@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.env
+.env.local
+*.md
+!README.md
+building-permits-active-permits.json
+.claude
