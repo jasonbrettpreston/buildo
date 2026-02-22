@@ -33,10 +33,24 @@ export function mToFt(m: number): number {
   return m * M_TO_FT;
 }
 
+// ---------------------------------------------------------------------------
+// Spatial matching constants (Strategy 3)
+// ---------------------------------------------------------------------------
+
+/** Maximum distance (metres) for spatial parcel matching. */
+export const SPATIAL_MAX_DISTANCE_M = 100;
+
+/** Confidence value assigned to spatial (nearest-centroid) matches. */
+export const SPATIAL_CONFIDENCE = 0.65;
+
+// ---------------------------------------------------------------------------
+// Distance & centroid helpers
+// ---------------------------------------------------------------------------
+
 /**
  * Haversine distance between two [lng, lat] points in meters.
  */
-function haversineDistance(
+export function haversineDistance(
   p1: [number, number],
   p2: [number, number]
 ): number {
@@ -78,6 +92,95 @@ function extractRing(
   }
 
   return null;
+}
+
+/**
+ * Compute the centroid [lng, lat] of a GeoJSON Polygon or MultiPolygon.
+ * Uses the arithmetic mean of the outer ring vertices (excluding the closing
+ * point). Returns null for invalid or missing geometry.
+ */
+export function computeCentroid(
+  geometry: Record<string, unknown> | null | undefined
+): [number, number] | null {
+  if (!geometry) return null;
+
+  const ring = extractRing(geometry as Record<string, unknown>);
+  if (!ring || ring.length < 4) return null; // need 3 unique + closing
+
+  // Exclude closing point (same as first)
+  const last = ring[ring.length - 1];
+  const n =
+    last[0] === ring[0][0] && last[1] === ring[0][1]
+      ? ring.length - 1
+      : ring.length;
+
+  if (n < 3) return null;
+
+  let sumLng = 0;
+  let sumLat = 0;
+  for (let i = 0; i < n; i++) {
+    sumLng += ring[i][0];
+    sumLat += ring[i][1];
+  }
+
+  return [sumLng / n, sumLat / n];
+}
+
+/** A parcel centroid candidate for spatial matching. */
+export interface CentroidCandidate {
+  id: number;
+  centroid_lat: number;
+  centroid_lng: number;
+}
+
+/**
+ * Find the nearest parcel centroid to a given lat/lng point.
+ * Returns the parcel id and distance in metres, or null if no candidate
+ * is within `maxDistanceM` (default: SPATIAL_MAX_DISTANCE_M = 100m).
+ */
+export function findNearestParcel(
+  lat: number,
+  lng: number,
+  candidates: CentroidCandidate[],
+  maxDistanceM: number = SPATIAL_MAX_DISTANCE_M
+): { parcel_id: number; distance_m: number } | null {
+  if (!candidates || candidates.length === 0) return null;
+
+  let bestId: number | null = null;
+  let bestDist = Infinity;
+
+  for (const c of candidates) {
+    const dist = haversineDistance(
+      [lng, lat],
+      [c.centroid_lng, c.centroid_lat]
+    );
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestId = c.id;
+    }
+  }
+
+  if (bestId === null || bestDist > maxDistanceM) return null;
+
+  return { parcel_id: bestId, distance_m: bestDist };
+}
+
+// ---------------------------------------------------------------------------
+// Address Points geocoding helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse a permit's geo_id field into a valid integer ADDRESS_POINT_ID.
+ * Returns null if the value is empty, non-numeric, or otherwise invalid.
+ * Mirrors the WHERE clause logic in scripts/geocode-permits.js.
+ */
+export function parseGeoId(geoId: string | null | undefined): number | null {
+  if (!geoId || geoId.trim() === '') return null;
+  const trimmed = geoId.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const id = parseInt(trimmed, 10);
+  if (isNaN(id) || id <= 0) return null;
+  return id;
 }
 
 /**
