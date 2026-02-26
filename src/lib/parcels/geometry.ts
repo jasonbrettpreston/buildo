@@ -126,6 +126,74 @@ export function computeCentroid(
   return [sumLng / n, sumLat / n];
 }
 
+// ---------------------------------------------------------------------------
+// Shoelace polygon area & irregularity detection
+// ---------------------------------------------------------------------------
+
+/** Threshold: polygons with (area / MBR area) below this are irregular. */
+export const IRREGULARITY_THRESHOLD = 0.95;
+
+/**
+ * Compute the area of a polygon ring in square meters using the Shoelace formula.
+ * Uses the same equirectangular projection as the MBR code.
+ * Returns null for invalid rings.
+ */
+export function shoelaceArea(ring: [number, number][]): number | null {
+  if (!ring || ring.length < 4) return null;
+
+  const n = ring.length - 1; // exclude closing point
+  if (n < 3) return null;
+
+  // Centroid for local projection
+  let cLat = 0;
+  let cLng = 0;
+  for (let i = 0; i < n; i++) {
+    cLng += ring[i][0];
+    cLat += ring[i][1];
+  }
+  cLat /= n;
+  cLng /= n;
+
+  const cosLat = Math.cos((cLat * Math.PI) / 180);
+  const mPerDegLat = 111320;
+  const mPerDegLng = 111320 * cosLat;
+
+  // Project to local XY in meters
+  const points: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    points.push([
+      (ring[i][0] - cLng) * mPerDegLng,
+      (ring[i][1] - cLat) * mPerDegLat,
+    ]);
+  }
+
+  // Shoelace formula
+  let sum = 0;
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    sum += points[i][0] * points[j][1] - points[j][0] * points[i][1];
+  }
+
+  return Math.abs(sum) / 2;
+}
+
+/**
+ * Compute the rectangularity ratio: polygon area / MBR area.
+ * Returns a value between 0 and 1, or null for invalid rings.
+ */
+export function rectangularityRatio(ring: [number, number][]): number | null {
+  const polyArea = shoelaceArea(ring);
+  if (polyArea == null || polyArea <= 0) return null;
+
+  const mbr = minimumBoundingRect(ring);
+  if (!mbr) return null;
+
+  const mbrArea = mbr.width * mbr.height;
+  if (mbrArea <= 0) return null;
+
+  return Math.min(polyArea / mbrArea, 1.0);
+}
+
 /** A parcel centroid candidate for spatial matching. */
 export interface CentroidCandidate {
   id: number;
@@ -266,10 +334,13 @@ function minimumBoundingRect(
  * Estimate lot frontage and depth from a GeoJSON polygon geometry.
  *
  * Uses the minimum bounding rectangle: shorter side = frontage, longer = depth.
+ * When statedAreaSqm is provided, scales MBR dimensions so that
+ * frontage * depth = statedArea (preserving aspect ratio).
  * Returns null if geometry is invalid or too small.
  */
 export function estimateLotDimensions(
-  geometry: Record<string, unknown> | null | undefined
+  geometry: Record<string, unknown> | null | undefined,
+  statedAreaSqm?: number | null
 ): LotDimensions | null {
   if (!geometry) return null;
 
@@ -282,8 +353,28 @@ export function estimateLotDimensions(
   // Sanity check: reject unreasonably small lots (< 1m either dimension)
   if (mbr.width < 1 || mbr.height < 1) return null;
 
+  const mbrArea = mbr.width * mbr.height;
+  const polygonArea = shoelaceArea(ring);
+
+  // Determine true area: prefer stated area, fallback to Shoelace
+  const trueArea = (statedAreaSqm && statedAreaSqm > 0)
+    ? statedAreaSqm
+    : polygonArea;
+
+  // Scale factor to correct MBR dimensions
+  const scale = (trueArea && trueArea > 0 && mbrArea > 0)
+    ? Math.sqrt(trueArea / mbrArea)
+    : 1;
+
+  // Irregularity detection
+  const isIrregular = (polygonArea != null && polygonArea > 0 && mbrArea > 0)
+    ? (polygonArea / mbrArea) < IRREGULARITY_THRESHOLD
+    : false;
+
   return {
-    frontage_m: Math.round(mbr.width * 100) / 100,
-    depth_m: Math.round(mbr.height * 100) / 100,
+    frontage_m: Math.round(mbr.width * scale * 100) / 100,
+    depth_m: Math.round(mbr.height * scale * 100) / 100,
+    polygon_area_sqm: polygonArea != null ? Math.round(polygonArea * 100) / 100 : null,
+    is_irregular: isIrregular,
   };
 }

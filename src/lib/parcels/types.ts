@@ -17,6 +17,7 @@ export interface Parcel {
   geometry: Record<string, unknown> | null;
   date_effective: Date | null;
   date_expiry: Date | null;
+  is_irregular: boolean | null;
   created_at: Date;
 }
 
@@ -32,13 +33,15 @@ export interface PermitParcel {
 
 export interface ParcelMatchResult {
   parcel_id: number;
-  match_type: 'exact_address' | 'name_only';
+  match_type: 'exact_address' | 'name_only' | 'spatial';
   confidence: number;
 }
 
 export interface LotDimensions {
   frontage_m: number;
   depth_m: number;
+  polygon_area_sqm: number | null;
+  is_irregular: boolean;
 }
 
 export interface ParsedAddress {

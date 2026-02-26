@@ -12,6 +12,9 @@ import {
   SPATIAL_MAX_DISTANCE_M,
   SPATIAL_CONFIDENCE,
   parseGeoId,
+  shoelaceArea,
+  rectangularityRatio,
+  IRREGULARITY_THRESHOLD,
 } from '@/lib/parcels/geometry';
 import {
   parseLinearName,
@@ -485,5 +488,218 @@ describe('parseGeoId', () => {
 
   it('trims whitespace around valid ID', () => {
     expect(parseGeoId('  42  ')).toBe(42);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Shoelace polygon area
+// ---------------------------------------------------------------------------
+describe('shoelaceArea', () => {
+  // ~10m x ~33m rectangle at Toronto latitude
+  const rectRing: [number, number][] = [
+    [-79.5000, 43.7500],
+    [-79.4999, 43.7500],
+    [-79.4999, 43.7503],
+    [-79.5000, 43.7503],
+    [-79.5000, 43.7500],
+  ];
+
+  it('computes known rectangle area (~270-290 sq.m)', () => {
+    const area = shoelaceArea(rectRing);
+    expect(area).not.toBeNull();
+    expect(area!).toBeGreaterThan(200);
+    expect(area!).toBeLessThan(400);
+  });
+
+  it('computes triangle area (half of rectangle)', () => {
+    const triRing: [number, number][] = [
+      [-79.5000, 43.7500],
+      [-79.4999, 43.7500],
+      [-79.5000, 43.7503],
+      [-79.5000, 43.7500],
+    ];
+    const triArea = shoelaceArea(triRing);
+    const rectArea = shoelaceArea(rectRing);
+    expect(triArea).not.toBeNull();
+    expect(rectArea).not.toBeNull();
+    // Triangle should be roughly half the rectangle
+    const ratio = triArea! / rectArea!;
+    expect(ratio).toBeGreaterThan(0.4);
+    expect(ratio).toBeLessThan(0.6);
+  });
+
+  it('computes L-shape area less than its MBR', () => {
+    // L-shape: cut out top-right quarter of rectangle
+    const lRing: [number, number][] = [
+      [-79.5000, 43.7500],
+      [-79.4998, 43.7500],
+      [-79.4998, 43.7501],
+      [-79.4999, 43.7501],
+      [-79.4999, 43.7503],
+      [-79.5000, 43.7503],
+      [-79.5000, 43.7500],
+    ];
+    const area = shoelaceArea(lRing);
+    expect(area).not.toBeNull();
+    expect(area!).toBeGreaterThan(0);
+  });
+
+  it('returns null for null ring', () => {
+    expect(shoelaceArea(null as unknown as [number, number][])).toBeNull();
+  });
+
+  it('returns null for ring with fewer than 4 points', () => {
+    const tooFew: [number, number][] = [
+      [-79.5, 43.75],
+      [-79.499, 43.75],
+      [-79.5, 43.75],
+    ];
+    expect(shoelaceArea(tooFew)).toBeNull();
+  });
+
+  it('returns same absolute area regardless of winding direction', () => {
+    const ccw = shoelaceArea(rectRing);
+    const cwRing = [...rectRing].reverse() as [number, number][];
+    const cw = shoelaceArea(cwRing);
+    expect(ccw).not.toBeNull();
+    expect(cw).not.toBeNull();
+    expect(Math.abs(ccw! - cw!)).toBeLessThan(0.01);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Rectangularity ratio
+// ---------------------------------------------------------------------------
+describe('rectangularityRatio', () => {
+  const rectRing: [number, number][] = [
+    [-79.5000, 43.7500],
+    [-79.4999, 43.7500],
+    [-79.4999, 43.7503],
+    [-79.5000, 43.7503],
+    [-79.5000, 43.7500],
+  ];
+
+  it('returns ~1.0 for a rectangle', () => {
+    const ratio = rectangularityRatio(rectRing);
+    expect(ratio).not.toBeNull();
+    expect(ratio!).toBeGreaterThan(0.95);
+    expect(ratio!).toBeLessThanOrEqual(1.0);
+  });
+
+  it('returns <0.95 for an L-shape', () => {
+    const lRing: [number, number][] = [
+      [-79.5000, 43.7500],
+      [-79.4998, 43.7500],
+      [-79.4998, 43.7501],
+      [-79.4999, 43.7501],
+      [-79.4999, 43.7503],
+      [-79.5000, 43.7503],
+      [-79.5000, 43.7500],
+    ];
+    const ratio = rectangularityRatio(lRing);
+    expect(ratio).not.toBeNull();
+    expect(ratio!).toBeLessThan(0.95);
+  });
+
+  it('returns null for invalid ring', () => {
+    expect(rectangularityRatio(null as unknown as [number, number][])).toBeNull();
+  });
+
+  it('returns value in range 0-1', () => {
+    const ratio = rectangularityRatio(rectRing);
+    expect(ratio).not.toBeNull();
+    expect(ratio!).toBeGreaterThan(0);
+    expect(ratio!).toBeLessThanOrEqual(1.0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// IRREGULARITY_THRESHOLD constant
+// ---------------------------------------------------------------------------
+describe('IRREGULARITY_THRESHOLD', () => {
+  it('is 0.95', () => {
+    expect(IRREGULARITY_THRESHOLD).toBe(0.95);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Area-corrected dimensions (estimateLotDimensions with statedAreaSqm)
+// ---------------------------------------------------------------------------
+describe('estimateLotDimensions area correction', () => {
+  // ~15m wide x ~33m deep rectangle
+  const geometry = {
+    type: 'Polygon',
+    coordinates: [[
+      [-79.5000, 43.7500],
+      [-79.4998, 43.7500],
+      [-79.4998, 43.7503],
+      [-79.5000, 43.7503],
+      [-79.5000, 43.7500],
+    ]],
+  };
+
+  it('scales dimensions when statedAreaSqm is provided', () => {
+    const withStated = estimateLotDimensions(geometry, 400);
+    const without = estimateLotDimensions(geometry);
+    expect(withStated).not.toBeNull();
+    expect(without).not.toBeNull();
+    // Product of corrected dims should be close to stated area
+    const product = withStated!.frontage_m * withStated!.depth_m;
+    expect(product).toBeCloseTo(400, -1); // within ~10
+  });
+
+  it('uses polygon area as fallback when no statedAreaSqm', () => {
+    const result = estimateLotDimensions(geometry);
+    expect(result).not.toBeNull();
+    expect(result!.polygon_area_sqm).not.toBeNull();
+    expect(result!.polygon_area_sqm!).toBeGreaterThan(0);
+  });
+
+  it('preserves aspect ratio when scaling', () => {
+    const without = estimateLotDimensions(geometry);
+    const withStated = estimateLotDimensions(geometry, 400);
+    expect(without).not.toBeNull();
+    expect(withStated).not.toBeNull();
+    const ratioWithout = without!.depth_m / without!.frontage_m;
+    const ratioWith = withStated!.depth_m / withStated!.frontage_m;
+    expect(ratioWith).toBeCloseTo(ratioWithout, 1);
+  });
+
+  it('sets is_irregular=false for rectangular polygon', () => {
+    const result = estimateLotDimensions(geometry);
+    expect(result).not.toBeNull();
+    expect(result!.is_irregular).toBe(false);
+  });
+
+  it('sets is_irregular=true for L-shaped polygon', () => {
+    const lGeometry = {
+      type: 'Polygon',
+      coordinates: [[
+        [-79.5000, 43.7500],
+        [-79.4996, 43.7500],
+        [-79.4996, 43.7502],
+        [-79.4998, 43.7502],
+        [-79.4998, 43.7506],
+        [-79.5000, 43.7506],
+        [-79.5000, 43.7500],
+      ]],
+    };
+    const result = estimateLotDimensions(lGeometry);
+    expect(result).not.toBeNull();
+    expect(result!.is_irregular).toBe(true);
+  });
+
+  it('backward compat: still returns null for null geometry', () => {
+    expect(estimateLotDimensions(null)).toBeNull();
+  });
+
+  it('backward compat: still returns null for invalid geometry', () => {
+    expect(estimateLotDimensions({ type: 'Polygon' })).toBeNull();
+  });
+
+  it('returns polygon_area_sqm field', () => {
+    const result = estimateLotDimensions(geometry);
+    expect(result).not.toBeNull();
+    expect(typeof result!.polygon_area_sqm).toBe('number');
   });
 });

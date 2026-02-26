@@ -45,10 +45,12 @@ The composite ID uses double-dash (`--`) as separator, matching the existing API
 | Field | Source | Display |
 |-------|--------|---------|
 | Lot Size | `parcels.lot_size_sqft` | Formatted number + "sq ft" |
-| Frontage | `parcels.frontage_ft` | Number + "ft" |
-| Depth | `parcels.depth_ft` | Number + "ft" |
+| Frontage | `parcels.frontage_ft` | Number + "ft". Shows "(est.)" suffix for irregular lots. |
+| Depth | `parcels.depth_ft` | Number + "ft". Shows "(est.)" suffix for irregular lots. |
 | Lot Size (metric) | `parcels.lot_size_sqm` | Formatted number + "sq m" |
-| Parcel Type | `parcels.feature_type` | Text (COMMON / CONDO) |
+| Parcel Type | `parcels.feature_type` | Text (COMMON / CONDO). Amber "Irregular Lot" badge shown when `parcels.is_irregular` is true. |
+
+**Irregular Lot Detection:** Parcels with a rectangularity ratio (Shoelace polygon area / MBR area) below 0.95 are flagged as irregular (L-shaped, pie-shaped, curved lots). For these lots, frontage and depth are area-corrected estimates, hence the "(est.)" suffix.
 
 Section is hidden entirely if no parcel is linked to the permit.
 

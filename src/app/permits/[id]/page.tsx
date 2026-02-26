@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/Badge';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import PropertyPhoto from '@/components/permits/PropertyPhoto';
 import NeighbourhoodProfile from '@/components/permits/NeighbourhoodProfile';
+import { PROJECT_TYPE_CONFIG, formatScopeTag, getScopeTagColor } from '@/lib/classification/scope';
+import type { ProjectType } from '@/lib/classification/scope';
 
 interface ParcelInfo {
   lot_size_sqft: number | null;
@@ -15,7 +17,17 @@ interface ParcelInfo {
   depth_ft: number | null;
   depth_m: number | null;
   feature_type: string | null;
+  is_irregular: boolean | null;
   link_confidence: number | null;
+}
+
+interface LinkedPermit {
+  permit_num: string;
+  revision_num: string;
+  permit_type: string | null;
+  work: string | null;
+  status: string | null;
+  est_const_cost: number | null;
 }
 
 interface PermitDetail {
@@ -39,6 +51,7 @@ interface PermitDetail {
   builder: Record<string, unknown> | null;
   parcel: ParcelInfo | null;
   neighbourhood: Record<string, unknown> | null;
+  linkedPermits: LinkedPermit[];
 }
 
 export default function PermitDetailPage() {
@@ -77,6 +90,14 @@ export default function PermitDetailPage() {
   }
 
   const p = data.permit as Record<string, string | number | null>;
+
+  // Extract scope_tags robustly from the uncast permit object
+  const rawTags = (data.permit as Record<string, unknown>).scope_tags;
+  const scopeTags: string[] = Array.isArray(rawTags)
+    ? rawTags as string[]
+    : typeof rawTags === 'string' && rawTags.startsWith('{')
+      ? rawTags.slice(1, -1).split(',').filter(Boolean)
+      : [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -126,6 +147,16 @@ export default function PermitDetailPage() {
             </div>
           </Section>
         )}
+
+        {/* Work Scope — Project Type badge only */}
+        {p.project_type && (() => {
+          const config = PROJECT_TYPE_CONFIG[p.project_type as ProjectType] || PROJECT_TYPE_CONFIG.other;
+          return (
+            <Section title="Work Scope">
+              <Badge label={config.label} color={config.color} />
+            </Section>
+          );
+        })()}
 
         {/* Builder - always visible */}
         <Section title="Builder">
@@ -218,30 +249,41 @@ export default function PermitDetailPage() {
 
         {/* Property Details (from parcel data) - always visible */}
         <Section title="Property Details">
-          {data.parcel ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <Field
-                label="Lot Size"
-                value={data.parcel.lot_size_sqft ? `${Number(data.parcel.lot_size_sqft).toLocaleString()} sq ft` : 'N/A'}
-              />
-              <Field
-                label="Frontage"
-                value={data.parcel.frontage_ft ? `${Number(data.parcel.frontage_ft).toFixed(1)} ft` : 'N/A'}
-              />
-              <Field
-                label="Depth"
-                value={data.parcel.depth_ft ? `${Number(data.parcel.depth_ft).toFixed(1)} ft` : 'N/A'}
-              />
-              <Field
-                label="Lot Size (metric)"
-                value={data.parcel.lot_size_sqm ? `${Number(data.parcel.lot_size_sqm).toLocaleString()} sq m` : 'N/A'}
-              />
-              <Field
-                label="Parcel Type"
-                value={data.parcel.feature_type || 'N/A'}
-              />
-            </div>
-          ) : (
+          {data.parcel ? (() => {
+            const irregular = !!data.parcel.is_irregular;
+            const estSuffix = irregular ? ' (est.)' : '';
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <Field
+                  label="Lot Size"
+                  value={data.parcel.lot_size_sqft ? `${Number(data.parcel.lot_size_sqft).toLocaleString()} sq ft` : 'N/A'}
+                />
+                <Field
+                  label={`Frontage${estSuffix}`}
+                  value={data.parcel.frontage_ft ? `${Number(data.parcel.frontage_ft).toFixed(1)} ft` : 'N/A'}
+                />
+                <Field
+                  label={`Depth${estSuffix}`}
+                  value={data.parcel.depth_ft ? `${Number(data.parcel.depth_ft).toFixed(1)} ft` : 'N/A'}
+                />
+                <Field
+                  label="Lot Size (metric)"
+                  value={data.parcel.lot_size_sqm ? `${Number(data.parcel.lot_size_sqm).toLocaleString()} sq m` : 'N/A'}
+                />
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Parcel Type</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-sm text-gray-900">{data.parcel.feature_type || 'N/A'}</p>
+                    {irregular && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                        Irregular Lot
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })() : (
             <p className="text-sm text-gray-400 italic">
               Property data not yet linked to this permit.
             </p>
@@ -285,10 +327,60 @@ export default function PermitDetailPage() {
           </div>
         </Section>
 
-        {/* Description */}
+        {/* Linked Permits — only shown when associated permits exist */}
+        {data.linkedPermits && data.linkedPermits.length > 0 && (
+          <Section title="Linked Permits">
+            <p className="text-xs text-gray-500 mb-3">
+              Other permits sharing the same project number
+            </p>
+            <div className="space-y-2">
+              {data.linkedPermits.map((lp) => {
+                const permitId = `${lp.permit_num}--${lp.revision_num}`;
+                const code = lp.permit_num.split(/\s+/)[2] || '';
+                return (
+                  <a
+                    key={permitId}
+                    href={`/permits/${encodeURIComponent(permitId)}`}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono font-semibold text-gray-700 bg-gray-200 rounded px-1.5 py-0.5">
+                        {code}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {lp.permit_type || 'Unknown Type'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {lp.work || 'N/A'}
+                          {lp.est_const_cost != null && ` · $${Number(lp.est_const_cost).toLocaleString()}`}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge label={lp.status || 'Unknown'} color="#2563EB" />
+                  </a>
+                );
+              })}
+            </div>
+          </Section>
+        )}
+
+        {/* Description + Scope Tags */}
         {p.description && (
           <Section title="Description">
             <p className="text-sm text-gray-700">{String(p.description)}</p>
+            {scopeTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {scopeTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    label={formatScopeTag(tag, Number(p.storeys) || undefined)}
+                    color={getScopeTagColor(tag)}
+                    variant="outline"
+                  />
+                ))}
+              </div>
+            )}
           </Section>
         )}
 

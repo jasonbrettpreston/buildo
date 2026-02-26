@@ -120,16 +120,62 @@ function minimumBoundingRect(ring) {
   return { width: bestW, height: bestH };
 }
 
-function estimateLotDimensions(geometry) {
+const IRREGULARITY_THRESHOLD = 0.95;
+
+function shoelaceArea(ring) {
+  if (!ring || ring.length < 4) return null;
+  const n = ring.length - 1;
+  if (n < 3) return null;
+  let cLat = 0, cLng = 0;
+  for (let i = 0; i < n; i++) { cLng += ring[i][0]; cLat += ring[i][1]; }
+  cLat /= n; cLng /= n;
+  const cosLat = Math.cos((cLat * Math.PI) / 180);
+  const mPerDegLat = 111320;
+  const mPerDegLng = 111320 * cosLat;
+  const points = [];
+  for (let i = 0; i < n; i++) {
+    points.push([(ring[i][0] - cLng) * mPerDegLng, (ring[i][1] - cLat) * mPerDegLat]);
+  }
+  let sum = 0;
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    sum += points[i][0] * points[j][1] - points[j][0] * points[i][1];
+  }
+  return Math.abs(sum) / 2;
+}
+
+function rectangularityRatio(ring) {
+  const polyArea = shoelaceArea(ring);
+  if (polyArea == null || polyArea <= 0) return null;
+  const mbr = minimumBoundingRect(ring);
+  if (!mbr) return null;
+  const mbrArea = mbr.width * mbr.height;
+  if (mbrArea <= 0) return null;
+  return Math.min(polyArea / mbrArea, 1.0);
+}
+
+function estimateLotDimensions(geometry, statedAreaSqm) {
   if (!geometry) return null;
   const ring = extractRing(geometry);
   if (!ring) return null;
   const mbr = minimumBoundingRect(ring);
   if (!mbr) return null;
   if (mbr.width < 1 || mbr.height < 1) return null;
+
+  const mbrArea = mbr.width * mbr.height;
+  const polygonArea = shoelaceArea(ring);
+
+  const trueArea = (statedAreaSqm && statedAreaSqm > 0) ? statedAreaSqm : polygonArea;
+  const scale = (trueArea && trueArea > 0 && mbrArea > 0)
+    ? Math.sqrt(trueArea / mbrArea) : 1;
+
+  const isIrregular = (polygonArea != null && polygonArea > 0 && mbrArea > 0)
+    ? (polygonArea / mbrArea) < IRREGULARITY_THRESHOLD : false;
+
   return {
-    frontage_m: Math.round(mbr.width * 100) / 100,
-    depth_m: Math.round(mbr.height * 100) / 100,
+    frontage_m: Math.round(mbr.width * scale * 100) / 100,
+    depth_m: Math.round(mbr.height * scale * 100) / 100,
+    is_irregular: isIrregular,
   };
 }
 
@@ -224,7 +270,7 @@ async function main() {
 
     for (const row of batch) {
       placeholders.push(
-        `($${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++})`
+        `($${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++})`
       );
       values.push(
         row.parcel_id, row.feature_type,
@@ -233,7 +279,7 @@ async function main() {
         row.stated_area_raw, row.lot_size_sqm, row.lot_size_sqft,
         row.frontage_m, row.frontage_ft, row.depth_m, row.depth_ft,
         row.geometry ? JSON.stringify(row.geometry) : null,
-        row.date_effective
+        row.date_effective, row.is_irregular
       );
     }
 
@@ -244,7 +290,7 @@ async function main() {
         addr_num_normalized, street_name_normalized, street_type_normalized,
         stated_area_raw, lot_size_sqm, lot_size_sqft,
         frontage_m, frontage_ft, depth_m, depth_ft,
-        geometry, date_effective
+        geometry, date_effective, is_irregular
       ) VALUES ${placeholders.join(', ')}
       ON CONFLICT (parcel_id)
       DO UPDATE SET
@@ -262,7 +308,8 @@ async function main() {
         depth_m = EXCLUDED.depth_m,
         depth_ft = EXCLUDED.depth_ft,
         geometry = EXCLUDED.geometry,
-        date_effective = EXCLUDED.date_effective`,
+        date_effective = EXCLUDED.date_effective,
+        is_irregular = EXCLUDED.is_irregular`,
       values
     );
 
@@ -311,13 +358,14 @@ async function main() {
       const parsed = parseLinearName(linearNameFull);
       const addrNumNorm = normalizeAddressNumber(addressNumber);
 
-      // Parse geometry and estimate dimensions
+      // Parse geometry and estimate dimensions (area-corrected)
       const geometry = parseGeoJSON(record.geometry || '');
-      const dims = estimateLotDimensions(geometry);
+      const dims = estimateLotDimensions(geometry, lotSizeSqm);
       const frontageM = dims ? dims.frontage_m : null;
       const depthM = dims ? dims.depth_m : null;
       const frontageFt = frontageM ? Math.round(frontageM * M_TO_FT * 100) / 100 : null;
       const depthFt = depthM ? Math.round(depthM * M_TO_FT * 100) / 100 : null;
+      const isIrregular = dims ? dims.is_irregular : false;
 
       batch.push({
         parcel_id: parcelId,
@@ -336,6 +384,7 @@ async function main() {
         depth_ft: depthFt,
         geometry: geometry,
         date_effective: parseDate(record.DATE_EFFECTIVE),
+        is_irregular: isIrregular,
       });
 
       if (batch.length >= BATCH_SIZE) {

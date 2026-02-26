@@ -1,6 +1,8 @@
 // UI Layer Tests - Component rendering and behavior
 // SPEC LINKS: docs/specs/15_dashboard_tradesperson.md, 18_permit_detail.md, 19_search_filter.md
 import { describe, it, expect } from 'vitest';
+import { PROJECT_TYPE_CONFIG, formatScopeTag } from '@/lib/classification/scope';
+import type { ProjectType } from '@/lib/classification/scope';
 
 // Since these are 'use client' components that require React DOM,
 // we test the pure logic extracted from components here.
@@ -574,6 +576,92 @@ describe('NeighbourhoodProfile Display Logic', () => {
   it('generates summary without era', () => {
     expect(generateSummary('Lower-income', 'renter-majority', null))
       .toBe('Lower-income, renter-majority');
+  });
+});
+
+describe('PROJECT_TYPE_CONFIG', () => {
+  const ALL_PROJECT_TYPES: ProjectType[] = [
+    'new_build', 'addition', 'renovation', 'demolition', 'mechanical', 'repair', 'other',
+  ];
+
+  it('has entries for all 7 project types', () => {
+    expect(Object.keys(PROJECT_TYPE_CONFIG)).toHaveLength(7);
+    for (const type of ALL_PROJECT_TYPES) {
+      expect(PROJECT_TYPE_CONFIG[type]).toBeDefined();
+      expect(PROJECT_TYPE_CONFIG[type].label).toBeTruthy();
+      expect(PROJECT_TYPE_CONFIG[type].color).toMatch(/^#[0-9A-Fa-f]{6}$/);
+    }
+  });
+
+  it('labels are human-readable (no underscores)', () => {
+    for (const type of ALL_PROJECT_TYPES) {
+      expect(PROJECT_TYPE_CONFIG[type].label).not.toContain('_');
+    }
+  });
+});
+
+describe('formatScopeTag', () => {
+  it('converts simple slug to title case', () => {
+    expect(formatScopeTag('deck')).toBe('Deck');
+    expect(formatScopeTag('basement')).toBe('Basement');
+  });
+
+  it('converts hyphenated slug to title case words', () => {
+    expect(formatScopeTag('basement-finish')).toBe('Basement Finish');
+    expect(formatScopeTag('rear-addition')).toBe('Rear Addition');
+    expect(formatScopeTag('fire-alarm')).toBe('Fire Alarm');
+  });
+
+  it('preserves numeric prefixes', () => {
+    expect(formatScopeTag('2nd-floor')).toBe('2nd Floor');
+    expect(formatScopeTag('3rd-floor')).toBe('3rd Floor');
+  });
+
+  it('handles multi-word tags', () => {
+    expect(formatScopeTag('backflow-preventer')).toBe('Backflow Preventer');
+    expect(formatScopeTag('laneway-suite')).toBe('Laneway Suite');
+  });
+});
+
+describe('Irregular Lot Display Logic', () => {
+  function formatFrontageLabel(isIrregular: boolean): string {
+    return isIrregular ? 'Frontage (est.)' : 'Frontage';
+  }
+
+  function formatDepthLabel(isIrregular: boolean): string {
+    return isIrregular ? 'Depth (est.)' : 'Depth';
+  }
+
+  function showIrregularBadge(isIrregular: boolean | null): boolean {
+    return !!isIrregular;
+  }
+
+  it('shows (est.) suffix for irregular lot frontage', () => {
+    expect(formatFrontageLabel(true)).toBe('Frontage (est.)');
+  });
+
+  it('shows (est.) suffix for irregular lot depth', () => {
+    expect(formatDepthLabel(true)).toBe('Depth (est.)');
+  });
+
+  it('no (est.) suffix for regular lot frontage', () => {
+    expect(formatFrontageLabel(false)).toBe('Frontage');
+  });
+
+  it('no (est.) suffix for regular lot depth', () => {
+    expect(formatDepthLabel(false)).toBe('Depth');
+  });
+
+  it('shows irregular badge when is_irregular is true', () => {
+    expect(showIrregularBadge(true)).toBe(true);
+  });
+
+  it('hides irregular badge when is_irregular is false', () => {
+    expect(showIrregularBadge(false)).toBe(false);
+  });
+
+  it('hides irregular badge when is_irregular is null', () => {
+    expect(showIrregularBadge(null)).toBe(false);
   });
 });
 
