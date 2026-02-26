@@ -11,10 +11,14 @@ import {
   formatStories,
   formatCoverage,
   computeBuildingCoverage,
+  resolveStories,
+  inferMassingUseType,
   STORY_HEIGHT_M,
+  STORY_HEIGHT_BY_USE_TYPE,
   SHED_THRESHOLD_SQM,
   GARAGE_MAX_SQM,
 } from '@/lib/massing/geometry';
+import type { MassingUseType } from '@/lib/massing/geometry';
 
 describe('estimateStories', () => {
   it('returns 1 for 3m height (single story)', () => {
@@ -254,5 +258,136 @@ describe('computeBuildingCoverage', () => {
 
   it('returns null for negative lot size', () => {
     expect(computeBuildingCoverage(500, -1000)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resolveStories — 3-tier cascade
+// ---------------------------------------------------------------------------
+
+describe('resolveStories', () => {
+  it('returns permit storeys when available (tier 1)', () => {
+    const result = resolveStories(3, 9.5, 'residential');
+    expect(result).toEqual({ stories: 3, source: 'permit' });
+  });
+
+  it('permit storeys take priority over height calculation', () => {
+    // Height would give ~3 stories (9.5/2.9=3.28), but permit says 2
+    const result = resolveStories(2, 9.5, 'residential');
+    expect(result).toEqual({ stories: 2, source: 'permit' });
+  });
+
+  it('uses residential coefficient (2.9m) for tier 2', () => {
+    const result = resolveStories(null, 8.7, 'residential');
+    expect(result.stories).toBe(3); // 8.7/2.9 = 3.0
+    expect(result.source).toBe('height_typed');
+  });
+
+  it('uses commercial coefficient (4.0m) for tier 2', () => {
+    const result = resolveStories(null, 12.0, 'commercial');
+    expect(result.stories).toBe(3); // 12.0/4.0 = 3.0
+    expect(result.source).toBe('height_typed');
+  });
+
+  it('uses industrial coefficient (4.5m) for tier 2', () => {
+    const result = resolveStories(null, 9.0, 'industrial');
+    expect(result.stories).toBe(2); // 9.0/4.5 = 2.0
+    expect(result.source).toBe('height_typed');
+  });
+
+  it('uses mixed-use coefficient (3.5m) for tier 2', () => {
+    const result = resolveStories(null, 10.5, 'mixed-use');
+    expect(result.stories).toBe(3); // 10.5/3.5 = 3.0
+    expect(result.source).toBe('height_typed');
+  });
+
+  it('falls back to generic 3.0m when no use-type (tier 3)', () => {
+    const result = resolveStories(null, 9.0, null);
+    expect(result.stories).toBe(3); // 9.0/3.0 = 3.0
+    expect(result.source).toBe('height_default');
+  });
+
+  it('falls back to generic 3.0m when use-type is undefined', () => {
+    const result = resolveStories(null, 6.0);
+    expect(result.stories).toBe(2);
+    expect(result.source).toBe('height_default');
+  });
+
+  it('returns minimum 1 story for low heights', () => {
+    const result = resolveStories(null, 1.5, 'commercial');
+    expect(result.stories).toBe(1);
+    expect(result.source).toBe('height_typed');
+  });
+
+  it('returns null when no data available', () => {
+    const result = resolveStories(null, null, null);
+    expect(result).toEqual({ stories: null, source: null });
+  });
+
+  it('returns null for zero permit storeys and no height', () => {
+    const result = resolveStories(0, null, 'residential');
+    expect(result).toEqual({ stories: null, source: null });
+  });
+
+  it('ignores zero permit storeys (falls through to height)', () => {
+    const result = resolveStories(0, 9.0, 'residential');
+    expect(result.stories).toBe(3); // 9.0/2.9 ≈ 3.1 → 3
+    expect(result.source).toBe('height_typed');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// STORY_HEIGHT_BY_USE_TYPE constants
+// ---------------------------------------------------------------------------
+
+describe('STORY_HEIGHT_BY_USE_TYPE', () => {
+  it('has correct residential height', () => {
+    expect(STORY_HEIGHT_BY_USE_TYPE.residential).toBe(2.9);
+  });
+
+  it('has correct commercial height', () => {
+    expect(STORY_HEIGHT_BY_USE_TYPE.commercial).toBe(4.0);
+  });
+
+  it('has correct industrial height', () => {
+    expect(STORY_HEIGHT_BY_USE_TYPE.industrial).toBe(4.5);
+  });
+
+  it('has correct mixed-use height', () => {
+    expect(STORY_HEIGHT_BY_USE_TYPE['mixed-use']).toBe(3.5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// inferMassingUseType — industrial detection
+// ---------------------------------------------------------------------------
+
+describe('inferMassingUseType', () => {
+  it('detects industrial from building_type', () => {
+    expect(inferMassingUseType({ building_type: 'Warehouse', structure_type: null, proposed_use: null })).toBe('industrial');
+  });
+
+  it('detects industrial from structure_type', () => {
+    expect(inferMassingUseType({ building_type: null, structure_type: 'Industrial Building', proposed_use: null })).toBe('industrial');
+  });
+
+  it('detects industrial from proposed_use', () => {
+    expect(inferMassingUseType({ building_type: null, structure_type: null, proposed_use: 'Manufacturing facility' })).toBe('industrial');
+  });
+
+  it('detects factory keyword', () => {
+    expect(inferMassingUseType({ building_type: 'Factory', structure_type: null, proposed_use: null })).toBe('industrial');
+  });
+
+  it('returns null for residential permit', () => {
+    expect(inferMassingUseType({ building_type: 'Row House', structure_type: 'Small Residential', proposed_use: 'Residential' })).toBeNull();
+  });
+
+  it('returns null for commercial permit', () => {
+    expect(inferMassingUseType({ building_type: 'Office', structure_type: 'Commercial', proposed_use: 'Commercial' })).toBeNull();
+  });
+
+  it('returns null for null fields', () => {
+    expect(inferMassingUseType({ building_type: null, structure_type: null, proposed_use: null })).toBeNull();
   });
 });

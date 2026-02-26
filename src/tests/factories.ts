@@ -352,6 +352,8 @@ export function createMockParcelBuilding(
     building_id: 1,
     is_primary: true,
     structure_type: 'primary',
+    match_type: 'polygon',
+    confidence: 0.90,
     linked_at: new Date('2024-01-01'),
     ...overrides,
   };

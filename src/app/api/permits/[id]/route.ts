@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
-import { classifyScope, extractBasePermitNum } from '@/lib/classification/scope';
+import { classifyScope, classifyUseType, extractBasePermitNum } from '@/lib/classification/scope';
+import { resolveStories, inferMassingUseType } from '@/lib/massing/geometry';
+import type { MassingUseType } from '@/lib/massing/geometry';
 
 export async function GET(
   request: NextRequest,
@@ -129,11 +131,22 @@ export async function GET(
           if (totalBuildingAreaSqft > 0 && lotSizeSqft && lotSizeSqft > 0) {
             coveragePct = Math.min(Math.round((totalBuildingAreaSqft / lotSizeSqft) * 1000) / 10, 100);
           }
+          // Resolve stories via 3-tier cascade: permit storeys > use-type height > generic height
+          const permitStoreys = permit.storeys != null ? parseInt(String(permit.storeys), 10) : null;
+          const primaryHeightM = primaryRow?.max_height_m != null ? parseFloat(String(primaryRow.max_height_m)) : null;
+          const industrialUseType = inferMassingUseType(permit);
+          const effectiveUseType: MassingUseType = industrialUseType
+            || classifyUseType(permit as Parameters<typeof classifyUseType>[0]);
+          const resolved = primaryRow
+            ? resolveStories(permitStoreys, primaryHeightM, effectiveUseType)
+            : { stories: null, source: null };
+
           massing = {
             primary: primaryRow ? {
               footprint_area_sqft: primaryRow.footprint_area_sqft != null ? parseFloat(String(primaryRow.footprint_area_sqft)) : null,
-              estimated_stories: primaryRow.estimated_stories != null ? parseInt(String(primaryRow.estimated_stories), 10) : null,
-              max_height_m: primaryRow.max_height_m != null ? parseFloat(String(primaryRow.max_height_m)) : null,
+              estimated_stories: resolved.stories,
+              max_height_m: primaryHeightM,
+              stories_source: resolved.source,
             } : null,
             accessory: accessoryRows.map((b: Record<string, unknown>) => ({
               structure_type: b.structure_type,

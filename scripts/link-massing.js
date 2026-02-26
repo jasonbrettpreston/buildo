@@ -20,6 +20,7 @@ const BATCH_SIZE = 500;
 const BBOX_OFFSET = 0.003; // ~333m pre-filter radius
 const SHED_THRESHOLD_SQM = 20;
 const GARAGE_MAX_SQM = 60;
+const NEAREST_MAX_DISTANCE_M = 50;
 
 const pool = new Pool({
   host: process.env.PG_HOST || 'localhost',
@@ -36,6 +37,57 @@ function classifyStructure(areaSqm, allAreas) {
   if (areaSqm < SHED_THRESHOLD_SQM) return 'shed';
   if (areaSqm <= GARAGE_MAX_SQM) return 'garage';
   return 'other';
+}
+
+/**
+ * Haversine distance between two [lng, lat] points in metres.
+ */
+function haversineDistance(p1, p2) {
+  const R = 6371000;
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const lat1 = toRad(p1[1]);
+  const lat2 = toRad(p2[1]);
+  const dLat = toRad(p2[1] - p1[1]);
+  const dLng = toRad(p2[0] - p1[0]);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Get 5 test points for multi-point matching: centroid + 4 bounding box midpoints.
+ * parcel must have { centroid_lat, centroid_lng, geometry }.
+ */
+function getTestPoints(parcel) {
+  const lat = parseFloat(parcel.centroid_lat);
+  const lng = parseFloat(parcel.centroid_lng);
+  const points = [{ lng, lat, label: 'centroid' }];
+
+  const geom = parcel.geometry;
+  if (geom && geom.coordinates) {
+    let ring = null;
+    if (geom.type === 'Polygon' && geom.coordinates.length > 0) {
+      ring = geom.coordinates[0];
+    } else if (geom.type === 'MultiPolygon' && geom.coordinates.length > 0 && geom.coordinates[0].length > 0) {
+      ring = geom.coordinates[0][0];
+    }
+    if (ring && ring.length >= 4) {
+      let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+      for (const coord of ring) {
+        if (coord[0] < minLng) minLng = coord[0];
+        if (coord[0] > maxLng) maxLng = coord[0];
+        if (coord[1] < minLat) minLat = coord[1];
+        if (coord[1] > maxLat) maxLat = coord[1];
+      }
+      const midLng = (minLng + maxLng) / 2;
+      const midLat = (minLat + maxLat) / 2;
+      points.push({ lng: midLng, lat: maxLat, label: 'top' });
+      points.push({ lng: midLng, lat: minLat, label: 'bottom' });
+      points.push({ lng: minLng, lat: midLat, label: 'left' });
+      points.push({ lng: maxLng, lat: midLat, label: 'right' });
+    }
+  }
+
+  return points;
 }
 
 async function main() {
@@ -62,12 +114,15 @@ async function main() {
   let processed = 0;
   let parcelsLinked = 0;
   let buildingsLinked = 0;
+  let polygonMatches = 0;
+  let multipointMatches = 0;
+  let nearestMatches = 0;
   let noMatch = 0;
   let offset = 0;
 
   while (offset < totalParcels) {
     const parcelBatch = await pool.query(
-      `SELECT id, centroid_lat, centroid_lng
+      `SELECT id, centroid_lat, centroid_lng, geometry
        FROM parcels
        WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL
        ORDER BY id
@@ -87,7 +142,7 @@ async function main() {
 
       // BBOX pre-filter: find building footprints near this parcel
       const candidates = await pool.query(
-        `SELECT id, geometry, footprint_area_sqm
+        `SELECT id, geometry, footprint_area_sqm, centroid_lat, centroid_lng
          FROM building_footprints
          WHERE centroid_lat BETWEEN $1 - $3 AND $1 + $3
            AND centroid_lng BETWEEN $2 - $3 AND $2 + $3`,
@@ -100,47 +155,88 @@ async function main() {
         continue;
       }
 
-      // Point-in-polygon test for each candidate
-      const parcelPoint = turfPoint([lng, lat]);
+      // Multi-point matching: test centroid + 4 bbox midpoints against each building
+      const testPoints = getTestPoints(parcel);
       const matchedBuildings = [];
 
       for (const building of candidates.rows) {
         const geom = building.geometry;
         if (!geom || !geom.type || !geom.coordinates) continue;
 
-        let isInside = false;
+        let hitLabel = null;
 
-        if (geom.type === 'Polygon') {
-          try {
-            isInside = booleanPointInPolygon(parcelPoint, {
-              type: 'Feature',
-              geometry: geom,
-              properties: {},
-            });
-          } catch {
-            // Invalid geometry — skip
-          }
-        } else if (geom.type === 'MultiPolygon') {
-          // Test each sub-polygon
-          for (const polyCoords of geom.coordinates) {
+        for (const tp of testPoints) {
+          const testPt = turfPoint([tp.lng, tp.lat]);
+          let isInside = false;
+
+          if (geom.type === 'Polygon') {
             try {
-              isInside = booleanPointInPolygon(parcelPoint, {
+              isInside = booleanPointInPolygon(testPt, {
                 type: 'Feature',
-                geometry: { type: 'Polygon', coordinates: polyCoords },
+                geometry: geom,
                 properties: {},
               });
-              if (isInside) break;
             } catch {
-              // Invalid sub-polygon — skip
+              // Invalid geometry — skip
             }
+          } else if (geom.type === 'MultiPolygon') {
+            for (const polyCoords of geom.coordinates) {
+              try {
+                isInside = booleanPointInPolygon(testPt, {
+                  type: 'Feature',
+                  geometry: { type: 'Polygon', coordinates: polyCoords },
+                  properties: {},
+                });
+                if (isInside) break;
+              } catch {
+                // Invalid sub-polygon — skip
+              }
+            }
+          }
+
+          if (isInside) {
+            hitLabel = tp.label;
+            break;
           }
         }
 
-        if (isInside) {
+        if (hitLabel) {
           matchedBuildings.push({
             building_id: building.id,
             footprint_area_sqm: parseFloat(building.footprint_area_sqm) || 0,
+            match_type: hitLabel === 'centroid' ? 'polygon' : 'multipoint',
+            confidence: hitLabel === 'centroid' ? 0.90 : 0.80,
           });
+        }
+      }
+
+      // Nearest-building fallback (≤50m by haversine) when no polygon match
+      if (matchedBuildings.length === 0) {
+        let nearestId = null;
+        let nearestDist = Infinity;
+        let nearestArea = 0;
+
+        for (const building of candidates.rows) {
+          if (building.centroid_lat == null || building.centroid_lng == null) continue;
+          const dist = haversineDistance(
+            [lng, lat],
+            [parseFloat(building.centroid_lng), parseFloat(building.centroid_lat)]
+          );
+          if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestId = building.id;
+            nearestArea = parseFloat(building.footprint_area_sqm) || 0;
+          }
+        }
+
+        if (nearestId !== null && nearestDist <= NEAREST_MAX_DISTANCE_M) {
+          matchedBuildings.push({
+            building_id: nearestId,
+            footprint_area_sqm: nearestArea,
+            match_type: 'nearest',
+            confidence: 0.60,
+          });
+          nearestMatches++;
         }
       }
 
@@ -150,6 +246,12 @@ async function main() {
         continue;
       }
 
+      // Track match type stats
+      for (const mb of matchedBuildings) {
+        if (mb.match_type === 'polygon') polygonMatches++;
+        else if (mb.match_type === 'multipoint') multipointMatches++;
+      }
+
       // Classify structures
       const allAreas = matchedBuildings.map(b => b.footprint_area_sqm);
       for (const mb of matchedBuildings) {
@@ -157,10 +259,10 @@ async function main() {
         const isPrimary = structureType === 'primary';
 
         insertParams.push(
-          `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`
+          `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`
         );
         insertValues.push(
-          parcel.id, mb.building_id, isPrimary, structureType
+          parcel.id, mb.building_id, isPrimary, structureType, mb.match_type, mb.confidence
         );
         buildingsLinked++;
       }
@@ -173,11 +275,13 @@ async function main() {
     if (insertParams.length > 0) {
       try {
         await pool.query(
-          `INSERT INTO parcel_buildings (parcel_id, building_id, is_primary, structure_type)
+          `INSERT INTO parcel_buildings (parcel_id, building_id, is_primary, structure_type, match_type, confidence)
            VALUES ${insertParams.join(', ')}
            ON CONFLICT (parcel_id, building_id) DO UPDATE SET
              is_primary = EXCLUDED.is_primary,
              structure_type = EXCLUDED.structure_type,
+             match_type = EXCLUDED.match_type,
+             confidence = EXCLUDED.confidence,
              linked_at = NOW()`,
           insertValues
         );
@@ -201,6 +305,9 @@ async function main() {
   console.log(`Parcels processed:      ${processed.toLocaleString()}`);
   console.log(`Parcels linked:         ${parcelsLinked.toLocaleString()} (${((parcelsLinked / Math.max(processed, 1)) * 100).toFixed(1)}%)`);
   console.log(`Buildings linked:       ${buildingsLinked.toLocaleString()}`);
+  console.log(`  Polygon (centroid):   ${polygonMatches.toLocaleString()} (confidence 0.90)`);
+  console.log(`  Multipoint (edge):    ${multipointMatches.toLocaleString()} (confidence 0.80)`);
+  console.log(`  Nearest (≤${NEAREST_MAX_DISTANCE_M}m):     ${nearestMatches.toLocaleString()} (confidence 0.60)`);
   console.log(`No match found:         ${noMatch.toLocaleString()}`);
   console.log(`Duration:               ${elapsed}s`);
 

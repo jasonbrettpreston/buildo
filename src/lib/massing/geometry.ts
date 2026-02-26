@@ -1,11 +1,27 @@
 import type { StructureType } from './types';
 
 // ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export type MassingUseType = 'residential' | 'commercial' | 'industrial' | 'mixed-use';
+
+export type StoriesSource = 'permit' | 'height_typed' | 'height_default';
+
+// ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 /** Average floor-to-floor height in metres for story estimation. */
 export const STORY_HEIGHT_M = 3.0;
+
+/** Floor-to-floor height by building use-type (metres). */
+export const STORY_HEIGHT_BY_USE_TYPE: Record<MassingUseType, number> = {
+  residential: 2.9,
+  commercial: 4.0,
+  industrial: 4.5,
+  'mixed-use': 3.5,
+};
 
 /** Below this area (sqm), accessory is classified as shed. */
 export const SHED_THRESHOLD_SQM = 20;
@@ -170,4 +186,73 @@ export function computeBuildingCoverage(
   if (lotSizeSqft <= 0 || buildingAreaSqft <= 0) return null;
   const pct = (buildingAreaSqft / lotSizeSqft) * 100;
   return Math.min(Math.round(pct * 10) / 10, 100);
+}
+
+// ---------------------------------------------------------------------------
+// Stories resolution — 3-tier cascade
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve the best story count from available data sources.
+ *
+ * Priority:
+ *   1. permit.storeys (declared by applicant) — most reliable
+ *   2. height ÷ use-type-specific coefficient
+ *   3. height ÷ 3.0m generic fallback
+ *
+ * Returns `{ stories, source }` or `{ stories: null, source: null }`.
+ */
+export function resolveStories(
+  permitStoreys: number | null | undefined,
+  maxHeightM: number | null | undefined,
+  useType?: MassingUseType | null
+): { stories: number | null; source: StoriesSource | null } {
+  // Tier 1: permit-declared storeys
+  if (permitStoreys != null && permitStoreys > 0) {
+    return { stories: permitStoreys, source: 'permit' };
+  }
+
+  // Tier 2: height with use-type coefficient
+  if (maxHeightM != null && maxHeightM > 0 && useType && useType in STORY_HEIGHT_BY_USE_TYPE) {
+    const coefficient = STORY_HEIGHT_BY_USE_TYPE[useType];
+    return {
+      stories: Math.max(1, Math.round(maxHeightM / coefficient)),
+      source: 'height_typed',
+    };
+  }
+
+  // Tier 3: height with generic 3.0m fallback
+  if (maxHeightM != null && maxHeightM > 0) {
+    return {
+      stories: Math.max(1, Math.round(maxHeightM / STORY_HEIGHT_M)),
+      source: 'height_default',
+    };
+  }
+
+  return { stories: null, source: null };
+}
+
+// ---------------------------------------------------------------------------
+// Industrial use-type inference
+// ---------------------------------------------------------------------------
+
+const INDUSTRIAL_RE = /\b(warehouse|factory|industrial|manufacturing)\b/i;
+
+/**
+ * Detect if a permit describes an industrial building based on building_type,
+ * structure_type, and proposed_use fields. Returns 'industrial' if matched,
+ * otherwise null (caller should fall back to classifyUseType from scope.ts).
+ */
+export function inferMassingUseType(
+  permit: { building_type?: string | null; structure_type?: string | null; proposed_use?: string | null }
+): 'industrial' | null {
+  const fields = [
+    permit.building_type || '',
+    permit.structure_type || '',
+    permit.proposed_use || '',
+  ];
+  for (const f of fields) {
+    if (INDUSTRIAL_RE.test(f)) return 'industrial';
+  }
+  return null;
 }

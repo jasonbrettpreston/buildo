@@ -30,6 +30,40 @@ const pool = new Pool({
 });
 
 /**
+ * Ray-casting point-in-polygon test.
+ * Point is [lng, lat], ring is array of [lng, lat] (closed polygon).
+ */
+function pointInPolygon(pt, ring) {
+  if (!pt || !ring || ring.length < 4) return false;
+  const [x, y] = pt;
+  let inside = false;
+  const n = ring.length;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1];
+    const xj = ring[j][0], yj = ring[j][1];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+/**
+ * Extract the outer ring from a GeoJSON Polygon or MultiPolygon geometry.
+ * Returns the first outer ring, or null if geometry is invalid.
+ */
+function extractOuterRing(geometry) {
+  if (!geometry || !geometry.coordinates) return null;
+  if (geometry.type === 'Polygon' && geometry.coordinates.length > 0) {
+    return geometry.coordinates[0];
+  }
+  if (geometry.type === 'MultiPolygon' && geometry.coordinates.length > 0 && geometry.coordinates[0].length > 0) {
+    return geometry.coordinates[0][0];
+  }
+  return null;
+}
+
+/**
  * Haversine distance between two [lng, lat] points in metres.
  */
 function haversineDistance(p1, p2) {
@@ -79,6 +113,7 @@ async function main() {
   let linkedExact = 0;
   let linkedName = 0;
   let linkedSpatial = 0;
+  let linkedSpatialPolygon = 0;
   let noMatch = 0;
   let offset = 0;
 
@@ -145,7 +180,7 @@ async function main() {
         const lng = parseFloat(permit.longitude);
 
         const candidates = await pool.query(
-          `SELECT id, centroid_lat, centroid_lng FROM parcels
+          `SELECT id, centroid_lat, centroid_lng, geometry FROM parcels
            WHERE centroid_lat BETWEEN $1 - ${BBOX_OFFSET} AND $1 + ${BBOX_OFFSET}
              AND centroid_lng BETWEEN $2 - ${BBOX_OFFSET} AND $2 + ${BBOX_OFFSET}`,
           [lat, lng]
@@ -154,6 +189,7 @@ async function main() {
         if (candidates.rows.length > 0) {
           let bestId = null;
           let bestDist = Infinity;
+          let bestGeometry = null;
 
           for (const c of candidates.rows) {
             const dist = haversineDistance(
@@ -163,11 +199,21 @@ async function main() {
             if (dist < bestDist) {
               bestDist = dist;
               bestId = c.id;
+              bestGeometry = c.geometry;
             }
           }
 
           if (bestId !== null && bestDist <= SPATIAL_MAX_DISTANCE_M) {
-            match = { parcel_id: bestId, match_type: 'spatial', confidence: SPATIAL_CONFIDENCE };
+            // Check if permit geocode falls inside the matched parcel polygon
+            const ring = extractOuterRing(bestGeometry);
+            const isInside = ring ? pointInPolygon([lng, lat], ring) : false;
+
+            if (isInside) {
+              match = { parcel_id: bestId, match_type: 'spatial_polygon', confidence: 0.90 };
+              linkedSpatialPolygon++;
+            } else {
+              match = { parcel_id: bestId, match_type: 'spatial', confidence: SPATIAL_CONFIDENCE };
+            }
             linkedSpatial++;
           }
         }
@@ -207,7 +253,7 @@ async function main() {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       const pct = ((processed / totalPermits) * 100).toFixed(1);
       const totalLinked = linkedExact + linkedName + linkedSpatial;
-      console.log(`  ${processed.toLocaleString()} / ${totalPermits.toLocaleString()} (${pct}%) - linked: ${totalLinked.toLocaleString()} (exact:${linkedExact.toLocaleString()} name:${linkedName.toLocaleString()} spatial:${linkedSpatial.toLocaleString()}) - ${elapsed}s`);
+      console.log(`  ${processed.toLocaleString()} / ${totalPermits.toLocaleString()} (${pct}%) - linked: ${totalLinked.toLocaleString()} (exact:${linkedExact.toLocaleString()} name:${linkedName.toLocaleString()} spatial:${linkedSpatial.toLocaleString()} spatial_polygon:${linkedSpatialPolygon.toLocaleString()}) - ${elapsed}s`);
     }
   }
 
@@ -220,6 +266,8 @@ async function main() {
   console.log(`  Exact address:      ${linkedExact.toLocaleString()}`);
   console.log(`  Name only:          ${linkedName.toLocaleString()}`);
   console.log(`  Spatial proximity:  ${linkedSpatial.toLocaleString()}`);
+  console.log(`    Polygon upgrade:  ${linkedSpatialPolygon.toLocaleString()} (confidence 0.90)`);
+  console.log(`    Centroid only:    ${(linkedSpatial - linkedSpatialPolygon).toLocaleString()} (confidence 0.65)`);
   console.log(`No match found:       ${noMatch.toLocaleString()}`);
   console.log(`Duration:             ${elapsed}s`);
 

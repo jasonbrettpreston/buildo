@@ -19,6 +19,8 @@ export interface ParcelBuilding {
   building_id: number;
   is_primary: boolean;
   structure_type: StructureType;
+  match_type: string;
+  confidence: number;
   linked_at: Date;
 }
 
@@ -29,6 +31,7 @@ export interface BuildingMassingInfo {
     footprint_area_sqft: number | null;
     estimated_stories: number | null;
     max_height_m: number | null;
+    stories_source: string | null;
   } | null;
   accessory: {
     structure_type: StructureType;
