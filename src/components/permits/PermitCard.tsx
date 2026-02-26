@@ -2,6 +2,8 @@
 
 import { Badge } from '@/components/ui/Badge';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
+import { PROJECT_TYPE_CONFIG, formatScopeTag, getScopeTagColor } from '@/lib/classification/scope';
+import type { ProjectType } from '@/lib/classification/scope';
 
 interface PermitCardProps {
   permit: {
@@ -19,6 +21,9 @@ interface PermitCardProps {
     est_const_cost: number | null;
     issued_date: string | null;
     builder_name: string;
+    project_type?: string | null;
+    scope_tags?: string[] | null;
+    storeys?: number | null;
   };
   trades?: {
     trade_slug: string;
@@ -120,6 +125,9 @@ export function PermitCard({
               <span>{daysSince(permit.issued_date)}</span>
             )}
             {permit.ward && <span>Ward {permit.ward}</span>}
+            {permit.project_type && (
+              <span>{PROJECT_TYPE_CONFIG[permit.project_type as ProjectType]?.label || permit.project_type}</span>
+            )}
           </div>
 
           {/* Builder */}
@@ -147,6 +155,26 @@ export function PermitCard({
                   size="sm"
                 />
               ))}
+            </div>
+          )}
+
+          {/* Scope tags */}
+          {permit.scope_tags && permit.scope_tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {permit.scope_tags.slice(0, 5).map((tag) => (
+                <Badge
+                  key={tag}
+                  label={formatScopeTag(tag, permit.storeys ?? undefined)}
+                  color={getScopeTagColor(tag)}
+                  variant="outline"
+                  size="sm"
+                />
+              ))}
+              {permit.scope_tags.length > 5 && (
+                <span className="text-xs text-gray-400 self-center">
+                  +{permit.scope_tags.length - 5} more
+                </span>
+              )}
             </div>
           )}
         </div>

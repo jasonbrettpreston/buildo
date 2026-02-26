@@ -424,26 +424,30 @@ ff.cloudEvent<PubSubMessageData>('classifyTrades', async (cloudEvent) => {
       'SELECT * FROM trade_mapping_rules WHERE is_active = true'
     );
 
-    // ----- 3. Classify each permit -----
+    // ----- 2b. Load scope classification module -----
+    const { classifyScope, extractBasePermitNum, isBLDPermit } = await import('../../src/lib/classification/scope');
+
+    // ----- 3. Classify each permit (trades + scope) -----
     let classifiedCount = 0;
     let errorCount = 0;
 
     for (const permit of changedPermits) {
       try {
         const matches = classifyPermit(permit, rules);
+        const scope = classifyScope(permit);
 
-        // Upsert trade matches into the permit_trades table
+        // Upsert trade matches and scope into the database
         const client = await pool.connect();
         try {
           await client.query('BEGIN');
 
-          // Clear existing classifications for this permit
+          // Clear existing trade classifications for this permit
           await client.query(
             'DELETE FROM permit_trades WHERE permit_num = $1 AND revision_num = $2',
             [permit.permit_num, permit.revision_num]
           );
 
-          // Insert fresh classifications
+          // Insert fresh trade classifications
           for (const match of matches) {
             await client.query(
               `INSERT INTO permit_trades (
@@ -456,6 +460,48 @@ ff.cloudEvent<PubSubMessageData>('classifyTrades', async (cloudEvent) => {
                 match.confidence, match.is_active, match.phase, match.lead_score,
               ]
             );
+          }
+
+          // Update scope classification on the permit
+          await client.query(
+            `UPDATE permits SET project_type = $1, scope_tags = $2, scope_classified_at = NOW(), scope_source = 'classified'
+             WHERE permit_num = $3 AND revision_num = $4`,
+            [scope.project_type, scope.scope_tags, permit.permit_num, permit.revision_num]
+          );
+
+          // --- Scope propagation: BLD ↔ companion permits ---
+          const baseNum = extractBasePermitNum(permit.permit_num);
+
+          if (isBLDPermit(permit.permit_num)) {
+            // This IS a BLD permit → propagate its tags to companion permits
+            if (scope.scope_tags.length > 0) {
+              await client.query(
+                `UPDATE permits
+                 SET scope_tags = $1, project_type = $2, scope_classified_at = NOW(), scope_source = 'propagated'
+                 WHERE TRIM(SPLIT_PART(permit_num, ' ', 1) || ' ' || SPLIT_PART(permit_num, ' ', 2)) = $3
+                   AND permit_num !~ '\\sBLD(\\s|$)'
+                   AND permit_num ~ '\\s[A-Z]{2,4}(\\s|$)'`,
+                [scope.scope_tags, scope.project_type, baseNum]
+              );
+            }
+          } else if (/\s[A-Z]{2,4}(\s|$)/.test(permit.permit_num)) {
+            // This is a companion permit → look up its BLD sibling and copy tags
+            const { rows: bldRows } = await client.query(
+              `SELECT scope_tags, project_type FROM permits
+               WHERE TRIM(SPLIT_PART(permit_num, ' ', 1) || ' ' || SPLIT_PART(permit_num, ' ', 2)) = $1
+                 AND permit_num ~ '\\sBLD(\\s|$)'
+                 AND scope_tags IS NOT NULL
+                 AND array_length(scope_tags, 1) > 0
+               LIMIT 1`,
+              [baseNum]
+            );
+            if (bldRows.length > 0) {
+              await client.query(
+                `UPDATE permits SET scope_tags = $1, project_type = $2, scope_classified_at = NOW(), scope_source = 'propagated'
+                 WHERE permit_num = $3 AND revision_num = $4`,
+                [bldRows[0].scope_tags, bldRows[0].project_type, permit.permit_num, permit.revision_num]
+              );
+            }
           }
 
           await client.query('COMMIT');

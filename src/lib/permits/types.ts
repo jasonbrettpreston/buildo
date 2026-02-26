@@ -183,6 +183,8 @@ export interface PermitFilter {
   work?: string;
   ward?: string;
   trade_slug?: string;
+  project_type?: string;
+  scope_tags?: string[];
   min_cost?: number;
   max_cost?: number;
   search?: string;

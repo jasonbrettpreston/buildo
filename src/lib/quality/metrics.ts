@@ -16,6 +16,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     neighbourhoodCount,
     geocodingCount,
     coaCounts,
+    scopeCounts,
     freshnessCounts,
     lastSync,
   ] = await Promise.all([
@@ -26,6 +27,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     queryNeighbourhoodCount(),
     queryGeocodingCount(),
     queryCoaCounts(),
+    queryScopeCounts(),
     queryFreshnessCounts(),
     queryLastSync(),
   ]);
@@ -50,6 +52,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     permits_with_parcel: parcelCounts.permits_with_parcel,
     parcel_exact_matches: parcelCounts.exact_matches,
     parcel_name_matches: parcelCounts.name_matches,
+    parcel_spatial_matches: parcelCounts.spatial_matches,
     parcel_avg_confidence: parcelCounts.avg_confidence,
     permits_with_neighbourhood: neighbourhoodCount,
     permits_geocoded: geocodingCount,
@@ -58,6 +61,8 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     coa_avg_confidence: coaCounts.avg_confidence,
     coa_high_confidence: coaCounts.high_confidence,
     coa_low_confidence: coaCounts.low_confidence,
+    permits_with_scope: scopeCounts.permits_with_scope,
+    scope_project_type_breakdown: scopeCounts.breakdown,
     permits_updated_24h: freshnessCounts.updated_24h,
     permits_updated_7d: freshnessCounts.updated_7d,
     permits_updated_30d: freshnessCounts.updated_30d,
@@ -74,18 +79,19 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       permits_with_builder, builders_total, builders_enriched,
       builders_with_phone, builders_with_email, builders_with_website,
       builders_with_google, builders_with_wsib,
-      permits_with_parcel, parcel_exact_matches, parcel_name_matches, parcel_avg_confidence,
+      permits_with_parcel, parcel_exact_matches, parcel_name_matches, parcel_spatial_matches, parcel_avg_confidence,
       permits_with_neighbourhood,
       permits_geocoded,
       coa_total, coa_linked, coa_avg_confidence, coa_high_confidence, coa_low_confidence,
+      permits_with_scope, scope_project_type_breakdown,
       permits_updated_24h, permits_updated_7d, permits_updated_30d,
       last_sync_at, last_sync_status
     ) VALUES (
       CURRENT_DATE,
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-      $11, $12, $13, $14, $15, $16, $17, $18, $19,
-      $20, $21, $22, $23, $24, $25, $26, $27, $28,
-      $29, $30, $31
+      $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+      $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
+      $31, $32, $33, $34, $35
     )
     ON CONFLICT (snapshot_date) DO UPDATE SET
       total_permits = EXCLUDED.total_permits,
@@ -107,6 +113,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       permits_with_parcel = EXCLUDED.permits_with_parcel,
       parcel_exact_matches = EXCLUDED.parcel_exact_matches,
       parcel_name_matches = EXCLUDED.parcel_name_matches,
+      parcel_spatial_matches = EXCLUDED.parcel_spatial_matches,
       parcel_avg_confidence = EXCLUDED.parcel_avg_confidence,
       permits_with_neighbourhood = EXCLUDED.permits_with_neighbourhood,
       permits_geocoded = EXCLUDED.permits_geocoded,
@@ -115,6 +122,8 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       coa_avg_confidence = EXCLUDED.coa_avg_confidence,
       coa_high_confidence = EXCLUDED.coa_high_confidence,
       coa_low_confidence = EXCLUDED.coa_low_confidence,
+      permits_with_scope = EXCLUDED.permits_with_scope,
+      scope_project_type_breakdown = EXCLUDED.scope_project_type_breakdown,
       permits_updated_24h = EXCLUDED.permits_updated_24h,
       permits_updated_7d = EXCLUDED.permits_updated_7d,
       permits_updated_30d = EXCLUDED.permits_updated_30d,
@@ -130,11 +139,12 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       row.builders_enriched, row.builders_with_phone, row.builders_with_email,
       row.builders_with_website, row.builders_with_google, row.builders_with_wsib,
       row.permits_with_parcel, row.parcel_exact_matches, row.parcel_name_matches,
-      row.parcel_avg_confidence,
+      row.parcel_spatial_matches, row.parcel_avg_confidence,
       row.permits_with_neighbourhood,
       row.permits_geocoded,
       row.coa_total, row.coa_linked, row.coa_avg_confidence,
       row.coa_high_confidence, row.coa_low_confidence,
+      row.permits_with_scope, JSON.stringify(row.scope_project_type_breakdown),
       row.permits_updated_24h, row.permits_updated_7d, row.permits_updated_30d,
       row.last_sync_at, row.last_sync_status,
     ]
@@ -172,7 +182,7 @@ async function queryPermitCounts() {
   const rows = await query<{ total: string; active: string }>(
     `SELECT
        COUNT(*) as total,
-       COUNT(*) FILTER (WHERE status IN ('Issued', 'Under Review', 'Under Inspection')) as active
+       COUNT(*) FILTER (WHERE status IN ('Permit Issued', 'Revision Issued', 'Under Review', 'Inspection')) as active
      FROM permits`
   );
   return {
@@ -252,12 +262,14 @@ async function queryParcelCounts() {
     permits_with_parcel: string;
     exact_matches: string;
     name_matches: string;
+    spatial_matches: string;
     avg_confidence: string | null;
   }>(
     `SELECT
        COUNT(DISTINCT (permit_num, revision_num)) as permits_with_parcel,
        COUNT(*) FILTER (WHERE match_type = 'exact_address') as exact_matches,
        COUNT(*) FILTER (WHERE match_type = 'name_only') as name_matches,
+       COUNT(*) FILTER (WHERE match_type = 'spatial') as spatial_matches,
        AVG(confidence)::NUMERIC(4,3) as avg_confidence
      FROM permit_parcels`
   );
@@ -265,6 +277,7 @@ async function queryParcelCounts() {
     permits_with_parcel: parseInt(rows[0].permits_with_parcel, 10),
     exact_matches: parseInt(rows[0].exact_matches, 10),
     name_matches: parseInt(rows[0].name_matches, 10),
+    spatial_matches: parseInt(rows[0].spatial_matches, 10),
     avg_confidence: rows[0].avg_confidence ? parseFloat(rows[0].avg_confidence) : null,
   };
 }
@@ -305,6 +318,30 @@ async function queryCoaCounts() {
     avg_confidence: rows[0].avg_confidence ? parseFloat(rows[0].avg_confidence) : null,
     high_confidence: parseInt(rows[0].high_confidence, 10),
     low_confidence: parseInt(rows[0].low_confidence, 10),
+  };
+}
+
+async function queryScopeCounts() {
+  const [countRows, breakdownRows] = await Promise.all([
+    query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM permits WHERE project_type IS NOT NULL`
+    ),
+    query<{ project_type: string; count: string }>(
+      `SELECT project_type, COUNT(*) as count
+       FROM permits
+       WHERE project_type IS NOT NULL
+       GROUP BY project_type`
+    ),
+  ]);
+
+  const breakdown: Record<string, number> = {};
+  for (const row of breakdownRows) {
+    breakdown[row.project_type] = parseInt(row.count, 10);
+  }
+
+  return {
+    permits_with_scope: parseInt(countRows[0].count, 10),
+    breakdown: Object.keys(breakdown).length > 0 ? breakdown : null,
   };
 }
 

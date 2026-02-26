@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
     work: params.get('work') || undefined,
     ward: params.get('ward') || undefined,
     trade_slug: params.get('trade_slug') || undefined,
+    project_type: params.get('project_type') || undefined,
+    scope_tags: params.get('scope_tags') ? params.get('scope_tags')!.split(',') : undefined,
     min_cost: params.get('min_cost') ? Number(params.get('min_cost')) : undefined,
     max_cost: params.get('max_cost') ? Number(params.get('max_cost')) : undefined,
     search: params.get('search') || undefined,
@@ -52,6 +54,14 @@ export async function GET(request: NextRequest) {
   if (filter.max_cost != null) {
     conditions.push(`p.est_const_cost <= $${paramIdx++}`);
     values.push(filter.max_cost);
+  }
+  if (filter.project_type) {
+    conditions.push(`p.project_type = $${paramIdx++}`);
+    values.push(filter.project_type);
+  }
+  if (filter.scope_tags && filter.scope_tags.length > 0) {
+    conditions.push(`p.scope_tags && $${paramIdx++}::TEXT[]`);
+    values.push(filter.scope_tags);
   }
   if (filter.search) {
     conditions.push(
@@ -96,7 +106,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Fetch trade classifications for returned permits
-    let tradesByPermit: Record<string, { trade_slug: string; trade_name: string; color: string; confidence: number; tier: number; lead_score: number; phase: string }[]> = {};
+    const tradesByPermit: Record<string, { trade_slug: string; trade_name: string; color: string; confidence: number; tier: number; lead_score: number; phase: string }[]> = {};
     if (permits.length > 0) {
       const permitKeys = permits.map((p: Record<string, unknown>) => `${p.permit_num}--${p.revision_num}`);
       const tradeRows = await query(

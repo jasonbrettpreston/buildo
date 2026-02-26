@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { classifyScope, extractBasePermitNum } from '@/lib/classification/scope';
 
 export async function GET(
   request: NextRequest,
@@ -103,13 +104,46 @@ export async function GET(
       // neighbourhoods table may not exist yet
     }
 
+    // Compute scope classification on-the-fly if not in DB
+    const permit = permits[0];
+    const scopeTags = Array.isArray(permit.scope_tags) && permit.scope_tags.length > 0
+      ? permit.scope_tags
+      : null;
+
+    if (!scopeTags || !permit.project_type) {
+      try {
+        const scope = classifyScope(permit as unknown as Parameters<typeof classifyScope>[0]);
+        if (!permit.project_type) permit.project_type = scope.project_type;
+        if (!scopeTags) permit.scope_tags = scope.scope_tags;
+      } catch {
+        // Classification failure is non-fatal; permit still renders without tags
+      }
+    }
+
+    // Fetch linked permits (same base number, different permit)
+    let linkedPermits: Record<string, unknown>[] = [];
+    try {
+      const baseNum = extractBasePermitNum(permitNum);
+      linkedPermits = await query(
+        `SELECT permit_num, revision_num, permit_type, work, status, est_const_cost
+         FROM permits
+         WHERE TRIM(SPLIT_PART(permit_num, ' ', 1) || ' ' || SPLIT_PART(permit_num, ' ', 2)) = $1
+           AND NOT (permit_num = $2 AND revision_num = $3)
+         ORDER BY permit_num`,
+        [baseNum, permitNum, revisionNum]
+      );
+    } catch {
+      // Non-fatal; linked permits are optional
+    }
+
     return NextResponse.json({
-      permit: permits[0],
+      permit,
       trades,
       history,
       builder,
       parcel,
       neighbourhood,
+      linkedPermits,
     });
   } catch (err) {
     console.error('Error fetching permit detail:', err);

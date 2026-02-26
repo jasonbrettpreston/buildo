@@ -28,6 +28,7 @@ export interface DataQualitySnapshot {
   permits_with_parcel: number;
   parcel_exact_matches: number;
   parcel_name_matches: number;
+  parcel_spatial_matches: number;
   parcel_avg_confidence: number | null;
 
   // Neighbourhood
@@ -42,6 +43,10 @@ export interface DataQualitySnapshot {
   coa_avg_confidence: number | null;
   coa_high_confidence: number;
   coa_low_confidence: number;
+
+  // Scope classification
+  permits_with_scope: number;
+  scope_project_type_breakdown: Record<string, number> | null;
 
   // Data freshness
   permits_updated_24h: number;
