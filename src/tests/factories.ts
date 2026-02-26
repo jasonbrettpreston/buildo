@@ -11,6 +11,7 @@ import type {
 import type { Parcel } from '@/lib/parcels/types';
 import type { Neighbourhood } from '@/lib/neighbourhoods/types';
 import type { DataQualitySnapshot } from '@/lib/quality/types';
+import type { BuildingFootprint, ParcelBuilding } from '@/lib/massing/types';
 
 export function createMockRawPermit(
   overrides: Partial<RawPermitRecord> = {}
@@ -306,7 +307,52 @@ export function createMockDataQualitySnapshot(
     permits_updated_30d: 35000,
     last_sync_at: '2024-03-01T06:30:00Z',
     last_sync_status: 'completed',
+    building_footprints_total: 820000,
+    parcels_with_buildings: 540000,
     created_at: '2024-03-01T06:35:00Z',
+    ...overrides,
+  };
+}
+
+export function createMockBuildingFootprint(
+  overrides: Partial<BuildingFootprint> = {}
+): BuildingFootprint {
+  return {
+    id: 1,
+    source_id: 'BLD-001',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [[
+        [-79.5, 43.75],
+        [-79.4999, 43.75],
+        [-79.4999, 43.7501],
+        [-79.5, 43.7501],
+        [-79.5, 43.75],
+      ]],
+    },
+    footprint_area_sqm: 120.5,
+    footprint_area_sqft: 1297.0,
+    max_height_m: 9.5,
+    min_height_m: 0.0,
+    elev_z: 175.0,
+    estimated_stories: 3,
+    centroid_lat: 43.75005,
+    centroid_lng: -79.49995,
+    created_at: new Date('2024-01-01'),
+    ...overrides,
+  };
+}
+
+export function createMockParcelBuilding(
+  overrides: Partial<ParcelBuilding> = {}
+): ParcelBuilding {
+  return {
+    id: 1,
+    parcel_id: 1,
+    building_id: 1,
+    is_primary: true,
+    structure_type: 'primary',
+    linked_at: new Date('2024-01-01'),
     ...overrides,
   };
 }

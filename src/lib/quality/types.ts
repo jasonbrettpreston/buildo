@@ -48,6 +48,10 @@ export interface DataQualitySnapshot {
   permits_with_scope: number;
   scope_project_type_breakdown: Record<string, number> | null;
 
+  // Building massing
+  building_footprints_total: number;
+  parcels_with_buildings: number;
+
   // Data freshness
   permits_updated_24h: number;
   permits_updated_7d: number;

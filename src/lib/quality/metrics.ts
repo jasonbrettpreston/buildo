@@ -19,6 +19,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     scopeCounts,
     freshnessCounts,
     lastSync,
+    massingCounts,
   ] = await Promise.all([
     queryPermitCounts(),
     queryTradeCounts(),
@@ -30,6 +31,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     queryScopeCounts(),
     queryFreshnessCounts(),
     queryLastSync(),
+    queryMassingCounts(),
   ]);
 
   const row = {
@@ -68,6 +70,8 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     permits_updated_30d: freshnessCounts.updated_30d,
     last_sync_at: lastSync.last_sync_at,
     last_sync_status: lastSync.last_sync_status,
+    building_footprints_total: massingCounts.footprints_total,
+    parcels_with_buildings: massingCounts.parcels_with_buildings,
   };
 
   const result = await query<DataQualitySnapshot>(
@@ -85,13 +89,14 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       coa_total, coa_linked, coa_avg_confidence, coa_high_confidence, coa_low_confidence,
       permits_with_scope, scope_project_type_breakdown,
       permits_updated_24h, permits_updated_7d, permits_updated_30d,
-      last_sync_at, last_sync_status
+      last_sync_at, last_sync_status,
+      building_footprints_total, parcels_with_buildings
     ) VALUES (
       CURRENT_DATE,
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
       $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
       $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-      $31, $32, $33, $34, $35
+      $31, $32, $33, $34, $35, $36, $37
     )
     ON CONFLICT (snapshot_date) DO UPDATE SET
       total_permits = EXCLUDED.total_permits,
@@ -129,6 +134,8 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       permits_updated_30d = EXCLUDED.permits_updated_30d,
       last_sync_at = EXCLUDED.last_sync_at,
       last_sync_status = EXCLUDED.last_sync_status,
+      building_footprints_total = EXCLUDED.building_footprints_total,
+      parcels_with_buildings = EXCLUDED.parcels_with_buildings,
       created_at = NOW()
     RETURNING *`,
     [
@@ -147,6 +154,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       row.permits_with_scope, JSON.stringify(row.scope_project_type_breakdown),
       row.permits_updated_24h, row.permits_updated_7d, row.permits_updated_30d,
       row.last_sync_at, row.last_sync_status,
+      row.building_footprints_total, row.parcels_with_buildings,
     ]
   );
 
@@ -362,6 +370,26 @@ async function queryFreshnessCounts() {
     updated_7d: parseInt(rows[0].updated_7d, 10),
     updated_30d: parseInt(rows[0].updated_30d, 10),
   };
+}
+
+async function queryMassingCounts() {
+  try {
+    const rows = await query<{
+      footprints_total: string;
+      parcels_with_buildings: string;
+    }>(
+      `SELECT
+         (SELECT COUNT(*) FROM building_footprints) as footprints_total,
+         (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings) as parcels_with_buildings`
+    );
+    return {
+      footprints_total: parseInt(rows[0].footprints_total, 10),
+      parcels_with_buildings: parseInt(rows[0].parcels_with_buildings, 10),
+    };
+  } catch {
+    // Tables may not exist yet
+    return { footprints_total: 0, parcels_with_buildings: 0 };
+  }
 }
 
 async function queryLastSync() {

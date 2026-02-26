@@ -665,6 +665,86 @@ describe('Irregular Lot Display Logic', () => {
   });
 });
 
+describe('BuildingMassing Display Logic', () => {
+  // Extracted from src/components/permits/BuildingMassing.tsx
+  function formatMassingArea(sqft: number | null): string {
+    if (sqft == null) return 'N/A';
+    return `${Math.round(sqft).toLocaleString()} sq ft`;
+  }
+
+  function formatMassingHeight(meters: number | null): string {
+    if (meters == null) return 'N/A';
+    const ft = meters * 3.28084;
+    return `${meters.toFixed(1)} m (${ft.toFixed(1)} ft)`;
+  }
+
+  function formatStories(stories: number | null): string {
+    if (stories == null) return 'N/A';
+    return stories === 1 ? '1 storey' : `${stories} storeys`;
+  }
+
+  function formatCoverage(pct: number | null): string {
+    if (pct == null) return 'N/A';
+    return `${pct}%`;
+  }
+
+  function getStructureLabel(type: string): string {
+    switch (type) {
+      case 'garage': return 'Garage';
+      case 'shed': return 'Shed';
+      default: return 'Accessory';
+    }
+  }
+
+  it('formats footprint area with comma grouping', () => {
+    expect(formatMassingArea(1297)).toBe('1,297 sq ft');
+  });
+
+  it('formats null area as N/A', () => {
+    expect(formatMassingArea(null)).toBe('N/A');
+  });
+
+  it('formats height with metric and imperial', () => {
+    expect(formatMassingHeight(9.5)).toBe('9.5 m (31.2 ft)');
+  });
+
+  it('formats null height as N/A', () => {
+    expect(formatMassingHeight(null)).toBe('N/A');
+  });
+
+  it('formats single storey', () => {
+    expect(formatStories(1)).toBe('1 storey');
+  });
+
+  it('formats multiple storeys', () => {
+    expect(formatStories(3)).toBe('3 storeys');
+  });
+
+  it('formats null stories as N/A', () => {
+    expect(formatStories(null)).toBe('N/A');
+  });
+
+  it('formats coverage percentage', () => {
+    expect(formatCoverage(34.2)).toBe('34.2%');
+  });
+
+  it('formats null coverage as N/A', () => {
+    expect(formatCoverage(null)).toBe('N/A');
+  });
+
+  it('labels garage correctly', () => {
+    expect(getStructureLabel('garage')).toBe('Garage');
+  });
+
+  it('labels shed correctly', () => {
+    expect(getStructureLabel('shed')).toBe('Shed');
+  });
+
+  it('labels other as Accessory', () => {
+    expect(getStructureLabel('other')).toBe('Accessory');
+  });
+});
+
 describe('Date Formatting', () => {
   function formatDate(dateStr: string | null | undefined): string {
     if (!dateStr) return 'N/A';

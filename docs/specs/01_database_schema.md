@@ -27,7 +27,9 @@
 | 12 | `permit_parcels` | Junction table linking permits to parcels via address or spatial matching. Carries `match_type` (`exact_address`, `name_only`, or `spatial`) and `confidence`. UNIQUE constraint on `(permit_num, revision_num, parcel_id)`. FK to `parcels(id)`. |
 | 13 | `neighbourhoods` | Toronto neighbourhoods with Census 2021 data. 158 rows. Stores boundary polygon as JSONB, income/housing/education demographics. `neighbourhood_id` is UNIQUE (maps to Toronto `AREA_S_CD`). |
 | 14 | `permits.neighbourhood_id` | FK column added to `permits` table linking to `neighbourhoods.id` via point-in-polygon matching. Added by migration 014. |
-| 15 | `data_quality_snapshots` | Daily snapshot of matching/enrichment coverage metrics across all 6 data linking processes. `UNIQUE(snapshot_date)` for upsert. 35 columns tracking trade, builder, parcel, neighbourhood, geocoding, and CoA metrics plus freshness counters. |
+| 15 | `data_quality_snapshots` | Daily snapshot of matching/enrichment coverage metrics across all 6 data linking processes. `UNIQUE(snapshot_date)` for upsert. 37 columns tracking trade, builder, parcel, neighbourhood, geocoding, CoA, and massing metrics plus freshness counters. |
+| 16 | `building_footprints` | Toronto 3D Massing building polygons. Stores footprint geometry (JSONB), area (sqm/sqft), height attributes (`max_height_m`, `min_height_m`, `elev_z`), derived `estimated_stories`, and pre-computed centroid. Indexed on centroid for spatial queries and `source_id` for upserts. |
+| 17 | `parcel_buildings` | Junction table linking parcels to building footprints. Carries `is_primary` flag and `structure_type` classification (`primary`, `garage`, `shed`, `other`). UNIQUE constraint on `(parcel_id, building_id)`. FK to `parcels(id)` and `building_footprints(id)`. |
 
 ### Indexes
 
@@ -98,6 +100,9 @@ The `pg` Pool is configured from either `DATABASE_URL` (production) or individua
 | `migrations/014_permit_neighbourhood.sql` | Adds `neighbourhood_id` FK column to `permits` |
 | `migrations/015_data_quality_snapshots.sql` | Creates `data_quality_snapshots` table |
 | `migrations/022_parcel_irregularity.sql` | Adds `is_irregular` BOOLEAN column to `parcels` |
+| `migrations/023_building_footprints.sql` | Creates `building_footprints` table for Toronto 3D Massing data |
+| `migrations/024_parcel_buildings.sql` | Creates `parcel_buildings` junction table linking parcels to building footprints |
+| `migrations/025_quality_massing.sql` | Adds `building_footprints_total` and `parcels_with_buildings` columns to `data_quality_snapshots` |
 | `src/lib/db/client.ts` | PostgreSQL connection pool (`pg.Pool`), `query<T>()`, `getClient()` |
 | `scripts/migrate.js` | Migration runner -- reads SQL files from `/migrations/` in alphabetical order and executes them sequentially |
 | `src/lib/permits/types.ts` | TypeScript interfaces: `Permit`, `RawPermitRecord`, `PermitChange`, `SyncRun`, `SyncStats`, `Trade`, `TradeMatch`, `TradeMappingRule`, `Builder`, `PermitFilter` |

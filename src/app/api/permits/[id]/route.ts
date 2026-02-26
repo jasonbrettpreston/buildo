@@ -104,6 +104,49 @@ export async function GET(
       // neighbourhoods table may not exist yet
     }
 
+    // Fetch building massing data if parcel is linked (graceful fallback)
+    let massing = null;
+    try {
+      if (parcel && parcel.id) {
+        const buildings = await query(
+          `SELECT bf.footprint_area_sqft, bf.estimated_stories, bf.max_height_m,
+                  pb.is_primary, pb.structure_type
+           FROM parcel_buildings pb
+           JOIN building_footprints bf ON bf.id = pb.building_id
+           WHERE pb.parcel_id = $1
+           ORDER BY pb.is_primary DESC, bf.footprint_area_sqft DESC`,
+          [parcel.id]
+        );
+        if (buildings.length > 0) {
+          const primaryRow = buildings.find((b: Record<string, unknown>) => b.is_primary);
+          const accessoryRows = buildings.filter((b: Record<string, unknown>) => !b.is_primary);
+          const totalBuildingAreaSqft = buildings.reduce((sum: number, b: Record<string, unknown>) => {
+            const area = b.footprint_area_sqft != null ? parseFloat(String(b.footprint_area_sqft)) : 0;
+            return sum + area;
+          }, 0);
+          const lotSizeSqft = parcel.lot_size_sqft != null ? parseFloat(String(parcel.lot_size_sqft)) : null;
+          let coveragePct: number | null = null;
+          if (totalBuildingAreaSqft > 0 && lotSizeSqft && lotSizeSqft > 0) {
+            coveragePct = Math.min(Math.round((totalBuildingAreaSqft / lotSizeSqft) * 1000) / 10, 100);
+          }
+          massing = {
+            primary: primaryRow ? {
+              footprint_area_sqft: primaryRow.footprint_area_sqft != null ? parseFloat(String(primaryRow.footprint_area_sqft)) : null,
+              estimated_stories: primaryRow.estimated_stories != null ? parseInt(String(primaryRow.estimated_stories), 10) : null,
+              max_height_m: primaryRow.max_height_m != null ? parseFloat(String(primaryRow.max_height_m)) : null,
+            } : null,
+            accessory: accessoryRows.map((b: Record<string, unknown>) => ({
+              structure_type: b.structure_type,
+              footprint_area_sqft: b.footprint_area_sqft != null ? parseFloat(String(b.footprint_area_sqft)) : null,
+            })),
+            building_coverage_pct: coveragePct,
+          };
+        }
+      }
+    } catch {
+      // building_footprints/parcel_buildings tables may not exist yet
+    }
+
     // Compute scope classification on-the-fly if not in DB
     const permit = permits[0];
     const scopeTags = Array.isArray(permit.scope_tags) && permit.scope_tags.length > 0
@@ -144,6 +187,7 @@ export async function GET(
       parcel,
       neighbourhood,
       linkedPermits,
+      massing,
     });
   } catch (err) {
     console.error('Error fetching permit detail:', err);

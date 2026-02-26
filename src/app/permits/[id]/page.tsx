@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/Badge';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import PropertyPhoto from '@/components/permits/PropertyPhoto';
 import NeighbourhoodProfile from '@/components/permits/NeighbourhoodProfile';
+import BuildingMassing from '@/components/permits/BuildingMassing';
+import type { BuildingMassingInfo } from '@/lib/massing/types';
 import { PROJECT_TYPE_CONFIG, formatScopeTag, getScopeTagColor } from '@/lib/classification/scope';
 import type { ProjectType } from '@/lib/classification/scope';
 
@@ -52,6 +54,7 @@ interface PermitDetail {
   parcel: ParcelInfo | null;
   neighbourhood: Record<string, unknown> | null;
   linkedPermits: LinkedPermit[];
+  massing: BuildingMassingInfo | null;
 }
 
 export default function PermitDetailPage() {
@@ -289,6 +292,9 @@ export default function PermitDetailPage() {
             </p>
           )}
         </Section>
+
+        {/* Building Massing */}
+        <BuildingMassing massing={data.massing} />
 
         {/* Neighbourhood Profile - always visible */}
         <NeighbourhoodProfile neighbourhood={data.neighbourhood as {

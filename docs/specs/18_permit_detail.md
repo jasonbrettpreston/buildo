@@ -54,6 +54,19 @@ The composite ID uses double-dash (`--`) as separator, matching the existing API
 
 Section is hidden entirely if no parcel is linked to the permit.
 
+**Section 3a: Building Massing** (from building footprint data)
+| Field | Source | Display |
+|-------|--------|---------|
+| Footprint Area | `building_footprints.footprint_area_sqft` | Formatted number + "sq ft" |
+| Est. Stories | `building_footprints.estimated_stories` | Number (derived from MAX_HEIGHT / 3.0m) |
+| Est. Height | `building_footprints.max_height_m` | Meters + feet (e.g. "9.5 m (31.2 ft)") |
+| Building Coverage | Computed: `footprint_area / lot_size * 100` | Percentage |
+| Accessory Structures | `parcel_buildings` where `is_primary = false` | List with type badge (Garage/Shed/Accessory) + area |
+
+Data comes from Toronto 3D Massing dataset (Spec 31). One parcel may have multiple building polygons — the largest is classified as primary, smaller ones as accessory structures (garage, shed, or other based on area thresholds).
+
+Section shows "Building footprint data not available for this property." when no massing data is linked. Source attribution: "City of Toronto 3D Massing, 2025".
+
 **Section 4: Project Details**
 | Field | Source Column | Display |
 |-------|-------------|---------|
