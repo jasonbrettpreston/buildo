@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { FilterPanel } from '@/components/search/FilterPanel';
 import { PermitCard } from '@/components/permits/PermitCard';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -30,7 +30,7 @@ interface PermitResult {
   }[];
 }
 
-export default function SearchPage() {
+function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -198,5 +198,19 @@ export default function SearchPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <p className="text-gray-500">Loading search...</p>
+        </div>
+      }
+    >
+      <SearchContent />
+    </Suspense>
   );
 }

@@ -16,14 +16,29 @@ interface SyncRun {
   duration_ms: number | null;
 }
 
+interface AdminStats {
+  total_permits: number;
+  active_permits: number;
+  total_builders: number;
+  permits_with_builder: number;
+  permits_with_parcel: number;
+  permits_with_neighbourhood: number;
+}
+
 export default function AdminPage() {
   const [syncRuns, setSyncRuns] = useState<SyncRun[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/sync')
-      .then((res) => res.json())
-      .then((data) => setSyncRuns(data.runs || []))
+    Promise.all([
+      fetch('/api/sync').then((r) => r.json()),
+      fetch('/api/admin/stats').then((r) => r.json()),
+    ])
+      .then(([syncData, statsData]) => {
+        setSyncRuns(syncData.runs || []);
+        setStats(statsData);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -84,6 +99,36 @@ export default function AdminPage() {
               label="Duration"
               value={latest.duration_ms ? `${(latest.duration_ms / 1000).toFixed(1)}s` : 'N/A'}
             />
+          </div>
+        )}
+
+        {/* Data coverage stats */}
+        {stats && (
+          <div>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              Data Coverage
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <StatCard
+                label="Active Permits"
+                value={stats.active_permits?.toLocaleString() || '0'}
+              />
+              <StatCard
+                label="With Builder Info"
+                value={stats.permits_with_builder?.toLocaleString() || '0'}
+                color="text-blue-600"
+              />
+              <StatCard
+                label="With Property Data"
+                value={stats.permits_with_parcel?.toLocaleString() || '0'}
+                color="text-purple-600"
+              />
+              <StatCard
+                label="With Neighbourhood"
+                value={stats.permits_with_neighbourhood?.toLocaleString() || '0'}
+                color="text-teal-600"
+              />
+            </div>
           </div>
         )}
 

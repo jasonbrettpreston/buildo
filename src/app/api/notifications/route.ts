@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   const conditions = ['user_id = $1'];
   const params: unknown[] = [userId];
-  let paramIdx = 2;
+  const paramIdx = 2;
 
   if (unreadOnly) {
     conditions.push('is_read = false');

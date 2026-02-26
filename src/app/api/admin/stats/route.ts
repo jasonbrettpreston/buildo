@@ -15,6 +15,10 @@ export async function GET() {
       recentPermitsResult,
       lastSyncResult,
       pendingNotificationsResult,
+      activePermitsResult,
+      permitsWithBuilderResult,
+      permitsWithParcelResult,
+      permitsWithNeighbourhoodResult,
     ] = await Promise.all([
       query<{ count: string }>(
         'SELECT COUNT(*)::text AS count FROM permits'
@@ -38,6 +42,22 @@ export async function GET() {
       query<{ count: string }>(
         'SELECT COUNT(*)::text AS count FROM notifications WHERE is_sent = false'
       ),
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM permits
+         WHERE status IN ('Permit Issued', 'Revision Issued', 'Under Review', 'Inspection')`
+      ),
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM permits
+         WHERE builder_name IS NOT NULL AND builder_name != ''`
+      ),
+      query<{ count: string }>(
+        `SELECT COUNT(DISTINCT (pp.permit_num, pp.revision_num))::text AS count
+         FROM permit_parcels pp`
+      ),
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM permits
+         WHERE neighbourhood_id IS NOT NULL AND neighbourhood_id > 0`
+      ),
     ]);
 
     return NextResponse.json({
@@ -48,6 +68,10 @@ export async function GET() {
       permits_this_week: parseInt(recentPermitsResult[0]?.count ?? '0', 10),
       last_sync_at: lastSyncResult[0]?.last_sync_at ?? null,
       notifications_pending: parseInt(pendingNotificationsResult[0]?.count ?? '0', 10),
+      active_permits: parseInt(activePermitsResult[0]?.count ?? '0', 10),
+      permits_with_builder: parseInt(permitsWithBuilderResult[0]?.count ?? '0', 10),
+      permits_with_parcel: parseInt(permitsWithParcelResult[0]?.count ?? '0', 10),
+      permits_with_neighbourhood: parseInt(permitsWithNeighbourhoodResult[0]?.count ?? '0', 10),
     });
   } catch (err) {
     console.error('[admin/stats] Error fetching stats:', err);

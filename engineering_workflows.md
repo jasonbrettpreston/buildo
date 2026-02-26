@@ -18,6 +18,10 @@
 | **`WF8`** | Lock | "Initialize Workflow 8. Create Feature Audit." |
 | **`WF9`** | Wire | "Initialize Workflow 9. Connect Feature to Data." |
 | **`WF10`**| Seed | "Initialize Workflow 10. Generate Test Data." |
+| **`WF11`**| Asset | "Initialize Workflow 11. Generate Assets." |
+| **`WF12`**| Launch | "Initialize Workflow 12. Safe Launch App." |
+| **`WF13`**| Perf | "Initialize Workflow 13. Build & Performance Audit." |
+| **`WF14`**| Schema | "Initialize Workflow 14. Schema Evolution." |
 
 
 ## 🛡️ The Prime Directive
@@ -461,11 +465,16 @@ Create a `.cursor/active_task.md` file using the template below.
     * **Target:** `apps/[app]`, `scripts/seeders/`
 
     ## 🛠️ Execution Plan (The Golden Path)
-    - [ ] **🛑 The Purge:** Kill all `node` processes. Delete `.next` or `.expo` caches.
-    - [ ] **🏗️ Build Check:** Run `npm run build --workspace=apps/[app]` to verify TypeScript integrity.
-    - [ ] **💉 State Injection:** Run specific seeder (e.g., `npx tsx scripts/seeders/seed-dashboard.ts`) to ensure DB data exists.
-    - [ ] **🛰️ Data Probe:** Run `npx tsx scripts/probe-data.ts` to verify DB connection *before* UI loads.
-    - [ ] **🚀 Ignition:** Run `npm run dev --workspace=apps/[app]`.
+    - [ ] **🛑 The Purge:** Kill all `node` processes. Delete `.next` cache.
+    - [ ] **🐘 Database Boot:** Ensure PostgreSQL is running. Check with `pg_isready`. If not running:
+        - **Scoop install:** `pg_ctl start -D "$HOME/scoop/apps/postgresql/current/data" -l "$HOME/scoop/apps/postgresql/current/logfile"`
+        - **WSL 2 install:** `sudo service postgresql start`
+        - **Windows service:** Should auto-start (check Services panel)
+        - **Verify:** `pg_isready -h localhost -p 5432` must return "accepting connections"
+        - **First-time setup:** If `buildo` DB doesn't exist: `createdb -U postgres buildo && npm run migrate && npm run seed:trades`
+    - [ ] **🏗️ Build Check:** Run `npm run build` to verify TypeScript integrity.
+    - [ ] **🛰️ Data Probe:** Test PostgreSQL connectivity by running a quick query via the app's db client.
+    - [ ] **🚀 Ignition:** Run `npm run dev` and verify the app loads at `http://localhost:3000`.
     ```
 
 3.  **STOP SEQUENCE (CRITICAL):**

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 interface Builder {
@@ -17,7 +17,7 @@ interface Builder {
   enriched_at: string | null;
 }
 
-export default function BuildersPage() {
+function BuildersContent() {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get('search') || '';
   const [search, setSearch] = useState(initialSearch);
@@ -151,5 +151,19 @@ export default function BuildersPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function BuildersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <p className="text-gray-500">Loading builders...</p>
+        </div>
+      }
+    >
+      <BuildersContent />
+    </Suspense>
   );
 }
