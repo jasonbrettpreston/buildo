@@ -13,6 +13,11 @@ The permit detail page displays the complete record for a single building permit
 
 The composite ID uses double-dash (`--`) as separator, matching the existing API convention in `src/app/api/permits/[id]/route.ts`.
 
+**Pre-Permit (CoA) URLs:** CoA application numbers contain slashes (e.g., `A0246/23EYK`), which break Next.js `[id]` path segment matching. To avoid 404 errors, slashes are replaced with tildes (`~`) in the URL:
+* `mapCoaToPermitDto()` encodes: `permit_num: "COA-A0246~23EYK"`
+* URL becomes: `/permits/COA-A0246~23EYK--00`
+* API route decodes: `appNum = permitNum.replace(/^COA-/, '').replace(/~/g, '/')`
+
 ### Page Sections
 
 **Section 1: Header**
@@ -82,7 +87,9 @@ Section shows "Building footprint data not available for this property." when no
 | Housing Units | `housing_units` | Number |
 | Dwelling Units Created | `dwelling_units_created` | Number |
 | Dwelling Units Lost | `dwelling_units_lost` | Number |
-| Description | `description` | Full text (collapsible if > 200 chars) |
+| Description | `description` | Full text (collapsible if > 200 chars). Scope tags rendered as colored outline badges below the description text (from `scope_tags` array). |
+
+**Note:** Scope classification (project type + scope tags) is conveyed exclusively through the scope tag badges in the Description section. There is no standalone "Work Scope" section — scope tags provide more granular information (e.g., "Deck", "Basement Finish", "Rear Addition") than the single project_type badge.
 
 **Section 4: Timeline**
 | Field | Source Column | Display |

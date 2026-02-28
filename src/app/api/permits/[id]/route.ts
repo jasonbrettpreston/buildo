@@ -3,6 +3,9 @@ import { query } from '@/lib/db/client';
 import { classifyScope, classifyUseType, extractBasePermitNum } from '@/lib/classification/scope';
 import { resolveStories, inferMassingUseType } from '@/lib/massing/geometry';
 import type { MassingUseType } from '@/lib/massing/geometry';
+import { getCoaByPermit } from '@/lib/coa/repository';
+import { mapCoaToPermitDto } from '@/lib/coa/pre-permits';
+import type { CoaApplication } from '@/lib/coa/types';
 
 export async function GET(
   request: NextRequest,
@@ -20,6 +23,67 @@ export async function GET(
   }
 
   const [permitNum, revisionNum] = parts;
+
+  // Handle COA- prefixed IDs (Pre-Permit detail from coa_applications)
+  if (permitNum.startsWith('COA-')) {
+    const appNum = permitNum.replace(/^COA-/, '').replace(/~/g, '/');
+    try {
+      const rows = await query<CoaApplication>(
+        `SELECT
+          id,
+          application_number  AS application_num,
+          address,
+          street_num,
+          street_name,
+          ward,
+          status,
+          decision,
+          decision_date,
+          hearing_date,
+          description,
+          applicant,
+          sub_type,
+          linked_permit_num,
+          NULL                AS linked_permit_revision,
+          linked_confidence   AS link_confidence,
+          first_seen_at       AS created_at
+        FROM coa_applications
+        WHERE application_number = $1
+        LIMIT 1`,
+        [appNum]
+      );
+      if (rows.length === 0) {
+        return NextResponse.json({ error: 'Pre-Permit not found' }, { status: 404 });
+      }
+      const coa = rows[0];
+      const permitDto = mapCoaToPermitDto({
+        application_num: coa.application_num,
+        address: coa.address,
+        street_num: coa.street_num,
+        street_name: coa.street_name,
+        ward: coa.ward,
+        decision: coa.decision,
+        decision_date: coa.decision_date ? String(coa.decision_date) : null,
+        hearing_date: coa.hearing_date ? String(coa.hearing_date) : null,
+        description: coa.description,
+        applicant: coa.applicant,
+      });
+      return NextResponse.json({
+        permit: permitDto,
+        trades: [],
+        history: [],
+        builder: null,
+        parcel: null,
+        neighbourhood: null,
+        linkedPermits: [],
+        massing: null,
+        coaApplications: [coa],
+      });
+    } catch (err) {
+      console.error('Error fetching pre-permit detail:', err);
+      return NextResponse.json({ error: 'Failed to fetch pre-permit' }, { status: 500 });
+    }
+  }
 
   try {
     // Fetch permit
@@ -106,6 +170,9 @@ export async function GET(
       // neighbourhoods table may not exist yet
     }
 
+    // Compute scope classification on-the-fly if not in DB
+    const permit = permits[0];
+
     // Fetch building massing data if parcel is linked (graceful fallback)
     let massing = null;
     try {
@@ -159,9 +226,6 @@ export async function GET(
     } catch {
       // building_footprints/parcel_buildings tables may not exist yet
     }
-
-    // Compute scope classification on-the-fly if not in DB
-    const permit = permits[0];
     const scopeTags = Array.isArray(permit.scope_tags) && permit.scope_tags.length > 0
       ? permit.scope_tags
       : null;
@@ -192,6 +256,14 @@ export async function GET(
       // Non-fatal; linked permits are optional
     }
 
+    // Fetch linked CoA applications (Committee of Adjustment)
+    let coaApplications: Record<string, unknown>[] = [];
+    try {
+      coaApplications = await getCoaByPermit(permitNum, revisionNum);
+    } catch {
+      // Non-fatal; CoA data is optional
+    }
+
     return NextResponse.json({
       permit,
       trades,
@@ -201,6 +273,7 @@ export async function GET(
       neighbourhood,
       linkedPermits,
       massing,
+      coaApplications,
     });
   } catch (err) {
     console.error('Error fetching permit detail:', err);

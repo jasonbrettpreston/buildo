@@ -16,11 +16,27 @@ The search and filter feature provides full-text search and faceted filtering ac
 * **Minimum characters:** 2 characters required before search executes.
 * **Search examples:** "100 Queen Street", "plumbing renovation", "ACME Construction", "12 storey condo".
 
+### Source Toggle (Building Permits / Pre-Permits)
+A segmented control at the top of the filter panel switches between two data sources:
+
+| Source | Query Param | Description |
+|--------|------------|-------------|
+| **Building Permits** (default) | _(none)_ | Standard permits from the `permits` table |
+| **Pre-Permits (Upcoming)** | `source=pre_permits` | Approved CoA applications not yet linked to a building permit (< 90 days). See Spec 12. |
+
+**Behavior when Pre-Permits is active:**
+* Filters that don't apply to CoA data are **hidden**: permit_type, structure_type, work, trade, cost range, sort.
+* Filters that remain active: **search** (text search on CoA address/description/applicant), **ward**.
+* The search text input placeholder changes to "Search pre-permits by address, description, applicant..."
+* Pre-permit results use the standard PermitCard with purple "Pre-Permit (Upcoming)" badge.
+* Builder field displays `applicant` (CONTACT_NAME from CKAN). When no contact name exists, builder section is hidden (not populated from SUB_TYPE). The `sub_type` field is stored separately in `coa_applications.sub_type` for reference.
+
 ### Faceted Filters
 Filters are applied alongside or independently from text search. All filters are passed as query parameters to `GET /api/permits`.
 
 | Filter | UI Element | Query Param | Values |
 |--------|-----------|-------------|--------|
+| Source | Segmented control | `source` | _(default: building permits)_, `pre_permits` |
 | Status | Dropdown | `status` | Inspection, Permit Issued, Revision Issued, Under Review, Issuance Pending, Application On Hold, Work Not Started, Revocation Pending, Pending Cancellation, Abandoned |
 | Permit Type | Dropdown | `permit_type` | Small Residential Projects, Plumbing(PS), Mechanical(MS), Building Additions/Alterations, Drain and Site Service, New Houses, Fire/Security Upgrade, Demolition Folder (DM), New Building, Residential Building Permit, Non-Residential Building Permit, Designated Structures, Temporary Structures, Partial Permit |
 | Structure Type | Dropdown | `structure_type` | SFD - Detached, SFD - Semi-Detached, Office, Apartment Building, SFD - Townhouse, Retail Store, Multiple Unit Building, 2 Unit - Detached, Multiple Use/Non Residential, Other, Industrial, Laneway / Rear Yard Suite, Restaurant 30 Seats or Less, Stacked Townhouses, Mixed Use/Res w Non Res |
@@ -196,6 +212,8 @@ Query Parameters:
 * [ ] **Rule 4:** URL deserialization: URL query params correctly parsed into filter state object; invalid values ignored.
 * [ ] **Rule 5:** Multi-select serialization: multiple status values joined with comma; deserialized back to array.
 * [ ] **Rule 6:** Sort default logic: `relevance` used when search text present; `issued_date` used when no search text.
+* [ ] **Rule 7:** Source toggle: setting source to `pre_permits` passes `source=pre_permits` query param to API.
+* [ ] **Rule 8:** Pre-permit search: API returns CoA results filtered by search text and/or ward when `source=pre_permits`.
 
 ### B. UI Layer (`search.ui.test.tsx`)
 * [ ] **Rule 1:** Filter panel renders all filter options: status, permit_type, ward, trade, cost range, date range.

@@ -20,6 +20,7 @@ export interface CoaApplication {
   hearing_date: Date | null;
   description: string;
   applicant: string;
+  sub_type: string | null;
   linked_permit_num: string | null;
   linked_permit_revision: string | null;
   link_confidence: number | null;
