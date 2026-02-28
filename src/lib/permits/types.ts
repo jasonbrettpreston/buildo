@@ -174,6 +174,25 @@ export interface Builder {
 }
 
 // ---------------------------------------------------------------------------
+// Product classification
+// ---------------------------------------------------------------------------
+export interface ProductGroup {
+  id: number;
+  slug: string;
+  name: string;
+  sort_order: number;
+}
+
+export interface ProductMatch {
+  permit_num: string;
+  revision_num: string;
+  product_id: number;
+  product_slug: string;
+  product_name: string;
+  confidence: number;
+}
+
+// ---------------------------------------------------------------------------
 // Filter / query params
 // ---------------------------------------------------------------------------
 export interface PermitFilter {

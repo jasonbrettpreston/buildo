@@ -8,8 +8,7 @@ import PropertyPhoto from '@/components/permits/PropertyPhoto';
 import NeighbourhoodProfile from '@/components/permits/NeighbourhoodProfile';
 import BuildingMassing from '@/components/permits/BuildingMassing';
 import type { BuildingMassingInfo } from '@/lib/massing/types';
-import { PROJECT_TYPE_CONFIG, formatScopeTag, getScopeTagColor } from '@/lib/classification/scope';
-import type { ProjectType } from '@/lib/classification/scope';
+import { formatScopeTag, getScopeTagColor } from '@/lib/classification/scope';
 
 interface ParcelInfo {
   lot_size_sqft: number | null;
@@ -30,6 +29,16 @@ interface LinkedPermit {
   work: string | null;
   status: string | null;
   est_const_cost: number | null;
+}
+
+interface CoaApplicationInfo {
+  application_num: string;
+  decision: string | null;
+  decision_date: string | null;
+  hearing_date: string | null;
+  description: string | null;
+  applicant: string | null;
+  link_confidence: number | null;
 }
 
 interface PermitDetail {
@@ -55,6 +64,7 @@ interface PermitDetail {
   neighbourhood: Record<string, unknown> | null;
   linkedPermits: LinkedPermit[];
   massing: BuildingMassingInfo | null;
+  coaApplications: CoaApplicationInfo[];
 }
 
 export default function PermitDetailPage() {
@@ -150,16 +160,6 @@ export default function PermitDetailPage() {
             </div>
           </Section>
         )}
-
-        {/* Work Scope — Project Type badge only */}
-        {p.project_type && (() => {
-          const config = PROJECT_TYPE_CONFIG[p.project_type as ProjectType] || PROJECT_TYPE_CONFIG.other;
-          return (
-            <Section title="Work Scope">
-              <Badge label={config.label} color={config.color} />
-            </Section>
-          );
-        })()}
 
         {/* Builder - always visible */}
         <Section title="Builder">
@@ -367,6 +367,60 @@ export default function PermitDetailPage() {
                   </a>
                 );
               })}
+            </div>
+          </Section>
+        )}
+
+        {/* CoA Applications — only shown when linked CoA data exists */}
+        {data.coaApplications && data.coaApplications.length > 0 && (
+          <Section title="CoA Application">
+            <p className="text-xs text-gray-500 mb-3">
+              Committee of Adjustment variance approvals linked to this permit
+            </p>
+            <div className="space-y-3">
+              {data.coaApplications.map((coa) => (
+                <div key={coa.application_num} className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-mono font-semibold text-purple-700 bg-purple-100 rounded px-1.5 py-0.5">
+                      {coa.application_num}
+                    </span>
+                    {coa.decision && (
+                      <Badge label={coa.decision} color="#7C3AED" />
+                    )}
+                    {coa.link_confidence != null && (
+                      <span className="text-xs text-gray-400">
+                        {Math.round(coa.link_confidence * 100)}% match
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-2">
+                    {coa.hearing_date && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Hearing</p>
+                        <p className="text-sm text-gray-900">{formatDate(coa.hearing_date)}</p>
+                      </div>
+                    )}
+                    {coa.decision_date && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Decision</p>
+                        <p className="text-sm text-gray-900">{formatDate(coa.decision_date)}</p>
+                      </div>
+                    )}
+                    {coa.applicant && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Applicant</p>
+                        <p className="text-sm text-gray-900">{coa.applicant}</p>
+                      </div>
+                    )}
+                  </div>
+                  {coa.description && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Variance Details</p>
+                      <p className="text-sm text-gray-700">{coa.description}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </Section>
         )}

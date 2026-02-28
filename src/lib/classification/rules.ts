@@ -214,9 +214,18 @@ export const TIER_3_RULES: TradeMappingRule[] = [
   rule(20, 3, 'description', 'damp.*proof|membrane',     0.55, 0, 6),
 ];
 
+/**
+ * ALL_RULES now contains only Tier 1 rules.
+ * Tier 2/3 arrays are kept for reference but deprecated — the tag-trade matrix
+ * (tag-trade-matrix.ts) replaces Tier 2/3 classification for broad-scope permits.
+ */
 export const ALL_RULES: TradeMappingRule[] = [
   ...TIER_1_RULES,
-  ...TIER_2_RULES,
-  ...STRUCTURE_TYPE_RULES,
-  ...TIER_3_RULES,
 ];
+
+/** @deprecated Use tag-trade-matrix.ts instead. Kept for reference only. */
+export const DEPRECATED_TIER_2_RULES = TIER_2_RULES;
+/** @deprecated Use tag-trade-matrix.ts instead. Kept for reference only. */
+export const DEPRECATED_STRUCTURE_TYPE_RULES = STRUCTURE_TYPE_RULES;
+/** @deprecated Use tag-trade-matrix.ts instead. Kept for reference only. */
+export const DEPRECATED_TIER_3_RULES = TIER_3_RULES;

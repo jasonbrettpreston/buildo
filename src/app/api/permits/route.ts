@@ -1,9 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import type { PermitFilter } from '@/lib/permits/types';
+import { getUpcomingLeads } from '@/lib/coa/pre-permits';
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
+
+  // Pre-Permits source: return upcoming CoA leads instead of building permits
+  const source = params.get('source');
+  if (source === 'pre_permits') {
+    try {
+      const limit = Math.min(Number(params.get('limit') || '50'), 100);
+      const search = params.get('search') || undefined;
+      const ward = params.get('ward') || undefined;
+      const leads = await getUpcomingLeads({ limit, search, ward });
+      return NextResponse.json({
+        data: leads.map((l) => ({ ...l, trades: [] })),
+        pagination: { page: 1, limit, total: leads.length, total_pages: 1 },
+      });
+    } catch (err) {
+      console.error('Error fetching pre-permits:', err);
+      return NextResponse.json(
+        { error: 'Failed to fetch pre-permits' },
+        { status: 500 }
+      );
+    }
+  }
 
   const filter: PermitFilter = {
     status: params.get('status') || undefined,

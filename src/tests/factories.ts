@@ -7,6 +7,8 @@ import type {
   Builder,
   SyncRun,
   PermitChange,
+  ProductGroup,
+  ProductMatch,
 } from '@/lib/permits/types';
 import type { Parcel } from '@/lib/parcels/types';
 import type { Neighbourhood } from '@/lib/neighbourhoods/types';
@@ -355,6 +357,32 @@ export function createMockParcelBuilding(
     match_type: 'polygon',
     confidence: 0.90,
     linked_at: new Date('2024-01-01'),
+    ...overrides,
+  };
+}
+
+export function createMockProductGroup(
+  overrides: Partial<ProductGroup> = {}
+): ProductGroup {
+  return {
+    id: 1,
+    slug: 'kitchen-cabinets',
+    name: 'Kitchen Cabinets',
+    sort_order: 1,
+    ...overrides,
+  };
+}
+
+export function createMockProductMatch(
+  overrides: Partial<ProductMatch> = {}
+): ProductMatch {
+  return {
+    permit_num: '24 101234',
+    revision_num: '01',
+    product_id: 1,
+    product_slug: 'kitchen-cabinets',
+    product_name: 'Kitchen Cabinets',
+    confidence: 0.75,
     ...overrides,
   };
 }

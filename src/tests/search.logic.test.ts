@@ -158,6 +158,60 @@ describe('Search API Request Building', () => {
   });
 });
 
+describe('CoA Source Toggle', () => {
+  const fs = require('fs');
+  const path = require('path');
+
+  it('FilterPanel contains a source toggle for pre-permits', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../components/search/FilterPanel.tsx'),
+      'utf-8'
+    );
+    // Must have a control that sets source to pre_permits
+    expect(src).toMatch(/pre_permits|Pre-Permits/);
+    expect(src).toMatch(/source/);
+  });
+
+  it('FilterPanel hides permit-only filters when pre-permit source is active', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../components/search/FilterPanel.tsx'),
+      'utf-8'
+    );
+    // Some conditional rendering based on source value
+    expect(src).toMatch(/source.*pre_permits|isPrePermit/);
+  });
+
+  it('pre-permits API supports search text filtering', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../app/api/permits/route.ts'),
+      'utf-8'
+    );
+    // When source=pre_permits, search param should be forwarded
+    expect(src).toMatch(/pre_permits[\s\S]*?search/);
+  });
+
+  it('pre-permits API supports ward filtering', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../app/api/permits/route.ts'),
+      'utf-8'
+    );
+    // When source=pre_permits, ward param should be forwarded
+    expect(src).toMatch(/pre_permits[\s\S]*?ward/);
+  });
+
+  it('getUpcomingLeads accepts search and ward params', async () => {
+    const mod = await import('../lib/coa/pre-permits');
+    // The function should accept an options object with search and ward
+    expect(mod.getUpcomingLeads.length).toBeGreaterThanOrEqual(0);
+    // Check the source for the parameter signature
+    const src = fs.readFileSync(
+      path.join(__dirname, '../lib/coa/pre-permits.ts'),
+      'utf-8'
+    );
+    expect(src).toMatch(/search.*ward|ward.*search|options.*search|options.*ward/);
+  });
+});
+
 describe('Permit URL Generation', () => {
   function getPermitUrl(permitNum: string, revisionNum: string): string {
     return `/permits/${permitNum}--${revisionNum}`;

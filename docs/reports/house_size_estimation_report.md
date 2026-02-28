@@ -1,4 +1,28 @@
-run
+# Building Footprint Estimation Strategy
+
+**Objective:** Estimate the existing square footage and physical footprint of a house on a specific lot to understand the scope of a renovation or demolition/rebuild project, leveraging available data and Street View imagery.
+
+---
+
+## 🏗️ Approach 1: Deterministic Open Data (The "Golden Record")
+
+Before relying on predictive computer vision, the most accurate method to determine an existing house's size is to query the municipality's structural records. 
+
+### The Data Sources: Parcels vs. Building Polygons
+It is a common misconception that property lines and building outlines are the same thing. In the City of Toronto's Open Data Architecture, they are maintained as two completely separate datasets:
+
+1. **Property Boundaries (Parcels):** This is the dataset we currently have loaded in the Buildo database (~500k rows). It defines the legal, mathematical property lines owned by the resident (the lot). It tells us where a house *can* be built, but knows nothing about the physical structures *currently* sitting on that lot.
+2. **3D Massing (Building Polygons):** This is a separate dataset maintained by the city, often updated alongside LiDAR scans and building permits. This dataset maps the precise polygonal footprint of every physical building structure in the city. A single parcel might contain multiple building polygons (e.g., a main house and a detached garage).
+
+#### 3D Massing Characteristics & Update Frequency
+* **Update Frequency:** According to the Toronto Open Data portal, the 3D Massing dataset is refreshed **Annually**. This means newly built homes or demolitions might have a 1-to-12 month lag before appearing in the dataset.
+* **Accessory Structures (Garages/Sheds):** Because this dataset maps *physical objects* rather than legal boundaries, a single residential parcel will often return multiple intersecting polygons. The primary polygon (usually the largest) is the main house, while smaller separate polygons are detached garages or large sheds.
+* **Pools:** The 3D Massing dataset *does not* typically map below-ground structures or flat surfaces like residential swimming pools. However, Toronto does maintain a separate "Building Permits - Pool Enclosures" dataset if pool verification is needed.
+* **Derived Data:** Beyond just the 2D footprint polygon, the massing dataset includes crucial Z-axis verticality data. 
+  * `MAX_HEIGHT`: Useful for calculating total building volume.
+  * `MIN_HEIGHT`: Useful for determining if a structure is elevated or sits on a podium.
+  * `ELEVZ`: Base elevation above sea level.
+  * **Note:** It does *not* explicitly list the number of stories; that must be mathematically derived by dividing `MAX_HEIGHT` by a standard floor height (e.g., 3 meters / 10 feet per story).
 
 ### Implementation Strategy
 To extract the exact footprint of a house:

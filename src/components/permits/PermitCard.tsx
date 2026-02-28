@@ -72,6 +72,7 @@ const STATUS_COLORS: Record<string, string> = {
   'Issuance Pending': '#CA8A04',
   'Application On Hold': '#9333EA',
   'Application Received': '#9333EA',
+  'Pre-Permit (Upcoming)': '#7C3AED',
   'Work Not Started': '#6B7280',
   'Revocation Pending': '#DC2626',
   'Pending Cancellation': '#DC2626',

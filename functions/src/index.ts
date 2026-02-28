@@ -364,8 +364,9 @@ ff.cloudEvent<PubSubMessageData>('syncProcess', async (cloudEvent) => {
 // =========================================================================
 //
 // Receives a batch change notification, queries the database for permits
-// that were changed in the given sync run, and runs the 3-tier trade
-// classification engine on each one. After classification, publishes
+// that were changed in the given sync run, and runs the hybrid trade
+// classifier (Tier 1 rules + tag-trade matrix) on each one. Also runs
+// product classification. After classification, publishes
 // "permit-classified" events for notification matching.
 // =========================================================================
 
@@ -424,17 +425,20 @@ ff.cloudEvent<PubSubMessageData>('classifyTrades', async (cloudEvent) => {
       'SELECT * FROM trade_mapping_rules WHERE is_active = true'
     );
 
-    // ----- 2b. Load scope classification module -----
+    // ----- 2b. Load scope + product classification modules -----
     const { classifyScope, extractBasePermitNum, isBLDPermit } = await import('../../src/lib/classification/scope');
+    const { classifyProducts } = await import('../../src/lib/classification/classifier');
 
-    // ----- 3. Classify each permit (trades + scope) -----
+    // ----- 3. Classify each permit (scope FIRST, then trades + products) -----
     let classifiedCount = 0;
     let errorCount = 0;
 
     for (const permit of changedPermits) {
       try {
-        const matches = classifyPermit(permit, rules);
+        // Scope classification runs FIRST so scope_tags feed the trade classifier
         const scope = classifyScope(permit);
+        const matches = classifyPermit(permit, rules, scope.scope_tags);
+        const productMatches = classifyProducts(permit, scope.scope_tags);
 
         // Upsert trade matches and scope into the database
         const client = await pool.connect();
@@ -468,6 +472,20 @@ ff.cloudEvent<PubSubMessageData>('classifyTrades', async (cloudEvent) => {
              WHERE permit_num = $3 AND revision_num = $4`,
             [scope.project_type, scope.scope_tags, permit.permit_num, permit.revision_num]
           );
+
+          // Upsert product classifications
+          await client.query(
+            'DELETE FROM permit_products WHERE permit_num = $1 AND revision_num = $2',
+            [permit.permit_num, permit.revision_num]
+          );
+          for (const pm of productMatches) {
+            await client.query(
+              `INSERT INTO permit_products (
+                permit_num, revision_num, product_id, product_slug, product_name, confidence
+              ) VALUES ($1, $2, $3, $4, $5, $6)`,
+              [pm.permit_num, pm.revision_num, pm.product_id, pm.product_slug, pm.product_name, pm.confidence]
+            );
+          }
 
           // --- Scope propagation: BLD ↔ companion permits ---
           const baseNum = extractBasePermitNum(permit.permit_num);

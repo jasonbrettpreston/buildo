@@ -19,6 +19,9 @@ export async function GET() {
       permitsWithBuilderResult,
       permitsWithParcelResult,
       permitsWithNeighbourhoodResult,
+      coaTotalResult,
+      coaLinkedResult,
+      coaUpcomingResult,
     ] = await Promise.all([
       query<{ count: string }>(
         'SELECT COUNT(*)::text AS count FROM permits'
@@ -58,6 +61,19 @@ export async function GET() {
         `SELECT COUNT(*)::text AS count FROM permits
          WHERE neighbourhood_id IS NOT NULL AND neighbourhood_id > 0`
       ),
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM coa_applications`
+      ),
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM coa_applications
+         WHERE linked_permit_num IS NOT NULL`
+      ),
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM coa_applications
+         WHERE decision IN ('Approved', 'Approved with Conditions')
+           AND linked_permit_num IS NULL
+           AND decision_date >= NOW() - INTERVAL '90 days'`
+      ),
     ]);
 
     return NextResponse.json({
@@ -72,6 +88,9 @@ export async function GET() {
       permits_with_builder: parseInt(permitsWithBuilderResult[0]?.count ?? '0', 10),
       permits_with_parcel: parseInt(permitsWithParcelResult[0]?.count ?? '0', 10),
       permits_with_neighbourhood: parseInt(permitsWithNeighbourhoodResult[0]?.count ?? '0', 10),
+      coa_total: parseInt(coaTotalResult[0]?.count ?? '0', 10),
+      coa_linked: parseInt(coaLinkedResult[0]?.count ?? '0', 10),
+      coa_upcoming: parseInt(coaUpcomingResult[0]?.count ?? '0', 10),
     });
   } catch (err) {
     console.error('[admin/stats] Error fetching stats:', err);

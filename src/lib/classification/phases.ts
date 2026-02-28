@@ -21,6 +21,7 @@ export const PHASE_TRADE_MAP: Record<Phase, string[]> = {
     'demolition',
     'concrete',
     'waterproofing',
+    'temporary-fencing',
   ],
   structural: [
     'framing',
@@ -33,6 +34,7 @@ export const PHASE_TRADE_MAP: Record<Phase, string[]> = {
     'electrical',
     'elevator',
     'fire-protection',
+    'pool-installation',
   ],
   finishing: [
     'insulation',
@@ -44,10 +46,20 @@ export const PHASE_TRADE_MAP: Record<Phase, string[]> = {
     'plumbing',
     'hvac',
     'electrical',
+    'trim-work',
+    'millwork-cabinetry',
+    'tiling',
+    'stone-countertops',
+    'caulking',
+    'security',
+    'solar',
+    'eavestrough-siding',
   ],
   landscaping: [
     'landscaping',
     'painting',
+    'decking-fences',
+    'pool-installation',
   ],
 };
 

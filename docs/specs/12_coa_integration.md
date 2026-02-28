@@ -1,7 +1,7 @@
 # 12 - Committee of Adjustments Integration
 
-**Status:** Planned
-**Last Updated:** 2026-02-14
+**Status:** In Progress
+**Last Updated:** 2026-02-27
 **Depends On:** `01_database_schema.md`, `02_data_ingestion.md`, `05_geocoding.md`
 **Blocks:** `15_dashboard_tradesperson.md`
 
@@ -114,14 +114,48 @@ CoA approvals are valuable because they precede permit issuance in the Toronto d
 
 A recent CoA approval at an address where no permit exists yet signals an upcoming permit application -- this is early intelligence for tradespeople.
 
+### Pre-Permit (Upcoming Lead) Entity
+
+**Design Decision:** Pre-Permits are NOT inserted into the `permits` table. They remain exclusively in `coa_applications`. The API layer UNIONs actual permits with qualifying CoAs when the "Upcoming Leads" filter is active.
+
+**Qualifying Criteria:**
+- `decision IN ('Approved', 'Approved with Conditions')`
+- `decision_date >= NOW() - INTERVAL '90 days'`
+- `linked_permit_num IS NULL` (no matching building permit yet)
+
+**DTO Mapping (CoA → Permit Shape):**
+
+| Permit Field | CoA Source | Value |
+|-------------|-----------|-------|
+| `permit_num` | `application_number` | `'COA-' + application_number` |
+| `revision_num` | — | `'00'` |
+| `status` | — | `'Pre-Permit (Upcoming)'` |
+| `permit_type` | — | `'Committee of Adjustment'` |
+| `description` | `description` | Full CoA variance text (robust) |
+| `street_num` | `street_num` | Direct map |
+| `street_name` | `street_name` | Direct map |
+| `builder_name` | `applicant` | Direct map |
+| `issued_date` | `decision_date` | Approval date |
+| `application_date` | `hearing_date` | Hearing date |
+| `ward` | `ward` | Direct map |
+| `est_const_cost` | — | `null` |
+| `latitude` / `longitude` | — | `null` (not geocoded) |
+
+**Pre-Permit ID Format:** `COA-{application_number}--00`
+- The `COA-` prefix allows the permit detail API to detect and route to `coa_applications` instead of `permits`
+
+### Linking Without Age Restriction
+
+The linker (`linkCoaToPermits`) links approved CoA applications to building permits regardless of age. The date proximity score decays over time (0.4 → 0.0) but never acts as a hard cutoff. This ensures that older CoA approvals that eventually result in permits are still properly linked.
+
 ```
-getUpcomingLeads(tradeSlug: string): CoaLead[]
+getUpcomingLeads(): PrePermit[]
   - Query CoA applications where:
-    - decision = 'Approved' or 'Approved with Conditions'
-    - decision_date within last 180 days
+    - decision IN ('Approved', 'Approved with Conditions')
+    - decision_date >= NOW() - INTERVAL '90 days'
     - linked_permit_num IS NULL (no permit yet)
-  - Return as "upcoming leads" -- projects likely to need permits soon
-  - Flag with trade relevance based on CoA description classification
+  - Map to standard permit DTO shape (see table above)
+  - Return as "upcoming leads"
 ```
 
 ---
@@ -130,10 +164,20 @@ getUpcomingLeads(tradeSlug: string): CoaLead[]
 
 | File | Purpose | Status |
 |------|---------|--------|
+| `src/lib/coa/types.ts` | CoaApplication, CoaLinkResult interfaces | Exists |
+| `src/lib/coa/repository.ts` | CRUD operations for coa_applications | Exists |
+| `src/lib/coa/linker.ts` | Address matching, confidence scoring, permit linking | Exists |
+| `src/lib/coa/pre-permits.ts` | Pre-Permit query + CoA-to-Permit DTO mapper | Planned |
 | `src/lib/coa/sync.ts` | CKAN data fetch, parsing, upsert logic | Planned |
-| `src/lib/coa/link.ts` | Address matching, confidence scoring, permit linking | Planned |
-| `migrations/009_coa_applications.sql` | Create coa_applications table | Planned |
-| `src/tests/coa.logic.test.ts` | Unit tests for address parsing, linking, confidence | Planned |
+| `src/app/api/coa/route.ts` | GET /api/coa endpoint | Exists |
+| `src/app/api/permits/route.ts` | MODIFY: UNION pre-permits when source=pre_permits | Planned |
+| `src/app/api/permits/geo/route.ts` | MODIFY: UNION pre-permits for map view | Planned |
+| `src/app/api/permits/[id]/route.ts` | MODIFY: Handle COA- prefix for pre-permit detail | Planned |
+| `src/components/permits/PermitCard.tsx` | MODIFY: Pre-Permit badge styling | Planned |
+| `src/app/permits/[id]/page.tsx` | MODIFY: Pre-Permit detail view with CoA fields | Planned |
+| `migrations/009_coa_applications.sql` | Create coa_applications table | Exists |
+| `migrations/027_coa_pre_permit_indexes.sql` | Indexes for decision_date + unlinked approved CoAs | Planned |
+| `src/tests/coa.logic.test.ts` | Unit tests: address parsing, linking, confidence, pre-permits | Exists (enhancing) |
 
 ---
 
@@ -270,6 +314,12 @@ interface ParsedAddress {
 | Stale CoA | Approved 3 years ago, no permit | Low priority, still stored |
 | Null decision_date | CoA with no decision_date | Date proximity = 0.0, no error |
 | Null description | CoA with no description | Description similarity = 0.0, no error |
+| Pre-Permit DTO mapping | Approved unlinked CoA | Maps to permit shape with COA- prefix, Pre-Permit status |
+| Pre-Permit ID format | `COA-A123/45CM` | Detected as pre-permit by COA- prefix |
+| Linker no age cutoff | CoA 5 years old + matching permit | Still links (low confidence, not rejected) |
+| Pre-Permit 90-day window | Approved 91 days ago, unlinked | NOT included in pre-permits |
+| Pre-Permit inclusion | Approved 30 days ago, unlinked | Included in pre-permits |
+| Refused CoA exclusion | Refused CoA, unlinked, recent | NOT included in pre-permits |
 
 ### B. UI Layer
 
@@ -281,6 +331,10 @@ interface ParsedAddress {
 | Confidence indicator | Link confidence shown as strong/moderate/weak visual indicator |
 | CoA timeline | CoA decision date shown relative to permit issuance on timeline view |
 | No CoA link | Permits without CoA links show no CoA section (not an empty state) |
+| Pre-Permit badge | PermitCard shows purple "Upcoming Lead" badge for `status === 'Pre-Permit (Upcoming)'` |
+| Pre-Permit detail | Pre-Permit detail page shows CoA-specific fields (application number, decision, hearing date, applicant, variances) |
+| Pre-Permit list | Dashboard with "Upcoming Leads" filter shows pre-permits alongside regular permits |
+| Pre-Permit map | Map view shows pre-permits as distinct markers (if geocoded) |
 
 ### C. Infra Layer
 

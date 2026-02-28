@@ -579,6 +579,53 @@ describe('NeighbourhoodProfile Display Logic', () => {
   });
 });
 
+describe('PermitDetail Work Scope Removal', () => {
+  // 🔗 SPEC LINK: docs/specs/18_permit_detail.md
+  // The standalone "Work Scope" section has been removed from the permit detail page.
+  // Scope info is now conveyed exclusively via scope tags in the Description section.
+
+  // Read the actual permit detail page source to verify removal
+  const fs = require('fs');
+  const path = require('path');
+  const pageSource = fs.readFileSync(
+    path.join(__dirname, '../app/permits/[id]/page.tsx'),
+    'utf-8'
+  );
+
+  it('permit detail page does NOT contain a Work Scope section', () => {
+    // The page should not render a section titled "Work Scope"
+    expect(pageSource).not.toContain('title="Work Scope"');
+  });
+
+  it('permit detail page does NOT contain Work Scope comment', () => {
+    expect(pageSource).not.toContain('Work Scope');
+  });
+
+  it('permit detail page does NOT import PROJECT_TYPE_CONFIG', () => {
+    // PROJECT_TYPE_CONFIG was only used by the Work Scope section in the permit detail page.
+    // It should no longer be imported there (it's still exported from scope.ts for other consumers).
+    expect(pageSource).not.toContain('PROJECT_TYPE_CONFIG');
+  });
+
+  it('permit detail page does NOT import ProjectType', () => {
+    // ProjectType was only used to cast p.project_type in the Work Scope section
+    expect(pageSource).not.toContain('ProjectType');
+  });
+
+  it('scope tags are still rendered in the Description section', () => {
+    // The Description section should still render scope tags via formatScopeTag + getScopeTagColor
+    expect(pageSource).toContain('formatScopeTag');
+    expect(pageSource).toContain('getScopeTagColor');
+  });
+
+  it('Description section is the sole place scope info is displayed', () => {
+    // scopeTags should only appear in the Description section, not in a separate Work Scope section
+    // Count occurrences of "Section title=" that reference scope
+    const sectionMatches = pageSource.match(/title="[^"]*[Ss]cope[^"]*"/g) || [];
+    expect(sectionMatches).toHaveLength(0);
+  });
+});
+
 describe('PROJECT_TYPE_CONFIG', () => {
   const ALL_PROJECT_TYPES: ProjectType[] = [
     'new_build', 'addition', 'renovation', 'demolition', 'mechanical', 'repair', 'other',

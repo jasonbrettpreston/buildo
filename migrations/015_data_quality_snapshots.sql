@@ -57,4 +57,4 @@ CREATE TABLE IF NOT EXISTS data_quality_snapshots (
     UNIQUE(snapshot_date)
 );
 
-CREATE INDEX idx_dqs_snapshot_date ON data_quality_snapshots (snapshot_date DESC);
+CREATE INDEX IF NOT EXISTS idx_dqs_snapshot_date ON data_quality_snapshots (snapshot_date DESC);

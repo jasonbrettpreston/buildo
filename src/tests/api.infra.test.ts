@@ -533,3 +533,50 @@ describe('Database Schema Constraints', () => {
     expect(slugs.size).toBe(20);
   });
 });
+
+describe('Pre-Permit API Integration', () => {
+  const fs = require('fs');
+  const path = require('path');
+
+  it('permit detail API handles COA- prefix to fetch from coa_applications', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../app/api/permits/[id]/route.ts'),
+      'utf-8'
+    );
+    expect(src).toContain("permitNum.startsWith('COA-')");
+    expect(src).toContain('coa_applications');
+    expect(src).toContain('mapCoaToPermitDto');
+  });
+
+  it('permit list API supports source=pre_permits parameter', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../app/api/permits/route.ts'),
+      'utf-8'
+    );
+    expect(src).toContain("source === 'pre_permits'");
+    expect(src).toContain('getUpcomingLeads');
+  });
+
+  it('admin stats API returns CoA counts in response', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/stats/route.ts'),
+      'utf-8'
+    );
+    expect(src).toContain('coa_total');
+    expect(src).toContain('coa_linked');
+    expect(src).toContain('coa_upcoming');
+  });
+
+  it('permit detail API declares permit variable before massing block', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../app/api/permits/[id]/route.ts'),
+      'utf-8'
+    );
+    // "const permit = permits[0]" must come before "permit.storeys" (massing block)
+    const permitDeclIdx = src.indexOf('const permit = permits[0]');
+    const massingUseIdx = src.indexOf('permit.storeys');
+    expect(permitDeclIdx).toBeGreaterThan(-1);
+    expect(massingUseIdx).toBeGreaterThan(-1);
+    expect(permitDeclIdx).toBeLessThan(massingUseIdx);
+  });
+});

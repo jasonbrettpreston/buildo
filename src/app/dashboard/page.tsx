@@ -1,11 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FilterPanel } from '@/components/search/FilterPanel';
 import { PermitFeed } from '@/components/permits/PermitFeed';
 
+interface DashboardStats {
+  total_permits: number;
+  active_permits: number;
+  permits_this_week: number;
+  coa_total: number;
+  coa_linked: number;
+  coa_upcoming: number;
+}
+
 export default function DashboardPage() {
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+
+  useEffect(() => {
+    fetch('/api/admin/stats')
+      .then((r) => r.json())
+      .then((data) => setStats(data))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -47,10 +64,39 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <StatCard label="Total Permits" value="237,000+" />
-          <StatCard label="Active Trades" value="20" />
-          <StatCard label="New Today" value="--" />
-          <StatCard label="Updated Today" value="--" />
+          <StatCard
+            label="Total Permits"
+            value={stats ? stats.total_permits.toLocaleString() : '--'}
+          />
+          <StatCard
+            label="Active Permits"
+            value={stats ? stats.active_permits.toLocaleString() : '--'}
+          />
+          <StatCard
+            label="New This Week"
+            value={stats ? stats.permits_this_week.toLocaleString() : '--'}
+          />
+          <StatCard
+            label="Upcoming Pre-Permits"
+            value={stats ? stats.coa_upcoming.toLocaleString() : '--'}
+            accent="purple"
+          />
+        </div>
+
+        {/* CoA stats row */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+          <StatCard
+            label="CoA Applications"
+            value={stats ? stats.coa_total.toLocaleString() : '--'}
+          />
+          <StatCard
+            label="CoA Linked to Permits"
+            value={stats ? stats.coa_linked.toLocaleString() : '--'}
+          />
+          <StatCard
+            label="CoA Unlinked"
+            value={stats ? (stats.coa_total - stats.coa_linked).toLocaleString() : '--'}
+          />
         </div>
 
         {/* Filters */}
@@ -65,13 +111,29 @@ export default function DashboardPage() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: 'purple';
+}) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className={`rounded-lg border p-4 ${
+      accent === 'purple'
+        ? 'bg-purple-50 border-purple-200'
+        : 'bg-white border-gray-200'
+    }`}>
       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
         {label}
       </p>
-      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+      <p className={`text-2xl font-bold mt-1 ${
+        accent === 'purple' ? 'text-purple-700' : 'text-gray-900'
+      }`}>
+        {value}
+      </p>
     </div>
   );
 }
