@@ -257,7 +257,7 @@ export async function GET(
     }
 
     // Fetch linked CoA applications (Committee of Adjustment)
-    let coaApplications: Record<string, unknown>[] = [];
+    let coaApplications: CoaApplication[] = [];
     try {
       coaApplications = await getCoaByPermit(permitNum, revisionNum);
     } catch {

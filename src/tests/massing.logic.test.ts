@@ -18,7 +18,6 @@ import {
   SHED_THRESHOLD_SQM,
   GARAGE_MAX_SQM,
 } from '@/lib/massing/geometry';
-import type { MassingUseType } from '@/lib/massing/geometry';
 
 describe('estimateStories', () => {
   it('returns 1 for 3m height (single story)', () => {

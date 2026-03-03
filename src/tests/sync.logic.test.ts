@@ -1,5 +1,5 @@
 // 🔗 SPEC LINK: docs/specs/02_data_ingestion.md, 03_change_detection.md
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';

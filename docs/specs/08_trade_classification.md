@@ -12,7 +12,7 @@
 > "As a system, I need to automatically determine which trades are needed for each permit using a hybrid classification approach."
 
 **Acceptance Criteria:**
-- Every ingested permit is classified against all 31 trades
+- Every ingested permit is classified against all 32 trades
 - Classification uses a hybrid approach: narrow-scope permit codes use Tier 1 rules only; broad-scope permits use tag-trade matrix lookup merged with Tier 1 rules
 - Each classification result includes the matched trade, the tier that matched, and a confidence score
 - Multi-trade permits produce multiple TradeMatch results
@@ -35,7 +35,8 @@ If the permit number contains a narrow-scope code (e.g., `PLB`, `HVA`, `DEM`), c
 
 | Permit Code | Allowed Trade Slugs |
 |-------------|---------------------|
-| `PLB`, `PSA`, `DRN`, `STS` | `plumbing` |
+| `PLB`, `PSA` | `plumbing` |
+| `DRN`, `STS` | `drain-plumbing` |
 | `HVA`, `MSA` | `hvac` |
 | `FSU` | `fire-protection` |
 | `DEM` | `demolition` |
@@ -72,7 +73,25 @@ matchTier1Rules(permit: Permit, rules: TradeMappingRule[], phase: string): Trade
 
 For permits without a narrow-scope code, the classifier uses `scope_tags` (produced by `classifyScope()`) to look up trades from the **tag-trade matrix**, then merges with any Tier 1 rule matches.
 
-The tag-trade matrix (`tag-trade-matrix.ts`) maps scope tags to arrays of `{ tradeSlug, confidence }` entries. Tags are normalized by stripping prefixes (`new:`, `alter:`, `sys:`, `scale:`, `exp:`) before lookup.
+The tag-trade matrix (`tag-trade-matrix.ts`) maps scope tags to arrays of `{ tradeSlug, confidence }` entries. Tags are normalized by:
+1. Stripping prefixes (`new:`, `alter:`, `sys:`, `scale:`, `exp:`)
+2. Collapsing `houseplex-N-unit` to `houseplex`
+3. Applying alias mappings (e.g. `roofing`->`roof`, `laneway-suite`->`laneway`, `interior-alterations`->`interior`)
+
+**Tag aliases** resolve naming mismatches between `scope.ts` emitters and matrix keys:
+
+| Alias | Resolves To | Reason |
+|-------|-------------|--------|
+| `roofing` | `roof` | Key mismatch |
+| `laneway-suite` | `laneway` | Key mismatch |
+| `fire-alarm` | `fire_alarm` | Hyphen vs underscore |
+| `interior-alterations` | `interior` | Semantic equivalence |
+| `finished-basement`, `basement-finish` | `basement` | Semantic equivalence |
+| `stacked-townhouse` | `townhouse` | Semantic equivalence |
+| `semi-detached` | `semi` | Semantic equivalence |
+| `condo` | `apartment` | Semantic equivalence |
+| `rear-addition`, `front-addition`, `side-addition`, `storey-addition`, `2nd-floor`, `3rd-floor` | `addition` | All structural additions |
+| `convert-unit` | `unit-conversion` | Semantic equivalence |
 
 **Key tag-trade mappings (representative sample):**
 
@@ -81,27 +100,35 @@ The tag-trade matrix (`tag-trade-matrix.ts`) maps scope tags to arrays of `{ tra
 | `kitchen` | plumbing (0.80), electrical (0.80), millwork-cabinetry (0.80), tiling (0.70), stone-countertops (0.70), flooring (0.65), drywall (0.60), painting (0.55) |
 | `bathroom` | plumbing (0.85), tiling (0.80), drywall (0.70), electrical (0.65), glazing (0.60), waterproofing (0.60), painting (0.55) |
 | `basement` | framing (0.75), drywall (0.75), electrical (0.75), plumbing (0.70), insulation (0.70), flooring (0.65), waterproofing (0.65), painting (0.55) |
-| `pool` | pool-installation (0.90), concrete (0.80), excavation (0.75), plumbing (0.75), temporary-fencing (0.70), electrical (0.65), landscaping (0.60) |
-| `sfd` | framing (0.85), excavation (0.80), concrete (0.80), roofing (0.80), plumbing (0.80), hvac (0.80), electrical (0.80), + 16 more trades |
-| `solar` | solar (0.90), electrical (0.75), roofing (0.55) |
-| `demolition` | demolition (0.85), temporary-fencing (0.60), excavation (0.50) |
-| `roof` | roofing (0.85), eavestrough-siding (0.55) |
+| `second-suite` | framing (0.75), plumbing (0.75), electrical (0.75), hvac (0.70), drywall (0.70), insulation (0.65), flooring (0.60), painting (0.55) |
+| `walkout` | excavation (0.75), concrete (0.70), waterproofing (0.70), framing (0.60) |
+| `balcony` | framing (0.70), concrete (0.65), waterproofing (0.60), glazing (0.55) |
+| `build-sfd` | framing (0.85), excavation (0.80), concrete (0.80), roofing (0.80), plumbing (0.80), hvac (0.80), electrical (0.80), + 16 more trades |
+| `open-concept` | framing (0.75), structural-steel (0.65), drywall (0.70), painting (0.60), electrical (0.55) |
+| `drain` | drain-plumbing (0.85) |
+| `fire-damage` | demolition (0.70), framing (0.70), drywall (0.70), painting (0.65), electrical (0.65), plumbing (0.60), insulation (0.60) |
 
-The full matrix contains 30 tag keys covering residential interiors, exteriors, building types, systems, structural, and specialty categories.
+The full matrix contains **58 tag keys** (40 direct + 18 new entries) plus **16 aliases**, covering residential interiors, exteriors, building types, systems, structural, institutional, and specialty categories.
 
 ```
 matchTagMatrix(permit: Permit, scopeTags: string[], phase: string): TradeMatch[]
-  - Normalize tags by stripping prefixes and collapsing variants
+  - Normalize tags by stripping prefixes, collapsing variants, and applying aliases
   - Lookup each tag in PREFIXED_TAG_TRADE_MATRIX
   - De-duplicate by trade slug, keeping max confidence
   - Tag-matrix matches are reported as tier 2
 ```
 
-#### Fallback: Minimal Residential Trades (Confidence: 0.40)
+#### Fallback: Work-Field-Based Tier 1 Trades
 
-Permits with no scope tags and no narrow-scope code receive a fallback set of minimal residential trades at 0.40 confidence. These are reported as tier 3.
+Permits with no matches from Tier 1 rules or tag-trade matrix receive a work-field-based fallback at Tier 1. Common `work` field values map to appropriate trades at 0.65-0.85 confidence. Unknown work values get broad residential trades at 0.55 confidence. These are reported as tier 1.
 
-**Fallback trades:** framing, plumbing, electrical, hvac, drywall, painting
+**Work-field fallback examples:**
+| Work Value | Trades | Confidence |
+|------------|--------|------------|
+| Interior Alterations | drywall, painting, flooring, electrical, plumbing | 0.70 |
+| New Building | framing, concrete, excavation, plumbing, electrical, hvac, drywall, roofing, insulation | 0.65 |
+| Re-Roofing | roofing | 0.85 |
+| (unknown) | framing, plumbing, electrical, hvac, drywall, painting | 0.55 |
 
 #### Work-Scope Exclusions
 
@@ -124,12 +151,13 @@ classifyPermit(permit: Permit, rules: TradeMappingRule[], scopeTags?: string[]):
   3. If narrow-scope code:
      a. Run matchTier1Rules() -> tier1Matches
      b. Apply scope limit (filter to allowed trades)
-     c. Return filtered matches (Path A)
+     c. If matches found, return filtered matches (Path A)
+     d. Else fallback: assign code's allowed trades at 0.80 confidence
   4. Else (broad-scope):
      a. Run matchTier1Rules() -> tier1Matches
      b. If scopeTags provided, run matchTagMatrix() -> tagMatches
      c. Merge: de-duplicate by trade_slug, keep highest confidence
-     d. If no matches and no tags, apply fallback minimal trades
+     d. If no matches, apply work-field-based Tier 1 fallback
      e. Apply work-scope exclusions
      f. Return merged matches (Path B)
 ```
@@ -149,7 +177,7 @@ interface TradeMatch {
   trade_id: number;
   trade_slug: string;
   trade_name: string;
-  tier: 1 | 2 | 3;         // 1 = Tier 1 rule, 2 = tag-matrix, 3 = fallback
+  tier: 1 | 2;              // 1 = Tier 1 rule or work-field fallback, 2 = tag-matrix
   confidence: number;       // 0.0 to 1.0
   is_active: boolean;       // whether trade is active in current phase
   phase: string;            // current construction phase
@@ -172,7 +200,7 @@ The previous Tier 2 (work field pattern matching) and Tier 3 (description NLP/re
 | `src/lib/classification/tag-trade-matrix.ts` | Tag-to-trade matrix, `lookupTradesForTags()` (replaces Tier 2/3) | In Progress |
 | `src/lib/classification/tag-product-matrix.ts` | Tag-to-product matrix, `lookupProductsForTags()` | In Progress |
 | `src/lib/classification/products.ts` | Product group definitions, lookup functions | In Progress |
-| `src/lib/classification/trades.ts` | Trade taxonomy with 31 trades (from spec `07`) | In Progress |
+| `src/lib/classification/trades.ts` | Trade taxonomy with 32 trades (from spec `07`) | In Progress |
 | `migrations/005_trade_mapping_rules.sql` | Create rules table and seed Tier 1 rules | In Progress |
 | `src/tests/classification.logic.test.ts` | Unit tests for hybrid classification and de-duplication | In Progress |
 
@@ -180,9 +208,9 @@ The previous Tier 2 (work field pattern matching) and Tier 3 (description NLP/re
 
 ## 4. Constraints & Edge Cases
 
-- **No match:** Some permits may not match any trade (e.g., administrative permits with no scope tags and no narrow-scope code). These receive the fallback minimal residential trades at 0.40 confidence.
+- **No match:** Permits with no Tier 1 or tag-matrix matches receive work-field-based Tier 1 fallback trades at 0.55-0.85 confidence.
 - **Multi-trade permits:** Large construction permits (e.g., new buildings) will match many trades via the tag-trade matrix. This is expected and correct -- they represent leads for multiple trades.
-- **Tag-trade matrix coverage:** The matrix contains 30 tag keys. Tags not present in the matrix produce no matches for that tag. New tags require a code update to `tag-trade-matrix.ts`.
+- **Tag-trade matrix coverage:** The matrix contains 58 tag keys plus 16 aliases. Tags not present in the matrix (after normalization + alias resolution) produce no matches for that tag. New tags require a code update to `tag-trade-matrix.ts`.
 - **Permit type codes not in mapping:** New or unusual permit type codes that are not in `NARROW_SCOPE_CODES` follow Path B (broad-scope).
 - **Scope exclusions:** Work-scope exclusions filter out irrelevant trades (e.g., "Interior Alterations" excludes excavation, roofing). These are applied after the merge step.
 - **Empty fields:** If `permit_num`, `work`, or `scope_tags` is null/empty, the corresponding path/lookup is skipped gracefully. Do not error.
@@ -238,7 +266,7 @@ interface TradeMappingRule {
 
 | System | Direction | Purpose |
 |--------|-----------|---------|
-| Trade Taxonomy (`07`) | Upstream | Provides 31 trade IDs and slugs for rule foreign keys |
+| Trade Taxonomy (`07`) | Upstream | Provides 32 trade IDs and slugs for rule foreign keys |
 | Data Ingestion (`02`) | Upstream | Triggers classification after permit upsert |
 | Scope Classification | Upstream | Provides `scope_tags` for tag-trade matrix lookup |
 | Phase Model (`09`) | Downstream | Uses classification results to determine phase relevance |
@@ -290,6 +318,6 @@ interface TradeMappingRule {
 | Rules loaded from DB | Tier 1 rules loaded from database for `classifyPermit()` |
 | Tag-trade matrix in memory | Tag-trade matrix is a constant, no DB lookup required |
 | Inactive rules skipped | Rules with `is_active = FALSE` are excluded from classification |
-| Foreign key integrity | All `trade_id` values in rules reference valid trades (31 trades) |
+| Foreign key integrity | All `trade_id` values in rules reference valid trades (32 trades) |
 | Batch performance | 1,000 permits classified in under 10 seconds |
 | Tag-matrix coverage | All 30 tag keys map to valid trade slugs present in `trades.ts` |

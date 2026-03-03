@@ -1,6 +1,8 @@
 // 🔗 SPEC LINK: docs/specs/19_search_filter.md
 // Search page logic: URL parameter handling, pagination, sort parsing
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 
 describe('Search URL Parameter Parsing', () => {
   function parseSearchParams(
@@ -159,8 +161,6 @@ describe('Search API Request Building', () => {
 });
 
 describe('CoA Source Toggle', () => {
-  const fs = require('fs');
-  const path = require('path');
 
   it('FilterPanel contains a source toggle for pre-permits', () => {
     const src = fs.readFileSync(

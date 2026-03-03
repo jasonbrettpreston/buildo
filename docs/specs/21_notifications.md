@@ -1,7 +1,7 @@
 # 21 - Notifications
 
-**Status:** Planned
-**Last Updated:** 2026-02-14
+**Status:** In Progress
+**Last Updated:** 2026-03-03
 **Depends On:** `01_database_schema.md`, `07_trade_taxonomy.md`, `13_auth.md`
 **Blocks:** None
 
@@ -118,17 +118,25 @@ isDuplicate(user_id, permit_num, type):
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `src/lib/notifications/types.ts` | Notification and preference TypeScript interfaces | Planned |
-| `src/lib/notifications/matcher.ts` | Preference matching algorithm | Planned |
+| `src/lib/notifications/types.ts` | NotificationType, NotificationChannel, Notification, NotificationPayload | Implemented |
+| `src/lib/notifications/matcher.ts` | Preference matching: trade filter, ward, postal prefix, cost range | Implemented |
+| `src/lib/notifications/repository.ts` | Notification CRUD operations | Implemented |
+| `src/lib/notifications/email.ts` | SendGrid email integration | Implemented |
+| `src/lib/notifications/push.ts` | Firebase Cloud Messaging push integration | Implemented |
+| `migrations/010_notifications.sql` | Notifications table (is_read, is_sent columns) | Implemented |
+| `src/app/api/notifications/route.ts` | GET with pagination/unread filter, PATCH mark_read/mark_all_read | Implemented |
+| `src/tests/notifications.logic.test.ts` | 19 tests: trade filter, ward, postal, cost, dedup window | Implemented |
 | `src/lib/notifications/dedup.ts` | Deduplication check logic | Planned |
 | `src/lib/notifications/digest.ts` | Digest grouping and scheduling | Planned |
 | `functions/match-notifications/index.ts` | Cloud Function: Pub/Sub subscriber, fan-out | Planned |
-| `migrations/010_notifications.sql` | Create notifications table | Planned |
-| `src/app/api/notifications/route.ts` | GET user notifications, PATCH mark as read | Planned |
-| `src/app/api/notifications/unsubscribe/route.ts` | GET unsubscribe handler | Planned |
+| `src/app/api/notifications/unsubscribe/route.ts` | One-click unsubscribe handler | Planned |
 | `src/components/notifications/NotificationBell.tsx` | Bell icon with unread badge | Planned |
 | `src/components/notifications/NotificationList.tsx` | Dropdown list of notifications | Planned |
-| `src/components/notifications/PreferencesForm.tsx` | Notification settings form | Planned |
+| `src/components/notifications/PreferencesForm.tsx` | Notification settings form (Firestore) | Planned |
+
+**Note:** Notification types in code use `new_lead` (not `new_permit` as in original spec)
+and `weekly_digest` (not `daily_digest`). Column names are `is_read`/`is_sent` (migration 010),
+mapped to `read`/`sent` in TS interfaces.
 
 ---
 

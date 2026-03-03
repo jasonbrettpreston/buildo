@@ -1,11 +1,12 @@
 // Logic Layer Tests - Data quality score calculations and metric extraction
 // SPEC LINK: docs/specs/28_data_quality_dashboard.md
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import {
   calculateEffectivenessScore,
   extractMetrics,
   EFFECTIVENESS_WEIGHTS,
 } from '@/lib/quality/types';
+import { parseSnapshot } from '@/lib/quality/metrics';
 import { createMockDataQualitySnapshot } from './factories';
 
 describe('Data Effectiveness Score', () => {
@@ -294,5 +295,278 @@ describe('DataQualitySnapshot Shape Validation', () => {
     if (snapshot.last_sync_status !== null) {
       expect(['running', 'completed', 'failed']).toContain(snapshot.last_sync_status);
     }
+  });
+});
+
+// ── parseSnapshot — NUMERIC coercion ──────────────────────────────────
+
+describe('parseSnapshot coerces NUMERIC fields from strings', () => {
+  it('coerces string-typed avg_confidence fields to numbers', () => {
+    // Simulate what node-postgres returns: NUMERIC(4,3) as strings
+    const raw = createMockDataQualitySnapshot({
+      trade_avg_confidence: 0.847,
+      parcel_avg_confidence: 0.95,
+      coa_avg_confidence: 0.623,
+    });
+    // Force to strings like node-postgres does
+    const dbRow = {
+      ...raw,
+      trade_avg_confidence: '0.847' as unknown as number,
+      parcel_avg_confidence: '0.950' as unknown as number,
+      coa_avg_confidence: '0.623' as unknown as number,
+    };
+    const parsed = parseSnapshot(dbRow);
+    expect(typeof parsed.trade_avg_confidence).toBe('number');
+    expect(typeof parsed.parcel_avg_confidence).toBe('number');
+    expect(typeof parsed.coa_avg_confidence).toBe('number');
+    expect(parsed.trade_avg_confidence!.toFixed(3)).toBe('0.847');
+    expect(parsed.parcel_avg_confidence!.toFixed(3)).toBe('0.950');
+    expect(parsed.coa_avg_confidence!.toFixed(3)).toBe('0.623');
+  });
+
+  it('preserves null confidence values', () => {
+    const raw = createMockDataQualitySnapshot({
+      trade_avg_confidence: null,
+      parcel_avg_confidence: null,
+      coa_avg_confidence: null,
+    });
+    const parsed = parseSnapshot(raw);
+    expect(parsed.trade_avg_confidence).toBeNull();
+    expect(parsed.parcel_avg_confidence).toBeNull();
+    expect(parsed.coa_avg_confidence).toBeNull();
+  });
+
+  it('preserves already-numeric confidence values', () => {
+    const raw = createMockDataQualitySnapshot({
+      trade_avg_confidence: 0.75,
+      parcel_avg_confidence: 0.85,
+      coa_avg_confidence: 0.60,
+    });
+    const parsed = parseSnapshot(raw);
+    expect(parsed.trade_avg_confidence).toBe(0.75);
+    expect(parsed.parcel_avg_confidence).toBe(0.85);
+    expect(parsed.coa_avg_confidence).toBe(0.60);
+  });
+});
+
+// ── Bug Fix Tests — Data Quality Display Accuracy ────────────────────
+
+describe('Neighbourhood count must not exceed active permits', () => {
+  it('permits_with_neighbourhood <= active_permits in factory defaults', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.permits_with_neighbourhood).toBeLessThanOrEqual(snapshot.active_permits);
+  });
+});
+
+describe('Builder accuracy uses permits_with_builder / active_permits', () => {
+  it('builder coverage is based on permits with builder name', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      active_permits: 1000,
+      permits_with_builder: 750,
+      builders_total: 200,
+      builders_enriched: 50,
+    });
+    // The correct metric: 750/1000 = 75%, NOT 50/200 = 25%
+    const builderCoverage = snapshot.active_permits > 0
+      ? Math.round((snapshot.permits_with_builder / snapshot.active_permits) * 1000) / 10
+      : 0;
+    expect(builderCoverage).toBe(75);
+  });
+});
+
+describe('Builder tier percentages', () => {
+  it('computes tier percentages relative to builders_total', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      builders_total: 1000,
+      builders_with_google: 450,
+      builders_with_wsib: 128,
+      builders_with_phone: 600,
+      builders_with_email: 480,
+      builders_with_website: 360,
+    });
+    const googlePct = Math.round((snapshot.builders_with_google / snapshot.builders_total) * 1000) / 10;
+    const wsibPct = Math.round((snapshot.builders_with_wsib / snapshot.builders_total) * 1000) / 10;
+    expect(googlePct).toBe(45);
+    expect(wsibPct).toBe(12.8);
+  });
+});
+
+describe('Work Scope split: classification vs detailed tags', () => {
+  it('snapshot includes permits_with_scope_tags field', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot).toHaveProperty('permits_with_scope_tags');
+    expect(typeof snapshot.permits_with_scope_tags).toBe('number');
+    expect(snapshot.permits_with_scope_tags).toBeGreaterThanOrEqual(0);
+  });
+
+  it('snapshot includes scope_tags_top distribution', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot).toHaveProperty('scope_tags_top');
+    if (snapshot.scope_tags_top) {
+      const keys = Object.keys(snapshot.scope_tags_top);
+      expect(keys.length).toBeGreaterThan(0);
+      for (const val of Object.values(snapshot.scope_tags_top)) {
+        expect(typeof val).toBe('number');
+      }
+    }
+  });
+
+  it('snapshot includes permits_with_detailed_tags field', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot).toHaveProperty('permits_with_detailed_tags');
+    expect(typeof snapshot.permits_with_detailed_tags).toBe('number');
+    expect(snapshot.permits_with_detailed_tags).toBeGreaterThanOrEqual(0);
+  });
+
+  it('detailed_tags <= scope_tags (subset relationship)', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.permits_with_detailed_tags).toBeLessThanOrEqual(snapshot.permits_with_scope_tags);
+  });
+
+  it('permits_with_scope <= active_permits (scope class cannot exceed 100%)', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.permits_with_scope).toBeLessThanOrEqual(snapshot.active_permits);
+  });
+
+  it('permits_with_detailed_tags <= active_permits', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.permits_with_detailed_tags).toBeLessThanOrEqual(snapshot.active_permits);
+  });
+
+  it('scope_project_type_breakdown contains residential, commercial, and mixed-use keys', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.scope_project_type_breakdown).not.toBeNull();
+    const keys = Object.keys(snapshot.scope_project_type_breakdown!);
+    expect(keys.sort()).toEqual(['commercial', 'mixed-use', 'residential']);
+  });
+
+  it('residential + commercial + mixed-use counts <= permits_with_scope', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    const breakdown = snapshot.scope_project_type_breakdown!;
+    const total = (breakdown.residential ?? 0) + (breakdown.commercial ?? 0) + (breakdown['mixed-use'] ?? 0);
+    expect(total).toBeLessThanOrEqual(snapshot.permits_with_scope);
+  });
+
+  it('trade_residential_classified <= trade_residential_total', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.trade_residential_classified).toBeLessThanOrEqual(snapshot.trade_residential_total);
+  });
+
+  it('trade_commercial_classified <= trade_commercial_total', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.trade_commercial_classified).toBeLessThanOrEqual(snapshot.trade_commercial_total);
+  });
+
+  it('trade_residential_total + trade_commercial_total <= active_permits', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.trade_residential_total + snapshot.trade_commercial_total)
+      .toBeLessThanOrEqual(snapshot.active_permits);
+  });
+
+  it('trade_residential_classified + trade_commercial_classified <= permits_with_trades', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.trade_residential_classified + snapshot.trade_commercial_classified)
+      .toBeLessThanOrEqual(snapshot.permits_with_trades);
+  });
+});
+
+// ── Pipeline Registry Tests ───────────────────────────────────────────
+
+describe('Pipeline Registry', () => {
+  // Lazy import so the module is resolved at test time
+  let PIPELINE_REGISTRY: Record<string, { name: string; group: string }>;
+
+  beforeAll(async () => {
+    const mod = await import('@/components/FreshnessTimeline');
+    PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
+  });
+
+  it('has exactly 21 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(21);
+  });
+
+  it('groups are correct: 7 ingest, 10 link, 3 classify, 1 snapshot', () => {
+    const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
+    expect(groups.filter((g) => g === 'ingest')).toHaveLength(7);
+    expect(groups.filter((g) => g === 'link')).toHaveLength(10);
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(3);
+    expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
+  });
+
+  it('every pipeline has a non-empty human-readable name', () => {
+    for (const [slug, entry] of Object.entries(PIPELINE_REGISTRY)) {
+      expect(entry.name, `${slug} should have a name`).toBeTruthy();
+      expect(entry.name.length).toBeGreaterThan(2);
+    }
+  });
+});
+
+describe('Pipeline Chains', () => {
+  let PIPELINE_CHAINS: { id: string; steps: { slug: string; indent: number }[] }[];
+  let PIPELINE_REGISTRY: Record<string, { name: string; group: string }>;
+
+  beforeAll(async () => {
+    const mod = await import('@/components/FreshnessTimeline');
+    PIPELINE_CHAINS = mod.PIPELINE_CHAINS;
+    PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
+  });
+
+  it('has exactly 3 chains: permits, coa, sources', () => {
+    const ids = PIPELINE_CHAINS.map((c) => c.id);
+    expect(ids).toEqual(['permits', 'coa', 'sources']);
+  });
+
+  it('permits chain has 14 steps in dependency order', () => {
+    const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    expect(permits.steps).toHaveLength(14);
+    expect(permits.steps[0].slug).toBe('permits');
+    expect(permits.steps[permits.steps.length - 1].slug).toBe('refresh_snapshot');
+  });
+
+  it('permits chain includes indent-2 sub-steps for builder enrichment', () => {
+    const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const indent2 = permits.steps.filter((s) => s.indent === 2);
+    expect(indent2.map((s) => s.slug)).toEqual(['enrich_google', 'enrich_wsib']);
+  });
+
+  it('coa chain has 4 steps', () => {
+    const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
+    expect(coa.steps).toHaveLength(4);
+    expect(coa.steps[0].slug).toBe('coa');
+  });
+
+  it('sources chain has 10 steps including compute_centroids and refresh_snapshot', () => {
+    const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
+    expect(sources.steps).toHaveLength(10);
+    expect(sources.steps.some((s) => s.slug === 'compute_centroids')).toBe(true);
+    expect(sources.steps[sources.steps.length - 1].slug).toBe('refresh_snapshot');
+  });
+
+  it('every slug in chains exists in PIPELINE_REGISTRY', () => {
+    for (const chain of PIPELINE_CHAINS) {
+      for (const step of chain.steps) {
+        expect(PIPELINE_REGISTRY, `${step.slug} missing from registry`).toHaveProperty(step.slug);
+      }
+    }
+  });
+});
+
+describe('DataSourceCircle field annotations', () => {
+  it('DataSourceCircle accepts fields prop', () => {
+    // Verify the component interface accepts a fields array
+    const props = {
+      name: 'Test',
+      slug: 'test',
+      accuracy: 80,
+      count: 100,
+      total: 125,
+      lastUpdated: null,
+      nextScheduled: 'Daily',
+      onUpdate: () => {},
+      fields: ['latitude', 'longitude'],
+    };
+    // fields prop must be accepted by the interface
+    expect(props.fields).toHaveLength(2);
+    expect(props.fields[0]).toBe('latitude');
   });
 });

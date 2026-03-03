@@ -22,6 +22,17 @@ export async function GET() {
       coaTotalResult,
       coaLinkedResult,
       coaUpcomingResult,
+      // Data Sources & Health Dashboard queries
+      permitsGeocodedResult,
+      permitsClassifiedResult,
+      buildersWithContactResult,
+      addressPointsResult,
+      parcelsTotalResult,
+      footprintsTotalResult,
+      parcelsWithMassingResult,
+      permitsWithMassingResult,
+      neighbourhoodsTotalResult,
+      coaApprovedResult,
     ] = await Promise.all([
       query<{ count: string }>(
         'SELECT COUNT(*)::text AS count FROM permits'
@@ -74,23 +85,103 @@ export async function GET() {
            AND linked_permit_num IS NULL
            AND decision_date >= NOW() - INTERVAL '90 days'`
       ),
+      // Geocoded permits
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM permits
+         WHERE latitude IS NOT NULL`
+      ),
+      // Classified permits (at least one trade match)
+      query<{ count: string }>(
+        `SELECT COUNT(DISTINCT (permit_num, revision_num))::text AS count
+         FROM permit_trades`
+      ),
+      // Builders with contact info
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM builders
+         WHERE phone IS NOT NULL OR email IS NOT NULL`
+      ),
+      // Address points total
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM address_points`
+      ).catch(() => [{ count: '0' }]),
+      // Parcels total
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM parcels`
+      ).catch(() => [{ count: '0' }]),
+      // Building footprints total
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM building_footprints`
+      ).catch(() => [{ count: '0' }]),
+      // Parcels with massing data
+      query<{ count: string }>(
+        `SELECT COUNT(DISTINCT parcel_id)::text AS count FROM parcel_buildings`
+      ).catch(() => [{ count: '0' }]),
+      // Permits linked to massing (via permit_parcels → parcel_buildings)
+      query<{ count: string }>(
+        `SELECT COUNT(DISTINCT (pp.permit_num, pp.revision_num))::text AS count
+         FROM permit_parcels pp
+         JOIN parcel_buildings pb ON pb.parcel_id = pp.parcel_id`
+      ).catch(() => [{ count: '0' }]),
+      // Neighbourhoods total
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM neighbourhoods`
+      ).catch(() => [{ count: '0' }]),
+      // CoA approved (for link rate denominator)
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM coa_applications
+         WHERE decision IN ('Approved', 'Approved with Conditions')`
+      ),
     ]);
 
+    // Pipeline freshness: last run per pipeline from pipeline_runs table
+    const pipelineLastRun: Record<string, { last_run_at: string | null; status: string | null }> = {};
+    try {
+      const pipelineRows = await query<{ pipeline: string; started_at: Date; status: string }>(
+        `SELECT DISTINCT ON (pipeline) pipeline, started_at, status
+         FROM pipeline_runs
+         ORDER BY pipeline, started_at DESC`
+      );
+      for (const row of pipelineRows) {
+        pipelineLastRun[row.pipeline] = {
+          last_run_at: row.started_at ? new Date(row.started_at).toISOString() : null,
+          status: row.status,
+        };
+      }
+    } catch {
+      // pipeline_runs table may not exist yet (migration not applied)
+    }
+
+    const p = (r: { count: string }[] | { count: string }) =>
+      parseInt(Array.isArray(r) ? (r[0]?.count ?? '0') : (r.count ?? '0'), 10);
+
     return NextResponse.json({
-      total_permits: parseInt(permitsResult[0]?.count ?? '0', 10),
-      total_builders: parseInt(buildersResult[0]?.count ?? '0', 10),
-      total_trades: parseInt(tradesResult[0]?.count ?? '0', 10),
-      active_rules: parseInt(activeRulesResult[0]?.count ?? '0', 10),
-      permits_this_week: parseInt(recentPermitsResult[0]?.count ?? '0', 10),
+      total_permits: p(permitsResult),
+      total_builders: p(buildersResult),
+      total_trades: p(tradesResult),
+      active_rules: p(activeRulesResult),
+      permits_this_week: p(recentPermitsResult),
       last_sync_at: lastSyncResult[0]?.last_sync_at ?? null,
-      notifications_pending: parseInt(pendingNotificationsResult[0]?.count ?? '0', 10),
-      active_permits: parseInt(activePermitsResult[0]?.count ?? '0', 10),
-      permits_with_builder: parseInt(permitsWithBuilderResult[0]?.count ?? '0', 10),
-      permits_with_parcel: parseInt(permitsWithParcelResult[0]?.count ?? '0', 10),
-      permits_with_neighbourhood: parseInt(permitsWithNeighbourhoodResult[0]?.count ?? '0', 10),
-      coa_total: parseInt(coaTotalResult[0]?.count ?? '0', 10),
-      coa_linked: parseInt(coaLinkedResult[0]?.count ?? '0', 10),
-      coa_upcoming: parseInt(coaUpcomingResult[0]?.count ?? '0', 10),
+      notifications_pending: p(pendingNotificationsResult),
+      active_permits: p(activePermitsResult),
+      permits_with_builder: p(permitsWithBuilderResult),
+      permits_with_parcel: p(permitsWithParcelResult),
+      permits_with_neighbourhood: p(permitsWithNeighbourhoodResult),
+      coa_total: p(coaTotalResult),
+      coa_linked: p(coaLinkedResult),
+      coa_upcoming: p(coaUpcomingResult),
+      // Data Sources & Health Dashboard fields
+      permits_geocoded: p(permitsGeocodedResult),
+      permits_classified: p(permitsClassifiedResult),
+      builders_with_contact: p(buildersWithContactResult),
+      address_points_total: p(addressPointsResult),
+      parcels_total: p(parcelsTotalResult),
+      building_footprints_total: p(footprintsTotalResult),
+      parcels_with_massing: p(parcelsWithMassingResult),
+      permits_with_massing: p(permitsWithMassingResult),
+      neighbourhoods_total: p(neighbourhoodsTotalResult),
+      coa_approved: p(coaApprovedResult),
+      // Pipeline freshness
+      pipeline_last_run: pipelineLastRun,
     });
   } catch (err) {
     console.error('[admin/stats] Error fetching stats:', err);

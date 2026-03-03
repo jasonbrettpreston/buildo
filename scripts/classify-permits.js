@@ -44,6 +44,7 @@ const TRADES = [
   { id: 18, slug: 'demolition' },
   { id: 19, slug: 'landscaping' },
   { id: 20, slug: 'waterproofing' },
+  { id: 32, slug: 'drain-plumbing' },
 ];
 
 const TRADE_BY_ID = new Map(TRADES.map(t => [t.id, t]));
@@ -52,7 +53,7 @@ const TRADE_BY_ID = new Map(TRADES.map(t => [t.id, t]));
 // Phase determination
 // ---------------------------------------------------------------------------
 const PHASE_TRADES = {
-  early_construction: ['excavation','shoring','demolition','concrete','waterproofing'],
+  early_construction: ['excavation','shoring','demolition','concrete','waterproofing','drain-plumbing'],
   structural: ['framing','structural-steel','masonry','concrete','roofing','plumbing','hvac','electrical','elevator','fire-protection'],
   finishing: ['insulation','drywall','painting','flooring','glazing','fire-protection','plumbing','hvac','electrical'],
   landscaping: ['landscaping','painting'],
@@ -138,6 +139,152 @@ function calculateLeadScore(permit, match, phase) {
 }
 
 // ---------------------------------------------------------------------------
+// Tag-Trade Matrix (mirrors src/lib/classification/tag-trade-matrix.ts)
+// ---------------------------------------------------------------------------
+const TAG_ALIASES = {
+  'roofing': 'roof',
+  'laneway-suite': 'laneway',
+  'fire-alarm': 'fire_alarm',
+  'interior-alterations': 'interior',
+  'finished-basement': 'basement',
+  'basement-finish': 'basement',
+  'stacked-townhouse': 'townhouse',
+  'semi-detached': 'semi',
+  'condo': 'apartment',
+  'rear-addition': 'addition',
+  'front-addition': 'addition',
+  'side-addition': 'addition',
+  'storey-addition': 'addition',
+  '2nd-floor': 'addition',
+  '3rd-floor': 'addition',
+  'convert-unit': 'unit-conversion',
+};
+
+function normalizeTag(tag) {
+  let base = tag.replace(/^(new|alter|sys|scale|exp):/, '');
+  base = base.replace(/^houseplex-\d+-unit$/, 'houseplex');
+  return TAG_ALIASES[base] ?? base;
+}
+
+const TAG_TRADE_MATRIX = {
+  kitchen: [['plumbing',0.80],['electrical',0.80],['flooring',0.65],['drywall',0.60],['painting',0.55]],
+  bathroom: [['plumbing',0.85],['drywall',0.70],['glazing',0.60],['electrical',0.65],['waterproofing',0.60],['painting',0.55]],
+  basement: [['framing',0.75],['drywall',0.75],['plumbing',0.70],['electrical',0.75],['insulation',0.70],['flooring',0.65],['waterproofing',0.65],['painting',0.55]],
+  pool: [['excavation',0.75],['concrete',0.80],['plumbing',0.75],['electrical',0.65],['landscaping',0.60]],
+  deck: [['framing',0.65],['concrete',0.55]],
+  porch: [['framing',0.70],['concrete',0.65],['roofing',0.55],['masonry',0.55]],
+  garage: [['framing',0.70],['concrete',0.70],['roofing',0.65],['electrical',0.60],['drywall',0.55]],
+  fence: [['framing',0.55]],
+  garden_suite: [['framing',0.80],['concrete',0.75],['excavation',0.70],['plumbing',0.75],['electrical',0.75],['hvac',0.70],['insulation',0.65],['drywall',0.65],['roofing',0.65]],
+  laneway: [['framing',0.80],['concrete',0.75],['excavation',0.70],['plumbing',0.75],['electrical',0.75],['hvac',0.70],['insulation',0.65],['drywall',0.65],['roofing',0.65]],
+  'build-sfd': [['excavation',0.80],['concrete',0.80],['framing',0.85],['roofing',0.80],['plumbing',0.80],['hvac',0.80],['electrical',0.80],['insulation',0.75],['drywall',0.75],['painting',0.70],['flooring',0.70],['masonry',0.65],['glazing',0.60],['waterproofing',0.55],['landscaping',0.60]],
+  semi: [['excavation',0.75],['concrete',0.75],['framing',0.80],['roofing',0.75],['plumbing',0.75],['hvac',0.75],['electrical',0.75],['insulation',0.70],['drywall',0.70],['painting',0.65],['flooring',0.65],['masonry',0.70],['landscaping',0.55]],
+  townhouse: [['excavation',0.75],['concrete',0.75],['framing',0.80],['roofing',0.75],['plumbing',0.75],['hvac',0.75],['electrical',0.75],['insulation',0.70],['drywall',0.70],['painting',0.65],['flooring',0.65],['masonry',0.70],['fire-protection',0.55],['landscaping',0.55]],
+  houseplex: [['excavation',0.75],['concrete',0.75],['framing',0.80],['roofing',0.75],['plumbing',0.80],['hvac',0.80],['electrical',0.80],['insulation',0.70],['drywall',0.70],['painting',0.65],['flooring',0.65],['fire-protection',0.60],['masonry',0.65]],
+  apartment: [['concrete',0.80],['framing',0.75],['plumbing',0.80],['hvac',0.80],['electrical',0.80],['elevator',0.75],['drywall',0.70],['painting',0.65],['fire-protection',0.70]],
+  'tenant-fitout': [['drywall',0.80],['painting',0.75],['electrical',0.75],['flooring',0.70],['hvac',0.65],['plumbing',0.60],['fire-protection',0.60]],
+  retail: [['drywall',0.75],['painting',0.70],['electrical',0.75],['plumbing',0.65],['flooring',0.70],['glazing',0.65],['hvac',0.60],['fire-protection',0.55]],
+  office: [['drywall',0.80],['painting',0.75],['electrical',0.75],['hvac',0.70],['flooring',0.70],['fire-protection',0.60]],
+  restaurant: [['plumbing',0.85],['hvac',0.80],['electrical',0.80],['fire-protection',0.75],['drywall',0.60],['painting',0.55]],
+  warehouse: [['concrete',0.75],['structural-steel',0.70],['electrical',0.75],['plumbing',0.60],['hvac',0.65],['fire-protection',0.70],['roofing',0.55]],
+  hvac: [['hvac',0.85]],
+  plumbing: [['plumbing',0.85]],
+  electrical: [['electrical',0.85]],
+  fire_alarm: [['fire-protection',0.85],['electrical',0.55]],
+  sprinkler: [['fire-protection',0.85],['plumbing',0.55]],
+  underpinning: [['shoring',0.85],['concrete',0.75],['waterproofing',0.65],['excavation',0.70]],
+  foundation: [['concrete',0.85],['excavation',0.75],['waterproofing',0.70]],
+  addition: [['framing',0.75],['concrete',0.65],['roofing',0.60],['plumbing',0.55],['electrical',0.60],['insulation',0.55],['drywall',0.55]],
+  roof: [['roofing',0.85]],
+  cladding: [['masonry',0.70],['insulation',0.60]],
+  windows: [['glazing',0.85]],
+  solar: [['electrical',0.75],['roofing',0.55]],
+  ev_charger: [['electrical',0.80]],
+  elevator: [['elevator',0.85],['electrical',0.55]],
+  interior: [['drywall',0.70],['painting',0.65],['flooring',0.60],['electrical',0.55]],
+  fireplace: [['hvac',0.65],['masonry',0.55]],
+  'high-rise': [['elevator',0.65],['concrete',0.65],['structural-steel',0.60],['fire-protection',0.60],['glazing',0.55]],
+  'mid-rise': [['concrete',0.60],['fire-protection',0.55],['elevator',0.55]],
+  demolition: [['demolition',0.85],['excavation',0.50]],
+  security: [['electrical',0.55]],
+  // New entries
+  walkout: [['excavation',0.75],['concrete',0.70],['waterproofing',0.70],['framing',0.60]],
+  'second-suite': [['framing',0.75],['plumbing',0.75],['electrical',0.75],['hvac',0.70],['drywall',0.70],['insulation',0.65],['flooring',0.60],['painting',0.55]],
+  balcony: [['framing',0.70],['concrete',0.65],['glazing',0.55],['waterproofing',0.60]],
+  dormer: [['framing',0.75],['roofing',0.70],['insulation',0.60],['drywall',0.60],['glazing',0.55]],
+  'unit-conversion': [['framing',0.70],['drywall',0.70],['plumbing',0.65],['electrical',0.70],['hvac',0.60],['painting',0.55],['flooring',0.55]],
+  'open-concept': [['framing',0.75],['structural-steel',0.65],['drywall',0.70],['painting',0.60],['electrical',0.55]],
+  'structural-beam': [['structural-steel',0.80],['framing',0.65]],
+  'fire-damage': [['demolition',0.70],['framing',0.70],['drywall',0.70],['painting',0.65],['electrical',0.65],['plumbing',0.60],['insulation',0.60]],
+  carport: [['framing',0.70],['concrete',0.65],['roofing',0.65]],
+  canopy: [['framing',0.65],['concrete',0.55]],
+  laundry: [['plumbing',0.80],['electrical',0.65]],
+  'accessory-building': [['framing',0.70],['concrete',0.60],['electrical',0.55],['roofing',0.55]],
+  drain: [['drain-plumbing',0.85]],
+  'backflow-preventer': [['drain-plumbing',0.80]],
+  'access-control': [['electrical',0.70]],
+  school: [['concrete',0.65],['framing',0.65],['hvac',0.70],['electrical',0.70],['plumbing',0.65],['fire-protection',0.60]],
+  hospital: [['concrete',0.65],['framing',0.60],['hvac',0.75],['electrical',0.75],['plumbing',0.70],['fire-protection',0.65],['elevator',0.60]],
+  station: [['concrete',0.70],['structural-steel',0.65],['electrical',0.70]],
+  storage: [['framing',0.60],['concrete',0.60]],
+};
+
+// Slug → trade id mapping
+const SLUG_TO_ID = new Map(TRADES.map(t => [t.slug, t.id]));
+
+function lookupTradesForTags(scopeTags) {
+  const best = new Map(); // slug -> confidence
+  for (const tag of scopeTags) {
+    const key = normalizeTag(tag);
+    const entries = TAG_TRADE_MATRIX[key];
+    if (!entries) continue;
+    for (const [slug, conf] of entries) {
+      const existing = best.get(slug) ?? 0;
+      if (conf > existing) best.set(slug, conf);
+    }
+  }
+  return Array.from(best.entries()).map(([slug, confidence]) => ({ slug, confidence }));
+}
+
+// ---------------------------------------------------------------------------
+// Work-Field Fallback (mirrors classifier.ts WORK_TRADE_FALLBACK)
+// ---------------------------------------------------------------------------
+const WORK_TRADE_FALLBACK = {
+  'Interior Alterations': { slugs: ['drywall','painting','flooring','electrical','plumbing'], confidence: 0.70 },
+  'New Building': { slugs: ['framing','concrete','excavation','plumbing','electrical','hvac','drywall','roofing','insulation'], confidence: 0.65 },
+  'Addition': { slugs: ['framing','concrete','plumbing','electrical','hvac','drywall','insulation'], confidence: 0.65 },
+  'Re-Roofing': { slugs: ['roofing'], confidence: 0.85 },
+  'Re-Cladding': { slugs: ['masonry','insulation'], confidence: 0.80 },
+  'Deck': { slugs: ['framing','concrete'], confidence: 0.75 },
+  'Porch': { slugs: ['framing','concrete','roofing','masonry'], confidence: 0.70 },
+  'Garage': { slugs: ['framing','concrete','roofing','electrical','drywall'], confidence: 0.70 },
+  'Pool': { slugs: ['excavation','concrete','plumbing','electrical'], confidence: 0.75 },
+  'Demolition': { slugs: ['demolition','excavation'], confidence: 0.85 },
+  'Underpinning': { slugs: ['shoring','concrete','waterproofing','excavation'], confidence: 0.80 },
+  'Fireplace/Wood Stoves': { slugs: ['hvac','masonry'], confidence: 0.75 },
+  'Fire Damage': { slugs: ['demolition','framing','drywall','painting','electrical','plumbing','insulation'], confidence: 0.65 },
+  'Sprinklers': { slugs: ['fire-protection','plumbing'], confidence: 0.80 },
+  'Electromagnetic Locks': { slugs: ['electrical'], confidence: 0.80 },
+  'Fire Alarm': { slugs: ['fire-protection','electrical'], confidence: 0.80 },
+  'Elevator': { slugs: ['elevator','electrical'], confidence: 0.80 },
+  'Balcony/Guard Replacement': { slugs: ['framing','concrete','glazing','waterproofing'], confidence: 0.70 },
+  'HVAC': { slugs: ['hvac'], confidence: 0.85 },
+  'Plumbing': { slugs: ['plumbing'], confidence: 0.85 },
+  'Drain': { slugs: ['drain-plumbing'], confidence: 0.85 },
+  'Mechanical': { slugs: ['hvac','plumbing','electrical'], confidence: 0.75 },
+};
+const DEFAULT_FALLBACK = { slugs: ['framing','plumbing','electrical','hvac','drywall','painting'], confidence: 0.55 };
+
+function getWorkFallback(work) {
+  if (!work) return DEFAULT_FALLBACK;
+  const workLower = work.toLowerCase();
+  for (const [pattern, fb] of Object.entries(WORK_TRADE_FALLBACK)) {
+    if (workLower.includes(pattern.toLowerCase())) return fb;
+  }
+  return DEFAULT_FALLBACK;
+}
+
+// ---------------------------------------------------------------------------
 // Rule matching
 // ---------------------------------------------------------------------------
 function fieldMatches(fieldValue, pattern, tier) {
@@ -174,8 +321,8 @@ const NARROW_SCOPE_CODES = {
   PSA: ['plumbing'],
   HVA: ['hvac'],
   MSA: ['hvac'],
-  DRN: ['plumbing'],
-  STS: ['plumbing'],
+  DRN: ['drain-plumbing'],
+  STS: ['drain-plumbing'],
   FSU: ['fire-protection'],
   DEM: ['demolition'],
   SHO: ['excavation', 'shoring', 'concrete', 'waterproofing'],
@@ -232,49 +379,119 @@ function getFieldValue(permit, matchField) {
 
 function classifyPermit(permit, rules) {
   const phase = determinePhase(permit);
-  const matchMap = new Map();
+  const code = extractPermitCode(permit.permit_num);
+  const isNarrowScope = code != null && NARROW_SCOPE_CODES[code] != null;
 
+  // Step 1: Tier 1 rule matches
+  const ruleMap = new Map();
   for (const rule of rules) {
     if (!rule.is_active) continue;
+    if (rule.tier !== 1) continue; // Only Tier 1 rules now
     const fieldValue = getFieldValue(permit, rule.match_field);
-    const { matched, strength } = fieldMatches(fieldValue, rule.match_pattern, rule.tier);
+    const { matched } = fieldMatches(fieldValue, rule.match_pattern, rule.tier);
     if (!matched) continue;
 
     const trade = TRADE_BY_ID.get(rule.trade_id);
     if (!trade) continue;
 
-    let confidence;
-    if (rule.confidence > 0) {
-      confidence = rule.confidence;
-    } else if (rule.tier === 3) {
-      confidence = strength;
-    } else {
-      confidence = rule.tier === 1 ? 0.95 : 0.80;
-    }
-
+    const confidence = rule.confidence > 0 ? rule.confidence : 0.95;
     const isActive = isTradeActiveInPhase(trade.slug, phase);
     const tradeMatch = {
       permit_num: permit.permit_num,
       revision_num: permit.revision_num,
       trade_id: trade.id,
       trade_slug: trade.slug,
-      tier: rule.tier,
+      tier: 1,
       confidence,
       is_active: isActive,
       phase,
     };
-
     tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase);
 
-    const key = `${trade.id}-${rule.tier}`;
-    const existing = matchMap.get(key);
-    if (!existing || existing.confidence < tradeMatch.confidence) {
-      matchMap.set(key, tradeMatch);
+    const existing = ruleMap.get(trade.slug);
+    if (!existing || existing.confidence < confidence) {
+      ruleMap.set(trade.slug, tradeMatch);
     }
   }
 
-  const allMatches = Array.from(matchMap.values());
-  return applyScopeLimit(allMatches, permit.permit_num, permit.work);
+  // Narrow-scope permits: Tier 1 rule matches, with code-based fallback
+  if (isNarrowScope) {
+    const limited = applyScopeLimit(Array.from(ruleMap.values()), permit.permit_num, permit.work);
+    if (limited.length > 0) return limited;
+
+    // Fallback: assign code's allowed trades at 0.80 confidence
+    const allowed = NARROW_SCOPE_CODES[code];
+    return allowed.map((slug) => {
+      const tradeId = SLUG_TO_ID.get(slug);
+      if (!tradeId) return null;
+      const isActive = isTradeActiveInPhase(slug, phase);
+      const tradeMatch = {
+        permit_num: permit.permit_num,
+        revision_num: permit.revision_num,
+        trade_id: tradeId,
+        trade_slug: slug,
+        tier: 1,
+        confidence: 0.80,
+        is_active: isActive,
+        phase,
+      };
+      tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase);
+      return tradeMatch;
+    }).filter(Boolean);
+  }
+
+  // Step 2: Tag-trade matrix matches (Tier 2)
+  const scopeTags = permit.scope_tags || [];
+  const merged = new Map(ruleMap); // start with rule matches
+
+  if (scopeTags.length > 0) {
+    const tagResults = lookupTradesForTags(scopeTags);
+    for (const { slug, confidence } of tagResults) {
+      const tradeId = SLUG_TO_ID.get(slug);
+      if (!tradeId) continue; // skip trades not in the 20-trade list
+      const isActive = isTradeActiveInPhase(slug, phase);
+      const tradeMatch = {
+        permit_num: permit.permit_num,
+        revision_num: permit.revision_num,
+        trade_id: tradeId,
+        trade_slug: slug,
+        tier: 2,
+        confidence,
+        is_active: isActive,
+        phase,
+      };
+      tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase);
+
+      const existing = merged.get(slug);
+      if (!existing || existing.confidence < confidence) {
+        merged.set(slug, tradeMatch);
+      }
+    }
+  }
+
+  // Step 3: Work-field fallback if no matches
+  if (merged.size === 0) {
+    const fb = getWorkFallback(permit.work);
+    for (const slug of fb.slugs) {
+      const tradeId = SLUG_TO_ID.get(slug);
+      if (!tradeId) continue;
+      const isActive = isTradeActiveInPhase(slug, phase);
+      const tradeMatch = {
+        permit_num: permit.permit_num,
+        revision_num: permit.revision_num,
+        trade_id: tradeId,
+        trade_slug: slug,
+        tier: 1,
+        confidence: fb.confidence,
+        is_active: isActive,
+        phase,
+      };
+      tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase);
+      merged.set(slug, tradeMatch);
+    }
+  }
+
+  return applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);
 }
 
 // ---------------------------------------------------------------------------
@@ -292,50 +509,8 @@ async function main() {
   const dbRules = rulesResult.rows;
   console.log(`Loaded ${dbRules.length} active rules from database`);
 
-  // Also use hardcoded structure_type rules (not yet in DB migration)
-  const structureTypeRules = [
-    // Small residential (SFD-*)
-    { id: 1000, trade_id: 5,  tier: 2, match_field: 'structure_type', match_pattern: 'SFD',               confidence: 0.55, phase_start: 3,  phase_end: 9,  is_active: true },
-    { id: 1001, trade_id: 7,  tier: 2, match_field: 'structure_type', match_pattern: 'SFD',               confidence: 0.50, phase_start: 9,  phase_end: 18, is_active: true },
-    { id: 1002, trade_id: 8,  tier: 2, match_field: 'structure_type', match_pattern: 'SFD',               confidence: 0.50, phase_start: 3,  phase_end: 18, is_active: true },
-    { id: 1003, trade_id: 9,  tier: 2, match_field: 'structure_type', match_pattern: 'SFD',               confidence: 0.50, phase_start: 3,  phase_end: 18, is_active: true },
-    { id: 1004, trade_id: 10, tier: 2, match_field: 'structure_type', match_pattern: 'SFD',               confidence: 0.50, phase_start: 3,  phase_end: 18, is_active: true },
-    { id: 1005, trade_id: 12, tier: 2, match_field: 'structure_type', match_pattern: 'SFD',               confidence: 0.45, phase_start: 9,  phase_end: 18, is_active: true },
-    { id: 1006, trade_id: 13, tier: 2, match_field: 'structure_type', match_pattern: 'SFD',               confidence: 0.45, phase_start: 9,  phase_end: 18, is_active: true },
-    { id: 1007, trade_id: 14, tier: 2, match_field: 'structure_type', match_pattern: 'SFD',               confidence: 0.40, phase_start: 9,  phase_end: 18, is_active: true },
-    { id: 1008, trade_id: 15, tier: 2, match_field: 'structure_type', match_pattern: 'SFD',               confidence: 0.40, phase_start: 9,  phase_end: 18, is_active: true },
-    // Laneway
-    { id: 1009, trade_id: 5,  tier: 2, match_field: 'structure_type', match_pattern: 'Laneway',           confidence: 0.55, phase_start: 3,  phase_end: 9,  is_active: true },
-    { id: 1010, trade_id: 3,  tier: 2, match_field: 'structure_type', match_pattern: 'Laneway',           confidence: 0.50, phase_start: 0,  phase_end: 6,  is_active: true },
-    { id: 1011, trade_id: 1,  tier: 2, match_field: 'structure_type', match_pattern: 'Laneway',           confidence: 0.50, phase_start: 0,  phase_end: 3,  is_active: true },
-    // Apartment Building
-    { id: 1012, trade_id: 3,  tier: 2, match_field: 'structure_type', match_pattern: 'Apartment Building', confidence: 0.60, phase_start: 0,  phase_end: 6,  is_active: true },
-    { id: 1013, trade_id: 17, tier: 2, match_field: 'structure_type', match_pattern: 'Apartment Building', confidence: 0.60, phase_start: 6,  phase_end: 18, is_active: true },
-    { id: 1014, trade_id: 11, tier: 2, match_field: 'structure_type', match_pattern: 'Apartment Building', confidence: 0.55, phase_start: 6,  phase_end: 18, is_active: true },
-    { id: 1015, trade_id: 16, tier: 2, match_field: 'structure_type', match_pattern: 'Apartment Building', confidence: 0.55, phase_start: 9,  phase_end: 18, is_active: true },
-    { id: 1016, trade_id: 4,  tier: 2, match_field: 'structure_type', match_pattern: 'Apartment Building', confidence: 0.50, phase_start: 3,  phase_end: 9,  is_active: true },
-    // Stacked Townhouses
-    { id: 1017, trade_id: 3,  tier: 2, match_field: 'structure_type', match_pattern: 'Stacked Townhouses', confidence: 0.55, phase_start: 0,  phase_end: 6,  is_active: true },
-    { id: 1018, trade_id: 11, tier: 2, match_field: 'structure_type', match_pattern: 'Stacked Townhouses', confidence: 0.50, phase_start: 6,  phase_end: 18, is_active: true },
-    // Industrial
-    { id: 1019, trade_id: 4,  tier: 2, match_field: 'structure_type', match_pattern: 'Industrial',        confidence: 0.60, phase_start: 3,  phase_end: 9,  is_active: true },
-    { id: 1020, trade_id: 10, tier: 2, match_field: 'structure_type', match_pattern: 'Industrial',        confidence: 0.55, phase_start: 3,  phase_end: 18, is_active: true },
-    { id: 1021, trade_id: 3,  tier: 2, match_field: 'structure_type', match_pattern: 'Industrial',        confidence: 0.55, phase_start: 0,  phase_end: 6,  is_active: true },
-    // Office
-    { id: 1022, trade_id: 11, tier: 2, match_field: 'structure_type', match_pattern: 'Office',            confidence: 0.50, phase_start: 6,  phase_end: 18, is_active: true },
-    { id: 1023, trade_id: 16, tier: 2, match_field: 'structure_type', match_pattern: 'Office',            confidence: 0.50, phase_start: 9,  phase_end: 18, is_active: true },
-    { id: 1024, trade_id: 9,  tier: 2, match_field: 'structure_type', match_pattern: 'Office',            confidence: 0.50, phase_start: 3,  phase_end: 18, is_active: true },
-    // Retail
-    { id: 1025, trade_id: 16, tier: 2, match_field: 'structure_type', match_pattern: 'Retail',            confidence: 0.50, phase_start: 9,  phase_end: 18, is_active: true },
-    { id: 1026, trade_id: 11, tier: 2, match_field: 'structure_type', match_pattern: 'Retail',            confidence: 0.45, phase_start: 6,  phase_end: 18, is_active: true },
-    // Restaurant
-    { id: 1027, trade_id: 9,  tier: 2, match_field: 'structure_type', match_pattern: 'Restaurant',        confidence: 0.55, phase_start: 3,  phase_end: 18, is_active: true },
-    { id: 1028, trade_id: 8,  tier: 2, match_field: 'structure_type', match_pattern: 'Restaurant',        confidence: 0.50, phase_start: 3,  phase_end: 18, is_active: true },
-    { id: 1029, trade_id: 11, tier: 2, match_field: 'structure_type', match_pattern: 'Restaurant',        confidence: 0.50, phase_start: 6,  phase_end: 18, is_active: true },
-  ];
-
-  const allRules = [...dbRules, ...structureTypeRules];
-  console.log(`Total rules (DB + structure_type): ${allRules.length}`);
+  const allRules = dbRules;
+  console.log(`Total rules: ${allRules.length} (Tier 1 DB rules + tag-trade matrix + work-field fallback)`);
 
   // Count permits
   const countResult = await pool.query('SELECT COUNT(*) as total FROM permits');
@@ -352,7 +527,8 @@ async function main() {
   while (offset.value < totalPermits) {
     const batch = await pool.query(
       `SELECT permit_num, revision_num, permit_type, structure_type, work,
-              description, status, est_const_cost, issued_date, current_use, proposed_use
+              description, status, est_const_cost, issued_date, current_use, proposed_use,
+              scope_tags
        FROM permits ORDER BY permit_num, revision_num
        LIMIT $1 OFFSET $2`,
       [BATCH_SIZE, offset.value]
@@ -393,16 +569,25 @@ async function main() {
       }
     }
 
-    // Batch insert
-    if (insertParams.length > 0) {
+    // Batch insert — sub-batch to stay under 65535 param limit (8 params per row → max 8000 rows)
+    const MAX_ROWS_PER_INSERT = 4000;
+    for (let i = 0; i < insertParams.length; i += MAX_ROWS_PER_INSERT) {
+      const chunk = insertParams.slice(i, i + MAX_ROWS_PER_INSERT);
+      const valChunk = insertValues.slice(i * 8, (i + MAX_ROWS_PER_INSERT) * 8);
+      // Re-number params for this chunk
+      let pIdx = 1;
+      const renumbered = [];
+      for (let r = 0; r < chunk.length; r++) {
+        renumbered.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++})`);
+      }
       await pool.query(
         `INSERT INTO permit_trades (permit_num, revision_num, trade_id, tier, confidence, is_active, phase, lead_score)
-         VALUES ${insertParams.join(', ')}
+         VALUES ${renumbered.join(', ')}
          ON CONFLICT (permit_num, revision_num, trade_id)
          DO UPDATE SET tier = EXCLUDED.tier, confidence = EXCLUDED.confidence,
                        is_active = EXCLUDED.is_active, phase = EXCLUDED.phase,
                        lead_score = EXCLUDED.lead_score, classified_at = NOW()`,
-        insertValues
+        valChunk
       );
     }
 

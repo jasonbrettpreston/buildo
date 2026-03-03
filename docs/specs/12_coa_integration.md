@@ -1,7 +1,7 @@
 # 12 - Committee of Adjustments Integration
 
 **Status:** In Progress
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-03-03
 **Depends On:** `01_database_schema.md`, `02_data_ingestion.md`, `05_geocoding.md`
 **Blocks:** `15_dashboard_tradesperson.md`
 
@@ -35,7 +35,7 @@
 ```
 syncCoaApplications(): SyncResult
   1. Fetch data from CKAN API:
-     GET https://ckan0.cf.opendata.inter.prod-p.toronto.ca/api/3/action/package_show?id=260e1356-dce6-48e2-afa0-e71d70cd6406
+     GET https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=260e1356-dce6-48e2-afa0-e71d70cd6406
      - Extract resource URLs from package metadata
      - Fetch resource data (JSON format)
   2. Parse each record into CoaApplication shape
@@ -62,46 +62,33 @@ parseCoaAddress(rawAddress: string): ParsedAddress
 
 ### Permit Linking Algorithm
 
-CoA applications are linked to building permits using a multi-factor matching approach.
+CoA applications are linked to building permits using a 3-tier cascade approach.
+The linker tries each tier in order and stops at the first match:
 
 ```
 linkCoaToPermits(coaApp: CoaApplication): LinkResult
-  1. Address Match (required):
+  Tier 1 — Exact Address Match (confidence: 0.95):
      - Parse CoA address into street_num + street_name
-     - Query permits where:
-       permits.street_num = coaApp.street_num AND
-       permits.street_name ILIKE coaApp.street_name
-     - If no address match: return { linked: false, reason: 'no_address_match' }
+     - Query permits WHERE street_num = coaApp.street_num AND street_name ILIKE coaApp.street_name
+     - If match found: link with confidence 0.95
 
-  2. Date Proximity Score (0.0 - 0.4):
-     - Calculate days between CoA decision_date and permit issued_date
-     - If within 90 days: 0.4
-     - If within 180 days: 0.3
-     - If within 365 days: 0.2
-     - If within 730 days: 0.1
-     - If > 730 days or no dates: 0.0
+  Tier 2 — Fuzzy Address Match (confidence: 0.60):
+     - Alternative address matching with ward filter
+     - Handles abbreviations, directional differences
+     - If match found: link with confidence 0.60
 
-  3. Description Similarity Score (0.0 - 0.3):
-     - Tokenize both CoA description and permit description
-     - Calculate Jaccard similarity of token sets
-     - Multiply by 0.3 to get score component
-     - If either description is null: 0.0
+  Tier 3 — Description Full-Text Search (confidence: 0.30-0.50):
+     - FTS search using CoA description against permit descriptions
+     - Variable confidence based on match quality
+     - Slowest tier (used only when address matching fails)
 
-  4. Decision Status Bonus (0.0 - 0.3):
-     - If CoA decision = "Approved": 0.3
-     - If CoA decision = "Approved with Conditions": 0.25
-     - If CoA decision = "Partially Approved": 0.15
-     - If CoA decision = "Refused" or "Withdrawn": 0.0
-
-  5. Total Confidence = date_proximity + description_similarity + decision_bonus
-     - Range: 0.0 to 1.0
-     - Threshold for auto-link: >= 0.5
-     - Below threshold: store as candidate link for manual review
-
-  6. If multiple permits match at same address:
-     - Link to permit with highest total confidence
-     - Store runner-up matches as candidates
+  If no tier produces a match: return { linked: false, reason: 'no_match' }
 ```
+
+**Note:** The original spec described a cumulative scoring model (date proximity +
+description similarity + decision bonus = 0.0-1.0). The actual implementation uses
+a tier-based cascade with fixed confidence per tier. Decision bonus scoring is not
+implemented as a separate component.
 
 ### Leading Indicator Logic
 
@@ -164,20 +151,22 @@ getUpcomingLeads(): PrePermit[]
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `src/lib/coa/types.ts` | CoaApplication, CoaLinkResult interfaces | Exists |
-| `src/lib/coa/repository.ts` | CRUD operations for coa_applications | Exists |
-| `src/lib/coa/linker.ts` | Address matching, confidence scoring, permit linking | Exists |
-| `src/lib/coa/pre-permits.ts` | Pre-Permit query + CoA-to-Permit DTO mapper | Planned |
-| `src/lib/coa/sync.ts` | CKAN data fetch, parsing, upsert logic | Planned |
-| `src/app/api/coa/route.ts` | GET /api/coa endpoint | Exists |
-| `src/app/api/permits/route.ts` | MODIFY: UNION pre-permits when source=pre_permits | Planned |
-| `src/app/api/permits/geo/route.ts` | MODIFY: UNION pre-permits for map view | Planned |
-| `src/app/api/permits/[id]/route.ts` | MODIFY: Handle COA- prefix for pre-permit detail | Planned |
-| `src/components/permits/PermitCard.tsx` | MODIFY: Pre-Permit badge styling | Planned |
-| `src/app/permits/[id]/page.tsx` | MODIFY: Pre-Permit detail view with CoA fields | Planned |
-| `migrations/009_coa_applications.sql` | Create coa_applications table | Exists |
-| `migrations/027_coa_pre_permit_indexes.sql` | Indexes for decision_date + unlinked approved CoAs | Planned |
-| `src/tests/coa.logic.test.ts` | Unit tests: address parsing, linking, confidence, pre-permits | Exists (enhancing) |
+| `src/lib/coa/types.ts` | CoaApplication, CoaLinkResult interfaces (snake_case) | Implemented |
+| `src/lib/coa/repository.ts` | CRUD operations for coa_applications | Implemented |
+| `src/lib/coa/linker.ts` | 3-tier address matching cascade (exact, fuzzy, FTS) | Implemented |
+| `src/lib/coa/pre-permits.ts` | Pre-Permit qualifying filter + CoA-to-Permit DTO mapper | Implemented |
+| `scripts/load-coa.js` | CKAN data fetch, parse two resources (active + closed), upsert | Implemented |
+| `scripts/link-coa.js` | Batch linking of CoA applications to permits | Implemented |
+| `scripts/seed-coa.js` | Initial CoA data seeding | Implemented |
+| `scripts/create-pre-permits.js` | Batch create pre-permit records from qualifying CoAs | Implemented |
+| `src/app/api/coa/route.ts` | GET /api/coa with permit_num and ward filtering | Implemented |
+| `src/app/api/permits/route.ts` | UNION pre-permits when source=pre_permits | Implemented |
+| `src/app/api/permits/[id]/route.ts` | Handle COA- prefix for pre-permit detail routing | Implemented |
+| `migrations/009_coa_applications.sql` | Create coa_applications table | Implemented |
+| `migrations/027_coa_pre_permit_indexes.sql` | Indexes for decision_date + unlinked approved CoAs | Implemented |
+| `migrations/032_coa_sub_type.sql` | Add sub_type column (separate application type from applicant) | Implemented |
+| `src/tests/coa.logic.test.ts` | 63 tests: address parsing, linking, confidence, pre-permits | Implemented |
+| `src/lib/coa/sync.ts` | TypeScript CKAN sync module | Planned |
 
 ---
 

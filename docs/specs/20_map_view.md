@@ -1,5 +1,8 @@
 # Feature: Map View
 
+**Status:** In Progress
+**Last Updated:** 2026-03-03
+
 ## 1. User Story
 "As a user, I want to see permits plotted on a map so I can find opportunities in my area and visualize construction activity geographically."
 
@@ -118,27 +121,29 @@ The map respects all active filters from the search/filter panel (Spec 19):
 
 ## 3. Associated Files
 
-| File | Status | Purpose |
-|------|--------|---------|
-| `src/app/map/page.tsx` | Planned | Map view page |
-| `src/app/map/layout.tsx` | Planned | Map view layout (full-width) |
-| `src/components/map/PermitMap.tsx` | Planned | Main map container component |
-| `src/components/map/MapMarker.tsx` | Planned | Custom marker component |
-| `src/components/map/MarkerCluster.tsx` | Planned | Cluster display component |
-| `src/components/map/MarkerPopup.tsx` | Planned | Info window popup component |
-| `src/components/map/HeatmapToggle.tsx` | Planned | Heat map layer toggle control |
-| `src/components/map/WardOverlay.tsx` | Planned | Ward boundary polygon overlay |
-| `src/components/map/RadiusSearch.tsx` | Planned | Radius search circle tool |
-| `src/components/map/MapToolbar.tsx` | Planned | Map controls toolbar |
-| `src/components/map/MapFilters.tsx` | Planned | Filter panel for map view |
-| `src/lib/map/viewport.ts` | Planned | Bounding box calculation and caching |
-| `src/lib/map/clustering.ts` | Planned | Cluster color/size calculation |
-| `src/lib/map/radius.ts` | Planned | Haversine distance and circle intersection |
-| `src/lib/map/ward-boundaries.ts` | Planned | Ward GeoJSON data and utilities |
-| `src/app/api/permits/geo/route.ts` | Planned | Geo-filtered permit API endpoint |
-| `src/tests/map.logic.test.ts` | Planned | Map logic unit tests |
-| `src/tests/map.ui.test.tsx` | Planned | Map component tests |
-| `src/tests/map.infra.test.ts` | Planned | Map integration tests |
+**Architecture note:** The spec planned 11 modular sub-components. The actual implementation
+uses a single monolithic page component with inline Google Maps integration, marker plotting,
+and a permit details sidebar. The geo API endpoint is implemented but the map page currently
+uses `/api/permits?limit=200` instead of viewport-based loading.
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `src/app/map/page.tsx` | Map page with Google Maps, markers, sidebar, quick filters | Implemented |
+| `src/app/api/permits/geo/route.ts` | Geo-filtered API with bounding box, status/trade/cost filters | Implemented |
+| `src/tests/map.ui.test.tsx` | Geocoded permit filtering logic tests | Implemented |
+| `src/components/map/MarkerCluster.tsx` | Marker clustering (@googlemaps/markerclusterer) | Planned |
+| `src/components/map/HeatmapToggle.tsx` | Heat map overlay toggle | Planned |
+| `src/components/map/WardOverlay.tsx` | Ward boundary GeoJSON overlay | Planned |
+| `src/components/map/RadiusSearch.tsx` | Radius search circle tool | Planned |
+| `src/lib/map/viewport.ts` | Viewport-based loading with debounced bounding box | Planned |
+| `src/tests/map.logic.test.ts` | Map logic unit tests | Planned |
+
+**Implemented features:** Google Maps with markers, marker click opens sidebar with permit
+details, quick filters (status, trade), geocoded permit count, navigation to detail page,
+fallback when API key not set.
+
+**Not yet implemented:** Marker clustering, heat map overlay, ward boundaries, radius search,
+viewport-based loading (uses static limit=200), marker color by status, marker size by cost.
 
 ## 4. Constraints & Edge Cases
 

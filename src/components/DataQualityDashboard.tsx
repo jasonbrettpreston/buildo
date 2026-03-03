@@ -1,298 +1,494 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import type { DataQualitySnapshot, DataQualityResponse } from '@/lib/quality/types';
-import { calculateEffectivenessScore } from '@/lib/quality/types';
-import { CoverageCard } from '@/components/CoverageCard';
-import { ConfidenceHistogram } from '@/components/ConfidenceHistogram';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import type { DataQualityResponse } from '@/lib/quality/types';
+import { DataSourceCircle } from '@/components/DataSourceCircle';
 import { FreshnessTimeline } from '@/components/FreshnessTimeline';
 
-function ScoreGauge({ score }: { score: number | null }) {
-  if (score === null) {
-    return (
-      <div className="flex flex-col items-center">
-        <div className="w-32 h-32 rounded-full border-8 border-gray-200 flex items-center justify-center">
-          <span className="text-2xl font-bold text-gray-400">N/A</span>
-        </div>
-        <p className="text-sm text-gray-500 mt-2">No data yet</p>
-      </div>
-    );
+// ---------------------------------------------------------------------------
+// Pipeline schedule constants (shared with admin page)
+// ---------------------------------------------------------------------------
+
+const PIPELINE_SCHEDULES: Record<string, { label: string }> = {
+  // Ingest
+  permits: { label: 'Daily' },
+  coa: { label: 'Daily' },
+  builders: { label: 'Daily' },
+  address_points: { label: 'Quarterly' },
+  parcels: { label: 'Quarterly' },
+  massing: { label: 'Quarterly' },
+  neighbourhoods: { label: 'Annual' },
+  // Link
+  geocode_permits: { label: 'Daily' },
+  link_parcels: { label: 'Quarterly' },
+  link_neighbourhoods: { label: 'Annual' },
+  link_massing: { label: 'Quarterly' },
+  link_coa: { label: 'Daily' },
+  // Enrich
+  enrich_google: { label: 'Daily' },
+  enrich_wsib: { label: 'Daily' },
+  // Classify
+  classify_scope_class: { label: 'Daily' },
+  classify_scope_tags: { label: 'Daily' },
+  classify_permits: { label: 'Daily' },
+  // Compute centroids
+  compute_centroids: { label: 'Quarterly' },
+  // Similar + Pre-permits
+  link_similar: { label: 'Daily' },
+  create_pre_permits: { label: 'Daily' },
+  // Snapshot
+  refresh_snapshot: { label: 'Daily' },
+};
+
+function getNextScheduledDate(slug: string): string {
+  const now = new Date();
+  const schedule = PIPELINE_SCHEDULES[slug];
+  if (!schedule) return 'N/A';
+
+  const fmt = (d: Date) =>
+    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  if (schedule.label === 'Daily') {
+    const estHours: Record<string, number> = { permits: 7, coa: 8, builders: 9 };
+    const hour = estHours[slug] ?? 7;
+    const next = new Date(now);
+    next.setUTCHours(hour, 0, 0, 0);
+    if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
+    return fmt(next);
   }
 
-  const color =
-    score >= 80 ? 'border-green-500 text-green-700' :
-    score >= 60 ? 'border-yellow-500 text-yellow-700' :
-    score >= 40 ? 'border-orange-500 text-orange-700' :
-    'border-red-500 text-red-700';
+  if (schedule.label === 'Quarterly') {
+    const quarterMonths = [0, 3, 6, 9];
+    const year = now.getFullYear();
+    for (const month of quarterMonths) {
+      const d = new Date(year, month, 1);
+      if (d > now) return fmt(d);
+    }
+    return fmt(new Date(year + 1, 0, 1));
+  }
 
-  const bgColor =
-    score >= 80 ? 'bg-green-50' :
-    score >= 60 ? 'bg-yellow-50' :
-    score >= 40 ? 'bg-orange-50' :
-    'bg-red-50';
+  if (schedule.label === 'Annual') {
+    const thisYear = new Date(now.getFullYear(), 0, 1);
+    if (thisYear > now) return fmt(thisYear);
+    return fmt(new Date(now.getFullYear() + 1, 0, 1));
+  }
 
-  const label =
-    score >= 80 ? 'Excellent' :
-    score >= 60 ? 'Good' :
-    score >= 40 ? 'Fair' :
-    'Needs Work';
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className={`w-32 h-32 rounded-full border-8 ${color} ${bgColor} flex items-center justify-center`}>
-        <span className={`text-3xl font-bold ${color.split(' ')[1]}`}>
-          {score.toFixed(1)}
-        </span>
-      </div>
-      <p className={`text-sm font-medium mt-2 ${color.split(' ')[1]}`}>
-        {label}
-      </p>
-    </div>
-  );
+  return 'N/A';
 }
 
-function ScoreSparkline({ trends }: { trends: DataQualitySnapshot[] }) {
-  const scores = trends
-    .map((t) => calculateEffectivenessScore(t))
-    .filter((s): s is number => s !== null)
-    .reverse();
+// ---------------------------------------------------------------------------
+// Stats types (for pipeline_last_run from /api/admin/stats)
+// ---------------------------------------------------------------------------
 
-  if (scores.length < 2) return null;
+interface PipelineRunInfo { last_run_at: string | null; status: string | null }
 
-  const max = Math.max(...scores);
-  const min = Math.min(...scores);
-  const range = max - min || 1;
-  const w = 200;
-  const h = 40;
-  const step = w / (scores.length - 1);
-  const points = scores
-    .map((v, i) => `${i * step},${h - ((v - min) / range) * (h - 4) - 2}`)
-    .join(' ');
-
-  return (
-    <svg width={w} height={h} className="mt-2">
-      <polyline
-        points={points}
-        fill="none"
-        stroke="#3B82F6"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+interface AdminStats {
+  total_permits: number;
+  active_permits: number;
+  address_points_total: number;
+  parcels_total: number;
+  building_footprints_total: number;
+  parcels_with_massing: number;
+  permits_with_massing: number;
+  neighbourhoods_total: number;
+  coa_upcoming: number;
+  pipeline_last_run: Record<string, PipelineRunInfo>;
+  [key: string]: unknown;
 }
+
+function calcPct(num: number, denom: number): number {
+  if (denom === 0) return 0;
+  return Math.round((num / denom) * 1000) / 10;
+}
+
+function fmtPct(num: number, denom: number): string {
+  return `${calcPct(num, denom)}%`;
+}
+
+const POLL_INTERVAL_MS = 5000;
+
+// ---------------------------------------------------------------------------
+// Dashboard
+// ---------------------------------------------------------------------------
 
 export function DataQualityDashboard() {
   const [data, setData] = useState<DataQualityResponse | null>(null);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [runningPipelines, setRunningPipelines] = useState<Set<string>>(new Set());
+  const [pipelineError, setPipelineError] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchData = useCallback(() => {
-    fetch('/api/quality')
-      .then((res) => res.json())
-      .then((d) => setData(d))
+    return Promise.all([
+      fetch('/api/quality').then((r) => r.json()),
+      fetch('/api/admin/stats').then((r) => r.json()),
+    ])
+      .then(([qualityData, statsData]) => {
+        setData(qualityData);
+        setStats(statsData);
+        return statsData as AdminStats;
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await fetch('/api/quality/refresh', { method: 'POST' });
-      fetchData();
-    } catch (err) {
-      console.error('Refresh failed:', err);
-    } finally {
-      setRefreshing(false);
+  // Polling while pipelines are running — also detects chain-spawned running steps
+  useEffect(() => {
+    if (runningPipelines.size === 0) {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      return;
     }
-  };
+    pollRef.current = setInterval(async () => {
+      const freshStats = await fetchData();
+      if (!freshStats) return;
+      setRunningPipelines((prev) => {
+        const next = new Set<string>();
+        // Keep any user-triggered slugs that are still running
+        for (const slug of prev) {
+          if (freshStats.pipeline_last_run?.[slug]?.status === 'running') next.add(slug);
+        }
+        // Also detect any individually-running pipeline steps (e.g. spawned by chain orchestrator)
+        for (const [slug, info] of Object.entries(freshStats.pipeline_last_run ?? {})) {
+          if (info?.status === 'running') next.add(slug);
+        }
+        return next;
+      });
+    }, POLL_INTERVAL_MS);
+    return () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
+  }, [runningPipelines.size, fetchData]);
+
+  const triggerPipeline = useCallback(async (slug: string) => {
+    setPipelineError(null);
+    setRunningPipelines((prev) => new Set(prev).add(slug));
+    try {
+      const res = await fetch(`/api/admin/pipelines/${slug}`, { method: 'POST' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(body.error || body.message || `Failed with status ${res.status}`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setPipelineError(`${slug}: ${msg}`);
+      setRunningPipelines((prev) => { const next = new Set(prev); next.delete(slug); return next; });
+    }
+  }, []);
 
   if (loading) {
-    return (
-      <div className="p-8 text-center text-gray-500">
-        Loading data quality metrics...
-      </div>
-    );
+    return <div className="p-8 text-center text-gray-500">Loading data quality metrics...</div>;
   }
 
   const current = data?.current;
-  const trends = data?.trends || [];
-  const score = current ? calculateEffectivenessScore(current) : null;
-
-  // Build trend arrays for sparklines (reversed so oldest first)
-  const trendFor = (key: keyof DataQualitySnapshot, denomKey?: keyof DataQualitySnapshot) => {
-    return trends.map((t) => {
-      const val = t[key] as number;
-      const denom = denomKey ? (t[denomKey] as number) : 0;
-      return denomKey && denom > 0 ? (val / denom) * 100 : val;
-    }).reverse();
-  };
-
-  // Confidence histogram buckets (placeholder — real data would come from a separate query)
-  const tradeConfBuckets = [
-    { label: '0.5-0.6', count: current ? Math.round(current.trade_tier3_count * 0.3) : 0 },
-    { label: '0.6-0.7', count: current ? Math.round(current.trade_tier3_count * 0.5) : 0 },
-    { label: '0.7-0.8', count: current ? Math.round(current.trade_tier2_count * 0.4) : 0 },
-    { label: '0.8-0.9', count: current ? Math.round(current.trade_tier2_count * 0.6 + current.trade_tier1_count * 0.3) : 0 },
-    { label: '0.9-1.0', count: current ? Math.round(current.trade_tier1_count * 0.7) : 0 },
-  ];
-
-  const coaConfBuckets = [
-    { label: '0.3-0.5', count: current?.coa_low_confidence || 0 },
-    { label: '0.5-0.6', count: current ? Math.round((current.coa_linked - current.coa_high_confidence - current.coa_low_confidence) * 0.3) : 0 },
-    { label: '0.6-0.7', count: current ? Math.round((current.coa_linked - current.coa_high_confidence - current.coa_low_confidence) * 0.4) : 0 },
-    { label: '0.7-0.8', count: current ? Math.round((current.coa_linked - current.coa_high_confidence - current.coa_low_confidence) * 0.3) : 0 },
-    { label: '0.8-1.0', count: current?.coa_high_confidence || 0 },
-  ];
+  const lastRunAt = (slug: string) => stats?.pipeline_last_run?.[slug]?.last_run_at ?? current?.last_sync_at ?? null;
 
   return (
-    <div className="space-y-6">
-      {/* Section A — Overall Health Score */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Data Effectiveness Score
-          </h2>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 disabled:opacity-50 transition-colors"
-          >
-            {refreshing ? 'Refreshing...' : 'Refresh Metrics'}
-          </button>
+    <div className="space-y-8">
+      {/* Pipeline error banner */}
+      {pipelineError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between">
+          <p className="text-sm text-red-700">Pipeline trigger failed: {pipelineError}</p>
+          <button onClick={() => setPipelineError(null)} className="text-red-400 hover:text-red-600 text-xs">Dismiss</button>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-6">
-          <ScoreGauge score={score} />
-          <div className="flex-1">
-            <ScoreSparkline trends={trends} />
-            {data?.lastUpdated && (
-              <p className="text-xs text-gray-400 mt-2">
-                Last updated: {new Date(data.lastUpdated).toLocaleString()}
-              </p>
-            )}
-            {current && (
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-500">
-                <span>Total permits: {current.total_permits.toLocaleString()}</span>
-                <span>Active permits: {current.active_permits.toLocaleString()}</span>
+      )}
+
+      {current ? (
+        <>
+          {/* ============================================================
+              Section 1: Hub-and-Spoke Data Source Diagram
+          ============================================================ */}
+          <div>
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+              Data Source Relationships
+            </h2>
+
+            {/* Hero: Permits (hub) */}
+            <div className="flex justify-center mb-2">
+              <div className="w-64">
+                <DataSourceCircle
+                  name="Building Permits"
+                  slug="permits"
+                  accuracy={calcPct(current.active_permits, current.total_permits)}
+                  count={current.total_permits}
+                  total={current.total_permits}
+                  lastUpdated={lastRunAt('permits')}
+                  nextScheduled={getNextScheduledDate('permits')}
+                  onUpdate={() => triggerPipeline('permits')}
+                  updating={runningPipelines.has('permits')}
+                  hero
+                  tiers={[
+                    { label: 'Active permits', value: current.active_permits.toLocaleString() },
+                    { label: 'Updated 24h', value: current.permits_updated_24h.toLocaleString() },
+                    { label: 'Updated 7d', value: current.permits_updated_7d.toLocaleString() },
+                  ]}
+                />
               </div>
-            )}
+            </div>
+
+            {/* Connector fan-out lines */}
+            <div className="flex justify-center">
+              <svg width="100%" height="24" className="max-w-4xl" preserveAspectRatio="none">
+                <line x1="50%" y1="0" x2="12.5%" y2="24" stroke="#d1d5db" strokeWidth="1" />
+                <line x1="50%" y1="0" x2="37.5%" y2="24" stroke="#d1d5db" strokeWidth="1" />
+                <line x1="50%" y1="0" x2="62.5%" y2="24" stroke="#d1d5db" strokeWidth="1" />
+                <line x1="50%" y1="0" x2="87.5%" y2="24" stroke="#d1d5db" strokeWidth="1" />
+              </svg>
+            </div>
+
+            {/* Row 1: Enrichment sources (link TO permits) */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Address Matching / Geocoding */}
+              <DataSourceCircle
+                name="Address Matching"
+                slug="address_points"
+                accuracy={calcPct(current.permits_geocoded, current.active_permits)}
+                count={current.permits_geocoded}
+                total={current.active_permits}
+                lastUpdated={lastRunAt('address_points')}
+                nextScheduled={getNextScheduledDate('address_points')}
+                onUpdate={() => triggerPipeline('address_points')}
+                updating={runningPipelines.has('address_points')}
+                relationship="geocodes"
+                fields={['latitude', 'longitude']}
+                tiers={[
+                  { label: 'Address points', value: stats ? stats.address_points_total.toLocaleString() : '—' },
+                  { label: 'Permits linked', value: current.permits_geocoded.toLocaleString() },
+                ]}
+              />
+
+              {/* Parcels */}
+              <DataSourceCircle
+                name="Lots (Parcels)"
+                slug="parcels"
+                accuracy={calcPct(current.permits_with_parcel, current.active_permits)}
+                count={current.permits_with_parcel}
+                total={current.active_permits}
+                avgConfidence={current.parcel_avg_confidence}
+                lastUpdated={lastRunAt('parcels')}
+                nextScheduled={getNextScheduledDate('parcels')}
+                onUpdate={() => triggerPipeline('parcels')}
+                updating={runningPipelines.has('parcels')}
+                relationship="links to"
+                fields={['lot_size', 'frontage', 'depth', 'is_irregular']}
+                tiers={[
+                  { label: 'Exact address', value: current.parcel_exact_matches.toLocaleString() },
+                  { label: 'Name match', value: current.parcel_name_matches.toLocaleString() },
+                  { label: 'Spatial', value: current.parcel_spatial_matches.toLocaleString() },
+                ]}
+              />
+
+              {/* 3D Massing */}
+              <DataSourceCircle
+                name="3D Massing"
+                slug="massing"
+                accuracy={calcPct(stats?.permits_with_massing ?? 0, current.active_permits)}
+                count={stats?.permits_with_massing ?? 0}
+                total={current.active_permits}
+                lastUpdated={lastRunAt('massing')}
+                nextScheduled={getNextScheduledDate('massing')}
+                onUpdate={() => triggerPipeline('massing')}
+                updating={runningPipelines.has('massing')}
+                relationship="enriches"
+                fields={['main_bldg_area', 'max_height', 'est_stories', 'accessory_bldgs', 'coverage_%']}
+                tiers={[
+                  { label: 'Footprints', value: (stats?.building_footprints_total ?? 0).toLocaleString() },
+                  { label: 'Parcels w/ bldg', value: (stats?.parcels_with_massing ?? 0).toLocaleString() },
+                ]}
+              />
+
+              {/* Neighbourhoods */}
+              <DataSourceCircle
+                name="Neighbourhoods"
+                slug="neighbourhoods"
+                accuracy={calcPct(current.permits_with_neighbourhood, current.active_permits)}
+                count={current.permits_with_neighbourhood}
+                total={current.active_permits}
+                lastUpdated={lastRunAt('neighbourhoods')}
+                nextScheduled={getNextScheduledDate('neighbourhoods')}
+                onUpdate={() => triggerPipeline('neighbourhoods')}
+                updating={runningPipelines.has('neighbourhoods')}
+                relationship="classifies"
+                fields={['neighbourhood_id', 'avg_income', 'tenure_%', 'construction_era']}
+                tiers={[
+                  { label: 'Total hoods', value: (stats?.neighbourhoods_total ?? 0).toLocaleString() },
+                ]}
+              />
+            </div>
+
+            {/* Connector fan-out lines for row 2 */}
+            <div className="flex justify-center mt-4">
+              <svg width="100%" height="16" className="max-w-4xl" preserveAspectRatio="none">
+                <line x1="50%" y1="0" x2="8.3%" y2="16" stroke="#d1d5db" strokeWidth="1" />
+                <line x1="50%" y1="0" x2="25%" y2="16" stroke="#d1d5db" strokeWidth="1" />
+                <line x1="50%" y1="0" x2="41.7%" y2="16" stroke="#d1d5db" strokeWidth="1" />
+                <line x1="50%" y1="0" x2="58.3%" y2="16" stroke="#d1d5db" strokeWidth="1" />
+                <line x1="50%" y1="0" x2="75%" y2="16" stroke="#d1d5db" strokeWidth="1" />
+                <line x1="50%" y1="0" x2="91.7%" y2="16" stroke="#d1d5db" strokeWidth="1" />
+              </svg>
+            </div>
+
+            {/* Row 2: Derived / classification sources */}
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+              {/* CoA Linked */}
+              <DataSourceCircle
+                name="CoA Linked"
+                slug="coa"
+                accuracy={calcPct(current.coa_linked, current.coa_total)}
+                count={current.coa_linked}
+                total={current.coa_total}
+                avgConfidence={current.coa_avg_confidence}
+                lastUpdated={lastRunAt('coa')}
+                nextScheduled={getNextScheduledDate('coa')}
+                onUpdate={() => triggerPipeline('coa')}
+                updating={runningPipelines.has('coa')}
+                relationship="links to"
+                fields={['decision', 'hearing_date', 'applicant', 'description', 'sub_type']}
+                tiers={[
+                  { label: 'Pre-permit files', value: (stats?.coa_upcoming ?? 0).toLocaleString() },
+                  { label: 'High conf (>=0.80)', value: current.coa_high_confidence.toLocaleString() },
+                  { label: 'Low conf (<0.50)', value: current.coa_low_confidence.toLocaleString() },
+                ]}
+              />
+
+              {/* Builder Profiles */}
+              <DataSourceCircle
+                name="Builder Profiles"
+                slug="builders"
+                accuracy={calcPct(current.permits_with_builder, current.active_permits)}
+                count={current.permits_with_builder}
+                total={current.active_permits}
+                lastUpdated={lastRunAt('builders')}
+                nextScheduled={getNextScheduledDate('builders')}
+                onUpdate={() => triggerPipeline('builders')}
+                updating={runningPipelines.has('builders')}
+                relationship="extracted from"
+                fields={['builder_name', 'phone', 'email', 'website']}
+                tiers={[
+                  { label: '  → Google Places', value: fmtPct(current.builders_with_google, current.builders_total) },
+                  { label: '  → WSIB', value: fmtPct(current.builders_with_wsib, current.builders_total) },
+                  { label: 'Phone', value: current.builders_with_phone.toLocaleString() },
+                  { label: 'Email', value: current.builders_with_email.toLocaleString() },
+                  { label: 'Website', value: current.builders_with_website.toLocaleString() },
+                ]}
+              />
+
+              {/* Scope Class (residential / commercial / mixed-use) */}
+              <DataSourceCircle
+                name="Scope Class"
+                slug="classify_scope_class"
+                accuracy={calcPct(current.permits_with_scope, current.active_permits)}
+                count={current.permits_with_scope}
+                total={current.active_permits}
+                lastUpdated={lastRunAt('classify_scope_class')}
+                nextScheduled={getNextScheduledDate('classify_scope_class')}
+                onUpdate={() => triggerPipeline('classify_scope_class')}
+                updating={runningPipelines.has('classify_scope_class')}
+                relationship="classifies"
+                fields={['scope_tags']}
+                tiers={[
+                  { label: 'Residential', value: (current.scope_project_type_breakdown?.residential ?? 0).toLocaleString() },
+                  { label: 'Commercial', value: (current.scope_project_type_breakdown?.commercial ?? 0).toLocaleString() },
+                  { label: 'Mixed-Use', value: (current.scope_project_type_breakdown?.['mixed-use'] ?? 0).toLocaleString() },
+                ]}
+              />
+
+              {/* Scope Tags (architectural feature tags, excluding use-types) */}
+              <DataSourceCircle
+                name="Scope Tags"
+                slug="classify_scope_tags"
+                accuracy={calcPct(current.permits_with_detailed_tags ?? 0, current.active_permits)}
+                count={current.permits_with_detailed_tags ?? 0}
+                total={current.active_permits}
+                lastUpdated={lastRunAt('classify_scope_tags')}
+                nextScheduled={getNextScheduledDate('classify_scope_tags')}
+                onUpdate={() => triggerPipeline('classify_scope_tags')}
+                updating={runningPipelines.has('classify_scope_tags')}
+                relationship="derived from"
+                fields={['scope_tags']}
+                tiers={
+                  current.scope_tags_top
+                    ? Object.entries(current.scope_tags_top)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 3)
+                        .map(([tag, count]) => ({ label: tag, value: count.toLocaleString() }))
+                    : []
+                }
+              />
+
+              {/* Trade Classification — Residential */}
+              <DataSourceCircle
+                name="Trades (Residential)"
+                slug="classify_permits"
+                accuracy={calcPct(current.trade_residential_classified ?? 0, current.trade_residential_total ?? 0)}
+                count={current.trade_residential_classified ?? 0}
+                total={current.trade_residential_total ?? 0}
+                lastUpdated={lastRunAt('classify_permits')}
+                nextScheduled={getNextScheduledDate('classify_permits')}
+                onUpdate={() => triggerPipeline('classify_permits')}
+                updating={runningPipelines.has('classify_permits')}
+                relationship="classifies"
+                fields={['permit_trades']}
+                tiers={[
+                  { label: 'Classified', value: (current.trade_residential_classified ?? 0).toLocaleString() },
+                  { label: 'Total residential', value: (current.trade_residential_total ?? 0).toLocaleString() },
+                ]}
+              />
+
+              {/* Trade Classification — Commercial / Mixed-Use */}
+              <DataSourceCircle
+                name="Trades (Commercial)"
+                slug="classify_permits"
+                accuracy={calcPct(current.trade_commercial_classified ?? 0, current.trade_commercial_total ?? 0)}
+                count={current.trade_commercial_classified ?? 0}
+                total={current.trade_commercial_total ?? 0}
+                lastUpdated={lastRunAt('classify_permits')}
+                nextScheduled={getNextScheduledDate('classify_permits')}
+                onUpdate={() => triggerPipeline('classify_permits')}
+                updating={runningPipelines.has('classify_permits')}
+                relationship="classifies"
+                fields={['permit_trades']}
+                tiers={[
+                  { label: 'Classified', value: (current.trade_commercial_classified ?? 0).toLocaleString() },
+                  { label: 'Total commercial + mixed-use', value: (current.trade_commercial_total ?? 0).toLocaleString() },
+                ]}
+              />
+
+              {/* Scope Tags placeholder for 5th column balance — shows overall enrichment */}
+              <div className="bg-gray-50 rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center p-4 text-center">
+                <div className="w-16 h-16 rounded-full border-4 border-gray-200 flex items-center justify-center mb-2">
+                  <span className="text-sm font-bold text-gray-400 tabular-nums">
+                    {current.active_permits > 0
+                      ? calcPct(
+                          current.permits_geocoded +
+                          current.permits_with_parcel +
+                          current.permits_with_neighbourhood +
+                          current.permits_with_trades +
+                          current.permits_with_scope,
+                          current.active_permits * 5
+                        ).toFixed(0)
+                      : 0}%
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Overall</p>
+                <p className="text-[10px] text-gray-400">Enrichment</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Section B — Coverage Matrix (3x2 grid) */}
-      {current && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Trade Classification */}
-          <CoverageCard
-            title="Trade Classification"
-            matched={current.permits_with_trades}
-            total={current.active_permits}
-            percentage={current.active_permits > 0 ? (current.permits_with_trades / current.active_permits) * 100 : 0}
-            avgConfidence={current.trade_avg_confidence}
-            trend={trendFor('permits_with_trades', 'active_permits')}
-            details={[
-              { label: 'Tier 1', value: `${current.trade_tier1_count.toLocaleString()} matches` },
-              { label: 'Tier 2', value: `${current.trade_tier2_count.toLocaleString()} matches` },
-              { label: 'Tier 3', value: `${current.trade_tier3_count.toLocaleString()} matches` },
-              { label: 'Total matches', value: current.trade_matches_total.toLocaleString() },
-            ]}
+          {/* ============================================================
+              Section 2: Pipeline Status
+          ============================================================ */}
+          <FreshnessTimeline
+            pipelineLastRun={stats?.pipeline_last_run ?? {}}
+            runningPipelines={runningPipelines}
+            onTrigger={triggerPipeline}
           />
-
-          {/* Builder Enrichment */}
-          <CoverageCard
-            title="Builder Enrichment"
-            matched={current.builders_enriched}
-            total={current.builders_total}
-            percentage={current.builders_total > 0 ? (current.builders_enriched / current.builders_total) * 100 : 0}
-            trend={trendFor('builders_enriched', 'builders_total')}
-            details={[
-              { label: 'Permits w/ builder', value: current.permits_with_builder.toLocaleString() },
-            ]}
-            subBars={[
-              { label: 'Phone', value: current.builders_with_phone, total: current.builders_total },
-              { label: 'Email', value: current.builders_with_email, total: current.builders_total },
-              { label: 'Website', value: current.builders_with_website, total: current.builders_total },
-              { label: 'Google', value: current.builders_with_google, total: current.builders_total },
-              { label: 'WSIB', value: current.builders_with_wsib, total: current.builders_total },
-            ]}
-          />
-
-          {/* Parcel Linking */}
-          <CoverageCard
-            title="Parcel Linking"
-            matched={current.permits_with_parcel}
-            total={current.active_permits}
-            percentage={current.active_permits > 0 ? (current.permits_with_parcel / current.active_permits) * 100 : 0}
-            avgConfidence={current.parcel_avg_confidence}
-            trend={trendFor('permits_with_parcel', 'active_permits')}
-            details={[
-              { label: 'Exact address', value: current.parcel_exact_matches.toLocaleString() },
-              { label: 'Name only', value: current.parcel_name_matches.toLocaleString() },
-            ]}
-          />
-
-          {/* Neighbourhood */}
-          <CoverageCard
-            title="Neighbourhood"
-            matched={current.permits_with_neighbourhood}
-            total={current.active_permits}
-            percentage={current.active_permits > 0 ? (current.permits_with_neighbourhood / current.active_permits) * 100 : 0}
-            trend={trendFor('permits_with_neighbourhood', 'active_permits')}
-          />
-
-          {/* Geocoding */}
-          <CoverageCard
-            title="Geocoding"
-            matched={current.permits_geocoded}
-            total={current.active_permits}
-            percentage={current.active_permits > 0 ? (current.permits_geocoded / current.active_permits) * 100 : 0}
-            trend={trendFor('permits_geocoded', 'active_permits')}
-          />
-
-          {/* CoA Linking */}
-          <CoverageCard
-            title="CoA Linking"
-            matched={current.coa_linked}
-            total={current.coa_total}
-            percentage={current.coa_total > 0 ? (current.coa_linked / current.coa_total) * 100 : 0}
-            avgConfidence={current.coa_avg_confidence}
-            trend={trendFor('coa_linked', 'coa_total')}
-            details={[
-              { label: 'High conf (>=0.80)', value: current.coa_high_confidence.toLocaleString() },
-              { label: 'Low conf (<0.50)', value: current.coa_low_confidence.toLocaleString() },
-            ]}
-          />
-        </div>
-      )}
-
-      {/* Section C — Confidence Distribution Charts */}
-      {current && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <ConfidenceHistogram
-            title="Trade Confidence Distribution"
-            buckets={tradeConfBuckets}
-          />
-          <ConfidenceHistogram
-            title="CoA Confidence Distribution"
-            buckets={coaConfBuckets}
-          />
-        </div>
-      )}
-
-      {/* Section D — Freshness Timeline */}
-      {current && <FreshnessTimeline snapshot={current} />}
-
-      {/* Empty state */}
-      {!current && (
+        </>
+      ) : (
         <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
           <p className="text-gray-500">
-            No quality snapshots found. Click &quot;Refresh Metrics&quot; to capture the first snapshot.
+            No quality snapshots found. Run a pipeline to capture the first snapshot.
           </p>
         </div>
       )}

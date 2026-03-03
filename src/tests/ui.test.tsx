@@ -1,6 +1,8 @@
 // UI Layer Tests - Component rendering and behavior
 // SPEC LINKS: docs/specs/15_dashboard_tradesperson.md, 18_permit_detail.md, 19_search_filter.md
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import { PROJECT_TYPE_CONFIG, formatScopeTag } from '@/lib/classification/scope';
 import type { ProjectType } from '@/lib/classification/scope';
 
@@ -585,8 +587,6 @@ describe('PermitDetail Work Scope Removal', () => {
   // Scope info is now conveyed exclusively via scope tags in the Description section.
 
   // Read the actual permit detail page source to verify removal
-  const fs = require('fs');
-  const path = require('path');
   const pageSource = fs.readFileSync(
     path.join(__dirname, '../app/permits/[id]/page.tsx'),
     'utf-8'

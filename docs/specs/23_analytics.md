@@ -1,7 +1,7 @@
 # 23 - Analytics Dashboard
 
-**Status:** Planned
-**Last Updated:** 2026-02-14
+**Status:** In Progress
+**Last Updated:** 2026-03-03
 **Depends On:** `01_database_schema.md`, `06_data_api.md`, `07_trade_taxonomy.md`, `13_auth.md`
 **Blocks:** None
 
@@ -155,20 +155,23 @@ GET /api/analytics/summary?start=&end=&compare=previous_period|last_year
 
 ## 3. Associated Files
 
+**Architecture note:** Only the query layer is implemented. No dashboard page, chart components,
+or API routes exist yet. Query functions are ready to be exposed via API.
+
 | File | Purpose | Status |
 |------|---------|--------|
+| `src/lib/analytics/queries.ts` | 6 query builders: permits by date, trade distribution, cost by ward, status distribution, top builders, permit trends | Implemented |
+| `src/tests/analytics.logic.test.ts` | Query logic tests | Implemented |
 | `src/app/analytics/page.tsx` | Analytics dashboard page layout | Planned |
+| `src/app/api/analytics/[chart]/route.ts` | Analytics aggregation API endpoints | Planned |
+| `src/lib/analytics/cache.ts` | Redis caching layer for analytics | Planned |
 | `src/components/analytics/DateRangeSelector.tsx` | Date range picker with presets | Planned |
 | `src/components/analytics/PermitsOverTime.tsx` | Line chart component | Planned |
 | `src/components/analytics/TradeDemand.tsx` | Horizontal bar chart component | Planned |
-| `src/components/analytics/GeographicHeatMap.tsx` | Map with heat overlay | Planned |
+| `src/components/analytics/GeographicHeatMap.tsx` | Map with heat overlay (missing geographic query) | Planned |
 | `src/components/analytics/CostByWard.tsx` | Choropleth map component | Planned |
 | `src/components/analytics/TopBuilders.tsx` | Sortable table component | Planned |
 | `src/components/analytics/StatusDistribution.tsx` | Donut chart component | Planned |
-| `src/components/analytics/PeriodComparison.tsx` | Comparison toggle and delta display | Planned |
-| `src/app/api/analytics/[chart]/route.ts` | Analytics aggregation API endpoints | Planned |
-| `src/lib/analytics/queries.ts` | PostgreSQL aggregation query builders | Planned |
-| `src/lib/analytics/cache.ts` | Redis caching layer for analytics | Planned |
 
 ---
 

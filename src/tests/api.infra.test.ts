@@ -1,6 +1,8 @@
 // Infra Layer Tests - API route validation, SQL safety, data integrity
 // SPEC LINKS: docs/specs/06_data_api.md, 01_database_schema.md
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 
 describe('API Permit Filter Validation', () => {
   const ALLOWED_SORT = ['issued_date', 'application_date', 'est_const_cost', 'lead_score', 'status'];
@@ -534,9 +536,103 @@ describe('Database Schema Constraints', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// API Route Structure & Export Validation
+// ---------------------------------------------------------------------------
+
+describe('API Route Exports', () => {
+  const API_ROUTES = [
+    { path: 'admin/builders/route.ts', methods: ['GET'] },
+    { path: 'admin/market-metrics/route.ts', methods: ['GET'] },
+    { path: 'admin/pipelines/[slug]/route.ts', methods: ['POST'] },
+    { path: 'admin/rules/route.ts', methods: ['GET'] },
+    { path: 'admin/stats/route.ts', methods: ['GET'] },
+    { path: 'admin/sync/route.ts', methods: ['POST'] },
+    { path: 'builders/route.ts', methods: ['GET'] },
+    { path: 'builders/[id]/route.ts', methods: ['GET'] },
+    { path: 'coa/route.ts', methods: ['GET'] },
+    { path: 'notifications/route.ts', methods: ['GET'] },
+    { path: 'permits/geo/route.ts', methods: ['GET'] },
+    { path: 'permits/route.ts', methods: ['GET'] },
+    { path: 'permits/[id]/route.ts', methods: ['GET'] },
+    { path: 'products/route.ts', methods: ['GET'] },
+    { path: 'quality/refresh/route.ts', methods: ['POST'] },
+    { path: 'quality/route.ts', methods: ['GET'] },
+    { path: 'sync/route.ts', methods: ['GET'] },
+    { path: 'trades/route.ts', methods: ['GET'] },
+  ];
+
+  for (const route of API_ROUTES) {
+    it(`${route.path} exists and exports ${route.methods.join(', ')}`, () => {
+      const filePath = path.join(__dirname, '../app/api', route.path);
+      expect(fs.existsSync(filePath)).toBe(true);
+      const src = fs.readFileSync(filePath, 'utf-8');
+      for (const method of route.methods) {
+        expect(src).toMatch(new RegExp(`export\\s+(async\\s+)?function\\s+${method}\\b`));
+      }
+    });
+  }
+
+  it('all 18 API route files exist', () => {
+    const count = API_ROUTES.filter(r =>
+      fs.existsSync(path.join(__dirname, '../app/api', r.path))
+    ).length;
+    expect(count).toBe(18);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Middleware Route Protection
+// ---------------------------------------------------------------------------
+
+describe('Middleware Route Protection', () => {
+  it('src/middleware.ts exists', () => {
+    expect(fs.existsSync(path.join(__dirname, '../middleware.ts'))).toBe(true);
+  });
+
+  it('middleware uses classifyRoute from route-guard', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../middleware.ts'),
+      'utf-8'
+    );
+    expect(src).toContain('classifyRoute');
+    expect(src).toContain('SESSION_COOKIE_NAME');
+  });
+
+  it('middleware returns 401 for unauthenticated admin API requests', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../middleware.ts'),
+      'utf-8'
+    );
+    expect(src).toContain('401');
+    expect(src).toContain('Authentication required');
+  });
+
+  it('middleware supports X-Admin-Key header for admin API fallback', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../middleware.ts'),
+      'utf-8'
+    );
+    expect(src).toContain('x-admin-key');
+    expect(src).toContain('ADMIN_API_KEY');
+  });
+
+  it('admin API routes are protected by middleware classification', async () => {
+    const guard = await import('@/lib/auth/route-guard');
+    expect(guard.classifyRoute('/api/admin/stats')).toBe('admin');
+    expect(guard.classifyRoute('/api/admin/sync')).toBe('admin');
+    expect(guard.classifyRoute('/api/admin/pipelines/load_permits')).toBe('admin');
+  });
+
+  it('read-only data APIs remain publicly accessible', async () => {
+    const guard = await import('@/lib/auth/route-guard');
+    expect(guard.classifyRoute('/api/permits')).toBe('public');
+    expect(guard.classifyRoute('/api/trades')).toBe('public');
+    expect(guard.classifyRoute('/api/quality')).toBe('public');
+  });
+});
+
 describe('Pre-Permit API Integration', () => {
-  const fs = require('fs');
-  const path = require('path');
 
   it('permit detail API handles COA- prefix to fetch from coa_applications', () => {
     const src = fs.readFileSync(

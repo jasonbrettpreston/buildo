@@ -1,7 +1,7 @@
 // Infra Layer Tests - Data quality API routes and snapshot table schema
 // SPEC LINK: docs/specs/28_data_quality_dashboard.md
 import { describe, it, expect } from 'vitest';
-import type { DataQualitySnapshot, DataQualityResponse } from '@/lib/quality/types';
+import type { DataQualityResponse } from '@/lib/quality/types';
 import { createMockDataQualitySnapshot } from './factories';
 
 describe('GET /api/quality Response Shape', () => {

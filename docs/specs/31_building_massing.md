@@ -1,5 +1,8 @@
 # Spec 31 -- Building Massing Integration
 
+**Status:** Implemented
+**Last Updated:** 2026-03-03
+
 ## 1. User Story
 
 > As a contractor viewing a permit, I want to see the size and height of the
@@ -48,41 +51,69 @@ estimated stories, and accessory structures on the permit detail page.
 
 | Constant | Value | Purpose |
 |----------|-------|---------|
-| `STORY_HEIGHT_M` | 3.0 | Average floor-to-floor height |
-| `PRIMARY_THRESHOLD_SQM` | 40 | Min area for primary classification |
+| `STORY_HEIGHT_M` | 3.0 | Default floor-to-floor height (Tier 3 fallback) |
 | `SHED_THRESHOLD_SQM` | 20 | Below this = shed |
 | `GARAGE_MAX_SQM` | 60 | 20-60 sqm accessory = garage |
-| `BBOX_OFFSET` | 0.003 | ~333m pre-filter radius |
+| `SQM_TO_SQFT` | 10.7639 | Metric to imperial conversion |
+| `NEAREST_MAX_DISTANCE_M` | 50 | Haversine distance fallback for link-massing |
+
+### 3-Tier Story Estimation
+
+Stories are resolved via a 3-tier cascade rather than a flat 3.0m constant:
+
+| Tier | Source | Method |
+|------|--------|--------|
+| 1 | `permit.storeys` | Use directly (most reliable) |
+| 2 | `maxHeightM` + use-type coefficient | residential=2.9m, commercial=4.0m, industrial=4.5m, mixed-use=3.5m |
+| 3 | `maxHeightM` / 3.0m | Default fallback |
+
+Implemented in `resolveStories(permitStoreys, maxHeightM, useType)`. The `stories_source`
+field tracks which tier was used: `'permit'`, `'height_typed'`, or `'height_default'`.
+
+### Matching Strategy (Enhanced)
+
+The `link-massing.js` script uses a multi-point approach:
+
+1. **Centroid** point-in-polygon test (primary)
+2. **4 bounding box edge midpoints** as fallback (north, south, east, west of parcel centroid)
+3. **Haversine distance** fallback (≤50m) for parcels near but not inside any polygon
+
+Each match records `match_type` (`polygon`, `multipoint`, `nearest`) and `confidence`
+(0.90, 0.75, 0.60 respectively) in the `parcel_buildings` junction table.
 
 ### Geometry Functions
 
-- `estimateStories(maxHeightM)` → `number | null`
+- `estimateStories(maxHeightM)` → `number | null` — basic height/3.0 estimation
+- `resolveStories(permitStoreys, maxHeightM, useType)` → `{ stories, source }` — 3-tier cascade
+- `inferMassingUseType(permit)` → `string` — detect residential/commercial/industrial from permit
 - `classifyStructure(areaSqm, allAreas)` → `StructureType`
 - `pointInPolygon(point, ring)` → `boolean` (ray-casting)
-- `computeFootprintArea(ring)` → `number | null` (Shoelace formula)
+- `computeFootprintArea(ring)` → `number | null` (Shoelace formula with equirectangular projection)
 - `formatHeight(meters)` → `string` (e.g. "9.5 m (31.2 ft)")
 - `formatArea(sqft)` → `string` (e.g. "1,500 sq ft")
-- `computeBuildingCoverage(buildingAreaSqft, lotSizeSqft)` → `number | null`
+- `formatStories(stories)` → `string`
+- `formatCoverage(pct)` → `string`
+- `computeBuildingCoverage(buildingAreaSqft, lotSizeSqft)` → `number | null` (caps at 100%)
 
 ## 3. Associated Files
 
-| File | Status | Purpose |
-|------|--------|---------|
-| `src/lib/massing/types.ts` | New | BuildingFootprint, ParcelBuilding, BuildingMassingInfo interfaces |
-| `src/lib/massing/geometry.ts` | New | Geometry + classification functions |
-| `src/tests/massing.logic.test.ts` | New | ~30 tests for massing functions |
-| `src/tests/factories.ts` | Modify | Add createMockBuildingFootprint, createMockParcelBuilding |
-| `src/tests/ui.test.tsx` | Modify | Add Building Massing display logic tests |
-| `scripts/load-massing.js` | New | Download SHP, stream features, batch INSERT |
-| `scripts/link-massing.js` | New | Point-in-polygon matching, classify structures |
-| `src/components/permits/BuildingMassing.tsx` | New | UI component |
-| `src/app/api/permits/[id]/route.ts` | Modify | Add massing JOIN query |
-| `src/app/permits/[id]/page.tsx` | Modify | Render BuildingMassing component |
-| `migrations/023_building_footprints.sql` | New | building_footprints table |
-| `migrations/024_parcel_buildings.sql` | New | parcel_buildings junction table |
-| `migrations/025_quality_massing.sql` | New | Quality snapshot columns |
-| `src/lib/quality/metrics.ts` | Modify | Add massing coverage query |
-| `src/lib/quality/types.ts` | Modify | Add massing snapshot fields |
+| File | Purpose | Status |
+|------|---------|--------|
+| `src/lib/massing/types.ts` | BuildingFootprint, ParcelBuilding, BuildingMassingInfo interfaces | Implemented |
+| `src/lib/massing/geometry.ts` | Geometry + classification functions, 3-tier story cascade | Implemented |
+| `src/tests/massing.logic.test.ts` | 86 tests covering all geometry, classification, and formatting | Implemented |
+| `src/tests/factories.ts` | Mock factories for BuildingFootprint, ParcelBuilding | Implemented |
+| `scripts/load-massing.js` | Download SHP, stream features, batch INSERT | Implemented |
+| `scripts/link-massing.js` | Multi-point matching + haversine fallback, classify structures | Implemented |
+| `src/components/permits/BuildingMassing.tsx` | UI component for permit detail page | Implemented |
+| `src/app/api/permits/[id]/route.ts` | Massing JOIN query with 3-tier story cascade | Implemented |
+| `src/app/permits/[id]/page.tsx` | Render BuildingMassing section | Implemented |
+| `migrations/023_building_footprints.sql` | building_footprints table (12 columns) | Implemented |
+| `migrations/024_parcel_buildings.sql` | parcel_buildings junction table | Implemented |
+| `migrations/025_quality_massing.sql` | Quality snapshot massing columns | Implemented |
+| `migrations/026_parcel_buildings_confidence.sql` | Add match_type + confidence columns | Implemented |
+| `src/lib/quality/metrics.ts` | Massing coverage query | Implemented |
+| `src/lib/quality/types.ts` | Massing snapshot fields | Implemented |
 
 ## 4. Constraints & Edge Cases
 
@@ -121,6 +152,8 @@ parcel_id       INTEGER         NOT NULL FK -> parcels(id)
 building_id     INTEGER         NOT NULL FK -> building_footprints(id)
 is_primary      BOOLEAN         NOT NULL DEFAULT false
 structure_type  VARCHAR(20)     NOT NULL DEFAULT 'other'
+match_type      VARCHAR(30)                                -- polygon, multipoint, nearest (migration 026)
+confidence      DECIMAL(3,2)                               -- 0.60-0.90 (migration 026)
 linked_at       TIMESTAMP       NOT NULL DEFAULT NOW()
 UNIQUE (parcel_id, building_id)
 ```
@@ -133,7 +166,8 @@ UNIQUE (parcel_id, building_id)
     "primary": {
       "footprint_area_sqft": 1297,
       "estimated_stories": 3,
-      "max_height_m": 9.5
+      "max_height_m": 9.5,
+      "stories_source": "height_typed"
     },
     "accessory": [
       { "structure_type": "garage", "footprint_area_sqft": 387 }
@@ -142,6 +176,8 @@ UNIQUE (parcel_id, building_id)
   }
 }
 ```
+
+`stories_source` tracks the 3-tier cascade tier used: `"permit"`, `"height_typed"`, or `"height_default"`.
 
 ## 6. Integrations
 

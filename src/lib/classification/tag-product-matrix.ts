@@ -15,7 +15,7 @@ const PREFIXED_TAG_PRODUCT_MATRIX: Record<string, string[]> = {
   fence: [],
   garden_suite: ['windows', 'doors', 'flooring', 'lighting', 'plumbing-fixtures', 'lumber-drywall', 'roofing-materials', 'paint'],
   laneway: ['windows', 'doors', 'flooring', 'lighting', 'plumbing-fixtures', 'lumber-drywall', 'roofing-materials', 'paint'],
-  sfd: [
+  'build-sfd': [
     'kitchen-cabinets', 'appliances', 'countertops', 'plumbing-fixtures', 'tiling',
     'windows', 'doors', 'flooring', 'paint', 'lighting', 'lumber-drywall',
     'roofing-materials', 'eavestroughs', 'staircases', 'mirrors-glass', 'garage-doors',

@@ -2,6 +2,19 @@ import { query } from '@/lib/db/client';
 import type { DataQualitySnapshot } from './types';
 
 /**
+ * Coerce NUMERIC(4,3) columns from strings (as node-postgres returns them)
+ * to proper numbers. Preserves null and already-numeric values.
+ */
+export function parseSnapshot(raw: DataQualitySnapshot): DataQualitySnapshot {
+  return {
+    ...raw,
+    trade_avg_confidence: raw.trade_avg_confidence != null ? Number(raw.trade_avg_confidence) : null,
+    parcel_avg_confidence: raw.parcel_avg_confidence != null ? Number(raw.parcel_avg_confidence) : null,
+    coa_avg_confidence: raw.coa_avg_confidence != null ? Number(raw.coa_avg_confidence) : null,
+  };
+}
+
+/**
  * Capture a full data quality snapshot by running counting queries across
  * all six matching processes. Inserts (or updates) a row in
  * `data_quality_snapshots` for today's date and returns it.
@@ -43,6 +56,10 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     trade_tier1_count: tradeCounts.tier1,
     trade_tier2_count: tradeCounts.tier2,
     trade_tier3_count: tradeCounts.tier3,
+    trade_residential_classified: tradeCounts.trade_residential_classified,
+    trade_residential_total: tradeCounts.trade_residential_total,
+    trade_commercial_classified: tradeCounts.trade_commercial_classified,
+    trade_commercial_total: tradeCounts.trade_commercial_total,
     permits_with_builder: builderCounts.permits_with_builder,
     builders_total: builderCounts.total,
     builders_enriched: builderCounts.enriched,
@@ -65,6 +82,9 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     coa_low_confidence: coaCounts.low_confidence,
     permits_with_scope: scopeCounts.permits_with_scope,
     scope_project_type_breakdown: scopeCounts.breakdown,
+    permits_with_scope_tags: scopeCounts.permits_with_scope_tags,
+    permits_with_detailed_tags: scopeCounts.permits_with_detailed_tags,
+    scope_tags_top: scopeCounts.scope_tags_top,
     permits_updated_24h: freshnessCounts.updated_24h,
     permits_updated_7d: freshnessCounts.updated_7d,
     permits_updated_30d: freshnessCounts.updated_30d,
@@ -80,6 +100,8 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       total_permits, active_permits,
       permits_with_trades, trade_matches_total, trade_avg_confidence,
       trade_tier1_count, trade_tier2_count, trade_tier3_count,
+      trade_residential_classified, trade_residential_total,
+      trade_commercial_classified, trade_commercial_total,
       permits_with_builder, builders_total, builders_enriched,
       builders_with_phone, builders_with_email, builders_with_website,
       builders_with_google, builders_with_wsib,
@@ -88,6 +110,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       permits_geocoded,
       coa_total, coa_linked, coa_avg_confidence, coa_high_confidence, coa_low_confidence,
       permits_with_scope, scope_project_type_breakdown,
+      permits_with_scope_tags, permits_with_detailed_tags, scope_tags_top,
       permits_updated_24h, permits_updated_7d, permits_updated_30d,
       last_sync_at, last_sync_status,
       building_footprints_total, parcels_with_buildings
@@ -96,7 +119,8 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
       $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
       $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-      $31, $32, $33, $34, $35, $36, $37
+      $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
+      $41, $42, $43, $44
     )
     ON CONFLICT (snapshot_date) DO UPDATE SET
       total_permits = EXCLUDED.total_permits,
@@ -107,6 +131,10 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       trade_tier1_count = EXCLUDED.trade_tier1_count,
       trade_tier2_count = EXCLUDED.trade_tier2_count,
       trade_tier3_count = EXCLUDED.trade_tier3_count,
+      trade_residential_classified = EXCLUDED.trade_residential_classified,
+      trade_residential_total = EXCLUDED.trade_residential_total,
+      trade_commercial_classified = EXCLUDED.trade_commercial_classified,
+      trade_commercial_total = EXCLUDED.trade_commercial_total,
       permits_with_builder = EXCLUDED.permits_with_builder,
       builders_total = EXCLUDED.builders_total,
       builders_enriched = EXCLUDED.builders_enriched,
@@ -129,6 +157,9 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       coa_low_confidence = EXCLUDED.coa_low_confidence,
       permits_with_scope = EXCLUDED.permits_with_scope,
       scope_project_type_breakdown = EXCLUDED.scope_project_type_breakdown,
+      permits_with_scope_tags = EXCLUDED.permits_with_scope_tags,
+      permits_with_detailed_tags = EXCLUDED.permits_with_detailed_tags,
+      scope_tags_top = EXCLUDED.scope_tags_top,
       permits_updated_24h = EXCLUDED.permits_updated_24h,
       permits_updated_7d = EXCLUDED.permits_updated_7d,
       permits_updated_30d = EXCLUDED.permits_updated_30d,
@@ -142,6 +173,8 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       row.total_permits, row.active_permits,
       row.permits_with_trades, row.trade_matches_total, row.trade_avg_confidence,
       row.trade_tier1_count, row.trade_tier2_count, row.trade_tier3_count,
+      row.trade_residential_classified, row.trade_residential_total,
+      row.trade_commercial_classified, row.trade_commercial_total,
       row.permits_with_builder, row.builders_total,
       row.builders_enriched, row.builders_with_phone, row.builders_with_email,
       row.builders_with_website, row.builders_with_google, row.builders_with_wsib,
@@ -152,6 +185,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       row.coa_total, row.coa_linked, row.coa_avg_confidence,
       row.coa_high_confidence, row.coa_low_confidence,
       row.permits_with_scope, JSON.stringify(row.scope_project_type_breakdown),
+      row.permits_with_scope_tags, row.permits_with_detailed_tags, JSON.stringify(row.scope_tags_top),
       row.permits_updated_24h, row.permits_updated_7d, row.permits_updated_30d,
       row.last_sync_at, row.last_sync_status,
       row.building_footprints_total, row.parcels_with_buildings,
@@ -175,9 +209,10 @@ export async function getQualityData(): Promise<{
      LIMIT 30`
   );
 
+  const parsed = rows.map(parseSnapshot);
   return {
-    current: rows[0] || null,
-    trends: rows,
+    current: parsed[0] || null,
+    trends: parsed,
     lastUpdated: rows[0]?.created_at || null,
   };
 }
@@ -200,31 +235,61 @@ async function queryPermitCounts() {
 }
 
 async function queryTradeCounts() {
-  const rows = await query<{
-    permits_with_trades: string;
-    total_matches: string;
-    avg_confidence: string | null;
-    tier1: string;
-    tier2: string;
-    tier3: string;
-  }>(
-    `SELECT
-       COUNT(DISTINCT (permit_num, revision_num)) as permits_with_trades,
-       COUNT(*) as total_matches,
-       AVG(confidence)::NUMERIC(4,3) as avg_confidence,
-       COUNT(*) FILTER (WHERE tier = 1) as tier1,
-       COUNT(*) FILTER (WHERE tier = 2) as tier2,
-       COUNT(*) FILTER (WHERE tier = 3) as tier3
-     FROM permit_trades
-     WHERE is_active = true`
-  );
+  const [overallRows, byUseTypeRows] = await Promise.all([
+    query<{
+      permits_with_trades: string;
+      total_matches: string;
+      avg_confidence: string | null;
+      tier1: string;
+      tier2: string;
+      tier3: string;
+    }>(
+      `SELECT
+         COUNT(DISTINCT (permit_num, revision_num)) as permits_with_trades,
+         COUNT(*) as total_matches,
+         AVG(confidence)::NUMERIC(4,3) as avg_confidence,
+         COUNT(*) FILTER (WHERE tier = 1) as tier1,
+         COUNT(*) FILTER (WHERE tier = 2) as tier2,
+         COUNT(*) FILTER (WHERE tier = 3) as tier3
+       FROM permit_trades`
+    ),
+    query<{
+      res_classified: string;
+      res_total: string;
+      com_classified: string;
+      com_total: string;
+    }>(
+      `SELECT
+         COUNT(DISTINCT p.permit_num) FILTER (
+           WHERE 'residential' = ANY(p.scope_tags) AND pt.permit_num IS NOT NULL
+         ) as res_classified,
+         COUNT(DISTINCT p.permit_num) FILTER (
+           WHERE 'residential' = ANY(p.scope_tags)
+         ) as res_total,
+         COUNT(DISTINCT p.permit_num) FILTER (
+           WHERE ('commercial' = ANY(p.scope_tags) OR 'mixed-use' = ANY(p.scope_tags))
+             AND pt.permit_num IS NOT NULL
+         ) as com_classified,
+         COUNT(DISTINCT p.permit_num) FILTER (
+           WHERE ('commercial' = ANY(p.scope_tags) OR 'mixed-use' = ANY(p.scope_tags))
+         ) as com_total
+       FROM permits p
+       LEFT JOIN (SELECT DISTINCT permit_num FROM permit_trades) pt
+         ON pt.permit_num = p.permit_num
+       WHERE p.${ACTIVE_FILTER}`
+    ),
+  ]);
   return {
-    permits_with_trades: parseInt(rows[0].permits_with_trades, 10),
-    total_matches: parseInt(rows[0].total_matches, 10),
-    avg_confidence: rows[0].avg_confidence ? parseFloat(rows[0].avg_confidence) : null,
-    tier1: parseInt(rows[0].tier1, 10),
-    tier2: parseInt(rows[0].tier2, 10),
-    tier3: parseInt(rows[0].tier3, 10),
+    permits_with_trades: parseInt(overallRows[0].permits_with_trades, 10),
+    total_matches: parseInt(overallRows[0].total_matches, 10),
+    avg_confidence: overallRows[0].avg_confidence ? parseFloat(overallRows[0].avg_confidence) : null,
+    tier1: parseInt(overallRows[0].tier1, 10),
+    tier2: parseInt(overallRows[0].tier2, 10),
+    tier3: parseInt(overallRows[0].tier3, 10),
+    trade_residential_classified: parseInt(byUseTypeRows[0].res_classified, 10),
+    trade_residential_total: parseInt(byUseTypeRows[0].res_total, 10),
+    trade_commercial_classified: parseInt(byUseTypeRows[0].com_classified, 10),
+    trade_commercial_total: parseInt(byUseTypeRows[0].com_total, 10),
   };
 }
 
@@ -292,7 +357,9 @@ async function queryParcelCounts() {
 
 async function queryNeighbourhoodCount(): Promise<number> {
   const rows = await query<{ count: string }>(
-    `SELECT COUNT(*) as count FROM permits WHERE neighbourhood_id IS NOT NULL`
+    `SELECT COUNT(*) as count FROM permits
+     WHERE neighbourhood_id IS NOT NULL
+       AND status IN ('Permit Issued', 'Revision Issued', 'Under Review', 'Inspection')`
   );
   return parseInt(rows[0].count, 10);
 }
@@ -329,27 +396,68 @@ async function queryCoaCounts() {
   };
 }
 
+const ACTIVE_FILTER = `status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`;
+
 async function queryScopeCounts() {
-  const [countRows, breakdownRows] = await Promise.all([
+  const [countRows, breakdownRows, tagCountRows, detailedTagRows, topTagRows] = await Promise.all([
+    // Active permits with residential, commercial, or mixed-use tag
     query<{ count: string }>(
-      `SELECT COUNT(*) as count FROM permits WHERE project_type IS NOT NULL`
+      `SELECT COUNT(*) as count FROM permits
+       WHERE ('residential' = ANY(scope_tags) OR 'commercial' = ANY(scope_tags) OR 'mixed-use' = ANY(scope_tags))
+         AND ${ACTIVE_FILTER}`
     ),
-    query<{ project_type: string; count: string }>(
-      `SELECT project_type, COUNT(*) as count
-       FROM permits
-       WHERE project_type IS NOT NULL
-       GROUP BY project_type`
+    query<{ tag: string; count: string }>(
+      `SELECT tag, COUNT(*) as count
+       FROM (SELECT unnest(scope_tags) as tag FROM permits
+             WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
+               AND ${ACTIVE_FILTER}) sub
+       WHERE tag IN ('residential', 'commercial', 'mixed-use')
+       GROUP BY tag`
+    ),
+    query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM permits
+       WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
+         AND ${ACTIVE_FILTER}`
+    ),
+    // Active permits with at least one true architectural tag (excluding use-types)
+    query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM permits
+       WHERE scope_tags IS NOT NULL
+         AND array_length(scope_tags, 1) > 0
+         AND ${ACTIVE_FILTER}
+         AND EXISTS (
+           SELECT 1 FROM unnest(scope_tags) AS t
+           WHERE t NOT IN ('residential', 'commercial', 'mixed-use')
+         )`
+    ),
+    query<{ tag: string; count: string }>(
+      `SELECT tag, COUNT(*) as count
+       FROM (SELECT unnest(scope_tags) as tag FROM permits
+             WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
+               AND ${ACTIVE_FILTER}) sub
+       WHERE tag NOT IN ('residential', 'commercial', 'mixed-use')
+       GROUP BY tag
+       ORDER BY count DESC
+       LIMIT 10`
     ),
   ]);
 
   const breakdown: Record<string, number> = {};
   for (const row of breakdownRows) {
-    breakdown[row.project_type] = parseInt(row.count, 10);
+    breakdown[row.tag] = parseInt(row.count, 10);
+  }
+
+  const tagsTop: Record<string, number> = {};
+  for (const row of topTagRows) {
+    tagsTop[row.tag] = parseInt(row.count, 10);
   }
 
   return {
     permits_with_scope: parseInt(countRows[0].count, 10),
     breakdown: Object.keys(breakdown).length > 0 ? breakdown : null,
+    permits_with_scope_tags: parseInt(tagCountRows[0].count, 10),
+    permits_with_detailed_tags: parseInt(detailedTagRows[0].count, 10),
+    scope_tags_top: Object.keys(tagsTop).length > 0 ? tagsTop : null,
   };
 }
 

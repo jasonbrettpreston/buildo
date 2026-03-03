@@ -198,9 +198,7 @@ function extractResidentialTags(permit) {
   const isAddition = /^Addition/i.test(work) || /\badd(i)?tion\b(?!\s+(of\s+)?(a\s+)?(new\s+)?(washroom|bathroom|laundry|closet|window|door|powder|shower|fireplace|skylight)\b)/i.test(descLower);
 
   if (isAddition) {
-    if (storeyCount >= 3) tags.add('new:3-storey-addition');
-    else if (storeyCount === 2) tags.add('new:2-storey-addition');
-    else tags.add('new:1-storey-addition');
+    tags.add('new:addition');
   }
 
   // --- Tag extraction ---
@@ -329,7 +327,7 @@ function extractNewHouseTags(permit) {
   }
   // 7. default SFD
   if (!buildingTypeSet) {
-    tags.add('new:sfd');
+    tags.add('new:build-sfd');
   }
 
   // Feature tags
@@ -448,6 +446,13 @@ async function main() {
     const updates = rows.map((permit) => {
       const projectType = classifyProjectType(permit);
       const scopeTags = classifyScopeTags(permit);
+
+      // Apartment prefix tier — replace bare `apartment` with prefixed version
+      const aptIdx = scopeTags.indexOf('apartment');
+      if (aptIdx !== -1) {
+        const prefix = projectType === 'new_build' ? 'new' : 'alter';
+        scopeTags[aptIdx] = `${prefix}:apartment`;
+      }
 
       // Demolition tier — all DM permits get a demolition tag
       const isDemolitionPermit = projectType === 'demolition' ||

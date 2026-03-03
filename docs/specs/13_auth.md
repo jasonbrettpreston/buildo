@@ -1,5 +1,8 @@
 # Feature: Authentication
 
+**Status:** In Progress
+**Last Updated:** 2026-03-03
+
 ## 1. User Story
 "As a user, I want to sign up and log in with Google or email so I can save my preferences and track leads."
 
@@ -47,23 +50,26 @@ AUTHENTICATED -> LOGGING_OUT -> UNAUTHENTICATED
 
 ## 3. Associated Files
 
-| File | Status | Purpose |
-|------|--------|---------|
-| `src/lib/auth/firebase.ts` | Planned | Firebase client SDK initialization, auth helpers |
-| `src/lib/auth/firebase-admin.ts` | Planned | Firebase Admin SDK initialization (server-side) |
-| `src/lib/auth/session.ts` | Planned | Cookie management, token verification |
-| `src/app/api/auth/session/route.ts` | Planned | POST: create session cookie, DELETE: clear session |
-| `src/app/api/auth/logout/route.ts` | Planned | POST: clear session cookie, revoke refresh token |
-| `src/app/(auth)/login/page.tsx` | Planned | Login page with email/password and Google button |
-| `src/app/(auth)/signup/page.tsx` | Planned | Signup page with account type selection |
-| `src/components/auth/LoginForm.tsx` | Planned | Email/password login form component |
-| `src/components/auth/SignupForm.tsx` | Planned | Email/password signup form component |
-| `src/components/auth/GoogleAuthButton.tsx` | Planned | Google OAuth sign-in button component |
-| `src/components/auth/AuthGuard.tsx` | Planned | Client-side auth state wrapper |
-| `src/middleware.ts` | Planned | Next.js middleware for route protection |
-| `src/tests/auth.logic.test.ts` | Planned | Auth logic unit tests |
-| `src/tests/auth.ui.test.tsx` | Planned | Auth component tests |
-| `src/tests/auth.infra.test.ts` | Planned | Auth integration tests |
+**Architecture note:** Auth is client-side Firebase SDK. Middleware exists and classifies routes
+as public/authenticated/admin. Admin API routes require `__session` cookie (JWT) or `X-Admin-Key`
+header. Full JWT verification via Firebase Admin SDK is planned but not yet connected.
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `src/lib/auth/config.ts` | Firebase client SDK initialization (replaces planned `firebase.ts`) | Implemented |
+| `src/lib/auth/types.ts` | Auth TypeScript interfaces | Implemented |
+| `src/lib/auth/session.ts` | Client-side auth logic (signUp, signIn, Google, signOut, preferences) | Implemented |
+| `src/lib/auth/route-guard.ts` | Route classification (public/authenticated/admin) and session cookie validation | Implemented |
+| `src/middleware.ts` | Next.js middleware — blocks unauthenticated admin/mutation API access, redirects protected pages to /login | Implemented |
+| `src/app/login/page.tsx` | Login page (no auth route group) | Implemented |
+| `src/components/auth/LoginForm.tsx` | Combined login/signup form with Google auth (replaces planned separate components) | Implemented |
+| `src/tests/auth.logic.test.ts` | Basic auth type tests | Implemented |
+| `src/tests/middleware.logic.test.ts` | Route classification, session cookie validation, file existence tests (30 tests) | Implemented |
+| `src/lib/auth/firebase-admin.ts` | Firebase Admin SDK (server-side token verification) | Planned |
+| `src/app/api/auth/session/route.ts` | Server-side session cookie management | Planned |
+| `src/components/auth/AuthGuard.tsx` | Client-side auth state wrapper | Planned |
+| `src/tests/auth.ui.test.tsx` | Auth component tests | Planned |
+| `src/tests/auth.infra.test.ts` | Auth integration tests | Planned |
 
 ## 4. Constraints & Edge Cases
 

@@ -10,8 +10,6 @@ import {
 } from './factories';
 import {
   SAMPLE_DIRTY_COST_PERMIT,
-  SAMPLE_PLUMBING_PERMIT,
-  SAMPLE_BUILDING_PERMIT,
 } from './fixtures/sample-permits';
 
 describe('Field Mapping', () => {

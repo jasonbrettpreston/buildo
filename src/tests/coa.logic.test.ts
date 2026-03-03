@@ -1,6 +1,7 @@
 // SPEC LINK: docs/specs/12_coa_integration.md
 import { describe, it, expect } from 'vitest';
-import type { CoaApplication } from '@/lib/coa/types';
+import fs from 'fs';
+import path from 'path';
 
 describe('CoA Address Parsing', () => {
   function parseCoaAddress(address: string): { street_num: string; street_name: string } {
@@ -450,8 +451,6 @@ describe('Linker No Hard Age Cutoff', () => {
 
 describe('Permit Detail CoA Section', () => {
   // Verify the permit detail API returns CoA data and the page renders it
-  const fs = require('fs');
-  const path = require('path');
 
   it('permit detail API route fetches CoA applications for the permit', () => {
     const apiSource = fs.readFileSync(
@@ -481,8 +480,6 @@ describe('Permit Detail CoA Section', () => {
 });
 
 describe('Dashboard CoA Stats', () => {
-  const fs = require('fs');
-  const path = require('path');
 
   it('dashboard page fetches and displays CoA stats', () => {
     const dashSource = fs.readFileSync(
@@ -597,8 +594,6 @@ describe('Pre-Permit Builder Field Null Handling', () => {
 });
 
 describe('Pre-Permit API Route Tilde Decoding', () => {
-  const fs = require('fs');
-  const path = require('path');
 
   it('API route decodes ~ back to / for COA DB lookup', () => {
     const apiSource = fs.readFileSync(
@@ -611,8 +606,6 @@ describe('Pre-Permit API Route Tilde Decoding', () => {
 });
 
 describe('Pre-Permit Query includes sub_type', () => {
-  const fs = require('fs');
-  const path = require('path');
 
   it('getUpcomingLeads SELECT references sub_type', () => {
     const source = fs.readFileSync(
@@ -637,8 +630,6 @@ describe('Pre-Permit Query includes sub_type', () => {
 
 describe('PermitCard Builder Section Hiding', () => {
   it('PermitCard does not render builder section when builder_name is falsy', () => {
-    const fs = require('fs');
-    const path = require('path');
     const source = fs.readFileSync(
       path.join(__dirname, '../components/permits/PermitCard.tsx'),
       'utf-8'
@@ -650,8 +641,6 @@ describe('PermitCard Builder Section Hiding', () => {
 
 describe('Pre-Permit Source File Existence', () => {
   // Verify the pre-permits module exists (will fail until implemented)
-  const fs = require('fs');
-  const path = require('path');
 
   it('src/lib/coa/pre-permits.ts exists', () => {
     const filePath = path.join(__dirname, '../lib/coa/pre-permits.ts');

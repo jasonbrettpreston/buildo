@@ -32,10 +32,8 @@ export type ProjectType =
 export type WorkType = 'new' | 'alter';
 
 export type ResidentialTagSlug =
-  // new: tags (27)
-  | '1-storey-addition'
-  | '2-storey-addition'
-  | '3-storey-addition'
+  // new: tags (25)
+  | 'addition'
   | 'deck'
   | 'garage'
   | 'porch'
@@ -72,7 +70,7 @@ export type ResidentialTagSlug =
 // Note: alter:deck, alter:porch, alter:garage share slugs with their new: counterparts
 
 export type NewHouseBuildingType =
-  | 'sfd'
+  | 'build-sfd'
   | 'semi-detached'
   | 'townhouse'
   | 'stacked-townhouse'
@@ -410,13 +408,7 @@ export function extractResidentialTags(
     /\badd(i)?tion\b(?!\s+(of\s+)?(a\s+)?(new\s+)?(washroom|bathroom|laundry|closet|window|door|powder|shower|fireplace|skylight)\b)/i.test(descLower);
 
   if (isAddition) {
-    if (storeyCount >= 3) {
-      tags.add('new:3-storey-addition');
-    } else if (storeyCount === 2) {
-      tags.add('new:2-storey-addition');
-    } else {
-      tags.add('new:1-storey-addition');
-    }
+    tags.add('new:addition');
   }
 
   // --- 3. Tag extraction from description + work field ---
@@ -673,7 +665,7 @@ export function isResidentialStructure(
 
 /**
  * Extract scope tags for New Houses permits.
- * Returns exactly one building type tag (new:sfd, new:houseplex-N-unit, etc.)
+ * Returns exactly one building type tag (new:build-sfd, new:houseplex-N-unit, etc.)
  * plus zero or more feature tags (new:garage, new:deck, etc.).
  */
 export function extractNewHouseTags(
@@ -734,7 +726,7 @@ export function extractNewHouseTags(
 
   // 7. Default → sfd
   if (!buildingTypeSet) {
-    tags.add('new:sfd');
+    tags.add('new:build-sfd');
   }
 
   // --- Feature tags ---
@@ -775,7 +767,7 @@ export const USE_TYPE_TAG_CONFIG: Record<string, { label: string; color: string 
 /** Display config for New Houses building type + feature tags. */
 export const NEW_HOUSE_TAG_CONFIG: Record<string, { label: string; color: string }> = {
   // Building type tags — emerald (#059669)
-  'new:sfd': { label: 'Single Family Detached', color: '#059669' },
+  'new:build-sfd': { label: 'Single Family Detached', color: '#059669' },
   'new:semi-detached': { label: 'Semi-Detached', color: '#059669' },
   'new:townhouse': { label: 'Townhouse', color: '#059669' },
   'new:stacked-townhouse': { label: 'Stacked Townhouse', color: '#059669' },
@@ -791,9 +783,7 @@ export const NEW_HOUSE_TAG_CONFIG: Record<string, { label: string; color: string
 /** Display config for the 30 residential scope tags. */
 export const RESIDENTIAL_TAG_CONFIG: Record<string, { label: string; color: string }> = {
   // new: tags — green
-  'new:1-storey-addition': { label: '1 Storey Addition', color: '#16A34A' },
-  'new:2-storey-addition': { label: '2 Storey Addition', color: '#16A34A' },
-  'new:3-storey-addition': { label: '3 Storey Addition', color: '#16A34A' },
+  'new:addition': { label: 'Addition', color: '#16A34A' },
   'new:deck': { label: 'Deck', color: '#16A34A' },
   'new:garage': { label: 'Garage', color: '#16A34A' },
   'new:porch': { label: 'Porch', color: '#16A34A' },
@@ -993,8 +983,15 @@ export function classifyScope(permit: Permit): ScopeResult {
     scope_tags = extractScopeTags(permit);
   }
 
-  // Demolition tier — all DM permits get a demolition tag
+  // Apartment prefix tier — replace bare `apartment` with prefixed version
   const project_type = classifyProjectType(permit);
+  const aptIdx = scope_tags.indexOf('apartment');
+  if (aptIdx !== -1) {
+    const prefix = project_type === 'new_build' ? 'new' : 'alter';
+    scope_tags[aptIdx] = `${prefix}:apartment`;
+  }
+
+  // Demolition tier — all DM permits get a demolition tag
   const isDemolitionPermit = project_type === 'demolition' ||
     /demolition\s*folder/i.test(permitType);
   if (isDemolitionPermit && !scope_tags.includes('demolition')) {

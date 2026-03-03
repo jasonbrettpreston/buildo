@@ -144,8 +144,8 @@ async function main() {
       const candidates = await pool.query(
         `SELECT id, geometry, footprint_area_sqm, centroid_lat, centroid_lng
          FROM building_footprints
-         WHERE centroid_lat BETWEEN $1 - $3 AND $1 + $3
-           AND centroid_lng BETWEEN $2 - $3 AND $2 + $3`,
+         WHERE centroid_lat BETWEEN $1::numeric - $3::numeric AND $1::numeric + $3::numeric
+           AND centroid_lng BETWEEN $2::numeric - $3::numeric AND $2::numeric + $3::numeric`,
         [lat, lng, BBOX_OFFSET]
       );
 

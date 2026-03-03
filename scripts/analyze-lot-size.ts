@@ -1,13 +1,13 @@
 import { Pool } from 'pg';
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/buildo'
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/buildo'
 });
 
 async function run() {
-    const client = await pool.connect();
-    try {
-        const { rows } = await client.query(`
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query(`
       SELECT 
         parcel_id,
         lot_size_sqm, 
@@ -22,7 +22,7 @@ async function run() {
         AND depth_m > 0
     `);
 
-        console.log(\`Found \${rows.length} parcels with both stated area and estimated dimensions.\`);
+    console.log(`Found ${rows.length} parcels with both stated area and estimated dimensions.`);
 
     if (rows.length === 0) {
       return;
@@ -41,10 +41,10 @@ async function run() {
     for (const row of rows) {
       const stated = Number(row.lot_size_sqm);
       const estimatedArea = Number(row.frontage_m) * Number(row.depth_m);
-      
+
       const absError = Math.abs(estimatedArea - stated);
       const percentError = absError / stated;
-      
+
       errors.push(percentError);
       totalError += percentError;
 
@@ -65,15 +65,15 @@ async function run() {
     const avgError = totalError / rows.length;
 
     console.log('--- Accuracy Report ---');
-    console.log(\`Total Parcels Analyzed: \${rows.length}\`);
-    console.log(\`Average Error: \${(avgError * 100).toFixed(2)}%\`);
-    console.log(\`Median Error: \${(medianError * 100).toFixed(2)}%\`);
-    console.log(\`Within 1%: \${exactMatches} (\${((exactMatches / rows.length) * 100).toFixed(2)}%)\`);
-    console.log(\`Within 5%: \${within5Percent} (\${((within5Percent / rows.length) * 100).toFixed(2)}%)\`);
-    console.log(\`Within 10%: \${within10Percent} (\${((within10Percent / rows.length) * 100).toFixed(2)}%)\`);
-    console.log(\`Within 20%: \${within20Percent} (\${((within20Percent / rows.length) * 100).toFixed(2)}%)\`);
-    console.log(\`Overestimates: \${overestimates.length} parcels\`);
-    console.log(\`Underestimates: \${underestimates.length} parcels\`);
+    console.log(`Total Parcels Analyzed: ${rows.length}`);
+    console.log(`Average Error: ${(avgError * 100).toFixed(2)}%`);
+    console.log(`Median Error: ${(medianError * 100).toFixed(2)}%`);
+    console.log(`Within 1%: ${exactMatches} (${((exactMatches / rows.length) * 100).toFixed(2)}%)`);
+    console.log(`Within 5%: ${within5Percent} (${((within5Percent / rows.length) * 100).toFixed(2)}%)`);
+    console.log(`Within 10%: ${within10Percent} (${((within10Percent / rows.length) * 100).toFixed(2)}%)`);
+    console.log(`Within 20%: ${within20Percent} (${((within20Percent / rows.length) * 100).toFixed(2)}%)`);
+    console.log(`Overestimates: ${overestimates.length} parcels`);
+    console.log(`Underestimates: ${underestimates.length} parcels`);
 
   } finally {
     client.release();

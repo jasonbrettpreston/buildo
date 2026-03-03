@@ -1,5 +1,8 @@
 # Feature: Permit Detail View
 
+**Status:** In Progress
+**Last Updated:** 2026-03-03
+
 ## 1. User Story
 "As a user, I want to see full details for any permit including its history timeline, trade matches, builder info, and location on a map."
 
@@ -146,27 +149,27 @@ If a matching Committee of Adjustment application exists (from `coa_applications
 
 ## 3. Associated Files
 
-| File | Status | Purpose |
-|------|--------|---------|
-| `src/app/permits/[id]/page.tsx` | Planned | Permit detail page |
-| `src/app/permits/[id]/loading.tsx` | Planned | Loading skeleton for permit detail |
-| `src/components/permits/PermitDetail.tsx` | Planned | Main detail container component |
-| `src/components/permits/PermitHeader.tsx` | Planned | Header with permit number, address, status |
-| `src/components/permits/PropertyPhoto.tsx` | Exists | Street View photo with dev mode placeholder |
-| `src/components/permits/PermitLocation.tsx` | Planned | Map embed and location details |
-| `src/components/permits/PermitProject.tsx` | Planned | Project details section |
-| `src/components/permits/PermitTimeline.tsx` | Planned | Date timeline section |
-| `src/components/permits/BuilderCard.tsx` | Planned | Builder/owner contact card |
-| `src/components/permits/TradeMatchCard.tsx` | Planned | Individual trade match display |
-| `src/components/permits/TradeMatchList.tsx` | Planned | List of trade match cards |
-| `src/components/permits/HistoryTimeline.tsx` | Planned | Change history timeline component |
-| `src/components/permits/CoaLink.tsx` | Planned | CoA application link card |
-| `src/components/permits/PermitActions.tsx` | Planned | Action buttons (save, share, export) |
-| `src/app/api/permits/[id]/route.ts` | Exists | Permit detail API (returns permit, trades, history, builder) |
-| `src/lib/classification/phases.ts` | Exists | `determinePhase()` for phase badge |
-| `src/tests/permit-detail.logic.test.ts` | Planned | Permit detail logic unit tests |
-| `src/tests/permit-detail.ui.test.tsx` | Planned | Permit detail component tests |
-| `src/tests/permit-detail.infra.test.ts` | Planned | Permit detail integration tests |
+**Architecture note:** The spec planned 14 modular sub-components. The actual implementation
+uses a single monolithic page component (~508 lines) with inline Section/Field helpers.
+All data sections listed in the spec are implemented but as inline code, not as separate files.
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `src/app/permits/[id]/page.tsx` | Monolithic permit detail page (all sections inline) | Implemented |
+| `src/components/permits/PropertyPhoto.tsx` | Street View photo | Implemented |
+| `src/components/permits/NeighbourhoodProfile.tsx` | Neighbourhood context section (beyond spec) | Implemented |
+| `src/components/permits/BuildingMassing.tsx` | Building massing section (Spec 31) | Implemented |
+| `src/app/api/permits/[id]/route.ts` | Detail API: permit, trades, history, builder, parcel, neighbourhood, massing, coaApplications | Implemented |
+| `src/lib/classification/phases.ts` | `determinePhase()` for phase badge | Implemented |
+| `src/app/permits/[id]/loading.tsx` | Loading skeleton | Planned |
+| `src/tests/permit-detail.logic.test.ts` | Permit detail logic tests | Planned |
+| `src/tests/permit-detail.ui.test.tsx` | Permit detail component tests | Planned |
+
+**Implemented sections:** Header, Property Photo, Property Details (parcel), Building Massing,
+Neighbourhood Profile, Project Details, Linked Permits, CoA Applications, Description + Scope Tags,
+Timeline, Change History, Builder info (name/phone/email/website/rating/WSIB), Trade Matches.
+
+**Not yet implemented:** Save/track actions, Share button, Export to PDF, View on Map link.
 
 ## 4. Constraints & Edge Cases
 

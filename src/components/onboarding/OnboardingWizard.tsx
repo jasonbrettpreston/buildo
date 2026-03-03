@@ -11,7 +11,7 @@ interface OnboardingWizardProps {
 
 const STEPS = ['Trades', 'Location', 'Notifications', 'Confirm'];
 
-export function OnboardingWizard({ accountType, onComplete }: OnboardingWizardProps) {
+export function OnboardingWizard({ accountType: _accountType, onComplete }: OnboardingWizardProps) {
   const [step, setStep] = useState(0);
   const [selectedTrades, setSelectedTrades] = useState<string[]>([]);
   const [postalCodes, setPostalCodes] = useState('');

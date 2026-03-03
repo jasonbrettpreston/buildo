@@ -1,7 +1,7 @@
 # Spec 28 -- Data Quality Dashboard
 
-**Status:** In Progress
-**Last Updated:** 2026-02-20
+**Status:** Implemented
+**Last Updated:** 2026-03-03
 **Depends On:** `01_database_schema.md`, `04_sync_scheduler.md`, `08_trade_classification.md`, `11_builder_enrichment.md`, `12_coa_integration.md`, `26_admin.md`, `27_neighbourhood_profiles.md`
 **Blocks:** None
 
@@ -29,7 +29,7 @@
 
 | # | Process | Linking Method | Confidence Stored? |
 |---|---------|---------------|-------------------|
-| 1 | Trade Classification | 3-tier rules engine → `permit_trades` | Yes (0.0–1.0) |
+| 1 | Trade Classification | 2-tier rules engine (Tier 1 permit rules + Tier 2 tag matrix with 58 keys + 16 aliases + work-field fallback) → `permit_trades`, split by residential vs commercial/mixed-use | Yes (0.0–1.0) |
 | 2 | Builder Matching | Name normalization → `builders.name_normalized` | No (binary) |
 | 3 | Parcel Linking | Address match → `permit_parcels` | Yes (0.60 / 0.95) |
 | 4 | Neighbourhood Linking | Point-in-polygon → `permits.neighbourhood_id` | No (binary) |
@@ -113,27 +113,73 @@ Composite weighted average of six coverage percentages, clamped to 0–100:
 }
 ```
 
-### 2.6 Dashboard Layout
+### 2.6 Dashboard Layout — Hub-and-Spoke Data Source Diagram
 
-**Section A — Overall Health Score (top banner)**
-Circular gauge with score (0-100), colour-coded. Sparkline showing score over last 30 days. Permit universe counts below.
+**Section 1 — Data Source Relationships (circle diagram)**
+Hub-and-spoke layout showing Building Permits as the central data source with SVG connector lines fanning out to dependent/enrichment sources. Each source is rendered as a `DataSourceCircle` with:
+- Progress ring (SVG) showing accuracy %, colour-coded (green >= 80%, yellow >= 60%, red < 60%)
+- Count / total, optional avg confidence
+- Tier/detail breakdown rows
+- Last updated timestamp, next scheduled run date
+- "Update Now" button triggering `POST /api/admin/pipelines/{slug}`
+- Relationship label on connector (e.g. "links to", "enriches", "classifies", "extracted from")
 
-**Section B — Coverage Matrix (3×2 card grid)**
-Each card shows: title, progress bar with percentage, matched/total count, optional avg confidence, optional detail rows, optional sub-bars (builder enrichment breakdown), sparkline trend.
+**Hub (hero, largest circle):**
+- Building Permits — active/total, 24h/7d update counts
 
-Cards:
-1. Trade Classification — coverage %, avg confidence, tier 1/2/3 breakdown
-2. Builder Enrichment — enriched %, phone/email/website/Google/WSIB sub-bars
-3. Parcel Linking — coverage %, exact vs name-only split, avg confidence
-4. Neighbourhood — coverage %
-5. Geocoding — coverage %
-6. CoA Linking — linked %, high/low confidence split, avg confidence
+**Row 1 — Enrichment sources (4-column grid):**
+1. Address Matching — geocoded permits, address points count
+2. Lots (Parcels) — exact/name/spatial tier breakdown, avg confidence
+3. 3D Massing — footprints, parcels with buildings
+4. Neighbourhoods — total hoods, permits linked
 
-**Section C — Confidence Distribution Charts (2 histograms)**
-Trade confidence histogram (5 buckets: 0.5-0.6 through 0.9-1.0) and CoA confidence histogram (5 buckets: 0.3-0.5 through 0.8-1.0). Approximated from tier counts and confidence splits in the snapshot.
+**Row 2 — Derived/classification sources (5-column grid):**
+5. CoA Linked — high/low confidence split, avg confidence
+6. Builder Profiles — permits w/ builder, phone/email/website breakdown; indented Google Places + WSIB enrichment tiers
+7. Scope Class — % of permits with a use-type tag; hardcoded tier list always shows three rows: Residential (count), Commercial (count), Mixed-Use (count)
+8. Scope Tags — % of permits with at least 1 true architectural tag (excluding use-types); top 3 tags listed
+9. Trades (Residential) — % of residential permits with ≥1 trade; Tier 1/2 counts
+10. Trades (Commercial) — % of commercial+mixed-use permits with ≥1 trade; Tier 1/2 counts
 
-**Section D — Freshness & Sync Timeline (bottom)**
+Fetches both `/api/quality` (snapshot data) and `/api/admin/stats` (pipeline timestamps, address_points/massing/neighbourhood counts). Polls every 5s while any pipeline is running.
+
+**Section 2 — Freshness & Sync Timeline (bottom)**
 Freshness counters (24h/7d/30d), staleness warning (% of active permits not seen in 30+ days), data source timeline with coloured dots and relative timestamps.
+
+### 2.7 Pipeline Chain Execution
+
+The chain orchestrator (`scripts/run-chain.js`) enables end-to-end execution of pipeline sequences. Three chains are defined, each ending with `refresh_snapshot` to capture updated metrics:
+
+**Chain Definitions:**
+
+| Chain ID | API Slug | Steps | Description |
+|----------|----------|-------|-------------|
+| `permits` | `chain_permits` | 14 | Daily — full permits ingest through classification, enrichment, linking, and snapshot |
+| `coa` | `chain_coa` | 4 | Daily — CoA ingest, linking, pre-permit creation, and snapshot |
+| `sources` | `chain_sources` | 10 | Quarterly/Annual — reference data refresh (address points, parcels, massing, neighbourhoods) with re-linking and snapshot |
+
+**Permits chain (14 steps):** permits → classify_scope_class → classify_scope_tags → classify_permits → builders → enrich_google → enrich_wsib → geocode_permits → link_parcels → link_neighbourhoods → link_massing → link_similar → link_coa → refresh_snapshot
+
+**CoA chain (4 steps):** coa → link_coa → create_pre_permits → refresh_snapshot
+
+**Sources chain (10 steps):** address_points → geocode_permits → parcels → compute_centroids → link_parcels → massing → link_massing → neighbourhoods → link_neighbourhoods → refresh_snapshot
+
+**Orchestrator behaviour:**
+- Accepts chain ID as CLI argument: `node scripts/run-chain.js permits`
+- Inserts a parent `pipeline_runs` row for `chain_<id>` tracking overall status
+- Executes steps sequentially; each step gets its own `pipeline_runs` row
+- **Stop-on-failure:** if step N fails, the chain stops and records which step failed
+- Parent chain row updated with `completed` or `failed` status and total duration
+- API route timeout: 1 hour for chains (vs 10 minutes for individual pipelines)
+
+**API integration:**
+- `POST /api/admin/pipelines/chain_permits` — triggers full permits chain
+- `POST /api/admin/pipelines/chain_coa` — triggers full CoA chain
+- `POST /api/admin/pipelines/chain_sources` — triggers full sources chain
+- Chain slug detection: when slug starts with `chain_`, the route passes the chain ID as an extra argument to `run-chain.js` and uses the extended 1-hour timeout
+
+**Dashboard polling:**
+- DataQualityDashboard polling (5s interval) auto-discovers any running pipeline steps from `pipeline_last_run`, including steps spawned by the chain orchestrator (not just user-triggered ones)
 
 ---
 
@@ -147,12 +193,13 @@ Freshness counters (24h/7d/30d), staleness warning (% of active permits not seen
 | `src/app/api/quality/route.ts` | `GET /api/quality` — latest snapshot + trends | Implemented |
 | `src/app/api/quality/refresh/route.ts` | `POST /api/quality/refresh` — manual snapshot capture | Implemented |
 | `src/app/admin/data-quality/page.tsx` | Dashboard page shell at `/admin/data-quality` | Implemented |
-| `src/components/DataQualityDashboard.tsx` | Main dashboard component (score gauge, coverage grid, histograms, freshness) | Implemented |
-| `src/components/CoverageCard.tsx` | Reusable coverage card with progress bar, sparkline, sub-bars | Implemented |
-| `src/components/ConfidenceHistogram.tsx` | Bar chart for confidence distribution | Implemented |
-| `src/components/FreshnessTimeline.tsx` | Data source staleness timeline | Implemented |
+| `src/components/DataQualityDashboard.tsx` | Hub-and-spoke dashboard — fetches quality + admin stats, renders circle diagram + freshness | Implemented |
+| `src/components/DataSourceCircle.tsx` | Reusable circle node with progress ring, tier breakdown, timestamps, Update Now button | Implemented |
+| `src/components/FreshnessTimeline.tsx` | Data source staleness timeline + pipeline chain definitions | Implemented |
+| `scripts/run-chain.js` | Sequential chain orchestrator — runs pipeline steps in order with tracking | Implemented |
 | `src/tests/quality.logic.test.ts` | 28 tests — score calculations, metric extraction, shape validation | Implemented |
 | `src/tests/quality.infra.test.ts` | 20 tests — API response shape, schema constraints, validation | Implemented |
+| `src/tests/chain.logic.test.ts` | 18 tests — chain definitions, slug extraction, file existence, completeness | Implemented |
 | `src/tests/factories.ts` | `createMockDataQualitySnapshot()` factory function | Implemented |
 | `functions/src/index.ts` | Snapshot capture added after sync (step 4, non-fatal) | Implemented |
 | `src/app/admin/page.tsx` | "Data Quality" nav link added to admin page | Implemented |

@@ -1,11 +1,12 @@
 import type { Trade } from '@/lib/permits/types';
 
 /**
- * The canonical list of 31 trade categories used by Buildo to classify
+ * The canonical list of 32 trade categories used by Buildo to classify
  * Toronto building permits into actionable leads.
  *
  * IDs 1-20: original trades (4 display renames, slugs unchanged)
  * IDs 21-31: new trades added in WF3
+ * ID 32: drain-plumbing (specialized drain/site-service trade)
  */
 export const TRADES: Trade[] = [
   { id: 1,  slug: 'excavation',          name: 'Excavation',              icon: 'Shovel',        color: '#795548', sort_order: 1  },
@@ -40,6 +41,7 @@ export const TRADES: Trade[] = [
   { id: 29, slug: 'security',            name: 'Security',                icon: 'ShieldCheck',   color: '#37474F', sort_order: 29 },
   { id: 30, slug: 'temporary-fencing',   name: 'Temporary Fencing',       icon: 'AlertTriangle', color: '#FF6F00', sort_order: 30 },
   { id: 31, slug: 'caulking',            name: 'Caulking',                icon: 'Pipette',       color: '#B0BEC5', sort_order: 31 },
+  { id: 32, slug: 'drain-plumbing',     name: 'Drain & Plumbing',        icon: 'Droplet',       color: '#1565C0', sort_order: 32 },
 ];
 
 /**

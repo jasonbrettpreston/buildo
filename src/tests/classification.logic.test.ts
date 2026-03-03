@@ -1,6 +1,6 @@
 // 🔗 SPEC LINK: docs/specs/07_trade_taxonomy.md, 08_trade_classification.md, 32_product_groups.md
 import { describe, it, expect } from 'vitest';
-import { classifyPermit, extractPermitCode, applyScopeLimit, classifyProducts, NARROW_SCOPE_CODES } from '@/lib/classification/classifier';
+import { classifyPermit, extractPermitCode, classifyProducts, NARROW_SCOPE_CODES } from '@/lib/classification/classifier';
 import {
   determinePhase,
   isTradeActiveInPhase,
@@ -8,18 +8,25 @@ import {
 } from '@/lib/classification/phases';
 import { TRADES, getTradeBySlug } from '@/lib/classification/trades';
 import { TIER_1_RULES, ALL_RULES } from '@/lib/classification/rules';
-import { lookupTradesForTags, TAG_TRADE_MATRIX } from '@/lib/classification/tag-trade-matrix';
+import { lookupTradesForTags } from '@/lib/classification/tag-trade-matrix';
 import { lookupProductsForTags } from '@/lib/classification/tag-product-matrix';
 import { PRODUCT_GROUPS } from '@/lib/classification/products';
-import { createMockPermit, createMockTradeMappingRule } from './factories';
+import { createMockPermit } from './factories';
 
 // ---------------------------------------------------------------------------
-// Trade Taxonomy (31 trades)
+// Trade Taxonomy (32 trades)
 // ---------------------------------------------------------------------------
 
 describe('Trade Taxonomy', () => {
-  it('has exactly 31 trade categories', () => {
-    expect(TRADES).toHaveLength(31);
+  it('has exactly 32 trade categories', () => {
+    expect(TRADES).toHaveLength(32);
+  });
+
+  it('includes drain-plumbing trade', () => {
+    const trade = getTradeBySlug('drain-plumbing');
+    expect(trade).toBeDefined();
+    expect(trade?.name).toBe('Drain & Plumbing');
+    expect(trade?.id).toBe(32);
   });
 
   it('each trade has slug, name, icon, and color', () => {
@@ -131,8 +138,8 @@ describe('Tag-Trade Matrix', () => {
     expect(results).toHaveLength(0);
   });
 
-  it('sfd tag produces many trades including new ones', () => {
-    const results = lookupTradesForTags(['new:sfd']);
+  it('build-sfd tag produces many trades including new ones', () => {
+    const results = lookupTradesForTags(['new:build-sfd']);
     const slugs = results.map((r) => r.tradeSlug);
     expect(slugs.length).toBeGreaterThan(15);
     expect(slugs).toContain('trim-work');
@@ -144,6 +151,208 @@ describe('Tag-Trade Matrix', () => {
     const results = lookupTradesForTags(['new:houseplex-4-unit']);
     const slugs = results.map((r) => r.tradeSlug);
     expect(slugs).toContain('framing');
+    expect(slugs).toContain('plumbing');
+  });
+
+  it('tenant-fitout tag maps to drywall, millwork-cabinetry, electrical', () => {
+    const results = lookupTradesForTags(['tenant-fitout']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('drywall');
+    expect(slugs).toContain('millwork-cabinetry');
+    expect(slugs).toContain('electrical');
+    expect(slugs).toContain('painting');
+  });
+
+  it('retail tag maps to drywall, electrical, glazing', () => {
+    const results = lookupTradesForTags(['retail']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('drywall');
+    expect(slugs).toContain('electrical');
+    expect(slugs).toContain('glazing');
+  });
+
+  it('office tag maps to drywall, hvac, electrical', () => {
+    const results = lookupTradesForTags(['office']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('drywall');
+    expect(slugs).toContain('hvac');
+    expect(slugs).toContain('electrical');
+  });
+
+  it('restaurant tag maps to plumbing, hvac, fire-protection', () => {
+    const results = lookupTradesForTags(['restaurant']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('plumbing');
+    expect(slugs).toContain('hvac');
+    expect(slugs).toContain('fire-protection');
+  });
+
+  it('warehouse tag maps to concrete, structural-steel, fire-protection', () => {
+    const results = lookupTradesForTags(['warehouse']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('concrete');
+    expect(slugs).toContain('structural-steel');
+    expect(slugs).toContain('fire-protection');
+  });
+
+  // ── Tag alias resolution ──────────────────────────────────────────────
+
+  it('interior-alterations resolves to interior trades via alias', () => {
+    const results = lookupTradesForTags(['alter:interior-alterations']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('drywall');
+    expect(slugs).toContain('painting');
+    expect(slugs).toContain('flooring');
+  });
+
+  it('roofing resolves to roof trades via alias', () => {
+    const results = lookupTradesForTags(['new:roofing']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('roofing');
+    expect(slugs).toContain('eavestrough-siding');
+  });
+
+  it('laneway-suite resolves to laneway trades via alias', () => {
+    const results = lookupTradesForTags(['new:laneway-suite']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('plumbing');
+    expect(slugs).toContain('hvac');
+  });
+
+  it('fire-alarm resolves to fire_alarm trades via alias', () => {
+    const results = lookupTradesForTags(['fire-alarm']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('fire-protection');
+    expect(slugs).toContain('electrical');
+  });
+
+  it('stacked-townhouse resolves to townhouse trades via alias', () => {
+    const results = lookupTradesForTags(['new:stacked-townhouse']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('masonry');
+    expect(slugs).toContain('fire-protection');
+  });
+
+  it('semi-detached resolves to semi trades via alias', () => {
+    const results = lookupTradesForTags(['new:semi-detached']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('masonry');
+  });
+
+  it('condo resolves to apartment trades via alias', () => {
+    const results = lookupTradesForTags(['condo']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('concrete');
+    expect(slugs).toContain('elevator');
+  });
+
+  it('storey/floor addition aliases resolve to addition trades', () => {
+    for (const tag of ['storey-addition', '2nd-floor', '3rd-floor', 'rear-addition']) {
+      const results = lookupTradesForTags([tag]);
+      const slugs = results.map((r) => r.tradeSlug);
+      expect(slugs).toContain('framing');
+      expect(slugs).toContain('concrete');
+    }
+  });
+
+  it('finished-basement and basement-finish resolve to basement trades', () => {
+    for (const tag of ['new:finished-basement', 'basement-finish']) {
+      const results = lookupTradesForTags([tag]);
+      const slugs = results.map((r) => r.tradeSlug);
+      expect(slugs).toContain('framing');
+      expect(slugs).toContain('waterproofing');
+    }
+  });
+
+  // ── New matrix entries ────────────────────────────────────────────────
+
+  it('walkout tag maps to excavation, concrete, waterproofing', () => {
+    const results = lookupTradesForTags(['new:walkout']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('excavation');
+    expect(slugs).toContain('concrete');
+    expect(slugs).toContain('waterproofing');
+  });
+
+  it('second-suite tag maps to framing, plumbing, electrical, hvac', () => {
+    const results = lookupTradesForTags(['new:second-suite']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('plumbing');
+    expect(slugs).toContain('electrical');
+    expect(slugs).toContain('hvac');
+  });
+
+  it('drain tag maps to drain-plumbing', () => {
+    const results = lookupTradesForTags(['drain']);
+    expect(results).toHaveLength(1);
+    expect(results[0].tradeSlug).toBe('drain-plumbing');
+  });
+
+  it('balcony tag maps to framing, concrete, waterproofing', () => {
+    const results = lookupTradesForTags(['new:balcony']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('concrete');
+    expect(slugs).toContain('waterproofing');
+  });
+
+  it('unit-conversion tag maps to framing, drywall, plumbing, electrical', () => {
+    const results = lookupTradesForTags(['alter:unit-conversion']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('drywall');
+    expect(slugs).toContain('plumbing');
+    expect(slugs).toContain('electrical');
+  });
+
+  it('open-concept tag maps to framing, structural-steel, drywall', () => {
+    const results = lookupTradesForTags(['new:open-concept']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('structural-steel');
+    expect(slugs).toContain('drywall');
+  });
+
+  it('structural-beam tag maps to structural-steel, framing', () => {
+    const results = lookupTradesForTags(['new:structural-beam']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('structural-steel');
+    expect(slugs).toContain('framing');
+  });
+
+  it('fire-damage tag maps to demolition, framing, drywall', () => {
+    const results = lookupTradesForTags(['alter:fire-damage']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('demolition');
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('drywall');
+  });
+
+  it('dormer tag maps to framing, roofing, insulation', () => {
+    const results = lookupTradesForTags(['new:dormer']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('roofing');
+    expect(slugs).toContain('insulation');
+  });
+
+  it('carport tag maps to framing, concrete, roofing', () => {
+    const results = lookupTradesForTags(['new:carport']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('concrete');
+    expect(slugs).toContain('roofing');
+  });
+
+  it('convert-unit resolves to unit-conversion trades via alias', () => {
+    const results = lookupTradesForTags(['convert-unit']);
+    const slugs = results.map((r) => r.tradeSlug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('drywall');
     expect(slugs).toContain('plumbing');
   });
 });
@@ -159,7 +368,7 @@ describe('classifyPermit - Tag Matrix Integration', () => {
       permit_type: 'Small Residential Projects',
       work: 'New Building',
     });
-    const tags = ['new:sfd', 'new:kitchen', 'new:bathroom'];
+    const tags = ['new:build-sfd', 'new:kitchen', 'new:bathroom'];
     const matches = classifyPermit(permit, ALL_RULES, tags);
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs.length).toBeGreaterThan(10);
@@ -184,7 +393,7 @@ describe('classifyPermit - Tag Matrix Integration', () => {
     expect(slugs).not.toContain('tiling');
   });
 
-  it('empty tags with no narrow-scope falls back to minimal trades at 0.40', () => {
+  it('empty tags with no narrow-scope falls back to broad trades at tier 1', () => {
     const permit = createMockPermit({
       permit_num: '21 123456 BLD 00',
       permit_type: 'Building',
@@ -192,9 +401,10 @@ describe('classifyPermit - Tag Matrix Integration', () => {
     });
     const matches = classifyPermit(permit, ALL_RULES, []);
     expect(matches.length).toBeGreaterThanOrEqual(1);
-    // Fallback trades should have 0.40 confidence
+    // Fallback trades should be tier 1 (Tier 3 deprecated)
     for (const m of matches) {
-      expect(m.confidence).toBe(0.40);
+      expect(m.tier).toBe(1);
+      expect(m.confidence).toBeGreaterThanOrEqual(0.50);
     }
   });
 
@@ -237,7 +447,7 @@ describe('classifyPermit - Tag Matrix Integration', () => {
     expect(slugs).not.toContain('landscaping');
   });
 
-  it('unknown scope tags fall back to minimal residential trades', () => {
+  it('unknown scope tags fall back to broad trades', () => {
     const permit = createMockPermit({
       permit_num: '21 123456 BLD 00',
       permit_type: 'Building',
@@ -247,7 +457,120 @@ describe('classifyPermit - Tag Matrix Integration', () => {
     const matches = classifyPermit(permit, ALL_RULES, tags);
     expect(matches.length).toBeGreaterThanOrEqual(1);
     for (const m of matches) {
-      expect(m.confidence).toBe(0.40);
+      expect(m.tier).toBe(1);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tier 3 Deprecation & Tier 1 Work-Field Fallback
+// ---------------------------------------------------------------------------
+
+describe('Tier 3 Deprecation - all fallback matches must be tier 1', () => {
+  it('fallback trades are tier 1, not tier 3', () => {
+    const permit = createMockPermit({
+      permit_num: '21 123456 BLD 00',
+      permit_type: 'Building',
+      work: 'Other',
+    });
+    const matches = classifyPermit(permit, ALL_RULES, []);
+    expect(matches.length).toBeGreaterThanOrEqual(1);
+    for (const m of matches) {
+      expect(m.tier).toBe(1);
+      expect(m.tier).not.toBe(3);
+    }
+  });
+
+  it('no permit ever produces tier 3 matches', () => {
+    const permits = [
+      createMockPermit({ permit_num: '21 100000 BLD 00', permit_type: 'Building', work: 'Other' }),
+      createMockPermit({ permit_num: '21 200000 BLD 00', permit_type: 'Building', work: 'Interior Alterations' }),
+      createMockPermit({ permit_num: '21 300000 BLD 00', permit_type: 'Building', work: 'New Building' }),
+      createMockPermit({ permit_num: '21 400000 BLD 00', permit_type: 'Small Residential Projects', work: 'Addition' }),
+    ];
+    for (const permit of permits) {
+      const matches = classifyPermit(permit, ALL_RULES, []);
+      for (const m of matches) {
+        expect(m.tier).not.toBe(3);
+      }
+    }
+  });
+});
+
+describe('Tier 1 Work-Field Fallback', () => {
+  it('Interior Alterations fallback includes drywall, painting, electrical', () => {
+    const permit = createMockPermit({
+      permit_num: '21 123456 BLD 00',
+      permit_type: 'Building',
+      work: 'Interior Alterations',
+    });
+    const matches = classifyPermit(permit, ALL_RULES, []);
+    const slugs = matches.map((m) => m.trade_slug);
+    expect(slugs).toContain('drywall');
+    expect(slugs).toContain('painting');
+    expect(slugs).toContain('electrical');
+    for (const m of matches) {
+      expect(m.tier).toBe(1);
+      expect(m.confidence).toBeGreaterThanOrEqual(0.55);
+    }
+  });
+
+  it('New Building fallback includes framing, concrete, excavation', () => {
+    const permit = createMockPermit({
+      permit_num: '21 123456 BLD 00',
+      permit_type: 'Building',
+      work: 'New Building',
+    });
+    const matches = classifyPermit(permit, ALL_RULES, []);
+    const slugs = matches.map((m) => m.trade_slug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('concrete');
+    expect(slugs).toContain('excavation');
+    for (const m of matches) {
+      expect(m.tier).toBe(1);
+    }
+  });
+
+  it('Re-Roofing fallback maps to roofing', () => {
+    const permit = createMockPermit({
+      permit_num: '21 123456 BLD 00',
+      permit_type: 'Building',
+      work: 'Re-Roofing',
+    });
+    const matches = classifyPermit(permit, ALL_RULES, []);
+    const slugs = matches.map((m) => m.trade_slug);
+    expect(slugs).toContain('roofing');
+    for (const m of matches) {
+      expect(m.tier).toBe(1);
+    }
+  });
+
+  it('Deck fallback maps to framing and concrete', () => {
+    const permit = createMockPermit({
+      permit_num: '21 123456 BLD 00',
+      permit_type: 'Building',
+      work: 'Deck',
+    });
+    const matches = classifyPermit(permit, ALL_RULES, []);
+    const slugs = matches.map((m) => m.trade_slug);
+    expect(slugs).toContain('framing');
+    expect(slugs).toContain('concrete');
+    for (const m of matches) {
+      expect(m.tier).toBe(1);
+    }
+  });
+
+  it('Unknown work field gets broad default trades at tier 1', () => {
+    const permit = createMockPermit({
+      permit_num: '21 123456 BLD 00',
+      permit_type: 'Building',
+      work: 'Some Unknown Work Type',
+    });
+    const matches = classifyPermit(permit, ALL_RULES, []);
+    expect(matches.length).toBeGreaterThanOrEqual(4);
+    for (const m of matches) {
+      expect(m.tier).toBe(1);
+      expect(m.confidence).toBeGreaterThanOrEqual(0.50);
     }
   });
 });
@@ -448,7 +771,7 @@ describe('Product Groups', () => {
       permit_num: '21 123456 BLD 00',
     });
     // Both kitchen and sfd map to kitchen-cabinets
-    const products = classifyProducts(permit, ['new:kitchen', 'new:sfd']);
+    const products = classifyProducts(permit, ['new:kitchen', 'new:build-sfd']);
     const cabinetMatches = products.filter((p) => p.product_slug === 'kitchen-cabinets');
     expect(cabinetMatches).toHaveLength(1);
   });
@@ -526,7 +849,7 @@ describe('Permit Code Scope Limiting', () => {
     expect(slugs).not.toContain('roofing');
   });
 
-  it('DRN permit only gets plumbing trade', () => {
+  it('DRN permit only gets drain-plumbing trade', () => {
     const permit = createMockPermit({
       permit_num: '20 222222 DRN 00',
       permit_type: 'Drain and Site Service',
@@ -535,7 +858,8 @@ describe('Permit Code Scope Limiting', () => {
     });
     const matches = classifyPermit(permit, ALL_RULES);
     const slugs = matches.map((m) => m.trade_slug);
-    expect(slugs).toContain('plumbing');
+    expect(slugs).toContain('drain-plumbing');
+    expect(slugs).not.toContain('plumbing');
     expect(slugs).not.toContain('framing');
     expect(slugs).not.toContain('roofing');
   });
@@ -572,7 +896,7 @@ describe('Permit Code Scope Limiting', () => {
       permit_type: 'Small Residential Projects',
       work: 'New Building',
     });
-    const tags = ['new:sfd', 'new:kitchen', 'new:bathroom'];
+    const tags = ['new:build-sfd', 'new:kitchen', 'new:bathroom'];
     const matches = classifyPermit(permit, ALL_RULES, tags);
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs.length).toBeGreaterThan(3);
@@ -608,6 +932,90 @@ describe('Permit Code Scope Limiting', () => {
     expect(slugs).not.toContain('glazing');
     expect(slugs).not.toContain('landscaping');
     expect(slugs).not.toContain('elevator');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Narrow-Scope Fallback (code-based)
+// ---------------------------------------------------------------------------
+
+describe('Narrow-Scope Code-Based Fallback', () => {
+  it('PLB permit with no matching Tier 1 rules falls back to plumbing at 0.80', () => {
+    const permit = createMockPermit({
+      permit_num: '22 654321 PLB 00',
+      permit_type: 'UnknownType',
+      work: 'Building Permit Related(PS)',
+    });
+    // Pass empty rules so no Tier 1 matches
+    const matches = classifyPermit(permit, []);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].trade_slug).toBe('plumbing');
+    expect(matches[0].confidence).toBe(0.80);
+    expect(matches[0].tier).toBe(1);
+  });
+
+  it('HVA permit with no matching Tier 1 rules falls back to hvac at 0.80', () => {
+    const permit = createMockPermit({
+      permit_num: '23 111111 HVA 00',
+      permit_type: 'UnknownType',
+      work: 'Building Permit Related(MS)',
+    });
+    const matches = classifyPermit(permit, []);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].trade_slug).toBe('hvac');
+    expect(matches[0].confidence).toBe(0.80);
+    expect(matches[0].tier).toBe(1);
+  });
+
+  it('DRN permit with no matching Tier 1 rules falls back to drain-plumbing at 0.80', () => {
+    const permit = createMockPermit({
+      permit_num: '20 222222 DRN 00',
+      permit_type: 'UnknownType',
+      work: 'Building Permit Related (DR)',
+    });
+    const matches = classifyPermit(permit, []);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].trade_slug).toBe('drain-plumbing');
+    expect(matches[0].confidence).toBe(0.80);
+    expect(matches[0].tier).toBe(1);
+  });
+
+  it('FSU permit with no matching Tier 1 rules falls back to fire-protection at 0.80', () => {
+    const permit = createMockPermit({
+      permit_num: '21 333333 FSU 00',
+      permit_type: 'UnknownType',
+      work: 'Unknown Work',
+    });
+    const matches = classifyPermit(permit, []);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].trade_slug).toBe('fire-protection');
+    expect(matches[0].confidence).toBe(0.80);
+  });
+
+  it('SHO permit with no matching Tier 1 rules falls back to all allowed trades', () => {
+    const permit = createMockPermit({
+      permit_num: '22 555555 SHO 00',
+      permit_type: 'UnknownType',
+      work: 'Unknown Work',
+    });
+    const matches = classifyPermit(permit, []);
+    const slugs = matches.map((m) => m.trade_slug);
+    expect(slugs).toContain('excavation');
+    expect(slugs).toContain('shoring');
+    expect(slugs).toContain('concrete');
+    expect(slugs).toContain('waterproofing');
+    expect(matches).toHaveLength(4);
+    for (const m of matches) {
+      expect(m.confidence).toBe(0.80);
+    }
+  });
+
+  it('NARROW_SCOPE_CODES maps DRN to drain-plumbing', () => {
+    expect(NARROW_SCOPE_CODES['DRN']).toEqual(['drain-plumbing']);
+  });
+
+  it('NARROW_SCOPE_CODES maps STS to drain-plumbing', () => {
+    expect(NARROW_SCOPE_CODES['STS']).toEqual(['drain-plumbing']);
   });
 });
 

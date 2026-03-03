@@ -15,6 +15,7 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 const { execSync } = require('child_process');
+const { platform } = require('os');
 const shapefile = require('shapefile');
 
 const BATCH_SIZE = 1000;
@@ -22,7 +23,7 @@ const SQM_TO_SQFT = 10.7639;
 const STORY_HEIGHT_M = 3.0;
 
 const ZIP_URL =
-  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/3d-massing/resource/edcd1310-ee62-40d0-a4a0-c95e7c3eaaf5/download/3dmassingshapefile_2025_wgs84.zip';
+  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/c57a333a-dc6c-416e-8dd0-7b7964161720/download/3dmassingshapefile_2025_wgs84.zip';
 
 const pool = new Pool({
   host: process.env.PG_HOST || 'localhost',
@@ -140,7 +141,14 @@ async function main() {
 
       console.log('Extracting ZIP...');
       fs.mkdirSync(extractDir, { recursive: true });
-      execSync(`unzip -o "${zipPath}" -d "${extractDir}"`, { stdio: 'inherit' });
+      if (platform() === 'win32') {
+        execSync(
+          `powershell -Command "Expand-Archive -Force -Path '${zipPath}' -DestinationPath '${extractDir}'"`,
+          { stdio: 'inherit' }
+        );
+      } else {
+        execSync(`unzip -o "${zipPath}" -d "${extractDir}"`, { stdio: 'inherit' });
+      }
       console.log('Extraction complete.');
     }
 
@@ -247,16 +255,19 @@ async function main() {
     const props = feature.properties || {};
     const maxHeight = props.MAX_HEIGHT != null ? parseFloat(props.MAX_HEIGHT) : null;
     const minHeight = props.MIN_HEIGHT != null ? parseFloat(props.MIN_HEIGHT) : null;
-    const elevZ = props.ELEVZ != null ? parseFloat(props.ELEVZ) : null;
-    const sourceId = props.OBJECTID != null ? String(props.OBJECTID) : null;
-    if (!sourceId) {
-      skipped++;
-      continue;
-    }
+    const elevZ = props.ELEVZ != null ? parseFloat(props.ELEVZ) : (props.SURF_ELEV != null ? parseFloat(props.SURF_ELEV) : null);
+    // OBJECTID may not exist in all shapefile versions; fall back to feature index
+    const sourceId = props.OBJECTID != null ? String(props.OBJECTID) : String(processed);
 
-    const areaSqm = shoelaceArea(ring);
+    // Detect projected coords (Web Mercator): values >> 180 means not WGS84 degrees
+    const isProjected = ring[0] && (Math.abs(ring[0][0]) > 180 || Math.abs(ring[0][1]) > 180);
+    const areaSqm = isProjected ? null : shoelaceArea(ring);
     const areaSqft = areaSqm != null ? Math.round(areaSqm * SQM_TO_SQFT * 100) / 100 : null;
-    const centroid = computeCentroid(ring);
+    // Prefer explicit LONGITUDE/LATITUDE properties over computing from ring coords
+    // (ring may be in projected CRS even if file claims WGS84)
+    const centroid = (props.LONGITUDE != null && props.LATITUDE != null)
+      ? [parseFloat(props.LONGITUDE), parseFloat(props.LATITUDE)]
+      : computeCentroid(ring);
     const stories = estimateStories(maxHeight);
 
     batch.push({
@@ -306,6 +317,11 @@ async function main() {
   console.log(`Duration:       ${elapsed}s`);
 
   await pool.end();
+
+  // Chain spatial linking: match parcels to newly loaded building footprints
+  console.log('');
+  console.log('=== Starting Parcel-to-Building Linking ===');
+  execSync(`node "${path.join(__dirname, 'link-massing.js')}"`, { stdio: 'inherit' });
 }
 
 main().catch((err) => {

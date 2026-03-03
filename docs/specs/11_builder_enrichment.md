@@ -1,7 +1,7 @@
 # 11 - Builder Enrichment
 
-**Status:** Planned
-**Last Updated:** 2026-02-14
+**Status:** In Progress
+**Last Updated:** 2026-03-03
 **Depends On:** `01_database_schema.md`, `02_data_ingestion.md`
 **Blocks:** `15_dashboard_tradesperson.md`, `18_permit_detail.md`
 
@@ -12,11 +12,15 @@
 > "As a tradesperson, I want contact information for builders so I can reach out about their projects."
 
 **Acceptance Criteria:**
-- Builder names extracted from permits are normalized and de-duplicated
-- Contact information (phone, website, email) is enriched from external sources
-- Enrichment follows a priority pipeline: Google Places -> Ontario Business Registry -> WSIB -> Google Custom Search -> User-contributed
-- Each builder record shows enrichment source and verification status
-- Estimated cost for initial enrichment of ~3,630 unique builders is ~$116 via Google Places API
+- [x] Builder names extracted from permits are normalized and de-duplicated
+- [x] Contact information (phone, website, email) enriched from Google Places API
+- [x] Batch enrichment with rate limiting (1,500ms delay, 50 per batch)
+- [x] Builder API routes: list, detail, admin stats/trigger
+- [ ] *(Planned)* Ontario Business Registry verification
+- [ ] *(Planned)* WSIB safety clearance check
+- [ ] *(Planned)* Google Custom Search fallback
+- [ ] *(Planned)* User-contributed contacts
+- [ ] *(Planned)* 90-day re-enrichment cycle
 
 ---
 
@@ -138,11 +142,18 @@ enrichBuilder(builder: Builder): void
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `src/lib/builders/enrich.ts` | Enrichment pipeline orchestrator, Google Places/OBR/WSIB clients | Planned |
-| `src/lib/builders/normalize.ts` | Name normalization, suffix stripping, dedup logic | Planned |
-| `migrations/007_builders.sql` | Create builders table | Planned |
-| `migrations/008_builder_contacts.sql` | Create builder_contacts table | Planned |
-| `src/tests/builders.logic.test.ts` | Unit tests for normalization and enrichment | Planned |
+| `src/lib/builders/normalize.ts` | Name normalization, suffix stripping, dedup logic | Implemented |
+| `src/lib/builders/enrichment.ts` | Google Places enrichment pipeline (text search + details) | Implemented |
+| `src/lib/builders/repository.ts` | Builder CRUD operations and permit-count upsert | Implemented |
+| `scripts/extract-builders.js` | Batch extract builder names from permits, normalize, upsert | Implemented |
+| `scripts/enrich-builders.js` | Batch Google Places enrichment with rate limiting | Implemented |
+| `scripts/enrich-wsib.js` | WSIB enrichment (stub — reports missing data) | Planned |
+| `src/app/api/builders/route.ts` | GET: list/search builders with pagination | Implemented |
+| `src/app/api/builders/[id]/route.ts` | GET: single builder detail with contacts | Implemented |
+| `src/app/api/admin/builders/route.ts` | GET: enrichment stats, POST: trigger batch | Implemented |
+| `migrations/007_builders.sql` | Create builders table | Implemented |
+| `migrations/008_builder_contacts.sql` | Create builder_contacts table | Implemented |
+| `src/tests/builders.logic.test.ts` | 24 tests: normalization, dedup, enrichment mocks | Implemented |
 
 ---
 

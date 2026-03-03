@@ -1,5 +1,8 @@
 # Spec 30 -- Permit Work Scope Classification
 
+**Status:** Implemented
+**Last Updated:** 2026-03-03
+
 ## 1. User Story
 
 > As a contractor, I want to filter permits by project scope (e.g. "new deck",
@@ -36,18 +39,16 @@ project type and specific scope items. Analytics need aggregate breakdowns.
 | `repair` | Fix existing damage | work contains "Repair", "Fire Damage" |
 | `other` | Signs, temporary structures, admin | Default fallback |
 
-### Dimension 2a: Residential Scope Tags (Small Residential — 37 fixed tags)
+### Dimension 2a: Residential Scope Tags (Small Residential — 35 fixed tags)
 
 For permits where `permit_type` starts with "Small Residential", a dedicated
-37-tag system with work-type prefixes is used.
+35-tag system with work-type prefixes is used.
 
-#### `new:` tags (31 tags — value-driving construction)
+#### `new:` tags (29 tags — value-driving construction)
 
 | Tag | Label | Primary Pattern |
 |-----|-------|-----------------|
-| `new:1-storey-addition` | 1 Storey Addition | Default when addition detected with no storey count |
-| `new:2-storey-addition` | 2 Storey Addition | "two storey" / "2 storey" in description |
-| `new:3-storey-addition` | 3 Storey Addition | "three storey" / "3 storey" in description |
+| `new:addition` | Addition | Any structural addition detected (storey count ignored for tagging) |
 | `new:deck` | Deck | `/\bdeck\b/i` — default new unless repair signal |
 | `new:garage` | Garage | `/\bgarage\b/i` — default new unless repair signal |
 | `new:porch` | Porch | `/\bporch\b/i` — default new unless repair signal |
@@ -105,12 +106,11 @@ Override back to `new:` if ALSO has new/construct/build signal nearby.
 | accessory-building + pool | pool | accessory-building | Pool is more specific |
 | unit-conversion + second-suite | second-suite | unit-conversion | Suite creation IS a conversion |
 
-#### Addition Storey Defaulting
+#### Addition Tagging
 
-1. Parse storey count from description (cardinal words + numeric)
-2. If addition detected AND storey count found: `new:N-storey-addition`
-3. If addition detected AND no storey count: default to `new:1-storey-addition`
-4. No generic addition tag — always 1, 2, or 3 storey
+All structural additions produce a single `new:addition` tag regardless of
+storey count. The storey count is still parsed for analytics but does not
+affect the tag slug.
 
 **"Addition of" disambiguation:** Phrases like "addition of washroom" mean
 installing a feature, not a structural addition. The negative lookahead
@@ -137,8 +137,9 @@ description, work, structure_type, proposed_use, and current_use fields.
 **Interior:** `kitchen`, `bathroom`, `basement-finish`, `second-suite`,
 `open-concept`, `convert-unit`, `tenant-fitout`
 
-**Building:** `condo`, `apartment`, `townhouse`, `mixed-use`, `retail`, `office`,
-`restaurant`, `warehouse`, `school`, `hospital`
+**Building:** `condo`, `apartment` (prefixed to `new:apartment`/`alter:apartment` in
+`classifyScope()`), `townhouse`, `mixed-use`, `retail`, `office`, `restaurant`,
+`warehouse`, `school`, `hospital`
 
 **Systems:** `hvac`, `plumbing`, `electrical`, `sprinkler`, `fire-alarm`,
 `elevator`, `drain`, `backflow-preventer`, `access-control`
@@ -156,7 +157,7 @@ produces exactly one building type tag plus zero or more feature tags.
 
 | Tag | Label | Signal |
 |-----|-------|--------|
-| `new:sfd` | Single Family Detached | Default; no other match |
+| `new:build-sfd` | Single Family Detached | Default; no other match |
 | `new:semi-detached` | Semi-Detached | structure_type contains "Semi" |
 | `new:townhouse` | Townhouse | structure_type contains "Townhouse" or "Row House" |
 | `new:stacked-townhouse` | Stacked Townhouse | structure_type contains "Stacked" |
@@ -237,7 +238,7 @@ After extractor-specific tags, two universal tiers are applied to every permit:
 
 Prefixed `TEXT[]` in existing `scope_tags` column:
 ```
-["new:3-storey-addition", "new:underpinning", "alter:interior-alterations"]
+["new:addition", "new:underpinning", "alter:interior-alterations"]
 ```
 
 No new migration needed — just re-run the classifier to repopulate.
@@ -320,21 +321,21 @@ ALTER TABLE permits ADD COLUMN scope_source VARCHAR(20) DEFAULT 'classified';
 
 ## 9. Files
 
-| Action | File |
-|--------|------|
-| CREATE | `migrations/019_permit_scope.sql` |
-| CREATE | `migrations/020_quality_scope.sql` |
-| CREATE | `src/lib/classification/scope.ts` |
-| CREATE | `scripts/classify-scope.js` |
-| CREATE | `src/tests/scope.logic.test.ts` |
-| MODIFY | `src/lib/permits/types.ts` (add filter fields) |
-| MODIFY | `src/app/api/permits/route.ts` (add scope filters) |
-| MODIFY | `src/lib/quality/types.ts` (add scope metrics) |
-| MODIFY | `src/lib/quality/metrics.ts` (add scope queries) |
-| MODIFY | `functions/src/index.ts` (classify scope in sync) |
-| MODIFY | `src/app/permits/[id]/page.tsx` (tags in Description section) |
-| MODIFY | `src/components/permits/PermitCard.tsx` (color-coded tags) |
-| CREATE | `migrations/021_scope_source.sql` |
+| File | Purpose | Status |
+|------|---------|--------|
+| `migrations/019_permit_scope.sql` | Add project_type, scope_tags, scope_classified_at columns | Implemented |
+| `migrations/020_quality_scope.sql` | Quality snapshot scope columns | Implemented |
+| `migrations/021_scope_source.sql` | Add scope_source column for propagation tracking | Implemented |
+| `migrations/035_scope_tags_snapshot.sql` | Scope tags snapshot for admin dashboard metrics | Implemented |
+| `src/lib/classification/scope.ts` | Scope classification engine (project types, residential/general/new house extractors) | Implemented |
+| `scripts/classify-scope.js` | Batch DB classifier with BLD→companion propagation | Implemented |
+| `src/tests/scope.logic.test.ts` | 254 test cases covering all extractors and edge cases | Implemented |
+| `src/lib/permits/types.ts` | Filter fields for project_type, scope_tags | Implemented |
+| `src/app/api/permits/route.ts` | Scope filter query params | Implemented |
+| `src/lib/quality/types.ts` | Scope metrics in quality snapshot type | Implemented |
+| `src/lib/quality/metrics.ts` | Scope coverage queries | Implemented |
+| `src/app/permits/[id]/page.tsx` | Tags displayed below description with colour-coding | Implemented |
+| `functions/src/index.ts` | Real-time scope classification in Cloud Function | Planned |
 
 ## 10. Use-Type Classification (Universal Tier)
 
@@ -351,6 +352,14 @@ Default: `commercial` (permits without clear residential signal)
 
 Use-type is applied in `classifyScope()` after extractor-specific tags, ensuring
 every permit's scope_tags array includes exactly one of these three values.
+
+### Admin Dashboard — Scope Class Metric
+
+The "Scope Class" DataSourceCircle on the admin dashboard measures the percentage
+of active permits tagged with **any** use-type (`residential`, `commercial`, or
+`mixed-use`). The breakdown below the bubble lists the active total count of each
+use-type. All three categories are included in both the numerator (bubble %) and
+the tier list.
 
 ### Companion Permit Delegation
 

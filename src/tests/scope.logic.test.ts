@@ -532,58 +532,56 @@ describe('extractResidentialTags', () => {
     });
 
   describe('Storey extraction + addition defaulting', () => {
-    it('"two storey rear addition" → [new:2-storey-addition]', () => {
+    it('"two storey rear addition" → [new:addition]', () => {
       const tags = extractResidentialTags(srp({
         work: 'Addition(s)',
         description: 'Proposal for two storey rear addition',
       }));
-      expect(tags).toContain('new:2-storey-addition');
-      expect(tags).not.toContain('new:1-storey-addition');
+      expect(tags).toContain('new:addition');
     });
 
-    it('"three storey rear addition" → [new:3-storey-addition]', () => {
+    it('"three storey rear addition" → [new:addition]', () => {
       const tags = extractResidentialTags(srp({
         work: 'Addition(s)',
         description: 'Proposal for three storey rear addition',
       }));
-      expect(tags).toContain('new:3-storey-addition');
+      expect(tags).toContain('new:addition');
     });
 
-    it('"Proposal for a rear addition" (no storey) → [new:1-storey-addition]', () => {
+    it('"Proposal for a rear addition" (no storey) → [new:addition]', () => {
       const tags = extractResidentialTags(srp({
         work: 'Addition(s)',
         description: 'Proposal for a rear addition',
       }));
-      expect(tags).toContain('new:1-storey-addition');
+      expect(tags).toContain('new:addition');
     });
 
-    it('"1 storey rear addition" → [new:1-storey-addition]', () => {
+    it('"1 storey rear addition" → [new:addition]', () => {
       const tags = extractResidentialTags(srp({
         description: 'Proposal for 1 storey rear addition',
       }));
-      expect(tags).toContain('new:1-storey-addition');
+      expect(tags).toContain('new:addition');
     });
 
-    it('"three-storey rear addition" (hyphenated) → [new:3-storey-addition]', () => {
+    it('"three-storey rear addition" (hyphenated) → [new:addition]', () => {
       const tags = extractResidentialTags(srp({
         description: 'Proposal for three-storey rear addition',
       }));
-      expect(tags).toContain('new:3-storey-addition');
+      expect(tags).toContain('new:addition');
     });
 
-    it('"single storey addition" → [new:1-storey-addition]', () => {
+    it('"single storey addition" → [new:addition]', () => {
       const tags = extractResidentialTags(srp({
         description: 'Proposal for single storey addition',
       }));
-      expect(tags).toContain('new:1-storey-addition');
+      expect(tags).toContain('new:addition');
     });
 
-    it('no generic addition tag ever — always storey-specific', () => {
+    it('all additions collapse to single new:addition tag', () => {
       const tags = extractResidentialTags(srp({
         description: 'Proposal for rear addition',
       }));
-      expect(tags.some(t => t === 'new:addition' || t === 'addition')).toBe(false);
-      expect(tags).toContain('new:1-storey-addition');
+      expect(tags).toContain('new:addition');
     });
   });
 
@@ -592,16 +590,16 @@ describe('extractResidentialTags', () => {
       const tags = extractResidentialTags(srp({
         description: 'Proposal for two storey rear addition and basement underpinning',
       }));
-      expect(tags).toContain('new:2-storey-addition');
+      expect(tags).toContain('new:addition');
       expect(tags).toContain('new:underpinning');
       expect(tags).not.toContain('new:basement');
     });
 
-    it('"three storey rear addition and deck" → [new:3-storey-addition, new:deck]', () => {
+    it('"three storey rear addition and deck" → [new:addition, new:deck]', () => {
       const tags = extractResidentialTags(srp({
         description: 'Proposal for three storey rear addition and deck',
       }));
-      expect(tags).toContain('new:3-storey-addition');
+      expect(tags).toContain('new:addition');
       expect(tags).toContain('new:deck');
     });
 
@@ -624,7 +622,7 @@ describe('extractResidentialTags', () => {
       const tags = extractResidentialTags(srp({
         description: 'Proposal for two storey rear addition, deck, interior alterations, underpinning, porch',
       }));
-      expect(tags).toContain('new:2-storey-addition');
+      expect(tags).toContain('new:addition');
       expect(tags).toContain('new:deck');
       expect(tags).toContain('new:porch');
       expect(tags).toContain('new:underpinning');
@@ -869,7 +867,7 @@ describe('extractResidentialTags', () => {
       const tags = extractResidentialTags(srp({
         description: 'Proposal for rear addtion and deck',
       }));
-      expect(tags).toContain('new:1-storey-addition');
+      expect(tags).toContain('new:addition');
       expect(tags).toContain('new:deck');
     });
 
@@ -887,7 +885,7 @@ describe('extractResidentialTags', () => {
         work: 'Interior Alterations',
         description: 'Interior alterations for addition of a washroom in basement',
       }));
-      expect(tags).not.toContain('new:1-storey-addition');
+      expect(tags).not.toContain('new:addition');
       expect(tags).toContain('new:bathroom');
       expect(tags).toContain('new:basement');
     });
@@ -897,7 +895,7 @@ describe('extractResidentialTags', () => {
         work: 'Interior Alterations',
         description: 'Proposal for addition of a window and door',
       }));
-      expect(tags).not.toContain('new:1-storey-addition');
+      expect(tags).not.toContain('new:addition');
     });
 
     it('"addition of second storey" still triggers storey-addition (work=Addition)', () => {
@@ -905,14 +903,14 @@ describe('extractResidentialTags', () => {
         work: 'Addition(s)',
         description: 'Proposal for addition of second storey',
       }));
-      expect(tags).toContain('new:1-storey-addition');
+      expect(tags).toContain('new:addition');
     });
 
     it('"rear addition" still triggers storey-addition', () => {
       const tags = extractResidentialTags(srp({
         description: 'Proposal for rear addition and deck',
       }));
-      expect(tags).toContain('new:1-storey-addition');
+      expect(tags).toContain('new:addition');
       expect(tags).toContain('new:deck');
     });
   });
@@ -1077,7 +1075,7 @@ describe('extractNewHouseTags', () => {
   describe('Building type classification cascade', () => {
     it('default SFD for simple new house', () => {
       const tags = extractNewHouseTags(nh({ description: 'Construct new SFD with integral garage' }));
-      expect(tags).toContain('new:sfd');
+      expect(tags).toContain('new:build-sfd');
       expect(tags).toContain('new:garage');
     });
 
@@ -1088,7 +1086,7 @@ describe('extractNewHouseTags', () => {
         description: 'Construct new 3-storey houseplex',
       }));
       expect(tags).toContain('new:houseplex-4-unit');
-      expect(tags).not.toContain('new:sfd');
+      expect(tags).not.toContain('new:build-sfd');
     });
 
     it('proposed_use "houseplex (2 Units)" → houseplex-2-unit', () => {
@@ -1192,7 +1190,7 @@ describe('extractNewHouseTags', () => {
         description: 'Construct new townhouse',
       }));
       expect(tags).toContain('new:townhouse');
-      expect(tags).not.toContain('new:sfd');
+      expect(tags).not.toContain('new:build-sfd');
     });
 
     it('structure_type "Row House" → townhouse', () => {
@@ -1210,7 +1208,7 @@ describe('extractNewHouseTags', () => {
         description: 'Construct new semi-detached dwelling',
       }));
       expect(tags).toContain('new:semi-detached');
-      expect(tags).not.toContain('new:sfd');
+      expect(tags).not.toContain('new:build-sfd');
     });
 
     it('cascade priority: proposed_use houseplex wins over structure_type stacked', () => {
@@ -1301,7 +1299,7 @@ describe('extractNewHouseTags', () => {
       const tags = extractNewHouseTags(nh({
         description: 'Construct new SFD with integral garage, deck, porch',
       }));
-      expect(tags).toContain('new:sfd');
+      expect(tags).toContain('new:build-sfd');
       expect(tags).toContain('new:garage');
       expect(tags).toContain('new:deck');
       expect(tags).toContain('new:porch');
@@ -1322,7 +1320,7 @@ describe('extractNewHouseTags', () => {
     it('empty description still gets building type', () => {
       const tags = extractNewHouseTags(nh({ description: '' }));
       expect(tags.length).toBeGreaterThanOrEqual(1);
-      expect(tags).toContain('new:sfd');
+      expect(tags).toContain('new:build-sfd');
     });
 
     it('minimal permit with no structure_type still defaults to SFD', () => {
@@ -1331,7 +1329,7 @@ describe('extractNewHouseTags', () => {
         proposed_use: '',
         description: '',
       }));
-      expect(tags).toEqual(['new:sfd']);
+      expect(tags).toEqual(['new:build-sfd']);
     });
   });
 });
@@ -1377,7 +1375,7 @@ describe('formatScopeTag', () => {
   it('formats residential prefixed tags using config', () => {
     expect(formatScopeTag('new:deck')).toBe('Deck');
     expect(formatScopeTag('alter:fire-damage')).toBe('Fire Damage');
-    expect(formatScopeTag('new:2-storey-addition')).toBe('2 Storey Addition');
+    expect(formatScopeTag('new:addition')).toBe('Addition');
     expect(formatScopeTag('alter:interior-alterations')).toBe('Interior Alterations');
   });
 
@@ -1387,7 +1385,7 @@ describe('formatScopeTag', () => {
   });
 
   it('formats New House building type tags', () => {
-    expect(formatScopeTag('new:sfd')).toBe('Single Family Detached');
+    expect(formatScopeTag('new:build-sfd')).toBe('Single Family Detached');
     expect(formatScopeTag('new:semi-detached')).toBe('Semi-Detached');
     expect(formatScopeTag('new:townhouse')).toBe('Townhouse');
     expect(formatScopeTag('new:stacked-townhouse')).toBe('Stacked Townhouse');
@@ -1428,7 +1426,7 @@ describe('getScopeTagColor', () => {
   });
 
   it('returns emerald for New House building type tags', () => {
-    expect(getScopeTagColor('new:sfd')).toBe('#059669');
+    expect(getScopeTagColor('new:build-sfd')).toBe('#059669');
     expect(getScopeTagColor('new:houseplex-4-unit')).toBe('#059669');
     expect(getScopeTagColor('new:stacked-townhouse')).toBe('#059669');
   });
@@ -1461,7 +1459,7 @@ describe('classifyScope', () => {
       storeys: 15,
     }));
     expect(result.project_type).toBe('new_build');
-    expect(result.scope_tags).toContain('apartment');
+    expect(result.scope_tags).toContain('new:apartment');
     expect(result.scope_tags).toContain('condo');
     expect(result.scope_tags).toContain('high-rise');
     expect(result.scope_tags).toContain('retail');
@@ -1509,7 +1507,7 @@ describe('classifyScope', () => {
         work: 'Addition(s)',
         description: 'Proposal for two storey rear addition and deck',
       }));
-      expect(result.scope_tags).toContain('new:2-storey-addition');
+      expect(result.scope_tags).toContain('new:addition');
       expect(result.scope_tags).toContain('new:deck');
     });
 
@@ -1530,7 +1528,7 @@ describe('classifyScope', () => {
         work: 'Multiple Projects',
         description: 'Proposal for multiple projects (three storey rear addition and basement underpinning).',
       }));
-      expect(result.scope_tags).toContain('new:3-storey-addition');
+      expect(result.scope_tags).toContain('new:addition');
       expect(result.scope_tags).toContain('new:underpinning');
       expect(result.scope_tags).not.toContain('new:basement');
     });
@@ -1541,7 +1539,7 @@ describe('classifyScope', () => {
         work: 'Multiple Projects',
         description: 'Proposal for a rear addition and deck',
       }));
-      expect(result.scope_tags).toContain('new:1-storey-addition');
+      expect(result.scope_tags).toContain('new:addition');
       expect(result.scope_tags).toContain('new:deck');
     });
 
@@ -1587,7 +1585,7 @@ describe('classifyScope', () => {
         description: 'Construct new SFD with integral garage, deck, porch',
       }));
       expect(result.project_type).toBe('new_build');
-      expect(result.scope_tags).toContain('new:sfd');
+      expect(result.scope_tags).toContain('new:build-sfd');
       expect(result.scope_tags).toContain('new:deck');
       expect(result.scope_tags).toContain('new:garage');
       expect(result.scope_tags).toContain('new:porch');
@@ -1603,7 +1601,7 @@ describe('classifyScope', () => {
         description: 'Construct new 3-storey houseplex',
       }));
       expect(result.scope_tags).toContain('new:houseplex-4-unit');
-      expect(result.scope_tags).not.toContain('new:sfd');
+      expect(result.scope_tags).not.toContain('new:build-sfd');
     });
 
     it('New Houses + stacked townhouse → stacked-townhouse + features', () => {
@@ -1618,14 +1616,14 @@ describe('classifyScope', () => {
       expect(result.scope_tags).toContain('new:finished-basement');
     });
 
-    it('New Houses + SFD with garden suite → [new:garage, new:laneway-suite, new:sfd]', () => {
+    it('New Houses + SFD with garden suite → [new:build-sfd, new:garage, new:laneway-suite]', () => {
       const result = classifyScope(createMockPermit({
         permit_type: 'New Houses Created',
         work: 'New Building',
         structure_type: 'SFD - Detached',
         description: 'Construct new SFD with garage and garden suite',
       }));
-      expect(result.scope_tags).toContain('new:sfd');
+      expect(result.scope_tags).toContain('new:build-sfd');
       expect(result.scope_tags).toContain('new:garage');
       expect(result.scope_tags).toContain('new:laneway-suite');
     });
@@ -1640,7 +1638,7 @@ describe('classifyScope', () => {
         proposed_use: 'Residential',
         description: 'Two storey rear addition',
       }));
-      expect(result.scope_tags).toContain('new:2-storey-addition');
+      expect(result.scope_tags).toContain('new:addition');
     });
 
     it('non-residential A/A → uses general tags', () => {
@@ -1774,7 +1772,7 @@ describe('Fix 1: Regex blacklisting — addition-of false positives', () => {
       work: 'Interior Alterations',
       description: 'Proposal for addition of a new washroom in basement',
     }));
-    expect(tags).not.toContain('new:1-storey-addition');
+    expect(tags).not.toContain('new:addition');
     expect(tags).toContain('new:bathroom');
   });
 
@@ -1783,7 +1781,7 @@ describe('Fix 1: Regex blacklisting — addition-of false positives', () => {
       work: 'Interior Alterations',
       description: 'Interior alterations for addition of laundry facility',
     }));
-    expect(tags).not.toContain('new:1-storey-addition');
+    expect(tags).not.toContain('new:addition');
     expect(tags).toContain('new:laundry');
   });
 
@@ -1791,35 +1789,35 @@ describe('Fix 1: Regex blacklisting — addition-of false positives', () => {
     const tags = extractResidentialTags(srp({
       description: 'Renovation including addition of closet space',
     }));
-    expect(tags).not.toContain('new:1-storey-addition');
+    expect(tags).not.toContain('new:addition');
   });
 
   it('"addition of shower" does NOT trigger storey-addition', () => {
     const tags = extractResidentialTags(srp({
       description: 'Interior alterations for addition of shower in basement',
     }));
-    expect(tags).not.toContain('new:1-storey-addition');
+    expect(tags).not.toContain('new:addition');
   });
 
   it('"addition of a new door" does NOT trigger storey-addition', () => {
     const tags = extractResidentialTags(srp({
       description: 'Interior alterations for addition of a new door opening',
     }));
-    expect(tags).not.toContain('new:1-storey-addition');
+    expect(tags).not.toContain('new:addition');
   });
 
   it('"addition of a window" does NOT trigger storey-addition', () => {
     const tags = extractResidentialTags(srp({
       description: 'Interior alterations for addition of a window',
     }));
-    expect(tags).not.toContain('new:1-storey-addition');
+    expect(tags).not.toContain('new:addition');
   });
 
   it('"addition of fireplace" does NOT trigger storey-addition', () => {
     const tags = extractResidentialTags(srp({
       description: 'Interior alterations for addition of fireplace',
     }));
-    expect(tags).not.toContain('new:1-storey-addition');
+    expect(tags).not.toContain('new:addition');
     expect(tags).toContain('new:fireplace');
   });
 
@@ -1827,7 +1825,7 @@ describe('Fix 1: Regex blacklisting — addition-of false positives', () => {
     const tags = extractResidentialTags(srp({
       description: 'Construct rear addition with new deck',
     }));
-    expect(tags).toContain('new:1-storey-addition');
+    expect(tags).toContain('new:addition');
   });
 
   it('work="Addition(s)" still triggers storey-addition regardless of description', () => {
@@ -1835,7 +1833,7 @@ describe('Fix 1: Regex blacklisting — addition-of false positives', () => {
       work: 'Addition(s)',
       description: 'Addition of new washroom and closet',
     }));
-    expect(tags).toContain('new:1-storey-addition');
+    expect(tags).toContain('new:addition');
   });
 });
 
@@ -1983,7 +1981,7 @@ describe('Fix 5: Use-type classification — universal tier', () => {
       structure_type: 'SFD - Detached',
     }));
     expect(result.scope_tags).toContain('residential');
-    expect(result.scope_tags).toContain('new:sfd');
+    expect(result.scope_tags).toContain('new:build-sfd');
   });
 });
 

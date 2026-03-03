@@ -12,7 +12,6 @@ import { PRODUCT_GROUPS } from '@/lib/classification/products';
 const TIER_CONFIDENCE: Record<number, number> = {
   1: 0.95,
   2: 0.80,
-  3: 0.60,
 };
 
 // ---------------------------------------------------------------------------
@@ -86,8 +85,8 @@ export const NARROW_SCOPE_CODES: Record<string, string[]> = {
   PSA: ['plumbing'],
   HVA: ['hvac'],
   MSA: ['hvac'],
-  DRN: ['plumbing'],
-  STS: ['plumbing'],
+  DRN: ['drain-plumbing'],
+  STS: ['drain-plumbing'],
   FSU: ['fire-protection'],
   DEM: ['demolition'],
   SHO: ['excavation', 'shoring', 'concrete', 'waterproofing'],
@@ -241,17 +240,68 @@ function matchTagMatrix(
 }
 
 // ---------------------------------------------------------------------------
-// Fallback: minimal residential trades for permits with no tags
+// Tier 1 Work-Field Fallback — replaces deprecated Tier 3
 // ---------------------------------------------------------------------------
-const MINIMAL_RESIDENTIAL_SLUGS = [
-  'framing', 'plumbing', 'electrical', 'hvac', 'drywall', 'painting',
-];
 
-function fallbackMinimalTrades(
+interface WorkFallback {
+  slugs: string[];
+  confidence: number;
+}
+
+/**
+ * Maps common `work` field values to trade slug arrays.
+ * Used as Tier 1 fallback when no Tier 1 rules or tag-matrix matches fire.
+ */
+const WORK_TRADE_FALLBACK: Record<string, WorkFallback> = {
+  'Interior Alterations':       { slugs: ['drywall', 'painting', 'flooring', 'electrical', 'plumbing'], confidence: 0.70 },
+  'New Building':               { slugs: ['framing', 'concrete', 'excavation', 'plumbing', 'electrical', 'hvac', 'drywall', 'roofing', 'insulation'], confidence: 0.65 },
+  'Addition':                   { slugs: ['framing', 'concrete', 'plumbing', 'electrical', 'hvac', 'drywall', 'insulation'], confidence: 0.65 },
+  'Re-Roofing':                 { slugs: ['roofing'], confidence: 0.85 },
+  'Re-Cladding':                { slugs: ['masonry', 'glazing', 'insulation'], confidence: 0.75 },
+  'Underpinning':               { slugs: ['shoring', 'concrete', 'excavation', 'waterproofing'], confidence: 0.80 },
+  'Demolition':                 { slugs: ['demolition'], confidence: 0.85 },
+  'Deck':                       { slugs: ['framing', 'concrete'], confidence: 0.75 },
+  'Porch':                      { slugs: ['framing', 'concrete', 'masonry'], confidence: 0.70 },
+  'Garage':                     { slugs: ['framing', 'concrete', 'electrical', 'drywall'], confidence: 0.70 },
+  'Garage Repair':              { slugs: ['framing', 'concrete', 'masonry'], confidence: 0.70 },
+  'Fire Alarm':                 { slugs: ['fire-protection', 'electrical'], confidence: 0.85 },
+  'Sprinklers':                 { slugs: ['fire-protection', 'plumbing'], confidence: 0.85 },
+  'Electromagnetic Locks':      { slugs: ['electrical', 'fire-protection'], confidence: 0.80 },
+  'Elevator':                   { slugs: ['elevator', 'electrical'], confidence: 0.85 },
+  'Curtain Wall':               { slugs: ['glazing', 'structural-steel'], confidence: 0.80 },
+  'Excavation':                 { slugs: ['excavation', 'shoring'], confidence: 0.85 },
+  'Site Servicing':             { slugs: ['plumbing', 'excavation'], confidence: 0.70 },
+  'Foundation Repair':          { slugs: ['concrete', 'waterproofing', 'excavation'], confidence: 0.75 },
+  'Masonry':                    { slugs: ['masonry'], confidence: 0.85 },
+  'Shoring':                    { slugs: ['shoring', 'excavation'], confidence: 0.85 },
+  'Mechanical':                 { slugs: ['hvac', 'plumbing', 'electrical'], confidence: 0.75 },
+};
+
+const DEFAULT_FALLBACK: WorkFallback = {
+  slugs: ['framing', 'plumbing', 'electrical', 'hvac', 'drywall', 'painting'],
+  confidence: 0.55,
+};
+
+/**
+ * Work-field-based Tier 1 fallback for permits with no tag-matrix or rule matches.
+ * Checks `permit.work` against WORK_TRADE_FALLBACK (case-insensitive includes).
+ * All matches are reported at tier: 1.
+ */
+function fallbackWorkTrades(
   permit: Partial<Permit>,
   phase: string
 ): TradeMatch[] {
-  return MINIMAL_RESIDENTIAL_SLUGS.map((slug) => {
+  const work = permit.work?.toLowerCase() ?? '';
+
+  let fallback = DEFAULT_FALLBACK;
+  for (const [pattern, fb] of Object.entries(WORK_TRADE_FALLBACK)) {
+    if (work.includes(pattern.toLowerCase())) {
+      fallback = fb;
+      break;
+    }
+  }
+
+  return fallback.slugs.map((slug) => {
     const trade = getTradeBySlug(slug)!;
     const isActive = isTradeActiveInPhase(slug, phase);
 
@@ -259,8 +309,8 @@ function fallbackMinimalTrades(
       trade_id: trade.id,
       trade_slug: slug,
       trade_name: trade.name,
-      tier: 3,
-      confidence: 0.40,
+      tier: 1,
+      confidence: fallback.confidence,
       is_active: isActive,
       phase,
     };
@@ -273,8 +323,8 @@ function fallbackMinimalTrades(
       trade_id: trade.id,
       trade_slug: slug,
       trade_name: trade.name,
-      tier: 3,
-      confidence: 0.40,
+      tier: 1,
+      confidence: fallback.confidence,
       is_active: isActive,
       phase,
       lead_score: leadScore,
@@ -295,11 +345,13 @@ function fallbackMinimalTrades(
  * - **Path B (Broad-scope):** scope_tags from classifyScope() are looked up
  *   in the tag-trade matrix, merged with any Tier 1 rule matches.
  *
- * - **Fallback:** Permits with no scope_tags and no narrow-scope code get
- *   minimal residential trades at 0.40 confidence.
+ * - **Fallback:** Permits with no matches get work-field-based Tier 1
+ *   trades. Common work values (Interior Alterations, New Building, etc.)
+ *   map to appropriate trades at 0.65-0.85 confidence. Unknown work values
+ *   get broad residential trades at 0.55 confidence.
  *
  * @param scopeTags - Optional pre-computed scope tags. If not provided,
- *   the classifier uses only Tier 1 rules + fallback.
+ *   the classifier uses only Tier 1 rules + work-field fallback.
  */
 export function classifyPermit(
   permit: Partial<Permit>,
@@ -313,7 +365,40 @@ export function classifyPermit(
   // Path A: Narrow-scope — Tier 1 rules only, filtered by allowed trades
   if (isNarrowScope) {
     const tier1 = matchTier1Rules(permit, rules, phase);
-    return applyScopeLimit(tier1, permit.permit_num, permit.work);
+    const limited = applyScopeLimit(tier1, permit.permit_num, permit.work);
+    if (limited.length > 0) return limited;
+
+    // Fallback: assign code's allowed trades at 0.80 confidence
+    const allowed = NARROW_SCOPE_CODES[code!];
+    return allowed.map((slug) => {
+      const trade = getTradeBySlug(slug)!;
+      const isActive = isTradeActiveInPhase(slug, phase);
+
+      const partial: Partial<TradeMatch> = {
+        trade_id: trade.id,
+        trade_slug: slug,
+        trade_name: trade.name,
+        tier: 1,
+        confidence: 0.80,
+        is_active: isActive,
+        phase,
+      };
+
+      const leadScore = calculateLeadScore(permit, partial, phase);
+
+      return {
+        permit_num: permit.permit_num ?? '',
+        revision_num: permit.revision_num ?? '',
+        trade_id: trade.id,
+        trade_slug: slug,
+        trade_name: trade.name,
+        tier: 1,
+        confidence: 0.80,
+        is_active: isActive,
+        phase,
+        lead_score: leadScore,
+      };
+    });
   }
 
   // Path B: Broad-scope — tag matrix + Tier 1 merge
@@ -342,9 +427,9 @@ export function classifyPermit(
     }
   }
 
-  // Fallback if no matches from Tier 1 or tag matrix
+  // Fallback if no matches from Tier 1 or tag matrix — work-field-based Tier 1
   if (merged.size === 0) {
-    const fallback = fallbackMinimalTrades(permit, phase);
+    const fallback = fallbackWorkTrades(permit, phase);
     for (const m of fallback) {
       merged.set(m.trade_slug, m);
     }

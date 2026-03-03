@@ -1,7 +1,7 @@
 # 26 - Admin Panel
 
-**Status:** Planned
-**Last Updated:** 2026-02-14
+**Status:** In Progress
+**Last Updated:** 2026-03-03
 **Depends On:** `01_database_schema.md`, `02_data_ingestion.md`, `07_trade_taxonomy.md`, `08_trade_classification.md`, `11_builder_enrichment.md`, `13_auth.md`
 **Blocks:** None
 
@@ -9,163 +9,256 @@
 
 ## 1. User Story
 
-> "As an admin, I want to monitor sync health, manage trade classification rules, view enrichment queues, and see system metrics."
+> "As an admin, I want to monitor data pipeline health, manage trade classification rules, and see system metrics."
 
 **Acceptance Criteria:**
-- Admin routes are protected by role-based access control (only users with `role: 'admin'` can access)
-- Dashboard contains 6 sections: Sync Dashboard, Trade Rule Editor, Builder Enrichment Queue, System Metrics, User Management, Data Quality
-- Sync Dashboard shows the last 20 sync runs with stats and supports triggering manual syncs
-- Trade Rule Editor provides full CRUD for classification rules with live testing against sample permits
-- Enrichment Queue shows pending/completed/failed enrichments with retry and manual entry capabilities
-- System Metrics display key counts and trends at a glance
-- User Management lists all users with plan info and usage statistics
+- [x] Admin dashboard at `/admin` shows hierarchical Data Health Overview for all 7 data pipelines
+- [x] Health cards display record counts, freshness, pipeline schedules, and "Update Now" triggers
+- [x] Pipeline trigger system supports 24 pipeline slugs (21 individual + 3 chain orchestrators)
+- [x] Data Quality Dashboard at `/admin/data-quality` shows accuracy, coverage, and trend analysis
+- [x] Sync history table displays last 20 sync runs with stats and duration
+- [x] Market Metrics Dashboard at `/admin/market-metrics` (Spec 34)
+- [ ] *(Planned)* Admin routes protected by role-based access control
+- [ ] *(Planned)* Trade Rule Editor with full CRUD and live testing
+- [ ] *(Planned)* Builder Enrichment Queue with retry/manual entry
+- [ ] *(Planned)* System Metrics with sparkline trends
+- [ ] *(Planned)* User Management with Firestore integration
 
 ---
 
 ## 2. Technical Logic
 
-### Admin Role Check
+### Admin Role Check *(Planned — Not Yet Implemented)*
+
+Admin role verification middleware is planned but not yet implemented. Currently
+all admin routes are accessible without authentication.
 
 ```typescript
-// Firestore /users/{uid} includes role field
+// Future: Firestore /users/{uid} includes role field
 interface AdminUser {
   uid: string;
   email: string;
   role: 'user' | 'admin';
 }
+```
 
-// Middleware for admin routes
-async function requireAdmin(req: Request): Promise<void> {
-  const user = await getAuthenticatedUser(req);
-  if (!user || user.role !== 'admin') {
-    throw new ForbiddenError('Admin access required');
-  }
+### Section 1: Sync Dashboard *(Integrated into Admin Home)*
+
+Sync history is displayed as a table on the main `/admin` page (Sub-Section 4b)
+rather than as a standalone page. Shows last 20 sync runs from the `sync_runs` table
+with columns: ID, Started, Status, Total, New, Updated, Unchanged, Errors, Duration.
+Status badges: `completed` (green), `running` (blue), `failed` (red). Duration formatted as "Xm Ys".
+
+### Section 2: Trade Rule Editor *(Planned — API Exists, UI Not Built)*
+
+API routes `GET/POST /api/admin/rules` exist for listing and creating trade mapping rules.
+No dedicated `/admin/rules` page or `RuleEditorForm`/`RuleTester` components have been built yet.
+
+### Section 3: Builder Enrichment Queue *(Planned — Not Yet Built)*
+
+No dedicated enrichment queue UI. Builder stats are displayed in the Admin Home
+"Active Sync Operations" section (Sub-Section 4b) showing total builders,
+builders with contact info, and enrichment rate.
+
+### Section 4: Data Sources & Health Dashboard (Admin Home) — IMPLEMENTED
+
+The admin home page (`/admin`) is a comprehensive "Data Sources & Health" dashboard
+covering all 7 data pipelines. It replaces the former permits-only sync view.
+
+#### Sub-Section 4a: Data Health Overview (Hierarchical Layout)
+
+7 `HealthCard` status indicators arranged in a visual hierarchy that communicates
+data relationships:
+
+**Row 1 — Primary Source (full-width hero card):**
+Building Permits — large card spanning full width with `hero` styling. This is the
+core dataset from which other data is derived or enriched.
+
+**Row 2 — Derived Source (indented under permits):**
+Builder Profiles — indented card (`ml-6 border-l-2`) with label "Extracted from
+permits". Builder data is derived from permit applicant fields.
+
+**Row 3 — Enrichment Sources (4-column grid):**
+Address Points | Property Parcels | 3D Massing | Neighbourhoods — standalone
+enrichment datasets that augment permit data with spatial context.
+
+**Row 4 — External Daily Source:**
+Committee of Adjustment — standalone card for CoA pre-permit variance applications.
+
+##### Health Thresholds
+
+| # | Pipeline | Count Source | Freshness Source | Green | Yellow | Red |
+|---|----------|-------------|------------------|-------|--------|-----|
+| 1 | Building Permits | `total_permits` | `pipeline_last_run.permits` | sync < 36h ago | sync < 72h ago | sync > 72h or 0 permits |
+| 2 | Builder Profiles | `total_builders` | `pipeline_last_run.builders` | total > 0 | — | 0 builders |
+| 3 | Address Points | `address_points_total` | `pipeline_last_run.address_points` | count >= 500,000 | count > 0 | 0 rows |
+| 4 | Property Parcels | `parcels_total` | `pipeline_last_run.parcels` | count > 0 | — | 0 rows |
+| 5 | 3D Massing | `building_footprints_total` | `pipeline_last_run.massing` | count > 0 | — | 0 rows |
+| 6 | Neighbourhoods | `neighbourhoods_total` | `pipeline_last_run.neighbourhoods` | count >= 158 | count > 0 | 0 rows |
+| 7 | Committee of Adjustment | `coa_total` | `pipeline_last_run.coa` | total > 0 & sync < 36h | sync < 72h | 0 records or stale |
+
+##### HealthCard Display
+
+Each card displays:
+- Pipeline name + status dot (green/yellow/red)
+- Record count with detail text
+- **Permits linked:** count of permits enriched by this source (enrichment sources only)
+- **Last updated:** relative time from `pipeline_last_run` (e.g., "6h ago", "3 days ago")
+- **Next update:** computed date from last run + frequency interval (e.g., "Mar 1, 2026"), or "Overdue" if past due
+- **Update Now** button — triggers `POST /api/admin/pipelines/{slug}`, shows persistent "Running..." state with polling until pipeline completes or fails
+
+##### Enrichment Source "Permits Linked" Counts
+
+| Source | Stat Field | Query |
+|--------|-----------|-------|
+| Address Points | `permits_geocoded` | Permits with `latitude IS NOT NULL` (geocoded via address points) | Displayed as "X permits linked (Y%)" |
+| Property Parcels | `permits_with_parcel` | Distinct permits in `permit_parcels` | Displayed as "X permits linked (Y%)" |
+| 3D Massing | `permits_with_massing` | Distinct permits in `permit_parcels` joined to `parcel_buildings` | Displayed as "X permits linked (Y%)" |
+| Neighbourhoods | `permits_with_neighbourhood` | Permits with `neighbourhood_id IS NOT NULL` | Displayed as "X permits linked (Y%)" |
+
+Percentage calculated as `calcPct(permitsLinked, total_permits)`.
+
+##### Update Now Button Behaviour
+
+1. On click: `POST /api/admin/pipelines/{slug}` — creates `pipeline_runs` row, spawns script
+2. Button enters "Running..." state (disabled, animated pulse)
+3. Page polls `GET /api/admin/stats` every 5 seconds
+4. When `pipeline_last_run[slug].status` is no longer `'running'`, polling stops
+5. Stats auto-refresh to show updated "Last updated" timestamp
+
+**Pipeline trigger route** (`POST /api/admin/pipelines/[slug]`):
+- Validates script exists with `fs.existsSync` before spawning (returns 500 if missing)
+- Captures `stderr` from `execFile` callback and stores in `error_message` (truncated to 4000 chars)
+- Passes `env: process.env` explicitly to child process
+- Logs script failures and stderr to server console
+
+**Cross-platform scripts**: `scripts/load-massing.js` uses `os.platform()` to choose
+`PowerShell Expand-Archive` on Windows or `unzip` on Unix for ZIP extraction.
+
+##### Pipeline Schedules (Client-Side Constant)
+
+```typescript
+const PIPELINE_SCHEDULES: Record<string, { label: string; intervalDays: number; scheduleNote: string }> = {
+  permits: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily at 2:00 AM EST' },
+  coa: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily at 3:00 AM EST' },
+  builders: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily at 4:00 AM EST (after permits)' },
+  classify_scope_class: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily (after permits)' },
+  classify_scope_tags: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily (after permits)' },
+  classify_permits: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily (after permits)' },
+  address_points: { label: 'Quarterly', intervalDays: 90, scheduleNote: 'Quarterly (Jan, Apr, Jul, Oct)' },
+  parcels: { label: 'Quarterly', intervalDays: 90, scheduleNote: 'Quarterly (Jan, Apr, Jul, Oct)' },
+  compute_centroids: { label: 'Quarterly', intervalDays: 90, scheduleNote: 'Quarterly (after parcels)' },
+  massing: { label: 'Quarterly', intervalDays: 90, scheduleNote: 'Quarterly (Jan, Apr, Jul, Oct)' },
+  neighbourhoods: { label: 'Annual', intervalDays: 365, scheduleNote: 'Annual (January)' },
+};
+```
+
+HealthCard displays `scheduleNote` (not bare label) for human-readable schedule context.
+
+##### Next Update Date Computation
+
+```typescript
+function getNextUpdateDate(lastRunAt: string | null, intervalDays: number): string {
+  if (!lastRunAt) return 'Not scheduled';
+  const next = new Date(new Date(lastRunAt).getTime() + intervalDays * 86400000);
+  if (next <= new Date()) return 'Overdue';
+  return next.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
+```
 
-// Client-side route protection
-function AdminLayout({ children }) {
-  const { user } = useAuth();
-  if (user?.role !== 'admin') return <Redirect to="/" />;
-  return <AdminShell>{children}</AdminShell>;
+##### Freshness Tracking: `pipeline_runs` Table (Migration 033)
+
+Generic pipeline run tracking table used by all 7 data sources:
+
+```sql
+CREATE TABLE pipeline_runs (
+  id SERIAL PRIMARY KEY,
+  pipeline TEXT NOT NULL,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'running',
+  records_total INT DEFAULT 0,
+  records_new INT DEFAULT 0,
+  records_updated INT DEFAULT 0,
+  error_message TEXT,
+  duration_ms INT
+);
+CREATE INDEX idx_pipeline_runs_lookup ON pipeline_runs (pipeline, started_at DESC);
+```
+
+Backfilled on creation from existing per-table timestamps (permits from `sync_runs`,
+others from `MAX(created_at)` of their respective tables).
+
+#### Sub-Section 4b: Active Sync Operations
+Two summary cards plus the sync history table (no standalone stat cards):
+
+1. **CoA Summary Card:** `coa_total` applications, `coa_approved` approved, `coa_linked` linked, permit link rate = `coa_linked / coa_approved * 100%`.
+2. **Builder Summary Card:** `total_builders` total, `builders_with_contact` with contact info, enrichment rate = `builders_with_contact / total_builders * 100%`.
+3. **Permits Sync Log:** The existing `sync_runs` table (ID, Started, Status, Total, New, Updated, Unchanged, Errors, Duration).
+
+#### Sub-Section 4c: Data Quality & Linking Metrics
+4 progress bar components tracking platform enrichment health:
+
+| Metric | Numerator | Denominator | Example |
+|--------|-----------|-------------|---------|
+| Geocoding Health | `permits_geocoded` | `total_permits` | 99.2% |
+| Builder Identification | `permits_with_builder` | `active_permits` | 85% |
+| Builder Contact Enrichment | `builders_with_contact` | `total_builders` | 45% |
+| Trade Classification | `permits_classified` | `total_permits` | 96% |
+
+Progress bars colour-code: >= 90% green, >= 70% yellow, < 70% red.
+
+#### Expanded API Response: `GET /api/admin/stats`
+
+New fields added to the existing endpoint:
+
+```typescript
+interface AdminStats {
+  // Existing fields
+  total_permits: number;
+  active_permits: number;
+  total_builders: number;
+  permits_with_builder: number;
+  permits_with_parcel: number;
+  permits_with_neighbourhood: number;
+  coa_total: number;
+  coa_linked: number;
+  coa_upcoming: number;
+  total_trades: number;
+  active_rules: number;
+  permits_this_week: number;
+  last_sync_at: string | null;
+  notifications_pending: number;
+
+  // New fields for Data Sources & Health Dashboard
+  permits_geocoded: number;
+  permits_classified: number;
+  builders_with_contact: number;
+  address_points_total: number;
+  parcels_total: number;
+  building_footprints_total: number;
+  parcels_with_massing: number;       // parcels with building footprint data
+  permits_with_massing: number;       // permits linked through parcels→parcel_buildings
+  neighbourhoods_total: number;
+  coa_approved: number;
+
+  // Pipeline freshness (from pipeline_runs table)
+  pipeline_last_run: Record<string, {
+    last_run_at: string | null;
+    status: string | null;
+  }>;
 }
 ```
 
-### Section 1: Sync Dashboard
+### Section 5: System Metrics *(Planned — Not Yet Built)*
 
-```
-Data source: sync_runs table (PostgreSQL)
+Key system metrics are exposed via `GET /api/admin/stats` but no dedicated
+metrics page with sparkline trends exists yet. The stats endpoint already
+provides: `total_permits`, `permits_classified`, `total_builders`,
+`builders_with_contact`, `permits_geocoded`, `permits_with_parcel`,
+`permits_with_massing`, `permits_with_neighbourhood`, etc.
 
-Display:
-  - Table of last 20 sync runs, columns:
-    id, started_at, completed_at, duration, status, permits_new, permits_updated,
-    permits_unchanged, errors_count
-  - Status badges: 'completed' (green), 'running' (blue), 'failed' (red)
-  - Duration formatted as "Xm Ys"
-  - Expandable error log per run (stores first 100 error messages)
-
-Actions:
-  - "Trigger Sync" button: POST /api/sync with admin authorization
-  - "View Errors" expand: shows error details for a specific run
-  - Auto-refresh: polls /api/admin/sync-runs every 30s while a sync is running
-
-Queries:
-  SELECT * FROM sync_runs ORDER BY started_at DESC LIMIT 20;
-
-  -- Sync health summary
-  SELECT
-    COUNT(*) FILTER (WHERE status = 'completed' AND started_at > NOW() - INTERVAL '7 days') AS successful_7d,
-    COUNT(*) FILTER (WHERE status = 'failed' AND started_at > NOW() - INTERVAL '7 days') AS failed_7d,
-    AVG(EXTRACT(EPOCH FROM (completed_at - started_at))) FILTER (WHERE status = 'completed') AS avg_duration_sec
-  FROM sync_runs;
-```
-
-### Section 2: Trade Rule Editor
-
-```
-Data source: trade_mapping_rules table (PostgreSQL)
-
-Display:
-  - Table of all rules, columns:
-    id, trade_slug, rule_type ('keyword'|'regex'|'work_type'), pattern, priority,
-    is_active, match_count, created_at
-  - Sort by priority DESC (highest priority first)
-  - Active/inactive toggle per rule
-
-CRUD Operations:
-  CREATE: Form with fields: trade_slug (dropdown from taxonomy), rule_type, pattern, priority
-  READ:   Table with all rules, filterable by trade and rule_type
-  UPDATE: Inline edit or modal form for existing rules
-  DELETE: Soft delete (set is_active = false) with hard delete option for unused rules
-
-Rule Testing:
-  - "Test Rule" panel: paste a permit description, run all active rules against it
-  - Shows which rules matched, in priority order, and the resulting trade classification
-  - Useful for debugging why a permit was classified a certain way
-
-Queries:
-  SELECT tmr.*, t.name as trade_name,
-         (SELECT COUNT(*) FROM permit_trades pt WHERE pt.rule_id = tmr.id) as match_count
-  FROM trade_mapping_rules tmr
-  JOIN trades t ON t.slug = tmr.trade_slug
-  ORDER BY tmr.priority DESC;
-```
-
-### Section 3: Builder Enrichment Queue
-
-```
-Data source: builders table + builder_contacts table (PostgreSQL)
-
-Display:
-  - Three tabs: Pending | Completed | Failed
-  - Pending: builders with enrichment_status = 'pending', ordered by created_at ASC
-  - Completed: builders with enrichment_status = 'completed', showing enriched fields
-  - Failed: builders with enrichment_status = 'failed', showing error message and retry count
-  - Columns: builder_name, permit_count, enrichment_status, last_attempted, error_message
-
-Actions:
-  - "Retry" button on failed items: resets status to 'pending', increments retry_count
-  - "Retry All Failed" bulk action: resets all failed items
-  - "Manual Entry" form: directly enter builder contact info (phone, email, website)
-    skipping the enrichment pipeline
-  - "Skip" button: marks a builder as 'skipped' (will not be retried)
-
-Queries:
-  SELECT b.*,
-         COUNT(DISTINCT p.id) as permit_count,
-         bc.phone, bc.email, bc.website
-  FROM builders b
-  LEFT JOIN permits p ON p.applicant = b.name
-  LEFT JOIN builder_contacts bc ON bc.builder_id = b.id
-  WHERE b.enrichment_status = $status
-  GROUP BY b.id, bc.phone, bc.email, bc.website
-  ORDER BY b.created_at ASC
-  LIMIT 50 OFFSET $offset;
-```
-
-### Section 4: System Metrics
-
-```
-Metrics displayed as stat cards with sparkline trends:
-
-  1. Total Permits:        SELECT COUNT(*) FROM permits
-  2. Classified Permits:   SELECT COUNT(DISTINCT permit_id) FROM permit_trades
-  3. Unclassified Permits: Total - Classified
-  4. Classification Rate:  Classified / Total * 100 (%)
-  5. Total Users:          Firestore /users collection count
-  6. Pro Subscribers:      Firestore query: plan == 'pro'
-  7. Enterprise Subs:      Firestore query: plan == 'enterprise'
-  8. Active Rules:         SELECT COUNT(*) FROM trade_mapping_rules WHERE is_active = true
-  9. Builders Enriched:    SELECT COUNT(*) FROM builders WHERE enrichment_status = 'completed'
-  10. API Requests (24h):  Redis counter or Cloud Monitoring metric
-
-Layout: 2-row grid of metric cards, each showing:
-  - Metric name
-  - Current value (large number)
-  - Change vs previous period (e.g., "+234 this week")
-  - Mini sparkline chart (last 30 days)
-```
-
-### Section 5: User Management
+### Section 6: User Management *(Planned — Not Yet Built)*
 
 ```
 Data source: Firestore /users collection
@@ -214,9 +307,18 @@ GET  /api/admin/metrics                - System metrics summary
 GET  /api/admin/users                  - Paginated user list
 GET  /api/admin/users/{uid}            - User detail
 
-GET  /api/quality                      - Data quality snapshot + 30-day trends (Spec 28)
-POST /api/quality/refresh              - Trigger manual data quality snapshot (Spec 28)
+POST /api/admin/pipelines/{slug}      - Trigger manual pipeline run
+                                        Individual: permits|coa|builders|address_points|parcels|massing|
+                                          neighbourhoods|geocode_permits|link_parcels|link_neighbourhoods|
+                                          link_massing|link_coa|enrich_google|enrich_wsib|
+                                          classify_scope_class|classify_scope_tags|classify_permits|
+                                          compute_centroids|link_similar|create_pre_permits|refresh_snapshot
+                                        Chains:     chain_permits|chain_coa|chain_sources
 ```
+
+**Note:** Chain slugs (`chain_permits`, `chain_coa`, `chain_sources`) trigger `scripts/run-chain.js`
+with the chain ID as argument, running all steps sequentially with 1-hour timeout.
+Individual pipelines use 10-minute timeout. See Spec 28 Section 2.7 for chain details.
 
 ---
 
@@ -224,21 +326,33 @@ POST /api/quality/refresh              - Trigger manual data quality snapshot (S
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `src/app/admin/layout.tsx` | Admin layout with sidebar navigation and role check | Planned |
-| `src/app/admin/page.tsx` | Admin dashboard home with Data Quality nav link | In Progress |
+| `src/app/admin/page.tsx` | Admin home — hierarchical Data Health Overview, sync operations, quality metrics | Implemented |
+| `src/lib/admin/types.ts` | Shared types: AdminStats, SyncRun, PipelineRunInfo, HealthStatus | Implemented |
+| `src/lib/admin/helpers.ts` | Pure helpers: pipeline schedules, health computation, formatting, scheduling | Implemented |
 | `src/app/admin/data-quality/page.tsx` | Data Quality Dashboard (Spec 28) | Implemented |
-| `src/app/admin/sync/page.tsx` | Sync Dashboard page | Planned |
-| `src/app/admin/rules/page.tsx` | Trade Rule Editor page | Planned |
-| `src/app/admin/enrichment/page.tsx` | Builder Enrichment Queue page | Planned |
-| `src/app/admin/metrics/page.tsx` | System Metrics page | Planned |
+| `src/app/admin/market-metrics/page.tsx` | Market Metrics Dashboard (Spec 34) | Implemented |
+| `src/app/api/admin/stats/route.ts` | Comprehensive admin stats endpoint (26 fields + pipeline freshness) | Implemented |
+| `src/app/api/admin/pipelines/[slug]/route.ts` | Pipeline trigger — 24 slugs (21 individual + 3 chains) | Implemented |
+| `src/app/api/admin/sync/route.ts` | Sync runs history and manual trigger | Implemented |
+| `src/app/api/admin/builders/route.ts` | Builder enrichment stats and batch trigger | Implemented |
+| `src/app/api/admin/rules/route.ts` | Trade mapping rules list and create | Implemented |
+| `src/app/api/admin/market-metrics/route.ts` | Market metrics aggregation API | Implemented |
+| `src/components/DataQualityDashboard.tsx` | Comprehensive quality dashboard with trends | Implemented |
+| `src/components/FreshnessTimeline.tsx` | Pipeline chain visualization with per-step Run buttons | Implemented |
+| `src/components/DataSourceCircle.tsx` | Visual pipeline status indicator circles | Implemented |
+| `scripts/run-chain.js` | Chain orchestrator — runs permits/coa/sources chains end-to-end | Implemented |
+| `migrations/033_pipeline_runs.sql` | Generic pipeline run tracking table with backfill | Implemented |
+| `src/lib/quality/types.ts` | Data quality TypeScript interfaces | Implemented |
+| `src/lib/quality/metrics.ts` | Quality snapshot capture and DB queries | Implemented |
+| `src/tests/admin.ui.test.tsx` | Admin UI tests (sync formatting, duration, status colours) | Implemented |
+| `src/tests/quality.logic.test.ts` | Quality logic tests (effectiveness, metrics, chains) | Implemented |
+| `src/tests/quality.infra.test.ts` | Quality infrastructure tests | Implemented |
+| `src/tests/chain.logic.test.ts` | Chain definition tests (step counts, completeness, slug extraction) | Implemented |
+| `src/app/admin/layout.tsx` | Admin layout with sidebar and role check | Planned |
+| `src/app/admin/rules/page.tsx` | Trade Rule Editor UI | Planned |
+| `src/app/admin/enrichment/page.tsx` | Builder Enrichment Queue UI | Planned |
+| `src/app/admin/metrics/page.tsx` | System Metrics page with sparklines | Planned |
 | `src/app/admin/users/page.tsx` | User Management page | Planned |
-| `src/components/admin/SyncRunsTable.tsx` | Sync runs table with expandable errors | Planned |
-| `src/components/admin/RuleEditorForm.tsx` | CRUD form for trade mapping rules | Planned |
-| `src/components/admin/RuleTester.tsx` | Rule testing panel | Planned |
-| `src/components/admin/EnrichmentQueue.tsx` | Tabbed enrichment queue display | Planned |
-| `src/components/admin/MetricCard.tsx` | Stat card with sparkline | Planned |
-| `src/components/admin/UserTable.tsx` | Paginated user list table | Planned |
-| `src/app/api/admin/[...path]/route.ts` | Admin API route handlers | Planned |
 | `src/lib/admin/middleware.ts` | Admin role verification middleware | Planned |
 
 ---
@@ -273,6 +387,8 @@ builders        - Spec 11: id, name, enrichment_status, last_attempted,
 builder_contacts - Spec 11: id, builder_id, phone, email, website
 permits         - Spec 01: all columns
 permit_trades   - Spec 08: permit_id, trade_id, rule_id
+pipeline_runs   - Migration 033: id, pipeline, started_at, completed_at, status,
+                  records_total, records_new, records_updated, error_message, duration_ms
 ```
 
 ### Firestore: `/admin_audit_log/{logId}`
@@ -362,60 +478,39 @@ interface SystemMetrics {
 
 ## 7. Triad Test Criteria
 
-### A. Logic Layer
+### A. Logic Layer (`src/tests/quality.logic.test.ts`, `src/tests/chain.logic.test.ts`)
 
-| Test Case | Input | Expected Output |
-|-----------|-------|-----------------|
-| Admin role check - admin | User with role='admin' accesses /admin | Access granted |
-| Admin role check - user | User with role='user' accesses /admin | 403 Forbidden |
-| Admin role check - unauth | No auth token accesses /admin | 401 Unauthorized |
-| Sync trigger while idle | No sync running, admin triggers sync | Sync starts, returns run ID |
-| Sync trigger while running | Sync already in progress | 409 Conflict, sync not triggered |
-| Rule creation validation | Valid rule: trade='plumbing', type='keyword', pattern='pipe' | Rule created, ID returned |
-| Rule creation invalid trade | Rule with trade_slug='nonexistent' | 400: invalid trade slug |
-| Rule priority conflict warn | Two rules same priority, different trades | Warning returned (not error) |
-| Rule test - single match | Description "install copper pipe", keyword rule 'pipe' -> plumbing | Match: plumbing |
-| Rule test - multi match | Description "pipe and wire", rules for plumbing + electrical | Both trades returned |
-| Rule test - no match | Description "general renovation", no matching rules | Empty classification |
-| Rule deletion with matches | Rule has match_count=50, delete requested | Requires confirmation flag |
-| Enrichment retry | Failed builder, retry_count=1 | Status reset to 'pending', retry_count=2 |
-| Enrichment retry limit | Failed builder, retry_count=3 | Error: max retries exceeded, mark permanently_failed |
-| Manual enrichment entry | Builder ID + phone + email | builder_contacts record created, status='completed' |
-| Audit log creation | Admin triggers sync | Audit entry created with admin UID, action, timestamp |
+| Test Case | Input | Expected Output | Status |
+|-----------|-------|-----------------|--------|
+| Quality effectiveness score | Various accuracy/coverage inputs | Weighted score 0-100 | Implemented |
+| Pipeline chain definitions | 3 chains exist (permits, coa, sources) | Correct step counts (14, 4, 10) | Implemented |
+| All chains end with refresh_snapshot | Check last step of each chain | `refresh_snapshot` slug | Implemented |
+| Chain step completeness | Every step slug in chain | Exists in PIPELINE_REGISTRY | Implemented |
+| Chain slug extraction | `chain_permits` | `permits` chain ID | Implemented |
+| run-chain.js file existence | Check scripts/ directory | File exists | Implemented |
+| Sources chain completeness | Sources chain steps | Includes compute_centroids + refresh_snapshot | Implemented |
 
-### B. UI Layer
+### B. UI Layer (`src/tests/admin.ui.test.tsx`)
 
-| Test Case | Verification |
-|-----------|-------------|
-| Admin sidebar navigation | 6 sections visible: Sync, Rules, Enrichment, Metrics, Users, Data Quality |
-| Sync runs table | Last 20 runs displayed with all stats columns |
-| Sync status badges | Green for completed, blue for running, red for failed |
-| Sync duration format | Duration shows as "2m 34s" not raw seconds |
-| Error log expansion | Clicking a row expands to show error details |
-| Trigger sync button | Button visible, disabled while sync is running |
-| Rule editor table | All rules listed with trade name, type, pattern, priority |
-| Rule create form | Form validates required fields before submission |
-| Rule active toggle | Toggle switch immediately enables/disables a rule |
-| Rule test panel | Text area for description, "Test" button, results display |
-| Enrichment tabs | Three tabs (Pending/Completed/Failed) with correct counts |
-| Retry button | Retry button on failed items resets status and refreshes list |
-| Manual entry form | Form with phone, email, website fields for direct builder entry |
-| Metric cards | 10 metric cards with current value and change indicator |
-| User table | Paginated table with search, plan filter, and sort |
-| Non-admin redirect | Non-admin user navigated to /admin sees redirect to home |
+| Test Case | Verification | Status |
+|-----------|-------------|--------|
+| Sync run duration format | `formatDuration(154000)` → "2m 34s" | Implemented |
+| Sync run short duration | `formatDuration(5000)` → "5s" | Implemented |
+| Sync status badge colour | `completed` → green, `running` → blue, `failed` → red | Implemented |
+| Sync run date formatting | ISO timestamp → human-readable | Implemented |
 
-### C. Infra Layer
+### C. Infra Layer (`src/tests/quality.infra.test.ts`)
 
-| Test Case | Verification |
-|-----------|-------------|
-| Admin middleware | All /api/admin/* routes reject non-admin requests with 403 |
-| Sync runs query | Query returns last 20 runs ordered by started_at DESC within 500ms |
-| Trade mapping rules CRUD | CREATE, READ, UPDATE, DELETE operations work against PostgreSQL |
-| Rule test execution | Test endpoint runs all active rules against input within 1 second |
-| Enrichment query | Queue query with joins returns within 500ms for up to 1000 builders |
-| Metrics aggregation | System metrics endpoint returns all 10 metrics within 2 seconds |
-| User list Firestore query | Paginated user query returns 25 users within 1 second |
-| Admin audit write | Audit entries written to Firestore within 500ms of admin action |
-| API rate limiting | Admin endpoints rate limited to 60 requests per minute |
-| CORS protection | Admin API endpoints only accept requests from app.buildo.ca origin |
-| Error handling | All admin endpoints return structured error JSON, never stack traces |
+| Test Case | Verification | Status |
+|-----------|-------------|--------|
+| Quality metrics DB queries | Snapshot capture and retrieval | Implemented |
+| Stats endpoint response shape | All 26 fields returned | Implemented |
+
+### Planned Tests (Not Yet Implemented)
+
+| Test Case | Layer | Notes |
+|-----------|-------|-------|
+| Admin role check - admin/user/unauth | Logic | Requires auth middleware |
+| Rule CRUD operations | Logic + Infra | Requires rule editor UI |
+| Enrichment retry / retry limit | Logic | Requires enrichment queue |
+| Pipeline trigger / 409 conflict | Infra | Integration test |

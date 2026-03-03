@@ -14,6 +14,12 @@ export interface DataQualitySnapshot {
   trade_tier2_count: number;
   trade_tier3_count: number;
 
+  // Trade classification by use-type
+  trade_residential_classified: number;
+  trade_residential_total: number;
+  trade_commercial_classified: number;
+  trade_commercial_total: number;
+
   // Builder matching
   permits_with_builder: number;
   builders_total: number;
@@ -47,6 +53,9 @@ export interface DataQualitySnapshot {
   // Scope classification
   permits_with_scope: number;
   scope_project_type_breakdown: Record<string, number> | null;
+  permits_with_scope_tags: number;
+  permits_with_detailed_tags: number;
+  scope_tags_top: Record<string, number> | null;
 
   // Building massing
   building_footprints_total: number;

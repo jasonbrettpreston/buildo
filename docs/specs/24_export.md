@@ -1,7 +1,7 @@
 # 24 - Data Export
 
-**Status:** Planned
-**Last Updated:** 2026-02-14
+**Status:** In Progress
+**Last Updated:** 2026-03-03
 **Depends On:** `01_database_schema.md`, `06_data_api.md`, `13_auth.md`, `19_search_filter.md`
 **Blocks:** None
 
@@ -146,17 +146,24 @@ GET /api/export/saved?format=csv|pdf
 
 ## 3. Associated Files
 
+**Architecture note:** CSV streaming is fully implemented with cursor-based batching. PDF
+generation is a stub (returns HTML, not actual PDF). No API routes or UI components exist yet.
+CSV column schema differs from spec — uses actual DB columns rather than spec's planned columns.
+
 | File | Purpose | Status |
 |------|---------|--------|
-| `src/lib/export/csv.ts` | CSV formatting, streaming, BOM handling | Planned |
-| `src/lib/export/pdf.ts` | PDF report generation with layout and charts | Planned |
+| `src/lib/export/csv.ts` | Streaming CSV generator with UTF-8 BOM, RFC 4180, PostgreSQL cursor (500-row batches) | Implemented |
+| `src/lib/export/pdf.ts` | PDF HTML stub (needs real PDF library like puppeteer/pdfmake) | Partial |
+| `src/tests/export.logic.test.ts` | CSV formatting and PDF HTML generation tests | Implemented |
 | `src/lib/export/naming.ts` | File name generation from filters | Planned |
 | `src/lib/export/rate-limit.ts` | Redis-based rate limiting for exports | Planned |
 | `src/app/api/export/csv/route.ts` | Streaming CSV export endpoint | Planned |
 | `src/app/api/export/pdf/route.ts` | PDF report generation endpoint | Planned |
-| `src/app/api/export/saved/route.ts` | Saved permits export endpoint | Planned |
 | `src/components/export/ExportButton.tsx` | Export trigger button with format selector | Planned |
-| `src/components/export/ExportProgress.tsx` | Progress indicator for large exports | Planned |
+
+**CSV columns (actual):** permit_num, revision_num, permit_type, status, work, description,
+street_num, street_name, ward, builder_name, est_const_cost, application_date, issued_date,
+completed_date, dwelling_units_created, storeys. *(Differs from spec's planned columns.)*
 
 ---
 

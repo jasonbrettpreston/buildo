@@ -1,5 +1,8 @@
 # Feature: Search & Filter
 
+**Status:** In Progress
+**Last Updated:** 2026-03-03
+
 ## 1. User Story
 "As a user, I want powerful search and filtering so I can find specific permits by address, description keywords, builder name, or any combination of criteria."
 
@@ -92,28 +95,26 @@ Default sort: `issued_date` DESC. Sort value is encoded as `sort_by:sort_order` 
 
 ## 3. Associated Files
 
-| File | Status | Purpose |
-|------|--------|---------|
-| `src/app/search/page.tsx` | Planned | Search page |
-| `src/app/search/layout.tsx` | Planned | Search layout |
-| `src/components/search/SearchInput.tsx` | Planned | Debounced text search input |
-| `src/components/search/FilterPanel.tsx` | **Implemented** | Filter panel: search, status, permit_type, sort, trade, ward, min_cost dropdowns |
-| `src/components/search/FilterChips.tsx` | Planned | Active filter chip display |
-| `src/components/search/StatusFilter.tsx` | Planned | Multi-select status checkboxes |
-| `src/components/search/TradeFilter.tsx` | Planned | Multi-select trade filter |
-| `src/components/search/CostSlider.tsx` | Planned | Dual-handle cost range slider |
-| `src/components/search/DateRangeFilter.tsx` | Planned | Date range picker |
-| `src/components/search/WardDropdown.tsx` | Planned | Ward selection dropdown |
-| `src/components/search/SortSelect.tsx` | Planned | Sort option dropdown |
-| `src/components/search/ResultCount.tsx` | Planned | Dynamic result count display |
-| `src/components/search/SavedSearches.tsx` | Planned | Saved search dropdown |
-| `src/components/search/Pagination.tsx` | Planned | Page navigation component |
-| `src/lib/search/url-state.ts` | Planned | URL serialization/deserialization for filter state |
-| `src/lib/search/debounce.ts` | Planned | Debounce utility for search input |
-| `src/app/api/permits/route.ts` | Exists | Permit list API with search and filter support |
-| `src/tests/search.logic.test.ts` | Planned | Search logic unit tests |
-| `src/tests/search.ui.test.tsx` | Planned | Search component tests |
-| `src/tests/search.infra.test.ts` | Planned | Search integration tests |
+**Architecture note:** The spec planned 14 modular sub-components. The actual implementation
+uses a monolithic search page with inline sort/pagination, plus a consolidated FilterPanel.
+Status, trade, ward, cost, sort, and permit_type filters are all built into FilterPanel.
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `src/app/search/page.tsx` | Search page with inline pagination, sort, result display | Implemented |
+| `src/components/search/FilterPanel.tsx` | Consolidated filter panel (status, trade, ward, cost, permit_type, sort, source toggle) | Implemented |
+| `src/app/api/permits/route.ts` | Permit list API with search, filter, pagination, scope filters | Implemented |
+| `src/tests/search.logic.test.ts` | URL param parsing, pagination logic tests | Implemented |
+| `src/components/search/FilterChips.tsx` | Active filter chip display | Planned |
+| `src/components/search/SavedSearches.tsx` | Saved search dropdown (Firestore) | Planned |
+| `src/lib/search/debounce.ts` | Debounce utility for search input | Planned |
+| `src/tests/search.ui.test.tsx` | Search component tests | Planned |
+
+**Implemented features:** Text search, multi-filter (status, trade, ward, permit_type,
+structure_type, work, min_cost), sort (lead_score, issued_date, est_cost, application_date),
+sort order toggle, pagination (prev/next), result count, source toggle (permits/pre-permits).
+
+**Not yet implemented:** Filter chips above results, saved searches, 300ms debounce, date range filter.
 
 ## 4. Constraints & Edge Cases
 

@@ -22,6 +22,7 @@ export const PHASE_TRADE_MAP: Record<Phase, string[]> = {
     'concrete',
     'waterproofing',
     'temporary-fencing',
+    'drain-plumbing',
   ],
   structural: [
     'framing',
