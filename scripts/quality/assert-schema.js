@@ -61,6 +61,11 @@ const NEIGHBOURHOOD_ID_PROPS = ['AREA_S_CD', 'AREA_SHORT_CODE', 'AREA_ID'];
 
 const SLUG = 'assert_schema';
 
+// When run from a chain (via run-chain.js), PIPELINE_CHAIN env var is set.
+// The chain orchestrator handles its own pipeline_runs tracking, so we skip
+// inserting our own row. Also scopes which checks to run.
+const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
+
 async function fetchFieldNames(resourceId, label) {
   const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=0`;
   console.log(`  Fetching metadata for ${label}...`);
@@ -177,93 +182,108 @@ async function run() {
   const startMs = Date.now();
   let runId = null;
 
-  try {
-    const res = await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, started_at, status)
-       VALUES ($1, NOW(), 'running') RETURNING id`,
-      [SLUG]
-    );
-    runId = res.rows[0].id;
-  } catch (err) {
-    console.warn('Could not insert pipeline_runs row:', err.message);
+  // Skip own pipeline_runs tracking when run from a chain — the chain
+  // orchestrator inserts chain-scoped rows (e.g. permits:assert_schema).
+  if (!CHAIN_ID) {
+    try {
+      const res = await pool.query(
+        `INSERT INTO pipeline_runs (pipeline, started_at, status)
+         VALUES ($1, NOW(), 'running') RETURNING id`,
+        [SLUG]
+      );
+      runId = res.rows[0].id;
+    } catch (err) {
+      console.warn('Could not insert pipeline_runs row:', err.message);
+    }
   }
 
   let allPassed = true;
   const errors = [];
 
+  // Determine which checks to run based on chain context
+  const runPermitChecks = !CHAIN_ID || CHAIN_ID === 'permits';
+  const runCoaChecks    = !CHAIN_ID || CHAIN_ID === 'permits' || CHAIN_ID === 'coa';
+  const runSourceChecks = !CHAIN_ID || CHAIN_ID === 'sources';
+
   try {
     // Check permits resource
-    const permitFields = await fetchFieldNames(PERMITS_RESOURCE_ID, 'Building Permits');
-    if (!checkColumns(permitFields, EXPECTED_PERMIT_COLUMNS, 'Building Permits')) {
-      allPassed = false;
-      errors.push('Permits schema drift detected');
-    }
-    if (!(await validateTypeSample(PERMITS_RESOURCE_ID, 'Building Permits'))) {
-      allPassed = false;
-      errors.push('Permits type coercion failed');
+    if (runPermitChecks) {
+      const permitFields = await fetchFieldNames(PERMITS_RESOURCE_ID, 'Building Permits');
+      if (!checkColumns(permitFields, EXPECTED_PERMIT_COLUMNS, 'Building Permits')) {
+        allPassed = false;
+        errors.push('Permits schema drift detected');
+      }
+      if (!(await validateTypeSample(PERMITS_RESOURCE_ID, 'Building Permits'))) {
+        allPassed = false;
+        errors.push('Permits type coercion failed');
+      }
     }
 
     // Check CoA active resource
-    const coaFields = await fetchFieldNames(COA_ACTIVE_RESOURCE_ID, 'CoA Active');
-    if (!checkColumns(coaFields, EXPECTED_COA_COLUMNS, 'CoA Active')) {
-      allPassed = false;
-      errors.push('CoA schema drift detected');
+    if (runCoaChecks) {
+      const coaFields = await fetchFieldNames(COA_ACTIVE_RESOURCE_ID, 'CoA Active');
+      if (!checkColumns(coaFields, EXPECTED_COA_COLUMNS, 'CoA Active')) {
+        allPassed = false;
+        errors.push('CoA schema drift detected');
+      }
     }
 
     // ------------------------------------------------------------------
     // Source data validation
     // ------------------------------------------------------------------
 
-    // Address Points CSV
-    try {
-      const apHeaders = await fetchCsvHeaders(ADDRESS_POINTS_URL, 'Address Points');
-      if (!checkColumns(apHeaders, EXPECTED_ADDRESS_POINT_COLUMNS, 'Address Points')) {
+    if (runSourceChecks) {
+      // Address Points CSV
+      try {
+        const apHeaders = await fetchCsvHeaders(ADDRESS_POINTS_URL, 'Address Points');
+        if (!checkColumns(apHeaders, EXPECTED_ADDRESS_POINT_COLUMNS, 'Address Points')) {
+          allPassed = false;
+          errors.push('Address Points schema drift detected');
+        }
+      } catch (err) {
         allPassed = false;
-        errors.push('Address Points schema drift detected');
+        errors.push(`Address Points: ${err.message}`);
+        console.error(`  FAIL: Address Points — ${err.message}`);
       }
-    } catch (err) {
-      allPassed = false;
-      errors.push(`Address Points: ${err.message}`);
-      console.error(`  FAIL: Address Points — ${err.message}`);
-    }
 
-    // Parcels CSV
-    try {
-      const parcelHeaders = await fetchCsvHeaders(PARCELS_URL, 'Parcels');
-      if (!checkColumns(parcelHeaders, EXPECTED_PARCEL_COLUMNS, 'Parcels')) {
+      // Parcels CSV
+      try {
+        const parcelHeaders = await fetchCsvHeaders(PARCELS_URL, 'Parcels');
+        if (!checkColumns(parcelHeaders, EXPECTED_PARCEL_COLUMNS, 'Parcels')) {
+          allPassed = false;
+          errors.push('Parcels schema drift detected');
+        }
+      } catch (err) {
         allPassed = false;
-        errors.push('Parcels schema drift detected');
+        errors.push(`Parcels: ${err.message}`);
+        console.error(`  FAIL: Parcels — ${err.message}`);
       }
-    } catch (err) {
-      allPassed = false;
-      errors.push(`Parcels: ${err.message}`);
-      console.error(`  FAIL: Parcels — ${err.message}`);
-    }
 
-    // Massing Shapefile ZIP — accessibility check only
-    try {
-      await checkUrlAccessible(MASSING_URL, '3D Massing');
-    } catch (err) {
-      allPassed = false;
-      errors.push(`3D Massing: ${err.message}`);
-      console.error(`  FAIL: 3D Massing — ${err.message}`);
-    }
-
-    // Neighbourhoods GeoJSON — property key validation
-    try {
-      const nhoodKeys = await fetchGeoJsonPropertyKeys(NEIGHBOURHOODS_URL, 'Neighbourhoods');
-      const hasIdProp = NEIGHBOURHOOD_ID_PROPS.some((p) => nhoodKeys.includes(p));
-      if (!hasIdProp) {
+      // Massing Shapefile ZIP — accessibility check only
+      try {
+        await checkUrlAccessible(MASSING_URL, '3D Massing');
+      } catch (err) {
         allPassed = false;
-        errors.push(`Neighbourhoods missing ID property (expected one of: ${NEIGHBOURHOOD_ID_PROPS.join(', ')})`);
-        console.error(`  FAIL: Neighbourhoods — no ID property found in: ${nhoodKeys.join(', ')}`);
-      } else {
-        console.log(`  OK: Neighbourhoods — ID property found (${nhoodKeys.length} total properties)`);
+        errors.push(`3D Massing: ${err.message}`);
+        console.error(`  FAIL: 3D Massing — ${err.message}`);
       }
-    } catch (err) {
-      allPassed = false;
-      errors.push(`Neighbourhoods: ${err.message}`);
-      console.error(`  FAIL: Neighbourhoods — ${err.message}`);
+
+      // Neighbourhoods GeoJSON — property key validation
+      try {
+        const nhoodKeys = await fetchGeoJsonPropertyKeys(NEIGHBOURHOODS_URL, 'Neighbourhoods');
+        const hasIdProp = NEIGHBOURHOOD_ID_PROPS.some((p) => nhoodKeys.includes(p));
+        if (!hasIdProp) {
+          allPassed = false;
+          errors.push(`Neighbourhoods missing ID property (expected one of: ${NEIGHBOURHOOD_ID_PROPS.join(', ')})`);
+          console.error(`  FAIL: Neighbourhoods — no ID property found in: ${nhoodKeys.join(', ')}`);
+        } else {
+          console.log(`  OK: Neighbourhoods — ID property found (${nhoodKeys.length} total properties)`);
+        }
+      } catch (err) {
+        allPassed = false;
+        errors.push(`Neighbourhoods: ${err.message}`);
+        console.error(`  FAIL: Neighbourhoods — ${err.message}`);
+      }
     }
   } catch (err) {
     allPassed = false;

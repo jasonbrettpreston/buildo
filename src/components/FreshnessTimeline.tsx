@@ -287,8 +287,11 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
               <div className="space-y-0">
                 {chain.steps.map((step, i) => {
                   const entry = PIPELINE_REGISTRY[step.slug];
-                  const info = pipelineLastRun[step.slug];
-                  const isRunning = runningPipelines.has(step.slug);
+                  // Look up chain-scoped status first (e.g. permits:assert_schema),
+                  // fall back to unscoped slug for standalone runs
+                  const scopedKey = `${chain.id}:${step.slug}`;
+                  const info = pipelineLastRun[scopedKey] ?? pipelineLastRun[step.slug];
+                  const isRunning = runningPipelines.has(scopedKey) || runningPipelines.has(step.slug);
                   const dot = getStatusDot(info, isRunning);
                   const stepNum = stepNumbers[i];
                   const isRoot = step.indent === 0;

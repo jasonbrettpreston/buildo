@@ -410,8 +410,8 @@ export function DataQualityDashboard() {
                   total={current.total_permits}
                   lastUpdated={lastRunAt('permits')}
                   nextScheduled={getNextScheduledDate('permits', stats?.pipeline_schedules)}
-                  onUpdate={() => triggerPipeline('permits')}
-                  updating={runningPipelines.has('permits')}
+                  onUpdate={() => triggerPipeline('chain_permits')}
+                  updating={runningPipelines.has('chain_permits') || runningPipelines.has('permits')}
                   hero
                   newestRecord={stats?.newest_permit_date}
                   tiers={[
@@ -564,8 +564,8 @@ export function DataQualityDashboard() {
                 avgConfidence={current.coa_avg_confidence}
                 lastUpdated={lastRunAt('coa')}
                 nextScheduled={getNextScheduledDate('coa', stats?.pipeline_schedules)}
-                onUpdate={() => triggerPipeline('coa')}
-                updating={runningPipelines.has('coa')}
+                onUpdate={() => triggerPipeline('chain_coa')}
+                updating={runningPipelines.has('chain_coa') || runningPipelines.has('coa')}
                 trend={trendCoa}
                 newestRecord={stats?.newest_coa_date}
                 relationship="links to"

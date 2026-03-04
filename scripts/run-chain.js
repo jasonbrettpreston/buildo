@@ -154,7 +154,9 @@ async function run() {
     const stepLabel = `[${i + 1}/${steps.length}] ${slug}`;
     console.log(`${stepLabel} — starting...`);
 
-    // Insert step tracking row
+    // Insert step tracking row — scoped to chain (e.g. permits:assert_schema)
+    // so status doesn't bleed across chains that share the same step slug.
+    const scopedSlug = `${chainId}:${slug}`;
     let stepRunId = null;
     const stepStart = Date.now();
     try {
@@ -162,7 +164,7 @@ async function run() {
         `INSERT INTO pipeline_runs (pipeline, started_at, status)
          VALUES ($1, NOW(), 'running')
          RETURNING id`,
-        [slug]
+        [scopedSlug]
       );
       stepRunId = res.rows[0].id;
     } catch (err) {
@@ -171,7 +173,7 @@ async function run() {
 
     try {
       execFileSync('node', [scriptPath], {
-        env: process.env,
+        env: { ...process.env, PIPELINE_CHAIN: chainId },
         stdio: 'inherit',
         // No per-step timeout — heavy scripts (link_massing, link_coa) can
         // take 30-120 min depending on data volume. The API route applies
