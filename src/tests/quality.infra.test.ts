@@ -1,6 +1,8 @@
 // Infra Layer Tests - Data quality API routes and snapshot table schema
 // SPEC LINK: docs/specs/28_data_quality_dashboard.md
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import type { DataQualityResponse } from '@/lib/quality/types';
 import { createMockDataQualitySnapshot } from './factories';
 
@@ -193,6 +195,61 @@ describe('Sync Status Validation', () => {
   });
 });
 
+describe('Quality API includes anomalies and health keys', () => {
+  it('quality route imports and computes anomalies', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/quality/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('detectVolumeAnomalies');
+    expect(source).toContain('anomalies');
+    expect(source).toContain('health');
+  });
+
+  it('quality route imports and computes schema drift', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/quality/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('detectSchemaDrift');
+    expect(source).toContain('schemaDrift');
+  });
+
+  it('quality route imports computeSystemHealth', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/quality/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('computeSystemHealth');
+  });
+});
+
+describe('Pipeline schedules API route exists', () => {
+  it('schedules route file exists', () => {
+    const routePath = path.join(__dirname, '../app/api/admin/pipelines/schedules/route.ts');
+    expect(fs.existsSync(routePath)).toBe(true);
+  });
+
+  it('schedules route exports GET and PUT handlers', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/schedules/route.ts'),
+      'utf-8'
+    );
+    expect(source).toMatch(/export.*async.*function.*GET/);
+    expect(source).toMatch(/export.*async.*function.*PUT/);
+  });
+
+  it('PUT validates cadence values', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/schedules/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('Daily');
+    expect(source).toContain('Quarterly');
+    expect(source).toContain('Annual');
+  });
+});
+
 describe('Migration 015 DDL Expectations', () => {
   it('table name is data_quality_snapshots', () => {
     const tableName = 'data_quality_snapshots';
@@ -215,5 +272,48 @@ describe('Migration 015 DDL Expectations', () => {
       'coa_linked',
     ];
     expect(matchingColumns).toHaveLength(6);
+  });
+});
+
+describe('Pipeline runs API route exists', () => {
+  it('runs route file exists', () => {
+    const routePath = path.join(__dirname, '../app/api/admin/pipelines/runs/route.ts');
+    expect(fs.existsSync(routePath)).toBe(true);
+  });
+
+  it('runs route exports GET handler', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/runs/route.ts'),
+      'utf-8'
+    );
+    expect(source).toMatch(/export.*async.*function.*GET/);
+  });
+
+  it('supports pagination with limit and offset', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/runs/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('limit');
+    expect(source).toContain('offset');
+  });
+
+  it('supports filtering by pipeline and status', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/runs/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain("searchParams.get('pipeline')");
+    expect(source).toContain("searchParams.get('status')");
+  });
+
+  it('returns duration_ms and error_message fields', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/runs/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('duration_ms');
+    expect(source).toContain('error_message');
+    expect(source).toContain('records_total');
   });
 });

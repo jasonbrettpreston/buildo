@@ -318,6 +318,21 @@ export function createMockDataQualitySnapshot(
     last_sync_status: 'completed',
     building_footprints_total: 820000,
     parcels_with_buildings: 540000,
+    // Null tracking
+    null_description_count: 5400,
+    null_builder_name_count: 15000,
+    null_est_const_cost_count: 3200,
+    null_street_num_count: 800,
+    null_street_name_count: 200,
+    null_geo_id_count: 18000,
+    // Violations
+    violation_cost_out_of_range: 12,
+    violation_future_issued_date: 3,
+    violation_missing_status: 0,
+    violations_total: 15,
+    // Schema & SLA
+    schema_column_counts: { permits: 30, builders: 15, coa_applications: 18 },
+    sla_permits_ingestion_hours: 6.5,
     created_at: '2024-03-01T06:35:00Z',
     ...overrides,
   };

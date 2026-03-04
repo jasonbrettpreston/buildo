@@ -11,6 +11,7 @@ export function parseSnapshot(raw: DataQualitySnapshot): DataQualitySnapshot {
     trade_avg_confidence: raw.trade_avg_confidence != null ? Number(raw.trade_avg_confidence) : null,
     parcel_avg_confidence: raw.parcel_avg_confidence != null ? Number(raw.parcel_avg_confidence) : null,
     coa_avg_confidence: raw.coa_avg_confidence != null ? Number(raw.coa_avg_confidence) : null,
+    sla_permits_ingestion_hours: raw.sla_permits_ingestion_hours != null ? Number(raw.sla_permits_ingestion_hours) : null,
   };
 }
 
@@ -33,6 +34,10 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     freshnessCounts,
     lastSync,
     massingCounts,
+    nullCounts,
+    violations,
+    schemaColumnCounts,
+    slaMetrics,
   ] = await Promise.all([
     queryPermitCounts(),
     queryTradeCounts(),
@@ -45,6 +50,10 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     queryFreshnessCounts(),
     queryLastSync(),
     queryMassingCounts(),
+    queryNullCounts(),
+    queryViolations(),
+    querySchemaColumnCounts(),
+    querySlaMetrics(),
   ]);
 
   const row = {
@@ -92,6 +101,21 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     last_sync_status: lastSync.last_sync_status,
     building_footprints_total: massingCounts.footprints_total,
     parcels_with_buildings: massingCounts.parcels_with_buildings,
+    // Null tracking
+    null_description_count: nullCounts.null_description,
+    null_builder_name_count: nullCounts.null_builder_name,
+    null_est_const_cost_count: nullCounts.null_est_const_cost,
+    null_street_num_count: nullCounts.null_street_num,
+    null_street_name_count: nullCounts.null_street_name,
+    null_geo_id_count: nullCounts.null_geo_id,
+    // Violations
+    violation_cost_out_of_range: violations.cost_out_of_range,
+    violation_future_issued_date: violations.future_issued_date,
+    violation_missing_status: violations.missing_status,
+    violations_total: violations.cost_out_of_range + violations.future_issued_date + violations.missing_status,
+    // Schema & SLA
+    schema_column_counts: schemaColumnCounts,
+    sla_permits_ingestion_hours: slaMetrics.hours_since_newest,
   };
 
   const result = await query<DataQualitySnapshot>(
@@ -113,14 +137,21 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       permits_with_scope_tags, permits_with_detailed_tags, scope_tags_top,
       permits_updated_24h, permits_updated_7d, permits_updated_30d,
       last_sync_at, last_sync_status,
-      building_footprints_total, parcels_with_buildings
+      building_footprints_total, parcels_with_buildings,
+      null_description_count, null_builder_name_count, null_est_const_cost_count,
+      null_street_num_count, null_street_name_count, null_geo_id_count,
+      violation_cost_out_of_range, violation_future_issued_date, violation_missing_status, violations_total,
+      schema_column_counts, sla_permits_ingestion_hours
     ) VALUES (
       CURRENT_DATE,
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
       $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
       $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
       $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
-      $41, $42, $43, $44
+      $41, $42, $43, $44,
+      $45, $46, $47, $48, $49, $50,
+      $51, $52, $53, $54,
+      $55, $56
     )
     ON CONFLICT (snapshot_date) DO UPDATE SET
       total_permits = EXCLUDED.total_permits,
@@ -167,6 +198,18 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       last_sync_status = EXCLUDED.last_sync_status,
       building_footprints_total = EXCLUDED.building_footprints_total,
       parcels_with_buildings = EXCLUDED.parcels_with_buildings,
+      null_description_count = EXCLUDED.null_description_count,
+      null_builder_name_count = EXCLUDED.null_builder_name_count,
+      null_est_const_cost_count = EXCLUDED.null_est_const_cost_count,
+      null_street_num_count = EXCLUDED.null_street_num_count,
+      null_street_name_count = EXCLUDED.null_street_name_count,
+      null_geo_id_count = EXCLUDED.null_geo_id_count,
+      violation_cost_out_of_range = EXCLUDED.violation_cost_out_of_range,
+      violation_future_issued_date = EXCLUDED.violation_future_issued_date,
+      violation_missing_status = EXCLUDED.violation_missing_status,
+      violations_total = EXCLUDED.violations_total,
+      schema_column_counts = EXCLUDED.schema_column_counts,
+      sla_permits_ingestion_hours = EXCLUDED.sla_permits_ingestion_hours,
       created_at = NOW()
     RETURNING *`,
     [
@@ -189,6 +232,11 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       row.permits_updated_24h, row.permits_updated_7d, row.permits_updated_30d,
       row.last_sync_at, row.last_sync_status,
       row.building_footprints_total, row.parcels_with_buildings,
+      row.null_description_count, row.null_builder_name_count, row.null_est_const_cost_count,
+      row.null_street_num_count, row.null_street_name_count, row.null_geo_id_count,
+      row.violation_cost_out_of_range, row.violation_future_issued_date,
+      row.violation_missing_status, row.violations_total,
+      JSON.stringify(row.schema_column_counts), row.sla_permits_ingestion_hours,
     ]
   );
 
@@ -497,6 +545,88 @@ async function queryMassingCounts() {
   } catch {
     // Tables may not exist yet
     return { footprints_total: 0, parcels_with_buildings: 0 };
+  }
+}
+
+async function queryNullCounts() {
+  const rows = await query<{
+    null_description: string;
+    null_builder_name: string;
+    null_est_const_cost: string;
+    null_street_num: string;
+    null_street_name: string;
+    null_geo_id: string;
+  }>(
+    `SELECT
+       COUNT(*) FILTER (WHERE description IS NULL OR description = '') as null_description,
+       COUNT(*) FILTER (WHERE builder_name IS NULL OR builder_name = '') as null_builder_name,
+       COUNT(*) FILTER (WHERE est_const_cost IS NULL) as null_est_const_cost,
+       COUNT(*) FILTER (WHERE street_num IS NULL OR street_num = '') as null_street_num,
+       COUNT(*) FILTER (WHERE street_name IS NULL OR street_name = '') as null_street_name,
+       COUNT(*) FILTER (WHERE geo_id IS NULL OR geo_id = '') as null_geo_id
+     FROM permits
+     WHERE ${ACTIVE_FILTER}`
+  );
+  return {
+    null_description: parseInt(rows[0].null_description, 10),
+    null_builder_name: parseInt(rows[0].null_builder_name, 10),
+    null_est_const_cost: parseInt(rows[0].null_est_const_cost, 10),
+    null_street_num: parseInt(rows[0].null_street_num, 10),
+    null_street_name: parseInt(rows[0].null_street_name, 10),
+    null_geo_id: parseInt(rows[0].null_geo_id, 10),
+  };
+}
+
+async function queryViolations() {
+  const rows = await query<{
+    cost_out_of_range: string;
+    future_issued_date: string;
+    missing_status: string;
+  }>(
+    `SELECT
+       COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < 100 OR est_const_cost > 1000000000)) as cost_out_of_range,
+       COUNT(*) FILTER (WHERE issued_date > NOW()) as future_issued_date,
+       COUNT(*) FILTER (WHERE status IS NULL OR status = '') as missing_status
+     FROM permits
+     WHERE ${ACTIVE_FILTER}`
+  );
+  return {
+    cost_out_of_range: parseInt(rows[0].cost_out_of_range, 10),
+    future_issued_date: parseInt(rows[0].future_issued_date, 10),
+    missing_status: parseInt(rows[0].missing_status, 10),
+  };
+}
+
+async function querySchemaColumnCounts(): Promise<Record<string, number>> {
+  try {
+    const rows = await query<{ table_name: string; col_count: string }>(
+      `SELECT table_name, COUNT(*)::text as col_count
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name IN ('permits', 'builders', 'coa_applications', 'parcels', 'permit_trades', 'permit_parcels')
+       GROUP BY table_name
+       ORDER BY table_name`
+    );
+    const result: Record<string, number> = {};
+    for (const row of rows) {
+      result[row.table_name] = parseInt(row.col_count, 10);
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+async function querySlaMetrics(): Promise<{ hours_since_newest: number | null }> {
+  try {
+    const rows = await query<{ hours: string | null }>(
+      `SELECT EXTRACT(EPOCH FROM (NOW() - MAX(first_seen_at))) / 3600 as hours
+       FROM permits`
+    );
+    const hours = rows[0]?.hours ? parseFloat(rows[0].hours) : null;
+    return { hours_since_newest: hours != null ? Math.round(hours * 100) / 100 : null };
+  } catch {
+    return { hours_since_newest: null };
   }
 }
 

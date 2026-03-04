@@ -7,6 +7,10 @@ import {
   EFFECTIVENESS_WEIGHTS,
   trendDelta,
   findSnapshotDaysAgo,
+  detectVolumeAnomalies,
+  detectSchemaDrift,
+  computeSystemHealth,
+  SLA_TARGETS,
 } from '@/lib/quality/types';
 import { parseSnapshot } from '@/lib/quality/metrics';
 import { createMockDataQualitySnapshot } from './factories';
@@ -644,5 +648,217 @@ describe('DataSourceCircle field annotations', () => {
     // fields prop must be accepted by the interface
     expect(props.fields).toHaveLength(2);
     expect(props.fields[0]).toBe('latitude');
+  });
+});
+
+// ── Volume Anomaly Detection ──────────────────────────────────────────
+
+describe('detectVolumeAnomalies()', () => {
+  it('returns empty when fewer than 3 trends', () => {
+    const trends = [createMockDataQualitySnapshot(), createMockDataQualitySnapshot()];
+    expect(detectVolumeAnomalies(trends)).toEqual([]);
+  });
+
+  it('returns empty when volume is stable', () => {
+    const trends = Array.from({ length: 10 }, (_, i) =>
+      createMockDataQualitySnapshot({
+        id: i + 1,
+        permits_updated_24h: 1200,
+        snapshot_date: `2024-03-${String(10 - i).padStart(2, '0')}`,
+      })
+    );
+    expect(detectVolumeAnomalies(trends)).toEqual([]);
+  });
+
+  it('flags a volume drop exceeding 2 standard deviations', () => {
+    const historical = Array.from({ length: 10 }, (_, i) =>
+      createMockDataQualitySnapshot({
+        id: i + 2,
+        permits_updated_24h: 1200,
+        snapshot_date: `2024-02-${String(20 - i).padStart(2, '0')}`,
+      })
+    );
+    const current = createMockDataQualitySnapshot({
+      id: 1,
+      permits_updated_24h: 2, // extreme drop
+      snapshot_date: '2024-03-01',
+    });
+    const trends = [current, ...historical];
+    const anomalies = detectVolumeAnomalies(trends);
+    expect(anomalies).toHaveLength(1);
+    expect(anomalies[0].direction).toBe('drop');
+    expect(anomalies[0].source).toBe('permits');
+    expect(anomalies[0].deviations).toBeGreaterThanOrEqual(2);
+  });
+
+  it('flags a volume spike exceeding 2 standard deviations', () => {
+    const historical = Array.from({ length: 10 }, (_, i) =>
+      createMockDataQualitySnapshot({
+        id: i + 2,
+        permits_updated_24h: 100,
+        snapshot_date: `2024-02-${String(20 - i).padStart(2, '0')}`,
+      })
+    );
+    const current = createMockDataQualitySnapshot({
+      id: 1,
+      permits_updated_24h: 50000, // extreme spike
+      snapshot_date: '2024-03-01',
+    });
+    const trends = [current, ...historical];
+    const anomalies = detectVolumeAnomalies(trends);
+    expect(anomalies).toHaveLength(1);
+    expect(anomalies[0].direction).toBe('spike');
+  });
+});
+
+// ── Schema Drift Detection ────────────────────────────────────────────
+
+describe('detectSchemaDrift()', () => {
+  it('returns empty when both inputs are null', () => {
+    expect(detectSchemaDrift(null, null)).toEqual([]);
+  });
+
+  it('returns empty when schemas are identical', () => {
+    const schema = { permits: 30, builders: 15 };
+    expect(detectSchemaDrift(schema, schema)).toEqual([]);
+  });
+
+  it('detects column count change', () => {
+    const current = { permits: 30, builders: 15 };
+    const previous = { permits: 30, builders: 14 };
+    const alerts = detectSchemaDrift(current, previous);
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].table).toBe('builders');
+    expect(alerts[0].previousCount).toBe(14);
+    expect(alerts[0].currentCount).toBe(15);
+  });
+
+  it('ignores new tables not present in previous', () => {
+    const current = { permits: 30, builders: 15, new_table: 5 };
+    const previous = { permits: 30, builders: 15 };
+    expect(detectSchemaDrift(current, previous)).toEqual([]);
+  });
+});
+
+// ── System Health Summary ─────────────────────────────────────────────
+
+describe('computeSystemHealth()', () => {
+  it('returns green when no issues or warnings', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 0,
+      null_description_count: 0,
+      sla_permits_ingestion_hours: 6,
+    });
+    const health = computeSystemHealth(snapshot, [], []);
+    expect(health.level).toBe('green');
+    expect(health.issues).toHaveLength(0);
+    expect(health.warnings).toHaveLength(0);
+  });
+
+  it('returns yellow when there are warnings but no issues', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 10,
+      null_description_count: 0,
+      sla_permits_ingestion_hours: 6,
+    });
+    const health = computeSystemHealth(snapshot, [], []);
+    expect(health.level).toBe('yellow');
+    expect(health.warnings.length).toBeGreaterThan(0);
+  });
+
+  it('returns red when violations >= 100', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 150,
+      sla_permits_ingestion_hours: 6,
+    });
+    const health = computeSystemHealth(snapshot, [], []);
+    expect(health.level).toBe('red');
+    expect(health.issues.length).toBeGreaterThan(0);
+  });
+
+  it('returns red when volume anomaly drop detected', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 0,
+      sla_permits_ingestion_hours: 6,
+    });
+    const anomalies = [{ source: 'permits', expected: 1200, actual: 2, deviations: 5.0, direction: 'drop' as const }];
+    const health = computeSystemHealth(snapshot, anomalies, []);
+    expect(health.level).toBe('red');
+  });
+
+  it('returns yellow when schema drift detected', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 0,
+      sla_permits_ingestion_hours: 6,
+    });
+    const drift = [{ table: 'permits', previousCount: 30, currentCount: 29 }];
+    const health = computeSystemHealth(snapshot, [], drift);
+    expect(health.level).toBe('yellow');
+    expect(health.warnings).toContain('Schema changes detected in 1 table(s)');
+  });
+
+  it('returns red when SLA breached', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 0,
+      sla_permits_ingestion_hours: 48,
+    });
+    const health = computeSystemHealth(snapshot, [], []);
+    expect(health.level).toBe('red');
+    expect(health.issues[0]).toContain('SLA breach');
+  });
+});
+
+// ── SLA Targets ───────────────────────────────────────────────────────
+
+describe('SLA_TARGETS', () => {
+  it('defines permits target as 24 hours', () => {
+    expect(SLA_TARGETS.permits).toBe(24);
+  });
+
+  it('defines quarterly targets as 2160 hours (90 days)', () => {
+    expect(SLA_TARGETS.parcels).toBe(2160);
+    expect(SLA_TARGETS.address_points).toBe(2160);
+  });
+
+  it('defines annual targets as 8760 hours (365 days)', () => {
+    expect(SLA_TARGETS.neighbourhoods).toBe(8760);
+  });
+});
+
+// ── Snapshot shape includes new quality fields ────────────────────────
+
+describe('Snapshot includes null tracking and violation fields', () => {
+  it('factory creates null count fields', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.null_description_count).toBeGreaterThanOrEqual(0);
+    expect(snapshot.null_builder_name_count).toBeGreaterThanOrEqual(0);
+    expect(snapshot.null_est_const_cost_count).toBeGreaterThanOrEqual(0);
+    expect(snapshot.null_street_num_count).toBeGreaterThanOrEqual(0);
+    expect(snapshot.null_street_name_count).toBeGreaterThanOrEqual(0);
+    expect(snapshot.null_geo_id_count).toBeGreaterThanOrEqual(0);
+  });
+
+  it('factory creates violation fields', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.violation_cost_out_of_range).toBeGreaterThanOrEqual(0);
+    expect(snapshot.violation_future_issued_date).toBeGreaterThanOrEqual(0);
+    expect(snapshot.violation_missing_status).toBeGreaterThanOrEqual(0);
+    expect(snapshot.violations_total).toBe(
+      snapshot.violation_cost_out_of_range +
+      snapshot.violation_future_issued_date +
+      snapshot.violation_missing_status
+    );
+  });
+
+  it('factory creates schema_column_counts', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.schema_column_counts).not.toBeNull();
+    expect(Object.keys(snapshot.schema_column_counts!).length).toBeGreaterThan(0);
+  });
+
+  it('factory creates sla_permits_ingestion_hours', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    expect(snapshot.sla_permits_ingestion_hours).not.toBeNull();
+    expect(snapshot.sla_permits_ingestion_hours!).toBeGreaterThan(0);
   });
 });

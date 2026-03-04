@@ -176,6 +176,56 @@ async function run() {
       massing = { footprints_total: parseInt(m.rows[0].footprints_total), parcels_with_buildings: parseInt(m.rows[0].parcels_with_buildings) };
     } catch {}
 
+    // 13. Null counts (active permits only)
+    const nulls = await client.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE description IS NULL OR description = '') as null_description,
+         COUNT(*) FILTER (WHERE builder_name IS NULL OR builder_name = '') as null_builder_name,
+         COUNT(*) FILTER (WHERE est_const_cost IS NULL) as null_est_const_cost,
+         COUNT(*) FILTER (WHERE street_num IS NULL OR street_num = '') as null_street_num,
+         COUNT(*) FILTER (WHERE street_name IS NULL OR street_name = '') as null_street_name,
+         COUNT(*) FILTER (WHERE geo_id IS NULL OR geo_id = '') as null_geo_id
+       FROM permits
+       WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+    );
+    const n = nulls.rows[0];
+    console.log(`Nulls: desc=${n.null_description}, builder=${n.null_builder_name}, cost=${n.null_est_const_cost}`);
+
+    // 14. Violations
+    const violations = await client.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < 100 OR est_const_cost > 1000000000)) as cost_oor,
+         COUNT(*) FILTER (WHERE issued_date > NOW()) as future_issued,
+         COUNT(*) FILTER (WHERE status IS NULL OR status = '') as missing_status
+       FROM permits
+       WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+    );
+    const v = violations.rows[0];
+    const violations_total = parseInt(v.cost_oor) + parseInt(v.future_issued) + parseInt(v.missing_status);
+    console.log(`Violations: cost_oor=${v.cost_oor}, future_issued=${v.future_issued}, missing_status=${v.missing_status}, total=${violations_total}`);
+
+    // 15. Schema column counts
+    let schemaColumnCounts = {};
+    try {
+      const schemaCols = await client.query(
+        `SELECT table_name, COUNT(*)::text as col_count
+         FROM information_schema.columns
+         WHERE table_schema = 'public'
+           AND table_name IN ('permits', 'builders', 'coa_applications', 'parcels', 'permit_trades', 'permit_parcels')
+         GROUP BY table_name ORDER BY table_name`
+      );
+      for (const row of schemaCols.rows) schemaColumnCounts[row.table_name] = parseInt(row.col_count);
+    } catch {}
+
+    // 16. SLA metrics
+    let slaHours = null;
+    try {
+      const sla = await client.query(
+        `SELECT EXTRACT(EPOCH FROM (NOW() - MAX(first_seen_at))) / 3600 as hours FROM permits`
+      );
+      slaHours = sla.rows[0]?.hours ? Math.round(parseFloat(sla.rows[0].hours) * 100) / 100 : null;
+    } catch {}
+
     // UPSERT snapshot
     const result = await client.query(
       `INSERT INTO data_quality_snapshots (
@@ -196,10 +246,14 @@ async function run() {
         permits_with_scope_tags, permits_with_detailed_tags, scope_tags_top,
         permits_updated_24h, permits_updated_7d, permits_updated_30d,
         last_sync_at, last_sync_status,
-        building_footprints_total, parcels_with_buildings
+        building_footprints_total, parcels_with_buildings,
+        null_description_count, null_builder_name_count, null_est_const_cost_count,
+        null_street_num_count, null_street_name_count, null_geo_id_count,
+        violation_cost_out_of_range, violation_future_issued_date, violation_missing_status, violations_total,
+        schema_column_counts, sla_permits_ingestion_hours
       ) VALUES (
         CURRENT_DATE,
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56
       )
       ON CONFLICT (snapshot_date) DO UPDATE SET
         total_permits=EXCLUDED.total_permits, active_permits=EXCLUDED.active_permits,
@@ -234,6 +288,18 @@ async function run() {
         last_sync_at=EXCLUDED.last_sync_at, last_sync_status=EXCLUDED.last_sync_status,
         building_footprints_total=EXCLUDED.building_footprints_total,
         parcels_with_buildings=EXCLUDED.parcels_with_buildings,
+        null_description_count=EXCLUDED.null_description_count,
+        null_builder_name_count=EXCLUDED.null_builder_name_count,
+        null_est_const_cost_count=EXCLUDED.null_est_const_cost_count,
+        null_street_num_count=EXCLUDED.null_street_num_count,
+        null_street_name_count=EXCLUDED.null_street_name_count,
+        null_geo_id_count=EXCLUDED.null_geo_id_count,
+        violation_cost_out_of_range=EXCLUDED.violation_cost_out_of_range,
+        violation_future_issued_date=EXCLUDED.violation_future_issued_date,
+        violation_missing_status=EXCLUDED.violation_missing_status,
+        violations_total=EXCLUDED.violations_total,
+        schema_column_counts=EXCLUDED.schema_column_counts,
+        sla_permits_ingestion_hours=EXCLUDED.sla_permits_ingestion_hours,
         created_at=NOW()
       RETURNING snapshot_date, permits_with_neighbourhood, active_permits, coa_total, coa_linked, permits_with_scope, permits_with_scope_tags, permits_with_detailed_tags`,
       [
@@ -260,6 +326,10 @@ async function run() {
         parseInt(fresh.rows[0].updated_30d),
         sync.rows[0]?.started_at || null, sync.rows[0]?.status || null,
         massing.footprints_total, massing.parcels_with_buildings,
+        parseInt(n.null_description), parseInt(n.null_builder_name), parseInt(n.null_est_const_cost),
+        parseInt(n.null_street_num), parseInt(n.null_street_name), parseInt(n.null_geo_id),
+        parseInt(v.cost_oor), parseInt(v.future_issued), parseInt(v.missing_status), violations_total,
+        JSON.stringify(schemaColumnCounts), slaHours,
       ]
     );
 

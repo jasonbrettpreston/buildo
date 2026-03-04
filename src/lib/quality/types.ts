@@ -68,6 +68,26 @@ export interface DataQualitySnapshot {
   last_sync_at: string | null;
   last_sync_status: string | null;
 
+  // Null tracking (field completeness)
+  null_description_count: number;
+  null_builder_name_count: number;
+  null_est_const_cost_count: number;
+  null_street_num_count: number;
+  null_street_name_count: number;
+  null_geo_id_count: number;
+
+  // Violation counts
+  violation_cost_out_of_range: number;
+  violation_future_issued_date: number;
+  violation_missing_status: number;
+  violations_total: number;
+
+  // Schema drift tracking
+  schema_column_counts: Record<string, number> | null;
+
+  // SLA metrics
+  sla_permits_ingestion_hours: number | null;
+
   created_at: string;
 }
 
@@ -243,4 +263,162 @@ export function extractMetrics(s: DataQualitySnapshot): MatchingMetrics {
         : 0,
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// SLA Targets (hours)
+// ---------------------------------------------------------------------------
+
+export const SLA_TARGETS: Record<string, number> = {
+  permits: 24,
+  coa: 48,
+  builders: 48,
+  address_points: 2160,   // 90 days
+  parcels: 2160,
+  massing: 2160,
+  neighbourhoods: 8760,   // 365 days
+};
+
+// ---------------------------------------------------------------------------
+// Volume Anomaly Detection
+// ---------------------------------------------------------------------------
+
+export interface VolumeAnomaly {
+  source: string;
+  expected: number;
+  actual: number;
+  deviations: number;
+  direction: 'drop' | 'spike';
+}
+
+/**
+ * Detect volume anomalies using 2-standard-deviation threshold on a 30-day window.
+ * Compares the latest snapshot's permits_updated_24h against the historical average.
+ */
+export function detectVolumeAnomalies(trends: DataQualitySnapshot[]): VolumeAnomaly[] {
+  if (trends.length < 3) return [];
+
+  const current = trends[0];
+  const historical = trends.slice(1);
+
+  const values = historical.map((s) => s.permits_updated_24h);
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  if (mean === 0) return [];
+
+  const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
+  const stddev = Math.sqrt(variance);
+
+  const diff = current.permits_updated_24h - mean;
+
+  // If stddev is 0 (all historical values identical), any significant deviation is anomalous
+  const deviations = stddev === 0
+    ? (diff === 0 ? 0 : Infinity)
+    : Math.abs(diff) / stddev;
+
+  if (deviations >= 2) {
+    return [{
+      source: 'permits',
+      expected: Math.round(mean),
+      actual: current.permits_updated_24h,
+      deviations: Math.round(deviations * 10) / 10,
+      direction: diff < 0 ? 'drop' : 'spike',
+    }];
+  }
+
+  return [];
+}
+
+// ---------------------------------------------------------------------------
+// Schema Drift Detection
+// ---------------------------------------------------------------------------
+
+export interface SchemaDriftAlert {
+  table: string;
+  previousCount: number;
+  currentCount: number;
+}
+
+/**
+ * Detect schema drift by comparing column counts between two snapshots.
+ */
+export function detectSchemaDrift(
+  current: Record<string, number> | null,
+  previous: Record<string, number> | null
+): SchemaDriftAlert[] {
+  if (!current || !previous) return [];
+
+  const alerts: SchemaDriftAlert[] = [];
+  for (const table of Object.keys(current)) {
+    if (previous[table] != null && current[table] !== previous[table]) {
+      alerts.push({
+        table,
+        previousCount: previous[table],
+        currentCount: current[table],
+      });
+    }
+  }
+  return alerts;
+}
+
+// ---------------------------------------------------------------------------
+// System Health Summary
+// ---------------------------------------------------------------------------
+
+export type HealthLevel = 'green' | 'yellow' | 'red';
+
+export interface SystemHealthSummary {
+  level: HealthLevel;
+  issues: string[];
+  warnings: string[];
+}
+
+/**
+ * Compute overall system health from a snapshot and anomaly/drift data.
+ */
+export function computeSystemHealth(
+  snapshot: DataQualitySnapshot,
+  anomalies: VolumeAnomaly[],
+  schemaDrift: SchemaDriftAlert[]
+): SystemHealthSummary {
+  const issues: string[] = [];
+  const warnings: string[] = [];
+
+  // Check violations
+  if (snapshot.violations_total > 0) {
+    if (snapshot.violations_total >= 100) {
+      issues.push(`${snapshot.violations_total} data quality violations`);
+    } else {
+      warnings.push(`${snapshot.violations_total} data quality violations`);
+    }
+  }
+
+  // Check volume anomalies
+  for (const a of anomalies) {
+    if (a.direction === 'drop') {
+      issues.push(`Volume drop: ${a.source} (${a.actual} vs expected ${a.expected})`);
+    } else {
+      warnings.push(`Volume spike: ${a.source} (${a.actual} vs expected ${a.expected})`);
+    }
+  }
+
+  // Check schema drift
+  if (schemaDrift.length > 0) {
+    warnings.push(`Schema changes detected in ${schemaDrift.length} table(s)`);
+  }
+
+  // Check null rates (flag if >20% of active permits missing critical fields)
+  if (snapshot.active_permits > 0) {
+    const descNullPct = (snapshot.null_description_count / snapshot.active_permits) * 100;
+    if (descNullPct > 20) {
+      warnings.push(`${descNullPct.toFixed(0)}% of permits missing description`);
+    }
+  }
+
+  // Check SLA
+  if (snapshot.sla_permits_ingestion_hours != null && snapshot.sla_permits_ingestion_hours > SLA_TARGETS.permits) {
+    issues.push(`Permits SLA breach: ${snapshot.sla_permits_ingestion_hours.toFixed(1)}h (target: ${SLA_TARGETS.permits}h)`);
+  }
+
+  const level: HealthLevel = issues.length > 0 ? 'red' : warnings.length > 0 ? 'yellow' : 'green';
+  return { level, issues, warnings };
 }

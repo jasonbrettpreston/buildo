@@ -144,11 +144,29 @@ export async function GET() {
       ).catch(() => [{ newest: null }]),
     ]);
 
-    // Pipeline freshness: last run per pipeline from pipeline_runs table
-    const pipelineLastRun: Record<string, { last_run_at: string | null; status: string | null }> = {};
+    // Pipeline freshness: last run per pipeline from pipeline_runs table (extended with observability)
+    const pipelineLastRun: Record<string, {
+      last_run_at: string | null;
+      status: string | null;
+      duration_ms: number | null;
+      error_message: string | null;
+      records_total: number | null;
+      records_new: number | null;
+      records_updated: number | null;
+    }> = {};
     try {
-      const pipelineRows = await query<{ pipeline: string; started_at: Date; status: string }>(
-        `SELECT DISTINCT ON (pipeline) pipeline, started_at, status
+      const pipelineRows = await query<{
+        pipeline: string;
+        started_at: Date;
+        status: string;
+        duration_ms: number | null;
+        error_message: string | null;
+        records_total: number | null;
+        records_new: number | null;
+        records_updated: number | null;
+      }>(
+        `SELECT DISTINCT ON (pipeline) pipeline, started_at, status,
+                duration_ms, error_message, records_total, records_new, records_updated
          FROM pipeline_runs
          ORDER BY pipeline, started_at DESC`
       );
@@ -156,10 +174,31 @@ export async function GET() {
         pipelineLastRun[row.pipeline] = {
           last_run_at: row.started_at ? new Date(row.started_at).toISOString() : null,
           status: row.status,
+          duration_ms: row.duration_ms,
+          error_message: row.error_message,
+          records_total: row.records_total,
+          records_new: row.records_new,
+          records_updated: row.records_updated,
         };
       }
     } catch {
       // pipeline_runs table may not exist yet (migration not applied)
+    }
+
+    // Pipeline schedules from DB
+    const pipelineSchedules: Record<string, { cadence: string; cron_expression: string | null }> = {};
+    try {
+      const scheduleRows = await query<{ pipeline: string; cadence: string; cron_expression: string | null }>(
+        `SELECT pipeline, cadence, cron_expression FROM pipeline_schedules`
+      );
+      for (const row of scheduleRows) {
+        pipelineSchedules[row.pipeline] = {
+          cadence: row.cadence,
+          cron_expression: row.cron_expression,
+        };
+      }
+    } catch {
+      // pipeline_schedules table may not exist yet
     }
 
     const p = (r: { count: string }[] | { count: string }) =>
@@ -196,6 +235,8 @@ export async function GET() {
       newest_coa_date: (Array.isArray(newestCoaResult) ? newestCoaResult[0]?.newest : null) ?? null,
       // Pipeline freshness
       pipeline_last_run: pipelineLastRun,
+      // Pipeline schedules
+      pipeline_schedules: pipelineSchedules,
     });
   } catch (err) {
     console.error('[admin/stats] Error fetching stats:', err);

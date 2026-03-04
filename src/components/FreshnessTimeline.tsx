@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 // ---------------------------------------------------------------------------
 // Pipeline Registry — single source of truth for all tracked pipelines
 // ---------------------------------------------------------------------------
@@ -119,15 +121,21 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
 // Props & helpers
 // ---------------------------------------------------------------------------
 
-interface PipelineRunInfo {
+export interface PipelineRunInfo {
   last_run_at: string | null;
   status: string | null;
+  duration_ms?: number | null;
+  error_message?: string | null;
+  records_total?: number | null;
+  records_new?: number | null;
+  records_updated?: number | null;
 }
 
 export interface FreshnessTimelineProps {
   pipelineLastRun: Record<string, PipelineRunInfo>;
   runningPipelines: Set<string>;
   onTrigger: (slug: string) => void;
+  slaTargets?: Record<string, number>;
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -153,6 +161,19 @@ function formatDate(dateStr: string | null): string {
     hour: 'numeric',
     minute: '2-digit',
   });
+}
+
+export function formatDuration(ms: number | null | undefined): string {
+  if (ms == null) return '';
+  if (ms < 1000) return `${ms}ms`;
+  const secs = Math.floor(ms / 1000);
+  if (secs < 60) return `${secs}s`;
+  const mins = Math.floor(secs / 60);
+  const remSecs = secs % 60;
+  if (mins < 60) return remSecs > 0 ? `${mins}m ${remSecs}s` : `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return remMins > 0 ? `${hrs}h ${remMins}m` : `${hrs}h`;
 }
 
 function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { color: string; label: string } {
@@ -186,7 +207,9 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
 // Component
 // ---------------------------------------------------------------------------
 
-export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger }: FreshnessTimelineProps) {
+export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets }: FreshnessTimelineProps) {
+  const [errorPopover, setErrorPopover] = useState<string | null>(null);
+
   const allSlugs = Object.keys(PIPELINE_REGISTRY);
   const completedCount = allSlugs.filter((s) => pipelineLastRun[s]?.status === 'completed').length;
   const failedCount = allSlugs.filter((s) => pipelineLastRun[s]?.status === 'failed').length;
@@ -330,6 +353,21 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                         {/* Dotted line */}
                         <div className="flex-1 border-b border-dotted border-gray-200" />
 
+                        {/* Records summary */}
+                        {!isRunning && info?.records_total != null && info.records_total > 0 && (
+                          <span className="text-[9px] text-gray-400 tabular-nums shrink-0" title={`${info.records_total} total / ${info.records_new ?? 0} new / ${info.records_updated ?? 0} updated`}>
+                            {info.records_total.toLocaleString()}
+                            {(info.records_new ?? 0) > 0 && <span className="text-green-500"> +{info.records_new}</span>}
+                          </span>
+                        )}
+
+                        {/* Duration */}
+                        {!isRunning && info?.duration_ms != null && (
+                          <span className="text-[9px] text-gray-400 tabular-nums shrink-0">
+                            {formatDuration(info.duration_ms)}
+                          </span>
+                        )}
+
                         {/* Status badge */}
                         {isRunning && (
                           <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">
@@ -337,10 +375,33 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           </span>
                         )}
                         {!isRunning && info?.status === 'failed' && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-50 text-red-600 font-medium">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setErrorPopover(errorPopover === step.slug ? null : step.slug);
+                            }}
+                            className="text-[9px] px-1.5 py-0.5 rounded bg-red-50 text-red-600 font-medium hover:bg-red-100 relative"
+                          >
                             Failed
-                          </span>
+                            {errorPopover === step.slug && info.error_message && (
+                              <div className="absolute z-20 right-0 top-6 w-72 bg-white border border-red-200 rounded-lg shadow-lg p-3 text-left">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-[10px] font-semibold text-red-700">Error Details</span>
+                                  <button onClick={(ev) => { ev.stopPropagation(); setErrorPopover(null); }} className="text-gray-400 hover:text-gray-600 text-xs">&times;</button>
+                                </div>
+                                <pre className="text-[9px] text-gray-600 whitespace-pre-wrap break-words max-h-40 overflow-y-auto font-mono">{info.error_message}</pre>
+                              </div>
+                            )}
+                          </button>
                         )}
+
+                        {/* SLA badge */}
+                        {!isRunning && slaTargets && slaTargets[step.slug] && info?.last_run_at && (() => {
+                          const hoursSince = (Date.now() - new Date(info.last_run_at).getTime()) / (1000 * 60 * 60);
+                          return hoursSince > slaTargets[step.slug] ? (
+                            <span className="text-[8px] px-1 py-0.5 rounded bg-red-100 text-red-600 font-semibold shrink-0">SLA</span>
+                          ) : null;
+                        })()}
 
                         {/* Timestamp */}
                         <span

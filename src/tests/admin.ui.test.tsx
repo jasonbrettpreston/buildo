@@ -754,6 +754,26 @@ describe('Admin Stats Pipeline Freshness', () => {
     );
     expect(source).toContain('pipeline_runs');
   });
+
+  it('admin stats API includes extended pipeline_last_run fields (duration, error, records)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/stats/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('duration_ms');
+    expect(source).toContain('error_message');
+    expect(source).toContain('records_total');
+    expect(source).toContain('records_new');
+    expect(source).toContain('records_updated');
+  });
+
+  it('admin stats API returns pipeline_schedules', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/stats/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('pipeline_schedules');
+  });
 });
 
 describe('Pipeline Trigger Endpoint', () => {
@@ -889,6 +909,98 @@ describe('Massing pipeline chains link-massing after load', () => {
   });
 });
 
+describe('FreshnessTimeline duration and error display', () => {
+  it('exports formatDuration helper', async () => {
+    const mod = await import('@/components/FreshnessTimeline');
+    expect(mod.formatDuration).toBeDefined();
+    expect(typeof mod.formatDuration).toBe('function');
+  });
+
+  it('formatDuration handles milliseconds', async () => {
+    const { formatDuration } = await import('@/components/FreshnessTimeline');
+    expect(formatDuration(500)).toBe('500ms');
+    expect(formatDuration(42000)).toBe('42s');
+    expect(formatDuration(135000)).toBe('2m 15s');
+    expect(formatDuration(3780000)).toBe('1h 3m');
+    expect(formatDuration(null)).toBe('');
+    expect(formatDuration(undefined)).toBe('');
+  });
+
+  it('PipelineRunInfo includes extended fields', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('duration_ms');
+    expect(source).toContain('error_message');
+    expect(source).toContain('records_total');
+    expect(source).toContain('records_new');
+  });
+
+  it('Failed badge is clickable for error popover', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('errorPopover');
+    expect(source).toContain('Error Details');
+  });
+});
+
+describe('ScheduleEditModal', () => {
+  it('ScheduleEditModal component exists', () => {
+    const modalPath = path.join(__dirname, '../components/ScheduleEditModal.tsx');
+    expect(fs.existsSync(modalPath)).toBe(true);
+  });
+
+  it('ScheduleEditModal has cadence dropdown options', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/ScheduleEditModal.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('Daily');
+    expect(source).toContain('Quarterly');
+    expect(source).toContain('Annual');
+    expect(source).toContain('CADENCE_OPTIONS');
+  });
+
+  it('ScheduleEditModal has Save and Cancel buttons', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/ScheduleEditModal.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('Save');
+    expect(source).toContain('Cancel');
+  });
+
+  it('ScheduleEditModal calls onSave with pipeline and cadence', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/ScheduleEditModal.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('onSave(pipeline, cadence)');
+  });
+
+  it('DataQualityDashboard imports and renders ScheduleEditModal', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('ScheduleEditModal');
+    expect(source).toContain('scheduleModal');
+    expect(source).toContain('saveSchedule');
+  });
+
+  it('DataQualityDashboard uses API schedules for getNextScheduledDate', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('pipeline_schedules');
+    expect(source).toMatch(/getNextScheduledDate\([^)]+pipeline_schedules/);
+  });
+});
+
 describe('Pipeline schedules in DataQualityDashboard', () => {
 
   it('PIPELINE_SCHEDULES includes schedule labels', () => {
@@ -912,6 +1024,54 @@ describe('Pipeline schedules in DataQualityDashboard', () => {
 // ---------------------------------------------------------------------------
 // DataSourceCircle Trend Arrow + Newest Record Tests
 // ---------------------------------------------------------------------------
+
+describe('DataSourceCircle quality badges', () => {
+  it('DataSourceCircle accepts volumeAnomaly prop', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('volumeAnomaly');
+    expect(source).toContain('Volume');
+  });
+
+  it('DataSourceCircle shows schema drift badge', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('schemaDrift');
+    expect(source).toContain('Schema Changed');
+  });
+
+  it('DataSourceCircle shows violation badge on hero', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('violationCount');
+    expect(source).toContain('violations');
+  });
+
+  it('DataSourceCircle shows null rates on hero', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('nullRates');
+    expect(source).toContain('Completeness');
+  });
+
+  it('DataQualityDashboard passes anomalies to hero circle', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('volumeAnomaly');
+    expect(source).toContain('violationCount');
+    expect(source).toContain('nullRates');
+  });
+});
 
 describe('DataSourceCircle trend arrow rendering', () => {
   it('renders up arrow when trend > 0', () => {
@@ -982,6 +1142,56 @@ describe('DataSourceCircle latest record date', () => {
       'utf-8'
     );
     expect(source).toMatch(/newestRecord\s*&&|newestRecord\s*!=\s*null|newestRecord\s*!==\s*null/);
+  });
+});
+
+describe('Health Banner in DataQualityDashboard', () => {
+  it('dashboard renders health banner', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('Health Banner');
+    expect(source).toContain('All systems healthy');
+  });
+
+  it('banner shows green/yellow/red states', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('bg-green-50');
+    expect(source).toContain('bg-yellow-50');
+    expect(source).toContain('bg-red-50');
+  });
+
+  it('banner displays issue and warning messages', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('data.health.issues');
+    expect(source).toContain('data.health.warnings');
+  });
+});
+
+describe('SLA badge in FreshnessTimeline', () => {
+  it('FreshnessTimeline accepts slaTargets prop', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('slaTargets');
+    expect(source).toContain('SLA');
+  });
+
+  it('DataQualityDashboard passes SLA_TARGETS to timeline', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('SLA_TARGETS');
+    expect(source).toContain('slaTargets');
   });
 });
 

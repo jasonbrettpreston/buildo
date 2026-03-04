@@ -1,5 +1,7 @@
 'use client';
 
+import type { VolumeAnomaly } from '@/lib/quality/types';
+
 export interface DataSourceCircleProps {
   name: string;
   slug: string;
@@ -21,6 +23,16 @@ export interface DataSourceCircleProps {
   trend?: number | null;
   /** ISO date string of the newest record in this source */
   newestRecord?: string | null;
+  /** Volume anomaly alert for this data source */
+  volumeAnomaly?: VolumeAnomaly | null;
+  /** Whether schema drift was detected for this source */
+  schemaDrift?: boolean;
+  /** Field null rate percentages (for hero circle completeness section) */
+  nullRates?: { field: string; pct: number }[];
+  /** Total violation count (for hero badge) */
+  violationCount?: number;
+  /** Callback when schedule label is clicked */
+  onScheduleClick?: () => void;
 }
 
 function formatCount(n: number): string {
@@ -101,6 +113,11 @@ export function DataSourceCircle({
   fields,
   trend,
   newestRecord,
+  volumeAnomaly,
+  schemaDrift,
+  nullRates,
+  violationCount,
+  onScheduleClick,
 }: DataSourceCircleProps) {
   const health = getHealthColor(accuracy);
   const ringSize = hero ? 140 : 96;
@@ -133,6 +150,25 @@ export function DataSourceCircle({
               </span>
             )}
           </div>
+        </div>
+
+        {/* Quality badges */}
+        <div className="flex flex-wrap gap-1 mt-1 justify-center">
+          {volumeAnomaly && (
+            <span className="text-[8px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-medium">
+              Volume {volumeAnomaly.direction === 'drop' ? '-' : '+'}{Math.abs(Math.round(((volumeAnomaly.actual - volumeAnomaly.expected) / volumeAnomaly.expected) * 100))}%
+            </span>
+          )}
+          {schemaDrift && (
+            <span className="text-[8px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-medium">
+              Schema Changed
+            </span>
+          )}
+          {hero && violationCount != null && violationCount > 0 && (
+            <span className="text-[8px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-medium">
+              {violationCount} violations
+            </span>
+          )}
         </div>
 
         {/* Name + count */}
@@ -171,6 +207,23 @@ export function DataSourceCircle({
           </div>
         )}
 
+        {/* Null rates / Completeness */}
+        {nullRates && nullRates.length > 0 && (
+          <div className="w-full mt-2 pt-2 border-t border-gray-100">
+            <div className="text-[9px] font-medium text-gray-500 uppercase tracking-wider mb-1">Completeness</div>
+            <div className="space-y-0.5">
+              {nullRates.map((nr) => (
+                <div key={nr.field} className="flex justify-between text-[10px]">
+                  <span className="text-gray-500">{nr.field}</span>
+                  <span className={`font-medium tabular-nums ${nr.pct > 20 ? 'text-red-500' : nr.pct > 5 ? 'text-yellow-600' : 'text-green-600'}`}>
+                    {nr.pct.toFixed(1)}% null
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Timestamps */}
         <div className="w-full mt-2 pt-2 border-t border-gray-100 space-y-0.5 text-[10px] text-gray-400">
           <div className="flex justify-between">
@@ -189,7 +242,13 @@ export function DataSourceCircle({
           )}
           <div className="flex justify-between">
             <span>Next</span>
-            <span className="text-gray-600">{nextScheduled}</span>
+            {onScheduleClick ? (
+              <button onClick={(e) => { e.stopPropagation(); onScheduleClick(); }} className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
+                {nextScheduled}
+              </button>
+            ) : (
+              <span className="text-gray-600">{nextScheduled}</span>
+            )}
           </div>
         </div>
 

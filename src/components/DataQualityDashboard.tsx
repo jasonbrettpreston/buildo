@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { DataQualityResponse } from '@/lib/quality/types';
-import { findSnapshotDaysAgo, trendDelta } from '@/lib/quality/types';
+import { findSnapshotDaysAgo, trendDelta, SLA_TARGETS } from '@/lib/quality/types';
 import { DataSourceCircle } from '@/components/DataSourceCircle';
 import { FreshnessTimeline } from '@/components/FreshnessTimeline';
+import { ScheduleEditModal } from '@/components/ScheduleEditModal';
 
 // ---------------------------------------------------------------------------
 // Pipeline schedule constants (shared with admin page)
@@ -41,15 +41,16 @@ const PIPELINE_SCHEDULES: Record<string, { label: string }> = {
   refresh_snapshot: { label: 'Daily' },
 };
 
-function getNextScheduledDate(slug: string): string {
+function getNextScheduledDate(slug: string, apiSchedules?: Record<string, { cadence: string }> | null): string {
   const now = new Date();
-  const schedule = PIPELINE_SCHEDULES[slug];
-  if (!schedule) return 'N/A';
+  // Prefer API schedules, fall back to hardcoded
+  const cadence = apiSchedules?.[slug]?.cadence ?? PIPELINE_SCHEDULES[slug]?.label;
+  if (!cadence) return 'N/A';
 
   const fmt = (d: Date) =>
     d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-  if (schedule.label === 'Daily') {
+  if (cadence === 'Daily') {
     const estHours: Record<string, number> = { permits: 7, coa: 8, builders: 9 };
     const hour = estHours[slug] ?? 7;
     const next = new Date(now);
@@ -58,7 +59,7 @@ function getNextScheduledDate(slug: string): string {
     return fmt(next);
   }
 
-  if (schedule.label === 'Quarterly') {
+  if (cadence === 'Quarterly') {
     const quarterMonths = [0, 3, 6, 9];
     const year = now.getFullYear();
     for (const month of quarterMonths) {
@@ -68,7 +69,7 @@ function getNextScheduledDate(slug: string): string {
     return fmt(new Date(year + 1, 0, 1));
   }
 
-  if (schedule.label === 'Annual') {
+  if (cadence === 'Annual') {
     const thisYear = new Date(now.getFullYear(), 0, 1);
     if (thisYear > now) return fmt(thisYear);
     return fmt(new Date(now.getFullYear() + 1, 0, 1));
@@ -81,7 +82,12 @@ function getNextScheduledDate(slug: string): string {
 // Stats types (for pipeline_last_run from /api/admin/stats)
 // ---------------------------------------------------------------------------
 
-interface PipelineRunInfo { last_run_at: string | null; status: string | null }
+import type { PipelineRunInfo } from '@/components/FreshnessTimeline';
+import type {
+  VolumeAnomaly,
+  SchemaDriftAlert,
+  SystemHealthSummary,
+} from '@/lib/quality/types';
 
 interface AdminStats {
   total_permits: number;
@@ -96,7 +102,17 @@ interface AdminStats {
   newest_permit_date: string | null;
   newest_coa_date: string | null;
   pipeline_last_run: Record<string, PipelineRunInfo>;
+  pipeline_schedules: Record<string, { cadence: string; cron_expression: string | null }>;
   [key: string]: unknown;
+}
+
+interface ExtendedQualityResponse {
+  current: import('@/lib/quality/types').DataQualitySnapshot | null;
+  trends: import('@/lib/quality/types').DataQualitySnapshot[];
+  lastUpdated: string | null;
+  anomalies: VolumeAnomaly[];
+  schemaDrift: SchemaDriftAlert[];
+  health: SystemHealthSummary;
 }
 
 function calcPct(num: number, denom: number): number {
@@ -115,11 +131,12 @@ const POLL_INTERVAL_MS = 5000;
 // ---------------------------------------------------------------------------
 
 export function DataQualityDashboard() {
-  const [data, setData] = useState<DataQualityResponse | null>(null);
+  const [data, setData] = useState<ExtendedQualityResponse | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [runningPipelines, setRunningPipelines] = useState<Set<string>>(new Set());
   const [pipelineError, setPipelineError] = useState<string | null>(null);
+  const [scheduleModal, setScheduleModal] = useState<{ pipeline: string; name: string } | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchData = useCallback(() => {
@@ -179,6 +196,20 @@ export function DataQualityDashboard() {
     }
   }, []);
 
+  const saveSchedule = useCallback(async (pipeline: string, cadence: string) => {
+    const res = await fetch('/api/admin/pipelines/schedules', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pipeline, cadence }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      throw new Error(body.error || 'Failed to save');
+    }
+    // Refresh stats to pick up the new schedule
+    await fetchData();
+  }, [fetchData]);
+
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Loading data quality metrics...</div>;
   }
@@ -234,6 +265,130 @@ export function DataQualityDashboard() {
       {current ? (
         <>
           {/* ============================================================
+              Health Banner — System-wide traffic light + quality trends
+          ============================================================ */}
+          {data?.health && (
+            <div className={`rounded-lg border px-4 py-3 ${
+              data.health.level === 'green'
+                ? 'bg-green-50 border-green-200'
+                : data.health.level === 'yellow'
+                ? 'bg-yellow-50 border-yellow-200'
+                : 'bg-red-50 border-red-200'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-3 h-3 rounded-full shrink-0 ${
+                  data.health.level === 'green' ? 'bg-green-500'
+                    : data.health.level === 'yellow' ? 'bg-yellow-500'
+                    : 'bg-red-500'
+                }`} />
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${
+                    data.health.level === 'green' ? 'text-green-800'
+                      : data.health.level === 'yellow' ? 'text-yellow-800'
+                      : 'text-red-800'
+                  }`}>
+                    {data.health.level === 'green'
+                      ? 'All systems healthy'
+                      : data.health.level === 'yellow'
+                      ? `${data.health.warnings.length} warning${data.health.warnings.length !== 1 ? 's' : ''}`
+                      : `${data.health.issues.length} issue${data.health.issues.length !== 1 ? 's' : ''}`}
+                  </p>
+                  {(data.health.issues.length > 0 || data.health.warnings.length > 0) && (
+                    <div className="mt-1 space-y-0.5">
+                      {data.health.issues.map((issue, i) => (
+                        <p key={`issue-${i}`} className="text-xs text-red-600">{issue}</p>
+                      ))}
+                      {data.health.warnings.map((warn, i) => (
+                        <p key={`warn-${i}`} className="text-xs text-yellow-700">{warn}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Quality trend indicators — 30-day comparisons */}
+              {prev && (
+                <div className="mt-3 pt-3 border-t border-gray-200/50 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {/* Violations trend */}
+                  {(() => {
+                    const curV = current.violations_total;
+                    const prevV = prev.violations_total ?? 0;
+                    const delta = curV - prevV;
+                    return (
+                      <div className="text-center">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">Violations</p>
+                        <p className="text-sm font-semibold tabular-nums text-gray-800">{curV.toLocaleString()}</p>
+                        <p className={`text-[10px] font-medium tabular-nums ${delta < 0 ? 'text-green-600' : delta > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                          {delta < 0 ? '▼' : delta > 0 ? '▲' : '—'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta} vs 30d`}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Completeness trend (avg null rate across 6 fields) */}
+                  {(() => {
+                    const nullSum = current.null_description_count + current.null_builder_name_count +
+                      current.null_est_const_cost_count + current.null_street_num_count +
+                      current.null_street_name_count + current.null_geo_id_count;
+                    const curPct = current.active_permits > 0 ? ((1 - nullSum / (current.active_permits * 6)) * 100) : 100;
+                    const prevNullSum = (prev.null_description_count ?? 0) + (prev.null_builder_name_count ?? 0) +
+                      (prev.null_est_const_cost_count ?? 0) + (prev.null_street_num_count ?? 0) +
+                      (prev.null_street_name_count ?? 0) + (prev.null_geo_id_count ?? 0);
+                    const prevPctVal = prev.active_permits > 0 ? ((1 - prevNullSum / (prev.active_permits * 6)) * 100) : 100;
+                    const delta = Math.round((curPct - prevPctVal) * 10) / 10;
+                    return (
+                      <div className="text-center">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">Completeness</p>
+                        <p className="text-sm font-semibold tabular-nums text-gray-800">{curPct.toFixed(1)}%</p>
+                        <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                          {delta > 0 ? '▲' : delta < 0 ? '▼' : '—'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta}pp vs 30d`}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Volume trend (permits updated 24h) */}
+                  {(() => {
+                    const curVol = current.permits_updated_24h;
+                    const prevVol = prev.permits_updated_24h;
+                    const delta = curVol - prevVol;
+                    const pctChange = prevVol > 0 ? Math.round(((curVol - prevVol) / prevVol) * 100) : 0;
+                    return (
+                      <div className="text-center">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">Volume (24h)</p>
+                        <p className="text-sm font-semibold tabular-nums text-gray-800">{curVol.toLocaleString()}</p>
+                        <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                          {delta > 0 ? '▲' : delta < 0 ? '▼' : '—'} {delta === 0 ? 'unchanged' : `${pctChange > 0 ? '+' : ''}${pctChange}% vs 30d`}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Linkage trend (overall enrichment) */}
+                  {(() => {
+                    const curLinked = current.permits_geocoded + current.permits_with_parcel +
+                      current.permits_with_neighbourhood + current.permits_with_trades + current.permits_with_scope;
+                    const curPct = current.active_permits > 0 ? (curLinked / (current.active_permits * 5)) * 100 : 0;
+                    const prevLinked = prev.permits_geocoded + prev.permits_with_parcel +
+                      prev.permits_with_neighbourhood + prev.permits_with_trades + prev.permits_with_scope;
+                    const prevPctVal = prev.active_permits > 0 ? (prevLinked / (prev.active_permits * 5)) * 100 : 0;
+                    const delta = Math.round((curPct - prevPctVal) * 10) / 10;
+                    return (
+                      <div className="text-center">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">Enrichment</p>
+                        <p className="text-sm font-semibold tabular-nums text-gray-800">{curPct.toFixed(1)}%</p>
+                        <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                          {delta > 0 ? '▲' : delta < 0 ? '▼' : '—'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta}pp vs 30d`}
+                        </p>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ============================================================
               Section 1: Hub-and-Spoke Data Source Diagram
           ============================================================ */}
           <div>
@@ -251,7 +406,7 @@ export function DataQualityDashboard() {
                   count={current.total_permits}
                   total={current.total_permits}
                   lastUpdated={lastRunAt('permits')}
-                  nextScheduled={getNextScheduledDate('permits')}
+                  nextScheduled={getNextScheduledDate('permits', stats?.pipeline_schedules)}
                   onUpdate={() => triggerPipeline('permits')}
                   updating={runningPipelines.has('permits')}
                   hero
@@ -261,6 +416,17 @@ export function DataQualityDashboard() {
                     { label: 'Updated 24h', value: current.permits_updated_24h.toLocaleString() },
                     { label: 'Updated 7d', value: current.permits_updated_7d.toLocaleString() },
                   ]}
+                  volumeAnomaly={data?.anomalies?.find((a) => a.source === 'permits') ?? null}
+                  schemaDrift={(data?.schemaDrift?.length ?? 0) > 0}
+                  violationCount={current.violations_total}
+                  nullRates={current.active_permits > 0 ? [
+                    { field: 'description', pct: (current.null_description_count / current.active_permits) * 100 },
+                    { field: 'builder_name', pct: (current.null_builder_name_count / current.active_permits) * 100 },
+                    { field: 'est_const_cost', pct: (current.null_est_const_cost_count / current.active_permits) * 100 },
+                    { field: 'street_num', pct: (current.null_street_num_count / current.active_permits) * 100 },
+                    { field: 'geo_id', pct: (current.null_geo_id_count / current.active_permits) * 100 },
+                  ] : undefined}
+                  onScheduleClick={() => setScheduleModal({ pipeline: 'permits', name: 'Building Permits' })}
                 />
               </div>
             </div>
@@ -285,7 +451,7 @@ export function DataQualityDashboard() {
                 count={current.permits_geocoded}
                 total={current.active_permits}
                 lastUpdated={lastRunAt('address_points')}
-                nextScheduled={getNextScheduledDate('address_points')}
+                nextScheduled={getNextScheduledDate('address_points', stats?.pipeline_schedules)}
                 onUpdate={() => triggerPipeline('address_points')}
                 updating={runningPipelines.has('address_points')}
                 trend={trendGeo}
@@ -294,7 +460,13 @@ export function DataQualityDashboard() {
                 tiers={[
                   { label: 'Address points', value: stats ? stats.address_points_total.toLocaleString() : '—' },
                   { label: 'Permits linked', value: current.permits_geocoded.toLocaleString() },
+                  { label: 'Unmatched', value: (current.active_permits - current.permits_geocoded).toLocaleString() },
                 ]}
+                nullRates={current.active_permits > 0 ? [
+                  { field: 'street_num', pct: (current.null_street_num_count / current.active_permits) * 100 },
+                  { field: 'street_name', pct: (current.null_street_name_count / current.active_permits) * 100 },
+                ] : undefined}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'address_points', name: 'Address Matching' })}
               />
 
               {/* Parcels */}
@@ -306,7 +478,7 @@ export function DataQualityDashboard() {
                 total={current.active_permits}
                 avgConfidence={current.parcel_avg_confidence}
                 lastUpdated={lastRunAt('parcels')}
-                nextScheduled={getNextScheduledDate('parcels')}
+                nextScheduled={getNextScheduledDate('parcels', stats?.pipeline_schedules)}
                 onUpdate={() => triggerPipeline('parcels')}
                 updating={runningPipelines.has('parcels')}
                 trend={trendParcels}
@@ -316,7 +488,9 @@ export function DataQualityDashboard() {
                   { label: 'Exact address', value: current.parcel_exact_matches.toLocaleString() },
                   { label: 'Name match', value: current.parcel_name_matches.toLocaleString() },
                   { label: 'Spatial', value: current.parcel_spatial_matches.toLocaleString() },
+                  { label: 'Unmatched', value: (current.active_permits - current.permits_with_parcel).toLocaleString() },
                 ]}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'parcels', name: 'Lots (Parcels)' })}
               />
 
               {/* 3D Massing */}
@@ -327,7 +501,7 @@ export function DataQualityDashboard() {
                 count={stats?.permits_with_massing ?? 0}
                 total={current.active_permits}
                 lastUpdated={lastRunAt('massing')}
-                nextScheduled={getNextScheduledDate('massing')}
+                nextScheduled={getNextScheduledDate('massing', stats?.pipeline_schedules)}
                 onUpdate={() => triggerPipeline('massing')}
                 updating={runningPipelines.has('massing')}
                 trend={trendMassing}
@@ -336,7 +510,9 @@ export function DataQualityDashboard() {
                 tiers={[
                   { label: 'Footprints', value: (stats?.building_footprints_total ?? 0).toLocaleString() },
                   { label: 'Parcels w/ bldg', value: (stats?.parcels_with_massing ?? 0).toLocaleString() },
+                  { label: 'Unmatched', value: (current.active_permits - (stats?.permits_with_massing ?? 0)).toLocaleString() },
                 ]}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'massing', name: '3D Massing' })}
               />
 
               {/* Neighbourhoods */}
@@ -347,7 +523,7 @@ export function DataQualityDashboard() {
                 count={current.permits_with_neighbourhood}
                 total={current.active_permits}
                 lastUpdated={lastRunAt('neighbourhoods')}
-                nextScheduled={getNextScheduledDate('neighbourhoods')}
+                nextScheduled={getNextScheduledDate('neighbourhoods', stats?.pipeline_schedules)}
                 onUpdate={() => triggerPipeline('neighbourhoods')}
                 updating={runningPipelines.has('neighbourhoods')}
                 trend={trendNeighbourhoods}
@@ -355,7 +531,9 @@ export function DataQualityDashboard() {
                 fields={['neighbourhood_id', 'avg_income', 'tenure_%', 'construction_era']}
                 tiers={[
                   { label: 'Total hoods', value: (stats?.neighbourhoods_total ?? 0).toLocaleString() },
+                  { label: 'Unmatched', value: (current.active_permits - current.permits_with_neighbourhood).toLocaleString() },
                 ]}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'neighbourhoods', name: 'Neighbourhoods' })}
               />
             </div>
 
@@ -382,7 +560,7 @@ export function DataQualityDashboard() {
                 total={current.coa_total}
                 avgConfidence={current.coa_avg_confidence}
                 lastUpdated={lastRunAt('coa')}
-                nextScheduled={getNextScheduledDate('coa')}
+                nextScheduled={getNextScheduledDate('coa', stats?.pipeline_schedules)}
                 onUpdate={() => triggerPipeline('coa')}
                 updating={runningPipelines.has('coa')}
                 trend={trendCoa}
@@ -393,7 +571,9 @@ export function DataQualityDashboard() {
                   { label: 'Pre-permit files', value: (stats?.coa_upcoming ?? 0).toLocaleString() },
                   { label: 'High conf (>=0.80)', value: current.coa_high_confidence.toLocaleString() },
                   { label: 'Low conf (<0.50)', value: current.coa_low_confidence.toLocaleString() },
+                  { label: 'Unlinked', value: (current.coa_total - current.coa_linked).toLocaleString() },
                 ]}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'coa', name: 'CoA Linked' })}
               />
 
               {/* Builder Profiles */}
@@ -404,7 +584,7 @@ export function DataQualityDashboard() {
                 count={current.permits_with_builder}
                 total={current.active_permits}
                 lastUpdated={lastRunAt('builders')}
-                nextScheduled={getNextScheduledDate('builders')}
+                nextScheduled={getNextScheduledDate('builders', stats?.pipeline_schedules)}
                 onUpdate={() => triggerPipeline('builders')}
                 updating={runningPipelines.has('builders')}
                 trend={trendBuilders}
@@ -417,6 +597,12 @@ export function DataQualityDashboard() {
                   { label: 'Email', value: current.builders_with_email.toLocaleString() },
                   { label: 'Website', value: current.builders_with_website.toLocaleString() },
                 ]}
+                nullRates={current.builders_total > 0 ? [
+                  { field: 'phone', pct: ((current.builders_total - current.builders_with_phone) / current.builders_total) * 100 },
+                  { field: 'email', pct: ((current.builders_total - current.builders_with_email) / current.builders_total) * 100 },
+                  { field: 'website', pct: ((current.builders_total - current.builders_with_website) / current.builders_total) * 100 },
+                ] : undefined}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'builders', name: 'Builder Profiles' })}
               />
 
               {/* Scope Class (residential / commercial / mixed-use) */}
@@ -427,7 +613,7 @@ export function DataQualityDashboard() {
                 count={current.permits_with_scope}
                 total={current.active_permits}
                 lastUpdated={lastRunAt('classify_scope_class')}
-                nextScheduled={getNextScheduledDate('classify_scope_class')}
+                nextScheduled={getNextScheduledDate('classify_scope_class', stats?.pipeline_schedules)}
                 onUpdate={() => triggerPipeline('classify_scope_class')}
                 updating={runningPipelines.has('classify_scope_class')}
                 trend={trendScopeClass}
@@ -437,7 +623,9 @@ export function DataQualityDashboard() {
                   { label: 'Residential', value: (current.scope_project_type_breakdown?.residential ?? 0).toLocaleString() },
                   { label: 'Commercial', value: (current.scope_project_type_breakdown?.commercial ?? 0).toLocaleString() },
                   { label: 'Mixed-Use', value: (current.scope_project_type_breakdown?.['mixed-use'] ?? 0).toLocaleString() },
+                  { label: 'Unclassified', value: (current.active_permits - current.permits_with_scope).toLocaleString() },
                 ]}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'classify_scope_class', name: 'Scope Class' })}
               />
 
               {/* Scope Tags (architectural feature tags, excluding use-types) */}
@@ -448,20 +636,22 @@ export function DataQualityDashboard() {
                 count={current.permits_with_detailed_tags ?? 0}
                 total={current.active_permits}
                 lastUpdated={lastRunAt('classify_scope_tags')}
-                nextScheduled={getNextScheduledDate('classify_scope_tags')}
+                nextScheduled={getNextScheduledDate('classify_scope_tags', stats?.pipeline_schedules)}
                 onUpdate={() => triggerPipeline('classify_scope_tags')}
                 updating={runningPipelines.has('classify_scope_tags')}
                 trend={trendScopeTags}
                 relationship="derived from"
                 fields={['scope_tags']}
-                tiers={
-                  current.scope_tags_top
+                tiers={[
+                  ...(current.scope_tags_top
                     ? Object.entries(current.scope_tags_top)
                         .sort(([, a], [, b]) => b - a)
                         .slice(0, 3)
                         .map(([tag, count]) => ({ label: tag, value: count.toLocaleString() }))
-                    : []
-                }
+                    : []),
+                  { label: 'Untagged', value: (current.active_permits - (current.permits_with_detailed_tags ?? 0)).toLocaleString() },
+                ]}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'classify_scope_tags', name: 'Scope Tags' })}
               />
 
               {/* Trade Classification — Residential */}
@@ -472,7 +662,7 @@ export function DataQualityDashboard() {
                 count={current.trade_residential_classified ?? 0}
                 total={current.trade_residential_total ?? 0}
                 lastUpdated={lastRunAt('classify_permits')}
-                nextScheduled={getNextScheduledDate('classify_permits')}
+                nextScheduled={getNextScheduledDate('classify_permits', stats?.pipeline_schedules)}
                 onUpdate={() => triggerPipeline('classify_permits')}
                 updating={runningPipelines.has('classify_permits')}
                 trend={trendTradesRes}
@@ -481,7 +671,9 @@ export function DataQualityDashboard() {
                 tiers={[
                   { label: 'Classified', value: (current.trade_residential_classified ?? 0).toLocaleString() },
                   { label: 'Total residential', value: (current.trade_residential_total ?? 0).toLocaleString() },
+                  { label: 'Unclassified', value: ((current.trade_residential_total ?? 0) - (current.trade_residential_classified ?? 0)).toLocaleString() },
                 ]}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'classify_permits', name: 'Trades (Residential)' })}
               />
 
               {/* Trade Classification — Commercial / Mixed-Use */}
@@ -492,7 +684,7 @@ export function DataQualityDashboard() {
                 count={current.trade_commercial_classified ?? 0}
                 total={current.trade_commercial_total ?? 0}
                 lastUpdated={lastRunAt('classify_permits')}
-                nextScheduled={getNextScheduledDate('classify_permits')}
+                nextScheduled={getNextScheduledDate('classify_permits', stats?.pipeline_schedules)}
                 onUpdate={() => triggerPipeline('classify_permits')}
                 updating={runningPipelines.has('classify_permits')}
                 trend={trendTradesCom}
@@ -501,7 +693,9 @@ export function DataQualityDashboard() {
                 tiers={[
                   { label: 'Classified', value: (current.trade_commercial_classified ?? 0).toLocaleString() },
                   { label: 'Total commercial + mixed-use', value: (current.trade_commercial_total ?? 0).toLocaleString() },
+                  { label: 'Unclassified', value: ((current.trade_commercial_total ?? 0) - (current.trade_commercial_classified ?? 0)).toLocaleString() },
                 ]}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'classify_permits', name: 'Trades (Commercial)' })}
               />
 
               {/* Scope Tags placeholder for 5th column balance — shows overall enrichment */}
@@ -533,17 +727,29 @@ export function DataQualityDashboard() {
             pipelineLastRun={stats?.pipeline_last_run ?? {}}
             runningPipelines={runningPipelines}
             onTrigger={triggerPipeline}
+            slaTargets={SLA_TARGETS}
           />
 
           {/* Schedule notice */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 flex items-start gap-2">
-            <span className="text-amber-500 text-sm mt-0.5">!</span>
-            <p className="text-xs text-amber-700">
-              <span className="font-medium">Scheduling is manual only.</span>{' '}
-              Pipelines must be triggered via the buttons above. Automated Cloud Scheduler is not yet deployed.
-              Schedule labels (Daily, Quarterly, Annual) indicate target refresh cadence.
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 flex items-start gap-2">
+            <span className="text-blue-500 text-sm mt-0.5">i</span>
+            <p className="text-xs text-blue-700">
+              <span className="font-medium">Pipeline schedules are editable.</span>{' '}
+              Click the &quot;Next&quot; date on any data source to change its cadence (Daily / Quarterly / Annual).
+              Pipelines can be triggered manually via &quot;Update Now&quot; or through the timeline chain buttons.
             </p>
           </div>
+
+          {/* Schedule edit modal */}
+          {scheduleModal && (
+            <ScheduleEditModal
+              pipeline={scheduleModal.pipeline}
+              pipelineName={scheduleModal.name}
+              currentCadence={stats?.pipeline_schedules?.[scheduleModal.pipeline]?.cadence ?? PIPELINE_SCHEDULES[scheduleModal.pipeline]?.label ?? 'Daily'}
+              onSave={saveSchedule}
+              onClose={() => setScheduleModal(null)}
+            />
+          )}
         </>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
