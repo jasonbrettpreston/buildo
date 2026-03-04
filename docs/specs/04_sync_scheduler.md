@@ -233,3 +233,23 @@ N/A -- the scheduler is a backend/infrastructure concern. The `GET /api/sync` en
 | I07 | `POST /api/sync` with valid path returns sync_run | Response contains `sync_run` object with final status |
 | I08 | Dead-letter topic receives messages after 3 failures | Message lands in dead-letter Pub/Sub topic |
 | I09 | Failure alert email is sent | Email contains sync run ID, error message, and timestamp |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/sync/`
+- `src/app/api/sync/route.ts`
+- `functions/src/index.ts`
+- `functions/src/config.ts`
+- `src/tests/sync.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/permits/field-mapping.ts`**: Governed by Spec 02. Do not modify field mapping.
+- **`src/app/api/permits/`**: Governed by Spec 06. Do not modify permit API routes.
+- **`migrations/`**: Governed by Spec 01. Raise a query if schema must change.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 02 (Data Ingestion)**: Triggers `runSync()` orchestrator.
+- Relies on **Spec 01 (Database Schema)**: Reads/writes `sync_runs` table.

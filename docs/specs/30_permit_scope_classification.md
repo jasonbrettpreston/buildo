@@ -369,3 +369,27 @@ receive their own scope tags through direct classification or BLD→companion
 propagation. This separation of concerns prevents tag pollution and double-counting
 of leads. The residential systems gap (1,158 SRP permits mentioning HVAC/plumbing/
 electrical) is resolved by design — system scope is delegated to companion permits.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/classification/scope.ts`
+- `scripts/classify-scope.js`
+- `migrations/019_permit_scope.sql`
+- `migrations/020_quality_scope.sql`
+- `migrations/021_scope_source.sql`
+- `migrations/035_scope_tags_snapshot.sql`
+- `migrations/036_detailed_tags_snapshot.sql`
+- `src/tests/scope.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/classifier.ts`**: Governed by Spec 08. Trade classification is separate from scope classification.
+- **`src/lib/sync/`**: Governed by Spec 02/04. Do not modify ingestion pipeline.
+- **`src/lib/classification/trades.ts`**: Governed by Spec 07. Do not modify trade taxonomy.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Uses `permits.work`, `permits.permit_type`, `permits.description` fields.
+- Consumed by **Spec 08 (Classification)**: Scope tags feed the tag-trade matrix for classification.
+- Consumed by **Spec 34 (Market Metrics)**: Scope breakdown used in market metrics analysis.

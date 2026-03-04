@@ -54,6 +54,12 @@ AUTHENTICATED -> LOGGING_OUT -> UNAUTHENTICATED
 as public/authenticated/admin. Admin API routes require `__session` cookie (JWT) or `X-Admin-Key`
 header. Full JWT verification via Firebase Admin SDK is planned but not yet connected.
 
+**Dev mode:** Set `NEXT_PUBLIC_DEV_MODE=true` in `.env` to bypass all auth checks locally.
+Middleware auto-injects a dev session cookie (`dev.buildo.local`). Login page shows a
+"Continue as Dev" button that navigates directly to `/admin` (or the redirect target).
+Dev mode is checked via `isDevMode()` in `route-guard.ts` — only activates when the
+env var is exactly `"true"`.
+
 | File | Purpose | Status |
 |------|---------|--------|
 | `src/lib/auth/config.ts` | Firebase client SDK initialization (replaces planned `firebase.ts`) | Implemented |
@@ -64,7 +70,7 @@ header. Full JWT verification via Firebase Admin SDK is planned but not yet conn
 | `src/app/login/page.tsx` | Login page (no auth route group) | Implemented |
 | `src/components/auth/LoginForm.tsx` | Combined login/signup form with Google auth (replaces planned separate components) | Implemented |
 | `src/tests/auth.logic.test.ts` | Basic auth type tests | Implemented |
-| `src/tests/middleware.logic.test.ts` | Route classification, session cookie validation, file existence tests (30 tests) | Implemented |
+| `src/tests/middleware.logic.test.ts` | Route classification, session cookie validation, dev mode, file existence tests (35 tests) | Implemented |
 | `src/lib/auth/firebase-admin.ts` | Firebase Admin SDK (server-side token verification) | Planned |
 | `src/app/api/auth/session/route.ts` | Server-side session cookie management | Planned |
 | `src/components/auth/AuthGuard.tsx` | Client-side auth state wrapper | Planned |
@@ -153,3 +159,28 @@ header. Full JWT verification via Firebase Admin SDK is planned but not yet conn
 * [ ] **Rule 4:** Middleware correctly blocks unauthenticated access to protected routes.
 * [ ] **Rule 5:** Middleware allows access to public routes without authentication.
 * [ ] **Rule 6:** Token refresh endpoint updates session cookie with new token.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/auth/config.ts`
+- `src/lib/auth/session.ts`
+- `src/lib/auth/types.ts`
+- `src/lib/auth/route-guard.ts`
+- `src/app/login/page.tsx`
+- `src/components/auth/LoginForm.tsx`
+- `src/middleware.ts`
+- `src/tests/auth.logic.test.ts`
+- `src/tests/middleware.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/sync/`**: Governed by Spec 02/04. Do not modify ingestion pipeline.
+- **`migrations/`**: Governed by Spec 01. Raise a query if schema must change.
+
+### Cross-Spec Dependencies
+- Foundation for all authenticated features. All specs requiring auth import from `src/lib/auth/` (read-only).
+- Consumed by **Spec 14 (Onboarding)**: Onboarding reads user profile after auth.
+- Consumed by **Spec 26 (Admin)**: Admin routes use route-guard for access control.

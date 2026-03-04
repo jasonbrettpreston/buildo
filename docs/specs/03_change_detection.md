@@ -194,3 +194,22 @@ N/A -- change detection is a backend process. The permit detail API endpoint (`G
 | I06 | `last_seen_at` is touched on unchanged permit | Timestamp is updated even when no fields changed |
 | I07 | Re-classification fires on change | `permit_trades` rows reflect the new permit data after an update |
 | I08 | Transaction rollback on error | If the diff or history insert throws, the permit row is not updated (data_hash unchanged) |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/permits/hash.ts`
+- `src/lib/permits/diff.ts`
+- `src/tests/permits.logic.test.ts`
+- `src/tests/sync.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/permits/field-mapping.ts`**: Governed by Spec 02. Do not modify field mapping.
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/sync/ingest.ts`**: Governed by Spec 02. Do not modify stream parser.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Uses `permits.data_hash` column and `permit_history` table.
+- Consumed by **Spec 02 (Data Ingestion)**: `processBatch()` calls hash/diff functions from this spec.

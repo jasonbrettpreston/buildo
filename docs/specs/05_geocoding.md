@@ -212,3 +212,24 @@ N/A -- geocoding is a backend batch process. The map UI that consumes the coordi
 | I05 | API errors do not crash the batch | `ZERO_RESULTS` or network errors are logged; processing continues to next permit |
 | I06 | Google API key is loaded from environment | Not hardcoded; read from `process.env.GOOGLE_GEOCODING_API_KEY` or similar |
 | I07 | Address-changed permits get re-geocoded | After change detection nulls the coordinates, the geocoder picks them up |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/permits/geocode.ts`
+- `src/lib/parcels/address.ts`
+- `scripts/geocode-permits.js`
+- `src/tests/geocoding.logic.test.ts`
+- `src/tests/parcels.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/sync/`**: Governed by Spec 02/04. Do not modify ingestion pipeline.
+- **`migrations/`**: Governed by Spec 01. Raise a query if schema must change.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Writes to `permits.latitude`, `permits.longitude`, `permits.geocoded_at`.
+- Consumed by **Spec 20 (Map View)**: Map uses geocoded coordinates for plotting.
+- Consumed by **Spec 27 (Neighbourhood Profiles)**: Point-in-polygon matching uses geocoded coordinates.

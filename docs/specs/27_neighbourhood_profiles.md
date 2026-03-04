@@ -84,3 +84,28 @@ Generated from Census metrics: `"High-income, owner-occupied, built 1961-1980"`
 - **Logic** (`neighbourhood.logic.test.ts`): classifyIncome, classifyTenure, generateSummary, formatIncome, formatPct, formatPeriod
 - **UI** (`ui.test.tsx`): NeighbourhoodProfile display formatting, summary validation
 - **Infra** (`api.infra.test.ts`): neighbourhood response shape, field validation
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/neighbourhoods/summary.ts`
+- `src/lib/neighbourhoods/types.ts`
+- `src/components/permits/NeighbourhoodProfile.tsx`
+- `scripts/load-neighbourhoods.js`
+- `scripts/link-neighbourhoods.js`
+- `migrations/013_neighbourhoods.sql`
+- `migrations/014_permit_neighbourhood.sql`
+- `src/tests/neighbourhood.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/permits/geocode.ts`**: Governed by Spec 05. Geocoding is consumed, not modified.
+- **`src/lib/parcels/`**: Governed by Spec 29. Do not modify parcel matching.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Uses `neighbourhoods` table and `permits.neighbourhood_id` FK.
+- Relies on **Spec 05 (Geocoding)**: Point-in-polygon matching uses geocoded permit coordinates.
+- Consumed by **Spec 18 (Permit Detail)**: Permit detail page displays neighbourhood context.
+- Consumed by **Spec 34 (Market Metrics)**: Neighbourhood wealth tiers use income data from this module.

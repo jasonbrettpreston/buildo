@@ -208,3 +208,25 @@ interface Trade {
 | API response | `GET /api/trades` returns 200 with `{ trades: [...], count: 32 }` |
 | API caching | Response includes appropriate cache headers |
 | No auth required | `GET /api/trades` succeeds without authentication token |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/classification/trades.ts`
+- `migrations/004_trades.sql`
+- `migrations/028_new_trades.sql`
+- `migrations/029_rename_trades.sql`
+- `src/tests/classification.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/classifier.ts`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/classification/scoring.ts`**: Governed by Spec 10. Do not modify lead scoring.
+- **`src/lib/classification/phases.ts`**: Governed by Spec 09. Do not modify phase model.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Uses `trades` table schema.
+- Consumed by **Spec 08 (Classification)**: Classification engine reads trade data from this module.
+- Consumed by **Spec 09 (Phases)**: Phase model maps trades to construction phases.
+- Consumed by **Spec 10 (Scoring)**: Lead scoring uses trade data for score calculation.

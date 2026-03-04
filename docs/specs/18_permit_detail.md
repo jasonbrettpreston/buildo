@@ -322,3 +322,25 @@ Timeline, Change History, Builder info (name/phone/email/website/rating/WSIB), T
 * [ ] **Rule 3:** 400 response handled: error message shown for invalid ID format.
 * [ ] **Rule 4:** Google Maps embed loads with correct coordinates.
 * [ ] **Rule 5:** Save lead action writes to Firestore and updates UI to reflect saved state.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/app/permits/[id]/page.tsx`
+- `src/components/permits/BuildingMassing.tsx`
+- `src/components/permits/NeighbourhoodProfile.tsx`
+- `src/components/permits/PropertyPhoto.tsx`
+- `src/tests/permits.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/app/api/permits/[id]/route.ts`**: Governed by Spec 06. API is consumed, not modified.
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/builders/`**: Governed by Spec 11. Builder data is consumed, not modified.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 06 (Data API)**: Consumes `GET /api/permits/{id}` endpoint.
+- Relies on **Spec 11 (Builder Enrichment)**: Displays builder contact info.
+- Relies on **Spec 27 (Neighbourhood Profiles)**: Displays neighbourhood context.
+- Relies on **Spec 31 (Building Massing)**: Displays building footprint data.

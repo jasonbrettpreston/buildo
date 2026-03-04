@@ -118,3 +118,17 @@ Structure type inference only applies to **broad-scope** permits (BLD, CMB, COM)
 4. **Multi-trade permits are common.** A single BLD permit may legitimately need 10+ trades.
 5. **Classification rules are updatable.** As the system learns from user feedback and data patterns, rules and confidence levels should be refined.
 6. **Narrow-scope permits may have related BLD permits.** A PLB permit often has a companion BLD permit for the same address. The BLD permit covers the broader trades.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- This is a documentation-only spec. No source files are directly governed.
+- Informs rules in `src/lib/classification/rules.ts` and `src/lib/classification/classifier.ts` (governed by Spec 08).
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- All `src/` code changes must go through **Spec 08** workflows.
+
+### Cross-Spec Dependencies
+- Supplements **Spec 08 (Classification Engine)**: Defines assumptions that inform classification rules.

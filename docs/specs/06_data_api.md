@@ -344,3 +344,25 @@ N/A -- these are API endpoints only. UI tests apply to the frontend components t
 | I09 | `GET /api/permits/[id]` returns null builder when no match | Builder is `null` when `builder_name` does not match any `builders.name_normalized` |
 | I10 | All endpoints return 500 with error message on DB failure | Error response shape: `{ error: string }` |
 | I11 | Parameterized queries prevent SQL injection | Injecting `'; DROP TABLE permits; --` as a filter value does not execute destructive SQL |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/app/api/permits/route.ts`
+- `src/app/api/permits/[id]/route.ts`
+- `src/app/api/permits/geo/route.ts`
+- `src/app/api/trades/route.ts`
+- `src/app/api/sync/route.ts`
+- `src/tests/api.infra.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/sync/ingest.ts`**: Governed by Spec 02. Do not modify stream parser.
+- **`migrations/`**: Governed by Spec 01. Raise a query if schema must change.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Queries all table schemas.
+- Relies on **Spec 07 (Trade Taxonomy)**: Returns trade data from `trades` table.
+- Consumed by **Specs 15-20**: All dashboard and UI pages consume these API endpoints (read-only).

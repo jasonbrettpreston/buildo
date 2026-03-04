@@ -181,6 +181,71 @@ The chain orchestrator (`scripts/run-chain.js`) enables end-to-end execution of 
 **Dashboard polling:**
 - DataQualityDashboard polling (5s interval) auto-discovers any running pipeline steps from `pipeline_last_run`, including steps spawned by the chain orchestrator (not just user-triggered ones)
 
+### 2.8 Trend Arrows on DataSourceCircle
+
+Each enrichment-source `DataSourceCircle` displays a 30-day trend arrow computed from historical snapshots. The Building Permits hero card does **not** show a trend (active/total % is not a meaningful enrichment metric).
+
+1. **`findSnapshotDaysAgo(trends, 30)`** — finds the snapshot closest to 30 days ago in the `trends` array. Requires a **minimum 7-day gap** — snapshots less than 7 days old are skipped to avoid comparing today's snapshot against itself (which always yields delta 0). Returns null if no qualifying snapshot exists.
+2. **`trendDelta(currentPct, previousPct)`** — returns `current - previous` (positive = up, negative = down, null = no data)
+3. Arrow is rendered inline below the accuracy percentage inside the progress ring:
+   - Positive: green `▲ +X.X vs 30d`
+   - Negative: red `▼ -X.X vs 30d`
+   - Zero: gray `— 0.0 vs 30d` (flat, shown to confirm the feature is active)
+   - Null: no indicator (insufficient historical data)
+
+The "vs 30d" suffix clarifies that the comparison is against ~30 days ago.
+
+**Utility functions** (in `src/lib/quality/types.ts`):
+```typescript
+findSnapshotDaysAgo(trends: DataQualitySnapshot[], daysAgo: number): DataQualitySnapshot | null
+trendDelta(current: number, previous: number | null): number | null
+```
+
+### 2.9 Latest Record Dates
+
+The dashboard displays the most recent record date for key data sources to verify data currency:
+
+- **Building Permits:** `MAX(first_seen_at)` from `permits` table → shown as "Latest Record → Mar 3, 2026". Uses `first_seen_at` (ingestion timestamp) instead of `issued_date` because "Under Review" permits have `issued_date = NULL` — using `issued_date` would show a stale date from the last *approved* permit rather than the most recently ingested data.
+- **CoA Applications:** `MAX(hearing_date)` from `coa_applications` table → shown as "Latest Record → Feb 28, 2026"
+
+Added to `GET /api/admin/stats` response:
+```typescript
+newest_permit_date: string | null   // ISO date of most recent permit issued_date
+newest_coa_date: string | null      // ISO date of most recent CoA hearing_date
+```
+
+The `DataSourceCircle` component accepts an optional `newestRecord` prop. When provided, a "Latest Record → {formatted date}" row appears between "Updated" and "Next" in the timestamps section. The date is shown as a formatted calendar date (e.g. "Feb 28, 2026") rather than relative time, so admins can immediately verify the data is current.
+
+### 2.10 Live CKAN Fetching for Permits
+
+The permit loader (`scripts/load-permits.js`) fetches live from the Toronto Open Data CKAN datastore API by default, ensuring the dashboard always reflects the most current data.
+
+| Mode | Flag | Source | Behaviour |
+|------|------|--------|-----------|
+| **Live CKAN** (default) | none | `datastore_search` API | Paginated fetch (10K per page) from resource `6d0229af...` |
+| **Local file** | `--file <path>` | JSON file on disk | Reads and parses the specified file |
+
+- CKAN base URL: `ckan0.cf.opendata.inter.prod-toronto.ca`
+- Resource ID: `6d0229af-bc54-46de-9c2b-26759b01dd05` (Active Building Permits)
+- Pagination: 10,000 records per request via `limit` + `offset` params
+- All existing `mapRecord`, `insertBatch`, dedup, and `sync_runs` logging unchanged
+- `--file` flag accepts a path argument for offline/testing use
+
+### 2.11 Incremental CoA Loading
+
+The CoA loader (`scripts/load-coa.js`) supports two modes:
+
+| Mode | Flag | Resources Fetched | Records |
+|------|------|------------------|---------|
+| **Incremental** (default) | none | Active only | Last 90 days via `datastore_search_sql` WHERE `HEARING_DATE >= cutoff` |
+| **Full** | `--full` | Active + Closed | All records via paginated `datastore_search` |
+
+- Incremental mode uses the CKAN SQL endpoint for efficient filtering
+- Only the Active resource (`51fd09cd...`) is queried — the Closed resource doesn't receive new records
+- Cutoff: 90 days before the current date
+- All existing dedup, mapping, and upsert logic is unchanged
+- Mode is logged at startup for operational visibility
+
 ---
 
 ## 3. Associated Files
@@ -197,7 +262,7 @@ The chain orchestrator (`scripts/run-chain.js`) enables end-to-end execution of 
 | `src/components/DataSourceCircle.tsx` | Reusable circle node with progress ring, tier breakdown, timestamps, Update Now button | Implemented |
 | `src/components/FreshnessTimeline.tsx` | Data source staleness timeline + pipeline chain definitions | Implemented |
 | `scripts/run-chain.js` | Sequential chain orchestrator — runs pipeline steps in order with tracking | Implemented |
-| `src/tests/quality.logic.test.ts` | 28 tests — score calculations, metric extraction, shape validation | Implemented |
+| `src/tests/quality.logic.test.ts` | 35 tests — score calculations, metric extraction, shape validation, trendDelta, findSnapshotDaysAgo | Implemented |
 | `src/tests/quality.infra.test.ts` | 20 tests — API response shape, schema constraints, validation | Implemented |
 | `src/tests/chain.logic.test.ts` | 18 tests — chain definitions, slug extraction, file existence, completeness | Implemented |
 | `src/tests/factories.ts` | `createMockDataQualitySnapshot()` factory function | Implemented |
@@ -323,7 +388,7 @@ const EFFECTIVENESS_WEIGHTS = {
 
 ## 7. Triad Test Criteria
 
-### A. Logic Layer (`quality.logic.test.ts` — 28 tests)
+### A. Logic Layer (`quality.logic.test.ts` — 35 tests)
 
 | ID | Test | Assertion |
 |----|------|-----------|
@@ -355,6 +420,14 @@ const EFFECTIVENESS_WEIGHTS = {
 | L26 | coa_high + coa_low <= coa_linked | Confidence splits don't exceed total |
 | L27 | Freshness counts in order: 24h <= 7d <= 30d | Monotonic increase |
 | L28 | last_sync_status is valid enum | running, completed, or failed |
+| L29 | trendDelta returns positive when current > previous | 85.5 - 80.0 = 5.5 |
+| L30 | trendDelta returns negative when current < previous | 72.3 - 80.0 = -7.7 |
+| L31 | trendDelta returns null when previous is null | No previous data available |
+| L32 | trendDelta returns 0 when values are equal | 50.0 - 50.0 = 0 |
+| L33 | findSnapshotDaysAgo returns closest snapshot (min 7d gap) | Picks snapshot nearest to target, skipping recent |
+| L34 | findSnapshotDaysAgo returns null for empty array | Empty trends array → null |
+| L35 | findSnapshotDaysAgo returns null when only recent snapshots | Snapshots < 7 days old skipped → null |
+| L36 | findSnapshotDaysAgo returns snapshot at least 7 days old | Skips 2-day-old, returns 10-day-old |
 
 ### B. UI Layer
 
@@ -371,6 +444,14 @@ const EFFECTIVENESS_WEIGHTS = {
 | Refresh button triggers POST | Calls `/api/quality/refresh` and reloads |
 | Loading state shows while fetching | "Loading..." message visible |
 | Empty state shows when no snapshots | Message with refresh prompt |
+| DataSourceCircle renders up arrow for positive trend | Green ▲ +X.X vs 30d |
+| DataSourceCircle renders down arrow for negative trend | Red ▼ -X.X vs 30d |
+| DataSourceCircle renders flat indicator when trend is 0 | Gray — 0.0 vs 30d |
+| DataSourceCircle hides arrow when trend is null | No arrow element rendered |
+| DataSourceCircle shows "vs 30d" comparison period label | Period suffix present |
+| DataSourceCircle renders latest record with "Latest Record" label | Formatted date shown |
+| DataSourceCircle shows formatted date (not relative time) | formatShortDate used |
+| DataSourceCircle hides latest record when null | No "Latest Record" row rendered |
 
 ### C. Infra Layer (`quality.infra.test.ts` — 20 tests)
 
@@ -396,3 +477,30 @@ const EFFECTIVENESS_WEIGHTS = {
 | I18 | UNIQUE on snapshot_date | Constraint documented |
 | I19 | 6 matching process columns exist | permits_with_trades through coa_linked |
 | I20 | Migration 015 DDL expectations | Table and constraint names verified |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/quality/metrics.ts`
+- `src/lib/quality/types.ts`
+- `src/app/api/quality/route.ts`
+- `src/app/api/quality/refresh/route.ts`
+- `src/app/admin/data-quality/page.tsx`
+- `src/components/DataQualityDashboard.tsx`
+- `src/components/DataSourceCircle.tsx`
+- `src/components/FreshnessTimeline.tsx`
+- `scripts/refresh-snapshot.js`
+- `src/tests/quality.logic.test.ts`
+- `src/tests/quality.infra.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/classifier.ts`**: Governed by Spec 08. Quality measures classification but does not modify it.
+- **`src/lib/sync/ingest.ts`**: Governed by Spec 02. Quality measures sync but does not modify it.
+- **`src/lib/builders/enrichment.ts`**: Governed by Spec 11. Quality measures enrichment but does not modify it.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Uses `data_quality_snapshots` table.
+- Relies on **Spec 26 (Admin)**: Quality dashboard linked from admin navigation.
+- Measures all data linking specs: Spec 08 (trades), Spec 11 (builders), Spec 29 (parcels), Spec 27 (neighbourhoods), Spec 05 (geocoding), Spec 12 (CoA).

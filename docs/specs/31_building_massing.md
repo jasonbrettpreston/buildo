@@ -205,3 +205,30 @@ UNIQUE (parcel_id, building_id)
 ### C. Infra Layer
 - API route returns massing data when linked
 - API route returns massing=null when not linked
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/massing/geometry.ts`
+- `src/lib/massing/types.ts`
+- `src/components/permits/BuildingMassing.tsx`
+- `scripts/load-massing.js`
+- `scripts/link-massing.js`
+- `migrations/023_building_footprints.sql`
+- `migrations/024_parcel_buildings.sql`
+- `migrations/025_quality_massing.sql`
+- `migrations/026_parcel_buildings_confidence.sql`
+- `src/tests/massing.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/parcels/address.ts`**: Governed by Spec 05/29. Parcel address matching is consumed, not modified.
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/parcels/geometry.ts`**: Governed by Spec 29. Parcel geometry is consumed, not modified.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Uses `building_footprints` and `parcel_buildings` tables.
+- Relies on **Spec 29 (Spatial Parcel Matching)**: Links buildings to parcels using parcel data.
+- Consumed by **Spec 18 (Permit Detail)**: Permit detail page displays building massing data.
+- Consumed by **Spec 28 (Data Quality)**: Massing coverage tracked in quality dashboard.

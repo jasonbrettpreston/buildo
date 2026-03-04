@@ -354,3 +354,18 @@ When specific description keywords are present, they limit the scope of inferred
 | Date | Change | Reason |
 |------|--------|--------|
 | 2026-02-14 | Initial version | Document all classification assumptions for transparency and future refinement |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- This is a documentation-only spec. No source files are directly governed.
+- Informs keyword mappings in `src/lib/classification/tag-trade-matrix.ts` (governed by Spec 08).
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- All `src/` code changes must go through **Spec 08** workflows.
+
+### Cross-Spec Dependencies
+- Supplements **Spec 08 (Classification Engine)**: Defines keyword-to-trade mappings for the tag-trade matrix.
+- Supplements **Spec 08b (Classification Assumptions)**: Builds on the assumption framework.

@@ -1,32 +1,18 @@
-# Active Task: Code Health — Expansive Audit Fixes (WF3)
+# Active Task: Merge Workflows + AI Automations + Atomic Git Strategy
 **Status:** Complete
-
-## Context
-* **Goal:** Improve codebase health scores from `docs/reports/expansive_code_health_audit.md`
-* **Source:** 8-metric rubric audit; focus on metrics scoring below 4/5
+**Workflow:** WF2 — Feature Enhancement
 
 ## Results
-| Metric | Before | After |
-|--------|--------|-------|
-| Type Safety | 4.5/5 | **5/5** |
-| Modularity & Coupling | 5/5 | 5/5 |
-| Linting & Code Hygiene | 1.5/5 | **5/5** |
-| Logic Complexity | 4/5 | **4.5/5** |
-| Testing Coverage | 4.5/5 | 4.5/5 |
-| Security & Authorization | 1/5 | **3/5** |
-| Database Performance | 5/5 | 5/5 |
-| Specification Alignment | 3/5 | 3/5 |
+- **13 workflows → Core 5 Pillars** (WF1, WF2, WF3, WF5, WF11)
+- **635 → 325 → 209 lines** (67% total reduction from original)
+- Merged: WF4→WF2, WF8+WF9→WF1/WF2, WF13→WF1/WF2, WF6+WF7+WF12→WF5
+- Added Execution Order Constraint (4-step chain-of-thought)
+- Added Allowed Commands table (12 pre-defined scripts)
+- Added auto-lint-fix to all Green Light steps
+- Added Atomic Git Commit Strategy (conventional commits + spec traceability)
+- Created `scripts/ai-env-check.mjs` (pre-flight environment check)
+- Updated `scripts/task-init.mjs` to Core 5 only (rejects old WF numbers)
 
-**Overall: 33.5/40 → 37/40**
-
-## Completed Steps
-- [x] npm audit fix — patched 4 of 10 vulnerabilities
-- [x] Created `src/lib/auth/route-guard.ts` — pure route classification
-- [x] Created `src/middleware.ts` — blocks unauthenticated admin/mutation API access
-- [x] Created `src/tests/middleware.logic.test.ts` — 30 tests
-- [x] Extracted admin types/helpers to `src/lib/admin/types.ts` + `helpers.ts`
-- [x] Reduced admin page from 721→569 lines
-- [x] Added API route export verification tests (25 tests)
-- [x] Green light: 1,325 tests passing, 0 TS errors, 0 ESLint errors
-- [x] Updated specs: 13_auth.md, 26_admin.md
-- [x] Updated audit report with new scores
+## Verification
+- 0 TypeScript errors
+- 1327 tests passing (29 files)

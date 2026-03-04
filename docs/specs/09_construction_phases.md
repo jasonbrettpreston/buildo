@@ -260,3 +260,21 @@ const PHASES: PhaseInfo[] = [
 | Query performance | Phase computation in SQL/application layer adds < 5ms per query |
 | Timezone consistency | `issued_date` comparisons use UTC throughout |
 | Cache invalidation | Phase computation reflects current date, not cached stale date |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/classification/phases.ts`
+- `src/tests/classification.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/classifier.ts`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/classification/scoring.ts`**: Governed by Spec 10. Do not modify lead scoring.
+- **`src/lib/classification/trades.ts`**: Governed by Spec 07. Do not modify trade taxonomy.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 07 (Trade Taxonomy)**: Reads trade data for phase-trade mapping.
+- Relies on **Spec 08 (Classification)**: Classification runs before phase assignment.
+- Consumed by **Spec 10 (Lead Scoring)**: Phase match is a scoring factor.

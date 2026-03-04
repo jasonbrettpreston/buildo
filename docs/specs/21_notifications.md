@@ -269,3 +269,27 @@ interface Notification {
 | Dedup constraint | Inserting duplicate (user_id, permit_num, type, date) raises unique violation |
 | Polling endpoint | `GET /api/notifications?unread=true` returns unread notifications within 200ms |
 | Digest scheduler | Cloud Scheduler fires at 07:00 ET, triggers digest Cloud Function |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/notifications/email.ts`
+- `src/lib/notifications/matcher.ts`
+- `src/lib/notifications/push.ts`
+- `src/lib/notifications/repository.ts`
+- `src/lib/notifications/types.ts`
+- `src/app/api/notifications/route.ts`
+- `src/components/notifications/NotificationBell.tsx`
+- `src/tests/notifications.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/sync/`**: Governed by Spec 02/04. Do not modify ingestion pipeline.
+- **`migrations/`**: Governed by Spec 01. Raise a query if schema must change.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Uses `notifications` table.
+- Relies on **Spec 07 (Trade Taxonomy)**: Matches notifications to user trade preferences.
+- Relies on **Spec 13 (Auth)**: Reads user profile and notification preferences.

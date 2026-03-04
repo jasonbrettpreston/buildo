@@ -262,3 +262,21 @@ match /invites/{code} {
 | Invite link routing | `/invite/{code}` correctly routes to acceptance page or signup |
 | Enterprise plan check | Firestore rule validates user's subscription plan before team creation |
 | Rate limiting | Maximum 20 invites per team per hour to prevent abuse |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/teams/types.ts`
+- `src/tests/teams.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/auth/`**: Governed by Spec 13. Auth logic is read-only.
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/subscription/`**: Governed by Spec 25. Subscription gating is read-only.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 13 (Auth)**: Uses user profiles for team membership.
+- Relies on **Spec 25 (Subscription)**: Team features gated to Enterprise plan.
+- Consumed by **Spec 16 (Company Dashboard)**: Company dashboard uses team data.

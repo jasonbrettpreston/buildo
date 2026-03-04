@@ -301,3 +301,22 @@ Static GeoJSON file loaded at `/public/data/ward-boundaries.geojson`:
 * [ ] **Rule 3:** Geo query performance: bounding box query with spatial index returns within 1 second for full dataset.
 * [ ] **Rule 4:** Ward boundary GeoJSON loads from static file and parses correctly.
 * [ ] **Rule 5:** Viewport cache: previously loaded markers are not re-fetched on minor pan adjustments.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/app/map/page.tsx`
+- `src/app/api/permits/geo/route.ts`
+- `src/tests/map.ui.test.tsx`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/sync/`**: Governed by Spec 02/04. Do not modify ingestion pipeline.
+- **`src/lib/permits/geocode.ts`**: Governed by Spec 05. Geocoding is consumed, not modified.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 05 (Geocoding)**: Uses `permits.latitude` / `permits.longitude` for map plotting.
+- Relies on **Spec 06 (Data API)**: Consumes `GET /api/permits/geo` endpoint.
+- Relies on **Spec 13 (Auth)**: Reads user preferences for default map filters.

@@ -48,3 +48,26 @@ Pure utility functions and types extracted from the API route for testability (N
 
 ## Tests — `market-metrics.logic.test.ts`
 Validates migration file, formatting helpers, category grouping, trend calculation, and wealth-tier response shape (tier ordering, labels, threshold alignment with `classifyIncome()`).
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/app/admin/market-metrics/page.tsx`
+- `src/app/api/admin/market-metrics/route.ts`
+- `src/lib/market-metrics/helpers.ts`
+- `migrations/034_mv_monthly_permit_stats.sql`
+- `migrations/037_trade_by_usetype.sql`
+- `src/tests/market-metrics.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/quality/`**: Governed by Spec 28. Quality dashboard is a separate spec.
+- **`src/lib/neighbourhoods/summary.ts`**: Governed by Spec 27. Neighbourhood data is consumed, not modified.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Queries permits, trades, and neighbourhood tables.
+- Relies on **Spec 26 (Admin)**: Market metrics linked from admin navigation.
+- Relies on **Spec 27 (Neighbourhood Profiles)**: Uses neighbourhood income tiers for wealth analysis.
+- Relies on **Spec 30 (Scope Classification)**: Uses scope tags for project type breakdown.

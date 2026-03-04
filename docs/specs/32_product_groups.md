@@ -246,3 +246,24 @@ interface ProductMatch {
 | Foreign key integrity | All `product_id` values reference valid product groups |
 | API response | `GET /api/products` returns 200 with `{ products: [...], count: 16 }` |
 | Tag-matrix coverage | All product slugs in tag-product matrix exist in `products.ts` |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/classification/products.ts`
+- `src/lib/classification/tag-product-matrix.ts`
+- `src/app/api/products/route.ts`
+- `migrations/031_product_groups.sql`
+- `src/tests/classification.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/classifier.ts`**: Governed by Spec 08. Trade classification is separate.
+- **`src/lib/classification/trades.ts`**: Governed by Spec 07. Trade taxonomy is read-only.
+- **`src/lib/classification/tag-trade-matrix.ts`**: Governed by Spec 08. Trade matrix is separate from product matrix.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 07 (Trade Taxonomy)**: Product groups map to trades.
+- Relies on **Spec 08 (Classification)**: Product classification uses scope tags from classification engine.
+- Relies on **Spec 30 (Scope Classification)**: Scope tags feed the tag-product matrix.

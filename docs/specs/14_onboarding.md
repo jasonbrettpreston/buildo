@@ -186,3 +186,21 @@ SKIP on steps 3 and 4 applies defaults and advances.
 * [ ] **Rule 3:** `onboarding_completed` flag set to `true` in `/users/{uid}` on final step completion.
 * [ ] **Rule 4:** Google Places Autocomplete loads and returns Toronto addresses.
 * [ ] **Rule 5:** Push notification permission request triggers browser prompt.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/app/onboarding/page.tsx`
+- `src/components/onboarding/OnboardingWizard.tsx`
+- `src/tests/onboarding.ui.test.tsx`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/auth/`**: Governed by Spec 13. Do not modify auth logic.
+- **`src/lib/classification/trades.ts`**: Governed by Spec 07. Read-only (trade list for selection step).
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 13 (Auth)**: Reads user profile, writes onboarding preferences.
+- Relies on **Spec 07 (Trade Taxonomy)**: Reads trade list for trade selection step (read-only).

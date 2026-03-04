@@ -308,3 +308,23 @@ const CSV_COLUMNS: CSVColumn[] = [
 | Content-Disposition header | Response includes correct filename in header |
 | Content-Type header | CSV returns `text/csv`, PDF returns `application/pdf` |
 | Auth middleware | Unauthenticated export requests return 401 |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/export/csv.ts`
+- `src/lib/export/pdf.ts`
+- `src/tests/export.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/app/api/permits/`**: Governed by Spec 06. API is consumed, not modified.
+- **`src/lib/auth/`**: Governed by Spec 13. Do not modify auth logic.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Queries permit data for export.
+- Relies on **Spec 06 (Data API)**: Consumes API endpoints for filtered data.
+- Relies on **Spec 13 (Auth)**: Export gated to Pro/Enterprise plans.
+- Relies on **Spec 19 (Search & Filter)**: Exports respect active filter criteria.

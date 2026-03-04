@@ -337,3 +337,28 @@ interface ParsedAddress {
 | Sync retry | CKAN API failure triggers retry with exponential backoff |
 | Daily sync schedule | CoA sync runs daily alongside permit sync |
 | Data integrity | Foreign key to permits (via linked_permit_num) is validated |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/coa/linker.ts`
+- `src/lib/coa/pre-permits.ts`
+- `src/lib/coa/repository.ts`
+- `src/lib/coa/types.ts`
+- `src/app/api/coa/route.ts`
+- `scripts/load-coa.js`
+- `scripts/link-coa.js`
+- `src/tests/coa.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/permits/field-mapping.ts`**: Governed by Spec 02. Do not modify permit field mapping.
+- **`migrations/`**: Governed by Spec 01. Raise a query if schema must change.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Uses `coa_applications` table.
+- Relies on **Spec 05 (Geocoding)**: Address matching uses geocoded coordinates for fallback.
+- Consumed by **Spec 19 (Search & Filter)**: Pre-permit source toggle uses CoA data.
+- Consumed by **Spec 28 (Data Quality)**: CoA linking metrics tracked in quality dashboard.

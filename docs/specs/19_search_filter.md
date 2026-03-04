@@ -231,3 +231,22 @@ Query Parameters:
 * [ ] **Rule 4:** Saved search write: saving a search creates document in Firestore at `/users/{uid}/savedSearches/`.
 * [ ] **Rule 5:** Saved search load: loading a saved search populates filter state and triggers search.
 * [ ] **Rule 6:** AbortController: new search request cancels previous in-flight request.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/app/search/page.tsx`
+- `src/components/search/FilterPanel.tsx`
+- `src/tests/search.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/app/api/permits/route.ts`**: Governed by Spec 06. API is consumed, not modified.
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/auth/`**: Governed by Spec 13. Do not modify auth logic.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 06 (Data API)**: Consumes `GET /api/permits` with filter parameters.
+- Relies on **Spec 12 (CoA Integration)**: Pre-permit source toggle uses CoA data.
+- Relies on **Spec 13 (Auth)**: Reads user preferences for default filters.

@@ -316,3 +316,28 @@ interface BuilderContact {
 | Rate limiting | Batch enrichment respects 1-second delay between batches |
 | Builder-permit link | Permit record references builder by builder_id or name_normalized |
 | Re-enrichment | Builders older than 90 days queued for re-enrichment |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/builders/enrichment.ts`
+- `src/lib/builders/normalize.ts`
+- `src/lib/builders/repository.ts`
+- `src/app/api/builders/route.ts`
+- `src/app/api/builders/[id]/route.ts`
+- `src/app/api/admin/builders/route.ts`
+- `scripts/enrich-builders.js`
+- `scripts/extract-builders.js`
+- `src/tests/builders.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/sync/`**: Governed by Spec 02/04. Do not modify ingestion pipeline.
+- **`migrations/`**: Governed by Spec 01. Raise a query if schema must change.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Uses `builders` and `builder_contacts` tables.
+- Relies on **Spec 02 (Data Ingestion)**: Builder names are extracted from ingested `permits.builder_name`.
+- Consumed by **Spec 18 (Permit Detail)**: Permit detail page displays builder info.

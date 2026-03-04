@@ -358,3 +358,23 @@ Product: Buildo Enterprise
 | Environment isolation | Test mode Stripe keys used in staging, live keys in production |
 | Webhook retry handling | Stripe retries on 5xx response; handler is idempotent |
 | HST tax calculation | Invoice includes 13% HST for Ontario-based customers |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/subscription/plans.ts`
+- `src/tests/subscription.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/auth/`**: Governed by Spec 13. Auth logic is read-only.
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/app/api/permits/`**: Governed by Spec 06. API is consumed, not modified.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 13 (Auth)**: Uses user identity for subscription association.
+- Consumed by **Spec 21 (Notifications)**: Notification channels gated by plan.
+- Consumed by **Spec 22 (Teams)**: Team features gated to Enterprise plan.
+- Consumed by **Spec 23 (Analytics)**: Analytics gated to Pro/Enterprise plans.
+- Consumed by **Spec 24 (Export)**: Export gated to Pro/Enterprise plans.

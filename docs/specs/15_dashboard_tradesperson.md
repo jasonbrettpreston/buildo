@@ -172,3 +172,27 @@ The existing API response is used. When `trade_slug` is provided, the response i
 * [ ] **Rule 3:** Firestore load: saved permits for user are loaded and their status reflected on permit cards.
 * [ ] **Rule 4:** Infinite scroll: next page loads when scroll threshold is reached.
 * [ ] **Rule 5:** Filter change cancels in-flight API request and issues new one.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/app/dashboard/page.tsx`
+- `src/components/permits/PermitCard.tsx`
+- `src/components/permits/PermitFeed.tsx`
+- `src/components/permits/SavedPermitsPipeline.tsx`
+- `src/components/ui/ScoreBadge.tsx`
+- `src/components/ui/Badge.tsx`
+- `src/tests/dashboard.ui.test.tsx`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/app/api/permits/`**: Governed by Spec 06. API is consumed, not modified.
+- **`src/lib/auth/`**: Governed by Spec 13. Do not modify auth logic.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 06 (Data API)**: Consumes `GET /api/permits` endpoint.
+- Relies on **Spec 10 (Lead Scoring)**: Sorts permits by lead score.
+- Relies on **Spec 13 (Auth)**: Reads user trade preferences for filtering.
+- Extended by **Spec 16 (Company Dashboard)** and **Spec 17 (Supplier Dashboard)**.

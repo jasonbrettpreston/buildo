@@ -200,3 +200,21 @@ Left sidebar shows:
 * [ ] **Rule 3:** Firestore write: creating a bid writes to `/companies/{companyId}/bids/{bidId}`.
 * [ ] **Rule 4:** Firestore security rules: team member can only read/write within their company.
 * [ ] **Rule 5:** Invitation flow: creating invitation writes to Firestore and updates company on acceptance.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/app/dashboard/page.tsx` (company view extension)
+- `src/tests/dashboard.ui.test.tsx`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/auth/`**: Governed by Spec 13. Do not modify auth logic.
+- **`src/components/permits/PermitCard.tsx`**: Governed by Spec 15. Shared component — do not modify without running UI regression tests.
+
+### Cross-Spec Dependencies
+- Extends **Spec 15 (Tradesperson Dashboard)**: Builds on the same dashboard page and permit feed.
+- Relies on **Spec 22 (Team Management)**: Uses team data for multi-user aggregation.
+- Relies on **Spec 13 (Auth)**: Reads company profile and team member data.

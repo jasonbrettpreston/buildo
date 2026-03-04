@@ -459,3 +459,21 @@ N/A -- the database schema has no visual component. UI tests apply to features t
 | I06 | Verify trade seed is idempotent | Running `004_trades.sql` twice still yields 20 rows (ON CONFLICT DO NOTHING) |
 | I07 | Verify connection pool handles concurrent queries | Issue 10 parallel `SELECT 1` queries -- all succeed |
 | I08 | Verify `query<T>()` returns typed rows | TypeScript compile check -- result rows match `Permit` interface |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/db/client.ts`
+- `src/lib/permits/types.ts`
+- `migrations/*.sql`
+- `scripts/migrate.js`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification logic.
+- **`src/app/`**: Governed by Specs 06, 13, 15-20, 26. Do not modify API routes or pages.
+- **`src/lib/sync/`**: Governed by Spec 02/04. Do not modify ingestion pipeline.
+
+### Cross-Spec Dependencies
+- Foundation schema for all downstream specs. All other specs may import and read types from `src/lib/permits/types.ts` but may not alter them without updating this spec first.

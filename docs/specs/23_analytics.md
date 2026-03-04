@@ -310,3 +310,22 @@ interface DeltaValue {
 | Plan gating | Free plan users receive 403 with upgrade message |
 | Ward GeoJSON loading | Static ward boundary file loads correctly (< 500KB) |
 | Concurrent requests | Multiple simultaneous analytics requests do not cause connection pool exhaustion |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/analytics/queries.ts`
+- `src/tests/analytics.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/app/api/permits/`**: Governed by Spec 06. API is consumed, not modified.
+- **`src/lib/auth/`**: Governed by Spec 13. Do not modify auth logic.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Queries permits, trades, and builder tables.
+- Relies on **Spec 06 (Data API)**: May consume existing API endpoints for data.
+- Relies on **Spec 07 (Trade Taxonomy)**: Uses trade data for demand analysis.
+- Relies on **Spec 13 (Auth)**: Analytics gated to Pro/Enterprise plans.

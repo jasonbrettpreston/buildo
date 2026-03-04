@@ -12,11 +12,9 @@
 > "As an admin, I want to monitor data pipeline health, manage trade classification rules, and see system metrics."
 
 **Acceptance Criteria:**
-- [x] Admin dashboard at `/admin` shows hierarchical Data Health Overview for all 7 data pipelines
-- [x] Health cards display record counts, freshness, pipeline schedules, and "Update Now" triggers
+- [x] Admin dashboard at `/admin` is a navigation hub with links to Data Quality and Market Metrics
 - [x] Pipeline trigger system supports 24 pipeline slugs (21 individual + 3 chain orchestrators)
 - [x] Data Quality Dashboard at `/admin/data-quality` shows accuracy, coverage, and trend analysis
-- [x] Sync history table displays last 20 sync runs with stats and duration
 - [x] Market Metrics Dashboard at `/admin/market-metrics` (Spec 34)
 - [ ] *(Planned)* Admin routes protected by role-based access control
 - [ ] *(Planned)* Trade Rule Editor with full CRUD and live testing
@@ -514,3 +512,29 @@ interface SystemMetrics {
 | Rule CRUD operations | Logic + Infra | Requires rule editor UI |
 | Enrichment retry / retry limit | Logic | Requires enrichment queue |
 | Pipeline trigger / 409 conflict | Infra | Integration test |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/app/admin/page.tsx`
+- `src/app/api/admin/stats/route.ts`
+- `src/app/api/admin/pipelines/[slug]/route.ts`
+- `src/app/api/admin/rules/route.ts`
+- `src/app/api/admin/sync/route.ts`
+- `src/lib/admin/helpers.ts`
+- `src/lib/admin/types.ts`
+- `scripts/run-chain.js`
+- `src/tests/admin.ui.test.tsx`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/classifier.ts`**: Governed by Spec 08. Admin may trigger classification but not modify the engine.
+- **`src/lib/sync/ingest.ts`**: Governed by Spec 02. Admin may trigger sync but not modify the pipeline.
+- **`src/lib/quality/`**: Governed by Spec 28. Quality dashboard is a separate spec.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Queries `pipeline_runs` and aggregate stats.
+- Relies on **Spec 13 (Auth)**: Admin access control via route-guard.
+- Consumed by **Spec 28 (Data Quality)**: Quality dashboard linked from admin nav.
+- Consumed by **Spec 34 (Market Metrics)**: Market metrics linked from admin nav.

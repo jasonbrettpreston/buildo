@@ -222,3 +222,25 @@ N/A -- the ingestion pipeline has no visual component. The `POST /api/sync` endp
 | I06 | `runSync()` records `duration_ms` | Value is a positive integer |
 | I07 | A single bad record does not abort the batch | Transaction rolls back for that record; `stats.errors` increments; remaining records process |
 | I08 | `POST /api/sync` without `file_path` returns 400 | Response body contains `{ error: "file_path is required" }` |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/sync/ingest.ts`
+- `src/lib/permits/field-mapping.ts`
+- `src/lib/sync/process.ts`
+- `src/app/api/sync/route.ts`
+- `scripts/load-permits.js`
+- `src/tests/permits.logic.test.ts`
+- `src/tests/sync.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/permits/hash.ts`**: Governed by Spec 03. Do not modify change detection logic.
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`migrations/`**: Governed by Spec 01. Raise a query if schema must change.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Imports `Permit`, `RawPermitRecord` from `src/lib/permits/types.ts` (read-only).
+- Relies on **Spec 03 (Change Detection)**: `processBatch()` calls `computePermitHash()` and `diffPermitFields()`.

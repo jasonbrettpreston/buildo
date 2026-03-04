@@ -13,7 +13,19 @@ function countTestsInFile(filePath) {
 }
 
 function auditSpecs() {
-    const files = fs.readdirSync(specsDir).filter(f => f.endsWith('.md'));
+    // Support --spec=NN_name to audit a single spec
+    const specArg = process.argv.find(a => a.startsWith('--spec='));
+    const specFilter = specArg ? specArg.split('=')[1] : null;
+
+    let files = fs.readdirSync(specsDir).filter(f => f.endsWith('.md'));
+    if (specFilter) {
+        files = files.filter(f => f.includes(specFilter));
+        if (files.length === 0) {
+            console.error(`No spec file matching "${specFilter}" found in ${specsDir}`);
+            process.exit(1);
+        }
+        console.log(`Auditing ${files.length} spec(s) matching "${specFilter}"`);
+    }
 
     let reportMd = `# Complete Codebase vs. Specification Audit Report\n\n`;
     reportMd += `This report programmatically evaluates all ${files.length} system specifications against the codebase, checking for file implementation status and test coverage based on the requested rubric.\n\n`;

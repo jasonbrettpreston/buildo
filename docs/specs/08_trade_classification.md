@@ -321,3 +321,26 @@ interface TradeMappingRule {
 | Foreign key integrity | All `trade_id` values in rules reference valid trades (32 trades) |
 | Batch performance | 1,000 permits classified in under 10 seconds |
 | Tag-matrix coverage | All 30 tag keys map to valid trade slugs present in `trades.ts` |
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/classification/classifier.ts`
+- `src/lib/classification/rules.ts`
+- `src/lib/classification/tag-trade-matrix.ts`
+- `scripts/classify-permits.js`
+- `scripts/reclassify-all.js`
+- `src/tests/classification.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/scoring.ts`**: Governed by Spec 10. Do not modify lead scoring.
+- **`src/lib/classification/phases.ts`**: Governed by Spec 09. Do not modify phase model.
+- **`src/lib/sync/`**: Governed by Spec 02/04. Do not modify ingestion pipeline.
+- **`src/lib/classification/trades.ts`**: Governed by Spec 07. Do not add/remove trade slugs.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 07 (Trade Taxonomy)**: Reads trade slugs and IDs from `trades.ts`.
+- Relies on **Spec 01 (Database Schema)**: Writes to `permit_trades` table.
+- Relies on **Spec 30 (Scope Classification)**: Uses scope tags from `permits.scope_tags` for tag-trade matrix lookup.

@@ -219,3 +219,21 @@ GROUP BY t.slug, t.name
 * [ ] **Rule 3:** Builder enrichment data access: builder records include phone, email, website when available.
 * [ ] **Rule 4:** SQL aggregation query executes within 2 seconds for full dataset.
 * [ ] **Rule 5:** Geographic clustering falls back to ward grouping when lat/lng data is missing.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/app/dashboard/page.tsx` (supplier view extension)
+- `src/tests/dashboard.ui.test.tsx`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/auth/`**: Governed by Spec 13. Do not modify auth logic.
+- **`src/components/permits/PermitCard.tsx`**: Governed by Spec 15. Shared component — do not modify without running UI regression tests.
+
+### Cross-Spec Dependencies
+- Extends **Spec 15 (Tradesperson Dashboard)**: Builds on the same dashboard page.
+- Relies on **Spec 07 (Trade Taxonomy)**: Maps trades to material categories for supplier view.
+- Relies on **Spec 13 (Auth)**: Reads supplier profile and preferences.

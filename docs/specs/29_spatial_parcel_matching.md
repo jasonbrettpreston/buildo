@@ -239,3 +239,29 @@ N/A -- parcel linking is a backend batch process.
 Note: Steps 4-5 use Toronto's free Address Points dataset to geocode permits
 via their `geo_id` field (ADDRESS_POINT_ID), eliminating the need for any paid
 geocoding API. ~96.9% of permits have `geo_id` and can be geocoded at zero cost.
+
+---
+
+## Operating Boundaries
+
+### Target Files (Modify / Create)
+- `src/lib/parcels/geometry.ts`
+- `src/lib/parcels/types.ts`
+- `scripts/load-parcels.js`
+- `scripts/link-parcels.js`
+- `scripts/load-address-points.js`
+- `migrations/016_parcel_centroids.sql`
+- `migrations/018_address_points.sql`
+- `migrations/022_parcel_irregularity.sql`
+- `src/tests/parcels.logic.test.ts`
+
+### Out-of-Scope Files (DO NOT TOUCH)
+- **`src/lib/permits/geocode.ts`**: Governed by Spec 05. Geocoding is consumed, not modified.
+- **`src/lib/classification/`**: Governed by Spec 08. Do not modify classification engine.
+- **`src/lib/massing/`**: Governed by Spec 31. Building massing is a separate spec.
+
+### Cross-Spec Dependencies
+- Relies on **Spec 01 (Database Schema)**: Uses `parcels` and `permit_parcels` tables.
+- Relies on **Spec 05 (Geocoding)**: Spatial matching uses geocoded permit coordinates.
+- Consumed by **Spec 31 (Building Massing)**: Massing links buildings to parcels from this module.
+- Consumed by **Spec 28 (Data Quality)**: Parcel coverage metrics tracked in quality dashboard.
