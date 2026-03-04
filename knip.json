@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/app/**/*.{ts,tsx}"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}"
+  ],
+  "ignore": [
+    "src/tests/**"
+  ],
+  "ignoreDependencies": [
+    "tailwindcss",
+    "@vitejs/plugin-react",
+    "exceljs",
+    "shapefile",
+    "csv-parse"
+  ]
+}

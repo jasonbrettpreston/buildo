@@ -31,7 +31,7 @@ function auditSpecs() {
     reportMd += `This report programmatically evaluates all ${files.length} system specifications against the codebase, checking for file implementation status and test coverage based on the requested rubric.\n\n`;
 
     reportMd += `## Audit Rubric\n`;
-    reportMd += `- **Spec Alignment [1-5]:** Evaluated based on whether the "Associated Files" mandated by the spec actually exist in the codebase.\n`;
+    reportMd += `- **Spec Alignment [1-5]:** Evaluated based on whether the "Operating Boundaries > Target Files" mandated by the spec actually exist in the codebase.\n`;
     reportMd += `- **Testing Coverage [1-5]:** Evaluated based on the volume of unit/logic tests implemented for the specific component.\n`;
     reportMd += `- **Testing Appropriateness:** [PASS] if tests exist and utilize the Vitest logic patterns. [FAIL/CAUTION] if tests are missing.\n\n`;
 
@@ -94,7 +94,7 @@ function auditSpecs() {
         let foundTestFiles = [];
 
         // Also check if the markdown explicitly mentions a test file
-        const explicitTestMatch = [...content.matchAll(/(src\/tests\/[a-zA-Z0-9_\-\.\/]+\.test\.ts)/g)];
+        const explicitTestMatch = [...content.matchAll(/(src\/tests\/[a-zA-Z0-9_\-\.\/]+\.test\.tsx?)/g)];
         explicitTestMatch.forEach(m => {
             possibleTestFiles.push(path.join(projectRoot, m[1]));
         });

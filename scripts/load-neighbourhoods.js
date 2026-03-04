@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
-const XLSX = require('xlsx');
+const ExcelJS = require('exceljs');
 
 const BOUNDARIES_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/fc443770-ef0a-4025-9c2c-2cb558bfab00/resource/0719053b-28b7-48ea-b863-068823a93aaa/download/neighbourhoods-4326.geojson';
@@ -146,10 +146,30 @@ async function loadBoundaries(geojsonPath) {
 async function loadProfiles(xlsxPath) {
   console.log('Step 2: Loading Census profiles from XLSX...');
 
-  const workbook = XLSX.readFile(xlsxPath);
-  const sheetName = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(xlsxPath);
+  const sheet = workbook.worksheets[0];
+  const sheetName = sheet.name;
+
+  // Convert ExcelJS sheet to array-of-objects (like xlsx sheet_to_json)
+  const headers = [];
+  sheet.getRow(1).eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    headers[colNumber] = cell.value != null ? String(cell.value) : `_${colNumber}`;
+  });
+  const rows = [];
+  sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+    if (rowNumber === 1) return; // skip header
+    const obj = {};
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const key = headers[colNumber] || `_${colNumber}`;
+      obj[key] = cell.value != null ? cell.value : '';
+    });
+    // Fill missing columns with default ''
+    for (const h of headers) {
+      if (h && !(h in obj)) obj[h] = '';
+    }
+    rows.push(obj);
+  });
 
   console.log(`  Sheet "${sheetName}" has ${rows.length} rows`);
 
