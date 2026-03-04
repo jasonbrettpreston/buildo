@@ -48,8 +48,9 @@ export const TIER_1_RULES: TradeMappingRule[] = [
 
 // ---------------------------------------------------------------------------
 // Tier 2: WORK field match (high confidence)
+// @deprecated — replaced by tag-trade-matrix.ts. Kept as local reference only.
 // ---------------------------------------------------------------------------
-export const TIER_2_RULES: TradeMappingRule[] = [
+const TIER_2_RULES: TradeMappingRule[] = [
   rule(7,  2, 'work', 'Re-Roofing',             0.85, 9, 18),
   rule(7,  2, 'work', 'Re-Cladding',            0.80, 9, 18),
   rule(2,  2, 'work', 'Underpinning',           0.85, 0, 6),
@@ -76,7 +77,7 @@ export const TIER_2_RULES: TradeMappingRule[] = [
 // plans. Confidence is lower (0.50-0.65) as these are estimates that may be
 // refined as the rule engine improves over time.
 // ---------------------------------------------------------------------------
-export const STRUCTURE_TYPE_RULES: TradeMappingRule[] = [
+const STRUCTURE_TYPE_RULES: TradeMappingRule[] = [
   // Small residential (SFD-*) → typical residential trades
   rule(5,  2, 'structure_type', 'SFD',               0.55, 3, 9),   // framing
   rule(7,  2, 'structure_type', 'SFD',               0.50, 9, 18),  // roofing
@@ -127,7 +128,7 @@ export const STRUCTURE_TYPE_RULES: TradeMappingRule[] = [
 // ---------------------------------------------------------------------------
 // Tier 3: DESCRIPTION keyword/regex match (moderate confidence)
 // ---------------------------------------------------------------------------
-export const TIER_3_RULES: TradeMappingRule[] = [
+const TIER_3_RULES: TradeMappingRule[] = [
   // Plumbing keywords
   rule(8,  3, 'description', 'plumb(ing|er)',              0.65, 3, 18),
   rule(8,  3, 'description', 'water\\s*(heater|tank|line)', 0.60, 3, 18),
@@ -223,9 +224,3 @@ export const ALL_RULES: TradeMappingRule[] = [
   ...TIER_1_RULES,
 ];
 
-/** @deprecated Use tag-trade-matrix.ts instead. Kept for reference only. */
-export const DEPRECATED_TIER_2_RULES = TIER_2_RULES;
-/** @deprecated Use tag-trade-matrix.ts instead. Kept for reference only. */
-export const DEPRECATED_STRUCTURE_TYPE_RULES = STRUCTURE_TYPE_RULES;
-/** @deprecated Use tag-trade-matrix.ts instead. Kept for reference only. */
-export const DEPRECATED_TIER_3_RULES = TIER_3_RULES;

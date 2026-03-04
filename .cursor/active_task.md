@@ -1,7 +1,7 @@
-# Active Task: Fix Audit Findings: knip config, audit parser, xlsx vulnerability
+# Active Task: File organization cleanup: dead code, script folders, report archive
 **Status:** Planning
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `d239010d` (d239010df04369d486c3e9174b6535250d674508)
+**Rollback Anchor:** `cb25a475` (cb25a47541ca558c6e491c6cc3c204e6046c1298)
 
 ## Context
 * **Goal:** [What are we building/fixing?]
@@ -49,7 +49,7 @@
 * **Database Impact:** [YES/NO — if YES, write `migrations/NNN_[feature].sql` and draft UPDATE strategy for 237K+ existing rows]
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `d239010d` (auto-recorded by task-init)
+- [ ] **Rollback Anchor:** `cb25a475` (auto-recorded by task-init)
 - [ ] **State Verification:** Examine the calling context. Document what data is actually available vs. what the fix assumes.
 - [ ] **Spec Review:** Read `docs/specs/[feature].md` to confirm the *intended* behavior.
 - [ ] **Reproduction:** Create a failing test case in `src/tests/` that isolates the bug.

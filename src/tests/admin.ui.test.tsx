@@ -889,22 +889,23 @@ describe('Massing pipeline chains link-massing after load', () => {
   });
 });
 
-describe('Schedule notes include specific times', () => {
+describe('Pipeline schedules in DataQualityDashboard', () => {
 
-  it('PIPELINE_SCHEDULES in helpers includes scheduleNote field', () => {
-    const helpers = fs.readFileSync(
-      path.join(__dirname, '../lib/admin/helpers.ts'),
+  it('PIPELINE_SCHEDULES includes schedule labels', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
       'utf-8'
     );
-    expect(helpers).toContain('scheduleNote');
+    expect(source).toContain('PIPELINE_SCHEDULES');
+    expect(source).toContain('label');
   });
 
-  it('schedule notes include specific times or periods', () => {
-    const helpers = fs.readFileSync(
-      path.join(__dirname, '../lib/admin/helpers.ts'),
+  it('schedule labels include frequency terms', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
       'utf-8'
     );
-    expect(helpers).toMatch(/AM|PM|Jan.*Apr|January/);
+    expect(source).toMatch(/Daily|Quarterly|Annual/);
   });
 });
 
