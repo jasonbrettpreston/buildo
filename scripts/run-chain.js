@@ -55,6 +55,7 @@ const CHAINS = {
     'assert_data_bounds',
   ],
   sources: [
+    'assert_schema',
     'address_points',
     'geocode_permits',
     'parcels',
@@ -65,6 +66,7 @@ const CHAINS = {
     'neighbourhoods',
     'link_neighbourhoods',
     'refresh_snapshot',
+    'assert_data_bounds',
   ],
 };
 

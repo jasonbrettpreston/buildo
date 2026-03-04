@@ -111,6 +111,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     label: 'Source Data Updates',
     description: 'Quarterly/Annual — reference data refreshes',
     steps: [
+      { slug: 'assert_schema',       indent: 0 },
       { slug: 'address_points',      indent: 0 },
       { slug: 'geocode_permits',     indent: 1 },
       { slug: 'parcels',             indent: 0 },
@@ -121,6 +122,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'neighbourhoods',      indent: 0 },
       { slug: 'link_neighbourhoods', indent: 1 },
       { slug: 'refresh_snapshot',    indent: 1 },
+      { slug: 'assert_data_bounds',  indent: 0 },
     ],
   },
 ];

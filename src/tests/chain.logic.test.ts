@@ -25,10 +25,10 @@ describe('Pipeline Chain Definitions', () => {
     expect(chain!.steps).toHaveLength(6);
   });
 
-  it('defines sources chain with 10 steps', () => {
+  it('defines sources chain with 12 steps', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(10);
+    expect(chain!.steps).toHaveLength(12);
   });
 
   it('permits and coa chains end with assert_data_bounds', () => {
@@ -38,9 +38,9 @@ describe('Pipeline Chain Definitions', () => {
     expect(coa!.steps[coa!.steps.length - 1].slug).toBe('assert_data_bounds');
   });
 
-  it('sources chain ends with refresh_snapshot', () => {
+  it('sources chain ends with assert_data_bounds', () => {
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources');
-    expect(sources!.steps[sources!.steps.length - 1].slug).toBe('refresh_snapshot');
+    expect(sources!.steps[sources!.steps.length - 1].slug).toBe('assert_data_bounds');
   });
 
   it('every chain step slug exists in PIPELINE_REGISTRY', () => {
@@ -118,11 +118,11 @@ describe('Pipeline Route Chain Registration', () => {
 });
 
 describe('Sources Chain Completeness', () => {
-  it('sources chain includes refresh_snapshot as final step', () => {
+  it('sources chain includes assert_data_bounds as final step', () => {
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(sources).toBeDefined();
     const lastStep = sources!.steps[sources!.steps.length - 1];
-    expect(lastStep.slug).toBe('refresh_snapshot');
+    expect(lastStep.slug).toBe('assert_data_bounds');
   });
 
   it('sources chain includes all reference data pipelines', () => {

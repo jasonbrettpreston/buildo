@@ -4,7 +4,7 @@
  *
  * Runs SQL-based validation queries against the local database to detect
  * data quality issues after ingestion: cost outliers, null rates, orphaned
- * records, and duplicate PKs.
+ * records, duplicate PKs, and source table row counts and bounds.
  *
  * Usage: node scripts/quality/assert-data-bounds.js
  *
@@ -165,6 +165,109 @@ async function run() {
       console.error(`  FAIL: ${dupes} duplicate PK groups`);
     } else {
       console.log('  OK: No duplicate PKs');
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. Source table checks — address_points
+    // -----------------------------------------------------------------------
+    const apCount = await count(`SELECT COUNT(*) FROM address_points`);
+    if (apCount === 0) {
+      errors.push('address_points table is empty');
+      console.error('  FAIL: address_points table is empty');
+    } else {
+      console.log(`  OK: address_points has ${apCount.toLocaleString()} rows`);
+    }
+
+    const apDupes = await count(
+      `SELECT COUNT(*) FROM (
+         SELECT address_point_id FROM address_points
+         GROUP BY address_point_id HAVING COUNT(*) > 1
+       ) d`
+    );
+    if (apDupes > 0) {
+      errors.push(`${apDupes} duplicate address_point_id groups`);
+      console.error(`  FAIL: ${apDupes} duplicate address_point_id groups`);
+    } else {
+      console.log('  OK: No duplicate address_point_id');
+    }
+
+    // -----------------------------------------------------------------------
+    // 6. Source table checks — parcels
+    // -----------------------------------------------------------------------
+    const parcelCount = await count(`SELECT COUNT(*) FROM parcels`);
+    if (parcelCount === 0) {
+      errors.push('parcels table is empty');
+      console.error('  FAIL: parcels table is empty');
+    } else {
+      console.log(`  OK: parcels has ${parcelCount.toLocaleString()} rows`);
+    }
+
+    const parcelDupes = await count(
+      `SELECT COUNT(*) FROM (
+         SELECT parcel_id FROM parcels
+         GROUP BY parcel_id HAVING COUNT(*) > 1
+       ) d`
+    );
+    if (parcelDupes > 0) {
+      errors.push(`${parcelDupes} duplicate parcel_id groups`);
+      console.error(`  FAIL: ${parcelDupes} duplicate parcel_id groups`);
+    } else {
+      console.log('  OK: No duplicate parcel_id');
+    }
+
+    const lotOutliers = await count(
+      `SELECT COUNT(*) FROM parcels WHERE lot_size_sqm IS NOT NULL AND (lot_size_sqm <= 0 OR lot_size_sqm > 1000000)`
+    );
+    if (lotOutliers > 0) {
+      warnings.push(`${lotOutliers} parcels with lot_size_sqm out of bounds (0-1M sqm)`);
+      console.log(`  WARN: ${lotOutliers} parcels with lot size outliers`);
+    } else {
+      console.log('  OK: Parcel lot sizes within bounds');
+    }
+
+    // -----------------------------------------------------------------------
+    // 7. Source table checks — building_footprints
+    // -----------------------------------------------------------------------
+    const bfCount = await count(`SELECT COUNT(*) FROM building_footprints`);
+    if (bfCount === 0) {
+      errors.push('building_footprints table is empty');
+      console.error('  FAIL: building_footprints table is empty');
+    } else {
+      console.log(`  OK: building_footprints has ${bfCount.toLocaleString()} rows`);
+    }
+
+    const heightOutliers = await count(
+      `SELECT COUNT(*) FROM building_footprints WHERE max_height IS NOT NULL AND (max_height <= 0 OR max_height > 500)`
+    );
+    if (heightOutliers > 0) {
+      warnings.push(`${heightOutliers} building_footprints with max_height out of bounds (0-500m)`);
+      console.log(`  WARN: ${heightOutliers} building footprints with height outliers`);
+    } else {
+      console.log('  OK: Building footprint heights within bounds');
+    }
+
+    // -----------------------------------------------------------------------
+    // 8. Source table checks — neighbourhoods
+    // -----------------------------------------------------------------------
+    const nhoodCount = await count(`SELECT COUNT(*) FROM neighbourhoods`);
+    if (nhoodCount < 158) {
+      errors.push(`neighbourhoods has ${nhoodCount} rows (expected >= 158)`);
+      console.error(`  FAIL: neighbourhoods has ${nhoodCount} rows (expected >= 158)`);
+    } else {
+      console.log(`  OK: neighbourhoods has ${nhoodCount} rows (>= 158)`);
+    }
+
+    const nhoodDupes = await count(
+      `SELECT COUNT(*) FROM (
+         SELECT neighbourhood_id FROM neighbourhoods
+         GROUP BY neighbourhood_id HAVING COUNT(*) > 1
+       ) d`
+    );
+    if (nhoodDupes > 0) {
+      errors.push(`${nhoodDupes} duplicate neighbourhood_id groups`);
+      console.error(`  FAIL: ${nhoodDupes} duplicate neighbourhood_id groups`);
+    } else {
+      console.log('  OK: No duplicate neighbourhood_id');
     }
 
   } catch (err) {

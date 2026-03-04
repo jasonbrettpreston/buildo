@@ -2,9 +2,10 @@
 /**
  * CQA Tier 1: Pre-Ingestion Schema Validation
  *
- * Fetches CKAN metadata for permits and CoA resources and asserts that
- * expected columns still exist. Catches upstream schema drift before
- * ingestion runs.
+ * Fetches CKAN metadata for permits and CoA resources, CSV headers for
+ * address_points and parcels, GeoJSON property keys for neighbourhoods,
+ * and URL accessibility for massing shapefiles. Catches upstream schema
+ * drift before ingestion runs.
  *
  * Usage: node scripts/quality/assert-schema.js
  *
@@ -38,6 +39,25 @@ const EXPECTED_COA_COLUMNS = [
   'REFERENCE_FILE#', 'APPLICATION_DATE', 'STATUS',
   'STREET_NUM', 'STREET_NAME', 'STREET_TYPE',
 ];
+
+// Source data download URLs
+const ADDRESS_POINTS_URL =
+  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abedd8bc-e3dd-4d45-8e69-79165a76e4fa/resource/64d4e54b-738f-4cd9-a9e7-8050fac8a52f/download/address-points-4326.csv';
+const PARCELS_URL =
+  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/property-boundaries/resource/23d1f792-018f-4069-ac5d-443e932e1b78/download/Property%20Boundaries%20-%204326.csv';
+const MASSING_URL =
+  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/c57a333a-dc6c-416e-8dd0-7b7964161720/download/3dmassingshapefile_2025_wgs84.zip';
+const NEIGHBOURHOODS_URL =
+  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/fc443770-ef0a-4025-9c2c-2cb558bfab00/resource/0719053b-28b7-48ea-b863-068823a93aaa/download/neighbourhoods-4326.geojson';
+
+// Expected CSV columns for source data
+const EXPECTED_ADDRESS_POINT_COLUMNS = ['ADDRESS_POINT_ID', 'geometry'];
+const EXPECTED_PARCEL_COLUMNS = [
+  'PARCELID', 'FEATURE_TYPE', 'ADDRESS_NUMBER', 'LINEAR_NAME_FULL',
+  'STATEDAREA', 'geometry', 'DATE_EFFECTIVE',
+];
+// Neighbourhood GeoJSON: at least one of these ID properties must exist
+const NEIGHBOURHOOD_ID_PROPS = ['AREA_S_CD', 'AREA_SHORT_CODE', 'AREA_ID'];
 
 const SLUG = 'assert_schema';
 
@@ -94,6 +114,63 @@ async function validateTypeSample(resourceId, label) {
   return true;
 }
 
+/**
+ * Fetch the first chunk of a CSV file and extract the header row column names.
+ */
+async function fetchCsvHeaders(url, label) {
+  console.log(`  Fetching CSV headers for ${label}...`);
+  const res = await fetch(url, { headers: { Range: 'bytes=0-2048' } });
+  // Some servers ignore Range and return 200 with full body — that's fine
+  if (!res.ok && res.status !== 206) {
+    throw new Error(`CSV fetch failed for ${label}: ${res.status} ${res.statusText}`);
+  }
+  const chunk = await res.text();
+  const firstLine = chunk.split(/\r?\n/)[0];
+  if (!firstLine) {
+    throw new Error(`Empty CSV header for ${label}`);
+  }
+  // Parse CSV header — handle quoted column names
+  return firstLine.split(',').map((col) => col.trim().replace(/^"|"$/g, ''));
+}
+
+/**
+ * Fetch the first chunk of a GeoJSON file and extract property keys from the first feature.
+ */
+async function fetchGeoJsonPropertyKeys(url, label) {
+  console.log(`  Fetching GeoJSON properties for ${label}...`);
+  const res = await fetch(url, { headers: { Range: 'bytes=0-8192' } });
+  if (!res.ok && res.status !== 206) {
+    throw new Error(`GeoJSON fetch failed for ${label}: ${res.status} ${res.statusText}`);
+  }
+  const chunk = await res.text();
+  // Extract first "properties":{...} block via regex (avoids parsing incomplete JSON)
+  const match = chunk.match(/"properties"\s*:\s*\{([^}]+)\}/);
+  if (!match) {
+    throw new Error(`Could not find properties in GeoJSON for ${label}`);
+  }
+  // Extract key names from the properties object fragment
+  const keys = [];
+  const keyPattern = /"([^"]+)"\s*:/g;
+  let m;
+  while ((m = keyPattern.exec(match[1])) !== null) {
+    keys.push(m[1]);
+  }
+  return keys;
+}
+
+/**
+ * HTTP HEAD request to check URL accessibility (for binary files like shapefiles).
+ */
+async function checkUrlAccessible(url, label) {
+  console.log(`  Checking URL accessibility for ${label}...`);
+  const res = await fetch(url, { method: 'HEAD' });
+  if (!res.ok) {
+    throw new Error(`URL not accessible for ${label}: ${res.status} ${res.statusText}`);
+  }
+  console.log(`  OK: ${label} — URL accessible (${res.status})`);
+  return true;
+}
+
 async function run() {
   console.log('\n=== CQA Tier 1: Schema Validation ===\n');
 
@@ -131,6 +208,62 @@ async function run() {
     if (!checkColumns(coaFields, EXPECTED_COA_COLUMNS, 'CoA Active')) {
       allPassed = false;
       errors.push('CoA schema drift detected');
+    }
+
+    // ------------------------------------------------------------------
+    // Source data validation
+    // ------------------------------------------------------------------
+
+    // Address Points CSV
+    try {
+      const apHeaders = await fetchCsvHeaders(ADDRESS_POINTS_URL, 'Address Points');
+      if (!checkColumns(apHeaders, EXPECTED_ADDRESS_POINT_COLUMNS, 'Address Points')) {
+        allPassed = false;
+        errors.push('Address Points schema drift detected');
+      }
+    } catch (err) {
+      allPassed = false;
+      errors.push(`Address Points: ${err.message}`);
+      console.error(`  FAIL: Address Points — ${err.message}`);
+    }
+
+    // Parcels CSV
+    try {
+      const parcelHeaders = await fetchCsvHeaders(PARCELS_URL, 'Parcels');
+      if (!checkColumns(parcelHeaders, EXPECTED_PARCEL_COLUMNS, 'Parcels')) {
+        allPassed = false;
+        errors.push('Parcels schema drift detected');
+      }
+    } catch (err) {
+      allPassed = false;
+      errors.push(`Parcels: ${err.message}`);
+      console.error(`  FAIL: Parcels — ${err.message}`);
+    }
+
+    // Massing Shapefile ZIP — accessibility check only
+    try {
+      await checkUrlAccessible(MASSING_URL, '3D Massing');
+    } catch (err) {
+      allPassed = false;
+      errors.push(`3D Massing: ${err.message}`);
+      console.error(`  FAIL: 3D Massing — ${err.message}`);
+    }
+
+    // Neighbourhoods GeoJSON — property key validation
+    try {
+      const nhoodKeys = await fetchGeoJsonPropertyKeys(NEIGHBOURHOODS_URL, 'Neighbourhoods');
+      const hasIdProp = NEIGHBOURHOOD_ID_PROPS.some((p) => nhoodKeys.includes(p));
+      if (!hasIdProp) {
+        allPassed = false;
+        errors.push(`Neighbourhoods missing ID property (expected one of: ${NEIGHBOURHOOD_ID_PROPS.join(', ')})`);
+        console.error(`  FAIL: Neighbourhoods — no ID property found in: ${nhoodKeys.join(', ')}`);
+      } else {
+        console.log(`  OK: Neighbourhoods — ID property found (${nhoodKeys.length} total properties)`);
+      }
+    } catch (err) {
+      allPassed = false;
+      errors.push(`Neighbourhoods: ${err.message}`);
+      console.error(`  FAIL: Neighbourhoods — ${err.message}`);
     }
   } catch (err) {
     allPassed = false;

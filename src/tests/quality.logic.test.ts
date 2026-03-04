@@ -544,11 +544,12 @@ describe('Pipeline Chains', () => {
     expect(coa.steps[1].slug).toBe('coa');
   });
 
-  it('sources chain has 10 steps including compute_centroids and refresh_snapshot', () => {
+  it('sources chain has 12 steps including compute_centroids and assert_data_bounds', () => {
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
-    expect(sources.steps).toHaveLength(10);
+    expect(sources.steps).toHaveLength(12);
     expect(sources.steps.some((s) => s.slug === 'compute_centroids')).toBe(true);
-    expect(sources.steps[sources.steps.length - 1].slug).toBe('refresh_snapshot');
+    expect(sources.steps[0].slug).toBe('assert_schema');
+    expect(sources.steps[sources.steps.length - 1].slug).toBe('assert_data_bounds');
   });
 
   it('every slug in chains exists in PIPELINE_REGISTRY', () => {
