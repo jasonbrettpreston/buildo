@@ -136,7 +136,7 @@ async function fetchFromCKAN() {
 }
 
 async function insertBatch(client, batch) {
-  if (batch.length === 0) return;
+  if (batch.length === 0) return [];
 
   // Deduplicate within batch - last occurrence wins
   const seen = new Map();
@@ -181,9 +181,12 @@ async function insertBatch(client, batch) {
       data_hash = EXCLUDED.data_hash,
       last_seen_at = NOW(),
       raw_json = EXCLUDED.raw_json
+    WHERE permits.data_hash IS DISTINCT FROM EXCLUDED.data_hash
+    RETURNING (xmax = 0) AS is_insert
   `;
 
-  await client.query(sql, values);
+  const result = await client.query(sql, values);
+  return result.rows;
 }
 
 async function run() {
@@ -204,7 +207,9 @@ async function run() {
   }
 
   const client = await pool.connect();
-  let inserted = 0;
+  let newInserts = 0;
+  let updated = 0;
+  let processed = 0;
   let errors = 0;
   let batch = [];
   const startTime = Date.now();
@@ -218,39 +223,51 @@ async function run() {
         }
         batch.push(mapRecord(record));
         if (batch.length >= BATCH_SIZE) {
-          await insertBatch(client, batch);
-          inserted += batch.length;
+          const rows = await insertBatch(client, batch);
+          for (const r of rows) {
+            if (r.is_insert) newInserts++;
+            else updated++;
+          }
+          processed += batch.length;
           batch = [];
-          if (inserted % 10000 === 0) {
+          if (processed % 10000 === 0) {
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-            console.log(`  ${inserted.toLocaleString()} inserted (${elapsed}s)`);
+            console.log(`  ${processed.toLocaleString()} processed (${elapsed}s)`);
           }
         }
       } catch (err) {
         errors++;
-        if (errors <= 5) console.error(`  Error on record ${inserted + errors}:`, err.message);
+        if (errors <= 5) console.error(`  Error on record ${processed + errors}:`, err.message);
       }
     }
 
     // Final batch
     if (batch.length > 0) {
-      await insertBatch(client, batch);
-      inserted += batch.length;
+      const rows = await insertBatch(client, batch);
+      for (const r of rows) {
+        if (r.is_insert) newInserts++;
+        else updated++;
+      }
+      processed += batch.length;
     }
   } finally {
     client.release();
   }
 
+  const unchanged = processed - newInserts - updated;
   const duration = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log(`\nDone in ${duration}s`);
-  console.log(`  Inserted/updated: ${inserted.toLocaleString()}`);
+  console.log(`  Processed: ${processed.toLocaleString()}`);
+  console.log(`  New: ${newInserts.toLocaleString()}`);
+  console.log(`  Updated: ${updated.toLocaleString()}`);
+  console.log(`  Unchanged: ${unchanged.toLocaleString()}`);
   console.log(`  Errors: ${errors}`);
 
   // Log sync run
   await pool.query(
     `INSERT INTO sync_runs (started_at, completed_at, status, records_total, records_new, records_updated, records_unchanged, records_errors, duration_ms)
-     VALUES (NOW() - interval '${duration} seconds', NOW(), 'completed', $1, $1, 0, 0, $2, $3)`,
-    [inserted, errors, Math.round(parseFloat(duration) * 1000)]
+     VALUES (NOW() - interval '${duration} seconds', NOW(), 'completed', $1, $2, $3, $4, $5, $6)`,
+    [processed, newInserts, updated, unchanged, errors, Math.round(parseFloat(duration) * 1000)]
   );
   console.log('  Sync run logged');
 

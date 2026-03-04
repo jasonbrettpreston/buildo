@@ -10,13 +10,17 @@
  * Strategy 3 requires permits to have geocoded lat/lng coordinates.
  * Parcels must have pre-computed centroid_lat/centroid_lng (run compute-centroids.js first).
  *
- * Processes ALL permits with valid street addresses or geocoded coordinates.
+ * By default, only processes permits without existing parcel links (incremental).
+ * Use --full to re-link all permits.
  *
- * Usage: node scripts/link-parcels.js
+ * Usage:
+ *   node scripts/link-parcels.js           # incremental (unlinked only)
+ *   node scripts/link-parcels.js --full    # re-link all permits
  */
 const { Pool } = require('pg');
 
 const BATCH_SIZE = 1000;
+const fullMode = process.argv.includes('--full');
 const SPATIAL_MAX_DISTANCE_M = 100;
 const SPATIAL_CONFIDENCE = 0.65;
 const BBOX_OFFSET = 0.001; // ~111m lat, ~82m lng at Toronto latitude
@@ -84,14 +88,22 @@ function haversineDistance(p1, p2) {
 
 async function main() {
   console.log('=== Buildo Permit-Parcel Linker (3-Step Cascade) ===');
+  console.log(`Mode: ${fullMode ? 'FULL (all permits)' : 'INCREMENTAL (unlinked only)'}`);
   console.log('');
 
-  // Count all permits with valid street addresses OR geocoded coordinates
-  const countResult = await pool.query(
-    `SELECT COUNT(*) as total FROM permits
-     WHERE (street_num IS NOT NULL AND street_num != ''
+  const addressFilter = `(street_num IS NOT NULL AND street_num != ''
        AND street_name IS NOT NULL AND street_name != '')
-       OR (latitude IS NOT NULL AND longitude IS NOT NULL)`
+       OR (latitude IS NOT NULL AND longitude IS NOT NULL)`;
+  const incrementalFilter = `AND NOT EXISTS (
+      SELECT 1 FROM permit_parcels pp
+      WHERE pp.permit_num = p.permit_num AND pp.revision_num = p.revision_num
+    )`;
+  const extraFilter = fullMode ? '' : incrementalFilter;
+
+  // Count permits to process
+  const countResult = await pool.query(
+    `SELECT COUNT(*) as total FROM permits p
+     WHERE (${addressFilter}) ${extraFilter}`
   );
   const totalPermits = parseInt(countResult.rows[0].total, 10);
   console.log(`Permits to process: ${totalPermits.toLocaleString()}`);
@@ -119,13 +131,11 @@ async function main() {
 
   while (offset < totalPermits) {
     const batch = await pool.query(
-      `SELECT permit_num, revision_num, street_num, street_name, street_type,
-              latitude, longitude
-       FROM permits
-       WHERE (street_num IS NOT NULL AND street_num != ''
-         AND street_name IS NOT NULL AND street_name != '')
-         OR (latitude IS NOT NULL AND longitude IS NOT NULL)
-       ORDER BY permit_num, revision_num
+      `SELECT p.permit_num, p.revision_num, p.street_num, p.street_name, p.street_type,
+              p.latitude, p.longitude
+       FROM permits p
+       WHERE (${addressFilter}) ${extraFilter}
+       ORDER BY p.permit_num, p.revision_num
        LIMIT $1 OFFSET $2`,
       [BATCH_SIZE, offset]
     );

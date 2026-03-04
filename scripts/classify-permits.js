@@ -6,11 +6,14 @@
  * description) in the absence of actual building plans. Results are estimates
  * that can be refined as rules improve over time.
  *
- * Usage: node scripts/classify-permits.js
+ * Usage:
+ *   node scripts/classify-permits.js           # incremental (new/changed only)
+ *   node scripts/classify-permits.js --full     # re-classify all permits
  */
 const { Pool } = require('pg');
 
 const BATCH_SIZE = 1000;
+const fullMode = process.argv.includes('--full');
 
 const pool = new Pool({
   host: process.env.PG_HOST || 'localhost',
@@ -512,10 +515,25 @@ async function main() {
   const allRules = dbRules;
   console.log(`Total rules: ${allRules.length} (Tier 1 DB rules + tag-trade matrix + work-field fallback)`);
 
-  // Count permits
-  const countResult = await pool.query('SELECT COUNT(*) as total FROM permits');
+  // Count permits to classify
+  const incrementalWhere = `
+    WHERE NOT EXISTS (
+      SELECT 1 FROM permit_trades pt
+      WHERE pt.permit_num = p.permit_num AND pt.revision_num = p.revision_num
+    )
+    OR EXISTS (
+      SELECT 1 FROM permit_trades pt
+      WHERE pt.permit_num = p.permit_num AND pt.revision_num = p.revision_num
+        AND p.last_seen_at > pt.classified_at
+    )`;
+  const whereClause = fullMode ? '' : incrementalWhere;
+
+  const countResult = await pool.query(
+    `SELECT COUNT(*) as total FROM permits p ${whereClause}`
+  );
   const totalPermits = parseInt(countResult.rows[0].total, 10);
-  console.log(`Total permits to classify: ${totalPermits.toLocaleString()}`);
+  console.log(`Mode: ${fullMode ? 'FULL (all permits)' : 'INCREMENTAL (new/changed only)'}`);
+  console.log(`Permits to classify: ${totalPermits.toLocaleString()}`);
   console.log('');
 
   let processed = 0;
@@ -526,10 +544,11 @@ async function main() {
 
   while (offset.value < totalPermits) {
     const batch = await pool.query(
-      `SELECT permit_num, revision_num, permit_type, structure_type, work,
-              description, status, est_const_cost, issued_date, current_use, proposed_use,
-              scope_tags
-       FROM permits ORDER BY permit_num, revision_num
+      `SELECT p.permit_num, p.revision_num, p.permit_type, p.structure_type, p.work,
+              p.description, p.status, p.est_const_cost, p.issued_date, p.current_use, p.proposed_use,
+              p.scope_tags
+       FROM permits p ${whereClause}
+       ORDER BY p.permit_num, p.revision_num
        LIMIT $1 OFFSET $2`,
       [BATCH_SIZE, offset.value]
     );

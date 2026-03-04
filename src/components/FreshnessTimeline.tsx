@@ -224,16 +224,30 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
       <div className="space-y-5">
         {PIPELINE_CHAINS.map((chain) => {
           const stepNumbers = computeStepNumbers(chain.steps);
+          const chainSlug = `chain_${chain.id}`;
+          const isChainRunning = runningPipelines.has(chainSlug) ||
+            chain.steps.some((s) => runningPipelines.has(s.slug));
 
           return (
             <div key={chain.id}>
               {/* Chain header */}
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 group/chain">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                   {chain.label}
                 </span>
                 <span className="text-[9px] text-gray-300">{chain.description}</span>
                 <div className="flex-1 h-px bg-gray-100" />
+                <button
+                  onClick={() => onTrigger(chainSlug)}
+                  disabled={isChainRunning}
+                  className={`text-[9px] px-2.5 py-0.5 rounded border opacity-0 group-hover/chain:opacity-100 transition-opacity ${
+                    isChainRunning
+                      ? 'border-blue-200 text-blue-400 bg-blue-50 cursor-not-allowed opacity-100'
+                      : 'border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700'
+                  }`}
+                >
+                  {isChainRunning ? 'Running...' : 'Run All'}
+                </button>
               </div>
 
               {/* Chain steps */}
