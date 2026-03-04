@@ -308,6 +308,7 @@ async function main() {
         depth_m = EXCLUDED.depth_m,
         depth_ft = EXCLUDED.depth_ft,
         geometry = EXCLUDED.geometry,
+        geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326),
         date_effective = EXCLUDED.date_effective,
         is_irregular = EXCLUDED.is_irregular`,
       values

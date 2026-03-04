@@ -130,7 +130,8 @@ async function loadBoundaries(geojsonPath) {
        VALUES ($1, $2, $3)
        ON CONFLICT (neighbourhood_id) DO UPDATE SET
          name = EXCLUDED.name,
-         geometry = EXCLUDED.geometry`,
+         geometry = EXCLUDED.geometry,
+         geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326)`,
       [neighbourhoodId, name, JSON.stringify(feature.geometry)]
     );
     inserted++;

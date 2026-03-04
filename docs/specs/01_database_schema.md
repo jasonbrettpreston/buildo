@@ -13,11 +13,11 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 ## 3. Behavioral Contract
 - **Inputs:** SQL migration files executed sequentially by `scripts/migrate.js` against a PostgreSQL database.
 - **Core Logic:** The schema consists of 17 tables across four domains. **Core permits** (`permits` with composite PK `(permit_num, revision_num)`, `permit_history`, `sync_runs`) store ingested data, field-level audit trails, and pipeline run metadata. **Classification** (`trades`, `trade_mapping_rules` with 3-tier CHECK, `permit_trades` junction) links permits to 32 trade categories with confidence scores. **Enrichment** (`builders` deduplicated by `name_normalized`, `builder_contacts`, `coa_applications` with optional permit linking) tracks builder profiles and Committee of Adjustment data. **Spatial** (`parcels` with lot dimensions, `permit_parcels` junction, `neighbourhoods` with Census 2021 demographics, `building_footprints` with 3D massing, `parcel_buildings` junction, `data_quality_snapshots`) supports geocoding, parcel matching, and quality tracking. All DDL uses `IF NOT EXISTS` for idempotent re-runs; trade seeds use `ON CONFLICT DO NOTHING`. The `pg` Pool in `src/lib/db/client.ts` provides `query<T>()` and `getClient()` for typed access. See `Permit`, `Trade`, `Builder`, and related interfaces in `src/lib/permits/types.ts`.
-- **Outputs:** A fully indexed PostgreSQL database with 24+ B-tree and GIN indexes supporting FTS, change detection (SHA-256 `data_hash`), and spatial lookups.
-- **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback.
+- **Outputs:** A fully indexed PostgreSQL database with 24+ B-tree, GIN, and GiST indexes supporting FTS, change detection (SHA-256 `data_hash`), spatial lookups (PostGIS `GEOMETRY` columns on `parcels` and `neighbourhoods`), and referential integrity (FK constraints on `permit_trades` and `permit_parcels`). Partial indexes on `permits` (needs geocode) and `builders` (needs enrich) accelerate worker queries.
+- **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback. CoA FK to permits is intentionally omitted (composite PK incompatible with single-column reference) — enforced via CQA Tier 2 referential audit instead. PostgreSQL ENUMs deferred for `status` columns to accommodate upstream Toronto Open Data changes.
 
 <!-- DB_SCHEMA_START -->
-### Tables (18)
+### Tables (19)
 
 | Table | Columns | Indexes |
 |-------|---------|--------|
@@ -26,7 +26,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `builders` | 15 | 3 |
 | `building_footprints` | 12 | 3 |
 | `coa_applications` | 18 | 6 |
-| `data_quality_snapshots` | 47 | 2 |
+| `data_quality_snapshots` | 59 | 2 |
 | `neighbourhoods` | 21 | 2 |
 | `notifications` | 12 | 2 |
 | `parcel_buildings` | 8 | 3 |
@@ -36,6 +36,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `permit_trades` | 10 | 5 |
 | `permits` | 42 | 10 |
 | `pipeline_runs` | 10 | 1 |
+| `pipeline_schedules` | 4 | 0 |
 | `sync_runs` | 12 | 0 |
 | `trade_mapping_rules` | 10 | 2 |
 | `trades` | 7 | 1 |
@@ -127,7 +128,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `last_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
 | `sub_type` | TEXT | YES | - |
 
-#### `data_quality_snapshots` (47 columns)
+#### `data_quality_snapshots` (59 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -178,6 +179,18 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `trade_residential_total` | INTEGER | YES | 0 |
 | `trade_commercial_classified` | INTEGER | YES | 0 |
 | `trade_commercial_total` | INTEGER | YES | 0 |
+| `null_description_count` | INTEGER | YES | 0 |
+| `null_builder_name_count` | INTEGER | YES | 0 |
+| `null_est_const_cost_count` | INTEGER | YES | 0 |
+| `null_street_num_count` | INTEGER | YES | 0 |
+| `null_street_name_count` | INTEGER | YES | 0 |
+| `null_geo_id_count` | INTEGER | YES | 0 |
+| `violation_cost_out_of_range` | INTEGER | YES | 0 |
+| `violation_future_issued_date` | INTEGER | YES | 0 |
+| `violation_missing_status` | INTEGER | YES | 0 |
+| `violations_total` | INTEGER | YES | 0 |
+| `schema_column_counts` | JSONB | YES | - |
+| `sla_permits_ingestion_hours` | NUMERIC(8,2) | YES | NULL |
 
 #### `neighbourhoods` (21 columns)
 
@@ -363,6 +376,15 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `records_updated` | INTEGER | YES | 0 |
 | `error_message` | TEXT | YES | - |
 | `duration_ms` | INTEGER | YES | - |
+
+#### `pipeline_schedules` (4 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `pipeline` | TEXT | NO | - |
+| `cadence` | TEXT | NO | Daily |
+| `cron_expression` | TEXT | YES | - |
+| `updated_at` | TIMESTAMP WITH TIME ZONE | YES | now() |
 
 #### `sync_runs` (12 columns)
 
