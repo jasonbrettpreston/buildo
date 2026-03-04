@@ -526,7 +526,8 @@ describe('Pipeline Chains', () => {
   it('permits chain has 16 steps in dependency order', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     expect(permits.steps).toHaveLength(16);
-    expect(permits.steps[0].slug).toBe('permits');
+    expect(permits.steps[0].slug).toBe('assert_schema');
+    expect(permits.steps[1].slug).toBe('permits');
     expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_data_bounds');
   });
 
@@ -536,10 +537,11 @@ describe('Pipeline Chains', () => {
     expect(indent2.map((s) => s.slug)).toEqual(['enrich_google', 'enrich_wsib']);
   });
 
-  it('coa chain has 5 steps', () => {
+  it('coa chain has 6 steps', () => {
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
-    expect(coa.steps).toHaveLength(5);
-    expect(coa.steps[0].slug).toBe('coa');
+    expect(coa.steps).toHaveLength(6);
+    expect(coa.steps[0].slug).toBe('assert_schema');
+    expect(coa.steps[1].slug).toBe('coa');
   });
 
   it('sources chain has 10 steps including compute_centroids and refresh_snapshot', () => {

@@ -29,6 +29,7 @@ const pool = new Pool({
 
 const CHAINS = {
   permits: [
+    'assert_schema',
     'permits',
     'classify_scope_class',
     'classify_scope_tags',
@@ -43,10 +44,10 @@ const CHAINS = {
     'link_similar',
     'link_coa',
     'refresh_snapshot',
-    'assert_schema',
     'assert_data_bounds',
   ],
   coa: [
+    'assert_schema',
     'coa',
     'link_coa',
     'create_pre_permits',

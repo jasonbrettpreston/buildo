@@ -75,6 +75,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     label: 'Permits Pipeline',
     description: 'Daily — when building permits are loaded',
     steps: [
+      { slug: 'assert_schema',       indent: 0 },
       { slug: 'permits',              indent: 0 },
       { slug: 'classify_scope_class', indent: 1 },
       { slug: 'classify_scope_tags',  indent: 1 },
@@ -89,8 +90,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_similar',         indent: 1 },
       { slug: 'link_coa',             indent: 1 },
       { slug: 'refresh_snapshot',     indent: 1 },
-      { slug: 'assert_schema',       indent: 1 },
-      { slug: 'assert_data_bounds',  indent: 1 },
+      { slug: 'assert_data_bounds',   indent: 0 },
     ],
   },
   {
@@ -98,11 +98,12 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     label: 'CoA Pipeline',
     description: 'Daily — when Committee of Adjustment data is loaded',
     steps: [
+      { slug: 'assert_schema',      indent: 0 },
       { slug: 'coa',                indent: 0 },
       { slug: 'link_coa',           indent: 1 },
       { slug: 'create_pre_permits', indent: 1 },
       { slug: 'refresh_snapshot',   indent: 1 },
-      { slug: 'assert_data_bounds', indent: 1 },
+      { slug: 'assert_data_bounds', indent: 0 },
     ],
   },
   {

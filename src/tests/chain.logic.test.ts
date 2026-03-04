@@ -19,10 +19,10 @@ describe('Pipeline Chain Definitions', () => {
     expect(chain!.steps).toHaveLength(16);
   });
 
-  it('defines coa chain with 5 steps', () => {
+  it('defines coa chain with 6 steps', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(5);
+    expect(chain!.steps).toHaveLength(6);
   });
 
   it('defines sources chain with 10 steps', () => {
