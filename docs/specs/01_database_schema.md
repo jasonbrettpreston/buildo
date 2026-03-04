@@ -1,468 +1,423 @@
 # Spec 01 -- Database Schema
 
-## 1. User Story
+## 1. Goal & User Story
+Provide a normalized PostgreSQL schema storing 237K+ building permits with change tracking, trade classification, builder enrichment, and spatial data so that every downstream feature queries a single authoritative data store.
 
-> As a developer, I need a normalized PostgreSQL schema to store 237K+ building
-> permits with change tracking, trade classification, and builder enrichment so
-> that every downstream feature (search, leads, maps, notifications) can query a
-> single authoritative data store.
+## 2. Auth Matrix
+| Role | Access |
+|------|--------|
+| Anonymous | None |
+| Authenticated | Read (via API) |
+| Admin | Read/Write |
 
-## 2. Technical Logic
+## 3. Behavioral Contract
+- **Inputs:** SQL migration files executed sequentially by `scripts/migrate.js` against a PostgreSQL database.
+- **Core Logic:** The schema consists of 17 tables across four domains. **Core permits** (`permits` with composite PK `(permit_num, revision_num)`, `permit_history`, `sync_runs`) store ingested data, field-level audit trails, and pipeline run metadata. **Classification** (`trades`, `trade_mapping_rules` with 3-tier CHECK, `permit_trades` junction) links permits to 32 trade categories with confidence scores. **Enrichment** (`builders` deduplicated by `name_normalized`, `builder_contacts`, `coa_applications` with optional permit linking) tracks builder profiles and Committee of Adjustment data. **Spatial** (`parcels` with lot dimensions, `permit_parcels` junction, `neighbourhoods` with Census 2021 demographics, `building_footprints` with 3D massing, `parcel_buildings` junction, `data_quality_snapshots`) supports geocoding, parcel matching, and quality tracking. All DDL uses `IF NOT EXISTS` for idempotent re-runs; trade seeds use `ON CONFLICT DO NOTHING`. The `pg` Pool in `src/lib/db/client.ts` provides `query<T>()` and `getClient()` for typed access. See `Permit`, `Trade`, `Builder`, and related interfaces in `src/lib/permits/types.ts`.
+- **Outputs:** A fully indexed PostgreSQL database with 24+ B-tree and GIN indexes supporting FTS, change detection (SHA-256 `data_hash`), and spatial lookups.
+- **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback.
 
-### Tables (15)
+<!-- DB_SCHEMA_START -->
+### Tables (18)
 
-| # | Table | Purpose |
-|---|-------|---------|
-| 1 | `permits` | Core permits table. Composite PK `(permit_num, revision_num)`. Stores all 30 mapped fields from the Toronto Open Data feed, geocoding columns (`latitude`, `longitude`, `geocoded_at`), a `data_hash` (SHA-256) for change detection, and `raw_json` JSONB for debugging. |
-| 2 | `permit_history` | Change tracking. One row per field that changed between sync runs. Columns: `permit_num`, `revision_num`, `sync_run_id`, `field_name`, `old_value`, `new_value`, `changed_at`. |
-| 3 | `sync_runs` | Audit log for every sync execution. Records `started_at`, `completed_at`, `status` (`running` / `completed` / `failed`), per-category counts (`records_total`, `records_new`, `records_updated`, `records_unchanged`, `records_errors`), `error_message`, `snapshot_path`, and `duration_ms`. |
-| 4 | `trades` | Reference table of 20 construction trade categories. Each trade has a `slug` (UNIQUE), `name`, `icon`, `color`, and `sort_order`. Seeded via `INSERT ... ON CONFLICT DO NOTHING`. |
-| 5 | `trade_mapping_rules` | Rules engine for permit-to-trade classification. Three tiers: Tier 1 (permit_type, confidence 0.90-0.95), Tier 2 (work field, confidence 0.60-0.90), Tier 3 (description keywords via ILIKE, confidence 0.50-0.80). Columns include `tier` with CHECK constraint `(tier IN (1, 2, 3))`, `match_field`, `match_pattern`, `confidence` (CHECK 0-1), `phase_start`/`phase_end` (months after issued date), and `is_active`. FK to `trades(id)`. |
-| 6 | `permit_trades` | Junction table linking permits to trades. Carries classification metadata: `tier`, `confidence`, `is_active`, `phase`, `lead_score`. UNIQUE constraint on `(permit_num, revision_num, trade_id)`. FK to `trades(id)`. |
-| 7 | `builders` | Builder directory aggregated from permit data, enriched via Google Places / OBR. `name_normalized` (UNIQUE) for deduplication. Stores `google_place_id`, `google_rating`, `google_review_count`, `obr_business_number`, `wsib_status`, `permit_count`. |
-| 8 | `builder_contacts` | User-contributed contact information. Each row has `contact_type`, `contact_value`, `source` (default `'user'`), `contributed_by`, `verified`. FK to `builders(id)`. |
-| 9 | `coa_applications` | Committee of Adjustment applications. Optionally linked to permits via `linked_permit_num` / `linked_confidence`. Has its own `data_hash` for change detection. `application_number` is UNIQUE. |
-| 10 | `notifications` | Notification queue. Columns: `user_id`, `type`, `title`, `body`, `permit_num`, `trade_slug`, `channel` (default `'in_app'`), `is_read`, `is_sent`, `sent_at`. |
-| 11 | `parcels` | Toronto Property Boundaries parcels. Stores lot dimensions (area, frontage, depth) in both metric and imperial. Geometry stored as JSONB. Normalized address fields for matching. Pre-computed `centroid_lat`/`centroid_lng` for spatial matching (migration 016). `is_irregular` BOOLEAN flags lots where polygon area / MBR area < 0.95 (migration 022). `parcel_id` is UNIQUE. |
-| 12 | `permit_parcels` | Junction table linking permits to parcels via address or spatial matching. Carries `match_type` (`exact_address`, `name_only`, or `spatial`) and `confidence`. UNIQUE constraint on `(permit_num, revision_num, parcel_id)`. FK to `parcels(id)`. |
-| 13 | `neighbourhoods` | Toronto neighbourhoods with Census 2021 data. 158 rows. Stores boundary polygon as JSONB, income/housing/education demographics. `neighbourhood_id` is UNIQUE (maps to Toronto `AREA_S_CD`). |
-| 14 | `permits.neighbourhood_id` | FK column added to `permits` table linking to `neighbourhoods.id` via point-in-polygon matching. Added by migration 014. |
-| 15 | `data_quality_snapshots` | Daily snapshot of matching/enrichment coverage metrics across all 6 data linking processes. `UNIQUE(snapshot_date)` for upsert. 37 columns tracking trade, builder, parcel, neighbourhood, geocoding, CoA, and massing metrics plus freshness counters. |
-| 16 | `building_footprints` | Toronto 3D Massing building polygons. Stores footprint geometry (JSONB), area (sqm/sqft), height attributes (`max_height_m`, `min_height_m`, `elev_z`), derived `estimated_stories`, and pre-computed centroid. Indexed on centroid for spatial queries and `source_id` for upserts. |
-| 17 | `parcel_buildings` | Junction table linking parcels to building footprints. Carries `is_primary` flag and `structure_type` classification (`primary`, `garage`, `shed`, `other`). UNIQUE constraint on `(parcel_id, building_id)`. FK to `parcels(id)` and `building_footprints(id)`. |
+| Table | Columns | Indexes |
+|-------|---------|--------|
+| `address_points` | 3 | 0 |
+| `builder_contacts` | 8 | 2 |
+| `builders` | 15 | 3 |
+| `building_footprints` | 12 | 3 |
+| `coa_applications` | 18 | 6 |
+| `data_quality_snapshots` | 47 | 2 |
+| `neighbourhoods` | 21 | 2 |
+| `notifications` | 12 | 2 |
+| `parcel_buildings` | 8 | 3 |
+| `parcels` | 22 | 5 |
+| `permit_history` | 8 | 2 |
+| `permit_parcels` | 7 | 3 |
+| `permit_trades` | 10 | 5 |
+| `permits` | 42 | 10 |
+| `pipeline_runs` | 10 | 1 |
+| `sync_runs` | 12 | 0 |
+| `trade_mapping_rules` | 10 | 2 |
+| `trades` | 7 | 1 |
 
-### Indexes
+### Materialized Views (1)
 
-| Table | Index | Type | Purpose |
-|-------|-------|------|---------|
-| `permits` | `idx_permits_status` | B-tree | Filter by status |
-| `permits` | `idx_permits_permit_type` | B-tree | Filter by permit type |
-| `permits` | `idx_permits_issued_date` | B-tree | Sort/filter by issued date |
-| `permits` | `idx_permits_ward` | B-tree | Filter by ward |
-| `permits` | `idx_permits_data_hash` | B-tree | Fast hash lookup for change detection |
-| `permits` | `idx_permits_builder_name` | B-tree | Join to builders |
-| `permits` | `idx_permits_description_fts` | GIN | Full-text search on `to_tsvector('english', COALESCE(description, ''))` |
-| `permit_history` | `idx_permit_history_permit` | B-tree | Look up history by permit composite key |
-| `permit_history` | `idx_permit_history_sync_run` | B-tree | Filter history by sync run |
-| `trade_mapping_rules` | `idx_trade_mapping_rules_trade` | B-tree | Filter rules by trade |
-| `trade_mapping_rules` | `idx_trade_mapping_rules_tier` | B-tree | Filter active rules by tier |
-| `permit_trades` | `idx_permit_trades_trade` | B-tree | Filter by trade |
-| `permit_trades` | `idx_permit_trades_active` | B-tree | Filter active matches |
-| `permit_trades` | `idx_permit_trades_lead_score` | B-tree (DESC) | Sort by lead score |
-| `permit_trades` | `idx_permit_trades_permit` | B-tree | Look up trades by permit |
-| `builders` | `idx_builders_name_normalized` | B-tree | Fast builder lookup |
-| `builders` | `idx_builders_permit_count` | B-tree (DESC) | Sort builders by activity |
-| `builder_contacts` | `idx_builder_contacts_builder` | B-tree | FK lookup |
-| `builder_contacts` | `idx_builder_contacts_type` | B-tree | Filter by contact type |
-| `coa_applications` | `idx_coa_applications_address` | B-tree | Address lookup |
-| `coa_applications` | `idx_coa_applications_ward` | B-tree | Filter by ward |
-| `coa_applications` | `idx_coa_applications_linked_permit` | B-tree | Join to permits |
-| `notifications` | `idx_notifications_user_read` | B-tree | Unread notification queries |
-| `notifications` | `idx_notifications_user_created` | B-tree (DESC) | Recent notifications per user |
-| `parcels` | `idx_parcels_address` | B-tree | Address lookup (addr_num_normalized, street_name_normalized) |
-| `parcels` | `idx_parcels_street_name` | B-tree | Street name lookup |
-| `parcels` | `idx_parcels_feature_type` | B-tree | Filter by feature type |
-| `permit_parcels` | `idx_permit_parcels_permit` | B-tree | Look up parcels by permit |
-| `permit_parcels` | `idx_permit_parcels_parcel` | B-tree | Look up permits by parcel |
-| `permits` | `idx_permits_neighbourhood` | B-tree | Filter by neighbourhood |
-| `neighbourhoods` | `idx_neighbourhoods_neighbourhood_id` | B-tree | Lookup by Toronto neighbourhood ID |
-| `data_quality_snapshots` | `idx_dqs_snapshot_date` | B-tree (DESC) | Latest snapshot lookup |
+- `mv_monthly_permit_stats`
 
-### Key Design Decisions
+### Column Detail
 
-- **Composite PK** `(permit_num, revision_num)` on `permits` -- the Toronto Open Data feed uses this pair as the natural key. A single permit can have multiple revisions.
-- **`data_hash` column** (VARCHAR(64)) stores the SHA-256 hex digest of the sorted raw JSON fields, enabling O(1) change detection during sync.
-- **`raw_json` JSONB column** preserves the original payload for reprocessing without re-downloading the feed.
-- **`CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`** -- all DDL is idempotent so migrations can be re-run safely.
-- **`ON CONFLICT (slug) DO NOTHING`** on trade seed data -- idempotent inserts.
+#### `address_points` (3 columns)
 
-### Database Client
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `address_point_id` | INTEGER | NO | - |
+| `latitude` | NUMERIC(10,7) | NO | - |
+| `longitude` | NUMERIC(10,7) | NO | - |
 
-The `pg` Pool is configured from either `DATABASE_URL` (production) or individual `PG_*` environment variables (local dev). SSL is enabled only in production. The `query<T>()` helper returns typed rows; `getClient()` returns a `PoolClient` for transactions.
+#### `builder_contacts` (8 columns)
 
-## 3. Associated Files
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(builder_contacts_id_seq) |
+| `builder_id` | INTEGER | NO | - |
+| `contact_type` | CHARACTER VARYING(20) | YES | - |
+| `contact_value` | CHARACTER VARYING(500) | YES | - |
+| `source` | CHARACTER VARYING(50) | NO | user |
+| `contributed_by` | CHARACTER VARYING(100) | YES | - |
+| `verified` | BOOLEAN | NO | false |
+| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
 
-| File | Role |
-|------|------|
-| `migrations/001_permits.sql` | Creates `permits` table and all its indexes including GIN FTS |
-| `migrations/002_permit_history.sql` | Creates `permit_history` table |
-| `migrations/003_sync_runs.sql` | Creates `sync_runs` table |
-| `migrations/004_trades.sql` | Creates `trades` table and seeds 20 trade rows |
-| `migrations/005_trade_mapping_rules.sql` | Creates `trade_mapping_rules` table and seeds ~90 rules across 3 tiers |
-| `migrations/006_permit_trades.sql` | Creates `permit_trades` junction table |
-| `migrations/007_builders.sql` | Creates `builders` table |
-| `migrations/008_builder_contacts.sql` | Creates `builder_contacts` table |
-| `migrations/009_coa_applications.sql` | Creates `coa_applications` table |
-| `migrations/010_notifications.sql` | Creates `notifications` table |
-| `migrations/011_parcels.sql` | Creates `parcels` table for Toronto Property Boundaries |
-| `migrations/012_permit_parcels.sql` | Creates `permit_parcels` junction table |
-| `migrations/013_neighbourhoods.sql` | Creates `neighbourhoods` table with Census 2021 data |
-| `migrations/014_permit_neighbourhood.sql` | Adds `neighbourhood_id` FK column to `permits` |
-| `migrations/015_data_quality_snapshots.sql` | Creates `data_quality_snapshots` table |
-| `migrations/022_parcel_irregularity.sql` | Adds `is_irregular` BOOLEAN column to `parcels` |
-| `migrations/023_building_footprints.sql` | Creates `building_footprints` table for Toronto 3D Massing data |
-| `migrations/024_parcel_buildings.sql` | Creates `parcel_buildings` junction table linking parcels to building footprints |
-| `migrations/025_quality_massing.sql` | Adds `building_footprints_total` and `parcels_with_buildings` columns to `data_quality_snapshots` |
-| `src/lib/db/client.ts` | PostgreSQL connection pool (`pg.Pool`), `query<T>()`, `getClient()` |
-| `scripts/migrate.js` | Migration runner -- reads SQL files from `/migrations/` in alphabetical order and executes them sequentially |
-| `src/lib/permits/types.ts` | TypeScript interfaces: `Permit`, `RawPermitRecord`, `PermitChange`, `SyncRun`, `SyncStats`, `Trade`, `TradeMatch`, `TradeMappingRule`, `Builder`, `PermitFilter` |
+#### `builders` (15 columns)
 
-## 4. Constraints & Edge Cases
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(builders_id_seq) |
+| `name` | CHARACTER VARYING(500) | NO | - |
+| `name_normalized` | CHARACTER VARYING(500) | NO | - |
+| `phone` | CHARACTER VARYING(50) | YES | - |
+| `email` | CHARACTER VARYING(200) | YES | - |
+| `website` | CHARACTER VARYING(500) | YES | - |
+| `google_place_id` | CHARACTER VARYING(200) | YES | - |
+| `google_rating` | NUMERIC(2,1) | YES | - |
+| `google_review_count` | INTEGER | YES | - |
+| `obr_business_number` | CHARACTER VARYING(50) | YES | - |
+| `wsib_status` | CHARACTER VARYING(50) | YES | - |
+| `permit_count` | INTEGER | NO | 0 |
+| `first_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `last_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `enriched_at` | TIMESTAMP WITHOUT TIME ZONE | YES | - |
 
-- `permits` PK is composite -- queries must always filter on both `permit_num` AND `revision_num`.
-- `trade_mapping_rules.tier` has a CHECK constraint `(tier IN (1, 2, 3))` -- inserting tier 4 will fail.
-- `trade_mapping_rules.confidence` has a CHECK constraint `(confidence >= 0 AND confidence <= 1)`.
-- `permit_trades` has a UNIQUE constraint on `(permit_num, revision_num, trade_id)` -- duplicate trade assignments for the same permit are rejected.
-- `trades.slug` is UNIQUE -- duplicate slugs will fail on insert.
-- `builders.name_normalized` is UNIQUE -- builder deduplication relies on normalization before insert.
-- `coa_applications.application_number` is UNIQUE.
-- The migration runner has no rollback capability -- it runs forward-only. Failed migrations abort the process.
-- `est_const_cost` is `DECIMAL(15,2)` -- values exceeding 13 integer digits will overflow.
-- Date columns (`application_date`, `issued_date`, `completed_date`) are `DATE` type (no time component); timestamp columns use `TIMESTAMP` (no timezone).
-- All `created_at` / `first_seen_at` / `last_seen_at` default to `NOW()` -- the database clock must be correct.
+#### `building_footprints` (12 columns)
 
-## 5. Data Schema
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(building_footprints_id_seq) |
+| `source_id` | CHARACTER VARYING(50) | NO | - |
+| `geometry` | JSONB | NO | - |
+| `footprint_area_sqm` | NUMERIC(12,2) | YES | - |
+| `footprint_area_sqft` | NUMERIC(12,2) | YES | - |
+| `max_height_m` | NUMERIC(8,2) | YES | - |
+| `min_height_m` | NUMERIC(8,2) | YES | - |
+| `elev_z` | NUMERIC(8,2) | YES | - |
+| `estimated_stories` | INTEGER | YES | - |
+| `centroid_lat` | NUMERIC(10,7) | YES | - |
+| `centroid_lng` | NUMERIC(10,7) | YES | - |
+| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
 
-### permits
+#### `coa_applications` (18 columns)
 
-```
-permit_num          VARCHAR(30)     NOT NULL  (PK part 1)
-revision_num        VARCHAR(10)     NOT NULL  (PK part 2)
-permit_type         VARCHAR(100)
-structure_type      VARCHAR(100)
-work                VARCHAR(200)
-street_num          VARCHAR(20)
-street_name         VARCHAR(200)
-street_type         VARCHAR(20)
-street_direction    VARCHAR(10)
-city                VARCHAR(100)
-postal              VARCHAR(10)
-geo_id              VARCHAR(30)
-building_type       VARCHAR(100)
-category            VARCHAR(100)
-application_date    DATE
-issued_date         DATE
-completed_date      DATE
-status              VARCHAR(50)
-description         TEXT
-est_const_cost      DECIMAL(15,2)
-builder_name        VARCHAR(500)
-owner               VARCHAR(500)
-dwelling_units_created  INTEGER
-dwelling_units_lost     INTEGER
-ward                VARCHAR(20)
-council_district    VARCHAR(50)
-current_use         VARCHAR(200)
-proposed_use        VARCHAR(200)
-housing_units       INTEGER
-storeys             INTEGER
-latitude            DECIMAL(10,7)
-longitude           DECIMAL(10,7)
-geocoded_at         TIMESTAMP
-data_hash           VARCHAR(64)
-first_seen_at       TIMESTAMP       NOT NULL DEFAULT NOW()
-last_seen_at        TIMESTAMP       NOT NULL DEFAULT NOW()
-raw_json            JSONB
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(coa_applications_id_seq) |
+| `application_number` | CHARACTER VARYING(50) | YES | - |
+| `address` | CHARACTER VARYING(500) | YES | - |
+| `street_num` | CHARACTER VARYING(20) | YES | - |
+| `street_name` | CHARACTER VARYING(200) | YES | - |
+| `ward` | CHARACTER VARYING(10) | YES | - |
+| `status` | CHARACTER VARYING(50) | YES | - |
+| `decision` | CHARACTER VARYING(50) | YES | - |
+| `decision_date` | DATE | YES | - |
+| `hearing_date` | DATE | YES | - |
+| `description` | TEXT | YES | - |
+| `applicant` | CHARACTER VARYING(500) | YES | - |
+| `linked_permit_num` | CHARACTER VARYING(30) | YES | - |
+| `linked_confidence` | NUMERIC(3,2) | YES | - |
+| `data_hash` | CHARACTER VARYING(64) | YES | - |
+| `first_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `last_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `sub_type` | TEXT | YES | - |
 
-### permit_history
+#### `data_quality_snapshots` (47 columns)
 
-```
-id              SERIAL          PRIMARY KEY
-permit_num      VARCHAR(30)     NOT NULL
-revision_num    VARCHAR(10)     NOT NULL
-sync_run_id     INTEGER
-field_name      VARCHAR(100)    NOT NULL
-old_value       TEXT
-new_value       TEXT
-changed_at      TIMESTAMP       NOT NULL DEFAULT NOW()
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(data_quality_snapshots_id_seq) |
+| `snapshot_date` | DATE | NO | CURRENT_DATE |
+| `total_permits` | INTEGER | NO | - |
+| `active_permits` | INTEGER | NO | - |
+| `permits_with_trades` | INTEGER | NO | - |
+| `trade_matches_total` | INTEGER | NO | - |
+| `trade_avg_confidence` | NUMERIC(4,3) | YES | - |
+| `trade_tier1_count` | INTEGER | NO | - |
+| `trade_tier2_count` | INTEGER | NO | - |
+| `trade_tier3_count` | INTEGER | NO | - |
+| `permits_with_builder` | INTEGER | NO | - |
+| `builders_total` | INTEGER | NO | - |
+| `builders_enriched` | INTEGER | NO | - |
+| `builders_with_phone` | INTEGER | NO | - |
+| `builders_with_email` | INTEGER | NO | - |
+| `builders_with_website` | INTEGER | NO | - |
+| `builders_with_google` | INTEGER | NO | - |
+| `builders_with_wsib` | INTEGER | NO | - |
+| `permits_with_parcel` | INTEGER | NO | - |
+| `parcel_exact_matches` | INTEGER | NO | - |
+| `parcel_name_matches` | INTEGER | NO | - |
+| `parcel_avg_confidence` | NUMERIC(4,3) | YES | - |
+| `permits_with_neighbourhood` | INTEGER | NO | - |
+| `permits_geocoded` | INTEGER | NO | - |
+| `coa_total` | INTEGER | NO | - |
+| `coa_linked` | INTEGER | NO | - |
+| `coa_avg_confidence` | NUMERIC(4,3) | YES | - |
+| `coa_high_confidence` | INTEGER | NO | - |
+| `coa_low_confidence` | INTEGER | NO | - |
+| `permits_updated_24h` | INTEGER | NO | - |
+| `permits_updated_7d` | INTEGER | NO | - |
+| `permits_updated_30d` | INTEGER | NO | - |
+| `last_sync_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `last_sync_status` | CHARACTER VARYING(20) | YES | - |
+| `created_at` | TIMESTAMP WITH TIME ZONE | YES | now() |
+| `parcel_spatial_matches` | INTEGER | YES | 0 |
+| `permits_with_scope` | INTEGER | YES | 0 |
+| `scope_project_type_breakdown` | JSONB | YES | - |
+| `building_footprints_total` | INTEGER | NO | 0 |
+| `parcels_with_buildings` | INTEGER | NO | 0 |
+| `permits_with_scope_tags` | INTEGER | YES | 0 |
+| `scope_tags_top` | JSONB | YES | - |
+| `permits_with_detailed_tags` | INTEGER | YES | 0 |
+| `trade_residential_classified` | INTEGER | YES | 0 |
+| `trade_residential_total` | INTEGER | YES | 0 |
+| `trade_commercial_classified` | INTEGER | YES | 0 |
+| `trade_commercial_total` | INTEGER | YES | 0 |
 
-### sync_runs
+#### `neighbourhoods` (21 columns)
 
-```
-id                  SERIAL          PRIMARY KEY
-started_at          TIMESTAMP       NOT NULL DEFAULT NOW()
-completed_at        TIMESTAMP
-status              VARCHAR(20)     NOT NULL DEFAULT 'running'
-records_total       INTEGER         NOT NULL DEFAULT 0
-records_new         INTEGER         NOT NULL DEFAULT 0
-records_updated     INTEGER         NOT NULL DEFAULT 0
-records_unchanged   INTEGER         NOT NULL DEFAULT 0
-records_errors      INTEGER         NOT NULL DEFAULT 0
-error_message       TEXT
-snapshot_path       VARCHAR(500)
-duration_ms         INTEGER
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(neighbourhoods_id_seq) |
+| `neighbourhood_id` | INTEGER | NO | - |
+| `name` | CHARACTER VARYING(100) | NO | - |
+| `geometry` | JSONB | YES | - |
+| `avg_household_income` | INTEGER | YES | - |
+| `median_household_income` | INTEGER | YES | - |
+| `avg_individual_income` | INTEGER | YES | - |
+| `low_income_pct` | NUMERIC(5,2) | YES | - |
+| `tenure_owner_pct` | NUMERIC(5,2) | YES | - |
+| `tenure_renter_pct` | NUMERIC(5,2) | YES | - |
+| `period_of_construction` | CHARACTER VARYING(50) | YES | - |
+| `couples_pct` | NUMERIC(5,2) | YES | - |
+| `lone_parent_pct` | NUMERIC(5,2) | YES | - |
+| `married_pct` | NUMERIC(5,2) | YES | - |
+| `university_degree_pct` | NUMERIC(5,2) | YES | - |
+| `immigrant_pct` | NUMERIC(5,2) | YES | - |
+| `visible_minority_pct` | NUMERIC(5,2) | YES | - |
+| `english_knowledge_pct` | NUMERIC(5,2) | YES | - |
+| `top_mother_tongue` | CHARACTER VARYING(50) | YES | - |
+| `census_year` | INTEGER | YES | 2021 |
+| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
 
-### trades
+#### `notifications` (12 columns)
 
-```
-id          SERIAL          PRIMARY KEY
-slug        VARCHAR(50)     UNIQUE NOT NULL
-name        VARCHAR(100)    NOT NULL
-icon        VARCHAR(50)
-color       VARCHAR(7)
-sort_order  INTEGER
-created_at  TIMESTAMP       NOT NULL DEFAULT NOW()
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(notifications_id_seq) |
+| `user_id` | CHARACTER VARYING(100) | NO | - |
+| `type` | CHARACTER VARYING(50) | NO | - |
+| `title` | CHARACTER VARYING(200) | YES | - |
+| `body` | TEXT | YES | - |
+| `permit_num` | CHARACTER VARYING(30) | YES | - |
+| `trade_slug` | CHARACTER VARYING(50) | YES | - |
+| `channel` | CHARACTER VARYING(20) | NO | in_app |
+| `is_read` | BOOLEAN | NO | false |
+| `is_sent` | BOOLEAN | NO | false |
+| `sent_at` | TIMESTAMP WITHOUT TIME ZONE | YES | - |
+| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
 
-### trade_mapping_rules
+#### `parcel_buildings` (8 columns)
 
-```
-id              SERIAL          PRIMARY KEY
-trade_id        INTEGER         NOT NULL  FK -> trades(id)
-tier            INTEGER         NOT NULL  CHECK (tier IN (1, 2, 3))
-match_field     VARCHAR(50)     NOT NULL
-match_pattern   VARCHAR(500)    NOT NULL
-confidence      DECIMAL(3,2)    NOT NULL  CHECK (0 <= confidence <= 1)
-phase_start     INTEGER
-phase_end       INTEGER
-is_active       BOOLEAN         NOT NULL DEFAULT true
-created_at      TIMESTAMP       NOT NULL DEFAULT NOW()
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(parcel_buildings_id_seq) |
+| `parcel_id` | INTEGER | NO | - |
+| `building_id` | INTEGER | NO | - |
+| `is_primary` | BOOLEAN | NO | false |
+| `structure_type` | CHARACTER VARYING(20) | NO | other |
+| `linked_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `match_type` | CHARACTER VARYING(30) | NO | polygon |
+| `confidence` | NUMERIC(3,2) | NO | 0.85 |
 
-### permit_trades
+#### `parcels` (22 columns)
 
-```
-id              SERIAL          PRIMARY KEY
-permit_num      VARCHAR(30)     NOT NULL
-revision_num    VARCHAR(10)     NOT NULL
-trade_id        INTEGER         NOT NULL  FK -> trades(id)
-tier            INTEGER
-confidence      DECIMAL(3,2)
-is_active       BOOLEAN         NOT NULL DEFAULT true
-phase           VARCHAR(20)
-lead_score      INTEGER         NOT NULL DEFAULT 0
-classified_at   TIMESTAMP       NOT NULL DEFAULT NOW()
-UNIQUE (permit_num, revision_num, trade_id)
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(parcels_id_seq) |
+| `parcel_id` | CHARACTER VARYING(20) | NO | - |
+| `feature_type` | CHARACTER VARYING(20) | YES | - |
+| `address_number` | CHARACTER VARYING(20) | YES | - |
+| `linear_name_full` | CHARACTER VARYING(200) | YES | - |
+| `addr_num_normalized` | CHARACTER VARYING(20) | YES | - |
+| `street_name_normalized` | CHARACTER VARYING(200) | YES | - |
+| `street_type_normalized` | CHARACTER VARYING(20) | YES | - |
+| `stated_area_raw` | CHARACTER VARYING(100) | YES | - |
+| `lot_size_sqm` | NUMERIC(12,2) | YES | - |
+| `lot_size_sqft` | NUMERIC(12,2) | YES | - |
+| `frontage_m` | NUMERIC(8,2) | YES | - |
+| `frontage_ft` | NUMERIC(8,2) | YES | - |
+| `depth_m` | NUMERIC(8,2) | YES | - |
+| `depth_ft` | NUMERIC(8,2) | YES | - |
+| `geometry` | JSONB | YES | - |
+| `date_effective` | DATE | YES | - |
+| `date_expiry` | DATE | YES | - |
+| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `centroid_lat` | NUMERIC(10,7) | YES | - |
+| `centroid_lng` | NUMERIC(10,7) | YES | - |
+| `is_irregular` | BOOLEAN | YES | false |
 
-### builders
+#### `permit_history` (8 columns)
 
-```
-id                      SERIAL          PRIMARY KEY
-name                    VARCHAR(500)    NOT NULL
-name_normalized         VARCHAR(500)    NOT NULL UNIQUE
-phone                   VARCHAR(50)
-email                   VARCHAR(200)
-website                 VARCHAR(500)
-google_place_id         VARCHAR(200)
-google_rating           DECIMAL(2,1)
-google_review_count     INTEGER
-obr_business_number     VARCHAR(50)
-wsib_status             VARCHAR(50)
-permit_count            INTEGER         NOT NULL DEFAULT 0
-first_seen_at           TIMESTAMP       NOT NULL DEFAULT NOW()
-last_seen_at            TIMESTAMP       NOT NULL DEFAULT NOW()
-enriched_at             TIMESTAMP
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(permit_history_id_seq) |
+| `permit_num` | CHARACTER VARYING(30) | NO | - |
+| `revision_num` | CHARACTER VARYING(10) | NO | - |
+| `sync_run_id` | INTEGER | YES | - |
+| `field_name` | CHARACTER VARYING(100) | NO | - |
+| `old_value` | TEXT | YES | - |
+| `new_value` | TEXT | YES | - |
+| `changed_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
 
-### builder_contacts
+#### `permit_parcels` (7 columns)
 
-```
-id              SERIAL          PRIMARY KEY
-builder_id      INTEGER         NOT NULL  FK -> builders(id)
-contact_type    VARCHAR(20)
-contact_value   VARCHAR(500)
-source          VARCHAR(50)     NOT NULL DEFAULT 'user'
-contributed_by  VARCHAR(100)
-verified        BOOLEAN         NOT NULL DEFAULT false
-created_at      TIMESTAMP       NOT NULL DEFAULT NOW()
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(permit_parcels_id_seq) |
+| `permit_num` | CHARACTER VARYING(30) | NO | - |
+| `revision_num` | CHARACTER VARYING(10) | NO | - |
+| `parcel_id` | INTEGER | NO | - |
+| `match_type` | CHARACTER VARYING(30) | NO | - |
+| `confidence` | NUMERIC(3,2) | NO | - |
+| `linked_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
 
-### coa_applications
+#### `permit_trades` (10 columns)
 
-```
-id                  SERIAL          PRIMARY KEY
-application_number  VARCHAR(50)     UNIQUE
-address             VARCHAR(500)
-street_num          VARCHAR(20)
-street_name         VARCHAR(200)
-ward                VARCHAR(10)
-status              VARCHAR(50)
-decision            VARCHAR(50)
-decision_date       DATE
-hearing_date        DATE
-description         TEXT
-applicant           VARCHAR(500)
-linked_permit_num   VARCHAR(30)
-linked_confidence   DECIMAL(3,2)
-data_hash           VARCHAR(64)
-first_seen_at       TIMESTAMP       NOT NULL DEFAULT NOW()
-last_seen_at        TIMESTAMP       NOT NULL DEFAULT NOW()
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(permit_trades_id_seq) |
+| `permit_num` | CHARACTER VARYING(30) | NO | - |
+| `revision_num` | CHARACTER VARYING(10) | NO | - |
+| `trade_id` | INTEGER | NO | - |
+| `tier` | INTEGER | YES | - |
+| `confidence` | NUMERIC(3,2) | YES | - |
+| `is_active` | BOOLEAN | NO | true |
+| `phase` | CHARACTER VARYING(20) | YES | - |
+| `lead_score` | INTEGER | NO | 0 |
+| `classified_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
 
-### notifications
+#### `permits` (42 columns)
 
-```
-id          SERIAL          PRIMARY KEY
-user_id     VARCHAR(100)    NOT NULL
-type        VARCHAR(50)     NOT NULL
-title       VARCHAR(200)
-body        TEXT
-permit_num  VARCHAR(30)
-trade_slug  VARCHAR(50)
-channel     VARCHAR(20)     NOT NULL DEFAULT 'in_app'
-is_read     BOOLEAN         NOT NULL DEFAULT false
-is_sent     BOOLEAN         NOT NULL DEFAULT false
-sent_at     TIMESTAMP
-created_at  TIMESTAMP       NOT NULL DEFAULT NOW()
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `permit_num` | CHARACTER VARYING(30) | NO | - |
+| `revision_num` | CHARACTER VARYING(10) | NO | - |
+| `permit_type` | CHARACTER VARYING(100) | YES | - |
+| `structure_type` | CHARACTER VARYING(100) | YES | - |
+| `work` | CHARACTER VARYING(200) | YES | - |
+| `street_num` | CHARACTER VARYING(20) | YES | - |
+| `street_name` | CHARACTER VARYING(200) | YES | - |
+| `street_type` | CHARACTER VARYING(20) | YES | - |
+| `street_direction` | CHARACTER VARYING(10) | YES | - |
+| `city` | CHARACTER VARYING(100) | YES | - |
+| `postal` | CHARACTER VARYING(10) | YES | - |
+| `geo_id` | CHARACTER VARYING(30) | YES | - |
+| `building_type` | CHARACTER VARYING(100) | YES | - |
+| `category` | CHARACTER VARYING(100) | YES | - |
+| `application_date` | DATE | YES | - |
+| `issued_date` | DATE | YES | - |
+| `completed_date` | DATE | YES | - |
+| `status` | CHARACTER VARYING(50) | YES | - |
+| `description` | TEXT | YES | - |
+| `est_const_cost` | NUMERIC(15,2) | YES | - |
+| `builder_name` | CHARACTER VARYING(500) | YES | - |
+| `owner` | CHARACTER VARYING(500) | YES | - |
+| `dwelling_units_created` | INTEGER | YES | - |
+| `dwelling_units_lost` | INTEGER | YES | - |
+| `ward` | CHARACTER VARYING(20) | YES | - |
+| `council_district` | CHARACTER VARYING(50) | YES | - |
+| `current_use` | CHARACTER VARYING(200) | YES | - |
+| `proposed_use` | CHARACTER VARYING(200) | YES | - |
+| `housing_units` | INTEGER | YES | - |
+| `storeys` | INTEGER | YES | - |
+| `latitude` | NUMERIC(10,7) | YES | - |
+| `longitude` | NUMERIC(10,7) | YES | - |
+| `geocoded_at` | TIMESTAMP WITHOUT TIME ZONE | YES | - |
+| `data_hash` | CHARACTER VARYING(64) | YES | - |
+| `first_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `last_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `raw_json` | JSONB | YES | - |
+| `neighbourhood_id` | INTEGER | YES | - |
+| `project_type` | CHARACTER VARYING(20) | YES | - |
+| `scope_tags` | ARRAY | YES | - |
+| `scope_classified_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `scope_source` | CHARACTER VARYING(20) | YES | classified |
 
-### parcels
+#### `pipeline_runs` (10 columns)
 
-```
-id                      SERIAL          PRIMARY KEY
-parcel_id               VARCHAR(20)     UNIQUE NOT NULL
-feature_type            VARCHAR(20)
-address_number          VARCHAR(20)
-linear_name_full        VARCHAR(200)
-addr_num_normalized     VARCHAR(20)
-street_name_normalized  VARCHAR(200)
-street_type_normalized  VARCHAR(20)
-stated_area_raw         VARCHAR(100)
-lot_size_sqm            DECIMAL(12,2)
-lot_size_sqft           DECIMAL(12,2)
-frontage_m              DECIMAL(8,2)
-frontage_ft             DECIMAL(8,2)
-depth_m                 DECIMAL(8,2)
-depth_ft                DECIMAL(8,2)
-geometry                JSONB
-date_effective          DATE
-date_expiry             DATE
-created_at              TIMESTAMP       NOT NULL DEFAULT NOW()
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(pipeline_runs_id_seq) |
+| `pipeline` | TEXT | NO | - |
+| `started_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `completed_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `status` | TEXT | NO | running |
+| `records_total` | INTEGER | YES | 0 |
+| `records_new` | INTEGER | YES | 0 |
+| `records_updated` | INTEGER | YES | 0 |
+| `error_message` | TEXT | YES | - |
+| `duration_ms` | INTEGER | YES | - |
 
-### permit_parcels
+#### `sync_runs` (12 columns)
 
-```
-id              SERIAL          PRIMARY KEY
-permit_num      VARCHAR(30)     NOT NULL
-revision_num    VARCHAR(10)     NOT NULL
-parcel_id       INTEGER         NOT NULL  FK -> parcels(id)
-match_type      VARCHAR(30)     NOT NULL
-confidence      DECIMAL(3,2)    NOT NULL
-linked_at       TIMESTAMP       NOT NULL DEFAULT NOW()
-UNIQUE (permit_num, revision_num, parcel_id)
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(sync_runs_id_seq) |
+| `started_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `completed_at` | TIMESTAMP WITHOUT TIME ZONE | YES | - |
+| `status` | CHARACTER VARYING(20) | NO | running |
+| `records_total` | INTEGER | NO | 0 |
+| `records_new` | INTEGER | NO | 0 |
+| `records_updated` | INTEGER | NO | 0 |
+| `records_unchanged` | INTEGER | NO | 0 |
+| `records_errors` | INTEGER | NO | 0 |
+| `error_message` | TEXT | YES | - |
+| `snapshot_path` | CHARACTER VARYING(500) | YES | - |
+| `duration_ms` | INTEGER | YES | - |
 
-### neighbourhoods
+#### `trade_mapping_rules` (10 columns)
 
-```
-id                      SERIAL          PRIMARY KEY
-neighbourhood_id        INTEGER         UNIQUE NOT NULL
-name                    VARCHAR(200)    NOT NULL
-geometry                JSONB
-avg_household_income    INTEGER
-median_household_income INTEGER
-avg_individual_income   INTEGER
-low_income_pct          DECIMAL(5,2)
-tenure_owner_pct        DECIMAL(5,2)
-tenure_renter_pct       DECIMAL(5,2)
-period_of_construction  VARCHAR(50)
-couples_pct             DECIMAL(5,2)
-lone_parent_pct         DECIMAL(5,2)
-married_pct             DECIMAL(5,2)
-university_degree_pct   DECIMAL(5,2)
-immigrant_pct           DECIMAL(5,2)
-visible_minority_pct    DECIMAL(5,2)
-english_knowledge_pct   DECIMAL(5,2)
-top_mother_tongue       VARCHAR(100)
-census_year             INTEGER         NOT NULL
-created_at              TIMESTAMP       NOT NULL DEFAULT NOW()
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(trade_mapping_rules_id_seq) |
+| `trade_id` | INTEGER | NO | - |
+| `tier` | INTEGER | NO | - |
+| `match_field` | CHARACTER VARYING(50) | NO | - |
+| `match_pattern` | CHARACTER VARYING(500) | NO | - |
+| `confidence` | NUMERIC(3,2) | NO | - |
+| `phase_start` | INTEGER | YES | - |
+| `phase_end` | INTEGER | YES | - |
+| `is_active` | BOOLEAN | NO | true |
+| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
 
-### data_quality_snapshots
+#### `trades` (7 columns)
 
-```
-id                          SERIAL          PRIMARY KEY
-snapshot_date               DATE            NOT NULL UNIQUE
-total_permits               INTEGER         NOT NULL
-active_permits              INTEGER         NOT NULL
-permits_with_trades         INTEGER         NOT NULL
-trade_matches_total         INTEGER         NOT NULL
-trade_avg_confidence        NUMERIC(4,3)
-trade_tier1_count           INTEGER         NOT NULL
-trade_tier2_count           INTEGER         NOT NULL
-trade_tier3_count           INTEGER         NOT NULL
-permits_with_builder        INTEGER         NOT NULL
-builders_total              INTEGER         NOT NULL
-builders_enriched           INTEGER         NOT NULL
-builders_with_phone         INTEGER         NOT NULL
-builders_with_email         INTEGER         NOT NULL
-builders_with_website       INTEGER         NOT NULL
-builders_with_google        INTEGER         NOT NULL
-builders_with_wsib          INTEGER         NOT NULL
-permits_with_parcel         INTEGER         NOT NULL
-parcel_exact_matches        INTEGER         NOT NULL
-parcel_name_matches         INTEGER         NOT NULL
-parcel_avg_confidence       NUMERIC(4,3)
-permits_with_neighbourhood  INTEGER         NOT NULL
-permits_geocoded            INTEGER         NOT NULL
-coa_total                   INTEGER         NOT NULL
-coa_linked                  INTEGER         NOT NULL
-coa_avg_confidence          NUMERIC(4,3)
-coa_high_confidence         INTEGER         NOT NULL
-coa_low_confidence          INTEGER         NOT NULL
-permits_updated_24h         INTEGER         NOT NULL
-permits_updated_7d          INTEGER         NOT NULL
-permits_updated_30d         INTEGER         NOT NULL
-last_sync_at                TIMESTAMPTZ
-last_sync_status            VARCHAR(20)
-created_at                  TIMESTAMPTZ     DEFAULT NOW()
-```
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(trades_id_seq) |
+| `slug` | CHARACTER VARYING(50) | NO | - |
+| `name` | CHARACTER VARYING(100) | NO | - |
+| `icon` | CHARACTER VARYING(50) | YES | - |
+| `color` | CHARACTER VARYING(7) | YES | - |
+| `sort_order` | INTEGER | YES | - |
+| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
 
-## 6. Integrations
+<!-- DB_SCHEMA_END -->
 
-| System | Direction | Detail |
-|--------|-----------|--------|
-| PostgreSQL | Read/Write | All data persistence. `pg` npm package via connection pool. |
-| `scripts/migrate.js` | Write | Runs all SQL files in `/migrations/` sequentially on deploy. |
-| Toronto Open Data | Ingest (via sync pipeline) | Raw data lands in `permits` table. |
-| Google Places API | Enrich | Builder enrichment writes to `builders` table. |
-| Google Geocoding API | Enrich | Geocoded coordinates written to `permits.latitude`, `permits.longitude`, `permits.geocoded_at`. |
-| Next.js API Routes | Read | All API endpoints query the schema via `src/lib/db/client.ts`. |
+## 4. Testing Mandate
+<!-- TEST_INJECT_START -->
+- **Logic:** Verify constraint enforcement -- NOT NULL on PK columns, CHECK constraints on tier/confidence, UNIQUE on slugs/normalized names/junction composites, and FK integrity across all junction tables.
+- **UI:** N/A -- no visual component.
+- **Infra:** Run `scripts/migrate.js` against empty DB (all migrations pass), run twice (idempotent), verify all indexes exist in `pg_indexes`, confirm 20 seeded trades with idempotent re-seed, and validate connection pool handles concurrent queries.
+<!-- TEST_INJECT_END -->
 
-## 7. Triad Test Criteria
-
-### A. Logic Layer
-
-| ID | Test | Assertion |
-|----|------|-----------|
-| L01 | Insert a permit with NULL `permit_num` | Should fail -- NOT NULL constraint on PK column |
-| L02 | Insert two permits with same `(permit_num, revision_num)` | Should fail -- PRIMARY KEY violation |
-| L03 | Insert a `trade_mapping_rules` row with `tier = 4` | Should fail -- CHECK constraint `(tier IN (1, 2, 3))` |
-| L04 | Insert a `trade_mapping_rules` row with `confidence = 1.5` | Should fail -- CHECK constraint `(confidence >= 0 AND confidence <= 1)` |
-| L05 | Insert a `permit_trades` row with duplicate `(permit_num, revision_num, trade_id)` | Should fail -- UNIQUE constraint |
-| L06 | Insert a `trades` row with duplicate slug | Should fail -- UNIQUE constraint on `slug` |
-| L07 | Insert a `builders` row with duplicate `name_normalized` | Should fail -- UNIQUE constraint |
-| L08 | Insert a `trade_mapping_rules` row with non-existent `trade_id` | Should fail -- FK constraint |
-| L09 | Insert a `builder_contacts` row with non-existent `builder_id` | Should fail -- FK constraint |
-| L10 | Insert a `permit_trades` row with non-existent `trade_id` | Should fail -- FK constraint |
-| L11 | Verify `sync_runs.status` defaults to `'running'` on INSERT | Should be `'running'` |
-| L12 | Verify `permits.first_seen_at` and `last_seen_at` default to `NOW()` | Both timestamps should be set automatically |
-
-### B. UI Layer
-
-N/A -- the database schema has no visual component. UI tests apply to features that consume this schema (see specs 06, etc.).
-
-### C. Infra Layer
-
-| ID | Test | Assertion |
-|----|------|-----------|
-| I01 | Run `scripts/migrate.js` against an empty database | All 10 migrations complete without error |
-| I02 | Run `scripts/migrate.js` twice against the same database | Second run succeeds (idempotent due to `IF NOT EXISTS`) |
-| I03 | Verify GIN index `idx_permits_description_fts` exists | `SELECT indexname FROM pg_indexes WHERE indexname = 'idx_permits_description_fts'` returns 1 row |
-| I04 | Verify all 24 indexes exist after migration | Query `pg_indexes` for each expected index name |
-| I05 | Verify 20 trades are seeded after migration | `SELECT COUNT(*) FROM trades` returns 20 |
-| I06 | Verify trade seed is idempotent | Running `004_trades.sql` twice still yields 20 rows (ON CONFLICT DO NOTHING) |
-| I07 | Verify connection pool handles concurrent queries | Issue 10 parallel `SELECT 1` queries -- all succeed |
-| I08 | Verify `query<T>()` returns typed rows | TypeScript compile check -- result rows match `Permit` interface |
-
----
-
-## Operating Boundaries
+## 5. Operating Boundaries
 
 ### Target Files (Modify / Create)
 - `src/lib/db/client.ts`

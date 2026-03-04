@@ -49,6 +49,8 @@
 | Scaffold task | `npm run task -- --wf=N --name="..."` |
 | Safe start | `npm run safe-start` |
 | Environment check | `node scripts/ai-env-check.mjs` |
+| Harvest tests → specs | `npm run spec:tests` |
+| Regenerate DB schema docs | `npm run db:docs` |
 
 ---
 

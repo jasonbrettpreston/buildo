@@ -18,6 +18,8 @@
     "system-map": "node scripts/generate-system-map.mjs",
     "safe-start": "node -e \"try{require('child_process').execSync('taskkill /F /IM node.exe',{stdio:'ignore'})}catch{}\" && rm -rf .next && npm run build && npm run dev",
     "seed:trades": "npx tsx scripts/seed-trades.ts",
+    "spec:tests": "node scripts/harvest-tests.mjs",
+    "db:docs": "node scripts/generate-db-docs.mjs",
     "prepare": "husky"
   },
   "dependencies": {

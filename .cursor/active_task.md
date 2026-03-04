@@ -1,18 +1,19 @@
-# Active Task: Merge Workflows + AI Automations + Atomic Git Strategy
+# Active Task: Spec Optimization — Lean Template + Automations
 **Status:** Complete
 **Workflow:** WF2 — Feature Enhancement
 
 ## Results
-- **13 workflows → Core 5 Pillars** (WF1, WF2, WF3, WF5, WF11)
-- **635 → 325 → 209 lines** (67% total reduction from original)
-- Merged: WF4→WF2, WF8+WF9→WF1/WF2, WF13→WF1/WF2, WF6+WF7+WF12→WF5
-- Added Execution Order Constraint (4-step chain-of-thought)
-- Added Allowed Commands table (12 pre-defined scripts)
-- Added auto-lint-fix to all Green Light steps
-- Added Atomic Git Commit Strategy (conventional commits + spec traceability)
-- Created `scripts/ai-env-check.mjs` (pre-flight environment check)
-- Updated `scripts/task-init.mjs` to Core 5 only (rejects old WF numbers)
+- **35 specs rewritten** from verbose (200-540 lines) to lean behavioral contracts (41-67 lines)
+- **Total spec lines:** ~10,000+ → 1,923 (80%+ reduction)
+- **0 code blocks** remaining across all specs
+- **All 35 specs** have exactly 5 sections with Auth Matrix
+- **2 automation scripts** created: `harvest-tests.mjs` (32 specs updated), `generate-db-docs.mjs` (18 tables, 272 columns)
+- **2 npm scripts** added: `spec:tests`, `db:docs`
+- **Template updated** to clean 5-section format
+- **engineering_workflows.md** updated with 2 new Allowed Commands
 
 ## Verification
 - 0 TypeScript errors
 - 1327 tests passing (29 files)
+- 0 remaining code blocks in specs
+- All specs have exactly 5 `##` sections

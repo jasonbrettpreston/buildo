@@ -19,45 +19,46 @@
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
-| 07 | `07_trade_taxonomy.md` | Trade Taxonomy | `src/lib/classification/trades.ts` | `src/tests/classification.logic.test.ts` | In Progress |
-| 08 | `08_trade_classification.md` | Classification Engine | `src/lib/classification/classifier.ts`, `src/lib/classification/rules.ts`, `src/lib/classification/tag-trade-matrix.ts` | `src/tests/classification.logic.test.ts` | In Progress |
-| 08b | `08b_classification_assumptions.md` | Trade Classification Assumptions | `src/lib/classification/rules.ts` | — | Active |
-| 08c | `08c_description_keyword_trades.md` | Description Keyword to Trade & Product Mapping | `src/lib/classification/tag-trade-matrix.ts` | — | Active |
-| 09 | `09_construction_phases.md` | Construction Phase Model | `src/lib/classification/phases.ts` | `src/tests/classification.logic.test.ts` | In Progress |
-| 10 | `10_lead_scoring.md` | Lead Scoring | `src/lib/classification/scoring.ts` | `src/tests/scoring.logic.test.ts` | In Progress |
-| 11 | `11_builder_enrichment.md` | Builder Enrichment | `src/lib/builders/enrichment.ts`, `src/lib/builders/normalize.ts`, `src/lib/builders/repository.ts`, +3 more | `src/tests/builders.logic.test.ts` | In Progress |
-| 12 | `12_coa_integration.md` | Committee of Adjustments Integration | `src/lib/coa/linker.ts`, `src/lib/coa/pre-permits.ts`, `src/lib/coa/repository.ts`, +2 more | `src/tests/coa.logic.test.ts` | In Progress |
+| 07 | `07_trade_taxonomy.md` | Trade Taxonomy | `src/lib/classification/trades.ts` | `src/tests/classification.logic.test.ts` | Done |
+| 08 | `08_trade_classification.md` | Classification Engine | `src/lib/classification/classifier.ts`, `src/lib/classification/rules.ts`, `src/lib/classification/tag-trade-matrix.ts` | `src/tests/classification.logic.test.ts` | Done |
+| 08b | `08b_classification_assumptions.md` | Classification Assumptions | `src/lib/classification/rules.ts` | — | Done |
+| 08c | `08c_description_keyword_trades.md` | Description Keyword-to-Trade Mapping | `src/lib/classification/tag-trade-matrix.ts` | — | Done |
+| 09 | `09_construction_phases.md` | Construction Phase Model | `src/lib/classification/phases.ts` | `src/tests/classification.logic.test.ts` | Done |
+| 10 | `10_lead_scoring.md` | Lead Scoring | `src/lib/classification/scoring.ts` | `src/tests/scoring.logic.test.ts` | Done |
+| 11 | `11_builder_enrichment.md` | Builder Enrichment | `src/lib/builders/enrichment.ts`, `src/lib/builders/normalize.ts`, `src/lib/builders/repository.ts`, +3 more | `src/tests/builders.logic.test.ts` | Done |
+| 12 | `12_coa_integration.md` | Committee of Adjustments Integration | `src/lib/coa/linker.ts`, `src/lib/coa/pre-permits.ts`, `src/lib/coa/repository.ts`, +2 more | `src/tests/coa.logic.test.ts` | Done |
 
 ## Phase 3: User Experience
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
-| 13 | `13_auth.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/session.ts`, `src/lib/auth/types.ts`, +4 more | `src/tests/auth.logic.test.ts`, `src/tests/middleware.logic.test.ts` | In Progress |
+| 13 | `13_auth.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/session.ts`, `src/lib/auth/types.ts`, +4 more | `src/tests/auth.logic.test.ts`, `src/tests/middleware.logic.test.ts` | Done |
 | 14 | `14_onboarding.md` | Onboarding Wizard | `src/app/onboarding/page.tsx`, `src/components/onboarding/OnboardingWizard.tsx` | `src/tests/onboarding.ui.test.tsx` | Done |
 | 15 | `15_dashboard_tradesperson.md` | Tradesperson Dashboard | `src/app/dashboard/page.tsx`, `src/components/permits/PermitCard.tsx`, `src/components/permits/PermitFeed.tsx`, +3 more | `src/tests/dashboard.ui.test.tsx` | Done |
 | 16 | `16_dashboard_company.md` | Company Dashboard | `src/app/dashboard/page.tsx` | `src/tests/dashboard.ui.test.tsx` | Done |
 | 17 | `17_dashboard_supplier.md` | Supplier Dashboard | `src/app/dashboard/page.tsx` | `src/tests/dashboard.ui.test.tsx` | Done |
-| 18 | `18_permit_detail.md` | Permit Detail View | `src/app/permits/[id]/page.tsx`, `src/components/permits/BuildingMassing.tsx`, `src/components/permits/NeighbourhoodProfile.tsx`, +1 more | `src/tests/permits.logic.test.ts` | In Progress |
-| 19 | `19_search_filter.md` | Search & Filter | `src/app/search/page.tsx`, `src/components/search/FilterPanel.tsx` | `src/tests/search.logic.test.ts` | In Progress |
-| 20 | `20_map_view.md` | Map View | `src/app/map/page.tsx`, `src/app/api/permits/geo/route.ts` | `src/tests/map.ui.test.tsx` | In Progress |
+| 18 | `18_permit_detail.md` | Permit Detail View | `src/app/permits/[id]/page.tsx`, `src/components/permits/BuildingMassing.tsx`, `src/components/permits/NeighbourhoodProfile.tsx`, +1 more | `src/tests/permits.logic.test.ts` | Done |
+| 19 | `19_search_filter.md` | Search & Filter | `src/app/search/page.tsx`, `src/components/search/FilterPanel.tsx` | `src/tests/search.logic.test.ts` | Done |
+| 20 | `20_map_view.md` | Map View | `src/app/map/page.tsx`, `src/app/api/permits/geo/route.ts` | `src/tests/map.ui.test.tsx` | Done |
 
 ## Phase 4: Growth & Operations
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
-| 21 | `21_notifications.md` | Notifications | `src/lib/notifications/email.ts`, `src/lib/notifications/matcher.ts`, `src/lib/notifications/push.ts`, +4 more | `src/tests/notifications.logic.test.ts` | In Progress |
-| 22 | `22_teams.md` | Team Management | `src/lib/teams/types.ts` | `src/tests/teams.logic.test.ts` | Planned |
-| 23 | `23_analytics.md` | Analytics Dashboard | `src/lib/analytics/queries.ts` | `src/tests/analytics.logic.test.ts` | In Progress |
-| 24 | `24_export.md` | Data Export | `src/lib/export/csv.ts`, `src/lib/export/pdf.ts` | `src/tests/export.logic.test.ts` | In Progress |
-| 25 | `25_subscription.md` | Billing (Stripe) | `src/lib/subscription/plans.ts` | `src/tests/subscription.logic.test.ts` | Planned |
-| 26 | `26_admin.md` | Admin Panel | `src/app/admin/page.tsx`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/pipelines/[slug]/route.ts`, +4 more | `src/tests/admin.ui.test.tsx` | In Progress |
+| 21 | `21_notifications.md` | Notifications | `src/lib/notifications/email.ts`, `src/lib/notifications/matcher.ts`, `src/lib/notifications/push.ts`, +4 more | `src/tests/notifications.logic.test.ts` | Done |
+| 22 | `22_teams.md` | Team Management | `src/lib/teams/types.ts` | `src/tests/teams.logic.test.ts` | Done |
+| 23 | `23_analytics.md` | Analytics Dashboard | `src/lib/analytics/queries.ts` | `src/tests/analytics.logic.test.ts` | Done |
+| 24 | `24_export.md` | Data Export | `src/lib/export/csv.ts`, `src/lib/export/pdf.ts` | `src/tests/export.logic.test.ts` | Done |
+| 25 | `25_subscription.md` | Subscription & Billing (Stripe) | `src/lib/subscription/plans.ts` | `src/tests/subscription.logic.test.ts` | Done |
+| 26 | `26_admin.md` | Admin Panel | `src/app/admin/page.tsx`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/pipelines/[slug]/route.ts`, +4 more | `src/tests/admin.ui.test.tsx` | Done |
 | 27 | `27_neighbourhood_profiles.md` | Neighbourhood Profiles | `src/lib/neighbourhoods/summary.ts`, `src/lib/neighbourhoods/types.ts`, `src/components/permits/NeighbourhoodProfile.tsx` | `src/tests/neighbourhood.logic.test.ts` | Done |
-| 28 | `28_data_quality_dashboard.md` | Data Quality Dashboard | `src/lib/quality/metrics.ts`, `src/lib/quality/types.ts`, `src/app/api/quality/route.ts`, +5 more | `src/tests/quality.logic.test.ts`, `src/tests/quality.infra.test.ts` | Implemented |
-| 29 | `29_spatial_parcel_matching.md` | Spatial Parcel Matching (Strategy 3) | `src/lib/parcels/geometry.ts`, `src/lib/parcels/types.ts` | `src/tests/parcels.logic.test.ts` | Done |
-| 30 | `30_permit_scope_classification.md` | Permit Work Scope Classification | `src/lib/classification/scope.ts` | `src/tests/scope.logic.test.ts` | Implemented |
-| 31 | `31_building_massing.md` | Building Massing Integration | `src/lib/massing/geometry.ts`, `src/lib/massing/types.ts`, `src/components/permits/BuildingMassing.tsx` | `src/tests/massing.logic.test.ts` | Implemented |
-| 32 | `32_product_groups.md` | Product Groups | `src/lib/classification/products.ts`, `src/lib/classification/tag-product-matrix.ts`, `src/app/api/products/route.ts` | `src/tests/classification.logic.test.ts` | In Progress |
+| 28 | `28_data_quality_dashboard.md` | Data Quality Dashboard | `src/lib/quality/metrics.ts`, `src/lib/quality/types.ts`, `src/app/api/quality/route.ts`, +5 more | `src/tests/quality.logic.test.ts`, `src/tests/quality.infra.test.ts` | Done |
+| 29 | `29_spatial_parcel_matching.md` | Spatial Parcel Matching | `src/lib/parcels/geometry.ts`, `src/lib/parcels/types.ts` | `src/tests/parcels.logic.test.ts` | Done |
+| 30 | `30_permit_scope_classification.md` | Permit Work Scope Classification | `src/lib/classification/scope.ts` | `src/tests/scope.logic.test.ts` | Done |
+| 31 | `31_building_massing.md` | Building Massing Integration | `src/lib/massing/geometry.ts`, `src/lib/massing/types.ts`, `src/components/permits/BuildingMassing.tsx` | `src/tests/massing.logic.test.ts` | Done |
+| 32 | `32_product_groups.md` | Product Groups | `src/lib/classification/products.ts`, `src/lib/classification/tag-product-matrix.ts`, `src/app/api/products/route.ts` | `src/tests/classification.logic.test.ts` | Done |
 | 34 | `34_market_metrics.md` | Market Metrics Dashboard | `src/app/admin/market-metrics/page.tsx`, `src/app/api/admin/market-metrics/route.ts`, `src/lib/market-metrics/helpers.ts` | `src/tests/market-metrics.logic.test.ts` | Done |
+| 99 | `_spec_template.md` | Spec [XX] -- [Feature Name] | `src/...` | — | Done |
 
 ---
 

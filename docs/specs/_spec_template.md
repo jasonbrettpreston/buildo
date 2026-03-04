@@ -1,46 +1,35 @@
-# Spec NN -- [Feature Name]
+# Spec [XX] -- [Feature Name]
 
-**Status:** Planned
-**Last Updated:** YYYY-MM-DD
-**Depends On:** (list spec files this depends on)
-
-## 1. Goals
-*What does this feature accomplish? Write as behavioral contracts, not implementation details.*
-
-- Goal 1
-- Goal 2
+## 1. Goal & User Story
+[1-2 sentences describing what this feature accomplishes.]
 
 ## 2. Auth Matrix
 | Role | Access |
 |------|--------|
 | Anonymous | None |
-| Authenticated User | Read |
+| Authenticated | Read |
 | Admin | Read/Write |
 
 ## 3. Behavioral Contract
-*Define inputs, outputs, and edge cases as testable assertions.*
+- **Inputs:** [What triggers this?]
+- **Core Logic:** [Business rules in plain English. NO code — reference source files.]
+- **Outputs:** [What is returned/rendered? Describe shape, not exact JSON.]
+- **Edge Cases:** [3-5 failure modes and fallbacks]
 
-| Input | Expected Output | Edge Case |
-|-------|----------------|-----------|
-| Valid permit_num | Permit detail JSON | Missing permit → 404 |
-
-## 4. Testing Triad
-| Pattern | File | What It Tests |
-|---------|------|---------------|
-| `*.logic.test.ts` | `src/tests/[feature].logic.test.ts` | Pure function behavior |
-| `*.ui.test.tsx` | `src/tests/[feature].ui.test.tsx` | Component rendering |
-| `*.infra.test.ts` | `src/tests/[feature].infra.test.ts` | API routes, DB queries |
+## 4. Testing Mandate
+<!-- TEST_INJECT_START -->
+- **Logic:** [What pure functions/algorithms must be proven?]
+- **UI:** [What components must render correctly? Or N/A]
+- **Infra:** [What DB/API integrations must be verified?]
+<!-- TEST_INJECT_END -->
 
 ## 5. Operating Boundaries
 
 ### Target Files (Modify / Create)
-- `src/app/api/[feature]/route.ts`
-- `src/components/[Feature].tsx`
-- `src/lib/[feature]/helpers.ts`
+- `src/...`
 
 ### Out-of-Scope Files (DO NOT TOUCH)
-- **`src/lib/classification/classifier.ts`**: (Governed by Spec 08. Do not modify trade logic.)
-- **`migrations/`**: (Schema locked. Raise a query if schema must change.)
+- **`src/lib/classification/classifier.ts`**: (Governed by Spec 08.)
 
 ### Cross-Spec Dependencies
-- Relies on **Spec 01 (Database Schema)**: May import and read interfaces, but may not alter them.
+- Relies on **Spec 01 (Database Schema)**.

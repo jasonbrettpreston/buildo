@@ -84,3 +84,22 @@ Update your default Spec Template to this hyper-compressed structure. An ideal s
 
 ### The Result
 If you compress your specs into this 5-point template, you will reduce their token footprint by 70%. When combined with the new 100-line Master Protocol, you give the AI a massive, unclouded "thinking space" to write brilliant, constraint-driven code.
+
+---
+
+## 4. Spec-as-Code Automations
+
+To completely automate spec updates and move to a "Spec-as-Code" paradigm where the specifications never drift from the implementation, implement these three concrete automations:
+
+### 1. TypeDoc Automation (Auto-Generating API Contracts)
+Instead of the AI manually typing out TypeScript interface contracts in the markdown specs, force it to write JSDoc comments directly in the `.ts` files. You can add `typedoc-plugin-markdown` to your `package.json`, and change the workflow step to:
+
+> `- [ ] Spec Sync: Write JSDoc comments, then run \`npm run docs:generate\`.`
+
+### 2. Auto-Schema Generator (For Database Specs)
+Specs like `01_database.md` are notoriously difficult to keep matched to actual UP/DOWN migrations manually. You can use libraries like `postgres-schema-builder` or `prisma-docs-generator` that read the live local PostgreSQL schema and output a formatted Markdown table automatically.
+
+> `- [ ] Schema Sync: Run \`npm run db:docs\` to auto-regenerate \`01_database.md\` from the live DB.`
+
+### 3. Automated Test Harvesting (The Triad Sync)
+The "Lean Spec" template we created requires you to list the tests (Logic, UI, Infra). Manually keeping this synced with your actual `src/tests/` folder is prone to error. You could write a single Node script (`scripts/harvest-tests.mjs`) that parses your test files, extracts the `describe()` strings, and automatically injects them into the relevant `.md` spec.

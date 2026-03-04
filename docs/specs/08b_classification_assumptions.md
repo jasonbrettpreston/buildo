@@ -1,127 +1,34 @@
-# 08b - Trade Classification Assumptions
+# Spec 08b -- Classification Assumptions
 
-**Status:** Active
-**Last Updated:** 2026-02-14
-**Depends On:** `08_trade_classification.md`
+## 1. Goal & User Story
+All trade classifications are inferred from permit metadata without building plans. This reference document defines the assumptions that inform classification rules, so they can be reviewed and refined as data patterns evolve.
 
-> Trade classifications are **inferred** from permit metadata in the absence of actual building plans. These are estimates. This document defines all assumptions and can be updated as classification rules are refined.
+## 2. Auth Matrix
+| Role | Access |
+|------|--------|
+| Anonymous | None |
+| Authenticated | None |
+| Admin | Full (documentation-only reference that informs Spec 08 rules) |
 
----
+## 3. Behavioral Contract
+- **Inputs:** Permit metadata fields: permit_num suffix code, permit_type, work field, structure_type, description
+- **Core Logic:** Three layers of assumptions govern classification. **(1) Permit code scope limiting:** Narrow-scope codes (PLB, PSA, HVA, MSA, DRN, STS, FSU, DEM) restrict to specific trades and override all other tiers. Broad-scope codes (BLD, CMB, COM, ALT, SHO, FND, DST, TPS, PCL) allow multi-tier classification. Unknown codes fall back to permit_type-based scope. **(2) Work field assumptions:** Within broad-scope permits, work values like "Interior Alterations", "New Building", "Re-Roofing", "Fire Alarm" narrow or expand the trade scope with specific inclusions and exclusions. **(3) Structure type assumptions:** Only applied to broad-scope permits; structure types (SFD, Apartment, Industrial, Office, etc.) boost or suppress certain trades based on building characteristics. Confidence ranges from 0.95 (narrow-scope code) down to 0.40-0.65 (structure type inference). See rules implementation in `src/lib/classification/rules.ts` and `src/lib/classification/classifier.ts`.
+- **Outputs:** Documented rationale for rule confidence levels and scope decisions
+- **Edge Cases:**
+  - Description quality varies widely ("install new plumbing fixtures" vs. "interior alterations")
+  - 95% of permits lack builder_name, so builder specialization cannot inform classification
+  - Narrow-scope permits often have companion BLD permits for broader trades
+  - Multi-trade permits with 10+ trades are common and correct for new buildings
+  - Rules and confidence levels should be refined as user feedback is gathered
 
-## 1. Permit Code Scope Limiting (Primary Gate)
+## 4. Testing Mandate
+<!-- TEST_INJECT_START -->
+- **Logic:** N/A (documentation-only spec; assumptions are tested through Spec 08 classification tests)
+- **UI:** N/A
+- **Infra:** N/A
+<!-- TEST_INJECT_END -->
 
-The permit number suffix (e.g., `XX XXXXXX **PLB** 00`) is the **definitive** indicator of what trades are in scope. This overrides all other classification tiers.
-
-### Narrow-Scope Codes (Single Trade)
-
-These permit codes restrict classification to specific trades only. No structure_type or description-based broadening is applied.
-
-| Code(s) | Permit Type | Allowed Trades | Rationale |
-|---------|-------------|---------------|-----------|
-| `PLB`, `PSA` | Plumbing(PS) | plumbing | Standalone plumbing permit. PSA = plumbing standalone amendment. |
-| `HVA`, `MSA` | Mechanical(MS) | hvac | Standalone HVAC/mechanical permit. MSA = mechanical standalone amendment. |
-| `DRN`, `STS` | Drain and Site Service | plumbing | Drain work is plumbing-scope. STS = site service drains. |
-| `FSU` | Fire/Security Upgrade | fire-protection | Fire alarm, sprinklers, electromagnetic locks. |
-| `DEM` | Demolition Folder (DM) | demolition | Demolition-only permit. |
-
-### Broad-Scope Codes (Multiple Trades)
-
-These permit codes allow full 3-tier classification with structure_type and description inference.
-
-| Code(s) | Permit Type | Scope | Notes |
-|---------|-------------|-------|-------|
-| `BLD` | Small Residential, Additions/Alterations, New Houses, New Building | All 20 trades | The primary building permit. Work, description, and structure_type all apply. |
-| `CMB` | Residential/Non-Residential Building Permit | All 20 trades | Combined permit covering multiple scopes. |
-| `COM` | Residential Building Permit | All 20 trades | Commercial combination permit. |
-| `ALT` | AS Alternative Solution | All 20 trades | Alternative code compliance. |
-| `SHO` | Partial Permit (Shoring) | excavation, shoring, concrete, waterproofing | Shoring partial permits are early-phase only. |
-| `FND` | Partial Permit (Foundation) | excavation, concrete, waterproofing, shoring | Foundation partial permits are early-phase only. |
-| `DST` | Designated Structures | All 20 trades | Large/complex designated structures. |
-| `TPS` | Temporary Structures | framing, electrical | Temporary structures have limited trade scope. |
-| `PCL` | Portable Classrooms | electrical, plumbing, hvac | Prefab units with limited site trades. |
-
-### Unknown/Missing Codes
-
-If the permit number has no recognizable suffix code, classification falls back to permit_type-based scope determination.
-
----
-
-## 2. Work Field Assumptions
-
-The `work` field provides secondary scope information within broad-scope permits.
-
-### Scope-Narrowing Work Types
-
-When a broad-scope permit (BLD) has one of these work types, the trade scope is narrowed:
-
-| Work Value | Implied Trades | Excluded Trades |
-|-----------|---------------|-----------------|
-| `Interior Alterations` | drywall, painting, flooring, framing, plumbing, hvac, electrical, glazing | excavation, shoring, roofing, landscaping, waterproofing, concrete (foundation) |
-| `Underpinning` | shoring, concrete, excavation, waterproofing | roofing, glazing, landscaping, elevator |
-| `Re-Roofing/Re-Cladding` | roofing, masonry | excavation, shoring, concrete, elevator, landscaping |
-| `Deck` | framing, landscaping | elevator, shoring, concrete (high-rise) |
-| `Porch` | framing, masonry | elevator, shoring |
-| `Garage` | framing, concrete, roofing, electrical | elevator, landscaping (interior) |
-| `Garage Repair/Reconstruction` | framing, concrete, masonry | elevator, landscaping |
-| `Fire Alarm` | fire-protection | all others |
-| `Sprinklers` | fire-protection, plumbing | all others except plumbing |
-| `Electromagnetic Locks` | fire-protection, electrical | all others |
-| `Elevator` | elevator, electrical | excavation, landscaping |
-| `Demolition` | demolition | all others |
-
-### Scope-Expanding Work Types
-
-| Work Value | Implied Trades |
-|-----------|---------------|
-| `New Building` | All early + structural + finishing trades (full construction lifecycle) |
-| `Multiple Projects` | Full scope - use description keywords and structure_type to narrow |
-| `Addition(s)` | Structural + finishing trades (concrete, framing, roofing, insulation, drywall, electrical, plumbing, hvac) |
-| `New Laneway / Rear Yard Suite` | Full scope for small building (excavation, concrete, framing, roofing, plumbing, hvac, electrical, insulation, drywall, painting, flooring, glazing) |
-
----
-
-## 3. Structure Type Assumptions
-
-Structure type inference only applies to **broad-scope** permits (BLD, CMB, COM). It is never applied to narrow-scope permits.
-
-| Structure Type | Boosted Trades | Not Applicable Trades |
-|---------------|---------------|----------------------|
-| SFD - Detached/Semi/Townhouse | framing (wood), roofing, plumbing, hvac, electrical, insulation, drywall, painting, flooring | elevator (rare), structural-steel (usually commercial) |
-| Apartment Building | concrete, elevator, fire-protection, glazing, structural-steel | landscaping (minimal for high-rise) |
-| Industrial | structural-steel, electrical, concrete | elevator (usually freight-specific), painting (limited) |
-| Office | fire-protection, glazing, hvac, electrical | excavation (usually existing building), masonry |
-| Retail Store | glazing (storefront), fire-protection, hvac | elevator, masonry |
-| Restaurant | hvac (kitchen exhaust), plumbing (grease traps), fire-protection | elevator, masonry, roofing |
-| Laneway / Rear Yard Suite | framing, concrete, excavation, plumbing, electrical | elevator, structural-steel |
-| Stacked Townhouses | concrete, fire-protection, framing | elevator (low-rise) |
-| Mixed Use | All trades possible | None excluded |
-
----
-
-## 4. Confidence Levels by Source
-
-| Classification Source | Confidence Range | Rationale |
-|----------------------|-----------------|-----------|
-| Permit code (narrow-scope) | 0.95 | Permit type explicitly identifies the trade |
-| Tier 1: Permit type field | 0.90-0.95 | Direct match on permit_type code |
-| Tier 2: Work field | 0.70-0.85 | Strong implication from work description |
-| Tier 2: Structure type | 0.40-0.65 | Inferred, not confirmed. Lower confidence. |
-| Tier 3: Description keywords | 0.50-0.70 | Ambiguous text scanning. Context-dependent. |
-
----
-
-## 5. Key Limitations
-
-1. **No building plans available.** All trade classification is metadata-based inference.
-2. **Description quality varies.** Some descriptions are detailed ("install new plumbing fixtures, water heater, bathroom renovation"); others are minimal ("interior alterations").
-3. **95% of permits have no builder_name.** Builder trade specialization cannot be used for classification.
-4. **Multi-trade permits are common.** A single BLD permit may legitimately need 10+ trades.
-5. **Classification rules are updatable.** As the system learns from user feedback and data patterns, rules and confidence levels should be refined.
-6. **Narrow-scope permits may have related BLD permits.** A PLB permit often has a companion BLD permit for the same address. The BLD permit covers the broader trades.
-
----
-
-## Operating Boundaries
+## 5. Operating Boundaries
 
 ### Target Files (Modify / Create)
 - This is a documentation-only spec. No source files are directly governed.
