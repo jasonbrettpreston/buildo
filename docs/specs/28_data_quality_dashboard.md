@@ -22,7 +22,8 @@ As an admin, I want a Data Effectiveness Dashboard that shows completeness, accu
   - Snapshots captured automatically after daily sync (Cloud Function, non-fatal) and manually via `POST /api/quality/refresh`.
   - `GET /api/quality` returns latest snapshot + 30-day trends array.
   - Freshness section: 24h/7d/30d update counters, staleness warning, data source timeline.
-  - Pipeline chain orchestrator (`scripts/run-chain.js`): 3 chains (permits=14 steps, coa=4, sources=10), each ending with `refresh_snapshot`. Sequential execution with stop-on-failure. API chains use 1-hour timeout.
+  - Pipeline chain orchestrator (`scripts/run-chain.js`): 3 chains (permits=16 steps, coa=5, sources=10). Permits and coa chains end with CQA validation (`assert_schema`, `assert_data_bounds`); sources ends with `refresh_snapshot`. Sequential execution with stop-on-failure. API chains use 1-hour timeout.
+  - Continuous Quality Assurance (CQA): Tier 1 pre-ingestion schema validation (`scripts/quality/assert-schema.js`) checks CKAN metadata for expected columns and type coercion. Tier 2 post-ingestion data bounds (`scripts/quality/assert-data-bounds.js`) runs SQL checks: cost outliers, null-rate thresholds (description 5%, builder 20%, status 0%), referential audits (orphaned permit_trades/permit_parcels/coa links), duplicate PK detection. Both log results to `pipeline_runs` table and appear as "Quality" group entries in FreshnessTimeline.
   - Dashboard polls every 5s while any pipeline is running.
   - Permit loader (`scripts/load-permits.js`) fetches live from CKAN by default (paginated 10K/page), or from local file via `--file` flag.
   - CoA loader (`scripts/load-coa.js`) uses incremental mode by default (active resource, last 90 days via SQL endpoint), or full mode via `--full` flag.
@@ -36,8 +37,8 @@ As an admin, I want a Data Effectiveness Dashboard that shows completeness, accu
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Logic** (`quality.logic.test.ts`): Data Effectiveness Score; Extract Matching Metrics; DataQualitySnapshot Shape Validation; parseSnapshot coerces NUMERIC fields from strings; Neighbourhood count must not exceed active permits; Builder accuracy uses permits_with_builder / active_permits; Builder tier percentages; Work Scope split: classification vs detailed tags; Pipeline Registry; Pipeline Chains; trendDelta(); findSnapshotDaysAgo(); DataSourceCircle field annotations
-- **Infra** (`quality.infra.test.ts`): GET /api/quality Response Shape; DataQualitySnapshot Schema Constraints; Snapshot Date Uniqueness; Confidence Value Validation; Coverage Rate Validation; Freshness Interval Validation; Sync Status Validation; Migration 015 DDL Expectations
+- **Logic** (`quality.logic.test.ts`): Data Effectiveness Score; Extract Matching Metrics; DataQualitySnapshot Shape Validation; parseSnapshot coerces NUMERIC fields from strings; Neighbourhood count must not exceed active permits; Builder accuracy uses permits_with_builder / active_permits; Builder tier percentages; Work Scope split: classification vs detailed tags; Pipeline Registry; Pipeline Chains; trendDelta(); findSnapshotDaysAgo(); DataSourceCircle field annotations; detectVolumeAnomalies(); detectSchemaDrift(); computeSystemHealth(); SLA_TARGETS; Snapshot includes null tracking and violation fields
+- **Infra** (`quality.infra.test.ts`): GET /api/quality Response Shape; DataQualitySnapshot Schema Constraints; Snapshot Date Uniqueness; Confidence Value Validation; Coverage Rate Validation; Freshness Interval Validation; Sync Status Validation; Quality API includes anomalies and health keys; Pipeline schedules API route exists; Migration 015 DDL Expectations; CQA Script Files; Pipeline runs API route exists
 <!-- TEST_INJECT_END -->
 
 ## 5. Operating Boundaries
@@ -52,6 +53,8 @@ As an admin, I want a Data Effectiveness Dashboard that shows completeness, accu
 - `src/components/DataSourceCircle.tsx`
 - `src/components/FreshnessTimeline.tsx`
 - `scripts/refresh-snapshot.js`
+- `scripts/quality/assert-schema.js`
+- `scripts/quality/assert-data-bounds.js`
 - `src/tests/quality.logic.test.ts`
 - `src/tests/quality.infra.test.ts`
 

@@ -275,6 +275,26 @@ describe('Migration 015 DDL Expectations', () => {
   });
 });
 
+describe('CQA Script Files', () => {
+  it('assert-schema.js exists in scripts/quality/', () => {
+    const scriptPath = path.join(__dirname, '../../scripts/quality/assert-schema.js');
+    expect(fs.existsSync(scriptPath)).toBe(true);
+  });
+
+  it('assert-data-bounds.js exists in scripts/quality/', () => {
+    const scriptPath = path.join(__dirname, '../../scripts/quality/assert-data-bounds.js');
+    expect(fs.existsSync(scriptPath)).toBe(true);
+  });
+
+  it('both CQA slugs are registered in PIPELINE_REGISTRY with quality group', async () => {
+    const { PIPELINE_REGISTRY } = await import('@/components/FreshnessTimeline');
+    expect(PIPELINE_REGISTRY.assert_schema).toBeDefined();
+    expect(PIPELINE_REGISTRY.assert_schema.group).toBe('quality');
+    expect(PIPELINE_REGISTRY.assert_data_bounds).toBeDefined();
+    expect(PIPELINE_REGISTRY.assert_data_bounds.group).toBe('quality');
+  });
+});
+
 describe('Pipeline runs API route exists', () => {
   it('runs route file exists', () => {
     const routePath = path.join(__dirname, '../app/api/admin/pipelines/runs/route.ts');

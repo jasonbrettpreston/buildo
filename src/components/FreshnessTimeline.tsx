@@ -6,7 +6,7 @@ import { useState } from 'react';
 // Pipeline Registry — single source of truth for all tracked pipelines
 // ---------------------------------------------------------------------------
 
-export type PipelineGroup = 'ingest' | 'link' | 'classify' | 'snapshot';
+export type PipelineGroup = 'ingest' | 'link' | 'classify' | 'snapshot' | 'quality';
 
 export interface PipelineEntry {
   name: string;
@@ -39,6 +39,9 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
   // Snapshot (1) — capture metrics
   refresh_snapshot:   { name: 'Refresh Snapshot',      group: 'snapshot' },
+  // Quality (2) — CQA validation
+  assert_schema:      { name: 'Schema Validation',    group: 'quality' },
+  assert_data_bounds: { name: 'Data Quality Checks',  group: 'quality' },
 };
 
 export const GROUP_LABELS: Record<PipelineGroup, string> = {
@@ -46,6 +49,7 @@ export const GROUP_LABELS: Record<PipelineGroup, string> = {
   link: 'Link',
   classify: 'Classify',
   snapshot: 'Snapshot',
+  quality: 'Quality',
 };
 
 // ---------------------------------------------------------------------------
@@ -85,6 +89,8 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_similar',         indent: 1 },
       { slug: 'link_coa',             indent: 1 },
       { slug: 'refresh_snapshot',     indent: 1 },
+      { slug: 'assert_schema',       indent: 1 },
+      { slug: 'assert_data_bounds',  indent: 1 },
     ],
   },
   {
@@ -96,6 +102,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_coa',           indent: 1 },
       { slug: 'create_pre_permits', indent: 1 },
       { slug: 'refresh_snapshot',   indent: 1 },
+      { slug: 'assert_data_bounds', indent: 1 },
     ],
   },
   {

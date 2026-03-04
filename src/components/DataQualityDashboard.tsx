@@ -39,6 +39,9 @@ const PIPELINE_SCHEDULES: Record<string, { label: string }> = {
   create_pre_permits: { label: 'Daily' },
   // Snapshot
   refresh_snapshot: { label: 'Daily' },
+  // Quality (CQA)
+  assert_schema: { label: 'Daily' },
+  assert_data_bounds: { label: 'Daily' },
 };
 
 function getNextScheduledDate(slug: string, apiSchedules?: Record<string, { cadence: string }> | null): string {

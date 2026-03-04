@@ -1175,6 +1175,34 @@ describe('Health Banner in DataQualityDashboard', () => {
   });
 });
 
+describe('FreshnessTimeline quality group', () => {
+  it('FreshnessTimeline includes quality group label', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain("quality: 'Quality'");
+  });
+
+  it('FreshnessTimeline registers Schema Validation step', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('Schema Validation');
+    expect(source).toContain('assert_schema');
+  });
+
+  it('FreshnessTimeline registers Data Quality Checks step', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('Data Quality Checks');
+    expect(source).toContain('assert_data_bounds');
+  });
+});
+
 describe('SLA badge in FreshnessTimeline', () => {
   it('FreshnessTimeline accepts slaTargets prop', () => {
     const source = fs.readFileSync(

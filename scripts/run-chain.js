@@ -43,12 +43,15 @@ const CHAINS = {
     'link_similar',
     'link_coa',
     'refresh_snapshot',
+    'assert_schema',
+    'assert_data_bounds',
   ],
   coa: [
     'coa',
     'link_coa',
     'create_pre_permits',
     'refresh_snapshot',
+    'assert_data_bounds',
   ],
   sources: [
     'address_points',
@@ -90,6 +93,8 @@ const PIPELINE_SCRIPTS = {
   link_similar:         'scripts/link-similar.js',
   create_pre_permits:   'scripts/create-pre-permits.js',
   refresh_snapshot:     'scripts/refresh-snapshot.js',
+  assert_schema:        'scripts/quality/assert-schema.js',
+  assert_data_bounds:   'scripts/quality/assert-data-bounds.js',
 };
 
 // ---------------------------------------------------------------------------

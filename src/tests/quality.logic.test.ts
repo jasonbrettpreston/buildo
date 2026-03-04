@@ -487,16 +487,17 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 21 tracked pipelines', () => {
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(21);
+  it('has exactly 23 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(23);
   });
 
-  it('groups are correct: 7 ingest, 10 link, 3 classify, 1 snapshot', () => {
+  it('groups are correct: 7 ingest, 10 link, 3 classify, 1 snapshot, 2 quality', () => {
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(7);
     expect(groups.filter((g) => g === 'link')).toHaveLength(10);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(3);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
+    expect(groups.filter((g) => g === 'quality')).toHaveLength(2);
   });
 
   it('every pipeline has a non-empty human-readable name', () => {
@@ -522,11 +523,11 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'sources']);
   });
 
-  it('permits chain has 14 steps in dependency order', () => {
+  it('permits chain has 16 steps in dependency order', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(14);
+    expect(permits.steps).toHaveLength(16);
     expect(permits.steps[0].slug).toBe('permits');
-    expect(permits.steps[permits.steps.length - 1].slug).toBe('refresh_snapshot');
+    expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_data_bounds');
   });
 
   it('permits chain includes indent-2 sub-steps for builder enrichment', () => {
@@ -535,9 +536,9 @@ describe('Pipeline Chains', () => {
     expect(indent2.map((s) => s.slug)).toEqual(['enrich_google', 'enrich_wsib']);
   });
 
-  it('coa chain has 4 steps', () => {
+  it('coa chain has 5 steps', () => {
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
-    expect(coa.steps).toHaveLength(4);
+    expect(coa.steps).toHaveLength(5);
     expect(coa.steps[0].slug).toBe('coa');
   });
 

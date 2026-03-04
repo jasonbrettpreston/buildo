@@ -13,16 +13,16 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(3);
   });
 
-  it('defines permits chain with 14 steps', () => {
+  it('defines permits chain with 16 steps', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(14);
+    expect(chain!.steps).toHaveLength(16);
   });
 
-  it('defines coa chain with 4 steps', () => {
+  it('defines coa chain with 5 steps', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(4);
+    expect(chain!.steps).toHaveLength(5);
   });
 
   it('defines sources chain with 10 steps', () => {
@@ -31,11 +31,16 @@ describe('Pipeline Chain Definitions', () => {
     expect(chain!.steps).toHaveLength(10);
   });
 
-  it('all 3 chains end with refresh_snapshot', () => {
-    for (const chain of PIPELINE_CHAINS) {
-      const last = chain.steps[chain.steps.length - 1];
-      expect(last.slug).toBe('refresh_snapshot');
-    }
+  it('permits and coa chains end with assert_data_bounds', () => {
+    const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits');
+    const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa');
+    expect(permits!.steps[permits!.steps.length - 1].slug).toBe('assert_data_bounds');
+    expect(coa!.steps[coa!.steps.length - 1].slug).toBe('assert_data_bounds');
+  });
+
+  it('sources chain ends with refresh_snapshot', () => {
+    const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources');
+    expect(sources!.steps[sources!.steps.length - 1].slug).toBe('refresh_snapshot');
   });
 
   it('every chain step slug exists in PIPELINE_REGISTRY', () => {
@@ -139,5 +144,21 @@ describe('Sources Chain Completeness', () => {
     expect(slugs).toContain('link_parcels');
     expect(slugs).toContain('link_massing');
     expect(slugs).toContain('link_neighbourhoods');
+  });
+});
+
+describe('Quality Pipeline Group', () => {
+  it('quality group has 2 registry entries', () => {
+    const qualityEntries = Object.entries(PIPELINE_REGISTRY).filter(
+      ([, entry]) => entry.group === 'quality'
+    );
+    expect(qualityEntries).toHaveLength(2);
+  });
+
+  it('assert_schema and assert_data_bounds exist in PIPELINE_REGISTRY', () => {
+    expect(PIPELINE_REGISTRY.assert_schema).toBeDefined();
+    expect(PIPELINE_REGISTRY.assert_schema.group).toBe('quality');
+    expect(PIPELINE_REGISTRY.assert_data_bounds).toBeDefined();
+    expect(PIPELINE_REGISTRY.assert_data_bounds.group).toBe('quality');
   });
 });

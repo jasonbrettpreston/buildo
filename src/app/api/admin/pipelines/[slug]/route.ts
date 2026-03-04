@@ -36,6 +36,9 @@ const PIPELINE_SCRIPTS: Record<string, string> = {
   create_pre_permits: 'scripts/create-pre-permits.js',
   // Snapshot (capture metrics)
   refresh_snapshot: 'scripts/refresh-snapshot.js',
+  // Quality (CQA validation)
+  assert_schema: 'scripts/quality/assert-schema.js',
+  assert_data_bounds: 'scripts/quality/assert-data-bounds.js',
   // Chain orchestrators
   chain_permits: 'scripts/run-chain.js',
   chain_coa: 'scripts/run-chain.js',
