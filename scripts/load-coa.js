@@ -19,6 +19,12 @@ const RESOURCES = [
 
 const BATCH_SIZE = 500;
 
+// CLI flags
+const fullMode = process.argv.includes('--full');
+
+// Active resource ID (incremental mode only fetches from Active)
+const ACTIVE_RESOURCE_ID = '51fd09cd-99d6-430a-9d42-c24a937b0cb0';
+
 const pool = new Pool({
   host: process.env.PG_HOST || 'localhost',
   port: parseInt(process.env.PG_PORT || '5432', 10),
@@ -69,6 +75,29 @@ async function fetchAllRecords(resourceId, resourceName) {
     offset += limit;
   }
 
+  return records;
+}
+
+/**
+ * Fetch only recent records (last 90 days) from a single resource using CKAN SQL endpoint.
+ * Used in incremental mode to avoid re-fetching the entire dataset.
+ */
+async function fetchRecentRecords(resourceId, resourceName) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 90);
+  const cutoffDate = cutoff.toISOString().slice(0, 10);
+
+  console.log(`\nFetching recent records from "${resourceName}" (since ${cutoffDate})...`);
+
+  const sql = `SELECT * FROM "${resourceId}" WHERE "HEARING_DATE" >= '${cutoffDate}'`;
+  const url = `${CKAN_BASE}/api/3/action/datastore_search_sql?sql=${encodeURIComponent(sql)}`;
+
+  const res = await fetch(url);
+  const json = await res.json();
+  if (!json.success) throw new Error(`datastore_search_sql failed: ${JSON.stringify(json.error)}`);
+
+  const records = json.result.records || [];
+  console.log(`  Got ${records.length} recent records`);
   return records;
 }
 
@@ -205,11 +234,19 @@ async function upsertBatch(client, batch) {
 
 async function main() {
   console.log('=== Buildo CoA Data Loader ===\n');
+  console.log(`Mode: ${fullMode ? 'FULL (all records, both resources)' : 'INCREMENTAL (Active resource, last 90 days)'}\n`);
 
-  // Fetch from both resources
+  // Fetch records based on mode
   let allRaw = [];
-  for (const res of RESOURCES) {
-    const records = await fetchAllRecords(res.id, res.name);
+  if (fullMode) {
+    // Full mode: fetch all records from both resources
+    for (const res of RESOURCES) {
+      const records = await fetchAllRecords(res.id, res.name);
+      allRaw.push(...records);
+    }
+  } else {
+    // Incremental mode: only recent records from Active resource
+    const records = await fetchRecentRecords(ACTIVE_RESOURCE_ID, 'Active Applications');
     allRaw.push(...records);
   }
 

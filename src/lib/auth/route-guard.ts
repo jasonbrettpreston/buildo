@@ -4,6 +4,22 @@
 export type RouteClass = 'public' | 'authenticated' | 'admin';
 
 // ---------------------------------------------------------------------------
+// Dev Mode — bypass auth for local development
+// ---------------------------------------------------------------------------
+
+/**
+ * Check if dev mode is enabled via NEXT_PUBLIC_DEV_MODE=true.
+ * When enabled, middleware auto-injects a dev session cookie so
+ * all routes are accessible without Firebase authentication.
+ */
+export function isDevMode(): boolean {
+  return process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+}
+
+/** A valid JWT-shaped cookie value used in dev mode to satisfy session checks. */
+export const DEV_SESSION_COOKIE = 'dev.buildo.local';
+
+// ---------------------------------------------------------------------------
 // Public paths — accessible without authentication
 // ---------------------------------------------------------------------------
 

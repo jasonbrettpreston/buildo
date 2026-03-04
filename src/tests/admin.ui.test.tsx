@@ -1,5 +1,5 @@
-// 🔗 SPEC LINK: docs/specs/26_admin.md
-// Admin panel logic: sync run display, status formatting, duration
+// SPEC LINK: docs/specs/26_admin.md
+// Admin panel logic: sync run display, status formatting, duration, navigation hub
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -250,59 +250,82 @@ describe('Active Permit Status Filter', () => {
   });
 });
 
-describe('Admin Navigation Links', () => {
-  const ADMIN_LINKS = [
-    { href: '/admin/data-quality', label: 'Data Quality' },
-    { href: '/dashboard', label: 'Dashboard' },
-  ];
+// ---------------------------------------------------------------------------
+// Admin Navigation Hub Tests
+// ---------------------------------------------------------------------------
 
-  it('includes data quality sub-page link', () => {
-    const dqLink = ADMIN_LINKS.find((l) => l.href === '/admin/data-quality');
-    expect(dqLink).toBeDefined();
-    expect(dqLink!.label).toBe('Data Quality');
+describe('Admin Page Navigation Hub', () => {
+
+  it('admin page links to /admin/data-quality', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/admin/page.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('/admin/data-quality');
   });
 
-  it('includes back-to-dashboard link', () => {
-    const dashLink = ADMIN_LINKS.find((l) => l.href === '/dashboard');
-    expect(dashLink).toBeDefined();
-  });
-});
-
-describe('Sync History Table Columns', () => {
-  const TABLE_HEADERS = [
-    'ID',
-    'Started',
-    'Status',
-    'Total',
-    'New',
-    'Updated',
-    'Unchanged',
-    'Errors',
-    'Duration',
-  ];
-
-  it('has 9 columns', () => {
-    expect(TABLE_HEADERS).toHaveLength(9);
+  it('admin page links to /admin/market-metrics', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/admin/page.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('/admin/market-metrics');
   });
 
-  it('first column is ID', () => {
-    expect(TABLE_HEADERS[0]).toBe('ID');
+  it('admin page has Data Quality button text', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/admin/page.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('Data Quality');
   });
 
-  it('last column is Duration', () => {
-    expect(TABLE_HEADERS[TABLE_HEADERS.length - 1]).toBe('Duration');
+  it('admin page has Market Metrics button text', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/admin/page.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('Market Metrics');
   });
 
-  it('includes all record type columns', () => {
-    expect(TABLE_HEADERS).toContain('New');
-    expect(TABLE_HEADERS).toContain('Updated');
-    expect(TABLE_HEADERS).toContain('Unchanged');
-    expect(TABLE_HEADERS).toContain('Errors');
+  it('admin page has back-to-dashboard link', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/admin/page.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('/dashboard');
+  });
+
+  it('admin page does NOT contain HealthCard component', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/admin/page.tsx'),
+      'utf-8'
+    );
+    expect(source).not.toMatch(/function HealthCard/);
+    expect(source).not.toMatch(/<HealthCard/);
+  });
+
+  it('admin page does NOT contain ProgressMetric component', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/admin/page.tsx'),
+      'utf-8'
+    );
+    expect(source).not.toMatch(/function ProgressMetric/);
+    expect(source).not.toMatch(/<ProgressMetric/);
+  });
+
+  it('admin page does NOT contain sync history table', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/admin/page.tsx'),
+      'utf-8'
+    );
+    expect(source).not.toMatch(/Sync History/);
+    expect(source).not.toMatch(/<table/);
   });
 });
 
 // ---------------------------------------------------------------------------
-// Data Sources & Health Dashboard Tests
+// Data Sources & Health Dashboard Tests (standalone logic — not page-dependent)
 // ---------------------------------------------------------------------------
 
 describe('Pipeline Health Status Logic', () => {
@@ -495,26 +518,6 @@ describe('Health Dashboard Pipeline Definitions', () => {
   });
 });
 
-describe('Data Quality Progress Metrics', () => {
-  const QUALITY_METRICS = [
-    'Geocoding Health',
-    'Builder Identification',
-    'Builder Contact Enrichment',
-    'Trade Classification',
-  ];
-
-  it('defines exactly 4 quality metrics', () => {
-    expect(QUALITY_METRICS).toHaveLength(4);
-  });
-
-  it('includes all enrichment metrics', () => {
-    expect(QUALITY_METRICS).toContain('Geocoding Health');
-    expect(QUALITY_METRICS).toContain('Builder Identification');
-    expect(QUALITY_METRICS).toContain('Builder Contact Enrichment');
-    expect(QUALITY_METRICS).toContain('Trade Classification');
-  });
-});
-
 describe('CoA Summary Card Link Rate', () => {
   function calcLinkRate(coaLinked: number, coaApproved: number): number {
     if (coaApproved === 0) return 0;
@@ -571,67 +574,22 @@ describe('Expanded AdminStats Interface Validation', () => {
       expect(source).toContain(field);
     }
   });
-});
 
-describe('Admin Page Section Structure', () => {
-
-  it('admin page renders Data Health Overview section', () => {
+  it('newest permit date uses first_seen_at (not issued_date) to capture Under Review permits', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
+      path.join(__dirname, '../app/api/admin/stats/route.ts'),
       'utf-8'
     );
-    expect(source).toMatch(/Data Health Overview|Data Sources/i);
-  });
-
-  it('admin page renders Active Sync Operations section', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/Active Sync|Sync Operations/i);
-  });
-
-  it('admin page renders Data Quality section with progress bars', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/Data Quality|Linking Metrics/i);
-  });
-
-  it('admin page includes HealthCard component', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/HealthCard/);
-  });
-
-  it('admin page includes ProgressMetric component', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/ProgressMetric/);
-  });
-
-  it('admin page references all 7 pipeline names', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toContain('Building Permits');
-    expect(source).toContain('Committee of Adjustment');
-    expect(source).toContain('Builder Profiles');
-    expect(source).toContain('Address Points');
-    expect(source).toContain('Property Parcels');
-    expect(source).toContain('3D Massing');
-    expect(source).toContain('Neighbourhoods');
+    // issued_date is NULL for "Under Review" permits, so MAX(issued_date) misses
+    // newly ingested permits. first_seen_at is set on every permit.
+    expect(source).toContain('MAX(first_seen_at)');
+    // Must NOT use MAX(issued_date) for the newest permit query
+    expect(source).not.toMatch(/MAX\(issued_date\)[\s\S]*?newest[\s\S]*?FROM permits/);
   });
 });
 
 // ---------------------------------------------------------------------------
-// Freshness, Schedule, Hierarchy & Update Trigger Tests
+// Freshness, Schedule & Trigger Tests (standalone logic)
 // ---------------------------------------------------------------------------
 
 describe('Pipeline Schedule Constants', () => {
@@ -707,70 +665,75 @@ describe('Relative Time Formatting', () => {
   });
 });
 
-describe('Admin Page Hierarchy & Freshness Features', () => {
+describe('Next Scheduled Date Computation', () => {
+  const PIPELINE_SCHEDULES: Record<string, { label: string; intervalDays: number; scheduleNote: string }> = {
+    permits: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily at 2:00 AM EST' },
+    coa: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily at 3:00 AM EST' },
+    builders: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily at 4:00 AM EST (after permits)' },
+    address_points: { label: 'Quarterly', intervalDays: 90, scheduleNote: 'Quarterly (Jan, Apr, Jul, Oct)' },
+    parcels: { label: 'Quarterly', intervalDays: 90, scheduleNote: 'Quarterly (Jan, Apr, Jul, Oct)' },
+    massing: { label: 'Quarterly', intervalDays: 90, scheduleNote: 'Quarterly (Jan, Apr, Jul, Oct)' },
+    neighbourhoods: { label: 'Annual', intervalDays: 365, scheduleNote: 'Annual (January)' },
+  };
 
-  it('admin page shows permits as primary/hero card', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/Primary.*Source|primary.*database/i);
+  function getNextScheduledDate(slug: string, now: Date = new Date()): string {
+    const schedule = PIPELINE_SCHEDULES[slug];
+    if (!schedule) return 'Unknown';
+    const fmt = (d: Date) =>
+      d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    if (schedule.label === 'Daily') {
+      const estHours: Record<string, number> = { permits: 7, coa: 8, builders: 9 };
+      const hour = estHours[slug] ?? 7;
+      const next = new Date(now);
+      next.setUTCHours(hour, 0, 0, 0);
+      if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
+      return fmt(next);
+    }
+    if (schedule.label === 'Quarterly') {
+      const quarterMonths = [0, 3, 6, 9];
+      const year = now.getFullYear();
+      for (const month of quarterMonths) {
+        const d = new Date(year, month, 1);
+        if (d > now) return fmt(d);
+      }
+      return fmt(new Date(year + 1, 0, 1));
+    }
+    if (schedule.label === 'Annual') {
+      const thisYear = new Date(now.getFullYear(), 0, 1);
+      if (thisYear > now) return fmt(thisYear);
+      return fmt(new Date(now.getFullYear() + 1, 0, 1));
+    }
+    return 'Unknown';
+  }
+
+  const now = new Date('2026-02-28T12:00:00Z');
+
+  it('daily pipeline returns next day date', () => {
+    const result = getNextScheduledDate('permits', now);
+    expect(result).toBe('Mar 1, 2026');
   });
 
-  it('admin page shows builder profiles as derived from permits', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/Extracted from|Derived from/i);
+  it('quarterly pipeline returns next quarter start', () => {
+    const result = getNextScheduledDate('parcels', now);
+    expect(result).toBe('Apr 1, 2026');
   });
 
-  it('admin page has Update Now buttons', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/Update Now/);
+  it('annual pipeline returns next January', () => {
+    const result = getNextScheduledDate('neighbourhoods', now);
+    expect(result).toBe('Jan 1, 2027');
   });
 
-  it('admin page imports schedule labels from helpers', () => {
-    const page = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(page).toContain('PIPELINE_SCHEDULES');
-    const helpers = fs.readFileSync(
-      path.join(__dirname, '../lib/admin/helpers.ts'),
-      'utf-8'
-    );
-    expect(helpers).toContain('Daily');
-    expect(helpers).toContain('Quarterly');
-    expect(helpers).toContain('Annual');
+  it('never returns Not scheduled for known slugs', () => {
+    for (const slug of Object.keys(PIPELINE_SCHEDULES)) {
+      const result = getNextScheduledDate(slug, now);
+      expect(result).not.toBe('Not scheduled');
+    }
   });
 
-  it('admin page has PIPELINE_SCHEDULES constant', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toContain('PIPELINE_SCHEDULES');
-  });
-
-  it('admin page renders last updated info', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/Last updated|lastRunAt|last_run_at|formatRelativeTime/);
-  });
-
-  it('HealthCard accepts schedule and onUpdate props', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/schedule.*string/);
-    expect(source).toMatch(/onUpdate/);
+  it('returns a real date even without any last run data', () => {
+    const result = getNextScheduledDate('massing', now);
+    expect(result).toBe('Apr 1, 2026');
   });
 });
 
@@ -818,198 +781,55 @@ describe('Pipeline Trigger Endpoint', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Bug Fix Tests: Update Buttons, Schedule Dates, Stat Cards, Permits Linked
+// Script & Pipeline Route Tests (not page-dependent)
 // ---------------------------------------------------------------------------
 
-describe('Bug A: Update Now Button Persistent State', () => {
+describe('load-permits.js fetches live CKAN data', () => {
 
-  it('admin page tracks running pipelines as a Set (not single string)', () => {
+  it('fetches from CKAN API by default instead of reading a local file', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
+      path.join(__dirname, '../../scripts/load-permits.js'),
       'utf-8'
     );
-    // Should use Set<string> for concurrent pipeline tracking
-    expect(source).toMatch(/runningPipelines/);
-    expect(source).toMatch(/Set<string>/);
+    // Must contain the CKAN base URL for live fetching
+    expect(source).toContain('ckan0.cf.opendata.inter.prod-toronto.ca');
+    expect(source).toContain('datastore_search');
   });
 
-  it('admin page polls stats while a pipeline is running', () => {
+  it('uses the correct Active Building Permits resource ID', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
+      path.join(__dirname, '../../scripts/load-permits.js'),
       'utf-8'
     );
-    // Should have polling logic (setInterval or setTimeout loop)
-    expect(source).toMatch(/setInterval|setTimeout.*fetchData|pollInterval/);
+    expect(source).toContain('6d0229af-bc54-46de-9c2b-26759b01dd05');
   });
 
-  it('HealthCard shows running state from runningPipelines or pipeline_last_run status', () => {
+  it('supports --file flag for local file fallback', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
+      path.join(__dirname, '../../scripts/load-permits.js'),
       'utf-8'
     );
-    // The running prop should come from the runningPipelines set
-    expect(source).toMatch(/runningPipelines\.has/);
+    expect(source).toMatch(/--file/);
+  });
+
+  it('does not default to reading a local JSON file', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/load-permits.js'),
+      'utf-8'
+    );
+    // The old default path should not be the primary code path
+    expect(source).not.toMatch(/const filePath\s*=\s*process\.argv\[2\]\s*\|\|\s*path\.join/);
   });
 });
 
-describe('Bug B: Next Scheduled Date Computation', () => {
-  const PIPELINE_SCHEDULES: Record<string, { label: string; intervalDays: number; scheduleNote: string }> = {
-    permits: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily at 2:00 AM EST' },
-    coa: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily at 3:00 AM EST' },
-    builders: { label: 'Daily', intervalDays: 1, scheduleNote: 'Daily at 4:00 AM EST (after permits)' },
-    address_points: { label: 'Quarterly', intervalDays: 90, scheduleNote: 'Quarterly (Jan, Apr, Jul, Oct)' },
-    parcels: { label: 'Quarterly', intervalDays: 90, scheduleNote: 'Quarterly (Jan, Apr, Jul, Oct)' },
-    massing: { label: 'Quarterly', intervalDays: 90, scheduleNote: 'Quarterly (Jan, Apr, Jul, Oct)' },
-    neighbourhoods: { label: 'Annual', intervalDays: 365, scheduleNote: 'Annual (January)' },
-  };
-
-  function getNextScheduledDate(slug: string, now: Date = new Date()): string {
-    const schedule = PIPELINE_SCHEDULES[slug];
-    if (!schedule) return 'Unknown';
-    const fmt = (d: Date) =>
-      d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-    if (schedule.label === 'Daily') {
-      const estHours: Record<string, number> = { permits: 7, coa: 8, builders: 9 };
-      const hour = estHours[slug] ?? 7;
-      const next = new Date(now);
-      next.setUTCHours(hour, 0, 0, 0);
-      if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
-      return fmt(next);
-    }
-    if (schedule.label === 'Quarterly') {
-      const quarterMonths = [0, 3, 6, 9];
-      const year = now.getFullYear();
-      for (const month of quarterMonths) {
-        const d = new Date(year, month, 1);
-        if (d > now) return fmt(d);
-      }
-      return fmt(new Date(year + 1, 0, 1));
-    }
-    if (schedule.label === 'Annual') {
-      const thisYear = new Date(now.getFullYear(), 0, 1);
-      if (thisYear > now) return fmt(thisYear);
-      return fmt(new Date(now.getFullYear() + 1, 0, 1));
-    }
-    return 'Unknown';
-  }
-
-  const now = new Date('2026-02-28T12:00:00Z');
-
-  it('daily pipeline returns next day date', () => {
-    const result = getNextScheduledDate('permits', now);
-    // Feb 28 at 12:00 UTC, permits run at 7:00 UTC → already passed today → Mar 1
-    expect(result).toBe('Mar 1, 2026');
-  });
-
-  it('quarterly pipeline returns next quarter start', () => {
-    const result = getNextScheduledDate('parcels', now);
-    // Feb 28 → next quarter is Apr 1
-    expect(result).toBe('Apr 1, 2026');
-  });
-
-  it('annual pipeline returns next January', () => {
-    const result = getNextScheduledDate('neighbourhoods', now);
-    // Feb 28, 2026 → Jan 1 2026 is past → next is Jan 1 2027
-    expect(result).toBe('Jan 1, 2027');
-  });
-
-  it('never returns Not scheduled for known slugs', () => {
-    for (const slug of Object.keys(PIPELINE_SCHEDULES)) {
-      const result = getNextScheduledDate(slug, now);
-      expect(result).not.toBe('Not scheduled');
-    }
-  });
-
-  it('returns a real date even without any last run data', () => {
-    // This is the key fix — schedules are fixed, not dependent on lastRunAt
-    const result = getNextScheduledDate('massing', now);
-    expect(result).toBe('Apr 1, 2026');
-  });
-
-  it('admin page uses getNextScheduledDate', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toContain('getNextScheduledDate');
-  });
-
-  it('admin page shows next date info on cards', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/Next:/);
-  });
-});
-
-describe('Bug C: Stat Cards Removed from Sync Operations', () => {
-
-  it('admin page does NOT contain StatCard component', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    // StatCard was the 5-box summary (Last Sync, Total, New, Updated, Duration)
-    expect(source).not.toMatch(/function StatCard/);
-    expect(source).not.toMatch(/<StatCard/);
-  });
-});
-
-describe('Bug D: Enrichment Sources Show Permits Linked', () => {
-
-  it('admin stats API returns permits_with_massing field', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/api/admin/stats/route.ts'),
-      'utf-8'
-    );
-    expect(source).toContain('permits_with_massing');
-  });
-
-  it('permits_with_massing query joins permit_parcels to parcel_buildings', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/api/admin/stats/route.ts'),
-      'utf-8'
-    );
-    expect(source).toMatch(/permit_parcels[\s\S]*parcel_buildings|parcel_buildings[\s\S]*permit_parcels/);
-  });
-
-  it('all 4 enrichment source cards show permits linked text', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    // Each enrichment card should reference "permits linked" in its detail
-    expect(source).toMatch(/permits_geocoded[\s\S]*permits linked|permits linked[\s\S]*permits_geocoded/i);
-    expect(source).toMatch(/permits_with_parcel[\s\S]*permits linked|permits linked[\s\S]*permits_with_parcel/i);
-    expect(source).toMatch(/permits_with_massing[\s\S]*permits linked|permits linked[\s\S]*permits_with_massing/i);
-    expect(source).toMatch(/permits_with_neighbourhood[\s\S]*permits linked|permits linked[\s\S]*permits_with_neighbourhood/i);
-  });
-
-  it('AdminStats interface includes permits_with_massing', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    expect(source).toContain('permits_with_massing');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Fix Round 2: Massing Pipeline, Schedule Notes, Permit Link Percentages
-// ---------------------------------------------------------------------------
-
-describe('Fix A2: Cross-platform ZIP extraction in load-massing.js', () => {
+describe('Cross-platform ZIP extraction in load-massing.js', () => {
 
   it('load-massing.js does not use unzip without platform guard', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../../scripts/load-massing.js'),
       'utf-8'
     );
-    // Must have a platform check (win32) guarding the unzip call
     expect(source).toMatch(/platform\(\)\s*===\s*['"]win32['"]/);
-    // The unzip call should only appear in an else branch, not standalone
     expect(source).toMatch(/else\s*\{[\s\S]*?unzip/);
   });
 
@@ -1018,19 +838,17 @@ describe('Fix A2: Cross-platform ZIP extraction in load-massing.js', () => {
       path.join(__dirname, '../../scripts/load-massing.js'),
       'utf-8'
     );
-    // Should have Windows-compatible extraction (Expand-Archive or platform check)
     expect(source).toMatch(/win32|Expand-Archive|platform/);
   });
 });
 
-describe('Fix A2: Pipeline route captures stderr and validates script', () => {
+describe('Pipeline route captures stderr and validates script', () => {
 
   it('pipeline route captures stderr from child process', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
       'utf-8'
     );
-    // Should use stderr from execFile callback or pipe stderr
     expect(source).toMatch(/stderr/);
   });
 
@@ -1047,22 +865,18 @@ describe('Fix A2: Pipeline route captures stderr and validates script', () => {
       path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
       'utf-8'
     );
-    // The INSERT into pipeline_runs should be in its own try/catch
-    // so that script spawning proceeds even if the table doesn't exist
     expect(source).toMatch(/try\s*\{[\s\S]*?INSERT INTO pipeline_runs[\s\S]*?\}\s*catch/);
-    // Script execution (execFile) should be outside that try/catch
     expect(source).toMatch(/runId.*null/);
   });
 });
 
-describe('Fix: Massing pipeline chains link-massing after load', () => {
+describe('Massing pipeline chains link-massing after load', () => {
 
   it('load-massing.js invokes link-massing.js after loading footprints', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../../scripts/load-massing.js'),
       'utf-8'
     );
-    // Must call link-massing.js (via execSync, require, or spawn)
     expect(source).toMatch(/link-massing/);
   });
 
@@ -1071,19 +885,18 @@ describe('Fix: Massing pipeline chains link-massing after load', () => {
       path.join(__dirname, '../../scripts/load-massing.js'),
       'utf-8'
     );
-    // Should use execSync to run link-massing synchronously after load
     expect(source).toMatch(/execSync.*link-massing|exec.*link-massing|spawn.*link-massing/);
   });
 });
 
-describe('Fix B2: Schedule notes on data source cards', () => {
+describe('Schedule notes include specific times', () => {
 
-  it('PIPELINE_SCHEDULES includes scheduleNote field', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
+  it('PIPELINE_SCHEDULES in helpers includes scheduleNote field', () => {
+    const helpers = fs.readFileSync(
+      path.join(__dirname, '../lib/admin/helpers.ts'),
       'utf-8'
     );
-    expect(source).toContain('scheduleNote');
+    expect(helpers).toContain('scheduleNote');
   });
 
   it('schedule notes include specific times or periods', () => {
@@ -1091,12 +904,87 @@ describe('Fix B2: Schedule notes on data source cards', () => {
       path.join(__dirname, '../lib/admin/helpers.ts'),
       'utf-8'
     );
-    // Should have time-specific schedule notes like "2:00 AM" or "Jan, Apr"
     expect(helpers).toMatch(/AM|PM|Jan.*Apr|January/);
   });
 });
 
-describe('Fix C2: Permit link percentages on enrichment cards', () => {
+// ---------------------------------------------------------------------------
+// DataSourceCircle Trend Arrow + Newest Record Tests
+// ---------------------------------------------------------------------------
+
+describe('DataSourceCircle trend arrow rendering', () => {
+  it('renders up arrow when trend > 0', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('trend');
+    expect(source).toMatch(/▲/);
+  });
+
+  it('renders down arrow when trend < 0', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    expect(source).toMatch(/▼/);
+  });
+
+  it('renders flat indicator when trend is exactly 0', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    // Zero trend should show a flat dash, not be hidden
+    expect(source).toMatch(/—.*0\.0|flat|trend\s*===\s*0/);
+  });
+
+  it('renders no arrow when trend is null', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    expect(source).toMatch(/trend\s*!=\s*null|trend\s*!==\s*null/);
+  });
+
+  it('shows comparison period label (vs 30d)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('vs 30d');
+  });
+});
+
+describe('DataSourceCircle latest record date', () => {
+  it('renders latest record date with "Latest Record" label', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('newestRecord');
+    expect(source).toContain('Latest Record');
+  });
+
+  it('shows formatted date (not relative time) for latest record', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    // Latest record should use formatShortDate, not formatRelativeTime
+    expect(source).toMatch(/formatShortDate\(newestRecord\)/);
+  });
+
+  it('does not render latest record date when null', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      'utf-8'
+    );
+    expect(source).toMatch(/newestRecord\s*&&|newestRecord\s*!=\s*null|newestRecord\s*!==\s*null/);
+  });
+});
+
+describe('Permit link percentage calculation', () => {
 
   function calcPct(num: number, denom: number): number {
     if (denom === 0) return 0;
@@ -1117,15 +1005,5 @@ describe('Fix C2: Permit link percentages on enrichment cards', () => {
 
   it('calculates neighbourhood link rate', () => {
     expect(calcPct(109116, 237000)).toBeCloseTo(46.0, 0);
-  });
-
-  it('enrichment cards show percentage in detail text', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/admin/page.tsx'),
-      'utf-8'
-    );
-    // Each enrichment card detail should include calcPct or percentage display
-    // Pattern: "X permits linked (Y%)"
-    expect(source).toMatch(/permits linked.*%|%.*permits linked/);
   });
 });

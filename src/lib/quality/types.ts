@@ -98,6 +98,58 @@ export interface DataQualityResponse {
   lastUpdated: string | null;
 }
 
+/**
+ * Find the snapshot closest to `daysAgo` days before today.
+ * Only considers snapshots that are at least 7 days old to avoid
+ * comparing today's snapshot against itself (which always yields delta 0).
+ * Returns null if trends is empty or no snapshot qualifies.
+ */
+export function findSnapshotDaysAgo(
+  trends: DataQualitySnapshot[],
+  daysAgo: number
+): DataQualitySnapshot | null {
+  if (trends.length === 0) return null;
+
+  const now = new Date();
+  const target = new Date(now);
+  target.setDate(target.getDate() - daysAgo);
+  const targetMs = target.getTime();
+
+  // Minimum age: snapshot must be at least 7 days old
+  const minAge = new Date(now);
+  minAge.setDate(minAge.getDate() - 7);
+  const minAgeMs = minAge.getTime();
+
+  let closest: DataQualitySnapshot | null = null;
+  let closestDiff = Infinity;
+
+  for (const snap of trends) {
+    const snapMs = new Date(snap.snapshot_date).getTime();
+    // Skip snapshots that are too recent (less than 7 days old)
+    if (snapMs > minAgeMs) continue;
+
+    const diff = Math.abs(snapMs - targetMs);
+    if (diff < closestDiff) {
+      closestDiff = diff;
+      closest = snap;
+    }
+  }
+
+  return closest;
+}
+
+/**
+ * Compute the delta between current and previous values.
+ * Returns positive = up, negative = down, null = no previous data.
+ */
+export function trendDelta(
+  current: number,
+  previous: number | null
+): number | null {
+  if (previous === null) return null;
+  return Math.round((current - previous) * 10) / 10;
+}
+
 /** Weights for the composite Data Effectiveness Score (must sum to 1.0) */
 export const EFFECTIVENESS_WEIGHTS = {
   tradeCoverage: 0.25,

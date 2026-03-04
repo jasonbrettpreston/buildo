@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 /**
- * Load permits from building-permits-active-permits.json into the database.
- * Streams the file and batch-inserts in groups of 1000.
+ * Load permits from Toronto Open Data (CKAN) into the database.
+ * Fetches live from the CKAN datastore API by default.
+ * Use --file <path> to load from a local JSON file instead.
  *
- * Usage: PG_PASSWORD=postgres node scripts/load-permits.js [path-to-json]
+ * Usage:
+ *   node scripts/load-permits.js              # fetch live from CKAN
+ *   node scripts/load-permits.js --file data.json  # load from local file
  */
 const { Pool } = require('pg');
 const fs = require('fs');
@@ -11,7 +14,14 @@ const path = require('path');
 const crypto = require('crypto');
 
 const BATCH_SIZE = 1000;
-const filePath = process.argv[2] || path.join(__dirname, '..', 'building-permits-active-permits.json');
+
+// CKAN datastore endpoint for Active Building Permits
+const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
+const RESOURCE_ID = '6d0229af-bc54-46de-9c2b-26759b01dd05';
+
+// CLI: --file <path> for local file fallback
+const fileArgIdx = process.argv.indexOf('--file');
+const localFilePath = fileArgIdx !== -1 ? process.argv[fileArgIdx + 1] : null;
 
 const pool = new Pool({
   host: process.env.PG_HOST || 'localhost',
@@ -98,6 +108,33 @@ function mapRecord(raw) {
   };
 }
 
+/**
+ * Fetch all permit records from the CKAN datastore API with pagination.
+ */
+async function fetchFromCKAN() {
+  const records = [];
+  const limit = 10000;
+  let offset = 0;
+
+  console.log('Fetching permits from CKAN datastore API...');
+  while (true) {
+    const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${RESOURCE_ID}&limit=${limit}&offset=${offset}`;
+    console.log(`  offset=${offset}...`);
+    const res = await fetch(url);
+    const json = await res.json();
+    if (!json.success) throw new Error(`datastore_search failed at offset ${offset}`);
+
+    const batch = json.result.records || [];
+    records.push(...batch);
+    console.log(`  Got ${batch.length} records (total: ${records.length})`);
+
+    if (batch.length < limit) break;
+    offset += limit;
+  }
+
+  return records;
+}
+
 async function insertBatch(client, batch) {
   if (batch.length === 0) return;
 
@@ -150,14 +187,21 @@ async function insertBatch(client, batch) {
 }
 
 async function run() {
-  console.log(`Loading permits from: ${filePath}`);
-  console.log(`File size: ${(fs.statSync(filePath).size / 1024 / 1024).toFixed(1)} MB`);
+  let records;
 
-  // Stream-parse the JSON array
-  const raw = fs.readFileSync(filePath, 'utf-8');
-  console.log('Parsing JSON...');
-  const records = JSON.parse(raw);
-  console.log(`Parsed ${records.length} records`);
+  if (localFilePath) {
+    // --file mode: read from local JSON file
+    console.log(`Loading permits from local file: ${localFilePath}`);
+    console.log(`File size: ${(fs.statSync(localFilePath).size / 1024 / 1024).toFixed(1)} MB`);
+    const raw = fs.readFileSync(localFilePath, 'utf-8');
+    console.log('Parsing JSON...');
+    records = JSON.parse(raw);
+    console.log(`Parsed ${records.length} records`);
+  } else {
+    // Default: fetch live from CKAN API
+    records = await fetchFromCKAN();
+    console.log(`Fetched ${records.length} records from CKAN`);
+  }
 
   const client = await pool.connect();
   let inserted = 0;

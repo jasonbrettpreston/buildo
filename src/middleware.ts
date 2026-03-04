@@ -6,6 +6,8 @@ import {
   classifyRoute,
   SESSION_COOKIE_NAME,
   isValidSessionCookie,
+  isDevMode,
+  DEV_SESSION_COOKIE,
 } from '@/lib/auth/route-guard';
 
 export function middleware(request: NextRequest) {
@@ -14,6 +16,23 @@ export function middleware(request: NextRequest) {
 
   // Public routes — pass through
   if (routeClass === 'public') {
+    return NextResponse.next();
+  }
+
+  // Dev mode — inject dev session cookie and allow all routes
+  if (isDevMode()) {
+    const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+    if (!sessionCookie) {
+      // Set the dev cookie so downstream code sees a valid session
+      const response = NextResponse.next();
+      response.cookies.set(SESSION_COOKIE_NAME, DEV_SESSION_COOKIE, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+      });
+      return response;
+    }
     return NextResponse.next();
   }
 

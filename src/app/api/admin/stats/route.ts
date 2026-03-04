@@ -33,6 +33,8 @@ export async function GET() {
       permitsWithMassingResult,
       neighbourhoodsTotalResult,
       coaApprovedResult,
+      newestPermitResult,
+      newestCoaResult,
     ] = await Promise.all([
       query<{ count: string }>(
         'SELECT COUNT(*)::text AS count FROM permits'
@@ -131,6 +133,15 @@ export async function GET() {
         `SELECT COUNT(*)::text AS count FROM coa_applications
          WHERE decision IN ('Approved', 'Approved with Conditions')`
       ),
+      // Newest permit by ingestion date — "Under Review" permits have no
+      // issued_date, so we use first_seen_at to capture all recent data
+      query<{ newest: string | null }>(
+        `SELECT MAX(first_seen_at)::text AS newest FROM permits`
+      ).catch(() => [{ newest: null }]),
+      // Newest CoA hearing_date
+      query<{ newest: string | null }>(
+        `SELECT MAX(hearing_date)::text AS newest FROM coa_applications`
+      ).catch(() => [{ newest: null }]),
     ]);
 
     // Pipeline freshness: last run per pipeline from pipeline_runs table
@@ -180,6 +191,9 @@ export async function GET() {
       permits_with_massing: p(permitsWithMassingResult),
       neighbourhoods_total: p(neighbourhoodsTotalResult),
       coa_approved: p(coaApprovedResult),
+      // Newest record dates
+      newest_permit_date: (Array.isArray(newestPermitResult) ? newestPermitResult[0]?.newest : null) ?? null,
+      newest_coa_date: (Array.isArray(newestCoaResult) ? newestCoaResult[0]?.newest : null) ?? null,
       // Pipeline freshness
       pipeline_last_run: pipelineLastRun,
     });

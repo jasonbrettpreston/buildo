@@ -44,7 +44,7 @@ export const SNAPSHOT_PREFIX = 'daily-snapshots';
  * We hit the datastore dump URL directly which returns the full JSON array.
  * The resource ID may change if the City of Toronto republishes; update here.
  */
-export const OPEN_DATA_RESOURCE_ID = '5e92f9fa-62a5-4a52-b218-a1ed656e0036';
+export const OPEN_DATA_RESOURCE_ID = '6d0229af-bc54-46de-9c2b-26759b01dd05';
 
 export const OPEN_DATA_BASE_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search';

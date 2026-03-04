@@ -1,11 +1,13 @@
 // Logic Layer Tests — Route protection middleware
 // SPEC LINK: docs/specs/13_auth.md
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   classifyRoute,
   isPublicRoute,
   isAdminRoute,
   isAuthRoute,
+  isDevMode,
+  DEV_SESSION_COOKIE,
   PUBLIC_PATHS,
   ADMIN_PATH_PREFIX,
 } from '@/lib/auth/route-guard';
@@ -185,6 +187,52 @@ describe('Session Cookie Validation', () => {
 
   it('accepts any 3-segment dot-separated string', () => {
     expect(isValidSessionCookie('a.b.c')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Dev Mode
+// ---------------------------------------------------------------------------
+
+describe('Dev Mode', () => {
+  const originalEnv = process.env.NEXT_PUBLIC_DEV_MODE;
+
+  afterEach(() => {
+    if (originalEnv === undefined) {
+      delete process.env.NEXT_PUBLIC_DEV_MODE;
+    } else {
+      process.env.NEXT_PUBLIC_DEV_MODE = originalEnv;
+    }
+  });
+
+  it('isDevMode returns false by default', () => {
+    delete process.env.NEXT_PUBLIC_DEV_MODE;
+    expect(isDevMode()).toBe(false);
+  });
+
+  it('isDevMode returns true when NEXT_PUBLIC_DEV_MODE=true', () => {
+    process.env.NEXT_PUBLIC_DEV_MODE = 'true';
+    expect(isDevMode()).toBe(true);
+  });
+
+  it('isDevMode returns false for non-true values', () => {
+    process.env.NEXT_PUBLIC_DEV_MODE = 'false';
+    expect(isDevMode()).toBe(false);
+    process.env.NEXT_PUBLIC_DEV_MODE = '1';
+    expect(isDevMode()).toBe(false);
+    process.env.NEXT_PUBLIC_DEV_MODE = '';
+    expect(isDevMode()).toBe(false);
+  });
+
+  it('DEV_SESSION_COOKIE is a valid JWT-shaped string', () => {
+    expect(DEV_SESSION_COOKIE).toBeDefined();
+    const parts = DEV_SESSION_COOKIE.split('.');
+    expect(parts.length).toBe(3);
+    expect(parts.every(p => p.length > 0)).toBe(true);
+  });
+
+  it('DEV_SESSION_COOKIE passes isValidSessionCookie', () => {
+    expect(isValidSessionCookie(DEV_SESSION_COOKIE)).toBe(true);
   });
 });
 

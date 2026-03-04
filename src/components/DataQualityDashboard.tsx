@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { DataQualityResponse } from '@/lib/quality/types';
+import { findSnapshotDaysAgo, trendDelta } from '@/lib/quality/types';
 import { DataSourceCircle } from '@/components/DataSourceCircle';
 import { FreshnessTimeline } from '@/components/FreshnessTimeline';
 
@@ -92,6 +93,8 @@ interface AdminStats {
   permits_with_massing: number;
   neighbourhoods_total: number;
   coa_upcoming: number;
+  newest_permit_date: string | null;
+  newest_coa_date: string | null;
   pipeline_last_run: Record<string, PipelineRunInfo>;
   [key: string]: unknown;
 }
@@ -183,6 +186,41 @@ export function DataQualityDashboard() {
   const current = data?.current;
   const lastRunAt = (slug: string) => stats?.pipeline_last_run?.[slug]?.last_run_at ?? current?.last_sync_at ?? null;
 
+  // Compute 30-day trend deltas
+  const prev = data?.trends ? findSnapshotDaysAgo(data.trends, 30) : null;
+  const prevPct = (num: number, denom: number) => prev ? calcPct(num, denom) : null;
+
+  const trendGeo = current && prev
+    ? trendDelta(calcPct(current.permits_geocoded, current.active_permits), prevPct(prev.permits_geocoded, prev.active_permits))
+    : null;
+  const trendParcels = current && prev
+    ? trendDelta(calcPct(current.permits_with_parcel, current.active_permits), prevPct(prev.permits_with_parcel, prev.active_permits))
+    : null;
+  const trendMassing = current && prev && stats
+    ? trendDelta(calcPct(stats.permits_with_massing ?? 0, current.active_permits), prevPct(prev.parcels_with_buildings ?? 0, prev.active_permits))
+    : null;
+  const trendNeighbourhoods = current && prev
+    ? trendDelta(calcPct(current.permits_with_neighbourhood, current.active_permits), prevPct(prev.permits_with_neighbourhood, prev.active_permits))
+    : null;
+  const trendCoa = current && prev
+    ? trendDelta(calcPct(current.coa_linked, current.coa_total), prevPct(prev.coa_linked, prev.coa_total))
+    : null;
+  const trendBuilders = current && prev
+    ? trendDelta(calcPct(current.permits_with_builder, current.active_permits), prevPct(prev.permits_with_builder, prev.active_permits))
+    : null;
+  const trendScopeClass = current && prev
+    ? trendDelta(calcPct(current.permits_with_scope, current.active_permits), prevPct(prev.permits_with_scope, prev.active_permits))
+    : null;
+  const trendScopeTags = current && prev
+    ? trendDelta(calcPct(current.permits_with_detailed_tags ?? 0, current.active_permits), prevPct(prev.permits_with_detailed_tags ?? 0, prev.active_permits))
+    : null;
+  const trendTradesRes = current && prev
+    ? trendDelta(calcPct(current.trade_residential_classified ?? 0, current.trade_residential_total ?? 0), prevPct(prev.trade_residential_classified ?? 0, prev.trade_residential_total ?? 0))
+    : null;
+  const trendTradesCom = current && prev
+    ? trendDelta(calcPct(current.trade_commercial_classified ?? 0, current.trade_commercial_total ?? 0), prevPct(prev.trade_commercial_classified ?? 0, prev.trade_commercial_total ?? 0))
+    : null;
+
   return (
     <div className="space-y-8">
       {/* Pipeline error banner */}
@@ -217,6 +255,7 @@ export function DataQualityDashboard() {
                   onUpdate={() => triggerPipeline('permits')}
                   updating={runningPipelines.has('permits')}
                   hero
+                  newestRecord={stats?.newest_permit_date}
                   tiers={[
                     { label: 'Active permits', value: current.active_permits.toLocaleString() },
                     { label: 'Updated 24h', value: current.permits_updated_24h.toLocaleString() },
@@ -249,6 +288,7 @@ export function DataQualityDashboard() {
                 nextScheduled={getNextScheduledDate('address_points')}
                 onUpdate={() => triggerPipeline('address_points')}
                 updating={runningPipelines.has('address_points')}
+                trend={trendGeo}
                 relationship="geocodes"
                 fields={['latitude', 'longitude']}
                 tiers={[
@@ -269,6 +309,7 @@ export function DataQualityDashboard() {
                 nextScheduled={getNextScheduledDate('parcels')}
                 onUpdate={() => triggerPipeline('parcels')}
                 updating={runningPipelines.has('parcels')}
+                trend={trendParcels}
                 relationship="links to"
                 fields={['lot_size', 'frontage', 'depth', 'is_irregular']}
                 tiers={[
@@ -289,6 +330,7 @@ export function DataQualityDashboard() {
                 nextScheduled={getNextScheduledDate('massing')}
                 onUpdate={() => triggerPipeline('massing')}
                 updating={runningPipelines.has('massing')}
+                trend={trendMassing}
                 relationship="enriches"
                 fields={['main_bldg_area', 'max_height', 'est_stories', 'accessory_bldgs', 'coverage_%']}
                 tiers={[
@@ -308,6 +350,7 @@ export function DataQualityDashboard() {
                 nextScheduled={getNextScheduledDate('neighbourhoods')}
                 onUpdate={() => triggerPipeline('neighbourhoods')}
                 updating={runningPipelines.has('neighbourhoods')}
+                trend={trendNeighbourhoods}
                 relationship="classifies"
                 fields={['neighbourhood_id', 'avg_income', 'tenure_%', 'construction_era']}
                 tiers={[
@@ -342,6 +385,8 @@ export function DataQualityDashboard() {
                 nextScheduled={getNextScheduledDate('coa')}
                 onUpdate={() => triggerPipeline('coa')}
                 updating={runningPipelines.has('coa')}
+                trend={trendCoa}
+                newestRecord={stats?.newest_coa_date}
                 relationship="links to"
                 fields={['decision', 'hearing_date', 'applicant', 'description', 'sub_type']}
                 tiers={[
@@ -362,6 +407,7 @@ export function DataQualityDashboard() {
                 nextScheduled={getNextScheduledDate('builders')}
                 onUpdate={() => triggerPipeline('builders')}
                 updating={runningPipelines.has('builders')}
+                trend={trendBuilders}
                 relationship="extracted from"
                 fields={['builder_name', 'phone', 'email', 'website']}
                 tiers={[
@@ -384,6 +430,7 @@ export function DataQualityDashboard() {
                 nextScheduled={getNextScheduledDate('classify_scope_class')}
                 onUpdate={() => triggerPipeline('classify_scope_class')}
                 updating={runningPipelines.has('classify_scope_class')}
+                trend={trendScopeClass}
                 relationship="classifies"
                 fields={['scope_tags']}
                 tiers={[
@@ -404,6 +451,7 @@ export function DataQualityDashboard() {
                 nextScheduled={getNextScheduledDate('classify_scope_tags')}
                 onUpdate={() => triggerPipeline('classify_scope_tags')}
                 updating={runningPipelines.has('classify_scope_tags')}
+                trend={trendScopeTags}
                 relationship="derived from"
                 fields={['scope_tags']}
                 tiers={
@@ -427,6 +475,7 @@ export function DataQualityDashboard() {
                 nextScheduled={getNextScheduledDate('classify_permits')}
                 onUpdate={() => triggerPipeline('classify_permits')}
                 updating={runningPipelines.has('classify_permits')}
+                trend={trendTradesRes}
                 relationship="classifies"
                 fields={['permit_trades']}
                 tiers={[
@@ -446,6 +495,7 @@ export function DataQualityDashboard() {
                 nextScheduled={getNextScheduledDate('classify_permits')}
                 onUpdate={() => triggerPipeline('classify_permits')}
                 updating={runningPipelines.has('classify_permits')}
+                trend={trendTradesCom}
                 relationship="classifies"
                 fields={['permit_trades']}
                 tiers={[

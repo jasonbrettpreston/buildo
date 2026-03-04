@@ -5,6 +5,8 @@ import {
   calculateEffectivenessScore,
   extractMetrics,
   EFFECTIVENESS_WEIGHTS,
+  trendDelta,
+  findSnapshotDaysAgo,
 } from '@/lib/quality/types';
 import { parseSnapshot } from '@/lib/quality/metrics';
 import { createMockDataQualitySnapshot } from './factories';
@@ -548,6 +550,80 @@ describe('Pipeline Chains', () => {
         expect(PIPELINE_REGISTRY, `${step.slug} missing from registry`).toHaveProperty(step.slug);
       }
     }
+  });
+});
+
+// ── trendDelta() ─────────────────────────────────────────────────────
+
+describe('trendDelta()', () => {
+  it('returns positive number when current > previous', () => {
+    expect(trendDelta(85.5, 80.0)).toBe(5.5);
+  });
+
+  it('returns negative number when current < previous', () => {
+    expect(trendDelta(72.3, 80.0)).toBe(-7.7);
+  });
+
+  it('returns null when no previous snapshot available', () => {
+    expect(trendDelta(85.5, null)).toBeNull();
+  });
+
+  it('returns 0 when current equals previous', () => {
+    expect(trendDelta(50.0, 50.0)).toBe(0);
+  });
+});
+
+// ── findSnapshotDaysAgo() ────────────────────────────────────────────
+
+describe('findSnapshotDaysAgo()', () => {
+  it('returns closest snapshot to target day count (minimum 7-day gap)', () => {
+    const now = new Date();
+    const d28 = new Date(now);
+    d28.setDate(d28.getDate() - 28);
+    const d32 = new Date(now);
+    d32.setDate(d32.getDate() - 32);
+
+    const trends = [
+      createMockDataQualitySnapshot({ id: 1, snapshot_date: d28.toISOString().slice(0, 10) }),
+      createMockDataQualitySnapshot({ id: 2, snapshot_date: d32.toISOString().slice(0, 10) }),
+    ];
+
+    const result = findSnapshotDaysAgo(trends, 30);
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe(1); // 28 days is closer to 30
+  });
+
+  it('returns null when trends array is empty', () => {
+    expect(findSnapshotDaysAgo([], 30)).toBeNull();
+  });
+
+  it('returns null when only recent snapshots exist (< 7 days old)', () => {
+    // If the only snapshot is from today or yesterday, it's too recent to be a
+    // meaningful "previous" comparison — should return null
+    const now = new Date();
+    const d1 = new Date(now);
+    d1.setDate(d1.getDate() - 1);
+    const trends = [
+      createMockDataQualitySnapshot({ id: 99, snapshot_date: d1.toISOString().slice(0, 10) }),
+    ];
+    const result = findSnapshotDaysAgo(trends, 30);
+    expect(result).toBeNull();
+  });
+
+  it('returns snapshot that is at least 7 days old', () => {
+    const now = new Date();
+    const d2 = new Date(now);
+    d2.setDate(d2.getDate() - 2);
+    const d10 = new Date(now);
+    d10.setDate(d10.getDate() - 10);
+
+    const trends = [
+      createMockDataQualitySnapshot({ id: 1, snapshot_date: d2.toISOString().slice(0, 10) }),
+      createMockDataQualitySnapshot({ id: 2, snapshot_date: d10.toISOString().slice(0, 10) }),
+    ];
+    const result = findSnapshotDaysAgo(trends, 30);
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe(2); // d2 is too recent, d10 qualifies
   });
 });
 

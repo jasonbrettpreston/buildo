@@ -17,6 +17,10 @@ export interface DataSourceCircleProps {
   relationship?: string;
   /** Field names this data source populates on permit detail */
   fields?: string[];
+  /** Trend delta: positive = up, negative = down, null = no data */
+  trend?: number | null;
+  /** ISO date string of the newest record in this source */
+  newestRecord?: string | null;
 }
 
 function formatCount(n: number): string {
@@ -45,6 +49,15 @@ function formatDate(dateStr: string | null): string {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+  });
+}
+
+function formatShortDate(dateStr: string | null): string {
+  if (!dateStr) return 'Never';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   });
 }
 
@@ -86,6 +99,8 @@ export function DataSourceCircle({
   hero = false,
   relationship,
   fields,
+  trend,
+  newestRecord,
 }: DataSourceCircleProps) {
   const health = getHealthColor(accuracy);
   const ringSize = hero ? 140 : 96;
@@ -109,6 +124,14 @@ export function DataSourceCircle({
             <span className={`font-bold tabular-nums ${hero ? 'text-2xl' : 'text-lg'} ${health.text}`}>
               {accuracy.toFixed(1)}%
             </span>
+            {trend != null && (
+              <span className={`text-[10px] font-medium tabular-nums ${
+                trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-500' : 'text-gray-400'
+              }`}>
+                {trend > 0 ? '▲' : trend < 0 ? '▼' : '—'}{' '}
+                {trend > 0 ? '+' : ''}{trend === 0 ? '0.0' : trend.toFixed(1)} vs 30d
+              </span>
+            )}
           </div>
         </div>
 
@@ -156,6 +179,14 @@ export function DataSourceCircle({
               {formatRelativeTime(lastUpdated)}
             </span>
           </div>
+          {newestRecord && (
+            <div className="flex justify-between">
+              <span>Latest Record</span>
+              <span className="text-gray-600">
+                {formatShortDate(newestRecord)}
+              </span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span>Next</span>
             <span className="text-gray-600">{nextScheduled}</span>

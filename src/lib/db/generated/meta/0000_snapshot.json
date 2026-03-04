@@ -1,0 +1,2941 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.permit_history": {
+      "name": "permit_history",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "permit_num": {
+          "name": "permit_num",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revision_num": {
+          "name": "revision_num",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sync_run_id": {
+          "name": "sync_run_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "field_name": {
+          "name": "field_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "old_value": {
+          "name": "old_value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "new_value": {
+          "name": "new_value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "changed_at": {
+          "name": "changed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_permit_history_permit": {
+          "name": "idx_permit_history_permit",
+          "columns": [
+            {
+              "expression": "permit_num",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            },
+            {
+              "expression": "revision_num",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permit_history_sync_run": {
+          "name": "idx_permit_history_sync_run",
+          "columns": [
+            {
+              "expression": "sync_run_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.sync_runs": {
+      "name": "sync_runs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'running'"
+        },
+        "records_total": {
+          "name": "records_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "records_new": {
+          "name": "records_new",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "records_updated": {
+          "name": "records_updated",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "records_unchanged": {
+          "name": "records_unchanged",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "records_errors": {
+          "name": "records_errors",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "snapshot_path": {
+          "name": "snapshot_path",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duration_ms": {
+          "name": "duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.trades": {
+      "name": "trades",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "icon": {
+          "name": "icon",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "color": {
+          "name": "color",
+          "type": "varchar(7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "trades_slug_key": {
+          "columns": [
+            "slug"
+          ],
+          "nullsNotDistinct": false,
+          "name": "trades_slug_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.trade_mapping_rules": {
+      "name": "trade_mapping_rules",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "trade_id": {
+          "name": "trade_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tier": {
+          "name": "tier",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "match_field": {
+          "name": "match_field",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "match_pattern": {
+          "name": "match_pattern",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "confidence": {
+          "name": "confidence",
+          "type": "numeric(3, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phase_start": {
+          "name": "phase_start",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phase_end": {
+          "name": "phase_end",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_trade_mapping_rules_tier": {
+          "name": "idx_trade_mapping_rules_tier",
+          "columns": [
+            {
+              "expression": "tier",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            },
+            {
+              "expression": "is_active",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_trade_mapping_rules_trade": {
+          "name": "idx_trade_mapping_rules_trade",
+          "columns": [
+            {
+              "expression": "trade_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "trade_mapping_rules_trade_id_fkey": {
+          "name": "trade_mapping_rules_trade_id_fkey",
+          "tableFrom": "trade_mapping_rules",
+          "tableTo": "trades",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "trade_mapping_rules_tier_check": {
+          "name": "trade_mapping_rules_tier_check",
+          "value": "tier = ANY (ARRAY[1, 2, 3])"
+        },
+        "trade_mapping_rules_confidence_check": {
+          "name": "trade_mapping_rules_confidence_check",
+          "value": "(confidence >= (0)::numeric) AND (confidence <= (1)::numeric)"
+        }
+      },
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.permit_trades": {
+      "name": "permit_trades",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "permit_num": {
+          "name": "permit_num",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revision_num": {
+          "name": "revision_num",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trade_id": {
+          "name": "trade_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tier": {
+          "name": "tier",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "confidence": {
+          "name": "confidence",
+          "type": "numeric(3, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "phase": {
+          "name": "phase",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lead_score": {
+          "name": "lead_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "classified_at": {
+          "name": "classified_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_permit_trades_active": {
+          "name": "idx_permit_trades_active",
+          "columns": [
+            {
+              "expression": "is_active",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "bool_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permit_trades_lead_score": {
+          "name": "idx_permit_trades_lead_score",
+          "columns": [
+            {
+              "expression": "lead_score",
+              "asc": false,
+              "nulls": "first",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permit_trades_permit": {
+          "name": "idx_permit_trades_permit",
+          "columns": [
+            {
+              "expression": "permit_num",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            },
+            {
+              "expression": "revision_num",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permit_trades_trade": {
+          "name": "idx_permit_trades_trade",
+          "columns": [
+            {
+              "expression": "trade_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "permit_trades_trade_id_fkey": {
+          "name": "permit_trades_trade_id_fkey",
+          "tableFrom": "permit_trades",
+          "tableTo": "trades",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "trade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "permit_trades_permit_num_revision_num_trade_id_key": {
+          "columns": [
+            "permit_num",
+            "revision_num",
+            "trade_id"
+          ],
+          "nullsNotDistinct": false,
+          "name": "permit_trades_permit_num_revision_num_trade_id_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.builders": {
+      "name": "builders",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_normalized": {
+          "name": "name_normalized",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "google_place_id": {
+          "name": "google_place_id",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "google_rating": {
+          "name": "google_rating",
+          "type": "numeric(2, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "google_review_count": {
+          "name": "google_review_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "obr_business_number": {
+          "name": "obr_business_number",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wsib_status": {
+          "name": "wsib_status",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permit_count": {
+          "name": "permit_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "first_seen_at": {
+          "name": "first_seen_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "enriched_at": {
+          "name": "enriched_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "idx_builders_name_normalized": {
+          "name": "idx_builders_name_normalized",
+          "columns": [
+            {
+              "expression": "name_normalized",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_builders_permit_count": {
+          "name": "idx_builders_permit_count",
+          "columns": [
+            {
+              "expression": "permit_count",
+              "asc": false,
+              "nulls": "first",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "builders_name_normalized_key": {
+          "columns": [
+            "name_normalized"
+          ],
+          "nullsNotDistinct": false,
+          "name": "builders_name_normalized_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.builder_contacts": {
+      "name": "builder_contacts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "builder_id": {
+          "name": "builder_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contact_type": {
+          "name": "contact_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_value": {
+          "name": "contact_value",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'user'"
+        },
+        "contributed_by": {
+          "name": "contributed_by",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verified": {
+          "name": "verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_builder_contacts_builder": {
+          "name": "idx_builder_contacts_builder",
+          "columns": [
+            {
+              "expression": "builder_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_builder_contacts_type": {
+          "name": "idx_builder_contacts_type",
+          "columns": [
+            {
+              "expression": "contact_type",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "builder_contacts_builder_id_fkey": {
+          "name": "builder_contacts_builder_id_fkey",
+          "tableFrom": "builder_contacts",
+          "tableTo": "builders",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "builder_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.coa_applications": {
+      "name": "coa_applications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "application_number": {
+          "name": "application_number",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "street_num": {
+          "name": "street_num",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "street_name": {
+          "name": "street_name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ward": {
+          "name": "ward",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "decision": {
+          "name": "decision",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "decision_date": {
+          "name": "decision_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hearing_date": {
+          "name": "hearing_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "applicant": {
+          "name": "applicant",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "linked_permit_num": {
+          "name": "linked_permit_num",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "linked_confidence": {
+          "name": "linked_confidence",
+          "type": "numeric(3, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_hash": {
+          "name": "data_hash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "first_seen_at": {
+          "name": "first_seen_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "sub_type": {
+          "name": "sub_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "idx_coa_applications_address": {
+          "name": "idx_coa_applications_address",
+          "columns": [
+            {
+              "expression": "address",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_coa_applications_linked_permit": {
+          "name": "idx_coa_applications_linked_permit",
+          "columns": [
+            {
+              "expression": "linked_permit_num",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_coa_applications_ward": {
+          "name": "idx_coa_applications_ward",
+          "columns": [
+            {
+              "expression": "ward",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_coa_decision_date": {
+          "name": "idx_coa_decision_date",
+          "columns": [
+            {
+              "expression": "decision_date",
+              "asc": false,
+              "nulls": "first",
+              "opclass": "date_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_coa_upcoming_leads": {
+          "name": "idx_coa_upcoming_leads",
+          "columns": [
+            {
+              "expression": "decision_date",
+              "asc": false,
+              "nulls": "first",
+              "opclass": "date_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "where": "(((decision)::text = ANY ((ARRAY['Approved'::character varying, 'Approved with Conditions'::character varying])::text[])) AND (linked_permit_num IS NULL))",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "coa_applications_application_number_key": {
+          "columns": [
+            "application_number"
+          ],
+          "nullsNotDistinct": false,
+          "name": "coa_applications_application_number_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.notifications": {
+      "name": "notifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permit_num": {
+          "name": "permit_num",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trade_slug": {
+          "name": "trade_slug",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "channel": {
+          "name": "channel",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'in_app'"
+        },
+        "is_read": {
+          "name": "is_read",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_sent": {
+          "name": "is_sent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_notifications_user_created": {
+          "name": "idx_notifications_user_created",
+          "columns": [
+            {
+              "expression": "user_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "timestamp_ops",
+              "isExpression": false
+            },
+            {
+              "expression": "created_at",
+              "asc": false,
+              "nulls": "first",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_notifications_user_read": {
+          "name": "idx_notifications_user_read",
+          "columns": [
+            {
+              "expression": "user_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "bool_ops",
+              "isExpression": false
+            },
+            {
+              "expression": "is_read",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "bool_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.permit_parcels": {
+      "name": "permit_parcels",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "permit_num": {
+          "name": "permit_num",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revision_num": {
+          "name": "revision_num",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parcel_id": {
+          "name": "parcel_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "match_type": {
+          "name": "match_type",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "confidence": {
+          "name": "confidence",
+          "type": "numeric(3, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "linked_at": {
+          "name": "linked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_permit_parcels_parcel": {
+          "name": "idx_permit_parcels_parcel",
+          "columns": [
+            {
+              "expression": "parcel_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permit_parcels_permit": {
+          "name": "idx_permit_parcels_permit",
+          "columns": [
+            {
+              "expression": "permit_num",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            },
+            {
+              "expression": "revision_num",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "permit_parcels_parcel_id_fkey": {
+          "name": "permit_parcels_parcel_id_fkey",
+          "tableFrom": "permit_parcels",
+          "tableTo": "parcels",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "parcel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "permit_parcels_permit_num_revision_num_parcel_id_key": {
+          "columns": [
+            "parcel_id",
+            "permit_num",
+            "revision_num"
+          ],
+          "nullsNotDistinct": false,
+          "name": "permit_parcels_permit_num_revision_num_parcel_id_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.neighbourhoods": {
+      "name": "neighbourhoods",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "neighbourhood_id": {
+          "name": "neighbourhood_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "geometry": {
+          "name": "geometry",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_household_income": {
+          "name": "avg_household_income",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "median_household_income": {
+          "name": "median_household_income",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_individual_income": {
+          "name": "avg_individual_income",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "low_income_pct": {
+          "name": "low_income_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tenure_owner_pct": {
+          "name": "tenure_owner_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tenure_renter_pct": {
+          "name": "tenure_renter_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "period_of_construction": {
+          "name": "period_of_construction",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "couples_pct": {
+          "name": "couples_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lone_parent_pct": {
+          "name": "lone_parent_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "married_pct": {
+          "name": "married_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "university_degree_pct": {
+          "name": "university_degree_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "immigrant_pct": {
+          "name": "immigrant_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "visible_minority_pct": {
+          "name": "visible_minority_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "english_knowledge_pct": {
+          "name": "english_knowledge_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "top_mother_tongue": {
+          "name": "top_mother_tongue",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "census_year": {
+          "name": "census_year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 2021
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_neighbourhoods_nid": {
+          "name": "idx_neighbourhoods_nid",
+          "columns": [
+            {
+              "expression": "neighbourhood_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "neighbourhoods_neighbourhood_id_key": {
+          "columns": [
+            "neighbourhood_id"
+          ],
+          "nullsNotDistinct": false,
+          "name": "neighbourhoods_neighbourhood_id_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.parcels": {
+      "name": "parcels",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "parcel_id": {
+          "name": "parcel_id",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feature_type": {
+          "name": "feature_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address_number": {
+          "name": "address_number",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "linear_name_full": {
+          "name": "linear_name_full",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "addr_num_normalized": {
+          "name": "addr_num_normalized",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "street_name_normalized": {
+          "name": "street_name_normalized",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "street_type_normalized": {
+          "name": "street_type_normalized",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stated_area_raw": {
+          "name": "stated_area_raw",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lot_size_sqm": {
+          "name": "lot_size_sqm",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lot_size_sqft": {
+          "name": "lot_size_sqft",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "frontage_m": {
+          "name": "frontage_m",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "frontage_ft": {
+          "name": "frontage_ft",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "depth_m": {
+          "name": "depth_m",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "depth_ft": {
+          "name": "depth_ft",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "geometry": {
+          "name": "geometry",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_effective": {
+          "name": "date_effective",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_expiry": {
+          "name": "date_expiry",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "centroid_lat": {
+          "name": "centroid_lat",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "centroid_lng": {
+          "name": "centroid_lng",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_irregular": {
+          "name": "is_irregular",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        }
+      },
+      "indexes": {
+        "idx_parcels_address": {
+          "name": "idx_parcels_address",
+          "columns": [
+            {
+              "expression": "addr_num_normalized",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            },
+            {
+              "expression": "street_name_normalized",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_parcels_centroid": {
+          "name": "idx_parcels_centroid",
+          "columns": [
+            {
+              "expression": "centroid_lat",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "numeric_ops",
+              "isExpression": false
+            },
+            {
+              "expression": "centroid_lng",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "numeric_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "where": "(centroid_lat IS NOT NULL)",
+          "with": {}
+        },
+        "idx_parcels_feature_type": {
+          "name": "idx_parcels_feature_type",
+          "columns": [
+            {
+              "expression": "feature_type",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_parcels_street_name": {
+          "name": "idx_parcels_street_name",
+          "columns": [
+            {
+              "expression": "street_name_normalized",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "parcels_parcel_id_key": {
+          "columns": [
+            "parcel_id"
+          ],
+          "nullsNotDistinct": false,
+          "name": "parcels_parcel_id_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.address_points": {
+      "name": "address_points",
+      "schema": "",
+      "columns": {
+        "address_point_id": {
+          "name": "address_point_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.pipeline_runs": {
+      "name": "pipeline_runs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "pipeline": {
+          "name": "pipeline",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'running'"
+        },
+        "records_total": {
+          "name": "records_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "records_new": {
+          "name": "records_new",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "records_updated": {
+          "name": "records_updated",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duration_ms": {
+          "name": "duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "idx_pipeline_runs_lookup": {
+          "name": "idx_pipeline_runs_lookup",
+          "columns": [
+            {
+              "expression": "pipeline",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            },
+            {
+              "expression": "started_at",
+              "asc": false,
+              "nulls": "first",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.building_footprints": {
+      "name": "building_footprints",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "geometry": {
+          "name": "geometry",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "footprint_area_sqm": {
+          "name": "footprint_area_sqm",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "footprint_area_sqft": {
+          "name": "footprint_area_sqft",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_height_m": {
+          "name": "max_height_m",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "min_height_m": {
+          "name": "min_height_m",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "elev_z": {
+          "name": "elev_z",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimated_stories": {
+          "name": "estimated_stories",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "centroid_lat": {
+          "name": "centroid_lat",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "centroid_lng": {
+          "name": "centroid_lng",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_building_footprints_centroid": {
+          "name": "idx_building_footprints_centroid",
+          "columns": [
+            {
+              "expression": "centroid_lat",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "numeric_ops",
+              "isExpression": false
+            },
+            {
+              "expression": "centroid_lng",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "numeric_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_building_footprints_source": {
+          "name": "idx_building_footprints_source",
+          "columns": [
+            {
+              "expression": "source_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "building_footprints_source_id_key": {
+          "columns": [
+            "source_id"
+          ],
+          "nullsNotDistinct": false,
+          "name": "building_footprints_source_id_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.parcel_buildings": {
+      "name": "parcel_buildings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "parcel_id": {
+          "name": "parcel_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "building_id": {
+          "name": "building_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_primary": {
+          "name": "is_primary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "structure_type": {
+          "name": "structure_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'other'"
+        },
+        "linked_at": {
+          "name": "linked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "match_type": {
+          "name": "match_type",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'polygon'"
+        },
+        "confidence": {
+          "name": "confidence",
+          "type": "numeric(3, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0.85'"
+        }
+      },
+      "indexes": {
+        "idx_parcel_buildings_building": {
+          "name": "idx_parcel_buildings_building",
+          "columns": [
+            {
+              "expression": "building_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_parcel_buildings_parcel": {
+          "name": "idx_parcel_buildings_parcel",
+          "columns": [
+            {
+              "expression": "parcel_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "parcel_buildings_parcel_id_fkey": {
+          "name": "parcel_buildings_parcel_id_fkey",
+          "tableFrom": "parcel_buildings",
+          "tableTo": "parcels",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "parcel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "parcel_buildings_building_id_fkey": {
+          "name": "parcel_buildings_building_id_fkey",
+          "tableFrom": "parcel_buildings",
+          "tableTo": "building_footprints",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "building_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "parcel_buildings_parcel_id_building_id_key": {
+          "columns": [
+            "building_id",
+            "parcel_id"
+          ],
+          "nullsNotDistinct": false,
+          "name": "parcel_buildings_parcel_id_building_id_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.data_quality_snapshots": {
+      "name": "data_quality_snapshots",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "snapshot_date": {
+          "name": "snapshot_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_DATE"
+        },
+        "total_permits": {
+          "name": "total_permits",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "active_permits": {
+          "name": "active_permits",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permits_with_trades": {
+          "name": "permits_with_trades",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trade_matches_total": {
+          "name": "trade_matches_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trade_avg_confidence": {
+          "name": "trade_avg_confidence",
+          "type": "numeric(4, 3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trade_tier1_count": {
+          "name": "trade_tier1_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trade_tier2_count": {
+          "name": "trade_tier2_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trade_tier3_count": {
+          "name": "trade_tier3_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permits_with_builder": {
+          "name": "permits_with_builder",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "builders_total": {
+          "name": "builders_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "builders_enriched": {
+          "name": "builders_enriched",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "builders_with_phone": {
+          "name": "builders_with_phone",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "builders_with_email": {
+          "name": "builders_with_email",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "builders_with_website": {
+          "name": "builders_with_website",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "builders_with_google": {
+          "name": "builders_with_google",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "builders_with_wsib": {
+          "name": "builders_with_wsib",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permits_with_parcel": {
+          "name": "permits_with_parcel",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parcel_exact_matches": {
+          "name": "parcel_exact_matches",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parcel_name_matches": {
+          "name": "parcel_name_matches",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parcel_avg_confidence": {
+          "name": "parcel_avg_confidence",
+          "type": "numeric(4, 3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permits_with_neighbourhood": {
+          "name": "permits_with_neighbourhood",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permits_geocoded": {
+          "name": "permits_geocoded",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coa_total": {
+          "name": "coa_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coa_linked": {
+          "name": "coa_linked",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coa_avg_confidence": {
+          "name": "coa_avg_confidence",
+          "type": "numeric(4, 3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coa_high_confidence": {
+          "name": "coa_high_confidence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coa_low_confidence": {
+          "name": "coa_low_confidence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permits_updated_24h": {
+          "name": "permits_updated_24h",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permits_updated_7d": {
+          "name": "permits_updated_7d",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permits_updated_30d": {
+          "name": "permits_updated_30d",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_sync_at": {
+          "name": "last_sync_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_sync_status": {
+          "name": "last_sync_status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "parcel_spatial_matches": {
+          "name": "parcel_spatial_matches",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "permits_with_scope": {
+          "name": "permits_with_scope",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "scope_project_type_breakdown": {
+          "name": "scope_project_type_breakdown",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "building_footprints_total": {
+          "name": "building_footprints_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "parcels_with_buildings": {
+          "name": "parcels_with_buildings",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "permits_with_scope_tags": {
+          "name": "permits_with_scope_tags",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "scope_tags_top": {
+          "name": "scope_tags_top",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permits_with_detailed_tags": {
+          "name": "permits_with_detailed_tags",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "trade_residential_classified": {
+          "name": "trade_residential_classified",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "trade_residential_total": {
+          "name": "trade_residential_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "trade_commercial_classified": {
+          "name": "trade_commercial_classified",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "trade_commercial_total": {
+          "name": "trade_commercial_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "idx_dqs_snapshot_date": {
+          "name": "idx_dqs_snapshot_date",
+          "columns": [
+            {
+              "expression": "snapshot_date",
+              "asc": false,
+              "nulls": "first",
+              "opclass": "date_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "data_quality_snapshots_snapshot_date_key": {
+          "columns": [
+            "snapshot_date"
+          ],
+          "nullsNotDistinct": false,
+          "name": "data_quality_snapshots_snapshot_date_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.permits": {
+      "name": "permits",
+      "schema": "",
+      "columns": {
+        "permit_num": {
+          "name": "permit_num",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revision_num": {
+          "name": "revision_num",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permit_type": {
+          "name": "permit_type",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "structure_type": {
+          "name": "structure_type",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "work": {
+          "name": "work",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "street_num": {
+          "name": "street_num",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "street_name": {
+          "name": "street_name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "street_type": {
+          "name": "street_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "street_direction": {
+          "name": "street_direction",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "postal": {
+          "name": "postal",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "geo_id": {
+          "name": "geo_id",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "building_type": {
+          "name": "building_type",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category": {
+          "name": "category",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "application_date": {
+          "name": "application_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "issued_date": {
+          "name": "issued_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_date": {
+          "name": "completed_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "est_const_cost": {
+          "name": "est_const_cost",
+          "type": "numeric(15, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "builder_name": {
+          "name": "builder_name",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner": {
+          "name": "owner",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dwelling_units_created": {
+          "name": "dwelling_units_created",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dwelling_units_lost": {
+          "name": "dwelling_units_lost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ward": {
+          "name": "ward",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "council_district": {
+          "name": "council_district",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "current_use": {
+          "name": "current_use",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "proposed_use": {
+          "name": "proposed_use",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "housing_units": {
+          "name": "housing_units",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storeys": {
+          "name": "storeys",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "geocoded_at": {
+          "name": "geocoded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_hash": {
+          "name": "data_hash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "first_seen_at": {
+          "name": "first_seen_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "raw_json": {
+          "name": "raw_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "neighbourhood_id": {
+          "name": "neighbourhood_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "project_type": {
+          "name": "project_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope_tags": {
+          "name": "scope_tags",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope_classified_at": {
+          "name": "scope_classified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope_source": {
+          "name": "scope_source",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'classified'"
+        }
+      },
+      "indexes": {
+        "idx_permits_builder_name": {
+          "name": "idx_permits_builder_name",
+          "columns": [
+            {
+              "expression": "builder_name",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permits_data_hash": {
+          "name": "idx_permits_data_hash",
+          "columns": [
+            {
+              "expression": "data_hash",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permits_description_fts": {
+          "name": "idx_permits_description_fts",
+          "columns": [
+            {
+              "expression": "to_tsvector('english'::regconfig, COALESCE(description, ''::tex",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "tsvector_ops",
+              "isExpression": true
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "idx_permits_issued_date": {
+          "name": "idx_permits_issued_date",
+          "columns": [
+            {
+              "expression": "issued_date",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "date_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permits_neighbourhood_id": {
+          "name": "idx_permits_neighbourhood_id",
+          "columns": [
+            {
+              "expression": "neighbourhood_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int4_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permits_permit_type": {
+          "name": "idx_permits_permit_type",
+          "columns": [
+            {
+              "expression": "permit_type",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permits_project_type": {
+          "name": "idx_permits_project_type",
+          "columns": [
+            {
+              "expression": "project_type",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "where": "(project_type IS NOT NULL)",
+          "with": {}
+        },
+        "idx_permits_scope_tags": {
+          "name": "idx_permits_scope_tags",
+          "columns": [
+            {
+              "expression": "scope_tags",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "array_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "where": "(scope_tags IS NOT NULL)",
+          "with": {}
+        },
+        "idx_permits_status": {
+          "name": "idx_permits_status",
+          "columns": [
+            {
+              "expression": "status",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_permits_ward": {
+          "name": "idx_permits_ward",
+          "columns": [
+            {
+              "expression": "ward",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "permits_pkey": {
+          "name": "permits_pkey",
+          "columns": [
+            "permit_num",
+            "revision_num"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {
+    "public.mv_monthly_permit_stats": {
+      "name": "mv_monthly_permit_stats",
+      "schema": "public",
+      "columns": {
+        "month": {
+          "name": "month",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permit_type": {
+          "name": "permit_type",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permit_count": {
+          "name": "permit_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_value": {
+          "name": "total_value",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT date_trunc('month'::text, issued_date::timestamp with time zone)::date AS month, permit_type, count(*)::integer AS permit_count, COALESCE(sum(est_const_cost), 0::numeric)::bigint AS total_value FROM permits WHERE issued_date IS NOT NULL GROUP BY (date_trunc('month'::text, issued_date::timestamp with time zone)), permit_type",
+      "materialized": true
+    }
+  },
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {
+      "permits": {
+        "columns": {
+          "scope_tags": {
+            "isArray": true,
+            "dimensions": 1,
+            "rawType": "text"
+          }
+        }
+      }
+    }
+  }
+}
