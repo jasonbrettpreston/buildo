@@ -104,6 +104,19 @@ describe('Chain Orchestrator Script', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/run-chain.js');
     expect(fs.existsSync(scriptPath)).toBe(true);
   });
+
+  it('local-cron.js exists in scripts/ directory', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/local-cron.js');
+    expect(fs.existsSync(scriptPath)).toBe(true);
+  });
+
+  it('local-cron.js contains all 3 chain IDs (permits, coa, sources)', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/local-cron.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    expect(content).toContain("chainId: 'permits'");
+    expect(content).toContain("chainId: 'coa'");
+    expect(content).toContain("chainId: 'sources'");
+  });
 });
 
 describe('Pipeline Route Chain Registration', () => {

@@ -20,6 +20,7 @@
     "seed:trades": "npx tsx scripts/seed-trades.ts",
     "spec:tests": "node scripts/harvest-tests.mjs",
     "db:docs": "node scripts/generate-db-docs.mjs",
+    "local-cron": "node scripts/local-cron.js",
     "prepare": "husky"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
     "firebase": "^12.9.0",
     "firebase-admin": "^13.6.1",
     "next": "^15.1.0",
+    "node-cron": "^4.2.1",
     "pg": "^8.13.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
