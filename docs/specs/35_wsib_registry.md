@@ -38,8 +38,8 @@ As an admin, I want to ingest the WSIB Businesses Classification Details open da
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Logic** (`wsib.logic.test.ts`): WSIB CSV row parsing and Class G filtering; legal name normalization for matching; trade name normalization; tier 1 exact trade name match; tier 2 exact legal name match; tier 3 fuzzy match; match confidence assignment; wsib_status string generation; multi-row de-duplication logic; BOM handling
-- **Infra** (`wsib.infra.test.ts`): wsib_registry table schema validation (migration 040); load_wsib pipeline slug registered; link_wsib pipeline slug registered; assert-data-bounds includes wsib checks
+- **Logic** (`wsib.logic.test.ts`): WSIB Registry Integration
+- **Infra** (`wsib.infra.test.ts`): WSIB Registry Infrastructure
 <!-- TEST_INJECT_END -->
 
 ## 5. Operating Boundaries

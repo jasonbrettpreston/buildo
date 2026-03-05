@@ -278,7 +278,7 @@ async function run() {
   console.log(`Found ${builders.length} unenriched builder(s)`);
   if (builders.length === 0) {
     console.log('Nothing to enrich.');
-    await finalize(runId, startMs, 0, 0, 0);
+    await finalize(runId, startMs, 0, 0, 0, { processed: 0, matched: 0, failed: 0 });
     return;
   }
 
@@ -288,6 +288,10 @@ async function run() {
   let enriched = 0;
   let contactsFound = 0;
   let failed = 0;
+
+  // Per-field extraction counters for records_meta
+  const fieldCounts = { phone: 0, email: 0, website: 0, instagram: 0, facebook: 0, linkedin: 0, houzz: 0 };
+  let websitesScraped = 0;
 
   for (let i = 0; i < builders.length; i++) {
     const b = builders[i];
@@ -305,6 +309,7 @@ async function run() {
 
       // If no email from snippets but we have a website, scrape it
       const websiteUrl = contacts.website || b.website;
+      if (websiteUrl) websitesScraped++;
       if (!contacts.email && !b.email && websiteUrl) {
         try {
           const pageRes = await fetch(websiteUrl, {
@@ -337,18 +342,21 @@ async function run() {
         params.push(contacts.phone);
         paramIdx++;
         newFields++;
+        fieldCounts.phone++;
       }
       if (contacts.email && !b.email) {
         updates.push(`email = COALESCE(email, $${paramIdx})`);
         params.push(contacts.email);
         paramIdx++;
         newFields++;
+        fieldCounts.email++;
       }
       if (contacts.website && !b.website) {
         updates.push(`website = COALESCE(website, $${paramIdx})`);
         params.push(contacts.website);
         paramIdx++;
         newFields++;
+        fieldCounts.website++;
       }
 
       // Always mark as enriched (even if no contacts found — prevents retry loops)
@@ -371,6 +379,7 @@ async function run() {
             [b.id, type, contacts[type]]
           );
           newFields++;
+          fieldCounts[type]++;
         }
       }
 
@@ -404,10 +413,18 @@ async function run() {
     if (i < builders.length - 1) await sleep(RATE_LIMIT_MS);
   }
 
-  await finalize(runId, startMs, enriched, contactsFound, failed);
+  const meta = {
+    processed: enriched + failed,
+    matched: enriched,
+    failed,
+    websites_found: websitesScraped,
+    extracted_fields: fieldCounts,
+  };
+
+  await finalize(runId, startMs, enriched, contactsFound, failed, meta);
 }
 
-async function finalize(runId, startMs, enriched, contactsFound, failed) {
+async function finalize(runId, startMs, enriched, contactsFound, failed, meta) {
   const durationMs = Date.now() - startMs;
 
   console.log('\n=== Results ===');
@@ -421,9 +438,9 @@ async function finalize(runId, startMs, enriched, contactsFound, failed) {
     await pool.query(
       `UPDATE pipeline_runs
        SET completed_at = NOW(), status = 'completed', duration_ms = $1,
-           records_total = $2, records_new = $3
-       WHERE id = $4`,
-      [durationMs, enriched + failed, contactsFound, runId]
+           records_total = $2, records_new = $3, records_meta = $4
+       WHERE id = $5`,
+      [durationMs, enriched + failed, contactsFound, JSON.stringify(meta), runId]
     ).catch(() => {});
   }
 

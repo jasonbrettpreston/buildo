@@ -295,6 +295,60 @@ describe('CQA Script Files', () => {
   });
 });
 
+describe('Migration 041 records_meta', () => {
+  it('migration file exists', () => {
+    const migrationPath = path.join(__dirname, '../../migrations/041_records_meta.sql');
+    expect(fs.existsSync(migrationPath)).toBe(true);
+  });
+
+  it('migration adds records_meta JSONB column', () => {
+    const content = fs.readFileSync(
+      path.join(__dirname, '../../migrations/041_records_meta.sql'),
+      'utf-8'
+    );
+    expect(content).toContain('records_meta');
+    expect(content).toContain('JSONB');
+  });
+});
+
+describe('enrich-web-search.js writes records_meta', () => {
+  it('script writes records_meta to pipeline_runs', () => {
+    const content = fs.readFileSync(
+      path.join(__dirname, '../../scripts/enrich-web-search.js'),
+      'utf-8'
+    );
+    expect(content).toContain('records_meta');
+  });
+
+  it('script tracks per-field extraction counts', () => {
+    const content = fs.readFileSync(
+      path.join(__dirname, '../../scripts/enrich-web-search.js'),
+      'utf-8'
+    );
+    expect(content).toContain('extracted_fields');
+    expect(content).toContain('fieldCounts');
+  });
+
+  it('script tracks websites_found for multi-step pipeline view', () => {
+    const content = fs.readFileSync(
+      path.join(__dirname, '../../scripts/enrich-web-search.js'),
+      'utf-8'
+    );
+    expect(content).toContain('websites_found');
+    expect(content).toContain('websitesScraped');
+  });
+});
+
+describe('Stats API returns records_meta', () => {
+  it('stats route selects records_meta from pipeline_runs', () => {
+    const content = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/stats/route.ts'),
+      'utf-8'
+    );
+    expect(content).toContain('records_meta');
+  });
+});
+
 describe('Pipeline runs API route exists', () => {
   it('runs route file exists', () => {
     const routePath = path.join(__dirname, '../app/api/admin/pipelines/runs/route.ts');

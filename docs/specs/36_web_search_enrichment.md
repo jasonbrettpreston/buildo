@@ -34,8 +34,8 @@ As an admin, I want WSIB-matched builders to be automatically enriched with cont
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Logic** (`enrichment.logic.test.ts`): Phone extraction regex with Ontario area codes; email extraction with reject list; HTML email extraction (mailto links, visible text, reject filtering, dedup); website extraction skipping directories; social link extraction (IG, FB, LI, Houzz); full contact extraction from mock Serper response; knowledge graph priority; search query construction; city extraction from WSIB address
-- **Infra** (`enrichment.infra.test.ts`): enrich-web-search.js script existence; SERPER_API_KEY env var usage (no hardcoded keys); pipeline registration; chain orchestrator placement; FreshnessTimeline entry; .env.example contains SERPER_API_KEY; extract-contacts.ts module exports
+- **Logic** (`enrichment.logic.test.ts`): Web Search Enrichment
+- **Infra** (`enrichment.infra.test.ts`): Web Search Enrichment Infrastructure
 <!-- TEST_INJECT_END -->
 
 ## 5. Operating Boundaries

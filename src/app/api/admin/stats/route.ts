@@ -187,6 +187,7 @@ export async function GET() {
       records_total: number | null;
       records_new: number | null;
       records_updated: number | null;
+      records_meta: Record<string, unknown> | null;
     }> = {};
     try {
       const pipelineRows = await query<{
@@ -198,9 +199,10 @@ export async function GET() {
         records_total: number | null;
         records_new: number | null;
         records_updated: number | null;
+        records_meta: Record<string, unknown> | null;
       }>(
         `SELECT DISTINCT ON (pipeline) pipeline, started_at, status,
-                duration_ms, error_message, records_total, records_new, records_updated
+                duration_ms, error_message, records_total, records_new, records_updated, records_meta
          FROM pipeline_runs
          ORDER BY pipeline, started_at DESC`
       );
@@ -213,6 +215,7 @@ export async function GET() {
           records_total: row.records_total,
           records_new: row.records_new,
           records_updated: row.records_updated,
+          records_meta: row.records_meta ?? null,
         };
       }
     } catch {

@@ -831,6 +831,87 @@ describe('SLA_TARGETS', () => {
   });
 });
 
+// ── Enrichment Funnel Config ──────────────────────────────────────
+
+describe('Enrichment Funnel', () => {
+  let FUNNEL_SOURCES: { id: string; name: string; statusSlug: string; triggerSlug: string; yieldFields: string[] }[];
+
+  beforeAll(async () => {
+    const mod = await import('@/components/EnrichmentFunnel');
+    FUNNEL_SOURCES = mod.FUNNEL_SOURCES;
+  });
+
+  it('defines exactly 13 data sources', () => {
+    expect(FUNNEL_SOURCES).toHaveLength(13);
+  });
+
+  it('source IDs are unique', () => {
+    const ids = FUNNEL_SOURCES.map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('each source has non-empty name, statusSlug, triggerSlug, and yieldFields', () => {
+    for (const src of FUNNEL_SOURCES) {
+      expect(src.name.length).toBeGreaterThan(0);
+      expect(src.statusSlug.length).toBeGreaterThan(0);
+      expect(src.triggerSlug.length).toBeGreaterThan(0);
+      expect(src.yieldFields.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('includes all expected source IDs', () => {
+    const ids = FUNNEL_SOURCES.map((s) => s.id);
+    expect(ids).toContain('permits');
+    expect(ids).toContain('scope_class');
+    expect(ids).toContain('scope_tags');
+    expect(ids).toContain('trades_residential');
+    expect(ids).toContain('trades_commercial');
+    expect(ids).toContain('builders');
+    expect(ids).toContain('wsib');
+    expect(ids).toContain('builder_web');
+    expect(ids).toContain('address_matching');
+    expect(ids).toContain('parcels');
+    expect(ids).toContain('neighbourhoods');
+    expect(ids).toContain('massing');
+    expect(ids).toContain('coa');
+  });
+
+  it('follows pipeline chain execution order', () => {
+    const ids = FUNNEL_SOURCES.map((s) => s.id);
+    // Permits hub first, then classify, then builders/enrichment, then spatial, then CoA last
+    expect(ids.indexOf('permits')).toBeLessThan(ids.indexOf('scope_class'));
+    expect(ids.indexOf('scope_class')).toBeLessThan(ids.indexOf('builders'));
+    expect(ids.indexOf('builders')).toBeLessThan(ids.indexOf('wsib'));
+    expect(ids.indexOf('wsib')).toBeLessThan(ids.indexOf('builder_web'));
+    expect(ids.indexOf('builder_web')).toBeLessThan(ids.indexOf('address_matching'));
+    expect(ids.indexOf('address_matching')).toBeLessThan(ids.indexOf('parcels'));
+    expect(ids.indexOf('parcels')).toBeLessThan(ids.indexOf('coa'));
+  });
+
+  it('builder_web source yields phone, email, and website', () => {
+    const builderWeb = FUNNEL_SOURCES.find((s) => s.id === 'builder_web')!;
+    expect(builderWeb.yieldFields).toContain('phone');
+    expect(builderWeb.yieldFields).toContain('email');
+    expect(builderWeb.yieldFields).toContain('website');
+  });
+
+  it('every triggerSlug is a valid pipeline slug', () => {
+    // All trigger slugs should map to known pipelines (or chains)
+    const validSlugs = [
+      'chain_permits', 'chain_coa', 'chain_sources',
+      'permits', 'coa', 'builders', 'address_points', 'parcels', 'massing', 'neighbourhoods',
+      'geocode_permits', 'link_parcels', 'link_neighbourhoods', 'link_massing', 'link_coa',
+      'load_wsib', 'link_wsib', 'enrich_wsib_builders', 'enrich_named_builders',
+      'classify_scope_class', 'classify_scope_tags', 'classify_permits',
+      'compute_centroids', 'link_similar', 'create_pre_permits',
+      'refresh_snapshot', 'assert_schema', 'assert_data_bounds',
+    ];
+    for (const src of FUNNEL_SOURCES) {
+      expect(validSlugs, `${src.id} trigger ${src.triggerSlug} not valid`).toContain(src.triggerSlug);
+    }
+  });
+});
+
 // ── Snapshot shape includes new quality fields ────────────────────────
 
 describe('Snapshot includes null tracking and violation fields', () => {

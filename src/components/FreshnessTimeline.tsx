@@ -144,6 +144,7 @@ export interface PipelineRunInfo {
   records_total?: number | null;
   records_new?: number | null;
   records_updated?: number | null;
+  records_meta?: Record<string, unknown> | null;
 }
 
 export interface FreshnessTimelineProps {

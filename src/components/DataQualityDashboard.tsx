@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { findSnapshotDaysAgo, trendDelta, SLA_TARGETS } from '@/lib/quality/types';
 import { DataSourceCircle } from '@/components/DataSourceCircle';
 import { FreshnessTimeline } from '@/components/FreshnessTimeline';
+import { EnrichmentFunnel } from '@/components/EnrichmentFunnel';
 import { ScheduleEditModal } from '@/components/ScheduleEditModal';
 
 // ---------------------------------------------------------------------------
@@ -25,9 +26,11 @@ const PIPELINE_SCHEDULES: Record<string, { label: string }> = {
   link_neighbourhoods: { label: 'Annual' },
   link_massing: { label: 'Quarterly' },
   link_coa: { label: 'Daily' },
-  // Enrich
-  enrich_google: { label: 'Daily' },
-  enrich_wsib: { label: 'Daily' },
+  // Enrich / Link
+  load_wsib: { label: 'Quarterly' },
+  link_wsib: { label: 'Daily' },
+  enrich_wsib_builders: { label: 'Daily' },
+  enrich_named_builders: { label: 'Daily' },
   // Classify
   classify_scope_class: { label: 'Daily' },
   classify_scope_tags: { label: 'Daily' },
@@ -768,6 +771,31 @@ export function DataQualityDashboard() {
             onTrigger={triggerPipeline}
             slaTargets={SLA_TARGETS}
           />
+
+          {/* ============================================================
+              Section 3: Enrichment Funnel
+          ============================================================ */}
+          {stats && (
+            <EnrichmentFunnel
+              stats={{
+                wsib_total: stats.wsib_total ?? 0,
+                wsib_linked: stats.wsib_linked ?? 0,
+                wsib_lead_pool: stats.wsib_lead_pool ?? 0,
+                wsib_with_trade: stats.wsib_with_trade ?? 0,
+                address_points_total: stats.address_points_total ?? 0,
+                parcels_total: stats.parcels_total ?? 0,
+                building_footprints_total: stats.building_footprints_total ?? 0,
+                parcels_with_massing: stats.parcels_with_massing ?? 0,
+                permits_with_massing: stats.permits_with_massing ?? 0,
+                neighbourhoods_total: stats.neighbourhoods_total ?? 0,
+                pipeline_last_run: stats.pipeline_last_run ?? {},
+                pipeline_schedules: stats.pipeline_schedules,
+              }}
+              current={current}
+              onTrigger={triggerPipeline}
+              runningPipelines={runningPipelines}
+            />
+          )}
 
           {/* Schedule notice */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 flex items-start gap-2">

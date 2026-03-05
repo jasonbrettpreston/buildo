@@ -27,7 +27,8 @@ As an admin, I want a Data Effectiveness Dashboard that shows completeness, accu
   - Dashboard polls every 5s while any pipeline is running.
   - Permit loader (`scripts/load-permits.js`) fetches live from CKAN by default (paginated 10K/page), or from local file via `--file` flag.
   - CoA loader (`scripts/load-coa.js`) uses incremental mode by default (active resource, last 90 days via SQL endpoint), or full mode via `--full` flag.
-- **Outputs:** Rendered dashboard with effectiveness score gauge, 10 data source circles with trend arrows, freshness timeline; snapshot row upserted on refresh; API JSON with current snapshot and trends.
+  - Enrichment Funnel section beneath Pipeline Status: 13 expandable rows in pipeline chain execution order (permits → scope_class → scope_tags → trades_residential → trades_commercial → builders → wsib → builder_web → address_matching → parcels → neighbourhoods → massing → coa). Each row renders 4 data zones — Zone 1 (Metadata & Freshness), Zone 2 (Baseline: raw external dataset size), Zone 3 (Intersection: match rate + sub-tiers), Zone 4 (Extracted Yield: field counts + null rates). `[All Time] / [Last Run]` toggle switches Zone 3/4 between cumulative snapshot data and per-run extraction counts from `records_meta` JSONB column on `pipeline_runs` (migration 041). Multi-step pipeline tracking for builder_web shows sub-step drop-offs (Builders Searched → Websites Found → Contacts Extracted). Collapsed view shows source name, status dot, match rate progress bar, yield summary, and "Update Now" button. Component: `src/components/EnrichmentFunnel.tsx`, config exported as `FUNNEL_SOURCES` for testing.
+- **Outputs:** Rendered dashboard with effectiveness score gauge, 10 data source circles with trend arrows, enrichment funnel, freshness timeline; snapshot row upserted on refresh; API JSON with current snapshot and trends.
 - **Edge Cases:**
   - `active_permits = 0` makes effectiveness score null (N/A).
   - `builders_total = 0` or `coa_total = 0` contributes 0% to score (no division error).
@@ -37,8 +38,8 @@ As an admin, I want a Data Effectiveness Dashboard that shows completeness, accu
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Logic** (`quality.logic.test.ts`): Data Effectiveness Score; Extract Matching Metrics; DataQualitySnapshot Shape Validation; parseSnapshot coerces NUMERIC fields from strings; Neighbourhood count must not exceed active permits; Builder accuracy uses permits_with_builder / active_permits; Builder tier percentages; Work Scope split: classification vs detailed tags; Pipeline Registry; Pipeline Chains; trendDelta(); findSnapshotDaysAgo(); DataSourceCircle field annotations; detectVolumeAnomalies(); detectSchemaDrift(); computeSystemHealth(); SLA_TARGETS; Snapshot includes null tracking and violation fields
-- **Infra** (`quality.infra.test.ts`): GET /api/quality Response Shape; DataQualitySnapshot Schema Constraints; Snapshot Date Uniqueness; Confidence Value Validation; Coverage Rate Validation; Freshness Interval Validation; Sync Status Validation; Quality API includes anomalies and health keys; Pipeline schedules API route exists; Migration 015 DDL Expectations; CQA Script Files; Pipeline runs API route exists
+- **Logic** (`quality.logic.test.ts`): Data Effectiveness Score; Extract Matching Metrics; DataQualitySnapshot Shape Validation; parseSnapshot coerces NUMERIC fields from strings; Neighbourhood count must not exceed active permits; Builder accuracy uses permits_with_builder / active_permits; Builder tier percentages; Work Scope split: classification vs detailed tags; Pipeline Registry; Pipeline Chains; trendDelta(); findSnapshotDaysAgo(); DataSourceCircle field annotations; detectVolumeAnomalies(); detectSchemaDrift(); computeSystemHealth(); SLA_TARGETS; Enrichment Funnel; Snapshot includes null tracking and violation fields
+- **Infra** (`quality.infra.test.ts`): GET /api/quality Response Shape; DataQualitySnapshot Schema Constraints; Snapshot Date Uniqueness; Confidence Value Validation; Coverage Rate Validation; Freshness Interval Validation; Sync Status Validation; Quality API includes anomalies and health keys; Pipeline schedules API route exists; Migration 015 DDL Expectations; CQA Script Files; Migration 041 records_meta; enrich-web-search.js writes records_meta; Stats API returns records_meta; Pipeline runs API route exists
 <!-- TEST_INJECT_END -->
 
 ## 5. Operating Boundaries
@@ -51,10 +52,12 @@ As an admin, I want a Data Effectiveness Dashboard that shows completeness, accu
 - `src/app/admin/data-quality/page.tsx`
 - `src/components/DataQualityDashboard.tsx`
 - `src/components/DataSourceCircle.tsx`
+- `src/components/EnrichmentFunnel.tsx`
 - `src/components/FreshnessTimeline.tsx`
 - `scripts/refresh-snapshot.js`
 - `scripts/quality/assert-schema.js`
 - `scripts/quality/assert-data-bounds.js`
+- `migrations/041_records_meta.sql`
 - `src/tests/quality.logic.test.ts`
 - `src/tests/quality.infra.test.ts`
 
