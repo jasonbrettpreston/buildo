@@ -144,6 +144,19 @@ export async function GET() {
       ).catch(() => [{ newest: null }]),
     ]);
 
+    // Auto-fail orphaned "running" rows older than 2 hours (process died mid-run)
+    try {
+      await query(
+        `UPDATE pipeline_runs
+         SET status = 'failed', completed_at = NOW(),
+             error_message = 'interrupted: stale run auto-cleaned'
+         WHERE status = 'running'
+           AND started_at < NOW() - INTERVAL '2 hours'`
+      );
+    } catch {
+      // Non-fatal — table may not exist yet
+    }
+
     // Pipeline freshness: last run per pipeline from pipeline_runs table (extended with observability)
     const pipelineLastRun: Record<string, {
       last_run_at: string | null;
