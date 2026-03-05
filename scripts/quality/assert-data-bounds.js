@@ -51,9 +51,10 @@ async function run() {
     }
   }
 
-  // Determine which checks to run based on chain context
+  // Determine which checks to run based on chain context.
+  // Each chain only validates data relevant to its own sources.
   const runPermitChecks = !CHAIN_ID || CHAIN_ID === 'permits';
-  const runCoaChecks    = !CHAIN_ID || CHAIN_ID === 'permits' || CHAIN_ID === 'coa';
+  const runCoaChecks    = !CHAIN_ID || CHAIN_ID === 'coa';
   const runSourceChecks = !CHAIN_ID || CHAIN_ID === 'sources';
 
   const warnings = [];
