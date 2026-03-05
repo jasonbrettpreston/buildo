@@ -60,13 +60,13 @@ async function run() {
     // 3. Builder counts
     const builders = await client.query(
       `SELECT COUNT(*) as total,
-              COUNT(*) FILTER (WHERE enriched_at IS NOT NULL) as enriched,
-              COUNT(*) FILTER (WHERE phone IS NOT NULL) as with_phone,
-              COUNT(*) FILTER (WHERE email IS NOT NULL) as with_email,
+              COUNT(*) FILTER (WHERE last_enriched_at IS NOT NULL) as enriched,
+              COUNT(*) FILTER (WHERE primary_phone IS NOT NULL) as with_phone,
+              COUNT(*) FILTER (WHERE primary_email IS NOT NULL) as with_email,
               COUNT(*) FILTER (WHERE website IS NOT NULL) as with_website,
               COUNT(*) FILTER (WHERE google_place_id IS NOT NULL) as with_google,
-              COUNT(*) FILTER (WHERE wsib_status IS NOT NULL AND wsib_status != 'unknown') as with_wsib
-       FROM builders`
+              COUNT(*) FILTER (WHERE is_wsib_registered = true) as with_wsib
+       FROM entities`
     );
     const b = builders.rows[0];
     const permitsBuilder = await client.query(

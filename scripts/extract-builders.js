@@ -92,7 +92,7 @@ async function run() {
     }
 
     await pool.query(`
-      INSERT INTO builders (name, name_normalized, permit_count)
+      INSERT INTO entities (legal_name, name_normalized, permit_count)
       VALUES ${placeholders.join(', ')}
       ON CONFLICT (name_normalized) DO UPDATE SET
         permit_count = EXCLUDED.permit_count,
@@ -106,12 +106,12 @@ async function run() {
   }
 
   // Verify
-  const countResult = await pool.query('SELECT COUNT(*) as total FROM builders');
+  const countResult = await pool.query('SELECT COUNT(*) as total FROM entities');
   console.log(`\nDone. ${countResult.rows[0].total} builders in database.`);
 
   // Show top 10
   const top = await pool.query(
-    'SELECT name, permit_count FROM builders ORDER BY permit_count DESC LIMIT 10'
+    'SELECT legal_name AS name, permit_count FROM entities ORDER BY permit_count DESC LIMIT 10'
   );
   console.log('\nTop 10 builders by permit count:');
   top.rows.forEach((r, i) => console.log(`  ${i + 1}. ${r.name} (${r.permit_count} permits)`));

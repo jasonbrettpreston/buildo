@@ -118,18 +118,17 @@ export async function GET(
       [permitNum, revisionNum]
     );
 
-    // Fetch builder info if available
+    // Fetch builder info via entity_projects junction
     let builder = null;
-    if (permits[0].builder_name) {
-      const builders = await query(
-        `SELECT * FROM builders
-         WHERE name_normalized = UPPER(REGEXP_REPLACE(TRIM($1), '\\s+', ' ', 'g'))
-         LIMIT 1`,
-        [permits[0].builder_name]
-      );
-      if (builders.length > 0) {
-        builder = builders[0];
-      }
+    const builderEntities = await query(
+      `SELECT e.* FROM entities e
+       JOIN entity_projects ep ON ep.entity_id = e.id
+       WHERE ep.permit_num = $1 AND ep.revision_num = $2 AND ep.role = 'Builder'
+       LIMIT 1`,
+      [permitNum, revisionNum]
+    );
+    if (builderEntities.length > 0) {
+      builder = builderEntities[0];
     }
 
     // Fetch parcel info if linked (graceful fallback if tables don't exist yet)

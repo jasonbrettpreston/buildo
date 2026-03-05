@@ -60,6 +60,7 @@
 | 34 | `34_market_metrics.md` | Market Metrics Dashboard | `src/app/admin/market-metrics/page.tsx`, `src/app/api/admin/market-metrics/route.ts`, `src/lib/market-metrics/helpers.ts` | `src/tests/market-metrics.logic.test.ts` | Done |
 | 35 | `35_wsib_registry.md` | WSIB Registry Integration | `src/app/api/admin/pipelines/[slug]/route.ts`, `src/components/DataQualityDashboard.tsx`, `src/components/FreshnessTimeline.tsx`, +2 more | `src/tests/wsib.logic.test.ts`, `src/tests/wsib.infra.test.ts` | Done |
 | 36 | `36_web_search_enrichment.md` | Web Search Enrichment | `src/lib/builders/extract-contacts.ts`, `src/app/api/admin/pipelines/[slug]/route.ts`, `src/components/FreshnessTimeline.tsx` | `src/tests/enrichment.logic.test.ts`, `src/tests/enrichment.infra.test.ts` | Done |
+| 37 | `37_corporate_identity_hub.md` | Corporate Identity Hub | `src/lib/permits/types.ts`, `src/lib/builders/normalize.ts`, `src/tests/factories.ts`, +15 more | `src/tests/entities.logic.test.ts`, `src/tests/entities.infra.test.ts` | Done |
 | 99 | `_spec_template.md` | Spec [XX] -- [Feature Name] | `src/...` | — | Done |
 
 ---

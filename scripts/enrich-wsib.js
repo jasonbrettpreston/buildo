@@ -23,9 +23,9 @@ async function run() {
   const { rows: [stats] } = await pool.query(
     `SELECT
        COUNT(*) as total,
-       COUNT(*) FILTER (WHERE wsib_status IS NOT NULL AND wsib_status != 'unknown') as with_wsib,
-       COUNT(*) FILTER (WHERE wsib_status IS NULL OR wsib_status = 'unknown') as missing_wsib
-     FROM builders`
+       COUNT(*) FILTER (WHERE is_wsib_registered = true) as with_wsib,
+       COUNT(*) FILTER (WHERE is_wsib_registered = false) as missing_wsib
+     FROM entities`
   );
 
   console.log(`Builders total:   ${parseInt(stats.total).toLocaleString()}`);

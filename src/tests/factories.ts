@@ -4,7 +4,8 @@ import type {
   Trade,
   TradeMatch,
   TradeMappingRule,
-  Builder,
+  Entity,
+  EntityProject,
   SyncRun,
   PermitChange,
   ProductGroup,
@@ -145,23 +146,41 @@ export function createMockTradeMappingRule(
   };
 }
 
-export function createMockBuilder(overrides: Partial<Builder> = {}): Builder {
+export function createMockEntity(overrides: Partial<Entity> = {}): Entity {
   return {
     id: 1,
-    name: 'ACME CONSTRUCTION INC',
+    legal_name: 'ACME CONSTRUCTION INC',
+    trade_name: null,
     name_normalized: 'ACME CONSTRUCTION',
-    phone: '416-555-1234',
-    email: 'info@acmeconstruction.ca',
+    entity_type: null,
+    primary_phone: '416-555-1234',
+    primary_email: 'info@acmeconstruction.ca',
     website: 'https://acmeconstruction.ca',
+    linkedin_url: null,
     google_place_id: null,
     google_rating: 4.2,
     google_review_count: 15,
-    obr_business_number: null,
-    wsib_status: null,
+    is_wsib_registered: false,
     permit_count: 12,
     first_seen_at: new Date('2023-01-01'),
     last_seen_at: new Date('2024-03-01'),
-    enriched_at: null,
+    last_enriched_at: null,
+    ...overrides,
+  };
+}
+
+/** @deprecated Use createMockEntity instead */
+export const createMockBuilder = createMockEntity;
+
+export function createMockEntityProject(overrides: Partial<EntityProject> = {}): EntityProject {
+  return {
+    id: 1,
+    entity_id: 1,
+    permit_num: '24 101234',
+    revision_num: '01',
+    coa_file_num: null,
+    role: 'Builder',
+    observed_at: new Date('2024-03-01'),
     ...overrides,
   };
 }
@@ -423,6 +442,7 @@ export interface WsibRegistryEntry {
   subclass_description: string | null;
   business_size: string | null;
   linked_builder_id: number | null;
+  linked_entity_id: number | null;
   match_confidence: number | null;
   matched_at: Date | null;
   first_seen_at: Date;
@@ -446,6 +466,7 @@ export function createMockWsibRegistryEntry(
     subclass_description: 'Residential building construction',
     business_size: 'Small Business',
     linked_builder_id: null,
+    linked_entity_id: null,
     match_confidence: null,
     matched_at: null,
     first_seen_at: new Date(),

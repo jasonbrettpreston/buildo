@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import { query } from '@/lib/db/client';
-import type { Builder } from '@/lib/permits/types';
+import type { Entity } from '@/lib/permits/types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -147,32 +147,30 @@ export async function searchGooglePlaces(
  *
  * @returns The updated builder, or `null` if the builder was not found.
  */
-export async function enrichBuilder(builderId: number): Promise<Builder | null> {
+export async function enrichBuilder(builderId: number): Promise<Entity | null> {
   try {
-    // Look up builder
-    const rows = await query<Builder>(
-      'SELECT * FROM builders WHERE id = $1 LIMIT 1',
+    const rows = await query<Entity>(
+      'SELECT * FROM entities WHERE id = $1 LIMIT 1',
       [builderId]
     );
 
     if (rows.length === 0) {
-      console.warn(`[enrichment] Builder id=${builderId} not found`);
+      console.warn(`[enrichment] Entity id=${builderId} not found`);
       return null;
     }
 
-    const builder = rows[0];
-    const placesResult = await searchGooglePlaces(builder.name);
+    const entity = rows[0];
+    const placesResult = await searchGooglePlaces(entity.legal_name);
 
     if (placesResult) {
-      // Update with enrichment data
-      const [updated] = await query<Builder>(
-        `UPDATE builders SET
-          google_place_id   = $1,
-          google_rating     = $2,
+      const [updated] = await query<Entity>(
+        `UPDATE entities SET
+          google_place_id     = $1,
+          google_rating       = $2,
           google_review_count = $3,
-          phone             = COALESCE(phone, $4),
-          website           = COALESCE(website, $5),
-          enriched_at       = NOW()
+          primary_phone       = COALESCE(primary_phone, $4),
+          website             = COALESCE(website, $5),
+          last_enriched_at    = NOW()
         WHERE id = $6
         RETURNING *`,
         [
@@ -188,13 +186,13 @@ export async function enrichBuilder(builderId: number): Promise<Builder | null> 
     }
 
     // No Places match -- still mark as enriched so we don't retry
-    const [updated] = await query<Builder>(
-      `UPDATE builders SET enriched_at = NOW() WHERE id = $1 RETURNING *`,
+    const [updated] = await query<Entity>(
+      `UPDATE entities SET last_enriched_at = NOW() WHERE id = $1 RETURNING *`,
       [builderId]
     );
     return updated;
   } catch (err) {
-    console.error(`[enrichment] Failed to enrich builder id=${builderId}:`, err);
+    console.error(`[enrichment] Failed to enrich entity id=${builderId}:`, err);
     return null;
   }
 }
@@ -219,9 +217,9 @@ export async function enrichUnenrichedBuilders(
   const stats = { enriched: 0, failed: 0 };
 
   try {
-    const unenriched = await query<Builder>(
-      `SELECT * FROM builders
-       WHERE enriched_at IS NULL
+    const unenriched = await query<Entity>(
+      `SELECT * FROM entities
+       WHERE last_enriched_at IS NULL
        ORDER BY permit_count DESC
        LIMIT $1`,
       [limit]

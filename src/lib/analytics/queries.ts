@@ -133,17 +133,21 @@ export async function getTopBuilders(
 ): Promise<{ name: string; permit_count: number; avg_cost: number }[]> {
   const rows = await query<{ name: string; permit_count: string; avg_cost: string }>(
     `SELECT
-      b.name,
-      b.permit_count::text AS permit_count,
+      e.legal_name AS name,
+      e.permit_count::text AS permit_count,
       COALESCE(
         ROUND(
-          (SELECT AVG(p.est_const_cost) FROM permits p WHERE p.builder_name = b.name)::numeric,
+          (SELECT AVG(p.est_const_cost)
+           FROM permits p
+           JOIN entity_projects ep ON ep.permit_num = p.permit_num AND ep.revision_num = p.revision_num
+           WHERE ep.entity_id = e.id AND ep.role = 'Builder')::numeric,
           2
         ),
         0
       )::text AS avg_cost
-    FROM builders b
-    ORDER BY b.permit_count DESC
+    FROM entities e
+    WHERE e.id IN (SELECT entity_id FROM entity_projects WHERE role = 'Builder')
+    ORDER BY e.permit_count DESC
     LIMIT $1`,
     [limit]
   );

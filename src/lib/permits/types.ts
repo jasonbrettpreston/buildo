@@ -153,25 +153,43 @@ export interface TradeMappingRule {
 }
 
 // ---------------------------------------------------------------------------
-// Builder
+// Entity (Corporate Identity Hub — replaces builders table)
 // ---------------------------------------------------------------------------
-export interface Builder {
+export type EntityType = 'Corporation' | 'Individual';
+export type ProjectRole = 'Builder' | 'Architect' | 'Applicant' | 'Owner' | 'Agent' | 'Engineer';
+
+export interface Entity {
   id: number;
-  name: string;
+  legal_name: string;
+  trade_name: string | null;
   name_normalized: string;
-  phone: string | null;
-  email: string | null;
+  entity_type: EntityType | null;
+  primary_phone: string | null;
+  primary_email: string | null;
   website: string | null;
+  linkedin_url: string | null;
   google_place_id: string | null;
   google_rating: number | null;
   google_review_count: number | null;
-  obr_business_number: string | null;
-  wsib_status: string | null;
+  is_wsib_registered: boolean;
   permit_count: number;
   first_seen_at: Date;
   last_seen_at: Date;
-  enriched_at: Date | null;
+  last_enriched_at: Date | null;
 }
+
+export interface EntityProject {
+  id: number;
+  entity_id: number;
+  permit_num: string | null;
+  revision_num: string | null;
+  coa_file_num: string | null;
+  role: ProjectRole;
+  observed_at: Date;
+}
+
+/** @deprecated Use Entity instead. Kept for backward compatibility. */
+export type Builder = Entity;
 
 // ---------------------------------------------------------------------------
 // Product classification

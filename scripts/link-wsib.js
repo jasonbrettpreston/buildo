@@ -7,7 +7,7 @@
  *   2. Exact legal name match  → 0.90 confidence
  *   3. Fuzzy name match (LIKE) → 0.60 confidence
  *
- * On match: updates builders.wsib_status and wsib_registry.linked_builder_id.
+ * On match: updates entities.is_wsib_registered and wsib_registry.linked_entity_id.
  *
  * Usage: node scripts/link-wsib.js [--dry-run]
  */
@@ -50,7 +50,7 @@ async function run() {
 
   try {
     const beforeResult = await client.query(
-      `SELECT COUNT(*) as total FROM wsib_registry WHERE linked_builder_id IS NULL`
+      `SELECT COUNT(*) as total FROM wsib_registry WHERE linked_entity_id IS NULL`
     );
     const totalUnlinked = parseInt(beforeResult.rows[0].total, 10);
     console.log(`Unlinked WSIB entries: ${totalUnlinked.toLocaleString()}\n`);
@@ -69,16 +69,16 @@ async function run() {
     if (!dryRun) {
       const result = await client.query(`
         WITH matched AS (
-          SELECT DISTINCT ON (w.id) w.id AS wsib_id, b.id AS builder_id
+          SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
           FROM wsib_registry w
-          JOIN builders b ON b.name_normalized = w.trade_name_normalized
-          WHERE w.linked_builder_id IS NULL
+          JOIN entities e ON e.name_normalized = w.trade_name_normalized
+          WHERE w.linked_entity_id IS NULL
             AND w.trade_name_normalized IS NOT NULL
             AND LENGTH(w.trade_name_normalized) >= 3
-          ORDER BY w.id, b.permit_count DESC
+          ORDER BY w.id, e.permit_count DESC
         )
         UPDATE wsib_registry w
-        SET linked_builder_id = m.builder_id,
+        SET linked_entity_id = m.entity_id,
             match_confidence = 0.95,
             matched_at = NOW()
         FROM matched m
@@ -86,15 +86,15 @@ async function run() {
       `);
       tier1 = result.rowCount || 0;
 
-      // Update builders wsib_status for tier 1 matches
+      // Update entities is_wsib_registered flag for tier 1 matches
       if (tier1 > 0) {
         await client.query(`
-          UPDATE builders b
-          SET wsib_status = 'Registered (Class ' || w.predominant_class || ')'
+          UPDATE entities e
+          SET is_wsib_registered = true
           FROM wsib_registry w
-          WHERE w.linked_builder_id = b.id
+          WHERE w.linked_entity_id = e.id
             AND w.match_confidence = 0.95
-            AND (b.wsib_status IS NULL OR b.wsib_status = 'unknown')
+            AND e.is_wsib_registered = false
         `);
       }
     }
@@ -107,15 +107,15 @@ async function run() {
     if (!dryRun) {
       const result = await client.query(`
         WITH matched AS (
-          SELECT DISTINCT ON (w.id) w.id AS wsib_id, b.id AS builder_id
+          SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
           FROM wsib_registry w
-          JOIN builders b ON b.name_normalized = w.legal_name_normalized
-          WHERE w.linked_builder_id IS NULL
+          JOIN entities e ON e.name_normalized = w.legal_name_normalized
+          WHERE w.linked_entity_id IS NULL
             AND LENGTH(w.legal_name_normalized) >= 3
-          ORDER BY w.id, b.permit_count DESC
+          ORDER BY w.id, e.permit_count DESC
         )
         UPDATE wsib_registry w
-        SET linked_builder_id = m.builder_id,
+        SET linked_entity_id = m.entity_id,
             match_confidence = 0.90,
             matched_at = NOW()
         FROM matched m
@@ -125,12 +125,12 @@ async function run() {
 
       if (tier2 > 0) {
         await client.query(`
-          UPDATE builders b
-          SET wsib_status = 'Registered (Class ' || w.predominant_class || ')'
+          UPDATE entities e
+          SET is_wsib_registered = true
           FROM wsib_registry w
-          WHERE w.linked_builder_id = b.id
+          WHERE w.linked_entity_id = e.id
             AND w.match_confidence = 0.90
-            AND (b.wsib_status IS NULL OR b.wsib_status = 'unknown')
+            AND e.is_wsib_registered = false
         `);
       }
     }
@@ -144,23 +144,23 @@ async function run() {
     if (!dryRun) {
       const result = await client.query(`
         WITH matched AS (
-          SELECT DISTINCT ON (w.id) w.id AS wsib_id, b.id AS builder_id
+          SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
           FROM wsib_registry w
-          JOIN builders b ON (
+          JOIN entities e ON (
             (w.trade_name_normalized IS NOT NULL AND LENGTH(w.trade_name_normalized) >= 5
-              AND (b.name_normalized LIKE '%' || w.trade_name_normalized || '%'
-                OR w.trade_name_normalized LIKE '%' || b.name_normalized || '%'))
+              AND (e.name_normalized LIKE '%' || w.trade_name_normalized || '%'
+                OR w.trade_name_normalized LIKE '%' || e.name_normalized || '%'))
             OR
             (LENGTH(w.legal_name_normalized) >= 5
-              AND (b.name_normalized LIKE '%' || w.legal_name_normalized || '%'
-                OR w.legal_name_normalized LIKE '%' || b.name_normalized || '%'))
+              AND (e.name_normalized LIKE '%' || w.legal_name_normalized || '%'
+                OR w.legal_name_normalized LIKE '%' || e.name_normalized || '%'))
           )
-          WHERE w.linked_builder_id IS NULL
-            AND LENGTH(b.name_normalized) >= 5
-          ORDER BY w.id, b.permit_count DESC
+          WHERE w.linked_entity_id IS NULL
+            AND LENGTH(e.name_normalized) >= 5
+          ORDER BY w.id, e.permit_count DESC
         )
         UPDATE wsib_registry w
-        SET linked_builder_id = m.builder_id,
+        SET linked_entity_id = m.entity_id,
             match_confidence = 0.60,
             matched_at = NOW()
         FROM matched m
@@ -170,12 +170,12 @@ async function run() {
 
       if (tier3 > 0) {
         await client.query(`
-          UPDATE builders b
-          SET wsib_status = 'Registered (Class ' || w.predominant_class || ')'
+          UPDATE entities e
+          SET is_wsib_registered = true
           FROM wsib_registry w
-          WHERE w.linked_builder_id = b.id
+          WHERE w.linked_entity_id = e.id
             AND w.match_confidence = 0.60
-            AND (b.wsib_status IS NULL OR b.wsib_status = 'unknown')
+            AND e.is_wsib_registered = false
         `);
       }
     }
@@ -205,7 +205,7 @@ async function run() {
     const stats = await client.query(`
       SELECT
         COUNT(*) AS total,
-        COUNT(*) FILTER (WHERE linked_builder_id IS NOT NULL) AS linked,
+        COUNT(*) FILTER (WHERE linked_entity_id IS NOT NULL) AS linked,
         COUNT(*) FILTER (WHERE match_confidence >= 0.90) AS high_conf,
         COUNT(*) FILTER (WHERE match_confidence >= 0.50 AND match_confidence < 0.90) AS med_conf
       FROM wsib_registry

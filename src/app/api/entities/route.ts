@@ -4,11 +4,12 @@ import { query } from '@/lib/db/client';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const search = searchParams.get('search');
+  const role = searchParams.get('role');
   const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
   const offset = parseInt(searchParams.get('offset') || '0', 10);
   const sortBy = searchParams.get('sort_by') || 'permit_count';
 
-  const ALLOWED_SORT = ['permit_count', 'legal_name', 'google_rating', 'last_enriched_at'];
+  const ALLOWED_SORT = ['permit_count', 'legal_name', 'google_rating', 'last_enriched_at', 'first_seen_at'];
   const sort = ALLOWED_SORT.includes(sortBy) ? sortBy : 'permit_count';
   const sortOrder = searchParams.get('sort_order') === 'asc' ? 'ASC' : 'DESC';
 
@@ -16,18 +17,19 @@ export async function GET(request: NextRequest) {
   const params: unknown[] = [];
   let paramIdx = 1;
 
-  // Only return entities that have a Builder role
-  conditions.push(
-    `id IN (SELECT entity_id FROM entity_projects WHERE role = 'Builder')`
-  );
-
   if (search) {
     conditions.push(`legal_name ILIKE $${paramIdx}`);
     params.push(`%${search}%`);
     paramIdx++;
   }
 
-  const where = `WHERE ${conditions.join(' AND ')}`;
+  if (role) {
+    conditions.push(`id IN (SELECT entity_id FROM entity_projects WHERE role = $${paramIdx}::project_role_enum)`);
+    params.push(role);
+    paramIdx++;
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const rows = await query(
     `SELECT * FROM entities ${where}
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest) {
   const total = parseInt(countResult[0]?.count || '0', 10);
 
   return NextResponse.json({
-    builders: rows,
+    entities: rows,
     pagination: {
       total,
       page: Math.floor(offset / limit) + 1,

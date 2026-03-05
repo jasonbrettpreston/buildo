@@ -243,7 +243,7 @@ async function run() {
   const stats = await pool.query(`
     SELECT
       COUNT(*) AS total,
-      COUNT(*) FILTER (WHERE linked_builder_id IS NOT NULL) AS linked,
+      COUNT(*) FILTER (WHERE linked_entity_id IS NOT NULL) AS linked,
       COUNT(*) FILTER (WHERE trade_name IS NOT NULL) AS with_trade,
       COUNT(DISTINCT predominant_class) AS class_count
     FROM wsib_registry

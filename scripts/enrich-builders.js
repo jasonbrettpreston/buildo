@@ -78,8 +78,8 @@ async function run() {
   console.log(`Enriching builders via Google Places (limit: ${BATCH_LIMIT})...\n`);
 
   const { rows: builders } = await pool.query(
-    `SELECT id, name FROM builders
-     WHERE enriched_at IS NULL
+    `SELECT id, legal_name AS name FROM entities
+     WHERE last_enriched_at IS NULL
      ORDER BY permit_count DESC
      LIMIT $1`,
     [BATCH_LIMIT]
@@ -96,16 +96,16 @@ async function run() {
       const result = await searchGooglePlaces(name);
       if (result) {
         await pool.query(
-          `UPDATE builders SET
+          `UPDATE entities SET
             google_place_id = $1, google_rating = $2, google_review_count = $3,
-            phone = COALESCE(phone, $4), website = COALESCE(website, $5),
-            enriched_at = NOW()
+            primary_phone = COALESCE(primary_phone, $4), website = COALESCE(website, $5),
+            last_enriched_at = NOW()
           WHERE id = $6`,
           [result.place_id, result.rating, result.review_count, result.phone, result.website, id]
         );
         enriched++;
       } else {
-        await pool.query('UPDATE builders SET enriched_at = NOW() WHERE id = $1', [id]);
+        await pool.query('UPDATE entities SET last_enriched_at = NOW() WHERE id = $1', [id]);
         enriched++;
       }
     } catch (err) {

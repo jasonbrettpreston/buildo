@@ -45,7 +45,7 @@ export async function GET() {
         'SELECT COUNT(*)::text AS count FROM permits'
       ),
       query<{ count: string }>(
-        'SELECT COUNT(*)::text AS count FROM builders'
+        'SELECT COUNT(*)::text AS count FROM entities'
       ),
       query<{ count: string }>(
         'SELECT COUNT(*)::text AS count FROM trades'
@@ -104,8 +104,8 @@ export async function GET() {
       ),
       // Builders with contact info
       query<{ count: string }>(
-        `SELECT COUNT(*)::text AS count FROM builders
-         WHERE phone IS NOT NULL OR email IS NOT NULL`
+        `SELECT COUNT(*)::text AS count FROM entities
+         WHERE primary_phone IS NOT NULL OR primary_email IS NOT NULL`
       ),
       // Address points total
       query<{ count: string }>(
@@ -151,13 +151,13 @@ export async function GET() {
       query<{ count: string }>(
         `SELECT COUNT(*)::text AS count FROM wsib_registry`
       ).catch(() => [{ count: '0' }]),
-      // WSIB linked to builders
+      // WSIB linked to entities
       query<{ count: string }>(
-        `SELECT COUNT(*)::text AS count FROM wsib_registry WHERE linked_builder_id IS NOT NULL`
+        `SELECT COUNT(*)::text AS count FROM wsib_registry WHERE linked_entity_id IS NOT NULL`
       ).catch(() => [{ count: '0' }]),
       // WSIB lead pool (unlinked Class G)
       query<{ count: string }>(
-        `SELECT COUNT(*)::text AS count FROM wsib_registry WHERE linked_builder_id IS NULL`
+        `SELECT COUNT(*)::text AS count FROM wsib_registry WHERE linked_entity_id IS NULL`
       ).catch(() => [{ count: '0' }]),
       // WSIB entries with trade name
       query<{ count: string }>(

@@ -6,9 +6,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const builderId = parseInt(id, 10);
+  const entityId = parseInt(id, 10);
 
-  if (isNaN(builderId)) {
+  if (isNaN(entityId)) {
     return NextResponse.json(
       { error: 'Invalid builder ID' },
       { status: 400 }
@@ -16,31 +16,32 @@ export async function GET(
   }
 
   try {
-    // Fetch builder
-    const builders = await query(
-      'SELECT * FROM builders WHERE id = $1',
-      [builderId]
+    // Fetch entity
+    const entities = await query(
+      'SELECT * FROM entities WHERE id = $1',
+      [entityId]
     );
 
-    if (builders.length === 0) {
+    if (entities.length === 0) {
       return NextResponse.json(
         { error: 'Builder not found' },
         { status: 404 }
       );
     }
 
-    const builder = builders[0];
+    const builder = entities[0];
 
-    // Fetch permits by this builder (match on normalized name)
+    // Fetch permits via entity_projects junction
     const permits = await query(
-      `SELECT permit_num, revision_num, permit_type, work, status,
-              street_num, street_name, street_type, city, ward,
-              est_const_cost, issued_date, description
-       FROM permits
-       WHERE UPPER(REGEXP_REPLACE(TRIM(builder_name), '\\s+', ' ', 'g')) = $1
-       ORDER BY issued_date DESC NULLS LAST
+      `SELECT p.permit_num, p.revision_num, p.permit_type, p.work, p.status,
+              p.street_num, p.street_name, p.street_type, p.city, p.ward,
+              p.est_const_cost, p.issued_date, p.description
+       FROM permits p
+       JOIN entity_projects ep ON ep.permit_num = p.permit_num AND ep.revision_num = p.revision_num
+       WHERE ep.entity_id = $1 AND ep.role = 'Builder'
+       ORDER BY p.issued_date DESC NULLS LAST
        LIMIT 50`,
-      [builder.name_normalized]
+      [entityId]
     );
 
     // Fetch user-contributed contacts
@@ -48,7 +49,7 @@ export async function GET(
       `SELECT * FROM builder_contacts
        WHERE builder_id = $1
        ORDER BY created_at DESC`,
-      [builderId]
+      [entityId]
     );
 
     return NextResponse.json({

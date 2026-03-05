@@ -14,13 +14,13 @@ export async function GET() {
     }>(
       `SELECT
         COUNT(*)::text                                    AS total,
-        COUNT(*) FILTER (WHERE enriched_at IS NOT NULL)::text AS enriched,
-        COUNT(*) FILTER (WHERE enriched_at IS NULL)::text     AS unenriched,
+        COUNT(*) FILTER (WHERE last_enriched_at IS NOT NULL)::text AS enriched,
+        COUNT(*) FILTER (WHERE last_enriched_at IS NULL)::text     AS unenriched,
         COUNT(*) FILTER (
-          WHERE enriched_at IS NOT NULL
+          WHERE last_enriched_at IS NOT NULL
             AND google_place_id IS NULL
         )::text AS failed_count
-      FROM builders`
+      FROM entities`
     );
 
     return NextResponse.json({

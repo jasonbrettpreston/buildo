@@ -318,17 +318,17 @@ async function run() {
             console.log('  OK: All WSIB NAICS codes are numeric');
           }
 
-          // Orphaned linked_builder_id
+          // Orphaned linked_entity_id
           const wsibOrphan = await count(
             `SELECT COUNT(*) FROM wsib_registry w
-             WHERE w.linked_builder_id IS NOT NULL
-               AND NOT EXISTS (SELECT 1 FROM builders b WHERE b.id = w.linked_builder_id)`
+             WHERE w.linked_entity_id IS NOT NULL
+               AND NOT EXISTS (SELECT 1 FROM entities e WHERE e.id = w.linked_entity_id)`
           );
           if (wsibOrphan > 0) {
-            errors.push(`${wsibOrphan} orphaned wsib_registry linked_builder_id`);
-            console.error(`  FAIL: ${wsibOrphan} orphaned WSIB builder links`);
+            errors.push(`${wsibOrphan} orphaned wsib_registry linked_entity_id`);
+            console.error(`  FAIL: ${wsibOrphan} orphaned WSIB entity links`);
           } else {
-            console.log('  OK: No orphaned WSIB builder links');
+            console.log('  OK: No orphaned WSIB entity links');
           }
         } else {
           console.log('  SKIP: wsib_registry is empty (not yet loaded)');

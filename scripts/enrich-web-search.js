@@ -258,16 +258,16 @@ async function run() {
   const { rows: builders } = await pool.query(`
     SELECT
       b.id,
-      b.name,
-      b.phone,
-      b.email,
+      b.legal_name AS name,
+      b.primary_phone AS phone,
+      b.primary_email AS email,
       b.website,
       w.trade_name,
       w.legal_name,
       w.mailing_address
-    FROM builders b
-    LEFT JOIN wsib_registry w ON w.linked_builder_id = b.id
-    WHERE b.enriched_at IS NULL
+    FROM entities b
+    LEFT JOIN wsib_registry w ON w.linked_entity_id = b.id
+    WHERE b.last_enriched_at IS NULL
     ${wsibFilter}
     ORDER BY
       CASE WHEN w.id IS NOT NULL THEN 0 ELSE 1 END,  -- WSIB-matched first
@@ -338,14 +338,14 @@ async function run() {
       let paramIdx = 1;
 
       if (contacts.phone && !b.phone) {
-        updates.push(`phone = COALESCE(phone, $${paramIdx})`);
+        updates.push(`primary_phone = COALESCE(primary_phone, $${paramIdx})`);
         params.push(contacts.phone);
         paramIdx++;
         newFields++;
         fieldCounts.phone++;
       }
       if (contacts.email && !b.email) {
-        updates.push(`email = COALESCE(email, $${paramIdx})`);
+        updates.push(`primary_email = COALESCE(primary_email, $${paramIdx})`);
         params.push(contacts.email);
         paramIdx++;
         newFields++;
@@ -360,11 +360,11 @@ async function run() {
       }
 
       // Always mark as enriched (even if no contacts found — prevents retry loops)
-      updates.push('enriched_at = NOW()');
+      updates.push('last_enriched_at = NOW()');
       params.push(b.id);
 
       await pool.query(
-        `UPDATE builders SET ${updates.join(', ')} WHERE id = $${paramIdx}`,
+        `UPDATE entities SET ${updates.join(', ')} WHERE id = $${paramIdx}`,
         params
       );
 
@@ -404,7 +404,7 @@ async function run() {
 
       // On API error, still mark as enriched to avoid infinite retry
       await pool.query(
-        'UPDATE builders SET enriched_at = NOW() WHERE id = $1',
+        'UPDATE entities SET last_enriched_at = NOW() WHERE id = $1',
         [b.id]
       ).catch(() => {});
     }

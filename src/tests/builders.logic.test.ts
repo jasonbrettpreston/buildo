@@ -83,38 +83,37 @@ describe('Builder Name Normalization', () => {
   });
 });
 
-describe('Builder Factory', () => {
-  it('creates a builder with defaults', () => {
-    const builder = createMockBuilder();
-    expect(builder.name).toBe('ACME CONSTRUCTION INC');
-    expect(builder.name_normalized).toBe('ACME CONSTRUCTION');
-    expect(builder.permit_count).toBe(12);
-    expect(builder.enriched_at).toBeNull();
+describe('Entity Factory (formerly Builder)', () => {
+  it('creates an entity with defaults', () => {
+    const entity = createMockBuilder();
+    expect(entity.legal_name).toBe('ACME CONSTRUCTION INC');
+    expect(entity.name_normalized).toBe('ACME CONSTRUCTION');
+    expect(entity.permit_count).toBe(12);
+    expect(entity.last_enriched_at).toBeNull();
   });
 
   it('allows overrides', () => {
-    const builder = createMockBuilder({
-      name: 'TEST BUILDER',
+    const entity = createMockBuilder({
+      legal_name: 'TEST BUILDER',
       google_rating: 4.8,
       permit_count: 50,
     });
-    expect(builder.name).toBe('TEST BUILDER');
-    expect(builder.google_rating).toBe(4.8);
-    expect(builder.permit_count).toBe(50);
+    expect(entity.legal_name).toBe('TEST BUILDER');
+    expect(entity.google_rating).toBe(4.8);
+    expect(entity.permit_count).toBe(50);
   });
 
-  it('builder has enrichment fields', () => {
-    const builder = createMockBuilder({
+  it('entity has enrichment fields', () => {
+    const entity = createMockBuilder({
       google_place_id: 'ChIJ...',
       google_rating: 4.5,
       google_review_count: 42,
-      obr_business_number: '123456789',
-      wsib_status: 'active',
-      enriched_at: new Date('2024-06-01'),
+      is_wsib_registered: true,
+      last_enriched_at: new Date('2024-06-01'),
     });
-    expect(builder.google_place_id).toBe('ChIJ...');
-    expect(builder.wsib_status).toBe('active');
-    expect(builder.enriched_at).toEqual(new Date('2024-06-01'));
+    expect(entity.google_place_id).toBe('ChIJ...');
+    expect(entity.is_wsib_registered).toBe(true);
+    expect(entity.last_enriched_at).toEqual(new Date('2024-06-01'));
   });
 });
 
@@ -136,9 +135,9 @@ describe('Builder Link & Display', () => {
     return '#6B7280';
   }
 
-  function enrichmentStatus(builder: { enriched_at: Date | null; phone: string | null; website: string | null }): string {
-    if (!builder.enriched_at) return 'pending';
-    if (builder.phone || builder.website) return 'enriched';
+  function enrichmentStatus(builder: { last_enriched_at: Date | null; primary_phone: string | null; website: string | null }): string {
+    if (!builder.last_enriched_at) return 'pending';
+    if (builder.primary_phone || builder.website) return 'enriched';
     return 'no_data';
   }
 
@@ -167,14 +166,14 @@ describe('Builder Link & Display', () => {
   });
 
   it('enrichment status pending when not enriched', () => {
-    expect(enrichmentStatus({ enriched_at: null, phone: null, website: null })).toBe('pending');
+    expect(enrichmentStatus({ last_enriched_at: null, primary_phone: null, website: null })).toBe('pending');
   });
 
   it('enrichment status enriched when has contact', () => {
-    expect(enrichmentStatus({ enriched_at: new Date(), phone: '416-555-0100', website: null })).toBe('enriched');
+    expect(enrichmentStatus({ last_enriched_at: new Date(), primary_phone: '416-555-0100', website: null })).toBe('enriched');
   });
 
   it('enrichment status no_data when enriched but empty', () => {
-    expect(enrichmentStatus({ enriched_at: new Date(), phone: null, website: null })).toBe('no_data');
+    expect(enrichmentStatus({ last_enriched_at: new Date(), primary_phone: null, website: null })).toBe('no_data');
   });
 });
