@@ -8,6 +8,7 @@ import { describe, it, expect } from 'vitest';
 import {
   extractPhoneNumbers,
   extractEmails,
+  extractEmailsFromHtml,
   extractWebsite,
   extractSocialLinks,
   extractContacts,
@@ -289,6 +290,58 @@ describe('Web Search Enrichment', () => {
 
     it('returns null for empty address', () => {
       expect(extractCity('')).toBeNull();
+    });
+  });
+
+  describe('HTML Email Extraction', () => {
+    it('extracts email from mailto: link', () => {
+      const html = '<a href="mailto:info@greengoldbuild.com">Email us</a>';
+      const emails = extractEmailsFromHtml(html);
+      expect(emails).toContain('info@greengoldbuild.com');
+    });
+
+    it('extracts email from mailto: with query params', () => {
+      const html = '<a href="mailto:sales@builder.ca?subject=Quote">Contact</a>';
+      const emails = extractEmailsFromHtml(html);
+      expect(emails).toContain('sales@builder.ca');
+    });
+
+    it('extracts email from visible text in HTML', () => {
+      const html = '<p>Contact us at contact@modular.ca for more info</p>';
+      const emails = extractEmailsFromHtml(html);
+      expect(emails).toContain('contact@modular.ca');
+    });
+
+    it('rejects noreply and example.com emails from HTML', () => {
+      const html = '<a href="mailto:noreply@service.com">No</a><p>user@example.com</p>';
+      const emails = extractEmailsFromHtml(html);
+      expect(emails).toHaveLength(0);
+    });
+
+    it('de-duplicates emails from mailto and text', () => {
+      const html = '<a href="mailto:info@builder.ca">Email</a><p>info@builder.ca</p>';
+      const emails = extractEmailsFromHtml(html);
+      expect(emails).toHaveLength(1);
+    });
+
+    it('returns empty for HTML with no emails', () => {
+      const html = '<html><body><h1>Welcome</h1><p>No contact info</p></body></html>';
+      const emails = extractEmailsFromHtml(html);
+      expect(emails).toHaveLength(0);
+    });
+
+    it('extracts multiple different emails', () => {
+      const html = '<a href="mailto:info@builder.ca">Info</a><a href="mailto:sales@builder.ca">Sales</a>';
+      const emails = extractEmailsFromHtml(html);
+      expect(emails).toHaveLength(2);
+      expect(emails).toContain('info@builder.ca');
+      expect(emails).toContain('sales@builder.ca');
+    });
+
+    it('lowercases emails from HTML', () => {
+      const html = '<a href="mailto:John@Builder.CA">Email</a>';
+      const emails = extractEmailsFromHtml(html);
+      expect(emails).toContain('john@builder.ca');
     });
   });
 

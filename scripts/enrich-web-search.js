@@ -77,6 +77,28 @@ function extractEmails(snippets) {
   return emails;
 }
 
+const MAILTO_PATTERN = /href="mailto:([^"?]+)/gi;
+
+function extractEmailsFromHtml(html) {
+  const emails = [];
+  const mailtoMatches = html.matchAll(MAILTO_PATTERN);
+  for (const m of mailtoMatches) {
+    const lower = m[1].toLowerCase();
+    if (EMAIL_REJECT.some((r) => lower.includes(r))) continue;
+    if (EMAIL_PATTERN.test(lower)) {
+      EMAIL_PATTERN.lastIndex = 0;
+      if (!emails.includes(lower)) emails.push(lower);
+    }
+  }
+  const textMatches = html.match(EMAIL_PATTERN) || [];
+  for (const m of textMatches) {
+    const lower = m.toLowerCase();
+    if (EMAIL_REJECT.some((r) => lower.includes(r))) continue;
+    if (!emails.includes(lower)) emails.push(lower);
+  }
+  return emails;
+}
+
 const DIRECTORY_DOMAINS = [
   'instagram.com', 'facebook.com', 'linkedin.com', 'twitter.com', 'x.com',
   'houzz.com', 'yellowpages.ca', 'yellowpages.com', 'yelp.com', 'yelp.ca',
@@ -271,6 +293,27 @@ async function run() {
 
       const response = await searchSerper(query);
       const contacts = extractContacts(response);
+
+      // If no email from snippets but we have a website, scrape it
+      const websiteUrl = contacts.website || b.website;
+      if (!contacts.email && !b.email && websiteUrl) {
+        try {
+          const pageRes = await fetch(websiteUrl, {
+            signal: AbortSignal.timeout(5000),
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Buildo/1.0)' },
+          });
+          if (pageRes.ok) {
+            const html = await pageRes.text();
+            const scraped = extractEmailsFromHtml(html);
+            if (scraped.length > 0) contacts.email = scraped[0];
+            // Also try phones from page if none from snippets
+            if (!contacts.phone && !b.phone) {
+              const pagePhones = extractPhones([html]);
+              if (pagePhones.length > 0) contacts.phone = pagePhones[0];
+            }
+          }
+        } catch { /* timeout or fetch error — skip silently */ }
+      }
 
       // Count how many new contact fields we found
       let newFields = 0;

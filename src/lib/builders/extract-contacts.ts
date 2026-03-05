@@ -104,6 +104,37 @@ export function extractEmails(snippets: string[]): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// HTML email extraction (scrape builder website)
+// ---------------------------------------------------------------------------
+
+const MAILTO_PATTERN = /href="mailto:([^"?]+)/gi;
+
+export function extractEmailsFromHtml(html: string): string[] {
+  const emails: string[] = [];
+
+  // Extract from mailto: links
+  const mailtoMatches = html.matchAll(MAILTO_PATTERN);
+  for (const m of mailtoMatches) {
+    const lower = m[1].toLowerCase();
+    if (EMAIL_REJECT.some((r) => lower.includes(r))) continue;
+    if (EMAIL_PATTERN.test(lower)) {
+      EMAIL_PATTERN.lastIndex = 0; // reset regex state
+      if (!emails.includes(lower)) emails.push(lower);
+    }
+  }
+
+  // Also scan visible text for email patterns
+  const textMatches = html.match(EMAIL_PATTERN) || [];
+  for (const m of textMatches) {
+    const lower = m.toLowerCase();
+    if (EMAIL_REJECT.some((r) => lower.includes(r))) continue;
+    if (!emails.includes(lower)) emails.push(lower);
+  }
+
+  return emails;
+}
+
+// ---------------------------------------------------------------------------
 // Website extraction
 // ---------------------------------------------------------------------------
 

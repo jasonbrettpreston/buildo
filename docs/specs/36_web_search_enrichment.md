@@ -17,7 +17,7 @@ As an admin, I want WSIB-matched builders to be automatically enriched with cont
   - **Query construction:** `"{Trade Name}" "{City}" contractor` using WSIB data fields. Falls back to `"{Legal Name}" "Toronto" contractor` when no trade name. Falls back to `"{Builder Name}" "Toronto" contractor` for non-WSIB builders.
   - **Contact extraction** from Serper response (pure functions in `src/lib/builders/extract-contacts.ts`):
     - Phone: regex for Ontario area codes (416, 647, 437, 905, 289, etc.) in snippets + knowledge graph
-    - Email: regex with reject list (noreply, example.com)
+    - Email: regex with reject list (noreply, example.com) from snippets; if no email found, fetches builder website HTML and scrapes for mailto: links and email patterns (5s timeout)
     - Website: first organic result URL that isn't a directory/social site (filtered against 30+ directory domains)
     - Social: Instagram, Facebook, LinkedIn, Houzz URLs from organic results
   - **Storage:** Core contacts (phone, email, website) → `UPDATE builders` with `COALESCE` (don't overwrite existing). Social links → `INSERT INTO builder_contacts` with `source = 'web_search'`.
@@ -34,7 +34,7 @@ As an admin, I want WSIB-matched builders to be automatically enriched with cont
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Logic** (`enrichment.logic.test.ts`): Phone extraction regex with Ontario area codes; email extraction with reject list; website extraction skipping directories; social link extraction (IG, FB, LI, Houzz); full contact extraction from mock Serper response; knowledge graph priority; search query construction; city extraction from WSIB address
+- **Logic** (`enrichment.logic.test.ts`): Phone extraction regex with Ontario area codes; email extraction with reject list; HTML email extraction (mailto links, visible text, reject filtering, dedup); website extraction skipping directories; social link extraction (IG, FB, LI, Houzz); full contact extraction from mock Serper response; knowledge graph priority; search query construction; city extraction from WSIB address
 - **Infra** (`enrichment.infra.test.ts`): enrich-web-search.js script existence; SERPER_API_KEY env var usage (no hardcoded keys); pipeline registration; chain orchestrator placement; FreshnessTimeline entry; .env.example contains SERPER_API_KEY; extract-contacts.ts module exports
 <!-- TEST_INJECT_END -->
 
