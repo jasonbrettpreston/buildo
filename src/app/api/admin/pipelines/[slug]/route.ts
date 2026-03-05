@@ -79,6 +79,26 @@ export async function POST(
 
   const isChain = CHAIN_SLUGS.has(slug);
 
+  // Concurrency guard: reject if this pipeline (or its chain) is already running
+  try {
+    const alreadyRunning = await query<{ id: number; pipeline: string }>(
+      `SELECT id, pipeline FROM pipeline_runs
+       WHERE status = 'running'
+         AND started_at > NOW() - INTERVAL '2 hours'
+         AND pipeline = $1
+       LIMIT 1`,
+      [slug]
+    );
+    if (alreadyRunning.length > 0) {
+      return NextResponse.json(
+        { error: `Pipeline ${slug} is already running (run ${alreadyRunning[0].id})` },
+        { status: 409 }
+      );
+    }
+  } catch {
+    // Non-fatal — proceed without guard if table doesn't exist
+  }
+
   // Chain orchestrator manages its own pipeline_runs rows; skip for chains
   let runId: number | null = null;
   if (!isChain) {

@@ -156,7 +156,18 @@ export function DataQualityDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  // On initial load, seed runningPipelines from DB state so buttons are
+  // disabled immediately if a chain is already running in the background.
+  useEffect(() => {
+    fetchData().then((statsData) => {
+      if (!statsData) return;
+      const initial = new Set<string>();
+      for (const [slug, info] of Object.entries(statsData.pipeline_last_run ?? {})) {
+        if (info?.status === 'running') initial.add(slug);
+      }
+      if (initial.size > 0) setRunningPipelines(initial);
+    });
+  }, [fetchData]);
 
   // Polling while pipelines are running — also detects chain-spawned running steps
   useEffect(() => {
