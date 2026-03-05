@@ -25,10 +25,10 @@ describe('Pipeline Chain Definitions', () => {
     expect(chain!.steps).toHaveLength(6);
   });
 
-  it('defines sources chain with 12 steps', () => {
+  it('defines sources chain with 14 steps', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(12);
+    expect(chain!.steps).toHaveLength(14);
   });
 
   it('permits and coa chains end with assert_data_bounds', () => {
@@ -64,10 +64,10 @@ describe('Pipeline Chain Definitions', () => {
     }
   });
 
-  it('indent values are 0, 1, or 2', () => {
+  it('indent values are 0, 1, 2, or 3', () => {
     for (const chain of PIPELINE_CHAINS) {
       for (const step of chain.steps) {
-        expect([0, 1, 2]).toContain(step.indent);
+        expect([0, 1, 2, 3]).toContain(step.indent);
       }
     }
   });
@@ -157,6 +157,14 @@ describe('Sources Chain Completeness', () => {
     expect(slugs).toContain('link_parcels');
     expect(slugs).toContain('link_massing');
     expect(slugs).toContain('link_neighbourhoods');
+  });
+
+  it('sources chain includes WSIB registry steps', () => {
+    const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources');
+    expect(sources).toBeDefined();
+    const slugs = sources!.steps.map((s) => s.slug);
+    expect(slugs).toContain('load_wsib');
+    expect(slugs).toContain('link_wsib');
   });
 });
 

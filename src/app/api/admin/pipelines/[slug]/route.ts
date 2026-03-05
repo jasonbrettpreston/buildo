@@ -23,9 +23,8 @@ const PIPELINE_SCRIPTS: Record<string, string> = {
   link_massing: 'scripts/link-massing.js',
   link_coa: 'scripts/link-coa.js',
   // Enrich (augment records)
-  enrich_google: 'scripts/enrich-builders.js',
-  enrich_web_search: 'scripts/enrich-web-search.js',
-  enrich_wsib: 'scripts/enrich-wsib.js',
+  enrich_wsib_builders: 'scripts/enrich-web-search.js',
+  enrich_named_builders: 'scripts/enrich-web-search.js',
   load_wsib: 'scripts/load-wsib.js',
   link_wsib: 'scripts/link-wsib.js',
   // Classify (derive fields)

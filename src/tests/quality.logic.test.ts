@@ -487,14 +487,14 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 26 tracked pipelines', () => {
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(26);
+  it('has exactly 25 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(25);
   });
 
-  it('groups are correct: 8 ingest, 12 link, 3 classify, 1 snapshot, 2 quality', () => {
+  it('groups are correct: 8 ingest, 11 link, 3 classify, 1 snapshot, 2 quality', () => {
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(8);
-    expect(groups.filter((g) => g === 'link')).toHaveLength(12);
+    expect(groups.filter((g) => g === 'link')).toHaveLength(11);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(3);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(2);
@@ -531,10 +531,10 @@ describe('Pipeline Chains', () => {
     expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_data_bounds');
   });
 
-  it('permits chain includes indent-2 sub-steps for builder enrichment', () => {
+  it('permits chain includes WSIB and enrichment sub-steps under builders', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    const indent2 = permits.steps.filter((s) => s.indent === 2);
-    expect(indent2.map((s) => s.slug)).toEqual(['enrich_google', 'enrich_web_search', 'enrich_wsib']);
+    const indent2plus = permits.steps.filter((s) => s.indent >= 2);
+    expect(indent2plus.map((s) => s.slug)).toEqual(['link_wsib', 'enrich_wsib_builders', 'enrich_named_builders']);
   });
 
   it('coa chain has 6 steps', () => {
@@ -544,10 +544,12 @@ describe('Pipeline Chains', () => {
     expect(coa.steps[1].slug).toBe('coa');
   });
 
-  it('sources chain has 12 steps including compute_centroids and assert_data_bounds', () => {
+  it('sources chain has 14 steps including WSIB, compute_centroids and assert_data_bounds', () => {
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
-    expect(sources.steps).toHaveLength(12);
+    expect(sources.steps).toHaveLength(14);
     expect(sources.steps.some((s) => s.slug === 'compute_centroids')).toBe(true);
+    expect(sources.steps.some((s) => s.slug === 'load_wsib')).toBe(true);
+    expect(sources.steps.some((s) => s.slug === 'link_wsib')).toBe(true);
     expect(sources.steps[0].slug).toBe('assert_schema');
     expect(sources.steps[sources.steps.length - 1].slug).toBe('assert_data_bounds');
   });

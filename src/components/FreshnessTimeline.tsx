@@ -28,9 +28,8 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   link_neighbourhoods:{ name: 'Link Neighbourhoods',   group: 'link' },
   link_massing:       { name: 'Link Massing',          group: 'link' },
   link_coa:           { name: 'Link CoA',              group: 'link' },
-  enrich_google:      { name: 'Enrich Google Places',  group: 'link' },
-  enrich_web_search:  { name: 'Enrich Web Search',     group: 'link' },
-  enrich_wsib:        { name: 'Enrich WSIB',           group: 'link' },
+  enrich_wsib_builders: { name: 'Enrich WSIB Matched',   group: 'link' },
+  enrich_named_builders:{ name: 'Enrich Named Builders', group: 'link' },
   load_wsib:          { name: 'Load WSIB Registry',    group: 'ingest' },
   link_wsib:          { name: 'Link WSIB',             group: 'link' },
   link_similar:       { name: 'Link Similar Permits',  group: 'link' },
@@ -84,9 +83,9 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'classify_scope_tags',  indent: 1 },
       { slug: 'classify_permits',     indent: 1 },
       { slug: 'builders',             indent: 1 },
-      { slug: 'enrich_google',        indent: 2 },
-      { slug: 'enrich_web_search',   indent: 2 },
-      { slug: 'enrich_wsib',          indent: 2 },
+      { slug: 'link_wsib',            indent: 2 },
+      { slug: 'enrich_wsib_builders', indent: 3 },
+      { slug: 'enrich_named_builders',indent: 2 },
       { slug: 'geocode_permits',      indent: 1 },
       { slug: 'link_parcels',         indent: 1 },
       { slug: 'link_neighbourhoods',  indent: 1 },
@@ -125,6 +124,8 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_massing',        indent: 1 },
       { slug: 'neighbourhoods',      indent: 0 },
       { slug: 'link_neighbourhoods', indent: 1 },
+      { slug: 'load_wsib',           indent: 0 },
+      { slug: 'link_wsib',           indent: 1 },
       { slug: 'refresh_snapshot',    indent: 1 },
       { slug: 'assert_data_bounds',  indent: 0 },
     ],
@@ -213,7 +214,7 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
       num++;
       return `${num}`;
     }
-    return null; // indent 2 = sub-step, no number
+    return null; // indent 2+ = sub-step, no number
   });
 }
 
@@ -299,13 +300,14 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const dot = getStatusDot(info, isRunning);
                   const stepNum = stepNumbers[i];
                   const isRoot = step.indent === 0;
-                  const isSub = step.indent === 2;
+                  const isSub = step.indent >= 2;
+                  const isDeepSub = step.indent >= 3;
 
                   // Connector line: show for indent 1+ steps, fade at end of group
                   const showConnector = step.indent > 0;
                   const nextStep = chain.steps[i + 1];
                   const isLastInGroup = !nextStep || nextStep.indent === 0;
-                  // For indent-2, check if next is also indent-2
+                  // For indent-2+, check if next is also indent-2+
                   const isLastSubStep = isSub && (!nextStep || nextStep.indent < 2);
 
                   return (
@@ -327,7 +329,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
 
                       {/* Extra indent spacer for sub-steps */}
                       {isSub && (
-                        <div className="shrink-0 flex items-center w-8">
+                        <div className={`shrink-0 flex items-center ${isDeepSub ? 'w-14' : 'w-8'}`}>
                           <div className="w-full border-b border-dashed border-gray-300" />
                         </div>
                       )}
@@ -358,6 +360,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           className={`text-xs truncate ${
                             isRoot
                               ? 'text-gray-800 font-medium w-36'
+                              : isDeepSub
+                              ? 'text-gray-400 w-28 text-[10px]'
                               : isSub
                               ? 'text-gray-500 w-32 text-[11px]'
                               : 'text-gray-600 w-36'

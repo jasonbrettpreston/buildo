@@ -56,37 +56,65 @@ describe('Web Search Enrichment Infrastructure', () => {
       const content = fs.readFileSync(scriptPath, 'utf-8');
       expect(content).toContain('extractEmailsFromHtml');
     });
+
+    it('supports ENRICH_WSIB_ONLY env var for WSIB-matched filtering', () => {
+      const content = fs.readFileSync(scriptPath, 'utf-8');
+      expect(content).toContain('ENRICH_WSIB_ONLY');
+    });
+
+    it('supports ENRICH_UNMATCHED_ONLY env var for non-WSIB filtering', () => {
+      const content = fs.readFileSync(scriptPath, 'utf-8');
+      expect(content).toContain('ENRICH_UNMATCHED_ONLY');
+    });
   });
 
   describe('Pipeline Registration', () => {
     const routePath = path.resolve(__dirname, '../app/api/admin/pipelines/[slug]/route.ts');
 
-    it('route.ts contains enrich_web_search pipeline slug', () => {
+    it('route.ts contains enrich_wsib_builders pipeline slug', () => {
       const content = fs.readFileSync(routePath, 'utf-8');
-      expect(content).toContain('enrich_web_search');
+      expect(content).toContain('enrich_wsib_builders');
     });
 
-    it('route.ts maps to scripts/enrich-web-search.js', () => {
+    it('route.ts contains enrich_named_builders pipeline slug', () => {
       const content = fs.readFileSync(routePath, 'utf-8');
-      expect(content).toContain("enrich_web_search: 'scripts/enrich-web-search.js'");
+      expect(content).toContain('enrich_named_builders');
+    });
+
+    it('route.ts maps both enrichment slugs to enrich-web-search.js', () => {
+      const content = fs.readFileSync(routePath, 'utf-8');
+      expect(content).toContain("enrich_wsib_builders: 'scripts/enrich-web-search.js'");
+      expect(content).toContain("enrich_named_builders: 'scripts/enrich-web-search.js'");
     });
   });
 
   describe('Chain Orchestrator', () => {
     const chainPath = path.resolve(__dirname, '../../scripts/run-chain.js');
 
-    it('run-chain.js contains enrich_web_search in PIPELINE_SCRIPTS', () => {
+    it('run-chain.js contains enrich_wsib_builders and enrich_named_builders', () => {
       const content = fs.readFileSync(chainPath, 'utf-8');
-      expect(content).toContain('enrich_web_search');
+      expect(content).toContain('enrich_wsib_builders');
+      expect(content).toContain('enrich_named_builders');
+    });
+
+    it('run-chain.js sets ENRICH_WSIB_ONLY for wsib_builders step', () => {
+      const content = fs.readFileSync(chainPath, 'utf-8');
+      expect(content).toContain('ENRICH_WSIB_ONLY');
+    });
+
+    it('run-chain.js sets ENRICH_UNMATCHED_ONLY for named_builders step', () => {
+      const content = fs.readFileSync(chainPath, 'utf-8');
+      expect(content).toContain('ENRICH_UNMATCHED_ONLY');
     });
   });
 
   describe('FreshnessTimeline', () => {
     const timelinePath = path.resolve(__dirname, '../components/FreshnessTimeline.tsx');
 
-    it('registry contains enrich_web_search', () => {
+    it('registry contains enrich_wsib_builders and enrich_named_builders', () => {
       const content = fs.readFileSync(timelinePath, 'utf-8');
-      expect(content).toContain('enrich_web_search');
+      expect(content).toContain('enrich_wsib_builders');
+      expect(content).toContain('enrich_named_builders');
     });
   });
 

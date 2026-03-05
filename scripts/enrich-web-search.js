@@ -31,6 +31,8 @@ const SERPER_URL = 'https://google.serper.dev/search';
 const SLUG = 'enrich_web_search';
 const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
 const RATE_LIMIT_MS = parseInt(process.env.ENRICH_RATE_MS || '500', 10);
+const WSIB_ONLY = process.env.ENRICH_WSIB_ONLY === '1';
+const UNMATCHED_ONLY = process.env.ENRICH_UNMATCHED_ONLY === '1';
 
 // ---------------------------------------------------------------------------
 // Contact extraction (mirrors src/lib/builders/extract-contacts.ts)
@@ -227,7 +229,8 @@ async function run() {
     return;
   }
 
-  console.log('=== Web Search Enrichment ===\n');
+  const mode = WSIB_ONLY ? 'WSIB-matched only' : UNMATCHED_ONLY ? 'Unmatched only' : 'All builders';
+  console.log(`=== Web Search Enrichment (${mode}) ===\n`);
   if (dryRun) console.log('DRY RUN — no database writes\n');
   console.log(`Limit: ${limit} | Rate: ${RATE_LIMIT_MS}ms\n`);
 
@@ -247,7 +250,11 @@ async function run() {
     }
   }
 
-  // Query builders that need enrichment, prioritizing WSIB-matched
+  // Query builders that need enrichment, with optional WSIB filtering
+  let wsibFilter = '';
+  if (WSIB_ONLY) wsibFilter = 'AND w.id IS NOT NULL';
+  if (UNMATCHED_ONLY) wsibFilter = 'AND w.id IS NULL';
+
   const { rows: builders } = await pool.query(`
     SELECT
       b.id,
@@ -261,6 +268,7 @@ async function run() {
     FROM builders b
     LEFT JOIN wsib_registry w ON w.linked_builder_id = b.id
     WHERE b.enriched_at IS NULL
+    ${wsibFilter}
     ORDER BY
       CASE WHEN w.id IS NOT NULL THEN 0 ELSE 1 END,  -- WSIB-matched first
       b.permit_count DESC

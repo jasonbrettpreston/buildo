@@ -35,9 +35,9 @@ const CHAINS = {
     'classify_scope_tags',
     'classify_permits',
     'builders',
-    'enrich_google',
-    'enrich_web_search',
-    'enrich_wsib',
+    'link_wsib',
+    'enrich_wsib_builders',
+    'enrich_named_builders',
     'geocode_permits',
     'link_parcels',
     'link_neighbourhoods',
@@ -66,6 +66,8 @@ const CHAINS = {
     'link_massing',
     'neighbourhoods',
     'link_neighbourhoods',
+    'load_wsib',
+    'link_wsib',
     'refresh_snapshot',
     'assert_data_bounds',
   ],
@@ -88,9 +90,8 @@ const PIPELINE_SCRIPTS = {
   link_neighbourhoods:  'scripts/link-neighbourhoods.js',
   link_massing:         'scripts/link-massing.js',
   link_coa:             'scripts/link-coa.js',
-  enrich_google:        'scripts/enrich-builders.js',
-  enrich_web_search:    'scripts/enrich-web-search.js',
-  enrich_wsib:          'scripts/enrich-wsib.js',
+  enrich_wsib_builders: 'scripts/enrich-web-search.js',
+  enrich_named_builders:'scripts/enrich-web-search.js',
   load_wsib:            'scripts/load-wsib.js',
   link_wsib:            'scripts/link-wsib.js',
   classify_scope_class: 'scripts/classify-scope.js',
@@ -181,6 +182,12 @@ async function run() {
       // Permits chain only has new permits — incremental (default) is sufficient.
       if (slug === 'link_massing' && chainId === 'sources') {
         stepEnv.LINK_MASSING_FULL = '1';
+      }
+      if (slug === 'enrich_wsib_builders') {
+        stepEnv.ENRICH_WSIB_ONLY = '1';
+      }
+      if (slug === 'enrich_named_builders') {
+        stepEnv.ENRICH_UNMATCHED_ONLY = '1';
       }
       execFileSync('node', [scriptPath], {
         env: stepEnv,
