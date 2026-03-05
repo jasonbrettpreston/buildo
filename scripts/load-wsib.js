@@ -187,7 +187,7 @@ async function run() {
         values.push(
           r.legal_name, r.trade_name, r.legal_name_normalized, r.trade_name_normalized,
           r.mailing_address, r.predominant_class, r.naics_code, r.naics_description,
-          r.subclass, r.subclass_description, r.business_size, r.business_size
+          r.subclass, r.subclass_description, r.business_size, new Date()
         );
       }
 
