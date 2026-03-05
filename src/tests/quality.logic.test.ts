@@ -487,14 +487,14 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 25 tracked pipelines', () => {
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(25);
+  it('has exactly 26 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(26);
   });
 
-  it('groups are correct: 8 ingest, 11 link, 3 classify, 1 snapshot, 2 quality', () => {
+  it('groups are correct: 8 ingest, 12 link, 3 classify, 1 snapshot, 2 quality', () => {
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(8);
-    expect(groups.filter((g) => g === 'link')).toHaveLength(11);
+    expect(groups.filter((g) => g === 'link')).toHaveLength(12);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(3);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(2);
@@ -523,9 +523,9 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'sources']);
   });
 
-  it('permits chain has 16 steps in dependency order', () => {
+  it('permits chain has 17 steps in dependency order', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(16);
+    expect(permits.steps).toHaveLength(17);
     expect(permits.steps[0].slug).toBe('assert_schema');
     expect(permits.steps[1].slug).toBe('permits');
     expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_data_bounds');
@@ -534,7 +534,7 @@ describe('Pipeline Chains', () => {
   it('permits chain includes indent-2 sub-steps for builder enrichment', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     const indent2 = permits.steps.filter((s) => s.indent === 2);
-    expect(indent2.map((s) => s.slug)).toEqual(['enrich_google', 'enrich_wsib']);
+    expect(indent2.map((s) => s.slug)).toEqual(['enrich_google', 'enrich_web_search', 'enrich_wsib']);
   });
 
   it('coa chain has 6 steps', () => {

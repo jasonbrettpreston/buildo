@@ -13,10 +13,10 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(3);
   });
 
-  it('defines permits chain with 16 steps', () => {
+  it('defines permits chain with 17 steps', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(16);
+    expect(chain!.steps).toHaveLength(17);
   });
 
   it('defines coa chain with 6 steps', () => {
