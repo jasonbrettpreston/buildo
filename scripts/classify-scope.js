@@ -11,9 +11,12 @@
  * For all other permits, uses the general tag extraction.
  *
  * Usage:
- *   node scripts/classify-scope.js
+ *   node scripts/classify-scope.js           # incremental (new/changed only)
+ *   node scripts/classify-scope.js --full     # re-classify all permits
  */
 const { Pool } = require('pg');
+
+const fullMode = process.argv.includes('--full');
 
 const pool = new Pool({
   host: process.env.PG_HOST || 'localhost',
@@ -392,15 +395,21 @@ function isBLDPermit(permitNum) {
 
 async function main() {
   console.log('=== Buildo Permit Scope Classifier ===');
+  console.log(`Mode: ${fullMode ? 'FULL (all permits)' : 'INCREMENTAL (new/changed only)'}`);
   console.log('');
 
   const startTime = Date.now();
 
+  // Incremental: only classify permits that are new or changed since last classification
+  const incrementalFilter = fullMode
+    ? ''
+    : ' WHERE scope_classified_at IS NULL OR scope_classified_at < last_seen_at';
+
   // Get total count
-  const countResult = await pool.query('SELECT COUNT(*) as total FROM permits');
+  const countResult = await pool.query(`SELECT COUNT(*) as total FROM permits${incrementalFilter}`);
   const total = parseInt(countResult.rows[0].total, 10);
-  console.log(`Total permits: ${total.toLocaleString()}`);
-  console.log(`Batch size:    ${BATCH_SIZE}`);
+  console.log(`Permits to classify: ${total.toLocaleString()}`);
+  console.log(`Batch size:          ${BATCH_SIZE}`);
   console.log('');
 
   // Track distribution
@@ -422,6 +431,7 @@ async function main() {
                description, current_use, proposed_use, storeys,
                housing_units, dwelling_units_created
         FROM permits
+        ${fullMode ? '' : 'WHERE (scope_classified_at IS NULL OR scope_classified_at < last_seen_at)'}
         ORDER BY permit_num, revision_num
         LIMIT $1
       `;
@@ -433,6 +443,7 @@ async function main() {
                housing_units, dwelling_units_created
         FROM permits
         WHERE (permit_num, revision_num) > ($1, $2)
+        ${fullMode ? '' : 'AND (scope_classified_at IS NULL OR scope_classified_at < last_seen_at)'}
         ORDER BY permit_num, revision_num
         LIMIT $3
       `;
