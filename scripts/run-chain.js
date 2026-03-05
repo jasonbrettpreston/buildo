@@ -172,12 +172,15 @@ async function run() {
     }
 
     try {
+      const stepEnv = { ...process.env, PIPELINE_CHAIN: chainId };
+      // Sources chain reloads massing data, so link_massing needs a full rescan.
+      // Permits chain only has new permits — incremental (default) is sufficient.
+      if (slug === 'link_massing' && chainId === 'sources') {
+        stepEnv.LINK_MASSING_FULL = '1';
+      }
       execFileSync('node', [scriptPath], {
-        env: { ...process.env, PIPELINE_CHAIN: chainId },
+        env: stepEnv,
         stdio: 'inherit',
-        // No per-step timeout — heavy scripts (link_massing, link_coa) can
-        // take 30-120 min depending on data volume. The API route applies
-        // its own overall timeout when triggering chains remotely.
       });
 
       const durationMs = Date.now() - stepStart;

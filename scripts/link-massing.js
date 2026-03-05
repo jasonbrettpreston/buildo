@@ -22,6 +22,10 @@ const SHED_THRESHOLD_SQM = 20;
 const GARAGE_MAX_SQM = 60;
 const NEAREST_MAX_DISTANCE_M = 50;
 
+// Incremental mode (default): skip parcels already linked in parcel_buildings.
+// Full mode: rescan all parcels (use when massing data is reloaded).
+const FULL_MODE = process.argv.includes('--full') || process.env.LINK_MASSING_FULL === '1';
+
 const pool = new Pool({
   host: process.env.PG_HOST || 'localhost',
   port: parseInt(process.env.PG_PORT || '5432', 10),
@@ -92,14 +96,19 @@ function getTestPoints(parcel) {
 
 async function main() {
   console.log('=== Buildo Parcel-Building Linker ===');
+  console.log(`Mode: ${FULL_MODE ? 'FULL (rescan all parcels)' : 'INCREMENTAL (unlinked parcels only)'}`);
   console.log('');
 
-  // Count parcels with centroids
+  // Count parcels to process
+  const baseFilter = 'centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL';
+  const incrementalFilter = FULL_MODE
+    ? ''
+    : ' AND NOT EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = parcels.id)';
   const countResult = await pool.query(
-    'SELECT COUNT(*) as total FROM parcels WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL'
+    `SELECT COUNT(*) as total FROM parcels WHERE ${baseFilter}${incrementalFilter}`
   );
   const totalParcels = parseInt(countResult.rows[0].total, 10);
-  console.log(`Parcels with centroids: ${totalParcels.toLocaleString()}`);
+  console.log(`Parcels to process:     ${totalParcels.toLocaleString()}`);
 
   // Count building footprints
   const bfCount = await pool.query('SELECT COUNT(*) as total FROM building_footprints');
@@ -124,7 +133,7 @@ async function main() {
     const parcelBatch = await pool.query(
       `SELECT id, centroid_lat, centroid_lng, geometry
        FROM parcels
-       WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL
+       WHERE ${baseFilter}${incrementalFilter}
        ORDER BY id
        LIMIT $1 OFFSET $2`,
       [BATCH_SIZE, offset]
