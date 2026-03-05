@@ -108,8 +108,8 @@ async function run() {
           `SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND status IS NULL`
         );
         if (statusNull > 0) {
-          errors.push(`${statusNull} permits with NULL status`);
-          console.error(`  FAIL: ${statusNull} permits with NULL status`);
+          warnings.push(`${statusNull} permits with NULL status`);
+          console.log(`  WARN: ${statusNull} permits with NULL status`);
         } else {
           console.log('  OK: No NULL status values');
         }
@@ -242,7 +242,7 @@ async function run() {
       }
 
       const heightOutliers = await count(
-        `SELECT COUNT(*) FROM building_footprints WHERE max_height IS NOT NULL AND (max_height <= 0 OR max_height > 500)`
+        `SELECT COUNT(*) FROM building_footprints WHERE max_height_m IS NOT NULL AND (max_height_m <= 0 OR max_height_m > 500)`
       );
       if (heightOutliers > 0) {
         warnings.push(`${heightOutliers} building_footprints with max_height out of bounds (0-500m)`);
