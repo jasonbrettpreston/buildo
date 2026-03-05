@@ -85,11 +85,12 @@ function extractEmailsFromHtml(html) {
   for (const m of mailtoMatches) {
     const lower = m[1].toLowerCase();
     if (EMAIL_REJECT.some((r) => lower.includes(r))) continue;
+    EMAIL_PATTERN.lastIndex = 0;
     if (EMAIL_PATTERN.test(lower)) {
-      EMAIL_PATTERN.lastIndex = 0;
       if (!emails.includes(lower)) emails.push(lower);
     }
   }
+  EMAIL_PATTERN.lastIndex = 0;
   const textMatches = html.match(EMAIL_PATTERN) || [];
   for (const m of textMatches) {
     const lower = m.toLowerCase();

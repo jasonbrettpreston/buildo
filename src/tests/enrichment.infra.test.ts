@@ -51,6 +51,11 @@ describe('Web Search Enrichment Infrastructure', () => {
       const content = fs.readFileSync(scriptPath, 'utf-8');
       expect(content).toContain('COALESCE');
     });
+
+    it('scrapes builder website for emails when snippet extraction fails', () => {
+      const content = fs.readFileSync(scriptPath, 'utf-8');
+      expect(content).toContain('extractEmailsFromHtml');
+    });
   });
 
   describe('Pipeline Registration', () => {
@@ -109,6 +114,11 @@ describe('Web Search Enrichment Infrastructure', () => {
     it('exports buildSearchQuery function', () => {
       const content = fs.readFileSync(modulePath, 'utf-8');
       expect(content).toContain('export function buildSearchQuery');
+    });
+
+    it('exports extractEmailsFromHtml function', () => {
+      const content = fs.readFileSync(modulePath, 'utf-8');
+      expect(content).toContain('export function extractEmailsFromHtml');
     });
   });
 });

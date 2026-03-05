@@ -117,11 +117,12 @@ export function extractEmailsFromHtml(html: string): string[] {
   for (const m of mailtoMatches) {
     const lower = m[1].toLowerCase();
     if (EMAIL_REJECT.some((r) => lower.includes(r))) continue;
+    EMAIL_PATTERN.lastIndex = 0; // reset global regex before .test()
     if (EMAIL_PATTERN.test(lower)) {
-      EMAIL_PATTERN.lastIndex = 0; // reset regex state
       if (!emails.includes(lower)) emails.push(lower);
     }
   }
+  EMAIL_PATTERN.lastIndex = 0;
 
   // Also scan visible text for email patterns
   const textMatches = html.match(EMAIL_PATTERN) || [];
