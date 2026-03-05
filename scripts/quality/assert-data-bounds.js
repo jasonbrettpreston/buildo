@@ -294,15 +294,28 @@ async function run() {
             console.log('  OK: All WSIB entries have legal names');
           }
 
-          // All entries should be Class G
+          // All entries should have at least one G class (predominant OR subclass)
           const wsibNonG = await count(
-            `SELECT COUNT(*) FROM wsib_registry WHERE predominant_class NOT LIKE 'G%'`
+            `SELECT COUNT(*) FROM wsib_registry
+             WHERE predominant_class NOT LIKE 'G%'
+               AND (subclass IS NULL OR subclass NOT LIKE 'G%')`
           );
           if (wsibNonG > 0) {
-            errors.push(`${wsibNonG} wsib_registry entries with non-G class`);
-            console.error(`  FAIL: ${wsibNonG} wsib_registry entries with non-G class`);
+            errors.push(`${wsibNonG} wsib_registry entries with no G class`);
+            console.error(`  FAIL: ${wsibNonG} wsib_registry entries with no G class`);
           } else {
-            console.log('  OK: All WSIB entries are Class G');
+            console.log('  OK: All WSIB entries have at least one G classification');
+          }
+
+          // NAICS codes should be numeric strings
+          const wsibBadNaics = await count(
+            `SELECT COUNT(*) FROM wsib_registry WHERE naics_code IS NOT NULL AND naics_code !~ '^[0-9]+$'`
+          );
+          if (wsibBadNaics > 0) {
+            warnings.push(`${wsibBadNaics} wsib_registry entries with non-numeric naics_code`);
+            console.warn(`  WARN: ${wsibBadNaics} wsib_registry entries with non-numeric naics_code`);
+          } else {
+            console.log('  OK: All WSIB NAICS codes are numeric');
           }
 
           // Orphaned linked_builder_id

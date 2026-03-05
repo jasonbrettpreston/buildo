@@ -39,6 +39,7 @@ export async function GET() {
       wsibTotalResult,
       wsibLinkedResult,
       wsibLeadPoolResult,
+      wsibWithTradeResult,
     ] = await Promise.all([
       query<{ count: string }>(
         'SELECT COUNT(*)::text AS count FROM permits'
@@ -158,6 +159,10 @@ export async function GET() {
       query<{ count: string }>(
         `SELECT COUNT(*)::text AS count FROM wsib_registry WHERE linked_builder_id IS NULL`
       ).catch(() => [{ count: '0' }]),
+      // WSIB entries with trade name
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM wsib_registry WHERE trade_name IS NOT NULL`
+      ).catch(() => [{ count: '0' }]),
     ]);
 
     // Auto-fail orphaned "running" rows older than 2 hours (process died mid-run)
@@ -266,6 +271,7 @@ export async function GET() {
       wsib_total: p(wsibTotalResult),
       wsib_linked: p(wsibLinkedResult),
       wsib_lead_pool: p(wsibLeadPoolResult),
+      wsib_with_trade: p(wsibWithTradeResult),
       // Pipeline freshness
       pipeline_last_run: pipelineLastRun,
       // Pipeline schedules

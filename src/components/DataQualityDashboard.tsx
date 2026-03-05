@@ -107,6 +107,7 @@ interface AdminStats {
   wsib_total: number;
   wsib_linked: number;
   wsib_lead_pool: number;
+  wsib_with_trade: number;
   pipeline_last_run: Record<string, PipelineRunInfo>;
   pipeline_schedules: Record<string, { cadence: string; cron_expression: string | null }>;
   [key: string]: unknown;
@@ -638,7 +639,7 @@ export function DataQualityDashboard() {
                 tiers={[
                   { label: 'Matched builders', value: (stats?.wsib_linked ?? 0).toLocaleString() },
                   { label: 'Lead pool', value: (stats?.wsib_lead_pool ?? 0).toLocaleString() },
-                  { label: 'With trade name', value: '' },
+                  { label: 'With trade name', value: (stats?.wsib_with_trade ?? 0).toLocaleString() },
                 ]}
                 onScheduleClick={() => setScheduleModal({ pipeline: 'load_wsib', name: 'WSIB Registry' })}
               />

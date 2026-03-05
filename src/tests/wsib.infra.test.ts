@@ -138,11 +138,17 @@ describe('WSIB Registry Infrastructure', () => {
     it('checks for non-G class entries', () => {
       const content = fs.readFileSync(boundsPath, 'utf-8');
       expect(content).toContain("NOT LIKE 'G%'");
+      expect(content).toContain('no G class');
     });
 
     it('checks for orphaned linked_builder_id', () => {
       const content = fs.readFileSync(boundsPath, 'utf-8');
       expect(content).toContain('orphaned wsib_registry');
+    });
+
+    it('checks for non-numeric naics_code', () => {
+      const content = fs.readFileSync(boundsPath, 'utf-8');
+      expect(content).toContain('non-numeric naics_code');
     });
   });
 
@@ -167,6 +173,11 @@ describe('WSIB Registry Infrastructure', () => {
     it('dashboard references wsib_lead_pool', () => {
       const content = fs.readFileSync(dashboardPath, 'utf-8');
       expect(content).toContain('wsib_lead_pool');
+    });
+
+    it('dashboard references wsib_with_trade', () => {
+      const content = fs.readFileSync(dashboardPath, 'utf-8');
+      expect(content).toContain('wsib_with_trade');
     });
   });
 
@@ -205,6 +216,11 @@ describe('WSIB Registry Infrastructure', () => {
     it('stats API returns wsib_lead_pool', () => {
       const content = fs.readFileSync(statsPath, 'utf-8');
       expect(content).toContain('wsib_lead_pool');
+    });
+
+    it('stats API returns wsib_with_trade', () => {
+      const content = fs.readFileSync(statsPath, 'utf-8');
+      expect(content).toContain('wsib_with_trade');
     });
   });
 });
