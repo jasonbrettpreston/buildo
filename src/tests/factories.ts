@@ -408,3 +408,48 @@ export function createMockProductMatch(
     ...overrides,
   };
 }
+
+export interface WsibRegistryEntry {
+  id: number;
+  legal_name: string;
+  trade_name: string | null;
+  legal_name_normalized: string;
+  trade_name_normalized: string | null;
+  mailing_address: string | null;
+  predominant_class: string;
+  naics_code: string | null;
+  naics_description: string | null;
+  subclass: string | null;
+  subclass_description: string | null;
+  business_size: string | null;
+  linked_builder_id: number | null;
+  match_confidence: number | null;
+  matched_at: Date | null;
+  first_seen_at: Date;
+  last_seen_at: Date;
+}
+
+export function createMockWsibRegistryEntry(
+  overrides: Partial<WsibRegistryEntry> = {}
+): WsibRegistryEntry {
+  return {
+    id: 1,
+    legal_name: '1234567 Ontario Inc.',
+    trade_name: 'Acme Construction',
+    legal_name_normalized: '1234567 ONTARIO',
+    trade_name_normalized: 'ACME CONSTRUCTION',
+    mailing_address: '123 Main St, Toronto, ON, M5V 1A1',
+    predominant_class: 'G1',
+    naics_code: '236110',
+    naics_description: 'Residential building construction',
+    subclass: 'G1',
+    subclass_description: 'Residential building construction',
+    business_size: 'Small Business',
+    linked_builder_id: null,
+    match_confidence: null,
+    matched_at: null,
+    first_seen_at: new Date(),
+    last_seen_at: new Date(),
+    ...overrides,
+  };
+}

@@ -30,6 +30,8 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   link_coa:           { name: 'Link CoA',              group: 'link' },
   enrich_google:      { name: 'Enrich Google Places',  group: 'link' },
   enrich_wsib:        { name: 'Enrich WSIB',           group: 'link' },
+  load_wsib:          { name: 'Load WSIB Registry',    group: 'ingest' },
+  link_wsib:          { name: 'Link WSIB',             group: 'link' },
   link_similar:       { name: 'Link Similar Permits',  group: 'link' },
   create_pre_permits: { name: 'Create Pre-Permits',    group: 'link' },
   compute_centroids:  { name: 'Compute Centroids',     group: 'link' },

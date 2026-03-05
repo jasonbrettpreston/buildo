@@ -104,6 +104,9 @@ interface AdminStats {
   coa_upcoming: number;
   newest_permit_date: string | null;
   newest_coa_date: string | null;
+  wsib_total: number;
+  wsib_linked: number;
+  wsib_lead_pool: number;
   pipeline_last_run: Record<string, PipelineRunInfo>;
   pipeline_schedules: Record<string, { cadence: string; cron_expression: string | null }>;
   [key: string]: unknown;
@@ -617,6 +620,27 @@ export function DataQualityDashboard() {
                   { field: 'website', pct: ((current.builders_total - current.builders_with_website) / current.builders_total) * 100 },
                 ] : undefined}
                 onScheduleClick={() => setScheduleModal({ pipeline: 'builders', name: 'Builder Profiles' })}
+              />
+
+              {/* WSIB Registry */}
+              <DataSourceCircle
+                name="WSIB Registry"
+                slug="load_wsib"
+                accuracy={calcPct(stats?.wsib_linked ?? 0, stats?.wsib_total ?? 0)}
+                count={stats?.wsib_linked ?? 0}
+                total={stats?.wsib_total ?? 0}
+                lastUpdated={lastRunAt('load_wsib')}
+                nextScheduled={getNextScheduledDate('load_wsib', stats?.pipeline_schedules)}
+                onUpdate={() => triggerPipeline('link_wsib')}
+                updating={runningPipelines.has('load_wsib') || runningPipelines.has('link_wsib')}
+                relationship="enriches"
+                fields={['legal_name', 'trade_name', 'mailing_address', 'subclass']}
+                tiers={[
+                  { label: 'Matched builders', value: (stats?.wsib_linked ?? 0).toLocaleString() },
+                  { label: 'Lead pool', value: (stats?.wsib_lead_pool ?? 0).toLocaleString() },
+                  { label: 'With trade name', value: '' },
+                ]}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'load_wsib', name: 'WSIB Registry' })}
               />
 
               {/* Scope Class (residential / commercial / mixed-use) */}

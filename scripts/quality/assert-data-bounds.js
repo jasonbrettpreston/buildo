@@ -274,6 +274,63 @@ async function run() {
       }
     }
 
+    // -----------------------------------------------------------------------
+    // WSIB-scoped checks
+    // -----------------------------------------------------------------------
+    if (runPermitChecks || runSourceChecks) {
+      try {
+        const wsibCount = await count(`SELECT COUNT(*) FROM wsib_registry`);
+        if (wsibCount > 0) {
+          console.log(`  OK: wsib_registry has ${wsibCount.toLocaleString()} rows`);
+
+          // All entries should have a legal name
+          const wsibNoName = await count(
+            `SELECT COUNT(*) FROM wsib_registry WHERE legal_name IS NULL OR TRIM(legal_name) = ''`
+          );
+          if (wsibNoName > 0) {
+            errors.push(`${wsibNoName} wsib_registry entries with NULL/empty legal_name`);
+            console.error(`  FAIL: ${wsibNoName} wsib_registry entries with no legal name`);
+          } else {
+            console.log('  OK: All WSIB entries have legal names');
+          }
+
+          // All entries should be Class G
+          const wsibNonG = await count(
+            `SELECT COUNT(*) FROM wsib_registry WHERE predominant_class NOT LIKE 'G%'`
+          );
+          if (wsibNonG > 0) {
+            errors.push(`${wsibNonG} wsib_registry entries with non-G class`);
+            console.error(`  FAIL: ${wsibNonG} wsib_registry entries with non-G class`);
+          } else {
+            console.log('  OK: All WSIB entries are Class G');
+          }
+
+          // Orphaned linked_builder_id
+          const wsibOrphan = await count(
+            `SELECT COUNT(*) FROM wsib_registry w
+             WHERE w.linked_builder_id IS NOT NULL
+               AND NOT EXISTS (SELECT 1 FROM builders b WHERE b.id = w.linked_builder_id)`
+          );
+          if (wsibOrphan > 0) {
+            errors.push(`${wsibOrphan} orphaned wsib_registry linked_builder_id`);
+            console.error(`  FAIL: ${wsibOrphan} orphaned WSIB builder links`);
+          } else {
+            console.log('  OK: No orphaned WSIB builder links');
+          }
+        } else {
+          console.log('  SKIP: wsib_registry is empty (not yet loaded)');
+        }
+      } catch (wsibErr) {
+        // Table may not exist yet
+        if (wsibErr.message && wsibErr.message.includes('does not exist')) {
+          console.log('  SKIP: wsib_registry table does not exist');
+        } else {
+          errors.push(wsibErr.message);
+          console.error(`  ERROR: ${wsibErr.message}`);
+        }
+      }
+    }
+
   } catch (err) {
     errors.push(err.message);
     console.error(`  ERROR: ${err.message}`);

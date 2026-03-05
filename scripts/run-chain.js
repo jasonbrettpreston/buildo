@@ -89,6 +89,8 @@ const PIPELINE_SCRIPTS = {
   link_coa:             'scripts/link-coa.js',
   enrich_google:        'scripts/enrich-builders.js',
   enrich_wsib:          'scripts/enrich-wsib.js',
+  load_wsib:            'scripts/load-wsib.js',
+  link_wsib:            'scripts/link-wsib.js',
   classify_scope_class: 'scripts/classify-scope.js',
   classify_scope_tags:  'scripts/classify-scope.js',
   classify_permits:     'scripts/classify-permits.js',

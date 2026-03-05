@@ -25,6 +25,8 @@ const PIPELINE_SCRIPTS: Record<string, string> = {
   // Enrich (augment records)
   enrich_google: 'scripts/enrich-builders.js',
   enrich_wsib: 'scripts/enrich-wsib.js',
+  load_wsib: 'scripts/load-wsib.js',
+  link_wsib: 'scripts/link-wsib.js',
   // Classify (derive fields)
   classify_scope_class: 'scripts/classify-scope.js',
   classify_scope_tags: 'scripts/classify-scope.js',

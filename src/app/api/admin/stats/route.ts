@@ -35,6 +35,10 @@ export async function GET() {
       coaApprovedResult,
       newestPermitResult,
       newestCoaResult,
+      // WSIB Registry
+      wsibTotalResult,
+      wsibLinkedResult,
+      wsibLeadPoolResult,
     ] = await Promise.all([
       query<{ count: string }>(
         'SELECT COUNT(*)::text AS count FROM permits'
@@ -142,6 +146,18 @@ export async function GET() {
       query<{ newest: string | null }>(
         `SELECT MAX(hearing_date)::text AS newest FROM coa_applications`
       ).catch(() => [{ newest: null }]),
+      // WSIB Registry total Class G
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM wsib_registry`
+      ).catch(() => [{ count: '0' }]),
+      // WSIB linked to builders
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM wsib_registry WHERE linked_builder_id IS NOT NULL`
+      ).catch(() => [{ count: '0' }]),
+      // WSIB lead pool (unlinked Class G)
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM wsib_registry WHERE linked_builder_id IS NULL`
+      ).catch(() => [{ count: '0' }]),
     ]);
 
     // Auto-fail orphaned "running" rows older than 2 hours (process died mid-run)
@@ -246,6 +262,10 @@ export async function GET() {
       // Newest record dates
       newest_permit_date: (Array.isArray(newestPermitResult) ? newestPermitResult[0]?.newest : null) ?? null,
       newest_coa_date: (Array.isArray(newestCoaResult) ? newestCoaResult[0]?.newest : null) ?? null,
+      // WSIB Registry
+      wsib_total: p(wsibTotalResult),
+      wsib_linked: p(wsibLinkedResult),
+      wsib_lead_pool: p(wsibLeadPoolResult),
       // Pipeline freshness
       pipeline_last_run: pipelineLastRun,
       // Pipeline schedules
