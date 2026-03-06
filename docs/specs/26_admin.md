@@ -17,7 +17,7 @@ As an admin, I want a unified dashboard to monitor data pipeline health, trigger
   - Each HealthCard shows record count, status dot (green/yellow/red per freshness thresholds), "Last updated" (relative time), "Next update" (computed from last run + interval, or "Overdue"), and an "Update Now" button.
   - Enrichment sources show "X permits linked (Y%)" counts for geocoding, parcels, massing, and neighbourhoods.
   - "Update Now" triggers `POST /api/admin/pipelines/{slug}`, enters polling state (5s interval on `GET /api/admin/stats`) until pipeline completes or fails.
-  - 24 pipeline slugs supported: 21 individual + 3 chain orchestrators (`chain_permits`, `chain_coa`, `chain_sources`). Chains use 1-hour timeout; individual pipelines use 10-minute timeout. See `scripts/run-chain.js`.
+  - 29 pipeline slugs supported: 26 individual + 3 chain orchestrators (`chain_permits`, `chain_coa`, `chain_sources`). Chains use 1-hour timeout; individual pipelines use 10-minute timeout. See `scripts/run-chain.js`.
   - Pipeline freshness tracked in `pipeline_runs` table (migration 033) with per-pipeline `started_at`, `completed_at`, `status`, record counts, and `error_message` (truncated to 4000 chars).
   - Pipeline schedules defined as client-side constants: permits/coa/builders/classify = Daily, address_points/parcels/massing = Quarterly, neighbourhoods = Annual. HealthCard shows `scheduleNote` for human context.
   - Active Sync Operations section: CoA summary card, builder summary card, permits sync log table (last 20 runs).

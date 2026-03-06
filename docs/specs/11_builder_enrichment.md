@@ -1,7 +1,7 @@
-# Spec 11 -- Builder Enrichment
+# Spec 11 -- Entity Enrichment
 
 ## 1. Goal & User Story
-Tradespeople need contact information for builders so they can reach out about projects. Builder names are extracted from permits, normalized, de-duplicated, and enriched with phone/website/rating via external APIs.
+Tradespeople need contact information for builders and other project stakeholders so they can reach out about projects. Entity names are extracted from permits, normalized, de-duplicated into the `entities` table (see Spec 37), and enriched with phone/website/rating via external APIs.
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -14,11 +14,11 @@ Tradespeople need contact information for builders so they can reach out about p
 - **Inputs:** Raw builder names from ingested permits; admin trigger via `POST /api/admin/builders`
 - **Core Logic:**
   - Name normalization: uppercase, collapse whitespace, strip trailing punctuation, strip business suffixes (INC, LTD, CORP, LLC, CO, LIMITED, INCORPORATED, CORPORATION, COMPANY), trim. See `src/lib/builders/normalize.ts`
-  - De-duplication by `name_normalized` unique key; new permits link to existing builder or create new record
-  - Enrichment cascade (priority order): (1) Google Places API text search with Levenshtein similarity > 0.7 validation, (2) Ontario Business Registry for incorporated businesses (planned), (3) WSIB safety clearance (planned), (4) Google Custom Search fallback (planned), (5) User-contributed contacts (planned)
-  - Batch processing: 50 builders per batch, 1,500ms delay between batches. See `scripts/enrich-builders.js`
-  - Builder API routes: list with search/pagination, single detail, admin stats/trigger. See `src/app/api/builders/` and `src/app/api/admin/builders/`
-- **Outputs:** Builder records with phone, email, website, google_rating, enrichment_source, enriched_at; builder_contacts table for multi-source contact storage
+  - De-duplication by `name_normalized` unique key in `entities` table (Spec 37); new permits link to existing entity or create new record via `entity_projects` junction
+  - Enrichment cascade (priority order): (1) Google Places API text search with Levenshtein similarity > 0.7 validation, (2) WSIB Registry matching (Spec 35), (3) Web search enrichment for email/phone/website (Spec 36), (4) User-contributed contacts (planned)
+  - Batch processing: 50 entities per batch, 1,500ms delay between batches. See `scripts/enrich-web-search.js`
+  - Entity API routes: list with search/pagination, single detail, admin stats/trigger. See `src/app/api/builders/` and `src/app/api/admin/builders/`
+- **Outputs:** Entity records in `entities` table with primary_phone, primary_email, website, google_rating, last_enriched_at
 - **Edge Cases:**
   - Name collisions after normalization (e.g., "Smith Construction Inc" and "Smith Construction Ltd") require manual review
   - Google Places false matches below 0.7 similarity threshold are rejected
@@ -50,6 +50,9 @@ Tradespeople need contact information for builders so they can reach out about p
 - **`migrations/`**: Governed by Spec 01. Raise a query if schema must change.
 
 ### Cross-Spec Dependencies
-- Relies on **Spec 01 (Database Schema)**: Uses `builders` and `builder_contacts` tables.
+- Relies on **Spec 01 (Database Schema)**: Uses `entities` and `entity_projects` tables.
 - Relies on **Spec 02 (Data Ingestion)**: Builder names are extracted from ingested `permits.builder_name`.
-- Consumed by **Spec 18 (Permit Detail)**: Permit detail page displays builder info.
+- Relies on **Spec 37 (Corporate Identity Hub)**: Entity extraction and project linking.
+- Relies on **Spec 35 (WSIB Registry)**: WSIB matching for enrichment.
+- Relies on **Spec 36 (Web Search Enrichment)**: Web scraping for contact details.
+- Consumed by **Spec 18 (Permit Detail)**: Permit detail page displays entity info.
