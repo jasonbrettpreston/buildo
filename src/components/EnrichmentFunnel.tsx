@@ -25,10 +25,10 @@ export const FUNNEL_SOURCES: FunnelSourceConfig[] = [
   { id: 'scope_tags', name: 'Scope Tags', statusSlug: 'classify_scope_tags', triggerSlug: 'classify_scope_tags', yieldFields: ['scope_tags'] },
   { id: 'trades_residential', name: 'Trades (Residential)', statusSlug: 'classify_permits', triggerSlug: 'classify_permits', yieldFields: ['permit_trades'] },
   { id: 'trades_commercial', name: 'Trades (Commercial)', statusSlug: 'classify_permits', triggerSlug: 'classify_permits', yieldFields: ['permit_trades'] },
-  // 6-8. Builder enrichment
-  { id: 'builders', name: 'Builder Profiles', statusSlug: 'builders', triggerSlug: 'builders', yieldFields: ['builder_name', 'phone', 'email', 'website'] },
+  // 6-8. Entity enrichment
+  { id: 'builders', name: 'Entity Extraction', statusSlug: 'builders', triggerSlug: 'builders', yieldFields: ['legal_name', 'phone', 'email', 'website'] },
   { id: 'wsib', name: 'WSIB Registry', statusSlug: 'link_wsib', triggerSlug: 'link_wsib', yieldFields: ['legal_name', 'trade_name', 'mailing_address'] },
-  { id: 'builder_web', name: 'Builder Web Profiles', statusSlug: 'enrich_wsib_builders', triggerSlug: 'enrich_wsib_builders', yieldFields: ['phone', 'email', 'website'] },
+  { id: 'builder_web', name: 'Entity Web Enrichment', statusSlug: 'enrich_wsib_builders', triggerSlug: 'enrich_wsib_builders', yieldFields: ['phone', 'email', 'website'] },
   // 9-13. Spatial & linking
   { id: 'address_matching', name: 'Address Matching', statusSlug: 'geocode_permits', triggerSlug: 'geocode_permits', yieldFields: ['latitude', 'longitude'] },
   { id: 'parcels', name: 'Lots (Parcels)', statusSlug: 'link_parcels', triggerSlug: 'link_parcels', yieldFields: ['lot_size', 'frontage', 'depth', 'is_irregular'] },
@@ -249,7 +249,7 @@ function computeRowData(
           { label: 'No Builder', count: ap - current.permits_with_builder },
         ],
         yieldCounts: [
-          { field: 'Total Builders', count: bt },
+          { field: 'Total Entities', count: bt },
           { field: 'Enriched', count: current.builders_enriched },
         ],
         yieldNullRates: [],
@@ -261,14 +261,14 @@ function computeRowData(
         baselineTotal: stats.wsib_total, baselineLabel: 'WSIB Registry Records',
         targetPool: stats.wsib_with_trade, targetPoolLabel: 'With Trade Name',
         baselineNullRates: [],
-        matchDenominator: bt, matchDenominatorLabel: 'Total Builders',
+        matchDenominator: bt, matchDenominatorLabel: 'Total Entities',
         matchCount: stats.wsib_linked, matchPct: pct(stats.wsib_linked, bt),
         matchTiers: [
           { label: 'WSIB Matched', count: stats.wsib_linked },
           { label: 'Unmatched', count: bt - stats.wsib_linked },
         ],
         yieldCounts: [
-          { field: 'Matched Builders', count: stats.wsib_linked },
+          { field: 'Matched Entities', count: stats.wsib_linked },
           { field: 'Lead Pool', count: stats.wsib_lead_pool },
         ],
         yieldNullRates: [],
@@ -282,14 +282,14 @@ function computeRowData(
         lastRunMeta: webMeta,
         lastRunRecordsTotal: stats.pipeline_last_run['enrich_wsib_builders']?.records_total ?? lastRunRecordsTotal,
         lastRunRecordsNew: stats.pipeline_last_run['enrich_wsib_builders']?.records_new ?? lastRunRecordsNew,
-        baselineTotal: bt, baselineLabel: 'Total Builders',
+        baselineTotal: bt, baselineLabel: 'Total Entities',
         targetPool: current.builders_enriched, targetPoolLabel: 'Enriched',
         baselineNullRates: bt > 0 ? [
           { field: 'phone', pct: nullPct(bt, current.builders_with_phone, bt) },
           { field: 'email', pct: nullPct(bt, current.builders_with_email, bt) },
           { field: 'website', pct: nullPct(bt, current.builders_with_website, bt) },
         ] : [],
-        matchDenominator: bt, matchDenominatorLabel: 'Total Builders',
+        matchDenominator: bt, matchDenominatorLabel: 'Total Entities',
         matchCount: current.builders_enriched, matchPct: pct(current.builders_enriched, bt),
         matchTiers: [
           { label: 'WSIB Matched Search', count: current.builders_with_wsib },
@@ -492,7 +492,7 @@ function LastRunView({ row }: { row: FunnelRowData }) {
           </h4>
           <div className="space-y-1.5">
             <div className="flex justify-between">
-              <span className="text-xs text-gray-600">1. Builders Searched</span>
+              <span className="text-xs text-gray-600">1. Entities Searched</span>
               <span className="text-xs font-semibold text-gray-900 tabular-nums">{processed.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">

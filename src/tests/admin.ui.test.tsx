@@ -496,7 +496,7 @@ describe('Health Dashboard Pipeline Definitions', () => {
   const PIPELINE_NAMES = [
     'Building Permits',
     'Committee of Adjustment',
-    'Builder Profiles',
+    'Entity Profiles',
     'Address Points',
     'Property Parcels',
     '3D Massing',
@@ -510,7 +510,7 @@ describe('Health Dashboard Pipeline Definitions', () => {
   it('includes all data sources', () => {
     expect(PIPELINE_NAMES).toContain('Building Permits');
     expect(PIPELINE_NAMES).toContain('Committee of Adjustment');
-    expect(PIPELINE_NAMES).toContain('Builder Profiles');
+    expect(PIPELINE_NAMES).toContain('Entity Profiles');
     expect(PIPELINE_NAMES).toContain('Address Points');
     expect(PIPELINE_NAMES).toContain('Property Parcels');
     expect(PIPELINE_NAMES).toContain('3D Massing');

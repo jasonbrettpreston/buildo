@@ -597,9 +597,9 @@ export function DataQualityDashboard() {
                 onScheduleClick={() => setScheduleModal({ pipeline: 'coa', name: 'CoA Linked' })}
               />
 
-              {/* Builder Profiles */}
+              {/* Entity Profiles */}
               <DataSourceCircle
-                name="Builder Profiles"
+                name="Entity Profiles"
                 slug="builders"
                 accuracy={calcPct(current.permits_with_builder, current.active_permits)}
                 count={current.permits_with_builder}
@@ -623,7 +623,7 @@ export function DataQualityDashboard() {
                   { field: 'email', pct: ((current.builders_total - current.builders_with_email) / current.builders_total) * 100 },
                   { field: 'website', pct: ((current.builders_total - current.builders_with_website) / current.builders_total) * 100 },
                 ] : undefined}
-                onScheduleClick={() => setScheduleModal({ pipeline: 'builders', name: 'Builder Profiles' })}
+                onScheduleClick={() => setScheduleModal({ pipeline: 'builders', name: 'Entity Profiles' })}
               />
 
               {/* WSIB Registry */}
