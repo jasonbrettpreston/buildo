@@ -2167,14 +2167,25 @@ describe('Warning and stale status dots flash', () => {
     expect(staleLineMatch![0]).toContain('animate-pulse');
   });
 
-  it('applies animate-pulse to the entire pipeline tile row for warning/stale steps', () => {
+  it('applies tile-flash CSS animation to the entire pipeline tile row for warning/stale steps', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // tileFlash variable should apply animate-pulse + colored border to the tile
-    expect(source).toMatch(/tileFlash[\s\S]{0,100}Aging[\s\S]{0,80}animate-pulse[\s\S]{0,80}border-yellow/);
-    expect(source).toMatch(/tileFlash[\s\S]{0,200}Stale[\s\S]{0,80}animate-pulse[\s\S]{0,80}border-red/);
+    // tileFlash uses custom CSS classes (not animate-pulse which is opacity-only)
+    expect(source).toMatch(/tileFlash[\s\S]{0,100}Aging[\s\S]{0,80}tile-flash-warning[\s\S]{0,80}border-yellow/);
+    expect(source).toMatch(/tileFlash[\s\S]{0,200}Stale[\s\S]{0,80}tile-flash-stale[\s\S]{0,80}border-red/);
     // tileFlash should be applied to the pipeline-tile div's className
     expect(source).toMatch(/pipeline-tile[\s\S]{0,200}tileFlash|tileFlash[\s\S]{0,200}pipeline-tile/);
+  });
+
+  it('globals.css defines tile-flash keyframes with background-color pulse', () => {
+    const css = fs.readFileSync(
+      path.join(__dirname, '../app/globals.css'), 'utf-8'
+    );
+    expect(css).toContain('tile-flash-yellow');
+    expect(css).toContain('tile-flash-red');
+    expect(css).toContain('background-color');
+    expect(css).toContain('.tile-flash-warning');
+    expect(css).toContain('.tile-flash-stale');
   });
 });

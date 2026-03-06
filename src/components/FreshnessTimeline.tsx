@@ -627,11 +627,13 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     ? barPct >= 90 ? 'bg-green-200' : barPct >= 70 ? 'bg-blue-200' : barPct >= 50 ? 'bg-yellow-200' : 'bg-red-200'
                     : '';
 
-                  // Flash the entire tile row for warning/stale steps to draw attention
+                  // Flash the entire tile row for warning/stale steps to draw attention.
+                  // Uses custom CSS keyframes (globals.css) that pulse background color
+                  // instead of opacity — opacity pulse is invisible on white-on-white.
                   const tileFlash = dot.label === 'Aging'
-                    ? 'animate-pulse border-yellow-400'
+                    ? 'tile-flash-warning border-yellow-400'
                     : dot.label === 'Stale'
-                    ? 'animate-pulse border-red-400'
+                    ? 'tile-flash-stale border-red-400'
                     : '';
 
                   const indentCls = isSub ? 'ml-6 bg-gray-50/40' : isDeepSub ? 'ml-10 bg-gray-50/30' : 'bg-white';
@@ -886,9 +888,14 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                     </div>
                                   )}
                                   {info.records_new != null && (
-                                    <div className="flex justify-between">
-                                      <span className="text-xs text-gray-600">New/Changed</span>
-                                      <span className="text-xs font-semibold text-green-700 tabular-nums">{info.records_new.toLocaleString()}</span>
+                                    <div>
+                                      <div className="flex justify-between">
+                                        <span className="text-xs text-gray-600">New/Changed</span>
+                                        <span className="text-xs font-semibold text-green-700 tabular-nums">{info.records_new.toLocaleString()}</span>
+                                      </div>
+                                      {info.records_new === 0 && info.records_total != null && info.records_total > 0 && (
+                                        <p className="text-[9px] text-gray-400 mt-0.5">No changes — source data unchanged since last run</p>
+                                      )}
                                     </div>
                                   )}
                                   {info.records_updated != null && info.records_updated > 0 && (

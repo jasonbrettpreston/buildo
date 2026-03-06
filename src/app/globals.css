@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* Pipeline tile attention flash — pulses background color (not opacity)
+   so the effect is visible on white-on-white layouts. */
+@keyframes tile-flash-yellow {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgb(254 249 195); /* yellow-100 */ }
+}
+@keyframes tile-flash-red {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgb(254 226 226); /* red-100 */ }
+}
+.tile-flash-warning {
+  animation: tile-flash-yellow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.tile-flash-stale {
+  animation: tile-flash-red 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
