@@ -118,28 +118,28 @@ export async function POST(
     // Non-fatal — proceed without guard if table doesn't exist
   }
 
-  // Chain orchestrator manages its own pipeline_runs rows; skip for chains
+  // Insert tracking row for ALL pipelines (including chains) so the row exists
+  // immediately for UI polling. Chain script receives the runId to avoid duplicates.
   let runId: number | null = null;
-  if (!isChain) {
-    try {
-      const rows = await query<{ id: number }>(
-        `INSERT INTO pipeline_runs (pipeline, started_at, status)
-         VALUES ($1, NOW(), 'running')
-         RETURNING id`,
-        [slug]
-      );
-      runId = rows[0].id;
-    } catch (trackErr) {
-      console.warn(`[pipelines/${slug}] pipeline_runs table not available, running without tracking:`, trackErr instanceof Error ? trackErr.message : trackErr);
-    }
+  try {
+    const rows = await query<{ id: number }>(
+      `INSERT INTO pipeline_runs (pipeline, started_at, status)
+       VALUES ($1, NOW(), 'running')
+       RETURNING id`,
+      [slug]
+    );
+    runId = rows[0].id;
+  } catch (trackErr) {
+    console.warn(`[pipelines/${slug}] pipeline_runs table not available, running without tracking:`, trackErr instanceof Error ? trackErr.message : trackErr);
   }
 
   try {
     const startMs = Date.now();
 
-    // For chain slugs, pass the chain ID as an extra argument
+    // For chain slugs, pass the chain ID and the pre-created runId so the
+    // chain script reuses it instead of inserting a duplicate tracking row.
     const args = isChain
-      ? [scriptPath, slug.replace(/^chain_/, '')]
+      ? [scriptPath, slug.replace(/^chain_/, ''), ...(runId ? [String(runId)] : [])]
       : [scriptPath];
     const timeout = isChain ? 3_600_000 : 600_000; // 1 hour for chains, 10 min for individual
 

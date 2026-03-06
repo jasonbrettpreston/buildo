@@ -148,6 +148,10 @@ export function DataQualityDashboard() {
   const [pipelineError, setPipelineError] = useState<string | null>(null);
   const [scheduleModal, setScheduleModal] = useState<{ pipeline: string; name: string } | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Grace period: keep recently-triggered slugs in runningPipelines even if
+  // they haven't appeared in stats yet (belt-and-suspenders for spawn delay).
+  const TRIGGER_GRACE_MS = 15_000;
+  const triggerTimestamps = useRef<Map<string, number>>(new Map());
 
   const fetchData = useCallback(() => {
     return Promise.all([
@@ -185,11 +189,21 @@ export function DataQualityDashboard() {
     pollRef.current = setInterval(async () => {
       const freshStats = await fetchData().catch(() => null);
       if (!freshStats) return;
+      const now = Date.now();
       setRunningPipelines((prev) => {
         const next = new Set<string>();
-        // Keep any user-triggered slugs that are still running
+        // Keep any user-triggered slugs that are still running OR within grace period
         for (const slug of prev) {
-          if (freshStats.pipeline_last_run?.[slug]?.status === 'running') next.add(slug);
+          const info = freshStats.pipeline_last_run?.[slug];
+          if (info?.status === 'running') {
+            next.add(slug);
+          } else {
+            // Keep slug if it was triggered recently and hasn't appeared in stats yet
+            const triggeredAt = triggerTimestamps.current.get(slug);
+            if (triggeredAt && (now - triggeredAt) < TRIGGER_GRACE_MS && !info) {
+              next.add(slug);
+            }
+          }
         }
         // Also detect any individually-running pipeline steps (e.g. spawned by chain orchestrator)
         for (const [slug, info] of Object.entries(freshStats.pipeline_last_run ?? {})) {
@@ -203,6 +217,7 @@ export function DataQualityDashboard() {
 
   const triggerPipeline = useCallback(async (slug: string) => {
     setPipelineError(null);
+    triggerTimestamps.current.set(slug, Date.now());
     setRunningPipelines((prev) => new Set(prev).add(slug));
     try {
       const res = await fetch(`/api/admin/pipelines/${slug}`, { method: 'POST' });

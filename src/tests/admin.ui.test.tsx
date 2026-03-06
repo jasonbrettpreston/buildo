@@ -1554,3 +1554,57 @@ describe('Mobile viewport (375px) — controls always visible', () => {
     Object.defineProperty(globalThis, 'innerWidth', { value: originalInnerWidth, writable: true });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Chain trigger race condition fix — API must insert chain row before spawn
+// ---------------------------------------------------------------------------
+
+describe('Chain trigger inserts pipeline_runs row before spawning process', () => {
+  const routeSource = () => fs.readFileSync(
+    path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
+  );
+
+  it('API route inserts pipeline_runs row for chain slugs (no isChain skip)', () => {
+    const source = routeSource();
+    // The old guard `if (!isChain)` around the INSERT should be removed.
+    // The INSERT should run for ALL pipelines (chains included) so the row
+    // exists immediately when polling starts.
+    expect(source).not.toMatch(/if\s*\(\s*!isChain\s*\)\s*\{[\s\S]*?INSERT INTO pipeline_runs/);
+  });
+
+  it('API route passes runId to chain script as CLI argument', () => {
+    const source = routeSource();
+    // For chains, the runId should be passed so run-chain.js can reuse it
+    expect(source).toMatch(/runId/);
+    expect(source).toMatch(/String\(runId\)/);
+  });
+});
+
+describe('run-chain.js accepts external run ID argument', () => {
+  const chainSource = () => fs.readFileSync(
+    path.join(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+  );
+
+  it('accepts run ID from CLI argument to skip duplicate INSERT', () => {
+    const source = chainSource();
+    // run-chain.js should check for a run ID argument (argv[3])
+    expect(source).toMatch(/process\.argv\[3\]/);
+  });
+
+  it('skips chain row INSERT when external run ID is provided', () => {
+    const source = chainSource();
+    // Should have conditional logic: if run ID provided, use it; else INSERT
+    expect(source).toMatch(/parseInt\(process\.argv\[3\]/);
+  });
+});
+
+describe('Polling resilience — grace period for newly triggered pipelines', () => {
+  it('DataQualityDashboard keeps recently-triggered slugs even if not yet in stats', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'), 'utf-8'
+    );
+    // The polling updater should not blindly clear slugs that are missing from stats.
+    // It should keep slugs that were recently added (grace period).
+    expect(source).toMatch(/triggerTimestamps|triggerTimes|addedAt|graceMs|GRACE/i);
+  });
+});

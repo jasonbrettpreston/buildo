@@ -123,19 +123,27 @@ async function run() {
 
   console.log(`\n=== Chain: ${chainId} (${steps.length} steps) ===\n`);
 
-  // Insert parent chain tracking row
+  // Use pre-created run ID from the API trigger (argv[3]) to avoid a duplicate
+  // INSERT and ensure the row exists before the first UI poll.
+  // Falls back to inserting its own row when run standalone (no argv[3]).
   let chainRunId = null;
   const chainStart = Date.now();
-  try {
-    const res = await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, started_at, status)
-       VALUES ($1, NOW(), 'running')
-       RETURNING id`,
-      [chainSlug]
-    );
-    chainRunId = res.rows[0].id;
-  } catch (err) {
-    console.warn('Could not insert chain tracking row:', err.message);
+  const externalRunId = process.argv[3] ? parseInt(process.argv[3], 10) : null;
+  if (externalRunId) {
+    chainRunId = externalRunId;
+    console.log(`Using pre-created pipeline_runs row: ${chainRunId}`);
+  } else {
+    try {
+      const res = await pool.query(
+        `INSERT INTO pipeline_runs (pipeline, started_at, status)
+         VALUES ($1, NOW(), 'running')
+         RETURNING id`,
+        [chainSlug]
+      );
+      chainRunId = res.rows[0].id;
+    } catch (err) {
+      console.warn('Could not insert chain tracking row:', err.message);
+    }
   }
 
   // Pre-fetch enabled/disabled state for all pipeline steps
