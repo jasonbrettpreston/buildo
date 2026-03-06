@@ -138,10 +138,39 @@ async function run() {
     console.warn('Could not insert chain tracking row:', err.message);
   }
 
+  // Pre-fetch enabled/disabled state for all pipeline steps
+  const disabledSlugs = new Set();
+  try {
+    const res = await pool.query(
+      `SELECT pipeline FROM pipeline_schedules WHERE enabled = FALSE`
+    );
+    for (const row of res.rows) disabledSlugs.add(row.pipeline);
+  } catch {
+    // pipeline_schedules may not have enabled column yet — treat all as enabled
+  }
+
   let failedStep = null;
 
   for (let i = 0; i < steps.length; i++) {
     const slug = steps[i];
+    const stepLabel = `[${i + 1}/${steps.length}] ${slug}`;
+
+    // Skip disabled steps
+    if (disabledSlugs.has(slug)) {
+      console.log(`${stepLabel} — SKIPPED (disabled)`);
+      const scopedSlug = `${chainId}:${slug}`;
+      try {
+        await pool.query(
+          `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status, duration_ms)
+           VALUES ($1, NOW(), NOW(), 'skipped', 0)`,
+          [scopedSlug]
+        );
+      } catch {
+        // Non-fatal — skip tracking if table unavailable
+      }
+      continue;
+    }
+
     const scriptRelPath = PIPELINE_SCRIPTS[slug];
     if (!scriptRelPath) {
       console.error(`  No script mapping for slug: ${slug}`);
@@ -156,7 +185,6 @@ async function run() {
       break;
     }
 
-    const stepLabel = `[${i + 1}/${steps.length}] ${slug}`;
     console.log(`${stepLabel} — starting...`);
 
     // Insert step tracking row — scoped to chain (e.g. permits:assert_schema)

@@ -154,6 +154,8 @@ export interface FreshnessTimelineProps {
   runningPipelines: Set<string>;
   onTrigger: (slug: string) => void;
   slaTargets?: Record<string, number>;
+  disabledPipelines?: Set<string>;
+  onToggle?: (slug: string, enabled: boolean) => void;
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -225,7 +227,7 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
 // Component
 // ---------------------------------------------------------------------------
 
-export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets }: FreshnessTimelineProps) {
+export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle }: FreshnessTimelineProps) {
   const [errorPopover, setErrorPopover] = useState<string | null>(null);
 
   const allSlugs = Object.keys(PIPELINE_REGISTRY);
@@ -300,7 +302,10 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const scopedKey = `${chain.id}:${step.slug}`;
                   const info = pipelineLastRun[scopedKey];
                   const isRunning = runningPipelines.has(scopedKey) || runningPipelines.has(step.slug);
-                  const dot = getStatusDot(info, isRunning);
+                  const isDisabled = disabledPipelines?.has(step.slug) ?? false;
+                  const dot = isDisabled
+                    ? { color: 'bg-gray-300', label: 'Disabled' }
+                    : getStatusDot(info, isRunning);
                   const stepNum = stepNumbers[i];
                   const isRoot = step.indent === 0;
                   const isSub = step.indent >= 2;
@@ -361,7 +366,9 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                         {/* Pipeline name */}
                         <span
                           className={`text-xs truncate ${
-                            isRoot
+                            isDisabled
+                              ? 'text-gray-300 line-through w-36'
+                              : isRoot
                               ? 'text-gray-800 font-medium w-36'
                               : isDeepSub
                               ? 'text-gray-400 w-28 text-[10px]'
@@ -438,15 +445,31 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                         {/* Run button */}
                         <button
                           onClick={(e) => { e.stopPropagation(); onTrigger(step.slug); }}
-                          disabled={isRunning}
+                          disabled={isRunning || isDisabled}
                           className={`text-[9px] px-2 py-0.5 rounded border opacity-0 group-hover:opacity-100 transition-opacity ${
                             isRunning
                               ? 'border-blue-200 text-blue-400 cursor-not-allowed'
+                              : isDisabled
+                              ? 'border-gray-200 text-gray-300 cursor-not-allowed'
                               : 'border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                           }`}
                         >
                           Run
                         </button>
+
+                        {/* Toggle switch */}
+                        {onToggle && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onToggle(step.slug, isDisabled); }}
+                            className={`min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${isDisabled ? 'opacity-100' : ''}`}
+                            title={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
+                            aria-label={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
+                          >
+                            <div className={`relative w-7 h-4 rounded-full transition-colors ${isDisabled ? 'bg-gray-300' : 'bg-green-500'}`}>
+                              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${isDisabled ? 'left-0.5' : 'left-3.5'}`} />
+                            </div>
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

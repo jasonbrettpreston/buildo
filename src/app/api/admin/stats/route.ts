@@ -224,15 +224,16 @@ export async function GET() {
     }
 
     // Pipeline schedules from DB
-    const pipelineSchedules: Record<string, { cadence: string; cron_expression: string | null }> = {};
+    const pipelineSchedules: Record<string, { cadence: string; cron_expression: string | null; enabled: boolean }> = {};
     try {
-      const scheduleRows = await query<{ pipeline: string; cadence: string; cron_expression: string | null }>(
-        `SELECT pipeline, cadence, cron_expression FROM pipeline_schedules`
+      const scheduleRows = await query<{ pipeline: string; cadence: string; cron_expression: string | null; enabled: boolean }>(
+        `SELECT pipeline, cadence, cron_expression, enabled FROM pipeline_schedules`
       );
       for (const row of scheduleRows) {
         pipelineSchedules[row.pipeline] = {
           cadence: row.cadence,
           cron_expression: row.cron_expression,
+          enabled: row.enabled,
         };
       }
     } catch {

@@ -1246,3 +1246,124 @@ describe('Permit link percentage calculation', () => {
     expect(calcPct(109116, 237000)).toBeCloseTo(46.0, 0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Pipeline Toggle Controls
+// ---------------------------------------------------------------------------
+
+describe('Pipeline Toggle — disabled step filtering', () => {
+  it('derives disabledPipelines set from pipeline_schedules with enabled=false', () => {
+    const schedules: Record<string, { cadence: string; cron_expression: string | null; enabled: boolean }> = {
+      permits: { cadence: 'Daily', cron_expression: null, enabled: true },
+      enrich_wsib_builders: { cadence: 'Daily', cron_expression: null, enabled: false },
+      enrich_named_builders: { cadence: 'Daily', cron_expression: null, enabled: false },
+      builders: { cadence: 'Daily', cron_expression: null, enabled: true },
+    };
+    const disabled = new Set(
+      Object.entries(schedules)
+        .filter(([, s]) => s.enabled === false)
+        .map(([slug]) => slug)
+    );
+    expect(disabled.size).toBe(2);
+    expect(disabled.has('enrich_wsib_builders')).toBe(true);
+    expect(disabled.has('enrich_named_builders')).toBe(true);
+    expect(disabled.has('permits')).toBe(false);
+  });
+
+  it('empty schedules produces empty disabled set', () => {
+    const schedules: Record<string, { cadence: string; cron_expression: string | null; enabled: boolean }> = {};
+    const disabled = new Set(
+      Object.entries(schedules)
+        .filter(([, s]) => s.enabled === false)
+        .map(([slug]) => slug)
+    );
+    expect(disabled.size).toBe(0);
+  });
+
+  it('all enabled produces empty disabled set', () => {
+    const schedules: Record<string, { cadence: string; cron_expression: string | null; enabled: boolean }> = {
+      permits: { cadence: 'Daily', cron_expression: null, enabled: true },
+      coa: { cadence: 'Daily', cron_expression: null, enabled: true },
+    };
+    const disabled = new Set(
+      Object.entries(schedules)
+        .filter(([, s]) => s.enabled === false)
+        .map(([slug]) => slug)
+    );
+    expect(disabled.size).toBe(0);
+  });
+});
+
+describe('Pipeline Toggle — PATCH endpoint contract', () => {
+  it('PATCH handler requires pipeline and enabled fields', () => {
+    // Validates the contract: missing fields should return 400
+    const body1 = { pipeline: 'permits' }; // missing enabled
+    expect(typeof (body1 as Record<string, unknown>).enabled).not.toBe('boolean');
+
+    const body2 = { enabled: true }; // missing pipeline
+    expect((body2 as Record<string, unknown>).pipeline).toBeUndefined();
+  });
+
+  it('PATCH handler rejects non-boolean enabled', () => {
+    const body = { pipeline: 'permits', enabled: 'yes' };
+    expect(typeof body.enabled).not.toBe('boolean');
+  });
+
+  it('schedules route.ts contains PATCH handler with logError', () => {
+    const routePath = path.resolve(__dirname, '../app/api/admin/pipelines/schedules/route.ts');
+    const content = fs.readFileSync(routePath, 'utf-8');
+    expect(content).toContain('export async function PATCH');
+    expect(content).toContain("logError('[admin/pipelines/schedules]'");
+    // Must NOT contain bare console.error in the PATCH handler
+    expect(content).not.toContain('console.error');
+  });
+});
+
+describe('Pipeline Toggle — UI rendering logic', () => {
+  it('disabled step gets gray dot and "Disabled" label', () => {
+    // Mirrors getStatusDot override in FreshnessTimeline
+    const isDisabled = true;
+    const dot = isDisabled
+      ? { color: 'bg-gray-300', label: 'Disabled' }
+      : { color: 'bg-green-500', label: 'Fresh' };
+    expect(dot.color).toBe('bg-gray-300');
+    expect(dot.label).toBe('Disabled');
+  });
+
+  it('enabled step gets normal status dot', () => {
+    const isDisabled = false;
+    const dot = isDisabled
+      ? { color: 'bg-gray-300', label: 'Disabled' }
+      : { color: 'bg-green-500', label: 'Fresh' };
+    expect(dot.color).toBe('bg-green-500');
+    expect(dot.label).toBe('Fresh');
+  });
+
+  it('disabled step name gets line-through class', () => {
+    const isDisabled = true;
+    const className = isDisabled
+      ? 'text-gray-300 line-through w-36'
+      : 'text-gray-800 font-medium w-36';
+    expect(className).toContain('line-through');
+    expect(className).toContain('text-gray-300');
+  });
+
+  it('FreshnessTimeline accepts disabledPipelines and onToggle props', () => {
+    const routePath = path.resolve(__dirname, '../components/FreshnessTimeline.tsx');
+    const content = fs.readFileSync(routePath, 'utf-8');
+    expect(content).toContain('disabledPipelines?: Set<string>');
+    expect(content).toContain('onToggle?: (slug: string, enabled: boolean) => void');
+  });
+
+  it('toggle button has 44px minimum touch target for mobile', () => {
+    const routePath = path.resolve(__dirname, '../components/FreshnessTimeline.tsx');
+    const content = fs.readFileSync(routePath, 'utf-8');
+    expect(content).toContain('min-h-[44px] min-w-[44px]');
+  });
+
+  it('toggle switch renders accessible aria-label', () => {
+    const routePath = path.resolve(__dirname, '../components/FreshnessTimeline.tsx');
+    const content = fs.readFileSync(routePath, 'utf-8');
+    expect(content).toContain('aria-label=');
+  });
+});

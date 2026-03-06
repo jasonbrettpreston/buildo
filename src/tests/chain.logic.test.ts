@@ -168,6 +168,42 @@ describe('Sources Chain Completeness', () => {
   });
 });
 
+describe('Pipeline Disabled Step Skip Logic', () => {
+  it('disabled steps should be filtered out of execution list', () => {
+    const disabledSlugs = new Set(['enrich_wsib_builders', 'enrich_named_builders']);
+    const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const activeSteps = permits.steps.filter((s) => !disabledSlugs.has(s.slug));
+    // Original permits chain has 17 steps; 2 enrichment steps disabled = 15 active
+    expect(activeSteps).toHaveLength(15);
+    expect(activeSteps.map((s) => s.slug)).not.toContain('enrich_wsib_builders');
+    expect(activeSteps.map((s) => s.slug)).not.toContain('enrich_named_builders');
+  });
+
+  it('disabled steps do not affect other chains without those steps', () => {
+    const disabledSlugs = new Set(['enrich_wsib_builders', 'enrich_named_builders']);
+    const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
+    const activeSteps = coa.steps.filter((s) => !disabledSlugs.has(s.slug));
+    // CoA chain has no enrichment steps — all 6 remain
+    expect(activeSteps).toHaveLength(6);
+  });
+
+  it('empty disabled set leaves all steps active', () => {
+    const disabledSlugs = new Set<string>();
+    for (const chain of PIPELINE_CHAINS) {
+      const activeSteps = chain.steps.filter((s) => !disabledSlugs.has(s.slug));
+      expect(activeSteps).toHaveLength(chain.steps.length);
+    }
+  });
+
+  it('run-chain.js contains disabled step skip logic', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/run-chain.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    expect(content).toContain('SKIPPED (disabled)');
+    expect(content).toContain("'skipped'");
+    expect(content).toContain('pipeline_schedules WHERE enabled = FALSE');
+  });
+});
+
 describe('Quality Pipeline Group', () => {
   it('quality group has 2 registry entries', () => {
     const qualityEntries = Object.entries(PIPELINE_REGISTRY).filter(

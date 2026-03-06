@@ -112,7 +112,7 @@ interface AdminStats {
   wsib_lead_pool: number;
   wsib_with_trade: number;
   pipeline_last_run: Record<string, PipelineRunInfo>;
-  pipeline_schedules: Record<string, { cadence: string; cron_expression: string | null }>;
+  pipeline_schedules: Record<string, { cadence: string; cron_expression: string | null; enabled: boolean }>;
   [key: string]: unknown;
 }
 
@@ -216,6 +216,25 @@ export function DataQualityDashboard() {
       setRunningPipelines((prev) => { const next = new Set(prev); next.delete(slug); return next; });
     }
   }, []);
+
+  const togglePipeline = useCallback(async (slug: string, currentlyDisabled: boolean) => {
+    setPipelineError(null);
+    try {
+      const res = await fetch('/api/admin/pipelines/schedules', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pipeline: slug, enabled: currentlyDisabled }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(body.error || 'Failed to toggle');
+      }
+      await fetchData();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setPipelineError(`Toggle ${slug}: ${msg}`);
+    }
+  }, [fetchData]);
 
   const saveSchedule = useCallback(async (pipeline: string, cadence: string) => {
     const res = await fetch('/api/admin/pipelines/schedules', {
@@ -770,6 +789,12 @@ export function DataQualityDashboard() {
             runningPipelines={runningPipelines}
             onTrigger={triggerPipeline}
             slaTargets={SLA_TARGETS}
+            disabledPipelines={new Set(
+              Object.entries(stats?.pipeline_schedules ?? {})
+                .filter(([, s]) => s.enabled === false)
+                .map(([slug]) => slug)
+            )}
+            onToggle={togglePipeline}
           />
 
           {/* ============================================================

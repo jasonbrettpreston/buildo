@@ -7,8 +7,8 @@ import { logError } from '@/lib/logger';
  */
 export async function GET() {
   try {
-    const rows = await query<{ pipeline: string; cadence: string; cron_expression: string | null; updated_at: string }>(
-      `SELECT pipeline, cadence, cron_expression, updated_at FROM pipeline_schedules ORDER BY pipeline`
+    const rows = await query<{ pipeline: string; cadence: string; cron_expression: string | null; enabled: boolean; updated_at: string }>(
+      `SELECT pipeline, cadence, cron_expression, enabled, updated_at FROM pipeline_schedules ORDER BY pipeline`
     );
     return NextResponse.json({ schedules: rows });
   } catch (err) {
@@ -50,5 +50,36 @@ export async function PUT(request: NextRequest) {
   } catch (err) {
     logError('[admin/pipelines/schedules]', err, { handler: 'PUT' });
     return NextResponse.json({ error: 'Failed to update schedule' }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/admin/pipelines/schedules - Toggle a pipeline's enabled state.
+ * Body: { pipeline: string, enabled: boolean }
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { pipeline, enabled } = body;
+
+    if (!pipeline || typeof enabled !== 'boolean') {
+      return NextResponse.json({ error: 'pipeline (string) and enabled (boolean) are required' }, { status: 400 });
+    }
+
+    const result = await query<{ pipeline: string; enabled: boolean }>(
+      `UPDATE pipeline_schedules SET enabled = $1, updated_at = NOW()
+       WHERE pipeline = $2
+       RETURNING pipeline, enabled`,
+      [enabled, pipeline]
+    );
+
+    if (result.length === 0) {
+      return NextResponse.json({ error: `Pipeline "${pipeline}" not found` }, { status: 404 });
+    }
+
+    return NextResponse.json({ updated: result[0] });
+  } catch (err) {
+    logError('[admin/pipelines/schedules]', err, { handler: 'PATCH' });
+    return NextResponse.json({ error: 'Failed to toggle pipeline' }, { status: 500 });
   }
 }
