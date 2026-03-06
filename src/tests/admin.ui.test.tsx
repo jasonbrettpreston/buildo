@@ -1416,8 +1416,10 @@ describe('NON_TOGGLEABLE_SLUGS filtering', () => {
     expect(NON_TOGGLEABLE_SLUGS.has('classify_permits')).toBe(false);
   });
 
-  it('every chain has at least one non-toggleable step', () => {
-    for (const chain of PIPELINE_CHAINS) {
+  it('every ingestion chain has at least one non-toggleable step', () => {
+    // Entities chain is enrichment-only (no infrastructure steps) — skip it
+    const ingestionChains = PIPELINE_CHAINS.filter((c) => c.id !== 'entities');
+    for (const chain of ingestionChains) {
       const hasInfra = chain.steps.some((s) => NON_TOGGLEABLE_SLUGS.has(s.slug));
       expect(hasInfra).toBe(true);
     }
@@ -1606,5 +1608,41 @@ describe('Polling resilience — grace period for newly triggered pipelines', ()
     // The polling updater should not blindly clear slugs that are missing from stats.
     // It should keep slugs that were recently added (grace period).
     expect(source).toMatch(/triggerTimestamps|triggerTimes|addedAt|graceMs|GRACE/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 4-Pillar Architecture — chain_entities registered in route.ts
+// ---------------------------------------------------------------------------
+
+describe('4-Pillar Architecture — chain_entities registration', () => {
+  const routeSource = () => fs.readFileSync(
+    path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
+  );
+
+  it('CHAIN_SLUGS includes chain_entities', () => {
+    const source = routeSource();
+    expect(source).toContain('chain_entities');
+  });
+
+  it('run-chain.js defines entities chain with enrichment steps', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+    );
+    expect(source).toMatch(/entities\s*:/);
+    expect(source).toContain('enrich_wsib_builders');
+    expect(source).toContain('enrich_named_builders');
+  });
+
+  it('run-chain.js permits chain does NOT contain enrichment steps', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+    );
+    // Extract the permits array block from source
+    const permitsMatch = source.match(/permits\s*:\s*\[([\s\S]*?)\]/);
+    expect(permitsMatch).not.toBeNull();
+    const permitsBlock = permitsMatch![1];
+    expect(permitsBlock).not.toContain('enrich_wsib_builders');
+    expect(permitsBlock).not.toContain('enrich_named_builders');
   });
 });

@@ -518,23 +518,23 @@ describe('Pipeline Chains', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 3 chains: permits, coa, sources', () => {
+  it('has exactly 4 chains: sources, permits, coa, entities', () => {
     const ids = PIPELINE_CHAINS.map((c) => c.id);
-    expect(ids).toEqual(['permits', 'coa', 'sources']);
+    expect(ids).toEqual(['sources', 'permits', 'coa', 'entities']);
   });
 
-  it('permits chain has 17 steps in dependency order', () => {
+  it('permits chain has 15 steps in dependency order (no enrichment)', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(17);
+    expect(permits.steps).toHaveLength(15);
     expect(permits.steps[0].slug).toBe('assert_schema');
     expect(permits.steps[1].slug).toBe('permits');
     expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_data_bounds');
   });
 
-  it('permits chain includes WSIB and enrichment sub-steps under builders', () => {
+  it('permits chain includes WSIB sub-step under builders', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     const indent2plus = permits.steps.filter((s) => s.indent >= 2);
-    expect(indent2plus.map((s) => s.slug)).toEqual(['link_wsib', 'enrich_wsib_builders', 'enrich_named_builders']);
+    expect(indent2plus.map((s) => s.slug)).toEqual(['link_wsib']);
   });
 
   it('coa chain has 6 steps', () => {

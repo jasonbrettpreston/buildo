@@ -74,6 +74,29 @@ export interface PipelineChain {
 }
 
 export const PIPELINE_CHAINS: PipelineChain[] = [
+  // Group 1: Foundation (periodic reference data)
+  {
+    id: 'sources',
+    label: 'Source Data Updates',
+    description: 'Quarterly/Annual — reference data refreshes',
+    steps: [
+      { slug: 'assert_schema',       indent: 0 },
+      { slug: 'address_points',      indent: 0 },
+      { slug: 'geocode_permits',     indent: 1 },
+      { slug: 'parcels',             indent: 0 },
+      { slug: 'compute_centroids',   indent: 1 },
+      { slug: 'link_parcels',        indent: 1 },
+      { slug: 'massing',             indent: 0 },
+      { slug: 'link_massing',        indent: 1 },
+      { slug: 'neighbourhoods',      indent: 0 },
+      { slug: 'link_neighbourhoods', indent: 1 },
+      { slug: 'load_wsib',           indent: 0 },
+      { slug: 'link_wsib',           indent: 1 },
+      { slug: 'refresh_snapshot',    indent: 1 },
+      { slug: 'assert_data_bounds',  indent: 0 },
+    ],
+  },
+  // Group 2: Core Ingestion (fast daily)
   {
     id: 'permits',
     label: 'Permits Pipeline',
@@ -86,8 +109,6 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'classify_permits',     indent: 1 },
       { slug: 'builders',             indent: 1 },
       { slug: 'link_wsib',            indent: 2 },
-      { slug: 'enrich_wsib_builders', indent: 3 },
-      { slug: 'enrich_named_builders',indent: 2 },
       { slug: 'geocode_permits',      indent: 1 },
       { slug: 'link_parcels',         indent: 1 },
       { slug: 'link_neighbourhoods',  indent: 1 },
@@ -111,25 +132,14 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'assert_data_bounds', indent: 0 },
     ],
   },
+  // Group 3: Corporate Entities Enrichment (slow daily scrapes)
   {
-    id: 'sources',
-    label: 'Source Data Updates',
-    description: 'Quarterly/Annual — reference data refreshes',
+    id: 'entities',
+    label: 'Corporate Entities Pipeline',
+    description: 'Daily — missing contact enrichment via web scraping',
     steps: [
-      { slug: 'assert_schema',       indent: 0 },
-      { slug: 'address_points',      indent: 0 },
-      { slug: 'geocode_permits',     indent: 1 },
-      { slug: 'parcels',             indent: 0 },
-      { slug: 'compute_centroids',   indent: 1 },
-      { slug: 'link_parcels',        indent: 1 },
-      { slug: 'massing',             indent: 0 },
-      { slug: 'link_massing',        indent: 1 },
-      { slug: 'neighbourhoods',      indent: 0 },
-      { slug: 'link_neighbourhoods', indent: 1 },
-      { slug: 'load_wsib',           indent: 0 },
-      { slug: 'link_wsib',           indent: 1 },
-      { slug: 'refresh_snapshot',    indent: 1 },
-      { slug: 'assert_data_bounds',  indent: 0 },
+      { slug: 'enrich_wsib_builders',  indent: 0 },
+      { slug: 'enrich_named_builders', indent: 0 },
     ],
   },
 ];

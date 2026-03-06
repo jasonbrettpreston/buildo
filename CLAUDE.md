@@ -109,7 +109,7 @@
 - [ ] **Contract Definition:** If creating an API route, define Request/Response TypeScript interface BEFORE implementation.
 - [ ] **Spec & Registry Sync:** Create/Update `docs/specs/[feature].md`. Run `npm run system-map`.
 - [ ] **Schema Evolution:** If Database Impact is YES: grep for the affected type/interface to understand blast radius. Write both `UP` and `DOWN` migrations in `migrations/NNN_[feature].sql`, run `npm run migrate`, then `npm run db:generate`. Update `src/tests/factories.ts` with new fields. Run `npm run typecheck` immediately to catch schema-related type errors. Grep test files for inline mocks of the changed type.
-- [ ] **Test Scaffolding:** Create `src/tests/[feature].logic.test.ts` (or `.infra`/`.ui`/`.security`). For integration wiring: test Loading, Success, and Error states in `.infra.test.ts`. For regression locks: classify as Visual/Logic, use snapshot testing, establish baseline.
+- [ ] **Test Scaffolding:** Create `src/tests/[feature].logic.test.ts` (or `.infra`/`.ui`/`.security`). For integration wiring: test Loading, Success, and Error states in `.infra.test.ts`. For regression locks: classify as Visual/Logic, use snapshot testing, establish baseline. You MUST write: *"Viewport Mocking: [Explicitly state how you will mock 375px OR explicitly state 'Backend Only, N/A']"*.
 - [ ] **Red Light:** Run `npm run test`. Must see failing or pending tests.
 - [ ] **Implementation:** Write `src/lib/[feature]/` or `src/components/` code to pass tests.
 - [ ] **Auth Boundary & Secrets:** If creating/modifying an API route, verify it is protected by `src/middleware.ts`. Ensure NO `.env` secrets are exposed to client components.
@@ -135,7 +135,7 @@
 - [ ] **Contract Definition:** If altering an API route, define updated Request/Response interface BEFORE implementation. Run `npm run typecheck` to identify breaking consumers.
 - [ ] **Spec Update:** Update `docs/specs/[feature].md` to reflect new requirements. Run `npm run system-map`.
 - [ ] **Schema Evolution:** If Database Impact is YES: grep for the affected type/interface to understand blast radius. Write both `UP` and `DOWN` migrations in `migrations/NNN_[change].sql`, run `npm run migrate`, then `npm run db:generate`. Update `src/tests/factories.ts` with new fields. Run `npm run typecheck` immediately to catch schema-related type errors. Grep test files for inline mocks of the changed type.
-- [ ] **Guardrail Test:** Add/Update test case in `src/tests/` for the new behavior. For integration wiring: test Loading, Success, and Error states in `.infra.test.ts`. For regression locks: classify as Visual/Logic, use snapshot testing, establish baseline.
+- [ ] **Guardrail Test:** Add/Update test case in `src/tests/` for the new behavior. For integration wiring: test Loading, Success, and Error states in `.infra.test.ts`. For regression locks: classify as Visual/Logic, use snapshot testing, establish baseline. You MUST write: *"Viewport Mocking: [Explicitly state how you will mock 375px OR explicitly state 'Backend Only, N/A']"*.
 - [ ] **Red Light:** Verify new test fails.
 - [ ] **Implementation:** Modify code to pass. *(If deleting a feature: remove `src/lib/[feature]/`, `src/components/[Feature].tsx`, and corresponding test files. Move spec to `docs/archive/`. Run `npm run system-map`.)*
 - [ ] **Auth Boundary & Secrets:** If creating/modifying an API route, verify it is protected by `src/middleware.ts`. Ensure NO `.env` secrets are exposed to client components.

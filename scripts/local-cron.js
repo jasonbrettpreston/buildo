@@ -46,6 +46,11 @@ const SCHEDULES = [
     cron: '0 8 1 1,4,7,10 *',     // 8 AM ET, 1st day of each quarter
     label: 'Sources (Quarterly)',
   },
+  {
+    chainId: 'entities',
+    cron: '0 3 * * *',             // 3 AM ET daily — after core ingestion
+    label: 'Entities Enrichment (Daily)',
+  },
 ];
 
 // ---------------------------------------------------------------------------

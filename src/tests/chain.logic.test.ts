@@ -9,14 +9,17 @@ import {
 } from '@/components/FreshnessTimeline';
 
 describe('Pipeline Chain Definitions', () => {
-  it('defines exactly 3 chains', () => {
-    expect(PIPELINE_CHAINS).toHaveLength(3);
+  it('defines exactly 4 chains', () => {
+    expect(PIPELINE_CHAINS).toHaveLength(4);
   });
 
-  it('defines permits chain with 17 steps', () => {
+  it('defines permits chain with 15 steps (no enrichment scripts)', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(17);
+    expect(chain!.steps).toHaveLength(15);
+    const slugs = chain!.steps.map((s) => s.slug);
+    expect(slugs).not.toContain('enrich_wsib_builders');
+    expect(slugs).not.toContain('enrich_named_builders');
   });
 
   it('defines coa chain with 6 steps', () => {
@@ -79,6 +82,28 @@ describe('Pipeline Chain Definitions', () => {
   });
 });
 
+describe('Entities Chain (4th Pillar)', () => {
+  it('defines entities chain with enrichment steps', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'entities');
+    expect(chain).toBeDefined();
+    expect(chain!.steps.map((s) => s.slug)).toContain('enrich_wsib_builders');
+    expect(chain!.steps.map((s) => s.slug)).toContain('enrich_named_builders');
+  });
+
+  it('entities chain has exactly 2 steps', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'entities');
+    expect(chain).toBeDefined();
+    expect(chain!.steps).toHaveLength(2);
+  });
+});
+
+describe('UI Chain Ordering (Dependency Hierarchy)', () => {
+  it('renders sources first (foundation), then permits, coa, entities', () => {
+    const ids = PIPELINE_CHAINS.map((c) => c.id);
+    expect(ids).toEqual(['sources', 'permits', 'coa', 'entities']);
+  });
+});
+
 describe('Chain Slug Extraction', () => {
   it('extracts chain ID from chain_permits slug', () => {
     const slug = 'chain_permits';
@@ -97,6 +122,12 @@ describe('Chain Slug Extraction', () => {
     const chainId = slug.replace(/^chain_/, '');
     expect(chainId).toBe('sources');
   });
+
+  it('extracts chain ID from chain_entities slug', () => {
+    const slug = 'chain_entities';
+    const chainId = slug.replace(/^chain_/, '');
+    expect(chainId).toBe('entities');
+  });
 });
 
 describe('Chain Orchestrator Script', () => {
@@ -110,12 +141,13 @@ describe('Chain Orchestrator Script', () => {
     expect(fs.existsSync(scriptPath)).toBe(true);
   });
 
-  it('local-cron.js contains all 3 chain IDs (permits, coa, sources)', () => {
+  it('local-cron.js contains all 4 chain IDs (permits, coa, sources, entities)', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/local-cron.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');
     expect(content).toContain("chainId: 'permits'");
     expect(content).toContain("chainId: 'coa'");
     expect(content).toContain("chainId: 'sources'");
+    expect(content).toContain("chainId: 'entities'");
   });
 });
 
@@ -171,12 +203,10 @@ describe('Sources Chain Completeness', () => {
 describe('Pipeline Disabled Step Skip Logic', () => {
   it('disabled steps should be filtered out of execution list', () => {
     const disabledSlugs = new Set(['enrich_wsib_builders', 'enrich_named_builders']);
-    const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    const activeSteps = permits.steps.filter((s) => !disabledSlugs.has(s.slug));
-    // Original permits chain has 17 steps; 2 enrichment steps disabled = 15 active
-    expect(activeSteps).toHaveLength(15);
-    expect(activeSteps.map((s) => s.slug)).not.toContain('enrich_wsib_builders');
-    expect(activeSteps.map((s) => s.slug)).not.toContain('enrich_named_builders');
+    const entities = PIPELINE_CHAINS.find((c) => c.id === 'entities')!;
+    const activeSteps = entities.steps.filter((s) => !disabledSlugs.has(s.slug));
+    // Entities chain has 2 enrichment steps; both disabled = 0 active
+    expect(activeSteps).toHaveLength(0);
   });
 
   it('disabled steps do not affect other chains without those steps', () => {

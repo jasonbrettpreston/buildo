@@ -36,8 +36,6 @@ const CHAINS = {
     'classify_permits',
     'builders',
     'link_wsib',
-    'enrich_wsib_builders',
-    'enrich_named_builders',
     'geocode_permits',
     'link_parcels',
     'link_neighbourhoods',
@@ -70,6 +68,10 @@ const CHAINS = {
     'link_wsib',
     'refresh_snapshot',
     'assert_data_bounds',
+  ],
+  entities: [
+    'enrich_wsib_builders',
+    'enrich_named_builders',
   ],
 };
 
