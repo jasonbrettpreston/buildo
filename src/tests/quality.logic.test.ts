@@ -487,14 +487,14 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 26 tracked pipelines', () => {
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(26);
+  it('has exactly 27 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(27);
   });
 
-  it('groups are correct: 8 ingest, 12 link, 3 classify, 1 snapshot, 2 quality', () => {
+  it('groups are correct: 8 ingest, 13 link, 3 classify, 1 snapshot, 2 quality', () => {
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(8);
-    expect(groups.filter((g) => g === 'link')).toHaveLength(12);
+    expect(groups.filter((g) => g === 'link')).toHaveLength(13);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(3);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(2);
@@ -518,9 +518,9 @@ describe('Pipeline Chains', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 4 chains: sources, permits, coa, entities', () => {
+  it('has exactly 5 chains: sources, permits, coa, entities, deep_scrapes', () => {
     const ids = PIPELINE_CHAINS.map((c) => c.id);
-    expect(ids).toEqual(['sources', 'permits', 'coa', 'entities']);
+    expect(ids).toEqual(['sources', 'permits', 'coa', 'entities', 'deep_scrapes']);
   });
 
   it('permits chain has 15 steps in dependency order (no enrichment)', () => {

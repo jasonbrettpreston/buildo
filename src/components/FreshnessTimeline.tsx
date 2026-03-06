@@ -37,6 +37,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   compute_centroids:  { name: 'Compute Centroids',     group: 'link' },
   // Scrape (1) — external portal data
   inspections:        { name: 'Inspection Stages',    group: 'link' },
+  coa_documents:      { name: 'CoA Documents',        group: 'link' },
   // Classify (3) — derive fields
   classify_scope_class: { name: 'Scope Class',         group: 'classify' },
   classify_scope_tags:  { name: 'Scope Tags',          group: 'classify' },
@@ -71,6 +72,7 @@ export interface PipelineChain {
   label: string;
   description: string;
   steps: ChainStep[];
+  comingSoon?: boolean;
 }
 
 export const PIPELINE_CHAINS: PipelineChain[] = [
@@ -140,6 +142,17 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     steps: [
       { slug: 'enrich_wsib_builders',  indent: 0 },
       { slug: 'enrich_named_builders', indent: 0 },
+    ],
+  },
+  // Group 4: Deep Scrapes & Documents (continuous async workers)
+  {
+    id: 'deep_scrapes',
+    label: 'Deep Scrapes & Documents',
+    description: 'Continuous — headless browser scraping & document retrieval',
+    comingSoon: true,
+    steps: [
+      { slug: 'inspections',    indent: 0 },
+      { slug: 'coa_documents',  indent: 0 },
     ],
   },
 ];
@@ -293,6 +306,19 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
           const isChainRunning = runningPipelines.has(chainSlug) ||
             chain.steps.some((s) => runningPipelines.has(s.slug));
 
+          // Disable Run All if chain is coming soon or all toggleable steps are disabled
+          const toggleableSteps = chain.steps.filter((s) => !NON_TOGGLEABLE_SLUGS.has(s.slug));
+          const allStepsDisabled = toggleableSteps.length > 0 &&
+            toggleableSteps.every((s) => disabledPipelines?.has(s.slug));
+          const runAllDisabled = isChainRunning || !!chain.comingSoon || allStepsDisabled;
+          const runAllLabel = chain.comingSoon
+            ? 'Coming Soon'
+            : allStepsDisabled
+            ? 'All Steps Disabled'
+            : isChainRunning
+            ? 'Running...'
+            : 'Run All';
+
           return (
             <div key={chain.id}>
               {/* Chain header */}
@@ -304,14 +330,16 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                 <div className="flex-1 h-px bg-gray-100" />
                 <button
                   onClick={() => onTrigger(chainSlug)}
-                  disabled={isChainRunning}
+                  disabled={runAllDisabled}
                   className={`text-[9px] px-2.5 py-1 rounded border min-h-[44px] ${
                     isChainRunning
                       ? 'border-blue-200 text-blue-400 bg-blue-50 cursor-not-allowed'
+                      : runAllDisabled
+                      ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
                       : 'border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700'
                   }`}
                 >
-                  {isChainRunning ? 'Running...' : 'Run All'}
+                  {runAllLabel}
                 </button>
               </div>
 

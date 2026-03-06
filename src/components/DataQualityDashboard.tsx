@@ -45,6 +45,9 @@ const PIPELINE_SCHEDULES: Record<string, { label: string }> = {
   // Quality (CQA)
   assert_schema: { label: 'Daily' },
   assert_data_bounds: { label: 'Daily' },
+  // Deep Scrapes (coming soon)
+  inspections: { label: 'Continuous' },
+  coa_documents: { label: 'Continuous' },
 };
 
 function getNextScheduledDate(slug: string, apiSchedules?: Record<string, { cadence: string }> | null): string {

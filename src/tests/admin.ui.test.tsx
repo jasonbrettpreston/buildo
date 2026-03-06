@@ -1400,7 +1400,7 @@ describe('Pipeline Toggle — UI rendering logic', () => {
 // Pipeline Status UX — always-visible controls, NON_TOGGLEABLE_SLUGS, errors
 // ---------------------------------------------------------------------------
 
-import { NON_TOGGLEABLE_SLUGS, PIPELINE_CHAINS } from '@/components/FreshnessTimeline';
+import { NON_TOGGLEABLE_SLUGS, PIPELINE_CHAINS, PIPELINE_REGISTRY } from '@/components/FreshnessTimeline';
 
 describe('NON_TOGGLEABLE_SLUGS filtering', () => {
   it('contains assert_schema, assert_data_bounds, and refresh_snapshot', () => {
@@ -1417,8 +1417,8 @@ describe('NON_TOGGLEABLE_SLUGS filtering', () => {
   });
 
   it('every ingestion chain has at least one non-toggleable step', () => {
-    // Entities chain is enrichment-only (no infrastructure steps) — skip it
-    const ingestionChains = PIPELINE_CHAINS.filter((c) => c.id !== 'entities');
+    // Entities and deep_scrapes chains have no infrastructure steps — skip them
+    const ingestionChains = PIPELINE_CHAINS.filter((c) => !['entities', 'deep_scrapes'].includes(c.id));
     for (const chain of ingestionChains) {
       const hasInfra = chain.steps.some((s) => NON_TOGGLEABLE_SLUGS.has(s.slug));
       expect(hasInfra).toBe(true);
@@ -1471,8 +1471,8 @@ describe('Pipeline controls always visible (no hover gating)', () => {
       path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const runAllBlock = content.slice(
-      content.indexOf("isChainRunning ? 'Running...' : 'Run All'") - 300,
-      content.indexOf("isChainRunning ? 'Running...' : 'Run All'")
+      content.indexOf('{runAllLabel}') - 500,
+      content.indexOf('{runAllLabel}')
     );
     expect(runAllBlock).toContain('min-h-[44px]');
   });
@@ -1644,5 +1644,48 @@ describe('4-Pillar Architecture — chain_entities registration', () => {
     const permitsBlock = permitsMatch![1];
     expect(permitsBlock).not.toContain('enrich_wsib_builders');
     expect(permitsBlock).not.toContain('enrich_named_builders');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Group 4: Deep Scrapes & Documents (comingSoon chain)
+// ---------------------------------------------------------------------------
+
+describe('Deep Scrapes pipeline group', () => {
+  it('PIPELINE_REGISTRY includes coa_documents entry', () => {
+    expect(PIPELINE_REGISTRY.coa_documents).toBeDefined();
+    expect(PIPELINE_REGISTRY.coa_documents.name).toBeTruthy();
+  });
+
+  it('deep_scrapes chain exists in PIPELINE_CHAINS', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'deep_scrapes');
+    expect(chain).toBeDefined();
+    expect(chain!.steps.map((s) => s.slug)).toContain('inspections');
+    expect(chain!.steps.map((s) => s.slug)).toContain('coa_documents');
+  });
+
+  it('deep_scrapes chain is marked comingSoon', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'deep_scrapes');
+    expect(chain).toBeDefined();
+    expect(chain!.comingSoon).toBe(true);
+  });
+});
+
+describe('Run All disabled when all steps disabled or comingSoon', () => {
+  it('FreshnessTimeline disables Run All for comingSoon chains', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain('comingSoon');
+    // The Run All button should be disabled when comingSoon is true
+    expect(source).toMatch(/chain\.comingSoon/);
+  });
+
+  it('FreshnessTimeline disables Run All when all non-infra steps are disabled', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Should check if all toggleable steps are disabled
+    expect(source).toMatch(/allStepsDisabled|allDisabled|everyDisabled/i);
   });
 });

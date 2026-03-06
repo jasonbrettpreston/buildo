@@ -9,8 +9,8 @@ import {
 } from '@/components/FreshnessTimeline';
 
 describe('Pipeline Chain Definitions', () => {
-  it('defines exactly 4 chains', () => {
-    expect(PIPELINE_CHAINS).toHaveLength(4);
+  it('defines exactly 5 chains', () => {
+    expect(PIPELINE_CHAINS).toHaveLength(5);
   });
 
   it('defines permits chain with 15 steps (no enrichment scripts)', () => {
@@ -98,9 +98,9 @@ describe('Entities Chain (4th Pillar)', () => {
 });
 
 describe('UI Chain Ordering (Dependency Hierarchy)', () => {
-  it('renders sources first (foundation), then permits, coa, entities', () => {
+  it('renders sources first (foundation), then permits, coa, entities, deep_scrapes', () => {
     const ids = PIPELINE_CHAINS.map((c) => c.id);
-    expect(ids).toEqual(['sources', 'permits', 'coa', 'entities']);
+    expect(ids).toEqual(['sources', 'permits', 'coa', 'entities', 'deep_scrapes']);
   });
 });
 
