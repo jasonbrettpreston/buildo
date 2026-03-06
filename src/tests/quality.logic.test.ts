@@ -487,14 +487,14 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 25 tracked pipelines', () => {
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(25);
+  it('has exactly 26 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(26);
   });
 
-  it('groups are correct: 8 ingest, 11 link, 3 classify, 1 snapshot, 2 quality', () => {
+  it('groups are correct: 8 ingest, 12 link, 3 classify, 1 snapshot, 2 quality', () => {
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(8);
-    expect(groups.filter((g) => g === 'link')).toHaveLength(11);
+    expect(groups.filter((g) => g === 'link')).toHaveLength(12);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(3);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(2);

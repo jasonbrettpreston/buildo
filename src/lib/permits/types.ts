@@ -211,6 +211,18 @@ export interface ProductMatch {
 }
 
 // ---------------------------------------------------------------------------
+// Inspection stages (scraped from AIC portal)
+// ---------------------------------------------------------------------------
+export interface Inspection {
+  id?: number;
+  permit_num: string;
+  stage_name: string;
+  status: 'Outstanding' | 'Pass' | 'Fail' | 'Partial';
+  inspection_date: string | null;
+  scraped_at: string;
+}
+
+// ---------------------------------------------------------------------------
 // Filter / query params
 // ---------------------------------------------------------------------------
 export interface PermitFilter {

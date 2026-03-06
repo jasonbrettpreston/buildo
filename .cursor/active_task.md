@@ -1,48 +1,33 @@
-# Active Task: Corporate Identity Hub
+# Active Task: Inspection Data Scraping (AIC Portal)
 **Status:** Implementation
 **Workflow:** WF1 — New Feature Genesis
 
 ## Context
-* **Goal:** Replace fragmented `builders` + `project_stakeholders` tables with unified `entities` hub and `entity_projects` junction table. Enables single-pass enrichment per entity, role-based portfolio views, and WSIB/regulatory linkage directly to the entity hub.
-* **Target Spec:** `docs/specs/37_corporate_identity_hub.md`
-* **Design Reference:** `docs/reports/corporate_identity_hub_strategy.md`
-* **Key Files:** `migrations/042_entities.sql`, `migrations/043_entities_data_migration.sql`, `migrations/044_wsib_entity_link.sql`, `src/lib/builders/normalize.ts`, `src/lib/permits/types.ts`
+* **Goal:** Scrape building permit inspection statuses from the City of Toronto AIC portal, store them in a new `permit_inspections` table, and surface them in the Permit Detail UI and Admin dashboard.
+* **Target Spec:** `docs/specs/38_inspection_scraping.md`
+* **Key Files:** `migrations/045_permit_inspections.sql`, `scripts/poc-aic-scraper.js`, `src/lib/inspections/parser.ts`, `src/app/api/permits/[id]/route.ts`, `src/app/permits/[id]/page.tsx`
 
 ## Technical Implementation
-
-### Database Impact: YES
-* **Migration 042:** DDL for `entities` + `entity_projects` tables (WRITTEN)
-* **Migration 043:** Data migration from `builders` table (WRITTEN)
-* **Migration 044:** `wsib_registry.linked_entity_id` FK (WRITTEN)
-
-### Already Completed (Pre-Crash)
-* Strategy doc, Spec 37, Migrations 042-044, `normalize.ts`, Entity/EntityProject types in `types.ts`
-
-### Remaining Work
-* **Factories:** Add `createMockEntity` + `createMockEntityProject` to `src/tests/factories.ts`
-* **Tests:** Create `src/tests/entities.logic.test.ts` (normalization, factory shape, role enum)
-* **Tests:** Create `src/tests/entities.infra.test.ts` (migration DDL, API response shapes)
-* **Run migrations:** `npm run migrate` then `npm run db:generate` then `npm run typecheck`
-* **API routes:** `src/app/api/entities/route.ts`, `src/app/api/entities/[id]/route.ts`
-* **Builder API alias:** Update `src/app/api/builders/route.ts` and `[id]/route.ts`
-* **Ingestion updates:** `scripts/load-permits.js` and `scripts/load-coa.js` inline entity upsert
-* **Enrichment updates:** Scripts to target `entities` table
-* **Dashboard updates:** EnrichmentFunnel, FreshnessTimeline, DataQualityDashboard
-* **UI updates:** PermitCard, permit detail page, builders page
+* **New Table:** `permit_inspections` -- dynamic stages per permit, UNIQUE on `(permit_num, stage_name)`
+* **New Script:** `scripts/poc-aic-scraper.js` -- Playwright-based scraper with stealth plugin + rotating proxy
+* **New Module:** `src/lib/inspections/parser.ts` -- HTML table parser extracting stage_name, status, inspection_date
+* **Modified API:** `GET /api/permits/[id]` adds LEFT JOIN to `permit_inspections`
+* **Modified UI:** Permit detail page adds "Inspection Progress" timeline section
+* **Database Impact:** YES -- new table `permit_inspections` (migration 045), no impact on existing 237K+ rows
 
 ## Execution Plan
-- [x] **Spec & Strategy:** `docs/specs/37_corporate_identity_hub.md` + strategy doc
-- [x] **Schema Evolution:** Migrations 042-044 written
-- [x] **Type Definitions:** Entity, EntityProject, Builder alias in `types.ts`
-- [x] **Normalization Module:** `src/lib/builders/normalize.ts`
-- [x] **Run Migrations:** DB already had entities (3,632 rows), entity_projects (14,542), WSIB links (1,321)
-- [x] **DB Types:** `npm run db:generate` — schema.ts regenerated with entities
-- [x] **Test Factories:** `createMockEntity` + `createMockEntityProject` added, `createMockBuilder` kept as alias
-- [x] **Test Scaffolding:** `entities.logic.test.ts` (20 tests) + `entities.infra.test.ts` (9 tests)
-- [x] **Implementation Phase 1 — Type fixes:** factories.ts, builders.logic.test.ts, enrichment.ts → Entity field names
-- [x] **Implementation Phase 2 — SQL repoint:** builders → entities across 7 files (enrichment.ts, builders/route.ts, builders/[id]/route.ts, admin/builders/route.ts, admin/stats/route.ts, permits/[id]/route.ts, analytics/queries.ts, quality/metrics.ts)
-- [x] **Implementation Phase 3 — New API routes:** entities/route.ts + entities/[id]/route.ts
-- [x] **Green Light:** 1,569 tests passing, 0 type errors, lint clean
-- [x] **System Map:** regenerated (39 specs)
-- [ ] **Atomic Commit**
-- [ ] **Founder's Audit**
+- [x] **Contract Definition:** Define `Inspection` TypeScript interface in `src/lib/permits/types.ts` and API response shape extension.
+- [x] **Spec & Registry Sync:** Spec 38 created. Run `npm run system-map` after implementation.
+- [x] **Schema Evolution:** Write `migrations/045_permit_inspections.sql` with CREATE TABLE, UNIQUE constraint, indexes. Run `npm run migrate` then `npm run db:generate`. Update `src/tests/factories.ts` with inspection factory. Run `npm run typecheck`.
+- [x] **Test Scaffolding:** Create `src/tests/inspections.logic.test.ts` for HTML parser tests (stage extraction, status mapping, date parsing). Create `src/tests/inspections.infra.test.ts` for upsert and API join tests.
+- [x] **Red Light:** Run `npm run test`. New tests must fail or be pending.
+- [x] **Implementation -- Parser:** Build `src/lib/inspections/parser.ts` with `parseInspectionTable(html: string)` returning `Inspection[]`.
+- [x] **Implementation -- Migration:** Create and run migration 045.
+- [x] **Implementation -- Scraper PoC:** Build `scripts/poc-aic-scraper.js` with Playwright session flow, stealth plugin, proxy config, and upsert logic.
+- [x] **Implementation -- API:** Modify `src/app/api/permits/[id]/route.ts` to LEFT JOIN `permit_inspections` and return `inspections[]`.
+- [x] **Implementation -- UI:** Add "Inspection Progress" section to `src/app/permits/[id]/page.tsx` with status timeline.
+- [x] **Implementation -- Admin:** Register `inspections` pipeline slug in admin types/helpers.
+- [x] **Auth Boundary & Secrets:** Verify proxy credentials are server-side only (env vars, never exposed to client). Pipeline trigger protected by admin middleware.
+- [x] **Green Light:** Run `npm run test && npm run lint -- --fix`. All tests must pass.
+- [ ] **Atomic Commit:** `git commit -m "feat(38_inspection_scraping): permit inspections table, scraper PoC, and UI timeline"`.
+- [ ] **Founder's Audit:** No laziness placeholders, all exports resolve, schema matches spec, test coverage complete.

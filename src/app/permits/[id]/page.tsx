@@ -41,6 +41,13 @@ interface CoaApplicationInfo {
   link_confidence: number | null;
 }
 
+interface InspectionInfo {
+  stage_name: string;
+  status: string;
+  inspection_date: string | null;
+  scraped_at: string;
+}
+
 interface PermitDetail {
   permit: Record<string, unknown>;
   trades: {
@@ -65,6 +72,7 @@ interface PermitDetail {
   linkedPermits: LinkedPermit[];
   massing: BuildingMassingInfo | null;
   coaApplications: CoaApplicationInfo[];
+  inspections?: InspectionInfo[];
 }
 
 export default function PermitDetailPage() {
@@ -158,6 +166,43 @@ export default function PermitDetailPage() {
                 </div>
               ))}
             </div>
+          </Section>
+        )}
+
+        {/* Inspection Progress */}
+        {data.inspections && data.inspections.length > 0 && (
+          <Section title="Inspection Progress">
+            <div className="space-y-2">
+              {data.inspections.map((insp) => (
+                <div
+                  key={insp.stage_name}
+                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
+                >
+                  <span className="text-lg w-6 text-center">
+                    {insp.status === 'Pass' ? '\u2705' :
+                     insp.status === 'Fail' ? '\u274C' :
+                     insp.status === 'Partial' ? '\u25D4' :
+                     '\u23F3'}
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{insp.stage_name}</p>
+                    <p className="text-xs text-gray-500">
+                      {insp.status}
+                      {insp.inspection_date && ` \u00B7 ${formatDate(insp.inspection_date)}`}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {(() => {
+              const latest = data.inspections!.reduce((max, i) =>
+                i.scraped_at > max ? i.scraped_at : max, data.inspections![0].scraped_at);
+              return (
+                <p className="text-xs text-gray-400 mt-3">
+                  Last scraped {formatRelativeTime(latest)}
+                </p>
+              );
+            })()}
           </Section>
         )}
 
@@ -504,4 +549,14 @@ function formatDate(dateStr: string | null | undefined): string {
   } catch {
     return 'N/A';
   }
+}
+
+function formatRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const hours = Math.floor(diff / 3_600_000);
+  if (hours < 1) return 'just now';
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return '1 day ago';
+  return `${days} days ago`;
 }

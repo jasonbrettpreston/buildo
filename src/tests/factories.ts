@@ -10,6 +10,7 @@ import type {
   PermitChange,
   ProductGroup,
   ProductMatch,
+  Inspection,
 } from '@/lib/permits/types';
 import type { Parcel } from '@/lib/parcels/types';
 import type { Neighbourhood } from '@/lib/neighbourhoods/types';
@@ -424,6 +425,19 @@ export function createMockProductMatch(
     product_slug: 'kitchen-cabinets',
     product_name: 'Kitchen Cabinets',
     confidence: 0.75,
+    ...overrides,
+  };
+}
+
+export function createMockInspection(
+  overrides: Partial<Inspection> = {}
+): Inspection {
+  return {
+    permit_num: '24 101234',
+    stage_name: 'Structural Framing',
+    status: 'Pass',
+    inspection_date: '2024-06-15',
+    scraped_at: '2024-06-16T10:00:00.000Z',
     ...overrides,
   };
 }

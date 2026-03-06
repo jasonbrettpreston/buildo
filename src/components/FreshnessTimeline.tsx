@@ -17,7 +17,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   // Ingest (7) — load raw data into DB
   permits:            { name: 'Building Permits',      group: 'ingest' },
   coa:                { name: 'CoA Applications',      group: 'ingest' },
-  builders:           { name: 'Builder Profiles',      group: 'ingest' },
+  builders:           { name: 'Extract Entities',       group: 'ingest' },
   address_points:     { name: 'Address Points',        group: 'ingest' },
   parcels:            { name: 'Parcels',               group: 'ingest' },
   massing:            { name: '3D Massing',            group: 'ingest' },
@@ -29,12 +29,14 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   link_massing:       { name: 'Link Massing',          group: 'link' },
   link_coa:           { name: 'Link CoA',              group: 'link' },
   enrich_wsib_builders: { name: 'Enrich WSIB Matched',   group: 'link' },
-  enrich_named_builders:{ name: 'Enrich Named Builders', group: 'link' },
+  enrich_named_builders:{ name: 'Enrich Web Entities',   group: 'link' },
   load_wsib:          { name: 'Load WSIB Registry',    group: 'ingest' },
   link_wsib:          { name: 'Link WSIB',             group: 'link' },
   link_similar:       { name: 'Link Similar Permits',  group: 'link' },
   create_pre_permits: { name: 'Create Pre-Permits',    group: 'link' },
   compute_centroids:  { name: 'Compute Centroids',     group: 'link' },
+  // Scrape (1) — external portal data
+  inspections:        { name: 'Inspection Stages',    group: 'link' },
   // Classify (3) — derive fields
   classify_scope_class: { name: 'Scope Class',         group: 'classify' },
   classify_scope_tags:  { name: 'Scope Tags',          group: 'classify' },

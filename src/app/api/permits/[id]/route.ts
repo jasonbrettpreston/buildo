@@ -169,6 +169,20 @@ export async function GET(
       // neighbourhoods table may not exist yet
     }
 
+    // Fetch inspection stages (scraped from AIC portal)
+    let inspections: Record<string, unknown>[] = [];
+    try {
+      inspections = await query(
+        `SELECT stage_name, status, inspection_date, scraped_at
+         FROM permit_inspections
+         WHERE permit_num = $1
+         ORDER BY inspection_date ASC NULLS LAST, created_at ASC`,
+        [permitNum]
+      );
+    } catch {
+      // permit_inspections table may not exist yet
+    }
+
     // Compute scope classification on-the-fly if not in DB
     const permit = permits[0];
 
@@ -273,6 +287,7 @@ export async function GET(
       linkedPermits,
       massing,
       coaApplications,
+      inspections,
     });
   } catch (err) {
     console.error('Error fetching permit detail:', err);
