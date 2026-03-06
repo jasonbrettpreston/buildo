@@ -1001,6 +1001,34 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
     expect(row.matchCount).toBe(80059);
   });
 
+  it('link_similar shows 0% when records_total is 0 (not 0/237K)', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'link_similar')!;
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      pipeline_last_run: {
+        'permits:link_similar': {
+          last_run_at: '2026-03-06T10:00:00Z',
+          status: 'completed',
+          records_total: 0,
+          records_new: 0,
+          records_updated: null,
+          records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    // Should NOT show "0 of 237K active permits" — denominator should be 0 or 1, not active_permits
+    expect(row.baselineTotal).toBe(0);
+    expect(row.matchCount).toBe(0);
+    expect(row.matchPct).toBe(0);
+    // Baseline label should reflect companion permits, not active permits
+    expect(row.baselineLabel).not.toContain('Active');
+  });
+
   it('link_coa resolves via coa:link_coa when plain key missing', () => {
     const snapshot = createMockDataQualitySnapshot();
     const config = FUNNEL_SOURCES.find((s) => s.id === 'link_coa')!;

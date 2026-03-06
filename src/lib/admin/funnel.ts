@@ -416,17 +416,20 @@ export function computeRowData(
     }
 
     case 'link_similar': {
+      // link_similar propagates scope tags from BLD permits to companion permits
+      // (PLB, MS, DM etc.). The baseline is companion permits updated, NOT all
+      // active permits — showing "0 of 237K" is misleading.
       const lsTotal = lastRunRecordsTotal ?? 0;
       const lsNew = lastRunRecordsNew ?? 0;
       return {
         config, lastUpdated, status, cadence, lastRunMeta, lastRunRecordsTotal, lastRunRecordsNew,
-        baselineTotal: ap, baselineLabel: 'Active Permits',
+        baselineTotal: lsTotal, baselineLabel: 'Companion Permits Updated',
         targetPool: null, targetPoolLabel: null, baselineNullRates: [],
-        matchDenominator: ap, matchDenominatorLabel: 'Active Permits',
-        matchCount: lsTotal, matchPct: pct(lsTotal, ap),
+        matchDenominator: lsTotal || 1, matchDenominatorLabel: 'Companion Permits',
+        matchCount: lsTotal, matchPct: lsTotal > 0 ? 100 : 0,
         matchTiers: [
-          { label: 'Propagated', count: lsTotal },
-          { label: 'New Links', count: lsNew },
+          { label: 'Tags Propagated', count: lsTotal },
+          ...(lsNew > 0 ? [{ label: 'DM Tags Fixed', count: lsNew }] : []),
         ],
         yieldCounts: [
           { field: 'Scope Propagated', count: lsTotal },

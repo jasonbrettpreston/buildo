@@ -2174,6 +2174,8 @@ describe('Warning and stale status dots flash', () => {
     // tileFlash uses custom CSS classes (not animate-pulse which is opacity-only)
     expect(source).toMatch(/tileFlash[\s\S]{0,100}Aging[\s\S]{0,80}tile-flash-warning[\s\S]{0,80}border-yellow/);
     expect(source).toMatch(/tileFlash[\s\S]{0,200}Stale[\s\S]{0,80}tile-flash-stale[\s\S]{0,80}border-red/);
+    // Failed steps also get the red flash
+    expect(source).toMatch(/Failed[\s\S]{0,30}tile-flash-stale/);
     // tileFlash should be applied to the pipeline-tile div's className
     expect(source).toMatch(/pipeline-tile[\s\S]{0,200}tileFlash|tileFlash[\s\S]{0,200}pipeline-tile/);
   });

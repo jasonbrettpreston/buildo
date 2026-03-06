@@ -627,12 +627,12 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     ? barPct >= 90 ? 'bg-green-200' : barPct >= 70 ? 'bg-blue-200' : barPct >= 50 ? 'bg-yellow-200' : 'bg-red-200'
                     : '';
 
-                  // Flash the entire tile row for warning/stale steps to draw attention.
+                  // Flash the entire tile row for warning/stale/failed steps to draw attention.
                   // Uses custom CSS keyframes (globals.css) that pulse background color
                   // instead of opacity — opacity pulse is invisible on white-on-white.
                   const tileFlash = dot.label === 'Aging'
                     ? 'tile-flash-warning border-yellow-400'
-                    : dot.label === 'Stale'
+                    : dot.label === 'Stale' || dot.label === 'Failed'
                     ? 'tile-flash-stale border-red-400'
                     : '';
 
