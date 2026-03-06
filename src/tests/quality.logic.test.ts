@@ -637,23 +637,31 @@ describe('findSnapshotDaysAgo()', () => {
   });
 });
 
-describe('DataSourceCircle field annotations', () => {
-  it('DataSourceCircle accepts fields prop', () => {
-    // Verify the component interface accepts a fields array
-    const props = {
-      name: 'Test',
-      slug: 'test',
-      accuracy: 80,
-      count: 100,
-      total: 125,
-      lastUpdated: null,
-      nextScheduled: 'Daily',
-      onUpdate: () => {},
-      fields: ['latitude', 'longitude'],
-    };
-    // fields prop must be accepted by the interface
-    expect(props.fields).toHaveLength(2);
-    expect(props.fields[0]).toBe('latitude');
+describe('Funnel computation (extracted to lib/admin/funnel)', () => {
+  it('computeAllFunnelRows is importable from funnel module', async () => {
+    const mod = await import('@/lib/admin/funnel');
+    expect(typeof mod.computeAllFunnelRows).toBe('function');
+    expect(typeof mod.computeRowData).toBe('function');
+    expect(mod.FUNNEL_SOURCES).toBeDefined();
+  });
+
+  it('STEP_DESCRIPTIONS covers all PIPELINE_REGISTRY slugs', async () => {
+    const { STEP_DESCRIPTIONS } = await import('@/lib/admin/funnel');
+    const { PIPELINE_REGISTRY } = await import('@/components/FreshnessTimeline');
+    const registrySlugs = Object.keys(PIPELINE_REGISTRY);
+    const descSlugs = Object.keys(STEP_DESCRIPTIONS);
+    for (const slug of registrySlugs) {
+      expect(descSlugs, `Missing STEP_DESCRIPTIONS entry for "${slug}"`).toContain(slug);
+    }
+  });
+
+  it('each STEP_DESCRIPTIONS entry has summary, fields, and table', async () => {
+    const { STEP_DESCRIPTIONS } = await import('@/lib/admin/funnel');
+    for (const [slug, desc] of Object.entries(STEP_DESCRIPTIONS)) {
+      expect(desc.summary.length, `${slug} summary empty`).toBeGreaterThan(0);
+      expect(desc.fields.length, `${slug} fields empty`).toBeGreaterThan(0);
+      expect(desc.table.length, `${slug} table empty`).toBeGreaterThan(0);
+    }
   });
 });
 
@@ -837,7 +845,7 @@ describe('Enrichment Funnel', () => {
   let FUNNEL_SOURCES: { id: string; name: string; statusSlug: string; triggerSlug: string; yieldFields: string[] }[];
 
   beforeAll(async () => {
-    const mod = await import('@/components/EnrichmentFunnel');
+    const mod = await import('@/lib/admin/funnel');
     FUNNEL_SOURCES = mod.FUNNEL_SOURCES;
   });
 

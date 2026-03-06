@@ -18,7 +18,7 @@ Provide REST API endpoints to query permits with filtering, pagination, full-tex
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Infra** (`api.infra.test.ts`): API Permit Filter Validation; Permit ID Parsing; Parameterized Query Builder; Geo Bounding Box Validation; Permit Detail Parcel Query; Permit Detail Neighbourhood Query; Street View URL Validation; Database Schema Constraints; API Route Exports; Middleware Route Protection; Pre-Permit API Integration
+- **Infra** (`api.infra.test.ts`): API Permit Filter Validation; Permit ID Parsing; Parameterized Query Builder; Geo Bounding Box Validation; Permit Detail Parcel Query; Permit Detail Neighbourhood Query; Street View URL Validation; Database Schema Constraints; API Route Exports; Middleware Route Protection; Pre-Permit API Integration; API Error Handling Hardening; Centralized Error Logging; Performance Index Coverage
 <!-- TEST_INJECT_END -->
 
 ## 5. Operating Boundaries

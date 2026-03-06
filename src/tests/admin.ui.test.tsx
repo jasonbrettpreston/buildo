@@ -1019,13 +1019,12 @@ describe('ScheduleEditModal', () => {
     expect(source).toContain('saveSchedule');
   });
 
-  it('DataQualityDashboard uses API schedules for getNextScheduledDate', () => {
+  it('DataQualityDashboard passes pipeline_schedules to child components', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/DataQualityDashboard.tsx'),
       'utf-8'
     );
     expect(source).toContain('pipeline_schedules');
-    expect(source).toMatch(/getNextScheduledDate\([^)]+pipeline_schedules/);
   });
 });
 
@@ -1050,126 +1049,74 @@ describe('Pipeline schedules in DataQualityDashboard', () => {
 });
 
 // ---------------------------------------------------------------------------
-// DataSourceCircle Trend Arrow + Newest Record Tests
+// Funnel Accordion in FreshnessTimeline Tests
 // ---------------------------------------------------------------------------
 
-describe('DataSourceCircle quality badges', () => {
-  it('DataSourceCircle accepts volumeAnomaly prop', () => {
+describe('FreshnessTimeline funnel accordion', () => {
+  it('renders drill-down chevron for all steps with 44px touch target', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    expect(source).toContain('volumeAnomaly');
-    expect(source).toContain('Volume');
+    // Chevron button with 44px touch target — universal for all steps
+    expect(source).toContain('min-h-[44px]');
+    expect(source).toContain('min-w-[44px]');
+    // Chevron is NOT gated behind funnelRow — all steps get it
+    expect(source).toContain('Drill-down expand chevron');
+    expect(source).not.toMatch(/funnelRow\s*&&\s*\(\s*<button[^>]*toggleExpand/);
   });
 
-  it('DataSourceCircle shows schema drift badge', () => {
+  it('renders Description section with STEP_DESCRIPTIONS in drill-down', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    expect(source).toContain('schemaDrift');
-    expect(source).toContain('Schema Changed');
+    expect(source).toContain('STEP_DESCRIPTIONS');
+    expect(source).toContain('Description');
+    expect(source).toContain('desc.summary');
+    expect(source).toContain('desc.fields');
+    expect(source).toContain('desc.table');
   });
 
-  it('DataSourceCircle shows violation badge on hero', () => {
+  it('match % chip uses correct color thresholds', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    expect(source).toContain('violationCount');
-    expect(source).toContain('violations');
+    // Green >= 90%, Blue >= 70%, Yellow >= 50%, Red < 50%
+    expect(source).toContain('matchPct >= 90');
+    expect(source).toContain('matchPct >= 70');
+    expect(source).toContain('matchPct >= 50');
+    expect(source).toContain('bg-green-50');
+    expect(source).toContain('bg-blue-50');
+    expect(source).toContain('bg-yellow-50');
+    expect(source).toContain('bg-red-50');
   });
 
-  it('DataSourceCircle shows null rates on hero', () => {
+  it('shows both All Time and Last Run panels stacked (no toggle)', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    expect(source).toContain('nullRates');
-    expect(source).toContain('Completeness');
+    // Both panels rendered simultaneously in accordion
+    expect(source).toContain('All Time');
+    expect(source).toContain('Last Run');
+    expect(source).toContain('FunnelAllTimePanel');
+    expect(source).toContain('FunnelLastRunPanel');
+    // Toggle is removed — no funnelViewMode prop
+    expect(source).not.toContain('funnelViewMode');
+    expect(source).not.toContain('onFunnelViewModeChange');
   });
 
-  it('DataQualityDashboard passes anomalies to hero circle', () => {
+  it('non-funnel steps get basic last-run stats in drill-down', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    expect(source).toContain('volumeAnomaly');
-    expect(source).toContain('violationCount');
-    expect(source).toContain('nullRates');
-  });
-});
-
-describe('DataSourceCircle trend arrow rendering', () => {
-  it('renders up arrow when trend > 0', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
-      'utf-8'
-    );
-    expect(source).toContain('trend');
-    expect(source).toMatch(/▲/);
-  });
-
-  it('renders down arrow when trend < 0', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/▼/);
-  });
-
-  it('renders flat indicator when trend is exactly 0', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
-      'utf-8'
-    );
-    // Zero trend should show a flat dash, not be hidden
-    expect(source).toMatch(/—.*0\.0|flat|trend\s*===\s*0/);
-  });
-
-  it('renders no arrow when trend is null', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/trend\s*!=\s*null|trend\s*!==\s*null/);
-  });
-
-  it('shows comparison period label (vs 30d)', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
-      'utf-8'
-    );
-    expect(source).toContain('vs 30d');
-  });
-});
-
-describe('DataSourceCircle latest record date', () => {
-  it('renders latest record date with "Latest Record" label', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
-      'utf-8'
-    );
-    expect(source).toContain('newestRecord');
-    expect(source).toContain('Latest Record');
-  });
-
-  it('shows formatted date (not relative time) for latest record', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
-      'utf-8'
-    );
-    // Latest record should use formatShortDate, not formatRelativeTime
-    expect(source).toMatch(/formatShortDate\(newestRecord\)/);
-  });
-
-  it('does not render latest record date when null', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/DataSourceCircle.tsx'),
-      'utf-8'
-    );
-    expect(source).toMatch(/newestRecord\s*&&|newestRecord\s*!=\s*null|newestRecord\s*!==\s*null/);
+    // Non-funnel steps show basic stats when info exists but no funnelRow
+    expect(source).toContain('No run data available yet');
+    expect(source).toContain('records_total');
+    expect(source).toContain('records_new');
   });
 });
 

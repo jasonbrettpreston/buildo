@@ -65,9 +65,7 @@ The City of Toronto's Application Information Centre (AIC) portal (`secure.toron
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Logic:** Parse HTML table extraction function (stage_name, status, date mapping); upsert conflict resolution; eligible permit selection query (active + residential + stale scrape filter)
-- **UI:** Inspection timeline renders all 4 status types; section hidden when no inspections; "Last scraped" footer displays correct relative time
-- **Infra:** Migration creates table with correct constraints; upsert handles duplicate (permit_num, stage_name); API returns inspections array joined to permit; pipeline trigger runs scraper script
+- **Logic** (`inspections.logic.test.ts, quality.logic.test.ts`): Inspection Parser; Data Effectiveness Score; Extract Matching Metrics; DataQualitySnapshot Shape Validation; parseSnapshot coerces NUMERIC fields from strings; Neighbourhood count must not exceed active permits; Builder accuracy uses permits_with_builder / active_permits; Builder tier percentages; Work Scope split: classification vs detailed tags; Pipeline Registry; Pipeline Chains; trendDelta(); findSnapshotDaysAgo(); Funnel computation (extracted to lib/admin/funnel); detectVolumeAnomalies(); detectSchemaDrift(); computeSystemHealth(); SLA_TARGETS; Enrichment Funnel; Snapshot includes null tracking and violation fields
 <!-- TEST_INJECT_END -->
 
 ## 5. Operating Boundaries

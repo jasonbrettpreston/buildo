@@ -28,7 +28,7 @@ Tradespeople need contact information for builders and other project stakeholder
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Logic** (`builders.logic.test.ts`): Builder Name Normalization; Builder Factory; Builder Link & Display
+- **Logic** (`builders.logic.test.ts`): Builder Name Normalization; Entity Factory (formerly Builder); Builder Link & Display
 <!-- TEST_INJECT_END -->
 
 ## 5. Operating Boundaries

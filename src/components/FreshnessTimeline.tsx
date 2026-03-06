@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import type { FunnelRowData } from '@/lib/admin/funnel';
+import { STEP_DESCRIPTIONS } from '@/lib/admin/funnel';
 
 // ---------------------------------------------------------------------------
 // Pipeline Registry — single source of truth for all tracked pipelines
@@ -22,7 +24,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   parcels:            { name: 'Parcels',               group: 'ingest' },
   massing:            { name: '3D Massing',            group: 'ingest' },
   neighbourhoods:     { name: 'Neighbourhoods',        group: 'ingest' },
-  // Link & Enrich (10)
+  // Link & Enrich (12)
   geocode_permits:    { name: 'Geocode Permits',       group: 'link' },
   link_parcels:       { name: 'Link Parcels',          group: 'link' },
   link_neighbourhoods:{ name: 'Link Neighbourhoods',   group: 'link' },
@@ -191,6 +193,8 @@ export interface FreshnessTimelineProps {
   disabledPipelines?: Set<string>;
   onToggle?: (slug: string, enabled: boolean) => void;
   triggerError?: string | null;
+  /** Pre-computed funnel data keyed by pipeline statusSlug */
+  funnelData?: Record<string, FunnelRowData>;
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -259,11 +263,188 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
 }
 
 // ---------------------------------------------------------------------------
+// Funnel accordion panels (inline, no separate component file)
+// ---------------------------------------------------------------------------
+
+function FunnelAllTimePanel({ row }: { row: FunnelRowData }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Zone 2: Baseline */}
+      <div>
+        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Baseline</h4>
+        <div className="space-y-1.5">
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-600">{row.baselineLabel}</span>
+            <span className="text-xs font-semibold text-gray-900 tabular-nums">{row.baselineTotal.toLocaleString()}</span>
+          </div>
+          {row.targetPool !== null && (
+            <div className="flex justify-between">
+              <span className="text-xs text-gray-600">{row.targetPoolLabel}</span>
+              <span className="text-xs font-semibold text-gray-900 tabular-nums">{row.targetPool.toLocaleString()}</span>
+            </div>
+          )}
+          {row.baselineNullRates.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-200/60">
+              <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Null Rates</p>
+              {row.baselineNullRates.map((nr) => (
+                <div key={nr.field} className="flex justify-between">
+                  <span className="text-[11px] text-gray-500">{nr.field}</span>
+                  <span className={`text-[11px] font-medium tabular-nums ${nr.pct > 20 ? 'text-red-500' : nr.pct > 5 ? 'text-yellow-600' : 'text-green-600'}`}>{nr.pct}% null</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Zone 3: Intersection */}
+      <div>
+        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Intersection</h4>
+        <div className="space-y-1.5">
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-600">{row.matchDenominatorLabel}</span>
+            <span className="text-xs font-semibold text-gray-900 tabular-nums">{row.matchDenominator.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-600">Matched</span>
+            <span className="text-xs font-semibold text-green-700 tabular-nums">{row.matchCount.toLocaleString()} ({row.matchPct}%)</span>
+          </div>
+          <div className="mt-2 pt-2 border-t border-gray-200/60">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Sub-Tiers</p>
+            {row.matchTiers.map((tier) => (
+              <div key={tier.label} className="flex justify-between">
+                <span className="text-[11px] text-gray-500">{tier.label}</span>
+                <span className="text-[11px] font-medium text-gray-700 tabular-nums">{tier.count.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* Zone 4: Yield */}
+      <div>
+        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Yield</h4>
+        <div className="space-y-1.5">
+          {row.yieldCounts.map((y) => (
+            <div key={y.field} className="flex justify-between">
+              <span className="text-xs text-gray-600">{y.field}</span>
+              <span className="text-xs font-semibold text-gray-900 tabular-nums">{y.count.toLocaleString()}</span>
+            </div>
+          ))}
+          {row.yieldNullRates.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-200/60">
+              <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Yield Null Rates</p>
+              {row.yieldNullRates.map((nr) => (
+                <div key={nr.field} className="flex justify-between">
+                  <span className="text-[11px] text-gray-500">{nr.field}</span>
+                  <span className={`text-[11px] font-medium tabular-nums ${nr.pct > 20 ? 'text-red-500' : nr.pct > 5 ? 'text-yellow-600' : 'text-green-600'}`}>{nr.pct}% null</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FunnelLastRunPanel({ row }: { row: FunnelRowData }) {
+  const meta = row.lastRunMeta;
+  if (!meta && row.lastRunRecordsTotal == null) {
+    return <p className="text-xs text-gray-400 italic py-2">No run data available yet. Trigger a pipeline run to populate.</p>;
+  }
+
+  const processed = (meta?.processed as number) ?? row.lastRunRecordsTotal ?? 0;
+  const matched = (meta?.matched as number) ?? row.lastRunRecordsNew ?? 0;
+  const failed = (meta?.failed as number) ?? 0;
+  const websitesFound = (meta?.websites_found as number) ?? null;
+  const extractedFields = (meta?.extracted_fields as Record<string, number>) ?? null;
+  const runPct = processed > 0 ? Math.round((matched / processed) * 1000) / 10 : 0;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Run Intersection</h4>
+        <div className="space-y-1.5">
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-600">Processed</span>
+            <span className="text-xs font-semibold text-gray-900 tabular-nums">{processed.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-xs text-gray-600">Matched</span>
+            <span className="text-xs font-semibold text-green-700 tabular-nums">{matched.toLocaleString()} ({runPct}%)</span>
+          </div>
+          {failed > 0 && (
+            <div className="flex justify-between">
+              <span className="text-xs text-gray-600">Failed</span>
+              <span className="text-xs font-semibold text-red-500 tabular-nums">{failed.toLocaleString()}</span>
+            </div>
+          )}
+        </div>
+      </div>
+      {websitesFound != null && (
+        <div>
+          <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Pipeline Steps</h4>
+          <div className="space-y-1.5">
+            <div className="flex justify-between">
+              <span className="text-xs text-gray-600">1. Entities Searched</span>
+              <span className="text-xs font-semibold text-gray-900 tabular-nums">{processed.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xs text-gray-600">2. Websites Found</span>
+              <span className="text-xs font-semibold text-gray-900 tabular-nums">{websitesFound.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xs text-gray-600">3. Contacts Extracted</span>
+              <span className="text-xs font-semibold text-gray-900 tabular-nums">{matched.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      )}
+      <div>
+        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Run Yield</h4>
+        {extractedFields ? (
+          <div className="space-y-1.5">
+            {Object.entries(extractedFields)
+              .filter(([, count]) => (count as number) > 0)
+              .map(([field, count]) => (
+                <div key={field} className="flex justify-between">
+                  <span className="text-xs text-gray-600">{field}</span>
+                  <span className="text-xs font-semibold text-gray-900 tabular-nums">{(count as number).toLocaleString()}</span>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            <div className="flex justify-between">
+              <span className="text-xs text-gray-600">Records</span>
+              <span className="text-xs font-semibold text-gray-900 tabular-nums">{(row.lastRunRecordsTotal ?? 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xs text-gray-600">New/Changed</span>
+              <span className="text-xs font-semibold text-gray-900 tabular-nums">{(row.lastRunRecordsNew ?? 0).toLocaleString()}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError }: FreshnessTimelineProps) {
+export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData }: FreshnessTimelineProps) {
   const [errorPopover, setErrorPopover] = useState<string | null>(null);
+  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
+
+  const toggleExpand = (key: string) => {
+    setExpandedSteps((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const allSlugs = Object.keys(PIPELINE_REGISTRY);
   const completedCount = allSlugs.filter((s) => pipelineLastRun[s]?.status === 'completed').length;
@@ -368,8 +549,13 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   // For indent-2+, check if next is also indent-2+
                   const isLastSubStep = isSub && (!nextStep || nextStep.indent < 2);
 
+                  const funnelRow = funnelData?.[step.slug];
+                  const expandKey = `${chain.id}-${step.slug}`;
+                  const isExpanded = expandedSteps.has(expandKey);
+
                   return (
-                    <div key={`${chain.id}-${step.slug}`} className="flex items-stretch group">
+                    <div key={expandKey}>
+                    <div className="flex items-stretch group">
                       {/* Vertical connector column */}
                       <div className={`shrink-0 flex flex-col items-center ${isSub ? 'w-5' : 'w-5'}`}>
                         {showConnector ? (
@@ -433,6 +619,18 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
 
                         {/* Dotted line */}
                         <div className="flex-1 border-b border-dotted border-gray-200" />
+
+                        {/* Funnel match % chip */}
+                        {funnelRow && (
+                          <span className={`text-[9px] font-semibold tabular-nums px-1.5 py-0.5 rounded shrink-0 ${
+                            funnelRow.matchPct >= 90 ? 'bg-green-50 text-green-700' :
+                            funnelRow.matchPct >= 70 ? 'bg-blue-50 text-blue-700' :
+                            funnelRow.matchPct >= 50 ? 'bg-yellow-50 text-yellow-700' :
+                            'bg-red-50 text-red-600'
+                          }`}>
+                            {funnelRow.matchPct}%
+                          </span>
+                        )}
 
                         {/* Records summary */}
                         {!isRunning && info?.records_total != null && info.records_total > 0 && (
@@ -522,7 +720,130 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                             </div>
                           </button>
                         )}
+
+                        {/* Drill-down expand chevron — available for all steps */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleExpand(expandKey); }}
+                          className="min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+                          title={isExpanded ? 'Collapse details' : 'Expand details'}
+                          aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                        >
+                          <svg
+                            className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
                       </div>
+                    </div>
+
+                    {/* Universal drill-down accordion panel */}
+                    {isExpanded && (
+                      <div className="ml-10 mb-2 bg-gray-50/80 border border-gray-100 rounded-lg px-4 py-3 space-y-4">
+                        {/* Description zone */}
+                        {(() => {
+                          const desc = STEP_DESCRIPTIONS[step.slug];
+                          if (!desc) return null;
+                          return (
+                            <div>
+                              <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</h4>
+                              <p className="text-xs text-gray-600 mb-2">{desc.summary}</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-0.5">
+                                {desc.fields.map((f) => (
+                                  <div key={f} className="flex items-center gap-1.5">
+                                    <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
+                                    <span className="text-[11px] text-gray-500 font-mono">{f}</span>
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-[9px] text-gray-400 mt-1.5">Target table: <span className="font-mono">{desc.table}</span></p>
+                            </div>
+                          );
+                        })()}
+
+                        {/* All Time zone (funnel sources only) */}
+                        {funnelRow && (
+                          <div>
+                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">All Time</h4>
+                            <FunnelAllTimePanel row={funnelRow} />
+                          </div>
+                        )}
+
+                        {/* Last Run zone */}
+                        {funnelRow ? (
+                          <div>
+                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Last Run</h4>
+                            <FunnelLastRunPanel row={funnelRow} />
+                          </div>
+                        ) : info ? (
+                          <div>
+                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Last Run</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="space-y-1.5">
+                                <div className="flex justify-between">
+                                  <span className="text-xs text-gray-600">Status</span>
+                                  <span className={`text-xs font-semibold ${info.status === 'completed' ? 'text-green-700' : info.status === 'failed' ? 'text-red-600' : 'text-gray-500'}`}>
+                                    {info.status ?? 'Unknown'}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-xs text-gray-600">Duration</span>
+                                  <span className="text-xs font-semibold text-gray-900 tabular-nums">{formatDuration(info.duration_ms)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-xs text-gray-600">Last Run</span>
+                                  <span className="text-xs font-medium text-gray-600">{timeAgo(info.last_run_at)}</span>
+                                </div>
+                              </div>
+                              {(info.records_total != null || info.records_new != null) && (
+                                <div className="space-y-1.5">
+                                  {info.records_total != null && (
+                                    <div className="flex justify-between">
+                                      <span className="text-xs text-gray-600">Records</span>
+                                      <span className="text-xs font-semibold text-gray-900 tabular-nums">{info.records_total.toLocaleString()}</span>
+                                    </div>
+                                  )}
+                                  {info.records_new != null && (
+                                    <div className="flex justify-between">
+                                      <span className="text-xs text-gray-600">New/Changed</span>
+                                      <span className="text-xs font-semibold text-green-700 tabular-nums">{info.records_new.toLocaleString()}</span>
+                                    </div>
+                                  )}
+                                  {info.records_updated != null && info.records_updated > 0 && (
+                                    <div className="flex justify-between">
+                                      <span className="text-xs text-gray-600">Updated</span>
+                                      <span className="text-xs font-semibold text-blue-700 tabular-nums">{info.records_updated.toLocaleString()}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 italic">No run data available yet. Trigger a pipeline run to populate.</p>
+                        )}
+
+                        {/* Footer metadata */}
+                        {funnelRow && (
+                          <div className="pt-2 border-t border-gray-200/60 flex flex-wrap items-center gap-4 text-[10px] text-gray-400">
+                            <span>Schedule: <span className="text-gray-600 font-medium">{funnelRow.cadence}</span></span>
+                            <span>Last run: <span className="text-gray-600 font-medium">{timeAgo(funnelRow.lastUpdated)}</span></span>
+                            {funnelRow.lastUpdated && (
+                              <span>
+                                Status:{' '}
+                                <span className={`font-medium ${
+                                  funnelRow.status === 'healthy' ? 'text-green-600' :
+                                  funnelRow.status === 'warning' ? 'text-yellow-600' : 'text-red-500'
+                                }`}>
+                                  {funnelRow.status === 'healthy' ? 'Healthy' : funnelRow.status === 'warning' ? 'Warning' : 'Stale'}
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     </div>
                   );
                 })}

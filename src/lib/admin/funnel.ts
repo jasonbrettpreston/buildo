@@ -1,12 +1,17 @@
-'use client';
+/**
+ * Enrichment Funnel — pure computation logic for pipeline step metrics.
+ *
+ * Extracted from EnrichmentFunnel.tsx so FreshnessTimeline can render
+ * funnel accordions inline and tests can import without React.
+ *
+ * SPEC LINK: docs/specs/28_data_quality_dashboard.md
+ */
 
-import { useState } from 'react';
 import type { DataQualitySnapshot } from '@/lib/quality/types';
 import type { PipelineRunInfo } from '@/components/FreshnessTimeline';
 
 // ---------------------------------------------------------------------------
-// Funnel source configuration — exported for testing
-// Ordered to match permits pipeline chain execution order
+// Funnel source configuration — ordered to match pipeline chain execution
 // ---------------------------------------------------------------------------
 
 export interface FunnelSourceConfig {
@@ -38,36 +43,10 @@ export const FUNNEL_SOURCES: FunnelSourceConfig[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Props
+// Funnel row data — computed per source
 // ---------------------------------------------------------------------------
 
-interface FunnelStats {
-  wsib_total: number;
-  wsib_linked: number;
-  wsib_lead_pool: number;
-  wsib_with_trade: number;
-  address_points_total: number;
-  parcels_total: number;
-  building_footprints_total: number;
-  parcels_with_massing: number;
-  permits_with_massing: number;
-  neighbourhoods_total: number;
-  pipeline_last_run: Record<string, PipelineRunInfo>;
-  pipeline_schedules?: Record<string, { cadence: string }> | null;
-}
-
-interface EnrichmentFunnelProps {
-  stats: FunnelStats;
-  current: DataQualitySnapshot;
-  onTrigger: (slug: string) => void;
-  runningPipelines: Set<string>;
-}
-
-// ---------------------------------------------------------------------------
-// Data computation per source
-// ---------------------------------------------------------------------------
-
-interface FunnelRowData {
+export interface FunnelRowData {
   config: FunnelSourceConfig;
   // Zone 1: Metadata
   lastUpdated: string | null;
@@ -94,7 +73,30 @@ interface FunnelRowData {
   lastRunRecordsNew: number | null;
 }
 
-function pct(n: number, d: number): number {
+// ---------------------------------------------------------------------------
+// Stats interface (subset of AdminStats needed for funnel computation)
+// ---------------------------------------------------------------------------
+
+export interface FunnelStats {
+  wsib_total: number;
+  wsib_linked: number;
+  wsib_lead_pool: number;
+  wsib_with_trade: number;
+  address_points_total: number;
+  parcels_total: number;
+  building_footprints_total: number;
+  parcels_with_massing: number;
+  permits_with_massing: number;
+  neighbourhoods_total: number;
+  pipeline_last_run: Record<string, PipelineRunInfo>;
+  pipeline_schedules?: Record<string, { cadence: string }> | null;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+export function pct(n: number, d: number): number {
   return d > 0 ? Math.round((n / d) * 1000) / 10 : 0;
 }
 
@@ -102,7 +104,11 @@ function nullPct(total: number, withField: number, denom: number): number {
   return denom > 0 ? Math.round(((denom - withField) / denom) * 1000) / 10 : 0;
 }
 
-function computeRowData(
+// ---------------------------------------------------------------------------
+// Compute funnel data for a single source
+// ---------------------------------------------------------------------------
+
+export function computeRowData(
   config: FunnelSourceConfig,
   stats: FunnelStats,
   current: DataQualitySnapshot
@@ -185,9 +191,9 @@ function computeRowData(
         matchTiers: [
           ...(current.scope_tags_top
             ? Object.entries(current.scope_tags_top)
-                .sort(([, a], [, b]) => b - a)
+                .sort(([, a], [, b]) => (b as number) - (a as number))
                 .slice(0, 4)
-                .map(([tag, count]) => ({ label: tag, count }))
+                .map(([tag, count]) => ({ label: tag, count: count as number }))
             : []),
           { label: 'Untagged', count: ap - (current.permits_with_detailed_tags ?? 0) },
         ],
@@ -275,7 +281,6 @@ function computeRowData(
       };
 
     case 'builder_web': {
-      // Use enrich_wsib_builders OR enrich_named_builders meta (prefer wsib)
       const webMeta = (stats.pipeline_last_run['enrich_wsib_builders']?.records_meta as Record<string, unknown>) ?? lastRunMeta;
       return {
         config, lastUpdated, status, cadence,
@@ -419,381 +424,63 @@ function computeRowData(
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Compute all funnel rows, keyed by statusSlug for FreshnessTimeline lookup
 // ---------------------------------------------------------------------------
 
-function timeAgo(dateStr: string | null): string {
-  if (!dateStr) return 'Never';
-  const ms = Date.now() - new Date(dateStr).getTime();
-  const hours = Math.floor(ms / 3600000);
-  if (hours < 1) return 'Just now';
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return '1 day ago';
-  return `${days} days ago`;
-}
-
-function statusDot(s: 'healthy' | 'warning' | 'stale'): string {
-  if (s === 'healthy') return 'bg-green-500';
-  if (s === 'warning') return 'bg-yellow-500';
-  return 'bg-red-500';
-}
-
-// ---------------------------------------------------------------------------
-// Last Run Zone — extracts from records_meta
-// ---------------------------------------------------------------------------
-
-function LastRunView({ row }: { row: FunnelRowData }) {
-  const meta = row.lastRunMeta;
-
-  if (!meta && row.lastRunRecordsTotal == null) {
-    return (
-      <p className="text-xs text-gray-400 italic py-2">No run data available yet. Trigger a pipeline run to populate.</p>
-    );
+export function computeAllFunnelRows(
+  stats: FunnelStats,
+  current: DataQualitySnapshot
+): Record<string, FunnelRowData> {
+  const result: Record<string, FunnelRowData> = {};
+  for (const config of FUNNEL_SOURCES) {
+    const row = computeRowData(config, stats, current);
+    result[config.statusSlug] = row;
   }
-
-  const processed = (meta?.processed as number) ?? row.lastRunRecordsTotal ?? 0;
-  const matched = (meta?.matched as number) ?? row.lastRunRecordsNew ?? 0;
-  const failed = (meta?.failed as number) ?? 0;
-  const websitesFound = (meta?.websites_found as number) ?? null;
-  const extractedFields = (meta?.extracted_fields as Record<string, number>) ?? null;
-  const runPct = processed > 0 ? Math.round((matched / processed) * 1000) / 10 : 0;
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Run Intersection */}
-      <div>
-        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
-          Run Intersection
-        </h4>
-        <div className="space-y-1.5">
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-600">Processed</span>
-            <span className="text-xs font-semibold text-gray-900 tabular-nums">{processed.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-600">Matched</span>
-            <span className="text-xs font-semibold text-green-700 tabular-nums">{matched.toLocaleString()} ({runPct}%)</span>
-          </div>
-          {failed > 0 && (
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">Failed</span>
-              <span className="text-xs font-semibold text-red-500 tabular-nums">{failed.toLocaleString()}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Multi-step tracking (if available) */}
-      {websitesFound != null && (
-        <div>
-          <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
-            Pipeline Steps
-          </h4>
-          <div className="space-y-1.5">
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">1. Entities Searched</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{processed.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">2. Websites Found</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{websitesFound.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">3. Contacts Extracted</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{matched.toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Run Yield */}
-      <div>
-        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
-          Run Yield
-        </h4>
-        {extractedFields ? (
-          <div className="space-y-1.5">
-            {Object.entries(extractedFields)
-              .filter(([, count]) => (count as number) > 0)
-              .map(([field, count]) => (
-                <div key={field} className="flex justify-between">
-                  <span className="text-xs text-gray-600">{field}</span>
-                  <span className="text-xs font-semibold text-gray-900 tabular-nums">{(count as number).toLocaleString()}</span>
-                </div>
-              ))}
-            {Object.values(extractedFields).every((c) => (c as number) === 0) && (
-              <p className="text-xs text-gray-400 italic">No fields extracted this run</p>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">Records</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{(row.lastRunRecordsTotal ?? 0).toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">New/Changed</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{(row.lastRunRecordsNew ?? 0).toLocaleString()}</span>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return result;
 }
 
 // ---------------------------------------------------------------------------
-// All Time Zone — existing snapshot data
+// Step descriptions — universal drill-down metadata for ALL pipeline steps
 // ---------------------------------------------------------------------------
 
-function AllTimeView({ row }: { row: FunnelRowData }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Zone 2: Baseline */}
-      <div>
-        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
-          Baseline (External Data)
-        </h4>
-        <div className="space-y-1.5">
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-600">{row.baselineLabel}</span>
-            <span className="text-xs font-semibold text-gray-900 tabular-nums">{row.baselineTotal.toLocaleString()}</span>
-          </div>
-          {row.targetPool !== null && (
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">{row.targetPoolLabel}</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{row.targetPool.toLocaleString()}</span>
-            </div>
-          )}
-          {row.baselineNullRates.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-200/60">
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Null Rates</p>
-              {row.baselineNullRates.map((nr) => (
-                <div key={nr.field} className="flex justify-between">
-                  <span className="text-[11px] text-gray-500">{nr.field}</span>
-                  <span className={`text-[11px] font-medium tabular-nums ${
-                    nr.pct > 20 ? 'text-red-500' : nr.pct > 5 ? 'text-yellow-600' : 'text-green-600'
-                  }`}>{nr.pct}% null</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Zone 3: Intersection */}
-      <div>
-        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
-          Intersection (Matching)
-        </h4>
-        <div className="space-y-1.5">
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-600">{row.matchDenominatorLabel}</span>
-            <span className="text-xs font-semibold text-gray-900 tabular-nums">{row.matchDenominator.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-600">Matched</span>
-            <span className="text-xs font-semibold text-green-700 tabular-nums">{row.matchCount.toLocaleString()} ({row.matchPct}%)</span>
-          </div>
-          <div className="mt-2 pt-2 border-t border-gray-200/60">
-            <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Sub-Tiers</p>
-            {row.matchTiers.map((tier) => (
-              <div key={tier.label} className="flex justify-between">
-                <span className="text-[11px] text-gray-500">{tier.label}</span>
-                <span className="text-[11px] font-medium text-gray-700 tabular-nums">{tier.count.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Zone 4: Yield */}
-      <div>
-        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
-          Extracted Yield
-        </h4>
-        <div className="space-y-1.5">
-          {row.yieldCounts.map((y) => (
-            <div key={y.field} className="flex justify-between">
-              <span className="text-xs text-gray-600">{y.field}</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{y.count.toLocaleString()}</span>
-            </div>
-          ))}
-          {row.yieldNullRates.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-200/60">
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Yield Null Rates</p>
-              {row.yieldNullRates.map((nr) => (
-                <div key={nr.field} className="flex justify-between">
-                  <span className="text-[11px] text-gray-500">{nr.field}</span>
-                  <span className={`text-[11px] font-medium tabular-nums ${
-                    nr.pct > 20 ? 'text-red-500' : nr.pct > 5 ? 'text-yellow-600' : 'text-green-600'
-                  }`}>{nr.pct}% null</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+export interface StepDescription {
+  summary: string;
+  fields: string[];
+  table: string;
 }
 
-// ---------------------------------------------------------------------------
-// FunnelRow component
-// ---------------------------------------------------------------------------
-
-function FunnelRow({ row, viewMode, onTrigger, isRunning }: {
-  row: FunnelRowData;
-  viewMode: 'all_time' | 'last_run';
-  onTrigger: (slug: string) => void;
-  isRunning: boolean;
-}) {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      {/* Collapsed header */}
-      <div className="flex items-center">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex-1 px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left min-w-0"
-        >
-          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${statusDot(row.status)}`} />
-
-          <div className="min-w-0 flex-shrink-0 w-44">
-            <p className="text-sm font-medium text-gray-900 truncate">{row.config.name}</p>
-            <p className="text-[10px] text-gray-400">Updated {timeAgo(row.lastUpdated)}</p>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${
-                    row.matchPct >= 90 ? 'bg-green-500' :
-                    row.matchPct >= 70 ? 'bg-blue-500' :
-                    row.matchPct >= 50 ? 'bg-yellow-500' : 'bg-red-400'
-                  }`}
-                  style={{ width: `${Math.min(row.matchPct, 100)}%` }}
-                />
-              </div>
-              <span className="text-xs font-semibold text-gray-700 tabular-nums w-12 text-right">{row.matchPct}%</span>
-            </div>
-          </div>
-
-          <div className="hidden sm:flex gap-3 shrink-0">
-            {row.yieldCounts.slice(0, 3).map((y) => (
-              <div key={y.field} className="text-center">
-                <p className="text-xs font-semibold text-gray-800 tabular-nums">{y.count.toLocaleString()}</p>
-                <p className="text-[9px] text-gray-400 uppercase tracking-wider">{y.field}</p>
-              </div>
-            ))}
-          </div>
-
-          <svg
-            className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        {/* Update Now button */}
-        <button
-          onClick={() => onTrigger(row.config.triggerSlug)}
-          disabled={isRunning}
-          className="px-3 py-3 border-l border-gray-200 hover:bg-blue-50 transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-          title={isRunning ? 'Running...' : 'Update Now'}
-        >
-          {isRunning ? (
-            <svg className="w-4 h-4 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4 text-gray-400 hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          )}
-        </button>
-      </div>
-
-      {/* Expanded detail */}
-      {expanded && (
-        <div className="border-t border-gray-100 bg-gray-50/50 px-4 py-4">
-          {viewMode === 'all_time' ? <AllTimeView row={row} /> : <LastRunView row={row} />}
-
-          {/* Zone 1: Metadata footer */}
-          <div className="mt-3 pt-3 border-t border-gray-200/60 flex items-center gap-4 text-[10px] text-gray-400">
-            <span>Schedule: <span className="text-gray-600 font-medium">{row.cadence}</span></span>
-            <span>Last run: <span className="text-gray-600 font-medium">{timeAgo(row.lastUpdated)}</span></span>
-            {row.lastUpdated && (
-              <span>
-                Status:{' '}
-                <span className={`font-medium ${
-                  row.status === 'healthy' ? 'text-green-600' :
-                  row.status === 'warning' ? 'text-yellow-600' : 'text-red-500'
-                }`}>
-                  {row.status === 'healthy' ? 'Healthy' : row.status === 'warning' ? 'Warning' : 'Stale'}
-                </span>
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// EnrichmentFunnel component
-// ---------------------------------------------------------------------------
-
-export function EnrichmentFunnel({ stats, current, onTrigger, runningPipelines }: EnrichmentFunnelProps) {
-  const [viewMode, setViewMode] = useState<'all_time' | 'last_run'>('all_time');
-  const rows = FUNNEL_SOURCES.map((config) => computeRowData(config, stats, current));
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-          Enrichment Funnel
-        </h2>
-        <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
-          <button
-            onClick={() => setViewMode('all_time')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-              viewMode === 'all_time'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            All Time
-          </button>
-          <button
-            onClick={() => setViewMode('last_run')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-              viewMode === 'last_run'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Last Run
-          </button>
-        </div>
-      </div>
-      <div className="space-y-2">
-        {rows.map((row) => (
-          <FunnelRow
-            key={row.config.id}
-            row={row}
-            viewMode={viewMode}
-            onTrigger={onTrigger}
-            isRunning={runningPipelines.has(row.config.triggerSlug) || runningPipelines.has(row.config.statusSlug)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
+export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
+  // Ingest
+  permits:              { summary: 'Ingests building permit CSV from Toronto Open Data CKAN API', fields: ['permit_num', 'revision_num', 'permit_type', 'description', 'est_const_cost', 'issued_date', 'status'], table: 'permits' },
+  coa:                  { summary: 'Ingests Committee of Adjustment applications from CKAN', fields: ['application_number', 'hearing_date', 'decision', 'ward', 'address'], table: 'coa_applications' },
+  builders:             { summary: 'Extracts corporate entity names from permit applicant/builder fields', fields: ['legal_name', 'phone', 'email', 'website'], table: 'entities' },
+  address_points:       { summary: 'Loads Toronto address point reference data for geocoding', fields: ['address_id', 'street_num', 'street_name', 'latitude', 'longitude'], table: 'address_points' },
+  parcels:              { summary: 'Loads Toronto property parcel boundaries and lot dimensions', fields: ['parcel_id', 'lot_size', 'frontage', 'depth', 'geom'], table: 'parcels' },
+  massing:              { summary: 'Loads 3D building massing models from City shapefile', fields: ['footprint_id', 'main_bldg_area', 'max_height', 'est_stories'], table: 'building_footprints' },
+  neighbourhoods:       { summary: 'Loads neighbourhood boundary polygons and demographic data', fields: ['neighbourhood_id', 'name', 'avg_income', 'geom'], table: 'neighbourhoods' },
+  load_wsib:            { summary: 'Loads WSIB registry snapshot for contractor identity matching', fields: ['legal_name', 'trade_name', 'mailing_address', 'naics_code'], table: 'wsib_registry' },
+  // Link & Enrich
+  geocode_permits:      { summary: 'Matches permit addresses to address points for lat/lng coordinates', fields: ['latitude', 'longitude', 'geo_id'], table: 'permits' },
+  link_parcels:         { summary: 'Links permits to property parcels via address or spatial match', fields: ['parcel_id', 'lot_size', 'frontage', 'depth'], table: 'permit_parcels' },
+  link_neighbourhoods:  { summary: 'Spatially links permits to neighbourhood boundaries', fields: ['neighbourhood_id'], table: 'permits' },
+  link_massing:         { summary: 'Links permits to 3D building footprints via parcel intersection', fields: ['main_bldg_area', 'max_height', 'est_stories'], table: 'permits' },
+  link_coa:             { summary: 'Links CoA applications to building permits by address and ward', fields: ['linked_permit_num', 'linked_confidence'], table: 'coa_applications' },
+  link_wsib:            { summary: 'Matches extracted entities against WSIB registry by name', fields: ['wsib_id', 'trade_name', 'mailing_address'], table: 'entities' },
+  enrich_wsib_builders: { summary: 'Web-scrapes contact info for WSIB-matched entities via Serper API', fields: ['phone', 'email', 'website'], table: 'entities' },
+  enrich_named_builders:{ summary: 'Web-scrapes contact info for unmatched entities via Serper API', fields: ['phone', 'email', 'website'], table: 'entities' },
+  link_similar:         { summary: 'Clusters permits by address proximity to find related applications', fields: ['similar_permit_id'], table: 'permits' },
+  create_pre_permits:   { summary: 'Creates placeholder permit records from eligible CoA applications', fields: ['permit_num', 'source', 'status'], table: 'permits' },
+  compute_centroids:    { summary: 'Computes geometric centroids for parcel polygons', fields: ['centroid_lat', 'centroid_lng'], table: 'parcels' },
+  // Classify
+  classify_scope_class: { summary: 'Classifies permits into project types (residential/commercial/mixed)', fields: ['scope_class', 'project_type'], table: 'permits' },
+  classify_scope_tags:  { summary: 'Extracts detailed work scope tags from permit descriptions', fields: ['scope_tags'], table: 'permits' },
+  classify_permits:     { summary: 'Assigns trade classifications using tag-trade matrix and rules', fields: ['permit_trades'], table: 'permit_trades' },
+  // Snapshot
+  refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', fields: ['active_permits', 'permits_geocoded', 'permits_with_trades', 'violations_total'], table: 'data_quality_snapshots' },
+  // Quality (CQA)
+  assert_schema:        { summary: 'Validates upstream CKAN/CSV column headers before ingestion', fields: ['column_count', 'missing_headers', 'type_mismatches'], table: 'pipeline_runs' },
+  assert_data_bounds:   { summary: 'Post-ingestion SQL checks for cost outliers, null rates, referential integrity', fields: ['cost_outliers', 'null_rate_violations', 'referential_audits'], table: 'pipeline_runs' },
+  // Deep Scrapes (coming soon)
+  inspections:          { summary: 'Scrapes permit inspection stages from City Application Status portal', fields: ['inspection_type', 'inspection_date', 'result'], table: 'permit_inspections' },
+  coa_documents:        { summary: 'Downloads Committee of Adjustment plans and decision PDFs from AIC portal', fields: ['document_url', 'document_type'], table: 'coa_documents' },
+};

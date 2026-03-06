@@ -15,9 +15,7 @@ As an admin, I want a Data Effectiveness Dashboard that shows completeness, accu
 - **Core Logic:**
   - Measures 6 matching processes: trade classification, builder enrichment, parcel linking, neighbourhood coverage, geocoding, CoA linking. Each has a coverage rate (matched/total).
   - Composite Data Effectiveness Score (0-100) is a weighted average: trades 25%, builders 20%, parcels 15%, neighbourhoods 15%, geocoding 15%, CoA 10%. Colour thresholds: green >= 80, yellow 60-79, orange 40-59, red < 40.
-  - Hub-and-spoke circle diagram: Building Permits as central hub, enrichment sources (4-column grid: address matching, parcels, 3D massing, neighbourhoods), derived sources (5-column grid: CoA, builders, scope class, scope tags, trades residential, trades commercial). Each `DataSourceCircle` shows progress ring, counts, confidence, tier breakdown, timestamps, and "Update Now" button.
-  - 30-day trend arrows on each circle: compares current % to snapshot ~30 days ago (minimum 7-day gap to avoid self-comparison). Positive = green up arrow, negative = red down arrow, zero = gray flat, null = hidden. See `findSnapshotDaysAgo()` and `trendDelta()` in `src/lib/quality/types.ts`.
-  - Latest record dates shown for permits (`MAX(first_seen_at)`) and CoA (`MAX(hearing_date)`) as formatted calendar dates.
+  - 30-day trend comparisons shown in health banner: violations, completeness, volume, and enrichment deltas. See `findSnapshotDaysAgo()` in `src/lib/quality/types.ts`.
   - Daily snapshot upserted to `data_quality_snapshots` table (migration 015, one row per day via `ON CONFLICT (snapshot_date) DO UPDATE`). `captureDataQualitySnapshot()` runs 9 parallel counting queries against live DB. See `src/lib/quality/metrics.ts`.
   - Snapshots captured automatically after daily sync (Cloud Function, non-fatal) and manually via `POST /api/quality/refresh`.
   - `GET /api/quality` returns latest snapshot + 30-day trends array.
@@ -27,8 +25,8 @@ As an admin, I want a Data Effectiveness Dashboard that shows completeness, accu
   - Dashboard polls every 5s while any pipeline is running.
   - Permit loader (`scripts/load-permits.js`) fetches live from CKAN by default (paginated 10K/page), or from local file via `--file` flag.
   - CoA loader (`scripts/load-coa.js`) uses incremental mode by default (active resource, last 90 days via SQL endpoint), or full mode via `--full` flag.
-  - Enrichment Funnel section beneath Pipeline Status: 13 expandable rows in pipeline chain execution order (permits → scope_class → scope_tags → trades_residential → trades_commercial → builders → wsib → builder_web → address_matching → parcels → neighbourhoods → massing → coa). Each row renders 4 data zones — Zone 1 (Metadata & Freshness), Zone 2 (Baseline: raw external dataset size), Zone 3 (Intersection: match rate + sub-tiers), Zone 4 (Extracted Yield: field counts + null rates). `[All Time] / [Last Run]` toggle switches Zone 3/4 between cumulative snapshot data and per-run extraction counts from `records_meta` JSONB column on `pipeline_runs` (migration 041). Multi-step pipeline tracking for builder_web shows sub-step drop-offs (Builders Searched → Websites Found → Contacts Extracted). Collapsed view shows source name, status dot, match rate progress bar, yield summary, and "Update Now" button. Component: `src/components/EnrichmentFunnel.tsx`, config exported as `FUNNEL_SOURCES` for testing.
-- **Outputs:** Rendered dashboard with effectiveness score gauge, 10 data source circles with trend arrows, enrichment funnel, freshness timeline; snapshot row upserted on refresh; API JSON with current snapshot and trends.
+  - Universal pipeline drill-downs: every pipeline step (all 25) has an expandable accordion with a 44px touch-target chevron. Drill-down layout stacks three zones vertically: (1) **Description** — step summary, target table, and fields grid from `STEP_DESCRIPTIONS` registry in `src/lib/admin/funnel.ts`; (2) **All Time** — Baseline, Intersection, Yield (3-col grid, funnel sources only); (3) **Last Run** — either rich FunnelLastRunPanel (funnel sources) or basic status/duration/records stats (non-funnel steps). Both All Time and Last Run are shown simultaneously (no toggle). 13 funnel sources in pipeline chain execution order (permits → scope_class → scope_tags → trades_residential → trades_commercial → builders → wsib → builder_web → address_matching → parcels → neighbourhoods → massing → coa). Each funnel step shows a compact match % chip (color-coded: green >= 90%, blue >= 70%, yellow >= 50%, red < 50%). Non-funnel steps (infrastructure, quality gates, deep scrapes) show description + basic last-run stats. Funnel computation logic extracted to `src/lib/admin/funnel.ts` (pure logic, no React), config exported as `FUNNEL_SOURCES` and `STEP_DESCRIPTIONS` for testing. Former standalone `EnrichmentFunnel.tsx` and hub-and-spoke `DataSourceCircle.tsx` components removed.
+- **Outputs:** Rendered dashboard with health banner, pipeline status timeline with inline funnel accordions, schedule controls; snapshot row upserted on refresh; API JSON with current snapshot and trends.
 - **Edge Cases:**
   - `active_permits = 0` makes effectiveness score null (N/A).
   - `builders_total = 0` or `coa_total = 0` contributes 0% to score (no division error).
@@ -38,7 +36,7 @@ As an admin, I want a Data Effectiveness Dashboard that shows completeness, accu
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Logic** (`quality.logic.test.ts`): Data Effectiveness Score; Extract Matching Metrics; DataQualitySnapshot Shape Validation; parseSnapshot coerces NUMERIC fields from strings; Neighbourhood count must not exceed active permits; Builder accuracy uses permits_with_builder / active_permits; Builder tier percentages; Work Scope split: classification vs detailed tags; Pipeline Registry; Pipeline Chains; trendDelta(); findSnapshotDaysAgo(); DataSourceCircle field annotations; detectVolumeAnomalies(); detectSchemaDrift(); computeSystemHealth(); SLA_TARGETS; Enrichment Funnel; Snapshot includes null tracking and violation fields
+- **Logic** (`quality.logic.test.ts`): Data Effectiveness Score; Extract Matching Metrics; DataQualitySnapshot Shape Validation; parseSnapshot coerces NUMERIC fields from strings; Neighbourhood count must not exceed active permits; Builder accuracy uses permits_with_builder / active_permits; Builder tier percentages; Work Scope split: classification vs detailed tags; Pipeline Registry; Pipeline Chains; trendDelta(); findSnapshotDaysAgo(); Funnel computation (extracted to lib/admin/funnel); detectVolumeAnomalies(); detectSchemaDrift(); computeSystemHealth(); SLA_TARGETS; Enrichment Funnel; Snapshot includes null tracking and violation fields
 - **Infra** (`quality.infra.test.ts`): GET /api/quality Response Shape; DataQualitySnapshot Schema Constraints; Snapshot Date Uniqueness; Confidence Value Validation; Coverage Rate Validation; Freshness Interval Validation; Sync Status Validation; Quality API includes anomalies and health keys; Pipeline schedules API route exists; Migration 015 DDL Expectations; CQA Script Files; Migration 041 records_meta; enrich-web-search.js writes records_meta; Stats API returns records_meta; Pipeline runs API route exists
 <!-- TEST_INJECT_END -->
 
@@ -51,9 +49,8 @@ As an admin, I want a Data Effectiveness Dashboard that shows completeness, accu
 - `src/app/api/quality/refresh/route.ts`
 - `src/app/admin/data-quality/page.tsx`
 - `src/components/DataQualityDashboard.tsx`
-- `src/components/DataSourceCircle.tsx`
-- `src/components/EnrichmentFunnel.tsx`
 - `src/components/FreshnessTimeline.tsx`
+- `src/lib/admin/funnel.ts`
 - `scripts/refresh-snapshot.js`
 - `scripts/quality/assert-schema.js`
 - `scripts/quality/assert-data-bounds.js`

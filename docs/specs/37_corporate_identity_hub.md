@@ -32,9 +32,8 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Logic:** Entity name normalization (suffix stripping, whitespace collapse, uppercase). Entity factory shape validation. EntityProject junction constraints. Role enum validation. Portfolio aggregation logic. (`entities.logic.test.ts`)
-- **UI:** N/A (no new UI components — existing components updated to reference entities)
-- **Infra:** Migration 042/043/044 DDL existence. GET /api/entities response shape. GET /api/entities/[id] response shape. /api/builders alias returns same data. entity_projects junction constraints. (`entities.infra.test.ts`)
+- **Logic** (`entities.logic.test.ts`): Entity Name Normalization (shared module); isIncorporated; Entity Factory; EntityProject Factory; Entity portfolio aggregation
+- **Infra** (`entities.infra.test.ts`): Migration 042: entities DDL; Migration 043: data migration structure; Migration 044: WSIB entity link; GET /api/entities response shape; GET /api/entities/[id] response shape; /api/builders alias
 <!-- TEST_INJECT_END -->
 
 ## 5. Operating Boundaries

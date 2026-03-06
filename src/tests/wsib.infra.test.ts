@@ -155,9 +155,10 @@ describe('WSIB Registry Infrastructure', () => {
   describe('Dashboard Integration', () => {
     const dashboardPath = path.resolve(__dirname, '../components/DataQualityDashboard.tsx');
 
-    it('dashboard includes WSIB Registry data source circle', () => {
+    it('dashboard includes WSIB stats in funnel computation', () => {
       const content = fs.readFileSync(dashboardPath, 'utf-8');
-      expect(content).toContain('WSIB Registry');
+      expect(content).toContain('wsib_total');
+      expect(content).toContain('wsib_linked');
     });
 
     it('dashboard references wsib_total', () => {

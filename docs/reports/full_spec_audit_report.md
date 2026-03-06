@@ -1,6 +1,6 @@
 # Complete Codebase vs. Specification Audit Report
 
-This report programmatically evaluates all 37 system specifications against the codebase, checking for file implementation status and test coverage based on the requested rubric.
+This report programmatically evaluates all 41 system specifications against the codebase, checking for file implementation status and test coverage based on the requested rubric.
 
 ## Audit Rubric
 - **Spec Alignment [1-5]:** Evaluated based on whether the "Operating Boundaries > Target Files" mandated by the spec actually exist in the codebase.
@@ -11,12 +11,12 @@ This report programmatically evaluates all 37 system specifications against the 
 
 | Spec | Alignment | Test Coverage | Appropriateness | Notes |
 |---|---|---|---|---|
-| 00_system_map.md | 4/5 | N/A | N/A | Informational/Architectural spec. |
+| 00_system_map.md | 3/5 | N/A | N/A | Informational/Architectural spec. |
 | 01_database_schema.md | 5/5 | N/A | N/A | Informational/Architectural spec. |
 | 02_data_ingestion.md | 5/5 | 4/5 | PASS |  |
 | 03_change_detection.md | 5/5 | 4/5 | PASS |  |
 | 04_sync_scheduler.md | 3/5 | 2/5 | CAUTION |  |
-| 05_geocoding.md | 5/5 | 5/5 | PASS | Excellent coverage. |
+| 05_geocoding.md | 4/5 | 5/5 | PASS | Excellent coverage. |
 | 06_data_api.md | 5/5 | 5/5 | PASS | Excellent coverage. |
 | 07_trade_taxonomy.md | 5/5 | 5/5 | PASS | Excellent coverage. |
 | 08b_classification_assumptions.md | 5/5 | N/A | N/A | Informational/Architectural spec. |
@@ -24,8 +24,8 @@ This report programmatically evaluates all 37 system specifications against the 
 | 08_trade_classification.md | 5/5 | 5/5 | PASS | Excellent coverage. |
 | 09_construction_phases.md | 5/5 | 5/5 | PASS | Excellent coverage. |
 | 10_lead_scoring.md | 5/5 | 3/5 | PASS |  |
-| 11_builder_enrichment.md | 5/5 | 4/5 | PASS |  |
-| 12_coa_integration.md | 5/5 | 5/5 | PASS | Excellent coverage. |
+| 11_builder_enrichment.md | 4/5 | 4/5 | PASS |  |
+| 12_coa_integration.md | 4/5 | 5/5 | PASS | Excellent coverage. |
 | 13_auth.md | 3/5 | 4/5 | PASS |  |
 | 14_onboarding.md | 2/5 | 4/5 | PASS |  |
 | 15_dashboard_tradesperson.md | 1/5 | 4/5 | PASS | Not yet implemented. |
@@ -33,29 +33,33 @@ This report programmatically evaluates all 37 system specifications against the 
 | 17_dashboard_supplier.md | 1/5 | 4/5 | PASS | Not yet implemented. |
 | 18_permit_detail.md | 2/5 | 3/5 | PASS |  |
 | 19_search_filter.md | 3/5 | 4/5 | PASS |  |
-| 20_map_view.md | 3/5 | 4/5 | PASS |  |
-| 21_notifications.md | 4/5 | 4/5 | PASS |  |
+| 20_map_view.md | 2/5 | 4/5 | PASS |  |
+| 21_notifications.md | 2/5 | 4/5 | PASS |  |
 | 22_teams.md | 2/5 | 4/5 | PASS |  |
 | 23_analytics.md | 5/5 | 3/5 | PASS |  |
 | 24_export.md | 5/5 | 4/5 | PASS |  |
 | 25_subscription.md | 5/5 | 4/5 | PASS |  |
 | 26_admin.md | 3/5 | 5/5 | PASS | Excellent coverage. |
-| 27_neighbourhood_profiles.md | 4/5 | 4/5 | PASS |  |
+| 27_neighbourhood_profiles.md | 3/5 | 4/5 | PASS |  |
 | 28_data_quality_dashboard.md | 3/5 | 5/5 | PASS | Excellent coverage. |
-| 29_spatial_parcel_matching.md | 5/5 | 5/5 | PASS | Excellent coverage. |
+| 29_spatial_parcel_matching.md | 3/5 | 5/5 | PASS | Excellent coverage. |
 | 30_permit_scope_classification.md | 5/5 | 5/5 | PASS | Excellent coverage. |
 | 31_building_massing.md | 4/5 | 5/5 | PASS | Excellent coverage. |
 | 32_product_groups.md | 5/5 | 5/5 | PASS | Excellent coverage. |
 | 34_market_metrics.md | 4/5 | 5/5 | PASS | Excellent coverage. |
+| 35_wsib_registry.md | 3/5 | 5/5 | PASS | Excellent coverage. |
+| 36_web_search_enrichment.md | 3/5 | 5/5 | PASS | Excellent coverage. |
+| 37_corporate_identity_hub.md | 3/5 | 4/5 | PASS |  |
+| 38_inspection_scraping.md | 4/5 | 5/5 | PASS | Excellent coverage. |
 | _spec_template.md | 5/5 | 1/5 | FAIL | Implemented, but missing test suite. |
 
 ## Detailed Spec Breakdown
 
 ### Buildo System Map (00_system_map.md)
-- **Files Specified:** 93
+- **Files Specified:** 102
 - **Files Implemented:** 77
-- **Testing Volume:** 1190 individual test cases found.
-- **Identified Test Suites:** C:\Users\User\Buildo\src\tests\permits.logic.test.ts, C:\Users\User\Buildo\src\tests\sync.logic.test.ts, C:\Users\User\Buildo\src\tests\geocoding.logic.test.ts, C:\Users\User\Buildo\src\tests\parcels.logic.test.ts, C:\Users\User\Buildo\src\tests\api.infra.test.ts, C:\Users\User\Buildo\src\tests\classification.logic.test.ts, C:\Users\User\Buildo\src\tests\scoring.logic.test.ts, C:\Users\User\Buildo\src\tests\builders.logic.test.ts, C:\Users\User\Buildo\src\tests\coa.logic.test.ts, C:\Users\User\Buildo\src\tests\auth.logic.test.ts, C:\Users\User\Buildo\src\tests\middleware.logic.test.ts, C:\Users\User\Buildo\src\tests\onboarding.ui.test.tsx, C:\Users\User\Buildo\src\tests\dashboard.ui.test.tsx, C:\Users\User\Buildo\src\tests\search.logic.test.ts, C:\Users\User\Buildo\src\tests\map.ui.test.tsx, C:\Users\User\Buildo\src\tests\notifications.logic.test.ts, C:\Users\User\Buildo\src\tests\teams.logic.test.ts, C:\Users\User\Buildo\src\tests\analytics.logic.test.ts, C:\Users\User\Buildo\src\tests\export.logic.test.ts, C:\Users\User\Buildo\src\tests\subscription.logic.test.ts, C:\Users\User\Buildo\src\tests\admin.ui.test.tsx, C:\Users\User\Buildo\src\tests\neighbourhood.logic.test.ts, C:\Users\User\Buildo\src\tests\quality.logic.test.ts, C:\Users\User\Buildo\src\tests\quality.infra.test.ts, C:\Users\User\Buildo\src\tests\scope.logic.test.ts, C:\Users\User\Buildo\src\tests\massing.logic.test.ts, C:\Users\User\Buildo\src\tests\market-metrics.logic.test.ts
+- **Testing Volume:** 1426 individual test cases found.
+- **Identified Test Suites:** C:\Users\User\Buildo\src\tests\permits.logic.test.ts, C:\Users\User\Buildo\src\tests\sync.logic.test.ts, C:\Users\User\Buildo\src\tests\geocoding.logic.test.ts, C:\Users\User\Buildo\src\tests\parcels.logic.test.ts, C:\Users\User\Buildo\src\tests\api.infra.test.ts, C:\Users\User\Buildo\src\tests\classification.logic.test.ts, C:\Users\User\Buildo\src\tests\scoring.logic.test.ts, C:\Users\User\Buildo\src\tests\builders.logic.test.ts, C:\Users\User\Buildo\src\tests\coa.logic.test.ts, C:\Users\User\Buildo\src\tests\auth.logic.test.ts, C:\Users\User\Buildo\src\tests\middleware.logic.test.ts, C:\Users\User\Buildo\src\tests\onboarding.ui.test.tsx, C:\Users\User\Buildo\src\tests\dashboard.ui.test.tsx, C:\Users\User\Buildo\src\tests\search.logic.test.ts, C:\Users\User\Buildo\src\tests\map.ui.test.tsx, C:\Users\User\Buildo\src\tests\notifications.logic.test.ts, C:\Users\User\Buildo\src\tests\teams.logic.test.ts, C:\Users\User\Buildo\src\tests\analytics.logic.test.ts, C:\Users\User\Buildo\src\tests\export.logic.test.ts, C:\Users\User\Buildo\src\tests\subscription.logic.test.ts, C:\Users\User\Buildo\src\tests\admin.ui.test.tsx, C:\Users\User\Buildo\src\tests\neighbourhood.logic.test.ts, C:\Users\User\Buildo\src\tests\quality.logic.test.ts, C:\Users\User\Buildo\src\tests\quality.infra.test.ts, C:\Users\User\Buildo\src\tests\scope.logic.test.ts, C:\Users\User\Buildo\src\tests\massing.logic.test.ts, C:\Users\User\Buildo\src\tests\market-metrics.logic.test.ts, C:\Users\User\Buildo\src\tests\wsib.logic.test.ts, C:\Users\User\Buildo\src\tests\wsib.infra.test.ts, C:\Users\User\Buildo\src\tests\enrichment.logic.test.ts, C:\Users\User\Buildo\src\tests\enrichment.infra.test.ts, C:\Users\User\Buildo\src\tests\entities.logic.test.ts, C:\Users\User\Buildo\src\tests\entities.infra.test.ts
 
 ### Spec 01 -- Database Schema (01_database_schema.md)
 - **Files Specified:** 2
@@ -83,7 +87,7 @@ This report programmatically evaluates all 37 system specifications against the 
 
 ### Spec 05 -- Address Geocoding (05_geocoding.md)
 - **Files Specified:** 5
-- **Files Implemented:** 5
+- **Files Implemented:** 4
 - **Testing Volume:** 92 individual test cases found.
 - **Identified Test Suites:** C:\Users\User\Buildo\src\tests\geocoding.logic.test.ts, C:\Users\User\Buildo\src\tests\parcels.logic.test.ts
 
@@ -131,13 +135,13 @@ This report programmatically evaluates all 37 system specifications against the 
 
 ### Spec 11 -- Builder Enrichment (11_builder_enrichment.md)
 - **Files Specified:** 6
-- **Files Implemented:** 6
+- **Files Implemented:** 5
 - **Testing Volume:** 24 individual test cases found.
 - **Identified Test Suites:** C:\Users\User\Buildo\src\tests\builders.logic.test.ts
 
 ### Spec 12 -- Committee of Adjustments Integration (12_coa_integration.md)
 - **Files Specified:** 7
-- **Files Implemented:** 7
+- **Files Implemented:** 6
 - **Testing Volume:** 63 individual test cases found.
 - **Identified Test Suites:** C:\Users\User\Buildo\src\tests\coa.logic.test.ts
 
@@ -185,13 +189,13 @@ This report programmatically evaluates all 37 system specifications against the 
 
 ### Spec 20 -- Map View (20_map_view.md)
 - **Files Specified:** 4
-- **Files Implemented:** 2
+- **Files Implemented:** 1
 - **Testing Volume:** 16 individual test cases found.
 - **Identified Test Suites:** C:\Users\User\Buildo\src\tests\map.ui.test.tsx
 
 ### Spec 21 -- Notifications (21_notifications.md)
 - **Files Specified:** 8
-- **Files Implemented:** 7
+- **Files Implemented:** 2
 - **Testing Volume:** 19 individual test cases found.
 - **Identified Test Suites:** C:\Users\User\Buildo\src\tests\notifications.logic.test.ts
 
@@ -221,25 +225,25 @@ This report programmatically evaluates all 37 system specifications against the 
 
 ### Spec 26 -- Admin Panel (26_admin.md)
 - **Files Specified:** 9
-- **Files Implemented:** 7
-- **Testing Volume:** 109 individual test cases found.
+- **Files Implemented:** 5
+- **Testing Volume:** 134 individual test cases found.
 - **Identified Test Suites:** C:\Users\User\Buildo\src\tests\admin.ui.test.tsx
 
 ### Spec 27 -- Neighbourhood Profiles (27_neighbourhood_profiles.md)
 - **Files Specified:** 5
-- **Files Implemented:** 4
+- **Files Implemented:** 3
 - **Testing Volume:** 32 individual test cases found.
 - **Identified Test Suites:** C:\Users\User\Buildo\src\tests\neighbourhood.logic.test.ts
 
 ### Spec 28 -- Data Quality Dashboard (28_data_quality_dashboard.md)
-- **Files Specified:** 13
+- **Files Specified:** 14
 - **Files Implemented:** 9
-- **Testing Volume:** 84 individual test cases found.
+- **Testing Volume:** 132 individual test cases found.
 - **Identified Test Suites:** C:\Users\User\Buildo\src\tests\quality.logic.test.ts, C:\Users\User\Buildo\src\tests\quality.infra.test.ts
 
 ### Spec 29 -- Spatial Parcel Matching (29_spatial_parcel_matching.md)
 - **Files Specified:** 4
-- **Files Implemented:** 4
+- **Files Implemented:** 3
 - **Testing Volume:** 80 individual test cases found.
 - **Identified Test Suites:** C:\Users\User\Buildo\src\tests\parcels.logic.test.ts
 
@@ -266,6 +270,30 @@ This report programmatically evaluates all 37 system specifications against the 
 - **Files Implemented:** 4
 - **Testing Volume:** 47 individual test cases found.
 - **Identified Test Suites:** C:\Users\User\Buildo\src\tests\market-metrics.logic.test.ts
+
+### Spec 35 -- WSIB Registry Integration (35_wsib_registry.md)
+- **Files Specified:** 6
+- **Files Implemented:** 4
+- **Testing Volume:** 66 individual test cases found.
+- **Identified Test Suites:** C:\Users\User\Buildo\src\tests\wsib.logic.test.ts, C:\Users\User\Buildo\src\tests\wsib.infra.test.ts
+
+### Spec 36 -- Web Search Enrichment (36_web_search_enrichment.md)
+- **Files Specified:** 4
+- **Files Implemented:** 3
+- **Testing Volume:** 68 individual test cases found.
+- **Identified Test Suites:** C:\Users\User\Buildo\src\tests\enrichment.logic.test.ts, C:\Users\User\Buildo\src\tests\enrichment.infra.test.ts
+
+### Spec 37 -- Corporate Identity Hub (37_corporate_identity_hub.md)
+- **Files Specified:** 17
+- **Files Implemented:** 12
+- **Testing Volume:** 29 individual test cases found.
+- **Identified Test Suites:** C:\Users\User\Buildo\src\tests\entities.logic.test.ts, C:\Users\User\Buildo\src\tests\entities.infra.test.ts
+
+### Spec 38 -- Inspection Data Scraping (AIC Portal) (38_inspection_scraping.md)
+- **Files Specified:** 8
+- **Files Implemented:** 7
+- **Testing Volume:** 106 individual test cases found.
+- **Identified Test Suites:** C:\Users\User\Buildo\src\tests\inspections.logic.test.ts, C:\Users\User\Buildo\src\tests\quality.logic.test.ts
 
 ### Spec [XX] -- [Feature Name] (_spec_template.md)
 - **Files Specified:** 1
