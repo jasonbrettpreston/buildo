@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { ScoreBadge } from '@/components/ui/ScoreBadge';
+import { MobileNav } from '@/components/layout/MobileNav';
 
 interface MapPermit {
   permit_num: string;
@@ -115,7 +116,7 @@ export default function MapPage() {
                   : `${geocodedCount} geocoded permits of ${permits.length} total`}
               </p>
             </div>
-            <nav className="flex items-center gap-4">
+            <nav className="hidden md:flex items-center gap-4">
               <a href="/dashboard" className="text-sm text-blue-600 hover:underline">
                 Dashboard
               </a>
@@ -123,6 +124,10 @@ export default function MapPage() {
                 Search
               </a>
             </nav>
+            <MobileNav links={[
+              { href: '/dashboard', label: 'Dashboard' },
+              { href: '/search', label: 'Search' },
+            ]} />
           </div>
 
           {/* Quick filters */}

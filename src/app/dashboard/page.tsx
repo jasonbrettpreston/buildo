@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FilterPanel } from '@/components/search/FilterPanel';
 import { PermitFeed } from '@/components/permits/PermitFeed';
+import { MobileNav } from '@/components/layout/MobileNav';
 
 interface DashboardStats {
   total_permits: number;
@@ -36,7 +37,7 @@ export default function DashboardPage() {
                 Toronto Building Permit Leads
               </p>
             </div>
-            <nav className="flex items-center gap-4">
+            <nav className="hidden md:flex items-center gap-4">
               <a
                 href="/search"
                 className="text-sm text-gray-600 hover:text-gray-900"
@@ -56,6 +57,11 @@ export default function DashboardPage() {
                 Admin
               </a>
             </nav>
+            <MobileNav links={[
+              { href: '/search', label: 'Search' },
+              { href: '/map', label: 'Map' },
+              { href: '/admin', label: 'Admin' },
+            ]} />
           </div>
         </div>
       </header>

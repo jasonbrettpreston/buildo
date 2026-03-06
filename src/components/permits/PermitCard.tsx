@@ -94,7 +94,7 @@ export function PermitCard({
       className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
       onClick={onView}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col md:flex-row items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           {/* Address */}
           <h3 className="font-semibold text-gray-900 truncate">
@@ -119,7 +119,7 @@ export function PermitCard({
           </p>
 
           {/* Meta row */}
-          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+          <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-3 text-xs text-gray-500">
             <span>{permit.permit_type}</span>
             <span>{formatCost(permit.est_const_cost)}</span>
             {permit.issued_date && (
@@ -181,7 +181,7 @@ export function PermitCard({
         </div>
 
         {/* Score + Save */}
-        <div className="flex flex-col items-center gap-2 shrink-0">
+        <div className="flex flex-row md:flex-col items-center gap-2 shrink-0">
           <ScoreBadge score={score} />
           {onSave && (
             <button
@@ -189,7 +189,7 @@ export function PermitCard({
                 e.stopPropagation();
                 onSave();
               }}
-              className={`text-xs px-2 py-1 rounded border transition-colors ${
+              className={`text-xs px-3 py-2 min-h-[44px] min-w-[44px] rounded border transition-colors ${
                 saved
                   ? 'bg-blue-50 border-blue-300 text-blue-700'
                   : 'border-gray-300 text-gray-500 hover:border-blue-300 hover:text-blue-600'

@@ -24,9 +24,11 @@
 4. **Verification:** Never declare a task done until `npx vitest run` passes.
 5. **Automated Gate:** The Husky pre-commit hook runs `npm run typecheck && npm run lint && npm run test` automatically. ESLint enforces `no-empty` (bans empty catch blocks) and `no-restricted-syntax` (bans `process.exit()` in src/).
 6. **Pre-Flight:** Before starting any task, run `node scripts/ai-env-check.mjs` to orient yourself to the current environment state.
+7. **Engineering Standards:** When writing API, frontend, or database code, you MUST adhere to the stability, testing, and mobile-first rules in `docs/specs/00_engineering_standards.md`.
+8. **Mobile-First UI:** All Tailwind styling MUST be written mobile-first (base classes = mobile, `md:` / `lg:` = desktop). Every new spec must include a `## 5. Mobile & Responsive Behavior` section.
 
 ### Execution Order Constraint
-> 1. You MUST read the relevant `docs/specs/[feature].md` file before generating the Active Task.
+> 1. You MUST read `docs/specs/00_engineering_standards.md` AND the relevant `docs/specs/[feature].md` file before generating the Active Task.
 > 2. You MUST write the Active Task to disk (via `npm run task -- --wf=N --name="..."` or manually).
 > 3. You MUST halt and ask the user: "PLAN LOCKED. Authorize?"
 > 4. You MAY NOT write any `src/` code until the user says "Yes".
@@ -72,6 +74,12 @@
 * **Data Hooks/Libs:** [e.g. `src/lib/permits/scoring.ts`]
 * **Database Impact:** [YES/NO — if YES, write `migrations/NNN_[feature].sql` and draft UPDATE strategy for 237K+ existing rows]
 
+## Standards Compliance
+*(How does this plan adhere to `docs/specs/00_engineering_standards.md`?)*
+* **Try-Catch Boundary:** [How are new/modified API routes handling errors?]
+* **Unhappy Path Tests:** [What error scenarios will be tested?]
+* **Mobile-First:** [How are layouts structured for mobile? Or N/A if backend-only.]
+
 ## Execution Plan
 - [ ] Step 1: [Specific Action]
 ...
@@ -93,6 +101,7 @@
 
 ### Execution Plan
 ```
+- [ ] **Standards Verification:** Explicitly state in the plan how your implementation adheres to the Try-Catch, Unhappy Path, and Mobile-First rules defined in `docs/specs/00_engineering_standards.md`. Fill out the `## Standards Compliance` section above.
 - [ ] **Contract Definition:** If creating an API route, define Request/Response TypeScript interface BEFORE implementation.
 - [ ] **Spec & Registry Sync:** Create/Update `docs/specs/[feature].md`. Run `npm run system-map`.
 - [ ] **Schema Evolution:** If Database Impact is YES: grep for the affected type/interface to understand blast radius. Write both `UP` and `DOWN` migrations in `migrations/NNN_[feature].sql`, run `npm run migrate`, then `npm run db:generate`. Update `src/tests/factories.ts` with new fields. Run `npm run typecheck` immediately to catch schema-related type errors. Grep test files for inline mocks of the changed type.
@@ -114,6 +123,7 @@
 
 ### Execution Plan
 ```
+- [ ] **Standards Verification:** Explicitly state in the plan how your implementation adheres to the Try-Catch, Unhappy Path, and Mobile-First rules defined in `docs/specs/00_engineering_standards.md`. Fill out the `## Standards Compliance` section above.
 - [ ] **State Verification:** Examine the calling context. Document what data is actually available vs. what the change assumes.
 - [ ] **Contract Definition:** If altering an API route, define updated Request/Response interface BEFORE implementation. Run `npm run typecheck` to identify breaking consumers.
 - [ ] **Spec Update:** Update `docs/specs/[feature].md` to reflect new requirements. Run `npm run system-map`.
@@ -192,40 +202,8 @@
 
 ---
 
-## Error Handling & Stability Rules
-
-### Rule 1: Unhappy Path Mandate (WF1 / WF2)
-When writing integration tests (`.infra.test.ts`), you MUST include tests for **error paths and silent failures** — not just Loading, Success, and Error states. Force errors in the deepest layer (e.g., database ROLLBACK failure, network timeout) and assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking `.message`.
-
-### Rule 2: Try-Catch Boundary Rule (WF1 / WF2)
-Every newly created `export async function GET/POST/PUT/DELETE/PATCH` inside `src/app/api/` MUST have an overarching `try-catch` block wrapping the entire handler body. The catch block MUST return `{ error: 'Human-readable message' }` with status 500 and log the raw error server-side only. Never expose `err.message` to clients. The guardrail test in `api.infra.test.ts` scans all route files to enforce this.
-
-### Rule 3: Assumption Documentation (WF2 / WF3)
-Before accessing nested properties, check for `null` or `undefined` first. Use Optional Chaining (`?.`) or explicit guards — not non-null assertion (`!`) — unless the value is guaranteed by a prior validation step. If using `!`, document why in a comment.
-
-### Rule 4: Zero-Downtime Migration Rule (WF1 / WF2)
-When altering existing columns in a database table larger than 100,000 rows, do NOT use `ALTER TABLE ... ALTER COLUMN` directly. Use the **Add-Backfill-Drop** pattern (add new column → backfill data → swap references → drop old column) to avoid table-locking. `CREATE INDEX` on large tables should use `CONCURRENTLY` when possible.
-
----
-
 ## Spec Boundary Requirements
 Every new spec MUST include an `## Operating Boundaries` section (Target Files, Out-of-Scope Files, Cross-Spec Dependencies). Copy from `docs/specs/_spec_template.md`.
-
----
-
-## Testing Standards
-**Rule:** Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`.
-
-### Test File Pattern
-| Pattern | Tests | Example |
-|---------|-------|---------|
-| `*.logic.test.ts` | Pure functions, scoring, classification | `scoring.logic.test.ts` |
-| `*.ui.test.tsx` | React component rendering, interactions | `admin.ui.test.tsx` |
-| `*.infra.test.ts` | API routes, DB queries, external calls | `api.infra.test.ts` |
-| `*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | `auth.security.test.ts` |
-
-### Test Data Seeding
-To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`. Define a JSON state object, insert it, and verify DB contents.
 
 ---
 

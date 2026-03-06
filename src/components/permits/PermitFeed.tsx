@@ -104,7 +104,7 @@ export function PermitFeed({ filters = {}, savedPermitIds, onSave }: PermitFeedP
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2 md:space-y-3">
         {permits.map((permit) => {
           const permitId = `${permit.permit_num}--${permit.revision_num}`;
           return (
@@ -130,7 +130,7 @@ export function PermitFeed({ filters = {}, savedPermitIds, onSave }: PermitFeedP
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 min-h-[44px] text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
@@ -140,7 +140,7 @@ export function PermitFeed({ filters = {}, savedPermitIds, onSave }: PermitFeedP
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 min-h-[44px] text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
           </button>

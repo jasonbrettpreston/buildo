@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect, useCallback } from 'react';
 import { FilterPanel } from '@/components/search/FilterPanel';
 import { PermitCard } from '@/components/permits/PermitCard';
+import { MobileNav } from '@/components/layout/MobileNav';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface PermitResult {
@@ -95,7 +96,7 @@ function SearchContent() {
                 Full-text search across all Toronto building permits
               </p>
             </div>
-            <nav className="flex items-center gap-4">
+            <nav className="hidden md:flex items-center gap-4">
               <a href="/dashboard" className="text-sm text-blue-600 hover:underline">
                 Dashboard
               </a>
@@ -103,6 +104,10 @@ function SearchContent() {
                 Map View
               </a>
             </nav>
+            <MobileNav links={[
+              { href: '/dashboard', label: 'Dashboard' },
+              { href: '/map', label: 'Map View' },
+            ]} />
           </div>
         </div>
       </header>

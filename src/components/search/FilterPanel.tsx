@@ -169,7 +169,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
         <button
           type="button"
           onClick={() => updateSource('permits')}
-          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+          className={`px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
             !isPrePermitSource
               ? 'bg-white text-gray-900 shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
@@ -180,7 +180,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
         <button
           type="button"
           onClick={() => updateSource('pre_permits')}
-          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+          className={`px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
             isPrePermitSource
               ? 'bg-purple-600 text-white shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
@@ -212,7 +212,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
           <select
             value={filters.ward || ''}
             onChange={(e) => updateFilter('ward', e.target.value)}
-            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+            className="w-full px-2 py-2.5 border border-gray-300 rounded text-sm"
           >
             <option value="">All wards</option>
             {WARD_OPTIONS.map((w) => (
@@ -232,7 +232,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
             <select
               value={filters.status || ''}
               onChange={(e) => updateFilter('status', e.target.value)}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-2.5 border border-gray-300 rounded text-sm"
             >
               <option value="">All statuses</option>
               {STATUS_OPTIONS.map((s) => (
@@ -253,7 +253,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
             <select
               value={filters.permit_type || ''}
               onChange={(e) => updateFilter('permit_type', e.target.value)}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-2.5 border border-gray-300 rounded text-sm"
             >
               <option value="">All types</option>
               {PERMIT_TYPE_OPTIONS.map((pt) => (
@@ -277,14 +277,14 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
                 <button
                   type="button"
                   onClick={() => setShowTradeInfo(!showTradeInfo)}
-                  className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-300 text-white text-[9px] font-bold hover:bg-blue-500 transition-colors"
+                  className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-300 text-white text-[10px] font-bold hover:bg-blue-500 transition-colors"
                   aria-label="How trades are classified"
                 >
                   i
                 </button>
               </label>
               {showTradeInfo && (
-                <div className="absolute z-50 top-full left-0 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-xs text-gray-600">
+                <div className="absolute z-50 top-full left-0 mt-1 max-w-[calc(100vw-2rem)] sm:w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-xs text-gray-600">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-gray-900 text-sm">How Trades Are Classified</span>
                     <button
@@ -298,7 +298,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
                   <p className="mb-2">
                     Trades are <strong>inferred</strong> from permit metadata, not from actual building plans. Classifications are estimates that improve over time.
                   </p>
-                  <table className="w-full text-[10px] border-collapse mb-2">
+                  <table className="w-full text-xs border-collapse mb-2">
                     <thead>
                       <tr className="border-b border-gray-200">
                         <th className="text-left py-1 pr-2 font-semibold text-gray-700">Tier</th>
@@ -332,7 +332,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
               <select
                 value={filters.trade_slug || ''}
                 onChange={(e) => updateFilter('trade_slug', e.target.value)}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-2.5 border border-gray-300 rounded text-sm"
               >
                 <option value="">All trades</option>
                 {trades.map((t) => (
@@ -351,7 +351,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
               <select
                 value={filters.min_cost || ''}
                 onChange={(e) => updateFilter('min_cost', e.target.value)}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-2.5 border border-gray-300 rounded text-sm"
               >
                 <option value="">Any</option>
                 <option value="10000">$10K+</option>
@@ -371,7 +371,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
               <select
                 value={filters.sort_by && filters.sort_order ? `${filters.sort_by}:${filters.sort_order}` : ''}
                 onChange={(e) => updateSort(e.target.value)}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-2.5 border border-gray-300 rounded text-sm"
               >
                 <option value="">Default</option>
                 {SORT_OPTIONS.map((s) => (
@@ -392,7 +392,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
               <select
                 value={filters.structure_type || ''}
                 onChange={(e) => updateFilter('structure_type', e.target.value)}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-2.5 border border-gray-300 rounded text-sm"
               >
                 <option value="">All structures</option>
                 {STRUCTURE_TYPE_OPTIONS.map((st) => (
@@ -411,7 +411,7 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
               <select
                 value={filters.work || ''}
                 onChange={(e) => updateFilter('work', e.target.value)}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-2.5 border border-gray-300 rounded text-sm"
               >
                 <option value="">All work types</option>
                 {WORK_OPTIONS.map((w) => (

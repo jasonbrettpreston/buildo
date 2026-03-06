@@ -819,3 +819,70 @@ describe('Date Formatting', () => {
     expect(formatDate('')).toBe('N/A');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Mobile-First Guardrail Tests
+// ---------------------------------------------------------------------------
+
+describe('Mobile-First UI Compliance', () => {
+  const permitCardSrc = fs.readFileSync(
+    path.resolve(__dirname, '../components/permits/PermitCard.tsx'), 'utf-8'
+  );
+  const permitFeedSrc = fs.readFileSync(
+    path.resolve(__dirname, '../components/permits/PermitFeed.tsx'), 'utf-8'
+  );
+  const filterPanelSrc = fs.readFileSync(
+    path.resolve(__dirname, '../components/search/FilterPanel.tsx'), 'utf-8'
+  );
+
+  describe('PermitCard', () => {
+    it('uses flex-col base with md:flex-row for main layout', () => {
+      expect(permitCardSrc).toMatch(/flex\s+flex-col\s+md:flex-row/);
+    });
+
+    it('meta row uses flex-wrap for narrow screen reflow', () => {
+      expect(permitCardSrc).toMatch(/flex[\s\w-]*flex-wrap/);
+    });
+
+    it('save button has min-h-[44px] touch target', () => {
+      expect(permitCardSrc).toContain('min-h-[44px]');
+    });
+  });
+
+  describe('PermitFeed', () => {
+    it('uses responsive card gaps (space-y-2 md:space-y-3)', () => {
+      expect(permitFeedSrc).toMatch(/space-y-2\s+md:space-y-3/);
+    });
+
+    it('pagination buttons have min-h-[44px] touch target', () => {
+      expect(permitFeedSrc).toContain('min-h-[44px]');
+    });
+  });
+
+  describe('FilterPanel', () => {
+    it('select elements have adequate touch target height', () => {
+      // py-2.5 gives ~40px + border = 44px effective height
+      expect(filterPanelSrc).toContain('py-2.5');
+    });
+
+    it('trade info tooltip is responsive width', () => {
+      expect(filterPanelSrc).toMatch(/max-w-\[calc\(100vw/);
+    });
+  });
+
+  describe('MobileNav', () => {
+    it('MobileNav component exists', () => {
+      const exists = fs.existsSync(
+        path.resolve(__dirname, '../components/layout/MobileNav.tsx')
+      );
+      expect(exists).toBe(true);
+    });
+
+    it('MobileNav uses md:hidden for mobile-only visibility', () => {
+      const src = fs.readFileSync(
+        path.resolve(__dirname, '../components/layout/MobileNav.tsx'), 'utf-8'
+      );
+      expect(src).toContain('md:hidden');
+    });
+  });
+});

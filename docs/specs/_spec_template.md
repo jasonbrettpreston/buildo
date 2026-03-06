@@ -23,7 +23,12 @@
 - **Infra:** [What DB/API integrations must be verified?]
 <!-- TEST_INJECT_END -->
 
-## 5. Operating Boundaries
+## 5. Mobile & Responsive Behavior
+- **Mobile Layout:** [How does this feature stack/reflow on screens < 768px? Or N/A if backend-only.]
+- **Touch Targets:** [All interactive elements must be >= 44px. List any buttons/links and their sizing.]
+- **Breakpoints Used:** [e.g., base (mobile) / `md:` (tablet) / `lg:` (desktop)]
+
+## 6. Operating Boundaries
 
 ### Target Files (Modify / Create)
 - `src/...`
