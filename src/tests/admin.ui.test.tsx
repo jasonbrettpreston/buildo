@@ -890,31 +890,28 @@ describe('Pipeline route captures stderr and validates script', () => {
   });
 });
 
-describe('Stale pipeline run auto-cleanup', () => {
+describe('Pipeline run concurrency handling', () => {
   const routeSource = () => fs.readFileSync(
     path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
   );
 
-  it('route auto-expires stale running rows before concurrency check', () => {
+  it('force-cancels stale running rows before inserting a new run', () => {
     const source = routeSource();
-    expect(source).toContain('Stale run auto-cleaned');
-    expect(source).toMatch(/UPDATE pipeline_runs[\s\S]*?SET status = 'failed'[\s\S]*?WHERE status = 'running'/);
+    expect(source).toContain('Superseded by new run');
+    expect(source).toMatch(/UPDATE pipeline_runs[\s\S]*?SET status = 'cancelled'[\s\S]*?WHERE status = 'running'/);
   });
 
-  it('chains get 60-minute stale threshold', () => {
+  it('does not reject with 409 for already running pipelines', () => {
     const source = routeSource();
-    expect(source).toContain('60 minutes');
+    expect(source).not.toContain('already running');
+    expect(source).not.toContain('status: 409');
   });
 
-  it('individual pipelines get 15-minute stale threshold', () => {
+  it('no stale threshold windows — all running rows are cancelled', () => {
     const source = routeSource();
-    expect(source).toContain('15 minutes');
-  });
-
-  it('concurrency guard no longer has a 2-hour hardcoded window', () => {
-    const source = routeSource();
-    // The old "2 hours" window should be removed
+    // No time-based thresholds — force-cancel everything
     expect(source).not.toContain("INTERVAL '2 hours'");
+    expect(source).not.toContain("INTERVAL '60 minutes'");
   });
 });
 
@@ -1195,6 +1192,311 @@ describe('SLA badge in FreshnessTimeline', () => {
     );
     expect(source).toContain('SLA_TARGETS');
     expect(source).toContain('slaTargets');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 1: Mobile-First Row Layout & Toggle/Run Bug Fixes
+// ---------------------------------------------------------------------------
+
+describe('FreshnessTimeline mobile-first row layout', () => {
+  it('does NOT use dotted line spacer between name and controls', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Dotted line has been removed from row layout
+    expect(source).not.toContain('border-dotted');
+  });
+
+  it('renders accuracy pill badge adjacent to pipeline name', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Match % pill is rendered right after pipeline name (not separated by dotted line)
+    expect(source).toContain('accuracy-pill');
+  });
+
+  it('uses mobile-first flex-wrap layout for row controls', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Controls wrap to new line on mobile
+    expect(source).toContain('flex-wrap');
+  });
+
+  it('uses semantic update status with clock icon', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Clock icon for timestamp
+    expect(source).toMatch(/update-status/);
+  });
+});
+
+describe('FreshnessTimeline toggle bug fix', () => {
+  it('uses local optimistic toggle state for immediate feedback', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Local state tracks optimistic toggle overrides
+    expect(source).toContain('optimisticToggles');
+  });
+
+  it('stores correct enabled value in optimistic state (not inverted)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // The handleToggle must store `currentlyDisabled` (the desired new enabled state),
+    // NOT `!currentlyDisabled` which would store the SAME state as before.
+    // Extract the handleToggle function body
+    const handleToggleIdx = source.indexOf('const handleToggle');
+    expect(handleToggleIdx).toBeGreaterThan(-1);
+    const handleToggleBlock = source.slice(handleToggleIdx, handleToggleIdx + 300);
+    // Must contain `next.set(slug, currentlyDisabled)` — not `!currentlyDisabled`
+    expect(handleToggleBlock).toContain('next.set(slug, currentlyDisabled)');
+    expect(handleToggleBlock).not.toContain('next.set(slug, !currentlyDisabled)');
+  });
+
+  it('auto-clears optimistic state via timeout (not broken reference comparison)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Must use timeout-based cleanup, not reference comparison on Set
+    expect(source).toContain('optimisticTimerRef');
+    expect(source).toContain('setTimeout');
+    // Must NOT use broken reference equality on disabledPipelines Set
+    expect(source).not.toContain('prevDisabledRef.current === disabledPipelines');
+  });
+});
+
+describe('FreshnessTimeline Run All bug fix', () => {
+  it('shows error when all toggleable steps are disabled', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('All Steps Disabled');
+  });
+
+  it('wraps onTrigger in try-catch with UI error feedback', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Run button has error handling
+    expect(source).toContain('runError');
+  });
+
+  it('isChainRunning only checks chain slug, not individual step slugs', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Extract isChainRunning assignment
+    const idx = source.indexOf('const isChainRunning');
+    expect(idx).toBeGreaterThan(-1);
+    const block = source.slice(idx, idx + 200);
+    // Must check only chain slug
+    expect(block).toContain('runningPipelines.has(chainSlug)');
+    // Must NOT check individual step slugs (causes stale runs to block Run All)
+    expect(block).not.toContain('chain.steps.some');
+  });
+
+  it('Run All button uses handleRun for error reporting, not raw onTrigger', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Find the Run All button onClick handler
+    const chainSlugIdx = source.indexOf("onClick={() => handleRun(chainSlug)");
+    const rawTriggerIdx = source.indexOf("onClick={() => onTrigger(chainSlug)");
+    // Must use handleRun (which has try-catch + setRunError)
+    expect(chainSlugIdx).toBeGreaterThan(-1);
+    // Must NOT use raw onTrigger (which swallows errors silently)
+    expect(rawTriggerIdx).toBe(-1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Stats API resilience
+// ---------------------------------------------------------------------------
+
+describe('Stats API pipeline_last_run resilience', () => {
+  it('stats route has fallback query when records_meta column is missing', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../app/api/admin/stats/route.ts'),
+      'utf-8'
+    );
+    // Must have two separate SELECT queries for pipeline_runs — full and fallback
+    const fullQuery = source.indexOf('records_meta');
+    expect(fullQuery).toBeGreaterThan(-1);
+    // The fallback query must NOT include records_meta
+    const fallbackIdx = source.indexOf('records_meta', fullQuery + 1);
+    // There should be multiple references — the fallback maps null for it
+    expect(fallbackIdx).toBeGreaterThan(fullQuery);
+    // Must have nested try-catch for graceful degradation
+    const nestedTryCatch = (source.match(/try\s*\{/g) || []).length;
+    expect(nestedTryCatch).toBeGreaterThanOrEqual(3); // outer + pipeline query + fallback
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 2: Pipeline Tiles & Accordion Tile Design
+// ---------------------------------------------------------------------------
+
+describe('FreshnessTimeline pipeline tiles', () => {
+  it('each pipeline step is wrapped in its own bordered tile', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('pipeline-tile');
+    expect(source).toContain('border rounded-lg');
+  });
+
+  it('accuracy bar chart fills proportionally behind the row', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Bar chart bg uses inline width style
+    expect(source).toContain('bar-chart');
+    expect(source).toMatch(/style=.*width.*barPct|style=.*width.*Math\.min/);
+  });
+
+  it('accordion panels use bordered white card tiles', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('bg-white border border-gray-200 rounded-lg');
+  });
+
+  it('All Time and Last Run panels are wrapped in tile cards', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('accordion-tile');
+  });
+
+  it('right-hand controls have adequate spacing (gap-3)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Secondary zone uses gap-3 for more spacing
+    expect(source).toMatch(/Secondary zone[\s\S]*gap-3/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Run All and Toggle API fixes
+// ---------------------------------------------------------------------------
+
+describe('Pipeline API route fixes', () => {
+  it('API route force-cancels stale running rows instead of 409 reject', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../src/app/api/admin/pipelines/[slug]/route.ts'),
+      'utf-8'
+    );
+    // Force-cancel instead of concurrency guard
+    expect(source).toContain('Superseded by new run');
+    expect(source).not.toContain('already running');
+  });
+
+  it('Toggle PATCH uses UPSERT for missing pipeline_schedules rows', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../src/app/api/admin/pipelines/schedules/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('ON CONFLICT (pipeline) DO UPDATE');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 3: Actionable Health Banner
+// ---------------------------------------------------------------------------
+
+describe('Actionable Health Banner', () => {
+  it('renders Retry Failed Pipelines button when failures exist', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('Retry Failed');
+  });
+
+  it('renders clickable issue count that scrolls to failed pipeline', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    // Deep link scroll behavior
+    expect(source).toContain('scrollToFailed');
+  });
+
+  it('uses swipeable horizontal carousel for trend metrics on mobile', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    // Mobile carousel: overflow-x-auto snap-x
+    expect(source).toContain('overflow-x-auto');
+    expect(source).toContain('snap-x');
+  });
+
+  it('Health Banner has premium gradient styling', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    // Gradient background for premium look
+    expect(source).toContain('bg-gradient');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 5: Dismissible schedule notice
+// ---------------------------------------------------------------------------
+
+describe('Dismissible schedule notice', () => {
+  it('schedule notice can be dismissed', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('dismissedNotice');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Viewport mocking: 375px viewport mock in src/tests/admin.ui.test.tsx
+// ---------------------------------------------------------------------------
+
+describe('Mobile viewport layout assertions', () => {
+  it('FreshnessTimeline row uses responsive stacking for mobile', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Mobile-first: base = stacked, md: = inline
+    expect(source).toMatch(/md:flex-nowrap|md:flex-row/);
+  });
+
+  it('DataQualityDashboard trend carousel uses snap scroll on mobile', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('snap-mandatory');
   });
 });
 

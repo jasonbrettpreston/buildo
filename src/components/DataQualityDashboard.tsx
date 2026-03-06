@@ -103,7 +103,9 @@ export function DataQualityDashboard() {
   const [runningPipelines, setRunningPipelines] = useState<Set<string>>(new Set());
   const [pipelineError, setPipelineError] = useState<string | null>(null);
   const [scheduleModal, setScheduleModal] = useState<{ pipeline: string; name: string } | null>(null);
+  const [dismissedNotice, setDismissedNotice] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
   // Grace period: keep recently-triggered slugs in runningPipelines even if
   // they haven't appeared in stats yet (belt-and-suspenders for spawn delay).
   const TRIGGER_GRACE_MS = 15_000;
@@ -221,6 +223,28 @@ export function DataQualityDashboard() {
     await fetchData();
   }, [fetchData]);
 
+  // Retry all failed pipelines
+  const retryFailedPipelines = useCallback(() => {
+    const lastRun = stats?.pipeline_last_run ?? {};
+    const failedSlugs = Object.entries(lastRun)
+      .filter(([, info]) => info?.status === 'failed')
+      .map(([slug]) => slug);
+    for (const slug of failedSlugs) {
+      triggerPipeline(slug);
+    }
+  }, [stats, triggerPipeline]);
+
+  // Scroll to the failed pipeline in FreshnessTimeline
+  const scrollToFailed = useCallback(() => {
+    const el = timelineRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  // Count failed pipelines for banner
+  const failedPipelineCount = Object.values(stats?.pipeline_last_run ?? {})
+    .filter((info) => info?.status === 'failed').length;
+
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Loading data quality metrics...</div>;
   }
@@ -261,124 +285,155 @@ export function DataQualityDashboard() {
       {current ? (
         <>
           {/* ============================================================
-              Health Banner — System-wide traffic light + quality trends
+              Health Banner — Actionable Command Center Header
           ============================================================ */}
           {data?.health && (
-            <div className={`rounded-lg border px-4 py-3 ${
+            <div className={`rounded-xl border shadow-sm overflow-hidden ${
               data.health.level === 'green'
-                ? 'bg-green-50 border-green-200'
+                ? 'border-green-200'
                 : data.health.level === 'yellow'
-                ? 'bg-yellow-50 border-yellow-200'
-                : 'bg-red-50 border-red-200'
+                ? 'border-yellow-200'
+                : 'border-red-200'
             }`}>
-              <div className="flex items-center gap-3">
-                <div className={`w-3 h-3 rounded-full shrink-0 ${
-                  data.health.level === 'green' ? 'bg-green-500'
-                    : data.health.level === 'yellow' ? 'bg-yellow-500'
-                    : 'bg-red-500'
-                }`} />
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${
-                    data.health.level === 'green' ? 'text-green-800'
-                      : data.health.level === 'yellow' ? 'text-yellow-800'
-                      : 'text-red-800'
-                  }`}>
-                    {data.health.level === 'green'
-                      ? 'All systems healthy'
-                      : data.health.level === 'yellow'
-                      ? `${data.health.warnings.length} warning${data.health.warnings.length !== 1 ? 's' : ''}`
-                      : `${data.health.issues.length} issue${data.health.issues.length !== 1 ? 's' : ''}`}
-                  </p>
-                  {(data.health.issues.length > 0 || data.health.warnings.length > 0) && (
-                    <div className="mt-1 space-y-0.5">
-                      {data.health.issues.map((issue, i) => (
-                        <p key={`issue-${i}`} className="text-xs text-red-600">{issue}</p>
-                      ))}
-                      {data.health.warnings.map((warn, i) => (
-                        <p key={`warn-${i}`} className="text-xs text-yellow-700">{warn}</p>
-                      ))}
+              {/* Premium bg-gradient header */}
+              <div className={`px-4 py-3 ${
+                data.health.level === 'green'
+                  ? 'bg-gradient-to-br from-green-50 to-white'
+                  : data.health.level === 'yellow'
+                  ? 'bg-gradient-to-br from-yellow-50 to-white'
+                  : 'bg-gradient-to-br from-red-50 to-white'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full shrink-0 ${
+                    data.health.level === 'green' ? 'bg-green-500'
+                      : data.health.level === 'yellow' ? 'bg-yellow-500'
+                      : 'bg-red-500'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className={`text-sm font-semibold ${
+                        data.health.level === 'green' ? 'text-green-800'
+                          : data.health.level === 'yellow' ? 'text-yellow-800'
+                          : 'text-red-800'
+                      }`}>
+                        {data.health.level === 'green'
+                          ? 'All systems healthy'
+                          : data.health.level === 'yellow'
+                          ? `${data.health.warnings.length} warning${data.health.warnings.length !== 1 ? 's' : ''}`
+                          : `${data.health.issues.length} issue${data.health.issues.length !== 1 ? 's' : ''}`}
+                      </p>
+                      {/* Deep link: clickable issue count scrolls to failed pipelines */}
+                      {failedPipelineCount > 0 && (
+                        <button
+                          onClick={scrollToFailed}
+                          className="text-[10px] font-semibold text-red-600 hover:text-red-800 underline underline-offset-2"
+                        >
+                          {failedPipelineCount} pipeline failure{failedPipelineCount !== 1 ? 's' : ''}
+                        </button>
+                      )}
                     </div>
+                    {(data.health.issues.length > 0 || data.health.warnings.length > 0) && (
+                      <div className="mt-1 space-y-0.5">
+                        {data.health.issues.map((issue, i) => (
+                          <p key={`issue-${i}`} className="text-xs text-red-600">{issue}</p>
+                        ))}
+                        {data.health.warnings.map((warn, i) => (
+                          <p key={`warn-${i}`} className="text-xs text-yellow-700">{warn}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* Retry Failed Pipelines — 1-click recovery */}
+                  {failedPipelineCount > 0 && (
+                    <button
+                      onClick={retryFailedPipelines}
+                      className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 text-red-700 bg-white hover:bg-red-50 shadow-sm min-h-[44px]"
+                    >
+                      Retry Failed
+                    </button>
                   )}
                 </div>
               </div>
 
-              {/* Quality trend indicators — 30-day comparisons */}
+              {/* Quality trend indicators — 30-day swipeable carousel on mobile */}
               {prev && (
-                <div className="mt-3 pt-3 border-t border-gray-200/50 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {/* Violations trend */}
-                  {(() => {
-                    const curV = current.violations_total;
-                    const prevV = prev.violations_total ?? 0;
-                    const delta = curV - prevV;
-                    return (
-                      <div className="text-center">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">Violations</p>
-                        <p className="text-sm font-semibold tabular-nums text-gray-800">{curV.toLocaleString()}</p>
-                        <p className={`text-[10px] font-medium tabular-nums ${delta < 0 ? 'text-green-600' : delta > 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                          {delta < 0 ? '▼' : delta > 0 ? '▲' : '—'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta} vs 30d`}
-                        </p>
-                      </div>
-                    );
-                  })()}
+                <div className="px-4 py-3 border-t border-gray-200/50">
+                  <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:grid md:grid-cols-4 md:overflow-visible -mx-1 px-1 pb-1">
+                    {/* Violations trend */}
+                    {(() => {
+                      const curV = current.violations_total;
+                      const prevV = prev.violations_total ?? 0;
+                      const delta = curV - prevV;
+                      return (
+                        <div className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Violations</p>
+                          <p className="text-sm font-semibold tabular-nums text-gray-800">{curV.toLocaleString()}</p>
+                          <p className={`text-[10px] font-medium tabular-nums ${delta < 0 ? 'text-green-600' : delta > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                            {delta < 0 ? '\u25BC' : delta > 0 ? '\u25B2' : '\u2014'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta} vs 30d`}
+                          </p>
+                        </div>
+                      );
+                    })()}
 
-                  {/* Completeness trend (avg null rate across 6 fields) */}
-                  {(() => {
-                    const nullSum = current.null_description_count + current.null_builder_name_count +
-                      current.null_est_const_cost_count + current.null_street_num_count +
-                      current.null_street_name_count + current.null_geo_id_count;
-                    const curPct = current.active_permits > 0 ? ((1 - nullSum / (current.active_permits * 6)) * 100) : 100;
-                    const prevNullSum = (prev.null_description_count ?? 0) + (prev.null_builder_name_count ?? 0) +
-                      (prev.null_est_const_cost_count ?? 0) + (prev.null_street_num_count ?? 0) +
-                      (prev.null_street_name_count ?? 0) + (prev.null_geo_id_count ?? 0);
-                    const prevPctVal = prev.active_permits > 0 ? ((1 - prevNullSum / (prev.active_permits * 6)) * 100) : 100;
-                    const delta = Math.round((curPct - prevPctVal) * 10) / 10;
-                    return (
-                      <div className="text-center">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">Completeness</p>
-                        <p className="text-sm font-semibold tabular-nums text-gray-800">{curPct.toFixed(1)}%</p>
-                        <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                          {delta > 0 ? '▲' : delta < 0 ? '▼' : '—'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta}pp vs 30d`}
-                        </p>
-                      </div>
-                    );
-                  })()}
+                    {/* Completeness trend */}
+                    {(() => {
+                      const nullSum = current.null_description_count + current.null_builder_name_count +
+                        current.null_est_const_cost_count + current.null_street_num_count +
+                        current.null_street_name_count + current.null_geo_id_count;
+                      const curPct = current.active_permits > 0 ? ((1 - nullSum / (current.active_permits * 6)) * 100) : 100;
+                      const prevNullSum = (prev.null_description_count ?? 0) + (prev.null_builder_name_count ?? 0) +
+                        (prev.null_est_const_cost_count ?? 0) + (prev.null_street_num_count ?? 0) +
+                        (prev.null_street_name_count ?? 0) + (prev.null_geo_id_count ?? 0);
+                      const prevPctVal = prev.active_permits > 0 ? ((1 - prevNullSum / (prev.active_permits * 6)) * 100) : 100;
+                      const delta = Math.round((curPct - prevPctVal) * 10) / 10;
+                      return (
+                        <div className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Completeness</p>
+                          <p className="text-sm font-semibold tabular-nums text-gray-800">{curPct.toFixed(1)}%</p>
+                          <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                            {delta > 0 ? '\u25B2' : delta < 0 ? '\u25BC' : '\u2014'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta}pp vs 30d`}
+                          </p>
+                        </div>
+                      );
+                    })()}
 
-                  {/* Volume trend (permits updated 24h) */}
-                  {(() => {
-                    const curVol = current.permits_updated_24h;
-                    const prevVol = prev.permits_updated_24h;
-                    const delta = curVol - prevVol;
-                    const pctChange = prevVol > 0 ? Math.round(((curVol - prevVol) / prevVol) * 100) : 0;
-                    return (
-                      <div className="text-center">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">Volume (24h)</p>
-                        <p className="text-sm font-semibold tabular-nums text-gray-800">{curVol.toLocaleString()}</p>
-                        <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                          {delta > 0 ? '▲' : delta < 0 ? '▼' : '—'} {delta === 0 ? 'unchanged' : `${pctChange > 0 ? '+' : ''}${pctChange}% vs 30d`}
-                        </p>
-                      </div>
-                    );
-                  })()}
+                    {/* Volume trend */}
+                    {(() => {
+                      const curVol = current.permits_updated_24h;
+                      const prevVol = prev.permits_updated_24h;
+                      const delta = curVol - prevVol;
+                      const pctChange = prevVol > 0 ? Math.round(((curVol - prevVol) / prevVol) * 100) : 0;
+                      return (
+                        <div className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Volume (24h)</p>
+                          <p className="text-sm font-semibold tabular-nums text-gray-800">{curVol.toLocaleString()}</p>
+                          <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                            {delta > 0 ? '\u25B2' : delta < 0 ? '\u25BC' : '\u2014'} {delta === 0 ? 'unchanged' : `${pctChange > 0 ? '+' : ''}${pctChange}% vs 30d`}
+                          </p>
+                        </div>
+                      );
+                    })()}
 
-                  {/* Linkage trend (overall enrichment) */}
-                  {(() => {
-                    const curLinked = current.permits_geocoded + current.permits_with_parcel +
-                      current.permits_with_neighbourhood + current.permits_with_trades + current.permits_with_scope;
-                    const curPct = current.active_permits > 0 ? (curLinked / (current.active_permits * 5)) * 100 : 0;
-                    const prevLinked = prev.permits_geocoded + prev.permits_with_parcel +
-                      prev.permits_with_neighbourhood + prev.permits_with_trades + prev.permits_with_scope;
-                    const prevPctVal = prev.active_permits > 0 ? (prevLinked / (prev.active_permits * 5)) * 100 : 0;
-                    const delta = Math.round((curPct - prevPctVal) * 10) / 10;
-                    return (
-                      <div className="text-center">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">Enrichment</p>
-                        <p className="text-sm font-semibold tabular-nums text-gray-800">{curPct.toFixed(1)}%</p>
-                        <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                          {delta > 0 ? '▲' : delta < 0 ? '▼' : '—'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta}pp vs 30d`}
-                        </p>
-                      </div>
-                    );
-                  })()}
+                    {/* Enrichment trend */}
+                    {(() => {
+                      const curLinked = current.permits_geocoded + current.permits_with_parcel +
+                        current.permits_with_neighbourhood + current.permits_with_trades + current.permits_with_scope;
+                      const curPct = current.active_permits > 0 ? (curLinked / (current.active_permits * 5)) * 100 : 0;
+                      const prevLinked = prev.permits_geocoded + prev.permits_with_parcel +
+                        prev.permits_with_neighbourhood + prev.permits_with_trades + prev.permits_with_scope;
+                      const prevPctVal = prev.active_permits > 0 ? (prevLinked / (prev.active_permits * 5)) * 100 : 0;
+                      const delta = Math.round((curPct - prevPctVal) * 10) / 10;
+                      return (
+                        <div className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Enrichment</p>
+                          <p className="text-sm font-semibold tabular-nums text-gray-800">{curPct.toFixed(1)}%</p>
+                          <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                            {delta > 0 ? '\u25B2' : delta < 0 ? '\u25BC' : '\u2014'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta}pp vs 30d`}
+                          </p>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               )}
             </div>
@@ -387,6 +442,7 @@ export function DataQualityDashboard() {
           {/* ============================================================
               Pipeline Status + Enrichment Funnel (merged view)
           ============================================================ */}
+          <div ref={timelineRef}>
           <FreshnessTimeline
             pipelineLastRun={stats?.pipeline_last_run ?? {}}
             runningPipelines={runningPipelines}
@@ -401,16 +457,25 @@ export function DataQualityDashboard() {
             onToggle={togglePipeline}
             triggerError={pipelineError}
           />
-
-          {/* Schedule notice */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 flex items-start gap-2">
-            <span className="text-blue-500 text-sm mt-0.5">i</span>
-            <p className="text-xs text-blue-700">
-              <span className="font-medium">Pipeline schedules are editable.</span>{' '}
-              Click the &quot;Next&quot; date on any data source to change its cadence (Daily / Quarterly / Annual).
-              Pipelines can be triggered manually via &quot;Update Now&quot; or through the timeline chain buttons.
-            </p>
           </div>
+
+          {/* Dismissible schedule notice */}
+          {!dismissedNotice && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 flex items-start gap-2">
+              <span className="text-blue-500 text-sm mt-0.5">i</span>
+              <p className="text-xs text-blue-700 flex-1">
+                <span className="font-medium">Pipeline schedules are editable.</span>{' '}
+                Click the &quot;Next&quot; date on any data source to change its cadence (Daily / Quarterly / Annual).
+                Pipelines can be triggered manually via &quot;Update Now&quot; or through the timeline chain buttons.
+              </p>
+              <button
+                onClick={() => setDismissedNotice(true)}
+                className="text-blue-400 hover:text-blue-600 text-xs shrink-0"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
 
           {/* Schedule edit modal */}
           {scheduleModal && (

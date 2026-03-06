@@ -1,82 +1,62 @@
-# Active Task: Universal Pipeline Drill-Downs + Dual View + Description Section
-**Status:** Implementation
+# Active Task: Fix Pipeline Run All + Error Reporting + Toggle Bugs
+**Status:** Planning
 
 ## Context
-* **Goal:** Three enhancements to the FreshnessTimeline pipeline accordion drill-downs:
-  1. **Every step gets a drill-down** — not just the 13 funnel sources. Steps without funnel data get a simpler drill-down showing description, fields updated, and last-run stats.
-  2. **Show both All Time and Last Run simultaneously** — remove the toggle, stack both views inside the accordion.
-  3. **Add a "Description" section** — each drill-down starts with a description of what the step does and which database fields/tables it updates.
-* **Target Spec:** `docs/specs/26_admin.md` (primary) + `docs/specs/28_data_quality_dashboard.md` (cross-spec)
-* **Reference:** `docs/reports/corporate_identity_pipeline_evaluation.md` Section 6 (UI Strategy + New Funnel Metrics Required)
+* **Goal:** Fix three persistent bugs: (1) Run All button shows "Running" then stops with no error, (2) pipeline error reporting not surfacing to the user, (3) toggle on/off not responsive. Also verify pipeline runs actually work end-to-end.
+* **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `src/lib/admin/funnel.ts` — Add `STEP_DESCRIPTIONS` registry covering all 25 pipeline slugs
-  - `src/components/FreshnessTimeline.tsx` — Universal drill-down for all steps, remove toggle, show both views, add Description zone
-  - `src/components/DataQualityDashboard.tsx` — Remove funnelViewMode state and onFunnelViewModeChange prop (toggle removed)
-  - `src/tests/admin.ui.test.tsx` — Update accordion tests for universal drill-down + dual view
-  - `src/tests/quality.logic.test.ts` — Add STEP_DESCRIPTIONS coverage test
+  - `src/components/FreshnessTimeline.tsx` (toggle optimistic state, Run All onClick, error display)
+  - `src/components/DataQualityDashboard.tsx` (triggerPipeline, polling, fetchData)
+  - `src/app/api/admin/stats/route.ts` (pipeline_last_run query)
+  - `src/app/api/admin/pipelines/[slug]/route.ts` (pipeline trigger API)
+  - `src/tests/admin.ui.test.tsx` (regression tests)
+  - `src/tests/quality.infra.test.ts` (infra tests)
+* **Rollback Anchor:** `f15820d35cd4a270365f9ac184bb114bc6a7bfbd`
 
-* **Database Impact:** NO
+## State Verification (Root Cause Analysis)
+
+### Bug 1: Run All says "Running" then stops (no error)
+- **Root cause:** `GET /api/admin/stats` queries `records_meta` column from `pipeline_runs`, but migration 041 was never applied to the DB. The query fails silently (empty `catch {}` on line 222 of stats/route.ts), returning **zero** `pipeline_last_run` entries.
+- **Effect:** Poll sees no running entry for `chain_permits` -> grace period expires (15s) -> button reverts to "Run All". The chain actually runs fine in the background -- the UI just can't see it.
+- **Evidence:** `curl /api/admin/stats` returned `pipeline_last_run: {}` (0 keys). After applying migration 041, returns 51 keys.
+
+### Bug 2: Error reporting not working
+- **Root cause:** Run All button calls `onTrigger(chainSlug)` directly (line 573 of FreshnessTimeline.tsx) instead of `handleRun(chainSlug)`. The `onTrigger` prop maps to `triggerPipeline` in DataQualityDashboard which catches errors into `pipelineError` state passed as `triggerError` prop -- so the prop-based error path works for HTTP errors. But if the API returns 200 and the child process fails later, status silently reverts due to Bug 1 (poll returns empty data).
+
+### Bug 3: Toggle not responsive / can't turn back on
+- **Root cause (already fixed in prior session):** `handleToggle` stored `!currentlyDisabled` (the SAME state) instead of `currentlyDisabled` (the desired new enabled state). Also, the useEffect sync used broken reference comparison on a new Set created every render.
+
+### Bug 4: Pipeline test coverage gaps
+- No test verifies that `stats/route.ts` returns `pipeline_last_run` entries when `records_meta` column is missing (the silent failure scenario).
 
 ## Technical Implementation
-
-### Phase 1: Add STEP_DESCRIPTIONS to funnel.ts
-- Add `StepDescription` interface: `{ summary: string; fields: string[]; table: string }`
-- Add `STEP_DESCRIPTIONS: Record<string, StepDescription>` covering all 25 pipeline slugs in PIPELINE_REGISTRY
-- Each entry describes what the step does (1-line summary) and which DB fields/tables it writes to
-- Steps from corporate_identity_pipeline_evaluation.md Section 6 (New Funnel Metrics Required):
-  - `assert_schema`: "Validates upstream CKAN/CSV column headers before ingestion" — fields: schema metadata
-  - `assert_data_bounds`: "Post-ingestion SQL checks for cost outliers, null rates, referential integrity" — fields: pipeline_runs
-  - `link_similar`: "Clusters permits by address proximity to find related applications" — fields: similar_permit_id
-  - `create_pre_permits`: "Creates placeholder permits from eligible CoA applications" — fields: permits (pre-permit rows)
-  - `refresh_snapshot`: "Captures data quality metrics snapshot to data_quality_snapshots table" — fields: all snapshot columns
-  - `compute_centroids`: "Computes geometric centroids for parcel polygons" — fields: centroid_lat, centroid_lng
-  - `inspections`: "Scrapes permit inspection stages from City portal" — fields: permit_inspections
-  - `coa_documents`: "Downloads Committee of Adjustment plans and decision PDFs" — fields: coa_documents
-  - Plus all 13 existing funnel sources get descriptions derived from their config
-
-### Phase 2: Universal drill-down in FreshnessTimeline
-- **Every step** gets an expand chevron (not just funnelRow steps)
-- For steps WITH funnelData: show Description + All Time panel + Last Run panel (stacked, no toggle)
-- For steps WITHOUT funnelData: show Description + basic last-run stats from `pipelineLastRun[scopedKey]`
-- Remove `funnelViewMode` and `onFunnelViewModeChange` props entirely
-- Remove the All Time / Last Run toggle from header
-- Accordion layout (top to bottom):
-  1. **Description** zone: step summary + fields grid
-  2. **All Time** zone (if funnelRow exists): Baseline | Intersection | Yield (3-col grid)
-  3. **Last Run** zone: either rich FunnelLastRunPanel (if funnelRow) or basic records/duration from PipelineRunInfo
-- Infrastructure steps (`refresh_snapshot`, `assert_schema`, `assert_data_bounds`) get drill-downs too — showing description + last run stats
-
-### Phase 3: Simplify DataQualityDashboard
-- Remove `funnelViewMode` state and `setFunnelViewMode`
-- Remove `onFunnelViewModeChange={setFunnelViewMode}` prop from FreshnessTimeline call
-
-### Phase 4: Update tests
-- Update accordion tests: chevron shown for ALL steps (not just funnelRow), assert 'Description' section rendered
-- Add test: STEP_DESCRIPTIONS covers all PIPELINE_REGISTRY slugs
-- Remove tests referencing the removed All Time / Last Run toggle
-- Add test: both All Time and Last Run panels render simultaneously when funnelRow exists
-
-### Phase 5: Update specs
-- Update `docs/specs/26_admin.md` — Note universal drill-downs and dual view
-- Update `docs/specs/28_data_quality_dashboard.md` — Remove toggle reference, note Description section
+* **Modified Files:**
+  - `src/app/api/admin/stats/route.ts` -- Fallback query without `records_meta` (already done)
+  - `src/components/FreshnessTimeline.tsx` -- Change Run All `onClick` from `onTrigger` to `handleRun`; toggle fix (already done); optimistic timer cleanup (already done)
+  - `src/tests/quality.infra.test.ts` -- Add test: stats route has fallback query for missing records_meta
+  - `src/tests/admin.ui.test.tsx` -- Add test: Run All uses handleRun (not raw onTrigger); regression tests for toggle + isChainRunning (already done)
 
 ## Standards Compliance
-* **Try-Catch Boundary:** No new API routes. Existing routes unchanged.
-* **Unhappy Path Tests:** Test drill-down when pipelineLastRun has no data for a step (graceful empty state).
-* **Mobile-First:** Description zone uses `grid grid-cols-1 md:grid-cols-2` for fields list. All Time + Last Run panels keep existing `grid grid-cols-1 md:grid-cols-3`. Touch targets verified via `min-h-[44px]`.
-* **Touch Targets:** Expand/collapse chevron button meets 44px minimum via `min-h-[44px] min-w-[44px]`.
+* **Try-Catch Boundary:** Stats route already has outer try-catch. Adding inner fallback try-catch for records_meta column graceful degradation.
+* **Unhappy Path Tests:** Testing the silent failure scenario (missing column -> empty pipeline_last_run).
+* **Mobile-First:** N/A -- bug fix only, no layout changes.
 
 ## Execution Plan
-- [ ] **Standards Verification:** Plan adheres to Try-Catch (no new routes), Unhappy Path (empty drill-down), Mobile-First (grid-cols-1 base), Touch Targets (44px expand button).
-- [ ] **Viewport Mocking:** This task modifies frontend UI components (FreshnessTimeline accordion, Description zone). Responsive grid uses `grid-cols-1` base (mobile) with `md:grid-cols-2` (description fields) and `md:grid-cols-3` (funnel panels) for desktop. Touch targets verified via string assertion on `min-h-[44px]`. No 375px viewport mock test required — source-level assertions confirm mobile-first class ordering.
-- [ ] **State Verification:** Currently only 13 funnel sources have drill-downs. Toggle switches between All Time / Last Run. No description section exists.
-- [ ] **Guardrail Test:** Add tests for: (1) STEP_DESCRIPTIONS covers all PIPELINE_REGISTRY slugs, (2) chevron shown for all steps, (3) Description section renders, (4) both All Time + Last Run shown without toggle.
-- [ ] **Red Light:** Run tests — new tests must fail.
-- [ ] **Implementation:**
-  - Add STEP_DESCRIPTIONS to `src/lib/admin/funnel.ts`
-  - Update FreshnessTimeline: universal drill-down, remove toggle, add Description, stack both views
-  - Simplify DataQualityDashboard: remove funnelViewMode state
-- [ ] **UI Regression Check:** Run `npx vitest run src/tests/*.ui.test.tsx`
-- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. All tests must pass.
-- [ ] **Atomic Commit:** Prompt user to commit: `feat(26_admin+28_quality): universal pipeline drill-downs with description + dual view`
-- [ ] **Founder's Audit:** Verify no laziness placeholders, all exports resolve, test coverage complete.
+- [ ] **Rollback Anchor:** `f15820d` recorded above.
+- [ ] **State Verification:** Root causes documented above.
+- [ ] **Spec Review:** Spec 28 confirms: "Dashboard polls every 5s while any pipeline is running" -- Bug 1 breaks this contract.
+- [ ] **Reproduction Tests (Red Light):**
+  - Test 1: Stats route pipeline_last_run query has fallback for missing records_meta
+  - Test 2: Run All button uses `handleRun` (not raw `onTrigger`)
+  - Test 3: Toggle stores correct optimistic value (already added)
+  - Test 4: isChainRunning only checks chain slug (already added)
+- [ ] **Red Light:** Run tests -- new tests MUST fail before fix.
+- [ ] **Fix:**
+  - Apply migration 041 to DB (already done)
+  - Stats route: inner fallback query without records_meta (already done)
+  - FreshnessTimeline: Run All onClick -> handleRun
+  - FreshnessTimeline: toggle fix + optimistic timer (already done)
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix` -- all pass.
+- [ ] **Collateral Check:** `npx vitest related src/app/api/admin/stats/route.ts --run`
+- [ ] **Atomic Commit:** `git commit -m "fix(28_quality): pipeline Run All + toggle + error reporting"`
+- [ ] **Spec Audit:** No spec change needed -- fixes restore intended behavior.

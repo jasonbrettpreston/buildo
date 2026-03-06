@@ -191,7 +191,8 @@ export async function GET() {
       records_meta: Record<string, unknown> | null;
     }> = {};
     try {
-      const pipelineRows = await query<{
+      // Try full query first (includes records_meta from migration 041)
+      let pipelineRows: Array<{
         pipeline: string;
         started_at: Date;
         status: string;
@@ -201,12 +202,32 @@ export async function GET() {
         records_new: number | null;
         records_updated: number | null;
         records_meta: Record<string, unknown> | null;
-      }>(
-        `SELECT DISTINCT ON (pipeline) pipeline, started_at, status,
-                duration_ms, error_message, records_total, records_new, records_updated, records_meta
-         FROM pipeline_runs
-         ORDER BY pipeline, started_at DESC`
-      );
+      }>;
+      try {
+        pipelineRows = await query(
+          `SELECT DISTINCT ON (pipeline) pipeline, started_at, status,
+                  duration_ms, error_message, records_total, records_new, records_updated, records_meta
+           FROM pipeline_runs
+           ORDER BY pipeline, started_at DESC`
+        );
+      } catch {
+        // Fallback: records_meta column may not exist yet (migration 041)
+        pipelineRows = (await query<{
+          pipeline: string;
+          started_at: Date;
+          status: string;
+          duration_ms: number | null;
+          error_message: string | null;
+          records_total: number | null;
+          records_new: number | null;
+          records_updated: number | null;
+        }>(
+          `SELECT DISTINCT ON (pipeline) pipeline, started_at, status,
+                  duration_ms, error_message, records_total, records_new, records_updated
+           FROM pipeline_runs
+           ORDER BY pipeline, started_at DESC`
+        )).map(r => ({ ...r, records_meta: null }));
+      }
       for (const row of pipelineRows) {
         pipelineLastRun[row.pipeline] = {
           last_run_at: row.started_at ? new Date(row.started_at).toISOString() : null,
@@ -220,7 +241,7 @@ export async function GET() {
         };
       }
     } catch {
-      // pipeline_runs table may not exist yet (migration not applied)
+      // pipeline_runs table may not exist yet
     }
 
     // Pipeline schedules from DB

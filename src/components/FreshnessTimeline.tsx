@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { FunnelRowData } from '@/lib/admin/funnel';
 import { STEP_DESCRIPTIONS } from '@/lib/admin/funnel';
 
@@ -436,7 +436,10 @@ function FunnelLastRunPanel({ row }: { row: FunnelRowData }) {
 export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData }: FreshnessTimelineProps) {
   const [errorPopover, setErrorPopover] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
-
+  // Bug Fix 1: optimisticToggles for immediate visual feedback on toggle click
+  const [optimisticToggles, setOptimisticToggles] = useState<Map<string, boolean>>(new Map());
+  // Bug Fix 2: per-step runError tracking
+  const [runError, setRunError] = useState<string | null>(null);
   const toggleExpand = (key: string) => {
     setExpandedSteps((prev) => {
       const next = new Set(prev);
@@ -444,6 +447,56 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
       else next.add(key);
       return next;
     });
+  };
+
+  // Optimistic toggle — flip local state immediately, auto-clear after API round-trip
+  const handleToggle = (slug: string, currentlyDisabled: boolean) => {
+    setOptimisticToggles((prev) => {
+      const next = new Map(prev);
+      next.set(slug, currentlyDisabled); // currentlyDisabled = desired new enabled state
+      return next;
+    });
+    // Clear optimistic entry after 3s (API fetchData should have refreshed by then)
+    const prev = optimisticTimerRef.current.get(slug);
+    if (prev) clearTimeout(prev);
+    optimisticTimerRef.current.set(
+      slug,
+      setTimeout(() => {
+        setOptimisticToggles((p) => {
+          const n = new Map(p);
+          n.delete(slug);
+          return n;
+        });
+        optimisticTimerRef.current.delete(slug);
+      }, 3000)
+    );
+    onToggle?.(slug, currentlyDisabled);
+  };
+
+  // Resolve effective disabled state: optimistic override > prop
+  const isEffectivelyDisabled = (slug: string): boolean => {
+    if (optimisticToggles.has(slug)) return !optimisticToggles.get(slug)!;
+    return disabledPipelines?.has(slug) ?? false;
+  };
+
+  // Clear optimistic overrides after a timeout — by then the API has refreshed the prop
+  const optimisticTimerRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+      for (const t of optimisticTimerRef.current.values()) clearTimeout(t);
+    };
+  }, []);
+
+  // Bug Fix 2: Safe run with async error feedback
+  const handleRun = async (slug: string) => {
+    setRunError(null);
+    try {
+      await onTrigger(slug);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setRunError(`${slug}: ${msg}`);
+    }
   };
 
   const allSlugs = Object.keys(PIPELINE_REGISTRY);
@@ -479,13 +532,20 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
         </div>
       </div>
 
+      {/* Run error inline banner */}
+      {runError && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center justify-between">
+          <p className="text-[10px] text-amber-700 font-medium">Run failed: {runError}</p>
+          <button onClick={() => setRunError(null)} className="text-amber-400 hover:text-amber-600 text-xs">Dismiss</button>
+        </div>
+      )}
+
       {/* Chains */}
       <div className="space-y-5">
         {PIPELINE_CHAINS.map((chain) => {
           const stepNumbers = computeStepNumbers(chain.steps);
           const chainSlug = `chain_${chain.id}`;
-          const isChainRunning = runningPipelines.has(chainSlug) ||
-            chain.steps.some((s) => runningPipelines.has(s.slug));
+          const isChainRunning = runningPipelines.has(chainSlug);
 
           // Disable Run All if chain is coming soon or all toggleable steps are disabled
           const toggleableSteps = chain.steps.filter((s) => !NON_TOGGLEABLE_SLUGS.has(s.slug));
@@ -510,7 +570,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                 <span className="text-[9px] text-gray-300">{chain.description}</span>
                 <div className="flex-1 h-px bg-gray-100" />
                 <button
-                  onClick={() => onTrigger(chainSlug)}
+                  onClick={() => handleRun(chainSlug)}
                   disabled={runAllDisabled}
                   className={`text-[9px] px-2.5 py-1 rounded border min-h-[44px] ${
                     isChainRunning
@@ -524,8 +584,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                 </button>
               </div>
 
-              {/* Chain steps */}
-              <div className="space-y-0">
+              {/* Chain steps — each pipeline gets its own tile */}
+              <div className="space-y-2">
                 {chain.steps.map((step, i) => {
                   const entry = PIPELINE_REGISTRY[step.slug];
                   // Use chain-scoped status key (e.g. permits:assert_schema) so
@@ -533,7 +593,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const scopedKey = `${chain.id}:${step.slug}`;
                   const info = pipelineLastRun[scopedKey];
                   const isRunning = runningPipelines.has(scopedKey) || runningPipelines.has(step.slug);
-                  const isDisabled = disabledPipelines?.has(step.slug) ?? false;
+                  const isDisabled = isEffectivelyDisabled(step.slug);
                   const dot = isDisabled
                     ? { color: 'bg-gray-300', label: 'Disabled' }
                     : getStatusDot(info, isRunning);
@@ -542,211 +602,211 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const isSub = step.indent >= 2;
                   const isDeepSub = step.indent >= 3;
 
-                  // Connector line: show for indent 1+ steps, fade at end of group
-                  const showConnector = step.indent > 0;
-                  const nextStep = chain.steps[i + 1];
-                  const isLastInGroup = !nextStep || nextStep.indent === 0;
-                  // For indent-2+, check if next is also indent-2+
-                  const isLastSubStep = isSub && (!nextStep || nextStep.indent < 2);
-
                   const funnelRow = funnelData?.[step.slug];
                   const expandKey = `${chain.id}-${step.slug}`;
                   const isExpanded = expandedSteps.has(expandKey);
 
-                  return (
-                    <div key={expandKey}>
-                    <div className="flex items-stretch group">
-                      {/* Vertical connector column */}
-                      <div className={`shrink-0 flex flex-col items-center ${isSub ? 'w-5' : 'w-5'}`}>
-                        {showConnector ? (
-                          <div
-                            className={`w-px flex-1 ${
-                              (isSub ? isLastSubStep : isLastInGroup)
-                                ? 'bg-gradient-to-b from-gray-200 to-transparent'
-                                : 'bg-gray-200'
-                            }`}
-                          />
-                        ) : (
-                          <div className="flex-1" />
-                        )}
-                      </div>
+                  // Accuracy bar chart width (accuracy-pill bar-chart)
+                  const barPct = funnelRow ? funnelRow.matchPct : null;
+                  const barColor = barPct !== null
+                    ? barPct >= 90 ? 'bg-green-200' : barPct >= 70 ? 'bg-blue-200' : barPct >= 50 ? 'bg-yellow-200' : 'bg-red-200'
+                    : '';
 
-                      {/* Extra indent spacer for sub-steps */}
-                      {isSub && (
-                        <div className={`shrink-0 flex items-center ${isDeepSub ? 'w-14' : 'w-8'}`}>
-                          <div className="w-full border-b border-dashed border-gray-300" />
-                        </div>
+                  return (
+                    <div key={expandKey} className={`pipeline-tile border rounded-lg ${
+                      isSub ? 'ml-6 border-gray-100 bg-gray-50/40' :
+                      isDeepSub ? 'ml-10 border-gray-100 bg-gray-50/30' :
+                      'border-gray-200 bg-white'
+                    } ${isDisabled ? 'opacity-60' : ''}`}>
+
+                    {/* Accuracy bar-chart background — fills proportionally */}
+                    <div className="relative overflow-hidden rounded-lg">
+                      {barPct !== null && (
+                        <div
+                          className={`absolute inset-y-0 left-0 ${barColor} opacity-30`}
+                          style={{ width: `${Math.min(barPct, 100)}%` }}
+                        />
                       )}
 
-                      {/* Row content */}
-                      <div className={`flex items-center gap-1.5 flex-1 py-1 ${isRoot ? 'pt-1.5' : ''}`}>
-                        {/* Step number */}
-                        {stepNum && (
-                          <span className={`text-[9px] tabular-nums shrink-0 w-5 text-right ${
-                            isRoot ? 'font-semibold text-gray-500' : 'text-gray-400'
-                          }`}>
-                            {stepNum}.
-                          </span>
-                        )}
+                      {/* Row content — mobile-first: wraps on small screens, inline on md+ */}
+                      <div className={`relative flex flex-wrap md:flex-nowrap items-center gap-2 px-3 py-2 ${isRoot ? '' : ''}`}>
+                        {/* Primary zone: step number + dot + name + accuracy % */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          {/* Step number */}
+                          {stepNum && (
+                            <span className={`text-[9px] tabular-nums shrink-0 w-5 text-right ${
+                              isRoot ? 'font-semibold text-gray-500' : 'text-gray-400'
+                            }`}>
+                              {stepNum}.
+                            </span>
+                          )}
 
-                        {/* Arrow for dependent / sub-dependent steps */}
-                        {step.indent >= 1 && (
-                          <span className={`text-gray-300 shrink-0 ${isSub ? 'text-[8px] w-3' : 'text-[9px] w-3'}`}>
-                            →
-                          </span>
-                        )}
+                          {/* Arrow for dependent / sub-dependent steps */}
+                          {step.indent >= 1 && !isSub && (
+                            <span className="text-gray-300 shrink-0 text-[9px] w-3">
+                              &rarr;
+                            </span>
+                          )}
 
-                        {/* Status dot */}
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${dot.color}`} title={dot.label} />
+                          {/* Status dot */}
+                          <div className={`w-2 h-2 rounded-full shrink-0 ${dot.color}`} title={dot.label} />
 
-                        {/* Pipeline name */}
-                        <span
-                          className={`text-xs truncate ${
-                            isDisabled
-                              ? 'text-gray-300 line-through w-36'
-                              : isRoot
-                              ? 'text-gray-800 font-medium w-36'
-                              : isDeepSub
-                              ? 'text-gray-400 w-28 text-[10px]'
-                              : isSub
-                              ? 'text-gray-500 w-32 text-[11px]'
-                              : 'text-gray-600 w-36'
-                          }`}
-                          title={entry?.name ?? step.slug}
-                        >
-                          {entry?.name ?? step.slug}
-                        </span>
-
-                        {/* Dotted line */}
-                        <div className="flex-1 border-b border-dotted border-gray-200" />
-
-                        {/* Funnel match % chip */}
-                        {funnelRow && (
-                          <span className={`text-[9px] font-semibold tabular-nums px-1.5 py-0.5 rounded shrink-0 ${
-                            funnelRow.matchPct >= 90 ? 'bg-green-50 text-green-700' :
-                            funnelRow.matchPct >= 70 ? 'bg-blue-50 text-blue-700' :
-                            funnelRow.matchPct >= 50 ? 'bg-yellow-50 text-yellow-700' :
-                            'bg-red-50 text-red-600'
-                          }`}>
-                            {funnelRow.matchPct}%
-                          </span>
-                        )}
-
-                        {/* Records summary */}
-                        {!isRunning && info?.records_total != null && info.records_total > 0 && (
-                          <span className="text-[9px] text-gray-400 tabular-nums shrink-0" title={`${info.records_total} total / ${info.records_new ?? 0} new / ${info.records_updated ?? 0} updated`}>
-                            {info.records_total.toLocaleString()}
-                            {(info.records_new ?? 0) > 0 && <span className="text-green-500"> +{info.records_new}</span>}
-                          </span>
-                        )}
-
-                        {/* Duration */}
-                        {!isRunning && info?.duration_ms != null && (
-                          <span className="text-[9px] text-gray-400 tabular-nums shrink-0">
-                            {formatDuration(info.duration_ms)}
-                          </span>
-                        )}
-
-                        {/* Status badge */}
-                        {isRunning && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">
-                            Running
-                          </span>
-                        )}
-                        {!isRunning && info?.status === 'failed' && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setErrorPopover(errorPopover === step.slug ? null : step.slug);
-                            }}
-                            className="text-[9px] px-1.5 py-0.5 rounded bg-red-50 text-red-600 font-medium hover:bg-red-100 relative"
-                          >
-                            Failed
-                            {errorPopover === step.slug && info.error_message && (
-                              <div className="absolute z-20 right-0 top-6 w-72 bg-white border border-red-200 rounded-lg shadow-lg p-3 text-left">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-[10px] font-semibold text-red-700">Error Details</span>
-                                  <button onClick={(ev) => { ev.stopPropagation(); setErrorPopover(null); }} className="text-gray-400 hover:text-gray-600 text-xs">&times;</button>
-                                </div>
-                                <pre className="text-[9px] text-gray-600 whitespace-pre-wrap break-words max-h-40 overflow-y-auto font-mono">{info.error_message}</pre>
-                              </div>
-                            )}
-                          </button>
-                        )}
-
-                        {/* SLA badge */}
-                        {!isRunning && slaTargets && slaTargets[step.slug] && info?.last_run_at && (() => {
-                          const hoursSince = (Date.now() - new Date(info.last_run_at).getTime()) / (1000 * 60 * 60);
-                          return hoursSince > slaTargets[step.slug] ? (
-                            <span className="text-[8px] px-1 py-0.5 rounded bg-red-100 text-red-600 font-semibold shrink-0">SLA</span>
-                          ) : null;
-                        })()}
-
-                        {/* Timestamp */}
-                        <span
-                          className="text-[10px] text-gray-500 w-20 text-right shrink-0 tabular-nums"
-                          title={formatDate(info?.last_run_at ?? null)}
-                        >
-                          {timeAgo(info?.last_run_at ?? null)}
-                        </span>
-
-                        {/* Run button — hidden for infrastructure steps */}
-                        {!NON_TOGGLEABLE_SLUGS.has(step.slug) && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); onTrigger(step.slug); }}
-                            disabled={isRunning || isDisabled}
-                            className={`text-[9px] px-2 py-0.5 rounded border ${
-                              isRunning
-                                ? 'border-blue-200 text-blue-400 cursor-not-allowed'
-                                : isDisabled
-                                ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                                : 'border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                          {/* Pipeline name */}
+                          <span
+                            className={`text-xs truncate ${
+                              isDisabled
+                                ? 'text-gray-300 line-through'
+                                : isRoot
+                                ? 'text-gray-800 font-medium'
+                                : isDeepSub
+                                ? 'text-gray-400 text-[10px]'
+                                : isSub
+                                ? 'text-gray-500 text-[11px]'
+                                : 'text-gray-600'
                             }`}
+                            title={entry?.name ?? step.slug}
                           >
-                            Run
-                          </button>
-                        )}
+                            {entry?.name ?? step.slug}
+                          </span>
 
-                        {/* Toggle switch — hidden for infrastructure steps */}
-                        {onToggle && !NON_TOGGLEABLE_SLUGS.has(step.slug) && (
+                          {/* Accuracy pill with % label (accuracy-pill) */}
+                          {funnelRow && (
+                            <span className={`accuracy-pill text-[9px] font-semibold tabular-nums px-1.5 py-0.5 rounded shrink-0 ${
+                              funnelRow.matchPct >= 90 ? 'bg-green-100 text-green-800' :
+                              funnelRow.matchPct >= 70 ? 'bg-blue-100 text-blue-700' :
+                              funnelRow.matchPct >= 50 ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-red-100 text-red-600'
+                            }`}>
+                              {funnelRow.matchPct}%
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Flexible spacer */}
+                        <div className="flex-1 hidden md:block" />
+
+                        {/* Secondary zone: update-status + controls — more spacing (gap-3) */}
+                        <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
+                          {/* Records summary */}
+                          {!isRunning && info?.records_total != null && info.records_total > 0 && (
+                            <span className="text-[9px] text-gray-400 tabular-nums shrink-0" title={`${info.records_total} total / ${info.records_new ?? 0} new / ${info.records_updated ?? 0} updated`}>
+                              {info.records_total.toLocaleString()}
+                              {(info.records_new ?? 0) > 0 && <span className="text-green-500"> +{info.records_new}</span>}
+                            </span>
+                          )}
+
+                          {/* Duration */}
+                          {!isRunning && info?.duration_ms != null && (
+                            <span className="text-[9px] text-gray-400 tabular-nums shrink-0">
+                              {formatDuration(info.duration_ms)}
+                            </span>
+                          )}
+
+                          {/* Status badge */}
+                          {isRunning && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">
+                              Running
+                            </span>
+                          )}
+                          {!isRunning && info?.status === 'failed' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setErrorPopover(errorPopover === step.slug ? null : step.slug);
+                              }}
+                              className="text-[9px] px-1.5 py-0.5 rounded bg-red-50 text-red-600 font-medium hover:bg-red-100 relative"
+                            >
+                              Failed
+                              {errorPopover === step.slug && info.error_message && (
+                                <div className="absolute z-20 right-0 top-6 w-72 bg-white border border-red-200 rounded-lg shadow-lg p-3 text-left">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[10px] font-semibold text-red-700">Error Details</span>
+                                    <button onClick={(ev) => { ev.stopPropagation(); setErrorPopover(null); }} className="text-gray-400 hover:text-gray-600 text-xs">&times;</button>
+                                  </div>
+                                  <pre className="text-[9px] text-gray-600 whitespace-pre-wrap break-words max-h-40 overflow-y-auto font-mono">{info.error_message}</pre>
+                                </div>
+                              )}
+                            </button>
+                          )}
+
+                          {/* SLA badge */}
+                          {!isRunning && slaTargets && slaTargets[step.slug] && info?.last_run_at && (() => {
+                            const hoursSince = (Date.now() - new Date(info.last_run_at).getTime()) / (1000 * 60 * 60);
+                            return hoursSince > slaTargets[step.slug] ? (
+                              <span className="text-[8px] px-1 py-0.5 rounded bg-red-100 text-red-600 font-semibold shrink-0">SLA</span>
+                            ) : null;
+                          })()}
+
+                          {/* Update status with clock icon (update-status) */}
+                          <span
+                            className="update-status flex items-center gap-1 text-[10px] text-gray-500 shrink-0 tabular-nums"
+                            title={formatDate(info?.last_run_at ?? null)}
+                          >
+                            <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {timeAgo(info?.last_run_at ?? null)}
+                          </span>
+
+                          {/* Run button — hidden for infrastructure steps */}
+                          {!NON_TOGGLEABLE_SLUGS.has(step.slug) && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleRun(step.slug); }}
+                              disabled={isRunning || isDisabled}
+                              className={`text-[9px] px-2.5 py-1 rounded border min-h-[44px] ${
+                                isRunning
+                                  ? 'border-blue-200 text-blue-400 cursor-not-allowed'
+                                  : isDisabled
+                                  ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                                  : 'border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                              }`}
+                            >
+                              <span className="hidden md:inline">Run</span>
+                              <span className="md:hidden">&#9654;</span>
+                            </button>
+                          )}
+
+                          {/* Toggle switch — hidden for infrastructure steps */}
+                          {onToggle && !NON_TOGGLEABLE_SLUGS.has(step.slug) && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleToggle(step.slug, isDisabled); }}
+                              className="min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+                              title={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
+                              aria-label={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
+                            >
+                              <div className={`relative w-7 h-4 rounded-full transition-colors ${isDisabled ? 'bg-gray-300' : 'bg-green-500'}`}>
+                                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${isDisabled ? 'left-0.5' : 'left-3.5'}`} />
+                              </div>
+                            </button>
+                          )}
+
+                          {/* Drill-down expand chevron — available for all steps */}
                           <button
-                            onClick={(e) => { e.stopPropagation(); onToggle(step.slug, isDisabled); }}
+                            onClick={(e) => { e.stopPropagation(); toggleExpand(expandKey); }}
                             className="min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
-                            title={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
-                            aria-label={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
+                            title={isExpanded ? 'Collapse details' : 'Expand details'}
+                            aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
                           >
-                            <div className={`relative w-7 h-4 rounded-full transition-colors ${isDisabled ? 'bg-gray-300' : 'bg-green-500'}`}>
-                              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${isDisabled ? 'left-0.5' : 'left-3.5'}`} />
-                            </div>
+                            <svg
+                              className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                              fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                           </button>
-                        )}
-
-                        {/* Drill-down expand chevron — available for all steps */}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); toggleExpand(expandKey); }}
-                          className="min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
-                          title={isExpanded ? 'Collapse details' : 'Expand details'}
-                          aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-                        >
-                          <svg
-                            className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
+                        </div>
                       </div>
                     </div>
 
                     {/* Universal drill-down accordion panel */}
                     {isExpanded && (
-                      <div className="ml-10 mb-2 bg-gray-50/80 border border-gray-100 rounded-lg px-4 py-3 space-y-4">
-                        {/* Description zone */}
+                      <div className="px-3 pb-3 pt-1 border-t border-gray-100 space-y-3">
+                        {/* Description tile (accordion-tile) */}
                         {(() => {
                           const desc = STEP_DESCRIPTIONS[step.slug];
                           if (!desc) return null;
                           return (
-                            <div>
+                            <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                               <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</h4>
                               <p className="text-xs text-gray-600 mb-2">{desc.summary}</p>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-0.5">
@@ -762,22 +822,22 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           );
                         })()}
 
-                        {/* All Time zone (funnel sources only) */}
+                        {/* All Time tile (funnel sources only) */}
                         {funnelRow && (
-                          <div>
+                          <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                             <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">All Time</h4>
                             <FunnelAllTimePanel row={funnelRow} />
                           </div>
                         )}
 
-                        {/* Last Run zone */}
+                        {/* Last Run tile */}
                         {funnelRow ? (
-                          <div>
+                          <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                             <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Last Run</h4>
                             <FunnelLastRunPanel row={funnelRow} />
                           </div>
                         ) : info ? (
-                          <div>
+                          <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                             <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Last Run</h4>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div className="space-y-1.5">

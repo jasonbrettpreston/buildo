@@ -67,15 +67,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     const result = await query<{ pipeline: string; enabled: boolean }>(
-      `UPDATE pipeline_schedules SET enabled = $1, updated_at = NOW()
-       WHERE pipeline = $2
+      `INSERT INTO pipeline_schedules (pipeline, cadence, enabled, updated_at)
+       VALUES ($2, 'Daily', $1, NOW())
+       ON CONFLICT (pipeline) DO UPDATE SET enabled = $1, updated_at = NOW()
        RETURNING pipeline, enabled`,
       [enabled, pipeline]
     );
-
-    if (result.length === 0) {
-      return NextResponse.json({ error: `Pipeline "${pipeline}" not found` }, { status: 404 });
-    }
 
     return NextResponse.json({ updated: result[0] });
   } catch (err) {

@@ -85,38 +85,20 @@ export async function POST(
 
   const isChain = CHAIN_SLUGS.has(slug);
 
-  // Auto-expire stale runs — processes that crashed without updating their row.
-  // Chains get 1 hour before considered stale; individual pipelines get 15 minutes.
+  // Force-cancel any previous 'running' rows for this slug.
+  // Previous runs may be stale (dev server restart, process crash) and would
+  // permanently block future runs. This is safe: if the old process is still
+  // alive it will continue but its tracking row is marked cancelled.
   try {
     await query(
       `UPDATE pipeline_runs
-       SET status = 'failed', error_message = 'Stale run auto-cleaned', completed_at = NOW()
+       SET status = 'cancelled', error_message = 'Superseded by new run', completed_at = NOW()
        WHERE status = 'running'
-         AND pipeline = $1
-         AND started_at < NOW() - INTERVAL '${isChain ? '60 minutes' : '15 minutes'}'`,
+         AND pipeline = $1`,
       [slug]
     );
   } catch {
-    // Non-fatal
-  }
-
-  // Concurrency guard: reject if this pipeline is legitimately still running
-  try {
-    const alreadyRunning = await query<{ id: number; pipeline: string }>(
-      `SELECT id, pipeline FROM pipeline_runs
-       WHERE status = 'running'
-         AND pipeline = $1
-       LIMIT 1`,
-      [slug]
-    );
-    if (alreadyRunning.length > 0) {
-      return NextResponse.json(
-        { error: `Pipeline ${slug} is already running (run ${alreadyRunning[0].id})` },
-        { status: 409 }
-      );
-    }
-  } catch {
-    // Non-fatal — proceed without guard if table doesn't exist
+    // Non-fatal — proceed if table doesn't exist
   }
 
   // Insert tracking row for ALL pipelines (including chains) so the row exists
