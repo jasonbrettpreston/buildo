@@ -583,7 +583,16 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
 
               {/* Chain steps — each pipeline gets its own tile */}
               <div className="space-y-2">
-                {chain.steps.map((step, i) => {
+                {(() => {
+                  // Chain start time — used to distinguish "completed in THIS run" vs stale previous-run data.
+                  // If chain is running but last_run_at hasn't appeared in polling yet, use
+                  // current time so all prior steps are treated as stale (pending).
+                  const chainInfo = pipelineLastRun[chainSlug];
+                  const chainStartedAt = chainInfo?.last_run_at
+                    ? new Date(chainInfo.last_run_at).getTime()
+                    : (isChainRunning ? Date.now() : 0);
+
+                  return chain.steps.map((step, i) => {
                   const entry = PIPELINE_REGISTRY[step.slug];
                   // Use chain-scoped status key (e.g. permits:assert_schema) so
                   // shared steps don't bleed status across unrelated chains.
@@ -593,10 +602,11 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const isDisabled = isEffectivelyDisabled(step.slug);
                   // When the parent chain is running but this step hasn't started yet,
                   // show "Pending" instead of stale last-run status (fixes green-stays-green).
-                  // Exclude steps that already completed/failed in THIS run — they should
-                  // show their real status, not revert to gray.
-                  const stepDone = info?.status === 'completed' || info?.status === 'failed';
-                  const isPending = isChainRunning && !isRunning && !stepDone;
+                  // A step is only "done in this run" if its last_run_at >= the chain's
+                  // start time. Otherwise the completed/failed status is from a previous run.
+                  const stepRanAt = info?.last_run_at ? new Date(info.last_run_at).getTime() : 0;
+                  const stepDoneThisRun = (info?.status === 'completed' || info?.status === 'failed') && stepRanAt >= chainStartedAt;
+                  const isPending = isChainRunning && !isRunning && !stepDoneThisRun;
                   const dot = isDisabled
                     ? { color: 'bg-gray-300', label: 'Disabled' }
                     : isPending
@@ -617,12 +627,18 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     ? barPct >= 90 ? 'bg-green-200' : barPct >= 70 ? 'bg-blue-200' : barPct >= 50 ? 'bg-yellow-200' : 'bg-red-200'
                     : '';
 
+                  // Flash the entire tile row for warning/stale steps to draw attention
+                  const tileFlash = dot.label === 'Aging'
+                    ? 'animate-pulse border-yellow-400'
+                    : dot.label === 'Stale'
+                    ? 'animate-pulse border-red-400'
+                    : '';
+
+                  const indentCls = isSub ? 'ml-6 bg-gray-50/40' : isDeepSub ? 'ml-10 bg-gray-50/30' : 'bg-white';
+                  const borderCls = tileFlash || (isSub || isDeepSub ? 'border-gray-100' : 'border-gray-200');
+
                   return (
-                    <div key={expandKey} className={`pipeline-tile border rounded-lg ${
-                      isSub ? 'ml-6 border-gray-100 bg-gray-50/40' :
-                      isDeepSub ? 'ml-10 border-gray-100 bg-gray-50/30' :
-                      'border-gray-200 bg-white'
-                    } ${isDisabled ? 'opacity-60' : ''}`}>
+                    <div key={expandKey} className={`pipeline-tile border rounded-lg ${indentCls} ${borderCls} ${isDisabled ? 'opacity-60' : ''}`}>
 
                     {/* Accuracy bar-chart background — fills proportionally */}
                     <div className="relative overflow-hidden rounded-lg">
@@ -911,7 +927,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     )}
                     </div>
                   );
-                })}
+                }); })()}
               </div>
 
               {/* Chain error summary — last failure in this chain */}

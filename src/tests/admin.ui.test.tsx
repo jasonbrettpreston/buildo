@@ -2071,14 +2071,15 @@ describe('Status dots reset when chain re-runs', () => {
     expect(source).toMatch(/isChainRunning[\s\S]{0,200}(pending|Pending|Queued|queued|bg-gray)/);
   });
 
-  it('excludes completed/failed steps from pending reset (stepDone guard)', () => {
+  it('compares step last_run_at against chain start time to detect done-this-run', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // Steps that already completed or failed during the chain run should NOT
-    // revert to gray pending — they should show their real status dot.
-    expect(source).toMatch(/stepDone[\s\S]{0,50}completed[\s\S]{0,50}failed/);
-    expect(source).toMatch(/isPending[\s\S]{0,80}!stepDone/);
+    // stepDoneThisRun must compare step time vs chain start time — not just check status
+    expect(source).toMatch(/chainStartedAt/);
+    expect(source).toMatch(/stepRanAt[\s\S]{0,100}chainStartedAt/);
+    expect(source).toMatch(/stepDoneThisRun/);
+    expect(source).toMatch(/isPending[\s\S]{0,80}!stepDoneThisRun/);
   });
 });
 
@@ -2164,5 +2165,16 @@ describe('Warning and stale status dots flash', () => {
     const staleLineMatch = fnBody.match(/return\s*\{[^}]*label:\s*'Stale'[^}]*\}/);
     expect(staleLineMatch).toBeTruthy();
     expect(staleLineMatch![0]).toContain('animate-pulse');
+  });
+
+  it('applies animate-pulse to the entire pipeline tile row for warning/stale steps', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // tileFlash variable should apply animate-pulse + colored border to the tile
+    expect(source).toMatch(/tileFlash[\s\S]{0,100}Aging[\s\S]{0,80}animate-pulse[\s\S]{0,80}border-yellow/);
+    expect(source).toMatch(/tileFlash[\s\S]{0,200}Stale[\s\S]{0,80}animate-pulse[\s\S]{0,80}border-red/);
+    // tileFlash should be applied to the pipeline-tile div's className
+    expect(source).toMatch(/pipeline-tile[\s\S]{0,200}tileFlash|tileFlash[\s\S]{0,200}pipeline-tile/);
   });
 });
