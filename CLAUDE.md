@@ -192,6 +192,22 @@
 
 ---
 
+## Error Handling & Stability Rules
+
+### Rule 1: Unhappy Path Mandate (WF1 / WF2)
+When writing integration tests (`.infra.test.ts`), you MUST include tests for **error paths and silent failures** — not just Loading, Success, and Error states. Force errors in the deepest layer (e.g., database ROLLBACK failure, network timeout) and assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking `.message`.
+
+### Rule 2: Try-Catch Boundary Rule (WF1 / WF2)
+Every newly created `export async function GET/POST/PUT/DELETE/PATCH` inside `src/app/api/` MUST have an overarching `try-catch` block wrapping the entire handler body. The catch block MUST return `{ error: 'Human-readable message' }` with status 500 and log the raw error server-side only. Never expose `err.message` to clients. The guardrail test in `api.infra.test.ts` scans all route files to enforce this.
+
+### Rule 3: Assumption Documentation (WF2 / WF3)
+Before accessing nested properties, check for `null` or `undefined` first. Use Optional Chaining (`?.`) or explicit guards — not non-null assertion (`!`) — unless the value is guaranteed by a prior validation step. If using `!`, document why in a comment.
+
+### Rule 4: Zero-Downtime Migration Rule (WF1 / WF2)
+When altering existing columns in a database table larger than 100,000 rows, do NOT use `ALTER TABLE ... ALTER COLUMN` directly. Use the **Add-Backfill-Drop** pattern (add new column → backfill data → swap references → drop old column) to avoid table-locking. `CREATE INDEX` on large tables should use `CONCURRENTLY` when possible.
+
+---
+
 ## Spec Boundary Requirements
 Every new spec MUST include an `## Operating Boundaries` section (Target Files, Out-of-Scope Files, Cross-Spec Dependencies). Copy from `docs/specs/_spec_template.md`.
 

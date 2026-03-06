@@ -741,6 +741,31 @@ describe('API Error Handling Hardening', () => {
   });
 });
 
+describe('Performance Index Coverage', () => {
+  function readMigrations(): string {
+    const migDir = path.join(__dirname, '../../migrations');
+    return fs.readdirSync(migDir)
+      .filter(f => f.endsWith('.sql'))
+      .map(f => fs.readFileSync(path.join(migDir, f), 'utf-8'))
+      .join('\n');
+  }
+
+  it('permits.est_const_cost has a B-tree index', () => {
+    const sql = readMigrations();
+    expect(sql).toMatch(/CREATE\s+INDEX[\s\S]*?ON\s+permits\s*\(\s*est_const_cost/i);
+  });
+
+  it('permits.application_date has a B-tree index', () => {
+    const sql = readMigrations();
+    expect(sql).toMatch(/CREATE\s+INDEX[\s\S]*?ON\s+permits\s*\(\s*application_date/i);
+  });
+
+  it('coa_applications.hearing_date has a B-tree index', () => {
+    const sql = readMigrations();
+    expect(sql).toMatch(/CREATE\s+INDEX[\s\S]*?ON\s+coa_applications\s*\(\s*hearing_date/i);
+  });
+});
+
 function findRouteFiles(dir: string): string[] {
   const results: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
