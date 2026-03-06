@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 
 export async function GET(
   request: NextRequest,
@@ -57,7 +58,7 @@ export async function GET(
       wsib: wsibLinks.length > 0 ? wsibLinks[0] : null,
     });
   } catch (err) {
-    console.error('Error fetching entity detail:', err);
+    logError('[api/entities]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch entity' },
       { status: 500 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 
 /**
  * GET /api/admin/pipelines/schedules - Return all pipeline schedules.
@@ -11,7 +12,7 @@ export async function GET() {
     );
     return NextResponse.json({ schedules: rows });
   } catch (err) {
-    console.error('[admin/pipelines/schedules] Error:', err);
+    logError('[admin/pipelines/schedules]', err, { handler: 'GET' });
     return NextResponse.json({ error: 'Failed to fetch schedules' }, { status: 500 });
   }
 }
@@ -47,7 +48,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ updated: result[0] });
   } catch (err) {
-    console.error('[admin/pipelines/schedules] Error updating:', err);
+    logError('[admin/pipelines/schedules]', err, { handler: 'PUT' });
     return NextResponse.json({ error: 'Failed to update schedule' }, { status: 500 });
   }
 }

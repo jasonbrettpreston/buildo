@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 
 /**
  * GET /api/admin/stats - Return system-wide statistics for the admin dashboard.
@@ -281,7 +282,7 @@ export async function GET() {
       pipeline_schedules: pipelineSchedules,
     });
   } catch (err) {
-    console.error('[admin/stats] Error fetching stats:', err);
+    logError('[admin/stats]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch system statistics' },
       { status: 500 }

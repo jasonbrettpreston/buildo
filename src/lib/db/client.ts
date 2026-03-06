@@ -1,4 +1,5 @@
 import { Pool, PoolClient, QueryResultRow } from 'pg';
+import { logError } from '@/lib/logger';
 
 const pool = new Pool(
   process.env.DATABASE_URL
@@ -13,7 +14,7 @@ const pool = new Pool(
 );
 
 pool.on('error', (err) => {
-  console.error('Unexpected error on idle PostgreSQL client', err);
+  logError('[db/pool]', err, { event: 'idle_client_error' });
 });
 
 /**

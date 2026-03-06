@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 import {
   type WealthTier,
   TIER_LABELS,
@@ -447,7 +448,7 @@ export async function GET() {
       neighbourhoods,
     });
   } catch (err) {
-    console.error('[admin/market-metrics] Error:', err);
+    logError('[admin/market-metrics]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch market metrics' },
       { status: 500 }

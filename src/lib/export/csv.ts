@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import { getClient } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 import type { PermitFilter } from '@/lib/permits/types';
 
 // ---------------------------------------------------------------------------
@@ -184,7 +185,7 @@ export async function* generatePermitsCsv(
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK').catch((rollbackErr: unknown) => {
-      console.error('[csv-export] ROLLBACK failed:', rollbackErr);
+      logError('[csv-export]', rollbackErr, { event: 'rollback_failed' });
     });
     throw err;
   } finally {

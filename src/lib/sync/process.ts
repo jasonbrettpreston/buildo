@@ -1,4 +1,5 @@
 import { query, getClient } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 import { mapRawToPermit } from '@/lib/permits/field-mapping';
 import { computePermitHash } from '@/lib/permits/hash';
 import { diffPermitFields } from '@/lib/permits/diff';
@@ -208,12 +209,9 @@ export async function processBatch(
       try {
         await client.query('ROLLBACK');
       } catch (rollbackErr) {
-        console.error(`[sync] ROLLBACK failed for permit ${raw.PERMIT_NUM}/${raw.REVISION_NUM}:`, rollbackErr);
+        logError('[sync]', rollbackErr, { event: 'rollback_failed', permit_num: raw.PERMIT_NUM, revision_num: raw.REVISION_NUM });
       }
-      console.error(
-        `[sync] Error processing permit ${raw.PERMIT_NUM}/${raw.REVISION_NUM}:`,
-        err
-      );
+      logError('[sync]', err, { event: 'permit_processing_error', permit_num: raw.PERMIT_NUM, revision_num: raw.REVISION_NUM });
       stats.errors++;
     } finally {
       client.release();

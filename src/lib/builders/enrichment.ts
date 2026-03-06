@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 import type { Entity } from '@/lib/permits/types';
 
 // ---------------------------------------------------------------------------
@@ -79,10 +80,10 @@ export async function searchGooglePlaces(
 
     const searchResponse = await fetch(`${PLACES_TEXT_SEARCH_URL}?${searchParams}`);
     if (!searchResponse.ok) {
-      console.error(
-        `[enrichment] Places text search HTTP ${searchResponse.status}:`,
-        await searchResponse.text()
-      );
+      logError('[enrichment]', new Error(`Places text search HTTP ${searchResponse.status}`), {
+        event: 'places_text_search_failed',
+        status: searchResponse.status,
+      });
       return null;
     }
 
@@ -127,7 +128,7 @@ export async function searchGooglePlaces(
       review_count: topResult.user_ratings_total ?? null,
     };
   } catch (err) {
-    console.error('[enrichment] Google Places API error:', err);
+    logError('[enrichment]', err, { event: 'google_places_api_error' });
     return null;
   }
 }
@@ -192,7 +193,7 @@ export async function enrichBuilder(builderId: number): Promise<Entity | null> {
     );
     return updated;
   } catch (err) {
-    console.error(`[enrichment] Failed to enrich entity id=${builderId}:`, err);
+    logError('[enrichment]', err, { event: 'enrich_builder_failed', entity_id: builderId });
     return null;
   }
 }
@@ -245,7 +246,7 @@ export async function enrichUnenrichedBuilders(
       }
     }
   } catch (err) {
-    console.error('[enrichment] Batch enrichment error:', err);
+    logError('[enrichment]', err, { event: 'batch_enrichment_error' });
   }
 
   console.log(

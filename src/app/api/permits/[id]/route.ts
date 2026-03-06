@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 import { classifyScope, classifyUseType, extractBasePermitNum } from '@/lib/classification/scope';
 import { resolveStories, inferMassingUseType } from '@/lib/massing/geometry';
 import type { MassingUseType } from '@/lib/massing/geometry';
@@ -80,7 +81,7 @@ export async function GET(
         coaApplications: [coa],
       });
     } catch (err) {
-      console.error('Error fetching pre-permit detail:', err);
+      logError('[api/permits]', err, { handler: 'GET_pre_permit_detail' });
       return NextResponse.json({ error: 'Failed to fetch pre-permit' }, { status: 500 });
     }
   }
@@ -290,7 +291,7 @@ export async function GET(
       inspections,
     });
   } catch (err) {
-    console.error('Error fetching permit detail:', err);
+    logError('[api/permits]', err, { handler: 'GET_detail' });
     return NextResponse.json(
       { error: 'Failed to fetch permit' },
       { status: 500 }

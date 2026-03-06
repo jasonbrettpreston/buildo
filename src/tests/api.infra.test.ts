@@ -741,6 +741,26 @@ describe('API Error Handling Hardening', () => {
   });
 });
 
+describe('Centralized Error Logging', () => {
+  it('logError module exists and exports logError function', () => {
+    const loggerPath = path.join(__dirname, '../lib/logger.ts');
+    expect(fs.existsSync(loggerPath)).toBe(true);
+    const src = fs.readFileSync(loggerPath, 'utf-8');
+    expect(src).toContain('export function logError');
+  });
+
+  it('critical paths use logError instead of bare console.error', () => {
+    const criticalFiles = [
+      path.join(__dirname, '../lib/db/client.ts'),
+      path.join(__dirname, '../lib/sync/process.ts'),
+    ];
+    for (const file of criticalFiles) {
+      const src = fs.readFileSync(file, 'utf-8');
+      expect(src).toContain("from '@/lib/logger'");
+    }
+  });
+});
+
 describe('Performance Index Coverage', () => {
   function readMigrations(): string {
     const migDir = path.join(__dirname, '../../migrations');

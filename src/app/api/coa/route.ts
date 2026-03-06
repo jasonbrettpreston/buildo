@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err) {
-    console.error('[api/coa] Error fetching CoA applications:', err);
+    logError('[api/coa]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch CoA applications' },
       { status: 500 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 
 /**
  * GET /api/admin/builders - Return builder enrichment queue statistics.
@@ -30,7 +31,7 @@ export async function GET() {
       failed_count: parseInt(stats.failed_count, 10),
     });
   } catch (err) {
-    console.error('[admin/builders] Error fetching enrichment stats:', err);
+    logError('[admin/builders]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch builder enrichment stats' },
       { status: 500 }
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       failed: result.failed,
     });
   } catch (err) {
-    console.error('[admin/builders] Error running enrichment batch:', err);
+    logError('[admin/builders]', err, { handler: 'POST' });
     return NextResponse.json(
       { error: 'Enrichment batch failed' },
       { status: 500 }

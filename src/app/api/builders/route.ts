@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err) {
-    console.error('[api/builders] Error fetching builders:', err);
+    logError('[api/builders]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch builders' },
       { status: 500 }

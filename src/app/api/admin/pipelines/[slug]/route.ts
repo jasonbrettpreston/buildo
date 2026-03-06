@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 import { execFile } from 'child_process';
 import path from 'path';
 import fs from 'fs';
@@ -141,8 +142,7 @@ export async function POST(
           : null;
 
         if (err) {
-          console.error(`[pipelines/${slug}] Script failed${runId ? ` (run ${runId})` : ''}:`, err.message);
-          if (stderr) console.error(`[pipelines/${slug}] stderr:`, stderr.slice(0, 2000));
+          logError(`[pipelines/${slug}]`, err, { event: 'script_failed', run_id: runId, stderr: stderr?.slice(0, 2000) });
         }
 
         if (runId) {
@@ -154,7 +154,7 @@ export async function POST(
               [status, durationMs, errorMsg, runId]
             );
           } catch (updateErr) {
-            console.error(`[pipelines/${slug}] Failed to update run ${runId}:`, updateErr);
+            logError(`[pipelines/${slug}]`, updateErr, { event: 'run_update_failed', run_id: runId });
           }
         }
       }
@@ -165,7 +165,7 @@ export async function POST(
 
     return NextResponse.json({ run_id: runId, pipeline: slug, status: 'running' });
   } catch (err) {
-    console.error(`[pipelines/${slug}] Error triggering pipeline:`, err);
+    logError(`[pipelines/${slug}]`, err, { event: 'trigger_failed' });
     return NextResponse.json(
       { error: 'Failed to trigger pipeline' },
       { status: 500 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 
 /**
  * GET /api/admin/rules - Return all trade mapping rules with trade name joined.
@@ -18,7 +19,7 @@ export async function GET() {
 
     return NextResponse.json({ rules });
   } catch (err) {
-    console.error('[admin/rules] Error fetching rules:', err);
+    logError('[admin/rules]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch trade mapping rules' },
       { status: 500 }
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ rule }, { status: 201 });
   } catch (err) {
-    console.error('[admin/rules] Error creating rule:', err);
+    logError('[admin/rules]', err, { handler: 'POST' });
     return NextResponse.json(
       { error: 'Failed to create rule' },
       { status: 500 }
@@ -140,7 +141,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ rule });
   } catch (err) {
-    console.error('[admin/rules] Error updating rule:', err);
+    logError('[admin/rules]', err, { handler: 'PATCH' });
     return NextResponse.json(
       { error: 'Failed to update rule' },
       { status: 500 }

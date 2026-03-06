@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 import type { PermitFilter } from '@/lib/permits/types';
 import { getUpcomingLeads } from '@/lib/coa/pre-permits';
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
         pagination: { page: 1, limit, total: leads.length, total_pages: 1 },
       });
     } catch (err) {
-      console.error('Error fetching pre-permits:', err);
+      logError('[api/permits]', err, { handler: 'GET_pre_permits' });
       return NextResponse.json(
         { error: 'Failed to fetch pre-permits' },
         { status: 500 }
@@ -171,7 +172,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err) {
-    console.error('Error fetching permits:', err);
+    logError('[api/permits]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch permits' },
       { status: 500 }

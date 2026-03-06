@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { logError } from '@/lib/logger';
 
 /**
  * GET /api/admin/sync - Return the last 20 sync runs ordered by most recent.
@@ -19,7 +20,7 @@ export async function GET() {
 
     return NextResponse.json({ runs });
   } catch (err) {
-    console.error('[admin/sync] Error fetching sync runs:', err);
+    logError('[admin/sync]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch sync runs' },
       { status: 500 }
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ sync_run: result });
   } catch (err) {
-    console.error('[admin/sync] Error triggering sync:', err);
+    logError('[admin/sync]', err, { handler: 'POST' });
     return NextResponse.json(
       { error: 'Sync failed' },
       { status: 500 }

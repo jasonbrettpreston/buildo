@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getQualityData } from '@/lib/quality/metrics';
+import { logError } from '@/lib/logger';
 import {
   detectVolumeAnomalies,
   detectSchemaDrift,
@@ -39,7 +40,7 @@ export async function GET() {
       health,
     });
   } catch (err) {
-    console.error('[api/quality] Error fetching quality data:', err);
+    logError('[api/quality]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch data quality metrics' },
       { status: 500 }
