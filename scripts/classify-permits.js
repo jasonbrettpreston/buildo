@@ -631,6 +631,7 @@ async function main() {
   console.log('');
   console.log('NOTE: Trade classifications are inferred estimates based on permit');
   console.log('metadata, not actual building plans. Rules can be refined over time.');
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: permitsWithTrades, records_updated: 0 }));
 
   await pool.end();
 }

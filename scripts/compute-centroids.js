@@ -122,6 +122,7 @@ async function main() {
   console.log(`Centroids set:     ${computed.toLocaleString()}`);
   console.log(`Failed:            ${failed.toLocaleString()}`);
   console.log(`Duration:          ${elapsed}s`);
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: computed, records_updated: 0 }));
 
   await pool.end();
 }

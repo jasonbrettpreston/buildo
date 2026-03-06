@@ -165,6 +165,21 @@ async function run() {
     const slug = steps[i];
     const stepLabel = `[${i + 1}/${steps.length}] ${slug}`;
 
+    // Check if chain was cancelled between steps
+    if (chainRunId) {
+      try {
+        const statusCheck = await pool.query(
+          `SELECT status FROM pipeline_runs WHERE id = $1`,
+          [chainRunId]
+        );
+        if (statusCheck.rows[0]?.status === 'cancelled') {
+          console.log(`\nChain cancelled by user — stopping before ${slug}`);
+          failedStep = slug;
+          break;
+        }
+      } catch { /* non-fatal — continue if check fails */ }
+    }
+
     // Skip disabled steps
     if (disabledSlugs.has(slug)) {
       console.log(`${stepLabel} — SKIPPED (disabled)`);
@@ -227,10 +242,29 @@ async function run() {
       if (slug === 'enrich_named_builders') {
         stepEnv.ENRICH_UNMATCHED_ONLY = '1';
       }
-      execFileSync('node', [scriptPath], {
+      const stdout = execFileSync('node', [scriptPath], {
         env: stepEnv,
-        stdio: 'inherit',
+        stdio: ['inherit', 'pipe', 'inherit'],
+        maxBuffer: 50 * 1024 * 1024,
       });
+
+      // Tee stdout to console so logs still appear
+      const output = stdout.toString('utf-8');
+      if (output) process.stdout.write(output);
+
+      // Parse PIPELINE_SUMMARY line for record counts
+      let recordsTotal = null;
+      let recordsNew = null;
+      let recordsUpdated = null;
+      const summaryMatch = output.match(/PIPELINE_SUMMARY:(.+)/);
+      if (summaryMatch) {
+        try {
+          const summary = JSON.parse(summaryMatch[1]);
+          recordsTotal = summary.records_total ?? null;
+          recordsNew = summary.records_new ?? null;
+          recordsUpdated = summary.records_updated ?? null;
+        } catch { /* malformed summary — ignore */ }
+      }
 
       const durationMs = Date.now() - stepStart;
       console.log(`${stepLabel} — completed (${(durationMs / 1000).toFixed(1)}s)\n`);
@@ -238,14 +272,19 @@ async function run() {
       if (stepRunId) {
         await pool.query(
           `UPDATE pipeline_runs
-           SET completed_at = NOW(), status = 'completed', duration_ms = $1
+           SET completed_at = NOW(), status = 'completed', duration_ms = $1,
+               records_total = COALESCE($3, records_total),
+               records_new = COALESCE($4, records_new),
+               records_updated = COALESCE($5, records_updated)
            WHERE id = $2`,
-          [durationMs, stepRunId]
+          [durationMs, stepRunId, recordsTotal, recordsNew, recordsUpdated]
         ).catch(() => {});
       }
     } catch (err) {
+      // Tee any captured stdout from the failed step so progress logs aren't lost
+      if (err.stdout) process.stdout.write(err.stdout);
       const durationMs = Date.now() - stepStart;
-      const errorMsg = (err.stderr || err.message || String(err)).slice(0, 4000);
+      const errorMsg = (err.message || String(err)).slice(0, 4000);
       console.error(`${stepLabel} — FAILED (${(durationMs / 1000).toFixed(1)}s)`);
       console.error(`  Error: ${errorMsg.slice(0, 200)}\n`);
 

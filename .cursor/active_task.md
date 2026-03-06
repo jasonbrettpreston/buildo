@@ -1,52 +1,49 @@
-# Active Task: WF3 Fix Missing Accuracy Bars, Pipeline Errors, Accordion Alignment
-**Status:** Planning
+# Active Task: WF3+WF2 — Status reset on re-run, Stop button fixes, warning flash
+**Status:** Implementation
 
 ## Context
-* **Goal:** Fix 4 bugs: (1) link_similar and link_coa missing accuracy bars, (2) CoA pipeline fails, (3) parcels pipeline fails (PostGIS missing), (4) accordion All Time/Last Run data misaligned and hard to read
+* **Goal:** (1) Status dots stay green from last run when re-running — should reset to blank/running. (2) Permits pipeline shows zero new records — investigate data source. (3) Stop button disappears while pipeline runs. (4) Stop button didn't work. (5) Stop button should always be visible while running. (6) WF2: Warning status steps should flash to draw attention.
 * **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `src/lib/admin/funnel.ts` (FUNNEL_SOURCES config, computeAllFunnelRows)
-  - `src/components/FreshnessTimeline.tsx` (accordion panels: FunnelAllTimePanel, FunnelLastRunPanel)
-  - `src/tests/admin.ui.test.tsx` / `src/tests/quality.logic.test.ts`
-* **Rollback Anchor:** `ab7550e`
+  - `src/components/FreshnessTimeline.tsx` (status dots, stop button visibility, warning flash)
+  - `src/components/DataQualityDashboard.tsx` (cancelPipeline, runningPipelines state, polling)
+  - `src/app/api/admin/pipelines/[slug]/route.ts` (DELETE handler)
+  - `scripts/load-permits.js` (data source investigation)
+* **Rollback Anchor:** `f7acd3a`
 
 ## State Verification (Root Cause Analysis)
 
-### Bug 1: link_similar and link_coa missing accuracy % and bar chart
-- **Root cause:** `funnelData` is keyed by `config.statusSlug`. The `coa` funnel source has `statusSlug: 'coa'`, but the pipeline step slug in the permits chain is `link_coa`. And `link_similar` has no FUNNEL_SOURCES entry at all.
-- **Fix:** Add `link_similar` to FUNNEL_SOURCES. Add `link_coa` as a separate funnel entry (or alias the lookup in FreshnessTimeline). These steps have meaningful metrics that should display.
+### Bug 1: Status dots stay green on re-run
+- **Root cause:** When "Run All" is clicked, `triggerPipeline` adds the chain slug (e.g. `chain_permits`) to `runningPipelines`. But `pipelineLastRun` still has the PREVIOUS run's data for each scoped step (e.g. `permits:assert_schema` → status: 'completed'). The `getStatusDot` function (line 239) checks `isRunning` first, but `isRunning` at line 570 checks `runningPipelines.has(scopedKey)` — the scoped keys (`permits:assert_schema`) are NOT in runningPipelines, only `chain_permits` is. So dots stay green from last run.
+- **Fix:** When a chain is running, all its steps should show as "pending" (gray) unless individually running. Add logic: if `isChainRunning && !isRunning && !info?.status === 'running'`, show a "Pending" dot.
 
-### Bug 2: CoA pipeline failed — `Command failed: node scripts/load-coa.js`
-- **Root cause:** The script itself errored. The error_message is truncated. This is a runtime/data issue — need to test the script directly and check for CKAN API changes.
-- **Scope:** Outside code fix — runtime investigation. Will document findings.
+### Bug 2: Zero new permits
+- **Root cause:** NOT a bug. `load-permits.js` fetches live from CKAN API (line 204-206, `fetchFromCKAN()`). The upsert uses `data_hash IS DISTINCT FROM EXCLUDED.data_hash` (line 184) — updates only happen when data actually changes. Toronto Open Data typically updates once per business day. If you re-run on the same day after already loading, the hashes match and zero records are new/updated. This is correct behavior.
+- **Action:** No code fix. Will add a "Same-day re-run — 0 changes expected" note in the records display when records_new=0 and records_total>0.
 
-### Bug 3: Parcels pipeline failed — `st_geomfromgeojson(text) does not exist`
-- **Root cause:** PostGIS extension not enabled on local PostgreSQL. Migration 039 added `geom` columns requiring PostGIS functions, but `CREATE EXTENSION postgis` was never run.
-- **Fix:** Enable PostGIS extension (`CREATE EXTENSION IF NOT EXISTS postgis`). This is a DB setup issue, not a code bug.
+### Bug 3+4+5: Stop button disappears / doesn't work
+- **Root causes (multiple):**
+  1. **Disappears:** `isChainRunning` depends on `runningPipelines.has(chainSlug)`. When `cancelPipeline` succeeds (line 201), it immediately removes the slug from `runningPipelines` → `isChainRunning` becomes false → Stop button vanishes before user sees confirmation. The chain process is still running in the background (DB cancel doesn't kill the process).
+  2. **Doesn't work:** The DELETE handler cancels DB rows, but the Node.js child process spawned by `execFile` keeps running. `run-chain.js` uses `execFileSync` per step — it doesn't check DB status between steps. So cancellation only marks DB rows, doesn't stop execution.
+  3. **Fix for visibility:** Don't remove from `runningPipelines` immediately on cancel. Let polling detect the cancelled status. Show "Stopping..." state instead.
+  4. **Fix for actual cancellation:** The API route has a reference to the `child` process. Store running children in a Map and kill them on DELETE. For `run-chain.js`, add a DB status check between steps.
 
-### Bug 4: Accordion data misaligned — Baseline/Intersection/Yield columns hard to read
-- **Root cause:** All Time panel uses flat `grid grid-cols-1 md:grid-cols-3` with `flex justify-between` rows. On desktop, the 3 columns are side-by-side but label/value pairs within each column aren't consistently aligned. The Last Run panel uses a different layout structure. No visual nesting separates sub-sections.
-- **Fix:** Wrap each sub-zone (Baseline, Intersection, Yield) in its own nested tile card with consistent label-value alignment using a definition-list pattern with fixed-width labels.
+### WF2 Bug 6: Warning steps should flash
+- **Root cause:** `getStatusDot` returns `'bg-yellow-500'` for aging steps (24-72h) but no animation. Only running state gets `animate-pulse`.
+- **Fix:** Add `animate-pulse` to warning dots (yellow/stale status) to draw attention.
 
 ## Standards Compliance
-* **Try-Catch Boundary:** No new API routes.
-* **Unhappy Path Tests:** Test funnel lookup for link_coa and link_similar slugs.
-* **Mobile-First:** Accordion layout must stack vertically on mobile (`grid-cols-1`), 3-col on desktop (`md:grid-cols-3`). All interactive elements maintain 44px touch targets. 375px viewport mocking in `src/tests/admin.ui.test.tsx` verifies nested tile layout stacks correctly on mobile.
+* **Try-Catch Boundary:** DELETE handler already has try-catch. No new routes.
+* **Unhappy Path Tests:** Test status reset on re-run. Test stop button visible while running. Test warning dot has animation.
+* **Mobile-First:** Stop button already has 44px touch target. Warning flash is CSS-only.
 
 ## Execution Plan
-- [x] **Rollback Anchor:** `ab7550e` recorded.
-- [x] **State Verification:** Root causes documented above.
-- [x] **Spec Review:** Spec 28 lists 13 funnel sources; link_similar and link_coa should have data.
-- [ ] **Reproduction Tests (Red Light):**
-  - Test: funnel data includes entries for `link_similar` and `link_coa` slugs
-  - Test: accordion sub-zones wrapped in nested tiles
-- [ ] **Red Light:** Run tests, new tests fail.
-- [ ] **Fix:**
-  - Add `link_similar` to FUNNEL_SOURCES in funnel.ts
-  - Add `link_coa` funnel entry (or make FreshnessTimeline look up both `step.slug` and alternative keys)
-  - Enable PostGIS: `CREATE EXTENSION IF NOT EXISTS postgis`
-  - Investigate CoA script failure
-  - Redesign FunnelAllTimePanel + FunnelLastRunPanel with nested sub-tiles and aligned label-value pairs
-- [ ] **Green Light:** All tests pass.
-- [ ] **Collateral Check:** vitest related on changed files.
-- [ ] **Atomic Commit.**
+- [x] **Rollback Anchor:** `f7acd3a`
+- [x] **Reproduction Tests (Red Light):** 6 failing tests confirmed
+- [x] **Fix 1:** Reset step dots to "Pending" (gray animate-pulse) when parent chain is running
+- [x] **Fix 2:** Zero new records is correct — CKAN hash-based upsert, same-day re-run = 0 changes
+- [x] **Fix 3:** Stop button: removed immediate runningPipelines delete, added "Stopping..." state
+- [x] **Fix 4:** Kill child process on DELETE via runningProcesses Map + cancellation check between steps in run-chain.js
+- [x] **Fix 6 (WF2):** Added animate-pulse to Aging (yellow) and Stale (red) status dots
+- [x] **Green Light:** 1712 tests pass, 0 type errors, 0 lint errors, 0 collateral
+- [ ] **Atomic Commit**

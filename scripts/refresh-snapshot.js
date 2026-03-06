@@ -340,6 +340,7 @@ async function run() {
     console.log(`  Scope Class: ${r.permits_with_scope} classified`);
     console.log(`  Scope Tags: ${r.permits_with_scope_tags} total, ${r.permits_with_detailed_tags} detailed`);
     console.log('\nDone!');
+    console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: total_permits, records_new: 1, records_updated: 0 }));
   } finally {
     client.release();
     await pool.end();

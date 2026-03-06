@@ -961,3 +961,123 @@ describe('Snapshot includes null tracking and violation fields', () => {
     expect(snapshot.sla_permits_ingestion_hours!).toBeGreaterThan(0);
   });
 });
+
+// ── Bug fix: chain-scoped pipeline_last_run key resolution ─────────────
+
+describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
+  let FUNNEL_SOURCES: { id: string; name: string; statusSlug: string; triggerSlug: string; yieldFields: string[] }[];
+  let computeRowData: typeof import('@/lib/admin/funnel').computeRowData;
+
+  beforeAll(async () => {
+    const mod = await import('@/lib/admin/funnel');
+    FUNNEL_SOURCES = mod.FUNNEL_SOURCES;
+    computeRowData = mod.computeRowData;
+  });
+
+  it('link_similar resolves via permits:link_similar when plain key missing', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'link_similar')!;
+    // pipeline_last_run has chain-scoped key, NOT plain key
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      pipeline_last_run: {
+        'permits:link_similar': {
+          last_run_at: '2026-03-06T10:00:00Z',
+          status: 'completed',
+          records_total: 80059,
+          records_new: 1234,
+          records_updated: null,
+          records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    // Should find the chain-scoped run data, not return stale/0
+    expect(row.status).not.toBe('stale');
+    expect(row.lastRunRecordsTotal).toBe(80059);
+    expect(row.matchCount).toBe(80059);
+  });
+
+  it('link_coa resolves via coa:link_coa when plain key missing', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'link_coa')!;
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      pipeline_last_run: {
+        'coa:link_coa': {
+          last_run_at: '2026-03-06T10:00:00Z',
+          status: 'completed',
+          records_total: 14614,
+          records_new: 200,
+          records_updated: null,
+          records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    expect(row.status).not.toBe('stale');
+    expect(row.lastRunRecordsTotal).toBe(14614);
+  });
+
+  it('plain key still works when present (no regression)', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'permits')!;
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      pipeline_last_run: {
+        permits: {
+          last_run_at: '2026-03-06T10:00:00Z',
+          status: 'completed',
+          records_total: 237000,
+          records_new: 50,
+          records_updated: null,
+          records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    expect(row.status).not.toBe('stale');
+    expect(row.lastRunRecordsTotal).toBe(237000);
+  });
+
+  it('multi-chain slug picks most recent run across chains', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'link_coa')!;
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      pipeline_last_run: {
+        'permits:link_coa': {
+          last_run_at: '2026-03-05T10:00:00Z',
+          status: 'completed',
+          records_total: 100,
+          records_new: 5,
+          records_updated: null,
+          records_meta: null,
+        },
+        'coa:link_coa': {
+          last_run_at: '2026-03-06T12:00:00Z',
+          status: 'completed',
+          records_total: 14614,
+          records_new: 200,
+          records_updated: null,
+          records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    // Should pick the coa:link_coa run (more recent) not permits:link_coa
+    expect(row.lastRunRecordsTotal).toBe(14614);
+  });
+});

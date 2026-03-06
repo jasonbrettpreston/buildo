@@ -293,6 +293,7 @@ async function main() {
     }
 
     console.log(`\n\nDone! ${totalInserted} inserted, ${totalUpdated} updated.`);
+    console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: deduplicated.length, records_new: totalInserted, records_updated: totalUpdated }));
 
     // Show stats
     const stats = await client.query(`

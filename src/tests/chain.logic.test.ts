@@ -249,3 +249,63 @@ describe('Quality Pipeline Group', () => {
     expect(PIPELINE_REGISTRY.assert_data_bounds.group).toBe('quality');
   });
 });
+
+// ---------------------------------------------------------------------------
+// PIPELINE_SUMMARY convention — scripts emit machine-readable record counts
+// ---------------------------------------------------------------------------
+
+describe('PIPELINE_SUMMARY convention', () => {
+  const scriptsDir = path.resolve(__dirname, '../../scripts');
+
+  // Scripts that track record counts and should emit PIPELINE_SUMMARY
+  const SCRIPTS_WITH_COUNTS = [
+    'load-permits.js',
+    'load-coa.js',
+    'load-address-points.js',
+    'load-parcels.js',
+    'load-massing.js',
+    'load-neighbourhoods.js',
+    'extract-builders.js',
+    'classify-permits.js',
+    'classify-scope.js',
+    'geocode-permits.js',
+    'link-parcels.js',
+    'link-neighbourhoods.js',
+    'link-massing.js',
+    'link-similar.js',
+    'link-coa.js',
+    'compute-centroids.js',
+    'create-pre-permits.js',
+    'refresh-snapshot.js',
+  ];
+
+  for (const script of SCRIPTS_WITH_COUNTS) {
+    it(`${script} emits PIPELINE_SUMMARY line`, () => {
+      const source = fs.readFileSync(path.join(scriptsDir, script), 'utf-8');
+      expect(source).toContain('PIPELINE_SUMMARY:');
+    });
+  }
+});
+
+describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
+  const chainSource = () => fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+  );
+
+  it('uses pipe mode instead of stdio inherit for step execution', () => {
+    const source = chainSource();
+    // Should NOT use stdio: 'inherit' for step execution (needs to capture stdout)
+    expect(source).not.toContain("stdio: 'inherit'");
+  });
+
+  it('parses PIPELINE_SUMMARY from step output', () => {
+    const source = chainSource();
+    expect(source).toContain('PIPELINE_SUMMARY');
+  });
+
+  it('writes records_total to pipeline_runs on step completion', () => {
+    const source = chainSource();
+    expect(source).toContain('records_total');
+    expect(source).toContain('records_new');
+  });
+});

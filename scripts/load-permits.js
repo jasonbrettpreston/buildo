@@ -262,6 +262,7 @@ async function run() {
   console.log(`  Updated: ${updated.toLocaleString()}`);
   console.log(`  Unchanged: ${unchanged.toLocaleString()}`);
   console.log(`  Errors: ${errors}`);
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: newInserts, records_updated: updated }));
 
   // Log sync run
   await pool.query(

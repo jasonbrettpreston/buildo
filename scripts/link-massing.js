@@ -319,6 +319,7 @@ async function main() {
   console.log(`  Nearest (≤${NEAREST_MAX_DISTANCE_M}m):     ${nearestMatches.toLocaleString()} (confidence 0.60)`);
   console.log(`No match found:         ${noMatch.toLocaleString()}`);
   console.log(`Duration:               ${elapsed}s`);
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: parcelsLinked, records_updated: 0 }));
 
   await pool.end();
 }

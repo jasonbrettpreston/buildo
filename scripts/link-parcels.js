@@ -280,6 +280,7 @@ async function main() {
   console.log(`    Centroid only:    ${(linkedSpatial - linkedSpatialPolygon).toLocaleString()} (confidence 0.65)`);
   console.log(`No match found:       ${noMatch.toLocaleString()}`);
   console.log(`Duration:             ${elapsed}s`);
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: totalLinked, records_updated: 0 }));
 
   await pool.end();
 }

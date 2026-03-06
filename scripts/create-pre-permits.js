@@ -74,6 +74,7 @@ async function run() {
   }
 
   console.log('\nDone.');
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: total, records_new: upcoming, records_updated: 0 }));
   await pool.end();
 }
 

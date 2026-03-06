@@ -61,6 +61,7 @@ async function run() {
   }
 
   console.log('\nDone.');
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: propagated + demFixed, records_new: propagated, records_updated: demFixed }));
   await pool.end();
 }
 

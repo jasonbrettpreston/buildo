@@ -213,6 +213,7 @@ async function main() {
   console.log(`Successfully linked: ${linked.toLocaleString()} (${((linked / Math.max(processed, 1)) * 100).toFixed(1)}%)`);
   console.log(`No match found:      ${noMatch.toLocaleString()}`);
   console.log(`Duration:            ${elapsed}s`);
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: linked, records_updated: 0 }));
 
   await pool.end();
 }

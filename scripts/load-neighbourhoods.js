@@ -582,6 +582,7 @@ async function main() {
   console.log('=== Load Complete ===');
   console.log(`Neighbourhoods: ${boundaryCount}`);
   console.log(`Duration:       ${elapsed}s`);
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: boundaryCount, records_new: boundaryCount, records_updated: 0 }));
 
   await pool.end();
 }

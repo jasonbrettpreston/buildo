@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
-import { execFile } from 'child_process';
+import { execFile, ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+
+/** Track running child processes so DELETE can kill them */
+const runningProcesses = new Map<string, ChildProcess>();
 
 /**
  * Map of allowed pipeline slugs to their script paths (relative to project root).
@@ -130,7 +133,8 @@ export async function POST(
       'node',
       args,
       { timeout, env: process.env },
-      async (err, _stdout, stderr) => {
+      async (err, stdout, stderr) => {
+        runningProcesses.delete(slug);
         const durationMs = Date.now() - startMs;
         const status = err ? 'failed' : 'completed';
         // Prefer stderr for error details, fall back to err.message
@@ -142,13 +146,30 @@ export async function POST(
           logError(`[pipelines/${slug}]`, err, { event: 'script_failed', run_id: runId, stderr: stderr?.slice(0, 2000) });
         }
 
+        // Parse PIPELINE_SUMMARY from stdout for record counts
+        let recordsTotal: number | null = null;
+        let recordsNew: number | null = null;
+        let recordsUpdated: number | null = null;
+        const summaryMatch = stdout?.match(/PIPELINE_SUMMARY:(.+)/);
+        if (summaryMatch) {
+          try {
+            const summary = JSON.parse(summaryMatch[1]);
+            recordsTotal = summary.records_total ?? null;
+            recordsNew = summary.records_new ?? null;
+            recordsUpdated = summary.records_updated ?? null;
+          } catch { /* malformed summary — ignore */ }
+        }
+
         if (runId) {
           try {
             await query(
               `UPDATE pipeline_runs
-               SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3
+               SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,
+                   records_total = COALESCE($5, records_total),
+                   records_new = COALESCE($6, records_new),
+                   records_updated = COALESCE($7, records_updated)
                WHERE id = $4`,
-              [status, durationMs, errorMsg, runId]
+              [status, durationMs, errorMsg, runId, recordsTotal, recordsNew, recordsUpdated]
             );
           } catch (updateErr) {
             logError(`[pipelines/${slug}]`, updateErr, { event: 'run_update_failed', run_id: runId });
@@ -156,6 +177,9 @@ export async function POST(
         }
       }
     );
+
+    // Track process for cancellation
+    runningProcesses.set(slug, child);
 
     // Detach so the API response isn't blocked
     child.unref();
@@ -165,6 +189,57 @@ export async function POST(
     logError(`[pipelines/${slug}]`, err, { event: 'trigger_failed' });
     return NextResponse.json(
       { error: 'Failed to trigger pipeline' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/admin/pipelines/[slug] - Cancel a running pipeline/chain.
+ *
+ * Sets all 'running' rows for the given slug to 'cancelled'.
+ */
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await params;
+
+  if (!ALLOWED_PIPELINES.includes(slug)) {
+    return NextResponse.json(
+      { error: `Invalid pipeline: ${slug}` },
+      { status: 400 }
+    );
+  }
+
+  try {
+    // Kill the running child process if one exists for this slug
+    const child = runningProcesses.get(slug);
+    if (child && !child.killed) {
+      child.kill('SIGTERM');
+      runningProcesses.delete(slug);
+    }
+
+    // Cancel the chain slug itself AND any chain-scoped step rows (e.g. permits:link_similar)
+    const chainPrefix = slug.replace(/^chain_/, '');
+    const result = await query<{ id: number }>(
+      `UPDATE pipeline_runs
+       SET status = 'cancelled', error_message = 'Cancelled by user', completed_at = NOW()
+       WHERE status = 'running'
+         AND (pipeline = $1 OR pipeline LIKE $2)
+       RETURNING id`,
+      [slug, `${chainPrefix}:%`]
+    );
+
+    return NextResponse.json({
+      cancelled: result.length,
+      pipeline: slug,
+      status: 'cancelled',
+    });
+  } catch (err) {
+    logError(`[pipelines/${slug}]`, err, { event: 'cancel_failed' });
+    return NextResponse.json(
+      { error: 'Failed to cancel pipeline' },
       { status: 500 }
     );
   }

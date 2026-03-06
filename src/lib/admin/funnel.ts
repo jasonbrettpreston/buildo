@@ -110,12 +110,29 @@ function nullPct(total: number, withField: number, denom: number): number {
 // Compute funnel data for a single source
 // ---------------------------------------------------------------------------
 
+function resolveLastRun(slug: string, plr: Record<string, PipelineRunInfo>): PipelineRunInfo | undefined {
+  if (plr[slug]) return plr[slug];
+  // Chain-scoped keys: pipeline_runs stores "chainId:slug" (e.g. "permits:link_similar").
+  // A slug may appear in multiple chains (e.g. link_coa in both permits and coa chains),
+  // so pick the most recent run across all matching scoped keys.
+  let best: PipelineRunInfo | undefined;
+  for (const key of Object.keys(plr)) {
+    if (key.endsWith(`:${slug}`)) {
+      const candidate = plr[key];
+      if (!best || (candidate.last_run_at && (!best.last_run_at || candidate.last_run_at > best.last_run_at))) {
+        best = candidate;
+      }
+    }
+  }
+  return best;
+}
+
 export function computeRowData(
   config: FunnelSourceConfig,
   stats: FunnelStats,
   current: DataQualitySnapshot
 ): FunnelRowData {
-  const lastRun = stats.pipeline_last_run[config.statusSlug];
+  const lastRun = resolveLastRun(config.statusSlug, stats.pipeline_last_run);
   const lastUpdated = lastRun?.last_run_at ?? null;
   const cadence = stats.pipeline_schedules?.[config.statusSlug]?.cadence ?? 'Daily';
 

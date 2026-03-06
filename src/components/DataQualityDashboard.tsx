@@ -190,6 +190,23 @@ export function DataQualityDashboard() {
     }
   }, []);
 
+  const cancelPipeline = useCallback(async (slug: string) => {
+    setPipelineError(null);
+    try {
+      const res = await fetch(`/api/admin/pipelines/${slug}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(body.error || body.message || `Failed with status ${res.status}`);
+      }
+      // Don't remove from runningPipelines here — let polling detect the
+      // cancelled status naturally. This keeps the Stop button visible and
+      // shows "Stopping..." until the process actually terminates.
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setPipelineError(`Cancel ${slug}: ${msg}`);
+    }
+  }, []);
+
   const togglePipeline = useCallback(async (slug: string, currentlyDisabled: boolean) => {
     setPipelineError(null);
     try {
@@ -456,6 +473,7 @@ export function DataQualityDashboard() {
             )}
             onToggle={togglePipeline}
             triggerError={pipelineError}
+            onCancel={cancelPipeline}
           />
           </div>
 

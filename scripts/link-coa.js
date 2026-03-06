@@ -203,6 +203,7 @@ async function main() {
     `);
     const s = stats.rows[0];
     console.log(`\nDB Stats: ${s.total} total | ${s.linked} linked (${s.high_conf} high, ${s.med_conf} med, ${s.low_conf} low) | ${s.upcoming} upcoming leads`);
+    console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: totalUnlinked, records_new: totalLinked, records_updated: 0 }));
 
   } finally {
     client.release();

@@ -195,6 +195,7 @@ export interface FreshnessTimelineProps {
   triggerError?: string | null;
   /** Pre-computed funnel data keyed by pipeline statusSlug */
   funnelData?: Record<string, FunnelRowData>;
+  onCancel?: (slug: string) => void;
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -243,8 +244,8 @@ function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { 
   const hours = (Date.now() - new Date(info.last_run_at).getTime()) / (1000 * 60 * 60);
   if (hours < 24) return { color: 'bg-green-500', label: 'Fresh' };
   if (hours < 72) return { color: 'bg-blue-500', label: 'Recent' };
-  if (hours < 168) return { color: 'bg-yellow-500', label: 'Aging' };
-  return { color: 'bg-red-500', label: 'Stale' };
+  if (hours < 168) return { color: 'bg-yellow-500 animate-pulse', label: 'Aging' };
+  return { color: 'bg-red-500 animate-pulse', label: 'Stale' };
 }
 
 /**
@@ -353,21 +354,27 @@ function FunnelLastRunPanel({ row }: { row: FunnelRowData }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div className="nested-tile bg-gray-50 border border-gray-100 rounded-md p-3">
+        <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Run Baseline</h4>
+        <MetricRow label="Records" value={(row.lastRunRecordsTotal ?? 0).toLocaleString()} />
+      </div>
+      <div className="nested-tile bg-gray-50 border border-gray-100 rounded-md p-3">
         <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Run Intersection</h4>
-        <MetricRow label="Processed" value={processed.toLocaleString()} />
-        <MetricRow label="Matched" value={`${matched.toLocaleString()} (${runPct}%)`} className="text-green-700" />
-        {failed > 0 && (
-          <MetricRow label="Failed" value={failed.toLocaleString()} className="text-red-500" />
+        {websitesFound != null ? (
+          <>
+            <MetricRow label="1. Searched" value={processed.toLocaleString()} />
+            <MetricRow label="2. Websites" value={websitesFound.toLocaleString()} />
+            <MetricRow label="3. Extracted" value={matched.toLocaleString()} />
+          </>
+        ) : (
+          <>
+            <MetricRow label="Processed" value={processed.toLocaleString()} />
+            <MetricRow label="Matched" value={`${matched.toLocaleString()} (${runPct}%)`} className="text-green-700" />
+            {failed > 0 && (
+              <MetricRow label="Failed" value={failed.toLocaleString()} className="text-red-500" />
+            )}
+          </>
         )}
       </div>
-      {websitesFound != null && (
-        <div className="nested-tile bg-gray-50 border border-gray-100 rounded-md p-3">
-          <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Pipeline Steps</h4>
-          <MetricRow label="1. Searched" value={processed.toLocaleString()} />
-          <MetricRow label="2. Websites" value={websitesFound.toLocaleString()} />
-          <MetricRow label="3. Extracted" value={matched.toLocaleString()} />
-        </div>
-      )}
       <div className="nested-tile bg-gray-50 border border-gray-100 rounded-md p-3">
         <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Run Yield</h4>
         {extractedFields ? (
@@ -393,13 +400,15 @@ function FunnelLastRunPanel({ row }: { row: FunnelRowData }) {
 // Component
 // ---------------------------------------------------------------------------
 
-export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData }: FreshnessTimelineProps) {
+export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData, onCancel }: FreshnessTimelineProps) {
   const [errorPopover, setErrorPopover] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   // Bug Fix 1: optimisticToggles for immediate visual feedback on toggle click
   const [optimisticToggles, setOptimisticToggles] = useState<Map<string, boolean>>(new Map());
   // Bug Fix 2: per-step runError tracking
   const [runError, setRunError] = useState<string | null>(null);
+  // Track chains where cancel has been requested (shows "Stopping..." until polling clears)
+  const [cancellingChains, setCancellingChains] = useState<Set<string>>(new Set());
   const toggleExpand = (key: string) => {
     setExpandedSteps((prev) => {
       const next = new Set(prev);
@@ -447,6 +456,18 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
       for (const t of optimisticTimerRef.current.values()) clearTimeout(t);
     };
   }, []);
+
+  // Clear "Stopping..." state once the chain is no longer in runningPipelines
+  useEffect(() => {
+    if (cancellingChains.size === 0) return;
+    setCancellingChains((prev) => {
+      const next = new Set<string>();
+      for (const slug of prev) {
+        if (runningPipelines.has(slug)) next.add(slug);
+      }
+      return next.size === prev.size ? prev : next;
+    });
+  }, [runningPipelines, cancellingChains.size]);
 
   // Bug Fix 2: Safe run with async error feedback
   const handleRun = async (slug: string) => {
@@ -542,6 +563,22 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                 >
                   {runAllLabel}
                 </button>
+                {isChainRunning && onCancel && (
+                  <button
+                    onClick={() => {
+                      setCancellingChains((prev) => new Set(prev).add(chainSlug));
+                      onCancel(chainSlug);
+                    }}
+                    disabled={cancellingChains.has(chainSlug)}
+                    className={`text-[9px] px-2.5 py-1 rounded border min-h-[44px] ${
+                      cancellingChains.has(chainSlug)
+                        ? 'border-gray-300 text-gray-400 bg-gray-50 cursor-not-allowed'
+                        : 'border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700'
+                    }`}
+                  >
+                    {cancellingChains.has(chainSlug) ? 'Stopping...' : 'Stop'}
+                  </button>
+                )}
               </div>
 
               {/* Chain steps — each pipeline gets its own tile */}
@@ -554,8 +591,16 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const info = pipelineLastRun[scopedKey];
                   const isRunning = runningPipelines.has(scopedKey) || runningPipelines.has(step.slug);
                   const isDisabled = isEffectivelyDisabled(step.slug);
+                  // When the parent chain is running but this step hasn't started yet,
+                  // show "Pending" instead of stale last-run status (fixes green-stays-green).
+                  // Exclude steps that already completed/failed in THIS run — they should
+                  // show their real status, not revert to gray.
+                  const stepDone = info?.status === 'completed' || info?.status === 'failed';
+                  const isPending = isChainRunning && !isRunning && !stepDone;
                   const dot = isDisabled
                     ? { color: 'bg-gray-300', label: 'Disabled' }
+                    : isPending
+                    ? { color: 'bg-gray-300 animate-pulse', label: 'Pending' }
                     : getStatusDot(info, isRunning);
                   const stepNum = stepNumbers[i];
                   const isRoot = step.indent === 0;

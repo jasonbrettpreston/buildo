@@ -1853,6 +1853,12 @@ describe('Chain trigger inserts pipeline_runs row before spawning process', () =
     expect(source).toMatch(/runId/);
     expect(source).toMatch(/String\(runId\)/);
   });
+
+  it('API route parses PIPELINE_SUMMARY from script stdout', () => {
+    const source = routeSource();
+    expect(source).toContain('PIPELINE_SUMMARY');
+    expect(source).toContain('records_total');
+  });
 });
 
 describe('run-chain.js accepts external run ID argument', () => {
@@ -1960,5 +1966,203 @@ describe('Run All disabled when all steps disabled or comingSoon', () => {
     );
     // Should check if all toggleable steps are disabled
     expect(source).toMatch(/allStepsDisabled|allDisabled|everyDisabled/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fix 2: FunnelLastRunPanel has 3 tiles to align with FunnelAllTimePanel
+// ---------------------------------------------------------------------------
+
+describe('FunnelLastRunPanel has 3 tiles matching FunnelAllTimePanel columns', () => {
+  it('FunnelLastRunPanel renders a Run Baseline tile as first column', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Extract the FunnelLastRunPanel function body (up to next top-level comment block)
+    const panelStart = source.indexOf('function FunnelLastRunPanel');
+    const panelEnd = source.indexOf('// -----', panelStart + 1);
+    const panelBody = source.slice(panelStart, panelEnd > -1 ? panelEnd : panelStart + 5000);
+    // Count nested-tile divs — exactly 3 (Run Baseline + Run Intersection + Run Yield)
+    const tileCount = (panelBody.match(/nested-tile/g) || []).length;
+    expect(tileCount).toBe(3);
+  });
+
+  it('FunnelLastRunPanel first tile is labeled Run Baseline', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const panelStart = source.indexOf('function FunnelLastRunPanel');
+    const panelBody = source.slice(panelStart, panelStart + 2000);
+    expect(panelBody).toContain('Run Baseline');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fix 4 (WF2): Stop/cancel button beside Run All for running chains
+// ---------------------------------------------------------------------------
+
+describe('Stop/cancel button for running chains', () => {
+  it('FreshnessTimeline has a Stop or Cancel button near Run All', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Should have a stop/cancel button that appears when chain is running
+    expect(source).toMatch(/Stop|Cancel/);
+    // The button should call onCancel or handleCancel
+    expect(source).toMatch(/onCancel|handleCancel|onStop|handleStop/);
+  });
+
+  it('FreshnessTimeline accepts onCancel prop', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain('onCancel');
+  });
+
+  it('DELETE handler exists in pipelines route for cancel', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
+    );
+    expect(source).toMatch(/export\s+(async\s+)?function\s+DELETE/);
+  });
+
+  it('DELETE handler updates pipeline_runs status to cancelled', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
+    );
+    expect(source).toContain("'cancelled'");
+  });
+
+  it('DELETE handler validates slug against ALLOWED_PIPELINES', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
+    );
+    // Extract the DELETE function body
+    const deleteIdx = source.indexOf('async function DELETE');
+    const deleteBody = source.slice(deleteIdx, deleteIdx + 500);
+    expect(deleteBody).toContain('ALLOWED_PIPELINES');
+  });
+
+  it('Stop button has 44px min touch target', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Find the stop button block by locating the cancel onClick handler
+    const cancelIdx = source.indexOf('onCancel(chainSlug)');
+    expect(cancelIdx).toBeGreaterThan(-1);
+    const stopBlock = source.slice(cancelIdx - 100, cancelIdx + 600);
+    expect(stopBlock).toContain('min-h-[44px]');
+    expect(stopBlock).toMatch(/Stop/);
+
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fix 1: Status dots reset to "Pending" when parent chain is running
+// ---------------------------------------------------------------------------
+
+describe('Status dots reset when chain re-runs', () => {
+  it('getStatusDot or step dot logic handles chain-running + not-individually-running as pending', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // When a chain is running, individual steps that are not yet running should
+    // show a pending/queued state instead of their last-run status
+    expect(source).toMatch(/isChainRunning[\s\S]{0,200}(pending|Pending|Queued|queued|bg-gray)/);
+  });
+
+  it('excludes completed/failed steps from pending reset (stepDone guard)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Steps that already completed or failed during the chain run should NOT
+    // revert to gray pending — they should show their real status dot.
+    expect(source).toMatch(/stepDone[\s\S]{0,50}completed[\s\S]{0,50}failed/);
+    expect(source).toMatch(/isPending[\s\S]{0,80}!stepDone/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fix 3+5: Stop button always visible while chain is running
+// ---------------------------------------------------------------------------
+
+describe('Stop button stays visible during cancel', () => {
+  it('cancelPipeline does NOT immediately remove slug from runningPipelines', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'), 'utf-8'
+    );
+    // Extract cancelPipeline function body
+    const cancelIdx = source.indexOf('cancelPipeline');
+    const cancelBody = source.slice(cancelIdx, cancelIdx + 500);
+    // Should NOT have next.delete(slug) in the success path — let polling handle it
+    expect(cancelBody).not.toMatch(/next\.delete\(slug\)[\s\S]*return next/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fix 4: run-chain.js checks for cancellation between steps
+// ---------------------------------------------------------------------------
+
+describe('run-chain.js cancellation check between steps', () => {
+  it('checks pipeline_runs status before each step', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+    );
+    expect(source).toContain('cancelled');
+    // Should query pipeline_runs to check if chain was cancelled
+    expect(source).toMatch(/SELECT[\s\S]*status[\s\S]*pipeline_runs[\s\S]*WHERE[\s\S]*id/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fix 4: API route kills child process on DELETE
+// ---------------------------------------------------------------------------
+
+describe('API route kills child process on cancel', () => {
+  it('stores running child processes in a map', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
+    );
+    expect(source).toMatch(/runningProcesses|childProcesses|activeProcesses/);
+  });
+
+  it('DELETE handler kills the child process', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
+    );
+    const deleteBody = source.slice(source.indexOf('async function DELETE'));
+    expect(deleteBody).toMatch(/\.kill|process\.kill/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF2 Fix 6: Warning/stale dots flash with animate-pulse
+// ---------------------------------------------------------------------------
+
+describe('Warning and stale status dots flash', () => {
+  it('getStatusDot returns animate-pulse for Aging (yellow) status', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Extract getStatusDot function
+    const fnStart = source.indexOf('function getStatusDot');
+    const fnEnd = source.indexOf('\n}', fnStart) + 2;
+    const fnBody = source.slice(fnStart, fnEnd);
+    // Yellow (Aging) should have animate-pulse
+    expect(fnBody).toMatch(/yellow.*animate-pulse|animate-pulse.*yellow/);
+  });
+
+  it('getStatusDot returns animate-pulse for Stale (red) status', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const fnStart = source.indexOf('function getStatusDot');
+    const fnEnd = source.indexOf('\n}', fnStart) + 2;
+    const fnBody = source.slice(fnStart, fnEnd);
+    // The stale return line should have animate-pulse in its color
+    // Note: Failed red should NOT pulse — only stale red
+    const staleLineMatch = fnBody.match(/return\s*\{[^}]*label:\s*'Stale'[^}]*\}/);
+    expect(staleLineMatch).toBeTruthy();
+    expect(staleLineMatch![0]).toContain('animate-pulse');
   });
 });

@@ -315,6 +315,7 @@ async function main() {
   console.log(`Skipped:        ${skipped.toLocaleString()}`);
   console.log(`Errors:         ${errors}`);
   console.log(`Duration:       ${elapsed}s`);
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: inserted, records_updated: 0 }));
 
   await pool.end();
 
