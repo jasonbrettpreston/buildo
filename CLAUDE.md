@@ -114,7 +114,7 @@
 - [ ] **Implementation:** Write `src/lib/[feature]/` or `src/components/` code to pass tests.
 - [ ] **Auth Boundary & Secrets:** If creating/modifying an API route, verify it is protected by `src/middleware.ts`. Ensure NO `.env` secrets are exposed to client components.
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. All tests must pass.
-- [ ] **Atomic Commit:** Prompt user to commit: `git commit -m "feat(NN_spec): [description]"`. Do not batch — commit each passing component individually.
+- [ ] **Atomic Commit:** Commit immediately: `git commit -m "feat(NN_spec): [description]"`. Do not batch — commit each passing component individually. Plan authorization grants commit authority.
 - [ ] **Founder's Audit:** Verify NO laziness placeholders (`// ... existing code`), all exports resolve, schema matches spec, and test coverage is complete.
 ```
 
@@ -141,7 +141,7 @@
 - [ ] **Auth Boundary & Secrets:** If creating/modifying an API route, verify it is protected by `src/middleware.ts`. Ensure NO `.env` secrets are exposed to client components.
 - [ ] **UI Regression Check:** If modifying a shared component, run `npx vitest run src/tests/*.ui.test.tsx` to verify no sibling UI broke.
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. All tests must pass.
-- [ ] **Atomic Commit:** Prompt user to commit: `git commit -m "feat|refactor|chore(NN_spec): [description]"`. Do not batch.
+- [ ] **Atomic Commit:** Commit immediately: `git commit -m "feat|refactor|chore(NN_spec): [description]"`. Do not batch. Plan authorization grants commit authority.
 - [ ] **Founder's Audit:** Verify NO laziness placeholders (`// ... existing code`), all exports resolve, schema matches spec, and test coverage is complete.
 ```
 
@@ -160,7 +160,7 @@
 - [ ] **Fix:** Modify the code to resolve the issue.
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. All tests must pass.
 - [ ] **Collateral Check:** Run `npx vitest related src/path/to/changed-file.ts --run` to verify no unrelated dependents broke. If failures appear, `git stash` and analyze root cause coupling — do not start fixing the new broken file.
-- [ ] **Atomic Commit:** Prompt user to commit: `git commit -m "fix(NN_spec): [description]"`. Do not batch.
+- [ ] **Atomic Commit:** Commit immediately: `git commit -m "fix(NN_spec): [description]"`. Do not batch. Plan authorization grants commit authority.
 - [ ] **Spec Audit:** Update `docs/specs/[feature].md` IF AND ONLY IF the fix required a logic change.
 ```
 
@@ -217,7 +217,7 @@ Every new spec MUST include an `## Operating Boundaries` section (Target Files, 
 ---
 
 ## Git Commit Strategy (Atomic Commits)
-1. **Never batch commit:** You MUST prompt the user to commit the moment a "Green Light" is achieved for a single component or function. Do not move on to the next component without committing.
+1. **Never batch commit:** You MUST commit immediately the moment a "Green Light" is achieved for a single component or function. Do not move on to the next component without committing. Plan authorization ("PLAN LOCKED → yes") grants commit authority for all steps in that plan — do not re-ask.
 2. **Conventional Commits:** Write commit messages using standard prefixes: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, or `chore:`.
 3. **Spec Traceability:** Every commit message MUST reference the Spec ID in parentheses: `feat(13_auth): implement LoginForm`.
 4. **Rollback Safety:** Atomic commits enable `git reset --hard HEAD~1` to undo exactly one step, not an entire feature.
