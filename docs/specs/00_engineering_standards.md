@@ -44,7 +44,11 @@ This document outlines the strict engineering standards, stability rules, and de
   4. Drop the old column in a subsequent deployment.
 - **Execution:** `CREATE INDEX` on large tables should use the `CONCURRENTLY` keyword when applicable.
 
-### 3.2 Pagination Enforcement
+### 3.2 Migration Rollback Safety
+- **Rule:** Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks so any schema change can be reversed with a single rollback.
+- **Execution:** Write `-- UP` (create/alter/add) and `-- DOWN` (drop/revert) SQL in the same `NNN_[feature].sql` file. If Database Impact is YES in the Active Task, the migration file is a mandatory deliverable — never skip it.
+
+### 3.3 Pagination Enforcement
 - **Rule:** Any API route that reads from growing database tables (`permits`, `coa_applications`) MUST enforce pagination boundaries. Unbounded `SELECT *` without `LIMIT` is strictly forbidden.
 
 ---
@@ -72,7 +76,11 @@ This document outlines the strict engineering standards, stability rules, and de
 | `*.infra.test.ts` | API routes, DB queries, external calls | `api.infra.test.ts` |
 | `*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | `auth.security.test.ts` |
 
-### 5.3 Test Data Seeding
+### 5.3 Red-Green Test Cycle (Golden Rule)
+- **Rule:** You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails.
+- **Execution:** For new API routes and database mutations, the failing test MUST be an `.infra.test.ts` that exercises the **unhappy path** (error responses, invalid input, missing auth). For pure logic, use `.logic.test.ts`. Run the test and confirm it fails — only then implement the code to make it pass (Green Light). This is the single strongest defense against hallucinated or untested code.
+
+### 5.4 Test Data Seeding
 - **Rule:** To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`. Define a JSON state object, insert it, and verify DB contents.
 
 ---
