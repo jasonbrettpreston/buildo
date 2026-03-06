@@ -24,6 +24,14 @@ const eslintConfig = [
     rules: {
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
+      'no-empty': ['error', { allowEmptyCatch: false }],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.object.name='process'][callee.property.name='exit']",
+          message: 'process.exit() is banned in src/. Use error logging and graceful recovery instead.',
+        },
+      ],
     },
   },
 ];

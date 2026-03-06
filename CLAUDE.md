@@ -22,7 +22,7 @@
 2. **System Map Authority:** `docs/specs/00_system_map.md` is the Single Source of Truth. Regenerate with `npm run system-map`.
 3. **Traceability:** Every test file MUST have a `SPEC LINK` header.
 4. **Verification:** Never declare a task done until `npx vitest run` passes.
-5. **Automated Gate:** The Husky pre-commit hook runs `npm run typecheck && npm run test` automatically.
+5. **Automated Gate:** The Husky pre-commit hook runs `npm run typecheck && npm run lint && npm run test` automatically. ESLint enforces `no-empty` (bans empty catch blocks) and `no-restricted-syntax` (bans `process.exit()` in src/).
 6. **Pre-Flight:** Before starting any task, run `node scripts/ai-env-check.mjs` to orient yourself to the current environment state.
 
 ### Execution Order Constraint
