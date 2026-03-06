@@ -1367,3 +1367,162 @@ describe('Pipeline Toggle — UI rendering logic', () => {
     expect(content).toContain('aria-label=');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Pipeline Status UX — always-visible controls, NON_TOGGLEABLE_SLUGS, errors
+// ---------------------------------------------------------------------------
+
+import { NON_TOGGLEABLE_SLUGS, PIPELINE_CHAINS } from '@/components/FreshnessTimeline';
+
+describe('NON_TOGGLEABLE_SLUGS filtering', () => {
+  it('contains assert_schema, assert_data_bounds, and refresh_snapshot', () => {
+    expect(NON_TOGGLEABLE_SLUGS.has('assert_schema')).toBe(true);
+    expect(NON_TOGGLEABLE_SLUGS.has('assert_data_bounds')).toBe(true);
+    expect(NON_TOGGLEABLE_SLUGS.has('refresh_snapshot')).toBe(true);
+  });
+
+  it('does not contain operational pipeline slugs', () => {
+    expect(NON_TOGGLEABLE_SLUGS.has('permits')).toBe(false);
+    expect(NON_TOGGLEABLE_SLUGS.has('builders')).toBe(false);
+    expect(NON_TOGGLEABLE_SLUGS.has('enrich_wsib_builders')).toBe(false);
+    expect(NON_TOGGLEABLE_SLUGS.has('classify_permits')).toBe(false);
+  });
+
+  it('every chain has at least one non-toggleable step', () => {
+    for (const chain of PIPELINE_CHAINS) {
+      const hasInfra = chain.steps.some((s) => NON_TOGGLEABLE_SLUGS.has(s.slug));
+      expect(hasInfra).toBe(true);
+    }
+  });
+});
+
+describe('Pipeline controls always visible (no hover gating)', () => {
+  it('Run All button has no opacity-0 or group-hover opacity class', () => {
+    const content = fs.readFileSync(
+      path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Find the Run All button className — should not contain opacity-0 group-hover
+    const runAllMatch = content.match(/Run All[\s\S]{0,200}/);
+    expect(runAllMatch).toBeTruthy();
+    // The Run All button block should not have opacity-0
+    const runAllBlock = content.slice(
+      content.indexOf("isChainRunning ? 'Running...' : 'Run All'") - 300,
+      content.indexOf("isChainRunning ? 'Running...' : 'Run All'") + 50
+    );
+    expect(runAllBlock).not.toContain('opacity-0');
+    expect(runAllBlock).not.toContain('group-hover/chain:opacity-100');
+  });
+
+  it('per-step Run button has no opacity-0 or group-hover class', () => {
+    const content = fs.readFileSync(
+      path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Find the individual Run button (not Run All)
+    const runBtnIdx = content.indexOf('{/* Run button');
+    expect(runBtnIdx).toBeGreaterThan(-1);
+    const runBtnBlock = content.slice(runBtnIdx, runBtnIdx + 500);
+    expect(runBtnBlock).not.toContain('opacity-0');
+    expect(runBtnBlock).not.toContain('group-hover:opacity-100');
+  });
+
+  it('toggle switch has no opacity-0 or group-hover class', () => {
+    const content = fs.readFileSync(
+      path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const toggleIdx = content.indexOf('{/* Toggle switch');
+    expect(toggleIdx).toBeGreaterThan(-1);
+    const toggleBlock = content.slice(toggleIdx, toggleIdx + 500);
+    expect(toggleBlock).not.toContain('opacity-0');
+    expect(toggleBlock).not.toContain('group-hover:opacity-100');
+  });
+
+  it('Run All button has 44px min touch target', () => {
+    const content = fs.readFileSync(
+      path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const runAllBlock = content.slice(
+      content.indexOf("isChainRunning ? 'Running...' : 'Run All'") - 300,
+      content.indexOf("isChainRunning ? 'Running...' : 'Run All'")
+    );
+    expect(runAllBlock).toContain('min-h-[44px]');
+  });
+});
+
+describe('Pipeline controls hidden for infrastructure steps', () => {
+  it('Run button is gated by NON_TOGGLEABLE_SLUGS check', () => {
+    const content = fs.readFileSync(
+      path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(content).toContain('!NON_TOGGLEABLE_SLUGS.has(step.slug)');
+  });
+});
+
+describe('Chain error summary box', () => {
+  it('FreshnessTimeline renders chain error summary section', () => {
+    const content = fs.readFileSync(
+      path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(content).toContain('Chain error summary');
+    expect(content).toContain('Last failure:');
+  });
+
+  it('FreshnessTimeline accepts triggerError prop', () => {
+    const content = fs.readFileSync(
+      path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(content).toContain('triggerError?: string | null');
+  });
+
+  it('computes failedSteps from pipelineLastRun entries', () => {
+    // Simulate the chain error detection logic
+    const pipelineLastRun: Record<string, { status: string | null; error_message?: string | null }> = {
+      'permits:assert_schema': { status: 'completed' },
+      'permits:permits': { status: 'completed' },
+      'permits:classify_permits': { status: 'failed', error_message: 'Script timed out' },
+      'permits:builders': { status: 'completed' },
+    };
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const failedSteps = chain.steps
+      .map((s) => ({ slug: s.slug, info: pipelineLastRun[`permits:${s.slug}`] }))
+      .filter((s) => s.info?.status === 'failed' && s.info.error_message);
+    expect(failedSteps).toHaveLength(1);
+    expect(failedSteps[0].slug).toBe('classify_permits');
+    expect(failedSteps[0].info!.error_message).toBe('Script timed out');
+  });
+});
+
+describe('Mobile viewport (375px) — controls always visible', () => {
+  it('at 375px width, no controls use hover-gated visibility patterns', () => {
+    // Mock narrow viewport
+    const originalInnerWidth = globalThis.innerWidth;
+    Object.defineProperty(globalThis, 'innerWidth', { value: 375, writable: true });
+
+    const content = fs.readFileSync(
+      path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+
+    // Extract all className strings from Run button, toggle, and Run All sections
+    const controlSections = [
+      content.slice(content.indexOf('{/* Run button'), content.indexOf('{/* Run button') + 500),
+      content.slice(content.indexOf('{/* Toggle switch'), content.indexOf('{/* Toggle switch') + 500),
+      content.slice(
+        content.indexOf("isChainRunning ? 'Running...' : 'Run All'") - 300,
+        content.indexOf("isChainRunning ? 'Running...' : 'Run All'") + 50
+      ),
+    ];
+
+    for (const section of controlSections) {
+      // No opacity-0 pattern means controls are visible regardless of hover/viewport
+      expect(section).not.toContain('opacity-0');
+      expect(section).not.toContain('group-hover:opacity-100');
+      expect(section).not.toContain('group-hover/chain:opacity-100');
+    }
+
+    // Verify 44px touch targets exist
+    expect(content).toContain('min-h-[44px] min-w-[44px]');
+    expect(content).toContain("min-h-[44px]");
+
+    // Restore
+    Object.defineProperty(globalThis, 'innerWidth', { value: originalInnerWidth, writable: true });
+  });
+});

@@ -795,6 +795,7 @@ export function DataQualityDashboard() {
                 .map(([slug]) => slug)
             )}
             onToggle={togglePipeline}
+            triggerError={pipelineError}
           />
 
           {/* ============================================================

@@ -135,6 +135,17 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Infrastructure steps — no individual Run button or toggle switch.
+// These always run as part of a chain and cannot be disabled.
+// ---------------------------------------------------------------------------
+
+export const NON_TOGGLEABLE_SLUGS = new Set([
+  'assert_schema',
+  'assert_data_bounds',
+  'refresh_snapshot',
+]);
+
+// ---------------------------------------------------------------------------
 // Props & helpers
 // ---------------------------------------------------------------------------
 
@@ -156,6 +167,7 @@ export interface FreshnessTimelineProps {
   slaTargets?: Record<string, number>;
   disabledPipelines?: Set<string>;
   onToggle?: (slug: string, enabled: boolean) => void;
+  triggerError?: string | null;
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -227,7 +239,7 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
 // Component
 // ---------------------------------------------------------------------------
 
-export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle }: FreshnessTimelineProps) {
+export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError }: FreshnessTimelineProps) {
   const [errorPopover, setErrorPopover] = useState<string | null>(null);
 
   const allSlugs = Object.keys(PIPELINE_REGISTRY);
@@ -274,7 +286,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
           return (
             <div key={chain.id}>
               {/* Chain header */}
-              <div className="flex items-center gap-2 mb-2 group/chain">
+              <div className="flex items-center gap-2 mb-2">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                   {chain.label}
                 </span>
@@ -283,9 +295,9 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                 <button
                   onClick={() => onTrigger(chainSlug)}
                   disabled={isChainRunning}
-                  className={`text-[9px] px-2.5 py-0.5 rounded border opacity-0 group-hover/chain:opacity-100 transition-opacity ${
+                  className={`text-[9px] px-2.5 py-1 rounded border min-h-[44px] ${
                     isChainRunning
-                      ? 'border-blue-200 text-blue-400 bg-blue-50 cursor-not-allowed opacity-100'
+                      ? 'border-blue-200 text-blue-400 bg-blue-50 cursor-not-allowed'
                       : 'border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700'
                   }`}
                 >
@@ -442,26 +454,28 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           {timeAgo(info?.last_run_at ?? null)}
                         </span>
 
-                        {/* Run button */}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onTrigger(step.slug); }}
-                          disabled={isRunning || isDisabled}
-                          className={`text-[9px] px-2 py-0.5 rounded border opacity-0 group-hover:opacity-100 transition-opacity ${
-                            isRunning
-                              ? 'border-blue-200 text-blue-400 cursor-not-allowed'
-                              : isDisabled
-                              ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                              : 'border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                          }`}
-                        >
-                          Run
-                        </button>
+                        {/* Run button — hidden for infrastructure steps */}
+                        {!NON_TOGGLEABLE_SLUGS.has(step.slug) && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onTrigger(step.slug); }}
+                            disabled={isRunning || isDisabled}
+                            className={`text-[9px] px-2 py-0.5 rounded border ${
+                              isRunning
+                                ? 'border-blue-200 text-blue-400 cursor-not-allowed'
+                                : isDisabled
+                                ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                                : 'border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                            }`}
+                          >
+                            Run
+                          </button>
+                        )}
 
-                        {/* Toggle switch */}
-                        {onToggle && (
+                        {/* Toggle switch — hidden for infrastructure steps */}
+                        {onToggle && !NON_TOGGLEABLE_SLUGS.has(step.slug) && (
                           <button
                             onClick={(e) => { e.stopPropagation(); onToggle(step.slug, isDisabled); }}
-                            className={`min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${isDisabled ? 'opacity-100' : ''}`}
+                            className="min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
                             title={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
                             aria-label={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
                           >
@@ -475,6 +489,38 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   );
                 })}
               </div>
+
+              {/* Chain error summary — last failure in this chain */}
+              {(() => {
+                const failedSteps = chain.steps
+                  .map((s) => ({ slug: s.slug, info: pipelineLastRun[`${chain.id}:${s.slug}`] }))
+                  .filter((s) => s.info?.status === 'failed' && s.info.error_message);
+                const lastFailure = failedSteps[failedSteps.length - 1];
+                if (!lastFailure) return null;
+                const failEntry = PIPELINE_REGISTRY[lastFailure.slug];
+                return (
+                  <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                      <span className="text-[10px] font-semibold text-red-700">
+                        Last failure: {failEntry?.name ?? lastFailure.slug}
+                      </span>
+                    </div>
+                    <pre className="text-[9px] text-red-600 whitespace-pre-wrap break-words max-h-32 overflow-y-auto font-mono">
+                      {lastFailure.info!.error_message}
+                    </pre>
+                  </div>
+                );
+              })()}
+
+              {/* Inline trigger error — 409 conflict or other trigger failures */}
+              {triggerError && triggerError.startsWith(`chain_${chain.id}:`) && (
+                <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  <p className="text-[10px] text-amber-700 font-medium">
+                    {triggerError.replace(`chain_${chain.id}: `, '')}
+                  </p>
+                </div>
+              )}
             </div>
           );
         })}
