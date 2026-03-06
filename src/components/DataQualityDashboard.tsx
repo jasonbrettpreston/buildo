@@ -284,6 +284,7 @@ export function DataQualityDashboard() {
         parcels_with_massing: stats.parcels_with_massing ?? 0,
         permits_with_massing: stats.permits_with_massing ?? 0,
         neighbourhoods_total: stats.neighbourhoods_total ?? 0,
+        permits_propagated: (stats.permits_propagated as number) ?? 0,
         pipeline_last_run: stats.pipeline_last_run ?? {},
         pipeline_schedules: stats.pipeline_schedules,
       }, current)

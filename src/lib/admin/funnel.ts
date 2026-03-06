@@ -90,6 +90,7 @@ export interface FunnelStats {
   parcels_with_massing: number;
   permits_with_massing: number;
   neighbourhoods_total: number;
+  permits_propagated: number;
   pipeline_last_run: Record<string, PipelineRunInfo>;
   pipeline_schedules?: Record<string, { cadence: string }> | null;
 }
@@ -417,22 +418,23 @@ export function computeRowData(
 
     case 'link_similar': {
       // link_similar propagates scope tags from BLD permits to companion permits
-      // (PLB, MS, DM etc.). The baseline is companion permits updated, NOT all
-      // active permits — showing "0 of 237K" is misleading.
-      const lsTotal = lastRunRecordsTotal ?? 0;
+      // (PLB, MS, DM etc.). Baseline is the DB count of permits with propagated
+      // tags — this persists across runs (not just last-run output).
+      const propagated = stats.permits_propagated;
       const lsNew = lastRunRecordsNew ?? 0;
       return {
         config, lastUpdated, status, cadence, lastRunMeta, lastRunRecordsTotal, lastRunRecordsNew,
-        baselineTotal: lsTotal, baselineLabel: 'Companion Permits Updated',
-        targetPool: null, targetPoolLabel: null, baselineNullRates: [],
-        matchDenominator: lsTotal || 1, matchDenominatorLabel: 'Companion Permits',
-        matchCount: lsTotal, matchPct: lsTotal > 0 ? 100 : 0,
+        baselineTotal: ap, baselineLabel: 'Active Permits',
+        targetPool: propagated, targetPoolLabel: 'Companion Permits',
+        baselineNullRates: [],
+        matchDenominator: ap, matchDenominatorLabel: 'Active Permits',
+        matchCount: propagated, matchPct: pct(propagated, ap),
         matchTiers: [
-          { label: 'Tags Propagated', count: lsTotal },
+          { label: 'Tags Propagated', count: propagated },
           ...(lsNew > 0 ? [{ label: 'DM Tags Fixed', count: lsNew }] : []),
         ],
         yieldCounts: [
-          { field: 'Scope Propagated', count: lsTotal },
+          { field: 'Scope Propagated', count: propagated },
         ],
         yieldNullRates: [],
       };

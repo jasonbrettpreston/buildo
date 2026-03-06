@@ -41,6 +41,7 @@ export async function GET() {
       wsibLinkedResult,
       wsibLeadPoolResult,
       wsibWithTradeResult,
+      permitsPropagatedResult,
     ] = await Promise.all([
       query<{ count: string }>(
         'SELECT COUNT(*)::text AS count FROM permits'
@@ -163,6 +164,10 @@ export async function GET() {
       // WSIB entries with trade name
       query<{ count: string }>(
         `SELECT COUNT(*)::text AS count FROM wsib_registry WHERE trade_name IS NOT NULL`
+      ).catch(() => [{ count: '0' }]),
+      // Permits with propagated scope tags (link_similar baseline)
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM permits WHERE scope_source = 'propagated'`
       ).catch(() => [{ count: '0' }]),
     ]);
 
@@ -298,6 +303,7 @@ export async function GET() {
       wsib_linked: p(wsibLinkedResult),
       wsib_lead_pool: p(wsibLeadPoolResult),
       wsib_with_trade: p(wsibWithTradeResult),
+      permits_propagated: p(permitsPropagatedResult),
       // Pipeline freshness
       pipeline_last_run: pipelineLastRun,
       // Pipeline schedules
