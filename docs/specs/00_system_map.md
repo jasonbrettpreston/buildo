@@ -25,7 +25,7 @@
 | 08c | `08c_description_keyword_trades.md` | Description Keyword-to-Trade Mapping | `src/lib/classification/tag-trade-matrix.ts` | — | Done |
 | 09 | `09_construction_phases.md` | Construction Phase Model | `src/lib/classification/phases.ts` | `src/tests/classification.logic.test.ts` | Done |
 | 10 | `10_lead_scoring.md` | Lead Scoring | `src/lib/classification/scoring.ts` | `src/tests/scoring.logic.test.ts` | Done |
-| 11 | `11_builder_enrichment.md` | Builder Enrichment | `src/lib/builders/enrichment.ts`, `src/lib/builders/normalize.ts`, `src/lib/builders/repository.ts`, +3 more | `src/tests/builders.logic.test.ts` | Done |
+| 11 | `11_builder_enrichment.md` | Entity Enrichment | `src/lib/builders/enrichment.ts`, `src/lib/builders/normalize.ts`, `src/lib/builders/repository.ts`, +3 more | `src/tests/builders.logic.test.ts` | Done |
 | 12 | `12_coa_integration.md` | Committee of Adjustments Integration | `src/lib/coa/linker.ts`, `src/lib/coa/pre-permits.ts`, `src/lib/coa/repository.ts`, +2 more | `src/tests/coa.logic.test.ts` | Done |
 
 ## Phase 3: User Experience
@@ -61,6 +61,7 @@
 | 35 | `35_wsib_registry.md` | WSIB Registry Integration | `src/app/api/admin/pipelines/[slug]/route.ts`, `src/components/DataQualityDashboard.tsx`, `src/components/FreshnessTimeline.tsx`, +2 more | `src/tests/wsib.logic.test.ts`, `src/tests/wsib.infra.test.ts` | Done |
 | 36 | `36_web_search_enrichment.md` | Web Search Enrichment | `src/lib/builders/extract-contacts.ts`, `src/app/api/admin/pipelines/[slug]/route.ts`, `src/components/FreshnessTimeline.tsx` | `src/tests/enrichment.logic.test.ts`, `src/tests/enrichment.infra.test.ts` | Done |
 | 37 | `37_corporate_identity_hub.md` | Corporate Identity Hub | `src/lib/permits/types.ts`, `src/lib/builders/normalize.ts`, `src/tests/factories.ts`, +15 more | `src/tests/entities.logic.test.ts`, `src/tests/entities.infra.test.ts` | Done |
+| 38 | `38_inspection_scraping.md` | Inspection Data Scraping (AIC Portal) | `src/lib/inspections/parser.ts`, `src/lib/permits/types.ts`, `src/app/api/permits/[id]/route.ts`, +4 more | `src/tests/inspections.logic.test.ts`, `src/tests/quality.logic.test.ts` | Done |
 | 99 | `_spec_template.md` | Spec [XX] -- [Feature Name] | `src/...` | — | Done |
 
 ---
