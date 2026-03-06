@@ -849,8 +849,8 @@ describe('Enrichment Funnel', () => {
     FUNNEL_SOURCES = mod.FUNNEL_SOURCES;
   });
 
-  it('defines exactly 13 data sources', () => {
-    expect(FUNNEL_SOURCES).toHaveLength(13);
+  it('defines exactly 15 data sources', () => {
+    expect(FUNNEL_SOURCES).toHaveLength(15);
   });
 
   it('source IDs are unique', () => {
@@ -882,6 +882,8 @@ describe('Enrichment Funnel', () => {
     expect(ids).toContain('neighbourhoods');
     expect(ids).toContain('massing');
     expect(ids).toContain('coa');
+    expect(ids).toContain('link_similar');
+    expect(ids).toContain('link_coa');
   });
 
   it('follows pipeline chain execution order', () => {
@@ -893,7 +895,9 @@ describe('Enrichment Funnel', () => {
     expect(ids.indexOf('wsib')).toBeLessThan(ids.indexOf('builder_web'));
     expect(ids.indexOf('builder_web')).toBeLessThan(ids.indexOf('address_matching'));
     expect(ids.indexOf('address_matching')).toBeLessThan(ids.indexOf('parcels'));
-    expect(ids.indexOf('parcels')).toBeLessThan(ids.indexOf('coa'));
+    expect(ids.indexOf('massing')).toBeLessThan(ids.indexOf('link_similar'));
+    expect(ids.indexOf('link_similar')).toBeLessThan(ids.indexOf('link_coa'));
+    expect(ids.indexOf('link_coa')).toBeLessThan(ids.indexOf('coa'));
   });
 
   it('builder_web source yields phone, email, and website', () => {

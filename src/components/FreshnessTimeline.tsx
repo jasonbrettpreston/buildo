@@ -266,81 +266,72 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
 // Funnel accordion panels (inline, no separate component file)
 // ---------------------------------------------------------------------------
 
+function MetricRow({ label, value, className }: { label: string; value: string; className?: string }) {
+  return (
+    <div className="flex items-baseline justify-between py-0.5">
+      <span className="text-xs text-gray-500 min-w-[80px]">{label}</span>
+      <span className={`text-xs font-semibold tabular-nums text-right ${className ?? 'text-gray-900'}`}>{value}</span>
+    </div>
+  );
+}
+
 function FunnelAllTimePanel({ row }: { row: FunnelRowData }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       {/* Zone 2: Baseline */}
-      <div>
-        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Baseline</h4>
-        <div className="space-y-1.5">
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-600">{row.baselineLabel}</span>
-            <span className="text-xs font-semibold text-gray-900 tabular-nums">{row.baselineTotal.toLocaleString()}</span>
+      <div className="nested-tile bg-gray-50 border border-gray-100 rounded-md p-3">
+        <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Baseline</h4>
+        <MetricRow label={row.baselineLabel} value={row.baselineTotal.toLocaleString()} />
+        {row.targetPool !== null && (
+          <MetricRow label={row.targetPoolLabel!} value={row.targetPool.toLocaleString()} />
+        )}
+        {row.baselineNullRates.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-gray-200/60">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Null Rates</p>
+            {row.baselineNullRates.map((nr) => (
+              <MetricRow
+                key={nr.field}
+                label={nr.field}
+                value={`${nr.pct}% null`}
+                className={nr.pct > 20 ? 'text-red-500' : nr.pct > 5 ? 'text-yellow-600' : 'text-green-600'}
+              />
+            ))}
           </div>
-          {row.targetPool !== null && (
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">{row.targetPoolLabel}</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{row.targetPool.toLocaleString()}</span>
-            </div>
-          )}
-          {row.baselineNullRates.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-200/60">
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Null Rates</p>
-              {row.baselineNullRates.map((nr) => (
-                <div key={nr.field} className="flex justify-between">
-                  <span className="text-[11px] text-gray-500">{nr.field}</span>
-                  <span className={`text-[11px] font-medium tabular-nums ${nr.pct > 20 ? 'text-red-500' : nr.pct > 5 ? 'text-yellow-600' : 'text-green-600'}`}>{nr.pct}% null</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </div>
       {/* Zone 3: Intersection */}
-      <div>
-        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Intersection</h4>
-        <div className="space-y-1.5">
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-600">{row.matchDenominatorLabel}</span>
-            <span className="text-xs font-semibold text-gray-900 tabular-nums">{row.matchDenominator.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-600">Matched</span>
-            <span className="text-xs font-semibold text-green-700 tabular-nums">{row.matchCount.toLocaleString()} ({row.matchPct}%)</span>
-          </div>
+      <div className="nested-tile bg-gray-50 border border-gray-100 rounded-md p-3">
+        <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Intersection</h4>
+        <MetricRow label={row.matchDenominatorLabel} value={row.matchDenominator.toLocaleString()} />
+        <MetricRow label="Matched" value={`${row.matchCount.toLocaleString()} (${row.matchPct}%)`} className="text-green-700" />
+        {row.matchTiers.length > 0 && (
           <div className="mt-2 pt-2 border-t border-gray-200/60">
             <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Sub-Tiers</p>
             {row.matchTiers.map((tier) => (
-              <div key={tier.label} className="flex justify-between">
-                <span className="text-[11px] text-gray-500">{tier.label}</span>
-                <span className="text-[11px] font-medium text-gray-700 tabular-nums">{tier.count.toLocaleString()}</span>
-              </div>
+              <MetricRow key={tier.label} label={tier.label} value={tier.count.toLocaleString()} className="text-gray-700" />
             ))}
           </div>
-        </div>
+        )}
       </div>
       {/* Zone 4: Yield */}
-      <div>
-        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Yield</h4>
-        <div className="space-y-1.5">
-          {row.yieldCounts.map((y) => (
-            <div key={y.field} className="flex justify-between">
-              <span className="text-xs text-gray-600">{y.field}</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{y.count.toLocaleString()}</span>
-            </div>
-          ))}
-          {row.yieldNullRates.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-200/60">
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Yield Null Rates</p>
-              {row.yieldNullRates.map((nr) => (
-                <div key={nr.field} className="flex justify-between">
-                  <span className="text-[11px] text-gray-500">{nr.field}</span>
-                  <span className={`text-[11px] font-medium tabular-nums ${nr.pct > 20 ? 'text-red-500' : nr.pct > 5 ? 'text-yellow-600' : 'text-green-600'}`}>{nr.pct}% null</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="nested-tile bg-gray-50 border border-gray-100 rounded-md p-3">
+        <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Yield</h4>
+        {row.yieldCounts.map((y) => (
+          <MetricRow key={y.field} label={y.field} value={y.count.toLocaleString()} />
+        ))}
+        {row.yieldNullRates.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-gray-200/60">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Null Rates</p>
+            {row.yieldNullRates.map((nr) => (
+              <MetricRow
+                key={nr.field}
+                label={nr.field}
+                value={`${nr.pct}% null`}
+                className={nr.pct > 20 ? 'text-red-500' : nr.pct > 5 ? 'text-yellow-600' : 'text-green-600'}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -360,69 +351,38 @@ function FunnelLastRunPanel({ row }: { row: FunnelRowData }) {
   const runPct = processed > 0 ? Math.round((matched / processed) * 1000) / 10 : 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Run Intersection</h4>
-        <div className="space-y-1.5">
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-600">Processed</span>
-            <span className="text-xs font-semibold text-gray-900 tabular-nums">{processed.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-xs text-gray-600">Matched</span>
-            <span className="text-xs font-semibold text-green-700 tabular-nums">{matched.toLocaleString()} ({runPct}%)</span>
-          </div>
-          {failed > 0 && (
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">Failed</span>
-              <span className="text-xs font-semibold text-red-500 tabular-nums">{failed.toLocaleString()}</span>
-            </div>
-          )}
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="nested-tile bg-gray-50 border border-gray-100 rounded-md p-3">
+        <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Run Intersection</h4>
+        <MetricRow label="Processed" value={processed.toLocaleString()} />
+        <MetricRow label="Matched" value={`${matched.toLocaleString()} (${runPct}%)`} className="text-green-700" />
+        {failed > 0 && (
+          <MetricRow label="Failed" value={failed.toLocaleString()} className="text-red-500" />
+        )}
       </div>
       {websitesFound != null && (
-        <div>
-          <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Pipeline Steps</h4>
-          <div className="space-y-1.5">
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">1. Entities Searched</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{processed.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">2. Websites Found</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{websitesFound.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">3. Contacts Extracted</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{matched.toLocaleString()}</span>
-            </div>
-          </div>
+        <div className="nested-tile bg-gray-50 border border-gray-100 rounded-md p-3">
+          <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Pipeline Steps</h4>
+          <MetricRow label="1. Searched" value={processed.toLocaleString()} />
+          <MetricRow label="2. Websites" value={websitesFound.toLocaleString()} />
+          <MetricRow label="3. Extracted" value={matched.toLocaleString()} />
         </div>
       )}
-      <div>
-        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Run Yield</h4>
+      <div className="nested-tile bg-gray-50 border border-gray-100 rounded-md p-3">
+        <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Run Yield</h4>
         {extractedFields ? (
-          <div className="space-y-1.5">
+          <>
             {Object.entries(extractedFields)
               .filter(([, count]) => (count as number) > 0)
               .map(([field, count]) => (
-                <div key={field} className="flex justify-between">
-                  <span className="text-xs text-gray-600">{field}</span>
-                  <span className="text-xs font-semibold text-gray-900 tabular-nums">{(count as number).toLocaleString()}</span>
-                </div>
+                <MetricRow key={field} label={field} value={(count as number).toLocaleString()} />
               ))}
-          </div>
+          </>
         ) : (
-          <div className="space-y-1.5">
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">Records</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{(row.lastRunRecordsTotal ?? 0).toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs text-gray-600">New/Changed</span>
-              <span className="text-xs font-semibold text-gray-900 tabular-nums">{(row.lastRunRecordsNew ?? 0).toLocaleString()}</span>
-            </div>
-          </div>
+          <>
+            <MetricRow label="Records" value={(row.lastRunRecordsTotal ?? 0).toLocaleString()} />
+            <MetricRow label="New/Changed" value={(row.lastRunRecordsNew ?? 0).toLocaleString()} />
+          </>
         )}
       </div>
     </div>

@@ -39,6 +39,8 @@ export const FUNNEL_SOURCES: FunnelSourceConfig[] = [
   { id: 'parcels', name: 'Lots (Parcels)', statusSlug: 'link_parcels', triggerSlug: 'link_parcels', yieldFields: ['lot_size', 'frontage', 'depth', 'is_irregular'] },
   { id: 'neighbourhoods', name: 'Neighbourhoods', statusSlug: 'link_neighbourhoods', triggerSlug: 'link_neighbourhoods', yieldFields: ['neighbourhood_id', 'avg_income', 'construction_era'] },
   { id: 'massing', name: '3D Massing', statusSlug: 'link_massing', triggerSlug: 'link_massing', yieldFields: ['main_bldg_area', 'max_height', 'est_stories'] },
+  { id: 'link_similar', name: 'Similar Permits', statusSlug: 'link_similar', triggerSlug: 'link_similar', yieldFields: ['similar_permit_id'] },
+  { id: 'link_coa', name: 'CoA Linking', statusSlug: 'link_coa', triggerSlug: 'link_coa', yieldFields: ['linked_permit_num', 'linked_confidence'] },
   { id: 'coa', name: 'CoA Applications', statusSlug: 'coa', triggerSlug: 'chain_coa', yieldFields: ['decision', 'hearing_date', 'applicant'] },
 ];
 
@@ -395,6 +397,44 @@ export function computeRowData(
         yieldNullRates: [],
       };
     }
+
+    case 'link_similar': {
+      const lsTotal = lastRunRecordsTotal ?? 0;
+      const lsNew = lastRunRecordsNew ?? 0;
+      return {
+        config, lastUpdated, status, cadence, lastRunMeta, lastRunRecordsTotal, lastRunRecordsNew,
+        baselineTotal: ap, baselineLabel: 'Active Permits',
+        targetPool: null, targetPoolLabel: null, baselineNullRates: [],
+        matchDenominator: ap, matchDenominatorLabel: 'Active Permits',
+        matchCount: lsTotal, matchPct: pct(lsTotal, ap),
+        matchTiers: [
+          { label: 'Propagated', count: lsTotal },
+          { label: 'New Links', count: lsNew },
+        ],
+        yieldCounts: [
+          { field: 'Scope Propagated', count: lsTotal },
+        ],
+        yieldNullRates: [],
+      };
+    }
+
+    case 'link_coa':
+      return {
+        config, lastUpdated, status, cadence, lastRunMeta, lastRunRecordsTotal, lastRunRecordsNew,
+        baselineTotal: current.coa_total, baselineLabel: 'CoA Applications',
+        targetPool: null, targetPoolLabel: null, baselineNullRates: [],
+        matchDenominator: current.coa_total, matchDenominatorLabel: 'CoA Applications',
+        matchCount: current.coa_linked, matchPct: pct(current.coa_linked, current.coa_total),
+        matchTiers: [
+          { label: 'High Conf (>=0.80)', count: current.coa_high_confidence },
+          { label: 'Low Conf (<0.50)', count: current.coa_low_confidence },
+          { label: 'Unlinked', count: current.coa_total - current.coa_linked },
+        ],
+        yieldCounts: [
+          { field: 'Linked', count: current.coa_linked },
+        ],
+        yieldNullRates: [],
+      };
 
     case 'coa': {
       const ct = current.coa_total;

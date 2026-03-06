@@ -1387,6 +1387,30 @@ describe('FreshnessTimeline pipeline tiles', () => {
     expect(source).toContain('accordion-tile');
   });
 
+  it('FunnelAllTimePanel sub-zones have nested tile cards for alignment', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Each sub-zone (Baseline, Intersection, Yield) should be in its own nested card
+    const panelIdx = source.indexOf('function FunnelAllTimePanel');
+    expect(panelIdx).toBeGreaterThan(-1);
+    const panelBlock = source.slice(panelIdx, panelIdx + 3000);
+    // Nested tiles within the All Time panel
+    expect(panelBlock).toContain('nested-tile');
+  });
+
+  it('FunnelLastRunPanel sub-zones have nested tile cards for alignment', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    const panelIdx = source.indexOf('function FunnelLastRunPanel');
+    expect(panelIdx).toBeGreaterThan(-1);
+    const panelBlock = source.slice(panelIdx, panelIdx + 3000);
+    expect(panelBlock).toContain('nested-tile');
+  });
+
   it('right-hand controls have adequate spacing (gap-3)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
