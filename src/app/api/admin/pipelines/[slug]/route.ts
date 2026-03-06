@@ -84,12 +84,26 @@ export async function POST(
 
   const isChain = CHAIN_SLUGS.has(slug);
 
-  // Concurrency guard: reject if this pipeline (or its chain) is already running
+  // Auto-expire stale runs — processes that crashed without updating their row.
+  // Chains get 1 hour before considered stale; individual pipelines get 15 minutes.
+  try {
+    await query(
+      `UPDATE pipeline_runs
+       SET status = 'failed', error_message = 'Stale run auto-cleaned', completed_at = NOW()
+       WHERE status = 'running'
+         AND pipeline = $1
+         AND started_at < NOW() - INTERVAL '${isChain ? '60 minutes' : '15 minutes'}'`,
+      [slug]
+    );
+  } catch {
+    // Non-fatal
+  }
+
+  // Concurrency guard: reject if this pipeline is legitimately still running
   try {
     const alreadyRunning = await query<{ id: number; pipeline: string }>(
       `SELECT id, pipeline FROM pipeline_runs
        WHERE status = 'running'
-         AND started_at > NOW() - INTERVAL '2 hours'
          AND pipeline = $1
        LIMIT 1`,
       [slug]

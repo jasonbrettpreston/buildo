@@ -890,6 +890,34 @@ describe('Pipeline route captures stderr and validates script', () => {
   });
 });
 
+describe('Stale pipeline run auto-cleanup', () => {
+  const routeSource = () => fs.readFileSync(
+    path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
+  );
+
+  it('route auto-expires stale running rows before concurrency check', () => {
+    const source = routeSource();
+    expect(source).toContain('Stale run auto-cleaned');
+    expect(source).toMatch(/UPDATE pipeline_runs[\s\S]*?SET status = 'failed'[\s\S]*?WHERE status = 'running'/);
+  });
+
+  it('chains get 60-minute stale threshold', () => {
+    const source = routeSource();
+    expect(source).toContain('60 minutes');
+  });
+
+  it('individual pipelines get 15-minute stale threshold', () => {
+    const source = routeSource();
+    expect(source).toContain('15 minutes');
+  });
+
+  it('concurrency guard no longer has a 2-hour hardcoded window', () => {
+    const source = routeSource();
+    // The old "2 hours" window should be removed
+    expect(source).not.toContain("INTERVAL '2 hours'");
+  });
+});
+
 describe('Massing pipeline chains link-massing after load', () => {
 
   it('load-massing.js invokes link-massing.js after loading footprints', () => {
