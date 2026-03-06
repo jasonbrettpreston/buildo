@@ -78,6 +78,7 @@
 *(How does this plan adhere to `docs/specs/00_engineering_standards.md`?)*
 * **Try-Catch Boundary:** [How are new/modified API routes handling errors?]
 * **Unhappy Path Tests:** [What error scenarios will be tested?]
+* **logError Mandate:** [Do all new/modified API catch blocks use `logError(tag, err, context)` from `src/lib/logger.ts`? Or N/A if no API routes.]
 * **Mobile-First:** [How are layouts structured for mobile? Or N/A if backend-only.]
 
 ## Execution Plan
@@ -101,7 +102,10 @@
 
 ### Execution Plan
 ```
-- [ ] **Standards Verification:** Explicitly state in the plan how your implementation adheres to the Try-Catch, Unhappy Path, and Mobile-First rules defined in `docs/specs/00_engineering_standards.md`. Fill out the `## Standards Compliance` section above.
+- [ ] **Standards Verification:** Explicitly state in the plan how your implementation adheres to ALL of the following from `docs/specs/00_engineering_standards.md`. Fill out the `## Standards Compliance` section above.
+  1. **Mobile-First UI Mandate** — touch targets >= 44px, base classes = mobile, `md:`/`lg:` for desktop. UI tests MUST mock a narrow viewport (375px) to verify.
+  2. **Try-Catch & Unhappy Path** — every API route has overarching try-catch; tests cover error paths (400, 404, 500).
+  3. **`logError` Mandate** — every API route catch block MUST use `logError(tag, err, context)` from `src/lib/logger.ts`. Zero bare `console.error()` in `src/app/api/`.
 - [ ] **Contract Definition:** If creating an API route, define Request/Response TypeScript interface BEFORE implementation.
 - [ ] **Spec & Registry Sync:** Create/Update `docs/specs/[feature].md`. Run `npm run system-map`.
 - [ ] **Schema Evolution:** If Database Impact is YES: grep for the affected type/interface to understand blast radius. Write both `UP` and `DOWN` migrations in `migrations/NNN_[feature].sql`, run `npm run migrate`, then `npm run db:generate`. Update `src/tests/factories.ts` with new fields. Run `npm run typecheck` immediately to catch schema-related type errors. Grep test files for inline mocks of the changed type.
@@ -123,7 +127,10 @@
 
 ### Execution Plan
 ```
-- [ ] **Standards Verification:** Explicitly state in the plan how your implementation adheres to the Try-Catch, Unhappy Path, and Mobile-First rules defined in `docs/specs/00_engineering_standards.md`. Fill out the `## Standards Compliance` section above.
+- [ ] **Standards Verification:** Explicitly state in the plan how your implementation adheres to ALL of the following from `docs/specs/00_engineering_standards.md`. Fill out the `## Standards Compliance` section above.
+  1. **Mobile-First UI Mandate** — touch targets >= 44px, base classes = mobile, `md:`/`lg:` for desktop. UI tests MUST mock a narrow viewport (375px) to verify.
+  2. **Try-Catch & Unhappy Path** — every API route has overarching try-catch; tests cover error paths (400, 404, 500).
+  3. **`logError` Mandate** — every API route catch block MUST use `logError(tag, err, context)` from `src/lib/logger.ts`. Zero bare `console.error()` in `src/app/api/`.
 - [ ] **State Verification:** Examine the calling context. Document what data is actually available vs. what the change assumes.
 - [ ] **Contract Definition:** If altering an API route, define updated Request/Response interface BEFORE implementation. Run `npm run typecheck` to identify breaking consumers.
 - [ ] **Spec Update:** Update `docs/specs/[feature].md` to reflect new requirements. Run `npm run system-map`.
@@ -172,6 +179,8 @@
 - [ ] **Dead Code Scan:** Run `npm run dead-code` (knip) — review unused files, exports, and dependencies.
 - [ ] **Supply Chain Security:** Run `npm audit`. Zero "High" or "Critical" vulnerabilities allowed.
 - [ ] **Coverage Check:** Are there any untested critical paths (scoring, classification, sync)?
+- [ ] **logError Enforcement:** Grep `src/app/api/` for bare `console.error` — zero instances allowed in server route files. Every catch block must import and use `logError` from `src/lib/logger.ts`.
+- [ ] **UI Viewport Audit:** Identify 3 critical shared components and verify their `*.ui.test.tsx` files test narrow-viewport rendering (375px) and touch-target dimensions (>= 44px).
 - [ ] **Build Health (if requested):** Score against the rubric below. Run `npm run build` (measure time). Run `npx madge --circular --extensions ts,tsx src`. Review `next.config.js` for misconfigurations. Run `ANALYZE=true npm run build` for bundle anatomy. Output `docs/reports/audit_[date].md`.
 - [ ] **Manual Validation (if requested):** Read spec, create atomic scenario checkboxes, execute each step. If any step fails: STOP → file WF3.
 - [ ] **Verdict:** Output "GO" (Green) or "NO-GO" (Red) with specific blockers.
