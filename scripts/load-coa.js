@@ -245,8 +245,10 @@ async function main() {
       allRaw.push(...records);
     }
   } else {
-    // Incremental mode: only recent records from Active resource
-    const records = await fetchRecentRecords(ACTIVE_RESOURCE_ID, 'Active Applications');
+    // Incremental mode: fetch all records from Active resource only.
+    // The active dataset is small (~3K records) so no SQL filter needed.
+    // (CKAN datastore_search_sql endpoint returns 403/404.)
+    const records = await fetchAllRecords(ACTIVE_RESOURCE_ID, 'Active Applications');
     allRaw.push(...records);
   }
 
