@@ -79,29 +79,6 @@ async function fetchAllRecords(resourceId, resourceName) {
 }
 
 /**
- * Fetch only recent records (last 90 days) from a single resource using CKAN SQL endpoint.
- * Used in incremental mode to avoid re-fetching the entire dataset.
- */
-async function fetchRecentRecords(resourceId, resourceName) {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 90);
-  const cutoffDate = cutoff.toISOString().slice(0, 10);
-
-  console.log(`\nFetching recent records from "${resourceName}" (since ${cutoffDate})...`);
-
-  const sql = `SELECT * FROM "${resourceId}" WHERE "HEARING_DATE" >= '${cutoffDate}'`;
-  const url = `${CKAN_BASE}/api/3/action/datastore_search_sql?sql=${encodeURIComponent(sql)}`;
-
-  const res = await fetch(url);
-  const json = await res.json();
-  if (!json.success) throw new Error(`datastore_search_sql failed: ${JSON.stringify(json.error)}`);
-
-  const records = json.result.records || [];
-  console.log(`  Got ${records.length} recent records`);
-  return records;
-}
-
-/**
  * Map a CKAN record to our coa_applications schema.
  *
  * Field names in the CKAN data:
