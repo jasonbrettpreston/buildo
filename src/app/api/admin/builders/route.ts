@@ -61,10 +61,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('[admin/builders] Error running enrichment batch:', err);
     return NextResponse.json(
-      {
-        error: 'Enrichment batch failed',
-        message: err instanceof Error ? err.message : String(err),
-      },
+      { error: 'Enrichment batch failed' },
       { status: 500 }
     );
   }

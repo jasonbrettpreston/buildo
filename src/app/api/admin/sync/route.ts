@@ -51,10 +51,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('[admin/sync] Error triggering sync:', err);
     return NextResponse.json(
-      {
-        error: 'Sync failed',
-        message: err instanceof Error ? err.message : String(err),
-      },
+      { error: 'Sync failed' },
       { status: 500 }
     );
   }

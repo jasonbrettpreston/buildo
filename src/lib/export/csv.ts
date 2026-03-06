@@ -183,7 +183,9 @@ export async function* generatePermitsCsv(
     await client.query(`CLOSE ${cursorName}`);
     await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
+    await client.query('ROLLBACK').catch((rollbackErr: unknown) => {
+      console.error('[csv-export] ROLLBACK failed:', rollbackErr);
+    });
     throw err;
   } finally {
     client.release();

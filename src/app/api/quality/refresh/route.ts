@@ -11,10 +11,7 @@ export async function POST() {
   } catch (err) {
     console.error('[api/quality/refresh] Error capturing snapshot:', err);
     return NextResponse.json(
-      {
-        error: 'Failed to capture data quality snapshot',
-        message: err instanceof Error ? err.message : String(err),
-      },
+      { error: 'Failed to capture data quality snapshot' },
       { status: 500 }
     );
   }

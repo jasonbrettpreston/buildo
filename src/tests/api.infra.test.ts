@@ -676,3 +676,80 @@ describe('Pre-Permit API Integration', () => {
     expect(permitDeclIdx).toBeLessThan(massingUseIdx);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Error Handling Hardening — WF5 audit fixes
+// ---------------------------------------------------------------------------
+
+describe('API Error Handling Hardening', () => {
+  // C8: No API route should leak raw err.message to clients
+  it('no API route exposes raw err.message in error responses', () => {
+    const apiDir = path.join(__dirname, '../app/api');
+    const routeFiles = findRouteFiles(apiDir);
+
+    const leakyFiles: string[] = [];
+    for (const file of routeFiles) {
+      const src = fs.readFileSync(file, 'utf-8');
+      // Match patterns like: message: err.message, message: err instanceof Error ? err.message : String(err)
+      if (/message:\s*err\b/.test(src) || /message:\s*err\s+instanceof/.test(src)) {
+        leakyFiles.push(path.relative(apiDir, file));
+      }
+    }
+
+    expect(leakyFiles).toEqual([]);
+  });
+
+  // C9: All public GET route handlers must be wrapped in try-catch
+  it('public GET routes have try-catch wrappers', () => {
+    const publicRoutes = [
+      path.join(__dirname, '../app/api/builders/route.ts'),
+      path.join(__dirname, '../app/api/coa/route.ts'),
+    ];
+
+    for (const file of publicRoutes) {
+      const src = fs.readFileSync(file, 'utf-8');
+      // GET handler should contain a try block
+      const getMatch = src.match(/export\s+async\s+function\s+GET[\s\S]*?\{([\s\S]*)\}/);
+      expect(getMatch, `${path.basename(file)} should export GET`).toBeTruthy();
+      expect(getMatch![1]).toContain('try');
+    }
+  });
+
+  // C1: Pool error handler must not crash the process
+  it('database pool error handler does not call process.exit', () => {
+    const clientSrc = fs.readFileSync(
+      path.join(__dirname, '../lib/db/client.ts'),
+      'utf-8'
+    );
+    expect(clientSrc).not.toContain('process.exit');
+  });
+
+  // C2: Sync process ROLLBACK must be error-guarded
+  it('sync process wraps ROLLBACK in nested try-catch', () => {
+    const syncSrc = fs.readFileSync(
+      path.join(__dirname, '../lib/sync/process.ts'),
+      'utf-8'
+    );
+    // The catch block should not have a bare `await client.query('ROLLBACK')`
+    // It should be wrapped in its own try-catch
+    const catchBlock = syncSrc.match(/}\s*catch\s*\(err\)\s*\{([\s\S]*?)}\s*finally/);
+    expect(catchBlock, 'should have catch block before finally').toBeTruthy();
+    const catchBody = catchBlock![1];
+    // Should contain a nested try around ROLLBACK
+    expect(catchBody).toContain('try');
+    expect(catchBody).toContain('ROLLBACK');
+  });
+});
+
+function findRouteFiles(dir: string): string[] {
+  const results: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...findRouteFiles(full));
+    } else if (entry.name === 'route.ts') {
+      results.push(full);
+    }
+  }
+  return results;
+}

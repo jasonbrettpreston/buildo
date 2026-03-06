@@ -205,7 +205,11 @@ export async function processBatch(
 
       await client.query('COMMIT');
     } catch (err) {
-      await client.query('ROLLBACK');
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackErr) {
+        console.error(`[sync] ROLLBACK failed for permit ${raw.PERMIT_NUM}/${raw.REVISION_NUM}:`, rollbackErr);
+      }
       console.error(
         `[sync] Error processing permit ${raw.PERMIT_NUM}/${raw.REVISION_NUM}:`,
         err

@@ -183,7 +183,7 @@ export function DataQualityDashboard() {
       return;
     }
     pollRef.current = setInterval(async () => {
-      const freshStats = await fetchData();
+      const freshStats = await fetchData().catch(() => null);
       if (!freshStats) return;
       setRunningPipelines((prev) => {
         const next = new Set<string>();

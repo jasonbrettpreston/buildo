@@ -167,7 +167,7 @@ export async function POST(
   } catch (err) {
     console.error(`[pipelines/${slug}] Error triggering pipeline:`, err);
     return NextResponse.json(
-      { error: 'Failed to trigger pipeline', message: err instanceof Error ? err.message : String(err) },
+      { error: 'Failed to trigger pipeline' },
       { status: 500 }
     );
   }

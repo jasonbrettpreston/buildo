@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('[admin/rules] Error creating rule:', err);
     return NextResponse.json(
-      { error: 'Failed to create rule', message: err instanceof Error ? err.message : String(err) },
+      { error: 'Failed to create rule' },
       { status: 500 }
     );
   }
@@ -142,7 +142,7 @@ export async function PATCH(request: NextRequest) {
   } catch (err) {
     console.error('[admin/rules] Error updating rule:', err);
     return NextResponse.json(
-      { error: 'Failed to update rule', message: err instanceof Error ? err.message : String(err) },
+      { error: 'Failed to update rule' },
       { status: 500 }
     );
   }
