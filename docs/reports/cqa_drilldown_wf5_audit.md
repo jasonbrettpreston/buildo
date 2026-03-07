@@ -89,3 +89,14 @@ We will update the implementation plan to replace the `current` and `prev` trend
 **Test Coverage:** 3 new guardrail tests added. Full suite: 1784 tests passing.
 
 **All audit findings are now resolved. No remaining debt.**
+
+---
+
+# Resolution Update — Chain-Mode records_meta Fix
+**Date**: March 7, 2026
+
+| # | Finding | Status | Resolution |
+|---|---------|--------|------------|
+| 3 | CQA records_meta not visible in chain mode | **RESOLVED** | Root cause: CQA scripts skip their own `pipeline_runs` INSERT when run from chain (`!CHAIN_ID`). Chain orchestrator (`run-chain.js`) wrote scoped keys (e.g. `permits:assert_schema`) but never captured `records_meta` from stdout. Fix: (a) Both CQA scripts now emit `PIPELINE_SUMMARY` with `records_meta` payload, (b) `run-chain.js` parses `summary.records_meta` and writes it to DB via `COALESCE($6::jsonb, records_meta)`. |
+
+**Test Coverage:** 3 new guardrail tests added. Full suite: 1787 tests passing.
