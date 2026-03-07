@@ -262,20 +262,42 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
       </div>
       <p className="text-xs text-gray-600 mb-3">{desc.summary}</p>
 
-      {isSelfRef && targetCols.length > 0 ? (
-        <div>
-          <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Reads & Writes" />
-          {readColsByTable?.[desc.table] && (
-            <div className="mt-2 px-2.5">
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Reads</p>
+      {isSelfRef && readColsByTable?.[desc.table] ? (
+        /* Self-referential with live meta: show explicit reads → writes columns */
+        <div className="flex flex-col md:flex-row items-stretch gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-2.5">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-[9px] font-semibold text-blue-400 uppercase tracking-wider">Reads</span>
+                <span className="text-[10px] font-mono text-blue-600 font-medium">{desc.table}</span>
+              </div>
               <div className="flex flex-wrap gap-1">
                 {readColsByTable[desc.table].map((c) => (
-                  <span key={c} className="text-[10px] font-mono text-blue-600 bg-blue-50 border border-blue-100 rounded px-1 py-0.5">{c}</span>
+                  <span key={c} className="text-[10px] font-mono text-blue-700 bg-white border border-blue-100 rounded px-1.5 py-0.5">{c}</span>
                 ))}
               </div>
             </div>
-          )}
+          </div>
+          <div className="flex items-center justify-center py-1 md:py-0 md:px-1">
+            <span className="text-gray-300 text-lg font-bold rotate-90 md:rotate-0">{'\u2192'}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-md p-2.5">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider">Writes</span>
+                <span className="text-[10px] font-mono text-emerald-600 font-medium">{desc.table}</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {writeCols ? writeCols.map((c) => (
+                  <span key={c} className="text-[10px] font-mono text-emerald-700 bg-white border border-emerald-100 rounded px-1.5 py-0.5">{c}</span>
+                )) : <span className="text-[10px] text-gray-400 italic">All columns</span>}
+              </div>
+            </div>
+          </div>
         </div>
+      ) : isSelfRef && targetCols.length > 0 ? (
+        /* Self-referential without live meta: show full table with write highlights */
+        <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Reads & Writes" />
       ) : (
         <div className="flex flex-col md:flex-row items-stretch gap-2">
           <div className={`flex flex-col gap-2 ${sources.length > 0 ? 'flex-1 min-w-0' : ''}`}>

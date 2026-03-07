@@ -1280,4 +1280,67 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
     // Should pick the coa:link_coa run (more recent) not permits:link_coa
     expect(row.lastRunRecordsTotal).toBe(14614);
   });
+
+  it('chain-scoped key wins over stale unscoped legacy key', () => {
+    // BUG FIX: When both "permits" (legacy, 3 days old) and "permits:permits"
+    // (chain-scoped, just ran) exist, must pick the most recent — not the unscoped key.
+    const snapshot = createMockDataQualitySnapshot();
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'permits')!;
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      permits_propagated: 0,
+      pipeline_last_run: {
+        // Legacy unscoped key — 3 days old
+        'permits': {
+          last_run_at: '2026-03-04T10:00:00Z',
+          status: 'completed',
+          records_total: 200000,
+          records_new: 50,
+          records_updated: null,
+          records_meta: null,
+        },
+        // Chain-scoped key — just ran
+        'permits:permits': {
+          last_run_at: '2026-03-07T10:00:00Z',
+          status: 'completed',
+          records_total: 234856,
+          records_new: 0,
+          records_updated: null,
+          records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    // Must use the chain-scoped entry (most recent), not the legacy one
+    expect(row.lastRunRecordsTotal).toBe(234856);
+    expect(row.lastUpdated).toBe('2026-03-07T10:00:00Z');
+  });
+
+  it('getStatusDot returns Stale for completed ingest with 0 new and 0 updated', () => {
+    // Verify the timeline tile flashes red when a pipeline ran but produced nothing
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // getStatusDot must check records_new === 0 AND records_updated === 0
+    expect(source).toContain('records_new === 0');
+    expect(source).toContain('records_updated');
+    // Stale label triggers tile-flash-stale (red pulse animation)
+    expect(source).toContain("'Stale'");
+    expect(source).toContain('tile-flash-stale');
+  });
+
+  it('getStatusDot exempts link/classify/quality/snapshot from stale detection', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain('STALE_EXEMPT_GROUPS');
+    expect(source).toContain("'link'");
+    expect(source).toContain("'classify'");
+    expect(source).toContain("'quality'");
+    expect(source).toContain("'snapshot'");
+    expect(source).toContain('staleExempt');
+  });
 });

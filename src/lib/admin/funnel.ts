@@ -112,11 +112,15 @@ function nullPct(total: number, withField: number, denom: number): number {
 // ---------------------------------------------------------------------------
 
 function resolveLastRun(slug: string, plr: Record<string, PipelineRunInfo>): PipelineRunInfo | undefined {
-  if (plr[slug]) return plr[slug];
   // Chain-scoped keys: pipeline_runs stores "chainId:slug" (e.g. "permits:link_similar").
-  // A slug may appear in multiple chains (e.g. link_coa in both permits and coa chains),
-  // so pick the most recent run across all matching scoped keys.
+  // A slug may appear in multiple chains (e.g. link_coa in both permits and coa chains).
+  // Also check the unscoped key (legacy pre-chain rows) and pick the most recent across all.
   let best: PipelineRunInfo | undefined;
+
+  // Check unscoped key (legacy)
+  if (plr[slug]) best = plr[slug];
+
+  // Check all chain-scoped keys and pick the most recent
   for (const key of Object.keys(plr)) {
     if (key.endsWith(`:${slug}`)) {
       const candidate = plr[key];
