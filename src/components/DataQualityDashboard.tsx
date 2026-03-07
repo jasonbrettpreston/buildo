@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { findSnapshotDaysAgo, SLA_TARGETS } from '@/lib/quality/types';
+import { SLA_TARGETS } from '@/lib/quality/types';
 import { FreshnessTimeline } from '@/components/FreshnessTimeline';
 import { ScheduleEditModal } from '@/components/ScheduleEditModal';
 import { computeAllFunnelRows } from '@/lib/admin/funnel';
@@ -268,9 +268,6 @@ export function DataQualityDashboard() {
 
   const current = data?.current;
 
-  // Compute 30-day trend deltas (for health banner)
-  const prev = data?.trends ? findSnapshotDaysAgo(data.trends, 30) : null;
-
   // Compute funnel data for FreshnessTimeline accordion
   const funnelData = current && stats
     ? computeAllFunnelRows({
@@ -373,83 +370,59 @@ export function DataQualityDashboard() {
                 </div>
               </div>
 
-              {/* Quality trend indicators — 30-day swipeable carousel on mobile */}
-              {prev && (
+              {/* Pipeline chain schedule status — shows whether each chain needs a run */}
+              {stats?.pipeline_last_run && (
                 <div className="px-4 py-3 border-t border-gray-200/50">
                   <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:grid md:grid-cols-4 md:overflow-visible -mx-1 px-1 pb-1">
-                    {/* Violations trend */}
                     {(() => {
-                      const curV = current.violations_total;
-                      const prevV = prev.violations_total ?? 0;
-                      const delta = curV - prevV;
-                      return (
-                        <div className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
-                          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Violations</p>
-                          <p className="text-sm font-semibold tabular-nums text-gray-800">{curV.toLocaleString()}</p>
-                          <p className={`text-[10px] font-medium tabular-nums ${delta < 0 ? 'text-green-600' : delta > 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                            {delta < 0 ? '\u25BC' : delta > 0 ? '\u25B2' : '\u2014'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta} vs 30d`}
-                          </p>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Completeness trend */}
-                    {(() => {
-                      const nullSum = current.null_description_count + current.null_builder_name_count +
-                        current.null_est_const_cost_count + current.null_street_num_count +
-                        current.null_street_name_count + current.null_geo_id_count;
-                      const curPct = current.active_permits > 0 ? ((1 - nullSum / (current.active_permits * 6)) * 100) : 100;
-                      const prevNullSum = (prev.null_description_count ?? 0) + (prev.null_builder_name_count ?? 0) +
-                        (prev.null_est_const_cost_count ?? 0) + (prev.null_street_num_count ?? 0) +
-                        (prev.null_street_name_count ?? 0) + (prev.null_geo_id_count ?? 0);
-                      const prevPctVal = prev.active_permits > 0 ? ((1 - prevNullSum / (prev.active_permits * 6)) * 100) : 100;
-                      const delta = Math.round((curPct - prevPctVal) * 10) / 10;
-                      return (
-                        <div className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
-                          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Completeness</p>
-                          <p className="text-sm font-semibold tabular-nums text-gray-800">{curPct.toFixed(1)}%</p>
-                          <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                            {delta > 0 ? '\u25B2' : delta < 0 ? '\u25BC' : '\u2014'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta}pp vs 30d`}
-                          </p>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Volume trend */}
-                    {(() => {
-                      const curVol = current.permits_updated_24h;
-                      const prevVol = prev.permits_updated_24h;
-                      const delta = curVol - prevVol;
-                      const pctChange = prevVol > 0 ? Math.round(((curVol - prevVol) / prevVol) * 100) : 0;
-                      return (
-                        <div className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
-                          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Volume (24h)</p>
-                          <p className="text-sm font-semibold tabular-nums text-gray-800">{curVol.toLocaleString()}</p>
-                          <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                            {delta > 0 ? '\u25B2' : delta < 0 ? '\u25BC' : '\u2014'} {delta === 0 ? 'unchanged' : `${pctChange > 0 ? '+' : ''}${pctChange}% vs 30d`}
-                          </p>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Enrichment trend */}
-                    {(() => {
-                      const curLinked = current.permits_geocoded + current.permits_with_parcel +
-                        current.permits_with_neighbourhood + current.permits_with_trades + current.permits_with_scope;
-                      const curPct = current.active_permits > 0 ? (curLinked / (current.active_permits * 5)) * 100 : 0;
-                      const prevLinked = prev.permits_geocoded + prev.permits_with_parcel +
-                        prev.permits_with_neighbourhood + prev.permits_with_trades + prev.permits_with_scope;
-                      const prevPctVal = prev.active_permits > 0 ? (prevLinked / (prev.active_permits * 5)) * 100 : 0;
-                      const delta = Math.round((curPct - prevPctVal) * 10) / 10;
-                      return (
-                        <div className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
-                          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Enrichment</p>
-                          <p className="text-sm font-semibold tabular-nums text-gray-800">{curPct.toFixed(1)}%</p>
-                          <p className={`text-[10px] font-medium tabular-nums ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                            {delta > 0 ? '\u25B2' : delta < 0 ? '\u25BC' : '\u2014'} {delta === 0 ? 'unchanged' : `${delta > 0 ? '+' : ''}${delta}pp vs 30d`}
-                          </p>
-                        </div>
-                      );
+                      const CADENCE_MS: Record<string, number> = {
+                        Daily: 26 * 3600_000,
+                        Quarterly: 95 * 86400_000,
+                        Annual: 370 * 86400_000,
+                      };
+                      const CHAINS: { id: string; label: string; cadence: string; rootSlug: string }[] = [
+                        { id: 'permits', label: 'Permits', cadence: 'Daily', rootSlug: 'permits' },
+                        { id: 'coa', label: 'CoA', cadence: 'Daily', rootSlug: 'coa' },
+                        { id: 'entities', label: 'Entities', cadence: 'Daily', rootSlug: 'enrich_wsib_builders' },
+                        { id: 'sources', label: 'Sources', cadence: 'Quarterly', rootSlug: 'address_points' },
+                      ];
+                      const now = Date.now();
+                      return CHAINS.map((c) => {
+                        const chainInfo = stats.pipeline_last_run[`chain_${c.id}`];
+                        const rootInfo = stats.pipeline_last_run[c.rootSlug];
+                        const info = chainInfo ?? rootInfo;
+                        let status: string;
+                        let color: string;
+                        let dotColor: string;
+                        if (!info?.last_run_at) {
+                          status = 'Never run'; color = 'text-gray-400'; dotColor = 'bg-gray-300';
+                        } else if (info.status === 'running') {
+                          status = 'Running'; color = 'text-blue-600'; dotColor = 'bg-blue-500';
+                        } else {
+                          const elapsed = now - new Date(info.last_run_at).getTime();
+                          const threshold = CADENCE_MS[c.cadence] ?? CADENCE_MS.Daily;
+                          if (elapsed > threshold * 2) {
+                            status = 'Overdue'; color = 'text-red-600'; dotColor = 'bg-red-500';
+                          } else if (elapsed > threshold) {
+                            status = 'Needs run'; color = 'text-yellow-600'; dotColor = 'bg-yellow-500';
+                          } else {
+                            status = 'On schedule'; color = 'text-green-600'; dotColor = 'bg-green-500';
+                          }
+                        }
+                        const lastRun = info?.last_run_at
+                          ? new Date(info.last_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : 'Never';
+                        return (
+                          <div key={c.id} className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider">{c.label}</p>
+                            <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                              <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
+                              <p className={`text-sm font-semibold ${color}`}>{status}</p>
+                            </div>
+                            <p className="text-[10px] text-gray-400 tabular-nums">{lastRun}</p>
+                          </div>
+                        );
+                      });
                     })()}
                   </div>
                 </div>

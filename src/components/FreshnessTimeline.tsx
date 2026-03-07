@@ -782,7 +782,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                   </div>
                                 )}
                               </div>
-                              {info && (info.records_total != null || info.records_new != null) && (
+                              {/* Hide records_total/records_new for quality/snapshot — they write 0 and clutter the CQA drill-down */}
+                              {info && stepGroup !== 'quality' && stepGroup !== 'snapshot' && (info.records_total != null || info.records_new != null) && (
                                 <div className="space-y-1.5">
                                   {info.records_total != null && (
                                     <div className="flex justify-between">
@@ -810,24 +811,40 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 </div>
                               )}
                               {/* records_meta — CQA check results and other structured metadata */}
-                              {info?.records_meta && typeof info.records_meta === 'object' && (
-                                <div className="space-y-1.5">
-                                  {Object.entries(info.records_meta as Record<string, unknown>)
-                                    .filter(([, v]) => v != null && v !== undefined)
-                                    .map(([key, value]) => (
-                                      <div key={key} className="flex justify-between">
-                                        <span className="text-xs text-gray-600">{key.replace(/_/g, ' ')}</span>
-                                        <span className={`text-xs font-semibold tabular-nums ${
-                                          key.includes('failed') && (value as number) > 0 ? 'text-red-600'
-                                          : key.includes('warned') && (value as number) > 0 ? 'text-yellow-600'
-                                          : 'text-gray-900'
-                                        }`}>
-                                          {Array.isArray(value) ? (value as string[]).length.toString() : String(value)}
-                                        </span>
+                              {info?.records_meta && typeof info.records_meta === 'object' && (() => {
+                                const meta = info.records_meta as Record<string, unknown>;
+                                const failed = (meta.checks_failed as number) ?? 0;
+                                const warned = (meta.checks_warned as number) ?? 0;
+                                const errors = (meta.errors as number) ?? 0;
+                                const hasFailures = failed > 0 || errors > 0;
+                                return (
+                                  <div className="space-y-1.5">
+                                    {/* Verdict banner for CQA steps */}
+                                    {(stepGroup === 'quality') && (
+                                      <div className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs font-semibold ${
+                                        hasFailures ? 'bg-red-50 text-red-700' : warned > 0 ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'
+                                      }`}>
+                                        <span>{hasFailures ? '\u2718' : '\u2714'}</span>
+                                        <span>{hasFailures ? `FAILED \u2014 ${failed + errors} check${(failed + errors) !== 1 ? 's' : ''} failed` : warned > 0 ? `PASSED with ${warned} warning${warned !== 1 ? 's' : ''}` : 'ALL CHECKS PASSED'}</span>
                                       </div>
-                                    ))}
-                                </div>
-                              )}
+                                    )}
+                                    {Object.entries(meta)
+                                      .filter(([, v]) => v != null && v !== undefined)
+                                      .map(([key, value]) => (
+                                        <div key={key} className="flex justify-between">
+                                          <span className="text-xs text-gray-600">{key.replace(/_/g, ' ')}</span>
+                                          <span className={`text-xs font-semibold tabular-nums ${
+                                            key.includes('failed') && (value as number) > 0 ? 'text-red-600'
+                                            : key.includes('warned') && (value as number) > 0 ? 'text-yellow-600'
+                                            : 'text-gray-900'
+                                          }`}>
+                                            {Array.isArray(value) ? (value as string[]).length.toString() : String(value)}
+                                          </span>
+                                        </div>
+                                      ))}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </div>
                         )}

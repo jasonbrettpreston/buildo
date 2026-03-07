@@ -2625,7 +2625,8 @@ describe('CQA records_meta rendering in non-funnel panel', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     // records_meta should be rendered in the drill-down
-    expect(source).toMatch(/records_meta[\s\S]{0,200}Object\.entries/);
+    expect(source).toContain('records_meta');
+    expect(source).toContain('Object.entries(meta)');
   });
 
   it('failed check counts render in red', () => {
@@ -2682,5 +2683,41 @@ describe('Funnel panel components extracted to separate file', () => {
     expect(source).toContain('export function FunnelAllTimePanel');
     expect(source).toContain('export function FunnelLastRunPanel');
     expect(source).toContain('export const INTERSECTION_LABELS');
+  });
+});
+
+// ── CQA drill-down hides irrelevant records for quality/snapshot ────
+
+describe('CQA drill-down hides records bloat', () => {
+  it('records block is guarded by quality/snapshot group check', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // records_total/records_new block must be skipped for quality and snapshot steps
+    expect(source).toMatch(/stepGroup[\s\S]{0,80}quality[\s\S]{0,200}records_total/);
+  });
+});
+
+// ── Health banner shows pipeline chain schedule status ───────────────
+
+describe('Health banner shows chain schedule status', () => {
+  it('displays the 4 pipeline chain names', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'), 'utf-8'
+    );
+    expect(source).toContain('Permits');
+    expect(source).toContain('CoA');
+    expect(source).toContain('Entities');
+    expect(source).toContain('Sources');
+  });
+
+  it('no longer contains generic trend labels', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'), 'utf-8'
+    );
+    expect(source).not.toMatch(/uppercase tracking-wider">Violations/);
+    expect(source).not.toMatch(/uppercase tracking-wider">Completeness/);
+    expect(source).not.toMatch(/uppercase tracking-wider">Volume/);
+    expect(source).not.toMatch(/uppercase tracking-wider">Enrichment/);
   });
 });
