@@ -1,71 +1,49 @@
-# Active Task: Fix WF5 Audit Findings (5 Items)
-**Status:** Planning → Authorized
+# Active Task: Extract Funnel Panel Components from FreshnessTimeline (WF2)
+**Status:** Planning
 
 ## Context
-* **Goal:** Fix five findings from `docs/reports/data_quality_wf5_audit.md`.
+* **Goal:** Resolve component bloat audit finding — extract inline accordion panel components from `FreshnessTimeline.tsx` (1088 lines) into `src/components/funnel/FunnelPanels.tsx`. Pure refactor, zero behavior change.
 * **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
-* **Key Files:** `src/components/FreshnessTimeline.tsx`, `src/lib/admin/funnel.ts`, `scripts/quality/assert-schema.js`, `scripts/quality/assert-data-bounds.js`, `src/tests/admin.ui.test.tsx`, `src/tests/quality.logic.test.ts`
-
-## Workflow Classification
-| # | Finding | Workflow | Reason |
-|---|---------|----------|--------|
-| 1 | Stale false positive | WF3 | Incorrect red status on healthy steps |
-| 2 | Timer flicker | WF3 | UI glitch from insufficient timeout |
-| 3 | Missing null rates | WF2 | Empty arrays are placeholders — wiring new data |
-| 4 | CQA drill-down depth | WF2 | Adding records_meta output + new UI rendering |
-| 5 | Contextual labels | WF2 | Changing generic labels to descriptive ones |
+* **Key Files:** `src/components/FreshnessTimeline.tsx`, `src/components/funnel/FunnelPanels.tsx` (new), `src/tests/admin.ui.test.tsx`
 
 ## Technical Implementation
 
-### Bug 1 (WF3): Stale False Positive
-* **Root Cause:** `getStatusDot()` marks ANY completed step with `records_new === 0 && records_updated === 0` as "Stale" (red). For link, classify, quality, and snapshot groups, 0 is valid.
-* **Fix:** Add optional `staleExempt` param to `getStatusDot()`. At call site, derive from `PIPELINE_REGISTRY[slug].group` — groups `link`, `classify`, `quality`, `snapshot` are exempt. When exempt, skip zero-records Stale check, fall through to time-based freshness.
+### What moves to `src/components/funnel/FunnelPanels.tsx`:
+1. `CircularBadge` — SVG donut percentage badge (lines 280-301)
+2. `MetricRow` — reusable label/value row (lines 303-310)
+3. `FunnelAllTimePanel` — Baseline/Intersection/Yield accordion (lines 312-371)
+4. `FunnelLastRunPanel` — Last Run accordion with rich parsing (lines 390-447)
+5. `INTERSECTION_LABELS` — contextual label constant (lines 374-388)
 
-### Bug 2 (WF3): Optimistic Timer Flicker
-* **Root Cause:** `optimisticTimerRef` uses `3000ms`. Cold-start PATCH >3s causes toggle flicker.
-* **Fix:** Increase to `8000ms` (covers two poll cycles).
+### What stays in `FreshnessTimeline.tsx`:
+- All types/interfaces (`PipelineRunInfo`, `FreshnessTimelineProps`, etc.)
+- All config constants (`PIPELINE_REGISTRY`, `PIPELINE_CHAINS`, `NON_TOGGLEABLE_SLUGS`, `GROUP_LABELS`)
+- All utility functions (`timeAgo`, `formatDate`, `formatDuration`, `getStatusDot`, `computeStepNumbers`)
+- The main `FreshnessTimeline` component
 
-### Enhancement 3 (WF2): Missing Null Rates
-* **Current State:** `funnel.ts` returns empty `[]` for `yieldNullRates` on parcels, neighbourhoods, massing, trades, scope_class, scope_tags.
-* **Fix:** Plumb yieldNullRates using existing snapshot fields:
-  - **parcels:** unlinked % = `(ap - permits_with_parcel) / ap`
-  - **neighbourhoods:** unlinked % = `(ap - permits_with_neighbourhood) / ap`
-  - **massing:** unlinked % = `(ap - permits_with_massing) / ap`
-  - **trades_residential:** unclassified % = `(total - classified) / total`
-  - **trades_commercial:** unclassified % = `(total - classified) / total`
-  - **scope_class:** unclassified % = `(ap - permits_with_scope) / ap`
-  - **scope_tags:** untagged % = `(ap - permits_with_detailed_tags) / ap`
+### Test impact:
+~20 source-inspection tests in `admin.ui.test.tsx` currently read `FreshnessTimeline.tsx` looking for `CircularBadge`, `FunnelAllTimePanel`, `FunnelLastRunPanel`, `INTERSECTION_LABELS`. These must be updated to read `funnel/FunnelPanels.tsx` instead. Tests that check the *usage* of these components (e.g., `<FunnelAllTimePanel`) in FreshnessTimeline.tsx remain unchanged.
 
-### Enhancement 4 (WF2): CQA Drill-Down Depth
-* **Current State:** CQA scripts write `error_message` but no `records_meta`. Non-funnel drill-down shows status/duration/records only.
-* **Fix:** (a) Both CQA scripts write `records_meta` JSON with checks_passed/checks_warned/checks_failed counts + detail arrays. (b) Non-funnel Last Run panel renders `info.records_meta` key/value pairs when present.
-
-### Enhancement 5 (WF2): Run Intersection Disconnect
-* **Current State:** `FunnelLastRunPanel` shows generic "Processed / Matched" labels for all non-web-scrape steps.
-* **Fix:** Map source IDs to contextual label pairs in FunnelLastRunPanel: geocode → "To Geocode / Geocoded", link_parcels → "Unlinked / Linked", classify → "To Classify / Classified". Default remains "Processed / Matched".
+### Database Impact
+NO
 
 ## Standards Compliance
 * **Try-Catch Boundary:** N/A — no API routes modified.
 * **Unhappy Path Tests:** N/A — no API routes modified.
 * **logError Mandate:** N/A — no API routes modified.
-* **Mobile-First:** N/A — no layout changes.
-
-## Database Impact
-NO
+* **Mobile-First:** N/A — no layout changes, pure file-move refactor.
 
 ## Execution Plan
-- [x] **Rollback Anchor:** `d4ffe0a`
-- [x] **State Verification:** Confirmed all current states.
-- [x] **Spec Review:** Spec 28 confirmed.
+- [x] **Rollback Anchor:** `762c643`
+- [x] **State Verification:** FreshnessTimeline.tsx is 1088 lines. Components to extract: CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS (lines 276-447). ~20 tests inspect source of these components.
+- [x] **Spec Review:** Spec 28 confirmed — funnel computation in `src/lib/admin/funnel.ts`, presentation in FreshnessTimeline. No constraint against splitting presentation files.
+- [ ] **Spec Update:** N/A — spec references `FreshnessTimeline.tsx` generically; component extraction doesn't change the spec contract.
 - [ ] **Viewport Mocking:** Backend Only, N/A.
-- [ ] **Reproduction + Red Light:** Write failing tests for all 5 items.
-- [ ] **Fix Bug 1:** Add `staleExempt` param to `getStatusDot()`, derive from group at call site.
-- [ ] **Fix Bug 2:** Change `3000` → `8000` in optimisticTimerRef.
-- [ ] **Atomic Commit (WF3):** `fix(28_data_quality_dashboard): stale false positive + timer flicker`
-- [ ] **Fix Enhancement 3:** Plumb yieldNullRates in funnel.ts.
-- [ ] **Fix Enhancement 4:** (a) CQA scripts write records_meta. (b) Non-funnel panel renders it.
-- [ ] **Fix Enhancement 5:** Contextual intersection labels in FunnelLastRunPanel.
+- [ ] **Guardrail Test:** Add test verifying FreshnessTimeline.tsx imports from `./funnel/FunnelPanels` and is under 700 lines.
+- [ ] **Red Light:** New test must fail before extraction.
+- [ ] **Implementation:** (a) Create `src/components/funnel/FunnelPanels.tsx` with extracted components. (b) Replace inline definitions in FreshnessTimeline.tsx with imports. (c) Update ~20 source-inspection tests to read correct file.
+- [ ] **UI Regression Check:** `npx vitest run src/tests/*.ui.test.tsx` — verify no sibling UI broke.
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`.
 - [ ] **Collateral Check:** `npx vitest related src/components/FreshnessTimeline.tsx --run`.
-- [ ] **Atomic Commit (WF2):** `feat(28_data_quality_dashboard): null rates + CQA depth + contextual labels`
-- [ ] **Spec Audit:** Update audit report to mark all 5 findings resolved.
+- [ ] **Atomic Commit:** `refactor(28_data_quality_dashboard): extract funnel panels from FreshnessTimeline`
+- [ ] **Spec Audit:** Update audit report to mark component bloat finding resolved.

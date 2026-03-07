@@ -1077,7 +1077,7 @@ describe('FreshnessTimeline funnel accordion', () => {
 
   it('circular badge uses correct color thresholds', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'),
       'utf-8'
     );
     // CircularBadge uses pct >= 90/70/50 thresholds
@@ -1218,12 +1218,17 @@ describe('FreshnessTimeline mobile-first row layout', () => {
     );
     // CircularBadge is rendered in the primary zone (beside step name)
     expect(source).toContain('CircularBadge');
-    expect(source).toContain('circular-badge');
     // Badge should be in primary zone (before Flexible spacer), not telemetry column
     const primaryZoneEnd = source.indexOf('Flexible spacer');
     const badgeIdx = source.indexOf('CircularBadge pct=');
     expect(badgeIdx).toBeGreaterThan(0);
     expect(badgeIdx).toBeLessThan(primaryZoneEnd);
+    // circular-badge CSS class lives in the extracted component
+    const panelSource = fs.readFileSync(
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'),
+      'utf-8'
+    );
+    expect(panelSource).toContain('circular-badge');
   });
 
   it('uses mobile-first flex-wrap layout for row controls', () => {
@@ -1396,7 +1401,7 @@ describe('FreshnessTimeline pipeline tiles', () => {
 
   it('FunnelAllTimePanel sub-zones have nested tile cards for alignment', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'),
       'utf-8'
     );
     // Each sub-zone (Baseline, Intersection, Yield) should be in its own nested card
@@ -1409,7 +1414,7 @@ describe('FreshnessTimeline pipeline tiles', () => {
 
   it('FunnelLastRunPanel sub-zones have nested tile cards for alignment', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'),
       'utf-8'
     );
     const panelIdx = source.indexOf('function FunnelLastRunPanel');
@@ -1954,12 +1959,11 @@ describe('Run All disabled when all steps disabled or comingSoon', () => {
 describe('FunnelLastRunPanel has 3 tiles matching FunnelAllTimePanel columns', () => {
   it('FunnelLastRunPanel renders a Run Baseline tile as first column', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
-    // Extract the FunnelLastRunPanel function body (up to next top-level comment block)
+    // Extract the FunnelLastRunPanel function body
     const panelStart = source.indexOf('function FunnelLastRunPanel');
-    const panelEnd = source.indexOf('// -----', panelStart + 1);
-    const panelBody = source.slice(panelStart, panelEnd > -1 ? panelEnd : panelStart + 5000);
+    const panelBody = source.slice(panelStart, panelStart + 5000);
     // Count nested-tile divs — exactly 3 (Run Baseline + Run Intersection + Run Yield)
     const tileCount = (panelBody.match(/nested-tile/g) || []).length;
     expect(tileCount).toBe(3);
@@ -1967,7 +1971,7 @@ describe('FunnelLastRunPanel has 3 tiles matching FunnelAllTimePanel columns', (
 
   it('FunnelLastRunPanel first tile is labeled Run Baseline', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
     const panelStart = source.indexOf('function FunnelLastRunPanel');
     const panelBody = source.slice(panelStart, panelStart + 2000);
@@ -2372,12 +2376,16 @@ describe('Circular percentage badges', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    expect(source).toMatch(/CircularBadge|circular-badge/);
-    expect(source).toMatch(/<circle/);
+    expect(source).toContain('CircularBadge');
     // Badge is in primary zone, before the spacer
     const spacerIdx = source.indexOf('Flexible spacer');
     const badgeIdx = source.indexOf('CircularBadge pct=');
     expect(badgeIdx).toBeLessThan(spacerIdx);
+    // SVG circle definition lives in the extracted component
+    const panelSource = fs.readFileSync(
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
+    );
+    expect(panelSource).toMatch(/<circle/);
   });
 
   it('horizontal bar chart background is removed', () => {
@@ -2558,7 +2566,7 @@ describe('Optimistic timer timeout', () => {
 describe('Contextual intersection labels (INTERSECTION_LABELS)', () => {
   it('INTERSECTION_LABELS constant exists with processedLabel and matchedLabel', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
     expect(source).toContain('INTERSECTION_LABELS');
     expect(source).toContain('processedLabel');
@@ -2567,7 +2575,7 @@ describe('Contextual intersection labels (INTERSECTION_LABELS)', () => {
 
   it('geocode_permits has "To Geocode" / "Geocoded" labels', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
     const labelsStart = source.indexOf('INTERSECTION_LABELS');
     const labelsBlock = source.slice(labelsStart, labelsStart + 2000);
@@ -2578,7 +2586,7 @@ describe('Contextual intersection labels (INTERSECTION_LABELS)', () => {
 
   it('link_parcels has "Unlinked" / "Linked" labels', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
     const labelsStart = source.indexOf('INTERSECTION_LABELS');
     const labelsBlock = source.slice(labelsStart, labelsStart + 2000);
@@ -2589,7 +2597,7 @@ describe('Contextual intersection labels (INTERSECTION_LABELS)', () => {
 
   it('classify_permits has "To Classify" / "Classified" labels', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
     const labelsStart = source.indexOf('INTERSECTION_LABELS');
     const labelsBlock = source.slice(labelsStart, labelsStart + 2000);
@@ -2600,7 +2608,7 @@ describe('Contextual intersection labels (INTERSECTION_LABELS)', () => {
 
   it('FunnelLastRunPanel uses INTERSECTION_LABELS via statusSlug lookup', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
     // The panel should look up labels from statusSlug
     expect(source).toMatch(/INTERSECTION_LABELS\[[\s\S]{0,50}statusSlug/);
@@ -2642,5 +2650,37 @@ describe('CQA records_meta rendering in non-funnel panel', () => {
     );
     // Array.isArray check should convert to .length
     expect(source).toMatch(/Array\.isArray[\s\S]{0,100}length/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF2: Component extraction — FreshnessTimeline imports from funnel/FunnelPanels
+// ---------------------------------------------------------------------------
+
+describe('Funnel panel components extracted to separate file', () => {
+  it('FreshnessTimeline.tsx imports from ./funnel/FunnelPanels', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain("from './funnel/FunnelPanels'");
+  });
+
+  it('FreshnessTimeline.tsx is under 950 lines after extraction', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const lineCount = source.split('\n').length;
+    expect(lineCount).toBeLessThan(950);
+  });
+
+  it('FunnelPanels.tsx exports CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
+    );
+    expect(source).toContain('export function CircularBadge');
+    expect(source).toContain('export function MetricRow');
+    expect(source).toContain('export function FunnelAllTimePanel');
+    expect(source).toContain('export function FunnelLastRunPanel');
+    expect(source).toContain('export const INTERSECTION_LABELS');
   });
 });
