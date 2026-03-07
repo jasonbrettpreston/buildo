@@ -1063,7 +1063,7 @@ describe('FreshnessTimeline funnel accordion', () => {
     expect(source).not.toMatch(/funnelRow\s*&&\s*\(\s*<button[^>]*toggleExpand/);
   });
 
-  it('renders Description section with STEP_DESCRIPTIONS in drill-down', () => {
+  it('renders Description section with STEP_DESCRIPTIONS and live schema in drill-down', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
@@ -1071,8 +1071,10 @@ describe('FreshnessTimeline funnel accordion', () => {
     expect(source).toContain('STEP_DESCRIPTIONS');
     expect(source).toContain('Description');
     expect(source).toContain('desc.summary');
-    expect(source).toContain('desc.fields');
     expect(source).toContain('desc.table');
+    // Fields come from live dbSchemaMap, not hardcoded desc.fields
+    expect(source).toContain('dbSchemaMap');
+    expect(source).not.toContain('desc.fields');
   });
 
   it('circular badge uses correct color thresholds', () => {

@@ -78,6 +78,7 @@ interface AdminStats {
   wsib_with_trade: number;
   pipeline_last_run: Record<string, PipelineRunInfo>;
   pipeline_schedules: Record<string, { cadence: string; cron_expression: string | null; enabled: boolean }>;
+  db_schema_map?: Record<string, string[]>;
   [key: string]: unknown;
 }
 
@@ -448,6 +449,7 @@ export function DataQualityDashboard() {
             onToggle={togglePipeline}
             triggerError={pipelineError}
             onCancel={cancelPipeline}
+            dbSchemaMap={stats?.db_schema_map}
           />
           </div>
 

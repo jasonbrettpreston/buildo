@@ -197,6 +197,8 @@ export interface FreshnessTimelineProps {
   /** Pre-computed funnel data keyed by pipeline statusSlug */
   funnelData?: Record<string, FunnelRowData>;
   onCancel?: (slug: string) => void;
+  /** Live DB schema map: table_name → column_name[] from information_schema */
+  dbSchemaMap?: Record<string, string[]>;
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -278,7 +280,7 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
 // Component
 // ---------------------------------------------------------------------------
 
-export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData, onCancel }: FreshnessTimelineProps) {
+export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData, onCancel, dbSchemaMap }: FreshnessTimelineProps) {
   const [errorPopover, setErrorPopover] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   // Bug Fix 1: optimisticToggles for immediate visual feedback on toggle click
@@ -717,19 +719,30 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                         {(() => {
                           const desc = STEP_DESCRIPTIONS[step.slug];
                           if (!desc) return null;
+                          const liveColumns = dbSchemaMap?.[desc.table] ?? [];
                           return (
                             <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                               <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</h4>
                               <p className="text-xs text-gray-600 mb-2">{desc.summary}</p>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-0.5">
-                                {desc.fields.map((f) => (
-                                  <div key={f} className="flex items-center gap-1.5">
-                                    <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
-                                    <span className="text-[11px] text-gray-500 font-mono">{f}</span>
+                              {liveColumns.length > 0 && (
+                                <>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-0.5">
+                                    {liveColumns.map((f) => (
+                                      <div key={f} className="flex items-center gap-1.5">
+                                        <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
+                                        <span className="text-[11px] text-gray-500 font-mono">{f}</span>
+                                      </div>
+                                    ))}
                                   </div>
-                                ))}
-                              </div>
-                              <p className="text-[9px] text-gray-400 mt-1.5">Target table: <span className="font-mono">{desc.table}</span></p>
+                                  <div className="flex items-center gap-2 mt-1.5">
+                                    <p className="text-[9px] text-gray-400">Target table: <span className="font-mono">{desc.table}</span></p>
+                                    <span className="text-[8px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">Live DB Schema</span>
+                                  </div>
+                                </>
+                              )}
+                              {liveColumns.length === 0 && (
+                                <p className="text-[9px] text-gray-400 mt-1.5">Target table: <span className="font-mono">{desc.table}</span></p>
+                              )}
                             </div>
                           );
                         })()}

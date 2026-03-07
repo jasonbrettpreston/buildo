@@ -266,6 +266,42 @@ export async function GET() {
       // pipeline_schedules table may not exist yet
     }
 
+    // Live DB schema map — query information_schema.columns for all tables
+    // referenced by STEP_DESCRIPTIONS so the UI never shows stale field lists
+    const dbSchemaMap: Record<string, string[]> = {};
+    try {
+      const tables = [...new Set(Object.values(
+        // Inline the table names to avoid importing funnel.ts in an API route
+        {
+          permits: 'permits', coa: 'coa_applications', builders: 'entities',
+          address_points: 'address_points', parcels: 'parcels', massing: 'building_footprints',
+          neighbourhoods: 'neighbourhoods', load_wsib: 'wsib_registry',
+          geocode_permits: 'permits', link_parcels: 'permit_parcels',
+          link_neighbourhoods: 'permits', link_massing: 'parcel_buildings',
+          link_coa: 'coa_applications', link_wsib: 'entities',
+          enrich_wsib_builders: 'entities', enrich_named_builders: 'entities',
+          link_similar: 'permits', create_pre_permits: 'coa_applications',
+          compute_centroids: 'parcels', classify_scope_class: 'permits',
+          classify_scope_tags: 'permits', classify_permits: 'permit_trades',
+          refresh_snapshot: 'data_quality_snapshots', assert_schema: 'pipeline_runs',
+          assert_data_bounds: 'pipeline_runs', inspections: 'permit_inspections',
+          coa_documents: 'coa_documents',
+        }
+      ))];
+      const schemaRows = await query<{ table_name: string; column_name: string }>(
+        `SELECT table_name, column_name FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = ANY($1)
+         ORDER BY table_name, ordinal_position`,
+        [tables]
+      );
+      for (const row of schemaRows) {
+        if (!dbSchemaMap[row.table_name]) dbSchemaMap[row.table_name] = [];
+        dbSchemaMap[row.table_name].push(row.column_name);
+      }
+    } catch {
+      // Non-fatal — UI will show description without field list
+    }
+
     const p = (r: { count: string }[] | { count: string }) =>
       parseInt(Array.isArray(r) ? (r[0]?.count ?? '0') : (r.count ?? '0'), 10);
 
@@ -308,6 +344,8 @@ export async function GET() {
       pipeline_last_run: pipelineLastRun,
       // Pipeline schedules
       pipeline_schedules: pipelineSchedules,
+      // Live DB schema for pipeline description tiles
+      db_schema_map: dbSchemaMap,
     });
   } catch (err) {
     logError('[admin/stats]', err, { handler: 'GET' });
