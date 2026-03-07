@@ -1075,19 +1075,20 @@ describe('FreshnessTimeline funnel accordion', () => {
     expect(source).toContain('desc.table');
   });
 
-  it('match % chip uses correct color thresholds', () => {
+  it('circular badge uses correct color thresholds', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    // Green >= 90%, Blue >= 70%, Yellow >= 50%, Red < 50%
-    expect(source).toContain('matchPct >= 90');
-    expect(source).toContain('matchPct >= 70');
-    expect(source).toContain('matchPct >= 50');
-    expect(source).toContain('bg-green-50');
-    expect(source).toContain('bg-blue-50');
-    expect(source).toContain('bg-yellow-50');
-    expect(source).toContain('bg-red-50');
+    // CircularBadge uses pct >= 90/70/50 thresholds
+    expect(source).toContain('pct >= 90');
+    expect(source).toContain('pct >= 70');
+    expect(source).toContain('pct >= 50');
+    // Uses stroke colors for SVG rings
+    expect(source).toContain('stroke-green-500');
+    expect(source).toContain('stroke-blue-500');
+    expect(source).toContain('stroke-yellow-500');
+    expect(source).toContain('stroke-red-500');
   });
 
   it('shows both All Time and Last Run panels stacked (no toggle)', () => {
@@ -1209,13 +1210,14 @@ describe('FreshnessTimeline mobile-first row layout', () => {
     expect(source).not.toContain('border-dotted');
   });
 
-  it('renders accuracy pill badge adjacent to pipeline name', () => {
+  it('renders circular percentage badge in telemetry column', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    // Match % pill is rendered right after pipeline name (not separated by dotted line)
-    expect(source).toContain('accuracy-pill');
+    // CircularBadge is rendered for funnel steps in the right-aligned telemetry
+    expect(source).toContain('CircularBadge');
+    expect(source).toContain('circular-badge');
   });
 
   it('uses mobile-first flex-wrap layout for row controls', () => {
@@ -1361,14 +1363,13 @@ describe('FreshnessTimeline pipeline tiles', () => {
     expect(source).toContain('border rounded-lg');
   });
 
-  it('accuracy bar chart fills proportionally behind the row', () => {
+  it('uses circular percentage badge instead of bar chart', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    // Bar chart bg uses inline width style
-    expect(source).toContain('bar-chart');
-    expect(source).toMatch(/style=.*width.*barPct|style=.*width.*Math\.min/);
+    // Circular badge replaces bar chart
+    expect(source).toMatch(/CircularBadge|circular-badge|<circle/);
   });
 
   it('accordion panels use bordered white card tiles', () => {
@@ -1416,8 +1417,8 @@ describe('FreshnessTimeline pipeline tiles', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    // Secondary zone uses gap-3 for more spacing
-    expect(source).toMatch(/Secondary zone[\s\S]*gap-3/);
+    // Right-aligned telemetry column uses gap-3
+    expect(source).toMatch(/telemetry[\s\S]*gap-3/);
   });
 });
 
@@ -1699,44 +1700,24 @@ describe('NON_TOGGLEABLE_SLUGS filtering', () => {
   });
 });
 
-describe('Pipeline controls always visible (no hover gating)', () => {
-  it('Run All button has no opacity-0 or group-hover opacity class', () => {
+describe('Pipeline controls visibility', () => {
+  it('Run All button has no opacity-0 (always visible)', () => {
     const content = fs.readFileSync(
       path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // Find the Run All button className — should not contain opacity-0 group-hover
-    const runAllMatch = content.match(/Run All[\s\S]{0,200}/);
-    expect(runAllMatch).toBeTruthy();
-    // The Run All button block should not have opacity-0
     const runAllBlock = content.slice(
       content.indexOf("isChainRunning ? 'Running...' : 'Run All'") - 300,
       content.indexOf("isChainRunning ? 'Running...' : 'Run All'") + 50
     );
     expect(runAllBlock).not.toContain('opacity-0');
-    expect(runAllBlock).not.toContain('group-hover/chain:opacity-100');
   });
 
-  it('per-step Run button has no opacity-0 or group-hover class', () => {
+  it('per-step Run and Toggle are hover-hidden on desktop (md:opacity-0)', () => {
     const content = fs.readFileSync(
       path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // Find the individual Run button (not Run All)
-    const runBtnIdx = content.indexOf('{/* Run button');
-    expect(runBtnIdx).toBeGreaterThan(-1);
-    const runBtnBlock = content.slice(runBtnIdx, runBtnIdx + 500);
-    expect(runBtnBlock).not.toContain('opacity-0');
-    expect(runBtnBlock).not.toContain('group-hover:opacity-100');
-  });
-
-  it('toggle switch has no opacity-0 or group-hover class', () => {
-    const content = fs.readFileSync(
-      path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
-    );
-    const toggleIdx = content.indexOf('{/* Toggle switch');
-    expect(toggleIdx).toBeGreaterThan(-1);
-    const toggleBlock = content.slice(toggleIdx, toggleIdx + 500);
-    expect(toggleBlock).not.toContain('opacity-0');
-    expect(toggleBlock).not.toContain('group-hover:opacity-100');
+    // Controls wrapper should use md:opacity-0 for desktop hover-hidden
+    expect(content).toContain('md:opacity-0');
   });
 
   it('Run All button has 44px min touch target', () => {
@@ -1795,7 +1776,7 @@ describe('Chain error summary box', () => {
 });
 
 describe('Mobile viewport (375px) — controls always visible', () => {
-  it('at 375px width, no controls use hover-gated visibility patterns', () => {
+  it('at 375px width, controls use md:opacity-0 (not base opacity-0)', () => {
     // Mock narrow viewport
     const originalInnerWidth = globalThis.innerWidth;
     Object.defineProperty(globalThis, 'innerWidth', { value: 375, writable: true });
@@ -1804,22 +1785,13 @@ describe('Mobile viewport (375px) — controls always visible', () => {
       path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
 
-    // Extract all className strings from Run button, toggle, and Run All sections
-    const controlSections = [
-      content.slice(content.indexOf('{/* Run button'), content.indexOf('{/* Run button') + 500),
-      content.slice(content.indexOf('{/* Toggle switch'), content.indexOf('{/* Toggle switch') + 500),
-      content.slice(
-        content.indexOf("isChainRunning ? 'Running...' : 'Run All'") - 300,
-        content.indexOf("isChainRunning ? 'Running...' : 'Run All'") + 50
-      ),
-    ];
-
-    for (const section of controlSections) {
-      // No opacity-0 pattern means controls are visible regardless of hover/viewport
-      expect(section).not.toContain('opacity-0');
-      expect(section).not.toContain('group-hover:opacity-100');
-      expect(section).not.toContain('group-hover/chain:opacity-100');
-    }
+    // Controls use md:opacity-0 for desktop only — base (mobile) has no opacity-0
+    // Run All button should never be hover-hidden
+    const runAllBlock = content.slice(
+      content.indexOf("isChainRunning ? 'Running...' : 'Run All'") - 300,
+      content.indexOf("isChainRunning ? 'Running...' : 'Run All'") + 50
+    );
+    expect(runAllBlock).not.toContain('opacity-0');
 
     // Verify 44px touch targets exist
     expect(content).toContain('min-h-[44px] min-w-[44px]');
@@ -2140,31 +2112,28 @@ describe('API route kills child process on cancel', () => {
 // WF2 Fix 6: Warning/stale dots flash with animate-pulse
 // ---------------------------------------------------------------------------
 
-describe('Warning and stale status dots flash', () => {
-  it('getStatusDot returns animate-pulse for Aging (yellow) status', () => {
+describe('Warning and stale status tile flash', () => {
+  it('getStatusDot returns bg-yellow-50 for Aging status', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // Extract getStatusDot function
     const fnStart = source.indexOf('function getStatusDot');
     const fnEnd = source.indexOf('\n}', fnStart) + 2;
     const fnBody = source.slice(fnStart, fnEnd);
-    // Yellow (Aging) should have animate-pulse
-    expect(fnBody).toMatch(/yellow.*animate-pulse|animate-pulse.*yellow/);
+    expect(fnBody).toContain("bg-yellow-50");
+    expect(fnBody).toContain("'Aging'");
   });
 
-  it('getStatusDot returns animate-pulse for Stale (red) status', () => {
+  it('getStatusDot returns bg-red-50 for Stale status', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const fnStart = source.indexOf('function getStatusDot');
     const fnEnd = source.indexOf('\n}', fnStart) + 2;
     const fnBody = source.slice(fnStart, fnEnd);
-    // The stale return line should have animate-pulse in its color
-    // Note: Failed red should NOT pulse — only stale red
     const staleLineMatch = fnBody.match(/return\s*\{[^}]*label:\s*'Stale'[^}]*\}/);
     expect(staleLineMatch).toBeTruthy();
-    expect(staleLineMatch![0]).toContain('animate-pulse');
+    expect(staleLineMatch![0]).toContain('bg-red-50');
   });
 
   it('applies tile-flash CSS animation to the entire pipeline tile row for warning/stale steps', () => {
@@ -2189,5 +2158,179 @@ describe('Warning and stale status dots flash', () => {
     expect(css).toContain('background-color');
     expect(css).toContain('.tile-flash-warning');
     expect(css).toContain('.tile-flash-stale');
+  });
+
+  it('globals.css defines tile-flash-blue keyframe for running state', () => {
+    const css = fs.readFileSync(
+      path.join(__dirname, '../app/globals.css'), 'utf-8'
+    );
+    expect(css).toContain('tile-flash-blue');
+    expect(css).toContain('.tile-flash-running');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Option C Redesign — Full-Tile Status Coloring
+// ---------------------------------------------------------------------------
+
+describe('Full-tile status coloring (no more dots)', () => {
+  it('status dot div (w-2 h-2 rounded-full) is removed from tile rows', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // The old 2x2 dot div should no longer exist in the step tile rendering
+    const tileSection = source.slice(source.indexOf('pipeline-tile'), source.indexOf('Universal drill-down'));
+    expect(tileSection).not.toMatch(/w-2\s+h-2\s+rounded-full/);
+  });
+
+  it('tile container gets status background class based on getStatusDot label', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // tile bg should use status-derived classes
+    expect(source).toContain('bg-green-50');
+    expect(source).toContain('bg-blue-50');
+    expect(source).toContain('bg-yellow-50');
+    expect(source).toContain('bg-red-50');
+  });
+
+  it('pending steps reset to neutral background (no status color)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // When isPending, dot.color is '' (empty = neutral bg). label: 'Pending'
+    // color: '' means no status background class is applied
+    expect(source).toMatch(/label:\s*'Pending'/);
+    expect(source).toMatch(/isPending[\s\S]{0,50}color:\s*''/);
+  });
+
+  it('running steps get tile-flash-running class for blue pulse', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toMatch(/Running[\s\S]{0,30}tile-flash-running/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Option C Redesign — Parent-Child Indentation
+// ---------------------------------------------------------------------------
+
+describe('Parent-child tile indentation', () => {
+  it('indent-1 steps get ml-6 on the tile container', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // indent === 1 should map to ml-6
+    expect(source).toMatch(/indent\s*===\s*1[\s\S]{0,80}ml-6/);
+  });
+
+  it('indent-2 steps get ml-12 on the tile container', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // indent >= 2 should map to ml-12
+    expect(source).toMatch(/indent\s*>=\s*2[\s\S]{0,80}ml-12/);
+  });
+
+  it('arrow prefix (rarr) is removed from step rows', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // The tile rendering section should not contain rarr arrows
+    const tileSection = source.slice(source.indexOf('pipeline-tile'), source.indexOf('Universal drill-down'));
+    expect(tileSection).not.toContain('&rarr;');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Option C Redesign — Bold Step Number Badges
+// ---------------------------------------------------------------------------
+
+describe('Bold step number badges', () => {
+  it('step numbers are rendered as bold rounded badges', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Step number badge should have bold + rounded-full + background
+    const tileSection = source.slice(source.indexOf('pipeline-tile'), source.indexOf('Universal drill-down'));
+    expect(tileSection).toMatch(/font-bold[\s\S]{0,120}rounded-full/);
+    expect(tileSection).toContain('bg-gray-100');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Option C Redesign — Circular Percentage Badges
+// ---------------------------------------------------------------------------
+
+describe('Circular percentage badges', () => {
+  it('renders SVG circle/donut for match percentage', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Should have an SVG-based circular badge
+    expect(source).toMatch(/CircularBadge|circular-badge|<svg[\s\S]{0,200}circle/);
+  });
+
+  it('horizontal bar chart background is removed', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // The old bar chart absolute-positioned background div should be gone
+    const tileSection = source.slice(source.indexOf('pipeline-tile'), source.indexOf('Universal drill-down'));
+    expect(tileSection).not.toMatch(/absolute\s+inset-y-0[\s\S]{0,80}barColor/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Option C Redesign — Source Data Reordering
+// ---------------------------------------------------------------------------
+
+describe('Source Data Updates relocated to bottom', () => {
+  it('sources chain appears after permits, coa, and entities chains', () => {
+    const chainsSource = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const sourcesIdx = chainsSource.indexOf("id: 'sources'");
+    const permitsIdx = chainsSource.indexOf("id: 'permits'");
+    const coaIdx = chainsSource.indexOf("id: 'coa'");
+    const entitiesIdx = chainsSource.indexOf("id: 'entities'");
+    expect(sourcesIdx).toBeGreaterThan(permitsIdx);
+    expect(sourcesIdx).toBeGreaterThan(coaIdx);
+    expect(sourcesIdx).toBeGreaterThan(entitiesIdx);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Option C Redesign — Hover-Hidden Controls (Desktop)
+// ---------------------------------------------------------------------------
+
+describe('Hover-hidden controls on desktop', () => {
+  it('per-step Run and Toggle buttons have md:opacity-0 for desktop hover', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Controls container should use md:opacity-0 and group-hover
+    expect(source).toContain('md:opacity-0');
+    expect(source).toMatch(/md:group-hover:opacity-100|group-hover\/tile:opacity-100/);
+  });
+
+  it('tile container has group class for hover detection', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // The pipeline-tile div should have the group class
+    expect(source).toMatch(/pipeline-tile[\s\S]{0,60}group/);
+  });
+
+  it('Run All button does NOT have hover-hidden classes', () => {
+    const content = fs.readFileSync(
+      path.resolve(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const runAllBlock = content.slice(
+      content.indexOf("isChainRunning ? 'Running...' : 'Run All'") - 300,
+      content.indexOf("isChainRunning ? 'Running...' : 'Run All'") + 50
+    );
+    expect(runAllBlock).not.toContain('md:opacity-0');
   });
 });

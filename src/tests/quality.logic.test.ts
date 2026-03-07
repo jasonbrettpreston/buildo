@@ -518,9 +518,9 @@ describe('Pipeline Chains', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 5 chains: sources, permits, coa, entities, deep_scrapes', () => {
+  it('has exactly 5 chains: permits, coa, entities, sources, deep_scrapes', () => {
     const ids = PIPELINE_CHAINS.map((c) => c.id);
-    expect(ids).toEqual(['sources', 'permits', 'coa', 'entities', 'deep_scrapes']);
+    expect(ids).toEqual(['permits', 'coa', 'entities', 'sources', 'deep_scrapes']);
   });
 
   it('permits chain has 15 steps in dependency order (no enrichment)', () => {

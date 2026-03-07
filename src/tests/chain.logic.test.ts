@@ -98,9 +98,9 @@ describe('Entities Chain (4th Pillar)', () => {
 });
 
 describe('UI Chain Ordering (Dependency Hierarchy)', () => {
-  it('renders sources first (foundation), then permits, coa, entities, deep_scrapes', () => {
+  it('renders daily pipelines first, then sources (foundation), then deep_scrapes', () => {
     const ids = PIPELINE_CHAINS.map((c) => c.id);
-    expect(ids).toEqual(['sources', 'permits', 'coa', 'entities', 'deep_scrapes']);
+    expect(ids).toEqual(['permits', 'coa', 'entities', 'sources', 'deep_scrapes']);
   });
 });
 

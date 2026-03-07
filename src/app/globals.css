@@ -16,3 +16,10 @@
 .tile-flash-stale {
   animation: tile-flash-red 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+@keyframes tile-flash-blue {
+  0%, 100% { background-color: rgb(239 246 255); /* blue-50 */ }
+  50% { background-color: rgb(219 234 254); /* blue-100 */ }
+}
+.tile-flash-running {
+  animation: tile-flash-blue 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

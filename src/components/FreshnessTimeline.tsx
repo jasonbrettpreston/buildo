@@ -78,29 +78,7 @@ export interface PipelineChain {
 }
 
 export const PIPELINE_CHAINS: PipelineChain[] = [
-  // Group 1: Foundation (periodic reference data)
-  {
-    id: 'sources',
-    label: 'Source Data Updates',
-    description: 'Quarterly/Annual — reference data refreshes',
-    steps: [
-      { slug: 'assert_schema',       indent: 0 },
-      { slug: 'address_points',      indent: 0 },
-      { slug: 'geocode_permits',     indent: 1 },
-      { slug: 'parcels',             indent: 0 },
-      { slug: 'compute_centroids',   indent: 1 },
-      { slug: 'link_parcels',        indent: 1 },
-      { slug: 'massing',             indent: 0 },
-      { slug: 'link_massing',        indent: 1 },
-      { slug: 'neighbourhoods',      indent: 0 },
-      { slug: 'link_neighbourhoods', indent: 1 },
-      { slug: 'load_wsib',           indent: 0 },
-      { slug: 'link_wsib',           indent: 1 },
-      { slug: 'refresh_snapshot',    indent: 1 },
-      { slug: 'assert_data_bounds',  indent: 0 },
-    ],
-  },
-  // Group 2: Core Ingestion (fast daily)
+  // Group 1: Core Ingestion (fast daily)
   {
     id: 'permits',
     label: 'Permits Pipeline',
@@ -136,7 +114,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'assert_data_bounds', indent: 0 },
     ],
   },
-  // Group 3: Corporate Entities Enrichment (slow daily scrapes)
+  // Group 2: Corporate Entities Enrichment (slow daily scrapes)
   {
     id: 'entities',
     label: 'Corporate Entities Pipeline',
@@ -144,6 +122,28 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     steps: [
       { slug: 'enrich_wsib_builders',  indent: 0 },
       { slug: 'enrich_named_builders', indent: 0 },
+    ],
+  },
+  // Group 3: Foundation (periodic reference data)
+  {
+    id: 'sources',
+    label: 'Source Data Updates',
+    description: 'Quarterly/Annual — reference data refreshes',
+    steps: [
+      { slug: 'assert_schema',       indent: 0 },
+      { slug: 'address_points',      indent: 0 },
+      { slug: 'geocode_permits',     indent: 1 },
+      { slug: 'parcels',             indent: 0 },
+      { slug: 'compute_centroids',   indent: 1 },
+      { slug: 'link_parcels',        indent: 1 },
+      { slug: 'massing',             indent: 0 },
+      { slug: 'link_massing',        indent: 1 },
+      { slug: 'neighbourhoods',      indent: 0 },
+      { slug: 'link_neighbourhoods', indent: 1 },
+      { slug: 'load_wsib',           indent: 0 },
+      { slug: 'link_wsib',           indent: 1 },
+      { slug: 'refresh_snapshot',    indent: 1 },
+      { slug: 'assert_data_bounds',  indent: 0 },
     ],
   },
   // Group 4: Deep Scrapes & Documents (continuous async workers)
@@ -237,15 +237,15 @@ export function formatDuration(ms: number | null | undefined): string {
 }
 
 function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { color: string; label: string } {
-  if (isRunning) return { color: 'bg-blue-400 animate-pulse', label: 'Running' };
-  if (!info || !info.last_run_at) return { color: 'bg-gray-300', label: 'Never run' };
-  if (info.status === 'failed') return { color: 'bg-red-500', label: 'Failed' };
+  if (isRunning) return { color: 'bg-blue-50 tile-flash-running', label: 'Running' };
+  if (!info || !info.last_run_at) return { color: '', label: 'Never run' };
+  if (info.status === 'failed') return { color: 'bg-red-50', label: 'Failed' };
 
   const hours = (Date.now() - new Date(info.last_run_at).getTime()) / (1000 * 60 * 60);
-  if (hours < 24) return { color: 'bg-green-500', label: 'Fresh' };
-  if (hours < 72) return { color: 'bg-blue-500', label: 'Recent' };
-  if (hours < 168) return { color: 'bg-yellow-500 animate-pulse', label: 'Aging' };
-  return { color: 'bg-red-500 animate-pulse', label: 'Stale' };
+  if (hours < 24) return { color: 'bg-green-50', label: 'Fresh' };
+  if (hours < 72) return { color: 'bg-green-50', label: 'Recent' };
+  if (hours < 168) return { color: 'bg-yellow-50', label: 'Aging' };
+  return { color: 'bg-red-50', label: 'Stale' };
 }
 
 /**
@@ -266,6 +266,29 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
 // ---------------------------------------------------------------------------
 // Funnel accordion panels (inline, no separate component file)
 // ---------------------------------------------------------------------------
+
+function CircularBadge({ pct }: { pct: number }) {
+  const r = 10;
+  const circ = 2 * Math.PI * r;
+  const filled = (Math.min(pct, 100) / 100) * circ;
+  const stroke = pct >= 90 ? 'stroke-green-500' : pct >= 70 ? 'stroke-blue-500' : pct >= 50 ? 'stroke-yellow-500' : 'stroke-red-500';
+  const text = pct >= 90 ? 'text-green-700' : pct >= 70 ? 'text-blue-700' : pct >= 50 ? 'text-yellow-700' : 'text-red-600';
+  return (
+    <div className="circular-badge relative w-7 h-7 shrink-0" title={`${pct}% matched`}>
+      <svg viewBox="0 0 24 24" className="w-7 h-7">
+        <circle cx="12" cy="12" r={r} fill="none" className="stroke-gray-200" strokeWidth="2.5" />
+        <circle cx="12" cy="12" r={r} fill="none" className={stroke} strokeWidth="2.5"
+          strokeDasharray={`${filled} ${circ - filled}`}
+          strokeDashoffset={circ / 4}
+          strokeLinecap="round"
+        />
+      </svg>
+      <span className={`absolute inset-0 flex items-center justify-center text-[8px] font-bold tabular-nums ${text}`}>
+        {pct}
+      </span>
+    </div>
+  );
+}
 
 function MetricRow({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
@@ -608,71 +631,46 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const stepDoneThisRun = (info?.status === 'completed' || info?.status === 'failed') && stepRanAt >= chainStartedAt;
                   const isPending = isChainRunning && !isRunning && !stepDoneThisRun;
                   const dot = isDisabled
-                    ? { color: 'bg-gray-300', label: 'Disabled' }
+                    ? { color: '', label: 'Disabled' }
                     : isPending
-                    ? { color: 'bg-gray-300 animate-pulse', label: 'Pending' }
+                    ? { color: '', label: 'Pending' }
                     : getStatusDot(info, isRunning);
                   const stepNum = stepNumbers[i];
                   const isRoot = step.indent === 0;
-                  const isSub = step.indent >= 2;
-                  const isDeepSub = step.indent >= 3;
 
                   const funnelRow = funnelData?.[step.slug];
                   const expandKey = `${chain.id}-${step.slug}`;
                   const isExpanded = expandedSteps.has(expandKey);
 
-                  // Accuracy bar chart width (accuracy-pill bar-chart)
-                  const barPct = funnelRow ? funnelRow.matchPct : null;
-                  const barColor = barPct !== null
-                    ? barPct >= 90 ? 'bg-green-200' : barPct >= 70 ? 'bg-blue-200' : barPct >= 50 ? 'bg-yellow-200' : 'bg-red-200'
-                    : '';
-
-                  // Flash the entire tile row for warning/stale/failed steps to draw attention.
-                  // Uses custom CSS keyframes (globals.css) that pulse background color
-                  // instead of opacity — opacity pulse is invisible on white-on-white.
+                  // Full-tile status coloring — flash overrides for attention states
                   const tileFlash = dot.label === 'Aging'
                     ? 'tile-flash-warning border-yellow-400'
                     : dot.label === 'Stale' || dot.label === 'Failed'
                     ? 'tile-flash-stale border-red-400'
+                    : dot.label === 'Running'
+                    ? 'tile-flash-running border-blue-300'
                     : '';
 
-                  const indentCls = isSub ? 'ml-6 bg-gray-50/40' : isDeepSub ? 'ml-10 bg-gray-50/30' : 'bg-white';
-                  const borderCls = tileFlash || (isSub || isDeepSub ? 'border-gray-100' : 'border-gray-200');
+                  // Status background — full tile coloring replaces status dots
+                  const statusBg = dot.color;
+
+                  // Parent-child indentation: entire tile box shifts right
+                  const indentCls = step.indent === 1 ? 'ml-6' : step.indent >= 2 ? 'ml-12' : '';
+                  const borderCls = tileFlash || 'border-gray-200';
 
                   return (
-                    <div key={expandKey} className={`pipeline-tile border rounded-lg ${indentCls} ${borderCls} ${isDisabled ? 'opacity-60' : ''}`}>
-
-                    {/* Accuracy bar-chart background — fills proportionally */}
-                    <div className="relative overflow-hidden rounded-lg">
-                      {barPct !== null && (
-                        <div
-                          className={`absolute inset-y-0 left-0 ${barColor} opacity-30`}
-                          style={{ width: `${Math.min(barPct, 100)}%` }}
-                        />
-                      )}
+                    <div key={expandKey} className={`pipeline-tile group border rounded-lg ${indentCls} ${statusBg} ${borderCls} ${isDisabled ? 'opacity-60' : ''}`}>
 
                       {/* Row content — mobile-first: wraps on small screens, inline on md+ */}
-                      <div className={`relative flex flex-wrap md:flex-nowrap items-center gap-2 px-3 py-2 ${isRoot ? '' : ''}`}>
-                        {/* Primary zone: step number + dot + name + accuracy % */}
+                      <div className="flex flex-wrap md:flex-nowrap items-center gap-2 px-3 py-2">
+                        {/* Primary zone: step number badge + name */}
                         <div className="flex items-center gap-2 min-w-0">
-                          {/* Step number */}
+                          {/* Bold step number badge */}
                           {stepNum && (
-                            <span className={`text-[9px] tabular-nums shrink-0 w-5 text-right ${
-                              isRoot ? 'font-semibold text-gray-500' : 'text-gray-400'
-                            }`}>
-                              {stepNum}.
+                            <span className="text-[10px] font-bold tabular-nums shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-gray-100 text-gray-700">
+                              {stepNum}
                             </span>
                           )}
-
-                          {/* Arrow for dependent / sub-dependent steps */}
-                          {step.indent >= 1 && !isSub && (
-                            <span className="text-gray-300 shrink-0 text-[9px] w-3">
-                              &rarr;
-                            </span>
-                          )}
-
-                          {/* Status dot */}
-                          <div className={`w-2 h-2 rounded-full shrink-0 ${dot.color}`} title={dot.label} />
 
                           {/* Pipeline name */}
                           <span
@@ -681,35 +679,26 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 ? 'text-gray-300 line-through'
                                 : isRoot
                                 ? 'text-gray-800 font-medium'
-                                : isDeepSub
+                                : step.indent >= 2
                                 ? 'text-gray-400 text-[10px]'
-                                : isSub
-                                ? 'text-gray-500 text-[11px]'
                                 : 'text-gray-600'
                             }`}
                             title={entry?.name ?? step.slug}
                           >
                             {entry?.name ?? step.slug}
                           </span>
-
-                          {/* Accuracy pill with % label (accuracy-pill) */}
-                          {funnelRow && (
-                            <span className={`accuracy-pill text-[9px] font-semibold tabular-nums px-1.5 py-0.5 rounded shrink-0 ${
-                              funnelRow.matchPct >= 90 ? 'bg-green-100 text-green-800' :
-                              funnelRow.matchPct >= 70 ? 'bg-blue-100 text-blue-700' :
-                              funnelRow.matchPct >= 50 ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-red-100 text-red-600'
-                            }`}>
-                              {funnelRow.matchPct}%
-                            </span>
-                          )}
                         </div>
 
                         {/* Flexible spacer */}
                         <div className="flex-1 hidden md:block" />
 
-                        {/* Secondary zone: update-status + controls — more spacing (gap-3) */}
+                        {/* Right-aligned telemetry column */}
                         <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
+                          {/* Circular percentage badge (replaces bar chart) */}
+                          {funnelRow && (
+                            <CircularBadge pct={funnelRow.matchPct} />
+                          )}
+
                           {/* Records summary */}
                           {!isRunning && info?.records_total != null && info.records_total > 0 && (
                             <span className="text-[9px] text-gray-400 tabular-nums shrink-0" title={`${info.records_total} total / ${info.records_new ?? 0} new / ${info.records_updated ?? 0} updated`}>
@@ -727,7 +716,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
 
                           {/* Status badge */}
                           {isRunning && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 font-medium">
                               Running
                             </span>
                           )}
@@ -737,7 +726,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 e.stopPropagation();
                                 setErrorPopover(errorPopover === step.slug ? null : step.slug);
                               }}
-                              className="text-[9px] px-1.5 py-0.5 rounded bg-red-50 text-red-600 font-medium hover:bg-red-100 relative"
+                              className="text-[9px] px-1.5 py-0.5 rounded bg-red-100 text-red-600 font-medium hover:bg-red-200 relative"
                             >
                               Failed
                               {errorPopover === step.slug && info.error_message && (
@@ -771,39 +760,42 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                             {timeAgo(info?.last_run_at ?? null)}
                           </span>
 
-                          {/* Run button — hidden for infrastructure steps */}
-                          {!NON_TOGGLEABLE_SLUGS.has(step.slug) && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleRun(step.slug); }}
-                              disabled={isRunning || isDisabled}
-                              className={`text-[9px] px-2.5 py-1 rounded border min-h-[44px] ${
-                                isRunning
-                                  ? 'border-blue-200 text-blue-400 cursor-not-allowed'
-                                  : isDisabled
-                                  ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                                  : 'border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                              }`}
-                            >
-                              <span className="hidden md:inline">Run</span>
-                              <span className="md:hidden">&#9654;</span>
-                            </button>
-                          )}
+                          {/* Hover-hidden controls: visible on mobile, fade-in on desktop hover */}
+                          <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            {/* Run button — hidden for infrastructure steps */}
+                            {!NON_TOGGLEABLE_SLUGS.has(step.slug) && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleRun(step.slug); }}
+                                disabled={isRunning || isDisabled}
+                                className={`text-[9px] px-2.5 py-1 rounded border min-h-[44px] ${
+                                  isRunning
+                                    ? 'border-blue-200 text-blue-400 cursor-not-allowed'
+                                    : isDisabled
+                                    ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                                    : 'border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                                }`}
+                              >
+                                <span className="hidden md:inline">Run</span>
+                                <span className="md:hidden">&#9654;</span>
+                              </button>
+                            )}
 
-                          {/* Toggle switch — hidden for infrastructure steps */}
-                          {onToggle && !NON_TOGGLEABLE_SLUGS.has(step.slug) && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleToggle(step.slug, isDisabled); }}
-                              className="min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
-                              title={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
-                              aria-label={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
-                            >
-                              <div className={`relative w-7 h-4 rounded-full transition-colors ${isDisabled ? 'bg-gray-300' : 'bg-green-500'}`}>
-                                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${isDisabled ? 'left-0.5' : 'left-3.5'}`} />
-                              </div>
-                            </button>
-                          )}
+                            {/* Toggle switch — hidden for infrastructure steps */}
+                            {onToggle && !NON_TOGGLEABLE_SLUGS.has(step.slug) && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleToggle(step.slug, isDisabled); }}
+                                className="min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+                                title={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
+                                aria-label={isDisabled ? `Enable ${entry?.name ?? step.slug}` : `Disable ${entry?.name ?? step.slug}`}
+                              >
+                                <div className={`relative w-7 h-4 rounded-full transition-colors ${isDisabled ? 'bg-gray-300' : 'bg-green-500'}`}>
+                                  <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${isDisabled ? 'left-0.5' : 'left-3.5'}`} />
+                                </div>
+                              </button>
+                            )}
+                          </div>
 
-                          {/* Drill-down expand chevron — available for all steps */}
+                          {/* Drill-down expand chevron — always visible */}
                           <button
                             onClick={(e) => { e.stopPropagation(); toggleExpand(expandKey); }}
                             className="min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
@@ -819,7 +811,6 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           </button>
                         </div>
                       </div>
-                    </div>
 
                     {/* Universal drill-down accordion panel */}
                     {isExpanded && (
