@@ -372,6 +372,9 @@ async function run() {
     ).catch(() => {});
   }
 
+  // Always emit PIPELINE_SUMMARY so chain orchestrator can capture records_meta
+  console.log(`PIPELINE_SUMMARY:${JSON.stringify({ records_total: 0, records_new: 0, records_meta: JSON.parse(meta) })}`);
+
   if (warnings.length > 0) {
     console.log(`\n  Warnings: ${warnings.length}`);
   }

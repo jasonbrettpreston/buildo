@@ -252,10 +252,11 @@ async function run() {
       const output = stdout.toString('utf-8');
       if (output) process.stdout.write(output);
 
-      // Parse PIPELINE_SUMMARY line for record counts
+      // Parse PIPELINE_SUMMARY line for record counts + records_meta
       let recordsTotal = null;
       let recordsNew = null;
       let recordsUpdated = null;
+      let recordsMeta = null;
       const summaryMatch = output.match(/PIPELINE_SUMMARY:(.+)/);
       if (summaryMatch) {
         try {
@@ -263,6 +264,7 @@ async function run() {
           recordsTotal = summary.records_total ?? null;
           recordsNew = summary.records_new ?? null;
           recordsUpdated = summary.records_updated ?? null;
+          recordsMeta = summary.records_meta ?? null;
         } catch { /* malformed summary — ignore */ }
       }
 
@@ -275,9 +277,10 @@ async function run() {
            SET completed_at = NOW(), status = 'completed', duration_ms = $1,
                records_total = COALESCE($3, records_total),
                records_new = COALESCE($4, records_new),
-               records_updated = COALESCE($5, records_updated)
+               records_updated = COALESCE($5, records_updated),
+               records_meta = COALESCE($6::jsonb, records_meta)
            WHERE id = $2`,
-          [durationMs, stepRunId, recordsTotal, recordsNew, recordsUpdated]
+          [durationMs, stepRunId, recordsTotal, recordsNew, recordsUpdated, recordsMeta ? JSON.stringify(recordsMeta) : null]
         ).catch(() => {});
       }
 

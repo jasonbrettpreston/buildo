@@ -319,6 +319,9 @@ async function run() {
     ).catch(() => {});
   }
 
+  // Always emit PIPELINE_SUMMARY so chain orchestrator can capture records_meta
+  console.log(`PIPELINE_SUMMARY:${JSON.stringify({ records_total: 0, records_new: 0, records_meta: JSON.parse(meta) })}`);
+
   console.log(`\n=== Schema Validation: ${status.toUpperCase()} (${(durationMs / 1000).toFixed(1)}s) ===\n`);
 
   await pool.end();
