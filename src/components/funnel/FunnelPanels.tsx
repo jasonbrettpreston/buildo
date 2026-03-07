@@ -1,4 +1,4 @@
-import type { FunnelRowData } from '@/lib/admin/funnel';
+import type { FunnelRowData, StepDescription } from '@/lib/admin/funnel';
 
 // ---------------------------------------------------------------------------
 // Funnel accordion sub-components — extracted from FreshnessTimeline.tsx
@@ -169,6 +169,88 @@ export function FunnelLastRunPanel({ row }: { row: FunnelRowData }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Data Flow Tile — source → target visualization for pipeline descriptions
+// ---------------------------------------------------------------------------
+
+function ColGrid({ cols, highlights }: { cols: string[]; highlights?: Set<string> | null }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-0">
+      {cols.map((c) => {
+        const lit = !highlights || highlights.has(c);
+        return (
+          <div key={c} className="flex items-center gap-1.5">
+            <span className={`w-1 h-1 rounded-full shrink-0 ${lit ? 'bg-emerald-400' : 'bg-gray-200'}`} />
+            <span className={`text-[11px] font-mono ${lit ? 'text-gray-700 font-medium' : 'text-gray-300'}`}>{c}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TableCard({ tableName, cols, highlights, label }: {
+  tableName: string; cols: string[]; highlights?: Set<string> | null; label: string;
+}) {
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-md p-2.5 flex-1 min-w-0">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">{label}</span>
+        <span className="text-[10px] font-mono text-gray-600 font-medium">{tableName}</span>
+        <span className="text-[8px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1 py-0.5 ml-auto">Live DB Schema</span>
+      </div>
+      {cols.length > 0 ? <ColGrid cols={cols} highlights={highlights} /> : (
+        <p className="text-[10px] text-gray-400 italic">Schema not available</p>
+      )}
+    </div>
+  );
+}
+
+function ExternalBadge({ label }: { label: string }) {
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-md px-3 py-2 flex items-center gap-2 flex-1 min-w-0">
+      <span className="text-[9px] font-semibold text-blue-400 uppercase tracking-wider">Source</span>
+      <span className="text-[11px] font-medium text-blue-700">{label}</span>
+    </div>
+  );
+}
+
+export function DataFlowTile({ desc, dbSchemaMap }: {
+  desc: StepDescription; dbSchemaMap?: Record<string, string[]>;
+}) {
+  const targetCols = dbSchemaMap?.[desc.table] ?? [];
+  const writesSet = desc.writes ? new Set(desc.writes) : null;
+  const isSelfRef = desc.sources.length === 1 && desc.sources[0] === desc.table;
+  const isExternal = (s: string) => !dbSchemaMap?.[s];
+
+  return (
+    <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+      <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Data Flow</h4>
+      <p className="text-xs text-gray-600 mb-3">{desc.summary}</p>
+
+      {isSelfRef && targetCols.length > 0 ? (
+        <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Reads & Writes" />
+      ) : (
+        <div className="flex flex-col md:flex-row items-stretch gap-2">
+          <div className={`flex flex-col gap-2 ${desc.sources.length > 0 ? 'flex-1 min-w-0' : ''}`}>
+            {desc.sources.map((s) => (
+              isExternal(s)
+                ? <div key={s}><ExternalBadge label={s} /></div>
+                : <div key={s}><TableCard tableName={s} cols={dbSchemaMap?.[s] ?? []} highlights={null} label="Source" /></div>
+            ))}
+          </div>
+          <div className="flex items-center justify-center py-1 md:py-0 md:px-1">
+            <span className="text-gray-300 text-lg font-bold rotate-90 md:rotate-0">{'\u2192'}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Target" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

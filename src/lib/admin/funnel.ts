@@ -528,40 +528,44 @@ export function computeAllFunnelRows(
 export interface StepDescription {
   summary: string;
   table: string;
+  /** Where this step reads from — DB table names or external labels like "CKAN API" */
+  sources: string[];
+  /** Specific columns written to target table. Omit for full-table ingest steps. */
+  writes?: string[];
 }
 
 export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
-  // Ingest
-  permits:              { summary: 'Ingests building permit CSV from Toronto Open Data CKAN API', table: 'permits' },
-  coa:                  { summary: 'Ingests Committee of Adjustment applications from CKAN', table: 'coa_applications' },
-  builders:             { summary: 'Extracts corporate entity names from permit applicant/builder fields', table: 'entities' },
-  address_points:       { summary: 'Loads Toronto address point reference data for geocoding', table: 'address_points' },
-  parcels:              { summary: 'Loads Toronto property parcel boundaries and lot dimensions', table: 'parcels' },
-  massing:              { summary: 'Loads 3D building massing models from City shapefile', table: 'building_footprints' },
-  neighbourhoods:       { summary: 'Loads neighbourhood boundary polygons and demographic data', table: 'neighbourhoods' },
-  load_wsib:            { summary: 'Loads WSIB registry snapshot for contractor identity matching', table: 'wsib_registry' },
-  // Link & Enrich
-  geocode_permits:      { summary: 'Matches permit addresses to address points for lat/lng coordinates', table: 'permits' },
-  link_parcels:         { summary: 'Links permits to property parcels via address or spatial match', table: 'permit_parcels' },
-  link_neighbourhoods:  { summary: 'Spatially links permits to neighbourhood boundaries', table: 'permits' },
-  link_massing:         { summary: 'Links permits to 3D building footprints via parcel intersection', table: 'parcel_buildings' },
-  link_coa:             { summary: 'Links CoA applications to building permits by address and ward', table: 'coa_applications' },
-  link_wsib:            { summary: 'Matches extracted entities against WSIB registry by name', table: 'entities' },
-  enrich_wsib_builders: { summary: 'Web-scrapes contact info for WSIB-matched entities via Serper API', table: 'entities' },
-  enrich_named_builders:{ summary: 'Web-scrapes contact info for unmatched entities via Serper API', table: 'entities' },
-  link_similar:         { summary: 'Clusters permits by address proximity to find related applications', table: 'permits' },
-  create_pre_permits:   { summary: 'Creates placeholder permit records from eligible CoA applications', table: 'coa_applications' },
-  compute_centroids:    { summary: 'Computes geometric centroids for parcel polygons', table: 'parcels' },
-  // Classify
-  classify_scope_class: { summary: 'Classifies permits into project types (residential/commercial/mixed)', table: 'permits' },
-  classify_scope_tags:  { summary: 'Extracts detailed work scope tags from permit descriptions', table: 'permits' },
-  classify_permits:     { summary: 'Assigns trade classifications using tag-trade matrix and rules', table: 'permit_trades' },
+  // Ingest — full table writes, no `writes` needed
+  permits:              { summary: 'Ingests building permit CSV from Toronto Open Data CKAN API', table: 'permits', sources: ['CKAN API'] },
+  coa:                  { summary: 'Ingests Committee of Adjustment applications from CKAN', table: 'coa_applications', sources: ['CKAN API'] },
+  builders:             { summary: 'Extracts corporate entity names from permit applicant/builder fields', table: 'entities', sources: ['permits'], writes: ['legal_name', 'name_normalized', 'permit_count'] },
+  address_points:       { summary: 'Loads Toronto address point reference data for geocoding', table: 'address_points', sources: ['CKAN API'] },
+  parcels:              { summary: 'Loads Toronto property parcel boundaries and lot dimensions', table: 'parcels', sources: ['CKAN API'] },
+  massing:              { summary: 'Loads 3D building massing models from City shapefile', table: 'building_footprints', sources: ['City Shapefile'] },
+  neighbourhoods:       { summary: 'Loads neighbourhood boundary polygons and demographic data', table: 'neighbourhoods', sources: ['City GeoJSON'] },
+  load_wsib:            { summary: 'Loads WSIB registry snapshot for contractor identity matching', table: 'wsib_registry', sources: ['WSIB CSV'] },
+  // Link & Enrich — narrow writes on shared tables
+  geocode_permits:      { summary: 'Matches permit addresses to address points for lat/lng coordinates', table: 'permits', sources: ['address_points'], writes: ['latitude', 'longitude', 'geocoded_at'] },
+  link_parcels:         { summary: 'Links permits to property parcels via address or spatial match', table: 'permit_parcels', sources: ['permits', 'parcels'] },
+  link_neighbourhoods:  { summary: 'Spatially links permits to neighbourhood boundaries', table: 'permits', sources: ['neighbourhoods'], writes: ['neighbourhood_id'] },
+  link_massing:         { summary: 'Links permits to 3D building footprints via parcel intersection', table: 'parcel_buildings', sources: ['permit_parcels', 'building_footprints'] },
+  link_coa:             { summary: 'Links CoA applications to building permits by address and ward', table: 'coa_applications', sources: ['permits', 'coa_applications'], writes: ['linked_permit_num', 'linked_confidence', 'last_seen_at'] },
+  link_wsib:            { summary: 'Matches extracted entities against WSIB registry by name', table: 'entities', sources: ['wsib_registry'], writes: ['is_wsib_registered'] },
+  enrich_wsib_builders: { summary: 'Web-scrapes contact info for WSIB-matched entities via Serper API', table: 'entities', sources: ['Serper API'], writes: ['primary_phone', 'primary_email', 'website', 'last_enriched_at'] },
+  enrich_named_builders:{ summary: 'Web-scrapes contact info for unmatched entities via Serper API', table: 'entities', sources: ['Serper API'], writes: ['primary_phone', 'primary_email', 'website', 'last_enriched_at'] },
+  link_similar:         { summary: 'Clusters permits by address proximity to find related applications', table: 'permits', sources: ['permits'], writes: ['scope_tags', 'project_type', 'scope_classified_at', 'scope_source'] },
+  create_pre_permits:   { summary: 'Creates placeholder permit records from eligible CoA applications', table: 'coa_applications', sources: ['coa_applications'] },
+  compute_centroids:    { summary: 'Computes geometric centroids for parcel polygons', table: 'parcels', sources: ['parcels'], writes: ['centroid_lat', 'centroid_lng'] },
+  // Classify — narrow writes on permits or dedicated table
+  classify_scope_class: { summary: 'Classifies permits into project types (residential/commercial/mixed)', table: 'permits', sources: ['permits'], writes: ['project_type', 'scope_classified_at', 'scope_source'] },
+  classify_scope_tags:  { summary: 'Extracts detailed work scope tags from permit descriptions', table: 'permits', sources: ['permits'], writes: ['scope_tags', 'scope_classified_at', 'scope_source'] },
+  classify_permits:     { summary: 'Assigns trade classifications using tag-trade matrix and rules', table: 'permit_trades', sources: ['permits'] },
   // Snapshot
-  refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', table: 'data_quality_snapshots' },
+  refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', table: 'data_quality_snapshots', sources: ['permits', 'entities', 'parcels'] },
   // Quality (CQA)
-  assert_schema:        { summary: 'Validates upstream CKAN/CSV column headers before ingestion', table: 'pipeline_runs' },
-  assert_data_bounds:   { summary: 'Post-ingestion SQL checks for cost outliers, null rates, referential integrity', table: 'pipeline_runs' },
+  assert_schema:        { summary: 'Validates upstream CKAN/CSV column headers before ingestion', table: 'pipeline_runs', sources: ['CKAN API'] },
+  assert_data_bounds:   { summary: 'Post-ingestion SQL checks for cost outliers, null rates, referential integrity', table: 'pipeline_runs', sources: ['permits', 'parcels', 'address_points'] },
   // Deep Scrapes (coming soon)
-  inspections:          { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections' },
-  coa_documents:        { summary: 'Downloads Committee of Adjustment plans and decision PDFs from AIC portal', table: 'coa_documents' },
+  inspections:          { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections', sources: ['City Portal'] },
+  coa_documents:        { summary: 'Downloads Committee of Adjustment plans and decision PDFs from AIC portal', table: 'coa_documents', sources: ['AIC Portal'] },
 };

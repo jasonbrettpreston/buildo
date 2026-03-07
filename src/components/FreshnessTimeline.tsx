@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FunnelRowData } from '@/lib/admin/funnel';
 import { STEP_DESCRIPTIONS } from '@/lib/admin/funnel';
-import { CircularBadge, FunnelAllTimePanel, FunnelLastRunPanel } from './funnel/FunnelPanels';
+import { CircularBadge, FunnelAllTimePanel, FunnelLastRunPanel, DataFlowTile } from './funnel/FunnelPanels';
 
 // ---------------------------------------------------------------------------
 // Pipeline Registry — single source of truth for all tracked pipelines
@@ -715,37 +715,10 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           )}
                         </div>
 
-                        {/* Description tile (accordion-tile) */}
-                        {(() => {
-                          const desc = STEP_DESCRIPTIONS[step.slug];
-                          if (!desc) return null;
-                          const liveColumns = dbSchemaMap?.[desc.table] ?? [];
-                          return (
-                            <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                              <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</h4>
-                              <p className="text-xs text-gray-600 mb-2">{desc.summary}</p>
-                              {liveColumns.length > 0 && (
-                                <>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-0.5">
-                                    {liveColumns.map((f) => (
-                                      <div key={f} className="flex items-center gap-1.5">
-                                        <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
-                                        <span className="text-[11px] text-gray-500 font-mono">{f}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <div className="flex items-center gap-2 mt-1.5">
-                                    <p className="text-[9px] text-gray-400">Target table: <span className="font-mono">{desc.table}</span></p>
-                                    <span className="text-[8px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">Live DB Schema</span>
-                                  </div>
-                                </>
-                              )}
-                              {liveColumns.length === 0 && (
-                                <p className="text-[9px] text-gray-400 mt-1.5">Target table: <span className="font-mono">{desc.table}</span></p>
-                              )}
-                            </div>
-                          );
-                        })()}
+                        {/* Description tile — source → target data flow */}
+                        {STEP_DESCRIPTIONS[step.slug] && (
+                          <DataFlowTile desc={STEP_DESCRIPTIONS[step.slug]} dbSchemaMap={dbSchemaMap} />
+                        )}
 
                         {/* All Time tile (funnel sources only) */}
                         {funnelRow && (

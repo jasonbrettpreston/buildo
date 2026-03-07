@@ -705,13 +705,18 @@ describe('Funnel computation (extracted to lib/admin/funnel)', () => {
     }
   });
 
-  it('each STEP_DESCRIPTIONS entry has summary and table (no hardcoded fields)', async () => {
+  it('each STEP_DESCRIPTIONS entry has summary, table, and sources', async () => {
     const { STEP_DESCRIPTIONS } = await import('@/lib/admin/funnel');
     for (const [slug, desc] of Object.entries(STEP_DESCRIPTIONS)) {
       expect(desc.summary.length, `${slug} summary empty`).toBeGreaterThan(0);
       expect(desc.table.length, `${slug} table empty`).toBeGreaterThan(0);
-      // fields must NOT exist — schema is now queried live from information_schema
-      expect(desc).not.toHaveProperty('fields');
+      expect(Array.isArray(desc.sources), `${slug} sources not an array`).toBe(true);
+      expect(desc.sources.length, `${slug} sources empty`).toBeGreaterThan(0);
+      // writes is optional — only set for narrow-update steps
+      if (desc.writes) {
+        expect(Array.isArray(desc.writes), `${slug} writes not an array`).toBe(true);
+        expect(desc.writes.length, `${slug} writes is empty array (should omit instead)`).toBeGreaterThan(0);
+      }
     }
   });
 
@@ -723,12 +728,12 @@ describe('Funnel computation (extracted to lib/admin/funnel)', () => {
     expect(source).toContain('db_schema_map');
   });
 
-  it('FreshnessTimeline accepts dbSchemaMap prop and renders live columns', () => {
+  it('FreshnessTimeline passes dbSchemaMap to DataFlowTile', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     expect(source).toContain('dbSchemaMap');
-    expect(source).toContain('Live DB Schema');
+    expect(source).toContain('DataFlowTile');
   });
 });
 

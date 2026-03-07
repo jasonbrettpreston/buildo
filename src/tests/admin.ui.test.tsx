@@ -1063,18 +1063,23 @@ describe('FreshnessTimeline funnel accordion', () => {
     expect(source).not.toMatch(/funnelRow\s*&&\s*\(\s*<button[^>]*toggleExpand/);
   });
 
-  it('renders Description section with STEP_DESCRIPTIONS and live schema in drill-down', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
-      'utf-8'
+  it('renders data flow description with source → target visualization', () => {
+    const timeline = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    expect(source).toContain('STEP_DESCRIPTIONS');
-    expect(source).toContain('Description');
-    expect(source).toContain('desc.summary');
-    expect(source).toContain('desc.table');
-    // Fields come from live dbSchemaMap, not hardcoded desc.fields
-    expect(source).toContain('dbSchemaMap');
-    expect(source).not.toContain('desc.fields');
+    // FreshnessTimeline delegates to DataFlowTile
+    expect(timeline).toContain('DataFlowTile');
+    expect(timeline).toContain('dbSchemaMap');
+    expect(timeline).not.toContain('desc.fields');
+
+    const panels = fs.readFileSync(
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
+    );
+    // DataFlowTile uses desc.sources, desc.writes, and live schema
+    expect(panels).toContain('desc.sources');
+    expect(panels).toContain('desc.writes');
+    expect(panels).toContain('Data Flow');
+    expect(panels).toContain('Live DB Schema');
   });
 
   it('circular badge uses correct color thresholds', () => {
@@ -2409,7 +2414,7 @@ describe('Drill-down status always visible', () => {
     expect(source).toContain("info?.status ?? 'Never run'");
     // Status bar appears before Description
     const statusBarIdx = source.indexOf('drilldown-status-bar');
-    const descIdx = source.indexOf('Description tile (accordion-tile)');
+    const descIdx = source.indexOf('<DataFlowTile');
     expect(statusBarIdx).toBeLessThan(descIdx);
   });
 
@@ -2676,7 +2681,7 @@ describe('Funnel panel components extracted to separate file', () => {
     expect(lineCount).toBeLessThan(950);
   });
 
-  it('FunnelPanels.tsx exports CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS', () => {
+  it('FunnelPanels.tsx exports CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS, DataFlowTile', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
@@ -2685,6 +2690,7 @@ describe('Funnel panel components extracted to separate file', () => {
     expect(source).toContain('export function FunnelAllTimePanel');
     expect(source).toContain('export function FunnelLastRunPanel');
     expect(source).toContain('export const INTERSECTION_LABELS');
+    expect(source).toContain('export function DataFlowTile');
   });
 });
 
