@@ -580,12 +580,13 @@ async function main() {
     const pct = ((count / processed) * 100).toFixed(1);
     console.log(`  ${tag.padEnd(30)} ${String(count).padStart(8)}  (${pct}%)`);
   }
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: withTags, records_updated: propagated }));
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: total, records_new: processed, records_updated: propagated }));
 
   await pool.end();
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error('Scope classification failed:', err);
+  await pool.end().catch(() => {});
   process.exit(1);
 });

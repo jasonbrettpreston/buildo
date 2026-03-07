@@ -242,6 +242,20 @@ describe('Incremental Processing Guards', () => {
     expect(content).toContain('IS DISTINCT FROM');
     expect(content).toContain('scope_tags');
   });
+
+  it('link-similar.js guards array_append against null scope_tags', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/link-similar.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    // DM fix must handle null scope_tags with CASE/WHEN or COALESCE
+    expect(content).toMatch(/scope_tags IS NULL[\s\S]{0,100}ARRAY\['demolition'\]/);
+  });
+
+  it('link-wsib.js emits PIPELINE_SUMMARY with totalUnlinked as records_total', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/link-wsib.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    expect(content).toContain('PIPELINE_SUMMARY:');
+    expect(content).toContain('totalUnlinked');
+  });
 });
 
 describe('Quality Pipeline Group', () => {
@@ -283,6 +297,7 @@ describe('PIPELINE_SUMMARY convention', () => {
     'link-neighbourhoods.js',
     'link-massing.js',
     'link-similar.js',
+    'link-wsib.js',
     'link-coa.js',
     'compute-centroids.js',
     'create-pre-permits.js',

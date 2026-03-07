@@ -52,9 +52,12 @@ async function run() {
   // Re-add demolition tag to DM permits that lost it during propagation
   const demFixResult = await pool.query(
     `UPDATE permits
-     SET scope_tags = array_append(scope_tags, 'demolition')
+     SET scope_tags = CASE
+       WHEN scope_tags IS NULL THEN ARRAY['demolition']
+       ELSE array_append(scope_tags, 'demolition')
+     END
      WHERE permit_type = 'Demolition Folder (DM)'
-       AND NOT ('demolition' = ANY(scope_tags))`
+       AND (scope_tags IS NULL OR NOT ('demolition' = ANY(scope_tags)))`
   );
   const demFixed = demFixResult.rowCount || 0;
   if (demFixed > 0) {

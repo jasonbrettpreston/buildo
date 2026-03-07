@@ -193,12 +193,18 @@ async function main() {
 
     // Batch update permits (neighbourhood_id = -1 marks "no neighbourhood found")
     for (const [dbId, permits] of Object.entries(updates)) {
+      if (permits.length === 0) continue;
+      const values = [];
+      const conditions = [];
+      let idx = 2; // $1 is neighbourhood_id
       for (const p of permits) {
-        await pool.query(
-          'UPDATE permits SET neighbourhood_id = $1 WHERE permit_num = $2 AND revision_num = $3',
-          [parseInt(dbId, 10), p.permit_num, p.revision_num]
-        );
+        conditions.push(`(permit_num = $${idx++} AND revision_num = $${idx++})`);
+        values.push(p.permit_num, p.revision_num);
       }
+      await pool.query(
+        `UPDATE permits SET neighbourhood_id = $1 WHERE ${conditions.join(' OR ')}`,
+        [parseInt(dbId, 10), ...values]
+      );
     }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

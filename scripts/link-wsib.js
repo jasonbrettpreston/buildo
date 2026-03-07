@@ -213,13 +213,15 @@ async function run() {
     const s = stats.rows[0];
     console.log(`\nDB Stats: ${s.total} total | ${s.linked} linked (${s.high_conf} high, ${s.med_conf} med)`);
 
+    console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: totalUnlinked, records_new: totalLinked, records_updated: 0 }));
+
     if (runId) {
       await pool.query(
         `UPDATE pipeline_runs
          SET completed_at = NOW(), status = 'completed', duration_ms = $1,
              records_total = $2, records_new = $3
          WHERE id = $4`,
-        [durationMs, totalLinked, totalLinked, runId]
+        [durationMs, totalUnlinked, totalLinked, runId]
       ).catch(() => {});
     }
 

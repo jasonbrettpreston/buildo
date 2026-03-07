@@ -240,6 +240,8 @@ function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { 
   if (isRunning) return { color: 'bg-blue-50 tile-flash-running', label: 'Running' };
   if (!info || !info.last_run_at) return { color: '', label: 'Never run' };
   if (info.status === 'failed') return { color: 'bg-red-50', label: 'Failed' };
+  if (info.status === 'skipped') return { color: 'bg-gray-50', label: 'Skipped' };
+  if (info.status === 'cancelled') return { color: 'bg-gray-50', label: 'Cancelled' };
 
   // Completed with zero work (0 new + 0 updated) = Stale.
   // records_new must be explicitly 0 (not null) — null means the step doesn't track records
@@ -983,7 +985,9 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                   !info || !info.status ? 'text-gray-400' :
                                   info.status === 'completed' ? 'text-green-600' :
                                   info.status === 'failed' ? 'text-red-500' :
-                                  info.status === 'running' ? 'text-blue-600' : 'text-gray-500'
+                                  info.status === 'running' ? 'text-blue-600' :
+                                  info.status === 'skipped' ? 'text-gray-500' :
+                                  info.status === 'cancelled' ? 'text-orange-500' : 'text-gray-500'
                                 }`}>
                                   {info?.status ? info.status.charAt(0).toUpperCase() + info.status.slice(1) : 'Never run'}
                                 </span>

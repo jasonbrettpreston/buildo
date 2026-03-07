@@ -144,6 +144,8 @@ async function main() {
     const insertValues = [];
     const insertParams = [];
     let paramIdx = 1;
+    let batchBuildingsCount = 0;
+    let batchParcelsCount = 0;
 
     for (const parcel of parcelBatch.rows) {
       const lat = parseFloat(parcel.centroid_lat);
@@ -273,14 +275,14 @@ async function main() {
         insertValues.push(
           parcel.id, mb.building_id, isPrimary, structureType, mb.match_type, mb.confidence
         );
-        buildingsLinked++;
+        batchBuildingsCount++;
       }
 
-      parcelsLinked++;
+      batchParcelsCount++;
       processed++;
     }
 
-    // Batch insert
+    // Batch insert — only increment counters after successful DB write
     if (insertParams.length > 0) {
       try {
         await pool.query(
@@ -294,9 +296,13 @@ async function main() {
              linked_at = NOW()`,
           insertValues
         );
+        buildingsLinked += batchBuildingsCount;
+        parcelsLinked += batchParcelsCount;
       } catch (err) {
         console.error(`  Error inserting batch at offset ${offset}:`, err.message);
       }
+    } else {
+      parcelsLinked += batchParcelsCount;
     }
 
     offset += BATCH_SIZE;

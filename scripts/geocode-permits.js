@@ -90,7 +90,7 @@ async function main() {
   console.log(`geo_id but no match: ${parseInt(after.has_geo_id_no_match).toLocaleString()}`);
   console.log(`No geo_id at all:    ${parseInt(after.no_geo_id).toLocaleString()}`);
   console.log(`Duration:            ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: parseInt(after.geocoded), records_new: updated, records_updated: updated }));
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: parseInt(before.to_geocode), records_new: updated, records_updated: 0 }));
 
   await pool.end();
 }

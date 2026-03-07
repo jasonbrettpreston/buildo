@@ -531,6 +531,7 @@ async function loadProfiles(xlsxPath) {
   }
 
   console.log('  Census profile updates complete.');
+  return matchedRows;
 }
 
 // ---------------------------------------------------------------------------
@@ -575,14 +576,15 @@ async function main() {
   const boundaryCount = await loadBoundaries(boundariesPath);
 
   // Step 2: Load Census profiles
-  await loadProfiles(profilesPath);
+  const profileUpdates = await loadProfiles(profilesPath);
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log('');
   console.log('=== Load Complete ===');
   console.log(`Neighbourhoods: ${boundaryCount}`);
+  console.log(`Profile updates: ${profileUpdates}`);
   console.log(`Duration:       ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: boundaryCount, records_new: boundaryCount, records_updated: 0 }));
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: boundaryCount, records_new: 0, records_updated: boundaryCount + profileUpdates }));
 
   await pool.end();
 }

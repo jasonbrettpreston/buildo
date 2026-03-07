@@ -325,7 +325,8 @@ async function main() {
   execSync(`node "${path.join(__dirname, 'link-massing.js')}"`, { stdio: 'inherit' });
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error('Load failed:', err);
+  await pool.end().catch(() => {});
   process.exit(1);
 });

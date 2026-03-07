@@ -436,7 +436,8 @@ async function main() {
   });
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error('Load failed:', err);
+  await pool.end().catch(() => {});
   process.exit(1);
 });

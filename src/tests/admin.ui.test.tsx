@@ -2259,6 +2259,39 @@ describe('Full-tile status coloring (no more dots)', () => {
     );
     expect(source).toMatch(/Running[\s\S]{0,30}tile-flash-running/);
   });
+
+  it('getStatusDot handles skipped status with gray background', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const fnStart = source.indexOf('function getStatusDot');
+    const fnEnd = source.indexOf('\n}', fnStart) + 2;
+    const fnBody = source.slice(fnStart, fnEnd);
+    expect(fnBody).toContain("'skipped'");
+    expect(fnBody).toContain("'Skipped'");
+    expect(fnBody).toContain('bg-gray-50');
+  });
+
+  it('getStatusDot handles cancelled status with gray background', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const fnStart = source.indexOf('function getStatusDot');
+    const fnEnd = source.indexOf('\n}', fnStart) + 2;
+    const fnBody = source.slice(fnStart, fnEnd);
+    expect(fnBody).toContain("'cancelled'");
+    expect(fnBody).toContain("'Cancelled'");
+  });
+
+  it('footer status text includes skipped and cancelled colors', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const footerSection = source.slice(source.indexOf('drilldown-footer'));
+    expect(footerSection).toContain("'skipped'");
+    expect(footerSection).toContain("'cancelled'");
+    expect(footerSection).toContain('text-orange-500');
+  });
 });
 
 // ---------------------------------------------------------------------------
