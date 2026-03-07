@@ -234,6 +234,16 @@ describe('Pipeline Disabled Step Skip Logic', () => {
   });
 });
 
+describe('Incremental Processing Guards', () => {
+  it('link-similar.js skips already-propagated companions', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/link-similar.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    // Must have IS DISTINCT FROM guard to avoid re-updating companions
+    expect(content).toContain('IS DISTINCT FROM');
+    expect(content).toContain('scope_tags');
+  });
+});
+
 describe('Quality Pipeline Group', () => {
   it('quality group has 2 registry entries', () => {
     const qualityEntries = Object.entries(PIPELINE_REGISTRY).filter(

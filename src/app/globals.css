@@ -23,3 +23,10 @@
 .tile-flash-running {
   animation: tile-flash-blue 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+@keyframes tile-flash-purple {
+  0%, 100% { background-color: rgb(245 243 255); /* purple-50 */ }
+  50% { background-color: rgb(233 213 255); /* purple-200 */ }
+}
+.tile-flash-overdue {
+  animation: tile-flash-purple 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

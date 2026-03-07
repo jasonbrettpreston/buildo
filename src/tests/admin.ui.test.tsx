@@ -2130,7 +2130,7 @@ describe('Warning and stale status tile flash', () => {
     expect(fnBody).toContain("'Aging'");
   });
 
-  it('getStatusDot returns bg-red-50 for Stale status', () => {
+  it('getStatusDot returns bg-red-50 for zero-records Stale status', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
@@ -2142,6 +2142,18 @@ describe('Warning and stale status tile flash', () => {
     expect(staleLineMatch![0]).toContain('bg-red-50');
   });
 
+  it('getStatusDot returns bg-purple-50 + Overdue for time-based >7d staleness', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const fnStart = source.indexOf('function getStatusDot');
+    const fnEnd = source.indexOf('\n}', fnStart) + 2;
+    const fnBody = source.slice(fnStart, fnEnd);
+    const overdueMatch = fnBody.match(/return\s*\{[^}]*label:\s*'Overdue'[^}]*\}/);
+    expect(overdueMatch).toBeTruthy();
+    expect(overdueMatch![0]).toContain('bg-purple-50');
+  });
+
   it('applies tile-flash CSS animation to the entire pipeline tile row for warning/stale steps', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
@@ -2151,6 +2163,8 @@ describe('Warning and stale status tile flash', () => {
     expect(source).toMatch(/tileFlash[\s\S]{0,200}Stale[\s\S]{0,80}tile-flash-stale[\s\S]{0,80}border-red/);
     // Failed steps also get the red flash
     expect(source).toMatch(/Failed[\s\S]{0,30}tile-flash-stale/);
+    // Overdue (>7d time-based) gets purple flash
+    expect(source).toMatch(/Overdue[\s\S]{0,80}tile-flash-overdue[\s\S]{0,80}border-purple/);
     // tileFlash should be applied to the pipeline-tile div's className
     expect(source).toMatch(/pipeline-tile[\s\S]{0,200}tileFlash|tileFlash[\s\S]{0,200}pipeline-tile/);
   });
@@ -2172,6 +2186,14 @@ describe('Warning and stale status tile flash', () => {
     );
     expect(css).toContain('tile-flash-blue');
     expect(css).toContain('.tile-flash-running');
+  });
+
+  it('globals.css defines tile-flash-purple keyframe for overdue state', () => {
+    const css = fs.readFileSync(
+      path.join(__dirname, '../app/globals.css'), 'utf-8'
+    );
+    expect(css).toContain('tile-flash-purple');
+    expect(css).toContain('.tile-flash-overdue');
   });
 });
 

@@ -252,7 +252,7 @@ function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { 
   if (hours < 24) return { color: 'bg-green-50', label: 'Fresh' };
   if (hours < 72) return { color: 'bg-green-50', label: 'Recent' };
   if (hours < 168) return { color: 'bg-yellow-50', label: 'Aging' };
-  return { color: 'bg-red-50', label: 'Stale' };
+  return { color: 'bg-purple-50', label: 'Overdue' };
 }
 
 /**
@@ -654,6 +654,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     ? 'tile-flash-warning border-yellow-400'
                     : dot.label === 'Stale' || dot.label === 'Failed'
                     ? 'tile-flash-stale border-red-400'
+                    : dot.label === 'Overdue'
+                    ? 'tile-flash-overdue border-purple-400'
                     : dot.label === 'Running'
                     ? 'tile-flash-running border-blue-300'
                     : '';

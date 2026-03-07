@@ -42,7 +42,8 @@ async function run() {
      ) AS bld
      WHERE TRIM(SPLIT_PART(companion.permit_num, ' ', 1) || ' ' || SPLIT_PART(companion.permit_num, ' ', 2)) = bld.base_num
        AND companion.permit_num !~ '\\sBLD(\\s|$)'
-       AND companion.permit_num ~ '\\s[A-Z]{2,4}(\\s|$)'`
+       AND companion.permit_num ~ '\\s[A-Z]{2,4}(\\s|$)'
+       AND companion.scope_tags IS DISTINCT FROM bld.scope_tags`
   );
 
   const propagated = propagateResult.rowCount || 0;
