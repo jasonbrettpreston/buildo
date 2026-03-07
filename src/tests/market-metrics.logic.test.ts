@@ -346,3 +346,65 @@ describe('MarketMetrics response shape', () => {
     expect(classifyIncome(null)).toBe('unknown-income');
   });
 });
+
+// ── Query extraction guardrails ─────────────────────────────────────
+
+describe('Query extraction', () => {
+  it('route.ts is a thin handler (< 50 lines)', () => {
+    const src = fs.readFileSync(
+      path.resolve('src/app/api/admin/market-metrics/route.ts'),
+      'utf-8'
+    );
+    const lines = src.split('\n').length;
+    expect(lines).toBeLessThan(50);
+  });
+
+  it('queries.ts exports all 7 query functions', async () => {
+    const mod = await import('@/lib/market-metrics/queries');
+    expect(typeof mod.getReferenceMonth).toBe('function');
+    expect(typeof mod.fetchKpi).toBe('function');
+    expect(typeof mod.fetchActivity).toBe('function');
+    expect(typeof mod.fetchTrades).toBe('function');
+    expect(typeof mod.fetchResidentialVsCommercial).toBe('function');
+    expect(typeof mod.fetchScopeTagsSegmented).toBe('function');
+    expect(typeof mod.fetchNeighbourhoods).toBe('function');
+  });
+});
+
+// ── getReferenceMonth logic ─────────────────────────────────────────
+
+describe('getReferenceMonth logic', () => {
+  it('route.ts does NOT contain the old MAX(issued_date) reference month query', () => {
+    const src = fs.readFileSync(
+      path.resolve('src/app/api/admin/market-metrics/route.ts'),
+      'utf-8'
+    );
+    expect(src).not.toContain('MAX(issued_date)');
+  });
+
+  it('queries.ts uses previous-month logic for reference month', () => {
+    const src = fs.readFileSync(
+      path.resolve('src/lib/market-metrics/queries.ts'),
+      'utf-8'
+    );
+    // Must subtract 1 month from current month to avoid partial-month comparison
+    expect(src).toContain("INTERVAL '1 month'");
+    expect(src).toContain('getReferenceMonth');
+  });
+});
+
+// ── ResComChart YoY occlusion fix ───────────────────────────────────
+
+describe('ResComChart YoY visibility', () => {
+  it('uses target lines instead of background-fill bars for YoY', () => {
+    const src = fs.readFileSync(
+      path.resolve('src/app/admin/market-metrics/page.tsx'),
+      'utf-8'
+    );
+    // The old pattern: YoY bars rendered behind current bars with opacity
+    // Should NOT have the old occlusion pattern (faded rects at same x position)
+    expect(src).not.toMatch(/YoY[\s\S]*opacity[\s\S]*0\.2/);
+    // Should have a target-line or side-by-side approach
+    expect(src).toMatch(/yoy|YoY/i);
+  });
+});

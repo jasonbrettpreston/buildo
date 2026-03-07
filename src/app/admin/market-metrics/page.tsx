@@ -210,23 +210,16 @@ function ResComChart({ data }: { data: ResComRow[] }) {
       <div className="flex gap-4 mb-3 text-xs text-gray-500">
         <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-blue-500" /> Residential</span>
         <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-purple-500" /> Commercial</span>
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-gray-300" /> Year ago (faded)</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-1 bg-gray-500" /> YoY target</span>
       </div>
       <svg width="100%" viewBox={`0 0 ${data.length * (groupW + 4)} ${chartH + 24}`} className="overflow-visible">
         {data.map((d, i) => {
           const rH = (d.residential / max) * chartH;
           const cH = (d.commercial / max) * chartH;
-          const rYoyH = (d.residential_yoy / max) * chartH;
-          const cYoyH = (d.commercial_yoy / max) * chartH;
+          const rYoyY = chartH - (d.residential_yoy / max) * chartH;
+          const cYoyY = chartH - (d.commercial_yoy / max) * chartH;
           return (
             <g key={d.month} transform={`translate(${i * (groupW + 4)}, 0)`}>
-              {/* YoY faded bars behind */}
-              <rect x={0} y={chartH - rYoyH} width={barW} height={rYoyH} fill="#3B82F6" opacity={0.2} rx={2}>
-                <title>Residential YoY: {d.residential_yoy.toLocaleString()}</title>
-              </rect>
-              <rect x={barW + 2} y={chartH - cYoyH} width={barW} height={cYoyH} fill="#8B5CF6" opacity={0.2} rx={2}>
-                <title>Commercial YoY: {d.commercial_yoy.toLocaleString()}</title>
-              </rect>
               {/* Current bars */}
               <rect x={0} y={chartH - rH} width={barW} height={rH} fill="#3B82F6" rx={2}>
                 <title>Residential: {d.residential.toLocaleString()}</title>
@@ -234,6 +227,17 @@ function ResComChart({ data }: { data: ResComRow[] }) {
               <rect x={barW + 2} y={chartH - cH} width={barW} height={cH} fill="#8B5CF6" rx={2}>
                 <title>Commercial: {d.commercial.toLocaleString()}</title>
               </rect>
+              {/* YoY target lines — always visible regardless of bar height */}
+              {d.residential_yoy > 0 && (
+                <line x1={0} y1={rYoyY} x2={barW} y2={rYoyY} stroke="#1E3A5F" strokeWidth={2} strokeDasharray="4,2">
+                  <title>Residential YoY: {d.residential_yoy.toLocaleString()}</title>
+                </line>
+              )}
+              {d.commercial_yoy > 0 && (
+                <line x1={barW + 2} y1={cYoyY} x2={barW + 2 + barW} y2={cYoyY} stroke="#4C1D95" strokeWidth={2} strokeDasharray="4,2">
+                  <title>Commercial YoY: {d.commercial_yoy.toLocaleString()}</title>
+                </line>
+              )}
               <text x={groupW / 2} y={chartH + 14} textAnchor="middle" className="text-[9px] fill-gray-400">
                 {monthLabel(d.month)}
               </text>

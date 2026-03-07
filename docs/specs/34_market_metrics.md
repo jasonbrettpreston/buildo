@@ -36,6 +36,7 @@ As an admin, I want a dedicated market metrics page showing business-level const
 - `src/app/admin/market-metrics/page.tsx`
 - `src/app/api/admin/market-metrics/route.ts`
 - `src/lib/market-metrics/helpers.ts`
+- `src/lib/market-metrics/queries.ts`
 - `migrations/034_mv_monthly_permit_stats.sql`
 - `migrations/037_trade_by_usetype.sql`
 - `src/tests/market-metrics.logic.test.ts`
