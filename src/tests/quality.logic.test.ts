@@ -688,6 +688,49 @@ describe('Funnel computation (extracted to lib/admin/funnel)', () => {
       expect(desc.table.length, `${slug} table empty`).toBeGreaterThan(0);
     }
   });
+
+  it('STEP_DESCRIPTIONS fields match actual DB column names', async () => {
+    const { STEP_DESCRIPTIONS } = await import('@/lib/admin/funnel');
+
+    // Verified against migration CREATE TABLE statements
+    const SCHEMA: Record<string, string[]> = {
+      address_points:       ['address_point_id', 'latitude', 'longitude'],
+      parcels:              ['parcel_id', 'lot_size_sqm', 'frontage_m', 'depth_m', 'geom'],
+      building_footprints:  ['source_id', 'footprint_area_sqm', 'max_height_m', 'estimated_stories'],
+      neighbourhoods:       ['neighbourhood_id', 'name', 'avg_household_income', 'geom'],
+      permit_inspections:   ['stage_name', 'inspection_date', 'status'],
+      parcel_buildings:     ['parcel_id', 'building_id', 'match_type', 'confidence'],
+    };
+
+    // Steps whose fields MUST be a subset of their target table columns
+    const FIELD_CHECKS: Record<string, { table: string; fields: string[] }> = {
+      address_points:       { table: 'address_points',      fields: SCHEMA.address_points },
+      parcels:              { table: 'parcels',             fields: SCHEMA.parcels },
+      massing:              { table: 'building_footprints', fields: SCHEMA.building_footprints },
+      neighbourhoods:       { table: 'neighbourhoods',      fields: SCHEMA.neighbourhoods },
+      inspections:          { table: 'permit_inspections',  fields: SCHEMA.permit_inspections },
+      link_massing:         { table: 'parcel_buildings',    fields: SCHEMA.parcel_buildings },
+    };
+
+    for (const [slug, check] of Object.entries(FIELD_CHECKS)) {
+      const desc = STEP_DESCRIPTIONS[slug];
+      expect(desc, `Missing STEP_DESCRIPTIONS for ${slug}`).toBeDefined();
+      expect(desc.table, `${slug} table mismatch`).toBe(check.table);
+      for (const field of desc.fields) {
+        expect(check.fields, `${slug}: field "${field}" not in ${check.table} schema`).toContain(field);
+      }
+    }
+
+    // CQA steps must reference records_meta fields, not nonexistent columns
+    expect(STEP_DESCRIPTIONS.assert_schema.fields).toContain('checks_passed');
+    expect(STEP_DESCRIPTIONS.assert_schema.fields).toContain('checks_failed');
+    expect(STEP_DESCRIPTIONS.assert_data_bounds.fields).toContain('checks_passed');
+    expect(STEP_DESCRIPTIONS.assert_data_bounds.fields).toContain('checks_warned');
+
+    // classify_scope_class must NOT reference nonexistent scope_class column
+    expect(STEP_DESCRIPTIONS.classify_scope_class.fields).toContain('project_type');
+    expect(STEP_DESCRIPTIONS.classify_scope_class.fields).not.toContain('scope_class');
+  });
 });
 
 // ── Volume Anomaly Detection ──────────────────────────────────────────
