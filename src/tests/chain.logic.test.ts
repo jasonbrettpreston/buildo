@@ -308,4 +308,11 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
     expect(source).toContain('records_total');
     expect(source).toContain('records_new');
   });
+
+  it('aborts chain when a step produces 0 new records', () => {
+    const source = chainSource();
+    // Must check records_new === 0 and break the chain
+    expect(source).toContain('0 new records');
+    expect(source).toMatch(/recordsNew === 0[\s\S]{0,300}break/);
+  });
 });

@@ -1106,13 +1106,14 @@ describe('FreshnessTimeline funnel accordion', () => {
     expect(source).not.toContain('onFunnelViewModeChange');
   });
 
-  it('non-funnel steps get basic last-run stats in drill-down', () => {
+  it('non-funnel steps always show status in drill-down (even with no run data)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    // Non-funnel steps show basic stats when info exists but no funnelRow
-    expect(source).toContain('No run data available yet');
+    // Non-funnel drill-down always renders status, even when info is null
+    expect(source).toContain("info?.status ?? 'Never run'");
+    expect(source).toContain('drilldown-status');
     expect(source).toContain('records_total');
     expect(source).toContain('records_new');
   });
@@ -1210,14 +1211,19 @@ describe('FreshnessTimeline mobile-first row layout', () => {
     expect(source).not.toContain('border-dotted');
   });
 
-  it('renders circular percentage badge in telemetry column', () => {
+  it('renders circular percentage badge beside pipeline name', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    // CircularBadge is rendered for funnel steps in the right-aligned telemetry
+    // CircularBadge is rendered in the primary zone (beside step name)
     expect(source).toContain('CircularBadge');
     expect(source).toContain('circular-badge');
+    // Badge should be in primary zone (before Flexible spacer), not telemetry column
+    const primaryZoneEnd = source.indexOf('Flexible spacer');
+    const badgeIdx = source.indexOf('CircularBadge pct=');
+    expect(badgeIdx).toBeGreaterThan(0);
+    expect(badgeIdx).toBeLessThan(primaryZoneEnd);
   });
 
   it('uses mobile-first flex-wrap layout for row controls', () => {
@@ -2194,6 +2200,17 @@ describe('Full-tile status coloring (no more dots)', () => {
     expect(source).toContain('bg-red-50');
   });
 
+  it('completed step with 0 new records shows Stale (red) status', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // getStatusDot must check records_new === 0 and return Stale
+    const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 1500);
+    expect(dotFn).toContain('records_new');
+    expect(dotFn).toMatch(/records_new[\s\S]{0,120}Stale/);
+    expect(dotFn).toMatch(/records_new[\s\S]{0,120}bg-red-50/);
+  });
+
   it('pending steps reset to neutral background (no status color)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
@@ -2264,21 +2281,71 @@ describe('Bold step number badges', () => {
 // ---------------------------------------------------------------------------
 
 describe('Circular percentage badges', () => {
-  it('renders SVG circle/donut for match percentage', () => {
+  it('renders SVG circle/donut for match percentage beside step name', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // Should have an SVG-based circular badge
-    expect(source).toMatch(/CircularBadge|circular-badge|<svg[\s\S]{0,200}circle/);
+    expect(source).toMatch(/CircularBadge|circular-badge/);
+    expect(source).toMatch(/<circle/);
+    // Badge is in primary zone, before the spacer
+    const spacerIdx = source.indexOf('Flexible spacer');
+    const badgeIdx = source.indexOf('CircularBadge pct=');
+    expect(badgeIdx).toBeLessThan(spacerIdx);
   });
 
   it('horizontal bar chart background is removed', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // The old bar chart absolute-positioned background div should be gone
     const tileSection = source.slice(source.indexOf('pipeline-tile'), source.indexOf('Universal drill-down'));
     expect(tileSection).not.toMatch(/absolute\s+inset-y-0[\s\S]{0,80}barColor/);
+  });
+});
+
+describe('Drill-down status always visible', () => {
+  it('universal status bar renders at top of every drill-down', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Status bar appears before Description tile, inside the accordion
+    expect(source).toContain('drilldown-status-bar');
+    expect(source).toContain("info?.status ?? 'Never run'");
+    // Status bar appears before Description
+    const statusBarIdx = source.indexOf('drilldown-status-bar');
+    const descIdx = source.indexOf('Description tile (accordion-tile)');
+    expect(statusBarIdx).toBeLessThan(descIdx);
+  });
+
+  it('status bar shows colored dot + status text + time + duration', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const barStart = source.indexOf('drilldown-status-bar');
+    const barSection = source.slice(barStart, barStart + 2000);
+    // Colored status dot
+    expect(barSection).toContain('bg-green-500');
+    expect(barSection).toContain('bg-red-500');
+    expect(barSection).toContain('bg-blue-500');
+    // Time ago and duration
+    expect(barSection).toContain('timeAgo');
+    expect(barSection).toContain('formatDuration');
+  });
+
+  it('footer status line renders for ALL steps (not just funnel steps)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Footer must be unconditional (drilldown-footer class, no funnelRow guard)
+    expect(source).toContain('drilldown-footer');
+    const footerIdx = source.indexOf('drilldown-footer');
+    const footerSection = source.slice(footerIdx, footerIdx + 3000);
+    // Funnel steps show their existing status (Healthy/Warning/Stale)
+    expect(footerSection).toContain('funnelRow.status');
+    // Non-funnel steps show info.status (Completed/Failed/Running/Never run)
+    expect(footerSection).toMatch(/info\?\.status/);
+    expect(footerSection).toContain('Never run');
+    // Both branches render "Status:" label
+    expect(footerSection.match(/Status:/g)!.length).toBeGreaterThanOrEqual(2);
   });
 });
 

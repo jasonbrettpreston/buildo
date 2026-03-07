@@ -241,6 +241,11 @@ function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { 
   if (!info || !info.last_run_at) return { color: '', label: 'Never run' };
   if (info.status === 'failed') return { color: 'bg-red-50', label: 'Failed' };
 
+  // Completed with 0 new records = Stale (nothing ingested)
+  if (info.status === 'completed' && info.records_new === 0 && (info.records_total ?? 0) > 0) {
+    return { color: 'bg-red-50', label: 'Stale' };
+  }
+
   const hours = (Date.now() - new Date(info.last_run_at).getTime()) / (1000 * 60 * 60);
   if (hours < 24) return { color: 'bg-green-50', label: 'Fresh' };
   if (hours < 72) return { color: 'bg-green-50', label: 'Recent' };
@@ -687,6 +692,11 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           >
                             {entry?.name ?? step.slug}
                           </span>
+
+                          {/* Circular percentage badge — beside step name */}
+                          {funnelRow && (
+                            <CircularBadge pct={funnelRow.matchPct} />
+                          )}
                         </div>
 
                         {/* Flexible spacer */}
@@ -694,10 +704,6 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
 
                         {/* Right-aligned telemetry column */}
                         <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
-                          {/* Circular percentage badge (replaces bar chart) */}
-                          {funnelRow && (
-                            <CircularBadge pct={funnelRow.matchPct} />
-                          )}
 
                           {/* Records summary */}
                           {!isRunning && info?.records_total != null && info.records_total > 0 && (
@@ -815,6 +821,39 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     {/* Universal drill-down accordion panel */}
                     {isExpanded && (
                       <div className="px-3 pb-3 pt-1 border-t border-gray-100 space-y-3">
+                        {/* Universal status summary — always visible for every step */}
+                        <div className="drilldown-status-bar flex flex-wrap items-center gap-4 text-xs py-1">
+                          <span className="flex items-center gap-1.5">
+                            <span className={`inline-block w-2 h-2 rounded-full ${
+                              !info ? 'bg-gray-300'
+                              : info.status === 'completed' ? 'bg-green-500'
+                              : info.status === 'failed' ? 'bg-red-500'
+                              : info.status === 'running' ? 'bg-blue-500'
+                              : 'bg-gray-400'
+                            }`} />
+                            <span className={`font-semibold ${
+                              !info ? 'text-gray-400'
+                              : info.status === 'completed' ? 'text-green-700'
+                              : info.status === 'failed' ? 'text-red-600'
+                              : info.status === 'running' ? 'text-blue-600'
+                              : 'text-gray-500'
+                            }`}>
+                              {info?.status ?? 'Never run'}
+                            </span>
+                          </span>
+                          {info?.last_run_at && (
+                            <span className="text-gray-500">{timeAgo(info.last_run_at)}</span>
+                          )}
+                          {info?.duration_ms != null && (
+                            <span className="text-gray-400 tabular-nums">{formatDuration(info.duration_ms)}</span>
+                          )}
+                          {info?.error_message && (
+                            <span className="text-red-500 text-[10px] truncate max-w-[300px]" title={info.error_message}>
+                              {info.error_message}
+                            </span>
+                          )}
+                        </div>
+
                         {/* Description tile (accordion-tile) */}
                         {(() => {
                           const desc = STEP_DESCRIPTIONS[step.slug];
@@ -850,27 +889,39 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                             <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Last Run</h4>
                             <FunnelLastRunPanel row={funnelRow} />
                           </div>
-                        ) : info ? (
+                        ) : (
                           <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                             <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Last Run</h4>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div className="space-y-1.5">
                                 <div className="flex justify-between">
                                   <span className="text-xs text-gray-600">Status</span>
-                                  <span className={`text-xs font-semibold ${info.status === 'completed' ? 'text-green-700' : info.status === 'failed' ? 'text-red-600' : 'text-gray-500'}`}>
-                                    {info.status ?? 'Unknown'}
+                                  <span className={`drilldown-status text-xs font-semibold ${
+                                    !info ? 'text-gray-400'
+                                    : info.status === 'completed' ? 'text-green-700'
+                                    : info.status === 'failed' ? 'text-red-600'
+                                    : info.status === 'running' ? 'text-blue-600'
+                                    : 'text-gray-500'
+                                  }`}>
+                                    {info?.status ?? 'Never run'}
                                   </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-xs text-gray-600">Duration</span>
-                                  <span className="text-xs font-semibold text-gray-900 tabular-nums">{formatDuration(info.duration_ms)}</span>
+                                  <span className="text-xs font-semibold text-gray-900 tabular-nums">{info ? formatDuration(info.duration_ms) : '—'}</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-xs text-gray-600">Last Run</span>
-                                  <span className="text-xs font-medium text-gray-600">{timeAgo(info.last_run_at)}</span>
+                                  <span className="text-xs font-medium text-gray-600">{info ? timeAgo(info.last_run_at) : 'Never'}</span>
                                 </div>
+                                {info?.error_message && (
+                                  <div className="mt-1">
+                                    <span className="text-xs text-gray-600">Error</span>
+                                    <pre className="text-[9px] text-red-600 whitespace-pre-wrap break-words max-h-24 overflow-y-auto font-mono mt-0.5">{info.error_message}</pre>
+                                  </div>
+                                )}
                               </div>
-                              {(info.records_total != null || info.records_new != null) && (
+                              {info && (info.records_total != null || info.records_new != null) && (
                                 <div className="space-y-1.5">
                                   {info.records_total != null && (
                                     <div className="flex justify-between">
@@ -899,28 +950,43 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                               )}
                             </div>
                           </div>
-                        ) : (
-                          <p className="text-xs text-gray-400 italic">No run data available yet. Trigger a pipeline run to populate.</p>
                         )}
 
                         {/* Footer metadata */}
-                        {funnelRow && (
-                          <div className="pt-2 border-t border-gray-200/60 flex flex-wrap items-center gap-4 text-[10px] text-gray-400">
-                            <span>Schedule: <span className="text-gray-600 font-medium">{funnelRow.cadence}</span></span>
-                            <span>Last run: <span className="text-gray-600 font-medium">{timeAgo(funnelRow.lastUpdated)}</span></span>
-                            {funnelRow.lastUpdated && (
+                        <div className="drilldown-footer pt-2 border-t border-gray-200/60 flex flex-wrap items-center gap-4 text-[10px] text-gray-400">
+                          {funnelRow ? (
+                            <>
+                              <span>Schedule: <span className="text-gray-600 font-medium">{funnelRow.cadence}</span></span>
+                              <span>Last run: <span className="text-gray-600 font-medium">{timeAgo(funnelRow.lastUpdated)}</span></span>
+                              {funnelRow.lastUpdated && (
+                                <span>
+                                  Status:{' '}
+                                  <span className={`font-medium ${
+                                    funnelRow.status === 'healthy' ? 'text-green-600' :
+                                    funnelRow.status === 'warning' ? 'text-yellow-600' : 'text-red-500'
+                                  }`}>
+                                    {funnelRow.status === 'healthy' ? 'Healthy' : funnelRow.status === 'warning' ? 'Warning' : 'Stale'}
+                                  </span>
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <span>Last run: <span className="text-gray-600 font-medium">{info?.last_run_at ? timeAgo(info.last_run_at) : 'Never'}</span></span>
                               <span>
                                 Status:{' '}
                                 <span className={`font-medium ${
-                                  funnelRow.status === 'healthy' ? 'text-green-600' :
-                                  funnelRow.status === 'warning' ? 'text-yellow-600' : 'text-red-500'
+                                  !info || !info.status ? 'text-gray-400' :
+                                  info.status === 'completed' ? 'text-green-600' :
+                                  info.status === 'failed' ? 'text-red-500' :
+                                  info.status === 'running' ? 'text-blue-600' : 'text-gray-500'
                                 }`}>
-                                  {funnelRow.status === 'healthy' ? 'Healthy' : funnelRow.status === 'warning' ? 'Warning' : 'Stale'}
+                                  {info?.status ? info.status.charAt(0).toUpperCase() + info.status.slice(1) : 'Never run'}
                                 </span>
                               </span>
-                            )}
-                          </div>
-                        )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     )}
                     </div>

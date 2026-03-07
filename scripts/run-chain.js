@@ -280,6 +280,14 @@ async function run() {
           [durationMs, stepRunId, recordsTotal, recordsNew, recordsUpdated]
         ).catch(() => {});
       }
+
+      // Abort chain if a step produced 0 new records — downstream steps
+      // (link, classify, snapshot) would process nothing.
+      if (recordsNew === 0 && recordsTotal > 0) {
+        console.log(`${stepLabel} — 0 new records — skipping downstream steps`);
+        failedStep = slug;
+        break;
+      }
     } catch (err) {
       // Tee any captured stdout from the failed step so progress logs aren't lost
       if (err.stdout) process.stdout.write(err.stdout);
