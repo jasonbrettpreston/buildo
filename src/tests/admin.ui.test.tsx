@@ -2281,6 +2281,7 @@ describe('Full-tile status coloring (no more dots)', () => {
     const fnBody = source.slice(fnStart, fnEnd);
     expect(fnBody).toContain("'cancelled'");
     expect(fnBody).toContain("'Cancelled'");
+    expect(fnBody).toContain('bg-gray-50');
   });
 
   it('footer status text includes skipped and cancelled colors', () => {
@@ -2291,6 +2292,27 @@ describe('Full-tile status coloring (no more dots)', () => {
     expect(footerSection).toContain("'skipped'");
     expect(footerSection).toContain("'cancelled'");
     expect(footerSection).toContain('text-orange-500');
+  });
+
+  it('drilldown status-bar indicator dot handles skipped and cancelled', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const statusBar = source.slice(source.indexOf('drilldown-status-bar'), source.indexOf('drilldown-status-bar') + 1500);
+    expect(statusBar).toContain("'skipped'");
+    expect(statusBar).toContain("'cancelled'");
+    expect(statusBar).toContain('bg-orange-400');
+    expect(statusBar).toContain('text-orange-600');
+  });
+
+  it('drilldown-status text handles skipped and cancelled', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const drilldownStatus = source.slice(source.indexOf('drilldown-status text'));
+    expect(drilldownStatus).toContain("'skipped'");
+    expect(drilldownStatus).toContain("'cancelled'");
+    expect(drilldownStatus).toContain('text-orange-600');
   });
 });
 

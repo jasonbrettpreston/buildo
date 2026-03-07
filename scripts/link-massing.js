@@ -301,8 +301,6 @@ async function main() {
       } catch (err) {
         console.error(`  Error inserting batch at offset ${offset}:`, err.message);
       }
-    } else {
-      parcelsLinked += batchParcelsCount;
     }
 
     offset += BATCH_SIZE;

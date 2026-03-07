@@ -835,6 +835,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                               : info.status === 'completed' ? 'bg-green-500'
                               : info.status === 'failed' ? 'bg-red-500'
                               : info.status === 'running' ? 'bg-blue-500'
+                              : info.status === 'skipped' ? 'bg-gray-400'
+                              : info.status === 'cancelled' ? 'bg-orange-400'
                               : 'bg-gray-400'
                             }`} />
                             <span className={`font-semibold ${
@@ -842,6 +844,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                               : info.status === 'completed' ? 'text-green-700'
                               : info.status === 'failed' ? 'text-red-600'
                               : info.status === 'running' ? 'text-blue-600'
+                              : info.status === 'skipped' ? 'text-gray-500'
+                              : info.status === 'cancelled' ? 'text-orange-600'
                               : 'text-gray-500'
                             }`}>
                               {info?.status ?? 'Never run'}
@@ -907,6 +911,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                     : info.status === 'completed' ? 'text-green-700'
                                     : info.status === 'failed' ? 'text-red-600'
                                     : info.status === 'running' ? 'text-blue-600'
+                                    : info.status === 'skipped' ? 'text-gray-500'
+                                    : info.status === 'cancelled' ? 'text-orange-600'
                                     : 'text-gray-500'
                                   }`}>
                                     {info?.status ?? 'Never run'}
