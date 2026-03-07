@@ -1063,21 +1063,26 @@ describe('FreshnessTimeline funnel accordion', () => {
     expect(source).not.toMatch(/funnelRow\s*&&\s*\(\s*<button[^>]*toggleExpand/);
   });
 
-  it('renders data flow description with source → target visualization', () => {
+  it('renders data flow description with source → target visualization and live meta support', () => {
     const timeline = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // FreshnessTimeline delegates to DataFlowTile
+    // FreshnessTimeline delegates to DataFlowTile with pipelineMeta
     expect(timeline).toContain('DataFlowTile');
     expect(timeline).toContain('dbSchemaMap');
+    expect(timeline).toContain('pipelineMeta');
+    expect(timeline).toContain('pipeline_meta');
     expect(timeline).not.toContain('desc.fields');
 
     const panels = fs.readFileSync(
       path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
-    // DataFlowTile uses desc.sources, desc.writes, and live schema
-    expect(panels).toContain('desc.sources');
-    expect(panels).toContain('desc.writes');
+    // DataFlowTile supports live pipeline_meta and static fallback
+    expect(panels).toContain('pipelineMeta');
+    expect(panels).toContain('PipelineMeta');
+    expect(panels).toContain('liveReads');
+    expect(panels).toContain('liveWrites');
+    expect(panels).toContain('Live Meta');
     expect(panels).toContain('Data Flow');
     expect(panels).toContain('Live DB Schema');
   });

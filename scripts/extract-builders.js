@@ -116,6 +116,7 @@ async function run() {
   console.log('\nTop 10 builders by permit count:');
   top.rows.forEach((r, i) => console.log(`  ${i + 1}. ${r.name} (${r.permit_count} permits)`));
   console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: builderMap.size, records_new: inserted, records_updated: 0 }));
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["builder_name"] }, writes: { "entities": ["legal_name", "name_normalized", "permit_count", "last_seen_at"] } }));
 
   await pool.end();
 }

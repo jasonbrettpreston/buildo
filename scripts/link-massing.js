@@ -324,6 +324,7 @@ async function main() {
   console.log(`No match found:         ${noMatch.toLocaleString()}`);
   console.log(`Duration:               ${elapsed}s`);
   console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: parcelsLinked, records_updated: 0 }));
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "parcels": ["id", "centroid_lat", "centroid_lng", "geometry"], "building_footprints": ["id", "geometry", "footprint_area_sqm", "centroid_lat", "centroid_lng"] }, writes: { "parcel_buildings": ["parcel_id", "building_id", "is_primary", "structure_type", "match_type", "confidence", "linked_at"] } }));
 
   await pool.end();
 }

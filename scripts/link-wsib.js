@@ -214,6 +214,7 @@ async function run() {
     console.log(`\nDB Stats: ${s.total} total | ${s.linked} linked (${s.high_conf} high, ${s.med_conf} med)`);
 
     console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: totalUnlinked, records_new: totalLinked, records_updated: 0 }));
+    console.log('PIPELINE_META:' + JSON.stringify({ reads: { "wsib_registry": ["id", "trade_name_normalized", "legal_name_normalized", "linked_entity_id"], "entities": ["id", "name_normalized", "permit_count"] }, writes: { "wsib_registry": ["linked_entity_id", "match_confidence", "matched_at"], "entities": ["is_wsib_registered"] } }));
 
     if (runId) {
       await pool.query(

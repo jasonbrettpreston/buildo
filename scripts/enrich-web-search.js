@@ -444,6 +444,7 @@ async function finalize(runId, startMs, enriched, contactsFound, failed, meta) {
     ).catch(() => {});
   }
 
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "entities": ["id", "legal_name", "primary_phone", "primary_email", "website", "last_enriched_at", "permit_count"], "wsib_registry": ["trade_name", "legal_name", "mailing_address"] }, writes: { "entities": ["primary_phone", "primary_email", "website", "last_enriched_at"], "builder_contacts": ["builder_id", "contact_type", "contact_value", "source"] } }));
   await pool.end();
 }
 

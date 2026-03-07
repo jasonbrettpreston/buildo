@@ -316,6 +316,7 @@ async function main() {
   console.log(`Errors:         ${errors}`);
   console.log(`Duration:       ${elapsed}s`);
   console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: inserted, records_updated: 0 }));
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "City Shapefile": ["SOURCE_ID", "geometry", "AREA_SQ_M", "MAX_HEIGHT", "MIN_HEIGHT", "ELEV_Z", "EST_STORIES"] }, writes: { "building_footprints": ["source_id", "geometry", "footprint_area_sqm", "footprint_area_sqft", "max_height_m", "min_height_m", "elev_z", "estimated_stories", "centroid_lat", "centroid_lng"] } }));
 
   await pool.end();
 

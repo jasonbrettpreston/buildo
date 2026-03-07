@@ -250,6 +250,7 @@ async function run() {
   `);
   const s = stats.rows[0];
   console.log(`\nDB Stats: ${s.total} total | ${s.linked} linked | ${s.with_trade} with trade name | ${s.class_count} classes`);
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "WSIB CSV": ["legal_name", "trade_name", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size"] }, writes: { "wsib_registry": ["legal_name", "trade_name", "legal_name_normalized", "trade_name_normalized", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size", "last_seen_at"] } }));
 
   if (runId) {
     await pool.query(

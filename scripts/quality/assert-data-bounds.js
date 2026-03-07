@@ -374,6 +374,7 @@ async function run() {
 
   // Always emit PIPELINE_SUMMARY so chain orchestrator can capture records_meta
   console.log(`PIPELINE_SUMMARY:${JSON.stringify({ records_total: 0, records_new: 0, records_meta: JSON.parse(meta) })}`);
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["*"], "parcels": ["*"], "address_points": ["*"], "building_footprints": ["*"], "neighbourhoods": ["*"], "coa_applications": ["*"] }, writes: { "pipeline_runs": ["checks_passed", "checks_failed", "checks_warned"] } }));
 
   if (warnings.length > 0) {
     console.log(`\n  Warnings: ${warnings.length}`);

@@ -632,6 +632,7 @@ async function main() {
   console.log('NOTE: Trade classifications are inferred estimates based on permit');
   console.log('metadata, not actual building plans. Rules can be refined over time.');
   console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: permitsWithTrades, records_updated: 0 }));
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"] }, writes: { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"] } }));
 
   await pool.end();
 }

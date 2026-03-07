@@ -717,7 +717,11 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
 
                         {/* Description tile — source → target data flow */}
                         {STEP_DESCRIPTIONS[step.slug] && (
-                          <DataFlowTile desc={STEP_DESCRIPTIONS[step.slug]} dbSchemaMap={dbSchemaMap} />
+                          <DataFlowTile
+                            desc={STEP_DESCRIPTIONS[step.slug]}
+                            dbSchemaMap={dbSchemaMap}
+                            pipelineMeta={(info?.records_meta as Record<string, unknown>)?.pipeline_meta as import('./funnel/FunnelPanels').PipelineMeta | undefined}
+                          />
                         )}
 
                         {/* All Time tile (funnel sources only) */}

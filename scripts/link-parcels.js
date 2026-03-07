@@ -281,6 +281,7 @@ async function main() {
   console.log(`No match found:       ${noMatch.toLocaleString()}`);
   console.log(`Duration:             ${elapsed}s`);
   console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: totalLinked, records_updated: 0 }));
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"], "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"] }, writes: { "permit_parcels": ["permit_num", "revision_num", "parcel_id", "match_type", "confidence", "linked_at"] } }));
 
   await pool.end();
 }

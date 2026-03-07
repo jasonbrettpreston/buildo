@@ -349,4 +349,50 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
     // Abort only when BOTH are 0 — updated records still warrant downstream work
     expect(source).toMatch(/recordsNew === 0[\s\S]{0,100}recordsUpdated/);
   });
+
+  it('parses PIPELINE_META from step output and merges into records_meta', () => {
+    const source = chainSource();
+    expect(source).toContain('PIPELINE_META');
+    expect(source).toContain('pipeline_meta');
+    // Must merge into recordsMeta, not replace it
+    expect(source).toContain('...(recordsMeta || {})');
+  });
+});
+
+describe('PIPELINE_META convention', () => {
+  const scriptsDir = path.resolve(__dirname, '../../scripts');
+
+  // All pipeline scripts that perform DB operations should emit PIPELINE_META
+  const SCRIPTS_WITH_META = [
+    'load-permits.js',
+    'load-coa.js',
+    'load-address-points.js',
+    'load-parcels.js',
+    'load-massing.js',
+    'load-neighbourhoods.js',
+    'load-wsib.js',
+    'extract-builders.js',
+    'classify-permits.js',
+    'classify-scope.js',
+    'geocode-permits.js',
+    'link-parcels.js',
+    'link-neighbourhoods.js',
+    'link-massing.js',
+    'link-similar.js',
+    'link-wsib.js',
+    'link-coa.js',
+    'compute-centroids.js',
+    'create-pre-permits.js',
+    'refresh-snapshot.js',
+    'enrich-web-search.js',
+    'quality/assert-schema.js',
+    'quality/assert-data-bounds.js',
+  ];
+
+  for (const script of SCRIPTS_WITH_META) {
+    it(`${script} emits PIPELINE_META line`, () => {
+      const source = fs.readFileSync(path.join(scriptsDir, script), 'utf-8');
+      expect(source).toContain('PIPELINE_META:');
+    });
+  }
 });

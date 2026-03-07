@@ -581,6 +581,7 @@ async function main() {
     console.log(`  ${tag.padEnd(30)} ${String(count).padStart(8)}  (${pct}%)`);
   }
   console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: total, records_new: processed, records_updated: propagated }));
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "current_use", "proposed_use", "storeys", "housing_units", "dwelling_units_created", "scope_classified_at", "last_seen_at"] }, writes: { "permits": ["project_type", "scope_tags", "scope_classified_at", "scope_source"] } }));
 
   await pool.end();
 }

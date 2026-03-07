@@ -321,6 +321,7 @@ async function run() {
 
   // Always emit PIPELINE_SUMMARY so chain orchestrator can capture records_meta
   console.log(`PIPELINE_SUMMARY:${JSON.stringify({ records_total: 0, records_new: 0, records_meta: JSON.parse(meta) })}`);
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["metadata"] }, writes: { "pipeline_runs": ["checks_passed", "checks_failed"] } }));
 
   console.log(`\n=== Schema Validation: ${status.toUpperCase()} (${(durationMs / 1000).toFixed(1)}s) ===\n`);
 

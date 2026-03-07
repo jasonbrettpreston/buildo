@@ -123,6 +123,7 @@ async function main() {
   console.log(`Failed:            ${failed.toLocaleString()}`);
   console.log(`Duration:          ${elapsed}s`);
   console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: computed, records_updated: 0 }));
+  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "parcels": ["id", "geometry"] }, writes: { "parcels": ["centroid_lat", "centroid_lng"] } }));
 
   await pool.end();
 }

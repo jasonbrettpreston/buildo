@@ -219,35 +219,84 @@ function ExternalBadge({ label }: { label: string }) {
   );
 }
 
-export function DataFlowTile({ desc, dbSchemaMap }: {
-  desc: StepDescription; dbSchemaMap?: Record<string, string[]>;
+/** Pipeline metadata from script-emitted PIPELINE_META stdout line */
+export interface PipelineMeta {
+  reads?: Record<string, string[]>;
+  writes?: Record<string, string[]>;
+}
+
+export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
+  desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null;
 }) {
+  // When live pipeline_meta is available, derive sources/writes from it.
+  // Otherwise fall back to static desc.sources/desc.writes (bootstrap defaults).
+  const liveReads = pipelineMeta?.reads;
+  const liveWrites = pipelineMeta?.writes;
+  const hasLiveMeta = !!(liveReads || liveWrites);
+
+  // Sources: live reads keys, or static fallback
+  const sources = hasLiveMeta
+    ? Object.keys(liveReads ?? {})
+    : desc.sources;
+
+  // Writes: live writes values (flattened), or static fallback
+  const writeCols = hasLiveMeta
+    ? Object.values(liveWrites ?? {}).flat()
+    : desc.writes ?? null;
+
+  // Read columns: live reads values per source table
+  const readColsByTable = liveReads ?? null;
+
   const targetCols = dbSchemaMap?.[desc.table] ?? [];
-  const writesSet = desc.writes ? new Set(desc.writes) : null;
-  const isSelfRef = desc.sources.length === 1 && desc.sources[0] === desc.table;
+  const writesSet = writeCols ? new Set(writeCols) : null;
+  const isSelfRef = sources.length === 1 && sources[0] === desc.table;
   const isExternal = (s: string) => !dbSchemaMap?.[s];
 
   return (
     <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-      <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Data Flow</h4>
+      <div className="flex items-center gap-2 mb-2">
+        <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Data Flow</h4>
+        {hasLiveMeta && (
+          <span className="text-[8px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded px-1 py-0.5">Live Meta</span>
+        )}
+      </div>
       <p className="text-xs text-gray-600 mb-3">{desc.summary}</p>
 
       {isSelfRef && targetCols.length > 0 ? (
-        <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Reads & Writes" />
+        <div>
+          <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Reads & Writes" />
+          {readColsByTable?.[desc.table] && (
+            <div className="mt-2 px-2.5">
+              <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Reads</p>
+              <div className="flex flex-wrap gap-1">
+                {readColsByTable[desc.table].map((c) => (
+                  <span key={c} className="text-[10px] font-mono text-blue-600 bg-blue-50 border border-blue-100 rounded px-1 py-0.5">{c}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="flex flex-col md:flex-row items-stretch gap-2">
-          <div className={`flex flex-col gap-2 ${desc.sources.length > 0 ? 'flex-1 min-w-0' : ''}`}>
-            {desc.sources.map((s) => (
+          <div className={`flex flex-col gap-2 ${sources.length > 0 ? 'flex-1 min-w-0' : ''}`}>
+            {sources.map((s) => (
               isExternal(s)
                 ? <div key={s}><ExternalBadge label={s} /></div>
-                : <div key={s}><TableCard tableName={s} cols={dbSchemaMap?.[s] ?? []} highlights={null} label="Source" /></div>
+                : <div key={s}>
+                    <TableCard
+                      tableName={s}
+                      cols={readColsByTable?.[s] ?? dbSchemaMap?.[s] ?? []}
+                      highlights={readColsByTable?.[s] ? new Set(readColsByTable[s]) : null}
+                      label="Reads"
+                    />
+                  </div>
             ))}
           </div>
           <div className="flex items-center justify-center py-1 md:py-0 md:px-1">
             <span className="text-gray-300 text-lg font-bold rotate-90 md:rotate-0">{'\u2192'}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Target" />
+            <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Writes" />
           </div>
         </div>
       )}

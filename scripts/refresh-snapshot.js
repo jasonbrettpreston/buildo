@@ -341,6 +341,7 @@ async function run() {
     console.log(`  Scope Tags: ${r.permits_with_scope_tags} total, ${r.permits_with_detailed_tags} detailed`);
     console.log('\nDone!');
     console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: total_permits, records_new: 1, records_updated: 0 }));
+    console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"] }, writes: { "data_quality_snapshots": ["*"] } }));
   } finally {
     client.release();
     await pool.end();

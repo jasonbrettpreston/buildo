@@ -268,6 +268,16 @@ async function run() {
         } catch { /* malformed summary — ignore */ }
       }
 
+      // Parse PIPELINE_META line for self-documented reads/writes
+      const metaMatch = output.match(/PIPELINE_META:(.+)/);
+      if (metaMatch) {
+        try {
+          const pipelineMeta = JSON.parse(metaMatch[1]);
+          // Merge into records_meta under pipeline_meta key
+          recordsMeta = { ...(recordsMeta || {}), pipeline_meta: pipelineMeta };
+        } catch { /* malformed meta — ignore */ }
+      }
+
       const durationMs = Date.now() - stepStart;
       console.log(`${stepLabel} — completed (${(durationMs / 1000).toFixed(1)}s)\n`);
 

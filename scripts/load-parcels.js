@@ -423,6 +423,7 @@ async function main() {
       console.log(`Errors:        ${errors}`);
       console.log(`Duration:      ${elapsed}s`);
       console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: inserted, records_updated: 0 }));
+      console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["ARN", "FEAT_TYPE", "ADDR_NUM", "LINEAR_NAME_FULL", "AREA", "SHAPE_Area", "geometry"] }, writes: { "parcels": ["parcel_id", "feature_type", "address_number", "linear_name_full", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "stated_area_raw", "lot_size_sqm", "lot_size_sqft", "frontage_m", "frontage_ft", "depth_m", "depth_ft", "geometry", "date_effective", "is_irregular", "geom"] } }));
 
       await pool.end();
       resolve();

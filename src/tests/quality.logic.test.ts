@@ -728,12 +728,14 @@ describe('Funnel computation (extracted to lib/admin/funnel)', () => {
     expect(source).toContain('db_schema_map');
   });
 
-  it('FreshnessTimeline passes dbSchemaMap to DataFlowTile', () => {
+  it('FreshnessTimeline passes dbSchemaMap and pipelineMeta to DataFlowTile', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     expect(source).toContain('dbSchemaMap');
     expect(source).toContain('DataFlowTile');
+    expect(source).toContain('pipelineMeta');
+    expect(source).toContain('pipeline_meta');
   });
 });
 

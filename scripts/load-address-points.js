@@ -208,6 +208,7 @@ async function main() {
       console.log(`Errors:        ${errors}`);
       console.log(`Duration:      ${elapsed}s`);
       console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: inserted, records_updated: 0 }));
+      console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["ADDRESS_POINT_ID", "LONGITUDE", "LATITUDE"] }, writes: { "address_points": ["address_point_id", "latitude", "longitude"] } }));
 
       await pool.end();
       resolve();
