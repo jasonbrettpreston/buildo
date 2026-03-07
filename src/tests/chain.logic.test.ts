@@ -309,10 +309,19 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
     expect(source).toContain('records_new');
   });
 
-  it('aborts chain when a step produces 0 new records', () => {
+  it('aborts chain only for primary ingest gate steps (permits, coa)', () => {
     const source = chainSource();
-    // Must check records_new === 0 and break the chain
+    // Chain abort is limited to CHAIN_GATES — not every step
+    expect(source).toContain('CHAIN_GATES');
+    expect(source).toContain("permits: 'permits'");
+    expect(source).toContain("coa: 'coa'");
     expect(source).toContain('0 new records');
     expect(source).toMatch(/recordsNew === 0[\s\S]{0,300}break/);
+  });
+
+  it('checks both records_new and records_updated before aborting', () => {
+    const source = chainSource();
+    // Abort only when BOTH are 0 — updated records still warrant downstream work
+    expect(source).toMatch(/recordsNew === 0[\s\S]{0,100}recordsUpdated/);
   });
 });

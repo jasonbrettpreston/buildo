@@ -2200,15 +2200,25 @@ describe('Full-tile status coloring (no more dots)', () => {
     expect(source).toContain('bg-red-50');
   });
 
-  it('completed step with 0 new records shows Stale (red) status', () => {
+  it('completed step with 0 new + 0 updated records shows Stale (red) status', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // getStatusDot must check records_new === 0 and return Stale
+    // getStatusDot must check records_new === 0 AND records_updated === 0 → Stale
     const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 1500);
     expect(dotFn).toContain('records_new');
-    expect(dotFn).toMatch(/records_new[\s\S]{0,120}Stale/);
-    expect(dotFn).toMatch(/records_new[\s\S]{0,120}bg-red-50/);
+    expect(dotFn).toContain('records_updated');
+    expect(dotFn).toMatch(/records_new[\s\S]{0,200}Stale/);
+    expect(dotFn).toMatch(/records_new[\s\S]{0,200}bg-red-50/);
+  });
+
+  it('steps that do not track records (quality gates) skip stale check', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // records_new must be != null (not just === 0) — null means no tracking
+    const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 1500);
+    expect(dotFn).toContain('records_new != null');
   });
 
   it('pending steps reset to neutral background (no status color)', () => {

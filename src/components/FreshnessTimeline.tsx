@@ -241,8 +241,10 @@ function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { 
   if (!info || !info.last_run_at) return { color: '', label: 'Never run' };
   if (info.status === 'failed') return { color: 'bg-red-50', label: 'Failed' };
 
-  // Completed with 0 new records = Stale (nothing ingested)
-  if (info.status === 'completed' && info.records_new === 0 && (info.records_total ?? 0) > 0) {
+  // Completed with zero work (0 new + 0 updated) = Stale.
+  // records_new must be explicitly 0 (not null) — null means the step doesn't track records
+  // (e.g. quality gates), so we skip them and fall through to time-based freshness.
+  if (info.status === 'completed' && info.records_new != null && info.records_new === 0 && (info.records_updated ?? 0) === 0) {
     return { color: 'bg-red-50', label: 'Stale' };
   }
 

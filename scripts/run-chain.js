@@ -281,9 +281,12 @@ async function run() {
         ).catch(() => {});
       }
 
-      // Abort chain if a step produced 0 new records — downstream steps
-      // (link, classify, snapshot) would process nothing.
-      if (recordsNew === 0 && recordsTotal > 0) {
+      // Abort chain when the primary ingest step produced zero changes.
+      // Link/classify steps legitimately yield 0 when everything is already
+      // processed — only the data-loading gate step should trigger an abort.
+      const CHAIN_GATES = { permits: 'permits', coa: 'coa' };
+      const gate = CHAIN_GATES[chainId];
+      if (gate && slug === gate && recordsNew === 0 && (recordsUpdated ?? 0) === 0) {
         console.log(`${stepLabel} — 0 new records — skipping downstream steps`);
         failedStep = slug;
         break;
