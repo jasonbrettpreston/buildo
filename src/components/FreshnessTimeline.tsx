@@ -236,17 +236,18 @@ export function formatDuration(ms: number | null | undefined): string {
   return remMins > 0 ? `${hrs}h ${remMins}m` : `${hrs}h`;
 }
 
-function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { color: string; label: string } {
+function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean, staleExempt?: boolean): { color: string; label: string } {
   if (isRunning) return { color: 'bg-blue-50 tile-flash-running', label: 'Running' };
   if (!info || !info.last_run_at) return { color: '', label: 'Never run' };
   if (info.status === 'failed') return { color: 'bg-red-50', label: 'Failed' };
   if (info.status === 'skipped') return { color: 'bg-gray-50', label: 'Skipped' };
   if (info.status === 'cancelled') return { color: 'bg-gray-50', label: 'Cancelled' };
 
-  // Completed with zero work (0 new + 0 updated) = Stale.
+  // Completed with zero work (0 new + 0 updated) = Stale — but only for ingest steps.
+  // Link, classify, quality, and snapshot steps legitimately return 0 on quiet days.
   // records_new must be explicitly 0 (not null) — null means the step doesn't track records
   // (e.g. quality gates), so we skip them and fall through to time-based freshness.
-  if (info.status === 'completed' && info.records_new != null && info.records_new === 0 && (info.records_updated ?? 0) === 0) {
+  if (!staleExempt && info.status === 'completed' && info.records_new != null && info.records_new === 0 && (info.records_updated ?? 0) === 0) {
     return { color: 'bg-red-50', label: 'Stale' };
   }
 
@@ -370,6 +371,22 @@ function FunnelAllTimePanel({ row }: { row: FunnelRowData }) {
   );
 }
 
+const INTERSECTION_LABELS: Record<string, { processedLabel: string; matchedLabel: string }> = {
+  geocode_permits:      { processedLabel: 'To Geocode',   matchedLabel: 'Geocoded' },
+  link_parcels:         { processedLabel: 'Unlinked',     matchedLabel: 'Linked' },
+  link_neighbourhoods:  { processedLabel: 'Unlinked',     matchedLabel: 'Linked' },
+  link_massing:         { processedLabel: 'Parcels',      matchedLabel: 'Linked' },
+  link_coa:             { processedLabel: 'Applications', matchedLabel: 'Linked' },
+  link_wsib:            { processedLabel: 'Unlinked',     matchedLabel: 'Linked' },
+  link_similar:         { processedLabel: 'Companions',   matchedLabel: 'Propagated' },
+  classify_scope_class: { processedLabel: 'To Classify',  matchedLabel: 'Classified' },
+  classify_scope_tags:  { processedLabel: 'To Tag',       matchedLabel: 'Tagged' },
+  classify_permits:     { processedLabel: 'To Classify',  matchedLabel: 'Classified' },
+  builders:             { processedLabel: 'Permits',      matchedLabel: 'Extracted' },
+  permits:              { processedLabel: 'Fetched',      matchedLabel: 'New/Changed' },
+  coa:                  { processedLabel: 'Fetched',      matchedLabel: 'New/Changed' },
+};
+
 function FunnelLastRunPanel({ row }: { row: FunnelRowData }) {
   const meta = row.lastRunMeta;
   if (!meta && row.lastRunRecordsTotal == null) {
@@ -382,6 +399,7 @@ function FunnelLastRunPanel({ row }: { row: FunnelRowData }) {
   const websitesFound = (meta?.websites_found as number) ?? null;
   const extractedFields = (meta?.extracted_fields as Record<string, number>) ?? null;
   const runPct = processed > 0 ? Math.round((matched / processed) * 1000) / 10 : 0;
+  const labels = INTERSECTION_LABELS[row.config.statusSlug] ?? { processedLabel: 'Processed', matchedLabel: 'Matched' };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -399,8 +417,8 @@ function FunnelLastRunPanel({ row }: { row: FunnelRowData }) {
           </>
         ) : (
           <>
-            <MetricRow label="Processed" value={processed.toLocaleString()} />
-            <MetricRow label="Matched" value={`${matched.toLocaleString()} (${runPct}%)`} className="text-green-700" />
+            <MetricRow label={labels.processedLabel} value={processed.toLocaleString()} />
+            <MetricRow label={labels.matchedLabel} value={`${matched.toLocaleString()} (${runPct}%)`} className="text-green-700" />
             {failed > 0 && (
               <MetricRow label="Failed" value={failed.toLocaleString()} className="text-red-500" />
             )}
@@ -457,7 +475,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
       next.set(slug, currentlyDisabled); // currentlyDisabled = desired new enabled state
       return next;
     });
-    // Clear optimistic entry after 3s (API fetchData should have refreshed by then)
+    // Clear optimistic entry after 8s — must survive cold-start API latency + two poll cycles (5s each)
     const prev = optimisticTimerRef.current.get(slug);
     if (prev) clearTimeout(prev);
     optimisticTimerRef.current.set(
@@ -469,7 +487,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
           return n;
         });
         optimisticTimerRef.current.delete(slug);
-      }, 3000)
+      }, 8000)
     );
     onToggle?.(slug, currentlyDisabled);
   };
@@ -639,11 +657,14 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const stepRanAt = info?.last_run_at ? new Date(info.last_run_at).getTime() : 0;
                   const stepDoneThisRun = (info?.status === 'completed' || info?.status === 'failed') && stepRanAt >= chainStartedAt;
                   const isPending = isChainRunning && !isRunning && !stepDoneThisRun;
+                  const STALE_EXEMPT_GROUPS = new Set(['link', 'classify', 'quality', 'snapshot']);
+                  const stepGroup = PIPELINE_REGISTRY[step.slug]?.group;
+                  const staleExempt = stepGroup ? STALE_EXEMPT_GROUPS.has(stepGroup) : false;
                   const dot = isDisabled
                     ? { color: '', label: 'Disabled' }
                     : isPending
                     ? { color: '', label: 'Pending' }
-                    : getStatusDot(info, isRunning);
+                    : getStatusDot(info, isRunning, staleExempt);
                   const stepNum = stepNumbers[i];
                   const isRoot = step.indent === 0;
 
@@ -958,6 +979,25 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                       <span className="text-xs font-semibold text-blue-700 tabular-nums">{info.records_updated.toLocaleString()}</span>
                                     </div>
                                   )}
+                                </div>
+                              )}
+                              {/* records_meta — CQA check results and other structured metadata */}
+                              {info?.records_meta && typeof info.records_meta === 'object' && (
+                                <div className="space-y-1.5">
+                                  {Object.entries(info.records_meta as Record<string, unknown>)
+                                    .filter(([, v]) => v != null && v !== undefined)
+                                    .map(([key, value]) => (
+                                      <div key={key} className="flex justify-between">
+                                        <span className="text-xs text-gray-600">{key.replace(/_/g, ' ')}</span>
+                                        <span className={`text-xs font-semibold tabular-nums ${
+                                          key.includes('failed') && (value as number) > 0 ? 'text-red-600'
+                                          : key.includes('warned') && (value as number) > 0 ? 'text-yellow-600'
+                                          : 'text-gray-900'
+                                        }`}>
+                                          {Array.isArray(value) ? (value as string[]).length.toString() : String(value)}
+                                        </span>
+                                      </div>
+                                    ))}
                                 </div>
                               )}
                             </div>

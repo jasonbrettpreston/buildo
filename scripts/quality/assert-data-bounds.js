@@ -354,13 +354,21 @@ async function run() {
   const status = hasErrors ? 'failed' : 'completed';
   const allMessages = [...errors, ...warnings.map((w) => `WARN: ${w}`)];
   const errorMsg = allMessages.length > 0 ? allMessages.join('; ') : null;
+  const meta = JSON.stringify({
+    checks_passed: allMessages.length === 0 ? 'all' : undefined,
+    checks_failed: errors.length,
+    checks_warned: warnings.length,
+    errors: errors.length > 0 ? errors : undefined,
+    warnings: warnings.length > 0 ? warnings : undefined,
+  });
 
   if (runId) {
     await pool.query(
       `UPDATE pipeline_runs
-       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3
+       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,
+           records_meta = $5
        WHERE id = $4`,
-      [status, durationMs, errorMsg, runId]
+      [status, durationMs, errorMsg, runId, meta]
     ).catch(() => {});
   }
 

@@ -303,13 +303,19 @@ async function run() {
   const durationMs = Date.now() - startMs;
   const status = allPassed ? 'completed' : 'failed';
   const errorMsg = errors.length > 0 ? errors.join('; ') : null;
+  const meta = JSON.stringify({
+    checks_passed: errors.length === 0 ? 'all' : undefined,
+    checks_failed: errors.length,
+    errors: errors.length > 0 ? errors : undefined,
+  });
 
   if (runId) {
     await pool.query(
       `UPDATE pipeline_runs
-       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3
+       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,
+           records_meta = $5
        WHERE id = $4`,
-      [status, durationMs, errorMsg, runId]
+      [status, durationMs, errorMsg, runId, meta]
     ).catch(() => {});
   }
 

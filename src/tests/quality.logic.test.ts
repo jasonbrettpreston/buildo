@@ -1,5 +1,7 @@
 // Logic Layer Tests - Data quality score calculations and metric extraction
 // SPEC LINK: docs/specs/28_data_quality_dashboard.md
+import fs from 'fs';
+import path from 'path';
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   calculateEffectivenessScore,
@@ -563,6 +565,29 @@ describe('Pipeline Chains', () => {
   });
 });
 
+// ── WF5 Audit Fix: CQA scripts write records_meta ────────────────────
+
+describe('CQA scripts write records_meta to pipeline_runs', () => {
+  it('assert-schema.js writes records_meta with checks_passed and checks_failed', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-schema.js'), 'utf-8'
+    );
+    expect(source).toContain('records_meta');
+    expect(source).toContain('checks_passed');
+    expect(source).toContain('checks_failed');
+  });
+
+  it('assert-data-bounds.js writes records_meta with checks_passed, checks_failed, and checks_warned', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'), 'utf-8'
+    );
+    expect(source).toContain('records_meta');
+    expect(source).toContain('checks_passed');
+    expect(source).toContain('checks_failed');
+    expect(source).toContain('checks_warned');
+  });
+});
+
 // ── trendDelta() ─────────────────────────────────────────────────────
 
 describe('trendDelta()', () => {
@@ -959,6 +984,102 @@ describe('Snapshot includes null tracking and violation fields', () => {
     const snapshot = createMockDataQualitySnapshot();
     expect(snapshot.sla_permits_ingestion_hours).not.toBeNull();
     expect(snapshot.sla_permits_ingestion_hours!).toBeGreaterThan(0);
+  });
+});
+
+// ── WF5 Audit Fix: yieldNullRates plumbing ─────────────────────────────
+
+describe('computeRowData returns non-empty yieldNullRates for funnel sources', () => {
+  let FUNNEL_SOURCES: { id: string; name: string; statusSlug: string; triggerSlug: string; yieldFields: string[] }[];
+  let computeRowData: typeof import('@/lib/admin/funnel').computeRowData;
+
+  beforeAll(async () => {
+    const mod = await import('@/lib/admin/funnel');
+    FUNNEL_SOURCES = mod.FUNNEL_SOURCES;
+    computeRowData = mod.computeRowData;
+  });
+
+  const makeStats = () => ({
+    wsib_total: 100, wsib_linked: 50, wsib_lead_pool: 30, wsib_with_trade: 40,
+    address_points_total: 500000, parcels_total: 800000, building_footprints_total: 600000,
+    parcels_with_massing: 200000, permits_with_massing: 50000, neighbourhoods_total: 158,
+    permits_propagated: 75000,
+    pipeline_last_run: {
+      permits: {
+        last_run_at: new Date().toISOString(),
+        status: 'completed' as const, records_total: 237000, records_new: 100, records_updated: null, records_meta: null,
+      },
+    },
+    pipeline_schedules: null,
+  });
+
+  const makeSnapshot = () => createMockDataQualitySnapshot({
+    active_permits: 237000,
+    permits_with_parcel: 200000,
+    permits_with_neighbourhood: 210000,
+    permits_with_trades: 220000,
+    permits_with_scope: 180000,
+    permits_with_detailed_tags: 160000,
+  });
+
+  it('parcels yields non-empty yieldNullRates with parcel_link field', () => {
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'parcels')!;
+    const row = computeRowData(config, makeStats(), makeSnapshot());
+    expect(row.yieldNullRates.length).toBeGreaterThan(0);
+    expect(row.yieldNullRates.some(r => r.field === 'parcel_link')).toBe(true);
+  });
+
+  it('neighbourhoods yields non-empty yieldNullRates with neighbourhood_link field', () => {
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'neighbourhoods')!;
+    const row = computeRowData(config, makeStats(), makeSnapshot());
+    expect(row.yieldNullRates.length).toBeGreaterThan(0);
+    expect(row.yieldNullRates.some(r => r.field === 'neighbourhood_id')).toBe(true);
+  });
+
+  it('massing yields non-empty yieldNullRates with massing_link field', () => {
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'massing')!;
+    const row = computeRowData(config, makeStats(), makeSnapshot());
+    expect(row.yieldNullRates.length).toBeGreaterThan(0);
+    expect(row.yieldNullRates.some(r => r.field === 'massing_link')).toBe(true);
+  });
+
+  it('scope_class yields non-empty yieldNullRates with unclassified field', () => {
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'scope_class')!;
+    const row = computeRowData(config, makeStats(), makeSnapshot());
+    expect(row.yieldNullRates.length).toBeGreaterThan(0);
+    expect(row.yieldNullRates.some(r => r.field === 'scope_class')).toBe(true);
+  });
+
+  it('scope_tags yields non-empty yieldNullRates with untagged field', () => {
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'scope_tags')!;
+    const row = computeRowData(config, makeStats(), makeSnapshot());
+    expect(row.yieldNullRates.length).toBeGreaterThan(0);
+    expect(row.yieldNullRates.some(r => r.field === 'scope_tags')).toBe(true);
+  });
+
+  it('trades_residential yields non-empty yieldNullRates', () => {
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'trades_residential')!;
+    const row = computeRowData(config, makeStats(), makeSnapshot());
+    expect(row.yieldNullRates.length).toBeGreaterThan(0);
+  });
+
+  it('trades_commercial yields non-empty yieldNullRates', () => {
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'trades_commercial')!;
+    const row = computeRowData(config, makeStats(), makeSnapshot());
+    expect(row.yieldNullRates.length).toBeGreaterThan(0);
+  });
+
+  it('yieldNullRates pct values are between 0 and 100', () => {
+    const stats = makeStats();
+    const snapshot = makeSnapshot();
+    for (const sourceId of ['parcels', 'neighbourhoods', 'massing', 'scope_class', 'scope_tags']) {
+      const config = FUNNEL_SOURCES.find((s) => s.id === sourceId)!;
+      const row = computeRowData(config, stats, snapshot);
+      for (const nr of row.yieldNullRates) {
+        expect(nr.pct).toBeGreaterThanOrEqual(0);
+        expect(nr.pct).toBeLessThanOrEqual(100);
+      }
+    }
   });
 });
 

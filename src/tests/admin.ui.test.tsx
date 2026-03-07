@@ -2488,3 +2488,159 @@ describe('Hover-hidden controls on desktop', () => {
     expect(runAllBlock).not.toContain('md:opacity-0');
   });
 });
+
+// ---------------------------------------------------------------------------
+// WF5 Audit Fix: Stale Exemption for link/classify/quality/snapshot groups
+// ---------------------------------------------------------------------------
+
+describe('Stale exemption for non-ingest groups', () => {
+  it('getStatusDot accepts staleExempt parameter', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const fnStart = source.indexOf('function getStatusDot');
+    const fnSig = source.slice(fnStart, source.indexOf('{', fnStart));
+    expect(fnSig).toContain('staleExempt');
+  });
+
+  it('staleExempt=true skips zero-records Stale check', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const fnStart = source.indexOf('function getStatusDot');
+    const fnBody = source.slice(fnStart, fnStart + 1500);
+    // The Stale check must be guarded by !staleExempt
+    expect(fnBody).toMatch(/!staleExempt[\s\S]{0,100}records_new/);
+  });
+
+  it('STALE_EXEMPT_GROUPS includes link, classify, quality, snapshot', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain("'link'");
+    expect(source).toContain("'classify'");
+    expect(source).toContain("'quality'");
+    expect(source).toContain("'snapshot'");
+    expect(source).toContain('STALE_EXEMPT_GROUPS');
+  });
+
+  it('staleExempt is derived from PIPELINE_REGISTRY group at call site', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Call site should derive staleExempt from stepGroup
+    expect(source).toMatch(/STALE_EXEMPT_GROUPS\.has\(stepGroup\)/);
+    expect(source).toMatch(/getStatusDot\(info,\s*isRunning,\s*staleExempt\)/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF5 Audit Fix: Optimistic Timer Timeout
+// ---------------------------------------------------------------------------
+
+describe('Optimistic timer timeout', () => {
+  it('optimistic timer uses >= 8000ms to survive cold-start latency', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Find the setTimeout in optimistic timer context
+    const timerMatch = source.match(/optimistic[\s\S]{0,500}},\s*(\d+)\)/);
+    expect(timerMatch).not.toBeNull();
+    const timeoutMs = parseInt(timerMatch![1], 10);
+    expect(timeoutMs).toBeGreaterThanOrEqual(8000);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF5 Audit Fix: Contextual Intersection Labels
+// ---------------------------------------------------------------------------
+
+describe('Contextual intersection labels (INTERSECTION_LABELS)', () => {
+  it('INTERSECTION_LABELS constant exists with processedLabel and matchedLabel', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain('INTERSECTION_LABELS');
+    expect(source).toContain('processedLabel');
+    expect(source).toContain('matchedLabel');
+  });
+
+  it('geocode_permits has "To Geocode" / "Geocoded" labels', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const labelsStart = source.indexOf('INTERSECTION_LABELS');
+    const labelsBlock = source.slice(labelsStart, labelsStart + 2000);
+    expect(labelsBlock).toContain('geocode_permits');
+    expect(labelsBlock).toContain('To Geocode');
+    expect(labelsBlock).toContain('Geocoded');
+  });
+
+  it('link_parcels has "Unlinked" / "Linked" labels', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const labelsStart = source.indexOf('INTERSECTION_LABELS');
+    const labelsBlock = source.slice(labelsStart, labelsStart + 2000);
+    expect(labelsBlock).toContain('link_parcels');
+    expect(labelsBlock).toContain('Unlinked');
+    expect(labelsBlock).toContain('Linked');
+  });
+
+  it('classify_permits has "To Classify" / "Classified" labels', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const labelsStart = source.indexOf('INTERSECTION_LABELS');
+    const labelsBlock = source.slice(labelsStart, labelsStart + 2000);
+    expect(labelsBlock).toContain('classify_permits');
+    expect(labelsBlock).toContain('To Classify');
+    expect(labelsBlock).toContain('Classified');
+  });
+
+  it('FunnelLastRunPanel uses INTERSECTION_LABELS via statusSlug lookup', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // The panel should look up labels from statusSlug
+    expect(source).toMatch(/INTERSECTION_LABELS\[[\s\S]{0,50}statusSlug/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF5 Audit Fix: CQA records_meta in non-funnel drill-down
+// ---------------------------------------------------------------------------
+
+describe('CQA records_meta rendering in non-funnel panel', () => {
+  it('non-funnel Last Run panel renders records_meta key/value pairs', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // records_meta should be rendered in the drill-down
+    expect(source).toMatch(/records_meta[\s\S]{0,200}Object\.entries/);
+  });
+
+  it('failed check counts render in red', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Keys containing 'failed' should get red text
+    expect(source).toMatch(/failed[\s\S]{0,100}text-red-600/);
+  });
+
+  it('warned check counts render in yellow', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Keys containing 'warned' should get yellow text
+    expect(source).toMatch(/warned[\s\S]{0,100}text-yellow-600/);
+  });
+
+  it('array values display length count, not raw array', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Array.isArray check should convert to .length
+    expect(source).toMatch(/Array\.isArray[\s\S]{0,100}length/);
+  });
+});

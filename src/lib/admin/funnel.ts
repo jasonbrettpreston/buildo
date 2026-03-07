@@ -197,7 +197,9 @@ export function computeRowData(
         yieldCounts: [
           { field: 'Classified', count: current.permits_with_scope },
         ],
-        yieldNullRates: [],
+        yieldNullRates: ap > 0 ? [
+          { field: 'scope_class', pct: pct(ap - current.permits_with_scope, ap) },
+        ] : [],
       };
 
     case 'scope_tags':
@@ -220,48 +222,60 @@ export function computeRowData(
         yieldCounts: [
           { field: 'Tagged', count: current.permits_with_detailed_tags ?? 0 },
         ],
-        yieldNullRates: [],
+        yieldNullRates: ap > 0 ? [
+          { field: 'scope_tags', pct: pct(ap - (current.permits_with_detailed_tags ?? 0), ap) },
+        ] : [],
       };
 
-    case 'trades_residential':
+    case 'trades_residential': {
+      const resTotal = current.trade_residential_total ?? 0;
+      const resClassified = current.trade_residential_classified ?? 0;
       return {
         config, lastUpdated, status, cadence, lastRunMeta, lastRunRecordsTotal, lastRunRecordsNew,
-        baselineTotal: current.trade_residential_total ?? 0,
+        baselineTotal: resTotal,
         baselineLabel: 'Residential Permits',
         targetPool: null, targetPoolLabel: null, baselineNullRates: [],
-        matchDenominator: current.trade_residential_total ?? 0,
+        matchDenominator: resTotal,
         matchDenominatorLabel: 'Residential Permits',
-        matchCount: current.trade_residential_classified ?? 0,
-        matchPct: pct(current.trade_residential_classified ?? 0, current.trade_residential_total ?? 0),
+        matchCount: resClassified,
+        matchPct: pct(resClassified, resTotal),
         matchTiers: [
-          { label: 'Classified', count: current.trade_residential_classified ?? 0 },
-          { label: 'Unclassified', count: (current.trade_residential_total ?? 0) - (current.trade_residential_classified ?? 0) },
+          { label: 'Classified', count: resClassified },
+          { label: 'Unclassified', count: resTotal - resClassified },
         ],
         yieldCounts: [
-          { field: 'Trade Matches', count: current.trade_residential_classified ?? 0 },
+          { field: 'Trade Matches', count: resClassified },
         ],
-        yieldNullRates: [],
+        yieldNullRates: resTotal > 0 ? [
+          { field: 'permit_trades', pct: pct(resTotal - resClassified, resTotal) },
+        ] : [],
       };
+    }
 
-    case 'trades_commercial':
+    case 'trades_commercial': {
+      const comTotal = current.trade_commercial_total ?? 0;
+      const comClassified = current.trade_commercial_classified ?? 0;
       return {
         config, lastUpdated, status, cadence, lastRunMeta, lastRunRecordsTotal, lastRunRecordsNew,
-        baselineTotal: current.trade_commercial_total ?? 0,
+        baselineTotal: comTotal,
         baselineLabel: 'Commercial + Mixed Permits',
         targetPool: null, targetPoolLabel: null, baselineNullRates: [],
-        matchDenominator: current.trade_commercial_total ?? 0,
+        matchDenominator: comTotal,
         matchDenominatorLabel: 'Commercial + Mixed Permits',
-        matchCount: current.trade_commercial_classified ?? 0,
-        matchPct: pct(current.trade_commercial_classified ?? 0, current.trade_commercial_total ?? 0),
+        matchCount: comClassified,
+        matchPct: pct(comClassified, comTotal),
         matchTiers: [
-          { label: 'Classified', count: current.trade_commercial_classified ?? 0 },
-          { label: 'Unclassified', count: (current.trade_commercial_total ?? 0) - (current.trade_commercial_classified ?? 0) },
+          { label: 'Classified', count: comClassified },
+          { label: 'Unclassified', count: comTotal - comClassified },
         ],
         yieldCounts: [
-          { field: 'Trade Matches', count: current.trade_commercial_classified ?? 0 },
+          { field: 'Trade Matches', count: comClassified },
         ],
-        yieldNullRates: [],
+        yieldNullRates: comTotal > 0 ? [
+          { field: 'permit_trades', pct: pct(comTotal - comClassified, comTotal) },
+        ] : [],
       };
+    }
 
     case 'builders':
       return {
@@ -374,7 +388,9 @@ export function computeRowData(
           { field: 'Lot Size', count: current.permits_with_parcel },
           { field: 'Frontage', count: current.permits_with_parcel },
         ],
-        yieldNullRates: [],
+        yieldNullRates: ap > 0 ? [
+          { field: 'parcel_link', pct: pct(ap - current.permits_with_parcel, ap) },
+        ] : [],
       };
 
     case 'neighbourhoods':
@@ -391,7 +407,9 @@ export function computeRowData(
         yieldCounts: [
           { field: 'Neighbourhood ID', count: current.permits_with_neighbourhood },
         ],
-        yieldNullRates: [],
+        yieldNullRates: ap > 0 ? [
+          { field: 'neighbourhood_id', pct: pct(ap - current.permits_with_neighbourhood, ap) },
+        ] : [],
       };
 
     case 'massing': {
@@ -412,7 +430,9 @@ export function computeRowData(
           { field: 'Max Height', count: pm },
           { field: 'Est Stories', count: pm },
         ],
-        yieldNullRates: [],
+        yieldNullRates: ap > 0 ? [
+          { field: 'massing_link', pct: pct(ap - pm, ap) },
+        ] : [],
       };
     }
 
