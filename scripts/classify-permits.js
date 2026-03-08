@@ -536,6 +536,16 @@ async function main() {
   console.log(`Permits to classify: ${totalPermits.toLocaleString()}`);
   console.log('');
 
+  // Count truly new permits (never classified before) for accurate reporting
+  const newCountResult = await pool.query(
+    `SELECT COUNT(*) as cnt FROM permits p
+     WHERE NOT EXISTS (
+       SELECT 1 FROM permit_trades pt
+       WHERE pt.permit_num = p.permit_num AND pt.revision_num = p.revision_num
+     )`
+  );
+  const trulyNewPermits = parseInt(newCountResult.rows[0].cnt, 10);
+
   let processed = 0;
   let totalMatches = 0;
   let permitsWithTrades = 0;
@@ -631,7 +641,7 @@ async function main() {
   console.log('');
   console.log('NOTE: Trade classifications are inferred estimates based on permit');
   console.log('metadata, not actual building plans. Rules can be refined over time.');
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: permitsWithTrades, records_updated: 0 }));
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: Math.min(trulyNewPermits, permitsWithTrades), records_updated: permitsWithTrades - Math.min(trulyNewPermits, permitsWithTrades) }));
   console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"] }, writes: { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"] } }));
 
   await pool.end();

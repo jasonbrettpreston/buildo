@@ -148,7 +148,8 @@ export function computeRowData(
     if (hoursAgo > slaHours) status = 'stale';
     else if (hoursAgo > slaHours * 0.8) status = 'warning';
     // Ran recently but produced 0 new + 0 updated = warning (data unchanged)
-    else if (lastRun && lastRun.records_new != null && lastRun.records_new === 0 && (lastRun.records_updated ?? 0) === 0) {
+    // Only flag completed runs — running steps haven't reported final counts yet
+    else if (lastRun && lastRun.status === 'completed' && lastRun.records_new != null && lastRun.records_new === 0 && (lastRun.records_updated ?? 0) === 0) {
       status = 'warning';
     }
   } else {
@@ -538,6 +539,8 @@ export interface StepDescription {
   table: string;
   /** Where this step reads from — DB table names or external labels like "CKAN API" */
   sources: string[];
+  /** Per-source read columns. Overrides live PIPELINE_META reads when present. */
+  reads?: Record<string, string[]>;
   /** Specific columns written to target table. Omit for full-table ingest steps. */
   writes?: string[];
 }
@@ -565,8 +568,8 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   create_pre_permits:   { summary: 'Creates placeholder permit records from eligible CoA applications', table: 'coa_applications', sources: ['coa_applications'] },
   compute_centroids:    { summary: 'Computes geometric centroids for parcel polygons', table: 'parcels', sources: ['parcels'], writes: ['centroid_lat', 'centroid_lng'] },
   // Classify — narrow writes on permits or dedicated table
-  classify_scope_class: { summary: 'Classifies permits into project types (residential/commercial/mixed)', table: 'permits', sources: ['permits'], writes: ['project_type', 'scope_classified_at', 'scope_source'] },
-  classify_scope_tags:  { summary: 'Extracts detailed work scope tags from permit descriptions', table: 'permits', sources: ['permits'], writes: ['scope_tags', 'scope_classified_at', 'scope_source'] },
+  classify_scope_class: { summary: 'Classifies project_type and extracts scope_tags for new/changed permits, then propagates BLD scope to companion permits', table: 'permits', sources: ['permits'], reads: { permits: ['permit_type', 'work', 'structure_type', 'description', 'current_use', 'proposed_use', 'storeys', 'housing_units', 'dwelling_units_created'] }, writes: ['project_type', 'scope_tags', 'scope_classified_at', 'scope_source'] },
+  classify_scope_tags:  { summary: 'Re-runs scope classifier to catch any permits missed by prior step (typically 0 — acts as verification pass)', table: 'permits', sources: ['permits'], reads: { permits: ['permit_type', 'work', 'structure_type', 'description', 'current_use', 'proposed_use', 'storeys', 'housing_units', 'dwelling_units_created'] }, writes: ['project_type', 'scope_tags', 'scope_classified_at', 'scope_source'] },
   classify_permits:     { summary: 'Assigns trade classifications using tag-trade matrix and rules', table: 'permit_trades', sources: ['permits'] },
   // Snapshot
   refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', table: 'data_quality_snapshots', sources: ['permits', 'entities', 'parcels'] },

@@ -230,16 +230,17 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
 }) {
   // Always use curated STEP_DESCRIPTIONS for sources and writes — these are
   // per-step accurate (e.g. classify_scope_class vs classify_scope_tags).
-  // Live pipeline_meta is only used for read column detail when available.
+  // Static reads override live pipeline_meta when present (shared scripts
+  // like classify-scope.js emit identical meta for both steps).
   const liveReads = pipelineMeta?.reads;
-  const hasLiveMeta = !!liveReads;
+  const hasLiveMeta = !!(desc.reads || liveReads);
 
   // Sources and writes always come from static step descriptions
   const sources = desc.sources;
   const writeCols = desc.writes ?? null;
 
-  // Read columns: live reads values per source table (for column-level detail)
-  const readColsByTable = liveReads ?? null;
+  // Read columns: static desc.reads (per-step accurate) > live meta (shared script)
+  const readColsByTable = desc.reads ?? liveReads ?? null;
 
   const targetCols = dbSchemaMap?.[desc.table] ?? [];
   const writesSet = writeCols ? new Set(writeCols) : null;

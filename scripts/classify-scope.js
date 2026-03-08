@@ -416,6 +416,7 @@ async function main() {
   const typeCounts = {};
   const tagCounts = {};
   let processed = 0;
+  let newlyClassified = 0;
   let withTags = 0;
 
   // Process in batches using cursor-style pagination
@@ -429,7 +430,7 @@ async function main() {
       batchQuery = `
         SELECT permit_num, revision_num, permit_type, structure_type, work,
                description, current_use, proposed_use, storeys,
-               housing_units, dwelling_units_created
+               housing_units, dwelling_units_created, scope_classified_at
         FROM permits
         ${fullMode ? '' : 'WHERE (scope_classified_at IS NULL OR scope_classified_at < last_seen_at)'}
         ORDER BY permit_num, revision_num
@@ -440,7 +441,7 @@ async function main() {
       batchQuery = `
         SELECT permit_num, revision_num, permit_type, structure_type, work,
                description, current_use, proposed_use, storeys,
-               housing_units, dwelling_units_created
+               housing_units, dwelling_units_created, scope_classified_at
         FROM permits
         WHERE (permit_num, revision_num) > ($1, $2)
         ${fullMode ? '' : 'AND (scope_classified_at IS NULL OR scope_classified_at < last_seen_at)'}
@@ -510,6 +511,7 @@ async function main() {
     );
 
     processed += rows.length;
+    newlyClassified += rows.filter(r => r.scope_classified_at == null).length;
     lastKey = rows[rows.length - 1];
 
     if (processed % 10000 < BATCH_SIZE) {
@@ -580,7 +582,7 @@ async function main() {
     const pct = ((count / processed) * 100).toFixed(1);
     console.log(`  ${tag.padEnd(30)} ${String(count).padStart(8)}  (${pct}%)`);
   }
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: total, records_new: processed, records_updated: propagated }));
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: total, records_new: newlyClassified, records_updated: processed - newlyClassified + propagated }));
   console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "current_use", "proposed_use", "storeys", "housing_units", "dwelling_units_created", "scope_classified_at", "last_seen_at"] }, writes: { "permits": ["project_type", "scope_tags", "scope_classified_at", "scope_source"] } }));
 
   await pool.end();

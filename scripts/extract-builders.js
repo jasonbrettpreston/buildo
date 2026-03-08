@@ -78,6 +78,7 @@ async function run() {
   const BATCH_SIZE = 500;
   const builders = Array.from(builderMap.values());
   let inserted = 0;
+  let updated = 0;
 
   for (let i = 0; i < builders.length; i += BATCH_SIZE) {
     const batch = builders.slice(i, i + BATCH_SIZE);
@@ -91,17 +92,21 @@ async function run() {
       values.push(b.name, b.name_normalized, b.permit_count);
     }
 
-    await pool.query(`
+    const result = await pool.query(`
       INSERT INTO entities (legal_name, name_normalized, permit_count)
       VALUES ${placeholders.join(', ')}
       ON CONFLICT (name_normalized) DO UPDATE SET
         permit_count = EXCLUDED.permit_count,
         last_seen_at = NOW()
+      RETURNING (xmax = 0) AS is_insert
     `, values);
 
-    inserted += batch.length;
-    if (inserted % 1000 === 0 || i + BATCH_SIZE >= builders.length) {
-      console.log(`  ${inserted} builders inserted`);
+    const batchNew = result.rows.filter(r => r.is_insert).length;
+    inserted += batchNew;
+    updated += result.rows.length - batchNew;
+    const processed = inserted + updated;
+    if (processed % 1000 === 0 || i + BATCH_SIZE >= builders.length) {
+      console.log(`  ${processed} builders processed (${inserted} new, ${updated} updated)`);
     }
   }
 
@@ -115,7 +120,7 @@ async function run() {
   );
   console.log('\nTop 10 builders by permit count:');
   top.rows.forEach((r, i) => console.log(`  ${i + 1}. ${r.name} (${r.permit_count} permits)`));
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: builderMap.size, records_new: inserted, records_updated: 0 }));
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: builderMap.size, records_new: inserted, records_updated: updated }));
   console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["builder_name"] }, writes: { "entities": ["legal_name", "name_normalized", "permit_count", "last_seen_at"] } }));
 
   await pool.end();

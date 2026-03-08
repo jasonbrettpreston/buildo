@@ -1430,6 +1430,27 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
     expect(row.status).toBe('healthy');
   });
 
+  it('computeRowData status is NOT "warning" when step is still running (counts incomplete)', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'permits')!;
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      permits_propagated: 0,
+      pipeline_last_run: {
+        'permits:permits': {
+          last_run_at: new Date().toISOString(), status: 'running',
+          records_total: 0, records_new: 0, records_updated: 0, records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    // Running step with 0/0/0 should NOT be flagged as warning — counts aren't final
+    expect(row.status).toBe('healthy');
+  });
+
   it('DataFlowTile always uses static STEP_DESCRIPTIONS for writes, not live meta', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
