@@ -31,8 +31,7 @@ const PIPELINE_SCHEDULES: Record<string, { label: string }> = {
   enrich_wsib_builders: { label: 'Daily' },
   enrich_named_builders: { label: 'Daily' },
   // Classify
-  classify_scope_class: { label: 'Daily' },
-  classify_scope_tags: { label: 'Daily' },
+  classify_scope: { label: 'Daily' },
   classify_permits: { label: 'Daily' },
   // Compute centroids
   compute_centroids: { label: 'Quarterly' },

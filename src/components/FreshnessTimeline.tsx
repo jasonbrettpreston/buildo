@@ -42,8 +42,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   inspections:        { name: 'Inspection Stages',    group: 'link' },
   coa_documents:      { name: 'CoA Documents',        group: 'link' },
   // Classify (3) — derive fields
-  classify_scope_class: { name: 'Scope Class',         group: 'classify' },
-  classify_scope_tags:  { name: 'Scope Tags',          group: 'classify' },
+  classify_scope:       { name: 'Scope Classification', group: 'classify' },
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
   // Snapshot (1) — capture metrics
   refresh_snapshot:   { name: 'Refresh Snapshot',      group: 'snapshot' },
@@ -87,8 +86,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     steps: [
       { slug: 'assert_schema',       indent: 0 },
       { slug: 'permits',              indent: 0 },
-      { slug: 'classify_scope_class', indent: 1 },
-      { slug: 'classify_scope_tags',  indent: 1 },
+      { slug: 'classify_scope',        indent: 1 },
       { slug: 'classify_permits',     indent: 1 },
       { slug: 'builders',             indent: 1 },
       { slug: 'link_wsib',            indent: 2 },

@@ -26,8 +26,7 @@ export const FUNNEL_SOURCES: FunnelSourceConfig[] = [
   // 1. Hub
   { id: 'permits', name: 'Building Permits', statusSlug: 'permits', triggerSlug: 'chain_permits', yieldFields: ['permit_num', 'description', 'est_const_cost'] },
   // 2-5. Classification (derived from permits)
-  { id: 'scope_class', name: 'Scope Class', statusSlug: 'classify_scope_class', triggerSlug: 'classify_scope_class', yieldFields: ['scope_class'] },
-  { id: 'scope_tags', name: 'Scope Tags', statusSlug: 'classify_scope_tags', triggerSlug: 'classify_scope_tags', yieldFields: ['scope_tags'] },
+  { id: 'scope', name: 'Scope Classification', statusSlug: 'classify_scope', triggerSlug: 'classify_scope', yieldFields: ['project_type', 'scope_tags'] },
   { id: 'trades_residential', name: 'Trades (Residential)', statusSlug: 'classify_permits', triggerSlug: 'classify_permits', yieldFields: ['permit_trades'] },
   { id: 'trades_commercial', name: 'Trades (Commercial)', statusSlug: 'classify_permits', triggerSlug: 'classify_permits', yieldFields: ['permit_trades'] },
   // 6-8. Entity enrichment
@@ -190,7 +189,8 @@ export function computeRowData(
         yieldNullRates: [],
       };
 
-    case 'scope_class':
+    case 'scope': {
+      const tagged = current.permits_with_detailed_tags ?? 0;
       return {
         config, lastUpdated, status, cadence, lastRunMeta, lastRunRecordsTotal, lastRunRecordsNew,
         baselineTotal: ap, baselineLabel: 'Active Permits',
@@ -198,43 +198,22 @@ export function computeRowData(
         matchDenominator: ap, matchDenominatorLabel: 'Active Permits',
         matchCount: current.permits_with_scope, matchPct: pct(current.permits_with_scope, ap),
         matchTiers: [
+          { label: 'With Project Type', count: current.permits_with_scope },
+          { label: 'With Scope Tags', count: tagged },
           { label: 'Residential', count: current.scope_project_type_breakdown?.residential ?? 0 },
           { label: 'Commercial', count: current.scope_project_type_breakdown?.commercial ?? 0 },
-          { label: 'Mixed-Use', count: current.scope_project_type_breakdown?.['mixed-use'] ?? 0 },
           { label: 'Unclassified', count: ap - current.permits_with_scope },
         ],
         yieldCounts: [
           { field: 'Classified', count: current.permits_with_scope },
+          { field: 'Tagged', count: tagged },
         ],
         yieldNullRates: ap > 0 ? [
-          { field: 'scope_class', pct: pct(ap - current.permits_with_scope, ap) },
+          { field: 'project_type', pct: pct(ap - current.permits_with_scope, ap) },
+          { field: 'scope_tags', pct: pct(ap - tagged, ap) },
         ] : [],
       };
-
-    case 'scope_tags':
-      return {
-        config, lastUpdated, status, cadence, lastRunMeta, lastRunRecordsTotal, lastRunRecordsNew,
-        baselineTotal: ap, baselineLabel: 'Active Permits',
-        targetPool: null, targetPoolLabel: null, baselineNullRates: [],
-        matchDenominator: ap, matchDenominatorLabel: 'Active Permits',
-        matchCount: current.permits_with_detailed_tags ?? 0,
-        matchPct: pct(current.permits_with_detailed_tags ?? 0, ap),
-        matchTiers: [
-          ...(current.scope_tags_top
-            ? Object.entries(current.scope_tags_top)
-                .sort(([, a], [, b]) => (b as number) - (a as number))
-                .slice(0, 4)
-                .map(([tag, count]) => ({ label: tag, count: count as number }))
-            : []),
-          { label: 'Untagged', count: ap - (current.permits_with_detailed_tags ?? 0) },
-        ],
-        yieldCounts: [
-          { field: 'Tagged', count: current.permits_with_detailed_tags ?? 0 },
-        ],
-        yieldNullRates: ap > 0 ? [
-          { field: 'scope_tags', pct: pct(ap - (current.permits_with_detailed_tags ?? 0), ap) },
-        ] : [],
-      };
+    }
 
     case 'trades_residential': {
       const resTotal = current.trade_residential_total ?? 0;
@@ -568,8 +547,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   create_pre_permits:   { summary: 'Creates placeholder permit records from eligible CoA applications', table: 'coa_applications', sources: ['coa_applications'] },
   compute_centroids:    { summary: 'Computes geometric centroids for parcel polygons', table: 'parcels', sources: ['parcels'], writes: ['centroid_lat', 'centroid_lng'] },
   // Classify — narrow writes on permits or dedicated table
-  classify_scope_class: { summary: 'Classifies project_type and extracts scope_tags for new/changed permits, then propagates BLD scope to companion permits', table: 'permits', sources: ['permits'], reads: { permits: ['permit_type', 'work', 'structure_type', 'description', 'current_use', 'proposed_use', 'storeys', 'housing_units', 'dwelling_units_created'] }, writes: ['project_type', 'scope_tags', 'scope_classified_at', 'scope_source'] },
-  classify_scope_tags:  { summary: 'Re-runs scope classifier to catch any permits missed by prior step (typically 0 — acts as verification pass)', table: 'permits', sources: ['permits'], reads: { permits: ['permit_type', 'work', 'structure_type', 'description', 'current_use', 'proposed_use', 'storeys', 'housing_units', 'dwelling_units_created'] }, writes: ['project_type', 'scope_tags', 'scope_classified_at', 'scope_source'] },
+  classify_scope:       { summary: 'Classifies project_type and extracts scope_tags for new/changed permits, then propagates BLD scope to companion permits', table: 'permits', sources: ['permits'], reads: { permits: ['permit_type', 'work', 'structure_type', 'description', 'current_use', 'proposed_use', 'storeys', 'housing_units', 'dwelling_units_created'] }, writes: ['project_type', 'scope_tags', 'scope_classified_at', 'scope_source'] },
   classify_permits:     { summary: 'Assigns trade classifications using tag-trade matrix and rules', table: 'permit_trades', sources: ['permits'] },
   // Snapshot
   refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', table: 'data_quality_snapshots', sources: ['permits', 'entities', 'parcels'] },

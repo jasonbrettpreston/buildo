@@ -489,15 +489,15 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 27 tracked pipelines', () => {
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(27);
+  it('has exactly 26 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(26);
   });
 
-  it('groups are correct: 8 ingest, 13 link, 3 classify, 1 snapshot, 2 quality', () => {
+  it('groups are correct: 8 ingest, 13 link, 2 classify, 1 snapshot, 2 quality', () => {
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(8);
     expect(groups.filter((g) => g === 'link')).toHaveLength(13);
-    expect(groups.filter((g) => g === 'classify')).toHaveLength(3);
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(2);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(2);
   });
@@ -525,9 +525,9 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'entities', 'sources', 'deep_scrapes']);
   });
 
-  it('permits chain has 15 steps in dependency order (no enrichment)', () => {
+  it('permits chain has 14 steps in dependency order (no enrichment)', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(15);
+    expect(permits.steps).toHaveLength(14);
     expect(permits.steps[0].slug).toBe('assert_schema');
     expect(permits.steps[1].slug).toBe('permits');
     expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_data_bounds');
@@ -923,8 +923,8 @@ describe('Enrichment Funnel', () => {
     FUNNEL_SOURCES = mod.FUNNEL_SOURCES;
   });
 
-  it('defines exactly 15 data sources', () => {
-    expect(FUNNEL_SOURCES).toHaveLength(15);
+  it('defines exactly 14 data sources', () => {
+    expect(FUNNEL_SOURCES).toHaveLength(14);
   });
 
   it('source IDs are unique', () => {
@@ -944,8 +944,7 @@ describe('Enrichment Funnel', () => {
   it('includes all expected source IDs', () => {
     const ids = FUNNEL_SOURCES.map((s) => s.id);
     expect(ids).toContain('permits');
-    expect(ids).toContain('scope_class');
-    expect(ids).toContain('scope_tags');
+    expect(ids).toContain('scope');
     expect(ids).toContain('trades_residential');
     expect(ids).toContain('trades_commercial');
     expect(ids).toContain('builders');
@@ -963,8 +962,8 @@ describe('Enrichment Funnel', () => {
   it('follows pipeline chain execution order', () => {
     const ids = FUNNEL_SOURCES.map((s) => s.id);
     // Permits hub first, then classify, then builders/enrichment, then spatial, then CoA last
-    expect(ids.indexOf('permits')).toBeLessThan(ids.indexOf('scope_class'));
-    expect(ids.indexOf('scope_class')).toBeLessThan(ids.indexOf('builders'));
+    expect(ids.indexOf('permits')).toBeLessThan(ids.indexOf('scope'));
+    expect(ids.indexOf('scope')).toBeLessThan(ids.indexOf('builders'));
     expect(ids.indexOf('builders')).toBeLessThan(ids.indexOf('wsib'));
     expect(ids.indexOf('wsib')).toBeLessThan(ids.indexOf('builder_web'));
     expect(ids.indexOf('builder_web')).toBeLessThan(ids.indexOf('address_matching'));
@@ -988,7 +987,7 @@ describe('Enrichment Funnel', () => {
       'permits', 'coa', 'builders', 'address_points', 'parcels', 'massing', 'neighbourhoods',
       'geocode_permits', 'link_parcels', 'link_neighbourhoods', 'link_massing', 'link_coa',
       'load_wsib', 'link_wsib', 'enrich_wsib_builders', 'enrich_named_builders',
-      'classify_scope_class', 'classify_scope_tags', 'classify_permits',
+      'classify_scope', 'classify_permits',
       'compute_centroids', 'link_similar', 'create_pre_permits',
       'refresh_snapshot', 'assert_schema', 'assert_data_bounds',
     ];
@@ -1092,18 +1091,20 @@ describe('computeRowData returns non-empty yieldNullRates for funnel sources', (
     expect(row.yieldNullRates.some(r => r.field === 'massing_link')).toBe(true);
   });
 
-  it('scope_class yields non-empty yieldNullRates with unclassified field', () => {
-    const config = FUNNEL_SOURCES.find((s) => s.id === 'scope_class')!;
+  it('scope yields yieldNullRates for both project_type and scope_tags', () => {
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'scope')!;
     const row = computeRowData(config, makeStats(), makeSnapshot());
     expect(row.yieldNullRates.length).toBeGreaterThan(0);
-    expect(row.yieldNullRates.some(r => r.field === 'scope_class')).toBe(true);
+    expect(row.yieldNullRates.some(r => r.field === 'project_type')).toBe(true);
+    expect(row.yieldNullRates.some(r => r.field === 'scope_tags')).toBe(true);
   });
 
-  it('scope_tags yields non-empty yieldNullRates with untagged field', () => {
-    const config = FUNNEL_SOURCES.find((s) => s.id === 'scope_tags')!;
+  it('scope matchTiers includes both project type breakdown and tag coverage', () => {
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'scope')!;
     const row = computeRowData(config, makeStats(), makeSnapshot());
-    expect(row.yieldNullRates.length).toBeGreaterThan(0);
-    expect(row.yieldNullRates.some(r => r.field === 'scope_tags')).toBe(true);
+    const labels = row.matchTiers.map(t => t.label);
+    expect(labels).toContain('With Project Type');
+    expect(labels).toContain('With Scope Tags');
   });
 
   it('trades_residential yields non-empty yieldNullRates', () => {
@@ -1121,7 +1122,7 @@ describe('computeRowData returns non-empty yieldNullRates for funnel sources', (
   it('yieldNullRates pct values are between 0 and 100', () => {
     const stats = makeStats();
     const snapshot = makeSnapshot();
-    for (const sourceId of ['parcels', 'neighbourhoods', 'massing', 'scope_class', 'scope_tags']) {
+    for (const sourceId of ['parcels', 'neighbourhoods', 'massing', 'scope']) {
       const config = FUNNEL_SOURCES.find((s) => s.id === sourceId)!;
       const row = computeRowData(config, stats, snapshot);
       for (const nr of row.yieldNullRates) {

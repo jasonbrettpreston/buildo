@@ -106,8 +106,7 @@ export const INTERSECTION_LABELS: Record<string, { processedLabel: string; match
   link_coa:             { processedLabel: 'Applications', matchedLabel: 'Linked' },
   link_wsib:            { processedLabel: 'Unlinked',     matchedLabel: 'Linked' },
   link_similar:         { processedLabel: 'Companions',   matchedLabel: 'Propagated' },
-  classify_scope_class: { processedLabel: 'To Classify',  matchedLabel: 'Classified' },
-  classify_scope_tags:  { processedLabel: 'To Tag',       matchedLabel: 'Tagged' },
+  classify_scope:       { processedLabel: 'To Classify',  matchedLabel: 'Classified' },
   classify_permits:     { processedLabel: 'To Classify',  matchedLabel: 'Classified' },
   builders:             { processedLabel: 'Permits',      matchedLabel: 'Extracted' },
   permits:              { processedLabel: 'Fetched',      matchedLabel: 'New/Changed' },
@@ -229,7 +228,7 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
   desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null;
 }) {
   // Always use curated STEP_DESCRIPTIONS for sources and writes — these are
-  // per-step accurate (e.g. classify_scope_class vs classify_scope_tags).
+  // per-step accurate (e.g. shared scripts emit union of all reads/writes).
   // Static reads override live pipeline_meta when present (shared scripts
   // like classify-scope.js emit identical meta for both steps).
   const liveReads = pipelineMeta?.reads;

@@ -34,8 +34,7 @@ const PIPELINE_SCRIPTS: Record<string, string> = {
   // Scrape (external portal data)
   inspections: 'scripts/poc-aic-scraper.js',
   // Classify (derive fields)
-  classify_scope_class: 'scripts/classify-scope.js',
-  classify_scope_tags: 'scripts/classify-scope.js',
+  classify_scope: 'scripts/classify-scope.js',
   classify_permits: 'scripts/classify-permits.js',
   // Compute centroids
   compute_centroids: 'scripts/compute-centroids.js',
