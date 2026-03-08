@@ -1319,6 +1319,32 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
     expect(row.lastUpdated).toBe('2026-03-07T10:00:00Z');
   });
 
+  it('chain-scoped key wins tie when timestamps are equal', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'permits')!;
+    const sameTimestamp = '2026-03-07T10:00:00Z';
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      permits_propagated: 0,
+      pipeline_last_run: {
+        'permits': {
+          last_run_at: sameTimestamp, status: 'completed',
+          records_total: 100, records_new: 5, records_updated: null, records_meta: null,
+        },
+        'permits:permits': {
+          last_run_at: sameTimestamp, status: 'completed',
+          records_total: 234856, records_new: 0, records_updated: 496, records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    // Chain-scoped key should win ties (>= comparison, iterated after unscoped)
+    expect(row.lastRunRecordsTotal).toBe(234856);
+  });
+
   it('getStatusDot returns Stale for completed ingest with 0 new and 0 updated', () => {
     // Verify the timeline tile flashes red when a pipeline ran but produced nothing
     const source = fs.readFileSync(
@@ -1342,5 +1368,84 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
     expect(source).toContain("'quality'");
     expect(source).toContain("'snapshot'");
     expect(source).toContain('staleExempt');
+  });
+
+  it('getStatusDot returns "No Change" for stale-exempt steps with 0 records', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain("'No Change'");
+    // Non-ingest steps with 0 new/updated get neutral "No Change", not green "Fresh"
+    expect(source).toContain('bg-gray-50');
+  });
+
+  it('records_meta renderer filters out pipeline_meta and nested objects', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Must filter pipeline_meta key to prevent [object Object] display
+    expect(source).toContain("k !== 'pipeline_meta'");
+    // Must also filter non-primitive values (objects) from rendering
+    expect(source).toContain("typeof v !== 'object'");
+  });
+
+  it('computeRowData status is "warning" when 0 new and 0 updated records', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'permits')!;
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      permits_propagated: 0,
+      pipeline_last_run: {
+        'permits:permits': {
+          last_run_at: new Date().toISOString(), status: 'completed',
+          records_total: 234856, records_new: 0, records_updated: 0, records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    // 0 new + 0 updated within SLA window = warning, not healthy
+    expect(row.status).toBe('warning');
+  });
+
+  it('computeRowData status is "healthy" when records were processed', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'permits')!;
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      permits_propagated: 0,
+      pipeline_last_run: {
+        'permits:permits': {
+          last_run_at: new Date().toISOString(), status: 'completed',
+          records_total: 234856, records_new: 50, records_updated: 200, records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    expect(row.status).toBe('healthy');
+  });
+
+  it('DataFlowTile always uses static STEP_DESCRIPTIONS for writes, not live meta', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
+    );
+    // Writes must come from static desc, not live pipeline_meta
+    expect(source).toContain('const writeCols = desc.writes ?? null');
+    // Sources also come from static desc
+    expect(source).toContain('const sources = desc.sources');
+  });
+
+  it('STEP_DESCRIPTIONS assert_schema and assert_data_bounds have explicit writes', async () => {
+    const { STEP_DESCRIPTIONS } = await import('@/lib/admin/funnel');
+    expect(STEP_DESCRIPTIONS.assert_schema.writes).toBeDefined();
+    expect(STEP_DESCRIPTIONS.assert_schema.writes).toContain('checks_passed');
+    expect(STEP_DESCRIPTIONS.assert_schema.writes).toContain('checks_failed');
+    expect(STEP_DESCRIPTIONS.assert_data_bounds.writes).toBeDefined();
+    expect(STEP_DESCRIPTIONS.assert_data_bounds.writes).toContain('checks_passed');
   });
 });

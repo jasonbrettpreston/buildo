@@ -228,23 +228,17 @@ export interface PipelineMeta {
 export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
   desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null;
 }) {
-  // When live pipeline_meta is available, derive sources/writes from it.
-  // Otherwise fall back to static desc.sources/desc.writes (bootstrap defaults).
+  // Always use curated STEP_DESCRIPTIONS for sources and writes — these are
+  // per-step accurate (e.g. classify_scope_class vs classify_scope_tags).
+  // Live pipeline_meta is only used for read column detail when available.
   const liveReads = pipelineMeta?.reads;
-  const liveWrites = pipelineMeta?.writes;
-  const hasLiveMeta = !!(liveReads || liveWrites);
+  const hasLiveMeta = !!liveReads;
 
-  // Sources: live reads keys, or static fallback
-  const sources = hasLiveMeta
-    ? Object.keys(liveReads ?? {})
-    : desc.sources;
+  // Sources and writes always come from static step descriptions
+  const sources = desc.sources;
+  const writeCols = desc.writes ?? null;
 
-  // Writes: live writes values (flattened), or static fallback
-  const writeCols = hasLiveMeta
-    ? Object.values(liveWrites ?? {}).flat()
-    : desc.writes ?? null;
-
-  // Read columns: live reads values per source table
+  // Read columns: live reads values per source table (for column-level detail)
   const readColsByTable = liveReads ?? null;
 
   const targetCols = dbSchemaMap?.[desc.table] ?? [];
@@ -264,6 +258,21 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
 
       {isSelfRef && readColsByTable?.[desc.table] ? (
         /* Self-referential with live meta: show explicit reads → writes columns */
+        writeCols && writeCols.length === 0 ? (
+          /* Read-only step (e.g. create-pre-permits): no writes, just show reads */
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-2.5">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <span className="text-[9px] font-semibold text-blue-400 uppercase tracking-wider">Reads</span>
+              <span className="text-[10px] font-mono text-blue-600 font-medium">{desc.table}</span>
+              <span className="text-[8px] font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded px-1 py-0.5 ml-auto">Read-only</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {readColsByTable[desc.table].map((c) => (
+                <span key={c} className="text-[10px] font-mono text-blue-700 bg-white border border-blue-100 rounded px-1.5 py-0.5">{c}</span>
+              ))}
+            </div>
+          </div>
+        ) : (
         <div className="flex flex-col md:flex-row items-stretch gap-2">
           <div className="flex-1 min-w-0">
             <div className="bg-blue-50 border border-blue-200 rounded-md p-2.5">
@@ -295,6 +304,7 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
             </div>
           </div>
         </div>
+        )
       ) : isSelfRef && targetCols.length > 0 ? (
         /* Self-referential without live meta: show full table with write highlights */
         <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Reads & Writes" />

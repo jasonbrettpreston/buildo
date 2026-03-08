@@ -246,12 +246,14 @@ function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean, sta
   if (info.status === 'skipped') return { color: 'bg-gray-50', label: 'Skipped' };
   if (info.status === 'cancelled') return { color: 'bg-gray-50', label: 'Cancelled' };
 
-  // Completed with zero work (0 new + 0 updated) = Stale — but only for ingest steps.
-  // Link, classify, quality, and snapshot steps legitimately return 0 on quiet days.
+  // Completed with zero work (0 new + 0 updated):
+  // - Ingest steps: "Stale" (red) — data source returned nothing new
+  // - All other steps: "No Change" (neutral) — no upstream data to process
   // records_new must be explicitly 0 (not null) — null means the step doesn't track records
   // (e.g. quality gates), so we skip them and fall through to time-based freshness.
-  if (!staleExempt && info.status === 'completed' && info.records_new != null && info.records_new === 0 && (info.records_updated ?? 0) === 0) {
-    return { color: 'bg-red-50', label: 'Stale' };
+  if (info.status === 'completed' && info.records_new != null && info.records_new === 0 && (info.records_updated ?? 0) === 0) {
+    if (!staleExempt) return { color: 'bg-red-50', label: 'Stale' };
+    return { color: 'bg-gray-50', label: 'No Change' };
   }
 
   const hours = (Date.now() - new Date(info.last_run_at).getTime()) / (1000 * 60 * 60);
@@ -819,7 +821,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                       </div>
                                     )}
                                     {Object.entries(meta)
-                                      .filter(([, v]) => v != null && v !== undefined)
+                                      .filter(([k, v]) => v != null && v !== undefined && k !== 'pipeline_meta' && (typeof v !== 'object' || Array.isArray(v)))
                                       .map(([key, value]) => (
                                         <div key={key} className="flex justify-between">
                                           <span className="text-xs text-gray-600">{key.replace(/_/g, ' ')}</span>

@@ -1077,14 +1077,18 @@ describe('FreshnessTimeline funnel accordion', () => {
     const panels = fs.readFileSync(
       path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
-    // DataFlowTile supports live pipeline_meta and static fallback
+    // DataFlowTile uses live pipeline_meta for reads, static desc for writes
     expect(panels).toContain('pipelineMeta');
     expect(panels).toContain('PipelineMeta');
     expect(panels).toContain('liveReads');
-    expect(panels).toContain('liveWrites');
+    // Writes always from static STEP_DESCRIPTIONS (not live meta)
+    expect(panels).toContain('const writeCols = desc.writes ?? null');
+    expect(panels).toContain('const sources = desc.sources');
     expect(panels).toContain('Live Meta');
     expect(panels).toContain('Data Flow');
     expect(panels).toContain('Live DB Schema');
+    // Read-only steps (empty writes) show Read-only badge instead of empty Writes card
+    expect(panels).toContain('Read-only');
   });
 
   it('circular badge uses correct color thresholds', () => {
@@ -2523,14 +2527,17 @@ describe('Stale exemption for non-ingest groups', () => {
     expect(fnSig).toContain('staleExempt');
   });
 
-  it('staleExempt=true skips zero-records Stale check', () => {
+  it('staleExempt steps get "No Change" instead of "Stale" for zero records', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const fnStart = source.indexOf('function getStatusDot');
     const fnBody = source.slice(fnStart, fnStart + 1500);
-    // The Stale check must be guarded by !staleExempt
-    expect(fnBody).toMatch(/!staleExempt[\s\S]{0,100}records_new/);
+    // Zero-records check runs for all steps, but staleExempt get "No Change" not "Stale"
+    expect(fnBody).toContain('records_new');
+    expect(fnBody).toContain("'Stale'");
+    expect(fnBody).toContain("'No Change'");
+    expect(fnBody).toContain('!staleExempt');
   });
 
   it('STALE_EXEMPT_GROUPS includes link, classify, quality, snapshot', () => {

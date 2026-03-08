@@ -1,53 +1,31 @@
-# Active Task: Dynamic DB Schema for Pipeline Descriptions (WF2)
+# Active Task: Fix Pipeline Dashboard Display Bugs (WF3)
 **Status:** Implementation
 
 ## Context
-* **Goal:** Replace hardcoded `STEP_DESCRIPTIONS.fields` arrays with live `information_schema` data queried from the database. This eliminates schema drift permanently — the UI always shows the exact columns that exist in each target table.
-* **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
-* **Audit Report:** `docs/reports/pipeline_descriptions_wf5_audit.md`
-* **Key Files:** `src/lib/admin/funnel.ts`, `src/app/api/admin/stats/route.ts`, `src/components/DataQualityDashboard.tsx`, `src/components/FreshnessTimeline.tsx`, `src/tests/quality.logic.test.ts`, `src/tests/admin.ui.test.tsx`
+* **Goal:** Fix multiple display bugs in the Data Quality pipeline dashboard identified from live UI inspection
+* **Target Spec:** docs/specs/28_data_quality_dashboard.md
+* **Key Files:** `src/components/FreshnessTimeline.tsx`, `src/components/funnel/FunnelPanels.tsx`, `src/lib/admin/funnel.ts`
 
-## Technical Implementation
+## Bug List (from live dashboard inspection)
 
-### Change 1: API — Query `information_schema.columns`
-* **File:** `src/app/api/admin/stats/route.ts`
-* **What:** Add a new parallel query that fetches column names grouped by table for all tables referenced in `STEP_DESCRIPTIONS`. Return as `db_schema_map: Record<string, string[]>` in the JSON response.
-* **Query:** `SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = ANY($1) ORDER BY table_name, ordinal_position`
-* **Tables param:** Deduplicated list of `STEP_DESCRIPTIONS[*].table` values.
-
-### Change 2: Strip `fields` from `STEP_DESCRIPTIONS`
-* **File:** `src/lib/admin/funnel.ts`
-* **What:** Remove `fields: string[]` from `StepDescription` interface and all hardcoded `fields` arrays from `STEP_DESCRIPTIONS`. Keep `summary` and `table` (both are accurate per the audit).
-
-### Change 3: Pass schema map through component tree
-* **File:** `src/components/DataQualityDashboard.tsx`
-* **What:** Extract `db_schema_map` from stats response and pass it to `FreshnessTimeline` as a new prop.
-
-### Change 4: Render live columns in Description tile
-* **File:** `src/components/FreshnessTimeline.tsx`
-* **What:** Accept `dbSchemaMap?: Record<string, string[]>` prop. In the Description tile (line 724), replace `desc.fields.map(...)` with `(dbSchemaMap?.[desc.table] ?? []).map(...)`. Add a small "Live DB Schema" badge next to the table name.
-
-### Database Impact
-NO — read-only `information_schema` query.
-
-## Standards Compliance
-* **Try-Catch Boundary:** The schema query is inside the existing stats route try-catch. Non-fatal — empty map fallback if query fails.
-* **Unhappy Path Tests:** Test that UI gracefully handles missing/empty schema map (falls back to empty field list).
-* **logError Mandate:** N/A — no new API routes, existing catch block already uses `logError`.
-* **Mobile-First:** N/A — no layout changes, just data source swap.
+| # | Bug | Root Cause | Fix |
+|---|-----|-----------|-----|
+| 1 | `[object Object]` in records_meta display for quality steps | records_meta renderer iterates all keys including nested `pipeline_meta` object, calls `String()` on it | Filter out `pipeline_meta` and non-primitive values from records_meta rendering |
+| 2 | Footer shows "Status: Healthy" when 0 new/changed records (Step 2 permits) | `computeRowData()` status is purely time-based — only checks SLA window, ignores record counts | Add 0-records check → status = 'warning' |
+| 3 | WRITES column shows ALL DB columns without highlighting (Steps 1, 2) | Ingest/quality STEP_DESCRIPTIONS missing `writes` array → `writesSet = null` → all columns lit | Add `writes` arrays to assert_schema, assert_data_bounds |
+| 4 | Live PIPELINE_META overrides step-specific writes (shared scripts) | classify_scope_class + classify_scope_tags share same script, emit same PIPELINE_META | DataFlowTile always uses static STEP_DESCRIPTIONS for writes, live meta for reads only |
+| 5 | Step 4 (Scope Tags) shows 0 records processed, "Healthy" | Same script runs twice; second run finds nothing. Status purely time-based | Fixed by bug #2 (warning status) + "No Change" label in getStatusDot |
 
 ## Execution Plan
-- [x] **Standards Verification:** No new API routes; existing try-catch covers schema query. No layout changes. Mobile-first N/A.
-- [ ] **State Verification:** `STEP_DESCRIPTIONS.fields` consumed in: FreshnessTimeline.tsx (line 725), quality.logic.test.ts (lines 708-757), admin.ui.test.tsx (line 1074). `yieldFields` on FUNNEL_SOURCES is a separate concern (not consumed in UI rendering) — leave untouched.
-- [ ] **Spec Update:** Update spec 28 to note dynamic schema query replaces hardcoded fields.
-- [ ] **Viewport Mocking:** Backend + data source change, N/A.
-- [ ] **Guardrail Test:** Update quality.logic.test.ts: remove `fields`-based assertions, add test that `StepDescription` interface has no `fields` property, add test that stats route queries `information_schema`.
-- [ ] **Red Light:** Verify new tests fail.
-- [ ] **Implementation:**
-  - (a) Remove `fields` from `StepDescription` interface and all entries in `STEP_DESCRIPTIONS`.
-  - (b) Add `information_schema.columns` query to stats route, return as `db_schema_map`.
-  - (c) Pass `dbSchemaMap` from DataQualityDashboard → FreshnessTimeline.
-  - (d) Render live columns in Description tile with "Live DB Schema" badge.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`.
-- [ ] **Collateral Check:** `npx vitest related src/lib/admin/funnel.ts src/components/FreshnessTimeline.tsx --run`.
-- [ ] **Atomic Commit:** `feat(28_data_quality_dashboard): replace hardcoded description fields with live information_schema query`
+- [x] **Rollback Anchor:** b482694
+- [x] **State Verification:** Inspected live dashboard via Chrome, documented 5 bugs
+- [x] **Spec Review:** Read docs/specs/28_data_quality_dashboard.md
+- [x] **Bug 1 Fix:** Filter `pipeline_meta` + nested objects from records_meta renderer
+- [x] **Bug 2 Fix:** Add 0-records → 'warning' status in computeRowData
+- [x] **Bug 3 Fix:** Add `writes` arrays to assert_schema/assert_data_bounds STEP_DESCRIPTIONS
+- [x] **Bug 4 Fix:** DataFlowTile always uses static desc.writes, live meta for reads only
+- [x] **Bug 5 Fix:** getStatusDot returns "No Change" for stale-exempt steps with 0 records
+- [ ] **Reproduction Tests:** Add tests for each bug
+- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`
+- [ ] **Visual Verification:** Reload dashboard and confirm fixes
+- [ ] **Atomic Commit**

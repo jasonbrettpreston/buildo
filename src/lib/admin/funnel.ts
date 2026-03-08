@@ -124,7 +124,7 @@ function resolveLastRun(slug: string, plr: Record<string, PipelineRunInfo>): Pip
   for (const key of Object.keys(plr)) {
     if (key.endsWith(`:${slug}`)) {
       const candidate = plr[key];
-      if (!best || (candidate.last_run_at && (!best.last_run_at || candidate.last_run_at > best.last_run_at))) {
+      if (!best || (candidate.last_run_at && (!best.last_run_at || candidate.last_run_at >= best.last_run_at))) {
         best = candidate;
       }
     }
@@ -147,6 +147,10 @@ export function computeRowData(
     const slaHours = cadence === 'Annual' ? 8760 : cadence === 'Quarterly' ? 2160 : 48;
     if (hoursAgo > slaHours) status = 'stale';
     else if (hoursAgo > slaHours * 0.8) status = 'warning';
+    // Ran recently but produced 0 new + 0 updated = warning (data unchanged)
+    else if (lastRun && lastRun.records_new != null && lastRun.records_new === 0 && (lastRun.records_updated ?? 0) === 0) {
+      status = 'warning';
+    }
   } else {
     status = 'stale';
   }
@@ -567,8 +571,8 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   // Snapshot
   refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', table: 'data_quality_snapshots', sources: ['permits', 'entities', 'parcels'] },
   // Quality (CQA)
-  assert_schema:        { summary: 'Validates upstream CKAN/CSV column headers before ingestion', table: 'pipeline_runs', sources: ['CKAN API'] },
-  assert_data_bounds:   { summary: 'Post-ingestion SQL checks for cost outliers, null rates, referential integrity', table: 'pipeline_runs', sources: ['permits', 'parcels', 'address_points'] },
+  assert_schema:        { summary: 'Validates upstream CKAN/CSV column headers before ingestion', table: 'pipeline_runs', sources: ['CKAN API'], writes: ['checks_passed', 'checks_failed'] },
+  assert_data_bounds:   { summary: 'Post-ingestion SQL checks for cost outliers, null rates, referential integrity', table: 'pipeline_runs', sources: ['permits', 'parcels', 'address_points'], writes: ['checks_passed', 'checks_failed', 'checks_warned'] },
   // Deep Scrapes (coming soon)
   inspections:          { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections', sources: ['City Portal'] },
   coa_documents:        { summary: 'Downloads Committee of Adjustment plans and decision PDFs from AIC portal', table: 'coa_documents', sources: ['AIC Portal'] },
