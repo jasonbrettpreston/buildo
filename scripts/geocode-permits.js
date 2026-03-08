@@ -90,7 +90,7 @@ async function main() {
   console.log(`geo_id but no match: ${parseInt(after.has_geo_id_no_match).toLocaleString()}`);
   console.log(`No geo_id at all:    ${parseInt(after.no_geo_id).toLocaleString()}`);
   console.log(`Duration:            ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: parseInt(before.to_geocode), records_new: updated, records_updated: 0 }));
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: updated, records_new: updated, records_updated: 0 }));
   console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "geo_id", "latitude", "longitude"], "address_points": ["address_point_id", "latitude", "longitude"] }, writes: { "permits": ["latitude", "longitude", "geocoded_at"] } }));
 
   await pool.end();
