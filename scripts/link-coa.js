@@ -203,7 +203,7 @@ async function main() {
     `);
     const s = stats.rows[0];
     console.log(`\nDB Stats: ${s.total} total | ${s.linked} linked (${s.high_conf} high, ${s.med_conf} med, ${s.low_conf} low) | ${s.upcoming} upcoming leads`);
-    console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: totalLinked, records_new: totalLinked, records_updated: 0 }));
+    console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: totalLinked, records_new: 0, records_updated: totalLinked }));
     console.log('PIPELINE_META:' + JSON.stringify({ reads: { "coa_applications": ["id", "application_number", "street_num", "street_name", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name", "ward", "issued_date", "description"] }, writes: { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"] } }));
 
   } finally {

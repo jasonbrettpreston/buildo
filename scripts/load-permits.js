@@ -262,7 +262,7 @@ async function run() {
   console.log(`  Updated: ${updated.toLocaleString()}`);
   console.log(`  Unchanged: ${unchanged.toLocaleString()}`);
   console.log(`  Errors: ${errors}`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: newInserts, records_updated: updated }));
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: newInserts + updated, records_new: newInserts, records_updated: updated }));
   console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["PERMIT_NUM", "REVISION_NUM", "PERMIT_TYPE", "STRUCTURE_TYPE", "WORK", "STREET_NUM", "STREET_NAME", "STREET_TYPE", "STREET_DIRECTION", "CITY", "POSTAL", "GEO_ID", "BUILDING_TYPE", "CATEGORY", "APPLICATION_DATE", "ISSUED_DATE", "COMPLETED_DATE", "STATUS", "DESCRIPTION", "EST_CONST_COST", "BUILDER", "OWNER", "DWELLING_UNITS_CREATED", "DWELLING_UNITS_LOST", "WARD", "COUNCIL_DISTRICT", "CURRENT_USE", "PROPOSED_USE", "HOUSING_UNITS", "STOREYS"] }, writes: { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "data_hash", "raw_json"] } }));
 
   // Log sync run

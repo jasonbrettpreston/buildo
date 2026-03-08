@@ -272,7 +272,7 @@ async function main() {
     }
 
     console.log(`\n\nDone! ${totalInserted} inserted, ${totalUpdated} updated.`);
-    console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: deduplicated.length, records_new: totalInserted, records_updated: totalUpdated }));
+    console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: totalInserted + totalUpdated, records_new: totalInserted, records_updated: totalUpdated }));
     console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["APPLICATION_NUMBER", "ADDRESS", "STREET_NUM", "STREET_NAME", "WARD", "STATUS", "DECISION", "DECISION_DATE", "HEARING_DATE", "DESCRIPTION", "APPLICANT", "SUB_TYPE"] }, writes: { "coa_applications": ["application_number", "address", "street_num", "street_name", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"] } }));
 
     // Show stats

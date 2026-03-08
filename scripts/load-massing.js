@@ -182,6 +182,7 @@ async function main() {
   const startTime = Date.now();
   let processed = 0;
   let inserted = 0;
+  let updated = 0;
   let skipped = 0;
   let errors = 0;
   let batch = [];
@@ -207,7 +208,7 @@ async function main() {
       );
     }
 
-    await pool.query(
+    const result = await pool.query(
       `INSERT INTO building_footprints (
         source_id, geometry,
         footprint_area_sqm, footprint_area_sqft,
@@ -224,11 +225,14 @@ async function main() {
         elev_z = EXCLUDED.elev_z,
         estimated_stories = EXCLUDED.estimated_stories,
         centroid_lat = EXCLUDED.centroid_lat,
-        centroid_lng = EXCLUDED.centroid_lng`,
+        centroid_lng = EXCLUDED.centroid_lng
+      RETURNING (xmax = 0) AS is_insert`,
       values
     );
 
-    inserted += batch.length;
+    const batchNew = result.rows.filter(r => r.is_insert).length;
+    inserted += batchNew;
+    updated += result.rows.length - batchNew;
     batch = [];
   }
 
@@ -312,10 +316,11 @@ async function main() {
   console.log('=== Load Complete ===');
   console.log(`Features read:  ${processed.toLocaleString()}`);
   console.log(`Inserted:       ${inserted.toLocaleString()}`);
+  console.log(`Updated:        ${updated.toLocaleString()}`);
   console.log(`Skipped:        ${skipped.toLocaleString()}`);
   console.log(`Errors:         ${errors}`);
   console.log(`Duration:       ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: inserted, records_updated: 0 }));
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: inserted + updated, records_new: inserted, records_updated: updated }));
   console.log('PIPELINE_META:' + JSON.stringify({ reads: { "City Shapefile": ["SOURCE_ID", "geometry", "AREA_SQ_M", "MAX_HEIGHT", "MIN_HEIGHT", "ELEV_Z", "EST_STORIES"] }, writes: { "building_footprints": ["source_id", "geometry", "footprint_area_sqm", "footprint_area_sqft", "max_height_m", "min_height_m", "elev_z", "estimated_stories", "centroid_lat", "centroid_lng"] } }));
 
   await pool.end();

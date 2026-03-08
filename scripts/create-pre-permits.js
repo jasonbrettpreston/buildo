@@ -74,7 +74,7 @@ async function run() {
   }
 
   console.log('\nDone.');
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: total, records_new: upcoming, records_updated: 0 }));
+  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: upcoming, records_new: 0, records_updated: 0 }));
   console.log('PIPELINE_META:' + JSON.stringify({ reads: { "coa_applications": ["decision", "linked_permit_num", "decision_date", "ward"] }, writes: {} }));
   await pool.end();
 }

@@ -106,14 +106,15 @@ async function main() {
       values.push(row.address_point_id, row.latitude, row.longitude);
     }
 
-    await pool.query(
+    const result = await pool.query(
       `INSERT INTO address_points (address_point_id, latitude, longitude)
        VALUES ${placeholders.join(', ')}
-       ON CONFLICT (address_point_id) DO NOTHING`,
+       ON CONFLICT (address_point_id) DO NOTHING
+       RETURNING 1`,
       values
     );
 
-    inserted += batch.length;
+    inserted += result.rowCount || 0;
     batch = [];
   }
 
@@ -207,7 +208,7 @@ async function main() {
       console.log(`Skipped:       ${skipped.toLocaleString()}`);
       console.log(`Errors:        ${errors}`);
       console.log(`Duration:      ${elapsed}s`);
-      console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: inserted, records_updated: 0 }));
+      console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: inserted, records_new: inserted, records_updated: 0 }));
       console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["ADDRESS_POINT_ID", "LONGITUDE", "LATITUDE"] }, writes: { "address_points": ["address_point_id", "latitude", "longitude"] } }));
 
       await pool.end();

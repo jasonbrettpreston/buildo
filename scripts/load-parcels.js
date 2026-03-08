@@ -257,6 +257,7 @@ async function main() {
   const startTime = Date.now();
   let processed = 0;
   let inserted = 0;
+  let updated = 0;
   let skipped = 0;
   let errors = 0;
   let batch = [];
@@ -283,7 +284,7 @@ async function main() {
       );
     }
 
-    await pool.query(
+    const result = await pool.query(
       `INSERT INTO parcels (
         parcel_id, feature_type,
         address_number, linear_name_full,
@@ -310,11 +311,14 @@ async function main() {
         geometry = EXCLUDED.geometry,
         geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326),
         date_effective = EXCLUDED.date_effective,
-        is_irregular = EXCLUDED.is_irregular`,
+        is_irregular = EXCLUDED.is_irregular
+      RETURNING (xmax = 0) AS is_insert`,
       values
     );
 
-    inserted += batch.length;
+    const batchNew = result.rows.filter(r => r.is_insert).length;
+    inserted += batchNew;
+    updated += result.rows.length - batchNew;
     batch = [];
   }
 
@@ -419,10 +423,11 @@ async function main() {
       console.log('=== Load Complete ===');
       console.log(`Rows read:     ${processed.toLocaleString()}`);
       console.log(`Inserted:      ${inserted.toLocaleString()}`);
+      console.log(`Updated:       ${updated.toLocaleString()}`);
       console.log(`Skipped:       ${skipped.toLocaleString()}`);
       console.log(`Errors:        ${errors}`);
       console.log(`Duration:      ${elapsed}s`);
-      console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: inserted, records_updated: 0 }));
+      console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: inserted + updated, records_new: inserted, records_updated: updated }));
       console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["ARN", "FEAT_TYPE", "ADDR_NUM", "LINEAR_NAME_FULL", "AREA", "SHAPE_Area", "geometry"] }, writes: { "parcels": ["parcel_id", "feature_type", "address_number", "linear_name_full", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "stated_area_raw", "lot_size_sqm", "lot_size_sqft", "frontage_m", "frontage_ft", "depth_m", "depth_ft", "geometry", "date_effective", "is_irregular", "geom"] } }));
 
       await pool.end();
