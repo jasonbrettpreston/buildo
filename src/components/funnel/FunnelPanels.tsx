@@ -306,8 +306,8 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
         </div>
         )
       ) : isSelfRef && targetCols.length > 0 ? (
-        /* Self-referential without live meta: show full table with write highlights */
-        <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Reads & Writes" />
+        /* Self-referential without live meta: show only write-highlighted columns (not full schema) */
+        <TableCard tableName={desc.table} cols={writesSet ? targetCols.filter((c) => writesSet.has(c)) : targetCols} highlights={writesSet} label="Reads & Writes" />
       ) : (
         <div className="flex flex-col md:flex-row items-stretch gap-2">
           <div className={`flex flex-col gap-2 ${sources.length > 0 ? 'flex-1 min-w-0' : ''}`}>
