@@ -419,3 +419,40 @@ describe('Pipeline status polling endpoint exists', () => {
     expect(source).toContain('logError');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Bug B9: Pipeline failure count uses current status, not 24h historical
+// ---------------------------------------------------------------------------
+
+describe('Pipeline failure query filters to current-status failures (Bug B9)', () => {
+  it('quality route only counts pipelines whose latest run is failed', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/quality/route.ts'),
+      'utf-8'
+    );
+    // The 24h query must be cross-referenced with the latest run per pipeline.
+    // A subquery or JOIN must verify the latest run (not just latest in 24h) is still failed.
+    // Current bug: uses only `WHERE status = 'failed' AND started_at > NOW() - INTERVAL '24 hours'`
+    // which includes pipelines that failed 20h ago but succeeded 2h ago.
+    // Fix: the query must ensure no subsequent successful run exists for the pipeline.
+    expect(source).not.toContain("WHERE status = 'failed' AND started_at > NOW() - INTERVAL '24 hours'");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Bug B10: DataFlowTile constrains WRITES columns
+// ---------------------------------------------------------------------------
+
+describe('DataFlowTile constrains write columns (Bug B10)', () => {
+  it('self-ref fallback filters targetCols through writesSet', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'),
+      'utf-8'
+    );
+    // The self-referential fallback (no live meta) must filter columns through
+    // writesSet so it doesn't show the full 50+ column schema.
+    // Fix: cols={writesSet ? targetCols.filter(...) : targetCols}
+    expect(source).toContain('targetCols.filter');
+    expect(source).toContain('writesSet.has');
+  });
+});

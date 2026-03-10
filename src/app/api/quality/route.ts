@@ -55,14 +55,18 @@ export async function GET() {
       // pipeline_runs table may not exist yet — skip duration anomalies
     }
 
-    // Query recent pipeline failures (last 24h)
+    // Query pipeline failures — only pipelines whose LATEST run is 'failed'
+    // (not historical 24h failures that may have been successfully rerun since)
     let pipelineFailures: PipelineFailure[] = [];
     try {
       const failureRows = await query<{ pipeline: string; error_message: string; failed_at: string }>(
-        `SELECT DISTINCT ON (pipeline) pipeline, error_message, started_at AS failed_at
-         FROM pipeline_runs
-         WHERE status = 'failed' AND started_at > NOW() - INTERVAL '24 hours'
-         ORDER BY pipeline, started_at DESC`
+        `SELECT pipeline, error_message, started_at AS failed_at
+         FROM (
+           SELECT DISTINCT ON (pipeline) pipeline, status, error_message, started_at
+           FROM pipeline_runs
+           ORDER BY pipeline, started_at DESC
+         ) latest
+         WHERE status = 'failed'`
       );
       pipelineFailures = failureRows.map((r) => ({
         pipeline: r.pipeline,
