@@ -89,7 +89,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'classify_scope',        indent: 1 },
       { slug: 'classify_permits',     indent: 1 },
       { slug: 'builders',             indent: 1 },
-      { slug: 'link_wsib',            indent: 2 },
+      { slug: 'link_wsib',            indent: 1 },
       { slug: 'geocode_permits',      indent: 1 },
       { slug: 'link_parcels',         indent: 1 },
       { slug: 'link_neighbourhoods',  indent: 1 },

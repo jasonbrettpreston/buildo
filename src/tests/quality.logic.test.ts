@@ -534,10 +534,14 @@ describe('Pipeline Chains', () => {
     expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_data_bounds');
   });
 
-  it('permits chain includes WSIB sub-step under builders', () => {
+  it('permits chain has link_wsib as indent-1 step (not sub-step)', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const linkWsib = permits.steps.find((s) => s.slug === 'link_wsib');
+    expect(linkWsib).toBeDefined();
+    expect(linkWsib!.indent).toBe(1);
+    // No indent-2+ steps in permits chain after B6 fix
     const indent2plus = permits.steps.filter((s) => s.indent >= 2);
-    expect(indent2plus.map((s) => s.slug)).toEqual(['link_wsib']);
+    expect(indent2plus).toHaveLength(0);
   });
 
   it('coa chain has 6 steps', () => {

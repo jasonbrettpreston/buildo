@@ -670,3 +670,49 @@ describe('Chain cancel sets cancelled status (Bug A5)', () => {
     expect(source).toContain("status === 'cancelled'");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Bug B6: link_wsib indent must be 1 in permits chain
+// ---------------------------------------------------------------------------
+
+describe('link_wsib indent in permits chain (Bug B6)', () => {
+  it('link_wsib has indent 1 in permits chain (not sub-step)', () => {
+    const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const linkWsib = permits.steps.find((s) => s.slug === 'link_wsib');
+    expect(linkWsib).toBeDefined();
+    expect(linkWsib!.indent).toBe(1);
+  });
+
+  it('link_wsib has indent 1 in sources chain too', () => {
+    const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
+    const linkWsib = sources.steps.find((s) => s.slug === 'link_wsib');
+    expect(linkWsib).toBeDefined();
+    expect(linkWsib!.indent).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Bug B7: Stale slugs not in PIPELINE_CHAINS
+// ---------------------------------------------------------------------------
+
+describe('Stale scope slugs removed (Bug B7)', () => {
+  it('no chain contains classify_scope_class slug', () => {
+    for (const chain of PIPELINE_CHAINS) {
+      const slugs = chain.steps.map((s) => s.slug);
+      expect(slugs).not.toContain('classify_scope_class');
+    }
+  });
+
+  it('no chain contains classify_scope_tags slug', () => {
+    for (const chain of PIPELINE_CHAINS) {
+      const slugs = chain.steps.map((s) => s.slug);
+      expect(slugs).not.toContain('classify_scope_tags');
+    }
+  });
+
+  it('classify_scope exists in permits chain', () => {
+    const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const slugs = permits.steps.map((s) => s.slug);
+    expect(slugs).toContain('classify_scope');
+  });
+});
