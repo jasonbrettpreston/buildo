@@ -7,17 +7,9 @@
  *
  * Usage: node scripts/load-wsib.js --file path/to/BusinessClassificationDetails(2025).csv
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 const fs = require('fs');
 const { parse } = require('csv-parse');
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
 
 const SLUG = 'load_wsib';
 const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
@@ -45,7 +37,30 @@ function normalizeName(name) {
   return n || null;
 }
 
-async function run() {
+function buildRow(row, legalName, legalNorm, tradeName, tradeNorm, address, predominantClass, subclass) {
+  // Handle duplicate "Description" columns — csv-parse names them Description and Description_1
+  // or similar. We need to figure out which is NAICS desc and which is subclass desc.
+  const keys = Object.keys(row);
+  const descKeys = keys.filter((k) => k.startsWith('Description'));
+  const naicsDesc = descKeys.length > 0 ? (row[descKeys[0]] || '').trim() : '';
+  const subclassDesc = descKeys.length > 1 ? (row[descKeys[1]] || '').trim() : '';
+
+  return {
+    legal_name: legalName,
+    trade_name: tradeName,
+    legal_name_normalized: legalNorm,
+    trade_name_normalized: tradeNorm,
+    mailing_address: address,
+    predominant_class: predominantClass,
+    naics_code: (row['NAICS code'] || '').trim() || null,
+    naics_description: naicsDesc || null,
+    subclass: subclass || null,
+    subclass_description: subclassDesc || null,
+    business_size: (row['Business size'] || '').trim() || null,
+  };
+}
+
+pipeline.run('load-wsib', async (pool) => {
   const args = process.argv.slice(2);
   const fileIdx = args.indexOf('--file');
   if (fileIdx === -1 || !args[fileIdx + 1]) {
@@ -163,18 +178,15 @@ async function run() {
 
   // Bulk upsert into wsib_registry
   console.log('\nUpserting into wsib_registry...');
-  const client = await pool.connect();
   let inserted = 0;
   let updated = 0;
 
-  try {
-    await client.query('BEGIN');
+  const rows = Array.from(seen.values());
+  const BATCH = 2000;
 
-    const rows = Array.from(seen.values());
-    const BATCH_SIZE = 2000;
-
-    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-      const batch = rows.slice(i, i + BATCH_SIZE);
+  await pipeline.withTransaction(pool, async (client) => {
+    for (let i = 0; i < rows.length; i += BATCH) {
+      const batch = rows.slice(i, i + BATCH);
       const values = [];
       const placeholders = [];
 
@@ -213,30 +225,25 @@ async function run() {
           subclass_description = EXCLUDED.subclass_description,
           business_size = EXCLUDED.business_size,
           last_seen_at = NOW()
+        RETURNING (xmax = 0) AS is_insert
       `, values);
 
-      // PostgreSQL INSERT...ON CONFLICT returns rowCount = total rows affected
-      // We can't distinguish inserts from updates here, so we count total
-      inserted += result.rowCount || 0;
+      const batchNew = result.rows.filter(r => r.is_insert).length;
+      inserted += batchNew;
+      updated += result.rows.length - batchNew;
 
-      if ((i + BATCH_SIZE) % 10000 < BATCH_SIZE) {
-        console.log(`  Progress: ${Math.min(i + BATCH_SIZE, rows.length).toLocaleString()} / ${rows.length.toLocaleString()}`);
+      if ((i + BATCH) % 10000 < BATCH) {
+        console.log(`  Progress: ${Math.min(i + BATCH, rows.length).toLocaleString()} / ${rows.length.toLocaleString()}`);
       }
     }
-
-    await client.query('COMMIT');
-  } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
-    throw err;
-  } finally {
-    client.release();
-  }
+  });
 
   const durationMs = Date.now() - startMs;
   const status = 'completed';
 
   console.log(`\n=== Results ===`);
-  console.log(`  Upserted:    ${inserted.toLocaleString()} rows`);
+  console.log(`  Inserted:    ${inserted.toLocaleString()} rows`);
+  console.log(`  Updated:     ${updated.toLocaleString()} rows`);
   console.log(`  Duration:    ${(durationMs / 1000).toFixed(1)}s`);
 
   // Final DB stats
@@ -250,7 +257,12 @@ async function run() {
   `);
   const s = stats.rows[0];
   console.log(`\nDB Stats: ${s.total} total | ${s.linked} linked | ${s.with_trade} with trade name | ${s.class_count} classes`);
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "WSIB CSV": ["legal_name", "trade_name", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size"] }, writes: { "wsib_registry": ["legal_name", "trade_name", "legal_name_normalized", "trade_name_normalized", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size", "last_seen_at"] } }));
+  pipeline.emitMeta(
+    { "WSIB CSV": ["legal_name", "trade_name", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size"] },
+    { "wsib_registry": ["legal_name", "trade_name", "legal_name_normalized", "trade_name_normalized", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size", "last_seen_at"] }
+  );
+
+  pipeline.emitSummary({ records_total: inserted + updated, records_new: inserted, records_updated: updated });
 
   if (runId) {
     await pool.query(
@@ -258,38 +270,7 @@ async function run() {
        SET completed_at = NOW(), status = $1, duration_ms = $2,
            records_total = $3, records_new = $4
        WHERE id = $5`,
-      [status, durationMs, inserted, seen.size, runId]
+      [status, durationMs, inserted + updated, inserted, runId]
     ).catch(() => {});
   }
-
-  await pool.end();
-}
-
-function buildRow(row, legalName, legalNorm, tradeName, tradeNorm, address, predominantClass, subclass) {
-  // Handle duplicate "Description" columns — csv-parse names them Description and Description_1
-  // or similar. We need to figure out which is NAICS desc and which is subclass desc.
-  const keys = Object.keys(row);
-  const descKeys = keys.filter((k) => k.startsWith('Description'));
-  const naicsDesc = descKeys.length > 0 ? (row[descKeys[0]] || '').trim() : '';
-  const subclassDesc = descKeys.length > 1 ? (row[descKeys[1]] || '').trim() : '';
-
-  return {
-    legal_name: legalName,
-    trade_name: tradeName,
-    legal_name_normalized: legalNorm,
-    trade_name_normalized: tradeNorm,
-    mailing_address: address,
-    predominant_class: predominantClass,
-    naics_code: (row['NAICS code'] || '').trim() || null,
-    naics_description: naicsDesc || null,
-    subclass: subclass || null,
-    subclass_description: subclassDesc || null,
-    business_size: (row['Business size'] || '').trim() || null,
-  };
-}
-
-run().catch((err) => {
-  console.error('\nFatal error:', err.message);
-  pool.end().catch(() => {});
-  process.exit(1);
 });

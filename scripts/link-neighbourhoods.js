@@ -9,11 +9,9 @@
  *
  * Dependency: npm install @turf/boolean-point-in-polygon @turf/helpers
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 const booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default;
 const { point, polygon, multiPolygon } = require('@turf/helpers');
-
-const BATCH_SIZE = 1000;
 
 /**
  * Compute centroid of a GeoJSON polygon/multipolygon.
@@ -41,15 +39,7 @@ function computeCentroid(geom) {
   return [sumLng / n, sumLat / n];
 }
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
-
-async function main() {
+pipeline.run('link-neighbourhoods', async (pool) => {
   console.log('=== Buildo Permit-Neighbourhood Linker ===');
   console.log('');
 
@@ -108,7 +98,6 @@ async function main() {
 
   if (totalPermits === 0) {
     console.log('No permits to link. Done.');
-    await pool.end();
     return;
   }
 
@@ -116,7 +105,6 @@ async function main() {
   let processed = 0;
   let linked = 0;
   let noMatch = 0;
-  let offset = 0;
 
   // Step 3: Process in batches
   while (true) {
@@ -135,7 +123,7 @@ async function main() {
          )
        ORDER BY p.permit_num, p.revision_num
        LIMIT $1`,
-      [BATCH_SIZE]
+      [pipeline.BATCH_SIZE]
     );
 
     if (batch.rows.length === 0) break;
@@ -192,20 +180,22 @@ async function main() {
     }
 
     // Batch update permits (neighbourhood_id = -1 marks "no neighbourhood found")
-    for (const [dbId, permits] of Object.entries(updates)) {
-      if (permits.length === 0) continue;
-      const values = [];
-      const conditions = [];
-      let idx = 2; // $1 is neighbourhood_id
-      for (const p of permits) {
-        conditions.push(`(permit_num = $${idx++} AND revision_num = $${idx++})`);
-        values.push(p.permit_num, p.revision_num);
+    await pipeline.withTransaction(pool, async (client) => {
+      for (const [dbId, permits] of Object.entries(updates)) {
+        if (permits.length === 0) continue;
+        const values = [];
+        const conditions = [];
+        let idx = 2; // $1 is neighbourhood_id
+        for (const p of permits) {
+          conditions.push(`(permit_num = $${idx++} AND revision_num = $${idx++})`);
+          values.push(p.permit_num, p.revision_num);
+        }
+        await client.query(
+          `UPDATE permits SET neighbourhood_id = $1 WHERE ${conditions.join(' OR ')}`,
+          [parseInt(dbId, 10), ...values]
+        );
       }
-      await pool.query(
-        `UPDATE permits SET neighbourhood_id = $1 WHERE ${conditions.join(' OR ')}`,
-        [parseInt(dbId, 10), ...values]
-      );
-    }
+    });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     const pct = ((processed / totalPermits) * 100).toFixed(1);
@@ -219,13 +209,9 @@ async function main() {
   console.log(`Successfully linked: ${linked.toLocaleString()} (${((linked / Math.max(processed, 1)) * 100).toFixed(1)}%)`);
   console.log(`No match found:      ${noMatch.toLocaleString()}`);
   console.log(`Duration:            ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: linked, records_new: linked, records_updated: 0 }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "latitude", "longitude", "neighbourhood_id"], "neighbourhoods": ["id", "neighbourhood_id", "name", "geometry"], "parcels": ["id", "geometry"] }, writes: { "permits": ["neighbourhood_id"] } }));
-
-  await pool.end();
-}
-
-main().catch((err) => {
-  console.error('Linking failed:', err);
-  process.exit(1);
+  pipeline.emitSummary({ records_total: linked, records_new: linked, records_updated: 0 });
+  pipeline.emitMeta(
+    { "permits": ["permit_num", "revision_num", "latitude", "longitude", "neighbourhood_id"], "neighbourhoods": ["id", "neighbourhood_id", "name", "geometry"], "parcels": ["id", "geometry"] },
+    { "permits": ["neighbourhood_id"] }
+  );
 });

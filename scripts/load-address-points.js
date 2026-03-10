@@ -8,25 +8,15 @@
  *
  * If no path is given, downloads from Toronto Open Data.
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
 const { parse } = require('csv-parse');
 
-const BATCH_SIZE = 1000;
-
 const CSV_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abedd8bc-e3dd-4d45-8e69-79165a76e4fa/resource/64d4e54b-738f-4cd9-a9e7-8050fac8a52f/download/address-points-4326.csv';
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
 
 // ---------------------------------------------------------------------------
 // Download helper
@@ -67,7 +57,7 @@ function downloadFile(url, destPath) {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-async function main() {
+pipeline.run('load-address-points', async (pool) => {
   console.log('=== Buildo Address Points Loader ===');
   console.log('');
 
@@ -97,25 +87,29 @@ async function main() {
   async function flushBatch() {
     if (batch.length === 0) return;
 
-    const values = [];
-    const placeholders = [];
-    let idx = 1;
-
-    for (const row of batch) {
-      placeholders.push(`($${idx++}, $${idx++}, $${idx++})`);
-      values.push(row.address_point_id, row.latitude, row.longitude);
-    }
-
-    const result = await pool.query(
-      `INSERT INTO address_points (address_point_id, latitude, longitude)
-       VALUES ${placeholders.join(', ')}
-       ON CONFLICT (address_point_id) DO NOTHING
-       RETURNING 1`,
-      values
-    );
-
-    inserted += result.rowCount || 0;
+    const currentBatch = batch;
     batch = [];
+
+    await pipeline.withTransaction(pool, async (client) => {
+      const values = [];
+      const placeholders = [];
+      let idx = 1;
+
+      for (const row of currentBatch) {
+        placeholders.push(`($${idx++}, $${idx++}, $${idx++})`);
+        values.push(row.address_point_id, row.latitude, row.longitude);
+      }
+
+      const result = await client.query(
+        `INSERT INTO address_points (address_point_id, latitude, longitude)
+         VALUES ${placeholders.join(', ')}
+         ON CONFLICT (address_point_id) DO NOTHING
+         RETURNING 1`,
+        values
+      );
+
+      inserted += result.rowCount || 0;
+    });
   }
 
   return new Promise((resolve, reject) => {
@@ -174,12 +168,12 @@ async function main() {
         longitude: lng,
       });
 
-      if (batch.length >= BATCH_SIZE) {
+      if (batch.length >= pipeline.BATCH_SIZE) {
         stream.pause();
         try {
           await flushBatch();
         } catch (err) {
-          console.error(`  Error inserting batch at row ${processed}:`, err.message);
+          pipeline.log.error('[load-address-points]', err, { row: processed });
           errors++;
           batch = [];
         }
@@ -196,7 +190,7 @@ async function main() {
       try {
         await flushBatch();
       } catch (err) {
-        console.error('Error flushing final batch:', err.message);
+        pipeline.log.error('[load-address-points]', err, { phase: 'final_flush' });
         errors++;
       }
 
@@ -208,23 +202,18 @@ async function main() {
       console.log(`Skipped:       ${skipped.toLocaleString()}`);
       console.log(`Errors:        ${errors}`);
       console.log(`Duration:      ${elapsed}s`);
-      console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: inserted, records_new: inserted, records_updated: 0 }));
-      console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["ADDRESS_POINT_ID", "LONGITUDE", "LATITUDE"] }, writes: { "address_points": ["address_point_id", "latitude", "longitude"] } }));
+      pipeline.emitSummary({ records_total: inserted, records_new: inserted, records_updated: 0 });
+      pipeline.emitMeta(
+        { "CKAN API": ["ADDRESS_POINT_ID", "LONGITUDE", "LATITUDE"] },
+        { "address_points": ["address_point_id", "latitude", "longitude"] }
+      );
 
-      await pool.end();
       resolve();
     });
 
     stream.on('error', async (err) => {
-      console.error('CSV parse error:', err);
-      await pool.end();
+      pipeline.log.error('[load-address-points]', err, { phase: 'csv_parse' });
       reject(err);
     });
   });
-}
-
-main().catch(async (err) => {
-  console.error('Load failed:', err);
-  await pool.end().catch(() => {});
-  process.exit(1);
 });

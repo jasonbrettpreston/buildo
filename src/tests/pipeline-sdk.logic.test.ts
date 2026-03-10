@@ -1,0 +1,346 @@
+/**
+ * Pipeline SDK — unit tests
+ * SPEC LINK: docs/specs/00_engineering_standards.md §9
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import path from 'path';
+
+// The SDK is CommonJS in scripts/lib — require it
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pipeline = require(path.resolve(__dirname, '../../scripts/lib/pipeline'));
+
+describe('Pipeline SDK', () => {
+  // -----------------------------------------------------------------------
+  // createPool
+  // -----------------------------------------------------------------------
+  describe('createPool()', () => {
+    it('returns a Pool instance with PG_* env var defaults', () => {
+      const pool = pipeline.createPool();
+      expect(pool).toBeDefined();
+      expect(typeof pool.query).toBe('function');
+      expect(typeof pool.connect).toBe('function');
+      expect(typeof pool.end).toBe('function');
+      // Clean up the pool immediately
+      pool.end().catch(() => {});
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // emitSummary
+  // -----------------------------------------------------------------------
+  describe('emitSummary()', () => {
+    let logSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      logSpy.mockRestore();
+    });
+
+    it('emits PIPELINE_SUMMARY with correct JSON format', () => {
+      pipeline.emitSummary({ records_total: 100, records_new: 50, records_updated: 30 });
+      expect(logSpy).toHaveBeenCalledTimes(1);
+      const output = logSpy.mock.calls[0][0] as string;
+      expect(output).toMatch(/^PIPELINE_SUMMARY:/);
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed).toEqual({ records_total: 100, records_new: 50, records_updated: 30 });
+    });
+
+    it('includes records_meta when provided', () => {
+      pipeline.emitSummary({
+        records_total: 10,
+        records_new: 5,
+        records_updated: 3,
+        records_meta: { checks_passed: 4, checks_failed: 0 },
+      });
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed.records_meta).toEqual({ checks_passed: 4, checks_failed: 0 });
+    });
+
+    it('defaults missing fields to 0', () => {
+      pipeline.emitSummary({});
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed).toEqual({ records_total: 0, records_new: 0, records_updated: 0 });
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // emitMeta
+  // -----------------------------------------------------------------------
+  describe('emitMeta()', () => {
+    let logSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      logSpy.mockRestore();
+    });
+
+    it('emits PIPELINE_META with reads and writes', () => {
+      pipeline.emitMeta(
+        { permits: ['permit_num'] },
+        { permit_trades: ['trade_slug'] }
+      );
+      const output = logSpy.mock.calls[0][0] as string;
+      expect(output).toMatch(/^PIPELINE_META:/);
+      const parsed = JSON.parse(output.replace('PIPELINE_META:', ''));
+      expect(parsed.reads).toEqual({ permits: ['permit_num'] });
+      expect(parsed.writes).toEqual({ permit_trades: ['trade_slug'] });
+    });
+
+    it('includes external APIs when provided', () => {
+      pipeline.emitMeta(
+        { 'CKAN API': ['PERMIT_NUM'] },
+        { permits: ['permit_num'] },
+        ['CKAN API']
+      );
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_META:', ''));
+      expect(parsed.external).toEqual(['CKAN API']);
+    });
+
+    it('omits external key when empty', () => {
+      pipeline.emitMeta({ t: ['c'] }, { t2: ['c2'] });
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_META:', ''));
+      expect(parsed.external).toBeUndefined();
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // progress
+  // -----------------------------------------------------------------------
+  describe('progress()', () => {
+    let logSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      logSpy.mockRestore();
+    });
+
+    it('logs progress with percentage and elapsed time', () => {
+      const start = Date.now() - 5000; // 5 seconds ago
+      pipeline.progress('test', 50, 100, start);
+      expect(logSpy).toHaveBeenCalledTimes(1);
+      const output = logSpy.mock.calls[0][0] as string;
+      expect(output).toContain('[test]');
+      expect(output).toContain('50.0%');
+    });
+
+    it('handles zero total gracefully', () => {
+      pipeline.progress('test', 0, 0, Date.now());
+      const output = logSpy.mock.calls[0][0] as string;
+      expect(output).toContain('0.0%');
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // log (structured logging)
+  // -----------------------------------------------------------------------
+  describe('log', () => {
+    it('log.info emits structured JSON to console.log', () => {
+      const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      pipeline.log.info('[test]', 'hello', { key: 'val' });
+      const parsed = JSON.parse(spy.mock.calls[0][0]);
+      expect(parsed.level).toBe('INFO');
+      expect(parsed.tag).toBe('[test]');
+      expect(parsed.msg).toBe('hello');
+      expect(parsed.context).toEqual({ key: 'val' });
+      spy.mockRestore();
+    });
+
+    it('log.warn emits structured JSON to console.warn', () => {
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      pipeline.log.warn('[test]', 'caution');
+      const parsed = JSON.parse(spy.mock.calls[0][0]);
+      expect(parsed.level).toBe('WARN');
+      spy.mockRestore();
+    });
+
+    it('log.error extracts message and stack from Error objects', () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const err = new Error('boom');
+      pipeline.log.error('[test]', err, { phase: 'load' });
+      const parsed = JSON.parse(spy.mock.calls[0][0]);
+      expect(parsed.level).toBe('ERROR');
+      expect(parsed.msg).toBe('boom');
+      expect(parsed.stack).toContain('Error: boom');
+      expect(parsed.context).toEqual({ phase: 'load' });
+      spy.mockRestore();
+    });
+
+    it('log.error handles non-Error values', () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      pipeline.log.error('[test]', 'string error');
+      const parsed = JSON.parse(spy.mock.calls[0][0]);
+      expect(parsed.msg).toBe('string error');
+      expect(parsed.stack).toBeUndefined();
+      spy.mockRestore();
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // withTransaction
+  // -----------------------------------------------------------------------
+  describe('withTransaction()', () => {
+    it('commits on success', async () => {
+      const queries: string[] = [];
+      const mockClient = {
+        query: vi.fn(async (sql: string) => { queries.push(sql); }),
+        release: vi.fn(),
+      };
+      const mockPool = {
+        connect: vi.fn(async () => mockClient),
+      };
+
+      const result = await pipeline.withTransaction(mockPool, async () => {
+        return 42;
+      });
+
+      expect(result).toBe(42);
+      expect(queries).toEqual(['BEGIN', 'COMMIT']);
+      expect(mockClient.release).toHaveBeenCalledTimes(1);
+    });
+
+    it('rolls back and re-throws on error', async () => {
+      const queries: string[] = [];
+      const mockClient = {
+        query: vi.fn(async (sql: string) => { queries.push(sql); }),
+        release: vi.fn(),
+      };
+      const mockPool = {
+        connect: vi.fn(async () => mockClient),
+      };
+
+      await expect(
+        pipeline.withTransaction(mockPool, async () => {
+          throw new Error('test error');
+        })
+      ).rejects.toThrow('test error');
+
+      expect(queries).toEqual(['BEGIN', 'ROLLBACK']);
+      expect(mockClient.release).toHaveBeenCalledTimes(1);
+    });
+
+    it('handles rollback failure gracefully (nested try-catch)', async () => {
+      const mockClient = {
+        query: vi.fn(async (sql: string) => {
+          if (sql === 'ROLLBACK') throw new Error('rollback failed');
+        }),
+        release: vi.fn(),
+      };
+      const mockPool = {
+        connect: vi.fn(async () => mockClient),
+      };
+
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await expect(
+        pipeline.withTransaction(mockPool, async () => {
+          throw new Error('original error');
+        })
+      ).rejects.toThrow('original error');
+
+      // Should log the rollback failure but preserve original error
+      expect(errorSpy).toHaveBeenCalled();
+      expect(mockClient.release).toHaveBeenCalledTimes(1);
+      errorSpy.mockRestore();
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Batch utilities
+  // -----------------------------------------------------------------------
+  describe('batch utilities', () => {
+    it('BATCH_SIZE defaults to 1000', () => {
+      expect(pipeline.BATCH_SIZE).toBe(1000);
+    });
+
+    it('maxRowsPerInsert respects 65535 param limit', () => {
+      expect(pipeline.maxRowsPerInsert(8)).toBe(8191);   // 65535 / 8
+      expect(pipeline.maxRowsPerInsert(16)).toBe(4095);  // 65535 / 16
+      expect(pipeline.maxRowsPerInsert(32)).toBe(2047);  // 65535 / 32
+    });
+
+    it('isFullMode returns false when --full not in argv', () => {
+      expect(pipeline.isFullMode()).toBe(false);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // run() lifecycle
+  // -----------------------------------------------------------------------
+  describe('run()', () => {
+    it('exports run and createPool as functions', () => {
+      expect(typeof pipeline.run).toBe('function');
+      expect(typeof pipeline.createPool).toBe('function');
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // All scripts import SDK
+  // -----------------------------------------------------------------------
+  describe('script SDK adoption', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs');
+    const scriptDir = path.resolve(__dirname, '../../scripts');
+
+    const PIPELINE_SCRIPTS = [
+      'load-permits.js',
+      'load-coa.js',
+      'load-parcels.js',
+      'load-neighbourhoods.js',
+      'load-wsib.js',
+      'load-address-points.js',
+      'load-massing.js',
+      'classify-permits.js',
+      'classify-scope.js',
+      'geocode-permits.js',
+      'link-parcels.js',
+      'link-neighbourhoods.js',
+      'link-massing.js',
+      'link-coa.js',
+      'link-wsib.js',
+      'extract-builders.js',
+      'refresh-snapshot.js',
+      'compute-centroids.js',
+      'link-similar.js',
+      'create-pre-permits.js',
+      'enrich-web-search.js',
+    ];
+
+    for (const script of PIPELINE_SCRIPTS) {
+      it(`${script} imports the pipeline SDK`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        expect(content).toContain("require('./lib/pipeline')");
+      });
+
+      it(`${script} uses pipeline.run() lifecycle`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        expect(content).toContain('pipeline.run(');
+      });
+
+      it(`${script} has no bare new Pool() instantiation`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        // Should not have direct pool creation (SDK handles it)
+        expect(content).not.toMatch(/new Pool\(/);
+      });
+
+      it(`${script} uses pipeline.emitSummary()`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        expect(content).toContain('pipeline.emitSummary(');
+      });
+
+      it(`${script} uses pipeline.emitMeta()`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        expect(content).toContain('pipeline.emitMeta(');
+      });
+    }
+  });
+});

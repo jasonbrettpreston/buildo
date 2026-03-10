@@ -10,18 +10,9 @@
  *   node scripts/classify-permits.js           # incremental (new/changed only)
  *   node scripts/classify-permits.js --full     # re-classify all permits
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 
 const BATCH_SIZE = 1000;
-const fullMode = process.argv.includes('--full');
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
 
 // ---------------------------------------------------------------------------
 // Trades (hardcoded to avoid module resolution issues in standalone script)
@@ -500,7 +491,9 @@ function classifyPermit(permit, rules) {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-async function main() {
+const fullMode = pipeline.isFullMode();
+
+pipeline.run('classify-permits', async (pool) => {
   console.log('=== Buildo Trade Classification ===');
   console.log('Note: Trades are inferred from permit metadata, not actual building plans.');
   console.log('');
@@ -609,15 +602,17 @@ async function main() {
       for (let r = 0; r < chunk.length; r++) {
         renumbered.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++})`);
       }
-      await pool.query(
-        `INSERT INTO permit_trades (permit_num, revision_num, trade_id, tier, confidence, is_active, phase, lead_score)
-         VALUES ${renumbered.join(', ')}
-         ON CONFLICT (permit_num, revision_num, trade_id)
-         DO UPDATE SET tier = EXCLUDED.tier, confidence = EXCLUDED.confidence,
-                       is_active = EXCLUDED.is_active, phase = EXCLUDED.phase,
-                       lead_score = EXCLUDED.lead_score, classified_at = NOW()`,
-        valChunk
-      );
+      await pipeline.withTransaction(pool, async (client) => {
+        await client.query(
+          `INSERT INTO permit_trades (permit_num, revision_num, trade_id, tier, confidence, is_active, phase, lead_score)
+           VALUES ${renumbered.join(', ')}
+           ON CONFLICT (permit_num, revision_num, trade_id)
+           DO UPDATE SET tier = EXCLUDED.tier, confidence = EXCLUDED.confidence,
+                         is_active = EXCLUDED.is_active, phase = EXCLUDED.phase,
+                         lead_score = EXCLUDED.lead_score, classified_at = NOW()`,
+          valChunk
+        );
+      });
     }
 
     processed += batch.rows.length;
@@ -641,13 +636,6 @@ async function main() {
   console.log('');
   console.log('NOTE: Trade classifications are inferred estimates based on permit');
   console.log('metadata, not actual building plans. Rules can be refined over time.');
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: processed, records_new: Math.min(trulyNewPermits, permitsWithTrades), records_updated: permitsWithTrades - Math.min(trulyNewPermits, permitsWithTrades) }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"] }, writes: { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"] } }));
-
-  await pool.end();
-}
-
-main().catch((err) => {
-  console.error('Classification failed:', err);
-  process.exit(1);
+  pipeline.emitSummary({ records_total: processed, records_new: Math.min(trulyNewPermits, permitsWithTrades), records_updated: permitsWithTrades - Math.min(trulyNewPermits, permitsWithTrades) });
+  pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"] });
 });

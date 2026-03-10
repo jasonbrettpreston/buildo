@@ -1,31 +1,71 @@
-# Active Task: Fix Pipeline Dashboard Display Bugs (WF3)
-**Status:** Implementation
+# Active Task: Pipeline SDK Extraction & A+ Rubric Compliance
+**Status:** Complete
 
 ## Context
-* **Goal:** Fix multiple display bugs in the Data Quality pipeline dashboard identified from live UI inspection
-* **Target Spec:** docs/specs/28_data_quality_dashboard.md
-* **Key Files:** `src/components/FreshnessTimeline.tsx`, `src/components/funnel/FunnelPanels.tsx`, `src/lib/admin/funnel.ts`
+* **Goal:** Extract a shared Pipeline SDK (`scripts/lib/pipeline.js`) that standardizes pool management, transactions, error handling, logging, and PIPELINE_SUMMARY/META emission across all 21 pipeline scripts. Resolve all consistency violations, adopt Google SWE recommendations, and bring every audit dimension to A+.
+* **Target Spec:** docs/specs/28_data_quality_dashboard.md + docs/specs/00_engineering_standards.md
+* **Key Files:**
+  - NEW: `scripts/lib/pipeline.js` — shared Pipeline SDK
+  - MODIFY: All 21 pipeline scripts in `scripts/`
+  - MODIFY: `scripts/refresh-snapshot.js` — fix DATABASE_URL → PG_* vars
+  - MODIFY: `scripts/link-parcels.js` — replace N+1 queries with batch CTE
+  - NEW: `src/tests/pipeline-sdk.logic.test.ts` — SDK unit tests
+  - NEW: `src/tests/classify-sync.logic.test.ts` — dual-path sync gate
 
-## Bug List (from live dashboard inspection)
+## Technical Implementation
 
-| # | Bug | Root Cause | Fix |
-|---|-----|-----------|-----|
-| 1 | `[object Object]` in records_meta display for quality steps | records_meta renderer iterates all keys including nested `pipeline_meta` object, calls `String()` on it | Filter out `pipeline_meta` and non-primitive values from records_meta rendering |
-| 2 | Footer shows "Status: Healthy" when 0 new/changed records (Step 2 permits) | `computeRowData()` status is purely time-based — only checks SLA window, ignores record counts | Add 0-records check → status = 'warning' |
-| 3 | WRITES column shows ALL DB columns without highlighting (Steps 1, 2) | Ingest/quality STEP_DESCRIPTIONS missing `writes` array → `writesSet = null` → all columns lit | Add `writes` arrays to assert_schema, assert_data_bounds |
-| 4 | Live PIPELINE_META overrides step-specific writes (shared scripts) | classify_scope_class + classify_scope_tags share same script, emit same PIPELINE_META | DataFlowTile always uses static STEP_DESCRIPTIONS for writes, live meta for reads only |
-| 5 | Step 4 (Scope Tags) shows 0 records processed, "Healthy" | Same script runs twice; second run finds nothing. Status purely time-based | Fixed by bug #2 (warning status) + "No Change" label in getStatusDot |
+### Phase 1: Pipeline SDK (`scripts/lib/pipeline.js`)
+Create a shared module exposing:
+- `createPool()` — standard PG_* env var pool creation
+- `run(name, fn)` — top-level try/catch/finally with pool.end() + process.exit()
+- `withTransaction(pool, fn)` — BEGIN/COMMIT/ROLLBACK with nested catch on rollback
+- `emitSummary(stats)` — `PIPELINE_SUMMARY:{json}`
+- `emitMeta(reads, writes, external)` — `PIPELINE_META:{json}`
+- `progress(label, current, total, startTime)` — standardized progress logging
+- `log` object — `{ info, warn, error }` structured JSON logging for scripts
+
+### Phase 2: Migrate All 21 Scripts to SDK
+Replace boilerplate in each script:
+- Pool init → `const { pool } = pipeline.createPool()`
+- Main wrapper → `pipeline.run('script-name', async (pool) => { ... })`
+- PIPELINE_SUMMARY/META → `pipeline.emitSummary()` / `pipeline.emitMeta()`
+- Bare console.error → `pipeline.log.error()`
+- Add transaction wrapping via `pipeline.withTransaction()` for all write scripts
+
+### Phase 3: Fix Specific Audit Findings
+1. `refresh-snapshot.js` — switch from DATABASE_URL to PG_* vars
+2. `link-parcels.js` — replace N+1 per-permit queries with batch CTE JOINs
+3. `load-wsib.js` — ensure pool.end() in all paths
+4. Standardize batch sizes (1000 default, document exceptions)
+5. Standardize `--full` mode via CLI flag (remove LINK_MASSING_FULL env var)
+
+### Phase 4: Classification Sync Gate
+- Create `src/tests/classify-sync.logic.test.ts`
+- Import tag-trade matrix from both `classifier.ts` and read `classify-permits.js`
+- Assert identical trade assignment for representative permits
+
+### Phase 5: Tests
+- `src/tests/pipeline-sdk.logic.test.ts` — SDK function tests
+- Update `src/tests/chain.logic.test.ts` if chain definitions change
+
+## Standards Compliance
+* **Try-Catch Boundary:** Pipeline SDK enforces overarching try/catch on every script via `pipeline.run()`
+* **Unhappy Path Tests:** SDK tests cover: pool creation failure, transaction rollback, malformed summary emission
+* **logError Mandate:** N/A — scripts use `pipeline.log.error()` (scripts are not `src/app/api/`)
+* **Mobile-First:** Backend Only, N/A
 
 ## Execution Plan
-- [x] **Rollback Anchor:** b482694
-- [x] **State Verification:** Inspected live dashboard via Chrome, documented 5 bugs
-- [x] **Spec Review:** Read docs/specs/28_data_quality_dashboard.md
-- [x] **Bug 1 Fix:** Filter `pipeline_meta` + nested objects from records_meta renderer
-- [x] **Bug 2 Fix:** Add 0-records → 'warning' status in computeRowData
-- [x] **Bug 3 Fix:** Add `writes` arrays to assert_schema/assert_data_bounds STEP_DESCRIPTIONS
-- [x] **Bug 4 Fix:** DataFlowTile always uses static desc.writes, live meta for reads only
-- [x] **Bug 5 Fix:** getStatusDot returns "No Change" for stale-exempt steps with 0 records
-- [ ] **Reproduction Tests:** Add tests for each bug
-- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`
-- [ ] **Visual Verification:** Reload dashboard and confirm fixes
-- [ ] **Atomic Commit**
+- [ ] **Standards Verification:** Backend-only pipeline refactor. No UI changes. §9.1 transaction compliance is the primary target.
+- [ ] **State Verification:** 21 scripts, 7800 lines, all currently working. Must not break any existing behavior.
+- [ ] **Spec Update:** Update `docs/specs/28_data_quality_dashboard.md` to document Pipeline SDK protocol.
+- [ ] **Schema Evolution:** NO — no database changes needed.
+- [ ] **Viewport Mocking:** Backend Only, N/A
+- [ ] **Guardrail Test:** Create `src/tests/pipeline-sdk.logic.test.ts` + `src/tests/classify-sync.logic.test.ts`
+- [ ] **Red Light:** Run new tests — must fail before implementation.
+- [ ] **Phase 1:** Create `scripts/lib/pipeline.js` SDK
+- [ ] **Phase 2:** Migrate all 21 scripts to use SDK (atomic commits per script)
+- [ ] **Phase 3:** Fix specific audit findings (N+1, DATABASE_URL, batch sizes)
+- [ ] **Phase 4:** Create classification sync gate test
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix` — all pass
+- [ ] **Atomic Commit:** Commit each phase separately
+- [ ] **Founder's Audit:** No laziness placeholders, all exports resolve, test coverage complete

@@ -253,7 +253,7 @@ describe('Incremental Processing Guards', () => {
   it('link-wsib.js emits PIPELINE_SUMMARY with totalUnlinked as records_total', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/link-wsib.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');
-    expect(content).toContain('PIPELINE_SUMMARY:');
+    expect(content).toContain('pipeline.emitSummary(');
     expect(content).toContain('totalUnlinked');
   });
 });
@@ -307,7 +307,8 @@ describe('PIPELINE_SUMMARY convention', () => {
   for (const script of SCRIPTS_WITH_COUNTS) {
     it(`${script} emits PIPELINE_SUMMARY line`, () => {
       const source = fs.readFileSync(path.join(scriptsDir, script), 'utf-8');
-      expect(source).toContain('PIPELINE_SUMMARY:');
+      // Scripts use pipeline.emitSummary() which internally emits PIPELINE_SUMMARY:
+      expect(source).toContain('pipeline.emitSummary(');
     });
   }
 });
@@ -392,7 +393,9 @@ describe('PIPELINE_META convention', () => {
   for (const script of SCRIPTS_WITH_META) {
     it(`${script} emits PIPELINE_META line`, () => {
       const source = fs.readFileSync(path.join(scriptsDir, script), 'utf-8');
-      expect(source).toContain('PIPELINE_META:');
+      // Scripts use pipeline.emitMeta() which internally emits PIPELINE_META:
+      // Quality scripts still emit directly (not yet migrated to SDK)
+      expect(source.includes('pipeline.emitMeta(') || source.includes('PIPELINE_META:')).toBe(true);
     });
   }
 });

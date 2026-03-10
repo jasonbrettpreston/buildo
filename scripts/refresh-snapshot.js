@@ -2,231 +2,227 @@
 // Refresh the data quality snapshot by re-running all counting queries
 // Usage: node scripts/refresh-snapshot.js
 
-const { Pool } = require('pg');
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/buildo',
-});
+const pipeline = require('./lib/pipeline');
 
-async function run() {
-  const client = await pool.connect();
+pipeline.run('refresh-snapshot', async (pool) => {
+  console.log('Recapturing data quality snapshot...\n');
+
+  // 1. Permit counts
+  const permits = await pool.query(
+    `SELECT COUNT(*) as total,
+            COUNT(*) FILTER (WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')) as active
+     FROM permits`
+  );
+  const total_permits = parseInt(permits.rows[0].total);
+  const active_permits = parseInt(permits.rows[0].active);
+  console.log(`Permits: ${total_permits} total, ${active_permits} active`);
+
+  // 2. Trade counts (all classifications, not just phase-active)
+  const trades = await pool.query(
+    `SELECT COUNT(DISTINCT (permit_num, revision_num)) as permits_with_trades,
+            COUNT(*) as total_matches,
+            AVG(confidence)::NUMERIC(4,3) as avg_confidence,
+            COUNT(*) FILTER (WHERE tier = 1) as tier1,
+            COUNT(*) FILTER (WHERE tier = 2) as tier2,
+            COUNT(*) FILTER (WHERE tier = 3) as tier3
+     FROM permit_trades`
+  );
+  const t = trades.rows[0];
+
+  // 2b. Trade counts by use-type
+  const tradeByType = await pool.query(
+    `SELECT
+       COUNT(DISTINCT p.permit_num) FILTER (
+         WHERE 'residential' = ANY(p.scope_tags) AND pt.permit_num IS NOT NULL
+       ) as res_classified,
+       COUNT(DISTINCT p.permit_num) FILTER (
+         WHERE 'residential' = ANY(p.scope_tags)
+       ) as res_total,
+       COUNT(DISTINCT p.permit_num) FILTER (
+         WHERE ('commercial' = ANY(p.scope_tags) OR 'mixed-use' = ANY(p.scope_tags))
+           AND pt.permit_num IS NOT NULL
+       ) as com_classified,
+       COUNT(DISTINCT p.permit_num) FILTER (
+         WHERE ('commercial' = ANY(p.scope_tags) OR 'mixed-use' = ANY(p.scope_tags))
+       ) as com_total
+     FROM permits p
+     LEFT JOIN (SELECT DISTINCT permit_num FROM permit_trades) pt
+       ON pt.permit_num = p.permit_num
+     WHERE p.status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+  );
+  const tt = tradeByType.rows[0];
+
+  // 3. Builder counts
+  const builders = await pool.query(
+    `SELECT COUNT(*) as total,
+            COUNT(*) FILTER (WHERE last_enriched_at IS NOT NULL) as enriched,
+            COUNT(*) FILTER (WHERE primary_phone IS NOT NULL) as with_phone,
+            COUNT(*) FILTER (WHERE primary_email IS NOT NULL) as with_email,
+            COUNT(*) FILTER (WHERE website IS NOT NULL) as with_website,
+            COUNT(*) FILTER (WHERE google_place_id IS NOT NULL) as with_google,
+            COUNT(*) FILTER (WHERE is_wsib_registered = true) as with_wsib
+     FROM entities`
+  );
+  const b = builders.rows[0];
+  const permitsBuilder = await pool.query(
+    `SELECT COUNT(*) as count FROM permits WHERE builder_name IS NOT NULL AND builder_name != ''`
+  );
+
+  // 4. Parcel counts
+  const parcels = await pool.query(
+    `SELECT COUNT(DISTINCT (permit_num, revision_num)) as permits_with_parcel,
+            COUNT(*) FILTER (WHERE match_type = 'exact_address') as exact_matches,
+            COUNT(*) FILTER (WHERE match_type = 'name_only') as name_matches,
+            COUNT(*) FILTER (WHERE match_type = 'spatial') as spatial_matches,
+            AVG(confidence)::NUMERIC(4,3) as avg_confidence
+     FROM permit_parcels`
+  );
+  const p = parcels.rows[0];
+
+  // 5. Neighbourhood count (FIXED: active only)
+  const nhood = await pool.query(
+    `SELECT COUNT(*) as count FROM permits
+     WHERE neighbourhood_id IS NOT NULL
+       AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+  );
+  const neighbourhood_count = parseInt(nhood.rows[0].count);
+  console.log(`Neighbourhoods (active): ${neighbourhood_count} / ${active_permits} = ${(neighbourhood_count/active_permits*100).toFixed(1)}%`);
+
+  // 6. Geocoding
+  const geo = await pool.query(
+    `SELECT COUNT(*) as count FROM permits WHERE latitude IS NOT NULL AND longitude IS NOT NULL`
+  );
+
+  // 7. CoA counts
+  const coa = await pool.query(
+    `SELECT COUNT(*) as total,
+            COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL) as linked,
+            AVG(linked_confidence) FILTER (WHERE linked_permit_num IS NOT NULL)::NUMERIC(4,3) as avg_confidence,
+            COUNT(*) FILTER (WHERE linked_confidence >= 0.80) as high_confidence,
+            COUNT(*) FILTER (WHERE linked_confidence IS NOT NULL AND linked_confidence < 0.50) as low_confidence
+     FROM coa_applications`
+  );
+  const c = coa.rows[0];
+  console.log(`CoA: ${c.total} total, ${c.linked} linked = ${(parseInt(c.linked)/parseInt(c.total)*100).toFixed(1)}%`);
+
+  // 8. Scope counts — active permits with residential/commercial/mixed-use tag
+  const scope = await pool.query(
+    `SELECT COUNT(*) as count FROM permits
+     WHERE ('residential' = ANY(scope_tags) OR 'commercial' = ANY(scope_tags) OR 'mixed-use' = ANY(scope_tags))
+       AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+  );
+  const scopeBreakdown = await pool.query(
+    `SELECT tag, COUNT(*) as count
+     FROM (SELECT unnest(scope_tags) as tag FROM permits
+           WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
+             AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')) sub
+     WHERE tag IN ('residential', 'commercial', 'mixed-use')
+     GROUP BY tag`
+  );
+  const breakdown = {};
+  for (const r of scopeBreakdown.rows) breakdown[r.tag] = parseInt(r.count);
+
+  // 9. Scope tags counts — active permits only
+  const scopeTags = await pool.query(
+    `SELECT COUNT(*) as count FROM permits
+     WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
+       AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+  );
+  // Detailed tags: active permits with at least one tag beyond residential/commercial
+  const detailedTags = await pool.query(
+    `SELECT COUNT(*) as count FROM permits
+     WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
+       AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')
+       AND EXISTS (SELECT 1 FROM unnest(scope_tags) AS t WHERE t NOT IN ('residential', 'commercial', 'mixed-use'))`
+  );
+  const topTags = await pool.query(
+    `SELECT tag, COUNT(*) as count
+     FROM (SELECT unnest(scope_tags) as tag FROM permits
+           WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
+             AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')) sub
+     WHERE tag NOT IN ('residential', 'commercial', 'mixed-use')
+     GROUP BY tag ORDER BY count DESC LIMIT 10`
+  );
+  const tagsTop = {};
+  for (const r of topTags.rows) tagsTop[r.tag] = parseInt(r.count);
+  console.log(`Scope tags: ${scopeTags.rows[0].count} total, ${detailedTags.rows[0].count} detailed`);
+  console.log(`Top tags: ${Object.entries(tagsTop).slice(0,5).map(([k,v])=>k+':'+v).join(', ')}`);
+
+  // 10. Freshness
+  const fresh = await pool.query(
+    `SELECT COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '24 hours') as updated_24h,
+            COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '7 days') as updated_7d,
+            COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '30 days') as updated_30d
+     FROM permits`
+  );
+
+  // 11. Last sync
+  const sync = await pool.query(
+    `SELECT started_at, status FROM sync_runs ORDER BY started_at DESC LIMIT 1`
+  );
+
+  // 12. Massing
+  let massing = { footprints_total: 0, parcels_with_buildings: 0 };
   try {
-    console.log('Recapturing data quality snapshot...\n');
-
-    // 1. Permit counts
-    const permits = await client.query(
-      `SELECT COUNT(*) as total,
-              COUNT(*) FILTER (WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')) as active
-       FROM permits`
+    const m = await pool.query(
+      `SELECT (SELECT COUNT(*) FROM building_footprints) as footprints_total,
+              (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings) as parcels_with_buildings`
     );
-    const total_permits = parseInt(permits.rows[0].total);
-    const active_permits = parseInt(permits.rows[0].active);
-    console.log(`Permits: ${total_permits} total, ${active_permits} active`);
+    massing = { footprints_total: parseInt(m.rows[0].footprints_total), parcels_with_buildings: parseInt(m.rows[0].parcels_with_buildings) };
+  } catch {}
 
-    // 2. Trade counts (all classifications, not just phase-active)
-    const trades = await client.query(
-      `SELECT COUNT(DISTINCT (permit_num, revision_num)) as permits_with_trades,
-              COUNT(*) as total_matches,
-              AVG(confidence)::NUMERIC(4,3) as avg_confidence,
-              COUNT(*) FILTER (WHERE tier = 1) as tier1,
-              COUNT(*) FILTER (WHERE tier = 2) as tier2,
-              COUNT(*) FILTER (WHERE tier = 3) as tier3
-       FROM permit_trades`
-    );
-    const t = trades.rows[0];
+  // 13. Null counts (active permits only)
+  const nulls = await pool.query(
+    `SELECT
+       COUNT(*) FILTER (WHERE description IS NULL OR description = '') as null_description,
+       COUNT(*) FILTER (WHERE builder_name IS NULL OR builder_name = '') as null_builder_name,
+       COUNT(*) FILTER (WHERE est_const_cost IS NULL) as null_est_const_cost,
+       COUNT(*) FILTER (WHERE street_num IS NULL OR street_num = '') as null_street_num,
+       COUNT(*) FILTER (WHERE street_name IS NULL OR street_name = '') as null_street_name,
+       COUNT(*) FILTER (WHERE geo_id IS NULL OR geo_id = '') as null_geo_id
+     FROM permits
+     WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+  );
+  const n = nulls.rows[0];
+  console.log(`Nulls: desc=${n.null_description}, builder=${n.null_builder_name}, cost=${n.null_est_const_cost}`);
 
-    // 2b. Trade counts by use-type
-    const tradeByType = await client.query(
-      `SELECT
-         COUNT(DISTINCT p.permit_num) FILTER (
-           WHERE 'residential' = ANY(p.scope_tags) AND pt.permit_num IS NOT NULL
-         ) as res_classified,
-         COUNT(DISTINCT p.permit_num) FILTER (
-           WHERE 'residential' = ANY(p.scope_tags)
-         ) as res_total,
-         COUNT(DISTINCT p.permit_num) FILTER (
-           WHERE ('commercial' = ANY(p.scope_tags) OR 'mixed-use' = ANY(p.scope_tags))
-             AND pt.permit_num IS NOT NULL
-         ) as com_classified,
-         COUNT(DISTINCT p.permit_num) FILTER (
-           WHERE ('commercial' = ANY(p.scope_tags) OR 'mixed-use' = ANY(p.scope_tags))
-         ) as com_total
-       FROM permits p
-       LEFT JOIN (SELECT DISTINCT permit_num FROM permit_trades) pt
-         ON pt.permit_num = p.permit_num
-       WHERE p.status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
-    );
-    const tt = tradeByType.rows[0];
+  // 14. Violations
+  const violations = await pool.query(
+    `SELECT
+       COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < 100 OR est_const_cost > 1000000000)) as cost_oor,
+       COUNT(*) FILTER (WHERE issued_date > NOW()) as future_issued,
+       COUNT(*) FILTER (WHERE status IS NULL OR status = '') as missing_status
+     FROM permits
+     WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+  );
+  const v = violations.rows[0];
+  const violations_total = parseInt(v.cost_oor) + parseInt(v.future_issued) + parseInt(v.missing_status);
+  console.log(`Violations: cost_oor=${v.cost_oor}, future_issued=${v.future_issued}, missing_status=${v.missing_status}, total=${violations_total}`);
 
-    // 3. Builder counts
-    const builders = await client.query(
-      `SELECT COUNT(*) as total,
-              COUNT(*) FILTER (WHERE last_enriched_at IS NOT NULL) as enriched,
-              COUNT(*) FILTER (WHERE primary_phone IS NOT NULL) as with_phone,
-              COUNT(*) FILTER (WHERE primary_email IS NOT NULL) as with_email,
-              COUNT(*) FILTER (WHERE website IS NOT NULL) as with_website,
-              COUNT(*) FILTER (WHERE google_place_id IS NOT NULL) as with_google,
-              COUNT(*) FILTER (WHERE is_wsib_registered = true) as with_wsib
-       FROM entities`
+  // 15. Schema column counts
+  let schemaColumnCounts = {};
+  try {
+    const schemaCols = await pool.query(
+      `SELECT table_name, COUNT(*)::text as col_count
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name IN ('permits', 'builders', 'coa_applications', 'parcels', 'permit_trades', 'permit_parcels')
+       GROUP BY table_name ORDER BY table_name`
     );
-    const b = builders.rows[0];
-    const permitsBuilder = await client.query(
-      `SELECT COUNT(*) as count FROM permits WHERE builder_name IS NOT NULL AND builder_name != ''`
-    );
+    for (const row of schemaCols.rows) schemaColumnCounts[row.table_name] = parseInt(row.col_count);
+  } catch {}
 
-    // 4. Parcel counts
-    const parcels = await client.query(
-      `SELECT COUNT(DISTINCT (permit_num, revision_num)) as permits_with_parcel,
-              COUNT(*) FILTER (WHERE match_type = 'exact_address') as exact_matches,
-              COUNT(*) FILTER (WHERE match_type = 'name_only') as name_matches,
-              COUNT(*) FILTER (WHERE match_type = 'spatial') as spatial_matches,
-              AVG(confidence)::NUMERIC(4,3) as avg_confidence
-       FROM permit_parcels`
+  // 16. SLA metrics
+  let slaHours = null;
+  try {
+    const sla = await pool.query(
+      `SELECT EXTRACT(EPOCH FROM (NOW() - MAX(first_seen_at))) / 3600 as hours FROM permits`
     );
-    const p = parcels.rows[0];
+    slaHours = sla.rows[0]?.hours ? Math.round(parseFloat(sla.rows[0].hours) * 100) / 100 : null;
+  } catch {}
 
-    // 5. Neighbourhood count (FIXED: active only)
-    const nhood = await client.query(
-      `SELECT COUNT(*) as count FROM permits
-       WHERE neighbourhood_id IS NOT NULL
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
-    );
-    const neighbourhood_count = parseInt(nhood.rows[0].count);
-    console.log(`Neighbourhoods (active): ${neighbourhood_count} / ${active_permits} = ${(neighbourhood_count/active_permits*100).toFixed(1)}%`);
-
-    // 6. Geocoding
-    const geo = await client.query(
-      `SELECT COUNT(*) as count FROM permits WHERE latitude IS NOT NULL AND longitude IS NOT NULL`
-    );
-
-    // 7. CoA counts
-    const coa = await client.query(
-      `SELECT COUNT(*) as total,
-              COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL) as linked,
-              AVG(linked_confidence) FILTER (WHERE linked_permit_num IS NOT NULL)::NUMERIC(4,3) as avg_confidence,
-              COUNT(*) FILTER (WHERE linked_confidence >= 0.80) as high_confidence,
-              COUNT(*) FILTER (WHERE linked_confidence IS NOT NULL AND linked_confidence < 0.50) as low_confidence
-       FROM coa_applications`
-    );
-    const c = coa.rows[0];
-    console.log(`CoA: ${c.total} total, ${c.linked} linked = ${(parseInt(c.linked)/parseInt(c.total)*100).toFixed(1)}%`);
-
-    // 8. Scope counts — active permits with residential/commercial/mixed-use tag
-    const scope = await client.query(
-      `SELECT COUNT(*) as count FROM permits
-       WHERE ('residential' = ANY(scope_tags) OR 'commercial' = ANY(scope_tags) OR 'mixed-use' = ANY(scope_tags))
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
-    );
-    const scopeBreakdown = await client.query(
-      `SELECT tag, COUNT(*) as count
-       FROM (SELECT unnest(scope_tags) as tag FROM permits
-             WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-               AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')) sub
-       WHERE tag IN ('residential', 'commercial', 'mixed-use')
-       GROUP BY tag`
-    );
-    const breakdown = {};
-    for (const r of scopeBreakdown.rows) breakdown[r.tag] = parseInt(r.count);
-
-    // 9. Scope tags counts — active permits only
-    const scopeTags = await client.query(
-      `SELECT COUNT(*) as count FROM permits
-       WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
-    );
-    // Detailed tags: active permits with at least one tag beyond residential/commercial
-    const detailedTags = await client.query(
-      `SELECT COUNT(*) as count FROM permits
-       WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')
-         AND EXISTS (SELECT 1 FROM unnest(scope_tags) AS t WHERE t NOT IN ('residential', 'commercial', 'mixed-use'))`
-    );
-    const topTags = await client.query(
-      `SELECT tag, COUNT(*) as count
-       FROM (SELECT unnest(scope_tags) as tag FROM permits
-             WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-               AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')) sub
-       WHERE tag NOT IN ('residential', 'commercial', 'mixed-use')
-       GROUP BY tag ORDER BY count DESC LIMIT 10`
-    );
-    const tagsTop = {};
-    for (const r of topTags.rows) tagsTop[r.tag] = parseInt(r.count);
-    console.log(`Scope tags: ${scopeTags.rows[0].count} total, ${detailedTags.rows[0].count} detailed`);
-    console.log(`Top tags: ${Object.entries(tagsTop).slice(0,5).map(([k,v])=>k+':'+v).join(', ')}`);
-
-    // 10. Freshness
-    const fresh = await client.query(
-      `SELECT COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '24 hours') as updated_24h,
-              COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '7 days') as updated_7d,
-              COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '30 days') as updated_30d
-       FROM permits`
-    );
-
-    // 11. Last sync
-    const sync = await client.query(
-      `SELECT started_at, status FROM sync_runs ORDER BY started_at DESC LIMIT 1`
-    );
-
-    // 12. Massing
-    let massing = { footprints_total: 0, parcels_with_buildings: 0 };
-    try {
-      const m = await client.query(
-        `SELECT (SELECT COUNT(*) FROM building_footprints) as footprints_total,
-                (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings) as parcels_with_buildings`
-      );
-      massing = { footprints_total: parseInt(m.rows[0].footprints_total), parcels_with_buildings: parseInt(m.rows[0].parcels_with_buildings) };
-    } catch {}
-
-    // 13. Null counts (active permits only)
-    const nulls = await client.query(
-      `SELECT
-         COUNT(*) FILTER (WHERE description IS NULL OR description = '') as null_description,
-         COUNT(*) FILTER (WHERE builder_name IS NULL OR builder_name = '') as null_builder_name,
-         COUNT(*) FILTER (WHERE est_const_cost IS NULL) as null_est_const_cost,
-         COUNT(*) FILTER (WHERE street_num IS NULL OR street_num = '') as null_street_num,
-         COUNT(*) FILTER (WHERE street_name IS NULL OR street_name = '') as null_street_name,
-         COUNT(*) FILTER (WHERE geo_id IS NULL OR geo_id = '') as null_geo_id
-       FROM permits
-       WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
-    );
-    const n = nulls.rows[0];
-    console.log(`Nulls: desc=${n.null_description}, builder=${n.null_builder_name}, cost=${n.null_est_const_cost}`);
-
-    // 14. Violations
-    const violations = await client.query(
-      `SELECT
-         COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < 100 OR est_const_cost > 1000000000)) as cost_oor,
-         COUNT(*) FILTER (WHERE issued_date > NOW()) as future_issued,
-         COUNT(*) FILTER (WHERE status IS NULL OR status = '') as missing_status
-       FROM permits
-       WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
-    );
-    const v = violations.rows[0];
-    const violations_total = parseInt(v.cost_oor) + parseInt(v.future_issued) + parseInt(v.missing_status);
-    console.log(`Violations: cost_oor=${v.cost_oor}, future_issued=${v.future_issued}, missing_status=${v.missing_status}, total=${violations_total}`);
-
-    // 15. Schema column counts
-    let schemaColumnCounts = {};
-    try {
-      const schemaCols = await client.query(
-        `SELECT table_name, COUNT(*)::text as col_count
-         FROM information_schema.columns
-         WHERE table_schema = 'public'
-           AND table_name IN ('permits', 'builders', 'coa_applications', 'parcels', 'permit_trades', 'permit_parcels')
-         GROUP BY table_name ORDER BY table_name`
-      );
-      for (const row of schemaCols.rows) schemaColumnCounts[row.table_name] = parseInt(row.col_count);
-    } catch {}
-
-    // 16. SLA metrics
-    let slaHours = null;
-    try {
-      const sla = await client.query(
-        `SELECT EXTRACT(EPOCH FROM (NOW() - MAX(first_seen_at))) / 3600 as hours FROM permits`
-      );
-      slaHours = sla.rows[0]?.hours ? Math.round(parseFloat(sla.rows[0].hours) * 100) / 100 : null;
-    } catch {}
-
-    // UPSERT snapshot
+  // UPSERT snapshot
+  await pipeline.withTransaction(pool, async (client) => {
     const result = await client.query(
       `INSERT INTO data_quality_snapshots (
         snapshot_date,
@@ -340,12 +336,8 @@ async function run() {
     console.log(`  Scope Class: ${r.permits_with_scope} classified`);
     console.log(`  Scope Tags: ${r.permits_with_scope_tags} total, ${r.permits_with_detailed_tags} detailed`);
     console.log('\nDone!');
-    console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: 1, records_new: 1, records_updated: 0 }));
-    console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"] }, writes: { "data_quality_snapshots": ["*"] } }));
-  } finally {
-    client.release();
-    await pool.end();
-  }
-}
+  });
 
-run().catch(err => { console.error(err); process.exit(1); });
+  pipeline.emitSummary({ records_total: 1, records_new: 1, records_updated: 0 });
+  pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"] }, { "data_quality_snapshots": ["*"] });
+});

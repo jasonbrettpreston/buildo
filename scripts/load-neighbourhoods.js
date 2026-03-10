@@ -8,7 +8,7 @@
  *
  * If no paths given, downloads from Toronto Open Data.
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -20,14 +20,6 @@ const BOUNDARIES_URL =
 
 const PROFILES_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/6e19a90f-971c-46b3-852c-0c48c436d1fc/resource/19d4a806-7385-4889-acf2-256f1e079060/download/nbhd_2021_census_profile_full_158model.xlsx';
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
 
 // Census characteristic row names to extract
 const INCOME_CHARACTERISTICS = {
@@ -109,33 +101,38 @@ function parseNumeric(val) {
 // ---------------------------------------------------------------------------
 // Step 1: Load boundaries GeoJSON
 // ---------------------------------------------------------------------------
-async function loadBoundaries(geojsonPath) {
+async function loadBoundaries(pool, geojsonPath, hasPostGIS) {
   console.log('Step 1: Loading neighbourhood boundaries...');
   const raw = fs.readFileSync(geojsonPath, 'utf8');
   const geojson = JSON.parse(raw);
 
+  const geomLine = hasPostGIS
+    ? ', geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326)'
+    : '';
+
   let inserted = 0;
-  for (const feature of geojson.features) {
-    const props = feature.properties;
-    const neighbourhoodId = parseInt(props.AREA_S_CD || props.AREA_SHORT_CODE || props.AREA_ID || '0', 10);
-    const name = props.AREA_NAME || props.AREA_LONG_CODE || '';
+  await pipeline.withTransaction(pool, async (client) => {
+    for (const feature of geojson.features) {
+      const props = feature.properties;
+      const neighbourhoodId = parseInt(props.AREA_S_CD || props.AREA_SHORT_CODE || props.AREA_ID || '0', 10);
+      const name = props.AREA_NAME || props.AREA_LONG_CODE || '';
 
-    if (!neighbourhoodId || !name) {
-      console.log(`  Skipping feature with missing ID or name`);
-      continue;
+      if (!neighbourhoodId || !name) {
+        console.log(`  Skipping feature with missing ID or name`);
+        continue;
+      }
+
+      await client.query(
+        `INSERT INTO neighbourhoods (neighbourhood_id, name, geometry)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (neighbourhood_id) DO UPDATE SET
+           name = EXCLUDED.name,
+           geometry = EXCLUDED.geometry${geomLine}`,
+        [neighbourhoodId, name, JSON.stringify(feature.geometry)]
+      );
+      inserted++;
     }
-
-    await pool.query(
-      `INSERT INTO neighbourhoods (neighbourhood_id, name, geometry)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (neighbourhood_id) DO UPDATE SET
-         name = EXCLUDED.name,
-         geometry = EXCLUDED.geometry,
-         geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326)`,
-      [neighbourhoodId, name, JSON.stringify(feature.geometry)]
-    );
-    inserted++;
-  }
+  });
 
   console.log(`  Inserted ${inserted} neighbourhood boundaries.`);
   return inserted;
@@ -144,7 +141,7 @@ async function loadBoundaries(geojsonPath) {
 // ---------------------------------------------------------------------------
 // Step 2: Load Census profiles from XLSX (transposed format)
 // ---------------------------------------------------------------------------
-async function loadProfiles(xlsxPath) {
+async function loadProfiles(pool, xlsxPath) {
   console.log('Step 2: Loading Census profiles from XLSX...');
 
   const workbook = new ExcelJS.Workbook();
@@ -180,12 +177,12 @@ async function loadProfiles(xlsxPath) {
   }
 
   // Discover neighbourhood columns from headers
-  const headers = Object.keys(rows[0]);
+  const headerKeys = Object.keys(rows[0]);
 
   // Find the characteristic column (first column)
-  const charColName = headers.find(h =>
+  const charColName = headerKeys.find(h =>
     h === 'Characteristic' || h === 'characteristic' || h === 'Neighbourhood Name' || h === '_0'
-  ) || headers[0];
+  ) || headerKeys[0];
   console.log(`  Characteristic column: "${charColName}"`);
 
   // Build neighbourhood columns mapping
@@ -196,7 +193,7 @@ async function loadProfiles(xlsxPath) {
   const row0 = rows[0];
   const row0Char = String(row0[charColName] || '').trim();
 
-  for (const col of headers) {
+  for (const col of headerKeys) {
     if (col === charColName) continue;
 
     // Try format 1: "Name (ID)"
@@ -218,7 +215,7 @@ async function loadProfiles(xlsxPath) {
 
   if (Object.keys(neighbourhoodColumns).length === 0) {
     console.log('  WARNING: No neighbourhood columns found. Listing first 5 headers:');
-    headers.slice(0, 5).forEach(h => console.log(`    "${h}"`));
+    headerKeys.slice(0, 5).forEach(h => console.log(`    "${h}"`));
     return;
   }
 
@@ -537,7 +534,7 @@ async function loadProfiles(xlsxPath) {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-async function main() {
+pipeline.run('load-neighbourhoods', async (pool) => {
   console.log('=== Buildo Neighbourhood Loader ===');
   console.log('');
 
@@ -568,15 +565,19 @@ async function main() {
     }
   }
 
+  // Detect PostGIS for optional geom column population
+  const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
+  const hasPostGIS = pgisCheck.rows.length > 0;
+  if (!hasPostGIS) console.log('Note: PostGIS not installed — skipping geom column');
   console.log('');
 
   const startTime = Date.now();
 
   // Step 1: Load boundaries
-  const boundaryCount = await loadBoundaries(boundariesPath);
+  const boundaryCount = await loadBoundaries(pool, boundariesPath, hasPostGIS);
 
   // Step 2: Load Census profiles
-  const profileUpdates = await loadProfiles(profilesPath);
+  const profileUpdates = await loadProfiles(pool, profilesPath);
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log('');
@@ -584,13 +585,9 @@ async function main() {
   console.log(`Neighbourhoods: ${boundaryCount}`);
   console.log(`Profile updates: ${profileUpdates}`);
   console.log(`Duration:       ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: boundaryCount, records_new: 0, records_updated: boundaryCount + profileUpdates }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "City GeoJSON": ["AREA_SHORT_CODE", "AREA_NAME", "geometry"], "Census XLSX": ["income", "tenure", "demographics"] }, writes: { "neighbourhoods": ["neighbourhood_id", "name", "geometry", "geom", "avg_household_income", "median_household_income", "avg_individual_income", "low_income_pct", "tenure_owner_pct", "tenure_renter_pct", "period_of_construction", "couples_pct", "lone_parent_pct", "married_pct", "university_degree_pct", "immigrant_pct", "visible_minority_pct", "english_knowledge_pct"] } }));
-
-  await pool.end();
-}
-
-main().catch((err) => {
-  console.error('Load failed:', err);
-  process.exit(1);
+  pipeline.emitSummary({ records_total: boundaryCount, records_new: 0, records_updated: boundaryCount + profileUpdates });
+  pipeline.emitMeta(
+    { "City GeoJSON": ["AREA_SHORT_CODE", "AREA_NAME", "geometry"], "Census XLSX": ["income", "tenure", "demographics"] },
+    { "neighbourhoods": ["neighbourhood_id", "name", "geometry", "geom", "avg_household_income", "median_household_income", "avg_individual_income", "low_income_pct", "tenure_owner_pct", "tenure_renter_pct", "period_of_construction", "couples_pct", "lone_parent_pct", "married_pct", "university_degree_pct", "immigrant_pct", "visible_minority_pct", "english_knowledge_pct"] }
+  );
 });

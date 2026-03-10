@@ -7,17 +7,7 @@
  *
  * Usage: node scripts/compute-centroids.js
  */
-const { Pool } = require('pg');
-
-const BATCH_SIZE = 1000;
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
+const pipeline = require('./lib/pipeline');
 
 /**
  * Compute centroid [lng, lat] from a GeoJSON geometry.
@@ -56,7 +46,7 @@ function computeCentroid(geom) {
   return [sumLng / n, sumLat / n];
 }
 
-async function main() {
+pipeline.run('compute-centroids', async (pool) => {
   console.log('=== Buildo Parcel Centroid Calculator ===');
   console.log('');
 
@@ -68,7 +58,6 @@ async function main() {
 
   if (totalParcels === 0) {
     console.log('All parcels already have centroids. Done.');
-    await pool.end();
     return;
   }
 
@@ -83,11 +72,13 @@ async function main() {
        WHERE geometry IS NOT NULL AND centroid_lat IS NULL
        ORDER BY id
        LIMIT $1`,
-      [BATCH_SIZE]
+      [pipeline.BATCH_SIZE]
     );
 
     if (batch.rows.length === 0) break;
 
+    // Prepare updates for this batch
+    const updates = [];
     for (const row of batch.rows) {
       const geom = typeof row.geometry === 'string'
         ? JSON.parse(row.geometry)
@@ -96,16 +87,25 @@ async function main() {
       const centroid = computeCentroid(geom);
 
       if (centroid) {
-        await pool.query(
-          `UPDATE parcels SET centroid_lng = $1, centroid_lat = $2 WHERE id = $3`,
-          [centroid[0], centroid[1], row.id]
-        );
+        updates.push({ id: row.id, lng: centroid[0], lat: centroid[1] });
         computed++;
       } else {
         failed++;
       }
 
       processed++;
+    }
+
+    // Write all updates for this batch in a single transaction
+    if (updates.length > 0) {
+      await pipeline.withTransaction(pool, async (client) => {
+        for (const u of updates) {
+          await client.query(
+            `UPDATE parcels SET centroid_lng = $1, centroid_lat = $2 WHERE id = $3`,
+            [u.lng, u.lat, u.id]
+          );
+        }
+      });
     }
 
     if (processed % 50000 === 0 || processed >= totalParcels) {
@@ -122,13 +122,9 @@ async function main() {
   console.log(`Centroids set:     ${computed.toLocaleString()}`);
   console.log(`Failed:            ${failed.toLocaleString()}`);
   console.log(`Duration:          ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: computed, records_new: 0, records_updated: computed }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "parcels": ["id", "geometry"] }, writes: { "parcels": ["centroid_lat", "centroid_lng"] } }));
-
-  await pool.end();
-}
-
-main().catch((err) => {
-  console.error('Centroid computation failed:', err);
-  process.exit(1);
+  pipeline.emitSummary({ records_total: computed, records_new: 0, records_updated: computed });
+  pipeline.emitMeta(
+    { "parcels": ["id", "geometry"] },
+    { "parcels": ["centroid_lat", "centroid_lng"] }
+  );
 });

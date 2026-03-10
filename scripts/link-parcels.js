@@ -7,7 +7,10 @@
  *   2. Num + name only (ignore type mismatch) -> confidence 0.80
  *   3. Spatial proximity (nearest parcel centroid ≤100m) -> confidence 0.65
  *
- * Strategy 3 requires permits to have geocoded lat/lng coordinates.
+ * Strategies 1 & 2 use a batch CTE approach (single SQL per batch).
+ * Strategy 3 requires permits to have geocoded lat/lng coordinates and
+ * uses JavaScript haversine + point-in-polygon for spatial matching.
+ *
  * Parcels must have pre-computed centroid_lat/centroid_lng (run compute-centroids.js first).
  *
  * By default, only processes permits without existing parcel links (incremental).
@@ -17,21 +20,11 @@
  *   node scripts/link-parcels.js           # incremental (unlinked only)
  *   node scripts/link-parcels.js --full    # re-link all permits
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 
-const BATCH_SIZE = 1000;
-const fullMode = process.argv.includes('--full');
 const SPATIAL_MAX_DISTANCE_M = 100;
 const SPATIAL_CONFIDENCE = 0.65;
 const BBOX_OFFSET = 0.001; // ~111m lat, ~82m lng at Toronto latitude
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
 
 /**
  * Ray-casting point-in-polygon test.
@@ -86,7 +79,9 @@ function haversineDistance(p1, p2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-async function main() {
+pipeline.run('link-parcels', async (pool) => {
+  const fullMode = pipeline.isFullMode();
+
   console.log('=== Buildo Permit-Parcel Linker (3-Step Cascade) ===');
   console.log(`Mode: ${fullMode ? 'FULL (all permits)' : 'INCREMENTAL (unlinked only)'}`);
   console.log('');
@@ -137,99 +132,158 @@ async function main() {
        WHERE (${addressFilter}) ${extraFilter}
        ORDER BY p.permit_num, p.revision_num
        LIMIT $1 OFFSET $2`,
-      [BATCH_SIZE, offset]
+      [pipeline.BATCH_SIZE, offset]
     );
 
     if (batch.rows.length === 0) break;
 
-    const insertValues = [];
-    const insertParams = [];
-    let paramIdx = 1;
-
+    // ------------------------------------------------------------------
+    // Build normalized arrays for batch CTE matching
+    // ------------------------------------------------------------------
+    const permitKeys = []; // { permit_num, revision_num, num, name, type, lat, lng }
     for (const permit of batch.rows) {
-      const num = (permit.street_num || '').trim().toUpperCase().replace(/^0+/, '');
-      const name = (permit.street_name || '').trim().toUpperCase();
-      const type = (permit.street_type || '').trim().toUpperCase();
+      permitKeys.push({
+        permit_num: permit.permit_num,
+        revision_num: permit.revision_num,
+        num: (permit.street_num || '').trim().toUpperCase().replace(/^0+/, ''),
+        name: (permit.street_name || '').trim().toUpperCase(),
+        type: (permit.street_type || '').trim().toUpperCase(),
+        lat: permit.latitude ? parseFloat(permit.latitude) : null,
+        lng: permit.longitude ? parseFloat(permit.longitude) : null,
+      });
+    }
 
-      let match = null;
+    // ------------------------------------------------------------------
+    // Strategies 1 & 2: Batch CTE for exact + name_only address matching
+    // ------------------------------------------------------------------
+    // Build a VALUES list for all permits that have address components
+    const addrPermits = permitKeys.filter(p => p.num && p.name);
+    let sqlMatched = new Map(); // key: "permit_num|revision_num" -> { parcel_id, match_type, confidence }
 
-      // Strategy 1: Exact address match (num + name + type)
-      if (num && name && type) {
-        const exact = await pool.query(
-          `SELECT id FROM parcels
-           WHERE addr_num_normalized = $1
-             AND street_name_normalized = $2
-             AND street_type_normalized = $3
-           LIMIT 1`,
-          [num, name, type]
-        );
-        if (exact.rows.length > 0) {
-          match = { parcel_id: exact.rows[0].id, match_type: 'exact_address', confidence: 0.95 };
-          linkedExact++;
-        }
+    if (addrPermits.length > 0) {
+      // Build parameterized VALUES list
+      const valuesPlaceholders = [];
+      const valuesParams = [];
+      let paramIdx = 1;
+
+      for (const p of addrPermits) {
+        valuesPlaceholders.push(`($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`);
+        valuesParams.push(p.permit_num, p.revision_num, p.num, p.name, p.type);
       }
 
-      // Strategy 2: Num + name only (ignore type)
-      if (!match && num && name) {
-        const nameOnly = await pool.query(
-          `SELECT id FROM parcels
-           WHERE addr_num_normalized = $1
-             AND street_name_normalized = $2
-           LIMIT 1`,
-          [num, name]
-        );
-        if (nameOnly.rows.length > 0) {
-          match = { parcel_id: nameOnly.rows[0].id, match_type: 'name_only', confidence: 0.80 };
-          linkedName++;
-        }
+      const cteResult = await pool.query(`
+        WITH input_permits (permit_num, revision_num, addr_num, street_name, street_type) AS (
+          VALUES ${valuesPlaceholders.join(', ')}
+        ),
+        exact AS (
+          SELECT DISTINCT ON (ip.permit_num, ip.revision_num)
+            ip.permit_num, ip.revision_num, pa.id AS parcel_id,
+            'exact_address' AS match_type, 0.95 AS confidence
+          FROM input_permits ip
+          JOIN parcels pa ON pa.addr_num_normalized = ip.addr_num
+            AND pa.street_name_normalized = ip.street_name
+            AND pa.street_type_normalized = ip.street_type
+          WHERE ip.street_type != ''
+          ORDER BY ip.permit_num, ip.revision_num, pa.id
+        ),
+        name_only AS (
+          SELECT DISTINCT ON (ip.permit_num, ip.revision_num)
+            ip.permit_num, ip.revision_num, pa.id AS parcel_id,
+            'name_only' AS match_type, 0.80 AS confidence
+          FROM input_permits ip
+          JOIN parcels pa ON pa.addr_num_normalized = ip.addr_num
+            AND pa.street_name_normalized = ip.street_name
+          WHERE NOT EXISTS (
+            SELECT 1 FROM exact e
+            WHERE e.permit_num = ip.permit_num AND e.revision_num = ip.revision_num
+          )
+          ORDER BY ip.permit_num, ip.revision_num, pa.id
+        )
+        SELECT * FROM exact
+        UNION ALL
+        SELECT * FROM name_only
+      `, valuesParams);
+
+      for (const row of cteResult.rows) {
+        const key = `${row.permit_num}|${row.revision_num}`;
+        sqlMatched.set(key, {
+          parcel_id: row.parcel_id,
+          match_type: row.match_type,
+          confidence: row.confidence,
+        });
       }
+    }
 
-      // Strategy 3: Spatial proximity (nearest centroid within 100m)
-      if (!match && hasCentroids && permit.latitude && permit.longitude) {
-        const lat = parseFloat(permit.latitude);
-        const lng = parseFloat(permit.longitude);
+    // ------------------------------------------------------------------
+    // Strategy 3: Spatial proximity for unmatched permits with lat/lng
+    // ------------------------------------------------------------------
+    const spatialPermits = permitKeys.filter(p => {
+      const key = `${p.permit_num}|${p.revision_num}`;
+      return !sqlMatched.has(key) && hasCentroids && p.lat !== null && p.lng !== null;
+    });
 
+    const spatialMatched = new Map();
+
+    if (spatialPermits.length > 0) {
+      for (const permit of spatialPermits) {
         const candidates = await pool.query(
           `SELECT id, centroid_lat, centroid_lng, geometry FROM parcels
            WHERE centroid_lat BETWEEN $1 - ${BBOX_OFFSET} AND $1 + ${BBOX_OFFSET}
              AND centroid_lng BETWEEN $2 - ${BBOX_OFFSET} AND $2 + ${BBOX_OFFSET}`,
-          [lat, lng]
+          [permit.lat, permit.lng]
         );
 
-        if (candidates.rows.length > 0) {
-          let bestId = null;
-          let bestDist = Infinity;
-          let bestGeometry = null;
+        if (candidates.rows.length === 0) continue;
 
-          for (const c of candidates.rows) {
-            const dist = haversineDistance(
-              [lng, lat],
-              [parseFloat(c.centroid_lng), parseFloat(c.centroid_lat)]
-            );
-            if (dist < bestDist) {
-              bestDist = dist;
-              bestId = c.id;
-              bestGeometry = c.geometry;
-            }
-          }
+        let bestId = null;
+        let bestDist = Infinity;
+        let bestGeometry = null;
 
-          if (bestId !== null && bestDist <= SPATIAL_MAX_DISTANCE_M) {
-            // Check if permit geocode falls inside the matched parcel polygon
-            const ring = extractOuterRing(bestGeometry);
-            const isInside = ring ? pointInPolygon([lng, lat], ring) : false;
-
-            if (isInside) {
-              match = { parcel_id: bestId, match_type: 'spatial_polygon', confidence: 0.90 };
-              linkedSpatialPolygon++;
-            } else {
-              match = { parcel_id: bestId, match_type: 'spatial', confidence: SPATIAL_CONFIDENCE };
-            }
-            linkedSpatial++;
+        for (const c of candidates.rows) {
+          const dist = haversineDistance(
+            [permit.lng, permit.lat],
+            [parseFloat(c.centroid_lng), parseFloat(c.centroid_lat)]
+          );
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestId = c.id;
+            bestGeometry = c.geometry;
           }
         }
+
+        if (bestId !== null && bestDist <= SPATIAL_MAX_DISTANCE_M) {
+          // Check if permit geocode falls inside the matched parcel polygon
+          const ring = extractOuterRing(bestGeometry);
+          const isInside = ring ? pointInPolygon([permit.lng, permit.lat], ring) : false;
+
+          const key = `${permit.permit_num}|${permit.revision_num}`;
+          if (isInside) {
+            spatialMatched.set(key, { parcel_id: bestId, match_type: 'spatial_polygon', confidence: 0.90 });
+            linkedSpatialPolygon++;
+          } else {
+            spatialMatched.set(key, { parcel_id: bestId, match_type: 'spatial', confidence: SPATIAL_CONFIDENCE });
+          }
+          linkedSpatial++;
+        }
       }
+    }
+
+    // ------------------------------------------------------------------
+    // Collect all matches and batch insert
+    // ------------------------------------------------------------------
+    const insertValues = [];
+    const insertParams = [];
+    let paramIdx = 1;
+
+    for (const permit of permitKeys) {
+      const key = `${permit.permit_num}|${permit.revision_num}`;
+      const match = sqlMatched.get(key) || spatialMatched.get(key);
 
       if (match) {
+        if (match.match_type === 'exact_address') linkedExact++;
+        else if (match.match_type === 'name_only') linkedName++;
+        // spatial counts already incremented above
+
         insertParams.push(
           `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`
         );
@@ -244,20 +298,22 @@ async function main() {
       processed++;
     }
 
-    // Batch insert
+    // Batch insert within a transaction
     if (insertParams.length > 0) {
-      await pool.query(
-        `INSERT INTO permit_parcels (permit_num, revision_num, parcel_id, match_type, confidence)
-         VALUES ${insertParams.join(', ')}
-         ON CONFLICT (permit_num, revision_num, parcel_id) DO UPDATE SET
-           match_type = EXCLUDED.match_type,
-           confidence = EXCLUDED.confidence,
-           linked_at = NOW()`,
-        insertValues
-      );
+      await pipeline.withTransaction(pool, async (client) => {
+        await client.query(
+          `INSERT INTO permit_parcels (permit_num, revision_num, parcel_id, match_type, confidence)
+           VALUES ${insertParams.join(', ')}
+           ON CONFLICT (permit_num, revision_num, parcel_id) DO UPDATE SET
+             match_type = EXCLUDED.match_type,
+             confidence = EXCLUDED.confidence,
+             linked_at = NOW()`,
+          insertValues
+        );
+      });
     }
 
-    offset += BATCH_SIZE;
+    offset += pipeline.BATCH_SIZE;
 
     if (processed % 10000 === 0 || processed >= totalPermits) {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -280,13 +336,10 @@ async function main() {
   console.log(`    Centroid only:    ${(linkedSpatial - linkedSpatialPolygon).toLocaleString()} (confidence 0.65)`);
   console.log(`No match found:       ${noMatch.toLocaleString()}`);
   console.log(`Duration:             ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: totalLinked, records_new: totalLinked, records_updated: 0 }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"], "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"] }, writes: { "permit_parcels": ["permit_num", "revision_num", "parcel_id", "match_type", "confidence", "linked_at"] } }));
 
-  await pool.end();
-}
-
-main().catch((err) => {
-  console.error('Linking failed:', err);
-  process.exit(1);
+  pipeline.emitSummary({ records_total: totalLinked, records_new: totalLinked, records_updated: 0 });
+  pipeline.emitMeta(
+    { "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"], "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"] },
+    { "permit_parcels": ["permit_num", "revision_num", "parcel_id", "match_type", "confidence", "linked_at"] }
+  );
 });

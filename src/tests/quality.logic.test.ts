@@ -1156,7 +1156,7 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
       permits_propagated: 80059,
       pipeline_last_run: {
         'permits:link_similar': {
-          last_run_at: '2026-03-06T10:00:00Z',
+          last_run_at: new Date(Date.now() - 6 * 3600_000).toISOString(),
           status: 'completed',
           records_total: 80059,
           records_new: 1234,
@@ -1185,7 +1185,7 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
       permits_propagated: 75000,
       pipeline_last_run: {
         'permits:link_similar': {
-          last_run_at: '2026-03-06T10:00:00Z',
+          last_run_at: new Date(Date.now() - 6 * 3600_000).toISOString(),
           status: 'completed',
           records_total: 0,
           records_new: 0,
@@ -1211,7 +1211,7 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
       parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0, permits_propagated: 0,
       pipeline_last_run: {
         'coa:link_coa': {
-          last_run_at: '2026-03-06T10:00:00Z',
+          last_run_at: new Date(Date.now() - 6 * 3600_000).toISOString(),
           status: 'completed',
           records_total: 14614,
           records_new: 200,
@@ -1235,7 +1235,7 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
       parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0, permits_propagated: 0,
       pipeline_last_run: {
         permits: {
-          last_run_at: '2026-03-06T10:00:00Z',
+          last_run_at: new Date(Date.now() - 6 * 3600_000).toISOString(),
           status: 'completed',
           records_total: 237000,
           records_new: 50,

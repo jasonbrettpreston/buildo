@@ -9,17 +9,9 @@
  * Usage:
  *   node scripts/geocode-permits.js
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
-
-async function main() {
+pipeline.run('geocode-permits', async (pool) => {
   console.log('=== Buildo Permit Geocoder (Address Points Lookup) ===');
   console.log('');
 
@@ -51,20 +43,22 @@ async function main() {
 
   // Bulk update: join permits to address_points via geo_id
   console.log('Running bulk UPDATE...');
-  const result = await pool.query(`
-    UPDATE permits p
-    SET latitude = ap.latitude,
-        longitude = ap.longitude,
-        geocoded_at = NOW()
-    FROM address_points ap
-    WHERE ap.address_point_id = CAST(p.geo_id AS INTEGER)
-      AND p.latitude IS NULL
-      AND p.geo_id IS NOT NULL
-      AND p.geo_id != ''
-      AND p.geo_id ~ '^[0-9]+$'
-  `);
+  const updated = await pipeline.withTransaction(pool, async (client) => {
+    const result = await client.query(`
+      UPDATE permits p
+      SET latitude = ap.latitude,
+          longitude = ap.longitude,
+          geocoded_at = NOW()
+      FROM address_points ap
+      WHERE ap.address_point_id = CAST(p.geo_id AS INTEGER)
+        AND p.latitude IS NULL
+        AND p.geo_id IS NOT NULL
+        AND p.geo_id != ''
+        AND p.geo_id ~ '^[0-9]+$'
+    `);
+    return result.rowCount;
+  });
 
-  const updated = result.rowCount;
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
   console.log('');
@@ -90,13 +84,9 @@ async function main() {
   console.log(`geo_id but no match: ${parseInt(after.has_geo_id_no_match).toLocaleString()}`);
   console.log(`No geo_id at all:    ${parseInt(after.no_geo_id).toLocaleString()}`);
   console.log(`Duration:            ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: updated, records_new: updated, records_updated: 0 }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "geo_id", "latitude", "longitude"], "address_points": ["address_point_id", "latitude", "longitude"] }, writes: { "permits": ["latitude", "longitude", "geocoded_at"] } }));
-
-  await pool.end();
-}
-
-main().catch((err) => {
-  console.error('Geocoding failed:', err);
-  process.exit(1);
+  pipeline.emitSummary({ records_total: updated, records_new: updated, records_updated: 0 });
+  pipeline.emitMeta(
+    { "permits": ["permit_num", "revision_num", "geo_id", "latitude", "longitude"], "address_points": ["address_point_id", "latitude", "longitude"] },
+    { "permits": ["latitude", "longitude", "geocoded_at"] }
+  );
 });

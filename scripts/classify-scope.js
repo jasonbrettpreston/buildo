@@ -14,17 +14,7 @@
  *   node scripts/classify-scope.js           # incremental (new/changed only)
  *   node scripts/classify-scope.js --full     # re-classify all permits
  */
-const { Pool } = require('pg');
-
-const fullMode = process.argv.includes('--full');
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
+const pipeline = require('./lib/pipeline');
 
 const BATCH_SIZE = 1000;
 
@@ -393,7 +383,9 @@ function isBLDPermit(permitNum) {
 // Main
 // ---------------------------------------------------------------------------
 
-async function main() {
+const fullMode = pipeline.isFullMode();
+
+pipeline.run('classify-scope', async (pool) => {
   console.log('=== Buildo Permit Scope Classifier ===');
   console.log(`Mode: ${fullMode ? 'FULL (all permits)' : 'INCREMENTAL (new/changed only)'}`);
   console.log('');
@@ -494,21 +486,23 @@ async function main() {
     const projectTypes = updates.map((u) => u.projectType);
     const scopeTagArrays = updates.map((u) => `{${u.scopeTags.join(',')}}`);
 
-    await pool.query(
-      `UPDATE permits AS p SET
-         project_type = v.project_type,
-         scope_tags = v.scope_tags::TEXT[],
-         scope_classified_at = NOW(),
-         scope_source = 'classified'
-       FROM (
-         SELECT unnest($1::TEXT[]) AS permit_num,
-                unnest($2::TEXT[]) AS revision_num,
-                unnest($3::TEXT[]) AS project_type,
-                unnest($4::TEXT[]) AS scope_tags
-       ) AS v
-       WHERE p.permit_num = v.permit_num AND p.revision_num = v.revision_num`,
-      [permitNums, revisionNums, projectTypes, scopeTagArrays]
-    );
+    await pipeline.withTransaction(pool, async (client) => {
+      await client.query(
+        `UPDATE permits AS p SET
+           project_type = v.project_type,
+           scope_tags = v.scope_tags::TEXT[],
+           scope_classified_at = NOW(),
+           scope_source = 'classified'
+         FROM (
+           SELECT unnest($1::TEXT[]) AS permit_num,
+                  unnest($2::TEXT[]) AS revision_num,
+                  unnest($3::TEXT[]) AS project_type,
+                  unnest($4::TEXT[]) AS scope_tags
+         ) AS v
+         WHERE p.permit_num = v.permit_num AND p.revision_num = v.revision_num`,
+        [permitNums, revisionNums, projectTypes, scopeTagArrays]
+      );
+    });
 
     processed += rows.length;
     newlyClassified += rows.filter(r => r.scope_classified_at == null).length;
@@ -582,14 +576,6 @@ async function main() {
     const pct = ((count / processed) * 100).toFixed(1);
     console.log(`  ${tag.padEnd(30)} ${String(count).padStart(8)}  (${pct}%)`);
   }
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: total, records_new: newlyClassified, records_updated: processed - newlyClassified + propagated }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "current_use", "proposed_use", "storeys", "housing_units", "dwelling_units_created", "scope_classified_at", "last_seen_at"] }, writes: { "permits": ["project_type", "scope_tags", "scope_classified_at", "scope_source"] } }));
-
-  await pool.end();
-}
-
-main().catch(async (err) => {
-  console.error('Scope classification failed:', err);
-  await pool.end().catch(() => {});
-  process.exit(1);
+  pipeline.emitSummary({ records_total: total, records_new: newlyClassified, records_updated: processed - newlyClassified + propagated });
+  pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "current_use", "proposed_use", "storeys", "housing_units", "dwelling_units_created", "scope_classified_at", "last_seen_at"] }, { "permits": ["project_type", "scope_tags", "scope_classified_at", "scope_source"] });
 });

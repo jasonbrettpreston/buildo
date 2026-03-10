@@ -9,65 +9,61 @@
  *
  * Usage: node scripts/link-similar.js
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
-
-async function run() {
+pipeline.run('link-similar', async (pool) => {
   console.log('Linking similar permits (BLD → companion propagation)...\n');
 
-  // Propagate scope_tags + project_type from BLD to companion permits
-  const propagateResult = await pool.query(
-    `UPDATE permits AS companion
-     SET
-       scope_tags = bld.scope_tags,
-       project_type = bld.project_type,
-       scope_classified_at = NOW(),
-       scope_source = 'propagated'
-     FROM (
-       SELECT
-         TRIM(SPLIT_PART(permit_num, ' ', 1) || ' ' || SPLIT_PART(permit_num, ' ', 2)) AS base_num,
-         scope_tags,
-         project_type
-       FROM permits
-       WHERE permit_num ~ '\\sBLD(\\s|$)'
-         AND scope_tags IS NOT NULL
-         AND array_length(scope_tags, 1) > 0
-     ) AS bld
-     WHERE TRIM(SPLIT_PART(companion.permit_num, ' ', 1) || ' ' || SPLIT_PART(companion.permit_num, ' ', 2)) = bld.base_num
-       AND companion.permit_num !~ '\\sBLD(\\s|$)'
-       AND companion.permit_num ~ '\\s[A-Z]{2,4}(\\s|$)'
-       AND companion.scope_tags IS DISTINCT FROM bld.scope_tags`
-  );
+  const { propagated, demFixed } = await pipeline.withTransaction(pool, async (client) => {
+    // Propagate scope_tags + project_type from BLD to companion permits
+    const propagateResult = await client.query(
+      `UPDATE permits AS companion
+       SET
+         scope_tags = bld.scope_tags,
+         project_type = bld.project_type,
+         scope_classified_at = NOW(),
+         scope_source = 'propagated'
+       FROM (
+         SELECT
+           TRIM(SPLIT_PART(permit_num, ' ', 1) || ' ' || SPLIT_PART(permit_num, ' ', 2)) AS base_num,
+           scope_tags,
+           project_type
+         FROM permits
+         WHERE permit_num ~ '\\sBLD(\\s|$)'
+           AND scope_tags IS NOT NULL
+           AND array_length(scope_tags, 1) > 0
+       ) AS bld
+       WHERE TRIM(SPLIT_PART(companion.permit_num, ' ', 1) || ' ' || SPLIT_PART(companion.permit_num, ' ', 2)) = bld.base_num
+         AND companion.permit_num !~ '\\sBLD(\\s|$)'
+         AND companion.permit_num ~ '\\s[A-Z]{2,4}(\\s|$)'
+         AND companion.scope_tags IS DISTINCT FROM bld.scope_tags`
+    );
 
-  const propagated = propagateResult.rowCount || 0;
-  console.log(`Propagated scope tags to ${propagated.toLocaleString()} companion permits`);
+    const propagated = propagateResult.rowCount || 0;
+    console.log(`Propagated scope tags to ${propagated.toLocaleString()} companion permits`);
 
-  // Re-add demolition tag to DM permits that lost it during propagation
-  const demFixResult = await pool.query(
-    `UPDATE permits
-     SET scope_tags = CASE
-       WHEN scope_tags IS NULL THEN ARRAY['demolition']
-       ELSE array_append(scope_tags, 'demolition')
-     END
-     WHERE permit_type = 'Demolition Folder (DM)'
-       AND (scope_tags IS NULL OR NOT ('demolition' = ANY(scope_tags)))`
-  );
-  const demFixed = demFixResult.rowCount || 0;
-  if (demFixed > 0) {
-    console.log(`Re-added demolition tag to ${demFixed} DM companion permits`);
-  }
+    // Re-add demolition tag to DM permits that lost it during propagation
+    const demFixResult = await client.query(
+      `UPDATE permits
+       SET scope_tags = CASE
+         WHEN scope_tags IS NULL THEN ARRAY['demolition']
+         ELSE array_append(scope_tags, 'demolition')
+       END
+       WHERE permit_type = 'Demolition Folder (DM)'
+         AND (scope_tags IS NULL OR NOT ('demolition' = ANY(scope_tags)))`
+    );
+    const demFixed = demFixResult.rowCount || 0;
+    if (demFixed > 0) {
+      console.log(`Re-added demolition tag to ${demFixed} DM companion permits`);
+    }
+
+    return { propagated, demFixed };
+  });
 
   console.log('\nDone.');
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: propagated + demFixed, records_new: 0, records_updated: propagated + demFixed }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["permit_num", "scope_tags", "project_type", "permit_type"] }, writes: { "permits": ["scope_tags", "project_type", "scope_classified_at", "scope_source"] } }));
-  await pool.end();
-}
-
-run().catch((err) => { console.error(err); process.exit(1); });
+  pipeline.emitSummary({ records_total: propagated + demFixed, records_new: 0, records_updated: propagated + demFixed });
+  pipeline.emitMeta(
+    { "permits": ["permit_num", "scope_tags", "project_type", "permit_type"] },
+    { "permits": ["scope_tags", "project_type", "scope_classified_at", "scope_source"] }
+  );
+});

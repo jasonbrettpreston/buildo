@@ -6,7 +6,7 @@
  *
  * Usage: node scripts/load-coa.js
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 const crypto = require('crypto');
 
 const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
@@ -19,19 +19,8 @@ const RESOURCES = [
 
 const BATCH_SIZE = 500;
 
-// CLI flags
-const fullMode = process.argv.includes('--full');
-
 // Active resource ID (incremental mode only fetches from Active)
 const ACTIVE_RESOURCE_ID = '51fd09cd-99d6-430a-9d42-c24a937b0cb0';
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
 
 function trimToNull(v) {
   if (v == null) return null;
@@ -209,7 +198,9 @@ async function upsertBatch(client, batch) {
   return { inserted, updated };
 }
 
-async function main() {
+pipeline.run('load-coa', async (pool) => {
+  const fullMode = pipeline.isFullMode();
+
   console.log('=== Buildo CoA Data Loader ===\n');
   console.log(`Mode: ${fullMode ? 'FULL (all records, both resources)' : 'INCREMENTAL (Active resource, last 90 days)'}\n`);
 
@@ -233,7 +224,7 @@ async function main() {
 
   if (allRaw.length === 0) {
     console.log('No records found. Exiting.');
-    process.exit(0);
+    return;
   }
 
   // Log sample record to debug field names
@@ -256,44 +247,37 @@ async function main() {
   const deduplicated = [...byAppNum.values()];
   console.log(`Deduplicated: ${deduplicated.length} unique applications\n`);
 
-  const client = await pool.connect();
   let totalInserted = 0;
   let totalUpdated = 0;
 
-  try {
-    for (let i = 0; i < deduplicated.length; i += BATCH_SIZE) {
-      const batch = deduplicated.slice(i, i + BATCH_SIZE);
-      const { inserted, updated } = await upsertBatch(client, batch);
-      totalInserted += inserted;
-      totalUpdated += updated;
+  for (let i = 0; i < deduplicated.length; i += BATCH_SIZE) {
+    const batch = deduplicated.slice(i, i + BATCH_SIZE);
+    const { inserted, updated } = await pipeline.withTransaction(pool, async (client) => {
+      return upsertBatch(client, batch);
+    });
+    totalInserted += inserted;
+    totalUpdated += updated;
 
-      const progress = Math.min(i + BATCH_SIZE, deduplicated.length);
-      process.stdout.write(`\r  Progress: ${progress}/${deduplicated.length} (${totalInserted} inserted, ${totalUpdated} updated)`);
-    }
-
-    console.log(`\n\nDone! ${totalInserted} inserted, ${totalUpdated} updated.`);
-    console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: totalInserted + totalUpdated, records_new: totalInserted, records_updated: totalUpdated }));
-    console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["APPLICATION_NUMBER", "ADDRESS", "STREET_NUM", "STREET_NAME", "WARD", "STATUS", "DECISION", "DECISION_DATE", "HEARING_DATE", "DESCRIPTION", "APPLICANT", "SUB_TYPE"] }, writes: { "coa_applications": ["application_number", "address", "street_num", "street_name", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"] } }));
-
-    // Show stats
-    const stats = await client.query(`
-      SELECT
-        COUNT(*) AS total,
-        COUNT(*) FILTER (WHERE decision IN ('Approved', 'Approved with Conditions')) AS approved,
-        COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL) AS linked,
-        COUNT(*) FILTER (WHERE decision IN ('Approved', 'Approved with Conditions') AND linked_permit_num IS NULL AND decision_date >= NOW() - INTERVAL '90 days') AS upcoming
-      FROM coa_applications
-    `);
-    const s = stats.rows[0];
-    console.log(`\nCoA Stats: ${s.total} total | ${s.approved} approved | ${s.linked} linked | ${s.upcoming} upcoming leads`);
-
-  } finally {
-    client.release();
-    await pool.end();
+    const progress = Math.min(i + BATCH_SIZE, deduplicated.length);
+    process.stdout.write(`\r  Progress: ${progress}/${deduplicated.length} (${totalInserted} inserted, ${totalUpdated} updated)`);
   }
-}
 
-main().catch((err) => {
-  console.error('\nFatal error:', err.message);
-  process.exit(1);
+  console.log(`\n\nDone! ${totalInserted} inserted, ${totalUpdated} updated.`);
+  pipeline.emitSummary({ records_total: totalInserted + totalUpdated, records_new: totalInserted, records_updated: totalUpdated });
+  pipeline.emitMeta(
+    { "CKAN API": ["APPLICATION_NUMBER", "ADDRESS", "STREET_NUM", "STREET_NAME", "WARD", "STATUS", "DECISION", "DECISION_DATE", "HEARING_DATE", "DESCRIPTION", "APPLICANT", "SUB_TYPE"] },
+    { "coa_applications": ["application_number", "address", "street_num", "street_name", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"] }
+  );
+
+  // Show stats
+  const stats = await pool.query(`
+    SELECT
+      COUNT(*) AS total,
+      COUNT(*) FILTER (WHERE decision IN ('Approved', 'Approved with Conditions')) AS approved,
+      COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL) AS linked,
+      COUNT(*) FILTER (WHERE decision IN ('Approved', 'Approved with Conditions') AND linked_permit_num IS NULL AND decision_date >= NOW() - INTERVAL '90 days') AS upcoming
+    FROM coa_applications
+  `);
+  const s = stats.rows[0];
+  console.log(`\nCoA Stats: ${s.total} total | ${s.approved} approved | ${s.linked} linked | ${s.upcoming} upcoming leads`);
 });

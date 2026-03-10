@@ -9,7 +9,7 @@
  *
  * If no path is given, downloads from Toronto Open Data.
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -18,20 +18,11 @@ const { execSync } = require('child_process');
 const { platform } = require('os');
 const shapefile = require('shapefile');
 
-const BATCH_SIZE = 1000;
 const SQM_TO_SQFT = 10.7639;
 const STORY_HEIGHT_M = 3.0;
 
 const ZIP_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/c57a333a-dc6c-416e-8dd0-7b7964161720/download/3dmassingshapefile_2025_wgs84.zip';
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
 
 // ---------------------------------------------------------------------------
 // Helpers (inline to avoid module resolution issues in standalone scripts)
@@ -122,7 +113,7 @@ function downloadFile(url, destPath) {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-async function main() {
+pipeline.run('load-massing', async (pool) => {
   console.log('=== Buildo 3D Massing Loader ===');
   console.log('');
 
@@ -190,50 +181,54 @@ async function main() {
   async function flushBatch() {
     if (batch.length === 0) return;
 
-    const values = [];
-    const placeholders = [];
-    let idx = 1;
-
-    for (const row of batch) {
-      placeholders.push(
-        `($${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++})`
-      );
-      values.push(
-        row.source_id,
-        JSON.stringify(row.geometry),
-        row.footprint_area_sqm, row.footprint_area_sqft,
-        row.max_height_m, row.min_height_m, row.elev_z,
-        row.estimated_stories,
-        row.centroid_lat, row.centroid_lng
-      );
-    }
-
-    const result = await pool.query(
-      `INSERT INTO building_footprints (
-        source_id, geometry,
-        footprint_area_sqm, footprint_area_sqft,
-        max_height_m, min_height_m, elev_z,
-        estimated_stories,
-        centroid_lat, centroid_lng
-      ) VALUES ${placeholders.join(', ')}
-      ON CONFLICT (source_id) DO UPDATE SET
-        geometry = EXCLUDED.geometry,
-        footprint_area_sqm = EXCLUDED.footprint_area_sqm,
-        footprint_area_sqft = EXCLUDED.footprint_area_sqft,
-        max_height_m = EXCLUDED.max_height_m,
-        min_height_m = EXCLUDED.min_height_m,
-        elev_z = EXCLUDED.elev_z,
-        estimated_stories = EXCLUDED.estimated_stories,
-        centroid_lat = EXCLUDED.centroid_lat,
-        centroid_lng = EXCLUDED.centroid_lng
-      RETURNING (xmax = 0) AS is_insert`,
-      values
-    );
-
-    const batchNew = result.rows.filter(r => r.is_insert).length;
-    inserted += batchNew;
-    updated += result.rows.length - batchNew;
+    const currentBatch = batch;
     batch = [];
+
+    await pipeline.withTransaction(pool, async (client) => {
+      const values = [];
+      const placeholders = [];
+      let idx = 1;
+
+      for (const row of currentBatch) {
+        placeholders.push(
+          `($${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++})`
+        );
+        values.push(
+          row.source_id,
+          JSON.stringify(row.geometry),
+          row.footprint_area_sqm, row.footprint_area_sqft,
+          row.max_height_m, row.min_height_m, row.elev_z,
+          row.estimated_stories,
+          row.centroid_lat, row.centroid_lng
+        );
+      }
+
+      const result = await client.query(
+        `INSERT INTO building_footprints (
+          source_id, geometry,
+          footprint_area_sqm, footprint_area_sqft,
+          max_height_m, min_height_m, elev_z,
+          estimated_stories,
+          centroid_lat, centroid_lng
+        ) VALUES ${placeholders.join(', ')}
+        ON CONFLICT (source_id) DO UPDATE SET
+          geometry = EXCLUDED.geometry,
+          footprint_area_sqm = EXCLUDED.footprint_area_sqm,
+          footprint_area_sqft = EXCLUDED.footprint_area_sqft,
+          max_height_m = EXCLUDED.max_height_m,
+          min_height_m = EXCLUDED.min_height_m,
+          elev_z = EXCLUDED.elev_z,
+          estimated_stories = EXCLUDED.estimated_stories,
+          centroid_lat = EXCLUDED.centroid_lat,
+          centroid_lng = EXCLUDED.centroid_lng
+        RETURNING (xmax = 0) AS is_insert`,
+        values
+      );
+
+      const batchNew = result.rows.filter(r => r.is_insert).length;
+      inserted += batchNew;
+      updated += result.rows.length - batchNew;
+    });
   }
 
   const source = await shapefile.open(shpPath);
@@ -287,11 +282,11 @@ async function main() {
       centroid_lng: centroid ? Math.round(centroid[0] * 10000000) / 10000000 : null,
     });
 
-    if (batch.length >= BATCH_SIZE) {
+    if (batch.length >= pipeline.BATCH_SIZE) {
       try {
         await flushBatch();
       } catch (err) {
-        console.error(`  Error inserting batch at row ${processed}:`, err.message);
+        pipeline.log.error('[load-massing]', err, { row: processed });
         errors++;
         batch = [];
       }
@@ -307,7 +302,7 @@ async function main() {
   try {
     await flushBatch();
   } catch (err) {
-    console.error('Error flushing final batch:', err.message);
+    pipeline.log.error('[load-massing]', err, { phase: 'final_flush' });
     errors++;
   }
 
@@ -320,19 +315,14 @@ async function main() {
   console.log(`Skipped:        ${skipped.toLocaleString()}`);
   console.log(`Errors:         ${errors}`);
   console.log(`Duration:       ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: inserted + updated, records_new: inserted, records_updated: updated }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "City Shapefile": ["SOURCE_ID", "geometry", "AREA_SQ_M", "MAX_HEIGHT", "MIN_HEIGHT", "ELEV_Z", "EST_STORIES"] }, writes: { "building_footprints": ["source_id", "geometry", "footprint_area_sqm", "footprint_area_sqft", "max_height_m", "min_height_m", "elev_z", "estimated_stories", "centroid_lat", "centroid_lng"] } }));
-
-  await pool.end();
+  pipeline.emitSummary({ records_total: inserted + updated, records_new: inserted, records_updated: updated });
+  pipeline.emitMeta(
+    { "City Shapefile": ["SOURCE_ID", "geometry", "AREA_SQ_M", "MAX_HEIGHT", "MIN_HEIGHT", "ELEV_Z", "EST_STORIES"] },
+    { "building_footprints": ["source_id", "geometry", "footprint_area_sqm", "footprint_area_sqft", "max_height_m", "min_height_m", "elev_z", "estimated_stories", "centroid_lat", "centroid_lng"] }
+  );
 
   // Chain spatial linking: match parcels to newly loaded building footprints
   console.log('');
   console.log('=== Starting Parcel-to-Building Linking ===');
   execSync(`node "${path.join(__dirname, 'link-massing.js')}"`, { stdio: 'inherit' });
-}
-
-main().catch(async (err) => {
-  console.error('Load failed:', err);
-  await pool.end().catch(() => {});
-  process.exit(1);
 });

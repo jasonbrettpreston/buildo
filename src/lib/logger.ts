@@ -7,11 +7,10 @@ let sentryCaptureException: ((err: unknown, ctx?: { extra?: ErrorContext }) => v
 
 // Lazy-load Sentry only when DSN is configured (production).
 // In local dev, this stays null and errors go to console only.
-// Use a variable to prevent TypeScript from resolving the module at compile time.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const SENTRY_MODULE = '@sentry/nextjs';
+// webpackIgnore comment prevents the "Critical dependency" warning.
 if (typeof process !== 'undefined' && process.env.SENTRY_DSN) {
-  import(SENTRY_MODULE)
+  // @ts-expect-error — @sentry/nextjs is an optional production dependency
+  import(/* webpackIgnore: true */ '@sentry/nextjs')
     .then((Sentry: { init: (opts: Record<string, unknown>) => void; captureException: (err: unknown, ctx?: Record<string, unknown>) => void }) => {
       Sentry.init({
         dsn: process.env.SENTRY_DSN,

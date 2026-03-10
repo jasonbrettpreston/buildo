@@ -12,17 +12,9 @@
  *
  * Usage: node scripts/create-pre-permits.js
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
-
-async function run() {
+pipeline.run('create-pre-permits', async (pool) => {
   console.log('Identifying pre-permit leads from CoA applications...\n');
 
   // Count current pre-permit leads
@@ -74,9 +66,9 @@ async function run() {
   }
 
   console.log('\nDone.');
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: upcoming, records_new: 0, records_updated: 0 }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "coa_applications": ["decision", "linked_permit_num", "decision_date", "ward"] }, writes: {} }));
-  await pool.end();
-}
-
-run().catch((err) => { console.error(err); process.exit(1); });
+  pipeline.emitSummary({ records_total: upcoming, records_new: 0, records_updated: 0 });
+  pipeline.emitMeta(
+    { "coa_applications": ["decision", "linked_permit_num", "decision_date", "ward"] },
+    {}
+  );
+});

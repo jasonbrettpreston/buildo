@@ -10,9 +10,9 @@
  *
  * Uses @turf/boolean-point-in-polygon for accurate spatial testing.
  *
- * Usage: node scripts/link-massing.js
+ * Usage: node scripts/link-massing.js [--full]
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 const booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default;
 const { point: turfPoint } = require('@turf/helpers');
 
@@ -21,18 +21,6 @@ const BBOX_OFFSET = 0.003; // ~333m pre-filter radius
 const SHED_THRESHOLD_SQM = 20;
 const GARAGE_MAX_SQM = 60;
 const NEAREST_MAX_DISTANCE_M = 50;
-
-// Incremental mode (default): skip parcels already linked in parcel_buildings.
-// Full mode: rescan all parcels (use when massing data is reloaded).
-const FULL_MODE = process.argv.includes('--full') || process.env.LINK_MASSING_FULL === '1';
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
 
 function classifyStructure(areaSqm, allAreas) {
   if (allAreas.length <= 1) return 'primary';
@@ -94,7 +82,9 @@ function getTestPoints(parcel) {
   return points;
 }
 
-async function main() {
+pipeline.run('link-massing', async (pool) => {
+  const FULL_MODE = pipeline.isFullMode();
+
   console.log('=== Buildo Parcel-Building Linker ===');
   console.log(`Mode: ${FULL_MODE ? 'FULL (rescan all parcels)' : 'INCREMENTAL (unlinked parcels only)'}`);
   console.log('');
@@ -282,10 +272,10 @@ async function main() {
       processed++;
     }
 
-    // Batch insert — only increment counters after successful DB write
+    // Batch insert within a transaction
     if (insertParams.length > 0) {
-      try {
-        await pool.query(
+      await pipeline.withTransaction(pool, async (client) => {
+        await client.query(
           `INSERT INTO parcel_buildings (parcel_id, building_id, is_primary, structure_type, match_type, confidence)
            VALUES ${insertParams.join(', ')}
            ON CONFLICT (parcel_id, building_id) DO UPDATE SET
@@ -298,9 +288,7 @@ async function main() {
         );
         buildingsLinked += batchBuildingsCount;
         parcelsLinked += batchParcelsCount;
-      } catch (err) {
-        console.error(`  Error inserting batch at offset ${offset}:`, err.message);
-      }
+      });
     }
 
     offset += BATCH_SIZE;
@@ -323,13 +311,10 @@ async function main() {
   console.log(`  Nearest (≤${NEAREST_MAX_DISTANCE_M}m):     ${nearestMatches.toLocaleString()} (confidence 0.60)`);
   console.log(`No match found:         ${noMatch.toLocaleString()}`);
   console.log(`Duration:               ${elapsed}s`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: parcelsLinked, records_new: parcelsLinked, records_updated: 0 }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "parcels": ["id", "centroid_lat", "centroid_lng", "geometry"], "building_footprints": ["id", "geometry", "footprint_area_sqm", "centroid_lat", "centroid_lng"] }, writes: { "parcel_buildings": ["parcel_id", "building_id", "is_primary", "structure_type", "match_type", "confidence", "linked_at"] } }));
 
-  await pool.end();
-}
-
-main().catch((err) => {
-  console.error('Linking failed:', err);
-  process.exit(1);
+  pipeline.emitSummary({ records_total: parcelsLinked, records_new: parcelsLinked, records_updated: 0 });
+  pipeline.emitMeta(
+    { "parcels": ["id", "centroid_lat", "centroid_lng", "geometry"], "building_footprints": ["id", "geometry", "footprint_area_sqm", "centroid_lat", "centroid_lng"] },
+    { "parcel_buildings": ["parcel_id", "building_id", "is_primary", "structure_type", "match_type", "confidence", "linked_at"] }
+  );
 });

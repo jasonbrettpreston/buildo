@@ -8,12 +8,10 @@
  *   node scripts/load-permits.js              # fetch live from CKAN
  *   node scripts/load-permits.js --file data.json  # load from local file
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-
-const BATCH_SIZE = 1000;
 
 // CKAN datastore endpoint for Active Building Permits
 const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
@@ -22,14 +20,6 @@ const RESOURCE_ID = '6d0229af-bc54-46de-9c2b-26759b01dd05';
 // CLI: --file <path> for local file fallback
 const fileArgIdx = process.argv.indexOf('--file');
 const localFilePath = fileArgIdx !== -1 ? process.argv[fileArgIdx + 1] : null;
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
 
 function trimToNull(v) {
   if (!v) return null;
@@ -189,7 +179,7 @@ async function insertBatch(client, batch) {
   return result.rows;
 }
 
-async function run() {
+pipeline.run('load-permits', async (pool) => {
   let records;
 
   if (localFilePath) {
@@ -206,7 +196,6 @@ async function run() {
     console.log(`Fetched ${records.length} records from CKAN`);
   }
 
-  const client = await pool.connect();
   let newInserts = 0;
   let updated = 0;
   let processed = 0;
@@ -214,44 +203,44 @@ async function run() {
   let batch = [];
   const startTime = Date.now();
 
-  try {
-    for (const record of records) {
-      try {
-        if (!record.PERMIT_NUM || !record.REVISION_NUM) {
-          errors++;
-          continue;
-        }
-        batch.push(mapRecord(record));
-        if (batch.length >= BATCH_SIZE) {
-          const rows = await insertBatch(client, batch);
-          for (const r of rows) {
-            if (r.is_insert) newInserts++;
-            else updated++;
-          }
-          processed += batch.length;
-          batch = [];
-          if (processed % 10000 === 0) {
-            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-            console.log(`  ${processed.toLocaleString()} processed (${elapsed}s)`);
-          }
-        }
-      } catch (err) {
+  for (const record of records) {
+    try {
+      if (!record.PERMIT_NUM || !record.REVISION_NUM) {
         errors++;
-        if (errors <= 5) console.error(`  Error on record ${processed + errors}:`, err.message);
+        continue;
       }
+      batch.push(mapRecord(record));
+      if (batch.length >= pipeline.BATCH_SIZE) {
+        const rows = await pipeline.withTransaction(pool, async (client) => {
+          return insertBatch(client, batch);
+        });
+        for (const r of rows) {
+          if (r.is_insert) newInserts++;
+          else updated++;
+        }
+        processed += batch.length;
+        batch = [];
+        if (processed % 10000 === 0) {
+          const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+          console.log(`  ${processed.toLocaleString()} processed (${elapsed}s)`);
+        }
+      }
+    } catch (err) {
+      errors++;
+      if (errors <= 5) pipeline.log.error('[load-permits]', err, { record: processed + errors });
     }
+  }
 
-    // Final batch
-    if (batch.length > 0) {
-      const rows = await insertBatch(client, batch);
-      for (const r of rows) {
-        if (r.is_insert) newInserts++;
-        else updated++;
-      }
-      processed += batch.length;
+  // Final batch
+  if (batch.length > 0) {
+    const rows = await pipeline.withTransaction(pool, async (client) => {
+      return insertBatch(client, batch);
+    });
+    for (const r of rows) {
+      if (r.is_insert) newInserts++;
+      else updated++;
     }
-  } finally {
-    client.release();
+    processed += batch.length;
   }
 
   const unchanged = processed - newInserts - updated;
@@ -262,8 +251,11 @@ async function run() {
   console.log(`  Updated: ${updated.toLocaleString()}`);
   console.log(`  Unchanged: ${unchanged.toLocaleString()}`);
   console.log(`  Errors: ${errors}`);
-  console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: newInserts + updated, records_new: newInserts, records_updated: updated }));
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["PERMIT_NUM", "REVISION_NUM", "PERMIT_TYPE", "STRUCTURE_TYPE", "WORK", "STREET_NUM", "STREET_NAME", "STREET_TYPE", "STREET_DIRECTION", "CITY", "POSTAL", "GEO_ID", "BUILDING_TYPE", "CATEGORY", "APPLICATION_DATE", "ISSUED_DATE", "COMPLETED_DATE", "STATUS", "DESCRIPTION", "EST_CONST_COST", "BUILDER", "OWNER", "DWELLING_UNITS_CREATED", "DWELLING_UNITS_LOST", "WARD", "COUNCIL_DISTRICT", "CURRENT_USE", "PROPOSED_USE", "HOUSING_UNITS", "STOREYS"] }, writes: { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "data_hash", "raw_json"] } }));
+  pipeline.emitSummary({ records_total: newInserts + updated, records_new: newInserts, records_updated: updated });
+  pipeline.emitMeta(
+    { "CKAN API": ["PERMIT_NUM", "REVISION_NUM", "PERMIT_TYPE", "STRUCTURE_TYPE", "WORK", "STREET_NUM", "STREET_NAME", "STREET_TYPE", "STREET_DIRECTION", "CITY", "POSTAL", "GEO_ID", "BUILDING_TYPE", "CATEGORY", "APPLICATION_DATE", "ISSUED_DATE", "COMPLETED_DATE", "STATUS", "DESCRIPTION", "EST_CONST_COST", "BUILDER", "OWNER", "DWELLING_UNITS_CREATED", "DWELLING_UNITS_LOST", "WARD", "COUNCIL_DISTRICT", "CURRENT_USE", "PROPOSED_USE", "HOUSING_UNITS", "STOREYS"] },
+    { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "data_hash", "raw_json"] }
+  );
 
   // Log sync run
   await pool.query(
@@ -272,11 +264,4 @@ async function run() {
     [processed, newInserts, updated, unchanged, errors, Math.round(parseFloat(duration) * 1000)]
   );
   console.log('  Sync run logged');
-
-  await pool.end();
-}
-
-run().catch((err) => {
-  console.error('Fatal:', err);
-  process.exit(1);
 });

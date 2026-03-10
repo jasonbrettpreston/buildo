@@ -16,15 +16,7 @@
  *   ENRICH_LIMIT     — Max builders to process (default 50, overridden by --limit)
  *   PIPELINE_CHAIN   — Set by run-chain.js when running as part of a chain
  */
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
+const pipeline = require('./lib/pipeline');
 
 const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 const SERPER_URL = 'https://google.serper.dev/search';
@@ -216,7 +208,7 @@ async function searchSerper(query) {
 // Main
 // ---------------------------------------------------------------------------
 
-async function run() {
+pipeline.run('enrich-web-search', async (pool) => {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const limitIdx = args.indexOf('--limit');
@@ -278,7 +270,7 @@ async function run() {
   console.log(`Found ${builders.length} unenriched builder(s)`);
   if (builders.length === 0) {
     console.log('Nothing to enrich.');
-    await finalize(runId, startMs, 0, 0, 0, { processed: 0, matched: 0, failed: 0 });
+    await finalize(pool, runId, startMs, 0, 0, 0, { processed: 0, matched: 0, failed: 0 });
     return;
   }
 
@@ -363,25 +355,27 @@ async function run() {
       updates.push('last_enriched_at = NOW()');
       params.push(b.id);
 
-      await pool.query(
-        `UPDATE entities SET ${updates.join(', ')} WHERE id = $${paramIdx}`,
-        params
-      );
+      await pipeline.withTransaction(pool, async (client) => {
+        await client.query(
+          `UPDATE entities SET ${updates.join(', ')} WHERE id = $${paramIdx}`,
+          params
+        );
 
-      // Insert social links into builder_contacts
-      const socialTypes = ['instagram', 'facebook', 'linkedin', 'houzz'];
-      for (const type of socialTypes) {
-        if (contacts[type]) {
-          await pool.query(
-            `INSERT INTO builder_contacts (builder_id, contact_type, contact_value, source)
-             VALUES ($1, $2, $3, 'web_search')
-             ON CONFLICT DO NOTHING`,
-            [b.id, type, contacts[type]]
-          );
-          newFields++;
-          fieldCounts[type]++;
+        // Insert social links into builder_contacts
+        const socialTypes = ['instagram', 'facebook', 'linkedin', 'houzz'];
+        for (const type of socialTypes) {
+          if (contacts[type]) {
+            await client.query(
+              `INSERT INTO builder_contacts (builder_id, contact_type, contact_value, source)
+               VALUES ($1, $2, $3, 'web_search')
+               ON CONFLICT DO NOTHING`,
+              [b.id, type, contacts[type]]
+            );
+            newFields++;
+            fieldCounts[type]++;
+          }
         }
-      }
+      });
 
       if (newFields > 0) contactsFound++;
       enriched++;
@@ -399,7 +393,7 @@ async function run() {
       console.log(`  [${i + 1}/${builders.length}] ${b.name} → ${summary}`);
 
     } catch (err) {
-      console.error(`  [${i + 1}/${builders.length}] ${b.name} — ERROR: ${err.message}`);
+      pipeline.log.error('[enrich-web-search]', err, { builder_id: b.id, builder_name: b.name });
       failed++;
 
       // On API error, still mark as enriched to avoid infinite retry
@@ -421,10 +415,10 @@ async function run() {
     extracted_fields: fieldCounts,
   };
 
-  await finalize(runId, startMs, enriched, contactsFound, failed, meta);
-}
+  await finalize(pool, runId, startMs, enriched, contactsFound, failed, meta);
+});
 
-async function finalize(runId, startMs, enriched, contactsFound, failed, meta) {
+async function finalize(pool, runId, startMs, enriched, contactsFound, failed, meta) {
   const durationMs = Date.now() - startMs;
 
   console.log('\n=== Results ===');
@@ -444,12 +438,6 @@ async function finalize(runId, startMs, enriched, contactsFound, failed, meta) {
     ).catch(() => {});
   }
 
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "entities": ["id", "legal_name", "primary_phone", "primary_email", "website", "last_enriched_at", "permit_count"], "wsib_registry": ["trade_name", "legal_name", "mailing_address"] }, writes: { "entities": ["primary_phone", "primary_email", "website", "last_enriched_at"], "builder_contacts": ["builder_id", "contact_type", "contact_value", "source"] } }));
-  await pool.end();
+  pipeline.emitSummary({ records_total: enriched + failed, records_new: contactsFound, records_updated: enriched - contactsFound });
+  pipeline.emitMeta({ "entities": ["id", "legal_name", "primary_phone", "primary_email", "website", "last_enriched_at", "permit_count"], "wsib_registry": ["trade_name", "legal_name", "mailing_address"] }, { "entities": ["primary_phone", "primary_email", "website", "last_enriched_at"], "builder_contacts": ["builder_id", "contact_type", "contact_value", "source"] });
 }
-
-run().catch((err) => {
-  console.error('\nFatal error:', err.message);
-  pool.end().catch(() => {});
-  process.exit(1);
-});

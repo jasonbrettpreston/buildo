@@ -8,25 +8,15 @@
  *
  * If no path is given, downloads from Toronto Open Data.
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
 const { parse } = require('csv-parse');
 
-const BATCH_SIZE = 1000;
-
 const CSV_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/property-boundaries/resource/23d1f792-018f-4069-ac5d-443e932e1b78/download/Property%20Boundaries%20-%204326.csv';
-
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -234,7 +224,7 @@ function downloadFile(url, destPath) {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-async function main() {
+pipeline.run('load-parcels', async (pool) => {
   console.log('=== Buildo Property Boundaries Loader ===');
   console.log('');
 
@@ -252,6 +242,11 @@ async function main() {
   }
 
   console.log(`Parsing: ${csvPath}`);
+
+  // Detect PostGIS for optional geom column population
+  const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
+  const hasPostGIS = pgisCheck.rows.length > 0;
+  if (!hasPostGIS) console.log('Note: PostGIS not installed — skipping geom column');
   console.log('');
 
   const startTime = Date.now();
@@ -265,61 +260,69 @@ async function main() {
   async function flushBatch() {
     if (batch.length === 0) return;
 
-    const values = [];
-    const placeholders = [];
-    let idx = 1;
-
-    for (const row of batch) {
-      placeholders.push(
-        `($${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++})`
-      );
-      values.push(
-        row.parcel_id, row.feature_type,
-        row.address_number, row.linear_name_full,
-        row.addr_num_normalized, row.street_name_normalized, row.street_type_normalized,
-        row.stated_area_raw, row.lot_size_sqm, row.lot_size_sqft,
-        row.frontage_m, row.frontage_ft, row.depth_m, row.depth_ft,
-        row.geometry ? JSON.stringify(row.geometry) : null,
-        row.date_effective, row.is_irregular
-      );
-    }
-
-    const result = await pool.query(
-      `INSERT INTO parcels (
-        parcel_id, feature_type,
-        address_number, linear_name_full,
-        addr_num_normalized, street_name_normalized, street_type_normalized,
-        stated_area_raw, lot_size_sqm, lot_size_sqft,
-        frontage_m, frontage_ft, depth_m, depth_ft,
-        geometry, date_effective, is_irregular
-      ) VALUES ${placeholders.join(', ')}
-      ON CONFLICT (parcel_id)
-      DO UPDATE SET
-        feature_type = EXCLUDED.feature_type,
-        address_number = EXCLUDED.address_number,
-        linear_name_full = EXCLUDED.linear_name_full,
-        addr_num_normalized = EXCLUDED.addr_num_normalized,
-        street_name_normalized = EXCLUDED.street_name_normalized,
-        street_type_normalized = EXCLUDED.street_type_normalized,
-        stated_area_raw = EXCLUDED.stated_area_raw,
-        lot_size_sqm = EXCLUDED.lot_size_sqm,
-        lot_size_sqft = EXCLUDED.lot_size_sqft,
-        frontage_m = EXCLUDED.frontage_m,
-        frontage_ft = EXCLUDED.frontage_ft,
-        depth_m = EXCLUDED.depth_m,
-        depth_ft = EXCLUDED.depth_ft,
-        geometry = EXCLUDED.geometry,
-        geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326),
-        date_effective = EXCLUDED.date_effective,
-        is_irregular = EXCLUDED.is_irregular
-      RETURNING (xmax = 0) AS is_insert`,
-      values
-    );
-
-    const batchNew = result.rows.filter(r => r.is_insert).length;
-    inserted += batchNew;
-    updated += result.rows.length - batchNew;
+    const currentBatch = batch;
     batch = [];
+
+    await pipeline.withTransaction(pool, async (client) => {
+      const values = [];
+      const placeholders = [];
+      let idx = 1;
+
+      for (const row of currentBatch) {
+        placeholders.push(
+          `($${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++})`
+        );
+        values.push(
+          row.parcel_id, row.feature_type,
+          row.address_number, row.linear_name_full,
+          row.addr_num_normalized, row.street_name_normalized, row.street_type_normalized,
+          row.stated_area_raw, row.lot_size_sqm, row.lot_size_sqft,
+          row.frontage_m, row.frontage_ft, row.depth_m, row.depth_ft,
+          row.geometry ? JSON.stringify(row.geometry) : null,
+          row.date_effective, row.is_irregular
+        );
+      }
+
+      const geomLine = hasPostGIS
+        ? 'geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326),'
+        : '';
+
+      const result = await client.query(
+        `INSERT INTO parcels (
+          parcel_id, feature_type,
+          address_number, linear_name_full,
+          addr_num_normalized, street_name_normalized, street_type_normalized,
+          stated_area_raw, lot_size_sqm, lot_size_sqft,
+          frontage_m, frontage_ft, depth_m, depth_ft,
+          geometry, date_effective, is_irregular
+        ) VALUES ${placeholders.join(', ')}
+        ON CONFLICT (parcel_id)
+        DO UPDATE SET
+          feature_type = EXCLUDED.feature_type,
+          address_number = EXCLUDED.address_number,
+          linear_name_full = EXCLUDED.linear_name_full,
+          addr_num_normalized = EXCLUDED.addr_num_normalized,
+          street_name_normalized = EXCLUDED.street_name_normalized,
+          street_type_normalized = EXCLUDED.street_type_normalized,
+          stated_area_raw = EXCLUDED.stated_area_raw,
+          lot_size_sqm = EXCLUDED.lot_size_sqm,
+          lot_size_sqft = EXCLUDED.lot_size_sqft,
+          frontage_m = EXCLUDED.frontage_m,
+          frontage_ft = EXCLUDED.frontage_ft,
+          depth_m = EXCLUDED.depth_m,
+          depth_ft = EXCLUDED.depth_ft,
+          geometry = EXCLUDED.geometry,
+          ${geomLine}
+          date_effective = EXCLUDED.date_effective,
+          is_irregular = EXCLUDED.is_irregular
+        RETURNING (xmax = 0) AS is_insert`,
+        values
+      );
+
+      const batchNew = result.rows.filter(r => r.is_insert).length;
+      inserted += batchNew;
+      updated += result.rows.length - batchNew;
+    });
   }
 
   return new Promise((resolve, reject) => {
@@ -392,12 +395,12 @@ async function main() {
         is_irregular: isIrregular,
       });
 
-      if (batch.length >= BATCH_SIZE) {
+      if (batch.length >= pipeline.BATCH_SIZE) {
         stream.pause();
         try {
           await flushBatch();
         } catch (err) {
-          console.error(`  Error inserting batch at row ${processed}:`, err.message);
+          pipeline.log.error('[load-parcels]', err, { row: processed });
           errors++;
           batch = [];
         }
@@ -414,7 +417,7 @@ async function main() {
       try {
         await flushBatch();
       } catch (err) {
-        console.error('Error flushing final batch:', err.message);
+        pipeline.log.error('[load-parcels]', err, { phase: 'final_flush' });
         errors++;
       }
 
@@ -427,23 +430,46 @@ async function main() {
       console.log(`Skipped:       ${skipped.toLocaleString()}`);
       console.log(`Errors:        ${errors}`);
       console.log(`Duration:      ${elapsed}s`);
-      console.log('PIPELINE_SUMMARY:' + JSON.stringify({ records_total: inserted + updated, records_new: inserted, records_updated: updated }));
-      console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["ARN", "FEAT_TYPE", "ADDR_NUM", "LINEAR_NAME_FULL", "AREA", "SHAPE_Area", "geometry"] }, writes: { "parcels": ["parcel_id", "feature_type", "address_number", "linear_name_full", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "stated_area_raw", "lot_size_sqm", "lot_size_sqft", "frontage_m", "frontage_ft", "depth_m", "depth_ft", "geometry", "date_effective", "is_irregular", "geom"] } }));
+      pipeline.emitSummary({ records_total: inserted + updated, records_new: inserted, records_updated: updated });
+      pipeline.emitMeta(
+        { "CKAN API": ["ARN", "FEAT_TYPE", "ADDR_NUM", "LINEAR_NAME_FULL", "AREA", "SHAPE_Area", "geometry"] },
+        { "parcels": ["parcel_id", "feature_type", "address_number", "linear_name_full", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "stated_area_raw", "lot_size_sqm", "lot_size_sqft", "frontage_m", "frontage_ft", "depth_m", "depth_ft", "geometry", "date_effective", "is_irregular", "geom"] }
+      );
 
-      await pool.end();
       resolve();
     });
 
     stream.on('error', async (err) => {
-      console.error('CSV parse error:', err);
-      await pool.end();
-      reject(err);
+      // Truncated CSV (unclosed quote at EOF) is recoverable — flush what we have
+      if (err.code === 'CSV_QUOTE_NOT_CLOSED' && processed > 0) {
+        console.warn(`\nCSV truncated at line ${err.lines || '?'} — flushing ${processed.toLocaleString()} rows already parsed`);
+        try {
+          await flushBatch();
+        } catch (flushErr) {
+          pipeline.log.error('[load-parcels]', flushErr, { phase: 'truncated_flush' });
+          errors++;
+        }
+
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log('');
+        console.log('=== Load Complete (partial — truncated CSV) ===');
+        console.log(`Rows read:     ${processed.toLocaleString()}`);
+        console.log(`Inserted:      ${inserted.toLocaleString()}`);
+        console.log(`Updated:       ${updated.toLocaleString()}`);
+        console.log(`Skipped:       ${skipped.toLocaleString()}`);
+        console.log(`Errors:        ${errors}`);
+        console.log(`Duration:      ${elapsed}s`);
+        pipeline.emitSummary({ records_total: inserted + updated, records_new: inserted, records_updated: updated });
+        pipeline.emitMeta(
+          { "CKAN API": ["ARN", "FEAT_TYPE", "ADDR_NUM", "LINEAR_NAME_FULL", "AREA", "SHAPE_Area", "geometry"] },
+          { "parcels": ["parcel_id", "feature_type", "address_number", "linear_name_full", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "stated_area_raw", "lot_size_sqm", "lot_size_sqft", "frontage_m", "frontage_ft", "depth_m", "depth_ft", "geometry", "date_effective", "is_irregular", "geom"] }
+        );
+
+        resolve();
+      } else {
+        pipeline.log.error('[load-parcels]', err, { phase: 'csv_parse' });
+        reject(err);
+      }
     });
   });
-}
-
-main().catch(async (err) => {
-  console.error('Load failed:', err);
-  await pool.end().catch(() => {});
-  process.exit(1);
 });
