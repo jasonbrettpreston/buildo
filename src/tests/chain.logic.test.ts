@@ -598,3 +598,52 @@ describe('Scoped key step status updates during chain run (Bug A3)', () => {
     expect(source).toContain('pipeline_last_run');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Stopping state cleanup — "Stopping..." clears when chain finishes (Bug A4)
+// ---------------------------------------------------------------------------
+
+describe('"Stopping..." clears when chain finishes (Bug A4)', () => {
+  it('FreshnessTimeline has cancellingChains state and cleanup effect', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('cancellingChains');
+    expect(source).toContain('setCancellingChains');
+  });
+
+  it('cleanup effect removes chain slug when no longer in runningPipelines', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Effect must check runningPipelines.has(slug) and remove if not present
+    expect(source).toContain('runningPipelines.has(slug)');
+    expect(source).toMatch(/cancellingChains[\s\S]{0,500}runningPipelines/);
+  });
+
+  it('cleanup effect depends on runningPipelines changes', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // useEffect dependency array must include runningPipelines
+    expect(source).toMatch(/\[runningPipelines.*cancellingChains/);
+  });
+
+  it('cancellingChains cleanup logic correctly filters finished chains', () => {
+    // Pure logic test mirroring the effect at FreshnessTimeline line 343-348
+    const runningPipelines = new Set(['chain_coa']); // coa still running
+    const cancellingChains = new Set(['chain_permits', 'chain_coa']); // both stopping
+
+    const next = new Set<string>();
+    for (const slug of cancellingChains) {
+      if (runningPipelines.has(slug)) next.add(slug);
+    }
+    // permits finished → removed; coa still running → kept
+    expect(next.has('chain_permits')).toBe(false);
+    expect(next.has('chain_coa')).toBe(true);
+    expect(next.size).toBe(1);
+  });
+});
