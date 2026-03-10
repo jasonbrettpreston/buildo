@@ -6,114 +6,42 @@
  * the overall chain in the pipeline_runs table. Stops on first failure.
  *
  * Usage: node scripts/run-chain.js <chain_id>
- *   chain_id: permits | coa | sources
+ *   chain_id: permits | coa | sources | entities
  *
  * Example: node scripts/run-chain.js permits
  */
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
-
 // ---------------------------------------------------------------------------
-// Chain definitions — mirrors PIPELINE_CHAINS in FreshnessTimeline.tsx
+// Pipeline Manifest — single source of truth (§9.6)
 // ---------------------------------------------------------------------------
 
-const CHAINS = {
-  permits: [
-    'assert_schema',
-    'permits',
-    'classify_scope',
-    'classify_permits',
-    'builders',
-    'link_wsib',
-    'geocode_permits',
-    'link_parcels',
-    'link_neighbourhoods',
-    'link_massing',
-    'link_similar',
-    'link_coa',
-    'refresh_snapshot',
-    'assert_data_bounds',
-  ],
-  coa: [
-    'assert_schema',
-    'coa',
-    'link_coa',
-    'create_pre_permits',
-    'refresh_snapshot',
-    'assert_data_bounds',
-  ],
-  sources: [
-    'assert_schema',
-    'address_points',
-    'geocode_permits',
-    'parcels',
-    'compute_centroids',
-    'link_parcels',
-    'massing',
-    'link_massing',
-    'neighbourhoods',
-    'link_neighbourhoods',
-    'load_wsib',
-    'link_wsib',
-    'refresh_snapshot',
-    'assert_data_bounds',
-  ],
-  entities: [
-    'enrich_wsib_builders',
-    'enrich_named_builders',
-  ],
-};
+const manifest = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, 'manifest.json'), 'utf-8')
+);
 
-// ---------------------------------------------------------------------------
-// Slug → script path — mirrors PIPELINE_SCRIPTS in route.ts
-// ---------------------------------------------------------------------------
+const CHAINS = manifest.chains;
 
-const PIPELINE_SCRIPTS = {
-  permits:              'scripts/load-permits.js',
-  coa:                  'scripts/load-coa.js',
-  builders:             'scripts/extract-builders.js',
-  address_points:       'scripts/load-address-points.js',
-  parcels:              'scripts/load-parcels.js',
-  massing:              'scripts/load-massing.js',
-  neighbourhoods:       'scripts/load-neighbourhoods.js',
-  geocode_permits:      'scripts/geocode-permits.js',
-  link_parcels:         'scripts/link-parcels.js',
-  link_neighbourhoods:  'scripts/link-neighbourhoods.js',
-  link_massing:         'scripts/link-massing.js',
-  link_coa:             'scripts/link-coa.js',
-  enrich_wsib_builders: 'scripts/enrich-web-search.js',
-  enrich_named_builders:'scripts/enrich-web-search.js',
-  load_wsib:            'scripts/load-wsib.js',
-  link_wsib:            'scripts/link-wsib.js',
-  classify_scope:       'scripts/classify-scope.js',
-  classify_permits:     'scripts/classify-permits.js',
-  compute_centroids:    'scripts/compute-centroids.js',
-  link_similar:         'scripts/link-similar.js',
-  create_pre_permits:   'scripts/create-pre-permits.js',
-  refresh_snapshot:     'scripts/refresh-snapshot.js',
-  assert_schema:        'scripts/quality/assert-schema.js',
-  assert_data_bounds:   'scripts/quality/assert-data-bounds.js',
-};
+// Build slug → script path map from manifest
+const PIPELINE_SCRIPTS = {};
+for (const [slug, entry] of Object.entries(manifest.scripts)) {
+  PIPELINE_SCRIPTS[slug] = entry.file;
+}
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 async function run() {
+  const pool = pipeline.createPool();
+
   const chainId = process.argv[2];
   if (!chainId || !CHAINS[chainId]) {
-    console.error(`Usage: node scripts/run-chain.js <chain_id>`);
-    console.error(`  Available chains: ${Object.keys(CHAINS).join(', ')}`);
+    pipeline.log.error('[run-chain]', `Invalid chain_id. Available: ${Object.keys(CHAINS).join(', ')}`);
+    await pool.end().catch(() => {});
     process.exit(1);
   }
 
@@ -142,7 +70,7 @@ async function run() {
       );
       chainRunId = res.rows[0].id;
     } catch (err) {
-      console.warn('Could not insert chain tracking row:', err.message);
+      pipeline.log.warn('[run-chain]', `Could not insert chain tracking row: ${err.message}`);
     }
   }
 
@@ -158,6 +86,7 @@ async function run() {
   }
 
   let failedStep = null;
+  let wasCancelled = false;
 
   for (let i = 0; i < steps.length; i++) {
     const slug = steps[i];
@@ -173,6 +102,7 @@ async function run() {
         if (statusCheck.rows[0]?.status === 'cancelled') {
           console.log(`\nChain cancelled by user — stopping before ${slug}`);
           failedStep = slug;
+          wasCancelled = true;
           break;
         }
       } catch { /* non-fatal — continue if check fails */ }
@@ -196,14 +126,14 @@ async function run() {
 
     const scriptRelPath = PIPELINE_SCRIPTS[slug];
     if (!scriptRelPath) {
-      console.error(`  No script mapping for slug: ${slug}`);
+      pipeline.log.error('[run-chain]', `No script mapping for slug: ${slug}`);
       failedStep = slug;
       break;
     }
 
     const scriptPath = path.resolve(projectRoot, scriptRelPath);
     if (!fs.existsSync(scriptPath)) {
-      console.error(`  Script not found: ${scriptRelPath}`);
+      pipeline.log.error('[run-chain]', `Script not found: ${scriptRelPath}`);
       failedStep = slug;
       break;
     }
@@ -224,15 +154,17 @@ async function run() {
       );
       stepRunId = res.rows[0].id;
     } catch (err) {
-      console.warn(`  Could not insert step tracking row: ${err.message}`);
+      pipeline.log.warn('[run-chain]', `Could not insert step tracking row: ${err.message}`);
     }
 
     try {
       const stepEnv = { ...process.env, PIPELINE_CHAIN: chainId };
       // Sources chain reloads massing data, so link_massing needs a full rescan.
       // Permits chain only has new permits — incremental (default) is sufficient.
+      // Build extra argv flags from manifest supports_full + chain context.
+      const extraArgs = [];
       if (slug === 'link_massing' && chainId === 'sources') {
-        stepEnv.LINK_MASSING_FULL = '1';
+        extraArgs.push('--full');
       }
       if (slug === 'enrich_wsib_builders') {
         stepEnv.ENRICH_WSIB_ONLY = '1';
@@ -240,7 +172,7 @@ async function run() {
       if (slug === 'enrich_named_builders') {
         stepEnv.ENRICH_UNMATCHED_ONLY = '1';
       }
-      const stdout = execFileSync('node', [scriptPath], {
+      const stdout = execFileSync('node', [scriptPath, ...extraArgs], {
         env: stepEnv,
         stdio: ['inherit', 'pipe', 'inherit'],
         maxBuffer: 50 * 1024 * 1024,
@@ -295,8 +227,7 @@ async function run() {
       // Abort chain when the primary ingest step produced zero changes.
       // Link/classify steps legitimately yield 0 when everything is already
       // processed — only the data-loading gate step should trigger an abort.
-      const CHAIN_GATES = { permits: 'permits', coa: 'coa' };
-      const gate = CHAIN_GATES[chainId];
+      const gate = manifest.chain_gates[chainId];
       if (gate && slug === gate && recordsNew === 0 && (recordsUpdated ?? 0) === 0) {
         console.log(`${stepLabel} — 0 new records — skipping downstream steps`);
         failedStep = slug;
@@ -307,8 +238,7 @@ async function run() {
       if (err.stdout) process.stdout.write(err.stdout);
       const durationMs = Date.now() - stepStart;
       const errorMsg = (err.message || String(err)).slice(0, 4000);
-      console.error(`${stepLabel} — FAILED (${(durationMs / 1000).toFixed(1)}s)`);
-      console.error(`  Error: ${errorMsg.slice(0, 200)}\n`);
+      pipeline.log.error('[run-chain]', `${stepLabel} — FAILED (${(durationMs / 1000).toFixed(1)}s)`, { error: errorMsg.slice(0, 200) });
 
       if (stepRunId) {
         await pool.query(
@@ -326,7 +256,7 @@ async function run() {
 
   // Update parent chain row
   const chainDurationMs = Date.now() - chainStart;
-  const chainStatus = failedStep ? 'failed' : 'completed';
+  const chainStatus = wasCancelled ? 'cancelled' : failedStep ? 'failed' : 'completed';
   const chainError = failedStep ? `Stopped at step: ${failedStep}` : null;
 
   if (chainRunId) {
@@ -340,16 +270,15 @@ async function run() {
 
   console.log(`=== Chain ${chainId}: ${chainStatus} (${(chainDurationMs / 1000).toFixed(1)}s) ===`);
   if (failedStep) {
-    console.error(`Chain stopped at step: ${failedStep}`);
+    pipeline.log.error('[run-chain]', `Chain stopped at step: ${failedStep}`);
   }
 
-  await pool.end();
+  await pool.end().catch(() => {});
 
   if (failedStep) process.exit(1);
 }
 
 run().catch((err) => {
-  console.error('Chain orchestrator error:', err);
-  pool.end().catch(() => {});
+  pipeline.log.error('[run-chain]', err, { phase: 'fatal' });
   process.exit(1);
 });

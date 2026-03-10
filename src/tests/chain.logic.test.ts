@@ -647,3 +647,26 @@ describe('"Stopping..." clears when chain finishes (Bug A4)', () => {
     expect(next.size).toBe(1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Chain cancel sets cancelled (not failed) status (Bug A5)
+// ---------------------------------------------------------------------------
+
+describe('Chain cancel sets cancelled status (Bug A5)', () => {
+  it('run-chain.js distinguishes cancelled from failed chain status', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+    );
+    // Must track cancellation separately from failure
+    expect(source).toContain('cancelled');
+    // Final chain status must be 'cancelled' when user cancels, not 'failed'
+    expect(source).toMatch(/chainStatus[\s\S]{0,200}cancelled/);
+  });
+
+  it('run-chain.js checks pipeline_runs.status for cancelled between steps', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+    );
+    expect(source).toContain("status === 'cancelled'");
+  });
+});
