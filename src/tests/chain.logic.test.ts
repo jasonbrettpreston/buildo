@@ -716,3 +716,48 @@ describe('Stale scope slugs removed (Bug B7)', () => {
     expect(slugs).toContain('classify_scope');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Bug C11: Sources chain registration end-to-end verification
+// ---------------------------------------------------------------------------
+
+describe('Sources chain registration completeness (Bug C11)', () => {
+  it('chain_sources is in PIPELINE_CHAINS', () => {
+    const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources');
+    expect(sources).toBeDefined();
+    expect(sources!.steps.length).toBeGreaterThan(0);
+  });
+
+  it('chain_sources trigger route maps to run-chain.js', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain("chain_sources: 'scripts/run-chain.js'");
+  });
+
+  it('chain_sources is in CHAIN_SLUGS set', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain("'chain_sources'");
+  });
+
+  it('sources chain exists in manifest.json', () => {
+    const manifest = JSON.parse(fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/manifest.json'), 'utf-8'
+    ));
+    expect(manifest.chains.sources).toBeDefined();
+    expect(manifest.chains.sources.length).toBeGreaterThan(0);
+  });
+
+  it('sources chain steps in manifest match PIPELINE_CHAINS', () => {
+    const manifest = JSON.parse(fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/manifest.json'), 'utf-8'
+    ));
+    const uiChain = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
+    const uiSlugs = uiChain.steps.map((s) => s.slug);
+    expect(manifest.chains.sources).toEqual(uiSlugs);
+  });
+});
