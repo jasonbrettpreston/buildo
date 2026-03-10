@@ -337,12 +337,16 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
 
   it('aborts chain only for primary ingest gate steps (permits, coa)', () => {
     const source = chainSource();
-    // Chain abort is limited to CHAIN_GATES — not every step
-    expect(source).toContain('CHAIN_GATES');
-    expect(source).toContain("permits: 'permits'");
-    expect(source).toContain("coa: 'coa'");
+    // Chain abort gates are read from manifest.chain_gates
+    expect(source).toContain('chain_gates');
     expect(source).toContain('0 new records');
     expect(source).toMatch(/recordsNew === 0[\s\S]{0,300}break/);
+
+    // Verify the manifest itself defines the expected gates
+    const manifest = JSON.parse(fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/manifest.json'), 'utf-8'
+    ));
+    expect(manifest.chain_gates).toEqual({ permits: 'permits', coa: 'coa' });
   });
 
   it('checks both records_new and records_updated before aborting', () => {
@@ -398,4 +402,147 @@ describe('PIPELINE_META convention', () => {
       expect(source.includes('pipeline.emitMeta(') || source.includes('PIPELINE_META:')).toBe(true);
     });
   }
+});
+
+// ---------------------------------------------------------------------------
+// Pipeline Manifest Validation (§9.6)
+// ---------------------------------------------------------------------------
+
+describe('Pipeline Manifest (§9.6)', () => {
+  const manifestPath = path.resolve(__dirname, '../../scripts/manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+
+  it('manifest.json exists and has version field', () => {
+    expect(manifest.version).toBe(1);
+  });
+
+  it('every manifest script entry points to an existing file (unless coming_soon)', () => {
+    const projectRoot = path.resolve(__dirname, '../..');
+    for (const [slug, entry] of Object.entries(manifest.scripts) as [string, { file: string | null; coming_soon?: boolean }][]) {
+      if (entry.coming_soon) continue;
+      const scriptPath = path.resolve(projectRoot, entry.file!);
+      expect(
+        fs.existsSync(scriptPath),
+        `Manifest script "${slug}" points to missing file: ${entry.file}`
+      ).toBe(true);
+    }
+  });
+
+  it('every chain step references a known script slug', () => {
+    const knownSlugs = new Set(Object.keys(manifest.scripts));
+    for (const [chainId, steps] of Object.entries(manifest.chains) as [string, string[]][]) {
+      for (const slug of steps) {
+        expect(
+          knownSlugs.has(slug),
+          `Chain "${chainId}" references unknown slug "${slug}"`
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('manifest chains match PIPELINE_CHAINS step slugs', () => {
+    for (const chain of PIPELINE_CHAINS) {
+      const manifestSteps = manifest.chains[chain.id];
+      expect(manifestSteps, `Manifest missing chain "${chain.id}"`).toBeDefined();
+      const uiSlugs = chain.steps.map((s) => s.slug);
+      expect(manifestSteps).toEqual(uiSlugs);
+    }
+  });
+
+  it('chain_gates only reference valid chain IDs', () => {
+    const chainIds = new Set(Object.keys(manifest.chains));
+    for (const chainId of Object.keys(manifest.chain_gates)) {
+      expect(chainIds.has(chainId), `chain_gate "${chainId}" is not a valid chain`).toBe(true);
+    }
+  });
+
+  it('chain_gates values reference valid script slugs', () => {
+    const knownSlugs = new Set(Object.keys(manifest.scripts));
+    for (const [chainId, gateSlug] of Object.entries(manifest.chain_gates) as [string, string][]) {
+      expect(
+        knownSlugs.has(gateSlug),
+        `chain_gate for "${chainId}" references unknown slug "${gateSlug}"`
+      ).toBe(true);
+    }
+  });
+
+  it('run-chain.js reads from manifest.json', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+    );
+    expect(source).toContain('manifest.json');
+    expect(source).toContain('manifest.chains');
+    expect(source).toContain('manifest.chain_gates');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Pending State Logic — steps reset to neutral when chain starts (Bug A2)
+// ---------------------------------------------------------------------------
+
+describe('Pending state logic (steps reset when chain starts)', () => {
+  // Mirrors FreshnessTimeline lines 487-489:
+  //   stepDoneThisRun = (status === 'completed' || status === 'failed') && stepRanAt >= chainStartedAt
+  //   isPending = isChainRunning && !isRunning && !stepDoneThisRun
+
+  function computeIsPending(
+    isChainRunning: boolean,
+    isRunning: boolean,
+    stepStatus: string | null,
+    stepRanAt: number,
+    chainStartedAt: number,
+  ): boolean {
+    const stepDoneThisRun =
+      (stepStatus === 'completed' || stepStatus === 'failed') &&
+      stepRanAt >= chainStartedAt;
+    return isChainRunning && !isRunning && !stepDoneThisRun;
+  }
+
+  it('step is pending when chain is running and step has not started', () => {
+    // Chain just started, step has stale data from 2 days ago
+    const chainStart = Date.now();
+    const staleStepRanAt = chainStart - 2 * 24 * 60 * 60 * 1000; // 2 days ago
+    expect(computeIsPending(true, false, 'completed', staleStepRanAt, chainStart)).toBe(true);
+  });
+
+  it('step is NOT pending when it completed in current run', () => {
+    const chainStart = Date.now() - 60_000; // chain started 1 min ago
+    const stepFinished = Date.now(); // step just finished
+    expect(computeIsPending(true, false, 'completed', stepFinished, chainStart)).toBe(false);
+  });
+
+  it('step is NOT pending when it is currently running', () => {
+    const chainStart = Date.now();
+    expect(computeIsPending(true, true, 'running', 0, chainStart)).toBe(false);
+  });
+
+  it('step is NOT pending when chain is not running', () => {
+    expect(computeIsPending(false, false, 'completed', 0, 0)).toBe(false);
+  });
+
+  it('step is pending when chain is running but no status data exists yet', () => {
+    // No pipeline_last_run entry yet → stepRanAt = 0, chainStartedAt = Date.now()
+    const chainStart = Date.now();
+    expect(computeIsPending(true, false, null, 0, chainStart)).toBe(true);
+  });
+
+  it('FreshnessTimeline uses isChainRunning derived from runningPipelines.has(chainSlug)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('runningPipelines.has(chainSlug)');
+    expect(source).toContain('isPending');
+    expect(source).toContain('stepDoneThisRun');
+  });
+
+  it('DataQualityDashboard polling merges pipeline_last_run into stats', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    // Lightweight poller must merge into stats so FreshnessTimeline re-renders
+    expect(source).toContain('pipeline_last_run: freshStatus');
+    expect(source).toContain('setStats');
+  });
 });
