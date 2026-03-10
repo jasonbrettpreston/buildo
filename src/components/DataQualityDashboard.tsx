@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { SLA_TARGETS } from '@/lib/quality/types';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { SLA_TARGETS, CADENCE_THRESHOLDS_MS } from '@/lib/quality/types';
 import { FreshnessTimeline } from '@/components/FreshnessTimeline';
 import { ScheduleEditModal } from '@/components/ScheduleEditModal';
 import { computeAllFunnelRows } from '@/lib/admin/funnel';
@@ -91,6 +91,150 @@ interface ExtendedQualityResponse {
 }
 
 const POLL_INTERVAL_MS = 5000;
+const FETCH_TIMEOUT_MS = 10_000;
+
+// ---------------------------------------------------------------------------
+// HealthBanner — extracted, memoized component
+// ---------------------------------------------------------------------------
+
+interface HealthBannerProps {
+  health: SystemHealthSummary;
+  failedPipelineCount: number;
+  scrollToFailed: () => void;
+  retryFailedPipelines: () => void;
+  pipelineLastRun: Record<string, import('@/components/FreshnessTimeline').PipelineRunInfo>;
+}
+
+const HealthBanner = React.memo(function HealthBanner({
+  health,
+  failedPipelineCount,
+  scrollToFailed,
+  retryFailedPipelines,
+  pipelineLastRun,
+}: HealthBannerProps) {
+  const CHAINS: { id: string; label: string; cadence: string; rootSlug: string }[] = [
+    { id: 'permits', label: 'Permits', cadence: 'Daily', rootSlug: 'permits' },
+    { id: 'coa', label: 'CoA', cadence: 'Daily', rootSlug: 'coa' },
+    { id: 'entities', label: 'Entities', cadence: 'Daily', rootSlug: 'enrich_wsib_builders' },
+    { id: 'sources', label: 'Sources', cadence: 'Quarterly', rootSlug: 'address_points' },
+  ];
+
+  const now = Date.now();
+
+  return (
+    <div className={`rounded-xl border shadow-sm overflow-hidden ${
+      health.level === 'green'
+        ? 'border-green-200'
+        : health.level === 'yellow'
+        ? 'border-yellow-200'
+        : 'border-red-200'
+    }`}>
+      {/* Premium bg-gradient header */}
+      <div className={`px-4 py-3 ${
+        health.level === 'green'
+          ? 'bg-gradient-to-br from-green-50 to-white'
+          : health.level === 'yellow'
+          ? 'bg-gradient-to-br from-yellow-50 to-white'
+          : 'bg-gradient-to-br from-red-50 to-white'
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-3 h-3 rounded-full shrink-0 ${
+            health.level === 'green' ? 'bg-green-500'
+              : health.level === 'yellow' ? 'bg-yellow-500'
+              : 'bg-red-500'
+          }`} />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className={`text-sm font-semibold ${
+                health.level === 'green' ? 'text-green-800'
+                  : health.level === 'yellow' ? 'text-yellow-800'
+                  : 'text-red-800'
+              }`}>
+                {health.level === 'green'
+                  ? 'All systems healthy'
+                  : health.level === 'yellow'
+                  ? `${health.warnings.length} warning${health.warnings.length !== 1 ? 's' : ''}`
+                  : `${health.issues.length} issue${health.issues.length !== 1 ? 's' : ''}`}
+              </p>
+              {/* Deep link: clickable issue count scrolls to failed pipelines */}
+              {failedPipelineCount > 0 && (
+                <button
+                  onClick={scrollToFailed}
+                  className="text-[10px] font-semibold text-red-600 hover:text-red-800 underline underline-offset-2"
+                >
+                  {failedPipelineCount} pipeline failure{failedPipelineCount !== 1 ? 's' : ''}
+                </button>
+              )}
+            </div>
+            {(health.issues.length > 0 || health.warnings.length > 0) && (
+              <div className="mt-1 space-y-0.5">
+                {health.issues.map((issue, i) => (
+                  <p key={`issue-${i}`} className="text-xs text-red-600">{issue}</p>
+                ))}
+                {health.warnings.map((warn, i) => (
+                  <p key={`warn-${i}`} className="text-xs text-yellow-700">{warn}</p>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Retry Failed Pipelines — 1-click recovery */}
+          {failedPipelineCount > 0 && (
+            <button
+              onClick={retryFailedPipelines}
+              className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 text-red-700 bg-white hover:bg-red-50 shadow-sm min-h-[44px]"
+            >
+              Retry Failed
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Pipeline chain schedule status */}
+      {pipelineLastRun && (
+        <div className="px-4 py-3 border-t border-gray-200/50">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:grid md:grid-cols-4 md:overflow-visible -mx-1 px-1 pb-1">
+            {CHAINS.map((c) => {
+              const chainInfo = pipelineLastRun[`chain_${c.id}`];
+              const rootInfo = pipelineLastRun[c.rootSlug];
+              const info = chainInfo ?? rootInfo;
+              let status: string;
+              let color: string;
+              let dotColor: string;
+              if (!info?.last_run_at) {
+                status = 'Never run'; color = 'text-gray-400'; dotColor = 'bg-gray-300';
+              } else if (info.status === 'running') {
+                status = 'Running'; color = 'text-blue-600'; dotColor = 'bg-blue-500';
+              } else {
+                const elapsed = now - new Date(info.last_run_at).getTime();
+                const threshold = CADENCE_THRESHOLDS_MS[c.cadence] ?? CADENCE_THRESHOLDS_MS.Daily;
+                if (elapsed > threshold * 2) {
+                  status = 'Overdue'; color = 'text-red-600'; dotColor = 'bg-red-500';
+                } else if (elapsed > threshold) {
+                  status = 'Needs run'; color = 'text-yellow-600'; dotColor = 'bg-yellow-500';
+                } else {
+                  status = 'On schedule'; color = 'text-green-600'; dotColor = 'bg-green-500';
+                }
+              }
+              const lastRun = info?.last_run_at
+                ? new Date(info.last_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : 'Never';
+              return (
+                <div key={c.id} className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">{c.label}</p>
+                  <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                    <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
+                    <p className={`text-sm font-semibold ${color}`}>{status}</p>
+                  </div>
+                  <p className="text-[10px] text-gray-400 tabular-nums">{lastRun}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
 
 // ---------------------------------------------------------------------------
 // Dashboard
@@ -101,7 +245,7 @@ export function DataQualityDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [runningPipelines, setRunningPipelines] = useState<Set<string>>(new Set());
-  const [pipelineError, setPipelineError] = useState<string | null>(null);
+  const [pipelineErrors, setPipelineErrors] = useState<string[]>([]);
   const [scheduleModal, setScheduleModal] = useState<{ pipeline: string; name: string } | null>(null);
   const [dismissedNotice, setDismissedNotice] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -112,17 +256,28 @@ export function DataQualityDashboard() {
   const triggerTimestamps = useRef<Map<string, number>>(new Map());
 
   const fetchData = useCallback(() => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
     return Promise.all([
-      fetch('/api/quality').then((r) => r.json()),
-      fetch('/api/admin/stats').then((r) => r.json()),
+      fetch('/api/quality', { signal: controller.signal }).then((r) => r.json()),
+      fetch('/api/admin/stats', { signal: controller.signal }).then((r) => r.json()),
     ])
       .then(([qualityData, statsData]) => {
         setData(qualityData);
         setStats(statsData);
         return statsData as AdminStats;
       })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        const msg = err instanceof Error && err.name === 'AbortError'
+          ? 'Dashboard fetch timed out'
+          : (err instanceof Error ? err.message : String(err));
+        setPipelineErrors((prev) => prev.includes(msg) ? prev : [...prev, msg]);
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
+        setLoading(false);
+      });
   }, []);
 
   // On initial load, seed runningPipelines from DB state so buttons are
@@ -174,7 +329,6 @@ export function DataQualityDashboard() {
   }, [runningPipelines.size, fetchData]);
 
   const triggerPipeline = useCallback(async (slug: string) => {
-    setPipelineError(null);
     triggerTimestamps.current.set(slug, Date.now());
     setRunningPipelines((prev) => new Set(prev).add(slug));
     try {
@@ -185,13 +339,12 @@ export function DataQualityDashboard() {
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      setPipelineError(`${slug}: ${msg}`);
+      setPipelineErrors((prev) => [...prev, `${slug}: ${msg}`]);
       setRunningPipelines((prev) => { const next = new Set(prev); next.delete(slug); return next; });
     }
   }, []);
 
   const cancelPipeline = useCallback(async (slug: string) => {
-    setPipelineError(null);
     try {
       const res = await fetch(`/api/admin/pipelines/${slug}`, { method: 'DELETE' });
       if (!res.ok) {
@@ -203,12 +356,11 @@ export function DataQualityDashboard() {
       // shows "Stopping..." until the process actually terminates.
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      setPipelineError(`Cancel ${slug}: ${msg}`);
+      setPipelineErrors((prev) => [...prev, `Cancel ${slug}: ${msg}`]);
     }
   }, []);
 
   const togglePipeline = useCallback(async (slug: string, currentlyDisabled: boolean) => {
-    setPipelineError(null);
     try {
       const res = await fetch('/api/admin/pipelines/schedules', {
         method: 'PATCH',
@@ -222,7 +374,7 @@ export function DataQualityDashboard() {
       await fetchData();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      setPipelineError(`Toggle ${slug}: ${msg}`);
+      setPipelineErrors((prev) => [...prev, `Toggle ${slug}: ${msg}`]);
     }
   }, [fetchData]);
 
@@ -262,172 +414,57 @@ export function DataQualityDashboard() {
   const failedPipelineCount = Object.values(stats?.pipeline_last_run ?? {})
     .filter((info) => info?.status === 'failed').length;
 
+  const current = data?.current;
+
+  // Memoize funnel computation — only recomputes when stats or snapshot changes
+  const funnelData = useMemo(() => {
+    if (!current || !stats) return undefined;
+    return computeAllFunnelRows({
+      wsib_total: stats.wsib_total ?? 0,
+      wsib_linked: stats.wsib_linked ?? 0,
+      wsib_lead_pool: stats.wsib_lead_pool ?? 0,
+      wsib_with_trade: stats.wsib_with_trade ?? 0,
+      address_points_total: stats.address_points_total ?? 0,
+      parcels_total: stats.parcels_total ?? 0,
+      building_footprints_total: stats.building_footprints_total ?? 0,
+      parcels_with_massing: stats.parcels_with_massing ?? 0,
+      permits_with_massing: stats.permits_with_massing ?? 0,
+      neighbourhoods_total: stats.neighbourhoods_total ?? 0,
+      permits_propagated: (stats.permits_propagated as number) ?? 0,
+      pipeline_last_run: stats.pipeline_last_run ?? {},
+      pipeline_schedules: stats.pipeline_schedules,
+    }, current);
+  }, [stats, current]);
+
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Loading data quality metrics...</div>;
   }
 
-  const current = data?.current;
-
-  // Compute funnel data for FreshnessTimeline accordion
-  const funnelData = current && stats
-    ? computeAllFunnelRows({
-        wsib_total: stats.wsib_total ?? 0,
-        wsib_linked: stats.wsib_linked ?? 0,
-        wsib_lead_pool: stats.wsib_lead_pool ?? 0,
-        wsib_with_trade: stats.wsib_with_trade ?? 0,
-        address_points_total: stats.address_points_total ?? 0,
-        parcels_total: stats.parcels_total ?? 0,
-        building_footprints_total: stats.building_footprints_total ?? 0,
-        parcels_with_massing: stats.parcels_with_massing ?? 0,
-        permits_with_massing: stats.permits_with_massing ?? 0,
-        neighbourhoods_total: stats.neighbourhoods_total ?? 0,
-        permits_propagated: (stats.permits_propagated as number) ?? 0,
-        pipeline_last_run: stats.pipeline_last_run ?? {},
-        pipeline_schedules: stats.pipeline_schedules,
-      }, current)
-    : undefined;
-
   return (
     <div className="space-y-8">
       {/* Pipeline error banner */}
-      {pipelineError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between">
-          <p className="text-sm text-red-700">Pipeline trigger failed: {pipelineError}</p>
-          <button onClick={() => setPipelineError(null)} className="text-red-400 hover:text-red-600 text-xs">Dismiss</button>
+      {pipelineErrors.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start justify-between gap-2">
+          <div className="space-y-0.5 flex-1">
+            {pipelineErrors.map((err, i) => (
+              <p key={i} className="text-sm text-red-700">Pipeline error: {err}</p>
+            ))}
+          </div>
+          <button onClick={() => setPipelineErrors([])} className="text-red-400 hover:text-red-600 text-xs shrink-0">Dismiss</button>
         </div>
       )}
 
       {current ? (
         <>
-          {/* ============================================================
-              Health Banner — Actionable Command Center Header
-          ============================================================ */}
+          {/* Health Banner — extracted, memoized component */}
           {data?.health && (
-            <div className={`rounded-xl border shadow-sm overflow-hidden ${
-              data.health.level === 'green'
-                ? 'border-green-200'
-                : data.health.level === 'yellow'
-                ? 'border-yellow-200'
-                : 'border-red-200'
-            }`}>
-              {/* Premium bg-gradient header */}
-              <div className={`px-4 py-3 ${
-                data.health.level === 'green'
-                  ? 'bg-gradient-to-br from-green-50 to-white'
-                  : data.health.level === 'yellow'
-                  ? 'bg-gradient-to-br from-yellow-50 to-white'
-                  : 'bg-gradient-to-br from-red-50 to-white'
-              }`}>
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full shrink-0 ${
-                    data.health.level === 'green' ? 'bg-green-500'
-                      : data.health.level === 'yellow' ? 'bg-yellow-500'
-                      : 'bg-red-500'
-                  }`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className={`text-sm font-semibold ${
-                        data.health.level === 'green' ? 'text-green-800'
-                          : data.health.level === 'yellow' ? 'text-yellow-800'
-                          : 'text-red-800'
-                      }`}>
-                        {data.health.level === 'green'
-                          ? 'All systems healthy'
-                          : data.health.level === 'yellow'
-                          ? `${data.health.warnings.length} warning${data.health.warnings.length !== 1 ? 's' : ''}`
-                          : `${data.health.issues.length} issue${data.health.issues.length !== 1 ? 's' : ''}`}
-                      </p>
-                      {/* Deep link: clickable issue count scrolls to failed pipelines */}
-                      {failedPipelineCount > 0 && (
-                        <button
-                          onClick={scrollToFailed}
-                          className="text-[10px] font-semibold text-red-600 hover:text-red-800 underline underline-offset-2"
-                        >
-                          {failedPipelineCount} pipeline failure{failedPipelineCount !== 1 ? 's' : ''}
-                        </button>
-                      )}
-                    </div>
-                    {(data.health.issues.length > 0 || data.health.warnings.length > 0) && (
-                      <div className="mt-1 space-y-0.5">
-                        {data.health.issues.map((issue, i) => (
-                          <p key={`issue-${i}`} className="text-xs text-red-600">{issue}</p>
-                        ))}
-                        {data.health.warnings.map((warn, i) => (
-                          <p key={`warn-${i}`} className="text-xs text-yellow-700">{warn}</p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {/* Retry Failed Pipelines — 1-click recovery */}
-                  {failedPipelineCount > 0 && (
-                    <button
-                      onClick={retryFailedPipelines}
-                      className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 text-red-700 bg-white hover:bg-red-50 shadow-sm min-h-[44px]"
-                    >
-                      Retry Failed
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Pipeline chain schedule status — shows whether each chain needs a run */}
-              {stats?.pipeline_last_run && (
-                <div className="px-4 py-3 border-t border-gray-200/50">
-                  <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:grid md:grid-cols-4 md:overflow-visible -mx-1 px-1 pb-1">
-                    {(() => {
-                      const CADENCE_MS: Record<string, number> = {
-                        Daily: 26 * 3600_000,
-                        Quarterly: 95 * 86400_000,
-                        Annual: 370 * 86400_000,
-                      };
-                      const CHAINS: { id: string; label: string; cadence: string; rootSlug: string }[] = [
-                        { id: 'permits', label: 'Permits', cadence: 'Daily', rootSlug: 'permits' },
-                        { id: 'coa', label: 'CoA', cadence: 'Daily', rootSlug: 'coa' },
-                        { id: 'entities', label: 'Entities', cadence: 'Daily', rootSlug: 'enrich_wsib_builders' },
-                        { id: 'sources', label: 'Sources', cadence: 'Quarterly', rootSlug: 'address_points' },
-                      ];
-                      const now = Date.now();
-                      return CHAINS.map((c) => {
-                        const chainInfo = stats.pipeline_last_run[`chain_${c.id}`];
-                        const rootInfo = stats.pipeline_last_run[c.rootSlug];
-                        const info = chainInfo ?? rootInfo;
-                        let status: string;
-                        let color: string;
-                        let dotColor: string;
-                        if (!info?.last_run_at) {
-                          status = 'Never run'; color = 'text-gray-400'; dotColor = 'bg-gray-300';
-                        } else if (info.status === 'running') {
-                          status = 'Running'; color = 'text-blue-600'; dotColor = 'bg-blue-500';
-                        } else {
-                          const elapsed = now - new Date(info.last_run_at).getTime();
-                          const threshold = CADENCE_MS[c.cadence] ?? CADENCE_MS.Daily;
-                          if (elapsed > threshold * 2) {
-                            status = 'Overdue'; color = 'text-red-600'; dotColor = 'bg-red-500';
-                          } else if (elapsed > threshold) {
-                            status = 'Needs run'; color = 'text-yellow-600'; dotColor = 'bg-yellow-500';
-                          } else {
-                            status = 'On schedule'; color = 'text-green-600'; dotColor = 'bg-green-500';
-                          }
-                        }
-                        const lastRun = info?.last_run_at
-                          ? new Date(info.last_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                          : 'Never';
-                        return (
-                          <div key={c.id} className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider">{c.label}</p>
-                            <div className="flex items-center justify-center gap-1.5 mt-0.5">
-                              <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
-                              <p className={`text-sm font-semibold ${color}`}>{status}</p>
-                            </div>
-                            <p className="text-[10px] text-gray-400 tabular-nums">{lastRun}</p>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                </div>
-              )}
-            </div>
+            <HealthBanner
+              health={data.health}
+              failedPipelineCount={failedPipelineCount}
+              scrollToFailed={scrollToFailed}
+              retryFailedPipelines={retryFailedPipelines}
+              pipelineLastRun={stats?.pipeline_last_run ?? {}}
+            />
           )}
 
           {/* ============================================================
@@ -446,7 +483,7 @@ export function DataQualityDashboard() {
                 .map(([slug]) => slug)
             )}
             onToggle={togglePipeline}
-            triggerError={pipelineError}
+            triggerError={pipelineErrors.length > 0 ? pipelineErrors.join('; ') : null}
             onCancel={cancelPipeline}
             dbSchemaMap={stats?.db_schema_map}
           />

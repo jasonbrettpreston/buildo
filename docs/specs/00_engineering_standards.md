@@ -135,3 +135,64 @@ This document outlines the strict engineering standards, stability rules, and de
 
 ### 9.3 Idempotent Scripts
 - **Rule:** All pipeline scripts MUST be safe to re-run. Use `INSERT ... ON CONFLICT DO UPDATE` (upsert) or `DELETE + INSERT` within a transaction rather than bare `INSERT` which fails on duplicate keys.
+
+### 9.4 Pipeline SDK Mandate
+- **Rule:** All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`) for infrastructure concerns. No inline `new Pool({...})` instantiation, no bare `console.error()` for error handling.
+- **Execution:** Every script must:
+  1. `const pipeline = require('./lib/pipeline');`
+  2. Wrap its main logic in `pipeline.run('script-name', async (pool) => { ... })`
+  3. Use `pipeline.createPool()` (handled by `run()`) — never instantiate `Pool` directly
+  4. Use `pipeline.log.{info,warn,error}()` for structured JSON logging
+  5. Use `pipeline.withTransaction(pool, fn)` for all multi-row write operations
+  6. Call `pipeline.emitSummary({ records_total, records_new, records_updated })` before exit
+  7. Call `pipeline.emitMeta(reads, writes, external?)` to declare I/O schema
+- **SDK exports:** `createPool`, `run`, `log`, `withTransaction`, `emitSummary`, `emitMeta`, `progress`, `BATCH_SIZE`, `maxRowsPerInsert`, `isFullMode`
+
+### 9.5 Streaming Ingestion
+- **Rule:** Data loaders that fetch from external APIs (CKAN, etc.) MUST NOT accumulate all records in memory before processing. Use async generator (yield-per-page) streaming to keep peak memory at O(batch_size) rather than O(total_records).
+- **Execution:** Replace array-accumulation fetch patterns with `async function*` generators that `yield` each page of results. Consumers process each batch immediately via `for await...of`.
+
+### 9.6 Pipeline Manifest
+- **Rule:** Pipeline metadata (chain definitions, script paths, table reads/writes, feature flags) MUST be declared in `scripts/manifest.json` as the single source of truth.
+- **Execution:** The chain orchestrator (`scripts/run-chain.js`) reads chain definitions from the manifest rather than hardcoding them. The UI (`FreshnessTimeline.tsx`) exports chain/registry data that must stay consistent with the manifest. Test coverage validates that every manifest entry points to an existing script file and that chain definitions match the UI registry.
+
+### 9.7 Pipeline Observability (Opt-In)
+- **Rule:** The Pipeline SDK (`scripts/lib/pipeline.js`) instruments `run()`, `withTransaction()`, and `progress()` with OpenTelemetry spans and events. Tracing is **opt-in** — it silently no-ops when `@opentelemetry/api` is not installed or no SDK is registered.
+- **Execution:** The tracing bootstrap (`scripts/lib/tracing.js`) attempts `require('@opentelemetry/api')` with a try-catch fallback to no-op stubs. Individual pipeline scripts require zero changes — all instrumentation is SDK-internal. To enable tracing:
+  1. `npm install @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-trace-otlp-http`
+  2. Set `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` (or Honeycomb/Datadog endpoint)
+  3. Run any pipeline script — spans are exported automatically
+- **Span hierarchy:** `pipeline.run.{name}` (root) → `pipeline.transaction` (per write batch) → `pipeline.progress` events (per progress tick)
+- **Attributes:** `pipeline.name`, `pipeline.duration_ms`, `pipeline.status`, `db.system=postgresql`
+
+---
+
+## ✅ 10. Plan Compliance Checklist
+
+Before presenting "PLAN LOCKED", the plan MUST address each applicable item below. These are not optional — if the condition applies, the corresponding items must appear in the plan.
+
+### If Database Impact = YES:
+- [ ] UP + DOWN migration in `migrations/NNN_[feature].sql` (§3.2)
+- [ ] Backfill strategy for ALTER on 100K+ row tables (§3.1)
+- [ ] `src/tests/factories.ts` updated with new fields (§5.1)
+- [ ] `npm run typecheck` planned after `db:generate` (§8.2)
+
+### If API Route Created/Modified:
+- [ ] Request/Response TypeScript interface defined BEFORE implementation
+- [ ] Overarching try-catch with `logError(tag, err, context)` (§2.2, §6.1)
+- [ ] Unhappy-path test cases listed: 400, 404, 500 (§2.1)
+- [ ] Route guarded in `src/middleware.ts` (§4.1)
+- [ ] No `.env` secrets exposed to client components
+
+### If UI Component Created/Modified:
+- [ ] Mobile-first layout: base classes = mobile, `md:`/`lg:` = desktop (§1.1)
+- [ ] Touch targets ≥ 44px (§1.1)
+- [ ] 375px viewport test in test plan
+
+### If Shared Logic Touched (classification, scoring, scope):
+- [ ] All dual-code-path consumers identified (§7.1, §7.2)
+- [ ] Update plan covers both TS module and JS script
+
+### If Pipeline Script Created/Modified:
+- [ ] Uses Pipeline SDK: `pipeline.run`, `withTransaction`, `emitSummary` (§9.4)
+- [ ] Streaming ingestion for external API data (§9.5)

@@ -13,6 +13,7 @@
 | **`WF2`** | Enhance | "Change, refactor, delete, wire, or lock existing code." |
 | **`WF3`** | Fix | "Fix a bug." |
 | **`WF5`** | Audit | "Audit code, specs, quality, security, or performance." |
+| **`WF6`** | Review | "Review, harden, and commit." |
 | **`WF11`**| Launch | "Safe start / recovery." |
 
 ---
@@ -86,84 +87,87 @@
 ...
 ```
 
-**STOP SEQUENCE (all workflows):** After generating the plan, output:
-> "PLAN LOCKED. Do you authorize this [Workflow Type] plan? (y/n)"
+**PLAN COMPLIANCE GATE (all workflows):** Before presenting the plan:
+1. Read §10 Plan Compliance Checklist in `docs/specs/00_engineering_standards.md`
+2. Verify the plan addresses every applicable item
+3. If any item is missing, fix the plan silently — do NOT present non-compliant plans
+
+**STOP SEQUENCE:** After the plan passes compliance, output the compliance
+summary followed by the lock prompt. The summary MUST be visible in the
+response (not just in active_task.md):
+
+> **§10 Compliance:**
+> - ✅/⬜ DB: [status]
+> - ✅/⬜ API: [status]
+> - ✅/⬜ UI: [status]
+> - ✅/⬜ Shared Logic: [status]
+> - ✅/⬜ Pipeline: [status]
 >
+> **PLAN LOCKED. Do you authorize this [Workflow Type] plan? (y/n)**
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.
 
 ---
 
 ## WF1: New Feature Genesis
-**Trigger:** User prompt starting with `WF1`, or "Build a new feature", "Implement [Feature Name]".
+**Trigger:** `WF1`, or "Build a new feature", "Implement [Feature Name]".
 
 ### Pre-Flight
-- Does `docs/specs/[feature].md` exist? (If no, Step 1 is "Create it." Copy from `docs/specs/_spec_template.md`.)
-- Run `npm run task -- --wf=1 --name="Feature Name"` to scaffold `.cursor/active_task.md`.
+- Does `docs/specs/[feature].md` exist? (If no, Step 1 is "Create it.")
+- Run `npm run task -- --wf=1 --name="Feature Name"`.
 
 ### Execution Plan
 ```
-- [ ] **Standards Verification:** Explicitly state in the plan how your implementation adheres to ALL of the following from `docs/specs/00_engineering_standards.md`. Fill out the `## Standards Compliance` section above.
-  1. **Mobile-First UI Mandate** — touch targets >= 44px, base classes = mobile, `md:`/`lg:` for desktop. UI tests MUST mock a narrow viewport (375px) to verify.
-  2. **Try-Catch & Unhappy Path** — every API route has overarching try-catch; tests cover error paths (400, 404, 500).
-  3. **`logError` Mandate** — every API route catch block MUST use `logError(tag, err, context)` from `src/lib/logger.ts`. Zero bare `console.error()` in `src/app/api/`.
-- [ ] **Contract Definition:** If creating an API route, define Request/Response TypeScript interface BEFORE implementation.
-- [ ] **Spec & Registry Sync:** Create/Update `docs/specs/[feature].md`. Run `npm run system-map`.
-- [ ] **Schema Evolution:** If Database Impact is YES: grep for the affected type/interface to understand blast radius. Write both `UP` and `DOWN` migrations in `migrations/NNN_[feature].sql`, run `npm run migrate`, then `npm run db:generate`. Update `src/tests/factories.ts` with new fields. Run `npm run typecheck` immediately to catch schema-related type errors. Grep test files for inline mocks of the changed type.
-- [ ] **Viewport Mocking:** You MUST emit this exact checklist item with one of: (a) "375px viewport mock in [test file]" if frontend UI is modified, or (b) "Backend Only, N/A" if no UI changes. This is a MANDATORY standalone checklist item — do NOT fold it into Standards Compliance or Test Scaffolding.
-- [ ] **Test Scaffolding:** Create `src/tests/[feature].logic.test.ts` (or `.infra`/`.ui`/`.security`). For integration wiring: test Loading, Success, and Error states in `.infra.test.ts`. For regression locks: classify as Visual/Logic, use snapshot testing, establish baseline.
-- [ ] **Red Light:** Run `npm run test`. Must see failing or pending tests.
-- [ ] **Implementation:** Write `src/lib/[feature]/` or `src/components/` code to pass tests.
-- [ ] **Auth Boundary & Secrets:** If creating/modifying an API route, verify it is protected by `src/middleware.ts`. Ensure NO `.env` secrets are exposed to client components.
-- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. All tests must pass.
-- [ ] **Atomic Commit:** Commit immediately: `git commit -m "feat(NN_spec): [description]"`. Do not batch — commit each passing component individually. Plan authorization grants commit authority.
-- [ ] **Founder's Audit:** Verify NO laziness placeholders (`// ... existing code`), all exports resolve, schema matches spec, and test coverage is complete.
+- [ ] **Contract Definition:** If creating an API route, define Request/Response
+      TypeScript interface BEFORE implementation.
+- [ ] **Spec & Registry Sync:** Create/update `docs/specs/[feature].md`.
+      Run `npm run system-map`.
+- [ ] **Schema Evolution:** If DB Impact YES: write UP + DOWN migration,
+      `npm run migrate`, `npm run db:generate`. Update factories. `npm run typecheck`.
+- [ ] **Test Scaffolding:** Create `src/tests/[feature].{logic,infra,ui}.test.ts`.
+- [ ] **Red Light:** Run `npm run test`. Must see failing tests.
+- [ ] **Implementation:** Write code to pass tests.
+- [ ] **Auth Boundary & Secrets:** Verify middleware protection.
+      No `.env` secrets in client components.
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
 ```
 
 ---
 
 ## WF2: Feature Enhancement
-**Trigger:** User prompt starting with `WF2`, or "Change a feature", "Refactor", "Update Logic", "Delete a feature", "Wire up data", "Lock [Feature]", "Snapshot behavior".
+**Trigger:** `WF2`, or "Change a feature", "Refactor", "Delete", "Wire up", "Lock".
 
 *This workflow absorbs former WF4 (Deletion), WF8 (Regression Lock), WF9 (Integration Wiring), and WF13 (Schema Evolution).*
 
 ### Execution Plan
 ```
-- [ ] **Standards Verification:** Explicitly state in the plan how your implementation adheres to ALL of the following from `docs/specs/00_engineering_standards.md`. Fill out the `## Standards Compliance` section above.
-  1. **Mobile-First UI Mandate** — touch targets >= 44px, base classes = mobile, `md:`/`lg:` for desktop. UI tests MUST mock a narrow viewport (375px) to verify.
-  2. **Try-Catch & Unhappy Path** — every API route has overarching try-catch; tests cover error paths (400, 404, 500).
-  3. **`logError` Mandate** — every API route catch block MUST use `logError(tag, err, context)` from `src/lib/logger.ts`. Zero bare `console.error()` in `src/app/api/`.
-- [ ] **State Verification:** Examine the calling context. Document what data is actually available vs. what the change assumes.
-- [ ] **Contract Definition:** If altering an API route, define updated Request/Response interface BEFORE implementation. Run `npm run typecheck` to identify breaking consumers.
-- [ ] **Spec Update:** Update `docs/specs/[feature].md` to reflect new requirements. Run `npm run system-map`.
-- [ ] **Schema Evolution:** If Database Impact is YES: grep for the affected type/interface to understand blast radius. Write both `UP` and `DOWN` migrations in `migrations/NNN_[change].sql`, run `npm run migrate`, then `npm run db:generate`. Update `src/tests/factories.ts` with new fields. Run `npm run typecheck` immediately to catch schema-related type errors. Grep test files for inline mocks of the changed type.
-- [ ] **Viewport Mocking:** You MUST emit this exact checklist item with one of: (a) "375px viewport mock in [test file]" if frontend UI is modified, or (b) "Backend Only, N/A" if no UI changes. This is a MANDATORY standalone checklist item — do NOT fold it into Standards Compliance or Guardrail Test.
-- [ ] **Guardrail Test:** Add/Update test case in `src/tests/` for the new behavior. For integration wiring: test Loading, Success, and Error states in `.infra.test.ts`. For regression locks: classify as Visual/Logic, use snapshot testing, establish baseline.
+- [ ] **State Verification:** Document what data is actually available vs. assumed.
+- [ ] **Contract Definition:** If altering API route, define updated interface.
+      `npm run typecheck` to identify breaking consumers.
+- [ ] **Spec Update:** Update `docs/specs/[feature].md`. Run `npm run system-map`.
+- [ ] **Schema Evolution:** If DB Impact YES: write UP + DOWN migration,
+      `npm run migrate`, `npm run db:generate`. Update factories. `npm run typecheck`.
+- [ ] **Guardrail Test:** Add/update test for new behavior.
 - [ ] **Red Light:** Verify new test fails.
-- [ ] **Implementation:** Modify code to pass. *(If deleting a feature: remove `src/lib/[feature]/`, `src/components/[Feature].tsx`, and corresponding test files. Move spec to `docs/archive/`. Run `npm run system-map`.)*
-- [ ] **Auth Boundary & Secrets:** If creating/modifying an API route, verify it is protected by `src/middleware.ts`. Ensure NO `.env` secrets are exposed to client components.
-- [ ] **UI Regression Check:** If modifying a shared component, run `npx vitest run src/tests/*.ui.test.tsx` to verify no sibling UI broke.
-- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. All tests must pass.
-- [ ] **Atomic Commit:** Commit immediately: `git commit -m "feat|refactor|chore(NN_spec): [description]"`. Do not batch. Plan authorization grants commit authority.
-- [ ] **Founder's Audit:** Verify NO laziness placeholders (`// ... existing code`), all exports resolve, schema matches spec, and test coverage is complete.
+- [ ] **Implementation:** Modify code to pass.
+- [ ] **UI Regression Check:** If modifying shared component,
+      `npx vitest run src/tests/*.ui.test.tsx`.
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
 ```
 
 ---
 
 ## WF3: Bug Fix
-**Trigger:** User prompt starting with `WF3`, or "Fix a bug", "Resolve issue".
+**Trigger:** `WF3`, or "Fix a bug", "Resolve issue".
 
 ### Execution Plan
 ```
-- [ ] **Rollback Anchor:** Record current Git commit hash in `.cursor/active_task.md`.
-- [ ] **State Verification:** Examine the calling context. Document what data is actually available vs. what the fix assumes.
-- [ ] **Spec Review:** Read `docs/specs/[feature].md` to confirm the *intended* behavior.
-- [ ] **Reproduction:** Create a failing test case in `src/tests/` that isolates the bug.
-- [ ] **Red Light:** Run the new test. It MUST fail to confirm reproduction.
-- [ ] **Fix:** Modify the code to resolve the issue.
-- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. All tests must pass.
-- [ ] **Collateral Check:** Run `npx vitest related src/path/to/changed-file.ts --run` to verify no unrelated dependents broke. If failures appear, `git stash` and analyze root cause coupling — do not start fixing the new broken file.
-- [ ] **Atomic Commit:** Commit immediately: `git commit -m "fix(NN_spec): [description]"`. Do not batch. Plan authorization grants commit authority.
-- [ ] **Spec Audit:** Update `docs/specs/[feature].md` IF AND ONLY IF the fix required a logic change.
+- [ ] **Rollback Anchor:** Record current Git commit hash in active task.
+- [ ] **State Verification:** Document what data is available vs. assumed.
+- [ ] **Spec Review:** Read `docs/specs/[feature].md` for intended behavior.
+- [ ] **Reproduction:** Create failing test that isolates the bug.
+- [ ] **Red Light:** Run test. MUST fail to confirm reproduction.
+- [ ] **Fix:** Modify code to resolve.
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
 ```
 
 ---
@@ -171,7 +175,7 @@
 ## WF5: Audit
 **Trigger:** User prompt starting with `WF5`, or "Audit the system", "Check quality", "Evaluate security", "Ready to merge", "Audit build", "Audit performance".
 
-*This workflow absorbs former WF6 (Manual Validation), WF7 (Quality Rubric), and WF12 (Build & Performance Audit).*
+*This workflow absorbs former Manual Validation, Quality Rubric, and Build & Performance Audit workflows.*
 
 ### Execution Plan
 ```
@@ -199,6 +203,61 @@
 | **Barrel Depth** | Direct Imports | Mixed | Nested Barrels |
 | **Circular Deps** | 0 | 1-5 | > 5 |
 
+### Production Readiness Rubric (10 Vectors)
+*Use this rubric when auditing a feature, module, or subsystem for production readiness. Score each vector independently.*
+
+| # | Vector | What It Evaluates | Key Questions |
+| :--- | :--- | :--- | :--- |
+| 1 | **Correctness** | Logic, edge cases, data integrity | Does it produce correct results? Are edge cases handled? Are there off-by-one errors? |
+| 2 | **Reliability** | Fault tolerance, error handling, recovery | What happens when things fail? Does it crash gracefully? Can it resume? |
+| 3 | **Scalability** | Batch sizes, pagination, memory, N+1 queries | Will it work at 10x current data volume? 100x? |
+| 4 | **Security** | Auth, injection, secrets, input validation | Are secrets hardcoded? Is user input sanitized? Are API keys rotated? |
+| 5 | **Observability** | Logging, metrics, tracing, alerting | Can you tell what happened when something goes wrong at 3am? |
+| 6 | **Data Safety** | Transactions, idempotency, migrations, backups | Can you re-run safely? Is partial state prevented? Are migrations reversible? |
+| 7 | **Maintainability** | DRY, modularity, documentation, complexity | Can a new developer understand this in 30 minutes? Is there code duplication? |
+| 8 | **Testing** | Unit, integration, e2e coverage, CI gates | Is the happy path tested? Error paths? Are tests automated? |
+| 9 | **Spec Compliance** | Adherence to your own engineering standards | Does it follow §9.1 (transactions), §7 (dual-path), §3 (migrations)? |
+| 10 | **Operability** | Deployment, rollback, config, feature flags | Can you deploy without downtime? Roll back in < 5 minutes? |
+
+**Scoring Scale (4-Point):**
+
+| Score | Label | Meaning |
+| :--- | :--- | :--- |
+| 0 | Not Ready | Critical gap — blocks production launch |
+| 1 | Needs Work | Known issues that should be fixed before scaling |
+| 2 | Acceptable | Meets baseline, minor improvements possible |
+| 3 | Exemplary | Best-in-class, could serve as a reference pattern |
+
+**Production threshold:** All vectors must be >= 1, and the average must be >= 1.5. Any single 0 blocks the release.
+
+---
+
+## WF6: Review
+**Trigger:** `WF6`, or "Review this", "Close gaps", "Harden this",
+"Check my work". Also the mandatory exit gate after WF1/WF2/WF3 Green Light.
+
+### Execution Plan
+```
+- [ ] **Scope:** Identify all files modified in the current session.
+- [ ] **5-Point Hardening Sweep:** For each modified file:
+  1. **Error paths** — Every function has try-catch or throws.
+     No `.catch(() => {})` silencing without logging.
+  2. **Edge cases** — Null, empty array, 0, undefined handled.
+  3. **Type safety** — `npm run typecheck` passes. No `any` without `// SAFETY:`.
+  4. **Consistency** — Patterns match adjacent files (naming, error shape, SDK).
+  5. **Drift** — If shared logic touched, all consumers updated.
+- [ ] **Collateral Check:** `npx vitest related [changed files] --run`.
+- [ ] **Founder's Audit:** No laziness placeholders (`// ... existing code`),
+      all exports resolve, schema matches spec.
+- [ ] **Auto-Fix:** Apply fixes. `npm run test && npm run lint -- --fix`.
+- [ ] **Verdict (MUST be visible in response):** Output the hardening summary:
+      ✅/⚠️ for each of the 5 sweep points + collateral check result.
+      Final line: "CLEAN" or "N gaps remain: [list]".
+- [ ] **Atomic Commit:** `git commit -m "[type](NN_spec): [description]"`.
+      Conventional prefixes: feat/fix/refactor/test/docs/chore.
+      Commit each component individually — do not batch.
+```
+
 ---
 
 ## WF11: Safe Launch Protocol
@@ -216,10 +275,3 @@
 ## Spec Boundary Requirements
 Every new spec MUST include an `## Operating Boundaries` section (Target Files, Out-of-Scope Files, Cross-Spec Dependencies). Copy from `docs/specs/_spec_template.md`.
 
----
-
-## Git Commit Strategy (Atomic Commits)
-1. **Never batch commit:** You MUST commit immediately the moment a "Green Light" is achieved for a single component or function. Do not move on to the next component without committing. Plan authorization ("PLAN LOCKED → yes") grants commit authority for all steps in that plan — do not re-ask.
-2. **Conventional Commits:** Write commit messages using standard prefixes: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, or `chore:`.
-3. **Spec Traceability:** Every commit message MUST reference the Spec ID in parentheses: `feat(13_auth): implement LoginForm`.
-4. **Rollback Safety:** Atomic commits enable `git reset --hard HEAD~1` to undo exactly one step, not an entire feature.
