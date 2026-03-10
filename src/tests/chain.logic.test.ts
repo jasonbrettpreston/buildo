@@ -546,3 +546,55 @@ describe('Pending state logic (steps reset when chain starts)', () => {
     expect(source).toContain('setStats');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Scoped Key Step Status Updates — steps update during chain run (Bug A3)
+// ---------------------------------------------------------------------------
+
+describe('Scoped key step status updates during chain run (Bug A3)', () => {
+  it('run-chain.js writes scoped slugs to pipeline_runs', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+    );
+    // Must construct scoped key: `${chainId}:${slug}`
+    expect(source).toContain('`${chainId}:${slug}`');
+  });
+
+  it('FreshnessTimeline reads pipelineLastRun using scoped key', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    // Must construct scopedKey and look it up
+    expect(source).toContain('`${chain.id}:${step.slug}`');
+    expect(source).toContain('pipelineLastRun[scopedKey]');
+  });
+
+  it('isRunning checks both scoped key and bare slug', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('runningPipelines.has(scopedKey)');
+    expect(source).toContain('runningPipelines.has(step.slug)');
+  });
+
+  it('polling adds scoped keys with running status to runningPipelines', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    // Poller must iterate over freshStatus entries and add running slugs
+    expect(source).toContain("info?.status === 'running'");
+    expect(source).toContain('next.add(slug)');
+  });
+
+  it('status endpoint returns DISTINCT ON (pipeline) including scoped keys', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/pipelines/status/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('DISTINCT ON (pipeline)');
+    expect(source).toContain('pipeline_last_run');
+  });
+});
