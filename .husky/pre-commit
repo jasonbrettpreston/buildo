@@ -1,1 +1,1 @@
-npm run typecheck && npm run lint && npm run test
+bash scripts/hooks/validate-migrations.sh && npm run typecheck && npm run lint && npm run test
