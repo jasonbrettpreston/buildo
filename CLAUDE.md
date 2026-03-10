@@ -76,7 +76,7 @@
 * **Database Impact:** [YES/NO — if YES, write `migrations/NNN_[feature].sql` and draft UPDATE strategy for 237K+ existing rows]
 
 ## Standards Compliance
-*(How does this plan adhere to `docs/specs/00_engineering_standards.md`?)*
+*(Fill in ALL items below. Mark inapplicable ones as N/A — do not omit.)*
 * **Try-Catch Boundary:** [How are new/modified API routes handling errors?]
 * **Unhappy Path Tests:** [What error scenarios will be tested?]
 * **logError Mandate:** [Do all new/modified API catch blocks use `logError(tag, err, context)` from `src/lib/logger.ts`? Or N/A if no API routes.]
@@ -128,7 +128,8 @@ response (not just in active_task.md):
 - [ ] **Implementation:** Write code to pass tests.
 - [ ] **Auth Boundary & Secrets:** Verify middleware protection.
       No `.env` secrets in client components.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
+      Output visible execution summary using ✅/⬜ for every step above. → WF6.
 ```
 
 ---
@@ -151,7 +152,8 @@ response (not just in active_task.md):
 - [ ] **Implementation:** Modify code to pass.
 - [ ] **UI Regression Check:** If modifying shared component,
       `npx vitest run src/tests/*.ui.test.tsx`.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
+      Output visible execution summary using ✅/⬜ for every step above. → WF6.
 ```
 
 ---
@@ -167,7 +169,8 @@ response (not just in active_task.md):
 - [ ] **Reproduction:** Create failing test that isolates the bug.
 - [ ] **Red Light:** Run test. MUST fail to confirm reproduction.
 - [ ] **Fix:** Modify code to resolve.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
+      Output visible execution summary using ✅/⬜ for every step above. → WF6.
 ```
 
 ---
@@ -250,9 +253,9 @@ response (not just in active_task.md):
 - [ ] **Founder's Audit:** No laziness placeholders (`// ... existing code`),
       all exports resolve, schema matches spec.
 - [ ] **Auto-Fix:** Apply fixes. `npm run test && npm run lint -- --fix`.
-- [ ] **Verdict (MUST be visible in response):** Output the hardening summary:
-      ✅/⚠️ for each of the 5 sweep points + collateral check result.
-      Final line: "CLEAN" or "N gaps remain: [list]".
+- [ ] **Verdict (MUST be visible in response):** Output ALL 7 WF6 steps
+      using ✅/⬜ format: Scope, each of the 5 sweep points, Collateral Check,
+      Founder's Audit, Auto-Fix. Final line: "CLEAN" or "N gaps remain: [list]".
 - [ ] **Atomic Commit:** `git commit -m "[type](NN_spec): [description]"`.
       Conventional prefixes: feat/fix/refactor/test/docs/chore.
       Commit each component individually — do not batch.
