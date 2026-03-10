@@ -130,7 +130,7 @@ Each step can be toggled via `pipeline_schedules.enabled` (migration 047). At ch
 **Non-toggleable steps:** `assert_schema`, `assert_data_bounds`, `refresh_snapshot` — these always run.
 
 ### 4.6 Cancellation
-Between steps, the orchestrator checks the chain's `pipeline_runs.status`. If set to `'cancelled'` (via admin UI), the chain stops before the next step.
+Between steps, the orchestrator checks the chain's `pipeline_runs.status`. If set to `'cancelled'` (via admin UI), the chain stops before the next step. The chain's final status is written as `'cancelled'` (not `'failed'`) to distinguish user-initiated cancellation from step execution failures.
 
 ### 4.7 Environment Variables Passed to Steps
 | Variable | Set When | Purpose |
