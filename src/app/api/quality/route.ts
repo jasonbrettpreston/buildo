@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getQualityData } from '@/lib/quality/metrics';
+import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import {
   detectVolumeAnomalies,
   detectSchemaDrift,
+  detectDurationAnomalies,
   computeSystemHealth,
+  PipelineFailure,
 } from '@/lib/quality/types';
 
 /**
@@ -28,9 +31,51 @@ export async function GET() {
         )
       : [];
 
+    // Compute duration anomalies from pipeline_runs (last 8 runs per pipeline)
+    let durationAnomalies: import('@/lib/quality/types').DurationAnomaly[] = [];
+    try {
+      const durationRows = await query<{ pipeline: string; duration_ms: number }>(
+        `SELECT pipeline, duration_ms
+         FROM (
+           SELECT pipeline, duration_ms,
+                  ROW_NUMBER() OVER (PARTITION BY pipeline ORDER BY started_at DESC) AS rn
+           FROM pipeline_runs
+           WHERE status = 'completed' AND duration_ms IS NOT NULL
+         ) sub
+         WHERE rn <= 8
+         ORDER BY pipeline, rn`
+      );
+      const runsByPipeline: Record<string, number[]> = {};
+      for (const row of durationRows) {
+        if (!runsByPipeline[row.pipeline]) runsByPipeline[row.pipeline] = [];
+        runsByPipeline[row.pipeline].push(row.duration_ms);
+      }
+      durationAnomalies = detectDurationAnomalies(runsByPipeline);
+    } catch {
+      // pipeline_runs table may not exist yet — skip duration anomalies
+    }
+
+    // Query recent pipeline failures (last 24h)
+    let pipelineFailures: PipelineFailure[] = [];
+    try {
+      const failureRows = await query<{ pipeline: string; error_message: string; failed_at: string }>(
+        `SELECT DISTINCT ON (pipeline) pipeline, error_message, started_at AS failed_at
+         FROM pipeline_runs
+         WHERE status = 'failed' AND started_at > NOW() - INTERVAL '24 hours'
+         ORDER BY pipeline, started_at DESC`
+      );
+      pipelineFailures = failureRows.map((r) => ({
+        pipeline: r.pipeline,
+        error_message: r.error_message || 'Unknown error',
+        failed_at: r.failed_at,
+      }));
+    } catch (err) {
+      logError('[api/quality]', err, { phase: 'pipeline_failures' });
+    }
+
     // Compute system health
     const health = data.current
-      ? computeSystemHealth(data.current, anomalies, schemaDrift)
+      ? computeSystemHealth(data.current, anomalies, schemaDrift, durationAnomalies, pipelineFailures)
       : { level: 'red' as const, issues: ['No snapshot data'], warnings: [] };
 
     return NextResponse.json({

@@ -266,6 +266,17 @@ export function extractMetrics(s: DataQualitySnapshot): MatchingMetrics {
 }
 
 // ---------------------------------------------------------------------------
+// Cadence Thresholds — milliseconds before a chain is considered stale
+// Used by HealthBanner to compute schedule status (on-schedule / needs-run / overdue)
+// ---------------------------------------------------------------------------
+
+export const CADENCE_THRESHOLDS_MS: Record<string, number> = {
+  Daily: 26 * 3600_000,        // 26 hours
+  Quarterly: 95 * 86400_000,   // 95 days
+  Annual: 370 * 86400_000,     // 370 days
+};
+
+// ---------------------------------------------------------------------------
 // SLA Targets (hours)
 // ---------------------------------------------------------------------------
 
@@ -361,6 +372,64 @@ export function detectSchemaDrift(
 }
 
 // ---------------------------------------------------------------------------
+// Duration Anomaly Detection
+// ---------------------------------------------------------------------------
+
+export interface DurationAnomaly {
+  pipeline: string;
+  avgMs: number;
+  currentMs: number;
+  ratio: number;
+}
+
+/**
+ * Detect pipelines whose latest run duration is significantly slower than
+ * their rolling average. Uses a 2x threshold on the average of the last 7 runs.
+ *
+ * @param runs - Map of pipeline slug → array of duration_ms values (most recent first)
+ * @returns Anomalies where latest run > 2x the rolling average
+ */
+export function detectDurationAnomalies(
+  runs: Record<string, number[]>
+): DurationAnomaly[] {
+  const anomalies: DurationAnomaly[] = [];
+
+  for (const [pipeline, durations] of Object.entries(runs)) {
+    // Need at least 2 runs: the current + at least 1 historical
+    if (durations.length < 2) continue;
+
+    const current = durations[0];
+    const historical = durations.slice(1, 8); // up to 7 prior runs
+    if (historical.length === 0) continue;
+
+    const avg = historical.reduce((a, b) => a + b, 0) / historical.length;
+    if (avg <= 0) continue;
+
+    const ratio = current / avg;
+    if (ratio >= 2) {
+      anomalies.push({
+        pipeline,
+        avgMs: Math.round(avg),
+        currentMs: current,
+        ratio: Math.round(ratio * 10) / 10,
+      });
+    }
+  }
+
+  return anomalies;
+}
+
+// ---------------------------------------------------------------------------
+// Pipeline Failure Detection
+// ---------------------------------------------------------------------------
+
+export interface PipelineFailure {
+  pipeline: string;
+  error_message: string;
+  failed_at: string;
+}
+
+// ---------------------------------------------------------------------------
 // System Health Summary
 // ---------------------------------------------------------------------------
 
@@ -374,11 +443,15 @@ export interface SystemHealthSummary {
 
 /**
  * Compute overall system health from a snapshot and anomaly/drift data.
+ * Optional durationAnomalies parameter surfaces pipeline slowdown warnings.
+ * Optional pipelineFailures parameter surfaces recent pipeline run failures.
  */
 export function computeSystemHealth(
   snapshot: DataQualitySnapshot,
   anomalies: VolumeAnomaly[],
-  schemaDrift: SchemaDriftAlert[]
+  schemaDrift: SchemaDriftAlert[],
+  durationAnomalies: DurationAnomaly[] = [],
+  pipelineFailures: PipelineFailure[] = []
 ): SystemHealthSummary {
   const issues: string[] = [];
   const warnings: string[] = [];
@@ -404,6 +477,24 @@ export function computeSystemHealth(
   // Check schema drift
   if (schemaDrift.length > 0) {
     warnings.push(`Schema changes detected in ${schemaDrift.length} table(s)`);
+  }
+
+  // Check duration anomalies — pipeline slowdowns
+  for (const d of durationAnomalies) {
+    const avgSec = (d.avgMs / 1000).toFixed(1);
+    const curSec = (d.currentMs / 1000).toFixed(1);
+    warnings.push(`Slow pipeline: ${d.pipeline} took ${curSec}s (avg: ${avgSec}s, ${d.ratio}x slower)`);
+  }
+
+  // Check pipeline failures (last 24h)
+  if (pipelineFailures.length >= 2) {
+    issues.push(`${pipelineFailures.length} pipelines failed in last 24h`);
+  } else if (pipelineFailures.length === 1) {
+    const f = pipelineFailures[0];
+    const msg = f.error_message.length > 120
+      ? f.error_message.slice(0, 117) + '...'
+      : f.error_message;
+    warnings.push(`Pipeline ${f.pipeline} failed: ${msg}`);
   }
 
   // Check null rates (flag if >20% of active permits missing critical fields)

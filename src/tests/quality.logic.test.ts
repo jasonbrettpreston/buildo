@@ -11,6 +11,7 @@ import {
   findSnapshotDaysAgo,
   detectVolumeAnomalies,
   detectSchemaDrift,
+  detectDurationAnomalies,
   computeSystemHealth,
   SLA_TARGETS,
 } from '@/lib/quality/types';
@@ -828,6 +829,68 @@ describe('detectSchemaDrift()', () => {
   });
 });
 
+// ── Duration Anomaly Detection ────────────────────────────────────────
+
+describe('detectDurationAnomalies()', () => {
+  it('returns empty array for empty input', () => {
+    expect(detectDurationAnomalies({})).toEqual([]);
+  });
+
+  it('returns empty array when pipeline has only 1 run', () => {
+    expect(detectDurationAnomalies({ permits: [5000] })).toEqual([]);
+  });
+
+  it('returns empty array when duration is within normal range', () => {
+    // Current: 8s, historical avg: 7s → ratio 1.14x (under 2x threshold)
+    const runs = { permits: [8000, 7000, 7000, 7000, 7000] };
+    expect(detectDurationAnomalies(runs)).toEqual([]);
+  });
+
+  it('detects anomaly when current run > 2x rolling average', () => {
+    // Current: 20s, historical avg: 8s → ratio 2.5x
+    const runs = { classify_permits: [20000, 8000, 8000, 8000, 8000] };
+    const anomalies = detectDurationAnomalies(runs);
+    expect(anomalies).toHaveLength(1);
+    expect(anomalies[0].pipeline).toBe('classify_permits');
+    expect(anomalies[0].currentMs).toBe(20000);
+    expect(anomalies[0].avgMs).toBe(8000);
+    expect(anomalies[0].ratio).toBe(2.5);
+  });
+
+  it('detects anomalies across multiple pipelines', () => {
+    const runs = {
+      permits: [30000, 5000, 5000, 5000],    // 6x → anomaly
+      coa: [6000, 5000, 5000, 5000],          // 1.2x → normal
+      classify_scope: [50000, 10000, 10000],   // 5x → anomaly
+    };
+    const anomalies = detectDurationAnomalies(runs);
+    expect(anomalies).toHaveLength(2);
+    expect(anomalies.map(a => a.pipeline).sort()).toEqual(['classify_scope', 'permits']);
+  });
+
+  it('handles exactly 2 runs (minimum for detection)', () => {
+    // Current: 10s, historical: [5s] → ratio 2x (boundary)
+    const runs = { permits: [10000, 5000] };
+    const anomalies = detectDurationAnomalies(runs);
+    expect(anomalies).toHaveLength(1);
+    expect(anomalies[0].ratio).toBe(2);
+  });
+
+  it('ignores pipelines with zero average duration', () => {
+    const runs = { permits: [5000, 0, 0, 0] };
+    expect(detectDurationAnomalies(runs)).toEqual([]);
+  });
+
+  it('uses at most 7 historical runs for average', () => {
+    // 1 current + 10 historical → should only use 7 historical
+    const runs = { permits: [20000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 1000, 1000, 1000] };
+    const anomalies = detectDurationAnomalies(runs);
+    // Avg of 7 historical: 8000, current: 20000 → 2.5x
+    expect(anomalies).toHaveLength(1);
+    expect(anomalies[0].avgMs).toBe(8000);
+  });
+});
+
 // ── System Health Summary ─────────────────────────────────────────────
 
 describe('computeSystemHealth()', () => {
@@ -893,6 +956,75 @@ describe('computeSystemHealth()', () => {
     const health = computeSystemHealth(snapshot, [], []);
     expect(health.level).toBe('red');
     expect(health.issues[0]).toContain('SLA breach');
+  });
+
+  it('returns yellow when duration anomalies detected', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 0,
+      sla_permits_ingestion_hours: 6,
+    });
+    const durationAnomalies = [
+      { pipeline: 'classify_permits', avgMs: 8000, currentMs: 20000, ratio: 2.5 },
+    ];
+    const health = computeSystemHealth(snapshot, [], [], durationAnomalies);
+    expect(health.level).toBe('yellow');
+    expect(health.warnings[0]).toContain('Slow pipeline: classify_permits');
+    expect(health.warnings[0]).toContain('2.5x slower');
+  });
+
+  it('returns green when pipeline failures array is empty', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 0,
+      sla_permits_ingestion_hours: 6,
+    });
+    const health = computeSystemHealth(snapshot, [], [], [], []);
+    expect(health.level).toBe('green');
+    expect(health.issues).toHaveLength(0);
+    expect(health.warnings).toHaveLength(0);
+  });
+
+  it('returns yellow when 1 pipeline failure in last 24h', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 0,
+      sla_permits_ingestion_hours: 6,
+    });
+    const failures = [
+      { pipeline: 'chain_permits', error_message: 'Connection refused', failed_at: new Date().toISOString() },
+    ];
+    const health = computeSystemHealth(snapshot, [], [], [], failures);
+    expect(health.level).toBe('yellow');
+    expect(health.warnings).toHaveLength(1);
+    expect(health.warnings[0]).toContain('chain_permits');
+    expect(health.warnings[0]).toContain('Connection refused');
+  });
+
+  it('returns red when 2+ pipeline failures in last 24h', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 0,
+      sla_permits_ingestion_hours: 6,
+    });
+    const failures = [
+      { pipeline: 'chain_permits', error_message: 'Connection refused', failed_at: new Date().toISOString() },
+      { pipeline: 'chain_coa', error_message: 'Timeout after 3600s', failed_at: new Date().toISOString() },
+    ];
+    const health = computeSystemHealth(snapshot, [], [], [], failures);
+    expect(health.level).toBe('red');
+    expect(health.issues).toHaveLength(1);
+    expect(health.issues[0]).toContain('2 pipelines failed');
+  });
+
+  it('truncates long error messages in pipeline failure warnings', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 0,
+      sla_permits_ingestion_hours: 6,
+    });
+    const longMessage = 'A'.repeat(200);
+    const failures = [
+      { pipeline: 'chain_permits', error_message: longMessage, failed_at: new Date().toISOString() },
+    ];
+    const health = computeSystemHealth(snapshot, [], [], [], failures);
+    expect(health.warnings[0].length).toBeLessThanOrEqual(200);
+    expect(health.warnings[0]).toContain('...');
   });
 });
 

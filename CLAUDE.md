@@ -96,12 +96,15 @@
 summary followed by the lock prompt. The summary MUST be visible in the
 response (not just in active_task.md):
 
-> **§10 Compliance:**
-> - ✅/⬜ DB: [status]
-> - ✅/⬜ API: [status]
-> - ✅/⬜ UI: [status]
-> - ✅/⬜ Shared Logic: [status]
-> - ✅/⬜ Pipeline: [status]
+> **§10 Compliance:** For each applicable category, list EVERY sub-item
+> from §10 with its status. Do not summarize — show each checklist item.
+> Mark inapplicable categories as ⬜ N/A.
+>
+> - ✅/⬜ DB: [each sub-item or N/A]
+> - ✅/⬜ API: [each sub-item or N/A]
+> - ✅/⬜ UI: [each sub-item or N/A]
+> - ✅/⬜ Shared Logic: [each sub-item or N/A]
+> - ✅/⬜ Pipeline: [each sub-item or N/A]
 >
 > **PLAN LOCKED. Do you authorize this [Workflow Type] plan? (y/n)**
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.
@@ -116,6 +119,7 @@ response (not just in active_task.md):
 - Run `npm run task -- --wf=1 --name="Feature Name"`.
 
 ### Execution Plan
+*You MUST include every step below verbatim. If a step does not apply, keep the step name and write N/A with a reason.*
 ```
 - [ ] **Contract Definition:** If creating an API route, define Request/Response
       TypeScript interface BEFORE implementation.
@@ -140,6 +144,7 @@ response (not just in active_task.md):
 *This workflow absorbs former WF4 (Deletion), WF8 (Regression Lock), WF9 (Integration Wiring), and WF13 (Schema Evolution).*
 
 ### Execution Plan
+*You MUST include every step below verbatim. If a step does not apply, keep the step name and write N/A with a reason.*
 ```
 - [ ] **State Verification:** Document what data is actually available vs. assumed.
 - [ ] **Contract Definition:** If altering API route, define updated interface.
@@ -162,6 +167,7 @@ response (not just in active_task.md):
 **Trigger:** `WF3`, or "Fix a bug", "Resolve issue".
 
 ### Execution Plan
+*You MUST include every step below verbatim. If a step does not apply, keep the step name and write N/A with a reason.*
 ```
 - [ ] **Rollback Anchor:** Record current Git commit hash in active task.
 - [ ] **State Verification:** Document what data is available vs. assumed.
