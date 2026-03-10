@@ -293,21 +293,37 @@ export function DataQualityDashboard() {
     });
   }, [fetchData]);
 
-  // Polling while pipelines are running — also detects chain-spawned running steps
+  // Polling while pipelines are running — uses lightweight status endpoint
+  // instead of full fetchData() (which times out under pipeline load).
   useEffect(() => {
     if (runningPipelines.size === 0) {
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
       return;
     }
     pollRef.current = setInterval(async () => {
-      const freshStats = await fetchData().catch(() => null);
-      if (!freshStats) return;
+      // Use lightweight endpoint — single fast query on pipeline_runs only
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      let freshStatus: { pipeline_last_run: Record<string, PipelineRunInfo> } | null = null;
+      try {
+        const res = await fetch('/api/admin/pipelines/status', { signal: controller.signal });
+        freshStatus = await res.json();
+      } catch {
+        // Timeout or network error — skip this poll cycle
+      } finally {
+        clearTimeout(timeoutId);
+      }
+      if (!freshStatus) return;
+
+      // Merge fresh pipeline_last_run into stats so FreshnessTimeline re-renders
+      setStats((prev) => prev ? { ...prev, pipeline_last_run: freshStatus!.pipeline_last_run } : prev);
+
       const now = Date.now();
       setRunningPipelines((prev) => {
         const next = new Set<string>();
         // Keep any user-triggered slugs that are still running OR within grace period
         for (const slug of prev) {
-          const info = freshStats.pipeline_last_run?.[slug];
+          const info = freshStatus!.pipeline_last_run?.[slug];
           if (info?.status === 'running') {
             next.add(slug);
           } else {
@@ -319,8 +335,12 @@ export function DataQualityDashboard() {
           }
         }
         // Also detect any individually-running pipeline steps (e.g. spawned by chain orchestrator)
-        for (const [slug, info] of Object.entries(freshStats.pipeline_last_run ?? {})) {
+        for (const [slug, info] of Object.entries(freshStatus!.pipeline_last_run ?? {})) {
           if (info?.status === 'running') next.add(slug);
+        }
+        // If all pipelines finished, trigger a full fetchData() refresh
+        if (next.size === 0 && prev.size > 0) {
+          fetchData();
         }
         return next;
       });

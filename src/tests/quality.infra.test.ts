@@ -391,3 +391,31 @@ describe('Pipeline runs API route exists', () => {
     expect(source).toContain('records_total');
   });
 });
+
+describe('Pipeline status polling endpoint exists', () => {
+  const statusRoutePath = path.join(__dirname, '../app/api/admin/pipelines/status/route.ts');
+
+  it('status route file exists', () => {
+    expect(fs.existsSync(statusRoutePath)).toBe(true);
+  });
+
+  it('status route exports GET handler', () => {
+    const source = fs.readFileSync(statusRoutePath, 'utf-8');
+    expect(source).toMatch(/export.*async.*function.*GET/);
+  });
+
+  it('returns pipeline_last_run in response', () => {
+    const source = fs.readFileSync(statusRoutePath, 'utf-8');
+    expect(source).toContain('pipeline_last_run');
+  });
+
+  it('uses DISTINCT ON (pipeline) for latest status per slug', () => {
+    const source = fs.readFileSync(statusRoutePath, 'utf-8');
+    expect(source).toContain('DISTINCT ON (pipeline)');
+  });
+
+  it('uses logError in catch block', () => {
+    const source = fs.readFileSync(statusRoutePath, 'utf-8');
+    expect(source).toContain('logError');
+  });
+});
