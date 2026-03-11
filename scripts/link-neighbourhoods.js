@@ -98,6 +98,11 @@ pipeline.run('link-neighbourhoods', async (pool) => {
 
   if (totalPermits === 0) {
     console.log('No permits to link. Done.');
+    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    pipeline.emitMeta(
+      { "permits": ["permit_num", "revision_num", "latitude", "longitude", "neighbourhood_id"], "neighbourhoods": ["id", "neighbourhood_id", "name", "geometry"], "parcels": ["id", "geometry"] },
+      { "permits": ["neighbourhood_id"] }
+    );
     return;
   }
 

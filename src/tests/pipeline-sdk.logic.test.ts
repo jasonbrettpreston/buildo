@@ -483,10 +483,11 @@ describe('Pipeline SDK', () => {
     for (const script of LINKING_SCRIPTS) {
       it(`${script} emitSummary does not hardcode records_new: 0`, () => {
         const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
-        // Extract the emitSummary call
-        const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
-        expect(match).not.toBeNull();
-        const summaryBody = match![1];
+        // Find all emitSummary calls — early-exit paths may hardcode 0,
+        // but the primary (last) call must reference variables
+        const matches = [...content.matchAll(/pipeline\.emitSummary\(\{([^}]+)\}\)/g)];
+        expect(matches.length).toBeGreaterThan(0);
+        const summaryBody = matches[matches.length - 1][1];
         // records_updated must reference a variable, not hardcode 0
         expect(summaryBody).toMatch(/records_updated:\s*[a-zA-Z]/);
       });
@@ -594,4 +595,24 @@ describe('Pipeline SDK', () => {
       });
     }
   });
+
+  describe('B22: early-exit scripts must still emit summary and meta', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fs2 = require('fs');
+      const scriptDir2 = path.resolve(__dirname, '../../scripts');
+
+      it('link-neighbourhoods.js emits summary/meta on early return (0 permits)', () => {
+        const source = fs2.readFileSync(path.join(scriptDir2, 'link-neighbourhoods.js'), 'utf-8');
+        // Find the early-exit block ("No permits to link")
+        const earlyExitIdx = source.indexOf('No permits to link');
+        expect(earlyExitIdx).toBeGreaterThan(-1);
+        // The emitSummary/emitMeta must come BEFORE the early return, not only after the main loop
+        const beforeEarlyExit = source.slice(0, earlyExitIdx);
+        const afterEarlyExit = source.slice(earlyExitIdx, source.indexOf('return;', earlyExitIdx) + 10);
+        const fullEarlyBlock = beforeEarlyExit.slice(beforeEarlyExit.lastIndexOf('if (totalPermits')) + afterEarlyExit;
+        expect(fullEarlyBlock).toMatch(/emitSummary/);
+        expect(fullEarlyBlock).toMatch(/emitMeta/);
+      });
+  });
 });
+

@@ -1585,6 +1585,48 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
     expect(row.status).toBe('healthy');
   });
 
+  it('B18: linker steps with 0 new + 0 updated are "healthy" not "warning"', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    // geocode_permits is an incremental linker — 0 records is expected
+    const config = FUNNEL_SOURCES.find((s) => s.statusSlug === 'geocode_permits')!;
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 525000, parcels_total: 486000, building_footprints_total: 428000,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 158,
+      permits_propagated: 0,
+      pipeline_last_run: {
+        'permits:geocode_permits': {
+          last_run_at: new Date().toISOString(), status: 'completed',
+          records_total: 0, records_new: 0, records_updated: 0, records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    expect(row.status).toBe('healthy');
+  });
+
+  it('B18: loader steps with 0 new + 0 updated remain "warning"', () => {
+    const snapshot = createMockDataQualitySnapshot();
+    // permits is a primary loader — 0 records is a genuine concern
+    const config = FUNNEL_SOURCES.find((s) => s.id === 'permits')!;
+    const stats = {
+      wsib_total: 0, wsib_linked: 0, wsib_lead_pool: 0, wsib_with_trade: 0,
+      address_points_total: 0, parcels_total: 0, building_footprints_total: 0,
+      parcels_with_massing: 0, permits_with_massing: 0, neighbourhoods_total: 0,
+      permits_propagated: 0,
+      pipeline_last_run: {
+        'permits:permits': {
+          last_run_at: new Date().toISOString(), status: 'completed',
+          records_total: 234856, records_new: 0, records_updated: 0, records_meta: null,
+        },
+      },
+      pipeline_schedules: null,
+    };
+    const row = computeRowData(config, stats, snapshot);
+    expect(row.status).toBe('warning');
+  });
+
   it('DataFlowTile renders exclusively from live pipeline_meta', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'

@@ -148,8 +148,13 @@ export function computeRowData(
     else if (hoursAgo > slaHours * 0.8) status = 'warning';
     // Ran recently but produced 0 new + 0 updated = warning (data unchanged)
     // Only flag completed runs — running steps haven't reported final counts yet
+    // Only apply to loader/primary-data steps — linker/enrichment steps legitimately
+    // produce 0 records when no new upstream data was loaded (incremental runs)
     else if (lastRun && lastRun.status === 'completed' && lastRun.records_new != null && lastRun.records_new === 0 && (lastRun.records_updated ?? 0) === 0) {
-      status = 'warning';
+      const LOADER_SLUGS = ['permits', 'coa', 'address_points', 'parcels', 'massing', 'neighbourhoods', 'load_wsib'];
+      if (LOADER_SLUGS.includes(config.statusSlug)) {
+        status = 'warning';
+      }
     }
   } else {
     status = 'stale';
