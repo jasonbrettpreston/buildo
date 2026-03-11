@@ -1,19 +1,18 @@
-# Active Task: Prevent concurrent chain runs (B11)
+# Active Task: Show records_total in Chain Completion Report per-step rows
 **Status:** Implementation
 
 ## Context
-* **Goal:** classify_permits takes 88+ minutes on the full 237K dataset. When two chains run concurrently (e.g., "Retry Failed" fires chain_permits and chain_sources simultaneously), they compete for DB connections and lock on shared tables, making both slower and causing timeout failures. The API route's `runningProcesses` map already tracks child processes, but POST doesn't check it before spawning a new one for the same slug. Additionally, re-triggering a chain marks the old DB row cancelled but leaves the old OS process alive (zombie).
+* **Goal:** The Chain Completion Report per-step rows show "—" when `records_new` and `records_updated` are both 0. But `records_total` (total records processed) is available and informative. Add it so users can see throughput even when no records changed.
 * **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `src/app/api/admin/pipelines/[slug]/route.ts` — POST handler, lines 88-210
-  - `src/tests/chain.logic.test.ts` — chain behavior tests
-  - `src/tests/api.infra.test.ts` — API route tests
+  - `src/components/FreshnessTimeline.tsx` — Chain Completion Report (lines 524-613)
+  - `src/tests/chain.logic.test.ts` — completion report tests
 
 ## Execution Plan
-- [x] **Rollback Anchor:** Git commit `f0cf1d3`
-- [x] **State Verification:** Current code allows concurrent runs — confirmed via code inspection.
-- [x] **Spec Review:** Spec 28 §3 says "API force-cancels any existing 'running' rows for the slug before inserting a new run (no 409 rejection)." Updating to add 409 rejection.
-- [ ] **Reproduction:** Add test asserting POST returns 409 when process already running.
-- [ ] **Red Light:** New test must fail against current code.
-- [ ] **Fix:** Add `runningProcesses` guard in POST handler. Kill stale process on re-trigger.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
+- [x] **Rollback Anchor:** Git commit `f468503`
+- [x] **State Verification:** CoA completion report shows steps with "—" for records (confirmed via browser API).
+- [x] **Spec Review:** Spec 28 §3 documents per-step drill-down with records_total/records_new/records_updated.
+- [x] **Reproduction:** Updated test to assert `records_total` appears in completion report.
+- [x] **Red Light:** Test failed against code without records_total.
+- [x] **Fix:** Added `records_total` to stepRows and render it in the per-step summary.
+- [x] **Green Light:** 2129 tests pass, typecheck clean, lint clean. → WF6.

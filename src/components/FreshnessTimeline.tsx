@@ -522,7 +522,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                 let totalDel = 0;
                 let hasAnyTelemetry = false;
                 // Build per-step summary data
-                const stepRows: { label: string; slug: string; ranThisChain: boolean; records_new: number | null; records_updated: number | null; duration_ms: number | null }[] = [];
+                const stepRows: { label: string; slug: string; ranThisChain: boolean; records_total: number | null; records_new: number | null; records_updated: number | null; duration_ms: number | null }[] = [];
                 for (const step of chain.steps) {
                   const scopedKey = `${chain.id}:${step.slug}`;
                   const stepInfo = pipelineLastRun[scopedKey];
@@ -532,6 +532,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     label: PIPELINE_REGISTRY[step.slug]?.name ?? step.slug,
                     slug: step.slug,
                     ranThisChain,
+                    records_total: ranThisChain ? (stepInfo?.records_total ?? null) : null,
                     records_new: ranThisChain ? (stepInfo?.records_new ?? null) : null,
                     records_updated: ranThisChain ? (stepInfo?.records_updated ?? null) : null,
                     duration_ms: ranThisChain ? (stepInfo?.duration_ms ?? null) : null,
@@ -591,13 +592,16 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           </span>
                           {s.ranThisChain ? (
                             <>
+                              {s.records_total != null && s.records_total > 0 && (
+                                <span className="text-gray-500">{s.records_total.toLocaleString()}</span>
+                              )}
                               {s.records_new != null && s.records_new > 0 && (
-                                <span className="text-green-600">+{s.records_new.toLocaleString()}</span>
+                                <span className="text-green-600">+{s.records_new.toLocaleString()} new</span>
                               )}
                               {s.records_updated != null && s.records_updated > 0 && (
                                 <span className="text-blue-600">{s.records_updated.toLocaleString()} upd</span>
                               )}
-                              {(s.records_new == null || s.records_new === 0) && (s.records_updated == null || s.records_updated === 0) && (
+                              {(s.records_total == null || s.records_total === 0) && (s.records_new == null || s.records_new === 0) && (s.records_updated == null || s.records_updated === 0) && (
                                 <span className="text-gray-400">&mdash;</span>
                               )}
                               <span className="text-gray-400 w-12 text-right">{formatDuration(s.duration_ms)}</span>

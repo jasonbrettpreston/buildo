@@ -829,16 +829,17 @@ describe('Chain Completion Report per-step summary (B3)', () => {
     'utf-8'
   );
 
-  it('B3: completion report renders per-step rows with records and duration', () => {
+  it('B3: completion report renders per-step rows with records_total, records_new, records_updated, and duration', () => {
     const source = timelineSource();
     // The Chain Completion Report IIFE should iterate chain.steps and render
-    // per-step info including records_new, records_updated, and duration_ms
+    // per-step info including records_total, records_new, records_updated, and duration_ms
     const reportBlock = source.slice(
       source.indexOf('Chain Completion Report'),
-      source.indexOf('Chain Completion Report') + 3000
+      source.indexOf('Chain Completion Report') + 4000
     );
     // Must reference step-level data from pipelineLastRun
     expect(reportBlock).toMatch(/step\.slug|PIPELINE_REGISTRY\[step\.slug\]/);
+    expect(reportBlock).toContain('records_total');
     expect(reportBlock).toMatch(/records_new|records_updated/);
     expect(reportBlock).toMatch(/duration_ms|formatDuration/);
   });
@@ -847,7 +848,7 @@ describe('Chain Completion Report per-step summary (B3)', () => {
     const source = timelineSource();
     const reportBlock = source.slice(
       source.indexOf('Chain Completion Report'),
-      source.indexOf('Chain Completion Report') + 6000
+      source.indexOf('Chain Completion Report') + 7000
     );
     // Must detect and label steps that were skipped (e.g. gate abort)
     expect(reportBlock).toMatch(/skip|Skipped/i);
