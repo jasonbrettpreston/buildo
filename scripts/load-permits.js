@@ -43,10 +43,16 @@ function cleanCost(v) {
   return parsed;
 }
 
-function computeHash(raw) {
+/**
+ * Compute a stable SHA-256 hash from a mapped permit record.
+ * Hashes only the cleaned/mapped fields we store — NOT the raw CKAN object.
+ * This prevents upstream metadata changes (_id, rank, new CKAN fields) from
+ * triggering false hash mismatches and cascading unnecessary reclassification.
+ */
+function computeHash(mapped) {
   const sorted = {};
-  for (const key of Object.keys(raw).sort()) {
-    sorted[key] = raw[key];
+  for (const key of Object.keys(mapped).sort()) {
+    sorted[key] = mapped[key];
   }
   return crypto.createHash('sha256').update(JSON.stringify(sorted)).digest('hex');
 }
@@ -62,7 +68,7 @@ function extractWard(raw) {
 }
 
 function mapRecord(raw) {
-  return {
+  const mapped = {
     permit_num: raw.PERMIT_NUM,
     revision_num: raw.REVISION_NUM || '00',
     permit_type: raw.PERMIT_TYPE || null,
@@ -93,20 +99,23 @@ function mapRecord(raw) {
     proposed_use: raw.PROPOSED_USE || null,
     housing_units: parseInt(raw.HOUSING_UNITS, 10) || 0,
     storeys: parseInt(raw.STOREYS, 10) || 0,
-    data_hash: computeHash(raw),
-    raw_json: JSON.stringify(raw),
   };
+  // Hash the mapped fields only — excludes raw_json and data_hash itself
+  mapped.data_hash = computeHash(mapped);
+  mapped.raw_json = JSON.stringify(raw);
+  return mapped;
 }
 
 /**
- * Fetch all permit records from the CKAN datastore API with pagination.
+ * Async generator that yields pages of CKAN records.
+ * Keeps peak memory at O(page_size) instead of O(total_records) (§9.5).
  */
-async function fetchFromCKAN() {
-  const records = [];
+async function* fetchFromCKAN() {
   const limit = 10000;
   let offset = 0;
+  let totalFetched = 0;
 
-  console.log('Fetching permits from CKAN datastore API...');
+  console.log('Fetching permits from CKAN datastore API (streaming)...');
   while (true) {
     const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${RESOURCE_ID}&limit=${limit}&offset=${offset}`;
     console.log(`  offset=${offset}...`);
@@ -115,14 +124,14 @@ async function fetchFromCKAN() {
     if (!json.success) throw new Error(`datastore_search failed at offset ${offset}`);
 
     const batch = json.result.records || [];
-    records.push(...batch);
-    console.log(`  Got ${batch.length} records (total: ${records.length})`);
+    totalFetched += batch.length;
+    console.log(`  Got ${batch.length} records (total: ${totalFetched})`);
+
+    yield batch;
 
     if (batch.length < limit) break;
     offset += limit;
   }
-
-  return records;
 }
 
 async function insertBatch(client, batch) {
@@ -179,34 +188,17 @@ async function insertBatch(client, batch) {
   return result.rows;
 }
 
-pipeline.run('load-permits', async (pool) => {
-  let records;
-
-  if (localFilePath) {
-    // --file mode: read from local JSON file
-    console.log(`Loading permits from local file: ${localFilePath}`);
-    console.log(`File size: ${(fs.statSync(localFilePath).size / 1024 / 1024).toFixed(1)} MB`);
-    const raw = fs.readFileSync(localFilePath, 'utf-8');
-    console.log('Parsing JSON...');
-    records = JSON.parse(raw);
-    console.log(`Parsed ${records.length} records`);
-  } else {
-    // Default: fetch live from CKAN API
-    records = await fetchFromCKAN();
-    console.log(`Fetched ${records.length} records from CKAN`);
-  }
-
-  let newInserts = 0;
-  let updated = 0;
-  let processed = 0;
-  let errors = 0;
+/**
+ * Process a page of raw CKAN records: map, batch, and upsert.
+ * Mutates counters in place (newInserts, updated, processed, errors).
+ */
+async function processRecords(pool, records, counters, startTime) {
   let batch = [];
-  const startTime = Date.now();
 
   for (const record of records) {
     try {
       if (!record.PERMIT_NUM || !record.REVISION_NUM) {
-        errors++;
+        counters.errors++;
         continue;
       }
       batch.push(mapRecord(record));
@@ -215,33 +207,56 @@ pipeline.run('load-permits', async (pool) => {
           return insertBatch(client, batch);
         });
         for (const r of rows) {
-          if (r.is_insert) newInserts++;
-          else updated++;
+          if (r.is_insert) counters.newInserts++;
+          else counters.updated++;
         }
-        processed += batch.length;
+        counters.processed += batch.length;
         batch = [];
-        if (processed % 10000 === 0) {
+        if (counters.processed % 10000 === 0) {
           const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-          console.log(`  ${processed.toLocaleString()} processed (${elapsed}s)`);
+          console.log(`  ${counters.processed.toLocaleString()} processed (${elapsed}s)`);
         }
       }
     } catch (err) {
-      errors++;
-      if (errors <= 5) pipeline.log.error('[load-permits]', err, { record: processed + errors });
+      counters.errors++;
+      if (counters.errors <= 5) pipeline.log.error('[load-permits]', err, { record: counters.processed + counters.errors });
     }
   }
 
-  // Final batch
+  // Flush remaining batch
   if (batch.length > 0) {
     const rows = await pipeline.withTransaction(pool, async (client) => {
       return insertBatch(client, batch);
     });
     for (const r of rows) {
-      if (r.is_insert) newInserts++;
-      else updated++;
+      if (r.is_insert) counters.newInserts++;
+      else counters.updated++;
     }
-    processed += batch.length;
+    counters.processed += batch.length;
   }
+}
+
+pipeline.run('load-permits', async (pool) => {
+  const counters = { newInserts: 0, updated: 0, processed: 0, errors: 0 };
+  const startTime = Date.now();
+
+  if (localFilePath) {
+    // --file mode: read from local JSON file
+    console.log(`Loading permits from local file: ${localFilePath}`);
+    console.log(`File size: ${(fs.statSync(localFilePath).size / 1024 / 1024).toFixed(1)} MB`);
+    const raw = fs.readFileSync(localFilePath, 'utf-8');
+    console.log('Parsing JSON...');
+    const records = JSON.parse(raw);
+    console.log(`Parsed ${records.length} records`);
+    await processRecords(pool, records, counters, startTime);
+  } else {
+    // Default: stream from CKAN API page by page (§9.5)
+    for await (const page of fetchFromCKAN()) {
+      await processRecords(pool, page, counters, startTime);
+    }
+  }
+
+  const { newInserts, updated, processed, errors } = counters;
 
   const unchanged = processed - newInserts - updated;
   const duration = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -257,11 +272,12 @@ pipeline.run('load-permits', async (pool) => {
     { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "data_hash", "raw_json"] }
   );
 
-  // Log sync run
+  // Log sync run (duration parameterized to prevent SQL injection — §4.2)
+  const durationSeconds = parseFloat(duration);
   await pool.query(
     `INSERT INTO sync_runs (started_at, completed_at, status, records_total, records_new, records_updated, records_unchanged, records_errors, duration_ms)
-     VALUES (NOW() - interval '${duration} seconds', NOW(), 'completed', $1, $2, $3, $4, $5, $6)`,
-    [processed, newInserts, updated, unchanged, errors, Math.round(parseFloat(duration) * 1000)]
+     VALUES (NOW() - make_interval(secs => $7), NOW(), 'completed', $1, $2, $3, $4, $5, $6)`,
+    [processed, newInserts, updated, unchanged, errors, Math.round(durationSeconds * 1000), durationSeconds]
   );
   console.log('  Sync run logged');
 });

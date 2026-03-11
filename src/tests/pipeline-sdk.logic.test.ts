@@ -452,6 +452,18 @@ describe('Pipeline SDK', () => {
       });
     }
 
+    // §9.3 — load-permits.js must hash mapped fields, not raw CKAN object
+    it('load-permits.js computeHash uses mapped permit fields, not raw CKAN object', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'load-permits.js'), 'utf-8');
+      // computeHash should NOT receive the raw CKAN record (which includes _id, rank, etc.)
+      // It should hash the mapped/cleaned fields only
+      // The mapRecord call should compute hash from mapped data, not raw
+      const mapRecordBody = content.match(/function mapRecord\(raw\)\s*\{([\s\S]*?)\n\}/);
+      expect(mapRecordBody).not.toBeNull();
+      // data_hash should NOT be computeHash(raw) — it should hash the mapped fields
+      expect(mapRecordBody![1]).not.toMatch(/data_hash:\s*computeHash\(raw\)/);
+    });
+
     // §9.3 — extract-builders.js upsert must guard against no-op updates
     it('extract-builders.js upsert has IS DISTINCT FROM guard to prevent no-op updates', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'extract-builders.js'), 'utf-8');
