@@ -26,6 +26,36 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
+  // track() / getTracked() — auto-tracking counters
+  // -----------------------------------------------------------------------
+  describe('track() and getTracked()', () => {
+    beforeEach(() => {
+      pipeline.track.reset();
+    });
+
+    it('getTracked() returns zeros initially', () => {
+      expect(pipeline.getTracked()).toEqual({ records_new: 0, records_updated: 0 });
+    });
+
+    it('track() increments counters correctly', () => {
+      pipeline.track(5, 10);
+      expect(pipeline.getTracked()).toEqual({ records_new: 5, records_updated: 10 });
+    });
+
+    it('track() accumulates across multiple calls', () => {
+      pipeline.track(3, 7);
+      pipeline.track(2, 3);
+      expect(pipeline.getTracked()).toEqual({ records_new: 5, records_updated: 10 });
+    });
+
+    it('track.reset() clears counters', () => {
+      pipeline.track(10, 20);
+      pipeline.track.reset();
+      expect(pipeline.getTracked()).toEqual({ records_new: 0, records_updated: 0 });
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // emitSummary
   // -----------------------------------------------------------------------
   describe('emitSummary()', () => {
@@ -64,6 +94,13 @@ describe('Pipeline SDK', () => {
       const output = logSpy.mock.calls[0][0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       expect(parsed).toEqual({ records_total: 0, records_new: 0, records_updated: 0 });
+    });
+
+    it('preserves null for records_new/records_updated (§3.5 CQA exemption)', () => {
+      pipeline.emitSummary({ records_total: 5, records_new: null, records_updated: null });
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed).toEqual({ records_total: 5, records_new: null, records_updated: null });
     });
   });
 
@@ -434,23 +471,54 @@ describe('Pipeline SDK', () => {
       expect(content).toContain('pipeline.log.warn(');
     });
 
-    // §3.5 — Linking scripts must report records_new: 0 (they only UPDATE, never INSERT)
+    // §3.5 — Linking scripts must NOT hardcode records_new: 0.
+    // They report records_updated with the real linked count.
     const LINKING_SCRIPTS = [
       'link-parcels.js',
       'link-neighbourhoods.js',
       'link-massing.js',
+      'link-coa.js',
+      'link-similar.js',
     ];
     for (const script of LINKING_SCRIPTS) {
-      it(`${script} emitSummary reports records_new: 0 (UPDATE-only script)`, () => {
+      it(`${script} emitSummary does not hardcode records_new: 0`, () => {
         const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
         // Extract the emitSummary call
         const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
         expect(match).not.toBeNull();
         const summaryBody = match![1];
-        // records_new must be 0 — these scripts link/update, they don't insert new rows
-        expect(summaryBody).toMatch(/records_new:\s*0/);
+        // records_updated must reference a variable, not hardcode 0
+        expect(summaryBody).toMatch(/records_updated:\s*[a-zA-Z]/);
       });
     }
+
+    // §3.5 — CQA scripts must use records_new: null (not 0) to signal "not applicable"
+    const CQA_SCRIPTS = ['quality/assert-schema.js', 'quality/assert-data-bounds.js'];
+    for (const script of CQA_SCRIPTS) {
+      it(`${script} emits records_new: null (not 0) for CQA exemption`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        const summaryMatch = content.match(/PIPELINE_SUMMARY.*records_new:\s*(null|0)/);
+        expect(summaryMatch).not.toBeNull();
+        expect(summaryMatch![1]).toBe('null');
+      });
+    }
+
+    // §3.5 — read-only scripts must use records_new: null
+    it('create-pre-permits.js emits records_new: null (read-only counter)', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'create-pre-permits.js'), 'utf-8');
+      const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
+      expect(match).not.toBeNull();
+      expect(match![1]).toMatch(/records_new:\s*null/);
+    });
+
+    // §3.5 — load-neighbourhoods.js must report real records_new count
+    it('load-neighbourhoods.js emitSummary uses real records_new count', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'load-neighbourhoods.js'), 'utf-8');
+      const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
+      expect(match).not.toBeNull();
+      // records_new must reference a variable, not hardcode 0
+      expect(match![1]).toMatch(/records_new:\s*[a-zA-Z]/);
+    });
 
     // §9.3 — load-permits.js must hash mapped fields, not raw CKAN object
     it('load-permits.js computeHash uses mapped permit fields, not raw CKAN object', () => {

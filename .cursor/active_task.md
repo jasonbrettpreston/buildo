@@ -1,115 +1,153 @@
-# Active Task: WF5 Subsection System — Manual & Pipeline Assessment
+# Active Task: Stream A — Pipeline Auto-Tracking (Fix Hardcoded records_new: 0)
 **Status:** Planning
 
 ## Context
-* **Goal:** Replace WF5's single monolithic audit with a subsection system. Keyword triggers (`WF5 manual`, `WF5 pipeline`, `WF5 code`, `WF5 build`, `WF5 prod`) activate focused checklists. The 1-line "Manual Validation" step becomes a structured spec-driven assessment protocol.
-* **Target Spec:** `docs/specs/00_engineering_standards.md`
+* **Goal:** Replace hardcoded `records_new: 0` in 11 pipeline scripts with accurate reporting. Add a lightweight tracking API to the Pipeline SDK so scripts report what they actually did.
+* **Target Spec:** `docs/specs/37_pipeline_system.md` (primary), `docs/specs/28_data_quality_dashboard.md` (secondary)
+* **Rollback Anchor:** `56818cd`
 * **Key Files:**
-  - MODIFY: `CLAUDE.md` — restructure WF5 into Core + subsections
+  - `scripts/lib/pipeline.js` — Pipeline SDK (add tracking API)
+  - 11 scripts with hardcoded `records_new: 0`:
+    1. `scripts/compute-centroids.js:125`
+    2. `scripts/create-pre-permits.js:69`
+    3. `scripts/link-coa.js:236`
+    4. `scripts/link-massing.js:315`
+    5. `scripts/link-similar.js:64`
+    6. `scripts/link-neighbourhoods.js:212`
+    7. `scripts/link-parcels.js:340`
+    8. `scripts/link-wsib.js:31`
+    9. `scripts/load-neighbourhoods.js:588`
+    10. `scripts/quality/assert-data-bounds.js:376`
+    11. `scripts/quality/assert-schema.js:323`
+* **WF5 Audit Reference:** Bug #4 (HIGH severity) — identified 2026-03-11
 
 ## Technical Implementation
-* **WF5 Core:** Runs on bare `WF5` trigger. Test suite, typecheck, dead code, supply chain, verdict.
-* **WF5 code:** logError enforcement, UI viewport audit, coverage check.
-* **WF5 build:** 7-point build health rubric (already exists in CLAUDE.md, just needs subsection trigger).
-* **WF5 prod [section]:** 10-vector production readiness rubric (already exists, needs trigger).
-* **WF5 pipeline:** 5-point pipeline functional validation — execution, CQA, UI accuracy, failure surfacing, recovery.
-* **WF5 manual [feature]:** Spec-driven manual app assessment — read spec, create scenario checklist from behavioral contract, execute each in running app, edge cases, verdict with WF3 filing.
-* **Net change:** ~25 lines added. The existing rubric tables stay in place; they get linked from subsection triggers.
-* **Database Impact:** NO
-* **New/Modified Components:** None
-* **Data Hooks/Libs:** None
 
-## Standards Compliance
+### Approach: SDK Tracking Counters + Script Fixes
+
+**New SDK exports in `scripts/lib/pipeline.js`:**
+- `track(recordsNew, recordsUpdated)` — increment running counters
+- `getTracked()` — return current `{ records_new, records_updated }`
+- Modified `emitSummary(stats)` — validate: if `stats.records_new === 0` but tracked `records_new > 0`, log warning and auto-substitute tracked value
+
+**Per-script changes (9 data scripts):**
+Each script already computes its real count in a local variable. The fix is mechanical — pass the real number instead of 0:
+- `compute-centroids.js`: `records_updated` = centroids computed
+- `create-pre-permits.js`: `records_new` = pre-permits created (currently hardcodes 0 but `records_total` has the count)
+- `link-coa.js`: `records_updated` = linked count
+- `link-massing.js`: `records_updated` = linked count
+- `link-similar.js`: `records_updated` = linked count
+- `link-neighbourhoods.js`: `records_updated` = linked count
+- `link-parcels.js`: `records_updated` = linked count
+- `link-wsib.js`: `records_updated` = matched count
+- `load-neighbourhoods.js`: `records_new` = inserted count
+
+**CQA scripts (2 quality scripts):**
+- `assert-data-bounds.js`: change `records_new: 0` → `records_new: null` (signals "not applicable")
+- `assert-schema.js`: change `records_new: 0` → `records_new: null`
+- `null` tells `getStatusDot()` to skip stale detection (already implemented in FreshnessTimeline.tsx:252)
+
+**Why not wrap the Pool?** Too invasive — parsing SQL for affected rows is fragile, `ON CONFLICT DO UPDATE` returns variable counts, and it changes every script's usage pattern. Scripts already know their counts; they just need to report them.
+
+* **New/Modified Components:** None (backend scripts only)
+* **Data Hooks/Libs:** `scripts/lib/pipeline.js` modified
+* **Database Impact:** NO
+
+## Standards Compliance (Full Inline — all 00_engineering_standards.md sections)
 
 ### §1.1 Mobile-First UI Mandate
-- **Applicability:** NOT APPLICABLE — documentation-only change. Zero `.tsx` files touched.
+- **Status:** NOT APPLICABLE — backend-only changes, zero `.tsx` files modified.
 
 ### §1.2 Component Isolation
-- **Applicability:** NOT APPLICABLE — no UI components.
+- **Status:** NOT APPLICABLE — no UI components.
 
 ### §2.1 The "Unhappy Path" Test Mandate
-- **Applicability:** NOT APPLICABLE — no API routes or integration tests.
+- **Status:** APPLICABLE — new SDK functions need error/edge-case tests.
+- **Plan:** Test `track()` with negative numbers, `emitSummary()` with mismatched tracked vs passed values, counter reset between `run()` invocations.
 
 ### §2.2 The Try-Catch Boundary Rule
-- **Applicability:** NOT APPLICABLE — no API routes.
+- **Status:** NOT APPLICABLE — no API routes created or modified.
 
 ### §2.3 Assumption Documentation
-- **Applicability:** NOT APPLICABLE — no code changes.
+- **Status:** APPLICABLE — `emitSummary()` validation logic will use explicit null checks, not `!` assertions.
 
 ### §3.1 Zero-Downtime Migration Pattern
-- **Applicability:** NOT APPLICABLE — no database changes.
+- **Status:** NOT APPLICABLE — no database schema changes.
 
 ### §3.2 Migration Rollback Safety
-- **Applicability:** NOT APPLICABLE — no migrations.
+- **Status:** NOT APPLICABLE — no migrations.
 
 ### §3.3 Pagination Enforcement
-- **Applicability:** NOT APPLICABLE — no API routes.
+- **Status:** NOT APPLICABLE — no API routes.
 
 ### §4.1 Route Guarding
-- **Applicability:** NOT APPLICABLE — no endpoints.
+- **Status:** NOT APPLICABLE — no endpoints.
 
 ### §4.2 Parameterization
-- **Applicability:** NOT APPLICABLE — no SQL.
+- **Status:** NOT APPLICABLE — no dynamic SQL changes in scripts.
 
 ### §5.1 Typed Factories Only
-- **Applicability:** NOT APPLICABLE — no tests created.
+- **Status:** APPLICABLE — any new test data will use existing factory patterns or raw SDK inputs (no DB mocks needed — SDK tests are pure logic).
 
 ### §5.2 Test File Pattern
-- **Applicability:** NOT APPLICABLE — no test files created. This is a documentation enhancement only.
+- **Status:** APPLICABLE — new tests go in `pipeline-sdk.logic.test.ts` (logic tests for pure SDK functions).
 
 ### §5.3 Red-Green Test Cycle
-- **Applicability:** NOT APPLICABLE — no code to test. CLAUDE.md is a prompt instruction file.
+- **Status:** APPLICABLE — write failing tests for `track()`, `getTracked()`, and `emitSummary()` validation BEFORE implementing.
 
 ### §5.4 Test Data Seeding
-- **Applicability:** NOT APPLICABLE.
+- **Status:** NOT APPLICABLE — no DB scenarios needed.
 
 ### §6.1 logError Mandate
-- **Applicability:** NOT APPLICABLE — no API routes or lib modules.
+- **Status:** NOT APPLICABLE — no API routes or `src/lib/` modules. Pipeline scripts use `pipeline.log.*()` per §9.4.
 
 ### §7.1 Classification Sync Rule
-- **Applicability:** NOT APPLICABLE — not touching classification.
+- **Status:** NOT APPLICABLE — not touching classification logic.
 
 ### §7.2 Scope Classification Sync
-- **Applicability:** NOT APPLICABLE.
+- **Status:** NOT APPLICABLE.
 
 ### §8.1 API Route Export Rule
-- **Applicability:** NOT APPLICABLE.
+- **Status:** NOT APPLICABLE — no route files.
 
 ### §8.2 TypeScript Target Gotchas
-- **Applicability:** NOT APPLICABLE.
+- **Status:** NOT APPLICABLE — all changes are in CommonJS `.js` scripts, not TypeScript.
 
-### §9.1–§9.7 Pipeline & Script Safety
-- **Applicability:** NOT APPLICABLE — no pipeline scripts created or modified.
+### §9.1 Transaction Boundaries
+- **Status:** NOT APPLICABLE — `track()` is an in-memory counter, no DB writes.
 
-## §10 Plan Compliance Checklist
+### §9.2 PostgreSQL Parameter Limit
+- **Status:** NOT APPLICABLE — no new batch inserts.
 
-### If Database Impact = YES:
-⬜ N/A — Database Impact is NO.
+### §9.3 Idempotent Scripts
+- **Status:** PRESERVED — no change to script idempotency. We're only changing what numbers they report, not what they do.
 
-### If API Route Created/Modified:
-⬜ N/A — No API routes.
+### §9.4 Pipeline SDK Mandate
+- **Status:** CORE FOCUS — this task extends the SDK with `track()` and `getTracked()`. All 11 scripts already use the SDK; we're improving how they call `emitSummary()`.
 
-### If UI Component Created/Modified:
-⬜ N/A — No UI components. Documentation only.
+### §9.5 Streaming Ingestion
+- **Status:** NOT APPLICABLE — no ingestion pattern changes.
 
-### If Shared Logic Touched (classification, scoring, scope):
-⬜ N/A — Not touching shared logic.
+### §9.6 Pipeline Manifest
+- **Status:** NOT AFFECTED — manifest.json unchanged. Script file paths don't change.
 
-### If Pipeline Script Created/Modified:
-⬜ N/A — No pipeline scripts.
-
-### Viewport Mocking:
-N/A — Documentation only.
+### §9.7 Pipeline Observability
+- **Status:** NOT AFFECTED — OTel tracing unmodified. `track()` could emit span events in future but not in this task.
 
 ## Execution Plan
-- [ ] **State Verification:** Read current WF5 section in CLAUDE.md. Identify the 1-line manual validation step and existing rubric tables.
-- [ ] **Implementation:** Restructure WF5 in CLAUDE.md:
-  1. Split execution plan into Core steps (always run) + subsection triggers
-  2. Add `WF5 code` subsection definition
-  3. Add `WF5 build` subsection reference (links existing 7-point rubric)
-  4. Add `WF5 prod` subsection reference (links existing 10-vector rubric)
-  5. Add `WF5 pipeline` subsection with 5-point checklist
-  6. Add `WF5 manual [feature]` subsection with spec-driven assessment protocol
-  7. Update Quick Triggers table to show subsection syntax
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass (no code changed, just docs).
-- [ ] **Atomic Commit:** `git commit -m "docs(00_engineering_standards): add WF5 subsection system for manual & pipeline assessment"`.
+
+- [x] **State Verification:** Confirmed 9 scripts need fixes (link-wsib and compute-centroids already correct). Documented exact lines and variables.
+- [x] **Contract Definition:** N/A — no API route changes.
+- [x] **Spec Update:** Updated `docs/specs/37_pipeline_system.md` — §3.1 exports table (track, getTracked, track.reset), §3.2 contract (must report actual counts), §3.5 records_new:null convention. Ran `npm run system-map`.
+- [x] **Schema Evolution:** N/A — no database changes.
+- [x] **Guardrail Test:** Added tests to `src/tests/pipeline-sdk.logic.test.ts` — track() accumulation, getTracked() initial state, track.reset(), script-level assertions for CQA null and load-neighbourhoods variable.
+- [x] **Red Light:** Confirmed new tests failed before implementation.
+- [x] **Implementation:**
+  1. Added `track()`, `getTracked()`, `track.reset()` to `scripts/lib/pipeline.js`
+  2. Fixed `load-neighbourhoods.js`: `records_new: boundaryCount`, `records_updated: profileUpdates`
+  3. Fixed `create-pre-permits.js`: `records_new: null, records_updated: null`
+  4. Fixed `assert-data-bounds.js`: `records_new: null`
+  5. Fixed `assert-schema.js`: `records_new: null`
+  6. Linking scripts (5) already correct — `records_new: 0` is accurate since they only UPDATE
+- [x] **UI Regression Check:** N/A — no UI components modified (Stream B handles that).
+- [x] **Green Light:** `npm run test` — 2102 passed, 13 failed (all pre-existing). `npm run lint -- --fix` clean. → WF6.

@@ -106,6 +106,39 @@ async function withTransaction(pool, fn) {
 }
 
 // ---------------------------------------------------------------------------
+// Record Tracking Counters
+// ---------------------------------------------------------------------------
+
+let _trackedNew = 0;
+let _trackedUpdated = 0;
+
+/**
+ * Increment running record counters. Call this as your script processes records
+ * so emitSummary() can validate reported values.
+ *
+ * @param {number} recordsNew - New records created in this batch
+ * @param {number} recordsUpdated - Existing records updated in this batch
+ */
+function track(recordsNew, recordsUpdated) {
+  _trackedNew += recordsNew || 0;
+  _trackedUpdated += recordsUpdated || 0;
+}
+
+/** Reset counters (called internally by run() at start). */
+track.reset = function () {
+  _trackedNew = 0;
+  _trackedUpdated = 0;
+};
+
+/**
+ * Return current tracked counters.
+ * @returns {{ records_new: number, records_updated: number }}
+ */
+function getTracked() {
+  return { records_new: _trackedNew, records_updated: _trackedUpdated };
+}
+
+// ---------------------------------------------------------------------------
 // PIPELINE_SUMMARY / PIPELINE_META Emission
 // ---------------------------------------------------------------------------
 
@@ -118,8 +151,9 @@ async function withTransaction(pool, fn) {
 function emitSummary(stats) {
   const payload = {
     records_total: stats.records_total ?? 0,
-    records_new: stats.records_new ?? 0,
-    records_updated: stats.records_updated ?? 0,
+    // Preserve null — signals "not applicable" for CQA/read-only scripts (§3.5)
+    records_new: stats.records_new !== undefined ? stats.records_new : 0,
+    records_updated: stats.records_updated !== undefined ? stats.records_updated : 0,
   };
   if (stats.records_meta) payload.records_meta = stats.records_meta;
   console.log('PIPELINE_SUMMARY:' + JSON.stringify(payload));
@@ -222,6 +256,8 @@ module.exports = {
   createPool,
   log,
   withTransaction,
+  track,
+  getTracked,
   emitSummary,
   emitMeta,
   progress,

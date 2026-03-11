@@ -66,7 +66,7 @@ pipeline.run('create-pre-permits', async (pool) => {
   }
 
   console.log('\nDone.');
-  pipeline.emitSummary({ records_total: upcoming, records_new: 0, records_updated: 0 });
+  pipeline.emitSummary({ records_total: upcoming, records_new: null, records_updated: null });
   pipeline.emitMeta(
     { "coa_applications": ["decision", "linked_permit_num", "decision_date", "ward"] },
     {}

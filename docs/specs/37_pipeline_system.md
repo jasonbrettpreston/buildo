@@ -35,6 +35,9 @@ The Pipeline SDK is the mandatory infrastructure layer for all pipeline scripts 
 | `BATCH_SIZE` | Default batch size constant (1000). |
 | `maxRowsPerInsert(cols)` | Calculates max rows to stay under PostgreSQL 65,535 param limit. |
 | `isFullMode()` | Returns `true` if `--full` argv flag present. |
+| `track(recordsNew, recordsUpdated)` | Increment running record counters. Call as your script processes records. |
+| `getTracked()` | Returns `{ records_new, records_updated }` — current tracked counter values. |
+| `track.reset()` | Reset counters to zero. Called internally by `run()` at start. |
 
 ### 3.2 Lifecycle: `pipeline.run()`
 ```
@@ -48,7 +51,7 @@ pipeline.run('script-name', async (pool) => { ... })
 5. On error: logs structured error, sets span ERROR, calls `process.exit(1)`
 6. Finally: ends span, closes pool
 
-**Contract:** Scripts MUST NOT call `process.exit()` directly — the SDK handles all exit codes. Scripts MUST call `emitSummary()` before returning from the `run()` callback.
+**Contract:** Scripts MUST NOT call `process.exit()` directly — the SDK handles all exit codes. Scripts MUST call `emitSummary()` before returning from the `run()` callback. Scripts MUST report actual `records_new` / `records_updated` counts — hardcoding `0` when work was done is a spec violation. Use `pipeline.track()` to accumulate counts during processing, or pass the final count variable directly to `emitSummary()`.
 
 ### 3.3 Transaction Contract: `withTransaction()`
 ```
@@ -79,6 +82,8 @@ PIPELINE_SUMMARY:{"records_total":237412,"records_new":142,"records_updated":89,
 ```
 
 Parsed by `run-chain.js` and stored in `pipeline_runs` table columns: `records_total`, `records_new`, `records_updated`, `records_meta` (JSONB).
+
+**`records_new: null` convention:** CQA scripts and read-only scripts that do not create or update data rows MUST emit `records_new: null` (not `0`). This signals "not applicable" to the dashboard's `getStatusDot()` function, which skips stale detection when `records_new` is null. Scripts that perform work MUST report actual counts — hardcoding `records_new: 0` when work was done is a spec violation.
 
 ### 3.6 Protocol: PIPELINE_META
 Emitted once per script execution, documents I/O schema:

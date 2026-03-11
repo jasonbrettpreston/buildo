@@ -585,7 +585,7 @@ pipeline.run('load-neighbourhoods', async (pool) => {
   console.log(`Neighbourhoods: ${boundaryCount}`);
   console.log(`Profile updates: ${profileUpdates}`);
   console.log(`Duration:       ${elapsed}s`);
-  pipeline.emitSummary({ records_total: boundaryCount, records_new: 0, records_updated: boundaryCount + profileUpdates });
+  pipeline.emitSummary({ records_total: boundaryCount, records_new: boundaryCount, records_updated: profileUpdates });
   pipeline.emitMeta(
     { "City GeoJSON": ["AREA_SHORT_CODE", "AREA_NAME", "geometry"], "Census XLSX": ["income", "tenure", "demographics"] },
     { "neighbourhoods": ["neighbourhood_id", "name", "geometry", "geom", "avg_household_income", "median_household_income", "avg_individual_income", "low_income_pct", "tenure_owner_pct", "tenure_renter_pct", "period_of_construction", "couples_pct", "lone_parent_pct", "married_pct", "university_degree_pct", "immigrant_pct", "visible_minority_pct", "english_knowledge_pct"] }
