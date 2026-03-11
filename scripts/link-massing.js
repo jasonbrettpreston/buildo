@@ -2,11 +2,17 @@
 /**
  * Link parcels to building footprints via point-in-polygon matching.
  *
+ * B13 optimization: loads all building footprints into an in-memory grid
+ * index (0.003° cells, ~333m) for O(1) candidate lookup per parcel.
+ * Eliminates the N+1 per-parcel DB queries that took 48+ min in full mode.
+ *
  * For each parcel with a centroid:
- *   1. BBOX pre-filter: find building footprints within ±0.003° (~333m)
- *   2. Point-in-polygon: test if parcel centroid falls inside each building polygon
- *   3. Classify: largest polygon = primary, rest by area thresholds
- *   4. Insert into parcel_buildings junction table
+ *   1. Grid lookup: find building footprints in same + adjacent grid cells
+ *   2. BBOX pre-filter: narrow candidates within ±0.003°
+ *   3. Point-in-polygon: test parcel centroid + edge midpoints against each candidate
+ *   4. Nearest fallback: haversine distance ≤50m when no polygon match
+ *   5. Classify: largest polygon = primary, rest by area thresholds
+ *   6. Insert into parcel_buildings junction table
  *
  * Uses @turf/boolean-point-in-polygon for accurate spatial testing.
  *
@@ -17,7 +23,7 @@ const booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default;
 const { point: turfPoint } = require('@turf/helpers');
 
 const BATCH_SIZE = 500;
-const BBOX_OFFSET = 0.003; // ~333m pre-filter radius
+const GRID_SIZE = 0.003; // ~333m grid cells (same as old BBOX_OFFSET)
 const SHED_THRESHOLD_SQM = 20;
 const GARAGE_MAX_SQM = 60;
 const NEAREST_MAX_DISTANCE_M = 50;
@@ -82,12 +88,73 @@ function getTestPoints(parcel) {
   return points;
 }
 
+// ---------------------------------------------------------------------------
+// Grid-based spatial index (B13)
+// ---------------------------------------------------------------------------
+
+/** Compute grid cell key for a lat/lng coordinate. */
+function gridKey(lat, lng) {
+  const r = Math.floor(lat / GRID_SIZE);
+  const c = Math.floor(lng / GRID_SIZE);
+  return `${r}:${c}`;
+}
+
+/** Get the 9 grid cell keys (center + 8 neighbours) for a coordinate. */
+function gridNeighbourKeys(lat, lng) {
+  const r = Math.floor(lat / GRID_SIZE);
+  const c = Math.floor(lng / GRID_SIZE);
+  const keys = [];
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      keys.push(`${r + dr}:${c + dc}`);
+    }
+  }
+  return keys;
+}
+
 pipeline.run('link-massing', async (pool) => {
   const FULL_MODE = pipeline.isFullMode();
 
   console.log('=== Buildo Parcel-Building Linker ===');
   console.log(`Mode: ${FULL_MODE ? 'FULL (rescan all parcels)' : 'INCREMENTAL (unlinked parcels only)'}`);
   console.log('');
+
+  // -----------------------------------------------------------------------
+  // Phase 1: Load all building footprints into in-memory grid index
+  // -----------------------------------------------------------------------
+  console.log('Loading building footprints into memory...');
+  const loadStart = Date.now();
+  const bfResult = await pool.query(
+    `SELECT id, geometry, footprint_area_sqm, centroid_lat, centroid_lng
+     FROM building_footprints
+     WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL`
+  );
+  const totalBuildings = bfResult.rows.length;
+
+  // Build grid index: Map<cellKey, building[]>
+  const grid = new Map();
+  for (const row of bfResult.rows) {
+    const lat = parseFloat(row.centroid_lat);
+    const lng = parseFloat(row.centroid_lng);
+    const key = gridKey(lat, lng);
+    if (!grid.has(key)) grid.set(key, []);
+    grid.get(key).push({
+      id: row.id,
+      geometry: row.geometry,
+      footprint_area_sqm: parseFloat(row.footprint_area_sqm) || 0,
+      centroid_lat: lat,
+      centroid_lng: lng,
+    });
+  }
+  // Free the raw result rows — grid now owns the data
+  bfResult.rows.length = 0;
+
+  const loadElapsed = ((Date.now() - loadStart) / 1000).toFixed(1);
+  console.log(`  Loaded ${totalBuildings.toLocaleString()} buildings into ${grid.size.toLocaleString()} grid cells (${loadElapsed}s)`);
+
+  // -----------------------------------------------------------------------
+  // Phase 2: Process parcels in batches
+  // -----------------------------------------------------------------------
 
   // Count parcels to process
   const baseFilter = 'centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL';
@@ -99,10 +166,6 @@ pipeline.run('link-massing', async (pool) => {
   );
   const totalParcels = parseInt(countResult.rows[0].total, 10);
   console.log(`Parcels to process:     ${totalParcels.toLocaleString()}`);
-
-  // Count building footprints
-  const bfCount = await pool.query('SELECT COUNT(*) as total FROM building_footprints');
-  console.log(`Building footprints:    ${parseInt(bfCount.rows[0].total, 10).toLocaleString()}`);
 
   // Count already linked
   const linkedCount = await pool.query('SELECT COUNT(*) as total FROM parcel_buildings');
@@ -141,16 +204,23 @@ pipeline.run('link-massing', async (pool) => {
       const lat = parseFloat(parcel.centroid_lat);
       const lng = parseFloat(parcel.centroid_lng);
 
-      // BBOX pre-filter: find building footprints near this parcel
-      const candidates = await pool.query(
-        `SELECT id, geometry, footprint_area_sqm, centroid_lat, centroid_lng
-         FROM building_footprints
-         WHERE centroid_lat BETWEEN $1::numeric - $3::numeric AND $1::numeric + $3::numeric
-           AND centroid_lng BETWEEN $2::numeric - $3::numeric AND $2::numeric + $3::numeric`,
-        [lat, lng, BBOX_OFFSET]
-      );
+      // Grid lookup: find candidate buildings in same + adjacent cells
+      const candidateKeys = gridNeighbourKeys(lat, lng);
+      const candidates = [];
+      for (const key of candidateKeys) {
+        const cell = grid.get(key);
+        if (cell) {
+          for (const b of cell) {
+            // BBOX pre-filter within ±GRID_SIZE of parcel centroid
+            if (Math.abs(b.centroid_lat - lat) <= GRID_SIZE &&
+                Math.abs(b.centroid_lng - lng) <= GRID_SIZE) {
+              candidates.push(b);
+            }
+          }
+        }
+      }
 
-      if (candidates.rows.length === 0) {
+      if (candidates.length === 0) {
         noMatch++;
         processed++;
         continue;
@@ -160,7 +230,7 @@ pipeline.run('link-massing', async (pool) => {
       const testPoints = getTestPoints(parcel);
       const matchedBuildings = [];
 
-      for (const building of candidates.rows) {
+      for (const building of candidates) {
         const geom = building.geometry;
         if (!geom || !geom.type || !geom.coordinates) continue;
 
@@ -204,7 +274,7 @@ pipeline.run('link-massing', async (pool) => {
         if (hitLabel) {
           matchedBuildings.push({
             building_id: building.id,
-            footprint_area_sqm: parseFloat(building.footprint_area_sqm) || 0,
+            footprint_area_sqm: building.footprint_area_sqm,
             match_type: hitLabel === 'centroid' ? 'polygon' : 'multipoint',
             confidence: hitLabel === 'centroid' ? 0.90 : 0.80,
           });
@@ -217,16 +287,15 @@ pipeline.run('link-massing', async (pool) => {
         let nearestDist = Infinity;
         let nearestArea = 0;
 
-        for (const building of candidates.rows) {
-          if (building.centroid_lat == null || building.centroid_lng == null) continue;
+        for (const building of candidates) {
           const dist = haversineDistance(
             [lng, lat],
-            [parseFloat(building.centroid_lng), parseFloat(building.centroid_lat)]
+            [building.centroid_lng, building.centroid_lat]
           );
           if (dist < nearestDist) {
             nearestDist = dist;
             nearestId = building.id;
-            nearestArea = parseFloat(building.footprint_area_sqm) || 0;
+            nearestArea = building.footprint_area_sqm;
           }
         }
 

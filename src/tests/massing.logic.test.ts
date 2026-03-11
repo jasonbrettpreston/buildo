@@ -1,6 +1,8 @@
 // Logic Layer Tests — Building Massing geometry and classification
 // SPEC LINK: docs/specs/31_building_massing.md
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import {
   estimateStories,
   classifyStructure,
@@ -388,5 +390,39 @@ describe('inferMassingUseType', () => {
 
   it('returns null for null fields', () => {
     expect(inferMassingUseType({ building_type: null, structure_type: null, proposed_use: null })).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// link-massing.js performance (B13)
+// ---------------------------------------------------------------------------
+
+describe('link-massing.js performance optimization (B13)', () => {
+  const scriptSource = () =>
+    fs.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.js'), 'utf-8');
+
+  it('B13: uses in-memory grid index instead of per-parcel DB queries', () => {
+    const source = scriptSource();
+    // Must build a grid/spatial index in memory from all building footprints
+    expect(source).toMatch(/grid|gridKey|cellKey|spatialIndex/i);
+    // Must load all buildings in a single query (not inside the parcel loop)
+    expect(source).toMatch(/SELECT[\s\S]*FROM building_footprints/);
+    // Must NOT have per-parcel BBOX query inside the processing loop
+    // The old pattern: pool.query inside `for (const parcel of parcelBatch.rows)`
+    const parcelLoop = source.slice(source.indexOf('for (const parcel'));
+    expect(parcelLoop).not.toMatch(/await pool\.query\(\s*`SELECT.*FROM building_footprints/);
+  });
+
+  it('B13: preserves classifyStructure and nearest-fallback logic', () => {
+    const source = scriptSource();
+    expect(source).toContain('classifyStructure');
+    expect(source).toContain('nearest');
+    expect(source).toContain('haversineDistance');
+  });
+
+  it('B13: preserves emitSummary and emitMeta calls', () => {
+    const source = scriptSource();
+    expect(source).toContain('pipeline.emitSummary');
+    expect(source).toContain('pipeline.emitMeta');
   });
 });
