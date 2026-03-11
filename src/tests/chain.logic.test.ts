@@ -770,3 +770,30 @@ describe('Sources chain registration completeness (Bug C11)', () => {
     expect(manifest.chains.sources).toEqual(uiSlugs);
   });
 });
+
+describe('API Route Chain Row Ownership (B2/B9/B10)', () => {
+  const routeSource = () => fs.readFileSync(
+    path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
+    'utf-8'
+  );
+
+  it('B2: API callback skips status/error_message overwrite for chain slugs', () => {
+    const source = routeSource();
+    // The callback should check isChain and skip the UPDATE for chains,
+    // since run-chain.js manages its own row status and error_message.
+    expect(source).toMatch(/isChain[\s\S]{0,500}skip|isChain[\s\S]{0,500}chain.*manages|!isChain[\s\S]{0,200}UPDATE pipeline_runs/);
+  });
+
+  it('B9: stale-run cleanup marks orphaned running rows as failed', () => {
+    const source = routeSource();
+    // Before starting a new run, there should be a sweep that marks
+    // old running rows (older than timeout) as failed — not just same-slug cancellation.
+    expect(source).toMatch(/running[\s\S]{0,300}(stale|orphan|timeout|older|interval)/i);
+  });
+
+  it('B6: no empty catch blocks in API route', () => {
+    const source = routeSource();
+    // Every catch block should have logError or meaningful handling
+    expect(source).not.toMatch(/catch\s*\{[\s]*\/[\/*]\s*(Non-fatal|non-fatal)[\s\S]{0,30}\}/);
+  });
+});

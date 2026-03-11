@@ -99,8 +99,23 @@ export async function POST(
          AND pipeline = $1`,
       [slug]
     );
-  } catch {
-    // Non-fatal — proceed if table doesn't exist
+  } catch (err) {
+    logError(`[pipelines/${slug}]`, err, { event: 'cancel_stale_failed' });
+  }
+
+  // Stale-run cleanup: mark any orphaned 'running' rows older than the timeout
+  // threshold as failed. This catches processes killed by timeout, server restart,
+  // or crash where the callback never fired to update the row.
+  try {
+    await query(
+      `UPDATE pipeline_runs
+       SET status = 'failed', error_message = 'Process timed out or orphaned — cleaned up on next run', completed_at = NOW()
+       WHERE status = 'running'
+         AND started_at < NOW() - INTERVAL '70 minutes'`,
+      []
+    );
+  } catch (err) {
+    logError(`[pipelines/${slug}]`, err, { event: 'stale_orphan_cleanup_failed' });
   }
 
   // Insert tracking row for ALL pipelines (including chains) so the row exists
@@ -134,16 +149,25 @@ export async function POST(
       { timeout, env: process.env },
       async (err, stdout, stderr) => {
         runningProcesses.delete(slug);
+
+        if (err) {
+          logError(`[pipelines/${slug}]`, err, { event: 'script_failed', run_id: runId, stderr: stderr?.slice(0, 2000) });
+        }
+
+        // For chain slugs, skip the status/error_message UPDATE — run-chain.js
+        // manages its own row. The chain script sets status (completed/failed/cancelled)
+        // and a clean error_message directly. If we overwrite here, we'd replace it
+        // with raw stderr content (assert_schema warnings, JSON log entries, etc.).
+        // The stale-run cleanup (above) handles the case where the chain process
+        // dies without updating its row (timeout, crash).
+        if (isChain) return;
+
         const durationMs = Date.now() - startMs;
         const status = err ? 'failed' : 'completed';
         // Prefer stderr for error details, fall back to err.message
         const errorMsg = err
           ? (stderr?.trim() || err.message).slice(0, 4000)
           : null;
-
-        if (err) {
-          logError(`[pipelines/${slug}]`, err, { event: 'script_failed', run_id: runId, stderr: stderr?.slice(0, 2000) });
-        }
 
         // Parse PIPELINE_SUMMARY from stdout for record counts
         let recordsTotal: number | null = null;
