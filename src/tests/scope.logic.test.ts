@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import {
   classifyProjectType,
   extractScopeTags,
@@ -2033,5 +2035,25 @@ describe('Demolition tag — all DM permits', () => {
     }));
     expect(result.scope_tags).toContain('demolition');
     expect(result.scope_tags).toContain('residential');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// classify-scope.js BLD→Companion propagation guard
+// ---------------------------------------------------------------------------
+
+describe('classify-scope.js BLD→Companion propagation', () => {
+  const scriptSource = () =>
+    fs.readFileSync(path.resolve(__dirname, '../../scripts/classify-scope.js'), 'utf-8');
+
+  it('uses IS DISTINCT FROM guard on propagation UPDATE', () => {
+    const source = scriptSource();
+    // The propagation UPDATE must include IS DISTINCT FROM to avoid
+    // unconditionally updating all ~80K companion permits every run
+    const propagationBlock = source.slice(
+      source.indexOf('BLD→Companion Scope Propagation'),
+      source.indexOf('Re-add demolition tag')
+    );
+    expect(propagationBlock).toMatch(/IS DISTINCT FROM/);
   });
 });
