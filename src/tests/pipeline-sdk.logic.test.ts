@@ -613,6 +613,19 @@ describe('Pipeline SDK', () => {
         expect(fullEarlyBlock).toMatch(/emitSummary/);
         expect(fullEarlyBlock).toMatch(/emitMeta/);
       });
+
+      it('load-wsib.js emits summary/meta when no --file arg in chain context', () => {
+        const source = fs2.readFileSync(path.join(scriptDir2, 'load-wsib.js'), 'utf-8');
+        // When running in a chain without --file, the script must gracefully skip
+        // with emitSummary/emitMeta instead of process.exit(1)
+        const noFileIdx = source.indexOf('--file');
+        expect(noFileIdx).toBeGreaterThan(-1);
+        // There must be an emitSummary call in the no-file/chain-skip path
+        // (before any process.exit or as an alternative path)
+        const chainSkipBlock = source.slice(0, source.indexOf('process.exit'));
+        expect(chainSkipBlock).toMatch(/emitSummary/);
+        expect(chainSkipBlock).toMatch(/emitMeta/);
+      });
   });
 });
 

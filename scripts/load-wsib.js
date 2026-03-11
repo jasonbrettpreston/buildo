@@ -64,6 +64,16 @@ pipeline.run('load-wsib', async (pool) => {
   const args = process.argv.slice(2);
   const fileIdx = args.indexOf('--file');
   if (fileIdx === -1 || !args[fileIdx + 1]) {
+    // When running inside a chain, skip gracefully instead of crashing
+    if (CHAIN_ID) {
+      console.log('No --file argument provided (chain context). Skipping WSIB load.');
+      pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+      pipeline.emitMeta(
+        { "WSIB CSV": ["legal_name", "trade_name", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size"] },
+        { "wsib_registry": ["legal_name", "trade_name", "legal_name_normalized", "trade_name_normalized", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size", "last_seen_at"] }
+      );
+      return;
+    }
     console.error('Usage: node scripts/load-wsib.js --file <path-to-csv>');
     process.exit(1);
   }
