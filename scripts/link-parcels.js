@@ -337,7 +337,7 @@ pipeline.run('link-parcels', async (pool) => {
   console.log(`No match found:       ${noMatch.toLocaleString()}`);
   console.log(`Duration:             ${elapsed}s`);
 
-  pipeline.emitSummary({ records_total: totalLinked, records_new: totalLinked, records_updated: 0 });
+  pipeline.emitSummary({ records_total: totalLinked, records_new: 0, records_updated: totalLinked });
   pipeline.emitMeta(
     { "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"], "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"] },
     { "permit_parcels": ["permit_num", "revision_num", "parcel_id", "match_type", "confidence", "linked_at"] }

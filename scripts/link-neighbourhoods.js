@@ -209,7 +209,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
   console.log(`Successfully linked: ${linked.toLocaleString()} (${((linked / Math.max(processed, 1)) * 100).toFixed(1)}%)`);
   console.log(`No match found:      ${noMatch.toLocaleString()}`);
   console.log(`Duration:            ${elapsed}s`);
-  pipeline.emitSummary({ records_total: linked, records_new: linked, records_updated: 0 });
+  pipeline.emitSummary({ records_total: linked, records_new: 0, records_updated: linked });
   pipeline.emitMeta(
     { "permits": ["permit_num", "revision_num", "latitude", "longitude", "neighbourhood_id"], "neighbourhoods": ["id", "neighbourhood_id", "name", "geometry"], "parcels": ["id", "geometry"] },
     { "permits": ["neighbourhood_id"] }

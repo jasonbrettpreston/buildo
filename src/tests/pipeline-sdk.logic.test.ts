@@ -284,6 +284,75 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
+  // Tracing (§9.7) — no-op when @opentelemetry/api not installed
+  // -----------------------------------------------------------------------
+  describe('tracing', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const tracing = require(path.resolve(__dirname, '../../scripts/lib/tracing'));
+
+    it('exports getTracer, isEnabled, SpanStatusCode', () => {
+      expect(typeof tracing.getTracer).toBe('function');
+      expect(typeof tracing.isEnabled).toBe('function');
+      expect(tracing.SpanStatusCode).toBeDefined();
+      expect(tracing.SpanStatusCode.OK).toBeDefined();
+      expect(tracing.SpanStatusCode.ERROR).toBeDefined();
+    });
+
+    it('returns no-op tracer when @opentelemetry/api is not installed', () => {
+      const tracer = tracing.getTracer('test');
+      expect(tracer).toBeDefined();
+      // No-op tracer should return a span with no-op methods
+      const span = tracer.startSpan('test-span');
+      expect(span).toBeDefined();
+      expect(typeof span.setAttribute).toBe('function');
+      expect(typeof span.end).toBe('function');
+      expect(span.isRecording()).toBe(false);
+      span.end(); // should not throw
+    });
+
+    it('startActiveSpan calls the callback with a span', () => {
+      const tracer = tracing.getTracer('test');
+      let called = false;
+      tracer.startActiveSpan('test-span', (span: { setAttribute: (k: string, v: string) => void; end: () => void }) => {
+        called = true;
+        expect(span).toBeDefined();
+        expect(typeof span.setAttribute).toBe('function');
+        span.end();
+      });
+      expect(called).toBe(true);
+    });
+
+    it('isEnabled returns false when OTel is not configured', () => {
+      expect(tracing.isEnabled()).toBe(false);
+    });
+
+    it('NOOP_SPAN methods are chainable (setAttribute returns this)', () => {
+      const span = tracing.NOOP_SPAN;
+      const result = span.setAttribute('key', 'value');
+      expect(result).toBe(span);
+    });
+
+    it('withTransaction still works with no-op tracing', async () => {
+      const queries: string[] = [];
+      const mockClient = {
+        query: vi.fn(async (sql: string) => { queries.push(sql); }),
+        release: vi.fn(),
+      };
+      const mockPool = {
+        connect: vi.fn(async () => mockClient),
+      };
+
+      const result = await pipeline.withTransaction(mockPool, async () => {
+        return 'success';
+      });
+
+      expect(result).toBe('success');
+      expect(queries).toEqual(['BEGIN', 'COMMIT']);
+      expect(mockClient.release).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // All scripts import SDK
   // -----------------------------------------------------------------------
   describe('script SDK adoption', () => {
@@ -340,6 +409,91 @@ describe('Pipeline SDK', () => {
       it(`${script} uses pipeline.emitMeta()`, () => {
         const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
         expect(content).toContain('pipeline.emitMeta(');
+      });
+    }
+
+    // run-chain.js is the orchestrator — it uses SDK for pool/logging but not pipeline.run()
+    it('run-chain.js imports the pipeline SDK', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'run-chain.js'), 'utf-8');
+      expect(content).toContain("require('./lib/pipeline')");
+    });
+
+    it('run-chain.js uses pipeline.createPool()', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'run-chain.js'), 'utf-8');
+      expect(content).toContain('pipeline.createPool()');
+    });
+
+    it('run-chain.js has no bare new Pool() instantiation', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'run-chain.js'), 'utf-8');
+      expect(content).not.toMatch(/new Pool\(/);
+    });
+
+    it('run-chain.js uses pipeline.log for error handling', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'run-chain.js'), 'utf-8');
+      expect(content).toContain('pipeline.log.error(');
+      expect(content).toContain('pipeline.log.warn(');
+    });
+
+    // §3.5 — Linking scripts must report records_new: 0 (they only UPDATE, never INSERT)
+    const LINKING_SCRIPTS = [
+      'link-parcels.js',
+      'link-neighbourhoods.js',
+      'link-massing.js',
+    ];
+    for (const script of LINKING_SCRIPTS) {
+      it(`${script} emitSummary reports records_new: 0 (UPDATE-only script)`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        // Extract the emitSummary call
+        const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
+        expect(match).not.toBeNull();
+        const summaryBody = match![1];
+        // records_new must be 0 — these scripts link/update, they don't insert new rows
+        expect(summaryBody).toMatch(/records_new:\s*0/);
+      });
+    }
+
+    // SQL Parameterization — no raw user values interpolated in SQL (§4.2)
+    it('load-permits.js uses make_interval instead of template literal for duration', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'load-permits.js'), 'utf-8');
+      // The sync_runs INSERT must use parameterized duration, not template literal
+      expect(content).toContain('make_interval');
+      expect(content).not.toMatch(/interval '\$\{duration\}/);
+    });
+
+    // N+1 elimination — Tier 3 FTS must use batched approach (§3 Scalability)
+    it('link-coa.js uses batched FTS instead of per-row queries', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'link-coa.js'), 'utf-8');
+      // Must use unnest + LATERAL for batch matching
+      expect(content).toContain('unnest');
+      expect(content).toContain('CROSS JOIN LATERAL');
+      // Must NOT have per-row FTS inside a for loop (N+1 pattern)
+      // The old pattern had client.query inside a for(i) loop with tsQuery per row
+      expect(content).not.toMatch(/for\s*\([^)]*i\s*<\s*remaining\.rows\.length/);
+    });
+
+    // Empty catch blocks — all scripts must log errors, not swallow them
+    it('refresh-snapshot.js has no empty catch blocks', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'refresh-snapshot.js'), 'utf-8');
+      // Match catch blocks with empty or whitespace-only bodies: catch { } or catch (e) { }
+      expect(content).not.toMatch(/catch\s*(\([^)]*\))?\s*\{\s*\}/);
+    });
+
+    // Quality scripts use SDK for pool creation but have unique lifecycle (chain-context)
+    const QUALITY_SCRIPTS = ['quality/assert-schema.js', 'quality/assert-data-bounds.js'];
+    for (const script of QUALITY_SCRIPTS) {
+      it(`${script} imports the pipeline SDK`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        expect(content).toContain("require('../lib/pipeline')");
+      });
+
+      it(`${script} uses pipeline.createPool()`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        expect(content).toContain('pipeline.createPool()');
+      });
+
+      it(`${script} has no bare new Pool() instantiation`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        expect(content).not.toMatch(/new Pool\(/);
       });
     }
   });
