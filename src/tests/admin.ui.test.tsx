@@ -1108,19 +1108,16 @@ describe('FreshnessTimeline funnel accordion', () => {
     expect(source).toContain('stroke-red-500');
   });
 
-  it('shows both All Time and Last Run panels stacked (no toggle)', () => {
+  it('accordion does NOT render FunnelAllTimePanel or FunnelLastRunPanel (B4: replaced by DataFlowTile telemetry)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    // Both panels rendered simultaneously in accordion
-    expect(source).toContain('All Time');
+    // All Time and Last Run funnel panels removed — DataFlowTile + telemetry replaces them
+    expect(source).not.toContain('FunnelAllTimePanel');
+    expect(source).not.toContain('FunnelLastRunPanel');
+    // Non-funnel fallback "Last Run" block still exists for steps without DataFlowTile
     expect(source).toContain('Last Run');
-    expect(source).toContain('FunnelAllTimePanel');
-    expect(source).toContain('FunnelLastRunPanel');
-    // Toggle is removed — no funnelViewMode prop
-    expect(source).not.toContain('funnelViewMode');
-    expect(source).not.toContain('onFunnelViewModeChange');
   });
 
   it('non-funnel steps always show status in drill-down (even with no run data)', () => {

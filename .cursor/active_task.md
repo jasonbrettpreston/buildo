@@ -1,41 +1,42 @@
-# Active Task: Add per-step summary to Chain Completion Report
+# Active Task: Remove redundant All Time / Last Run tiles (B4)
 **Status:** Implementation
 
 ## Context
-* **Goal:** The Chain Completion Report tile currently only shows aggregate ins/upd/del totals. After a chain completes, the user wants to see what each step did — records_total/new/updated, duration, and whether steps were skipped (gate abort). This data already exists in `pipelineLastRun` per scoped step key.
+* **Goal:** The step accordion renders three tile zones: DataFlowTile (live telemetry), FunnelAllTimePanel (snapshot-derived), and FunnelLastRunPanel (snapshot-derived). Now that DataFlowTile shows live reads/writes, row count deltas (T1), pg_stat mutations (T2), and NULL fill rates (T4) from actual pipeline runs, the All Time and Last Run panels are redundant and sometimes contradict the live data. Remove them.
 * **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `src/components/FreshnessTimeline.tsx` — Chain Completion Report (lines 514-567)
+  - `src/components/FreshnessTimeline.tsx` — renders tiles at lines 891-966
+  - `src/components/funnel/FunnelPanels.tsx` — component definitions
+  - `src/tests/admin.ui.test.tsx` — structural tests referencing both panels
   - `src/tests/chain.logic.test.ts` — chain behavior tests
-  - `src/tests/admin.ui.test.tsx` — UI pattern tests
 
 ## Technical Implementation
 
 ### Current behavior
-The report shows: `{chain.label} Completed | {duration} | +N inserted | N updated | N deleted | No rows impacted`
+Each step accordion shows three zones:
+1. **DataFlowTile** — live source→target with PIPELINE_META + telemetry (T1/T2/T4)
+2. **All Time** — FunnelAllTimePanel (baseline/intersection/yield from snapshot)
+3. **Last Run** — FunnelLastRunPanel (funnel sources) or inline status/duration/records (non-funnel)
 
 ### New behavior
-Add a collapsible per-step table below the aggregate summary. Each step row shows:
-- Step name (from `chain.steps[i].label`)
-- Status indicator: completed (green dot), skipped (gray), or the step's `records_new`/`records_updated` counts
-- Duration
-- Gate-skipped steps (those with old timestamps vs the chain's `last_run_at`) shown as "Skipped" in gray
-
-The step data comes from `pipelineLastRun[${chain.id}:${step.slug}]` which has `status`, `records_total`, `records_new`, `records_updated`, `duration_ms`, and `last_run_at`.
-
-A step is considered "ran in this chain" if its `last_run_at` is close to the chain's `last_run_at` (within the chain duration window). Otherwise it was skipped.
+- Remove zone 2 (All Time) entirely — lines 891-897
+- Remove zone 3's funnel branch (FunnelLastRunPanel) — lines 899-904
+- Keep zone 3's non-funnel fallback (inline status/duration/records/error + CQA metadata) — this serves steps that don't have STEP_DESCRIPTIONS entries and thus no DataFlowTile
+- Remove `FunnelAllTimePanel` and `FunnelLastRunPanel` imports from FreshnessTimeline.tsx
+- Keep component definitions in FunnelPanels.tsx (dead code cleanup is a separate task)
+- Update tests that assert these panels are rendered in the accordion
 
 ## Standards Compliance
 * **Try-Catch Boundary:** N/A — no API routes.
 * **Unhappy Path Tests:** N/A — no API routes.
 * **logError Mandate:** N/A — no API routes.
-* **Mobile-First:** Report table uses `flex flex-col` base layout, stacks naturally on mobile.
+* **Mobile-First:** Remaining tiles use existing mobile-first layout (base `flex-col`, `md:grid-cols-3`).
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** Git commit `e3748f6`
-- [ ] **State Verification:** Confirmed via WF5: CoA completion report shows "No rows impacted" with no per-step breakdown.
-- [ ] **Spec Review:** Spec 28 documents pipeline chain orchestrator with step-level tracking.
-- [ ] **Reproduction:** Add test asserting Chain Completion Report includes per-step rows.
+- [x] **Rollback Anchor:** Git commit `fb775be`
+- [x] **State Verification:** Current accordion shows All Time + Last Run tiles for funnel steps (confirmed via WF5 manual audit).
+- [x] **Spec Review:** Spec 28 §3 documents all three zones. The spec describes DataFlowTile as the primary drill-down, with All Time/Last Run as supplementary.
+- [ ] **Reproduction:** Add test asserting accordion does NOT render FunnelAllTimePanel/FunnelLastRunPanel.
 - [ ] **Red Light:** New test must fail against current code.
-- [ ] **Fix:** Add per-step summary table to the Chain Completion Report IIFE in FreshnessTimeline.tsx.
+- [ ] **Fix:** Remove FunnelAllTimePanel and FunnelLastRunPanel from FreshnessTimeline.tsx accordion. Remove unused imports.
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FunnelRowData } from '@/lib/admin/funnel';
 import { STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP } from '@/lib/admin/funnel';
-import { CircularBadge, FunnelAllTimePanel, FunnelLastRunPanel, DataFlowTile, Sparkline, type SparklineRun, type TelemetryData } from './funnel/FunnelPanels';
+import { CircularBadge, DataFlowTile, Sparkline, type SparklineRun, type TelemetryData } from './funnel/FunnelPanels';
 
 // ---------------------------------------------------------------------------
 // Pipeline Registry — single source of truth for all tracked pipelines
@@ -888,21 +888,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           />
                         )}
 
-                        {/* All Time tile (funnel sources only) */}
-                        {funnelRow && (
-                          <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">All Time</h4>
-                            <FunnelAllTimePanel row={funnelRow} />
-                          </div>
-                        )}
-
-                        {/* Last Run tile */}
-                        {funnelRow ? (
-                          <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Last Run</h4>
-                            <FunnelLastRunPanel row={funnelRow} />
-                          </div>
-                        ) : (
+                        {/* Last Run tile (non-funnel steps without DataFlowTile) */}
+                        {!funnelRow && (
                           <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                             <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Last Run</h4>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
