@@ -12,7 +12,7 @@
 | **`WF1`** | Genesis | "Plan a new feature." |
 | **`WF2`** | Enhance | "Change, refactor, delete, wire, or lock existing code." |
 | **`WF3`** | Fix | "Fix a bug." |
-| **`WF5`** | Audit | "Audit code, specs, quality, security, or performance." |
+| **`WF5`** | Audit | "Audit." Append: `code`, `build`, `prod`, `pipeline`, `manual [feature]` |
 | **`WF6`** | Review | "Review, harden, and commit." |
 | **`WF11`**| Launch | "Safe start / recovery." |
 
@@ -182,23 +182,79 @@ response (not just in active_task.md):
 ---
 
 ## WF5: Audit
-**Trigger:** User prompt starting with `WF5`, or "Audit the system", "Check quality", "Evaluate security", "Ready to merge", "Audit build", "Audit performance".
+**Trigger:** `WF5` alone runs Core. Append a keyword to activate a focused subsection.
 
-*This workflow absorbs former Manual Validation, Quality Rubric, and Build & Performance Audit workflows.*
+| Trigger | Subsection | What It Does |
+| :--- | :--- | :--- |
+| `WF5` | Core | Test suite, typecheck, dead code, supply chain, verdict |
+| `WF5 code` | Code Quality | logError enforcement, viewport audit, coverage check |
+| `WF5 build` | Build Health | 7-point rubric (build time, bundle size, circular deps, etc.) |
+| `WF5 prod [section]` | Production Readiness | 10-vector rubric scored per feature/module |
+| `WF5 pipeline` | Pipeline Validation | 5-point functional check of chains + CQA + admin UI |
+| `WF5 manual [feature]` | Manual App Assessment | Spec-driven scenario testing in the running app |
 
-### Execution Plan
+### Core (always runs)
 ```
 - [ ] **Spec Alignment:** Run `node scripts/audit_all_specs.mjs` (or `--spec=NN_name`). Review `docs/reports/full_spec_audit_report.md`. For each discrepancy found, file WF3.
 - [ ] **Test Suite:** Run `npm run test` — all tests must pass.
 - [ ] **Type Check:** Run `npm run typecheck` — must be 0 errors.
 - [ ] **Dead Code Scan:** Run `npm run dead-code` (knip) — review unused files, exports, and dependencies.
 - [ ] **Supply Chain Security:** Run `npm audit`. Zero "High" or "Critical" vulnerabilities allowed.
+- [ ] **Verdict:** Output "GO" (Green) or "NO-GO" (Red) with specific blockers.
+```
+
+### Subsection: `WF5 code`
+```
 - [ ] **Coverage Check:** Are there any untested critical paths (scoring, classification, sync)?
 - [ ] **logError Enforcement:** Grep `src/app/api/` for bare `console.error` — zero instances allowed in server route files. Every catch block must import and use `logError` from `src/lib/logger.ts`.
 - [ ] **UI Viewport Audit:** Identify 3 critical shared components and verify their `*.ui.test.tsx` files test narrow-viewport rendering (375px) and touch-target dimensions (>= 44px).
-- [ ] **Build Health (if requested):** Score against the rubric below. Run `npm run build` (measure time). Run `npx madge --circular --extensions ts,tsx src`. Review `next.config.js` for misconfigurations. Run `ANALYZE=true npm run build` for bundle anatomy. Output `docs/reports/audit_[date].md`.
-- [ ] **Manual Validation (if requested):** Read spec, create atomic scenario checkboxes, execute each step. If any step fails: STOP → file WF3.
-- [ ] **Verdict:** Output "GO" (Green) or "NO-GO" (Red) with specific blockers.
+- [ ] **Verdict:** List gaps found. For each, file WF3.
+```
+
+### Subsection: `WF5 build`
+```
+- [ ] **Build:** Run `npm run build` (measure time).
+- [ ] **Circular Deps:** Run `npx madge --circular --extensions ts,tsx src`.
+- [ ] **Config Review:** Review `next.config.js` for misconfigurations.
+- [ ] **Bundle Anatomy:** Run `ANALYZE=true npm run build`.
+- [ ] **Score:** Rate each metric against the 7-Point Build Health Rubric below.
+- [ ] **Report:** Output `docs/reports/audit_[date].md`.
+```
+
+### Subsection: `WF5 prod [section]`
+```
+- [ ] **Scope:** Identify the feature/module/subsystem to audit.
+- [ ] **Score:** Rate each of the 10 Production Readiness Vectors below (0-3).
+- [ ] **Threshold:** All vectors >= 1, average >= 1.5. Any 0 blocks release.
+- [ ] **Report:** Output scored table with justification per vector.
+```
+
+### Subsection: `WF5 pipeline`
+```
+- [ ] **Execution:** Run each chain (permits, coa, sources) — all complete without crash.
+- [ ] **Data Quality:** CQA gates pass (assert-schema + assert-data-bounds).
+- [ ] **UI Accuracy:** Admin panel reflects actual pipeline state (running/completed/failed match DB).
+- [ ] **Failure Surfacing:** Trigger a pipeline failure → health banner turns yellow/red.
+- [ ] **Recovery:** Re-run the failed pipeline → succeeds, banner returns to green.
+- [ ] **Verdict:** X/5 checks passed. For each failure, file WF3.
+```
+
+### Subsection: `WF5 manual [feature]`
+```
+- [ ] **Read Spec:** Load `docs/specs/[feature].md`. Identify the Behavioral Contract
+      or functional requirements section.
+- [ ] **Scenario Checklist:** Create one checkbox per spec requirement. Each scenario
+      must be atomic (single user action → expected outcome).
+- [ ] **Execute Scenarios:** For each scenario in the running app:
+      - Execute the user action
+      - Record PASS or FAIL with description of actual vs. expected behavior
+      - Any FAIL → file WF3 immediately (with bug name, repro steps, expected behavior)
+- [ ] **Edge Cases:** Test scenarios NOT in the spec but implied by the UI:
+      - Concurrent triggers (double-click, rapid navigation)
+      - Missing/empty data states (no results, null fields)
+      - Error responses (network failure, API 500)
+      - Mobile viewport (375px width, touch targets)
+- [ ] **Verdict:** X/Y scenarios passed. List all WF3s filed with bug names.
 ```
 
 ### Build Health Rubric (7-Point)
