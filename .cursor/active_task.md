@@ -1,42 +1,36 @@
-# Active Task: Remove redundant All Time / Last Run tiles (B4)
-**Status:** Implementation
+# Active Task: Fix misleading health banner "failed in last 24h" label (B5)
+**Status:** Planning
 
 ## Context
-* **Goal:** The step accordion renders three tile zones: DataFlowTile (live telemetry), FunnelAllTimePanel (snapshot-derived), and FunnelLastRunPanel (snapshot-derived). Now that DataFlowTile shows live reads/writes, row count deltas (T1), pg_stat mutations (T2), and NULL fill rates (T4) from actual pipeline runs, the All Time and Last Run panels are redundant and sometimes contradict the live data. Remove them.
+* **Goal:** `computeSystemHealth()` in `src/lib/quality/types.ts` pushes the message `"N pipelines failed in last 24h"` but the actual query (in `/api/quality` route) selects pipelines whose **latest run** has `status = 'failed'` — no 24h time filter. The label is misleading. Fix it to accurately describe what the query returns.
 * **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `src/components/FreshnessTimeline.tsx` — renders tiles at lines 891-966
-  - `src/components/funnel/FunnelPanels.tsx` — component definitions
-  - `src/tests/admin.ui.test.tsx` — structural tests referencing both panels
-  - `src/tests/chain.logic.test.ts` — chain behavior tests
+  - `src/lib/quality/types.ts` — `computeSystemHealth()` line 491
+  - `src/app/api/quality/route.ts` — pipeline failure query lines 60-80
+  - `src/tests/quality.logic.test.ts` — test asserting message text
 
 ## Technical Implementation
 
 ### Current behavior
-Each step accordion shows three zones:
-1. **DataFlowTile** — live source→target with PIPELINE_META + telemetry (T1/T2/T4)
-2. **All Time** — FunnelAllTimePanel (baseline/intersection/yield from snapshot)
-3. **Last Run** — FunnelLastRunPanel (funnel sources) or inline status/duration/records (non-funnel)
+- Query: `DISTINCT ON (pipeline) ... ORDER BY started_at DESC WHERE status = 'failed'` — gets latest run per pipeline, filters to failed ones. No time window.
+- Message: `"N pipelines failed in last 24h"` — implies a 24h window that doesn't exist.
 
 ### New behavior
-- Remove zone 2 (All Time) entirely — lines 891-897
-- Remove zone 3's funnel branch (FunnelLastRunPanel) — lines 899-904
-- Keep zone 3's non-funnel fallback (inline status/duration/records/error + CQA metadata) — this serves steps that don't have STEP_DESCRIPTIONS entries and thus no DataFlowTile
-- Remove `FunnelAllTimePanel` and `FunnelLastRunPanel` imports from FreshnessTimeline.tsx
-- Keep component definitions in FunnelPanels.tsx (dead code cleanup is a separate task)
-- Update tests that assert these panels are rendered in the accordion
+- Change message from `"N pipelines failed in last 24h"` to `"N pipelines have a failed latest run"`
+- Update test assertion to match new message text
+- No query change needed — the query logic is correct (checking latest run, not historical)
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — no API routes.
-* **Unhappy Path Tests:** N/A — no API routes.
-* **logError Mandate:** N/A — no API routes.
-* **Mobile-First:** Remaining tiles use existing mobile-first layout (base `flex-col`, `md:grid-cols-3`).
+* **Try-Catch Boundary:** N/A — no API route changes.
+* **Unhappy Path Tests:** N/A — no API route changes.
+* **logError Mandate:** N/A — no API route changes.
+* **Mobile-First:** N/A — text-only change in shared logic.
 
 ## Execution Plan
-- [x] **Rollback Anchor:** Git commit `fb775be`
-- [x] **State Verification:** Current accordion shows All Time + Last Run tiles for funnel steps (confirmed via WF5 manual audit).
-- [x] **Spec Review:** Spec 28 §3 documents all three zones. The spec describes DataFlowTile as the primary drill-down, with All Time/Last Run as supplementary.
-- [ ] **Reproduction:** Add test asserting accordion does NOT render FunnelAllTimePanel/FunnelLastRunPanel.
-- [ ] **Red Light:** New test must fail against current code.
-- [ ] **Fix:** Remove FunnelAllTimePanel and FunnelLastRunPanel from FreshnessTimeline.tsx accordion. Remove unused imports.
+- [ ] **Rollback Anchor:** Git commit `994e5b5`
+- [ ] **State Verification:** Current message says "failed in last 24h" per code inspection.
+- [ ] **Spec Review:** Spec 28 §3 says health banner shows pipeline status — no specific wording mandated.
+- [ ] **Reproduction:** Update test to assert the corrected message; must fail against current code.
+- [ ] **Red Light:** New test fails.
+- [ ] **Fix:** Change message string in `computeSystemHealth()`.
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.

@@ -995,7 +995,7 @@ describe('computeSystemHealth()', () => {
     expect(health.warnings[0]).toContain('Connection refused');
   });
 
-  it('returns red when 2+ pipeline failures in last 24h', () => {
+  it('returns red when 2+ pipelines have a failed latest run', () => {
     const snapshot = createMockDataQualitySnapshot({
       violations_total: 0,
       sla_permits_ingestion_hours: 6,
@@ -1007,7 +1007,7 @@ describe('computeSystemHealth()', () => {
     const health = computeSystemHealth(snapshot, [], [], [], failures);
     expect(health.level).toBe('red');
     expect(health.issues).toHaveLength(1);
-    expect(health.issues[0]).toContain('2 pipelines failed');
+    expect(health.issues[0]).toContain('2 pipelines have a failed latest run');
   });
 
   it('truncates long error messages in pipeline failure warnings', () => {

@@ -486,9 +486,9 @@ export function computeSystemHealth(
     warnings.push(`Slow pipeline: ${d.pipeline} took ${curSec}s (avg: ${avgSec}s, ${d.ratio}x slower)`);
   }
 
-  // Check pipeline failures (last 24h)
+  // Check pipeline failures (latest run per pipeline)
   if (pipelineFailures.length >= 2) {
-    issues.push(`${pipelineFailures.length} pipelines failed in last 24h`);
+    issues.push(`${pipelineFailures.length} pipelines have a failed latest run`);
   } else if (pipelineFailures.length === 1) {
     const f = pipelineFailures[0];
     const msg = f.error_message.length > 120
