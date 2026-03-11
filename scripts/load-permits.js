@@ -29,9 +29,13 @@ function trimToNull(v) {
 
 function parseDate(v) {
   if (!v || String(v).trim() === '') return null;
-  const ms = Date.parse(String(v).trim());
-  if (isNaN(ms)) return null;
-  return new Date(ms);
+  const s = String(v).trim();
+  // Extract YYYY-MM-DD only — avoids timezone-dependent Date.parse() which
+  // treats "2021-10-18" as UTC but "2021-10-18T00:00:00" as local time,
+  // producing different hashes for the same logical date.
+  const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (!m) return null;
+  return m[1];
 }
 
 function cleanCost(v) {
@@ -174,9 +178,34 @@ async function insertBatch(client, batch) {
     INSERT INTO permits (${cols.join(',')})
     VALUES ${placeholders.join(',\n')}
     ON CONFLICT (permit_num, revision_num) DO UPDATE SET
+      permit_type = EXCLUDED.permit_type,
+      structure_type = EXCLUDED.structure_type,
+      work = EXCLUDED.work,
+      street_num = EXCLUDED.street_num,
+      street_name = EXCLUDED.street_name,
+      street_type = EXCLUDED.street_type,
+      street_direction = EXCLUDED.street_direction,
+      city = EXCLUDED.city,
+      postal = EXCLUDED.postal,
+      geo_id = EXCLUDED.geo_id,
+      building_type = EXCLUDED.building_type,
+      category = EXCLUDED.category,
+      application_date = EXCLUDED.application_date,
+      issued_date = EXCLUDED.issued_date,
+      completed_date = EXCLUDED.completed_date,
       status = EXCLUDED.status,
       description = EXCLUDED.description,
       est_const_cost = EXCLUDED.est_const_cost,
+      builder_name = EXCLUDED.builder_name,
+      owner = EXCLUDED.owner,
+      dwelling_units_created = EXCLUDED.dwelling_units_created,
+      dwelling_units_lost = EXCLUDED.dwelling_units_lost,
+      ward = EXCLUDED.ward,
+      council_district = EXCLUDED.council_district,
+      current_use = EXCLUDED.current_use,
+      proposed_use = EXCLUDED.proposed_use,
+      housing_units = EXCLUDED.housing_units,
+      storeys = EXCLUDED.storeys,
       data_hash = EXCLUDED.data_hash,
       last_seen_at = NOW(),
       raw_json = EXCLUDED.raw_json
