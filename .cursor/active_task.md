@@ -1,42 +1,41 @@
-# Active Task: Fix API route chain row overwrite + stale run cleanup
+# Active Task: Add per-step summary to Chain Completion Report
 **Status:** Implementation
 
 ## Context
-* **Goal:** Fix three related bugs in the pipeline trigger API: (B2) API callback overwrites chain rows that `run-chain.js` already manages, replacing clean error_message with raw stderr. (B9) When API timeout kills a chain, the callback fails to update the DB — row stuck as `running` forever. (B10) No periodic cleanup for orphaned `running` rows where the process is dead.
+* **Goal:** The Chain Completion Report tile currently only shows aggregate ins/upd/del totals. After a chain completes, the user wants to see what each step did — records_total/new/updated, duration, and whether steps were skipped (gate abort). This data already exists in `pipelineLastRun` per scoped step key.
 * **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `src/app/api/admin/pipelines/[slug]/route.ts` — execFile callback (lines 131-177), timeout (line 129)
-  - `scripts/run-chain.js` — chain self-manages its own row
+  - `src/components/FreshnessTimeline.tsx` — Chain Completion Report (lines 514-567)
   - `src/tests/chain.logic.test.ts` — chain behavior tests
+  - `src/tests/admin.ui.test.tsx` — UI pattern tests
 
 ## Technical Implementation
 
-### Bug B2: API route overwrites chain rows
-**Current:** The execFile callback (line 135) ALWAYS fires after the chain process exits and runs `UPDATE pipeline_runs SET status=$1, error_message=$3 WHERE id=$4`. For chains, `run-chain.js` already updates the same row at lines 297-302 with correct status and a clean error_message. The API callback then overwrites it — replacing "Stopped at step: X" with raw stderr content (assert_schema FAIL messages, JSON log entries).
+### Current behavior
+The report shows: `{chain.label} Completed | {duration} | +N inserted | N updated | N deleted | No rows impacted`
 
-**Fix:** For chain slugs (`isChain === true`), the callback should NOT overwrite `status` or `error_message` — the chain script owns those fields. The callback should only log errors. For non-chain individual pipelines, the callback continues to work as-is (those scripts don't manage their own tracking row).
+### New behavior
+Add a collapsible per-step table below the aggregate summary. Each step row shows:
+- Step name (from `chain.steps[i].label`)
+- Status indicator: completed (green dot), skipped (gray), or the step's `records_new`/`records_updated` counts
+- Duration
+- Gate-skipped steps (those with old timestamps vs the chain's `last_run_at`) shown as "Skipped" in gray
 
-### Bug B9: Timeout kills chain, DB stuck as `running`
-**Current:** API route sets `timeout: 3_600_000` (1 hour) for chains. When the timeout fires, Node kills the child process. The callback should fire with `err` and update the row to `failed`. But `child.unref()` (line 184) combined with Next.js HMR causes the async callback to lose its DB connection context — the UPDATE never executes. Result: row permanently stuck as `running`.
+The step data comes from `pipelineLastRun[${chain.id}:${step.slug}]` which has `status`, `records_total`, `records_new`, `records_updated`, `duration_ms`, and `last_run_at`.
 
-**Fix:** For chains, since `run-chain.js` manages its own row, the API callback doesn't need to update status. But for the timeout case specifically, `run-chain.js` never gets to its finalization code (it's killed). So we need a safety net: a stale-run sweep that detects orphaned rows.
-
-### Bug B10: No stale-run cleanup
-**Current:** Only cleanup is force-cancel on new run for same slug (lines 94-104). No periodic detection of dead processes.
-
-**Fix:** Add a stale-run check at the START of every chain/pipeline trigger. Before starting a new run, check for any `running` rows older than the timeout threshold and mark them as `failed` with error_message "Process timed out — cleaned up on next run".
+A step is considered "ran in this chain" if its `last_run_at` is close to the chain's `last_run_at` (within the chain duration window). Otherwise it was skipped.
 
 ## Standards Compliance
-* **Try-Catch Boundary:** Existing try-catch in API route at line 121. No new routes.
-* **Unhappy Path Tests:** Test that chain callback skips status overwrite. Test that stale run cleanup fires.
-* **logError Mandate:** Existing logError calls. Will add logError to empty catch at line 102 (B6).
-* **Mobile-First:** N/A — backend-only fix.
+* **Try-Catch Boundary:** N/A — no API routes.
+* **Unhappy Path Tests:** N/A — no API routes.
+* **logError Mandate:** N/A — no API routes.
+* **Mobile-First:** Report table uses `flex flex-col` base layout, stacks naturally on mobile.
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** Git commit `861b6b4`
-- [ ] **State Verification:** Confirmed via WF5: chain_permits row 458 stuck as `running` with dead process. chain_coa error_message was overwritten by stderr content.
-- [ ] **Spec Review:** Spec 28 §3 documents pipeline chain orchestrator. API route is the trigger mechanism.
-- [ ] **Reproduction:** Add tests: (1) chain callback should not overwrite status/error_message for chain slugs, (2) stale run cleanup marks old `running` rows as failed.
-- [ ] **Red Light:** New tests must fail against current code.
-- [ ] **Fix:** Modify `route.ts`: skip chain row overwrite in callback for chain slugs; add stale-run cleanup before each trigger; fix empty catch at line 102.
+- [ ] **Rollback Anchor:** Git commit `e3748f6`
+- [ ] **State Verification:** Confirmed via WF5: CoA completion report shows "No rows impacted" with no per-step breakdown.
+- [ ] **Spec Review:** Spec 28 documents pipeline chain orchestrator with step-level tracking.
+- [ ] **Reproduction:** Add test asserting Chain Completion Report includes per-step rows.
+- [ ] **Red Light:** New test must fail against current code.
+- [ ] **Fix:** Add per-step summary table to the Chain Completion Report IIFE in FreshnessTimeline.tsx.
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.

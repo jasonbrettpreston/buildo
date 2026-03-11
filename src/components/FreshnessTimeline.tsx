@@ -511,18 +511,31 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                 );
               })()}
 
-              {/* Chain Completion Report — aggregated DB impact summary */}
+              {/* Chain Completion Report — aggregated DB impact + per-step summary */}
               {(() => {
                 const chainInfo = pipelineLastRun[chainSlug];
                 if (!chainInfo || chainInfo.status !== 'completed' || isChainRunning) return null;
+                const chainStartMs = chainInfo.last_run_at ? new Date(chainInfo.last_run_at).getTime() : 0;
                 // Aggregate T2 pg_stats across all chain steps
                 let totalIns = 0;
                 let totalUpd = 0;
                 let totalDel = 0;
                 let hasAnyTelemetry = false;
+                // Build per-step summary data
+                const stepRows: { label: string; slug: string; ranThisChain: boolean; records_new: number | null; records_updated: number | null; duration_ms: number | null }[] = [];
                 for (const step of chain.steps) {
                   const scopedKey = `${chain.id}:${step.slug}`;
                   const stepInfo = pipelineLastRun[scopedKey];
+                  const stepStartMs = stepInfo?.last_run_at ? new Date(stepInfo.last_run_at).getTime() : 0;
+                  const ranThisChain = stepStartMs >= chainStartMs && chainStartMs > 0;
+                  stepRows.push({
+                    label: PIPELINE_REGISTRY[step.slug]?.name ?? step.slug,
+                    slug: step.slug,
+                    ranThisChain,
+                    records_new: ranThisChain ? (stepInfo?.records_new ?? null) : null,
+                    records_updated: ranThisChain ? (stepInfo?.records_updated ?? null) : null,
+                    duration_ms: ranThisChain ? (stepInfo?.duration_ms ?? null) : null,
+                  });
                   const telemetry = (stepInfo?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
                   if (telemetry?.pg_stats) {
                     hasAnyTelemetry = true;
@@ -533,35 +546,68 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     }
                   }
                 }
-                if (!hasAnyTelemetry) return null;
                 return (
-                  <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-                    <span className="text-[10px] font-semibold text-green-700 uppercase tracking-wider">
-                      {chain.label} Completed
-                    </span>
-                    <span className="text-[10px] tabular-nums text-gray-600">
-                      {formatDuration(chainInfo.duration_ms)}
-                    </span>
-                    {totalIns > 0 && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium tabular-nums">
-                        +{totalIns.toLocaleString()} inserted
+                  <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <span className="text-[10px] font-semibold text-green-700 uppercase tracking-wider">
+                        {chain.label} Completed
                       </span>
-                    )}
-                    {totalUpd > 0 && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium tabular-nums">
-                        {totalUpd.toLocaleString()} updated
+                      <span className="text-[10px] tabular-nums text-gray-600">
+                        {formatDuration(chainInfo.duration_ms)}
                       </span>
-                    )}
-                    {totalDel > 0 && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium tabular-nums">
-                        {totalDel.toLocaleString()} deleted
-                      </span>
-                    )}
-                    {totalIns === 0 && totalUpd === 0 && totalDel === 0 && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 font-medium">
-                        No rows impacted
-                      </span>
-                    )}
+                      {totalIns > 0 && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium tabular-nums">
+                          +{totalIns.toLocaleString()} inserted
+                        </span>
+                      )}
+                      {totalUpd > 0 && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium tabular-nums">
+                          {totalUpd.toLocaleString()} updated
+                        </span>
+                      )}
+                      {totalDel > 0 && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium tabular-nums">
+                          {totalDel.toLocaleString()} deleted
+                        </span>
+                      )}
+                      {hasAnyTelemetry && totalIns === 0 && totalUpd === 0 && totalDel === 0 && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 font-medium">
+                          No rows impacted
+                        </span>
+                      )}
+                    </div>
+                    {/* Per-step breakdown */}
+                    <div className="mt-2 flex flex-col gap-0.5">
+                      {stepRows.map((s, i) => (
+                        <div key={s.slug} className="flex items-center gap-2 text-[9px] tabular-nums">
+                          <span className="text-gray-400 w-3 text-right">{i + 1}</span>
+                          {s.ranThisChain ? (
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                          ) : (
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+                          )}
+                          <span className={`flex-1 min-w-0 truncate ${s.ranThisChain ? 'text-gray-700' : 'text-gray-400'}`}>
+                            {s.label}
+                          </span>
+                          {s.ranThisChain ? (
+                            <>
+                              {s.records_new != null && s.records_new > 0 && (
+                                <span className="text-green-600">+{s.records_new.toLocaleString()}</span>
+                              )}
+                              {s.records_updated != null && s.records_updated > 0 && (
+                                <span className="text-blue-600">{s.records_updated.toLocaleString()} upd</span>
+                              )}
+                              {(s.records_new == null || s.records_new === 0) && (s.records_updated == null || s.records_updated === 0) && (
+                                <span className="text-gray-400">&mdash;</span>
+                              )}
+                              <span className="text-gray-400 w-12 text-right">{formatDuration(s.duration_ms)}</span>
+                            </>
+                          ) : (
+                            <span className="text-gray-400 italic">Skipped</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 );
               })()}
