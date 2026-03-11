@@ -109,16 +109,16 @@ describe('WSIB Registry Infrastructure', () => {
   });
 
   describe('Chain Orchestrator', () => {
-    const chainPath = path.resolve(__dirname, '../../scripts/run-chain.js');
+    const manifestPath = path.resolve(__dirname, '../../scripts/manifest.json');
 
-    it('run-chain.js contains load_wsib in PIPELINE_SCRIPTS', () => {
-      const content = fs.readFileSync(chainPath, 'utf-8');
-      expect(content).toContain('load_wsib');
+    it('manifest.json contains load_wsib in scripts', () => {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      expect(manifest.scripts).toHaveProperty('load_wsib');
     });
 
-    it('run-chain.js contains link_wsib in PIPELINE_SCRIPTS', () => {
-      const content = fs.readFileSync(chainPath, 'utf-8');
-      expect(content).toContain('link_wsib');
+    it('manifest.json contains link_wsib in scripts', () => {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      expect(manifest.scripts).toHaveProperty('link_wsib');
     });
   });
 

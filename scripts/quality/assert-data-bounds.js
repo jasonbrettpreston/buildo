@@ -11,15 +11,9 @@
  * Exit 0 = pass (warnings are OK)
  * Exit 1 = fail (errors detected — orphans, duplicates, or critical nulls)
  */
-const { Pool } = require('pg');
+const pipeline = require('../lib/pipeline');
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
+const pool = pipeline.createPool();
 
 const SLUG = 'assert_data_bounds';
 

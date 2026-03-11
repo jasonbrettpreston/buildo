@@ -169,7 +169,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
               (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings) as parcels_with_buildings`
     );
     massing = { footprints_total: parseInt(m.rows[0].footprints_total), parcels_with_buildings: parseInt(m.rows[0].parcels_with_buildings) };
-  } catch {}
+  } catch (err) { pipeline.log.warn('[refresh-snapshot]', `Massing query failed: ${err.message}`); }
 
   // 13. Null counts (active permits only)
   const nulls = await pool.query(
@@ -210,7 +210,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
        GROUP BY table_name ORDER BY table_name`
     );
     for (const row of schemaCols.rows) schemaColumnCounts[row.table_name] = parseInt(row.col_count);
-  } catch {}
+  } catch (err) { pipeline.log.warn('[refresh-snapshot]', `Schema column count query failed: ${err.message}`); }
 
   // 16. SLA metrics
   let slaHours = null;
@@ -219,7 +219,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
       `SELECT EXTRACT(EPOCH FROM (NOW() - MAX(first_seen_at))) / 3600 as hours FROM permits`
     );
     slaHours = sla.rows[0]?.hours ? Math.round(parseFloat(sla.rows[0].hours) * 100) / 100 : null;
-  } catch {}
+  } catch (err) { pipeline.log.warn('[refresh-snapshot]', `SLA query failed: ${err.message}`); }
 
   // UPSERT snapshot
   await pipeline.withTransaction(pool, async (client) => {

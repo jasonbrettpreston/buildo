@@ -1160,8 +1160,9 @@ describe('Health Banner in DataQualityDashboard', () => {
       path.join(__dirname, '../components/DataQualityDashboard.tsx'),
       'utf-8'
     );
-    expect(source).toContain('data.health.issues');
-    expect(source).toContain('data.health.warnings');
+    // Health is destructured as a prop — access via health.issues, not data.health.issues
+    expect(source).toContain('health.issues');
+    expect(source).toContain('health.warnings');
   });
 });
 
@@ -1903,25 +1904,24 @@ describe('4-Pillar Architecture — chain_entities registration', () => {
     expect(source).toContain('chain_entities');
   });
 
-  it('run-chain.js defines entities chain with enrichment steps', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/run-chain.js'), 'utf-8'
-    );
-    expect(source).toMatch(/entities\s*:/);
-    expect(source).toContain('enrich_wsib_builders');
-    expect(source).toContain('enrich_named_builders');
+  it('manifest.json defines entities chain with enrichment steps', () => {
+    const manifest = JSON.parse(fs.readFileSync(
+      path.join(__dirname, '../../scripts/manifest.json'), 'utf-8'
+    ));
+    expect(manifest.chains.entities).toBeDefined();
+    const entitySteps = manifest.chains.entities;
+    expect(entitySteps).toContain('enrich_wsib_builders');
+    expect(entitySteps).toContain('enrich_named_builders');
   });
 
-  it('run-chain.js permits chain does NOT contain enrichment steps', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/run-chain.js'), 'utf-8'
-    );
-    // Extract the permits array block from source
-    const permitsMatch = source.match(/permits\s*:\s*\[([\s\S]*?)\]/);
-    expect(permitsMatch).not.toBeNull();
-    const permitsBlock = permitsMatch![1];
-    expect(permitsBlock).not.toContain('enrich_wsib_builders');
-    expect(permitsBlock).not.toContain('enrich_named_builders');
+  it('manifest.json permits chain does NOT contain enrichment steps', () => {
+    const manifest = JSON.parse(fs.readFileSync(
+      path.join(__dirname, '../../scripts/manifest.json'), 'utf-8'
+    ));
+    const permitsSteps = manifest.chains.permits;
+    expect(permitsSteps).toBeDefined();
+    expect(permitsSteps).not.toContain('enrich_wsib_builders');
+    expect(permitsSteps).not.toContain('enrich_named_builders');
   });
 });
 

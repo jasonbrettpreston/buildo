@@ -12,15 +12,9 @@
  * Exit 0 = pass (all expected columns present)
  * Exit 1 = fail (missing columns detected)
  */
-const { Pool } = require('pg');
+const pipeline = require('../lib/pipeline');
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
+const pool = pipeline.createPool();
 
 const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
 

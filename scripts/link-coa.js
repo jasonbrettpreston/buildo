@@ -99,8 +99,7 @@ pipeline.run('link-coa', async (pool) => {
   console.log(`  Linked: ${fuzzy.toLocaleString()} (confidence 0.60)`);
 
   // ------------------------------------------------------------------
-  // Tier 3: Description FTS — sequential for remaining unmatched
-  // (FTS queries are per-app because each app has unique keywords)
+  // Tier 3: Description FTS — batched via unnest + CROSS JOIN LATERAL
   // ------------------------------------------------------------------
   console.log('Tier 3: Description similarity matching...');
   const remaining = await pool.query(`
@@ -113,87 +112,100 @@ pipeline.run('link-coa', async (pool) => {
   `);
   console.log(`  Candidates: ${remaining.rows.length.toLocaleString()}`);
 
+  // Build ts_query strings for each candidate (JS-side keyword extraction)
+  const candidates = [];
+  for (const app of remaining.rows) {
+    const keywords = app.description
+      .toUpperCase()
+      .replace(/[^A-Z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter((w) => w.length > 3)
+      .slice(0, 8);
+    if (keywords.length < 2) continue;
+    candidates.push({ id: app.id, ward: app.ward, tsQuery: keywords.join(' & ') });
+  }
+  console.log(`  Filterable candidates: ${candidates.length.toLocaleString()}`);
+
   let descErrors = 0;
+  const BATCH_SIZE = 500;
   if (!dryRun) {
-    await pipeline.withTransaction(pool, async (client) => {
-      for (let i = 0; i < remaining.rows.length; i++) {
-        const app = remaining.rows[i];
-        const keywords = app.description
-          .toUpperCase()
-          .replace(/[^A-Z0-9\s]/g, ' ')
-          .split(/\s+/)
-          .filter((w) => w.length > 3)
-          .slice(0, 8);
-
-        if (keywords.length < 2) continue;
-
-        const tsQuery = keywords.join(' & ');
-
-        try {
-          const rows = await client.query(
-            `SELECT permit_num,
-                    ts_rank(to_tsvector('english', COALESCE(description, '')), to_tsquery('english', $1)) AS rank
-             FROM permits
-             WHERE to_tsvector('english', COALESCE(description, '')) @@ to_tsquery('english', $1)
-               AND ward = $2
-             ORDER BY rank DESC
-             LIMIT 1`,
-            [tsQuery, app.ward]
-          );
-          if (rows.rows.length === 0) continue;
-
-          const rank = Number(rows.rows[0].rank) || 0;
-          const confidence = Math.min(0.50, 0.30 + rank * 0.1);
-
-          await client.query(
-            `UPDATE coa_applications
-             SET linked_permit_num = $1, linked_confidence = $2, last_seen_at = NOW()
-             WHERE id = $3`,
-            [rows.rows[0].permit_num, confidence, app.id]
-          );
-          desc++;
-        } catch {
-          descErrors++;
-        }
-
-        if ((i + 1) % 1000 === 0) {
-          console.log(`  Progress: ${(i + 1).toLocaleString()} / ${remaining.rows.length.toLocaleString()} — ${desc} matched`);
-        }
-      }
-    });
-  } else {
-    // Dry run: still iterate to count potential matches but use pool for reads
-    for (let i = 0; i < remaining.rows.length; i++) {
-      const app = remaining.rows[i];
-      const keywords = app.description
-        .toUpperCase()
-        .replace(/[^A-Z0-9\s]/g, ' ')
-        .split(/\s+/)
-        .filter((w) => w.length > 3)
-        .slice(0, 8);
-
-      if (keywords.length < 2) continue;
-
-      const tsQuery = keywords.join(' & ');
+    for (let offset = 0; offset < candidates.length; offset += BATCH_SIZE) {
+      const batch = candidates.slice(offset, offset + BATCH_SIZE);
+      const ids = batch.map((c) => c.id);
+      const wards = batch.map((c) => c.ward);
+      const queries = batch.map((c) => c.tsQuery);
 
       try {
-        const rows = await pool.query(
-          `SELECT permit_num,
-                  ts_rank(to_tsvector('english', COALESCE(description, '')), to_tsquery('english', $1)) AS rank
-           FROM permits
-           WHERE to_tsvector('english', COALESCE(description, '')) @@ to_tsquery('english', $1)
-             AND ward = $2
-           ORDER BY rank DESC
-           LIMIT 1`,
-          [tsQuery, app.ward]
-        );
-        if (rows.rows.length > 0) desc++;
+        await pipeline.withTransaction(pool, async (client) => {
+          const result = await client.query(`
+            WITH candidates AS (
+              SELECT * FROM unnest($1::int[], $2::text[], $3::text[])
+                AS t(coa_id, ward, ts_query)
+            )
+            UPDATE coa_applications ca
+            SET linked_permit_num = matched.permit_num,
+                linked_confidence = LEAST(0.50, 0.30 + matched.rank * 0.1),
+                last_seen_at = NOW()
+            FROM (
+              SELECT DISTINCT ON (c.coa_id) c.coa_id, p.permit_num, lat.rank
+              FROM candidates c
+              CROSS JOIN LATERAL (
+                SELECT permit_num,
+                       ts_rank(to_tsvector('english', COALESCE(description, '')),
+                               to_tsquery('english', c.ts_query)) AS rank
+                FROM permits
+                WHERE to_tsvector('english', COALESCE(description, '')) @@ to_tsquery('english', c.ts_query)
+                  AND ward = c.ward
+                ORDER BY ts_rank(to_tsvector('english', COALESCE(description, '')),
+                                 to_tsquery('english', c.ts_query)) DESC
+                LIMIT 1
+              ) lat
+              ORDER BY c.coa_id
+            ) matched
+            WHERE ca.id = matched.coa_id
+          `, [ids, wards, queries]);
+          desc += result.rowCount || 0;
+        });
+      } catch (err) {
+        descErrors++;
+        pipeline.log.warn('[link-coa]', `Tier 3 batch at offset ${offset} failed: ${err.message}`);
+      }
+
+      if ((offset + BATCH_SIZE) % 2000 === 0 || offset + BATCH_SIZE >= candidates.length) {
+        console.log(`  Progress: ${Math.min(offset + BATCH_SIZE, candidates.length).toLocaleString()} / ${candidates.length.toLocaleString()} — ${desc} matched`);
+      }
+    }
+  } else {
+    // Dry run: count potential matches via read-only batched LATERAL
+    for (let offset = 0; offset < candidates.length; offset += BATCH_SIZE) {
+      const batch = candidates.slice(offset, offset + BATCH_SIZE);
+      const ids = batch.map((c) => c.id);
+      const wards = batch.map((c) => c.ward);
+      const queries = batch.map((c) => c.tsQuery);
+
+      try {
+        const result = await pool.query(`
+          WITH candidates AS (
+            SELECT * FROM unnest($1::int[], $2::text[], $3::text[])
+              AS t(coa_id, ward, ts_query)
+          )
+          SELECT COUNT(*) as cnt
+          FROM candidates c
+          CROSS JOIN LATERAL (
+            SELECT permit_num
+            FROM permits
+            WHERE to_tsvector('english', COALESCE(description, '')) @@ to_tsquery('english', c.ts_query)
+              AND ward = c.ward
+            LIMIT 1
+          ) lat
+        `, [ids, wards, queries]);
+        desc += parseInt(result.rows[0].cnt, 10);
       } catch {
         descErrors++;
       }
 
-      if ((i + 1) % 1000 === 0) {
-        console.log(`  Progress: ${(i + 1).toLocaleString()} / ${remaining.rows.length.toLocaleString()} — ${desc} matched`);
+      if ((offset + BATCH_SIZE) % 2000 === 0 || offset + BATCH_SIZE >= candidates.length) {
+        console.log(`  Progress: ${Math.min(offset + BATCH_SIZE, candidates.length).toLocaleString()} / ${candidates.length.toLocaleString()} — ${desc} matched`);
       }
     }
   }
