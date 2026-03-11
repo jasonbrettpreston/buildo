@@ -296,9 +296,35 @@ export function DataQualityDashboard() {
 
   // On initial load, seed runningPipelines from DB state so buttons are
   // disabled immediately if a chain is already running in the background.
+  // If full stats times out, fall back to the lightweight /api/admin/pipelines/status
+  // endpoint so pipeline_last_run is always populated (B15).
   useEffect(() => {
-    fetchData().then((statsData) => {
-      if (!statsData) return;
+    fetchData().then(async (statsData) => {
+      // If stats timed out, seed pipeline_last_run from lightweight endpoint
+      if (!statsData) {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+          const res = await fetch('/api/admin/pipelines/status', { signal: ctrl.signal });
+          clearTimeout(timer);
+          const fallback: { pipeline_last_run: Record<string, PipelineRunInfo> } = await res.json();
+          if (fallback?.pipeline_last_run) {
+            setStats((prev) => ({
+              ...(prev ?? {} as AdminStats),
+              pipeline_last_run: fallback.pipeline_last_run,
+            }));
+            // Seed running pipelines from fallback data
+            const initial = new Set<string>();
+            for (const [slug, info] of Object.entries(fallback.pipeline_last_run)) {
+              if (info?.status === 'running') initial.add(slug);
+            }
+            if (initial.size > 0) setRunningPipelines(initial);
+          }
+        } catch {
+          // Lightweight endpoint also failed — no pipeline data available
+        }
+        return;
+      }
       const initial = new Set<string>();
       for (const [slug, info] of Object.entries(statsData.pipeline_last_run ?? {})) {
         if (info?.status === 'running') initial.add(slug);
@@ -329,8 +355,12 @@ export function DataQualityDashboard() {
       }
       if (!freshStatus) return;
 
-      // Merge fresh pipeline_last_run into stats so FreshnessTimeline re-renders
-      setStats((prev) => prev ? { ...prev, pipeline_last_run: freshStatus!.pipeline_last_run } : prev);
+      // Merge fresh pipeline_last_run into stats so FreshnessTimeline re-renders.
+      // B15: handle null prev (stats timed out on initial load) by creating a shell object.
+      setStats((prev) => ({
+        ...(prev ?? {} as AdminStats),
+        pipeline_last_run: freshStatus!.pipeline_last_run,
+      }));
 
       const now = Date.now();
       setRunningPipelines((prev) => {

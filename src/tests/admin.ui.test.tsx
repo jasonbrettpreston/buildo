@@ -1375,6 +1375,34 @@ describe('Stats API pipeline_last_run resilience', () => {
   });
 });
 
+describe('B15: Pipeline status fallback when stats times out', () => {
+  it('B15: initial load seeds pipeline_last_run from lightweight status endpoint when stats fails', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    // The initial load effect must fetch from the lightweight status endpoint
+    // as a fallback when full stats returns undefined (timed out).
+    // Slice from "On initial load" to "Polling while" to isolate just the initial load effect.
+    const start = source.indexOf('On initial load');
+    const end = source.indexOf('Polling while');
+    const initialLoadBlock = source.slice(start, end);
+    expect(initialLoadBlock).toContain('pipelines/status');
+  });
+
+  it('B15: polling merge handles null stats (does not silently return null)', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../components/DataQualityDashboard.tsx'),
+      'utf-8'
+    );
+    // The old pattern: `prev ? { ...prev, pipeline_last_run } : prev` silently returns null
+    // The fix must provide a fallback object when prev is null
+    const pollBlock = source.slice(source.indexOf('Merge fresh pipeline_last_run'));
+    // Should NOT have the pattern that returns prev unchanged when null
+    expect(pollBlock).not.toMatch(/prev\s*\?\s*\{[^}]*pipeline_last_run[^}]*\}\s*:\s*prev\s*\)/);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Phase 2: Pipeline Tiles & Accordion Tile Design
 // ---------------------------------------------------------------------------
