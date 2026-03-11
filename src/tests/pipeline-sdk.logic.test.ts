@@ -452,6 +452,16 @@ describe('Pipeline SDK', () => {
       });
     }
 
+    // §3.5 — classify-scope.js records_total must include propagated permits
+    it('classify-scope.js emitSummary records_total includes propagated count', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'classify-scope.js'), 'utf-8');
+      const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
+      expect(match).not.toBeNull();
+      const summaryBody = match![1];
+      // records_total must include propagated so it is always >= records_updated
+      expect(summaryBody).toMatch(/records_total:\s*total\s*\+\s*propagated/);
+    });
+
     // SQL Parameterization — no raw user values interpolated in SQL (§4.2)
     it('load-permits.js uses make_interval instead of template literal for duration', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'load-permits.js'), 'utf-8');

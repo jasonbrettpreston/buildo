@@ -515,42 +515,47 @@ pipeline.run('classify-scope', async (pool) => {
   }
 
   // ----- Propagation pass: copy BLD scope_tags to companion permits -----
+  // Split into two separate transactions to minimize lock duration (§9.1)
   console.log('');
   console.log('--- BLD→Companion Scope Propagation ---');
 
-  const propagateResult = await pool.query(
-    `UPDATE permits AS companion
-     SET
-       scope_tags = bld.scope_tags,
-       project_type = bld.project_type,
-       scope_classified_at = NOW(),
-       scope_source = 'propagated'
-     FROM (
-       SELECT
-         TRIM(SPLIT_PART(permit_num, ' ', 1) || ' ' || SPLIT_PART(permit_num, ' ', 2)) AS base_num,
-         scope_tags,
-         project_type
-       FROM permits
-       WHERE permit_num ~ '\\sBLD(\\s|$)'
-         AND scope_tags IS NOT NULL
-         AND array_length(scope_tags, 1) > 0
-     ) AS bld
-     WHERE TRIM(SPLIT_PART(companion.permit_num, ' ', 1) || ' ' || SPLIT_PART(companion.permit_num, ' ', 2)) = bld.base_num
-       AND companion.permit_num !~ '\\sBLD(\\s|$)'
-       AND companion.permit_num ~ '\\s[A-Z]{2,4}(\\s|$)'`
-  );
-
-  const propagated = propagateResult.rowCount || 0;
-  console.log(`  Propagated scope tags to ${propagated.toLocaleString()} companion permits`);
+  const propagated = await pipeline.withTransaction(pool, async (client) => {
+    const propagateResult = await client.query(
+      `UPDATE permits AS companion
+       SET
+         scope_tags = bld.scope_tags,
+         project_type = bld.project_type,
+         scope_classified_at = NOW(),
+         scope_source = 'propagated'
+       FROM (
+         SELECT
+           TRIM(SPLIT_PART(permit_num, ' ', 1) || ' ' || SPLIT_PART(permit_num, ' ', 2)) AS base_num,
+           scope_tags,
+           project_type
+         FROM permits
+         WHERE permit_num ~ '\\sBLD(\\s|$)'
+           AND scope_tags IS NOT NULL
+           AND array_length(scope_tags, 1) > 0
+       ) AS bld
+       WHERE TRIM(SPLIT_PART(companion.permit_num, ' ', 1) || ' ' || SPLIT_PART(companion.permit_num, ' ', 2)) = bld.base_num
+         AND companion.permit_num !~ '\\sBLD(\\s|$)'
+         AND companion.permit_num ~ '\\s[A-Z]{2,4}(\\s|$)'`
+    );
+    return propagateResult.rowCount || 0;
+  });
 
   // Re-add demolition tag to DM permits that lost it during propagation
-  const demFixResult = await pool.query(
-    `UPDATE permits
-     SET scope_tags = array_append(scope_tags, 'demolition')
-     WHERE permit_type = 'Demolition Folder (DM)'
-       AND NOT ('demolition' = ANY(scope_tags))`
-  );
-  const demFixed = demFixResult.rowCount || 0;
+  const demFixed = await pipeline.withTransaction(pool, async (client) => {
+    const demFixResult = await client.query(
+      `UPDATE permits
+       SET scope_tags = array_append(scope_tags, 'demolition')
+       WHERE permit_type = 'Demolition Folder (DM)'
+         AND NOT ('demolition' = ANY(scope_tags))`
+    );
+    return demFixResult.rowCount || 0;
+  });
+
+  console.log(`  Propagated scope tags to ${propagated.toLocaleString()} companion permits`);
   if (demFixed > 0) {
     console.log(`  Re-added demolition tag to ${demFixed} DM companion permits`);
   }
@@ -576,6 +581,6 @@ pipeline.run('classify-scope', async (pool) => {
     const pct = ((count / processed) * 100).toFixed(1);
     console.log(`  ${tag.padEnd(30)} ${String(count).padStart(8)}  (${pct}%)`);
   }
-  pipeline.emitSummary({ records_total: total, records_new: newlyClassified, records_updated: processed - newlyClassified + propagated });
+  pipeline.emitSummary({ records_total: total + propagated + demFixed, records_new: newlyClassified, records_updated: processed - newlyClassified + propagated + demFixed });
   pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "current_use", "proposed_use", "storeys", "housing_units", "dwelling_units_created", "scope_classified_at", "last_seen_at"] }, { "permits": ["project_type", "scope_tags", "scope_classified_at", "scope_source"] });
 });
