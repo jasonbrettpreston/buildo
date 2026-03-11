@@ -2688,11 +2688,62 @@ describe('Funnel panel components extracted to separate file', () => {
       path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
     expect(source).toContain('export function CircularBadge');
-    expect(source).toContain('export function MetricRow');
+    expect(source).toContain('function MetricRow');
     expect(source).toContain('export function FunnelAllTimePanel');
     expect(source).toContain('export function FunnelLastRunPanel');
     expect(source).toContain('export const INTERSECTION_LABELS');
     expect(source).toContain('export function DataFlowTile');
+  });
+});
+
+// ── T5 Sparkline wiring ────────────────────────────────────────────
+
+describe('T5 Sparkline wiring', () => {
+  it('FreshnessTimeline.tsx imports Sparkline from FunnelPanels', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain('Sparkline');
+    expect(source).toContain("from './funnel/FunnelPanels'");
+  });
+
+  it('FreshnessTimeline.tsx fetches pipeline history for sparkline data', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain('/api/admin/pipelines/history');
+  });
+
+  it('FreshnessTimeline.tsx renders <Sparkline', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain('<Sparkline');
+  });
+});
+
+// ── Shared PIPELINE_TABLE_MAP ──────────────────────────────────────
+
+describe('PIPELINE_TABLE_MAP shared constant', () => {
+  it('PIPELINE_TABLE_MAP is exported from funnel.ts', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../lib/admin/funnel.ts'), 'utf-8'
+    );
+    expect(source).toContain('export const PIPELINE_TABLE_MAP');
+  });
+
+  it('FreshnessTimeline.tsx imports PIPELINE_TABLE_MAP', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain('PIPELINE_TABLE_MAP');
+  });
+
+  it('stats route imports PIPELINE_TABLE_MAP', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/admin/stats/route.ts'), 'utf-8'
+    );
+    expect(source).toContain('PIPELINE_TABLE_MAP');
   });
 });
 

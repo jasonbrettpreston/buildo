@@ -558,3 +558,23 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   inspections:          { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections', sources: ['City Portal'] },
   coa_documents:        { summary: 'Downloads Committee of Adjustment plans and decision PDFs from AIC portal', table: 'coa_documents', sources: ['AIC Portal'] },
 };
+
+// ---------------------------------------------------------------------------
+// Pipeline slug → primary DB table mapping (shared between stats API and UI)
+// ---------------------------------------------------------------------------
+
+export const PIPELINE_TABLE_MAP: Record<string, string> = {
+  permits: 'permits', coa: 'coa_applications', builders: 'entities',
+  address_points: 'address_points', parcels: 'parcels', massing: 'building_footprints',
+  neighbourhoods: 'neighbourhoods', load_wsib: 'wsib_registry',
+  geocode_permits: 'permits', link_parcels: 'permit_parcels',
+  link_neighbourhoods: 'permits', link_massing: 'parcel_buildings',
+  link_coa: 'coa_applications', link_wsib: 'entities',
+  enrich_wsib_builders: 'entities', enrich_named_builders: 'entities',
+  link_similar: 'permits', create_pre_permits: 'coa_applications',
+  compute_centroids: 'parcels', classify_scope: 'permits',
+  classify_permits: 'permit_trades',
+  refresh_snapshot: 'data_quality_snapshots', assert_schema: 'pipeline_runs',
+  assert_data_bounds: 'pipeline_runs', inspections: 'permit_inspections',
+  coa_documents: 'coa_documents',
+};

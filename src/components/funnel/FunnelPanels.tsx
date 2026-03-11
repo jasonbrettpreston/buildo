@@ -136,7 +136,7 @@ export function CircularBadge({ pct }: { pct: number }) {
   );
 }
 
-export function MetricRow({ label, value, className }: { label: string; value: string; className?: string }) {
+function MetricRow({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
     <div className="flex items-baseline justify-between py-0.5">
       <span className="text-xs text-gray-500 min-w-[80px]">{label}</span>

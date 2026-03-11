@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { FunnelRowData } from '@/lib/admin/funnel';
-import { STEP_DESCRIPTIONS } from '@/lib/admin/funnel';
-import { CircularBadge, FunnelAllTimePanel, FunnelLastRunPanel, DataFlowTile, type TelemetryData } from './funnel/FunnelPanels';
+import { STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP } from '@/lib/admin/funnel';
+import { CircularBadge, FunnelAllTimePanel, FunnelLastRunPanel, DataFlowTile, Sparkline, type SparklineRun, type TelemetryData } from './funnel/FunnelPanels';
 
 // ---------------------------------------------------------------------------
 // Pipeline Registry — single source of truth for all tracked pipelines
@@ -301,6 +301,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
   const [runError, setRunError] = useState<string | null>(null);
   // Track chains where cancel has been requested (shows "Stopping..." until polling clears)
   const [cancellingChains, setCancellingChains] = useState<Set<string>>(new Set());
+  // T5 Sparkline: cached history runs per pipeline slug (lazy-loaded on accordion expand)
+  const sparklineCache = useRef<Map<string, SparklineRun[]>>(new Map());
   const toggleExpand = (key: string) => {
     setExpandedSteps((prev) => {
       const next = new Set(prev);
@@ -308,6 +310,20 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
       else next.add(key);
       return next;
     });
+    // T5: Lazy-load sparkline history on first expand
+    const slug = key.split('-').slice(1).join('-'); // expandKey = chainId-stepSlug
+    if (!sparklineCache.current.has(slug)) {
+      fetch(`/api/admin/pipelines/history?slug=${encodeURIComponent(slug)}&limit=10`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (data?.runs) {
+            sparklineCache.current.set(slug, data.runs);
+            // Force re-render so sparkline appears
+            setExpandedSteps((prev) => new Set(prev));
+          }
+        })
+        .catch(() => { /* non-fatal — sparkline is optional */ });
+    }
   };
 
   // Optimistic toggle — flip local state immediately, auto-clear after API round-trip
@@ -477,15 +493,9 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
               {liveTableCounts && Object.keys(liveTableCounts).length > 0 && (() => {
                 // Collect unique target tables for this chain's steps
                 const chainTables = new Set<string>();
-                const TABLE_MAP: Record<string, string> = {
-                  permits: 'permits', coa: 'coa_applications', builders: 'entities',
-                  address_points: 'address_points', parcels: 'parcels', massing: 'building_footprints',
-                  neighbourhoods: 'neighbourhoods', load_wsib: 'wsib_registry',
-                  link_parcels: 'permit_parcels', link_massing: 'parcel_buildings',
-                  classify_permits: 'permit_trades', refresh_snapshot: 'data_quality_snapshots',
-                };
+                // Use shared constant — see src/lib/admin/funnel.ts
                 for (const step of chain.steps) {
-                  const table = TABLE_MAP[step.slug];
+                  const table = PIPELINE_TABLE_MAP[step.slug];
                   if (table && liveTableCounts[table] != null) chainTables.add(table);
                 }
                 if (chainTables.size === 0) return null;
@@ -648,6 +658,11 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                             <span className={`text-[8px] px-1 py-0.5 rounded border font-medium shrink-0 ${freshness.cls}`}>
                               {freshness.text}
                             </span>
+                          )}
+
+                          {/* T5 Sparkline — last 10 runs trend (hidden on mobile) */}
+                          {!isRunning && sparklineCache.current.has(step.slug) && (
+                            <Sparkline runs={sparklineCache.current.get(step.slug)!} />
                           )}
 
                           {/* SLA badge */}
