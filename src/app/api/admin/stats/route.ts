@@ -302,6 +302,24 @@ export async function GET() {
       // Non-fatal — UI will show description without field list
     }
 
+    // T3: Live table counts using pg_class.reltuples (fast approximate)
+    const liveTableCounts: Record<string, number> = {};
+    try {
+      const countRows = await query<{ relname: string; reltuples: string }>(
+        `SELECT relname, reltuples::bigint::text AS reltuples
+         FROM pg_class
+         WHERE relname = ANY($1) AND relkind = 'r'`,
+        [['permits', 'entities', 'coa_applications', 'parcels', 'address_points',
+          'building_footprints', 'neighbourhoods', 'permit_trades', 'permit_parcels',
+          'parcel_buildings', 'wsib_registry', 'data_quality_snapshots', 'pipeline_runs']]
+      );
+      for (const row of countRows) {
+        liveTableCounts[row.relname] = Math.max(0, parseInt(row.reltuples, 10));
+      }
+    } catch {
+      // Non-fatal — UI degrades gracefully without counts
+    }
+
     const p = (r: { count: string }[] | { count: string }) =>
       parseInt(Array.isArray(r) ? (r[0]?.count ?? '0') : (r.count ?? '0'), 10);
 
@@ -346,6 +364,8 @@ export async function GET() {
       pipeline_schedules: pipelineSchedules,
       // Live DB schema for pipeline description tiles
       db_schema_map: dbSchemaMap,
+      // T3: Fast approximate row counts from pg_class
+      live_table_counts: liveTableCounts,
     });
   } catch (err) {
     logError('[admin/stats]', err, { handler: 'GET' });

@@ -78,6 +78,7 @@ interface AdminStats {
   pipeline_last_run: Record<string, PipelineRunInfo>;
   pipeline_schedules: Record<string, { cadence: string; cron_expression: string | null; enabled: boolean }>;
   db_schema_map?: Record<string, string[]>;
+  live_table_counts?: Record<string, number>;
   [key: string]: unknown;
 }
 
@@ -506,6 +507,7 @@ export function DataQualityDashboard() {
             triggerError={pipelineErrors.length > 0 ? pipelineErrors.join('; ') : null}
             onCancel={cancelPipeline}
             dbSchemaMap={stats?.db_schema_map}
+            liveTableCounts={stats?.live_table_counts}
           />
           </div>
 

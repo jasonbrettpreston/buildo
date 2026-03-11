@@ -93,6 +93,31 @@ PIPELINE_META:{"reads":{"permits":["permit_num","status"]},"writes":{"permit_tra
 
 Parsed by `run-chain.js` and merged into `records_meta.pipeline_meta`. Rendered by `DataFlowTile` in the admin dashboard with "Live Meta" badge.
 
+### 3.7 Telemetry: `captureTelemetry()` / `diffTelemetry()`
+Pre/post-run database state capture for transparent pipeline observability. Stored in `records_meta.telemetry` (JSONB, migration 041).
+
+**Exports:**
+
+| Export | Purpose |
+|--------|---------|
+| `captureTelemetry(pool, tables, nullCols?)` | Captures pre-run snapshot: row counts, `pg_stat_user_tables` counters (ins/upd/del), NULL counts for specified columns. |
+| `diffTelemetry(pool, tables, pre)` | Captures post-run state and computes deltas against `pre` snapshot. Returns `{ counts, pg_stats, null_fills }`. |
+| `quoteIdent(name)` | Validates and double-quotes SQL identifiers. Prevents SQL injection for dynamic table/column names. |
+
+**Telemetry tiers:**
+- **T1 (Row counts):** `SELECT count(*)` before/after for each table. Delta = rows added.
+- **T2 (pg_stat diffs):** `pg_stat_user_tables.n_tup_{ins,upd,del}` before/after. Shows actual DML operations.
+- **T4 (NULL fills):** Counts NULLs in specified enrichment columns before/after. Delta = enrichment progress.
+
+**Manifest config:** Each step in `manifest.json` declares:
+- `telemetry_tables`: Array of table names to monitor (e.g., `["permits"]`)
+- `telemetry_null_cols`: Object mapping table → columns (e.g., `{ "permits": ["latitude", "longitude"] }`)
+
+**Chain orchestrator integration:**
+- Before each step: `captureTelemetry()` using manifest config
+- After success: `diffTelemetry()` → merged into `records_meta.telemetry`
+- After failure: `diffTelemetry()` still runs in catch block for partial-data debugging
+
 ---
 
 ## 4. Chain Orchestration

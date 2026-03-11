@@ -4,6 +4,115 @@ import type { FunnelRowData, StepDescription } from '@/lib/admin/funnel';
 // Funnel accordion sub-components — extracted from FreshnessTimeline.tsx
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// T5: Sparkline — inline SVG for historical run trends
+// ---------------------------------------------------------------------------
+
+export interface SparklineRun {
+  duration_ms: number | null;
+  status: string;
+}
+
+/**
+ * Tiny inline SVG sparkline (40×16px) showing duration trend for last N runs.
+ * Green dots = completed, red dots = failed. Hidden on mobile.
+ */
+export function Sparkline({ runs }: { runs: SparklineRun[] }) {
+  if (!runs || runs.length < 2) return null;
+  const w = 40;
+  const h = 16;
+  const pad = 2;
+  const ordered = [...runs].reverse(); // oldest first (runs is DESC from API)
+  const durations = ordered.map((r) => r.duration_ms ?? 0);
+  const max = Math.max(...durations, 1);
+  const points = durations.map((d, i) => ({
+    x: pad + (i / (durations.length - 1)) * (w - pad * 2),
+    y: pad + (1 - d / max) * (h - pad * 2),
+    failed: ordered[i]?.status === 'failed',
+  }));
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+  return (
+    <svg width={w} height={h} className="hidden md:inline-block shrink-0" aria-label="Run history sparkline">
+      <path d={pathD} fill="none" stroke="#9ca3af" strokeWidth={1} />
+      {points.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r={1.5} fill={p.failed ? '#ef4444' : '#22c55e'} />
+      ))}
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// T1/T2/T4: Telemetry section for DataFlowTile drill-down
+// ---------------------------------------------------------------------------
+
+export interface TelemetryData {
+  counts?: Record<string, { before: number; after: number; delta: number }>;
+  pg_stats?: Record<string, { ins: number; upd: number; del: number }>;
+  null_fills?: Record<string, Record<string, { before: number; after: number; filled: number }>>;
+}
+
+/** Renders T1/T2/T4 telemetry inline below the DataFlowTile schema */
+export function TelemetrySection({ telemetry }: { telemetry: TelemetryData }) {
+  const tables = Object.keys(telemetry.counts ?? {});
+  if (tables.length === 0) return null;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+      <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Last Run Telemetry</h5>
+      {tables.map((table) => {
+        const count = telemetry.counts?.[table];
+        const stats = telemetry.pg_stats?.[table];
+        const fills = telemetry.null_fills?.[table];
+
+        return (
+          <div key={table} className="space-y-1">
+            <span className="text-[10px] font-mono text-gray-600 font-medium">{table}</span>
+            <div className="flex flex-wrap gap-2 items-center">
+              {/* T1: Row count delta */}
+              {count && (
+                <span className="text-[9px] tabular-nums text-gray-500">
+                  {count.before.toLocaleString()} → {count.after.toLocaleString()}{' '}
+                  <span className={count.delta > 0 ? 'text-green-600 font-medium' : count.delta < 0 ? 'text-red-600 font-medium' : 'text-gray-400'}>
+                    ({count.delta > 0 ? '+' : ''}{count.delta.toLocaleString()})
+                  </span>
+                </span>
+              )}
+              {/* T2: pg_stat mutation badges */}
+              {stats && (stats.ins > 0 || stats.upd > 0 || stats.del > 0) && (
+                <span className="flex gap-1">
+                  {stats.ins > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-medium tabular-nums">Ins: {stats.ins.toLocaleString()}</span>}
+                  {stats.upd > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-blue-100 text-blue-700 font-medium tabular-nums">Upd: {stats.upd.toLocaleString()}</span>}
+                  {stats.del > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-red-100 text-red-700 font-medium tabular-nums">Del: {stats.del.toLocaleString()}</span>}
+                </span>
+              )}
+            </div>
+            {/* T4: NULL fill audit */}
+            {fills && Object.keys(fills).length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(fills).map(([col, f]) => {
+                  const beforePct = count && count.before > 0 ? ((f.before / count.before) * 100).toFixed(1) : '?';
+                  const afterPct = count && count.after > 0 ? ((f.after / count.after) * 100).toFixed(1) : '?';
+                  return (
+                    <span key={col} className="text-[9px] text-gray-500 tabular-nums">
+                      <span className="font-mono text-gray-600">{col}</span>: {beforePct}% null → {afterPct}% null
+                      {f.filled > 0 && <span className="text-green-600 font-medium"> ({f.filled} filled)</span>}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CircularBadge
+// ---------------------------------------------------------------------------
+
 export function CircularBadge({ pct }: { pct: number }) {
   const r = 10;
   const circ = 2 * Math.PI * r;
@@ -224,8 +333,8 @@ export interface PipelineMeta {
   writes?: Record<string, string[]>;
 }
 
-export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
-  desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null;
+export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, telemetry }: {
+  desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null; telemetry?: TelemetryData | null;
 }) {
   // Always use curated STEP_DESCRIPTIONS for sources and writes — these are
   // per-step accurate (e.g. shared scripts emit union of all reads/writes).
@@ -332,6 +441,9 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
           </div>
         </div>
       )}
+
+      {/* T1/T2/T4: Telemetry section — progressive enhancement */}
+      {telemetry && <TelemetrySection telemetry={telemetry} />}
     </div>
   );
 }

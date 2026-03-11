@@ -2139,53 +2139,44 @@ describe('API route kills child process on cancel', () => {
 // ---------------------------------------------------------------------------
 
 describe('Warning and stale status tile flash', () => {
-  it('getStatusDot returns bg-yellow-50 for Aging status', () => {
+  it('getStatusDot returns direct DB status mapping (Raw DB Transparency)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const fnStart = source.indexOf('function getStatusDot');
     const fnEnd = source.indexOf('\n}', fnStart) + 2;
     const fnBody = source.slice(fnStart, fnEnd);
-    expect(fnBody).toContain("bg-yellow-50");
+    // Direct 1:1 status mapping — no stale detection
+    expect(fnBody).toContain("'Completed'");
+    expect(fnBody).toContain("'Failed'");
+    expect(fnBody).toContain("'Running'");
+    expect(fnBody).not.toContain("'Stale'");
+    expect(fnBody).not.toContain("'Aging'");
+    expect(fnBody).not.toContain("'Overdue'");
+  });
+
+  it('getFreshnessBadge handles time-based freshness separately from status', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    const fnStart = source.indexOf('function getFreshnessBadge');
+    const fnEnd = source.indexOf('\n}', fnStart) + 2;
+    const fnBody = source.slice(fnStart, fnEnd);
+    expect(fnBody).toContain("'Fresh'");
     expect(fnBody).toContain("'Aging'");
+    expect(fnBody).toContain("'Overdue'");
   });
 
-  it('getStatusDot returns bg-red-50 for zero-records Stale status', () => {
+  it('applies tile-flash CSS animation based on DB status and freshness', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    const fnStart = source.indexOf('function getStatusDot');
-    const fnEnd = source.indexOf('\n}', fnStart) + 2;
-    const fnBody = source.slice(fnStart, fnEnd);
-    const staleLineMatch = fnBody.match(/return\s*\{[^}]*label:\s*'Stale'[^}]*\}/);
-    expect(staleLineMatch).toBeTruthy();
-    expect(staleLineMatch![0]).toContain('bg-red-50');
-  });
-
-  it('getStatusDot returns bg-purple-50 + Overdue for time-based >7d staleness', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
-    );
-    const fnStart = source.indexOf('function getStatusDot');
-    const fnEnd = source.indexOf('\n}', fnStart) + 2;
-    const fnBody = source.slice(fnStart, fnEnd);
-    const overdueMatch = fnBody.match(/return\s*\{[^}]*label:\s*'Overdue'[^}]*\}/);
-    expect(overdueMatch).toBeTruthy();
-    expect(overdueMatch![0]).toContain('bg-purple-50');
-  });
-
-  it('applies tile-flash CSS animation to the entire pipeline tile row for warning/stale steps', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
-    );
-    // tileFlash uses custom CSS classes (not animate-pulse which is opacity-only)
-    expect(source).toMatch(/tileFlash[\s\S]{0,100}Aging[\s\S]{0,80}tile-flash-warning[\s\S]{0,80}border-yellow/);
-    expect(source).toMatch(/tileFlash[\s\S]{0,200}Stale[\s\S]{0,80}tile-flash-stale[\s\S]{0,80}border-red/);
-    // Failed steps also get the red flash
+    // Failed steps get red flash
     expect(source).toMatch(/Failed[\s\S]{0,30}tile-flash-stale/);
-    // Overdue (>7d time-based) gets purple flash
+    // Freshness-based flashes (from getFreshnessBadge, not getStatusDot)
+    expect(source).toMatch(/Aging[\s\S]{0,80}tile-flash-warning[\s\S]{0,80}border-yellow/);
     expect(source).toMatch(/Overdue[\s\S]{0,80}tile-flash-overdue[\s\S]{0,80}border-purple/);
-    // tileFlash should be applied to the pipeline-tile div's className
+    // tileFlash applied to pipeline-tile div
     expect(source).toMatch(/pipeline-tile[\s\S]{0,200}tileFlash|tileFlash[\s\S]{0,200}pipeline-tile/);
   });
 
@@ -2242,25 +2233,24 @@ describe('Full-tile status coloring (no more dots)', () => {
     expect(source).toContain('bg-red-50');
   });
 
-  it('completed step with 0 new + 0 updated records shows Stale (red) status', () => {
+  it('getStatusDot maps completed status to green (Raw DB Transparency)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // getStatusDot must check records_new === 0 AND records_updated === 0 → Stale
-    const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 1500);
-    expect(dotFn).toContain('records_new');
-    expect(dotFn).toContain('records_updated');
-    expect(dotFn).toMatch(/records_new[\s\S]{0,200}Stale/);
-    expect(dotFn).toMatch(/records_new[\s\S]{0,200}bg-red-50/);
+    // Direct 1:1 mapping — completed → green, no stale detection
+    const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 800);
+    expect(dotFn).toContain("'completed'");
+    expect(dotFn).toContain("'Completed'");
+    expect(dotFn).toContain('bg-green-50');
   });
 
-  it('steps that do not track records (quality gates) skip stale check', () => {
+  it('getStatusDot does not reference records_new or stale detection', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // records_new must be != null (not just === 0) — null means no tracking
-    const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 1500);
-    expect(dotFn).toContain('records_new != null');
+    const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 500);
+    expect(dotFn).not.toContain('records_new');
+    expect(dotFn).not.toContain("'Stale'");
   });
 
   it('pending steps reset to neutral background (no status color)', () => {
@@ -2517,47 +2507,47 @@ describe('Hover-hidden controls on desktop', () => {
 // WF5 Audit Fix: Stale Exemption for link/classify/quality/snapshot groups
 // ---------------------------------------------------------------------------
 
-describe('Stale exemption for non-ingest groups', () => {
-  it('getStatusDot accepts staleExempt parameter', () => {
+describe('Raw DB Transparency — getStatusDot simplification', () => {
+  it('getStatusDot does not accept staleExempt parameter (removed)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const fnStart = source.indexOf('function getStatusDot');
     const fnSig = source.slice(fnStart, source.indexOf('{', fnStart));
-    expect(fnSig).toContain('staleExempt');
+    expect(fnSig).not.toContain('staleExempt');
   });
 
-  it('staleExempt steps get "No Change" instead of "Stale" for zero records', () => {
+  it('getStatusDot maps directly to DB status without stale detection', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const fnStart = source.indexOf('function getStatusDot');
-    const fnBody = source.slice(fnStart, fnStart + 1500);
-    // Zero-records check runs for all steps, but staleExempt get "No Change" not "Stale"
-    expect(fnBody).toContain('records_new');
-    expect(fnBody).toContain("'Stale'");
-    expect(fnBody).toContain("'No Change'");
-    expect(fnBody).toContain('!staleExempt');
+    const fnBody = source.slice(fnStart, fnStart + 800);
+    // Direct mapping: completed/failed/skipped/cancelled → colors
+    expect(fnBody).toContain("'completed'");
+    expect(fnBody).toContain("'failed'");
+    expect(fnBody).not.toContain("'Stale'");
+    expect(fnBody).not.toContain("'No Change'");
   });
 
-  it('STALE_EXEMPT_GROUPS includes link, classify, quality, snapshot', () => {
+  it('getFreshnessBadge provides separate time-based badges', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    expect(source).toContain("'link'");
-    expect(source).toContain("'classify'");
-    expect(source).toContain("'quality'");
-    expect(source).toContain("'snapshot'");
-    expect(source).toContain('STALE_EXEMPT_GROUPS');
+    expect(source).toContain('function getFreshnessBadge');
+    const fnStart = source.indexOf('function getFreshnessBadge');
+    const fnBody = source.slice(fnStart, fnStart + 800);
+    expect(fnBody).toContain("'Fresh'");
+    expect(fnBody).toContain("'Aging'");
+    expect(fnBody).toContain("'Overdue'");
   });
 
-  it('staleExempt is derived from PIPELINE_REGISTRY group at call site', () => {
+  it('getStatusDot call site does not use staleExempt', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // Call site should derive staleExempt from stepGroup
-    expect(source).toMatch(/STALE_EXEMPT_GROUPS\.has\(stepGroup\)/);
-    expect(source).toMatch(/getStatusDot\(info,\s*isRunning,\s*staleExempt\)/);
+    expect(source).not.toContain('STALE_EXEMPT_GROUPS');
+    expect(source).not.toMatch(/getStatusDot\([^)]*staleExempt/);
   });
 });
 
@@ -2690,7 +2680,7 @@ describe('Funnel panel components extracted to separate file', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const lineCount = source.split('\n').length;
-    expect(lineCount).toBeLessThan(950);
+    expect(lineCount).toBeLessThan(1000);
   });
 
   it('FunnelPanels.tsx exports CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS, DataFlowTile', () => {

@@ -16,7 +16,7 @@
     "db:generate": "drizzle-kit introspect",
     "task": "node scripts/task-init.mjs",
     "system-map": "node scripts/generate-system-map.mjs",
-    "safe-start": "node -e \"try{require('child_process').execSync('taskkill /F /IM node.exe',{stdio:'ignore'})}catch{}\" && rm -rf .next && npm run build && npm run dev",
+    "safe-start": "node -e \"try{require('child_process').execSync('Stop-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess -Force', {shell: 'powershell.exe', stdio:'ignore'})}catch{}\" && rm -rf .next && npm run build && npm run dev",
     "seed:trades": "npx tsx scripts/seed-trades.ts",
     "spec:tests": "node scripts/harvest-tests.mjs",
     "db:docs": "node scripts/generate-db-docs.mjs",

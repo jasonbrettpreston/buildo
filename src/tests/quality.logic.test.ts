@@ -1482,38 +1482,42 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
     expect(row.lastRunRecordsTotal).toBe(234856);
   });
 
-  it('getStatusDot returns Stale for completed ingest with 0 new and 0 updated', () => {
-    // Verify the timeline tile flashes red when a pipeline ran but produced nothing
+  it('getStatusDot maps 1:1 to DB status (Raw DB Transparency — replaces stale detection)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // getStatusDot must check records_new === 0 AND records_updated === 0
-    expect(source).toContain('records_new === 0');
-    expect(source).toContain('records_updated');
-    // Stale label triggers tile-flash-stale (red pulse animation)
-    expect(source).toContain("'Stale'");
+    const fnStart = source.indexOf('function getStatusDot');
+    const fnBody = source.slice(fnStart, fnStart + 800);
+    // Direct DB status → color mapping
+    expect(fnBody).toContain("'completed'");
+    expect(fnBody).toContain("'Completed'");
+    expect(fnBody).toContain("'failed'");
+    expect(fnBody).toContain("'Failed'");
+    // No stale detection — removed
+    expect(fnBody).not.toContain("'Stale'");
+    expect(fnBody).not.toContain('records_new');
+    // tile-flash-stale still used for Failed status
     expect(source).toContain('tile-flash-stale');
   });
 
-  it('getStatusDot exempts link/classify/quality/snapshot from stale detection', () => {
+  it('getFreshnessBadge provides time-based badges (decoupled from status)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    expect(source).toContain('STALE_EXEMPT_GROUPS');
-    expect(source).toContain("'link'");
-    expect(source).toContain("'classify'");
-    expect(source).toContain("'quality'");
-    expect(source).toContain("'snapshot'");
-    expect(source).toContain('staleExempt');
+    expect(source).toContain('function getFreshnessBadge');
+    const fnStart = source.indexOf('function getFreshnessBadge');
+    const fnBody = source.slice(fnStart, fnStart + 800);
+    expect(fnBody).toContain("'Fresh'");
+    expect(fnBody).toContain("'Aging'");
+    expect(fnBody).toContain("'Overdue'");
   });
 
-  it('getStatusDot returns "No Change" for stale-exempt steps with 0 records', () => {
+  it('getStatusDot no longer uses staleExempt (Raw DB Transparency)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    expect(source).toContain("'No Change'");
-    // Non-ingest steps with 0 new/updated get neutral "No Change", not green "Fresh"
-    expect(source).toContain('bg-gray-50');
+    expect(source).not.toContain('STALE_EXEMPT_GROUPS');
+    expect(source).not.toContain('staleExempt');
   });
 
   it('records_meta renderer filters out pipeline_meta and nested objects', () => {

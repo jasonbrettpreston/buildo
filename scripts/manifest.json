@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "description": "Single source of truth for pipeline metadata (§9.6)",
+
+  "scripts": {
+    "permits":              { "file": "scripts/load-permits.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
+    "coa":                  { "file": "scripts/load-coa.js",              "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["coa_applications"] },
+    "builders":             { "file": "scripts/extract-builders.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["entities"] },
+    "address_points":       { "file": "scripts/load-address-points.js",   "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["address_points"] },
+    "parcels":              { "file": "scripts/load-parcels.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcels"] },
+    "massing":              { "file": "scripts/load-massing.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["building_footprints"] },
+    "neighbourhoods":       { "file": "scripts/load-neighbourhoods.js",   "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["neighbourhoods"] },
+    "geocode_permits":      { "file": "scripts/geocode-permits.js",       "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["latitude", "longitude"] } },
+    "link_parcels":         { "file": "scripts/link-parcels.js",          "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permit_parcels"] },
+    "link_neighbourhoods":  { "file": "scripts/link-neighbourhoods.js",   "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["neighbourhood_id"] } },
+    "link_massing":         { "file": "scripts/link-massing.js",          "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["parcel_buildings"] },
+    "link_coa":             { "file": "scripts/link-coa.js",              "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["coa_applications"], "telemetry_null_cols": { "coa_applications": ["linked_permit_num"] } },
+    "enrich_wsib_builders": { "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
+    "enrich_named_builders":{ "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
+    "load_wsib":            { "file": "scripts/load-wsib.js",             "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["wsib_registry"] },
+    "link_wsib":            { "file": "scripts/link-wsib.js",             "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["entities"] },
+    "classify_scope":       { "file": "scripts/classify-scope.js",        "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["scope_classified_at"] } },
+    "classify_permits":     { "file": "scripts/classify-permits.js",      "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permit_trades"] },
+    "compute_centroids":    { "file": "scripts/compute-centroids.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcels"] },
+    "link_similar":         { "file": "scripts/link-similar.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
+    "create_pre_permits":   { "file": "scripts/create-pre-permits.js",    "supports_full": false, "supports_dry_run": false },
+    "refresh_snapshot":     { "file": "scripts/refresh-snapshot.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["data_quality_snapshots"] },
+    "assert_schema":        { "file": "scripts/quality/assert-schema.js", "supports_full": false, "supports_dry_run": false },
+    "assert_data_bounds":   { "file": "scripts/quality/assert-data-bounds.js", "supports_full": false, "supports_dry_run": false },
+    "inspections":          { "file": null, "supports_full": false, "supports_dry_run": false, "coming_soon": true },
+    "coa_documents":        { "file": null, "supports_full": false, "supports_dry_run": false, "coming_soon": true }
+  },
+
+  "chains": {
+    "permits": [
+      "assert_schema", "permits", "classify_scope", "classify_permits",
+      "builders", "link_wsib", "geocode_permits", "link_parcels",
+      "link_neighbourhoods", "link_massing", "link_similar", "link_coa",
+      "refresh_snapshot", "assert_data_bounds"
+    ],
+    "coa": [
+      "assert_schema", "coa", "link_coa", "create_pre_permits",
+      "refresh_snapshot", "assert_data_bounds"
+    ],
+    "sources": [
+      "assert_schema", "address_points", "geocode_permits", "parcels",
+      "compute_centroids", "link_parcels", "massing", "link_massing",
+      "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib",
+      "refresh_snapshot", "assert_data_bounds"
+    ],
+    "entities": [
+      "enrich_wsib_builders", "enrich_named_builders"
+    ],
+    "deep_scrapes": [
+      "inspections", "coa_documents"
+    ]
+  },
+
+  "chain_gates": {
+    "permits": "permits",
+    "coa": "coa"
+  }
+}

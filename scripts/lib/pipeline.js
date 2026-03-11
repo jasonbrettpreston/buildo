@@ -221,6 +221,129 @@ async function run(name, fn) {
 }
 
 // ---------------------------------------------------------------------------
+// Telemetry — pre/post run DB state capture (T1, T2, T4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Capture pre-run database state for telemetry.
+ * T1: row counts per table, T2: pg_stat mutation counters, T4: NULL fill counts.
+ *
+ * @param {Pool} pool
+ * @param {string[]} tables - Target write table names
+ * @param {Record<string, string[]>} [nullCols] - Optional: { table: [col1, col2] } for NULL auditing (T4)
+ * @returns {Promise<object>} Pre-run telemetry snapshot
+ */
+async function captureTelemetry(pool, tables, nullCols) {
+  const snapshot = { counts: {}, pg_stats: {}, null_fills: {}, captured_at: new Date().toISOString() };
+  for (const table of tables) {
+    try {
+      // T1: row count
+      const countRes = await pool.query(`SELECT count(*)::int AS cnt FROM ${quoteIdent(table)}`);
+      snapshot.counts[table] = { before: countRes.rows[0].cnt };
+
+      // T2: pg_stat mutation counters
+      const statRes = await pool.query(
+        `SELECT n_tup_ins::int AS ins, n_tup_upd::int AS upd, n_tup_del::int AS del
+         FROM pg_stat_user_tables WHERE relname = $1`,
+        [table]
+      );
+      if (statRes.rows[0]) {
+        snapshot.pg_stats[table] = {
+          before_ins: statRes.rows[0].ins,
+          before_upd: statRes.rows[0].upd,
+          before_del: statRes.rows[0].del,
+        };
+      }
+
+      // T4: NULL fill counts for configured columns
+      if (nullCols && nullCols[table]) {
+        snapshot.null_fills[table] = {};
+        for (const col of nullCols[table]) {
+          const nullRes = await pool.query(
+            `SELECT count(*)::int AS cnt FROM ${quoteIdent(table)} WHERE ${quoteIdent(col)} IS NULL`
+          );
+          snapshot.null_fills[table][col] = { before: nullRes.rows[0].cnt };
+        }
+      }
+    } catch (err) {
+      log.warn('[telemetry]', `captureTelemetry failed for ${table}: ${err.message}`);
+    }
+  }
+  return snapshot;
+}
+
+/**
+ * Capture post-run database state and compute deltas against pre-run snapshot.
+ *
+ * @param {Pool} pool
+ * @param {string[]} tables
+ * @param {object} pre - Pre-run telemetry from captureTelemetry()
+ * @returns {Promise<object>} Telemetry with before/after/delta values
+ */
+async function diffTelemetry(pool, tables, pre) {
+  const result = { counts: {}, pg_stats: {}, null_fills: {} };
+  for (const table of tables) {
+    try {
+      // T1: row count diff
+      const countRes = await pool.query(`SELECT count(*)::int AS cnt FROM ${quoteIdent(table)}`);
+      const after = countRes.rows[0].cnt;
+      const before = pre.counts[table]?.before ?? 0;
+      result.counts[table] = { before, after, delta: after - before };
+
+      // T2: pg_stat diff
+      if (pre.pg_stats[table]) {
+        const statRes = await pool.query(
+          `SELECT n_tup_ins::int AS ins, n_tup_upd::int AS upd, n_tup_del::int AS del
+           FROM pg_stat_user_tables WHERE relname = $1`,
+          [table]
+        );
+        if (statRes.rows[0]) {
+          result.pg_stats[table] = {
+            ins: statRes.rows[0].ins - pre.pg_stats[table].before_ins,
+            upd: statRes.rows[0].upd - pre.pg_stats[table].before_upd,
+            del: statRes.rows[0].del - pre.pg_stats[table].before_del,
+          };
+        }
+      }
+
+      // T4: NULL fill diff
+      if (pre.null_fills[table]) {
+        result.null_fills[table] = {};
+        for (const col of Object.keys(pre.null_fills[table])) {
+          const nullRes = await pool.query(
+            `SELECT count(*)::int AS cnt FROM ${quoteIdent(table)} WHERE ${quoteIdent(col)} IS NULL`
+          );
+          const afterNull = nullRes.rows[0].cnt;
+          const beforeNull = pre.null_fills[table][col].before;
+          result.null_fills[table][col] = {
+            before: beforeNull,
+            after: afterNull,
+            filled: beforeNull - afterNull,
+          };
+        }
+      }
+    } catch (err) {
+      log.warn('[telemetry]', `diffTelemetry failed for ${table}: ${err.message}`);
+    }
+  }
+  return result;
+}
+
+/**
+ * Sanitize a PostgreSQL identifier (table or column name).
+ * Prevents SQL injection in dynamic telemetry queries.
+ * @param {string} name
+ * @returns {string}
+ */
+function quoteIdent(name) {
+  // Only allow [a-zA-Z0-9_] — reject anything else
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+    throw new Error(`Invalid identifier: ${name}`);
+  }
+  return `"${name}"`;
+}
+
+// ---------------------------------------------------------------------------
 // Batch Utilities
 // ---------------------------------------------------------------------------
 
@@ -265,4 +388,7 @@ module.exports = {
   BATCH_SIZE,
   maxRowsPerInsert,
   isFullMode,
+  captureTelemetry,
+  diffTelemetry,
+  quoteIdent,
 };

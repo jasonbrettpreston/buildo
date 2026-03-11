@@ -53,7 +53,7 @@
 | 25 | `25_subscription.md` | Subscription & Billing (Stripe) | `src/lib/subscription/plans.ts` | `src/tests/subscription.logic.test.ts` | Done |
 | 26 | `26_admin.md` | Admin Panel | `src/app/admin/page.tsx`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/pipelines/[slug]/route.ts`, +4 more | `src/tests/admin.ui.test.tsx` | Done |
 | 27 | `27_neighbourhood_profiles.md` | Neighbourhood Profiles | `src/lib/neighbourhoods/summary.ts`, `src/lib/neighbourhoods/types.ts`, `src/components/permits/NeighbourhoodProfile.tsx` | `src/tests/neighbourhood.logic.test.ts` | Done |
-| 28 | `28_data_quality_dashboard.md` | Data Quality Dashboard | `src/lib/quality/metrics.ts`, `src/lib/quality/types.ts`, `src/app/api/quality/route.ts`, +5 more | `src/tests/quality.logic.test.ts`, `src/tests/quality.infra.test.ts` | Done |
+| 28 | `28_data_quality_dashboard.md` | Data Quality Dashboard | `src/lib/quality/metrics.ts`, `src/lib/quality/types.ts`, `src/app/api/quality/route.ts`, +7 more | `src/tests/quality.logic.test.ts`, `src/tests/quality.infra.test.ts` | Done |
 | 29 | `29_spatial_parcel_matching.md` | Spatial Parcel Matching | `src/lib/parcels/geometry.ts`, `src/lib/parcels/types.ts` | `src/tests/parcels.logic.test.ts` | Done |
 | 30 | `30_permit_scope_classification.md` | Permit Work Scope Classification | `src/lib/classification/scope.ts` | `src/tests/scope.logic.test.ts` | Done |
 | 31 | `31_building_massing.md` | Building Massing Integration | `src/lib/massing/geometry.ts`, `src/lib/massing/types.ts`, `src/components/permits/BuildingMassing.tsx` | `src/tests/massing.logic.test.ts` | Done |

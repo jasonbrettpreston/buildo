@@ -157,6 +157,19 @@ async function run() {
       pipeline.log.warn('[run-chain]', `Could not insert step tracking row: ${err.message}`);
     }
 
+    // T1/T2/T4 Telemetry: capture pre-run DB state for transparency
+    let preTelemetry = null;
+    const scriptEntry = manifest.scripts[slug];
+    const telemetryTables = scriptEntry?.telemetry_tables ?? [];
+    const telemetryNullCols = scriptEntry?.telemetry_null_cols ?? null;
+    if (telemetryTables.length > 0) {
+      try {
+        preTelemetry = await pipeline.captureTelemetry(pool, telemetryTables, telemetryNullCols);
+      } catch (err) {
+        pipeline.log.warn('[run-chain]', `Pre-telemetry capture failed for ${slug}: ${err.message}`);
+      }
+    }
+
     try {
       const stepEnv = { ...process.env, PIPELINE_CHAIN: chainId };
       // Sources chain reloads massing data, so link_massing needs a full rescan.
@@ -208,6 +221,16 @@ async function run() {
         } catch { /* malformed meta — ignore */ }
       }
 
+      // T1/T2/T4 Telemetry: capture post-run state (always, even on success)
+      if (preTelemetry) {
+        try {
+          const telemetry = await pipeline.diffTelemetry(pool, telemetryTables, preTelemetry);
+          recordsMeta = { ...(recordsMeta || {}), telemetry };
+        } catch (err) {
+          pipeline.log.warn('[run-chain]', `Post-telemetry capture failed for ${slug}: ${err.message}`);
+        }
+      }
+
       const durationMs = Date.now() - stepStart;
       console.log(`${stepLabel} — completed (${(durationMs / 1000).toFixed(1)}s)\n`);
 
@@ -240,12 +263,23 @@ async function run() {
       const errorMsg = (err.message || String(err)).slice(0, 4000);
       pipeline.log.error('[run-chain]', `${stepLabel} — FAILED (${(durationMs / 1000).toFixed(1)}s)`, { error: errorMsg.slice(0, 200) });
 
+      // T1/T2/T4: Still capture post-run telemetry on failure — partial data
+      // (e.g. "5,000 rows inserted before crash") is invaluable for debugging.
+      let failMeta = null;
+      if (preTelemetry) {
+        try {
+          const telemetry = await pipeline.diffTelemetry(pool, telemetryTables, preTelemetry);
+          failMeta = { telemetry };
+        } catch { /* non-fatal */ }
+      }
+
       if (stepRunId) {
         await pool.query(
           `UPDATE pipeline_runs
-           SET completed_at = NOW(), status = 'failed', duration_ms = $1, error_message = $2
+           SET completed_at = NOW(), status = 'failed', duration_ms = $1, error_message = $2,
+               records_meta = COALESCE($4::jsonb, records_meta)
            WHERE id = $3`,
-          [durationMs, errorMsg, stepRunId]
+          [durationMs, errorMsg, stepRunId, failMeta ? JSON.stringify(failMeta) : null]
         ).catch(() => {});
       }
 

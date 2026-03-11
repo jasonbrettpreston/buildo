@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FunnelRowData } from '@/lib/admin/funnel';
 import { STEP_DESCRIPTIONS } from '@/lib/admin/funnel';
-import { CircularBadge, FunnelAllTimePanel, FunnelLastRunPanel, DataFlowTile } from './funnel/FunnelPanels';
+import { CircularBadge, FunnelAllTimePanel, FunnelLastRunPanel, DataFlowTile, type TelemetryData } from './funnel/FunnelPanels';
 
 // ---------------------------------------------------------------------------
 // Pipeline Registry — single source of truth for all tracked pipelines
@@ -197,6 +197,8 @@ export interface FreshnessTimelineProps {
   onCancel?: (slug: string) => void;
   /** Live DB schema map: table_name → column_name[] from information_schema */
   dbSchemaMap?: Record<string, string[]>;
+  /** T3: Fast approximate row counts from pg_class.reltuples */
+  liveTableCounts?: Record<string, number>;
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -237,28 +239,38 @@ export function formatDuration(ms: number | null | undefined): string {
   return remMins > 0 ? `${hrs}h ${remMins}m` : `${hrs}h`;
 }
 
-function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean, staleExempt?: boolean): { color: string; label: string } {
+/**
+ * Raw DB Transparency: status dot maps 1:1 to pipeline_runs.status.
+ * No interpreted states (stale, freshness) — just what the DB says.
+ */
+function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { color: string; label: string } {
   if (isRunning) return { color: 'bg-blue-50 tile-flash-running', label: 'Running' };
   if (!info || !info.last_run_at) return { color: '', label: 'Never run' };
   if (info.status === 'failed') return { color: 'bg-red-50', label: 'Failed' };
   if (info.status === 'skipped') return { color: 'bg-gray-50', label: 'Skipped' };
   if (info.status === 'cancelled') return { color: 'bg-gray-50', label: 'Cancelled' };
+  if (info.status === 'completed') return { color: 'bg-green-50', label: 'Completed' };
+  return { color: '', label: info.status ?? 'Unknown' };
+}
 
-  // Completed with zero work (0 new + 0 updated):
-  // - Ingest steps: "Stale" (red) — data source returned nothing new
-  // - All other steps: "No Change" (neutral) — no upstream data to process
-  // records_new must be explicitly 0 (not null) — null means the step doesn't track records
-  // (e.g. quality gates), so we skip them and fall through to time-based freshness.
-  if (info.status === 'completed' && info.records_new != null && info.records_new === 0 && (info.records_updated ?? 0) === 0) {
-    if (!staleExempt) return { color: 'bg-red-50', label: 'Stale' };
-    return { color: 'bg-gray-50', label: 'No Change' };
-  }
-
+/**
+ * Freshness badge — separate from status, based on time since last_run_at.
+ * Returns null if no run data or if running.
+ */
+function getFreshnessBadge(info: PipelineRunInfo | undefined, isRunning: boolean): { text: string; cls: string } | null {
+  if (isRunning || !info?.last_run_at) return null;
   const hours = (Date.now() - new Date(info.last_run_at).getTime()) / (1000 * 60 * 60);
-  if (hours < 24) return { color: 'bg-green-50', label: 'Fresh' };
-  if (hours < 72) return { color: 'bg-green-50', label: 'Recent' };
-  if (hours < 168) return { color: 'bg-yellow-50', label: 'Aging' };
-  return { color: 'bg-purple-50', label: 'Overdue' };
+  if (hours < 24) return { text: 'Fresh', cls: 'text-green-600 bg-green-50 border-green-200' };
+  if (hours < 72) return { text: 'Recent', cls: 'text-green-600 bg-green-50 border-green-200' };
+  if (hours < 168) return { text: 'Aging', cls: 'text-yellow-600 bg-yellow-50 border-yellow-200' };
+  return { text: 'Overdue', cls: 'text-purple-600 bg-purple-50 border-purple-200' };
+}
+
+/** Compact number formatter: 1234 → 1.2K, 1234567 → 1.2M */
+function compactNum(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return n.toLocaleString();
 }
 
 /**
@@ -280,7 +292,7 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
 // Component
 // ---------------------------------------------------------------------------
 
-export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData, onCancel, dbSchemaMap }: FreshnessTimelineProps) {
+export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData, onCancel, dbSchemaMap, liveTableCounts }: FreshnessTimelineProps) {
   const [errorPopover, setErrorPopover] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   // Bug Fix 1: optimisticToggles for immediate visual feedback on toggle click
@@ -461,6 +473,34 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                 )}
               </div>
 
+              {/* T3: Live DB state bar — approximate row counts for chain tables */}
+              {liveTableCounts && Object.keys(liveTableCounts).length > 0 && (() => {
+                // Collect unique target tables for this chain's steps
+                const chainTables = new Set<string>();
+                const TABLE_MAP: Record<string, string> = {
+                  permits: 'permits', coa: 'coa_applications', builders: 'entities',
+                  address_points: 'address_points', parcels: 'parcels', massing: 'building_footprints',
+                  neighbourhoods: 'neighbourhoods', load_wsib: 'wsib_registry',
+                  link_parcels: 'permit_parcels', link_massing: 'parcel_buildings',
+                  classify_permits: 'permit_trades', refresh_snapshot: 'data_quality_snapshots',
+                };
+                for (const step of chain.steps) {
+                  const table = TABLE_MAP[step.slug];
+                  if (table && liveTableCounts[table] != null) chainTables.add(table);
+                }
+                if (chainTables.size === 0) return null;
+                return (
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mb-1.5 px-1">
+                    {[...chainTables].map((t) => (
+                      <span key={t} className="text-[9px] text-gray-400 tabular-nums">
+                        <span className="text-gray-500 font-medium">{t}</span>{' '}
+                        {compactNum(liveTableCounts[t])}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })()}
+
               {/* Chain steps — each pipeline gets its own tile */}
               <div className="space-y-2">
                 {(() => {
@@ -487,14 +527,13 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const stepRanAt = info?.last_run_at ? new Date(info.last_run_at).getTime() : 0;
                   const stepDoneThisRun = (info?.status === 'completed' || info?.status === 'failed') && stepRanAt >= chainStartedAt;
                   const isPending = isChainRunning && !isRunning && !stepDoneThisRun;
-                  const STALE_EXEMPT_GROUPS = new Set(['link', 'classify', 'quality', 'snapshot']);
                   const stepGroup = PIPELINE_REGISTRY[step.slug]?.group;
-                  const staleExempt = stepGroup ? STALE_EXEMPT_GROUPS.has(stepGroup) : false;
                   const dot = isDisabled
                     ? { color: '', label: 'Disabled' }
                     : isPending
                     ? { color: '', label: 'Pending' }
-                    : getStatusDot(info, isRunning, staleExempt);
+                    : getStatusDot(info, isRunning);
+                  const freshness = isDisabled || isPending ? null : getFreshnessBadge(info, isRunning);
                   const stepNum = stepNumbers[i];
                   const isRoot = step.indent === 0;
 
@@ -502,15 +541,15 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const expandKey = `${chain.id}-${step.slug}`;
                   const isExpanded = expandedSteps.has(expandKey);
 
-                  // Full-tile status coloring — flash overrides for attention states
-                  const tileFlash = dot.label === 'Aging'
-                    ? 'tile-flash-warning border-yellow-400'
-                    : dot.label === 'Stale' || dot.label === 'Failed'
+                  // Full-tile status coloring — direct from DB status
+                  const tileFlash = dot.label === 'Failed'
                     ? 'tile-flash-stale border-red-400'
-                    : dot.label === 'Overdue'
-                    ? 'tile-flash-overdue border-purple-400'
                     : dot.label === 'Running'
                     ? 'tile-flash-running border-blue-300'
+                    : freshness?.text === 'Aging'
+                    ? 'tile-flash-warning border-yellow-400'
+                    : freshness?.text === 'Overdue'
+                    ? 'tile-flash-overdue border-purple-400'
                     : '';
 
                   // Status background — full tile coloring replaces status dots
@@ -602,6 +641,13 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 </div>
                               )}
                             </button>
+                          )}
+
+                          {/* Freshness badge — decoupled from status dot */}
+                          {freshness && (
+                            <span className={`text-[8px] px-1 py-0.5 rounded border font-medium shrink-0 ${freshness.cls}`}>
+                              {freshness.text}
+                            </span>
                           )}
 
                           {/* SLA badge */}
@@ -715,12 +761,14 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           )}
                         </div>
 
-                        {/* Description tile — source → target data flow */}
+                        {/* Description tile — source → target data flow + telemetry */}
                         {STEP_DESCRIPTIONS[step.slug] && (
                           <DataFlowTile
                             desc={STEP_DESCRIPTIONS[step.slug]}
                             dbSchemaMap={dbSchemaMap}
+                            // SAFETY: records_meta is JSONB (Record<string, unknown> | null), pipeline_meta/telemetry are known sub-keys
                             pipelineMeta={(info?.records_meta as Record<string, unknown>)?.pipeline_meta as import('./funnel/FunnelPanels').PipelineMeta | undefined}
+                            telemetry={(info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined}
                           />
                         )}
 
