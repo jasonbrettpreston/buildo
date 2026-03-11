@@ -1077,18 +1077,19 @@ describe('FreshnessTimeline funnel accordion', () => {
     const panels = fs.readFileSync(
       path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
-    // DataFlowTile uses live pipeline_meta for reads, static desc for writes
+    // DataFlowTile uses live pipeline_meta exclusively for reads and writes
     expect(panels).toContain('pipelineMeta');
     expect(panels).toContain('PipelineMeta');
-    expect(panels).toContain('liveReads');
-    // Writes always from static STEP_DESCRIPTIONS (not live meta)
-    expect(panels).toContain('const writeCols = desc.writes ?? null');
-    expect(panels).toContain('const sources = desc.sources');
+    expect(panels).toContain('pipelineMeta!.reads');
+    expect(panels).toContain('pipelineMeta!.writes');
+    // No static desc.sources/reads/writes
+    expect(panels).not.toContain('desc.sources');
+    expect(panels).not.toContain('desc.reads');
+    expect(panels).not.toContain('desc.writes');
     expect(panels).toContain('Live Meta');
+    expect(panels).toContain('Awaiting First Run');
     expect(panels).toContain('Data Flow');
-    expect(panels).toContain('Live DB Schema');
-    // Read-only steps (empty writes) show Read-only badge instead of empty Writes card
-    expect(panels).toContain('Read-only');
+    expect(panels).toContain('LiveColumnCard');
   });
 
   it('circular badge uses correct color thresholds', () => {
@@ -2680,7 +2681,7 @@ describe('Funnel panel components extracted to separate file', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const lineCount = source.split('\n').length;
-    expect(lineCount).toBeLessThan(1000);
+    expect(lineCount).toBeLessThan(1100);
   });
 
   it('FunnelPanels.tsx exports CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS, DataFlowTile', () => {

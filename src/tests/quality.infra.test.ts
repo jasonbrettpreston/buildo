@@ -459,19 +459,22 @@ describe('Duration anomaly query excludes deprecated scope slugs (Bug D3)', () =
 });
 
 // ---------------------------------------------------------------------------
-// Bug B10: DataFlowTile constrains WRITES columns
+// DataFlowTile renders from live pipeline_meta
 // ---------------------------------------------------------------------------
 
-describe('DataFlowTile constrains write columns (Bug B10)', () => {
-  it('self-ref fallback filters targetCols through writesSet', () => {
+describe('DataFlowTile renders from live pipeline_meta', () => {
+  it('uses pipelineMeta exclusively, with never-run fallback', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/funnel/FunnelPanels.tsx'),
       'utf-8'
     );
-    // The self-referential fallback (no live meta) must filter columns through
-    // writesSet so it doesn't show the full 50+ column schema.
-    // Fix: cols={writesSet ? targetCols.filter(...) : targetCols}
-    expect(source).toContain('targetCols.filter');
-    expect(source).toContain('writesSet.has');
+    // Live meta is the sole source for reads/writes — no static desc fields
+    expect(source).toContain('pipelineMeta!.reads');
+    expect(source).toContain('pipelineMeta!.writes');
+    expect(source).not.toContain('desc.sources');
+    expect(source).not.toContain('desc.writes');
+    // Never-run fallback shows full table schema from dbSchemaMap
+    expect(source).toContain('Awaiting First Run');
+    expect(source).toContain('LiveColumnCard');
   });
 });

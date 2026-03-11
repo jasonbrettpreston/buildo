@@ -81,8 +81,8 @@ async function run() {
       `SELECT pipeline FROM pipeline_schedules WHERE enabled = FALSE`
     );
     for (const row of res.rows) disabledSlugs.add(row.pipeline);
-  } catch {
-    // pipeline_schedules may not have enabled column yet — treat all as enabled
+  } catch (err) {
+    pipeline.log.warn('[run-chain]', `Could not query pipeline_schedules: ${err.message}`);
   }
 
   let failedStep = null;
@@ -105,7 +105,7 @@ async function run() {
           wasCancelled = true;
           break;
         }
-      } catch { /* non-fatal — continue if check fails */ }
+      } catch (err) { pipeline.log.warn('[run-chain]', `Cancel check failed: ${err.message}`); }
     }
 
     // Skip disabled steps
@@ -118,8 +118,8 @@ async function run() {
            VALUES ($1, NOW(), NOW(), 'skipped', 0)`,
           [scopedSlug]
         );
-      } catch {
-        // Non-fatal — skip tracking if table unavailable
+      } catch (err) {
+        pipeline.log.warn('[run-chain]', `Skip tracking insert failed: ${err.message}`);
       }
       continue;
     }

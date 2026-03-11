@@ -710,18 +710,11 @@ describe('Funnel computation (extracted to lib/admin/funnel)', () => {
     }
   });
 
-  it('each STEP_DESCRIPTIONS entry has summary, table, and sources', async () => {
+  it('each STEP_DESCRIPTIONS entry has summary and table', async () => {
     const { STEP_DESCRIPTIONS } = await import('@/lib/admin/funnel');
     for (const [slug, desc] of Object.entries(STEP_DESCRIPTIONS)) {
       expect(desc.summary.length, `${slug} summary empty`).toBeGreaterThan(0);
       expect(desc.table.length, `${slug} table empty`).toBeGreaterThan(0);
-      expect(Array.isArray(desc.sources), `${slug} sources not an array`).toBe(true);
-      expect(desc.sources.length, `${slug} sources empty`).toBeGreaterThan(0);
-      // writes is optional — only set for narrow-update steps
-      if (desc.writes) {
-        expect(Array.isArray(desc.writes), `${slug} writes not an array`).toBe(true);
-        expect(desc.writes.length, `${slug} writes is empty array (should omit instead)`).toBeGreaterThan(0);
-      }
     }
   });
 
@@ -1592,22 +1585,27 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
     expect(row.status).toBe('healthy');
   });
 
-  it('DataFlowTile always uses static STEP_DESCRIPTIONS for writes, not live meta', () => {
+  it('DataFlowTile renders exclusively from live pipeline_meta', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
-    // Writes must come from static desc, not live pipeline_meta
-    expect(source).toContain('const writeCols = desc.writes ?? null');
-    // Sources also come from static desc
-    expect(source).toContain('const sources = desc.sources');
+    // Must use live pipelineMeta for reads and writes — no static desc.sources/reads/writes
+    expect(source).toContain('pipelineMeta!.reads');
+    expect(source).toContain('pipelineMeta!.writes');
+    expect(source).not.toContain('desc.sources');
+    expect(source).not.toContain('desc.reads');
+    expect(source).not.toContain('desc.writes');
+    // Never-run fallback shows placeholder
+    expect(source).toContain('Awaiting First Run');
   });
 
-  it('STEP_DESCRIPTIONS assert_schema and assert_data_bounds have explicit writes', async () => {
+  it('STEP_DESCRIPTIONS has no static sources/reads/writes fields', async () => {
     const { STEP_DESCRIPTIONS } = await import('@/lib/admin/funnel');
-    expect(STEP_DESCRIPTIONS.assert_schema.writes).toBeDefined();
-    expect(STEP_DESCRIPTIONS.assert_schema.writes).toContain('checks_passed');
-    expect(STEP_DESCRIPTIONS.assert_schema.writes).toContain('checks_failed');
-    expect(STEP_DESCRIPTIONS.assert_data_bounds.writes).toBeDefined();
-    expect(STEP_DESCRIPTIONS.assert_data_bounds.writes).toContain('checks_passed');
+    for (const [slug, desc] of Object.entries(STEP_DESCRIPTIONS)) {
+      const d = desc as unknown as Record<string, unknown>;
+      expect(d.sources, `${slug} should not have static sources`).toBeUndefined();
+      expect(d.reads, `${slug} should not have static reads`).toBeUndefined();
+      expect(d.writes, `${slug} should not have static writes`).toBeUndefined();
+    }
   });
 });

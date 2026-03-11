@@ -318,11 +318,51 @@ function TableCard({ tableName, cols, highlights, label }: {
   );
 }
 
-function ExternalBadge({ label }: { label: string }) {
+function ExternalBadge({ label, cols }: { label: string; cols?: string[] }) {
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-md px-3 py-2 flex items-center gap-2 flex-1 min-w-0">
-      <span className="text-[9px] font-semibold text-blue-400 uppercase tracking-wider">Source</span>
-      <span className="text-[11px] font-medium text-blue-700">{label}</span>
+    <div className="bg-blue-50 border border-blue-200 rounded-md px-3 py-2 flex-1 min-w-0">
+      <div className="flex items-center gap-2">
+        <span className="text-[9px] font-semibold text-blue-400 uppercase tracking-wider">Source</span>
+        <span className="text-[11px] font-medium text-blue-700">{label}</span>
+      </div>
+      {cols && cols.length > 0 && cols[0] !== '*' && (
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {cols.map((c) => (
+            <span key={c} className="text-[10px] font-mono text-blue-600 bg-white border border-blue-100 rounded px-1.5 py-0.5">{c}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Renders exact columns from live pipeline_meta — no fallback to full schema */
+function LiveColumnCard({ tableName, cols, label, color }: {
+  tableName: string; cols: string[]; label: string; color: 'blue' | 'emerald';
+}) {
+  const isWildcard = cols.length === 1 && cols[0] === '*';
+  const bgCls = color === 'blue' ? 'bg-blue-50 border-blue-200' : 'bg-emerald-50 border-emerald-200';
+  const labelCls = color === 'blue' ? 'text-blue-400' : 'text-emerald-400';
+  const nameCls = color === 'blue' ? 'text-blue-600' : 'text-emerald-600';
+  const chipCls = color === 'blue'
+    ? 'text-blue-700 bg-white border-blue-100'
+    : 'text-emerald-700 bg-white border-emerald-100';
+
+  return (
+    <div className={`${bgCls} border rounded-md p-2.5`}>
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className={`text-[9px] font-semibold ${labelCls} uppercase tracking-wider`}>{label}</span>
+        <span className={`text-[10px] font-mono ${nameCls} font-medium`}>{tableName}</span>
+      </div>
+      {isWildcard ? (
+        <span className="text-[10px] text-gray-400 italic">All columns</span>
+      ) : (
+        <div className="flex flex-wrap gap-1">
+          {cols.map((c) => (
+            <span key={c} className={`text-[10px] font-mono ${chipCls} border rounded px-1.5 py-0.5`}>{c}</span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -336,111 +376,74 @@ export interface PipelineMeta {
 export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, telemetry }: {
   desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null; telemetry?: TelemetryData | null;
 }) {
-  // Always use curated STEP_DESCRIPTIONS for sources and writes — these are
-  // per-step accurate (e.g. shared scripts emit union of all reads/writes).
-  // Static reads override live pipeline_meta when present (shared scripts
-  // like classify-scope.js emit identical meta for both steps).
-  const liveReads = pipelineMeta?.reads;
-  const hasLiveMeta = !!(desc.reads || liveReads);
-
-  // Sources and writes always come from static step descriptions
-  const sources = desc.sources;
-  const writeCols = desc.writes ?? null;
-
-  // Read columns: static desc.reads (per-step accurate) > live meta (shared script)
-  const readColsByTable = desc.reads ?? liveReads ?? null;
-
-  const targetCols = dbSchemaMap?.[desc.table] ?? [];
-  const writesSet = writeCols ? new Set(writeCols) : null;
-  const isSelfRef = sources.length === 1 && sources[0] === desc.table;
+  // Live pipeline_meta is the single source of truth for reads/writes.
+  // It comes from PIPELINE_META emitted by each script and stored in
+  // pipeline_runs.records_meta.pipeline_meta after every run.
+  const hasLiveMeta = !!(pipelineMeta?.reads || pipelineMeta?.writes);
   const isExternal = (s: string) => !dbSchemaMap?.[s];
+
+  if (!hasLiveMeta) {
+    // Never-run fallback: show full table schema from information_schema
+    const targetCols = dbSchemaMap?.[desc.table] ?? [];
+    return (
+      <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-2">
+          <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Data Flow</h4>
+          <span className="text-[8px] font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded px-1 py-0.5">Awaiting First Run</span>
+        </div>
+        <p className="text-xs text-gray-600 mb-3">{desc.summary}</p>
+        {targetCols.length > 0 ? (
+          <TableCard tableName={desc.table} cols={targetCols} highlights={null} label="Target Table" />
+        ) : (
+          <p className="text-[10px] text-gray-400 italic">Run this pipeline to see exact data flow</p>
+        )}
+        {telemetry && <TelemetrySection telemetry={telemetry} />}
+      </div>
+    );
+  }
+
+  // Live data flow from pipeline_meta
+  const readTables = Object.keys(pipelineMeta!.reads ?? {});
+  const writeTables = Object.keys(pipelineMeta!.writes ?? {});
 
   return (
     <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
       <div className="flex items-center gap-2 mb-2">
         <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Data Flow</h4>
-        {hasLiveMeta && (
-          <span className="text-[8px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded px-1 py-0.5">Live Meta</span>
-        )}
+        <span className="text-[8px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded px-1 py-0.5">Live Meta</span>
       </div>
       <p className="text-xs text-gray-600 mb-3">{desc.summary}</p>
 
-      {isSelfRef && readColsByTable?.[desc.table] ? (
-        /* Self-referential with live meta: show explicit reads → writes columns */
-        writeCols && writeCols.length === 0 ? (
-          /* Read-only step (e.g. create-pre-permits): no writes, just show reads */
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-2.5">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <span className="text-[9px] font-semibold text-blue-400 uppercase tracking-wider">Reads</span>
-              <span className="text-[10px] font-mono text-blue-600 font-medium">{desc.table}</span>
-              <span className="text-[8px] font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded px-1 py-0.5 ml-auto">Read-only</span>
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {readColsByTable[desc.table].map((c) => (
-                <span key={c} className="text-[10px] font-mono text-blue-700 bg-white border border-blue-100 rounded px-1.5 py-0.5">{c}</span>
-              ))}
-            </div>
-          </div>
-        ) : (
-        <div className="flex flex-col md:flex-row items-stretch gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-2.5">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="text-[9px] font-semibold text-blue-400 uppercase tracking-wider">Reads</span>
-                <span className="text-[10px] font-mono text-blue-600 font-medium">{desc.table}</span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {readColsByTable[desc.table].map((c) => (
-                  <span key={c} className="text-[10px] font-mono text-blue-700 bg-white border border-blue-100 rounded px-1.5 py-0.5">{c}</span>
-                ))}
-              </div>
-            </div>
-          </div>
+      <div className="flex flex-col md:flex-row items-stretch gap-2">
+        {/* Read sources */}
+        <div className={`flex flex-col gap-2 ${readTables.length > 0 ? 'flex-1 min-w-0' : ''}`}>
+          {readTables.map((table) => {
+            const cols = pipelineMeta!.reads![table];
+            return isExternal(table)
+              ? <div key={table}><ExternalBadge label={table} cols={cols} /></div>
+              : <div key={table}>
+                  <LiveColumnCard tableName={table} cols={cols} label="Reads" color="blue" />
+                </div>;
+          })}
+        </div>
+        {/* Arrow */}
+        {readTables.length > 0 && writeTables.length > 0 && (
           <div className="flex items-center justify-center py-1 md:py-0 md:px-1">
             <span className="text-gray-300 text-lg font-bold rotate-90 md:rotate-0">{'\u2192'}</span>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="bg-emerald-50 border border-emerald-200 rounded-md p-2.5">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider">Writes</span>
-                <span className="text-[10px] font-mono text-emerald-600 font-medium">{desc.table}</span>
+        )}
+        {/* Write targets */}
+        <div className={`flex flex-col gap-2 ${writeTables.length > 0 ? 'flex-1 min-w-0' : ''}`}>
+          {writeTables.map((table) => {
+            const cols = pipelineMeta!.writes![table];
+            return (
+              <div key={table}>
+                <LiveColumnCard tableName={table} cols={cols} label="Writes" color="emerald" />
               </div>
-              <div className="flex flex-wrap gap-1">
-                {writeCols ? writeCols.map((c) => (
-                  <span key={c} className="text-[10px] font-mono text-emerald-700 bg-white border border-emerald-100 rounded px-1.5 py-0.5">{c}</span>
-                )) : <span className="text-[10px] text-gray-400 italic">All columns</span>}
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
-        )
-      ) : isSelfRef && targetCols.length > 0 ? (
-        /* Self-referential without live meta: show only write-highlighted columns (not full schema) */
-        <TableCard tableName={desc.table} cols={writesSet ? targetCols.filter((c) => writesSet.has(c)) : targetCols} highlights={writesSet} label="Reads & Writes" />
-      ) : (
-        <div className="flex flex-col md:flex-row items-stretch gap-2">
-          <div className={`flex flex-col gap-2 ${sources.length > 0 ? 'flex-1 min-w-0' : ''}`}>
-            {sources.map((s) => (
-              isExternal(s)
-                ? <div key={s}><ExternalBadge label={s} /></div>
-                : <div key={s}>
-                    <TableCard
-                      tableName={s}
-                      cols={readColsByTable?.[s] ?? dbSchemaMap?.[s] ?? []}
-                      highlights={readColsByTable?.[s] ? new Set(readColsByTable[s]) : null}
-                      label="Reads"
-                    />
-                  </div>
-            ))}
-          </div>
-          <div className="flex items-center justify-center py-1 md:py-0 md:px-1">
-            <span className="text-gray-300 text-lg font-bold rotate-90 md:rotate-0">{'\u2192'}</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <TableCard tableName={desc.table} cols={targetCols} highlights={writesSet} label="Writes" />
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* T1/T2/T4: Telemetry section — progressive enhancement */}
       {telemetry && <TelemetrySection telemetry={telemetry} />}

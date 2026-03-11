@@ -103,7 +103,8 @@ pipeline.run('refresh-snapshot', async (pool) => {
      FROM coa_applications`
   );
   const c = coa.rows[0];
-  console.log(`CoA: ${c.total} total, ${c.linked} linked = ${(parseInt(c.linked)/parseInt(c.total)*100).toFixed(1)}%`);
+  const coaTotal = parseInt(c.total);
+  console.log(`CoA: ${c.total} total, ${c.linked} linked = ${coaTotal > 0 ? (parseInt(c.linked)/coaTotal*100).toFixed(1) : '0.0'}%`);
 
   // 8. Scope counts — active permits with residential/commercial/mixed-use tag
   const scope = await pool.query(

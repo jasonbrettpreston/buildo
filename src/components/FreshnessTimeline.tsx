@@ -311,7 +311,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
       return next;
     });
     // T5: Lazy-load sparkline history on first expand
-    const slug = key.split('-').slice(1).join('-'); // expandKey = chainId-stepSlug
+    const slug = key.substring(key.indexOf('-') + 1); // expandKey = chainId-stepSlug
     if (!sparklineCache.current.has(slug)) {
       fetch(`/api/admin/pipelines/history?slug=${encodeURIComponent(slug)}&limit=10`)
         .then((r) => r.ok ? r.json() : null)
@@ -322,7 +322,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
             setExpandedSteps((prev) => new Set(prev));
           }
         })
-        .catch(() => { /* non-fatal — sparkline is optional */ });
+        .catch((e) => { console.warn('[sparkline]', e); });
     }
   };
 
@@ -507,6 +507,61 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                         {compactNum(liveTableCounts[t])}
                       </span>
                     ))}
+                  </div>
+                );
+              })()}
+
+              {/* Chain Completion Report — aggregated DB impact summary */}
+              {(() => {
+                const chainInfo = pipelineLastRun[chainSlug];
+                if (!chainInfo || chainInfo.status !== 'completed' || isChainRunning) return null;
+                // Aggregate T2 pg_stats across all chain steps
+                let totalIns = 0;
+                let totalUpd = 0;
+                let totalDel = 0;
+                let hasAnyTelemetry = false;
+                for (const step of chain.steps) {
+                  const scopedKey = `${chain.id}:${step.slug}`;
+                  const stepInfo = pipelineLastRun[scopedKey];
+                  const telemetry = (stepInfo?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
+                  if (telemetry?.pg_stats) {
+                    hasAnyTelemetry = true;
+                    for (const stats of Object.values(telemetry.pg_stats)) {
+                      totalIns += stats.ins ?? 0;
+                      totalUpd += stats.upd ?? 0;
+                      totalDel += stats.del ?? 0;
+                    }
+                  }
+                }
+                if (!hasAnyTelemetry) return null;
+                return (
+                  <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                    <span className="text-[10px] font-semibold text-green-700 uppercase tracking-wider">
+                      {chain.label} Completed
+                    </span>
+                    <span className="text-[10px] tabular-nums text-gray-600">
+                      {formatDuration(chainInfo.duration_ms)}
+                    </span>
+                    {totalIns > 0 && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium tabular-nums">
+                        +{totalIns.toLocaleString()} inserted
+                      </span>
+                    )}
+                    {totalUpd > 0 && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium tabular-nums">
+                        {totalUpd.toLocaleString()} updated
+                      </span>
+                    )}
+                    {totalDel > 0 && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium tabular-nums">
+                        {totalDel.toLocaleString()} deleted
+                      </span>
+                    )}
+                    {totalIns === 0 && totalUpd === 0 && totalDel === 0 && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 font-medium">
+                        No rows impacted
+                      </span>
+                    )}
                   </div>
                 );
               })()}

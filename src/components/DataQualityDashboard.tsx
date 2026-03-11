@@ -257,28 +257,41 @@ export function DataQualityDashboard() {
   const triggerTimestamps = useRef<Map<string, number>>(new Map());
 
   const fetchData = useCallback(() => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    // Separate abort controllers so a slow /api/quality doesn't kill /api/admin/stats
+    const qualityCtrl = new AbortController();
+    const statsCtrl = new AbortController();
+    const qualityTimer = setTimeout(() => qualityCtrl.abort(), FETCH_TIMEOUT_MS);
+    const statsTimer = setTimeout(() => statsCtrl.abort(), FETCH_TIMEOUT_MS);
 
-    return Promise.all([
-      fetch('/api/quality', { signal: controller.signal }).then((r) => r.json()),
-      fetch('/api/admin/stats', { signal: controller.signal }).then((r) => r.json()),
-    ])
-      .then(([qualityData, statsData]) => {
-        setData(qualityData);
+    const qualityPromise = fetch('/api/quality', { signal: qualityCtrl.signal })
+      .then((r) => r.json())
+      .then((qualityData) => { setData(qualityData); })
+      .catch((err) => {
+        const msg = err instanceof Error && err.name === 'AbortError'
+          ? 'Quality data fetch timed out'
+          : (err instanceof Error ? err.message : String(err));
+        setPipelineErrors((prev) => prev.includes(msg) ? prev : [...prev, msg]);
+      })
+      .finally(() => clearTimeout(qualityTimer));
+
+    const statsPromise = fetch('/api/admin/stats', { signal: statsCtrl.signal })
+      .then((r) => r.json())
+      .then((statsData) => {
         setStats(statsData);
         return statsData as AdminStats;
       })
       .catch((err) => {
         const msg = err instanceof Error && err.name === 'AbortError'
-          ? 'Dashboard fetch timed out'
+          ? 'Stats fetch timed out'
           : (err instanceof Error ? err.message : String(err));
         setPipelineErrors((prev) => prev.includes(msg) ? prev : [...prev, msg]);
+        return undefined;
       })
-      .finally(() => {
-        clearTimeout(timeoutId);
-        setLoading(false);
-      });
+      .finally(() => clearTimeout(statsTimer));
+
+    return Promise.all([qualityPromise, statsPromise])
+      .then(([, statsData]) => statsData as AdminStats | undefined)
+      .finally(() => setLoading(false));
   }, []);
 
   // On initial load, seed runningPipelines from DB state so buttons are
