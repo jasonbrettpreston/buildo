@@ -440,6 +440,25 @@ describe('Pipeline failure query filters to current-status failures (Bug B9)', (
 });
 
 // ---------------------------------------------------------------------------
+// Bug D3: Duration anomaly query must exclude deprecated scope slugs
+// ---------------------------------------------------------------------------
+
+describe('Duration anomaly query excludes deprecated scope slugs (Bug D3)', () => {
+  it('quality route filters out classify_scope_class and classify_scope_tags from duration query', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/quality/route.ts'),
+      'utf-8'
+    );
+    // The duration anomaly SQL must exclude deprecated scope slugs that were
+    // merged into classify_scope. Old rows in pipeline_runs trigger false warnings.
+    expect(source).toMatch(/classify_scope_class/);
+    expect(source).toMatch(/classify_scope_tags/);
+    // Must be in a NOT LIKE or NOT IN exclusion context
+    expect(source).toMatch(/NOT\s+(LIKE|IN)/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Bug B10: DataFlowTile constrains WRITES columns
 // ---------------------------------------------------------------------------
 

@@ -41,6 +41,8 @@ export async function GET() {
                   ROW_NUMBER() OVER (PARTITION BY pipeline ORDER BY started_at DESC) AS rn
            FROM pipeline_runs
            WHERE status = 'completed' AND duration_ms IS NOT NULL
+             AND pipeline NOT LIKE '%classify_scope_class%'
+             AND pipeline NOT LIKE '%classify_scope_tags%'
          ) sub
          WHERE rn <= 8
          ORDER BY pipeline, rn`
