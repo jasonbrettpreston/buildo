@@ -355,6 +355,15 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
     expect(source).toMatch(/recordsNew === 0[\s\S]{0,100}recordsUpdated/);
   });
 
+  it('gate abort uses completed status, not failed (stale data is not a failure)', () => {
+    const source = chainSource();
+    // Gate skip must NOT set failedStep — it uses a separate gateSkipped flag
+    // so the chain status resolves to 'completed' not 'failed'
+    expect(source).toContain('gateSkipped');
+    // Chain status must check gateSkipped separately from failedStep
+    expect(source).not.toMatch(/failedStep\s*=\s*slug[\s\S]{0,20}0 new records/);
+  });
+
   it('parses PIPELINE_META from step output and merges into records_meta', () => {
     const source = chainSource();
     expect(source).toContain('PIPELINE_META');

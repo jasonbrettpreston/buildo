@@ -86,6 +86,7 @@ async function run() {
   }
 
   let failedStep = null;
+  let gateSkipped = false;
   let wasCancelled = false;
 
   for (let i = 0; i < steps.length; i++) {
@@ -253,7 +254,7 @@ async function run() {
       const gate = manifest.chain_gates[chainId];
       if (gate && slug === gate && recordsNew === 0 && (recordsUpdated ?? 0) === 0) {
         console.log(`${stepLabel} — 0 new records — skipping downstream steps`);
-        failedStep = slug;
+        gateSkipped = true;
         break;
       }
     } catch (err) {
@@ -291,7 +292,11 @@ async function run() {
   // Update parent chain row
   const chainDurationMs = Date.now() - chainStart;
   const chainStatus = wasCancelled ? 'cancelled' : failedStep ? 'failed' : 'completed';
-  const chainError = failedStep ? `Stopped at step: ${failedStep}` : null;
+  const chainError = failedStep
+    ? `Stopped at step: ${failedStep}`
+    : gateSkipped
+      ? '0 new records — downstream steps skipped'
+      : null;
 
   if (chainRunId) {
     await pool.query(
@@ -305,6 +310,9 @@ async function run() {
   console.log(`=== Chain ${chainId}: ${chainStatus} (${(chainDurationMs / 1000).toFixed(1)}s) ===`);
   if (failedStep) {
     pipeline.log.error('[run-chain]', `Chain stopped at step: ${failedStep}`);
+  }
+  if (gateSkipped) {
+    pipeline.log.info('[run-chain]', '0 new records — downstream steps skipped (stale data, not a failure)');
   }
 
   await pool.end().catch(() => {});
