@@ -452,6 +452,13 @@ describe('Pipeline SDK', () => {
       });
     }
 
+    // §9.3 — extract-builders.js upsert must guard against no-op updates
+    it('extract-builders.js upsert has IS DISTINCT FROM guard to prevent no-op updates', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'extract-builders.js'), 'utf-8');
+      // The ON CONFLICT DO UPDATE must have a WHERE guard so unchanged rows aren't "updated"
+      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+    });
+
     // §3.5 — classify-scope.js records_total must include propagated permits
     it('classify-scope.js emitSummary records_total includes propagated count', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'classify-scope.js'), 'utf-8');

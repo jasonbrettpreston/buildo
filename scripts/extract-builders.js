@@ -91,6 +91,7 @@ pipeline.run('extract-builders', async (pool) => {
         ON CONFLICT (name_normalized) DO UPDATE SET
           permit_count = EXCLUDED.permit_count,
           last_seen_at = NOW()
+        WHERE entities.permit_count IS DISTINCT FROM EXCLUDED.permit_count
         RETURNING (xmax = 0) AS is_insert
       `, values);
 
