@@ -901,10 +901,10 @@ describe('Pipeline run concurrency handling', () => {
     expect(source).toMatch(/UPDATE pipeline_runs[\s\S]*?SET status = 'cancelled'[\s\S]*?WHERE status = 'running'/);
   });
 
-  it('does not reject with 409 for already running pipelines', () => {
+  it('rejects with 409 when pipeline process is already running (B11)', () => {
     const source = routeSource();
-    expect(source).not.toContain('already running');
-    expect(source).not.toContain('status: 409');
+    expect(source).toContain('already running');
+    expect(source).toContain('status: 409');
   });
 
   it('no stale threshold windows — all running rows are cancelled', () => {
@@ -1453,14 +1453,16 @@ describe('FreshnessTimeline pipeline tiles', () => {
 // ---------------------------------------------------------------------------
 
 describe('Pipeline API route fixes', () => {
-  it('API route force-cancels stale running rows instead of 409 reject', () => {
+  it('API route force-cancels stale DB rows AND guards with 409 for live processes (B11)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../../src/app/api/admin/pipelines/[slug]/route.ts'),
       'utf-8'
     );
-    // Force-cancel instead of concurrency guard
+    // Force-cancel stale DB rows
     expect(source).toContain('Superseded by new run');
-    expect(source).not.toContain('already running');
+    // 409 guard for live processes
+    expect(source).toContain('already running');
+    expect(source).toContain('status: 409');
   });
 
   it('Toggle PATCH uses UPSERT for missing pipeline_schedules rows', () => {

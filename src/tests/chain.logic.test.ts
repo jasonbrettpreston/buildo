@@ -798,6 +798,31 @@ describe('API Route Chain Row Ownership (B2/B9/B10)', () => {
   });
 });
 
+describe('Concurrent chain prevention (B11)', () => {
+  const routeSource = () => fs.readFileSync(
+    path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
+    'utf-8'
+  );
+
+  it('B11: POST returns 409 if process already running for same slug', () => {
+    const source = routeSource();
+    // Guard checks runningProcesses map before spawning
+    expect(source).toMatch(/runningProcesses\.get\(slug\)|runningProcesses\.has\(slug\)/);
+    expect(source).toContain('already running');
+    expect(source).toContain('status: 409');
+  });
+
+  it('B11: POST kills previous child process when force-cancelling stale rows', () => {
+    const source = routeSource();
+    // Force-cancel path should also SIGTERM the old process
+    const cancelBlock = source.slice(
+      source.indexOf('Force-cancel'),
+      source.indexOf('Stale-run cleanup')
+    );
+    expect(cancelBlock).toMatch(/child\.kill|\.kill\(/);
+  });
+});
+
 describe('Chain Completion Report per-step summary (B3)', () => {
   const timelineSource = () => fs.readFileSync(
     path.join(__dirname, '../components/FreshnessTimeline.tsx'),

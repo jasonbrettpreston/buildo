@@ -87,10 +87,25 @@ export async function POST(
 
   const isChain = CHAIN_SLUGS.has(slug);
 
+  // Concurrency guard: reject if a live process is already running for this slug.
+  // Prevents resource contention (B11: concurrent chains slow classify_permits from
+  // ~10 min to 88+ min, exceeding the 1-hour timeout).
+  const existingChild = runningProcesses.get(slug);
+  if (existingChild && !existingChild.killed) {
+    return NextResponse.json(
+      { error: `Pipeline ${slug} is already running` },
+      { status: 409 }
+    );
+  }
+
   // Force-cancel any previous 'running' rows for this slug.
   // Previous runs may be stale (dev server restart, process crash) and would
-  // permanently block future runs. This is safe: if the old process is still
-  // alive it will continue but its tracking row is marked cancelled.
+  // permanently block future runs. Also kill the OS process if still alive.
+  const staleChild = runningProcesses.get(slug);
+  if (staleChild && !staleChild.killed) {
+    staleChild.kill('SIGTERM');
+    runningProcesses.delete(slug);
+  }
   try {
     await query(
       `UPDATE pipeline_runs
