@@ -221,6 +221,12 @@ pipeline.run('load-massing', async (pool) => {
           estimated_stories = EXCLUDED.estimated_stories,
           centroid_lat = EXCLUDED.centroid_lat,
           centroid_lng = EXCLUDED.centroid_lng
+        WHERE building_footprints.geometry IS DISTINCT FROM EXCLUDED.geometry
+          OR building_footprints.max_height_m IS DISTINCT FROM EXCLUDED.max_height_m
+          OR building_footprints.min_height_m IS DISTINCT FROM EXCLUDED.min_height_m
+          OR building_footprints.footprint_area_sqm IS DISTINCT FROM EXCLUDED.footprint_area_sqm
+          OR building_footprints.centroid_lat IS DISTINCT FROM EXCLUDED.centroid_lat
+          OR building_footprints.centroid_lng IS DISTINCT FROM EXCLUDED.centroid_lng
         RETURNING (xmax = 0) AS is_insert`,
         values
       );
