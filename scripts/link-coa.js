@@ -147,7 +147,7 @@ pipeline.run('link-coa', async (pool) => {
                 linked_confidence = LEAST(0.50, 0.30 + matched.rank * 0.1),
                 last_seen_at = NOW()
             FROM (
-              SELECT DISTINCT ON (c.coa_id) c.coa_id, p.permit_num, lat.rank
+              SELECT DISTINCT ON (c.coa_id) c.coa_id, lat.permit_num, lat.rank
               FROM candidates c
               CROSS JOIN LATERAL (
                 SELECT permit_num,

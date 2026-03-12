@@ -576,6 +576,24 @@ describe('Pipeline SDK', () => {
       expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
     });
 
+    // §9.3 — link-coa.js Tier 3 LATERAL query must use "lat" alias not "p"
+    it('link-coa.js Tier 3 LATERAL query uses lat.permit_num not p.permit_num', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'link-coa.js'), 'utf-8');
+      // Extract the CROSS JOIN LATERAL block (Tier 3)
+      const lateralBlock = content.match(/CROSS JOIN LATERAL[\s\S]*?\) lat/);
+      expect(lateralBlock).not.toBeNull();
+      // The SELECT referencing lat results must use lat.permit_num
+      expect(content).toContain('lat.permit_num');
+    });
+
+    // §9.3 — link-massing.js records_updated must use buildingsLinked (actual DB writes)
+    it('link-massing.js emitSummary records_updated uses buildingsLinked not parcelsLinked', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'link-massing.js'), 'utf-8');
+      const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
+      expect(match).not.toBeNull();
+      expect(match![1]).toContain('records_updated: buildingsLinked');
+    });
+
     // §3.5 — classify-scope.js records_total must include propagated permits
     it('classify-scope.js emitSummary records_total includes propagated count', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'classify-scope.js'), 'utf-8');
