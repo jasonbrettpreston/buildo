@@ -51,10 +51,11 @@ pipeline.run('geocode-permits', async (pool) => {
           geocoded_at = NOW()
       FROM address_points ap
       WHERE ap.address_point_id = CAST(p.geo_id AS INTEGER)
-        AND p.latitude IS NULL
         AND p.geo_id IS NOT NULL
         AND p.geo_id != ''
         AND p.geo_id ~ '^[0-9]+$'
+        AND (p.latitude IS DISTINCT FROM ap.latitude
+          OR p.longitude IS DISTINCT FROM ap.longitude)
     `);
     return result.rowCount;
   });
