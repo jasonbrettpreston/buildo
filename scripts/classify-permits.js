@@ -542,6 +542,7 @@ pipeline.run('classify-permits', async (pool) => {
   let processed = 0;
   let totalMatches = 0;
   let permitsWithTrades = 0;
+  let dbUpdated = 0;
   const offset = { value: 0 };
   const startTime = Date.now();
 
@@ -603,7 +604,7 @@ pipeline.run('classify-permits', async (pool) => {
         renumbered.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++})`);
       }
       await pipeline.withTransaction(pool, async (client) => {
-        await client.query(
+        const result = await client.query(
           `INSERT INTO permit_trades (permit_num, revision_num, trade_id, tier, confidence, is_active, phase, lead_score)
            VALUES ${renumbered.join(', ')}
            ON CONFLICT (permit_num, revision_num, trade_id)
@@ -617,6 +618,7 @@ pipeline.run('classify-permits', async (pool) => {
               OR permit_trades.lead_score IS DISTINCT FROM EXCLUDED.lead_score`,
           valChunk
         );
+        dbUpdated += result.rowCount || 0;
       });
     }
 
@@ -637,10 +639,11 @@ pipeline.run('classify-permits', async (pool) => {
   console.log(`Permits with trades:  ${permitsWithTrades.toLocaleString()} (${((permitsWithTrades / processed) * 100).toFixed(1)}%)`);
   console.log(`Total trade matches:  ${totalMatches.toLocaleString()}`);
   console.log(`Avg trades/permit:    ${(totalMatches / Math.max(permitsWithTrades, 1)).toFixed(1)}`);
+  console.log(`Actual DB changes:    ${dbUpdated.toLocaleString()}`);
   console.log(`Duration:             ${elapsed}s`);
   console.log('');
   console.log('NOTE: Trade classifications are inferred estimates based on permit');
   console.log('metadata, not actual building plans. Rules can be refined over time.');
-  pipeline.emitSummary({ records_total: processed, records_new: Math.min(trulyNewPermits, permitsWithTrades), records_updated: permitsWithTrades - Math.min(trulyNewPermits, permitsWithTrades) });
+  pipeline.emitSummary({ records_total: processed, records_new: Math.min(trulyNewPermits, permitsWithTrades), records_updated: dbUpdated });
   pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"] });
 });

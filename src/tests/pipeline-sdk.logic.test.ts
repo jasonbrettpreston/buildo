@@ -576,6 +576,14 @@ describe('Pipeline SDK', () => {
       expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
     });
 
+    // §9.3 — classify-permits.js records_updated must use dbUpdated (actual DB writes via rowCount)
+    it('classify-permits.js emitSummary records_updated uses dbUpdated not permitsWithTrades', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'classify-permits.js'), 'utf-8');
+      const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
+      expect(match).not.toBeNull();
+      expect(match![1]).toContain('records_updated: dbUpdated');
+    });
+
     // §9.3 — link-coa.js Tier 3 LATERAL query must use "lat" alias not "p"
     it('link-coa.js Tier 3 LATERAL query uses lat.permit_num not p.permit_num', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'link-coa.js'), 'utf-8');
