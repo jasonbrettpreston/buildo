@@ -607,6 +607,30 @@ describe('assert-schema.js EXPECTED_COA_COLUMNS sync with load-coa.js', () => {
   });
 });
 
+// ── Regression: assert-schema NEIGHBOURHOOD_ID_PROPS sync ─────────────
+
+describe('assert-schema.js NEIGHBOURHOOD_ID_PROPS sync with load-neighbourhoods.js', () => {
+  const schemaSource = fs.readFileSync(
+    path.join(__dirname, '../../scripts/quality/assert-schema.js'), 'utf-8'
+  );
+
+  it('does not reference non-existent AREA_S_CD property', () => {
+    const match = schemaSource.match(/NEIGHBOURHOOD_ID_PROPS\s*=\s*\[([\s\S]*?)\]/);
+    expect(match).not.toBeNull();
+    expect(match![1]).not.toContain("'AREA_S_CD'");
+  });
+
+  it('includes AREA_SHORT_CODE which load-neighbourhoods.js reads', () => {
+    const loadSource = fs.readFileSync(
+      path.join(__dirname, '../../scripts/load-neighbourhoods.js'), 'utf-8'
+    );
+    expect(loadSource).toContain('AREA_SHORT_CODE');
+    const match = schemaSource.match(/NEIGHBOURHOOD_ID_PROPS\s*=\s*\[([\s\S]*?)\]/);
+    expect(match).not.toBeNull();
+    expect(match![1]).toContain("'AREA_SHORT_CODE'");
+  });
+});
+
 // ── WF5 Audit Fix: CQA scripts write records_meta ────────────────────
 
 describe('CQA scripts write records_meta to pipeline_runs', () => {

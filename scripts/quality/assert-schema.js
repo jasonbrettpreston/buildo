@@ -51,7 +51,7 @@ const EXPECTED_PARCEL_COLUMNS = [
   'STATEDAREA', 'geometry', 'DATE_EFFECTIVE',
 ];
 // Neighbourhood GeoJSON: at least one of these ID properties must exist
-const NEIGHBOURHOOD_ID_PROPS = ['AREA_S_CD', 'AREA_SHORT_CODE', 'AREA_ID'];
+const NEIGHBOURHOOD_ID_PROPS = ['AREA_SHORT_CODE', 'AREA_ID'];
 
 const SLUG = 'assert_schema';
 
