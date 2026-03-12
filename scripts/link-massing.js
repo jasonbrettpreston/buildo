@@ -385,7 +385,7 @@ pipeline.run('link-massing', async (pool) => {
   console.log(`No match found:         ${noMatch.toLocaleString()}`);
   console.log(`Duration:               ${elapsed}s`);
 
-  pipeline.emitSummary({ records_total: parcelsLinked, records_new: 0, records_updated: parcelsLinked });
+  pipeline.emitSummary({ records_total: parcelsLinked, records_new: 0, records_updated: buildingsLinked });
   pipeline.emitMeta(
     { "parcels": ["id", "centroid_lat", "centroid_lng", "geometry"], "building_footprints": ["id", "geometry", "footprint_area_sqm", "centroid_lat", "centroid_lng"] },
     { "parcel_buildings": ["parcel_id", "building_id", "is_primary", "structure_type", "match_type", "confidence", "linked_at"] }
