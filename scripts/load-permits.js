@@ -104,10 +104,30 @@ function mapRecord(raw) {
     housing_units: parseInt(raw.HOUSING_UNITS, 10) || 0,
     storeys: parseInt(raw.STOREYS, 10) || 0,
   };
-  // Hash the mapped fields only — excludes raw_json and data_hash itself
+  // Hash the mapped fields only — excludes raw_json, data_hash, and _ckan_id
   mapped.data_hash = computeHash(mapped);
   mapped.raw_json = JSON.stringify(raw);
+  // Preserve CKAN _id for cross-page deduplication tiebreaker
+  if (raw._id != null) mapped._ckan_id = raw._id;
   return mapped;
+}
+
+/**
+ * Deduplicate mapped records by permit_num + revision_num.
+ * For duplicates, the record with the highest _ckan_id wins (deterministic
+ * tiebreaker that is stable across CKAN pagination order changes).
+ * This prevents the 488-update ping-pong caused by ~252 CKAN duplicate pairs.
+ */
+function deduplicateRecords(records) {
+  const seen = new Map();
+  for (const rec of records) {
+    const key = `${rec.permit_num}--${rec.revision_num}`;
+    const existing = seen.get(key);
+    if (!existing || (rec._ckan_id || 0) > (existing._ckan_id || 0)) {
+      seen.set(key, rec);
+    }
+  }
+  return Array.from(seen.values());
 }
 
 /**
@@ -218,37 +238,51 @@ async function insertBatch(client, batch) {
 }
 
 /**
- * Process a page of raw CKAN records: map, batch, and upsert.
- * Mutates counters in place (newInserts, updated, processed, errors).
+ * Map raw CKAN records, filtering out invalid ones.
+ * Returns mapped records (with _ckan_id for dedup tiebreaker).
  */
-async function processRecords(pool, records, counters, startTime) {
-  let batch = [];
-
+function mapRawRecords(records, counters) {
+  const mapped = [];
   for (const record of records) {
     try {
       if (!record.PERMIT_NUM || !record.REVISION_NUM) {
         counters.errors++;
         continue;
       }
-      batch.push(mapRecord(record));
-      if (batch.length >= pipeline.BATCH_SIZE) {
-        const rows = await pipeline.withTransaction(pool, async (client) => {
-          return insertBatch(client, batch);
-        });
-        for (const r of rows) {
-          if (r.is_insert) counters.newInserts++;
-          else counters.updated++;
-        }
-        counters.processed += batch.length;
-        batch = [];
-        if (counters.processed % 10000 === 0) {
-          const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-          console.log(`  ${counters.processed.toLocaleString()} processed (${elapsed}s)`);
-        }
-      }
+      mapped.push(mapRecord(record));
     } catch (err) {
       counters.errors++;
       if (counters.errors <= 5) pipeline.log.error('[load-permits]', err, { record: counters.processed + counters.errors });
+    }
+  }
+  return mapped;
+}
+
+/**
+ * Upsert mapped records in batches.
+ * Strips _ckan_id (dedup-only field, not a DB column) before insertion.
+ */
+async function upsertRecords(pool, records, counters, startTime) {
+  let batch = [];
+
+  for (const record of records) {
+    // Strip _ckan_id — it's a dedup tiebreaker, not a DB column
+    const { _ckan_id, ...dbRecord } = record;
+    batch.push(dbRecord);
+    if (batch.length >= pipeline.BATCH_SIZE) {
+      const rows = await pipeline.withTransaction(pool, async (client) => {
+        return insertBatch(client, batch);
+      });
+      for (const r of rows) {
+        if (r.is_insert) counters.newInserts++;
+        else counters.updated++;
+      }
+      counters.processed += batch.length;
+      batch = [];
+      if (counters.processed % 10000 === 0) {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`  ${counters.processed.toLocaleString()} processed (${elapsed}s)`);
+      }
     }
   }
 
@@ -265,9 +299,13 @@ async function processRecords(pool, records, counters, startTime) {
   }
 }
 
-pipeline.run('load-permits', async (pool) => {
+// Only run when executed directly (not when required for testing)
+if (require.main === module) pipeline.run('load-permits', async (pool) => {
   const counters = { newInserts: 0, updated: 0, processed: 0, errors: 0 };
   const startTime = Date.now();
+
+  // Phase 1: Map all raw records (streamed page-by-page from CKAN or local file)
+  let allMapped = [];
 
   if (localFilePath) {
     // --file mode: read from local JSON file
@@ -277,13 +315,26 @@ pipeline.run('load-permits', async (pool) => {
     console.log('Parsing JSON...');
     const records = JSON.parse(raw);
     console.log(`Parsed ${records.length} records`);
-    await processRecords(pool, records, counters, startTime);
+    allMapped = mapRawRecords(records, counters);
   } else {
     // Default: stream from CKAN API page by page (§9.5)
     for await (const page of fetchFromCKAN()) {
-      await processRecords(pool, page, counters, startTime);
+      const pageMapped = mapRawRecords(page, counters);
+      allMapped.push(...pageMapped);
     }
   }
+
+  // Phase 2: Deduplicate across all pages — highest _ckan_id wins.
+  // Prevents the ~488 ghost-update ping-pong from ~252 CKAN duplicate pairs.
+  const beforeDedup = allMapped.length;
+  allMapped = deduplicateRecords(allMapped);
+  const dupsRemoved = beforeDedup - allMapped.length;
+  if (dupsRemoved > 0) {
+    console.log(`  Deduplicated: removed ${dupsRemoved} cross-page duplicate(s)`);
+  }
+
+  // Phase 3: Upsert deduplicated records in batches
+  await upsertRecords(pool, allMapped, counters, startTime);
 
   const { newInserts, updated, processed, errors } = counters;
 
@@ -310,3 +361,6 @@ pipeline.run('load-permits', async (pool) => {
   );
   console.log('  Sync run logged');
 });
+
+// Export for testing (used by sync.logic.test.ts)
+module.exports = { deduplicateRecords };
