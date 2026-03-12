@@ -420,6 +420,105 @@ export function detectDurationAnomalies(
 }
 
 // ---------------------------------------------------------------------------
+// Engine Health Anomaly Detection
+// ---------------------------------------------------------------------------
+
+export interface EngineHealthEntry {
+  table_name: string;
+  n_live_tup: number;
+  n_dead_tup: number;
+  dead_ratio: number;
+  seq_scan: number;
+  idx_scan: number;
+  seq_ratio: number;
+}
+
+export interface EngineHealthAnomaly {
+  table: string;
+  type: 'dead_tuples' | 'seq_scan_heavy' | 'update_ping_pong';
+  value: number;
+  threshold: number;
+  detail: string;
+}
+
+/** Thresholds for engine health checks */
+export const ENGINE_HEALTH_THRESHOLDS = {
+  /** Flag tables where dead tuples exceed this ratio of live tuples */
+  DEAD_TUPLE_RATIO: 0.10,
+  /** Flag tables where sequential scans exceed this ratio (on large tables) */
+  SEQ_SCAN_RATIO: 0.80,
+  /** Minimum live tuples before seq_scan ratio is checked */
+  SEQ_SCAN_MIN_ROWS: 10000,
+  /** Flag when update count exceeds this multiple of insert count */
+  PING_PONG_RATIO: 2,
+} as const;
+
+/**
+ * Detect engine health issues from pg_stat_user_tables data.
+ *
+ * Checks:
+ * 1. Dead tuple ratio > 10% (VACUUM not keeping up)
+ * 2. Sequential scan ratio > 80% on tables with 10K+ rows (missing indexes)
+ * 3. Update ping-pong: updates > 2x inserts (scripts re-touching unchanged rows)
+ */
+export function detectEngineHealthIssues(
+  entries: EngineHealthEntry[],
+  pgStats?: Record<string, { ins: number; upd: number; del: number }>
+): EngineHealthAnomaly[] {
+  const anomalies: EngineHealthAnomaly[] = [];
+
+  for (const entry of entries) {
+    // Check 1: Dead tuple ratio
+    if (entry.n_live_tup > 0 && entry.dead_ratio > ENGINE_HEALTH_THRESHOLDS.DEAD_TUPLE_RATIO) {
+      anomalies.push({
+        table: entry.table_name,
+        type: 'dead_tuples',
+        value: Math.round(entry.dead_ratio * 1000) / 10,
+        threshold: ENGINE_HEALTH_THRESHOLDS.DEAD_TUPLE_RATIO * 100,
+        detail: `${entry.n_dead_tup.toLocaleString()} dead tuples (${(entry.dead_ratio * 100).toFixed(1)}% of ${entry.n_live_tup.toLocaleString()} live)`,
+      });
+    }
+
+    // Check 2: Sequential scan ratio on large tables
+    const totalScans = entry.seq_scan + entry.idx_scan;
+    if (
+      entry.n_live_tup >= ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_MIN_ROWS &&
+      totalScans > 0 &&
+      entry.seq_ratio > ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_RATIO
+    ) {
+      anomalies.push({
+        table: entry.table_name,
+        type: 'seq_scan_heavy',
+        value: Math.round(entry.seq_ratio * 1000) / 10,
+        threshold: ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_RATIO * 100,
+        detail: `${entry.seq_scan} seq scans vs ${entry.idx_scan} idx scans (${(entry.seq_ratio * 100).toFixed(1)}% sequential)`,
+      });
+    }
+  }
+
+  // Check 3: Update ping-pong from recent pipeline telemetry
+  if (pgStats) {
+    for (const [table, stats] of Object.entries(pgStats)) {
+      if (
+        stats.ins > 0 &&
+        stats.upd > ENGINE_HEALTH_THRESHOLDS.PING_PONG_RATIO * stats.ins
+      ) {
+        const ratio = Math.round((stats.upd / stats.ins) * 10) / 10;
+        anomalies.push({
+          table,
+          type: 'update_ping_pong',
+          value: ratio,
+          threshold: ENGINE_HEALTH_THRESHOLDS.PING_PONG_RATIO,
+          detail: `${stats.upd.toLocaleString()} updates vs ${stats.ins.toLocaleString()} inserts (${ratio}x ratio)`,
+        });
+      }
+    }
+  }
+
+  return anomalies;
+}
+
+// ---------------------------------------------------------------------------
 // Pipeline Failure Detection
 // ---------------------------------------------------------------------------
 
@@ -445,13 +544,15 @@ export interface SystemHealthSummary {
  * Compute overall system health from a snapshot and anomaly/drift data.
  * Optional durationAnomalies parameter surfaces pipeline slowdown warnings.
  * Optional pipelineFailures parameter surfaces recent pipeline run failures.
+ * Optional engineHealthAnomalies parameter surfaces DB engine health issues.
  */
 export function computeSystemHealth(
   snapshot: DataQualitySnapshot,
   anomalies: VolumeAnomaly[],
   schemaDrift: SchemaDriftAlert[],
   durationAnomalies: DurationAnomaly[] = [],
-  pipelineFailures: PipelineFailure[] = []
+  pipelineFailures: PipelineFailure[] = [],
+  engineHealthAnomalies: EngineHealthAnomaly[] = []
 ): SystemHealthSummary {
   const issues: string[] = [];
   const warnings: string[] = [];
@@ -495,6 +596,17 @@ export function computeSystemHealth(
       ? f.error_message.slice(0, 117) + '...'
       : f.error_message;
     warnings.push(`Pipeline ${f.pipeline} failed: ${msg}`);
+  }
+
+  // Check engine health anomalies
+  for (const eh of engineHealthAnomalies) {
+    if (eh.type === 'dead_tuples') {
+      warnings.push(`Dead tuples: ${eh.table} at ${eh.value}% (threshold: ${eh.threshold}%)`);
+    } else if (eh.type === 'seq_scan_heavy') {
+      warnings.push(`Sequential scans: ${eh.table} at ${eh.value}% (threshold: ${eh.threshold}%)`);
+    } else if (eh.type === 'update_ping_pong') {
+      warnings.push(`Update ping-pong: ${eh.table} — ${eh.value}x update/insert ratio`);
+    }
   }
 
   // Check null rates (flag if >20% of active permits missing critical fields)

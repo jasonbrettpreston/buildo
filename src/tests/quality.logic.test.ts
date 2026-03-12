@@ -12,9 +12,12 @@ import {
   detectVolumeAnomalies,
   detectSchemaDrift,
   detectDurationAnomalies,
+  detectEngineHealthIssues,
   computeSystemHealth,
   SLA_TARGETS,
+  ENGINE_HEALTH_THRESHOLDS,
 } from '@/lib/quality/types';
+import type { EngineHealthEntry } from '@/lib/quality/types';
 import { parseSnapshot } from '@/lib/quality/metrics';
 import { createMockDataQualitySnapshot } from './factories';
 
@@ -490,17 +493,17 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 26 tracked pipelines', () => {
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(26);
+  it('has exactly 27 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(27);
   });
 
-  it('groups are correct: 8 ingest, 13 link, 2 classify, 1 snapshot, 2 quality', () => {
+  it('groups are correct: 8 ingest, 13 link, 2 classify, 1 snapshot, 3 quality', () => {
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(8);
     expect(groups.filter((g) => g === 'link')).toHaveLength(13);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(2);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
-    expect(groups.filter((g) => g === 'quality')).toHaveLength(2);
+    expect(groups.filter((g) => g === 'quality')).toHaveLength(3);
   });
 
   it('every pipeline has a non-empty human-readable name', () => {
@@ -526,12 +529,12 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'entities', 'sources', 'deep_scrapes']);
   });
 
-  it('permits chain has 14 steps in dependency order (no enrichment)', () => {
+  it('permits chain has 15 steps in dependency order (no enrichment)', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(14);
+    expect(permits.steps).toHaveLength(15);
     expect(permits.steps[0].slug).toBe('assert_schema');
     expect(permits.steps[1].slug).toBe('permits');
-    expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_data_bounds');
+    expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_engine_health');
   });
 
   it('permits chain has link_wsib as indent-1 step (not sub-step)', () => {
@@ -544,21 +547,21 @@ describe('Pipeline Chains', () => {
     expect(indent2plus).toHaveLength(0);
   });
 
-  it('coa chain has 6 steps', () => {
+  it('coa chain has 7 steps', () => {
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
-    expect(coa.steps).toHaveLength(6);
+    expect(coa.steps).toHaveLength(7);
     expect(coa.steps[0].slug).toBe('assert_schema');
     expect(coa.steps[1].slug).toBe('coa');
   });
 
-  it('sources chain has 14 steps including WSIB, compute_centroids and assert_data_bounds', () => {
+  it('sources chain has 15 steps including WSIB, compute_centroids and assert_engine_health', () => {
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
-    expect(sources.steps).toHaveLength(14);
+    expect(sources.steps).toHaveLength(15);
     expect(sources.steps.some((s) => s.slug === 'compute_centroids')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'load_wsib')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'link_wsib')).toBe(true);
     expect(sources.steps[0].slug).toBe('assert_schema');
-    expect(sources.steps[sources.steps.length - 1].slug).toBe('assert_data_bounds');
+    expect(sources.steps[sources.steps.length - 1].slug).toBe('assert_engine_health');
   });
 
   it('every slug in chains exists in PIPELINE_REGISTRY', () => {
@@ -1716,5 +1719,215 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
       expect(d.reads, `${slug} should not have static reads`).toBeUndefined();
       expect(d.writes, `${slug} should not have static writes`).toBeUndefined();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Engine Health & Volume Volatility (CQA Tier 3)
+// ---------------------------------------------------------------------------
+
+describe('detectEngineHealthIssues', () => {
+  const healthyEntry: EngineHealthEntry = {
+    table_name: 'permits',
+    n_live_tup: 237000,
+    n_dead_tup: 5000,
+    dead_ratio: 0.021,
+    seq_scan: 100,
+    idx_scan: 900,
+    seq_ratio: 0.10,
+  };
+
+  it('returns empty array for healthy tables', () => {
+    const result = detectEngineHealthIssues([healthyEntry]);
+    expect(result).toEqual([]);
+  });
+
+  it('flags dead tuple ratio above threshold', () => {
+    const bloated: EngineHealthEntry = {
+      ...healthyEntry,
+      n_dead_tup: 30000,
+      dead_ratio: 0.127, // 12.7%
+    };
+    const result = detectEngineHealthIssues([bloated]);
+    expect(result).toHaveLength(1);
+    expect(result[0].type).toBe('dead_tuples');
+    expect(result[0].table).toBe('permits');
+    expect(result[0].value).toBeGreaterThan(ENGINE_HEALTH_THRESHOLDS.DEAD_TUPLE_RATIO * 100);
+  });
+
+  it('does not flag dead tuples on empty tables', () => {
+    const empty: EngineHealthEntry = {
+      ...healthyEntry,
+      n_live_tup: 0,
+      n_dead_tup: 100,
+      dead_ratio: 0,
+    };
+    const result = detectEngineHealthIssues([empty]);
+    expect(result.filter(a => a.type === 'dead_tuples')).toHaveLength(0);
+  });
+
+  it('flags sequential scan heavy tables with 10K+ rows', () => {
+    const seqHeavy: EngineHealthEntry = {
+      ...healthyEntry,
+      seq_scan: 900,
+      idx_scan: 100,
+      seq_ratio: 0.90,
+    };
+    const result = detectEngineHealthIssues([seqHeavy]);
+    expect(result).toHaveLength(1);
+    expect(result[0].type).toBe('seq_scan_heavy');
+    expect(result[0].value).toBeGreaterThan(ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_RATIO * 100);
+  });
+
+  it('does not flag seq scan on small tables', () => {
+    const smallTable: EngineHealthEntry = {
+      ...healthyEntry,
+      n_live_tup: 500, // below 10K threshold
+      seq_scan: 900,
+      idx_scan: 100,
+      seq_ratio: 0.90,
+    };
+    const result = detectEngineHealthIssues([smallTable]);
+    expect(result.filter(a => a.type === 'seq_scan_heavy')).toHaveLength(0);
+  });
+
+  it('flags update ping-pong from pgStats', () => {
+    const pgStats = {
+      permit_trades: { ins: 1000, upd: 5000, del: 0 },
+    };
+    const result = detectEngineHealthIssues([], pgStats);
+    expect(result).toHaveLength(1);
+    expect(result[0].type).toBe('update_ping_pong');
+    expect(result[0].table).toBe('permit_trades');
+    expect(result[0].value).toBe(5);
+  });
+
+  it('does not flag update ping-pong when ratio is below threshold', () => {
+    const pgStats = {
+      permits: { ins: 1000, upd: 1500, del: 0 },
+    };
+    const result = detectEngineHealthIssues([], pgStats);
+    expect(result).toHaveLength(0);
+  });
+
+  it('does not flag update ping-pong when inserts are zero', () => {
+    const pgStats = {
+      permits: { ins: 0, upd: 5000, del: 0 },
+    };
+    const result = detectEngineHealthIssues([], pgStats);
+    expect(result).toHaveLength(0);
+  });
+
+  it('can detect multiple anomalies across multiple tables', () => {
+    const entries: EngineHealthEntry[] = [
+      { ...healthyEntry, table_name: 'permits', n_dead_tup: 30000, dead_ratio: 0.127 },
+      { ...healthyEntry, table_name: 'entities', seq_scan: 950, idx_scan: 50, seq_ratio: 0.95 },
+    ];
+    const pgStats = {
+      permit_trades: { ins: 100, upd: 500, del: 0 },
+    };
+    const result = detectEngineHealthIssues(entries, pgStats);
+    expect(result).toHaveLength(3);
+    expect(result.map(a => a.type).sort()).toEqual(['dead_tuples', 'seq_scan_heavy', 'update_ping_pong']);
+  });
+});
+
+describe('computeSystemHealth with engine health anomalies', () => {
+  it('adds engine health warnings to system health', () => {
+    const snapshot = createMockDataQualitySnapshot({ violations_total: 0 });
+    const engineAnomalies = [{
+      table: 'permits',
+      type: 'dead_tuples' as const,
+      value: 15.2,
+      threshold: 10,
+      detail: '36,000 dead tuples',
+    }];
+    const health = computeSystemHealth(snapshot, [], [], [], [], engineAnomalies);
+    expect(health.level).toBe('yellow');
+    expect(health.warnings).toHaveLength(1);
+    expect(health.warnings[0]).toContain('Dead tuples');
+    expect(health.warnings[0]).toContain('permits');
+  });
+
+  it('surfaces seq_scan_heavy as warning', () => {
+    const snapshot = createMockDataQualitySnapshot({ violations_total: 0 });
+    const engineAnomalies = [{
+      table: 'permit_trades',
+      type: 'seq_scan_heavy' as const,
+      value: 92.3,
+      threshold: 80,
+      detail: '923 seq scans',
+    }];
+    const health = computeSystemHealth(snapshot, [], [], [], [], engineAnomalies);
+    expect(health.warnings.some(w => w.includes('Sequential scans'))).toBe(true);
+  });
+
+  it('surfaces update_ping_pong as warning', () => {
+    const snapshot = createMockDataQualitySnapshot({ violations_total: 0 });
+    const engineAnomalies = [{
+      table: 'permit_trades',
+      type: 'update_ping_pong' as const,
+      value: 5.2,
+      threshold: 2,
+      detail: '5,200 updates vs 1,000 inserts',
+    }];
+    const health = computeSystemHealth(snapshot, [], [], [], [], engineAnomalies);
+    expect(health.warnings.some(w => w.includes('Update ping-pong'))).toBe(true);
+  });
+});
+
+describe('ENGINE_HEALTH_THRESHOLDS', () => {
+  it('has expected threshold values', () => {
+    expect(ENGINE_HEALTH_THRESHOLDS.DEAD_TUPLE_RATIO).toBe(0.10);
+    expect(ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_RATIO).toBe(0.80);
+    expect(ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_MIN_ROWS).toBe(10000);
+    expect(ENGINE_HEALTH_THRESHOLDS.PING_PONG_RATIO).toBe(2);
+  });
+});
+
+describe('Pipeline manifest includes assert_engine_health', () => {
+  it('assert_engine_health is registered in manifest', () => {
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '../../scripts/manifest.json'), 'utf-8')
+    );
+    expect(manifest.scripts.assert_engine_health).toBeDefined();
+    expect(manifest.scripts.assert_engine_health.file).toBe('scripts/quality/assert-engine-health.js');
+  });
+
+  it('assert_engine_health is in all three chains', () => {
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '../../scripts/manifest.json'), 'utf-8')
+    );
+    expect(manifest.chains.permits).toContain('assert_engine_health');
+    expect(manifest.chains.coa).toContain('assert_engine_health');
+    expect(manifest.chains.sources).toContain('assert_engine_health');
+  });
+
+  it('assert_engine_health runs after assert_data_bounds in all chains', () => {
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '../../scripts/manifest.json'), 'utf-8')
+    );
+    for (const chain of ['permits', 'coa', 'sources']) {
+      const steps = manifest.chains[chain];
+      const boundsIdx = steps.indexOf('assert_data_bounds');
+      const engineIdx = steps.indexOf('assert_engine_health');
+      expect(engineIdx).toBeGreaterThan(boundsIdx);
+    }
+  });
+
+  it('assert_engine_health script file exists', () => {
+    const scriptPath = path.join(__dirname, '../../scripts/quality/assert-engine-health.js');
+    expect(fs.existsSync(scriptPath)).toBe(true);
+  });
+
+  it('STEP_DESCRIPTIONS includes assert_engine_health', async () => {
+    const { STEP_DESCRIPTIONS } = await import('@/lib/admin/funnel');
+    expect(STEP_DESCRIPTIONS.assert_engine_health).toBeDefined();
+    expect(STEP_DESCRIPTIONS.assert_engine_health.summary).toContain('Engine health');
+  });
+
+  it('PIPELINE_TABLE_MAP includes assert_engine_health', async () => {
+    const { PIPELINE_TABLE_MAP } = await import('@/lib/admin/funnel');
+    expect(PIPELINE_TABLE_MAP.assert_engine_health).toBe('engine_health_snapshots');
   });
 });

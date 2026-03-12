@@ -27,6 +27,7 @@
     "refresh_snapshot":     { "file": "scripts/refresh-snapshot.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["data_quality_snapshots"] },
     "assert_schema":        { "file": "scripts/quality/assert-schema.js", "supports_full": false, "supports_dry_run": false },
     "assert_data_bounds":   { "file": "scripts/quality/assert-data-bounds.js", "supports_full": false, "supports_dry_run": false },
+    "assert_engine_health": { "file": "scripts/quality/assert-engine-health.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["engine_health_snapshots"] },
     "inspections":          { "file": null, "supports_full": false, "supports_dry_run": false, "coming_soon": true },
     "coa_documents":        { "file": null, "supports_full": false, "supports_dry_run": false, "coming_soon": true }
   },
@@ -36,17 +37,17 @@
       "assert_schema", "permits", "classify_scope", "classify_permits",
       "builders", "link_wsib", "geocode_permits", "link_parcels",
       "link_neighbourhoods", "link_massing", "link_similar", "link_coa",
-      "refresh_snapshot", "assert_data_bounds"
+      "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
     ],
     "coa": [
       "assert_schema", "coa", "link_coa", "create_pre_permits",
-      "refresh_snapshot", "assert_data_bounds"
+      "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
     ],
     "sources": [
       "assert_schema", "address_points", "geocode_permits", "parcels",
       "compute_centroids", "link_parcels", "massing", "link_massing",
       "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib",
-      "refresh_snapshot", "assert_data_bounds"
+      "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
     ],
     "entities": [
       "enrich_wsib_builders", "enrich_named_builders"

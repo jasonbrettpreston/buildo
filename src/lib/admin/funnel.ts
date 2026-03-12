@@ -553,6 +553,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   // Quality (CQA)
   assert_schema:        { summary: 'Validates upstream CKAN/CSV column headers before ingestion', table: 'pipeline_runs' },
   assert_data_bounds:   { summary: 'Post-ingestion SQL checks for cost outliers, null rates, referential integrity', table: 'pipeline_runs' },
+  assert_engine_health: { summary: 'Engine health checks: dead tuples, index usage, update ping-pong detection', table: 'engine_health_snapshots' },
   // Deep Scrapes (coming soon)
   inspections:          { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections' },
   coa_documents:        { summary: 'Downloads Committee of Adjustment plans and decision PDFs from AIC portal', table: 'coa_documents' },
@@ -574,6 +575,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   compute_centroids: 'parcels', classify_scope: 'permits',
   classify_permits: 'permit_trades',
   refresh_snapshot: 'data_quality_snapshots', assert_schema: 'pipeline_runs',
-  assert_data_bounds: 'pipeline_runs', inspections: 'permit_inspections',
+  assert_data_bounds: 'pipeline_runs', assert_engine_health: 'engine_health_snapshots',
+  inspections: 'permit_inspections',
   coa_documents: 'coa_documents',
 };

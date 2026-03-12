@@ -478,3 +478,99 @@ describe('DataFlowTile renders from live pipeline_meta', () => {
     expect(source).toContain('LiveColumnCard');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Engine Health (CQA Tier 3)
+// ---------------------------------------------------------------------------
+
+describe('Engine Health CQA Tier 3', () => {
+  it('assert-engine-health.js script uses Pipeline SDK pattern', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      'utf-8'
+    );
+    expect(source).toContain("require('../lib/pipeline')");
+    expect(source).toContain('PIPELINE_SUMMARY:');
+    expect(source).toContain('PIPELINE_META:');
+    expect(source).toContain('pipeline.createPool()');
+  });
+
+  it('assert-engine-health.js queries pg_stat_user_tables', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      'utf-8'
+    );
+    expect(source).toContain('pg_stat_user_tables');
+    expect(source).toContain('n_live_tup');
+    expect(source).toContain('n_dead_tup');
+    expect(source).toContain('seq_scan');
+    expect(source).toContain('idx_scan');
+  });
+
+  it('assert-engine-health.js writes to engine_health_snapshots', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      'utf-8'
+    );
+    expect(source).toContain('engine_health_snapshots');
+    expect(source).toContain('ON CONFLICT');
+  });
+
+  it('migration 051 creates engine_health_snapshots table', () => {
+    const sql = fs.readFileSync(
+      path.join(__dirname, '../../migrations/051_engine_health_snapshots.sql'),
+      'utf-8'
+    );
+    expect(sql).toContain('CREATE TABLE');
+    expect(sql).toContain('engine_health_snapshots');
+    expect(sql).toContain('table_name');
+    expect(sql).toContain('n_live_tup');
+    expect(sql).toContain('n_dead_tup');
+    expect(sql).toContain('dead_ratio');
+    expect(sql).toContain('seq_scan');
+    expect(sql).toContain('idx_scan');
+    expect(sql).toContain('seq_ratio');
+    // Must have both UP and DOWN
+    expect(sql).toContain('-- UP');
+    expect(sql).toContain('-- DOWN');
+    expect(sql).toContain('DROP TABLE');
+  });
+
+  it('quality API route imports detectEngineHealthIssues', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/quality/route.ts'),
+      'utf-8'
+    );
+    expect(source).toContain('detectEngineHealthIssues');
+    expect(source).toContain('engineHealth');
+    expect(source).toContain('engineHealthAnomalies');
+  });
+
+  it('TelemetrySection supports engine data (T6)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'),
+      'utf-8'
+    );
+    expect(source).toContain('engine?');
+    expect(source).toContain('dead_ratio');
+    expect(source).toContain('seq_ratio');
+  });
+
+  it('Pipeline SDK captureTelemetry includes T6 engine stats', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/lib/pipeline.js'),
+      'utf-8'
+    );
+    expect(source).toContain('T6: Engine health stats');
+    expect(source).toContain('snapshot.engine[table]');
+  });
+
+  it('Pipeline SDK diffTelemetry includes T6 engine stats', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/lib/pipeline.js'),
+      'utf-8'
+    );
+    expect(source).toContain('result.engine[table]');
+    expect(source).toContain('pre.engine');
+  });
+});

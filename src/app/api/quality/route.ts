@@ -6,9 +6,11 @@ import {
   detectVolumeAnomalies,
   detectSchemaDrift,
   detectDurationAnomalies,
+  detectEngineHealthIssues,
   computeSystemHealth,
   PipelineFailure,
 } from '@/lib/quality/types';
+import type { EngineHealthEntry, EngineHealthAnomaly } from '@/lib/quality/types';
 
 /**
  * GET /api/quality - Return the latest snapshot + last 30 days of trend data,
@@ -85,9 +87,52 @@ export async function GET() {
       logError('[api/quality]', err, { phase: 'pipeline_failures' });
     }
 
+    // Query engine health from pg_stat_user_tables
+    let engineHealthEntries: EngineHealthEntry[] = [];
+    let engineHealthAnomalies: EngineHealthAnomaly[] = [];
+    try {
+      const engineRows = await query<{
+        table_name: string;
+        n_live_tup: string;
+        n_dead_tup: string;
+        seq_scan: string;
+        idx_scan: string;
+      }>(
+        `SELECT relname AS table_name,
+                n_live_tup::bigint::text AS n_live_tup,
+                n_dead_tup::bigint::text AS n_dead_tup,
+                seq_scan::bigint::text AS seq_scan,
+                idx_scan::bigint::text AS idx_scan
+         FROM pg_stat_user_tables
+         WHERE relname = ANY($1)
+         ORDER BY relname`,
+        [['permits', 'entities', 'coa_applications', 'parcels', 'address_points',
+          'building_footprints', 'neighbourhoods', 'permit_trades', 'permit_parcels',
+          'parcel_buildings', 'wsib_registry']]
+      );
+      engineHealthEntries = engineRows.map((r) => {
+        const live = parseInt(r.n_live_tup, 10) || 0;
+        const dead = parseInt(r.n_dead_tup, 10) || 0;
+        const seq = parseInt(r.seq_scan, 10) || 0;
+        const idx = parseInt(r.idx_scan, 10) || 0;
+        return {
+          table_name: r.table_name,
+          n_live_tup: live,
+          n_dead_tup: dead,
+          dead_ratio: live > 0 ? Math.round((dead / live) * 10000) / 10000 : 0,
+          seq_scan: seq,
+          idx_scan: idx,
+          seq_ratio: (seq + idx) > 0 ? Math.round((seq / (seq + idx)) * 10000) / 10000 : 0,
+        };
+      });
+      engineHealthAnomalies = detectEngineHealthIssues(engineHealthEntries);
+    } catch {
+      // pg_stat_user_tables query may fail — skip engine health
+    }
+
     // Compute system health
     const health = data.current
-      ? computeSystemHealth(data.current, anomalies, schemaDrift, durationAnomalies, pipelineFailures)
+      ? computeSystemHealth(data.current, anomalies, schemaDrift, durationAnomalies, pipelineFailures, engineHealthAnomalies)
       : { level: 'red' as const, issues: ['No snapshot data'], warnings: [] };
 
     return NextResponse.json({
@@ -95,6 +140,8 @@ export async function GET() {
       anomalies,
       schemaDrift,
       health,
+      engineHealth: engineHealthEntries,
+      engineHealthAnomalies,
     });
   } catch (err) {
     logError('[api/quality]', err, { handler: 'GET' });

@@ -50,9 +50,10 @@ export interface TelemetryData {
   counts?: Record<string, { before: number; after: number; delta: number }>;
   pg_stats?: Record<string, { ins: number; upd: number; del: number }>;
   null_fills?: Record<string, Record<string, { before: number; after: number; filled: number }>>;
+  engine?: Record<string, { n_live_tup: number; n_dead_tup: number; dead_ratio: number; seq_scan: number; idx_scan: number; seq_ratio: number }>;
 }
 
-/** Renders T1/T2/T4 telemetry inline below the DataFlowTile schema */
+/** Renders T1/T2/T4/T6 telemetry inline below the DataFlowTile schema */
 export function TelemetrySection({ telemetry }: { telemetry: TelemetryData }) {
   const tables = Object.keys(telemetry.counts ?? {});
   if (tables.length === 0) return null;
@@ -64,6 +65,7 @@ export function TelemetrySection({ telemetry }: { telemetry: TelemetryData }) {
         const count = telemetry.counts?.[table];
         const stats = telemetry.pg_stats?.[table];
         const fills = telemetry.null_fills?.[table];
+        const engine = telemetry.engine?.[table];
 
         return (
           <div key={table} className="space-y-1">
@@ -100,6 +102,19 @@ export function TelemetrySection({ telemetry }: { telemetry: TelemetryData }) {
                     </span>
                   );
                 })}
+              </div>
+            )}
+            {/* T6: Engine health badges */}
+            {engine && (
+              <div className="flex flex-wrap gap-2">
+                <span className={`text-[8px] px-1 py-0.5 rounded font-medium tabular-nums ${engine.dead_ratio > 0.10 ? 'bg-amber-100 text-amber-700' : 'bg-gray-50 text-gray-500'}`}>
+                  Dead: {(engine.dead_ratio * 100).toFixed(1)}%
+                </span>
+                {engine.n_live_tup >= 10000 && (
+                  <span className={`text-[8px] px-1 py-0.5 rounded font-medium tabular-nums ${engine.seq_ratio > 0.80 ? 'bg-amber-100 text-amber-700' : 'bg-gray-50 text-gray-500'}`}>
+                    Seq: {(engine.seq_ratio * 100).toFixed(1)}%
+                  </span>
+                )}
               </div>
             )}
           </div>

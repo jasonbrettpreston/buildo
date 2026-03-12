@@ -13,37 +13,37 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(5);
   });
 
-  it('defines permits chain with 14 steps (no enrichment scripts)', () => {
+  it('defines permits chain with 15 steps (no enrichment scripts)', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(14);
+    expect(chain!.steps).toHaveLength(15);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
   });
 
-  it('defines coa chain with 6 steps', () => {
+  it('defines coa chain with 7 steps', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(6);
+    expect(chain!.steps).toHaveLength(7);
   });
 
-  it('defines sources chain with 14 steps', () => {
+  it('defines sources chain with 15 steps', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(14);
+    expect(chain!.steps).toHaveLength(15);
   });
 
-  it('permits and coa chains end with assert_data_bounds', () => {
+  it('permits and coa chains end with assert_engine_health', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa');
-    expect(permits!.steps[permits!.steps.length - 1].slug).toBe('assert_data_bounds');
-    expect(coa!.steps[coa!.steps.length - 1].slug).toBe('assert_data_bounds');
+    expect(permits!.steps[permits!.steps.length - 1].slug).toBe('assert_engine_health');
+    expect(coa!.steps[coa!.steps.length - 1].slug).toBe('assert_engine_health');
   });
 
-  it('sources chain ends with assert_data_bounds', () => {
+  it('sources chain ends with assert_engine_health', () => {
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources');
-    expect(sources!.steps[sources!.steps.length - 1].slug).toBe('assert_data_bounds');
+    expect(sources!.steps[sources!.steps.length - 1].slug).toBe('assert_engine_health');
   });
 
   it('every chain step slug exists in PIPELINE_REGISTRY', () => {
@@ -163,11 +163,11 @@ describe('Pipeline Route Chain Registration', () => {
 });
 
 describe('Sources Chain Completeness', () => {
-  it('sources chain includes assert_data_bounds as final step', () => {
+  it('sources chain includes assert_engine_health as final step', () => {
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(sources).toBeDefined();
     const lastStep = sources!.steps[sources!.steps.length - 1];
-    expect(lastStep.slug).toBe('assert_data_bounds');
+    expect(lastStep.slug).toBe('assert_engine_health');
   });
 
   it('sources chain includes all reference data pipelines', () => {
@@ -213,8 +213,8 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     const disabledSlugs = new Set(['enrich_wsib_builders', 'enrich_named_builders']);
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
     const activeSteps = coa.steps.filter((s) => !disabledSlugs.has(s.slug));
-    // CoA chain has no enrichment steps — all 6 remain
-    expect(activeSteps).toHaveLength(6);
+    // CoA chain has no enrichment steps — all 7 remain
+    expect(activeSteps).toHaveLength(7);
   });
 
   it('empty disabled set leaves all steps active', () => {
@@ -259,11 +259,11 @@ describe('Incremental Processing Guards', () => {
 });
 
 describe('Quality Pipeline Group', () => {
-  it('quality group has 2 registry entries', () => {
+  it('quality group has 3 registry entries', () => {
     const qualityEntries = Object.entries(PIPELINE_REGISTRY).filter(
       ([, entry]) => entry.group === 'quality'
     );
-    expect(qualityEntries).toHaveLength(2);
+    expect(qualityEntries).toHaveLength(3);
   });
 
   it('assert_schema and assert_data_bounds exist in PIPELINE_REGISTRY', () => {

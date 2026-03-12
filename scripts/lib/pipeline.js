@@ -234,7 +234,7 @@ async function run(name, fn) {
  * @returns {Promise<object>} Pre-run telemetry snapshot
  */
 async function captureTelemetry(pool, tables, nullCols) {
-  const snapshot = { counts: {}, pg_stats: {}, null_fills: {}, captured_at: new Date().toISOString() };
+  const snapshot = { counts: {}, pg_stats: {}, null_fills: {}, engine: {}, captured_at: new Date().toISOString() };
   for (const table of tables) {
     try {
       // T1: row count
@@ -252,6 +252,29 @@ async function captureTelemetry(pool, tables, nullCols) {
           before_ins: statRes.rows[0].ins,
           before_upd: statRes.rows[0].upd,
           before_del: statRes.rows[0].del,
+        };
+      }
+
+      // T6: Engine health stats (dead tuples, index usage)
+      const engineRes = await pool.query(
+        `SELECT n_live_tup::bigint AS live, n_dead_tup::bigint AS dead,
+                seq_scan::bigint AS seq, idx_scan::bigint AS idx
+         FROM pg_stat_user_tables WHERE relname = $1`,
+        [table]
+      );
+      if (engineRes.rows[0]) {
+        const r = engineRes.rows[0];
+        const live = parseInt(r.live, 10) || 0;
+        const dead = parseInt(r.dead, 10) || 0;
+        const seq = parseInt(r.seq, 10) || 0;
+        const idx = parseInt(r.idx, 10) || 0;
+        snapshot.engine[table] = {
+          n_live_tup: live,
+          n_dead_tup: dead,
+          dead_ratio: live > 0 ? Math.round((dead / live) * 10000) / 10000 : 0,
+          seq_scan: seq,
+          idx_scan: idx,
+          seq_ratio: (seq + idx) > 0 ? Math.round((seq / (seq + idx)) * 10000) / 10000 : 0,
         };
       }
 
@@ -281,7 +304,7 @@ async function captureTelemetry(pool, tables, nullCols) {
  * @returns {Promise<object>} Telemetry with before/after/delta values
  */
 async function diffTelemetry(pool, tables, pre) {
-  const result = { counts: {}, pg_stats: {}, null_fills: {} };
+  const result = { counts: {}, pg_stats: {}, null_fills: {}, engine: {} };
   for (const table of tables) {
     try {
       // T1: row count diff
@@ -302,6 +325,31 @@ async function diffTelemetry(pool, tables, pre) {
             ins: statRes.rows[0].ins - pre.pg_stats[table].before_ins,
             upd: statRes.rows[0].upd - pre.pg_stats[table].before_upd,
             del: statRes.rows[0].del - pre.pg_stats[table].before_del,
+          };
+        }
+      }
+
+      // T6: Engine health (post-run snapshot for comparison)
+      if (pre.engine && pre.engine[table]) {
+        const engineRes = await pool.query(
+          `SELECT n_live_tup::bigint AS live, n_dead_tup::bigint AS dead,
+                  seq_scan::bigint AS seq, idx_scan::bigint AS idx
+           FROM pg_stat_user_tables WHERE relname = $1`,
+          [table]
+        );
+        if (engineRes.rows[0]) {
+          const r = engineRes.rows[0];
+          const live = parseInt(r.live, 10) || 0;
+          const dead = parseInt(r.dead, 10) || 0;
+          const seq = parseInt(r.seq, 10) || 0;
+          const idx = parseInt(r.idx, 10) || 0;
+          result.engine[table] = {
+            n_live_tup: live,
+            n_dead_tup: dead,
+            dead_ratio: live > 0 ? Math.round((dead / live) * 10000) / 10000 : 0,
+            seq_scan: seq,
+            idx_scan: idx,
+            seq_ratio: (seq + idx) > 0 ? Math.round((seq / (seq + idx)) * 10000) / 10000 : 0,
           };
         }
       }

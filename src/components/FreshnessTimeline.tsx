@@ -46,9 +46,10 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
   // Snapshot (1) — capture metrics
   refresh_snapshot:   { name: 'Refresh Snapshot',      group: 'snapshot' },
-  // Quality (2) — CQA validation
-  assert_schema:      { name: 'Schema Validation',    group: 'quality' },
-  assert_data_bounds: { name: 'Data Quality Checks',  group: 'quality' },
+  // Quality (3) — CQA validation
+  assert_schema:        { name: 'Schema Validation',    group: 'quality' },
+  assert_data_bounds:   { name: 'Data Quality Checks',  group: 'quality' },
+  assert_engine_health: { name: 'Engine Health',         group: 'quality' },
 };
 
 export const GROUP_LABELS: Record<PipelineGroup, string> = {
@@ -98,6 +99,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_coa',             indent: 1 },
       { slug: 'refresh_snapshot',     indent: 1 },
       { slug: 'assert_data_bounds',   indent: 0 },
+      { slug: 'assert_engine_health', indent: 0 },
     ],
   },
   {
@@ -109,8 +111,9 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'coa',                indent: 0 },
       { slug: 'link_coa',           indent: 1 },
       { slug: 'create_pre_permits', indent: 1 },
-      { slug: 'refresh_snapshot',   indent: 1 },
-      { slug: 'assert_data_bounds', indent: 0 },
+      { slug: 'refresh_snapshot',    indent: 1 },
+      { slug: 'assert_data_bounds',  indent: 0 },
+      { slug: 'assert_engine_health', indent: 0 },
     ],
   },
   // Group 2: Corporate Entities Enrichment (slow daily scrapes)
@@ -143,6 +146,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_wsib',           indent: 1 },
       { slug: 'refresh_snapshot',    indent: 1 },
       { slug: 'assert_data_bounds',  indent: 0 },
+      { slug: 'assert_engine_health', indent: 0 },
     ],
   },
   // Group 4: Deep Scrapes & Documents (continuous async workers)
@@ -166,6 +170,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
 export const NON_TOGGLEABLE_SLUGS = new Set([
   'assert_schema',
   'assert_data_bounds',
+  'assert_engine_health',
   'refresh_snapshot',
 ]);
 
