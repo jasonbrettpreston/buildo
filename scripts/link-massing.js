@@ -352,7 +352,11 @@ pipeline.run('link-massing', async (pool) => {
              structure_type = EXCLUDED.structure_type,
              match_type = EXCLUDED.match_type,
              confidence = EXCLUDED.confidence,
-             linked_at = NOW()`,
+             linked_at = NOW()
+           WHERE parcel_buildings.is_primary IS DISTINCT FROM EXCLUDED.is_primary
+             OR parcel_buildings.structure_type IS DISTINCT FROM EXCLUDED.structure_type
+             OR parcel_buildings.match_type IS DISTINCT FROM EXCLUDED.match_type
+             OR parcel_buildings.confidence IS DISTINCT FROM EXCLUDED.confidence`,
           insertValues
         );
         buildingsLinked += batchBuildingsCount;
