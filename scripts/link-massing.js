@@ -344,7 +344,7 @@ pipeline.run('link-massing', async (pool) => {
     // Batch insert within a transaction
     if (insertParams.length > 0) {
       await pipeline.withTransaction(pool, async (client) => {
-        await client.query(
+        const result = await client.query(
           `INSERT INTO parcel_buildings (parcel_id, building_id, is_primary, structure_type, match_type, confidence)
            VALUES ${insertParams.join(', ')}
            ON CONFLICT (parcel_id, building_id) DO UPDATE SET
@@ -359,7 +359,7 @@ pipeline.run('link-massing', async (pool) => {
              OR parcel_buildings.confidence IS DISTINCT FROM EXCLUDED.confidence`,
           insertValues
         );
-        buildingsLinked += batchBuildingsCount;
+        buildingsLinked += result.rowCount || 0;
         parcelsLinked += batchParcelsCount;
       });
     }
