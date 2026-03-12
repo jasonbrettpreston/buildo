@@ -235,7 +235,7 @@ export async function GET() {
         )).map(r => ({ ...r, records_meta: null }));
       }
       for (const row of pipelineRows) {
-        pipelineLastRun[row.pipeline] = {
+        const entry = {
           last_run_at: row.started_at ? new Date(row.started_at).toISOString() : null,
           status: row.status,
           duration_ms: row.duration_ms,
@@ -245,6 +245,17 @@ export async function GET() {
           records_updated: row.records_updated,
           records_meta: row.records_meta ?? null,
         };
+        pipelineLastRun[row.pipeline] = entry;
+
+        // Normalize chain-prefixed names (e.g. "permits:assert_schema" → "assert_schema")
+        // so the frontend sees the latest run regardless of standalone vs chain execution
+        if (row.pipeline.includes(':')) {
+          const baseName = row.pipeline.split(':').pop()!;
+          const existing = pipelineLastRun[baseName];
+          if (!existing || !existing.last_run_at || (entry.last_run_at && entry.last_run_at > existing.last_run_at)) {
+            pipelineLastRun[baseName] = entry;
+          }
+        }
       }
     } catch {
       // pipeline_runs table may not exist yet
