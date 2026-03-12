@@ -196,7 +196,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
           values.push(p.permit_num, p.revision_num);
         }
         await client.query(
-          `UPDATE permits SET neighbourhood_id = $1 WHERE ${conditions.join(' OR ')}`,
+          `UPDATE permits SET neighbourhood_id = $1 WHERE (${conditions.join(' OR ')}) AND neighbourhood_id IS DISTINCT FROM $1`,
           [parseInt(dbId, 10), ...values]
         );
       }

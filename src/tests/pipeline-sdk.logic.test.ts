@@ -540,6 +540,36 @@ describe('Pipeline SDK', () => {
       expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
     });
 
+    // §9.3 — load-parcels.js upsert must guard against no-op updates
+    it('load-parcels.js upsert has IS DISTINCT FROM guard to prevent ghost updates', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'load-parcels.js'), 'utf-8');
+      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+    });
+
+    // §9.3 — load-massing.js upsert must guard against no-op updates
+    it('load-massing.js upsert has IS DISTINCT FROM guard to prevent ghost updates', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'load-massing.js'), 'utf-8');
+      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+    });
+
+    // §9.3 — link-massing.js upsert must guard against no-op updates
+    it('link-massing.js upsert has IS DISTINCT FROM guard to prevent ghost updates', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'link-massing.js'), 'utf-8');
+      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+    });
+
+    // §9.3 — link-neighbourhoods.js update must guard against no-op updates
+    it('link-neighbourhoods.js UPDATE has IS DISTINCT FROM guard', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'link-neighbourhoods.js'), 'utf-8');
+      expect(content).toContain('IS DISTINCT FROM');
+    });
+
+    // §9.3 — geocode-permits.js update must guard against identical coordinate writes
+    it('geocode-permits.js UPDATE has IS DISTINCT FROM guard on coordinates', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'geocode-permits.js'), 'utf-8');
+      expect(content).toContain('IS DISTINCT FROM');
+    });
+
     // §3.5 — classify-scope.js records_total must include propagated permits
     it('classify-scope.js emitSummary records_total includes propagated count', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'classify-scope.js'), 'utf-8');
