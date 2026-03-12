@@ -570,6 +570,43 @@ describe('Pipeline Chains', () => {
   });
 });
 
+// ── Regression: assert-schema expected columns match CKAN reality ─────
+
+describe('assert-schema.js EXPECTED_COA_COLUMNS sync with load-coa.js', () => {
+  const schemaSource = fs.readFileSync(
+    path.join(__dirname, '../../scripts/quality/assert-schema.js'), 'utf-8'
+  );
+  const coaSource = fs.readFileSync(
+    path.join(__dirname, '../../scripts/load-coa.js'), 'utf-8'
+  );
+
+  it('does not reference renamed CKAN columns (APPLICATION_DATE, STATUS)', () => {
+    // CKAN renamed APPLICATION_DATE → IN_DATE and STATUS → STATUSDESC.
+    // If these old names reappear in EXPECTED_COA_COLUMNS, schema check will
+    // false-fail because the CKAN resource no longer has them.
+    const match = schemaSource.match(/EXPECTED_COA_COLUMNS\s*=\s*\[([\s\S]*?)\]/);
+    expect(match).not.toBeNull();
+    const columnsBlock = match![1];
+    expect(columnsBlock).not.toContain("'APPLICATION_DATE'");
+    expect(columnsBlock).not.toContain("'STATUS'");
+  });
+
+  it('EXPECTED_COA_COLUMNS includes STATUSDESC which load-coa.js reads', () => {
+    // load-coa.js reads raw.STATUSDESC — assert-schema must validate it exists
+    expect(coaSource).toContain('raw.STATUSDESC');
+    const match = schemaSource.match(/EXPECTED_COA_COLUMNS\s*=\s*\[([\s\S]*?)\]/);
+    expect(match).not.toBeNull();
+    expect(match![1]).toContain("'STATUSDESC'");
+  });
+
+  it('EXPECTED_COA_COLUMNS includes REFERENCE_FILE# which load-coa.js reads', () => {
+    expect(coaSource).toContain("raw['REFERENCE_FILE#']");
+    const match = schemaSource.match(/EXPECTED_COA_COLUMNS\s*=\s*\[([\s\S]*?)\]/);
+    expect(match).not.toBeNull();
+    expect(match![1]).toContain("'REFERENCE_FILE#'");
+  });
+});
+
 // ── WF5 Audit Fix: CQA scripts write records_meta ────────────────────
 
 describe('CQA scripts write records_meta to pipeline_runs', () => {
