@@ -570,6 +570,12 @@ describe('Pipeline SDK', () => {
       expect(content).toContain('IS DISTINCT FROM');
     });
 
+    // §9.3 — classify-permits.js upsert must guard against no-op updates
+    it('classify-permits.js upsert has IS DISTINCT FROM guard to prevent ghost updates', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'classify-permits.js'), 'utf-8');
+      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+    });
+
     // §3.5 — classify-scope.js records_total must include propagated permits
     it('classify-scope.js emitSummary records_total includes propagated count', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'classify-scope.js'), 'utf-8');
