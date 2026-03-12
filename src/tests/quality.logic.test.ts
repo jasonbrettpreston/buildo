@@ -629,6 +629,12 @@ describe('assert-schema.js NEIGHBOURHOOD_ID_PROPS sync with load-neighbourhoods.
     expect(match).not.toBeNull();
     expect(match![1]).toContain("'AREA_SHORT_CODE'");
   });
+
+  it('fetchGeoJsonPropertyKeys skips CRS properties block before Feature', () => {
+    // The GeoJSON has a CRS block with "properties":{"name":"..."} that must be skipped
+    expect(schemaSource).toContain("chunk.indexOf('\"Feature\"')");
+    expect(schemaSource).toContain('featureStart');
+  });
 });
 
 // ── WF5 Audit Fix: CQA scripts write records_meta ────────────────────

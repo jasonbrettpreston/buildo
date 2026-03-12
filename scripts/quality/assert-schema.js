@@ -150,8 +150,11 @@ async function fetchGeoJsonPropertyKeys(url, label) {
     throw new Error(`GeoJSON fetch failed for ${label}: ${res.status} ${res.statusText}`);
   }
   const chunk = await res.text();
+  // Skip to first Feature to avoid matching CRS "properties":{"name":"..."} block
+  const featureStart = chunk.indexOf('"Feature"');
+  const searchChunk = featureStart >= 0 ? chunk.slice(featureStart) : chunk;
   // Extract first "properties":{...} block via regex (avoids parsing incomplete JSON)
-  const match = chunk.match(/"properties"\s*:\s*\{([^}]+)\}/);
+  const match = searchChunk.match(/"properties"\s*:\s*\{([^}]+)\}/);
   if (!match) {
     throw new Error(`Could not find properties in GeoJSON for ${label}`);
   }
