@@ -315,6 +315,11 @@ pipeline.run('load-parcels', async (pool) => {
           ${geomLine}
           date_effective = EXCLUDED.date_effective,
           is_irregular = EXCLUDED.is_irregular
+        WHERE parcels.geometry IS DISTINCT FROM EXCLUDED.geometry
+          OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm
+          OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type
+          OR parcels.address_number IS DISTINCT FROM EXCLUDED.address_number
+          OR parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective
         RETURNING (xmax = 0) AS is_insert`,
         values
       );
