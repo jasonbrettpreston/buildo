@@ -59,14 +59,20 @@ export async function GET() {
 
     // Query pipeline failures — only pipelines whose LATEST run is 'failed'
     // (not historical 24h failures that may have been successfully rerun since)
+    // Normalize chain-prefixed names (e.g. "permits:assert_schema" → "assert_schema")
+    // so a successful chain run supersedes a stale standalone failure.
     let pipelineFailures: PipelineFailure[] = [];
     try {
       const failureRows = await query<{ pipeline: string; error_message: string; failed_at: string }>(
-        `SELECT pipeline, error_message, started_at AS failed_at
+        `SELECT base_pipeline AS pipeline, error_message, failed_at
          FROM (
-           SELECT DISTINCT ON (pipeline) pipeline, status, error_message, started_at
+           SELECT DISTINCT ON (base_pipeline)
+                  CASE WHEN pipeline LIKE '%:%'
+                       THEN SPLIT_PART(pipeline, ':', 2)
+                       ELSE pipeline END AS base_pipeline,
+                  status, error_message, started_at AS failed_at
            FROM pipeline_runs
-           ORDER BY pipeline, started_at DESC
+           ORDER BY base_pipeline, started_at DESC
          ) latest
          WHERE status = 'failed'`
       );
