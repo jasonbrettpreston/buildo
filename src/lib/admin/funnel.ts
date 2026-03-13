@@ -563,6 +563,201 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
 // Pipeline slug → primary DB table mapping (shared between stats API and UI)
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Expected behavior ranges — per-step baselines for telemetry labelling
+// ---------------------------------------------------------------------------
+
+/** Expected value range as [min, max] inclusive */
+export type ValueRange = [number, number];
+
+export interface ExpectedRanges {
+  /** Brief explanation of what this step does and why its numbers look the way they do */
+  behavior: string;
+  /** Expected PIPELINE_SUMMARY values per run */
+  summary?: {
+    records_total?: ValueRange;
+    records_new?: ValueRange;
+    records_updated?: ValueRange;
+  };
+  /** Expected pg_stats mutation counts per table */
+  mutations?: Record<string, {
+    ins?: ValueRange;
+    upd?: ValueRange;
+    del?: ValueRange;
+  }>;
+  /** Expected T1 row count delta per table */
+  row_delta?: Record<string, ValueRange>;
+}
+
+/**
+ * Returns range status for a given value against an expected range.
+ * - 'normal':     value is within [min, max]
+ * - 'borderline': value is outside range but within 20% of the nearest boundary
+ * - 'anomaly':    value is more than 20% beyond the nearest boundary
+ */
+export function getRangeStatus(value: number, range: ValueRange): 'normal' | 'borderline' | 'anomaly' {
+  const [min, max] = range;
+  if (value >= min && value <= max) return 'normal';
+  const span = max - min || 1;
+  const margin = span * 0.20;
+  if (value < min) {
+    return value >= min - margin ? 'borderline' : 'anomaly';
+  }
+  return value <= max + margin ? 'borderline' : 'anomaly';
+}
+
+/**
+ * Per-step expected behavior ranges, populated from observed pipeline_runs data.
+ * Used by TelemetrySection and Last Run tiles to display range indicators.
+ *
+ * Values reflect steady-state runs (no new upstream data). When upstream data
+ * changes (e.g. new permits from City), totals will temporarily spike — that is
+ * expected and not an anomaly.
+ */
+export const STEP_EXPECTED_RANGES: Record<string, ExpectedRanges> = {
+  // ── Ingest ──────────────────────────────────────────────────────────────
+  permits: {
+    behavior: 'Fetches all building permits from CKAN. On steady-state days, 0 new records (hash unchanged). On update days, typically 50-500 new/changed permits.',
+    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 100] },
+    mutations: { permits: { ins: [0, 500], upd: [0, 500], del: [0, 0] } },
+    row_delta: { permits: [0, 500] },
+  },
+  coa: {
+    behavior: 'Incremental CoA fetch (last 90 days). On steady-state days, 0 new records. On update days, typically 0-100 new applications.',
+    summary: { records_total: [0, 200], records_new: [0, 200], records_updated: [0, 50] },
+    mutations: { coa_applications: { ins: [0, 200], upd: [0, 200], del: [0, 0] } },
+    row_delta: { coa_applications: [0, 200] },
+  },
+  builders: {
+    behavior: 'Extracts entity names from permit applicant/builder fields. Steady-state: 0 new entities unless new permits arrived.',
+    summary: { records_total: [3500, 4000], records_new: [0, 50], records_updated: [0, 20] },
+    mutations: { entities: { ins: [0, 50], upd: [0, 20], del: [0, 0] } },
+    row_delta: { entities: [0, 50] },
+  },
+  address_points: {
+    behavior: 'Loads Toronto address point reference data. Quarterly refresh — typically 0 changes between refreshes.',
+    summary: { records_total: [0, 1000], records_new: [0, 1000], records_updated: [0, 100] },
+    mutations: { address_points: { ins: [0, 1000], upd: [0, 1000], del: [0, 0] } },
+    row_delta: { address_points: [0, 1000] },
+  },
+  parcels: {
+    behavior: 'Loads Toronto property parcels. Quarterly refresh — typically 0 changes between refreshes.',
+    summary: { records_total: [0, 1000], records_new: [0, 1000], records_updated: [0, 500] },
+    mutations: { parcels: { ins: [0, 1000], upd: [0, 1000], del: [0, 0] } },
+    row_delta: { parcels: [0, 1000] },
+  },
+  massing: {
+    behavior: 'Loads 3D building massing models from City shapefile. Quarterly refresh — typically 0 changes between refreshes.',
+    summary: { records_total: [0, 1000], records_new: [0, 1000], records_updated: [0, 500] },
+    mutations: { building_footprints: { ins: [0, 1000], upd: [0, 1000], del: [0, 0] } },
+    row_delta: { building_footprints: [0, 1000] },
+  },
+  neighbourhoods: {
+    behavior: 'Loads 158 neighbourhood boundaries from GeoJSON, then enriches all rows with Census demographics across 8 characteristics. The ~2,054 SQL UPDATEs are normal — each demographic dimension updates all 158 rows individually.',
+    summary: { records_total: [155, 165], records_new: [155, 165], records_updated: [20, 50] },
+    mutations: { neighbourhoods: { ins: [0, 10], upd: [1800, 2500], del: [0, 0] } },
+    row_delta: { neighbourhoods: [0, 10] },
+  },
+  load_wsib: {
+    behavior: 'Loads WSIB registry snapshot. Typically 0 changes unless a new WSIB file is provided.',
+    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 200] },
+    mutations: { wsib_registry: { ins: [0, 500], upd: [0, 500], del: [0, 0] } },
+    row_delta: { wsib_registry: [0, 500] },
+  },
+
+  // ── Link & Enrich ──────────────────────────────────────────────────────
+  geocode_permits: {
+    behavior: 'Matches permit addresses to address points for lat/lng. Steady-state: 0 geocoded (all already done). After new permits: matches new addresses.',
+    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 100] },
+    mutations: { permits: { ins: [0, 0], upd: [0, 500], del: [0, 0] } },
+    row_delta: { permits: [0, 0] },
+  },
+  link_parcels: {
+    behavior: 'Links permits to property parcels via address match. Steady-state: 0 linked. After new permits: links new ones.',
+    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 500] },
+    mutations: { permit_parcels: { ins: [0, 500], upd: [0, 100], del: [0, 0] } },
+    row_delta: { permit_parcels: [0, 500] },
+  },
+  link_neighbourhoods: {
+    behavior: 'Spatially links permits to neighbourhood boundaries. Steady-state: 0 linked. After new permits: links new ones.',
+    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 500] },
+    mutations: { permits: { ins: [0, 0], upd: [0, 500], del: [0, 0] } },
+    row_delta: { permits: [0, 0] },
+  },
+  link_massing: {
+    behavior: 'Links permits to 3D building footprints via parcel intersection. Steady-state: 0 linked. Uses in-memory grid index for efficiency.',
+    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 500] },
+    mutations: { parcel_buildings: { ins: [0, 500], upd: [0, 5000], del: [0, 0] } },
+    row_delta: { parcel_buildings: [0, 500] },
+  },
+  link_coa: {
+    behavior: 'Links CoA applications to building permits by address and ward. Typically 0-40 links per run.',
+    summary: { records_total: [0, 50], records_new: [0, 50], records_updated: [0, 50] },
+    mutations: { coa_applications: { ins: [0, 0], upd: [0, 50], del: [0, 0] } },
+    row_delta: { coa_applications: [0, 0] },
+  },
+  link_wsib: {
+    behavior: 'Matches extracted entities against WSIB registry by name. Steady-state: 0 matches. After new entities: fuzzy-matches names.',
+    summary: { records_total: [0, 20], records_new: [0, 20], records_updated: [0, 10] },
+    mutations: { entities: { ins: [0, 0], upd: [0, 200], del: [0, 0] } },
+    row_delta: { entities: [0, 0] },
+  },
+  enrich_wsib_builders: {
+    behavior: 'Web-scrapes contact info for WSIB-matched entities via Serper API. Batch size capped at 50 per run.',
+    summary: { records_total: [0, 50], records_new: [0, 50], records_updated: [0, 50] },
+    mutations: { entities: { ins: [0, 0], upd: [0, 50], del: [0, 0] } },
+  },
+  enrich_named_builders: {
+    behavior: 'Web-scrapes contact info for unmatched entities via Serper API. Batch size capped at 50 per run.',
+    summary: { records_total: [0, 50], records_new: [0, 50], records_updated: [0, 50] },
+    mutations: { entities: { ins: [0, 0], upd: [0, 50], del: [0, 0] } },
+  },
+  link_similar: {
+    behavior: 'Clusters permits by address proximity to find related (companion) applications. Propagates BLD scope to companions. Typically ~10,700 permits updated per run — this is normal whole-table reprocessing.',
+    summary: { records_total: [10000, 12000], records_new: [0, 500], records_updated: [10000, 12000] },
+    mutations: { permits: { ins: [0, 0], upd: [10000, 12000], del: [0, 0] } },
+    row_delta: { permits: [0, 0] },
+  },
+  compute_centroids: {
+    behavior: 'Computes geometric centroids for parcel polygons. Steady-state: 0 computed (all already done).',
+    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 500] },
+    mutations: { parcels: { ins: [0, 0], upd: [0, 500], del: [0, 0] } },
+    row_delta: { parcels: [0, 0] },
+  },
+  create_pre_permits: {
+    behavior: 'Creates placeholder permit records from eligible CoA applications. Typically ~370 candidates checked, 0 new on steady-state.',
+    summary: { records_total: [350, 400], records_new: [0, 20], records_updated: [0, 10] },
+  },
+
+  // ── Classify ────────────────────────────────────────────────────────────
+  classify_scope: {
+    behavior: 'Classifies project_type and extracts scope_tags for new/changed permits. Processes ~10,700 permits per run then propagates BLD scope to companions.',
+    summary: { records_total: [10000, 12000], records_new: [0, 500], records_updated: [10000, 12000] },
+    mutations: { permits: { ins: [0, 0], upd: [10000, 12000], del: [0, 0] } },
+    row_delta: { permits: [0, 0] },
+  },
+  classify_permits: {
+    behavior: 'Assigns trade classifications using tag-trade matrix. Processes ~95,000 permits per run. The high records_updated count is normal — existing classifications are refreshed. The low T2 mutation count vs high summary count is because sub-batch INSERTs use ON CONFLICT.',
+    summary: { records_total: [90000, 100000], records_new: [0, 500], records_updated: [90000, 100000] },
+    mutations: { permit_trades: { ins: [0, 1000], upd: [0, 710000], del: [0, 0] } },
+    row_delta: { permit_trades: [0, 1000] },
+  },
+
+  // ── Snapshot & Quality ──────────────────────────────────────────────────
+  refresh_snapshot: {
+    behavior: 'Captures daily data quality metrics snapshot. Always produces exactly 1 record (upsert on snapshot_date).',
+    summary: { records_total: [1, 1], records_new: [1, 1], records_updated: [0, 0] },
+    mutations: { data_quality_snapshots: { ins: [0, 1], upd: [0, 1], del: [0, 0] } },
+    row_delta: { data_quality_snapshots: [0, 1] },
+  },
+  assert_engine_health: {
+    behavior: 'Queries pg_stat_user_tables for dead tuples, seq scans, and update ping-pong. Auto-VACUUMs tables exceeding 10% dead ratio. Snapshots to engine_health_snapshots.',
+    summary: { records_total: [10, 15], records_new: [0, 0], records_updated: [0, 15] },
+    mutations: { engine_health_snapshots: { ins: [0, 15], upd: [0, 15], del: [0, 0] } },
+    row_delta: { engine_health_snapshots: [0, 15] },
+  },
+};
+
 export const PIPELINE_TABLE_MAP: Record<string, string> = {
   permits: 'permits', coa: 'coa_applications', builders: 'entities',
   address_points: 'address_points', parcels: 'parcels', massing: 'building_footprints',

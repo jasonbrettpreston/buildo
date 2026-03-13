@@ -1,4 +1,5 @@
-import type { FunnelRowData, StepDescription } from '@/lib/admin/funnel';
+import type { FunnelRowData, StepDescription, ExpectedRanges } from '@/lib/admin/funnel';
+import { getRangeStatus, STEP_EXPECTED_RANGES } from '@/lib/admin/funnel';
 
 // ---------------------------------------------------------------------------
 // Funnel accordion sub-components — extracted from FreshnessTimeline.tsx
@@ -53,19 +54,36 @@ export interface TelemetryData {
   engine?: Record<string, { n_live_tup: number; n_dead_tup: number; dead_ratio: number; seq_scan: number; idx_scan: number; seq_ratio: number }>;
 }
 
+/** Small inline range badge — green/yellow/red based on expected range */
+function RangeBadge({ value, range }: { value: number; range?: [number, number] }) {
+  if (!range) return null;
+  const status = getRangeStatus(value, range);
+  if (status === 'normal') return <span className="text-[7px] px-1 py-0.5 rounded bg-green-50 text-green-600 font-medium" title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{'\u2713'}</span>;
+  if (status === 'borderline') return <span className="text-[7px] px-1 py-0.5 rounded bg-yellow-50 text-yellow-600 font-medium" title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{'\u26A0'}</span>;
+  return <span className="text-[7px] px-1 py-0.5 rounded bg-red-50 text-red-600 font-medium" title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{'\u2717'}</span>;
+}
+
 /** Renders T1/T2/T4/T6 telemetry inline below the DataFlowTile schema */
-export function TelemetrySection({ telemetry }: { telemetry: TelemetryData }) {
+export function TelemetrySection({ telemetry, stepSlug }: { telemetry: TelemetryData; stepSlug?: string }) {
   const tables = Object.keys(telemetry.counts ?? {});
   if (tables.length === 0) return null;
 
+  const expected = stepSlug ? STEP_EXPECTED_RANGES[stepSlug] : undefined;
+
   return (
     <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
-      <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Last Run Telemetry</h5>
+      <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">DB State Changes</h5>
+      <p className="text-[8px] text-gray-400 leading-snug">Observed database mutations from PostgreSQL stats counters (pg_stat_user_tables). These are raw SQL operation counts, not logical record counts.</p>
+      {expected?.behavior && (
+        <p className="text-[8px] text-violet-500 leading-snug italic">{expected.behavior}</p>
+      )}
       {tables.map((table) => {
         const count = telemetry.counts?.[table];
         const stats = telemetry.pg_stats?.[table];
         const fills = telemetry.null_fills?.[table];
         const engine = telemetry.engine?.[table];
+        const mutRanges = expected?.mutations?.[table];
+        const deltaRange = expected?.row_delta?.[table];
 
         return (
           <div key={table} className="space-y-1">
@@ -78,14 +96,15 @@ export function TelemetrySection({ telemetry }: { telemetry: TelemetryData }) {
                   <span className={count.delta > 0 ? 'text-green-600 font-medium' : count.delta < 0 ? 'text-red-600 font-medium' : 'text-gray-400'}>
                     ({count.delta > 0 ? '+' : ''}{count.delta.toLocaleString()})
                   </span>
+                  <RangeBadge value={count.delta} range={deltaRange} />
                 </span>
               )}
               {/* T2: pg_stat mutation badges */}
               {stats && (stats.ins > 0 || stats.upd > 0 || stats.del > 0) && (
                 <span className="flex gap-1">
-                  {stats.ins > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-medium tabular-nums">Ins: {stats.ins.toLocaleString()}</span>}
-                  {stats.upd > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-blue-100 text-blue-700 font-medium tabular-nums">Upd: {stats.upd.toLocaleString()}</span>}
-                  {stats.del > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-red-100 text-red-700 font-medium tabular-nums">Del: {stats.del.toLocaleString()}</span>}
+                  {stats.ins > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-medium tabular-nums">SQL Inserts: {stats.ins.toLocaleString()} <RangeBadge value={stats.ins} range={mutRanges?.ins} /></span>}
+                  {stats.upd > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-blue-100 text-blue-700 font-medium tabular-nums">SQL Updates: {stats.upd.toLocaleString()} <RangeBadge value={stats.upd} range={mutRanges?.upd} /></span>}
+                  {stats.del > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-red-100 text-red-700 font-medium tabular-nums">SQL Deletes: {stats.del.toLocaleString()} <RangeBadge value={stats.del} range={mutRanges?.del} /></span>}
                 </span>
               )}
             </div>
@@ -388,8 +407,8 @@ export interface PipelineMeta {
   writes?: Record<string, string[]>;
 }
 
-export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, telemetry }: {
-  desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null; telemetry?: TelemetryData | null;
+export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, telemetry, stepSlug }: {
+  desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null; telemetry?: TelemetryData | null; stepSlug?: string;
 }) {
   // Live pipeline_meta is the single source of truth for reads/writes.
   // It comes from PIPELINE_META emitted by each script and stored in
@@ -412,7 +431,7 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, telemetry }: {
         ) : (
           <p className="text-[10px] text-gray-400 italic">Run this pipeline to see exact data flow</p>
         )}
-        {telemetry && <TelemetrySection telemetry={telemetry} />}
+        {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={stepSlug} />}
       </div>
     );
   }
@@ -461,7 +480,7 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, telemetry }: {
       </div>
 
       {/* T1/T2/T4: Telemetry section — progressive enhancement */}
-      {telemetry && <TelemetrySection telemetry={telemetry} />}
+      {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={stepSlug} />}
     </div>
   );
 }

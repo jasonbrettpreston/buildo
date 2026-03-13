@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { FunnelRowData } from '@/lib/admin/funnel';
-import { STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP } from '@/lib/admin/funnel';
+import { STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP, STEP_EXPECTED_RANGES, getRangeStatus } from '@/lib/admin/funnel';
 import { CircularBadge, DataFlowTile, Sparkline, type SparklineRun, type TelemetryData } from './funnel/FunnelPanels';
 
 // ---------------------------------------------------------------------------
@@ -891,16 +891,31 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           <DataFlowTile
                             desc={STEP_DESCRIPTIONS[step.slug]}
                             dbSchemaMap={dbSchemaMap}
+                            stepSlug={step.slug}
                             // SAFETY: records_meta is JSONB (Record<string, unknown> | null), pipeline_meta/telemetry are known sub-keys
                             pipelineMeta={(info?.records_meta as Record<string, unknown>)?.pipeline_meta as import('./funnel/FunnelPanels').PipelineMeta | undefined}
                             telemetry={(info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined}
                           />
                         )}
 
-                        {/* Last Run tile (non-funnel steps without DataFlowTile) */}
-                        {!funnelRow && (
+                        {/* Script Output tile (non-funnel steps) — self-reported PIPELINE_SUMMARY values */}
+                        {!funnelRow && (() => {
+                          const stepExpected = STEP_EXPECTED_RANGES[step.slug];
+                          const summaryRanges = stepExpected?.summary;
+                          const rangeBadge = (value: number, range?: [number, number]) => {
+                            if (!range) return null;
+                            const status = getRangeStatus(value, range);
+                            const cls = status === 'normal' ? 'bg-green-50 text-green-600' : status === 'borderline' ? 'bg-yellow-50 text-yellow-600' : 'bg-red-50 text-red-600';
+                            const icon = status === 'normal' ? '\u2713' : status === 'borderline' ? '\u26A0' : '\u2717';
+                            return <span className={`text-[7px] px-1 py-0.5 rounded font-medium ml-1 ${cls}`} title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{icon}</span>;
+                          };
+                          return (
                           <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Last Run</h4>
+                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Script Output</h4>
+                            <p className="text-[8px] text-gray-400 leading-snug mb-2">Values self-reported by the pipeline script via PIPELINE_SUMMARY. These represent the script&apos;s logical view of what it processed.</p>
+                            {stepExpected?.behavior && (
+                              <p className="text-[8px] text-violet-500 leading-snug italic mb-2">{stepExpected.behavior}</p>
+                            )}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div className="space-y-1.5">
                                 <div className="flex justify-between">
@@ -936,16 +951,16 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                               {info && stepGroup !== 'quality' && stepGroup !== 'snapshot' && (info.records_total != null || info.records_new != null) && (
                                 <div className="space-y-1.5">
                                   {info.records_total != null && (
-                                    <div className="flex justify-between">
-                                      <span className="text-xs text-gray-600">Records</span>
-                                      <span className="text-xs font-semibold text-gray-900 tabular-nums">{info.records_total.toLocaleString()}</span>
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-xs text-gray-600">Total Processed</span>
+                                      <span className="text-xs font-semibold text-gray-900 tabular-nums">{info.records_total.toLocaleString()}{rangeBadge(info.records_total, summaryRanges?.records_total)}</span>
                                     </div>
                                   )}
                                   {info.records_new != null && (
                                     <div>
-                                      <div className="flex justify-between">
-                                        <span className="text-xs text-gray-600">New/Changed</span>
-                                        <span className="text-xs font-semibold text-green-700 tabular-nums">{info.records_new.toLocaleString()}</span>
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-xs text-gray-600">New / Changed</span>
+                                        <span className="text-xs font-semibold text-green-700 tabular-nums">{info.records_new.toLocaleString()}{rangeBadge(info.records_new, summaryRanges?.records_new)}</span>
                                       </div>
                                       {info.records_new === 0 && info.records_total != null && info.records_total > 0 && (
                                         <p className="text-[9px] text-gray-400 mt-0.5">No changes — source data unchanged since last run</p>
@@ -953,9 +968,9 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                     </div>
                                   )}
                                   {info.records_updated != null && info.records_updated > 0 && (
-                                    <div className="flex justify-between">
+                                    <div className="flex justify-between items-center">
                                       <span className="text-xs text-gray-600">Updated</span>
-                                      <span className="text-xs font-semibold text-blue-700 tabular-nums">{info.records_updated.toLocaleString()}</span>
+                                      <span className="text-xs font-semibold text-blue-700 tabular-nums">{info.records_updated.toLocaleString()}{rangeBadge(info.records_updated, summaryRanges?.records_updated)}</span>
                                     </div>
                                   )}
                                 </div>
@@ -1061,7 +1076,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                               })()}
                             </div>
                           </div>
-                        )}
+                          );
+                        })()}
 
                         {/* Footer metadata */}
                         <div className="drilldown-footer pt-2 border-t border-gray-200/60 flex flex-wrap items-center gap-4 text-[10px] text-gray-400">

@@ -636,3 +636,67 @@ describe('Ghost record detection in assert-data-bounds', () => {
     expect(source).toMatch(/last_seen_at[\s\S]{0,100}30\s*days/i);
   });
 });
+
+describe('Telemetry & Last Run labelling with expected behavior ranges', () => {
+  it('STEP_EXPECTED_RANGES is exported from funnel.ts and covers telemetry-enabled steps', async () => {
+    const funnel = await import('@/lib/admin/funnel');
+    expect(funnel.STEP_EXPECTED_RANGES).toBeDefined();
+    expect(typeof funnel.STEP_EXPECTED_RANGES).toBe('object');
+    // Must cover all steps that have telemetry_tables in manifest
+    const telemetrySteps = [
+      'permits', 'coa', 'builders', 'address_points', 'parcels', 'massing',
+      'neighbourhoods', 'load_wsib', 'geocode_permits', 'link_parcels',
+      'link_neighbourhoods', 'link_massing', 'link_coa', 'link_wsib',
+      'enrich_wsib_builders', 'enrich_named_builders', 'classify_scope',
+      'classify_permits', 'compute_centroids', 'link_similar',
+      'refresh_snapshot', 'assert_engine_health',
+    ];
+    for (const slug of telemetrySteps) {
+      expect(funnel.STEP_EXPECTED_RANGES[slug], `Missing expected range for ${slug}`).toBeDefined();
+      expect(funnel.STEP_EXPECTED_RANGES[slug].behavior, `Missing behavior note for ${slug}`).toBeTruthy();
+    }
+  });
+
+  it('getRangeStatus returns correct status for in-range, borderline, and anomaly values', async () => {
+    const { getRangeStatus } = await import('@/lib/admin/funnel');
+    expect(getRangeStatus(100, [50, 150])).toBe('normal');
+    expect(getRangeStatus(50, [50, 150])).toBe('normal');
+    expect(getRangeStatus(150, [50, 150])).toBe('normal');
+    // borderline = within 20% beyond range boundary
+    expect(getRangeStatus(170, [50, 150])).toBe('borderline');
+    expect(getRangeStatus(42, [50, 150])).toBe('borderline');
+    // anomaly = beyond 20% of range boundary
+    expect(getRangeStatus(200, [50, 150])).toBe('anomaly');
+    expect(getRangeStatus(20, [50, 150])).toBe('anomaly');
+  });
+
+  it('TelemetrySection header says "DB State Changes" not "Last Run Telemetry"', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
+    );
+    expect(source).toContain('DB State Changes');
+    expect(source).not.toContain('Last Run Telemetry');
+  });
+
+  it('Last Run tile header says "Script Output" not just "Last Run"', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // The non-funnel Last Run tile should have the new header
+    expect(source).toContain('Script Output');
+  });
+
+  it('TelemetrySection includes a descriptor explaining DB mutations', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
+    );
+    expect(source).toMatch(/pg_stat_user_tables|database mutations|PostgreSQL stats/i);
+  });
+
+  it('Last Run tile includes a descriptor explaining script-reported values', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toMatch(/PIPELINE_SUMMARY|script.*report|self-reported/i);
+  });
+});
