@@ -1,4 +1,4 @@
-import type { FunnelRowData, StepDescription, ExpectedRanges } from '@/lib/admin/funnel';
+import type { FunnelRowData, StepDescription } from '@/lib/admin/funnel';
 import { getRangeStatus, STEP_EXPECTED_RANGES } from '@/lib/admin/funnel';
 
 // ---------------------------------------------------------------------------
