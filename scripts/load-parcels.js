@@ -231,7 +231,7 @@ pipeline.run('load-parcels', async (pool) => {
   let csvPath = process.argv[2];
 
   if (!csvPath) {
-    csvPath = path.join(__dirname, '..', 'property-boundaries-4326.csv');
+    csvPath = path.join(__dirname, '..', 'data', 'property-boundaries-4326.csv');
     if (!fs.existsSync(csvPath)) {
       console.log('Downloading Property Boundaries CSV (~327 MB)...');
       await downloadFile(CSV_URL, csvPath);

@@ -64,7 +64,7 @@ pipeline.run('load-address-points', async (pool) => {
   let csvPath = process.argv[2];
 
   if (!csvPath) {
-    csvPath = path.join(__dirname, '..', 'address-points-4326.csv');
+    csvPath = path.join(__dirname, '..', 'data', 'address-points-4326.csv');
     if (!fs.existsSync(csvPath)) {
       console.log('Downloading Address Points CSV (~185 MB)...');
       await downloadFile(CSV_URL, csvPath);

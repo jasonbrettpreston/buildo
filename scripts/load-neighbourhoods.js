@@ -543,7 +543,7 @@ pipeline.run('load-neighbourhoods', async (pool) => {
 
   // Download boundaries if not provided
   if (!boundariesPath) {
-    boundariesPath = path.join(__dirname, '..', 'neighbourhoods-4326.geojson');
+    boundariesPath = path.join(__dirname, '..', 'data', 'neighbourhoods-4326.geojson');
     if (!fs.existsSync(boundariesPath)) {
       console.log('Downloading Neighbourhood Boundaries GeoJSON...');
       await downloadFile(BOUNDARIES_URL, boundariesPath);
@@ -555,7 +555,7 @@ pipeline.run('load-neighbourhoods', async (pool) => {
 
   // Download profiles if not provided
   if (!profilesPath) {
-    profilesPath = path.join(__dirname, '..', 'neighbourhood-profiles-2021.xlsx');
+    profilesPath = path.join(__dirname, '..', 'data', 'neighbourhood-profiles-2021.xlsx');
     if (!fs.existsSync(profilesPath)) {
       console.log('Downloading Neighbourhood Profiles XLSX...');
       await downloadFile(PROFILES_URL, profilesPath);

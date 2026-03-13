@@ -37,12 +37,7 @@ npm-debug.log*
 next-env.d.ts
 
 # data files (large datasets — never commit)
-building-permits-active-permits.json
-*.csv
-*.xlsx
-*.geojson
-*.zip
-/3d-massing-wgs84/
+/data/
 
 # temp outputs & ad-hoc dumps
 stats_*.json

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const JSON_FILE = path.join(__dirname, '../building-permits-active-permits.json');
+const JSON_FILE = path.join(__dirname, '../data/building-permits-active-permits.json');
 
 // Common English stop words and construction-specific noise words
 const STOP_WORDS = new Set([

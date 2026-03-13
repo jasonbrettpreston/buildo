@@ -120,8 +120,8 @@ pipeline.run('load-massing', async (pool) => {
   let shpPath = process.argv[2];
 
   if (!shpPath) {
-    const zipPath = path.join(__dirname, '..', '3d-massing-wgs84.zip');
-    const extractDir = path.join(__dirname, '..', '3d-massing-wgs84');
+    const zipPath = path.join(__dirname, '..', 'data', '3d-massing-wgs84.zip');
+    const extractDir = path.join(__dirname, '..', 'data', '3d-massing-wgs84');
 
     if (!fs.existsSync(extractDir)) {
       if (!fs.existsSync(zipPath)) {
