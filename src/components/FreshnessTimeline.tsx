@@ -52,14 +52,6 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   assert_engine_health: { name: 'Engine Health',         group: 'quality' },
 };
 
-export const GROUP_LABELS: Record<PipelineGroup, string> = {
-  ingest: 'Ingest',
-  link: 'Link',
-  classify: 'Classify',
-  snapshot: 'Snapshot',
-  quality: 'Quality',
-};
-
 // ---------------------------------------------------------------------------
 // Pipeline Chains — dependency-ordered execution sequences
 // indent: 0 = root trigger, 1 = main step, 2 = sub-dependency

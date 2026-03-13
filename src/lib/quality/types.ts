@@ -98,11 +98,6 @@ export interface CoverageRate {
   percentage: number;
 }
 
-export interface TrendPoint {
-  date: string;
-  value: number;
-}
-
 export interface MatchingMetrics {
   tradeCoverage: CoverageRate;
   builderEnrichment: CoverageRate;

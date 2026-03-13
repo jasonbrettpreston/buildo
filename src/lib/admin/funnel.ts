@@ -98,7 +98,7 @@ export interface FunnelStats {
 // Helpers
 // ---------------------------------------------------------------------------
 
-export function pct(n: number, d: number): number {
+function pct(n: number, d: number): number {
   return d > 0 ? Math.round((n / d) * 1000) / 10 : 0;
 }
 
@@ -568,9 +568,9 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
 // ---------------------------------------------------------------------------
 
 /** Expected value range as [min, max] inclusive */
-export type ValueRange = [number, number];
+type ValueRange = [number, number];
 
-export interface ExpectedRanges {
+interface ExpectedRanges {
   /** Brief explanation of what this step does and why its numbers look the way they do */
   behavior: string;
   /** Expected PIPELINE_SUMMARY values per run */

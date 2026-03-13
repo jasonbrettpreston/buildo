@@ -1165,12 +1165,12 @@ describe('Health Banner in DataQualityDashboard', () => {
 });
 
 describe('FreshnessTimeline quality group', () => {
-  it('FreshnessTimeline includes quality group label', () => {
+  it('FreshnessTimeline includes quality group in PIPELINE_REGISTRY', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
-    expect(source).toContain("quality: 'Quality'");
+    expect(source).toContain("group: 'quality'");
   });
 
   it('FreshnessTimeline registers Schema Validation step', () => {
