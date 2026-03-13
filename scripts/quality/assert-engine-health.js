@@ -59,6 +59,7 @@ async function run() {
   const warnings = [];
   const errors = [];
   const tableResults = [];
+  let vacuumTargets = [];
 
   try {
     // Query pg_stat_user_tables for all monitored tables
@@ -123,7 +124,7 @@ async function run() {
     }
 
     // Auto-VACUUM ANALYZE tables exceeding dead tuple threshold
-    const vacuumTargets = tableResults.filter((t) => t.dead_ratio > DEAD_TUPLE_RATIO && t.n_live_tup > 0);
+    vacuumTargets = tableResults.filter((t) => t.dead_ratio > DEAD_TUPLE_RATIO && t.n_live_tup > 0);
     if (vacuumTargets.length > 0) {
       console.log(`\n--- Auto-VACUUM ANALYZE (${vacuumTargets.length} tables above ${DEAD_TUPLE_RATIO * 100}% dead ratio) ---`);
       for (const target of vacuumTargets) {

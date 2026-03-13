@@ -2818,6 +2818,33 @@ describe('CQA accordion renders individual warning text', () => {
   });
 });
 
+// ── CQA verdict banner must not show "ALL CHECKS PASSED" on failed steps ────
+
+describe('CQA verdict banner respects step failure status', () => {
+  it('verdict banner checks info.status before showing green verdict', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Must guard against showing "ALL CHECKS PASSED" when step actually failed
+    // Two guards: (1) standalone banner for failed steps with no records_meta, (2) hasFailures includes status check
+    expect(source).toContain("info?.status === 'failed'");
+  });
+});
+
+// ── Cross-chain status bleed: isRunning must only use scoped keys ────
+
+describe('No cross-chain status bleed on shared step slugs', () => {
+  it('isRunning does NOT fall back to bare step.slug for chain steps', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // The isRunning check should only use scopedKey, not bare step.slug
+    // Old: runningPipelines.has(scopedKey) || runningPipelines.has(step.slug)
+    // Fix: remove the bare slug fallback
+    expect(source).not.toMatch(/isRunning.*runningPipelines\.has\(step\.slug\)/);
+  });
+});
+
 // ── Health banner shows pipeline chain schedule status ───────────────
 
 describe('Health banner shows chain schedule status', () => {

@@ -598,13 +598,14 @@ describe('Scoped key step status updates during chain run (Bug A3)', () => {
     expect(source).toContain('pipelineLastRun[scopedKey]');
   });
 
-  it('isRunning checks both scoped key and bare slug', () => {
+  it('isRunning uses only scoped key (no bare slug fallback to prevent cross-chain bleed)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
       'utf-8'
     );
     expect(source).toContain('runningPipelines.has(scopedKey)');
-    expect(source).toContain('runningPipelines.has(step.slug)');
+    // Bare slug fallback removed to prevent cross-chain status bleed
+    expect(source).not.toContain('runningPipelines.has(step.slug)');
   });
 
   it('polling adds scoped keys with running status to runningPipelines', () => {

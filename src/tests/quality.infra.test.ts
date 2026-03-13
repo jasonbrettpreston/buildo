@@ -599,6 +599,18 @@ describe('Engine Health CQA Tier 3', () => {
     );
     expect(source).toContain('VACUUM ANALYZE');
   });
+
+  it('vacuumTargets is declared before the outer try block (scope bug fix)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      'utf-8'
+    );
+    // vacuumTargets must be declared with `let` before the outer try block (not `const` inside it)
+    // so it's accessible in meta construction after the catch
+    expect(source).toMatch(/let vacuumTargets\s*=\s*\[\]/);
+    // Must NOT have a `const vacuumTargets` (that would shadow the outer let)
+    expect(source).not.toMatch(/const vacuumTargets/);
+  });
 });
 
 describe('Ghost record detection in assert-data-bounds', () => {

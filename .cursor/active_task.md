@@ -1,46 +1,37 @@
-# Active Task: Engine Health & Volume Volatility
-**Status:** Implementation Complete — Ready for WF6
-**Workflow:** WF1 — New Feature Genesis
-**Rollback Anchor:** `657e47f7` (657e47f7f6b474efe3f2721ea325fc61e695a096)
+# Active Task: Fix vacuumTargets scope crash and false "ALL CHECKS PASSED" on failed steps
+**Status:** Implementation
+**Workflow:** WF3 — Bug Fix
+**Rollback Anchor:** `255f010`
 
 ## Context
-* **Goal:** Add engine-level health monitoring (dead tuples, index usage, seq-scan ratio) and volume volatility spike detection to the Data Quality Dashboard. This extends the existing CQA framework with a "Tier 3" engine health layer — capturing PostgreSQL maintenance health and detecting update ping-pong patterns that indicate script inefficiency.
-* **Target Spec:** `docs/specs/28_data_quality_dashboard.md` (extends existing CQA tiers)
+* **Goal:** Fix two bugs found during WF5 manual testing of the CQA trio hardening:
+  (1) `assert-engine-health.js` crashes with `ReferenceError: vacuumTargets is not defined` because the variable is declared inside a `try` block (line 126) but referenced in `meta` construction (line 189) outside that scope.
+  (2) FreshnessTimeline CQA verdict banner shows green "ALL CHECKS PASSED" even when the step status is "failed" — because when the script crashes before emitting PIPELINE_SUMMARY, `records_meta` is null and all counters default to 0.
+* **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `scripts/lib/pipeline.js` — extend `captureTelemetry`/`diffTelemetry` with engine stats
-  - `scripts/quality/assert-engine-health.js` — NEW CQA Tier 3 validation script
-  - `src/lib/quality/types.ts` — add `EngineHealthAnomaly` type + detection logic
-  - `src/app/api/quality/route.ts` — return engine health data
-  - `src/lib/quality/metrics.ts` — capture engine stats in snapshots
-  - `scripts/manifest.json` — register `assert_engine_health` step
-  - `src/lib/admin/funnel.ts` — add step description
+  - `scripts/quality/assert-engine-health.js` — vacuumTargets scope fix (line 126 → hoist before try)
+  - `src/components/FreshnessTimeline.tsx` — verdict banner must check step status (lines 973-979)
+
+## Bug Description
+1. **vacuumTargets scope crash:** `const vacuumTargets` is declared at line 126 inside the outer `try` block (line 63). The `meta` object at line 189 references `vacuumTargets.length` but is outside the `try`. If the outer `try` completes normally, this works — but if any earlier code in the `try` throws (or if JS hoisting rules don't apply to `const`), the variable is not in scope at line 189. In practice, the script runs all checks successfully, writes snapshots, then crashes at line 189 because `const` is block-scoped and `vacuumTargets` exits scope at the `catch` on line 174.
+2. **False "ALL CHECKS PASSED" on crash:** When the script crashes, `run-chain.js` captures the error but `records_meta` is null (no PIPELINE_SUMMARY emitted). The UI renders the verdict banner with all counters defaulting to 0, showing green "ALL CHECKS PASSED" — misleading when the step actually failed.
 
 ## Technical Implementation
-* **New/Modified Components:** None (backend + dashboard integration only, rendered in existing `TelemetrySection` / health banner)
-* **Data Hooks/Libs:**
-  - `src/lib/quality/types.ts` — `EngineHealthAnomaly`, `detectEngineHealthIssues()`, extended `computeSystemHealth()`
-  - `scripts/quality/assert-engine-health.js` — standalone CQA Tier 3 script using Pipeline SDK
-  - `scripts/lib/pipeline.js` — extend telemetry to capture `n_dead_tup`, `n_live_tup`, `seq_scan`, `idx_scan`
-* **Database Impact:** YES — migration `051_engine_health_snapshots.sql` adds `engine_health_snapshots` table for historical tracking of dead tuple ratios and index usage per table.
+* **New/Modified Components:** `FreshnessTimeline.tsx` — verdict banner conditional
+* **Data Hooks/Libs:** N/A
+* **Database Impact:** NO
 
 ## Standards Compliance
-* **Try-Catch Boundary:** `GET /api/quality` already has overarching try-catch; new engine health query will be wrapped in its own inner try-catch (non-fatal if table doesn't exist yet).
-* **Unhappy Path Tests:** Test for: `engine_health_snapshots` table missing (graceful skip), zero rows in `pg_stat_user_tables` (empty result), dead tuple ratio above threshold (anomaly flagged), all-sequential-scans table (anomaly flagged).
-* **logError Mandate:** Any new catch blocks in API route will use `logError(tag, err, context)`.
-* **Mobile-First:** N/A — no new UI components; data surfaces through existing dashboard components.
+* **Try-Catch Boundary:** N/A — no API routes modified
+* **Unhappy Path Tests:** Test that vacuumTargets is declared outside try; test that verdict banner respects step failure status
+* **logError Mandate:** N/A
+* **Mobile-First:** N/A — existing component, no layout changes
 
 ## Execution Plan
-- [ ] **Contract Definition:** Define `EngineHealthSnapshot` and `EngineHealthAnomaly` TypeScript interfaces. Define response shape extension for `GET /api/quality`.
-- [ ] **Spec & Registry Sync:** Update `docs/specs/28_data_quality_dashboard.md` with Tier 3 CQA section. Add `assert_engine_health` to `scripts/manifest.json`. Run `npm run system-map`.
-- [ ] **Schema Evolution:** Write `migrations/051_engine_health_snapshots.sql` (UP + DOWN). Table: `engine_health_snapshots(id, table_name, snapshot_date, n_live_tup, n_dead_tup, dead_ratio, seq_scan, idx_scan, seq_ratio, captured_at)`. Run `npm run migrate`, `npm run db:generate`. Update factories.
-- [ ] **Test Scaffolding:** Add engine health tests to `src/tests/quality.logic.test.ts` and `src/tests/quality.infra.test.ts`.
-- [ ] **Red Light:** Run `npm run test`. Must see failing tests.
-- [ ] **Implementation:**
-  - Extend `captureTelemetry`/`diffTelemetry` in `scripts/lib/pipeline.js` to include `n_dead_tup`, `n_live_tup`, `seq_scan`, `idx_scan` (T6 engine stats).
-  - Create `scripts/quality/assert-engine-health.js` — queries `pg_stat_user_tables` for all telemetry tables, flags: dead tuple ratio > 10%, seq scan ratio > 80% (on tables with > 10K rows), update ping-pong (n_tup_upd > 2× n_tup_ins in last run).
-  - Add `EngineHealthAnomaly` type and `detectEngineHealthIssues()` to `src/lib/quality/types.ts`.
-  - Extend `GET /api/quality` to query engine health and include in response.
-  - Register in `scripts/manifest.json` chains (after `assert_data_bounds`).
-  - Add `STEP_DESCRIPTIONS` entry in `src/lib/admin/funnel.ts`.
-- [ ] **Auth Boundary & Secrets:** `/api/quality` is already admin-guarded. No new routes. No secrets exposed.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
+- [ ] **Rollback Anchor:** `255f010`
+- [ ] **State Verification:** Confirmed: vacuumTargets at line 126 inside try; meta at line 189 outside try; verdict banner shows "ALL CHECKS PASSED" when records_meta is null.
+- [ ] **Spec Review:** Spec 28 §3 defines CQA tiers — engine health should not crash; verdict banner should reflect actual status.
+- [ ] **Reproduction:** Add tests: (a) assert-engine-health.js declares vacuumTargets before the outer try block; (b) FreshnessTimeline verdict banner does not show "ALL CHECKS PASSED" when step status is failed.
+- [ ] **Red Light:** Run tests — new tests fail.
+- [ ] **Fix:** (a) Move `let vacuumTargets = []` declaration before the outer `try` block. (b) Add guard to verdict banner: when `info.status === 'failed'` and no meaningful records_meta, show red "FAILED" instead of green "ALL CHECKS PASSED".
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.

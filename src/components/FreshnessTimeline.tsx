@@ -638,7 +638,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   // shared steps don't bleed status across unrelated chains.
                   const scopedKey = `${chain.id}:${step.slug}`;
                   const info = pipelineLastRun[scopedKey];
-                  const isRunning = runningPipelines.has(scopedKey) || runningPipelines.has(step.slug);
+                  const isRunning = runningPipelines.has(scopedKey);
                   const isDisabled = isEffectivelyDisabled(step.slug);
                   // When the parent chain is running but this step hasn't started yet,
                   // show "Pending" instead of stale last-run status (fixes green-stays-green).
@@ -961,12 +961,19 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 </div>
                               )}
                               {/* records_meta — CQA check results and other structured metadata */}
+                              {/* Verdict banner: show STEP FAILED when status is failed but no records_meta */}
+                              {(stepGroup === 'quality') && info?.status === 'failed' && (!info?.records_meta || typeof info.records_meta !== 'object') && (
+                                <div className="flex items-center gap-2 px-2 py-1.5 rounded text-xs font-semibold bg-red-50 text-red-700">
+                                  <span>{'\u2718'}</span>
+                                  <span>STEP FAILED</span>
+                                </div>
+                              )}
                               {info?.records_meta && typeof info.records_meta === 'object' && (() => {
                                 const meta = info.records_meta as Record<string, unknown>;
                                 const failed = (meta.checks_failed as number) ?? 0;
                                 const warned = (meta.checks_warned as number) ?? 0;
                                 const errCount = (typeof meta.errors === 'number' ? meta.errors : Array.isArray(meta.errors) ? (meta.errors as string[]).length : 0);
-                                const hasFailures = failed > 0 || errCount > 0;
+                                const hasFailures = failed > 0 || errCount > 0 || info?.status === 'failed';
                                 const warningsList = Array.isArray(meta.warnings) ? meta.warnings as string[] : [];
                                 const errorsList = Array.isArray(meta.errors) ? meta.errors as string[] : [];
                                 return (
