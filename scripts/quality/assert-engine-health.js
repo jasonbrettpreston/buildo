@@ -60,6 +60,7 @@ async function run() {
   const errors = [];
   const tableResults = [];
   let vacuumTargets = [];
+  let recordsUpdated = 0;
 
   try {
     // Query pg_stat_user_tables for all monitored tables
@@ -139,7 +140,6 @@ async function run() {
     }
 
     // Snapshot engine health to engine_health_snapshots table
-    let recordsUpdated = 0;
     try {
       for (const entry of tableResults) {
         const res = await pool.query(

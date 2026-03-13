@@ -611,6 +611,20 @@ describe('Engine Health CQA Tier 3', () => {
     // Must NOT have a `const vacuumTargets` (that would shadow the outer let)
     expect(source).not.toMatch(/const vacuumTargets/);
   });
+
+  it('recordsUpdated is declared before the outer try block (scope bug fix)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      'utf-8'
+    );
+    // recordsUpdated must be hoisted before the outer try block so PIPELINE_SUMMARY can reference it
+    // Verify it appears alongside the other hoisted variables (vacuumTargets)
+    const vacIdx = source.indexOf('let vacuumTargets');
+    const recUpdIdx = source.indexOf('let recordsUpdated');
+    expect(recUpdIdx).toBeGreaterThan(-1);
+    // recordsUpdated should be near vacuumTargets (both hoisted before try)
+    expect(Math.abs(recUpdIdx - vacIdx)).toBeLessThan(100);
+  });
 });
 
 describe('Ghost record detection in assert-data-bounds', () => {
