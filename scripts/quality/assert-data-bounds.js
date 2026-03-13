@@ -61,10 +61,10 @@ async function run() {
     if (runPermitChecks) {
       // 1. Cost bounds
       const costOutliers = await count(
-        `SELECT COUNT(*) FROM permits WHERE est_const_cost < 100 OR est_const_cost > 500000000`
+        `SELECT COUNT(*) FROM permits WHERE est_const_cost < 0 OR est_const_cost > 500000000`
       );
       if (costOutliers > 0) {
-        warnings.push(`${costOutliers} permits with cost < $100 or > $500M`);
+        warnings.push(`${costOutliers} permits with negative cost or > $500M`);
         console.log(`  WARN: ${costOutliers} permits with cost outliers`);
       } else {
         console.log('  OK: Cost bounds — no outliers');

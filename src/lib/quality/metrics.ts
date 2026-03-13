@@ -584,7 +584,7 @@ async function queryViolations() {
     missing_status: string;
   }>(
     `SELECT
-       COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < 100 OR est_const_cost > 1000000000)) as cost_out_of_range,
+       COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < 0 OR est_const_cost > 500000000)) as cost_out_of_range,
        COUNT(*) FILTER (WHERE issued_date > NOW()) as future_issued_date,
        COUNT(*) FILTER (WHERE status IS NULL OR status = '') as missing_status
      FROM permits

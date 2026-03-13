@@ -700,3 +700,30 @@ describe('Telemetry & Last Run labelling with expected behavior ranges', () => {
     expect(source).toMatch(/PIPELINE_SUMMARY|script.*report|self-reported/i);
   });
 });
+
+describe('Cost violation threshold', () => {
+  it('metrics.ts flags only negative costs (< 0), not $0 permits', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../lib/quality/metrics.ts'), 'utf-8'
+    );
+    // Must use < 0 (not < 100) — $0 permits are legitimate in Toronto data
+    expect(source).toMatch(/est_const_cost\s*<\s*0/);
+    expect(source).not.toMatch(/est_const_cost\s*<\s*100/);
+  });
+
+  it('metrics.ts upper bound matches assert-data-bounds at $500M', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../lib/quality/metrics.ts'), 'utf-8'
+    );
+    expect(source).toMatch(/est_const_cost\s*>\s*500000000/);
+    expect(source).not.toMatch(/est_const_cost\s*>\s*1000000000/);
+  });
+
+  it('assert-data-bounds.js flags only negative costs (< 0), not $0 permits', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'), 'utf-8'
+    );
+    expect(source).toMatch(/est_const_cost\s*<\s*0/);
+    expect(source).not.toMatch(/est_const_cost\s*<\s*100/);
+  });
+});
