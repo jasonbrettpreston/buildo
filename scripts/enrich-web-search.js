@@ -20,7 +20,7 @@ const pipeline = require('./lib/pipeline');
 
 const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 const SERPER_URL = 'https://google.serper.dev/search';
-const SLUG = 'enrich_web_search';
+const SLUG = process.env.ENRICH_WSIB_ONLY === '1' ? 'enrich_wsib_builders' : 'enrich_named_builders';
 const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
 const RATE_LIMIT_MS = parseInt(process.env.ENRICH_RATE_MS || '500', 10);
 const WSIB_ONLY = process.env.ENRICH_WSIB_ONLY === '1';

@@ -1,38 +1,31 @@
-# Active Task: Fix Orphaned Duration Anomalies & Make Banner Warnings Actionable
-**Status:** Implementation — Green Light ✅
+# Active Task: Fix enrich_web_search Phantom Slug Mismatch
+**Status:** Planning
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Three banner bugs: (A) Duration anomaly SQL treats `builders` and `permits:builders` as separate pipelines — 3 of 4 slow-pipeline warnings come from orphaned standalone slugs that will never get new runs. (B) "7 data quality violations" shows only a count — no breakdown of what the violations are or what to do about them. (C) Slow pipeline warnings don't identify which chain or pipeline name they refer to (shows raw slug like `coa:assert_data_bounds` instead of "Data Quality Checks (CoA chain)").
-* **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
+* **Goal:** `scripts/enrich-web-search.js` hardcodes `SLUG = 'enrich_web_search'` but the manifest registers it under two slugs: `enrich_wsib_builders` and `enrich_named_builders`. Standalone runs log as `enrich_web_search` in `pipeline_runs`, creating a phantom slug that doesn't appear in PIPELINE_REGISTRY or PIPELINE_NAMES — causing the health banner to show raw slug `enrich_web_search (enrich_web_search)` instead of a human name.
+* **Target Spec:** `docs/specs/37_pipeline_system.md`
 * **Key Files:**
-  - `src/app/api/quality/route.ts` — duration query SQL (add SPLIT_PART normalization)
-  - `src/lib/quality/types.ts` — `computeSystemHealth()` message formatting
-  - `src/tests/quality.infra.test.ts` — SQL normalization test
-  - `src/tests/quality.logic.test.ts` — violation breakdown + naming tests
+  - `scripts/enrich-web-search.js` — SLUG constant (line 23)
+  - `src/tests/pipeline-sdk.logic.test.ts` — slug consistency tests
+  - `scripts/manifest.json` — canonical slug definitions
 
 ## Technical Implementation
 * **New/Modified Components:** None
-* **Data Hooks/Libs:** `src/lib/quality/types.ts` (message formatting), `src/app/api/quality/route.ts` (SQL only)
-* **Database Impact:** NO
+* **Data Hooks/Libs:** None — script-only change
+* **Database Impact:** NO (old `enrich_web_search` rows in `pipeline_runs` become orphaned history — harmless, will be merged by SPLIT_PART normalization since they share the same base slug after normalization)
 
 ## Standards Compliance
-* **Try-Catch Boundary:** Existing try-catch in route.ts preserved — no new routes
-* **Unhappy Path Tests:** Test normalization, violation breakdown, pipeline naming
-* **logError Mandate:** N/A — no new catch blocks
-* **Mobile-First:** N/A — no UI component changes
+* **Try-Catch Boundary:** N/A — no API routes
+* **Unhappy Path Tests:** Test slug matches manifest
+* **logError Mandate:** N/A
+* **Mobile-First:** N/A
 
 ## Execution Plan
-- [x] **Rollback Anchor:** `4875d78`
-- [x] **State Verification:** 3/4 duration warnings from orphaned standalone slugs; violation message is unactionable count; slugs are raw identifiers
-- [x] **Spec Review:** Spec 28 §3 — failure query already normalizes with SPLIT_PART; duration query doesn't. PIPELINE_REGISTRY already maps slug→human name.
-- [x] **Reproduction:** Add 3 tests:
-  1. (infra) Duration query SQL uses SPLIT_PART to normalize chain prefixes
-  2. (logic) `computeSystemHealth` violation warning shows type breakdown, not just total
-  3. (logic) `computeSystemHealth` duration warning includes human-readable pipeline name
-- [x] **Red Light:** 3 failures confirmed, 238 pass
-- [x] **Fix:**
-  1. `route.ts`: SPLIT_PART normalization in duration query — partitions by `base_pipeline`
-  2. `types.ts`: Violation breakdown — shows "5 cost outliers, 2 future-dated permits" instead of "7 data quality violations"
-  3. `types.ts`: Pipeline name lookup — inline `PIPELINE_NAMES` map, shows "Extract Entities (builders)" instead of raw slug
-- [x] **Green Light:** 2212/2212 tests pass, lint clean
+- [x] **Rollback Anchor:** `52851b9`
+- [x] **State Verification:** DB has `enrich_web_search` rows from standalone runs, `entities:enrich_named_builders` from chain runs. Script serves 2 manifest slugs via env vars.
+- [x] **Spec Review:** Manifest maps both `enrich_wsib_builders` and `enrich_named_builders` to same script. Chain sets `ENRICH_WSIB_ONLY=1` or `ENRICH_UNMATCHED_ONLY=1`.
+- [ ] **Reproduction:** Add test asserting script SLUG matches one of its manifest slugs
+- [ ] **Red Light:** Test fails (SLUG is `enrich_web_search`, not in manifest)
+- [ ] **Fix:** Change SLUG to derive from env: `const SLUG = process.env.ENRICH_WSIB_ONLY === '1' ? 'enrich_wsib_builders' : 'enrich_named_builders';`
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.

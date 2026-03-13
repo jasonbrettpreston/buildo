@@ -502,6 +502,37 @@ describe('Pipeline Manifest (§9.6)', () => {
     expect(source).toContain('manifest.chains');
     expect(source).toContain('manifest.chain_gates');
   });
+
+  it('every script SLUG constant matches a manifest slug', () => {
+    const projectRoot = path.resolve(__dirname, '../..');
+    const knownSlugs = new Set(Object.keys(manifest.scripts));
+    for (const [, entry] of Object.entries(manifest.scripts) as [string, { file: string | null; coming_soon?: boolean }][]) {
+      if (entry.coming_soon || !entry.file) continue;
+      const scriptPath = path.resolve(projectRoot, entry.file);
+      const source = fs.readFileSync(scriptPath, 'utf-8');
+      // Scripts that self-register in pipeline_runs use a SLUG constant
+      // Match simple string: const SLUG = 'foo'
+      const simpleMatch = source.match(/const SLUG\s*=\s*['"]([^'"]+)['"]/);
+      if (simpleMatch) {
+        expect(
+          knownSlugs.has(simpleMatch[1]),
+          `Script "${entry.file}" has SLUG='${simpleMatch[1]}' which is not a manifest slug`
+        ).toBe(true);
+        continue;
+      }
+      // Match ternary: const SLUG = ... ? 'foo' : 'bar' — all string values must be valid slugs
+      const ternaryMatch = source.match(/const SLUG\s*=\s*.+/);
+      if (ternaryMatch) {
+        const allSlugs = [...ternaryMatch[0].matchAll(/['"]([a-z_]+)['"]/g)].map(m => m[1]);
+        for (const s of allSlugs) {
+          expect(
+            knownSlugs.has(s),
+            `Script "${entry.file}" has conditional SLUG value '${s}' which is not a manifest slug`
+          ).toBe(true);
+        }
+      }
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------
