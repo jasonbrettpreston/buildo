@@ -1,37 +1,35 @@
-# Active Task: Fix vacuumTargets scope crash and false "ALL CHECKS PASSED" on failed steps
+# Active Task: Fix recordsUpdated scope crash in assert-engine-health.js
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `255f010`
+**Rollback Anchor:** `9d9acf7`
 
 ## Context
-* **Goal:** Fix two bugs found during WF5 manual testing of the CQA trio hardening:
-  (1) `assert-engine-health.js` crashes with `ReferenceError: vacuumTargets is not defined` because the variable is declared inside a `try` block (line 126) but referenced in `meta` construction (line 189) outside that scope.
-  (2) FreshnessTimeline CQA verdict banner shows green "ALL CHECKS PASSED" even when the step status is "failed" — because when the script crashes before emitting PIPELINE_SUMMARY, `records_meta` is null and all counters default to 0.
+* **Goal:** Fix `ReferenceError: recordsUpdated is not defined` in `assert-engine-health.js`. Same bug class as the vacuumTargets scope crash (committed `9d9acf7`). `let recordsUpdated = 0` is declared at line 143 inside the outer `try` block but referenced at line 206 in `PIPELINE_SUMMARY` outside that block. The script runs all checks and snapshots successfully, then crashes when emitting PIPELINE_SUMMARY.
 * **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `scripts/quality/assert-engine-health.js` — vacuumTargets scope fix (line 126 → hoist before try)
-  - `src/components/FreshnessTimeline.tsx` — verdict banner must check step status (lines 973-979)
+  - `scripts/quality/assert-engine-health.js` — hoist `let recordsUpdated = 0` before outer `try` (line 143 → before line 64)
 
 ## Bug Description
-1. **vacuumTargets scope crash:** `const vacuumTargets` is declared at line 126 inside the outer `try` block (line 63). The `meta` object at line 189 references `vacuumTargets.length` but is outside the `try`. If the outer `try` completes normally, this works — but if any earlier code in the `try` throws (or if JS hoisting rules don't apply to `const`), the variable is not in scope at line 189. In practice, the script runs all checks successfully, writes snapshots, then crashes at line 189 because `const` is block-scoped and `vacuumTargets` exits scope at the `catch` on line 174.
-2. **False "ALL CHECKS PASSED" on crash:** When the script crashes, `run-chain.js` captures the error but `records_meta` is null (no PIPELINE_SUMMARY emitted). The UI renders the verdict banner with all counters defaulting to 0, showing green "ALL CHECKS PASSED" — misleading when the step actually failed.
+`let recordsUpdated = 0` is declared at line 143 inside the outer `try` block (line 64). Line 206 (`PIPELINE_SUMMARY`) references `recordsUpdated` outside that block. Since `let` is block-scoped, the variable is not accessible after the `catch` on line 175. The script completes all health checks and writes snapshots, then crashes with `ReferenceError: recordsUpdated is not defined`.
+
+Discovered during WF5 manual testing: CoA pipeline Engine Health step failed with 292ms, error `Command failed: node ...assert-engine-health.js`. Running the script directly revealed the stack trace pointing to line 206.
 
 ## Technical Implementation
-* **New/Modified Components:** `FreshnessTimeline.tsx` — verdict banner conditional
+* **New/Modified Components:** N/A
 * **Data Hooks/Libs:** N/A
 * **Database Impact:** NO
 
 ## Standards Compliance
 * **Try-Catch Boundary:** N/A — no API routes modified
-* **Unhappy Path Tests:** Test that vacuumTargets is declared outside try; test that verdict banner respects step failure status
+* **Unhappy Path Tests:** Test that `recordsUpdated` is declared before the outer try block
 * **logError Mandate:** N/A
-* **Mobile-First:** N/A — existing component, no layout changes
+* **Mobile-First:** N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `255f010`
-- [ ] **State Verification:** Confirmed: vacuumTargets at line 126 inside try; meta at line 189 outside try; verdict banner shows "ALL CHECKS PASSED" when records_meta is null.
-- [ ] **Spec Review:** Spec 28 §3 defines CQA tiers — engine health should not crash; verdict banner should reflect actual status.
-- [ ] **Reproduction:** Add tests: (a) assert-engine-health.js declares vacuumTargets before the outer try block; (b) FreshnessTimeline verdict banner does not show "ALL CHECKS PASSED" when step status is failed.
-- [ ] **Red Light:** Run tests — new tests fail.
-- [ ] **Fix:** (a) Move `let vacuumTargets = []` declaration before the outer `try` block. (b) Add guard to verdict banner: when `info.status === 'failed'` and no meaningful records_meta, show red "FAILED" instead of green "ALL CHECKS PASSED".
+- [ ] **Rollback Anchor:** `9d9acf7`
+- [ ] **State Verification:** Confirmed: `let recordsUpdated = 0` at line 143 inside outer try; `PIPELINE_SUMMARY` at line 206 references it outside try. Running script directly produces `ReferenceError: recordsUpdated is not defined`.
+- [ ] **Spec Review:** Spec 28 §3 — engine health script must complete and emit PIPELINE_SUMMARY.
+- [ ] **Reproduction:** Add test asserting `let recordsUpdated` is declared near `let vacuumTargets` (both hoisted before try).
+- [ ] **Red Light:** Run tests — new test fails.
+- [ ] **Fix:** Move `let recordsUpdated = 0` before the outer `try` block (alongside `vacuumTargets`). Remove inner declaration.
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
