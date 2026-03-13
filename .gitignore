@@ -36,11 +36,29 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# data files
+# data files (large datasets — never commit)
 building-permits-active-permits.json
 *.csv
 *.xlsx
 *.geojson
-property-boundaries-4326.csv
-neighbourhood-profiles-2021.xlsx
-neighbourhoods-4326.geojson
+*.zip
+/3d-massing-wgs84/
+
+# temp outputs & ad-hoc dumps
+stats_*.json
+test_output*.json
+test_output*.txt
+*_tmp*.json
+audit-out.txt
+report_output.txt
+schema.json
+schema.txt
+lot_size_accuracy.json
+massing_data.json
+
+# accidental zero-byte files from CLI typos
+nul
+GEO_ID
+pipeline_meta
+telemetry
+pt.classified_at
