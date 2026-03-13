@@ -276,7 +276,7 @@ export const CADENCE_THRESHOLDS_MS: Record<string, number> = {
 // ---------------------------------------------------------------------------
 
 export const SLA_TARGETS: Record<string, number> = {
-  permits: 24,
+  permits: 36,
   coa: 48,
   builders: 48,
   address_points: 2160,   // 90 days
@@ -394,7 +394,7 @@ export function detectDurationAnomalies(
     if (durations.length < 2) continue;
 
     const current = durations[0];
-    const historical = durations.slice(1, 8); // up to 7 prior runs
+    const historical = durations.slice(1, 8).filter(d => d > 0); // exclude 0ms skipped/gated runs
     if (historical.length === 0) continue;
 
     const avg = historical.reduce((a, b) => a + b, 0) / historical.length;

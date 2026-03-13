@@ -948,6 +948,30 @@ describe('detectDurationAnomalies()', () => {
     expect(detectDurationAnomalies(runs)).toEqual([]);
   });
 
+  it('excludes 0ms skipped/gated runs from historical average', () => {
+    // Real scenario: builders ran once at 2200ms, one real run at 400ms, rest gated (0ms)
+    // Without fix: avg of [400, 0, 0, 0, 0, 0] = 66ms → ratio 33x → false anomaly
+    // With fix: avg of [400] only → ratio 5.5x → real anomaly (legitimate)
+    // But the key case: current 8300ms, historical has one 100ms + six 0ms
+    // Without fix: avg = 14ms → 580x ratio → absurd false alarm
+    // With fix: avg = 100ms → 83x → still an anomaly but a real one
+    const runs = { enrich_web_search: [8300, 100, 0, 0, 0, 0, 0, 0] };
+    const anomalies = detectDurationAnomalies(runs);
+    // After fix: only [100] used as historical → avg=100, ratio=83 → anomaly
+    // Key assertion: avgMs should be 100 (not 14)
+    expect(anomalies).toHaveLength(1);
+    expect(anomalies[0].avgMs).toBe(100);
+  });
+
+  it('computes average from only non-zero historical runs', () => {
+    // Mix of real runs and gated 0ms runs
+    // Real historical: [7000, 8000] → avg 7500, current 16000 → 2.1x → anomaly
+    const runs = { builders: [16000, 0, 7000, 0, 8000, 0] };
+    const anomalies = detectDurationAnomalies(runs);
+    expect(anomalies).toHaveLength(1);
+    expect(anomalies[0].avgMs).toBe(7500);
+  });
+
   it('uses at most 7 historical runs for average', () => {
     // 1 current + 10 historical → should only use 7 historical
     const runs = { permits: [20000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 1000, 1000, 1000] };
@@ -1098,8 +1122,8 @@ describe('computeSystemHealth()', () => {
 // ── SLA Targets ───────────────────────────────────────────────────────
 
 describe('SLA_TARGETS', () => {
-  it('defines permits target as 24 hours', () => {
-    expect(SLA_TARGETS.permits).toBe(24);
+  it('defines permits target as 36 hours (accounts for Toronto Open Data publish gaps)', () => {
+    expect(SLA_TARGETS.permits).toBe(36);
   });
 
   it('defines quarterly targets as 2160 hours (90 days)', () => {
