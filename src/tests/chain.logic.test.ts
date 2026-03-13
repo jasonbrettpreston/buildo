@@ -335,12 +335,15 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
     expect(source).toContain('records_new');
   });
 
-  it('aborts chain only for primary ingest gate steps (permits, coa)', () => {
+  it('gate-skip does NOT break the chain — quality/infrastructure steps still run', () => {
     const source = chainSource();
-    // Chain abort gates are read from manifest.chain_gates
+    // Chain gates are read from manifest.chain_gates
     expect(source).toContain('chain_gates');
     expect(source).toContain('0 new records');
-    expect(source).toMatch(/recordsNew === 0[\s\S]{0,300}break/);
+    // Must NOT hard-break on gate — quality steps need to run
+    expect(source).not.toMatch(/recordsNew === 0[\s\S]{0,300}break/);
+    // Must set gateSkipped flag (soft skip, not abort)
+    expect(source).toContain('gateSkipped = true');
 
     // Verify the manifest itself defines the expected gates
     const manifest = JSON.parse(fs.readFileSync(
@@ -349,9 +352,25 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
     expect(manifest.chain_gates).toEqual({ permits: 'permits', coa: 'coa' });
   });
 
-  it('checks both records_new and records_updated before aborting', () => {
+  it('gate-skip continues non-essential steps with SKIPPED status', () => {
     const source = chainSource();
-    // Abort only when BOTH are 0 — updated records still warrant downstream work
+    // When gateSkipped is true, non-essential steps must be skipped (continue)
+    expect(source).toMatch(/gateSkipped[\s\S]{0,500}continue/);
+    // Must log gate-skipped steps
+    expect(source).toMatch(/SKIPPED.*gate|gate.*skip/i);
+  });
+
+  it('gate-skip still runs quality/infrastructure steps (assert_*, refresh_snapshot)', () => {
+    const source = chainSource();
+    // Quality steps must be exempted from gate-skip — they check cumulative DB state
+    expect(source).toMatch(/assert_|refresh_snapshot/);
+    // The exemption logic must reference slug patterns for quality steps
+    expect(source).toMatch(/startsWith\(['"]assert_['"]\)|=== ['"]refresh_snapshot['"]/);
+  });
+
+  it('checks both records_new and records_updated before skipping', () => {
+    const source = chainSource();
+    // Skip only when BOTH are 0 — updated records still warrant downstream work
     expect(source).toMatch(/recordsNew === 0[\s\S]{0,100}recordsUpdated/);
   });
 

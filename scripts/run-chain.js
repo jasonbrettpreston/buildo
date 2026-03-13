@@ -125,6 +125,25 @@ async function run() {
       continue;
     }
 
+    // Gate-skip: when primary ingest had 0 new records, skip non-essential
+    // downstream steps but still run quality/infrastructure steps (assert_*,
+    // refresh_snapshot) — they check cumulative DB state, not just the latest batch.
+    const isInfraStep = slug.startsWith('assert_') || slug === 'refresh_snapshot';
+    if (gateSkipped && !isInfraStep) {
+      console.log(`${stepLabel} — SKIPPED (gate: 0 new records)`);
+      const scopedSlug = `${chainId}:${slug}`;
+      try {
+        await pool.query(
+          `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status, duration_ms)
+           VALUES ($1, NOW(), NOW(), 'skipped', 0)`,
+          [scopedSlug]
+        );
+      } catch (err) {
+        pipeline.log.warn('[run-chain]', `Gate-skip tracking insert failed: ${err.message}`);
+      }
+      continue;
+    }
+
     const scriptRelPath = PIPELINE_SCRIPTS[slug];
     if (!scriptRelPath) {
       pipeline.log.error('[run-chain]', `No script mapping for slug: ${slug}`);
@@ -248,14 +267,14 @@ async function run() {
         ).catch(() => {});
       }
 
-      // Abort chain when the primary ingest step produced zero changes.
-      // Link/classify steps legitimately yield 0 when everything is already
-      // processed — only the data-loading gate step should trigger an abort.
+      // When the primary ingest step produced zero changes, set gateSkipped
+      // so non-essential downstream steps are skipped. Quality/infrastructure
+      // steps (assert_*, refresh_snapshot) still run — they check cumulative
+      // DB state, not just the latest batch.
       const gate = manifest.chain_gates[chainId];
       if (gate && slug === gate && recordsNew === 0 && (recordsUpdated ?? 0) === 0) {
-        console.log(`${stepLabel} — 0 new records — skipping downstream steps`);
+        console.log(`${stepLabel} — 0 new records — skipping non-essential downstream steps`);
         gateSkipped = true;
-        break;
       }
     } catch (err) {
       // Tee any captured stdout from the failed step so progress logs aren't lost
