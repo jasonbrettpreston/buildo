@@ -727,3 +727,20 @@ describe('Cost violation threshold', () => {
     expect(source).not.toMatch(/est_const_cost\s*<\s*100/);
   });
 });
+
+describe('Duration anomaly SQL normalization', () => {
+  it('quality API route normalizes chain prefixes in duration query with SPLIT_PART', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../app/api/quality/route.ts'), 'utf-8'
+    );
+    // Extract the duration query section (between "duration anomalies" comment and the
+    // runsByPipeline grouping) — this must have its own SPLIT_PART normalization,
+    // separate from the failure query that already has one
+    const durationSection = source.slice(
+      source.indexOf('Compute duration anomalies'),
+      source.indexOf('runsByPipeline')
+    );
+    expect(durationSection.length).toBeGreaterThan(0);
+    expect(durationSection).toMatch(/SPLIT_PART.*pipeline.*:.*2/i);
+  });
+});

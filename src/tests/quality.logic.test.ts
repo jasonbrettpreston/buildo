@@ -1008,6 +1008,37 @@ describe('computeSystemHealth()', () => {
     expect(health.warnings.length).toBeGreaterThan(0);
   });
 
+  it('violation warning shows type breakdown, not just total', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violation_cost_out_of_range: 5,
+      violation_future_issued_date: 2,
+      violation_missing_status: 0,
+      violations_total: 7,
+      sla_permits_ingestion_hours: 6,
+    });
+    const health = computeSystemHealth(snapshot, [], []);
+    const violationWarning = health.warnings.find(w => w.includes('cost') || w.includes('violation'));
+    expect(violationWarning).toBeDefined();
+    // Must mention the specific types, not just "7 data quality violations"
+    expect(violationWarning).toContain('cost');
+    expect(violationWarning).not.toBe('7 data quality violations');
+  });
+
+  it('duration warning includes human-readable pipeline name, not raw slug', () => {
+    const snapshot = createMockDataQualitySnapshot({
+      violations_total: 0,
+      sla_permits_ingestion_hours: 6,
+    });
+    const durationAnomalies = [
+      { pipeline: 'builders', avgMs: 5000, currentMs: 15000, ratio: 3.0 },
+    ];
+    const health = computeSystemHealth(snapshot, [], [], durationAnomalies);
+    const durationWarning = health.warnings.find(w => w.includes('Slow pipeline'));
+    expect(durationWarning).toBeDefined();
+    // Must include human name (e.g. "Extract Entities"), not just raw slug "builders"
+    expect(durationWarning).toContain('Extract Entities');
+  });
+
   it('returns red when violations >= 100', () => {
     const snapshot = createMockDataQualitySnapshot({
       violations_total: 150,
@@ -1059,7 +1090,7 @@ describe('computeSystemHealth()', () => {
     ];
     const health = computeSystemHealth(snapshot, [], [], durationAnomalies);
     expect(health.level).toBe('yellow');
-    expect(health.warnings[0]).toContain('Slow pipeline: classify_permits');
+    expect(health.warnings[0]).toContain('Slow pipeline: Classify Trades (classify_permits)');
     expect(health.warnings[0]).toContain('2.5x slower');
   });
 

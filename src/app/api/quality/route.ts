@@ -37,17 +37,25 @@ export async function GET() {
     let durationAnomalies: import('@/lib/quality/types').DurationAnomaly[] = [];
     try {
       const durationRows = await query<{ pipeline: string; duration_ms: number }>(
-        `SELECT pipeline, duration_ms
+        `SELECT base_pipeline AS pipeline, duration_ms
          FROM (
-           SELECT pipeline, duration_ms,
-                  ROW_NUMBER() OVER (PARTITION BY pipeline ORDER BY started_at DESC) AS rn
+           SELECT CASE WHEN pipeline LIKE '%:%'
+                       THEN SPLIT_PART(pipeline, ':', 2)
+                       ELSE pipeline END AS base_pipeline,
+                  duration_ms,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY CASE WHEN pipeline LIKE '%:%'
+                                      THEN SPLIT_PART(pipeline, ':', 2)
+                                      ELSE pipeline END
+                    ORDER BY started_at DESC
+                  ) AS rn
            FROM pipeline_runs
            WHERE status = 'completed' AND duration_ms IS NOT NULL
              AND pipeline NOT LIKE '%classify_scope_class%'
              AND pipeline NOT LIKE '%classify_scope_tags%'
          ) sub
          WHERE rn <= 8
-         ORDER BY pipeline, rn`
+         ORDER BY base_pipeline, rn`
       );
       const runsByPipeline: Record<string, number[]> = {};
       for (const row of durationRows) {

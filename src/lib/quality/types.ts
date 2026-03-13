@@ -552,12 +552,22 @@ export function computeSystemHealth(
   const issues: string[] = [];
   const warnings: string[] = [];
 
-  // Check violations
+  // Check violations — show type breakdown for actionable messages
   if (snapshot.violations_total > 0) {
+    const parts: string[] = [];
+    if (snapshot.violation_cost_out_of_range > 0)
+      parts.push(`${snapshot.violation_cost_out_of_range} cost outlier${snapshot.violation_cost_out_of_range === 1 ? '' : 's'}`);
+    if (snapshot.violation_future_issued_date > 0)
+      parts.push(`${snapshot.violation_future_issued_date} future-dated permit${snapshot.violation_future_issued_date === 1 ? '' : 's'}`);
+    if (snapshot.violation_missing_status > 0)
+      parts.push(`${snapshot.violation_missing_status} missing status`);
+    const detail = parts.length > 0
+      ? parts.join(', ')
+      : `${snapshot.violations_total} data quality violations`;
     if (snapshot.violations_total >= 100) {
-      issues.push(`${snapshot.violations_total} data quality violations`);
+      issues.push(detail);
     } else {
-      warnings.push(`${snapshot.violations_total} data quality violations`);
+      warnings.push(detail);
     }
   }
 
@@ -576,10 +586,27 @@ export function computeSystemHealth(
   }
 
   // Check duration anomalies — pipeline slowdowns
+  // Inline slug→name map (subset of FreshnessTimeline PIPELINE_REGISTRY to avoid circular dep)
+  const PIPELINE_NAMES: Record<string, string> = {
+    permits: 'Building Permits', coa: 'CoA Applications', builders: 'Extract Entities',
+    address_points: 'Address Points', parcels: 'Parcels', massing: '3D Massing',
+    neighbourhoods: 'Neighbourhoods', geocode_permits: 'Geocode Permits',
+    link_parcels: 'Link Parcels', link_neighbourhoods: 'Link Neighbourhoods',
+    link_massing: 'Link Massing', link_coa: 'Link CoA',
+    enrich_wsib_builders: 'Enrich WSIB Matched', enrich_named_builders: 'Enrich Web Entities',
+    load_wsib: 'Load WSIB Registry', link_wsib: 'Link WSIB',
+    link_similar: 'Link Similar Permits', create_pre_permits: 'Create Pre-Permits',
+    compute_centroids: 'Compute Centroids', inspections: 'Inspection Stages',
+    coa_documents: 'CoA Documents', classify_scope: 'Scope Classification',
+    classify_permits: 'Classify Trades', refresh_snapshot: 'Refresh Snapshot',
+    assert_schema: 'Schema Validation', assert_data_bounds: 'Data Quality Checks',
+    assert_engine_health: 'Engine Health',
+  };
   for (const d of durationAnomalies) {
     const avgSec = (d.avgMs / 1000).toFixed(1);
     const curSec = (d.currentMs / 1000).toFixed(1);
-    warnings.push(`Slow pipeline: ${d.pipeline} took ${curSec}s (avg: ${avgSec}s, ${d.ratio}x slower)`);
+    const name = PIPELINE_NAMES[d.pipeline] || d.pipeline;
+    warnings.push(`Slow pipeline: ${name} (${d.pipeline}) took ${curSec}s (avg: ${avgSec}s, ${d.ratio}x slower)`);
   }
 
   // Check pipeline failures (latest run per pipeline)
