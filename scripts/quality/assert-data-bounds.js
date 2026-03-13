@@ -338,6 +338,27 @@ async function run() {
       }
     }
 
+    // Ghost record detection — permits the City silently dropped from CKAN
+    console.log('\n--- Ghost Records (stale > 30 days) ---');
+    try {
+      const ghostRes = await pool.query(
+        `SELECT COUNT(*) AS count, MIN(last_seen_at) AS oldest
+         FROM permits
+         WHERE last_seen_at < CURRENT_DATE - INTERVAL '30 days'`
+      );
+      const ghostCount = parseInt(ghostRes.rows[0].count, 10);
+      if (ghostCount > 0) {
+        const oldest = ghostRes.rows[0].oldest;
+        warnings.push(`${ghostCount} permits not seen in 30+ days (oldest: ${oldest})`);
+        console.warn(`  WARN: ${ghostCount} ghost permits — oldest last_seen_at: ${oldest}`);
+      } else {
+        console.log('  OK: No ghost records (all permits seen within 30 days)');
+      }
+    } catch (ghostErr) {
+      // Non-fatal — last_seen_at column may not exist
+      console.log(`  SKIP: Ghost record check failed: ${ghostErr.message}`);
+    }
+
   } catch (err) {
     errors.push(err.message);
     console.error(`  ERROR: ${err.message}`);

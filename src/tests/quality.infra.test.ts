@@ -591,4 +591,22 @@ describe('Engine Health CQA Tier 3', () => {
     expect(summaryMatch).toBeTruthy();
     expect(summaryMatch![1]).toContain('records_updated');
   });
+
+  it('auto-triggers VACUUM ANALYZE on tables exceeding dead tuple threshold', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      'utf-8'
+    );
+    expect(source).toContain('VACUUM ANALYZE');
+  });
+});
+
+describe('Ghost record detection in assert-data-bounds', () => {
+  it('checks for permits not seen in 30+ days', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'),
+      'utf-8'
+    );
+    expect(source).toMatch(/last_seen_at[\s\S]{0,100}30\s*days/i);
+  });
 });

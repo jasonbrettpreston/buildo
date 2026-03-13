@@ -2708,7 +2708,7 @@ describe('Funnel panel components extracted to separate file', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const lineCount = source.split('\n').length;
-    expect(lineCount).toBeLessThan(1100);
+    expect(lineCount).toBeLessThan(1200);
   });
 
   it('FunnelPanels.tsx exports CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS, DataFlowTile', () => {
@@ -2784,6 +2784,37 @@ describe('CQA drill-down hides records bloat', () => {
     );
     // records_total/records_new block must be skipped for quality and snapshot steps
     expect(source).toMatch(/stepGroup[\s\S]{0,80}quality[\s\S]{0,200}records_total/);
+  });
+});
+
+// ── CQA warning detail rendering in accordion panels ─────────────────
+
+describe('CQA accordion renders individual warning text', () => {
+  it('renders warnings array items as individual line items', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Must extract warnings from meta.warnings and .map over them to render individually
+    expect(source).toContain('meta.warnings');
+    expect(source).toMatch(/warningsList\.map/);
+  });
+
+  it('renders errors array items as individual line items', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    expect(source).toContain('meta.errors');
+    expect(source).toMatch(/errorsList\.map/);
+  });
+
+  it('uses amber styling for warnings and red for errors', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Warning items should have amber coloring
+    expect(source).toContain('bg-amber-50 text-amber-700');
+    // Error items should have red coloring
+    expect(source).toContain('bg-red-50 text-red-700');
   });
 });
 

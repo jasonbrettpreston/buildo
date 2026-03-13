@@ -122,6 +122,21 @@ async function run() {
       }
     }
 
+    // Auto-VACUUM ANALYZE tables exceeding dead tuple threshold
+    const vacuumTargets = tableResults.filter((t) => t.dead_ratio > DEAD_TUPLE_RATIO && t.n_live_tup > 0);
+    if (vacuumTargets.length > 0) {
+      console.log(`\n--- Auto-VACUUM ANALYZE (${vacuumTargets.length} tables above ${DEAD_TUPLE_RATIO * 100}% dead ratio) ---`);
+      for (const target of vacuumTargets) {
+        try {
+          // VACUUM ANALYZE is safe: non-blocking on reads, reclaims dead tuples, updates planner stats
+          await pool.query(`VACUUM ANALYZE ${target.table_name}`);
+          console.log(`  VACUUM ANALYZE ${target.table_name} — done (was ${(target.dead_ratio * 100).toFixed(1)}% dead)`);
+        } catch (vacErr) {
+          console.warn(`  WARN: VACUUM ANALYZE ${target.table_name} failed: ${vacErr.message}`);
+        }
+      }
+    }
+
     // Snapshot engine health to engine_health_snapshots table
     let recordsUpdated = 0;
     try {
@@ -171,6 +186,7 @@ async function run() {
     checks_warned: warnings.length,
     checks_failed: errors.length,
     tables_checked: tableResults.length,
+    tables_vacuumed: vacuumTargets.length,
     warnings: warnings.length > 0 ? warnings : undefined,
     errors: errors.length > 0 ? errors : undefined,
     engine_health: tableResults,

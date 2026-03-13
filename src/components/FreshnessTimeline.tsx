@@ -965,8 +965,10 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 const meta = info.records_meta as Record<string, unknown>;
                                 const failed = (meta.checks_failed as number) ?? 0;
                                 const warned = (meta.checks_warned as number) ?? 0;
-                                const errors = (meta.errors as number) ?? 0;
-                                const hasFailures = failed > 0 || errors > 0;
+                                const errCount = (typeof meta.errors === 'number' ? meta.errors : Array.isArray(meta.errors) ? (meta.errors as string[]).length : 0);
+                                const hasFailures = failed > 0 || errCount > 0;
+                                const warningsList = Array.isArray(meta.warnings) ? meta.warnings as string[] : [];
+                                const errorsList = Array.isArray(meta.errors) ? meta.errors as string[] : [];
                                 return (
                                   <div className="space-y-1.5">
                                     {/* Verdict banner for CQA steps */}
@@ -975,11 +977,34 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                         hasFailures ? 'bg-red-50 text-red-700' : warned > 0 ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'
                                       }`}>
                                         <span>{hasFailures ? '\u2718' : '\u2714'}</span>
-                                        <span>{hasFailures ? `FAILED \u2014 ${failed + errors} check${(failed + errors) !== 1 ? 's' : ''} failed` : warned > 0 ? `PASSED with ${warned} warning${warned !== 1 ? 's' : ''}` : 'ALL CHECKS PASSED'}</span>
+                                        <span>{hasFailures ? `FAILED \u2014 ${failed + errCount} check${(failed + errCount) !== 1 ? 's' : ''} failed` : warned > 0 ? `PASSED with ${warned} warning${warned !== 1 ? 's' : ''}` : 'ALL CHECKS PASSED'}</span>
                                       </div>
                                     )}
+                                    {/* Individual error details */}
+                                    {errorsList.length > 0 && (
+                                      <div className="space-y-1">
+                                        {errorsList.map((err, i) => (
+                                          <div key={`err-${i}`} className="flex items-start gap-1.5 px-2 py-1 rounded bg-red-50 text-red-700">
+                                            <span className="text-[10px] mt-0.5 shrink-0">{'\u2718'}</span>
+                                            <span className="text-[10px] break-words">{err}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {/* Individual warning details */}
+                                    {warningsList.length > 0 && (
+                                      <div className="space-y-1">
+                                        {warningsList.map((w, i) => (
+                                          <div key={`warn-${i}`} className="flex items-start gap-1.5 px-2 py-1 rounded bg-amber-50 text-amber-700">
+                                            <span className="text-[10px] mt-0.5 shrink-0">{'\u26A0'}</span>
+                                            <span className="text-[10px] break-words">{w}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {/* Scalar metadata (counts, labels) — skip arrays already rendered above */}
                                     {Object.entries(meta)
-                                      .filter(([k, v]) => v != null && v !== undefined && k !== 'pipeline_meta' && (typeof v !== 'object' || Array.isArray(v)))
+                                      .filter(([k, v]) => v != null && v !== undefined && k !== 'pipeline_meta' && k !== 'warnings' && k !== 'errors' && k !== 'engine_health' && typeof v !== 'object')
                                       .map(([key, value]) => (
                                         <div key={key} className="flex justify-between">
                                           <span className="text-xs text-gray-600">{key.replace(/_/g, ' ')}</span>
@@ -988,10 +1013,42 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                             : key.includes('warned') && (value as number) > 0 ? 'text-yellow-600'
                                             : 'text-gray-900'
                                           }`}>
-                                            {Array.isArray(value) ? (value as string[]).length.toString() : String(value)}
+                                            {String(value)}
                                           </span>
                                         </div>
                                       ))}
+                                    {/* Engine health compact table (for assert_engine_health) */}
+                                    {Array.isArray(meta.engine_health) && (meta.engine_health as Array<Record<string, unknown>>).length > 0 && (
+                                      <div className="mt-2">
+                                        <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Engine Health</h5>
+                                        <div className="overflow-x-auto">
+                                          <table className="w-full text-[10px] tabular-nums">
+                                            <thead>
+                                              <tr className="text-gray-500 text-left">
+                                                <th className="pr-2 py-0.5 font-medium">Table</th>
+                                                <th className="px-2 py-0.5 font-medium text-right">Live</th>
+                                                <th className="px-2 py-0.5 font-medium text-right">Dead %</th>
+                                                <th className="px-2 py-0.5 font-medium text-right">Seq %</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              {(meta.engine_health as Array<{table_name: string; n_live_tup: number; dead_ratio: number; seq_ratio: number; n_dead_tup: number}>).map((t) => (
+                                                <tr key={t.table_name} className="border-t border-gray-50">
+                                                  <td className="pr-2 py-0.5 font-mono text-gray-700">{t.table_name}</td>
+                                                  <td className="px-2 py-0.5 text-right text-gray-600">{t.n_live_tup.toLocaleString()}</td>
+                                                  <td className={`px-2 py-0.5 text-right font-medium ${t.dead_ratio > 0.10 ? 'text-amber-700' : 'text-gray-500'}`}>
+                                                    {(t.dead_ratio * 100).toFixed(1)}%
+                                                  </td>
+                                                  <td className={`px-2 py-0.5 text-right font-medium ${t.n_live_tup >= 10000 && t.seq_ratio > 0.80 ? 'text-amber-700' : 'text-gray-500'}`}>
+                                                    {(t.seq_ratio * 100).toFixed(1)}%
+                                                  </td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })()}
