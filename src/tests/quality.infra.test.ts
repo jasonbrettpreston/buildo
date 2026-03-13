@@ -573,4 +573,22 @@ describe('Engine Health CQA Tier 3', () => {
     expect(source).toContain('result.engine[table]');
     expect(source).toContain('pre.engine');
   });
+
+  it('UPSERT uses IS DISTINCT FROM guard to skip no-op updates', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      'utf-8'
+    );
+    expect(source).toContain('IS DISTINCT FROM');
+  });
+
+  it('PIPELINE_SUMMARY includes records_updated field', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
+      'utf-8'
+    );
+    const summaryMatch = source.match(/PIPELINE_SUMMARY.*?(\{[^}]+\})/);
+    expect(summaryMatch).toBeTruthy();
+    expect(summaryMatch![1]).toContain('records_updated');
+  });
 });

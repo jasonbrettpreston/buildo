@@ -123,9 +123,10 @@ async function run() {
     }
 
     // Snapshot engine health to engine_health_snapshots table
+    let recordsUpdated = 0;
     try {
       for (const entry of tableResults) {
-        await pool.query(
+        const res = await pool.query(
           `INSERT INTO engine_health_snapshots
              (table_name, snapshot_date, n_live_tup, n_dead_tup, dead_ratio, seq_scan, idx_scan, seq_ratio)
            VALUES ($1, CURRENT_DATE, $2, $3, $4, $5, $6, $7)
@@ -136,11 +137,20 @@ async function run() {
              seq_scan = EXCLUDED.seq_scan,
              idx_scan = EXCLUDED.idx_scan,
              seq_ratio = EXCLUDED.seq_ratio,
-             captured_at = NOW()`,
+             captured_at = NOW()
+           WHERE engine_health_snapshots.n_live_tup IS DISTINCT FROM EXCLUDED.n_live_tup
+              OR engine_health_snapshots.n_dead_tup IS DISTINCT FROM EXCLUDED.n_dead_tup
+              OR engine_health_snapshots.dead_ratio IS DISTINCT FROM EXCLUDED.dead_ratio
+              OR engine_health_snapshots.seq_scan IS DISTINCT FROM EXCLUDED.seq_scan
+              OR engine_health_snapshots.idx_scan IS DISTINCT FROM EXCLUDED.idx_scan
+              OR engine_health_snapshots.seq_ratio IS DISTINCT FROM EXCLUDED.seq_ratio
+           RETURNING xmax`,
           [entry.table_name, entry.n_live_tup, entry.n_dead_tup, entry.dead_ratio, entry.seq_scan, entry.idx_scan, entry.seq_ratio]
         );
+        // xmax > 0 means UPDATE (existing row changed), xmax = 0 means INSERT (new row)
+        if (res.rowCount > 0 && res.rows[0].xmax !== '0') recordsUpdated++;
       }
-      console.log(`\n  Snapshot: ${tableResults.length} tables written to engine_health_snapshots`);
+      console.log(`\n  Snapshot: ${tableResults.length} tables written to engine_health_snapshots (${recordsUpdated} actually updated)`);
     } catch (err) {
       // Non-fatal — table may not exist yet
       console.warn(`  WARN: Could not write engine_health_snapshots: ${err.message}`);
@@ -176,7 +186,7 @@ async function run() {
     ).catch(() => {});
   }
 
-  console.log(`PIPELINE_SUMMARY:${JSON.stringify({ records_total: tableResults.length, records_new: null, records_meta: JSON.parse(meta) })}`);
+  console.log(`PIPELINE_SUMMARY:${JSON.stringify({ records_total: tableResults.length, records_new: null, records_updated: recordsUpdated, records_meta: JSON.parse(meta) })}`);
   console.log('PIPELINE_META:' + JSON.stringify({
     reads: { pg_stat_user_tables: ['relname', 'n_live_tup', 'n_dead_tup', 'seq_scan', 'idx_scan', 'n_tup_ins', 'n_tup_upd'] },
     writes: { engine_health_snapshots: ['table_name', 'n_live_tup', 'n_dead_tup', 'dead_ratio', 'seq_scan', 'idx_scan', 'seq_ratio'] },
