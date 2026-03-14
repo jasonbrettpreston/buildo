@@ -184,10 +184,11 @@ export async function POST(
           ? (stderr?.trim() || err.message).slice(0, 4000)
           : null;
 
-        // Parse PIPELINE_SUMMARY from stdout for record counts
+        // Parse PIPELINE_SUMMARY from stdout for record counts + records_meta
         let recordsTotal: number | null = null;
         let recordsNew: number | null = null;
         let recordsUpdated: number | null = null;
+        let recordsMeta: Record<string, unknown> | null = null;
         const summaryMatch = stdout?.match(/PIPELINE_SUMMARY:(.+)/);
         if (summaryMatch) {
           try {
@@ -195,7 +196,17 @@ export async function POST(
             recordsTotal = summary.records_total ?? null;
             recordsNew = summary.records_new ?? null;
             recordsUpdated = summary.records_updated ?? null;
+            recordsMeta = summary.records_meta ?? null;
           } catch { /* malformed summary — ignore */ }
+        }
+
+        // Parse PIPELINE_META from stdout for self-documented reads/writes
+        const metaMatch = stdout?.match(/PIPELINE_META:(.+)/);
+        if (metaMatch) {
+          try {
+            const pipelineMeta = JSON.parse(metaMatch[1]);
+            recordsMeta = { ...(recordsMeta || {}), pipeline_meta: pipelineMeta };
+          } catch { /* malformed meta — ignore */ }
         }
 
         if (runId) {
@@ -205,9 +216,11 @@ export async function POST(
                SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,
                    records_total = COALESCE($5, records_total),
                    records_new = COALESCE($6, records_new),
-                   records_updated = COALESCE($7, records_updated)
+                   records_updated = COALESCE($7, records_updated),
+                   records_meta = COALESCE($8::jsonb, records_meta)
                WHERE id = $4`,
-              [status, durationMs, errorMsg, runId, recordsTotal, recordsNew, recordsUpdated]
+              [status, durationMs, errorMsg, runId, recordsTotal, recordsNew, recordsUpdated,
+               recordsMeta ? JSON.stringify(recordsMeta) : null]
             );
           } catch (updateErr) {
             logError(`[pipelines/${slug}]`, updateErr, { event: 'run_update_failed', run_id: runId });
