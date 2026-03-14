@@ -353,6 +353,12 @@ export function createMockDataQualitySnapshot(
     // Schema & SLA
     schema_column_counts: { permits: 30, builders: 15, coa_applications: 18 },
     sla_permits_ingestion_hours: 6.5,
+    // Inspections
+    inspections_total: 89,
+    inspections_permits_scraped: 14,
+    inspections_outstanding_count: 66,
+    inspections_passed_count: 20,
+    inspections_not_passed_count: 3,
     created_at: '2024-03-01T06:35:00Z',
     ...overrides,
   };

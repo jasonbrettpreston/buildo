@@ -38,6 +38,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     violations,
     schemaColumnCounts,
     slaMetrics,
+    inspectionCounts,
   ] = await Promise.all([
     queryPermitCounts(),
     queryTradeCounts(),
@@ -54,6 +55,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     queryViolations(),
     querySchemaColumnCounts(),
     querySlaMetrics(),
+    queryInspectionCounts(),
   ]);
 
   const row = {
@@ -116,6 +118,12 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     // Schema & SLA
     schema_column_counts: schemaColumnCounts,
     sla_permits_ingestion_hours: slaMetrics.hours_since_newest,
+    // Inspections
+    inspections_total: inspectionCounts.total,
+    inspections_permits_scraped: inspectionCounts.permits_scraped,
+    inspections_outstanding_count: inspectionCounts.outstanding,
+    inspections_passed_count: inspectionCounts.passed,
+    inspections_not_passed_count: inspectionCounts.not_passed,
   };
 
   const result = await query<DataQualitySnapshot>(
@@ -141,7 +149,9 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       null_description_count, null_builder_name_count, null_est_const_cost_count,
       null_street_num_count, null_street_name_count, null_geo_id_count,
       violation_cost_out_of_range, violation_future_issued_date, violation_missing_status, violations_total,
-      schema_column_counts, sla_permits_ingestion_hours
+      schema_column_counts, sla_permits_ingestion_hours,
+      inspections_total, inspections_permits_scraped,
+      inspections_outstanding_count, inspections_passed_count, inspections_not_passed_count
     ) VALUES (
       CURRENT_DATE,
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
@@ -151,7 +161,8 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       $41, $42, $43, $44,
       $45, $46, $47, $48, $49, $50,
       $51, $52, $53, $54,
-      $55, $56
+      $55, $56,
+      $57, $58, $59, $60, $61
     )
     ON CONFLICT (snapshot_date) DO UPDATE SET
       total_permits = EXCLUDED.total_permits,
@@ -210,6 +221,11 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       violations_total = EXCLUDED.violations_total,
       schema_column_counts = EXCLUDED.schema_column_counts,
       sla_permits_ingestion_hours = EXCLUDED.sla_permits_ingestion_hours,
+      inspections_total = EXCLUDED.inspections_total,
+      inspections_permits_scraped = EXCLUDED.inspections_permits_scraped,
+      inspections_outstanding_count = EXCLUDED.inspections_outstanding_count,
+      inspections_passed_count = EXCLUDED.inspections_passed_count,
+      inspections_not_passed_count = EXCLUDED.inspections_not_passed_count,
       created_at = NOW()
     RETURNING *`,
     [
@@ -237,6 +253,8 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
       row.violation_cost_out_of_range, row.violation_future_issued_date,
       row.violation_missing_status, row.violations_total,
       JSON.stringify(row.schema_column_counts), row.sla_permits_ingestion_hours,
+      row.inspections_total, row.inspections_permits_scraped,
+      row.inspections_outstanding_count, row.inspections_passed_count, row.inspections_not_passed_count,
     ]
   );
 
@@ -627,6 +645,35 @@ async function querySlaMetrics(): Promise<{ hours_since_newest: number | null }>
     return { hours_since_newest: hours != null ? Math.round(hours * 100) / 100 : null };
   } catch {
     return { hours_since_newest: null };
+  }
+}
+
+async function queryInspectionCounts() {
+  try {
+    const rows = await query<{
+      total: string;
+      permits_scraped: string;
+      outstanding: string;
+      passed: string;
+      not_passed: string;
+    }>(
+      `SELECT
+         COUNT(*) as total,
+         COUNT(DISTINCT permit_num) as permits_scraped,
+         COUNT(*) FILTER (WHERE status = 'Outstanding') as outstanding,
+         COUNT(*) FILTER (WHERE status = 'Passed') as passed,
+         COUNT(*) FILTER (WHERE status = 'Not Passed') as not_passed
+       FROM permit_inspections`
+    );
+    return {
+      total: parseInt(rows[0].total, 10),
+      permits_scraped: parseInt(rows[0].permits_scraped, 10),
+      outstanding: parseInt(rows[0].outstanding, 10),
+      passed: parseInt(rows[0].passed, 10),
+      not_passed: parseInt(rows[0].not_passed, 10),
+    };
+  } catch {
+    return { total: 0, permits_scraped: 0, outstanding: 0, passed: 0, not_passed: 0 };
   }
 }
 

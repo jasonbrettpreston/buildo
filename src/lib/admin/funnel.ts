@@ -756,6 +756,12 @@ export const STEP_EXPECTED_RANGES: Record<string, ExpectedRanges> = {
     mutations: { engine_health_snapshots: { ins: [0, 15], upd: [0, 15], del: [0, 0] } },
     row_delta: { engine_health_snapshots: [0, 15] },
   },
+  inspections: {
+    behavior: 'Scrapes inspection stages from AIC portal via REST API. Weekly cadence, ~104K target permits across 5 types. Each run processes BATCH_SIZE permits (default 10).',
+    summary: { records_total: [1, 500], records_new: [0, 5000], records_updated: [0, 0] },
+    mutations: { permit_inspections: { ins: [0, 5000], upd: [0, 5000], del: [0, 0] } },
+    row_delta: { permit_inspections: [0, 5000] },
+  },
 };
 
 export const PIPELINE_TABLE_MAP: Record<string, string> = {

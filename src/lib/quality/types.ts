@@ -88,6 +88,13 @@ export interface DataQualitySnapshot {
   // SLA metrics
   sla_permits_ingestion_hours: number | null;
 
+  // Inspection scraping coverage
+  inspections_total: number;
+  inspections_permits_scraped: number;
+  inspections_outstanding_count: number;
+  inspections_passed_count: number;
+  inspections_not_passed_count: number;
+
   created_at: string;
 }
 
@@ -283,6 +290,7 @@ export const SLA_TARGETS: Record<string, number> = {
   parcels: 2160,
   massing: 2160,
   neighbourhoods: 8760,   // 365 days
+  inspections: 168,       // 7 days (weekly cadence)
 };
 
 // ---------------------------------------------------------------------------

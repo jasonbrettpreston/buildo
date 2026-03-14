@@ -338,6 +338,88 @@ async function run() {
       }
     }
 
+    // -----------------------------------------------------------------------
+    // Inspection-scoped checks
+    // -----------------------------------------------------------------------
+    {
+      try {
+        const inspCount = await count(`SELECT COUNT(*) FROM permit_inspections`);
+        if (inspCount > 0) {
+          console.log(`  OK: permit_inspections has ${inspCount.toLocaleString()} rows`);
+
+          // Orphaned permit_num (not in permits table)
+          const orphanInsp = await count(
+            `SELECT COUNT(*) FROM permit_inspections pi
+             WHERE NOT EXISTS (SELECT 1 FROM permits p WHERE p.permit_num = pi.permit_num)`
+          );
+          if (orphanInsp > 0) {
+            errors.push(`${orphanInsp} orphaned permit_inspections rows (permit_num not in permits)`);
+            console.error(`  FAIL: ${orphanInsp} orphaned permit_inspections rows`);
+          } else {
+            console.log('  OK: No orphaned permit_inspections');
+          }
+
+          // Invalid status values
+          const badStatus = await count(
+            `SELECT COUNT(*) FROM permit_inspections
+             WHERE status NOT IN ('Outstanding', 'Passed', 'Not Passed', 'Partial')`
+          );
+          if (badStatus > 0) {
+            errors.push(`${badStatus} permit_inspections with invalid status value`);
+            console.error(`  FAIL: ${badStatus} invalid inspection status values`);
+          } else {
+            console.log('  OK: All inspection status values valid');
+          }
+
+          // Date logic: Outstanding should have null date, non-Outstanding should have date
+          const outstandingWithDate = await count(
+            `SELECT COUNT(*) FROM permit_inspections
+             WHERE status = 'Outstanding' AND inspection_date IS NOT NULL`
+          );
+          if (outstandingWithDate > 0) {
+            warnings.push(`${outstandingWithDate} Outstanding inspections with a date (unexpected)`);
+            console.log(`  WARN: ${outstandingWithDate} Outstanding inspections have dates`);
+          } else {
+            console.log('  OK: No Outstanding inspections with dates');
+          }
+
+          const completedNoDate = await count(
+            `SELECT COUNT(*) FROM permit_inspections
+             WHERE status != 'Outstanding' AND inspection_date IS NULL`
+          );
+          if (completedNoDate > 0) {
+            warnings.push(`${completedNoDate} completed inspections missing date`);
+            console.log(`  WARN: ${completedNoDate} completed inspections have no date`);
+          } else {
+            console.log('  OK: All completed inspections have dates');
+          }
+
+          // Duplicate (permit_num, stage_name) — should be impossible with UNIQUE constraint
+          const inspDupes = await count(
+            `SELECT COUNT(*) FROM (
+               SELECT permit_num, stage_name FROM permit_inspections
+               GROUP BY permit_num, stage_name HAVING COUNT(*) > 1
+             ) d`
+          );
+          if (inspDupes > 0) {
+            errors.push(`${inspDupes} duplicate (permit_num, stage_name) groups`);
+            console.error(`  FAIL: ${inspDupes} duplicate inspection stage groups`);
+          } else {
+            console.log('  OK: No duplicate inspection stages');
+          }
+        } else {
+          console.log('  SKIP: permit_inspections is empty (not yet scraped)');
+        }
+      } catch (inspErr) {
+        if (inspErr.message && inspErr.message.includes('does not exist')) {
+          console.log('  SKIP: permit_inspections table does not exist');
+        } else {
+          errors.push(inspErr.message);
+          console.error(`  ERROR: ${inspErr.message}`);
+        }
+      }
+    }
+
     // Ghost record detection — permits the City silently dropped from CKAN
     console.log('\n--- Ghost Records (stale > 30 days) ---');
     try {

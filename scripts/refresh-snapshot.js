@@ -222,6 +222,29 @@ pipeline.run('refresh-snapshot', async (pool) => {
     slaHours = sla.rows[0]?.hours ? Math.round(parseFloat(sla.rows[0].hours) * 100) / 100 : null;
   } catch (err) { pipeline.log.warn('[refresh-snapshot]', `SLA query failed: ${err.message}`); }
 
+  // 17. Inspection scraping coverage
+  let insp = { total: 0, permits_scraped: 0, outstanding: 0, passed: 0, not_passed: 0 };
+  try {
+    const inspResult = await pool.query(
+      `SELECT
+         COUNT(*) as total,
+         COUNT(DISTINCT permit_num) as permits_scraped,
+         COUNT(*) FILTER (WHERE status = 'Outstanding') as outstanding,
+         COUNT(*) FILTER (WHERE status = 'Passed') as passed,
+         COUNT(*) FILTER (WHERE status = 'Not Passed') as not_passed
+       FROM permit_inspections`
+    );
+    const ir = inspResult.rows[0];
+    insp = {
+      total: parseInt(ir.total),
+      permits_scraped: parseInt(ir.permits_scraped),
+      outstanding: parseInt(ir.outstanding),
+      passed: parseInt(ir.passed),
+      not_passed: parseInt(ir.not_passed),
+    };
+    console.log(`Inspections: ${insp.total} stages, ${insp.permits_scraped} permits, ${insp.outstanding} outstanding, ${insp.passed} passed, ${insp.not_passed} not passed`);
+  } catch (err) { pipeline.log.warn('[refresh-snapshot]', `Inspection query failed: ${err.message}`); }
+
   // UPSERT snapshot
   await pipeline.withTransaction(pool, async (client) => {
     const result = await client.query(
@@ -247,10 +270,12 @@ pipeline.run('refresh-snapshot', async (pool) => {
         null_description_count, null_builder_name_count, null_est_const_cost_count,
         null_street_num_count, null_street_name_count, null_geo_id_count,
         violation_cost_out_of_range, violation_future_issued_date, violation_missing_status, violations_total,
-        schema_column_counts, sla_permits_ingestion_hours
+        schema_column_counts, sla_permits_ingestion_hours,
+        inspections_total, inspections_permits_scraped,
+        inspections_outstanding_count, inspections_passed_count, inspections_not_passed_count
       ) VALUES (
         CURRENT_DATE,
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61
       )
       ON CONFLICT (snapshot_date) DO UPDATE SET
         total_permits=EXCLUDED.total_permits, active_permits=EXCLUDED.active_permits,
@@ -297,6 +322,11 @@ pipeline.run('refresh-snapshot', async (pool) => {
         violations_total=EXCLUDED.violations_total,
         schema_column_counts=EXCLUDED.schema_column_counts,
         sla_permits_ingestion_hours=EXCLUDED.sla_permits_ingestion_hours,
+        inspections_total=EXCLUDED.inspections_total,
+        inspections_permits_scraped=EXCLUDED.inspections_permits_scraped,
+        inspections_outstanding_count=EXCLUDED.inspections_outstanding_count,
+        inspections_passed_count=EXCLUDED.inspections_passed_count,
+        inspections_not_passed_count=EXCLUDED.inspections_not_passed_count,
         created_at=NOW()
       RETURNING snapshot_date, permits_with_neighbourhood, active_permits, coa_total, coa_linked, permits_with_scope, permits_with_scope_tags, permits_with_detailed_tags`,
       [
@@ -327,6 +357,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
         parseInt(n.null_street_num), parseInt(n.null_street_name), parseInt(n.null_geo_id),
         parseInt(v.cost_oor), parseInt(v.future_issued), parseInt(v.missing_status), violations_total,
         JSON.stringify(schemaColumnCounts), slaHours,
+        insp.total, insp.permits_scraped, insp.outstanding, insp.passed, insp.not_passed,
       ]
     );
 
