@@ -435,7 +435,7 @@ export function createMockInspection(
   return {
     permit_num: '24 101234',
     stage_name: 'Structural Framing',
-    status: 'Pass',
+    status: 'Passed',
     inspection_date: '2024-06-15',
     scraped_at: '2024-06-16T10:00:00.000Z',
     ...overrides,

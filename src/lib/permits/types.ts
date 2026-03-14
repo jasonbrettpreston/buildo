@@ -217,7 +217,7 @@ export interface Inspection {
   id?: number;
   permit_num: string;
   stage_name: string;
-  status: 'Outstanding' | 'Pass' | 'Fail' | 'Partial';
+  status: 'Outstanding' | 'Passed' | 'Not Passed' | 'Partial';
   inspection_date: string | null;
   scraped_at: string;
 }

@@ -16,16 +16,16 @@ describe('Inspection Parser', () => {
       const html = `
         <table>
           <tr><th>Inspection Stage</th><th>Status</th><th>Date</th></tr>
-          <tr><td>Excavation/Shoring</td><td>Pass</td><td>01/15/2024</td></tr>
+          <tr><td>Excavation/Shoring</td><td>Passed</td><td>01/15/2024</td></tr>
           <tr><td>Structural Framing</td><td>Outstanding</td><td>-</td></tr>
-          <tr><td>Final Inspection</td><td>Fail</td><td>03/20/2024</td></tr>
+          <tr><td>Final Inspection</td><td>Not Passed</td><td>03/20/2024</td></tr>
         </table>
       `;
       const result = parseInspectionTable(html, '24 101234');
 
       expect(result).toHaveLength(3);
       expect(result[0].stage_name).toBe('Excavation/Shoring');
-      expect(result[0].status).toBe('Pass');
+      expect(result[0].status).toBe('Passed');
       expect(result[0].inspection_date).toBe('2024-01-15');
       expect(result[0].permit_num).toBe('24 101234');
 
@@ -34,7 +34,7 @@ describe('Inspection Parser', () => {
       expect(result[1].inspection_date).toBeNull();
 
       expect(result[2].stage_name).toBe('Final Inspection');
-      expect(result[2].status).toBe('Fail');
+      expect(result[2].status).toBe('Not Passed');
       expect(result[2].inspection_date).toBe('2024-03-20');
     });
 
@@ -42,7 +42,7 @@ describe('Inspection Parser', () => {
       const html = `
         <table>
           <tr><td>Inspection Stage</td><td>Status</td><td>Date</td></tr>
-          <tr><td>Rough-in Plumbing</td><td>Pass</td><td>02/10/2024</td></tr>
+          <tr><td>Rough-in Plumbing</td><td>Passed</td><td>02/10/2024</td></tr>
         </table>
       `;
       const result = parseInspectionTable(html, 'PLB-001');
@@ -64,6 +64,11 @@ describe('Inspection Parser', () => {
       expect(result).toEqual([]);
     });
 
+    it('returns empty array for empty string', () => {
+      const result = parseInspectionTable('', '24 101234');
+      expect(result).toEqual([]);
+    });
+
     it('strips inner HTML tags from cell content', () => {
       const html = `
         <tr><td><b>Insulation</b></td><td><span>Partial</span></td><td>05/01/2024</td></tr>
@@ -73,28 +78,58 @@ describe('Inspection Parser', () => {
       expect(result[0].status).toBe('Partial');
     });
 
-    it('handles Partial status', () => {
+    it('handles Partially Completed status', () => {
       const html = `
         <tr><td>Vapour Barrier</td><td>Partially Completed</td><td>04/12/2024</td></tr>
       `;
       const result = parseInspectionTable(html, '24 101234');
       expect(result[0].status).toBe('Partial');
     });
+
+    it('skips rows with unknown status', () => {
+      const html = `
+        <tr><td>Some Stage</td><td>Cancelled</td><td>01/01/2024</td></tr>
+        <tr><td>Real Stage</td><td>Passed</td><td>01/02/2024</td></tr>
+      `;
+      const result = parseInspectionTable(html, '24 101234');
+      expect(result).toHaveLength(1);
+      expect(result[0].stage_name).toBe('Real Stage');
+    });
+
+    it('handles all 4 AIC portal status values in one table', () => {
+      const html = `
+        <tr><td>Stage A</td><td>Outstanding</td><td>-</td></tr>
+        <tr><td>Stage B</td><td>Passed</td><td>01/10/2026</td></tr>
+        <tr><td>Stage C</td><td>Not Passed</td><td>02/15/2026</td></tr>
+        <tr><td>Stage D</td><td>Partial</td><td>03/01/2026</td></tr>
+      `;
+      const result = parseInspectionTable(html, '26 100000');
+      expect(result).toHaveLength(4);
+      expect(result.map(r => r.status)).toEqual([
+        'Outstanding', 'Passed', 'Not Passed', 'Partial',
+      ]);
+    });
   });
 
   describe('normalizeStatus', () => {
-    it('maps standard values', () => {
+    it('maps portal status values', () => {
       expect(normalizeStatus('Outstanding')).toBe('Outstanding');
-      expect(normalizeStatus('Pass')).toBe('Pass');
-      expect(normalizeStatus('Fail')).toBe('Fail');
+      expect(normalizeStatus('Passed')).toBe('Passed');
+      expect(normalizeStatus('Not Passed')).toBe('Not Passed');
       expect(normalizeStatus('Partial')).toBe('Partial');
     });
 
     it('handles case-insensitive variants', () => {
-      expect(normalizeStatus('PASS')).toBe('Pass');
-      expect(normalizeStatus('failed')).toBe('Fail');
-      expect(normalizeStatus('Passed')).toBe('Pass');
+      expect(normalizeStatus('PASSED')).toBe('Passed');
+      expect(normalizeStatus('not passed')).toBe('Not Passed');
+      expect(normalizeStatus('outstanding')).toBe('Outstanding');
       expect(normalizeStatus('partially completed')).toBe('Partial');
+    });
+
+    it('handles legacy Pass/Fail values', () => {
+      expect(normalizeStatus('Pass')).toBe('Passed');
+      expect(normalizeStatus('Fail')).toBe('Not Passed');
+      expect(normalizeStatus('Failed')).toBe('Not Passed');
     });
 
     it('returns null for unknown status', () => {
@@ -109,9 +144,23 @@ describe('Inspection Parser', () => {
       expect(parseInspectionDate('12/05/2023')).toBe('2023-12-05');
     });
 
+    it('parses single-digit month/day', () => {
+      expect(parseInspectionDate('3/4/2026')).toBe('2026-03-04');
+    });
+
     it('parses ISO format', () => {
       expect(parseInspectionDate('2024-01-15')).toBe('2024-01-15');
       expect(parseInspectionDate('2024-01-15T10:00:00Z')).toBe('2024-01-15');
+    });
+
+    it('parses "Mon D, YYYY" named month format from AIC portal', () => {
+      expect(parseInspectionDate('Mar 4, 2026')).toBe('2026-03-04');
+      expect(parseInspectionDate('Jan 15, 2024')).toBe('2024-01-15');
+      expect(parseInspectionDate('December 25, 2025')).toBe('2025-12-25');
+    });
+
+    it('parses named month without comma', () => {
+      expect(parseInspectionDate('Mar 4 2026')).toBe('2026-03-04');
     });
 
     it('returns null for empty/placeholder values', () => {
@@ -126,7 +175,7 @@ describe('Inspection Parser', () => {
       const insp = createMockInspection();
       expect(insp.permit_num).toBe('24 101234');
       expect(insp.stage_name).toBe('Structural Framing');
-      expect(insp.status).toBe('Pass');
+      expect(insp.status).toBe('Passed');
     });
 
     it('accepts overrides', () => {

@@ -54,11 +54,11 @@ export function parseInspectionTable(
  */
 export function normalizeStatus(
   raw: string
-): 'Outstanding' | 'Pass' | 'Fail' | 'Partial' | null {
+): 'Outstanding' | 'Passed' | 'Not Passed' | 'Partial' | null {
   const s = raw.trim().toLowerCase();
   if (s === 'outstanding') return 'Outstanding';
-  if (s === 'pass' || s === 'passed') return 'Pass';
-  if (s === 'fail' || s === 'failed') return 'Fail';
+  if (s === 'pass' || s === 'passed') return 'Passed';
+  if (s === 'fail' || s === 'failed' || s === 'not passed') return 'Not Passed';
   if (s === 'partial' || s === 'partially completed') return 'Partial';
   return null;
 }
@@ -83,10 +83,17 @@ export function parseInspectionDate(raw: string): string | null {
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
 
-  // Try Date constructor as fallback
-  const d = new Date(trimmed);
-  if (!isNaN(d.getTime())) {
-    return d.toISOString().slice(0, 10);
+  // Try "Mon D, YYYY" / "Month D, YYYY" format (AIC portal uses this)
+  const MONTHS: Record<string, string> = {
+    jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+    jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
+  };
+  const namedMatch = trimmed.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+  if (namedMatch) {
+    const monthNum = MONTHS[namedMatch[1].slice(0, 3).toLowerCase()];
+    if (monthNum) {
+      return `${namedMatch[3]}-${monthNum}-${namedMatch[2].padStart(2, '0')}`;
+    }
   }
 
   return null;

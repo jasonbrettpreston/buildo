@@ -179,8 +179,8 @@ export default function PermitDetailPage() {
                   className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
                 >
                   <span className="text-lg w-6 text-center">
-                    {insp.status === 'Pass' ? '\u2705' :
-                     insp.status === 'Fail' ? '\u274C' :
+                    {insp.status === 'Passed' ? '\u2705' :
+                     insp.status === 'Not Passed' ? '\u274C' :
                      insp.status === 'Partial' ? '\u25D4' :
                      '\u23F3'}
                   </span>
