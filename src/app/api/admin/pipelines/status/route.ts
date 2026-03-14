@@ -85,6 +85,24 @@ export async function GET() {
           }
         }
       }
+
+      // Reverse alias: populate chain-scoped keys from bare slugs when a step
+      // was triggered individually (e.g. bare "inspections" → "deep_scrapes:inspections").
+      // This ensures FreshnessTimeline finds the status regardless of how the pipeline was run.
+      const CHAIN_STEP_MAP: Record<string, string[]> = {
+        inspections: ['deep_scrapes:inspections'],
+        coa_documents: ['deep_scrapes:coa_documents'],
+      };
+      for (const [bare, scopedKeys] of Object.entries(CHAIN_STEP_MAP)) {
+        const bareEntry = pipelineLastRun[bare];
+        if (!bareEntry) continue;
+        for (const scoped of scopedKeys) {
+          const existing = pipelineLastRun[scoped];
+          if (!existing || !existing.last_run_at || (bareEntry.last_run_at && bareEntry.last_run_at > existing.last_run_at)) {
+            pipelineLastRun[scoped] = bareEntry;
+          }
+        }
+      }
     } catch {
       // pipeline_runs table may not exist yet — return empty object
     }
