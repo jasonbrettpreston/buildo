@@ -32,7 +32,7 @@ const PIPELINE_SCRIPTS: Record<string, string> = {
   load_wsib: 'scripts/load-wsib.js',
   link_wsib: 'scripts/link-wsib.js',
   // Scrape (external portal data)
-  inspections: 'scripts/poc-aic-scraper.js',
+  inspections: 'scripts/poc-aic-scraper-v2.js',
   // Classify (derive fields)
   classify_scope: 'scripts/classify-scope.js',
   classify_permits: 'scripts/classify-permits.js',

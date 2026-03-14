@@ -28,7 +28,7 @@
     "assert_schema":        { "file": "scripts/quality/assert-schema.js", "supports_full": false, "supports_dry_run": false },
     "assert_data_bounds":   { "file": "scripts/quality/assert-data-bounds.js", "supports_full": false, "supports_dry_run": false },
     "assert_engine_health": { "file": "scripts/quality/assert-engine-health.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["engine_health_snapshots"] },
-    "inspections":          { "file": null, "supports_full": false, "supports_dry_run": false, "coming_soon": true },
+    "inspections":          { "file": "scripts/poc-aic-scraper-v2.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permit_inspections"] },
     "coa_documents":        { "file": null, "supports_full": false, "supports_dry_run": false, "coming_soon": true }
   },
 
