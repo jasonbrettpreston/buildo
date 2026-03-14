@@ -35,7 +35,12 @@ const TARGET_TYPES = [
   'Small Residential Projects',
   'Building Additions/Alterations',
   'New Houses',
+  'Plumbing(PS)',
+  'Residential Building Permit',
 ];
+
+const BATCH_SIZE = parseInt(process.env.SCRAPE_BATCH_SIZE || '10', 10);
+const SESSION_REFRESH_INTERVAL = 200; // re-establish WAF session every N permits
 
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
@@ -319,8 +324,8 @@ pipeline.run('poc-aic-scraper', async (pool) => {
            AND (pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '7 days')
            AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= 26
          ORDER BY year_seq DESC
-         LIMIT 10`,
-        [TARGET_TYPES]
+         LIMIT $2`,
+        [TARGET_TYPES, BATCH_SIZE]
       );
 
       pipeline.log.info('[scraper]', `Batch mode: ${rows.length} year+sequence combos to scrape`);
@@ -328,6 +333,13 @@ pipeline.run('poc-aic-scraper', async (pool) => {
       for (let i = 0; i < rows.length; i++) {
         const yearSeq = rows[i].year_seq;
         pipeline.progress('poc-aic-scraper', i + 1, rows.length, startMs);
+
+        // Refresh WAF session periodically to prevent expiry on long runs
+        if (i > 0 && i % SESSION_REFRESH_INTERVAL === 0) {
+          pipeline.log.info('[scraper]', `Refreshing WAF session (after ${i} permits)...`);
+          await page.goto(`${AIC_BASE}/setup.do?action=init`, { waitUntil: 'commit' });
+          await page.waitForTimeout(1000);
+        }
 
         const result = await scrapeWithRetry(page, yearSeq, pool);
         totalSearched += result.searched;

@@ -144,12 +144,10 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
   // Group 4: Deep Scrapes & Documents (continuous async workers)
   {
     id: 'deep_scrapes',
-    label: 'Deep Scrapes & Documents',
-    description: 'Continuous — headless browser scraping & document retrieval',
-    comingSoon: true,
+    label: 'Deep Scrapes',
+    description: 'Weekly — AIC portal inspection scraping via REST API',
     steps: [
       { slug: 'inspections',    indent: 0 },
-      { slug: 'coa_documents',  indent: 0 },
     ],
   },
 ];

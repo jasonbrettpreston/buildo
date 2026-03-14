@@ -53,7 +53,7 @@
       "enrich_wsib_builders", "enrich_named_builders"
     ],
     "deep_scrapes": [
-      "inspections", "coa_documents"
+      "inspections"
     ]
   },
 

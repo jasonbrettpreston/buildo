@@ -1963,17 +1963,16 @@ describe('Deep Scrapes pipeline group', () => {
     expect(PIPELINE_REGISTRY.coa_documents.name).toBeTruthy();
   });
 
-  it('deep_scrapes chain exists in PIPELINE_CHAINS', () => {
+  it('deep_scrapes chain exists in PIPELINE_CHAINS with inspections', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'deep_scrapes');
     expect(chain).toBeDefined();
     expect(chain!.steps.map((s) => s.slug)).toContain('inspections');
-    expect(chain!.steps.map((s) => s.slug)).toContain('coa_documents');
   });
 
-  it('deep_scrapes chain is marked comingSoon', () => {
+  it('deep_scrapes chain is not marked comingSoon', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'deep_scrapes');
     expect(chain).toBeDefined();
-    expect(chain!.comingSoon).toBe(true);
+    expect(chain!.comingSoon).toBeFalsy();
   });
 });
 
