@@ -245,7 +245,7 @@ async function run() {
     ];
     const coaHasFails = coaAuditRows.some((r) => r.status === 'FAIL');
     coaAuditTable = {
-      phase: 9,
+      phase: 8,
       name: 'CoA Engine Health',
       verdict: coaHasFails ? 'FAIL' : 'PASS',
       rows: coaAuditRows,
@@ -261,8 +261,9 @@ async function run() {
     warnings: warnings.length > 0 ? warnings : undefined,
     errors: errors.length > 0 ? errors : undefined,
     engine_health: tableResults,
-    ...(inspAuditTable && { audit_table: inspAuditTable }),
-    ...(coaAuditTable && { coa_audit_table: coaAuditTable }),
+    // Chain-aware: only emit the relevant audit_table for the current chain
+    ...(inspAuditTable && (!CHAIN_ID || CHAIN_ID === 'deep_scrapes') && { audit_table: inspAuditTable }),
+    ...(coaAuditTable && (!CHAIN_ID || CHAIN_ID === 'coa') && { audit_table: coaAuditTable }),
   });
 
   if (runId) {

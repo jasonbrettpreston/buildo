@@ -991,7 +991,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 const hasFailures = failed > 0 || errCount > 0 || info?.status === 'failed';
                                 const warningsList: string[] = Array.isArray(meta.warnings) ? meta.warnings as string[] : [];
                                 const errorsList: string[] = Array.isArray(meta.errors) ? meta.errors as string[] : [];
-                                const hasAuditTable = !!(meta.audit_table && typeof meta.audit_table === 'object') || !!(meta.coa_audit_table && typeof meta.coa_audit_table === 'object');
+                                const hasAuditTable = !!(meta.audit_table && typeof meta.audit_table === 'object');
                                 return (
                                   <div className="space-y-1.5">
                                     {/* Old CQA verdict/scalars — hidden when audit_table replaces them */}
@@ -1029,7 +1029,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                     )}
                                     {/* Scalar metadata (counts, labels) */}
                                     {Object.entries(meta)
-                                      .filter(([k, v]) => v != null && v !== undefined && k !== 'pipeline_meta' && k !== 'warnings' && k !== 'errors' && k !== 'engine_health' && k !== 'audit_table' && k !== 'coa_audit_table' && typeof v !== 'object')
+                                      .filter(([k, v]) => v != null && v !== undefined && k !== 'pipeline_meta' && k !== 'warnings' && k !== 'errors' && k !== 'engine_health' && k !== 'audit_table' && typeof v !== 'object')
                                       .map(([key, value]) => (
                                         <div key={key} className="flex justify-between">
                                           <span className="text-xs text-gray-600">{key.replace(/_/g, ' ')}</span>
@@ -1075,8 +1075,9 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                         </div>
                                       </div>
                                     )}
-                                    {/* Audit tables — render audit_table and/or coa_audit_table when present */}
-                                    {[meta.audit_table, meta.coa_audit_table].filter(Boolean).map((atRaw, atIdx) => {
+                                    {/* Audit table — chain-aware, single audit_table key per step */}
+                                    {!!(meta.audit_table && typeof meta.audit_table === 'object') && (() => {
+                                      const atRaw = meta.audit_table; const atIdx = 0;
                                       if (!atRaw || typeof atRaw !== 'object') return null;
                                       const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string }> };
                                       const verdictColor = at.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200'
@@ -1115,7 +1116,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                           </div>
                                         </div>
                                       );
-                                    })}
+                                    })()}
                                   </div>
                                 );
                               })()}
@@ -1127,7 +1128,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                         {/* Audit table for funnel steps — Script Output is hidden by !funnelRow, so render separately */}
                         {funnelRow && info?.records_meta && typeof info.records_meta === 'object' && (() => {
                           const meta = info.records_meta as Record<string, unknown>;
-                          const tables = [meta.audit_table, meta.coa_audit_table].filter(Boolean);
+                          const tables = [meta.audit_table].filter(Boolean);
                           if (tables.length === 0) return null;
                           const statusIcon = (s: string) => s === 'PASS' ? '\u2714' : s === 'FAIL' ? '\u2718' : s === 'WARN' ? '\u26A0' : s === 'SKIP' ? '\u2014' : '\u2022';
                           const statusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : 'text-gray-400';

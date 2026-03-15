@@ -327,7 +327,7 @@ async function run() {
     checks_passed: errors.length === 0 ? 'all' : undefined,
     checks_failed: errors.length,
     errors: errors.length > 0 ? errors : undefined,
-    ...(coaAuditTable && { coa_audit_table: coaAuditTable }),
+    ...(coaAuditTable && { audit_table: coaAuditTable }),
   });
 
   if (runId) {

@@ -220,7 +220,7 @@ async function run() {
       const coaHasFails = coaAuditRows.some((r) => r.status === 'FAIL');
       const coaHasWarns = coaAuditRows.some((r) => r.status === 'WARN');
       coaAuditTable = {
-        phase: 8,
+        phase: 7,
         name: 'CoA Data Quality',
         verdict: coaHasFails ? 'FAIL' : coaHasWarns ? 'WARN' : 'PASS',
         rows: coaAuditRows,
@@ -557,8 +557,9 @@ async function run() {
     checks_warned: warnings.length,
     errors: errors.length > 0 ? errors : undefined,
     warnings: warnings.length > 0 ? warnings : undefined,
-    ...(inspectionAuditTable && { audit_table: inspectionAuditTable }),
-    ...(coaAuditTable && { coa_audit_table: coaAuditTable }),
+    // Chain-aware: only emit the relevant audit_table for the current chain
+    ...(inspectionAuditTable && (!CHAIN_ID || CHAIN_ID === 'deep_scrapes') && { audit_table: inspectionAuditTable }),
+    ...(coaAuditTable && (!CHAIN_ID || CHAIN_ID === 'coa') && { audit_table: coaAuditTable }),
   };
   const meta = JSON.stringify(metaObj);
 

@@ -370,16 +370,18 @@ pipeline.run('refresh-snapshot', async (pool) => {
     console.log('\nDone!');
   });
 
+  // Chain-aware phase number: deep_scrapes = step 3 (phase 5), coa = step 6 (phase 6)
+  const chainId = process.env.PIPELINE_CHAIN || null;
+  const snapshotPhase = chainId === 'coa' ? 6 : 5;
   pipeline.emitSummary({
     records_total: 1, records_new: 1, records_updated: 0,
     records_meta: {
       audit_table: {
-        phase: 5,
+        phase: snapshotPhase,
         name: 'Refresh Snapshot',
         verdict: 'PASS',
         rows: [
           { metric: 'snapshots_created', value: 1, threshold: null, status: 'INFO' },
-          { metric: 'inspection_history_table', value: false, threshold: null, status: 'SKIP' },
         ],
       },
     },

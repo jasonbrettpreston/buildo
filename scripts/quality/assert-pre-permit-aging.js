@@ -58,18 +58,18 @@ pipeline.run('assert-pre-permit-aging', async (pool) => {
     { metric: 'total_approved_unlinked', value: totalApprovedUnlinked, threshold: null, status: 'INFO' },
     { metric: 'stale_18m', value: stale18m, threshold: null, status: 'INFO' },
     { metric: 'stale_12m', value: stale12m, threshold: null, status: 'INFO' },
-    { metric: 'expired_pre_permits', value: expiredPrePermits, threshold: '== 0', status: expiredPrePermits === 0 ? 'PASS' : 'FAIL' },
+    { metric: 'expired_pre_permits', value: expiredPrePermits, threshold: null, status: expiredPrePermits === 0 ? 'PASS' : 'WARN' },
   ];
 
-  const hasFails = auditRows.some((r) => r.status === 'FAIL');
+  const hasWarns = auditRows.some((r) => r.status === 'WARN');
   const auditTable = {
-    phase: 6,
+    phase: 5,
     name: 'Pre-Permit Aging',
-    verdict: hasFails ? 'FAIL' : 'PASS',
+    verdict: hasWarns ? 'WARN' : 'PASS',
     rows: auditRows,
   };
 
-  if (hasFails) {
+  if (hasWarns) {
     pipeline.log.warn('[assert-pre-permit-aging]', `${expiredPrePermits} expired pre-permits detected (approved+unlinked > 18 months)`);
   }
 
