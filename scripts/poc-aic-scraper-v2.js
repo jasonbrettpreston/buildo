@@ -228,14 +228,22 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
       continue;
     }
 
-    // Upsert stages into permit_inspections
+    // Upsert stages into permit_inspections, tracking status changes
     const client = await dbPool.connect();
+    let statusChanges = 0;
     try {
       for (const stage of result.stages) {
         const status = normalizeStatus(stage.status);
         if (!status) continue;
 
         const inspDate = parseInspectionDate(stage.date);
+
+        // Check existing status before upsert to detect changes
+        const existing = await client.query(
+          `SELECT status FROM permit_inspections WHERE permit_num = $1 AND stage_name = $2`,
+          [result.permitNum, stage.desc]
+        );
+        const oldStatus = existing.rows[0]?.status;
 
         await client.query(
           `INSERT INTO permit_inspections (permit_num, stage_name, status, inspection_date, scraped_at)
@@ -247,10 +255,12 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
           [result.permitNum, stage.desc, status, inspDate]
         );
         upserted++;
+        if (oldStatus && oldStatus !== status) statusChanges++;
       }
     } finally {
       client.release();
     }
+    totalStatusChanges += statusChanges;
 
     scraped++;
     pipeline.log.info('[scraper]', `Scraped ${result.stages.length} stages for ${result.permitNum}`, {
@@ -304,6 +314,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
   let totalScraped = 0;
   let totalUpserted = 0;
   let totalBytes = 0;
+  let totalStatusChanges = 0;
 
   try {
     if (singlePermit) {
@@ -357,6 +368,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
     searched: totalSearched,
     scraped: totalScraped,
     upserted: totalUpserted,
+    statusChanges: totalStatusChanges,
     bytes: totalBytes,
     bytesHuman: `${(totalBytes / 1024).toFixed(1)} KB`,
     elapsed: `${elapsed}s`,
@@ -365,7 +377,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
   pipeline.emitSummary({
     records_total: totalScraped,
     records_new: totalUpserted,
-    records_updated: 0,
+    records_updated: totalStatusChanges,
   });
 
   pipeline.emitMeta(

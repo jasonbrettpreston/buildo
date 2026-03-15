@@ -261,7 +261,13 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 - Freshness tracked in `pipeline_runs` table
 - Schedule: Weekly (for active permits across 5 target types)
 - **Chain:** `deep_scrapes` = `inspections` → `refresh_snapshot` → `assert_data_bounds` → `assert_engine_health`
-- Quality tail steps provide: snapshot metrics capture, data bounds validation (null rates, referential integrity), and engine health checks (dead tuples, index usage) after each scrape run
+- Quality tail steps provide: snapshot metrics capture, data bounds validation, and engine health checks after each scrape run
+- **Inspection-specific assert-data-bounds checks (13 total):**
+  - Basic: row count, orphaned rows (FK), invalid status values, Outstanding-with-date, completed-without-date, duplicate stages
+  - Coverage: per-type scrape coverage (all 5 TARGET_TYPES must have >0), scrape staleness (>30 days), thin data detection (single Outstanding stage)
+  - Integrity: stage count >20 (duplication), future dates, date-before-permit-year
+  - Transitions: status change count from latest scraper run (via records_updated in pipeline_runs)
+- **Scraper tracks status changes:** upsert checks previous status before writing; emits count as `records_updated` in PIPELINE_SUMMARY
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->

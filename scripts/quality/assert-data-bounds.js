@@ -407,6 +407,126 @@ async function run() {
           } else {
             console.log('  OK: No duplicate inspection stages');
           }
+
+          // --- Check 1: Coverage rate by permit type ---
+          console.log('\n  --- Inspection Coverage & Staleness ---');
+          const TARGET_TYPES = [
+            'Small Residential Projects', 'Building Additions/Alterations',
+            'New Houses', 'Plumbing(PS)', 'Residential Building Permit',
+          ];
+          const coverageRes = await pool.query(
+            `SELECT p.permit_type,
+                    COUNT(DISTINCT p.permit_num) AS total,
+                    COUNT(DISTINCT pi.permit_num) AS scraped
+             FROM permits p
+             LEFT JOIN permit_inspections pi ON pi.permit_num = p.permit_num
+             WHERE p.status = 'Inspection' AND p.permit_type = ANY($1)
+             GROUP BY p.permit_type`,
+            [TARGET_TYPES]
+          );
+          for (const row of coverageRes.rows) {
+            if (parseInt(row.scraped) === 0) {
+              errors.push(`${row.permit_type}: 0 permits scraped (AIC portal may have changed)`);
+              console.error(`  FAIL: ${row.permit_type} has 0 scraped permits`);
+            } else {
+              const pct = (100 * parseInt(row.scraped) / parseInt(row.total)).toFixed(1);
+              console.log(`  OK: ${row.permit_type}: ${row.scraped}/${row.total} scraped (${pct}%)`);
+            }
+          }
+
+          // --- Check 2: Scrape staleness ---
+          const staleRes = await pool.query(
+            `SELECT COUNT(*) AS total,
+                    COUNT(*) FILTER (WHERE pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '30 days') AS stale
+             FROM permits p
+             LEFT JOIN (SELECT DISTINCT ON (permit_num) permit_num, scraped_at
+                        FROM permit_inspections ORDER BY permit_num, scraped_at DESC) pi
+               ON pi.permit_num = p.permit_num
+             WHERE p.status = 'Inspection' AND p.permit_type = ANY($1)`,
+            [TARGET_TYPES]
+          );
+          const staleTotal = parseInt(staleRes.rows[0].total);
+          const staleCount = parseInt(staleRes.rows[0].stale);
+          const stalePct = staleTotal > 0 ? (100 * staleCount / staleTotal).toFixed(1) : '0';
+          if (staleTotal > 0 && staleCount / staleTotal > 0.99) {
+            // >99% stale is expected early (only scraped ~100 of 104K) — just log
+            console.log(`  OK: ${stalePct}% stale (${staleCount.toLocaleString()}/${staleTotal.toLocaleString()}) — early coverage phase`);
+          } else if (staleTotal > 0 && staleCount / staleTotal > 0.50) {
+            warnings.push(`${stalePct}% of inspection permits are stale (>30 days since scrape)`);
+            console.log(`  WARN: ${stalePct}% stale — scrape batches may not be keeping up`);
+          } else {
+            console.log(`  OK: ${stalePct}% stale (${staleCount.toLocaleString()}/${staleTotal.toLocaleString()})`);
+          }
+
+          // --- Check 3: Suspiciously thin data (only 1 Outstanding stage) ---
+          const thinPermits = await count(
+            `SELECT COUNT(*) FROM (
+               SELECT permit_num FROM permit_inspections
+               GROUP BY permit_num
+               HAVING COUNT(*) = 1 AND COUNT(*) FILTER (WHERE status = 'Outstanding') = 1
+             ) t`
+          );
+          if (thinPermits > inspCount * 0.3) {
+            warnings.push(`${thinPermits} permits have only 1 Outstanding stage (${(100 * thinPermits / inspCount).toFixed(0)}% — suspiciously thin)`);
+            console.log(`  WARN: ${thinPermits} permits with only 1 Outstanding stage`);
+          } else {
+            console.log(`  OK: ${thinPermits} permits with single Outstanding stage (normal)`);
+          }
+
+          // --- Check 4: Stage count per permit (>20 = anomaly) ---
+          const highStagePermits = await count(
+            `SELECT COUNT(*) FROM (
+               SELECT permit_num FROM permit_inspections
+               GROUP BY permit_num HAVING COUNT(*) > 20
+             ) h`
+          );
+          if (highStagePermits > 0) {
+            warnings.push(`${highStagePermits} permits have >20 inspection stages (possible duplication)`);
+            console.log(`  WARN: ${highStagePermits} permits with >20 stages`);
+          } else {
+            console.log('  OK: No permits with >20 stages');
+          }
+
+          // --- Check 5: Future inspection dates ---
+          const futureDates = await count(
+            `SELECT COUNT(*) FROM permit_inspections WHERE inspection_date > CURRENT_DATE`
+          );
+          if (futureDates > 0) {
+            errors.push(`${futureDates} inspections with future dates`);
+            console.error(`  FAIL: ${futureDates} inspections have future dates`);
+          } else {
+            console.log('  OK: No future inspection dates');
+          }
+
+          // --- Check 6: Date before permit year ---
+          const dateBeforePermit = await count(
+            `SELECT COUNT(*) FROM permit_inspections
+             WHERE inspection_date IS NOT NULL
+               AND EXTRACT(YEAR FROM inspection_date) < (2000 + SUBSTRING(permit_num FROM '^[0-9]{2}')::int)`
+          );
+          if (dateBeforePermit > 0) {
+            errors.push(`${dateBeforePermit} inspections with date before permit year`);
+            console.error(`  FAIL: ${dateBeforePermit} inspections dated before their permit year`);
+          } else {
+            console.log('  OK: No inspection dates before permit year');
+          }
+
+          // --- Check 7: Status change tracking (from latest scraper run) ---
+          try {
+            const lastRun = await pool.query(
+              `SELECT records_updated FROM pipeline_runs
+               WHERE pipeline = 'inspections' OR pipeline LIKE '%:inspections'
+               ORDER BY started_at DESC LIMIT 1`
+            );
+            const statusChanges = lastRun.rows[0]?.records_updated ?? 0;
+            if (statusChanges > 0) {
+              console.log(`  INFO: ${statusChanges} inspection stages changed status in last scrape run`);
+            } else {
+              console.log('  OK: No status changes in last scrape run');
+            }
+          } catch {
+            console.log('  SKIP: Could not read last scraper run for status changes');
+          }
         } else {
           console.log('  SKIP: permit_inspections is empty (not yet scraped)');
         }
