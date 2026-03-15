@@ -307,6 +307,8 @@ pipeline.run('load-coa', async (pool) => {
 
   for (const raw of allRaw) {
     const { record, skipReason } = mapRecord(raw, tel.schema_drift);
+    // Halt immediately if schema drift detected — no point processing 10K broken records
+    if (tel.schema_drift.length > 0) break;
     if (record) {
       mapped.push(record);
       // Track max hearing date for portal rot detection
