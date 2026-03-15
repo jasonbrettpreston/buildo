@@ -54,6 +54,7 @@ async function run() {
   const warnings = [];
   const errors = [];
   let inspectionAuditTable = null;
+  let coaAuditTable = null;
 
   try {
     // -----------------------------------------------------------------------
@@ -156,17 +157,74 @@ async function run() {
     // CoA-scoped checks
     // -----------------------------------------------------------------------
     if (runCoaChecks) {
+      const coaAuditRows = [];
+
       const orphanCoa = await count(
         `SELECT COUNT(*) FROM coa_applications ca
          WHERE ca.linked_permit_num IS NOT NULL
            AND NOT EXISTS (SELECT 1 FROM permits p WHERE p.permit_num = ca.linked_permit_num)`
       );
+      coaAuditRows.push({ metric: 'orphan_link_count', value: orphanCoa, threshold: '== 0', status: orphanCoa > 0 ? 'FAIL' : 'PASS' });
       if (orphanCoa > 0) {
         errors.push(`${orphanCoa} orphaned coa_applications linked_permit_num`);
         console.error(`  FAIL: ${orphanCoa} orphaned coa linked_permit_num`);
       } else {
         console.log('  OK: No orphaned CoA links');
       }
+
+      const nullAddress = await count(
+        `SELECT COUNT(*) FROM coa_applications WHERE address IS NULL OR TRIM(address) = ''`
+      );
+      coaAuditRows.push({ metric: 'null_address', value: nullAddress, threshold: null, status: nullAddress > 0 ? 'WARN' : 'PASS' });
+      if (nullAddress > 0) {
+        warnings.push(`${nullAddress} coa_applications with NULL/empty address`);
+        console.log(`  WARN: ${nullAddress} coa_applications with NULL address`);
+      } else {
+        console.log('  OK: No NULL CoA addresses');
+      }
+
+      const nullAppNum = await count(
+        `SELECT COUNT(*) FROM coa_applications WHERE application_number IS NULL OR TRIM(application_number) = ''`
+      );
+      coaAuditRows.push({ metric: 'null_app_num', value: nullAppNum, threshold: '== 0', status: nullAppNum > 0 ? 'FAIL' : 'PASS' });
+      if (nullAppNum > 0) {
+        errors.push(`${nullAppNum} coa_applications with NULL application_number`);
+        console.error(`  FAIL: ${nullAppNum} coa_applications with NULL application_number`);
+      } else {
+        console.log('  OK: No NULL CoA application numbers');
+      }
+
+      const futureHearing = await count(
+        `SELECT COUNT(*) FROM coa_applications WHERE hearing_date > CURRENT_DATE + INTERVAL '2 years'`
+      );
+      coaAuditRows.push({ metric: 'future_hearing', value: futureHearing, threshold: '== 0', status: futureHearing > 0 ? 'FAIL' : 'PASS' });
+      if (futureHearing > 0) {
+        errors.push(`${futureHearing} coa_applications with hearing_date > 2 years in future`);
+        console.error(`  FAIL: ${futureHearing} coa_applications with future hearing dates`);
+      } else {
+        console.log('  OK: No future hearing dates beyond 2 years');
+      }
+
+      const ancientHearing = await count(
+        `SELECT COUNT(*) FROM coa_applications WHERE hearing_date < '2010-01-01'`
+      );
+      coaAuditRows.push({ metric: 'ancient_hearing', value: ancientHearing, threshold: '== 0', status: ancientHearing > 0 ? 'WARN' : 'PASS' });
+      if (ancientHearing > 0) {
+        warnings.push(`${ancientHearing} coa_applications with hearing_date before 2010`);
+        console.log(`  WARN: ${ancientHearing} coa_applications with ancient hearing dates`);
+      } else {
+        console.log('  OK: No ancient hearing dates');
+      }
+
+      // Emit CoA audit_table
+      const coaHasFails = coaAuditRows.some((r) => r.status === 'FAIL');
+      const coaHasWarns = coaAuditRows.some((r) => r.status === 'WARN');
+      coaAuditTable = {
+        phase: 8,
+        name: 'CoA Data Quality',
+        verdict: coaHasFails ? 'FAIL' : coaHasWarns ? 'WARN' : 'PASS',
+        rows: coaAuditRows,
+      };
     }
 
     // -----------------------------------------------------------------------
@@ -500,6 +558,7 @@ async function run() {
     errors: errors.length > 0 ? errors : undefined,
     warnings: warnings.length > 0 ? warnings : undefined,
     ...(inspectionAuditTable && { audit_table: inspectionAuditTable }),
+    ...(coaAuditTable && { coa_audit_table: coaAuditTable }),
   };
   const meta = JSON.stringify(metaObj);
 

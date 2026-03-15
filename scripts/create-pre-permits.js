@@ -15,7 +15,7 @@
 const pipeline = require('./lib/pipeline');
 
 pipeline.run('create-pre-permits', async (pool) => {
-  console.log('Identifying pre-permit leads from CoA applications...\n');
+  pipeline.log.info('[create-pre-permits]', 'Identifying pre-permit leads from CoA applications...');
 
   // Count current pre-permit leads
   const { rows: [counts] } = await pool.query(
@@ -41,10 +41,10 @@ pipeline.run('create-pre-permits', async (pool) => {
   const approved = parseInt(counts.total_approved);
   const total = parseInt(counts.total);
 
-  console.log(`CoA Applications:  ${total.toLocaleString()} total`);
-  console.log(`Approved:          ${approved.toLocaleString()}`);
-  console.log(`Already linked:    ${linked.toLocaleString()}`);
-  console.log(`Pre-permit leads:  ${upcoming.toLocaleString()} (approved, unlinked, last 90d)`);
+  pipeline.log.info('[create-pre-permits]', `CoA Applications: ${total.toLocaleString()} total`);
+  pipeline.log.info('[create-pre-permits]', `Approved: ${approved.toLocaleString()}`);
+  pipeline.log.info('[create-pre-permits]', `Already linked: ${linked.toLocaleString()}`);
+  pipeline.log.info('[create-pre-permits]', `Pre-permit leads: ${upcoming.toLocaleString()} (approved, unlinked, last 90d)`);
 
   // Breakdown by ward
   const { rows: byWard } = await pool.query(
@@ -59,14 +59,32 @@ pipeline.run('create-pre-permits', async (pool) => {
   );
 
   if (byWard.length > 0) {
-    console.log('\nTop wards with pre-permit leads:');
+    pipeline.log.info('[create-pre-permits]', 'Top wards with pre-permit leads:');
     for (const row of byWard) {
-      console.log(`  Ward ${row.ward}: ${parseInt(row.count).toLocaleString()}`);
+      pipeline.log.info('[create-pre-permits]', `  Ward ${row.ward}: ${parseInt(row.count).toLocaleString()}`);
     }
   }
 
-  console.log('\nDone.');
-  pipeline.emitSummary({ records_total: upcoming, records_new: null, records_updated: null });
+  // Build audit_table
+  const eligibleCoaRecords = approved - linked;
+  const auditRows = [
+    { metric: 'eligible_coa_records', value: eligibleCoaRecords, threshold: null, status: 'INFO' },
+    { metric: 'pre_permits_created', value: upcoming, threshold: null, status: 'INFO' },
+  ];
+  const auditTable = {
+    phase: 5,
+    name: 'Pre-Permit Leads',
+    verdict: 'PASS',
+    rows: auditRows,
+  };
+
+  pipeline.log.info('[create-pre-permits]', 'Done.');
+  pipeline.emitSummary({
+    records_total: upcoming,
+    records_new: null,
+    records_updated: null,
+    records_meta: { audit_table: auditTable },
+  });
   pipeline.emitMeta(
     { "coa_applications": ["decision", "linked_permit_num", "decision_date", "ward"] },
     {}

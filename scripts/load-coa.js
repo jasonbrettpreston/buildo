@@ -394,6 +394,30 @@ pipeline.run('load-coa', async (pool) => {
     avg_latency: `${avgLatency}ms`,
   });
 
+  // Build audit_table for CoA ingestion observability
+  const skipRate = allRaw.length > 0 ? (totalSkipped / allRaw.length) * 100 : 0;
+  const skipRateStr = skipRate.toFixed(1) + '%';
+  const coaAuditRows = [
+    { metric: 'records_fetched', value: allRaw.length, threshold: null, status: 'INFO' },
+    { metric: 'records_mapped', value: mapped.length, threshold: null, status: 'INFO' },
+    { metric: 'records_skipped', value: totalSkipped, threshold: null, status: 'INFO' },
+    { metric: 'skip_rate', value: skipRateStr, threshold: '< 5%', status: skipRate >= 5 ? 'FAIL' : 'PASS' },
+    { metric: 'records_inserted', value: totalInserted, threshold: null, status: 'INFO' },
+    { metric: 'records_updated', value: totalUpdated, threshold: null, status: 'INFO' },
+    { metric: 'api_errors', value: tel.api_errors, threshold: '== 0', status: tel.api_errors > 0 ? 'FAIL' : 'PASS' },
+    { metric: 'avg_latency_ms', value: avgLatency, threshold: null, status: 'INFO' },
+    { metric: 'schema_mismatch_count', value: tel.schema_drift.length, threshold: '== 0', status: tel.schema_drift.length > 0 ? 'FAIL' : 'PASS' },
+    { metric: 'max_days_stale', value: maxDaysStale, threshold: '< 45', status: maxDaysStale !== null && maxDaysStale >= 45 ? 'WARN' : 'PASS' },
+  ];
+  const coaAuditHasFails = tel.api_errors > 0 || tel.schema_drift.length > 0 || skipRate >= 5;
+  const coaAuditHasWarns = maxDaysStale !== null && maxDaysStale >= 45;
+  const coaAuditTable = {
+    phase: 2,
+    name: 'CoA Ingestion',
+    verdict: coaAuditHasFails ? 'FAIL' : coaAuditHasWarns ? 'WARN' : 'PASS',
+    rows: coaAuditRows,
+  };
+
   pipeline.emitSummary({
     records_total: totalInserted + totalUpdated,
     records_new: totalInserted,
@@ -414,6 +438,7 @@ pipeline.run('load-coa', async (pool) => {
         schema_mismatch_count: tel.schema_drift.length,
         max_days_stale: maxDaysStale,
       },
+      audit_table: coaAuditTable,
     },
   });
   pipeline.emitMeta(

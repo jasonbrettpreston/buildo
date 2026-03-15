@@ -219,6 +219,39 @@ async function run() {
     };
   }
 
+  // Build CoA-specific audit_table (Phase 9)
+  const coaRow = tableResults.find((t) => t.table_name === 'coa_applications');
+  let coaAuditTable = null;
+  if (coaRow) {
+    const coaLive = coaRow.n_live_tup;
+    const coaDead = coaRow.n_dead_tup;
+    const coaDeadPct = coaLive + coaDead > 0 ? ((coaDead / (coaLive + coaDead)) * 100).toFixed(2) + '%' : '0%';
+    const coaStat = await pool.query(
+      `SELECT n_tup_ins::bigint AS ins, n_tup_upd::bigint AS upd, last_autovacuum
+       FROM pg_stat_user_tables WHERE relname = 'coa_applications'`
+    ).catch(() => ({ rows: [] }));
+    const coaIns = parseInt(coaStat.rows[0]?.ins) || 0;
+    const coaUpd = parseInt(coaStat.rows[0]?.upd) || 0;
+    const coaUiRatio = coaIns > 0 ? (coaUpd / coaIns).toFixed(2) : 0;
+    const coaLastVac = coaStat.rows[0]?.last_autovacuum || null;
+
+    const coaDeadPctNum = coaLive + coaDead > 0 ? (coaDead / (coaLive + coaDead)) * 100 : 0;
+    const coaAuditRows = [
+      { metric: 'live_rows', value: coaLive, threshold: null, status: 'INFO' },
+      { metric: 'dead_rows', value: coaDead, threshold: null, status: 'INFO' },
+      { metric: 'dead_tuple_pct', value: coaDeadPct, threshold: '< 10%', status: coaDeadPctNum >= 10 ? 'FAIL' : 'PASS' },
+      { metric: 'update_insert_ratio', value: parseFloat(coaUiRatio), threshold: null, status: 'INFO' },
+      { metric: 'last_autovacuum', value: coaLastVac, threshold: null, status: 'INFO' },
+    ];
+    const coaHasFails = coaAuditRows.some((r) => r.status === 'FAIL');
+    coaAuditTable = {
+      phase: 9,
+      name: 'CoA Engine Health',
+      verdict: coaHasFails ? 'FAIL' : 'PASS',
+      rows: coaAuditRows,
+    };
+  }
+
   const meta = JSON.stringify({
     checks_passed: allMessages.length === 0 ? 'all' : undefined,
     checks_warned: warnings.length,
@@ -229,6 +262,7 @@ async function run() {
     errors: errors.length > 0 ? errors : undefined,
     engine_health: tableResults,
     ...(inspAuditTable && { audit_table: inspAuditTable }),
+    ...(coaAuditTable && { coa_audit_table: coaAuditTable }),
   });
 
   if (runId) {

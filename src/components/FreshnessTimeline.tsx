@@ -46,12 +46,13 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
   // Snapshot (1) — capture metrics
   refresh_snapshot:   { name: 'Refresh Snapshot',      group: 'snapshot' },
-  // Quality (5) — CQA validation
-  assert_schema:         { name: 'Schema Validation',    group: 'quality' },
-  assert_data_bounds:    { name: 'Data Quality Checks',  group: 'quality' },
-  assert_engine_health:  { name: 'Engine Health',         group: 'quality' },
-  assert_network_health: { name: 'Network Health',        group: 'quality' },
-  assert_staleness:      { name: 'Staleness Monitor',     group: 'quality' },
+  // Quality (6) — CQA validation
+  assert_schema:              { name: 'Schema Validation',      group: 'quality' },
+  assert_data_bounds:         { name: 'Data Quality Checks',    group: 'quality' },
+  assert_engine_health:       { name: 'Engine Health',           group: 'quality' },
+  assert_network_health:      { name: 'Network Health',          group: 'quality' },
+  assert_staleness:           { name: 'Staleness Monitor',       group: 'quality' },
+  assert_pre_permit_aging:    { name: 'Pre-Permit Aging',        group: 'quality' },
 };
 
 // ---------------------------------------------------------------------------
@@ -101,13 +102,14 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     label: 'CoA Pipeline',
     description: 'Daily — when Committee of Adjustment data is loaded',
     steps: [
-      { slug: 'assert_schema',      indent: 0 },
-      { slug: 'coa',                indent: 0 },
-      { slug: 'link_coa',           indent: 1 },
-      { slug: 'create_pre_permits', indent: 1 },
-      { slug: 'refresh_snapshot',    indent: 1 },
-      { slug: 'assert_data_bounds',  indent: 0 },
-      { slug: 'assert_engine_health', indent: 0 },
+      { slug: 'assert_schema',           indent: 0 },
+      { slug: 'coa',                     indent: 0 },
+      { slug: 'link_coa',                indent: 1 },
+      { slug: 'create_pre_permits',      indent: 1 },
+      { slug: 'assert_pre_permit_aging', indent: 0 },
+      { slug: 'refresh_snapshot',         indent: 1 },
+      { slug: 'assert_data_bounds',       indent: 0 },
+      { slug: 'assert_engine_health',     indent: 0 },
     ],
   },
   // Group 2: Corporate Entities Enrichment (slow daily scrapes)
@@ -168,6 +170,7 @@ export const NON_TOGGLEABLE_SLUGS = new Set([
   'assert_schema',
   'assert_data_bounds',
   'assert_engine_health',
+  'assert_pre_permit_aging',
   'refresh_snapshot',
 ]);
 
@@ -988,7 +991,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 const hasFailures = failed > 0 || errCount > 0 || info?.status === 'failed';
                                 const warningsList: string[] = Array.isArray(meta.warnings) ? meta.warnings as string[] : [];
                                 const errorsList: string[] = Array.isArray(meta.errors) ? meta.errors as string[] : [];
-                                const hasAuditTable = !!(meta.audit_table && typeof meta.audit_table === 'object');
+                                const hasAuditTable = !!(meta.audit_table && typeof meta.audit_table === 'object') || !!(meta.coa_audit_table && typeof meta.coa_audit_table === 'object');
                                 return (
                                   <div className="space-y-1.5">
                                     {/* Old CQA verdict/scalars — hidden when audit_table replaces them */}
@@ -1026,7 +1029,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                     )}
                                     {/* Scalar metadata (counts, labels) */}
                                     {Object.entries(meta)
-                                      .filter(([k, v]) => v != null && v !== undefined && k !== 'pipeline_meta' && k !== 'warnings' && k !== 'errors' && k !== 'engine_health' && k !== 'audit_table' && typeof v !== 'object')
+                                      .filter(([k, v]) => v != null && v !== undefined && k !== 'pipeline_meta' && k !== 'warnings' && k !== 'errors' && k !== 'engine_health' && k !== 'audit_table' && k !== 'coa_audit_table' && typeof v !== 'object')
                                       .map(([key, value]) => (
                                         <div key={key} className="flex justify-between">
                                           <span className="text-xs text-gray-600">{key.replace(/_/g, ' ')}</span>
@@ -1072,9 +1075,10 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                         </div>
                                       </div>
                                     )}
-                                    {/* Audit table (6-phase inspection audit) */}
-                                    {!!(meta.audit_table && typeof meta.audit_table === 'object') && (() => {
-                                      const at = meta.audit_table as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string }> };
+                                    {/* Audit tables — render audit_table and/or coa_audit_table when present */}
+                                    {[meta.audit_table, meta.coa_audit_table].filter(Boolean).map((atRaw, atIdx) => {
+                                      if (!atRaw || typeof atRaw !== 'object') return null;
+                                      const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string }> };
                                       const verdictColor = at.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200'
                                         : at.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200'
                                         : at.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
@@ -1082,7 +1086,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                       const statusIcon = (s: string) => s === 'PASS' ? '\u2714' : s === 'FAIL' ? '\u2718' : s === 'WARN' ? '\u26A0' : s === 'SKIP' ? '\u2014' : '\u2022';
                                       const statusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : 'text-gray-400';
                                       return (
-                                        <div className="mt-2">
+                                        <div key={`audit-${atIdx}`} className="mt-2">
                                           <div className="flex items-center gap-2 mb-1">
                                             <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Phase {at.phase}: {at.name}</h5>
                                             <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${verdictColor}`}>{at.verdict}</span>
@@ -1111,7 +1115,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                           </div>
                                         </div>
                                       );
-                                    })()}
+                                    })}
                                   </div>
                                 );
                               })()}

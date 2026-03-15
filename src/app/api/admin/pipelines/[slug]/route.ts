@@ -48,6 +48,7 @@ const PIPELINE_SCRIPTS: Record<string, string> = {
   assert_data_bounds: 'scripts/quality/assert-data-bounds.js',
   assert_network_health: 'scripts/quality/assert-network-health.js',
   assert_staleness: 'scripts/quality/assert-staleness.js',
+  assert_pre_permit_aging: 'scripts/quality/assert-pre-permit-aging.js',
   // Chain orchestrators
   chain_permits: 'scripts/run-chain.js',
   chain_coa: 'scripts/run-chain.js',

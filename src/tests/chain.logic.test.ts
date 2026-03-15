@@ -22,10 +22,10 @@ describe('Pipeline Chain Definitions', () => {
     expect(slugs).not.toContain('enrich_named_builders');
   });
 
-  it('defines coa chain with 7 steps', () => {
+  it('defines coa chain with 8 steps', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(7);
+    expect(chain!.steps).toHaveLength(8);
   });
 
   it('defines sources chain with 15 steps', () => {
@@ -213,8 +213,8 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     const disabledSlugs = new Set(['enrich_wsib_builders', 'enrich_named_builders']);
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
     const activeSteps = coa.steps.filter((s) => !disabledSlugs.has(s.slug));
-    // CoA chain has no enrichment steps — all 7 remain
-    expect(activeSteps).toHaveLength(7);
+    // CoA chain has no enrichment steps — all 8 remain
+    expect(activeSteps).toHaveLength(8);
   });
 
   it('empty disabled set leaves all steps active', () => {
@@ -259,11 +259,11 @@ describe('Incremental Processing Guards', () => {
 });
 
 describe('Quality Pipeline Group', () => {
-  it('quality group has 5 registry entries', () => {
+  it('quality group has 6 registry entries', () => {
     const qualityEntries = Object.entries(PIPELINE_REGISTRY).filter(
       ([, entry]) => entry.group === 'quality'
     );
-    expect(qualityEntries).toHaveLength(5);
+    expect(qualityEntries).toHaveLength(6);
   });
 
   it('assert_schema and assert_data_bounds exist in PIPELINE_REGISTRY', () => {

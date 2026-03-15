@@ -299,6 +299,25 @@ async function run() {
     console.error(`  ERROR: ${err.message}`);
   }
 
+  // Build CoA-specific audit_table when CoA columns were checked
+  let coaAuditTable = null;
+  if (runCoaChecks) {
+    const coaSchemaErrors = errors.filter((e) => e.toLowerCase().includes('coa'));
+    const coaApiErrors = errors.filter((e) => e.toLowerCase().includes('ckan') && !e.toLowerCase().includes('permit'));
+    const coaAuditRows = [
+      { metric: 'coa_columns_checked', value: EXPECTED_COA_COLUMNS.length, threshold: null, status: 'INFO' },
+      { metric: 'schema_mismatch_count', value: coaSchemaErrors.length, threshold: '== 0', status: coaSchemaErrors.length > 0 ? 'FAIL' : 'PASS' },
+      { metric: 'api_errors', value: coaApiErrors.length, threshold: '== 0', status: coaApiErrors.length > 0 ? 'FAIL' : 'PASS' },
+    ];
+    const coaHasFails = coaAuditRows.some((r) => r.status === 'FAIL');
+    coaAuditTable = {
+      phase: 1,
+      name: 'Schema Validation',
+      verdict: coaHasFails ? 'FAIL' : 'PASS',
+      rows: coaAuditRows,
+    };
+  }
+
   const durationMs = Date.now() - startMs;
   const status = allPassed ? 'completed' : 'failed';
   const errorMsg = errors.length > 0 ? errors.join('; ') : null;
@@ -306,6 +325,7 @@ async function run() {
     checks_passed: errors.length === 0 ? 'all' : undefined,
     checks_failed: errors.length,
     errors: errors.length > 0 ? errors : undefined,
+    ...(coaAuditTable && { coa_audit_table: coaAuditTable }),
   });
 
   if (runId) {

@@ -507,7 +507,8 @@ describe('Pipeline SDK', () => {
     // §3.5 — read-only scripts must use records_new: null
     it('create-pre-permits.js emits records_new: null (read-only counter)', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'create-pre-permits.js'), 'utf-8');
-      const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
+      // Match emitSummary call — may span multiple lines with nested objects
+      const match = content.match(/pipeline\.emitSummary\(\{([\s\S]+?)\}\);/);
       expect(match).not.toBeNull();
       expect(match![1]).toMatch(/records_new:\s*null/);
     });

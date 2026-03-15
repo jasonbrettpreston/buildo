@@ -258,6 +258,44 @@ pipeline.run('link-coa', async (pool) => {
   const s = stats.rows[0];
   pipeline.log.info('[link-coa]', `DB stats: ${s.total} total | ${s.linked} linked (${s.high_conf} high, ${s.med_conf} med, ${s.low_conf} low) | ${s.upcoming} upcoming leads`);
 
+  // Integrity queries for audit_table
+  const linksToPrePermits = await pool.query(
+    `SELECT COUNT(*) FROM coa_applications ca
+     JOIN permits p ON p.permit_num = ca.linked_permit_num
+     WHERE ca.linked_permit_num IS NOT NULL
+       AND p.permit_type = 'Pre-Permit'`
+  );
+  const prePermitLinkCount = parseInt(linksToPrePermits.rows[0].count, 10) || 0;
+
+  const crossWardLinks = await pool.query(
+    `SELECT COUNT(*) FROM coa_applications ca
+     JOIN permits p ON p.permit_num = ca.linked_permit_num
+     WHERE ca.linked_permit_num IS NOT NULL
+       AND ca.ward IS NOT NULL AND p.ward IS NOT NULL
+       AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')`
+  );
+  const crossWardCount = parseInt(crossWardLinks.rows[0].count, 10) || 0;
+
+  // Build audit_table
+  const auditRows = [
+    { metric: 'total_candidates', value: totalUnlinked, threshold: null, status: 'INFO' },
+    { metric: 'matches_tier_1_exact', value: exact, threshold: null, status: 'INFO' },
+    { metric: 'matches_tier_2_fuzzy', value: fuzzy, threshold: null, status: 'INFO' },
+    { metric: 'matches_tier_3_desc', value: desc, threshold: null, status: 'INFO' },
+    { metric: 'tier_3_errors', value: descErrors, threshold: '== 0', status: descErrors > 0 ? 'FAIL' : 'PASS' },
+    { metric: 'unlinked_remaining', value: noMatch, threshold: null, status: 'INFO' },
+    { metric: 'links_to_pre_permits', value: prePermitLinkCount, threshold: '== 0', status: prePermitLinkCount > 0 ? 'FAIL' : 'PASS' },
+    { metric: 'cross_ward_links', value: crossWardCount, threshold: '== 0', status: crossWardCount > 0 ? 'WARN' : 'PASS' },
+  ];
+  const linkAuditHasFails = prePermitLinkCount > 0;
+  const linkAuditHasWarns = descErrors > 0 || crossWardCount > 0;
+  const linkAuditTable = {
+    phase: 4,
+    name: 'Link CoA',
+    verdict: linkAuditHasFails ? 'FAIL' : linkAuditHasWarns ? 'WARN' : 'PASS',
+    rows: auditRows,
+  };
+
   const meta = {
     duration_ms: durationMs,
     matches_tier_1_exact: exact,
@@ -265,6 +303,7 @@ pipeline.run('link-coa', async (pool) => {
     matches_tier_3_desc: desc,
     tier_3_errors: descErrors,
     unlinked_remaining: noMatch,
+    audit_table: linkAuditTable,
   };
   pipeline.emitSummary({ records_total: totalLinked, records_new: 0, records_updated: totalLinked, records_meta: meta });
   pipeline.emitMeta(
