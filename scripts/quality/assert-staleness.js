@@ -17,12 +17,11 @@
  */
 const pipeline = require('../lib/pipeline');
 
+// Must match scraper TARGET_TYPES (Spec 38 §3.6 — stage-level scrape targets only)
 const TARGET_TYPES = [
   'Small Residential Projects',
   'Building Additions/Alterations',
   'New Houses',
-  'Plumbing(PS)',
-  'Residential Building Permit',
 ];
 
 pipeline.run('assert-staleness', async (pool) => {

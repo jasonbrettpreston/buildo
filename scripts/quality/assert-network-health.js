@@ -126,6 +126,13 @@ pipeline.run('assert-network-health', async (pool) => {
     console.log(`  PASS: session_failures = 0`);
   }
 
+  // Check 7: Permits closed on portal (informational — stale Open Data feed)
+  const closed = scTel.permits_closed || 0;
+  if (closed > 0) {
+    rows.push({ metric: 'permits_closed', value: closed, threshold: null, status: 'INFO' });
+    console.log(`  INFO: permits_closed = ${closed} (progressed past Inspection on portal)`);
+  }
+
   // Verdict
   const verdict = errors.length > 0 ? 'FAIL' : warnings.length > 0 ? 'WARN' : 'PASS';
   console.log(`\n=== Network Health: ${verdict} ===\n`);

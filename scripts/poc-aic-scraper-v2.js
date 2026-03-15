@@ -41,12 +41,11 @@ const RETRY_BASE_MS = 2000;
 const WAF_TRAP_THRESHOLD = 20; // consecutive empty responses before re-bootstrap
 
 // Target permit types for stage-level scraping (Spec 38 §3.6)
+// Monitor-only types (Plumbing, Residential Building Permit) excluded — no stage-level value
 const TARGET_TYPES = [
   'Small Residential Projects',
   'Building Additions/Alterations',
   'New Houses',
-  'Plumbing(PS)',
-  'Residential Building Permit',
 ];
 
 const BATCH_SIZE = parseInt(process.env.SCRAPE_BATCH_SIZE || '10', 10);
@@ -255,9 +254,17 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
     return { searched: 1, scraped: 0, upserted: 0, bytes: totalBytes, schemaDrift: schemaDrift || [] };
   }
 
-  const inspectionFolders = folders.filter(
-    (f) => f.statusDesc === 'Inspection' && TARGET_TYPES.includes(f.folderTypeDesc)
-  );
+  const targetFolders = folders.filter((f) => TARGET_TYPES.includes(f.folderTypeDesc));
+  const inspectionFolders = targetFolders.filter((f) => f.statusDesc === 'Inspection');
+
+  // Detect permits that progressed past Inspection on the portal (Closed/Completed)
+  // but still show Inspection in our DB (stale Open Data feed)
+  if (targetFolders.length > 0 && inspectionFolders.length === 0) {
+    const statuses = targetFolders.map((f) => f.statusDesc);
+    pipeline.log.info('[scraper]', `${yearSeq}: ${targetFolders.length} target folders all non-Inspection [${[...new Set(statuses)].join(', ')}]`);
+    return { searched: 1, scraped: 0, upserted: 0, bytes: totalBytes, schemaDrift: schemaDrift || [], closed: true };
+  }
+
   pipeline.log.info('[scraper]', `${yearSeq}: ${folders.length} folders, ${inspectionFolders.length} target inspections`, {
     all: folders.map((f) => `${f.folderYear} ${f.folderSequence} ${f.folderSection} [${f.statusDesc}]`),
   });
@@ -406,6 +413,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
     permits_found: 0,
     permits_scraped: 0,
     not_found_count: 0,
+    permits_closed: 0,
     proxy_errors: 0,
     consecutive_empty: 0,
     consecutive_empty_max: 0,
@@ -442,6 +450,10 @@ pipeline.run('poc-aic-scraper', async (pool) => {
       tel.permits_found++;
       tel.permits_scraped += result.scraped;
       tel.consecutive_empty = 0;
+    } else if (result.closed) {
+      // Property found but all target folders progressed past Inspection (Closed/Completed)
+      tel.permits_closed++;
+      tel.consecutive_empty = 0; // Not a WAF issue — portal responded correctly
     } else if (result.searched > 0 && result.scraped === 0) {
       tel.not_found_count++;
       tel.consecutive_empty++;
@@ -535,6 +547,8 @@ pipeline.run('poc-aic-scraper', async (pool) => {
 
   pipeline.log.info('[scraper]', 'Scrape complete', {
     permits_attempted: tel.permits_attempted,
+    permits_found: tel.permits_found,
+    permits_closed: tel.permits_closed,
     permits_scraped: tel.permits_scraped,
     status_changes: tel.status_changes,
     proxy_errors: tel.proxy_errors,
@@ -557,6 +571,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         permits_found: tel.permits_found,
         permits_scraped: tel.permits_scraped,
         not_found_count: tel.not_found_count,
+        permits_closed: tel.permits_closed,
         proxy_errors: tel.proxy_errors,
         consecutive_empty_max: tel.consecutive_empty_max,
         session_refreshes: tel.session_refreshes,
@@ -577,6 +592,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         rows: [
           { metric: 'permits_attempted', value: tel.permits_attempted, threshold: null, status: 'INFO' },
           { metric: 'permits_found', value: tel.permits_found, threshold: null, status: 'INFO' },
+          { metric: 'permits_closed', value: tel.permits_closed, threshold: null, status: 'INFO' },
           { metric: 'not_found_count', value: tel.not_found_count, threshold: null, status: 'INFO' },
           { metric: 'records_inserted', value: tel.total_upserted, threshold: null, status: 'INFO' },
           { metric: 'records_updated', value: tel.status_changes, threshold: null, status: 'INFO' },
