@@ -264,6 +264,7 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
 
   let scraped = 0;
   let upserted = 0;
+  let totalStatusChanges = 0;
 
   for (const result of results) {
     if (result.error) {
@@ -309,6 +310,7 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
     } finally {
       client.release();
     }
+    totalStatusChanges += statusChanges;
     scraped++;
     pipeline.log.info('[scraper]', `Scraped ${result.stages.length} stages for ${result.permitNum}`, {
       stages: result.stages.map((s) => `${s.desc}: ${s.status}`),
@@ -316,7 +318,7 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
     });
   }
 
-  return { searched: 1, scraped, upserted, bytes: totalBytes, schemaDrift: schemaDrift || [], statusChanges };
+  return { searched: 1, scraped, upserted, bytes: totalBytes, schemaDrift: schemaDrift || [], statusChanges: totalStatusChanges };
 }
 
 // Classify error for telemetry

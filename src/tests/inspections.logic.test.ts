@@ -170,6 +170,67 @@ describe('Inspection Parser', () => {
     });
   });
 
+  describe('scraper statusChanges scoping', () => {
+    /**
+     * Regression: statusChanges was declared inside the for-loop body (let, block-scoped)
+     * but referenced outside the loop in the return statement → ReferenceError.
+     * This test validates the fix by replicating the accumulation pattern.
+     */
+    function simulateScrapeAccumulation(results: Array<{ error?: string; stages?: Array<{ status: string }> }>) {
+      let scraped = 0;
+      let upserted = 0;
+      let totalStatusChanges = 0;
+
+      for (const result of results) {
+        if (result.error) continue;
+
+        let statusChanges = 0;
+        for (const stage of result.stages!) {
+          upserted++;
+          if (stage.status === 'changed') statusChanges++;
+        }
+        totalStatusChanges += statusChanges;
+        scraped++;
+      }
+
+      return { searched: 1, scraped, upserted, statusChanges: totalStatusChanges };
+    }
+
+    it('returns statusChanges when results have stages', () => {
+      const result = simulateScrapeAccumulation([
+        { stages: [{ status: 'Outstanding' }, { status: 'changed' }] },
+      ]);
+      expect(result.statusChanges).toBe(1);
+      expect(result.scraped).toBe(1);
+      expect(result.upserted).toBe(2);
+    });
+
+    it('returns statusChanges=0 when results array is empty', () => {
+      const result = simulateScrapeAccumulation([]);
+      expect(result.statusChanges).toBe(0);
+      expect(result.scraped).toBe(0);
+    });
+
+    it('accumulates statusChanges across multiple results', () => {
+      const result = simulateScrapeAccumulation([
+        { stages: [{ status: 'changed' }, { status: 'changed' }] },
+        { stages: [{ status: 'Outstanding' }] },
+        { stages: [{ status: 'changed' }] },
+      ]);
+      expect(result.statusChanges).toBe(3);
+      expect(result.scraped).toBe(3);
+    });
+
+    it('skips error results without affecting statusChanges', () => {
+      const result = simulateScrapeAccumulation([
+        { error: 'no_processes' },
+        { stages: [{ status: 'changed' }] },
+      ]);
+      expect(result.statusChanges).toBe(1);
+      expect(result.scraped).toBe(1);
+    });
+  });
+
   describe('factory', () => {
     it('creates a valid mock inspection', () => {
       const insp = createMockInspection();
