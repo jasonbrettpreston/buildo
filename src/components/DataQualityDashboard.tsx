@@ -118,6 +118,7 @@ const HealthBanner = React.memo(function HealthBanner({
     { id: 'coa', label: 'CoA', cadence: 'Daily', rootSlug: 'coa' },
     { id: 'entities', label: 'Entities', cadence: 'Daily', rootSlug: 'enrich_wsib_builders' },
     { id: 'sources', label: 'Sources', cadence: 'Quarterly', rootSlug: 'address_points' },
+    { id: 'deep_scrapes', label: 'Deep Scrapes', cadence: 'Weekly', rootSlug: 'inspections' },
   ];
 
   const now = Date.now();
@@ -193,7 +194,7 @@ const HealthBanner = React.memo(function HealthBanner({
       {/* Pipeline chain schedule status */}
       {pipelineLastRun && (
         <div className="px-4 py-3 border-t border-gray-200/50">
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:grid md:grid-cols-4 md:overflow-visible -mx-1 px-1 pb-1">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:grid md:grid-cols-5 md:overflow-visible -mx-1 px-1 pb-1">
             {CHAINS.map((c) => {
               const chainInfo = pipelineLastRun[`chain_${c.id}`];
               const rootInfo = pipelineLastRun[c.rootSlug];

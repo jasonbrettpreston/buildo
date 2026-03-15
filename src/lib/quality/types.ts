@@ -274,6 +274,7 @@ export function extractMetrics(s: DataQualitySnapshot): MatchingMetrics {
 
 export const CADENCE_THRESHOLDS_MS: Record<string, number> = {
   Daily: 26 * 3600_000,        // 26 hours
+  Weekly: 8 * 86400_000,       // 8 days
   Quarterly: 95 * 86400_000,   // 95 days
   Annual: 370 * 86400_000,     // 370 days
 };
