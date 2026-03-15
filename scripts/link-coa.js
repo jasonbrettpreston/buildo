@@ -65,6 +65,7 @@ pipeline.run('link-coa', async (pool) => {
             ON UPPER(TRIM(p.street_num)) = UPPER(TRIM(ca2.street_num))
             AND UPPER(p.street_name) LIKE '%' || ${STRIP_STREET_SQL.replace(/ca\./g, 'ca2.')} || '%'
             AND LTRIM(p.ward, '0') = LTRIM(ca2.ward, '0')
+            AND p.permit_type != 'Pre-Permit'
           WHERE ca2.linked_permit_num IS NULL
             AND ca2.street_num IS NOT NULL AND TRIM(ca2.street_num) != ''
             AND ca2.street_name IS NOT NULL AND TRIM(ca2.street_name) != ''
@@ -96,6 +97,7 @@ pipeline.run('link-coa', async (pool) => {
           JOIN permits p
             ON UPPER(p.street_name) LIKE '%' || ${STRIP_STREET_SQL.replace(/ca\./g, 'ca2.')} || '%'
             AND LTRIM(p.ward, '0') = LTRIM(ca2.ward, '0')
+            AND p.permit_type != 'Pre-Permit'
           WHERE ca2.linked_permit_num IS NULL
             AND ca2.street_name IS NOT NULL AND TRIM(ca2.street_name) != ''
             AND ca2.ward IS NOT NULL
@@ -168,6 +170,7 @@ pipeline.run('link-coa', async (pool) => {
                 FROM permits
                 WHERE to_tsvector('english', COALESCE(description, '')) @@ plainto_tsquery('english', c.ts_query)
                   AND LTRIM(ward, '0') = LTRIM(c.ward, '0')
+                  AND permit_type != 'Pre-Permit'
                 ORDER BY ts_rank(to_tsvector('english', COALESCE(description, '')),
                                  plainto_tsquery('english', c.ts_query)) DESC
                 LIMIT 1
@@ -208,6 +211,7 @@ pipeline.run('link-coa', async (pool) => {
             FROM permits
             WHERE to_tsvector('english', COALESCE(description, '')) @@ plainto_tsquery('english', c.ts_query)
               AND LTRIM(ward, '0') = LTRIM(c.ward, '0')
+              AND permit_type != 'Pre-Permit'
             LIMIT 1
           ) lat
         `, [ids, wards, queries]);
