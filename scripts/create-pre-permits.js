@@ -72,7 +72,7 @@ pipeline.run('create-pre-permits', async (pool) => {
     { metric: 'pre_permits_created', value: upcoming, threshold: null, status: 'INFO' },
   ];
   const auditTable = {
-    phase: 5,
+    phase: 4,
     name: 'Pre-Permit Leads',
     verdict: 'PASS',
     rows: auditRows,
