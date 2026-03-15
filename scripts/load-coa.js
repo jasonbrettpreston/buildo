@@ -4,7 +4,18 @@
  * Fetches from both "Active Applications" and "Closed Applications since 2017"
  * datastore resources and upserts into coa_applications.
  *
+ * Observability:
+ *   - Structured logging via pipeline.log (§9.4)
+ *   - Network telemetry: latencies, api_errors, retry counts
+ *   - Schema drift detection: critical CKAN field presence check per-record
+ *   - Skip accounting: reason-tracked (missing_app_num, schema_mismatch)
+ *   - Portal rot detection: max_hearing_date staleness
+ *   - Full records_meta in PIPELINE_SUMMARY for downstream assertion steps
+ *
  * Usage: node scripts/load-coa.js
+ *        node scripts/load-coa.js --full   (both resources)
+ *
+ * SPEC LINK: docs/specs/12_coa_integration.md
  */
 const pipeline = require('./lib/pipeline');
 const crypto = require('crypto');
@@ -18,9 +29,21 @@ const RESOURCES = [
 ];
 
 const BATCH_SIZE = 500;
+const MAX_RETRIES = 3;
+const RETRY_BASE_MS = 2000;
 
 // Active resource ID (incremental mode only fetches from Active)
 const ACTIVE_RESOURCE_ID = '51fd09cd-99d6-430a-9d42-c24a937b0cb0';
+
+// Critical CKAN fields — if any are missing from the payload, schema has drifted
+const CRITICAL_FIELDS = [
+  'REFERENCE_FILE#',   // application_number — primary key
+  'C_OF_A_DESCISION',  // decision (note city's typo)
+  'STATUSDESC',        // status
+  'HEARING_DATE',      // hearing_date — used for portal rot detection
+  'STREET_NUM',        // address component
+  'STREET_NAME',       // address component
+];
 
 function trimToNull(v) {
   if (v == null) return null;
@@ -43,25 +66,55 @@ function computeHash(record) {
   return crypto.createHash('sha256').update(JSON.stringify(sorted)).digest('hex');
 }
 
-async function fetchAllRecords(resourceId, resourceName) {
+async function fetchAllRecords(resourceId, resourceName, tel) {
   const records = [];
   const limit = 10000;
   let offset = 0;
 
-  console.log(`\nFetching "${resourceName}"...`);
+  pipeline.log.info('[load-coa]', `Fetching "${resourceName}"...`);
+
   while (true) {
     const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=${limit}&offset=${offset}`;
-    console.log(`  offset=${offset}...`);
-    const res = await fetch(url);
-    const json = await res.json();
-    if (!json.success) throw new Error(`datastore_search failed at offset ${offset}`);
+    let lastErr = null;
 
-    const batch = json.result.records || [];
-    records.push(...batch);
-    console.log(`  Got ${batch.length} records (total: ${records.length})`);
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const reqStart = Date.now();
+      try {
+        const res = await fetch(url);
+        tel.latencies.push(Date.now() - reqStart);
 
-    if (batch.length < limit) break;
-    offset += limit;
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} at offset ${offset}`);
+        }
+
+        const json = await res.json();
+        if (!json.success) throw new Error(`CKAN success=false at offset ${offset}`);
+
+        const batch = json.result.records || [];
+        records.push(...batch);
+        pipeline.log.info('[load-coa]', `${resourceName}: offset=${offset}, got ${batch.length} (total: ${records.length})`);
+
+        lastErr = null;
+        if (batch.length < limit) return records;
+        offset += limit;
+        break; // success — exit retry loop, continue pagination
+
+      } catch (err) {
+        tel.latencies.push(Date.now() - reqStart);
+        lastErr = err;
+        if (attempt < MAX_RETRIES) {
+          const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1);
+          pipeline.log.warn('[load-coa]', `Fetch failed (attempt ${attempt}/${MAX_RETRIES}): ${err.message}. Retrying in ${delay}ms...`);
+          await new Promise((r) => setTimeout(r, delay));
+        }
+      }
+    }
+
+    if (lastErr) {
+      tel.api_errors++;
+      pipeline.log.error('[load-coa]', lastErr, { offset, resource: resourceName });
+      throw lastErr;
+    }
   }
 
   return records;
@@ -69,6 +122,7 @@ async function fetchAllRecords(resourceId, resourceName) {
 
 /**
  * Map a CKAN record to our coa_applications schema.
+ * Returns { record, skipReason } — record is null if skipped.
  *
  * Field names in the CKAN data:
  *   REFERENCE_FILE#     → application_number  (e.g. "A0246/23EYK")
@@ -82,10 +136,19 @@ async function fetchAllRecords(resourceId, resourceName) {
  *   DESCRIPTION         → description
  *   CONTACT_NAME        → applicant (closest available field)
  */
-function mapRecord(raw) {
+function mapRecord(raw, schemaDrift) {
+  // Schema drift detection: check critical fields exist in the CKAN payload
+  const rawKeys = Object.keys(raw);
+  for (const field of CRITICAL_FIELDS) {
+    if (!rawKeys.includes(field)) {
+      if (!schemaDrift.includes(field)) schemaDrift.push(field);
+      return { record: null, skipReason: 'schema_mismatch' };
+    }
+  }
+
   // Application number
   const appNum = trimToNull(raw['REFERENCE_FILE#']);
-  if (!appNum) return null;
+  if (!appNum) return { record: null, skipReason: 'missing_app_num' };
 
   // Build address from separate fields
   const streetNum = trimToNull(raw.STREET_NUM);
@@ -127,19 +190,22 @@ function mapRecord(raw) {
   const subType = trimToNull(raw.SUB_TYPE);
 
   return {
-    application_number: appNum,
-    address,
-    street_num: streetNum,
-    street_name: fullStreetName,
-    ward,
-    status,
-    decision,
-    decision_date: decisionDate,
-    hearing_date: hearingDate,
-    description,
-    applicant,
-    sub_type: subType,
-    data_hash: computeHash(raw),
+    record: {
+      application_number: appNum,
+      address,
+      street_num: streetNum,
+      street_name: fullStreetName,
+      ward,
+      status,
+      decision,
+      decision_date: decisionDate,
+      hearing_date: hearingDate,
+      description,
+      applicant,
+      sub_type: subType,
+      data_hash: computeHash(raw),
+    },
+    skipReason: null,
   };
 }
 
@@ -200,40 +266,83 @@ async function upsertBatch(client, batch) {
 
 pipeline.run('load-coa', async (pool) => {
   const fullMode = pipeline.isFullMode();
+  const startMs = Date.now();
 
-  console.log('=== Buildo CoA Data Loader ===\n');
-  console.log(`Mode: ${fullMode ? 'FULL (all records, both resources)' : 'INCREMENTAL (Active resource, last 90 days)'}\n`);
+  // Telemetry accumulator
+  const tel = {
+    api_errors: 0,
+    latencies: [],
+    schema_drift: [],
+    skip_reasons: {},
+  };
+
+  pipeline.log.info('[load-coa]', `Mode: ${fullMode ? 'FULL (both resources)' : 'INCREMENTAL (Active only)'}`);
 
   // Fetch records based on mode
   let allRaw = [];
   if (fullMode) {
-    // Full mode: fetch all records from both resources
     for (const res of RESOURCES) {
-      const records = await fetchAllRecords(res.id, res.name);
+      const records = await fetchAllRecords(res.id, res.name, tel);
       allRaw.push(...records);
     }
   } else {
-    // Incremental mode: fetch all records from Active resource only.
-    // The active dataset is small (~3K records) so no SQL filter needed.
-    // (CKAN datastore_search_sql endpoint returns 403/404.)
-    const records = await fetchAllRecords(ACTIVE_RESOURCE_ID, 'Active Applications');
+    const records = await fetchAllRecords(ACTIVE_RESOURCE_ID, 'Active Applications', tel);
     allRaw.push(...records);
   }
 
-  console.log(`\nTotal fetched: ${allRaw.length} raw records from CKAN\n`);
+  pipeline.log.info('[load-coa]', `Fetched ${allRaw.length} raw records from CKAN`);
 
   if (allRaw.length === 0) {
-    console.log('No records found. Exiting.');
+    pipeline.log.warn('[load-coa]', 'No records found from CKAN. Exiting.');
+    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
     return;
   }
 
-  // Log sample record to debug field names
-  console.log('Sample record fields:', Object.keys(allRaw[0]).join(', '));
-  console.log('Sample record:', JSON.stringify(allRaw[0], null, 2).slice(0, 500));
-  console.log('');
+  // Log sample record fields for debugging (structured, not raw dump)
+  pipeline.log.info('[load-coa]', 'Sample CKAN fields', { fields: Object.keys(allRaw[0]) });
 
-  const mapped = allRaw.map(mapRecord).filter(Boolean);
-  console.log(`Mapped ${mapped.length} valid records (${allRaw.length - mapped.length} skipped)\n`);
+  // Map records with skip accounting
+  const mapped = [];
+  let maxHearingDate = null;
+
+  for (const raw of allRaw) {
+    const { record, skipReason } = mapRecord(raw, tel.schema_drift);
+    if (record) {
+      mapped.push(record);
+      // Track max hearing date for portal rot detection
+      if (record.hearing_date && (!maxHearingDate || record.hearing_date > maxHearingDate)) {
+        maxHearingDate = record.hearing_date;
+      }
+    } else {
+      tel.skip_reasons[skipReason] = (tel.skip_reasons[skipReason] || 0) + 1;
+    }
+  }
+
+  const totalSkipped = allRaw.length - mapped.length;
+  pipeline.log.info('[load-coa]', `Mapped ${mapped.length} valid records (${totalSkipped} skipped)`, {
+    skip_reasons: Object.keys(tel.skip_reasons).length > 0 ? tel.skip_reasons : 'none',
+  });
+
+  // Schema drift abort: if critical fields are missing, stop before upserting bad data
+  if (tel.schema_drift.length > 0) {
+    pipeline.log.error('[load-coa]', `Schema drift detected — missing CKAN fields: ${tel.schema_drift.join(', ')}. Aborting to prevent NULL data ingestion.`);
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        duration_ms: Date.now() - startMs,
+        api_health: { api_errors: tel.api_errors },
+        data_health: {
+          records_fetched: allRaw.length,
+          records_mapped: mapped.length,
+          records_skipped: totalSkipped,
+          skip_reasons: tel.skip_reasons,
+          schema_mismatch_count: tel.schema_drift.length,
+          schema_drift: tel.schema_drift,
+        },
+      },
+    });
+    process.exit(1);
+  }
 
   // Deduplicate by application_number (active may overlap with closed)
   const byAppNum = new Map();
@@ -245,7 +354,7 @@ pipeline.run('load-coa', async (pool) => {
     }
   }
   const deduplicated = [...byAppNum.values()];
-  console.log(`Deduplicated: ${deduplicated.length} unique applications\n`);
+  pipeline.log.info('[load-coa]', `Deduplicated: ${deduplicated.length} unique applications`);
 
   let totalInserted = 0;
   let totalUpdated = 0;
@@ -257,15 +366,56 @@ pipeline.run('load-coa', async (pool) => {
     });
     totalInserted += inserted;
     totalUpdated += updated;
-
-    const progress = Math.min(i + BATCH_SIZE, deduplicated.length);
-    process.stdout.write(`\r  Progress: ${progress}/${deduplicated.length} (${totalInserted} inserted, ${totalUpdated} updated)`);
+    pipeline.progress('load-coa', Math.min(i + BATCH_SIZE, deduplicated.length), deduplicated.length, startMs);
   }
 
-  console.log(`\n\nDone! ${totalInserted} inserted, ${totalUpdated} updated.`);
-  pipeline.emitSummary({ records_total: totalInserted + totalUpdated, records_new: totalInserted, records_updated: totalUpdated });
+  // Portal rot detection: how stale is the most recent hearing?
+  const maxDaysStale = maxHearingDate
+    ? Math.max(0, Math.round((Date.now() - maxHearingDate.getTime()) / (1000 * 60 * 60 * 24)))
+    : null;
+  if (maxDaysStale !== null && maxDaysStale > 45) {
+    pipeline.log.warn('[load-coa]', `Portal rot warning: newest hearing date is ${maxDaysStale} days old. CKAN data may be frozen.`);
+  }
+
+  // Latency stats
+  const sortedLat = [...tel.latencies].sort((a, b) => a - b);
+  const avgLatency = sortedLat.length > 0
+    ? Math.round(sortedLat.reduce((a, b) => a + b, 0) / sortedLat.length) : 0;
+  const maxLatency = sortedLat.length > 0 ? sortedLat[sortedLat.length - 1] : 0;
+
+  const durationMs = Date.now() - startMs;
+  pipeline.log.info('[load-coa]', 'Load complete', {
+    inserted: totalInserted,
+    updated: totalUpdated,
+    skipped: totalSkipped,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+    avg_latency: `${avgLatency}ms`,
+  });
+
+  pipeline.emitSummary({
+    records_total: totalInserted + totalUpdated,
+    records_new: totalInserted,
+    records_updated: totalUpdated,
+    records_meta: {
+      duration_ms: durationMs,
+      api_health: {
+        api_errors: tel.api_errors,
+        avg_req_latency_ms: avgLatency,
+        max_req_latency_ms: maxLatency,
+      },
+      data_health: {
+        records_fetched: allRaw.length,
+        records_mapped: mapped.length,
+        records_skipped: totalSkipped,
+        skip_reasons: tel.skip_reasons,
+        records_deduplicated: deduplicated.length,
+        schema_mismatch_count: tel.schema_drift.length,
+        max_days_stale: maxDaysStale,
+      },
+    },
+  });
   pipeline.emitMeta(
-    { "CKAN API": ["APPLICATION_NUMBER", "ADDRESS", "STREET_NUM", "STREET_NAME", "WARD", "STATUS", "DECISION", "DECISION_DATE", "HEARING_DATE", "DESCRIPTION", "APPLICANT", "SUB_TYPE"] },
+    { "CKAN API": ["REFERENCE_FILE#", "STREET_NUM", "STREET_NAME", "WARD", "C_OF_A_DESCISION", "STATUSDESC", "HEARING_DATE", "DESCRIPTION", "CONTACT_NAME", "SUB_TYPE"] },
     { "coa_applications": ["application_number", "address", "street_num", "street_name", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"] }
   );
 
@@ -279,5 +429,5 @@ pipeline.run('load-coa', async (pool) => {
     FROM coa_applications
   `);
   const s = stats.rows[0];
-  console.log(`\nCoA Stats: ${s.total} total | ${s.approved} approved | ${s.linked} linked | ${s.upcoming} upcoming leads`);
+  pipeline.log.info('[load-coa]', `Stats: ${s.total} total | ${s.approved} approved | ${s.linked} linked | ${s.upcoming} upcoming leads`);
 });
