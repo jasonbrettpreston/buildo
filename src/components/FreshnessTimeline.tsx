@@ -1124,6 +1124,55 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           );
                         })()}
 
+                        {/* Audit table for funnel steps — Script Output is hidden by !funnelRow, so render separately */}
+                        {funnelRow && info?.records_meta && typeof info.records_meta === 'object' && (() => {
+                          const meta = info.records_meta as Record<string, unknown>;
+                          const tables = [meta.audit_table, meta.coa_audit_table].filter(Boolean);
+                          if (tables.length === 0) return null;
+                          const statusIcon = (s: string) => s === 'PASS' ? '\u2714' : s === 'FAIL' ? '\u2718' : s === 'WARN' ? '\u26A0' : s === 'SKIP' ? '\u2014' : '\u2022';
+                          const statusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : 'text-gray-400';
+                          return (
+                            <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                              {tables.map((atRaw, atIdx) => {
+                                if (!atRaw || typeof atRaw !== 'object') return null;
+                                const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string }> };
+                                const verdictColor = at.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200'
+                                  : at.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200'
+                                  : at.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                  : 'bg-gray-50 text-gray-500 border-gray-200';
+                                return (
+                                  <div key={`funnel-audit-${atIdx}`} className="mt-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Phase {at.phase}: {at.name}</h5>
+                                      <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${verdictColor}`}>{at.verdict}</span>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-[10px] tabular-nums">
+                                        <thead><tr className="text-gray-500 text-left">
+                                          <th className="pr-2 py-0.5 font-medium">Metric</th>
+                                          <th className="px-2 py-0.5 font-medium text-right">Value</th>
+                                          <th className="px-2 py-0.5 font-medium text-right">Threshold</th>
+                                          <th className="px-2 py-0.5 font-medium text-center">Status</th>
+                                        </tr></thead>
+                                        <tbody>
+                                          {at.rows.map((r) => (
+                                            <tr key={r.metric} className="border-t border-gray-50">
+                                              <td className="pr-2 py-0.5 font-mono text-gray-700">{r.metric}</td>
+                                              <td className="px-2 py-0.5 text-right text-gray-900 font-medium">{r.value === null ? '\u2014' : typeof r.value === 'boolean' ? String(r.value) : typeof r.value === 'number' ? r.value.toLocaleString() : String(r.value)}</td>
+                                              <td className="px-2 py-0.5 text-right text-gray-400">{r.threshold ?? '\u2014'}</td>
+                                              <td className={`px-2 py-0.5 text-center font-semibold ${statusColor(r.status)}`}>{statusIcon(r.status)}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+
                         {/* Footer metadata */}
                         <div className="drilldown-footer pt-2 border-t border-gray-200/60 flex flex-wrap items-center gap-4 text-[10px] text-gray-400">
                           {funnelRow ? (
