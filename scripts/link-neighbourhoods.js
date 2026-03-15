@@ -5,9 +5,17 @@
  * Uses @turf/boolean-point-in-polygon against 158 neighbourhood polygons.
  * Only processes permits with lat/lng and neighbourhood_id IS NULL.
  *
+ * Optimizations:
+ *   - BBOX pre-filter: eliminates ~98% of polygon tests per permit
+ *   - Marks no-match permits with neighbourhood_id = -1 to prevent re-fetch
+ *
+ * Observability:
+ *   - Structured logging via pipeline.log (§9.4)
+ *   - records_meta with permits_processed, permits_linked, no_match_count
+ *
  * Usage: node scripts/link-neighbourhoods.js
  *
- * Dependency: npm install @turf/boolean-point-in-polygon @turf/helpers
+ * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
 const booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default;
@@ -39,18 +47,35 @@ function computeCentroid(geom) {
   return [sumLng / n, sumLat / n];
 }
 
-pipeline.run('link-neighbourhoods', async (pool) => {
-  console.log('=== Buildo Permit-Neighbourhood Linker ===');
-  console.log('');
+/**
+ * Compute bounding box [minLng, minLat, maxLng, maxLat] from a GeoJSON geometry.
+ */
+function computeBBox(geom) {
+  let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+  function walkCoords(coords) {
+    if (typeof coords[0] === 'number') {
+      if (coords[0] < minLng) minLng = coords[0];
+      if (coords[0] > maxLng) maxLng = coords[0];
+      if (coords[1] < minLat) minLat = coords[1];
+      if (coords[1] > maxLat) maxLat = coords[1];
+    } else {
+      for (const c of coords) walkCoords(c);
+    }
+  }
+  walkCoords(geom.coordinates);
+  return [minLng, minLat, maxLng, maxLat];
+}
 
-  // Step 1: Load all neighbourhood boundaries
-  console.log('Loading neighbourhood boundaries...');
+pipeline.run('link-neighbourhoods', async (pool) => {
+  const startTime = Date.now();
+
+  pipeline.log.info('[link-neighbourhoods]', 'Loading neighbourhood boundaries...');
   const nhoods = await pool.query(
     'SELECT id, neighbourhood_id, name, geometry FROM neighbourhoods WHERE geometry IS NOT NULL'
   );
-  console.log(`  Loaded ${nhoods.rows.length} neighbourhoods with geometry.`);
+  pipeline.log.info('[link-neighbourhoods]', `Loaded ${nhoods.rows.length} neighbourhoods with geometry`);
 
-  // Pre-build Turf polygon objects
+  // Pre-build Turf polygon objects + bounding boxes
   const turfPolygons = [];
   for (const n of nhoods.rows) {
     const geom = typeof n.geometry === 'string' ? JSON.parse(n.geometry) : n.geometry;
@@ -66,7 +91,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
         continue;
       }
     } catch {
-      console.log(`  Warning: Invalid geometry for ${n.name} (${n.neighbourhood_id})`);
+      pipeline.log.warn('[link-neighbourhoods]', `Invalid geometry for ${n.name} (${n.neighbourhood_id})`);
       continue;
     }
 
@@ -75,12 +100,12 @@ pipeline.run('link-neighbourhoods', async (pool) => {
       neighbourhood_id: n.neighbourhood_id,
       name: n.name,
       geometry: turfGeom,
+      bounds: computeBBox(geom),
     });
   }
-  console.log(`  Built ${turfPolygons.length} Turf polygons.`);
+  pipeline.log.info('[link-neighbourhoods]', `Built ${turfPolygons.length} Turf polygons with BBOX`);
 
-  // Step 2: Count permits to process
-  // Use parcel centroid if permit has no lat/lng (most common case)
+  // Count permits to process
   const countResult = await pool.query(
     `SELECT COUNT(DISTINCT (p.permit_num, p.revision_num)) as total
      FROM permits p
@@ -93,11 +118,10 @@ pipeline.run('link-neighbourhoods', async (pool) => {
        )`
   );
   const totalPermits = parseInt(countResult.rows[0].total, 10);
-  console.log(`Permits to link (geocoded or parcel-linked): ${totalPermits.toLocaleString()}`);
-  console.log('');
+  pipeline.log.info('[link-neighbourhoods]', `Permits to link: ${totalPermits.toLocaleString()}`);
 
   if (totalPermits === 0) {
-    console.log('No permits to link. Done.');
+    pipeline.log.info('[link-neighbourhoods]', 'No permits to link. Done.');
     pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
     pipeline.emitMeta(
       { "permits": ["permit_num", "revision_num", "latitude", "longitude", "neighbourhood_id"], "neighbourhoods": ["id", "neighbourhood_id", "name", "geometry"], "parcels": ["id", "geometry"] },
@@ -106,14 +130,13 @@ pipeline.run('link-neighbourhoods', async (pool) => {
     return;
   }
 
-  const startTime = Date.now();
   let processed = 0;
   let linked = 0;
   let noMatch = 0;
+  let bboxSkipped = 0;
 
   // Step 3: Process in batches
   while (true) {
-    // Get permits with either direct lat/lng or parcel geometry
     const batch = await pool.query(
       `SELECT DISTINCT ON (p.permit_num, p.revision_num)
               p.permit_num, p.revision_num, p.latitude, p.longitude,
@@ -140,26 +163,43 @@ pipeline.run('link-neighbourhoods', async (pool) => {
       let lng, lat;
 
       if (permit.latitude && permit.longitude) {
-        // Use direct geocoded location
         lng = permit.longitude;
         lat = permit.latitude;
       } else if (permit.parcel_geometry) {
-        // Compute centroid from parcel geometry
         const geom = typeof permit.parcel_geometry === 'string'
           ? JSON.parse(permit.parcel_geometry)
           : permit.parcel_geometry;
         const centroid = computeCentroid(geom);
-        if (!centroid) { noMatch++; processed++; continue; }
+        if (!centroid) {
+          // Mark as -1 to prevent infinite loop re-fetch
+          noMatch++;
+          processed++;
+          if (!updates[-1]) updates[-1] = [];
+          updates[-1].push({ permit_num: permit.permit_num, revision_num: permit.revision_num });
+          continue;
+        }
         lng = centroid[0];
         lat = centroid[1];
       } else {
-        noMatch++; processed++; continue;
+        // No coords at all — mark as -1
+        noMatch++;
+        processed++;
+        if (!updates[-1]) updates[-1] = [];
+        updates[-1].push({ permit_num: permit.permit_num, revision_num: permit.revision_num });
+        continue;
       }
 
       const pt = point([lng, lat]);
       let matched = false;
 
       for (const nhood of turfPolygons) {
+        // BBOX pre-filter: skip polygon test if point is outside bounding box
+        const [minX, minY, maxX, maxY] = nhood.bounds;
+        if (lng < minX || lng > maxX || lat < minY || lat > maxY) {
+          bboxSkipped++;
+          continue;
+        }
+
         if (booleanPointInPolygon(pt, nhood.geometry)) {
           if (!updates[nhood.db_id]) updates[nhood.db_id] = [];
           updates[nhood.db_id].push({
@@ -174,7 +214,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
 
       if (!matched) {
         noMatch++;
-        // Mark as -1 so it's not re-queried (neighbourhood_id IS NULL won't match)
+        // Mark as -1 so it's not re-queried
         if (!updates[-1]) updates[-1] = [];
         updates[-1].push({
           permit_num: permit.permit_num,
@@ -184,7 +224,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
       processed++;
     }
 
-    // Batch update permits (neighbourhood_id = -1 marks "no neighbourhood found")
+    // Batch update permits
     await pipeline.withTransaction(pool, async (client) => {
       for (const [dbId, permits] of Object.entries(updates)) {
         if (permits.length === 0) continue;
@@ -202,19 +242,30 @@ pipeline.run('link-neighbourhoods', async (pool) => {
       }
     });
 
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    const pct = ((processed / totalPermits) * 100).toFixed(1);
-    console.log(`  ${processed.toLocaleString()} / ${totalPermits.toLocaleString()} (${pct}%) - linked: ${linked.toLocaleString()} - ${elapsed}s`);
+    pipeline.progress('link-neighbourhoods', processed, totalPermits, startTime);
   }
 
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log('');
-  console.log('=== Linking Complete ===');
-  console.log(`Permits processed:   ${processed.toLocaleString()}`);
-  console.log(`Successfully linked: ${linked.toLocaleString()} (${((linked / Math.max(processed, 1)) * 100).toFixed(1)}%)`);
-  console.log(`No match found:      ${noMatch.toLocaleString()}`);
-  console.log(`Duration:            ${elapsed}s`);
-  pipeline.emitSummary({ records_total: linked, records_new: 0, records_updated: linked });
+  const durationMs = Date.now() - startTime;
+  pipeline.log.info('[link-neighbourhoods]', 'Linking complete', {
+    permits_processed: processed,
+    permits_linked: linked,
+    no_match: noMatch,
+    bbox_skipped: bboxSkipped,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
+
+  pipeline.emitSummary({
+    records_total: processed,
+    records_new: 0,
+    records_updated: linked,
+    records_meta: {
+      duration_ms: durationMs,
+      permits_processed: processed,
+      permits_linked: linked,
+      no_match_count: noMatch,
+      bbox_tests_skipped: bboxSkipped,
+    },
+  });
   pipeline.emitMeta(
     { "permits": ["permit_num", "revision_num", "latitude", "longitude", "neighbourhood_id"], "neighbourhoods": ["id", "neighbourhood_id", "name", "geometry"], "parcels": ["id", "geometry"] },
     { "permits": ["neighbourhood_id"] }
