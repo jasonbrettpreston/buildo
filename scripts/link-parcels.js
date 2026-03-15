@@ -6,19 +6,21 @@
  *   1. Exact address (num + name + type) -> confidence 0.95
  *   2. Num + name only (ignore type mismatch) -> confidence 0.80
  *   3. Spatial proximity (nearest parcel centroid ≤100m) -> confidence 0.65
+ *      (upgraded to 0.90 if permit geocode falls inside parcel polygon)
  *
  * Strategies 1 & 2 use a batch CTE approach (single SQL per batch).
- * Strategy 3 requires permits to have geocoded lat/lng coordinates and
- * uses JavaScript haversine + point-in-polygon for spatial matching.
+ * Strategy 3 uses JavaScript haversine + point-in-polygon for spatial matching.
  *
- * Parcels must have pre-computed centroid_lat/centroid_lng (run compute-centroids.js first).
- *
- * By default, only processes permits without existing parcel links (incremental).
- * Use --full to re-link all permits.
+ * Observability:
+ *   - Structured logging via pipeline.log (§9.4)
+ *   - IS DISTINCT FROM prevents dead tuple bloat on re-runs (§9.3)
+ *   - records_meta with tier breakdown for downstream assertions
  *
  * Usage:
  *   node scripts/link-parcels.js           # incremental (unlinked only)
  *   node scripts/link-parcels.js --full    # re-link all permits
+ *
+ * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
 
@@ -81,10 +83,9 @@ function haversineDistance(p1, p2) {
 
 pipeline.run('link-parcels', async (pool) => {
   const fullMode = pipeline.isFullMode();
+  const startTime = Date.now();
 
-  console.log('=== Buildo Permit-Parcel Linker (3-Step Cascade) ===');
-  console.log(`Mode: ${fullMode ? 'FULL (all permits)' : 'INCREMENTAL (unlinked only)'}`);
-  console.log('');
+  pipeline.log.info('[link-parcels]', `Mode: ${fullMode ? 'FULL (all permits)' : 'INCREMENTAL (unlinked only)'}`);
 
   const addressFilter = `(street_num IS NOT NULL AND street_num != ''
        AND street_name IS NOT NULL AND street_name != '')
@@ -101,27 +102,32 @@ pipeline.run('link-parcels', async (pool) => {
      WHERE (${addressFilter}) ${extraFilter}`
   );
   const totalPermits = parseInt(countResult.rows[0].total, 10);
-  console.log(`Permits to process: ${totalPermits.toLocaleString()}`);
-
-  // Count already linked
-  const linkedCount = await pool.query('SELECT COUNT(*) as total FROM permit_parcels');
-  console.log(`Already linked: ${parseInt(linkedCount.rows[0].total, 10).toLocaleString()}`);
+  pipeline.log.info('[link-parcels]', `Permits to process: ${totalPermits.toLocaleString()}`);
 
   // Check if centroids are available for Strategy 3
   const centroidCount = await pool.query(
     'SELECT COUNT(*) as total FROM parcels WHERE centroid_lat IS NOT NULL'
   );
   const hasCentroids = parseInt(centroidCount.rows[0].total, 10) > 0;
-  console.log(`Parcels with centroids: ${parseInt(centroidCount.rows[0].total, 10).toLocaleString()} ${hasCentroids ? '(Strategy 3 enabled)' : '(Strategy 3 disabled — run compute-centroids.js first)'}`);
-  console.log('');
+  pipeline.log.info('[link-parcels]', `Parcels with centroids: ${parseInt(centroidCount.rows[0].total, 10).toLocaleString()} ${hasCentroids ? '(Strategy 3 enabled)' : '(Strategy 3 disabled)'}`);
 
-  const startTime = Date.now();
+  if (totalPermits === 0) {
+    pipeline.log.info('[link-parcels]', 'No permits to process. Done.');
+    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    pipeline.emitMeta(
+      { "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"], "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"] },
+      { "permit_parcels": ["permit_num", "revision_num", "parcel_id", "match_type", "confidence", "linked_at"] }
+    );
+    return;
+  }
+
   let processed = 0;
   let linkedExact = 0;
   let linkedName = 0;
   let linkedSpatial = 0;
   let linkedSpatialPolygon = 0;
   let noMatch = 0;
+  let dbUpserted = 0;
   let offset = 0;
 
   while (offset < totalPermits) {
@@ -140,7 +146,7 @@ pipeline.run('link-parcels', async (pool) => {
     // ------------------------------------------------------------------
     // Build normalized arrays for batch CTE matching
     // ------------------------------------------------------------------
-    const permitKeys = []; // { permit_num, revision_num, num, name, type, lat, lng }
+    const permitKeys = [];
     for (const permit of batch.rows) {
       permitKeys.push({
         permit_num: permit.permit_num,
@@ -156,12 +162,10 @@ pipeline.run('link-parcels', async (pool) => {
     // ------------------------------------------------------------------
     // Strategies 1 & 2: Batch CTE for exact + name_only address matching
     // ------------------------------------------------------------------
-    // Build a VALUES list for all permits that have address components
     const addrPermits = permitKeys.filter(p => p.num && p.name);
-    let sqlMatched = new Map(); // key: "permit_num|revision_num" -> { parcel_id, match_type, confidence }
+    const sqlMatched = new Map();
 
     if (addrPermits.length > 0) {
-      // Build parameterized VALUES list
       const valuesPlaceholders = [];
       const valuesParams = [];
       let paramIdx = 1;
@@ -252,8 +256,9 @@ pipeline.run('link-parcels', async (pool) => {
         }
 
         if (bestId !== null && bestDist <= SPATIAL_MAX_DISTANCE_M) {
-          // Check if permit geocode falls inside the matched parcel polygon
-          const ring = extractOuterRing(bestGeometry);
+          // Defensive: ensure geometry is parsed object (JSONB auto-parses, but safety first)
+          const parsedGeom = typeof bestGeometry === 'string' ? JSON.parse(bestGeometry) : bestGeometry;
+          const ring = extractOuterRing(parsedGeom);
           const isInside = ring ? pointInPolygon([permit.lng, permit.lat], ring) : false;
 
           const key = `${permit.permit_num}|${permit.revision_num}`;
@@ -282,7 +287,6 @@ pipeline.run('link-parcels', async (pool) => {
       if (match) {
         if (match.match_type === 'exact_address') linkedExact++;
         else if (match.match_type === 'name_only') linkedName++;
-        // spatial counts already incremented above
 
         insertParams.push(
           `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`
@@ -298,46 +302,62 @@ pipeline.run('link-parcels', async (pool) => {
       processed++;
     }
 
-    // Batch insert within a transaction
+    // Batch insert within a transaction — IS DISTINCT FROM prevents dead tuple bloat (§9.3)
     if (insertParams.length > 0) {
       await pipeline.withTransaction(pool, async (client) => {
-        await client.query(
+        const result = await client.query(
           `INSERT INTO permit_parcels (permit_num, revision_num, parcel_id, match_type, confidence)
            VALUES ${insertParams.join(', ')}
            ON CONFLICT (permit_num, revision_num, parcel_id) DO UPDATE SET
              match_type = EXCLUDED.match_type,
              confidence = EXCLUDED.confidence,
-             linked_at = NOW()`,
+             linked_at = NOW()
+           WHERE permit_parcels.match_type IS DISTINCT FROM EXCLUDED.match_type
+              OR permit_parcels.confidence IS DISTINCT FROM EXCLUDED.confidence`,
           insertValues
         );
+        dbUpserted += result.rowCount || 0;
       });
     }
 
     offset += pipeline.BATCH_SIZE;
 
     if (processed % 10000 === 0 || processed >= totalPermits) {
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      const pct = ((processed / totalPermits) * 100).toFixed(1);
-      const totalLinked = linkedExact + linkedName + linkedSpatial;
-      console.log(`  ${processed.toLocaleString()} / ${totalPermits.toLocaleString()} (${pct}%) - linked: ${totalLinked.toLocaleString()} (exact:${linkedExact.toLocaleString()} name:${linkedName.toLocaleString()} spatial:${linkedSpatial.toLocaleString()} spatial_polygon:${linkedSpatialPolygon.toLocaleString()}) - ${elapsed}s`);
+      pipeline.progress('link-parcels', processed, totalPermits, startTime);
     }
   }
 
   const totalLinked = linkedExact + linkedName + linkedSpatial;
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log('');
-  console.log('=== Linking Complete ===');
-  console.log(`Permits processed:    ${processed.toLocaleString()}`);
-  console.log(`Successfully linked:  ${totalLinked.toLocaleString()} (${((totalLinked / Math.max(processed, 1)) * 100).toFixed(1)}%)`);
-  console.log(`  Exact address:      ${linkedExact.toLocaleString()}`);
-  console.log(`  Name only:          ${linkedName.toLocaleString()}`);
-  console.log(`  Spatial proximity:  ${linkedSpatial.toLocaleString()}`);
-  console.log(`    Polygon upgrade:  ${linkedSpatialPolygon.toLocaleString()} (confidence 0.90)`);
-  console.log(`    Centroid only:    ${(linkedSpatial - linkedSpatialPolygon).toLocaleString()} (confidence 0.65)`);
-  console.log(`No match found:       ${noMatch.toLocaleString()}`);
-  console.log(`Duration:             ${elapsed}s`);
+  const durationMs = Date.now() - startTime;
 
-  pipeline.emitSummary({ records_total: totalLinked, records_new: 0, records_updated: totalLinked });
+  pipeline.log.info('[link-parcels]', 'Linking complete', {
+    processed,
+    linked: totalLinked,
+    exact: linkedExact,
+    name_only: linkedName,
+    spatial: linkedSpatial,
+    spatial_polygon: linkedSpatialPolygon,
+    no_match: noMatch,
+    db_upserted: dbUpserted,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
+
+  pipeline.emitSummary({
+    records_total: processed,
+    records_new: 0,
+    records_updated: dbUpserted,
+    records_meta: {
+      duration_ms: durationMs,
+      permits_processed: processed,
+      matches_tier_1_exact: linkedExact,
+      matches_tier_2_name: linkedName,
+      matches_tier_3_spatial: linkedSpatial,
+      matches_tier_3_polygon: linkedSpatialPolygon,
+      matches_tier_3_centroid: linkedSpatial - linkedSpatialPolygon,
+      no_match_count: noMatch,
+      db_upserted: dbUpserted,
+    },
+  });
   pipeline.emitMeta(
     { "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"], "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"] },
     { "permit_parcels": ["permit_num", "revision_num", "parcel_id", "match_type", "confidence", "linked_at"] }
