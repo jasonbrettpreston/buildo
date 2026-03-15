@@ -268,6 +268,16 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
   - Integrity: stage count >20 (duplication), future dates, date-before-permit-year
   - Transitions: status change count from latest scraper run (via records_updated in pipeline_runs)
 - **Scraper tracks status changes:** upsert checks previous status before writing; emits count as `records_updated` in PIPELINE_SUMMARY
+- **Scraper observability (telemetry in records_meta.scraper_telemetry):**
+  - `permits_attempted/found/scraped` — funnel visibility
+  - `proxy_errors` — retries exhausted count (all 3 attempts failed)
+  - `consecutive_empty_max` — peak consecutive empty responses (WAF trap indicator)
+  - `session_refreshes/bootstraps/failures` — WAF session health
+  - `schema_drift[]` — AIC API field changes detected (validates propertyRsn, folderRsn, inspectionProcesses, stages.desc/status)
+  - `latency.p50/p95/max` — per-request timing in ms
+  - Exponential backoff: 2s → 4s → 8s (was linear 2s/4s/6s)
+  - WAF trap auto-recovery: 20 consecutive empty responses → full browser re-bootstrap with fresh proxy session
+- **assert-data-bounds reads scraper_telemetry:** flags proxy_errors (WARN), schema_drift (ERROR), WAF traps (WARN), session failures (WARN)
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->

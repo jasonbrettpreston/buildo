@@ -28,7 +28,8 @@ const pipeline = require('./lib/pipeline');
 
 const AIC_BASE = 'https://secure.toronto.ca/ApplicationStatus';
 const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
+const RETRY_BASE_MS = 2000;
+const WAF_TRAP_THRESHOLD = 20; // consecutive empty responses before re-bootstrap
 
 // Target permit types for stage-level scraping (Spec 38 §3.6)
 const TARGET_TYPES = [
@@ -129,16 +130,38 @@ async function launchBrowser() {
 async function fetchPermitChain(page, year, sequence, targetTypes) {
   return page.evaluate(async ({ year, sequence, targetTypes, base }) => {
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
+    const schemaDrift = [];
+
+    // Schema validation — detect when AIC portal changes JSON structure
+    function checkFields(label, obj, expected) {
+      if (!obj || typeof obj !== 'object') return;
+      const missing = expected.filter(k => !(k in obj));
+      if (missing.length > 0) {
+        schemaDrift.push(`${label}: missing fields [${missing.join(', ')}]`);
+      }
+    }
 
     async function post(path, body) {
       const r = await fetch(base + path, { method: 'POST', headers, body: JSON.stringify(body) });
       const text = await r.text();
-      return { status: r.status, data: r.status < 400 ? JSON.parse(text) : null, size: text.length };
+      if (r.status >= 400) return { status: r.status, data: null, size: text.length };
+      try {
+        return { status: r.status, data: JSON.parse(text), size: text.length };
+      } catch {
+        schemaDrift.push(`POST ${path}: response is not valid JSON (${text.slice(0, 100)})`);
+        return { status: r.status, data: null, size: text.length };
+      }
     }
     async function get(path) {
       const r = await fetch(base + path, { method: 'GET', headers: { Accept: 'application/json' } });
       const text = await r.text();
-      return { status: r.status, data: r.status < 400 ? JSON.parse(text) : null, size: text.length };
+      if (r.status >= 400) return { status: r.status, data: null, size: text.length };
+      try {
+        return { status: r.status, data: JSON.parse(text), size: text.length };
+      } catch {
+        schemaDrift.push(`GET ${path}: response is not valid JSON (${text.slice(0, 100)})`);
+        return { status: r.status, data: null, size: text.length };
+      }
     }
 
     let totalBytes = 0;
@@ -155,16 +178,20 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
 
     const r1 = await post('/jaxrs/search/properties', searchBody);
     totalBytes += r1.size;
-    if (!r1.data || r1.data.length === 0) return { properties: [], folders: [], results, totalBytes };
+    if (!r1.data || r1.data.length === 0) return { properties: [], folders: [], results, totalBytes, schemaDrift };
 
+    checkFields('properties[0]', r1.data[0], ['propertyRsn']);
     const propertyRsn = String(r1.data[0].propertyRsn);
 
     // Step 2: Get folders
     const r2 = await post('/jaxrs/search/folders', { ...searchBody, propertyRsn });
     totalBytes += r2.size;
-    if (!r2.data) return { properties: r1.data, folders: [], results, totalBytes };
+    if (!r2.data) return { properties: r1.data, folders: [], results, totalBytes, schemaDrift };
 
     const folders = r2.data;
+    if (folders.length > 0) {
+      checkFields('folders[0]', folders[0], ['folderYear', 'folderSequence', 'folderSection', 'statusDesc', 'folderTypeDesc', 'folderRsn']);
+    }
 
     // Step 3+4: For each target folder, get detail + status (chained)
     for (const folder of folders) {
@@ -174,6 +201,10 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
 
       const r3 = await get(`/jaxrs/search/detail/${folder.folderRsn}`);
       totalBytes += r3.size;
+
+      if (r3.data) {
+        checkFields('detail', r3.data, ['inspectionProcesses', 'showStatus']);
+      }
 
       if (!r3.data || !r3.data.inspectionProcesses || r3.data.inspectionProcesses.length === 0) {
         results.push({ permitNum, error: 'no_processes' });
@@ -186,10 +217,13 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
       }
 
       for (const proc of r3.data.inspectionProcesses) {
+        checkFields('process', proc, ['processRsn']);
+
         const r4 = await get(`/jaxrs/search/status/${folder.folderRsn}/${proc.processRsn}`);
         totalBytes += r4.size;
 
         if (r4.data && r4.data.stages && r4.data.stages.length > 0) {
+          checkFields('stages[0]', r4.data.stages[0], ['desc', 'status']);
           results.push({ permitNum, stages: r4.data.stages, orders: r4.data.orders || [] });
         } else {
           results.push({ permitNum, error: 'no_stages' });
@@ -197,7 +231,7 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
       }
     }
 
-    return { properties: r1.data, folders, results, totalBytes };
+    return { properties: r1.data, folders, results, totalBytes, schemaDrift };
   }, { year, sequence, targetTypes, base: AIC_BASE });
 }
 
@@ -205,11 +239,11 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
   const [year, sequence] = yearSeq.split(' ');
 
   // Single round-trip: all 4 API calls execute inside Chrome
-  const { properties, folders, results, totalBytes } = await fetchPermitChain(page, year, sequence, TARGET_TYPES);
+  const { properties, folders, results, totalBytes, schemaDrift } = await fetchPermitChain(page, year, sequence, TARGET_TYPES);
 
   if (properties.length === 0) {
     pipeline.log.info('[scraper]', `No property found for ${yearSeq}`);
-    return { searched: 1, scraped: 0, upserted: 0, bytes: totalBytes };
+    return { searched: 1, scraped: 0, upserted: 0, bytes: totalBytes, schemaDrift: schemaDrift || [] };
   }
 
   const inspectionFolders = folders.filter(
@@ -260,15 +294,14 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
     } finally {
       client.release();
     }
-    totalStatusChanges += statusChanges;
-
     scraped++;
     pipeline.log.info('[scraper]', `Scraped ${result.stages.length} stages for ${result.permitNum}`, {
       stages: result.stages.map((s) => `${s.desc}: ${s.status}`),
+      statusChanges,
     });
   }
 
-  return { searched: 1, scraped, upserted, bytes: totalBytes };
+  return { searched: 1, scraped, upserted, bytes: totalBytes, schemaDrift: schemaDrift || [], statusChanges };
 }
 
 async function scrapeWithRetry(page, yearSeq, dbPool) {
@@ -279,9 +312,10 @@ async function scrapeWithRetry(page, yearSeq, dbPool) {
       pipeline.log.error('[scraper]', err, { yearSeq, attempt, maxRetries: MAX_RETRIES });
       if (attempt === MAX_RETRIES) {
         pipeline.log.error('[scraper]', `All retries exhausted for ${yearSeq}, skipping`);
-        return { searched: 1, scraped: 0, upserted: 0, bytes: 0 };
+        return { searched: 1, scraped: 0, upserted: 0, bytes: 0, schemaDrift: [], retryExhausted: true };
       }
-      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+      // Exponential backoff: 2s, 4s, 8s
+      await new Promise((r) => setTimeout(r, RETRY_BASE_MS * Math.pow(2, attempt - 1)));
     }
   }
 }
@@ -290,12 +324,11 @@ async function scrapeWithRetry(page, yearSeq, dbPool) {
 // Main
 // ---------------------------------------------------------------------------
 
-pipeline.run('poc-aic-scraper', async (pool) => {
-  const singlePermit = process.argv[2];
-  const startMs = Date.now();
+// ---------------------------------------------------------------------------
+// Session bootstrap — launch browser + establish WAF session
+// ---------------------------------------------------------------------------
 
-  // Step 0: Launch browser + load init page (establishes WAF session)
-  pipeline.log.info('[scraper]', 'Launching browser for WAF session...');
+async function bootstrapSession() {
   const { browser, context } = await launchBrowser();
   const page = await context.newPage();
 
@@ -308,22 +341,80 @@ pipeline.run('poc-aic-scraper', async (pool) => {
 
   await page.goto(`${AIC_BASE}/setup.do?action=init`, { waitUntil: 'commit' });
   await page.waitForTimeout(1000);
+  return { browser, page };
+}
+
+// ---------------------------------------------------------------------------
+// Latency percentiles
+// ---------------------------------------------------------------------------
+
+function computePercentiles(latencies) {
+  if (latencies.length === 0) return { p50: 0, p95: 0, max: 0 };
+  const sorted = [...latencies].sort((a, b) => a - b);
+  return {
+    p50: sorted[Math.floor(sorted.length * 0.5)],
+    p95: sorted[Math.floor(sorted.length * 0.95)],
+    max: sorted[sorted.length - 1],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+pipeline.run('poc-aic-scraper', async (pool) => {
+  const singlePermit = process.argv[2];
+  const startMs = Date.now();
+
+  // Telemetry accumulator — emitted in records_meta for assert-data-bounds
+  const tel = {
+    permits_attempted: 0,
+    permits_found: 0,
+    permits_scraped: 0,
+    not_found_count: 0,
+    proxy_errors: 0,
+    consecutive_empty: 0,
+    consecutive_empty_max: 0,
+    session_refreshes: 0,
+    session_bootstraps: 0,
+    session_failures: 0,
+    schema_drift: [],
+    status_changes: 0,
+    latencies: [],
+  };
+
+  // Step 0: Launch browser + establish WAF session
+  pipeline.log.info('[scraper]', 'Launching browser for WAF session...');
+  let { browser, page } = await bootstrapSession();
   pipeline.log.info('[scraper]', 'WAF session established');
 
-  let totalSearched = 0;
-  let totalScraped = 0;
-  let totalUpserted = 0;
-  let totalBytes = 0;
-  let totalStatusChanges = 0;
+  function accumulateResult(result) {
+    tel.permits_attempted++;
+    if (result.scraped > 0) {
+      tel.permits_found++;
+      tel.permits_scraped += result.scraped;
+      tel.consecutive_empty = 0;
+    } else if (result.searched > 0 && result.scraped === 0) {
+      tel.not_found_count++;
+      tel.consecutive_empty++;
+      tel.consecutive_empty_max = Math.max(tel.consecutive_empty_max, tel.consecutive_empty);
+    }
+    if (result.retryExhausted) tel.proxy_errors++;
+    if (result.schemaDrift) {
+      for (const drift of result.schemaDrift) {
+        if (!tel.schema_drift.includes(drift)) tel.schema_drift.push(drift);
+      }
+    }
+    tel.status_changes += (result.statusChanges || 0);
+  }
 
   try {
     if (singlePermit) {
       pipeline.log.info('[scraper]', `Single permit mode: ${singlePermit}`);
+      const reqStart = Date.now();
       const result = await scrapeWithRetry(page, singlePermit, pool);
-      totalSearched += result.searched;
-      totalScraped += result.scraped;
-      totalUpserted += result.upserted;
-      totalBytes += result.bytes;
+      tel.latencies.push(Date.now() - reqStart);
+      accumulateResult(result);
     } else {
       // Batch mode: query DB for eligible permits
       const { rows } = await pool.query(
@@ -345,18 +436,39 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         const yearSeq = rows[i].year_seq;
         pipeline.progress('poc-aic-scraper', i + 1, rows.length, startMs);
 
-        // Refresh WAF session periodically to prevent expiry on long runs
-        if (i > 0 && i % SESSION_REFRESH_INTERVAL === 0) {
-          pipeline.log.info('[scraper]', `Refreshing WAF session (after ${i} permits)...`);
-          await page.goto(`${AIC_BASE}/setup.do?action=init`, { waitUntil: 'commit' });
-          await page.waitForTimeout(1000);
+        // WAF trap detection — consecutive empty responses indicate silent block
+        if (tel.consecutive_empty >= WAF_TRAP_THRESHOLD) {
+          pipeline.log.warn('[scraper]', `WAF trap detected (${tel.consecutive_empty} consecutive empty). Re-bootstrapping session...`);
+          try {
+            await browser.close();
+            ({ browser, page } = await bootstrapSession());
+            tel.session_bootstraps++;
+            tel.consecutive_empty = 0;
+            pipeline.log.info('[scraper]', 'Session re-bootstrapped successfully');
+          } catch (bootstrapErr) {
+            tel.session_failures++;
+            pipeline.log.error('[scraper]', bootstrapErr, { event: 'session_bootstrap_failed' });
+            break; // Can't continue without a browser
+          }
         }
 
+        // Periodic WAF session refresh to prevent expiry on long runs
+        if (i > 0 && i % SESSION_REFRESH_INTERVAL === 0) {
+          pipeline.log.info('[scraper]', `Refreshing WAF session (after ${i} permits)...`);
+          try {
+            await page.goto(`${AIC_BASE}/setup.do?action=init`, { waitUntil: 'commit' });
+            await page.waitForTimeout(1000);
+            tel.session_refreshes++;
+          } catch (refreshErr) {
+            tel.session_failures++;
+            pipeline.log.error('[scraper]', refreshErr, { event: 'session_refresh_failed' });
+          }
+        }
+
+        const reqStart = Date.now();
         const result = await scrapeWithRetry(page, yearSeq, pool);
-        totalSearched += result.searched;
-        totalScraped += result.scraped;
-        totalUpserted += result.upserted;
-        totalBytes += result.bytes;
+        tel.latencies.push(Date.now() - reqStart);
+        accumulateResult(result);
       }
     }
   } finally {
@@ -364,20 +476,40 @@ pipeline.run('poc-aic-scraper', async (pool) => {
   }
 
   const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
+  const latencyStats = computePercentiles(tel.latencies);
+
   pipeline.log.info('[scraper]', 'Scrape complete', {
-    searched: totalSearched,
-    scraped: totalScraped,
-    upserted: totalUpserted,
-    statusChanges: totalStatusChanges,
-    bytes: totalBytes,
-    bytesHuman: `${(totalBytes / 1024).toFixed(1)} KB`,
+    permits_attempted: tel.permits_attempted,
+    permits_scraped: tel.permits_scraped,
+    status_changes: tel.status_changes,
+    proxy_errors: tel.proxy_errors,
+    session_bootstraps: tel.session_bootstraps,
+    schema_drift: tel.schema_drift.length,
+    latency_p50: `${latencyStats.p50}ms`,
+    latency_p95: `${latencyStats.p95}ms`,
     elapsed: `${elapsed}s`,
   });
 
   pipeline.emitSummary({
-    records_total: totalScraped,
-    records_new: totalUpserted,
-    records_updated: totalStatusChanges,
+    records_total: tel.permits_scraped,
+    records_new: tel.permits_scraped > 0 ? tel.latencies.length : 0,
+    records_updated: tel.status_changes,
+    records_meta: {
+      scraper_telemetry: {
+        permits_attempted: tel.permits_attempted,
+        permits_found: tel.permits_found,
+        permits_scraped: tel.permits_scraped,
+        not_found_count: tel.not_found_count,
+        proxy_errors: tel.proxy_errors,
+        consecutive_empty_max: tel.consecutive_empty_max,
+        session_refreshes: tel.session_refreshes,
+        session_bootstraps: tel.session_bootstraps,
+        session_failures: tel.session_failures,
+        schema_drift: tel.schema_drift,
+        status_changes: tel.status_changes,
+        latency: latencyStats,
+      },
+    },
   });
 
   pipeline.emitMeta(

@@ -511,21 +511,65 @@ async function run() {
             console.log('  OK: No inspection dates before permit year');
           }
 
-          // --- Check 7: Status change tracking (from latest scraper run) ---
+          // --- Check 7: Scraper telemetry (from latest scraper run) ---
+          console.log('\n  --- Scraper Telemetry ---');
           try {
             const lastRun = await pool.query(
-              `SELECT records_updated FROM pipeline_runs
-               WHERE pipeline = 'inspections' OR pipeline LIKE '%:inspections'
+              `SELECT records_updated, records_meta FROM pipeline_runs
+               WHERE (pipeline = 'inspections' OR pipeline LIKE '%:inspections')
+                 AND status = 'completed'
                ORDER BY started_at DESC LIMIT 1`
             );
-            const statusChanges = lastRun.rows[0]?.records_updated ?? 0;
+            const row = lastRun.rows[0];
+            const statusChanges = row?.records_updated ?? 0;
+            const scTel = row?.records_meta?.scraper_telemetry;
+
             if (statusChanges > 0) {
               console.log(`  INFO: ${statusChanges} inspection stages changed status in last scrape run`);
             } else {
               console.log('  OK: No status changes in last scrape run');
             }
+
+            if (scTel) {
+              // Proxy errors
+              if (scTel.proxy_errors > 0) {
+                warnings.push(`Scraper had ${scTel.proxy_errors} proxy errors (all retries exhausted)`);
+                console.log(`  WARN: ${scTel.proxy_errors} proxy errors in last scrape`);
+              } else {
+                console.log('  OK: No proxy errors');
+              }
+
+              // Schema drift
+              if (scTel.schema_drift && scTel.schema_drift.length > 0) {
+                errors.push(`AIC API schema drift detected: ${scTel.schema_drift.join('; ')}`);
+                console.error(`  FAIL: Schema drift — ${scTel.schema_drift.join('; ')}`);
+              } else {
+                console.log('  OK: No API schema drift');
+              }
+
+              // WAF trap
+              if (scTel.consecutive_empty_max >= 20) {
+                warnings.push(`WAF trap triggered (${scTel.consecutive_empty_max} consecutive empty responses)`);
+                console.log(`  WARN: WAF trap triggered — ${scTel.session_bootstraps || 0} session re-bootstraps`);
+              } else {
+                console.log(`  OK: Max consecutive empty: ${scTel.consecutive_empty_max || 0}`);
+              }
+
+              // Session failures
+              if (scTel.session_failures > 0) {
+                warnings.push(`${scTel.session_failures} session refresh/bootstrap failures`);
+                console.log(`  WARN: ${scTel.session_failures} session failures`);
+              }
+
+              // Latency
+              if (scTel.latency) {
+                console.log(`  INFO: Latency p50=${scTel.latency.p50}ms p95=${scTel.latency.p95}ms max=${scTel.latency.max}ms`);
+              }
+            } else {
+              console.log('  SKIP: No scraper telemetry in latest run (pre-telemetry run)');
+            }
           } catch {
-            console.log('  SKIP: Could not read last scraper run for status changes');
+            console.log('  SKIP: Could not read last scraper run');
           }
         } else {
           console.log('  SKIP: permit_inspections is empty (not yet scraped)');
