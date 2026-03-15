@@ -521,13 +521,11 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                 const chainInfo = pipelineLastRun[chainSlug];
                 if (!chainInfo || chainInfo.status !== 'completed' || isChainRunning) return null;
                 const chainStartMs = chainInfo.last_run_at ? new Date(chainInfo.last_run_at).getTime() : 0;
-                // Aggregate T2 pg_stats across all chain steps
+                // Aggregate T2 pg_stats for legacy badge fallback (chains without audit_tables)
                 let totalIns = 0;
                 let totalUpd = 0;
-                let totalDel = 0;
-                let hasAnyTelemetry = false;
                 // Build per-step summary data
-                const stepRows: { label: string; slug: string; ranThisChain: boolean; records_total: number | null; records_new: number | null; records_updated: number | null; duration_ms: number | null; verdict: string | null }[] = [];
+                const stepRows: { label: string; slug: string; ranThisChain: boolean; duration_ms: number | null; verdict: string | null }[] = [];
                 for (const step of chain.steps) {
                   const scopedKey = `${chain.id}:${step.slug}`;
                   const stepInfo = pipelineLastRun[scopedKey];
@@ -540,19 +538,14 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     label: PIPELINE_REGISTRY[step.slug]?.name ?? step.slug,
                     slug: step.slug,
                     ranThisChain,
-                    records_total: ranThisChain ? (stepInfo?.records_total ?? null) : null,
-                    records_new: ranThisChain ? (stepInfo?.records_new ?? null) : null,
-                    records_updated: ranThisChain ? (stepInfo?.records_updated ?? null) : null,
                     duration_ms: ranThisChain ? (stepInfo?.duration_ms ?? null) : null,
                     verdict: auditVerdict,
                   });
                   const telemetry = (stepInfo?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
                   if (telemetry?.pg_stats) {
-                    hasAnyTelemetry = true;
                     for (const stats of Object.values(telemetry.pg_stats)) {
                       totalIns += stats.ins ?? 0;
                       totalUpd += stats.upd ?? 0;
-                      totalDel += stats.del ?? 0;
                     }
                   }
                 }
