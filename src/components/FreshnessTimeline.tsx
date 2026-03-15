@@ -147,7 +147,10 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     label: 'Deep Scrapes',
     description: 'Weekly — AIC portal inspection scraping via REST API',
     steps: [
-      { slug: 'inspections',    indent: 0 },
+      { slug: 'inspections',          indent: 0 },
+      { slug: 'refresh_snapshot',     indent: 1 },
+      { slug: 'assert_data_bounds',   indent: 0 },
+      { slug: 'assert_engine_health', indent: 0 },
     ],
   },
 ];

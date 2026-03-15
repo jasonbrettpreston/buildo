@@ -259,7 +259,9 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 - New pipeline slug `inspections` registered in admin pipeline definitions
 - Trigger via `POST /api/admin/pipelines/inspections`
 - Freshness tracked in `pipeline_runs` table
-- Schedule: Daily (for active permits only)
+- Schedule: Weekly (for active permits across 5 target types)
+- **Chain:** `deep_scrapes` = `inspections` → `refresh_snapshot` → `assert_data_bounds` → `assert_engine_health`
+- Quality tail steps provide: snapshot metrics capture, data bounds validation (null rates, referential integrity), and engine health checks (dead tuples, index usage) after each scrape run
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->

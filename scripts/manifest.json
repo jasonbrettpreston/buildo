@@ -53,7 +53,8 @@
       "enrich_wsib_builders", "enrich_named_builders"
     ],
     "deep_scrapes": [
-      "inspections"
+      "inspections",
+      "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
     ]
   },
 
