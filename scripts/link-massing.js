@@ -16,7 +16,15 @@
  *
  * Uses @turf/boolean-point-in-polygon for accurate spatial testing.
  *
+ * Observability:
+ *   - Structured logging via pipeline.log (§9.4)
+ *   - Separate matched vs upserted metrics (algorithmic vs DB mutation)
+ *   - Parameter limit safeguard: flushes INSERT at 30,000 params (§9.2)
+ *   - Full records_meta in PIPELINE_SUMMARY
+ *
  * Usage: node scripts/link-massing.js [--full]
+ *
+ * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
 const booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default;
@@ -27,6 +35,7 @@ const GRID_SIZE = 0.003; // ~333m grid cells (same as old BBOX_OFFSET)
 const SHED_THRESHOLD_SQM = 20;
 const GARAGE_MAX_SQM = 60;
 const NEAREST_MAX_DISTANCE_M = 50;
+const PARAM_FLUSH_THRESHOLD = 30000; // §9.2: flush before hitting PG 65,535 limit
 
 function classifyStructure(areaSqm, allAreas) {
   if (allAreas.length <= 1) return 'primary';
@@ -112,17 +121,44 @@ function gridNeighbourKeys(lat, lng) {
   return keys;
 }
 
+/**
+ * Flush accumulated INSERT params to DB within a transaction.
+ * Returns the number of actual DB writes (rowCount from IS DISTINCT FROM).
+ */
+async function flushInsertBatch(pool, insertParams, insertValues) {
+  if (insertParams.length === 0) return 0;
+  let upserted = 0;
+  await pipeline.withTransaction(pool, async (client) => {
+    const result = await client.query(
+      `INSERT INTO parcel_buildings (parcel_id, building_id, is_primary, structure_type, match_type, confidence)
+       VALUES ${insertParams.join(', ')}
+       ON CONFLICT (parcel_id, building_id) DO UPDATE SET
+         is_primary = EXCLUDED.is_primary,
+         structure_type = EXCLUDED.structure_type,
+         match_type = EXCLUDED.match_type,
+         confidence = EXCLUDED.confidence,
+         linked_at = NOW()
+       WHERE parcel_buildings.is_primary IS DISTINCT FROM EXCLUDED.is_primary
+         OR parcel_buildings.structure_type IS DISTINCT FROM EXCLUDED.structure_type
+         OR parcel_buildings.match_type IS DISTINCT FROM EXCLUDED.match_type
+         OR parcel_buildings.confidence IS DISTINCT FROM EXCLUDED.confidence`,
+      insertValues
+    );
+    upserted = result.rowCount || 0;
+  });
+  return upserted;
+}
+
 pipeline.run('link-massing', async (pool) => {
   const FULL_MODE = pipeline.isFullMode();
+  const startTime = Date.now();
 
-  console.log('=== Buildo Parcel-Building Linker ===');
-  console.log(`Mode: ${FULL_MODE ? 'FULL (rescan all parcels)' : 'INCREMENTAL (unlinked parcels only)'}`);
-  console.log('');
+  pipeline.log.info('[link-massing]', `Mode: ${FULL_MODE ? 'FULL (rescan all parcels)' : 'INCREMENTAL (unlinked parcels only)'}`);
 
   // -----------------------------------------------------------------------
   // Phase 1: Load all building footprints into in-memory grid index
   // -----------------------------------------------------------------------
-  console.log('Loading building footprints into memory...');
+  pipeline.log.info('[link-massing]', 'Loading building footprints into memory...');
   const loadStart = Date.now();
   const bfResult = await pool.query(
     `SELECT id, geometry, footprint_area_sqm, centroid_lat, centroid_lng
@@ -150,7 +186,7 @@ pipeline.run('link-massing', async (pool) => {
   bfResult.rows.length = 0;
 
   const loadElapsed = ((Date.now() - loadStart) / 1000).toFixed(1);
-  console.log(`  Loaded ${totalBuildings.toLocaleString()} buildings into ${grid.size.toLocaleString()} grid cells (${loadElapsed}s)`);
+  pipeline.log.info('[link-massing]', `Loaded ${totalBuildings.toLocaleString()} buildings into ${grid.size.toLocaleString()} grid cells (${loadElapsed}s)`);
 
   // -----------------------------------------------------------------------
   // Phase 2: Process parcels in batches
@@ -165,17 +201,12 @@ pipeline.run('link-massing', async (pool) => {
     `SELECT COUNT(*) as total FROM parcels WHERE ${baseFilter}${incrementalFilter}`
   );
   const totalParcels = parseInt(countResult.rows[0].total, 10);
-  console.log(`Parcels to process:     ${totalParcels.toLocaleString()}`);
+  pipeline.log.info('[link-massing]', `Parcels to process: ${totalParcels.toLocaleString()}`);
 
-  // Count already linked
-  const linkedCount = await pool.query('SELECT COUNT(*) as total FROM parcel_buildings');
-  console.log(`Already linked:         ${parseInt(linkedCount.rows[0].total, 10).toLocaleString()}`);
-  console.log('');
-
-  const startTime = Date.now();
   let processed = 0;
   let parcelsLinked = 0;
-  let buildingsLinked = 0;
+  let buildingsMatched = 0;  // algorithmic matches (candidates that hit)
+  let buildingsUpserted = 0; // actual DB writes (rowCount from IS DISTINCT FROM)
   let polygonMatches = 0;
   let multipointMatches = 0;
   let nearestMatches = 0;
@@ -194,10 +225,9 @@ pipeline.run('link-massing', async (pool) => {
 
     if (parcelBatch.rows.length === 0) break;
 
-    const insertValues = [];
-    const insertParams = [];
+    let insertValues = [];
+    let insertParams = [];
     let paramIdx = 1;
-    let batchBuildingsCount = 0;
     let batchParcelsCount = 0;
 
     for (const parcel of parcelBatch.rows) {
@@ -334,58 +364,65 @@ pipeline.run('link-massing', async (pool) => {
         insertValues.push(
           parcel.id, mb.building_id, isPrimary, structureType, mb.match_type, mb.confidence
         );
-        batchBuildingsCount++;
+        buildingsMatched++;
       }
 
       batchParcelsCount++;
       processed++;
+
+      // §9.2 safeguard: flush if approaching PG 65,535 param limit
+      if (insertValues.length >= PARAM_FLUSH_THRESHOLD) {
+        buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
+        parcelsLinked += batchParcelsCount;
+        insertParams = [];
+        insertValues = [];
+        paramIdx = 1;
+        batchParcelsCount = 0;
+      }
     }
 
-    // Batch insert within a transaction
+    // Flush remaining batch
     if (insertParams.length > 0) {
-      await pipeline.withTransaction(pool, async (client) => {
-        const result = await client.query(
-          `INSERT INTO parcel_buildings (parcel_id, building_id, is_primary, structure_type, match_type, confidence)
-           VALUES ${insertParams.join(', ')}
-           ON CONFLICT (parcel_id, building_id) DO UPDATE SET
-             is_primary = EXCLUDED.is_primary,
-             structure_type = EXCLUDED.structure_type,
-             match_type = EXCLUDED.match_type,
-             confidence = EXCLUDED.confidence,
-             linked_at = NOW()
-           WHERE parcel_buildings.is_primary IS DISTINCT FROM EXCLUDED.is_primary
-             OR parcel_buildings.structure_type IS DISTINCT FROM EXCLUDED.structure_type
-             OR parcel_buildings.match_type IS DISTINCT FROM EXCLUDED.match_type
-             OR parcel_buildings.confidence IS DISTINCT FROM EXCLUDED.confidence`,
-          insertValues
-        );
-        buildingsLinked += result.rowCount || 0;
-        parcelsLinked += batchParcelsCount;
-      });
+      buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
+      parcelsLinked += batchParcelsCount;
     }
 
     offset += BATCH_SIZE;
 
     if (processed % 10000 === 0 || processed >= totalParcels) {
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      const pct = ((processed / totalParcels) * 100).toFixed(1);
-      console.log(`  ${processed.toLocaleString()} / ${totalParcels.toLocaleString()} (${pct}%) - linked: ${parcelsLinked.toLocaleString()} parcels, ${buildingsLinked.toLocaleString()} buildings - ${elapsed}s`);
+      pipeline.progress('link-massing', processed, totalParcels, startTime);
     }
   }
 
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log('');
-  console.log('=== Linking Complete ===');
-  console.log(`Parcels processed:      ${processed.toLocaleString()}`);
-  console.log(`Parcels linked:         ${parcelsLinked.toLocaleString()} (${((parcelsLinked / Math.max(processed, 1)) * 100).toFixed(1)}%)`);
-  console.log(`Buildings linked:       ${buildingsLinked.toLocaleString()}`);
-  console.log(`  Polygon (centroid):   ${polygonMatches.toLocaleString()} (confidence 0.90)`);
-  console.log(`  Multipoint (edge):    ${multipointMatches.toLocaleString()} (confidence 0.80)`);
-  console.log(`  Nearest (≤${NEAREST_MAX_DISTANCE_M}m):     ${nearestMatches.toLocaleString()} (confidence 0.60)`);
-  console.log(`No match found:         ${noMatch.toLocaleString()}`);
-  console.log(`Duration:               ${elapsed}s`);
+  const durationMs = Date.now() - startTime;
+  pipeline.log.info('[link-massing]', 'Linking complete', {
+    parcels_processed: processed,
+    parcels_linked: parcelsLinked,
+    buildings_matched: buildingsMatched,
+    buildings_upserted: buildingsUpserted,
+    polygon: polygonMatches,
+    multipoint: multipointMatches,
+    nearest: nearestMatches,
+    no_match: noMatch,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
 
-  pipeline.emitSummary({ records_total: buildingsLinked, records_new: 0, records_updated: buildingsLinked });
+  pipeline.emitSummary({
+    records_total: processed,
+    records_new: 0,
+    records_updated: buildingsUpserted,
+    records_meta: {
+      duration_ms: durationMs,
+      parcels_processed: processed,
+      parcels_linked: parcelsLinked,
+      buildings_matched: buildingsMatched,
+      buildings_upserted: buildingsUpserted,
+      matches_polygon: polygonMatches,
+      matches_multipoint: multipointMatches,
+      matches_nearest: nearestMatches,
+      no_match_count: noMatch,
+    },
+  });
   pipeline.emitMeta(
     { "parcels": ["id", "centroid_lat", "centroid_lng", "geometry"], "building_footprints": ["id", "geometry", "footprint_area_sqm", "centroid_lat", "centroid_lng"] },
     { "parcel_buildings": ["parcel_id", "building_id", "is_primary", "structure_type", "match_type", "confidence", "linked_at"] }
