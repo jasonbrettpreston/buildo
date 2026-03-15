@@ -527,12 +527,15 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                 let totalDel = 0;
                 let hasAnyTelemetry = false;
                 // Build per-step summary data
-                const stepRows: { label: string; slug: string; ranThisChain: boolean; records_total: number | null; records_new: number | null; records_updated: number | null; duration_ms: number | null }[] = [];
+                const stepRows: { label: string; slug: string; ranThisChain: boolean; records_total: number | null; records_new: number | null; records_updated: number | null; duration_ms: number | null; verdict: string | null }[] = [];
                 for (const step of chain.steps) {
                   const scopedKey = `${chain.id}:${step.slug}`;
                   const stepInfo = pipelineLastRun[scopedKey];
                   const stepStartMs = stepInfo?.last_run_at ? new Date(stepInfo.last_run_at).getTime() : 0;
                   const ranThisChain = stepStartMs >= chainStartMs && chainStartMs > 0;
+                  const auditVerdict = ranThisChain
+                    ? ((stepInfo?.records_meta as Record<string, unknown>)?.audit_table as { verdict?: string } | undefined)?.verdict ?? null
+                    : null;
                   stepRows.push({
                     label: PIPELINE_REGISTRY[step.slug]?.name ?? step.slug,
                     slug: step.slug,
@@ -541,6 +544,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     records_new: ranThisChain ? (stepInfo?.records_new ?? null) : null,
                     records_updated: ranThisChain ? (stepInfo?.records_updated ?? null) : null,
                     duration_ms: ranThisChain ? (stepInfo?.duration_ms ?? null) : null,
+                    verdict: auditVerdict,
                   });
                   const telemetry = (stepInfo?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
                   if (telemetry?.pg_stats) {
@@ -561,26 +565,22 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                       <span className="text-[10px] tabular-nums text-gray-600">
                         {formatDuration(chainInfo.duration_ms)}
                       </span>
-                      {totalIns > 0 && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium tabular-nums">
-                          +{totalIns.toLocaleString()} inserted
-                        </span>
-                      )}
-                      {totalUpd > 0 && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium tabular-nums">
-                          {totalUpd.toLocaleString()} updated
-                        </span>
-                      )}
-                      {totalDel > 0 && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium tabular-nums">
-                          {totalDel.toLocaleString()} deleted
-                        </span>
-                      )}
-                      {hasAnyTelemetry && totalIns === 0 && totalUpd === 0 && totalDel === 0 && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 font-medium">
-                          No rows impacted
-                        </span>
-                      )}
+                      {/* Audit verdict summary — show worst verdict across all steps */}
+                      {(() => {
+                        const verdicts = stepRows.map(s => s.verdict).filter(Boolean) as string[];
+                        if (verdicts.length === 0) {
+                          // No audit_tables — fall back to legacy badges
+                          return <>
+                            {totalIns > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium tabular-nums">+{totalIns.toLocaleString()} inserted</span>}
+                            {totalUpd > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium tabular-nums">{totalUpd.toLocaleString()} updated</span>}
+                          </>;
+                        }
+                        const hasFail = verdicts.includes('FAIL');
+                        const hasWarn = verdicts.includes('WARN');
+                        const label = hasFail ? 'FAIL' : hasWarn ? 'WARN' : 'PASS';
+                        const cls = hasFail ? 'bg-red-100 text-red-700' : hasWarn ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700';
+                        return <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${cls}`}>{label}</span>;
+                      })()}
                     </div>
                     {/* Per-step breakdown */}
                     <div className="mt-2 flex flex-col gap-0.5">
@@ -597,16 +597,14 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           </span>
                           {s.ranThisChain ? (
                             <>
-                              {s.records_total != null && s.records_total > 0 && (
-                                <span className="text-gray-500">{s.records_total.toLocaleString()}</span>
-                              )}
-                              {s.records_new != null && s.records_new > 0 && (
-                                <span className="text-green-600">+{s.records_new.toLocaleString()} new</span>
-                              )}
-                              {s.records_updated != null && s.records_updated > 0 && (
-                                <span className="text-blue-600">{s.records_updated.toLocaleString()} upd</span>
-                              )}
-                              {(s.records_total == null || s.records_total === 0) && (s.records_new == null || s.records_new === 0) && (s.records_updated == null || s.records_updated === 0) && (
+                              {s.verdict ? (
+                                <span className={`text-[8px] px-1 py-0.5 rounded font-semibold ${
+                                  s.verdict === 'PASS' ? 'bg-green-50 text-green-600' :
+                                  s.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-600' :
+                                  s.verdict === 'FAIL' ? 'bg-red-50 text-red-600' :
+                                  'text-gray-400'
+                                }`}>{s.verdict}</span>
+                              ) : (
                                 <span className="text-gray-400">&mdash;</span>
                               )}
                               <span className="text-gray-400 w-12 text-right">{formatDuration(s.duration_ms)}</span>
