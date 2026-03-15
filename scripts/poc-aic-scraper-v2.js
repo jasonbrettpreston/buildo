@@ -536,6 +536,13 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         const result = await scrapeWithRetry(page, yearSeq, pool);
         tel.latencies.push(Date.now() - reqStart);
         accumulateResult(result);
+
+        // Early abort on sustained misses (big runs only)
+        // Check every 10 permits: if 50%+ are not_found (excluding closed), something is wrong
+        if (i >= 9 && (i + 1) % 10 === 0 && tel.not_found_count / tel.permits_attempted >= 0.5) {
+          pipeline.log.warn('[scraper]', `Early abort: ${tel.not_found_count}/${tel.permits_attempted} not found (${(tel.not_found_count / tel.permits_attempted * 100).toFixed(0)}% miss rate). Stopping to prevent bandwidth waste.`);
+          break;
+        }
       }
     }
   } finally {
@@ -585,22 +592,31 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         proxy_host: process.env.PROXY_HOST || null,
         latency: latencyStats,
       },
-      audit_table: {
-        phase: 1,
-        name: 'Data Ingestion',
-        verdict: 'PASS',
-        rows: [
-          { metric: 'permits_attempted', value: tel.permits_attempted, threshold: null, status: 'INFO' },
-          { metric: 'permits_found', value: tel.permits_found, threshold: null, status: 'INFO' },
-          { metric: 'permits_closed', value: tel.permits_closed, threshold: null, status: 'INFO' },
-          { metric: 'not_found_count', value: tel.not_found_count, threshold: null, status: 'INFO' },
-          { metric: 'records_inserted', value: tel.total_upserted, threshold: null, status: 'INFO' },
-          { metric: 'records_updated', value: tel.status_changes, threshold: null, status: 'INFO' },
-          { metric: 'duration_ms', value: durationMs, threshold: null, status: 'INFO' },
-          { metric: 'exit_code', value: 0, threshold: '== 0', status: 'PASS' },
-          { metric: 'pipeline_summary_emitted', value: true, threshold: '== true', status: 'PASS' },
-        ],
-      },
+      audit_table: (() => {
+        // Effective miss rate: not_found / attempted (excludes permits_closed — those are expected)
+        const missRate = tel.permits_attempted > 0
+          ? (tel.not_found_count / tel.permits_attempted * 100) : 0;
+        const missRateStr = missRate.toFixed(1) + '%';
+        const missStatus = missRate >= 20 ? 'FAIL' : 'PASS';
+        const verdict = missStatus === 'FAIL' ? 'FAIL' : 'PASS';
+        return {
+          phase: 1,
+          name: 'Data Ingestion',
+          verdict,
+          rows: [
+            { metric: 'permits_attempted', value: tel.permits_attempted, threshold: null, status: 'INFO' },
+            { metric: 'permits_found', value: tel.permits_found, threshold: null, status: 'INFO' },
+            { metric: 'permits_closed', value: tel.permits_closed, threshold: null, status: 'INFO' },
+            { metric: 'not_found_count', value: tel.not_found_count, threshold: null, status: 'INFO' },
+            { metric: 'not_found_rate', value: missRateStr, threshold: '< 20%', status: missStatus },
+            { metric: 'records_inserted', value: tel.total_upserted, threshold: null, status: 'INFO' },
+            { metric: 'records_updated', value: tel.status_changes, threshold: null, status: 'INFO' },
+            { metric: 'duration_ms', value: durationMs, threshold: null, status: 'INFO' },
+            { metric: 'exit_code', value: 0, threshold: '== 0', status: 'PASS' },
+            { metric: 'pipeline_summary_emitted', value: true, threshold: '== true', status: 'PASS' },
+          ],
+        };
+      })(),
     },
   });
 
