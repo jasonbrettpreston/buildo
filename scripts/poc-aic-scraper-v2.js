@@ -20,10 +20,15 @@
  *   node scripts/poc-aic-scraper-v2.js "24 132854"        # single permit
  *
  * Env vars:
- *   PROXY_HOST, PROXY_PORT     — proxy server (required for production)
- *   PROXY_USER, PROXY_PASS     — proxy credentials
- *   PROXY_COUNTRY              — geo-target country code (default: CA)
- *   SCRAPE_BATCH_SIZE           — permits per batch (default: 10)
+ *   PROXY_HOST     — proxy hostname (e.g. ca.decodo.com for Canadian IPs)
+ *   PROXY_PORT     — proxy port (e.g. 20001 for Decodo Canada)
+ *   PROXY_USER     — proxy username
+ *   PROXY_PASS     — proxy password
+ *   SCRAPE_BATCH_SIZE — permits per batch (default: 10)
+ *
+ * Decodo geo-targeting: use country-specific hostname + port range
+ *   Random:  gate.decodo.com:10001  (will be geo-fenced by AIC portal)
+ *   Canada:  ca.decodo.com:20001    (required for Toronto municipal data)
  *
  * SPEC LINK: docs/specs/38_inspection_scraping.md
  */
@@ -113,17 +118,10 @@ async function launchBrowser() {
     browser = await chromium.launch(launchOpts);
   }
 
-  // Geo-targeting: append ;country=XX to proxy username for providers like Decodo/ProxyEmpire
-  let proxyUser = process.env.PROXY_USER || '';
-  if (proxyUser && !proxyUser.includes(';country=')) {
-    const country = process.env.PROXY_COUNTRY || 'CA';
-    proxyUser = `${proxyUser};country=${country}`;
-  }
-
   const context = await browser.newContext({
     userAgent: USER_AGENT,
-    ...(proxyUser && {
-      httpCredentials: { username: proxyUser, password: process.env.PROXY_PASS || '' },
+    ...(process.env.PROXY_USER && {
+      httpCredentials: { username: process.env.PROXY_USER, password: process.env.PROXY_PASS || '' },
     }),
   });
 
@@ -420,12 +418,15 @@ pipeline.run('poc-aic-scraper', async (pool) => {
     latencies: [],
   };
 
-  // Proxy validation — warn if no proxy configured
+  // Proxy validation — warn if no proxy configured or using wrong endpoint
   if (!process.env.PROXY_HOST) {
-    pipeline.log.warn('[scraper]', 'No PROXY_HOST configured — connecting directly to AIC portal. WAF will likely block headless requests. Set PROXY_HOST/PROXY_PORT/PROXY_USER/PROXY_PASS for production use.');
+    pipeline.log.warn('[scraper]', 'No PROXY_HOST configured — connecting directly to AIC portal. WAF will likely block headless requests. Set PROXY_HOST=ca.decodo.com PROXY_PORT=20001 for Canadian residential proxy.');
   } else {
-    const country = process.env.PROXY_COUNTRY || 'CA';
-    pipeline.log.info('[scraper]', `Proxy: ${process.env.PROXY_HOST}:${process.env.PROXY_PORT} (geo: ${country})`);
+    const host = process.env.PROXY_HOST;
+    pipeline.log.info('[scraper]', `Proxy: ${host}:${process.env.PROXY_PORT}`);
+    if (host === 'gate.decodo.com') {
+      pipeline.log.warn('[scraper]', 'Using gate.decodo.com (random geo) — AIC portal may geo-fence non-Canadian IPs. Use ca.decodo.com:20001 for Canadian IPs.');
+    }
   }
 
   // Step 0: Launch browser + establish WAF session
@@ -562,6 +563,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         error_categories: tel.error_categories,
         last_error: tel.last_error,
         proxy_configured: !!process.env.PROXY_HOST,
+        proxy_host: process.env.PROXY_HOST || null,
         latency: latencyStats,
       },
     },

@@ -546,6 +546,11 @@ async function run() {
               if (scTel.proxy_configured === false) {
                 warnings.push('Scraper ran without proxy — WAF likely blocking direct connections');
                 console.log('  WARN: No proxy configured — running direct');
+              } else if (scTel.proxy_host === 'gate.decodo.com') {
+                warnings.push('Scraper using random-geo proxy (gate.decodo.com) — use ca.decodo.com for Canadian IPs');
+                console.log('  WARN: Using random-geo proxy — AIC portal may geo-fence');
+              } else {
+                console.log(`  OK: Proxy host: ${scTel.proxy_host}`);
               }
 
               // Proxy errors with breakdown
