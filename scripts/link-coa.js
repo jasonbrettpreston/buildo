@@ -3,11 +3,18 @@
  * Link unlinked CoA applications to building permits using address matching.
  *
  * 3-tier cascade (bulk SQL operations):
- *   1. Exact address match (street_num + street_name) → 0.95 confidence
- *   2. Fuzzy address match (street_name + ward)       → 0.60 confidence
- *   3. Description similarity (full-text search)      → 0.30-0.50 confidence
+ *   1. Exact address match (street_num + street_name + ward) → 0.95 confidence
+ *   2. Fuzzy address match (street_name + ward)              → 0.60 confidence
+ *   3. Description similarity (full-text search + ward)      → 0.30-0.50 confidence
+ *
+ * Ward comparison uses LTRIM(ward, '0') to normalize format differences
+ * (CoA uses "2", permits use "02").
+ *
+ * Tier 3 uses plainto_tsquery for stop-word safety.
  *
  * Usage: node scripts/link-coa.js [--dry-run]
+ *
+ * SPEC LINK: docs/specs/12_coa_integration.md
  */
 const pipeline = require('./lib/pipeline');
 
@@ -19,29 +26,31 @@ const STRIP_STREET_SQL = `TRIM(REGEXP_REPLACE(UPPER(ca.street_name),
 pipeline.run('link-coa', async (pool) => {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
+  const startTime = Date.now();
 
-  console.log('=== Buildo CoA Linker ===\n');
-  if (dryRun) console.log('DRY RUN — no database writes\n');
+  pipeline.log.info('[link-coa]', `Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
 
   // Count unlinked before
   const beforeResult = await pool.query(
     `SELECT COUNT(*) as total FROM coa_applications WHERE linked_permit_num IS NULL`
   );
   const totalUnlinked = parseInt(beforeResult.rows[0].total, 10);
-  console.log(`Unlinked CoA applications: ${totalUnlinked.toLocaleString()}\n`);
+  pipeline.log.info('[link-coa]', `Unlinked CoA applications: ${totalUnlinked.toLocaleString()}`);
 
   if (totalUnlinked === 0) {
-    console.log('Nothing to link.');
+    pipeline.log.info('[link-coa]', 'Nothing to link.');
+    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
     return;
   }
 
-  const startTime = Date.now();
   let exact = 0, fuzzy = 0, desc = 0;
+  let descErrors = 0;
 
   // ------------------------------------------------------------------
-  // Tier 1: Bulk exact address match (street_num + street_name → 0.95)
+  // Tier 1: Bulk exact address match (street_num + street_name + ward → 0.95)
+  // Ward normalized with LTRIM to handle "2" vs "02" format mismatch.
   // ------------------------------------------------------------------
-  console.log('Tier 1: Exact address matching...');
+  pipeline.log.info('[link-coa]', 'Tier 1: Exact address + ward matching...');
   if (!dryRun) {
     exact = await pipeline.withTransaction(pool, async (client) => {
       const exactResult = await client.query(`
@@ -55,9 +64,11 @@ pipeline.run('link-coa', async (pool) => {
           JOIN permits p
             ON UPPER(TRIM(p.street_num)) = UPPER(TRIM(ca2.street_num))
             AND UPPER(p.street_name) LIKE '%' || ${STRIP_STREET_SQL.replace(/ca\./g, 'ca2.')} || '%'
+            AND LTRIM(p.ward, '0') = LTRIM(ca2.ward, '0')
           WHERE ca2.linked_permit_num IS NULL
             AND ca2.street_num IS NOT NULL AND TRIM(ca2.street_num) != ''
             AND ca2.street_name IS NOT NULL AND TRIM(ca2.street_name) != ''
+            AND ca2.ward IS NOT NULL
             AND LENGTH(${STRIP_STREET_SQL.replace(/ca\./g, 'ca2.')}) > 0
           ORDER BY ca2.id, p.issued_date DESC NULLS LAST
         ) matched
@@ -66,12 +77,12 @@ pipeline.run('link-coa', async (pool) => {
       return exactResult.rowCount || 0;
     });
   }
-  console.log(`  Linked: ${exact.toLocaleString()} (confidence 0.95)`);
+  pipeline.log.info('[link-coa]', `Tier 1 linked: ${exact.toLocaleString()} (confidence 0.95)`);
 
   // ------------------------------------------------------------------
   // Tier 2: Bulk fuzzy address match (street_name + ward → 0.60)
   // ------------------------------------------------------------------
-  console.log('Tier 2: Fuzzy address matching...');
+  pipeline.log.info('[link-coa]', 'Tier 2: Fuzzy address + ward matching...');
   if (!dryRun) {
     fuzzy = await pipeline.withTransaction(pool, async (client) => {
       const fuzzyResult = await client.query(`
@@ -84,7 +95,7 @@ pipeline.run('link-coa', async (pool) => {
           FROM coa_applications ca2
           JOIN permits p
             ON UPPER(p.street_name) LIKE '%' || ${STRIP_STREET_SQL.replace(/ca\./g, 'ca2.')} || '%'
-            AND p.ward = ca2.ward
+            AND LTRIM(p.ward, '0') = LTRIM(ca2.ward, '0')
           WHERE ca2.linked_permit_num IS NULL
             AND ca2.street_name IS NOT NULL AND TRIM(ca2.street_name) != ''
             AND ca2.ward IS NOT NULL
@@ -96,12 +107,13 @@ pipeline.run('link-coa', async (pool) => {
       return fuzzyResult.rowCount || 0;
     });
   }
-  console.log(`  Linked: ${fuzzy.toLocaleString()} (confidence 0.60)`);
+  pipeline.log.info('[link-coa]', `Tier 2 linked: ${fuzzy.toLocaleString()} (confidence 0.60)`);
 
   // ------------------------------------------------------------------
   // Tier 3: Description FTS — batched via unnest + CROSS JOIN LATERAL
+  // Uses plainto_tsquery for stop-word safety (no dangling & crash risk).
   // ------------------------------------------------------------------
-  console.log('Tier 3: Description similarity matching...');
+  pipeline.log.info('[link-coa]', 'Tier 3: Description similarity matching...');
   const remaining = await pool.query(`
     SELECT id, application_number, ward, description
     FROM coa_applications
@@ -110,9 +122,10 @@ pipeline.run('link-coa', async (pool) => {
       AND ward IS NOT NULL
     ORDER BY decision_date DESC NULLS LAST
   `);
-  console.log(`  Candidates: ${remaining.rows.length.toLocaleString()}`);
+  pipeline.log.info('[link-coa]', `Tier 3 candidates: ${remaining.rows.length.toLocaleString()}`);
 
-  // Build ts_query strings for each candidate (JS-side keyword extraction)
+  // Build keyword strings for each candidate (JS-side keyword extraction)
+  // Joined with spaces for plainto_tsquery (not & for to_tsquery)
   const candidates = [];
   for (const app of remaining.rows) {
     const keywords = app.description
@@ -122,11 +135,10 @@ pipeline.run('link-coa', async (pool) => {
       .filter((w) => w.length > 3)
       .slice(0, 8);
     if (keywords.length < 2) continue;
-    candidates.push({ id: app.id, ward: app.ward, tsQuery: keywords.join(' & ') });
+    candidates.push({ id: app.id, ward: app.ward, tsQuery: keywords.join(' ') });
   }
-  console.log(`  Filterable candidates: ${candidates.length.toLocaleString()}`);
+  pipeline.log.info('[link-coa]', `Tier 3 filterable: ${candidates.length.toLocaleString()}`);
 
-  let descErrors = 0;
   const BATCH_SIZE = 500;
   if (!dryRun) {
     for (let offset = 0; offset < candidates.length; offset += BATCH_SIZE) {
@@ -152,12 +164,12 @@ pipeline.run('link-coa', async (pool) => {
               CROSS JOIN LATERAL (
                 SELECT permit_num,
                        ts_rank(to_tsvector('english', COALESCE(description, '')),
-                               to_tsquery('english', c.ts_query)) AS rank
+                               plainto_tsquery('english', c.ts_query)) AS rank
                 FROM permits
-                WHERE to_tsvector('english', COALESCE(description, '')) @@ to_tsquery('english', c.ts_query)
-                  AND ward = c.ward
+                WHERE to_tsvector('english', COALESCE(description, '')) @@ plainto_tsquery('english', c.ts_query)
+                  AND LTRIM(ward, '0') = LTRIM(c.ward, '0')
                 ORDER BY ts_rank(to_tsvector('english', COALESCE(description, '')),
-                                 to_tsquery('english', c.ts_query)) DESC
+                                 plainto_tsquery('english', c.ts_query)) DESC
                 LIMIT 1
               ) lat
               ORDER BY c.coa_id
@@ -172,7 +184,7 @@ pipeline.run('link-coa', async (pool) => {
       }
 
       if ((offset + BATCH_SIZE) % 2000 === 0 || offset + BATCH_SIZE >= candidates.length) {
-        console.log(`  Progress: ${Math.min(offset + BATCH_SIZE, candidates.length).toLocaleString()} / ${candidates.length.toLocaleString()} — ${desc} matched`);
+        pipeline.progress('link-coa', Math.min(offset + BATCH_SIZE, candidates.length), candidates.length, startTime);
       }
     }
   } else {
@@ -194,8 +206,8 @@ pipeline.run('link-coa', async (pool) => {
           CROSS JOIN LATERAL (
             SELECT permit_num
             FROM permits
-            WHERE to_tsvector('english', COALESCE(description, '')) @@ to_tsquery('english', c.ts_query)
-              AND ward = c.ward
+            WHERE to_tsvector('english', COALESCE(description, '')) @@ plainto_tsquery('english', c.ts_query)
+              AND LTRIM(ward, '0') = LTRIM(c.ward, '0')
             LIMIT 1
           ) lat
         `, [ids, wards, queries]);
@@ -205,31 +217,27 @@ pipeline.run('link-coa', async (pool) => {
       }
 
       if ((offset + BATCH_SIZE) % 2000 === 0 || offset + BATCH_SIZE >= candidates.length) {
-        console.log(`  Progress: ${Math.min(offset + BATCH_SIZE, candidates.length).toLocaleString()} / ${candidates.length.toLocaleString()} — ${desc} matched`);
+        pipeline.progress('link-coa', Math.min(offset + BATCH_SIZE, candidates.length), candidates.length, startTime);
       }
     }
   }
-  console.log(`  Linked: ${desc.toLocaleString()} (confidence 0.30-0.50)`);
-  if (descErrors > 0) console.log(`  Errors: ${descErrors}`);
+  pipeline.log.info('[link-coa]', `Tier 3 linked: ${desc.toLocaleString()} (confidence 0.30-0.50)${descErrors > 0 ? `, ${descErrors} batch errors` : ''}`);
 
   // ------------------------------------------------------------------
   // Summary
   // ------------------------------------------------------------------
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  const durationMs = Date.now() - startTime;
   const totalLinked = exact + fuzzy + desc;
   const noMatch = totalUnlinked - totalLinked;
 
-  console.log('');
-  console.log('=== Results ===');
-  console.log(`  Exact address matches:    ${exact.toLocaleString()} (0.95 confidence)`);
-  console.log(`  Fuzzy address matches:    ${fuzzy.toLocaleString()} (0.60 confidence)`);
-  console.log(`  Description matches:      ${desc.toLocaleString()} (0.30-0.50 confidence)`);
-  console.log(`  No match:                 ${noMatch.toLocaleString()}`);
-  console.log(`  Total linked:             ${totalLinked.toLocaleString()}/${totalUnlinked.toLocaleString()} (${((totalLinked / totalUnlinked) * 100).toFixed(1)}%)`);
-  console.log(`  Duration:                 ${elapsed}s`);
+  pipeline.log.info('[link-coa]', 'Linking complete', {
+    exact, fuzzy, desc, noMatch, totalLinked,
+    rate: `${((totalLinked / totalUnlinked) * 100).toFixed(1)}%`,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
 
   if (dryRun) {
-    console.log('\nDRY RUN complete — no changes written to database.');
+    pipeline.log.info('[link-coa]', 'DRY RUN complete — no changes written.');
   }
 
   // Final stats
@@ -244,8 +252,17 @@ pipeline.run('link-coa', async (pool) => {
     FROM coa_applications
   `);
   const s = stats.rows[0];
-  console.log(`\nDB Stats: ${s.total} total | ${s.linked} linked (${s.high_conf} high, ${s.med_conf} med, ${s.low_conf} low) | ${s.upcoming} upcoming leads`);
-  pipeline.emitSummary({ records_total: totalLinked, records_new: 0, records_updated: totalLinked });
+  pipeline.log.info('[link-coa]', `DB stats: ${s.total} total | ${s.linked} linked (${s.high_conf} high, ${s.med_conf} med, ${s.low_conf} low) | ${s.upcoming} upcoming leads`);
+
+  const meta = {
+    duration_ms: durationMs,
+    matches_tier_1_exact: exact,
+    matches_tier_2_fuzzy: fuzzy,
+    matches_tier_3_desc: desc,
+    tier_3_errors: descErrors,
+    unlinked_remaining: noMatch,
+  };
+  pipeline.emitSummary({ records_total: totalLinked, records_new: 0, records_updated: totalLinked, records_meta: meta });
   pipeline.emitMeta(
     { "coa_applications": ["id", "application_number", "street_num", "street_name", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name", "ward", "issued_date", "description"] },
     { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"] }
