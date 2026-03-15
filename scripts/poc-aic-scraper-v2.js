@@ -19,7 +19,11 @@
  *   node scripts/poc-aic-scraper-v2.js                    # batch mode (10 permits)
  *   node scripts/poc-aic-scraper-v2.js "24 132854"        # single permit
  *
- * Env vars: PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS
+ * Env vars:
+ *   PROXY_HOST, PROXY_PORT     — proxy server (required for production)
+ *   PROXY_USER, PROXY_PASS     — proxy credentials
+ *   PROXY_COUNTRY              — geo-target country code (default: CA)
+ *   SCRAPE_BATCH_SIZE           — permits per batch (default: 10)
  *
  * SPEC LINK: docs/specs/38_inspection_scraping.md
  */
@@ -109,10 +113,17 @@ async function launchBrowser() {
     browser = await chromium.launch(launchOpts);
   }
 
+  // Geo-targeting: append ;country=XX to proxy username for providers like Decodo/ProxyEmpire
+  let proxyUser = process.env.PROXY_USER || '';
+  if (proxyUser && !proxyUser.includes(';country=')) {
+    const country = process.env.PROXY_COUNTRY || 'CA';
+    proxyUser = `${proxyUser};country=${country}`;
+  }
+
   const context = await browser.newContext({
     userAgent: USER_AGENT,
-    ...(process.env.PROXY_USER && {
-      httpCredentials: { username: process.env.PROXY_USER, password: process.env.PROXY_PASS || '' },
+    ...(proxyUser && {
+      httpCredentials: { username: proxyUser, password: process.env.PROXY_PASS || '' },
     }),
   });
 
@@ -310,15 +321,31 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
   return { searched: 1, scraped, upserted, bytes: totalBytes, schemaDrift: schemaDrift || [], statusChanges };
 }
 
+// Classify error for telemetry
+function categorizeError(err) {
+  const msg = (err.message || String(err)).toLowerCase();
+  if (msg.includes('timeout') || msg.includes('timed out')) return 'timeout';
+  if (msg.includes('econnreset') || msg.includes('econnrefused') || msg.includes('socket hang up')) return 'connection_refused';
+  if (msg.includes('403') || msg.includes('forbidden')) return 'waf_block';
+  if (msg.includes('407') || msg.includes('proxy auth')) return 'proxy_auth';
+  if (msg.includes('429') || msg.includes('too many')) return 'rate_limited';
+  if (msg.includes('json') || msg.includes('unexpected token')) return 'json_parse';
+  if (msg.includes('navigation') || msg.includes('net::err')) return 'navigation';
+  return 'unknown';
+}
+
 async function scrapeWithRetry(page, yearSeq, dbPool) {
+  let lastError = null;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       return await scrapeYearSequence(page, yearSeq, dbPool);
     } catch (err) {
-      pipeline.log.error('[scraper]', err, { yearSeq, attempt, maxRetries: MAX_RETRIES });
+      lastError = err;
+      const category = categorizeError(err);
+      pipeline.log.error('[scraper]', err, { yearSeq, attempt, maxRetries: MAX_RETRIES, category });
       if (attempt === MAX_RETRIES) {
-        pipeline.log.error('[scraper]', `All retries exhausted for ${yearSeq}, skipping`);
-        return { searched: 1, scraped: 0, upserted: 0, bytes: 0, schemaDrift: [], retryExhausted: true };
+        pipeline.log.error('[scraper]', `All retries exhausted for ${yearSeq} [${category}], skipping`);
+        return { searched: 1, scraped: 0, upserted: 0, bytes: 0, schemaDrift: [], retryExhausted: true, errorCategory: category, errorMessage: (err.message || String(err)).slice(0, 200) };
       }
       // Exponential backoff: 2s, 4s, 8s
       await new Promise((r) => setTimeout(r, RETRY_BASE_MS * Math.pow(2, attempt - 1)));
@@ -388,8 +415,18 @@ pipeline.run('poc-aic-scraper', async (pool) => {
     schema_drift: [],
     status_changes: 0,
     total_upserted: 0,
+    error_categories: {},
+    last_error: null,
     latencies: [],
   };
+
+  // Proxy validation — warn if no proxy configured
+  if (!process.env.PROXY_HOST) {
+    pipeline.log.warn('[scraper]', 'No PROXY_HOST configured — connecting directly to AIC portal. WAF will likely block headless requests. Set PROXY_HOST/PROXY_PORT/PROXY_USER/PROXY_PASS for production use.');
+  } else {
+    const country = process.env.PROXY_COUNTRY || 'CA';
+    pipeline.log.info('[scraper]', `Proxy: ${process.env.PROXY_HOST}:${process.env.PROXY_PORT} (geo: ${country})`);
+  }
 
   // Step 0: Launch browser + establish WAF session
   pipeline.log.info('[scraper]', 'Launching browser for WAF session...');
@@ -408,7 +445,13 @@ pipeline.run('poc-aic-scraper', async (pool) => {
       tel.consecutive_empty_max = Math.max(tel.consecutive_empty_max, tel.consecutive_empty);
     }
     tel.total_upserted += (result.upserted || 0);
-    if (result.retryExhausted) tel.proxy_errors++;
+    if (result.retryExhausted) {
+      tel.proxy_errors++;
+      if (result.errorCategory) {
+        tel.error_categories[result.errorCategory] = (tel.error_categories[result.errorCategory] || 0) + 1;
+      }
+      if (result.errorMessage) tel.last_error = result.errorMessage;
+    }
     if (result.schemaDrift) {
       for (const drift of result.schemaDrift) {
         if (!tel.schema_drift.includes(drift)) tel.schema_drift.push(drift);
@@ -516,6 +559,9 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         session_failures: tel.session_failures,
         schema_drift: tel.schema_drift,
         status_changes: tel.status_changes,
+        error_categories: tel.error_categories,
+        last_error: tel.last_error,
+        proxy_configured: !!process.env.PROXY_HOST,
         latency: latencyStats,
       },
     },

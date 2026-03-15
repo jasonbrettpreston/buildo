@@ -542,10 +542,21 @@ async function run() {
             }
 
             if (scTel) {
-              // Proxy errors
+              // Proxy configuration
+              if (scTel.proxy_configured === false) {
+                warnings.push('Scraper ran without proxy — WAF likely blocking direct connections');
+                console.log('  WARN: No proxy configured — running direct');
+              }
+
+              // Proxy errors with breakdown
               if (scTel.proxy_errors > 0) {
-                warnings.push(`Scraper had ${scTel.proxy_errors} proxy errors (all retries exhausted)`);
-                console.log(`  WARN: ${scTel.proxy_errors} proxy errors in last scrape`);
+                const cats = scTel.error_categories || {};
+                const breakdown = Object.entries(cats).map(([k, v]) => `${k}:${v}`).join(', ');
+                warnings.push(`Scraper had ${scTel.proxy_errors} proxy errors (${breakdown || 'unclassified'})`);
+                console.log(`  WARN: ${scTel.proxy_errors} proxy errors — ${breakdown || 'unclassified'}`);
+                if (scTel.last_error) {
+                  console.log(`  WARN: Last error: ${scTel.last_error}`);
+                }
               } else {
                 console.log('  OK: No proxy errors');
               }
