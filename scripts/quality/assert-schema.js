@@ -29,11 +29,13 @@ const EXPECTED_PERMIT_COLUMNS = [
   'BUILDER_NAME', 'ISSUED_DATE', 'APPLICATION_DATE',
 ];
 
+// Active resource columns only — CONTACT_NAME and WARD_NUMBER are Closed-resource-only.
+// Active uses WARD (text), Closed uses WARD_NUMBER (int4). Both handled in load-coa.js mapRecord.
 const EXPECTED_COA_COLUMNS = [
   'REFERENCE_FILE#', 'IN_DATE', 'STATUSDESC',
   'STREET_NUM', 'STREET_NAME', 'STREET_TYPE',
-  'C_OF_A_DESCISION', 'HEARING_DATE', 'CONTACT_NAME',
-  'DESCRIPTION', 'SUB_TYPE', 'WARD_NUMBER',
+  'C_OF_A_DESCISION', 'HEARING_DATE', 'WARD',
+  'DESCRIPTION', 'SUB_TYPE',
 ];
 
 // Source data download URLs
