@@ -46,6 +46,8 @@ const PIPELINE_SCRIPTS: Record<string, string> = {
   // Quality (CQA validation)
   assert_schema: 'scripts/quality/assert-schema.js',
   assert_data_bounds: 'scripts/quality/assert-data-bounds.js',
+  assert_network_health: 'scripts/quality/assert-network-health.js',
+  assert_staleness: 'scripts/quality/assert-staleness.js',
   // Chain orchestrators
   chain_permits: 'scripts/run-chain.js',
   chain_coa: 'scripts/run-chain.js',

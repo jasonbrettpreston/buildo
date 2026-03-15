@@ -46,10 +46,12 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
   // Snapshot (1) — capture metrics
   refresh_snapshot:   { name: 'Refresh Snapshot',      group: 'snapshot' },
-  // Quality (3) — CQA validation
-  assert_schema:        { name: 'Schema Validation',    group: 'quality' },
-  assert_data_bounds:   { name: 'Data Quality Checks',  group: 'quality' },
-  assert_engine_health: { name: 'Engine Health',         group: 'quality' },
+  // Quality (5) — CQA validation
+  assert_schema:         { name: 'Schema Validation',    group: 'quality' },
+  assert_data_bounds:    { name: 'Data Quality Checks',  group: 'quality' },
+  assert_engine_health:  { name: 'Engine Health',         group: 'quality' },
+  assert_network_health: { name: 'Network Health',        group: 'quality' },
+  assert_staleness:      { name: 'Staleness Monitor',     group: 'quality' },
 };
 
 // ---------------------------------------------------------------------------
@@ -147,10 +149,12 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     label: 'Deep Scrapes',
     description: 'Weekly — AIC portal inspection scraping via REST API',
     steps: [
-      { slug: 'inspections',          indent: 0 },
-      { slug: 'refresh_snapshot',     indent: 1 },
-      { slug: 'assert_data_bounds',   indent: 0 },
-      { slug: 'assert_engine_health', indent: 0 },
+      { slug: 'inspections',           indent: 0 },
+      { slug: 'assert_network_health', indent: 0 },
+      { slug: 'refresh_snapshot',      indent: 1 },
+      { slug: 'assert_data_bounds',    indent: 0 },
+      { slug: 'assert_staleness',      indent: 0 },
+      { slug: 'assert_engine_health',  indent: 0 },
     ],
   },
 ];
@@ -982,8 +986,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 const warned = (meta.checks_warned as number) ?? 0;
                                 const errCount = (typeof meta.errors === 'number' ? meta.errors : Array.isArray(meta.errors) ? (meta.errors as string[]).length : 0);
                                 const hasFailures = failed > 0 || errCount > 0 || info?.status === 'failed';
-                                const warningsList = Array.isArray(meta.warnings) ? meta.warnings as string[] : [];
-                                const errorsList = Array.isArray(meta.errors) ? meta.errors as string[] : [];
+                                const warningsList: string[] = Array.isArray(meta.warnings) ? meta.warnings as string[] : [];
+                                const errorsList: string[] = Array.isArray(meta.errors) ? meta.errors as string[] : [];
                                 return (
                                   <div className="space-y-1.5">
                                     {/* Verdict banner for CQA steps */}
@@ -1009,7 +1013,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                     {/* Individual warning details */}
                                     {warningsList.length > 0 && (
                                       <div className="space-y-1">
-                                        {warningsList.map((w, i) => (
+                                        {warningsList.map((w: string, i: number) => (
                                           <div key={`warn-${i}`} className="flex items-start gap-1.5 px-2 py-1 rounded bg-amber-50 text-amber-700">
                                             <span className="text-[10px] mt-0.5 shrink-0">{'\u26A0'}</span>
                                             <span className="text-[10px] break-words">{w}</span>
@@ -1019,7 +1023,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                     )}
                                     {/* Scalar metadata (counts, labels) — skip arrays already rendered above */}
                                     {Object.entries(meta)
-                                      .filter(([k, v]) => v != null && v !== undefined && k !== 'pipeline_meta' && k !== 'warnings' && k !== 'errors' && k !== 'engine_health' && typeof v !== 'object')
+                                      .filter(([k, v]) => v != null && v !== undefined && k !== 'pipeline_meta' && k !== 'warnings' && k !== 'errors' && k !== 'engine_health' && k !== 'audit_table' && typeof v !== 'object')
                                       .map(([key, value]) => (
                                         <div key={key} className="flex justify-between">
                                           <span className="text-xs text-gray-600">{key.replace(/_/g, ' ')}</span>
@@ -1064,6 +1068,46 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                         </div>
                                       </div>
                                     )}
+                                    {/* Audit table (6-phase inspection audit) */}
+                                    {!!(meta.audit_table && typeof meta.audit_table === 'object') && (() => {
+                                      const at = meta.audit_table as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string }> };
+                                      const verdictColor = at.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200'
+                                        : at.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200'
+                                        : at.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                        : 'bg-gray-50 text-gray-500 border-gray-200';
+                                      const statusIcon = (s: string) => s === 'PASS' ? '\u2714' : s === 'FAIL' ? '\u2718' : s === 'WARN' ? '\u26A0' : s === 'SKIP' ? '\u2014' : '\u2022';
+                                      const statusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : 'text-gray-400';
+                                      return (
+                                        <div className="mt-2">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Phase {at.phase}: {at.name}</h5>
+                                            <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${verdictColor}`}>{at.verdict}</span>
+                                          </div>
+                                          <div className="overflow-x-auto">
+                                            <table className="w-full text-[10px] tabular-nums">
+                                              <thead>
+                                                <tr className="text-gray-500 text-left">
+                                                  <th className="pr-2 py-0.5 font-medium">Metric</th>
+                                                  <th className="px-2 py-0.5 font-medium text-right">Value</th>
+                                                  <th className="px-2 py-0.5 font-medium text-right">Threshold</th>
+                                                  <th className="px-2 py-0.5 font-medium text-center">Status</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {at.rows.map((r) => (
+                                                  <tr key={r.metric} className="border-t border-gray-50">
+                                                    <td className="pr-2 py-0.5 font-mono text-gray-700">{r.metric}</td>
+                                                    <td className="px-2 py-0.5 text-right text-gray-900 font-medium">{r.value === null ? '\u2014' : typeof r.value === 'boolean' ? String(r.value) : typeof r.value === 'number' ? r.value.toLocaleString() : String(r.value)}</td>
+                                                    <td className="px-2 py-0.5 text-right text-gray-400">{r.threshold ?? '\u2014'}</td>
+                                                    <td className={`px-2 py-0.5 text-center font-semibold ${statusColor(r.status)}`}>{statusIcon(r.status)}</td>
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
                                 );
                               })()}

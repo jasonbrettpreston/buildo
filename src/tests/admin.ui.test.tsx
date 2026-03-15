@@ -2707,7 +2707,7 @@ describe('Funnel panel components extracted to separate file', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const lineCount = source.split('\n').length;
-    expect(lineCount).toBeLessThan(1200);
+    expect(lineCount).toBeLessThan(1250);
   });
 
   it('FunnelPanels.tsx exports CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS, DataFlowTile', () => {

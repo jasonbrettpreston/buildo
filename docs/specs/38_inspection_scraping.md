@@ -255,29 +255,129 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 - **Section hidden** when no `permit_inspections` records exist for the permit
 - **"Last scraped"** timestamp shown at section footer
 
-### 3.6 Admin Integration
-- New pipeline slug `inspections` registered in admin pipeline definitions
+### 3.6 Admin Integration & 6-Phase Audit Chain
+
+- Pipeline slug `inspections` registered in admin pipeline definitions
 - Trigger via `POST /api/admin/pipelines/inspections`
 - Freshness tracked in `pipeline_runs` table
 - Schedule: Weekly (for active permits across 5 target types)
-- **Chain:** `deep_scrapes` = `inspections` → `refresh_snapshot` → `assert_data_bounds` → `assert_engine_health`
-- Quality tail steps provide: snapshot metrics capture, data bounds validation, and engine health checks after each scrape run
-- **Inspection-specific assert-data-bounds checks (13 total):**
-  - Basic: row count, orphaned rows (FK), invalid status values, Outstanding-with-date, completed-without-date, duplicate stages
-  - Coverage: per-type scrape coverage (all 5 TARGET_TYPES must have >0), scrape staleness (>30 days), thin data detection (single Outstanding stage)
-  - Integrity: stage count >20 (duplication), future dates, date-before-permit-year
-  - Transitions: status change count from latest scraper run (via records_updated in pipeline_runs)
-- **Scraper tracks status changes:** upsert checks previous status before writing; emits count as `records_updated` in PIPELINE_SUMMARY
-- **Scraper observability (telemetry in records_meta.scraper_telemetry):**
-  - `permits_attempted/found/scraped` — funnel visibility
-  - `proxy_errors` — retries exhausted count (all 3 attempts failed)
-  - `consecutive_empty_max` — peak consecutive empty responses (WAF trap indicator)
-  - `session_refreshes/bootstraps/failures` — WAF session health
-  - `schema_drift[]` — AIC API field changes detected (validates propertyRsn, folderRsn, inspectionProcesses, stages.desc/status)
-  - `latency.p50/p95/max` — per-request timing in ms
-  - Exponential backoff: 2s → 4s → 8s (was linear 2s/4s/6s)
-  - WAF trap auto-recovery: 20 consecutive empty responses → full browser re-bootstrap with fresh proxy session
-- **assert-data-bounds reads scraper_telemetry:** flags proxy_errors (WARN), schema_drift (ERROR), WAF traps (WARN), session failures (WARN)
+
+**Chain:** `deep_scrapes` (6 steps):
+```
+inspections → assert_network_health → refresh_snapshot → assert_data_bounds → assert_staleness → assert_engine_health
+```
+
+Every step emits a structured `audit_table` in `records_meta` with a consistent shape:
+```json
+{ "audit_table": { "phase": N, "name": "...", "verdict": "PASS|FAIL|WARN|SKIP", "rows": [{ "metric": "...", "value": ..., "threshold": "...|null", "status": "PASS|FAIL|WARN|INFO|SKIP" }] } }
+```
+
+#### Step 1: `inspections` (Phase 1 — Data Ingestion)
+**Script:** `scripts/poc-aic-scraper-v2.js`
+**Objective:** Execute the core extraction loop (Playwright/REST API) to pull live permit and inspection data from the AIC portal and upsert into PostgreSQL.
+
+| Metric | Source | Threshold | Level |
+|--------|--------|-----------|-------|
+| `permits_attempted` | `tel.permits_attempted` | — | INFO |
+| `permits_found` | `tel.permits_found` | — | INFO |
+| `not_found_count` | `tel.not_found_count` | — | INFO |
+| `records_inserted` | `tel.total_upserted` | — | INFO |
+| `records_updated` | `tel.status_changes` | — | INFO |
+| `duration_ms` | elapsed time | — | INFO |
+| `exit_code` | process exit | `== 0` | PASS/FAIL |
+| `pipeline_summary_emitted` | PIPELINE_SUMMARY output | `== true` | PASS/FAIL |
+
+**Pass criteria:** Exit code 0 AND PIPELINE_SUMMARY emitted. Finding 0 new permits is still PASS provided the script checked sequences without crashing.
+
+**Scraper observability (telemetry in `records_meta.scraper_telemetry`):**
+- `permits_attempted/found/scraped` — funnel visibility
+- `proxy_errors` — retries exhausted count (all 3 attempts failed)
+- `consecutive_empty_max` — peak consecutive empty responses (WAF trap indicator)
+- `session_refreshes/bootstraps/failures` — WAF session health
+- `schema_drift[]` — AIC API field changes detected
+- `latency.p50/p95/max` — per-request timing in ms
+- Exponential backoff: 2s → 4s → 8s
+- WAF trap auto-recovery: 20 consecutive empty → full browser re-bootstrap
+
+#### Step 2: `assert_network_health` (Phase 2 — Network Health)
+**Script:** `scripts/quality/assert-network-health.js`
+**Objective:** Validate the operational health of the scraping infrastructure by reading the telemetry JSON from the latest `inspections` run.
+
+| Metric | Source | Threshold | Level |
+|--------|--------|-----------|-------|
+| `schema_drift_count` | `scTel.schema_drift.length` | `== 0` | FAIL |
+| `proxy_error_rate` | `proxy_errors / permits_attempted * 100` | `< 5%` | FAIL |
+| `avg_latency_ms` | `scTel.latency.p50` | `< 2000` | WARN |
+| `max_latency_ms` | `scTel.latency.max` | — | INFO |
+| `consecutive_empty_hit` | `consecutive_empty_max >= 20` | `== false` | WARN |
+| `session_bootstraps` | `scTel.session_bootstraps` | — | INFO |
+| `session_failures` | `scTel.session_failures` | — | WARN if > 0 |
+
+**Pass criteria:** `schema_drift_count == 0` AND `proxy_error_rate < 5%`.
+
+#### Step 3: `refresh_snapshot` (Phase 5 — Refresh Snapshot)
+**Script:** `scripts/refresh-snapshot.js`
+**Objective:** Copy current state into historical ledger for time-series analytics.
+
+| Metric | Source | Threshold | Level |
+|--------|--------|-----------|-------|
+| `snapshots_created` | snapshot insert count | — | INFO |
+| `snapshot_duration_ms` | elapsed time | — | INFO |
+| `inspection_history_table` | table existence | — | SKIP (Phase 2) |
+
+**Pass criteria:** Snapshot transaction commits without FK/unique violations.
+
+#### Step 4: `assert_data_bounds` (Phase 3 — Data Quality)
+**Script:** `scripts/quality/assert-data-bounds.js`
+**Objective:** Run SQL queries to prove ingested data is structurally sound, logically valid, and free of anomalies.
+
+| Metric | SQL Check | Threshold | Level |
+|--------|-----------|-----------|-------|
+| `null_permit_num` | `COUNT(*) WHERE permit_num IS NULL OR ''` | `== 0` | FAIL |
+| `null_stage_name` | `COUNT(*) WHERE stage_name IS NULL OR ''` | `== 0` | FAIL |
+| `null_status` | `COUNT(*) WHERE status IS NULL OR ''` | `== 0` | FAIL |
+| `null_scraped_at` | `COUNT(*) WHERE scraped_at IS NULL` | `== 0` | FAIL |
+| `orphan_inspections` | `LEFT JOIN permits WHERE p.permit_num IS NULL` | `== 0` | FAIL |
+| `invalid_status` | `WHERE status NOT IN ('Outstanding','Passed','Not Passed','Partial')` | `== 0` | FAIL |
+| `outstanding_with_date` | `WHERE status='Outstanding' AND inspection_date IS NOT NULL` | `== 0` | WARN |
+| `completed_without_date` | `WHERE status!='Outstanding' AND inspection_date IS NULL` | `== 0` | WARN |
+| `duplicate_stages` | `GROUP BY (permit_num, stage_name) HAVING COUNT(*)>1` | `== 0` | FAIL |
+| `future_dates` | `WHERE inspection_date > CURRENT_DATE` | `== 0` | FAIL |
+| `ancient_dates` | `WHERE inspection_date < '2020-01-01'` | `== 0` | FAIL |
+| `date_before_permit_year` | `WHERE YEAR(date) < 2000 + YY` | `== 0` | FAIL |
+
+**Pass criteria:** All FAIL-level metrics return 0 rows.
+
+#### Step 5: `assert_staleness` (Phase 4 — Staleness Monitor)
+**Script:** `scripts/quality/assert-staleness.js`
+**Objective:** Detect pipeline blind spots — permits the scraper has silently abandoned.
+
+| Metric | SQL Check | Threshold | Level |
+|--------|-----------|-----------|-------|
+| `total_target_permits` | `COUNT(*) WHERE status='Inspection' AND permit_type = ANY(TARGET_TYPES)` | — | INFO |
+| `scraped_permits` | `COUNT(DISTINCT pi.permit_num) ... JOIN permit_inspections` | — | INFO |
+| `never_scraped` | `total - scraped` | — | INFO |
+| `coverage_pct` | `scraped / total * 100` | — | INFO |
+| `max_days_stale` | `MAX(CURRENT_DATE - scraped_at::date)` | — | INFO |
+| `stale_over_14d` | `COUNT(*) WHERE scraped_at < NOW() - '14 days'` | `== 0` | WARN (early) / FAIL (prod) |
+
+**Early phase:** `coverage_pct < 5%` → staleness is WARN, not FAIL.
+**Production phase:** `coverage_pct ≥ 5%` → staleness is FAIL.
+**Pass criteria:** No scraped permits stale > 14 days (adjusting for coverage phase).
+
+#### Step 6: `assert_engine_health` (Phase 6 — Engine Health)
+**Script:** `scripts/quality/assert-engine-health.js`
+**Objective:** Read PostgreSQL system catalogs to ensure upsert logic isn't bloating the disk.
+
+| Metric | Source | Threshold | Level |
+|--------|--------|-----------|-------|
+| `live_rows` | `pg_stat_user_tables.n_live_tup` for `permit_inspections` | — | INFO |
+| `dead_rows` | `n_dead_tup` | — | INFO |
+| `dead_tuple_pct` | `dead / (live + dead) * 100` | `< 10%` | FAIL |
+| `update_insert_ratio` | `n_tup_upd / n_tup_ins` | `< 5.0` | FAIL |
+| `last_autovacuum` | `last_autovacuum` timestamp | — | INFO |
+
+**Pass criteria:** `dead_tuple_pct < 10%` AND `update_insert_ratio < 5.0`.
 
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
@@ -289,12 +389,20 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 ### Target Files (Modify / Create)
 - `migrations/045_permit_inspections.sql` (new table)
 - `scripts/poc-aic-scraper.js` (v1 scraper — HTML scraping, superseded)
-- `scripts/poc-aic-scraper-v2.js` (v2 scraper — hybrid REST API, active)
+- `scripts/poc-aic-scraper-v2.js` (v2 scraper — hybrid REST API, active — add audit_table)
+- `scripts/quality/assert-network-health.js` (NEW — Phase 2 network health)
+- `scripts/quality/assert-staleness.js` (NEW — Phase 4 staleness monitor)
+- `scripts/quality/assert-data-bounds.js` (enhance — add NULL/ancient checks, emit audit_table)
+- `scripts/quality/assert-engine-health.js` (enhance — add inspection audit_table)
+- `scripts/refresh-snapshot.js` (enhance — add inspection audit_table)
+- `scripts/manifest.json` (register 2 new scripts, update deep_scrapes chain)
 - `src/lib/inspections/parser.ts` (HTML table parsing logic)
 - `src/lib/permits/types.ts` (add `Inspection` interface)
+- `src/lib/admin/funnel.ts` (add 2 new slugs to PIPELINE_REGISTRY)
 - `src/app/api/permits/[id]/route.ts` (add inspections JOIN)
 - `src/app/permits/[id]/page.tsx` (add Inspection Progress section)
-- `src/components/FreshnessTimeline.tsx` (register `inspections` pipeline slug)
+- `src/components/FreshnessTimeline.tsx` (register pipeline slugs, wire AuditTablePanel)
+- `src/components/funnel/FunnelPanels.tsx` (new AuditTablePanel component)
 - `src/app/api/admin/pipelines/[slug]/route.ts` (register pipeline script)
 - `src/tests/factories.ts` (add `createMockInspection` factory)
 - `src/tests/inspections.logic.test.ts` (new)

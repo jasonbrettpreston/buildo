@@ -493,17 +493,17 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 27 tracked pipelines', () => {
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(27);
+  it('has exactly 29 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(29);
   });
 
-  it('groups are correct: 8 ingest, 13 link, 2 classify, 1 snapshot, 3 quality', () => {
+  it('groups are correct: 8 ingest, 13 link, 2 classify, 1 snapshot, 5 quality', () => {
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(8);
     expect(groups.filter((g) => g === 'link')).toHaveLength(13);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(2);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
-    expect(groups.filter((g) => g === 'quality')).toHaveLength(3);
+    expect(groups.filter((g) => g === 'quality')).toHaveLength(5);
   });
 
   it('every pipeline has a non-empty human-readable name', () => {

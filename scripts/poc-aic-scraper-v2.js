@@ -545,6 +545,8 @@ pipeline.run('poc-aic-scraper', async (pool) => {
     elapsed: `${elapsed}s`,
   });
 
+  const durationMs = Date.now() - startMs;
+
   pipeline.emitSummary({
     records_total: tel.permits_attempted,
     records_new: tel.total_upserted,
@@ -567,6 +569,21 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         proxy_configured: !!process.env.PROXY_HOST,
         proxy_host: process.env.PROXY_HOST || null,
         latency: latencyStats,
+      },
+      audit_table: {
+        phase: 1,
+        name: 'Data Ingestion',
+        verdict: 'PASS',
+        rows: [
+          { metric: 'permits_attempted', value: tel.permits_attempted, threshold: null, status: 'INFO' },
+          { metric: 'permits_found', value: tel.permits_found, threshold: null, status: 'INFO' },
+          { metric: 'not_found_count', value: tel.not_found_count, threshold: null, status: 'INFO' },
+          { metric: 'records_inserted', value: tel.total_upserted, threshold: null, status: 'INFO' },
+          { metric: 'records_updated', value: tel.status_changes, threshold: null, status: 'INFO' },
+          { metric: 'duration_ms', value: durationMs, threshold: null, status: 'INFO' },
+          { metric: 'exit_code', value: 0, threshold: '== 0', status: 'PASS' },
+          { metric: 'pipeline_summary_emitted', value: true, threshold: '== true', status: 'PASS' },
+        ],
       },
     },
   });

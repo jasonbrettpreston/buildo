@@ -370,6 +370,19 @@ pipeline.run('refresh-snapshot', async (pool) => {
     console.log('\nDone!');
   });
 
-  pipeline.emitSummary({ records_total: 1, records_new: 1, records_updated: 0 });
+  pipeline.emitSummary({
+    records_total: 1, records_new: 1, records_updated: 0,
+    records_meta: {
+      audit_table: {
+        phase: 5,
+        name: 'Refresh Snapshot',
+        verdict: 'PASS',
+        rows: [
+          { metric: 'snapshots_created', value: 1, threshold: null, status: 'INFO' },
+          { metric: 'inspection_history_table', value: false, threshold: null, status: 'SKIP' },
+        ],
+      },
+    },
+  });
   pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"], "permit_inspections": ["*"] }, { "data_quality_snapshots": ["*"] });
 });

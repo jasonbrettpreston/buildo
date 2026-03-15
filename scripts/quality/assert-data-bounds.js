@@ -53,6 +53,7 @@ async function run() {
 
   const warnings = [];
   const errors = [];
+  let inspectionAuditTable = null;
 
   try {
     // -----------------------------------------------------------------------
@@ -339,265 +340,103 @@ async function run() {
     }
 
     // -----------------------------------------------------------------------
-    // Inspection-scoped checks
+    // Inspection-scoped checks (Phase 3: Data Quality)
+    // Note: Telemetry checks moved to assert-network-health.js (Phase 2)
+    //       Staleness checks moved to assert-staleness.js (Phase 4)
     // -----------------------------------------------------------------------
     {
+      const auditRows = [];
       try {
         const inspCount = await count(`SELECT COUNT(*) FROM permit_inspections`);
         if (inspCount > 0) {
-          console.log(`  OK: permit_inspections has ${inspCount.toLocaleString()} rows`);
+          console.log(`\n--- Phase 3: Inspection Data Quality (${inspCount.toLocaleString()} rows) ---`);
+
+          // Helper to run a check and record audit row
+          function checkInsp(metric, value, threshold, level) {
+            const status = level === 'FAIL' ? (value > 0 ? 'FAIL' : 'PASS')
+              : level === 'WARN' ? (value > 0 ? 'WARN' : 'PASS')
+              : 'INFO';
+            auditRows.push({ metric, value, threshold, status });
+            if (status === 'FAIL') {
+              errors.push(`${value} ${metric}`);
+              console.error(`  FAIL: ${metric} = ${value}`);
+            } else if (status === 'WARN') {
+              warnings.push(`${value} ${metric}`);
+              console.log(`  WARN: ${metric} = ${value}`);
+            } else {
+              console.log(`  PASS: ${metric} = ${value}`);
+            }
+          }
+
+          // NULL field checks (4 required columns)
+          const nullPermitNum = await count(`SELECT COUNT(*) FROM permit_inspections WHERE permit_num IS NULL OR permit_num = ''`);
+          checkInsp('null_permit_num', nullPermitNum, '== 0', 'FAIL');
+
+          const nullStageName = await count(`SELECT COUNT(*) FROM permit_inspections WHERE stage_name IS NULL OR stage_name = ''`);
+          checkInsp('null_stage_name', nullStageName, '== 0', 'FAIL');
+
+          const nullStatus = await count(`SELECT COUNT(*) FROM permit_inspections WHERE status IS NULL OR status = ''`);
+          checkInsp('null_status', nullStatus, '== 0', 'FAIL');
+
+          const nullScrapedAt = await count(`SELECT COUNT(*) FROM permit_inspections WHERE scraped_at IS NULL`);
+          checkInsp('null_scraped_at', nullScrapedAt, '== 0', 'FAIL');
 
           // Orphaned permit_num (not in permits table)
           const orphanInsp = await count(
             `SELECT COUNT(*) FROM permit_inspections pi
              WHERE NOT EXISTS (SELECT 1 FROM permits p WHERE p.permit_num = pi.permit_num)`
           );
-          if (orphanInsp > 0) {
-            errors.push(`${orphanInsp} orphaned permit_inspections rows (permit_num not in permits)`);
-            console.error(`  FAIL: ${orphanInsp} orphaned permit_inspections rows`);
-          } else {
-            console.log('  OK: No orphaned permit_inspections');
-          }
+          checkInsp('orphan_inspections', orphanInsp, '== 0', 'FAIL');
 
           // Invalid status values
           const badStatus = await count(
             `SELECT COUNT(*) FROM permit_inspections
              WHERE status NOT IN ('Outstanding', 'Passed', 'Not Passed', 'Partial')`
           );
-          if (badStatus > 0) {
-            errors.push(`${badStatus} permit_inspections with invalid status value`);
-            console.error(`  FAIL: ${badStatus} invalid inspection status values`);
-          } else {
-            console.log('  OK: All inspection status values valid');
-          }
+          checkInsp('invalid_status', badStatus, '== 0', 'FAIL');
 
-          // Date logic: Outstanding should have null date, non-Outstanding should have date
+          // Date logic
           const outstandingWithDate = await count(
             `SELECT COUNT(*) FROM permit_inspections
              WHERE status = 'Outstanding' AND inspection_date IS NOT NULL`
           );
-          if (outstandingWithDate > 0) {
-            warnings.push(`${outstandingWithDate} Outstanding inspections with a date (unexpected)`);
-            console.log(`  WARN: ${outstandingWithDate} Outstanding inspections have dates`);
-          } else {
-            console.log('  OK: No Outstanding inspections with dates');
-          }
+          checkInsp('outstanding_with_date', outstandingWithDate, '== 0', 'WARN');
 
           const completedNoDate = await count(
             `SELECT COUNT(*) FROM permit_inspections
              WHERE status != 'Outstanding' AND inspection_date IS NULL`
           );
-          if (completedNoDate > 0) {
-            warnings.push(`${completedNoDate} completed inspections missing date`);
-            console.log(`  WARN: ${completedNoDate} completed inspections have no date`);
-          } else {
-            console.log('  OK: All completed inspections have dates');
-          }
+          checkInsp('completed_without_date', completedNoDate, '== 0', 'WARN');
 
-          // Duplicate (permit_num, stage_name) — should be impossible with UNIQUE constraint
+          // Duplicate (permit_num, stage_name)
           const inspDupes = await count(
             `SELECT COUNT(*) FROM (
                SELECT permit_num, stage_name FROM permit_inspections
                GROUP BY permit_num, stage_name HAVING COUNT(*) > 1
              ) d`
           );
-          if (inspDupes > 0) {
-            errors.push(`${inspDupes} duplicate (permit_num, stage_name) groups`);
-            console.error(`  FAIL: ${inspDupes} duplicate inspection stage groups`);
-          } else {
-            console.log('  OK: No duplicate inspection stages');
-          }
+          checkInsp('duplicate_stages', inspDupes, '== 0', 'FAIL');
 
-          // --- Check 1: Coverage rate by permit type ---
-          console.log('\n  --- Inspection Coverage & Staleness ---');
-          const TARGET_TYPES = [
-            'Small Residential Projects', 'Building Additions/Alterations',
-            'New Houses', 'Plumbing(PS)', 'Residential Building Permit',
-          ];
-          const coverageRes = await pool.query(
-            `SELECT p.permit_type,
-                    COUNT(DISTINCT p.permit_num) AS total,
-                    COUNT(DISTINCT pi.permit_num) AS scraped
-             FROM permits p
-             LEFT JOIN permit_inspections pi ON pi.permit_num = p.permit_num
-             WHERE p.status = 'Inspection' AND p.permit_type = ANY($1)
-             GROUP BY p.permit_type`,
-            [TARGET_TYPES]
-          );
-          // Determine overall coverage phase: if <5% scraped across all types, we're in early ramp-up
-          const totalTarget = coverageRes.rows.reduce((s, r) => s + parseInt(r.total), 0);
-          const totalScraped = coverageRes.rows.reduce((s, r) => s + parseInt(r.scraped), 0);
-          const isEarlyPhase = totalTarget > 0 && (totalScraped / totalTarget) < 0.05;
-
-          for (const row of coverageRes.rows) {
-            if (parseInt(row.scraped) === 0) {
-              if (isEarlyPhase) {
-                // During early ramp-up, 0-scraped types are expected — warn, don't fail
-                warnings.push(`${row.permit_type}: 0 permits scraped (early coverage phase)`);
-                console.log(`  WARN: ${row.permit_type} has 0 scraped permits (early phase — not blocking)`);
-              } else {
-                errors.push(`${row.permit_type}: 0 permits scraped (AIC portal may have changed)`);
-                console.error(`  FAIL: ${row.permit_type} has 0 scraped permits`);
-              }
-            } else {
-              const pct = (100 * parseInt(row.scraped) / parseInt(row.total)).toFixed(1);
-              console.log(`  OK: ${row.permit_type}: ${row.scraped}/${row.total} scraped (${pct}%)`);
-            }
-          }
-
-          // --- Check 2: Scrape staleness ---
-          const staleRes = await pool.query(
-            `SELECT COUNT(*) AS total,
-                    COUNT(*) FILTER (WHERE pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '30 days') AS stale
-             FROM permits p
-             LEFT JOIN (SELECT DISTINCT ON (permit_num) permit_num, scraped_at
-                        FROM permit_inspections ORDER BY permit_num, scraped_at DESC) pi
-               ON pi.permit_num = p.permit_num
-             WHERE p.status = 'Inspection' AND p.permit_type = ANY($1)`,
-            [TARGET_TYPES]
-          );
-          const staleTotal = parseInt(staleRes.rows[0].total);
-          const staleCount = parseInt(staleRes.rows[0].stale);
-          const stalePct = staleTotal > 0 ? (100 * staleCount / staleTotal).toFixed(1) : '0';
-          if (staleTotal > 0 && staleCount / staleTotal > 0.99) {
-            // >99% stale is expected early (only scraped ~100 of 104K) — just log
-            console.log(`  OK: ${stalePct}% stale (${staleCount.toLocaleString()}/${staleTotal.toLocaleString()}) — early coverage phase`);
-          } else if (staleTotal > 0 && staleCount / staleTotal > 0.50) {
-            warnings.push(`${stalePct}% of inspection permits are stale (>30 days since scrape)`);
-            console.log(`  WARN: ${stalePct}% stale — scrape batches may not be keeping up`);
-          } else {
-            console.log(`  OK: ${stalePct}% stale (${staleCount.toLocaleString()}/${staleTotal.toLocaleString()})`);
-          }
-
-          // --- Check 3: Suspiciously thin data (only 1 Outstanding stage) ---
-          const thinPermits = await count(
-            `SELECT COUNT(*) FROM (
-               SELECT permit_num FROM permit_inspections
-               GROUP BY permit_num
-               HAVING COUNT(*) = 1 AND COUNT(*) FILTER (WHERE status = 'Outstanding') = 1
-             ) t`
-          );
-          if (thinPermits > inspCount * 0.3) {
-            warnings.push(`${thinPermits} permits have only 1 Outstanding stage (${(100 * thinPermits / inspCount).toFixed(0)}% — suspiciously thin)`);
-            console.log(`  WARN: ${thinPermits} permits with only 1 Outstanding stage`);
-          } else {
-            console.log(`  OK: ${thinPermits} permits with single Outstanding stage (normal)`);
-          }
-
-          // --- Check 4: Stage count per permit (>20 = anomaly) ---
-          const highStagePermits = await count(
-            `SELECT COUNT(*) FROM (
-               SELECT permit_num FROM permit_inspections
-               GROUP BY permit_num HAVING COUNT(*) > 20
-             ) h`
-          );
-          if (highStagePermits > 0) {
-            warnings.push(`${highStagePermits} permits have >20 inspection stages (possible duplication)`);
-            console.log(`  WARN: ${highStagePermits} permits with >20 stages`);
-          } else {
-            console.log('  OK: No permits with >20 stages');
-          }
-
-          // --- Check 5: Future inspection dates ---
+          // Future inspection dates
           const futureDates = await count(
             `SELECT COUNT(*) FROM permit_inspections WHERE inspection_date > CURRENT_DATE`
           );
-          if (futureDates > 0) {
-            errors.push(`${futureDates} inspections with future dates`);
-            console.error(`  FAIL: ${futureDates} inspections have future dates`);
-          } else {
-            console.log('  OK: No future inspection dates');
-          }
+          checkInsp('future_dates', futureDates, '== 0', 'FAIL');
 
-          // --- Check 6: Date before permit year ---
+          // Ancient dates (before 2020 — impossible for active permits)
+          const ancientDates = await count(
+            `SELECT COUNT(*) FROM permit_inspections WHERE inspection_date < '2020-01-01'`
+          );
+          checkInsp('ancient_dates', ancientDates, '== 0', 'FAIL');
+
+          // Date before permit year
           const dateBeforePermit = await count(
             `SELECT COUNT(*) FROM permit_inspections
              WHERE inspection_date IS NOT NULL
                AND EXTRACT(YEAR FROM inspection_date) < (2000 + SUBSTRING(permit_num FROM '^[0-9]{2}')::int)`
           );
-          if (dateBeforePermit > 0) {
-            errors.push(`${dateBeforePermit} inspections with date before permit year`);
-            console.error(`  FAIL: ${dateBeforePermit} inspections dated before their permit year`);
-          } else {
-            console.log('  OK: No inspection dates before permit year');
-          }
+          checkInsp('date_before_permit_year', dateBeforePermit, '== 0', 'FAIL');
 
-          // --- Check 7: Scraper telemetry (from latest scraper run) ---
-          console.log('\n  --- Scraper Telemetry ---');
-          try {
-            const lastRun = await pool.query(
-              `SELECT records_updated, records_meta FROM pipeline_runs
-               WHERE (pipeline = 'inspections' OR pipeline LIKE '%:inspections')
-                 AND status = 'completed'
-               ORDER BY started_at DESC LIMIT 1`
-            );
-            const row = lastRun.rows[0];
-            const statusChanges = row?.records_updated ?? 0;
-            const scTel = row?.records_meta?.scraper_telemetry;
-
-            if (statusChanges > 0) {
-              console.log(`  INFO: ${statusChanges} inspection stages changed status in last scrape run`);
-            } else {
-              console.log('  OK: No status changes in last scrape run');
-            }
-
-            if (scTel) {
-              // Proxy configuration
-              if (scTel.proxy_configured === false) {
-                warnings.push('Scraper ran without proxy — WAF likely blocking direct connections');
-                console.log('  WARN: No proxy configured — running direct');
-              } else if (scTel.proxy_host === 'gate.decodo.com') {
-                warnings.push('Scraper using random-geo proxy (gate.decodo.com) — use ca.decodo.com for Canadian IPs');
-                console.log('  WARN: Using random-geo proxy — AIC portal may geo-fence');
-              } else {
-                console.log(`  OK: Proxy host: ${scTel.proxy_host}`);
-              }
-
-              // Proxy errors with breakdown
-              if (scTel.proxy_errors > 0) {
-                const cats = scTel.error_categories || {};
-                const breakdown = Object.entries(cats).map(([k, v]) => `${k}:${v}`).join(', ');
-                warnings.push(`Scraper had ${scTel.proxy_errors} proxy errors (${breakdown || 'unclassified'})`);
-                console.log(`  WARN: ${scTel.proxy_errors} proxy errors — ${breakdown || 'unclassified'}`);
-                if (scTel.last_error) {
-                  console.log(`  WARN: Last error: ${scTel.last_error}`);
-                }
-              } else {
-                console.log('  OK: No proxy errors');
-              }
-
-              // Schema drift
-              if (scTel.schema_drift && scTel.schema_drift.length > 0) {
-                errors.push(`AIC API schema drift detected: ${scTel.schema_drift.join('; ')}`);
-                console.error(`  FAIL: Schema drift — ${scTel.schema_drift.join('; ')}`);
-              } else {
-                console.log('  OK: No API schema drift');
-              }
-
-              // WAF trap
-              if (scTel.consecutive_empty_max >= 20) {
-                warnings.push(`WAF trap triggered (${scTel.consecutive_empty_max} consecutive empty responses)`);
-                console.log(`  WARN: WAF trap triggered — ${scTel.session_bootstraps || 0} session re-bootstraps`);
-              } else {
-                console.log(`  OK: Max consecutive empty: ${scTel.consecutive_empty_max || 0}`);
-              }
-
-              // Session failures
-              if (scTel.session_failures > 0) {
-                warnings.push(`${scTel.session_failures} session refresh/bootstrap failures`);
-                console.log(`  WARN: ${scTel.session_failures} session failures`);
-              }
-
-              // Latency
-              if (scTel.latency) {
-                console.log(`  INFO: Latency p50=${scTel.latency.p50}ms p95=${scTel.latency.p95}ms max=${scTel.latency.max}ms`);
-              }
-            } else {
-              console.log('  SKIP: No scraper telemetry in latest run (pre-telemetry run)');
-            }
-          } catch {
-            console.log('  SKIP: Could not read last scraper run');
-          }
         } else {
           console.log('  SKIP: permit_inspections is empty (not yet scraped)');
         }
@@ -608,6 +447,18 @@ async function run() {
           errors.push(inspErr.message);
           console.error(`  ERROR: ${inspErr.message}`);
         }
+      }
+
+      // Emit inspection audit_table in records_meta
+      if (auditRows.length > 0) {
+        const hasFails = auditRows.some((r) => r.status === 'FAIL');
+        const hasWarns = auditRows.some((r) => r.status === 'WARN');
+        inspectionAuditTable = {
+          phase: 3,
+          name: 'Data Quality',
+          verdict: hasFails ? 'FAIL' : hasWarns ? 'WARN' : 'PASS',
+          rows: auditRows,
+        };
       }
     }
 
@@ -642,13 +493,15 @@ async function run() {
   const status = hasErrors ? 'failed' : 'completed';
   const allMessages = [...errors, ...warnings.map((w) => `WARN: ${w}`)];
   const errorMsg = allMessages.length > 0 ? allMessages.join('; ') : null;
-  const meta = JSON.stringify({
+  const metaObj = {
     checks_passed: allMessages.length === 0 ? 'all' : undefined,
     checks_failed: errors.length,
     checks_warned: warnings.length,
     errors: errors.length > 0 ? errors : undefined,
     warnings: warnings.length > 0 ? warnings : undefined,
-  });
+    ...(inspectionAuditTable && { audit_table: inspectionAuditTable }),
+  };
+  const meta = JSON.stringify(metaObj);
 
   if (runId) {
     await pool.query(

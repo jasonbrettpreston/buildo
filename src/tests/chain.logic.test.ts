@@ -259,11 +259,11 @@ describe('Incremental Processing Guards', () => {
 });
 
 describe('Quality Pipeline Group', () => {
-  it('quality group has 3 registry entries', () => {
+  it('quality group has 5 registry entries', () => {
     const qualityEntries = Object.entries(PIPELINE_REGISTRY).filter(
       ([, entry]) => entry.group === 'quality'
     );
-    expect(qualityEntries).toHaveLength(3);
+    expect(qualityEntries).toHaveLength(5);
   });
 
   it('assert_schema and assert_data_bounds exist in PIPELINE_REGISTRY', () => {

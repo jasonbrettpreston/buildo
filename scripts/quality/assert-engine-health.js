@@ -184,6 +184,41 @@ async function run() {
   const status = hasErrors ? 'failed' : 'completed';
   const allMessages = [...errors, ...warnings.map((w) => `WARN: ${w}`)];
   const errorMsg = allMessages.length > 0 ? allMessages.join('; ') : null;
+  // Build inspection-specific audit_table (Phase 6)
+  const inspRow = tableResults.find((t) => t.table_name === 'permit_inspections');
+  let inspAuditTable = null;
+  if (inspRow) {
+    const live = inspRow.n_live_tup;
+    const dead = inspRow.n_dead_tup;
+    const deadPct = live + dead > 0 ? ((dead / (live + dead)) * 100).toFixed(2) + '%' : '0%';
+    // Query update/insert ratio for permit_inspections
+    const piStat = await pool.query(
+      `SELECT n_tup_ins::bigint AS ins, n_tup_upd::bigint AS upd, last_autovacuum
+       FROM pg_stat_user_tables WHERE relname = 'permit_inspections'`
+    ).catch(() => ({ rows: [] }));
+    const ins = parseInt(piStat.rows[0]?.ins) || 0;
+    const upd = parseInt(piStat.rows[0]?.upd) || 0;
+    const uiRatio = ins > 0 ? (upd / ins).toFixed(2) : 0;
+    const lastVac = piStat.rows[0]?.last_autovacuum || null;
+
+    const deadPctNum = live + dead > 0 ? (dead / (live + dead)) * 100 : 0;
+    const uiRatioNum = ins > 0 ? upd / ins : 0;
+    const auditRows = [
+      { metric: 'live_rows', value: live, threshold: null, status: 'INFO' },
+      { metric: 'dead_rows', value: dead, threshold: null, status: 'INFO' },
+      { metric: 'dead_tuple_pct', value: deadPct, threshold: '< 10%', status: deadPctNum >= 10 ? 'FAIL' : 'PASS' },
+      { metric: 'update_insert_ratio', value: parseFloat(uiRatio), threshold: '< 5.0', status: uiRatioNum >= 5 ? 'FAIL' : 'PASS' },
+      { metric: 'last_autovacuum', value: lastVac, threshold: null, status: 'INFO' },
+    ];
+    const hasFails = auditRows.some((r) => r.status === 'FAIL');
+    inspAuditTable = {
+      phase: 6,
+      name: 'Engine Health',
+      verdict: hasFails ? 'FAIL' : 'PASS',
+      rows: auditRows,
+    };
+  }
+
   const meta = JSON.stringify({
     checks_passed: allMessages.length === 0 ? 'all' : undefined,
     checks_warned: warnings.length,
@@ -193,6 +228,7 @@ async function run() {
     warnings: warnings.length > 0 ? warnings : undefined,
     errors: errors.length > 0 ? errors : undefined,
     engine_health: tableResults,
+    ...(inspAuditTable && { audit_table: inspAuditTable }),
   });
 
   if (runId) {
