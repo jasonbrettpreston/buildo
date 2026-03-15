@@ -4,9 +4,17 @@
  * Fetches live from the CKAN datastore API by default.
  * Use --file <path> to load from a local JSON file instead.
  *
+ * Observability:
+ *   - Structured logging via pipeline.log (§9.4)
+ *   - Network telemetry: latencies, api_errors, retry counts
+ *   - Schema drift detection: critical CKAN field presence check
+ *   - Full records_meta in PIPELINE_SUMMARY for downstream assertions
+ *
  * Usage:
  *   node scripts/load-permits.js              # fetch live from CKAN
  *   node scripts/load-permits.js --file data.json  # load from local file
+ *
+ * SPEC LINK: docs/specs/02_permit_sync.md
  */
 const pipeline = require('./lib/pipeline');
 const fs = require('fs');
@@ -16,6 +24,19 @@ const crypto = require('crypto');
 // CKAN datastore endpoint for Active Building Permits
 const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
 const RESOURCE_ID = '6d0229af-bc54-46de-9c2b-26759b01dd05';
+
+const MAX_RETRIES = 3;
+const RETRY_BASE_MS = 2000;
+
+// Critical CKAN fields — if any are missing, schema has drifted
+const CRITICAL_FIELDS = [
+  'PERMIT_NUM',     // primary key part 1
+  'REVISION_NUM',   // primary key part 2
+  'STATUS',         // permit lifecycle status
+  'PERMIT_TYPE',    // classification input
+  'STREET_NUM',     // address component
+  'STREET_NAME',    // address component
+];
 
 // CLI: --file <path> for local file fallback
 const fileArgIdx = process.argv.indexOf('--file');
@@ -133,28 +154,68 @@ function deduplicateRecords(records) {
 /**
  * Async generator that yields pages of CKAN records.
  * Keeps peak memory at O(page_size) instead of O(total_records) (§9.5).
+ * Includes retry with exponential backoff and latency tracking.
  */
-async function* fetchFromCKAN() {
+async function* fetchFromCKAN(tel) {
   const limit = 10000;
   let offset = 0;
   let totalFetched = 0;
 
-  console.log('Fetching permits from CKAN datastore API (streaming)...');
+  pipeline.log.info('[load-permits]', 'Fetching permits from CKAN datastore API (streaming)...');
+
   while (true) {
     const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${RESOURCE_ID}&limit=${limit}&offset=${offset}`;
-    console.log(`  offset=${offset}...`);
-    const res = await fetch(url);
-    const json = await res.json();
-    if (!json.success) throw new Error(`datastore_search failed at offset ${offset}`);
+    let lastErr = null;
 
-    const batch = json.result.records || [];
-    totalFetched += batch.length;
-    console.log(`  Got ${batch.length} records (total: ${totalFetched})`);
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const reqStart = Date.now();
+      try {
+        const res = await fetch(url);
+        tel.latencies.push(Date.now() - reqStart);
 
-    yield batch;
+        if (!res.ok) throw new Error(`HTTP ${res.status} at offset ${offset}`);
 
-    if (batch.length < limit) break;
-    offset += limit;
+        const json = await res.json();
+        if (!json.success) throw new Error(`CKAN success=false at offset ${offset}`);
+
+        const batch = json.result.records || [];
+        totalFetched += batch.length;
+        pipeline.log.info('[load-permits]', `offset=${offset}, got ${batch.length} (total: ${totalFetched})`);
+
+        // Schema drift check on first batch
+        if (offset === 0 && batch.length > 0) {
+          const rawKeys = Object.keys(batch[0]);
+          const missing = CRITICAL_FIELDS.filter((f) => !rawKeys.includes(f));
+          if (missing.length > 0) {
+            tel.schema_drift = missing;
+            pipeline.log.error('[load-permits]', `Schema drift — missing CKAN fields: ${missing.join(', ')}. Aborting.`);
+            return; // Exit generator — caller checks tel.schema_drift
+          }
+        }
+
+        lastErr = null;
+        yield batch;
+
+        if (batch.length < limit) return;
+        offset += limit;
+        break; // success — exit retry loop, continue pagination
+
+      } catch (err) {
+        tel.latencies.push(Date.now() - reqStart);
+        lastErr = err;
+        if (attempt < MAX_RETRIES) {
+          const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1);
+          pipeline.log.warn('[load-permits]', `Fetch failed (attempt ${attempt}/${MAX_RETRIES}): ${err.message}. Retrying in ${delay}ms...`);
+          await new Promise((r) => setTimeout(r, delay));
+        }
+      }
+    }
+
+    if (lastErr) {
+      tel.api_errors++;
+      pipeline.log.error('[load-permits]', lastErr, { offset });
+      throw lastErr;
+    }
   }
 }
 
@@ -280,8 +341,7 @@ async function upsertRecords(pool, records, counters, startTime) {
       counters.processed += batch.length;
       batch = [];
       if (counters.processed % 10000 === 0) {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`  ${counters.processed.toLocaleString()} processed (${elapsed}s)`);
+        pipeline.progress('load-permits', counters.processed, records.length, startTime);
       }
     }
   }
@@ -304,62 +364,112 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
   const counters = { newInserts: 0, updated: 0, processed: 0, errors: 0 };
   const startTime = Date.now();
 
+  // Telemetry accumulator
+  const tel = {
+    api_errors: 0,
+    latencies: [],
+    schema_drift: [],
+  };
+
   // Phase 1: Map all raw records (streamed page-by-page from CKAN or local file)
   let allMapped = [];
 
   if (localFilePath) {
     // --file mode: read from local JSON file
-    console.log(`Loading permits from local file: ${localFilePath}`);
-    console.log(`File size: ${(fs.statSync(localFilePath).size / 1024 / 1024).toFixed(1)} MB`);
+    pipeline.log.info('[load-permits]', `Loading from local file: ${localFilePath}`);
+    pipeline.log.info('[load-permits]', `File size: ${(fs.statSync(localFilePath).size / 1024 / 1024).toFixed(1)} MB`);
     const raw = fs.readFileSync(localFilePath, 'utf-8');
-    console.log('Parsing JSON...');
+    pipeline.log.info('[load-permits]', 'Parsing JSON...');
     const records = JSON.parse(raw);
-    console.log(`Parsed ${records.length} records`);
+    pipeline.log.info('[load-permits]', `Parsed ${records.length} records`);
     allMapped = mapRawRecords(records, counters);
   } else {
     // Default: stream from CKAN API page by page (§9.5)
-    for await (const page of fetchFromCKAN()) {
+    for await (const page of fetchFromCKAN(tel)) {
       const pageMapped = mapRawRecords(page, counters);
       allMapped.push(...pageMapped);
+    }
+
+    // Schema drift abort — check after generator completes
+    if (tel.schema_drift.length > 0) {
+      const durationMs = Date.now() - startTime;
+      pipeline.emitSummary({
+        records_total: 0, records_new: 0, records_updated: 0,
+        records_meta: {
+          duration_ms: durationMs,
+          api_health: { api_errors: tel.api_errors },
+          data_health: {
+            records_fetched: 0, records_mapped: 0, records_skipped: 0,
+            schema_mismatch_count: tel.schema_drift.length,
+            schema_drift: tel.schema_drift,
+          },
+        },
+      });
+      process.exit(1);
     }
   }
 
   // Phase 2: Deduplicate across all pages — highest _ckan_id wins.
-  // Prevents the ~488 ghost-update ping-pong from ~252 CKAN duplicate pairs.
   const beforeDedup = allMapped.length;
   allMapped = deduplicateRecords(allMapped);
   const dupsRemoved = beforeDedup - allMapped.length;
   if (dupsRemoved > 0) {
-    console.log(`  Deduplicated: removed ${dupsRemoved} cross-page duplicate(s)`);
+    pipeline.log.info('[load-permits]', `Deduplicated: removed ${dupsRemoved} cross-page duplicate(s)`);
   }
 
   // Phase 3: Upsert deduplicated records in batches
   await upsertRecords(pool, allMapped, counters, startTime);
 
   const { newInserts, updated, processed, errors } = counters;
-
   const unchanged = processed - newInserts - updated;
-  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log(`\nDone in ${duration}s`);
-  console.log(`  Processed: ${processed.toLocaleString()}`);
-  console.log(`  New: ${newInserts.toLocaleString()}`);
-  console.log(`  Updated: ${updated.toLocaleString()}`);
-  console.log(`  Unchanged: ${unchanged.toLocaleString()}`);
-  console.log(`  Errors: ${errors}`);
-  pipeline.emitSummary({ records_total: newInserts + updated, records_new: newInserts, records_updated: updated });
+  const durationMs = Date.now() - startTime;
+
+  // Latency stats
+  const sortedLat = [...tel.latencies].sort((a, b) => a - b);
+  const avgLatency = sortedLat.length > 0
+    ? Math.round(sortedLat.reduce((a, b) => a + b, 0) / sortedLat.length) : 0;
+  const maxLatency = sortedLat.length > 0 ? sortedLat[sortedLat.length - 1] : 0;
+
+  pipeline.log.info('[load-permits]', 'Load complete', {
+    processed, newInserts, updated, unchanged, errors,
+    dups_removed: dupsRemoved,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+    avg_latency: `${avgLatency}ms`,
+  });
+
+  pipeline.emitSummary({
+    records_total: newInserts + updated,
+    records_new: newInserts,
+    records_updated: updated,
+    records_meta: {
+      duration_ms: durationMs,
+      api_health: {
+        api_errors: tel.api_errors,
+        avg_req_latency_ms: avgLatency,
+        max_req_latency_ms: maxLatency,
+      },
+      data_health: {
+        records_fetched: processed + errors,
+        records_mapped: processed,
+        records_skipped: errors,
+        schema_mismatch_count: tel.schema_drift.length,
+        dups_removed: dupsRemoved,
+      },
+    },
+  });
   pipeline.emitMeta(
     { "CKAN API": ["PERMIT_NUM", "REVISION_NUM", "PERMIT_TYPE", "STRUCTURE_TYPE", "WORK", "STREET_NUM", "STREET_NAME", "STREET_TYPE", "STREET_DIRECTION", "CITY", "POSTAL", "GEO_ID", "BUILDING_TYPE", "CATEGORY", "APPLICATION_DATE", "ISSUED_DATE", "COMPLETED_DATE", "STATUS", "DESCRIPTION", "EST_CONST_COST", "BUILDER", "OWNER", "DWELLING_UNITS_CREATED", "DWELLING_UNITS_LOST", "WARD", "COUNCIL_DISTRICT", "CURRENT_USE", "PROPOSED_USE", "HOUSING_UNITS", "STOREYS"] },
     { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "data_hash", "raw_json"] }
   );
 
   // Log sync run (duration parameterized to prevent SQL injection — §4.2)
-  const durationSeconds = parseFloat(duration);
+  const durationSeconds = durationMs / 1000;
   await pool.query(
     `INSERT INTO sync_runs (started_at, completed_at, status, records_total, records_new, records_updated, records_unchanged, records_errors, duration_ms)
      VALUES (NOW() - make_interval(secs => $7), NOW(), 'completed', $1, $2, $3, $4, $5, $6)`,
-    [processed, newInserts, updated, unchanged, errors, Math.round(durationSeconds * 1000), durationSeconds]
+    [processed, newInserts, updated, unchanged, errors, durationMs, durationSeconds]
   );
-  console.log('  Sync run logged');
+  pipeline.log.info('[load-permits]', 'Sync run logged');
 });
 
 // Export for testing (used by sync.logic.test.ts)
