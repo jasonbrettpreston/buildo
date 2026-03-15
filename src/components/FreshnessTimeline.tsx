@@ -988,8 +988,11 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 const hasFailures = failed > 0 || errCount > 0 || info?.status === 'failed';
                                 const warningsList: string[] = Array.isArray(meta.warnings) ? meta.warnings as string[] : [];
                                 const errorsList: string[] = Array.isArray(meta.errors) ? meta.errors as string[] : [];
+                                const hasAuditTable = !!(meta.audit_table && typeof meta.audit_table === 'object');
                                 return (
                                   <div className="space-y-1.5">
+                                    {/* Old CQA verdict/scalars — hidden when audit_table replaces them */}
+                                    {!hasAuditTable && <>
                                     {/* Verdict banner for CQA steps */}
                                     {(stepGroup === 'quality') && (
                                       <div className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs font-semibold ${
@@ -1021,7 +1024,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                         ))}
                                       </div>
                                     )}
-                                    {/* Scalar metadata (counts, labels) — skip arrays already rendered above */}
+                                    {/* Scalar metadata (counts, labels) */}
                                     {Object.entries(meta)
                                       .filter(([k, v]) => v != null && v !== undefined && k !== 'pipeline_meta' && k !== 'warnings' && k !== 'errors' && k !== 'engine_health' && k !== 'audit_table' && typeof v !== 'object')
                                       .map(([key, value]) => (
@@ -1036,8 +1039,9 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                           </span>
                                         </div>
                                       ))}
-                                    {/* Engine health compact table (for assert_engine_health) */}
-                                    {Array.isArray(meta.engine_health) && (meta.engine_health as Array<Record<string, unknown>>).length > 0 && (
+                                    </>}
+                                    {/* Engine health compact table (for assert_engine_health) — hidden when audit_table present */}
+                                    {!hasAuditTable && Array.isArray(meta.engine_health) && (meta.engine_health as Array<Record<string, unknown>>).length > 0 && (
                                       <div className="mt-2">
                                         <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Engine Health</h5>
                                         <div className="overflow-x-auto">
