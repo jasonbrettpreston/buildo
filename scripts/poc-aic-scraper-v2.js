@@ -363,7 +363,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
   });
 
   pipeline.emitSummary({
-    records_total: totalSearched,
+    records_total: totalScraped,
     records_new: totalUpserted,
     records_updated: 0,
   });

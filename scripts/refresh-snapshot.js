@@ -371,5 +371,5 @@ pipeline.run('refresh-snapshot', async (pool) => {
   });
 
   pipeline.emitSummary({ records_total: 1, records_new: 1, records_updated: 0 });
-  pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"] }, { "data_quality_snapshots": ["*"] });
+  pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"], "permit_inspections": ["*"] }, { "data_quality_snapshots": ["*"] });
 });

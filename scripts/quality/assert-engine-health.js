@@ -24,13 +24,6 @@ const SLUG = 'assert_engine_health';
 
 const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
 
-// Tables to monitor — all telemetry-relevant tables from manifest.json
-const MONITORED_TABLES = [
-  'permits', 'entities', 'coa_applications', 'parcels', 'address_points',
-  'building_footprints', 'neighbourhoods', 'permit_trades', 'permit_parcels',
-  'parcel_buildings', 'wsib_registry', 'data_quality_snapshots', 'pipeline_runs',
-];
-
 // Thresholds
 const DEAD_TUPLE_RATIO = 0.10;       // 10%
 const SEQ_SCAN_RATIO = 0.80;         // 80%
@@ -63,6 +56,15 @@ async function run() {
   let recordsUpdated = 0;
 
   try {
+    // Discover all public-schema tables dynamically — no hardcoded list
+    const tableRes = await pool.query(
+      `SELECT relname FROM pg_stat_user_tables
+       WHERE schemaname = 'public'
+       ORDER BY relname`
+    );
+    const MONITORED_TABLES = tableRes.rows.map(r => r.relname);
+    console.log(`Monitoring ${MONITORED_TABLES.length} tables\n`);
+
     // Query pg_stat_user_tables for all monitored tables
     const statRes = await pool.query(
       `SELECT relname AS table_name,
