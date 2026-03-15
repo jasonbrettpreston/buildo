@@ -380,6 +380,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
     session_failures: 0,
     schema_drift: [],
     status_changes: 0,
+    total_upserted: 0,
     latencies: [],
   };
 
@@ -399,6 +400,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
       tel.consecutive_empty++;
       tel.consecutive_empty_max = Math.max(tel.consecutive_empty_max, tel.consecutive_empty);
     }
+    tel.total_upserted += (result.upserted || 0);
     if (result.retryExhausted) tel.proxy_errors++;
     if (result.schemaDrift) {
       for (const drift of result.schemaDrift) {
@@ -491,8 +493,8 @@ pipeline.run('poc-aic-scraper', async (pool) => {
   });
 
   pipeline.emitSummary({
-    records_total: tel.permits_scraped,
-    records_new: tel.permits_scraped > 0 ? tel.latencies.length : 0,
+    records_total: tel.permits_attempted,
+    records_new: tel.total_upserted,
     records_updated: tel.status_changes,
     records_meta: {
       scraper_telemetry: {

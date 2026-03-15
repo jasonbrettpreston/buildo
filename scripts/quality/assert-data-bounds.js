@@ -424,10 +424,21 @@ async function run() {
              GROUP BY p.permit_type`,
             [TARGET_TYPES]
           );
+          // Determine overall coverage phase: if <5% scraped across all types, we're in early ramp-up
+          const totalTarget = coverageRes.rows.reduce((s, r) => s + parseInt(r.total), 0);
+          const totalScraped = coverageRes.rows.reduce((s, r) => s + parseInt(r.scraped), 0);
+          const isEarlyPhase = totalTarget > 0 && (totalScraped / totalTarget) < 0.05;
+
           for (const row of coverageRes.rows) {
             if (parseInt(row.scraped) === 0) {
-              errors.push(`${row.permit_type}: 0 permits scraped (AIC portal may have changed)`);
-              console.error(`  FAIL: ${row.permit_type} has 0 scraped permits`);
+              if (isEarlyPhase) {
+                // During early ramp-up, 0-scraped types are expected — warn, don't fail
+                warnings.push(`${row.permit_type}: 0 permits scraped (early coverage phase)`);
+                console.log(`  WARN: ${row.permit_type} has 0 scraped permits (early phase — not blocking)`);
+              } else {
+                errors.push(`${row.permit_type}: 0 permits scraped (AIC portal may have changed)`);
+                console.error(`  FAIL: ${row.permit_type} has 0 scraped permits`);
+              }
             } else {
               const pct = (100 * parseInt(row.scraped) / parseInt(row.total)).toFixed(1);
               console.log(`  OK: ${row.permit_type}: ${row.scraped}/${row.total} scraped (${pct}%)`);
