@@ -279,17 +279,23 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
         );
         const oldStatus = existing.rows[0]?.status;
 
-        await client.query(
+        // Only update if data actually changed — prevents dead tuple bloat
+        const res = await client.query(
           `INSERT INTO permit_inspections (permit_num, stage_name, status, inspection_date, scraped_at)
            VALUES ($1, $2, $3, $4, NOW())
            ON CONFLICT (permit_num, stage_name) DO UPDATE
            SET status = EXCLUDED.status,
                inspection_date = EXCLUDED.inspection_date,
-               scraped_at = NOW()`,
+               scraped_at = NOW()
+           WHERE permit_inspections.status IS DISTINCT FROM EXCLUDED.status
+              OR permit_inspections.inspection_date IS DISTINCT FROM EXCLUDED.inspection_date`,
           [result.permitNum, stage.desc, status, inspDate]
         );
-        upserted++;
-        if (oldStatus && oldStatus !== status) statusChanges++;
+        // Only count actual DB writes — rowCount=0 when IS DISTINCT FROM skips the update
+        if (res.rowCount > 0) {
+          upserted++;
+          if (oldStatus && oldStatus !== status) statusChanges++;
+        }
       }
     } finally {
       client.release();
@@ -332,10 +338,11 @@ async function bootstrapSession() {
   const { browser, context } = await launchBrowser();
   const page = await context.newPage();
 
-  // Block everything except documents and XHR (we only need the session + fetch)
+  // Block images/css/fonts but allow scripts — WAFs run JS challenges to verify
+  // the browser isn't headless. Blocking scripts causes permanent shadow-ban.
   await page.route('**/*', (route) => {
     const type = route.request().resourceType();
-    if (['document', 'xhr', 'fetch'].includes(type)) return route.continue();
+    if (['document', 'xhr', 'fetch', 'script'].includes(type)) return route.continue();
     return route.abort();
   });
 
