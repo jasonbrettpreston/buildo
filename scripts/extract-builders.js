@@ -1,9 +1,16 @@
 #!/usr/bin/env node
 /**
- * Extract unique builder names from permits table, normalize, and insert into builders table.
+ * Extract unique builder names from permits table, normalize, and insert into entities table.
  * Follows spec 11_builder_enrichment.md normalization pipeline.
  *
- * Usage: PG_PASSWORD=postgres node scripts/extract-builders.js
+ * Observability:
+ *   - Structured logging via pipeline.log (§9.4)
+ *   - Separates algorithmic progress from DB mutation counts
+ *   - records_meta with raw_names, normalized_entities, db_inserts, db_updates
+ *
+ * Usage: node scripts/extract-builders.js
+ *
+ * SPEC LINK: docs/specs/11_builder_enrichment.md
  */
 const pipeline = require('./lib/pipeline');
 
@@ -27,7 +34,9 @@ function normalizeBuilderName(name) {
 }
 
 pipeline.run('extract-builders', async (pool) => {
-  console.log('Extracting builders from permits...');
+  const startTime = Date.now();
+
+  pipeline.log.info('[extract-builders]', 'Extracting builders from permits...');
 
   // Get distinct builder names
   const result = await pool.query(`
@@ -38,7 +47,8 @@ pipeline.run('extract-builders', async (pool) => {
     ORDER BY permit_count DESC
   `);
 
-  console.log(`Found ${result.rows.length} unique raw builder names`);
+  const rawNamesCount = result.rows.length;
+  pipeline.log.info('[extract-builders]', `Found ${rawNamesCount.toLocaleString()} unique raw builder names`);
 
   // Normalize and dedup
   const builderMap = new Map(); // name_normalized -> { name, permit_count }
@@ -64,13 +74,14 @@ pipeline.run('extract-builders', async (pool) => {
     }
   }
 
-  console.log(`Normalized to ${builderMap.size} unique builders`);
+  pipeline.log.info('[extract-builders]', `Normalized to ${builderMap.size.toLocaleString()} unique builders`);
 
   // Batch insert
   const BATCH_SIZE = 500;
   const builders = Array.from(builderMap.values());
   let inserted = 0;
   let updated = 0;
+  let totalProcessed = 0;
 
   await pipeline.withTransaction(pool, async (client) => {
     for (let i = 0; i < builders.length; i += BATCH_SIZE) {
@@ -98,24 +109,40 @@ pipeline.run('extract-builders', async (pool) => {
       const batchNew = result.rows.filter(r => r.is_insert).length;
       inserted += batchNew;
       updated += result.rows.length - batchNew;
-      const processed = inserted + updated;
-      if (processed % 1000 === 0 || i + BATCH_SIZE >= builders.length) {
-        console.log(`  ${processed} builders processed (${inserted} new, ${updated} updated)`);
+      totalProcessed += batch.length;
+
+      if (totalProcessed % 1000 === 0 || i + BATCH_SIZE >= builders.length) {
+        pipeline.progress('extract-builders', totalProcessed, builders.length, startTime);
       }
     }
   });
 
+  const durationMs = Date.now() - startTime;
+
   // Verify
   const countResult = await pool.query('SELECT COUNT(*) as total FROM entities');
-  console.log(`\nDone. ${countResult.rows[0].total} builders in database.`);
+  pipeline.log.info('[extract-builders]', 'Complete', {
+    total_in_db: parseInt(countResult.rows[0].total),
+    raw_names: rawNamesCount,
+    normalized: builderMap.size,
+    inserted,
+    updated,
+    unchanged: totalProcessed - inserted - updated,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
 
-  // Show top 10
-  const top = await pool.query(
-    'SELECT legal_name AS name, permit_count FROM entities ORDER BY permit_count DESC LIMIT 10'
-  );
-  console.log('\nTop 10 builders by permit count:');
-  top.rows.forEach((r, i) => console.log(`  ${i + 1}. ${r.name} (${r.permit_count} permits)`));
-  pipeline.emitSummary({ records_total: builderMap.size, records_new: inserted, records_updated: updated });
+  pipeline.emitSummary({
+    records_total: builderMap.size,
+    records_new: inserted,
+    records_updated: updated,
+    records_meta: {
+      duration_ms: durationMs,
+      raw_names_found: rawNamesCount,
+      normalized_unique_entities: builderMap.size,
+      db_inserts: inserted,
+      db_updates: updated,
+    },
+  });
   pipeline.emitMeta(
     { "permits": ["builder_name"] },
     { "entities": ["legal_name", "name_normalized", "permit_count", "last_seen_at"] }
