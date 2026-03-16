@@ -5,7 +5,15 @@
  * Populates the centroid_lat and centroid_lng columns added by migration 016.
  * Uses arithmetic mean of outer ring vertices (excluding closing point).
  *
+ * Observability:
+ *   - Structured logging via pipeline.log (§9.4)
+ *   - Cursor-based pagination prevents infinite loop on malformed geometries
+ *   - Bulk unnest UPDATE instead of N+1 per-row queries
+ *   - records_meta with centroids_computed, failed_geometries
+ *
  * Usage: node scripts/compute-centroids.js
+ *
+ * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
 
@@ -47,38 +55,44 @@ function computeCentroid(geom) {
 }
 
 pipeline.run('compute-centroids', async (pool) => {
-  console.log('=== Buildo Parcel Centroid Calculator ===');
-  console.log('');
+  const startTime = Date.now();
 
   const countResult = await pool.query(
     `SELECT COUNT(*) as total FROM parcels WHERE geometry IS NOT NULL AND centroid_lat IS NULL`
   );
   const totalParcels = parseInt(countResult.rows[0].total, 10);
-  console.log(`Parcels to compute centroids for: ${totalParcels.toLocaleString()}`);
+  pipeline.log.info('[compute-centroids]', `Parcels to compute: ${totalParcels.toLocaleString()}`);
 
   if (totalParcels === 0) {
-    console.log('All parcels already have centroids. Done.');
+    pipeline.log.info('[compute-centroids]', 'All parcels already have centroids. Done.');
+    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    pipeline.emitMeta({ "parcels": ["id", "geometry"] }, { "parcels": ["centroid_lat", "centroid_lng"] });
     return;
   }
 
-  const startTime = Date.now();
   let processed = 0;
   let computed = 0;
   let failed = 0;
+  let lastId = 0;
 
   while (true) {
+    // Cursor-based pagination: id > lastId prevents infinite loop on bad geometries
     const batch = await pool.query(
       `SELECT id, geometry FROM parcels
-       WHERE geometry IS NOT NULL AND centroid_lat IS NULL
+       WHERE geometry IS NOT NULL AND centroid_lat IS NULL AND id > $1
        ORDER BY id
-       LIMIT $1`,
-      [pipeline.BATCH_SIZE]
+       LIMIT $2`,
+      [lastId, pipeline.BATCH_SIZE]
     );
 
     if (batch.rows.length === 0) break;
+    lastId = batch.rows[batch.rows.length - 1].id;
 
-    // Prepare updates for this batch
-    const updates = [];
+    // Compute centroids for this batch
+    const ids = [];
+    const lngs = [];
+    const lats = [];
+
     for (const row of batch.rows) {
       const geom = typeof row.geometry === 'string'
         ? JSON.parse(row.geometry)
@@ -87,7 +101,9 @@ pipeline.run('compute-centroids', async (pool) => {
       const centroid = computeCentroid(geom);
 
       if (centroid) {
-        updates.push({ id: row.id, lng: centroid[0], lat: centroid[1] });
+        ids.push(row.id);
+        lngs.push(centroid[0]);
+        lats.push(centroid[1]);
         computed++;
       } else {
         failed++;
@@ -96,33 +112,46 @@ pipeline.run('compute-centroids', async (pool) => {
       processed++;
     }
 
-    // Write all updates for this batch in a single transaction
-    if (updates.length > 0) {
+    // Bulk update using unnest — single query instead of N+1
+    if (ids.length > 0) {
       await pipeline.withTransaction(pool, async (client) => {
-        for (const u of updates) {
-          await client.query(
-            `UPDATE parcels SET centroid_lng = $1, centroid_lat = $2 WHERE id = $3`,
-            [u.lng, u.lat, u.id]
-          );
-        }
+        await client.query(
+          `UPDATE parcels AS p SET
+             centroid_lng = v.lng,
+             centroid_lat = v.lat
+           FROM (
+             SELECT unnest($1::int[]) AS id,
+                    unnest($2::float[]) AS lng,
+                    unnest($3::float[]) AS lat
+           ) AS v
+           WHERE p.id = v.id`,
+          [ids, lngs, lats]
+        );
       });
     }
 
     if (processed % 50000 === 0 || processed >= totalParcels) {
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      const pct = ((processed / totalParcels) * 100).toFixed(1);
-      console.log(`  ${processed.toLocaleString()} / ${totalParcels.toLocaleString()} (${pct}%) - computed: ${computed.toLocaleString()} - ${elapsed}s`);
+      pipeline.progress('compute-centroids', processed, totalParcels, startTime);
     }
   }
 
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log('');
-  console.log('=== Centroid Computation Complete ===');
-  console.log(`Parcels processed: ${processed.toLocaleString()}`);
-  console.log(`Centroids set:     ${computed.toLocaleString()}`);
-  console.log(`Failed:            ${failed.toLocaleString()}`);
-  console.log(`Duration:          ${elapsed}s`);
-  pipeline.emitSummary({ records_total: computed, records_new: 0, records_updated: computed });
+  const durationMs = Date.now() - startTime;
+  pipeline.log.info('[compute-centroids]', 'Complete', {
+    processed, computed, failed,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
+
+  pipeline.emitSummary({
+    records_total: processed,
+    records_new: 0,
+    records_updated: computed,
+    records_meta: {
+      duration_ms: durationMs,
+      parcels_processed: processed,
+      centroids_computed: computed,
+      failed_geometries: failed,
+    },
+  });
   pipeline.emitMeta(
     { "parcels": ["id", "geometry"] },
     { "parcels": ["centroid_lat", "centroid_lng"] }
