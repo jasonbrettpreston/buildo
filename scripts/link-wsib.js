@@ -44,8 +44,55 @@ pipeline.run('link-wsib', async (pool) => {
 
   let tier1 = 0, tier2 = 0, tier3 = 0;
 
+  // Tier 3 fuzzy match SQL — shared between live and dry-run modes
+  const TIER3_CTE = `
+    SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
+    FROM wsib_registry w
+    JOIN entities e ON (
+      (w.trade_name_normalized IS NOT NULL AND LENGTH(w.trade_name_normalized) >= 5
+        AND similarity(w.trade_name_normalized, e.name_normalized) > 0.6)
+      OR
+      (LENGTH(w.legal_name_normalized) >= 5
+        AND similarity(w.legal_name_normalized, e.name_normalized) > 0.6)
+    )
+    WHERE w.linked_entity_id IS NULL
+      AND LENGTH(e.name_normalized) >= 5
+    ORDER BY w.id, e.permit_count DESC
+  `;
+
   if (dryRun) {
-    pipeline.log.info('[link-wsib]', 'DRY RUN — skipping writes. Tier counts will be 0.');
+    // Dry-run simulation: read-only COUNT queries using same matching logic
+    pipeline.log.info('[link-wsib]', 'DRY RUN — simulating match counts...');
+
+    const dr1 = await pool.query(`
+      SELECT COUNT(DISTINCT w.id) as cnt
+      FROM wsib_registry w
+      JOIN entities e ON e.name_normalized = w.trade_name_normalized
+      WHERE w.linked_entity_id IS NULL
+        AND w.trade_name_normalized IS NOT NULL
+        AND LENGTH(w.trade_name_normalized) >= 3
+    `);
+    tier1 = parseInt(dr1.rows[0].cnt, 10);
+    pipeline.log.info('[link-wsib]', `Tier 1 (simulated): ${tier1.toLocaleString()} matches`);
+
+    const dr2 = await pool.query(`
+      SELECT COUNT(DISTINCT w.id) as cnt
+      FROM wsib_registry w
+      JOIN entities e ON e.name_normalized = w.legal_name_normalized
+      WHERE w.linked_entity_id IS NULL
+        AND LENGTH(w.legal_name_normalized) >= 3
+        AND NOT EXISTS (
+          SELECT 1 FROM wsib_registry w2
+          JOIN entities e2 ON e2.name_normalized = w2.trade_name_normalized
+          WHERE w2.id = w.id AND w2.trade_name_normalized IS NOT NULL AND LENGTH(w2.trade_name_normalized) >= 3
+        )
+    `);
+    tier2 = parseInt(dr2.rows[0].cnt, 10);
+    pipeline.log.info('[link-wsib]', `Tier 2 (simulated): ${tier2.toLocaleString()} matches`);
+
+    const dr3 = await pool.query(`SELECT COUNT(*) as cnt FROM (${TIER3_CTE}) sub`);
+    tier3 = parseInt(dr3.rows[0].cnt, 10);
+    pipeline.log.info('[link-wsib]', `Tier 3 (simulated): ${tier3.toLocaleString()} matches`);
   } else {
     await pipeline.withTransaction(pool, async (client) => {
       // ------------------------------------------------------------------
@@ -118,29 +165,13 @@ pipeline.run('link-wsib', async (pool) => {
       pipeline.log.info('[link-wsib]', `Tier 2 linked: ${tier2.toLocaleString()} (confidence 0.90)`);
 
       // ------------------------------------------------------------------
-      // Tier 3: Fuzzy name match — LIKE substring (0.60)
-      // Capped at 1000 matches to prevent Cartesian bomb timeout.
-      // pg_trgm similarity() would be faster but requires CREATE EXTENSION.
+      // Tier 3: Fuzzy name match — pg_trgm similarity() (0.60)
+      // Uses GIN trigram indexes for fast fuzzy matching.
+      // Replaces bi-directional LIKE which caused Cartesian bomb.
       // ------------------------------------------------------------------
-      pipeline.log.info('[link-wsib]', 'Tier 3: Fuzzy name matching...');
+      pipeline.log.info('[link-wsib]', 'Tier 3: Fuzzy name matching (pg_trgm)...');
       const result3 = await client.query(`
-        WITH matched AS (
-          SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
-          FROM wsib_registry w
-          JOIN entities e ON (
-            (w.trade_name_normalized IS NOT NULL AND LENGTH(w.trade_name_normalized) >= 5
-              AND (e.name_normalized LIKE '%' || w.trade_name_normalized || '%'
-                OR w.trade_name_normalized LIKE '%' || e.name_normalized || '%'))
-            OR
-            (LENGTH(w.legal_name_normalized) >= 5
-              AND (e.name_normalized LIKE '%' || w.legal_name_normalized || '%'
-                OR w.legal_name_normalized LIKE '%' || e.name_normalized || '%'))
-          )
-          WHERE w.linked_entity_id IS NULL
-            AND LENGTH(e.name_normalized) >= 5
-          ORDER BY w.id, e.permit_count DESC
-          LIMIT 1000
-        )
+        WITH matched AS (${TIER3_CTE})
         UPDATE wsib_registry w
         SET linked_entity_id = m.entity_id,
             match_confidence = 0.60,
