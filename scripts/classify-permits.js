@@ -494,19 +494,18 @@ function classifyPermit(permit, rules) {
 const fullMode = pipeline.isFullMode();
 
 pipeline.run('classify-permits', async (pool) => {
-  console.log('=== Buildo Trade Classification ===');
-  console.log('Note: Trades are inferred from permit metadata, not actual building plans.');
-  console.log('');
+  const startTime = Date.now();
+
+  pipeline.log.info('[classify-permits]', 'Trade classification — inferred from permit metadata, not actual building plans');
 
   // Load rules from DB
   const rulesResult = await pool.query(
     'SELECT id, trade_id, tier, match_field, match_pattern, confidence, phase_start, phase_end, is_active FROM trade_mapping_rules WHERE is_active = true ORDER BY tier, id'
   );
   const dbRules = rulesResult.rows;
-  console.log(`Loaded ${dbRules.length} active rules from database`);
+  pipeline.log.info('[classify-permits]', `Loaded ${dbRules.length} active rules`);
 
   const allRules = dbRules;
-  console.log(`Total rules: ${allRules.length} (Tier 1 DB rules + tag-trade matrix + work-field fallback)`);
 
   // Count permits to classify
   const incrementalWhere = `
@@ -525,9 +524,7 @@ pipeline.run('classify-permits', async (pool) => {
     `SELECT COUNT(*) as total FROM permits p ${whereClause}`
   );
   const totalPermits = parseInt(countResult.rows[0].total, 10);
-  console.log(`Mode: ${fullMode ? 'FULL (all permits)' : 'INCREMENTAL (new/changed only)'}`);
-  console.log(`Permits to classify: ${totalPermits.toLocaleString()}`);
-  console.log('');
+  pipeline.log.info('[classify-permits]', `Mode: ${fullMode ? 'FULL' : 'INCREMENTAL'}, permits to classify: ${totalPermits.toLocaleString()}`);
 
   // Count truly new permits (never classified before) for accurate reporting
   const newCountResult = await pool.query(
@@ -592,6 +589,9 @@ pipeline.run('classify-permits', async (pool) => {
       }
     }
 
+    // Collect permit keys for ghost trade cleanup
+    const batchPermitKeys = batch.rows.map(p => `${p.permit_num}--${p.revision_num}`);
+
     // Batch insert — sub-batch to stay under 65535 param limit (8 params per row → max 8000 rows)
     const MAX_ROWS_PER_INSERT = 4000;
     for (let i = 0; i < insertParams.length; i += MAX_ROWS_PER_INSERT) {
@@ -622,28 +622,63 @@ pipeline.run('classify-permits', async (pool) => {
       });
     }
 
-    processed += batch.rows.length;
-    offset.value += BATCH_SIZE;
+    // Ghost trade cleanup: delete trades that no longer match after reclassification.
+    // Build set of valid (permit_num, revision_num, trade_id) combos from this batch.
+    if (insertValues.length > 0) {
+      const validTradeIds = new Map(); // "pnum--rev" -> Set<trade_id>
+      for (let i = 0; i < insertValues.length; i += 8) {
+        const key = `${insertValues[i]}--${insertValues[i + 1]}`;
+        if (!validTradeIds.has(key)) validTradeIds.set(key, new Set());
+        validTradeIds.get(key).add(insertValues[i + 2]);
+      }
+      // For permits that had matches, delete trades not in the current match set
+      for (const [key, tradeIds] of validTradeIds) {
+        const [permitNum, revisionNum] = key.split('--');
+        const tradeIdArray = Array.from(tradeIds);
+        await pool.query(
+          `DELETE FROM permit_trades
+           WHERE permit_num = $1 AND revision_num = $2
+             AND trade_id != ALL($3)`,
+          [permitNum, revisionNum, tradeIdArray]
+        );
+      }
+    }
 
-    if (processed % 10000 === 0 || processed === totalPermits) {
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      const pct = ((processed / totalPermits) * 100).toFixed(1);
-      console.log(`  ${processed.toLocaleString()} / ${totalPermits.toLocaleString()} (${pct}%) - ${elapsed}s elapsed`);
+    processed += batch.rows.length;
+    // Incremental mode: view shrinks as records are classified, so keep OFFSET 0.
+    // Full mode: view doesn't shrink, so advance OFFSET normally.
+    if (fullMode) {
+      offset.value += BATCH_SIZE;
+    }
+    // In incremental mode, offset stays 0 — processed items drop out of the WHERE clause.
+
+    if (processed % 10000 === 0 || processed >= totalPermits) {
+      pipeline.progress('classify-permits', processed, totalPermits, startTime);
     }
   }
 
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log('');
-  console.log('=== Classification Complete ===');
-  console.log(`Permits processed:    ${processed.toLocaleString()}`);
-  console.log(`Permits with trades:  ${permitsWithTrades.toLocaleString()} (${((permitsWithTrades / processed) * 100).toFixed(1)}%)`);
-  console.log(`Total trade matches:  ${totalMatches.toLocaleString()}`);
-  console.log(`Avg trades/permit:    ${(totalMatches / Math.max(permitsWithTrades, 1)).toFixed(1)}`);
-  console.log(`Actual DB changes:    ${dbUpdated.toLocaleString()}`);
-  console.log(`Duration:             ${elapsed}s`);
-  console.log('');
-  console.log('NOTE: Trade classifications are inferred estimates based on permit');
-  console.log('metadata, not actual building plans. Rules can be refined over time.');
-  pipeline.emitSummary({ records_total: processed, records_new: Math.min(trulyNewPermits, permitsWithTrades), records_updated: dbUpdated });
+  const durationMs = Date.now() - startTime;
+  pipeline.log.info('[classify-permits]', 'Classification complete', {
+    processed,
+    permits_with_trades: permitsWithTrades,
+    total_matches: totalMatches,
+    avg_trades: (totalMatches / Math.max(permitsWithTrades, 1)).toFixed(1),
+    db_changes: dbUpdated,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
+
+  pipeline.emitSummary({
+    records_total: processed,
+    records_new: Math.min(trulyNewPermits, permitsWithTrades),
+    records_updated: dbUpdated,
+    records_meta: {
+      duration_ms: durationMs,
+      permits_processed: processed,
+      permits_with_trades: permitsWithTrades,
+      total_trade_matches: totalMatches,
+      avg_trades_per_permit: parseFloat((totalMatches / Math.max(permitsWithTrades, 1)).toFixed(2)),
+      db_updated: dbUpdated,
+    },
+  });
   pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"] });
 });

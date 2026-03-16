@@ -576,9 +576,8 @@ describe('Pipeline SDK', () => {
     // §9.3 — classify-permits.js records_updated must use dbUpdated (actual DB writes via rowCount)
     it('classify-permits.js emitSummary records_updated uses dbUpdated not permitsWithTrades', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'classify-permits.js'), 'utf-8');
-      const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
-      expect(match).not.toBeNull();
-      expect(match![1]).toContain('records_updated: dbUpdated');
+      // Check content directly — nested records_meta breaks single-line regex
+      expect(content).toContain('records_updated: dbUpdated');
     });
 
     // §9.3 — link-coa.js Tier 3 LATERAL query must use "lat" alias not "p"
