@@ -6,16 +6,20 @@
  * Address Points dataset. This script performs a single bulk UPDATE to populate
  * latitude/longitude on permits that have a valid geo_id but no coordinates yet.
  *
- * Usage:
- *   node scripts/geocode-permits.js
+ * Observability:
+ *   - Structured logging via pipeline.log (§9.4)
+ *   - records_meta with geocoding coverage stats
+ *
+ * Usage: node scripts/geocode-permits.js
+ *
+ * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
 
 pipeline.run('geocode-permits', async (pool) => {
-  console.log('=== Buildo Permit Geocoder (Address Points Lookup) ===');
-  console.log('');
-
   const startTime = Date.now();
+
+  pipeline.log.info('[geocode-permits]', 'Starting permit geocoding (Address Points lookup)');
 
   // Count permits needing geocoding
   const beforeCounts = await pool.query(`
@@ -30,19 +34,19 @@ pipeline.run('geocode-permits', async (pool) => {
     FROM permits
   `);
   const before = beforeCounts.rows[0];
-  console.log(`Total permits:       ${parseInt(before.total).toLocaleString()}`);
-  console.log(`Already geocoded:    ${parseInt(before.already_geocoded).toLocaleString()}`);
-  console.log(`Have geo_id:         ${parseInt(before.has_geo_id).toLocaleString()}`);
-  console.log(`To geocode:          ${parseInt(before.to_geocode).toLocaleString()}`);
-  console.log('');
+  pipeline.log.info('[geocode-permits]', 'Before', {
+    total: parseInt(before.total),
+    already_geocoded: parseInt(before.already_geocoded),
+    has_geo_id: parseInt(before.has_geo_id),
+    to_geocode: parseInt(before.to_geocode),
+  });
 
   // Count address points available
   const apCount = await pool.query('SELECT COUNT(*) as count FROM address_points');
-  console.log(`Address points loaded: ${parseInt(apCount.rows[0].count).toLocaleString()}`);
-  console.log('');
+  pipeline.log.info('[geocode-permits]', `Address points loaded: ${parseInt(apCount.rows[0].count).toLocaleString()}`);
 
   // Bulk update: join permits to address_points via geo_id
-  console.log('Running bulk UPDATE...');
+  pipeline.log.info('[geocode-permits]', 'Running bulk UPDATE...');
   const updated = await pipeline.withTransaction(pool, async (client) => {
     const result = await client.query(`
       UPDATE permits p
@@ -60,12 +64,6 @@ pipeline.run('geocode-permits', async (pool) => {
     return result.rowCount;
   });
 
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-
-  console.log('');
-  console.log('=== Geocoding Complete ===');
-  console.log(`Permits updated:     ${updated.toLocaleString()}`);
-
   // Post-update stats
   const afterCounts = await pool.query(`
     SELECT
@@ -81,11 +79,28 @@ pipeline.run('geocode-permits', async (pool) => {
     FROM permits
   `);
   const after = afterCounts.rows[0];
-  console.log(`Total geocoded:      ${parseInt(after.geocoded).toLocaleString()}`);
-  console.log(`geo_id but no match: ${parseInt(after.has_geo_id_no_match).toLocaleString()}`);
-  console.log(`No geo_id at all:    ${parseInt(after.no_geo_id).toLocaleString()}`);
-  console.log(`Duration:            ${elapsed}s`);
-  pipeline.emitSummary({ records_total: updated, records_new: updated, records_updated: 0 });
+  const durationMs = Date.now() - startTime;
+
+  pipeline.log.info('[geocode-permits]', 'Geocoding complete', {
+    updated,
+    total_geocoded: parseInt(after.geocoded),
+    has_geo_id_no_match: parseInt(after.has_geo_id_no_match),
+    no_geo_id: parseInt(after.no_geo_id),
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
+
+  pipeline.emitSummary({
+    records_total: updated,
+    records_new: updated,
+    records_updated: 0,
+    records_meta: {
+      duration_ms: durationMs,
+      permits_total: parseInt(before.total),
+      total_geocoded: parseInt(after.geocoded),
+      has_geo_id_no_match: parseInt(after.has_geo_id_no_match),
+      no_geo_id: parseInt(after.no_geo_id),
+    },
+  });
   pipeline.emitMeta(
     { "permits": ["permit_num", "revision_num", "geo_id", "latitude", "longitude"], "address_points": ["address_point_id", "latitude", "longitude"] },
     { "permits": ["latitude", "longitude", "geocoded_at"] }
