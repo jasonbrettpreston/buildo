@@ -386,11 +386,9 @@ function isBLDPermit(permitNum) {
 const fullMode = pipeline.isFullMode();
 
 pipeline.run('classify-scope', async (pool) => {
-  console.log('=== Buildo Permit Scope Classifier ===');
-  console.log(`Mode: ${fullMode ? 'FULL (all permits)' : 'INCREMENTAL (new/changed only)'}`);
-  console.log('');
-
   const startTime = Date.now();
+
+  pipeline.log.info('[classify-scope]', `Mode: ${fullMode ? 'FULL' : 'INCREMENTAL'}`);
 
   // Incremental: only classify permits that are new or changed since last classification
   const incrementalFilter = fullMode
@@ -400,9 +398,7 @@ pipeline.run('classify-scope', async (pool) => {
   // Get total count
   const countResult = await pool.query(`SELECT COUNT(*) as total FROM permits${incrementalFilter}`);
   const total = parseInt(countResult.rows[0].total, 10);
-  console.log(`Permits to classify: ${total.toLocaleString()}`);
-  console.log(`Batch size:          ${BATCH_SIZE}`);
-  console.log('');
+  pipeline.log.info('[classify-scope]', `Permits to classify: ${total.toLocaleString()}`);
 
   // Track distribution
   const typeCounts = {};
@@ -499,7 +495,11 @@ pipeline.run('classify-scope', async (pool) => {
                   unnest($3::TEXT[]) AS project_type,
                   unnest($4::TEXT[]) AS scope_tags
          ) AS v
-         WHERE p.permit_num = v.permit_num AND p.revision_num = v.revision_num`,
+         WHERE p.permit_num = v.permit_num AND p.revision_num = v.revision_num
+           AND (p.project_type IS DISTINCT FROM v.project_type
+                OR p.scope_tags IS DISTINCT FROM v.scope_tags::TEXT[]
+                OR p.scope_classified_at IS NULL
+                OR p.scope_classified_at < p.last_seen_at)`,
         [permitNums, revisionNums, projectTypes, scopeTagArrays]
       );
     });
@@ -509,15 +509,13 @@ pipeline.run('classify-scope', async (pool) => {
     lastKey = rows[rows.length - 1];
 
     if (processed % 10000 < BATCH_SIZE) {
-      const pct = ((processed / total) * 100).toFixed(1);
-      console.log(`  Processed ${processed.toLocaleString()} / ${total.toLocaleString()} (${pct}%)`);
+      pipeline.progress('classify-scope', processed, total, startTime);
     }
   }
 
   // ----- Propagation pass: copy BLD scope_tags to companion permits -----
-  // Split into two separate transactions to minimize lock duration (§9.1)
-  console.log('');
-  console.log('--- BLD→Companion Scope Propagation ---');
+  // Uses DISTINCT ON for deterministic latest revision, SUBSTRING for index eligibility
+  pipeline.log.info('[classify-scope]', 'BLD→Companion scope propagation...');
 
   const propagated = await pipeline.withTransaction(pool, async (client) => {
     const propagateResult = await client.query(
@@ -528,16 +526,17 @@ pipeline.run('classify-scope', async (pool) => {
          scope_classified_at = NOW(),
          scope_source = 'propagated'
        FROM (
-         SELECT
-           TRIM(SPLIT_PART(permit_num, ' ', 1) || ' ' || SPLIT_PART(permit_num, ' ', 2)) AS base_num,
+         SELECT DISTINCT ON (base_num)
+           SUBSTRING(permit_num FROM '^\\d{2} \\d{6}') AS base_num,
            scope_tags,
            project_type
          FROM permits
          WHERE permit_num ~ '\\sBLD(\\s|$)'
            AND scope_tags IS NOT NULL
            AND array_length(scope_tags, 1) > 0
+         ORDER BY SUBSTRING(permit_num FROM '^\\d{2} \\d{6}'), permit_num DESC
        ) AS bld
-       WHERE TRIM(SPLIT_PART(companion.permit_num, ' ', 1) || ' ' || SPLIT_PART(companion.permit_num, ' ', 2)) = bld.base_num
+       WHERE SUBSTRING(companion.permit_num FROM '^\\d{2} \\d{6}') = bld.base_num
          AND companion.permit_num !~ '\\sBLD(\\s|$)'
          AND companion.permit_num ~ '\\s[A-Z]{2,4}(\\s|$)'
          AND (companion.scope_tags IS DISTINCT FROM bld.scope_tags
@@ -546,43 +545,48 @@ pipeline.run('classify-scope', async (pool) => {
     return propagateResult.rowCount || 0;
   });
 
-  // Re-add demolition tag to DM permits that lost it during propagation
+  // Re-add demolition tag to DM permits that lost it during propagation (NULL-safe)
   const demFixed = await pipeline.withTransaction(pool, async (client) => {
     const demFixResult = await client.query(
       `UPDATE permits
-       SET scope_tags = array_append(scope_tags, 'demolition')
+       SET scope_tags = CASE
+         WHEN scope_tags IS NULL THEN ARRAY['demolition']
+         ELSE array_append(scope_tags, 'demolition')
+       END
        WHERE permit_type = 'Demolition Folder (DM)'
-         AND NOT ('demolition' = ANY(scope_tags))`
+         AND (scope_tags IS NULL OR NOT ('demolition' = ANY(scope_tags)))`
     );
     return demFixResult.rowCount || 0;
   });
 
-  console.log(`  Propagated scope tags to ${propagated.toLocaleString()} companion permits`);
-  if (demFixed > 0) {
-    console.log(`  Re-added demolition tag to ${demFixed} DM companion permits`);
-  }
+  pipeline.log.info('[classify-scope]', `Propagated: ${propagated.toLocaleString()} companions${demFixed > 0 ? `, ${demFixed} DM tags restored` : ''}`);
 
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  const durationMs = Date.now() - startTime;
 
-  console.log('');
-  console.log('=== Classification Complete ===');
-  console.log(`Processed:     ${processed.toLocaleString()}`);
-  console.log(`With tags:     ${withTags.toLocaleString()} (${((withTags / processed) * 100).toFixed(1)}%)`);
-  console.log(`Propagated:    ${propagated.toLocaleString()} companion permits`);
-  console.log(`Duration:      ${elapsed}s`);
-  console.log('');
-  console.log('--- Project Type Distribution ---');
-  for (const [type, count] of Object.entries(typeCounts).sort((a, b) => b[1] - a[1])) {
-    const pct = ((count / processed) * 100).toFixed(1);
-    console.log(`  ${type.padEnd(15)} ${String(count).padStart(8)}  (${pct}%)`);
-  }
-  console.log('');
-  console.log('--- Top 20 Scope Tags ---');
-  const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 20);
-  for (const [tag, count] of sortedTags) {
-    const pct = ((count / processed) * 100).toFixed(1);
-    console.log(`  ${tag.padEnd(30)} ${String(count).padStart(8)}  (${pct}%)`);
-  }
-  pipeline.emitSummary({ records_total: total + propagated + demFixed, records_new: newlyClassified, records_updated: processed - newlyClassified + propagated + demFixed });
+  pipeline.log.info('[classify-scope]', 'Classification complete', {
+    processed,
+    with_tags: withTags,
+    propagated,
+    dem_fixed: demFixed,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
+  // Top type/tag distributions for structured logging
+  const topTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  pipeline.log.info('[classify-scope]', 'Type distribution', { types: Object.fromEntries(topTypes) });
+  pipeline.log.info('[classify-scope]', 'Top scope tags', { tags: Object.fromEntries(topTags) });
+
+  pipeline.emitSummary({
+    records_total: total + propagated + demFixed,
+    records_new: newlyClassified,
+    records_updated: processed - newlyClassified + propagated + demFixed,
+    records_meta: {
+      duration_ms: durationMs,
+      permits_processed: processed,
+      permits_with_tags: withTags,
+      propagated_companions: propagated,
+      demolitions_fixed: demFixed,
+    },
+  });
   pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "current_use", "proposed_use", "storeys", "housing_units", "dwelling_units_created", "scope_classified_at", "last_seen_at"] }, { "permits": ["project_type", "scope_tags", "scope_classified_at", "scope_source"] });
 });

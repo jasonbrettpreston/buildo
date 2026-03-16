@@ -2051,7 +2051,7 @@ describe('classify-scope.js BLD→Companion propagation', () => {
     // The propagation UPDATE must include IS DISTINCT FROM to avoid
     // unconditionally updating all ~80K companion permits every run
     const propagationBlock = source.slice(
-      source.indexOf('BLD→Companion Scope Propagation'),
+      source.indexOf('BLD→Companion scope propagation'),
       source.indexOf('Re-add demolition tag')
     );
     expect(propagationBlock).toMatch(/IS DISTINCT FROM/);
