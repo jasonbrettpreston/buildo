@@ -3,10 +3,18 @@
  * Load Toronto Address Points CSV into the address_points lookup table.
  * Streams the ~185 MB file and batch-inserts in groups of 1000.
  *
+ * Observability:
+ *   - Structured logging via pipeline.log (§9.4)
+ *   - for-await async iterator for clean backpressure (§9.5)
+ *   - IS DISTINCT FROM upsert to apply coordinate updates (§9.3)
+ *   - records_meta with rows_read, inserted, updated, skipped
+ *
  * Usage:
  *   node scripts/load-address-points.js [path-to-csv]
  *
  * If no path is given, downloads from Toronto Open Data.
+ *
+ * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
 const fs = require('fs');
@@ -42,7 +50,7 @@ function downloadFile(url, destPath) {
         downloaded += chunk.length;
         if (total > 0 && downloaded % (10 * 1024 * 1024) < chunk.length) {
           const pct = ((downloaded / total) * 100).toFixed(1);
-          console.log(`  Downloaded: ${(downloaded / 1024 / 1024).toFixed(0)} MB / ${(total / 1024 / 1024).toFixed(0)} MB (${pct}%)`);
+          pipeline.log.info('[load-address-points]', `Download: ${(downloaded / 1024 / 1024).toFixed(0)} MB / ${(total / 1024 / 1024).toFixed(0)} MB (${pct}%)`);
         }
       });
       response.pipe(file);
@@ -58,28 +66,26 @@ function downloadFile(url, destPath) {
 // Main
 // ---------------------------------------------------------------------------
 pipeline.run('load-address-points', async (pool) => {
-  console.log('=== Buildo Address Points Loader ===');
-  console.log('');
+  const startTime = Date.now();
 
   let csvPath = process.argv[2];
 
   if (!csvPath) {
     csvPath = path.join(__dirname, '..', 'data', 'address-points-4326.csv');
     if (!fs.existsSync(csvPath)) {
-      console.log('Downloading Address Points CSV (~185 MB)...');
+      pipeline.log.info('[load-address-points]', 'Downloading Address Points CSV (~185 MB)...');
       await downloadFile(CSV_URL, csvPath);
-      console.log('Download complete.');
+      pipeline.log.info('[load-address-points]', 'Download complete.');
     } else {
-      console.log(`Using cached CSV: ${csvPath}`);
+      pipeline.log.info('[load-address-points]', `Using cached CSV: ${csvPath}`);
     }
   }
 
-  console.log(`Parsing: ${csvPath}`);
-  console.log('');
+  pipeline.log.info('[load-address-points]', `Parsing: ${csvPath}`);
 
-  const startTime = Date.now();
   let processed = 0;
   let inserted = 0;
+  let updated = 0;
   let skipped = 0;
   let errors = 0;
   let batch = [];
@@ -103,33 +109,41 @@ pipeline.run('load-address-points', async (pool) => {
       const result = await client.query(
         `INSERT INTO address_points (address_point_id, latitude, longitude)
          VALUES ${placeholders.join(', ')}
-         ON CONFLICT (address_point_id) DO NOTHING
-         RETURNING 1`,
+         ON CONFLICT (address_point_id) DO UPDATE SET
+           latitude = EXCLUDED.latitude,
+           longitude = EXCLUDED.longitude
+         WHERE address_points.latitude IS DISTINCT FROM EXCLUDED.latitude
+            OR address_points.longitude IS DISTINCT FROM EXCLUDED.longitude
+         RETURNING (xmax = 0) AS is_insert`,
         values
       );
 
-      inserted += result.rowCount || 0;
+      for (const r of result.rows) {
+        if (r.is_insert) inserted++;
+        else updated++;
+      }
     });
   }
 
-  return new Promise((resolve, reject) => {
-    const parser = parse({
-      columns: true,
-      skip_empty_lines: true,
-      relax_column_count: true,
-      relax_quotes: true,
-    });
+  // Use for-await async iterator for clean stream backpressure (§9.5)
+  const parser = parse({
+    columns: true,
+    skip_empty_lines: true,
+    relax_column_count: true,
+    relax_quotes: true,
+  });
 
-    const stream = fs.createReadStream(csvPath).pipe(parser);
+  const stream = fs.createReadStream(csvPath).pipe(parser);
 
-    stream.on('data', async (record) => {
+  try {
+    for await (const record of stream) {
       processed++;
 
       const idRaw = (record.ADDRESS_POINT_ID || '').trim();
       const id = parseInt(idRaw, 10);
       if (isNaN(id)) {
         skipped++;
-        return;
+        continue;
       }
 
       // Coordinates are in a GeoJSON geometry column (MultiPoint or Point)
@@ -147,7 +161,7 @@ pipeline.run('load-address-points', async (pool) => {
             lat = coord[1];
           }
         } catch {
-          // fall through
+          // fall through to fallback
         }
       }
 
@@ -159,17 +173,12 @@ pipeline.run('load-address-points', async (pool) => {
 
       if (isNaN(lat) || isNaN(lng)) {
         skipped++;
-        return;
+        continue;
       }
 
-      batch.push({
-        address_point_id: id,
-        latitude: lat,
-        longitude: lng,
-      });
+      batch.push({ address_point_id: id, latitude: lat, longitude: lng });
 
       if (batch.length >= pipeline.BATCH_SIZE) {
-        stream.pause();
         try {
           await flushBatch();
         } catch (err) {
@@ -177,43 +186,41 @@ pipeline.run('load-address-points', async (pool) => {
           errors++;
           batch = [];
         }
-        stream.resume();
+
+        if (processed % 50000 === 0) {
+          pipeline.progress('load-address-points', processed, 525000, startTime);
+        }
       }
+    }
 
-      if (processed % 50000 === 0) {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`  ${processed.toLocaleString()} rows read, ${inserted.toLocaleString()} inserted, ${skipped.toLocaleString()} skipped - ${elapsed}s`);
-      }
-    });
+    // Flush remaining
+    await flushBatch();
+  } catch (err) {
+    pipeline.log.error('[load-address-points]', err, { phase: 'csv_parse_or_insert' });
+    errors++;
+  }
 
-    stream.on('end', async () => {
-      try {
-        await flushBatch();
-      } catch (err) {
-        pipeline.log.error('[load-address-points]', err, { phase: 'final_flush' });
-        errors++;
-      }
-
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log('');
-      console.log('=== Load Complete ===');
-      console.log(`Rows read:     ${processed.toLocaleString()}`);
-      console.log(`Inserted:      ${inserted.toLocaleString()}`);
-      console.log(`Skipped:       ${skipped.toLocaleString()}`);
-      console.log(`Errors:        ${errors}`);
-      console.log(`Duration:      ${elapsed}s`);
-      pipeline.emitSummary({ records_total: inserted, records_new: inserted, records_updated: 0 });
-      pipeline.emitMeta(
-        { "CKAN API": ["ADDRESS_POINT_ID", "LONGITUDE", "LATITUDE"] },
-        { "address_points": ["address_point_id", "latitude", "longitude"] }
-      );
-
-      resolve();
-    });
-
-    stream.on('error', async (err) => {
-      pipeline.log.error('[load-address-points]', err, { phase: 'csv_parse' });
-      reject(err);
-    });
+  const durationMs = Date.now() - startTime;
+  pipeline.log.info('[load-address-points]', 'Load complete', {
+    rows_read: processed, inserted, updated, skipped, errors,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
+
+  pipeline.emitSummary({
+    records_total: inserted + updated,
+    records_new: inserted,
+    records_updated: updated,
+    records_meta: {
+      duration_ms: durationMs,
+      rows_read: processed,
+      records_inserted: inserted,
+      records_updated: updated,
+      records_skipped: skipped,
+      errors,
+    },
+  });
+  pipeline.emitMeta(
+    { "Toronto Open Data CSV": ["ADDRESS_POINT_ID", "LONGITUDE", "LATITUDE", "geometry"] },
+    { "address_points": ["address_point_id", "latitude", "longitude"] }
+  );
 });
