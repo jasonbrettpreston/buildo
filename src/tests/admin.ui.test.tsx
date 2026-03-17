@@ -925,12 +925,13 @@ describe('Massing pipeline chains link-massing after load', () => {
     expect(source).toMatch(/link-massing/);
   });
 
-  it('link-massing.js is called with execSync or child_process', () => {
+  it('load-massing.js no longer couples to link-massing via execSync (chain orchestrator handles sequencing)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../../scripts/load-massing.js'),
       'utf-8'
     );
-    expect(source).toMatch(/execSync.*link-massing|exec.*link-massing|spawn.*link-massing/);
+    // execSync coupling removed — chain orchestrator runs link-massing as the next step
+    expect(source).not.toMatch(/execSync.*link-massing/);
   });
 });
 

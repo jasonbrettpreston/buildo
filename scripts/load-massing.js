@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
+const crypto = require('crypto');
 const { execSync } = require('child_process');
 const { platform } = require('os');
 const shapefile = require('shapefile');
@@ -98,7 +99,7 @@ function downloadFile(url, destPath) {
         downloaded += chunk.length;
         if (total > 0 && downloaded % (10 * 1024 * 1024) < chunk.length) {
           const pct = ((downloaded / total) * 100).toFixed(1);
-          console.log(`  Downloaded: ${(downloaded / 1024 / 1024).toFixed(0)} MB / ${(total / 1024 / 1024).toFixed(0)} MB (${pct}%)`);
+          pipeline.log.info('[load-massing]', `Download: ${(downloaded / 1024 / 1024).toFixed(0)} MB / ${(total / 1024 / 1024).toFixed(0)} MB (${pct}%)`);
         }
       });
       response.pipe(file);
@@ -114,8 +115,8 @@ function downloadFile(url, destPath) {
 // Main
 // ---------------------------------------------------------------------------
 pipeline.run('load-massing', async (pool) => {
-  console.log('=== Buildo 3D Massing Loader ===');
-  console.log('');
+  const startTime = Date.now();
+  pipeline.log.info('[load-massing]', '3D Massing Loader starting...');
 
   let shpPath = process.argv[2];
 
@@ -125,12 +126,12 @@ pipeline.run('load-massing', async (pool) => {
 
     if (!fs.existsSync(extractDir)) {
       if (!fs.existsSync(zipPath)) {
-        console.log('Downloading 3D Massing ZIP...');
+        pipeline.log.info('[load-massing]', 'Downloading 3D Massing ZIP...');
         await downloadFile(ZIP_URL, zipPath);
-        console.log('Download complete.');
+        pipeline.log.info('[load-massing]', 'Download complete.');
       }
 
-      console.log('Extracting ZIP...');
+      pipeline.log.info('[load-massing]', 'Extracting ZIP...');
       fs.mkdirSync(extractDir, { recursive: true });
       if (platform() === 'win32') {
         execSync(
@@ -140,7 +141,7 @@ pipeline.run('load-massing', async (pool) => {
       } else {
         execSync(`unzip -o "${zipPath}" -d "${extractDir}"`, { stdio: 'inherit' });
       }
-      console.log('Extraction complete.');
+      pipeline.log.info('[load-massing]', 'Extraction complete.');
     }
 
     // Find the .shp file in the extracted directory
@@ -167,10 +168,8 @@ pipeline.run('load-massing', async (pool) => {
     }
   }
 
-  console.log(`Reading: ${shpPath}`);
-  console.log('');
+  pipeline.log.info('[load-massing]', `Reading: ${shpPath}`);
 
-  const startTime = Date.now();
   let processed = 0;
   let inserted = 0;
   let updated = 0;
@@ -261,8 +260,16 @@ pipeline.run('load-massing', async (pool) => {
     const maxHeight = props.MAX_HEIGHT != null ? parseFloat(props.MAX_HEIGHT) : null;
     const minHeight = props.MIN_HEIGHT != null ? parseFloat(props.MIN_HEIGHT) : null;
     const elevZ = props.ELEVZ != null ? parseFloat(props.ELEVZ) : (props.SURF_ELEV != null ? parseFloat(props.SURF_ELEV) : null);
-    // OBJECTID may not exist in all shapefile versions; fall back to feature index
-    const sourceId = props.OBJECTID != null ? String(props.OBJECTID) : String(processed);
+    // Stable deterministic ID: prefer OBJECTID, fall back to geometry hash
+    // (loop counter would cause PK collisions on re-runs with different shapefiles)
+    let sourceId;
+    if (props.OBJECTID != null) {
+      sourceId = String(props.OBJECTID);
+    } else if (props.ID != null) {
+      sourceId = String(props.ID);
+    } else {
+      sourceId = 'hash_' + crypto.createHash('md5').update(JSON.stringify(feature.geometry)).digest('hex').substring(0, 12);
+    }
 
     // Detect projected coords (Web Mercator): values >> 180 means not WGS84 degrees
     const isProjected = ring[0] && (Math.abs(ring[0][0]) > 180 || Math.abs(ring[0][1]) > 180);
@@ -299,8 +306,7 @@ pipeline.run('load-massing', async (pool) => {
     }
 
     if (processed % 50000 === 0) {
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`  ${processed.toLocaleString()} features read, ${inserted.toLocaleString()} inserted, ${skipped.toLocaleString()} skipped - ${elapsed}s`);
+      pipeline.progress('load-massing', processed, 480000, startTime);
     }
   }
 
@@ -312,23 +318,28 @@ pipeline.run('load-massing', async (pool) => {
     errors++;
   }
 
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log('');
-  console.log('=== Load Complete ===');
-  console.log(`Features read:  ${processed.toLocaleString()}`);
-  console.log(`Inserted:       ${inserted.toLocaleString()}`);
-  console.log(`Updated:        ${updated.toLocaleString()}`);
-  console.log(`Skipped:        ${skipped.toLocaleString()}`);
-  console.log(`Errors:         ${errors}`);
-  console.log(`Duration:       ${elapsed}s`);
-  pipeline.emitSummary({ records_total: inserted + updated, records_new: inserted, records_updated: updated });
+  const durationMs = Date.now() - startTime;
+  pipeline.log.info('[load-massing]', 'Load complete', {
+    features_read: processed, inserted, updated, skipped, errors,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
+
+  pipeline.emitSummary({
+    records_total: inserted + updated,
+    records_new: inserted,
+    records_updated: updated,
+    records_meta: {
+      duration_ms: durationMs,
+      features_read: processed,
+      records_inserted: inserted,
+      records_updated: updated,
+      features_skipped: skipped,
+      errors,
+    },
+  });
   pipeline.emitMeta(
     { "City Shapefile": ["SOURCE_ID", "geometry", "AREA_SQ_M", "MAX_HEIGHT", "MIN_HEIGHT", "ELEV_Z", "EST_STORIES"] },
     { "building_footprints": ["source_id", "geometry", "footprint_area_sqm", "footprint_area_sqft", "max_height_m", "min_height_m", "elev_z", "estimated_stories", "centroid_lat", "centroid_lng"] }
   );
-
-  // Chain spatial linking: match parcels to newly loaded building footprints
-  console.log('');
-  console.log('=== Starting Parcel-to-Building Linking ===');
-  execSync(`node "${path.join(__dirname, 'link-massing.js')}"`, { stdio: 'inherit' });
+  // Note: link-massing.js runs as the next chain step — no longer coupled via execSync
 });
