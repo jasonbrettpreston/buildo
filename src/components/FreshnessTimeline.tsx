@@ -53,6 +53,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   assert_network_health:      { name: 'Network Health',          group: 'quality' },
   assert_staleness:           { name: 'Staleness Monitor',       group: 'quality' },
   assert_pre_permit_aging:    { name: 'Pre-Permit Aging',        group: 'quality' },
+  assert_coa_freshness:       { name: 'Source Freshness',         group: 'quality' },
 };
 
 // ---------------------------------------------------------------------------
@@ -104,6 +105,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     steps: [
       { slug: 'assert_schema',           indent: 0 },
       { slug: 'coa',                     indent: 0 },
+      { slug: 'assert_coa_freshness',   indent: 0 },
       { slug: 'link_coa',                indent: 1 },
       { slug: 'create_pre_permits',      indent: 1 },
       { slug: 'assert_pre_permit_aging', indent: 0 },
@@ -171,6 +173,7 @@ export const NON_TOGGLEABLE_SLUGS = new Set([
   'assert_data_bounds',
   'assert_engine_health',
   'assert_pre_permit_aging',
+  'assert_coa_freshness',
   'refresh_snapshot',
 ]);
 

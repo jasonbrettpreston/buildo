@@ -557,6 +557,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   assert_network_health: { summary: 'Validates scraper network health: proxy errors, latency, schema drift, WAF traps', table: 'pipeline_runs' },
   assert_staleness:      { summary: 'Detects stale inspection permits not scraped within 14 days', table: 'pipeline_runs' },
   assert_pre_permit_aging: { summary: 'Detects approved+unlinked CoA applications aging past 12/18 months', table: 'pipeline_runs' },
+  assert_coa_freshness:    { summary: 'Checks CKAN portal freshness — warns if newest CoA data is >45 days stale', table: 'pipeline_runs' },
   // Deep Scrapes
   inspections:          { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections' },
   coa_documents:        { summary: 'Downloads Committee of Adjustment plans and decision PDFs from AIC portal', table: 'coa_documents' },
@@ -781,6 +782,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   refresh_snapshot: 'data_quality_snapshots', assert_schema: 'pipeline_runs',
   assert_data_bounds: 'pipeline_runs', assert_engine_health: 'engine_health_snapshots',
   assert_network_health: 'pipeline_runs', assert_staleness: 'pipeline_runs',
+  assert_coa_freshness: 'pipeline_runs',
   assert_pre_permit_aging: 'pipeline_runs',
   inspections: 'permit_inspections',
   coa_documents: 'coa_documents',
