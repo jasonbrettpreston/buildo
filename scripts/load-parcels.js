@@ -171,9 +171,13 @@ function estimateLotDimensions(geometry, statedAreaSqm) {
 
 function parseDate(v) {
   if (!v || String(v).trim() === '') return null;
-  const ms = Date.parse(String(v).trim());
+  const s = String(v).trim();
+  // Return ISO date string YYYY-MM-DD to avoid timezone mismatch in IS DISTINCT FROM
+  const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (m) return m[1];
+  const ms = Date.parse(s);
   if (isNaN(ms)) return null;
-  return new Date(ms);
+  return new Date(ms).toISOString().slice(0, 10);
 }
 
 function parseGeoJSON(raw) {
@@ -209,7 +213,7 @@ function downloadFile(url, destPath) {
         downloaded += chunk.length;
         if (total > 0 && downloaded % (10 * 1024 * 1024) < chunk.length) {
           const pct = ((downloaded / total) * 100).toFixed(1);
-          console.log(`  Downloaded: ${(downloaded / 1024 / 1024).toFixed(0)} MB / ${(total / 1024 / 1024).toFixed(0)} MB (${pct}%)`);
+          pipeline.log.info('[load-parcels]', `Download: ${(downloaded / 1024 / 1024).toFixed(0)} MB / ${(total / 1024 / 1024).toFixed(0)} MB (${pct}%)`);
         }
       });
       response.pipe(file);
@@ -225,29 +229,29 @@ function downloadFile(url, destPath) {
 // Main
 // ---------------------------------------------------------------------------
 pipeline.run('load-parcels', async (pool) => {
-  console.log('=== Buildo Property Boundaries Loader ===');
-  console.log('');
+  pipeline.log.info('[load-parcels]','=== Buildo Property Boundaries Loader ===');
+  pipeline.log.info('[load-parcels]','');
 
   let csvPath = process.argv[2];
 
   if (!csvPath) {
     csvPath = path.join(__dirname, '..', 'data', 'property-boundaries-4326.csv');
     if (!fs.existsSync(csvPath)) {
-      console.log('Downloading Property Boundaries CSV (~327 MB)...');
+      pipeline.log.info('[load-parcels]','Downloading Property Boundaries CSV (~327 MB)...');
       await downloadFile(CSV_URL, csvPath);
-      console.log('Download complete.');
+      pipeline.log.info('[load-parcels]','Download complete.');
     } else {
-      console.log(`Using cached CSV: ${csvPath}`);
+      pipeline.log.info('[load-parcels]',`Using cached CSV: ${csvPath}`);
     }
   }
 
-  console.log(`Parsing: ${csvPath}`);
+  pipeline.log.info('[load-parcels]',`Parsing: ${csvPath}`);
 
   // Detect PostGIS for optional geom column population
   const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
   const hasPostGIS = pgisCheck.rows.length > 0;
-  if (!hasPostGIS) console.log('Note: PostGIS not installed — skipping geom column');
-  console.log('');
+  if (!hasPostGIS) pipeline.log.info('[load-parcels]', 'PostGIS not installed — skipping geom column');
+  pipeline.log.info('[load-parcels]','');
 
   const startTime = Date.now();
   let processed = 0;
@@ -315,7 +319,7 @@ pipeline.run('load-parcels', async (pool) => {
           ${geomLine}
           date_effective = EXCLUDED.date_effective,
           is_irregular = EXCLUDED.is_irregular
-        WHERE parcels.geometry IS DISTINCT FROM EXCLUDED.geometry
+        WHERE parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
           OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm
           OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type
           OR parcels.address_number IS DISTINCT FROM EXCLUDED.address_number
@@ -330,35 +334,62 @@ pipeline.run('load-parcels', async (pool) => {
     });
   }
 
-  return new Promise((resolve, reject) => {
-    const parser = parse({
-      columns: true,
-      skip_empty_lines: true,
-      relax_column_count: true,
-      relax_quotes: true,
+  const parser = parse({
+    columns: true,
+    skip_empty_lines: true,
+    relax_column_count: true,
+    relax_quotes: true,
+  });
+
+  const stream = fs.createReadStream(csvPath).pipe(parser);
+
+  // Helper to emit final summary (used in both success and truncated paths)
+  function emitFinal(label) {
+    const durationMs = Date.now() - startTime;
+    pipeline.log.info('[load-parcels]', `${label}`, {
+      rows_read: processed, inserted, updated, skipped, errors,
+      duration: `${(durationMs / 1000).toFixed(1)}s`,
     });
+    pipeline.emitSummary({
+      records_total: inserted + updated,
+      records_new: inserted,
+      records_updated: updated,
+      records_meta: {
+        duration_ms: durationMs,
+        rows_read: processed,
+        records_inserted: inserted,
+        records_updated: updated,
+        records_skipped: skipped,
+        errors,
+      },
+    });
+    pipeline.emitMeta(
+      { "Toronto Open Data CSV": ["PARCELID", "FEATURE_TYPE", "ADDRESS_NUMBER", "LINEAR_NAME_FULL", "STATEDAREA", "geometry", "DATE_EFFECTIVE"] },
+      { "parcels": ["parcel_id", "feature_type", "address_number", "linear_name_full", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "stated_area_raw", "lot_size_sqm", "lot_size_sqft", "frontage_m", "frontage_ft", "depth_m", "depth_ft", "geometry", "date_effective", "is_irregular", "geom"] }
+    );
+  }
 
-    const stream = fs.createReadStream(csvPath).pipe(parser);
-
-    stream.on('data', async (record) => {
+  // Use for-await async iterator for clean stream backpressure (§9.5)
+  try {
+    for await (const record of stream) {
       processed++;
 
       // Filter: skip CORRIDOR, RESERVE feature types
       const featureType = (record.FEATURE_TYPE || '').trim().toUpperCase();
       if (featureType === 'CORRIDOR' || featureType === 'RESERVE') {
         skipped++;
-        return;
+        continue;
       }
 
       // Filter: skip expired parcels (DATE_EXPIRY before today)
       const dateExpiry = record.DATE_EXPIRY || '';
       if (dateExpiry && dateExpiry !== '3000-01-01' && dateExpiry < new Date().toISOString().slice(0, 10)) {
         skipped++;
-        return;
+        continue;
       }
 
       const parcelId = (record.PARCELID || '').trim();
-      if (!parcelId) { skipped++; return; }
+      if (!parcelId) { skipped++; continue; }
 
       // Parse stated area
       const statedAreaRaw = (record.STATEDAREA || '').trim();
@@ -401,7 +432,6 @@ pipeline.run('load-parcels', async (pool) => {
       });
 
       if (batch.length >= pipeline.BATCH_SIZE) {
-        stream.pause();
         try {
           await flushBatch();
         } catch (err) {
@@ -409,72 +439,31 @@ pipeline.run('load-parcels', async (pool) => {
           errors++;
           batch = [];
         }
-        stream.resume();
-      }
 
-      if (processed % 50000 === 0) {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`  ${processed.toLocaleString()} rows read, ${inserted.toLocaleString()} inserted, ${skipped.toLocaleString()} skipped - ${elapsed}s`);
+        if (processed % 50000 === 0) {
+          pipeline.progress('load-parcels', processed, 484000, startTime);
+        }
       }
-    });
+    }
 
-    stream.on('end', async () => {
+    // Flush remaining
+    await flushBatch();
+    emitFinal('Load complete');
+
+  } catch (err) {
+    // Truncated CSV (unclosed quote at EOF) is recoverable — flush what we have
+    if (err.code === 'CSV_QUOTE_NOT_CLOSED' && processed > 0) {
+      pipeline.log.warn('[load-parcels]', `CSV truncated at line ${err.lines || '?'} — flushing ${processed.toLocaleString()} rows already parsed`);
       try {
         await flushBatch();
-      } catch (err) {
-        pipeline.log.error('[load-parcels]', err, { phase: 'final_flush' });
+      } catch (flushErr) {
+        pipeline.log.error('[load-parcels]', flushErr, { phase: 'truncated_flush' });
         errors++;
       }
-
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log('');
-      console.log('=== Load Complete ===');
-      console.log(`Rows read:     ${processed.toLocaleString()}`);
-      console.log(`Inserted:      ${inserted.toLocaleString()}`);
-      console.log(`Updated:       ${updated.toLocaleString()}`);
-      console.log(`Skipped:       ${skipped.toLocaleString()}`);
-      console.log(`Errors:        ${errors}`);
-      console.log(`Duration:      ${elapsed}s`);
-      pipeline.emitSummary({ records_total: inserted + updated, records_new: inserted, records_updated: updated });
-      pipeline.emitMeta(
-        { "CKAN API": ["ARN", "FEAT_TYPE", "ADDR_NUM", "LINEAR_NAME_FULL", "AREA", "SHAPE_Area", "geometry"] },
-        { "parcels": ["parcel_id", "feature_type", "address_number", "linear_name_full", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "stated_area_raw", "lot_size_sqm", "lot_size_sqft", "frontage_m", "frontage_ft", "depth_m", "depth_ft", "geometry", "date_effective", "is_irregular", "geom"] }
-      );
-
-      resolve();
-    });
-
-    stream.on('error', async (err) => {
-      // Truncated CSV (unclosed quote at EOF) is recoverable — flush what we have
-      if (err.code === 'CSV_QUOTE_NOT_CLOSED' && processed > 0) {
-        console.warn(`\nCSV truncated at line ${err.lines || '?'} — flushing ${processed.toLocaleString()} rows already parsed`);
-        try {
-          await flushBatch();
-        } catch (flushErr) {
-          pipeline.log.error('[load-parcels]', flushErr, { phase: 'truncated_flush' });
-          errors++;
-        }
-
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log('');
-        console.log('=== Load Complete (partial — truncated CSV) ===');
-        console.log(`Rows read:     ${processed.toLocaleString()}`);
-        console.log(`Inserted:      ${inserted.toLocaleString()}`);
-        console.log(`Updated:       ${updated.toLocaleString()}`);
-        console.log(`Skipped:       ${skipped.toLocaleString()}`);
-        console.log(`Errors:        ${errors}`);
-        console.log(`Duration:      ${elapsed}s`);
-        pipeline.emitSummary({ records_total: inserted + updated, records_new: inserted, records_updated: updated });
-        pipeline.emitMeta(
-          { "CKAN API": ["ARN", "FEAT_TYPE", "ADDR_NUM", "LINEAR_NAME_FULL", "AREA", "SHAPE_Area", "geometry"] },
-          { "parcels": ["parcel_id", "feature_type", "address_number", "linear_name_full", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "stated_area_raw", "lot_size_sqm", "lot_size_sqft", "frontage_m", "frontage_ft", "depth_m", "depth_ft", "geometry", "date_effective", "is_irregular", "geom"] }
-        );
-
-        resolve();
-      } else {
-        pipeline.log.error('[load-parcels]', err, { phase: 'csv_parse' });
-        reject(err);
-      }
-    });
-  });
+      emitFinal('Load complete (partial — truncated CSV)');
+    } else {
+      pipeline.log.error('[load-parcels]', err, { phase: 'csv_parse' });
+      throw err;
+    }
+  }
 });
