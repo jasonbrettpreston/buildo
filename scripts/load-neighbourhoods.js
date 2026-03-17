@@ -66,7 +66,7 @@ function downloadFile(url, destPath) {
         downloaded += chunk.length;
         if (total > 0 && downloaded % (2 * 1024 * 1024) < chunk.length) {
           const pct = ((downloaded / total) * 100).toFixed(1);
-          console.log(`  Downloaded: ${(downloaded / 1024 / 1024).toFixed(1)} MB (${pct}%)`);
+          pipeline.log.info('[load-neighbourhoods]',`  Downloaded: ${(downloaded / 1024 / 1024).toFixed(1)} MB (${pct}%)`);
         }
       });
       response.pipe(file);
@@ -102,7 +102,7 @@ function parseNumeric(val) {
 // Step 1: Load boundaries GeoJSON
 // ---------------------------------------------------------------------------
 async function loadBoundaries(pool, geojsonPath, hasPostGIS) {
-  console.log('Step 1: Loading neighbourhood boundaries...');
+  pipeline.log.info('[load-neighbourhoods]','Step 1: Loading neighbourhood boundaries...');
   const raw = fs.readFileSync(geojsonPath, 'utf8');
   const geojson = JSON.parse(raw);
 
@@ -118,7 +118,7 @@ async function loadBoundaries(pool, geojsonPath, hasPostGIS) {
       const name = props.AREA_NAME || props.AREA_LONG_CODE || '';
 
       if (!neighbourhoodId || !name) {
-        console.log(`  Skipping feature with missing ID or name`);
+        pipeline.log.info('[load-neighbourhoods]',`  Skipping feature with missing ID or name`);
         continue;
       }
 
@@ -127,14 +127,16 @@ async function loadBoundaries(pool, geojsonPath, hasPostGIS) {
          VALUES ($1, $2, $3)
          ON CONFLICT (neighbourhood_id) DO UPDATE SET
            name = EXCLUDED.name,
-           geometry = EXCLUDED.geometry${geomLine}`,
+           geometry = EXCLUDED.geometry${geomLine}
+         WHERE neighbourhoods.name IS DISTINCT FROM EXCLUDED.name
+            OR neighbourhoods.geometry::text IS DISTINCT FROM EXCLUDED.geometry::text`,
         [neighbourhoodId, name, JSON.stringify(feature.geometry)]
       );
       inserted++;
     }
   });
 
-  console.log(`  Inserted ${inserted} neighbourhood boundaries.`);
+  pipeline.log.info('[load-neighbourhoods]',`  Inserted ${inserted} neighbourhood boundaries.`);
   return inserted;
 }
 
@@ -142,7 +144,7 @@ async function loadBoundaries(pool, geojsonPath, hasPostGIS) {
 // Step 2: Load Census profiles from XLSX (transposed format)
 // ---------------------------------------------------------------------------
 async function loadProfiles(pool, xlsxPath) {
-  console.log('Step 2: Loading Census profiles from XLSX...');
+  pipeline.log.info('[load-neighbourhoods]','Step 2: Loading Census profiles from XLSX...');
 
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(xlsxPath);
@@ -169,10 +171,10 @@ async function loadProfiles(pool, xlsxPath) {
     rows.push(obj);
   });
 
-  console.log(`  Sheet "${sheetName}" has ${rows.length} rows`);
+  pipeline.log.info('[load-neighbourhoods]',`  Sheet "${sheetName}" has ${rows.length} rows`);
 
   if (rows.length === 0) {
-    console.log('  No data rows found. Skipping profiles.');
+    pipeline.log.info('[load-neighbourhoods]','  No data rows found. Skipping profiles.');
     return;
   }
 
@@ -183,7 +185,7 @@ async function loadProfiles(pool, xlsxPath) {
   const charColName = headerKeys.find(h =>
     h === 'Characteristic' || h === 'characteristic' || h === 'Neighbourhood Name' || h === '_0'
   ) || headerKeys[0];
-  console.log(`  Characteristic column: "${charColName}"`);
+  pipeline.log.info('[load-neighbourhoods]',`  Characteristic column: "${charColName}"`);
 
   // Build neighbourhood columns mapping
   // Two formats:
@@ -211,11 +213,11 @@ async function loadProfiles(pool, xlsxPath) {
       }
     }
   }
-  console.log(`  Found ${Object.keys(neighbourhoodColumns).length} neighbourhood columns`);
+  pipeline.log.info('[load-neighbourhoods]',`  Found ${Object.keys(neighbourhoodColumns).length} neighbourhood columns`);
 
   if (Object.keys(neighbourhoodColumns).length === 0) {
-    console.log('  WARNING: No neighbourhood columns found. Listing first 5 headers:');
-    headerKeys.slice(0, 5).forEach(h => console.log(`    "${h}"`));
+    pipeline.log.info('[load-neighbourhoods]','  WARNING: No neighbourhood columns found. Listing first 5 headers:');
+    headerKeys.slice(0, 5).forEach(h => pipeline.log.info('[load-neighbourhoods]', `    "${h}"`));
     return;
   }
 
@@ -437,8 +439,8 @@ async function loadProfiles(pool, xlsxPath) {
     }
   }
 
-  console.log(`  Matched ${matchedRows} characteristic rows for updates.`);
-  console.log('  Computing derived percentages...');
+  pipeline.log.info('[load-neighbourhoods]',`  Matched ${matchedRows} characteristic rows for updates.`);
+  pipeline.log.info('[load-neighbourhoods]','  Computing derived percentages...');
 
   // Compute tenure percentages
   for (const [nid, data] of Object.entries(tenureData)) {
@@ -487,47 +489,55 @@ async function loadProfiles(pool, xlsxPath) {
     }
   }
 
-  // Married percentage
-  for (const [nid, data] of Object.entries(marriedData)) {
-    if (data.total > 0) {
-      await pool.query('UPDATE neighbourhoods SET married_pct = $1 WHERE neighbourhood_id = $2',
-        [Math.round((data.married / data.total) * 1000) / 10, parseInt(nid, 10)]);
-    }
+  // Bulk update: married, university_degree, immigrant, visible_minority, english_knowledge percentages
+  const censusIds = [...new Set([
+    ...Object.keys(marriedData),
+    ...Object.keys(educationData),
+    ...Object.keys(immigrantData),
+    ...Object.keys(minorityData),
+    ...Object.keys(languageData),
+  ])];
+
+  if (censusIds.length > 0) {
+    const ids = censusIds.map(id => parseInt(id, 10));
+    const marriedPcts = ids.map(id => {
+      const d = marriedData[id]; return d && d.total > 0 ? Math.round((d.married / d.total) * 1000) / 10 : null;
+    });
+    const universityPcts = ids.map(id => {
+      const d = educationData[id]; return d && d.total > 0 ? Math.round((d.university / d.total) * 1000) / 10 : null;
+    });
+    const immigrantPcts = ids.map(id => {
+      const d = immigrantData[id]; return d && d.total > 0 ? Math.round((d.immigrants / d.total) * 1000) / 10 : null;
+    });
+    const minorityPcts = ids.map(id => {
+      const d = minorityData[id]; return d && d.total > 0 ? Math.round((d.visible / d.total) * 1000) / 10 : null;
+    });
+    const englishPcts = ids.map(id => {
+      const d = languageData[id]; return d && d.total > 0 ? Math.round((d.english / d.total) * 1000) / 10 : null;
+    });
+
+    await pipeline.withTransaction(pool, async (client) => {
+      await client.query(`
+        UPDATE neighbourhoods AS n SET
+          married_pct = COALESCE(v.married_pct, n.married_pct),
+          university_degree_pct = COALESCE(v.university_degree_pct, n.university_degree_pct),
+          immigrant_pct = COALESCE(v.immigrant_pct, n.immigrant_pct),
+          visible_minority_pct = COALESCE(v.visible_minority_pct, n.visible_minority_pct),
+          english_knowledge_pct = COALESCE(v.english_knowledge_pct, n.english_knowledge_pct)
+        FROM (
+          SELECT unnest($1::int[]) AS neighbourhood_id,
+                 unnest($2::float[]) AS married_pct,
+                 unnest($3::float[]) AS university_degree_pct,
+                 unnest($4::float[]) AS immigrant_pct,
+                 unnest($5::float[]) AS visible_minority_pct,
+                 unnest($6::float[]) AS english_knowledge_pct
+        ) AS v
+        WHERE n.neighbourhood_id = v.neighbourhood_id
+      `, [ids, marriedPcts, universityPcts, immigrantPcts, minorityPcts, englishPcts]);
+    });
   }
 
-  // University degree percentage
-  for (const [nid, data] of Object.entries(educationData)) {
-    if (data.total > 0) {
-      await pool.query('UPDATE neighbourhoods SET university_degree_pct = $1 WHERE neighbourhood_id = $2',
-        [Math.round((data.university / data.total) * 1000) / 10, parseInt(nid, 10)]);
-    }
-  }
-
-  // Immigrant percentage
-  for (const [nid, data] of Object.entries(immigrantData)) {
-    if (data.total > 0) {
-      await pool.query('UPDATE neighbourhoods SET immigrant_pct = $1 WHERE neighbourhood_id = $2',
-        [Math.round((data.immigrants / data.total) * 1000) / 10, parseInt(nid, 10)]);
-    }
-  }
-
-  // Visible minority percentage
-  for (const [nid, data] of Object.entries(minorityData)) {
-    if (data.total > 0) {
-      await pool.query('UPDATE neighbourhoods SET visible_minority_pct = $1 WHERE neighbourhood_id = $2',
-        [Math.round((data.visible / data.total) * 1000) / 10, parseInt(nid, 10)]);
-    }
-  }
-
-  // English knowledge percentage
-  for (const [nid, data] of Object.entries(languageData)) {
-    if (data.total > 0) {
-      await pool.query('UPDATE neighbourhoods SET english_knowledge_pct = $1 WHERE neighbourhood_id = $2',
-        [Math.round((data.english / data.total) * 1000) / 10, parseInt(nid, 10)]);
-    }
-  }
-
-  console.log('  Census profile updates complete.');
+  pipeline.log.info('[load-neighbourhoods]','  Census profile updates complete.');
   return matchedRows;
 }
 
@@ -535,8 +545,8 @@ async function loadProfiles(pool, xlsxPath) {
 // Main
 // ---------------------------------------------------------------------------
 pipeline.run('load-neighbourhoods', async (pool) => {
-  console.log('=== Buildo Neighbourhood Loader ===');
-  console.log('');
+  pipeline.log.info('[load-neighbourhoods]','=== Buildo Neighbourhood Loader ===');
+  pipeline.log.info('[load-neighbourhoods]','');
 
   let boundariesPath = process.argv[2];
   let profilesPath = process.argv[3];
@@ -545,11 +555,11 @@ pipeline.run('load-neighbourhoods', async (pool) => {
   if (!boundariesPath) {
     boundariesPath = path.join(__dirname, '..', 'data', 'neighbourhoods-4326.geojson');
     if (!fs.existsSync(boundariesPath)) {
-      console.log('Downloading Neighbourhood Boundaries GeoJSON...');
+      pipeline.log.info('[load-neighbourhoods]','Downloading Neighbourhood Boundaries GeoJSON...');
       await downloadFile(BOUNDARIES_URL, boundariesPath);
-      console.log('Download complete.');
+      pipeline.log.info('[load-neighbourhoods]','Download complete.');
     } else {
-      console.log(`Using cached boundaries: ${boundariesPath}`);
+      pipeline.log.info('[load-neighbourhoods]',`Using cached boundaries: ${boundariesPath}`);
     }
   }
 
@@ -557,19 +567,19 @@ pipeline.run('load-neighbourhoods', async (pool) => {
   if (!profilesPath) {
     profilesPath = path.join(__dirname, '..', 'data', 'neighbourhood-profiles-2021.xlsx');
     if (!fs.existsSync(profilesPath)) {
-      console.log('Downloading Neighbourhood Profiles XLSX...');
+      pipeline.log.info('[load-neighbourhoods]','Downloading Neighbourhood Profiles XLSX...');
       await downloadFile(PROFILES_URL, profilesPath);
-      console.log('Download complete.');
+      pipeline.log.info('[load-neighbourhoods]','Download complete.');
     } else {
-      console.log(`Using cached profiles: ${profilesPath}`);
+      pipeline.log.info('[load-neighbourhoods]',`Using cached profiles: ${profilesPath}`);
     }
   }
 
   // Detect PostGIS for optional geom column population
   const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
   const hasPostGIS = pgisCheck.rows.length > 0;
-  if (!hasPostGIS) console.log('Note: PostGIS not installed — skipping geom column');
-  console.log('');
+  if (!hasPostGIS) pipeline.log.info('[load-neighbourhoods]', 'PostGIS not installed — skipping geom column');
+  pipeline.log.info('[load-neighbourhoods]','');
 
   const startTime = Date.now();
 
@@ -579,13 +589,23 @@ pipeline.run('load-neighbourhoods', async (pool) => {
   // Step 2: Load Census profiles
   const profileUpdates = await loadProfiles(pool, profilesPath);
 
-  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log('');
-  console.log('=== Load Complete ===');
-  console.log(`Neighbourhoods: ${boundaryCount}`);
-  console.log(`Profile updates: ${profileUpdates}`);
-  console.log(`Duration:       ${elapsed}s`);
-  pipeline.emitSummary({ records_total: boundaryCount, records_new: boundaryCount, records_updated: profileUpdates });
+  const durationMs = Date.now() - startTime;
+  pipeline.log.info('[load-neighbourhoods]', 'Load complete', {
+    boundaries: boundaryCount, census_updates: profileUpdates,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
+
+  pipeline.emitSummary({
+    records_total: boundaryCount,
+    records_new: boundaryCount,
+    records_updated: profileUpdates,
+    records_meta: {
+      duration_ms: durationMs,
+      boundaries_loaded: boundaryCount,
+      census_rows_matched: profileUpdates,
+      has_postgis: hasPostGIS,
+    },
+  });
   pipeline.emitMeta(
     { "City GeoJSON": ["AREA_SHORT_CODE", "AREA_NAME", "geometry"], "Census XLSX": ["income", "tenure", "demographics"] },
     { "neighbourhoods": ["neighbourhood_id", "name", "geometry", "geom", "avg_household_income", "median_household_income", "avg_individual_income", "low_income_pct", "tenure_owner_pct", "tenure_renter_pct", "period_of_construction", "couples_pct", "lone_parent_pct", "married_pct", "university_degree_pct", "immigrant_pct", "visible_minority_pct", "english_knowledge_pct"] }

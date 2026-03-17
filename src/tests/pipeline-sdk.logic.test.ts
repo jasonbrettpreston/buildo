@@ -510,10 +510,8 @@ describe('Pipeline SDK', () => {
     // §3.5 — load-neighbourhoods.js must report real records_new count
     it('load-neighbourhoods.js emitSummary uses real records_new count', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'load-neighbourhoods.js'), 'utf-8');
-      const match = content.match(/pipeline\.emitSummary\(\{([^}]+)\}\)/);
-      expect(match).not.toBeNull();
-      // records_new must reference a variable, not hardcode 0
-      expect(match![1]).toMatch(/records_new:\s*[a-zA-Z]/);
+      // Check content directly — nested records_meta breaks single-line regex
+      expect(content).toMatch(/records_new:\s*boundaryCount/);
     });
 
     // §9.3 — load-permits.js must hash mapped fields, not raw CKAN object
