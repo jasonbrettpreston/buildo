@@ -541,7 +541,6 @@ pipeline.run('classify-permits', async (pool) => {
   let permitsWithTrades = 0;
   let dbUpdated = 0;
   const offset = { value: 0 };
-  const startTime = Date.now();
 
   while (offset.value < totalPermits) {
     const batch = await pool.query(
