@@ -5,24 +5,22 @@
  * Runs alongside the Next.js dev server to trigger pipeline chains
  * on schedule. Uses node-cron with America/Toronto timezone.
  *
+ * Improvements:
+ *   - spawn (not execFile) prevents buffer overflow on long pipelines
+ *   - 12-hour zombie lock timeout prevents permanent pipeline deadlock
+ *   - pipeline.createPool() for consistent DB config (§9.4)
+ *
  * Usage: npm run local-cron
  *   (or: node scripts/local-cron.js)
  *
- * Chains triggered via execFileSync('node', ['scripts/run-chain.js', chainId])
- * — same execution path as admin dashboard "Run All".
+ * SPEC LINK: docs/specs/37_pipeline_system.md
  */
 const cron = require('node-cron');
-const { execFile } = require('child_process');
+const { spawn } = require('child_process');
 const path = require('path');
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
+const pool = pipeline.createPool();
 
 const RUN_CHAIN_SCRIPT = path.resolve(__dirname, 'run-chain.js');
 
@@ -55,6 +53,7 @@ const SCHEDULES = [
 
 // ---------------------------------------------------------------------------
 // Concurrency guard — skip if chain is already running
+// 12-hour staleness threshold prevents permanent zombie locks from crashes
 // ---------------------------------------------------------------------------
 
 async function isChainRunning(chainId) {
@@ -63,12 +62,13 @@ async function isChainRunning(chainId) {
     const res = await pool.query(
       `SELECT id FROM pipeline_runs
        WHERE pipeline = $1 AND status = 'running'
+         AND started_at > NOW() - INTERVAL '12 hours'
        LIMIT 1`,
       [chainSlug]
     );
     return res.rows.length > 0;
   } catch (err) {
-    console.error(`[local-cron] DB check failed for ${chainSlug}:`, err.message);
+    pipeline.log.error('[local-cron]', `DB check failed for ${chainSlug}: ${err.message}`);
     // If we can't check, skip to be safe
     return true;
   }
@@ -76,21 +76,29 @@ async function isChainRunning(chainId) {
 
 // ---------------------------------------------------------------------------
 // Trigger a chain via run-chain.js (child process)
+// Uses spawn with stdio: 'inherit' — zero memory buffering
 // ---------------------------------------------------------------------------
 
 function triggerChain(chainId, label) {
   return new Promise((resolve) => {
-    console.log(`[local-cron] Triggering ${label} (chain_${chainId})...`);
+    pipeline.log.info('[local-cron]', `Triggering ${label} (chain_${chainId})...`);
 
-    const child = execFile('node', [RUN_CHAIN_SCRIPT, chainId], {
+    const child = spawn('node', [RUN_CHAIN_SCRIPT, chainId], {
       env: process.env,
       stdio: 'inherit',
-    }, (err) => {
-      if (err) {
-        console.error(`[local-cron] ${label} failed:`, err.message);
+    });
+
+    child.on('close', (code) => {
+      if (code !== 0) {
+        pipeline.log.error('[local-cron]', `${label} failed with exit code ${code}`);
       } else {
-        console.log(`[local-cron] ${label} completed successfully.`);
+        pipeline.log.info('[local-cron]', `${label} completed successfully.`);
       }
+      resolve();
+    });
+
+    child.on('error', (err) => {
+      pipeline.log.error('[local-cron]', `${label} failed to start: ${err.message}`);
       resolve();
     });
   });
@@ -102,8 +110,7 @@ function triggerChain(chainId, label) {
 
 const tasks = [];
 
-console.log('\n[local-cron] Starting local pipeline scheduler...');
-console.log('[local-cron] Timezone: America/Toronto\n');
+pipeline.log.info('[local-cron]', 'Starting local pipeline scheduler (America/Toronto)');
 
 for (const schedule of SCHEDULES) {
   const task = cron.schedule(
@@ -111,7 +118,7 @@ for (const schedule of SCHEDULES) {
     async () => {
       const running = await isChainRunning(schedule.chainId);
       if (running) {
-        console.log(`[local-cron] Skipping ${schedule.label} — already running.`);
+        pipeline.log.info('[local-cron]', `Skipping ${schedule.label} — already running.`);
         return;
       }
       await triggerChain(schedule.chainId, schedule.label);
@@ -120,26 +127,25 @@ for (const schedule of SCHEDULES) {
   );
 
   tasks.push(task);
-
-  console.log(`  ${schedule.label}`);
-  console.log(`    Cron: ${schedule.cron}`);
+  pipeline.log.info('[local-cron]', `  ${schedule.label} — cron: ${schedule.cron}`);
 }
 
-console.log(`\n[local-cron] ${tasks.length} jobs scheduled. Waiting for triggers...\n`);
+pipeline.log.info('[local-cron]', `${tasks.length} jobs scheduled. Waiting for triggers...`);
 
 // ---------------------------------------------------------------------------
 // Graceful shutdown
 // ---------------------------------------------------------------------------
 
 function shutdown(signal) {
-  console.log(`\n[local-cron] Received ${signal}. Stopping cron jobs...`);
+  pipeline.log.info('[local-cron]', `Received ${signal}. Stopping cron jobs...`);
   for (const task of tasks) {
     task.stop();
   }
   pool.end().then(() => {
-    console.log('[local-cron] DB pool closed. Exiting.');
+    pipeline.log.info('[local-cron]', 'DB pool closed. Exiting.');
     process.exit(0);
-  }).catch(() => {
+  }).catch((err) => {
+    pipeline.log.warn('[local-cron]', `pool.end failed: ${err.message}`);
     process.exit(0);
   });
 }
