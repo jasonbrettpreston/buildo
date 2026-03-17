@@ -66,7 +66,7 @@ pipeline.run('load-wsib', async (pool) => {
   if (fileIdx === -1 || !args[fileIdx + 1]) {
     // When running inside a chain, skip gracefully instead of crashing
     if (CHAIN_ID) {
-      console.log('No --file argument provided (chain context). Skipping WSIB load.');
+      pipeline.log.info('[load-wsib]', 'No --file argument (chain context). Skipping.');
       pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
       pipeline.emitMeta(
         { "WSIB CSV": ["legal_name", "trade_name", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size"] },
@@ -74,18 +74,17 @@ pipeline.run('load-wsib', async (pool) => {
       );
       return;
     }
-    console.error('Usage: node scripts/load-wsib.js --file <path-to-csv>');
+    pipeline.log.error('[load-wsib]', 'Usage: node scripts/load-wsib.js --file <path-to-csv>');
     process.exit(1);
   }
   const filePath = args[fileIdx + 1];
 
   if (!fs.existsSync(filePath)) {
-    console.error(`File not found: ${filePath}`);
+    pipeline.log.error('[load-wsib]', `File not found: ${filePath}`);
     process.exit(1);
   }
 
-  console.log('=== WSIB Registry Loader ===\n');
-  console.log(`Source: ${filePath}`);
+  pipeline.log.info('[load-wsib]', `Source: ${filePath}`);
 
   const startMs = Date.now();
   let runId = null;
@@ -99,7 +98,7 @@ pipeline.run('load-wsib', async (pool) => {
       );
       runId = res.rows[0].id;
     } catch (err) {
-      console.warn('Could not insert pipeline_runs row:', err.message);
+      pipeline.log.warn('[load-wsib]', `Could not insert pipeline_runs row: ${err.message}`);
     }
   }
 
@@ -172,7 +171,7 @@ pipeline.run('load-wsib', async (pool) => {
       gRows++;
 
       if (totalRows % 50000 === 0) {
-        console.log(`  Progress: ${totalRows.toLocaleString()} rows read, ${gRows.toLocaleString()} Class G kept`);
+        pipeline.log.info('[load-wsib]', `${totalRows.toLocaleString()} rows read, ${gRows.toLocaleString()} Class G kept`);
       }
     });
 
@@ -180,14 +179,12 @@ pipeline.run('load-wsib', async (pool) => {
     parser.on('end', resolve);
   });
 
-  console.log(`\nParsing complete:`);
-  console.log(`  Total CSV rows:    ${totalRows.toLocaleString()}`);
-  console.log(`  Non-G skipped:     ${skippedNonG.toLocaleString()}`);
-  console.log(`  No-name skipped:   ${skippedNoName}`);
-  console.log(`  Unique Class G:    ${seen.size.toLocaleString()}`);
+  pipeline.log.info('[load-wsib]', 'Parsing complete', {
+    total_csv_rows: totalRows, non_g_skipped: skippedNonG,
+    no_name_skipped: skippedNoName, unique_class_g: seen.size,
+  });
 
-  // Bulk upsert into wsib_registry
-  console.log('\nUpserting into wsib_registry...');
+  pipeline.log.info('[load-wsib]', 'Upserting into wsib_registry...');
   let inserted = 0;
   let updated = 0;
 
@@ -202,14 +199,14 @@ pipeline.run('load-wsib', async (pool) => {
 
       for (let j = 0; j < batch.length; j++) {
         const r = batch[j];
-        const offset = j * 12;
+        const offset = j * 11;
         placeholders.push(
-          `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, $${offset + 12})`
+          `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, NOW())`
         );
         values.push(
           r.legal_name, r.trade_name, r.legal_name_normalized, r.trade_name_normalized,
           r.mailing_address, r.predominant_class, r.naics_code, r.naics_description,
-          r.subclass, r.subclass_description, r.business_size, new Date()
+          r.subclass, r.subclass_description, r.business_size
         );
       }
 
@@ -235,6 +232,14 @@ pipeline.run('load-wsib', async (pool) => {
           subclass_description = EXCLUDED.subclass_description,
           business_size = EXCLUDED.business_size,
           last_seen_at = NOW()
+        WHERE wsib_registry.trade_name IS DISTINCT FROM EXCLUDED.trade_name
+           OR wsib_registry.trade_name_normalized IS DISTINCT FROM EXCLUDED.trade_name_normalized
+           OR wsib_registry.predominant_class IS DISTINCT FROM EXCLUDED.predominant_class
+           OR wsib_registry.naics_code IS DISTINCT FROM EXCLUDED.naics_code
+           OR wsib_registry.naics_description IS DISTINCT FROM EXCLUDED.naics_description
+           OR wsib_registry.subclass IS DISTINCT FROM EXCLUDED.subclass
+           OR wsib_registry.subclass_description IS DISTINCT FROM EXCLUDED.subclass_description
+           OR wsib_registry.business_size IS DISTINCT FROM EXCLUDED.business_size
         RETURNING (xmax = 0) AS is_insert
       `, values);
 
@@ -243,7 +248,7 @@ pipeline.run('load-wsib', async (pool) => {
       updated += result.rows.length - batchNew;
 
       if ((i + BATCH) % 10000 < BATCH) {
-        console.log(`  Progress: ${Math.min(i + BATCH, rows.length).toLocaleString()} / ${rows.length.toLocaleString()}`);
+        pipeline.progress('load-wsib', Math.min(i + BATCH, rows.length), rows.length, startMs);
       }
     }
   });
@@ -251,10 +256,9 @@ pipeline.run('load-wsib', async (pool) => {
   const durationMs = Date.now() - startMs;
   const status = 'completed';
 
-  console.log(`\n=== Results ===`);
-  console.log(`  Inserted:    ${inserted.toLocaleString()} rows`);
-  console.log(`  Updated:     ${updated.toLocaleString()} rows`);
-  console.log(`  Duration:    ${(durationMs / 1000).toFixed(1)}s`);
+  pipeline.log.info('[load-wsib]', 'Load complete', {
+    inserted, updated, duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
 
   // Final DB stats
   const stats = await pool.query(`
@@ -266,13 +270,26 @@ pipeline.run('load-wsib', async (pool) => {
     FROM wsib_registry
   `);
   const s = stats.rows[0];
-  console.log(`\nDB Stats: ${s.total} total | ${s.linked} linked | ${s.with_trade} with trade name | ${s.class_count} classes`);
+  pipeline.log.info('[load-wsib]', `DB stats: ${s.total} total | ${s.linked} linked | ${s.with_trade} with trade | ${s.class_count} classes`);
   pipeline.emitMeta(
     { "WSIB CSV": ["legal_name", "trade_name", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size"] },
     { "wsib_registry": ["legal_name", "trade_name", "legal_name_normalized", "trade_name_normalized", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size", "last_seen_at"] }
   );
 
-  pipeline.emitSummary({ records_total: inserted + updated, records_new: inserted, records_updated: updated });
+  pipeline.emitSummary({
+    records_total: inserted + updated,
+    records_new: inserted,
+    records_updated: updated,
+    records_meta: {
+      duration_ms: durationMs,
+      total_csv_rows: totalRows,
+      unique_class_g: seen.size,
+      records_inserted: inserted,
+      records_updated: updated,
+      skipped_non_g: skippedNonG,
+      skipped_no_name: skippedNoName,
+    },
+  });
 
   if (runId) {
     await pool.query(
