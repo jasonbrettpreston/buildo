@@ -11,7 +11,7 @@
  * Example: node scripts/run-chain.js permits
  */
 const pipeline = require('./lib/pipeline');
-const { execFileSync } = require('child_process');
+const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
@@ -41,7 +41,7 @@ async function run() {
   const chainId = process.argv[2];
   if (!chainId || !CHAINS[chainId]) {
     pipeline.log.error('[run-chain]', `Invalid chain_id. Available: ${Object.keys(CHAINS).join(', ')}`);
-    await pool.end().catch(() => {});
+    await pool.end().catch((dbErr) => { pipeline.log.warn('[run-chain]', `pool.end failed: ${dbErr.message}`); });
     process.exit(1);
   }
 
@@ -205,15 +205,31 @@ async function run() {
       if (slug === 'enrich_named_builders') {
         stepEnv.ENRICH_UNMATCHED_ONLY = '1';
       }
-      const stdout = execFileSync('node', [scriptPath, ...extraArgs], {
-        env: stepEnv,
-        stdio: ['inherit', 'pipe', 'inherit'],
-        maxBuffer: 50 * 1024 * 1024,
-      });
+      // Spawn child process with streaming stdout — prevents ENOBUFS on long scripts
+      const output = await new Promise((resolveSpawn, rejectSpawn) => {
+        const child = spawn('node', [scriptPath, ...extraArgs], {
+          env: stepEnv,
+          stdio: ['inherit', 'pipe', 'inherit'],
+        });
 
-      // Tee stdout to console so logs still appear
-      const output = stdout.toString('utf-8');
-      if (output) process.stdout.write(output);
+        let summaryLines = '';
+        child.stdout.on('data', (data) => {
+          const chunk = data.toString('utf-8');
+          process.stdout.write(chunk); // Tee to console immediately
+          // Only buffer telemetry marker lines (not full output)
+          for (const line of chunk.split('\n')) {
+            if (line.includes('PIPELINE_SUMMARY:') || line.includes('PIPELINE_META:')) {
+              summaryLines += line + '\n';
+            }
+          }
+        });
+
+        child.on('close', (code) => {
+          if (code === 0) resolveSpawn(summaryLines);
+          else rejectSpawn(new Error(`Command failed: node ${scriptPath}`));
+        });
+        child.on('error', rejectSpawn);
+      });
 
       // Parse PIPELINE_SUMMARY line for record counts + records_meta
       let recordsTotal = null;
@@ -264,7 +280,7 @@ async function run() {
                records_meta = COALESCE($6::jsonb, records_meta)
            WHERE id = $2`,
           [durationMs, stepRunId, recordsTotal, recordsNew, recordsUpdated, recordsMeta ? JSON.stringify(recordsMeta) : null]
-        ).catch(() => {});
+        ).catch((dbErr) => { pipeline.log.error('[run-chain]', `Failed to update pipeline_runs: ${dbErr.message}`); });
       }
 
       // When the primary ingest step produced zero changes, set gateSkipped
@@ -277,8 +293,7 @@ async function run() {
         gateSkipped = true;
       }
     } catch (err) {
-      // Tee any captured stdout from the failed step so progress logs aren't lost
-      if (err.stdout) process.stdout.write(err.stdout);
+      // With spawn, stdout was already streamed to console in real-time
       const durationMs = Date.now() - stepStart;
       const errorMsg = (err.message || String(err)).slice(0, 4000);
       pipeline.log.error('[run-chain]', `${stepLabel} — FAILED (${(durationMs / 1000).toFixed(1)}s)`, { error: errorMsg.slice(0, 200) });
@@ -300,7 +315,7 @@ async function run() {
                records_meta = COALESCE($4::jsonb, records_meta)
            WHERE id = $3`,
           [durationMs, errorMsg, stepRunId, failMeta ? JSON.stringify(failMeta) : null]
-        ).catch(() => {});
+        ).catch((dbErr) => { pipeline.log.error('[run-chain]', `Failed to update pipeline_runs: ${dbErr.message}`); });
       }
 
       failedStep = slug;
@@ -323,7 +338,7 @@ async function run() {
        SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3
        WHERE id = $4`,
       [chainStatus, chainDurationMs, chainError, chainRunId]
-    ).catch(() => {});
+    ).catch((dbErr) => { pipeline.log.error('[run-chain]', `Failed to update chain status: ${dbErr.message}`); });
   }
 
   console.log(`=== Chain ${chainId}: ${chainStatus} (${(chainDurationMs / 1000).toFixed(1)}s) ===`);
@@ -334,12 +349,13 @@ async function run() {
     pipeline.log.info('[run-chain]', '0 new records — downstream steps skipped (stale data, not a failure)');
   }
 
-  await pool.end().catch(() => {});
+  await pool.end().catch((dbErr) => { pipeline.log.warn('[run-chain]', `pool.end failed: ${dbErr.message}`); });
 
   if (failedStep) process.exit(1);
 }
 
 run().catch((err) => {
   pipeline.log.error('[run-chain]', err, { phase: 'fatal' });
-  process.exit(1);
+  // Allow event loop to flush pending pool.end() before exiting
+  setTimeout(() => process.exit(1), 500);
 });
