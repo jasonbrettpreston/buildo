@@ -51,9 +51,31 @@ describe('commit-msg hook', () => {
     expect(source).toMatch(/[0-9]{2}_/);
   });
 
-  it('allows merge commits', () => {
+  it('allows merge and revert commits', () => {
     const source = readFileSync(scriptPath, 'utf-8');
     expect(source).toContain('Merge');
+    expect(source).toContain('Revert');
+  });
+
+  it('allows version bump commits (v1.2.3)', () => {
+    const source = readFileSync(scriptPath, 'utf-8');
+    expect(source).toMatch(/[vV].*[0-9]+\.[0-9]+\.[0-9]+/);
+  });
+
+  it('supports 08b/08c spec IDs with optional letter suffix', () => {
+    const source = readFileSync(scriptPath, 'utf-8');
+    // Regex must allow optional lowercase letter after 2-digit prefix
+    expect(source).toMatch(/\[a-z\]\?/);
+  });
+
+  it('supports breaking change ! notation', () => {
+    const source = readFileSync(scriptPath, 'utf-8');
+    expect(source).toContain('!?');
+  });
+
+  it('strips git comment lines before validation', () => {
+    const source = readFileSync(scriptPath, 'utf-8');
+    expect(source).toContain("grep -vE '^(#|$)'");
   });
 });
 
@@ -64,14 +86,30 @@ describe('migration validator', () => {
     expect(existsSync(scriptPath)).toBe(true);
   });
 
-  it('checks for DOWN block in migration files', () => {
+  it('checks for both UP and DOWN blocks in migration files', () => {
     const source = readFileSync(scriptPath, 'utf-8');
-    expect(source).toContain('-- DOWN');
+    expect(source).toContain('UP');
+    expect(source).toContain('DOWN');
   });
 
   it('scans only staged migration files', () => {
     const source = readFileSync(scriptPath, 'utf-8');
     expect(source).toContain('git diff');
     expect(source).toContain('migrations/');
+  });
+
+  it('uses while read loop for space-safe file iteration', () => {
+    const source = readFileSync(scriptPath, 'utf-8');
+    expect(source).toContain('while IFS= read -r FILE');
+  });
+
+  it('uses case-insensitive tolerant regex', () => {
+    const source = readFileSync(scriptPath, 'utf-8');
+    expect(source).toContain('grep -qiE');
+  });
+
+  it('has || true on grep pipe for set -e safety', () => {
+    const source = readFileSync(scriptPath, 'utf-8');
+    expect(source).toContain('|| true');
   });
 });
