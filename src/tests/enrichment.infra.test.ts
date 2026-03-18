@@ -89,8 +89,6 @@ describe('Web Search Enrichment Infrastructure', () => {
   });
 
   describe('Chain Orchestrator', () => {
-    const chainPath = path.resolve(__dirname, '../../scripts/run-chain.js');
-
     it('manifest.json entities chain contains enrich_wsib_builders and enrich_named_builders', () => {
       const manifestPath = path.resolve(__dirname, '../../scripts/manifest.json');
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));

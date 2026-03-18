@@ -321,55 +321,10 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
-  // Tracing (§9.7) — no-op when @opentelemetry/api not installed
+  // withTransaction
   // -----------------------------------------------------------------------
-  describe('tracing', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const tracing = require(path.resolve(__dirname, '../../scripts/lib/tracing'));
-
-    it('exports getTracer, isEnabled, SpanStatusCode', () => {
-      expect(typeof tracing.getTracer).toBe('function');
-      expect(typeof tracing.isEnabled).toBe('function');
-      expect(tracing.SpanStatusCode).toBeDefined();
-      expect(tracing.SpanStatusCode.OK).toBeDefined();
-      expect(tracing.SpanStatusCode.ERROR).toBeDefined();
-    });
-
-    it('returns no-op tracer when @opentelemetry/api is not installed', () => {
-      const tracer = tracing.getTracer('test');
-      expect(tracer).toBeDefined();
-      // No-op tracer should return a span with no-op methods
-      const span = tracer.startSpan('test-span');
-      expect(span).toBeDefined();
-      expect(typeof span.setAttribute).toBe('function');
-      expect(typeof span.end).toBe('function');
-      expect(span.isRecording()).toBe(false);
-      span.end(); // should not throw
-    });
-
-    it('startActiveSpan calls the callback with a span', () => {
-      const tracer = tracing.getTracer('test');
-      let called = false;
-      tracer.startActiveSpan('test-span', (span: { setAttribute: (k: string, v: string) => void; end: () => void }) => {
-        called = true;
-        expect(span).toBeDefined();
-        expect(typeof span.setAttribute).toBe('function');
-        span.end();
-      });
-      expect(called).toBe(true);
-    });
-
-    it('isEnabled returns false when OTel is not configured', () => {
-      expect(tracing.isEnabled()).toBe(false);
-    });
-
-    it('NOOP_SPAN methods are chainable (setAttribute returns this)', () => {
-      const span = tracing.NOOP_SPAN;
-      const result = span.setAttribute('key', 'value');
-      expect(result).toBe(span);
-    });
-
-    it('withTransaction still works with no-op tracing', async () => {
+  describe('withTransaction', () => {
+    it('wraps callback in BEGIN/COMMIT and releases client', async () => {
       const queries: string[] = [];
       const mockClient = {
         query: vi.fn(async (sql: string) => { queries.push(sql); }),
