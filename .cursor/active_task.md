@@ -1,70 +1,57 @@
-# Active Task: Deep Scrapes Pipeline — Decouple Chain, Multi-Type Test, Full Run
-**Status:** Planning
-**Workflow:** WF2 — Feature Enhancement
+# Active Task: Migration Cleanup — Delete Dead Migrations & Extract Backfills
+**Status:** Implementation
+**Rollback Anchor:** `fe5080c3` (fe5080c352271b13e18ff8f5dca2dbae23a4577a)
+**Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** The `deep_scrapes` chain currently bundles `inspections` + `coa_documents` (which doesn't exist yet). This task: (1) decouples them so inspections runs standalone, (2) expands TARGET_TYPES to cover all meaningful permit types, (3) defines a small test run across all types, and (4) prepares for the full production run (~66K+ permits).
-* **Target Spec:** `docs/specs/38_inspection_scraping.md`
+* **Goal:** Delete 2 fully-applied one-time cleanup migrations (049, 050) and extract 2 data-backfill migrations (033, 043) into standalone one-time scripts, leaving only schema portions in the migration files.
+* **Target Spec:** `docs/specs/00_engineering_standards.md` §3.2 (Migration Rollback Safety)
 * **Key Files:**
-  - `scripts/poc-aic-scraper-v2.js` — v2 scraper (expand TARGET_TYPES, configurable batch size)
-  - `scripts/manifest.json` — decouple `deep_scrapes` chain, remove `coa_documents` coupling
-  - `src/app/api/admin/pipelines/[slug]/route.ts` — add `chain_deep_scrapes` if needed, or remove chain
-  - `docs/specs/38_inspection_scraping.md` — update permit type coverage
+  - `migrations/049_cleanup_stale_scope_slugs.sql` — DELETE only
+  - `migrations/050_cleanup_prefixed_scope_slugs.sql` — DELETE only
+  - `migrations/033_pipeline_runs.sql` — schema CREATE + backfill INSERTs
+  - `migrations/043_entities_data_migration.sql` — pure data migration
 
 ## Technical Implementation
-* **New/Modified Components:** None (no UI changes)
-* **Data Hooks/Libs:** None
-* **Database Impact:** NO — `permit_inspections` table already exists (migration 045), no schema changes needed
-
-## Current State Analysis
-
-### Permit Types in "Inspection" Status (from DB)
-| Permit Type | Count | AIC Portal? | Current Coverage |
-|---|---|---|---|
-| Small Residential Projects | 35,557 | Yes (SR) | TARGET |
-| Plumbing(PS) | 35,325 | Yes (PLB) | Not scraped |
-| Mechanical(MS) | 25,719 | Yes (HVA) | Not scraped |
-| Building Additions/Alterations | 20,544 | Yes (BA) | TARGET |
-| Drain and Site Service | 10,346 | Yes (DRN) | Not scraped |
-| New Houses | 10,329 | Yes (NH) | TARGET |
-| Residential Building Permit | 2,880 | Yes (CMB) | Not scraped |
-| Fire/Security Upgrade | 2,304 | Yes (FSU) | Not scraped |
-| New Building | 1,370 | Yes (BLD) | Not scraped |
-| Demolition Folder (DM) | 410 | Yes (DEM) | Not scraped |
-| Designated Structures | 395 | Yes (DST) | Not scraped |
-| Multiple Use Permit | 138 | Maybe | Not scraped |
-| Portable Classrooms | 88 | Maybe | Not scraped |
-| Temporary Structures | 86 | Maybe | Not scraped |
-| Partial Permit | 77 | Maybe | Not scraped |
-| Conditional Permit | 74 | Maybe | Not scraped |
-| Site Inspection(Scarborough) | 21 | Maybe | Not scraped |
-| **TOTAL** | **146,333** | | |
-
-### Key Decisions Needed
-1. **Which types to add?** Spec 38 §3.6 lists PS/MS/DM/DR as "monitor-only" (low value per stage). But the v2 scraper gets data at 4 KB/permit — scraping them costs almost nothing. Include all types where the AIC portal returns data.
-2. **Batch sizing for full run:** Current LIMIT 10 → need ~14,600 runs to cover 146K permits. At ~1.5s/permit, full pass = ~61 hours. Need to increase batch size and add session refresh.
-3. **Chain decoupling:** Remove `deep_scrapes` chain entirely (or convert to `inspections`-only). `coa_documents` runs independently when implemented.
+* **Deleted Files:** `migrations/049_cleanup_stale_scope_slugs.sql`, `migrations/050_cleanup_prefixed_scope_slugs.sql`, `migrations/043_entities_data_migration.sql`
+* **Modified:** `migrations/033_pipeline_runs.sql` — keep CREATE TABLE + CREATE INDEX, remove backfill INSERTs (lines 21–67)
+* **New Scripts:** `scripts/backfill/seed-pipeline-runs.js`, `scripts/backfill/migrate-entities.js`
+* **Database Impact:** NO — no schema changes; removing SQL that already runs as no-ops
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — no API routes created/modified
-* **Unhappy Path Tests:** N/A — no new test scenarios (scraper retry logic already tested in production)
-* **logError Mandate:** N/A — pipeline script uses `pipeline.log.error()`
-* **Mobile-First:** N/A — no UI changes
+* **Try-Catch Boundary:** N/A — no API routes
+* **Unhappy Path Tests:** Test that `npm run migrate` still succeeds after file changes
+* **logError Mandate:** N/A
+* **Mobile-First:** N/A — backend-only
+
+## §10 Plan Compliance Checklist
+
+### If Database Impact = YES:
+- ⬜ N/A all sub-items
+
+### If API Route Created/Modified:
+- ⬜ N/A all sub-items
+
+### If UI Component Created/Modified:
+- ⬜ N/A all sub-items
+
+### If Shared Logic Touched:
+- ⬜ N/A all sub-items
+
+### If Pipeline Script Created/Modified:
+- ⬜ N/A — backfill scripts are one-time utilities, not pipeline chain steps
 
 ## Execution Plan
-- [ ] **State Verification:** Current state: 14/146,333 permits scraped (0.01%). v2 scraper works for SR/BA/NH types. Need to verify other types return data from AIC portal.
-- [ ] **Contract Definition:** N/A — no API routes altered.
-- [ ] **Spec Update:** Update Spec 38 §3.6 to expand target types. Remove "monitor-only" distinction since v2 bandwidth is negligible. Update time/bandwidth estimates for full corpus.
-- [ ] **Schema Evolution:** N/A — no DB changes.
-- [ ] **Guardrail Test:** N/A — no new logic to test (same normalizeStatus/parseInspectionDate functions).
-- [ ] **Red Light:** N/A — no new testable behavior.
-- [ ] **Implementation:**
-  1. **Decouple chain:** In `manifest.json`, remove `deep_scrapes` chain (or make it `["inspections"]` only). In `route.ts`, no `chain_deep_scrapes` needed — `inspections` already works standalone.
-  2. **Expand TARGET_TYPES:** Add all high-volume types that appear on AIC portal: Plumbing(PS), Mechanical(MS), Drain and Site Service, Residential Building Permit, Fire/Security Upgrade, New Building, Demolition Folder (DM), Designated Structures. Keep smaller types (<100 permits) out for now.
-  3. **Add batch size control:** Add `BATCH_SIZE` constant (default 10, env-overridable via `SCRAPE_BATCH_SIZE`). For test run: 2 per type. For full run: 500+.
-  4. **Add session refresh:** Every 200 permits, re-navigate to `setup.do` to keep WAF session alive.
-  5. **Small test run:** Run scraper with BATCH_SIZE=2 per type (11 types × 2 = ~22 permits). Verify all types return data. Identify any types that fail or have no inspection processes.
-  6. **Assess test results:** Check permit_inspections for coverage across all types. Remove any types that consistently return no data.
-  7. **Full run:** Increase BATCH_SIZE and run. Monitor bandwidth and session stability.
-- [ ] **UI Regression Check:** N/A — no shared components modified.
+- [ ] **Rollback Anchor:** Record current Git commit hash
+- [ ] **State Verification:** Confirm all 4 migrations are no-ops on current DB
+- [ ] **Spec Review:** §3.2 requires UP+DOWN — remaining migrations must still comply
+- [ ] **Reproduction:** Run `npm run migrate` — passes. Verify 049/050 DELETE match 0 rows, 043 INSERTs match 0 rows via ON CONFLICT, 033 backfills match 0 rows
+- [ ] **Red Light:** Add test asserting the 4 migration files no longer exist / are trimmed
+- [ ] **Fix:**
+  1. Delete `migrations/049_cleanup_stale_scope_slugs.sql`
+  2. Delete `migrations/050_cleanup_prefixed_scope_slugs.sql`
+  3. Delete `migrations/043_entities_data_migration.sql`
+  4. Trim `migrations/033_pipeline_runs.sql` to schema-only (lines 1–19)
+  5. Create `scripts/backfill/seed-pipeline-runs.js` with extracted INSERT logic
+  6. Create `scripts/backfill/migrate-entities.js` with extracted entity migration logic
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
