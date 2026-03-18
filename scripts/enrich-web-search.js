@@ -349,19 +349,19 @@ pipeline.run('enrich-web-search', async (pool) => {
       // Track which fields are new (counters incremented after transaction succeeds)
       const pendingFields = { phone: false, email: false, website: false };
       if (contacts.phone && !b.phone) {
-        updates.push(`primary_phone = COALESCE(primary_phone, $${paramIdx})`);
+        updates.push(`primary_phone = COALESCE(NULLIF(primary_phone, ''), $${paramIdx})`);
         params.push(contacts.phone);
         paramIdx++;
         pendingFields.phone = true;
       }
       if (contacts.email && !b.email) {
-        updates.push(`primary_email = COALESCE(primary_email, $${paramIdx})`);
+        updates.push(`primary_email = COALESCE(NULLIF(primary_email, ''), $${paramIdx})`);
         params.push(contacts.email);
         paramIdx++;
         pendingFields.email = true;
       }
       if (contacts.website && !b.website) {
-        updates.push(`website = COALESCE(website, $${paramIdx})`);
+        updates.push(`website = COALESCE(NULLIF(website, ''), $${paramIdx})`);
         params.push(contacts.website);
         paramIdx++;
         pendingFields.website = true;

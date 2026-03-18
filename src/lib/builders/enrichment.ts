@@ -88,17 +88,17 @@ export async function enrichBuilder(entityId: number): Promise<Entity | null> {
     let paramIdx = 1;
 
     if (contacts.phone && !entity.primary_phone) {
-      updates.push(`primary_phone = COALESCE(primary_phone, $${paramIdx})`);
+      updates.push(`primary_phone = COALESCE(NULLIF(primary_phone, ''), $${paramIdx})`);
       params.push(contacts.phone);
       paramIdx++;
     }
     if (contacts.email && !entity.primary_email) {
-      updates.push(`primary_email = COALESCE(primary_email, $${paramIdx})`);
+      updates.push(`primary_email = COALESCE(NULLIF(primary_email, ''), $${paramIdx})`);
       params.push(contacts.email);
       paramIdx++;
     }
     if (contacts.website && !entity.website) {
-      updates.push(`website = COALESCE(website, $${paramIdx})`);
+      updates.push(`website = COALESCE(NULLIF(website, ''), $${paramIdx})`);
       params.push(contacts.website);
       paramIdx++;
     }

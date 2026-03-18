@@ -446,6 +446,7 @@ export const entityContacts = pgTable("entity_contacts", {
 			foreignColumns: [entities.id],
 			name: "entity_contacts_entity_id_fkey"
 		}).onDelete("cascade"),
+	unique("uq_entity_contacts_type_value").on(table.entityId, table.contactType, table.contactValue),
 ]);
 
 export const trades = pgTable("trades", {
