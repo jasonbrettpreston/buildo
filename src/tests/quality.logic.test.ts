@@ -529,9 +529,9 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'entities', 'sources', 'deep_scrapes']);
   });
 
-  it('permits chain has 15 steps in dependency order (no enrichment)', () => {
+  it('permits chain has 16 steps in dependency order (no enrichment)', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(15);
+    expect(permits.steps).toHaveLength(16);
     expect(permits.steps[0].slug).toBe('assert_schema');
     expect(permits.steps[1].slug).toBe('permits');
     expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_engine_health');

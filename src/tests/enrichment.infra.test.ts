@@ -91,20 +91,23 @@ describe('Web Search Enrichment Infrastructure', () => {
   describe('Chain Orchestrator', () => {
     const chainPath = path.resolve(__dirname, '../../scripts/run-chain.js');
 
-    it('run-chain.js contains enrich_wsib_builders and enrich_named_builders', () => {
-      const content = fs.readFileSync(chainPath, 'utf-8');
-      expect(content).toContain('enrich_wsib_builders');
-      expect(content).toContain('enrich_named_builders');
+    it('manifest.json entities chain contains enrich_wsib_builders and enrich_named_builders', () => {
+      const manifestPath = path.resolve(__dirname, '../../scripts/manifest.json');
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      expect(manifest.chains.entities).toContain('enrich_wsib_builders');
+      expect(manifest.chains.entities).toContain('enrich_named_builders');
     });
 
-    it('run-chain.js sets ENRICH_WSIB_ONLY for wsib_builders step', () => {
-      const content = fs.readFileSync(chainPath, 'utf-8');
-      expect(content).toContain('ENRICH_WSIB_ONLY');
+    it('manifest.json declares ENRICH_WSIB_ONLY env for wsib_builders step', () => {
+      const manifestPath = path.resolve(__dirname, '../../scripts/manifest.json');
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      expect(manifest.scripts.enrich_wsib_builders.env).toEqual({ ENRICH_WSIB_ONLY: '1' });
     });
 
-    it('run-chain.js sets ENRICH_UNMATCHED_ONLY for named_builders step', () => {
-      const content = fs.readFileSync(chainPath, 'utf-8');
-      expect(content).toContain('ENRICH_UNMATCHED_ONLY');
+    it('manifest.json declares ENRICH_UNMATCHED_ONLY env for named_builders step', () => {
+      const manifestPath = path.resolve(__dirname, '../../scripts/manifest.json');
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      expect(manifest.scripts.enrich_named_builders.env).toEqual({ ENRICH_UNMATCHED_ONLY: '1' });
     });
   });
 

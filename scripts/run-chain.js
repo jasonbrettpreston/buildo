@@ -144,6 +144,12 @@ async function run() {
       continue;
     }
 
+    // Skip coming_soon placeholders (file: null) to prevent path.resolve crash
+    if (manifest.scripts[slug]?.coming_soon) {
+      console.log(`${stepLabel} — SKIPPED (coming soon)`);
+      continue;
+    }
+
     const scriptRelPath = PIPELINE_SCRIPTS[slug];
     if (!scriptRelPath) {
       pipeline.log.error('[run-chain]', `No script mapping for slug: ${slug}`);
@@ -191,20 +197,9 @@ async function run() {
     }
 
     try {
-      const stepEnv = { ...process.env, PIPELINE_CHAIN: chainId };
-      // Sources chain reloads massing data, so link_massing needs a full rescan.
-      // Permits chain only has new permits — incremental (default) is sufficient.
-      // Build extra argv flags from manifest supports_full + chain context.
-      const extraArgs = [];
-      if (slug === 'link_massing' && chainId === 'sources') {
-        extraArgs.push('--full');
-      }
-      if (slug === 'enrich_wsib_builders') {
-        stepEnv.ENRICH_WSIB_ONLY = '1';
-      }
-      if (slug === 'enrich_named_builders') {
-        stepEnv.ENRICH_UNMATCHED_ONLY = '1';
-      }
+      // Merge step-specific env vars and chain-specific args from manifest
+      const stepEnv = { ...process.env, PIPELINE_CHAIN: chainId, ...(scriptEntry.env || {}) };
+      const extraArgs = [...(scriptEntry.chain_args?.[chainId] || [])];
       // Spawn child process with streaming stdout — prevents ENOBUFS on long scripts
       const output = await new Promise((resolveSpawn, rejectSpawn) => {
         const child = spawn('node', [scriptPath, ...extraArgs], {

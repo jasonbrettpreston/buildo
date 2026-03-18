@@ -13,10 +13,10 @@
     "geocode_permits":      { "file": "scripts/geocode-permits.js",       "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["latitude", "longitude"] } },
     "link_parcels":         { "file": "scripts/link-parcels.js",          "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permit_parcels"] },
     "link_neighbourhoods":  { "file": "scripts/link-neighbourhoods.js",   "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["neighbourhood_id"] } },
-    "link_massing":         { "file": "scripts/link-massing.js",          "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["parcel_buildings"] },
+    "link_massing":         { "file": "scripts/link-massing.js",          "supports_full": true,  "supports_dry_run": false, "chain_args": { "sources": ["--full"] }, "telemetry_tables": ["parcel_buildings"] },
     "link_coa":             { "file": "scripts/link-coa.js",              "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["coa_applications"], "telemetry_null_cols": { "coa_applications": ["linked_permit_num"] } },
-    "enrich_wsib_builders": { "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
-    "enrich_named_builders":{ "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
+    "enrich_wsib_builders": { "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_WSIB_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
+    "enrich_named_builders":{ "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_UNMATCHED_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
     "load_wsib":            { "file": "scripts/load-wsib.js",             "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["wsib_registry"] },
     "link_wsib":            { "file": "scripts/link-wsib.js",             "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["entities"] },
     "classify_scope":       { "file": "scripts/classify-scope.js",        "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["scope_classified_at"] } },
@@ -41,7 +41,7 @@
       "assert_schema", "permits", "classify_scope", "classify_permits",
       "builders", "link_wsib", "geocode_permits", "link_parcels",
       "link_neighbourhoods", "link_massing", "link_similar", "link_coa",
-      "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
+      "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
     ],
     "coa": [
       "assert_schema", "coa", "assert_coa_freshness", "link_coa", "create_pre_permits",

@@ -93,6 +93,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_massing',         indent: 1 },
       { slug: 'link_similar',         indent: 1 },
       { slug: 'link_coa',             indent: 1 },
+      { slug: 'create_pre_permits',  indent: 1 },
       { slug: 'refresh_snapshot',     indent: 1 },
       { slug: 'assert_data_bounds',   indent: 0 },
       { slug: 'assert_engine_health', indent: 0 },
