@@ -1,33 +1,33 @@
-# Active Task: Migration Cleanup — Delete Dead Migrations & Extract Backfills
-**Status:** Implementation
-**Rollback Anchor:** `fe5080c3` (fe5080c352271b13e18ff8f5dca2dbae23a4577a)
+# Active Task: Fix FTS Index Truncation + Standardize Timestamps to TIMESTAMPTZ
+**Status:** Green Light — awaiting WF6
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Delete 2 fully-applied one-time cleanup migrations (049, 050) and extract 2 data-backfill migrations (033, 043) into standalone one-time scripts, leaving only schema portions in the migration files.
-* **Target Spec:** `docs/specs/00_engineering_standards.md` §3.2 (Migration Rollback Safety)
+* **Goal:** Fix 2 bugs: (1) Drizzle schema.ts has a truncated FTS index definition that would cause a syntax error if ever pushed; (2) 30 timestamp columns across 17 tables use `TIMESTAMP` instead of `TIMESTAMPTZ`, creating a timezone trap for Cloud SQL deployment.
+* **Target Spec:** `docs/specs/00_engineering_standards.md` §3.1 (Zero-Downtime Migration), §3.2 (Migration Rollback Safety)
 * **Key Files:**
-  - `migrations/049_cleanup_stale_scope_slugs.sql` — DELETE only
-  - `migrations/050_cleanup_prefixed_scope_slugs.sql` — DELETE only
-  - `migrations/033_pipeline_runs.sql` — schema CREATE + backfill INSERTs
-  - `migrations/043_entities_data_migration.sql` — pure data migration
+  - `src/lib/db/generated/schema.ts` — truncated FTS index on line 526
+  - `migrations/054_standardize_timestamptz.sql` — new migration
+  - 17 tables with 30 TIMESTAMP columns to convert
 
 ## Technical Implementation
-* **Deleted Files:** `migrations/049_cleanup_stale_scope_slugs.sql`, `migrations/050_cleanup_prefixed_scope_slugs.sql`, `migrations/043_entities_data_migration.sql`
-* **Modified:** `migrations/033_pipeline_runs.sql` — keep CREATE TABLE + CREATE INDEX, remove backfill INSERTs (lines 21–67)
-* **New Scripts:** `scripts/backfill/seed-pipeline-runs.js`, `scripts/backfill/migrate-entities.js`
-* **Database Impact:** NO — no schema changes; removing SQL that already runs as no-ops
+* **Bug 1 (FTS):** Re-run `npm run db:generate` after fixing timestamps — the regenerated schema will pick up the corrected index from the live DB. If drizzle-kit still truncates, manually patch line 526.
+* **Bug 2 (Timestamps):** `ALTER COLUMN ... TYPE TIMESTAMPTZ` is metadata-only in PostgreSQL (no row rewrite when converting from TIMESTAMP). Safe on 237K+ row tables.
+* **Database Impact:** YES — ALTER COLUMN TYPE on 17 tables (30 columns). No row rewrite. No backfill needed.
 
 ## Standards Compliance
 * **Try-Catch Boundary:** N/A — no API routes
-* **Unhappy Path Tests:** Test that `npm run migrate` still succeeds after file changes
+* **Unhappy Path Tests:** Verify `npm run typecheck` passes after db:generate; verify timestamps are TIMESTAMPTZ in DB
 * **logError Mandate:** N/A
 * **Mobile-First:** N/A — backend-only
 
 ## §10 Plan Compliance Checklist
 
 ### If Database Impact = YES:
-- ⬜ N/A all sub-items
+- [x] UP + DOWN migration in `migrations/054_standardize_timestamptz.sql` (§3.2)
+- [x] Backfill strategy: N/A — ALTER TYPE TIMESTAMPTZ is metadata-only, no row rewrite (§3.1)
+- [x] `src/tests/factories.ts` — no new fields, timestamp types unchanged in TS (§5.1)
+- [x] `npm run typecheck` planned after `db:generate` (§8.2)
 
 ### If API Route Created/Modified:
 - ⬜ N/A all sub-items
@@ -39,19 +39,40 @@
 - ⬜ N/A all sub-items
 
 ### If Pipeline Script Created/Modified:
-- ⬜ N/A — backfill scripts are one-time utilities, not pipeline chain steps
+- ⬜ N/A all sub-items
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** Record current Git commit hash
-- [ ] **State Verification:** Confirm all 4 migrations are no-ops on current DB
-- [ ] **Spec Review:** §3.2 requires UP+DOWN — remaining migrations must still comply
-- [ ] **Reproduction:** Run `npm run migrate` — passes. Verify 049/050 DELETE match 0 rows, 043 INSERTs match 0 rows via ON CONFLICT, 033 backfills match 0 rows
-- [ ] **Red Light:** Add test asserting the 4 migration files no longer exist / are trimmed
+- [ ] **Rollback Anchor:** `eef8e72`
+- [ ] **State Verification:** 30 TIMESTAMP columns confirmed across 17 tables. FTS index truncation confirmed on schema.ts:526. Live DB has correct index.
+- [ ] **Spec Review:** §3.1 zero-downtime pattern applies, but ALTER TYPE timestamp→timestamptz is metadata-only in PostgreSQL (no table rewrite). §3.2 requires UP+DOWN.
+- [ ] **Reproduction:** Query DB to confirm mixed TIMESTAMP/TIMESTAMPTZ. Read schema.ts:526 to confirm truncation.
+- [ ] **Red Light:** N/A — these are DB-layer bugs, not testable via vitest. Verification is via psql + db:generate.
 - [ ] **Fix:**
-  1. Delete `migrations/049_cleanup_stale_scope_slugs.sql`
-  2. Delete `migrations/050_cleanup_prefixed_scope_slugs.sql`
-  3. Delete `migrations/043_entities_data_migration.sql`
-  4. Trim `migrations/033_pipeline_runs.sql` to schema-only (lines 1–19)
-  5. Create `scripts/backfill/seed-pipeline-runs.js` with extracted INSERT logic
-  6. Create `scripts/backfill/migrate-entities.js` with extracted entity migration logic
+  1. Write `migrations/054_standardize_timestamptz.sql` with UP (ALTER all 30 columns) + DOWN (ALTER back to TIMESTAMP)
+  2. Run `npm run migrate`
+  3. Run `npm run db:generate` to regenerate schema.ts + relations.ts (fixes FTS truncation too)
+  4. Run `npm run typecheck`
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
+
+## Tables & Columns (30 TIMESTAMP → TIMESTAMPTZ)
+| Table | Columns |
+|-------|---------|
+| permits | first_seen_at, last_seen_at, geocoded_at |
+| permit_history | changed_at |
+| sync_runs | started_at, completed_at |
+| trades | created_at |
+| trade_mapping_rules | created_at |
+| permit_trades | classified_at |
+| builders | first_seen_at, last_seen_at, enriched_at |
+| builder_contacts | created_at |
+| coa_applications | first_seen_at, last_seen_at |
+| notifications | sent_at, created_at |
+| parcels | created_at |
+| permit_parcels | linked_at |
+| neighbourhoods | created_at |
+| building_footprints | created_at |
+| parcel_buildings | linked_at |
+| entities | first_seen_at, last_seen_at, last_enriched_at |
+| entity_projects | observed_at |
+| wsib_registry | matched_at, first_seen_at, last_seen_at |
+| permit_inspections | scraped_at, created_at |
