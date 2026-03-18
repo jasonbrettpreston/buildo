@@ -4,7 +4,7 @@
 
 import { query, withTransaction } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
-import { searchSerper, fetchWebsiteHtml } from '@/lib/enrichment/serper-client';
+import { searchSerper, fetchWebsiteHtml, fetchContactPageHtml } from '@/lib/enrichment/serper-client';
 import {
   extractContacts,
   extractEmailsFromHtml,
@@ -67,7 +67,7 @@ export async function enrichBuilder(entityId: number): Promise<Entity | null> {
     const response = await searchSerper(searchQuery) as SerperResponse;
     const contacts = extractContacts(response);
 
-    // If no email from snippets, scrape the website
+    // If no email from snippets, scrape the website (homepage + /contact fallback)
     const websiteUrl = contacts.website || entity.website;
     if (!contacts.email && !entity.primary_email && websiteUrl) {
       const html = await fetchWebsiteHtml(websiteUrl);
@@ -78,6 +78,19 @@ export async function enrichBuilder(entityId: number): Promise<Entity | null> {
           const cleanText = stripHtmlNoise(html);
           const pagePhones = extractPhoneNumbers([cleanText]);
           if (pagePhones.length > 0) contacts.phone = pagePhones[0];
+        }
+      }
+      // If homepage had no email, try common /contact page paths
+      if (!contacts.email) {
+        const contactHtml = await fetchContactPageHtml(websiteUrl);
+        if (contactHtml) {
+          const contactEmails = extractEmailsFromHtml(contactHtml);
+          if (contactEmails.length > 0) contacts.email = contactEmails[0];
+          if (!contacts.phone && !entity.primary_phone) {
+            const cleanText = stripHtmlNoise(contactHtml);
+            const pagePhones = extractPhoneNumbers([cleanText]);
+            if (pagePhones.length > 0) contacts.phone = pagePhones[0];
+          }
         }
       }
     }

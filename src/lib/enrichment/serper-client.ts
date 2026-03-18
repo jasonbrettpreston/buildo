@@ -69,3 +69,32 @@ export async function fetchWebsiteHtml(url: string): Promise<string | null> {
     return null;
   }
 }
+
+const CONTACT_PATHS = ['/contact', '/contact-us', '/about/contact'];
+
+/**
+ * Fetch common /contact page paths from a website.
+ * Returns the first successful HTML response, or null if none found.
+ * Used as a fallback when the homepage has no email addresses.
+ */
+export async function fetchContactPageHtml(baseUrl: string): Promise<string | null> {
+  let normalizedBase = baseUrl;
+  if (!normalizedBase.startsWith('http')) {
+    normalizedBase = `https://${normalizedBase}`;
+  }
+  // Strip trailing slash for clean path joining
+  normalizedBase = normalizedBase.replace(/\/+$/, '');
+
+  for (const path of CONTACT_PATHS) {
+    try {
+      const res = await fetch(`${normalizedBase}${path}`, {
+        signal: AbortSignal.timeout(5000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Buildo/1.0)' },
+      });
+      if (res.ok) return res.text();
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}

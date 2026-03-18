@@ -63,12 +63,16 @@ export function extractPhoneNumbers(snippets: string[]): string[] {
     const matches = text.match(PHONE_PATTERN) || [];
     for (const m of matches) {
       const digits = m.replace(/\D/g, '');
-      // Must be 10 or 11 digits (with country code)
-      if (digits.length < 10 || digits.length > 11) continue;
-      const areaCode = digits.length === 11 ? digits.slice(1, 4) : digits.slice(0, 3);
+      // Take only the core 10-11 digits — trailing noise (extensions, unit numbers)
+      // can inflate the digit count and cause valid numbers to be discarded.
+      const coreDigits = digits.length >= 11 && digits.startsWith('1')
+        ? digits.slice(0, 11)
+        : digits.slice(0, 10);
+      if (coreDigits.length < 10) continue;
+      const areaCode = coreDigits.length === 11 ? coreDigits.slice(1, 4) : coreDigits.slice(0, 3);
       if (PHONE_AREA_CODES.includes(areaCode)) {
         // Normalize to (XXX) XXX-XXXX
-        const d = digits.length === 11 ? digits.slice(1) : digits;
+        const d = coreDigits.length === 11 ? coreDigits.slice(1) : coreDigits;
         const formatted = `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
         if (!phones.includes(formatted)) phones.push(formatted);
       }
@@ -123,19 +127,22 @@ export function stripHtmlNoise(html: string): string {
 // HTML email extraction (scrape builder website)
 // ---------------------------------------------------------------------------
 
-const MAILTO_PATTERN = /href="mailto:([^"?]+)/gi;
+const MAILTO_PATTERN = /href=["']mailto:([^"'?#]+)/gi;
 
 export function extractEmailsFromHtml(html: string): string[] {
   const emails: string[] = [];
 
-  // Extract from mailto: links
+  // Extract from mailto: links — use .match() to pull only the valid email
+  // portion, discarding query params (?subject=) that the regex boundary might miss.
   const mailtoMatches = html.matchAll(MAILTO_PATTERN);
   for (const m of mailtoMatches) {
     const lower = m[1].toLowerCase();
     if (EMAIL_REJECT.some((r) => lower.includes(r))) continue;
-    EMAIL_PATTERN.lastIndex = 0; // reset global regex before .test()
-    if (EMAIL_PATTERN.test(lower)) {
-      if (!emails.includes(lower)) emails.push(lower);
+    EMAIL_PATTERN.lastIndex = 0;
+    const emailMatch = lower.match(EMAIL_PATTERN);
+    if (emailMatch && emailMatch.length > 0) {
+      const cleanEmail = emailMatch[0];
+      if (!emails.includes(cleanEmail)) emails.push(cleanEmail);
     }
   }
   EMAIL_PATTERN.lastIndex = 0;
