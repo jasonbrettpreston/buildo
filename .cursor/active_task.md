@@ -1,17 +1,10 @@
-# Active Task: Fix entity_contacts duplicates + COALESCE empty-string bug
+# Active Task: Fix 3 classifier bugs — fallback crash, scope bypass, Tier 3 ratio
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `6ef5fbb`
-
-## Context
-* **Goal:** (1) Add UNIQUE(entity_id, contact_type, contact_value) constraint on entity_contacts to prevent duplicate social links on re-enrichment. (2) Fix COALESCE empty-string bypass with NULLIF on phone/email/website updates.
-* **Target Spec:** `docs/specs/36_web_search_enrichment.md`
-* **Key Files:**
-  - `migrations/058_entity_contacts_unique.sql` — new unique constraint
-  - `src/lib/builders/enrichment.ts` — NULLIF fix
-  - `scripts/enrich-web-search.js` — same NULLIF fix
+**Rollback Anchor:** `518b66c`
 
 ## Execution Plan
-- [ ] Migration 058: ADD UNIQUE(entity_id, contact_type, contact_value)
-- [ ] Fix COALESCE → COALESCE(NULLIF(..., ''), $N) in enrichment.ts + enrich-web-search.js
-- [ ] db:generate + typecheck + test → WF6
+- [ ] Fix non-null assertion crash in fallbackWorkTrades + narrow-scope fallback
+- [ ] Fix narrow-scope fallback bypassing applyScopeLimit
+- [ ] Fix Tier 3 match ratio penalizing long descriptions
+- [ ] typecheck + test → WF6

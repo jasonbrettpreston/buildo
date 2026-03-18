@@ -33,14 +33,12 @@ function fieldMatches(
       const re = new RegExp(normPattern, 'i');
       const match = re.test(fieldValue);
       if (!match) return { matched: false, strength: 0 };
-      const execResult = re.exec(fieldValue);
-      const matchLength = execResult ? execResult[0].length : 0;
-      const ratio = Math.min(matchLength / normValue.length, 1);
-      const strength = 0.50 + ratio * 0.20;
-      return { matched: true, strength };
+      // Flat confidence for keyword matches — long descriptions should not
+      // be penalized vs short ones when the keyword is clearly present.
+      return { matched: true, strength: 0.65 };
     } catch {
       const matched = normValue.includes(normPattern);
-      return { matched, strength: matched ? 0.50 : 0 };
+      return { matched, strength: matched ? 0.65 : 0 };
     }
   }
 
@@ -301,8 +299,11 @@ function fallbackWorkTrades(
     }
   }
 
-  return fallback.slugs.map((slug) => {
-    const trade = getTradeBySlug(slug)!;
+  const matches: TradeMatch[] = [];
+  for (const slug of fallback.slugs) {
+    const trade = getTradeBySlug(slug);
+    if (!trade) continue;
+
     const isActive = isTradeActiveInPhase(slug, phase);
 
     const partial: Partial<TradeMatch> = {
@@ -317,7 +318,7 @@ function fallbackWorkTrades(
 
     const leadScore = calculateLeadScore(permit, partial, phase);
 
-    return {
+    matches.push({
       permit_num: permit.permit_num ?? '',
       revision_num: permit.revision_num ?? '',
       trade_id: trade.id,
@@ -328,8 +329,9 @@ function fallbackWorkTrades(
       is_active: isActive,
       phase,
       lead_score: leadScore,
-    };
-  });
+    });
+  }
+  return matches;
 }
 
 // ---------------------------------------------------------------------------
@@ -370,8 +372,11 @@ export function classifyPermit(
 
     // Fallback: assign code's allowed trades at 0.80 confidence
     const allowed = NARROW_SCOPE_CODES[code!];
-    return allowed.map((slug) => {
-      const trade = getTradeBySlug(slug)!;
+    const narrowFallback: TradeMatch[] = [];
+    for (const slug of allowed) {
+      const trade = getTradeBySlug(slug);
+      if (!trade) continue;
+
       const isActive = isTradeActiveInPhase(slug, phase);
 
       const partial: Partial<TradeMatch> = {
@@ -386,7 +391,7 @@ export function classifyPermit(
 
       const leadScore = calculateLeadScore(permit, partial, phase);
 
-      return {
+      narrowFallback.push({
         permit_num: permit.permit_num ?? '',
         revision_num: permit.revision_num ?? '',
         trade_id: trade.id,
@@ -397,8 +402,9 @@ export function classifyPermit(
         is_active: isActive,
         phase,
         lead_score: leadScore,
-      };
-    });
+      });
+    }
+    return applyScopeLimit(narrowFallback, permit.permit_num, permit.work);
   }
 
   // Path B: Broad-scope — tag matrix + Tier 1 merge
