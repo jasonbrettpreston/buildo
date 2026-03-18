@@ -1,10 +1,14 @@
 import { relations } from "drizzle-orm/relations";
-import { entities, entityProjects, parcels, permitParcels, permits, buildingFootprints, parcelBuildings, trades, permitTrades, entityContacts, tradeMappingRules, wsibRegistry } from "./schema";
+import { entities, entityProjects, permits, parcels, permitParcels, buildingFootprints, parcelBuildings, trades, permitTrades, entityContacts, tradeMappingRules, wsibRegistry } from "./schema";
 
 export const entityProjectsRelations = relations(entityProjects, ({one}) => ({
 	entity: one(entities, {
 		fields: [entityProjects.entityId],
 		references: [entities.id]
+	}),
+	permit: one(permits, {
+		fields: [entityProjects.permitNum],
+		references: [permits.permitNum]
 	}),
 }));
 
@@ -12,6 +16,12 @@ export const entitiesRelations = relations(entities, ({many}) => ({
 	entityProjects: many(entityProjects),
 	entityContacts: many(entityContacts),
 	wsibRegistries: many(wsibRegistry),
+}));
+
+export const permitsRelations = relations(permits, ({many}) => ({
+	entityProjects: many(entityProjects),
+	permitParcels: many(permitParcels),
+	permitTrades: many(permitTrades),
 }));
 
 export const permitParcelsRelations = relations(permitParcels, ({one}) => ({
@@ -28,11 +38,6 @@ export const permitParcelsRelations = relations(permitParcels, ({one}) => ({
 export const parcelsRelations = relations(parcels, ({many}) => ({
 	permitParcels: many(permitParcels),
 	parcelBuildings: many(parcelBuildings),
-}));
-
-export const permitsRelations = relations(permits, ({many}) => ({
-	permitParcels: many(permitParcels),
-	permitTrades: many(permitTrades),
 }));
 
 export const parcelBuildingsRelations = relations(parcelBuildings, ({one}) => ({

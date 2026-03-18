@@ -148,6 +148,11 @@ export const entityProjects = pgTable("entity_projects", {
 			foreignColumns: [entities.id],
 			name: "entity_projects_entity_id_fkey"
 		}),
+	foreignKey({
+			columns: [table.permitNum, table.revisionNum],
+			foreignColumns: [permits.permitNum, permits.revisionNum],
+			name: "fk_entity_projects_permits"
+		}),
 	unique("entity_projects_entity_id_coa_file_num_role_key").on(table.entityId, table.coaFileNum, table.role),
 	unique("entity_projects_entity_id_permit_num_revision_num_role_key").on(table.entityId, table.permitNum, table.revisionNum, table.role),
 ]);
@@ -298,6 +303,9 @@ export const pipelineSchedules = pgTable("pipeline_schedules", {
 	enabled: boolean().default(true).notNull(),
 });
 
+// Legacy per-run audit log for permit sync (src/lib/sync/process.ts).
+// Distinct from pipeline_runs: sync_runs tracks a single atomic sync cycle,
+// pipeline_runs tracks multi-step chain orchestration. Both are active.
 export const syncRuns = pgTable("sync_runs", {
 	id: serial().primaryKey().notNull(),
 	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
