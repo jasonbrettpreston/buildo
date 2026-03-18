@@ -43,10 +43,11 @@ describe('WSIB Registry Infrastructure', () => {
       expect(sql).toContain('predominant_class');
     });
 
-    it('has linked_builder_id FK', () => {
-      const sql = fs.readFileSync(migrationPath, 'utf-8');
-      expect(sql).toContain('linked_builder_id');
-      expect(sql).toContain('REFERENCES builders(id)');
+    it('has linked_entity_id FK (via migration 044)', () => {
+      const entityLinkPath = path.resolve(__dirname, '../../migrations/044_wsib_entity_link.sql');
+      const sql = fs.readFileSync(entityLinkPath, 'utf-8');
+      expect(sql).toContain('linked_entity_id');
+      expect(sql).toContain('REFERENCES entities(id)');
     });
 
     it('has unique constraint on (legal_name_normalized, mailing_address)', () => {
@@ -141,7 +142,7 @@ describe('WSIB Registry Infrastructure', () => {
       expect(content).toContain('no G class');
     });
 
-    it('checks for orphaned linked_builder_id', () => {
+    it('checks for orphaned linked_entity_id', () => {
       const content = fs.readFileSync(boundsPath, 'utf-8');
       expect(content).toContain('orphaned wsib_registry');
     });

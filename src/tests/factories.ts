@@ -461,7 +461,6 @@ export interface WsibRegistryEntry {
   subclass: string | null;
   subclass_description: string | null;
   business_size: string | null;
-  linked_builder_id: number | null;
   linked_entity_id: number | null;
   match_confidence: number | null;
   matched_at: Date | null;
@@ -485,7 +484,6 @@ export function createMockWsibRegistryEntry(
     subclass: 'G1',
     subclass_description: 'Residential building construction',
     business_size: 'Small Business',
-    linked_builder_id: null,
     linked_entity_id: null,
     match_confidence: null,
     matched_at: null,

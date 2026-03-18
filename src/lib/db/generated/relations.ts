@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { trades, tradeMappingRules, permitTrades, builders, builderContacts, parcels, permitParcels, parcelBuildings, buildingFootprints, wsibRegistry, entities, entityProjects } from "./schema";
+import { trades, tradeMappingRules, permitTrades, entities, entityContacts, parcels, permitParcels, parcelBuildings, buildingFootprints, wsibRegistry, entityProjects } from "./schema";
 
 export const tradeMappingRulesRelations = relations(tradeMappingRules, ({one}) => ({
 	trade: one(trades, {
@@ -20,16 +20,17 @@ export const permitTradesRelations = relations(permitTrades, ({one}) => ({
 	}),
 }));
 
-export const builderContactsRelations = relations(builderContacts, ({one}) => ({
-	builder: one(builders, {
-		fields: [builderContacts.builderId],
-		references: [builders.id]
+export const entityContactsRelations = relations(entityContacts, ({one}) => ({
+	entity: one(entities, {
+		fields: [entityContacts.entityId],
+		references: [entities.id]
 	}),
 }));
 
-export const buildersRelations = relations(builders, ({many}) => ({
-	builderContacts: many(builderContacts),
+export const entitiesRelations = relations(entities, ({many}) => ({
+	entityContacts: many(entityContacts),
 	wsibRegistries: many(wsibRegistry),
+	entityProjects: many(entityProjects),
 }));
 
 export const permitParcelsRelations = relations(permitParcels, ({one}) => ({
@@ -60,19 +61,10 @@ export const buildingFootprintsRelations = relations(buildingFootprints, ({many}
 }));
 
 export const wsibRegistryRelations = relations(wsibRegistry, ({one}) => ({
-	builder: one(builders, {
-		fields: [wsibRegistry.linkedBuilderId],
-		references: [builders.id]
-	}),
 	entity: one(entities, {
 		fields: [wsibRegistry.linkedEntityId],
 		references: [entities.id]
 	}),
-}));
-
-export const entitiesRelations = relations(entities, ({many}) => ({
-	wsibRegistries: many(wsibRegistry),
-	entityProjects: many(entityProjects),
 }));
 
 export const entityProjectsRelations = relations(entityProjects, ({one}) => ({

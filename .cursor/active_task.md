@@ -1,78 +1,79 @@
-# Active Task: Fix FTS Index Truncation + Standardize Timestamps to TIMESTAMPTZ
-**Status:** Green Light — awaiting WF6
-**Workflow:** WF3 — Bug Fix
+# Active Task: Consolidate builders → entities & Drop Legacy Tables
+**Status:** Implementation
+**Rollback Anchor:** `abf3c9f`
+**Workflow:** WF2 — Feature Enhancement
 
 ## Context
-* **Goal:** Fix 2 bugs: (1) Drizzle schema.ts has a truncated FTS index definition that would cause a syntax error if ever pushed; (2) 30 timestamp columns across 17 tables use `TIMESTAMP` instead of `TIMESTAMPTZ`, creating a timezone trap for Cloud SQL deployment.
-* **Target Spec:** `docs/specs/00_engineering_standards.md` §3.1 (Zero-Downtime Migration), §3.2 (Migration Rollback Safety)
+* **Goal:** Finish the builders→entities consolidation (Spec 37). Create `entity_contacts` to replace `builder_contacts`. Update the 2 remaining runtime files that still reference `builder_contacts`. Drop `builders`, `builder_contacts`, and `sync_runs` (superseded by `pipeline_runs`). Regenerate Drizzle schema.
+* **Target Spec:** `docs/specs/37_corporate_identity_hub.md`
 * **Key Files:**
-  - `src/lib/db/generated/schema.ts` — truncated FTS index on line 526
-  - `migrations/054_standardize_timestamptz.sql` — new migration
-  - 17 tables with 30 TIMESTAMP columns to convert
+  - `migrations/055_entity_contacts.sql` — new table replacing builder_contacts
+  - `migrations/056_drop_legacy_tables.sql` — drop builders, builder_contacts, sync_runs
+  - `scripts/enrich-web-search.js` — writes to builder_contacts (line 385)
+  - `src/app/api/builders/[id]/route.ts` — reads from builder_contacts (line 50)
+  - `src/lib/db/generated/schema.ts` + `relations.ts` — regenerate after drops
 
 ## Technical Implementation
-* **Bug 1 (FTS):** Re-run `npm run db:generate` after fixing timestamps — the regenerated schema will pick up the corrected index from the live DB. If drizzle-kit still truncates, manually patch line 526.
-* **Bug 2 (Timestamps):** `ALTER COLUMN ... TYPE TIMESTAMPTZ` is metadata-only in PostgreSQL (no row rewrite when converting from TIMESTAMP). Safe on 237K+ row tables.
-* **Database Impact:** YES — ALTER COLUMN TYPE on 17 tables (30 columns). No row rewrite. No backfill needed.
+* **Migration 055 (entity_contacts):**
+  - CREATE TABLE entity_contacts (id, entity_id FK→entities, contact_type, contact_value, source, contributed_by, verified, created_at)
+  - Data migration: INSERT INTO entity_contacts SELECT ... FROM builder_contacts bc JOIN builders b JOIN entities e ON e.name_normalized = b.name_normalized
+  - Indexes: entity_id, contact_type
+* **Migration 056 (drop legacy):**
+  - DROP TABLE builder_contacts (after 055 migrates data)
+  - DROP TABLE builders (all consumers already use entities)
+  - DROP TABLE sync_runs (superseded by pipeline_runs)
+  - Remove wsib_registry.linked_builder_id FK + column
+* **Script updates:**
+  - `enrich-web-search.js:385` — `builder_contacts` → `entity_contacts`, `builder_id` → `entity_id`
+  - `src/app/api/builders/[id]/route.ts:50` — `builder_contacts` → `entity_contacts`, `builder_id` → `entity_id`
+* **Database Impact:** YES — 3 tables dropped, 1 created, 1 column dropped (wsib_registry.linked_builder_id)
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — no API routes
-* **Unhappy Path Tests:** Verify `npm run typecheck` passes after db:generate; verify timestamps are TIMESTAMPTZ in DB
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A — backend-only
+* **Try-Catch Boundary:** Existing try-catch in route.ts preserved; only SQL table name changes
+* **Unhappy Path Tests:** Test that builder detail API returns contacts from entity_contacts
+* **logError Mandate:** N/A — no new catch blocks
+* **Mobile-First:** N/A — no UI changes
 
 ## §10 Plan Compliance Checklist
 
 ### If Database Impact = YES:
-- [x] UP + DOWN migration in `migrations/054_standardize_timestamptz.sql` (§3.2)
-- [x] Backfill strategy: N/A — ALTER TYPE TIMESTAMPTZ is metadata-only, no row rewrite (§3.1)
-- [x] `src/tests/factories.ts` — no new fields, timestamp types unchanged in TS (§5.1)
+- [x] UP + DOWN migration in `migrations/055_entity_contacts.sql` + `migrations/056_drop_legacy_tables.sql` (§3.2)
+- [x] Backfill strategy: INSERT...SELECT from builder_contacts JOIN builders/entities for contact migration (§3.1) — builder_contacts is small (~500-1K rows)
+- [x] `src/tests/factories.ts` — add createMockEntityContact factory (§5.1)
 - [x] `npm run typecheck` planned after `db:generate` (§8.2)
 
 ### If API Route Created/Modified:
-- ⬜ N/A all sub-items
+- [x] No new routes — only table name change in existing query
+- [x] Existing try-catch + logError preserved
+- [x] Unhappy path: test empty contacts, missing entity
+- [x] Route already guarded in middleware
+- [x] No secrets
 
 ### If UI Component Created/Modified:
 - ⬜ N/A all sub-items
 
 ### If Shared Logic Touched:
-- ⬜ N/A all sub-items
+- ⬜ N/A — no classification/scoring/scope changes
 
 ### If Pipeline Script Created/Modified:
-- ⬜ N/A all sub-items
+- [x] enrich-web-search.js already uses Pipeline SDK (§9.4)
+- [x] emitMeta updated to reference entity_contacts instead of builder_contacts
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `eef8e72`
-- [ ] **State Verification:** 30 TIMESTAMP columns confirmed across 17 tables. FTS index truncation confirmed on schema.ts:526. Live DB has correct index.
-- [ ] **Spec Review:** §3.1 zero-downtime pattern applies, but ALTER TYPE timestamp→timestamptz is metadata-only in PostgreSQL (no table rewrite). §3.2 requires UP+DOWN.
-- [ ] **Reproduction:** Query DB to confirm mixed TIMESTAMP/TIMESTAMPTZ. Read schema.ts:526 to confirm truncation.
-- [ ] **Red Light:** N/A — these are DB-layer bugs, not testable via vitest. Verification is via psql + db:generate.
-- [ ] **Fix:**
-  1. Write `migrations/054_standardize_timestamptz.sql` with UP (ALTER all 30 columns) + DOWN (ALTER back to TIMESTAMP)
-  2. Run `npm run migrate`
-  3. Run `npm run db:generate` to regenerate schema.ts + relations.ts (fixes FTS truncation too)
-  4. Run `npm run typecheck`
+- [ ] **State Verification:** Confirm builder_contacts row count and that all builder_id values map to entities via name_normalized. Confirm sync_runs is not referenced by any active runtime code.
+- [ ] **Contract Definition:** N/A — no new API routes, only table rename in existing query
+- [ ] **Spec Update:** Update `docs/specs/37_corporate_identity_hub.md` to mark consolidation as complete. Run `npm run system-map`.
+- [ ] **Schema Evolution:**
+  1. Write `migrations/055_entity_contacts.sql` — CREATE TABLE + data migration + indexes
+  2. Write `migrations/056_drop_legacy_tables.sql` — DROP builders, builder_contacts, sync_runs + remove wsib_registry.linked_builder_id
+  3. Run migrations directly (pre-existing 030 failure is unrelated)
+  4. `npm run db:generate` + `npm run typecheck`
+- [ ] **Guardrail Test:** Add test for entity_contacts in entities.infra.test.ts; update enrichment tests
+- [ ] **Red Light:** Verify new test fails before implementation
+- [ ] **Implementation:**
+  1. Update `scripts/enrich-web-search.js` — builder_contacts → entity_contacts
+  2. Update `src/app/api/builders/[id]/route.ts` — builder_contacts → entity_contacts
+  3. Update `src/tests/factories.ts` — add createMockEntityContact
+  4. Update test assertions for entity_contacts
+- [ ] **UI Regression Check:** N/A — no shared components modified
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
-
-## Tables & Columns (30 TIMESTAMP → TIMESTAMPTZ)
-| Table | Columns |
-|-------|---------|
-| permits | first_seen_at, last_seen_at, geocoded_at |
-| permit_history | changed_at |
-| sync_runs | started_at, completed_at |
-| trades | created_at |
-| trade_mapping_rules | created_at |
-| permit_trades | classified_at |
-| builders | first_seen_at, last_seen_at, enriched_at |
-| builder_contacts | created_at |
-| coa_applications | first_seen_at, last_seen_at |
-| notifications | sent_at, created_at |
-| parcels | created_at |
-| permit_parcels | linked_at |
-| neighbourhoods | created_at |
-| building_footprints | created_at |
-| parcel_buildings | linked_at |
-| entities | first_seen_at, last_seen_at, last_enriched_at |
-| entity_projects | observed_at |
-| wsib_registry | matched_at, first_seen_at, last_seen_at |
-| permit_inspections | scraped_at, created_at |

@@ -145,19 +145,19 @@ describe('WSIB Registry Integration', () => {
       expect(entry.legal_name).toBeTruthy();
       expect(entry.legal_name_normalized).toBeTruthy();
       expect(entry.predominant_class).toBe('G1');
-      expect(entry.linked_builder_id).toBeNull();
+      expect(entry.linked_entity_id).toBeNull();
     });
 
     it('accepts overrides', () => {
       const entry = createMockWsibRegistryEntry({
         trade_name: 'Custom Builder',
         predominant_class: 'G5',
-        linked_builder_id: 42,
+        linked_entity_id: 42,
         match_confidence: 0.95,
       });
       expect(entry.trade_name).toBe('Custom Builder');
       expect(entry.predominant_class).toBe('G5');
-      expect(entry.linked_builder_id).toBe(42);
+      expect(entry.linked_entity_id).toBe(42);
       expect(entry.match_confidence).toBe(0.95);
     });
   });

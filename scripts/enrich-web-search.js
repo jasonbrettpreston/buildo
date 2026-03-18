@@ -4,7 +4,7 @@
  *
  * Prioritizes WSIB-matched builders (have trade name + legal name + mailing address).
  * Extracts: phone, email, website, social links (Instagram, Facebook, LinkedIn, Houzz).
- * Stores core contacts on builders table, social links in builder_contacts.
+ * Stores core contacts on entities table, social links in entity_contacts.
  *
  * Requires SERPER_API_KEY environment variable (serper.dev).
  *
@@ -377,12 +377,12 @@ pipeline.run('enrich-web-search', async (pool) => {
           params
         );
 
-        // Insert social links into builder_contacts
+        // Insert social links into entity_contacts
         const socialTypes = ['instagram', 'facebook', 'linkedin', 'houzz'];
         for (const type of socialTypes) {
           if (contacts[type]) {
             await client.query(
-              `INSERT INTO builder_contacts (builder_id, contact_type, contact_value, source)
+              `INSERT INTO entity_contacts (entity_id, contact_type, contact_value, source)
                VALUES ($1, $2, $3, 'web_search')
                ON CONFLICT DO NOTHING`,
               [b.id, type, contacts[type]]
@@ -468,5 +468,5 @@ async function finalize(pool, runId, startMs, enriched, contactsFound, failed, m
       ...meta,
     },
   });
-  pipeline.emitMeta({ "entities": ["id", "legal_name", "primary_phone", "primary_email", "website", "last_enriched_at", "permit_count"], "wsib_registry": ["trade_name", "legal_name", "mailing_address"] }, { "entities": ["primary_phone", "primary_email", "website", "last_enriched_at"], "builder_contacts": ["builder_id", "contact_type", "contact_value", "source"] });
+  pipeline.emitMeta({ "entities": ["id", "legal_name", "primary_phone", "primary_email", "website", "last_enriched_at", "permit_count"], "wsib_registry": ["trade_name", "legal_name", "mailing_address"] }, { "entities": ["primary_phone", "primary_email", "website", "last_enriched_at"], "entity_contacts": ["entity_id", "contact_type", "contact_value", "source"] });
 }

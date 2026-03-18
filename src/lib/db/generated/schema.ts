@@ -93,31 +93,9 @@ export const permitTrades = pgTable("permit_trades", {
 	unique("permit_trades_permit_num_revision_num_trade_id_key").on(table.permitNum, table.revisionNum, table.tradeId),
 ]);
 
-export const builders = pgTable("builders", {
+export const entityContacts = pgTable("entity_contacts", {
 	id: serial().primaryKey().notNull(),
-	name: varchar({ length: 500 }).notNull(),
-	nameNormalized: varchar("name_normalized", { length: 500 }).notNull(),
-	phone: varchar({ length: 50 }),
-	email: varchar({ length: 200 }),
-	website: varchar({ length: 500 }),
-	googlePlaceId: varchar("google_place_id", { length: 200 }),
-	googleRating: numeric("google_rating", { precision: 2, scale:  1 }),
-	googleReviewCount: integer("google_review_count"),
-	obrBusinessNumber: varchar("obr_business_number", { length: 50 }),
-	wsibStatus: varchar("wsib_status", { length: 50 }),
-	permitCount: integer("permit_count").default(0).notNull(),
-	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	enrichedAt: timestamp("enriched_at", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	index("idx_builders_name_normalized").using("btree", table.nameNormalized.asc().nullsLast().op("text_ops")),
-	index("idx_builders_permit_count").using("btree", table.permitCount.desc().nullsFirst().op("int4_ops")),
-	unique("builders_name_normalized_key").on(table.nameNormalized),
-]);
-
-export const builderContacts = pgTable("builder_contacts", {
-	id: serial().primaryKey().notNull(),
-	builderId: integer("builder_id").notNull(),
+	entityId: integer("entity_id").notNull(),
 	contactType: varchar("contact_type", { length: 20 }),
 	contactValue: varchar("contact_value", { length: 500 }),
 	source: varchar({ length: 50 }).default('user').notNull(),
@@ -125,13 +103,13 @@ export const builderContacts = pgTable("builder_contacts", {
 	verified: boolean().default(false).notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
-	index("idx_builder_contacts_builder").using("btree", table.builderId.asc().nullsLast().op("int4_ops")),
-	index("idx_builder_contacts_type").using("btree", table.contactType.asc().nullsLast().op("text_ops")),
+	index("idx_entity_contacts_entity").using("btree", table.entityId.asc().nullsLast().op("int4_ops")),
+	index("idx_entity_contacts_type").using("btree", table.contactType.asc().nullsLast().op("text_ops")),
 	foreignKey({
-			columns: [table.builderId],
-			foreignColumns: [builders.id],
-			name: "builder_contacts_builder_id_fkey"
-		}),
+			columns: [table.entityId],
+			foreignColumns: [entities.id],
+			name: "entity_contacts_entity_id_fkey"
+		}).onDelete("cascade"),
 ]);
 
 export const coaApplications = pgTable("coa_applications", {
@@ -345,7 +323,6 @@ export const wsibRegistry = pgTable("wsib_registry", {
 	subclass: varchar({ length: 50 }),
 	subclassDescription: text("subclass_description"),
 	businessSize: varchar("business_size", { length: 100 }),
-	linkedBuilderId: integer("linked_builder_id"),
 	matchConfidence: numeric("match_confidence", { precision: 3, scale:  2 }),
 	matchedAt: timestamp("matched_at", { withTimezone: true, mode: 'string' }),
 	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
@@ -355,15 +332,9 @@ export const wsibRegistry = pgTable("wsib_registry", {
 	index("idx_wsib_class").using("btree", table.predominantClass.asc().nullsLast().op("text_ops")),
 	index("idx_wsib_legal_norm").using("btree", table.legalNameNormalized.asc().nullsLast().op("text_ops")),
 	index("idx_wsib_legal_trgm").using("gin", table.legalNameNormalized.asc().nullsLast().op("gin_trgm_ops")),
-	index("idx_wsib_linked").using("btree", table.linkedBuilderId.asc().nullsLast().op("int4_ops")).where(sql`(linked_builder_id IS NOT NULL)`),
 	index("idx_wsib_linked_entity").using("btree", table.linkedEntityId.asc().nullsLast().op("int4_ops")).where(sql`(linked_entity_id IS NOT NULL)`),
 	index("idx_wsib_trade_norm").using("btree", table.tradeNameNormalized.asc().nullsLast().op("text_ops")),
 	index("idx_wsib_trade_trgm").using("gin", table.tradeNameNormalized.asc().nullsLast().op("gin_trgm_ops")),
-	foreignKey({
-			columns: [table.linkedBuilderId],
-			foreignColumns: [builders.id],
-			name: "wsib_registry_linked_builder_id_fkey"
-		}).onDelete("set null"),
 	foreignKey({
 			columns: [table.linkedEntityId],
 			foreignColumns: [entities.id],

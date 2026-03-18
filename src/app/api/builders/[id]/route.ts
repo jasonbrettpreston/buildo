@@ -47,8 +47,8 @@ export async function GET(
 
     // Fetch user-contributed contacts
     const contacts = await query(
-      `SELECT * FROM builder_contacts
-       WHERE builder_id = $1
+      `SELECT * FROM entity_contacts
+       WHERE entity_id = $1
        ORDER BY created_at DESC`,
       [entityId]
     );
