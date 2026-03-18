@@ -39,6 +39,10 @@ next-env.d.ts
 # data files (large datasets — never commit)
 /data/
 
+# database dumps
+*.dump
+*.sql.gz
+
 # temp outputs & ad-hoc dumps
 stats_*.json
 test_output*.json
