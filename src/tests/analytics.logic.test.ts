@@ -41,7 +41,7 @@ describe('getPermitsByDateRange', () => {
     expect(result[1]).toEqual({ date: '2024-01-08', count: 38 });
   });
 
-  it('passes groupBy parameter to query', async () => {
+  it('interpolates groupBy into SQL (not as parameter)', async () => {
     mockQuery.mockResolvedValueOnce([]);
 
     await getPermitsByDateRange(
@@ -51,8 +51,11 @@ describe('getPermitsByDateRange', () => {
     );
 
     expect(mockQuery).toHaveBeenCalledTimes(1);
-    const args = mockQuery.mock.calls[0];
-    expect(args[1]![0]).toBe('month');
+    const sql = mockQuery.mock.calls[0][0] as string;
+    expect(sql).toContain("date_trunc('month'");
+    // groupBy is interpolated, not parameterized — params are only dates
+    const params = mockQuery.mock.calls[0][1] as unknown[];
+    expect(params).toHaveLength(2);
   });
 
   it('returns empty array when no data', async () => {

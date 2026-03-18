@@ -1,46 +1,31 @@
-# Active Task: Harden db/client.ts — HMR leak, withTransaction, timeouts
+# Active Task: Fix 4 analytics query bugs — date_trunc, schema ghost, sync_runs, N+1
 **Status:** Implementation
-**Rollback Anchor:** `90154cb`
+**Rollback Anchor:** `8f94a0b`
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Fix 3 bugs in `src/lib/db/client.ts`: (1) Next.js HMR connection pool leak — each hot reload creates a new 10-connection pool, exhausting PostgreSQL. (2) Expose `withTransaction()` to eliminate manual BEGIN/COMMIT/ROLLBACK boilerplate. (3) Add connection + idle timeouts to prevent hanging API routes.
-* **Target Spec:** `docs/specs/00_engineering_standards.md` §2.2 (Error Handling)
+* **Goal:** Fix 4 bugs in `src/lib/analytics/queries.ts`: (1) date_trunc parameterization crash, (2) permit_trades.trade_name ghost column, (3) sync_runs stale data source, (4) N+1 correlated subquery in getTopBuilders.
+* **Target Spec:** `docs/specs/23_analytics.md`
 * **Key Files:**
-  - `src/lib/db/client.ts` — all 3 fixes
-  - `src/lib/export/csv.ts` — refactor to use withTransaction
-  - `src/lib/sync/process.ts` — refactor to use withTransaction
+  - `src/lib/analytics/queries.ts` — all 4 fixes
+  - `src/tests/analytics.logic.test.ts` — update test for groupBy interpolation
 
 ## Technical Implementation
-* **HMR fix:** Cache pool on `globalThis` in development; create fresh in production
-* **withTransaction:** Port pattern from `scripts/lib/pipeline.js` — BEGIN/COMMIT/ROLLBACK/release in one wrapper
-* **Timeouts:** `connectionTimeoutMillis: 5000`, `idleTimeoutMillis: 30000`
-* **Deprecate getClient():** Keep exported but add @deprecated JSDoc pointing to withTransaction
+* **Bug 1 (date_trunc):** Interpolate `groupBy` directly into SQL (safe — typed as `'day'|'week'|'month'`). Shift params to `$1, $2`.
+* **Bug 2 (trade_name):** JOIN `trades t ON pt.trade_id = t.id`, use `t.name AS trade_name`.
+* **Bug 3 (sync_runs):** Point `getPermitTrends` at `pipeline_runs WHERE pipeline = 'permits'`.
+* **Bug 4 (N+1):** Replace correlated subquery with single-pass JOIN + GROUP BY.
 * **Database Impact:** NO
-
-## Standards Compliance
-* **Try-Catch Boundary:** withTransaction wraps try-catch with ROLLBACK + logError on rollback failure
-* **Unhappy Path Tests:** Test withTransaction commit, rollback, and release-on-error
-* **logError Mandate:** ROLLBACK failure logged via logError
-* **Mobile-First:** N/A
 
 ## §10 Plan Compliance Checklist
 - ⬜ DB — N/A
-- ⬜ API — N/A (no routes modified, only shared library)
+- ⬜ API — N/A (queries called by routes, but routes unchanged)
 - ⬜ UI — N/A
-- ⬜ Shared Logic — N/A (no classification/scoring)
+- ⬜ Shared Logic — N/A
 - ⬜ Pipeline — N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `90154cb`
-- [ ] **State Verification:** Pool created fresh on every module load. No globalThis caching. No timeouts.
-- [ ] **Spec Review:** §2.2 requires try-catch boundaries
-- [ ] **Reproduction:** Pool leak observable on any HMR cycle in dev
-- [ ] **Red Light:** N/A — infrastructure fix, verified by typecheck + existing tests
-- [ ] **Fix:**
-  1. Add globalThis pool caching for HMR safety
-  2. Add connectionTimeoutMillis + idleTimeoutMillis
-  3. Add withTransaction() with BEGIN/COMMIT/ROLLBACK/release
-  4. Guard pool.on('error') listener count for HMR
-  5. Deprecate getClient() with JSDoc
+- [ ] **Rollback Anchor:** `8f94a0b`
+- [ ] **State Verification:** All 4 bugs confirmed by code review
+- [ ] **Fix:** Patch all 4 queries + update test assertion for groupBy
 - [ ] **Green Light:** typecheck + test pass → WF6

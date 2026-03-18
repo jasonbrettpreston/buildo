@@ -8,6 +8,8 @@ import { query } from '@/lib/db/client';
 // Permits by date range
 // ---------------------------------------------------------------------------
 
+const VALID_GROUP_BY = new Set(['day', 'week', 'month']);
+
 /**
  * Count permits grouped by a time bucket (day, week, or month) within a
  * date range. Uses `date_trunc` for consistent grouping.
@@ -17,15 +19,17 @@ export async function getPermitsByDateRange(
   endDate: Date,
   groupBy: 'day' | 'week' | 'month'
 ): Promise<{ date: string; count: number }[]> {
+  if (!VALID_GROUP_BY.has(groupBy)) throw new Error(`Invalid groupBy: ${groupBy}`);
+
   const rows = await query<{ date: string; count: string }>(
     `SELECT
-      date_trunc($1, issued_date)::date::text AS date,
+      date_trunc('${groupBy}', issued_date)::date::text AS date,
       COUNT(*)::text AS count
     FROM permits
-    WHERE issued_date >= $2 AND issued_date <= $3
-    GROUP BY date_trunc($1, issued_date)
-    ORDER BY date_trunc($1, issued_date) ASC`,
-    [groupBy, startDate.toISOString(), endDate.toISOString()]
+    WHERE issued_date >= $1 AND issued_date <= $2
+    GROUP BY date_trunc('${groupBy}', issued_date)
+    ORDER BY date_trunc('${groupBy}', issued_date) ASC`,
+    [startDate.toISOString(), endDate.toISOString()]
   );
 
   return rows.map((r) => ({
@@ -48,14 +52,15 @@ export async function getTradeDistribution(
 ): Promise<{ trade_name: string; count: number; avg_score: number }[]> {
   const rows = await query<{ trade_name: string; count: string; avg_score: string }>(
     `SELECT
-      pt.trade_name,
+      t.name AS trade_name,
       COUNT(*)::text AS count,
       ROUND(AVG(pt.lead_score)::numeric, 2)::text AS avg_score
     FROM permit_trades pt
+    INNER JOIN trades t ON t.id = pt.trade_id
     INNER JOIN permits p
       ON p.permit_num = pt.permit_num AND p.revision_num = pt.revision_num
     WHERE p.issued_date >= $1 AND p.issued_date <= $2
-    GROUP BY pt.trade_name
+    GROUP BY t.name
     ORDER BY count DESC`,
     [startDate.toISOString(), endDate.toISOString()]
   );
@@ -126,7 +131,7 @@ export async function getStatusDistribution(): Promise<
 
 /**
  * Return the top builders ranked by permit count, with average estimated
- * construction cost per permit.
+ * construction cost per permit. Single-pass JOIN avoids N+1 correlated subquery.
  */
 export async function getTopBuilders(
   limit: number = 10
@@ -135,18 +140,11 @@ export async function getTopBuilders(
     `SELECT
       e.legal_name AS name,
       e.permit_count::text AS permit_count,
-      COALESCE(
-        ROUND(
-          (SELECT AVG(p.est_const_cost)
-           FROM permits p
-           JOIN entity_projects ep ON ep.permit_num = p.permit_num AND ep.revision_num = p.revision_num
-           WHERE ep.entity_id = e.id AND ep.role = 'Builder')::numeric,
-          2
-        ),
-        0
-      )::text AS avg_cost
+      COALESCE(ROUND(AVG(p.est_const_cost)::numeric, 2), 0)::text AS avg_cost
     FROM entities e
-    WHERE e.id IN (SELECT entity_id FROM entity_projects WHERE role = 'Builder')
+    INNER JOIN entity_projects ep ON ep.entity_id = e.id AND ep.role = 'Builder'
+    INNER JOIN permits p ON p.permit_num = ep.permit_num AND p.revision_num = ep.revision_num
+    GROUP BY e.id, e.legal_name, e.permit_count
     ORDER BY e.permit_count DESC
     LIMIT $1`,
     [limit]
@@ -160,11 +158,11 @@ export async function getTopBuilders(
 }
 
 // ---------------------------------------------------------------------------
-// Permit trends (from sync runs)
+// Permit trends (from pipeline runs)
 // ---------------------------------------------------------------------------
 
 /**
- * Return daily new and updated permit counts derived from sync run data
+ * Return daily new and updated permit counts derived from pipeline run data
  * over the last N days.
  */
 export async function getPermitTrends(
@@ -175,9 +173,10 @@ export async function getPermitTrends(
       date_trunc('day', started_at)::date::text AS date,
       COALESCE(SUM(records_new), 0)::text AS new_count,
       COALESCE(SUM(records_updated), 0)::text AS updated_count
-    FROM sync_runs
+    FROM pipeline_runs
     WHERE started_at >= NOW() - make_interval(days => $1)
       AND status = 'completed'
+      AND pipeline = 'permits'
     GROUP BY date_trunc('day', started_at)
     ORDER BY date ASC`,
     [days]
