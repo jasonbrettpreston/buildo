@@ -1,37 +1,46 @@
-# Active Task: Fix composite key relations + add CoA→permits FK
+# Active Task: Harden db/client.ts — HMR leak, withTransaction, timeouts
 **Status:** Implementation
-**Rollback Anchor:** `29336eb`
+**Rollback Anchor:** `90154cb`
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** (1) Fix drizzle-kit bug: relations.ts uses single-column permit references instead of composite (permit_num, revision_num). (2) Add missing coa_applications.linked_permit_num FK to permits and corresponding Drizzle relation.
-* **Target Spec:** `docs/specs/37_corporate_identity_hub.md`, `docs/specs/12_coa_integration.md`
+* **Goal:** Fix 3 bugs in `src/lib/db/client.ts`: (1) Next.js HMR connection pool leak — each hot reload creates a new 10-connection pool, exhausting PostgreSQL. (2) Expose `withTransaction()` to eliminate manual BEGIN/COMMIT/ROLLBACK boilerplate. (3) Add connection + idle timeouts to prevent hanging API routes.
+* **Target Spec:** `docs/specs/00_engineering_standards.md` §2.2 (Error Handling)
 * **Key Files:**
-  - `migrations/058_coa_permit_fk.sql` — new FK for coa_applications→permits
-  - `src/lib/db/generated/relations.ts` — fix composite refs, add CoA relation
-  - `src/lib/db/generated/schema.ts` — regenerate after 058
+  - `src/lib/db/client.ts` — all 3 fixes
+  - `src/lib/export/csv.ts` — refactor to use withTransaction
+  - `src/lib/sync/process.ts` — refactor to use withTransaction
 
 ## Technical Implementation
-* **relations.ts:** Patch 3 relations to use composite `[permitNum, revisionNum]` instead of `[permitNum]` alone: entityProjectsRelations, permitParcelsRelations, permitTradesRelations
-* **Migration 058:** `ALTER TABLE coa_applications ADD CONSTRAINT fk_coa_linked_permit FOREIGN KEY (linked_permit_num) REFERENCES permits(permit_num)` — single-column FK since CoA links by permit_num only (no revision_num on coa_applications)
-* **Database Impact:** YES — 1 new FK on coa_applications (32K rows)
+* **HMR fix:** Cache pool on `globalThis` in development; create fresh in production
+* **withTransaction:** Port pattern from `scripts/lib/pipeline.js` — BEGIN/COMMIT/ROLLBACK/release in one wrapper
+* **Timeouts:** `connectionTimeoutMillis: 5000`, `idleTimeoutMillis: 30000`
+* **Deprecate getClient():** Keep exported but add @deprecated JSDoc pointing to withTransaction
+* **Database Impact:** NO
+
+## Standards Compliance
+* **Try-Catch Boundary:** withTransaction wraps try-catch with ROLLBACK + logError on rollback failure
+* **Unhappy Path Tests:** Test withTransaction commit, rollback, and release-on-error
+* **logError Mandate:** ROLLBACK failure logged via logError
+* **Mobile-First:** N/A
 
 ## §10 Plan Compliance Checklist
-
-### If Database Impact = YES:
-- [x] UP + DOWN migration (§3.2)
-- [x] Backfill: N/A — FK only
-- [x] factories.ts: N/A — no new fields
-- [x] typecheck after db:generate
-
-### Other categories: ⬜ N/A
+- ⬜ DB — N/A
+- ⬜ API — N/A (no routes modified, only shared library)
+- ⬜ UI — N/A
+- ⬜ Shared Logic — N/A (no classification/scoring)
+- ⬜ Pipeline — N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `29336eb`
-- [ ] **State Verification:** Confirmed single-column refs in relations.ts; no FK on coa_applications
+- [ ] **Rollback Anchor:** `90154cb`
+- [ ] **State Verification:** Pool created fresh on every module load. No globalThis caching. No timeouts.
+- [ ] **Spec Review:** §2.2 requires try-catch boundaries
+- [ ] **Reproduction:** Pool leak observable on any HMR cycle in dev
+- [ ] **Red Light:** N/A — infrastructure fix, verified by typecheck + existing tests
 - [ ] **Fix:**
-  1. Write + apply migration 058 (coa_applications→permits FK)
-  2. `db:generate` to pick up new FK
-  3. Patch relations.ts composite references + add coaApplications relation
-  4. Patch FTS + remove PostGIS system artifacts (recurring drizzle-kit bug)
+  1. Add globalThis pool caching for HMR safety
+  2. Add connectionTimeoutMillis + idleTimeoutMillis
+  3. Add withTransaction() with BEGIN/COMMIT/ROLLBACK/release
+  4. Guard pool.on('error') listener count for HMR
+  5. Deprecate getClient() with JSDoc
 - [ ] **Green Light:** typecheck + test pass → WF6
