@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { entities, entityProjects, permits, parcels, permitParcels, buildingFootprints, parcelBuildings, trades, permitTrades, entityContacts, tradeMappingRules, wsibRegistry } from "./schema";
+import { entities, entityProjects, permits, parcels, permitParcels, buildingFootprints, parcelBuildings, trades, permitTrades, entityContacts, tradeMappingRules, wsibRegistry, coaApplications } from "./schema";
 
 export const entityProjectsRelations = relations(entityProjects, ({one}) => ({
 	entity: one(entities, {
@@ -7,8 +7,8 @@ export const entityProjectsRelations = relations(entityProjects, ({one}) => ({
 		references: [entities.id]
 	}),
 	permit: one(permits, {
-		fields: [entityProjects.permitNum],
-		references: [permits.permitNum]
+		fields: [entityProjects.permitNum, entityProjects.revisionNum],
+		references: [permits.permitNum, permits.revisionNum]
 	}),
 }));
 
@@ -22,6 +22,14 @@ export const permitsRelations = relations(permits, ({many}) => ({
 	entityProjects: many(entityProjects),
 	permitParcels: many(permitParcels),
 	permitTrades: many(permitTrades),
+	coaApplications: many(coaApplications),
+}));
+
+export const coaApplicationsRelations = relations(coaApplications, ({one}) => ({
+	permit: one(permits, {
+		fields: [coaApplications.linkedPermitNum],
+		references: [permits.permitNum]
+	}),
 }));
 
 export const permitParcelsRelations = relations(permitParcels, ({one}) => ({
@@ -30,8 +38,8 @@ export const permitParcelsRelations = relations(permitParcels, ({one}) => ({
 		references: [parcels.id]
 	}),
 	permit: one(permits, {
-		fields: [permitParcels.permitNum],
-		references: [permits.permitNum]
+		fields: [permitParcels.permitNum, permitParcels.revisionNum],
+		references: [permits.permitNum, permits.revisionNum]
 	}),
 }));
 
@@ -61,8 +69,8 @@ export const permitTradesRelations = relations(permitTrades, ({one}) => ({
 		references: [trades.id]
 	}),
 	permit: one(permits, {
-		fields: [permitTrades.permitNum],
-		references: [permits.permitNum]
+		fields: [permitTrades.permitNum, permitTrades.revisionNum],
+		references: [permits.permitNum, permits.revisionNum]
 	}),
 }));
 

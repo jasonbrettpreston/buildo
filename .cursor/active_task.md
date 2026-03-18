@@ -1,46 +1,37 @@
-# Active Task: Add entity_projects→permits FK + annotate sync_runs
+# Active Task: Fix composite key relations + add CoA→permits FK
 **Status:** Implementation
-**Rollback Anchor:** `a92b8c8`
+**Rollback Anchor:** `29336eb`
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** (1) Add missing composite FK from entity_projects(permit_num, revision_num) → permits(permit_num, revision_num). (2) Add clarifying comment to sync_runs in schema explaining its distinct purpose vs pipeline_runs.
-* **Target Spec:** `docs/specs/37_corporate_identity_hub.md`
+* **Goal:** (1) Fix drizzle-kit bug: relations.ts uses single-column permit references instead of composite (permit_num, revision_num). (2) Add missing coa_applications.linked_permit_num FK to permits and corresponding Drizzle relation.
+* **Target Spec:** `docs/specs/37_corporate_identity_hub.md`, `docs/specs/12_coa_integration.md`
 * **Key Files:**
-  - `migrations/057_entity_projects_permit_fk.sql` — new FK constraint
-  - `src/lib/db/generated/schema.ts` — regenerated after migration
+  - `migrations/058_coa_permit_fk.sql` — new FK for coa_applications→permits
+  - `src/lib/db/generated/relations.ts` — fix composite refs, add CoA relation
+  - `src/lib/db/generated/schema.ts` — regenerate after 058
 
 ## Technical Implementation
-* **Migration 057:** `ALTER TABLE entity_projects ADD CONSTRAINT fk_entity_projects_permits FOREIGN KEY (permit_num, revision_num) REFERENCES permits(permit_num, revision_num)`
-* **sync_runs:** NOT dropped — actively used by `src/lib/sync/process.ts` for per-run permit sync tracking. Add clarifying comment in schema.ts.
-* **Database Impact:** YES — FK constraint on entity_projects (~45K rows). No data changes.
-
-## Standards Compliance
-* **Try-Catch Boundary:** N/A — no API routes
-* **Unhappy Path Tests:** N/A — FK is additive
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A
+* **relations.ts:** Patch 3 relations to use composite `[permitNum, revisionNum]` instead of `[permitNum]` alone: entityProjectsRelations, permitParcelsRelations, permitTradesRelations
+* **Migration 058:** `ALTER TABLE coa_applications ADD CONSTRAINT fk_coa_linked_permit FOREIGN KEY (linked_permit_num) REFERENCES permits(permit_num)` — single-column FK since CoA links by permit_num only (no revision_num on coa_applications)
+* **Database Impact:** YES — 1 new FK on coa_applications (32K rows)
 
 ## §10 Plan Compliance Checklist
 
 ### If Database Impact = YES:
-- [x] UP + DOWN migration in `migrations/057_entity_projects_permit_fk.sql` (§3.2)
-- [x] Backfill: N/A — FK only, no data changes
+- [x] UP + DOWN migration (§3.2)
+- [x] Backfill: N/A — FK only
 - [x] factories.ts: N/A — no new fields
-- [x] `npm run typecheck` after `db:generate`
+- [x] typecheck after db:generate
 
-### If API/UI/Shared Logic/Pipeline:
-- ⬜ N/A all sub-items
+### Other categories: ⬜ N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `a92b8c8`
-- [ ] **State Verification:** entity_projects has only entity_id FK, no permits FK
-- [ ] **Spec Review:** Spec 37 §3 lists entity_projects junction with permit_num/revision_num
-- [ ] **Reproduction:** Confirmed via pg_constraint query
-- [ ] **Red Light:** N/A — DB constraint, not testable via vitest
+- [ ] **Rollback Anchor:** `29336eb`
+- [ ] **State Verification:** Confirmed single-column refs in relations.ts; no FK on coa_applications
 - [ ] **Fix:**
-  1. Write `migrations/057_entity_projects_permit_fk.sql`
-  2. Apply migration
-  3. `npm run db:generate` + patch FTS + add sync_runs comment
-  4. `npm run typecheck && npm run test`
-- [ ] **Green Light:** All pass. → WF6.
+  1. Write + apply migration 058 (coa_applications→permits FK)
+  2. `db:generate` to pick up new FK
+  3. Patch relations.ts composite references + add coaApplications relation
+  4. Patch FTS + remove PostGIS system artifacts (recurring drizzle-kit bug)
+- [ ] **Green Light:** typecheck + test pass → WF6
