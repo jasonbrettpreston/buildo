@@ -104,6 +104,22 @@ export function extractEmails(snippets: string[]): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// HTML noise stripping (prevent catastrophic backtracking on minified JS/SVG)
+// ---------------------------------------------------------------------------
+
+/**
+ * Strip script/style/svg tags and remaining HTML to prevent catastrophic
+ * regex backtracking on minified JS and false-positive phones from SVG paths.
+ */
+export function stripHtmlNoise(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+    .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ');
+}
+
+// ---------------------------------------------------------------------------
 // HTML email extraction (scrape builder website)
 // ---------------------------------------------------------------------------
 

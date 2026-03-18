@@ -1,199 +1,145 @@
 // ---------------------------------------------------------------------------
-// Builder enrichment via Google Places API
+// Builder enrichment via Serper web search API
 // ---------------------------------------------------------------------------
 
-import { query } from '@/lib/db/client';
+import { query, withTransaction } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { searchSerper, fetchWebsiteHtml } from '@/lib/enrichment/serper-client';
+import {
+  extractContacts,
+  extractEmailsFromHtml,
+  extractPhoneNumbers,
+  stripHtmlNoise,
+  buildSearchQuery,
+} from '@/lib/builders/extract-contacts';
+import type { SerperResponse } from '@/lib/builders/extract-contacts';
 import type { Entity } from '@/lib/permits/types';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export interface PlacesResult {
-  place_id: string;
-  name: string;
-  formatted_address: string;
-  phone: string | null;
-  website: string | null;
-  rating: number | null;
-  review_count: number | null;
-}
-
-// ---------------------------------------------------------------------------
-// Configuration
-// ---------------------------------------------------------------------------
-
-const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
-
-/** Delay between enrichment requests in milliseconds to respect rate limits. */
-const RATE_LIMIT_DELAY_MS = 1_500;
-
-/** Base URL for the Google Places Text Search endpoint. */
-const PLACES_TEXT_SEARCH_URL =
-  'https://maps.googleapis.com/maps/api/place/textsearch/json';
-
-/** Base URL for the Google Places Details endpoint. */
-const PLACES_DETAILS_URL =
-  'https://maps.googleapis.com/maps/api/place/details/json';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const RATE_LIMIT_DELAY_MS = 500;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // ---------------------------------------------------------------------------
-// Google Places lookup
+// Single entity enrichment
 // ---------------------------------------------------------------------------
 
 /**
- * Search Google Places for a builder by name.
+ * Enrich a single entity with contact data from Serper web search.
  *
- * The query is constructed as `"{builderName} contractor {city}"` to bias
- * results towards construction-related businesses in the target city.
+ * 1. Loads the entity + optional WSIB data for search query construction.
+ * 2. Calls Serper API and extracts contacts (phone, email, website, social).
+ * 3. If no email found from search snippets, scrapes the entity's website.
+ * 4. Updates the entity record and inserts social links into entity_contacts.
+ * 5. Sets `last_enriched_at = NOW()` regardless of result (prevents retry loops).
  *
- * If the text search returns a candidate, a follow-up Places Details request
- * is made to retrieve phone number and website (fields not included in the
- * text search response).
- *
- * @returns The top matching place or `null` if no results / API error.
+ * @returns The updated entity, or `null` if the entity was not found or enrichment failed.
  */
-export async function searchGooglePlaces(
-  builderName: string,
-  city: string = 'Toronto'
-): Promise<PlacesResult | null> {
-  if (!GOOGLE_MAPS_API_KEY) {
-    console.warn('[enrichment] GOOGLE_MAPS_API_KEY is not set; skipping Places lookup');
-    return null;
-  }
-
+export async function enrichBuilder(entityId: number): Promise<Entity | null> {
   try {
-    // 1. Text Search to find the place
-    const searchQuery = `${builderName} contractor ${city}`;
-    const searchParams = new URLSearchParams({
-      query: searchQuery,
-      key: GOOGLE_MAPS_API_KEY,
+    const rows = await query<Entity & {
+      trade_name_wsib?: string | null;
+      legal_name_wsib?: string | null;
+      mailing_address?: string | null;
+    }>(
+      `SELECT e.*,
+              w.trade_name AS trade_name_wsib,
+              w.legal_name AS legal_name_wsib,
+              w.mailing_address
+       FROM entities e
+       LEFT JOIN wsib_registry w ON w.linked_entity_id = e.id
+       WHERE e.id = $1
+       LIMIT 1`,
+      [entityId]
+    );
+
+    if (rows.length === 0) return null;
+
+    const entity = rows[0];
+    const searchQuery = buildSearchQuery({
+      name: entity.legal_name,
+      trade_name: entity.trade_name_wsib,
+      legal_name: entity.legal_name_wsib,
+      mailing_address: entity.mailing_address,
     });
 
-    const searchResponse = await fetch(`${PLACES_TEXT_SEARCH_URL}?${searchParams}`);
-    if (!searchResponse.ok) {
-      logError('[enrichment]', new Error(`Places text search HTTP ${searchResponse.status}`), {
-        event: 'places_text_search_failed',
-        status: searchResponse.status,
-      });
-      return null;
-    }
+    const response = await searchSerper(searchQuery) as SerperResponse;
+    const contacts = extractContacts(response);
 
-    const searchData = await searchResponse.json();
-    if (
-      searchData.status !== 'OK' ||
-      !searchData.results ||
-      searchData.results.length === 0
-    ) {
-      return null;
-    }
-
-    const topResult = searchData.results[0];
-    const placeId: string = topResult.place_id;
-
-    // 2. Place Details to get phone + website
-    const detailsParams = new URLSearchParams({
-      place_id: placeId,
-      fields: 'formatted_phone_number,website',
-      key: GOOGLE_MAPS_API_KEY,
-    });
-
-    const detailsResponse = await fetch(`${PLACES_DETAILS_URL}?${detailsParams}`);
-    let phone: string | null = null;
-    let website: string | null = null;
-
-    if (detailsResponse.ok) {
-      const detailsData = await detailsResponse.json();
-      if (detailsData.status === 'OK' && detailsData.result) {
-        phone = detailsData.result.formatted_phone_number ?? null;
-        website = detailsData.result.website ?? null;
+    // If no email from snippets, scrape the website
+    const websiteUrl = contacts.website || entity.website;
+    if (!contacts.email && !entity.primary_email && websiteUrl) {
+      const html = await fetchWebsiteHtml(websiteUrl);
+      if (html) {
+        const scraped = extractEmailsFromHtml(html);
+        if (scraped.length > 0) contacts.email = scraped[0];
+        if (!contacts.phone && !entity.primary_phone) {
+          const cleanText = stripHtmlNoise(html);
+          const pagePhones = extractPhoneNumbers([cleanText]);
+          if (pagePhones.length > 0) contacts.phone = pagePhones[0];
+        }
       }
     }
 
-    return {
-      place_id: placeId,
-      name: topResult.name ?? builderName,
-      formatted_address: topResult.formatted_address ?? '',
-      phone,
-      website,
-      rating: topResult.rating ?? null,
-      review_count: topResult.user_ratings_total ?? null,
-    };
-  } catch (err) {
-    logError('[enrichment]', err, { event: 'google_places_api_error' });
-    return null;
-  }
-}
+    // Build UPDATE with COALESCE to preserve existing data
+    const updates: string[] = [];
+    const params: unknown[] = [];
+    let paramIdx = 1;
 
-// ---------------------------------------------------------------------------
-// Single builder enrichment
-// ---------------------------------------------------------------------------
-
-/**
- * Enrich a single builder record with data from Google Places.
- *
- * 1. Loads the builder from the database.
- * 2. Calls `searchGooglePlaces` with the builder's name.
- * 3. Updates the builder record with any results found.
- * 4. Sets `enriched_at = NOW()` regardless of whether a match was found
- *    (so we don't repeatedly retry the same builder).
- *
- * @returns The updated builder, or `null` if the builder was not found.
- */
-export async function enrichBuilder(builderId: number): Promise<Entity | null> {
-  try {
-    const rows = await query<Entity>(
-      'SELECT * FROM entities WHERE id = $1 LIMIT 1',
-      [builderId]
-    );
-
-    if (rows.length === 0) {
-      console.warn(`[enrichment] Entity id=${builderId} not found`);
-      return null;
+    if (contacts.phone && !entity.primary_phone) {
+      updates.push(`primary_phone = COALESCE(primary_phone, $${paramIdx})`);
+      params.push(contacts.phone);
+      paramIdx++;
+    }
+    if (contacts.email && !entity.primary_email) {
+      updates.push(`primary_email = COALESCE(primary_email, $${paramIdx})`);
+      params.push(contacts.email);
+      paramIdx++;
+    }
+    if (contacts.website && !entity.website) {
+      updates.push(`website = COALESCE(website, $${paramIdx})`);
+      params.push(contacts.website);
+      paramIdx++;
     }
 
-    const entity = rows[0];
-    const placesResult = await searchGooglePlaces(entity.legal_name);
+    updates.push('last_enriched_at = NOW()');
+    params.push(entityId);
 
-    if (placesResult) {
-      const [updated] = await query<Entity>(
-        `UPDATE entities SET
-          google_place_id     = $1,
-          google_rating       = $2,
-          google_review_count = $3,
-          primary_phone       = COALESCE(primary_phone, $4),
-          website             = COALESCE(website, $5),
-          last_enriched_at    = NOW()
-        WHERE id = $6
-        RETURNING *`,
-        [
-          placesResult.place_id,
-          placesResult.rating,
-          placesResult.review_count,
-          placesResult.phone,
-          placesResult.website,
-          builderId,
-        ]
+    const updated = await withTransaction(async (client) => {
+      const { rows: [row] } = await client.query(
+        `UPDATE entities SET ${updates.join(', ')} WHERE id = $${paramIdx} RETURNING *`,
+        params
       );
-      return updated;
-    }
 
-    // No Places match -- still mark as enriched so we don't retry
-    const [updated] = await query<Entity>(
-      `UPDATE entities SET last_enriched_at = NOW() WHERE id = $1 RETURNING *`,
-      [builderId]
-    );
+      // Insert social links into entity_contacts
+      const socialTypes = ['instagram', 'facebook', 'linkedin', 'houzz'] as const;
+      for (const type of socialTypes) {
+        if (contacts[type]) {
+          await client.query(
+            `INSERT INTO entity_contacts (entity_id, contact_type, contact_value, source)
+             VALUES ($1, $2, $3, 'web_search')
+             ON CONFLICT DO NOTHING`,
+            [entityId, type, contacts[type]]
+          );
+        }
+      }
+
+      return row as Entity;
+    });
+
     return updated;
   } catch (err) {
-    logError('[enrichment]', err, { event: 'enrich_builder_failed', entity_id: builderId });
+    logError('[enrichment]', err, { event: 'enrich_builder_failed', entity_id: entityId });
+
+    // Still mark as enriched to prevent retry loops
+    await query(
+      'UPDATE entities SET last_enriched_at = NOW() WHERE id = $1',
+      [entityId]
+    ).catch((dbErr) => {
+      logError('[enrichment]', dbErr, { event: 'mark_enriched_failed', entity_id: entityId });
+    });
+
     return null;
   }
 }
@@ -203,14 +149,11 @@ export async function enrichBuilder(builderId: number): Promise<Entity | null> {
 // ---------------------------------------------------------------------------
 
 /**
- * Process all builders that have not yet been enriched (`enriched_at IS NULL`).
+ * Process unenriched entities in batches via Serper web search.
+ * Prioritizes WSIB-matched entities (have trade name + mailing address).
  *
- * Builders are processed one at a time with a configurable delay between each
- * request to respect Google Places API rate limits.
- *
- * @param limit  Maximum number of builders to process in this run.
- *               Defaults to 50.
- * @returns Counts of successfully enriched and failed builders.
+ * @param limit  Maximum number of entities to process. Defaults to 50.
+ * @returns Counts of successfully enriched and failed entities.
  */
 export async function enrichUnenrichedBuilders(
   limit: number = 50
@@ -218,29 +161,26 @@ export async function enrichUnenrichedBuilders(
   const stats = { enriched: 0, failed: 0 };
 
   try {
-    const unenriched = await query<Entity>(
-      `SELECT * FROM entities
-       WHERE last_enriched_at IS NULL
-       ORDER BY permit_count DESC
+    const unenriched = await query<{ id: number }>(
+      `SELECT e.id
+       FROM entities e
+       LEFT JOIN wsib_registry w ON w.linked_entity_id = e.id
+       WHERE e.last_enriched_at IS NULL
+       ORDER BY
+         CASE WHEN w.id IS NOT NULL THEN 0 ELSE 1 END,
+         e.permit_count DESC
        LIMIT $1`,
       [limit]
     );
 
-    console.log(
-      `[enrichment] Found ${unenriched.length} unenriched builder(s) to process`
-    );
-
     for (let i = 0; i < unenriched.length; i++) {
-      const builder = unenriched[i];
-
-      const result = await enrichBuilder(builder.id);
+      const result = await enrichBuilder(unenriched[i].id);
       if (result) {
         stats.enriched++;
       } else {
         stats.failed++;
       }
 
-      // Rate-limit delay between requests (skip after the last one)
       if (i < unenriched.length - 1) {
         await sleep(RATE_LIMIT_DELAY_MS);
       }
@@ -248,10 +188,6 @@ export async function enrichUnenrichedBuilders(
   } catch (err) {
     logError('[enrichment]', err, { event: 'batch_enrichment_error' });
   }
-
-  console.log(
-    `[enrichment] Batch complete: ${stats.enriched} enriched, ${stats.failed} failed`
-  );
 
   return stats;
 }

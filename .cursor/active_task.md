@@ -1,31 +1,50 @@
-# Active Task: Fix 4 analytics query bugs — date_trunc, schema ghost, sync_runs, N+1
+# Active Task: Unified Serper Enrichment — Delete Dead Google Places Code
 **Status:** Implementation
-**Rollback Anchor:** `8f94a0b`
-**Workflow:** WF3 — Bug Fix
+**Rollback Anchor:** `862572a`
+**Workflow:** WF2 — Feature Enhancement
 
 ## Context
-* **Goal:** Fix 4 bugs in `src/lib/analytics/queries.ts`: (1) date_trunc parameterization crash, (2) permit_trades.trade_name ghost column, (3) sync_runs stale data source, (4) N+1 correlated subquery in getTopBuilders.
-* **Target Spec:** `docs/specs/23_analytics.md`
+* **Goal:** Delete dead Google Places enrichment code. Create a shared Serper client in `src/lib/enrichment/serper-client.ts`. Rewrite `enrichment.ts` to use Serper so the admin "Enrich Now" button works. Refactor `enrich-web-search.js` to import the shared extraction functions from the existing TS module.
+* **Target Spec:** `docs/specs/36_web_search_enrichment.md`
 * **Key Files:**
-  - `src/lib/analytics/queries.ts` — all 4 fixes
-  - `src/tests/analytics.logic.test.ts` — update test for groupBy interpolation
+  - `scripts/enrich-builders.js` — DELETE (dead Google Places script)
+  - `src/lib/builders/enrichment.ts` — REWRITE to use Serper via shared client
+  - `src/lib/enrichment/serper-client.ts` — NEW shared Serper API fetch + stripHtmlNoise
+  - `scripts/enrich-web-search.js` — REFACTOR to import from `extract-contacts.ts` (remove duplicated extraction functions)
+  - `src/lib/builders/extract-contacts.ts` — ADD `stripHtmlNoise` (currently only in JS)
 
 ## Technical Implementation
-* **Bug 1 (date_trunc):** Interpolate `groupBy` directly into SQL (safe — typed as `'day'|'week'|'month'`). Shift params to `$1, $2`.
-* **Bug 2 (trade_name):** JOIN `trades t ON pt.trade_id = t.id`, use `t.name AS trade_name`.
-* **Bug 3 (sync_runs):** Point `getPermitTrends` at `pipeline_runs WHERE pipeline = 'permits'`.
-* **Bug 4 (N+1):** Replace correlated subquery with single-pass JOIN + GROUP BY.
+* **Step 1: Delete** `scripts/enrich-builders.js` (dead Google Places pipeline script)
+* **Step 2: Create** `src/lib/enrichment/serper-client.ts` — exports `searchSerper(query)` and `scrapeWebsiteContacts(url)`. Reads `SERPER_API_KEY` from env.
+* **Step 3: Add** `stripHtmlNoise()` to `src/lib/builders/extract-contacts.ts` (missing from TS, exists in JS)
+* **Step 4: Rewrite** `src/lib/builders/enrichment.ts` — replace Google Places with Serper. `enrichBuilder(id)` calls `searchSerper` + `extractContacts` + website scrape. `enrichUnenrichedBuilders(limit)` does batch processing. Both use `withTransaction` from db/client.
+* **Step 5: Refactor** `scripts/enrich-web-search.js` — delete the 130 lines of duplicated extraction functions, require from the TS-compiled paths or keep as-is (CJS script can't import TS directly). Actually, the JS script runs standalone via Node, not through Next.js bundler — it must keep its own extraction functions OR we compile the TS. **Decision:** Leave the JS extraction functions in place for now (the script works, and CJS can't require ESM/TS). The shared client is for the Next.js web path only.
 * **Database Impact:** NO
+
+## Standards Compliance
+* **Try-Catch Boundary:** enrichBuilder wraps Serper call + DB update in try-catch with logError
+* **Unhappy Path Tests:** Test enrichBuilder with missing API key, failed fetch, no results
+* **logError Mandate:** All catch blocks use logError
+* **Mobile-First:** N/A
 
 ## §10 Plan Compliance Checklist
 - ⬜ DB — N/A
-- ⬜ API — N/A (queries called by routes, but routes unchanged)
+- ⬜ API — N/A (route unchanged, calls same function name)
 - ⬜ UI — N/A
-- ⬜ Shared Logic — N/A
-- ⬜ Pipeline — N/A
+- ⬜ Shared Logic — N/A (no classification/scoring)
+- ⬜ Pipeline — N/A (enrich-web-search.js keeps its own extraction; not modifying pipeline SDK usage)
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `8f94a0b`
-- [ ] **State Verification:** All 4 bugs confirmed by code review
-- [ ] **Fix:** Patch all 4 queries + update test assertion for groupBy
+- [ ] **State Verification:** enrichment.ts uses dead Google Places API. enrich-builders.js is dead.
+- [ ] **Contract Definition:** N/A — admin route interface unchanged (POST /api/admin/builders)
+- [ ] **Spec Update:** N/A — spec 36 already describes Serper
+- [ ] **Schema Evolution:** N/A
+- [ ] **Guardrail Test:** N/A — existing enrichment tests cover extract-contacts
+- [ ] **Red Light:** N/A
+- [ ] **Implementation:**
+  1. Delete `scripts/enrich-builders.js`
+  2. Create `src/lib/enrichment/serper-client.ts`
+  3. Add `stripHtmlNoise` to `extract-contacts.ts`
+  4. Rewrite `enrichment.ts` with Serper
+- [ ] **UI Regression Check:** N/A
 - [ ] **Green Light:** typecheck + test pass → WF6
