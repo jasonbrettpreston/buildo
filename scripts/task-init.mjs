@@ -31,10 +31,11 @@ function getArg(name) {
 
 const wfNum = parseInt(getArg('wf') || '0', 10);
 const taskName = getArg('name') || 'Untitled Task';
+const scope = getArg('scope') || 'global'; // e.g., 'permits', 'coa', 'sources', 'entities', 'deep_scrapes'
 
 const VALID_WFS = [1, 2, 3, 5, 11];
 if (!VALID_WFS.includes(wfNum)) {
-  console.error('Usage: node scripts/task-init.mjs --wf=<1|2|3|5|11> --name="Task Name"');
+  console.error('Usage: node scripts/task-init.mjs --wf=<1|2|3|5|11> --name="Task Name" [--scope=permits|coa|sources|entities|deep_scrapes]');
   console.error('');
   console.error('  Core 5 Pillars:');
   console.error('    --wf=1   Genesis  (new feature)');
@@ -48,16 +49,42 @@ if (!VALID_WFS.includes(wfNum)) {
 // ── Gather context ──────────────────────────────────────────────────────────
 let commitHash = 'unknown';
 try {
-  commitHash = execSync('git rev-parse HEAD', { cwd: ROOT, encoding: 'utf-8' }).trim();
-} catch { /* not in git */ }
+  commitHash = execSync('git rev-parse HEAD', { cwd: ROOT, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+} catch (err) {
+  const errMsg = err.stderr ? err.stderr.toString().trim() : err.message;
+  console.warn(`⚠️  Could not generate Git Rollback Anchor: ${errMsg}`);
+}
 
 const shortHash = commitHash.slice(0, 8);
 
-// List available specs
-const specFiles = fs.readdirSync(SPECS_DIR)
+// List available specs — filtered by scope if provided
+const allSpecFiles = fs.readdirSync(SPECS_DIR)
   .filter(f => f.endsWith('.md') && f !== '00_system_map.md' && !f.startsWith('_'))
   .map(f => `docs/specs/${f}`)
   .sort();
+
+// Scope-based filtering: match spec filenames against scope keywords
+const SCOPE_KEYWORDS = {
+  permits: ['permit', 'sync', 'classification', 'scoring', 'builder', 'geocod', 'parcel', 'neighbourhood', 'massing', 'similar'],
+  coa: ['coa', 'committee', 'pre_permit', 'pre-permit'],
+  sources: ['address', 'parcel', 'massing', 'neighbourhood', 'wsib'],
+  entities: ['builder', 'enrichment', 'wsib', 'entity'],
+  deep_scrapes: ['inspection', 'scraping', 'aic'],
+};
+
+const scopeKeywords = SCOPE_KEYWORDS[scope];
+const specFiles = scope !== 'global' && scopeKeywords
+  ? allSpecFiles.filter(f => scopeKeywords.some(kw => f.toLowerCase().includes(kw)))
+  : allSpecFiles;
+
+// Read manifest for pipeline context
+let manifestChain = null;
+if (scope !== 'global') {
+  try {
+    const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'manifest.json'), 'utf-8'));
+    manifestChain = manifest.chains[scope] || null;
+  } catch { /* manifest not found */ }
+}
 
 // ── Workflow checklists ─────────────────────────────────────────────────────
 const WF_NAMES = {
@@ -99,6 +126,7 @@ const CHECKLISTS = {
 - [ ] **Reproduction:** Create a failing test case in \`src/tests/\` that isolates the bug.
 - [ ] **Red Light:** Run the new test. It MUST fail to confirm reproduction.
 - [ ] **Fix:** Modify the code to resolve the issue.
+- [ ] **Schema Evolution:** If the fix requires a DB change: write \`migrations/NNN_[fix].sql\` (UP + DOWN), run \`npm run migrate\`, then \`npm run db:generate\`.
 - [ ] **Green Light:** Run \`npm run test && npm run lint -- --fix\`. All tests must pass.
 - [ ] **Collateral Check:** Run \`npx vitest related src/path/to/changed-file.ts --run\` to verify no unrelated dependents broke.
 - [ ] **Atomic Commit:** Prompt user to commit: \`git commit -m "fix(NN_spec): [description]"\`. Do not batch.
@@ -136,11 +164,12 @@ let content = `# Active Task: ${taskName}
 **Status:** Planning
 **Workflow:** WF${wfNum} — ${wfLabel}
 **Rollback Anchor:** \`${shortHash}\` (${commitHash})
+${scope !== 'global' ? `**Scope:** ${scope}` : ''}
 
 ## Context
 * **Goal:** [What are we building/fixing?]
-* **Target Spec:** MISSING — select from the list below and replace this line:
-${specFiles.map(s => `  - \`${s}\``).join('\n')}
+${scope !== 'global' && manifestChain ? `* **Pipeline Chain:** \`${scope}\` — ${manifestChain.length} steps: ${manifestChain.join(' → ')}\n` : ''}* **Target Spec:** MISSING — select from the list below and replace this line:
+${(specFiles.length > 0 ? specFiles : allSpecFiles).map(s => `  - \`${s}\``).join('\n')}
 * **Key Files:** [List specific src files]
 `;
 
@@ -163,5 +192,6 @@ fs.mkdirSync(path.dirname(TASK_FILE), { recursive: true });
 fs.writeFileSync(TASK_FILE, content);
 console.log(`✔ Created ${path.relative(ROOT, TASK_FILE)}`);
 console.log(`  Workflow: WF${wfNum} — ${wfLabel}`);
+console.log(`  Scope:    ${scope}${manifestChain ? ` (${manifestChain.length} chain steps)` : ''}`);
 console.log(`  Rollback: ${shortHash}`);
-console.log(`  Specs:    ${specFiles.length} available`);
+console.log(`  Specs:    ${specFiles.length} relevant${scope !== 'global' ? ` (of ${allSpecFiles.length} total)` : ''}`);
