@@ -200,7 +200,9 @@ function progress(label, current, total, startMs) {
  * 1. Create pool
  * 2. Execute fn(pool) inside try/catch
  * 3. Always pool.end() in finally
- * 4. process.exit(1) on fatal error
+ * 4. Re-throw on fatal error (lets caller or Node.js unhandled rejection handle exit)
+ *
+ * Safe to import in long-running processes — does not call process.exit().
  *
  * @param {string} name - Script name for logging (e.g. 'load-permits')
  * @param {(pool: Pool) => Promise<void>} fn - The main pipeline logic
@@ -214,9 +216,11 @@ async function run(name, fn) {
     console.log(`\n[${name}] completed in ${elapsed}s`);
   } catch (err) {
     log.error(`[${name}]`, err, { phase: 'fatal' });
-    process.exit(1);
+    throw err;
   } finally {
-    await pool.end().catch(() => {});
+    await pool.end().catch((endErr) => {
+      log.warn(`[${name}]`, `pool.end failed: ${endErr.message}`);
+    });
   }
 }
 
@@ -271,7 +275,7 @@ async function captureTelemetry(pool, tables, nullCols) {
         snapshot.engine[table] = {
           n_live_tup: live,
           n_dead_tup: dead,
-          dead_ratio: live > 0 ? Math.round((dead / live) * 10000) / 10000 : 0,
+          dead_ratio: (live + dead) > 0 ? Math.round((dead / (live + dead)) * 10000) / 10000 : 0,
           seq_scan: seq,
           idx_scan: idx,
           seq_ratio: (seq + idx) > 0 ? Math.round((seq / (seq + idx)) * 10000) / 10000 : 0,
@@ -346,7 +350,7 @@ async function diffTelemetry(pool, tables, pre) {
           result.engine[table] = {
             n_live_tup: live,
             n_dead_tup: dead,
-            dead_ratio: live > 0 ? Math.round((dead / live) * 10000) / 10000 : 0,
+            dead_ratio: (live + dead) > 0 ? Math.round((dead / (live + dead)) * 10000) / 10000 : 0,
             seq_scan: seq,
             idx_scan: idx,
             seq_ratio: (seq + idx) > 0 ? Math.round((seq / (seq + idx)) * 10000) / 10000 : 0,
