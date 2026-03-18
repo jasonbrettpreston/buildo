@@ -73,6 +73,18 @@ function extractEmails(snippets) {
 
 const MAILTO_PATTERN = /href="mailto:([^"?]+)/gi;
 
+/**
+ * Strip script/style/svg tags and remaining HTML to prevent catastrophic
+ * regex backtracking on minified JS and false-positive phones from SVG paths.
+ */
+function stripHtmlNoise(html) {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+    .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ');
+}
+
 function extractEmailsFromHtml(html) {
   const emails = [];
   const mailtoMatches = html.matchAll(MAILTO_PATTERN);
@@ -217,14 +229,14 @@ pipeline.run('enrich-web-search', async (pool) => {
     : parseInt(process.env.ENRICH_LIMIT || '50', 10);
 
   if (!SERPER_API_KEY) {
-    console.log('SERPER_API_KEY not set — skipping web search enrichment');
+    pipeline.log.info('[enrich-web-search]','SERPER_API_KEY not set — skipping web search enrichment');
     return;
   }
 
   const mode = WSIB_ONLY ? 'WSIB-matched only' : UNMATCHED_ONLY ? 'Unmatched only' : 'All builders';
-  console.log(`=== Web Search Enrichment (${mode}) ===\n`);
-  if (dryRun) console.log('DRY RUN — no database writes\n');
-  console.log(`Limit: ${limit} | Rate: ${RATE_LIMIT_MS}ms\n`);
+  pipeline.log.info('[enrich-web-search]',`=== Web Search Enrichment (${mode}) ===\n`);
+  if (dryRun) pipeline.log.info('[enrich-web-search]', 'DRY RUN — no database writes');
+  pipeline.log.info('[enrich-web-search]',`Limit: ${limit} | Rate: ${RATE_LIMIT_MS}ms\n`);
 
   const startMs = Date.now();
   let runId = null;
@@ -238,7 +250,7 @@ pipeline.run('enrich-web-search', async (pool) => {
       );
       runId = res.rows[0].id;
     } catch (err) {
-      console.warn('Could not insert pipeline_runs row:', err.message);
+      pipeline.log.warn('[enrich-web-search]', `Could not insert pipeline_runs row: ${err.message}`);
     }
   }
 
@@ -267,15 +279,15 @@ pipeline.run('enrich-web-search', async (pool) => {
     LIMIT $1
   `, [limit]);
 
-  console.log(`Found ${builders.length} unenriched builder(s)`);
+  pipeline.log.info('[enrich-web-search]',`Found ${builders.length} unenriched builder(s)`);
   if (builders.length === 0) {
-    console.log('Nothing to enrich.');
+    pipeline.log.info('[enrich-web-search]','Nothing to enrich.');
     await finalize(pool, runId, startMs, 0, 0, 0, { processed: 0, matched: 0, failed: 0 });
     return;
   }
 
   const wsibCount = builders.filter((b) => b.trade_name || b.legal_name).length;
-  console.log(`  WSIB-matched: ${wsibCount} | Name-only: ${builders.length - wsibCount}\n`);
+  pipeline.log.info('[enrich-web-search]',`  WSIB-matched: ${wsibCount} | Name-only: ${builders.length - wsibCount}\n`);
 
   let enriched = 0;
   let contactsFound = 0;
@@ -291,7 +303,7 @@ pipeline.run('enrich-web-search', async (pool) => {
 
     try {
       if (dryRun) {
-        console.log(`  [${i + 1}/${builders.length}] ${b.name} → query: ${query}`);
+        pipeline.log.info('[enrich-web-search]',`  [${i + 1}/${builders.length}] ${b.name} → query: ${query}`);
         enriched++;
         continue;
       }
@@ -300,7 +312,10 @@ pipeline.run('enrich-web-search', async (pool) => {
       const contacts = extractContacts(response);
 
       // If no email from snippets but we have a website, scrape it
-      const websiteUrl = contacts.website || b.website;
+      let websiteUrl = contacts.website || b.website;
+      if (websiteUrl && !websiteUrl.startsWith('http')) {
+        websiteUrl = `https://${websiteUrl}`;
+      }
       if (websiteUrl) websitesScraped++;
       if (!contacts.email && !b.email && websiteUrl) {
         try {
@@ -309,12 +324,14 @@ pipeline.run('enrich-web-search', async (pool) => {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Buildo/1.0)' },
           });
           if (pageRes.ok) {
-            const html = await pageRes.text();
-            const scraped = extractEmailsFromHtml(html);
+            const rawHtml = await pageRes.text();
+            // Extract mailto: links from raw HTML first (needs href attributes)
+            const scraped = extractEmailsFromHtml(rawHtml);
             if (scraped.length > 0) contacts.email = scraped[0];
-            // Also try phones from page if none from snippets
+            // Strip noise before running general regex to prevent backtracking + SVG false positives
             if (!contacts.phone && !b.phone) {
-              const pagePhones = extractPhones([html]);
+              const cleanText = stripHtmlNoise(rawHtml);
+              const pagePhones = extractPhones([cleanText]);
               if (pagePhones.length > 0) contacts.phone = pagePhones[0];
             }
           }
@@ -329,26 +346,25 @@ pipeline.run('enrich-web-search', async (pool) => {
       const params = [];
       let paramIdx = 1;
 
+      // Track which fields are new (counters incremented after transaction succeeds)
+      const pendingFields = { phone: false, email: false, website: false };
       if (contacts.phone && !b.phone) {
         updates.push(`primary_phone = COALESCE(primary_phone, $${paramIdx})`);
         params.push(contacts.phone);
         paramIdx++;
-        newFields++;
-        fieldCounts.phone++;
+        pendingFields.phone = true;
       }
       if (contacts.email && !b.email) {
         updates.push(`primary_email = COALESCE(primary_email, $${paramIdx})`);
         params.push(contacts.email);
         paramIdx++;
-        newFields++;
-        fieldCounts.email++;
+        pendingFields.email = true;
       }
       if (contacts.website && !b.website) {
         updates.push(`website = COALESCE(website, $${paramIdx})`);
         params.push(contacts.website);
         paramIdx++;
-        newFields++;
-        fieldCounts.website++;
+        pendingFields.website = true;
       }
 
       // Always mark as enriched (even if no contacts found — prevents retry loops)
@@ -371,11 +387,17 @@ pipeline.run('enrich-web-search', async (pool) => {
                ON CONFLICT DO NOTHING`,
               [b.id, type, contacts[type]]
             );
-            newFields++;
-            fieldCounts[type]++;
           }
         }
       });
+
+      // Increment counters AFTER transaction succeeds (prevents telemetry drift)
+      if (pendingFields.phone) { newFields++; fieldCounts.phone++; }
+      if (pendingFields.email) { newFields++; fieldCounts.email++; }
+      if (pendingFields.website) { newFields++; fieldCounts.website++; }
+      for (const type of ['instagram', 'facebook', 'linkedin', 'houzz']) {
+        if (contacts[type]) { newFields++; fieldCounts[type]++; }
+      }
 
       if (newFields > 0) contactsFound++;
       enriched++;
@@ -390,7 +412,7 @@ pipeline.run('enrich-web-search', async (pool) => {
         contacts.houzz ? 'HZ' : '',
       ].filter(Boolean).join(' ') || 'no contacts';
 
-      console.log(`  [${i + 1}/${builders.length}] ${b.name} → ${summary}`);
+      pipeline.log.info('[enrich-web-search]',`  [${i + 1}/${builders.length}] ${b.name} → ${summary}`);
 
     } catch (err) {
       pipeline.log.error('[enrich-web-search]', err, { builder_id: b.id, builder_name: b.name });
@@ -400,7 +422,7 @@ pipeline.run('enrich-web-search', async (pool) => {
       await pool.query(
         'UPDATE entities SET last_enriched_at = NOW() WHERE id = $1',
         [b.id]
-      ).catch(() => {});
+      ).catch((dbErr) => { pipeline.log.error('[enrich-web-search]', `Failed to mark enriched: ${dbErr.message}`); });
     }
 
     // Rate limiting
@@ -421,12 +443,11 @@ pipeline.run('enrich-web-search', async (pool) => {
 async function finalize(pool, runId, startMs, enriched, contactsFound, failed, meta) {
   const durationMs = Date.now() - startMs;
 
-  console.log('\n=== Results ===');
-  console.log(`  Processed:       ${enriched + failed}`);
-  console.log(`  Contacts found:  ${contactsFound}`);
-  console.log(`  No contacts:     ${enriched - contactsFound}`);
-  console.log(`  Failed:          ${failed}`);
-  console.log(`  Duration:        ${(durationMs / 1000).toFixed(1)}s`);
+  pipeline.log.info('[enrich-web-search]', 'Enrichment complete', {
+    processed: enriched + failed, contacts_found: contactsFound,
+    no_contacts: enriched - contactsFound, failed,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+  });
 
   if (runId) {
     await pool.query(
@@ -435,9 +456,17 @@ async function finalize(pool, runId, startMs, enriched, contactsFound, failed, m
            records_total = $2, records_new = $3, records_meta = $4
        WHERE id = $5`,
       [durationMs, enriched + failed, contactsFound, JSON.stringify(meta), runId]
-    ).catch(() => {});
+    ).catch((dbErr) => { pipeline.log.error('[enrich-web-search]', `Failed to update pipeline_runs: ${dbErr.message}`); });
   }
 
-  pipeline.emitSummary({ records_total: enriched + failed, records_new: contactsFound, records_updated: enriched - contactsFound });
+  pipeline.emitSummary({
+    records_total: enriched + failed,
+    records_new: contactsFound,
+    records_updated: enriched - contactsFound,
+    records_meta: {
+      duration_ms: durationMs,
+      ...meta,
+    },
+  });
   pipeline.emitMeta({ "entities": ["id", "legal_name", "primary_phone", "primary_email", "website", "last_enriched_at", "permit_count"], "wsib_registry": ["trade_name", "legal_name", "mailing_address"] }, { "entities": ["primary_phone", "primary_email", "website", "last_enriched_at"], "builder_contacts": ["builder_id", "contact_type", "contact_value", "source"] });
 }
