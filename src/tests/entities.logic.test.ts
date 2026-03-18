@@ -15,8 +15,8 @@ describe('Entity Name Normalization (shared module)', () => {
     expect(normalizeEntityName('  abc builders  ')).toBe('ABC BUILDERS');
   });
 
-  it('collapses multiple spaces', () => {
-    expect(normalizeEntityName('SMITH   &   SONS')).toBe('SMITH & SONS');
+  it('collapses multiple spaces and standardizes ampersands', () => {
+    expect(normalizeEntityName('SMITH   &   SONS')).toBe('SMITH AND SONS');
   });
 
   it('strips INC suffix', () => {

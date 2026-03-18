@@ -5,7 +5,8 @@
 
 const CORPORATE_SUFFIXES = [
   'INCORPORATED', 'CORPORATION', 'LIMITED', 'COMPANY',
-  'INC\\.?', 'CORP\\.?', 'LTD\\.?', 'CO\\.?', 'LLC\\.?', 'L\\.?P\\.?',
+  'INC\\.', 'CORP\\.', 'LTD\\.', 'CO\\.', 'LLC\\.', 'L\\.P\\.',
+  'INC', 'CORP', 'LTD', 'CO', 'LLC', 'LP',
 ];
 
 const SUFFIX_PATTERN = new RegExp(
@@ -16,9 +17,10 @@ const SUFFIX_PATTERN = new RegExp(
 /**
  * Normalize an entity name for deduplication:
  * - Uppercase + trim
+ * - Standardize ampersands (& → AND)
+ * - Strip internal punctuation (commas, periods, apostrophes, semicolons)
  * - Collapse whitespace
- * - Strip corporate suffixes (run twice for double suffixes like "INC. LTD.")
- * - Remove trailing punctuation
+ * - Recursively strip corporate suffixes
  *
  * Returns null for empty/whitespace-only input.
  */
@@ -26,21 +28,32 @@ export function normalizeEntityName(name: string | null | undefined): string | n
   if (!name || !name.trim()) return null;
 
   let normalized = name.toUpperCase().trim();
-  normalized = normalized.replace(/\s+/g, ' ');
 
-  // Run twice to catch double suffixes like "INC. LTD."
-  normalized = normalized.replace(SUFFIX_PATTERN, '').trim();
-  normalized = normalized.replace(SUFFIX_PATTERN, '').trim();
+  // Standardize ampersands before punctuation stripping
+  normalized = normalized.replace(/&/g, ' AND ');
 
-  // Remove trailing punctuation
-  normalized = normalized.replace(/[.,;]+$/, '').trim();
+  // Strip rogue punctuation (periods, commas, apostrophes, semicolons)
+  normalized = normalized.replace(/[.,;'"]/g, '');
+
+  // Collapse multiple spaces into a single space
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+
+  // Recursively strip corporate suffixes until none remain
+  let previous = '';
+  while (normalized !== previous) {
+    previous = normalized;
+    normalized = normalized.replace(SUFFIX_PATTERN, '').trim();
+  }
 
   return normalized || null;
 }
 
 /**
  * Check if a name appears to be a corporation (has corporate suffixes).
+ * Cleans punctuation first so "SMITH INC.," matches correctly.
  */
 export function isIncorporated(name: string): boolean {
-  return SUFFIX_PATTERN.test(name);
+  if (!name) return false;
+  const cleaned = name.toUpperCase().replace(/[.,;'"]/g, '').trim();
+  return SUFFIX_PATTERN.test(cleaned);
 }
