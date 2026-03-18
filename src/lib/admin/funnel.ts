@@ -143,7 +143,11 @@ export function computeRowData(
   let status: 'healthy' | 'warning' | 'stale' = 'healthy';
   if (lastUpdated) {
     const hoursAgo = (Date.now() - new Date(lastUpdated).getTime()) / 3600000;
-    const slaHours = cadence === 'Annual' ? 8760 : cadence === 'Quarterly' ? 2160 : 48;
+    let slaHours = 48; // Default: Daily (24h + 24h buffer)
+    if (cadence === 'Annual') slaHours = 8760;
+    else if (cadence === 'Quarterly') slaHours = 2160;
+    else if (cadence === 'Monthly') slaHours = 744;
+    else if (cadence === 'Weekly') slaHours = 192;
     if (hoursAgo > slaHours) status = 'stale';
     else if (hoursAgo > slaHours * 0.8) status = 'warning';
     // Ran recently but produced 0 new + 0 updated = warning (data unchanged)
