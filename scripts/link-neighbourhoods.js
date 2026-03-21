@@ -254,6 +254,19 @@ pipeline.run('link-neighbourhoods', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  // Build audit_table for neighbourhood linking observability
+  const nhoodLinkRate = processed > 0 ? (linked / processed) * 100 : 0;
+  const nhoodCount = turfPolygons.length;
+  const nhoodAuditRows = [
+    { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
+    { metric: 'neighbourhoods_loaded', value: nhoodCount, threshold: '== 158', status: nhoodCount === 158 ? 'PASS' : 'WARN' },
+    { metric: 'permits_linked', value: linked, threshold: null, status: 'INFO' },
+    { metric: 'link_rate', value: nhoodLinkRate.toFixed(1) + '%', threshold: '>= 95%', status: nhoodLinkRate >= 95 ? 'PASS' : 'WARN' },
+    { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
+    { metric: 'bbox_optimization_skipped', value: bboxSkipped, threshold: null, status: 'INFO' },
+  ];
+  const nhoodHasWarns = nhoodLinkRate < 95 || nhoodCount !== 158;
+
   pipeline.emitSummary({
     records_total: processed,
     records_new: 0,
@@ -264,6 +277,12 @@ pipeline.run('link-neighbourhoods', async (pool) => {
       permits_linked: linked,
       no_match_count: noMatch,
       bbox_tests_skipped: bboxSkipped,
+      audit_table: {
+        phase: 8,
+        name: 'Neighbourhood Linking',
+        verdict: nhoodHasWarns ? 'WARN' : 'PASS',
+        rows: nhoodAuditRows,
+      },
     },
   });
   pipeline.emitMeta(

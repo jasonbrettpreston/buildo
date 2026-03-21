@@ -81,6 +81,13 @@ pipeline.run('link-similar', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  // Build audit_table for similar permit linking observability
+  const similarAuditRows = [
+    { metric: 'scope_tags_propagated', value: propagated, threshold: '> 0', status: propagated > 0 ? 'PASS' : 'WARN' },
+    { metric: 'demolition_tags_restored', value: demFixed, threshold: null, status: 'INFO' },
+    { metric: 'total_companion_updates', value: propagated + demFixed, threshold: null, status: 'INFO' },
+  ];
+
   pipeline.emitSummary({
     records_total: propagated + demFixed,
     records_new: 0,
@@ -89,6 +96,12 @@ pipeline.run('link-similar', async (pool) => {
       duration_ms: durationMs,
       tags_propagated: propagated,
       demolitions_restored: demFixed,
+      audit_table: {
+        phase: 10,
+        name: 'Similar Permit Linking',
+        verdict: propagated === 0 ? 'WARN' : 'PASS',
+        rows: similarAuditRows,
+      },
     },
   });
   pipeline.emitMeta(

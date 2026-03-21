@@ -131,6 +131,18 @@ pipeline.run('extract-builders', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  // Build audit_table for builder extraction observability
+  const totalInDb = parseInt(countResult.rows[0].total);
+  const dedupRatio = rawNamesCount > 0 ? ((1 - builderMap.size / rawNamesCount) * 100).toFixed(1) + '%' : '0%';
+  const buildersAuditRows = [
+    { metric: 'raw_names_distinct', value: rawNamesCount, threshold: null, status: 'INFO' },
+    { metric: 'normalized_entities', value: builderMap.size, threshold: null, status: 'INFO' },
+    { metric: 'dedup_ratio', value: dedupRatio, threshold: null, status: 'INFO' },
+    { metric: 'db_inserted', value: inserted, threshold: null, status: 'INFO' },
+    { metric: 'db_updated', value: updated, threshold: null, status: 'INFO' },
+    { metric: 'total_in_db', value: totalInDb, threshold: '>= ' + builderMap.size, status: totalInDb >= builderMap.size ? 'PASS' : 'FAIL' },
+  ];
+
   pipeline.emitSummary({
     records_total: builderMap.size,
     records_new: inserted,
@@ -141,6 +153,12 @@ pipeline.run('extract-builders', async (pool) => {
       normalized_unique_entities: builderMap.size,
       db_inserts: inserted,
       db_updates: updated,
+      audit_table: {
+        phase: 4,
+        name: 'Builder Extraction',
+        verdict: totalInDb < builderMap.size ? 'FAIL' : 'PASS',
+        rows: buildersAuditRows,
+      },
     },
   });
   pipeline.emitMeta(

@@ -576,6 +576,18 @@ pipeline.run('classify-scope', async (pool) => {
   pipeline.log.info('[classify-scope]', 'Type distribution', { types: Object.fromEntries(topTypes) });
   pipeline.log.info('[classify-scope]', 'Top scope tags', { tags: Object.fromEntries(topTags) });
 
+  // Build audit_table for scope classification observability
+  const tagsCoverage = processed > 0 ? (withTags / processed) * 100 : 0;
+  const scopeAuditRows = [
+    { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
+    { metric: 'permits_with_tags', value: withTags, threshold: null, status: 'INFO' },
+    { metric: 'tags_coverage_rate', value: tagsCoverage.toFixed(1) + '%', threshold: '>= 50%', status: tagsCoverage >= 50 ? 'PASS' : 'WARN' },
+    { metric: 'newly_classified', value: newlyClassified, threshold: null, status: 'INFO' },
+    { metric: 'scope_tags_propagated', value: propagated, threshold: null, status: 'INFO' },
+    { metric: 'demolition_tags_restored', value: demFixed, threshold: null, status: 'INFO' },
+    { metric: 'top_project_type', value: topTypes[0] ? topTypes[0][0] : 'N/A', threshold: null, status: 'INFO' },
+  ];
+
   pipeline.emitSummary({
     records_total: total + propagated + demFixed,
     records_new: newlyClassified,
@@ -586,6 +598,12 @@ pipeline.run('classify-scope', async (pool) => {
       permits_with_tags: withTags,
       propagated_companions: propagated,
       demolitions_fixed: demFixed,
+      audit_table: {
+        phase: 3,
+        name: 'Scope Classification',
+        verdict: tagsCoverage < 50 ? 'WARN' : 'PASS',
+        rows: scopeAuditRows,
+      },
     },
   });
   pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "current_use", "proposed_use", "storeys", "housing_units", "dwelling_units_created", "scope_classified_at", "last_seen_at"] }, { "permits": ["project_type", "scope_tags", "scope_classified_at", "scope_source"] });

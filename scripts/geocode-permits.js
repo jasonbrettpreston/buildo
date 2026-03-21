@@ -89,16 +89,35 @@ pipeline.run('geocode-permits', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  // Build audit_table for geocoding observability
+  const totalPermits = parseInt(before.total);
+  const totalGeocoded = parseInt(after.geocoded);
+  const geocodeCoverage = totalPermits > 0 ? (totalGeocoded / totalPermits) * 100 : 0;
+  const geocodeAuditRows = [
+    { metric: 'total_permits', value: totalPermits, threshold: null, status: 'INFO' },
+    { metric: 'already_geocoded', value: parseInt(before.already_geocoded), threshold: null, status: 'INFO' },
+    { metric: 'newly_geocoded', value: updated, threshold: null, status: 'INFO' },
+    { metric: 'total_geocoded', value: totalGeocoded, threshold: null, status: 'INFO' },
+    { metric: 'geocode_coverage', value: geocodeCoverage.toFixed(1) + '%', threshold: '>= 95%', status: geocodeCoverage >= 95 ? 'PASS' : 'WARN' },
+    { metric: 'no_geo_id', value: parseInt(after.no_geo_id), threshold: null, status: 'INFO' },
+  ];
+
   pipeline.emitSummary({
     records_total: updated,
     records_new: updated,
     records_updated: 0,
     records_meta: {
       duration_ms: durationMs,
-      permits_total: parseInt(before.total),
-      total_geocoded: parseInt(after.geocoded),
+      permits_total: totalPermits,
+      total_geocoded: totalGeocoded,
       has_geo_id_no_match: parseInt(after.has_geo_id_no_match),
       no_geo_id: parseInt(after.no_geo_id),
+      audit_table: {
+        phase: 6,
+        name: 'Permit Geocoding',
+        verdict: geocodeCoverage < 95 ? 'WARN' : 'PASS',
+        rows: geocodeAuditRows,
+      },
     },
   });
   pipeline.emitMeta(

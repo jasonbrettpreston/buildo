@@ -407,6 +407,23 @@ pipeline.run('link-massing', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  // Build audit_table for massing linking observability
+  const massingLinkRate = processed > 0 ? (parcelsLinked / processed) * 100 : 0;
+  const massingHasFails = totalBuildings === 0 || (processed > 0 && parcelsLinked === 0);
+  const massingHasWarns = massingLinkRate < 50;
+  const massingAuditRows = [
+    { metric: 'buildings_indexed', value: totalBuildings, threshold: '> 0', status: totalBuildings > 0 ? 'PASS' : 'FAIL' },
+    { metric: 'grid_cells', value: grid.size, threshold: null, status: 'INFO' },
+    { metric: 'parcels_processed', value: processed, threshold: null, status: 'INFO' },
+    { metric: 'parcels_linked', value: parcelsLinked, threshold: '> 0', status: (processed > 0 && parcelsLinked === 0) ? 'FAIL' : 'PASS' },
+    { metric: 'match_type_polygon', value: polygonMatches, threshold: null, status: 'INFO' },
+    { metric: 'match_type_multipoint', value: multipointMatches, threshold: null, status: 'INFO' },
+    { metric: 'match_type_nearest', value: nearestMatches, threshold: null, status: 'INFO' },
+    { metric: 'link_rate', value: massingLinkRate.toFixed(1) + '%', threshold: '>= 50%', status: massingLinkRate >= 50 ? 'PASS' : 'WARN' },
+    { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
+    { metric: 'db_upserted', value: buildingsUpserted, threshold: null, status: 'INFO' },
+  ];
+
   pipeline.emitSummary({
     records_total: processed,
     records_new: 0,
@@ -421,6 +438,12 @@ pipeline.run('link-massing', async (pool) => {
       matches_multipoint: multipointMatches,
       matches_nearest: nearestMatches,
       no_match_count: noMatch,
+      audit_table: {
+        phase: 9,
+        name: 'Building Footprint Linking',
+        verdict: massingHasFails ? 'FAIL' : massingHasWarns ? 'WARN' : 'PASS',
+        rows: massingAuditRows,
+      },
     },
   });
   pipeline.emitMeta(

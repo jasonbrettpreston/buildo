@@ -666,6 +666,21 @@ pipeline.run('classify-permits', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  // Build audit_table for trade classification observability
+  const classificationCoverage = processed > 0 ? (permitsWithTrades / processed) * 100 : 0;
+  const avgTradesPerPermit = totalMatches / Math.max(permitsWithTrades, 1);
+  const classifyHasFails = classificationCoverage === 0 && processed > 0;
+  const classifyHasWarns = classificationCoverage < 95 || avgTradesPerPermit < 1.5;
+  const classifyAuditRows = [
+    { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
+    { metric: 'permits_truly_new', value: trulyNewPermits, threshold: null, status: 'INFO' },
+    { metric: 'permits_with_trades', value: permitsWithTrades, threshold: null, status: 'INFO' },
+    { metric: 'classification_coverage', value: classificationCoverage.toFixed(1) + '%', threshold: '>= 95%', status: classificationCoverage === 0 && processed > 0 ? 'FAIL' : classificationCoverage >= 95 ? 'PASS' : 'WARN' },
+    { metric: 'total_trade_matches', value: totalMatches, threshold: null, status: 'INFO' },
+    { metric: 'avg_trades_per_permit', value: avgTradesPerPermit.toFixed(2), threshold: '>= 1.5', status: avgTradesPerPermit >= 1.5 ? 'PASS' : 'WARN' },
+    { metric: 'db_mutations', value: dbUpdated, threshold: null, status: 'INFO' },
+  ];
+
   pipeline.emitSummary({
     records_total: processed,
     records_new: Math.min(trulyNewPermits, permitsWithTrades),
@@ -675,8 +690,14 @@ pipeline.run('classify-permits', async (pool) => {
       permits_processed: processed,
       permits_with_trades: permitsWithTrades,
       total_trade_matches: totalMatches,
-      avg_trades_per_permit: parseFloat((totalMatches / Math.max(permitsWithTrades, 1)).toFixed(2)),
+      avg_trades_per_permit: parseFloat(avgTradesPerPermit.toFixed(2)),
       db_updated: dbUpdated,
+      audit_table: {
+        phase: 11,
+        name: 'Trade Classification',
+        verdict: classifyHasFails ? 'FAIL' : classifyHasWarns ? 'WARN' : 'PASS',
+        rows: classifyAuditRows,
+      },
     },
   });
   pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"] });

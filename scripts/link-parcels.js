@@ -342,6 +342,21 @@ pipeline.run('link-parcels', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  // Build audit_table for parcel linking observability
+  const totalMatched = linkedExact + linkedName + linkedSpatial;
+  const parcelLinkRate = processed > 0 ? (totalMatched / processed) * 100 : 0;
+  const parcelAuditRows = [
+    { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
+    { metric: 'tier_1_exact_address', value: linkedExact, threshold: null, status: 'INFO' },
+    { metric: 'tier_2_name_only', value: linkedName, threshold: null, status: 'INFO' },
+    { metric: 'tier_3_spatial', value: linkedSpatial, threshold: null, status: 'INFO' },
+    { metric: 'tier_3_polygon', value: linkedSpatialPolygon, threshold: null, status: 'INFO' },
+    { metric: 'total_matched', value: totalMatched, threshold: null, status: 'INFO' },
+    { metric: 'link_rate', value: parcelLinkRate.toFixed(1) + '%', threshold: '>= 75%', status: parcelLinkRate >= 75 ? 'PASS' : 'WARN' },
+    { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
+    { metric: 'db_upserted', value: dbUpserted, threshold: null, status: 'INFO' },
+  ];
+
   pipeline.emitSummary({
     records_total: processed,
     records_new: 0,
@@ -356,6 +371,12 @@ pipeline.run('link-parcels', async (pool) => {
       matches_tier_3_centroid: linkedSpatial - linkedSpatialPolygon,
       no_match_count: noMatch,
       db_upserted: dbUpserted,
+      audit_table: {
+        phase: 7,
+        name: 'Parcel Linking',
+        verdict: parcelLinkRate < 75 ? 'WARN' : 'PASS',
+        rows: parcelAuditRows,
+      },
     },
   });
   pipeline.emitMeta(

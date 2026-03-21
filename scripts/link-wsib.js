@@ -221,6 +221,18 @@ pipeline.run('link-wsib', async (pool) => {
   const s = stats.rows[0];
   pipeline.log.info('[link-wsib]', `DB stats: ${s.total} total | ${s.linked} linked (${s.high_conf} high, ${s.med_conf} med)`);
 
+  // Build audit_table for WSIB matching observability
+  const linkRate = totalUnlinked > 0 ? (totalLinked / totalUnlinked) * 100 : 0;
+  const wsibAuditRows = [
+    { metric: 'unlinked_start', value: totalUnlinked, threshold: null, status: 'INFO' },
+    { metric: 'tier_1_trade_matches', value: tier1, threshold: null, status: 'INFO' },
+    { metric: 'tier_2_legal_matches', value: tier2, threshold: null, status: 'INFO' },
+    { metric: 'tier_3_fuzzy_matches', value: tier3, threshold: null, status: 'INFO' },
+    { metric: 'total_linked', value: totalLinked, threshold: null, status: 'INFO' },
+    { metric: 'link_rate', value: linkRate.toFixed(1) + '%', threshold: '>= 70%', status: linkRate >= 70 ? 'PASS' : 'WARN' },
+    { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
+  ];
+
   pipeline.emitSummary({
     records_total: totalLinked,
     records_new: totalLinked,
@@ -232,6 +244,12 @@ pipeline.run('link-wsib', async (pool) => {
       matches_tier_2_legal: tier2,
       matches_tier_3_fuzzy: tier3,
       no_match_count: noMatch,
+      audit_table: {
+        phase: 5,
+        name: 'WSIB Registry Matching',
+        verdict: linkRate < 70 ? 'WARN' : 'PASS',
+        rows: wsibAuditRows,
+      },
     },
   });
   pipeline.emitMeta(

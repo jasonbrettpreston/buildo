@@ -437,6 +437,21 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
     avg_latency: `${avgLatency}ms`,
   });
 
+  // Build audit_table for permit ingestion observability
+  const auditRows = [
+    { metric: 'records_fetched', value: processed + errors, threshold: null, status: 'INFO' },
+    { metric: 'records_mapped', value: processed, threshold: null, status: 'INFO' },
+    { metric: 'records_errors', value: errors, threshold: '== 0', status: errors > 0 ? 'FAIL' : 'PASS' },
+    { metric: 'records_deduplicated', value: dupsRemoved, threshold: null, status: 'INFO' },
+    { metric: 'records_inserted', value: newInserts, threshold: null, status: 'INFO' },
+    { metric: 'records_updated', value: updated, threshold: null, status: 'INFO' },
+    { metric: 'records_unchanged', value: unchanged, threshold: null, status: 'INFO' },
+    { metric: 'api_errors', value: tel.api_errors, threshold: '== 0', status: tel.api_errors > 0 ? 'FAIL' : 'PASS' },
+    { metric: 'avg_latency_ms', value: avgLatency, threshold: null, status: 'INFO' },
+    { metric: 'schema_drift', value: tel.schema_drift.length, threshold: '== 0', status: tel.schema_drift.length > 0 ? 'FAIL' : 'PASS' },
+  ];
+  const permitAuditHasFails = tel.api_errors > 0 || tel.schema_drift.length > 0 || errors > 0;
+
   pipeline.emitSummary({
     records_total: newInserts + updated,
     records_new: newInserts,
@@ -454,6 +469,12 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
         records_skipped: errors,
         schema_mismatch_count: tel.schema_drift.length,
         dups_removed: dupsRemoved,
+      },
+      audit_table: {
+        phase: 2,
+        name: 'Permit Ingestion',
+        verdict: permitAuditHasFails ? 'FAIL' : 'PASS',
+        rows: auditRows,
       },
     },
   });

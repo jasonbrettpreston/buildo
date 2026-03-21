@@ -1,68 +1,59 @@
-# Active Task: Reorder permits chain — move classify_permits after all linking steps
+# Active Task: Phase 1 — Add audit_table to 10 permits chain scripts
 **Status:** Implementation
-**Rollback Anchor:** `3fa259c`
+**Rollback Anchor:** `52fd9e3`
 **Workflow:** WF2 — Feature Enhancement
 
 ## Context
-* **Goal:** Move `classify_permits` from step 4 to step 11 in the permits chain so that trade classification and lead scoring run after all identity resolution (builders, WSIB) and spatial linking (geocode, parcels, neighbourhoods, massing) are complete. Future-proofs the scoring formula for when WSIB/neighbourhood/parcel signals are added.
-* **Target Spec:** `docs/specs/37_pipeline_system.md`
-* **Key Files:**
-  - `scripts/manifest.json` — reorder permits chain array
-  - `src/components/FreshnessTimeline.tsx` — reorder UI steps array (step numbers auto-computed by `computeStepNumbers`)
+* **Goal:** Add structured `audit_table` objects (inside `records_meta`) to all 10 permits-chain-specific scripts that currently lack them. This enables the FreshnessTimeline UI to render per-step observability tables with Metric/Value/Threshold/Status columns — matching the pattern already working for CoA chain steps.
+* **Target Spec:** `docs/specs/37_pipeline_system.md`, `docs/specs/28_data_quality_dashboard.md`
+* **Key Files (10 scripts to modify):**
+  1. `scripts/load-permits.js` — Phase 2: Permit Ingestion
+  2. `scripts/classify-scope.js` — Phase 3: Scope Classification
+  3. `scripts/extract-builders.js` — Phase 4: Builder Extraction
+  4. `scripts/link-wsib.js` — Phase 5: WSIB Registry Matching
+  5. `scripts/geocode-permits.js` — Phase 6: Permit Geocoding
+  6. `scripts/link-parcels.js` — Phase 7: Parcel Linking
+  7. `scripts/link-neighbourhoods.js` — Phase 8: Neighbourhood Linking
+  8. `scripts/link-massing.js` — Phase 9: Building Footprint Linking
+  9. `scripts/link-similar.js` — Phase 10: Similar Permit Linking
+  10. `scripts/classify-permits.js` — Phase 11: Trade Classification
 
 ## Technical Implementation
-* **Current order (steps 3–11):**
-  ```
-  3:classify_scope → 4:classify_permits → 5:builders → 6:link_wsib →
-  7:geocode_permits → 8:link_parcels → 9:link_neighbourhoods → 10:link_massing → 11:link_similar
-  ```
-* **New order (steps 3–11):**
-  ```
-  3:classify_scope → 4:builders → 5:link_wsib → 6:geocode_permits →
-  7:link_parcels → 8:link_neighbourhoods → 9:link_massing → 10:link_similar → 11:classify_permits
-  ```
-* **UI impact:** Step numbers in FreshnessTimeline are auto-computed from array position (`computeStepNumbers` increments a counter). Reordering the array automatically renumbers the badges. No manual numbering edits needed.
-* **Dependency audit (verified via grep — zero permit_trades readers in steps 5–10):**
-  - `classify_permits` reads `scope_tags` → set by step 3 (classify_scope) ✅
-  - `classify_permits` reads `permits` → loaded at step 2 ✅
-  - `link_similar` reads `scope_tags` → still after step 3 ✅
-  - `refresh_snapshot` reads `permit_trades` → runs at step 14 (after new step 11) ✅
-  - Chain gate on step 2 still skips steps 3–13 when 0 new ✅
-  - `chain.logic.test.ts` checks count (16) + last step, not exact order ✅
+* **Pattern:** Match existing CoA audit_table format (`{ phase, name, verdict, rows: [{ metric, value, threshold, status }] }`) nested inside `records_meta.audit_table` in existing `emitSummary()` calls.
+* **No new counters needed** — all metrics reference variables already tracked in each script.
+* **Existing `records_meta` fields preserved** — audit_table is additive.
+* **FAIL/WARN/PASS criteria per step:**
+  - **FAIL:** api_errors > 0, schema_drift > 0, records_errors > 0 (step 2), total_in_db < normalized (step 4), neighbourhoods != 158 (step 8), buildings_indexed == 0 (step 9), coverage == 0% (step 11)
+  - **WARN:** tags_coverage < 50% (3), link_rate < 70% (5), coverage < 95% (6), link_rate < 75% (7), link_rate < 95% (8), link_rate < 50% (9), propagated == 0 (10), coverage < 95% or avg_trades < 1.5 (11)
+  - **INFO:** All observational counters (inserted, updated, matched, latencies, etc.)
 * **Database Impact:** NO
+* **UI Impact:** NO — FreshnessTimeline.tsx already renders audit_table objects
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — no code changes
-* **Unhappy Path Tests:** N/A
+* **Try-Catch Boundary:** N/A — adding data to existing emitSummary calls
+* **Unhappy Path Tests:** N/A — audit_table is informational metadata
 * **logError Mandate:** N/A
-* **Mobile-First:** N/A — reordering data array, no layout/touch/viewport changes
+* **Mobile-First:** N/A
 
 ## §10 Plan Compliance Checklist
 
-### If Database Impact = YES:
-- ⬜ N/A
-
-### If API Route Created/Modified:
-- ⬜ N/A
-
-### If UI Component Created/Modified:
-- ⬜ N/A — reordering an existing data array in FreshnessTimeline.tsx, not modifying component layout, touch targets, or responsive behavior. Step numbers auto-computed.
-
-### If Shared Logic Touched:
-- ⬜ N/A
-
 ### If Pipeline Script Created/Modified:
-- ⬜ N/A — no scripts modified, only chain ordering in manifest.json config
+- [x] Uses Pipeline SDK: all 10 scripts already use `pipeline.run`, `emitSummary`, `emitMeta` (§9.4)
+- [x] No new streaming changes (§9.5)
+
+### Other categories:
+- ⬜ DB — N/A
+- ⬜ API — N/A
+- ⬜ UI — N/A (existing renderer handles new data automatically)
+- ⬜ Shared Logic — N/A
 
 ## Execution Plan
-- [ ] **State Verification:** Confirmed zero dependencies on `permit_trades` in steps 5–10.
+- [ ] **State Verification:** Confirmed all 10 scripts have emitSummary calls with records_meta but no audit_table
 - [ ] **Contract Definition:** N/A
 - [ ] **Spec Update:** N/A
 - [ ] **Schema Evolution:** N/A
-- [ ] **Guardrail Test:** Existing chain.logic.test.ts validates step count (16) and terminal step.
-- [ ] **Red Light:** N/A — configuration change.
-- [ ] **Implementation:**
-  1. Update `scripts/manifest.json` permits chain array
-  2. Update `src/components/FreshnessTimeline.tsx` permits steps array
-- [ ] **UI Regression Check:** N/A — data array reorder, no shared component changes.
+- [ ] **Guardrail Test:** N/A — metadata addition, existing tests unaffected
+- [ ] **Red Light:** N/A
+- [ ] **Implementation:** Add audit_table to emitSummary records_meta in all 10 scripts
+- [ ] **UI Regression Check:** N/A — renderer auto-detects audit_table
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
