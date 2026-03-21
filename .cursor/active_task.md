@@ -1,26 +1,27 @@
-# Active Task: WF3-A — Add permits-chain audit_tables to 3 CQA scripts
+# Active Task: Fix 3 CQA audit_table bugs — circuit breaker, missing metrics, missing sources table
 **Status:** Implementation
-**Rollback Anchor:** `a01edb7`
+**Rollback Anchor:** `ab3dc8a`
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** The 3 CQA scripts (`assert-schema.js`, `assert-data-bounds.js`, `assert-engine-health.js`) are chain-aware and emit audit_tables for CoA and deep_scrapes chains, but NOT for the permits chain. When running in the permits chain, they fall back to the old scalar format (checks_passed/checks_failed), so the UI shows the legacy "ALL CHECKS PASSED" banner instead of the structured Metric/Value/Threshold/Status table.
+* **Goal:** Fix 3 bugs in CQA scripts introduced during audit_table implementation:
+  1. `assert-schema.js` — broken circuit breaker: schema drift in chain mode is non-fatal, allowing load-permits to run with malformed data
+  2. `assert-data-bounds.js` — permits audit_table missing null-rate metrics (description, builder_name, status) that are computed but not included in rows
+  3. `assert-data-bounds.js` — no sources-chain audit_table: sources chain gets empty UI accordion
 * **Target Spec:** `docs/specs/37_pipeline_system.md`, `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `scripts/quality/assert-schema.js` — add permits-chain audit_table (schema field validation)
-  - `scripts/quality/assert-data-bounds.js` — add permits-chain audit_table (cost/null/orphan checks)
-  - `scripts/quality/assert-engine-health.js` — add permits-chain audit_table (dead tuples, seq scans)
+  - `scripts/quality/assert-schema.js` — restore circuit breaker (process.exit(1) on schema drift regardless of chain mode)
+  - `scripts/quality/assert-data-bounds.js` — add null-rate metrics to permits audit_table + build sources audit_table
 
 ## Technical Implementation
-* **Pattern:** Follow the existing CoA audit_table pattern in each script. Add `runPermitChecks` guard and build permits-specific `audit_table` alongside the existing CoA one.
-* **assert-schema.js:** Already has `runPermitChecks` flag (line 214). Build permits audit_table with permit column check results. Emit alongside CoA audit_table via chain-aware spread.
-* **assert-data-bounds.js:** Already has `runPermitChecks` flag (line 50). Build permits audit_table from the permit-specific SQL checks (cost outliers, null rates, orphans, PKs).
-* **assert-engine-health.js:** No chain filter currently — always runs same checks. Build permits audit_table from the engine health metrics (same data, different phase/name label).
+* **Bug 1 (circuit breaker):** Remove the `!CHAIN_ID` guard on process.exit(1). Schema drift must halt the chain — the gate was defeating Tier 1's purpose.
+* **Bug 2 (missing metrics):** Add `descNull`, `builderNull`, `statusNull` variables to `permitAuditRows` array. Variables are already computed (lines 82-111) but scoped inside an `if (recentTotal > 0)` block — need to hoist them or conditionally spread.
+* **Bug 3 (sources table):** Build `sourcesAuditTable` from existing source checks (apCount, apDupes, parcelCount, parcelDupes, lotOutliers, bfCount, heightOutliers, nhoodCount, nhoodDupes). Add to exclusive IIFE.
 * **Database Impact:** NO
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — adding audit_table to existing emitSummary
-* **Unhappy Path Tests:** N/A — metadata addition
+* **Try-Catch Boundary:** N/A
+* **Unhappy Path Tests:** N/A
 * **logError Mandate:** N/A
 * **Mobile-First:** N/A
 
@@ -31,10 +32,13 @@
 ### Other: ⬜ All N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `a01edb7`
-- [ ] **State Verification:** Confirmed 3 scripts only emit CoA/deep_scrapes audit_tables
-- [ ] **Spec Review:** §9.6 mandates consistent observability across chains
-- [ ] **Reproduction:** UI shows old scalar format for permits chain CQA steps
-- [ ] **Red Light:** N/A — metadata addition
-- [ ] **Fix:** Add permits-chain audit_tables to all 3 scripts
+- [ ] **Rollback Anchor:** `ab3dc8a`
+- [ ] **State Verification:** Confirmed all 3 bugs via code review
+- [ ] **Spec Review:** Tier 1 schema validation must be a hard gate (§CQA)
+- [ ] **Reproduction:** Confirmed via source reading
+- [ ] **Red Light:** N/A — metadata + control flow fix
+- [ ] **Fix:**
+  1. assert-schema.js: make process.exit(1) unconditional on schema drift
+  2. assert-data-bounds.js: add null-rate rows to permits audit_table
+  3. assert-data-bounds.js: build sources audit_table + add to exclusive IIFE
 - [ ] **Green Light:** typecheck + test pass → WF6

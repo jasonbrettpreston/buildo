@@ -375,12 +375,9 @@ async function run() {
 
   await pool.end();
 
-  // In chain mode, schema validation is non-fatal — warn but don't block the
-  // pipeline. This prevents CKAN flakiness from stopping all data loading.
-  if (!allPassed && !CHAIN_ID) process.exit(1);
-  if (!allPassed && CHAIN_ID) {
-    console.warn(`[assert_schema] Warnings logged but not blocking chain ${CHAIN_ID}`);
-  }
+  // Schema drift must halt the chain — allowing downstream scripts to run
+  // with malformed data would silently corrupt 240K+ permit records.
+  if (!allPassed) process.exit(1);
 }
 
 run().catch((err) => {

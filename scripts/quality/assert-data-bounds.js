@@ -56,6 +56,7 @@ async function run() {
   let inspectionAuditTable = null;
   let coaAuditTable = null;
   let permitsAuditTable = null;
+  let sourcesAuditTable = null;
 
   try {
     // -----------------------------------------------------------------------
@@ -78,11 +79,15 @@ async function run() {
         `SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day'`
       );
 
+      let descNull = 0, descPct = '0.0';
+      let builderNull = 0, builderPct = '0.0';
+      let statusNull = 0;
+
       if (recentTotal > 0) {
-        const descNull = await count(
+        descNull = await count(
           `SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND description IS NULL`
         );
-        const descPct = (descNull / recentTotal * 100).toFixed(1);
+        descPct = (descNull / recentTotal * 100).toFixed(1);
         if (descNull / recentTotal > 0.05) {
           warnings.push(`Description null rate ${descPct}% (${descNull}/${recentTotal})`);
           console.log(`  WARN: Description null rate ${descPct}%`);
@@ -90,10 +95,10 @@ async function run() {
           console.log(`  OK: Description null rate ${descPct}%`);
         }
 
-        const builderNull = await count(
+        builderNull = await count(
           `SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND builder_name IS NULL`
         );
-        const builderPct = (builderNull / recentTotal * 100).toFixed(1);
+        builderPct = (builderNull / recentTotal * 100).toFixed(1);
         if (builderNull / recentTotal > 0.20) {
           warnings.push(`Builder name null rate ${builderPct}% (${builderNull}/${recentTotal})`);
           console.log(`  WARN: Builder name null rate ${builderPct}%`);
@@ -101,7 +106,7 @@ async function run() {
           console.log(`  OK: Builder name null rate ${builderPct}%`);
         }
 
-        const statusNull = await count(
+        statusNull = await count(
           `SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND status IS NULL`
         );
         if (statusNull > 0) {
@@ -156,6 +161,11 @@ async function run() {
       // Build permits audit_table
       const permitAuditRows = [
         { metric: 'cost_outliers', value: costOutliers, threshold: '== 0', status: costOutliers > 0 ? 'WARN' : 'PASS' },
+        ...(recentTotal > 0 ? [
+          { metric: 'null_descriptions_24h', value: `${descPct}%`, threshold: '< 5%', status: (descNull / recentTotal > 0.05) ? 'WARN' : 'PASS' },
+          { metric: 'null_builders_24h', value: `${builderPct}%`, threshold: '< 20%', status: (builderNull / recentTotal > 0.20) ? 'WARN' : 'PASS' },
+          { metric: 'null_status_24h', value: statusNull, threshold: '== 0', status: statusNull > 0 ? 'WARN' : 'PASS' },
+        ] : []),
         { metric: 'orphaned_permit_trades', value: orphanTrades, threshold: '== 0', status: orphanTrades > 0 ? 'FAIL' : 'PASS' },
         { metric: 'orphaned_permit_parcels', value: orphanParcels, threshold: '== 0', status: orphanParcels > 0 ? 'FAIL' : 'PASS' },
         { metric: 'duplicate_pk_groups', value: dupes, threshold: '== 0', status: dupes > 0 ? 'FAIL' : 'PASS' },
@@ -342,6 +352,27 @@ async function run() {
       } else {
         console.log('  OK: No duplicate neighbourhood_id');
       }
+
+      // Build sources audit_table
+      const sourceAuditRows = [
+        { metric: 'address_points_count', value: apCount, threshold: '> 0', status: apCount === 0 ? 'FAIL' : 'PASS' },
+        { metric: 'address_point_dupes', value: apDupes, threshold: '== 0', status: apDupes > 0 ? 'FAIL' : 'PASS' },
+        { metric: 'parcels_count', value: parcelCount, threshold: '> 0', status: parcelCount === 0 ? 'FAIL' : 'PASS' },
+        { metric: 'parcel_dupes', value: parcelDupes, threshold: '== 0', status: parcelDupes > 0 ? 'FAIL' : 'PASS' },
+        { metric: 'parcel_lot_outliers', value: lotOutliers, threshold: '== 0', status: lotOutliers > 0 ? 'WARN' : 'PASS' },
+        { metric: 'building_footprints_count', value: bfCount, threshold: '> 0', status: bfCount === 0 ? 'FAIL' : 'PASS' },
+        { metric: 'building_height_outliers', value: heightOutliers, threshold: '== 0', status: heightOutliers > 0 ? 'WARN' : 'PASS' },
+        { metric: 'neighbourhoods_count', value: nhoodCount, threshold: '>= 158', status: nhoodCount < 158 ? 'FAIL' : 'PASS' },
+        { metric: 'neighbourhood_dupes', value: nhoodDupes, threshold: '== 0', status: nhoodDupes > 0 ? 'FAIL' : 'PASS' },
+      ];
+      const sourceHasFails = sourceAuditRows.some((r) => r.status === 'FAIL');
+      const sourceHasWarns = sourceAuditRows.some((r) => r.status === 'WARN');
+      sourcesAuditTable = {
+        phase: 14,
+        name: 'Sources Data Quality',
+        verdict: sourceHasFails ? 'FAIL' : sourceHasWarns ? 'WARN' : 'PASS',
+        rows: sourceAuditRows,
+      };
     }
 
     // -----------------------------------------------------------------------
@@ -577,10 +608,12 @@ async function run() {
     // Chain-aware: only emit the relevant audit_table for the current chain (exclusive)
     ...(() => {
       if (CHAIN_ID === 'permits' && permitsAuditTable) return { audit_table: permitsAuditTable };
+      if (CHAIN_ID === 'sources' && sourcesAuditTable) return { audit_table: sourcesAuditTable };
       if (CHAIN_ID === 'deep_scrapes' && inspectionAuditTable) return { audit_table: inspectionAuditTable };
       if (CHAIN_ID === 'coa' && coaAuditTable) return { audit_table: coaAuditTable };
       // Standalone (no chain) — prefer permits if available
       if (permitsAuditTable) return { audit_table: permitsAuditTable };
+      if (sourcesAuditTable) return { audit_table: sourcesAuditTable };
       if (coaAuditTable) return { audit_table: coaAuditTable };
       if (inspectionAuditTable) return { audit_table: inspectionAuditTable };
       return {};
