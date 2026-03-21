@@ -1,18 +1,18 @@
-# Active Task: Fix assert-pre-permit-aging.js — decision filter misses 132 approved permits + phase mismatch
+# Active Task: Fix assert-engine-health.js — ping-pong threshold, dynamic phase, VACUUM quoting
 **Status:** Implementation
-**Rollback Anchor:** `d41992f`
+**Rollback Anchor:** `56a3efe`
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Fix 2 bugs: (1) Decision filter `IN ('Approved', 'Approved with Conditions')` misses 132 approved CoA applications with variant spellings ('approved', 'Approved on condition', 'Approved wih Conditions', 'APPROVED', etc.). Use case-insensitive `ILIKE 'approved%'` to catch all variants. (2) Phase number mismatch — log says "Phase 6" but audit_table says `phase: 5`. Should be 6 (step 6 in CoA chain).
-* **Target Spec:** `docs/specs/12_coa_integration.md`
+* **Goal:** Fix 3 bugs: (1) PING_PONG_RATIO=2 causes permanent WARN on dimensional tables with natural lifecycle updates (geocode, parcel link, WSIB link, etc.) — raise to 10. (2) Hardcoded phase:16 breaks for sources/coa/deep_scrapes chains — use dynamic phase map. (3) Dynamic VACUUM ANALYZE SQL vulnerable to reserved keyword/hyphenated table names — quote identifiers.
+* **Target Spec:** `docs/specs/37_pipeline_system.md`
 * **Key Files:**
-  - `scripts/quality/assert-pre-permit-aging.js` — fix SQL filter + phase number
+  - `scripts/quality/assert-engine-health.js` — 3 fixes
 
 ## Technical Implementation
-* **Bug 1:** Replace `decision IN ('Approved', 'Approved with Conditions')` with `decision ILIKE 'approved%'`. This catches all 18 variants (26,914 total vs 26,782 current — 132 missed approvals).
-* **Bug 2:** Change `phase: 5` to `phase: 6` in audit_table.
-* **Note:** The same filter is used in `create-pre-permits.js` — should be updated there too for consistency.
+* **Bug 1:** Change `PING_PONG_RATIO = 2` → `10`. Permits table naturally accumulates 5-6x updates per insert (geocode + parcel + neighbourhood + WSIB + scope + trade classification). Threshold 2 would permanently WARN.
+* **Bug 2:** Replace hardcoded `phase: 16` with chain-aware map: permits→16, sources→15, coa→9, deep_scrapes→6. Standalone defaults to 99.
+* **Bug 3:** Wrap `target.table_name` in double quotes for VACUUM ANALYZE SQL.
 * **Database Impact:** NO
 
 ## §10 Plan Compliance Checklist
@@ -22,7 +22,7 @@
 ### Other: ⬜ All N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `d41992f`
-- [ ] **State Verification:** Confirmed 18 decision variants via psql, 132 missed
-- [ ] **Fix:** ILIKE 'approved%' + phase: 6 in assert-pre-permit-aging.js + create-pre-permits.js
+- [ ] **Rollback Anchor:** `56a3efe`
+- [ ] **State Verification:** Confirmed PING_PONG_RATIO=2, hardcoded phase:16, unquoted VACUUM
+- [ ] **Fix:** All 3 fixes in assert-engine-health.js
 - [ ] **Green Light:** typecheck + test pass → WF6

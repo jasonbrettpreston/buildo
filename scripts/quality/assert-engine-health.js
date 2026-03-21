@@ -28,7 +28,7 @@ const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
 const DEAD_TUPLE_RATIO = 0.10;       // 10%
 const SEQ_SCAN_RATIO = 0.80;         // 80%
 const SEQ_SCAN_MIN_ROWS = 10000;     // Only flag large tables
-const PING_PONG_RATIO = 2;           // updates > 2x inserts
+const PING_PONG_RATIO = 10;          // updates > 10x inserts (dimensional tables naturally accumulate 5-6x lifecycle updates per insert)
 
 async function run() {
   console.log('\n=== CQA Tier 3: Engine Health & Volume Volatility ===\n');
@@ -133,7 +133,7 @@ async function run() {
       for (const target of vacuumTargets) {
         try {
           // VACUUM ANALYZE is safe: non-blocking on reads, reclaims dead tuples, updates planner stats
-          await pool.query(`VACUUM ANALYZE ${target.table_name}`);
+          await pool.query(`VACUUM ANALYZE "${target.table_name}"`);
           console.log(`  VACUUM ANALYZE ${target.table_name} — done (was ${(target.dead_ratio * 100).toFixed(1)}% dead)`);
         } catch (vacErr) {
           console.warn(`  WARN: VACUUM ANALYZE ${target.table_name} failed: ${vacErr.message}`);
@@ -275,7 +275,9 @@ async function run() {
         { metric: 'high_seq_scan_tables', value: highSeqTables.length, threshold: '== 0', status: highSeqTables.length > 0 ? 'WARN' : 'PASS' },
       ];
       const permitsEngineHasWarns = permitsEngineRows.some((r) => r.status === 'WARN');
-      return { audit_table: { phase: 16, name: 'Engine Health', verdict: permitsEngineHasWarns ? 'WARN' : 'PASS', rows: permitsEngineRows } };
+      const phaseMap = { permits: 16, sources: 15, coa: 9, deep_scrapes: 6 };
+      const phase = phaseMap[CHAIN_ID] || 16;
+      return { audit_table: { phase, name: 'Engine Health', verdict: permitsEngineHasWarns ? 'WARN' : 'PASS', rows: permitsEngineRows } };
     })(),
   });
 
