@@ -1,22 +1,18 @@
-# Active Task: Fix 3 CQA audit_table bugs — circuit breaker, missing metrics, missing sources table
+# Active Task: Fix assert-staleness.js — broken aggregation counting stages not permits
 **Status:** Implementation
-**Rollback Anchor:** `ab3dc8a`
+**Rollback Anchor:** `e3dad53`
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Fix 3 bugs in CQA scripts introduced during audit_table implementation:
-  1. `assert-schema.js` — broken circuit breaker: schema drift in chain mode is non-fatal, allowing load-permits to run with malformed data
-  2. `assert-data-bounds.js` — permits audit_table missing null-rate metrics (description, builder_name, status) that are computed but not included in rows
-  3. `assert-data-bounds.js` — no sources-chain audit_table: sources chain gets empty UI accordion
-* **Target Spec:** `docs/specs/37_pipeline_system.md`, `docs/specs/28_data_quality_dashboard.md`
+* **Goal:** Fix the staleness query that counts inspection stages instead of permits. A single permit with 15 stages inflates `stale_14d` to 15, artificially failing the staleness check. Use CTE to group by `permit_num` first, then check staleness of the most recent scrape per permit.
+* **Target Spec:** `docs/specs/38_inspection_scraping.md` §3.6 Step 5
 * **Key Files:**
-  - `scripts/quality/assert-schema.js` — restore circuit breaker (process.exit(1) on schema drift regardless of chain mode)
-  - `scripts/quality/assert-data-bounds.js` — add null-rate metrics to permits audit_table + build sources audit_table
+  - `scripts/quality/assert-staleness.js` — fix staleness SQL query (lines 62-71)
+* **Note:** The `never_scraped` miscalculation (zero-stage permits counted as unscraped) requires adding `last_scraped_at` to the permits table — deferred to a separate WF2 with migration.
 
 ## Technical Implementation
-* **Bug 1 (circuit breaker):** Remove the `!CHAIN_ID` guard on process.exit(1). Schema drift must halt the chain — the gate was defeating Tier 1's purpose.
-* **Bug 2 (missing metrics):** Add `descNull`, `builderNull`, `statusNull` variables to `permitAuditRows` array. Variables are already computed (lines 82-111) but scoped inside an `if (recentTotal > 0)` block — need to hoist them or conditionally spread.
-* **Bug 3 (sources table):** Build `sourcesAuditTable` from existing source checks (apCount, apDupes, parcelCount, parcelDupes, lotOutliers, bfCount, heightOutliers, nhoodCount, nhoodDupes). Add to exclusive IIFE.
+* **Bug:** `COUNT(*) FILTER (WHERE pi.scraped_at < ...)` counts rows in permit_inspections (multiple per permit). Should count distinct permits.
+* **Fix:** Use CTE `permit_freshness` that `GROUP BY p.permit_num` with `MAX(pi.scraped_at) AS last_scraped`, then query staleness from the CTE.
 * **Database Impact:** NO
 
 ## Standards Compliance
@@ -32,13 +28,10 @@
 ### Other: ⬜ All N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `ab3dc8a`
-- [ ] **State Verification:** Confirmed all 3 bugs via code review
-- [ ] **Spec Review:** Tier 1 schema validation must be a hard gate (§CQA)
-- [ ] **Reproduction:** Confirmed via source reading
-- [ ] **Red Light:** N/A — metadata + control flow fix
-- [ ] **Fix:**
-  1. assert-schema.js: make process.exit(1) unconditional on schema drift
-  2. assert-data-bounds.js: add null-rate rows to permits audit_table
-  3. assert-data-bounds.js: build sources audit_table + add to exclusive IIFE
+- [ ] **Rollback Anchor:** `e3dad53`
+- [ ] **State Verification:** Confirmed COUNT(*) counts stages, not permits
+- [ ] **Spec Review:** Spec 38 §3.6 defines staleness as per-permit, not per-stage
+- [ ] **Reproduction:** Confirmed via SQL analysis
+- [ ] **Red Light:** N/A — SQL logic fix
+- [ ] **Fix:** Replace staleness query with CTE-based per-permit aggregation
 - [ ] **Green Light:** typecheck + test pass → WF6

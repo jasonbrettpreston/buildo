@@ -58,15 +58,23 @@ pipeline.run('assert-staleness', async (pool) => {
   console.log(`  INFO: never_scraped = ${neverScraped.toLocaleString()}`);
   console.log(`  INFO: coverage_pct = ${coveragePct}${isEarlyPhase ? ' (early phase)' : ''}`);
 
-  // Staleness query — for permits that HAVE been scraped
+  // Staleness query — group by permit first (a permit has multiple inspection
+  // stages, so counting raw rows inflates stale_14d by the stage count)
   const stalenessRes = await pool.query(
-    `SELECT
-       MAX(CURRENT_DATE - pi.scraped_at::date) AS max_days_stale,
-       COUNT(*) FILTER (WHERE pi.scraped_at < NOW() - INTERVAL '14 days') AS stale_14d
-     FROM permits p
-     JOIN permit_inspections pi ON pi.permit_num = p.permit_num
-     WHERE p.status = 'Inspection'
-       AND p.permit_type = ANY($1)`,
+    `WITH permit_freshness AS (
+       SELECT
+         p.permit_num,
+         MAX(pi.scraped_at) AS last_scraped
+       FROM permits p
+       JOIN permit_inspections pi ON pi.permit_num = p.permit_num
+       WHERE p.status = 'Inspection'
+         AND p.permit_type = ANY($1)
+       GROUP BY p.permit_num
+     )
+     SELECT
+       MAX(CURRENT_DATE - last_scraped::date) AS max_days_stale,
+       COUNT(*) FILTER (WHERE last_scraped < NOW() - INTERVAL '14 days') AS stale_14d
+     FROM permit_freshness`,
     [TARGET_TYPES]
   );
   const maxDaysStale = parseInt(stalenessRes.rows[0]?.max_days_stale) || 0;
