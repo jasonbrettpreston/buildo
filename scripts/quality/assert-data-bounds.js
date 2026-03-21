@@ -55,6 +55,7 @@ async function run() {
   const errors = [];
   let inspectionAuditTable = null;
   let coaAuditTable = null;
+  let permitsAuditTable = null;
 
   try {
     // -----------------------------------------------------------------------
@@ -151,6 +152,22 @@ async function run() {
       } else {
         console.log('  OK: No duplicate PKs');
       }
+
+      // Build permits audit_table
+      const permitAuditRows = [
+        { metric: 'cost_outliers', value: costOutliers, threshold: '== 0', status: costOutliers > 0 ? 'WARN' : 'PASS' },
+        { metric: 'orphaned_permit_trades', value: orphanTrades, threshold: '== 0', status: orphanTrades > 0 ? 'FAIL' : 'PASS' },
+        { metric: 'orphaned_permit_parcels', value: orphanParcels, threshold: '== 0', status: orphanParcels > 0 ? 'FAIL' : 'PASS' },
+        { metric: 'duplicate_pk_groups', value: dupes, threshold: '== 0', status: dupes > 0 ? 'FAIL' : 'PASS' },
+      ];
+      const permitHasFails = permitAuditRows.some((r) => r.status === 'FAIL');
+      const permitHasWarns = permitAuditRows.some((r) => r.status === 'WARN');
+      permitsAuditTable = {
+        phase: 15,
+        name: 'Data Quality Checks',
+        verdict: permitHasFails ? 'FAIL' : permitHasWarns ? 'WARN' : 'PASS',
+        rows: permitAuditRows,
+      };
     }
 
     // -----------------------------------------------------------------------
@@ -557,9 +574,17 @@ async function run() {
     checks_warned: warnings.length,
     errors: errors.length > 0 ? errors : undefined,
     warnings: warnings.length > 0 ? warnings : undefined,
-    // Chain-aware: only emit the relevant audit_table for the current chain
-    ...(inspectionAuditTable && (!CHAIN_ID || CHAIN_ID === 'deep_scrapes') && { audit_table: inspectionAuditTable }),
-    ...(coaAuditTable && (!CHAIN_ID || CHAIN_ID === 'coa') && { audit_table: coaAuditTable }),
+    // Chain-aware: only emit the relevant audit_table for the current chain (exclusive)
+    ...(() => {
+      if (CHAIN_ID === 'permits' && permitsAuditTable) return { audit_table: permitsAuditTable };
+      if (CHAIN_ID === 'deep_scrapes' && inspectionAuditTable) return { audit_table: inspectionAuditTable };
+      if (CHAIN_ID === 'coa' && coaAuditTable) return { audit_table: coaAuditTable };
+      // Standalone (no chain) — prefer permits if available
+      if (permitsAuditTable) return { audit_table: permitsAuditTable };
+      if (coaAuditTable) return { audit_table: coaAuditTable };
+      if (inspectionAuditTable) return { audit_table: inspectionAuditTable };
+      return {};
+    })(),
   };
   const meta = JSON.stringify(metaObj);
 

@@ -301,6 +301,25 @@ async function run() {
     console.error(`  ERROR: ${err.message}`);
   }
 
+  // Build permits-specific audit_table when permit columns were checked
+  let permitsAuditTable = null;
+  if (runPermitChecks) {
+    const permitSchemaErrors = errors.filter((e) => e.toLowerCase().includes('permit'));
+    const permitApiErrors = errors.filter((e) => e.toLowerCase().includes('ckan') && !e.toLowerCase().includes('coa'));
+    const permitAuditRows = [
+      { metric: 'permit_columns_checked', value: EXPECTED_PERMIT_COLUMNS.length, threshold: null, status: 'INFO' },
+      { metric: 'schema_mismatch_count', value: permitSchemaErrors.length, threshold: '== 0', status: permitSchemaErrors.length > 0 ? 'FAIL' : 'PASS' },
+      { metric: 'api_errors', value: permitApiErrors.length, threshold: '== 0', status: permitApiErrors.length > 0 ? 'FAIL' : 'PASS' },
+    ];
+    const permitHasFails = permitAuditRows.some((r) => r.status === 'FAIL');
+    permitsAuditTable = {
+      phase: 1,
+      name: 'Schema Validation',
+      verdict: permitHasFails ? 'FAIL' : 'PASS',
+      rows: permitAuditRows,
+    };
+  }
+
   // Build CoA-specific audit_table when CoA columns were checked
   let coaAuditTable = null;
   if (runCoaChecks) {
@@ -327,7 +346,15 @@ async function run() {
     checks_passed: errors.length === 0 ? 'all' : undefined,
     checks_failed: errors.length,
     errors: errors.length > 0 ? errors : undefined,
-    ...(coaAuditTable && { audit_table: coaAuditTable }),
+    // Chain-aware: only emit the relevant audit_table (exclusive)
+    ...(() => {
+      if (CHAIN_ID === 'permits' && permitsAuditTable) return { audit_table: permitsAuditTable };
+      if (CHAIN_ID === 'coa' && coaAuditTable) return { audit_table: coaAuditTable };
+      // Standalone — prefer permits if available
+      if (permitsAuditTable) return { audit_table: permitsAuditTable };
+      if (coaAuditTable) return { audit_table: coaAuditTable };
+      return {};
+    })(),
   });
 
   if (runId) {

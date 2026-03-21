@@ -262,8 +262,21 @@ async function run() {
     errors: errors.length > 0 ? errors : undefined,
     engine_health: tableResults,
     // Chain-aware: only emit the relevant audit_table for the current chain
-    ...(inspAuditTable && (!CHAIN_ID || CHAIN_ID === 'deep_scrapes') && { audit_table: inspAuditTable }),
-    ...(coaAuditTable && (!CHAIN_ID || CHAIN_ID === 'coa') && { audit_table: coaAuditTable }),
+    ...(() => {
+      if (CHAIN_ID === 'deep_scrapes' && inspAuditTable) return { audit_table: inspAuditTable };
+      if (CHAIN_ID === 'coa' && coaAuditTable) return { audit_table: coaAuditTable };
+      // Permits chain or standalone — build engine health summary
+      const highDeadTables = tableResults.filter((t) => t.dead_ratio > 0.10 && t.n_live_tup > 0);
+      const highSeqTables = tableResults.filter((t) => t.seq_ratio > 0.80 && t.n_live_tup > 10000);
+      const permitsEngineRows = [
+        { metric: 'tables_checked', value: tableResults.length, threshold: null, status: 'INFO' },
+        { metric: 'tables_vacuumed', value: vacuumTargets.length, threshold: null, status: 'INFO' },
+        { metric: 'high_dead_ratio_tables', value: highDeadTables.length, threshold: '== 0', status: highDeadTables.length > 0 ? 'WARN' : 'PASS' },
+        { metric: 'high_seq_scan_tables', value: highSeqTables.length, threshold: '== 0', status: highSeqTables.length > 0 ? 'WARN' : 'PASS' },
+      ];
+      const permitsEngineHasWarns = permitsEngineRows.some((r) => r.status === 'WARN');
+      return { audit_table: { phase: 16, name: 'Engine Health', verdict: permitsEngineHasWarns ? 'WARN' : 'PASS', rows: permitsEngineRows } };
+    })(),
   });
 
   if (runId) {

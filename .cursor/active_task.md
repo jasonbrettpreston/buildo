@@ -1,63 +1,40 @@
-# Active Task: Phase 2 — Aggregate audit_table verdicts in run-chain.js
+# Active Task: WF3-A — Add permits-chain audit_tables to 3 CQA scripts
 **Status:** Implementation
-**Rollback Anchor:** `fcd6ff6`
-**Workflow:** WF2 — Feature Enhancement
+**Rollback Anchor:** `a01edb7`
+**Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Update `scripts/run-chain.js` to aggregate `records_meta.audit_table.verdict` strings from each completed step. When any step has `verdict: 'WARN'`, the chain-level status should be `'completed_with_warnings'` instead of plain `'completed'`. When any step has `verdict: 'FAIL'` (but the script still exited 0), the chain should be `'completed_with_errors'`. This gives the admin dashboard a chain-level amber/red signal without halting the pipeline.
-* **Target Spec:** `docs/specs/37_pipeline_system.md`
+* **Goal:** The 3 CQA scripts (`assert-schema.js`, `assert-data-bounds.js`, `assert-engine-health.js`) are chain-aware and emit audit_tables for CoA and deep_scrapes chains, but NOT for the permits chain. When running in the permits chain, they fall back to the old scalar format (checks_passed/checks_failed), so the UI shows the legacy "ALL CHECKS PASSED" banner instead of the structured Metric/Value/Threshold/Status table.
+* **Target Spec:** `docs/specs/37_pipeline_system.md`, `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `scripts/run-chain.js` — aggregate verdicts, update chain status
-  - `src/components/FreshnessTimeline.tsx` — render new chain-level statuses (amber for warnings)
+  - `scripts/quality/assert-schema.js` — add permits-chain audit_table (schema field validation)
+  - `scripts/quality/assert-data-bounds.js` — add permits-chain audit_table (cost/null/orphan checks)
+  - `scripts/quality/assert-engine-health.js` — add permits-chain audit_table (dead tuples, seq scans)
 
 ## Technical Implementation
-* **Verdict collection:** After each step completes, extract `recordsMeta?.audit_table?.verdict` and push to a `stepVerdicts` array.
-* **Chain status logic (lines 321-337):**
-  ```
-  Current:  cancelled | failed | completed
-  New:      cancelled | failed | completed_with_errors | completed_with_warnings | completed
-  ```
-  - If any step exited non-zero → `'failed'` (unchanged)
-  - If all steps exited 0 but any verdict is `'FAIL'` → `'completed_with_errors'`
-  - If all steps exited 0 but any verdict is `'WARN'` → `'completed_with_warnings'`
-  - If all verdicts are `'PASS'` or `'INFO'` → `'completed'`
-* **Chain records_meta:** Include `{ step_verdicts: { step_slug: 'PASS'|'WARN'|'FAIL', ... } }` for drill-down
-* **UI rendering:** FreshnessTimeline already color-codes chain status. Need to add `completed_with_warnings` → amber and `completed_with_errors` → red badge treatment.
-* **Database Impact:** NO — status is a TEXT column, accepts any string
+* **Pattern:** Follow the existing CoA audit_table pattern in each script. Add `runPermitChecks` guard and build permits-specific `audit_table` alongside the existing CoA one.
+* **assert-schema.js:** Already has `runPermitChecks` flag (line 214). Build permits audit_table with permit column check results. Emit alongside CoA audit_table via chain-aware spread.
+* **assert-data-bounds.js:** Already has `runPermitChecks` flag (line 50). Build permits audit_table from the permit-specific SQL checks (cost outliers, null rates, orphans, PKs).
+* **assert-engine-health.js:** No chain filter currently — always runs same checks. Build permits audit_table from the engine health metrics (same data, different phase/name label).
+* **Database Impact:** NO
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — adding data aggregation to existing orchestrator
-* **Unhappy Path Tests:** N/A — orchestrator infrastructure
+* **Try-Catch Boundary:** N/A — adding audit_table to existing emitSummary
+* **Unhappy Path Tests:** N/A — metadata addition
 * **logError Mandate:** N/A
 * **Mobile-First:** N/A
 
 ## §10 Plan Compliance Checklist
-
 ### If Pipeline Script Created/Modified:
-- [x] Uses Pipeline SDK: run-chain.js is the orchestrator itself (§9.4)
+- [x] Uses Pipeline SDK (§9.4)
 - [x] No streaming changes (§9.5)
-
-### If UI Component Created/Modified:
-- [x] Mobile-first: adding status color mapping only, no layout changes (§1.1)
-- [x] No new touch targets
-
-### Other:
-- ⬜ DB — N/A
-- ⬜ API — N/A
-- ⬜ Shared Logic — N/A
+### Other: ⬜ All N/A
 
 ## Execution Plan
-- [ ] **State Verification:** Current chain status is binary: completed | failed | cancelled
-- [ ] **Contract Definition:** N/A
-- [ ] **Spec Update:** N/A
-- [ ] **Schema Evolution:** N/A
-- [ ] **Guardrail Test:** N/A — orchestrator + UI display logic
-- [ ] **Red Light:** N/A
-- [ ] **Implementation:**
-  1. Add `stepVerdicts` array to run-chain.js
-  2. After each step, extract audit_table.verdict from recordsMeta
-  3. Compute chain-level verdict from aggregated step verdicts
-  4. Update chain pipeline_runs row with enriched status + step_verdicts in records_meta
-  5. Update FreshnessTimeline.tsx status color mapping for new statuses
-- [ ] **UI Regression Check:** N/A — status display only
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
+- [ ] **Rollback Anchor:** `a01edb7`
+- [ ] **State Verification:** Confirmed 3 scripts only emit CoA/deep_scrapes audit_tables
+- [ ] **Spec Review:** §9.6 mandates consistent observability across chains
+- [ ] **Reproduction:** UI shows old scalar format for permits chain CQA steps
+- [ ] **Red Light:** N/A — metadata addition
+- [ ] **Fix:** Add permits-chain audit_tables to all 3 scripts
+- [ ] **Green Light:** typecheck + test pass → WF6
