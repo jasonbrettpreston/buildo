@@ -1,18 +1,18 @@
-# Active Task: Fix assert-staleness.js — broken aggregation counting stages not permits
+# Active Task: Fix assert-coa-freshness.js — Time Traveler Bug
 **Status:** Implementation
-**Rollback Anchor:** `e3dad53`
+**Rollback Anchor:** `0ea3498`
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Fix the staleness query that counts inspection stages instead of permits. A single permit with 15 stages inflates `stale_14d` to 15, artificially failing the staleness check. Use CTE to group by `permit_num` first, then check staleness of the most recent scrape per permit.
-* **Target Spec:** `docs/specs/38_inspection_scraping.md` §3.6 Step 5
+* **Goal:** Fix the "Time Traveler Bug" — future hearing dates (up to 12 months ahead) mask portal rot by producing `maxDaysStale = 0` even when the CKAN portal is frozen. Use `MAX(last_seen_at)` (ingestion timestamp) as the primary freshness indicator, with `MAX(decision_date)` as a secondary check. Remove `hearing_date` from staleness calculation since hearings are scheduled in the future.
+* **Target Spec:** `docs/specs/12_coa_integration.md`
 * **Key Files:**
-  - `scripts/quality/assert-staleness.js` — fix staleness SQL query (lines 62-71)
-* **Note:** The `never_scraped` miscalculation (zero-stage permits counted as unscraped) requires adding `last_scraped_at` to the permits table — deferred to a separate WF2 with migration.
+  - `scripts/quality/assert-coa-freshness.js` — fix staleness calculation
 
 ## Technical Implementation
-* **Bug:** `COUNT(*) FILTER (WHERE pi.scraped_at < ...)` counts rows in permit_inspections (multiple per permit). Should count distinct permits.
-* **Fix:** Use CTE `permit_freshness` that `GROUP BY p.permit_num` with `MAX(pi.scraped_at) AS last_scraped`, then query staleness from the CTE.
+* **Root cause:** `newestMs = Math.max(maxHearingMs, maxDecisionMs)` picks the future hearing date. `Math.max(0, Date.now() - futureDate)` evaluates to 0. Portal rot is hidden for months.
+* **Fix:** Replace with `MAX(last_seen_at)` as primary freshness metric (updated by load-coa.js on every ingestion). Keep `decision_date` and `hearing_date` as INFO metrics for context. Add `last_ingestion` metric with the `< 45 days` threshold.
+* **Confirmed:** `coa_applications.last_seen_at` is `2026-03-17` (3 days ago). `hearing_date` max is `2027-03-10` (12 months future). Bug is live.
 * **Database Impact:** NO
 
 ## Standards Compliance
@@ -28,10 +28,10 @@
 ### Other: ⬜ All N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `e3dad53`
-- [ ] **State Verification:** Confirmed COUNT(*) counts stages, not permits
-- [ ] **Spec Review:** Spec 38 §3.6 defines staleness as per-permit, not per-stage
-- [ ] **Reproduction:** Confirmed via SQL analysis
+- [ ] **Rollback Anchor:** `0ea3498`
+- [ ] **State Verification:** Confirmed hearing_date max is 2027-03-10 (future), last_seen_at is 2026-03-17 (correct)
+- [ ] **Spec Review:** Portal rot detection should measure ingestion freshness, not event dates
+- [ ] **Reproduction:** Confirmed via psql query
 - [ ] **Red Light:** N/A — SQL logic fix
-- [ ] **Fix:** Replace staleness query with CTE-based per-permit aggregation
+- [ ] **Fix:** Use MAX(last_seen_at) for staleness, keep dates as INFO
 - [ ] **Green Light:** typecheck + test pass → WF6

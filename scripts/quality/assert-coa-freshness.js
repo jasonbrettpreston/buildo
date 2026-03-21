@@ -2,17 +2,20 @@
 /**
  * CQA Step 3: CoA Source Freshness Monitor (Portal Rot Check)
  *
- * Queries coa_applications for the most recent hearing_date to detect
- * if the city's CKAN portal has stopped publishing new data.
+ * Detects if the city's CKAN portal has stopped publishing new CoA data
+ * by checking the ingestion timestamp (last_seen_at) — NOT hearing_date,
+ * which can be scheduled months into the future and masks portal rot.
  *
  * Read-only — no database writes. Independently testable and triggerable.
  *
  * Metrics:
- *   max_hearing_date: latest hearing date in the dataset
- *   max_days_stale: days between NOW and max_hearing_date
+ *   last_ingestion: MAX(last_seen_at) — when load-coa.js last touched a row
+ *   ingestion_days_ago: days since last ingestion
+ *   max_decision_date: latest decision (past-only, informational)
+ *   max_hearing_date: latest hearing (may be future, informational only)
  *
  * Pass Criteria:
- *   max_days_stale < 45 (WARN if >= 45, data may be frozen)
+ *   ingestion_days_ago < 45 (WARN if >= 45, data may be frozen)
  *
  * Usage: node scripts/quality/assert-coa-freshness.js
  *
@@ -25,17 +28,18 @@ pipeline.run('assert-coa-freshness', async (pool) => {
 
   pipeline.log.info('[assert-coa-freshness]', 'Checking CoA source data freshness...');
 
-  // Query the most recent hearing date across all CoA applications
   const result = await pool.query(`
     SELECT
-      MAX(hearing_date)::date as max_hearing_date,
-      MAX(decision_date)::date as max_decision_date,
-      COUNT(*) as total_records
+      MAX(last_seen_at) AS max_last_seen,
+      MAX(hearing_date)::date AS max_hearing_date,
+      MAX(decision_date)::date AS max_decision_date,
+      COUNT(*) AS total_records
     FROM coa_applications
   `);
 
   const row = result.rows[0];
   const totalRecords = parseInt(row.total_records) || 0;
+  const maxLastSeen = row.max_last_seen;
   const maxHearingDate = row.max_hearing_date;
   const maxDecisionDate = row.max_decision_date;
 
@@ -50,38 +54,39 @@ pipeline.run('assert-coa-freshness', async (pool) => {
         },
       },
     });
-    pipeline.emitMeta({ coa_applications: ['hearing_date', 'decision_date'] }, {});
+    pipeline.emitMeta({ coa_applications: ['last_seen_at', 'hearing_date', 'decision_date'] }, {});
     return;
   }
 
-  // Compute staleness from hearing_date (scheduled into the future for active apps)
-  const maxHearingMs = maxHearingDate ? new Date(maxHearingDate).getTime() : 0;
-  const maxDecisionMs = maxDecisionDate ? new Date(maxDecisionDate).getTime() : 0;
-  const newestMs = Math.max(maxHearingMs, maxDecisionMs);
-  const maxDaysStale = newestMs > 0
-    ? Math.max(0, Math.round((Date.now() - newestMs) / (1000 * 60 * 60 * 24)))
+  // Use last_seen_at (ingestion timestamp) for staleness — not hearing_date
+  // which can be months in the future and masks portal rot.
+  const lastSeenMs = maxLastSeen ? new Date(maxLastSeen).getTime() : 0;
+  const ingestionDaysAgo = lastSeenMs > 0
+    ? Math.max(0, Math.round((Date.now() - lastSeenMs) / (1000 * 60 * 60 * 24)))
     : null;
 
-  const isStale = maxDaysStale !== null && maxDaysStale >= 45;
+  const isStale = ingestionDaysAgo !== null && ingestionDaysAgo >= 45;
 
   pipeline.log.info('[assert-coa-freshness]', 'Freshness check complete', {
     total_records: totalRecords,
-    max_hearing_date: maxHearingDate,
+    last_ingestion: maxLastSeen,
+    ingestion_days_ago: ingestionDaysAgo,
     max_decision_date: maxDecisionDate,
-    max_days_stale: maxDaysStale,
+    max_hearing_date: maxHearingDate,
     stale: isStale,
   });
 
   if (isStale) {
-    pipeline.log.warn('[assert-coa-freshness]', `Portal rot warning: newest data is ${maxDaysStale} days old. CKAN data may be frozen.`);
+    pipeline.log.warn('[assert-coa-freshness]', `Portal rot warning: last ingestion was ${ingestionDaysAgo} days ago. CKAN data may be frozen.`);
   }
 
   const durationMs = Date.now() - startTime;
   const rows = [
     { metric: 'total_records', value: totalRecords, threshold: null, status: 'INFO' },
-    { metric: 'max_hearing_date', value: maxHearingDate || 'none', threshold: null, status: 'INFO' },
+    { metric: 'last_ingestion', value: maxLastSeen ? new Date(maxLastSeen).toISOString().split('T')[0] : 'never', threshold: null, status: 'INFO' },
+    { metric: 'ingestion_days_ago', value: ingestionDaysAgo, threshold: '< 45', status: isStale ? 'WARN' : 'PASS' },
     { metric: 'max_decision_date', value: maxDecisionDate || 'none', threshold: null, status: 'INFO' },
-    { metric: 'max_days_stale', value: maxDaysStale, threshold: '< 45', status: isStale ? 'WARN' : 'PASS' },
+    { metric: 'max_hearing_date', value: maxHearingDate || 'none', threshold: null, status: 'INFO' },
   ];
 
   pipeline.emitSummary({
@@ -97,7 +102,7 @@ pipeline.run('assert-coa-freshness', async (pool) => {
     },
   });
   pipeline.emitMeta(
-    { coa_applications: ['hearing_date', 'decision_date'] },
+    { coa_applications: ['last_seen_at', 'hearing_date', 'decision_date'] },
     {}
   );
 });
