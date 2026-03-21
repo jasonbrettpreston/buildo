@@ -1,18 +1,17 @@
-# Active Task: Fix assert-engine-health.js — ping-pong threshold, dynamic phase, VACUUM quoting
+# Active Task: Fix assert-data-bounds.js — WSIB metrics missing from audit_table
 **Status:** Implementation
-**Rollback Anchor:** `56a3efe`
+**Rollback Anchor:** `8c9e64d`
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Fix 3 bugs: (1) PING_PONG_RATIO=2 causes permanent WARN on dimensional tables with natural lifecycle updates (geocode, parcel link, WSIB link, etc.) — raise to 10. (2) Hardcoded phase:16 breaks for sources/coa/deep_scrapes chains — use dynamic phase map. (3) Dynamic VACUUM ANALYZE SQL vulnerable to reserved keyword/hyphenated table names — quote identifiers.
-* **Target Spec:** `docs/specs/37_pipeline_system.md`
+* **Goal:** WSIB registry checks (legal names, G-class, NAICS codes, orphaned links) push to errors/warnings arrays but are NOT included in any audit_table. When WSIB fails, the dashboard shows red but the accordion table only shows permit/source metrics — admin can't see WHY it failed without checking server logs.
+* **Target Spec:** `docs/specs/35_wsib_registry.md`
 * **Key Files:**
-  - `scripts/quality/assert-engine-health.js` — 3 fixes
+  - `scripts/quality/assert-data-bounds.js` — hoist WSIB variables, append to active audit_table
 
 ## Technical Implementation
-* **Bug 1:** Change `PING_PONG_RATIO = 2` → `10`. Permits table naturally accumulates 5-6x updates per insert (geocode + parcel + neighbourhood + WSIB + scope + trade classification). Threshold 2 would permanently WARN.
-* **Bug 2:** Replace hardcoded `phase: 16` with chain-aware map: permits→16, sources→15, coa→9, deep_scrapes→6. Standalone defaults to 99.
-* **Bug 3:** Wrap `target.table_name` in double quotes for VACUUM ANALYZE SQL.
+* **Bug:** WSIB check variables (`wsibNoName`, `wsibNonG`, `wsibBadNaics`, `wsibOrphan`) are scoped inside a `try` block (lines 382-445). They're not accessible when building the audit_table. WSIB errors show in logs and fail the script, but the UI audit_table has no WSIB rows.
+* **Fix:** Hoist `let wsibNoName = 0, wsibNonG = 0, wsibBadNaics = 0, wsibOrphan = 0` before the try block. After the WSIB checks, build WSIB audit rows and append to whichever audit_table is active (permits or sources). Re-evaluate verdict if WSIB rows have FAILs.
 * **Database Impact:** NO
 
 ## §10 Plan Compliance Checklist
@@ -22,7 +21,7 @@
 ### Other: ⬜ All N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `56a3efe`
-- [ ] **State Verification:** Confirmed PING_PONG_RATIO=2, hardcoded phase:16, unquoted VACUUM
-- [ ] **Fix:** All 3 fixes in assert-engine-health.js
+- [ ] **Rollback Anchor:** `8c9e64d`
+- [ ] **State Verification:** Confirmed WSIB metrics not in any audit_table
+- [ ] **Fix:** Hoist variables + build WSIB rows + append to active audit_table
 - [ ] **Green Light:** typecheck + test pass → WF6

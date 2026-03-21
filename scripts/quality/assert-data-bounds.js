@@ -378,14 +378,18 @@ async function run() {
     // -----------------------------------------------------------------------
     // WSIB-scoped checks
     // -----------------------------------------------------------------------
+    let wsibNoName = 0, wsibNonG = 0, wsibBadNaics = 0, wsibOrphan = 0;
+    let wsibChecked = false;
+
     if (runPermitChecks || runSourceChecks) {
       try {
         const wsibCount = await count(`SELECT COUNT(*) FROM wsib_registry`);
         if (wsibCount > 0) {
+          wsibChecked = true;
           console.log(`  OK: wsib_registry has ${wsibCount.toLocaleString()} rows`);
 
           // All entries should have a legal name
-          const wsibNoName = await count(
+          wsibNoName = await count(
             `SELECT COUNT(*) FROM wsib_registry WHERE legal_name IS NULL OR TRIM(legal_name) = ''`
           );
           if (wsibNoName > 0) {
@@ -396,7 +400,7 @@ async function run() {
           }
 
           // All entries should have at least one G class (predominant OR subclass)
-          const wsibNonG = await count(
+          wsibNonG = await count(
             `SELECT COUNT(*) FROM wsib_registry
              WHERE predominant_class NOT LIKE 'G%'
                AND (subclass IS NULL OR subclass NOT LIKE 'G%')`
@@ -409,7 +413,7 @@ async function run() {
           }
 
           // NAICS codes should be numeric strings
-          const wsibBadNaics = await count(
+          wsibBadNaics = await count(
             `SELECT COUNT(*) FROM wsib_registry WHERE naics_code IS NOT NULL AND naics_code !~ '^[0-9]+$'`
           );
           if (wsibBadNaics > 0) {
@@ -420,7 +424,7 @@ async function run() {
           }
 
           // Orphaned linked_entity_id
-          const wsibOrphan = await count(
+          wsibOrphan = await count(
             `SELECT COUNT(*) FROM wsib_registry w
              WHERE w.linked_entity_id IS NOT NULL
                AND NOT EXISTS (SELECT 1 FROM entities e WHERE e.id = w.linked_entity_id)`
@@ -441,6 +445,26 @@ async function run() {
         } else {
           errors.push(wsibErr.message);
           console.error(`  ERROR: ${wsibErr.message}`);
+        }
+      }
+
+      // Append WSIB metrics to the active audit_table so the UI shows them
+      if (wsibChecked) {
+        const wsibAuditRows = [
+          { metric: 'wsib_no_legal_name', value: wsibNoName, threshold: '== 0', status: wsibNoName > 0 ? 'FAIL' : 'PASS' },
+          { metric: 'wsib_no_g_class', value: wsibNonG, threshold: '== 0', status: wsibNonG > 0 ? 'FAIL' : 'PASS' },
+          { metric: 'wsib_invalid_naics', value: wsibBadNaics, threshold: '== 0', status: wsibBadNaics > 0 ? 'WARN' : 'PASS' },
+          { metric: 'wsib_orphaned_links', value: wsibOrphan, threshold: '== 0', status: wsibOrphan > 0 ? 'FAIL' : 'PASS' },
+        ];
+        const wsibHasFails = wsibAuditRows.some((r) => r.status === 'FAIL');
+
+        if (permitsAuditTable) {
+          permitsAuditTable.rows.push(...wsibAuditRows);
+          if (wsibHasFails) permitsAuditTable.verdict = 'FAIL';
+        }
+        if (sourcesAuditTable) {
+          sourcesAuditTable.rows.push(...wsibAuditRows);
+          if (wsibHasFails) sourcesAuditTable.verdict = 'FAIL';
         }
       }
     }
