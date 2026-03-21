@@ -450,9 +450,9 @@ pipeline.run('load-coa', async (pool) => {
   const stats = await pool.query(`
     SELECT
       COUNT(*) AS total,
-      COUNT(*) FILTER (WHERE decision IN ('Approved', 'Approved with Conditions')) AS approved,
+      COUNT(*) FILTER (WHERE decision ILIKE 'approved%') AS approved,
       COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL) AS linked,
-      COUNT(*) FILTER (WHERE decision IN ('Approved', 'Approved with Conditions') AND linked_permit_num IS NULL AND decision_date >= NOW() - INTERVAL '90 days') AS upcoming
+      COUNT(*) FILTER (WHERE decision ILIKE 'approved%' AND linked_permit_num IS NULL AND decision_date >= NOW() - INTERVAL '90 days') AS upcoming
     FROM coa_applications
   `);
   const s = stats.rows[0];

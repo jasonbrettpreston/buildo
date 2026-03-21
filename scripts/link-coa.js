@@ -252,7 +252,7 @@ pipeline.run('link-coa', async (pool) => {
       COUNT(*) FILTER (WHERE linked_confidence >= 0.90) AS high_conf,
       COUNT(*) FILTER (WHERE linked_confidence >= 0.50 AND linked_confidence < 0.90) AS med_conf,
       COUNT(*) FILTER (WHERE linked_confidence > 0 AND linked_confidence < 0.50) AS low_conf,
-      COUNT(*) FILTER (WHERE decision IN ('Approved', 'Approved with Conditions') AND linked_permit_num IS NULL AND decision_date >= NOW() - INTERVAL '90 days') AS upcoming
+      COUNT(*) FILTER (WHERE decision ILIKE 'approved%' AND linked_permit_num IS NULL AND decision_date >= NOW() - INTERVAL '90 days') AS upcoming
     FROM coa_applications
   `);
   const s = stats.rows[0];

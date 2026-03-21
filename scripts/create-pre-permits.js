@@ -32,16 +32,16 @@ pipeline.run('create-pre-permits', async (pool) => {
   const { rows: [counts] } = await pool.query(
     `SELECT
        COUNT(*) FILTER (
-         WHERE decision IN ('Approved', 'Approved with Conditions')
+         WHERE decision ILIKE 'approved%'
            AND linked_permit_num IS NULL
            AND decision_date >= NOW() - INTERVAL '90 days'
        ) as upcoming,
        COUNT(*) FILTER (
-         WHERE decision IN ('Approved', 'Approved with Conditions')
+         WHERE decision ILIKE 'approved%'
            AND linked_permit_num IS NOT NULL
        ) as already_linked,
        COUNT(*) FILTER (
-         WHERE decision IN ('Approved', 'Approved with Conditions')
+         WHERE decision ILIKE 'approved%'
        ) as total_approved,
        COUNT(*) as total
      FROM coa_applications`
@@ -68,7 +68,7 @@ pipeline.run('create-pre-permits', async (pool) => {
         'Forecasted',
         description, ward, street_num, street_name, decision_date
       FROM coa_applications
-      WHERE decision IN ('Approved', 'Approved with Conditions')
+      WHERE decision ILIKE 'approved%'
         AND linked_permit_num IS NULL
         AND decision_date >= NOW() - INTERVAL '90 days'
       ON CONFLICT (permit_num, revision_num) DO NOTHING
@@ -99,7 +99,7 @@ pipeline.run('create-pre-permits', async (pool) => {
   const { rows: byWard } = await pool.query(
     `SELECT ward, COUNT(*) as count
      FROM coa_applications
-     WHERE decision IN ('Approved', 'Approved with Conditions')
+     WHERE decision ILIKE 'approved%'
        AND linked_permit_num IS NULL
        AND decision_date >= NOW() - INTERVAL '90 days'
      GROUP BY ward

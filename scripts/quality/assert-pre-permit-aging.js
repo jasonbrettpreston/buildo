@@ -33,7 +33,7 @@ pipeline.run('assert-pre-permit-aging', async (pool) => {
         WHERE decision_date < NOW() - INTERVAL '12 months'
       ) AS stale_12m
     FROM coa_applications
-    WHERE decision IN ('Approved', 'Approved with Conditions')
+    WHERE decision ILIKE 'approved%'
       AND linked_permit_num IS NULL
   `);
 
@@ -63,7 +63,7 @@ pipeline.run('assert-pre-permit-aging', async (pool) => {
 
   const hasWarns = auditRows.some((r) => r.status === 'WARN');
   const auditTable = {
-    phase: 5,
+    phase: 6,
     name: 'Pre-Permit Aging',
     verdict: hasWarns ? 'WARN' : 'PASS',
     rows: auditRows,
