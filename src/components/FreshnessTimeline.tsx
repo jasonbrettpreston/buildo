@@ -256,6 +256,8 @@ function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { 
   if (isRunning) return { color: 'bg-blue-50 tile-flash-running', label: 'Running' };
   if (!info || !info.last_run_at) return { color: '', label: 'Never run' };
   if (info.status === 'failed') return { color: 'bg-red-50', label: 'Failed' };
+  if (info.status === 'completed_with_errors') return { color: 'bg-red-50', label: 'Errors' };
+  if (info.status === 'completed_with_warnings') return { color: 'bg-amber-50', label: 'Warnings' };
   if (info.status === 'skipped') return { color: 'bg-gray-50', label: 'Skipped' };
   if (info.status === 'cancelled') return { color: 'bg-gray-50', label: 'Cancelled' };
   if (info.status === 'completed') return { color: 'bg-green-50', label: 'Completed' };
@@ -398,7 +400,10 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
   };
 
   const allSlugs = Object.keys(PIPELINE_REGISTRY);
-  const completedCount = allSlugs.filter((s) => pipelineLastRun[s]?.status === 'completed').length;
+  const completedCount = allSlugs.filter((s) => {
+    const st = pipelineLastRun[s]?.status;
+    return st === 'completed' || st === 'completed_with_warnings' || st === 'completed_with_errors';
+  }).length;
   const failedCount = allSlugs.filter((s) => pipelineLastRun[s]?.status === 'failed').length;
   const neverRunCount = allSlugs.filter((s) => !pipelineLastRun[s]?.last_run_at).length;
 
@@ -523,7 +528,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
               {/* Chain Completion Report — aggregated DB impact + per-step summary */}
               {(() => {
                 const chainInfo = pipelineLastRun[chainSlug];
-                if (!chainInfo || chainInfo.status !== 'completed' || isChainRunning) return null;
+                const chainDone = chainInfo?.status === 'completed' || chainInfo?.status === 'completed_with_warnings' || chainInfo?.status === 'completed_with_errors';
+                if (!chainInfo || !chainDone || isChainRunning) return null;
                 const chainStartMs = chainInfo.last_run_at ? new Date(chainInfo.last_run_at).getTime() : 0;
                 // Aggregate T2 pg_stats for legacy badge fallback (chains without audit_tables)
                 let totalIns = 0;
@@ -640,7 +646,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   // A step is only "done in this run" if its last_run_at >= the chain's
                   // start time. Otherwise the completed/failed status is from a previous run.
                   const stepRanAt = info?.last_run_at ? new Date(info.last_run_at).getTime() : 0;
-                  const stepDoneThisRun = (info?.status === 'completed' || info?.status === 'failed') && stepRanAt >= chainStartedAt;
+                  const stepDoneThisRun = (info?.status === 'completed' || info?.status === 'completed_with_warnings' || info?.status === 'completed_with_errors' || info?.status === 'failed') && stepRanAt >= chainStartedAt;
                   const isPending = isChainRunning && !isRunning && !stepDoneThisRun;
                   const stepGroup = PIPELINE_REGISTRY[step.slug]?.group;
                   const dot = isDisabled
@@ -850,6 +856,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                             <span className={`inline-block w-2 h-2 rounded-full ${
                               !info ? 'bg-gray-300'
                               : info.status === 'completed' ? 'bg-green-500'
+                              : info.status === 'completed_with_warnings' ? 'bg-amber-500'
+                              : info.status === 'completed_with_errors' ? 'bg-red-500'
                               : info.status === 'failed' ? 'bg-red-500'
                               : info.status === 'running' ? 'bg-blue-500'
                               : info.status === 'skipped' ? 'bg-gray-400'
@@ -859,6 +867,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                             <span className={`font-semibold ${
                               !info ? 'text-gray-400'
                               : info.status === 'completed' ? 'text-green-700'
+                              : info.status === 'completed_with_warnings' ? 'text-amber-700'
+                              : info.status === 'completed_with_errors' ? 'text-red-600'
                               : info.status === 'failed' ? 'text-red-600'
                               : info.status === 'running' ? 'text-blue-600'
                               : info.status === 'skipped' ? 'text-gray-500'
@@ -918,6 +928,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                   <span className={`drilldown-status text-xs font-semibold ${
                                     !info ? 'text-gray-400'
                                     : info.status === 'completed' ? 'text-green-700'
+                                    : info.status === 'completed_with_warnings' ? 'text-amber-700'
+                                    : info.status === 'completed_with_errors' ? 'text-red-600'
                                     : info.status === 'failed' ? 'text-red-600'
                                     : info.status === 'running' ? 'text-blue-600'
                                     : info.status === 'skipped' ? 'text-gray-500'

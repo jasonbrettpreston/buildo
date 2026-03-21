@@ -1,59 +1,63 @@
-# Active Task: Phase 1 — Add audit_table to 10 permits chain scripts
+# Active Task: Phase 2 — Aggregate audit_table verdicts in run-chain.js
 **Status:** Implementation
-**Rollback Anchor:** `52fd9e3`
+**Rollback Anchor:** `fcd6ff6`
 **Workflow:** WF2 — Feature Enhancement
 
 ## Context
-* **Goal:** Add structured `audit_table` objects (inside `records_meta`) to all 10 permits-chain-specific scripts that currently lack them. This enables the FreshnessTimeline UI to render per-step observability tables with Metric/Value/Threshold/Status columns — matching the pattern already working for CoA chain steps.
-* **Target Spec:** `docs/specs/37_pipeline_system.md`, `docs/specs/28_data_quality_dashboard.md`
-* **Key Files (10 scripts to modify):**
-  1. `scripts/load-permits.js` — Phase 2: Permit Ingestion
-  2. `scripts/classify-scope.js` — Phase 3: Scope Classification
-  3. `scripts/extract-builders.js` — Phase 4: Builder Extraction
-  4. `scripts/link-wsib.js` — Phase 5: WSIB Registry Matching
-  5. `scripts/geocode-permits.js` — Phase 6: Permit Geocoding
-  6. `scripts/link-parcels.js` — Phase 7: Parcel Linking
-  7. `scripts/link-neighbourhoods.js` — Phase 8: Neighbourhood Linking
-  8. `scripts/link-massing.js` — Phase 9: Building Footprint Linking
-  9. `scripts/link-similar.js` — Phase 10: Similar Permit Linking
-  10. `scripts/classify-permits.js` — Phase 11: Trade Classification
+* **Goal:** Update `scripts/run-chain.js` to aggregate `records_meta.audit_table.verdict` strings from each completed step. When any step has `verdict: 'WARN'`, the chain-level status should be `'completed_with_warnings'` instead of plain `'completed'`. When any step has `verdict: 'FAIL'` (but the script still exited 0), the chain should be `'completed_with_errors'`. This gives the admin dashboard a chain-level amber/red signal without halting the pipeline.
+* **Target Spec:** `docs/specs/37_pipeline_system.md`
+* **Key Files:**
+  - `scripts/run-chain.js` — aggregate verdicts, update chain status
+  - `src/components/FreshnessTimeline.tsx` — render new chain-level statuses (amber for warnings)
 
 ## Technical Implementation
-* **Pattern:** Match existing CoA audit_table format (`{ phase, name, verdict, rows: [{ metric, value, threshold, status }] }`) nested inside `records_meta.audit_table` in existing `emitSummary()` calls.
-* **No new counters needed** — all metrics reference variables already tracked in each script.
-* **Existing `records_meta` fields preserved** — audit_table is additive.
-* **FAIL/WARN/PASS criteria per step:**
-  - **FAIL:** api_errors > 0, schema_drift > 0, records_errors > 0 (step 2), total_in_db < normalized (step 4), neighbourhoods != 158 (step 8), buildings_indexed == 0 (step 9), coverage == 0% (step 11)
-  - **WARN:** tags_coverage < 50% (3), link_rate < 70% (5), coverage < 95% (6), link_rate < 75% (7), link_rate < 95% (8), link_rate < 50% (9), propagated == 0 (10), coverage < 95% or avg_trades < 1.5 (11)
-  - **INFO:** All observational counters (inserted, updated, matched, latencies, etc.)
-* **Database Impact:** NO
-* **UI Impact:** NO — FreshnessTimeline.tsx already renders audit_table objects
+* **Verdict collection:** After each step completes, extract `recordsMeta?.audit_table?.verdict` and push to a `stepVerdicts` array.
+* **Chain status logic (lines 321-337):**
+  ```
+  Current:  cancelled | failed | completed
+  New:      cancelled | failed | completed_with_errors | completed_with_warnings | completed
+  ```
+  - If any step exited non-zero → `'failed'` (unchanged)
+  - If all steps exited 0 but any verdict is `'FAIL'` → `'completed_with_errors'`
+  - If all steps exited 0 but any verdict is `'WARN'` → `'completed_with_warnings'`
+  - If all verdicts are `'PASS'` or `'INFO'` → `'completed'`
+* **Chain records_meta:** Include `{ step_verdicts: { step_slug: 'PASS'|'WARN'|'FAIL', ... } }` for drill-down
+* **UI rendering:** FreshnessTimeline already color-codes chain status. Need to add `completed_with_warnings` → amber and `completed_with_errors` → red badge treatment.
+* **Database Impact:** NO — status is a TEXT column, accepts any string
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — adding data to existing emitSummary calls
-* **Unhappy Path Tests:** N/A — audit_table is informational metadata
+* **Try-Catch Boundary:** N/A — adding data aggregation to existing orchestrator
+* **Unhappy Path Tests:** N/A — orchestrator infrastructure
 * **logError Mandate:** N/A
 * **Mobile-First:** N/A
 
 ## §10 Plan Compliance Checklist
 
 ### If Pipeline Script Created/Modified:
-- [x] Uses Pipeline SDK: all 10 scripts already use `pipeline.run`, `emitSummary`, `emitMeta` (§9.4)
-- [x] No new streaming changes (§9.5)
+- [x] Uses Pipeline SDK: run-chain.js is the orchestrator itself (§9.4)
+- [x] No streaming changes (§9.5)
 
-### Other categories:
+### If UI Component Created/Modified:
+- [x] Mobile-first: adding status color mapping only, no layout changes (§1.1)
+- [x] No new touch targets
+
+### Other:
 - ⬜ DB — N/A
 - ⬜ API — N/A
-- ⬜ UI — N/A (existing renderer handles new data automatically)
 - ⬜ Shared Logic — N/A
 
 ## Execution Plan
-- [ ] **State Verification:** Confirmed all 10 scripts have emitSummary calls with records_meta but no audit_table
+- [ ] **State Verification:** Current chain status is binary: completed | failed | cancelled
 - [ ] **Contract Definition:** N/A
 - [ ] **Spec Update:** N/A
 - [ ] **Schema Evolution:** N/A
-- [ ] **Guardrail Test:** N/A — metadata addition, existing tests unaffected
+- [ ] **Guardrail Test:** N/A — orchestrator + UI display logic
 - [ ] **Red Light:** N/A
-- [ ] **Implementation:** Add audit_table to emitSummary records_meta in all 10 scripts
-- [ ] **UI Regression Check:** N/A — renderer auto-detects audit_table
+- [ ] **Implementation:**
+  1. Add `stepVerdicts` array to run-chain.js
+  2. After each step, extract audit_table.verdict from recordsMeta
+  3. Compute chain-level verdict from aggregated step verdicts
+  4. Update chain pipeline_runs row with enriched status + step_verdicts in records_meta
+  5. Update FreshnessTimeline.tsx status color mapping for new statuses
+- [ ] **UI Regression Check:** N/A — status display only
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.

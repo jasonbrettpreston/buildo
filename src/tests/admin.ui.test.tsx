@@ -2266,7 +2266,7 @@ describe('Full-tile status coloring (no more dots)', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     // Direct 1:1 mapping — completed → green, no stale detection
-    const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 800);
+    const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 1200);
     expect(dotFn).toContain("'completed'");
     expect(dotFn).toContain("'Completed'");
     expect(dotFn).toContain('bg-green-50');
@@ -2336,7 +2336,7 @@ describe('Full-tile status coloring (no more dots)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    const statusBar = source.slice(source.indexOf('drilldown-status-bar'), source.indexOf('drilldown-status-bar') + 1500);
+    const statusBar = source.slice(source.indexOf('drilldown-status-bar'), source.indexOf('drilldown-status-bar') + 2000);
     expect(statusBar).toContain("'skipped'");
     expect(statusBar).toContain("'cancelled'");
     expect(statusBar).toContain('bg-orange-400');
@@ -2450,7 +2450,7 @@ describe('Drill-down status always visible', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const barStart = source.indexOf('drilldown-status-bar');
-    const barSection = source.slice(barStart, barStart + 2000);
+    const barSection = source.slice(barStart, barStart + 2500);
     // Colored status dot
     expect(barSection).toContain('bg-green-500');
     expect(barSection).toContain('bg-red-500');

@@ -1605,7 +1605,7 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const fnStart = source.indexOf('function getStatusDot');
-    const fnBody = source.slice(fnStart, fnStart + 800);
+    const fnBody = source.slice(fnStart, fnStart + 1200);
     // Direct DB status → color mapping
     expect(fnBody).toContain("'completed'");
     expect(fnBody).toContain("'Completed'");
@@ -1624,7 +1624,7 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
     );
     expect(source).toContain('function getFreshnessBadge');
     const fnStart = source.indexOf('function getFreshnessBadge');
-    const fnBody = source.slice(fnStart, fnStart + 800);
+    const fnBody = source.slice(fnStart, fnStart + 1200);
     expect(fnBody).toContain("'Fresh'");
     expect(fnBody).toContain("'Aging'");
     expect(fnBody).toContain("'Overdue'");

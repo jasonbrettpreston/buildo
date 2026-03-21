@@ -88,6 +88,7 @@ async function run() {
   let failedStep = null;
   let gateSkipped = false;
   let wasCancelled = false;
+  const stepVerdicts = {}; // slug → 'PASS' | 'WARN' | 'FAIL'
 
   for (let i = 0; i < steps.length; i++) {
     const slug = steps[i];
@@ -242,6 +243,11 @@ async function run() {
         } catch { /* malformed summary — ignore */ }
       }
 
+      // Extract audit_table verdict for chain-level aggregation
+      if (recordsMeta?.audit_table?.verdict) {
+        stepVerdicts[slug] = recordsMeta.audit_table.verdict;
+      }
+
       // Parse PIPELINE_META line for self-documented reads/writes
       const metaMatch = output.match(/PIPELINE_META:(.+)/);
       if (metaMatch) {
@@ -318,27 +324,49 @@ async function run() {
     }
   }
 
-  // Update parent chain row
+  // Update parent chain row — aggregate step verdicts for chain-level health
   const chainDurationMs = Date.now() - chainStart;
-  const chainStatus = wasCancelled ? 'cancelled' : failedStep ? 'failed' : 'completed';
+  const verdictValues = Object.values(stepVerdicts);
+  const hasVerdictFails = verdictValues.includes('FAIL');
+  const hasVerdictWarns = verdictValues.includes('WARN');
+
+  let chainStatus;
+  if (wasCancelled) chainStatus = 'cancelled';
+  else if (failedStep) chainStatus = 'failed';
+  else if (hasVerdictFails) chainStatus = 'completed_with_errors';
+  else if (hasVerdictWarns) chainStatus = 'completed_with_warnings';
+  else chainStatus = 'completed';
+
   const chainError = failedStep
     ? `Stopped at step: ${failedStep}`
     : gateSkipped
       ? '0 new records — downstream steps skipped'
       : null;
 
+  // Include step verdicts in chain records_meta for drill-down
+  const chainMeta = Object.keys(stepVerdicts).length > 0
+    ? JSON.stringify({ step_verdicts: stepVerdicts })
+    : null;
+
   if (chainRunId) {
     await pool.query(
       `UPDATE pipeline_runs
-       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3
+       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,
+           records_meta = COALESCE(records_meta, '{}'::jsonb) || COALESCE($5::jsonb, '{}'::jsonb)
        WHERE id = $4`,
-      [chainStatus, chainDurationMs, chainError, chainRunId]
+      [chainStatus, chainDurationMs, chainError, chainRunId, chainMeta]
     ).catch((dbErr) => { pipeline.log.error('[run-chain]', `Failed to update chain status: ${dbErr.message}`); });
   }
 
   console.log(`=== Chain ${chainId}: ${chainStatus} (${(chainDurationMs / 1000).toFixed(1)}s) ===`);
   if (failedStep) {
     pipeline.log.error('[run-chain]', `Chain stopped at step: ${failedStep}`);
+  }
+  if (hasVerdictFails && !failedStep) {
+    pipeline.log.warn('[run-chain]', `Chain completed but ${verdictValues.filter(v => v === 'FAIL').length} step(s) reported FAIL verdicts`, { step_verdicts: stepVerdicts });
+  }
+  if (hasVerdictWarns && !hasVerdictFails && !failedStep) {
+    pipeline.log.warn('[run-chain]', `Chain completed with ${verdictValues.filter(v => v === 'WARN').length} warning(s)`, { step_verdicts: stepVerdicts });
   }
   if (gateSkipped) {
     pipeline.log.info('[run-chain]', '0 new records — downstream steps skipped (stale data, not a failure)');
