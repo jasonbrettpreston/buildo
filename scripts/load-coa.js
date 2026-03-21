@@ -343,7 +343,7 @@ pipeline.run('load-coa', async (pool) => {
         },
       },
     });
-    process.exit(1);
+    throw new Error(`Schema drift detected: ${tel.schema_drift.join(', ')}`);
   }
 
   // Deduplicate by application_number (active may overlap with closed)

@@ -25,8 +25,7 @@ async function main() {
     classifyScope = scope.classifyScope;
   } catch (e) {
     console.error('Failed to import modules. Run with: npx tsx scripts/reclassify-all.js');
-    console.error(e);
-    process.exit(1);
+    throw e;
   }
 
   try {
@@ -150,5 +149,5 @@ async function main() {
 
 main().catch((err) => {
   console.error('Fatal error:', err);
-  process.exit(1);
+  process.exitCode = 1;
 });

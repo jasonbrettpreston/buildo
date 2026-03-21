@@ -405,7 +405,7 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
           },
         },
       });
-      process.exit(1);
+      throw new Error(`Schema drift detected: ${tel.schema_drift.join(', ')}`);
     }
   }
 

@@ -45,7 +45,7 @@ async function run() {
       );
       runId = res.rows[0].id;
     } catch (err) {
-      console.warn('Could not insert pipeline_runs row:', err.message);
+      pipeline.log.warn('[assert-engine-health]', `Could not insert pipeline_runs row: ${err.message}`);
     }
   }
 

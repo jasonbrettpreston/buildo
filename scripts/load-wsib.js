@@ -74,14 +74,12 @@ pipeline.run('load-wsib', async (pool) => {
       );
       return;
     }
-    pipeline.log.error('[load-wsib]', 'Usage: node scripts/load-wsib.js --file <path-to-csv>');
-    process.exit(1);
+    throw new Error('Usage: node scripts/load-wsib.js --file <path-to-csv>');
   }
   const filePath = args[fileIdx + 1];
 
   if (!fs.existsSync(filePath)) {
-    pipeline.log.error('[load-wsib]', `File not found: ${filePath}`);
-    process.exit(1);
+    throw new Error(`File not found: ${filePath}`);
   }
 
   pipeline.log.info('[load-wsib]', `Source: ${filePath}`);
