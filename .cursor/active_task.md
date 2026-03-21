@@ -1,25 +1,18 @@
-# Active Task: Fix assert-coa-freshness.js — Time Traveler Bug
+# Active Task: Fix assert-network-health.js — remove unnecessary status filter + defensive defaults
 **Status:** Implementation
-**Rollback Anchor:** `0ea3498`
+**Rollback Anchor:** `fcd6c30`
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Fix the "Time Traveler Bug" — future hearing dates (up to 12 months ahead) mask portal rot by producing `maxDaysStale = 0` even when the CKAN portal is frozen. Use `MAX(last_seen_at)` (ingestion timestamp) as the primary freshness indicator, with `MAX(decision_date)` as a secondary check. Remove `hearing_date` from staleness calculation since hearings are scheduled in the future.
-* **Target Spec:** `docs/specs/12_coa_integration.md`
+* **Goal:** Remove the `status = 'completed'` filter from the telemetry query — it's unnecessary (run-chain.js already updates each step before the next runs) and creates a fragile coupling to orchestrator write-timing. Also add defensive row defaulting for first-ever-run scenario.
+* **Target Spec:** `docs/specs/38_inspection_scraping.md` §3.6 Step 2
 * **Key Files:**
-  - `scripts/quality/assert-coa-freshness.js` — fix staleness calculation
+  - `scripts/quality/assert-network-health.js` — fix SQL query + defensive defaults
 
 ## Technical Implementation
-* **Root cause:** `newestMs = Math.max(maxHearingMs, maxDecisionMs)` picks the future hearing date. `Math.max(0, Date.now() - futureDate)` evaluates to 0. Portal rot is hidden for months.
-* **Fix:** Replace with `MAX(last_seen_at)` as primary freshness metric (updated by load-coa.js on every ingestion). Keep `decision_date` and `hearing_date` as INFO metrics for context. Add `last_ingestion` metric with the `< 45 days` threshold.
-* **Confirmed:** `coa_applications.last_seen_at` is `2026-03-17` (3 days ago). `hearing_date` max is `2027-03-10` (12 months future). Bug is live.
+* **Fix 1:** Remove `AND status = 'completed'` from the SQL query. The `ORDER BY started_at DESC LIMIT 1` already gets the most recent run. This removes the fragile coupling and future-proofs against orchestrator timing changes.
+* **Fix 2:** Default `lastRun.rows[0]` to empty object to prevent potential undefined destructuring on first-ever run.
 * **Database Impact:** NO
-
-## Standards Compliance
-* **Try-Catch Boundary:** N/A
-* **Unhappy Path Tests:** N/A
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A
 
 ## §10 Plan Compliance Checklist
 ### If Pipeline Script Created/Modified:
@@ -28,10 +21,7 @@
 ### Other: ⬜ All N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `0ea3498`
-- [ ] **State Verification:** Confirmed hearing_date max is 2027-03-10 (future), last_seen_at is 2026-03-17 (correct)
-- [ ] **Spec Review:** Portal rot detection should measure ingestion freshness, not event dates
-- [ ] **Reproduction:** Confirmed via psql query
-- [ ] **Red Light:** N/A — SQL logic fix
-- [ ] **Fix:** Use MAX(last_seen_at) for staleness, keep dates as INFO
+- [ ] **Rollback Anchor:** `fcd6c30`
+- [ ] **State Verification:** Confirmed run-chain.js updates step rows before next step (Scenario A)
+- [ ] **Fix:** Remove status filter + add defensive defaults
 - [ ] **Green Light:** typecheck + test pass → WF6

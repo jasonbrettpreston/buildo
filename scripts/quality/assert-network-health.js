@@ -26,16 +26,18 @@ pipeline.run('assert-network-health', async (pool) => {
   const warnings = [];
   const rows = [];
 
-  // Fetch latest completed inspections run with scraper_telemetry
+  // Fetch latest inspections run with scraper_telemetry.
+  // No status filter — run-chain.js updates each step row to 'completed'
+  // before the next step runs, but removing the filter future-proofs against
+  // orchestrator timing changes.
   const lastRun = await pool.query(
     `SELECT records_meta, records_updated FROM pipeline_runs
      WHERE (pipeline = 'inspections' OR pipeline LIKE '%:inspections')
-       AND status = 'completed'
      ORDER BY started_at DESC LIMIT 1`
   );
 
-  const row = lastRun.rows[0];
-  const scTel = row?.records_meta?.scraper_telemetry;
+  const row = lastRun.rows[0] || {};
+  const scTel = row.records_meta?.scraper_telemetry;
 
   if (!scTel) {
     console.log('  SKIP: No scraper_telemetry in latest inspections run');
