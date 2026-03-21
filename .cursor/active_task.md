@@ -1,42 +1,68 @@
-# Active Task: Delete 7 orphan POC/test scripts
+# Active Task: Reorder permits chain — move classify_permits after all linking steps
 **Status:** Implementation
-**Rollback Anchor:** `da5fe6d`
-**Workflow:** WF3 — Bug Fix
+**Rollback Anchor:** `3fa259c`
+**Workflow:** WF2 — Feature Enhancement
 
 ## Context
-* **Goal:** Delete 7 orphan scripts identified by the WF5 pipeline health audit. These are POC experiments and integration tests that are not registered in manifest.json, not referenced by any src/ code, and not part of any pipeline chain. They add repo clutter and could confuse future developers.
-* **Target Spec:** `docs/specs/37_pipeline_system.md` (manifest is single source of truth)
-* **Key Files to DELETE:**
-  - `scripts/bandwidth-sniff.js` — Network bandwidth POC
-  - `scripts/bandwidth-test.js` — Network bandwidth POC
-  - `scripts/bandwidth-test-v3.js` — Network bandwidth POC
-  - `scripts/bandwidth-test-v4.js` — Network bandwidth POC
-  - `scripts/bandwidth-test-v5.js` — Network bandwidth POC
-  - `scripts/poc-aic-scraper.js` — Scraper v1, superseded by poc-aic-scraper-v2.js
-  - `scripts/test-wsib-download.js` — One-time WSIB integration test
+* **Goal:** Move `classify_permits` from step 4 to step 11 in the permits chain so that trade classification and lead scoring run after all identity resolution (builders, WSIB) and spatial linking (geocode, parcels, neighbourhoods, massing) are complete. Future-proofs the scoring formula for when WSIB/neighbourhood/parcel signals are added.
+* **Target Spec:** `docs/specs/37_pipeline_system.md`
+* **Key Files:**
+  - `scripts/manifest.json` — reorder permits chain array
+  - `src/components/FreshnessTimeline.tsx` — reorder UI steps array (step numbers auto-computed by `computeStepNumbers`)
 
 ## Technical Implementation
-* **Deletions only** — no code modifications, no schema changes.
+* **Current order (steps 3–11):**
+  ```
+  3:classify_scope → 4:classify_permits → 5:builders → 6:link_wsib →
+  7:geocode_permits → 8:link_parcels → 9:link_neighbourhoods → 10:link_massing → 11:link_similar
+  ```
+* **New order (steps 3–11):**
+  ```
+  3:classify_scope → 4:builders → 5:link_wsib → 6:geocode_permits →
+  7:link_parcels → 8:link_neighbourhoods → 9:link_massing → 10:link_similar → 11:classify_permits
+  ```
+* **UI impact:** Step numbers in FreshnessTimeline are auto-computed from array position (`computeStepNumbers` increments a counter). Reordering the array automatically renumbers the badges. No manual numbering edits needed.
+* **Dependency audit (verified via grep — zero permit_trades readers in steps 5–10):**
+  - `classify_permits` reads `scope_tags` → set by step 3 (classify_scope) ✅
+  - `classify_permits` reads `permits` → loaded at step 2 ✅
+  - `link_similar` reads `scope_tags` → still after step 3 ✅
+  - `refresh_snapshot` reads `permit_trades` → runs at step 14 (after new step 11) ✅
+  - Chain gate on step 2 still skips steps 3–13 when 0 new ✅
+  - `chain.logic.test.ts` checks count (16) + last step, not exact order ✅
 * **Database Impact:** NO
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A
+* **Try-Catch Boundary:** N/A — no code changes
 * **Unhappy Path Tests:** N/A
 * **logError Mandate:** N/A
-* **Mobile-First:** N/A
+* **Mobile-First:** N/A — reordering data array, no layout/touch/viewport changes
 
 ## §10 Plan Compliance Checklist
-- ⬜ DB — N/A
-- ⬜ API — N/A
-- ⬜ UI — N/A
-- ⬜ Shared Logic — N/A
-- ⬜ Pipeline — N/A (deleting unregistered scripts, not modifying pipeline steps)
+
+### If Database Impact = YES:
+- ⬜ N/A
+
+### If API Route Created/Modified:
+- ⬜ N/A
+
+### If UI Component Created/Modified:
+- ⬜ N/A — reordering an existing data array in FreshnessTimeline.tsx, not modifying component layout, touch targets, or responsive behavior. Step numbers auto-computed.
+
+### If Shared Logic Touched:
+- ⬜ N/A
+
+### If Pipeline Script Created/Modified:
+- ⬜ N/A — no scripts modified, only chain ordering in manifest.json config
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `da5fe6d`
-- [ ] **State Verification:** All 7 files confirmed as orphans — not in manifest.json, not imported by src/, not in any chain.
-- [ ] **Spec Review:** §9.6 mandates manifest.json as single source of truth. These scripts are outside that registry.
-- [ ] **Reproduction:** Confirmed via grep — zero references in manifest or src.
-- [ ] **Red Light:** N/A — file deletions, not logic changes.
-- [ ] **Fix:** Delete all 7 files.
+- [ ] **State Verification:** Confirmed zero dependencies on `permit_trades` in steps 5–10.
+- [ ] **Contract Definition:** N/A
+- [ ] **Spec Update:** N/A
+- [ ] **Schema Evolution:** N/A
+- [ ] **Guardrail Test:** Existing chain.logic.test.ts validates step count (16) and terminal step.
+- [ ] **Red Light:** N/A — configuration change.
+- [ ] **Implementation:**
+  1. Update `scripts/manifest.json` permits chain array
+  2. Update `src/components/FreshnessTimeline.tsx` permits steps array
+- [ ] **UI Regression Check:** N/A — data array reorder, no shared component changes.
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.

@@ -38,10 +38,10 @@
 
   "chains": {
     "permits": [
-      "assert_schema", "permits", "classify_scope", "classify_permits",
+      "assert_schema", "permits", "classify_scope",
       "builders", "link_wsib", "geocode_permits", "link_parcels",
-      "link_neighbourhoods", "link_massing", "link_similar", "link_coa",
-      "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
+      "link_neighbourhoods", "link_massing", "link_similar", "classify_permits",
+      "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
     ],
     "coa": [
       "assert_schema", "coa", "assert_coa_freshness", "link_coa", "create_pre_permits",
