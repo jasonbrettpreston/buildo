@@ -1,27 +1,44 @@
-# Active Task: Fix assert-data-bounds.js — WSIB metrics missing from audit_table
+# Active Task: Fix Pipeline Trigger Hang + Add Chain Force-Recovery
 **Status:** Implementation
-**Rollback Anchor:** `8c9e64d`
-**Workflow:** WF3 — Bug Fix
+**Workflow:** WF3 — Bug Fix (dual)
 
 ## Context
-* **Goal:** WSIB registry checks (legal names, G-class, NAICS codes, orphaned links) push to errors/warnings arrays but are NOT included in any audit_table. When WSIB fails, the dashboard shows red but the accordion table only shows permit/source metrics — admin can't see WHY it failed without checking server logs.
-* **Target Spec:** `docs/specs/35_wsib_registry.md`
+* **Goal:** Fix two pipeline system bugs:
+  - **Bug 1 (Tier 3 Trigger):** API-triggered pipeline steps (`POST /api/admin/pipelines/[slug]`) hang indefinitely on Windows. `execFile` causes `pool.connect()` to block because stdin is piped (not inherited). Scripts complete in <1s from CLI but timeout at 600s via API.
+  - **Bug 2 (Gate Recovery):** If a chain crashes mid-run, re-running the chain skips all downstream steps because the gate step reports 0 new records (data already loaded). No `--force` flag exists to bypass gate-skip for recovery.
+* **Target Spec:** `docs/specs/37_pipeline_system.md`
 * **Key Files:**
-  - `scripts/quality/assert-data-bounds.js` — hoist WSIB variables, append to active audit_table
+  - `src/app/api/admin/pipelines/[slug]/route.ts` — API route using `execFile` (Bug 1)
+  - `scripts/run-chain.js` — Chain orchestrator with gate-skip logic (Bug 2)
 
 ## Technical Implementation
-* **Bug:** WSIB check variables (`wsibNoName`, `wsibNonG`, `wsibBadNaics`, `wsibOrphan`) are scoped inside a `try` block (lines 382-445). They're not accessible when building the audit_table. WSIB errors show in logs and fail the script, but the UI audit_table has no WSIB rows.
-* **Fix:** Hoist `let wsibNoName = 0, wsibNonG = 0, wsibBadNaics = 0, wsibOrphan = 0` before the try block. After the WSIB checks, build WSIB audit rows and append to whichever audit_table is active (permits or sources). Re-evaluate verdict if WSIB rows have FAILs.
-* **Database Impact:** NO
 
-## §10 Plan Compliance Checklist
-### If Pipeline Script Created/Modified:
-- [x] Uses Pipeline SDK (§9.4)
-- [x] No streaming changes (§9.5)
-### Other: ⬜ All N/A
+### Bug 1: Replace `execFile` with `spawn` in API route
+* **Root Cause:** `execFile` sets stdin to `pipe` mode. On Windows, the pg library's `pool.connect()` blocks when stdin is a pipe with no data. `spawn` with `stdio: ['ignore', 'pipe', 'pipe']` fixes this by closing stdin.
+* **Fix:** Replace `execFile(...)` call with `spawn(...)` + manual stdout/stderr buffering + timeout handling. Match the pattern used by `run-chain.js` (which uses spawn and works).
+* **Affected:** `src/app/api/admin/pipelines/[slug]/route.ts` — the `POST` handler's script spawning logic.
+
+### Bug 2: Add `--force` flag to chain orchestrator
+* **Root Cause:** `run-chain.js` line 291-294 sets `gateSkipped = true` when the gate step reports 0 new + 0 updated. No mechanism to override this.
+* **Fix:** Accept `--force` CLI arg (passed via API when user holds shift or adds `?force=true`). When `--force` is set, skip the gate-skip logic entirely. Update API route to forward the force flag.
+* **Affected:** `scripts/run-chain.js` (gate logic), `src/app/api/admin/pipelines/[slug]/route.ts` (pass --force arg).
+
+### Database Impact: NO
+
+## Standards Compliance
+* **Try-Catch Boundary:** API route already has overarching try-catch — no change needed.
+* **Unhappy Path Tests:** Add test for spawn failure handling. Existing API tests cover 400/500.
+* **logError Mandate:** Already using `logError` in catch blocks — no change needed.
+* **Mobile-First:** N/A (backend only)
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `8c9e64d`
-- [ ] **State Verification:** Confirmed WSIB metrics not in any audit_table
-- [ ] **Fix:** Hoist variables + build WSIB rows + append to active audit_table
-- [ ] **Green Light:** typecheck + test pass → WF6
+- [ ] **Rollback Anchor:** `326bb84`
+- [ ] **State Verification:** Confirmed `execFile` hangs with `pool.connect()` on Windows; `spawn` with `stdio: ['ignore', 'pipe', 'pipe']` works. Confirmed gate-skip has no override.
+- [ ] **Spec Review:** `docs/specs/37_pipeline_system.md` — SDK contract, chain orchestration model.
+- [ ] **Reproduction:** `execFile` test shows 15s timeout with only 3 stdout lines. `spawn` via run-chain.js completes in 0.2s.
+- [ ] **Red Light:** N/A — this is a runtime behavior bug, not testable in vitest without spawning real PG.
+- [ ] **Fix Bug 1:** Replace `execFile` with `spawn` in API route, buffer stdout/stderr manually, handle timeout via `setTimeout` + `child.kill()`.
+- [ ] **Fix Bug 2:** Add `--force` arg parsing in `run-chain.js`, skip gate-skip when set. Update API to pass `--force` when `?force=true` query param is present.
+- [ ] **Verify Bug 1:** Trigger `builders` via API curl — must complete in <5s (not 600s timeout).
+- [ ] **Verify Bug 2:** Run `node scripts/run-chain.js permits --force` — all 16 steps must execute (no gate-skip).
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.

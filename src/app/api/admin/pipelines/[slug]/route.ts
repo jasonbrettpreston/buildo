@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
-import { execFile, ChildProcess } from 'child_process';
+import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
@@ -153,86 +153,118 @@ export async function POST(
     console.warn(`[pipelines/${slug}] pipeline_runs table not available, running without tracking:`, trackErr instanceof Error ? trackErr.message : trackErr);
   }
 
+  // Bug 1 fix: Use spawn (not execFile) — execFile pipes stdin which causes
+  // pg pool.connect() to hang on Windows. spawn with 'ignore' stdin avoids this.
+  // Also supports ?force=true for chain recovery (Bug 2).
+  const forceMode = request.nextUrl.searchParams.get('force') === 'true';
+
   try {
     const startMs = Date.now();
 
     // For chain slugs, pass the chain ID and the pre-created runId so the
     // chain script reuses it instead of inserting a duplicate tracking row.
     const args = isChain
-      ? [scriptPath, slug.replace(/^chain_/, ''), ...(runId ? [String(runId)] : [])]
+      ? [scriptPath, slug.replace(/^chain_/, ''), ...(runId ? [String(runId)] : []), ...(forceMode ? ['--force'] : [])]
       : [scriptPath];
     const timeout = isChain ? 3_600_000 : 600_000; // 1 hour for chains, 10 min for individual
 
-    const child = execFile(
-      'node',
-      args,
-      { timeout, env: process.env },
-      async (err, stdout, stderr) => {
-        runningProcesses.delete(slug);
+    // spawn with stdin='ignore' to prevent Windows pg connection hang.
+    // stdout/stderr are piped for PIPELINE_SUMMARY/META parsing.
+    const child = spawn('node', args, {
+      env: process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
 
-        if (err) {
-          logError(`[pipelines/${slug}]`, err, { event: 'script_failed', run_id: runId, stderr: stderr?.slice(0, 2000) });
-        }
+    // Buffer stdout/stderr for parsing after process exits
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (data: Buffer) => { stdout += data.toString('utf-8'); });
+    child.stderr.on('data', (data: Buffer) => { stderr += data.toString('utf-8'); });
 
-        // For chain slugs, skip the status/error_message UPDATE — run-chain.js
-        // manages its own row. The chain script sets status (completed/failed/cancelled)
-        // and a clean error_message directly. If we overwrite here, we'd replace it
-        // with raw stderr content (assert_schema warnings, JSON log entries, etc.).
-        // The stale-run cleanup (above) handles the case where the chain process
-        // dies without updating its row (timeout, crash).
-        if (isChain) return;
+    // Timeout: kill the process if it exceeds the limit
+    const timeoutHandle = setTimeout(() => {
+      if (!child.killed) {
+        child.kill('SIGTERM');
+        // Give 5s for graceful shutdown, then force-kill
+        setTimeout(() => { if (!child.killed) child.kill('SIGKILL'); }, 5000);
+      }
+    }, timeout);
 
-        const durationMs = Date.now() - startMs;
-        const status = err ? 'failed' : 'completed';
-        // Prefer stderr for error details, fall back to err.message
-        const errorMsg = err
-          ? (stderr?.trim() || err.message).slice(0, 4000)
-          : null;
+    child.on('close', async (code) => {
+      clearTimeout(timeoutHandle);
+      runningProcesses.delete(slug);
 
-        // Parse PIPELINE_SUMMARY from stdout for record counts + records_meta
-        let recordsTotal: number | null = null;
-        let recordsNew: number | null = null;
-        let recordsUpdated: number | null = null;
-        let recordsMeta: Record<string, unknown> | null = null;
-        const summaryMatch = stdout?.match(/PIPELINE_SUMMARY:(.+)/);
-        if (summaryMatch) {
-          try {
-            const summary = JSON.parse(summaryMatch[1]);
-            recordsTotal = summary.records_total ?? null;
-            recordsNew = summary.records_new ?? null;
-            recordsUpdated = summary.records_updated ?? null;
-            recordsMeta = summary.records_meta ?? null;
-          } catch { /* malformed summary — ignore */ }
-        }
+      const err = code !== 0;
+      if (err) {
+        logError(`[pipelines/${slug}]`, new Error(`Script exited with code ${code}`), {
+          event: 'script_failed', run_id: runId, stderr: stderr?.slice(0, 2000),
+        });
+      }
 
-        // Parse PIPELINE_META from stdout for self-documented reads/writes
-        const metaMatch = stdout?.match(/PIPELINE_META:(.+)/);
-        if (metaMatch) {
-          try {
-            const pipelineMeta = JSON.parse(metaMatch[1]);
-            recordsMeta = { ...(recordsMeta || {}), pipeline_meta: pipelineMeta };
-          } catch { /* malformed meta — ignore */ }
-        }
+      // isChain guard: skip the status/error_message UPDATE — run-chain.js
+      // manages its own row. The chain script sets status (completed/failed/cancelled)
+      // and a clean error_message directly. If we overwrite here, we'd replace it
+      // with raw stderr content (assert_schema warnings, JSON log entries, etc.).
+      // The stale-run cleanup (above) handles the case where the chain process
+      // dies without updating its row (timeout, crash).
+      if (isChain) return;
 
-        if (runId) {
-          try {
-            await query(
-              `UPDATE pipeline_runs
+      const durationMs = Date.now() - startMs;
+      const status = err ? 'failed' : 'completed';
+      // Prefer stderr for error details, fall back to exit code
+      const errorMsg = err
+        ? (stderr?.trim() || `Process exited with code ${code}`).slice(0, 4000)
+        : null;
+
+      // Parse PIPELINE_SUMMARY from stdout for record counts + records_meta
+      let recordsTotal: number | null = null;
+      let recordsNew: number | null = null;
+      let recordsUpdated: number | null = null;
+      let recordsMeta: Record<string, unknown> | null = null;
+      const summaryMatch = stdout?.match(/PIPELINE_SUMMARY:(.+)/);
+      if (summaryMatch) {
+        try {
+          const summary = JSON.parse(summaryMatch[1]);
+          recordsTotal = summary.records_total ?? null;
+          recordsNew = summary.records_new ?? null;
+          recordsUpdated = summary.records_updated ?? null;
+          recordsMeta = summary.records_meta ?? null;
+        } catch { /* malformed summary — ignore */ }
+      }
+
+      // Parse PIPELINE_META from stdout for self-documented reads/writes
+      const metaMatch = stdout?.match(/PIPELINE_META:(.+)/);
+      if (metaMatch) {
+        try {
+          const pipelineMeta = JSON.parse(metaMatch[1]);
+          recordsMeta = { ...(recordsMeta || {}), pipeline_meta: pipelineMeta };
+        } catch { /* malformed meta — ignore */ }
+      }
+
+      if (runId) {
+        try {
+          await query(
+            `UPDATE pipeline_runs
                SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,
                    records_total = COALESCE($5, records_total),
                    records_new = COALESCE($6, records_new),
                    records_updated = COALESCE($7, records_updated),
                    records_meta = COALESCE($8::jsonb, records_meta)
                WHERE id = $4`,
-              [status, durationMs, errorMsg, runId, recordsTotal, recordsNew, recordsUpdated,
-               recordsMeta ? JSON.stringify(recordsMeta) : null]
-            );
-          } catch (updateErr) {
-            logError(`[pipelines/${slug}]`, updateErr, { event: 'run_update_failed', run_id: runId });
-          }
+            [status, durationMs, errorMsg, runId, recordsTotal, recordsNew, recordsUpdated,
+             recordsMeta ? JSON.stringify(recordsMeta) : null]
+          );
+        } catch (updateErr) {
+          logError(`[pipelines/${slug}]`, updateErr, { event: 'run_update_failed', run_id: runId });
         }
       }
-    );
+    });
+
+    child.on('error', (spawnErr) => {
+      clearTimeout(timeoutHandle);
+      runningProcesses.delete(slug);
+      logError(`[pipelines/${slug}]`, spawnErr, { event: 'spawn_failed', run_id: runId });
+    });
 
     // Track process for cancellation
     runningProcesses.set(slug, child);

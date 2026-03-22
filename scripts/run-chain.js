@@ -48,8 +48,9 @@ async function run() {
   const steps = CHAINS[chainId];
   const chainSlug = `chain_${chainId}`;
   const projectRoot = path.resolve(__dirname, '..');
+  const forceMode = process.argv.includes('--force');
 
-  console.log(`\n=== Chain: ${chainId} (${steps.length} steps) ===\n`);
+  console.log(`\n=== Chain: ${chainId} (${steps.length} steps)${forceMode ? ' [FORCE]' : ''} ===\n`);
 
   // Use pre-created run ID from the API trigger (argv[3]) to avoid a duplicate
   // INSERT and ensure the row exists before the first UI poll.
@@ -288,8 +289,9 @@ async function run() {
       // so non-essential downstream steps are skipped. Quality/infrastructure
       // steps (assert_*, refresh_snapshot) still run — they check cumulative
       // DB state, not just the latest batch.
+      // --force bypasses gate-skip entirely (recovery after mid-chain crash).
       const gate = manifest.chain_gates[chainId];
-      if (gate && slug === gate && recordsNew === 0 && (recordsUpdated ?? 0) === 0) {
+      if (gate && slug === gate && recordsNew === 0 && (recordsUpdated ?? 0) === 0 && !forceMode) {
         console.log(`${stepLabel} — 0 new records — skipping non-essential downstream steps`);
         gateSkipped = true;
       }
