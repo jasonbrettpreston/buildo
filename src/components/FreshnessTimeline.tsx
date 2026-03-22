@@ -249,8 +249,9 @@ export function formatDuration(ms: number | null | undefined): string {
 }
 
 /**
- * Raw DB Transparency: status dot maps 1:1 to pipeline_runs.status.
- * No interpreted states (stale, freshness) — just what the DB says.
+ * Raw DB Transparency: status dot maps 1:1 to pipeline_runs.status,
+ * with audit_table.verdict override for completed steps.
+ * A step that completed (exit 0) but has verdict=FAIL shows red, WARN shows amber.
  */
 function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { color: string; label: string } {
   if (isRunning) return { color: 'bg-blue-50 tile-flash-running', label: 'Running' };
@@ -260,7 +261,14 @@ function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { 
   if (info.status === 'completed_with_warnings') return { color: 'bg-amber-50', label: 'Warnings' };
   if (info.status === 'skipped') return { color: 'bg-gray-50', label: 'Skipped' };
   if (info.status === 'cancelled') return { color: 'bg-gray-50', label: 'Cancelled' };
-  if (info.status === 'completed') return { color: 'bg-green-50', label: 'Completed' };
+  if (info.status === 'completed') {
+    // Override tile color when audit verdict disagrees with process exit code
+    const verdict = (info.records_meta as Record<string, unknown> | null)
+      ?.audit_table as { verdict?: string } | undefined;
+    if (verdict?.verdict === 'FAIL') return { color: 'bg-red-50', label: 'Failed' };
+    if (verdict?.verdict === 'WARN') return { color: 'bg-amber-50', label: 'Warnings' };
+    return { color: 'bg-green-50', label: 'Completed' };
+  }
   return { color: '', label: info.status ?? 'Unknown' };
 }
 
@@ -662,9 +670,11 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                   const expandKey = `${chain.id}-${step.slug}`;
                   const isExpanded = expandedSteps.has(expandKey);
 
-                  // Full-tile status coloring — direct from DB status
+                  // Full-tile status coloring — direct from DB status + audit verdict
                   const tileFlash = dot.label === 'Failed'
                     ? 'tile-flash-stale border-red-400'
+                    : dot.label === 'Warnings'
+                    ? 'border-yellow-400'
                     : dot.label === 'Running'
                     ? 'tile-flash-running border-blue-300'
                     : freshness?.text === 'Aging'

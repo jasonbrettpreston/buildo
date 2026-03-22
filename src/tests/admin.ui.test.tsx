@@ -2261,15 +2261,19 @@ describe('Full-tile status coloring (no more dots)', () => {
     expect(source).toContain('bg-red-50');
   });
 
-  it('getStatusDot maps completed status to green (Raw DB Transparency)', () => {
+  it('getStatusDot maps completed status to green, with verdict override for FAIL/WARN (Raw DB Transparency)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    // Direct 1:1 mapping — completed → green, no stale detection
-    const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 1200);
+    // Direct 1:1 mapping — completed → green, with audit verdict override
+    const dotFn = source.slice(source.indexOf('function getStatusDot'), source.indexOf('function getStatusDot') + 1500);
     expect(dotFn).toContain("'completed'");
     expect(dotFn).toContain("'Completed'");
     expect(dotFn).toContain('bg-green-50');
+    // Verdict override: FAIL → red, WARN → amber
+    expect(dotFn).toContain('audit_table');
+    expect(dotFn).toContain("verdict === 'FAIL'");
+    expect(dotFn).toContain("verdict === 'WARN'");
   });
 
   it('getStatusDot does not reference records_new or stale detection', () => {

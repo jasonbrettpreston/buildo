@@ -1600,17 +1600,20 @@ describe('computeRowData resolves chain-scoped pipeline_last_run keys', () => {
     expect(row.lastRunRecordsTotal).toBe(234856);
   });
 
-  it('getStatusDot maps 1:1 to DB status (Raw DB Transparency — replaces stale detection)', () => {
+  it('getStatusDot maps 1:1 to DB status with audit verdict override (Raw DB Transparency)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const fnStart = source.indexOf('function getStatusDot');
-    const fnBody = source.slice(fnStart, fnStart + 1200);
+    const fnBody = source.slice(fnStart, fnStart + 1500);
     // Direct DB status → color mapping
     expect(fnBody).toContain("'completed'");
     expect(fnBody).toContain("'Completed'");
     expect(fnBody).toContain("'failed'");
     expect(fnBody).toContain("'Failed'");
+    // Verdict override for completed steps
+    expect(fnBody).toContain('audit_table');
+    expect(fnBody).toContain("verdict === 'FAIL'");
     // No stale detection — removed
     expect(fnBody).not.toContain("'Stale'");
     expect(fnBody).not.toContain('records_new');
