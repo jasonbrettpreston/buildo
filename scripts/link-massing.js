@@ -97,43 +97,6 @@ function haversineDistance(p1, p2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/**
- * Get 5 test points for multi-point matching: centroid + 4 bounding box midpoints.
- * parcel must have { centroid_lat, centroid_lng, geometry }.
- */
-function getTestPoints(parcel) {
-  const lat = parseFloat(parcel.centroid_lat);
-  const lng = parseFloat(parcel.centroid_lng);
-  const points = [{ lng, lat, label: 'centroid' }];
-
-  const geom = parcel.geometry;
-  if (geom && geom.coordinates) {
-    let ring = null;
-    if (geom.type === 'Polygon' && geom.coordinates.length > 0) {
-      ring = geom.coordinates[0];
-    } else if (geom.type === 'MultiPolygon' && geom.coordinates.length > 0 && geom.coordinates[0].length > 0) {
-      ring = geom.coordinates[0][0];
-    }
-    if (ring && ring.length >= 4) {
-      let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
-      for (const coord of ring) {
-        if (coord[0] < minLng) minLng = coord[0];
-        if (coord[0] > maxLng) maxLng = coord[0];
-        if (coord[1] < minLat) minLat = coord[1];
-        if (coord[1] > maxLat) maxLat = coord[1];
-      }
-      const midLng = (minLng + maxLng) / 2;
-      const midLat = (minLat + maxLat) / 2;
-      points.push({ lng: midLng, lat: maxLat, label: 'top' });
-      points.push({ lng: midLng, lat: minLat, label: 'bottom' });
-      points.push({ lng: minLng, lat: midLat, label: 'left' });
-      points.push({ lng: maxLng, lat: midLat, label: 'right' });
-    }
-  }
-
-  return points;
-}
-
 // ---------------------------------------------------------------------------
 // Grid-based spatial index (B13)
 // ---------------------------------------------------------------------------
@@ -244,8 +207,7 @@ pipeline.run('link-massing', async (pool) => {
   let parcelsLinked = 0;
   let buildingsMatched = 0;  // algorithmic matches (candidates that hit)
   let buildingsUpserted = 0; // actual DB writes (rowCount from IS DISTINCT FROM)
-  let polygonMatches = 0;
-  let multipointMatches = 0;
+  let centroidInParcelMatches = 0;
   let nearestMatches = 0;
   let noMatch = 0;
   let offset = 0;
@@ -293,57 +255,52 @@ pipeline.run('link-massing', async (pool) => {
         continue;
       }
 
-      // Multi-point matching: test centroid + 4 bbox midpoints against each building
-      const testPoints = getTestPoints(parcel);
+      // Flipped matching: test if BUILDING centroid is inside PARCEL polygon.
+      // Parcels contain buildings (land contains structures), not the reverse.
+      // One Turf.js test per candidate instead of 5 — faster and more accurate.
       const matchedBuildings = [];
+      const parcelGeom = parcel.geometry;
+      if (!parcelGeom || !parcelGeom.type || !parcelGeom.coordinates) {
+        noMatch++;
+        processed++;
+        continue;
+      }
 
       for (const building of candidates) {
-        const geom = building.geometry;
-        if (!geom || !geom.type || !geom.coordinates) continue;
+        const buildingPt = turfPoint([building.centroid_lng, building.centroid_lat]);
+        let isInside = false;
 
-        let hitLabel = null;
-
-        for (const tp of testPoints) {
-          const testPt = turfPoint([tp.lng, tp.lat]);
-          let isInside = false;
-
-          if (geom.type === 'Polygon') {
+        if (parcelGeom.type === 'Polygon') {
+          try {
+            isInside = booleanPointInPolygon(buildingPt, {
+              type: 'Feature',
+              geometry: parcelGeom,
+              properties: {},
+            });
+          } catch {
+            // Invalid geometry — skip
+          }
+        } else if (parcelGeom.type === 'MultiPolygon') {
+          for (const polyCoords of parcelGeom.coordinates) {
             try {
-              isInside = booleanPointInPolygon(testPt, {
+              isInside = booleanPointInPolygon(buildingPt, {
                 type: 'Feature',
-                geometry: geom,
+                geometry: { type: 'Polygon', coordinates: polyCoords },
                 properties: {},
               });
+              if (isInside) break;
             } catch {
-              // Invalid geometry — skip
+              // Invalid sub-polygon — skip
             }
-          } else if (geom.type === 'MultiPolygon') {
-            for (const polyCoords of geom.coordinates) {
-              try {
-                isInside = booleanPointInPolygon(testPt, {
-                  type: 'Feature',
-                  geometry: { type: 'Polygon', coordinates: polyCoords },
-                  properties: {},
-                });
-                if (isInside) break;
-              } catch {
-                // Invalid sub-polygon — skip
-              }
-            }
-          }
-
-          if (isInside) {
-            hitLabel = tp.label;
-            break;
           }
         }
 
-        if (hitLabel) {
+        if (isInside) {
           matchedBuildings.push({
             building_id: building.id,
             footprint_area_sqm: building.footprint_area_sqm,
-            match_type: hitLabel === 'centroid' ? 'polygon' : 'multipoint',
-            confidence: hitLabel === 'centroid' ? 0.90 : 0.80,
+            match_type: 'centroid_in_parcel',
+            confidence: 0.95,
           });
         }
       }
@@ -385,8 +342,7 @@ pipeline.run('link-massing', async (pool) => {
 
       // Track match type stats
       for (const mb of matchedBuildings) {
-        if (mb.match_type === 'polygon') polygonMatches++;
-        else if (mb.match_type === 'multipoint') multipointMatches++;
+        if (mb.match_type === 'centroid_in_parcel') centroidInParcelMatches++;
       }
 
       // Classify structures
@@ -437,8 +393,7 @@ pipeline.run('link-massing', async (pool) => {
     parcels_linked: parcelsLinked,
     buildings_matched: buildingsMatched,
     buildings_upserted: buildingsUpserted,
-    polygon: polygonMatches,
-    multipoint: multipointMatches,
+    centroid_in_parcel: centroidInParcelMatches,
     nearest: nearestMatches,
     no_match: noMatch,
     duration: `${(durationMs / 1000).toFixed(1)}s`,
@@ -453,9 +408,8 @@ pipeline.run('link-massing', async (pool) => {
     { metric: 'grid_cells', value: grid.size, threshold: null, status: 'INFO' },
     { metric: 'parcels_processed', value: processed, threshold: null, status: 'INFO' },
     { metric: 'parcels_linked', value: parcelsLinked, threshold: '> 0', status: (processed > 0 && parcelsLinked === 0) ? 'FAIL' : 'PASS' },
-    { metric: 'match_type_polygon', value: polygonMatches, threshold: null, status: 'INFO' },
-    { metric: 'match_type_multipoint', value: multipointMatches, threshold: null, status: 'INFO' },
-    { metric: 'match_type_nearest', value: nearestMatches, threshold: null, status: 'INFO' },
+    { metric: 'match_centroid_in_parcel', value: centroidInParcelMatches, threshold: null, status: 'INFO' },
+    { metric: 'match_nearest_fallback', value: nearestMatches, threshold: null, status: 'INFO' },
     { metric: 'link_rate', value: massingLinkRate.toFixed(1) + '%', threshold: '>= 50%', status: massingLinkRate >= 50 ? 'PASS' : 'WARN' },
     { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
     { metric: 'db_upserted', value: buildingsUpserted, threshold: null, status: 'INFO' },
@@ -471,8 +425,7 @@ pipeline.run('link-massing', async (pool) => {
       parcels_linked: parcelsLinked,
       buildings_matched: buildingsMatched,
       buildings_upserted: buildingsUpserted,
-      matches_polygon: polygonMatches,
-      matches_multipoint: multipointMatches,
+      matches_centroid_in_parcel: centroidInParcelMatches,
       matches_nearest: nearestMatches,
       no_match_count: noMatch,
       audit_table: {
