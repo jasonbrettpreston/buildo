@@ -166,7 +166,7 @@ export async function POST(
     const args = isChain
       ? [scriptPath, slug.replace(/^chain_/, ''), ...(runId ? [String(runId)] : []), ...(forceMode ? ['--force'] : [])]
       : [scriptPath];
-    const timeout = isChain ? 3_600_000 : 600_000; // 1 hour for chains, 10 min for individual
+    const timeout = isChain ? 7_200_000 : 600_000; // 2 hours for chains, 10 min for individual
 
     // spawn with stdin='ignore' to prevent Windows pg connection hang.
     // stdout/stderr are piped for PIPELINE_SUMMARY/META parsing.
