@@ -37,6 +37,43 @@ const GARAGE_MAX_SQM = 60;
 const NEAREST_MAX_DISTANCE_M = 50;
 const PARAM_FLUSH_THRESHOLD = 30000; // §9.2: flush before hitting PG 65,535 limit
 
+/**
+ * Reproject a GeoJSON geometry from EPSG:3857 (Web Mercator) to EPSG:4326 (WGS84).
+ * Building footprints are stored in Mercator; parcels + centroids are in WGS84.
+ * Pure math — no PostGIS or proj4 dependency needed.
+ */
+const MERCATOR_ORIGIN = 20037508.342789244;
+function mercatorToWgs84(x, y) {
+  const lng = (x / MERCATOR_ORIGIN) * 180;
+  const lat = (Math.atan(Math.exp((y / MERCATOR_ORIGIN) * Math.PI)) * 2 - Math.PI / 2) * (180 / Math.PI);
+  return [lng, lat];
+}
+
+function reprojectRing(ring) {
+  return ring.map(coord => mercatorToWgs84(coord[0], coord[1]));
+}
+
+function reprojectGeometry(geom) {
+  if (!geom || !geom.coordinates) return geom;
+  // Detect CRS: WGS84 lng is -180..180, Mercator x is ~±20M
+  const sample = geom.type === 'Polygon'
+    ? geom.coordinates[0]?.[0]
+    : geom.type === 'MultiPolygon'
+    ? geom.coordinates[0]?.[0]?.[0]
+    : null;
+  if (!sample || (Math.abs(sample[0]) < 200 && Math.abs(sample[1]) < 200)) {
+    // Already in WGS84 range — no reprojection needed
+    return geom;
+  }
+  if (geom.type === 'Polygon') {
+    return { type: 'Polygon', coordinates: geom.coordinates.map(reprojectRing) };
+  }
+  if (geom.type === 'MultiPolygon') {
+    return { type: 'MultiPolygon', coordinates: geom.coordinates.map(poly => poly.map(reprojectRing)) };
+  }
+  return geom;
+}
+
 function classifyStructure(areaSqm, allAreas) {
   if (allAreas.length <= 1) return 'primary';
   const maxArea = Math.max(...allAreas);
@@ -176,7 +213,7 @@ pipeline.run('link-massing', async (pool) => {
     if (!grid.has(key)) grid.set(key, []);
     grid.get(key).push({
       id: row.id,
-      geometry: row.geometry,
+      geometry: reprojectGeometry(row.geometry),
       footprint_area_sqm: parseFloat(row.footprint_area_sqm) || 0,
       centroid_lat: lat,
       centroid_lng: lng,
