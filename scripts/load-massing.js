@@ -187,7 +187,10 @@ pipeline.run('load-massing', async (pool) => {
       pipeline.log.info('[load-massing]', `Detected source_id format change: ${staleCount.toLocaleString()} old non-hash rows → cleaning up`);
       await pool.query(`DELETE FROM parcel_buildings WHERE building_id IN (SELECT id FROM building_footprints WHERE source_id NOT LIKE 'hash_%')`);
       await pool.query(`DELETE FROM building_footprints WHERE source_id NOT LIKE 'hash_%'`);
-      pipeline.log.info('[load-massing]', `Cleanup complete: removed ${staleCount.toLocaleString()} stale rows`);
+      // VACUUM immediately — mass deletes leave dead tuples that slow downstream link_massing
+      await pool.query('VACUUM ANALYZE building_footprints');
+      await pool.query('VACUUM ANALYZE parcel_buildings');
+      pipeline.log.info('[load-massing]', `Cleanup complete: removed ${staleCount.toLocaleString()} stale rows + vacuumed`);
     }
   } else {
     const staleCheck = await pool.query(
@@ -198,7 +201,9 @@ pipeline.run('load-massing', async (pool) => {
       pipeline.log.info('[load-massing]', `Detected source_id format change: ${staleCount.toLocaleString()} old hash rows → cleaning up`);
       await pool.query(`DELETE FROM parcel_buildings WHERE building_id IN (SELECT id FROM building_footprints WHERE source_id LIKE 'hash_%')`);
       await pool.query(`DELETE FROM building_footprints WHERE source_id LIKE 'hash_%'`);
-      pipeline.log.info('[load-massing]', `Cleanup complete: removed ${staleCount.toLocaleString()} stale rows`);
+      await pool.query('VACUUM ANALYZE building_footprints');
+      await pool.query('VACUUM ANALYZE parcel_buildings');
+      pipeline.log.info('[load-massing]', `Cleanup complete: removed ${staleCount.toLocaleString()} stale rows + vacuumed`);
     }
   }
 
