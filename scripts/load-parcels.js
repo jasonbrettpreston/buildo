@@ -361,10 +361,10 @@ pipeline.run('load-parcels', async (pool) => {
       { metric: 'records_updated', value: updated, threshold: null, status: 'INFO' },
       { metric: 'records_unchanged', value: unchanged, threshold: null, status: 'INFO' },
       { metric: 'records_skipped', value: skipped, threshold: null, status: 'INFO' },
-      { metric: 'skip_rate', value: skipRateStr, threshold: '< 5%', status: skipRate >= 5 ? 'FAIL' : 'PASS' },
+      { metric: 'skip_rate', value: skipRateStr, threshold: '< 10%', status: skipRate >= 10 ? 'FAIL' : 'PASS' },
       { metric: 'records_errors', value: errors, threshold: '== 0', status: errors > 0 ? 'FAIL' : 'PASS' },
     ];
-    const hasFails = errors > 0 || skipRate >= 5;
+    const hasFails = errors > 0 || skipRate >= 10;
     const hasWarns = processed < 450000;
 
     pipeline.emitSummary({

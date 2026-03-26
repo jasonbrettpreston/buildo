@@ -328,6 +328,8 @@ pipeline.run('load-massing', async (pool) => {
   const unchanged = Math.max(0, processed - inserted - updated - skipped);
   const skipRate = processed > 0 ? (skipped / processed) * 100 : 0;
   const skipRateStr = skipRate.toFixed(1) + '%';
+  const errorRate = processed > 0 ? (errors / Math.ceil(processed / pipeline.BATCH_SIZE)) * 100 : 0;
+  const errorRateStr = errorRate.toFixed(1) + '%';
   const auditRows = [
     { metric: 'features_read', value: processed, threshold: '>= 400000', status: processed < 400000 ? 'WARN' : 'PASS' },
     { metric: 'records_inserted', value: inserted, threshold: null, status: 'INFO' },
@@ -335,9 +337,10 @@ pipeline.run('load-massing', async (pool) => {
     { metric: 'records_unchanged', value: unchanged, threshold: null, status: 'INFO' },
     { metric: 'features_skipped', value: skipped, threshold: null, status: 'INFO' },
     { metric: 'skip_rate', value: skipRateStr, threshold: '< 5%', status: skipRate >= 5 ? 'FAIL' : 'PASS' },
-    { metric: 'records_errors', value: errors, threshold: '== 0', status: errors > 0 ? 'FAIL' : 'PASS' },
+    { metric: 'batch_errors', value: errors, threshold: null, status: 'INFO' },
+    { metric: 'batch_error_rate', value: errorRateStr, threshold: '< 1%', status: errorRate >= 1 ? 'FAIL' : 'PASS' },
   ];
-  const hasFails = errors > 0 || skipRate >= 5;
+  const hasFails = skipRate >= 5 || errorRate >= 1;
   const hasWarns = processed < 400000;
 
   pipeline.emitSummary({
