@@ -170,6 +170,38 @@ pipeline.run('load-massing', async (pool) => {
 
   pipeline.log.info('[load-massing]', `Reading: ${shpPath}`);
 
+  // Detect source_id format change: if the new shapefile uses a different ID
+  // strategy (e.g., hash vs OBJECTID), old rows won't match ON CONFLICT and
+  // the table will double. Peek at the first feature to determine the format,
+  // then clean up mismatched rows before loading.
+  const peekSource = await shapefile.open(shpPath);
+  const peekResult = await peekSource.read();
+  const peekProps = peekResult.value?.properties || {};
+  const usesHashIds = peekProps.OBJECTID == null && peekProps.ID == null;
+  if (usesHashIds) {
+    const staleCheck = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM building_footprints WHERE source_id NOT LIKE 'hash_%' LIMIT 1`
+    );
+    const staleCount = parseInt(staleCheck.rows[0].cnt, 10);
+    if (staleCount > 0) {
+      pipeline.log.info('[load-massing]', `Detected source_id format change: ${staleCount.toLocaleString()} old non-hash rows → cleaning up`);
+      await pool.query(`DELETE FROM parcel_buildings WHERE building_id IN (SELECT id FROM building_footprints WHERE source_id NOT LIKE 'hash_%')`);
+      await pool.query(`DELETE FROM building_footprints WHERE source_id NOT LIKE 'hash_%'`);
+      pipeline.log.info('[load-massing]', `Cleanup complete: removed ${staleCount.toLocaleString()} stale rows`);
+    }
+  } else {
+    const staleCheck = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM building_footprints WHERE source_id LIKE 'hash_%' LIMIT 1`
+    );
+    const staleCount = parseInt(staleCheck.rows[0].cnt, 10);
+    if (staleCount > 0) {
+      pipeline.log.info('[load-massing]', `Detected source_id format change: ${staleCount.toLocaleString()} old hash rows → cleaning up`);
+      await pool.query(`DELETE FROM parcel_buildings WHERE building_id IN (SELECT id FROM building_footprints WHERE source_id LIKE 'hash_%')`);
+      await pool.query(`DELETE FROM building_footprints WHERE source_id LIKE 'hash_%'`);
+      pipeline.log.info('[load-massing]', `Cleanup complete: removed ${staleCount.toLocaleString()} stale rows`);
+    }
+  }
+
   let processed = 0;
   let inserted = 0;
   let updated = 0;
