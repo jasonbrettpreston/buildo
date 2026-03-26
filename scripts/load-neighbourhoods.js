@@ -612,7 +612,7 @@ pipeline.run('load-neighbourhoods', async (pool) => {
       census_rows_matched: profileUpdates,
       has_postgis: hasPostGIS,
       audit_table: {
-        phase: 24,
+        phase: 9,
         name: 'Neighbourhood Boundaries',
         verdict: hasFails ? 'FAIL' : 'PASS',
         rows: auditRows,

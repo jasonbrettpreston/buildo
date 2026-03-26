@@ -380,7 +380,7 @@ pipeline.run('load-parcels', async (pool) => {
         records_skipped: skipped,
         errors,
         audit_table: {
-          phase: 21,
+          phase: 4,
           name: 'Parcels Ingestion',
           verdict: hasFails ? 'FAIL' : hasWarns ? 'WARN' : 'PASS',
           rows: auditRows,

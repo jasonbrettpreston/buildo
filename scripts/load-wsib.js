@@ -71,10 +71,14 @@ pipeline.run('load-wsib', async (pool) => {
         records_total: 0, records_new: 0, records_updated: 0,
         records_meta: {
           audit_table: {
-            phase: 25,
+            phase: 11,
             name: 'WSIB Registry Ingestion',
             verdict: 'PASS',
-            rows: [{ metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' }],
+            rows: [
+              { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+              { metric: 'reason', value: 'No CSV file provided — WSIB requires annual manual download', threshold: null, status: 'INFO' },
+              { metric: 'instructions', value: 'Download BusinessClassificationDetails CSV from wsib.ca → save to data/ folder → run: node scripts/load-wsib.js --file data/BusinessClassificationDetails(YYYY).csv', threshold: null, status: 'INFO' },
+            ],
           },
         },
       });
@@ -312,7 +316,7 @@ pipeline.run('load-wsib', async (pool) => {
       skipped_non_g: skippedNonG,
       skipped_no_name: skippedNoName,
       audit_table: {
-        phase: 25,
+        phase: 11,
         name: 'WSIB Registry Ingestion',
         verdict: hasWarns ? 'WARN' : 'PASS',
         rows: auditRows,

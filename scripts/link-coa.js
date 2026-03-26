@@ -289,8 +289,9 @@ pipeline.run('link-coa', async (pool) => {
   ];
   const linkAuditHasFails = prePermitLinkCount > 0;
   const linkAuditHasWarns = descErrors > 0 || crossWardCount > 0;
+  const chainId = process.env.PIPELINE_CHAIN || null;
   const linkAuditTable = {
-    phase: 4,
+    phase: chainId === 'coa' ? 4 : 12,
     name: 'Link CoA',
     verdict: linkAuditHasFails ? 'FAIL' : linkAuditHasWarns ? 'WARN' : 'PASS',
     rows: auditRows,

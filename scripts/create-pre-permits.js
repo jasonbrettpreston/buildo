@@ -122,8 +122,9 @@ pipeline.run('create-pre-permits', async (pool) => {
     { metric: 'aging_leads_expired', value: expired, threshold: null, status: 'PASS' },
     { metric: 'eligible_coa_remaining', value: eligibleRemaining, threshold: null, status: 'INFO' },
   ];
+  const chainId = process.env.PIPELINE_CHAIN || null;
   const auditTable = {
-    phase: 4,
+    phase: chainId === 'coa' ? 5 : 13,
     name: 'Pre-Permit Lead Generation',
     verdict: 'PASS',
     rows: auditRows,

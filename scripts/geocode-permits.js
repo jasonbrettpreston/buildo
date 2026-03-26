@@ -113,7 +113,7 @@ pipeline.run('geocode-permits', async (pool) => {
       has_geo_id_no_match: parseInt(after.has_geo_id_no_match),
       no_geo_id: parseInt(after.no_geo_id),
       audit_table: {
-        phase: 6,
+        phase: (process.env.PIPELINE_CHAIN === 'sources') ? 3 : 6,
         name: 'Permit Geocoding',
         verdict: geocodeCoverage < 95 ? 'WARN' : 'PASS',
         rows: geocodeAuditRows,

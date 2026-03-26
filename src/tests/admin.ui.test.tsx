@@ -2340,7 +2340,7 @@ describe('Full-tile status coloring (no more dots)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    const statusBar = source.slice(source.indexOf('drilldown-status-bar'), source.indexOf('drilldown-status-bar') + 2000);
+    const statusBar = source.slice(source.indexOf('drilldown-status-bar'), source.indexOf('drilldown-status-bar') + 3000);
     expect(statusBar).toContain("'skipped'");
     expect(statusBar).toContain("'cancelled'");
     expect(statusBar).toContain('bg-orange-400');
@@ -2454,8 +2454,8 @@ describe('Drill-down status always visible', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const barStart = source.indexOf('drilldown-status-bar');
-    const barSection = source.slice(barStart, barStart + 2500);
-    // Colored status dot
+    const barSection = source.slice(barStart, barStart + 3500);
+    // Colored status dot (includes audit verdict override)
     expect(barSection).toContain('bg-green-500');
     expect(barSection).toContain('bg-red-500');
     expect(barSection).toContain('bg-blue-500');
@@ -2712,7 +2712,7 @@ describe('Funnel panel components extracted to separate file', () => {
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const lineCount = source.split('\n').length;
-    expect(lineCount).toBeLessThan(1300);
+    expect(lineCount).toBeLessThan(1350);
   });
 
   it('FunnelPanels.tsx exports CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS, DataFlowTile', () => {

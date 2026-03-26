@@ -235,7 +235,7 @@ pipeline.run('load-address-points', async (pool) => {
       records_skipped: skipped,
       errors,
       audit_table: {
-        phase: 20,
+        phase: 2,
         name: 'Address Points Ingestion',
         verdict: hasFails ? 'FAIL' : hasWarns ? 'WARN' : 'PASS',
         rows: auditRows,

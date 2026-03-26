@@ -122,7 +122,22 @@ pipeline.run('link-neighbourhoods', async (pool) => {
 
   if (totalPermits === 0) {
     pipeline.log.info('[link-neighbourhoods]', 'No permits to link. Done.');
-    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    const chainId = process.env.PIPELINE_CHAIN || null;
+    const skipPhase = chainId === 'sources' ? 10 : 8;
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        audit_table: {
+          phase: skipPhase,
+          name: 'Neighbourhood Linking',
+          verdict: 'PASS',
+          rows: [
+            { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+            { metric: 'reason', value: 'No unlinked permits — all permits already have neighbourhoods', threshold: null, status: 'INFO' },
+          ],
+        },
+      },
+    });
     pipeline.emitMeta(
       { "permits": ["permit_num", "revision_num", "latitude", "longitude", "neighbourhood_id"], "neighbourhoods": ["id", "neighbourhood_id", "name", "geometry"], "parcels": ["id", "geometry"] },
       { "permits": ["neighbourhood_id"] }
@@ -278,7 +293,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
       no_match_count: noMatch,
       bbox_tests_skipped: bboxSkipped,
       audit_table: {
-        phase: 8,
+        phase: (process.env.PIPELINE_CHAIN === 'sources') ? 10 : 8,
         name: 'Neighbourhood Linking',
         verdict: nhoodHasWarns ? 'WARN' : 'PASS',
         rows: nhoodAuditRows,

@@ -245,7 +245,7 @@ async function run() {
     ];
     const coaHasFails = coaAuditRows.some((r) => r.status === 'FAIL');
     coaAuditTable = {
-      phase: 8,
+      phase: 9,
       name: 'CoA Engine Health',
       verdict: coaHasFails ? 'FAIL' : 'PASS',
       rows: coaAuditRows,

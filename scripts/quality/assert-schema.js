@@ -350,6 +350,23 @@ async function run() {
     ...(() => {
       if (CHAIN_ID === 'permits' && permitsAuditTable) return { audit_table: permitsAuditTable };
       if (CHAIN_ID === 'coa' && coaAuditTable) return { audit_table: coaAuditTable };
+      if (CHAIN_ID === 'sources') {
+        const sourceErrors = errors.filter((e) =>
+          /address|parcel|massing|neighbourhood/i.test(e)
+        );
+        const sourceAuditRows = [
+          { metric: 'sources_checked', value: 4, threshold: null, status: 'INFO' },
+          { metric: 'schema_errors', value: sourceErrors.length, threshold: '== 0', status: sourceErrors.length > 0 ? 'FAIL' : 'PASS' },
+        ];
+        return {
+          audit_table: {
+            phase: 1,
+            name: 'Schema Validation',
+            verdict: sourceErrors.length > 0 ? 'FAIL' : 'PASS',
+            rows: sourceAuditRows,
+          },
+        };
+      }
       // Standalone — prefer permits if available
       if (permitsAuditTable) return { audit_table: permitsAuditTable };
       if (coaAuditTable) return { audit_table: coaAuditTable };

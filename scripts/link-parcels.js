@@ -372,7 +372,7 @@ pipeline.run('link-parcels', async (pool) => {
       no_match_count: noMatch,
       db_upserted: dbUpserted,
       audit_table: {
-        phase: 7,
+        phase: (process.env.PIPELINE_CHAIN === 'sources') ? 6 : 7,
         name: 'Parcel Linking',
         verdict: parcelLinkRate < 75 ? 'WARN' : 'PASS',
         rows: parcelAuditRows,

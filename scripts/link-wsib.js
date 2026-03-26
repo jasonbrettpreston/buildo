@@ -266,7 +266,7 @@ pipeline.run('link-wsib', async (pool) => {
       matches_tier_3_fuzzy: tier3,
       no_match_count: noMatch,
       audit_table: {
-        phase: 5,
+        phase: (process.env.PIPELINE_CHAIN === 'sources') ? 12 : 5,
         name: 'WSIB Registry Matching',
         verdict: linkRate < 70 ? 'WARN' : 'PASS',
         rows: wsibAuditRows,

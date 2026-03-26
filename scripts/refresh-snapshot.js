@@ -382,9 +382,9 @@ pipeline.run('refresh-snapshot', async (pool) => {
   const duration_ms = Date.now() - t0;
   pipeline.log.info(TAG, `Done in ${duration_ms}ms`);
 
-  // Chain-aware phase number: deep_scrapes = step 3 (phase 5), coa = step 6 (phase 6)
+  // Chain-aware phase number
   const chainId = process.env.PIPELINE_CHAIN || null;
-  const snapshotPhase = chainId === 'coa' ? 6 : 5;
+  const snapshotPhase = chainId === 'sources' ? 13 : chainId === 'coa' ? 7 : 14;
   pipeline.emitSummary({
     records_total: 1, records_new: isNew, records_updated: isUpdate,
     records_meta: {

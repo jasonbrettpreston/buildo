@@ -429,7 +429,7 @@ pipeline.run('link-massing', async (pool) => {
       matches_nearest: nearestMatches,
       no_match_count: noMatch,
       audit_table: {
-        phase: 9,
+        phase: (process.env.PIPELINE_CHAIN === 'sources') ? 8 : 9,
         name: 'Building Footprint Linking',
         verdict: massingHasFails ? 'FAIL' : massingHasWarns ? 'WARN' : 'PASS',
         rows: massingAuditRows,

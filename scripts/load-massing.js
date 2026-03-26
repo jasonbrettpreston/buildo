@@ -356,7 +356,7 @@ pipeline.run('load-massing', async (pool) => {
       features_skipped: skipped,
       errors,
       audit_table: {
-        phase: 23,
+        phase: 7,
         name: 'Building Footprints Ingestion',
         verdict: hasFails ? 'FAIL' : hasWarns ? 'WARN' : 'PASS',
         rows: auditRows,

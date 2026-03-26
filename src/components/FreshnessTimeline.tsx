@@ -599,7 +599,11 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                         <div key={s.slug} className="flex items-center gap-2 text-[9px] tabular-nums">
                           <span className="text-gray-400 w-3 text-right">{i + 1}</span>
                           {s.ranThisChain ? (
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                              s.verdict === 'FAIL' ? 'bg-red-500'
+                              : s.verdict === 'WARN' ? 'bg-amber-500'
+                              : 'bg-green-500'
+                            }`} />
                           ) : (
                             <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
                           )}
@@ -864,15 +868,24 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                         <div className="drilldown-status-bar flex flex-wrap items-center gap-4 text-xs py-1">
                           <span className="flex items-center gap-1.5">
                             <span className={`inline-block w-2 h-2 rounded-full ${
-                              !info ? 'bg-gray-300'
-                              : info.status === 'completed' ? 'bg-green-500'
-                              : info.status === 'completed_with_warnings' ? 'bg-amber-500'
-                              : info.status === 'completed_with_errors' ? 'bg-red-500'
-                              : info.status === 'failed' ? 'bg-red-500'
-                              : info.status === 'running' ? 'bg-blue-500'
-                              : info.status === 'skipped' ? 'bg-gray-400'
-                              : info.status === 'cancelled' ? 'bg-orange-400'
-                              : 'bg-gray-400'
+                              (() => {
+                                if (!info) return 'bg-gray-300';
+                                // Override with audit verdict when step completed
+                                if (info.status === 'completed') {
+                                  const v = (info.records_meta as Record<string, unknown> | null)
+                                    ?.audit_table as { verdict?: string } | undefined;
+                                  if (v?.verdict === 'FAIL') return 'bg-red-500';
+                                  if (v?.verdict === 'WARN') return 'bg-amber-500';
+                                  return 'bg-green-500';
+                                }
+                                if (info.status === 'completed_with_warnings') return 'bg-amber-500';
+                                if (info.status === 'completed_with_errors') return 'bg-red-500';
+                                if (info.status === 'failed') return 'bg-red-500';
+                                if (info.status === 'running') return 'bg-blue-500';
+                                if (info.status === 'skipped') return 'bg-gray-400';
+                                if (info.status === 'cancelled') return 'bg-orange-400';
+                                return 'bg-gray-400';
+                              })()
                             }`} />
                             <span className={`font-semibold ${
                               !info ? 'text-gray-400'
@@ -964,8 +977,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                   </div>
                                 )}
                               </div>
-                              {/* Hide records_total/records_new for quality/snapshot — they write 0 and clutter the CQA drill-down */}
-                              {info && stepGroup !== 'quality' && stepGroup !== 'snapshot' && (info.records_total != null || info.records_new != null) && (
+                              {/* Hide records_total/records_new when audit_table present (redundant), or for quality/snapshot steps */}
+                              {info && stepGroup !== 'quality' && stepGroup !== 'snapshot' && !((info.records_meta as Record<string, unknown> | null)?.audit_table) && (info.records_total != null || info.records_new != null) && (
                                 <div className="space-y-1.5">
                                   {info.records_total != null && (
                                     <div className="flex justify-between items-center">
@@ -1103,12 +1116,27 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                         : 'bg-gray-50 text-gray-500 border-gray-200';
                                       const statusIcon = (s: string) => s === 'PASS' ? '\u2714' : s === 'FAIL' ? '\u2718' : s === 'WARN' ? '\u26A0' : s === 'SKIP' ? '\u2014' : '\u2022';
                                       const statusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : 'text-gray-400';
+                                      const infoRows = at.rows.filter((r) => r.metric === 'reason' || r.metric === 'instructions');
+                                      const metricRows = at.rows.filter((r) => r.metric !== 'reason' && r.metric !== 'instructions');
                                       return (
                                         <div key={`audit-${atIdx}`} className="mt-2">
                                           <div className="flex items-center gap-2 mb-1">
                                             <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Phase {at.phase}: {at.name}</h5>
                                             <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${verdictColor}`}>{at.verdict}</span>
                                           </div>
+                                          {infoRows.length > 0 && (
+                                            <div className="space-y-1 mb-2">
+                                              {infoRows.map((r) => (
+                                                <div key={r.metric} className={`flex items-start gap-2 px-2.5 py-1.5 rounded text-[10px] ${
+                                                  r.metric === 'instructions' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-600'
+                                                }`}>
+                                                  <span className="shrink-0 mt-0.5">{r.metric === 'instructions' ? '\u2139' : '\u25B8'}</span>
+                                                  <span className="break-words">{String(r.value)}</span>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+                                          {metricRows.length > 0 && (
                                           <div className="overflow-x-auto">
                                             <table className="w-full text-[10px] tabular-nums">
                                               <thead>
@@ -1120,7 +1148,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                                 </tr>
                                               </thead>
                                               <tbody>
-                                                {at.rows.map((r) => (
+                                                {metricRows.map((r) => (
                                                   <tr key={r.metric} className="border-t border-gray-50">
                                                     <td className="pr-2 py-0.5 font-mono text-gray-700">{r.metric}</td>
                                                     <td className="px-2 py-0.5 text-right text-gray-900 font-medium">{r.value === null ? '\u2014' : typeof r.value === 'boolean' ? String(r.value) : typeof r.value === 'number' ? r.value.toLocaleString() : String(r.value)}</td>
@@ -1131,6 +1159,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                               </tbody>
                                             </table>
                                           </div>
+                                          )}
                                         </div>
                                       );
                                     })()}
@@ -1158,12 +1187,27 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                   : at.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200'
                                   : at.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
                                   : 'bg-gray-50 text-gray-500 border-gray-200';
+                                const funnelInfoRows = at.rows.filter((r) => r.metric === 'reason' || r.metric === 'instructions');
+                                const funnelMetricRows = at.rows.filter((r) => r.metric !== 'reason' && r.metric !== 'instructions');
                                 return (
                                   <div key={`funnel-audit-${atIdx}`} className="mt-1">
                                     <div className="flex items-center gap-2 mb-1">
                                       <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Phase {at.phase}: {at.name}</h5>
                                       <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${verdictColor}`}>{at.verdict}</span>
                                     </div>
+                                    {funnelInfoRows.length > 0 && (
+                                      <div className="space-y-1 mb-2">
+                                        {funnelInfoRows.map((r) => (
+                                          <div key={r.metric} className={`flex items-start gap-2 px-2.5 py-1.5 rounded text-[10px] ${
+                                            r.metric === 'instructions' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-600'
+                                          }`}>
+                                            <span className="shrink-0 mt-0.5">{r.metric === 'instructions' ? '\u2139' : '\u25B8'}</span>
+                                            <span className="break-words">{String(r.value)}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {funnelMetricRows.length > 0 && (
                                     <div className="overflow-x-auto">
                                       <table className="w-full text-[10px] tabular-nums">
                                         <thead><tr className="text-gray-500 text-left">
@@ -1173,7 +1217,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                           <th className="px-2 py-0.5 font-medium text-center">Status</th>
                                         </tr></thead>
                                         <tbody>
-                                          {at.rows.map((r) => (
+                                          {funnelMetricRows.map((r) => (
                                             <tr key={r.metric} className="border-t border-gray-50">
                                               <td className="pr-2 py-0.5 font-mono text-gray-700">{r.metric}</td>
                                               <td className="px-2 py-0.5 text-right text-gray-900 font-medium">{r.value === null ? '\u2014' : typeof r.value === 'boolean' ? String(r.value) : typeof r.value === 'number' ? r.value.toLocaleString() : String(r.value)}</td>
@@ -1184,6 +1228,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                         </tbody>
                                       </table>
                                     </div>
+                                    )}
                                   </div>
                                 );
                               })}

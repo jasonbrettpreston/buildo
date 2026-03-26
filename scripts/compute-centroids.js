@@ -69,10 +69,13 @@ pipeline.run('compute-centroids', async (pool) => {
       records_total: 0, records_new: 0, records_updated: 0,
       records_meta: {
         audit_table: {
-          phase: 22,
+          phase: 5,
           name: 'Centroid Computation',
           verdict: 'PASS',
-          rows: [{ metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' }],
+          rows: [
+            { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+            { metric: 'reason', value: 'All parcels already have centroids — nothing to compute', threshold: null, status: 'INFO' },
+          ],
         },
       },
     });
@@ -170,7 +173,7 @@ pipeline.run('compute-centroids', async (pool) => {
       centroids_computed: computed,
       failed_geometries: failed,
       audit_table: {
-        phase: 22,
+        phase: 5,
         name: 'Centroid Computation',
         verdict: hasWarns ? 'WARN' : 'PASS',
         rows: auditRows,
