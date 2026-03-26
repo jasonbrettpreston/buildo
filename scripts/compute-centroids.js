@@ -65,7 +65,17 @@ pipeline.run('compute-centroids', async (pool) => {
 
   if (totalParcels === 0) {
     pipeline.log.info('[compute-centroids]', 'All parcels already have centroids. Done.');
-    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        audit_table: {
+          phase: 22,
+          name: 'Centroid Computation',
+          verdict: 'PASS',
+          rows: [{ metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' }],
+        },
+      },
+    });
     pipeline.emitMeta({ "parcels": ["id", "geometry"] }, { "parcels": ["centroid_lat", "centroid_lng"] });
     return;
   }
@@ -146,9 +156,9 @@ pipeline.run('compute-centroids', async (pool) => {
     { metric: 'parcels_processed', value: processed, threshold: null, status: 'INFO' },
     { metric: 'centroids_computed', value: computed, threshold: null, status: 'INFO' },
     { metric: 'failed_geometries', value: failed, threshold: '== 0', status: failed > 0 ? 'WARN' : 'PASS' },
-    { metric: 'compute_rate', value: `${computeRate}%`, threshold: '>= 90%', status: parseFloat(computeRate) < 90 ? 'WARN' : 'PASS' },
+    { metric: 'compute_rate', value: `${computeRate}%`, threshold: '>= 98%', status: parseFloat(computeRate) < 98 ? 'WARN' : 'PASS' },
   ];
-  const hasWarns = failed > 0 || parseFloat(computeRate) < 90;
+  const hasWarns = failed > 0 || parseFloat(computeRate) < 98;
 
   pipeline.emitSummary({
     records_total: processed,

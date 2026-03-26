@@ -324,14 +324,21 @@ pipeline.run('load-massing', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  // Note: if a batch flush fails, lost rows inflate this count slightly
+  const unchanged = Math.max(0, processed - inserted - updated - skipped);
+  const skipRate = processed > 0 ? (skipped / processed) * 100 : 0;
+  const skipRateStr = skipRate.toFixed(1) + '%';
   const auditRows = [
-    { metric: 'features_read', value: processed, threshold: null, status: 'INFO' },
+    { metric: 'features_read', value: processed, threshold: '>= 400000', status: processed < 400000 ? 'WARN' : 'PASS' },
     { metric: 'records_inserted', value: inserted, threshold: null, status: 'INFO' },
     { metric: 'records_updated', value: updated, threshold: null, status: 'INFO' },
+    { metric: 'records_unchanged', value: unchanged, threshold: null, status: 'INFO' },
     { metric: 'features_skipped', value: skipped, threshold: null, status: 'INFO' },
+    { metric: 'skip_rate', value: skipRateStr, threshold: '< 5%', status: skipRate >= 5 ? 'FAIL' : 'PASS' },
     { metric: 'records_errors', value: errors, threshold: '== 0', status: errors > 0 ? 'FAIL' : 'PASS' },
   ];
-  const hasFails = errors > 0;
+  const hasFails = errors > 0 || skipRate >= 5;
+  const hasWarns = processed < 400000;
 
   pipeline.emitSummary({
     records_total: inserted + updated,
@@ -342,12 +349,13 @@ pipeline.run('load-massing', async (pool) => {
       features_read: processed,
       records_inserted: inserted,
       records_updated: updated,
+      records_unchanged: unchanged,
       features_skipped: skipped,
       errors,
       audit_table: {
         phase: 23,
         name: 'Building Footprints Ingestion',
-        verdict: hasFails ? 'FAIL' : 'PASS',
+        verdict: hasFails ? 'FAIL' : hasWarns ? 'WARN' : 'PASS',
         rows: auditRows,
       },
     },

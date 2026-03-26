@@ -289,6 +289,35 @@ describe('Incremental Processing Guards', () => {
     });
   }
 
+  // CSV loaders must have business accuracy thresholds (skip_rate, row count floor)
+  const CSV_LOADERS_WITH_THRESHOLDS = [
+    'load-address-points.js',
+    'load-parcels.js',
+    'load-massing.js',
+  ];
+
+  for (const script of CSV_LOADERS_WITH_THRESHOLDS) {
+    it(`${script} has skip_rate and records_unchanged in audit_table`, () => {
+      const scriptPath = path.resolve(__dirname, `../../scripts/${script}`);
+      const content = fs.readFileSync(scriptPath, 'utf-8');
+      expect(content).toContain('skip_rate');
+      expect(content).toContain('records_unchanged');
+    });
+  }
+
+  it('load-wsib.js has unique_class_g threshold in audit_table', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/load-wsib.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    expect(content).toContain('unique_class_g');
+    expect(content).toMatch(/>=\s*110000/);
+  });
+
+  it('compute-centroids.js has compute_rate >= 98% threshold', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/compute-centroids.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    expect(content).toMatch(/>= 98/);
+  });
+
   it('link-wsib.js emits PIPELINE_SUMMARY with totalUnlinked as records_total', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/link-wsib.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');

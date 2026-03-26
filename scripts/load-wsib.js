@@ -67,7 +67,17 @@ pipeline.run('load-wsib', async (pool) => {
     // When running inside a chain, skip gracefully instead of crashing
     if (CHAIN_ID) {
       pipeline.log.info('[load-wsib]', 'No --file argument (chain context). Skipping.');
-      pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+      pipeline.emitSummary({
+        records_total: 0, records_new: 0, records_updated: 0,
+        records_meta: {
+          audit_table: {
+            phase: 25,
+            name: 'WSIB Registry Ingestion',
+            verdict: 'PASS',
+            rows: [{ metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' }],
+          },
+        },
+      });
       pipeline.emitMeta(
         { "WSIB CSV": ["legal_name", "trade_name", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size"] },
         { "wsib_registry": ["legal_name", "trade_name", "legal_name_normalized", "trade_name_normalized", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size", "last_seen_at"] }
@@ -274,14 +284,20 @@ pipeline.run('load-wsib', async (pool) => {
     { "wsib_registry": ["legal_name", "trade_name", "legal_name_normalized", "trade_name_normalized", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size", "last_seen_at"] }
   );
 
+  const gRowCount = seen.size;
+  const skipNoNameRate = gRowCount + skippedNoName > 0
+    ? (skippedNoName / (gRowCount + skippedNoName)) * 100 : 0;
+  const skipNoNameRateStr = skipNoNameRate.toFixed(1) + '%';
   const auditRows = [
     { metric: 'total_csv_rows', value: totalRows, threshold: null, status: 'INFO' },
-    { metric: 'unique_class_g', value: seen.size, threshold: null, status: 'INFO' },
+    { metric: 'unique_class_g', value: gRowCount, threshold: '>= 110000', status: gRowCount < 110000 ? 'WARN' : 'PASS' },
     { metric: 'records_inserted', value: inserted, threshold: null, status: 'INFO' },
     { metric: 'records_updated', value: updated, threshold: null, status: 'INFO' },
     { metric: 'skipped_non_g', value: skippedNonG, threshold: null, status: 'INFO' },
     { metric: 'skipped_no_name', value: skippedNoName, threshold: null, status: 'INFO' },
+    { metric: 'skip_no_name_rate', value: skipNoNameRateStr, threshold: '< 1%', status: skipNoNameRate >= 1 ? 'WARN' : 'PASS' },
   ];
+  const hasWarns = gRowCount < 110000 || skipNoNameRate >= 1;
 
   pipeline.emitSummary({
     records_total: inserted + updated,
@@ -290,7 +306,7 @@ pipeline.run('load-wsib', async (pool) => {
     records_meta: {
       duration_ms: durationMs,
       total_csv_rows: totalRows,
-      unique_class_g: seen.size,
+      unique_class_g: gRowCount,
       records_inserted: inserted,
       records_updated: updated,
       skipped_non_g: skippedNonG,
@@ -298,7 +314,7 @@ pipeline.run('load-wsib', async (pool) => {
       audit_table: {
         phase: 25,
         name: 'WSIB Registry Ingestion',
-        verdict: 'PASS',
+        verdict: hasWarns ? 'WARN' : 'PASS',
         rows: auditRows,
       },
     },
