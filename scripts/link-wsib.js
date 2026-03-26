@@ -44,21 +44,41 @@ pipeline.run('link-wsib', async (pool) => {
 
   let tier1 = 0, tier2 = 0, tier3 = 0;
 
-  // Tier 3 fuzzy match SQL — shared between live and dry-run modes
-  const TIER3_CTE = `
-    SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
-    FROM wsib_registry w
-    JOIN entities e ON (
-      (w.trade_name_normalized IS NOT NULL AND LENGTH(w.trade_name_normalized) >= 5
-        AND similarity(w.trade_name_normalized, e.name_normalized) > 0.6)
-      OR
-      (LENGTH(w.legal_name_normalized) >= 5
-        AND similarity(w.legal_name_normalized, e.name_normalized) > 0.6)
-    )
-    WHERE w.linked_entity_id IS NULL
-      AND LENGTH(e.name_normalized) >= 5
-    ORDER BY w.id, e.permit_count DESC
-  `;
+  // Tier 3 fuzzy match SQL — shared between live and dry-run modes.
+  // Split into two CTEs (trade vs legal) so Postgres can use GIN trigram
+  // indexes on each column independently. The OR-based version caused a
+  // Nested Loop over 107K × 3.6K rows (~394M similarity calls).
+  // TIER3_CTES: top-level WITH clause (trade_matches, legal_matches, combined)
+  // TIER3_SELECT: final SELECT from combined (used in both dry-run and live paths)
+  const TIER3_CTES = `
+    trade_matches AS (
+      SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count
+      FROM wsib_registry w
+      JOIN entities e ON w.trade_name_normalized % e.name_normalized
+      WHERE w.linked_entity_id IS NULL
+        AND w.trade_name_normalized IS NOT NULL
+        AND LENGTH(w.trade_name_normalized) >= 5
+        AND LENGTH(e.name_normalized) >= 5
+        AND similarity(w.trade_name_normalized, e.name_normalized) > 0.6
+    ),
+    legal_matches AS (
+      SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count
+      FROM wsib_registry w
+      JOIN entities e ON w.legal_name_normalized % e.name_normalized
+      WHERE w.linked_entity_id IS NULL
+        AND LENGTH(w.legal_name_normalized) >= 5
+        AND LENGTH(e.name_normalized) >= 5
+        AND similarity(w.legal_name_normalized, e.name_normalized) > 0.6
+    ),
+    combined AS (
+      SELECT * FROM trade_matches
+      UNION ALL
+      SELECT * FROM legal_matches
+    )`;
+  const TIER3_SELECT = `
+    SELECT DISTINCT ON (wsib_id) wsib_id, entity_id
+    FROM combined
+    ORDER BY wsib_id, permit_count DESC`;
 
   if (dryRun) {
     // Dry-run simulation: read-only COUNT queries using same matching logic
@@ -90,7 +110,7 @@ pipeline.run('link-wsib', async (pool) => {
     tier2 = parseInt(dr2.rows[0].cnt, 10);
     pipeline.log.info('[link-wsib]', `Tier 2 (simulated): ${tier2.toLocaleString()} matches`);
 
-    const dr3 = await pool.query(`SELECT COUNT(*) as cnt FROM (${TIER3_CTE}) sub`);
+    const dr3 = await pool.query(`WITH ${TIER3_CTES} SELECT COUNT(*) as cnt FROM (${TIER3_SELECT}) sub`);
     tier3 = parseInt(dr3.rows[0].cnt, 10);
     pipeline.log.info('[link-wsib]', `Tier 3 (simulated): ${tier3.toLocaleString()} matches`);
   } else {
@@ -171,7 +191,8 @@ pipeline.run('link-wsib', async (pool) => {
       // ------------------------------------------------------------------
       pipeline.log.info('[link-wsib]', 'Tier 3: Fuzzy name matching (pg_trgm)...');
       const result3 = await client.query(`
-        WITH matched AS (${TIER3_CTE})
+        WITH ${TIER3_CTES},
+        matched AS (${TIER3_SELECT})
         UPDATE wsib_registry w
         SET linked_entity_id = m.entity_id,
             match_confidence = 0.60,
