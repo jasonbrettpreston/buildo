@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { FunnelRowData } from '@/lib/admin/funnel';
-import { STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP, STEP_EXPECTED_RANGES, getRangeStatus } from '@/lib/admin/funnel';
+import { FUNNEL_SOURCE_BY_SLUG, STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP, STEP_EXPECTED_RANGES, getRangeStatus } from '@/lib/admin/funnel';
 import { CircularBadge, DataFlowTile, Sparkline, type SparklineRun, type TelemetryData } from './funnel/FunnelPanels';
 
 // ---------------------------------------------------------------------------
@@ -724,10 +724,20 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                             {entry?.name ?? step.slug}
                           </span>
 
-                          {/* Circular percentage badge — beside step name */}
-                          {funnelRow && (
-                            <CircularBadge pct={funnelRow.matchPct} />
-                          )}
+                          {/* Circular percentage badge — prefer audit_table metric over funnel matchPct */}
+                          {funnelRow && (() => {
+                            const funnelSrc = FUNNEL_SOURCE_BY_SLUG[step.slug];
+                            if (funnelSrc?.auditMetric && info?.records_meta) {
+                              const at = (info.records_meta as Record<string, unknown>)?.audit_table as
+                                { rows?: Array<{ metric: string; value: unknown }> } | undefined;
+                              const row = at?.rows?.find(r => r.metric === funnelSrc.auditMetric);
+                              if (row?.value != null) {
+                                const parsed = parseFloat(String(row.value).replace('%', ''));
+                                if (!isNaN(parsed)) return <CircularBadge pct={parsed} />;
+                              }
+                            }
+                            return <CircularBadge pct={funnelRow.matchPct} />;
+                          })()}
                         </div>
 
                         {/* Flexible spacer */}

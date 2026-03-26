@@ -20,28 +20,35 @@ export interface FunnelSourceConfig {
   statusSlug: string;
   triggerSlug: string;
   yieldFields: string[];
+  /** audit_table metric name to use for CircularBadge (overrides funnel matchPct) */
+  auditMetric?: string;
 }
 
 export const FUNNEL_SOURCES: FunnelSourceConfig[] = [
   // 1. Hub
   { id: 'permits', name: 'Building Permits', statusSlug: 'permits', triggerSlug: 'chain_permits', yieldFields: ['permit_num', 'description', 'est_const_cost'] },
   // 2-5. Classification (derived from permits)
-  { id: 'scope', name: 'Scope Classification', statusSlug: 'classify_scope', triggerSlug: 'classify_scope', yieldFields: ['project_type', 'scope_tags'] },
-  { id: 'trades_residential', name: 'Trades (Residential)', statusSlug: 'classify_permits', triggerSlug: 'classify_permits', yieldFields: ['permit_trades'] },
-  { id: 'trades_commercial', name: 'Trades (Commercial)', statusSlug: 'classify_permits', triggerSlug: 'classify_permits', yieldFields: ['permit_trades'] },
+  { id: 'scope', name: 'Scope Classification', statusSlug: 'classify_scope', triggerSlug: 'classify_scope', yieldFields: ['project_type', 'scope_tags'], auditMetric: 'tags_coverage_rate' },
+  { id: 'trades_residential', name: 'Trades (Residential)', statusSlug: 'classify_permits', triggerSlug: 'classify_permits', yieldFields: ['permit_trades'], auditMetric: 'classification_coverage' },
+  { id: 'trades_commercial', name: 'Trades (Commercial)', statusSlug: 'classify_permits', triggerSlug: 'classify_permits', yieldFields: ['permit_trades'], auditMetric: 'classification_coverage' },
   // 6-8. Entity enrichment
   { id: 'builders', name: 'Entity Extraction', statusSlug: 'builders', triggerSlug: 'builders', yieldFields: ['legal_name', 'phone', 'email', 'website'] },
-  { id: 'wsib', name: 'WSIB Registry', statusSlug: 'link_wsib', triggerSlug: 'link_wsib', yieldFields: ['legal_name', 'trade_name', 'mailing_address'] },
+  { id: 'wsib', name: 'WSIB Registry', statusSlug: 'link_wsib', triggerSlug: 'link_wsib', yieldFields: ['legal_name', 'trade_name', 'mailing_address'], auditMetric: 'link_rate' },
   { id: 'builder_web', name: 'Entity Web Enrichment', statusSlug: 'enrich_wsib_builders', triggerSlug: 'enrich_wsib_builders', yieldFields: ['phone', 'email', 'website'] },
   // 9-13. Spatial & linking
-  { id: 'address_matching', name: 'Address Matching', statusSlug: 'geocode_permits', triggerSlug: 'geocode_permits', yieldFields: ['latitude', 'longitude'] },
-  { id: 'parcels', name: 'Lots (Parcels)', statusSlug: 'link_parcels', triggerSlug: 'link_parcels', yieldFields: ['lot_size', 'frontage', 'depth', 'is_irregular'] },
-  { id: 'neighbourhoods', name: 'Neighbourhoods', statusSlug: 'link_neighbourhoods', triggerSlug: 'link_neighbourhoods', yieldFields: ['neighbourhood_id', 'avg_income', 'construction_era'] },
-  { id: 'massing', name: '3D Massing', statusSlug: 'link_massing', triggerSlug: 'link_massing', yieldFields: ['main_bldg_area', 'max_height', 'est_stories'] },
+  { id: 'address_matching', name: 'Address Matching', statusSlug: 'geocode_permits', triggerSlug: 'geocode_permits', yieldFields: ['latitude', 'longitude'], auditMetric: 'geocode_coverage' },
+  { id: 'parcels', name: 'Lots (Parcels)', statusSlug: 'link_parcels', triggerSlug: 'link_parcels', yieldFields: ['lot_size', 'frontage', 'depth', 'is_irregular'], auditMetric: 'link_rate' },
+  { id: 'neighbourhoods', name: 'Neighbourhoods', statusSlug: 'link_neighbourhoods', triggerSlug: 'link_neighbourhoods', yieldFields: ['neighbourhood_id', 'avg_income', 'construction_era'], auditMetric: 'link_rate' },
+  { id: 'massing', name: '3D Massing', statusSlug: 'link_massing', triggerSlug: 'link_massing', yieldFields: ['main_bldg_area', 'max_height', 'est_stories'], auditMetric: 'link_rate' },
   { id: 'link_similar', name: 'Similar Permits', statusSlug: 'link_similar', triggerSlug: 'link_similar', yieldFields: ['similar_permit_id'] },
   { id: 'link_coa', name: 'CoA Linking', statusSlug: 'link_coa', triggerSlug: 'link_coa', yieldFields: ['linked_permit_num', 'linked_confidence'] },
   { id: 'coa', name: 'CoA Applications', statusSlug: 'coa', triggerSlug: 'chain_coa', yieldFields: ['decision', 'hearing_date', 'applicant'] },
 ];
+
+/** Pre-computed lookup: statusSlug → FunnelSourceConfig (O(1) instead of .find()) */
+export const FUNNEL_SOURCE_BY_SLUG: Record<string, FunnelSourceConfig> = Object.fromEntries(
+  FUNNEL_SOURCES.map(s => [s.statusSlug, s])
+);
 
 // ---------------------------------------------------------------------------
 // Funnel row data — computed per source

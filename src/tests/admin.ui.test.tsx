@@ -2285,6 +2285,30 @@ describe('Full-tile status coloring (no more dots)', () => {
     expect(dotFn).not.toContain("'Stale'");
   });
 
+  it('CircularBadge prefers audit_table metric over funnel matchPct', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Must import FUNNEL_SOURCE_BY_SLUG and use auditMetric for badge override
+    expect(source).toContain('FUNNEL_SOURCE_BY_SLUG');
+    expect(source).toContain('auditMetric');
+    // Must parse percentage string from audit_table row value
+    expect(source).toMatch(/parseFloat.*replace.*%/);
+  });
+
+  it('FUNNEL_SOURCES auditMetric entries map to real audit_table metric names', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../lib/admin/funnel.ts'), 'utf-8'
+    );
+    const validMetrics = ['tags_coverage_rate', 'classification_coverage', 'link_rate', 'geocode_coverage'];
+    // Extract auditMetric values from source
+    const auditMatches = [...source.matchAll(/auditMetric:\s*'([^']+)'/g)];
+    expect(auditMatches.length).toBe(8);
+    for (const [, metric] of auditMatches) {
+      expect(validMetrics, `Unknown auditMetric "${metric}"`).toContain(metric);
+    }
+  });
+
   it('pending steps reset to neutral background (no status color)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
