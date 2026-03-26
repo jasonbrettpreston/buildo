@@ -180,7 +180,15 @@ pipeline.run('load-massing', async (pool) => {
   async function flushBatch() {
     if (batch.length === 0) return;
 
-    const currentBatch = batch;
+    // Deduplicate within the batch by source_id — the 2025 shapefile lacks
+    // OBJECTID, so source_id is an MD5 hash of geometry. Identical geometries
+    // produce duplicate hashes; PostgreSQL rejects INSERT...ON CONFLICT when
+    // the same row is affected twice in a single statement. Last write wins.
+    const uniqueMap = new Map();
+    for (const row of batch) {
+      uniqueMap.set(row.source_id, row);
+    }
+    const currentBatch = Array.from(uniqueMap.values());
     batch = [];
 
     await pipeline.withTransaction(pool, async (client) => {
