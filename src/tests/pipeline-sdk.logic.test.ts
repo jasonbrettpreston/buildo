@@ -518,10 +518,16 @@ describe('Pipeline SDK', () => {
       expect(content).toContain('IS DISTINCT FROM');
     });
 
-    // §9.3 — classify-permits.js upsert must guard against no-op updates
-    it('classify-permits.js upsert has IS DISTINCT FROM guard to prevent ghost updates', () => {
+    // §9.3 — classify-permits.js upsert must always update classified_at (no sticky record bug)
+    it('classify-permits.js upsert updates classified_at unconditionally', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'classify-permits.js'), 'utf-8');
-      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE SET[\s\S]*?classified_at\s*=\s*NOW\(\)/i);
+      // Must NOT have WHERE IS DISTINCT FROM guard that prevents classified_at from updating
+      const upsertMatch = content.match(
+        /ON CONFLICT \(permit_num, revision_num, trade_id\)\s*\n\s*DO UPDATE SET([\s\S]*?)(?:;|`)/
+      );
+      expect(upsertMatch).not.toBeNull();
+      expect(upsertMatch![1]).not.toContain('IS DISTINCT FROM');
     });
 
     // §9.3 — classify-permits.js records_updated must use dbUpdated (actual DB writes via rowCount)

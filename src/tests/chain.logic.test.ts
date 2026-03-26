@@ -250,6 +250,24 @@ describe('Incremental Processing Guards', () => {
     expect(content).toMatch(/scope_tags IS NULL[\s\S]{0,100}ARRAY\['demolition'\]/);
   });
 
+  it('classify-permits.js UPSERT updates classified_at unconditionally (no sticky record bug)', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/classify-permits.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    // The UPSERT into permit_trades must NOT have a WHERE ... IS DISTINCT FROM guard
+    // that prevents classified_at from updating when trade columns are unchanged.
+    // If classified_at doesn't update, the incremental WHERE clause keeps re-fetching
+    // the same permits forever (sticky record bug).
+    const upsertMatch = content.match(
+      /ON CONFLICT \(permit_num, revision_num, trade_id\)\s*\n\s*DO UPDATE SET([\s\S]*?)(?:;|`)/
+    );
+    expect(upsertMatch, 'UPSERT into permit_trades not found').not.toBeNull();
+    const upsertBody = upsertMatch![1];
+    // classified_at = NOW() must be present
+    expect(upsertBody).toContain('classified_at');
+    // There must NOT be a WHERE ... IS DISTINCT FROM guard on this UPSERT
+    expect(upsertBody).not.toContain('IS DISTINCT FROM');
+  });
+
   it('link-wsib.js emits PIPELINE_SUMMARY with totalUnlinked as records_total', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/link-wsib.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');

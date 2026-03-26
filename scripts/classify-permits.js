@@ -609,12 +609,7 @@ pipeline.run('classify-permits', async (pool) => {
            ON CONFLICT (permit_num, revision_num, trade_id)
            DO UPDATE SET tier = EXCLUDED.tier, confidence = EXCLUDED.confidence,
                          is_active = EXCLUDED.is_active, phase = EXCLUDED.phase,
-                         lead_score = EXCLUDED.lead_score, classified_at = NOW()
-           WHERE permit_trades.tier IS DISTINCT FROM EXCLUDED.tier
-              OR permit_trades.confidence IS DISTINCT FROM EXCLUDED.confidence
-              OR permit_trades.is_active IS DISTINCT FROM EXCLUDED.is_active
-              OR permit_trades.phase IS DISTINCT FROM EXCLUDED.phase
-              OR permit_trades.lead_score IS DISTINCT FROM EXCLUDED.lead_score`,
+                         lead_score = EXCLUDED.lead_score, classified_at = NOW()`,
           valChunk
         );
         dbUpdated += result.rowCount || 0;
