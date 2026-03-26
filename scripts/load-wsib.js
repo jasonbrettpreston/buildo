@@ -274,6 +274,15 @@ pipeline.run('load-wsib', async (pool) => {
     { "wsib_registry": ["legal_name", "trade_name", "legal_name_normalized", "trade_name_normalized", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size", "last_seen_at"] }
   );
 
+  const auditRows = [
+    { metric: 'total_csv_rows', value: totalRows, threshold: null, status: 'INFO' },
+    { metric: 'unique_class_g', value: seen.size, threshold: null, status: 'INFO' },
+    { metric: 'records_inserted', value: inserted, threshold: null, status: 'INFO' },
+    { metric: 'records_updated', value: updated, threshold: null, status: 'INFO' },
+    { metric: 'skipped_non_g', value: skippedNonG, threshold: null, status: 'INFO' },
+    { metric: 'skipped_no_name', value: skippedNoName, threshold: null, status: 'INFO' },
+  ];
+
   pipeline.emitSummary({
     records_total: inserted + updated,
     records_new: inserted,
@@ -286,6 +295,12 @@ pipeline.run('load-wsib', async (pool) => {
       records_updated: updated,
       skipped_non_g: skippedNonG,
       skipped_no_name: skippedNoName,
+      audit_table: {
+        phase: 25,
+        name: 'WSIB Registry Ingestion',
+        verdict: 'PASS',
+        rows: auditRows,
+      },
     },
   });
 

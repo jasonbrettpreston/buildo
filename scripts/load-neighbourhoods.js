@@ -595,6 +595,13 @@ pipeline.run('load-neighbourhoods', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  const auditRows = [
+    { metric: 'boundaries_loaded', value: boundaryCount, threshold: '>= 158', status: boundaryCount >= 158 ? 'PASS' : 'FAIL' },
+    { metric: 'census_rows_matched', value: profileUpdates, threshold: null, status: 'INFO' },
+    { metric: 'has_postgis', value: hasPostGIS ? 'yes' : 'no', threshold: null, status: 'INFO' },
+  ];
+  const hasFails = boundaryCount < 158;
+
   pipeline.emitSummary({
     records_total: boundaryCount,
     records_new: boundaryCount,
@@ -604,6 +611,12 @@ pipeline.run('load-neighbourhoods', async (pool) => {
       boundaries_loaded: boundaryCount,
       census_rows_matched: profileUpdates,
       has_postgis: hasPostGIS,
+      audit_table: {
+        phase: 24,
+        name: 'Neighbourhood Boundaries',
+        verdict: hasFails ? 'FAIL' : 'PASS',
+        rows: auditRows,
+      },
     },
   });
   pipeline.emitMeta(

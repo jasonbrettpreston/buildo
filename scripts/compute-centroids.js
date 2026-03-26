@@ -141,6 +141,15 @@ pipeline.run('compute-centroids', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  const computeRate = processed > 0 ? ((computed / processed) * 100).toFixed(1) : '0.0';
+  const auditRows = [
+    { metric: 'parcels_processed', value: processed, threshold: null, status: 'INFO' },
+    { metric: 'centroids_computed', value: computed, threshold: null, status: 'INFO' },
+    { metric: 'failed_geometries', value: failed, threshold: '== 0', status: failed > 0 ? 'WARN' : 'PASS' },
+    { metric: 'compute_rate', value: `${computeRate}%`, threshold: '>= 90%', status: parseFloat(computeRate) < 90 ? 'WARN' : 'PASS' },
+  ];
+  const hasWarns = failed > 0 || parseFloat(computeRate) < 90;
+
   pipeline.emitSummary({
     records_total: processed,
     records_new: 0,
@@ -150,6 +159,12 @@ pipeline.run('compute-centroids', async (pool) => {
       parcels_processed: processed,
       centroids_computed: computed,
       failed_geometries: failed,
+      audit_table: {
+        phase: 22,
+        name: 'Centroid Computation',
+        verdict: hasWarns ? 'WARN' : 'PASS',
+        rows: auditRows,
+      },
     },
   });
   pipeline.emitMeta(

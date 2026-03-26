@@ -268,6 +268,27 @@ describe('Incremental Processing Guards', () => {
     expect(upsertBody).not.toContain('IS DISTINCT FROM');
   });
 
+  // All sources chain loader scripts must emit audit_table in records_meta
+  const SOURCES_LOADERS_REQUIRING_AUDIT_TABLE = [
+    'load-address-points.js',
+    'load-parcels.js',
+    'compute-centroids.js',
+    'load-massing.js',
+    'load-neighbourhoods.js',
+    'load-wsib.js',
+  ];
+
+  for (const script of SOURCES_LOADERS_REQUIRING_AUDIT_TABLE) {
+    it(`${script} emits audit_table in records_meta`, () => {
+      const scriptPath = path.resolve(__dirname, `../../scripts/${script}`);
+      const content = fs.readFileSync(scriptPath, 'utf-8');
+      expect(content).toContain('audit_table');
+      expect(content).toMatch(/phase:\s*\d+/);
+      expect(content).toMatch(/verdict/);
+      expect(content).toContain("status: 'INFO'");
+    });
+  }
+
   it('link-wsib.js emits PIPELINE_SUMMARY with totalUnlinked as records_total', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/link-wsib.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');

@@ -350,6 +350,16 @@ pipeline.run('load-parcels', async (pool) => {
       rows_read: processed, inserted, updated, skipped, errors,
       duration: `${(durationMs / 1000).toFixed(1)}s`,
     });
+
+    const auditRows = [
+      { metric: 'rows_read', value: processed, threshold: null, status: 'INFO' },
+      { metric: 'records_inserted', value: inserted, threshold: null, status: 'INFO' },
+      { metric: 'records_updated', value: updated, threshold: null, status: 'INFO' },
+      { metric: 'records_skipped', value: skipped, threshold: null, status: 'INFO' },
+      { metric: 'records_errors', value: errors, threshold: '== 0', status: errors > 0 ? 'FAIL' : 'PASS' },
+    ];
+    const hasFails = errors > 0;
+
     pipeline.emitSummary({
       records_total: inserted + updated,
       records_new: inserted,
@@ -361,6 +371,12 @@ pipeline.run('load-parcels', async (pool) => {
         records_updated: updated,
         records_skipped: skipped,
         errors,
+        audit_table: {
+          phase: 21,
+          name: 'Parcels Ingestion',
+          verdict: hasFails ? 'FAIL' : 'PASS',
+          rows: auditRows,
+        },
       },
     });
     pipeline.emitMeta(

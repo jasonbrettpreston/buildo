@@ -324,6 +324,15 @@ pipeline.run('load-massing', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  const auditRows = [
+    { metric: 'features_read', value: processed, threshold: null, status: 'INFO' },
+    { metric: 'records_inserted', value: inserted, threshold: null, status: 'INFO' },
+    { metric: 'records_updated', value: updated, threshold: null, status: 'INFO' },
+    { metric: 'features_skipped', value: skipped, threshold: null, status: 'INFO' },
+    { metric: 'records_errors', value: errors, threshold: '== 0', status: errors > 0 ? 'FAIL' : 'PASS' },
+  ];
+  const hasFails = errors > 0;
+
   pipeline.emitSummary({
     records_total: inserted + updated,
     records_new: inserted,
@@ -335,6 +344,12 @@ pipeline.run('load-massing', async (pool) => {
       records_updated: updated,
       features_skipped: skipped,
       errors,
+      audit_table: {
+        phase: 23,
+        name: 'Building Footprints Ingestion',
+        verdict: hasFails ? 'FAIL' : 'PASS',
+        rows: auditRows,
+      },
     },
   });
   pipeline.emitMeta(
