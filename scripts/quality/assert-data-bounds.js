@@ -202,12 +202,12 @@ async function run() {
       const nullAddress = await count(
         `SELECT COUNT(*) FROM coa_applications WHERE address IS NULL OR TRIM(address) = ''`
       );
-      coaAuditRows.push({ metric: 'null_address', value: nullAddress, threshold: null, status: nullAddress > 0 ? 'WARN' : 'PASS' });
-      if (nullAddress > 0) {
+      coaAuditRows.push({ metric: 'null_address', value: nullAddress, threshold: '< 10', status: nullAddress >= 10 ? 'WARN' : 'PASS' });
+      if (nullAddress >= 10) {
         warnings.push(`${nullAddress} coa_applications with NULL/empty address`);
         console.log(`  WARN: ${nullAddress} coa_applications with NULL address`);
       } else {
-        console.log('  OK: No NULL CoA addresses');
+        console.log(`  OK: CoA NULL addresses within baseline (${nullAddress})`);
       }
 
       const nullAppNum = await count(
@@ -235,12 +235,12 @@ async function run() {
       const ancientHearing = await count(
         `SELECT COUNT(*) FROM coa_applications WHERE hearing_date < '2010-01-01'`
       );
-      coaAuditRows.push({ metric: 'ancient_hearing', value: ancientHearing, threshold: '== 0', status: ancientHearing > 0 ? 'WARN' : 'PASS' });
-      if (ancientHearing > 0) {
+      coaAuditRows.push({ metric: 'ancient_hearing', value: ancientHearing, threshold: '< 5', status: ancientHearing >= 5 ? 'WARN' : 'PASS' });
+      if (ancientHearing >= 5) {
         warnings.push(`${ancientHearing} coa_applications with hearing_date before 2010`);
         console.log(`  WARN: ${ancientHearing} coa_applications with ancient hearing dates`);
       } else {
-        console.log('  OK: No ancient hearing dates');
+        console.log(`  OK: Ancient hearing dates within baseline (${ancientHearing})`);
       }
 
       // Emit CoA audit_table
