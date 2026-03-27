@@ -407,8 +407,8 @@ export interface PipelineMeta {
   writes?: Record<string, string[]>;
 }
 
-export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, stepSlug }: {
-  desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null; stepSlug?: string;
+export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
+  desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null;
 }) {
   // Live pipeline_meta is the single source of truth for reads/writes.
   // It comes from PIPELINE_META emitted by each script and stored in

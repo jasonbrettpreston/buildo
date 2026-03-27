@@ -929,7 +929,6 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           <DataFlowTile
                             desc={STEP_DESCRIPTIONS[step.slug]}
                             dbSchemaMap={dbSchemaMap}
-                            stepSlug={step.slug}
                             // SAFETY: records_meta is JSONB (Record<string, unknown> | null), pipeline_meta is a known sub-key
                             pipelineMeta={(info?.records_meta as Record<string, unknown>)?.pipeline_meta as import('./funnel/FunnelPanels').PipelineMeta | undefined}
                           />
