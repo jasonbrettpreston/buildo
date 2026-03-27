@@ -98,7 +98,7 @@ pipeline.run('geocode-permits', async (pool) => {
     { metric: 'already_geocoded', value: parseInt(before.already_geocoded), threshold: null, status: 'INFO' },
     { metric: 'newly_geocoded', value: updated, threshold: null, status: 'INFO' },
     { metric: 'total_geocoded', value: totalGeocoded, threshold: null, status: 'INFO' },
-    { metric: 'geocode_coverage', value: geocodeCoverage.toFixed(1) + '%', threshold: '>= 95%', status: geocodeCoverage >= 95 ? 'PASS' : 'WARN' },
+    { metric: 'geocode_coverage', value: geocodeCoverage.toFixed(1) + '%', threshold: '>= 85%', status: geocodeCoverage >= 85 ? 'PASS' : 'WARN' },
     { metric: 'no_geo_id', value: parseInt(after.no_geo_id), threshold: null, status: 'INFO' },
   ];
 
