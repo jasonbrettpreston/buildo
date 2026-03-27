@@ -936,7 +936,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           />
                         )}
 
-                        {/* Script Output tile (non-funnel steps) — self-reported PIPELINE_SUMMARY values */}
+                        {/* Performance Metrics tile (non-funnel steps) — self-reported PIPELINE_SUMMARY values */}
                         {!funnelRow && (() => {
                           const stepExpected = STEP_EXPECTED_RANGES[step.slug];
                           const summaryRanges = stepExpected?.summary;
@@ -949,44 +949,17 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           };
                           return (
                           <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Script Output</h4>
-                            <p className="text-[8px] text-gray-400 leading-snug mb-2">Values self-reported by the pipeline script via PIPELINE_SUMMARY. These represent the script&apos;s logical view of what it processed.</p>
+                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Performance Metrics</h4>
                             {stepExpected?.behavior && (
                               <p className="text-[8px] text-violet-500 leading-snug italic mb-2">{stepExpected.behavior}</p>
                             )}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div className="space-y-1.5">
-                                <div className="flex justify-between">
-                                  <span className="text-xs text-gray-600">Status</span>
-                                  <span className={`drilldown-status text-xs font-semibold ${
-                                    !info ? 'text-gray-400'
-                                    : info.status === 'completed' ? 'text-green-700'
-                                    : info.status === 'completed_with_warnings' ? 'text-amber-700'
-                                    : info.status === 'completed_with_errors' ? 'text-red-600'
-                                    : info.status === 'failed' ? 'text-red-600'
-                                    : info.status === 'running' ? 'text-blue-600'
-                                    : info.status === 'skipped' ? 'text-gray-500'
-                                    : info.status === 'cancelled' ? 'text-orange-600'
-                                    : 'text-gray-500'
-                                  }`}>
-                                    {info?.status ?? 'Never run'}
-                                  </span>
+                              {info?.error_message && (
+                                <div>
+                                  <span className="text-xs text-gray-600">Error</span>
+                                  <pre className="text-[9px] text-red-600 whitespace-pre-wrap break-words max-h-24 overflow-y-auto font-mono mt-0.5">{info.error_message}</pre>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span className="text-xs text-gray-600">Duration</span>
-                                  <span className="text-xs font-semibold text-gray-900 tabular-nums">{info ? formatDuration(info.duration_ms) : '—'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-xs text-gray-600">Last Run</span>
-                                  <span className="text-xs font-medium text-gray-600">{info ? timeAgo(info.last_run_at) : 'Never'}</span>
-                                </div>
-                                {info?.error_message && (
-                                  <div className="mt-1">
-                                    <span className="text-xs text-gray-600">Error</span>
-                                    <pre className="text-[9px] text-red-600 whitespace-pre-wrap break-words max-h-24 overflow-y-auto font-mono mt-0.5">{info.error_message}</pre>
-                                  </div>
-                                )}
-                              </div>
+                              )}
                               {/* Hide records_total/records_new when audit_table present (redundant), or for quality/snapshot steps */}
                               {info && stepGroup !== 'quality' && stepGroup !== 'snapshot' && !((info.records_meta as Record<string, unknown> | null)?.audit_table) && (info.records_total != null || info.records_new != null) && (
                                 <div className="space-y-1.5">
@@ -1181,7 +1154,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           );
                         })()}
 
-                        {/* Audit table for funnel steps — Script Output is hidden by !funnelRow, so render separately */}
+                        {/* Audit table for funnel steps — Performance Metrics is hidden by !funnelRow, so render separately */}
                         {funnelRow && info?.records_meta && typeof info.records_meta === 'object' && (() => {
                           const meta = info.records_meta as Record<string, unknown>;
                           const tables = [meta.audit_table].filter(Boolean);

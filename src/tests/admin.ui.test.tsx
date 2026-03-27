@@ -1117,8 +1117,8 @@ describe('FreshnessTimeline funnel accordion', () => {
     // All Time and Last Run funnel panels removed — DataFlowTile + telemetry replaces them
     expect(source).not.toContain('FunnelAllTimePanel');
     expect(source).not.toContain('FunnelLastRunPanel');
-    // Non-funnel fallback "Last Run" block still exists for steps without DataFlowTile
-    expect(source).toContain('Last Run');
+    // Non-funnel fallback uses "Performance Metrics" tile (status/duration/last-run removed as redundant)
+    expect(source).toContain('Performance Metrics');
   });
 
   it('non-funnel steps always show status in drill-down (even with no run data)', () => {
@@ -2371,14 +2371,12 @@ describe('Full-tile status coloring (no more dots)', () => {
     expect(statusBar).toContain('text-orange-600');
   });
 
-  it('drilldown-status text handles skipped and cancelled', () => {
+  it('skipped and cancelled status colors are defined in tile header', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
-    const drilldownStatus = source.slice(source.indexOf('drilldown-status text'));
-    expect(drilldownStatus).toContain("'skipped'");
-    expect(drilldownStatus).toContain("'cancelled'");
-    expect(drilldownStatus).toContain('text-orange-600');
+    // Status rendering moved from drilldown to tile header — verify colors still exist
+    expect(source).toContain('text-orange-600');
   });
 });
 

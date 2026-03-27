@@ -678,12 +678,12 @@ describe('Telemetry & Last Run labelling with expected behavior ranges', () => {
     expect(source).not.toContain('Last Run Telemetry');
   });
 
-  it('Last Run tile header says "Script Output" not just "Last Run"', () => {
+  it('Last Run tile header says "Performance Metrics" not just "Last Run"', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     // The non-funnel Last Run tile should have the new header
-    expect(source).toContain('Script Output');
+    expect(source).toContain('Performance Metrics');
   });
 
   it('TelemetrySection includes a descriptor explaining DB mutations', () => {
