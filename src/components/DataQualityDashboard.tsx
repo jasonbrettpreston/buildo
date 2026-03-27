@@ -405,28 +405,6 @@ export function DataQualityDashboard() {
     await fetchData();
   }, [fetchData]);
 
-  // Retry all failed pipelines
-  const retryFailedPipelines = useCallback(() => {
-    const lastRun = stats?.pipeline_last_run ?? {};
-    const failedSlugs = Object.entries(lastRun)
-      .filter(([, info]) => info?.status === 'failed')
-      .map(([slug]) => slug);
-    for (const slug of failedSlugs) {
-      triggerPipeline(slug);
-    }
-  }, [stats, triggerPipeline]);
-
-  // Scroll to the failed pipeline in FreshnessTimeline
-  const scrollToFailed = useCallback(() => {
-    const el = timelineRef.current;
-    if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
-
-  // Count failed pipelines for banner
-  const failedPipelineCount = Object.values(stats?.pipeline_last_run ?? {})
-    .filter((info) => info?.status === 'failed').length;
-
   const current = data?.current;
 
   // Memoize funnel computation — only recomputes when stats or snapshot changes

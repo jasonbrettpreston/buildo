@@ -1516,13 +1516,13 @@ describe('Actionable Health Banner', () => {
     expect(source).toContain("label: 'Deep Scrapes'");
   });
 
-  it('renders clickable issue count that scrolls to failed pipeline', () => {
+  it('health banner renders schedule status per chain', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/DataQualityDashboard.tsx'),
       'utf-8'
     );
-    // Deep link scroll behavior
-    expect(source).toContain('scrollToFailed');
+    expect(source).toContain('scheduleStatus');
+    expect(source).toContain('On schedule');
   });
 
   it('uses swipeable horizontal carousel for trend metrics on mobile', () => {
