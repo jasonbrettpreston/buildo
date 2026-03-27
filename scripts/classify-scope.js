@@ -581,10 +581,18 @@ pipeline.run('classify-scope', async (pool) => {
   pipeline.log.info('[classify-scope]', 'Top scope tags', { tags: Object.fromEntries(topTags) });
 
   // Build audit_table for scope classification observability
-  const tagsCoverage = processed > 0 ? (withTags / processed) * 100 : 0;
+  // Cumulative coverage — run-specific rate is misleading in steady-state
+  const cumulativeResult = await pool.query(
+    `SELECT
+       (SELECT COUNT(*) FROM permits WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0) AS with_tags,
+       (SELECT COUNT(*) FROM permits) AS total`
+  );
+  const cumulativeWithTags = parseInt(cumulativeResult.rows[0].with_tags, 10);
+  const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
+  const tagsCoverage = cumulativeTotal > 0 ? (cumulativeWithTags / cumulativeTotal) * 100 : 0;
   const scopeAuditRows = [
     { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
-    { metric: 'permits_with_tags', value: withTags, threshold: null, status: 'INFO' },
+    { metric: 'run_classified', value: withTags, threshold: null, status: 'INFO' },
     { metric: 'tags_coverage_rate', value: tagsCoverage.toFixed(1) + '%', threshold: '>= 50%', status: tagsCoverage >= 50 ? 'PASS' : 'WARN' },
     { metric: 'newly_classified', value: newlyClassified, threshold: null, status: 'INFO' },
     { metric: 'scope_tags_propagated', value: propagated, threshold: null, status: 'INFO' },
