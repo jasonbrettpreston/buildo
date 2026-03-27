@@ -102,8 +102,8 @@ async function run() {
         seq_ratio: Math.round(seqRatio * 10000) / 10000,
       });
 
-      // Check 1: Dead tuple ratio
-      if (live > 0 && deadRatio > DEAD_TUPLE_RATIO) {
+      // Check 1: Dead tuple ratio (skip small tables < 1000 rows — autovacuum handles them)
+      if (live >= 1000 && deadRatio > DEAD_TUPLE_RATIO) {
         warnings.push(`${row.table_name}: ${dead.toLocaleString()} dead tuples (${(deadRatio * 100).toFixed(1)}% of ${live.toLocaleString()} live)`);
         console.log(`  WARN: ${row.table_name} — dead tuple ratio ${(deadRatio * 100).toFixed(1)}% exceeds ${DEAD_TUPLE_RATIO * 100}%`);
       } else {
@@ -266,7 +266,7 @@ async function run() {
       if (CHAIN_ID === 'deep_scrapes' && inspAuditTable) return { audit_table: inspAuditTable };
       if (CHAIN_ID === 'coa' && coaAuditTable) return { audit_table: coaAuditTable };
       // Permits chain or standalone — build engine health summary
-      const highDeadTables = tableResults.filter((t) => t.dead_ratio > 0.10 && t.n_live_tup > 0);
+      const highDeadTables = tableResults.filter((t) => t.dead_ratio > 0.10 && t.n_live_tup >= 1000);
       const highSeqTables = tableResults.filter((t) => t.seq_ratio > 0.80 && t.n_live_tup > 10000);
       const permitsEngineRows = [
         { metric: 'tables_checked', value: tableResults.length, threshold: null, status: 'INFO' },

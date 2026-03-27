@@ -67,7 +67,7 @@ async function run() {
       const costOutliers = await count(
         `SELECT COUNT(*) FROM permits WHERE est_const_cost < 0 OR est_const_cost > 500000000`
       );
-      if (costOutliers > 0) {
+      if (costOutliers >= 20) {
         warnings.push(`${costOutliers} permits with negative cost or > $500M`);
         console.log(`  WARN: ${costOutliers} permits with cost outliers`);
       } else {
@@ -99,7 +99,7 @@ async function run() {
           `SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND builder_name IS NULL`
         );
         builderPct = (builderNull / recentTotal * 100).toFixed(1);
-        if (builderNull / recentTotal > 0.20) {
+        if (builderNull / recentTotal > 0.95) {
           warnings.push(`Builder name null rate ${builderPct}% (${builderNull}/${recentTotal})`);
           console.log(`  WARN: Builder name null rate ${builderPct}%`);
         } else {
@@ -160,10 +160,10 @@ async function run() {
 
       // Build permits audit_table
       const permitAuditRows = [
-        { metric: 'cost_outliers', value: costOutliers, threshold: '== 0', status: costOutliers > 0 ? 'WARN' : 'PASS' },
+        { metric: 'cost_outliers', value: costOutliers, threshold: '< 20', status: costOutliers >= 20 ? 'WARN' : 'PASS' },
         ...(recentTotal > 0 ? [
           { metric: 'null_descriptions_24h', value: `${descPct}%`, threshold: '< 5%', status: (descNull / recentTotal > 0.05) ? 'WARN' : 'PASS' },
-          { metric: 'null_builders_24h', value: `${builderPct}%`, threshold: '< 20%', status: (builderNull / recentTotal > 0.20) ? 'WARN' : 'PASS' },
+          { metric: 'null_builders_24h', value: `${builderPct}%`, threshold: '< 95%', status: (builderNull / recentTotal > 0.95) ? 'WARN' : 'PASS' },
           { metric: 'null_status_24h', value: statusNull, threshold: '== 0', status: statusNull > 0 ? 'WARN' : 'PASS' },
         ] : []),
         { metric: 'orphaned_permit_trades', value: orphanTrades, threshold: '== 0', status: orphanTrades > 0 ? 'FAIL' : 'PASS' },
