@@ -295,6 +295,27 @@ async function insertBatch(client, batch) {
   `;
 
   const result = await client.query(sql, values);
+
+  // Always touch last_seen_at for every permit in the batch — even if data_hash
+  // didn't change. This is the "seen in feed" signal used by close-stale-permits.js
+  // to detect feed disappearance. The main upsert only updates last_seen_at when
+  // data_hash changes (IS DISTINCT FROM guard), so unchanged permits would go stale.
+  // Uses VALUES list with parameterized tuples for correct paired matching.
+  const touchParams = [];
+  const touchPlaceholders = [];
+  let tIdx = 1;
+  for (const r of batch) {
+    touchPlaceholders.push(`($${tIdx++}, $${tIdx++})`);
+    touchParams.push(r.permit_num, r.revision_num);
+  }
+  await client.query(
+    `UPDATE permits SET last_seen_at = NOW()
+     FROM (VALUES ${touchPlaceholders.join(',')}) AS v(pn, rn)
+     WHERE permits.permit_num = v.pn AND permits.revision_num = v.rn
+       AND permits.last_seen_at < NOW() - INTERVAL '1 hour'`,
+    touchParams
+  );
+
   return result.rows;
 }
 

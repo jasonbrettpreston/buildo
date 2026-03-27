@@ -537,6 +537,7 @@ export interface StepDescription {
 export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   // Ingest
   permits:              { summary: 'Ingests building permit CSV from Toronto Open Data CKAN API', table: 'permits' },
+  close_stale_permits:  { summary: 'Detects permits removed from feed and transitions to Pending Closed / Closed', table: 'permits' },
   coa:                  { summary: 'Ingests Committee of Adjustment applications from CKAN', table: 'coa_applications' },
   builders:             { summary: 'Extracts corporate entity names from permit applicant/builder fields', table: 'entities' },
   address_points:       { summary: 'Loads Toronto address point reference data for geocoding', table: 'address_points' },

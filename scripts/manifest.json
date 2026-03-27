@@ -4,6 +4,7 @@
 
   "scripts": {
     "permits":              { "file": "scripts/load-permits.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
+    "close_stale_permits":  { "file": "scripts/close-stale-permits.js",  "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
     "coa":                  { "file": "scripts/load-coa.js",              "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["coa_applications"] },
     "builders":             { "file": "scripts/extract-builders.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["entities"] },
     "address_points":       { "file": "scripts/load-address-points.js",   "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["address_points"] },
@@ -38,7 +39,7 @@
 
   "chains": {
     "permits": [
-      "assert_schema", "permits", "classify_scope",
+      "assert_schema", "permits", "close_stale_permits", "classify_scope",
       "builders", "link_wsib", "geocode_permits", "link_parcels",
       "link_neighbourhoods", "link_massing", "link_similar", "classify_permits",
       "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"

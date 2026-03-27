@@ -19,6 +19,7 @@ export interface PipelineEntry {
 export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   // Ingest (7) — load raw data into DB
   permits:            { name: 'Building Permits',      group: 'ingest' },
+  close_stale_permits:{ name: 'Close Stale Permits',   group: 'ingest' },
   coa:                { name: 'CoA Applications',      group: 'ingest' },
   builders:           { name: 'Extract Entities',       group: 'ingest' },
   address_points:     { name: 'Address Points',        group: 'ingest' },
@@ -83,6 +84,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     steps: [
       { slug: 'assert_schema',       indent: 0 },
       { slug: 'permits',              indent: 0 },
+      { slug: 'close_stale_permits',  indent: 1 },
       { slug: 'classify_scope',       indent: 1 },
       { slug: 'builders',             indent: 1 },
       { slug: 'link_wsib',            indent: 1 },
