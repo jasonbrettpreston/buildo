@@ -1167,6 +1167,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           const statusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : 'text-gray-400';
                           return (
                             <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                              <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Performance Metrics</h4>
                               {tables.map((atRaw, atIdx) => {
                                 if (!atRaw || typeof atRaw !== 'object') return null;
                                 const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string }> };
