@@ -86,10 +86,22 @@ pipeline.run('link-similar', async (pool) => {
   });
 
   // Build audit_table for similar permit linking observability
+  // Cumulative propagation rate — how many companion permits have inherited tags
+  const cumulativeResult = await pool.query(
+    `SELECT
+       (SELECT COUNT(*) FROM permits WHERE scope_source = 'propagated') AS propagated,
+       (SELECT COUNT(*) FROM permits WHERE scope_source IS NOT NULL) AS classified`
+  );
+  const cumulativePropagated = parseInt(cumulativeResult.rows[0].propagated, 10);
+  const cumulativeClassified = parseInt(cumulativeResult.rows[0].classified, 10);
+  const propagationRate = cumulativeClassified > 0 ? (cumulativePropagated / cumulativeClassified) * 100 : 0;
+
   const similarAuditRows = [
-    { metric: 'scope_tags_propagated', value: propagated, threshold: '> 0', status: propagated > 0 ? 'PASS' : 'WARN' },
+    { metric: 'run_propagated', value: propagated, threshold: null, status: 'INFO' },
     { metric: 'demolition_tags_restored', value: demFixed, threshold: null, status: 'INFO' },
-    { metric: 'total_companion_updates', value: propagated + demFixed, threshold: null, status: 'INFO' },
+    { metric: 'cumulative_propagated', value: cumulativePropagated, threshold: null, status: 'INFO' },
+    { metric: 'cumulative_classified', value: cumulativeClassified, threshold: null, status: 'INFO' },
+    { metric: 'propagation_rate', value: propagationRate.toFixed(1) + '%', threshold: '>= 20%', status: propagationRate >= 20 ? 'PASS' : 'WARN' },
   ];
 
   pipeline.emitSummary({
@@ -103,7 +115,7 @@ pipeline.run('link-similar', async (pool) => {
       audit_table: {
         phase: 10,
         name: 'Similar Permit Linking',
-        verdict: propagated === 0 ? 'WARN' : 'PASS',
+        verdict: propagationRate >= 20 ? 'PASS' : 'WARN',
         rows: similarAuditRows,
       },
     },
