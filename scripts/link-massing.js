@@ -210,19 +210,20 @@ pipeline.run('link-massing', async (pool) => {
   let centroidInParcelMatches = 0;
   let nearestMatches = 0;
   let noMatch = 0;
-  let offset = 0;
+  let lastId = 0; // keyset cursor — O(1) per batch via index seek
 
-  while (offset < totalParcels) {
+  while (true) {
     const parcelBatch = await pool.query(
       `SELECT id, centroid_lat, centroid_lng, geometry
        FROM parcels
-       WHERE ${baseFilter}${incrementalFilter}
-       ORDER BY id
-       LIMIT $1 OFFSET $2`,
-      [BATCH_SIZE, offset]
+       WHERE id > $2 AND ${baseFilter}${incrementalFilter}
+       ORDER BY id ASC
+       LIMIT $1`,
+      [BATCH_SIZE, lastId]
     );
 
     if (parcelBatch.rows.length === 0) break;
+    lastId = parcelBatch.rows[parcelBatch.rows.length - 1].id;
 
     let insertValues = [];
     let insertParams = [];
@@ -379,8 +380,6 @@ pipeline.run('link-massing', async (pool) => {
       buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
       parcelsLinked += batchParcelsCount;
     }
-
-    offset += BATCH_SIZE;
 
     if (processed % 10000 === 0 || processed >= totalParcels) {
       pipeline.progress('link-massing', processed, totalParcels, startTime);
