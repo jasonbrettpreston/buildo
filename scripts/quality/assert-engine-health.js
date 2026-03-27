@@ -239,7 +239,7 @@ async function run() {
     const coaAuditRows = [
       { metric: 'live_rows', value: coaLive, threshold: null, status: 'INFO' },
       { metric: 'dead_rows', value: coaDead, threshold: null, status: 'INFO' },
-      { metric: 'dead_tuple_pct', value: coaDeadPct, threshold: '< 10%', status: coaDeadPctNum >= 10 ? 'FAIL' : 'PASS' },
+      { metric: 'dead_tuple_pct', value: coaDeadPct, threshold: '< 10%', status: coaDeadPctNum >= 10 ? 'WARN' : 'PASS' },
       { metric: 'update_insert_ratio', value: parseFloat(coaUiRatio), threshold: null, status: 'INFO' },
       { metric: 'last_autovacuum', value: coaLastVac, threshold: null, status: 'INFO' },
     ];

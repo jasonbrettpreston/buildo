@@ -385,6 +385,10 @@ pipeline.run('load-coa', async (pool) => {
     ? Math.round(sortedLat.reduce((a, b) => a + b, 0) / sortedLat.length) : 0;
   const maxLatency = sortedLat.length > 0 ? sortedLat[sortedLat.length - 1] : 0;
 
+  // VACUUM — upsert touches ~2,800 rows on a 33K table, creating 97%+ dead tuples.
+  // Clean before telemetry snapshot and engine health check.
+  await pool.query('VACUUM ANALYZE coa_applications');
+
   const durationMs = Date.now() - startMs;
   pipeline.log.info('[load-coa]', 'Load complete', {
     inserted: totalInserted,
