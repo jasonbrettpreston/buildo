@@ -243,14 +243,18 @@ pipeline.run('link-wsib', async (pool) => {
   pipeline.log.info('[link-wsib]', `DB stats: ${s.total} total | ${s.linked} linked (${s.high_conf} high, ${s.med_conf} med)`);
 
   // Build audit_table for WSIB matching observability
-  const linkRate = totalUnlinked > 0 ? (totalLinked / totalUnlinked) * 100 : 0;
+  // Cumulative link rate from the stats query above — run-specific rate is misleading
+  // because most WSIB entries (121K) have no matching entity in our 3.7K builder pool.
+  const cumulativeTotal = parseInt(s.total, 10);
+  const cumulativeLinked = parseInt(s.linked, 10);
+  const linkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
   const wsibAuditRows = [
     { metric: 'unlinked_start', value: totalUnlinked, threshold: null, status: 'INFO' },
     { metric: 'tier_1_trade_matches', value: tier1, threshold: null, status: 'INFO' },
     { metric: 'tier_2_legal_matches', value: tier2, threshold: null, status: 'INFO' },
     { metric: 'tier_3_fuzzy_matches', value: tier3, threshold: null, status: 'INFO' },
-    { metric: 'total_linked', value: totalLinked, threshold: null, status: 'INFO' },
-    { metric: 'link_rate', value: linkRate.toFixed(1) + '%', threshold: '>= 70%', status: linkRate >= 70 ? 'PASS' : 'WARN' },
+    { metric: 'run_matched', value: totalLinked, threshold: null, status: 'INFO' },
+    { metric: 'link_rate', value: linkRate.toFixed(1) + '%', threshold: '>= 5%', status: linkRate >= 5 ? 'PASS' : 'WARN' },
     { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
   ];
 
