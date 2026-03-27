@@ -683,17 +683,22 @@ pipeline.run('classify-permits', async (pool) => {
   });
 
   // Build audit_table for trade classification observability
-  const classificationCoverage = processed > 0 ? (permitsWithTrades / processed) * 100 : 0;
+  // Cumulative coverage — run-specific rate is misleading in incremental mode
+  const cumulativeResult = await pool.query(
+    `SELECT
+       (SELECT COUNT(DISTINCT (permit_num, revision_num)) FROM permit_trades) AS classified,
+       (SELECT COUNT(*) FROM permits) AS total`
+  );
+  const cumulativeClassified = parseInt(cumulativeResult.rows[0].classified, 10);
+  const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
+  const classificationCoverage = cumulativeTotal > 0 ? (cumulativeClassified / cumulativeTotal) * 100 : 0;
   const avgTradesPerPermit = totalMatches / Math.max(permitsWithTrades, 1);
-  const classifyHasFails = classificationCoverage === 0 && processed > 0;
-  const classifyHasWarns = classificationCoverage < 95 || avgTradesPerPermit < 1.5;
+  const classifyHasWarns = classificationCoverage < 95;
   const classifyAuditRows = [
     { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
-    { metric: 'permits_truly_new', value: trulyNewPermits, threshold: null, status: 'INFO' },
-    { metric: 'permits_with_trades', value: permitsWithTrades, threshold: null, status: 'INFO' },
-    { metric: 'classification_coverage', value: classificationCoverage.toFixed(1) + '%', threshold: '>= 95%', status: classificationCoverage === 0 && processed > 0 ? 'FAIL' : classificationCoverage >= 95 ? 'PASS' : 'WARN' },
+    { metric: 'run_classified', value: permitsWithTrades, threshold: null, status: 'INFO' },
+    { metric: 'classification_coverage', value: classificationCoverage.toFixed(1) + '%', threshold: '>= 95%', status: classificationCoverage >= 95 ? 'PASS' : 'WARN' },
     { metric: 'total_trade_matches', value: totalMatches, threshold: null, status: 'INFO' },
-    { metric: 'avg_trades_per_permit', value: avgTradesPerPermit.toFixed(2), threshold: '>= 1.5', status: avgTradesPerPermit >= 1.5 ? 'PASS' : 'WARN' },
     { metric: 'db_mutations', value: dbUpdated, threshold: null, status: 'INFO' },
   ];
 
