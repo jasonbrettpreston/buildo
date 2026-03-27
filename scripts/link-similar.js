@@ -74,6 +74,10 @@ pipeline.run('link-similar', async (pool) => {
     return { propagated, demFixed };
   });
 
+  // VACUUM — last step writing to permits before classify_permits.
+  // Resets dead tuples accumulated from geocode + link_neighbourhoods + this step.
+  await pool.query('VACUUM ANALYZE permits');
+
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[link-similar]', 'Done', {
     tags_propagated: propagated,

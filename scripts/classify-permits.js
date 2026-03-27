@@ -668,6 +668,10 @@ pipeline.run('classify-permits', async (pool) => {
     }
   }
 
+  // VACUUM — classify_permits upserts up to 1.2M permit_trades rows.
+  // Clean dead tuples and update pg_stat estimates for query planner.
+  await pool.query('VACUUM ANALYZE permit_trades');
+
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[classify-permits]', 'Classification complete', {
     processed,
