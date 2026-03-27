@@ -540,20 +540,43 @@ pipeline.run('classify-permits', async (pool) => {
   let totalMatches = 0;
   let permitsWithTrades = 0;
   let dbUpdated = 0;
-  const offset = { value: 0 };
+  let lastPermitNum = '';
+  let lastRevisionNum = 0;
 
-  while (offset.value < totalPermits) {
+  while (true) {
+    // Keyset pagination — O(1) per batch via index seek on (permit_num, revision_num)
+    // In incremental mode, the WHERE clause has OR conditions, so the cursor must be
+    // wrapped in a separate AND (...) to avoid operator precedence issues.
+    let batchWhere;
+    let params;
+    if (fullMode) {
+      // Full mode: no incremental filter, just cursor
+      batchWhere = lastPermitNum
+        ? `WHERE (p.permit_num, p.revision_num) > ($2, $3)`
+        : '';
+      params = lastPermitNum ? [BATCH_SIZE, lastPermitNum, lastRevisionNum] : [BATCH_SIZE];
+    } else {
+      // Incremental mode: wrap incremental filter in parens, add cursor
+      const cursorClause = lastPermitNum
+        ? `AND (p.permit_num, p.revision_num) > ($2, $3)`
+        : '';
+      batchWhere = `WHERE (${incrementalWhere.replace(/^\s*WHERE\s+/i, '')}) ${cursorClause}`;
+      params = lastPermitNum ? [BATCH_SIZE, lastPermitNum, lastRevisionNum] : [BATCH_SIZE];
+    }
     const batch = await pool.query(
       `SELECT p.permit_num, p.revision_num, p.permit_type, p.structure_type, p.work,
               p.description, p.status, p.est_const_cost, p.issued_date, p.current_use, p.proposed_use,
               p.scope_tags
-       FROM permits p ${whereClause}
-       ORDER BY p.permit_num, p.revision_num
-       LIMIT $1 OFFSET $2`,
-      [BATCH_SIZE, offset.value]
+       FROM permits p ${batchWhere}
+       ORDER BY p.permit_num ASC, p.revision_num ASC
+       LIMIT $1`,
+      params
     );
 
     if (batch.rows.length === 0) break;
+    const lastRow = batch.rows[batch.rows.length - 1];
+    lastPermitNum = lastRow.permit_num;
+    lastRevisionNum = lastRow.revision_num;
 
     const insertValues = [];
     const insertParams = [];
@@ -639,12 +662,6 @@ pipeline.run('classify-permits', async (pool) => {
     }
 
     processed += batch.rows.length;
-    // Incremental mode: view shrinks as records are classified, so keep OFFSET 0.
-    // Full mode: view doesn't shrink, so advance OFFSET normally.
-    if (fullMode) {
-      offset.value += BATCH_SIZE;
-    }
-    // In incremental mode, offset stays 0 — processed items drop out of the WHERE clause.
 
     if (processed % 10000 === 0 || processed >= totalPermits) {
       pipeline.progress('classify-permits', processed, totalPermits, startTime);
