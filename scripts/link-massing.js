@@ -399,14 +399,23 @@ pipeline.run('link-massing', async (pool) => {
   });
 
   // Build audit_table for massing linking observability
-  const massingLinkRate = processed > 0 ? (parcelsLinked / processed) * 100 : 0;
-  const massingHasFails = totalBuildings === 0 || (processed > 0 && parcelsLinked === 0);
+  // Cumulative link rate — run-specific rate is misleading in incremental mode where
+  // the unlinked pool is permanently unmatchable parcels (no nearby buildings).
+  const cumulativeResult = await pool.query(
+    `SELECT
+       (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings) AS linked,
+       (SELECT COUNT(*) FROM parcels WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL) AS total`
+  );
+  const cumulativeLinked = parseInt(cumulativeResult.rows[0].linked, 10);
+  const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
+  const massingLinkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
+  const massingHasFails = totalBuildings === 0;
   const massingHasWarns = massingLinkRate < 50;
   const massingAuditRows = [
     { metric: 'buildings_indexed', value: totalBuildings, threshold: '> 0', status: totalBuildings > 0 ? 'PASS' : 'FAIL' },
     { metric: 'grid_cells', value: grid.size, threshold: null, status: 'INFO' },
     { metric: 'parcels_processed', value: processed, threshold: null, status: 'INFO' },
-    { metric: 'parcels_linked', value: parcelsLinked, threshold: '> 0', status: (processed > 0 && parcelsLinked === 0) ? 'FAIL' : 'PASS' },
+    { metric: 'run_matched', value: parcelsLinked, threshold: null, status: 'INFO' },
     { metric: 'match_centroid_in_parcel', value: centroidInParcelMatches, threshold: null, status: 'INFO' },
     { metric: 'match_nearest_fallback', value: nearestMatches, threshold: null, status: 'INFO' },
     { metric: 'link_rate', value: massingLinkRate.toFixed(1) + '%', threshold: '>= 50%', status: massingLinkRate >= 50 ? 'PASS' : 'WARN' },
