@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FunnelRowData } from '@/lib/admin/funnel';
 import { FUNNEL_SOURCE_BY_SLUG, STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP, STEP_EXPECTED_RANGES, getRangeStatus } from '@/lib/admin/funnel';
-import { CircularBadge, DataFlowTile, Sparkline, type SparklineRun, type TelemetryData } from './funnel/FunnelPanels';
+import { CircularBadge, DataFlowTile, TelemetrySection, Sparkline, type SparklineRun, type TelemetryData } from './funnel/FunnelPanels';
 
 // ---------------------------------------------------------------------------
 // Pipeline Registry — single source of truth for all tracked pipelines
@@ -930,9 +930,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                             desc={STEP_DESCRIPTIONS[step.slug]}
                             dbSchemaMap={dbSchemaMap}
                             stepSlug={step.slug}
-                            // SAFETY: records_meta is JSONB (Record<string, unknown> | null), pipeline_meta/telemetry are known sub-keys
+                            // SAFETY: records_meta is JSONB (Record<string, unknown> | null), pipeline_meta is a known sub-key
                             pipelineMeta={(info?.records_meta as Record<string, unknown>)?.pipeline_meta as import('./funnel/FunnelPanels').PipelineMeta | undefined}
-                            telemetry={(info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined}
                           />
                         )}
 
@@ -1146,6 +1145,12 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                         </div>
                                       );
                                     })()}
+                                    {/* DB State Changes — telemetry rendered after audit table */}
+                                    {(() => {
+                                      const telemetry = (info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
+                                      if (!telemetry) return null;
+                                      return <TelemetrySection telemetry={telemetry} stepSlug={step.slug} />;
+                                    })()}
                                   </div>
                                 );
                               })()}
@@ -1215,6 +1220,12 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                   </div>
                                 );
                               })}
+                              {/* DB State Changes — telemetry rendered after audit table */}
+                              {(() => {
+                                const telemetry = (info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
+                                if (!telemetry) return null;
+                                return <TelemetrySection telemetry={telemetry} stepSlug={step.slug} />;
+                              })()}
                             </div>
                           );
                         })()}

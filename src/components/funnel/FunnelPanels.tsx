@@ -63,7 +63,7 @@ function RangeBadge({ value, range }: { value: number; range?: [number, number] 
   return <span className="text-[7px] px-1 py-0.5 rounded bg-red-50 text-red-600 font-medium" title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{'\u2717'}</span>;
 }
 
-/** Renders T1/T2/T4/T6 telemetry inline below the DataFlowTile schema */
+/** Renders T1/T2/T4/T6 telemetry inline — displayed in Performance Metrics section after audit table */
 export function TelemetrySection({ telemetry, stepSlug }: { telemetry: TelemetryData; stepSlug?: string }) {
   const tables = Object.keys(telemetry.counts ?? {});
   if (tables.length === 0) return null;
@@ -126,7 +126,7 @@ export function TelemetrySection({ telemetry, stepSlug }: { telemetry: Telemetry
             {/* T6: Engine health badges */}
             {engine && (
               <div className="flex flex-wrap gap-2">
-                <span className={`text-[8px] px-1 py-0.5 rounded font-medium tabular-nums ${engine.dead_ratio > 0.10 ? 'bg-amber-100 text-amber-700' : 'bg-gray-50 text-gray-500'}`}>
+                <span className={`text-[8px] px-1 py-0.5 rounded font-medium tabular-nums ${engine.dead_ratio > 0.10 && engine.n_live_tup >= 1000 ? 'bg-amber-100 text-amber-700' : 'bg-gray-50 text-gray-500'}`}>
                   Dead: {(engine.dead_ratio * 100).toFixed(1)}%
                 </span>
                 {engine.n_live_tup >= 10000 && (
@@ -407,8 +407,8 @@ export interface PipelineMeta {
   writes?: Record<string, string[]>;
 }
 
-export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, telemetry, stepSlug }: {
-  desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null; telemetry?: TelemetryData | null; stepSlug?: string;
+export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, stepSlug }: {
+  desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null; stepSlug?: string;
 }) {
   // Live pipeline_meta is the single source of truth for reads/writes.
   // It comes from PIPELINE_META emitted by each script and stored in
@@ -431,7 +431,6 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, telemetry, stepS
         ) : (
           <p className="text-[10px] text-gray-400 italic">Run this pipeline to see exact data flow</p>
         )}
-        {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={stepSlug} />}
       </div>
     );
   }
@@ -479,8 +478,6 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta, telemetry, stepS
         </div>
       </div>
 
-      {/* T1/T2/T4: Telemetry section — progressive enhancement */}
-      {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={stepSlug} />}
     </div>
   );
 }

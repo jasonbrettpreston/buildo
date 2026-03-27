@@ -589,6 +589,10 @@ pipeline.run('load-neighbourhoods', async (pool) => {
   // Step 2: Load Census profiles
   const profileUpdates = await loadProfiles(pool, profilesPath);
 
+  // VACUUM immediately — full upsert + census enrichment creates ~1,264 dead tuples
+  // on a 158-row table (70%+ dead ratio). Clean up before telemetry snapshot.
+  await pool.query('VACUUM ANALYZE neighbourhoods');
+
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[load-neighbourhoods]', 'Load complete', {
     boundaries: boundaryCount, census_updates: profileUpdates,
