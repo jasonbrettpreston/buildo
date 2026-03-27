@@ -344,14 +344,26 @@ pipeline.run('link-parcels', async (pool) => {
 
   // Build audit_table for parcel linking observability
   const totalMatched = linkedExact + linkedName + linkedSpatial;
-  const parcelLinkRate = processed > 0 ? (totalMatched / processed) * 100 : 0;
+
+  // Cumulative link rate — the meaningful metric: total permits with parcel links / total permits.
+  // Run-specific rate (totalMatched / processed) is misleading in steady-state because the
+  // unlinked pool is mostly permanently unmatchable permits with bad addresses.
+  const cumulativeResult = await pool.query(
+    `SELECT
+       (SELECT COUNT(DISTINCT (permit_num, revision_num)) FROM permit_parcels) AS linked,
+       (SELECT COUNT(*) FROM permits) AS total`
+  );
+  const cumulativeLinked = parseInt(cumulativeResult.rows[0].linked, 10);
+  const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
+  const parcelLinkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
+
   const parcelAuditRows = [
     { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
     { metric: 'tier_1_exact_address', value: linkedExact, threshold: null, status: 'INFO' },
     { metric: 'tier_2_name_only', value: linkedName, threshold: null, status: 'INFO' },
     { metric: 'tier_3_spatial', value: linkedSpatial, threshold: null, status: 'INFO' },
     { metric: 'tier_3_polygon', value: linkedSpatialPolygon, threshold: null, status: 'INFO' },
-    { metric: 'total_matched', value: totalMatched, threshold: null, status: 'INFO' },
+    { metric: 'run_matched', value: totalMatched, threshold: null, status: 'INFO' },
     { metric: 'link_rate', value: parcelLinkRate.toFixed(1) + '%', threshold: '>= 75%', status: parcelLinkRate >= 75 ? 'PASS' : 'WARN' },
     { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
     { metric: 'db_upserted', value: dbUpserted, threshold: null, status: 'INFO' },
