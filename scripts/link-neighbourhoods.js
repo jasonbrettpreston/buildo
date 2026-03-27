@@ -270,12 +270,20 @@ pipeline.run('link-neighbourhoods', async (pool) => {
   });
 
   // Build audit_table for neighbourhood linking observability
-  const nhoodLinkRate = processed > 0 ? (linked / processed) * 100 : 0;
+  // Cumulative link rate — run-specific rate is misleading in incremental mode
+  const cumulativeResult = await pool.query(
+    `SELECT
+       (SELECT COUNT(*) FROM permits WHERE neighbourhood_id IS NOT NULL) AS linked,
+       (SELECT COUNT(*) FROM permits) AS total`
+  );
+  const cumulativeLinked = parseInt(cumulativeResult.rows[0].linked, 10);
+  const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
+  const nhoodLinkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
   const nhoodCount = turfPolygons.length;
   const nhoodAuditRows = [
     { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
     { metric: 'neighbourhoods_loaded', value: nhoodCount, threshold: '== 158', status: nhoodCount === 158 ? 'PASS' : 'WARN' },
-    { metric: 'permits_linked', value: linked, threshold: null, status: 'INFO' },
+    { metric: 'run_linked', value: linked, threshold: null, status: 'INFO' },
     { metric: 'link_rate', value: nhoodLinkRate.toFixed(1) + '%', threshold: '>= 95%', status: nhoodLinkRate >= 95 ? 'PASS' : 'WARN' },
     { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
     { metric: 'bbox_optimization_skipped', value: bboxSkipped, threshold: null, status: 'INFO' },
