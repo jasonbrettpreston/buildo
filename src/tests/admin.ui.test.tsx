@@ -1135,13 +1135,13 @@ describe('FreshnessTimeline funnel accordion', () => {
 });
 
 describe('Health Banner in DataQualityDashboard', () => {
-  it('dashboard renders health banner', () => {
+  it('dashboard renders health banner with per-chain verdicts', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/DataQualityDashboard.tsx'),
       'utf-8'
     );
     expect(source).toContain('Health Banner');
-    expect(source).toContain('All systems healthy');
+    expect(source).toContain('getChainVerdict');
   });
 
   it('banner shows green/yellow/red states', () => {
@@ -1154,14 +1154,13 @@ describe('Health Banner in DataQualityDashboard', () => {
     expect(source).toContain('bg-red-50');
   });
 
-  it('banner displays issue and warning messages', () => {
+  it('banner displays per-chain verdict and records summary', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/DataQualityDashboard.tsx'),
       'utf-8'
     );
-    // Health is destructured as a prop — access via health.issues, not data.health.issues
-    expect(source).toContain('health.issues');
-    expect(source).toContain('health.warnings');
+    expect(source).toContain('verdict.label');
+    expect(source).toContain('getRecordsSummary');
   });
 });
 
@@ -1508,12 +1507,13 @@ describe('Pipeline API route fixes', () => {
 // ---------------------------------------------------------------------------
 
 describe('Actionable Health Banner', () => {
-  it('renders Retry Failed Pipelines button when failures exist', () => {
+  it('health banner shows all five chain tiles', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/DataQualityDashboard.tsx'),
       'utf-8'
     );
-    expect(source).toContain('Retry Failed');
+    expect(source).toContain("label: 'Permits'");
+    expect(source).toContain("label: 'Deep Scrapes'");
   });
 
   it('renders clickable issue count that scrolls to failed pipeline', () => {
@@ -1535,13 +1535,12 @@ describe('Actionable Health Banner', () => {
     expect(source).toContain('snap-x');
   });
 
-  it('Health Banner has premium gradient styling', () => {
+  it('Health Banner auto-clears errors on successful fetch', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/DataQualityDashboard.tsx'),
       'utf-8'
     );
-    // Gradient background for premium look
-    expect(source).toContain('bg-gradient');
+    expect(source).toContain('Auto-clear errors on successful fetch');
   });
 });
 

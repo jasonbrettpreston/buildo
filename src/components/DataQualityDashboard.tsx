@@ -99,18 +99,10 @@ const FETCH_TIMEOUT_MS = 10_000;
 // ---------------------------------------------------------------------------
 
 interface HealthBannerProps {
-  health: SystemHealthSummary;
-  failedPipelineCount: number;
-  scrollToFailed: () => void;
-  retryFailedPipelines: () => void;
   pipelineLastRun: Record<string, import('@/components/FreshnessTimeline').PipelineRunInfo>;
 }
 
 const HealthBanner = React.memo(function HealthBanner({
-  health,
-  failedPipelineCount,
-  scrollToFailed,
-  retryFailedPipelines,
   pipelineLastRun,
 }: HealthBannerProps) {
   const CHAINS: { id: string; label: string; cadence: string; rootSlug: string }[] = [
@@ -123,98 +115,51 @@ const HealthBanner = React.memo(function HealthBanner({
 
   const now = Date.now();
 
-  return (
-    <div className={`rounded-xl border shadow-sm overflow-hidden ${
-      health.level === 'green'
-        ? 'border-green-200'
-        : health.level === 'yellow'
-        ? 'border-yellow-200'
-        : 'border-red-200'
-    }`}>
-      {/* Premium bg-gradient header */}
-      <div className={`px-4 py-3 ${
-        health.level === 'green'
-          ? 'bg-gradient-to-br from-green-50 to-white'
-          : health.level === 'yellow'
-          ? 'bg-gradient-to-br from-yellow-50 to-white'
-          : 'bg-gradient-to-br from-red-50 to-white'
-      }`}>
-        <div className="flex items-center gap-3">
-          <div className={`w-3 h-3 rounded-full shrink-0 ${
-            health.level === 'green' ? 'bg-green-500'
-              : health.level === 'yellow' ? 'bg-yellow-500'
-              : 'bg-red-500'
-          }`} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className={`text-sm font-semibold ${
-                health.level === 'green' ? 'text-green-800'
-                  : health.level === 'yellow' ? 'text-yellow-800'
-                  : 'text-red-800'
-              }`}>
-                {health.level === 'green'
-                  ? 'All systems healthy'
-                  : health.level === 'yellow'
-                  ? `${health.warnings.length} warning${health.warnings.length !== 1 ? 's' : ''}`
-                  : `${health.issues.length} issue${health.issues.length !== 1 ? 's' : ''}`}
-              </p>
-              {/* Deep link: clickable issue count scrolls to failed pipelines */}
-              {failedPipelineCount > 0 && (
-                <button
-                  onClick={scrollToFailed}
-                  className="text-[10px] font-semibold text-red-600 hover:text-red-800 underline underline-offset-2"
-                >
-                  {failedPipelineCount} pipeline failure{failedPipelineCount !== 1 ? 's' : ''}
-                </button>
-              )}
-            </div>
-            {(health.issues.length > 0 || health.warnings.length > 0) && (
-              <div className="mt-1 space-y-0.5">
-                {health.issues.map((issue, i) => (
-                  <p key={`issue-${i}`} className="text-xs text-red-600">{issue}</p>
-                ))}
-                {health.warnings.map((warn, i) => (
-                  <p key={`warn-${i}`} className="text-xs text-yellow-700">{warn}</p>
-                ))}
-              </div>
-            )}
-          </div>
-          {/* Retry Failed Pipelines — 1-click recovery */}
-          {failedPipelineCount > 0 && (
-            <button
-              onClick={retryFailedPipelines}
-              className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-300 text-red-700 bg-white hover:bg-red-50 shadow-sm min-h-[44px]"
-            >
-              Retry Failed
-            </button>
-          )}
-        </div>
-      </div>
+  // Derive chain verdict from status + step_verdicts in records_meta
+  function getChainVerdict(info: typeof pipelineLastRun[string] | undefined): { label: string; cls: string } {
+    if (!info?.last_run_at) return { label: '—', cls: 'text-gray-400 bg-gray-50 border-gray-200' };
+    if (info.status === 'running') return { label: 'RUNNING', cls: 'text-blue-600 bg-blue-50 border-blue-200' };
+    if (info.status === 'failed') return { label: 'FAIL', cls: 'text-red-700 bg-red-50 border-red-200' };
+    if (info.status === 'completed_with_errors') return { label: 'FAIL', cls: 'text-red-700 bg-red-50 border-red-200' };
+    if (info.status === 'completed_with_warnings') return { label: 'WARN', cls: 'text-yellow-700 bg-yellow-50 border-yellow-200' };
+    return { label: 'PASS', cls: 'text-green-700 bg-green-50 border-green-200' };
+  }
 
-      {/* Pipeline chain schedule status */}
+  function getRecordsSummary(info: typeof pipelineLastRun[string] | undefined): string {
+    if (!info?.last_run_at) return '';
+    if (info.status === 'running') return '';
+    const n = info.records_new ?? 0;
+    if (n > 0) return `${n.toLocaleString()} new`;
+    return 'No changes';
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       {pipelineLastRun && (
-        <div className="px-4 py-3 border-t border-gray-200/50">
+        <div className="px-4 py-3">
           <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:grid md:grid-cols-5 md:overflow-visible -mx-1 px-1 pb-1">
             {CHAINS.map((c) => {
               const chainInfo = pipelineLastRun[`chain_${c.id}`];
               const rootInfo = pipelineLastRun[c.rootSlug];
               const info = chainInfo ?? rootInfo;
-              let status: string;
-              let color: string;
+              const verdict = getChainVerdict(info);
+              const records = getRecordsSummary(info);
+              let scheduleStatus: string;
+              let scheduleColor: string;
               let dotColor: string;
               if (!info?.last_run_at) {
-                status = 'Never run'; color = 'text-gray-400'; dotColor = 'bg-gray-300';
+                scheduleStatus = 'Never run'; scheduleColor = 'text-gray-400'; dotColor = 'bg-gray-300';
               } else if (info.status === 'running') {
-                status = 'Running'; color = 'text-blue-600'; dotColor = 'bg-blue-500';
+                scheduleStatus = 'Running'; scheduleColor = 'text-blue-600'; dotColor = 'bg-blue-500';
               } else {
                 const elapsed = now - new Date(info.last_run_at).getTime();
                 const threshold = CADENCE_THRESHOLDS_MS[c.cadence] ?? CADENCE_THRESHOLDS_MS.Daily;
                 if (elapsed > threshold * 2) {
-                  status = 'Overdue'; color = 'text-red-600'; dotColor = 'bg-red-500';
+                  scheduleStatus = 'Overdue'; scheduleColor = 'text-red-600'; dotColor = 'bg-red-500';
                 } else if (elapsed > threshold) {
-                  status = 'Needs run'; color = 'text-yellow-600'; dotColor = 'bg-yellow-500';
+                  scheduleStatus = 'Needs run'; scheduleColor = 'text-yellow-600'; dotColor = 'bg-yellow-500';
                 } else {
-                  status = 'On schedule'; color = 'text-green-600'; dotColor = 'bg-green-500';
+                  scheduleStatus = 'On schedule'; scheduleColor = 'text-green-600'; dotColor = 'bg-green-500';
                 }
               }
               const lastRun = info?.last_run_at
@@ -223,9 +168,11 @@ const HealthBanner = React.memo(function HealthBanner({
               return (
                 <div key={c.id} className="text-center min-w-[120px] snap-center shrink-0 md:min-w-0 md:shrink">
                   <p className="text-[10px] text-gray-500 uppercase tracking-wider">{c.label}</p>
-                  <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                  <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded border mt-1 ${verdict.cls}`}>{verdict.label}</span>
+                  {records && <p className="text-[10px] text-gray-500 mt-0.5">{records}</p>}
+                  <div className="flex items-center justify-center gap-1.5 mt-1">
                     <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
-                    <p className={`text-sm font-semibold ${color}`}>{status}</p>
+                    <p className={`text-sm font-semibold ${scheduleColor}`}>{scheduleStatus}</p>
                   </div>
                   <p className="text-[10px] text-gray-400 tabular-nums">{lastRun}</p>
                 </div>
@@ -279,6 +226,7 @@ export function DataQualityDashboard() {
       .then((r) => r.json())
       .then((statsData) => {
         setStats(statsData);
+        setPipelineErrors([]); // Auto-clear errors on successful fetch
         return statsData as AdminStats;
       })
       .catch((err) => {
@@ -521,14 +469,10 @@ export function DataQualityDashboard() {
 
       {current ? (
         <>
-          {/* Health Banner — extracted, memoized component */}
-          {data?.health && (
+          {/* Health Banner — per-chain verdicts + schedule status */}
+          {stats?.pipeline_last_run && (
             <HealthBanner
-              health={data.health}
-              failedPipelineCount={failedPipelineCount}
-              scrollToFailed={scrollToFailed}
-              retryFailedPipelines={retryFailedPipelines}
-              pipelineLastRun={stats?.pipeline_last_run ?? {}}
+              pipelineLastRun={stats.pipeline_last_run}
             />
           )}
 
