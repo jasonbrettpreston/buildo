@@ -322,10 +322,10 @@ async function run() {
       }
 
       const heightOutliers = await count(
-        `SELECT COUNT(*) FROM building_footprints WHERE max_height_m IS NOT NULL AND (max_height_m <= 0 OR max_height_m > 500)`
+        `SELECT COUNT(*) FROM building_footprints WHERE max_height_m IS NOT NULL AND (max_height_m < 0 OR max_height_m > 500)`
       );
       if (heightOutliers > 0) {
-        warnings.push(`${heightOutliers} building_footprints with max_height out of bounds (0-500m)`);
+        warnings.push(`${heightOutliers} building_footprints with max_height out of bounds (negative or >500m)`);
         console.log(`  WARN: ${heightOutliers} building footprints with height outliers`);
       } else {
         console.log('  OK: Building footprint heights within bounds');

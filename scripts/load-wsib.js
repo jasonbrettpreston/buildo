@@ -9,6 +9,7 @@
  */
 const pipeline = require('./lib/pipeline');
 const fs = require('fs');
+const path = require('path');
 const { parse } = require('csv-parse');
 
 const SLUG = 'load_wsib';
@@ -67,6 +68,18 @@ pipeline.run('load-wsib', async (pool) => {
     // When running inside a chain, skip gracefully instead of crashing
     if (CHAIN_ID) {
       pipeline.log.info('[load-wsib]', 'No --file argument (chain context). Skipping.');
+      // Scan data/ for existing WSIB CSV so admins can see what file is loaded and how stale it is
+      const dataDir = path.join(__dirname, '..', 'data');
+      const wsibFiles = fs.existsSync(dataDir)
+        ? fs.readdirSync(dataDir).filter(f => /^BusinessClassificationDetails/i.test(f) && f.endsWith('.csv'))
+        : [];
+      const fileRows = [];
+      if (wsibFiles.length > 0) {
+        const latest = wsibFiles.sort().pop();
+        const stat = fs.statSync(path.join(dataDir, latest));
+        fileRows.push({ metric: 'current_file', value: latest, threshold: null, status: 'INFO' });
+        fileRows.push({ metric: 'file_date', value: stat.mtime.toISOString().split('T')[0], threshold: null, status: 'INFO' });
+      }
       pipeline.emitSummary({
         records_total: 0, records_new: 0, records_updated: 0,
         records_meta: {
@@ -76,6 +89,7 @@ pipeline.run('load-wsib', async (pool) => {
             verdict: 'PASS',
             rows: [
               { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+              ...fileRows,
               { metric: 'reason', value: 'No CSV file provided — WSIB requires annual manual download', threshold: null, status: 'INFO' },
               { metric: 'instructions', value: 'Download BusinessClassificationDetails CSV from wsib.ca → save to data/ folder → run: node scripts/load-wsib.js --file data/BusinessClassificationDetails(YYYY).csv', threshold: null, status: 'INFO' },
             ],
@@ -292,7 +306,10 @@ pipeline.run('load-wsib', async (pool) => {
   const skipNoNameRate = gRowCount + skippedNoName > 0
     ? (skippedNoName / (gRowCount + skippedNoName)) * 100 : 0;
   const skipNoNameRateStr = skipNoNameRate.toFixed(1) + '%';
+  const fileStat = fs.statSync(filePath);
   const auditRows = [
+    { metric: 'source_file', value: path.basename(filePath), threshold: null, status: 'INFO' },
+    { metric: 'file_date', value: fileStat.mtime.toISOString().split('T')[0], threshold: null, status: 'INFO' },
     { metric: 'total_csv_rows', value: totalRows, threshold: null, status: 'INFO' },
     { metric: 'unique_class_g', value: gRowCount, threshold: '>= 110000', status: gRowCount < 110000 ? 'WARN' : 'PASS' },
     { metric: 'records_inserted', value: inserted, threshold: null, status: 'INFO' },
