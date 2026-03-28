@@ -103,9 +103,18 @@ pipeline.run('close-stale-permits', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  // Safety guard: if > 10% of permits are being closed in a single run,
+  // the upstream permits load likely had a partial download (CKAN timeout, etc.)
+  const pendingClosedRate = totalPermits > 0 ? (pendingCount / totalPermits * 100) : 0;
+  const hasFails = pendingClosedRate >= 10;
+  if (hasFails) {
+    pipeline.log.error('[close-stale]', `Safety guard: ${pendingClosedRate.toFixed(1)}% closure rate exceeds 10% — possible partial CKAN download upstream`);
+  }
+
   const auditRows = [
     { metric: 'last_load_at', value: new Date(lastLoadAt).toISOString().split('T')[0], threshold: null, status: 'INFO' },
     { metric: 'pending_closed', value: pendingCount, threshold: null, status: 'INFO' },
+    { metric: 'pending_closed_rate', value: pendingClosedRate.toFixed(1) + '%', threshold: '< 10%', status: hasFails ? 'FAIL' : 'PASS' },
     { metric: 'promoted_to_closed', value: closedCount, threshold: null, status: 'INFO' },
     { metric: 'total_pending', value: totalPending, threshold: null, status: 'INFO' },
     { metric: 'total_closed', value: totalClosed, threshold: null, status: 'INFO' },
@@ -125,7 +134,7 @@ pipeline.run('close-stale-permits', async (pool) => {
       audit_table: {
         phase: 3,
         name: 'Stale Permit Closure',
-        verdict: 'PASS',
+        verdict: hasFails ? 'FAIL' : 'PASS',
         rows: auditRows,
       },
     },

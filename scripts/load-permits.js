@@ -460,7 +460,7 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
 
   // Build audit_table for permit ingestion observability
   const auditRows = [
-    { metric: 'records_fetched', value: processed + errors, threshold: null, status: 'INFO' },
+    { metric: 'records_fetched', value: processed + errors, threshold: '>= 200000', status: (processed + errors) < 200000 ? 'FAIL' : 'PASS' },
     { metric: 'records_mapped', value: processed, threshold: null, status: 'INFO' },
     { metric: 'records_errors', value: errors, threshold: '== 0', status: errors > 0 ? 'FAIL' : 'PASS' },
     { metric: 'records_deduplicated', value: dupsRemoved, threshold: null, status: 'INFO' },
@@ -471,7 +471,7 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
     { metric: 'avg_latency_ms', value: avgLatency, threshold: null, status: 'INFO' },
     { metric: 'schema_drift', value: tel.schema_drift.length, threshold: '== 0', status: tel.schema_drift.length > 0 ? 'FAIL' : 'PASS' },
   ];
-  const permitAuditHasFails = tel.api_errors > 0 || tel.schema_drift.length > 0 || errors > 0;
+  const permitAuditHasFails = tel.api_errors > 0 || tel.schema_drift.length > 0 || errors > 0 || (processed + errors) < 200000;
 
   pipeline.emitSummary({
     records_total: newInserts + updated,
