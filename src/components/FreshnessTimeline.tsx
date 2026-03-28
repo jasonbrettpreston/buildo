@@ -41,8 +41,9 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   create_pre_permits: { name: 'Create Pre-Permits',    group: 'link' },
   compute_centroids:  { name: 'Compute Centroids',     group: 'link' },
   // Scrape (1) — external portal data
-  inspections:        { name: 'Inspection Stages',    group: 'link' },
-  coa_documents:      { name: 'CoA Documents',        group: 'link' },
+  inspections:                  { name: 'Inspection Stages',             group: 'link' },
+  classify_inspection_status:   { name: 'Classify Inspection Status',    group: 'classify' },
+  coa_documents:                { name: 'CoA Documents',                 group: 'link' },
   // Classify (3) — derive fields
   classify_scope:       { name: 'Scope Classification', group: 'classify' },
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
@@ -158,8 +159,9 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     label: 'Deep Scrapes',
     description: 'Weekly — AIC portal inspection scraping via REST API',
     steps: [
-      { slug: 'inspections',           indent: 0 },
-      { slug: 'assert_network_health', indent: 0 },
+      { slug: 'inspections',                  indent: 0 },
+      { slug: 'classify_inspection_status',  indent: 0 },
+      { slug: 'assert_network_health',       indent: 0 },
       { slug: 'refresh_snapshot',      indent: 1 },
       { slug: 'assert_data_bounds',    indent: 0 },
       { slug: 'assert_staleness',      indent: 0 },

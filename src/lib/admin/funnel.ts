@@ -572,7 +572,8 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   assert_pre_permit_aging: { summary: 'Detects approved+unlinked CoA applications aging past 12/18 months', table: 'pipeline_runs' },
   assert_coa_freshness:    { summary: 'Checks CKAN portal freshness — warns if newest CoA data is >45 days stale', table: 'pipeline_runs' },
   // Deep Scrapes
-  inspections:          { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections' },
+  inspections:                    { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections' },
+  classify_inspection_status:     { summary: 'Detects stalled permits (10+ months inactive) and classifies enriched_status', table: 'permits' },
   coa_documents:        { summary: 'Downloads Committee of Adjustment plans and decision PDFs from AIC portal', table: 'coa_documents' },
 };
 

@@ -1,16 +1,16 @@
-# Active Task: Fix proxy not loading from .env in AIC scraper
+# Active Task: Fix enriched_status not written for permits with no inspection stages
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** `poc-aic-scraper-v2.js` doesn't load `.env` file, so PROXY_HOST/PORT/USER/PASS are not available when running standalone. This causes the scraper to bypass the Decodo proxy and connect directly to AIC portal, risking WAF blocks and producing unreliable results.
+* **Goal:** In the scraper, permits that return `no_processes` or `no_status_link` errors from AIC skip the enriched_status writeback entirely. These are permits where AIC has the folder but the inspector hasn't created stages yet — they should get `enriched_status = 'Permit Issued'` since work hasn't started.
 * **Target Spec:** `docs/specs/38_inspection_scraping.md`
-* **Key Files:** `scripts/poc-aic-scraper-v2.js`
-* **Rollback Anchor:** `4d7d41f`
+* **Key Files:** `scripts/poc-aic-scraper-v2.js` (line ~308)
+* **Rollback Anchor:** `704e25f`
 
 ## Technical Implementation
-* Add `require('dotenv').config()` at top of scraper script before any `process.env` reads
-* dotenv is already a project dependency (used by Next.js)
+* In the `for (const result of results)` loop, when `result.error` is `no_processes` or `no_status_link`, still write `enriched_status = 'Permit Issued'` to the permits table
+* These permits have a folder on AIC but no stages — inspector hasn't set them up yet, which means work definitely hasn't started
 
 ## Standards Compliance
 * **Try-Catch Boundary:** N/A — pipeline script
@@ -19,9 +19,9 @@
 * **Mobile-First:** N/A
 
 ## Execution Plan
-- [x] **Rollback Anchor:** 4d7d41f
-- [x] **State Verification:** Scraper logs "No PROXY_HOST configured" despite .env having it
-- [x] **Spec Review:** Spec 38 requires proxy for AIC portal access
-- [x] **Reproduction:** Ran scraper, got WARN about missing proxy
-- [ ] **Fix:** Add dotenv.config() to scraper
+- [x] **Rollback Anchor:** 704e25f
+- [x] **State Verification:** Permits with no_processes/no_status_link skip enriched_status update
+- [x] **Spec Review:** Spec 38 §3.3 — "Missing Status link" permits should be re-scraped next run
+- [ ] **Reproduction:** Code review confirms gap at line ~308
+- [ ] **Fix:** Add enriched_status = 'Permit Issued' writeback for error results with valid permitNum
 - [ ] **Green Light:** npm run test && npm run lint -- --fix. All pass. → WF6

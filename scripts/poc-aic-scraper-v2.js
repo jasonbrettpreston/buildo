@@ -82,6 +82,23 @@ function normalizeStatus(raw) {
   return null;
 }
 
+/**
+ * Compute enriched_status from scraped inspection stages.
+ * - All Outstanding → 'Permit Issued' (work not started)
+ * - Any 'Not Passed' → 'Not Passed' (failed inspection — lead signal)
+ * - All Passed → 'Inspections Complete'
+ * - Mix of Passed/Outstanding → 'Active Inspection'
+ */
+function computeEnrichedStatus(stages) {
+  if (!stages || stages.length === 0) return null;
+  const statuses = stages.map((s) => normalizeStatus(s.status)).filter(Boolean);
+  if (statuses.length === 0) return null;
+  if (statuses.some((s) => s === 'Not Passed')) return 'Not Passed';
+  if (statuses.every((s) => s === 'Outstanding')) return 'Permit Issued';
+  if (statuses.every((s) => s === 'Passed')) return 'Inspections Complete';
+  return 'Active Inspection';
+}
+
 function parseInspectionDate(raw) {
   const trimmed = (raw || '').trim();
   if (!trimmed || trimmed === '-' || trimmed === 'N/A' || trimmed === '') return null;
@@ -217,8 +234,10 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
     }
 
     // Step 3+4: For each target folder, get detail + status (chained)
+    // Scrape any target folder regardless of AIC statusDesc — "Permit Issued" permits
+    // also have inspection stages (all Outstanding initially)
     for (const folder of folders) {
-      if (folder.statusDesc !== 'Inspection' || !targetTypes.includes(folder.folderTypeDesc)) continue;
+      if (!targetTypes.includes(folder.folderTypeDesc)) continue;
 
       const permitNum = `${folder.folderYear} ${folder.folderSequence} ${folder.folderSection}`;
 
@@ -270,27 +289,39 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
   }
 
   const targetFolders = folders.filter((f) => TARGET_TYPES.includes(f.folderTypeDesc));
-  const inspectionFolders = targetFolders.filter((f) => f.statusDesc === 'Inspection');
 
-  // Detect permits that progressed past Inspection on the portal (Closed/Completed)
-  // but still show Inspection in our DB (stale Open Data feed)
-  if (targetFolders.length > 0 && inspectionFolders.length === 0) {
-    const statuses = targetFolders.map((f) => f.statusDesc);
-    pipeline.log.info('[scraper]', `${yearSeq}: ${targetFolders.length} target folders all non-Inspection [${[...new Set(statuses)].join(', ')}]`);
-    return { searched: 1, scraped: 0, upserted: 0, bytes: totalBytes, schemaDrift: schemaDrift || [], closed: true };
+  if (targetFolders.length === 0) {
+    pipeline.log.info('[scraper]', `${yearSeq}: no target folders found`);
+    return { searched: 1, scraped: 0, upserted: 0, bytes: totalBytes, schemaDrift: schemaDrift || [] };
   }
 
-  pipeline.log.info('[scraper]', `${yearSeq}: ${folders.length} folders, ${inspectionFolders.length} target inspections`, {
+  pipeline.log.info('[scraper]', `${yearSeq}: ${folders.length} folders, ${targetFolders.length} target permits`, {
     all: folders.map((f) => `${f.folderYear} ${f.folderSequence} ${f.folderSection} [${f.statusDesc}]`),
   });
 
   let scraped = 0;
   let upserted = 0;
   let totalStatusChanges = 0;
+  let enrichedUpdates = 0;
 
   for (const result of results) {
     if (result.error) {
       pipeline.log.info('[scraper]', `${result.permitNum}: ${result.error}`);
+      // Permits with no_processes or no_status_link still exist on AIC —
+      // inspector hasn't created stages yet, so work hasn't started
+      if (result.permitNum && (result.error === 'no_processes' || result.error === 'no_status_link')) {
+        const client = await dbPool.connect();
+        try {
+          const enrichRes = await client.query(
+            `UPDATE permits SET enriched_status = 'Permit Issued'
+             WHERE permit_num = $1 AND enriched_status IS DISTINCT FROM 'Permit Issued'`,
+            [result.permitNum]
+          );
+          if (enrichRes.rowCount > 0) enrichedUpdates++;
+        } finally {
+          client.release();
+        }
+      }
       continue;
     }
 
@@ -329,6 +360,16 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
           if (oldStatus && oldStatus !== status) statusChanges++;
         }
       }
+
+      // Compute and write enriched_status based on stage data
+      const enrichedStatus = computeEnrichedStatus(result.stages);
+      const enrichRes = await client.query(
+        `UPDATE permits SET enriched_status = $1
+         WHERE permit_num = $2 AND enriched_status IS DISTINCT FROM $1`,
+        [enrichedStatus, result.permitNum]
+      );
+      if (enrichRes.rowCount > 0) enrichedUpdates++;
+
     } finally {
       client.release();
     }
@@ -337,10 +378,11 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
     pipeline.log.info('[scraper]', `Scraped ${result.stages.length} stages for ${result.permitNum}`, {
       stages: result.stages.map((s) => `${s.desc}: ${s.status}`),
       statusChanges,
+      enrichedStatus: computeEnrichedStatus(result.stages),
     });
   }
 
-  return { searched: 1, scraped, upserted, bytes: totalBytes, schemaDrift: schemaDrift || [], statusChanges: totalStatusChanges };
+  return { searched: 1, scraped, upserted, bytes: totalBytes, schemaDrift: schemaDrift || [], statusChanges: totalStatusChanges, enrichedUpdates };
 }
 
 // Classify error for telemetry
@@ -428,7 +470,6 @@ pipeline.run('poc-aic-scraper', async (pool) => {
     permits_found: 0,
     permits_scraped: 0,
     not_found_count: 0,
-    permits_closed: 0,
     proxy_errors: 0,
     consecutive_empty: 0,
     consecutive_empty_max: 0,
@@ -438,6 +479,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
     schema_drift: [],
     status_changes: 0,
     total_upserted: 0,
+    enriched_updates: 0,
     error_categories: {},
     last_error: null,
     latencies: [],
@@ -465,16 +507,13 @@ pipeline.run('poc-aic-scraper', async (pool) => {
       tel.permits_found++;
       tel.permits_scraped += result.scraped;
       tel.consecutive_empty = 0;
-    } else if (result.closed) {
-      // Property found but all target folders progressed past Inspection (Closed/Completed)
-      tel.permits_closed++;
-      tel.consecutive_empty = 0; // Not a WAF issue — portal responded correctly
     } else if (result.searched > 0 && result.scraped === 0) {
       tel.not_found_count++;
       tel.consecutive_empty++;
       tel.consecutive_empty_max = Math.max(tel.consecutive_empty_max, tel.consecutive_empty);
     }
     tel.total_upserted += (result.upserted || 0);
+    tel.enriched_updates += (result.enrichedUpdates || 0);
     if (result.retryExhausted) {
       tel.proxy_errors++;
       if (result.errorCategory) {
@@ -509,6 +548,8 @@ pipeline.run('poc-aic-scraper', async (pool) => {
              AND p.permit_type = ANY($1)
              AND p.issued_date IS NOT NULL
              AND p.issued_date > NOW() - INTERVAL '3 years'
+             AND (p.enriched_status IS NULL
+                  OR p.enriched_status IN ('Permit Issued', 'Active Inspection', 'Not Passed'))
              AND (pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '7 days')
              AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= 26
            GROUP BY year_seq
@@ -560,7 +601,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
 
         // Early abort on sustained misses (big runs only)
         // Check every 10 permits: if 90%+ are not_found (excluding closed), something is wrong
-        if (i >= 9 && (i + 1) % 10 === 0 && tel.not_found_count / (tel.permits_attempted - tel.permits_closed) >= 0.9) {
+        if (i >= 9 && (i + 1) % 10 === 0 && tel.not_found_count / tel.permits_attempted >= 0.9) {
           pipeline.log.warn('[scraper]', `Early abort: ${tel.not_found_count}/${tel.permits_attempted} not found (${(tel.not_found_count / tel.permits_attempted * 100).toFixed(0)}% miss rate). Stopping to prevent bandwidth waste.`);
           break;
         }
@@ -576,8 +617,8 @@ pipeline.run('poc-aic-scraper', async (pool) => {
   pipeline.log.info('[scraper]', 'Scrape complete', {
     permits_attempted: tel.permits_attempted,
     permits_found: tel.permits_found,
-    permits_closed: tel.permits_closed,
     permits_scraped: tel.permits_scraped,
+    enriched_updates: tel.enriched_updates,
     status_changes: tel.status_changes,
     proxy_errors: tel.proxy_errors,
     session_bootstraps: tel.session_bootstraps,
@@ -599,7 +640,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         permits_found: tel.permits_found,
         permits_scraped: tel.permits_scraped,
         not_found_count: tel.not_found_count,
-        permits_closed: tel.permits_closed,
+        enriched_updates: tel.enriched_updates,
         proxy_errors: tel.proxy_errors,
         consecutive_empty_max: tel.consecutive_empty_max,
         session_refreshes: tel.session_refreshes,
@@ -614,7 +655,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         latency: latencyStats,
       },
       audit_table: (() => {
-        // Effective miss rate: not_found / attempted (excludes permits_closed — those are expected)
+        // Effective miss rate: not_found / attempted
         const missRate = tel.permits_attempted > 0
           ? (tel.not_found_count / tel.permits_attempted * 100) : 0;
         const missRateStr = missRate.toFixed(1) + '%';
@@ -627,7 +668,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
           rows: [
             { metric: 'permits_attempted', value: tel.permits_attempted, threshold: null, status: 'INFO' },
             { metric: 'permits_found', value: tel.permits_found, threshold: null, status: 'INFO' },
-            { metric: 'permits_closed', value: tel.permits_closed, threshold: null, status: 'INFO' },
+            { metric: 'enriched_updates', value: tel.enriched_updates, threshold: null, status: 'INFO' },
             { metric: 'not_found_count', value: tel.not_found_count, threshold: null, status: 'INFO' },
             { metric: 'not_found_rate', value: missRateStr, threshold: '< 20%', status: missStatus },
             { metric: 'records_inserted', value: tel.total_upserted, threshold: null, status: 'INFO' },
@@ -642,7 +683,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
   });
 
   pipeline.emitMeta(
-    { permits: ['permit_num', 'status', 'permit_type'] },
+    { permits: ['permit_num', 'status', 'enriched_status', 'permit_type'] },
     { permit_inspections: ['permit_num', 'stage_name', 'status', 'inspection_date', 'scraped_at'] },
     ['AIC Portal REST API (secure.toronto.ca/ApplicationStatus/jaxrs)']
   );
