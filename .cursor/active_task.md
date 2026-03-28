@@ -1,19 +1,16 @@
-# Active Task: Fix ancient_dates threshold in assert-data-bounds
+# Active Task: Fix proxy not loading from .env in AIC scraper
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** `assert-data-bounds.js` step 17 fails because `ancient_dates` check requires exactly 0 inspection records before 2020-01-01, but 2 legitimate records exist (permit `18 145660 BLD` with passed Excavation/Shoring and Footings/Foundations inspections from 2018-2019). These are real scraped data, not corruption.
-* **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
-* **Key Files:**
-  - `scripts/quality/assert-data-bounds.js` (line 560)
-  - `src/tests/quality.logic.test.ts`
-* **Rollback Anchor:** `c6bf9f1d6741271f666b2af4487b70d52bbdfe23`
+* **Goal:** `poc-aic-scraper-v2.js` doesn't load `.env` file, so PROXY_HOST/PORT/USER/PASS are not available when running standalone. This causes the scraper to bypass the Decodo proxy and connect directly to AIC portal, risking WAF blocks and producing unreliable results.
+* **Target Spec:** `docs/specs/38_inspection_scraping.md`
+* **Key Files:** `scripts/poc-aic-scraper-v2.js`
+* **Rollback Anchor:** `4d7d41f`
 
 ## Technical Implementation
-* Change `ancient_dates` threshold from `== 0` (FAIL) to `<= 5` (WARN)
-* This follows the same baseline pattern used by other checks (e.g., `null_status` uses WARN, CoA NULL addresses has baseline of 3)
-* Old permits with valid inspection history are legitimate — the scraper can encounter them
+* Add `require('dotenv').config()` at top of scraper script before any `process.env` reads
+* dotenv is already a project dependency (used by Next.js)
 
 ## Standards Compliance
 * **Try-Catch Boundary:** N/A — pipeline script
@@ -22,10 +19,9 @@
 * **Mobile-First:** N/A
 
 ## Execution Plan
-- [x] **Rollback Anchor:** c6bf9f1
-- [x] **State Verification:** 2 records with inspection_date < 2020-01-01, both legitimate (permit 18 145660 BLD)
-- [x] **Spec Review:** assert-data-bounds is CQA Tier 2 post-ingestion validation
-- [ ] **Reproduction:** Existing pipeline failure reproduces the bug
-- [ ] **Red Light:** `node scripts/quality/assert-data-bounds.js` fails with ancient_dates = 2
-- [ ] **Fix:** Change threshold from `== 0` FAIL to `<= 5` WARN
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6
+- [x] **Rollback Anchor:** 4d7d41f
+- [x] **State Verification:** Scraper logs "No PROXY_HOST configured" despite .env having it
+- [x] **Spec Review:** Spec 38 requires proxy for AIC portal access
+- [x] **Reproduction:** Ran scraper, got WARN about missing proxy
+- [ ] **Fix:** Add dotenv.config() to scraper
+- [ ] **Green Light:** npm run test && npm run lint -- --fix. All pass. → WF6

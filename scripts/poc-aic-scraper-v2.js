@@ -33,7 +33,18 @@
  * SPEC LINK: docs/specs/38_inspection_scraping.md
  */
 
+const { readFileSync } = require('fs');
+const { resolve } = require('path');
 const pipeline = require('./lib/pipeline');
+
+// Load .env for standalone execution (proxy credentials, etc.)
+try {
+  const envPath = resolve(__dirname, '..', '.env');
+  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+    const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
+  }
+} catch { /* .env not required when chain orchestrator provides env */ }
 
 const AIC_BASE = 'https://secure.toronto.ca/ApplicationStatus';
 const MAX_RETRIES = 3;
