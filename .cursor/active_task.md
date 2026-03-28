@@ -1,32 +1,31 @@
-# Active Task: Fix link-wsib Tier 3 fuzzy query performance (OR trap)
-**Status:** Planning
+# Active Task: Fix ancient_dates threshold in assert-data-bounds
+**Status:** Implementation
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** `link_wsib` Tier 3 fuzzy query went from ~4 min to ~30 min between Mar 13–22. The `OR`-based similarity join prevents PostgreSQL from using GIN trigram indexes, causing a nested loop over 107K × 3.6K rows (~394M similarity calls). This eats the chain's time budget and causes downstream `classify_permits` to get killed by the 2h chain timeout.
+* **Goal:** `assert-data-bounds.js` step 17 fails because `ancient_dates` check requires exactly 0 inspection records before 2020-01-01, but 2 legitimate records exist (permit `18 145660 BLD` with passed Excavation/Shoring and Footings/Foundations inspections from 2018-2019). These are real scraped data, not corruption.
 * **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
 * **Key Files:**
-  - `scripts/link-wsib.js` — Tier 3 `TIER3_CTE` (lines 47–61)
-  - `src/tests/quality.logic.test.ts` — pipeline tests
+  - `scripts/quality/assert-data-bounds.js` (line 560)
+  - `src/tests/quality.logic.test.ts`
+* **Rollback Anchor:** `c6bf9f1d6741271f666b2af4487b70d52bbdfe23`
 
 ## Technical Implementation
-* **Root Cause:** The `TIER3_CTE` joins `wsib_registry` to `entities` using `similarity(col_a, e.name) > 0.6 OR similarity(col_b, e.name) > 0.6`. The `OR` defeats GIN trigram index use. PostgreSQL falls back to a nested loop sequential scan.
-* **Fix:** Split the `OR` into two separate CTEs (`trade_matches`, `legal_matches`) using the `%` operator in the `ON` clause (triggers GIN index scan), then `UNION ALL` + `DISTINCT ON`. The `%` operator uses the default similarity threshold (0.3) as a candidate filter; the explicit `similarity() > 0.6` in the WHERE clause applies the real threshold.
-* **Database Impact:** NO
-* **New/Modified Components:** `scripts/link-wsib.js` (TIER3_CTE rewrite)
+* Change `ancient_dates` threshold from `== 0` (FAIL) to `<= 5` (WARN)
+* This follows the same baseline pattern used by other checks (e.g., `null_status` uses WARN, CoA NULL addresses has baseline of 3)
+* Old permits with valid inspection history are legitimate — the scraper can encounter them
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — pipeline script, not API route
-* **Unhappy Path Tests:** Existing chain.logic tests cover link_wsib execution
-* **logError Mandate:** N/A — pipeline script uses pipeline.log
-* **Mobile-First:** N/A — backend script
+* **Try-Catch Boundary:** N/A — pipeline script
+* **Unhappy Path Tests:** N/A
+* **logError Mandate:** N/A
+* **Mobile-First:** N/A
 
 ## Execution Plan
-- [x] **Rollback Anchor:** `13bdfb8`
-- [ ] **State Verification:** Confirm 107K unlinked WSIB records, existing GIN indexes, current query runtime
-- [ ] **Spec Review:** Read spec 28 for WSIB linking behavior (3-tier cascade)
-- [ ] **Reproduction:** Benchmark current Tier 3 query to confirm ~30 min runtime
-- [ ] **Red Light:** N/A — this is a perf fix, not a logic change. Existing tests must still pass.
-- [ ] **Fix:** Replace `TIER3_CTE` with split UNION approach using `%` operator
-- [ ] **Benchmark:** Run new query to confirm < 2 min runtime
+- [x] **Rollback Anchor:** c6bf9f1
+- [x] **State Verification:** 2 records with inspection_date < 2020-01-01, both legitimate (permit 18 145660 BLD)
+- [x] **Spec Review:** assert-data-bounds is CQA Tier 2 post-ingestion validation
+- [ ] **Reproduction:** Existing pipeline failure reproduces the bug
+- [ ] **Red Light:** `node scripts/quality/assert-data-bounds.js` fails with ancient_dates = 2
+- [ ] **Fix:** Change threshold from `== 0` FAIL to `<= 5` WARN
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6

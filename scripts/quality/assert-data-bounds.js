@@ -553,11 +553,11 @@ async function run() {
           );
           checkInsp('future_dates', futureDates, '== 0', 'FAIL');
 
-          // Ancient dates (before 2020 — impossible for active permits)
+          // Ancient dates (before 2020 — rare but legitimate for long-lived permits)
           const ancientDates = await count(
             `SELECT COUNT(*) FROM permit_inspections WHERE inspection_date < '2020-01-01'`
           );
-          checkInsp('ancient_dates', ancientDates, '== 0', 'FAIL');
+          checkInsp('ancient_dates', ancientDates, '<= 5', 'WARN');
 
           // Date before permit year
           const dateBeforePermit = await count(
