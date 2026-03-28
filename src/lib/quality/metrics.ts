@@ -291,7 +291,7 @@ async function queryPermitCounts() {
   const rows = await query<{ total: string; active: string }>(
     `SELECT
        COUNT(*) as total,
-       COUNT(*) FILTER (WHERE status IN ('Permit Issued', 'Revision Issued', 'Under Review', 'Inspection')) as active
+       COUNT(*) FILTER (WHERE status IN ('Permit Issued', 'Revision Issued', 'Under Review', 'Inspection', 'Examination')) as active
      FROM permits`
   );
   return {
@@ -425,7 +425,7 @@ async function queryNeighbourhoodCount(): Promise<number> {
   const rows = await query<{ count: string }>(
     `SELECT COUNT(*) as count FROM permits
      WHERE neighbourhood_id IS NOT NULL
-       AND status IN ('Permit Issued', 'Revision Issued', 'Under Review', 'Inspection')`
+       AND status IN ('Permit Issued', 'Revision Issued', 'Under Review', 'Inspection', 'Examination')`
   );
   return parseInt(rows[0].count, 10);
 }
@@ -462,7 +462,7 @@ async function queryCoaCounts() {
   };
 }
 
-const ACTIVE_FILTER = `status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`;
+const ACTIVE_FILTER = `status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`;
 
 async function queryScopeCounts() {
   const [countRows, breakdownRows, tagCountRows, detailedTagRows, topTagRows] = await Promise.all([

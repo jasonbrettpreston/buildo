@@ -13,10 +13,10 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(5);
   });
 
-  it('defines permits chain with 17 steps (no enrichment scripts)', () => {
+  it('defines permits chain with 18 steps (no enrichment scripts)', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(17);
+    expect(chain!.steps).toHaveLength(18);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');

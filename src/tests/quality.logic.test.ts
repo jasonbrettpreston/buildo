@@ -493,13 +493,13 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 32 tracked pipelines', () => {
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(32);
+  it('has exactly 33 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(33);
   });
 
-  it('groups are correct: 9 ingest, 13 link, 2 classify, 1 snapshot, 7 quality', () => {
+  it('groups are correct: 10 ingest, 13 link, 2 classify, 1 snapshot, 7 quality', () => {
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
-    expect(groups.filter((g) => g === 'ingest')).toHaveLength(9);
+    expect(groups.filter((g) => g === 'ingest')).toHaveLength(10);
     expect(groups.filter((g) => g === 'link')).toHaveLength(13);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(2);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
@@ -529,9 +529,9 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'entities', 'sources', 'deep_scrapes']);
   });
 
-  it('permits chain has 17 steps in dependency order (no enrichment)', () => {
+  it('permits chain has 18 steps in dependency order (no enrichment)', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(17);
+    expect(permits.steps).toHaveLength(18);
     expect(permits.steps[0].slug).toBe('assert_schema');
     expect(permits.steps[1].slug).toBe('permits');
     expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_engine_health');

@@ -19,7 +19,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
     // 1. Permit counts
     pool.query(
       `SELECT COUNT(*) as total,
-              COUNT(*) FILTER (WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')) as active
+              COUNT(*) FILTER (WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')) as active
        FROM permits`
     ),
     // 2. Trade counts
@@ -51,7 +51,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
        FROM permits p
        LEFT JOIN (SELECT DISTINCT permit_num FROM permit_trades) pt
          ON pt.permit_num = p.permit_num
-       WHERE p.status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+       WHERE p.status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
     ),
     // 3. Builder counts
     pool.query(
@@ -80,7 +80,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
     pool.query(
       `SELECT COUNT(*) as count FROM permits
        WHERE neighbourhood_id IS NOT NULL
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
     ),
     // 6. Geocoding
     pool.query(
@@ -99,25 +99,25 @@ pipeline.run('refresh-snapshot', async (pool) => {
     pool.query(
       `SELECT COUNT(*) as count FROM permits
        WHERE ('residential' = ANY(scope_tags) OR 'commercial' = ANY(scope_tags) OR 'mixed-use' = ANY(scope_tags))
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
     ),
     // 9. Scope tags counts
     pool.query(
       `SELECT COUNT(*) as count FROM permits
        WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
     ),
     pool.query(
       `SELECT COUNT(*) as count FROM permits
        WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')
+         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')
          AND EXISTS (SELECT 1 FROM unnest(scope_tags) AS t WHERE t NOT IN ('residential', 'commercial', 'mixed-use'))`
     ),
     pool.query(
       `SELECT tag, COUNT(*) as count
        FROM (SELECT unnest(scope_tags) as tag FROM permits
              WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-               AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')) sub
+               AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')) sub
        WHERE tag NOT IN ('residential', 'commercial', 'mixed-use')
        GROUP BY tag ORDER BY count DESC LIMIT 10`
     ),
@@ -125,7 +125,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
       `SELECT tag, COUNT(*) as count
        FROM (SELECT unnest(scope_tags) as tag FROM permits
              WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-               AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection')) sub
+               AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')) sub
        WHERE tag IN ('residential', 'commercial', 'mixed-use')
        GROUP BY tag`
     ),
@@ -150,7 +150,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
          COUNT(*) FILTER (WHERE street_name IS NULL OR street_name = '') as null_street_name,
          COUNT(*) FILTER (WHERE geo_id IS NULL OR geo_id = '') as null_geo_id
        FROM permits
-       WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+       WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
     ),
     // 14. Violations
     pool.query(
@@ -159,7 +159,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
          COUNT(*) FILTER (WHERE issued_date > NOW()) as future_issued,
          COUNT(*) FILTER (WHERE status IS NULL OR status = '') as missing_status
        FROM permits
-       WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection')`
+       WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
     ),
   ]);
 
