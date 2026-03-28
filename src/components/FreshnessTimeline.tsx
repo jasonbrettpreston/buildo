@@ -84,7 +84,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
     steps: [
       { slug: 'assert_schema',       indent: 0 },
       { slug: 'permits',              indent: 0 },
-      { slug: 'close_stale_permits',  indent: 1 },
+      { slug: 'close_stale_permits',  indent: 0 },
       { slug: 'classify_scope',       indent: 1 },
       { slug: 'builders',             indent: 1 },
       { slug: 'link_wsib',            indent: 1 },
