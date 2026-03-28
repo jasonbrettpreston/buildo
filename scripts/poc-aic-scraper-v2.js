@@ -42,11 +42,15 @@ const WAF_TRAP_THRESHOLD = 20; // consecutive empty responses before re-bootstra
 
 // Target permit types for stage-level scraping (Spec 38 §3.6)
 // Monitor-only types (Plumbing, Residential Building Permit) excluded — no stage-level value
-const TARGET_TYPES = [
+const ALL_TARGET_TYPES = [
   'Small Residential Projects',
   'Building Additions/Alterations',
   'New Houses',
 ];
+// SCRAPE_PERMIT_TYPE env var: filter to a single type for controlled testing
+const TARGET_TYPES = process.env.SCRAPE_PERMIT_TYPE
+  ? ALL_TARGET_TYPES.filter(t => t.toLowerCase().includes(process.env.SCRAPE_PERMIT_TYPE.toLowerCase()))
+  : ALL_TARGET_TYPES;
 
 const BATCH_SIZE = parseInt(process.env.SCRAPE_BATCH_SIZE || '10', 10);
 const SESSION_REFRESH_INTERVAL = 200; // re-establish WAF session every N permits
@@ -485,15 +489,21 @@ pipeline.run('poc-aic-scraper', async (pool) => {
     } else {
       // Batch mode: query DB for eligible permits
       const { rows } = await pool.query(
-        `SELECT DISTINCT SUBSTRING(p.permit_num FROM '^[0-9]{2} [0-9]+') AS year_seq
-         FROM permits p
-         LEFT JOIN permit_inspections pi ON pi.permit_num = p.permit_num
-         WHERE p.status = 'Inspection'
-           AND p.permit_type = ANY($1)
-           AND (pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '7 days')
-           AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= 26
-         ORDER BY year_seq DESC
-         LIMIT $2`,
+        `SELECT year_seq FROM (
+           SELECT DISTINCT SUBSTRING(p.permit_num FROM '^[0-9]{2} [0-9]+') AS year_seq,
+                  MAX(p.issued_date) AS max_issued
+           FROM permits p
+           LEFT JOIN permit_inspections pi ON pi.permit_num = p.permit_num
+           WHERE p.status = 'Inspection'
+             AND p.permit_type = ANY($1)
+             AND p.issued_date IS NOT NULL
+             AND p.issued_date > NOW() - INTERVAL '3 years'
+             AND (pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '7 days')
+             AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= 26
+           GROUP BY year_seq
+           ORDER BY max_issued DESC
+           LIMIT $2
+         ) sub`,
         [TARGET_TYPES, BATCH_SIZE]
       );
 
@@ -538,8 +548,8 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         accumulateResult(result);
 
         // Early abort on sustained misses (big runs only)
-        // Check every 10 permits: if 50%+ are not_found (excluding closed), something is wrong
-        if (i >= 9 && (i + 1) % 10 === 0 && tel.not_found_count / tel.permits_attempted >= 0.5) {
+        // Check every 10 permits: if 90%+ are not_found (excluding closed), something is wrong
+        if (i >= 9 && (i + 1) % 10 === 0 && tel.not_found_count / (tel.permits_attempted - tel.permits_closed) >= 0.9) {
           pipeline.log.warn('[scraper]', `Early abort: ${tel.not_found_count}/${tel.permits_attempted} not found (${(tel.not_found_count / tel.permits_attempted * 100).toFixed(0)}% miss rate). Stopping to prevent bandwidth waste.`);
           break;
         }
