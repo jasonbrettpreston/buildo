@@ -1,1 +1,2 @@
+#!/bin/sh
 bash scripts/hooks/validate-commit-msg.sh "$1"

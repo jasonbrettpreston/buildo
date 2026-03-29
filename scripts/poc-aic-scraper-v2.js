@@ -66,8 +66,15 @@ const TARGET_TYPES = process.env.SCRAPE_PERMIT_TYPE
 const BATCH_SIZE = parseInt(process.env.SCRAPE_BATCH_SIZE || '10', 10);
 const SESSION_REFRESH_INTERVAL = 200; // re-establish WAF session every N permits
 
-const USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+// UA pool — rotate per session bootstrap to avoid statistical fingerprinting
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+];
+function randomUA() { return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)]; }
 
 // ---------------------------------------------------------------------------
 // Status normalization (matches Spec 38 §3.4 + parser.ts)
@@ -150,7 +157,7 @@ async function launchBrowser() {
   }
 
   const context = await browser.newContext({
-    userAgent: USER_AGENT,
+    userAgent: randomUA(),
     ...(process.env.PROXY_USER && {
       httpCredentials: { username: process.env.PROXY_USER, password: process.env.PROXY_PASS || '' },
     }),
@@ -181,9 +188,13 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
       }
     }
 
+    // Detect WAF HTML responses (e.g. "Access Denied" pages)
+    function isWafHtml(text) { return text.trimStart().startsWith('<'); }
+
     async function post(path, body) {
       const r = await fetch(base + path, { method: 'POST', headers, body: JSON.stringify(body) });
       const text = await r.text();
+      if (isWafHtml(text)) return { status: r.status, data: null, size: text.length, wafBlocked: true };
       if (r.status >= 400) return { status: r.status, data: null, size: text.length };
       try {
         return { status: r.status, data: JSON.parse(text), size: text.length };
@@ -195,6 +206,7 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
     async function get(path) {
       const r = await fetch(base + path, { method: 'GET', headers: { Accept: 'application/json' } });
       const text = await r.text();
+      if (isWafHtml(text)) return { status: r.status, data: null, size: text.length, wafBlocked: true };
       if (r.status >= 400) return { status: r.status, data: null, size: text.length };
       try {
         return { status: r.status, data: JSON.parse(text), size: text.length };
@@ -218,6 +230,7 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
 
     const r1 = await post('/jaxrs/search/properties', searchBody);
     totalBytes += r1.size;
+    if (r1.wafBlocked) return { properties: [], folders: [], results, totalBytes, schemaDrift, wafBlocked: true };
     if (!r1.data || r1.data.length === 0) return { properties: [], folders: [], results, totalBytes, schemaDrift };
 
     checkFields('properties[0]', r1.data[0], ['propertyRsn']);
@@ -226,6 +239,7 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
     // Step 2: Get folders
     const r2 = await post('/jaxrs/search/folders', { ...searchBody, propertyRsn });
     totalBytes += r2.size;
+    if (r2.wafBlocked) return { properties: r1.data, folders: [], results, totalBytes, schemaDrift, wafBlocked: true };
     if (!r2.data) return { properties: r1.data, folders: [], results, totalBytes, schemaDrift };
 
     const folders = r2.data;
@@ -243,6 +257,7 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
 
       const r3 = await get(`/jaxrs/search/detail/${folder.folderRsn}`);
       totalBytes += r3.size;
+      if (r3.wafBlocked) return { properties: r1.data, folders, results, totalBytes, schemaDrift, wafBlocked: true };
 
       if (r3.data) {
         checkFields('detail', r3.data, ['inspectionProcesses', 'showStatus']);
@@ -263,6 +278,7 @@ async function fetchPermitChain(page, year, sequence, targetTypes) {
 
         const r4 = await get(`/jaxrs/search/status/${folder.folderRsn}/${proc.processRsn}`);
         totalBytes += r4.size;
+        if (r4.wafBlocked) return { properties: r1.data, folders, results, totalBytes, schemaDrift, wafBlocked: true };
 
         if (r4.data && r4.data.stages && r4.data.stages.length > 0) {
           checkFields('stages[0]', r4.data.stages[0], ['desc', 'status']);
@@ -281,7 +297,12 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
   const [year, sequence] = yearSeq.split(' ');
 
   // Single round-trip: all 4 API calls execute inside Chrome
-  const { properties, folders, results, totalBytes, schemaDrift } = await fetchPermitChain(page, year, sequence, TARGET_TYPES);
+  const { properties, folders, results, totalBytes, schemaDrift, wafBlocked } = await fetchPermitChain(page, year, sequence, TARGET_TYPES);
+
+  // WAF block — throw to trigger retry with exponential backoff
+  if (wafBlocked) {
+    throw new Error(`WAF blocked request for ${yearSeq} (HTML response instead of JSON)`);
+  }
 
   if (properties.length === 0) {
     pipeline.log.info('[scraper]', `No property found for ${yearSeq}`);
@@ -598,6 +619,11 @@ pipeline.run('poc-aic-scraper', async (pool) => {
         const result = await scrapeWithRetry(page, yearSeq, pool);
         tel.latencies.push(Date.now() - reqStart);
         accumulateResult(result);
+
+        // Human-like jitter between requests (500-2000ms)
+        if (i < rows.length - 1) {
+          await page.waitForTimeout(500 + Math.floor(Math.random() * 1500));
+        }
 
         // Early abort on sustained misses (big runs only)
         // Check every 10 permits: if 90%+ are not_found (excluding closed), something is wrong
