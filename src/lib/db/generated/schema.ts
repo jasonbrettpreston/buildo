@@ -1,36 +1,116 @@
-import { pgTable, check, integer, varchar, uniqueIndex, serial, text, date, bigint, numeric, timestamp, index, unique, jsonb, foreignKey, boolean, geometry, primaryKey, pgMaterializedView, pgEnum } from "drizzle-orm/pg-core"
+import { pgTable, serial, timestamp, varchar, integer, text, index, unique, foreignKey, check, numeric, boolean, date, jsonb, uniqueIndex, bigint, primaryKey, pgMaterializedView, pgEnum } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const entityTypeEnum = pgEnum("entity_type_enum", ['Corporation', 'Individual'])
 export const projectRoleEnum = pgEnum("project_role_enum", ['Builder', 'Architect', 'Applicant', 'Owner', 'Agent', 'Engineer'])
 
 
-// PostGIS system table spatial_ref_sys omitted (internal, not application schema)
-
-export const engineHealthSnapshots = pgTable("engine_health_snapshots", {
+export const syncRuns = pgTable("sync_runs", {
 	id: serial().primaryKey().notNull(),
-	tableName: text("table_name").notNull(),
-	snapshotDate: date("snapshot_date").default(sql`CURRENT_DATE`).notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	nLiveTup: bigint("n_live_tup", { mode: "number" }).default(0).notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	nDeadTup: bigint("n_dead_tup", { mode: "number" }).default(0).notNull(),
-	deadRatio: numeric("dead_ratio", { precision: 6, scale:  4 }).default('0').notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	seqScan: bigint("seq_scan", { mode: "number" }).default(0).notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	idxScan: bigint("idx_scan", { mode: "number" }).default(0).notNull(),
-	seqRatio: numeric("seq_ratio", { precision: 6, scale:  4 }).default('0').notNull(),
-	capturedAt: timestamp("captured_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	completedAt: timestamp("completed_at", { withTimezone: true, mode: 'string' }),
+	status: varchar({ length: 20 }).default('running').notNull(),
+	recordsTotal: integer("records_total").default(0).notNull(),
+	recordsNew: integer("records_new").default(0).notNull(),
+	recordsUpdated: integer("records_updated").default(0).notNull(),
+	recordsUnchanged: integer("records_unchanged").default(0).notNull(),
+	recordsErrors: integer("records_errors").default(0).notNull(),
+	errorMessage: text("error_message"),
+	snapshotPath: varchar("snapshot_path", { length: 500 }),
+	durationMs: integer("duration_ms"),
+});
+
+export const permitHistory = pgTable("permit_history", {
+	id: serial().primaryKey().notNull(),
+	permitNum: varchar("permit_num", { length: 30 }).notNull(),
+	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
+	syncRunId: integer("sync_run_id"),
+	fieldName: varchar("field_name", { length: 100 }).notNull(),
+	oldValue: text("old_value"),
+	newValue: text("new_value"),
+	changedAt: timestamp("changed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
-	uniqueIndex("uq_engine_health_table_date").using("btree", table.tableName.asc().nullsLast().op("date_ops"), table.snapshotDate.asc().nullsLast().op("date_ops")),
+	index("idx_permit_history_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
+	index("idx_permit_history_sync_run").using("btree", table.syncRunId.asc().nullsLast().op("int4_ops")),
 ]);
 
-export const addressPoints = pgTable("address_points", {
-	addressPointId: integer("address_point_id").primaryKey().notNull(),
-	latitude: numeric({ precision: 10, scale:  7 }).notNull(),
-	longitude: numeric({ precision: 10, scale:  7 }).notNull(),
-});
+export const trades = pgTable("trades", {
+	id: serial().primaryKey().notNull(),
+	slug: varchar({ length: 50 }).notNull(),
+	name: varchar({ length: 100 }).notNull(),
+	icon: varchar({ length: 50 }),
+	color: varchar({ length: 7 }),
+	sortOrder: integer("sort_order"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	unique("trades_slug_key").on(table.slug),
+]);
+
+export const tradeMappingRules = pgTable("trade_mapping_rules", {
+	id: serial().primaryKey().notNull(),
+	tradeId: integer("trade_id").notNull(),
+	tier: integer().notNull(),
+	matchField: varchar("match_field", { length: 50 }).notNull(),
+	matchPattern: varchar("match_pattern", { length: 500 }).notNull(),
+	confidence: numeric({ precision: 3, scale:  2 }).notNull(),
+	phaseStart: integer("phase_start"),
+	phaseEnd: integer("phase_end"),
+	isActive: boolean("is_active").default(true).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_trade_mapping_rules_tier").using("btree", table.tier.asc().nullsLast().op("int4_ops"), table.isActive.asc().nullsLast().op("int4_ops")),
+	index("idx_trade_mapping_rules_trade").using("btree", table.tradeId.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+			columns: [table.tradeId],
+			foreignColumns: [trades.id],
+			name: "trade_mapping_rules_trade_id_fkey"
+		}),
+	check("trade_mapping_rules_tier_check", sql`tier = ANY (ARRAY[1, 2, 3])`),
+	check("trade_mapping_rules_confidence_check", sql`(confidence >= (0)::numeric) AND (confidence <= (1)::numeric)`),
+]);
+
+export const permitTrades = pgTable("permit_trades", {
+	id: serial().primaryKey().notNull(),
+	permitNum: varchar("permit_num", { length: 30 }).notNull(),
+	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
+	tradeId: integer("trade_id").notNull(),
+	tier: integer(),
+	confidence: numeric({ precision: 3, scale:  2 }),
+	isActive: boolean("is_active").default(true).notNull(),
+	phase: varchar({ length: 20 }),
+	leadScore: integer("lead_score").default(0).notNull(),
+	classifiedAt: timestamp("classified_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_permit_trades_active").using("btree", table.isActive.asc().nullsLast().op("bool_ops")),
+	index("idx_permit_trades_lead_score").using("btree", table.leadScore.desc().nullsFirst().op("int4_ops")),
+	index("idx_permit_trades_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
+	index("idx_permit_trades_trade").using("btree", table.tradeId.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+			columns: [table.tradeId],
+			foreignColumns: [trades.id],
+			name: "permit_trades_trade_id_fkey"
+		}),
+	unique("permit_trades_permit_num_revision_num_trade_id_key").on(table.permitNum, table.revisionNum, table.tradeId),
+]);
+
+export const entityContacts = pgTable("entity_contacts", {
+	id: serial().primaryKey().notNull(),
+	entityId: integer("entity_id").notNull(),
+	contactType: varchar("contact_type", { length: 20 }),
+	contactValue: varchar("contact_value", { length: 500 }),
+	source: varchar({ length: 50 }).default('user').notNull(),
+	contributedBy: varchar("contributed_by", { length: 100 }),
+	verified: boolean().default(false).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_entity_contacts_entity").using("btree", table.entityId.asc().nullsLast().op("int4_ops")),
+	index("idx_entity_contacts_type").using("btree", table.contactType.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.entityId],
+			foreignColumns: [entities.id],
+			name: "entity_contacts_entity_id_fkey"
+		}).onDelete("cascade"),
+]);
 
 export const coaApplications = pgTable("coa_applications", {
 	id: serial().primaryKey().notNull(),
@@ -57,8 +137,330 @@ export const coaApplications = pgTable("coa_applications", {
 	index("idx_coa_applications_ward").using("btree", table.ward.asc().nullsLast().op("text_ops")),
 	index("idx_coa_decision_date").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")),
 	index("idx_coa_hearing_date").using("btree", table.hearingDate.asc().nullsLast().op("date_ops")),
-	index("idx_coa_upcoming_leads").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")).where(sql`(((decision)::text = ANY (ARRAY[('Approved'::character varying)::text, ('Approved with Conditions'::character varying)::text])) AND (linked_permit_num IS NULL))`),
+	index("idx_coa_upcoming_leads").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")).where(sql`(((decision)::text = ANY ((ARRAY['Approved'::character varying, 'Approved with Conditions'::character varying])::text[])) AND (linked_permit_num IS NULL))`),
 	unique("coa_applications_application_number_key").on(table.applicationNumber),
+]);
+
+export const builders = pgTable("builders", {
+	id: serial().primaryKey().notNull(),
+	name: varchar({ length: 500 }).notNull(),
+	nameNormalized: varchar("name_normalized", { length: 500 }).notNull(),
+	phone: varchar({ length: 50 }),
+	email: varchar({ length: 200 }),
+	website: varchar({ length: 500 }),
+	googlePlaceId: varchar("google_place_id", { length: 200 }),
+	googleRating: numeric("google_rating", { precision: 2, scale:  1 }),
+	googleReviewCount: integer("google_review_count"),
+	obrBusinessNumber: varchar("obr_business_number", { length: 50 }),
+	wsibStatus: varchar("wsib_status", { length: 50 }),
+	permitCount: integer("permit_count").default(0).notNull(),
+	firstSeenAt: timestamp("first_seen_at", { mode: 'string' }).defaultNow().notNull(),
+	lastSeenAt: timestamp("last_seen_at", { mode: 'string' }).defaultNow().notNull(),
+	enrichedAt: timestamp("enriched_at", { mode: 'string' }),
+}, (table) => [
+	index("idx_builders_name_normalized").using("btree", table.nameNormalized.asc().nullsLast().op("text_ops")),
+	index("idx_builders_permit_count").using("btree", table.permitCount.desc().nullsFirst().op("int4_ops")),
+	unique("builders_name_normalized_key").on(table.nameNormalized),
+]);
+
+export const notifications = pgTable("notifications", {
+	id: serial().primaryKey().notNull(),
+	userId: varchar("user_id", { length: 100 }).notNull(),
+	type: varchar({ length: 50 }).notNull(),
+	title: varchar({ length: 200 }),
+	body: text(),
+	permitNum: varchar("permit_num", { length: 30 }),
+	tradeSlug: varchar("trade_slug", { length: 50 }),
+	channel: varchar({ length: 20 }).default('in_app').notNull(),
+	isRead: boolean("is_read").default(false).notNull(),
+	isSent: boolean("is_sent").default(false).notNull(),
+	sentAt: timestamp("sent_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_notifications_user_created").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("text_ops")),
+	index("idx_notifications_user_read").using("btree", table.userId.asc().nullsLast().op("bool_ops"), table.isRead.asc().nullsLast().op("bool_ops")),
+]);
+
+export const builderContacts = pgTable("builder_contacts", {
+	id: serial().primaryKey().notNull(),
+	builderId: integer("builder_id").notNull(),
+	contactType: varchar("contact_type", { length: 20 }),
+	contactValue: varchar("contact_value", { length: 500 }),
+	source: varchar({ length: 50 }).default('user').notNull(),
+	contributedBy: varchar("contributed_by", { length: 100 }),
+	verified: boolean().default(false).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_builder_contacts_builder").using("btree", table.builderId.asc().nullsLast().op("int4_ops")),
+	index("idx_builder_contacts_type").using("btree", table.contactType.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.builderId],
+			foreignColumns: [builders.id],
+			name: "builder_contacts_builder_id_fkey"
+		}),
+]);
+
+export const neighbourhoods = pgTable("neighbourhoods", {
+	id: serial().primaryKey().notNull(),
+	neighbourhoodId: integer("neighbourhood_id").notNull(),
+	name: varchar({ length: 100 }).notNull(),
+	geometry: jsonb(),
+	avgHouseholdIncome: integer("avg_household_income"),
+	medianHouseholdIncome: integer("median_household_income"),
+	avgIndividualIncome: integer("avg_individual_income"),
+	lowIncomePct: numeric("low_income_pct", { precision: 5, scale:  2 }),
+	tenureOwnerPct: numeric("tenure_owner_pct", { precision: 5, scale:  2 }),
+	tenureRenterPct: numeric("tenure_renter_pct", { precision: 5, scale:  2 }),
+	periodOfConstruction: varchar("period_of_construction", { length: 50 }),
+	couplesPct: numeric("couples_pct", { precision: 5, scale:  2 }),
+	loneParentPct: numeric("lone_parent_pct", { precision: 5, scale:  2 }),
+	marriedPct: numeric("married_pct", { precision: 5, scale:  2 }),
+	universityDegreePct: numeric("university_degree_pct", { precision: 5, scale:  2 }),
+	immigrantPct: numeric("immigrant_pct", { precision: 5, scale:  2 }),
+	visibleMinorityPct: numeric("visible_minority_pct", { precision: 5, scale:  2 }),
+	englishKnowledgePct: numeric("english_knowledge_pct", { precision: 5, scale:  2 }),
+	topMotherTongue: varchar("top_mother_tongue", { length: 50 }),
+	censusYear: integer("census_year").default(2021),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_neighbourhoods_nid").using("btree", table.neighbourhoodId.asc().nullsLast().op("int4_ops")),
+	unique("neighbourhoods_neighbourhood_id_key").on(table.neighbourhoodId),
+]);
+
+export const permitParcels = pgTable("permit_parcels", {
+	id: serial().primaryKey().notNull(),
+	permitNum: varchar("permit_num", { length: 30 }).notNull(),
+	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
+	parcelId: integer("parcel_id").notNull(),
+	matchType: varchar("match_type", { length: 30 }).notNull(),
+	confidence: numeric({ precision: 3, scale:  2 }).notNull(),
+	linkedAt: timestamp("linked_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_permit_parcels_parcel").using("btree", table.parcelId.asc().nullsLast().op("int4_ops")),
+	index("idx_permit_parcels_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.parcelId],
+			foreignColumns: [parcels.id],
+			name: "permit_parcels_parcel_id_fkey"
+		}),
+	unique("permit_parcels_permit_num_revision_num_parcel_id_key").on(table.parcelId, table.permitNum, table.revisionNum),
+]);
+
+export const parcels = pgTable("parcels", {
+	id: serial().primaryKey().notNull(),
+	parcelId: varchar("parcel_id", { length: 20 }).notNull(),
+	featureType: varchar("feature_type", { length: 20 }),
+	addressNumber: varchar("address_number", { length: 20 }),
+	linearNameFull: varchar("linear_name_full", { length: 200 }),
+	addrNumNormalized: varchar("addr_num_normalized", { length: 20 }),
+	streetNameNormalized: varchar("street_name_normalized", { length: 200 }),
+	streetTypeNormalized: varchar("street_type_normalized", { length: 20 }),
+	statedAreaRaw: varchar("stated_area_raw", { length: 100 }),
+	lotSizeSqm: numeric("lot_size_sqm", { precision: 12, scale:  2 }),
+	lotSizeSqft: numeric("lot_size_sqft", { precision: 12, scale:  2 }),
+	frontageM: numeric("frontage_m", { precision: 8, scale:  2 }),
+	frontageFt: numeric("frontage_ft", { precision: 8, scale:  2 }),
+	depthM: numeric("depth_m", { precision: 8, scale:  2 }),
+	depthFt: numeric("depth_ft", { precision: 8, scale:  2 }),
+	geometry: jsonb(),
+	dateEffective: date("date_effective"),
+	dateExpiry: date("date_expiry"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	centroidLat: numeric("centroid_lat", { precision: 10, scale:  7 }),
+	centroidLng: numeric("centroid_lng", { precision: 10, scale:  7 }),
+	isIrregular: boolean("is_irregular").default(false),
+}, (table) => [
+	index("idx_parcels_address").using("btree", table.addrNumNormalized.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")),
+	index("idx_parcels_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")).where(sql`(centroid_lat IS NOT NULL)`),
+	index("idx_parcels_feature_type").using("btree", table.featureType.asc().nullsLast().op("text_ops")),
+	index("idx_parcels_street_name").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")),
+	unique("parcels_parcel_id_key").on(table.parcelId),
+]);
+
+export const addressPoints = pgTable("address_points", {
+	addressPointId: integer("address_point_id").primaryKey().notNull(),
+	latitude: numeric({ precision: 10, scale:  7 }).notNull(),
+	longitude: numeric({ precision: 10, scale:  7 }).notNull(),
+});
+
+export const parcelBuildings = pgTable("parcel_buildings", {
+	id: serial().primaryKey().notNull(),
+	parcelId: integer("parcel_id").notNull(),
+	buildingId: integer("building_id").notNull(),
+	isPrimary: boolean("is_primary").default(false).notNull(),
+	structureType: varchar("structure_type", { length: 20 }).default('other').notNull(),
+	linkedAt: timestamp("linked_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	matchType: varchar("match_type", { length: 30 }).default('polygon').notNull(),
+	confidence: numeric({ precision: 3, scale:  2 }).default('0.85').notNull(),
+}, (table) => [
+	index("idx_parcel_buildings_building").using("btree", table.buildingId.asc().nullsLast().op("int4_ops")),
+	index("idx_parcel_buildings_parcel").using("btree", table.parcelId.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+			columns: [table.parcelId],
+			foreignColumns: [parcels.id],
+			name: "parcel_buildings_parcel_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.buildingId],
+			foreignColumns: [buildingFootprints.id],
+			name: "parcel_buildings_building_id_fkey"
+		}),
+	unique("parcel_buildings_parcel_id_building_id_key").on(table.buildingId, table.parcelId),
+]);
+
+export const pipelineRuns = pgTable("pipeline_runs", {
+	id: serial().primaryKey().notNull(),
+	pipeline: text().notNull(),
+	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	completedAt: timestamp("completed_at", { withTimezone: true, mode: 'string' }),
+	status: text().default('running').notNull(),
+	recordsTotal: integer("records_total").default(0),
+	recordsNew: integer("records_new").default(0),
+	recordsUpdated: integer("records_updated").default(0),
+	errorMessage: text("error_message"),
+	durationMs: integer("duration_ms"),
+	recordsMeta: jsonb("records_meta"),
+}, (table) => [
+	index("idx_pipeline_runs_lookup").using("btree", table.pipeline.asc().nullsLast().op("text_ops"), table.startedAt.desc().nullsFirst().op("text_ops")),
+]);
+
+export const pipelineSchedules = pgTable("pipeline_schedules", {
+	pipeline: text().primaryKey().notNull(),
+	cadence: text().default('Daily').notNull(),
+	cronExpression: text("cron_expression"),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	enabled: boolean().default(true).notNull(),
+});
+
+export const buildingFootprints = pgTable("building_footprints", {
+	id: serial().primaryKey().notNull(),
+	sourceId: varchar("source_id", { length: 50 }).notNull(),
+	geometry: jsonb().notNull(),
+	footprintAreaSqm: numeric("footprint_area_sqm", { precision: 12, scale:  2 }),
+	footprintAreaSqft: numeric("footprint_area_sqft", { precision: 12, scale:  2 }),
+	maxHeightM: numeric("max_height_m", { precision: 8, scale:  2 }),
+	minHeightM: numeric("min_height_m", { precision: 8, scale:  2 }),
+	elevZ: numeric("elev_z", { precision: 8, scale:  2 }),
+	estimatedStories: integer("estimated_stories"),
+	centroidLat: numeric("centroid_lat", { precision: 10, scale:  7 }),
+	centroidLng: numeric("centroid_lng", { precision: 10, scale:  7 }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_building_footprints_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")),
+	index("idx_building_footprints_source").using("btree", table.sourceId.asc().nullsLast().op("text_ops")),
+	unique("building_footprints_source_id_key").on(table.sourceId),
+]);
+
+export const wsibRegistry = pgTable("wsib_registry", {
+	id: serial().primaryKey().notNull(),
+	legalName: varchar("legal_name", { length: 500 }).notNull(),
+	tradeName: varchar("trade_name", { length: 500 }),
+	legalNameNormalized: varchar("legal_name_normalized", { length: 500 }).notNull(),
+	tradeNameNormalized: varchar("trade_name_normalized", { length: 500 }),
+	mailingAddress: varchar("mailing_address", { length: 500 }),
+	predominantClass: varchar("predominant_class", { length: 10 }).notNull(),
+	naicsCode: varchar("naics_code", { length: 20 }),
+	naicsDescription: varchar("naics_description", { length: 500 }),
+	subclass: varchar({ length: 50 }),
+	subclassDescription: text("subclass_description"),
+	businessSize: varchar("business_size", { length: 100 }),
+	matchConfidence: numeric("match_confidence", { precision: 3, scale:  2 }),
+	matchedAt: timestamp("matched_at", { withTimezone: true, mode: 'string' }),
+	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	linkedEntityId: integer("linked_entity_id"),
+}, (table) => [
+	index("idx_wsib_class").using("btree", table.predominantClass.asc().nullsLast().op("text_ops")),
+	index("idx_wsib_legal_norm").using("btree", table.legalNameNormalized.asc().nullsLast().op("text_ops")),
+	index("idx_wsib_legal_trgm").using("gin", table.legalNameNormalized.asc().nullsLast().op("gin_trgm_ops")),
+	index("idx_wsib_linked_entity").using("btree", table.linkedEntityId.asc().nullsLast().op("int4_ops")).where(sql`(linked_entity_id IS NOT NULL)`),
+	index("idx_wsib_trade_norm").using("btree", table.tradeNameNormalized.asc().nullsLast().op("text_ops")),
+	index("idx_wsib_trade_trgm").using("gin", table.tradeNameNormalized.asc().nullsLast().op("gin_trgm_ops")),
+	foreignKey({
+			columns: [table.linkedEntityId],
+			foreignColumns: [entities.id],
+			name: "wsib_registry_linked_entity_id_fkey"
+		}),
+	unique("wsib_registry_legal_name_normalized_mailing_address_key").on(table.legalNameNormalized, table.mailingAddress),
+]);
+
+export const permitInspections = pgTable("permit_inspections", {
+	id: serial().primaryKey().notNull(),
+	permitNum: varchar("permit_num", { length: 30 }).notNull(),
+	stageName: text("stage_name").notNull(),
+	status: varchar({ length: 20 }).notNull(),
+	inspectionDate: date("inspection_date"),
+	scrapedAt: timestamp("scraped_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_permit_inspections_outstanding").using("btree", table.permitNum.asc().nullsLast().op("text_ops")).where(sql`((status)::text = 'Outstanding'::text)`),
+	index("idx_permit_inspections_permit_num").using("btree", table.permitNum.asc().nullsLast().op("text_ops")),
+	unique("uq_permit_inspection").on(table.permitNum, table.stageName),
+]);
+
+export const engineHealthSnapshots = pgTable("engine_health_snapshots", {
+	id: serial().primaryKey().notNull(),
+	tableName: text("table_name").notNull(),
+	snapshotDate: date("snapshot_date").default(sql`CURRENT_DATE`).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	nLiveTup: bigint("n_live_tup", { mode: "number" }).default(0).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	nDeadTup: bigint("n_dead_tup", { mode: "number" }).default(0).notNull(),
+	deadRatio: numeric("dead_ratio", { precision: 6, scale:  4 }).default('0').notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	seqScan: bigint("seq_scan", { mode: "number" }).default(0).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	idxScan: bigint("idx_scan", { mode: "number" }).default(0).notNull(),
+	seqRatio: numeric("seq_ratio", { precision: 6, scale:  4 }).default('0').notNull(),
+	capturedAt: timestamp("captured_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	uniqueIndex("uq_engine_health_table_date").using("btree", table.tableName.asc().nullsLast().op("date_ops"), table.snapshotDate.asc().nullsLast().op("date_ops")),
+]);
+
+export const entities = pgTable("entities", {
+	id: serial().primaryKey().notNull(),
+	legalName: varchar("legal_name", { length: 500 }).notNull(),
+	tradeName: varchar("trade_name", { length: 500 }),
+	nameNormalized: varchar("name_normalized", { length: 750 }).notNull(),
+	entityType: entityTypeEnum("entity_type"),
+	primaryPhone: varchar("primary_phone", { length: 50 }),
+	primaryEmail: varchar("primary_email", { length: 200 }),
+	website: varchar({ length: 500 }),
+	linkedinUrl: varchar("linkedin_url", { length: 500 }),
+	googlePlaceId: varchar("google_place_id", { length: 200 }),
+	googleRating: numeric("google_rating", { precision: 2, scale:  1 }),
+	googleReviewCount: integer("google_review_count"),
+	isWsibRegistered: boolean("is_wsib_registered").default(false),
+	permitCount: integer("permit_count").default(0).notNull(),
+	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	lastEnrichedAt: timestamp("last_enriched_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("idx_entities_name_norm").using("btree", table.nameNormalized.asc().nullsLast().op("text_ops")),
+	index("idx_entities_name_trgm").using("gin", table.nameNormalized.asc().nullsLast().op("gin_trgm_ops")),
+	index("idx_entities_permit_count").using("btree", table.permitCount.desc().nullsFirst().op("int4_ops")),
+	unique("entities_name_normalized_key").on(table.nameNormalized),
+]);
+
+export const entityProjects = pgTable("entity_projects", {
+	id: serial().primaryKey().notNull(),
+	entityId: integer("entity_id").notNull(),
+	permitNum: varchar("permit_num", { length: 50 }),
+	revisionNum: varchar("revision_num", { length: 10 }),
+	coaFileNum: varchar("coa_file_num", { length: 50 }),
+	role: projectRoleEnum().notNull(),
+	observedAt: timestamp("observed_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("idx_entity_projects_coa").using("btree", table.coaFileNum.asc().nullsLast().op("text_ops")).where(sql`(coa_file_num IS NOT NULL)`),
+	index("idx_entity_projects_entity").using("btree", table.entityId.asc().nullsLast().op("int4_ops")),
+	index("idx_entity_projects_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.entityId],
+			foreignColumns: [entities.id],
+			name: "entity_projects_entity_id_fkey"
+		}),
+	unique("entity_projects_entity_id_permit_num_revision_num_role_key").on(table.entityId, table.permitNum, table.revisionNum, table.role),
+	unique("entity_projects_entity_id_coa_file_num_role_key").on(table.coaFileNum, table.entityId, table.role),
 ]);
 
 export const dataQualitySnapshots = pgTable("data_quality_snapshots", {
@@ -131,390 +533,18 @@ export const dataQualitySnapshots = pgTable("data_quality_snapshots", {
 	unique("data_quality_snapshots_snapshot_date_key").on(table.snapshotDate),
 ]);
 
-export const entityProjects = pgTable("entity_projects", {
-	id: serial().primaryKey().notNull(),
-	entityId: integer("entity_id").notNull(),
-	permitNum: varchar("permit_num", { length: 50 }),
-	revisionNum: varchar("revision_num", { length: 10 }),
-	coaFileNum: varchar("coa_file_num", { length: 50 }),
-	role: projectRoleEnum().notNull(),
-	observedAt: timestamp("observed_at", { withTimezone: true, mode: 'string' }).defaultNow(),
-}, (table) => [
-	index("idx_entity_projects_coa").using("btree", table.coaFileNum.asc().nullsLast().op("text_ops")).where(sql`(coa_file_num IS NOT NULL)`),
-	index("idx_entity_projects_entity").using("btree", table.entityId.asc().nullsLast().op("int4_ops")),
-	index("idx_entity_projects_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
-	foreignKey({
-			columns: [table.entityId],
-			foreignColumns: [entities.id],
-			name: "entity_projects_entity_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.permitNum, table.revisionNum],
-			foreignColumns: [permits.permitNum, permits.revisionNum],
-			name: "fk_entity_projects_permits"
-		}),
-	unique("entity_projects_entity_id_coa_file_num_role_key").on(table.entityId, table.coaFileNum, table.role),
-	unique("entity_projects_entity_id_permit_num_revision_num_role_key").on(table.entityId, table.permitNum, table.revisionNum, table.role),
-]);
-
-export const buildingFootprints = pgTable("building_footprints", {
-	id: serial().primaryKey().notNull(),
-	sourceId: varchar("source_id", { length: 50 }).notNull(),
-	geometry: jsonb().notNull(),
-	footprintAreaSqm: numeric("footprint_area_sqm", { precision: 12, scale:  2 }),
-	footprintAreaSqft: numeric("footprint_area_sqft", { precision: 12, scale:  2 }),
-	maxHeightM: numeric("max_height_m", { precision: 8, scale:  2 }),
-	minHeightM: numeric("min_height_m", { precision: 8, scale:  2 }),
-	elevZ: numeric("elev_z", { precision: 8, scale:  2 }),
-	estimatedStories: integer("estimated_stories"),
-	centroidLat: numeric("centroid_lat", { precision: 10, scale:  7 }),
-	centroidLng: numeric("centroid_lng", { precision: 10, scale:  7 }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_building_footprints_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")),
-	index("idx_building_footprints_source").using("btree", table.sourceId.asc().nullsLast().op("text_ops")),
-	unique("building_footprints_source_id_key").on(table.sourceId),
-]);
-
-export const parcels = pgTable("parcels", {
-	id: serial().primaryKey().notNull(),
-	parcelId: varchar("parcel_id", { length: 20 }).notNull(),
-	featureType: varchar("feature_type", { length: 20 }),
-	addressNumber: varchar("address_number", { length: 20 }),
-	linearNameFull: varchar("linear_name_full", { length: 200 }),
-	addrNumNormalized: varchar("addr_num_normalized", { length: 20 }),
-	streetNameNormalized: varchar("street_name_normalized", { length: 200 }),
-	streetTypeNormalized: varchar("street_type_normalized", { length: 20 }),
-	statedAreaRaw: varchar("stated_area_raw", { length: 100 }),
-	lotSizeSqm: numeric("lot_size_sqm", { precision: 12, scale:  2 }),
-	lotSizeSqft: numeric("lot_size_sqft", { precision: 12, scale:  2 }),
-	frontageM: numeric("frontage_m", { precision: 8, scale:  2 }),
-	frontageFt: numeric("frontage_ft", { precision: 8, scale:  2 }),
-	depthM: numeric("depth_m", { precision: 8, scale:  2 }),
-	depthFt: numeric("depth_ft", { precision: 8, scale:  2 }),
-	geometry: jsonb(),
-	dateEffective: date("date_effective"),
-	dateExpiry: date("date_expiry"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	centroidLat: numeric("centroid_lat", { precision: 10, scale:  7 }),
-	centroidLng: numeric("centroid_lng", { precision: 10, scale:  7 }),
-	isIrregular: boolean("is_irregular").default(false),
-	geom: geometry({ type: "geometry", srid: 4326 }),
-}, (table) => [
-	index("idx_parcels_address").using("btree", table.addrNumNormalized.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")),
-	index("idx_parcels_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")).where(sql`(centroid_lat IS NOT NULL)`),
-	index("idx_parcels_feature_type").using("btree", table.featureType.asc().nullsLast().op("text_ops")),
-	index("idx_parcels_geom_gist").using("gist", table.geom.asc().nullsLast().op("gist_geometry_ops_2d")),
-	index("idx_parcels_street_name").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")),
-	unique("parcels_parcel_id_key").on(table.parcelId),
-]);
-
-export const notifications = pgTable("notifications", {
-	id: serial().primaryKey().notNull(),
-	userId: varchar("user_id", { length: 100 }).notNull(),
-	type: varchar({ length: 50 }).notNull(),
-	title: varchar({ length: 200 }),
-	body: text(),
-	permitNum: varchar("permit_num", { length: 30 }),
-	tradeSlug: varchar("trade_slug", { length: 50 }),
-	channel: varchar({ length: 20 }).default('in_app').notNull(),
-	isRead: boolean("is_read").default(false).notNull(),
-	isSent: boolean("is_sent").default(false).notNull(),
-	sentAt: timestamp("sent_at", { withTimezone: true, mode: 'string' }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_notifications_user_created").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.createdAt.desc().nullsFirst().op("text_ops")),
-	index("idx_notifications_user_read").using("btree", table.userId.asc().nullsLast().op("bool_ops"), table.isRead.asc().nullsLast().op("bool_ops")),
-]);
-
-export const permitParcels = pgTable("permit_parcels", {
-	id: serial().primaryKey().notNull(),
-	permitNum: varchar("permit_num", { length: 30 }).notNull(),
-	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
-	parcelId: integer("parcel_id").notNull(),
-	matchType: varchar("match_type", { length: 30 }).notNull(),
-	confidence: numeric({ precision: 3, scale:  2 }).notNull(),
-	linkedAt: timestamp("linked_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_permit_parcels_parcel").using("btree", table.parcelId.asc().nullsLast().op("int4_ops")),
-	index("idx_permit_parcels_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
-	foreignKey({
-			columns: [table.parcelId],
-			foreignColumns: [parcels.id],
-			name: "permit_parcels_parcel_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.permitNum, table.revisionNum],
-			foreignColumns: [permits.permitNum, permits.revisionNum],
-			name: "fk_permit_parcels_permits"
-		}),
-	unique("permit_parcels_permit_num_revision_num_parcel_id_key").on(table.permitNum, table.revisionNum, table.parcelId),
-]);
-
-export const permitHistory = pgTable("permit_history", {
-	id: serial().primaryKey().notNull(),
-	permitNum: varchar("permit_num", { length: 30 }).notNull(),
-	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
-	syncRunId: integer("sync_run_id"),
-	fieldName: varchar("field_name", { length: 100 }).notNull(),
-	oldValue: text("old_value"),
-	newValue: text("new_value"),
-	changedAt: timestamp("changed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_permit_history_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
-	index("idx_permit_history_sync_run").using("btree", table.syncRunId.asc().nullsLast().op("int4_ops")),
-]);
-
-export const permitInspections = pgTable("permit_inspections", {
-	id: serial().primaryKey().notNull(),
-	permitNum: varchar("permit_num", { length: 30 }).notNull(),
-	stageName: text("stage_name").notNull(),
-	status: varchar({ length: 20 }).notNull(),
-	inspectionDate: date("inspection_date"),
-	scrapedAt: timestamp("scraped_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_permit_inspections_outstanding").using("btree", table.permitNum.asc().nullsLast().op("text_ops")).where(sql`((status)::text = 'Outstanding'::text)`),
-	index("idx_permit_inspections_permit_num").using("btree", table.permitNum.asc().nullsLast().op("text_ops")),
-	unique("uq_permit_inspection").on(table.permitNum, table.stageName),
-]);
-
-export const pipelineRuns = pgTable("pipeline_runs", {
-	id: serial().primaryKey().notNull(),
-	pipeline: text().notNull(),
-	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+export const scraperQueue = pgTable("scraper_queue", {
+	yearSeq: varchar("year_seq", { length: 20 }).primaryKey().notNull(),
+	permitType: text("permit_type").notNull(),
+	claimedAt: timestamp("claimed_at", { withTimezone: true, mode: 'string' }),
+	claimedBy: text("claimed_by"),
 	completedAt: timestamp("completed_at", { withTimezone: true, mode: 'string' }),
-	status: text().default('running').notNull(),
-	recordsTotal: integer("records_total").default(0),
-	recordsNew: integer("records_new").default(0),
-	recordsUpdated: integer("records_updated").default(0),
-	errorMessage: text("error_message"),
-	durationMs: integer("duration_ms"),
-	recordsMeta: jsonb("records_meta"),
-}, (table) => [
-	index("idx_pipeline_runs_lookup").using("btree", table.pipeline.asc().nullsLast().op("text_ops"), table.startedAt.desc().nullsFirst().op("text_ops")),
-]);
-
-export const pipelineSchedules = pgTable("pipeline_schedules", {
-	pipeline: text().primaryKey().notNull(),
-	cadence: text().default('Daily').notNull(),
-	cronExpression: text("cron_expression"),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
-	enabled: boolean().default(true).notNull(),
-});
-
-// Legacy per-run audit log for permit sync (src/lib/sync/process.ts).
-// Distinct from pipeline_runs: sync_runs tracks a single atomic sync cycle,
-// pipeline_runs tracks multi-step chain orchestration. Both are active.
-export const syncRuns = pgTable("sync_runs", {
-	id: serial().primaryKey().notNull(),
-	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	completedAt: timestamp("completed_at", { withTimezone: true, mode: 'string' }),
-	status: varchar({ length: 20 }).default('running').notNull(),
-	recordsTotal: integer("records_total").default(0).notNull(),
-	recordsNew: integer("records_new").default(0).notNull(),
-	recordsUpdated: integer("records_updated").default(0).notNull(),
-	recordsUnchanged: integer("records_unchanged").default(0).notNull(),
-	recordsErrors: integer("records_errors").default(0).notNull(),
-	errorMessage: text("error_message"),
-	snapshotPath: varchar("snapshot_path", { length: 500 }),
-	durationMs: integer("duration_ms"),
-});
-
-export const parcelBuildings = pgTable("parcel_buildings", {
-	id: serial().primaryKey().notNull(),
-	parcelId: integer("parcel_id").notNull(),
-	buildingId: integer("building_id").notNull(),
-	isPrimary: boolean("is_primary").default(false).notNull(),
-	structureType: varchar("structure_type", { length: 20 }).default('other').notNull(),
-	linkedAt: timestamp("linked_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	matchType: varchar("match_type", { length: 30 }).default('polygon').notNull(),
-	confidence: numeric({ precision: 3, scale:  2 }).default('0.85').notNull(),
-}, (table) => [
-	index("idx_parcel_buildings_building").using("btree", table.buildingId.asc().nullsLast().op("int4_ops")),
-	index("idx_parcel_buildings_parcel").using("btree", table.parcelId.asc().nullsLast().op("int4_ops")),
-	foreignKey({
-			columns: [table.buildingId],
-			foreignColumns: [buildingFootprints.id],
-			name: "parcel_buildings_building_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.parcelId],
-			foreignColumns: [parcels.id],
-			name: "parcel_buildings_parcel_id_fkey"
-		}),
-	unique("parcel_buildings_parcel_id_building_id_key").on(table.parcelId, table.buildingId),
-]);
-
-export const neighbourhoods = pgTable("neighbourhoods", {
-	id: serial().primaryKey().notNull(),
-	neighbourhoodId: integer("neighbourhood_id").notNull(),
-	name: varchar({ length: 100 }).notNull(),
-	geometry: jsonb(),
-	avgHouseholdIncome: integer("avg_household_income"),
-	medianHouseholdIncome: integer("median_household_income"),
-	avgIndividualIncome: integer("avg_individual_income"),
-	lowIncomePct: numeric("low_income_pct", { precision: 5, scale:  2 }),
-	tenureOwnerPct: numeric("tenure_owner_pct", { precision: 5, scale:  2 }),
-	tenureRenterPct: numeric("tenure_renter_pct", { precision: 5, scale:  2 }),
-	periodOfConstruction: varchar("period_of_construction", { length: 50 }),
-	couplesPct: numeric("couples_pct", { precision: 5, scale:  2 }),
-	loneParentPct: numeric("lone_parent_pct", { precision: 5, scale:  2 }),
-	marriedPct: numeric("married_pct", { precision: 5, scale:  2 }),
-	universityDegreePct: numeric("university_degree_pct", { precision: 5, scale:  2 }),
-	immigrantPct: numeric("immigrant_pct", { precision: 5, scale:  2 }),
-	visibleMinorityPct: numeric("visible_minority_pct", { precision: 5, scale:  2 }),
-	englishKnowledgePct: numeric("english_knowledge_pct", { precision: 5, scale:  2 }),
-	topMotherTongue: varchar("top_mother_tongue", { length: 50 }),
-	censusYear: integer("census_year").default(2021),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	geom: geometry({ type: "geometry", srid: 4326 }),
-}, (table) => [
-	index("idx_neighbourhoods_geom_gist").using("gist", table.geom.asc().nullsLast().op("gist_geometry_ops_2d")),
-	index("idx_neighbourhoods_nid").using("btree", table.neighbourhoodId.asc().nullsLast().op("int4_ops")),
-	unique("neighbourhoods_neighbourhood_id_key").on(table.neighbourhoodId),
-]);
-
-export const permitTrades = pgTable("permit_trades", {
-	id: serial().primaryKey().notNull(),
-	permitNum: varchar("permit_num", { length: 30 }).notNull(),
-	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
-	tradeId: integer("trade_id").notNull(),
-	tier: integer(),
-	confidence: numeric({ precision: 3, scale:  2 }),
-	isActive: boolean("is_active").default(true).notNull(),
-	phase: varchar({ length: 20 }),
-	leadScore: integer("lead_score").default(0).notNull(),
-	classifiedAt: timestamp("classified_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_permit_trades_active").using("btree", table.isActive.asc().nullsLast().op("bool_ops")),
-	index("idx_permit_trades_lead_score").using("btree", table.leadScore.desc().nullsFirst().op("int4_ops")),
-	index("idx_permit_trades_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
-	index("idx_permit_trades_trade").using("btree", table.tradeId.asc().nullsLast().op("int4_ops")),
-	foreignKey({
-			columns: [table.tradeId],
-			foreignColumns: [trades.id],
-			name: "permit_trades_trade_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.permitNum, table.revisionNum],
-			foreignColumns: [permits.permitNum, permits.revisionNum],
-			name: "fk_permit_trades_permits"
-		}),
-	unique("permit_trades_permit_num_revision_num_trade_id_key").on(table.permitNum, table.revisionNum, table.tradeId),
-]);
-
-export const entities = pgTable("entities", {
-	id: serial().primaryKey().notNull(),
-	legalName: varchar("legal_name", { length: 500 }).notNull(),
-	tradeName: varchar("trade_name", { length: 500 }),
-	nameNormalized: varchar("name_normalized", { length: 750 }).notNull(),
-	entityType: entityTypeEnum("entity_type"),
-	primaryPhone: varchar("primary_phone", { length: 50 }),
-	primaryEmail: varchar("primary_email", { length: 200 }),
-	website: varchar({ length: 500 }),
-	linkedinUrl: varchar("linkedin_url", { length: 500 }),
-	googlePlaceId: varchar("google_place_id", { length: 200 }),
-	googleRating: numeric("google_rating", { precision: 2, scale:  1 }),
-	googleReviewCount: integer("google_review_count"),
-	isWsibRegistered: boolean("is_wsib_registered").default(false),
-	permitCount: integer("permit_count").default(0).notNull(),
-	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	lastEnrichedAt: timestamp("last_enriched_at", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	index("idx_entities_name_norm").using("btree", table.nameNormalized.asc().nullsLast().op("text_ops")),
-	index("idx_entities_name_trgm").using("gin", table.nameNormalized.asc().nullsLast().op("gin_trgm_ops")),
-	index("idx_entities_permit_count").using("btree", table.permitCount.desc().nullsFirst().op("int4_ops")),
-	unique("entities_name_normalized_key").on(table.nameNormalized),
-]);
-
-export const entityContacts = pgTable("entity_contacts", {
-	id: serial().primaryKey().notNull(),
-	entityId: integer("entity_id").notNull(),
-	contactType: varchar("contact_type", { length: 20 }),
-	contactValue: varchar("contact_value", { length: 500 }),
-	source: varchar({ length: 50 }).default('user').notNull(),
-	contributedBy: varchar("contributed_by", { length: 100 }),
-	verified: boolean().default(false).notNull(),
+	status: varchar({ length: 20 }).default('pending').notNull(),
+	errorMsg: text("error_msg"),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
-	index("idx_entity_contacts_entity").using("btree", table.entityId.asc().nullsLast().op("int4_ops")),
-	index("idx_entity_contacts_type").using("btree", table.contactType.asc().nullsLast().op("text_ops")),
-	foreignKey({
-			columns: [table.entityId],
-			foreignColumns: [entities.id],
-			name: "entity_contacts_entity_id_fkey"
-		}).onDelete("cascade"),
-	unique("uq_entity_contacts_type_value").on(table.entityId, table.contactType, table.contactValue),
-]);
-
-export const trades = pgTable("trades", {
-	id: serial().primaryKey().notNull(),
-	slug: varchar({ length: 50 }).notNull(),
-	name: varchar({ length: 100 }).notNull(),
-	icon: varchar({ length: 50 }),
-	color: varchar({ length: 7 }),
-	sortOrder: integer("sort_order"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	unique("trades_slug_key").on(table.slug),
-]);
-
-export const tradeMappingRules = pgTable("trade_mapping_rules", {
-	id: serial().primaryKey().notNull(),
-	tradeId: integer("trade_id").notNull(),
-	tier: integer().notNull(),
-	matchField: varchar("match_field", { length: 50 }).notNull(),
-	matchPattern: varchar("match_pattern", { length: 500 }).notNull(),
-	confidence: numeric({ precision: 3, scale:  2 }).notNull(),
-	phaseStart: integer("phase_start"),
-	phaseEnd: integer("phase_end"),
-	isActive: boolean("is_active").default(true).notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_trade_mapping_rules_tier").using("btree", table.tier.asc().nullsLast().op("int4_ops"), table.isActive.asc().nullsLast().op("int4_ops")),
-	index("idx_trade_mapping_rules_trade").using("btree", table.tradeId.asc().nullsLast().op("int4_ops")),
-	foreignKey({
-			columns: [table.tradeId],
-			foreignColumns: [trades.id],
-			name: "trade_mapping_rules_trade_id_fkey"
-		}),
-	check("trade_mapping_rules_confidence_check", sql`(confidence >= (0)::numeric) AND (confidence <= (1)::numeric)`),
-	check("trade_mapping_rules_tier_check", sql`tier = ANY (ARRAY[1, 2, 3])`),
-]);
-
-export const wsibRegistry = pgTable("wsib_registry", {
-	id: serial().primaryKey().notNull(),
-	legalName: varchar("legal_name", { length: 500 }).notNull(),
-	tradeName: varchar("trade_name", { length: 500 }),
-	legalNameNormalized: varchar("legal_name_normalized", { length: 500 }).notNull(),
-	tradeNameNormalized: varchar("trade_name_normalized", { length: 500 }),
-	mailingAddress: varchar("mailing_address", { length: 500 }),
-	predominantClass: varchar("predominant_class", { length: 10 }).notNull(),
-	naicsCode: varchar("naics_code", { length: 20 }),
-	naicsDescription: varchar("naics_description", { length: 500 }),
-	subclass: varchar({ length: 50 }),
-	subclassDescription: text("subclass_description"),
-	businessSize: varchar("business_size", { length: 100 }),
-	matchConfidence: numeric("match_confidence", { precision: 3, scale:  2 }),
-	matchedAt: timestamp("matched_at", { withTimezone: true, mode: 'string' }),
-	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	linkedEntityId: integer("linked_entity_id"),
-}, (table) => [
-	index("idx_wsib_class").using("btree", table.predominantClass.asc().nullsLast().op("text_ops")),
-	index("idx_wsib_legal_norm").using("btree", table.legalNameNormalized.asc().nullsLast().op("text_ops")),
-	index("idx_wsib_legal_trgm").using("gin", table.legalNameNormalized.asc().nullsLast().op("gin_trgm_ops")),
-	index("idx_wsib_linked_entity").using("btree", table.linkedEntityId.asc().nullsLast().op("int4_ops")).where(sql`(linked_entity_id IS NOT NULL)`),
-	index("idx_wsib_trade_norm").using("btree", table.tradeNameNormalized.asc().nullsLast().op("text_ops")),
-	index("idx_wsib_trade_trgm").using("gin", table.tradeNameNormalized.asc().nullsLast().op("gin_trgm_ops")),
-	foreignKey({
-			columns: [table.linkedEntityId],
-			foreignColumns: [entities.id],
-			name: "wsib_registry_linked_entity_id_fkey"
-		}),
-	unique("wsib_registry_legal_name_normalized_mailing_address_key").on(table.legalNameNormalized, table.mailingAddress),
+	index("idx_scraper_queue_pending").using("btree", table.createdAt.asc().nullsLast().op("timestamptz_ops")).where(sql`((status)::text = 'pending'::text)`),
+	check("scraper_queue_status_check", sql`(status)::text = ANY ((ARRAY['pending'::character varying, 'claimed'::character varying, 'completed'::character varying, 'failed'::character varying])::text[])`),
 ]);
 
 export const permits = pgTable("permits", {
@@ -560,14 +590,16 @@ export const permits = pgTable("permits", {
 	scopeTags: text("scope_tags").array(),
 	scopeClassifiedAt: timestamp("scope_classified_at", { withTimezone: true, mode: 'string' }),
 	scopeSource: varchar("scope_source", { length: 20 }).default('classified'),
+	enrichedStatus: varchar("enriched_status", { length: 30 }).default(sql`NULL`),
 }, (table) => [
 	index("idx_permits_application_date").using("btree", table.applicationDate.asc().nullsLast().op("date_ops")),
 	index("idx_permits_builder_name").using("btree", table.builderName.asc().nullsLast().op("text_ops")),
 	index("idx_permits_data_hash").using("btree", table.dataHash.asc().nullsLast().op("text_ops")),
-	index("idx_permits_description_fts").using("gin", sql`to_tsvector('english'::regconfig, COALESCE(description, ''::text))`),
+	index("idx_permits_description_fts").using("gin", sql`to_tsvector('english'::regconfig, COALESCE(description, ''::tex`),
+	index("idx_permits_enriched_active").using("btree", table.permitNum.asc().nullsLast().op("text_ops")).where(sql`((enriched_status)::text = 'Active Inspection'::text)`),
+	index("idx_permits_enriched_status_scrape").using("btree", table.issuedDate.desc().nullsFirst().op("date_ops")).where(sql`((enriched_status IS NULL) OR ((enriched_status)::text = ANY ((ARRAY['Permit Issued'::character varying, 'Active Inspection'::character varying, 'Not Passed'::character varying])::text[])))`),
 	index("idx_permits_est_const_cost").using("btree", table.estConstCost.asc().nullsLast().op("numeric_ops")),
 	index("idx_permits_issued_date").using("btree", table.issuedDate.asc().nullsLast().op("date_ops")),
-	index("idx_permits_needs_geocode").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")).where(sql`(geocoded_at IS NULL)`),
 	index("idx_permits_neighbourhood_id").using("btree", table.neighbourhoodId.asc().nullsLast().op("int4_ops")),
 	index("idx_permits_permit_type").using("btree", table.permitType.asc().nullsLast().op("text_ops")),
 	index("idx_permits_project_type").using("btree", table.projectType.asc().nullsLast().op("text_ops")).where(sql`(project_type IS NOT NULL)`),
@@ -576,11 +608,9 @@ export const permits = pgTable("permits", {
 	index("idx_permits_ward").using("btree", table.ward.asc().nullsLast().op("text_ops")),
 	primaryKey({ columns: [table.permitNum, table.revisionNum], name: "permits_pkey"}),
 ]);
-// PostGIS system views geography_columns + geometry_columns omitted (use unknown() type that TS rejects)
-
 export const mvMonthlyPermitStats = pgMaterializedView("mv_monthly_permit_stats", {	month: date(),
 	permitType: varchar("permit_type", { length: 100 }),
 	permitCount: integer("permit_count"),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	totalValue: bigint("total_value", { mode: "number" }),
-}).as(sql`SELECT date_trunc('month'::text, permits.issued_date::timestamp with time zone)::date AS month, permits.permit_type, count(*)::integer AS permit_count, COALESCE(sum(permits.est_const_cost), 0::numeric)::bigint AS total_value FROM permits WHERE permits.issued_date IS NOT NULL GROUP BY (date_trunc('month'::text, permits.issued_date::timestamp with time zone)), permits.permit_type`);
+}).as(sql`SELECT date_trunc('month'::text, issued_date::timestamp with time zone)::date AS month, permit_type, count(*)::integer AS permit_count, COALESCE(sum(est_const_cost), 0::numeric)::bigint AS total_value FROM permits WHERE issued_date IS NOT NULL GROUP BY (date_trunc('month'::text, issued_date::timestamp with time zone)), permit_type`);

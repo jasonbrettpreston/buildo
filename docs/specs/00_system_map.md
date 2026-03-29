@@ -63,7 +63,7 @@
 | 36 | `36_web_search_enrichment.md` | Web Search Enrichment | `src/lib/builders/extract-contacts.ts`, `src/app/api/admin/pipelines/[slug]/route.ts`, `src/components/FreshnessTimeline.tsx` | `src/tests/enrichment.logic.test.ts`, `src/tests/enrichment.infra.test.ts` | Done |
 | 37 | `37_corporate_identity_hub.md` | Corporate Identity Hub | `src/lib/permits/types.ts`, `src/lib/builders/normalize.ts`, `src/tests/factories.ts`, +15 more | `src/tests/entities.logic.test.ts`, `src/tests/entities.infra.test.ts` | Done |
 | 37 | `37_pipeline_system.md` | Pipeline System | `src/lib/classification/classifier.ts`, `src/components/FreshnessTimeline.tsx` | — | Done |
-| 38 | `38_inspection_scraping.md` | Inspection Data Scraping (AIC Portal) | `src/lib/inspections/parser.ts`, `src/lib/permits/types.ts`, `src/app/api/permits/[id]/route.ts`, +4 more | `src/tests/inspections.logic.test.ts`, `src/tests/quality.logic.test.ts` | Done |
+| 38 | `38_inspection_scraping.md` | Inspection Data Scraping (AIC Portal) | `src/lib/inspections/parser.ts`, `src/lib/permits/types.ts`, `src/lib/admin/funnel.ts`, +6 more | `src/tests/inspections.logic.test.ts`, `src/tests/quality.logic.test.ts` | Done |
 | 99 | `_spec_template.md` | Spec [XX] -- [Feature Name] | `src/...` | — | Done |
 
 ---

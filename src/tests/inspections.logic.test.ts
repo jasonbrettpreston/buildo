@@ -231,6 +231,199 @@ describe('Inspection Parser', () => {
     });
   });
 
+  describe('enrichedStatus computation', () => {
+    function computeEnrichedStatus(stages: Array<{ status: string }>): string | null {
+      if (!stages.length) return null;
+      const statuses = stages.map(s => s.status);
+      if (statuses.some(s => s === 'Not Passed')) return 'Not Passed';
+      if (statuses.every(s => s === 'Outstanding')) return 'Permit Issued';
+      if (statuses.every(s => s === 'Passed')) return 'Inspections Complete';
+      return 'Active Inspection';
+    }
+
+    it('returns null for empty stages', () => {
+      expect(computeEnrichedStatus([])).toBeNull();
+    });
+
+    it('returns Not Passed when any stage failed', () => {
+      expect(computeEnrichedStatus([
+        { status: 'Passed' }, { status: 'Not Passed' }, { status: 'Outstanding' },
+      ])).toBe('Not Passed');
+    });
+
+    it('returns Permit Issued when all outstanding', () => {
+      expect(computeEnrichedStatus([
+        { status: 'Outstanding' }, { status: 'Outstanding' },
+      ])).toBe('Permit Issued');
+    });
+
+    it('returns Inspections Complete when all passed', () => {
+      expect(computeEnrichedStatus([
+        { status: 'Passed' }, { status: 'Passed' },
+      ])).toBe('Inspections Complete');
+    });
+
+    it('returns Active Inspection for mixed passed/outstanding', () => {
+      expect(computeEnrichedStatus([
+        { status: 'Passed' }, { status: 'Outstanding' },
+      ])).toBe('Active Inspection');
+    });
+  });
+
+  describe('orchestrator telemetry aggregation', () => {
+    interface WorkerTelemetry {
+      permits_attempted: number;
+      permits_found: number;
+      permits_scraped: number;
+      not_found_count: number;
+      proxy_errors: number;
+      session_bootstraps: number;
+      session_failures: number;
+      total_upserted: number;
+      status_changes: number;
+      enriched_updates: number;
+      preflight_passed: boolean;
+      latencies: number[];
+    }
+
+    function aggregateTelemetry(workers: WorkerTelemetry[]) {
+      const agg = {
+        permits_attempted: 0,
+        permits_found: 0,
+        permits_scraped: 0,
+        not_found_count: 0,
+        proxy_errors: 0,
+        session_bootstraps: 0,
+        session_failures: 0,
+        total_upserted: 0,
+        status_changes: 0,
+        enriched_updates: 0,
+        preflight_failures: 0,
+        all_latencies: [] as number[],
+      };
+
+      for (const w of workers) {
+        agg.permits_attempted += w.permits_attempted;
+        agg.permits_found += w.permits_found;
+        agg.permits_scraped += w.permits_scraped;
+        agg.not_found_count += w.not_found_count;
+        agg.proxy_errors += w.proxy_errors;
+        agg.session_bootstraps += w.session_bootstraps;
+        agg.session_failures += w.session_failures;
+        agg.total_upserted += w.total_upserted;
+        agg.status_changes += w.status_changes;
+        agg.enriched_updates += w.enriched_updates;
+        if (!w.preflight_passed) agg.preflight_failures++;
+        agg.all_latencies.push(...w.latencies);
+      }
+
+      return agg;
+    }
+
+    it('sums all counters from multiple workers', () => {
+      const result = aggregateTelemetry([
+        { permits_attempted: 25, permits_found: 20, permits_scraped: 18, not_found_count: 5, proxy_errors: 1, session_bootstraps: 1, session_failures: 0, total_upserted: 30, status_changes: 5, enriched_updates: 3, preflight_passed: true, latencies: [100, 200] },
+        { permits_attempted: 25, permits_found: 22, permits_scraped: 22, not_found_count: 3, proxy_errors: 0, session_bootstraps: 1, session_failures: 0, total_upserted: 40, status_changes: 8, enriched_updates: 5, preflight_passed: true, latencies: [150, 250] },
+      ]);
+      expect(result.permits_attempted).toBe(50);
+      expect(result.permits_found).toBe(42);
+      expect(result.total_upserted).toBe(70);
+      expect(result.status_changes).toBe(13);
+      expect(result.preflight_failures).toBe(0);
+      expect(result.all_latencies).toHaveLength(4);
+    });
+
+    it('counts preflight failures', () => {
+      const result = aggregateTelemetry([
+        { permits_attempted: 0, permits_found: 0, permits_scraped: 0, not_found_count: 0, proxy_errors: 0, session_bootstraps: 1, session_failures: 0, total_upserted: 0, status_changes: 0, enriched_updates: 0, preflight_passed: false, latencies: [] },
+        { permits_attempted: 25, permits_found: 20, permits_scraped: 18, not_found_count: 5, proxy_errors: 0, session_bootstraps: 1, session_failures: 0, total_upserted: 30, status_changes: 5, enriched_updates: 3, preflight_passed: true, latencies: [100] },
+      ]);
+      expect(result.preflight_failures).toBe(1);
+    });
+
+    it('handles empty worker list', () => {
+      const result = aggregateTelemetry([]);
+      expect(result.permits_attempted).toBe(0);
+      expect(result.preflight_failures).toBe(0);
+    });
+  });
+
+  describe('preflight stealth check', () => {
+    function checkPreflight(webdriver: unknown, chromeRuntime: unknown): { passed: boolean; reason?: string } {
+      if (webdriver === true) return { passed: false, reason: 'navigator.webdriver is true' };
+      if (!chromeRuntime) return { passed: false, reason: 'window.chrome.runtime is falsy' };
+      return { passed: true };
+    }
+
+    it('passes when webdriver is undefined and chrome.runtime exists', () => {
+      expect(checkPreflight(undefined, { id: 'xxx' })).toEqual({ passed: true });
+    });
+
+    it('passes when webdriver is false', () => {
+      expect(checkPreflight(false, { id: 'xxx' })).toEqual({ passed: true });
+    });
+
+    it('fails when webdriver is true', () => {
+      const result = checkPreflight(true, { id: 'xxx' });
+      expect(result.passed).toBe(false);
+      expect(result.reason).toContain('webdriver');
+    });
+
+    it('fails when chrome.runtime is falsy', () => {
+      const result = checkPreflight(undefined, undefined);
+      expect(result.passed).toBe(false);
+      expect(result.reason).toContain('chrome.runtime');
+    });
+  });
+
+  describe('batch claim SQL pattern', () => {
+    // Validates the claim logic pattern used in the Python orchestrator
+    function simulateBatchClaim(
+      queue: Array<{ year_seq: string; status: string }>,
+      workerId: string,
+      batchSize: number,
+    ) {
+      const claimed: string[] = [];
+      for (const item of queue) {
+        if (claimed.length >= batchSize) break;
+        if (item.status === 'pending') {
+          item.status = 'claimed';
+          claimed.push(item.year_seq);
+        }
+      }
+      return claimed;
+    }
+
+    it('claims up to batchSize pending items', () => {
+      const queue = [
+        { year_seq: '24 100001', status: 'pending' },
+        { year_seq: '24 100002', status: 'pending' },
+        { year_seq: '24 100003', status: 'pending' },
+      ];
+      const claimed = simulateBatchClaim(queue, 'worker-1', 2);
+      expect(claimed).toEqual(['24 100001', '24 100002']);
+      expect(queue[0].status).toBe('claimed');
+      expect(queue[2].status).toBe('pending');
+    });
+
+    it('skips already claimed items', () => {
+      const queue = [
+        { year_seq: '24 100001', status: 'claimed' },
+        { year_seq: '24 100002', status: 'pending' },
+      ];
+      const claimed = simulateBatchClaim(queue, 'worker-2', 2);
+      expect(claimed).toEqual(['24 100002']);
+    });
+
+    it('returns empty when nothing pending', () => {
+      const queue = [
+        { year_seq: '24 100001', status: 'completed' },
+        { year_seq: '24 100002', status: 'failed' },
+      ];
+      expect(simulateBatchClaim(queue, 'worker-1', 5)).toEqual([]);
+    });
+  });
+
   describe('factory', () => {
     it('creates a valid mock inspection', () => {
       const insp = createMockInspection();

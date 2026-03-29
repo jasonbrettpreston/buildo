@@ -232,17 +232,62 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 - **Stealth:** Built into nodriver — no plugins needed. CDP does not expose `navigator.webdriver`, avoids high-risk CDP domains that anti-bot systems monitor.
 - **Warm bootstrap:** Navigates to `toronto.ca` before AIC portal to build realistic referrer chain and populate cookies.
 - **Error handling:** Max 3 retries with exponential backoff (2s × attempt). Per-permit try/catch — individual permit failures don't crash the batch.
-- **Concurrency:** Single-threaded PoC; queue-based concurrency deferred to Phase 2
+- **Concurrency:** Multi-worker via orchestrator (see §3.9)
 
-### 3.8 Queue System (Phase 2)
-- BullMQ + Redis for job queue
-- `scripts/queue-inspections.js` selects permits in target types with status = "Inspection"
-- **5 concurrent Playwright workers** processing from queue (completes full pass in ~2 days)
-- Fresh browser context every ~50-100 searches to prevent memory leaks
-- Automatic retry with exponential backoff on failure (30s → 60s → 120s, max 3 attempts)
-- Dead letter queue for permits that fail all retries — logged for manual review
-- Checkpoint/resume: tracks progress via `scraped_at` timestamp — pipeline restarts pick up where they left off
-- **Schedule:** Weekly full pass of all target permits in "Inspection" status
+### 3.9 Multi-Worker Orchestrator
+
+- **Script:** `scripts/aic-orchestrator.py` — spawns N concurrent nodriver workers
+- **Dependencies:** Same as single-worker (`nodriver`, `psycopg2-binary`) + `asyncio.subprocess`
+- **Architecture:** Orchestrator populates `scraper_queue` table from permits, then spawns N worker subprocesses. Each worker claims batches via `SELECT ... FOR UPDATE SKIP LOCKED`, bootstraps its own Chrome instance, scrapes, and reports results via stdout JSON lines. Orchestrator aggregates telemetry into a single `PIPELINE_SUMMARY`.
+
+#### Batch Claiming (DB-level locking)
+- **Table:** `scraper_queue` (migration 060) — `year_seq` PK, `status` (pending/claimed/completed/failed), `claimed_by` (worker ID), `claimed_at`/`completed_at` timestamps
+- **Claim query:** `UPDATE scraper_queue SET status='claimed', claimed_at=NOW(), claimed_by=$1 WHERE year_seq IN (SELECT year_seq FROM scraper_queue WHERE status='pending' ORDER BY created_at LIMIT $2 FOR UPDATE SKIP LOCKED) RETURNING year_seq`
+- **Why DB not Redis:** PostgreSQL is already running; adding Redis for a 3-5 worker pool is unnecessary infrastructure. `SKIP LOCKED` provides exactly the contention-free claiming needed.
+
+#### Worker Lifecycle
+1. Claim batch of 25 year_seq combos from `scraper_queue`
+2. Bootstrap nodriver Chrome (warm entry via toronto.ca)
+3. **Preflight stealth check:** verify `navigator.webdriver === undefined` and `window.chrome.runtime` is truthy. If either fails → abort worker, log `PREFLIGHT_FAIL`.
+4. Scrape all claimed permits (same 4-step REST API chain as single-worker)
+5. Mark completed/failed in `scraper_queue`
+6. Kill browser, claim next batch, repeat until queue empty
+7. Emit worker-level telemetry JSON to stdout on exit
+
+#### Preflight Stealth Check
+- Runs after every browser bootstrap, before any AIC requests
+- Checks: `navigator.webdriver` (must be undefined/false), `window.chrome.runtime` (must be truthy)
+- If 2+ workers fail preflight in the same run → orchestrator aborts all workers (CDP stealth may be compromised by Chrome update)
+- Do NOT use external fingerprint sites (creepjs, bot.sannysoft) — only local JS property checks
+
+#### Orchestrator Responsibilities
+- Populate queue: `INSERT INTO scraper_queue SELECT DISTINCT ... FROM permits WHERE status='Inspection' AND permit_type = ANY(TARGET_TYPES)`
+- Spawn workers: `asyncio.create_subprocess_exec('python', 'aic-scraper-nodriver.py', '--worker-id=N')`
+- Monitor: read stdout JSON lines from each worker, aggregate telemetry
+- Graceful shutdown: on SIGINT/SIGTERM, set shutdown flag → workers finish current permit → aggregate and emit PIPELINE_SUMMARY
+- Stale claim recovery: on startup, reset any `claimed` rows older than 30 minutes back to `pending`
+
+#### Configuration
+| Env Var | Default | Description |
+|---------|---------|-------------|
+| `SCRAPER_WORKERS` | `1` | Number of concurrent workers |
+| `SCRAPE_BATCH_SIZE` | `25` | Permits per worker batch claim |
+| `PROXY_HOST` | *(unset)* | Decodo proxy host (enables proxy mode) |
+| `PROXY_PORT` | *(unset)* | Decodo proxy port |
+| `PROXY_USER` | *(unset)* | Decodo proxy username |
+| `PROXY_PASS` | *(unset)* | Decodo proxy password |
+
+#### Proxy (per-worker sticky sessions)
+- Each worker gets unique Decodo sticky session: `buildo-worker-{id}-{timestamp}`
+- Session rotated every 200 permits (same as single-worker SESSION_REFRESH_INTERVAL)
+- Disabled by default — direct connection when `PROXY_HOST` is unset
+
+#### Throughput Estimates
+| Workers | Throughput | Full Pass (62K) |
+|---------|-----------|-----------------|
+| 1 | ~3,600/hr | 17.4 hours |
+| 3 | ~10,800/hr | 5.8 hours |
+| 5 | ~18,000/hr | 3.5 hours |
 
 ### 3.4 API Surfacing
 - **Modify:** `GET /api/permits/[id]` to JOIN `permit_inspections` and return `inspections[]` array

@@ -187,7 +187,30 @@ async def bootstrap_session():
         raise err
 
 
-async def bootstrap_with_retry():
+async def preflight_stealth_check(page):
+    """Verify browser fingerprint is not compromised before scraping.
+    Returns (passed: bool, reason: str | None)."""
+    try:
+        webdriver = await page.evaluate('navigator.webdriver', await_promise=False)
+        if webdriver is True:
+            return False, 'navigator.webdriver is true — CDP stealth compromised'
+    except Exception as err:
+        return False, f'navigator.webdriver check failed: {err}'
+
+    try:
+        chrome_runtime = await page.evaluate(
+            'window.chrome && window.chrome.runtime && typeof window.chrome.runtime === "object"',
+            await_promise=False,
+        )
+        if not chrome_runtime:
+            return False, 'window.chrome.runtime is falsy — may not be real Chrome'
+    except Exception as err:
+        return False, f'chrome.runtime check failed: {err}'
+
+    return True, None
+
+
+async def bootstrap_with_retry(run_preflight=True):
     """Bootstrap with retry — 3 attempts with 10s backoff."""
     last_error = None
     for attempt in range(1, 4):
@@ -195,6 +218,16 @@ async def bootstrap_with_retry():
             browser, page = await bootstrap_session()
             if attempt > 1:
                 log('INFO', '[scraper]', f'Bootstrap succeeded on attempt {attempt}')
+
+            # Preflight stealth check
+            if run_preflight:
+                passed, reason = await preflight_stealth_check(page)
+                if not passed:
+                    log('ERROR', '[scraper]', f'PREFLIGHT_FAIL: {reason}')
+                    browser.stop()
+                    raise Exception(f'Preflight failed: {reason}')
+                log('INFO', '[scraper]', 'Preflight stealth check passed')
+
             return browser, page, attempt
         except Exception as err:
             last_error = err
@@ -433,28 +466,35 @@ async def scrape_with_retry(page, year_seq, conn):
 
 
 # ---------------------------------------------------------------------------
-# Main
+# Argument parsing
 # ---------------------------------------------------------------------------
-async def main():
-    single_permit = sys.argv[1] if len(sys.argv) > 1 else None
-    start_ms = time.time() * 1000
-
-    # Telemetry
-    tel = {
-        'permits_attempted': 0, 'permits_found': 0, 'permits_scraped': 0,
-        'not_found_count': 0, 'enriched_updates': 0, 'proxy_errors': 0,
-        'consecutive_empty': 0, 'consecutive_empty_max': 0,
-        'session_bootstraps': 0, 'session_failures': 0,
-        'schema_drift': [], 'status_changes': 0, 'total_upserted': 0,
-        'error_categories': {}, 'last_error': None, 'latencies': [],
+def parse_args():
+    """Parse CLI arguments. Supports standalone, single-permit, and worker modes."""
+    args = {
+        'mode': 'standalone',  # standalone | single | worker
+        'single_permit': None,
+        'worker_id': None,
+        'batch_file': None,
     }
 
-    log('INFO', '[scraper]', 'Launching browser via nodriver (CDP)...')
-    browser, page, bootstrap_attempts = await bootstrap_with_retry()
-    tel['session_bootstraps'] = bootstrap_attempts
-    log('INFO', '[scraper]', 'WAF session established (no WebDriver)')
+    for arg in sys.argv[1:]:
+        if arg.startswith('--worker-id='):
+            args['worker_id'] = arg.split('=', 1)[1]
+            args['mode'] = 'worker'
+        elif arg.startswith('--batch-file='):
+            args['batch_file'] = arg.split('=', 1)[1]
+        elif not arg.startswith('--'):
+            args['single_permit'] = arg
+            args['mode'] = 'single'
 
-    conn = get_db_connection()
+    return args
+
+
+# ---------------------------------------------------------------------------
+# Scrape loop — shared between standalone and worker modes
+# ---------------------------------------------------------------------------
+async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]'):
+    """Core scrape loop for a list of year_seq combos. Mutates tel in place."""
 
     def accumulate(result):
         tel['permits_attempted'] += 1
@@ -472,111 +512,74 @@ async def main():
         if result.get('retry_exhausted'):
             tel['proxy_errors'] += 1
 
-    try:
-        if single_permit:
-            log('INFO', '[scraper]', f'Single permit mode: {single_permit}')
-            req_start = time.time() * 1000
-            result = await scrape_with_retry(page, single_permit, conn)
-            tel['latencies'].append(time.time() * 1000 - req_start)
-            accumulate(result)
-        else:
-            # Batch mode: query DB for eligible permits
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            cur.execute("""
-                SELECT year_seq FROM (
-                    SELECT DISTINCT SUBSTRING(p.permit_num FROM '^[0-9]{2} [0-9]+') AS year_seq,
-                           MAX(p.issued_date) AS max_issued
-                    FROM permits p
-                    LEFT JOIN permit_inspections pi ON pi.permit_num = p.permit_num
-                    WHERE p.status = 'Inspection'
-                      AND p.permit_type = ANY(%s)
-                      AND p.issued_date IS NOT NULL
-                      AND p.issued_date > NOW() - INTERVAL '3 years'
-                      AND (p.enriched_status IS NULL
-                           OR p.enriched_status IN ('Permit Issued', 'Active Inspection', 'Not Passed'))
-                      AND (pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '7 days')
-                      AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= EXTRACT(YEAR FROM CURRENT_DATE) %% 100
-                    GROUP BY year_seq
-                    ORDER BY max_issued DESC
-                    LIMIT %s
-                ) sub
-            """, (TARGET_TYPES, BATCH_SIZE))
-            rows = cur.fetchall()
-            cur.close()
+    for i, year_seq in enumerate(year_seqs):
+        progress_pct = (i + 1) / len(year_seqs) * 100
+        elapsed = (time.time() * 1000 - start_ms) / 1000
+        print(f"  {worker_tag} {i + 1} / {len(year_seqs)} ({progress_pct:.1f}%) — {elapsed:.1f}s")
 
-            log('INFO', '[scraper]', f'Batch mode: {len(rows)} year+sequence combos to scrape')
+        # WAF trap detection
+        if tel['consecutive_empty'] >= WAF_TRAP_THRESHOLD:
+            log('WARN', worker_tag, f"WAF trap detected ({tel['consecutive_empty']} consecutive empty). Re-bootstrapping...")
+            try:
+                browser.stop()
+                browser, page, attempts = await bootstrap_with_retry()
+                tel['session_bootstraps'] += attempts
+                tel['consecutive_empty'] = 0
+            except Exception as err:
+                tel['session_failures'] += 1
+                log('ERROR', worker_tag, str(err), {'event': 'session_bootstrap_failed'})
+                break
 
-            for i, row in enumerate(rows):
-                year_seq = row['year_seq']
-                progress_pct = (i + 1) / len(rows) * 100
-                elapsed = (time.time() * 1000 - start_ms) / 1000
-                print(f"  [aic-scraper-nodriver] {i + 1} / {len(rows)} ({progress_pct:.1f}%) — {elapsed:.1f}s")
+        # Periodic session refresh
+        if i > 0 and i % SESSION_REFRESH_INTERVAL == 0:
+            log('INFO', worker_tag, f'Refreshing session (after {i} permits)...')
+            try:
+                page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
+                await page.sleep(1)
+            except Exception as err:
+                tel['session_failures'] += 1
+                log('ERROR', worker_tag, str(err), {'event': 'session_refresh_failed'})
 
-                # WAF trap detection
-                if tel['consecutive_empty'] >= WAF_TRAP_THRESHOLD:
-                    log('WARN', '[scraper]', f"WAF trap detected ({tel['consecutive_empty']} consecutive empty). Re-bootstrapping...")
-                    try:
-                        browser.stop()
-                        browser = None
-                        browser, page, attempts = await bootstrap_with_retry()
-                        tel['session_bootstraps'] += attempts
-                        tel['consecutive_empty'] = 0
-                    except Exception as err:
-                        tel['session_failures'] += 1
-                        log('ERROR', '[scraper]', str(err), {'event': 'session_bootstrap_failed'})
-                        break
+        req_start = time.time() * 1000
+        result = await scrape_with_retry(page, year_seq, conn)
+        tel['latencies'].append(time.time() * 1000 - req_start)
+        accumulate(result)
 
-                # Periodic session refresh
-                if i > 0 and i % SESSION_REFRESH_INTERVAL == 0:
-                    log('INFO', '[scraper]', f'Refreshing session (after {i} permits)...')
-                    try:
-                        page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
-                        await page.sleep(1)
-                    except Exception as err:
-                        tel['session_failures'] += 1
-                        log('ERROR', '[scraper]', str(err), {'event': 'session_refresh_failed'})
+        # Jitter between requests (500-2000ms)
+        if i < len(year_seqs) - 1:
+            await page.sleep(0.5 + random.random() * 1.5)
 
-                req_start = time.time() * 1000
-                result = await scrape_with_retry(page, year_seq, conn)
-                tel['latencies'].append(time.time() * 1000 - req_start)
-                accumulate(result)
+        # Early abort on sustained misses
+        if i >= 9 and (i + 1) % 10 == 0 and tel['not_found_count'] / tel['permits_attempted'] >= 0.9:
+            log('WARN', worker_tag, f"Early abort: {tel['not_found_count']}/{tel['permits_attempted']} not found")
+            break
 
-                # Jitter between requests (500-2000ms)
-                if i < len(rows) - 1:
-                    await page.sleep(0.5 + random.random() * 1.5)
+    return browser, page
 
-                # Early abort on sustained misses
-                if i >= 9 and (i + 1) % 10 == 0 and tel['not_found_count'] / tel['permits_attempted'] >= 0.9:
-                    log('WARN', '[scraper]', f"Early abort: {tel['not_found_count']}/{tel['permits_attempted']} not found")
-                    break
 
-    finally:
-        if browser:
-            browser.stop()
-        conn.close()
+def make_telemetry():
+    """Create a fresh telemetry dict."""
+    return {
+        'permits_attempted': 0, 'permits_found': 0, 'permits_scraped': 0,
+        'not_found_count': 0, 'enriched_updates': 0, 'proxy_errors': 0,
+        'consecutive_empty': 0, 'consecutive_empty_max': 0,
+        'session_bootstraps': 0, 'session_failures': 0,
+        'schema_drift': [], 'status_changes': 0, 'total_upserted': 0,
+        'error_categories': {}, 'last_error': None, 'latencies': [],
+        'preflight_passed': True,
+    }
 
-    # Compute latency percentiles
+
+def compute_summary(tel, start_ms):
+    """Compute PIPELINE_SUMMARY from telemetry."""
     latencies = sorted(tel['latencies']) if tel['latencies'] else [0]
     p50 = latencies[len(latencies) // 2]
     p95 = latencies[int(len(latencies) * 0.95)]
-    elapsed_s = (time.time() * 1000 - start_ms) / 1000
-
-    log('INFO', '[scraper]', 'Scrape complete', {
-        'permits_attempted': tel['permits_attempted'],
-        'permits_found': tel['permits_found'],
-        'permits_scraped': tel['permits_scraped'],
-        'enriched_updates': tel['enriched_updates'],
-        'status_changes': tel['status_changes'],
-        'proxy_errors': tel['proxy_errors'],
-        'session_bootstraps': tel['session_bootstraps'],
-        'elapsed': f'{elapsed_s:.1f}s',
-    })
-
     duration_ms = int(time.time() * 1000 - start_ms)
     miss_rate = (tel['not_found_count'] / tel['permits_attempted'] * 100) if tel['permits_attempted'] > 0 else 0
     miss_status = 'FAIL' if miss_rate >= 20 else 'PASS'
 
-    emit_summary({
+    return {
         'records_total': tel['permits_attempted'],
         'records_new': tel['total_upserted'],
         'records_updated': tel['status_changes'],
@@ -597,6 +600,7 @@ async def main():
                 'last_error': tel['last_error'],
                 'proxy_configured': bool(os.environ.get('PROXY_HOST')),
                 'proxy_host': os.environ.get('PROXY_HOST'),
+                'preflight_passed': tel.get('preflight_passed', True),
                 'latency': {'p50': int(p50), 'p95': int(p95), 'max': int(latencies[-1])},
             },
             'audit_table': {
@@ -617,7 +621,110 @@ async def main():
                 ],
             },
         },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+async def main():
+    args = parse_args()
+    start_ms = time.time() * 1000
+    tel = make_telemetry()
+
+    worker_tag = f'[worker-{args["worker_id"]}]' if args['worker_id'] else '[scraper]'
+    log('INFO', worker_tag, 'Launching browser via nodriver (CDP)...')
+
+    browser = None
+    try:
+        browser, page, bootstrap_attempts = await bootstrap_with_retry()
+        tel['session_bootstraps'] = bootstrap_attempts
+        log('INFO', worker_tag, 'WAF session established (no WebDriver)')
+
+        conn = get_db_connection()
+
+        try:
+            if args['mode'] == 'single':
+                log('INFO', worker_tag, f'Single permit mode: {args["single_permit"]}')
+                req_start = time.time() * 1000
+                result = await scrape_with_retry(page, args['single_permit'], conn)
+                tel['latencies'].append(time.time() * 1000 - req_start)
+                tel['permits_attempted'] += 1
+                if result.get('scraped', 0) > 0:
+                    tel['permits_found'] += 1
+                    tel['permits_scraped'] += result['scraped']
+                tel['total_upserted'] += result.get('upserted', 0)
+                tel['enriched_updates'] += result.get('enriched_updates', 0)
+                tel['status_changes'] += result.get('status_changes', 0)
+
+            elif args['mode'] == 'worker':
+                # Worker mode: read year_seqs from batch file
+                if not args['batch_file']:
+                    log('ERROR', worker_tag, 'Worker mode requires --batch-file')
+                    sys.exit(1)
+                with open(args['batch_file'], 'r') as f:
+                    year_seqs = json.load(f)
+                log('INFO', worker_tag, f'Worker mode: {len(year_seqs)} year_seqs from {args["batch_file"]}')
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag)
+
+            else:
+                # Standalone batch mode: query DB for eligible permits
+                cur = conn.cursor(cursor_factory=RealDictCursor)
+                cur.execute("""
+                    SELECT year_seq FROM (
+                        SELECT DISTINCT SUBSTRING(p.permit_num FROM '^[0-9]{2} [0-9]+') AS year_seq,
+                               MAX(p.issued_date) AS max_issued
+                        FROM permits p
+                        LEFT JOIN permit_inspections pi ON pi.permit_num = p.permit_num
+                        WHERE p.status = 'Inspection'
+                          AND p.permit_type = ANY(%s)
+                          AND p.issued_date IS NOT NULL
+                          AND p.issued_date > NOW() - INTERVAL '3 years'
+                          AND (p.enriched_status IS NULL
+                               OR p.enriched_status IN ('Permit Issued', 'Active Inspection', 'Not Passed'))
+                          AND (pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '7 days')
+                          AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= EXTRACT(YEAR FROM CURRENT_DATE) %% 100
+                        GROUP BY year_seq
+                        ORDER BY max_issued DESC
+                        LIMIT %s
+                    ) sub
+                """, (TARGET_TYPES, BATCH_SIZE))
+                rows = cur.fetchall()
+                cur.close()
+
+                year_seqs = [r['year_seq'] for r in rows]
+                log('INFO', worker_tag, f'Batch mode: {len(year_seqs)} year+sequence combos to scrape')
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag)
+
+        finally:
+            conn.close()
+
+    except Exception as err:
+        tel['preflight_passed'] = False
+        tel['last_error'] = str(err)
+        log('ERROR', worker_tag, f'Fatal: {err}')
+
+    finally:
+        if browser:
+            try:
+                browser.stop()
+            except Exception:
+                pass
+
+    elapsed_s = (time.time() * 1000 - start_ms) / 1000
+    log('INFO', worker_tag, 'Scrape complete', {
+        'permits_attempted': tel['permits_attempted'],
+        'permits_found': tel['permits_found'],
+        'permits_scraped': tel['permits_scraped'],
+        'enriched_updates': tel['enriched_updates'],
+        'status_changes': tel['status_changes'],
+        'proxy_errors': tel['proxy_errors'],
+        'session_bootstraps': tel['session_bootstraps'],
+        'elapsed': f'{elapsed_s:.1f}s',
     })
+
+    summary = compute_summary(tel, start_ms)
+    emit_summary(summary)
 
     emit_meta(
         {'permits': ['permit_num', 'status', 'enriched_status', 'permit_type']},
