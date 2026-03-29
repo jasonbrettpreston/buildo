@@ -382,6 +382,13 @@ async function scrapeYearSequence(page, yearSeq, dbPool) {
         }
       }
 
+      // Touch scraped_at unconditionally so the 7-day cooldown works
+      // even when stage data hasn't changed (prevents re-scraping unchanged permits)
+      await client.query(
+        `UPDATE permit_inspections SET scraped_at = NOW() WHERE permit_num = $1`,
+        [result.permitNum]
+      );
+
       // Compute and write enriched_status based on stage data
       const enrichedStatus = computeEnrichedStatus(result.stages);
       const enrichRes = await client.query(
@@ -572,7 +579,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
              AND (p.enriched_status IS NULL
                   OR p.enriched_status IN ('Permit Issued', 'Active Inspection', 'Not Passed'))
              AND (pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '7 days')
-             AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= 26
+             AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= EXTRACT(YEAR FROM CURRENT_DATE) % 100
            GROUP BY year_seq
            ORDER BY max_issued DESC
            LIMIT $2

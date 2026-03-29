@@ -262,9 +262,9 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 - Freshness tracked in `pipeline_runs` table
 - Schedule: Weekly (for active permits across 5 target types)
 
-**Chain:** `deep_scrapes` (6 steps):
+**Chain:** `deep_scrapes` (7 steps):
 ```
-inspections → assert_network_health → refresh_snapshot → assert_data_bounds → assert_staleness → assert_engine_health
+inspections → classify_inspection_status → assert_network_health → refresh_snapshot → assert_data_bounds → assert_staleness → assert_engine_health
 ```
 
 Every step emits a structured `audit_table` in `records_meta` with a consistent shape:
