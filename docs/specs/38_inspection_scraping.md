@@ -215,22 +215,22 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 
 **Total bandwidth per permit: ~4 KB** (vs ~1.5 MB with full-page HTML scraping).
 
-### 3.8 Scraping Pipeline — Hybrid "Puppet Master" Architecture
+### 3.8 Scraping Pipeline — nodriver CDP Architecture
 
-- **Script:** `scripts/poc-aic-scraper-v2.js` (replaces v1 `poc-aic-scraper.js`)
-- **Dependencies:** `playwright`, `playwright-extra`, `puppeteer-extra-plugin-stealth`
-- **Architecture:** Playwright launches once to establish a WAF-compliant browser session (TLS fingerprint + JSESSIONID). All subsequent data fetching uses `page.evaluate(fetch(...))` — executing native `fetch()` calls from within Chrome's network stack. No page navigation, no HTML parsing, no DOM interaction after init.
-- **Why hybrid:** The WAF performs JA3/JA4 TLS fingerprinting — raw Node.js `https` requests get 403'd even with valid session cookies. Running `fetch()` inside `page.evaluate()` inherits Chrome's exact TLS fingerprint.
-- **Chained execution:** All 4 API calls (properties → folders → detail → status) execute inside a single `page.evaluate()` call, eliminating Node↔Browser IPC round-trips. The browser-side JavaScript chains the fetches and returns the complete result set to Node in one shot.
+- **Script:** `scripts/aic-scraper-nodriver.py` (replaces Playwright-based `poc-aic-scraper-v2.js`)
+- **Dependencies:** `nodriver` (Python), `psycopg2-binary`
+- **Architecture:** nodriver launches Chrome via Chrome DevTools Protocol (CDP) — no WebDriver protocol, no automation flags. The WAF cannot detect automation because CDP communicates through Chrome's native debugging interface, not the WebDriver API that anti-bot systems target.
+- **Why nodriver:** The City of Toronto's WAF consistently blocked Playwright's WebDriver-based automation despite stealth plugins, UA rotation, Client Hints, sticky proxy sessions, and warm bootstrapping. A nodriver spike proved that CDP-based automation bypasses the WAF completely without even needing a proxy — the WebDriver protocol itself was the detection vector.
+- **Step-by-step execution:** Each API call (properties → folders → detail → status) executes as a separate `page.evaluate(fetch(...), await_promise=True)` call. This is slightly more round-trips than the Playwright version's chained IIFE, but enables per-step WAF detection and cleaner error handling.
 - **Flow per permit:**
   1. `POST /jaxrs/search/properties` — find address by year+sequence
   2. `POST /jaxrs/search/folders` — list all permits at address (adds `propertyRsn`)
   3. `GET /jaxrs/search/detail/{folderRsn}` — get inspection processes + `processRsn`
   4. `GET /jaxrs/search/status/{folderRsn}/{processRsn}` — get inspection stages (JSON, not HTML)
   5. Upsert stages into `permit_inspections` with `ON CONFLICT (permit_num, stage_name) DO UPDATE`
-- **Proxy:** Decodo residential rotating proxy (`ca.decodo.com`, ports 20001-20010). Credentials via `PROXY_HOST`, `PROXY_PORT`, `PROXY_USER`, `PROXY_PASS` env vars. Required for rate limiting at scale, not for WAF bypass (browser session handles WAF).
-- **Stealth:** `playwright-extra` + `puppeteer-extra-plugin-stealth` + custom UA string. Required for initial session bootstrap — the WAF blocks bare headless Chrome.
-- **Asset blocking:** Route interception aborts all non-document/XHR/fetch resources during session init. After init, all data flows through `fetch()` (no page loads).
+- **Proxy:** Optional. Direct connection works (nodriver bypasses WAF without proxy). Decodo residential proxy (`ca.decodo.com`) available via `PROXY_HOST`/`PROXY_PORT` env vars for IP rotation at extreme scale (30K+ permits) to avoid rate limiting.
+- **Stealth:** Built into nodriver — no plugins needed. CDP does not expose `navigator.webdriver`, avoids high-risk CDP domains that anti-bot systems monitor.
+- **Warm bootstrap:** Navigates to `toronto.ca` before AIC portal to build realistic referrer chain and populate cookies.
 - **Error handling:** Max 3 retries with exponential backoff (2s × attempt). Per-permit try/catch — individual permit failures don't crash the batch.
 - **Concurrency:** Single-threaded PoC; queue-based concurrency deferred to Phase 2
 

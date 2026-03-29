@@ -1,40 +1,34 @@
-# Active Task: Fix 3 review agent gaps in stealth hardening
+# Active Task: Fix 4 review agent gaps in nodriver scraper
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Independent review agent found 3 issues in the stealth hardening implementation: (1) browser leak if bootstrapSession fails after launchBrowser, (2) inconsistent bootstrapAttempts counting between initial and re-bootstrap, (3) double-close risk when re-bootstrap fails and the finally block tries to close an already-closed browser.
+* **Goal:** Independent review agent found 4 issues: (1) chain orchestrator error message hardcodes "node", (2) `python` may not exist on Linux — needs `python3` fallback, (3) f-string interpolation of external API values into page.evaluate JS, (4) .env parser doesn't strip quotes.
 * **Target Spec:** `docs/specs/38_inspection_scraping.md`
-* **Key Files:** `scripts/poc-aic-scraper-v2.js`
-* **Rollback Anchor:** `dceda6b`
+* **Key Files:**
+  - `scripts/run-chain.js` (fixes 1, 2)
+  - `scripts/aic-scraper-nodriver.py` (fixes 3, 4)
+* **Rollback Anchor:** `bcd89e0`
 
 ## Technical Implementation
 
-### Fix 1: Browser leak in bootstrapSession (HIGH)
-- Wrap bootstrapSession internals in try/catch after launchBrowser
-- On failure, close the browser before re-throwing
-- Already applied in working tree
+### Fix 1: Error message uses `runtime` variable (run-chain.js)
+- Change hardcoded "node" in error message to `${runtime}`
 
-### Fix 2: Inconsistent bootstrap counting (MEDIUM)
-- Change initial bootstrap from `attempts - 1` to `attempts` to match re-bootstrap counting
-- Both paths now count total attempts consistently
-- Already applied in working tree
+### Fix 2: Python runtime fallback (run-chain.js)
+- Try `python3` first, fall back to `python` — or use manifest config
 
-### Fix 3: Double-close guard on re-bootstrap failure (LOW)
-- When WAF trap re-bootstrap fails, `browser` still references the old closed instance
-- Set `browser = null` after closing, guard the finally block with `if (browser)`
-- Not yet applied
+### Fix 3: Sanitize external values before JS interpolation (aic-scraper-nodriver.py)
+- Validate `property_rsn`, `folder_rsn`, `process_rsn` are alphanumeric before interpolating into page.evaluate
+
+### Fix 4: Strip quotes from .env values (aic-scraper-nodriver.py)
+- Strip surrounding quotes from parsed values
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — pipeline script
-* **Unhappy Path Tests:** N/A
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A
+* All N/A — pipeline scripts
 
 ## Execution Plan
-- [x] **Rollback Anchor:** dceda6b
-- [x] **State Verification:** Review agent identified all 3 gaps with line numbers
-- [x] **Spec Review:** No spec violations — these are implementation correctness issues
-- [x] **Reproduction:** Code review confirms gaps
-- [ ] **Fix:** Apply fix 3 (double-close guard). Fixes 1-2 already applied.
+- [x] **Rollback Anchor:** bcd89e0
+- [x] **State Verification:** Review agent identified all 4 gaps
+- [ ] **Fix:** Apply all 4 fixes
 - [ ] **Green Light:** npm run test && npm run lint -- --fix. All pass. → WF6

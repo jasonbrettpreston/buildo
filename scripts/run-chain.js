@@ -204,7 +204,10 @@ async function run() {
       const extraArgs = [...(scriptEntry.chain_args?.[chainId] || [])];
       // Spawn child process with streaming stdout — prevents ENOBUFS on long scripts
       const output = await new Promise((resolveSpawn, rejectSpawn) => {
-        const child = spawn('node', [scriptPath, ...extraArgs], {
+        const runtime = scriptPath.endsWith('.py')
+          ? (process.platform === 'win32' ? 'python' : 'python3')
+          : 'node';
+        const child = spawn(runtime, [scriptPath, ...extraArgs], {
           env: stepEnv,
           stdio: ['inherit', 'pipe', 'inherit'],
         });
@@ -223,7 +226,7 @@ async function run() {
 
         child.on('close', (code) => {
           if (code === 0) resolveSpawn(summaryLines);
-          else rejectSpawn(new Error(`Command failed: node ${scriptPath}`));
+          else rejectSpawn(new Error(`Command failed: ${runtime} ${scriptPath}`));
         });
         child.on('error', rejectSpawn);
       });
