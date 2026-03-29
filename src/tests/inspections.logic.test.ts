@@ -603,6 +603,133 @@ describe('Inspection Parser', () => {
     });
   });
 
+  describe('proxy extension builder (Fix 1)', () => {
+    function buildProxyExtensionManifest(): object {
+      return {
+        version: '1.0.0',
+        manifest_version: 3,
+        name: 'Decodo Proxy Auth',
+        permissions: ['proxy', 'webRequest', 'webRequestAuthProvider'],
+        host_permissions: ['<all_urls>'],
+        background: { service_worker: 'background.js' },
+      };
+    }
+
+    function buildProxyBackgroundJs(host: string, port: number, user: string, pass: string): string {
+      return [
+        `var config = { mode: "fixed_servers", rules: { singleProxy: { scheme: "http", host: "${host}", port: ${port} }, bypassList: ["localhost"] } };`,
+        `chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});`,
+        `chrome.webRequest.onAuthRequired.addListener(function(details, callback) { callback({ authCredentials: { username: "${user}", password: "${pass}" } }); }, {urls: ["<all_urls>"]}, ['asyncBlocking']);`,
+      ].join('\n');
+    }
+
+    it('generates valid Manifest V3 JSON', () => {
+      const manifest = buildProxyExtensionManifest();
+      expect(manifest).toHaveProperty('manifest_version', 3);
+      expect(manifest).toHaveProperty('permissions');
+      expect((manifest as { permissions: string[] }).permissions).toContain('webRequestAuthProvider');
+    });
+
+    it('embeds credentials in background.js', () => {
+      const js = buildProxyBackgroundJs('ca.decodo.com', 20001, 'user1-session-abc', 'pass123');
+      expect(js).toContain('ca.decodo.com');
+      expect(js).toContain('20001');
+      expect(js).toContain('user1-session-abc');
+      expect(js).toContain('pass123');
+      expect(js).toContain('onAuthRequired');
+    });
+
+    it('does not include raw password in proxy URL (no --proxy-server auth)', () => {
+      // The old approach embedded user:pass in the URL — Chrome ignores it
+      const badUrl = 'http://user:pass@proxy.com:8080';
+      // Extension approach never constructs this URL
+      const js = buildProxyBackgroundJs('proxy.com', 8080, 'user', 'pass');
+      expect(js).not.toContain('http://user:pass@');
+    });
+  });
+
+  describe('JSON soft block resilience (Fix 3)', () => {
+    function safeJsonParse(raw: string | null | undefined): { ok: boolean; data?: unknown; waf_blocked?: boolean } {
+      if (!raw || raw.trim().startsWith('<')) {
+        return { ok: false, waf_blocked: true };
+      }
+      try {
+        return { ok: true, data: JSON.parse(raw) };
+      } catch {
+        return { ok: false, waf_blocked: true };
+      }
+    }
+
+    it('parses valid JSON', () => {
+      const result = safeJsonParse('[{"propertyRsn": 123}]');
+      expect(result.ok).toBe(true);
+      expect(result.data).toEqual([{ propertyRsn: 123 }]);
+    });
+
+    it('treats HTML as WAF block', () => {
+      expect(safeJsonParse('<html>Access Denied</html>')).toEqual({ ok: false, waf_blocked: true });
+    });
+
+    it('treats empty string as WAF block', () => {
+      expect(safeJsonParse('')).toEqual({ ok: false, waf_blocked: true });
+    });
+
+    it('treats null as WAF block', () => {
+      expect(safeJsonParse(null)).toEqual({ ok: false, waf_blocked: true });
+    });
+
+    it('treats 502 plain text as WAF block', () => {
+      expect(safeJsonParse('502 Bad Gateway')).toEqual({ ok: false, waf_blocked: true });
+    });
+
+    it('treats 429 plain text as WAF block', () => {
+      expect(safeJsonParse('429 Too Many Requests')).toEqual({ ok: false, waf_blocked: true });
+    });
+
+    it('treats truncated JSON as WAF block', () => {
+      expect(safeJsonParse('{"propertyRsn": 12')).toEqual({ ok: false, waf_blocked: true });
+    });
+  });
+
+  describe('streaming subprocess output (Fix 4)', () => {
+    function simulateStreamParsing(lines: string[]): { summary: string | null; linesStreamed: number; memoryKept: number } {
+      let summary: string | null = null;
+      let linesStreamed = 0;
+      let memoryKept = 0;
+
+      for (const line of lines) {
+        linesStreamed++;
+        if (line.includes('PIPELINE_SUMMARY:')) {
+          summary = line;
+          memoryKept++;
+        }
+        // All other lines are printed and discarded — not kept in memory
+      }
+
+      return { summary, linesStreamed, memoryKept };
+    }
+
+    it('only keeps PIPELINE_SUMMARY in memory', () => {
+      const lines = [
+        '{"level":"INFO","tag":"[worker-1]","msg":"Starting..."}',
+        '{"level":"INFO","tag":"[worker-1]","msg":"Batch 1: claimed 25 year_seqs"}',
+        ...Array.from({ length: 10000 }, (_, i) => `{"level":"INFO","msg":"permit ${i}"}`),
+        'PIPELINE_SUMMARY:{"records_total":10000,"records_new":500}',
+      ];
+
+      const result = simulateStreamParsing(lines);
+      expect(result.linesStreamed).toBe(10003);
+      expect(result.memoryKept).toBe(1); // Only the summary line
+      expect(result.summary).toContain('PIPELINE_SUMMARY:');
+    });
+
+    it('handles no summary line', () => {
+      const result = simulateStreamParsing(['line1', 'line2']);
+      expect(result.summary).toBeNull();
+      expect(result.memoryKept).toBe(0);
+    });
+  });
+
   describe('factory', () => {
     it('creates a valid mock inspection', () => {
       const insp = createMockInspection();

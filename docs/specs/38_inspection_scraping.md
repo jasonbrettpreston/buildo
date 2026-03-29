@@ -277,8 +277,9 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 | `PROXY_USER` | *(unset)* | Decodo proxy username |
 | `PROXY_PASS` | *(unset)* | Decodo proxy password |
 
-#### Proxy (per-worker sticky sessions)
+#### Proxy (per-worker sticky sessions via Manifest V3 extension)
 - Each worker gets unique Decodo sticky session: `buildo-worker-{id}-{timestamp}`
+- **Auth mechanism:** Chromium ignores `user:pass` in `--proxy-server` URLs. Authentication is handled via a dynamically-generated Manifest V3 Chrome extension that intercepts `chrome.webRequest.onAuthRequired` and responds with credentials. The extension is loaded via `--load-extension=<temp_dir>` and cleaned up after the worker exits.
 - Session rotated every 200 permits (same as single-worker SESSION_REFRESH_INTERVAL)
 - Disabled by default — direct connection when `PROXY_HOST` is unset
 

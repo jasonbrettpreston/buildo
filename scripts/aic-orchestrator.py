@@ -203,22 +203,45 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
             env={**os.environ, 'SCRAPE_BATCH_SIZE': str(BATCH_SIZE)},
         )
 
-        stdout_data, stderr_data = await proc.communicate()
-        stdout_text = stdout_data.decode('utf-8', errors='replace')
-        stderr_text = stderr_data.decode('utf-8', errors='replace')
+        # Stream stdout/stderr line-by-line to avoid buffering entire output in RAM.
+        # Only keep the PIPELINE_SUMMARY line for telemetry parsing.
+        captured_summary = []
 
-        # Stream output
-        for line in stdout_text.split('\n'):
-            if line.strip():
-                print(line)
+        async def stream_reader(stream, is_stderr=False):
+            async for raw_line in stream:
+                text = raw_line.decode('utf-8', errors='replace').rstrip()
+                if not text:
+                    continue
+                if is_stderr:
+                    print(text, file=sys.stderr)
+                else:
+                    print(text)
+                    if 'PIPELINE_SUMMARY:' in text:
+                        captured_summary.append(text)
+                    # Check for preflight failure in real-time
+                    if 'PREFLIGHT_FAIL' in text:
+                        worker_tel['preflight_passed'] = False
+                        preflight_fail_counter[0] += 1
+                        log('ERROR', worker_tag, f'Preflight failure detected in stream (count: {preflight_fail_counter[0]}/{MAX_PREFLIGHT_FAILURES})')
+                        if preflight_fail_counter[0] >= MAX_PREFLIGHT_FAILURES:
+                            abort_event.set()
+                            log('ERROR', worker_tag, 'Preflight abort threshold — terminating worker')
+                # Active kill switch: terminate on abort or shutdown
+                if abort_event.is_set() or shutdown_requested:
+                    if proc.returncode is None:
+                        log('WARN', worker_tag, 'Termination signal — killing worker subprocess')
+                        proc.terminate()
+                        return
 
-        if stderr_text.strip():
-            for line in stderr_text.split('\n'):
-                if line.strip():
-                    print(line, file=sys.stderr)
+        await asyncio.gather(
+            stream_reader(proc.stdout, is_stderr=False),
+            stream_reader(proc.stderr, is_stderr=True),
+        )
+        await proc.wait()
 
-        # Parse worker's PIPELINE_SUMMARY for telemetry
-        summary_match = re.search(r'PIPELINE_SUMMARY:(.+)', stdout_text)
+        # Parse the captured PIPELINE_SUMMARY line for telemetry
+        summary_line = next((l for l in captured_summary if 'PIPELINE_SUMMARY:' in l), None)
+        summary_match = re.search(r'PIPELINE_SUMMARY:(.+)', summary_line) if summary_line else None
         if summary_match:
             try:
                 summary = json.loads(summary_match.group(1))
@@ -253,15 +276,7 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
             worker_tel['batches_completed'] += 1
         else:
             log('ERROR', worker_tag, f'Worker process exited with code {proc.returncode}')
-
-            # Check for preflight failure — signal abort to all workers
-            if 'PREFLIGHT_FAIL' in stdout_text or 'PREFLIGHT_FAIL' in stderr_text:
-                worker_tel['preflight_passed'] = False
-                preflight_fail_counter[0] += 1
-                log('ERROR', worker_tag, f'Preflight stealth check failed (count: {preflight_fail_counter[0]}/{MAX_PREFLIGHT_FAILURES})')
-                if preflight_fail_counter[0] >= MAX_PREFLIGHT_FAILURES:
-                    abort_event.set()
-                    log('ERROR', worker_tag, 'Preflight abort threshold reached — signaling all workers to stop')
+            # Preflight failures are now detected in real-time via stream_reader
 
     except Exception as err:
         log('ERROR', worker_tag, f'Worker subprocess error: {err}')
