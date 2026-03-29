@@ -24,13 +24,10 @@ SPEC LINK: docs/specs/38_inspection_scraping.md
 """
 
 import asyncio
-import atexit
 import json
 import os
 import random
 import re
-import shutil
-import stat
 import sys
 import time
 from datetime import datetime
@@ -182,7 +179,7 @@ def get_db_connection():
 
 
 # ---------------------------------------------------------------------------
-# Proxy — Decodo sticky sessions via Manifest V3 extension
+# Proxy — Decodo sticky sessions via nodriver built-in proxy support
 # ---------------------------------------------------------------------------
 def build_proxy_session_id(worker_id, timestamp=None):
     """Build a unique Decodo sticky session ID for this worker."""
@@ -190,95 +187,36 @@ def build_proxy_session_id(worker_id, timestamp=None):
     return f'buildo-worker-{worker_id}-{ts}'
 
 
-def build_proxy_extension(session_id):
-    """Create a temp Manifest V3 extension that handles proxy auth silently.
+def build_proxy_url(session_id):
+    """Build a Decodo proxy URL with sticky session embedded in username.
 
-    Chromium ignores user:pass in --proxy-server URLs. The only way to
-    authenticate with a proxy in headless Chrome is via the
-    chrome.webRequest.onAuthRequired event in a background service worker.
+    nodriver's create_context(proxy_server=url) handles auth transparently
+    via a local proxy forwarder — no extensions needed, works in headless.
 
-    Returns the extension directory path, or None if proxy is not configured.
+    Returns the proxy URL string, or None if proxy is not configured.
     """
     if not PROXY_HOST:
         return None
-
     user_with_session = f'{PROXY_USER}-session-{session_id}' if PROXY_USER else session_id
-    ext_dir = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        '..', '.proxy_ext', f'decodo_{session_id}',
-    )
-    ext_dir = os.path.abspath(ext_dir)
-    os.makedirs(ext_dir, exist_ok=True)
-
-    manifest = {
-        "version": "1.0.0",
-        "manifest_version": 3,
-        "name": "Decodo Proxy Auth",
-        "permissions": ["proxy", "webRequest", "webRequestAuthProvider"],
-        "host_permissions": ["<all_urls>"],
-        "background": {"service_worker": "background.js"},
-    }
-
-    background_js = f"""
-var config = {{
-    mode: "fixed_servers",
-    rules: {{
-        singleProxy: {{ scheme: "http", host: "{PROXY_HOST}", port: parseInt("{PROXY_PORT}") }},
-        bypassList: ["localhost"]
-    }}
-}};
-chrome.proxy.settings.set({{value: config, scope: "regular"}}, function() {{}});
-chrome.webRequest.onAuthRequired.addListener(
-    function(details, callback) {{
-        callback({{ authCredentials: {{ username: "{user_with_session}", password: "{PROXY_PASS}" }} }});
-    }},
-    {{urls: ["<all_urls>"]}},
-    ['asyncBlocking']
-);
-"""
-
-    with open(os.path.join(ext_dir, 'manifest.json'), 'w') as f:
-        json.dump(manifest, f)
-    with open(os.path.join(ext_dir, 'background.js'), 'w') as f:
-        f.write(background_js)
-
-    # Restrict permissions — credentials are in background.js
-    if sys.platform != 'win32':
-        os.chmod(ext_dir, stat.S_IRWXU)  # 700: owner only
-
-    # Register atexit handler as secondary cleanup (catches crashes before finally)
-    atexit.register(cleanup_proxy_extension, ext_dir)
-
-    return ext_dir
-
-
-def cleanup_proxy_extension(ext_dir):
-    """Remove temporary proxy extension directory and prune empty parent."""
-    if ext_dir and os.path.exists(ext_dir):
-        try:
-            shutil.rmtree(ext_dir)
-        except OSError as err:
-            log('WARN', '[scraper]', f'Failed to clean up proxy extension: {err}')
-        # Prune parent .proxy_ext/ if empty
-        parent = os.path.dirname(ext_dir)
-        try:
-            if parent and os.path.isdir(parent) and not os.listdir(parent):
-                os.rmdir(parent)
-        except OSError:
-            pass
+    return f'http://{user_with_session}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}'
 
 
 # ---------------------------------------------------------------------------
 # Browser — nodriver CDP (no WebDriver)
 # ---------------------------------------------------------------------------
-async def bootstrap_session(proxy_ext_dir=None):
-    """Launch Chrome via CDP in headless mode and establish AIC session with warm entry."""
-    browser_args = None
-    if proxy_ext_dir:
-        browser_args = [f'--load-extension={proxy_ext_dir}']
-    browser = await uc.start(headless=True, browser_args=browser_args)
+async def bootstrap_session(proxy_url=None):
+    """Launch headless Chrome via CDP and establish AIC session with warm entry."""
+    browser = await uc.start(headless=True)
     try:
-        page = await browser.get('about:blank')
+        # If proxy configured, create a browser context routed through the proxy.
+        # nodriver handles auth transparently via a local proxy forwarder.
+        if proxy_url:
+            page = await browser.create_context(
+                url='about:blank',
+                proxy_server=proxy_url,
+            )
+        else:
+            page = await browser.get('about:blank')
 
         # Warm bootstrap: toronto.ca first for realistic referrer chain
         try:
@@ -327,12 +265,12 @@ async def preflight_stealth_check(page):
     return True, None
 
 
-async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None):
+async def bootstrap_with_retry(run_preflight=True, proxy_url=None):
     """Bootstrap with retry — 3 attempts with 10s backoff."""
     last_error = None
     for attempt in range(1, 4):
         try:
-            browser, page = await bootstrap_session(proxy_ext_dir=proxy_ext_dir)
+            browser, page = await bootstrap_session(proxy_url=proxy_url)
             if attempt > 1:
                 log('INFO', '[scraper]', f'Bootstrap succeeded on attempt {attempt}')
 
@@ -685,7 +623,7 @@ def complete_batch_in_queue(conn, year_seqs, worker_id, failed=None):
 # ---------------------------------------------------------------------------
 # Scrape loop — shared between standalone and worker modes
 # ---------------------------------------------------------------------------
-async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]', proxy_ext_dir=None):
+async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]', proxy_url=None):
     """Core scrape loop for a list of year_seq combos. Mutates tel in place."""
 
     def accumulate(result):
@@ -716,12 +654,11 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
                 browser.stop()
                 # Rotate proxy session to get a new IP
                 if PROXY_HOST:
-                    cleanup_proxy_extension(proxy_ext_dir)
                     new_session_id = build_proxy_session_id(
                         tel.get('_worker_id', 'standalone'), int(time.time()))
-                    proxy_ext_dir = build_proxy_extension(new_session_id)
+                    proxy_url = build_proxy_url(new_session_id)
                     log('INFO', worker_tag, f'Proxy session rotated: {new_session_id}')
-                browser, page, attempts = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir)
+                browser, page, attempts = await bootstrap_with_retry(proxy_url=proxy_url)
                 tel['session_bootstraps'] += attempts
                 tel['consecutive_empty'] = 0
             except Exception as err:
@@ -834,22 +771,22 @@ async def main():
 
     worker_tag = f'[worker-{args["worker_id"]}]' if args['worker_id'] else '[scraper]'
 
-    # Build per-worker proxy extension if proxy is configured
-    proxy_ext_dir = None
+    # Build per-worker proxy URL if proxy is configured
+    proxy_url = None
     if PROXY_HOST and args['worker_id']:
         session_id = build_proxy_session_id(args['worker_id'])
-        proxy_ext_dir = build_proxy_extension(session_id)
-        log('INFO', worker_tag, f'Proxy extension created: {PROXY_HOST}:{PROXY_PORT} session={session_id}')
+        proxy_url = build_proxy_url(session_id)
+        log('INFO', worker_tag, f'Proxy configured: {PROXY_HOST}:{PROXY_PORT} session={session_id}')
     elif PROXY_HOST:
         session_id = build_proxy_session_id('standalone')
-        proxy_ext_dir = build_proxy_extension(session_id)
-        log('INFO', worker_tag, f'Proxy extension created: {PROXY_HOST}:{PROXY_PORT} session={session_id}')
+        proxy_url = build_proxy_url(session_id)
+        log('INFO', worker_tag, f'Proxy configured: {PROXY_HOST}:{PROXY_PORT} session={session_id}')
 
     log('INFO', worker_tag, 'Launching browser via nodriver (CDP)...')
 
     browser = None
     try:
-        browser, page, bootstrap_attempts = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir)
+        browser, page, bootstrap_attempts = await bootstrap_with_retry(proxy_url=proxy_url)
         tel['session_bootstraps'] = bootstrap_attempts
         log('INFO', worker_tag, 'WAF session established (no WebDriver)')
 
@@ -877,13 +814,12 @@ async def main():
                 with open(args['batch_file'], 'r') as f:
                     year_seqs = json.load(f)
                 log('INFO', worker_tag, f'Worker mode: {len(year_seqs)} year_seqs from {args["batch_file"]}')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_url=proxy_url)
 
             elif args['mode'] == 'db-queue':
                 # DB-queue mode: 1 batch = 1 IP address.
-                # Each batch gets a fresh proxy session, fresh Chrome, fresh IP.
-                # After scraping, browser is killed and proxy extension cleaned up.
-                # This maximizes stealth — no IP sees more than BATCH_SIZE permits.
+                # Each batch gets a fresh proxy URL (new sticky session), fresh Chrome.
+                # After scraping, browser is killed. No IP sees more than BATCH_SIZE permits.
                 worker_id = args['worker_id'] or 'standalone'
                 batch_num = 0
 
@@ -892,8 +828,6 @@ async def main():
                 if browser and PROXY_HOST:
                     browser.stop()
                     browser = None
-                    cleanup_proxy_extension(proxy_ext_dir)
-                    proxy_ext_dir = None
 
                 while True:
                     year_seqs = claim_batch_from_queue(conn, worker_id, BATCH_SIZE)
@@ -902,20 +836,20 @@ async def main():
                         break
                     batch_num += 1
 
-                    # Fresh proxy session + browser per batch
+                    # Fresh proxy session per batch (new Decodo sticky session = new IP)
                     if PROXY_HOST:
                         batch_session_id = build_proxy_session_id(worker_id, int(time.time()))
-                        proxy_ext_dir = build_proxy_extension(batch_session_id)
+                        proxy_url = build_proxy_url(batch_session_id)
                         log('INFO', worker_tag, f'Batch {batch_num}: new IP session={batch_session_id}')
 
                     if browser is None:
-                        browser, page, attempts = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir)
+                        browser, page, attempts = await bootstrap_with_retry(proxy_url=proxy_url)
                         tel['session_bootstraps'] += attempts
                         log('INFO', worker_tag, f'Batch {batch_num}: browser bootstrapped')
 
                     log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
                     try:
-                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir)
+                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_url=proxy_url)
                         complete_batch_in_queue(conn, year_seqs, worker_id)
                         log('INFO', worker_tag, f'Batch {batch_num}: complete')
                     except Exception as err:
@@ -929,13 +863,10 @@ async def main():
                                 pass
                             browser = None
 
-                    # Kill browser + proxy extension after each batch (1 batch = 1 IP)
+                    # Kill browser after each batch (1 batch = 1 IP)
                     if PROXY_HOST and browser:
                         browser.stop()
                         browser = None
-                    if PROXY_HOST:
-                        cleanup_proxy_extension(proxy_ext_dir)
-                        proxy_ext_dir = None
 
             else:
                 # Standalone batch mode: query DB for eligible permits
@@ -964,7 +895,7 @@ async def main():
 
                 year_seqs = [r['year_seq'] for r in rows]
                 log('INFO', worker_tag, f'Batch mode: {len(year_seqs)} year+sequence combos to scrape')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_url=proxy_url)
 
         finally:
             conn.close()
@@ -999,8 +930,6 @@ async def main():
                 )
         except Exception:
             pass
-        # Clean up proxy extension temp directory
-        cleanup_proxy_extension(proxy_ext_dir)
 
     elapsed_s = (time.time() * 1000 - start_ms) / 1000
     log('INFO', worker_tag, 'Scrape complete', {

@@ -1,48 +1,54 @@
-# Active Task: Headless Chrome mode and zombie process cleanup
+# Active Task: Replace MV3 proxy extension with nodriver built-in proxy for headless compatibility
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `54421b63` (54421b63dd2726ee6dbfa7e87b936c0f521ac657)
+**Rollback Anchor:** `4ff6c662` (4ff6c662fb760a859b703d0394db717a983ea6ec)
 
 ## Context
-* **Goal:** Fix 2 bugs discovered during WF5 live testing:
-  1. **Visible Chrome windows** — nodriver defaults to headed mode. Every bootstrap opens a Chrome window on the user's desktop, navigates to toronto.ca, then AIC portal. Production scraper must run headless (invisible).
-  2. **Zombie Chrome processes** — failed bootstrap retries and WAF re-bootstraps leave orphaned Chrome processes. `bootstrap_with_retry` calls `browser.stop()` on preflight failure, but `bootstrap_session` only stops on exception within its own try block. Failed retries between attempts 1→2→3 may leave Chrome processes alive.
+* **Goal:** Chrome's `--headless=new` doesn't support `--load-extension`. Our MV3 proxy auth extension silently fails in headless mode, breaking Decodo proxy auth. Replace with nodriver's built-in proxy support (`browser.create_context(proxy_server=...)`) which handles auth transparently via a local proxy forwarder — works in headless.
 * **Target Spec:** `docs/specs/38_inspection_scraping.md`
 * **Key Files:**
-  - `scripts/aic-scraper-nodriver.py` — `bootstrap_session()` and `bootstrap_with_retry()`
+  - `scripts/aic-scraper-nodriver.py` — replace MV3 extension with `create_context` proxy
 
 ## Technical Implementation
 
-### Bug 1: Headless mode
-- nodriver supports `headless=True` parameter in `uc.start()` which adds `--headless=new` to Chrome args
-- Change `bootstrap_session()` line 279 from:
-  ```python
-  browser = await uc.start(browser_args=browser_args)
-  ```
-  to:
-  ```python
-  browser = await uc.start(headless=True, browser_args=browser_args)
-  ```
-- This is a one-line fix. Chrome runs invisibly, no windows on desktop.
+### Replace MV3 extension with nodriver built-in proxy
+- **Remove:** `build_proxy_extension()`, `cleanup_proxy_extension()`, `atexit` registration, `shutil`/`stat` imports, `proxy_ext_dir` parameter threading
+- **Add:** Build proxy URL string `http://user-session-{id}:pass@host:port` and pass to `browser.create_context(proxy_server=url)` after `uc.start(headless=True)`
+- **How it works:** nodriver detects `user:pass` in the proxy URL, spins up a local forwarder on `127.0.0.1:{random_port}`, Chrome connects to the local forwarder (no auth needed), forwarder handles upstream auth transparently
+- **Per-batch rotation:** In db-queue mode, each batch still gets a fresh session ID in the proxy URL. The `create_context` call creates a new browser context with the new proxy.
 
-### Bug 2: Zombie cleanup
-- In `bootstrap_with_retry()`, when preflight fails, `browser.stop()` is called before raising — this is correct.
-- But `bootstrap_session()` catches exceptions and calls `browser.stop()` — if `uc.start()` succeeds but the warm bootstrap to `toronto.ca` hangs and times out, the browser is stopped. This path looks correct.
-- The real zombie risk is in `scrape_loop` WAF re-bootstrap at line 712: `browser.stop()` is called, then `bootstrap_with_retry()` may fail 3 times, each spawning and killing a Chrome. If the 3rd attempt also fails, the exception propagates — but each attempt's browser IS stopped in `bootstrap_session`'s except block. So this path is also correct.
-- **Additional safety:** Add explicit process kill in the outer `finally` block of `main()` to catch any edge case zombies.
+### Changes to bootstrap_session
+```python
+async def bootstrap_session(proxy_url=None):
+    browser = await uc.start(headless=True)
+    if proxy_url:
+        page = await browser.create_context(proxy_server=proxy_url)
+    else:
+        page = await browser.get('about:blank')
+    # ... warm bootstrap ...
+```
+
+### What gets removed
+- `build_proxy_extension()` — ~40 lines
+- `cleanup_proxy_extension()` — ~12 lines
+- `proxy_ext_dir` parameter on `bootstrap_session`, `bootstrap_with_retry`, `scrape_loop`
+- `atexit.register` calls
+- `shutil`, `stat` imports
+- `.proxy_ext/` directory handling
 
 * **Database Impact:** NO
 
 ## Standards Compliance
 * **Try-Catch Boundary:** N/A
-* **Unhappy Path Tests:** N/A — headless is a Chrome flag, not testable in Vitest
+* **Unhappy Path Tests:** N/A — proxy is runtime behavior
 * **logError Mandate:** N/A
 * **Mobile-First:** N/A
 
 ## Execution Plan
-- [x] **Rollback Anchor:** `54421b63`
-- [x] **State Verification:** Confirmed — Chrome windows visible on desktop during every test run. Multiple zombie processes observed.
-- [x] **Spec Review:** §3.8 says "nodriver launches Chrome via CDP" — headless is implied for pipeline scripts.
-- [ ] **Fix:** Add `headless=True` to `uc.start()`. Add zombie kill safety net in `main()` finally block.
+- [x] **Rollback Anchor:** `4ff6c662`
+- [x] **State Verification:** Review agent confirmed `--headless=new` + `--load-extension` is incompatible. nodriver's `create_context(proxy_server=...)` works in headless via local forwarder.
+- [x] **Spec Review:** §3.9 proxy section needs update to document new approach.
+- [ ] **Fix:** Replace MV3 extension with `create_context` proxy. Remove all extension code.
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
-- [ ] **Spec Audit:** Update §3.8 to explicitly state headless mode.
+- [ ] **Live Test:** Single permit through Decodo in headless — no visible Chrome window, proxy auth works.
+- [ ] **Spec Audit:** Update §3.9 to document `create_context` approach.
