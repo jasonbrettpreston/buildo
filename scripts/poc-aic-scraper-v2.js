@@ -66,15 +66,30 @@ const TARGET_TYPES = process.env.SCRAPE_PERMIT_TYPE
 const BATCH_SIZE = parseInt(process.env.SCRAPE_BATCH_SIZE || '10', 10);
 const SESSION_REFRESH_INTERVAL = 200; // re-establish WAF session every N permits
 
-// UA pool — rotate per session bootstrap to avoid statistical fingerprinting
-const USER_AGENTS = [
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+// UA pool with matching Sec-CH Client Hints — WAFs cross-check these
+const BROWSER_PROFILES = [
+  {
+    ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    hints: { 'Sec-CH-UA': '"Chromium";v="131", "Google Chrome";v="131", "Not_A Brand";v="24"', 'Sec-CH-UA-Mobile': '?0', 'Sec-CH-UA-Platform': '"Windows"' },
+  },
+  {
+    ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    hints: { 'Sec-CH-UA': '"Chromium";v="131", "Google Chrome";v="131", "Not_A Brand";v="24"', 'Sec-CH-UA-Mobile': '?0', 'Sec-CH-UA-Platform': '"macOS"' },
+  },
+  {
+    ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
+    hints: { 'Sec-CH-UA': '"Chromium";v="131", "Microsoft Edge";v="131", "Not_A Brand";v="24"', 'Sec-CH-UA-Mobile': '?0', 'Sec-CH-UA-Platform': '"Windows"' },
+  },
+  {
+    ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+    hints: {}, // Safari does not send Client Hints
+  },
+  {
+    ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+    hints: { 'Sec-CH-UA': '"Chromium";v="130", "Google Chrome";v="130", "Not_A Brand";v="24"', 'Sec-CH-UA-Mobile': '?0', 'Sec-CH-UA-Platform': '"Windows"' },
+  },
 ];
-function randomUA() { return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)]; }
+function randomProfile() { return BROWSER_PROFILES[Math.floor(Math.random() * BROWSER_PROFILES.length)]; }
 
 // ---------------------------------------------------------------------------
 // Status normalization (matches Spec 38 §3.4 + parser.ts)
@@ -133,6 +148,7 @@ function parseInspectionDate(raw) {
 
 async function launchBrowser() {
   const { chromium } = require('playwright');
+  const crypto = require('crypto');
   let addExtra, StealthPlugin;
   try {
     addExtra = require('playwright-extra').addExtra;
@@ -156,11 +172,26 @@ async function launchBrowser() {
     browser = await chromium.launch(launchOpts);
   }
 
+  // Select a random browser profile (UA + matching Client Hints)
+  const profile = randomProfile();
+
+  // Sticky proxy session — pin the same Decodo IP for this browser lifecycle.
+  // Format: {user}-session-{randomId} keeps the same residential IP until re-bootstrap.
+  let proxyCredentials;
+  if (process.env.PROXY_USER) {
+    const sessionId = crypto.randomBytes(8).toString('hex');
+    proxyCredentials = {
+      username: `${process.env.PROXY_USER}-session-${sessionId}`,
+      password: process.env.PROXY_PASS || '',
+    };
+    pipeline.log.info('[scraper]', `Sticky session: ${sessionId}`);
+  }
+
   const context = await browser.newContext({
-    userAgent: randomUA(),
-    ...(process.env.PROXY_USER && {
-      httpCredentials: { username: process.env.PROXY_USER, password: process.env.PROXY_PASS || '' },
-    }),
+    userAgent: profile.ua,
+    ...(proxyCredentials && { httpCredentials: proxyCredentials }),
+    // Align Client Hints with the selected UA to avoid WAF fingerprint mismatch
+    ...(Object.keys(profile.hints).length > 0 && { extraHTTPHeaders: profile.hints }),
   });
 
   return { browser, context };
@@ -453,21 +484,63 @@ async function scrapeWithRetry(page, yearSeq, dbPool) {
 // Session bootstrap — launch browser + establish WAF session
 // ---------------------------------------------------------------------------
 
+const BOOTSTRAP_MAX_RETRIES = 3;
+const BOOTSTRAP_BACKOFF_MS = 10000;
+
 async function bootstrapSession() {
   const { browser, context } = await launchBrowser();
-  const page = await context.newPage();
+  try {
+    const page = await context.newPage();
 
-  // Block images/css/fonts but allow scripts — WAFs run JS challenges to verify
-  // the browser isn't headless. Blocking scripts causes permanent shadow-ban.
-  await page.route('**/*', (route) => {
-    const type = route.request().resourceType();
-    if (['document', 'xhr', 'fetch', 'script'].includes(type)) return route.continue();
-    return route.abort();
-  });
+    // Block images/css/fonts but allow scripts — WAFs run JS challenges to verify
+    // the browser isn't headless. Blocking scripts causes permanent shadow-ban.
+    await page.route('**/*', (route) => {
+      const type = route.request().resourceType();
+      if (['document', 'xhr', 'fetch', 'script'].includes(type)) return route.continue();
+      return route.abort();
+    });
 
-  await page.goto(`${AIC_BASE}/setup.do?action=init`, { waitUntil: 'commit' });
-  await page.waitForTimeout(1000);
-  return { browser, page };
+    // Warm bootstrap: navigate to toronto.ca first to build a realistic referrer
+    // chain and populate cookies/cache before hitting the secured AIC portal.
+    try {
+      await page.goto('https://www.toronto.ca', { waitUntil: 'commit', timeout: 15000 });
+      await page.waitForTimeout(2000);
+    } catch {
+      // toronto.ca may be slow — non-fatal, proceed to AIC directly
+    }
+
+    await page.goto(`${AIC_BASE}/setup.do?action=init`, { waitUntil: 'commit' });
+    await page.waitForTimeout(1000);
+    return { browser, page };
+  } catch (err) {
+    await browser.close();
+    throw err;
+  }
+}
+
+/**
+ * Bootstrap with retry — on failure, close browser, wait, and try with a
+ * fresh sticky session ID (new Decodo IP) up to BOOTSTRAP_MAX_RETRIES times.
+ */
+async function bootstrapWithRetry() {
+  let lastError;
+  for (let attempt = 1; attempt <= BOOTSTRAP_MAX_RETRIES; attempt++) {
+    try {
+      const session = await bootstrapSession();
+      if (attempt > 1) {
+        pipeline.log.info('[scraper]', `Bootstrap succeeded on attempt ${attempt}`);
+      }
+      return { ...session, bootstrapAttempts: attempt };
+    } catch (err) {
+      lastError = err;
+      pipeline.log.error('[scraper]', err, { event: 'bootstrap_failed', attempt, maxRetries: BOOTSTRAP_MAX_RETRIES });
+      if (attempt < BOOTSTRAP_MAX_RETRIES) {
+        pipeline.log.info('[scraper]', `Retrying bootstrap in ${BOOTSTRAP_BACKOFF_MS / 1000}s with fresh session...`);
+        await new Promise((r) => setTimeout(r, BOOTSTRAP_BACKOFF_MS));
+      }
+    }
+  }
+  throw new Error(`Bootstrap failed after ${BOOTSTRAP_MAX_RETRIES} attempts: ${lastError.message}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -524,9 +597,10 @@ pipeline.run('poc-aic-scraper', async (pool) => {
     }
   }
 
-  // Step 0: Launch browser + establish WAF session
+  // Step 0: Launch browser + establish WAF session (with retry)
   pipeline.log.info('[scraper]', 'Launching browser for WAF session...');
-  let { browser, page } = await bootstrapSession();
+  let { browser, page, bootstrapAttempts } = await bootstrapWithRetry();
+  tel.session_bootstraps += bootstrapAttempts; // total attempts including initial
   pipeline.log.info('[scraper]', 'WAF session established');
 
   function accumulateResult(result) {
@@ -598,8 +672,11 @@ pipeline.run('poc-aic-scraper', async (pool) => {
           pipeline.log.warn('[scraper]', `WAF trap detected (${tel.consecutive_empty} consecutive empty). Re-bootstrapping session...`);
           try {
             await browser.close();
-            ({ browser, page } = await bootstrapSession());
-            tel.session_bootstraps++;
+            browser = null;
+            const reboot = await bootstrapWithRetry();
+            browser = reboot.browser;
+            page = reboot.page;
+            tel.session_bootstraps += reboot.bootstrapAttempts;
             tel.consecutive_empty = 0;
             pipeline.log.info('[scraper]', 'Session re-bootstrapped successfully');
           } catch (bootstrapErr) {
@@ -641,7 +718,7 @@ pipeline.run('poc-aic-scraper', async (pool) => {
       }
     }
   } finally {
-    await browser.close();
+    if (browser) await browser.close();
   }
 
   const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);

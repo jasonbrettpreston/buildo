@@ -1,48 +1,40 @@
-# Active Task: Fix 5 gaps identified by independent review agent
+# Active Task: Fix 3 review agent gaps in stealth hardening
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
 
 ## Context
-* **Goal:** Independent review agent identified 5 issues in the scraper and classify-inspection-status scripts: SQL interpolation, scraped_at not advancing on unchanged data, chain/spec divergence, hardcoded year cap, and NULL-invisible stalled detection.
+* **Goal:** Independent review agent found 3 issues in the stealth hardening implementation: (1) browser leak if bootstrapSession fails after launchBrowser, (2) inconsistent bootstrapAttempts counting between initial and re-bootstrap, (3) double-close risk when re-bootstrap fails and the finally block tries to close an already-closed browser.
 * **Target Spec:** `docs/specs/38_inspection_scraping.md`
-* **Key Files:**
-  - `scripts/poc-aic-scraper-v2.js` (fixes 4a, 9a)
-  - `scripts/classify-inspection-status.js` (fixes 2a, 13b)
-  - `docs/specs/38_inspection_scraping.md` (fix 6a)
-* **Rollback Anchor:** `a18c46c`
+* **Key Files:** `scripts/poc-aic-scraper-v2.js`
+* **Rollback Anchor:** `dceda6b`
 
 ## Technical Implementation
 
-### Fix 2a: SQL interpolation in classify-inspection-status.js
-- Replace `INTERVAL '${STALE_MONTHS} months'` with parameterized `INTERVAL '1 month' * $1`
-- Lines 30, 48
+### Fix 1: Browser leak in bootstrapSession (HIGH)
+- Wrap bootstrapSession internals in try/catch after launchBrowser
+- On failure, close the browser before re-throwing
+- Already applied in working tree
 
-### Fix 4a: scraped_at never advances on unchanged data
-- After processing all stages for a permit, unconditionally touch scraped_at:
-  `UPDATE permit_inspections SET scraped_at = NOW() WHERE permit_num = $1`
-- This ensures the 7-day cooldown works even when nothing changed
-- Run this as a single bulk update per permit, not per stage
+### Fix 2: Inconsistent bootstrap counting (MEDIUM)
+- Change initial bootstrap from `attempts - 1` to `attempts` to match re-bootstrap counting
+- Both paths now count total attempts consistently
+- Already applied in working tree
 
-### Fix 6a: Spec chain doesn't include classify_inspection_status
-- Update docs/specs/38_inspection_scraping.md section 3.6 chain definition to include the new step
-
-### Fix 9a: Hardcoded year cap <= 26
-- Replace `SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= 26` with dynamic `<= EXTRACT(YEAR FROM CURRENT_DATE) % 100`
-
-### Fix 13b: NULL inspection_date invisible to stalled detection
-- Use `COALESCE(MAX(pi.inspection_date), MIN(pi.scraped_at)::date)` as the activity timestamp
-- If no inspection_date exists, fall back to when we first scraped it — if that was 10+ months ago with no stage activity, it's stalled
+### Fix 3: Double-close guard on re-bootstrap failure (LOW)
+- When WAF trap re-bootstrap fails, `browser` still references the old closed instance
+- Set `browser = null` after closing, guard the finally block with `if (browser)`
+- Not yet applied
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — pipeline scripts
+* **Try-Catch Boundary:** N/A — pipeline script
 * **Unhappy Path Tests:** N/A
 * **logError Mandate:** N/A
 * **Mobile-First:** N/A
 
 ## Execution Plan
-- [x] **Rollback Anchor:** a18c46c
-- [x] **State Verification:** Review agent identified all 5 gaps with line numbers
-- [x] **Spec Review:** Spec 38 §3.6 chain definition needs updating
-- [ ] **Reproduction:** Code review confirms all 5 gaps
-- [ ] **Fix:** Apply all 5 fixes
-- [ ] **Green Light:** npm run test && npm run lint -- --fix. All pass. Spawn review agent. → WF6
+- [x] **Rollback Anchor:** dceda6b
+- [x] **State Verification:** Review agent identified all 3 gaps with line numbers
+- [x] **Spec Review:** No spec violations — these are implementation correctness issues
+- [x] **Reproduction:** Code review confirms gaps
+- [ ] **Fix:** Apply fix 3 (double-close guard). Fixes 1-2 already applied.
+- [ ] **Green Light:** npm run test && npm run lint -- --fix. All pass. → WF6
