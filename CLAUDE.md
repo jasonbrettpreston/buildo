@@ -28,6 +28,9 @@
 7. **Engineering Standards:** When writing API, frontend, or database code, you MUST adhere to the stability, testing, and mobile-first rules in `docs/specs/00_engineering_standards.md`.
 8. **Mobile-First UI:** All Tailwind styling MUST be written mobile-first (base classes = mobile, `md:` / `lg:` = desktop). Every new spec must include a `## 5. Mobile & Responsive Behavior` section.
 
+### Context7 Library Docs
+When implementing features that depend on external libraries, use the Context7 MCP server to fetch current documentation before writing code. This prevents hallucinated API calls against outdated library versions. Use `resolve-library-id` to find the library, then `get-library-docs` to fetch the docs.
+
 ### Execution Order Constraint
 > 1. You MUST read `docs/specs/00_engineering_standards.md` AND the relevant `docs/specs/[feature].md` file before generating the Active Task.
 > 2. You MUST write the Active Task to disk (via `npm run task -- --wf=N --name="..."` or manually).
@@ -334,6 +337,35 @@ response (not just in active_task.md):
 - [ ] **Safe Start:** Run `npm run safe-start` (kills node, purges .next cache, builds, starts dev server).
 - [ ] **Verify:** App loads at `http://localhost:3000`.
 ```
+
+---
+
+## Independent Review Agent
+After implementing any WF1/WF2/WF3, spawn an independent review agent in an isolated worktree before committing. The agent acts as a second pair of eyes that doesn't share your implementation context.
+
+### Agent Protocol
+1. **Spawn** with `isolation: "worktree"` so it reads committed + staged state independently.
+2. **Inputs:** Provide ONLY these — do NOT provide a pre-built checklist:
+   - The target spec path (e.g., `docs/specs/38_inspection_scraping.md`)
+   - The list of modified files
+   - A 1-sentence summary of what changed and why
+3. **Agent task:** The agent must:
+   a. Read the spec's Behavioral Contract and Operating Boundaries
+   b. Read each modified file in full
+   c. **Generate its own evaluation checklist** based on what the spec requires and what the code does — not what the implementor claims it does
+   d. Evaluate each checklist item as PASS/FAIL with line numbers
+   e. Check for gaps the implementor may not have considered:
+      - Error paths that silently swallow failures
+      - State mutations without IS DISTINCT FROM guards
+      - Missing telemetry/logging for new code paths
+      - Spec requirements that exist in the spec but have no corresponding code
+      - Off-by-one errors in thresholds or date math
+      - New values/states that aren't handled by downstream consumers
+4. **Output:** Return a structured report: checklist items, PASS/FAIL counts, and specific gaps with line numbers.
+5. **Action:** Fix any FAIL items before committing.
+
+### Why self-generated checklists
+If the implementor writes the checklist, the agent only validates what was intended — not what was missed. Self-generated checklists catch the "unknown unknowns" that the implementor's bias filters out.
 
 ---
 
