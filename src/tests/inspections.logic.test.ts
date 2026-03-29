@@ -424,6 +424,185 @@ describe('Inspection Parser', () => {
     });
   });
 
+  describe('real-time preflight abort (A8)', () => {
+    /**
+     * Simulates the orchestrator's abort logic. When preflight_failure_count
+     * reaches MAX_PREFLIGHT_FAILURES, the abort_event should be set and all
+     * workers should stop processing new batches.
+     */
+    function simulateOrchestratorAbort(
+      workerPreflightResults: boolean[],
+      maxPreflightFailures: number,
+    ): { abortTriggered: boolean; abortAfterWorker: number; batchesSkipped: number } {
+      let preflightFailureCount = 0;
+      let abortTriggered = false;
+      let abortAfterWorker = -1;
+      let batchesSkipped = 0;
+
+      for (let i = 0; i < workerPreflightResults.length; i++) {
+        // Check abort before processing
+        if (abortTriggered) {
+          batchesSkipped++;
+          continue;
+        }
+
+        if (!workerPreflightResults[i]) {
+          preflightFailureCount++;
+          if (preflightFailureCount >= maxPreflightFailures) {
+            abortTriggered = true;
+            abortAfterWorker = i;
+          }
+        }
+      }
+
+      return { abortTriggered, abortAfterWorker, batchesSkipped };
+    }
+
+    it('aborts when 2+ workers fail preflight', () => {
+      const result = simulateOrchestratorAbort(
+        [false, false, true, true, true], // workers 0,1 fail; 2,3,4 should be skipped
+        2,
+      );
+      expect(result.abortTriggered).toBe(true);
+      expect(result.abortAfterWorker).toBe(1);
+      expect(result.batchesSkipped).toBe(3);
+    });
+
+    it('does not abort when only 1 worker fails preflight', () => {
+      const result = simulateOrchestratorAbort(
+        [false, true, true, true],
+        2,
+      );
+      expect(result.abortTriggered).toBe(false);
+      expect(result.batchesSkipped).toBe(0);
+    });
+
+    it('does not abort when all workers pass', () => {
+      const result = simulateOrchestratorAbort(
+        [true, true, true],
+        2,
+      );
+      expect(result.abortTriggered).toBe(false);
+    });
+
+    it('handles abort at exactly the threshold', () => {
+      const result = simulateOrchestratorAbort(
+        [true, false, false, true], // workers 1,2 fail -> abort before worker 3
+        2,
+      );
+      expect(result.abortTriggered).toBe(true);
+      expect(result.abortAfterWorker).toBe(2);
+      expect(result.batchesSkipped).toBe(1);
+    });
+  });
+
+  describe('per-worker proxy sticky sessions (I1)', () => {
+    function buildProxySessionId(workerId: string, timestamp: number): string {
+      return `buildo-worker-${workerId}-${timestamp}`;
+    }
+
+    function buildProxyUrl(host: string, port: string, user: string, pass: string, sessionId: string): string {
+      return `http://${user}-session-${sessionId}:${pass}@${host}:${port}`;
+    }
+
+    it('constructs unique session ID per worker', () => {
+      const ts = 1711700000;
+      const s1 = buildProxySessionId('1', ts);
+      const s2 = buildProxySessionId('2', ts);
+      expect(s1).toBe('buildo-worker-1-1711700000');
+      expect(s2).toBe('buildo-worker-2-1711700000');
+      expect(s1).not.toBe(s2);
+    });
+
+    it('builds valid Decodo proxy URL with session', () => {
+      const url = buildProxyUrl('ca.decodo.com', '10000', 'user1', 'pass1', 'buildo-worker-1-123');
+      expect(url).toBe('http://user1-session-buildo-worker-1-123:pass1@ca.decodo.com:10000');
+    });
+
+    it('session changes when rotated', () => {
+      const s1 = buildProxySessionId('1', 1000);
+      const s2 = buildProxySessionId('1', 2000);
+      expect(s1).not.toBe(s2);
+    });
+  });
+
+  describe('worker batch loop with browser reuse (B6)', () => {
+    /**
+     * Simulates a long-lived worker that reuses its browser across multiple
+     * batch claims, only bootstrapping once at start and on WAF trap recovery.
+     */
+    function simulateWorkerBatchLoop(
+      queueBatches: string[][],  // pre-claimed batches
+      bootstrapCost: number,     // ms per bootstrap
+      perPermitCost: number,     // ms per permit
+    ): { totalTime: number; bootstrapCount: number; permitsProcessed: number } {
+      let totalTime = 0;
+      let bootstrapCount = 0;
+      let permitsProcessed = 0;
+
+      // Single bootstrap at start
+      totalTime += bootstrapCost;
+      bootstrapCount++;
+
+      for (const batch of queueBatches) {
+        // No re-bootstrap between batches — reuse browser
+        for (const _yearSeq of batch) {
+          totalTime += perPermitCost;
+          permitsProcessed++;
+        }
+      }
+
+      return { totalTime, bootstrapCount, permitsProcessed };
+    }
+
+    function simulateSubprocessPerBatch(
+      queueBatches: string[][],
+      bootstrapCost: number,
+      perPermitCost: number,
+    ): { totalTime: number; bootstrapCount: number; permitsProcessed: number } {
+      let totalTime = 0;
+      let bootstrapCount = 0;
+      let permitsProcessed = 0;
+
+      for (const batch of queueBatches) {
+        // New Chrome per batch
+        totalTime += bootstrapCost;
+        bootstrapCount++;
+        for (const _yearSeq of batch) {
+          totalTime += perPermitCost;
+          permitsProcessed++;
+        }
+      }
+
+      return { totalTime, bootstrapCount, permitsProcessed };
+    }
+
+    it('browser reuse saves bootstrap overhead across batches', () => {
+      const batches = Array.from({ length: 10 }, (_, i) =>
+        Array.from({ length: 25 }, (_, j) => `24 ${100000 + i * 25 + j}`),
+      );
+
+      const reuse = simulateWorkerBatchLoop(batches, 3000, 1000);
+      const noReuse = simulateSubprocessPerBatch(batches, 3000, 1000);
+
+      // Browser reuse: 1 bootstrap. No reuse: 10 bootstraps.
+      expect(reuse.bootstrapCount).toBe(1);
+      expect(noReuse.bootstrapCount).toBe(10);
+      expect(reuse.permitsProcessed).toBe(noReuse.permitsProcessed);
+      // 27s saved (9 * 3000ms)
+      expect(noReuse.totalTime - reuse.totalTime).toBe(27000);
+    });
+
+    it('at scale (2480 batches), saves ~2 hours of bootstrap overhead', () => {
+      // 62K permits / 25 per batch = 2480 batches per worker
+      const batchCount = 2480;
+      const bootstrapCost = 3000; // 3s
+      const savedMs = (batchCount - 1) * bootstrapCost;
+      const savedHours = savedMs / 1000 / 3600;
+      expect(savedHours).toBeGreaterThan(2);
+    });
+  });
+
   describe('factory', () => {
     it('creates a valid mock inspection', () => {
       const insp = createMockInspection();

@@ -25,12 +25,10 @@ import os
 import re
 import signal
 import sys
-import tempfile
 import time
 from pathlib import Path
 
 import psycopg2
-from psycopg2.extras import RealDictCursor
 
 # ---------------------------------------------------------------------------
 # Load .env for standalone execution
@@ -161,62 +159,19 @@ def populate_queue(conn):
         cur.close()
 
 
-def claim_batch(conn, worker_id):
-    """Claim a batch of year_seqs for a worker. Returns list of year_seq strings."""
-    cur = conn.cursor()
-    try:
-        cur.execute("""
-            UPDATE scraper_queue
-            SET status = 'claimed', claimed_at = NOW(), claimed_by = %s
-            WHERE year_seq IN (
-                SELECT year_seq FROM scraper_queue
-                WHERE status = 'pending'
-                ORDER BY created_at
-                LIMIT %s
-                FOR UPDATE SKIP LOCKED
-            )
-            RETURNING year_seq
-        """, (worker_id, BATCH_SIZE))
-        rows = cur.fetchall()
-        conn.commit()
-        return [r[0] for r in rows]
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        cur.close()
-
-
-def complete_batch(conn, year_seqs, worker_id, failed=None):
-    """Mark year_seqs as completed (or failed) in the queue."""
-    failed = failed or set()
-    cur = conn.cursor()
-    try:
-        completed = [ys for ys in year_seqs if ys not in failed]
-        if completed:
-            cur.execute("""
-                UPDATE scraper_queue
-                SET status = 'completed', completed_at = NOW()
-                WHERE year_seq = ANY(%s) AND claimed_by = %s
-            """, (completed, worker_id))
-
-        for ys in failed:
-            cur.execute("""
-                UPDATE scraper_queue
-                SET status = 'failed', completed_at = NOW(), error_msg = 'Worker reported failure'
-                WHERE year_seq = %s AND claimed_by = %s
-            """, (ys, worker_id))
-
-        conn.commit()
-    finally:
-        cur.close()
-
-
 # ---------------------------------------------------------------------------
 # Worker management
 # ---------------------------------------------------------------------------
-async def run_worker(worker_id, conn):
-    """Run a single worker loop: claim batch → write to temp file → spawn scraper → repeat."""
+async def run_worker(worker_id, abort_event, preflight_fail_counter):
+    """Spawn a long-lived worker subprocess that claims batches from the DB queue.
+
+    The worker uses --db-queue mode: single Chrome bootstrap, browser reuse across batches.
+
+    Args:
+        abort_event: asyncio.Event — set when preflight failures exceed threshold.
+        preflight_fail_counter: list[int] — shared counter for preflight failures
+            (safe because all workers are coroutines in the same event loop).
+    """
     worker_tag = f'[worker-{worker_id}]'
     worker_tel = {
         'permits_attempted': 0, 'permits_found': 0, 'permits_scraped': 0,
@@ -226,122 +181,91 @@ async def run_worker(worker_id, conn):
         'batches_completed': 0, 'consecutive_empty_max': 0,
     }
 
+    # Check abort before even spawning
+    if abort_event.is_set():
+        log('INFO', worker_tag, 'Abort event already set — skipping')
+        return worker_tel
+
     try:
-      while not shutdown_requested:
-        # Claim next batch
-        year_seqs = claim_batch(conn, f'worker-{worker_id}')
-        if not year_seqs:
-            log('INFO', worker_tag, 'No more pending items in queue')
-            break
+        # Spawn a single long-lived worker subprocess (--db-queue mode)
+        # The worker claims batches from scraper_queue itself, reusing one Chrome instance
+        runtime = 'python' if sys.platform == 'win32' else 'python3'
+        cmd = [
+            runtime, str(WORKER_SCRIPT),
+            f'--worker-id={worker_id}',
+            '--db-queue',
+        ]
 
-        log('INFO', worker_tag, f'Claimed {len(year_seqs)} year_seqs')
-
-        # Write batch to temp file
-        batch_file = tempfile.NamedTemporaryFile(
-            mode='w', suffix='.json', prefix=f'scraper_batch_{worker_id}_',
-            delete=False,
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env={**os.environ, 'SCRAPE_BATCH_SIZE': str(BATCH_SIZE)},
         )
-        json.dump(year_seqs, batch_file)
-        batch_file.close()
 
-        try:
-            # Spawn worker subprocess
-            runtime = 'python' if sys.platform == 'win32' else 'python3'
-            cmd = [
-                runtime, str(WORKER_SCRIPT),
-                f'--worker-id={worker_id}',
-                f'--batch-file={batch_file.name}',
-            ]
+        stdout_data, stderr_data = await proc.communicate()
+        stdout_text = stdout_data.decode('utf-8', errors='replace')
+        stderr_text = stderr_data.decode('utf-8', errors='replace')
 
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                env={**os.environ, 'SCRAPE_BATCH_SIZE': str(BATCH_SIZE)},
-            )
+        # Stream output
+        for line in stdout_text.split('\n'):
+            if line.strip():
+                print(line)
 
-            stdout_data, stderr_data = await proc.communicate()
-            stdout_text = stdout_data.decode('utf-8', errors='replace')
-            stderr_text = stderr_data.decode('utf-8', errors='replace')
-
-            # Stream output
-            for line in stdout_text.split('\n'):
+        if stderr_text.strip():
+            for line in stderr_text.split('\n'):
                 if line.strip():
-                    print(line)
+                    print(line, file=sys.stderr)
 
-            if stderr_text.strip():
-                for line in stderr_text.split('\n'):
-                    if line.strip():
-                        print(line, file=sys.stderr)
-
-            # Parse worker's PIPELINE_SUMMARY for telemetry
-            summary_match = re.search(r'PIPELINE_SUMMARY:(.+)', stdout_text)
-            if summary_match:
-                try:
-                    summary = json.loads(summary_match.group(1))
-                    meta = summary.get('records_meta', {})
-                    sc_tel = meta.get('scraper_telemetry', {})
-
-                    worker_tel['permits_attempted'] += sc_tel.get('permits_attempted', 0)
-                    worker_tel['permits_found'] += sc_tel.get('permits_found', 0)
-                    worker_tel['permits_scraped'] += sc_tel.get('permits_scraped', 0)
-                    worker_tel['not_found_count'] += sc_tel.get('not_found_count', 0)
-                    worker_tel['proxy_errors'] += sc_tel.get('proxy_errors', 0)
-                    worker_tel['session_bootstraps'] += sc_tel.get('session_bootstraps', 0)
-                    worker_tel['session_failures'] += sc_tel.get('session_failures', 0)
-                    worker_tel['total_upserted'] += summary.get('records_new', 0)
-                    worker_tel['status_changes'] += summary.get('records_updated', 0)
-                    worker_tel['enriched_updates'] += sc_tel.get('enriched_updates', 0)
-
-                    if not sc_tel.get('preflight_passed', True):
-                        worker_tel['preflight_passed'] = False
-
-                    lat = sc_tel.get('latency', {})
-                    if lat.get('p50'):
-                        worker_tel['latencies'].append(lat['p50'])
-                except (json.JSONDecodeError, KeyError) as err:
-                    log('WARN', worker_tag, f'Failed to parse worker summary: {err}')
-
-            # Aggregate consecutive_empty_max from worker
-            if summary_match:
-                try:
-                    cem = sc_tel.get('consecutive_empty_max', 0)
-                    worker_tel['consecutive_empty_max'] = max(worker_tel['consecutive_empty_max'], cem)
-                except Exception:
-                    pass
-
-            if proc.returncode == 0:
-                try:
-                    complete_batch(conn, year_seqs, f'worker-{worker_id}')
-                except Exception as err:
-                    log('WARN', worker_tag, f'Failed to mark batch completed: {err}')
-                worker_tel['batches_completed'] += 1
-            else:
-                try:
-                    complete_batch(conn, year_seqs, f'worker-{worker_id}', failed=set(year_seqs))
-                except Exception as err:
-                    log('WARN', worker_tag, f'Failed to mark batch failed: {err}')
-                log('ERROR', worker_tag, f'Worker process exited with code {proc.returncode}')
-
-                # Check for preflight failure
-                if 'PREFLIGHT_FAIL' in stdout_text or 'PREFLIGHT_FAIL' in stderr_text:
-                    worker_tel['preflight_passed'] = False
-                    log('ERROR', worker_tag, 'Preflight stealth check failed')
-                    break
-
-        finally:
-            # Clean up temp file
+        # Parse worker's PIPELINE_SUMMARY for telemetry
+        summary_match = re.search(r'PIPELINE_SUMMARY:(.+)', stdout_text)
+        if summary_match:
             try:
-                os.unlink(batch_file.name)
-            except OSError:
-                pass
+                summary = json.loads(summary_match.group(1))
+                meta = summary.get('records_meta', {})
+                sc_tel = meta.get('scraper_telemetry', {})
 
-    finally:
-        # Close worker's DB connection (Fix F3: prevent connection leak)
-        try:
-            conn.close()
-        except Exception:
-            pass
+                worker_tel['permits_attempted'] += sc_tel.get('permits_attempted', 0)
+                worker_tel['permits_found'] += sc_tel.get('permits_found', 0)
+                worker_tel['permits_scraped'] += sc_tel.get('permits_scraped', 0)
+                worker_tel['not_found_count'] += sc_tel.get('not_found_count', 0)
+                worker_tel['proxy_errors'] += sc_tel.get('proxy_errors', 0)
+                worker_tel['session_bootstraps'] += sc_tel.get('session_bootstraps', 0)
+                worker_tel['session_failures'] += sc_tel.get('session_failures', 0)
+                worker_tel['total_upserted'] += summary.get('records_new', 0)
+                worker_tel['status_changes'] += summary.get('records_updated', 0)
+                worker_tel['enriched_updates'] += sc_tel.get('enriched_updates', 0)
+                worker_tel['consecutive_empty_max'] = max(
+                    worker_tel['consecutive_empty_max'],
+                    sc_tel.get('consecutive_empty_max', 0),
+                )
+
+                if not sc_tel.get('preflight_passed', True):
+                    worker_tel['preflight_passed'] = False
+
+                lat = sc_tel.get('latency', {})
+                if lat.get('p50'):
+                    worker_tel['latencies'].append(lat['p50'])
+            except (json.JSONDecodeError, KeyError) as err:
+                log('WARN', worker_tag, f'Failed to parse worker summary: {err}')
+
+        if proc.returncode == 0:
+            worker_tel['batches_completed'] += 1
+        else:
+            log('ERROR', worker_tag, f'Worker process exited with code {proc.returncode}')
+
+            # Check for preflight failure — signal abort to all workers
+            if 'PREFLIGHT_FAIL' in stdout_text or 'PREFLIGHT_FAIL' in stderr_text:
+                worker_tel['preflight_passed'] = False
+                preflight_fail_counter[0] += 1
+                log('ERROR', worker_tag, f'Preflight stealth check failed (count: {preflight_fail_counter[0]}/{MAX_PREFLIGHT_FAILURES})')
+                if preflight_fail_counter[0] >= MAX_PREFLIGHT_FAILURES:
+                    abort_event.set()
+                    log('ERROR', worker_tag, 'Preflight abort threshold reached — signaling all workers to stop')
+
+    except Exception as err:
+        log('ERROR', worker_tag, f'Worker subprocess error: {err}')
+        worker_tel['preflight_passed'] = False
 
     return worker_tel
 
@@ -414,12 +338,15 @@ async def main():
         conn.close()
         return
 
-    # Spawn workers concurrently
+    # Shared abort mechanism for real-time preflight failure detection (A8)
+    abort_event = asyncio.Event()
+    preflight_fail_counter = [0]  # Shared mutable counter (GIL-safe in single event loop)
+
+    # Spawn workers concurrently — each worker is a long-lived subprocess
+    # that claims batches from scraper_queue itself (browser reuse, fix B6)
     tasks = []
     for i in range(min(NUM_WORKERS, total_pending)):
-        # Each worker gets its own DB connection
-        worker_conn = get_db_connection()
-        tasks.append(run_worker(i + 1, worker_conn))
+        tasks.append(run_worker(i + 1, abort_event, preflight_fail_counter))
 
     log('INFO', '[orchestrator]', f'Spawning {len(tasks)} workers...')
     worker_results = await asyncio.gather(*tasks, return_exceptions=True)

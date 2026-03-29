@@ -238,7 +238,7 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 
 - **Script:** `scripts/aic-orchestrator.py` — spawns N concurrent nodriver workers
 - **Dependencies:** Same as single-worker (`nodriver`, `psycopg2-binary`) + `asyncio.subprocess`
-- **Architecture:** Orchestrator populates `scraper_queue` table from permits, then spawns N worker subprocesses. Each worker claims batches via `SELECT ... FOR UPDATE SKIP LOCKED`, bootstraps its own Chrome instance, scrapes, and reports results via stdout JSON lines. Orchestrator aggregates telemetry into a single `PIPELINE_SUMMARY`.
+- **Architecture:** Orchestrator populates `scraper_queue` table from permits, then spawns N long-lived worker subprocesses in `--db-queue` mode. Each worker bootstraps Chrome once, then loops: claim batch from queue via `SELECT ... FOR UPDATE SKIP LOCKED` → scrape → mark done → claim next. Browser is reused across batches for the worker's entire lifetime. Workers report results via stdout JSON lines. Orchestrator aggregates telemetry into a single `PIPELINE_SUMMARY`.
 
 #### Batch Claiming (DB-level locking)
 - **Table:** `scraper_queue` (migration 060) — `year_seq` PK, `status` (pending/claimed/completed/failed), `claimed_by` (worker ID), `claimed_at`/`completed_at` timestamps

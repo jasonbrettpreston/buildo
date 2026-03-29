@@ -74,6 +74,12 @@ else:
 
 BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE', '10'))
 
+# Proxy configuration (Decodo residential rotating proxy)
+PROXY_HOST = os.environ.get('PROXY_HOST', '')
+PROXY_PORT = os.environ.get('PROXY_PORT', '')
+PROXY_USER = os.environ.get('PROXY_USER', '')
+PROXY_PASS = os.environ.get('PROXY_PASS', '')
+
 
 # ---------------------------------------------------------------------------
 # Sanitization — validate values before interpolating into page.evaluate JS
@@ -163,11 +169,31 @@ def get_db_connection():
 
 
 # ---------------------------------------------------------------------------
+# Proxy — Decodo sticky sessions (per-worker)
+# ---------------------------------------------------------------------------
+def build_proxy_session_id(worker_id, timestamp=None):
+    """Build a unique Decodo sticky session ID for this worker."""
+    ts = timestamp or int(time.time())
+    return f'buildo-worker-{worker_id}-{ts}'
+
+
+def build_proxy_url(session_id):
+    """Build Decodo proxy URL with sticky session embedded in username."""
+    if not PROXY_HOST:
+        return None
+    user_with_session = f'{PROXY_USER}-session-{session_id}' if PROXY_USER else session_id
+    return f'http://{user_with_session}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}'
+
+
+# ---------------------------------------------------------------------------
 # Browser — nodriver CDP (no WebDriver)
 # ---------------------------------------------------------------------------
-async def bootstrap_session():
+async def bootstrap_session(proxy_url=None):
     """Launch Chrome via CDP and establish AIC session with warm entry."""
-    browser = await uc.start()
+    browser_args = None
+    if proxy_url:
+        browser_args = [f'--proxy-server={proxy_url}']
+    browser = await uc.start(browser_args=browser_args)
     try:
         page = await browser.get('about:blank')
 
@@ -210,12 +236,12 @@ async def preflight_stealth_check(page):
     return True, None
 
 
-async def bootstrap_with_retry(run_preflight=True):
+async def bootstrap_with_retry(run_preflight=True, proxy_url=None):
     """Bootstrap with retry — 3 attempts with 10s backoff."""
     last_error = None
     for attempt in range(1, 4):
         try:
-            browser, page = await bootstrap_session()
+            browser, page = await bootstrap_session(proxy_url=proxy_url)
             if attempt > 1:
                 log('INFO', '[scraper]', f'Bootstrap succeeded on attempt {attempt}')
 
@@ -469,9 +495,9 @@ async def scrape_with_retry(page, year_seq, conn):
 # Argument parsing
 # ---------------------------------------------------------------------------
 def parse_args():
-    """Parse CLI arguments. Supports standalone, single-permit, and worker modes."""
+    """Parse CLI arguments. Supports standalone, single-permit, worker, and db-queue modes."""
     args = {
-        'mode': 'standalone',  # standalone | single | worker
+        'mode': 'standalone',  # standalone | single | worker | db-queue
         'single_permit': None,
         'worker_id': None,
         'batch_file': None,
@@ -480,20 +506,84 @@ def parse_args():
     for arg in sys.argv[1:]:
         if arg.startswith('--worker-id='):
             args['worker_id'] = arg.split('=', 1)[1]
-            args['mode'] = 'worker'
         elif arg.startswith('--batch-file='):
             args['batch_file'] = arg.split('=', 1)[1]
+            args['mode'] = 'worker'
+        elif arg == '--db-queue':
+            args['mode'] = 'db-queue'
         elif not arg.startswith('--'):
             args['single_permit'] = arg
             args['mode'] = 'single'
+
+    # --worker-id without --batch-file implies db-queue mode
+    if args['worker_id'] and args['mode'] not in ('worker', 'single'):
+        args['mode'] = 'db-queue'
 
     return args
 
 
 # ---------------------------------------------------------------------------
+# DB queue claiming — used by db-queue worker mode (browser reuse across batches)
+# ---------------------------------------------------------------------------
+def claim_batch_from_queue(conn, worker_id, batch_size):
+    """Claim a batch of year_seqs from scraper_queue. Returns list of year_seq strings."""
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE scraper_queue
+            SET status = 'claimed', claimed_at = NOW(), claimed_by = %s
+            WHERE year_seq IN (
+                SELECT year_seq FROM scraper_queue
+                WHERE status = 'pending'
+                ORDER BY created_at
+                LIMIT %s
+                FOR UPDATE SKIP LOCKED
+            )
+            RETURNING year_seq
+        """, (f'worker-{worker_id}', batch_size))
+        rows = cur.fetchall()
+        conn.commit()
+        return [r[0] for r in rows]
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+
+
+def complete_batch_in_queue(conn, year_seqs, worker_id, failed=None):
+    """Mark year_seqs as completed (or failed) in scraper_queue."""
+    failed = failed or set()
+    cur = conn.cursor()
+    try:
+        completed = [ys for ys in year_seqs if ys not in failed]
+        if completed:
+            cur.execute("""
+                UPDATE scraper_queue
+                SET status = 'completed', completed_at = NOW()
+                WHERE year_seq = ANY(%s) AND claimed_by = %s
+            """, (completed, f'worker-{worker_id}'))
+        for ys in failed:
+            cur.execute("""
+                UPDATE scraper_queue
+                SET status = 'failed', completed_at = NOW(), error_msg = 'Scrape failed'
+                WHERE year_seq = %s AND claimed_by = %s
+            """, (ys, f'worker-{worker_id}'))
+        conn.commit()
+    except Exception as err:
+        log('WARN', f'[worker-{worker_id}]', f'Failed to update queue: {err}')
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+    finally:
+        cur.close()
+
+
+# ---------------------------------------------------------------------------
 # Scrape loop — shared between standalone and worker modes
 # ---------------------------------------------------------------------------
-async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]'):
+async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]', proxy_url=None):
     """Core scrape loop for a list of year_seq combos. Mutates tel in place."""
 
     def accumulate(result):
@@ -522,7 +612,7 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
             log('WARN', worker_tag, f"WAF trap detected ({tel['consecutive_empty']} consecutive empty). Re-bootstrapping...")
             try:
                 browser.stop()
-                browser, page, attempts = await bootstrap_with_retry()
+                browser, page, attempts = await bootstrap_with_retry(proxy_url=proxy_url)
                 tel['session_bootstraps'] += attempts
                 tel['consecutive_empty'] = 0
             except Exception as err:
@@ -633,11 +723,23 @@ async def main():
     tel = make_telemetry()
 
     worker_tag = f'[worker-{args["worker_id"]}]' if args['worker_id'] else '[scraper]'
+
+    # Build per-worker proxy URL if proxy is configured
+    proxy_url = None
+    if PROXY_HOST and args['worker_id']:
+        session_id = build_proxy_session_id(args['worker_id'])
+        proxy_url = build_proxy_url(session_id)
+        log('INFO', worker_tag, f'Proxy configured: {PROXY_HOST}:{PROXY_PORT} session={session_id}')
+    elif PROXY_HOST:
+        session_id = build_proxy_session_id('standalone')
+        proxy_url = build_proxy_url(session_id)
+        log('INFO', worker_tag, f'Proxy configured: {PROXY_HOST}:{PROXY_PORT} session={session_id}')
+
     log('INFO', worker_tag, 'Launching browser via nodriver (CDP)...')
 
     browser = None
     try:
-        browser, page, bootstrap_attempts = await bootstrap_with_retry()
+        browser, page, bootstrap_attempts = await bootstrap_with_retry(proxy_url=proxy_url)
         tel['session_bootstraps'] = bootstrap_attempts
         log('INFO', worker_tag, 'WAF session established (no WebDriver)')
 
@@ -658,14 +760,31 @@ async def main():
                 tel['status_changes'] += result.get('status_changes', 0)
 
             elif args['mode'] == 'worker':
-                # Worker mode: read year_seqs from batch file
+                # Worker mode: read year_seqs from batch file (legacy — used by old orchestrator)
                 if not args['batch_file']:
                     log('ERROR', worker_tag, 'Worker mode requires --batch-file')
                     sys.exit(1)
                 with open(args['batch_file'], 'r') as f:
                     year_seqs = json.load(f)
                 log('INFO', worker_tag, f'Worker mode: {len(year_seqs)} year_seqs from {args["batch_file"]}')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_url=proxy_url)
+
+            elif args['mode'] == 'db-queue':
+                # DB-queue mode: long-lived worker that claims batches from scraper_queue
+                # Browser stays alive across batches — single bootstrap for entire worker lifetime
+                worker_id = args['worker_id'] or 'standalone'
+                batch_num = 0
+                while True:
+                    year_seqs = claim_batch_from_queue(conn, worker_id, BATCH_SIZE)
+                    if not year_seqs:
+                        log('INFO', worker_tag, 'No more pending items in queue')
+                        break
+                    batch_num += 1
+                    log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
+                    browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_url=proxy_url)
+                    # Mark batch completed — failures tracked per-permit in scrape_loop
+                    complete_batch_in_queue(conn, year_seqs, worker_id)
+                    log('INFO', worker_tag, f'Batch {batch_num}: complete')
 
             else:
                 # Standalone batch mode: query DB for eligible permits
@@ -694,7 +813,7 @@ async def main():
 
                 year_seqs = [r['year_seq'] for r in rows]
                 log('INFO', worker_tag, f'Batch mode: {len(year_seqs)} year+sequence combos to scrape')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_url=proxy_url)
 
         finally:
             conn.close()
