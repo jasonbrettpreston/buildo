@@ -277,7 +277,7 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 | `PROXY_USER` | *(unset)* | Decodo proxy username |
 | `PROXY_PASS` | *(unset)* | Decodo proxy password |
 
-#### Proxy (1 batch = 1 IP via Manifest V3 extension)
+#### Proxy (1 batch = 1 IP via nodriver built-in proxy)
 - **Strategy:** Each batch gets a fresh Decodo sticky session (`buildo-worker-{id}-{timestamp}`), fresh Chrome instance, and fresh residential IP. After scraping, browser is killed. No IP sees more than `SCRAPE_BATCH_SIZE` permits.
 - **Auth mechanism:** nodriver's built-in `browser.create_context(proxy_server=url)` handles proxy authentication transparently via a local proxy forwarder. The proxy URL includes credentials (`http://user-session-{id}:pass@host:port`). nodriver detects the auth, spins up a local forwarder on `127.0.0.1:{random_port}`, and Chrome connects to the local forwarder without needing extensions. This works in headless mode (Chrome's `--headless=new` does not support `--load-extension`).
 - **Overhead:** ~5s bootstrap per batch. At 10 permits/batch and 4,300 daily permits: 430 batches × 5s = ~36 min overhead total, ~12 min per worker with 3 workers.
