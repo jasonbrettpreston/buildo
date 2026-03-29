@@ -24,11 +24,13 @@ SPEC LINK: docs/specs/38_inspection_scraping.md
 """
 
 import asyncio
+import atexit
 import json
 import os
 import random
 import re
 import shutil
+import stat
 import sys
 import time
 from datetime import datetime
@@ -230,16 +232,30 @@ chrome.webRequest.onAuthRequired.addListener(
     with open(os.path.join(ext_dir, 'background.js'), 'w') as f:
         f.write(background_js)
 
+    # Restrict permissions — credentials are in background.js
+    if sys.platform != 'win32':
+        os.chmod(ext_dir, stat.S_IRWXU)  # 700: owner only
+
+    # Register atexit handler as secondary cleanup (catches crashes before finally)
+    atexit.register(cleanup_proxy_extension, ext_dir)
+
     return ext_dir
 
 
 def cleanup_proxy_extension(ext_dir):
-    """Remove temporary proxy extension directory."""
+    """Remove temporary proxy extension directory and prune empty parent."""
     if ext_dir and os.path.exists(ext_dir):
         try:
             shutil.rmtree(ext_dir)
         except OSError as err:
             log('WARN', '[scraper]', f'Failed to clean up proxy extension: {err}')
+        # Prune parent .proxy_ext/ if empty
+        parent = os.path.dirname(ext_dir)
+        try:
+            if parent and os.path.isdir(parent) and not os.listdir(parent):
+                os.rmdir(parent)
+        except OSError:
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -675,11 +691,18 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
         elapsed = (time.time() * 1000 - start_ms) / 1000
         print(f"  {worker_tag} {i + 1} / {len(year_seqs)} ({progress_pct:.1f}%) — {elapsed:.1f}s")
 
-        # WAF trap detection
+        # WAF trap detection — rotate proxy session on re-bootstrap
         if tel['consecutive_empty'] >= WAF_TRAP_THRESHOLD:
             log('WARN', worker_tag, f"WAF trap detected ({tel['consecutive_empty']} consecutive empty). Re-bootstrapping...")
             try:
                 browser.stop()
+                # Rotate proxy session to get a new IP
+                if PROXY_HOST:
+                    cleanup_proxy_extension(proxy_ext_dir)
+                    new_session_id = build_proxy_session_id(
+                        tel.get('_worker_id', 'standalone'), int(time.time()))
+                    proxy_ext_dir = build_proxy_extension(new_session_id)
+                    log('INFO', worker_tag, f'Proxy session rotated: {new_session_id}')
                 browser, page, attempts = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir)
                 tel['session_bootstraps'] += attempts
                 tel['consecutive_empty'] = 0
@@ -688,12 +711,25 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
                 log('ERROR', worker_tag, str(err), {'event': 'session_bootstrap_failed'})
                 break
 
-        # Periodic session refresh
+        # Periodic session refresh + proxy session rotation
         if i > 0 and i % SESSION_REFRESH_INTERVAL == 0:
             log('INFO', worker_tag, f'Refreshing session (after {i} permits)...')
             try:
-                page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
-                await page.sleep(1)
+                # Rotate proxy session for new IP at interval
+                if PROXY_HOST:
+                    cleanup_proxy_extension(proxy_ext_dir)
+                    new_session_id = build_proxy_session_id(
+                        tel.get('_worker_id', 'standalone'), int(time.time()))
+                    proxy_ext_dir = build_proxy_extension(new_session_id)
+                    log('INFO', worker_tag, f'Proxy session rotated: {new_session_id}')
+                    # Full re-bootstrap with new proxy extension
+                    browser.stop()
+                    browser, page, attempts = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir)
+                    tel['session_bootstraps'] += attempts
+                else:
+                    # No proxy — just refresh the AIC page
+                    page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
+                    await page.sleep(1)
             except Exception as err:
                 tel['session_failures'] += 1
                 log('ERROR', worker_tag, str(err), {'event': 'session_refresh_failed'})
@@ -724,7 +760,7 @@ def make_telemetry():
         'session_bootstraps': 0, 'session_failures': 0,
         'schema_drift': [], 'status_changes': 0, 'total_upserted': 0,
         'error_categories': {}, 'last_error': None, 'latencies': [],
-        'preflight_passed': True,
+        'preflight_passed': True, '_worker_id': 'standalone',
     }
 
 
@@ -789,6 +825,7 @@ async def main():
     args = parse_args()
     start_ms = time.time() * 1000
     tel = make_telemetry()
+    tel['_worker_id'] = args['worker_id'] or 'standalone'
 
     worker_tag = f'[worker-{args["worker_id"]}]' if args['worker_id'] else '[scraper]'
 
