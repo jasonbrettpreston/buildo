@@ -1,69 +1,57 @@
-# Active Task: Fix 7 review agent gaps — proxy rotation, DB conn, credentials, metrics
+# Active Task: Fix folderTypeDesc filter, batch size, enable Decodo proxy
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `a8d6dc31` (a8d6dc31aba90c4048093021336bb5b3df436ed1)
-
+**Rollback Anchor:** `e018e90f` (e018e90fa2ec0228974fc614b7be58ee11d65fae)
 
 ## Context
-* **Goal:** [What are we building/fixing?]
-* **Target Spec:** MISSING — select from the list below and replace this line:
-  - `docs/specs/00_engineering_standards.md`
-  - `docs/specs/01_database_schema.md`
-  - `docs/specs/02_data_ingestion.md`
-  - `docs/specs/03_change_detection.md`
-  - `docs/specs/04_sync_scheduler.md`
-  - `docs/specs/05_geocoding.md`
-  - `docs/specs/06_data_api.md`
-  - `docs/specs/07_trade_taxonomy.md`
-  - `docs/specs/08_trade_classification.md`
-  - `docs/specs/08b_classification_assumptions.md`
-  - `docs/specs/08c_description_keyword_trades.md`
-  - `docs/specs/09_construction_phases.md`
-  - `docs/specs/10_lead_scoring.md`
-  - `docs/specs/11_builder_enrichment.md`
-  - `docs/specs/12_coa_integration.md`
-  - `docs/specs/13_auth.md`
-  - `docs/specs/14_onboarding.md`
-  - `docs/specs/15_dashboard_tradesperson.md`
-  - `docs/specs/16_dashboard_company.md`
-  - `docs/specs/17_dashboard_supplier.md`
-  - `docs/specs/18_permit_detail.md`
-  - `docs/specs/19_search_filter.md`
-  - `docs/specs/20_map_view.md`
-  - `docs/specs/21_notifications.md`
-  - `docs/specs/22_teams.md`
-  - `docs/specs/23_analytics.md`
-  - `docs/specs/24_export.md`
-  - `docs/specs/25_subscription.md`
-  - `docs/specs/26_admin.md`
-  - `docs/specs/27_neighbourhood_profiles.md`
-  - `docs/specs/28_data_quality_dashboard.md`
-  - `docs/specs/29_spatial_parcel_matching.md`
-  - `docs/specs/30_permit_scope_classification.md`
-  - `docs/specs/31_building_massing.md`
-  - `docs/specs/32_product_groups.md`
-  - `docs/specs/34_market_metrics.md`
-  - `docs/specs/35_wsib_registry.md`
-  - `docs/specs/36_web_search_enrichment.md`
-  - `docs/specs/37_corporate_identity_hub.md`
-  - `docs/specs/37_pipeline_system.md`
-  - `docs/specs/38_inspection_scraping.md`
-* **Key Files:** [List specific src files]
+* **Goal:** Fix 3 issues discovered during WF5 live testing:
+  1. **folderTypeDesc taxonomy mismatch** — `fetch_permit_chain()` and `scrape_year_sequence()` filter folders by `folderTypeDesc in TARGET_TYPES`, but TARGET_TYPES contains our DB strings (`'Small Residential Projects'`) while AIC uses different labels. Fix: filter on `folderSection` (AIC permit code: `BLD`, `HVA`, `PLB`, etc.) which is documented and stable, not the human-readable `folderTypeDesc`.
+  2. **Batch size override** — `.env` has `SCRAPE_BATCH_SIZE=50`, overriding our aligned default of 10.
+  3. **Proxy must be default** — all future runs must go through Decodo. Running 200+ permits from a residential IP got us WAF-blocked by Akamai.
+* **Target Spec:** `docs/specs/38_inspection_scraping.md`
+* **Key Files:**
+  - `scripts/aic-scraper-nodriver.py` — fix folder filter (lines 410, 473)
+  - `.env` — fix SCRAPE_BATCH_SIZE to 10
 
 ## Technical Implementation
-* **New/Modified Components:** [e.g. `PermitCard.tsx`]
-* **Data Hooks/Libs:** [e.g. `src/lib/permits/scoring.ts`]
-* **Database Impact:** [YES/NO — if YES, write `migrations/NNN_[feature].sql` and draft UPDATE strategy for 237K+ existing rows]
+
+### Bug 1: folderTypeDesc → folderSection filter
+- **Root cause:** `folderTypeDesc` is AIC's human-readable label (unknown values). `folderSection` is the AIC permit type code (`BLD`, `HVA`, `PLB`, `DRN`, `DEM`, `FSU`, `DST`, `SHO`, `TPS`). All 3 target types (SR, BA, NH) have `folderSection = 'BLD'`.
+- **Fix:** Replace `TARGET_TYPES` string filter with `TARGET_SECTIONS` code filter:
+  ```python
+  TARGET_SECTIONS = ['BLD']  # Covers SR, BA, NH — all use BLD section code
+  ```
+  And change both filter lines (410, 473) from:
+  ```python
+  [f for f in folders if f.get('folderTypeDesc') in TARGET_TYPES]
+  ```
+  to:
+  ```python
+  [f for f in folders if f.get('folderSection') in TARGET_SECTIONS]
+  ```
+- Keep `TARGET_TYPES` for the DB queue population query (it uses our `permit_type` strings correctly).
+
+### Bug 2: Batch size
+- Change `.env` `SCRAPE_BATCH_SIZE=50` → `SCRAPE_BATCH_SIZE=10`
+
+### Bug 3: Proxy default
+- Spec already documents Decodo as default. `.env` already has `PROXY_HOST=ca.decodo.com`. Stop passing `PROXY_HOST=""` in manual testing.
+
+* **Database Impact:** NO
+
+## Standards Compliance
+* **Try-Catch Boundary:** N/A
+* **Unhappy Path Tests:** Test that folderSection filter matches BLD permits
+* **logError Mandate:** N/A
+* **Mobile-First:** N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `a8d6dc31` (auto-recorded by task-init)
-- [ ] **State Verification:** Examine the calling context. Document what data is actually available vs. what the fix assumes.
-- [ ] **Spec Review:** Read `docs/specs/[feature].md` to confirm the *intended* behavior.
-- [ ] **Reproduction:** Create a failing test case in `src/tests/` that isolates the bug.
-- [ ] **Red Light:** Run the new test. It MUST fail to confirm reproduction.
-- [ ] **Fix:** Modify the code to resolve the issue.
-- [ ] **Schema Evolution:** If the fix requires a DB change: write `migrations/NNN_[fix].sql` (UP + DOWN), run `npm run migrate`, then `npm run db:generate`.
-- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. All tests must pass.
-- [ ] **Collateral Check:** Run `npx vitest related src/path/to/changed-file.ts --run` to verify no unrelated dependents broke.
-- [ ] **Atomic Commit:** Prompt user to commit: `git commit -m "fix(NN_spec): [description]"`. Do not batch.
-- [ ] **Spec Audit:** Update `docs/specs/[feature].md` IF AND ONLY IF the fix required a logic change.
+- [x] **Rollback Anchor:** `e018e90f`
+- [x] **State Verification:** Confirmed via live WF5 output — 100% miss rate because `folderTypeDesc` values from AIC don't match DB `permit_type` strings. Spec §3.3 documents all target types use `BLD` section code.
+- [x] **Spec Review:** §3.3 maps permit types → AIC codes. All 3 targets = `BLD`.
+- [ ] **Reproduction:** Add test confirming folderSection-based filter catches BLD permits.
+- [ ] **Red Light:** Verify test targets the gap.
+- [ ] **Fix:** Replace folderTypeDesc filter with folderSection filter. Update .env batch size.
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
+- [ ] **Live Test:** Single permit through Decodo proxy to confirm MV3 extension + folderSection filter works.
+      Output visible execution summary. → WF6.

@@ -277,11 +277,12 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 | `PROXY_USER` | *(unset)* | Decodo proxy username |
 | `PROXY_PASS` | *(unset)* | Decodo proxy password |
 
-#### Proxy (per-worker sticky sessions via Manifest V3 extension)
-- Each worker gets unique Decodo sticky session: `buildo-worker-{id}-{timestamp}`
-- **Auth mechanism:** Chromium ignores `user:pass` in `--proxy-server` URLs. Authentication is handled via a dynamically-generated Manifest V3 Chrome extension that intercepts `chrome.webRequest.onAuthRequired` and responds with credentials. The extension is loaded via `--load-extension=<temp_dir>` and cleaned up after the worker exits.
-- Session rotated every 200 permits (same as single-worker SESSION_REFRESH_INTERVAL)
-- Disabled by default — direct connection when `PROXY_HOST` is unset
+#### Proxy (1 batch = 1 IP via Manifest V3 extension)
+- **Strategy:** Each batch gets a fresh Decodo sticky session (`buildo-worker-{id}-{timestamp}`), fresh Chrome instance, and fresh residential IP. After scraping, browser is killed and proxy extension cleaned up. No IP sees more than `SCRAPE_BATCH_SIZE` permits.
+- **Auth mechanism:** Chromium ignores `user:pass` in `--proxy-server` URLs. Authentication is handled via a dynamically-generated Manifest V3 Chrome extension that intercepts `chrome.webRequest.onAuthRequired` and responds with credentials. The extension is loaded via `--load-extension=<temp_dir>` and cleaned up after each batch.
+- **Overhead:** ~5s bootstrap per batch. At 10 permits/batch and 4,300 daily permits: 430 batches × 5s = ~36 min overhead total, ~12 min per worker with 3 workers.
+- **Cost:** ~4KB per permit × 10 permits × 430 batches = ~17 MB/day. Trivial against 3GB/month Decodo plan.
+- Disabled when `PROXY_HOST` is unset — direct connection for development/testing
 
 #### Throughput Estimates
 | Workers | Throughput | Full Pass (62K) |

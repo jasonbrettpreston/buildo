@@ -606,6 +606,40 @@ describe('Inspection Parser', () => {
     });
   });
 
+  describe('folder filter: folderSection vs folderTypeDesc', () => {
+    // AIC API returns folders with folderSection (code: BLD, HVA, PLB) and
+    // folderTypeDesc (human label: varies, not matching our DB permit_type).
+    // We must filter on folderSection, not folderTypeDesc.
+
+    const TARGET_SECTIONS = ['BLD'];
+
+    const mockFolders = [
+      { folderSection: 'BLD', folderTypeDesc: 'Building', statusDesc: 'Inspection', folderYear: '24', folderSequence: '100001', folderRsn: '1' },
+      { folderSection: 'BLD', folderTypeDesc: 'Small Residential', statusDesc: 'Inspection', folderYear: '24', folderSequence: '100001', folderRsn: '2' },
+      { folderSection: 'HVA', folderTypeDesc: 'Mechanical', statusDesc: 'Inspection', folderYear: '24', folderSequence: '100001', folderRsn: '3' },
+      { folderSection: 'PLB', folderTypeDesc: 'Plumbing', statusDesc: 'Inspection', folderYear: '24', folderSequence: '100001', folderRsn: '4' },
+      { folderSection: 'BLD', folderTypeDesc: 'New House', statusDesc: 'Permit Issued', folderYear: '24', folderSequence: '100001', folderRsn: '5' },
+    ];
+
+    it('folderSection filter catches all BLD permits regardless of typeDesc label', () => {
+      const result = mockFolders.filter(f => TARGET_SECTIONS.includes(f.folderSection));
+      expect(result).toHaveLength(3);
+      expect(result.map(f => f.folderTypeDesc)).toEqual(['Building', 'Small Residential', 'New House']);
+    });
+
+    it('old folderTypeDesc filter would miss permits with AIC-specific labels', () => {
+      const DB_TARGET_TYPES = ['Small Residential Projects', 'Building Additions/Alterations', 'New Houses'];
+      const result = mockFolders.filter(f => DB_TARGET_TYPES.includes(f.folderTypeDesc));
+      // AIC uses "Building" not "Building Additions/Alterations", "Small Residential" not "Small Residential Projects"
+      expect(result).toHaveLength(0); // 100% miss — this was the bug
+    });
+
+    it('non-BLD sections (HVA, PLB) are correctly excluded', () => {
+      const result = mockFolders.filter(f => TARGET_SECTIONS.includes(f.folderSection));
+      expect(result.every(f => f.folderSection === 'BLD')).toBe(true);
+    });
+  });
+
   describe('proxy extension builder (Fix 1)', () => {
     function buildProxyExtensionManifest(): object {
       return {

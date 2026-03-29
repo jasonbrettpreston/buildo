@@ -63,6 +63,7 @@ RETRY_BASE_MS = 2000
 WAF_TRAP_THRESHOLD = 20
 SESSION_REFRESH_INTERVAL = 200
 
+# DB permit_type strings — used for queue population queries
 ALL_TARGET_TYPES = [
     'Small Residential Projects',
     'Building Additions/Alterations',
@@ -74,6 +75,11 @@ if SCRAPE_PERMIT_TYPE:
     TARGET_TYPES = [t for t in ALL_TARGET_TYPES if SCRAPE_PERMIT_TYPE.lower() in t.lower()]
 else:
     TARGET_TYPES = ALL_TARGET_TYPES
+
+# AIC portal section codes — used to filter folders from the API response.
+# All 3 target types (SR, BA, NH) use section code 'BLD' on the AIC portal.
+# Do NOT filter on folderTypeDesc — AIC uses different labels than our DB permit_type.
+TARGET_SECTIONS = ['BLD']
 
 BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE', '10'))
 
@@ -407,7 +413,7 @@ async def fetch_permit_chain(page, year, sequence):
     folders, err = safe_json_parse(step2, 'step2:folders')
     if err:
         return {'waf_blocked': True, 'properties': props, 'results': []}
-    target_folders = [f for f in folders if f.get('folderTypeDesc') in TARGET_TYPES]
+    target_folders = [f for f in folders if f.get('folderSection') in TARGET_SECTIONS]
 
     results = []
     for folder in target_folders:
@@ -470,7 +476,7 @@ async def scrape_year_sequence(page, year_seq, conn):
 
     results = chain_result.get('results', [])
     folders = chain_result.get('folders', [])
-    target_folders = [f for f in folders if f.get('folderTypeDesc') in TARGET_TYPES]
+    target_folders = [f for f in folders if f.get('folderSection') in TARGET_SECTIONS]
 
     if not target_folders:
         log('INFO', '[scraper]', f'{year_seq}: no target folders found')
@@ -719,25 +725,12 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
                 log('ERROR', worker_tag, str(err), {'event': 'session_bootstrap_failed'})
                 break
 
-        # Periodic session refresh + proxy session rotation
-        if i > 0 and i % SESSION_REFRESH_INTERVAL == 0:
-            log('INFO', worker_tag, f'Refreshing session (after {i} permits)...')
+        # Periodic session refresh (non-proxy only — proxy mode uses 1 batch = 1 IP)
+        if i > 0 and i % SESSION_REFRESH_INTERVAL == 0 and not PROXY_HOST:
+            log('INFO', worker_tag, f'Refreshing AIC session (after {i} permits)...')
             try:
-                # Rotate proxy session for new IP at interval
-                if PROXY_HOST:
-                    cleanup_proxy_extension(proxy_ext_dir)
-                    new_session_id = build_proxy_session_id(
-                        tel.get('_worker_id', 'standalone'), int(time.time()))
-                    proxy_ext_dir = build_proxy_extension(new_session_id)
-                    log('INFO', worker_tag, f'Proxy session rotated: {new_session_id}')
-                    # Full re-bootstrap with new proxy extension
-                    browser.stop()
-                    browser, page, attempts = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir)
-                    tel['session_bootstraps'] += attempts
-                else:
-                    # No proxy — just refresh the AIC page
-                    page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
-                    await page.sleep(1)
+                page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
+                await page.sleep(1)
             except Exception as err:
                 tel['session_failures'] += 1
                 log('ERROR', worker_tag, str(err), {'event': 'session_refresh_failed'})
@@ -883,21 +876,52 @@ async def main():
                 browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir)
 
             elif args['mode'] == 'db-queue':
-                # DB-queue mode: long-lived worker that claims batches from scraper_queue
-                # Browser stays alive across batches — single bootstrap for entire worker lifetime
+                # DB-queue mode: 1 batch = 1 IP address.
+                # Each batch gets a fresh proxy session, fresh Chrome, fresh IP.
+                # After scraping, browser is killed and proxy extension cleaned up.
+                # This maximizes stealth — no IP sees more than BATCH_SIZE permits.
                 worker_id = args['worker_id'] or 'standalone'
                 batch_num = 0
+
+                # In db-queue mode, the outer bootstrap is only for non-proxy runs.
+                # For proxy runs, each batch builds its own session. Kill the initial browser.
+                if browser and PROXY_HOST:
+                    browser.stop()
+                    browser = None
+                    cleanup_proxy_extension(proxy_ext_dir)
+                    proxy_ext_dir = None
+
                 while True:
                     year_seqs = claim_batch_from_queue(conn, worker_id, BATCH_SIZE)
                     if not year_seqs:
                         log('INFO', worker_tag, 'No more pending items in queue')
                         break
                     batch_num += 1
+
+                    # Fresh proxy session + browser per batch
+                    if PROXY_HOST:
+                        batch_session_id = build_proxy_session_id(worker_id, int(time.time()))
+                        proxy_ext_dir = build_proxy_extension(batch_session_id)
+                        log('INFO', worker_tag, f'Batch {batch_num}: new IP session={batch_session_id}')
+
+                    if browser is None:
+                        browser, page, attempts = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir)
+                        tel['session_bootstraps'] += attempts
+                        log('INFO', worker_tag, f'Batch {batch_num}: browser bootstrapped')
+
                     log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
                     browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir)
-                    # Mark batch completed — failures tracked per-permit in scrape_loop
+
+                    # Mark batch completed
                     complete_batch_in_queue(conn, year_seqs, worker_id)
                     log('INFO', worker_tag, f'Batch {batch_num}: complete')
+
+                    # Kill browser + proxy extension after each batch (1 batch = 1 IP)
+                    if PROXY_HOST and browser:
+                        browser.stop()
+                        browser = None
+                        cleanup_proxy_extension(proxy_ext_dir)
+                        proxy_ext_dir = None
 
             else:
                 # Standalone batch mode: query DB for eligible permits
