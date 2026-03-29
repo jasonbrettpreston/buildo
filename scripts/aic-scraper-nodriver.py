@@ -131,9 +131,13 @@ def parse_inspection_date(raw):
     trimmed = (raw or '').strip()
     if not trimmed or trimmed in ('-', 'N/A', ''):
         return None
-    # ISO format
+    # ISO format: "2024-01-15" or "2024-01-15T10:00:00Z"
     if re.match(r'^\d{4}-\d{2}-\d{2}', trimmed):
         return trimmed[:10]
+    # MM/DD/YYYY format: "01/15/2024" or "1/5/2024"
+    m = re.match(r'^(\d{1,2})/(\d{1,2})/(\d{4})$', trimmed)
+    if m:
+        return f"{m.group(3)}-{m.group(1).zfill(2)}-{m.group(2).zfill(2)}"
     # Named month: "Jun 3, 2024"
     months = {'jan':'01','feb':'02','mar':'03','apr':'04','may':'05','jun':'06',
               'jul':'07','aug':'08','sep':'09','oct':'10','nov':'11','dec':'12'}
@@ -910,16 +914,26 @@ async def main():
                         log('INFO', worker_tag, f'Batch {batch_num}: browser bootstrapped')
 
                     log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
-                    browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir)
-
-                    # Mark batch completed
-                    complete_batch_in_queue(conn, year_seqs, worker_id)
-                    log('INFO', worker_tag, f'Batch {batch_num}: complete')
+                    try:
+                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir)
+                        complete_batch_in_queue(conn, year_seqs, worker_id)
+                        log('INFO', worker_tag, f'Batch {batch_num}: complete')
+                    except Exception as err:
+                        log('ERROR', worker_tag, f'Batch {batch_num} failed: {err}')
+                        complete_batch_in_queue(conn, year_seqs, worker_id, failed=set(year_seqs))
+                        # Browser may be dead — force cleanup
+                        if browser:
+                            try:
+                                browser.stop()
+                            except Exception:
+                                pass
+                            browser = None
 
                     # Kill browser + proxy extension after each batch (1 batch = 1 IP)
                     if PROXY_HOST and browser:
                         browser.stop()
                         browser = None
+                    if PROXY_HOST:
                         cleanup_proxy_extension(proxy_ext_dir)
                         proxy_ext_dir = None
 
