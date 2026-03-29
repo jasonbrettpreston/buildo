@@ -47,7 +47,7 @@ if env_path.exists():
 # Constants
 # ---------------------------------------------------------------------------
 NUM_WORKERS = int(os.environ.get('SCRAPER_WORKERS', '1'))
-BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE', '25'))
+BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE', '10'))
 STALE_CLAIM_MINUTES = 30
 MAX_PREFLIGHT_FAILURES = 2
 
@@ -212,10 +212,12 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
                 text = raw_line.decode('utf-8', errors='replace').rstrip()
                 if not text:
                     continue
+                # Encode to console-safe output (Windows charmap can't handle all Unicode)
+                safe_text = text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(sys.stdout.encoding or 'utf-8', errors='replace')
                 if is_stderr:
-                    print(text, file=sys.stderr)
+                    print(safe_text, file=sys.stderr)
                 else:
-                    print(text)
+                    print(safe_text)
                     if 'PIPELINE_SUMMARY:' in text:
                         captured_summary.append(text)
                     # Check for preflight failure in real-time

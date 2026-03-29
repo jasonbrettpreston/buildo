@@ -288,7 +288,15 @@ async def bootstrap_session(proxy_ext_dir=None):
 
 async def preflight_stealth_check(page):
     """Verify browser fingerprint is not compromised before scraping.
-    Returns (passed: bool, reason: str | None)."""
+    Returns (passed: bool, reason: str | None).
+
+    Checks:
+    1. navigator.webdriver must NOT be true (CDP sets it to false/undefined, WebDriver sets true)
+    2. window.chrome must exist (proves we're in a real Chromium, not JSDOM/Puppeteer)
+
+    Note: window.chrome.runtime is undefined in nodriver (no extensions loaded) and in
+    regular Chrome without extensions. We do NOT check it — its absence is normal.
+    """
     try:
         webdriver = await page.evaluate('navigator.webdriver', await_promise=False)
         if webdriver is True:
@@ -297,14 +305,14 @@ async def preflight_stealth_check(page):
         return False, f'navigator.webdriver check failed: {err}'
 
     try:
-        chrome_runtime = await page.evaluate(
-            'window.chrome && window.chrome.runtime && typeof window.chrome.runtime === "object"',
+        chrome_exists = await page.evaluate(
+            'typeof window.chrome === "object"',
             await_promise=False,
         )
-        if not chrome_runtime:
-            return False, 'window.chrome.runtime is falsy — may not be real Chrome'
+        if not chrome_exists:
+            return False, 'window.chrome is missing — may not be real Chromium'
     except Exception as err:
-        return False, f'chrome.runtime check failed: {err}'
+        return False, f'window.chrome check failed: {err}'
 
     return True, None
 

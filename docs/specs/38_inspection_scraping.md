@@ -271,7 +271,7 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 | Env Var | Default | Description |
 |---------|---------|-------------|
 | `SCRAPER_WORKERS` | `1` | Number of concurrent workers |
-| `SCRAPE_BATCH_SIZE` | `25` | Permits per worker batch claim |
+| `SCRAPE_BATCH_SIZE` | `10` | Permits per worker batch claim |
 | `PROXY_HOST` | *(unset)* | Decodo proxy host (enables proxy mode) |
 | `PROXY_PORT` | *(unset)* | Decodo proxy port |
 | `PROXY_USER` | *(unset)* | Decodo proxy username |

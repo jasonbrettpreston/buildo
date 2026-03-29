@@ -349,30 +349,33 @@ describe('Inspection Parser', () => {
   });
 
   describe('preflight stealth check', () => {
-    function checkPreflight(webdriver: unknown, chromeRuntime: unknown): { passed: boolean; reason?: string } {
+    function checkPreflight(webdriver: unknown, chromeExists: boolean): { passed: boolean; reason?: string } {
       if (webdriver === true) return { passed: false, reason: 'navigator.webdriver is true' };
-      if (!chromeRuntime) return { passed: false, reason: 'window.chrome.runtime is falsy' };
+      if (!chromeExists) return { passed: false, reason: 'window.chrome is missing' };
       return { passed: true };
     }
 
-    it('passes when webdriver is undefined and chrome.runtime exists', () => {
-      expect(checkPreflight(undefined, { id: 'xxx' })).toEqual({ passed: true });
+    it('passes when webdriver is undefined/false and chrome exists', () => {
+      expect(checkPreflight(undefined, true)).toEqual({ passed: true });
+      expect(checkPreflight(false, true)).toEqual({ passed: true });
     });
 
-    it('passes when webdriver is false', () => {
-      expect(checkPreflight(false, { id: 'xxx' })).toEqual({ passed: true });
+    it('passes when chrome.runtime is undefined (normal for nodriver)', () => {
+      // nodriver does NOT populate chrome.runtime — this is expected
+      // We only check window.chrome exists, not chrome.runtime
+      expect(checkPreflight(false, true)).toEqual({ passed: true });
     });
 
     it('fails when webdriver is true', () => {
-      const result = checkPreflight(true, { id: 'xxx' });
+      const result = checkPreflight(true, true);
       expect(result.passed).toBe(false);
       expect(result.reason).toContain('webdriver');
     });
 
-    it('fails when chrome.runtime is falsy', () => {
-      const result = checkPreflight(undefined, undefined);
+    it('fails when window.chrome is missing', () => {
+      const result = checkPreflight(false, false);
       expect(result.passed).toBe(false);
-      expect(result.reason).toContain('chrome.runtime');
+      expect(result.reason).toContain('chrome');
     });
   });
 
