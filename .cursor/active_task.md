@@ -1,57 +1,48 @@
-# Active Task: Fix folderTypeDesc filter, batch size, enable Decodo proxy
+# Active Task: Headless Chrome mode and zombie process cleanup
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `e018e90f` (e018e90fa2ec0228974fc614b7be58ee11d65fae)
+**Rollback Anchor:** `54421b63` (54421b63dd2726ee6dbfa7e87b936c0f521ac657)
 
 ## Context
-* **Goal:** Fix 3 issues discovered during WF5 live testing:
-  1. **folderTypeDesc taxonomy mismatch** — `fetch_permit_chain()` and `scrape_year_sequence()` filter folders by `folderTypeDesc in TARGET_TYPES`, but TARGET_TYPES contains our DB strings (`'Small Residential Projects'`) while AIC uses different labels. Fix: filter on `folderSection` (AIC permit code: `BLD`, `HVA`, `PLB`, etc.) which is documented and stable, not the human-readable `folderTypeDesc`.
-  2. **Batch size override** — `.env` has `SCRAPE_BATCH_SIZE=50`, overriding our aligned default of 10.
-  3. **Proxy must be default** — all future runs must go through Decodo. Running 200+ permits from a residential IP got us WAF-blocked by Akamai.
+* **Goal:** Fix 2 bugs discovered during WF5 live testing:
+  1. **Visible Chrome windows** — nodriver defaults to headed mode. Every bootstrap opens a Chrome window on the user's desktop, navigates to toronto.ca, then AIC portal. Production scraper must run headless (invisible).
+  2. **Zombie Chrome processes** — failed bootstrap retries and WAF re-bootstraps leave orphaned Chrome processes. `bootstrap_with_retry` calls `browser.stop()` on preflight failure, but `bootstrap_session` only stops on exception within its own try block. Failed retries between attempts 1→2→3 may leave Chrome processes alive.
 * **Target Spec:** `docs/specs/38_inspection_scraping.md`
 * **Key Files:**
-  - `scripts/aic-scraper-nodriver.py` — fix folder filter (lines 410, 473)
-  - `.env` — fix SCRAPE_BATCH_SIZE to 10
+  - `scripts/aic-scraper-nodriver.py` — `bootstrap_session()` and `bootstrap_with_retry()`
 
 ## Technical Implementation
 
-### Bug 1: folderTypeDesc → folderSection filter
-- **Root cause:** `folderTypeDesc` is AIC's human-readable label (unknown values). `folderSection` is the AIC permit type code (`BLD`, `HVA`, `PLB`, `DRN`, `DEM`, `FSU`, `DST`, `SHO`, `TPS`). All 3 target types (SR, BA, NH) have `folderSection = 'BLD'`.
-- **Fix:** Replace `TARGET_TYPES` string filter with `TARGET_SECTIONS` code filter:
+### Bug 1: Headless mode
+- nodriver supports `headless=True` parameter in `uc.start()` which adds `--headless=new` to Chrome args
+- Change `bootstrap_session()` line 279 from:
   ```python
-  TARGET_SECTIONS = ['BLD']  # Covers SR, BA, NH — all use BLD section code
-  ```
-  And change both filter lines (410, 473) from:
-  ```python
-  [f for f in folders if f.get('folderTypeDesc') in TARGET_TYPES]
+  browser = await uc.start(browser_args=browser_args)
   ```
   to:
   ```python
-  [f for f in folders if f.get('folderSection') in TARGET_SECTIONS]
+  browser = await uc.start(headless=True, browser_args=browser_args)
   ```
-- Keep `TARGET_TYPES` for the DB queue population query (it uses our `permit_type` strings correctly).
+- This is a one-line fix. Chrome runs invisibly, no windows on desktop.
 
-### Bug 2: Batch size
-- Change `.env` `SCRAPE_BATCH_SIZE=50` → `SCRAPE_BATCH_SIZE=10`
-
-### Bug 3: Proxy default
-- Spec already documents Decodo as default. `.env` already has `PROXY_HOST=ca.decodo.com`. Stop passing `PROXY_HOST=""` in manual testing.
+### Bug 2: Zombie cleanup
+- In `bootstrap_with_retry()`, when preflight fails, `browser.stop()` is called before raising — this is correct.
+- But `bootstrap_session()` catches exceptions and calls `browser.stop()` — if `uc.start()` succeeds but the warm bootstrap to `toronto.ca` hangs and times out, the browser is stopped. This path looks correct.
+- The real zombie risk is in `scrape_loop` WAF re-bootstrap at line 712: `browser.stop()` is called, then `bootstrap_with_retry()` may fail 3 times, each spawning and killing a Chrome. If the 3rd attempt also fails, the exception propagates — but each attempt's browser IS stopped in `bootstrap_session`'s except block. So this path is also correct.
+- **Additional safety:** Add explicit process kill in the outer `finally` block of `main()` to catch any edge case zombies.
 
 * **Database Impact:** NO
 
 ## Standards Compliance
 * **Try-Catch Boundary:** N/A
-* **Unhappy Path Tests:** Test that folderSection filter matches BLD permits
+* **Unhappy Path Tests:** N/A — headless is a Chrome flag, not testable in Vitest
 * **logError Mandate:** N/A
 * **Mobile-First:** N/A
 
 ## Execution Plan
-- [x] **Rollback Anchor:** `e018e90f`
-- [x] **State Verification:** Confirmed via live WF5 output — 100% miss rate because `folderTypeDesc` values from AIC don't match DB `permit_type` strings. Spec §3.3 documents all target types use `BLD` section code.
-- [x] **Spec Review:** §3.3 maps permit types → AIC codes. All 3 targets = `BLD`.
-- [ ] **Reproduction:** Add test confirming folderSection-based filter catches BLD permits.
-- [ ] **Red Light:** Verify test targets the gap.
-- [ ] **Fix:** Replace folderTypeDesc filter with folderSection filter. Update .env batch size.
+- [x] **Rollback Anchor:** `54421b63`
+- [x] **State Verification:** Confirmed — Chrome windows visible on desktop during every test run. Multiple zombie processes observed.
+- [x] **Spec Review:** §3.8 says "nodriver launches Chrome via CDP" — headless is implied for pipeline scripts.
+- [ ] **Fix:** Add `headless=True` to `uc.start()`. Add zombie kill safety net in `main()` finally block.
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
-- [ ] **Live Test:** Single permit through Decodo proxy to confirm MV3 extension + folderSection filter works.
-      Output visible execution summary. → WF6.
+- [ ] **Spec Audit:** Update §3.8 to explicitly state headless mode.

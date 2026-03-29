@@ -219,7 +219,7 @@ The AIC portal exposes undocumented JAX-RS REST endpoints that return structured
 
 - **Script:** `scripts/aic-scraper-nodriver.py` (replaces Playwright-based `poc-aic-scraper-v2.js`)
 - **Dependencies:** `nodriver` (Python), `psycopg2-binary`
-- **Architecture:** nodriver launches Chrome via Chrome DevTools Protocol (CDP) — no WebDriver protocol, no automation flags. The WAF cannot detect automation because CDP communicates through Chrome's native debugging interface, not the WebDriver API that anti-bot systems target.
+- **Architecture:** nodriver launches Chrome in **headless mode** (`--headless=new`) via Chrome DevTools Protocol (CDP) — no WebDriver protocol, no automation flags, no visible browser windows. The WAF cannot detect automation because CDP communicates through Chrome's native debugging interface, not the WebDriver API that anti-bot systems target.
 - **Why nodriver:** The City of Toronto's WAF consistently blocked Playwright's WebDriver-based automation despite stealth plugins, UA rotation, Client Hints, sticky proxy sessions, and warm bootstrapping. A nodriver spike proved that CDP-based automation bypasses the WAF completely without even needing a proxy — the WebDriver protocol itself was the detection vector.
 - **Step-by-step execution:** Each API call (properties → folders → detail → status) executes as a separate `page.evaluate(fetch(...), await_promise=True)` call. This is slightly more round-trips than the Playwright version's chained IIFE, but enables per-step WAF detection and cleaner error handling.
 - **Flow per permit:**

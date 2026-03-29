@@ -272,11 +272,11 @@ def cleanup_proxy_extension(ext_dir):
 # Browser — nodriver CDP (no WebDriver)
 # ---------------------------------------------------------------------------
 async def bootstrap_session(proxy_ext_dir=None):
-    """Launch Chrome via CDP and establish AIC session with warm entry."""
+    """Launch Chrome via CDP in headless mode and establish AIC session with warm entry."""
     browser_args = None
     if proxy_ext_dir:
         browser_args = [f'--load-extension={proxy_ext_dir}']
-    browser = await uc.start(browser_args=browser_args)
+    browser = await uc.start(headless=True, browser_args=browser_args)
     try:
         page = await browser.get('about:blank')
 
@@ -980,6 +980,25 @@ async def main():
                 browser.stop()
             except Exception:
                 pass
+        # Safety net: kill any orphaned Chrome processes spawned by this worker.
+        # nodriver temp profiles start with 'uc_' — only kill those, not user's Chrome.
+        try:
+            import subprocess
+            if sys.platform == 'win32':
+                subprocess.run(
+                    ['powershell', '-Command',
+                     "Get-Process chrome -ErrorAction SilentlyContinue | "
+                     "Where-Object {$_.CommandLine -like '*uc_*'} | "
+                     "Stop-Process -Force -ErrorAction SilentlyContinue"],
+                    capture_output=True, timeout=5,
+                )
+            else:
+                subprocess.run(
+                    ['pkill', '-f', 'chrome.*uc_'],
+                    capture_output=True, timeout=5,
+                )
+        except Exception:
+            pass
         # Clean up proxy extension temp directory
         cleanup_proxy_extension(proxy_ext_dir)
 
