@@ -1001,3 +1001,29 @@ describe('Chain failure path preserves PIPELINE_SUMMARY', () => {
     expect(catchBlock).toContain('PIPELINE_META');
   });
 });
+
+describe('run-chain.js captures last PIPELINE_SUMMARY (not first)', () => {
+  const chainSource = () => fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+  );
+
+  it('success path uses matchAll to get last PIPELINE_SUMMARY', () => {
+    const source = chainSource();
+    // Must NOT use .match() which returns the first occurrence
+    // (multi-worker scripts like aic-orchestrator emit worker summaries before aggregate)
+    expect(source).not.toMatch(/output\.match\s*\(\s*\/PIPELINE_SUMMARY/);
+    expect(source).toMatch(/matchAll.*PIPELINE_SUMMARY/);
+  });
+
+  it('success path uses matchAll to get last PIPELINE_META', () => {
+    const source = chainSource();
+    expect(source).not.toMatch(/output\.match\s*\(\s*\/PIPELINE_META/);
+    expect(source).toMatch(/matchAll.*PIPELINE_META/);
+  });
+
+  it('failure path uses matchAll for summaryLines', () => {
+    const source = chainSource();
+    expect(source).not.toMatch(/summaryLines\.match\s*\(\s*\/PIPELINE_SUMMARY/);
+    expect(source).not.toMatch(/summaryLines\.match\s*\(\s*\/PIPELINE_META/);
+  });
+});

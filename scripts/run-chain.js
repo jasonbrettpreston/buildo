@@ -239,7 +239,10 @@ async function run() {
       let recordsNew = null;
       let recordsUpdated = null;
       let recordsMeta = null;
-      const summaryMatch = output.match(/PIPELINE_SUMMARY:(.+)/);
+      // Use last PIPELINE_SUMMARY — multi-worker scripts (orchestrator) emit
+      // worker summaries before the aggregate. matchAll + last gets the aggregate.
+      const summaryMatches = [...output.matchAll(/PIPELINE_SUMMARY:(.+)/g)];
+      const summaryMatch = summaryMatches.length > 0 ? summaryMatches[summaryMatches.length - 1] : null;
       if (summaryMatch) {
         try {
           const summary = JSON.parse(summaryMatch[1]);
@@ -256,7 +259,8 @@ async function run() {
       }
 
       // Parse PIPELINE_META line for self-documented reads/writes
-      const metaMatch = output.match(/PIPELINE_META:(.+)/);
+      const metaMatches = [...output.matchAll(/PIPELINE_META:(.+)/g)];
+      const metaMatch = metaMatches.length > 0 ? metaMatches[metaMatches.length - 1] : null;
       if (metaMatch) {
         try {
           const pipelineMeta = JSON.parse(metaMatch[1]);
@@ -310,14 +314,16 @@ async function run() {
       // Parse PIPELINE_SUMMARY + PIPELINE_META from stdout even on failure —
       // scrapers emit telemetry (audit_table, scraper_telemetry) before exiting non-zero.
       let failMeta = null;
-      const failSummaryMatch = summaryLines.match(/PIPELINE_SUMMARY:(.+)/);
+      const failSummaryMatches = [...summaryLines.matchAll(/PIPELINE_SUMMARY:(.+)/g)];
+      const failSummaryMatch = failSummaryMatches.length > 0 ? failSummaryMatches[failSummaryMatches.length - 1] : null;
       if (failSummaryMatch) {
         try {
           const summary = JSON.parse(failSummaryMatch[1]);
           failMeta = summary.records_meta ?? null;
         } catch { /* malformed summary — ignore */ }
       }
-      const failMetaMatch = summaryLines.match(/PIPELINE_META:(.+)/);
+      const failMetaMatches = [...summaryLines.matchAll(/PIPELINE_META:(.+)/g)];
+      const failMetaMatch = failMetaMatches.length > 0 ? failMetaMatches[failMetaMatches.length - 1] : null;
       if (failMetaMatch) {
         try {
           const pipelineMeta = JSON.parse(failMetaMatch[1]);
