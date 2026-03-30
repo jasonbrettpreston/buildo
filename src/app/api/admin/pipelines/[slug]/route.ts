@@ -32,7 +32,7 @@ const PIPELINE_SCRIPTS: Record<string, string> = {
   load_wsib: 'scripts/load-wsib.js',
   link_wsib: 'scripts/link-wsib.js',
   // Scrape (external portal data)
-  inspections: 'scripts/poc-aic-scraper-v2.js',
+  inspections: 'scripts/aic-orchestrator.py',
   // Classify (derive fields)
   classify_scope: 'scripts/classify-scope.js',
   classify_permits: 'scripts/classify-permits.js',
@@ -168,9 +168,15 @@ export async function POST(
       : [scriptPath];
     const timeout = isChain ? 7_200_000 : 600_000; // 2 hours for chains, 10 min for individual
 
+    // Detect Python scripts and use the correct runtime.
+    const isPython = scriptPath.endsWith('.py');
+    const runtime = isPython
+      ? (process.platform === 'win32' ? 'python' : 'python3')
+      : 'node';
+
     // spawn with stdin='ignore' to prevent Windows pg connection hang.
     // stdout/stderr are piped for PIPELINE_SUMMARY/META parsing.
-    const child = spawn('node', args, {
+    const child = spawn(runtime, args, {
       env: process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -221,7 +227,10 @@ export async function POST(
       let recordsNew: number | null = null;
       let recordsUpdated: number | null = null;
       let recordsMeta: Record<string, unknown> | null = null;
-      const summaryMatch = stdout?.match(/PIPELINE_SUMMARY:(.+)/);
+      // Use last PIPELINE_SUMMARY line — orchestrator emits its aggregate after
+      // workers stream theirs. .match() returns the first; we need the last.
+      const summaryMatches = [...(stdout?.matchAll(/PIPELINE_SUMMARY:(.+)/g) ?? [])];
+      const summaryMatch = summaryMatches.length > 0 ? summaryMatches[summaryMatches.length - 1] : null;
       if (summaryMatch) {
         try {
           const summary = JSON.parse(summaryMatch[1]);
@@ -233,7 +242,8 @@ export async function POST(
       }
 
       // Parse PIPELINE_META from stdout for self-documented reads/writes
-      const metaMatch = stdout?.match(/PIPELINE_META:(.+)/);
+      const metaMatches = [...(stdout?.matchAll(/PIPELINE_META:(.+)/g) ?? [])];
+      const metaMatch = metaMatches.length > 0 ? metaMatches[metaMatches.length - 1] : null;
       if (metaMatch) {
         try {
           const pipelineMeta = JSON.parse(metaMatch[1]);

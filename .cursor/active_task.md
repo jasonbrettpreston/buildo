@@ -1,54 +1,36 @@
-# Active Task: Replace MV3 proxy extension with nodriver built-in proxy for headless compatibility
-**Status:** Implementation
+# Active Task: Fix PIPELINE_SUMMARY — route captures worker summary, not orchestrator aggregate
+**Status:** Planning
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `4ff6c662` (4ff6c662fb760a859b703d0394db717a983ea6ec)
+**Rollback Anchor:** `117d3d66`
 
 ## Context
-* **Goal:** Chrome's `--headless=new` doesn't support `--load-extension`. Our MV3 proxy auth extension silently fails in headless mode, breaking Decodo proxy auth. Replace with nodriver's built-in proxy support (`browser.create_context(proxy_server=...)`) which handles auth transparently via a local proxy forwarder — works in headless.
+* **Goal:** When the orchestrator spawns 5 workers, each worker emits PIPELINE_SUMMARY to stdout. The orchestrator also emits its own aggregated PIPELINE_SUMMARY. But route.ts uses `stdout.match(/PIPELINE_SUMMARY:(.+)/)` which matches the FIRST occurrence. Workers stream their output through the orchestrator's stdout, so the last worker's summary may appear after the orchestrator's. Need to capture the LAST PIPELINE_SUMMARY line instead of the first.
 * **Target Spec:** `docs/specs/38_inspection_scraping.md`
 * **Key Files:**
-  - `scripts/aic-scraper-nodriver.py` — replace MV3 extension with `create_context` proxy
+  - `src/app/api/admin/pipelines/[slug]/route.ts` — captures PIPELINE_SUMMARY
+  - `scripts/aic-orchestrator.py` — emits aggregated summary
+
+## Bug Description
+1. `route.ts` line 224: `stdout.match(/PIPELINE_SUMMARY:(.+)/)` — matches FIRST occurrence
+2. Workers stream PIPELINE_SUMMARY through orchestrator stdout before the orchestrator emits its own
+3. Result: dashboard shows 1 worker's stats (10 attempted) instead of aggregate (50 attempted)
 
 ## Technical Implementation
-
-### Replace MV3 extension with nodriver built-in proxy
-- **Remove:** `build_proxy_extension()`, `cleanup_proxy_extension()`, `atexit` registration, `shutil`/`stat` imports, `proxy_ext_dir` parameter threading
-- **Add:** Build proxy URL string `http://user-session-{id}:pass@host:port` and pass to `browser.create_context(proxy_server=url)` after `uc.start(headless=True)`
-- **How it works:** nodriver detects `user:pass` in the proxy URL, spins up a local forwarder on `127.0.0.1:{random_port}`, Chrome connects to the local forwarder (no auth needed), forwarder handles upstream auth transparently
-- **Per-batch rotation:** In db-queue mode, each batch still gets a fresh session ID in the proxy URL. The `create_context` call creates a new browser context with the new proxy.
-
-### Changes to bootstrap_session
-```python
-async def bootstrap_session(proxy_url=None):
-    browser = await uc.start(headless=True)
-    if proxy_url:
-        page = await browser.create_context(proxy_server=proxy_url)
-    else:
-        page = await browser.get('about:blank')
-    # ... warm bootstrap ...
-```
-
-### What gets removed
-- `build_proxy_extension()` — ~40 lines
-- `cleanup_proxy_extension()` — ~12 lines
-- `proxy_ext_dir` parameter on `bootstrap_session`, `bootstrap_with_retry`, `scrape_loop`
-- `atexit.register` calls
-- `shutil`, `stat` imports
-- `.proxy_ext/` directory handling
-
+* **Modified File:** `src/app/api/admin/pipelines/[slug]/route.ts`
+  - Change regex match to capture the LAST `PIPELINE_SUMMARY` line, not the first
 * **Database Impact:** NO
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A
-* **Unhappy Path Tests:** N/A — proxy is runtime behavior
+* **Try-Catch Boundary:** Existing
+* **Unhappy Path Tests:** Test that last PIPELINE_SUMMARY is captured
 * **logError Mandate:** N/A
 * **Mobile-First:** N/A
 
 ## Execution Plan
-- [x] **Rollback Anchor:** `4ff6c662`
-- [x] **State Verification:** Review agent confirmed `--headless=new` + `--load-extension` is incompatible. nodriver's `create_context(proxy_server=...)` works in headless via local forwarder.
-- [x] **Spec Review:** §3.9 proxy section needs update to document new approach.
-- [ ] **Fix:** Replace MV3 extension with `create_context` proxy. Remove all extension code.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
-- [ ] **Live Test:** Single permit through Decodo in headless — no visible Chrome window, proxy auth works.
-- [ ] **Spec Audit:** Update §3.9 to document `create_context` approach.
+- [x] **Rollback Anchor:** `117d3d66`
+- [x] **State Verification:** DB confirms run 1529 has worker summary (10 attempted) not aggregate (50)
+- [x] **Spec Review:** Spec 38 — orchestrator emits aggregate after all workers complete
+- [ ] **Reproduction:** Write failing test
+- [ ] **Red Light:** Test fails
+- [ ] **Fix:** Use last match instead of first
+- [ ] **Green Light:** All tests pass → WF6

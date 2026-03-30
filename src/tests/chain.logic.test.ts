@@ -972,3 +972,32 @@ describe('Chain Completion Report per-step summary (B3)', () => {
     expect(reportBlock).toMatch(/skip|Skipped/i);
   });
 });
+
+// ---------------------------------------------------------------------------
+// run-chain.js: failure path preserves PIPELINE_SUMMARY data
+// ---------------------------------------------------------------------------
+describe('Chain failure path preserves PIPELINE_SUMMARY', () => {
+  const chainSource = () => fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+  );
+
+  it('summaryLines is declared outside try/catch so catch block can access it', () => {
+    const source = chainSource();
+    // summaryLines must be declared BEFORE the try block (not inside it)
+    const declIdx = source.indexOf("let summaryLines = ''");
+    // Find the try block that contains the spawn — it's the one with 'Merge step-specific'
+    const tryIdx = source.indexOf('// Merge step-specific env');
+    expect(declIdx).toBeGreaterThan(-1);
+    expect(tryIdx).toBeGreaterThan(-1);
+    expect(declIdx).toBeLessThan(tryIdx);
+  });
+
+  it('catch block parses PIPELINE_SUMMARY and PIPELINE_META from summaryLines on failure', () => {
+    const source = chainSource();
+    // The catch block must reference summaryLines to extract both protocols
+    const catchBlock = source.slice(source.indexOf('} catch (err) {'));
+    expect(catchBlock).toContain('summaryLines');
+    expect(catchBlock).toContain('PIPELINE_SUMMARY');
+    expect(catchBlock).toContain('PIPELINE_META');
+  });
+});

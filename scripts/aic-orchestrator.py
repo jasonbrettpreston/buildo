@@ -11,7 +11,8 @@ Usage:
 
 Env vars:
     SCRAPER_WORKERS    — number of concurrent workers (default: 1)
-    SCRAPE_BATCH_SIZE  — permits per worker batch claim (default: 25)
+    SCRAPE_BATCH_SIZE  — permits per worker batch claim (default: 10)
+    SCRAPE_MAX_PERMITS — total permits cap across all workers (default: 0 = unlimited)
     SCRAPE_PERMIT_TYPE — filter to one type (e.g. "Small Residential")
     PROXY_HOST/PORT/USER/PASS — optional Decodo proxy (disabled by default)
     PG_HOST/PORT/DATABASE/USER/PASSWORD — PostgreSQL connection
@@ -48,6 +49,7 @@ if env_path.exists():
 # ---------------------------------------------------------------------------
 NUM_WORKERS = int(os.environ.get('SCRAPER_WORKERS', '1'))
 BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE', '10'))
+MAX_PERMITS = int(os.environ.get('SCRAPE_MAX_PERMITS', '0'))  # 0 = unlimited
 STALE_CLAIM_MINUTES = 30
 MAX_PREFLIGHT_FAILURES = 2
 
@@ -196,11 +198,19 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
             '--db-queue',
         ]
 
+        # Divide max permits across workers — worker 1 gets the remainder
+        if MAX_PERMITS > 0:
+            base = MAX_PERMITS // max(NUM_WORKERS, 1)
+            remainder = MAX_PERMITS % max(NUM_WORKERS, 1)
+            per_worker_max = str(base + (1 if worker_id <= remainder else 0))
+        else:
+            per_worker_max = '0'
+
         proc = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env={**os.environ, 'SCRAPE_BATCH_SIZE': str(BATCH_SIZE)},
+            env={**os.environ, 'SCRAPE_BATCH_SIZE': str(BATCH_SIZE), 'SCRAPE_MAX_PERMITS': per_worker_max},
         )
 
         # Stream stdout/stderr line-by-line to avoid buffering entire output in RAM.
@@ -331,6 +341,8 @@ async def main():
 
     log('INFO', '[orchestrator]', f'Starting with {NUM_WORKERS} workers, batch size {BATCH_SIZE}')
     log('INFO', '[orchestrator]', f'Target types: {TARGET_TYPES}')
+    if MAX_PERMITS > 0:
+        log('INFO', '[orchestrator]', f'Max permits cap: {MAX_PERMITS} total ({MAX_PERMITS // max(NUM_WORKERS, 1)} per worker)')
 
     conn = get_db_connection()
 
@@ -433,6 +445,8 @@ async def main():
                   'last_error': None,
                   'proxy_configured': bool(os.environ.get('PROXY_HOST')),
                   'proxy_host': os.environ.get('PROXY_HOST'),
+                  'max_permits_cap': MAX_PERMITS,
+                  'capped': MAX_PERMITS > 0 and agg['permits_attempted'] >= MAX_PERMITS,
                   'preflight_failures': agg['preflight_failures'],
                   'workers': agg['workers_total'],
                   'workers_completed': agg['workers_completed'],

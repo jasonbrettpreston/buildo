@@ -782,3 +782,87 @@ describe('Inspection Parser', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Pipeline route wiring — inspections slug must point to Python orchestrator
+// ---------------------------------------------------------------------------
+import * as fs from 'fs';
+import * as path from 'path';
+
+describe('Pipeline route wiring for inspections', () => {
+  const routePath = path.resolve(__dirname, '../app/api/admin/pipelines/[slug]/route.ts');
+  const routeSource = fs.readFileSync(routePath, 'utf-8');
+
+  it('inspections slug maps to aic-orchestrator.py (not legacy JS scraper)', () => {
+    expect(routeSource).toContain("inspections: 'scripts/aic-orchestrator.py'");
+    expect(routeSource).not.toContain("inspections: 'scripts/poc-aic-scraper-v2.js'");
+  });
+
+  it('aic-orchestrator.py script exists on disk', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/aic-orchestrator.py');
+    expect(fs.existsSync(scriptPath)).toBe(true);
+  });
+
+  it('spawn logic detects .py scripts and uses python runtime', () => {
+    // Route must have logic to choose python/python3 for .py files
+    expect(routeSource).toMatch(/\.py['"`]/);
+    expect(routeSource).toMatch(/python/);
+  });
+});
+
+describe('SCRAPE_MAX_PERMITS cap', () => {
+  const orchestratorSource = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/aic-orchestrator.py'), 'utf-8'
+  );
+  const workerSource = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/aic-scraper-nodriver.py'), 'utf-8'
+  );
+
+  it('orchestrator reads SCRAPE_MAX_PERMITS and passes to workers', () => {
+    expect(orchestratorSource).toContain('SCRAPE_MAX_PERMITS');
+  });
+
+  it('worker db-queue mode breaks batch loop when cap is reached', () => {
+    // Worker must read SCRAPE_MAX_PERMITS and check cumulative count
+    expect(workerSource).toContain('SCRAPE_MAX_PERMITS');
+    expect(workerSource).toMatch(/max_permits/i);
+  });
+});
+
+describe('Proxy auth via MV3 extension', () => {
+  const scraperSource = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/aic-scraper-nodriver.py'), 'utf-8'
+  );
+
+  it('uses MV3 extension for proxy auth, not create_context', () => {
+    // create_context(proxy_server=url) does NOT handle authenticated proxies (407 error).
+    // Must use MV3 Chrome extension with webRequest.onAuthRequired instead.
+    expect(scraperSource).toContain('build_proxy_extension');
+    expect(scraperSource).toContain('onAuthRequired');
+    expect(scraperSource).toContain('--load-extension');
+    expect(scraperSource).not.toContain('create_context');
+  });
+
+  it('cleans up proxy extension directory on completion', () => {
+    expect(scraperSource).toContain('cleanup_proxy_extension');
+  });
+});
+
+describe('PIPELINE_SUMMARY capture uses last occurrence', () => {
+  const routeSource = fs.readFileSync(
+    path.resolve(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
+  );
+
+  it('route.ts captures last PIPELINE_SUMMARY, not first (orchestrator aggregate)', () => {
+    // Workers stream PIPELINE_SUMMARY before the orchestrator emits its aggregate.
+    // .match() returns the first occurrence — must use lastIndexOf or matchAll.
+    const parseBlock = routeSource.slice(
+      routeSource.indexOf('Parse PIPELINE_SUMMARY'),
+      routeSource.indexOf('Parse PIPELINE_META')
+    );
+    // Must NOT use simple .match() which returns the first match
+    expect(parseBlock).not.toMatch(/stdout\?\.match\s*\(\s*\/PIPELINE_SUMMARY/);
+    // Must find the LAST occurrence
+    expect(parseBlock).toMatch(/last|lastIndexOf|reverse|pop|matchAll/i);
+  });
+});

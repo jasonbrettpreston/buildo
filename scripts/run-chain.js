@@ -198,11 +198,15 @@ async function run() {
       }
     }
 
+    // summaryLines is declared outside try/catch so the catch block can parse
+    // PIPELINE_SUMMARY on failure (scrapers emit telemetry even when exiting non-zero).
+    let summaryLines = '';
+
     try {
       // Merge step-specific env vars and chain-specific args from manifest
       const stepEnv = { ...process.env, PIPELINE_CHAIN: chainId, ...(scriptEntry.env || {}) };
       const extraArgs = [...(scriptEntry.chain_args?.[chainId] || [])];
-      // Spawn child process with streaming stdout — prevents ENOBUFS on long scripts
+      // Spawn child process with streaming stdout — prevents ENOBUFS on long scripts.
       const output = await new Promise((resolveSpawn, rejectSpawn) => {
         const runtime = scriptPath.endsWith('.py')
           ? (process.platform === 'win32' ? 'python' : 'python3')
@@ -212,7 +216,6 @@ async function run() {
           stdio: ['inherit', 'pipe', 'inherit'],
         });
 
-        let summaryLines = '';
         child.stdout.on('data', (data) => {
           const chunk = data.toString('utf-8');
           process.stdout.write(chunk); // Tee to console immediately
@@ -304,13 +307,30 @@ async function run() {
       const errorMsg = (err.message || String(err)).slice(0, 4000);
       pipeline.log.error('[run-chain]', `${stepLabel} — FAILED (${(durationMs / 1000).toFixed(1)}s)`, { error: errorMsg.slice(0, 200) });
 
+      // Parse PIPELINE_SUMMARY + PIPELINE_META from stdout even on failure —
+      // scrapers emit telemetry (audit_table, scraper_telemetry) before exiting non-zero.
+      let failMeta = null;
+      const failSummaryMatch = summaryLines.match(/PIPELINE_SUMMARY:(.+)/);
+      if (failSummaryMatch) {
+        try {
+          const summary = JSON.parse(failSummaryMatch[1]);
+          failMeta = summary.records_meta ?? null;
+        } catch { /* malformed summary — ignore */ }
+      }
+      const failMetaMatch = summaryLines.match(/PIPELINE_META:(.+)/);
+      if (failMetaMatch) {
+        try {
+          const pipelineMeta = JSON.parse(failMetaMatch[1]);
+          failMeta = { ...(failMeta || {}), pipeline_meta: pipelineMeta };
+        } catch { /* malformed meta — ignore */ }
+      }
+
       // T1/T2/T4: Still capture post-run telemetry on failure — partial data
       // (e.g. "5,000 rows inserted before crash") is invaluable for debugging.
-      let failMeta = null;
       if (preTelemetry) {
         try {
           const telemetry = await pipeline.diffTelemetry(pool, telemetryTables, preTelemetry);
-          failMeta = { telemetry };
+          failMeta = { ...(failMeta || {}), telemetry };
         } catch { /* non-fatal */ }
       }
 
