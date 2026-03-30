@@ -23,6 +23,7 @@ SPEC LINK: docs/specs/38_inspection_scraping.md §3.9
 import asyncio
 import json
 import os
+import random
 import re
 import signal
 import sys
@@ -371,13 +372,20 @@ async def main():
       abort_event = asyncio.Event()
       preflight_fail_counter = [0]  # Shared mutable counter (GIL-safe in single event loop)
 
-      # Spawn workers concurrently — each worker is a long-lived subprocess
-      # that claims batches from scraper_queue itself (browser reuse, fix B6)
+      # Spawn workers with random stagger (0-5s) — avoids simultaneous
+      # browser launches which create a detectable burst pattern.
+      async def staggered_worker(worker_id, abort_event, counter):
+          stagger = random.uniform(0, 5.0) if worker_id > 1 else 0
+          if stagger > 0:
+              log('INFO', '[orchestrator]', f'Worker {worker_id} starting in {stagger:.1f}s')
+              await asyncio.sleep(stagger)
+          return await run_worker(worker_id, abort_event, counter)
+
       tasks = []
       for i in range(min(NUM_WORKERS, total_pending)):
-          tasks.append(run_worker(i + 1, abort_event, preflight_fail_counter))
+          tasks.append(staggered_worker(i + 1, abort_event, preflight_fail_counter))
 
-      log('INFO', '[orchestrator]', f'Spawning {len(tasks)} workers...')
+      log('INFO', '[orchestrator]', f'Spawning {len(tasks)} workers (staggered)...')
       worker_results = await asyncio.gather(*tasks, return_exceptions=True)
 
       # Handle exceptions from workers

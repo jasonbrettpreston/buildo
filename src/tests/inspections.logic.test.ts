@@ -829,6 +829,41 @@ describe('SCRAPE_MAX_PERMITS cap', () => {
   });
 });
 
+describe('Stealth hardening', () => {
+  const scraperSource = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/aic-scraper-nodriver.py'), 'utf-8'
+  );
+  const orchestratorSource = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/aic-orchestrator.py'), 'utf-8'
+  );
+
+  it('has a pool of warm bootstrap entry URLs (not just toronto.ca)', () => {
+    expect(scraperSource).toMatch(/ENTRY_URLS|WARM_URLS|REFERRER_URLS/);
+    // Must have at least 3 different entry points
+    const poolMatch = scraperSource.match(/(ENTRY_URLS|WARM_URLS|REFERRER_URLS)\s*=\s*\[/);
+    expect(poolMatch).not.toBeNull();
+  });
+
+  it('uses random inter-request jitter above 1 second', () => {
+    // Must have random.uniform or random() with minimum >= 1.0s
+    expect(scraperSource).toMatch(/random\.uniform\s*\(\s*1/);
+  });
+
+  it('has a pool of viewport sizes for fingerprint variation', () => {
+    expect(scraperSource).toMatch(/VIEWPORT|viewport|window.size/i);
+    // Must include at least 3 different widths
+    expect(scraperSource).toMatch(/1280|1366|1440/);
+  });
+
+  it('has mid-session noise URLs to break API-only pattern', () => {
+    expect(scraperSource).toMatch(/NOISE_URLS|DECOY_URLS|noise/i);
+  });
+
+  it('orchestrator staggers worker start times', () => {
+    expect(orchestratorSource).toMatch(/stagger|sleep.*random|asyncio\.sleep/i);
+  });
+});
+
 describe('Proxy auth via MV3 extension', () => {
   const scraperSource = fs.readFileSync(
     path.resolve(__dirname, '../../scripts/aic-scraper-nodriver.py'), 'utf-8'

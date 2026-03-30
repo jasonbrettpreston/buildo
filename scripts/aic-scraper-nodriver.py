@@ -90,6 +90,35 @@ PROXY_PORT = os.environ.get('PROXY_PORT', '')
 PROXY_USER = os.environ.get('PROXY_USER', '')
 PROXY_PASS = os.environ.get('PROXY_PASS', '')
 
+# ---------------------------------------------------------------------------
+# Stealth — randomize fingerprint to look like organic human traffic
+# ---------------------------------------------------------------------------
+# Warm bootstrap entry URLs — vary referrer chain per session
+ENTRY_URLS = [
+    'https://www.toronto.ca',
+    'https://www.toronto.ca/services-payments/',
+    'https://www.toronto.ca/city-government/planning-development/',
+    'https://www.toronto.ca/311/',
+    'https://www.toronto.ca/city-government/data-research-maps/',
+]
+
+# Mid-session noise URLs — break the API-only request pattern
+NOISE_URLS = [
+    f'{AIC_BASE}/setup.do?action=init',
+    'https://www.toronto.ca/services-payments/building-construction/',
+    'https://www.toronto.ca/city-government/planning-development/application-information-centre/',
+]
+
+# Viewport sizes — vary browser fingerprint per session
+VIEWPORT_SIZES = [
+    (1280, 800), (1366, 768), (1440, 900),
+    (1536, 864), (1680, 1050), (1920, 1080),
+]
+
+# Batch size range — vary permits per batch instead of fixed BATCH_SIZE
+BATCH_SIZE_MIN = max(5, BATCH_SIZE - 5)
+BATCH_SIZE_MAX = max(BATCH_SIZE_MIN, min(20, BATCH_SIZE + 5))
+
 
 # ---------------------------------------------------------------------------
 # Sanitization — validate values before interpolating into page.evaluate JS
@@ -279,25 +308,28 @@ async def bootstrap_session(proxy_ext_dir=None):
     --load-extension is required for MV3 proxy auth and Chrome's
     headless mode does not support extensions.
     """
-    browser_args = None
+    # Random viewport per session for fingerprint variation
+    vw, vh = random.choice(VIEWPORT_SIZES)
+    browser_args = [f'--window-size={vw},{vh}']
     use_headless = True
     if proxy_ext_dir:
-        browser_args = [f'--load-extension={proxy_ext_dir}']
+        browser_args.append(f'--load-extension={proxy_ext_dir}')
         use_headless = False  # Extensions require headed mode
     browser = await uc.start(headless=use_headless, browser_args=browser_args)
     try:
         page = await browser.get('about:blank')
 
-        # Warm bootstrap: toronto.ca first for realistic referrer chain
+        # Warm bootstrap: random entry URL for referrer chain variation
+        entry_url = random.choice(ENTRY_URLS)
         try:
-            page = await browser.get('https://www.toronto.ca', new_tab=False)
-            await page.sleep(2)
+            page = await browser.get(entry_url, new_tab=False)
+            await page.sleep(random.uniform(1.5, 4.0))
         except Exception:
-            pass  # toronto.ca may be slow — non-fatal
+            pass  # entry site may be slow — non-fatal
 
         # Navigate to AIC portal
         page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
-        await page.sleep(1)
+        await page.sleep(random.uniform(0.8, 2.0))
         return browser, page
     except Exception as err:
         browser.stop()
@@ -752,9 +784,21 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
         tel['latencies'].append(time.time() * 1000 - req_start)
         accumulate(result)
 
-        # Jitter between requests (500-2000ms)
+        # Human-like jitter between requests (1-3.5s)
         if i < len(year_seqs) - 1:
-            await page.sleep(0.5 + random.random() * 1.5)
+            await page.sleep(random.uniform(1.0, 3.5))
+
+        # Mid-session noise: visit a benign page every 3-5 permits to break API-only pattern
+        if i > 0 and i % random.randint(3, 5) == 0 and i < len(year_seqs) - 1:
+            try:
+                noise_url = random.choice(NOISE_URLS)
+                page = await browser.get(noise_url, new_tab=False)
+                await page.sleep(random.uniform(1.0, 3.0))
+                # Return to AIC portal
+                page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
+                await page.sleep(random.uniform(0.5, 1.5))
+            except Exception:
+                pass  # noise visit failed — non-fatal
 
         # Early abort on sustained misses
         if i >= 9 and (i + 1) % 10 == 0 and tel['not_found_count'] / tel['permits_attempted'] >= 0.9:
@@ -908,9 +952,10 @@ async def main():
                         log('INFO', worker_tag, f"Max permits cap reached ({tel['permits_attempted']}/{MAX_PERMITS})")
                         break
 
-                    # Clamp batch size to remaining cap so we don't overshoot
-                    remaining = MAX_PERMITS - tel['permits_attempted'] if MAX_PERMITS > 0 else BATCH_SIZE
-                    claim_size = min(BATCH_SIZE, remaining)
+                    # Random batch size (5-15) clamped to remaining cap
+                    random_batch = random.randint(BATCH_SIZE_MIN, BATCH_SIZE_MAX)
+                    remaining = MAX_PERMITS - tel['permits_attempted'] if MAX_PERMITS > 0 else random_batch
+                    claim_size = min(random_batch, remaining)
 
                     year_seqs = claim_batch_from_queue(conn, worker_id, claim_size)
                     if not year_seqs:
