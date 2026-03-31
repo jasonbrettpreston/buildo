@@ -1,7 +1,17 @@
 # Spec 26 -- Admin Panel
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As an admin, I want a unified dashboard to monitor data pipeline health, trigger pipeline runs, and view system-wide metrics so I can keep all 7 data sources fresh and identify issues early.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +19,12 @@ As an admin, I want a unified dashboard to monitor data pipeline health, trigger
 | Anonymous | None |
 | Authenticated | None |
 | Admin | Full |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Admin navigates to `/admin`; clicks "Update Now" on any pipeline; clicks nav links to Data Quality or Market Metrics sub-pages.
@@ -34,10 +50,22 @@ As an admin, I want a unified dashboard to monitor data pipeline health, trigger
   - `pipeline_last_run` entry missing for a source shows "Not scheduled" for next update.
   - `stderr` from child process captured and stored (truncated to 4000 chars).
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **UI** (`admin.ui.test.tsx`): Sync Run Status Formatting; Duration Formatting; Sync Run Record Counts; Latest Sync Stats Display; Data Coverage Stats; Active Permit Status Filter; Admin Page Navigation Hub; Pipeline Health Status Logic; Progress Bar Percentage Calculation; Health Dashboard Pipeline Definitions; CoA Summary Card Link Rate; Builder Enrichment Rate; Expanded AdminStats Interface Validation; Pipeline Schedule Constants; Relative Time Formatting; Next Scheduled Date Computation; Admin Stats Pipeline Freshness; Pipeline Trigger Endpoint; load-permits.js fetches live CKAN data; Cross-platform ZIP extraction in load-massing.js; Pipeline route captures stderr and validates script; Stale pipeline run auto-cleanup; Massing pipeline chains link-massing after load; FreshnessTimeline duration and error display; ScheduleEditModal; Pipeline schedules in DataQualityDashboard; FreshnessTimeline funnel accordion; Health Banner in DataQualityDashboard; FreshnessTimeline quality group; SLA badge in FreshnessTimeline; Permit link percentage calculation; Pipeline Toggle — disabled step filtering; Pipeline Toggle — PATCH endpoint contract; Pipeline Toggle — UI rendering logic; NON_TOGGLEABLE_SLUGS filtering; Pipeline controls always visible (no hover gating); Pipeline controls hidden for infrastructure steps; Chain error summary box; Mobile viewport (375px) — controls always visible; Chain trigger inserts pipeline_runs row before spawning process; run-chain.js accepts external run ID argument; Polling resilience — grace period for newly triggered pipelines; 4-Pillar Architecture — chain_entities registration; Deep Scrapes pipeline group; Run All disabled when all steps disabled or comingSoon
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -62,3 +90,5 @@ As an admin, I want a unified dashboard to monitor data pipeline health, trigger
 - Relies on **Spec 13 (Auth)**: Admin access control via route-guard.
 - Consumed by **Spec 28 (Data Quality)**: Quality dashboard linked from admin nav.
 - Consumed by **Spec 34 (Market Metrics)**: Market metrics linked from admin nav.
+
+</constraints>

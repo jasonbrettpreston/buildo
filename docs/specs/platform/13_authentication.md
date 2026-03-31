@@ -1,7 +1,15 @@
 # Spec 13 -- Authentication
 
+<requirements>
+
 ## 1. Goal & User Story
 Users sign up and log in with Google OAuth or email/password so they can save preferences, track leads, and access role-appropriate features across the app.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +17,12 @@ Users sign up and log in with Google OAuth or email/password so they can save pr
 | Anonymous | Login and signup pages only (`/login`, `/signup`, `/api/auth/*`) |
 | Authenticated | Full app access (dashboard, permits, map, search, onboarding) |
 | Admin | Full app access + admin panel and admin API routes |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Firebase Authentication (Google OAuth 2.0 and email/password providers); `__session` cookie on subsequent requests; `X-Admin-Key` header for script/CI access to admin APIs
@@ -27,10 +41,22 @@ Users sign up and log in with Google OAuth or email/password so they can save pr
   - Concurrent tabs share same cookie; token refresh in one tab updates for all
   - Static assets excluded from middleware matcher (`/_next/*`, `/favicon.ico`, `/public/*`)
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`auth.logic.test.ts, middleware.logic.test.ts`): Auth Types; Route Classification; Route Guard Constants; Session Cookie Validation; Dev Mode; Security Files
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -54,3 +80,5 @@ Users sign up and log in with Google OAuth or email/password so they can save pr
 - Foundation for all authenticated features. All specs requiring auth import from `src/lib/auth/` (read-only).
 - Consumed by **Spec 14 (Onboarding)**: Onboarding reads user profile after auth.
 - Consumed by **Spec 26 (Admin)**: Admin routes use route-guard for access control.
+
+</constraints>

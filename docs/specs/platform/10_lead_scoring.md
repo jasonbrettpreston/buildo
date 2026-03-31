@@ -1,7 +1,15 @@
 # Spec 10 -- Lead Scoring
 
+<requirements>
+
 ## 1. Goal & User Story
 Every permit-trade combination receives a lead score from 0 to 100 so the best opportunities appear first in trade-specific feeds.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +17,12 @@ Every permit-trade combination receives a lead score from 0 to 100 so the best o
 | Anonymous | None |
 | Authenticated | None |
 | Admin | Full (backend logic, stored in permit_trades) |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Permit record (status, est_cost, issued_date, last_updated), trade slug, classification confidence, computed construction phase
@@ -22,10 +36,22 @@ Every permit-trade combination receives a lead score from 0 to 100 so the best o
   - Suspended permits get revocation_penalty=20
   - Bulk recalculation must handle 50K+ permit-trade combinations efficiently
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`scoring.logic.test.ts`): Lead Scoring
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -43,3 +69,5 @@ Every permit-trade combination receives a lead score from 0 to 100 so the best o
 - Relies on **Spec 08 (Classification)**: Uses classification confidence as a scoring input.
 - Relies on **Spec 09 (Phases)**: Uses phase match as a scoring factor.
 - Consumed by **Spec 15 (Dashboard)**: Dashboard sorts permits by lead score.
+
+</constraints>

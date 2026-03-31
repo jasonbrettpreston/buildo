@@ -1,7 +1,17 @@
 # Spec 19 -- Search & Filter
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As a user, I want powerful search and filtering so I can find specific permits by address, description keywords, builder name, or any combination of criteria across the 237K+ permit dataset.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +19,12 @@ As a user, I want powerful search and filtering so I can find specific permits b
 | Anonymous | Read (search) |
 | Authenticated | Read + saved searches |
 | Admin | Read |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Text query (min 2 chars, 300ms debounce, max 200 chars), faceted filters (status, permit_type, structure_type, work, ward, trade_slug, min_cost, date range, building_type), source toggle (building permits or pre-permits), sort selection, page number. All filters serialized as URL query params for shareable/bookmarkable links.
@@ -29,10 +45,22 @@ As a user, I want powerful search and filtering so I can find specific permits b
   - Date range end before start: auto-swap with correction notice.
   - Concurrent filter changes: AbortController cancels in-flight requests; latest wins.
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`search.logic.test.ts`): Search URL Parameter Parsing; Search Pagination Logic; Sort Option Parsing; Search API Request Building; CoA Source Toggle; Permit URL Generation
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -50,3 +78,5 @@ As a user, I want powerful search and filtering so I can find specific permits b
 - Relies on **Spec 06 (Data API)**: Consumes `GET /api/permits` with filter parameters.
 - Relies on **Spec 12 (CoA Integration)**: Pre-permit source toggle uses CoA data.
 - Relies on **Spec 13 (Auth)**: Reads user preferences for default filters.
+
+</constraints>

@@ -1,7 +1,15 @@
 # Spec 37 -- Corporate Identity Hub
 
+<requirements>
+
 ## 1. Goal & User Story
 Replace the fragmented `builders` table with a unified `entities` hub and `entity_projects` junction table, enabling single-pass enrichment per entity, role-based portfolio views, and WSIB/regulatory linkage directly to the entity hub.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +17,12 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
 | Anonymous | None |
 | Authenticated | Read entities list, entity detail + portfolio |
 | Admin | Read/Write, trigger enrichment, manage entity data |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Permits (builder_name), CoA applications (applicant), WSIB registry entries. Data migration from existing `builders` table.
@@ -30,11 +44,23 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
   - Entity with zero linked projects: still persists (may have been enriched)
   - Very long builder names (>500 chars): truncated by VARCHAR(500) constraint
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`entities.logic.test.ts`): Entity Name Normalization (shared module); isIncorporated; Entity Factory; EntityProject Factory; Entity portfolio aggregation
 - **Infra** (`entities.infra.test.ts`): Migration 042: entities DDL; Migration 043: data migration structure; Migration 044: WSIB entity link; GET /api/entities response shape; GET /api/entities/[id] response shape; /api/builders alias
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -83,3 +109,5 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
 - Modifies **Spec 28 (Data Quality Dashboard)** — metrics source changes.
 - Modifies **Spec 35 (WSIB Registry)** — linked_entity_id replaces linked_builder_id.
 - Relies on **Spec 12 (CoA Integration)** — CoA applicant extraction.
+
+</constraints>

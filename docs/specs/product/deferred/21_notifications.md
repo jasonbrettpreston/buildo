@@ -2,8 +2,18 @@
 
 > **Status: PARTIAL** — In-app notification API route and table work. **Deferred:** Pub/Sub fan-out, email digests, push notifications, `src/lib/notifications/matcher.ts` (not coded). **File path corrections:** `UserPreferences` lives in `src/lib/auth/types.ts`, not `src/lib/notifications/types.ts`.
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As a tradesperson, I want to be notified when new permits matching my trades appear so I don't miss opportunities, via in-app alerts, email digests, and push notifications.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -11,6 +21,12 @@ As a tradesperson, I want to be notified when new permits matching my trades app
 | Anonymous | None |
 | Authenticated | Read/Write (own) |
 | Admin | None |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Permit changes published to `permit-changes` Pub/Sub topic by sync pipeline; user notification preferences stored in Firestore at `/users/{uid}/preferences/notifications` (see `NotificationPreferences` in `src/lib/notifications/types.ts`): trade filters, postal codes, wards, cost range, alert frequency (instant/daily/weekly digest), and per-channel toggles (in-app, email, push).
@@ -30,10 +46,22 @@ As a tradesperson, I want to be notified when new permits matching my trades app
   - Expired unsubscribe JWT: render page prompting manual login to manage preferences.
   - Dedup race condition: unique constraint prevents duplicates from near-simultaneous updates.
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`notifications.logic.test.ts`): Notification Matching Logic; Notification Email Templates; Alert Frequency Logic
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -56,3 +84,5 @@ As a tradesperson, I want to be notified when new permits matching my trades app
 - Relies on **Spec 01 (Database Schema)**: Uses `notifications` table.
 - Relies on **Spec 07 (Trade Taxonomy)**: Matches notifications to user trade preferences.
 - Relies on **Spec 13 (Auth)**: Reads user profile and notification preferences.
+
+</constraints>

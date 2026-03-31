@@ -1,7 +1,17 @@
 # Spec 24 -- Data Export
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As a user, I want to export my filtered permit results or saved leads as CSV or PDF for offline use or sharing with my team. Exports respect active filters (WYSIWYG), use streaming for large datasets, and are gated to Pro/Enterprise plans.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +19,12 @@ As a user, I want to export my filtered permit results or saved leads as CSV or 
 | Anonymous | None |
 | Authenticated | Read/Export (own data) |
 | Admin | Read/Export (all) |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Export trigger from search toolbar or saved permits page; format selection (CSV or PDF); current filter state; optional map-inclusion toggle (PDF only)
@@ -27,10 +43,22 @@ As a user, I want to export my filtered permit results or saved leads as CSV or 
   - Fields containing commas, quotes, or newlines are properly escaped per RFC 4180
   - Network interruption during streaming CSV: client should detect incomplete download and offer retry
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`export.logic.test.ts`): CSV_COLUMNS; formatCsvRow; generatePermitsPdf
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -49,3 +77,5 @@ As a user, I want to export my filtered permit results or saved leads as CSV or 
 - Relies on **Spec 06 (Data API)**: Consumes API endpoints for filtered data.
 - Relies on **Spec 13 (Auth)**: Export gated to Pro/Enterprise plans.
 - Relies on **Spec 19 (Search & Filter)**: Exports respect active filter criteria.
+
+</constraints>

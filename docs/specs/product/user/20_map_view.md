@@ -1,7 +1,17 @@
 # Spec 20 -- Map View
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As a user, I want to see permits plotted on a map so I can find opportunities in my area and visualize construction activity geographically across Toronto's 237K+ permits.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +19,12 @@ As a user, I want to see permits plotted on a map so I can find opportunities in
 | Anonymous | Read |
 | Authenticated | Read |
 | Admin | Read |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Map viewport (bounding box as NE/SW lat/lng), optional filters (trade_slug, status, min_cost, max_cost, ward), radius search center + radius. Default center: Toronto City Hall (43.6532, -79.3832), zoom 11.
@@ -29,10 +45,22 @@ As a user, I want to see permits plotted on a map so I can find opportunities in
   - Map fails to load (API key error): fallback static image with retry button.
   - Permits without lat/lng: counted in `not_geocoded` but not plotted.
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **UI** (`map.ui.test.tsx`): Geocoded Permit Filtering; Map Center and Defaults; Marker Title Generation; Map Filter State; Map Display State; Selected Permit Sidebar
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -50,3 +78,5 @@ As a user, I want to see permits plotted on a map so I can find opportunities in
 - Relies on **Spec 05 (Geocoding)**: Uses `permits.latitude` / `permits.longitude` for map plotting.
 - Relies on **Spec 06 (Data API)**: Consumes `GET /api/permits/geo` endpoint.
 - Relies on **Spec 13 (Auth)**: Reads user preferences for default map filters.
+
+</constraints>

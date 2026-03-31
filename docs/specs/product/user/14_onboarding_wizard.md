@@ -1,7 +1,17 @@
 # Spec 14 -- Onboarding Wizard
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 New users complete a 4-step setup wizard to select their account type, trades, location preferences, and notification settings so their dashboard shows relevant leads immediately.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +19,12 @@ New users complete a 4-step setup wizard to select their account type, trades, l
 | Anonymous | None |
 | Authenticated | Write (own profile only) |
 | Admin | None |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Authenticated user redirected from middleware when `onboarding_completed === false`; user selections at each step
@@ -25,10 +41,22 @@ New users complete a 4-step setup wizard to select their account type, trades, l
   - User already completed onboarding and navigates to `/onboarding`: redirect to `/dashboard`
   - Multiple devices: last write wins via Firestore merge
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **UI** (`onboarding.ui.test.tsx`): Onboarding Default Preferences; Onboarding Step Validation; Trade Selection Toggle; Postal Code Parsing; Account Type Validation; Preferences Construction
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -45,3 +73,5 @@ New users complete a 4-step setup wizard to select their account type, trades, l
 ### Cross-Spec Dependencies
 - Relies on **Spec 13 (Auth)**: Reads user profile, writes onboarding preferences.
 - Relies on **Spec 07 (Trade Taxonomy)**: Reads trade list for trade selection step (read-only).
+
+</constraints>

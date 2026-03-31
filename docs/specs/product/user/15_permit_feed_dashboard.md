@@ -2,8 +2,18 @@
 
 > **Status: PARTIAL** — Dashboard page and PermitCard/PermitFeed components exist. Trade-specific filtering (showing only permits matching user's selected trades) is NOT yet implemented. `src/lib/dashboard/merge-feeds.ts` referenced in spec does not exist. Dashboard currently shows global/admin-style permit feed.
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 A tradesperson (e.g., plumber) sees a dashboard of building permits matching their selected trades, sorted by lead score, so they can find and track work opportunities.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -11,6 +21,12 @@ A tradesperson (e.g., plumber) sees a dashboard of building permits matching the
 | Anonymous | None |
 | Authenticated | Read/Write (own data: view feed, save leads, update lead status) |
 | Admin | None |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** User's selected trades from Firestore `/users/{uid}/preferences/trades`; permit data via `GET /api/permits?trade_slug={slug}&sort_by=lead_score&sort_order=desc`; user filter selections (ward, cost range, status, date range, phase)
@@ -28,10 +44,22 @@ A tradesperson (e.g., plumber) sees a dashboard of building permits matching the
   - Network error on feed load: error state with retry button, preserve cached data
   - Max 500 saved permits per user (Firestore subcollection consideration)
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **UI** (`dashboard.ui.test.tsx`): Dashboard StatCard Logic; Dashboard Navigation Links; Dashboard Filter State; Dashboard Stats Row; Dashboard Account Type Variants
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -54,3 +82,5 @@ A tradesperson (e.g., plumber) sees a dashboard of building permits matching the
 - Relies on **Spec 10 (Lead Scoring)**: Sorts permits by lead score.
 - Relies on **Spec 13 (Auth)**: Reads user trade preferences for filtering.
 - Extended by **Spec 16 (Company Dashboard)** and **Spec 17 (Supplier Dashboard)**.
+
+</constraints>

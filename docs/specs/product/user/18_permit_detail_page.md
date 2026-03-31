@@ -1,7 +1,17 @@
 # Spec 18 -- Permit Detail View
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As a user, I want to see full details for any permit including its history timeline, trade matches, builder info, property data, and location on a map so I can evaluate the opportunity.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +19,12 @@ As a user, I want to see full details for any permit including its history timel
 | Anonymous | Read |
 | Authenticated | Read |
 | Admin | Read |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** URL path `/permits/{permitNum}--{revisionNum}`. Pre-permit (CoA) URLs encode slashes as tildes: `COA-A0246~23EYK--00`. API decodes tildes back to slashes.
@@ -25,10 +41,22 @@ As a user, I want to see full details for any permit including its history timel
   - No builder enrichment: show `builder_name` only, hide contact section.
   - Cost is 0 or null: display "Not specified" instead of "$0".
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`permits.logic.test.ts`): Field Mapping; Permit Hashing; Permit Diff
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -49,3 +77,5 @@ As a user, I want to see full details for any permit including its history timel
 - Relies on **Spec 11 (Builder Enrichment)**: Displays builder contact info.
 - Relies on **Spec 27 (Neighbourhood Profiles)**: Displays neighbourhood context.
 - Relies on **Spec 31 (Building Massing)**: Displays building footprint data.
+
+</constraints>

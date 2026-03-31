@@ -1,7 +1,17 @@
 # Spec 23 -- Analytics Dashboard
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As a user, I want to see trends in permit activity, trade demand, and geographic hotspots so I can make better business decisions. The dashboard displays 6 chart types with a global date range selector, period comparison mode, and responsive layout gated to Pro/Enterprise plans.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +19,12 @@ As a user, I want to see trends in permit activity, trade demand, and geographic
 | Anonymous | None |
 | Authenticated | Read (own data) |
 | Admin | Read (all data) |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Date range (presets: 7d, 30d, 90d, YTD, 1Y, custom), optional comparison toggle (previous period or same period last year), granularity override
@@ -26,10 +42,22 @@ As a user, I want to see trends in permit activity, trade demand, and geographic
   - Builder name matching is exact only (no fuzzy dedup)
   - Viewports below 768px stack charts vertically; heat map and choropleth require minimum 400px width
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`analytics.logic.test.ts`): getPermitsByDateRange; getTradeDistribution; getCostByWard; getStatusDistribution; getTopBuilders; getPermitTrends
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -47,3 +75,5 @@ As a user, I want to see trends in permit activity, trade demand, and geographic
 - Relies on **Spec 06 (Data API)**: May consume existing API endpoints for data.
 - Relies on **Spec 07 (Trade Taxonomy)**: Uses trade data for demand analysis.
 - Relies on **Spec 13 (Auth)**: Analytics gated to Pro/Enterprise plans.
+
+</constraints>

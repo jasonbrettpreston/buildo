@@ -2,8 +2,18 @@
 
 > **Status: PARTIAL** — Only `ROLE_PERMISSIONS` enum and TypeScript interfaces defined in `src/lib/teams/types.ts`. **Deferred:** Permissions enforcement logic, invite flow, team API routes, Firestore team linking. Tests cover type definitions only.
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As a company owner, I want to invite team members, assign roles, and share leads across my organization so we can collaborate on construction opportunities.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -11,6 +21,12 @@ As a company owner, I want to invite team members, assign roles, and share leads
 | Anonymous | None |
 | Authenticated | Read/Write (own team) |
 | Admin | Read/Write (all) |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Team creation (owner UID + name), member invitations (email + role), invite acceptance (code + UID), member removal, ownership transfer, leave-team requests. Team features gated to Enterprise subscription plan (Spec 25).
@@ -30,10 +46,22 @@ As a company owner, I want to invite team members, assign roles, and share leads
   - Plan downgrade from Enterprise: existing members remain but no new invites allowed; upgrade prompt shown.
   - Deleted user: Cloud Function on user deletion removes them from any team.
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`teams.logic.test.ts`): Team Role Permissions; Team Type Structure; Permission Check Helper
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -50,3 +78,5 @@ As a company owner, I want to invite team members, assign roles, and share leads
 - Relies on **Spec 13 (Auth)**: Uses user profiles for team membership.
 - Relies on **Spec 25 (Subscription)**: Team features gated to Enterprise plan.
 - Consumed by **Spec 16 (Company Dashboard)**: Company dashboard uses team data.
+
+</constraints>

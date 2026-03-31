@@ -1,7 +1,17 @@
 # Spec 34 -- Market Metrics Dashboard
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As an admin, I want a dedicated market metrics page showing business-level construction trends, lead volumes by trade, and geographic patterns so I can understand market dynamics and complement the system health admin view.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +19,12 @@ As an admin, I want a dedicated market metrics page showing business-level const
 | Anonymous | None |
 | Authenticated | None |
 | Admin | Read |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Admin navigates to `/admin/market-metrics`. Data sourced from permits, permit_trades, trades, neighbourhoods tables, and `mv_monthly_permit_stats` materialized view.
@@ -25,10 +41,22 @@ As an admin, I want a dedicated market metrics page showing business-level const
   - YoY comparison returns null change when no data exists for prior year window.
   - Empty permit set produces zero counts (no division errors in trendPct).
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`market-metrics.logic.test.ts`): Migration 034 — mv_monthly_permit_stats; API route exports; formatCurrency; mapPermitType; PERMIT_TYPE_TO_TRADE; trendPct; MarketMetrics response shape
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -51,3 +79,5 @@ As an admin, I want a dedicated market metrics page showing business-level const
 - Relies on **Spec 26 (Admin)**: Market metrics linked from admin navigation.
 - Relies on **Spec 27 (Neighbourhood Profiles)**: Uses neighbourhood income tiers for wealth analysis.
 - Relies on **Spec 30 (Scope Classification)**: Uses scope tags for project type breakdown.
+
+</constraints>

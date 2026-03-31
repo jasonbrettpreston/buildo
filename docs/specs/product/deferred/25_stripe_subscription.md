@@ -2,8 +2,18 @@
 
 > **Status: PARTIAL** — 3-tier plan definitions (Free/Pro/Enterprise) and feature gating constants exist in `src/lib/subscription/plans.ts`. **Deferred:** Stripe Checkout integration, Stripe Customer Portal, webhook handling, subscription middleware enforcement. Tests validate plan definitions only.
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As a user, I want to choose a subscription plan (Free, Pro at $29/mo, Enterprise at $99/mo) that fits my needs, with Stripe-hosted payment and self-service subscription management. Feature gating middleware enforces plan limits across the app.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -11,6 +21,12 @@ As a user, I want to choose a subscription plan (Free, Pro at $29/mo, Enterprise
 | Anonymous | None |
 | Authenticated | Read/Write (own subscription) |
 | Admin | Read/Write (all) |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Plan selection on pricing page; Stripe webhook events (checkout.session.completed, subscription.updated, subscription.deleted, invoice.payment_failed, invoice.paid)
@@ -31,10 +47,22 @@ As a user, I want to choose a subscription plan (Free, Pro at $29/mo, Enterprise
   - One active subscription per user; checkout prevents creating a second
   - All prices in CAD with HST 13% applied via Stripe Tax
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`subscription.logic.test.ts`): Plan Catalog; canAccess; isWithinLimit
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -53,3 +81,5 @@ As a user, I want to choose a subscription plan (Free, Pro at $29/mo, Enterprise
 - Consumed by **Spec 22 (Teams)**: Team features gated to Enterprise plan.
 - Consumed by **Spec 23 (Analytics)**: Analytics gated to Pro/Enterprise plans.
 - Consumed by **Spec 24 (Export)**: Export gated to Pro/Enterprise plans.
+
+</constraints>

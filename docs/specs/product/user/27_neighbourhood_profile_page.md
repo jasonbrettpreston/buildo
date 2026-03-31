@@ -1,7 +1,17 @@
 # Spec 27 -- Neighbourhood Profiles
 
+---
+
+<requirements>
+
 ## 1. Goal & User Story
 As a tradesperson viewing a permit, I want to see Census-based neighbourhood context (income level, tenure, construction era) so I can assess local market conditions at a glance.
+
+</requirements>
+
+---
+
+<security>
 
 ## 2. Auth Matrix
 | Role | Access |
@@ -9,6 +19,12 @@ As a tradesperson viewing a permit, I want to see Census-based neighbourhood con
 | Anonymous | Read |
 | Authenticated | Read |
 | Admin | Read/Write |
+
+</security>
+
+---
+
+<behavior>
 
 ## 3. Behavioral Contract
 - **Inputs:** Permit's geocoded lat/lng coordinates; 158 Toronto neighbourhood boundary polygons (GeoJSON); Census 2021 demographic profiles (transposed CSV)
@@ -24,10 +40,22 @@ As a tradesperson viewing a permit, I want to see Census-based neighbourhood con
   - Point-in-polygon runs as batch offline process, not real-time
   - Boundary data covers 158 neighbourhoods with IDs 1-174 (gaps exist in Toronto's numbering)
 
+</behavior>
+
+---
+
+<testing>
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic** (`neighbourhood.logic.test.ts`): classifyIncome; classifyTenure; generateSummary; formatIncome; formatPct; formatPeriod; createMockNeighbourhood
 <!-- TEST_INJECT_END -->
+
+</testing>
+
+---
+
+<constraints>
 
 ## 5. Operating Boundaries
 
@@ -51,3 +79,5 @@ As a tradesperson viewing a permit, I want to see Census-based neighbourhood con
 - Relies on **Spec 05 (Geocoding)**: Point-in-polygon matching uses geocoded permit coordinates.
 - Consumed by **Spec 18 (Permit Detail)**: Permit detail page displays neighbourhood context.
 - Consumed by **Spec 34 (Market Metrics)**: Neighbourhood wealth tiers use income data from this module.
+
+</constraints>
