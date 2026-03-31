@@ -147,4 +147,76 @@ assert_engine_health
 - **Relies on:** `pipeline_system.md` (SDK, orchestrator)
 - **Relies on:** `chain_sources.md` (spatial reference tables must be populated first)
 - **Consumed by:** `chain_coa.md` (shares `link_coa`, `create_pre_permits`, `refresh_snapshot`)
+- **Shared steps:** See `60_shared_steps.md` for geocode_permits, link_parcels, link_neighbourhoods, link_massing, link_wsib, link_coa, create_pre_permits, refresh_snapshot
 </constraints>
+
+---
+
+## Step Details (Single-Chain Steps)
+
+### Step 5: Classify Scope (`classify-scope.js`)
+
+**Dual Code Path (§7.2):** Both `src/lib/classification/scope.ts` (TS API) and `scripts/classify-scope.js` (batch) MUST produce identical output.
+
+**Logic:**
+1. Determine `project_type` from `work` field → `permit_type` → description keywords (first match wins)
+2. Extract `scope_tags[]` via TAG_PATTERNS regex array against description + other fields
+3. Add mandatory `useType` tag (residential/commercial/mixed-use) from `structure_type` + `permit_type`
+4. For demolition permits, add `demolition` tag
+5. BLD propagation: scope tags propagate to companion permits (HVA, PLB) at same address via `DISTINCT ON (base_num) ORDER BY revision_num DESC`
+
+**Outputs:** `permits.project_type` (new_build/demolition/renovation/addition/repair/mechanical/other), `permits.scope_tags` (TEXT[]), `permits.scope_classified_at`
+
+**Edge Cases:** "Demolition of shed for new addition" → `project_type = 'demolition'` (first match). Multiple BLD revisions → DISTINCT ON picks latest.
+
+**Testing:** `scope.logic.test.ts` (255 tests), `classify-sync.logic.test.ts` (dual-path sync)
+
+---
+
+### Step 6: Extract Builder Entities (`extract-builders.js`)
+
+**Logic:**
+1. Query distinct `builder_name` values from `permits`
+2. Normalize: trim, uppercase, remove noise ("DO NOT USE", "TBD", "N/A")
+3. Group variant spellings into canonical entities
+4. Upsert to `entities` via `ON CONFLICT (normalized_name) DO UPDATE`
+
+**Edge Cases:** Noise strings filtered out. Numbered companies ("1234567 ONTARIO INC") kept as-is.
+
+**Testing:** `builders.logic.test.ts`, `entities.logic.test.ts`
+
+---
+
+### Step 12: Link Similar Permits (`link-similar.js`)
+
+**Logic:**
+1. Find BLD permits with scope_tags. Propagate `scope_tags` + `project_type` to companion permits (HVA, PLB, DRN) sharing the same base number (`YY NNNNNN`)
+2. Uses `DISTINCT ON (base_num) ORDER BY revision_num DESC` for latest BLD revision
+3. DM permits without `demolition` tag get it added via `array_append`
+
+**Edge Cases:** Multiple BLD revisions → deterministic pick. DM already has tag → guard prevents duplicates.
+
+---
+
+### Step 13: Trade Classification (`classify-permits.js`)
+
+**Dual Code Path (§7.1):** Both `src/lib/classification/classifier.ts` (TS API) and `scripts/classify-permits.js` (batch) MUST stay in sync.
+
+**32 trades** (IDs 1-32). Classification tiers:
+
+| Tier | Method | Confidence |
+|------|--------|------------|
+| 1 | `trade_mapping_rules` DB rules | 0.90-1.00 |
+| 2 | Tag-trade matrix (58 keys + 16 aliases) | 0.50-0.90 |
+| 3 | Work-field fallback | 0.80 |
+| 4 | Narrow-scope code fallback (PLB→plumbing, HVA→hvac, etc.) | 0.80 |
+
+**Logic:**
+1. Load active rules from `trade_mapping_rules` (fall back to ALL_RULES)
+2. For each permit: Tier 1 → tag-trade matrix → work-field → narrow-scope
+3. Determine construction phase per match (early_construction/structural/finishing/landscaping)
+4. DELETE existing `permit_trades`, INSERT new matches with sub-batch at 4000 rows (§9.2)
+
+**PHASE_TRADES:** early_construction (excavation, shoring, demolition, concrete, waterproofing, drain-plumbing, temporary-fencing), structural (framing, structural-steel, masonry, roofing, plumbing, hvac, electrical, elevator, fire-protection), finishing (insulation, drywall, painting, flooring, glazing, trim-work, millwork-cabinetry, tiling, stone-countertops, caulking, solar, security), landscaping (landscaping, painting, decking-fences, eavestrough-siding, pool-installation)
+
+**Testing:** `classification.logic.test.ts` (104 tests), `classify-sync.logic.test.ts`, `pipeline-sdk.logic.test.ts` (32 trades present)

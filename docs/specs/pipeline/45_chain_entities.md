@@ -86,4 +86,5 @@ Both steps run the **same script** (`enrich-web-search.js`) with different envir
 - **Relies on:** `pipeline_system.md` (SDK, orchestrator)
 - **Relies on:** `chain_permits.md` (builders must be extracted first)
 - **Relies on:** `chain_sources.md` (WSIB registry must be loaded for prioritization)
+- **Relies on:** `chain_sources.md` (WSIB registry must be loaded for prioritization)
 </constraints>

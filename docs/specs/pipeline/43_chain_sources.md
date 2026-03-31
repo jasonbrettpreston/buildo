@@ -113,4 +113,18 @@ refresh_snapshot → assert_data_bounds → assert_engine_health
 ### Cross-Spec Dependencies
 - **Relies on:** `pipeline_system.md` (SDK, orchestrator)
 - **Consumed by:** `chain_permits.md` (depends on spatial tables being populated)
+- **Shared steps:** See `60_shared_steps.md` for geocode_permits, link_parcels, link_massing, link_neighbourhoods, link_wsib, refresh_snapshot
 </constraints>
+
+---
+
+## Step Details (Single-Chain Steps)
+
+### Step 5: Compute Centroids (`compute-centroids.js`)
+
+**Logic:**
+1. Query parcels where `centroid_lat IS NULL` or `centroid_lng IS NULL`
+2. Calculate geometric centroid from polygon coordinates
+3. Update `parcels.centroid_lat`, `parcels.centroid_lng`
+
+**Edge Cases:** Complex multipolygon → centroid may fall outside polygon (valid for approximate matching). Individual UPDATE per parcel (known N+1 performance issue).
