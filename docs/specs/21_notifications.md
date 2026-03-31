@@ -1,5 +1,7 @@
 # Spec 21 -- Notifications
 
+> **Status: PARTIAL** — In-app notification API route and table work. **Deferred:** Pub/Sub fan-out, email digests, push notifications, `src/lib/notifications/matcher.ts` (not coded). **File path corrections:** `UserPreferences` lives in `src/lib/auth/types.ts`, not `src/lib/notifications/types.ts`.
+
 ## 1. Goal & User Story
 As a tradesperson, I want to be notified when new permits matching my trades appear so I don't miss opportunities, via in-app alerts, email digests, and push notifications.
 

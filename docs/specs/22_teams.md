@@ -1,5 +1,7 @@
 # Spec 22 -- Team Management
 
+> **Status: PARTIAL** — Only `ROLE_PERMISSIONS` enum and TypeScript interfaces defined in `src/lib/teams/types.ts`. **Deferred:** Permissions enforcement logic, invite flow, team API routes, Firestore team linking. Tests cover type definitions only.
+
 ## 1. Goal & User Story
 As a company owner, I want to invite team members, assign roles, and share leads across my organization so we can collaborate on construction opportunities.
 

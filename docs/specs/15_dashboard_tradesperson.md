@@ -1,5 +1,7 @@
 # Spec 15 -- Tradesperson Dashboard
 
+> **Status: PARTIAL** — Dashboard page and PermitCard/PermitFeed components exist. Trade-specific filtering (showing only permits matching user's selected trades) is NOT yet implemented. `src/lib/dashboard/merge-feeds.ts` referenced in spec does not exist. Dashboard currently shows global/admin-style permit feed.
+
 ## 1. Goal & User Story
 A tradesperson (e.g., plumber) sees a dashboard of building permits matching their selected trades, sorted by lead score, so they can find and track work opportunities.
 

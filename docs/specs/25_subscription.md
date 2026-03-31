@@ -1,5 +1,7 @@
 # Spec 25 -- Subscription & Billing (Stripe)
 
+> **Status: PARTIAL** — 3-tier plan definitions (Free/Pro/Enterprise) and feature gating constants exist in `src/lib/subscription/plans.ts`. **Deferred:** Stripe Checkout integration, Stripe Customer Portal, webhook handling, subscription middleware enforcement. Tests validate plan definitions only.
+
 ## 1. Goal & User Story
 As a user, I want to choose a subscription plan (Free, Pro at $29/mo, Enterprise at $99/mo) that fits my needs, with Stripe-hosted payment and self-service subscription management. Feature gating middleware enforces plan limits across the app.
 
