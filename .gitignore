@@ -55,6 +55,16 @@ schema.txt
 lot_size_accuracy.json
 massing_data.json
 
+# scraper temp files
+.proxy_ext/
+tmp_*.py
+tmp_*.mjs
+tmp_*.json
+
+# claude code agent worktrees
+.claude/worktrees/
+.claude/settings.local.json
+
 # accidental zero-byte files from CLI typos
 nul
 GEO_ID
