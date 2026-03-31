@@ -19,9 +19,10 @@
 const pipeline = require('./lib/pipeline');
 
 // SQL version of the JS stripStreetType regex — removes street type suffixes
-const STRIP_STREET_SQL = `TRIM(REGEXP_REPLACE(UPPER(ca.street_name),
+// Strip street type suffixes and escape LIKE wildcards (% and _) for safe use in LIKE patterns
+const STRIP_STREET_SQL = `REPLACE(REPLACE(TRIM(REGEXP_REPLACE(UPPER(ca.street_name),
   '\\y(ST|STREET|AVE|AVENUE|DR|DRIVE|RD|ROAD|BLVD|BOULEVARD|CRT|COURT|CRES|CRESCENT|PL|PLACE|WAY|LANE|LN|TR|TRAIL|TERR|TERRACE|CIR|CIRCLE|PKWY|PARKWAY|GATE|GDNS|GARDENS|GRV|GROVE|HTS|HEIGHTS|MEWS|SQ|SQUARE)\\y',
-  '', 'g'))`;
+  '', 'g')), '%', '\\%'), '_', '\\_')`;
 
 pipeline.run('link-coa', async (pool) => {
   const args = process.argv.slice(2);

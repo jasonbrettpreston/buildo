@@ -468,7 +468,9 @@ pipeline.run('classify-scope', async (pool) => {
       }
 
       typeCounts[projectType] = (typeCounts[projectType] || 0) + 1;
-      if (scopeTags.length > 0) withTags++;
+      // Count permits with tags beyond the mandatory use-type (residential/commercial/mixed-use)
+      const detailedTags = scopeTags.filter(t => t !== 'residential' && t !== 'commercial' && t !== 'mixed-use');
+      if (detailedTags.length > 0) withTags++;
       for (const tag of scopeTags) {
         tagCounts[tag] = (tagCounts[tag] || 0) + 1;
       }

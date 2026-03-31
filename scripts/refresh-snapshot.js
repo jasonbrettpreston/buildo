@@ -176,7 +176,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
   const p = parcelsRes.rows[0];
 
   const neighbourhood_count = parseInt(nhoodRes.rows[0].count);
-  pipeline.log.info(TAG, `Neighbourhoods (active): ${neighbourhood_count} / ${active_permits} = ${(neighbourhood_count/active_permits*100).toFixed(1)}%`);
+  pipeline.log.info(TAG, `Neighbourhoods (active): ${neighbourhood_count} / ${active_permits} = ${active_permits > 0 ? (neighbourhood_count/active_permits*100).toFixed(1) : '0.0'}%`);
 
   const c = coaRes.rows[0];
   const coaTotal = parseInt(c.total);

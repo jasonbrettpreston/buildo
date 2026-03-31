@@ -490,7 +490,7 @@ describe('Engine Health CQA Tier 3', () => {
       'utf-8'
     );
     expect(source).toContain("require('../lib/pipeline')");
-    expect(source).toContain('PIPELINE_SUMMARY:');
+    expect(source).toMatch(/pipeline\.emitSummary|PIPELINE_SUMMARY:/);
     expect(source).toContain('PIPELINE_META:');
     expect(source).toContain('pipeline.createPool()');
   });
@@ -587,7 +587,8 @@ describe('Engine Health CQA Tier 3', () => {
       path.join(__dirname, '../../scripts/quality/assert-engine-health.js'),
       'utf-8'
     );
-    const summaryMatch = source.match(/PIPELINE_SUMMARY.*?(\{[^}]+\})/);
+    // Match both raw PIPELINE_SUMMARY and pipeline.emitSummary() calls
+    const summaryMatch = source.match(/(?:PIPELINE_SUMMARY|emitSummary\().*?(\{[^}]+\})/);
     expect(summaryMatch).toBeTruthy();
     expect(summaryMatch![1]).toContain('records_updated');
   });

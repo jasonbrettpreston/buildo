@@ -381,11 +381,11 @@ async function run() {
            records_meta = $5
        WHERE id = $4`,
       [status, durationMs, errorMsg, runId, meta]
-    ).catch(() => {});
+    ).catch((err) => pipeline.log.warn('[assert-schema]', `pipeline_runs UPDATE failed: ${err.message}`));
   }
 
   // Always emit PIPELINE_SUMMARY so chain orchestrator can capture records_meta
-  console.log(`PIPELINE_SUMMARY:${JSON.stringify({ records_total: 0, records_new: null, records_meta: JSON.parse(meta) })}`);
+  pipeline.emitSummary({ records_total: 0, records_new: null, records_updated: null, records_meta: JSON.parse(meta) });
   console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["metadata"] }, writes: { "pipeline_runs": ["checks_passed", "checks_failed"] } }));
 
   console.log(`\n=== Schema Validation: ${status.toUpperCase()} (${(durationMs / 1000).toFixed(1)}s) ===\n`);
@@ -399,6 +399,6 @@ async function run() {
 
 run().catch((err) => {
   console.error('Schema validation error:', err);
-  pool.end().catch(() => {});
+  pool.end().catch((endErr) => pipeline.log.warn('[assert-schema]', `pool.end failed: ${endErr.message}`));
   process.exit(1);
 });

@@ -449,7 +449,8 @@ describe('Pipeline SDK', () => {
     for (const script of CQA_SCRIPTS) {
       it(`${script} emits records_new: null (not 0) for CQA exemption`, () => {
         const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
-        const summaryMatch = content.match(/PIPELINE_SUMMARY.*records_new:\s*(null|0)/);
+        // Match both raw PIPELINE_SUMMARY and pipeline.emitSummary() calls
+        const summaryMatch = content.match(/(?:PIPELINE_SUMMARY|emitSummary\().*records_new:\s*(null|0)/);
         expect(summaryMatch).not.toBeNull();
         expect(summaryMatch![1]).toBe('null');
       });

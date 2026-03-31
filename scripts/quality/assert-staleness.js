@@ -116,5 +116,5 @@ pipeline.run('assert-staleness', async (pool) => {
     {}
   );
 
-  if (errors.length > 0) process.exit(1);
+  if (errors.length > 0) throw new Error(`Staleness check failed: ${errors.join('; ')}`);
 });

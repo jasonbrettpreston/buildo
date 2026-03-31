@@ -47,9 +47,10 @@ async function run() {
 
   // Determine which checks to run based on chain context.
   // Each chain only validates data relevant to its own sources.
-  const runPermitChecks = !CHAIN_ID || CHAIN_ID === 'permits';
-  const runCoaChecks    = !CHAIN_ID || CHAIN_ID === 'coa';
-  const runSourceChecks = !CHAIN_ID || CHAIN_ID === 'sources';
+  const runPermitChecks     = !CHAIN_ID || CHAIN_ID === 'permits';
+  const runCoaChecks        = !CHAIN_ID || CHAIN_ID === 'coa';
+  const runSourceChecks     = !CHAIN_ID || CHAIN_ID === 'sources';
+  const runInspectionChecks = !CHAIN_ID || CHAIN_ID === 'deep_scrapes';
 
   const warnings = [];
   const errors = [];
@@ -474,7 +475,7 @@ async function run() {
     // Note: Telemetry checks moved to assert-network-health.js (Phase 2)
     //       Staleness checks moved to assert-staleness.js (Phase 4)
     // -----------------------------------------------------------------------
-    {
+    if (runInspectionChecks) {
       const auditRows = [];
       try {
         const inspCount = await count(`SELECT COUNT(*) FROM permit_inspections`);
@@ -593,6 +594,7 @@ async function run() {
     }
 
     // Ghost record detection — permits the City silently dropped from CKAN
+    if (runPermitChecks) {
     console.log('\n--- Ghost Records (stale > 30 days) ---');
     try {
       const ghostRes = await pool.query(
@@ -612,6 +614,7 @@ async function run() {
       // Non-fatal — last_seen_at column may not exist
       console.log(`  SKIP: Ghost record check failed: ${ghostErr.message}`);
     }
+    } // end runPermitChecks ghost check
 
   } catch (err) {
     errors.push(err.message);
@@ -652,11 +655,11 @@ async function run() {
            records_meta = $5
        WHERE id = $4`,
       [status, durationMs, errorMsg, runId, meta]
-    ).catch(() => {});
+    ).catch((err) => pipeline.log.warn('[assert-data-bounds]', `pipeline_runs UPDATE failed: ${err.message}`));
   }
 
   // Always emit PIPELINE_SUMMARY so chain orchestrator can capture records_meta
-  console.log(`PIPELINE_SUMMARY:${JSON.stringify({ records_total: 0, records_new: null, records_meta: JSON.parse(meta) })}`);
+  pipeline.emitSummary({ records_total: 0, records_new: null, records_updated: null, records_meta: JSON.parse(meta) });
   console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["*"], "parcels": ["*"], "address_points": ["*"], "building_footprints": ["*"], "neighbourhoods": ["*"], "coa_applications": ["*"], "permit_inspections": ["*"] }, writes: { "pipeline_runs": ["checks_passed", "checks_failed", "checks_warned"] } }));
 
   if (warnings.length > 0) {
@@ -675,6 +678,6 @@ async function run() {
 
 run().catch((err) => {
   console.error('Data bounds validation error:', err);
-  pool.end().catch(() => {});
+  pool.end().catch((endErr) => pipeline.log.warn('[assert-data-bounds]', `pool.end failed: ${endErr.message}`));
   process.exit(1);
 });

@@ -38,6 +38,17 @@ const TRADES = [
   { id: 18, slug: 'demolition' },
   { id: 19, slug: 'landscaping' },
   { id: 20, slug: 'waterproofing' },
+  { id: 21, slug: 'trim-work' },
+  { id: 22, slug: 'millwork-cabinetry' },
+  { id: 23, slug: 'tiling' },
+  { id: 24, slug: 'stone-countertops' },
+  { id: 25, slug: 'decking-fences' },
+  { id: 26, slug: 'eavestrough-siding' },
+  { id: 27, slug: 'pool-installation' },
+  { id: 28, slug: 'solar' },
+  { id: 29, slug: 'security' },
+  { id: 30, slug: 'temporary-fencing' },
+  { id: 31, slug: 'caulking' },
   { id: 32, slug: 'drain-plumbing' },
 ];
 
@@ -47,10 +58,10 @@ const TRADE_BY_ID = new Map(TRADES.map(t => [t.id, t]));
 // Phase determination
 // ---------------------------------------------------------------------------
 const PHASE_TRADES = {
-  early_construction: ['excavation','shoring','demolition','concrete','waterproofing','drain-plumbing'],
+  early_construction: ['excavation','shoring','demolition','concrete','waterproofing','drain-plumbing','temporary-fencing'],
   structural: ['framing','structural-steel','masonry','concrete','roofing','plumbing','hvac','electrical','elevator','fire-protection'],
-  finishing: ['insulation','drywall','painting','flooring','glazing','fire-protection','plumbing','hvac','electrical'],
-  landscaping: ['landscaping','painting'],
+  finishing: ['insulation','drywall','painting','flooring','glazing','fire-protection','plumbing','hvac','electrical','trim-work','millwork-cabinetry','tiling','stone-countertops','caulking','solar','security'],
+  landscaping: ['landscaping','painting','decking-fences','eavestrough-siding','pool-installation'],
 };
 
 function determinePhase(permit) {

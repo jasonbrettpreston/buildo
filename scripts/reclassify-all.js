@@ -54,20 +54,21 @@ async function main() {
 
       if (permits.length === 0) break;
 
-      for (const permit of permits) {
-        try {
-          // 1. Classify scope
-          const scope = classifyScope(permit);
-
-          // 2. Classify trades using tag matrix
-          const matches = classifyPermit(permit, rules, scope.scope_tags);
-
-          // 3. Classify products
-          const products = classifyProducts(permit, scope.scope_tags);
-
-          // 4. Write to DB
-          const client = await pool.connect();
+      // Acquire one client per batch (not per permit) to avoid 237K connect/release cycles
+      const client = await pool.connect();
+      try {
+        for (const permit of permits) {
           try {
+            // 1. Classify scope
+            const scope = classifyScope(permit);
+
+            // 2. Classify trades using tag matrix
+            const matches = classifyPermit(permit, rules, scope.scope_tags);
+
+            // 3. Classify products
+            const products = classifyProducts(permit, scope.scope_tags);
+
+            // 4. Write to DB in a per-permit transaction
             await client.query('BEGIN');
 
             // Update scope
@@ -82,17 +83,21 @@ async function main() {
               'DELETE FROM permit_trades WHERE permit_num = $1 AND revision_num = $2',
               [permit.permit_num, permit.revision_num]
             );
-            for (const match of matches) {
+            // Batch-insert trades using multi-row VALUES
+            if (matches.length > 0) {
+              const tradeCols = 10; // permit_num, revision_num, trade_id, trade_slug, trade_name, tier, confidence, is_active, phase, lead_score
+              const tradePlaceholders = [];
+              const tradeValues = [];
+              for (let ti = 0; ti < matches.length; ti++) {
+                const m = matches[ti];
+                const base = ti * tradeCols;
+                tradePlaceholders.push(`($${base+1},$${base+2},$${base+3},$${base+4},$${base+5},$${base+6},$${base+7},$${base+8},$${base+9},$${base+10})`);
+                tradeValues.push(m.permit_num, m.revision_num, m.trade_id, m.trade_slug, m.trade_name, m.tier, m.confidence, m.is_active, m.phase, m.lead_score);
+              }
               await client.query(
-                `INSERT INTO permit_trades (
-                  permit_num, revision_num, trade_id, trade_slug, trade_name,
-                  tier, confidence, is_active, phase, lead_score
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-                [
-                  match.permit_num, match.revision_num, match.trade_id,
-                  match.trade_slug, match.trade_name, match.tier,
-                  match.confidence, match.is_active, match.phase, match.lead_score,
-                ]
+                `INSERT INTO permit_trades (permit_num, revision_num, trade_id, trade_slug, trade_name, tier, confidence, is_active, phase, lead_score)
+                 VALUES ${tradePlaceholders.join(',')}`,
+                tradeValues
               );
             }
 
@@ -101,12 +106,21 @@ async function main() {
               'DELETE FROM permit_products WHERE permit_num = $1 AND revision_num = $2',
               [permit.permit_num, permit.revision_num]
             );
-            for (const pm of products) {
+            // Batch-insert products using multi-row VALUES
+            if (products.length > 0) {
+              const prodCols = 6; // permit_num, revision_num, product_id, product_slug, product_name, confidence
+              const prodPlaceholders = [];
+              const prodValues = [];
+              for (let pi = 0; pi < products.length; pi++) {
+                const pm = products[pi];
+                const base = pi * prodCols;
+                prodPlaceholders.push(`($${base+1},$${base+2},$${base+3},$${base+4},$${base+5},$${base+6})`);
+                prodValues.push(pm.permit_num, pm.revision_num, pm.product_id, pm.product_slug, pm.product_name, pm.confidence);
+              }
               await client.query(
-                `INSERT INTO permit_products (
-                  permit_num, revision_num, product_id, product_slug, product_name, confidence
-                ) VALUES ($1, $2, $3, $4, $5, $6)`,
-                [pm.permit_num, pm.revision_num, pm.product_id, pm.product_slug, pm.product_name, pm.confidence]
+                `INSERT INTO permit_products (permit_num, revision_num, product_id, product_slug, product_name, confidence)
+                 VALUES ${prodPlaceholders.join(',')}`,
+                prodValues
               );
             }
 
@@ -114,18 +128,16 @@ async function main() {
             classifiedCount++;
             tradeTotal += matches.length;
             productTotal += products.length;
-          } catch (txErr) {
-            await client.query('ROLLBACK');
-            throw txErr;
-          } finally {
-            client.release();
-          }
-        } catch (err) {
-          errorCount++;
-          if (errorCount <= 10) {
-            console.error(`Error on ${permit.permit_num}/${permit.revision_num}: ${err.message}`);
+          } catch (err) {
+            try { await client.query('ROLLBACK'); } catch (_) { /* rollback best-effort */ }
+            errorCount++;
+            if (errorCount <= 10) {
+              console.error(`Error on ${permit.permit_num}/${permit.revision_num}: ${err.message}`);
+            }
           }
         }
+      } finally {
+        client.release();
       }
 
       offset += permits.length;

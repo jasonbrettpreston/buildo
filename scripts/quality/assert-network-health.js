@@ -155,5 +155,5 @@ pipeline.run('assert-network-health', async (pool) => {
     {}
   );
 
-  if (errors.length > 0) process.exit(1);
+  if (errors.length > 0) throw new Error(`Network health check failed: ${errors.join('; ')}`);
 });

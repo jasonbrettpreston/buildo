@@ -11,126 +11,14 @@
  *   and aggregate accuracy scores.
  *
  * Usage:
- *   node scripts/audit-scope-accuracy.js [--limit 500] [--permit-type "Small Residential Projects"]
+ *   npx tsx scripts/analysis/audit-scope-accuracy.js [--limit 500] [--permit-type "Small Residential Projects"]
+ *
+ * NOTE: Requires tsx runtime for TypeScript imports (§7.2 dual-code-path compliance).
  */
-const { Pool } = require('pg');
+const pipeline = require('../lib/pipeline');
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
-
-// ---------------------------------------------------------------------------
-// Inline classification logic (mirrors src/lib/classification/scope.ts)
-// ---------------------------------------------------------------------------
-
-function classifyProjectType(permit) {
-  const work = (permit.work || '').trim();
-  const permitType = (permit.permit_type || '').trim();
-  const desc = (permit.description || '').trim().toLowerCase();
-
-  if (work === 'New Building') return 'new_build';
-  if (work === 'Demolition') return 'demolition';
-  if (work === 'Interior Alterations') return 'renovation';
-  if (work === 'Addition(s)') return 'addition';
-  if (/^(Deck|Porch|Garage|Pool)$/i.test(work)) return 'addition';
-  if (/repair|fire damage|balcony\/guard/i.test(work)) return 'repair';
-
-  if (/new\s*(house|building)/i.test(permitType)) return 'new_build';
-  if (/demolition\s*folder/i.test(permitType)) return 'demolition';
-
-  if (/^(Plumbing|Mechanical|Drain|Electrical)/i.test(permitType)) {
-    const buildingWork = /addition|alteration|new\s*building|renovation|construct/i.test(work);
-    if (!buildingWork) return 'mechanical';
-  }
-
-  if (/\bnew\s*(build|construct|erect)/i.test(desc)) return 'new_build';
-  if (/\bdemolish|demolition|tear\s*down/i.test(desc)) return 'demolition';
-  if (/\baddition\b/i.test(desc)) return 'addition';
-  if (/\brenovati?on|interior\s*alter|remodel/i.test(desc)) return 'renovation';
-  if (/\brepair\b/i.test(desc)) return 'repair';
-
-  return 'other';
-}
-
-const TAG_PATTERNS = [
-  { tag: '2nd-floor',       patterns: [/\b2nd\s*(floor|storey|flr)\b/i, /\bsecond\s*(floor|storey|flr)\b/i] },
-  { tag: '3rd-floor',       patterns: [/\b3rd\s*(floor|storey|flr)\b/i, /\bthird\s*(floor|storey|flr)\b/i] },
-  { tag: 'rear-addition',   patterns: [/\brear\s*(addition|ext(ension)?)\b/i] },
-  { tag: 'side-addition',   patterns: [/\bside\s*(addition|ext(ension)?)\b/i] },
-  { tag: 'front-addition',  patterns: [/\bfront\s*(addition|ext(ension)?)\b/i] },
-  { tag: 'storey-addition', patterns: [/\b(storey|story)\s*addition\b/i, /\badd(ition)?\s*(a|one|1|two|2|three|3)?\s*(storey|story|stories)\b/i] },
-  { tag: 'basement',        patterns: [/\bbasement\b/i] },
-  { tag: 'underpinning',    patterns: [/\bunderpinn?ing\b/i] },
-  { tag: 'foundation',      patterns: [/\bfoundation\b/i] },
-  { tag: 'deck',            patterns: [/\bdeck\b/i] },
-  { tag: 'porch',           patterns: [/\bporch\b/i] },
-  { tag: 'garage',          patterns: [/\bgarage\b/i] },
-  { tag: 'carport',         patterns: [/\bcarport\b/i] },
-  { tag: 'canopy',          patterns: [/\bcanopy\b/i] },
-  { tag: 'walkout',         patterns: [/\bwalk[\s-]?out\b/i] },
-  { tag: 'balcony',         patterns: [/\bbalcon(y|ies)\b/i] },
-  { tag: 'laneway-suite',   patterns: [/\blaneway\s*(suite|house)\b/i, /\blaneway\b/i] },
-  { tag: 'pool',            patterns: [/\bpool\b/i] },
-  { tag: 'fence',           patterns: [/\bfenc(e|ing)\b/i] },
-  { tag: 'roofing',         patterns: [/\broof(ing)?\b/i, /\bre-?roof\b/i] },
-  { tag: 'kitchen',         patterns: [/\bkitchen\b/i] },
-  { tag: 'bathroom',        patterns: [/\bbath(room)?\b/i, /\bwashroom\b/i] },
-  { tag: 'basement-finish', patterns: [/\bbasement\s*(finish|reno|completion|convert|apartment)\b/i, /\bfinish(ed|ing)?\s*basement\b/i] },
-  { tag: 'second-suite',    patterns: [/\b(2nd|second)\s*suite\b/i, /\bsecondary\s*suite\b/i, /\b2nd\s*unit\b/i, /\bsecond\s*unit\b/i] },
-  { tag: 'open-concept',    patterns: [/\bopen\s*concept\b/i, /\bremov(e|al|ing)\s*(of\s*)?(bearing|load|interior)\s*wall\b/i] },
-  { tag: 'convert-unit',    patterns: [/\bconvert\b/i] },
-  { tag: 'tenant-fitout',   patterns: [/\btenant\b/i, /\bfit[\s-]?out\b/i, /\bleasehold\s*improv/i] },
-  { tag: 'condo',           patterns: [/\bcondo(minium)?\b/i] },
-  { tag: 'apartment',       patterns: [/\bapartment\b/i] },
-  { tag: 'townhouse',       patterns: [/\btownhouse\b/i, /\btown\s*home\b/i, /\brow\s*house\b/i] },
-  { tag: 'mixed-use',       patterns: [/\bmixed[\s-]?use\b/i] },
-  { tag: 'retail',          patterns: [/\bretail\b/i] },
-  { tag: 'office',          patterns: [/\boffice\b/i] },
-  { tag: 'restaurant',      patterns: [/\brestaurant\b/i] },
-  { tag: 'warehouse',       patterns: [/\bwarehouse\b/i] },
-  { tag: 'school',          patterns: [/\bschool\b/i] },
-  { tag: 'hospital',        patterns: [/\bhospital\b/i] },
-  { tag: 'hvac',            patterns: [/\bhvac\b/i, /\b(furnace|air\s*condition|heat\s*pump|duct(work)?)\b/i] },
-  { tag: 'plumbing',        patterns: [/\bplumbing\b/i] },
-  { tag: 'electrical',      patterns: [/\belectrical\b/i] },
-  { tag: 'sprinkler',       patterns: [/\bsprinkler\b/i] },
-  { tag: 'fire-alarm',      patterns: [/\bfire\s*alarm\b/i] },
-  { tag: 'elevator',        patterns: [/\belevator\b/i, /\blift\b/i] },
-  { tag: 'drain',           patterns: [/\bdrain\b/i, /\bsewer\b/i, /\bstorm\s*water\b/i] },
-  { tag: 'backflow-preventer', patterns: [/\bbackflow\s*(preventer|prevent(ion)?|device)\b/i, /\bbackflow\b/i] },
-  { tag: 'access-control',  patterns: [/\bmaglock\b/i, /\baccess\s*control\b/i, /\bcard\s*reader\b/i, /\bsecurity\s*(lock|access)\b/i] },
-];
-
-function extractScopeTags(permit) {
-  const fields = [
-    permit.description || '',
-    permit.work || '',
-    permit.structure_type || '',
-    permit.proposed_use || '',
-    permit.current_use || '',
-  ].join(' ');
-
-  const tags = new Set();
-  for (const { tag, patterns } of TAG_PATTERNS) {
-    for (const pattern of patterns) {
-      if (pattern.test(fields)) {
-        tags.add(tag);
-        break;
-      }
-    }
-  }
-
-  const storeys = permit.storeys || 0;
-  if (storeys >= 10) tags.add('high-rise');
-  else if (storeys >= 5) tags.add('mid-rise');
-  else if (storeys >= 2) tags.add('low-rise');
-
-  return Array.from(tags).sort();
-}
+// classifyScope is loaded dynamically from the shared TS module (§7.2)
+let classifyScope;
 
 // ---------------------------------------------------------------------------
 // "Ground Truth" keyword signals — broader patterns that SHOULD be captured
@@ -202,9 +90,10 @@ function scorePermit(permit) {
   const desc = (permit.description || '').trim();
   if (!desc) return null; // Skip permits with no description
 
-  // Run current classifier
-  const projectType = classifyProjectType(permit);
-  const scopeTags = extractScopeTags(permit);
+  // Run current classifier (imported from shared module — §7.2)
+  const scope = classifyScope(permit);
+  const projectType = scope.project_type;
+  const scopeTags = scope.scope_tags;
 
   // Extract ground truth signals from description
   const groundTruth = extractGroundTruth(desc);
@@ -257,7 +146,16 @@ function scorePermit(permit) {
 // Main
 // ---------------------------------------------------------------------------
 
-async function main() {
+pipeline.run('audit-scope-accuracy', async (pool) => {
+  // Load shared classifier (requires tsx runtime)
+  try {
+    const scopeModule = await import('../../src/lib/classification/scope');
+    classifyScope = scopeModule.classifyScope;
+  } catch (e) {
+    console.error('Failed to import scope classifier. Run with: npx tsx scripts/analysis/audit-scope-accuracy.js');
+    throw e;
+  }
+
   const args = process.argv.slice(2);
   let limit = 500;
   let permitType = 'Small Residential Projects';
@@ -423,11 +321,5 @@ async function main() {
     console.log(`    EXPECTED: [${r.gt_scope_tags.join(', ')}]\n`);
   }
 
-  await pool.end();
   console.log('\nDone.');
-}
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
 });

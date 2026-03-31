@@ -133,7 +133,7 @@ async function run() {
       for (const target of vacuumTargets) {
         try {
           // VACUUM ANALYZE is safe: non-blocking on reads, reclaims dead tuples, updates planner stats
-          await pool.query(`VACUUM ANALYZE "${target.table_name}"`);
+          await pool.query(`VACUUM ANALYZE ${pipeline.quoteIdent(target.table_name)}`);
           console.log(`  VACUUM ANALYZE ${target.table_name} — done (was ${(target.dead_ratio * 100).toFixed(1)}% dead)`);
         } catch (vacErr) {
           console.warn(`  WARN: VACUUM ANALYZE ${target.table_name} failed: ${vacErr.message}`);
@@ -288,10 +288,10 @@ async function run() {
            records_meta = $5
        WHERE id = $4`,
       [status, durationMs, errorMsg, runId, meta]
-    ).catch(() => {});
+    ).catch((err) => pipeline.log.warn('[assert-engine-health]', `pipeline_runs UPDATE failed: ${err.message}`));
   }
 
-  console.log(`PIPELINE_SUMMARY:${JSON.stringify({ records_total: tableResults.length, records_new: null, records_updated: recordsUpdated, records_meta: JSON.parse(meta) })}`);
+  pipeline.emitSummary({ records_total: tableResults.length, records_new: null, records_updated: recordsUpdated, records_meta: JSON.parse(meta) });
   console.log('PIPELINE_META:' + JSON.stringify({
     reads: { pg_stat_user_tables: ['relname', 'n_live_tup', 'n_dead_tup', 'seq_scan', 'idx_scan', 'n_tup_ins', 'n_tup_upd'] },
     writes: { engine_health_snapshots: ['table_name', 'n_live_tup', 'n_dead_tup', 'dead_ratio', 'seq_scan', 'idx_scan', 'seq_ratio'] },
@@ -313,6 +313,6 @@ async function run() {
 
 run().catch((err) => {
   console.error('Engine health check error:', err);
-  pool.end().catch(() => {});
+  pool.end().catch((endErr) => pipeline.log.warn('[assert-engine-health]', `pool.end failed: ${endErr.message}`));
   process.exit(1);
 });
