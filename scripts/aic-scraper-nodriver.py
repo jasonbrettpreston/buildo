@@ -109,10 +109,16 @@ NOISE_URLS = [
     'https://www.toronto.ca/city-government/planning-development/application-information-centre/',
 ]
 
-# Viewport sizes — vary browser fingerprint per session
-VIEWPORT_SIZES = [
-    (1280, 800), (1366, 768), (1440, 900),
-    (1536, 864), (1680, 1050), (1920, 1080),
+# Fingerprint profiles — coherent tuples of (width, height, platform, ua_hint)
+# Ensures viewport, screen dimensions, platform, and UA are internally consistent.
+# ua_hint is documentary — Chrome sets its own UA string; this records what it should match.
+FINGERPRINT_PROFILES = [
+    {'w': 1280, 'h': 800,  'platform': 'Win32', 'ua_hint': 'Windows NT 10.0; Win64; x64'},
+    {'w': 1366, 'h': 768,  'platform': 'Win32', 'ua_hint': 'Windows NT 10.0; Win64; x64'},
+    {'w': 1440, 'h': 900,  'platform': 'MacIntel', 'ua_hint': 'Macintosh; Intel Mac OS X 10_15_7'},
+    {'w': 1536, 'h': 864,  'platform': 'Win32', 'ua_hint': 'Windows NT 10.0; Win64; x64'},
+    {'w': 1680, 'h': 1050, 'platform': 'MacIntel', 'ua_hint': 'Macintosh; Intel Mac OS X 10_15_7'},
+    {'w': 1920, 'h': 1080, 'platform': 'Win32', 'ua_hint': 'Windows NT 10.0; Win64; x64'},
 ]
 
 # Batch size range — vary permits per batch instead of fixed BATCH_SIZE
@@ -301,36 +307,72 @@ def cleanup_proxy_extension(ext_dir):
 # ---------------------------------------------------------------------------
 # Browser — nodriver CDP (no WebDriver)
 # ---------------------------------------------------------------------------
-async def bootstrap_session(proxy_ext_dir=None):
+async def inject_screen_overrides(page, profile):
+    """Override screen dimensions to match the chosen viewport profile.
+
+    Headless Chrome reports screen.width/height as 800x600 regardless of
+    --window-size, which is a known bot detection vector (nodriver#2242).
+    """
+    w, h = profile['w'], profile['h']
+    platform = profile['platform']
+    await page.evaluate(f"""
+        Object.defineProperty(screen, 'width', {{ get: () => {w} }});
+        Object.defineProperty(screen, 'height', {{ get: () => {h} }});
+        Object.defineProperty(screen, 'availWidth', {{ get: () => {w} }});
+        Object.defineProperty(screen, 'availHeight', {{ get: () => {h - 40} }});
+        Object.defineProperty(navigator, 'platform', {{ get: () => '{platform}' }});
+    """, await_promise=False)
+
+
+async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
     """Launch Chrome via CDP and establish AIC session with warm entry.
 
     When proxy is configured, runs headed (not headless) because
     --load-extension is required for MV3 proxy auth and Chrome's
     headless mode does not support extensions.
     """
-    # Random viewport per session for fingerprint variation
-    vw, vh = random.choice(VIEWPORT_SIZES)
-    browser_args = [f'--window-size={vw},{vh}']
+    # Coherent fingerprint profile — viewport, platform, and UA match
+    profile = random.choice(FINGERPRINT_PROFILES)
+    vw, vh = profile['w'], profile['h']
+    browser_args = [
+        f'--window-size={vw},{vh}',
+        '--disable-blink-features=AutomationControlled',  # suppress cdc_ variables
+    ]
     use_headless = True
     if proxy_ext_dir:
         browser_args.append(f'--load-extension={proxy_ext_dir}')
         use_headless = False  # Extensions require headed mode
-    browser = await uc.start(headless=use_headless, browser_args=browser_args)
+
+    # Persistent profile dir — reuse cookies/localStorage across runs
+    profile_name = f'worker-{worker_id}' if worker_id else 'standalone'
+    profile_dir = os.path.join(Path.home(), '.buildo-scraper', f'profile-{profile_name}')
+    os.makedirs(profile_dir, exist_ok=True)
+
+    browser = await uc.start(
+        headless=use_headless,
+        browser_args=browser_args,
+        user_data_dir=profile_dir,
+    )
     try:
         page = await browser.get('about:blank')
+
+        # Fix headless screen dimensions to match viewport (nodriver#2242)
+        await inject_screen_overrides(page, profile)
 
         # Warm bootstrap: random entry URL for referrer chain variation
         entry_url = random.choice(ENTRY_URLS)
         try:
             page = await browser.get(entry_url, new_tab=False)
+            await inject_screen_overrides(page, profile)
             await page.sleep(random.uniform(1.5, 4.0))
         except Exception:
             pass  # entry site may be slow — non-fatal
 
         # Navigate to AIC portal
         page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
+        await inject_screen_overrides(page, profile)
         await page.sleep(random.uniform(0.8, 2.0))
-        return browser, page
+        return browser, page, profile
     except Exception as err:
         browser.stop()
         raise err
@@ -364,15 +406,34 @@ async def preflight_stealth_check(page):
     except Exception as err:
         return False, f'window.chrome check failed: {err}'
 
+    # Check 3: screen dimensions should NOT be the headless default 800x600
+    try:
+        screen_w = await page.evaluate('screen.width', await_promise=False)
+        if screen_w == 800:
+            return False, f'screen.width is 800 — headless default not overridden'
+    except Exception:
+        pass  # non-fatal — screen check is best-effort
+
+    # Check 4: no cdc_ prefixed variables (Chrome DevTools Controller leak)
+    try:
+        has_cdc = await page.evaluate(
+            'Object.keys(document).some(k => k.startsWith("cdc_") || k.startsWith("$cdc_"))',
+            await_promise=False,
+        )
+        if has_cdc:
+            return False, 'cdc_ variables detected — AutomationControlled not disabled'
+    except Exception:
+        pass  # non-fatal
+
     return True, None
 
 
-async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None):
+async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id=None):
     """Bootstrap with retry — 3 attempts with 10s backoff."""
     last_error = None
     for attempt in range(1, 4):
         try:
-            browser, page = await bootstrap_session(proxy_ext_dir=proxy_ext_dir)
+            browser, page, profile = await bootstrap_session(proxy_ext_dir=proxy_ext_dir, worker_id=worker_id)
             if attempt > 1:
                 log('INFO', '[scraper]', f'Bootstrap succeeded on attempt {attempt}')
 
@@ -385,7 +446,7 @@ async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None):
                     raise Exception(f'Preflight failed: {reason}')
                 log('INFO', '[scraper]', 'Preflight stealth check passed')
 
-            return browser, page, attempt
+            return browser, page, attempt, profile
         except Exception as err:
             last_error = err
             log('ERROR', '[scraper]', str(err), {'event': 'bootstrap_failed', 'attempt': attempt})
@@ -725,7 +786,7 @@ def complete_batch_in_queue(conn, year_seqs, worker_id, failed=None):
 # ---------------------------------------------------------------------------
 # Scrape loop — shared between standalone and worker modes
 # ---------------------------------------------------------------------------
-async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]', proxy_ext_dir=None):
+async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]', proxy_ext_dir=None, profile=None):
     """Core scrape loop for a list of year_seq combos. Mutates tel in place."""
 
     def accumulate(result):
@@ -743,6 +804,8 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
         tel['status_changes'] += result.get('status_changes', 0)
         if result.get('retry_exhausted'):
             tel['proxy_errors'] += 1
+            # WAF blocks (retry exhausted) should also trigger proxy rotation
+            tel['consecutive_empty'] += WAF_TRAP_THRESHOLD  # force immediate rotation
 
     for i, year_seq in enumerate(year_seqs):
         progress_pct = (i + 1) / len(year_seqs) * 100
@@ -761,7 +824,7 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
                         tel.get('_worker_id', 'standalone'), int(time.time()))
                     proxy_ext_dir = build_proxy_extension(new_session_id)
                     log('INFO', worker_tag, f'Proxy session rotated: {new_session_id}')
-                browser, page, attempts = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir)
+                browser, page, attempts, profile = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir, worker_id=tel.get('_worker_id'))
                 tel['session_bootstraps'] += attempts
                 tel['consecutive_empty'] = 0
             except Exception as err:
@@ -774,6 +837,8 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
             log('INFO', worker_tag, f'Refreshing AIC session (after {i} permits)...')
             try:
                 page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
+                if profile:
+                    await inject_screen_overrides(page, profile)
                 await page.sleep(1)
             except Exception as err:
                 tel['session_failures'] += 1
@@ -793,9 +858,13 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
             try:
                 noise_url = random.choice(NOISE_URLS)
                 page = await browser.get(noise_url, new_tab=False)
+                if profile:
+                    await inject_screen_overrides(page, profile)
                 await page.sleep(random.uniform(1.0, 3.0))
                 # Return to AIC portal
                 page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
+                if profile:
+                    await inject_screen_overrides(page, profile)
                 await page.sleep(random.uniform(0.5, 1.5))
             except Exception:
                 pass  # noise visit failed — non-fatal
@@ -903,7 +972,7 @@ async def main():
 
     browser = None
     try:
-        browser, page, bootstrap_attempts = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir)
+        browser, page, bootstrap_attempts, profile = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir, worker_id=tel['_worker_id'])
         tel['session_bootstraps'] = bootstrap_attempts
         log('INFO', worker_tag, 'WAF session established (no WebDriver)')
 
@@ -931,7 +1000,7 @@ async def main():
                 with open(args['batch_file'], 'r') as f:
                     year_seqs = json.load(f)
                 log('INFO', worker_tag, f'Worker mode: {len(year_seqs)} year_seqs from {args["batch_file"]}')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile)
 
             elif args['mode'] == 'db-queue':
                 # DB-queue mode: 1 batch = 1 IP address.
@@ -971,13 +1040,13 @@ async def main():
                         log('INFO', worker_tag, f'Batch {batch_num}: new IP session={batch_session_id}')
 
                     if browser is None:
-                        browser, page, attempts = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir)
+                        browser, page, attempts, profile = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir, worker_id=worker_id)
                         tel['session_bootstraps'] += attempts
                         log('INFO', worker_tag, f'Batch {batch_num}: browser bootstrapped')
 
                     log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
                     try:
-                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir)
+                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile)
                         complete_batch_in_queue(conn, year_seqs, worker_id)
                         log('INFO', worker_tag, f'Batch {batch_num}: complete')
                     except Exception as err:
@@ -1022,8 +1091,10 @@ async def main():
                 cur.close()
 
                 year_seqs = [r['year_seq'] for r in rows]
-                log('INFO', worker_tag, f'Batch mode: {len(year_seqs)} year+sequence combos to scrape')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir)
+                # Shuffle to break sequential access patterns (anti-bot signal)
+                random.shuffle(year_seqs)
+                log('INFO', worker_tag, f'Batch mode: {len(year_seqs)} year+sequence combos to scrape (shuffled)')
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile)
 
         finally:
             conn.close()
