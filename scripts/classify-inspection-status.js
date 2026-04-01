@@ -17,44 +17,57 @@ const pipeline = require('./lib/pipeline');
 const STALE_MONTHS = 10;
 
 pipeline.run('classify-inspection-status', async (pool) => {
-  // Step 1: Mark Active Inspection permits as Stalled if no activity in 10+ months
-  // Uses COALESCE to fall back to scraped_at when inspection_date is NULL
-  const stalledResult = await pool.query(
-    `UPDATE permits p
-     SET enriched_status = 'Stalled'
-     FROM (
-       SELECT pi.permit_num,
-              COALESCE(MAX(pi.inspection_date), MIN(pi.scraped_at)::date) AS last_activity
-       FROM permit_inspections pi
-       JOIN permits p2 ON p2.permit_num = pi.permit_num
-       WHERE p2.enriched_status = 'Active Inspection'
-       GROUP BY pi.permit_num
-       HAVING COALESCE(MAX(pi.inspection_date), MIN(pi.scraped_at)::date) < NOW() - INTERVAL '1 month' * $1
-     ) stale
-     WHERE p.permit_num = stale.permit_num
-       AND p.enriched_status IS DISTINCT FROM 'Stalled'`,
-    [STALE_MONTHS]
-  );
-  const stalledCount = stalledResult.rowCount;
+  // Wrap both steps in a single transaction to prevent race conditions
+  // with concurrent scraper inserts between stalling and re-activating
+  const { stalledCount, reactivatedCount } = await pipeline.withTransaction(pool, async (client) => {
+    // Step 1: Mark Active Inspection permits as Stalled if no activity in 10+ months
+    // Uses MAX(scraped_at) — scraped_at tracks when data actually changed, not first discovery
+    const stalledResult = await client.query(
+      `UPDATE permits p
+       SET enriched_status = 'Stalled'
+       FROM (
+         SELECT pi.permit_num,
+                COALESCE(MAX(pi.inspection_date), MAX(pi.scraped_at)::date) AS last_activity
+         FROM permit_inspections pi
+         WHERE EXISTS (
+           SELECT 1 FROM permits p2
+           WHERE p2.permit_num = pi.permit_num
+             AND p2.enriched_status = 'Active Inspection'
+         )
+         GROUP BY pi.permit_num
+         HAVING COALESCE(MAX(pi.inspection_date), MAX(pi.scraped_at)::date) < NOW() - INTERVAL '1 month' * $1
+       ) stale
+       WHERE p.permit_num = stale.permit_num
+         AND p.enriched_status = 'Active Inspection'`,
+      [STALE_MONTHS]
+    );
 
-  // Step 2: Re-activate Stalled permits if new activity detected
-  const reactivatedResult = await pool.query(
-    `UPDATE permits p
-     SET enriched_status = 'Active Inspection'
-     FROM (
-       SELECT pi.permit_num,
-              COALESCE(MAX(pi.inspection_date), MIN(pi.scraped_at)::date) AS last_activity
-       FROM permit_inspections pi
-       JOIN permits p2 ON p2.permit_num = pi.permit_num
-       WHERE p2.enriched_status = 'Stalled'
-       GROUP BY pi.permit_num
-       HAVING COALESCE(MAX(pi.inspection_date), MIN(pi.scraped_at)::date) >= NOW() - INTERVAL '1 month' * $1
-     ) active
-     WHERE p.permit_num = active.permit_num
-       AND p.enriched_status IS DISTINCT FROM 'Active Inspection'`,
-    [STALE_MONTHS]
-  );
-  const reactivatedCount = reactivatedResult.rowCount;
+    // Step 2: Re-activate Stalled permits if new activity detected
+    const reactivatedResult = await client.query(
+      `UPDATE permits p
+       SET enriched_status = 'Active Inspection'
+       FROM (
+         SELECT pi.permit_num,
+                COALESCE(MAX(pi.inspection_date), MAX(pi.scraped_at)::date) AS last_activity
+         FROM permit_inspections pi
+         WHERE EXISTS (
+           SELECT 1 FROM permits p2
+           WHERE p2.permit_num = pi.permit_num
+             AND p2.enriched_status = 'Stalled'
+         )
+         GROUP BY pi.permit_num
+         HAVING COALESCE(MAX(pi.inspection_date), MAX(pi.scraped_at)::date) >= NOW() - INTERVAL '1 month' * $1
+       ) active
+       WHERE p.permit_num = active.permit_num
+         AND p.enriched_status = 'Stalled'`,
+      [STALE_MONTHS]
+    );
+
+    return {
+      stalledCount: stalledResult.rowCount || 0,
+      reactivatedCount: reactivatedResult.rowCount || 0,
+    };
+  });
 
   // Step 3: Report current distribution
   const { rows: dist } = await pool.query(
@@ -73,7 +86,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
 
   pipeline.emitSummary({
     records_total: stalledCount + reactivatedCount,
-    records_new: null,
+    records_new: 0,
     records_updated: stalledCount + reactivatedCount,
     records_meta: {
       stalled: stalledCount,
