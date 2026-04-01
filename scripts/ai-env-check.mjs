@@ -33,6 +33,9 @@ if (hasEnv) {
           val = quoteMatch[2];
         } else {
           val = val.replace(/\s+#.*$/, '');
+          // Re-check for quotes that may remain after comment removal (e.g., VAL='hello' # comment)
+          const innerQuote = val.match(/^(['"])(.*)\1$/);
+          if (innerQuote) val = innerQuote[2];
         }
         process.env[match[1]] = val;
       }
