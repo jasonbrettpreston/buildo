@@ -12,7 +12,7 @@
  *
  * Usage: node scripts/geocode-permits.js
  *
- * SPEC LINK: docs/specs/28_data_quality_dashboard.md
+ * SPEC LINK: docs/specs/05_geocoding.md
  */
 const pipeline = require('./lib/pipeline');
 
@@ -47,26 +47,42 @@ pipeline.run('geocode-permits', async (pool) => {
 
   // Bulk update: join permits to address_points via geo_id
   pipeline.log.info('[geocode-permits]', 'Running bulk UPDATE...');
-  const updated = await pipeline.withTransaction(pool, async (client) => {
-    const result = await client.query(`
-      UPDATE permits p
-      SET latitude = ap.latitude,
-          longitude = ap.longitude,
-          geocoded_at = NOW()
-      FROM address_points ap
-      WHERE ap.address_point_id = CAST(p.geo_id AS INTEGER)
-        AND p.geo_id IS NOT NULL
-        AND p.geo_id != ''
-        AND p.geo_id ~ '^[0-9]+$'
-        AND (p.latitude IS DISTINCT FROM ap.latitude
-          OR p.longitude IS DISTINCT FROM ap.longitude)
-    `);
-    return result.rowCount;
-  });
+  // Single UPDATE is inherently atomic — no transaction wrapper needed
+  const geocodeResult = await pool.query(`
+    UPDATE permits p
+    SET latitude = ap.latitude,
+        longitude = ap.longitude,
+        geocoded_at = NOW()
+    FROM address_points ap
+    WHERE p.geo_id IS NOT NULL
+      AND p.geo_id != ''
+      AND p.geo_id ~ '^[0-9]+$'
+      AND ap.address_point_id = CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END
+      AND (p.latitude IS DISTINCT FROM ap.latitude
+        OR p.longitude IS DISTINCT FROM ap.longitude)
+  `);
+  const updated = geocodeResult.rowCount;
+
+  // Cleanup: clear stale coordinates on permits that lost their geo_id
+  // (e.g., city corrected a typo and removed the geo_id from the feed)
+  // Only clears permits with geocoded_at set (i.e., previously geocoded by this script),
+  // to avoid wiping coordinates set by other geocoding methods.
+  const zombieResult = await pool.query(`
+    UPDATE permits
+    SET latitude = NULL, longitude = NULL, geocoded_at = NULL
+    WHERE (geo_id IS NULL OR geo_id = '')
+      AND latitude IS NOT NULL
+      AND geocoded_at IS NOT NULL
+  `);
+  const zombiesCleaned = zombieResult.rowCount;
+  if (zombiesCleaned > 0) {
+    pipeline.log.info('[geocode-permits]', `Cleaned ${zombiesCleaned} zombie locations (geo_id removed but coords persisted)`);
+  }
 
   // Post-update stats
   const afterCounts = await pool.query(`
     SELECT
+      COUNT(*) as total,
       COUNT(*) FILTER (WHERE latitude IS NOT NULL AND longitude IS NOT NULL) as geocoded,
       COUNT(*) FILTER (
         WHERE latitude IS NULL
@@ -90,7 +106,8 @@ pipeline.run('geocode-permits', async (pool) => {
   });
 
   // Build audit_table for geocoding observability
-  const totalPermits = parseInt(before.total);
+  // Use after.total as denominator to avoid read-skew with concurrent inserts
+  const totalPermits = parseInt(after.total);
   const totalGeocoded = parseInt(after.geocoded);
   const geocodeCoverage = totalPermits > 0 ? (totalGeocoded / totalPermits) * 100 : 0;
   const geocodeAuditRows = [
@@ -98,20 +115,21 @@ pipeline.run('geocode-permits', async (pool) => {
     { metric: 'already_geocoded', value: parseInt(before.already_geocoded), threshold: null, status: 'INFO' },
     { metric: 'newly_geocoded', value: updated, threshold: null, status: 'INFO' },
     { metric: 'total_geocoded', value: totalGeocoded, threshold: null, status: 'INFO' },
-    { metric: 'geocode_coverage', value: geocodeCoverage.toFixed(1) + '%', threshold: '>= 85%', status: geocodeCoverage >= 85 ? 'PASS' : 'WARN' },
+    { metric: 'geocode_coverage', value: geocodeCoverage.toFixed(1) + '%', threshold: '>= 95%', status: geocodeCoverage >= 95 ? 'PASS' : 'WARN' },
     { metric: 'no_geo_id', value: parseInt(after.no_geo_id), threshold: null, status: 'INFO' },
   ];
 
   pipeline.emitSummary({
-    records_total: updated,
-    records_new: updated,
-    records_updated: 0,
+    records_total: parseInt(before.to_geocode),
+    records_new: 0,
+    records_updated: updated + zombiesCleaned,
     records_meta: {
       duration_ms: durationMs,
       permits_total: totalPermits,
       total_geocoded: totalGeocoded,
       has_geo_id_no_match: parseInt(after.has_geo_id_no_match),
       no_geo_id: parseInt(after.no_geo_id),
+      zombies_cleaned: zombiesCleaned,
       audit_table: {
         phase: (process.env.PIPELINE_CHAIN === 'sources') ? 3 : 6,
         name: 'Permit Geocoding',
