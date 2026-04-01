@@ -548,12 +548,13 @@ pipeline.run('classify-scope', async (pool) => {
   });
 
   // Re-add demolition tag to DM permits that lost it during propagation (NULL-safe)
+  // Sort the resulting array to match JS-side sorted output and prevent IS DISTINCT FROM thrashing
   const demFixed = await pipeline.withTransaction(pool, async (client) => {
     const demFixResult = await client.query(
       `UPDATE permits
        SET scope_tags = CASE
          WHEN scope_tags IS NULL THEN ARRAY['demolition']
-         ELSE array_append(scope_tags, 'demolition')
+         ELSE (SELECT ARRAY_AGG(x ORDER BY x) FROM UNNEST(array_append(scope_tags, 'demolition')) AS x)
        END
        WHERE permit_type = 'Demolition Folder (DM)'
          AND (scope_tags IS NULL OR NOT ('demolition' = ANY(scope_tags)))`
@@ -562,10 +563,6 @@ pipeline.run('classify-scope', async (pool) => {
   });
 
   pipeline.log.info('[classify-scope]', `Propagated: ${propagated.toLocaleString()} companions${demFixed > 0 ? `, ${demFixed} DM tags restored` : ''}`);
-
-  // VACUUM — classify_scope is the heaviest permits writer (5K+ updates).
-  // Clean dead tuples before downstream steps (geocode, link_neighbourhoods, link_similar).
-  await pool.query('VACUUM ANALYZE permits');
 
   const durationMs = Date.now() - startTime;
 
