@@ -1,72 +1,92 @@
-# Active Task: WF2 — Harden Enrichment Pre-Flight Filters
+# Active Task: WF1 — WSIB-First Contact Enrichment
 **Status:** Implementation
-**Workflow:** WF2 — Feature Enhancement
+**Workflow:** WF1 — New Feature Genesis
 
 ## Context
-* **Goal:** Add pre-flight filters to `enrich-web-search.js` to skip unenrichable entities (individual names, numbered corporations, generic WSIB trade names, broken city parsing) — eliminating ~70% of wasted Serper API credits.
-* **Target Spec:** `docs/specs/pipeline/45_chain_entities.md`
-* **Key Files:** `scripts/enrich-web-search.js`, `src/lib/builders/normalize.ts`, `src/lib/builders/extract-contacts.ts`, `src/tests/enrichment.logic.test.ts`
+* **Goal:** Enrich WSIB registry entries directly with Serper web search contacts (phone, email, website, social links), making WSIB a standalone enriched contractor database. When `link-wsib.js` matches a WSIB entry to a permit entity, contacts flow automatically from WSIB → entity.
+* **Target Spec:** `docs/specs/pipeline/45_chain_entities.md` (updated) + new `docs/specs/pipeline/46_wsib_enrichment.md`
+* **Key Files:** `scripts/enrich-web-search.js`, `scripts/link-wsib.js`, `scripts/manifest.json`, `migrations/063_wsib_contacts.sql`
 
 ## Analysis
-From the DB: 3,706 entities total. ~2,549 (69%) are individual names, ~154 (4%) are numbered corporations. Only ~1,000 (27%) are real construction businesses worth enriching. The first 78-entity Serper run wasted ~60% of credits on names like "YAN WANG", "1000287552 ONTARIO INC", and queries with "Suite 400" as the city.
+- 121,116 WSIB Class G entries total
+- 54,462 have trade_name (Tier A — best search queries)
+- 1,033 Large Business + 4,370 Medium Business = 5,403 highest-value targets
+- Current entities chain only enriches ~3,706 permit-derived builders; ~70% were wasted on individuals/numbered corps (fixed in Phase 1)
+- WSIB entries have legal_name + trade_name + mailing_address = highest quality Serper input
+- Only 13,915 WSIB entries link to entities today — enriching WSIB directly means contacts are ready before a permit even arrives
 
 ## Technical Implementation
 
-### A. Entity Skip Filters (in `enrich-web-search.js`, before Serper call)
-Add a `shouldSkipEntity(builder)` function with these checks:
-
-1. **Numbered corporations** — legal_name matches `/^\d{5,}/` (e.g., "1000287552 ONTARIO INC"). These are shell companies with no web presence.
-2. **Likely individuals** — 2-3 word names with no business keyword and no WSIB match. Use a keyword list: `home|build|construct|develop|design|group|project|reno|plumb|electric|hvac|roof|mason|concrete|contract|pav|excavat|landscape|paint|floor|insul|demol|glass|steel|iron|fenc|deck|drain|fire|solar|elevator|sid|waterproof|cabinet|mill|tile|stone|pool|caulk|trim|property|invest|capital|holding|enterpr|restoration|maintenance|service|tech|solution|supply|architec|engineer|consult|manage|venture`. Skip if: no WSIB match AND name has 2-3 words AND none of these keywords match.
-3. **Generic WSIB trade names** — Skip if trade_name (the name used for search) is under 4 characters or in a blocklist: `Contracting`, `General Contracting`, `Construction`, `Design Co`, `Holdings Co`, `Custom Home`, `Custom Home Ltd`, `Holdings`, `Building`, `Renovations`. These return irrelevant results.
-
-### B. City Extraction Fix (in `enrich-web-search.js` `extractCity()` + `src/lib/builders/extract-contacts.ts` `extractCity()`)
-Current logic: `address.split(',')[1]` — breaks on `PO Box 20053`, `Suite 400` etc.
-Fix: After splitting on commas, validate that the candidate city part is not a PO Box, Suite, unit number, or postal code. Fall back to subsequent parts or return null.
-
-### C. Skip Telemetry
-Track skip reasons in `records_meta` so we can see how many were filtered:
-```json
-{
-  "skipped": { "numbered_corp": 5, "individual": 20, "generic_name": 3 },
-  "processed": 22,
-  "matched": 15
-}
+### A. Database: Add contact columns to `wsib_registry` (migration 063)
+```sql
+ALTER TABLE wsib_registry ADD COLUMN primary_phone VARCHAR(50);
+ALTER TABLE wsib_registry ADD COLUMN primary_email VARCHAR(200);
+ALTER TABLE wsib_registry ADD COLUMN website VARCHAR(500);
+ALTER TABLE wsib_registry ADD COLUMN last_enriched_at TIMESTAMP;
 ```
+No need for `entity_contacts`-style social links on WSIB — those stay on the entity layer. WSIB gets core contacts only.
 
-### D. Dual-Path Consideration
-- `extractCity()` exists in BOTH `scripts/enrich-web-search.js` (JS) AND `src/lib/builders/extract-contacts.ts` (TS) — must fix both.
-- `shouldSkipEntity()` is new, only needed in the pipeline script (the TS API path in `src/lib/builders/enrichment.ts` is out of scope per spec 45).
+### B. New pipeline script: `scripts/enrich-wsib.js`
+Reuses the existing contact extraction functions from `enrich-web-search.js` but targets `wsib_registry` directly:
+1. Query: `SELECT * FROM wsib_registry WHERE last_enriched_at IS NULL AND trade_name IS NOT NULL ORDER BY business_size DESC, legal_name LIMIT $1`
+2. Apply `shouldSkipEntity()` pre-flight filters (generic trade names, short names)
+3. Build search query from trade_name + city from mailing_address
+4. Call Serper, extract contacts
+5. Update `wsib_registry` with COALESCE preservation + `last_enriched_at = NOW()`
+6. Emit `PIPELINE_SUMMARY` + `PIPELINE_META`
 
-* **New/Modified Components:** None (pipeline-only change)
-* **Data Hooks/Libs:** `src/lib/builders/extract-contacts.ts` (extractCity fix)
-* **Database Impact:** NO
+Business size ordering: Large Business → Medium Business → Small Business (highest-value first).
+
+### C. Contact flow: WSIB → Entity on link (modify `link-wsib.js`)
+After each tier's `UPDATE entities SET is_wsib_registered = true`, add:
+```sql
+UPDATE entities e
+SET primary_phone = COALESCE(e.primary_phone, w.primary_phone),
+    primary_email = COALESCE(e.primary_email, w.primary_email),
+    website = COALESCE(e.website, w.website)
+FROM wsib_registry w
+WHERE w.linked_entity_id = e.id
+  AND w.match_confidence >= [tier_threshold]
+  AND (e.primary_phone IS NULL OR e.primary_email IS NULL OR e.website IS NULL)
+```
+This makes entity enrichment instant on link — no separate Serper call needed for WSIB-matched builders.
+
+### D. Chain updates (`scripts/manifest.json`)
+Add new script entry `enrich_wsib_registry` and new chain step:
+```json
+"entities": [
+  "enrich_wsib_registry", "enrich_wsib_builders", "enrich_named_builders"
+]
+```
+Or a dedicated chain: `"wsib_enrichment": ["enrich_wsib_registry"]`
+
+### E. Existing `enrich-web-search.js` — no changes needed
+The existing entity enrichment still works for non-WSIB builders. WSIB-matched entities that already got contacts from the link step will be skipped (`last_enriched_at IS NOT NULL` or `phone/email/website already populated`).
+
+* **New/Modified Components:** None (pipeline/backend only)
+* **Data Hooks/Libs:** None
+* **Database Impact:** YES — migration 063 adds 4 columns to wsib_registry (121K rows, ALTER ADD COLUMN is instant for nullable columns)
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — pipeline script, no API routes modified
-* **Unhappy Path Tests:** Test edge cases: numbered corp detection, individual name detection, generic trade name blocklist, city extraction from malformed addresses
-* **logError Mandate:** N/A — no API routes
+* **Try-Catch Boundary:** N/A — no API routes
+* **Unhappy Path Tests:** Test WSIB enrichment skip filters, contact-copy on link, COALESCE preservation
+* **logError Mandate:** N/A — pipeline scripts use `pipeline.log.error`
 * **Mobile-First:** N/A — backend only
 
 ## Execution Plan
-- [ ] **State Verification:** Confirm current entity_type column exists (entity_type_enum in migration 042). Confirm extractCity exists in both JS and TS paths.
-- [ ] **Contract Definition:** N/A — no API routes modified.
-- [ ] **Spec Update:** Update `docs/specs/pipeline/45_chain_entities.md` to document pre-flight filters. Run `npm run system-map`.
-- [ ] **Schema Evolution:** N/A — no DB changes.
-- [ ] **Guardrail Test:** Add tests to `enrichment.logic.test.ts`:
-  - `shouldSkipEntity` — numbered corp → true
-  - `shouldSkipEntity` — individual name without WSIB → true
-  - `shouldSkipEntity` — individual name WITH WSIB → false (override)
-  - `shouldSkipEntity` — real business name → false
-  - `shouldSkipEntity` — generic trade name → true
-  - `extractCity` — "Suite 400" → null (not a city)
-  - `extractCity` — "PO Box 20053" → null
-  - `extractCity` — standard WSIB format → correct city
-- [ ] **Red Light:** Run tests, verify new tests fail.
-- [ ] **Implementation:** 
-  - Add `shouldSkipEntity()` to `scripts/enrich-web-search.js`
-  - Fix `extractCity()` in `scripts/enrich-web-search.js`
-  - Fix `extractCity()` in `src/lib/builders/extract-contacts.ts` (dual-path sync)
-  - Add skip counters to telemetry/records_meta
-  - Wire `shouldSkipEntity` into main loop before Serper call
-- [ ] **UI Regression Check:** N/A — no shared components modified.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6
+- [ ] **Contract Definition:** N/A — no API routes created.
+- [ ] **Spec & Registry Sync:** Create `docs/specs/pipeline/46_wsib_enrichment.md`. Run `npm run system-map`.
+- [ ] **Schema Evolution:** Write `migrations/063_wsib_contacts.sql` (UP: add 4 columns; DOWN: drop 4 columns). Run migration. `npm run typecheck`.
+- [ ] **Test Scaffolding:** Add tests to `enrichment.logic.test.ts` and `wsib.logic.test.ts`:
+  - WSIB enrichment query prioritization (Large > Medium > Small)
+  - shouldSkipEntity applied to WSIB entries
+  - Contact copy from WSIB → entity on link (COALESCE preserves existing)
+  - Contact copy skipped when entity already has all contacts
+- [ ] **Red Light:** Run `npm run test`. New tests fail.
+- [ ] **Implementation:**
+  - Create `scripts/enrich-wsib.js` (WSIB-targeted enrichment)
+  - Modify `scripts/link-wsib.js` (contact-copy after each tier)
+  - Update `scripts/manifest.json` (new script + chain entry)
+  - Update `src/tests/factories.ts` if needed
+- [ ] **Auth Boundary & Secrets:** SERPER_API_KEY already in .env, not exposed to client.
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.

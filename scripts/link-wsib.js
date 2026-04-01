@@ -37,7 +37,7 @@ pipeline.run('link-wsib', async (pool) => {
     pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
     pipeline.emitMeta(
       { "wsib_registry": ["id", "trade_name_normalized", "legal_name_normalized", "linked_entity_id"], "entities": ["id", "name_normalized", "permit_count"] },
-      { "wsib_registry": ["linked_entity_id", "match_confidence", "matched_at"], "entities": ["is_wsib_registered"] }
+      { "wsib_registry": ["linked_entity_id", "match_confidence", "matched_at"], "entities": ["is_wsib_registered", "primary_phone", "primary_email", "website"] }
     );
     return;
   }
@@ -147,6 +147,21 @@ pipeline.run('link-wsib', async (pool) => {
             AND w.match_confidence = 0.95
             AND e.is_wsib_registered = false
         `);
+        // Copy enriched contacts from WSIB → entity (COALESCE preserves existing)
+        const copy1 = await client.query(`
+          UPDATE entities e
+          SET primary_phone = COALESCE(e.primary_phone, w.primary_phone),
+              primary_email = COALESCE(e.primary_email, w.primary_email),
+              website = COALESCE(e.website, w.website)
+          FROM wsib_registry w
+          WHERE w.linked_entity_id = e.id
+            AND w.match_confidence = 0.95
+            AND (w.primary_phone IS NOT NULL OR w.primary_email IS NOT NULL OR w.website IS NOT NULL)
+            AND (e.primary_phone IS NULL OR e.primary_email IS NULL OR e.website IS NULL)
+        `);
+        if (copy1.rowCount > 0) {
+          pipeline.log.info('[link-wsib]', `  Tier 1 contact copy: ${copy1.rowCount} entities updated`);
+        }
       }
       pipeline.log.info('[link-wsib]', `Tier 1 linked: ${tier1.toLocaleString()} (confidence 0.95)`);
 
@@ -181,6 +196,20 @@ pipeline.run('link-wsib', async (pool) => {
             AND w.match_confidence = 0.90
             AND e.is_wsib_registered = false
         `);
+        const copy2 = await client.query(`
+          UPDATE entities e
+          SET primary_phone = COALESCE(e.primary_phone, w.primary_phone),
+              primary_email = COALESCE(e.primary_email, w.primary_email),
+              website = COALESCE(e.website, w.website)
+          FROM wsib_registry w
+          WHERE w.linked_entity_id = e.id
+            AND w.match_confidence = 0.90
+            AND (w.primary_phone IS NOT NULL OR w.primary_email IS NOT NULL OR w.website IS NOT NULL)
+            AND (e.primary_phone IS NULL OR e.primary_email IS NULL OR e.website IS NULL)
+        `);
+        if (copy2.rowCount > 0) {
+          pipeline.log.info('[link-wsib]', `  Tier 2 contact copy: ${copy2.rowCount} entities updated`);
+        }
       }
       pipeline.log.info('[link-wsib]', `Tier 2 linked: ${tier2.toLocaleString()} (confidence 0.90)`);
 
@@ -211,6 +240,20 @@ pipeline.run('link-wsib', async (pool) => {
             AND w.match_confidence = 0.60
             AND e.is_wsib_registered = false
         `);
+        const copy3 = await client.query(`
+          UPDATE entities e
+          SET primary_phone = COALESCE(e.primary_phone, w.primary_phone),
+              primary_email = COALESCE(e.primary_email, w.primary_email),
+              website = COALESCE(e.website, w.website)
+          FROM wsib_registry w
+          WHERE w.linked_entity_id = e.id
+            AND w.match_confidence = 0.60
+            AND (w.primary_phone IS NOT NULL OR w.primary_email IS NOT NULL OR w.website IS NOT NULL)
+            AND (e.primary_phone IS NULL OR e.primary_email IS NULL OR e.website IS NULL)
+        `);
+        if (copy3.rowCount > 0) {
+          pipeline.log.info('[link-wsib]', `  Tier 3 contact copy: ${copy3.rowCount} entities updated`);
+        }
       }
       pipeline.log.info('[link-wsib]', `Tier 3 linked: ${tier3.toLocaleString()} (confidence 0.60)`);
     });
@@ -279,6 +322,6 @@ pipeline.run('link-wsib', async (pool) => {
   });
   pipeline.emitMeta(
     { "wsib_registry": ["id", "trade_name_normalized", "legal_name_normalized", "linked_entity_id"], "entities": ["id", "name_normalized", "permit_count"] },
-    { "wsib_registry": ["linked_entity_id", "match_confidence", "matched_at"], "entities": ["is_wsib_registered"] }
+    { "wsib_registry": ["linked_entity_id", "match_confidence", "matched_at"], "entities": ["is_wsib_registered", "primary_phone", "primary_email", "website"] }
   );
 });

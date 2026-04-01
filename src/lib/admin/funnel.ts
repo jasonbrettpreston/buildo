@@ -555,6 +555,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   link_wsib:            { summary: 'Matches extracted entities against WSIB registry by name', table: 'entities' },
   enrich_wsib_builders: { summary: 'Web-scrapes contact info for WSIB-matched entities via Serper API', table: 'entities' },
   enrich_named_builders:{ summary: 'Web-scrapes contact info for unmatched entities via Serper API', table: 'entities' },
+  enrich_wsib_registry: { summary: 'Enriches WSIB registry entries directly with contact data via Serper API', table: 'wsib_registry' },
   link_similar:         { summary: 'Clusters permits by address proximity to find related applications', table: 'permits' },
   create_pre_permits:   { summary: 'Creates placeholder permit records from eligible CoA applications', table: 'coa_applications' },
   compute_centroids:    { summary: 'Computes geometric centroids for parcel polygons', table: 'parcels' },
@@ -730,6 +731,11 @@ export const STEP_EXPECTED_RANGES: Record<string, ExpectedRanges> = {
     summary: { records_total: [0, 50], records_new: [0, 50], records_updated: [0, 50] },
     mutations: { entities: { ins: [0, 0], upd: [0, 50], del: [0, 0] } },
   },
+  enrich_wsib_registry: {
+    behavior: 'Enriches WSIB registry entries directly with contact data via Serper API. Prioritizes Large > Medium > Small businesses with trade names.',
+    summary: { records_total: [0, 50], records_new: [0, 50], records_updated: [0, 50] },
+    mutations: { wsib_registry: { ins: [0, 0], upd: [0, 50], del: [0, 0] } },
+  },
   link_similar: {
     behavior: 'Clusters permits by address proximity to find related (companion) applications. Propagates BLD scope to companions. Typically ~10,700 permits updated per run — this is normal whole-table reprocessing.',
     summary: { records_total: [10000, 12000], records_new: [0, 500], records_updated: [10000, 12000] },
@@ -789,7 +795,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   geocode_permits: 'permits', link_parcels: 'permit_parcels',
   link_neighbourhoods: 'permits', link_massing: 'parcel_buildings',
   link_coa: 'coa_applications', link_wsib: 'entities',
-  enrich_wsib_builders: 'entities', enrich_named_builders: 'entities',
+  enrich_wsib_builders: 'entities', enrich_named_builders: 'entities', enrich_wsib_registry: 'wsib_registry',
   link_similar: 'permits', create_pre_permits: 'coa_applications',
   compute_centroids: 'parcels', classify_scope: 'permits',
   classify_permits: 'permit_trades',

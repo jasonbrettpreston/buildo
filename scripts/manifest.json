@@ -21,6 +21,7 @@
     "enrich_named_builders":{ "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_UNMATCHED_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
     "load_wsib":            { "file": "scripts/load-wsib.js",             "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["wsib_registry"] },
     "link_wsib":            { "file": "scripts/link-wsib.js",             "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["entities"] },
+    "enrich_wsib_registry": { "file": "scripts/enrich-wsib.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["wsib_registry"], "telemetry_null_cols": { "wsib_registry": ["primary_phone", "primary_email", "website"] } },
     "classify_scope":       { "file": "scripts/classify-scope.js",        "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["scope_classified_at"] } },
     "classify_permits":     { "file": "scripts/classify-permits.js",      "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permit_trades"] },
     "compute_centroids":    { "file": "scripts/compute-centroids.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcels"] },
@@ -59,6 +60,9 @@
     ],
     "entities": [
       "enrich_wsib_builders", "enrich_named_builders"
+    ],
+    "wsib": [
+      "enrich_wsib_registry"
     ],
     "deep_scrapes": [
       "inspections", "classify_inspection_status", "assert_network_health",

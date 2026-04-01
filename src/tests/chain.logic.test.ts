@@ -9,8 +9,8 @@ import {
 } from '@/components/FreshnessTimeline';
 
 describe('Pipeline Chain Definitions', () => {
-  it('defines exactly 5 chains', () => {
-    expect(PIPELINE_CHAINS).toHaveLength(5);
+  it('defines exactly 6 chains', () => {
+    expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
   it('defines permits chain with 18 steps (no enrichment scripts)', () => {
@@ -96,6 +96,13 @@ describe('Entities Chain (4th Pillar)', () => {
     expect(chain!.steps).toHaveLength(2);
   });
 
+  it('defines wsib chain with registry enrichment', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'wsib');
+    expect(chain).toBeDefined();
+    expect(chain!.steps).toHaveLength(1);
+    expect(chain!.steps[0].slug).toBe('enrich_wsib_registry');
+  });
+
   it('deep_scrapes chain has exactly 7 steps', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'deep_scrapes');
     expect(chain).toBeDefined();
@@ -116,7 +123,7 @@ describe('Entities Chain (4th Pillar)', () => {
 describe('UI Chain Ordering (Dependency Hierarchy)', () => {
   it('renders daily pipelines first, then sources (foundation), then deep_scrapes', () => {
     const ids = PIPELINE_CHAINS.map((c) => c.id);
-    expect(ids).toEqual(['permits', 'coa', 'entities', 'sources', 'deep_scrapes']);
+    expect(ids).toEqual(['permits', 'coa', 'entities', 'wsib', 'sources', 'deep_scrapes']);
   });
 });
 

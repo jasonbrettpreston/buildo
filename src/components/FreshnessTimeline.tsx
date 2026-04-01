@@ -35,6 +35,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   link_coa:           { name: 'Link CoA',              group: 'link' },
   enrich_wsib_builders: { name: 'Enrich WSIB Matched',   group: 'link' },
   enrich_named_builders:{ name: 'Enrich Web Entities',   group: 'link' },
+  enrich_wsib_registry: { name: 'Enrich WSIB Registry',  group: 'link' },
   load_wsib:          { name: 'Load WSIB Registry',    group: 'ingest' },
   link_wsib:          { name: 'Link WSIB',             group: 'link' },
   link_similar:       { name: 'Link Similar Permits',  group: 'link' },
@@ -130,7 +131,16 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'enrich_named_builders', indent: 0 },
     ],
   },
-  // Group 3: Foundation (periodic reference data)
+  // Group 3: WSIB Registry Enrichment (annual, on-demand)
+  {
+    id: 'wsib',
+    label: 'WSIB Enrichment',
+    description: 'Annual — enrich WSIB registry with contact data via web search',
+    steps: [
+      { slug: 'enrich_wsib_registry', indent: 0 },
+    ],
+  },
+  // Group 4: Foundation (periodic reference data)
   {
     id: 'sources',
     label: 'Source Data Updates',
