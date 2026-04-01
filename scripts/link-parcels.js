@@ -48,18 +48,36 @@ function pointInPolygon(pt, ring) {
 }
 
 /**
- * Extract the outer ring from a GeoJSON Polygon or MultiPolygon geometry.
- * Returns the first outer ring, or null if geometry is invalid.
+ * Test if a point is inside a GeoJSON Polygon or MultiPolygon, respecting holes.
+ * For Polygon: must be inside outer ring AND NOT inside any inner ring (hole).
+ * For MultiPolygon: must be inside at least one sub-polygon (with hole exclusion).
  */
-function extractOuterRing(geometry) {
-  if (!geometry || !geometry.coordinates) return null;
-  if (geometry.type === 'Polygon' && geometry.coordinates.length > 0) {
-    return geometry.coordinates[0];
+function pointInGeoJSON(pt, geometry) {
+  if (!geometry || !geometry.coordinates) return false;
+  if (geometry.type === 'Polygon') {
+    const rings = geometry.coordinates;
+    if (!rings[0] || rings[0].length < 4) return false;
+    // Must be inside outer ring
+    if (!pointInPolygon(pt, rings[0])) return false;
+    // Must NOT be inside any hole (inner rings)
+    for (let i = 1; i < rings.length; i++) {
+      if (rings[i] && rings[i].length >= 4 && pointInPolygon(pt, rings[i])) return false;
+    }
+    return true;
   }
-  if (geometry.type === 'MultiPolygon' && geometry.coordinates.length > 0 && geometry.coordinates[0].length > 0) {
-    return geometry.coordinates[0][0];
+  if (geometry.type === 'MultiPolygon') {
+    for (const poly of geometry.coordinates) {
+      if (!poly[0] || poly[0].length < 4) continue;
+      if (!pointInPolygon(pt, poly[0])) continue;
+      // Check holes in this sub-polygon
+      let inHole = false;
+      for (let i = 1; i < poly.length; i++) {
+        if (poly[i] && poly[i].length >= 4 && pointInPolygon(pt, poly[i])) { inHole = true; break; }
+      }
+      if (!inHole) return true;
+    }
   }
-  return null;
+  return false;
 }
 
 /**
@@ -128,20 +146,25 @@ pipeline.run('link-parcels', async (pool) => {
   let linkedSpatialPolygon = 0;
   let noMatch = 0;
   let dbUpserted = 0;
-  let offset = 0;
+  let lastPermitNum = '';
+  let lastRevisionNum = '';
 
-  while (offset < totalPermits) {
+  while (true) {
     const batch = await pool.query(
       `SELECT p.permit_num, p.revision_num, p.street_num, p.street_name, p.street_type,
               p.latitude, p.longitude
        FROM permits p
        WHERE (${addressFilter}) ${extraFilter}
+         AND (p.permit_num, p.revision_num) > ($2, $3)
        ORDER BY p.permit_num, p.revision_num
-       LIMIT $1 OFFSET $2`,
-      [pipeline.BATCH_SIZE, offset]
+       LIMIT $1`,
+      [pipeline.BATCH_SIZE, lastPermitNum, lastRevisionNum]
     );
 
     if (batch.rows.length === 0) break;
+    const lastRow = batch.rows[batch.rows.length - 1];
+    lastPermitNum = lastRow.permit_num;
+    lastRevisionNum = lastRow.revision_num;
 
     // ------------------------------------------------------------------
     // Build normalized arrays for batch CTE matching
@@ -151,7 +174,7 @@ pipeline.run('link-parcels', async (pool) => {
       permitKeys.push({
         permit_num: permit.permit_num,
         revision_num: permit.revision_num,
-        num: (permit.street_num || '').trim().toUpperCase().replace(/^0+/, ''),
+        num: (permit.street_num || '').trim().toUpperCase().replace(/^0+(?=\d)/, ''),
         name: (permit.street_name || '').trim().toUpperCase(),
         type: (permit.street_type || '').trim().toUpperCase(),
         lat: permit.latitude ? parseFloat(permit.latitude) : null,
@@ -187,7 +210,7 @@ pipeline.run('link-parcels', async (pool) => {
           JOIN parcels pa ON pa.addr_num_normalized = ip.addr_num
             AND pa.street_name_normalized = ip.street_name
             AND pa.street_type_normalized = ip.street_type
-          WHERE ip.street_type != ''
+          WHERE (ip.street_type = '' OR pa.street_type_normalized = ip.street_type)
           ORDER BY ip.permit_num, ip.revision_num, pa.id
         ),
         name_only AS (
@@ -258,8 +281,7 @@ pipeline.run('link-parcels', async (pool) => {
         if (bestId !== null && bestDist <= SPATIAL_MAX_DISTANCE_M) {
           // Defensive: ensure geometry is parsed object (JSONB auto-parses, but safety first)
           const parsedGeom = typeof bestGeometry === 'string' ? JSON.parse(bestGeometry) : bestGeometry;
-          const ring = extractOuterRing(parsedGeom);
-          const isInside = ring ? pointInPolygon([permit.lng, permit.lat], ring) : false;
+          const isInside = pointInGeoJSON([permit.lng, permit.lat], parsedGeom);
 
           const key = `${permit.permit_num}|${permit.revision_num}`;
           if (isInside) {
@@ -319,8 +341,6 @@ pipeline.run('link-parcels', async (pool) => {
         dbUpserted += result.rowCount || 0;
       });
     }
-
-    offset += pipeline.BATCH_SIZE;
 
     if (processed % 10000 === 0 || processed >= totalPermits) {
       pipeline.progress('link-parcels', processed, totalPermits, startTime);
