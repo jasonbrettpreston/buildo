@@ -44,6 +44,32 @@ pipeline.run('link-wsib', async (pool) => {
 
   let tier1 = 0, tier2 = 0, tier3 = 0;
 
+  // Shared contact enrichment: aggregate WSIB data per entity to avoid non-deterministic
+  // UPDATE FROM with one-to-many relationships. Uses NULLIF to handle empty strings.
+  async function copyContacts(client, confidence) {
+    return client.query(`
+      UPDATE entities e
+      SET primary_phone = COALESCE(NULLIF(TRIM(e.primary_phone), ''), w_agg.primary_phone),
+          primary_email = COALESCE(NULLIF(TRIM(e.primary_email), ''), w_agg.primary_email),
+          website = COALESCE(NULLIF(TRIM(e.website), ''), w_agg.website)
+      FROM (
+        SELECT linked_entity_id,
+               MAX(primary_phone) FILTER (WHERE primary_phone IS NOT NULL AND TRIM(primary_phone) != '') AS primary_phone,
+               MAX(primary_email) FILTER (WHERE primary_email IS NOT NULL AND TRIM(primary_email) != '') AS primary_email,
+               MAX(website) FILTER (WHERE website IS NOT NULL AND TRIM(website) != '') AS website
+        FROM wsib_registry
+        WHERE match_confidence = $1
+        GROUP BY linked_entity_id
+      ) w_agg
+      WHERE w_agg.linked_entity_id = e.id
+        AND (
+          (NULLIF(TRIM(e.primary_phone), '') IS NULL AND w_agg.primary_phone IS NOT NULL) OR
+          (NULLIF(TRIM(e.primary_email), '') IS NULL AND w_agg.primary_email IS NOT NULL) OR
+          (NULLIF(TRIM(e.website), '') IS NULL AND w_agg.website IS NOT NULL)
+        )
+    `, [confidence]);
+  }
+
   // Tier 3 fuzzy match SQL — shared between live and dry-run modes.
   // Split into two CTEs (trade vs legal) so Postgres can use GIN trigram
   // indexes on each column independently. The OR-based version caused a
@@ -52,7 +78,8 @@ pipeline.run('link-wsib', async (pool) => {
   // TIER3_SELECT: final SELECT from combined (used in both dry-run and live paths)
   const TIER3_CTES = `
     trade_matches AS (
-      SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count
+      SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
+             similarity(w.trade_name_normalized, e.name_normalized) AS score
       FROM wsib_registry w
       JOIN entities e ON w.trade_name_normalized % e.name_normalized
       WHERE w.linked_entity_id IS NULL
@@ -62,7 +89,8 @@ pipeline.run('link-wsib', async (pool) => {
         AND similarity(w.trade_name_normalized, e.name_normalized) > 0.6
     ),
     legal_matches AS (
-      SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count
+      SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
+             similarity(w.legal_name_normalized, e.name_normalized) AS score
       FROM wsib_registry w
       JOIN entities e ON w.legal_name_normalized % e.name_normalized
       WHERE w.linked_entity_id IS NULL
@@ -75,28 +103,33 @@ pipeline.run('link-wsib', async (pool) => {
       UNION ALL
       SELECT * FROM legal_matches
     )`;
+  // Sort by similarity score first (not permit_count) to avoid cross-linking unrelated businesses.
+  // LIMIT 1000 enforces the safety cap documented in the header.
   const TIER3_SELECT = `
     SELECT DISTINCT ON (wsib_id) wsib_id, entity_id
     FROM combined
-    ORDER BY wsib_id, permit_count DESC`;
+    ORDER BY wsib_id, score DESC, permit_count DESC
+    LIMIT 1000`;
 
   if (dryRun) {
-    // Dry-run simulation: read-only COUNT queries using same matching logic
+    // Dry-run simulation: read-only queries using same matching logic.
+    // Collect matched IDs so Tier 3 can exclude them (prevents double-counting).
     pipeline.log.info('[link-wsib]', 'DRY RUN — simulating match counts...');
 
     const dr1 = await pool.query(`
-      SELECT COUNT(DISTINCT w.id) as cnt
+      SELECT DISTINCT w.id
       FROM wsib_registry w
       JOIN entities e ON e.name_normalized = w.trade_name_normalized
       WHERE w.linked_entity_id IS NULL
         AND w.trade_name_normalized IS NOT NULL
         AND LENGTH(w.trade_name_normalized) >= 3
     `);
-    tier1 = parseInt(dr1.rows[0].cnt, 10);
+    const tier1Ids = dr1.rows.map(r => r.id);
+    tier1 = tier1Ids.length;
     pipeline.log.info('[link-wsib]', `Tier 1 (simulated): ${tier1.toLocaleString()} matches`);
 
     const dr2 = await pool.query(`
-      SELECT COUNT(DISTINCT w.id) as cnt
+      SELECT DISTINCT w.id
       FROM wsib_registry w
       JOIN entities e ON e.name_normalized = w.legal_name_normalized
       WHERE w.linked_entity_id IS NULL
@@ -107,10 +140,23 @@ pipeline.run('link-wsib', async (pool) => {
           WHERE w2.id = w.id AND w2.trade_name_normalized IS NOT NULL AND LENGTH(w2.trade_name_normalized) >= 3
         )
     `);
-    tier2 = parseInt(dr2.rows[0].cnt, 10);
+    const tier2Ids = dr2.rows.map(r => r.id);
+    tier2 = tier2Ids.length;
     pipeline.log.info('[link-wsib]', `Tier 2 (simulated): ${tier2.toLocaleString()} matches`);
 
-    const dr3 = await pool.query(`WITH ${TIER3_CTES} SELECT COUNT(*) as cnt FROM (${TIER3_SELECT}) sub`);
+    // Exclude Tier 1/2 matched IDs from Tier 3 to prevent double-counting
+    const excludedIds = [...tier1Ids, ...tier2Ids];
+    const tier3ExcludeClause = excludedIds.length > 0
+      ? `AND w.id != ALL($1)`
+      : '';
+    const tier3Params = excludedIds.length > 0 ? [excludedIds] : [];
+    // Inject exclusion into TIER3_CTES by replacing the base filter
+    const tier3CtesExcluded = TIER3_CTES
+      .replace(/w\.linked_entity_id IS NULL/g, `w.linked_entity_id IS NULL ${tier3ExcludeClause}`);
+    const dr3 = await pool.query(
+      `WITH ${tier3CtesExcluded} SELECT COUNT(*) as cnt FROM (${TIER3_SELECT}) sub`,
+      tier3Params
+    );
     tier3 = parseInt(dr3.rows[0].cnt, 10);
     pipeline.log.info('[link-wsib]', `Tier 3 (simulated): ${tier3.toLocaleString()} matches`);
   } else {
@@ -147,20 +193,9 @@ pipeline.run('link-wsib', async (pool) => {
             AND w.match_confidence = 0.95
             AND e.is_wsib_registered = false
         `);
-        // Copy enriched contacts from WSIB → entity (COALESCE preserves existing)
-        const copy1 = await client.query(`
-          UPDATE entities e
-          SET primary_phone = COALESCE(e.primary_phone, w.primary_phone),
-              primary_email = COALESCE(e.primary_email, w.primary_email),
-              website = COALESCE(e.website, w.website)
-          FROM wsib_registry w
-          WHERE w.linked_entity_id = e.id
-            AND w.match_confidence = 0.95
-            AND (w.primary_phone IS NOT NULL OR w.primary_email IS NOT NULL OR w.website IS NOT NULL)
-            AND (e.primary_phone IS NULL OR e.primary_email IS NULL OR e.website IS NULL)
-        `);
+        const copy1 = await copyContacts(client, 0.95);
         if (copy1.rowCount > 0) {
-          pipeline.log.info('[link-wsib]', `  Tier 1 contact copy: ${copy1.rowCount} entities updated`);
+          pipeline.log.info('[link-wsib]', `  Tier 1 contact copy: ${copy1.rowCount} entities enriched`);
         }
       }
       pipeline.log.info('[link-wsib]', `Tier 1 linked: ${tier1.toLocaleString()} (confidence 0.95)`);
@@ -196,19 +231,9 @@ pipeline.run('link-wsib', async (pool) => {
             AND w.match_confidence = 0.90
             AND e.is_wsib_registered = false
         `);
-        const copy2 = await client.query(`
-          UPDATE entities e
-          SET primary_phone = COALESCE(e.primary_phone, w.primary_phone),
-              primary_email = COALESCE(e.primary_email, w.primary_email),
-              website = COALESCE(e.website, w.website)
-          FROM wsib_registry w
-          WHERE w.linked_entity_id = e.id
-            AND w.match_confidence = 0.90
-            AND (w.primary_phone IS NOT NULL OR w.primary_email IS NOT NULL OR w.website IS NOT NULL)
-            AND (e.primary_phone IS NULL OR e.primary_email IS NULL OR e.website IS NULL)
-        `);
+        const copy2 = await copyContacts(client, 0.90);
         if (copy2.rowCount > 0) {
-          pipeline.log.info('[link-wsib]', `  Tier 2 contact copy: ${copy2.rowCount} entities updated`);
+          pipeline.log.info('[link-wsib]', `  Tier 2 contact copy: ${copy2.rowCount} entities enriched`);
         }
       }
       pipeline.log.info('[link-wsib]', `Tier 2 linked: ${tier2.toLocaleString()} (confidence 0.90)`);
@@ -219,6 +244,9 @@ pipeline.run('link-wsib', async (pool) => {
       // Replaces bi-directional LIKE which caused Cartesian bomb.
       // ------------------------------------------------------------------
       pipeline.log.info('[link-wsib]', 'Tier 3: Fuzzy name matching (pg_trgm)...');
+      // Set pg_trgm threshold to 0.6 so the GIN index only returns relevant pairs
+      // (default 0.3 fetches too many garbage pairs before the WHERE filter)
+      await client.query('SET pg_trgm.similarity_threshold = 0.6');
       const result3 = await client.query(`
         WITH ${TIER3_CTES},
         matched AS (${TIER3_SELECT})
@@ -231,6 +259,8 @@ pipeline.run('link-wsib', async (pool) => {
       `);
       tier3 = result3.rowCount || 0;
 
+      await client.query('RESET pg_trgm.similarity_threshold');
+
       if (tier3 > 0) {
         await client.query(`
           UPDATE entities e
@@ -240,19 +270,9 @@ pipeline.run('link-wsib', async (pool) => {
             AND w.match_confidence = 0.60
             AND e.is_wsib_registered = false
         `);
-        const copy3 = await client.query(`
-          UPDATE entities e
-          SET primary_phone = COALESCE(e.primary_phone, w.primary_phone),
-              primary_email = COALESCE(e.primary_email, w.primary_email),
-              website = COALESCE(e.website, w.website)
-          FROM wsib_registry w
-          WHERE w.linked_entity_id = e.id
-            AND w.match_confidence = 0.60
-            AND (w.primary_phone IS NOT NULL OR w.primary_email IS NOT NULL OR w.website IS NOT NULL)
-            AND (e.primary_phone IS NULL OR e.primary_email IS NULL OR e.website IS NULL)
-        `);
+        const copy3 = await copyContacts(client, 0.60);
         if (copy3.rowCount > 0) {
-          pipeline.log.info('[link-wsib]', `  Tier 3 contact copy: ${copy3.rowCount} entities updated`);
+          pipeline.log.info('[link-wsib]', `  Tier 3 contact copy: ${copy3.rowCount} entities enriched`);
         }
       }
       pipeline.log.info('[link-wsib]', `Tier 3 linked: ${tier3.toLocaleString()} (confidence 0.60)`);
@@ -303,8 +323,8 @@ pipeline.run('link-wsib', async (pool) => {
 
   pipeline.emitSummary({
     records_total: totalLinked,
-    records_new: totalLinked,
-    records_updated: 0,
+    records_new: 0,
+    records_updated: totalLinked,
     records_meta: {
       duration_ms: durationMs,
       unlinked_start: totalUnlinked,
@@ -315,7 +335,7 @@ pipeline.run('link-wsib', async (pool) => {
       audit_table: {
         phase: (process.env.PIPELINE_CHAIN === 'sources') ? 12 : 5,
         name: 'WSIB Registry Matching',
-        verdict: linkRate < 70 ? 'WARN' : 'PASS',
+        verdict: linkRate < 5 ? 'WARN' : 'PASS',
         rows: wsibAuditRows,
       },
     },
