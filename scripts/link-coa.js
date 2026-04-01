@@ -46,6 +46,47 @@ pipeline.run('link-coa', async (pool) => {
 
   let exact = 0, fuzzy = 0, desc = 0;
   let descErrors = 0;
+  let crossWardCleaned = 0;
+
+  // ------------------------------------------------------------------
+  // Pre-pass: Unlink cross-ward mismatches from previous runs
+  // These were created by older script versions before ward matching was enforced.
+  // Unlinking lets the 3-tier cascade re-evaluate them with correct ward filtering.
+  // ------------------------------------------------------------------
+  pipeline.log.info('[link-coa]', 'Pre-pass: Checking for cross-ward mismatches...');
+  if (!dryRun) {
+    crossWardCleaned = await pipeline.withTransaction(pool, async (client) => {
+      const result = await client.query(`
+        UPDATE coa_applications ca
+        SET linked_permit_num = NULL,
+            linked_confidence = NULL
+        FROM permits p
+        WHERE p.permit_num = ca.linked_permit_num
+          AND ca.ward IS NOT NULL AND p.ward IS NOT NULL
+          AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')
+      `);
+      return result.rowCount || 0;
+    });
+  } else {
+    const preview = await pool.query(`
+      SELECT COUNT(*) FROM coa_applications ca
+      JOIN permits p ON p.permit_num = ca.linked_permit_num
+      WHERE ca.linked_permit_num IS NOT NULL
+        AND ca.ward IS NOT NULL AND p.ward IS NOT NULL
+        AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')
+    `);
+    crossWardCleaned = parseInt(preview.rows[0].count, 10) || 0;
+  }
+  pipeline.log.info('[link-coa]', `Pre-pass: ${crossWardCleaned.toLocaleString()} cross-ward mismatches unlinked`);
+
+  // Re-count unlinked after cleanup (cross-ward records are now eligible for re-matching)
+  const afterCleanup = await pool.query(
+    `SELECT COUNT(*) as total FROM coa_applications WHERE linked_permit_num IS NULL`
+  );
+  const totalUnlinkedAfter = parseInt(afterCleanup.rows[0].total, 10);
+  if (crossWardCleaned > 0) {
+    pipeline.log.info('[link-coa]', `Unlinked after cleanup: ${totalUnlinkedAfter.toLocaleString()} (was ${totalUnlinked.toLocaleString()})`);
+  }
 
   // ------------------------------------------------------------------
   // Tier 1: Bulk exact address match (street_num + street_name + ward → 0.95)
@@ -233,11 +274,12 @@ pipeline.run('link-coa', async (pool) => {
   // ------------------------------------------------------------------
   const durationMs = Date.now() - startTime;
   const totalLinked = exact + fuzzy + desc;
-  const noMatch = totalUnlinked - totalLinked;
+  const actualCandidates = totalUnlinked + crossWardCleaned;
+  const noMatch = actualCandidates - totalLinked;
 
   pipeline.log.info('[link-coa]', 'Linking complete', {
-    exact, fuzzy, desc, noMatch, totalLinked,
-    rate: `${((totalLinked / totalUnlinked) * 100).toFixed(1)}%`,
+    crossWardCleaned, exact, fuzzy, desc, noMatch, totalLinked,
+    rate: `${((totalLinked / actualCandidates) * 100).toFixed(1)}%`,
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
@@ -279,7 +321,8 @@ pipeline.run('link-coa', async (pool) => {
 
   // Build audit_table
   const auditRows = [
-    { metric: 'total_candidates', value: totalUnlinked, threshold: null, status: 'INFO' },
+    { metric: 'cross_ward_cleaned', value: crossWardCleaned, threshold: null, status: crossWardCleaned > 0 ? 'INFO' : 'PASS' },
+    { metric: 'total_candidates', value: actualCandidates, threshold: null, status: 'INFO' },
     { metric: 'matches_tier_1_exact', value: exact, threshold: null, status: 'INFO' },
     { metric: 'matches_tier_2_fuzzy', value: fuzzy, threshold: null, status: 'INFO' },
     { metric: 'matches_tier_3_desc', value: desc, threshold: null, status: 'INFO' },
@@ -300,6 +343,7 @@ pipeline.run('link-coa', async (pool) => {
 
   const meta = {
     duration_ms: durationMs,
+    cross_ward_cleaned: crossWardCleaned,
     matches_tier_1_exact: exact,
     matches_tier_2_fuzzy: fuzzy,
     matches_tier_3_desc: desc,
@@ -307,7 +351,7 @@ pipeline.run('link-coa', async (pool) => {
     unlinked_remaining: noMatch,
     audit_table: linkAuditTable,
   };
-  pipeline.emitSummary({ records_total: totalLinked, records_new: 0, records_updated: totalLinked, records_meta: meta });
+  pipeline.emitSummary({ records_total: totalLinked + crossWardCleaned, records_new: 0, records_updated: totalLinked + crossWardCleaned, records_meta: meta });
   pipeline.emitMeta(
     { "coa_applications": ["id", "application_number", "street_num", "street_name", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name", "ward", "issued_date", "description"] },
     { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"] }
