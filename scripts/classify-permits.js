@@ -519,16 +519,12 @@ pipeline.run('classify-permits', async (pool) => {
   const allRules = dbRules;
 
   // Count permits to classify
+  // Timestamp-based incremental: evaluate permits never classified or changed since last classification.
+  // Avoids infinite re-evaluation of unmatchable permits (the NOT EXISTS pattern would loop forever
+  // on permits that yield zero trades, since no child row is inserted to break the cycle).
   const incrementalWhere = `
-    WHERE NOT EXISTS (
-      SELECT 1 FROM permit_trades pt
-      WHERE pt.permit_num = p.permit_num AND pt.revision_num = p.revision_num
-    )
-    OR EXISTS (
-      SELECT 1 FROM permit_trades pt
-      WHERE pt.permit_num = p.permit_num AND pt.revision_num = p.revision_num
-        AND p.last_seen_at > pt.classified_at
-    )`;
+    WHERE trade_classified_at IS NULL
+       OR trade_classified_at < last_seen_at`;
   const whereClause = fullMode ? '' : incrementalWhere;
 
   const countResult = await pool.query(
@@ -539,11 +535,7 @@ pipeline.run('classify-permits', async (pool) => {
 
   // Count truly new permits (never classified before) for accurate reporting
   const newCountResult = await pool.query(
-    `SELECT COUNT(*) as cnt FROM permits p
-     WHERE NOT EXISTS (
-       SELECT 1 FROM permit_trades pt
-       WHERE pt.permit_num = p.permit_num AND pt.revision_num = p.revision_num
-     )`
+    `SELECT COUNT(*) as cnt FROM permits WHERE trade_classified_at IS NULL`
   );
   const trulyNewPermits = parseInt(newCountResult.rows[0].cnt, 10);
 
@@ -652,25 +644,51 @@ pipeline.run('classify-permits', async (pool) => {
 
     // Ghost trade cleanup: delete trades that no longer match after reclassification.
     // Build set of valid (permit_num, revision_num, trade_id) combos from this batch.
-    if (insertValues.length > 0) {
-      const validTradeIds = new Map(); // "pnum--rev" -> Set<trade_id>
-      for (let i = 0; i < insertValues.length; i += 8) {
-        const key = `${insertValues[i]}--${insertValues[i + 1]}`;
-        if (!validTradeIds.has(key)) validTradeIds.set(key, new Set());
-        validTradeIds.get(key).add(insertValues[i + 2]);
-      }
-      // For permits that had matches, delete trades not in the current match set
-      for (const [key, tradeIds] of validTradeIds) {
-        const [permitNum, revisionNum] = key.split('--');
-        const tradeIdArray = Array.from(tradeIds);
-        await pool.query(
-          `DELETE FROM permit_trades
-           WHERE permit_num = $1 AND revision_num = $2
-             AND trade_id != ALL($3)`,
-          [permitNum, revisionNum, tradeIdArray]
-        );
-      }
+    const validTradeIds = new Map(); // "pnum--rev" -> Set<trade_id>
+    for (let i = 0; i < insertValues.length; i += 8) {
+      const key = `${insertValues[i]}--${insertValues[i + 1]}`;
+      if (!validTradeIds.has(key)) validTradeIds.set(key, new Set());
+      validTradeIds.get(key).add(insertValues[i + 2]);
     }
+    // For permits that had matches, delete trades not in the current match set
+    for (const [key, tradeIds] of validTradeIds) {
+      const [permitNum, revisionNum] = key.split('--');
+      const tradeIdArray = Array.from(tradeIds);
+      await pool.query(
+        `DELETE FROM permit_trades
+         WHERE permit_num = $1 AND revision_num = $2
+           AND trade_id != ALL($3)`,
+        [permitNum, revisionNum, tradeIdArray]
+      );
+    }
+    // For permits that yielded ZERO matches, delete all existing trades (went from matched → unmatched)
+    const zeroMatchPermits = batch.rows.filter(p => {
+      const key = `${p.permit_num}--${p.revision_num}`;
+      return !validTradeIds.has(key);
+    });
+    if (zeroMatchPermits.length > 0) {
+      const zeroNums = zeroMatchPermits.map(p => p.permit_num);
+      const zeroRevs = zeroMatchPermits.map(p => p.revision_num);
+      await pool.query(
+        `DELETE FROM permit_trades
+         WHERE (permit_num, revision_num) IN (
+           SELECT unnest($1::text[]), unnest($2::text[])
+         )`,
+        [zeroNums, zeroRevs]
+      );
+    }
+
+    // Mark ALL processed permits as evaluated (regardless of match count)
+    // This prevents infinite re-evaluation of unmatchable permits
+    const allNums = batch.rows.map(p => p.permit_num);
+    const allRevs = batch.rows.map(p => p.revision_num);
+    await pool.query(
+      `UPDATE permits SET trade_classified_at = NOW()
+       WHERE (permit_num, revision_num) IN (
+         SELECT unnest($1::text[]), unnest($2::text[])
+       )`,
+      [allNums, allRevs]
+    );
 
     processed += batch.rows.length;
 
