@@ -343,14 +343,19 @@ async def main():
     if MAX_PERMITS > 0:
         log('INFO', '[orchestrator]', f'Max permits cap: {MAX_PERMITS} total ({MAX_PERMITS // max(NUM_WORKERS, 1)} per worker)')
 
+    # Populate queue with a short-lived connection — release before long-running scrape.
+    # Managed PostgreSQL servers drop idle connections after 5-15 minutes, so holding
+    # a connection open during asyncio.gather (which can run for hours) would crash
+    # with psycopg2.OperationalError when fetching final stats.
     conn = get_db_connection()
-
     try:
-      # Populate queue
-      new_rows, total_pending = populate_queue(conn)
-      log('INFO', '[orchestrator]', f'Queue: {new_rows} new rows added, {total_pending} total pending')
+        new_rows, total_pending = populate_queue(conn)
+    finally:
+        conn.close()
 
-      if total_pending == 0:
+    log('INFO', '[orchestrator]', f'Queue: {new_rows} new rows added, {total_pending} total pending')
+
+    if total_pending == 0:
         log('INFO', '[orchestrator]', 'Nothing to scrape — queue is empty')
         emit_summary({
             'records_total': 0, 'records_new': 0, 'records_updated': 0,
@@ -366,141 +371,142 @@ async def main():
         )
         return
 
-      # Shared abort mechanism for real-time preflight failure detection (A8)
-      abort_event = asyncio.Event()
-      preflight_fail_counter = [0]  # Shared mutable counter (GIL-safe in single event loop)
+    # Shared abort mechanism for real-time preflight failure detection (A8)
+    abort_event = asyncio.Event()
+    preflight_fail_counter = [0]  # Shared mutable counter (GIL-safe in single event loop)
 
-      # Spawn workers with random stagger (0-5s) — avoids simultaneous
-      # browser launches which create a detectable burst pattern.
-      async def staggered_worker(worker_id, abort_event, counter):
-          stagger = random.uniform(0, 5.0) if worker_id > 1 else 0
-          if stagger > 0:
-              log('INFO', '[orchestrator]', f'Worker {worker_id} starting in {stagger:.1f}s')
-              await asyncio.sleep(stagger)
-          return await run_worker(worker_id, abort_event, counter)
+    # Spawn workers with random stagger (0-5s) — avoids simultaneous
+    # browser launches which create a detectable burst pattern.
+    async def staggered_worker(wid, abort_evt, counter):
+        stagger = random.uniform(0, 5.0) if wid > 1 else 0
+        if stagger > 0:
+            log('INFO', '[orchestrator]', f'Worker {wid} starting in {stagger:.1f}s')
+            await asyncio.sleep(stagger)
+        return await run_worker(wid, abort_evt, counter)
 
-      tasks = []
-      for i in range(min(NUM_WORKERS, total_pending)):
-          tasks.append(staggered_worker(i + 1, abort_event, preflight_fail_counter))
+    tasks = []
+    for i in range(min(NUM_WORKERS, total_pending)):
+        tasks.append(staggered_worker(i + 1, abort_event, preflight_fail_counter))
 
-      log('INFO', '[orchestrator]', f'Spawning {len(tasks)} workers (staggered)...')
-      worker_results = await asyncio.gather(*tasks, return_exceptions=True)
+    log('INFO', '[orchestrator]', f'Spawning {len(tasks)} workers (staggered)...')
+    worker_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-      # Handle exceptions from workers
-      clean_results = []
-      for i, result in enumerate(worker_results):
-          if isinstance(result, Exception):
-              log('ERROR', '[orchestrator]', f'Worker {i+1} crashed: {result}')
-              clean_results.append({'preflight_passed': False})
-          else:
-              clean_results.append(result)
+    # Handle exceptions from workers
+    clean_results = []
+    for i, result in enumerate(worker_results):
+        if isinstance(result, Exception):
+            log('ERROR', '[orchestrator]', f'Worker {i+1} crashed: {result}')
+            clean_results.append({'preflight_passed': False})
+        else:
+            clean_results.append(result)
 
-      # Aggregate telemetry
-      agg = aggregate_telemetry(clean_results)
+    # Aggregate telemetry
+    agg = aggregate_telemetry(clean_results)
 
-      # Check preflight abort condition
-      if agg['preflight_failures'] >= MAX_PREFLIGHT_FAILURES:
-          log('ERROR', '[orchestrator]', f"ABORT: {agg['preflight_failures']}/{agg['workers_total']} workers failed preflight — CDP stealth may be compromised")
+    # Check preflight abort condition
+    if agg['preflight_failures'] >= MAX_PREFLIGHT_FAILURES:
+        log('ERROR', '[orchestrator]', f"ABORT: {agg['preflight_failures']}/{agg['workers_total']} workers failed preflight — CDP stealth may be compromised")
 
-      elapsed_s = (time.time() * 1000 - start_ms) / 1000
-      log('INFO', '[orchestrator]', 'All workers complete', {
-          'workers': agg['workers_total'],
-          'workers_completed': agg['workers_completed'],
-          'permits_attempted': agg['permits_attempted'],
-          'permits_scraped': agg['permits_scraped'],
-          'preflight_failures': agg['preflight_failures'],
-          'elapsed': f'{elapsed_s:.1f}s',
-      })
+    elapsed_s = (time.time() * 1000 - start_ms) / 1000
+    log('INFO', '[orchestrator]', 'All workers complete', {
+        'workers': agg['workers_total'],
+        'workers_completed': agg['workers_completed'],
+        'permits_attempted': agg['permits_attempted'],
+        'permits_scraped': agg['permits_scraped'],
+        'preflight_failures': agg['preflight_failures'],
+        'elapsed': f'{elapsed_s:.1f}s',
+    })
 
-      # Emit aggregated PIPELINE_SUMMARY
-      latencies = sorted(agg['latencies']) if agg['latencies'] else [0]
-      p50 = latencies[len(latencies) // 2]
-      p95 = latencies[int(len(latencies) * 0.95)]
-      duration_ms = int(time.time() * 1000 - start_ms)
-      miss_rate = (agg['not_found_count'] / agg['permits_attempted'] * 100) if agg['permits_attempted'] > 0 else 0
-      miss_status = 'FAIL' if miss_rate >= 20 else 'PASS'
+    # Emit aggregated PIPELINE_SUMMARY
+    latencies = sorted(agg['latencies']) if agg['latencies'] else [0]
+    p50 = latencies[len(latencies) // 2]
+    p95 = latencies[int(len(latencies) * 0.95)]
+    duration_ms = int(time.time() * 1000 - start_ms)
+    miss_rate = (agg['not_found_count'] / agg['permits_attempted'] * 100) if agg['permits_attempted'] > 0 else 0
+    miss_status = 'FAIL' if miss_rate >= 20 else 'PASS'
 
-      # Queue stats
-      cur = conn.cursor()
-      try:
-        cur.execute("""
-            SELECT status, COUNT(*) FROM scraper_queue GROUP BY status ORDER BY status
-        """)
-        queue_stats = {r[0]: r[1] for r in cur.fetchall()}
-      finally:
-        cur.close()
-
-      emit_summary({
-          'records_total': agg['permits_attempted'],
-          'records_new': agg['total_upserted'],
-          'records_updated': agg['status_changes'],
-          'records_meta': {
-              'scraper_telemetry': {
-                  'permits_attempted': agg['permits_attempted'],
-                  'permits_found': agg['permits_found'],
-                  'permits_scraped': agg['permits_scraped'],
-                  'not_found_count': agg['not_found_count'],
-                  'enriched_updates': agg['enriched_updates'],
-                  'proxy_errors': agg['proxy_errors'],
-                  'consecutive_empty_max': agg['consecutive_empty_max'],
-                  'session_bootstraps': agg['session_bootstraps'],
-                  'session_failures': agg['session_failures'],
-                  'schema_drift': [],
-                  'status_changes': agg['status_changes'],
-                  'error_categories': {},
-                  'last_error': None,
-                  'proxy_configured': bool(os.environ.get('PROXY_HOST')),
-                  'proxy_host': os.environ.get('PROXY_HOST'),
-                  'max_permits_cap': MAX_PERMITS,
-                  'capped': MAX_PERMITS > 0 and agg['permits_attempted'] >= MAX_PERMITS,
-                  'preflight_failures': agg['preflight_failures'],
-                  'workers': agg['workers_total'],
-                  'workers_completed': agg['workers_completed'],
-                  'latency': {'p50': int(p50), 'p95': int(p95), 'max': int(latencies[-1])},
-              },
-              'orchestrator': {
-                  'workers': agg['workers_total'],
-                  'batch_size': BATCH_SIZE,
-                  'queue_stats': queue_stats,
-              },
-              'audit_table': {
-                  'phase': 1,
-                  'name': 'Data Ingestion (Multi-Worker)',
-                  'verdict': 'FAIL' if (miss_status == 'FAIL' or agg['preflight_failures'] >= MAX_PREFLIGHT_FAILURES) else 'PASS',
-                  'rows': [
-                      {'metric': 'workers_total', 'value': agg['workers_total'], 'threshold': None, 'status': 'INFO'},
-                      {'metric': 'preflight_failures', 'value': agg['preflight_failures'], 'threshold': f'< {MAX_PREFLIGHT_FAILURES}', 'status': 'FAIL' if agg['preflight_failures'] >= MAX_PREFLIGHT_FAILURES else 'PASS'},
-                      {'metric': 'permits_attempted', 'value': agg['permits_attempted'], 'threshold': None, 'status': 'INFO'},
-                      {'metric': 'permits_found', 'value': agg['permits_found'], 'threshold': None, 'status': 'INFO'},
-                      {'metric': 'enriched_updates', 'value': agg['enriched_updates'], 'threshold': None, 'status': 'INFO'},
-                      {'metric': 'not_found_rate', 'value': f'{miss_rate:.1f}%', 'threshold': '< 20%', 'status': miss_status},
-                      {'metric': 'records_inserted', 'value': agg['total_upserted'], 'threshold': None, 'status': 'INFO'},
-                      {'metric': 'records_updated', 'value': agg['status_changes'], 'threshold': None, 'status': 'INFO'},
-                      {'metric': 'duration_ms', 'value': duration_ms, 'threshold': None, 'status': 'INFO'},
-                      {'metric': 'queue_pending', 'value': queue_stats.get('pending', 0), 'threshold': None, 'status': 'INFO'},
-                      {'metric': 'queue_completed', 'value': queue_stats.get('completed', 0), 'threshold': None, 'status': 'INFO'},
-                      {'metric': 'queue_failed', 'value': queue_stats.get('failed', 0), 'threshold': None, 'status': 'INFO'},
-                      {'metric': 'exit_code', 'value': 0, 'threshold': '== 0', 'status': 'PASS'},
-                      {'metric': 'pipeline_summary_emitted', 'value': True, 'threshold': '== true', 'status': 'PASS'},
-                  ],
-              },
-          },
-      })
-
-      emit_meta(
-          {
-              'permits': ['permit_num', 'status', 'enriched_status', 'permit_type'],
-              'scraper_queue': ['year_seq', 'status', 'claimed_by'],
-          },
-          {
-              'permit_inspections': ['permit_num', 'stage_name', 'status', 'inspection_date', 'scraped_at'],
-              'scraper_queue': ['year_seq', 'status', 'claimed_at', 'completed_at', 'claimed_by'],
-          },
-          ['AIC Portal REST API (secure.toronto.ca/ApplicationStatus/jaxrs)'],
-      )
-
+    # Queue stats — fresh connection since the populate connection was closed hours ago
+    stats_conn = get_db_connection()
+    try:
+        cur = stats_conn.cursor()
+        try:
+            cur.execute("""
+                SELECT status, COUNT(*) FROM scraper_queue GROUP BY status ORDER BY status
+            """)
+            queue_stats = {r[0]: r[1] for r in cur.fetchall()}
+        finally:
+            cur.close()
     finally:
-        conn.close()
+        stats_conn.close()
+
+    emit_summary({
+        'records_total': agg['permits_attempted'],
+        'records_new': agg['total_upserted'],
+        'records_updated': agg['status_changes'],
+        'records_meta': {
+            'scraper_telemetry': {
+                'permits_attempted': agg['permits_attempted'],
+                'permits_found': agg['permits_found'],
+                'permits_scraped': agg['permits_scraped'],
+                'not_found_count': agg['not_found_count'],
+                'enriched_updates': agg['enriched_updates'],
+                'proxy_errors': agg['proxy_errors'],
+                'consecutive_empty_max': agg['consecutive_empty_max'],
+                'session_bootstraps': agg['session_bootstraps'],
+                'session_failures': agg['session_failures'],
+                'schema_drift': [],
+                'status_changes': agg['status_changes'],
+                'error_categories': {},
+                'last_error': None,
+                'proxy_configured': bool(os.environ.get('PROXY_HOST')),
+                'proxy_host': os.environ.get('PROXY_HOST'),
+                'max_permits_cap': MAX_PERMITS,
+                'capped': MAX_PERMITS > 0 and agg['permits_attempted'] >= MAX_PERMITS,
+                'preflight_failures': agg['preflight_failures'],
+                'workers': agg['workers_total'],
+                'workers_completed': agg['workers_completed'],
+                'latency': {'p50': int(p50), 'p95': int(p95), 'max': int(latencies[-1])},
+            },
+            'orchestrator': {
+                'workers': agg['workers_total'],
+                'batch_size': BATCH_SIZE,
+                'queue_stats': queue_stats,
+            },
+            'audit_table': {
+                'phase': 1,
+                'name': 'Data Ingestion (Multi-Worker)',
+                'verdict': 'FAIL' if (miss_status == 'FAIL' or agg['preflight_failures'] >= MAX_PREFLIGHT_FAILURES) else 'PASS',
+                'rows': [
+                    {'metric': 'workers_total', 'value': agg['workers_total'], 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'preflight_failures', 'value': agg['preflight_failures'], 'threshold': f'< {MAX_PREFLIGHT_FAILURES}', 'status': 'FAIL' if agg['preflight_failures'] >= MAX_PREFLIGHT_FAILURES else 'PASS'},
+                    {'metric': 'permits_attempted', 'value': agg['permits_attempted'], 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'permits_found', 'value': agg['permits_found'], 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'enriched_updates', 'value': agg['enriched_updates'], 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'not_found_rate', 'value': f'{miss_rate:.1f}%', 'threshold': '< 20%', 'status': miss_status},
+                    {'metric': 'records_inserted', 'value': agg['total_upserted'], 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'records_updated', 'value': agg['status_changes'], 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'duration_ms', 'value': duration_ms, 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'queue_pending', 'value': queue_stats.get('pending', 0), 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'queue_completed', 'value': queue_stats.get('completed', 0), 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'queue_failed', 'value': queue_stats.get('failed', 0), 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'exit_code', 'value': 0, 'threshold': '== 0', 'status': 'PASS'},
+                    {'metric': 'pipeline_summary_emitted', 'value': True, 'threshold': '== true', 'status': 'PASS'},
+                ],
+            },
+        },
+    })
+
+    emit_meta(
+        {
+            'permits': ['permit_num', 'status', 'enriched_status', 'permit_type'],
+            'scraper_queue': ['year_seq', 'status', 'claimed_by'],
+        },
+        {
+            'permit_inspections': ['permit_num', 'stage_name', 'status', 'inspection_date', 'scraped_at'],
+            'scraper_queue': ['year_seq', 'status', 'claimed_at', 'completed_at', 'claimed_by'],
+        },
+        ['AIC Portal REST API (secure.toronto.ca/ApplicationStatus/jaxrs)'],
+    )
 
 
 if __name__ == '__main__':

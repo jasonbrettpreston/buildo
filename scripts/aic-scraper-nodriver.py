@@ -900,7 +900,7 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
             except Exception as err:
                 tel['session_failures'] += 1
                 log('ERROR', worker_tag, str(err), {'event': 'session_bootstrap_failed'})
-                break
+                raise RuntimeError(f'Mid-batch WAF rotate failed: {err}')
 
         # Periodic session refresh (non-proxy only — proxy mode uses 1 batch = 1 IP)
         if i > 0 and i % SESSION_REFRESH_INTERVAL == 0 and not PROXY_HOST:
@@ -1185,21 +1185,24 @@ async def main():
         # Clean up proxy extension directory
         if proxy_ext_dir:
             cleanup_proxy_extension(proxy_ext_dir)
-        # Safety net: kill any orphaned Chrome processes spawned by this worker.
-        # nodriver temp profiles start with 'uc_' — only kill those, not user's Chrome.
+        # Safety net: kill orphaned Chrome processes spawned by THIS worker only.
+        # Each worker uses a unique profile dir (profile-worker-N or profile-standalone).
+        # Scoping prevents multi-worker sabotage where one worker kills another's Chrome.
+        profile_name = f'worker-{args["worker_id"]}' if args['worker_id'] else 'standalone'
+        profile_pattern = f'profile-{profile_name}'
         try:
             import subprocess
             if sys.platform == 'win32':
                 subprocess.run(
                     ['powershell', '-Command',
                      "Get-Process chrome -ErrorAction SilentlyContinue | "
-                     "Where-Object {$_.CommandLine -like '*uc_*'} | "
+                     f"Where-Object {{$_.CommandLine -like '*{profile_pattern}*'}} | "
                      "Stop-Process -Force -ErrorAction SilentlyContinue"],
                     capture_output=True, timeout=5,
                 )
             else:
                 subprocess.run(
-                    ['pkill', '-f', 'chrome.*uc_'],
+                    ['pkill', '-f', f'chrome.*{profile_pattern}'],
                     capture_output=True, timeout=5,
                 )
         except Exception:
