@@ -1224,11 +1224,13 @@ async def main():
         try:
             import subprocess
             if sys.platform == 'win32':
+                # Get-CimInstance exposes CommandLine on Windows PS 5.1+
+                # (Get-Process lacks CommandLine, causing silent filter failure)
                 subprocess.run(
                     ['powershell', '-Command',
-                     "Get-Process chrome -ErrorAction SilentlyContinue | "
+                     "Get-CimInstance Win32_Process -Filter \"name='chrome.exe'\" -ErrorAction SilentlyContinue | "
                      f"Where-Object {{$_.CommandLine -match '{profile_pattern}\\b'}} | "
-                     "Stop-Process -Force -ErrorAction SilentlyContinue"],
+                     "ForEach-Object {{ Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }}"],
                     capture_output=True, timeout=5,
                 )
             else:

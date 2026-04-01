@@ -87,7 +87,7 @@ function auditSpecs() {
     const uniqueSrcFiles = [...new Set(srcFilesMatch.map(m => m[1]))];
 
     // Find mentioned pipeline scripts (scripts/...)
-    const scriptFilesMatch = [...content.matchAll(/(scripts\/[a-zA-Z0-9_\-\.\/]+\.js)/g)];
+    const scriptFilesMatch = [...content.matchAll(/(scripts\/[a-zA-Z0-9_\-\.\/]+\.(js|py|mjs))/g)];
     const uniqueScriptFiles = [...new Set(scriptFilesMatch.map(m => m[1]))];
 
     // Check implementation alignment (src/ files)

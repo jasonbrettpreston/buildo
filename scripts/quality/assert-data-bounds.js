@@ -607,6 +607,14 @@ async function run() {
         const oldest = ghostRes.rows[0].oldest;
         warnings.push(`${ghostCount} permits not seen in 30+ days (oldest: ${oldest})`);
         console.warn(`  WARN: ${ghostCount} ghost permits — oldest last_seen_at: ${oldest}`);
+        // Push into audit table so the dashboard reflects the warning (not just console)
+        if (permitsAuditTable) {
+          permitsAuditTable.rows.push({
+            metric: 'ghost_permits_30d', value: ghostCount,
+            threshold: '== 0', status: 'WARN',
+          });
+          if (permitsAuditTable.verdict === 'PASS') permitsAuditTable.verdict = 'WARN';
+        }
       } else {
         console.log('  OK: No ghost records (all permits seen within 30 days)');
       }

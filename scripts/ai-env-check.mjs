@@ -26,10 +26,14 @@ if (hasEnv) {
       const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$/);
       if (match && !process.env[match[1]]) {
         let val = match[2].trim();
-        // Strip inline comments (unquoted values only)
-        val = val.replace(/\s+#.*$/, '');
-        // Strip matching quote pairs
-        val = val.replace(/^(['"])(.*)\1$/, '$2');
+        // Strip matching quote pairs first, then strip inline comments only for unquoted values.
+        // This prevents truncating quoted values containing # (e.g., SECRET="my #1 password").
+        const quoteMatch = val.match(/^(['"])(.*)\1$/);
+        if (quoteMatch) {
+          val = quoteMatch[2];
+        } else {
+          val = val.replace(/\s+#.*$/, '');
+        }
         process.env[match[1]] = val;
       }
     }
