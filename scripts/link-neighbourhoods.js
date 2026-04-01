@@ -19,32 +19,23 @@
  */
 const pipeline = require('./lib/pipeline');
 const booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default;
+const turfCentroid = require('@turf/centroid').default;
 const { point, polygon, multiPolygon } = require('@turf/helpers');
 
 /**
- * Compute centroid of a GeoJSON polygon/multipolygon.
+ * Compute centroid of a GeoJSON polygon/multipolygon using Turf.js.
  * Returns [lng, lat] or null.
  */
 function computeCentroid(geom) {
   if (!geom || !geom.coordinates) return null;
-  let ring;
-  if (geom.type === 'Polygon') {
-    ring = geom.coordinates[0];
-  } else if (geom.type === 'MultiPolygon') {
-    ring = geom.coordinates[0]?.[0];
-  } else {
+  if (geom.type !== 'Polygon' && geom.type !== 'MultiPolygon') return null;
+  try {
+    const feature = { type: 'Feature', geometry: geom, properties: {} };
+    const c = turfCentroid(feature);
+    return c.geometry.coordinates; // [lng, lat]
+  } catch {
     return null;
   }
-  if (!ring || ring.length < 3) return null;
-  let sumLng = 0, sumLat = 0;
-  // Exclude closing point (same as first)
-  const n = ring[ring.length - 1][0] === ring[0][0] && ring[ring.length - 1][1] === ring[0][1]
-    ? ring.length - 1 : ring.length;
-  for (let i = 0; i < n; i++) {
-    sumLng += ring[i][0];
-    sumLat += ring[i][1];
-  }
-  return [sumLng / n, sumLat / n];
 }
 
 /**
@@ -148,9 +139,11 @@ pipeline.run('link-neighbourhoods', async (pool) => {
   let processed = 0;
   let linked = 0;
   let noMatch = 0;
-  let bboxSkipped = 0;
+  let polygonTestsSkipped = 0;
+  let lastPermitNum = '';
+  let lastRevisionNum = '';
 
-  // Step 3: Process in batches
+  // Step 3: Process in batches using keyset cursor for guaranteed forward progress
   while (true) {
     const batch = await pool.query(
       `SELECT DISTINCT ON (p.permit_num, p.revision_num)
@@ -164,12 +157,16 @@ pipeline.run('link-neighbourhoods', async (pool) => {
            (p.latitude IS NOT NULL AND p.longitude IS NOT NULL)
            OR pa.geometry IS NOT NULL
          )
-       ORDER BY p.permit_num, p.revision_num
+         AND (p.permit_num, p.revision_num) > ($2, $3)
+       ORDER BY p.permit_num, p.revision_num, pa.id DESC
        LIMIT $1`,
-      [pipeline.BATCH_SIZE]
+      [pipeline.BATCH_SIZE, lastPermitNum, lastRevisionNum]
     );
 
     if (batch.rows.length === 0) break;
+    const lastRow = batch.rows[batch.rows.length - 1];
+    lastPermitNum = lastRow.permit_num;
+    lastRevisionNum = lastRow.revision_num;
 
     // Group by matched neighbourhood for batch updates
     const updates = {}; // db_id -> [{ permit_num, revision_num }]
@@ -178,12 +175,22 @@ pipeline.run('link-neighbourhoods', async (pool) => {
       let lng, lat;
 
       if (permit.latitude && permit.longitude) {
-        lng = permit.longitude;
-        lat = permit.latitude;
+        lng = parseFloat(permit.longitude);
+        lat = parseFloat(permit.latitude);
       } else if (permit.parcel_geometry) {
-        const geom = typeof permit.parcel_geometry === 'string'
-          ? JSON.parse(permit.parcel_geometry)
-          : permit.parcel_geometry;
+        let geom;
+        try {
+          geom = typeof permit.parcel_geometry === 'string'
+            ? JSON.parse(permit.parcel_geometry)
+            : permit.parcel_geometry;
+        } catch (err) {
+          pipeline.log.warn('[link-neighbourhoods]', `Invalid parcel geometry JSON for ${permit.permit_num}`, { error: err.message });
+          noMatch++;
+          processed++;
+          if (!updates[-1]) updates[-1] = [];
+          updates[-1].push({ permit_num: permit.permit_num, revision_num: permit.revision_num });
+          continue;
+        }
         const centroid = computeCentroid(geom);
         if (!centroid) {
           // Mark as -1 to prevent infinite loop re-fetch
@@ -211,7 +218,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
         // BBOX pre-filter: skip polygon test if point is outside bounding box
         const [minX, minY, maxX, maxY] = nhood.bounds;
         if (lng < minX || lng > maxX || lat < minY || lat > maxY) {
-          bboxSkipped++;
+          polygonTestsSkipped++;
           continue;
         }
 
@@ -239,20 +246,18 @@ pipeline.run('link-neighbourhoods', async (pool) => {
       processed++;
     }
 
-    // Batch update permits
+    // Batch update permits using UNNEST array pattern (avoids OR chain meltdown)
     await pipeline.withTransaction(pool, async (client) => {
       for (const [dbId, permits] of Object.entries(updates)) {
         if (permits.length === 0) continue;
-        const values = [];
-        const conditions = [];
-        let idx = 2; // $1 is neighbourhood_id
-        for (const p of permits) {
-          conditions.push(`(permit_num = $${idx++} AND revision_num = $${idx++})`);
-          values.push(p.permit_num, p.revision_num);
-        }
+        const permitNums = permits.map(p => p.permit_num);
+        const revisionNums = permits.map(p => p.revision_num);
         await client.query(
-          `UPDATE permits SET neighbourhood_id = $1 WHERE (${conditions.join(' OR ')}) AND neighbourhood_id IS DISTINCT FROM $1`,
-          [parseInt(dbId, 10), ...values]
+          `UPDATE permits p SET neighbourhood_id = $1
+           FROM (SELECT unnest($2::text[]) AS pn, unnest($3::text[]) AS rn) v
+           WHERE p.permit_num = v.pn AND p.revision_num = v.rn
+             AND p.neighbourhood_id IS DISTINCT FROM $1`,
+          [parseInt(dbId, 10), permitNums, revisionNums]
         );
       }
     });
@@ -265,7 +270,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
     permits_processed: processed,
     permits_linked: linked,
     no_match: noMatch,
-    bbox_skipped: bboxSkipped,
+    polygon_tests_skipped: polygonTestsSkipped,
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
@@ -273,7 +278,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
   // Cumulative link rate — run-specific rate is misleading in incremental mode
   const cumulativeResult = await pool.query(
     `SELECT
-       (SELECT COUNT(*) FROM permits WHERE neighbourhood_id IS NOT NULL) AS linked,
+       (SELECT COUNT(*) FROM permits WHERE neighbourhood_id IS NOT NULL AND neighbourhood_id != -1) AS linked,
        (SELECT COUNT(*) FROM permits) AS total`
   );
   const cumulativeLinked = parseInt(cumulativeResult.rows[0].linked, 10);
@@ -286,20 +291,20 @@ pipeline.run('link-neighbourhoods', async (pool) => {
     { metric: 'run_linked', value: linked, threshold: null, status: 'INFO' },
     { metric: 'link_rate', value: nhoodLinkRate.toFixed(1) + '%', threshold: '>= 95%', status: nhoodLinkRate >= 95 ? 'PASS' : 'WARN' },
     { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
-    { metric: 'bbox_optimization_skipped', value: bboxSkipped, threshold: null, status: 'INFO' },
+    { metric: 'polygon_tests_skipped', value: polygonTestsSkipped, threshold: null, status: 'INFO' },
   ];
   const nhoodHasWarns = nhoodLinkRate < 95 || nhoodCount !== 158;
 
   pipeline.emitSummary({
     records_total: processed,
     records_new: 0,
-    records_updated: linked,
+    records_updated: linked + noMatch,
     records_meta: {
       duration_ms: durationMs,
       permits_processed: processed,
       permits_linked: linked,
       no_match_count: noMatch,
-      bbox_tests_skipped: bboxSkipped,
+      polygon_tests_skipped: polygonTestsSkipped,
       audit_table: {
         phase: (process.env.PIPELINE_CHAIN === 'sources') ? 10 : 8,
         name: 'Neighbourhood Linking',
