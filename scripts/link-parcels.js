@@ -108,10 +108,10 @@ pipeline.run('link-parcels', async (pool) => {
   const addressFilter = `(street_num IS NOT NULL AND street_num != ''
        AND street_name IS NOT NULL AND street_name != '')
        OR (latitude IS NOT NULL AND longitude IS NOT NULL)`;
-  const incrementalFilter = `AND NOT EXISTS (
-      SELECT 1 FROM permit_parcels pp
-      WHERE pp.permit_num = p.permit_num AND pp.revision_num = p.revision_num
-    )`;
+  // Timestamp-based incremental: evaluate permits never linked or changed since last linking.
+  // Avoids infinite re-evaluation of unmatchable permits (NOT EXISTS would loop forever
+  // on permits that yield zero parcel matches, since no child row is inserted).
+  const incrementalFilter = `AND (p.parcel_linked_at IS NULL OR p.parcel_linked_at < p.last_seen_at)`;
   const extraFilter = fullMode ? '' : incrementalFilter;
 
   // Count permits to process
@@ -344,6 +344,34 @@ pipeline.run('link-parcels', async (pool) => {
         dbUpserted += result.rowCount || 0;
       });
     }
+
+    // Ghost link cleanup: delete old parcel links for permits that now match different parcels
+    // or have zero matches. Only runs for permits in this batch that had prior links.
+    const matchedPermitKeys = new Set();
+    for (const permit of permitKeys) {
+      const key = `${permit.permit_num}|${permit.revision_num}`;
+      if (sqlMatched.has(key) || spatialMatched.has(key)) matchedPermitKeys.add(key);
+    }
+    // Permits with zero matches: delete all their old links
+    const zeroMatchPermits = permitKeys.filter(p => !matchedPermitKeys.has(`${p.permit_num}|${p.revision_num}`));
+    if (zeroMatchPermits.length > 0) {
+      const zNums = zeroMatchPermits.map(p => p.permit_num);
+      const zRevs = zeroMatchPermits.map(p => p.revision_num);
+      await pool.query(
+        `DELETE FROM permit_parcels
+         WHERE (permit_num, revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))`,
+        [zNums, zRevs]
+      );
+    }
+
+    // Mark ALL processed permits as evaluated (regardless of match count)
+    const allNums = permitKeys.map(p => p.permit_num);
+    const allRevs = permitKeys.map(p => p.revision_num);
+    await pool.query(
+      `UPDATE permits SET parcel_linked_at = NOW()
+       WHERE (permit_num, revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))`,
+      [allNums, allRevs]
+    );
 
     if (processed % 10000 === 0 || processed >= totalPermits) {
       pipeline.progress('link-parcels', processed, totalPermits, startTime);
