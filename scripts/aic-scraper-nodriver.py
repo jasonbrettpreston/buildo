@@ -530,6 +530,10 @@ async def fetch_permit_chain(page, year, sequence):
 
     property_rsn = sanitize_js_value(props[0].get('propertyRsn', ''))
 
+    # Micro-jitter between API steps (0.1-0.4s) — prevents thundering herd when
+    # multiple workers execute the same 4-step chain with similar latency.
+    await asyncio.sleep(random.uniform(0.1, 0.4))
+
     # Step 2: Get folders
     step2 = await page.evaluate(f"""
         (async () => {{
@@ -564,6 +568,8 @@ async def fetch_permit_chain(page, year, sequence):
         permit_num = f"{folder['folderYear']} {folder['folderSequence']} {folder['folderSection']}"
         folder_rsn = sanitize_js_value(folder['folderRsn'])
 
+        await asyncio.sleep(random.uniform(0.1, 0.4))
+
         # Step 3: Get detail
         step3 = await page.evaluate(f"""
             (async () => {{
@@ -594,6 +600,7 @@ async def fetch_permit_chain(page, year, sequence):
 
         # Step 4: Get inspection stages
         for proc in processes:
+            await asyncio.sleep(random.uniform(0.1, 0.4))
             process_rsn = sanitize_js_value(proc.get('processRsn'))
             step4 = await page.evaluate(f"""
                 (async () => {{
@@ -1190,8 +1197,12 @@ async def main():
         # Scoping prevents multi-worker sabotage where one worker kills another's Chrome.
         profile_name = f'worker-{args["worker_id"]}' if args['worker_id'] else 'standalone'
         profile_pattern = f'profile-{profile_name}'
-        # Use word boundary (\b) to prevent substring matches — e.g. profile-worker-1
-        # must NOT match profile-worker-10. Windows uses -match (regex) instead of -like (glob).
+        # Word boundary (\b) prevents substring matches: profile-worker-1 must NOT match
+        # profile-worker-10. Escape chain verified:
+        #   Linux pkill: Python f'...\\b' → shell receives literal \b → ERE word boundary ✓
+        #   Windows PS:  Python f"...\\b" → PowerShell receives \b → .NET regex boundary ✓
+        # Chrome's --user-data-dir=.../profile-worker-1/Default has / or \ after the digit,
+        # both are non-word chars so \b fires correctly at the boundary.
         try:
             import subprocess
             if sys.platform == 'win32':
