@@ -21,45 +21,35 @@ pipeline.run('classify-inspection-status', async (pool) => {
   // with concurrent scraper inserts between stalling and re-activating
   const { stalledCount, reactivatedCount } = await pipeline.withTransaction(pool, async (client) => {
     // Step 1: Mark Active Inspection permits as Stalled if no activity in 10+ months
-    // Uses MAX(scraped_at) — scraped_at tracks when data actually changed, not first discovery
+    // Driven from permits table (not permit_inspections) so permits with ZERO inspections
+    // are also caught — these are the most stalled (abandoned post-issuance).
+    // Uses GREATEST (not COALESCE) to pick the true latest activity date.
+    // Falls back to issued_date / last_seen_at when no inspections exist.
     const stalledResult = await client.query(
       `UPDATE permits p
        SET enriched_status = 'Stalled'
-       FROM (
-         SELECT pi.permit_num,
-                COALESCE(MAX(pi.inspection_date), MAX(pi.scraped_at)::date) AS last_activity
-         FROM permit_inspections pi
-         WHERE EXISTS (
-           SELECT 1 FROM permits p2
-           WHERE p2.permit_num = pi.permit_num
-             AND p2.enriched_status = 'Active Inspection'
-         )
-         GROUP BY pi.permit_num
-         HAVING COALESCE(MAX(pi.inspection_date), MAX(pi.scraped_at)::date) < NOW() - INTERVAL '1 month' * $1
-       ) stale
-       WHERE p.permit_num = stale.permit_num
-         AND p.enriched_status = 'Active Inspection'`,
+       WHERE p.enriched_status = 'Active Inspection'
+         AND COALESCE(
+           (SELECT GREATEST(MAX(pi.inspection_date), MAX(pi.scraped_at)::date)
+            FROM permit_inspections pi
+            WHERE pi.permit_num = p.permit_num),
+           p.issued_date,
+           (p.last_seen_at AT TIME ZONE 'America/Toronto')::date
+         ) < NOW() - INTERVAL '1 month' * $1`,
       [STALE_MONTHS]
     );
 
-    // Step 2: Re-activate Stalled permits if new activity detected
+    // Step 2: Re-activate Stalled permits if new inspection activity detected
+    // No fallback needed — reactivation requires actual new inspection data
     const reactivatedResult = await client.query(
       `UPDATE permits p
        SET enriched_status = 'Active Inspection'
-       FROM (
-         SELECT pi.permit_num,
-                COALESCE(MAX(pi.inspection_date), MAX(pi.scraped_at)::date) AS last_activity
-         FROM permit_inspections pi
-         WHERE EXISTS (
-           SELECT 1 FROM permits p2
-           WHERE p2.permit_num = pi.permit_num
-             AND p2.enriched_status = 'Stalled'
-         )
-         GROUP BY pi.permit_num
-         HAVING COALESCE(MAX(pi.inspection_date), MAX(pi.scraped_at)::date) >= NOW() - INTERVAL '1 month' * $1
-       ) active
-       WHERE p.permit_num = active.permit_num
-         AND p.enriched_status = 'Stalled'`,
+       WHERE p.enriched_status = 'Stalled'
+         AND (
+           SELECT GREATEST(MAX(pi.inspection_date), MAX(pi.scraped_at)::date)
+           FROM permit_inspections pi
+           WHERE pi.permit_num = p.permit_num
+         ) >= NOW() - INTERVAL '1 month' * $1`,
       [STALE_MONTHS]
     );
 
