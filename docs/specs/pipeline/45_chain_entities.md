@@ -42,10 +42,16 @@ Both steps run the **same script** (`enrich-web-search.js`) with different envir
 - Prioritization: WSIB-matched builders first (verified contractors = highest value leads)
 
 ### Core Logic
-1. **WSIB builders** — query entities where `wsib_match IS NOT NULL` and `(phone IS NULL OR email IS NULL)`. For each, execute Google search via Serper API. Parse results for phone, email, website. Write to entity record with `records_meta` tracking.
-2. **Named builders** — query remaining entities where `name IS NOT NULL` and `(phone IS NULL OR email IS NULL)` and `wsib_match IS NULL`. Same enrichment flow.
-3. **Rate limiting** — Serper API has daily quota. Script tracks usage and stops when approaching limit.
-4. **Deduplication** — normalized name matching prevents re-enriching the same entity across runs.
+1. **Pre-flight filters** — Before calling Serper, each entity is checked by `shouldSkipEntity()`:
+   - **Numbered corporations** (`/^\d{5,}/`) — shell companies with no web presence (e.g., "1000287552 ONTARIO INC")
+   - **Likely individuals** — 2-3 word names without business keywords and no WSIB match (e.g., "YAN WANG")
+   - **Generic WSIB trade names** — under 4 characters or in blocklist (e.g., "Contracting", "General Contracting")
+   - Skipped entities are marked `last_enriched_at = NOW()` to prevent re-processing. Skip counts tracked in `records_meta.skipped`.
+2. **WSIB builders** — query entities where `wsib_match IS NOT NULL` and `(phone IS NULL OR email IS NULL)`. For each, execute Google search via Serper API. Parse results for phone, email, website. Write to entity record with `records_meta` tracking.
+3. **Named builders** — query remaining entities where `name IS NOT NULL` and `(phone IS NULL OR email IS NULL)` and `wsib_match IS NULL`. Same enrichment flow.
+4. **Rate limiting** — Serper API has daily quota. Script tracks usage and stops when approaching limit.
+5. **Deduplication** — normalized name matching prevents re-enriching the same entity across runs.
+6. **City extraction** — `extractCity()` validates WSIB mailing address parts, skipping PO Box, Suite, Unit, province abbreviations, and postal codes to avoid malformed search queries.
 
 ### Outputs
 - `entities` table: `phone`, `email`, `website` fields populated
@@ -55,6 +61,10 @@ Both steps run the **same script** (`enrich-web-search.js`) with different envir
 - Serper API daily limit reached → script stops gracefully, remaining builders deferred to next run
 - Generic builder names ("John Smith Construction") → may return irrelevant results; confidence scoring filters noise
 - Same builder with multiple permit appearances → enriched once via entity deduplication
+- Numbered corporations (e.g., "1000287552 ONTARIO INC") → skipped by pre-flight filter
+- Individual names without WSIB match (e.g., "YAN WANG") → skipped to avoid wasting credits on homeowner permits
+- Generic WSIB trade names (e.g., "Contracting") → skipped, would return irrelevant search results
+- Malformed WSIB addresses (PO Box, Suite prefix) → city extraction falls back to subsequent address parts
 </behavior>
 
 ---

@@ -56,7 +56,7 @@ function extractPhones(snippets) {
 }
 
 const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-const EMAIL_REJECT = ['noreply@', 'no-reply@', 'donotreply@', 'example.com', 'test.com', 'sentry.io', 'wixpress.com'];
+const EMAIL_REJECT = ['noreply@', 'no-reply@', 'donotreply@', 'example.com', 'test.com', 'email.com', 'sentry.io', 'wixpress.com'];
 
 function extractEmails(snippets) {
   const emails = [];
@@ -180,7 +180,21 @@ function extractContacts(response) {
 function extractCity(address) {
   if (!address) return null;
   const parts = address.split(',').map((p) => p.trim());
-  if (parts.length >= 3) return parts[1];
+  if (parts.length < 3) return null;
+
+  // Patterns that are NOT a city name
+  const NON_CITY = /^(PO\s+Box|P\.?O\.?\s*Box|Suite|Ste\.?|Unit|Apt\.?|#|\d{1,5}\s|RR\s?\d)/i;
+  const POSTAL_CODE = /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i;
+  const PROVINCE = /^(ON|AB|BC|SK|MB|QC|NB|NS|PE|NL|NT|YT|NU)$/i;
+
+  for (let i = 1; i < Math.min(parts.length, 4); i++) {
+    const candidate = parts[i];
+    if (!candidate) continue;
+    if (NON_CITY.test(candidate)) continue;
+    if (POSTAL_CODE.test(candidate)) continue;
+    if (PROVINCE.test(candidate)) continue;
+    return candidate;
+  }
   return null;
 }
 
@@ -188,6 +202,52 @@ function buildSearchQuery(builder) {
   const name = builder.trade_name || builder.legal_name || builder.name;
   const city = extractCity(builder.mailing_address) || 'Toronto';
   return `"${name}" "${city}" contractor`;
+}
+
+// ---------------------------------------------------------------------------
+// Pre-flight skip filters (mirrors src/lib/builders/extract-contacts.ts)
+// ---------------------------------------------------------------------------
+
+const NUMBERED_CORP_PATTERN = /^\d{5,}/;
+
+const BUSINESS_KEYWORDS =
+  /\b(homes?|builders?|construct|develop|design|group|project|reno|plumb|electric|hvac|roof|mason|concrete|contract|pav|excavat|landscape|paint|floor|insul|demol|glass|steel|iron|fenc|deck|drain|fire|solar|elevator|sid|waterproof|cabinet|mill|tile|stone|pool|caulk|trim|property|properties|invest|capital|holding|enterpr|restoration|maintenance|service|tech|solution|supply|architec|engineer|consult|manage|venture|tower|condo|real|custom|infra|mechanic|scaffold|crane|window|door|lumber|wood|metal|weld|pil|excavat|grad|asphalt|survey|environment|energy|systems|basement|estate|living|residence|habitat|urban|metro|civic|municipal|structural|foundation|framing|forming|drywall|glazing|insulation|masonry|siding|eavestrough|millwork|cabinetry|tiling|flooring|roofing|plumbing|electrical|painting|fencing|decking|demolition|drilling|boring|remediat|abatement|hoist|rigging|welding|paving|grading)/i;
+
+const GENERIC_TRADE_NAMES = new Set([
+  'CONTRACTING', 'GENERAL CONTRACTING', 'CONSTRUCTION', 'DESIGN CO',
+  'HOLDINGS CO', 'CUSTOM HOME', 'CUSTOM HOME LTD', 'HOLDINGS',
+  'BUILDING', 'RENOVATIONS', 'GENERAL CONTRACTOR', 'DRYWALL',
+  'PAINTING', 'FLOORING', 'ROOFING', 'PLUMBING', 'ELECTRICAL',
+]);
+
+function shouldSkipEntity(builder) {
+  const name = (builder.name || '').trim();
+
+  // 1. Numbered corporations (e.g., "1000287552 ONTARIO INC")
+  if (NUMBERED_CORP_PATTERN.test(name)) {
+    return { skip: true, reason: 'numbered_corp' };
+  }
+
+  // 2. Generic WSIB trade names
+  let hasValidTradeName = false;
+  if (builder.trade_name) {
+    const normalized = builder.trade_name.trim().toUpperCase()
+      .replace(/[.,;'"]/g, '').replace(/\s+/g, ' ');
+    if (normalized.length < 4 || GENERIC_TRADE_NAMES.has(normalized)) {
+      return { skip: true, reason: 'generic_trade_name' };
+    }
+    hasValidTradeName = true;
+  }
+
+  // 3. Likely individuals — 2-3 word names, no business keywords, no WSIB match
+  if (!builder.has_wsib_match && !hasValidTradeName) {
+    const words = name.split(/\s+/);
+    if (words.length >= 2 && words.length <= 3 && !BUSINESS_KEYWORDS.test(name)) {
+      return { skip: true, reason: 'individual' };
+    }
+  }
+
+  return { skip: false, reason: null };
 }
 
 // ---------------------------------------------------------------------------
@@ -268,7 +328,8 @@ pipeline.run('enrich-web-search', async (pool) => {
       b.website,
       w.trade_name,
       w.legal_name,
-      w.mailing_address
+      w.mailing_address,
+      CASE WHEN w.id IS NOT NULL THEN true ELSE false END AS has_wsib_match
     FROM entities b
     LEFT JOIN wsib_registry w ON w.linked_entity_id = b.id
     WHERE b.last_enriched_at IS NULL
@@ -297,8 +358,27 @@ pipeline.run('enrich-web-search', async (pool) => {
   const fieldCounts = { phone: 0, email: 0, website: 0, instagram: 0, facebook: 0, linkedin: 0, houzz: 0 };
   let websitesScraped = 0;
 
+  // Pre-flight skip counters
+  const skipped = { numbered_corp: 0, individual: 0, generic_trade_name: 0 };
+
   for (let i = 0; i < builders.length; i++) {
     const b = builders[i];
+
+    // Pre-flight filter — skip unenrichable entities before calling Serper
+    const skipResult = shouldSkipEntity(b);
+    if (skipResult.skip) {
+      skipped[skipResult.reason]++;
+      pipeline.log.info('[enrich-web-search]',`  [${i + 1}/${builders.length}] SKIP (${skipResult.reason}): ${b.name}`);
+      // Mark as enriched to prevent re-processing on next run
+      if (!dryRun) {
+        await pool.query(
+          'UPDATE entities SET last_enriched_at = NOW() WHERE id = $1',
+          [b.id]
+        ).catch((err) => { pipeline.log.error('[enrich-web-search]', `Failed to mark skipped: ${err.message}`); });
+      }
+      continue;
+    }
+
     const query = buildSearchQuery(b);
 
     try {
@@ -429,10 +509,15 @@ pipeline.run('enrich-web-search', async (pool) => {
     if (i < builders.length - 1) await sleep(RATE_LIMIT_MS);
   }
 
+  const totalSkipped = skipped.numbered_corp + skipped.individual + skipped.generic_trade_name;
+  pipeline.log.info('[enrich-web-search]', `Skipped ${totalSkipped} entities`, skipped);
+
   const meta = {
     processed: enriched + failed,
     matched: enriched,
     failed,
+    skipped,
+    skipped_total: totalSkipped,
     websites_found: websitesScraped,
     extracted_fields: fieldCounts,
   };

@@ -14,6 +14,7 @@ import {
   extractContacts,
   buildSearchQuery,
   extractCity,
+  shouldSkipEntity,
 } from '@/lib/builders/extract-contacts';
 import type { SerperOrganicResult, SerperResponse } from '@/lib/builders/extract-contacts';
 
@@ -380,6 +381,122 @@ describe('Web Search Enrichment', () => {
         mailing_address: null,
       });
       expect(query).toContain('"Toronto"');
+    });
+  });
+
+  describe('City Extraction — Malformed Addresses', () => {
+    it('skips Suite as city', () => {
+      expect(extractCity('123 Main St, Suite 400, Toronto, ON')).toBe('Toronto');
+    });
+
+    it('skips PO Box as city', () => {
+      expect(extractCity('PO Box 20053, Toronto, ON, M5V 2T1')).toBe('Toronto');
+    });
+
+    it('skips P.O. Box variant', () => {
+      expect(extractCity('P.O. Box 123, Woodstock, ON')).toBe('Woodstock');
+    });
+
+    it('skips Unit prefix', () => {
+      expect(extractCity('Unit 5, 200 Bay St, Toronto, ON')).toBe('Toronto');
+    });
+
+    it('returns null when all parts are non-city', () => {
+      expect(extractCity('Suite 400')).toBeNull();
+    });
+
+    it('skips province-only parts', () => {
+      expect(extractCity('123 Main, ON, M5V 2T1')).toBeNull();
+    });
+
+    it('skips postal codes', () => {
+      expect(extractCity('123 Main, M5V 2T1, Toronto')).toBe('Toronto');
+    });
+  });
+
+  describe('Pre-Flight Skip Filters', () => {
+    it('skips numbered corporations', () => {
+      const result = shouldSkipEntity({ name: '1000287552 ONTARIO INC' });
+      expect(result.skip).toBe(true);
+      expect(result.reason).toBe('numbered_corp');
+    });
+
+    it('skips 7-digit numbered corps', () => {
+      const result = shouldSkipEntity({ name: '12362741 CANADA CORPORATION' });
+      expect(result.skip).toBe(true);
+      expect(result.reason).toBe('numbered_corp');
+    });
+
+    it('does not skip address-number names like 53 HARRIET STREET INC', () => {
+      // 2-digit prefix — not a numbered corp (threshold is 5+ digits)
+      const result = shouldSkipEntity({ name: '53 HARRIET STREET INC' });
+      expect(result.skip).toBe(false);
+    });
+
+    it('skips individual names without WSIB match', () => {
+      const result = shouldSkipEntity({ name: 'YAN WANG', has_wsib_match: false });
+      expect(result.skip).toBe(true);
+      expect(result.reason).toBe('individual');
+    });
+
+    it('skips 3-word individual names', () => {
+      const result = shouldSkipEntity({ name: 'DEAN JASON PODOLSKY', has_wsib_match: false });
+      expect(result.skip).toBe(true);
+      expect(result.reason).toBe('individual');
+    });
+
+    it('does NOT skip individual names WITH WSIB match', () => {
+      const result = shouldSkipEntity({ name: 'HELMUT GINTER', has_wsib_match: true });
+      expect(result.skip).toBe(false);
+    });
+
+    it('does not skip real business names', () => {
+      const result = shouldSkipEntity({ name: 'GREENGOLD CONSTRUCTION LIMITED' });
+      expect(result.skip).toBe(false);
+    });
+
+    it('does not skip business names with keywords', () => {
+      const result = shouldSkipEntity({ name: 'HIGHCREST HOMES' });
+      expect(result.skip).toBe(false);
+    });
+
+    it('does not skip multi-word business names', () => {
+      // 4+ words: not caught by individual filter
+      const result = shouldSkipEntity({ name: 'PROSPER LIVING DEVELOPMENT INC' });
+      expect(result.skip).toBe(false);
+    });
+
+    it('skips generic WSIB trade name "Contracting"', () => {
+      const result = shouldSkipEntity({ name: 'SOME CORP', trade_name: 'Contracting' });
+      expect(result.skip).toBe(true);
+      expect(result.reason).toBe('generic_trade_name');
+    });
+
+    it('skips generic WSIB trade name "General Contracting"', () => {
+      const result = shouldSkipEntity({ name: 'SOME CORP', trade_name: 'General Contracting' });
+      expect(result.skip).toBe(true);
+      expect(result.reason).toBe('generic_trade_name');
+    });
+
+    it('skips very short trade names', () => {
+      const result = shouldSkipEntity({ name: 'SOME CORP', trade_name: 'PCL' });
+      expect(result.skip).toBe(true);
+      expect(result.reason).toBe('generic_trade_name');
+    });
+
+    it('does not skip legitimate trade names', () => {
+      const result = shouldSkipEntity({ name: 'SOME CORP', trade_name: 'Greengold Construction' });
+      expect(result.skip).toBe(false);
+    });
+
+    it('does not skip individual name when valid trade name exists', () => {
+      const result = shouldSkipEntity({ name: 'YAN WANG', trade_name: 'Wang Plumbing', has_wsib_match: false });
+      expect(result.skip).toBe(false);
+    });
+
+    it('handles null/empty name gracefully', () => {
+      const result = shouldSkipEntity({ name: '' });
+      expect(result.skip).toBe(false);
     });
   });
 });

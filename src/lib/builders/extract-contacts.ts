@@ -271,13 +271,29 @@ export interface BuilderSearchInput {
 }
 
 /**
- * Extract city from a WSIB mailing address like "123 Main St, Toronto, ON, M5V 1A1"
+ * Extract city from a WSIB mailing address like "123 Main St, Toronto, ON, M5V 1A1".
+ * Validates the candidate city is not a PO Box, Suite, unit number, or postal code.
  */
 export function extractCity(address: string | null | undefined): string | null {
   if (!address) return null;
   const parts = address.split(',').map((p) => p.trim());
-  // WSIB format: street, city, province, postal
-  if (parts.length >= 3) return parts[1];
+  // WSIB format: street, city, province, postal — but sometimes malformed
+  if (parts.length < 3) return null;
+
+  // Patterns that are NOT a city name
+  const NON_CITY = /^(PO\s+Box|P\.?O\.?\s*Box|Suite|Ste\.?|Unit|Apt\.?|#|\d{1,5}\s|RR\s?\d)/i;
+  const POSTAL_CODE = /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i;
+
+  // Try parts[1] first (standard position), then parts[2] as fallback
+  for (let i = 1; i < Math.min(parts.length, 4); i++) {
+    const candidate = parts[i];
+    if (!candidate) continue;
+    if (NON_CITY.test(candidate)) continue;
+    if (POSTAL_CODE.test(candidate)) continue;
+    // Reject if it looks like a province abbreviation only
+    if (/^(ON|AB|BC|SK|MB|QC|NB|NS|PE|NL|NT|YT|NU)$/i.test(candidate)) continue;
+    return candidate;
+  }
   return null;
 }
 
@@ -286,4 +302,79 @@ export function buildSearchQuery(builder: BuilderSearchInput): string {
   const name = builder.trade_name || builder.legal_name || builder.name;
   const city = extractCity(builder.mailing_address) || 'Toronto';
   return `"${name}" "${city}" contractor`;
+}
+
+// ---------------------------------------------------------------------------
+// Pre-flight skip filters — prevent wasting Serper credits on unenrichable entities
+// ---------------------------------------------------------------------------
+
+export interface SkipCandidate {
+  name: string;
+  trade_name?: string | null;
+  has_wsib_match?: boolean;
+}
+
+export interface SkipResult {
+  skip: boolean;
+  reason: 'numbered_corp' | 'individual' | 'generic_trade_name' | null;
+}
+
+const NUMBERED_CORP_PATTERN = /^\d{5,}/;
+
+const BUSINESS_KEYWORDS =
+  /\b(homes?|builders?|construct|develop|design|group|project|reno|plumb|electric|hvac|roof|mason|concrete|contract|pav|excavat|landscape|paint|floor|insul|demol|glass|steel|iron|fenc|deck|drain|fire|solar|elevator|sid|waterproof|cabinet|mill|tile|stone|pool|caulk|trim|property|properties|invest|capital|holding|enterpr|restoration|maintenance|service|tech|solution|supply|architec|engineer|consult|manage|venture|tower|condo|real|custom|infra|mechanic|scaffold|crane|window|door|lumber|wood|metal|weld|pil|excavat|grad|asphalt|survey|environment|energy|systems|basement|estate|living|residence|habitat|urban|metro|civic|municipal|structural|foundation|framing|forming|drywall|glazing|insulation|masonry|siding|eavestrough|millwork|cabinetry|tiling|flooring|roofing|plumbing|electrical|painting|fencing|decking|demolition|drilling|boring|remediat|abatement|hoist|rigging|welding|paving|grading)/i;
+
+const GENERIC_TRADE_NAMES = new Set([
+  'CONTRACTING',
+  'GENERAL CONTRACTING',
+  'CONSTRUCTION',
+  'DESIGN CO',
+  'HOLDINGS CO',
+  'CUSTOM HOME',
+  'CUSTOM HOME LTD',
+  'HOLDINGS',
+  'BUILDING',
+  'RENOVATIONS',
+  'GENERAL CONTRACTOR',
+  'DRYWALL',
+  'PAINTING',
+  'FLOORING',
+  'ROOFING',
+  'PLUMBING',
+  'ELECTRICAL',
+]);
+
+/**
+ * Determine if an entity should be skipped before calling Serper.
+ * Returns { skip: true, reason } or { skip: false, reason: null }.
+ */
+export function shouldSkipEntity(candidate: SkipCandidate): SkipResult {
+  const name = (candidate.name || '').trim();
+
+  // 1. Numbered corporations (e.g., "1000287552 ONTARIO INC")
+  if (NUMBERED_CORP_PATTERN.test(name)) {
+    return { skip: true, reason: 'numbered_corp' };
+  }
+
+  // 2. Generic WSIB trade names — if trade_name is what we'd search with
+  let hasValidTradeName = false;
+  if (candidate.trade_name) {
+    const normalized = candidate.trade_name.trim().toUpperCase()
+      .replace(/[.,;'"]/g, '').replace(/\s+/g, ' ');
+    if (normalized.length < 4 || GENERIC_TRADE_NAMES.has(normalized)) {
+      return { skip: true, reason: 'generic_trade_name' };
+    }
+    hasValidTradeName = true;
+  }
+
+  // 3. Likely individuals — 2-3 word names without business keywords, no WSIB
+  //    Skip this check if entity has a valid trade name (search will use that instead)
+  if (!candidate.has_wsib_match && !hasValidTradeName) {
+    const words = name.split(/\s+/);
+    if (words.length >= 2 && words.length <= 3 && !BUSINESS_KEYWORDS.test(name)) {
+      return { skip: true, reason: 'individual' };
+    }
+  }
+
+  return { skip: false, reason: null };
 }
