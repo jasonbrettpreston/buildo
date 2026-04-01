@@ -280,8 +280,11 @@ pipeline.run('link-parcels', async (pool) => {
 
         if (bestId !== null && bestDist <= SPATIAL_MAX_DISTANCE_M) {
           // Defensive: ensure geometry is parsed object (JSONB auto-parses, but safety first)
-          const parsedGeom = typeof bestGeometry === 'string' ? JSON.parse(bestGeometry) : bestGeometry;
-          const isInside = pointInGeoJSON([permit.lng, permit.lat], parsedGeom);
+          let parsedGeom = bestGeometry;
+          if (typeof bestGeometry === 'string') {
+            try { parsedGeom = JSON.parse(bestGeometry); } catch { parsedGeom = null; }
+          }
+          const isInside = parsedGeom ? pointInGeoJSON([permit.lng, permit.lat], parsedGeom) : false;
 
           const key = `${permit.permit_num}|${permit.revision_num}`;
           if (isInside) {
