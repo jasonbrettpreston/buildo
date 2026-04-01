@@ -266,11 +266,12 @@ describe('Incremental Processing Guards', () => {
     expect(content).toContain('scope_tags');
   });
 
-  it('link-similar.js guards array_append against null scope_tags', () => {
+  it('link-similar.js guards null scope_tags with COALESCE in array union', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/link-similar.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');
-    // DM fix must handle null scope_tags with CASE/WHEN or COALESCE
-    expect(content).toMatch(/scope_tags IS NULL[\s\S]{0,100}ARRAY\['demolition'\]/);
+    // DM demolition tag merged inline via array union with COALESCE null guard
+    expect(content).toMatch(/COALESCE\(companion\.scope_tags/);
+    expect(content).toContain("ARRAY['demolition']");
   });
 
   it('classify-permits.js UPSERT updates classified_at unconditionally (no sticky record bug)', () => {
