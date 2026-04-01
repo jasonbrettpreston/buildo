@@ -115,18 +115,17 @@ for (const specFile of specFiles) {
     lines.push(`- **${layer}** (\`${fileNames}\`): ${allDescribes.join('; ')}`);
   }
 
-  if (lines.length === 0) {
-    skipped++;
-    continue;
-  }
-
-  // Replace between markers
+  // Replace between markers — even if lines is empty (clears stale test references
+  // when test files are deleted or migrated, instead of leaving old content)
   const startIdx = content.indexOf(startMarker);
   const endIdx = content.indexOf(endMarker);
 
+  const injected = lines.length > 0
+    ? '\n' + lines.join('\n') + '\n'
+    : '\n*No tests mapped*\n';
   const newContent =
     content.slice(0, startIdx + startMarker.length) +
-    '\n' + lines.join('\n') + '\n' +
+    injected +
     content.slice(endIdx);
 
   fs.writeFileSync(specPath, newContent);

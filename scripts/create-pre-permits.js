@@ -98,6 +98,24 @@ pipeline.run('create-pre-permits', async (pool) => {
     pipeline.log.info('[create-pre-permits]', `Expired ${expired.toLocaleString()} aging Pre-Permits (>18 months)`);
   }
 
+  // Step 3: Reconcile ghost Pre-Permits — when a CoA gets linked to a real permit,
+  // the PRE-xxx placeholder row is no longer needed. Delete or close it.
+  const reconciled = await pipeline.withTransaction(pool, async (client) => {
+    const result = await client.query(`
+      DELETE FROM permits
+      WHERE permit_type = 'Pre-Permit'
+        AND SUBSTRING(permit_num FROM 5) IN (
+          SELECT application_number FROM coa_applications
+          WHERE linked_permit_num IS NOT NULL
+        )
+    `);
+    return result.rowCount || 0;
+  });
+
+  if (reconciled > 0) {
+    pipeline.log.info('[create-pre-permits]', `Reconciled ${reconciled.toLocaleString()} ghost Pre-Permits (CoA now linked to real permit)`);
+  }
+
   // Ward breakdown for leads
   const { rows: byWard } = await pool.query(
     `SELECT ward, COUNT(*) as count
@@ -124,6 +142,7 @@ pipeline.run('create-pre-permits', async (pool) => {
   const auditRows = [
     { metric: 'pre_permits_generated', value: inserted, threshold: null, status: 'PASS' },
     { metric: 'aging_leads_expired', value: expired, threshold: null, status: 'PASS' },
+    { metric: 'ghosts_reconciled', value: reconciled, threshold: null, status: reconciled > 0 ? 'INFO' : 'PASS' },
     { metric: 'eligible_coa_remaining', value: eligibleRemaining, threshold: null, status: 'INFO' },
   ];
   const chainId = process.env.PIPELINE_CHAIN || null;
@@ -135,18 +154,19 @@ pipeline.run('create-pre-permits', async (pool) => {
   };
 
   pipeline.log.info('[create-pre-permits]', 'Done', {
-    generated: inserted, expired, eligible_remaining: eligibleRemaining,
+    generated: inserted, expired, reconciled, eligible_remaining: eligibleRemaining,
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
   pipeline.emitSummary({
     records_total: eligible,
     records_new: inserted,
-    records_updated: expired,
+    records_updated: expired + reconciled,
     records_meta: {
       duration_ms: durationMs,
       pre_permits_generated: inserted,
       aging_leads_expired: expired,
+      ghosts_reconciled: reconciled,
       eligible_coa_remaining: eligibleRemaining,
       audit_table: auditTable,
     },

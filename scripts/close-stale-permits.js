@@ -93,7 +93,7 @@ pipeline.run('close-stale-permits', async (pool) => {
     return client.query(
       `UPDATE permits
        SET status = 'Pending Closed',
-           completed_date = COALESCE(completed_date, last_seen_at::date)
+           completed_date = COALESCE(completed_date, CURRENT_DATE)
        WHERE status NOT IN ('Pending Closed', 'Closed')
          AND last_seen_at < $1
        RETURNING permit_num`,

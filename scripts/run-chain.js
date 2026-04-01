@@ -12,6 +12,7 @@
  */
 const pipeline = require('./lib/pipeline');
 const { spawn } = require('child_process');
+const { StringDecoder } = require('string_decoder');
 const path = require('path');
 const fs = require('fs');
 
@@ -220,11 +221,13 @@ async function run() {
           stdio: ['inherit', 'pipe', 'inherit'],
         });
 
-        // Line buffer: accumulate partial chunks so PIPELINE_SUMMARY markers
-        // that span chunk boundaries (OS fragments at ~8KB) are not lost.
+        // StringDecoder correctly buffers split multibyte UTF-8 characters
+        // across chunk boundaries (OS fragments at ~8KB). Without it,
+        // Buffer.toString('utf-8') can corrupt characters split mid-sequence.
+        const decoder = new StringDecoder('utf8');
         let lineBuffer = '';
         child.stdout.on('data', (data) => {
-          const chunk = data.toString('utf-8');
+          const chunk = decoder.write(data);
           process.stdout.write(chunk); // Tee to console immediately
           lineBuffer += chunk;
           const lines = lineBuffer.split('\n');
@@ -238,7 +241,9 @@ async function run() {
         });
 
         child.on('close', (code) => {
-          // Flush remaining buffer
+          // Flush remaining decoder bytes + line buffer
+          const remaining = decoder.end();
+          if (remaining) lineBuffer += remaining;
           if (lineBuffer && (lineBuffer.includes('PIPELINE_SUMMARY:') || lineBuffer.includes('PIPELINE_META:'))) {
             summaryLines += lineBuffer + '\n';
           }
