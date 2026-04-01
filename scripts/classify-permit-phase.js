@@ -7,12 +7,9 @@
  * pipeline (zoning review, code review) awaiting issuance. These permits
  * have already passed initial screening and don't require a COA variance.
  *
- * This step reclassifies them so the scraper and dashboard correctly
- * distinguish pre-issuance (Examination) from post-issuance (Inspection).
- *
- * The permits loader upsert will restore the CKAN status if the permit
- * reappears with a different status (e.g., when it's finally issued and
- * moves to real Inspection).
+ * This step writes to enriched_status (not raw status) so the permits loader
+ * upsert won't conflict — raw CKAN status is preserved, and enriched_status
+ * reflects our derived classification.
  *
  * Usage: node scripts/classify-permit-phase.js
  *
@@ -23,24 +20,31 @@ const pipeline = require('./lib/pipeline');
 pipeline.run('classify-permit-phase', async (pool) => {
   const startTime = Date.now();
 
+  // Count the eligible pool BEFORE updating (for accurate records_total)
+  const eligibleResult = await pool.query(
+    `SELECT COUNT(*) AS cnt FROM permits
+     WHERE status = 'Inspection' AND issued_date IS NULL`
+  );
+  const eligibleCount = parseInt(eligibleResult.rows[0].cnt, 10);
+
   // Reclassify: permits with status = 'Inspection' but no issued_date
   // are in the city examination phase, not active construction inspection.
-  const examResult = await pipeline.withTransaction(pool, async (client) => {
-    return client.query(
-      `UPDATE permits
-       SET status = 'Examination'
-       WHERE status = 'Inspection'
-         AND issued_date IS NULL
-       RETURNING permit_num`
-    );
-  });
+  // Single UPDATE is inherently atomic — no transaction wrapper needed.
+  const examResult = await pool.query(
+    `UPDATE permits
+     SET enriched_status = 'Examination'
+     WHERE status = 'Inspection'
+       AND issued_date IS NULL
+       AND enriched_status IS DISTINCT FROM 'Examination'
+     RETURNING permit_num`
+  );
   const examCount = examResult.rowCount || 0;
   pipeline.log.info('[classify-phase]', `Examination: ${examCount.toLocaleString()} permits reclassified`);
 
   // Cumulative counts
   const statsResult = await pool.query(
     `SELECT
-       COUNT(*) FILTER (WHERE status = 'Examination') AS total_examination,
+       COUNT(*) FILTER (WHERE enriched_status = 'Examination') AS total_examination,
        COUNT(*) FILTER (WHERE status = 'Inspection') AS total_inspection,
        COUNT(*) FILTER (WHERE status = 'Permit Issued') AS total_issued,
        COUNT(*) AS total
@@ -50,11 +54,6 @@ pipeline.run('classify-permit-phase', async (pool) => {
   const totalInspection = parseInt(statsResult.rows[0].total_inspection, 10);
   const totalPermits = parseInt(statsResult.rows[0].total, 10);
   const examRate = totalPermits > 0 ? (totalExamination / totalPermits * 100) : 0;
-
-  // VACUUM if we touched many rows
-  if (examCount > 100) {
-    await pool.query('VACUUM ANALYZE permits');
-  }
 
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[classify-phase]', 'Complete', {
@@ -72,7 +71,7 @@ pipeline.run('classify-permit-phase', async (pool) => {
   ];
 
   pipeline.emitSummary({
-    records_total: examCount,
+    records_total: eligibleCount,
     records_new: 0,
     records_updated: examCount,
     records_meta: {
@@ -89,7 +88,7 @@ pipeline.run('classify-permit-phase', async (pool) => {
     },
   });
   pipeline.emitMeta(
-    { "permits": ["status", "issued_date"] },
-    { "permits": ["status"] }
+    { "permits": ["status", "issued_date", "enriched_status"] },
+    { "permits": ["enriched_status"] }
   );
 });
