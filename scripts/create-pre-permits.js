@@ -99,16 +99,28 @@ pipeline.run('create-pre-permits', async (pool) => {
   }
 
   // Step 3: Reconcile ghost Pre-Permits — when a CoA gets linked to a real permit,
-  // the PRE-xxx placeholder row is no longer needed. Delete or close it.
+  // the PRE-xxx placeholder row is no longer needed. Delete child rows first
+  // (permit_trades, permit_parcels have FK constraints with ON DELETE NO ACTION),
+  // then delete the permit itself.
   const reconciled = await pipeline.withTransaction(pool, async (client) => {
-    const result = await client.query(`
-      DELETE FROM permits
-      WHERE permit_type = 'Pre-Permit'
-        AND SUBSTRING(permit_num FROM 5) IN (
-          SELECT application_number FROM coa_applications
-          WHERE linked_permit_num IS NOT NULL
-        )
-    `);
+    const ghostFilter = `
+      permit_type = 'Pre-Permit'
+      AND SUBSTRING(permit_num FROM 5) IN (
+        SELECT application_number FROM coa_applications
+        WHERE linked_permit_num IS NOT NULL
+      )`;
+    // Clean child tables before deleting the parent permit
+    await client.query(
+      `DELETE FROM permit_trades WHERE (permit_num, revision_num) IN (
+        SELECT permit_num, revision_num FROM permits WHERE ${ghostFilter})`
+    );
+    await client.query(
+      `DELETE FROM permit_parcels WHERE (permit_num, revision_num) IN (
+        SELECT permit_num, revision_num FROM permits WHERE ${ghostFilter})`
+    );
+    const result = await client.query(
+      `DELETE FROM permits WHERE ${ghostFilter}`
+    );
     return result.rowCount || 0;
   });
 
