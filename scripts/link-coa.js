@@ -2,27 +2,25 @@
 /**
  * Link unlinked CoA applications to building permits using address matching.
  *
- * 3-tier cascade (bulk SQL operations):
- *   1. Exact address match (street_num + street_name + ward) → 0.95 confidence
- *   2. Fuzzy address match (street_name + ward)              → 0.60 confidence
- *   3. Description similarity (full-text search + ward)      → 0.30-0.50 confidence
+ * Uses pre-computed street_name_normalized columns (populated at ingestion)
+ * for fast exact matching. Ward is a confidence booster, not a gatekeeper —
+ * 80% of permits have NULL ward, so requiring it would blind the linker.
  *
- * Ward comparison uses LTRIM(ward, '0') to normalize format differences
- * (CoA uses "2", permits use "02").
- *
- * Tier 3 uses plainto_tsquery for stop-word safety.
+ * Confidence matrix:
+ *   Tier 1:  street_num + street_name_normalized match
+ *     1a: ward match        → 0.95
+ *     1b: permit ward NULL  → 0.85
+ *     1c: ward conflict     → 0.10 (flagged for review)
+ *   Tier 2:  street_name_normalized only (no street_num)
+ *     2a: ward match        → 0.60
+ *     2b: permit ward NULL  → 0.50
+ *   Tier 3:  Description FTS → 0.30-0.50
  *
  * Usage: node scripts/link-coa.js [--dry-run]
  *
  * SPEC LINK: docs/specs/12_coa_integration.md
  */
 const pipeline = require('./lib/pipeline');
-
-// SQL version of the JS stripStreetType regex — removes street type suffixes
-// Strip street type suffixes and escape LIKE wildcards (% and _) for safe use in LIKE patterns
-const STRIP_STREET_SQL = `REPLACE(REPLACE(TRIM(REGEXP_REPLACE(UPPER(ca.street_name),
-  '\\y(ST|STREET|AVE|AVENUE|DR|DRIVE|RD|ROAD|BLVD|BOULEVARD|CRT|COURT|CRES|CRESCENT|PL|PLACE|WAY|LANE|LN|TR|TRAIL|TERR|TERRACE|CIR|CIRCLE|PKWY|PARKWAY|GATE|GDNS|GARDENS|GRV|GROVE|HTS|HEIGHTS|MEWS|SQ|SQUARE)\\y',
-  '', 'g')), '%', '\\%'), '_', '\\_')`;
 
 pipeline.run('link-coa', async (pool) => {
   const args = process.argv.slice(2);
@@ -44,14 +42,13 @@ pipeline.run('link-coa', async (pool) => {
     return;
   }
 
-  let exact = 0, fuzzy = 0, desc = 0;
-  let descErrors = 0;
+  let tier1a = 0, tier1b = 0, tier1c = 0;
+  let tier2a = 0, tier2b = 0;
+  let desc = 0, descErrors = 0;
   let crossWardCleaned = 0;
 
   // ------------------------------------------------------------------
   // Pre-pass: Unlink cross-ward mismatches from previous runs
-  // These were created by older script versions before ward matching was enforced.
-  // Unlinking lets the 3-tier cascade re-evaluate them with correct ward filtering.
   // ------------------------------------------------------------------
   pipeline.log.info('[link-coa]', 'Pre-pass: Checking for cross-ward mismatches...');
   if (!dryRun) {
@@ -79,83 +76,113 @@ pipeline.run('link-coa', async (pool) => {
   }
   pipeline.log.info('[link-coa]', `Pre-pass: ${crossWardCleaned.toLocaleString()} cross-ward mismatches unlinked`);
 
-  // Re-count unlinked after cleanup (cross-ward records are now eligible for re-matching)
-  const afterCleanup = await pool.query(
-    `SELECT COUNT(*) as total FROM coa_applications WHERE linked_permit_num IS NULL`
-  );
-  const totalUnlinkedAfter = parseInt(afterCleanup.rows[0].total, 10);
-  if (crossWardCleaned > 0) {
-    pipeline.log.info('[link-coa]', `Unlinked after cleanup: ${totalUnlinkedAfter.toLocaleString()} (was ${totalUnlinked.toLocaleString()})`);
-  }
+  const actualCandidates = totalUnlinked + crossWardCleaned;
 
   // ------------------------------------------------------------------
-  // Tier 1: Bulk exact address match (street_num + street_name + ward → 0.95)
-  // Ward normalized with LTRIM to handle "2" vs "02" format mismatch.
+  // Tier 1a: street_num + street_name_normalized + ward match → 0.95
   // ------------------------------------------------------------------
-  pipeline.log.info('[link-coa]', 'Tier 1: Exact address + ward matching...');
-  if (!dryRun) {
-    exact = await pipeline.withTransaction(pool, async (client) => {
-      const exactResult = await client.query(`
-        UPDATE coa_applications ca
-        SET linked_permit_num = matched.permit_num,
-            linked_confidence = 0.95,
-            last_seen_at = NOW()
-        FROM (
-          SELECT DISTINCT ON (ca2.id) ca2.id, p.permit_num
-          FROM coa_applications ca2
-          JOIN permits p
-            ON UPPER(TRIM(p.street_num)) = UPPER(TRIM(ca2.street_num))
-            AND UPPER(p.street_name) LIKE '%' || ${STRIP_STREET_SQL.replace(/ca\./g, 'ca2.')} || '%'
-            AND LTRIM(p.ward, '0') = LTRIM(ca2.ward, '0')
-            AND p.permit_type != 'Pre-Permit'
-          WHERE ca2.linked_permit_num IS NULL
-            AND ca2.street_num IS NOT NULL AND TRIM(ca2.street_num) != ''
-            AND ca2.street_name IS NOT NULL AND TRIM(ca2.street_name) != ''
-            AND ca2.ward IS NOT NULL
-            AND LENGTH(${STRIP_STREET_SQL.replace(/ca\./g, 'ca2.')}) > 0
-          ORDER BY ca2.id, p.issued_date DESC NULLS LAST
-        ) matched
-        WHERE ca.id = matched.id
-      `);
-      return exactResult.rowCount || 0;
-    });
-  }
-  pipeline.log.info('[link-coa]', `Tier 1 linked: ${exact.toLocaleString()} (confidence 0.95)`);
+  // Shared subquery fragments for Tiers 1-2 (used in both live UPDATE and dry-run COUNT)
+  const TIER1A_WHERE = `
+    UPPER(TRIM(p.street_num)) = UPPER(TRIM(ca2.street_num))
+    AND p.street_name_normalized = ca2.street_name_normalized
+    AND LTRIM(p.ward, '0') = LTRIM(ca2.ward, '0')
+    AND p.permit_type != 'Pre-Permit'`;
+  const TIER1A_FILTER = `
+    ca2.linked_permit_num IS NULL
+    AND ca2.street_num IS NOT NULL AND TRIM(ca2.street_num) != ''
+    AND ca2.street_name_normalized IS NOT NULL
+    AND ca2.ward IS NOT NULL AND p.ward IS NOT NULL`;
 
-  // ------------------------------------------------------------------
-  // Tier 2: Bulk fuzzy address match (street_name + ward → 0.60)
-  // ------------------------------------------------------------------
-  pipeline.log.info('[link-coa]', 'Tier 2: Fuzzy address + ward matching...');
-  if (!dryRun) {
-    fuzzy = await pipeline.withTransaction(pool, async (client) => {
-      const fuzzyResult = await client.query(`
-        UPDATE coa_applications ca
-        SET linked_permit_num = matched.permit_num,
-            linked_confidence = 0.60,
-            last_seen_at = NOW()
-        FROM (
-          SELECT DISTINCT ON (ca2.id) ca2.id, p.permit_num
-          FROM coa_applications ca2
-          JOIN permits p
-            ON UPPER(p.street_name) LIKE '%' || ${STRIP_STREET_SQL.replace(/ca\./g, 'ca2.')} || '%'
-            AND LTRIM(p.ward, '0') = LTRIM(ca2.ward, '0')
-            AND p.permit_type != 'Pre-Permit'
-          WHERE ca2.linked_permit_num IS NULL
-            AND ca2.street_name IS NOT NULL AND TRIM(ca2.street_name) != ''
-            AND ca2.ward IS NOT NULL
-            AND LENGTH(${STRIP_STREET_SQL.replace(/ca\./g, 'ca2.')}) > 0
-          ORDER BY ca2.id, p.issued_date DESC NULLS LAST
-        ) matched
-        WHERE ca.id = matched.id
+  const TIER1B_WHERE = `
+    UPPER(TRIM(p.street_num)) = UPPER(TRIM(ca2.street_num))
+    AND p.street_name_normalized = ca2.street_name_normalized
+    AND p.ward IS NULL
+    AND p.permit_type != 'Pre-Permit'`;
+  const TIER1B_FILTER = `
+    ca2.linked_permit_num IS NULL
+    AND ca2.street_num IS NOT NULL AND TRIM(ca2.street_num) != ''
+    AND ca2.street_name_normalized IS NOT NULL`;
+
+  const TIER1C_WHERE = `
+    UPPER(TRIM(p.street_num)) = UPPER(TRIM(ca2.street_num))
+    AND p.street_name_normalized = ca2.street_name_normalized
+    AND p.ward IS NOT NULL AND ca2.ward IS NOT NULL
+    AND LTRIM(p.ward, '0') != LTRIM(ca2.ward, '0')
+    AND p.permit_type != 'Pre-Permit'`;
+  const TIER1C_FILTER = TIER1B_FILTER;
+
+  const TIER2A_WHERE = `
+    p.street_name_normalized = ca2.street_name_normalized
+    AND LTRIM(p.ward, '0') = LTRIM(ca2.ward, '0')
+    AND p.permit_type != 'Pre-Permit'`;
+  const TIER2A_FILTER = `
+    ca2.linked_permit_num IS NULL
+    AND ca2.street_name_normalized IS NOT NULL
+    AND ca2.ward IS NOT NULL AND p.ward IS NOT NULL`;
+
+  const TIER2B_WHERE = `
+    p.street_name_normalized = ca2.street_name_normalized
+    AND p.ward IS NULL
+    AND p.permit_type != 'Pre-Permit'`;
+  const TIER2B_FILTER = `
+    ca2.linked_permit_num IS NULL
+    AND ca2.street_name_normalized IS NOT NULL`;
+
+  // Helper: run a tier as UPDATE (live) or SELECT COUNT (dry-run)
+  async function runTier(label, confidence, joinWhere, filterWhere) {
+    if (!dryRun) {
+      return await pipeline.withTransaction(pool, async (client) => {
+        const result = await client.query(`
+          UPDATE coa_applications ca
+          SET linked_permit_num = matched.permit_num,
+              linked_confidence = ${confidence},
+              last_seen_at = NOW()
+          FROM (
+            SELECT DISTINCT ON (ca2.id) ca2.id, p.permit_num
+            FROM coa_applications ca2
+            JOIN permits p ON ${joinWhere}
+            WHERE ${filterWhere}
+            ORDER BY ca2.id, p.issued_date DESC NULLS LAST
+          ) matched
+          WHERE ca.id = matched.id
+        `);
+        return result.rowCount || 0;
+      });
+    } else {
+      const result = await pool.query(`
+        SELECT COUNT(DISTINCT ca2.id) as cnt
+        FROM coa_applications ca2
+        JOIN permits p ON ${joinWhere}
+        WHERE ${filterWhere}
       `);
-      return fuzzyResult.rowCount || 0;
-    });
+      return parseInt(result.rows[0].cnt, 10) || 0;
+    }
   }
-  pipeline.log.info('[link-coa]', `Tier 2 linked: ${fuzzy.toLocaleString()} (confidence 0.60)`);
+
+  pipeline.log.info('[link-coa]', 'Tier 1a: Exact address + ward match...');
+  tier1a = await runTier('1a', 0.95, TIER1A_WHERE, TIER1A_FILTER);
+  pipeline.log.info('[link-coa]', `Tier 1a linked: ${tier1a.toLocaleString()} (confidence 0.95)`);
+
+  pipeline.log.info('[link-coa]', 'Tier 1b: Exact address + null permit ward...');
+  tier1b = await runTier('1b', 0.85, TIER1B_WHERE, TIER1B_FILTER);
+  pipeline.log.info('[link-coa]', `Tier 1b linked: ${tier1b.toLocaleString()} (confidence 0.85)`);
+
+  pipeline.log.info('[link-coa]', 'Tier 1c: Exact address + ward conflict...');
+  tier1c = await runTier('1c', 0.10, TIER1C_WHERE, TIER1C_FILTER);
+  pipeline.log.info('[link-coa]', `Tier 1c linked: ${tier1c.toLocaleString()} (confidence 0.10 — ward conflict, flagged)`);
+
+  pipeline.log.info('[link-coa]', 'Tier 2a: Street name + ward match...');
+  tier2a = await runTier('2a', 0.60, TIER2A_WHERE, TIER2A_FILTER);
+  pipeline.log.info('[link-coa]', `Tier 2a linked: ${tier2a.toLocaleString()} (confidence 0.60)`);
+
+  pipeline.log.info('[link-coa]', 'Tier 2b: Street name + null permit ward...');
+  tier2b = await runTier('2b', 0.50, TIER2B_WHERE, TIER2B_FILTER);
+  pipeline.log.info('[link-coa]', `Tier 2b linked: ${tier2b.toLocaleString()} (confidence 0.50)`);
 
   // ------------------------------------------------------------------
   // Tier 3: Description FTS — batched via unnest + CROSS JOIN LATERAL
-  // Uses plainto_tsquery for stop-word safety (no dangling & crash risk).
+  // Ward is optional — used as tiebreaker when available, not as filter.
+  // Uses plainto_tsquery for stop-word safety.
   // ------------------------------------------------------------------
   pipeline.log.info('[link-coa]', 'Tier 3: Description similarity matching...');
   const remaining = await pool.query(`
@@ -163,13 +190,10 @@ pipeline.run('link-coa', async (pool) => {
     FROM coa_applications
     WHERE linked_permit_num IS NULL
       AND description IS NOT NULL AND LENGTH(TRIM(description)) >= 10
-      AND ward IS NOT NULL
     ORDER BY decision_date DESC NULLS LAST
   `);
   pipeline.log.info('[link-coa]', `Tier 3 candidates: ${remaining.rows.length.toLocaleString()}`);
 
-  // Build keyword strings for each candidate (JS-side keyword extraction)
-  // Joined with spaces for plainto_tsquery (not & for to_tsquery)
   const candidates = [];
   for (const app of remaining.rows) {
     const keywords = app.description
@@ -179,7 +203,7 @@ pipeline.run('link-coa', async (pool) => {
       .filter((w) => w.length > 3)
       .slice(0, 8);
     if (keywords.length < 2) continue;
-    candidates.push({ id: app.id, ward: app.ward, tsQuery: keywords.join(' ') });
+    candidates.push({ id: app.id, ward: app.ward || '', tsQuery: keywords.join(' ') });
   }
   pipeline.log.info('[link-coa]', `Tier 3 filterable: ${candidates.length.toLocaleString()}`);
 
@@ -200,21 +224,29 @@ pipeline.run('link-coa', async (pool) => {
             )
             UPDATE coa_applications ca
             SET linked_permit_num = matched.permit_num,
-                linked_confidence = LEAST(0.50, 0.30 + matched.rank * 0.1),
+                linked_confidence = matched.conf,
                 last_seen_at = NOW()
             FROM (
-              SELECT DISTINCT ON (c.coa_id) c.coa_id, lat.permit_num, lat.rank
+              SELECT DISTINCT ON (c.coa_id) c.coa_id, lat.permit_num,
+                CASE
+                  WHEN c.ward != '' AND lat.ward IS NOT NULL AND LTRIM(lat.ward, '0') = LTRIM(c.ward, '0')
+                    THEN LEAST(0.50, 0.30 + lat.rank * 0.1)
+                  WHEN lat.ward IS NULL OR c.ward = ''
+                    THEN LEAST(0.40, 0.25 + lat.rank * 0.1)
+                  ELSE 0.10
+                END AS conf
               FROM candidates c
               CROSS JOIN LATERAL (
-                SELECT permit_num,
+                SELECT permit_num, ward,
                        ts_rank(to_tsvector('english', COALESCE(description, '')),
                                plainto_tsquery('english', c.ts_query)) AS rank
                 FROM permits
                 WHERE to_tsvector('english', COALESCE(description, '')) @@ plainto_tsquery('english', c.ts_query)
-                  AND LTRIM(ward, '0') = LTRIM(c.ward, '0')
                   AND permit_type != 'Pre-Permit'
-                ORDER BY ts_rank(to_tsvector('english', COALESCE(description, '')),
-                                 plainto_tsquery('english', c.ts_query)) DESC
+                ORDER BY
+                  CASE WHEN c.ward != '' AND ward IS NOT NULL AND LTRIM(ward, '0') = LTRIM(c.ward, '0') THEN 0 ELSE 1 END,
+                  ts_rank(to_tsvector('english', COALESCE(description, '')),
+                          plainto_tsquery('english', c.ts_query)) DESC
                 LIMIT 1
               ) lat
               ORDER BY c.coa_id
@@ -233,7 +265,6 @@ pipeline.run('link-coa', async (pool) => {
       }
     }
   } else {
-    // Dry run: count potential matches via read-only batched LATERAL
     for (let offset = 0; offset < candidates.length; offset += BATCH_SIZE) {
       const batch = candidates.slice(offset, offset + BATCH_SIZE);
       const ids = batch.map((c) => c.id);
@@ -252,7 +283,6 @@ pipeline.run('link-coa', async (pool) => {
             SELECT permit_num
             FROM permits
             WHERE to_tsvector('english', COALESCE(description, '')) @@ plainto_tsquery('english', c.ts_query)
-              AND LTRIM(ward, '0') = LTRIM(c.ward, '0')
               AND permit_type != 'Pre-Permit'
             LIMIT 1
           ) lat
@@ -267,19 +297,20 @@ pipeline.run('link-coa', async (pool) => {
       }
     }
   }
-  pipeline.log.info('[link-coa]', `Tier 3 linked: ${desc.toLocaleString()} (confidence 0.30-0.50)${descErrors > 0 ? `, ${descErrors} batch errors` : ''}`);
+  pipeline.log.info('[link-coa]', `Tier 3 linked: ${desc.toLocaleString()} (confidence 0.10-0.50)${descErrors > 0 ? `, ${descErrors} batch errors` : ''}`);
 
   // ------------------------------------------------------------------
   // Summary
   // ------------------------------------------------------------------
   const durationMs = Date.now() - startTime;
-  const totalLinked = exact + fuzzy + desc;
-  const actualCandidates = totalUnlinked + crossWardCleaned;
+  const totalLinked = tier1a + tier1b + tier1c + tier2a + tier2b + desc;
   const noMatch = actualCandidates - totalLinked;
+  const matchRate = actualCandidates > 0 ? (totalLinked / actualCandidates) * 100 : 0;
 
   pipeline.log.info('[link-coa]', 'Linking complete', {
-    crossWardCleaned, exact, fuzzy, desc, noMatch, totalLinked,
-    rate: `${((totalLinked / actualCandidates) * 100).toFixed(1)}%`,
+    crossWardCleaned, tier1a, tier1b, tier1c, tier2a, tier2b, desc,
+    noMatch, totalLinked,
+    rate: `${matchRate.toFixed(1)}%`,
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
@@ -310,29 +341,40 @@ pipeline.run('link-coa', async (pool) => {
   );
   const prePermitLinkCount = parseInt(linksToPrePermits.rows[0].count, 10) || 0;
 
+  // Exclude Tier 1c links (confidence = 0.10) — those are intentional ward-conflict
+  // matches already reported via matches_tier_1c_ward_conflict metric.
   const crossWardLinks = await pool.query(
     `SELECT COUNT(*) FROM coa_applications ca
      JOIN permits p ON p.permit_num = ca.linked_permit_num
      WHERE ca.linked_permit_num IS NOT NULL
        AND ca.ward IS NOT NULL AND p.ward IS NOT NULL
-       AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')`
+       AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')
+       AND ca.linked_confidence != 0.10`
   );
   const crossWardCount = parseInt(crossWardLinks.rows[0].count, 10) || 0;
+
+  // Dynamic match rate threshold
+  const matchRateStatus = actualCandidates > 10 && matchRate < 5 ? 'FAIL'
+    : actualCandidates > 10 && matchRate < 20 ? 'WARN' : 'PASS';
 
   // Build audit_table
   const auditRows = [
     { metric: 'cross_ward_cleaned', value: crossWardCleaned, threshold: null, status: crossWardCleaned > 0 ? 'INFO' : 'PASS' },
     { metric: 'total_candidates', value: actualCandidates, threshold: null, status: 'INFO' },
-    { metric: 'matches_tier_1_exact', value: exact, threshold: null, status: 'INFO' },
-    { metric: 'matches_tier_2_fuzzy', value: fuzzy, threshold: null, status: 'INFO' },
+    { metric: 'match_rate_pct', value: Math.round(matchRate * 10) / 10, threshold: '>= 5%', status: matchRateStatus },
+    { metric: 'matches_tier_1a_exact_ward', value: tier1a, threshold: null, status: 'INFO' },
+    { metric: 'matches_tier_1b_exact_null_ward', value: tier1b, threshold: null, status: 'INFO' },
+    { metric: 'matches_tier_1c_ward_conflict', value: tier1c, threshold: null, status: tier1c > 0 ? 'WARN' : 'PASS' },
+    { metric: 'matches_tier_2a_name_ward', value: tier2a, threshold: null, status: 'INFO' },
+    { metric: 'matches_tier_2b_name_null_ward', value: tier2b, threshold: null, status: 'INFO' },
     { metric: 'matches_tier_3_desc', value: desc, threshold: null, status: 'INFO' },
     { metric: 'tier_3_errors', value: descErrors, threshold: '== 0', status: descErrors > 0 ? 'FAIL' : 'PASS' },
     { metric: 'unlinked_remaining', value: noMatch, threshold: null, status: 'INFO' },
     { metric: 'links_to_pre_permits', value: prePermitLinkCount, threshold: '== 0', status: prePermitLinkCount > 0 ? 'FAIL' : 'PASS' },
     { metric: 'cross_ward_links', value: crossWardCount, threshold: '== 0', status: crossWardCount > 0 ? 'WARN' : 'PASS' },
   ];
-  const linkAuditHasFails = prePermitLinkCount > 0;
-  const linkAuditHasWarns = descErrors > 0 || crossWardCount > 0;
+  const linkAuditHasFails = prePermitLinkCount > 0 || matchRateStatus === 'FAIL';
+  const linkAuditHasWarns = descErrors > 0 || crossWardCount > 0 || tier1c > 0 || matchRateStatus === 'WARN';
   const chainId = process.env.PIPELINE_CHAIN || null;
   const linkAuditTable = {
     phase: chainId === 'coa' ? 4 : 12,
@@ -344,16 +386,20 @@ pipeline.run('link-coa', async (pool) => {
   const meta = {
     duration_ms: durationMs,
     cross_ward_cleaned: crossWardCleaned,
-    matches_tier_1_exact: exact,
-    matches_tier_2_fuzzy: fuzzy,
+    matches_tier_1a_exact_ward: tier1a,
+    matches_tier_1b_exact_null_ward: tier1b,
+    matches_tier_1c_ward_conflict: tier1c,
+    matches_tier_2a_name_ward: tier2a,
+    matches_tier_2b_name_null_ward: tier2b,
     matches_tier_3_desc: desc,
     tier_3_errors: descErrors,
+    match_rate_pct: Math.round(matchRate * 10) / 10,
     unlinked_remaining: noMatch,
     audit_table: linkAuditTable,
   };
   pipeline.emitSummary({ records_total: totalLinked + crossWardCleaned, records_new: 0, records_updated: totalLinked + crossWardCleaned, records_meta: meta });
   pipeline.emitMeta(
-    { "coa_applications": ["id", "application_number", "street_num", "street_name", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name", "ward", "issued_date", "description"] },
+    { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name_normalized", "ward", "issued_date", "description"] },
     { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"] }
   );
 });

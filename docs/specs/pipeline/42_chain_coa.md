@@ -28,7 +28,7 @@ assert_data_bounds → assert_engine_health
 | 1 | `assert_schema` | `quality/assert-schema.js` | Validate CKAN metadata for CoA resources | pipeline_runs |
 | 2 | `coa` | `load-coa.js` | Ingest CoA applications from CKAN (active + closed resources) | coa_applications |
 | 3 | `assert_coa_freshness` | `quality/assert-coa-freshness.js` | Verify last CoA record is within 45-day threshold | — |
-| 4 | `link_coa` | `link-coa.js` | 3-tier address matching: exact (0.95), fuzzy+ward (0.60), FTS (0.30) | coa_applications |
+| 4 | `link_coa` | `link-coa.js` | Address matching via `street_name_normalized` columns + confidence matrix (ward as booster) | coa_applications |
 | 5 | `create_pre_permits` | `create-pre-permits.js` | Generate pre-permit leads from approved unlinked CoA applications | — |
 | 6 | `assert_pre_permit_aging` | `quality/assert-pre-permit-aging.js` | Warn on expired pre-permits (approved+unlinked >18 months) | — |
 | 7 | `refresh_snapshot` | `refresh-snapshot.js` | Update dashboard metrics snapshot | data_quality_snapshots |
@@ -56,10 +56,15 @@ assert_data_bounds → assert_engine_health
    - `WARD_NUMBER` (closed) / `WARD` (active) → `ward`
    - Address composed from: `STREET_NUM + STREET_NAME + STREET_TYPE + STREET_DIRECTION`
 3. **Freshness check** — if last CoA record is >45 days old, WARN (source may be stale)
-4. **Address linking** — 3-tier cascade matching CoA applications to permits:
-   - Tier 1: Exact street_num + street_name + ward → confidence 0.95
-   - Tier 2: Fuzzy street_name (stripped types) + ward → confidence 0.60
-   - Tier 3: Description full-text search → confidence 0.30-0.50
+4. **Address linking** — uses pre-computed `street_name_normalized` columns (populated at ingestion by `scripts/lib/address.js`). Ward is a confidence **booster**, not a gatekeeper (80% of permits lack ward data):
+   - Pre-pass: unlinks cross-ward mismatches from prior runs
+   - Tier 1a: `street_num + street_name_normalized` + ward match → 0.95
+   - Tier 1b: `street_num + street_name_normalized` + permit ward NULL → 0.85
+   - Tier 1c: `street_num + street_name_normalized` + ward conflict → 0.10 (flagged)
+   - Tier 2a: `street_name_normalized` only + ward match → 0.60
+   - Tier 2b: `street_name_normalized` only + permit ward NULL → 0.50
+   - Tier 3: Description full-text search → 0.10-0.50 (ward as tiebreaker)
+   - Audit: dynamic match rate threshold (candidates > 10 + rate < 5% = FAIL, < 20% = WARN)
 5. **Pre-permit generation** — approved CoA applications without linked permits become speculative leads
 6. **Aging check** — approved+unlinked applications older than 18 months flagged as expired (WARN)
 7. **Quality assertions** — CoA-scoped data bounds and engine health
@@ -72,7 +77,7 @@ assert_data_bounds → assert_engine_health
 ### Edge Cases
 - CKAN `WARD_NUMBER` vs `WARD` column mismatch between active/closed resources → handled by field mapper
 - CoA `C_OF_A_DESCISION` typo in source → mapped as-is, not corrected
-- Address with `%` or `_` in street name → LIKE wildcards escaped in SQL
+- "ST CLAIR" false stripping: `normalizeStreetName('ST CLAIR AVE')` → `'CLAIR'` (strips "ST" as street type). Both CoA and permit sides produce same result, so matching works despite semantic loss
 - 0 new CoA records → gate-skip enrichment steps, quality steps still run
 - Freshness >45 days → WARN but does not halt chain
 </behavior>
@@ -95,7 +100,9 @@ assert_data_bounds → assert_engine_health
 
 ### Target Files
 - `scripts/manifest.json` (coa chain array)
+- `scripts/lib/address.js` (shared street name normalizer)
 - `scripts/load-coa.js`, `scripts/link-coa.js`, `scripts/create-pre-permits.js`
+- `migrations/061_street_name_normalized.sql`
 - `scripts/quality/assert-coa-freshness.js`, `scripts/quality/assert-pre-permit-aging.js`
 
 ### Out-of-Scope Files

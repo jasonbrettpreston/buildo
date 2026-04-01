@@ -40,7 +40,7 @@ assert_engine_health
 | 11 | `link_massing` | `link-massing.js` | Link parcels to 3D building footprint volumes | parcel_buildings |
 | 12 | `link_similar` | `link-similar.js` | Propagate scope tags between related permits at same address | permits |
 | 13 | `classify_permits` | `classify-permits.js` | Deep trade classification via tag-trade matrix (32 trades) | permit_trades |
-| 14 | `link_coa` | `link-coa.js` | Link Committee of Adjustment applications to permits | coa_applications |
+| 14 | `link_coa` | `link-coa.js` | Link CoA to permits via `street_name_normalized` + confidence matrix | coa_applications |
 | 15 | `create_pre_permits` | `create-pre-permits.js` | Generate pre-permit leads from approved CoA applications | — |
 | 16 | `refresh_snapshot` | `refresh-snapshot.js` | Update data_quality_snapshots for dashboard metrics | data_quality_snapshots |
 | 17 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Post-ingestion: cost outliers, null rates, duplicate PKs | pipeline_runs |

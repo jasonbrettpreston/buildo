@@ -18,6 +18,7 @@
  * SPEC LINK: docs/specs/12_coa_integration.md
  */
 const pipeline = require('./lib/pipeline');
+const { normalizeStreetName } = require('./lib/address');
 const crypto = require('crypto');
 
 const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
@@ -195,6 +196,7 @@ function mapRecord(raw, schemaDrift) {
       address,
       street_num: streetNum,
       street_name: fullStreetName,
+      street_name_normalized: normalizeStreetName(fullStreetName),
       ward,
       status,
       decision,
@@ -218,14 +220,15 @@ async function upsertBatch(client, batch) {
   for (const rec of batch) {
     const result = await client.query(
       `INSERT INTO coa_applications (
-        application_number, address, street_num, street_name, ward,
+        application_number, address, street_num, street_name, street_name_normalized, ward,
         status, decision, decision_date, hearing_date, description,
         applicant, sub_type, data_hash, first_seen_at, last_seen_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())
       ON CONFLICT (application_number) DO UPDATE SET
         address = EXCLUDED.address,
         street_num = EXCLUDED.street_num,
         street_name = EXCLUDED.street_name,
+        street_name_normalized = EXCLUDED.street_name_normalized,
         ward = EXCLUDED.ward,
         status = EXCLUDED.status,
         decision = EXCLUDED.decision,
@@ -243,6 +246,7 @@ async function upsertBatch(client, batch) {
         rec.address,
         rec.street_num,
         rec.street_name,
+        rec.street_name_normalized,
         rec.ward,
         rec.status,
         rec.decision,
@@ -447,7 +451,7 @@ pipeline.run('load-coa', async (pool) => {
   });
   pipeline.emitMeta(
     { "CKAN API": ["REFERENCE_FILE#", "STREET_NUM", "STREET_NAME", "WARD", "C_OF_A_DESCISION", "STATUSDESC", "HEARING_DATE", "DESCRIPTION", "CONTACT_NAME", "SUB_TYPE"] },
-    { "coa_applications": ["application_number", "address", "street_num", "street_name", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"] }
+    { "coa_applications": ["application_number", "address", "street_num", "street_name", "street_name_normalized", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"] }
   );
 
   // Show stats
