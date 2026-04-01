@@ -95,6 +95,22 @@ describe('Entities Chain (4th Pillar)', () => {
     expect(chain).toBeDefined();
     expect(chain!.steps).toHaveLength(2);
   });
+
+  it('deep_scrapes chain has exactly 7 steps', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'deep_scrapes');
+    expect(chain).toBeDefined();
+    expect(chain!.steps).toHaveLength(7);
+  });
+
+  it('deep_scrapes runs engine_health before staleness (maintenance before quality gates)', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'deep_scrapes')!;
+    const slugs = chain.steps.map((s) => s.slug);
+    const ehIdx = slugs.indexOf('assert_engine_health');
+    const stIdx = slugs.indexOf('assert_staleness');
+    expect(ehIdx).toBeGreaterThan(-1);
+    expect(stIdx).toBeGreaterThan(-1);
+    expect(ehIdx).toBeLessThan(stIdx);
+  });
 });
 
 describe('UI Chain Ordering (Dependency Hierarchy)', () => {

@@ -17,8 +17,8 @@ As a tradesperson, I want real-time inspection statuses (Pass/Fail/Outstanding) 
 
 ```
 inspections → classify_inspection_status → assert_network_health →
-refresh_snapshot → assert_data_bounds → assert_staleness →
-assert_engine_health
+refresh_snapshot → assert_data_bounds → assert_engine_health →
+assert_staleness
 ```
 
 ### Step Breakdown
@@ -30,8 +30,8 @@ assert_engine_health
 | 3 | `assert_network_health` | `quality/assert-network-health.js` | Verify scraper connectivity and proxy health | — |
 | 4 | `refresh_snapshot` | `refresh-snapshot.js` | Update dashboard metrics with inspection coverage | data_quality_snapshots |
 | 5 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Inspection-scoped: NULL rates, ancient dates, ghost records | pipeline_runs |
-| 6 | `assert_staleness` | `quality/assert-staleness.js` | Monitor scrape freshness and stale permit detection | — |
-| 7 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuple ratio for permit_inspections table | engine_health_snapshots |
+| 6 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuple ratio + auto-vacuum (maintenance — runs before quality gates) | engine_health_snapshots |
+| 7 | `assert_staleness` | `quality/assert-staleness.js` | Monitor scrape freshness and stale permit detection | — |
 </architecture>
 
 ---

@@ -164,8 +164,8 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'assert_network_health',       indent: 0 },
       { slug: 'refresh_snapshot',      indent: 1 },
       { slug: 'assert_data_bounds',    indent: 0 },
-      { slug: 'assert_staleness',      indent: 0 },
       { slug: 'assert_engine_health',  indent: 0 },
+      { slug: 'assert_staleness',      indent: 0 },
     ],
   },
 ];

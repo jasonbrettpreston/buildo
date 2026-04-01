@@ -62,7 +62,7 @@
     ],
     "deep_scrapes": [
       "inspections", "classify_inspection_status", "assert_network_health",
-      "refresh_snapshot", "assert_data_bounds", "assert_staleness", "assert_engine_health"
+      "refresh_snapshot", "assert_data_bounds", "assert_engine_health", "assert_staleness"
     ]
   },
 
