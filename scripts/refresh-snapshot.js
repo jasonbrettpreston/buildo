@@ -9,21 +9,19 @@ pipeline.run('refresh-snapshot', async (pool) => {
   const t0 = Date.now();
   pipeline.log.info(TAG, 'Recapturing data quality snapshot...');
 
-  // Queries 1-11 + 13-14 are independent — run in parallel
-  const [
-    permitsRes, tradesRes, tradeByTypeRes, buildersRes, permitsBuilderRes,
-    parcelsRes, nhoodRes, geoRes, coaRes,
-    scopeRes, scopeTagsRes, detailedTagsRes, topTagsRes, scopeBreakdownRes,
-    freshRes, syncRes, nullsRes, violationsRes,
-  ] = await Promise.all([
-    // 1. Permit counts
-    pool.query(
+  // All queries run sequentially on a single REPEATABLE READ client.
+  // This guarantees point-in-time consistency (no "torn snapshot" from concurrent writes)
+  // and uses only 1 connection (prevents pool starvation from 18 simultaneous queries).
+  const snapClient = await pool.connect();
+  await snapClient.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
+
+  try {
+    const permitsRes = await snapClient.query(
       `SELECT COUNT(*) as total,
               COUNT(*) FILTER (WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')) as active
        FROM permits`
-    ),
-    // 2. Trade counts
-    pool.query(
+    );
+    const tradesRes = await snapClient.query(
       `SELECT COUNT(DISTINCT (permit_num, revision_num)) as permits_with_trades,
               COUNT(*) as total_matches,
               AVG(confidence)::NUMERIC(4,3) as avg_confidence,
@@ -31,9 +29,8 @@ pipeline.run('refresh-snapshot', async (pool) => {
               COUNT(*) FILTER (WHERE tier = 2) as tier2,
               COUNT(*) FILTER (WHERE tier = 3) as tier3
        FROM permit_trades`
-    ),
-    // 2b. Trade counts by use-type
-    pool.query(
+    );
+    const tradeByTypeRes = await snapClient.query(
       `SELECT
          COUNT(DISTINCT p.permit_num) FILTER (
            WHERE 'residential' = ANY(p.scope_tags) AND pt.permit_num IS NOT NULL
@@ -52,9 +49,8 @@ pipeline.run('refresh-snapshot', async (pool) => {
        LEFT JOIN (SELECT DISTINCT permit_num FROM permit_trades) pt
          ON pt.permit_num = p.permit_num
        WHERE p.status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    ),
-    // 3. Builder counts
-    pool.query(
+    );
+    const buildersRes = await snapClient.query(
       `SELECT COUNT(*) as total,
               COUNT(*) FILTER (WHERE last_enriched_at IS NOT NULL) as enriched,
               COUNT(*) FILTER (WHERE primary_phone IS NOT NULL) as with_phone,
@@ -63,85 +59,76 @@ pipeline.run('refresh-snapshot', async (pool) => {
               COUNT(*) FILTER (WHERE google_place_id IS NOT NULL) as with_google,
               COUNT(*) FILTER (WHERE is_wsib_registered = true) as with_wsib
        FROM entities`
-    ),
-    pool.query(
+    );
+    const permitsBuilderRes = await snapClient.query(
       `SELECT COUNT(*) as count FROM permits WHERE builder_name IS NOT NULL AND builder_name != ''`
-    ),
-    // 4. Parcel counts
-    pool.query(
+    );
+    const parcelsRes = await snapClient.query(
       `SELECT COUNT(DISTINCT (permit_num, revision_num)) as permits_with_parcel,
               COUNT(*) FILTER (WHERE match_type = 'exact_address') as exact_matches,
               COUNT(*) FILTER (WHERE match_type = 'name_only') as name_matches,
               COUNT(*) FILTER (WHERE match_type = 'spatial') as spatial_matches,
               AVG(confidence)::NUMERIC(4,3) as avg_confidence
        FROM permit_parcels`
-    ),
-    // 5. Neighbourhood count (active only)
-    pool.query(
+    );
+    const nhoodRes = await snapClient.query(
       `SELECT COUNT(*) as count FROM permits
-       WHERE neighbourhood_id IS NOT NULL
+       WHERE neighbourhood_id IS NOT NULL AND neighbourhood_id != -1
          AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    ),
-    // 6. Geocoding
-    pool.query(
+    );
+    const geoRes = await snapClient.query(
       `SELECT COUNT(*) as count FROM permits WHERE latitude IS NOT NULL AND longitude IS NOT NULL`
-    ),
-    // 7. CoA counts
-    pool.query(
+    );
+    const coaRes = await snapClient.query(
       `SELECT COUNT(*) as total,
               COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL) as linked,
               AVG(linked_confidence) FILTER (WHERE linked_permit_num IS NOT NULL)::NUMERIC(4,3) as avg_confidence,
               COUNT(*) FILTER (WHERE linked_confidence >= 0.80) as high_confidence,
               COUNT(*) FILTER (WHERE linked_confidence IS NOT NULL AND linked_confidence < 0.50) as low_confidence
        FROM coa_applications`
-    ),
-    // 8. Scope counts
-    pool.query(
+    );
+    const scopeRes = await snapClient.query(
       `SELECT COUNT(*) as count FROM permits
        WHERE ('residential' = ANY(scope_tags) OR 'commercial' = ANY(scope_tags) OR 'mixed-use' = ANY(scope_tags))
          AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    ),
-    // 9. Scope tags counts
-    pool.query(
+    );
+    const scopeTagsRes = await snapClient.query(
       `SELECT COUNT(*) as count FROM permits
        WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
          AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    ),
-    pool.query(
+    );
+    const detailedTagsRes = await snapClient.query(
       `SELECT COUNT(*) as count FROM permits
        WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
          AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')
          AND EXISTS (SELECT 1 FROM unnest(scope_tags) AS t WHERE t NOT IN ('residential', 'commercial', 'mixed-use'))`
-    ),
-    pool.query(
+    );
+    const topTagsRes = await snapClient.query(
       `SELECT tag, COUNT(*) as count
        FROM (SELECT unnest(scope_tags) as tag FROM permits
              WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
                AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')) sub
        WHERE tag NOT IN ('residential', 'commercial', 'mixed-use')
        GROUP BY tag ORDER BY count DESC LIMIT 10`
-    ),
-    pool.query(
+    );
+    const scopeBreakdownRes = await snapClient.query(
       `SELECT tag, COUNT(*) as count
        FROM (SELECT unnest(scope_tags) as tag FROM permits
              WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
                AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')) sub
        WHERE tag IN ('residential', 'commercial', 'mixed-use')
        GROUP BY tag`
-    ),
-    // 10. Freshness
-    pool.query(
+    );
+    const freshRes = await snapClient.query(
       `SELECT COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '24 hours') as updated_24h,
               COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '7 days') as updated_7d,
               COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '30 days') as updated_30d
        FROM permits`
-    ),
-    // 11. Last sync
-    pool.query(
+    );
+    const syncRes = await snapClient.query(
       `SELECT started_at, status FROM sync_runs ORDER BY started_at DESC LIMIT 1`
-    ),
-    // 13. Null counts (active permits only)
-    pool.query(
+    );
+    const nullsRes = await snapClient.query(
       `SELECT
          COUNT(*) FILTER (WHERE description IS NULL OR description = '') as null_description,
          COUNT(*) FILTER (WHERE builder_name IS NULL OR builder_name = '') as null_builder_name,
@@ -151,17 +138,17 @@ pipeline.run('refresh-snapshot', async (pool) => {
          COUNT(*) FILTER (WHERE geo_id IS NULL OR geo_id = '') as null_geo_id
        FROM permits
        WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    ),
-    // 14. Violations
-    pool.query(
+    );
+    const violationsRes = await snapClient.query(
       `SELECT
          COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < 100 OR est_const_cost > 1000000000)) as cost_oor,
          COUNT(*) FILTER (WHERE issued_date > NOW()) as future_issued,
          COUNT(*) FILTER (WHERE status IS NULL OR status = '') as missing_status
        FROM permits
        WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    ),
-  ]);
+    );
+
+    await snapClient.query('COMMIT');
 
   // Extract results
   const total_permits = parseInt(permitsRes.rows[0].total);
@@ -197,6 +184,24 @@ pipeline.run('refresh-snapshot', async (pool) => {
   const violations_total = parseInt(v.cost_oor) + parseInt(v.future_issued) + parseInt(v.missing_status);
   pipeline.log.info(TAG, `Violations: cost_oor=${v.cost_oor}, future_issued=${v.future_issued}, missing_status=${v.missing_status}, total=${violations_total}`);
 
+  } finally {
+    snapClient.release();
+  }
+
+  // Optional queries: on failure, carry forward previous snapshot values
+  // instead of defaulting to 0 (which would destroy dashboard trend lines).
+  let prevSnapshot = null;
+  async function getPrevSnapshot() {
+    if (prevSnapshot !== null) return prevSnapshot;
+    try {
+      const prev = await pool.query(
+        `SELECT * FROM data_quality_snapshots ORDER BY snapshot_date DESC LIMIT 1`
+      );
+      prevSnapshot = prev.rows[0] || {};
+    } catch { prevSnapshot = {}; }
+    return prevSnapshot;
+  }
+
   // 12. Massing (may not exist)
   let massing = { footprints_total: 0, parcels_with_buildings: 0 };
   try {
@@ -205,7 +210,11 @@ pipeline.run('refresh-snapshot', async (pool) => {
               (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings) as parcels_with_buildings`
     );
     massing = { footprints_total: parseInt(m.rows[0].footprints_total), parcels_with_buildings: parseInt(m.rows[0].parcels_with_buildings) };
-  } catch (err) { pipeline.log.warn(TAG, `Massing query failed: ${err.message}`); }
+  } catch (err) {
+    pipeline.log.warn(TAG, `Massing query failed — carrying forward previous snapshot: ${err.message}`);
+    const prev = await getPrevSnapshot();
+    massing = { footprints_total: prev.building_footprints_total || 0, parcels_with_buildings: prev.parcels_with_buildings || 0 };
+  }
 
   // 15. Schema column counts
   let schemaColumnCounts = {};
@@ -218,7 +227,11 @@ pipeline.run('refresh-snapshot', async (pool) => {
        GROUP BY table_name ORDER BY table_name`
     );
     for (const row of schemaCols.rows) schemaColumnCounts[row.table_name] = parseInt(row.col_count);
-  } catch (err) { pipeline.log.warn(TAG, `Schema column count query failed: ${err.message}`); }
+  } catch (err) {
+    pipeline.log.warn(TAG, `Schema column count query failed — carrying forward: ${err.message}`);
+    const prev = await getPrevSnapshot();
+    schemaColumnCounts = prev.schema_column_counts || {};
+  }
 
   // 16. SLA metrics
   let slaHours = null;
@@ -227,7 +240,11 @@ pipeline.run('refresh-snapshot', async (pool) => {
       `SELECT EXTRACT(EPOCH FROM (NOW() - MAX(first_seen_at))) / 3600 as hours FROM permits`
     );
     slaHours = sla.rows[0]?.hours ? Math.round(parseFloat(sla.rows[0].hours) * 100) / 100 : null;
-  } catch (err) { pipeline.log.warn(TAG, `SLA query failed: ${err.message}`); }
+  } catch (err) {
+    pipeline.log.warn(TAG, `SLA query failed — carrying forward: ${err.message}`);
+    const prev = await getPrevSnapshot();
+    slaHours = prev.sla_permits_ingestion_hours || null;
+  }
 
   // 17. Inspection scraping coverage
   let insp = { total: 0, permits_scraped: 0, outstanding: 0, passed: 0, not_passed: 0 };
@@ -250,7 +267,17 @@ pipeline.run('refresh-snapshot', async (pool) => {
       not_passed: parseInt(ir.not_passed),
     };
     pipeline.log.info(TAG, `Inspections: ${insp.total} stages, ${insp.permits_scraped} permits, ${insp.outstanding} outstanding, ${insp.passed} passed, ${insp.not_passed} not passed`);
-  } catch (err) { pipeline.log.warn(TAG, `Inspection query failed: ${err.message}`); }
+  } catch (err) {
+    pipeline.log.warn(TAG, `Inspection query failed — carrying forward: ${err.message}`);
+    const prev = await getPrevSnapshot();
+    insp = {
+      total: prev.inspections_total || 0,
+      permits_scraped: prev.inspections_permits_scraped || 0,
+      outstanding: prev.inspections_outstanding_count || 0,
+      passed: prev.inspections_passed_count || 0,
+      not_passed: prev.inspections_not_passed_count || 0,
+    };
+  }
 
   // UPSERT snapshot
   let isNew, isUpdate;
@@ -283,7 +310,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
         inspections_outstanding_count, inspections_passed_count, inspections_not_passed_count
       ) VALUES (
         CURRENT_DATE,
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34::jsonb,$35,$36,$37::jsonb,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53::jsonb,$54,$55,$56,$57,$58,$59,$60,$61
       )
       ON CONFLICT (snapshot_date) DO UPDATE SET
         total_permits=EXCLUDED.total_permits, active_permits=EXCLUDED.active_permits,
@@ -336,7 +363,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
         inspections_passed_count=EXCLUDED.inspections_passed_count,
         inspections_not_passed_count=EXCLUDED.inspections_not_passed_count,
         created_at=NOW()
-      RETURNING (xmax = 0) AS is_insert, snapshot_date, permits_with_neighbourhood, active_permits, coa_total, coa_linked, permits_with_scope, permits_with_scope_tags, permits_with_detailed_tags`,
+      RETURNING (xmax::text::int = 0) AS is_insert, snapshot_date, permits_with_neighbourhood, active_permits, coa_total, coa_linked, permits_with_scope, permits_with_scope_tags, permits_with_detailed_tags`,
       [
         total_permits, active_permits,
         parseInt(t.permits_with_trades), parseInt(t.total_matches),
