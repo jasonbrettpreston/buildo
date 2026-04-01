@@ -366,7 +366,7 @@ async function run() {
         try {
           const telemetry = await pipeline.diffTelemetry(pool, telemetryTables, preTelemetry);
           failMeta = { ...(failMeta || {}), telemetry };
-        } catch { /* non-fatal */ }
+        } catch (telErr) { pipeline.log.warn('[run-chain]', `Failure-path telemetry capture failed for ${slug}: ${telErr.message}`); }
       }
 
       if (stepRunId) {
