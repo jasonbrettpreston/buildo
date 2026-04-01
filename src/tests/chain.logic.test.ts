@@ -462,8 +462,8 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
 
   it('checks both records_new and records_updated before skipping', () => {
     const source = chainSource();
-    // Skip only when BOTH are 0 — updated records still warrant downstream work
-    expect(source).toMatch(/recordsNew === 0[\s\S]{0,100}recordsUpdated/);
+    // Skip only when BOTH are 0 — null-safe via || 0 coercion
+    expect(source).toMatch(/recordsNew.*=== 0[\s\S]{0,100}recordsUpdated/);
   });
 
   it('gate abort uses completed status, not failed (stale data is not a failure)', () => {

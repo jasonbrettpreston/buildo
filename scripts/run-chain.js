@@ -16,32 +16,40 @@ const path = require('path');
 const fs = require('fs');
 
 // ---------------------------------------------------------------------------
-// Pipeline Manifest — single source of truth (§9.6)
-// ---------------------------------------------------------------------------
-
-const manifest = JSON.parse(
-  fs.readFileSync(path.resolve(__dirname, 'manifest.json'), 'utf-8')
-);
-
-const CHAINS = manifest.chains;
-
-// Build slug → script path map from manifest
-const PIPELINE_SCRIPTS = {};
-for (const [slug, entry] of Object.entries(manifest.scripts)) {
-  PIPELINE_SCRIPTS[slug] = entry.file;
-}
-
-// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
+let _pool = null; // Module-level reference for fatal handler cleanup
+
 async function run() {
   const pool = pipeline.createPool();
+  _pool = pool;
+
+  // Parse manifest inside run() so errors are caught by the global try/catch
+  // and logged via pipeline.log (instead of crashing with raw stderr on boot)
+  const manifest = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, 'manifest.json'), 'utf-8')
+  );
+  const CHAINS = manifest.chains;
+  const PIPELINE_SCRIPTS = {};
+  for (const [slug, entry] of Object.entries(manifest.scripts)) {
+    PIPELINE_SCRIPTS[slug] = entry.file;
+  }
 
   const chainId = process.argv[2];
+  // Parse externalRunId BEFORE validation so we can mark it as failed on invalid chain
+  const externalRunId = process.argv[3] ? parseInt(process.argv[3], 10) : null;
+
   if (!chainId || !CHAINS[chainId]) {
     pipeline.log.error('[run-chain]', `Invalid chain_id. Available: ${Object.keys(CHAINS).join(', ')}`);
-    await pool.end().catch((dbErr) => { pipeline.log.warn('[run-chain]', `pool.end failed: ${dbErr.message}`); });
+    // Mark external run as failed so it doesn't ghost in the UI as 'running' forever
+    if (externalRunId) {
+      await pool.query(
+        `UPDATE pipeline_runs SET status = 'failed', completed_at = NOW(), error_message = $1 WHERE id = $2`,
+        [`Invalid chain_id: ${chainId}`, externalRunId]
+      ).catch(() => {});
+    }
+    await pool.end().catch(() => {});
     process.exit(1);
   }
 
@@ -52,12 +60,8 @@ async function run() {
 
   console.log(`\n=== Chain: ${chainId} (${steps.length} steps)${forceMode ? ' [FORCE]' : ''} ===\n`);
 
-  // Use pre-created run ID from the API trigger (argv[3]) to avoid a duplicate
-  // INSERT and ensure the row exists before the first UI poll.
-  // Falls back to inserting its own row when run standalone (no argv[3]).
   let chainRunId = null;
   const chainStart = Date.now();
-  const externalRunId = process.argv[3] ? parseInt(process.argv[3], 10) : null;
   if (externalRunId) {
     chainRunId = externalRunId;
     console.log(`Using pre-created pipeline_runs row: ${chainRunId}`);
@@ -216,11 +220,17 @@ async function run() {
           stdio: ['inherit', 'pipe', 'inherit'],
         });
 
+        // Line buffer: accumulate partial chunks so PIPELINE_SUMMARY markers
+        // that span chunk boundaries (OS fragments at ~8KB) are not lost.
+        let lineBuffer = '';
         child.stdout.on('data', (data) => {
           const chunk = data.toString('utf-8');
           process.stdout.write(chunk); // Tee to console immediately
-          // Only buffer telemetry marker lines (not full output)
-          for (const line of chunk.split('\n')) {
+          lineBuffer += chunk;
+          const lines = lineBuffer.split('\n');
+          // Last element is incomplete (no trailing \n) — retain for next chunk
+          lineBuffer = lines.pop();
+          for (const line of lines) {
             if (line.includes('PIPELINE_SUMMARY:') || line.includes('PIPELINE_META:')) {
               summaryLines += line + '\n';
             }
@@ -228,6 +238,10 @@ async function run() {
         });
 
         child.on('close', (code) => {
+          // Flush remaining buffer
+          if (lineBuffer && (lineBuffer.includes('PIPELINE_SUMMARY:') || lineBuffer.includes('PIPELINE_META:'))) {
+            summaryLines += lineBuffer + '\n';
+          }
           if (code === 0) resolveSpawn(summaryLines);
           else rejectSpawn(new Error(`Command failed: ${runtime} ${scriptPath}`));
         });
@@ -250,7 +264,9 @@ async function run() {
           recordsNew = summary.records_new ?? null;
           recordsUpdated = summary.records_updated ?? null;
           recordsMeta = summary.records_meta ?? null;
-        } catch { /* malformed summary — ignore */ }
+        } catch (parseErr) {
+          pipeline.log.warn('[run-chain]', `Malformed PIPELINE_SUMMARY JSON from ${slug}: ${parseErr.message}`);
+        }
       }
 
       // Extract audit_table verdict for chain-level aggregation
@@ -266,7 +282,9 @@ async function run() {
           const pipelineMeta = JSON.parse(metaMatch[1]);
           // Merge into records_meta under pipeline_meta key
           recordsMeta = { ...(recordsMeta || {}), pipeline_meta: pipelineMeta };
-        } catch { /* malformed meta — ignore */ }
+        } catch (parseErr) {
+          pipeline.log.warn('[run-chain]', `Malformed PIPELINE_META JSON from ${slug}: ${parseErr.message}`);
+        }
       }
 
       // T1/T2/T4 Telemetry: capture post-run state (always, even on success)
@@ -292,7 +310,9 @@ async function run() {
                records_meta = COALESCE($6::jsonb, records_meta)
            WHERE id = $2`,
           [durationMs, stepRunId, recordsTotal, recordsNew, recordsUpdated, recordsMeta ? JSON.stringify(recordsMeta) : null]
-        ).catch((dbErr) => { pipeline.log.error('[run-chain]', `Failed to update pipeline_runs: ${dbErr.message}`); });
+        );
+        // No .catch() — DB failures on step completion must halt the chain
+        // (masked disconnects would silently cascade into the next step)
       }
 
       // When the primary ingest step produced zero changes, set gateSkipped
@@ -301,7 +321,8 @@ async function run() {
       // DB state, not just the latest batch.
       // --force bypasses gate-skip entirely (recovery after mid-chain crash).
       const gate = manifest.chain_gates[chainId];
-      if (gate && slug === gate && recordsNew === 0 && (recordsUpdated ?? 0) === 0 && !forceMode) {
+      // Defensive: null/undefined coerce to 0 (null === 0 is false in JS)
+      if (gate && slug === gate && (recordsNew || 0) === 0 && (recordsUpdated || 0) === 0 && !forceMode) {
         console.log(`${stepLabel} — 0 new records — skipping non-essential downstream steps`);
         gateSkipped = true;
       }
@@ -320,7 +341,13 @@ async function run() {
         try {
           const summary = JSON.parse(failSummaryMatch[1]);
           failMeta = summary.records_meta ?? null;
-        } catch { /* malformed summary — ignore */ }
+          // Extract verdict from failure telemetry (same as success path)
+          if (failMeta?.audit_table?.verdict) {
+            stepVerdicts[slug] = failMeta.audit_table.verdict;
+          }
+        } catch (parseErr) {
+          pipeline.log.warn('[run-chain]', `Malformed PIPELINE_SUMMARY JSON from failed ${slug}: ${parseErr.message}`);
+        }
       }
       const failMetaMatches = [...summaryLines.matchAll(/PIPELINE_META:(.+)/g)];
       const failMetaMatch = failMetaMatches.length > 0 ? failMetaMatches[failMetaMatches.length - 1] : null;
@@ -328,7 +355,9 @@ async function run() {
         try {
           const pipelineMeta = JSON.parse(failMetaMatch[1]);
           failMeta = { ...(failMeta || {}), pipeline_meta: pipelineMeta };
-        } catch { /* malformed meta — ignore */ }
+        } catch (parseErr) {
+          pipeline.log.warn('[run-chain]', `Malformed PIPELINE_META JSON from failed ${slug}: ${parseErr.message}`);
+        }
       }
 
       // T1/T2/T4: Still capture post-run telemetry on failure — partial data
@@ -408,8 +437,9 @@ async function run() {
   if (failedStep) process.exit(1);
 }
 
-run().catch((err) => {
+run().catch(async (err) => {
   pipeline.log.error('[run-chain]', err, { phase: 'fatal' });
-  // Allow event loop to flush pending pool.end() before exiting
+  // Close pool to prevent orphaned TCP connections on the database server
+  if (_pool) { try { await _pool.end(); } catch { /* best effort */ } }
   setTimeout(() => process.exit(1), 500);
 });
