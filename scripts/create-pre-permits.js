@@ -5,7 +5,6 @@
  * Pre-permit leads are Committee of Adjustment applications that:
  * - Were approved (decision = 'Approved' or 'Approved with Conditions')
  * - Have NOT yet been linked to a building permit
- * - Were decided within the last 90 days
  *
  * This script:
  *   1. INSERTs Pre-Permit placeholder rows into the permits table (PRE- prefix)
@@ -28,14 +27,13 @@ pipeline.run('create-pre-permits', async (pool) => {
 
   pipeline.log.info('[create-pre-permits]', 'Generating pre-permit leads from CoA applications...');
 
-  // Count current state
+  // Count current state — all-time approved, unlinked
   const { rows: [counts] } = await pool.query(
     `SELECT
        COUNT(*) FILTER (
          WHERE decision ILIKE 'approved%'
            AND linked_permit_num IS NULL
-           AND decision_date >= NOW() - INTERVAL '90 days'
-       ) as upcoming,
+       ) as eligible,
        COUNT(*) FILTER (
          WHERE decision ILIKE 'approved%'
            AND linked_permit_num IS NOT NULL
@@ -47,30 +45,35 @@ pipeline.run('create-pre-permits', async (pool) => {
      FROM coa_applications`
   );
 
-  const upcoming = parseInt(counts.upcoming);
+  const eligible = parseInt(counts.eligible);
   const linked = parseInt(counts.already_linked);
   const approved = parseInt(counts.total_approved);
   const total = parseInt(counts.total);
 
-  pipeline.log.info('[create-pre-permits]', `CoA: ${total.toLocaleString()} total, ${approved.toLocaleString()} approved, ${linked.toLocaleString()} linked, ${upcoming.toLocaleString()} eligible leads`);
+  pipeline.log.info('[create-pre-permits]', `CoA: ${total.toLocaleString()} total, ${approved.toLocaleString()} approved, ${linked.toLocaleString()} linked, ${eligible.toLocaleString()} eligible leads`);
 
   // Step 1: Generate Pre-Permit placeholder rows
+  // No 90-day window — ON CONFLICT DO NOTHING provides idempotency,
+  // and aging Pre-Permits are handled by Step 2's 18-month expiry.
+  // Filter out NULL application_numbers to prevent NULL concatenation crash.
   const inserted = await pipeline.withTransaction(pool, async (client) => {
     const result = await client.query(`
       INSERT INTO permits (
         permit_num, revision_num, permit_type, status,
-        description, ward, street_num, street_name, application_date
+        description, ward, street_num, street_name, application_date,
+        last_seen_at
       )
       SELECT
         'PRE-' || application_number,
         '00',
         'Pre-Permit',
         'Forecasted',
-        description, ward, street_num, street_name, decision_date
+        description, ward, street_num, street_name, decision_date,
+        NOW()
       FROM coa_applications
       WHERE decision ILIKE 'approved%'
         AND linked_permit_num IS NULL
-        AND decision_date >= NOW() - INTERVAL '90 days'
+        AND application_number IS NOT NULL
       ON CONFLICT (permit_num, revision_num) DO NOTHING
     `);
     return result.rowCount || 0;
@@ -101,7 +104,7 @@ pipeline.run('create-pre-permits', async (pool) => {
      FROM coa_applications
      WHERE decision ILIKE 'approved%'
        AND linked_permit_num IS NULL
-       AND decision_date >= NOW() - INTERVAL '90 days'
+       AND application_number IS NOT NULL
      GROUP BY ward
      ORDER BY count DESC
      LIMIT 10`
@@ -114,7 +117,8 @@ pipeline.run('create-pre-permits', async (pool) => {
   }
 
   const durationMs = Date.now() - startTime;
-  const eligibleRemaining = approved - linked;
+  // Eligible remaining uses the same scope as the INSERT (all unlinked approved)
+  const eligibleRemaining = eligible - inserted;
 
   // Audit table
   const auditRows = [
@@ -136,7 +140,7 @@ pipeline.run('create-pre-permits', async (pool) => {
   });
 
   pipeline.emitSummary({
-    records_total: inserted + expired,
+    records_total: eligible,
     records_new: inserted,
     records_updated: expired,
     records_meta: {
