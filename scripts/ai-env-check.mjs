@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------
 
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -21,15 +21,21 @@ const envPath = resolve(__dirname, '..', '.env');
 const hasEnv = existsSync(envPath);
 if (hasEnv) {
   try {
-    const { readFileSync } = await import('fs');
     const envContent = readFileSync(envPath, 'utf-8');
     for (const line of envContent.split('\n')) {
-      const match = line.match(/^([A-Z_]+)=(.*)$/);
+      const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$/);
       if (match && !process.env[match[1]]) {
-        process.env[match[1]] = match[2].trim().replace(/^["']|["']$/g, '');
+        let val = match[2].trim();
+        // Strip inline comments (unquoted values only)
+        val = val.replace(/\s+#.*$/, '');
+        // Strip matching quote pairs
+        val = val.replace(/^(['"])(.*)\1$/, '$2');
+        process.env[match[1]] = val;
       }
     }
-  } catch { /* ignore parse errors */ }
+  } catch (err) {
+    console.warn(`⚠️  Warning: Found .env file but could not read it: ${err.message}`);
+  }
 }
 
 function run(cmd, label) {
@@ -38,7 +44,11 @@ function run(cmd, label) {
     console.log(`✔ ${label}: ${out.replace(/\s+/g, ' ')}`);
   } catch (e) {
     const errorMsg = e.stderr ? e.stderr.toString().split('\n')[0] : e.message.split('\n')[0];
-    console.log(`✘ ${label}: FAILED — ${errorMsg}`);
+    if (/not recognized|not found|ENOENT/.test(errorMsg)) {
+      console.log(`✘ ${label}: NOT INSTALLED — ${errorMsg}`);
+    } else {
+      console.log(`✘ ${label}: FAILED — ${errorMsg}`);
+    }
   }
 }
 
@@ -46,7 +56,7 @@ console.log('--- AI Environment Pre-Flight ---\n');
 
 // 1. Core Infrastructure
 run('node -v', 'Node.js');
-run('npx tsc --version', 'TypeScript');
+run('npx --no-install tsc --version', 'TypeScript');
 
 // 2. Database (from env vars, not hardcoded)
 const pgHost = process.env.PG_HOST || 'localhost';
@@ -59,7 +69,14 @@ console.log(`✔ Pipeline SDK: ${existsSync(resolve(__dirname, 'lib', 'pipeline.
 
 // 4. Git State
 run('git branch --show-current', 'Git branch');
-run('git status --short | wc -l', 'Uncommitted files');
+try {
+  const statusOut = execSync('git status --short', { encoding: 'utf-8', timeout: 10000 }).trim();
+  const fileCount = statusOut ? statusOut.split('\n').length : 0;
+  console.log(`✔ Uncommitted files: ${fileCount}`);
+} catch (e) {
+  const errorMsg = e.stderr ? e.stderr.toString().split('\n')[0] : e.message.split('\n')[0];
+  console.log(`✘ Uncommitted files: FAILED — ${errorMsg}`);
+}
 run('git log --oneline -1', 'Last commit');
 
 console.log('\n--- Done ---');
