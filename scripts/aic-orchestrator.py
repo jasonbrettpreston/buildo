@@ -72,15 +72,23 @@ WORKER_SCRIPT = SCRIPT_DIR / 'aic-scraper-nodriver.py'
 shutdown_requested = False
 
 
-def handle_signal(signum, frame):
+def handle_signal(signum, frame=None):
     global shutdown_requested
     shutdown_requested = True
     log('WARN', '[orchestrator]', f'Shutdown signal received ({signum}), finishing current batches...')
 
 
-# Register signal handlers (SIGINT for Ctrl+C, SIGTERM for kill)
-signal.signal(signal.SIGINT, handle_signal)
-signal.signal(signal.SIGTERM, handle_signal)
+def setup_signal_handlers():
+    """Register signal handlers. Uses asyncio-native handlers when available (Linux),
+    falls back to signal.signal on Windows (which doesn't support loop signal handlers)."""
+    try:
+        loop = asyncio.get_running_loop()
+        loop.add_signal_handler(signal.SIGINT, lambda: handle_signal(signal.SIGINT))
+        loop.add_signal_handler(signal.SIGTERM, lambda: handle_signal(signal.SIGTERM))
+    except (NotImplementedError, RuntimeError):
+        # Windows doesn't support loop.add_signal_handler — use standard signal module
+        signal.signal(signal.SIGINT, handle_signal)
+        signal.signal(signal.SIGTERM, handle_signal)
 
 
 # ---------------------------------------------------------------------------
@@ -339,11 +347,21 @@ def aggregate_telemetry(worker_results):
 # ---------------------------------------------------------------------------
 async def main():
     start_ms = time.time() * 1000
+    setup_signal_handlers()
 
     log('INFO', '[orchestrator]', f'Starting with {NUM_WORKERS} workers, batch size {BATCH_SIZE}')
     log('INFO', '[orchestrator]', f'Target types: {TARGET_TYPES}')
     if MAX_PERMITS > 0:
         log('INFO', '[orchestrator]', f'Max permits cap: {MAX_PERMITS} total ({MAX_PERMITS // max(NUM_WORKERS, 1)} per worker)')
+
+    # Clean slate: wipe orphaned proxy extension dirs from previous runs.
+    # atexit doesn't fire on SIGKILL/OOM, so dead dirs accumulate over time.
+    proxy_ext_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.proxy_ext')
+    proxy_ext_root = os.path.abspath(proxy_ext_root)
+    if os.path.isdir(proxy_ext_root):
+        import shutil
+        shutil.rmtree(proxy_ext_root, ignore_errors=True)
+        log('INFO', '[orchestrator]', f'Cleaned orphaned proxy extension dirs: {proxy_ext_root}')
 
     # Populate queue with a short-lived connection — release before long-running scrape.
     # Managed PostgreSQL servers drop idle connections after 5-15 minutes, so holding

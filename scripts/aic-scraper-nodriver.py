@@ -358,6 +358,13 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
     if proxy_ext_dir:
         browser_args.append(f'--load-extension={proxy_ext_dir}')
         use_headless = False  # Extensions require headed mode
+        # Guard: headed mode on Linux requires a display server (X11/Wayland) or Xvfb.
+        # Without one, Chrome crashes with "cannot open display". Fail fast with clear message.
+        if sys.platform != 'win32' and not os.environ.get('DISPLAY'):
+            raise RuntimeError(
+                'Proxy mode requires headed Chrome but no DISPLAY is set. '
+                'Run with: xvfb-run -a python3 scripts/aic-orchestrator.py'
+            )
 
     # Persistent profile dir — reuse cookies/localStorage across runs
     profile_name = f'worker-{worker_id}' if worker_id else 'standalone'
@@ -1053,10 +1060,9 @@ async def main():
         tel['session_bootstraps'] = bootstrap_attempts
         log('INFO', worker_tag, 'WAF session established (no WebDriver)')
 
-        conn = get_db_connection()
-
-        try:
-            if args['mode'] == 'single':
+        if args['mode'] == 'single':
+            conn = get_db_connection()
+            try:
                 log('INFO', worker_tag, f'Single permit mode: {args["single_permit"]}')
                 req_start = time.time() * 1000
                 result = await scrape_with_retry(page, args['single_permit'], conn)
@@ -1068,9 +1074,12 @@ async def main():
                 tel['total_upserted'] += result.get('upserted', 0)
                 tel['enriched_updates'] += result.get('enriched_updates', 0)
                 tel['status_changes'] += result.get('status_changes', 0)
+            finally:
+                conn.close()
 
-            elif args['mode'] == 'worker':
-                # Worker mode: read year_seqs from batch file (legacy — used by old orchestrator)
+        elif args['mode'] == 'worker':
+            conn = get_db_connection()
+            try:
                 if not args['batch_file']:
                     log('ERROR', worker_tag, 'Worker mode requires --batch-file')
                     sys.exit(1)
@@ -1078,26 +1087,32 @@ async def main():
                     year_seqs = json.load(f)
                 log('INFO', worker_tag, f'Worker mode: {len(year_seqs)} year_seqs from {args["batch_file"]}')
                 browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile)
+            finally:
+                conn.close()
 
-            elif args['mode'] == 'db-queue':
-                # DB-queue mode: 1 batch = 1 IP address.
-                # Each batch gets a fresh proxy URL (new sticky session), fresh Chrome.
-                # After scraping, browser is killed. No IP sees more than BATCH_SIZE permits.
-                worker_id = args['worker_id'] or 'standalone'
-                batch_num = 0
+        elif args['mode'] == 'db-queue':
+            # DB-queue mode: 1 batch = 1 IP address.
+            # Each batch gets a fresh DB connection (prevents idle timeout on managed PG)
+            # and a fresh proxy URL (new sticky session), fresh Chrome.
+            worker_id = args['worker_id'] or 'standalone'
+            batch_num = 0
 
-                # In db-queue mode, the outer bootstrap is only for non-proxy runs.
-                # For proxy runs, each batch builds its own session. Kill the initial browser.
-                if browser and PROXY_HOST:
-                    browser.stop()
-                    browser = None
+            # In db-queue mode, the outer bootstrap is only for non-proxy runs.
+            # For proxy runs, each batch builds its own session. Kill the initial browser.
+            if browser and PROXY_HOST:
+                browser.stop()
+                browser = None
 
-                while True:
-                    # Cap check: stop claiming if we've hit the max permits limit
-                    if MAX_PERMITS > 0 and tel['permits_attempted'] >= MAX_PERMITS:
-                        log('INFO', worker_tag, f"Max permits cap reached ({tel['permits_attempted']}/{MAX_PERMITS})")
-                        break
+            while True:
+                # Cap check: stop claiming if we've hit the max permits limit
+                if MAX_PERMITS > 0 and tel['permits_attempted'] >= MAX_PERMITS:
+                    log('INFO', worker_tag, f"Max permits cap reached ({tel['permits_attempted']}/{MAX_PERMITS})")
+                    break
 
+                # Fresh DB connection per batch — prevents idle timeout on managed PostgreSQL.
+                # Connection is short-lived: claim → scrape → complete → close.
+                conn = get_db_connection()
+                try:
                     # Random batch size (5-15) clamped to remaining cap
                     random_batch = random.randint(BATCH_SIZE_MIN, BATCH_SIZE_MAX)
                     remaining = MAX_PERMITS - tel['permits_attempted'] if MAX_PERMITS > 0 else random_batch
@@ -1107,6 +1122,7 @@ async def main():
                     if not year_seqs:
                         log('INFO', worker_tag, 'No more pending items in queue')
                         break
+
                     batch_num += 1
 
                     # Fresh proxy session per batch (new Decodo sticky session = new IP)
@@ -1144,9 +1160,13 @@ async def main():
                             log('INFO', worker_tag, f'Browser TTL: recycling after {BROWSER_MAX_BATCHES} batches')
                         browser.stop()
                         browser = None
+                finally:
+                    conn.close()
 
-            else:
-                # Standalone batch mode: query DB for eligible permits
+        else:
+            # Standalone batch mode: query DB for eligible permits
+            conn = get_db_connection()
+            try:
                 cur = conn.cursor(cursor_factory=RealDictCursor)
                 cur.execute("""
                     SELECT year_seq FROM (
@@ -1170,13 +1190,11 @@ async def main():
                 cur.close()
 
                 year_seqs = [r['year_seq'] for r in rows]
-                # Shuffle to break sequential access patterns (anti-bot signal)
                 random.shuffle(year_seqs)
                 log('INFO', worker_tag, f'Batch mode: {len(year_seqs)} year+sequence combos to scrape (shuffled)')
                 browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile)
-
-        finally:
-            conn.close()
+            finally:
+                conn.close()
 
     except Exception as err:
         tel['preflight_passed'] = False
