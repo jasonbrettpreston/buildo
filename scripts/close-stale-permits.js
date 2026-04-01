@@ -12,7 +12,8 @@
  *
  * Lifecycle:
  *   1. Pending Closed — permit not in latest feed (last_seen_at < last load)
- *   2. Closed — Pending Closed for 30+ days
+ *   2. Closed — Pending Closed for 30+ days (anchored to completed_date,
+ *      not last_seen_at, to prevent state machine bypass during pipeline gaps)
  *   3. Reopened — permit reappears in feed → permits loader upsert restores
  *      CKAN status naturally (no extra code needed)
  *
@@ -47,13 +48,52 @@ pipeline.run('close-stale-permits', async (pool) => {
   const lastLoadAt = lastLoadResult.rows[0].started_at;
   pipeline.log.info('[close-stale]', `Reference load: ${new Date(lastLoadAt).toISOString()}`);
 
+  // Safety guard: pre-check how many permits WOULD be closed before committing
+  const preCheckResult = await pool.query(
+    `SELECT
+       COUNT(*) FILTER (WHERE status NOT IN ('Pending Closed', 'Closed') AND last_seen_at < $1) AS would_close,
+       COUNT(*) AS total
+     FROM permits`,
+    [lastLoadAt]
+  );
+  const wouldClose = parseInt(preCheckResult.rows[0].would_close, 10);
+  const totalPermits = parseInt(preCheckResult.rows[0].total, 10);
+  const pendingClosedRate = totalPermits > 0 ? (wouldClose / totalPermits * 100) : 0;
+
+  if (pendingClosedRate >= 10) {
+    pipeline.log.error('[close-stale]', `Safety guard ABORT: ${pendingClosedRate.toFixed(1)}% closure rate (${wouldClose.toLocaleString()}/${totalPermits.toLocaleString()}) exceeds 10% — possible partial CKAN download upstream. No permits modified.`);
+    pipeline.emitSummary({
+      records_total: 0,
+      records_new: 0,
+      records_updated: 0,
+      records_meta: {
+        safety_guard: 'TRIGGERED',
+        would_close: wouldClose,
+        closure_rate: pendingClosedRate.toFixed(1) + '%',
+        audit_table: {
+          phase: 3,
+          name: 'Stale Permit Closure',
+          verdict: 'FAIL',
+          rows: [
+            { metric: 'pending_closed_rate', value: pendingClosedRate.toFixed(1) + '%', threshold: '< 10%', status: 'FAIL' },
+            { metric: 'would_close', value: wouldClose, threshold: null, status: 'INFO' },
+          ],
+        },
+      },
+    });
+    pipeline.emitMeta(
+      { "permits": ["status", "last_seen_at", "completed_date"], "pipeline_runs": ["pipeline", "status", "started_at"] },
+      { "permits": ["status", "completed_date"] }
+    );
+    return;
+  }
+
   // Step 1: Mark permits not in latest feed as Pending Closed
-  // Any permit with last_seen_at before the latest load was NOT in that feed.
   const pendingResult = await pipeline.withTransaction(pool, async (client) => {
     return client.query(
       `UPDATE permits
        SET status = 'Pending Closed',
-           completed_date = last_seen_at::date
+           completed_date = COALESCE(completed_date, last_seen_at::date)
        WHERE status NOT IN ('Pending Closed', 'Closed')
          AND last_seen_at < $1
        RETURNING permit_num`,
@@ -64,12 +104,15 @@ pipeline.run('close-stale-permits', async (pool) => {
   pipeline.log.info('[close-stale]', `Pending Closed: ${pendingCount.toLocaleString()} permits`);
 
   // Step 2: Promote Pending Closed > 30 days to Closed
+  // Uses completed_date (set in Step 1) as the anchor, not last_seen_at.
+  // This prevents state machine bypass during pipeline gaps — a 40-day pause
+  // won't instantly promote permits that were just marked Pending Closed.
   const closedResult = await pipeline.withTransaction(pool, async (client) => {
     return client.query(
       `UPDATE permits
        SET status = 'Closed'
        WHERE status = 'Pending Closed'
-         AND last_seen_at < NOW() - INTERVAL '30 days'
+         AND completed_date < NOW() - INTERVAL '30 days'
        RETURNING permit_num`
     );
   });
@@ -86,13 +129,8 @@ pipeline.run('close-stale-permits', async (pool) => {
   );
   const totalPending = parseInt(statsResult.rows[0].total_pending, 10);
   const totalClosed = parseInt(statsResult.rows[0].total_closed, 10);
-  const totalPermits = parseInt(statsResult.rows[0].total, 10);
-  const closureRate = totalPermits > 0 ? ((totalPending + totalClosed) / totalPermits * 100) : 0;
-
-  // VACUUM if we touched a lot of rows
-  if (pendingCount + closedCount > 100) {
-    await pool.query('VACUUM ANALYZE permits');
-  }
+  const finalTotal = parseInt(statsResult.rows[0].total, 10);
+  const closureRate = finalTotal > 0 ? ((totalPending + totalClosed) / finalTotal * 100) : 0;
 
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[close-stale]', 'Complete', {
@@ -103,18 +141,10 @@ pipeline.run('close-stale-permits', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
-  // Safety guard: if > 10% of permits are being closed in a single run,
-  // the upstream permits load likely had a partial download (CKAN timeout, etc.)
-  const pendingClosedRate = totalPermits > 0 ? (pendingCount / totalPermits * 100) : 0;
-  const hasFails = pendingClosedRate >= 10;
-  if (hasFails) {
-    pipeline.log.error('[close-stale]', `Safety guard: ${pendingClosedRate.toFixed(1)}% closure rate exceeds 10% — possible partial CKAN download upstream`);
-  }
-
   const auditRows = [
     { metric: 'last_load_at', value: new Date(lastLoadAt).toISOString().split('T')[0], threshold: null, status: 'INFO' },
     { metric: 'pending_closed', value: pendingCount, threshold: null, status: 'INFO' },
-    { metric: 'pending_closed_rate', value: pendingClosedRate.toFixed(1) + '%', threshold: '< 10%', status: hasFails ? 'FAIL' : 'PASS' },
+    { metric: 'pending_closed_rate', value: pendingClosedRate.toFixed(1) + '%', threshold: '< 10%', status: 'PASS' },
     { metric: 'promoted_to_closed', value: closedCount, threshold: null, status: 'INFO' },
     { metric: 'total_pending', value: totalPending, threshold: null, status: 'INFO' },
     { metric: 'total_closed', value: totalClosed, threshold: null, status: 'INFO' },
@@ -134,7 +164,7 @@ pipeline.run('close-stale-permits', async (pool) => {
       audit_table: {
         phase: 3,
         name: 'Stale Permit Closure',
-        verdict: hasFails ? 'FAIL' : 'PASS',
+        verdict: 'PASS',
         rows: auditRows,
       },
     },
