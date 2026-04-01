@@ -203,6 +203,21 @@ pipeline.run('link-massing', async (pool) => {
   const totalParcels = parseInt(countResult.rows[0].total, 10);
   pipeline.log.info('[link-massing]', `Parcels to process: ${totalParcels.toLocaleString()}`);
 
+  // In FULL_MODE, clean stale parcel_buildings links before re-evaluation.
+  // Without this, parcels whose boundaries were redrawn accumulate ghost links
+  // to buildings they no longer intersect.
+  if (FULL_MODE) {
+    const ghostsRemoved = await pipeline.withTransaction(pool, async (client) => {
+      const result = await client.query(
+        'DELETE FROM parcel_buildings WHERE parcel_id IN (SELECT id FROM parcels WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL)'
+      );
+      return result.rowCount || 0;
+    });
+    if (ghostsRemoved > 0) {
+      pipeline.log.info('[link-massing]', `Full mode: cleared ${ghostsRemoved.toLocaleString()} existing links for re-evaluation`);
+    }
+  }
+
   let processed = 0;
   let parcelsLinked = 0;
   let buildingsMatched = 0;  // algorithmic matches (candidates that hit)
@@ -234,17 +249,49 @@ pipeline.run('link-massing', async (pool) => {
       const lat = parseFloat(parcel.centroid_lat);
       const lng = parseFloat(parcel.centroid_lng);
 
+      // Compute parcel envelope to dynamically scale BBOX for large parcels
+      // (airports, campuses, industrial complexes can exceed the default 333m grid)
+      let searchRadius = GRID_SIZE;
+      const parcelGeomRaw = parcel.geometry;
+      if (parcelGeomRaw && parcelGeomRaw.coordinates) {
+        let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+        const rings = parcelGeomRaw.type === 'Polygon'
+          ? [parcelGeomRaw.coordinates[0]]
+          : parcelGeomRaw.type === 'MultiPolygon'
+          ? parcelGeomRaw.coordinates.map(p => p[0])
+          : [];
+        for (const ring of rings) {
+          if (!ring) continue;
+          for (const coord of ring) {
+            if (coord[1] < minLat) minLat = coord[1];
+            if (coord[1] > maxLat) maxLat = coord[1];
+            if (coord[0] < minLng) minLng = coord[0];
+            if (coord[0] > maxLng) maxLng = coord[0];
+          }
+        }
+        if (minLat !== Infinity) {
+          const halfHeight = (maxLat - minLat) / 2;
+          const halfWidth = (maxLng - minLng) / 2;
+          const halfDiagonal = Math.sqrt(halfHeight ** 2 + halfWidth ** 2);
+          searchRadius = Math.max(GRID_SIZE, halfDiagonal + GRID_SIZE * 0.5);
+        }
+      }
+
       // Grid lookup: find candidate buildings in same + adjacent cells
-      const candidateKeys = gridNeighbourKeys(lat, lng);
+      // For large parcels, expand grid search to cover the full envelope
+      const gridSpan = Math.ceil(searchRadius / GRID_SIZE);
       const candidates = [];
-      for (const key of candidateKeys) {
-        const cell = grid.get(key);
-        if (cell) {
-          for (const b of cell) {
-            // BBOX pre-filter within ±GRID_SIZE of parcel centroid
-            if (Math.abs(b.centroid_lat - lat) <= GRID_SIZE &&
-                Math.abs(b.centroid_lng - lng) <= GRID_SIZE) {
-              candidates.push(b);
+      const r0 = Math.floor(lat / GRID_SIZE);
+      const c0 = Math.floor(lng / GRID_SIZE);
+      for (let dr = -gridSpan; dr <= gridSpan; dr++) {
+        for (let dc = -gridSpan; dc <= gridSpan; dc++) {
+          const cell = grid.get(`${r0 + dr}:${c0 + dc}`);
+          if (cell) {
+            for (const b of cell) {
+              if (Math.abs(b.centroid_lat - lat) <= searchRadius &&
+                  Math.abs(b.centroid_lng - lng) <= searchRadius) {
+                candidates.push(b);
+              }
             }
           }
         }
@@ -267,33 +314,17 @@ pipeline.run('link-massing', async (pool) => {
         continue;
       }
 
+      const parcelFeature = { type: 'Feature', geometry: parcelGeom, properties: {} };
+
       for (const building of candidates) {
         const buildingPt = turfPoint([building.centroid_lng, building.centroid_lat]);
         let isInside = false;
 
-        if (parcelGeom.type === 'Polygon') {
-          try {
-            isInside = booleanPointInPolygon(buildingPt, {
-              type: 'Feature',
-              geometry: parcelGeom,
-              properties: {},
-            });
-          } catch {
-            // Invalid geometry — skip
-          }
-        } else if (parcelGeom.type === 'MultiPolygon') {
-          for (const polyCoords of parcelGeom.coordinates) {
-            try {
-              isInside = booleanPointInPolygon(buildingPt, {
-                type: 'Feature',
-                geometry: { type: 'Polygon', coordinates: polyCoords },
-                properties: {},
-              });
-              if (isInside) break;
-            } catch {
-              // Invalid sub-polygon — skip
-            }
-          }
+        try {
+          // booleanPointInPolygon natively supports both Polygon and MultiPolygon
+          isInside = booleanPointInPolygon(buildingPt, parcelFeature);
+        } catch (err) {
+          pipeline.log.warn('[link-massing]', `Invalid geometry in PiP test`, { parcel_id: parcel.id, building_id: building.id, error: err.message });
         }
 
         if (isInside) {
@@ -346,10 +377,18 @@ pipeline.run('link-massing', async (pool) => {
         if (mb.match_type === 'centroid_in_parcel') centroidInParcelMatches++;
       }
 
-      // Classify structures
+      // Classify structures — deterministic primary assignment
+      // classifyStructure may return 'primary' for multiple tied buildings,
+      // so we enforce exactly one primary via building_id tie-breaker.
       const allAreas = matchedBuildings.map(b => b.footprint_area_sqm);
+      const maxArea = Math.max(...allAreas);
+      const primaryBuildingId = matchedBuildings.find(b => b.footprint_area_sqm === maxArea).building_id;
       for (const mb of matchedBuildings) {
-        const structureType = classifyStructure(mb.footprint_area_sqm, allAreas);
+        let structureType = classifyStructure(mb.footprint_area_sqm, allAreas);
+        // Enforce single primary: only the first building at max area gets 'primary'
+        if (structureType === 'primary' && mb.building_id !== primaryBuildingId) {
+          structureType = mb.footprint_area_sqm <= GARAGE_MAX_SQM ? 'garage' : 'other';
+        }
         const isPrimary = structureType === 'primary';
 
         insertParams.push(
