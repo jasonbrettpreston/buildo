@@ -139,14 +139,13 @@ def populate_queue(conn):
                 SUBSTRING(p.permit_num FROM '^[0-9]{2} [0-9]+') AS year_seq,
                 p.permit_type
             FROM permits p
-            LEFT JOIN permit_inspections pi ON pi.permit_num = p.permit_num
             WHERE p.status = 'Inspection'
               AND p.permit_type = ANY(%s)
               AND p.issued_date IS NOT NULL
               AND p.issued_date > NOW() - INTERVAL '3 years'
               AND (p.enriched_status IS NULL
                    OR p.enriched_status IN ('Permit Issued', 'Active Inspection', 'Not Passed'))
-              AND (pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '7 days')
+              AND (p.last_scraped_at IS NULL OR p.last_scraped_at < NOW() - INTERVAL '7 days')
               AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= EXTRACT(YEAR FROM CURRENT_DATE) %% 100
             ON CONFLICT (year_seq) DO NOTHING
         """, (TARGET_TYPES,))
@@ -192,9 +191,8 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
     try:
         # Spawn a single long-lived worker subprocess (--db-queue mode)
         # The worker claims batches from scraper_queue itself, reusing one Chrome instance
-        runtime = 'python' if sys.platform == 'win32' else 'python3'
         cmd = [
-            runtime, str(WORKER_SCRIPT),
+            sys.executable, str(WORKER_SCRIPT),
             f'--worker-id={worker_id}',
             '--db-queue',
         ]

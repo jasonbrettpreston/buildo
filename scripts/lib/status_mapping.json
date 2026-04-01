@@ -1,0 +1,18 @@
+{
+  "status_normalization": {
+    "outstanding": "Outstanding",
+    "pass": "Passed",
+    "passed": "Passed",
+    "fail": "Not Passed",
+    "failed": "Not Passed",
+    "not passed": "Not Passed",
+    "partial": "Partial",
+    "partially completed": "Partial"
+  },
+  "enriched_status": {
+    "all_not_passed": "Not Passed",
+    "all_outstanding": "Permit Issued",
+    "all_passed": "Inspections Complete",
+    "mixed": "Active Inspection"
+  }
+}

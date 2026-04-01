@@ -1,4 +1,10 @@
 import type { Inspection } from '@/lib/permits/types';
+// Single source of truth for status normalization — shared with Python scraper
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const STATUS_CONFIG = require('../../../scripts/lib/status_mapping.json') as {
+  status_normalization: Record<string, string>;
+  enriched_status: Record<string, string>;
+};
 
 /**
  * Parse an HTML table from the AIC portal inspection status popup.
@@ -56,11 +62,8 @@ export function normalizeStatus(
   raw: string
 ): 'Outstanding' | 'Passed' | 'Not Passed' | 'Partial' | null {
   const s = raw.trim().toLowerCase();
-  if (s === 'outstanding') return 'Outstanding';
-  if (s === 'pass' || s === 'passed') return 'Passed';
-  if (s === 'fail' || s === 'failed' || s === 'not passed') return 'Not Passed';
-  if (s === 'partial' || s === 'partially completed') return 'Partial';
-  return null;
+  const mapped = STATUS_CONFIG.status_normalization[s];
+  return (mapped as 'Outstanding' | 'Passed' | 'Not Passed' | 'Partial') || null;
 }
 
 /**

@@ -268,6 +268,24 @@ describe('Inspection Parser', () => {
         { status: 'Passed' }, { status: 'Outstanding' },
       ])).toBe('Active Inspection');
     });
+
+    it('returns Active Inspection when any stage is Partial', () => {
+      expect(computeEnrichedStatus([
+        { status: 'Partial' }, { status: 'Passed' },
+      ])).toBe('Active Inspection');
+    });
+
+    it('returns Active Inspection for Partial + Outstanding', () => {
+      expect(computeEnrichedStatus([
+        { status: 'Partial' }, { status: 'Outstanding' },
+      ])).toBe('Active Inspection');
+    });
+
+    it('returns Not Passed when Not Passed + Partial (Not Passed takes priority)', () => {
+      expect(computeEnrichedStatus([
+        { status: 'Partial' }, { status: 'Not Passed' },
+      ])).toBe('Not Passed');
+    });
   });
 
   describe('orchestrator telemetry aggregation', () => {

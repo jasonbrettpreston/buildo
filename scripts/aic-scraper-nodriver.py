@@ -125,28 +125,44 @@ FINGERPRINT_PROFILES = [
 BATCH_SIZE_MIN = max(5, BATCH_SIZE - 5)
 BATCH_SIZE_MAX = max(BATCH_SIZE_MIN, min(20, BATCH_SIZE + 5))
 
+# Browser TTL — max batches before force-killing Chrome to prevent memory bloat.
+# Only applies in non-proxy mode (proxy mode already kills after each batch).
+BROWSER_MAX_BATCHES = int(os.environ.get('BROWSER_MAX_BATCHES', '50'))
+
 
 # ---------------------------------------------------------------------------
 # Sanitization — validate values before interpolating into page.evaluate JS
 # ---------------------------------------------------------------------------
 def sanitize_js_value(val):
     """Ensure a value is safe to interpolate into JavaScript. Strip non-alphanumeric chars except spaces."""
-    s = str(val)
+    if val is None or val == '':
+        return ''
+    s = str(val).strip()
+    if not s:
+        return ''
     if not re.match(r'^[A-Za-z0-9 _\-]+$', s):
         raise ValueError(f"Unsafe value for JS interpolation: {s!r}")
     return s
 
 
+# Timeout in ms for AbortController wrapping all fetch() calls inside page.evaluate.
+# Prevents indefinite hangs from AIC tarpit/dropped connections.
+FETCH_TIMEOUT_MS = 15000
+
+
 # ---------------------------------------------------------------------------
-# Status normalization (matches Spec 38 §3.4)
+# Status normalization — single source of truth in scripts/lib/status_mapping.json
 # ---------------------------------------------------------------------------
+_STATUS_MAP_PATH = os.path.join(os.path.dirname(__file__), 'lib', 'status_mapping.json')
+with open(_STATUS_MAP_PATH, 'r') as _f:
+    _STATUS_CONFIG = json.load(_f)
+_STATUS_NORM = _STATUS_CONFIG['status_normalization']
+_ENRICHED = _STATUS_CONFIG['enriched_status']
+
+
 def normalize_status(raw):
     s = (raw or '').strip().lower()
-    if s == 'outstanding': return 'Outstanding'
-    if s in ('pass', 'passed'): return 'Passed'
-    if s in ('fail', 'failed', 'not passed'): return 'Not Passed'
-    if s in ('partial', 'partially completed'): return 'Partial'
-    return None
+    return _STATUS_NORM.get(s)
 
 
 def compute_enriched_status(stages):
@@ -157,10 +173,10 @@ def compute_enriched_status(stages):
     statuses = [s for s in statuses if s]
     if not statuses:
         return None
-    if any(s == 'Not Passed' for s in statuses): return 'Not Passed'
-    if all(s == 'Outstanding' for s in statuses): return 'Permit Issued'
-    if all(s == 'Passed' for s in statuses): return 'Inspections Complete'
-    return 'Active Inspection'
+    if any(s == 'Not Passed' for s in statuses): return _ENRICHED['all_not_passed']
+    if all(s == 'Outstanding' for s in statuses): return _ENRICHED['all_outstanding']
+    if all(s == 'Passed' for s in statuses): return _ENRICHED['all_passed']
+    return _ENRICHED['mixed']
 
 
 def parse_inspection_date(raw):
@@ -464,7 +480,12 @@ def safe_json_parse(raw, step_label=''):
     if not raw or raw.strip().startswith('<'):
         return None, 'html_or_empty'
     try:
-        return json.loads(raw), None
+        data = json.loads(raw)
+        # Detect AbortController timeout or fetch error sentinel from our JS wrapper
+        if isinstance(data, dict) and 'error' in data and len(data) == 1:
+            log('WARN', '[scraper]', f'Fetch error at {step_label}: {data["error"]}')
+            return None, f'fetch_error:{data["error"]}'
+        return data, None
     except (json.JSONDecodeError, ValueError):
         snippet = raw[:120] if raw else '(empty)'
         log('WARN', '[scraper]', f'JSON parse failed at {step_label}', {'snippet': snippet})
@@ -479,17 +500,26 @@ async def fetch_permit_chain(page, year, sequence):
 
     # Step 1: Search properties
     step1 = await page.evaluate(f"""
-        fetch('{AIC_BASE}/jaxrs/search/properties', {{
-            method: 'POST',
-            headers: {{ 'Content-Type': 'application/json', Accept: 'application/json' }},
-            body: JSON.stringify({{
-                ward: '', folderYear: '{year}', folderSequence: '{sequence}',
-                folderSection: '', folderRevision: '', folderType: '',
-                address: '', searchType: '0',
-                mapX: null, mapY: null,
-                propX_min: '0', propX_max: '0', propY_min: '0', propY_max: '0'
-            }})
-        }}).then(r => r.text())
+        (async () => {{
+            const ac = new AbortController();
+            const t = setTimeout(() => ac.abort(), {FETCH_TIMEOUT_MS});
+            try {{
+                const r = await fetch('{AIC_BASE}/jaxrs/search/properties', {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json', Accept: 'application/json' }},
+                    signal: ac.signal,
+                    body: JSON.stringify({{
+                        ward: '', folderYear: '{year}', folderSequence: '{sequence}',
+                        folderSection: '', folderRevision: '', folderType: '',
+                        address: '', searchType: '0',
+                        mapX: null, mapY: null,
+                        propX_min: '0', propX_max: '0', propY_min: '0', propY_max: '0'
+                    }})
+                }});
+                return await r.text();
+            }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError'}}); }}
+            finally {{ clearTimeout(t); }}
+        }})()
     """, await_promise=True)
 
     props, err = safe_json_parse(step1, 'step1:properties')
@@ -502,17 +532,26 @@ async def fetch_permit_chain(page, year, sequence):
 
     # Step 2: Get folders
     step2 = await page.evaluate(f"""
-        fetch('{AIC_BASE}/jaxrs/search/folders', {{
-            method: 'POST',
-            headers: {{ 'Content-Type': 'application/json', Accept: 'application/json' }},
-            body: JSON.stringify({{
-                ward: '', folderYear: '{year}', folderSequence: '{sequence}',
-                folderSection: '', folderRevision: '', folderType: '',
-                address: '', searchType: '0', propertyRsn: '{property_rsn}',
-                mapX: null, mapY: null,
-                propX_min: '0', propX_max: '0', propY_min: '0', propY_max: '0'
-            }})
-        }}).then(r => r.text())
+        (async () => {{
+            const ac = new AbortController();
+            const t = setTimeout(() => ac.abort(), {FETCH_TIMEOUT_MS});
+            try {{
+                const r = await fetch('{AIC_BASE}/jaxrs/search/folders', {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json', Accept: 'application/json' }},
+                    signal: ac.signal,
+                    body: JSON.stringify({{
+                        ward: '', folderYear: '{year}', folderSequence: '{sequence}',
+                        folderSection: '', folderRevision: '', folderType: '',
+                        address: '', searchType: '0', propertyRsn: '{property_rsn}',
+                        mapX: null, mapY: null,
+                        propX_min: '0', propX_max: '0', propY_min: '0', propY_max: '0'
+                    }})
+                }});
+                return await r.text();
+            }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError'}}); }}
+            finally {{ clearTimeout(t); }}
+        }})()
     """, await_promise=True)
 
     folders, err = safe_json_parse(step2, 'step2:folders')
@@ -527,9 +566,17 @@ async def fetch_permit_chain(page, year, sequence):
 
         # Step 3: Get detail
         step3 = await page.evaluate(f"""
-            fetch('{AIC_BASE}/jaxrs/search/detail/{folder_rsn}', {{
-                method: 'GET', headers: {{ Accept: 'application/json' }}
-            }}).then(r => r.text())
+            (async () => {{
+                const ac = new AbortController();
+                const t = setTimeout(() => ac.abort(), {FETCH_TIMEOUT_MS});
+                try {{
+                    const r = await fetch('{AIC_BASE}/jaxrs/search/detail/{folder_rsn}', {{
+                        method: 'GET', headers: {{ Accept: 'application/json' }}, signal: ac.signal
+                    }});
+                    return await r.text();
+                }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError'}}); }}
+                finally {{ clearTimeout(t); }}
+            }})()
         """, await_promise=True)
 
         detail, err = safe_json_parse(step3, f'step3:detail/{folder_rsn}')
@@ -549,9 +596,17 @@ async def fetch_permit_chain(page, year, sequence):
         for proc in processes:
             process_rsn = sanitize_js_value(proc.get('processRsn'))
             step4 = await page.evaluate(f"""
-                fetch('{AIC_BASE}/jaxrs/search/status/{folder_rsn}/{process_rsn}', {{
-                    method: 'GET', headers: {{ Accept: 'application/json' }}
-                }}).then(r => r.text())
+                (async () => {{
+                    const ac = new AbortController();
+                    const t = setTimeout(() => ac.abort(), {FETCH_TIMEOUT_MS});
+                    try {{
+                        const r = await fetch('{AIC_BASE}/jaxrs/search/status/{folder_rsn}/{process_rsn}', {{
+                            method: 'GET', headers: {{ Accept: 'application/json' }}, signal: ac.signal
+                        }});
+                        return await r.text();
+                    }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError'}}); }}
+                    finally {{ clearTimeout(t); }}
+                }})()
             """, await_promise=True)
 
             status_data, err = safe_json_parse(step4, f'step4:status/{folder_rsn}/{process_rsn}')
@@ -604,12 +659,17 @@ async def scrape_year_sequence(page, year_seq, conn):
                 # Permits with no_processes/no_status_link — set Permit Issued
                 if result['error'] in ('no_processes', 'no_status_link'):
                     cur.execute(
-                        "UPDATE permits SET enriched_status = 'Permit Issued' "
+                        "UPDATE permits SET enriched_status = 'Permit Issued', last_scraped_at = NOW() "
                         "WHERE permit_num = %s AND enriched_status IS DISTINCT FROM 'Permit Issued'",
                         (result['permit_num'],)
                     )
                     if cur.rowcount > 0:
                         enriched_updates += 1
+                    else:
+                        cur.execute(
+                            "UPDATE permits SET last_scraped_at = NOW() WHERE permit_num = %s",
+                            (result['permit_num'],)
+                        )
                 continue
 
             # Upsert stages
@@ -643,21 +703,31 @@ async def scrape_year_sequence(page, year_seq, conn):
                     if old_status and old_status != status:
                         status_changes += 1
 
-            # Touch scraped_at unconditionally for 7-day cooldown
-            cur.execute(
-                "UPDATE permit_inspections SET scraped_at = NOW() WHERE permit_num = %s",
-                (result['permit_num'],)
-            )
+            # Touch scraped_at only for stages returned in this response.
+            # Stages AIC has removed will naturally age out, enabling ghost detection.
+            returned_stages = [stage['desc'] for stage in result['stages'] if stage.get('desc')]
+            if returned_stages:
+                cur.execute(
+                    "UPDATE permit_inspections SET scraped_at = NOW() "
+                    "WHERE permit_num = %s AND stage_name = ANY(%s)",
+                    (result['permit_num'], returned_stages)
+                )
 
-            # Compute and write enriched_status
+            # Compute and write enriched_status + touch last_scraped_at
             enriched = compute_enriched_status(result['stages'])
             cur.execute(
-                "UPDATE permits SET enriched_status = %s "
+                "UPDATE permits SET enriched_status = %s, last_scraped_at = NOW() "
                 "WHERE permit_num = %s AND enriched_status IS DISTINCT FROM %s",
                 (enriched, result['permit_num'], enriched)
             )
             if cur.rowcount > 0:
                 enriched_updates += 1
+            else:
+                # enriched_status unchanged — still touch last_scraped_at for cooldown
+                cur.execute(
+                    "UPDATE permits SET last_scraped_at = NOW() WHERE permit_num = %s",
+                    (result['permit_num'],)
+                )
 
             scraped += 1
             log('INFO', '[scraper]', f"Scraped {len(result['stages'])} stages for {result['permit_num']}", {
@@ -1060,8 +1130,11 @@ async def main():
                                 pass
                             browser = None
 
-                    # Kill browser after each batch (1 batch = 1 IP)
-                    if PROXY_HOST and browser:
+                    # Kill browser after each batch in proxy mode (1 batch = 1 IP),
+                    # or after BROWSER_MAX_BATCHES in non-proxy mode (memory TTL).
+                    if browser and (PROXY_HOST or batch_num % BROWSER_MAX_BATCHES == 0):
+                        if not PROXY_HOST:
+                            log('INFO', worker_tag, f'Browser TTL: recycling after {BROWSER_MAX_BATCHES} batches')
                         browser.stop()
                         browser = None
 
@@ -1073,14 +1146,13 @@ async def main():
                         SELECT DISTINCT SUBSTRING(p.permit_num FROM '^[0-9]{2} [0-9]+') AS year_seq,
                                MAX(p.issued_date) AS max_issued
                         FROM permits p
-                        LEFT JOIN permit_inspections pi ON pi.permit_num = p.permit_num
                         WHERE p.status = 'Inspection'
                           AND p.permit_type = ANY(%s)
                           AND p.issued_date IS NOT NULL
                           AND p.issued_date > NOW() - INTERVAL '3 years'
                           AND (p.enriched_status IS NULL
                                OR p.enriched_status IN ('Permit Issued', 'Active Inspection', 'Not Passed'))
-                          AND (pi.scraped_at IS NULL OR pi.scraped_at < NOW() - INTERVAL '7 days')
+                          AND (p.last_scraped_at IS NULL OR p.last_scraped_at < NOW() - INTERVAL '7 days')
                           AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= EXTRACT(YEAR FROM CURRENT_DATE) %% 100
                         GROUP BY year_seq
                         ORDER BY max_issued DESC

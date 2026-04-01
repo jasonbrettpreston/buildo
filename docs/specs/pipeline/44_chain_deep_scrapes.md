@@ -144,6 +144,10 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
 - `scripts/poc-aic-scraper-v2.js` — legacy JS scraper (deprecated)
 - `src/app/permits/[id]/page.tsx` — inspection UI rendering
 
+### Deployment Notes
+- **Linux + proxy mode:** Chrome runs in headed mode (`headless=False`) because Manifest V3 proxy extensions don't load in standard headless. On headless Linux servers, wrap with `xvfb-run`: `xvfb-run python3 aic-orchestrator.py`. This provides a virtual framebuffer for Chrome to render into.
+- **Browser TTL:** Non-proxy mode recycles Chrome every `BROWSER_MAX_BATCHES` batches (default 50) to prevent memory bloat.
+
 ### Cross-Spec Dependencies
 - **Relies on:** `pipeline_system.md` (SDK, orchestrator)
 - **Relies on:** `chain_permits.md` (permits must be loaded first — scraper targets permits with `status = 'Inspection'`)
