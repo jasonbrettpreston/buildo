@@ -1,7 +1,7 @@
-// SPEC LINK: docs/specs/37_corporate_identity_hub.md
+// SPEC LINK: docs/specs/platform/37_entity_model.md
 import { describe, it, expect } from 'vitest';
 import { createMockEntity, createMockEntityProject } from './factories';
-import { normalizeEntityName, isIncorporated } from '@/lib/builders/normalize';
+import { normalizeEntityName, isIncorporated, classifyEntityType } from '@/lib/builders/normalize';
 
 describe('Entity Name Normalization (shared module)', () => {
   it('returns null for null/undefined/empty input', () => {
@@ -64,6 +64,44 @@ describe('isIncorporated', () => {
 
   it('returns false for plain names', () => {
     expect(isIncorporated('BOB THE BUILDER')).toBe(false);
+  });
+});
+
+describe('Entity Type Classification', () => {
+  it('classifies corporate suffix as Corporation', () => {
+    expect(classifyEntityType('ACME CONSTRUCTION INC')).toBe('Corporation');
+    expect(classifyEntityType('MAPLE LTD.')).toBe('Corporation');
+    expect(classifyEntityType('SMITH CORP')).toBe('Corporation');
+  });
+
+  it('classifies numbered corporations as Corporation', () => {
+    expect(classifyEntityType('1000287552 ONTARIO INC')).toBe('Corporation');
+    expect(classifyEntityType('12362741 CANADA CORPORATION')).toBe('Corporation');
+  });
+
+  it('classifies business keyword names as Corporation', () => {
+    expect(classifyEntityType('HIGHCREST HOMES')).toBe('Corporation');
+    expect(classifyEntityType('PENGUIN BASEMENTS')).toBe('Corporation');
+    expect(classifyEntityType('GREENGOLD CONSTRUCTION')).toBe('Corporation');
+  });
+
+  it('classifies 4+ word names as Corporation', () => {
+    expect(classifyEntityType('PROSPER LIVING DEVELOPMENT GROUP')).toBe('Corporation');
+    expect(classifyEntityType('FIRST CAPITAL KING LIBERTY')).toBe('Corporation');
+  });
+
+  it('classifies 2-3 word plain names as Individual', () => {
+    expect(classifyEntityType('YAN WANG')).toBe('Individual');
+    expect(classifyEntityType('DEAN JASON PODOLSKY')).toBe('Individual');
+    expect(classifyEntityType('HELMUT GINTER')).toBe('Individual');
+  });
+
+  it('classifies single word as Individual', () => {
+    expect(classifyEntityType('SMITH')).toBe('Individual');
+  });
+
+  it('classifies empty/null as Individual', () => {
+    expect(classifyEntityType('')).toBe('Individual');
   });
 });
 

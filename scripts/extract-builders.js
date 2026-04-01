@@ -14,6 +14,22 @@
  */
 const pipeline = require('./lib/pipeline');
 
+// Entity type classification (mirrors src/lib/builders/normalize.ts classifyEntityType)
+const NUMBERED_CORP_PATTERN = /^\d{5,}/;
+const BUSINESS_KEYWORDS =
+  /\b(homes?|builders?|construct|develop|design|group|project|reno|plumb|electric|hvac|roof|mason|concrete|contract|pav|excavat|landscape|paint|floor|insul|demol|glass|steel|iron|fenc|deck|drain|fire|solar|elevator|sid|waterproof|cabinet|mill|tile|stone|pool|caulk|trim|property|properties|invest|capital|holding|enterpr|restoration|maintenance|service|tech|solution|supply|architec|engineer|consult|manage|venture|tower|condo|real|custom|infra|mechanic|scaffold|crane|window|door|lumber|wood|metal|weld|pil|excavat|grad|asphalt|survey|environment|energy|systems|basement|estate|living|residence|habitat|urban|metro|civic|municipal|structural|foundation|framing|forming|drywall|glazing|insulation|masonry|siding|eavestrough|millwork|cabinetry|tiling|flooring|roofing|plumbing|electrical|painting|fencing|decking|demolition|drilling|boring|remediat|abatement|hoist|rigging|welding|paving|grading)/i;
+const SUFFIX_DETECT = /\b(INC\.?|CORP\.?|LTD\.?|CO\.?|LLC\.?|L\.?P\.?|INCORPORATED|CORPORATION|LIMITED|COMPANY)\s*$/i;
+
+function classifyEntityType(name) {
+  if (!name || !name.trim()) return 'Individual';
+  const trimmed = name.trim();
+  if (SUFFIX_DETECT.test(trimmed.toUpperCase().replace(/[.,;'"]/g, '').trim())) return 'Corporation';
+  if (NUMBERED_CORP_PATTERN.test(trimmed)) return 'Corporation';
+  if (BUSINESS_KEYWORDS.test(trimmed)) return 'Corporation';
+  if (trimmed.split(/\s+/).length >= 4) return 'Corporation';
+  return 'Individual';
+}
+
 function normalizeBuilderName(name) {
   let normalized = name.toUpperCase().trim();
   normalized = normalized.replace(/\s+/g, ' ');
@@ -70,6 +86,7 @@ pipeline.run('extract-builders', async (pool) => {
         name_normalized: normalized,
         permit_count: parseInt(row.permit_count, 10),
         max_count: parseInt(row.permit_count, 10),
+        entity_type: classifyEntityType(row.builder_name.trim()),
       });
     }
   }
@@ -91,18 +108,20 @@ pipeline.run('extract-builders', async (pool) => {
 
       for (let j = 0; j < batch.length; j++) {
         const b = batch[j];
-        const offset = j * 3;
-        placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3})`);
-        values.push(b.name, b.name_normalized, b.permit_count);
+        const offset = j * 4;
+        placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4})`);
+        values.push(b.name, b.name_normalized, b.permit_count, b.entity_type);
       }
 
       const result = await client.query(`
-        INSERT INTO entities (legal_name, name_normalized, permit_count)
+        INSERT INTO entities (legal_name, name_normalized, permit_count, entity_type)
         VALUES ${placeholders.join(', ')}
         ON CONFLICT (name_normalized) DO UPDATE SET
           permit_count = EXCLUDED.permit_count,
+          entity_type = COALESCE(entities.entity_type, EXCLUDED.entity_type),
           last_seen_at = NOW()
         WHERE entities.permit_count IS DISTINCT FROM EXCLUDED.permit_count
+           OR entities.entity_type IS NULL
         RETURNING (xmax = 0) AS is_insert
       `, values);
 
@@ -117,17 +136,60 @@ pipeline.run('extract-builders', async (pool) => {
     }
   });
 
+  // Backfill entity_type for any rows still NULL (from prior runs without classification)
+  const backfillResult = await pool.query(`
+    SELECT id, legal_name FROM entities WHERE entity_type IS NULL
+  `);
+  if (backfillResult.rows.length > 0) {
+    pipeline.log.info('[extract-builders]', `Backfilling entity_type for ${backfillResult.rows.length} unclassified entities`);
+    let backfillFailed = 0;
+    // Batch: build CASE expression to update all rows in one statement
+    const BACKFILL_BATCH = 500;
+    const rows = backfillResult.rows;
+    for (let i = 0; i < rows.length; i += BACKFILL_BATCH) {
+      const batch = rows.slice(i, i + BACKFILL_BATCH);
+      const cases = [];
+      const ids = [];
+      const params = [];
+      for (let j = 0; j < batch.length; j++) {
+        const etype = classifyEntityType(batch[j].legal_name);
+        params.push(batch[j].id, etype);
+        cases.push(`WHEN id = $${j * 2 + 1} THEN $${j * 2 + 2}::entity_type_enum`);
+        ids.push(batch[j].id);
+      }
+      try {
+        await pool.query(
+          `UPDATE entities SET entity_type = CASE ${cases.join(' ')} END WHERE id = ANY($${params.length + 1}::int[])`,
+          [...params, ids]
+        );
+      } catch (err) {
+        pipeline.log.error('[extract-builders]', `Backfill batch failed: ${err.message}`);
+        backfillFailed += batch.length;
+      }
+    }
+    if (backfillFailed > 0) {
+      pipeline.log.warn('[extract-builders]', `${backfillFailed} entities failed backfill`);
+    }
+  }
+
   const durationMs = Date.now() - startTime;
 
   // Verify
   const countResult = await pool.query('SELECT COUNT(*) as total FROM entities');
+  // Classification counts
+  const corpCount = builders.filter(b => b.entity_type === 'Corporation').length;
+  const indivCount = builders.filter(b => b.entity_type === 'Individual').length;
+
   pipeline.log.info('[extract-builders]', 'Complete', {
     total_in_db: parseInt(countResult.rows[0].total),
     raw_names: rawNamesCount,
     normalized: builderMap.size,
+    corporations: corpCount,
+    individuals: indivCount,
     inserted,
     updated,
     unchanged: totalProcessed - inserted - updated,
+    backfilled: backfillResult.rows.length,
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
@@ -141,6 +203,9 @@ pipeline.run('extract-builders', async (pool) => {
     { metric: 'db_inserted', value: inserted, threshold: null, status: 'INFO' },
     { metric: 'db_updated', value: updated, threshold: null, status: 'INFO' },
     { metric: 'total_in_db', value: totalInDb, threshold: '>= ' + builderMap.size, status: totalInDb >= builderMap.size ? 'PASS' : 'FAIL' },
+    { metric: 'corporations', value: corpCount, threshold: null, status: 'INFO' },
+    { metric: 'individuals', value: indivCount, threshold: null, status: 'INFO' },
+    { metric: 'backfilled_entity_type', value: backfillResult.rows.length, threshold: null, status: 'INFO' },
   ];
 
   pipeline.emitSummary({
@@ -163,6 +228,6 @@ pipeline.run('extract-builders', async (pool) => {
   });
   pipeline.emitMeta(
     { "permits": ["builder_name"] },
-    { "entities": ["legal_name", "name_normalized", "permit_count", "last_seen_at"] }
+    { "entities": ["legal_name", "name_normalized", "permit_count", "entity_type", "last_seen_at"] }
   );
 });
