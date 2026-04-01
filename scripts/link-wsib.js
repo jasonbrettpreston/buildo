@@ -76,7 +76,10 @@ pipeline.run('link-wsib', async (pool) => {
   // Nested Loop over 107K × 3.6K rows (~394M similarity calls).
   // TIER3_CTES: top-level WITH clause (trade_matches, legal_matches, combined)
   // TIER3_SELECT: final SELECT from combined (used in both dry-run and live paths)
-  const TIER3_CTES = `
+  // Build Tier 3 CTEs with optional exclusion clause for dry-run mode.
+  // Parameterized to avoid fragile string replacement.
+  function buildTier3Ctes(extraFilter = '') {
+    return `
     trade_matches AS (
       SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
              similarity(w.trade_name_normalized, e.name_normalized) AS score
@@ -87,6 +90,7 @@ pipeline.run('link-wsib', async (pool) => {
         AND LENGTH(w.trade_name_normalized) >= 5
         AND LENGTH(e.name_normalized) >= 5
         AND similarity(w.trade_name_normalized, e.name_normalized) > 0.6
+        ${extraFilter}
     ),
     legal_matches AS (
       SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
@@ -97,12 +101,14 @@ pipeline.run('link-wsib', async (pool) => {
         AND LENGTH(w.legal_name_normalized) >= 5
         AND LENGTH(e.name_normalized) >= 5
         AND similarity(w.legal_name_normalized, e.name_normalized) > 0.6
+        ${extraFilter}
     ),
     combined AS (
       SELECT * FROM trade_matches
       UNION ALL
       SELECT * FROM legal_matches
     )`;
+  }
   // Sort by similarity score first (not permit_count) to avoid cross-linking unrelated businesses.
   // LIMIT 1000 enforces the safety cap documented in the header.
   const TIER3_SELECT = `
@@ -150,13 +156,13 @@ pipeline.run('link-wsib', async (pool) => {
       ? `AND w.id != ALL($1)`
       : '';
     const tier3Params = excludedIds.length > 0 ? [excludedIds] : [];
-    // Inject exclusion into TIER3_CTES by replacing the base filter
-    const tier3CtesExcluded = TIER3_CTES
-      .replace(/w\.linked_entity_id IS NULL/g, `w.linked_entity_id IS NULL ${tier3ExcludeClause}`);
+    // Set pg_trgm threshold for dry-run too (default 0.3 would produce different counts)
+    await pool.query('SET pg_trgm.similarity_threshold = 0.6');
     const dr3 = await pool.query(
-      `WITH ${tier3CtesExcluded} SELECT COUNT(*) as cnt FROM (${TIER3_SELECT}) sub`,
+      `WITH ${buildTier3Ctes(tier3ExcludeClause)} SELECT COUNT(*) as cnt FROM (${TIER3_SELECT}) sub`,
       tier3Params
     );
+    await pool.query('RESET pg_trgm.similarity_threshold');
     tier3 = parseInt(dr3.rows[0].cnt, 10);
     pipeline.log.info('[link-wsib]', `Tier 3 (simulated): ${tier3.toLocaleString()} matches`);
   } else {
@@ -248,7 +254,7 @@ pipeline.run('link-wsib', async (pool) => {
       // (default 0.3 fetches too many garbage pairs before the WHERE filter)
       await client.query('SET pg_trgm.similarity_threshold = 0.6');
       const result3 = await client.query(`
-        WITH ${TIER3_CTES},
+        WITH ${buildTier3Ctes()},
         matched AS (${TIER3_SELECT})
         UPDATE wsib_registry w
         SET linked_entity_id = m.entity_id,
