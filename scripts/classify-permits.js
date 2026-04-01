@@ -391,7 +391,7 @@ function classifyPermit(permit, rules) {
   const ruleMap = new Map();
   for (const rule of rules) {
     if (!rule.is_active) continue;
-    if (rule.tier !== 1) continue; // Only Tier 1 rules now
+    if (rule.tier !== 1) continue; // Only Tier 1 rules — kept in sync with classifier.ts (§7.1)
     const fieldValue = getFieldValue(permit, rule.match_field);
     const { matched } = fieldMatches(fieldValue, rule.match_pattern, rule.tier);
     if (!matched) continue;
@@ -406,7 +406,7 @@ function classifyPermit(permit, rules) {
       revision_num: permit.revision_num,
       trade_id: trade.id,
       trade_slug: trade.slug,
-      tier: 1,
+      tier: rule.tier,
       confidence,
       is_active: isActive,
       phase,
