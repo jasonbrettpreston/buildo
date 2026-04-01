@@ -564,6 +564,12 @@ pipeline.run('classify-scope', async (pool) => {
 
   pipeline.log.info('[classify-scope]', `Propagated: ${propagated.toLocaleString()} companions${demFixed > 0 ? `, ${demFixed} DM tags restored` : ''}`);
 
+  // VACUUM — classify_scope is the heaviest permits writer (5K-50K+ updates).
+  // Runs mid-chain before geocode, link_neighbourhoods, link_similar — autovacuum
+  // is async and may not fire between back-to-back chain steps, so we clean dead
+  // tuples explicitly to keep downstream index scans efficient.
+  await pool.query('VACUUM ANALYZE permits');
+
   const durationMs = Date.now() - startTime;
 
   pipeline.log.info('[classify-scope]', 'Classification complete', {
