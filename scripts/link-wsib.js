@@ -85,6 +85,7 @@ pipeline.run('link-wsib', async (pool) => {
              similarity(w.trade_name_normalized, e.name_normalized) AS score
       FROM wsib_registry w
       JOIN entities e ON w.trade_name_normalized % e.name_normalized
+        AND LEFT(w.trade_name_normalized, 1) = LEFT(e.name_normalized, 1)
       WHERE w.linked_entity_id IS NULL
         AND w.trade_name_normalized IS NOT NULL
         AND LENGTH(w.trade_name_normalized) >= 5
@@ -97,6 +98,7 @@ pipeline.run('link-wsib', async (pool) => {
              similarity(w.legal_name_normalized, e.name_normalized) AS score
       FROM wsib_registry w
       JOIN entities e ON w.legal_name_normalized % e.name_normalized
+        AND LEFT(w.legal_name_normalized, 1) = LEFT(e.name_normalized, 1)
       WHERE w.linked_entity_id IS NULL
         AND LENGTH(w.legal_name_normalized) >= 5
         AND LENGTH(e.name_normalized) >= 5
