@@ -345,33 +345,47 @@ pipeline.run('link-parcels', async (pool) => {
       });
     }
 
-    // Ghost link cleanup: delete old parcel links for permits that now match different parcels
-    // or have zero matches. Only runs for permits in this batch that had prior links.
-    const matchedPermitKeys = new Set();
-    for (const permit of permitKeys) {
-      const key = `${permit.permit_num}|${permit.revision_num}`;
-      if (sqlMatched.has(key) || spatialMatched.has(key)) matchedPermitKeys.add(key);
-    }
-    // Permits with zero matches: delete all their old links
-    const zeroMatchPermits = permitKeys.filter(p => !matchedPermitKeys.has(`${p.permit_num}|${p.revision_num}`));
-    if (zeroMatchPermits.length > 0) {
-      const zNums = zeroMatchPermits.map(p => p.permit_num);
-      const zRevs = zeroMatchPermits.map(p => p.revision_num);
-      await pool.query(
-        `DELETE FROM permit_parcels
-         WHERE (permit_num, revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))`,
-        [zNums, zRevs]
-      );
-    }
-
-    // Mark ALL processed permits as evaluated (regardless of match count)
+    // Ghost cleanup + timestamp update in a single transaction for atomicity
     const allNums = permitKeys.map(p => p.permit_num);
     const allRevs = permitKeys.map(p => p.revision_num);
-    await pool.query(
-      `UPDATE permits SET parcel_linked_at = NOW()
-       WHERE (permit_num, revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))`,
-      [allNums, allRevs]
-    );
+
+    await pipeline.withTransaction(pool, async (client) => {
+      // For permits WITH matches: delete old parcel links not in the current match set
+      // (handles address corrections where a permit now links to a different parcel)
+      const matchedParcelIds = new Map(); // "pnum|rev" -> parcel_id
+      for (const permit of permitKeys) {
+        const key = `${permit.permit_num}|${permit.revision_num}`;
+        const match = sqlMatched.get(key) || spatialMatched.get(key);
+        if (match) matchedParcelIds.set(key, match.parcel_id);
+      }
+      for (const [key, parcelId] of matchedParcelIds) {
+        const [permitNum, revisionNum] = key.split('|');
+        await client.query(
+          `DELETE FROM permit_parcels
+           WHERE permit_num = $1 AND revision_num = $2 AND parcel_id != $3`,
+          [permitNum, revisionNum, parcelId]
+        );
+      }
+
+      // For permits with ZERO matches: delete all their old links
+      const zeroMatchPermits = permitKeys.filter(p => !matchedParcelIds.has(`${p.permit_num}|${p.revision_num}`));
+      if (zeroMatchPermits.length > 0) {
+        const zNums = zeroMatchPermits.map(p => p.permit_num);
+        const zRevs = zeroMatchPermits.map(p => p.revision_num);
+        await client.query(
+          `DELETE FROM permit_parcels
+           WHERE (permit_num, revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))`,
+          [zNums, zRevs]
+        );
+      }
+
+      // Mark ALL processed permits as evaluated (regardless of match count)
+      await client.query(
+        `UPDATE permits SET parcel_linked_at = NOW()
+         WHERE (permit_num, revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))`,
+        [allNums, allRevs]
+      );
+    });
 
     if (processed % 10000 === 0 || processed >= totalPermits) {
       pipeline.progress('link-parcels', processed, totalPermits, startTime);
