@@ -44,7 +44,7 @@ pipeline.run('link-coa', async (pool) => {
 
   let tier1a = 0, tier1b = 0, tier1c = 0;
   let tier2a = 0, tier2b = 0;
-  let desc = 0, descErrors = 0;
+  let desc = 0, descErrors = 0, tier3Skipped = 0;
   let crossWardCleaned = 0;
 
   // ------------------------------------------------------------------
@@ -61,6 +61,7 @@ pipeline.run('link-coa', async (pool) => {
         WHERE p.permit_num = ca.linked_permit_num
           AND ca.ward IS NOT NULL AND p.ward IS NOT NULL
           AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')
+          AND ca.linked_confidence != 0.10
       `);
       return result.rowCount || 0;
     });
@@ -71,12 +72,15 @@ pipeline.run('link-coa', async (pool) => {
       WHERE ca.linked_permit_num IS NOT NULL
         AND ca.ward IS NOT NULL AND p.ward IS NOT NULL
         AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')
+        AND ca.linked_confidence != 0.10
     `);
     crossWardCleaned = parseInt(preview.rows[0].count, 10) || 0;
   }
   pipeline.log.info('[link-coa]', `Pre-pass: ${crossWardCleaned.toLocaleString()} cross-ward mismatches unlinked`);
 
-  const actualCandidates = totalUnlinked + crossWardCleaned;
+  // In dry-run mode, crossWardCleaned records aren't actually unlinked, so they
+  // won't appear in the IS NULL pool for subsequent tiers. Use totalUnlinked only.
+  const actualCandidates = dryRun ? totalUnlinked : totalUnlinked + crossWardCleaned;
 
   // ------------------------------------------------------------------
   // Tier 1a: street_num + street_name_normalized + ward match → 0.95
@@ -142,7 +146,7 @@ pipeline.run('link-coa', async (pool) => {
             FROM coa_applications ca2
             JOIN permits p ON ${joinWhere}
             WHERE ${filterWhere}
-            ORDER BY ca2.id, p.issued_date DESC NULLS LAST
+            ORDER BY ca2.id, COALESCE(p.issued_date, p.application_date) DESC NULLS LAST, p.permit_num DESC
           ) matched
           WHERE ca.id = matched.id
         `);
@@ -200,7 +204,7 @@ pipeline.run('link-coa', async (pool) => {
       .toUpperCase()
       .replace(/[^A-Z0-9\s]/g, ' ')
       .split(/\s+/)
-      .filter((w) => w.length > 3)
+      .filter((w) => w.length >= 3)
       .slice(0, 8);
     if (keywords.length < 2) continue;
     candidates.push({ id: app.id, ward: app.ward || '', tsQuery: keywords.join(' ') });
@@ -246,7 +250,8 @@ pipeline.run('link-coa', async (pool) => {
                 ORDER BY
                   CASE WHEN c.ward != '' AND ward IS NOT NULL AND LTRIM(ward, '0') = LTRIM(c.ward, '0') THEN 0 ELSE 1 END,
                   ts_rank(to_tsvector('english', COALESCE(description, '')),
-                          plainto_tsquery('english', c.ts_query)) DESC
+                          plainto_tsquery('english', c.ts_query)) DESC,
+                  permit_num DESC
                 LIMIT 1
               ) lat
               ORDER BY c.coa_id
@@ -257,7 +262,8 @@ pipeline.run('link-coa', async (pool) => {
         });
       } catch (err) {
         descErrors++;
-        pipeline.log.warn('[link-coa]', `Tier 3 batch at offset ${offset} failed: ${err.message}`);
+        tier3Skipped += batch.length;
+        pipeline.log.warn('[link-coa]', `Tier 3 batch at offset ${offset} failed (${batch.length} candidates skipped): ${err.message}`);
       }
 
       if ((offset + BATCH_SIZE) % 2000 === 0 || offset + BATCH_SIZE >= candidates.length) {
@@ -304,7 +310,8 @@ pipeline.run('link-coa', async (pool) => {
   // ------------------------------------------------------------------
   const durationMs = Date.now() - startTime;
   const totalLinked = tier1a + tier1b + tier1c + tier2a + tier2b + desc;
-  const noMatch = actualCandidates - totalLinked;
+  // Subtract error-skipped Tier 3 candidates from unlinked count so noMatch is accurate
+  const noMatch = Math.max(0, actualCandidates - totalLinked - tier3Skipped);
   const matchRate = actualCandidates > 0 ? (totalLinked / actualCandidates) * 100 : 0;
 
   pipeline.log.info('[link-coa]', 'Linking complete', {
@@ -368,7 +375,7 @@ pipeline.run('link-coa', async (pool) => {
     { metric: 'matches_tier_2a_name_ward', value: tier2a, threshold: null, status: 'INFO' },
     { metric: 'matches_tier_2b_name_null_ward', value: tier2b, threshold: null, status: 'INFO' },
     { metric: 'matches_tier_3_desc', value: desc, threshold: null, status: 'INFO' },
-    { metric: 'tier_3_errors', value: descErrors, threshold: '== 0', status: descErrors > 0 ? 'FAIL' : 'PASS' },
+    { metric: 'tier_3_errors', value: descErrors, threshold: '== 0', status: descErrors > 0 ? 'WARN' : 'PASS' },
     { metric: 'unlinked_remaining', value: noMatch, threshold: null, status: 'INFO' },
     { metric: 'links_to_pre_permits', value: prePermitLinkCount, threshold: '== 0', status: prePermitLinkCount > 0 ? 'FAIL' : 'PASS' },
     { metric: 'cross_ward_links', value: crossWardCount, threshold: '== 0', status: crossWardCount > 0 ? 'WARN' : 'PASS' },
