@@ -147,16 +147,18 @@ def populate_queue(conn):
                    OR p.enriched_status IN ('Permit Issued', 'Active Inspection', 'Not Passed'))
               AND (p.last_scraped_at IS NULL OR p.last_scraped_at < NOW() - INTERVAL '7 days')
               AND SUBSTRING(p.permit_num FROM '^[0-9]{2}')::int <= EXTRACT(YEAR FROM CURRENT_DATE) %% 100
-            ON CONFLICT (year_seq) DO NOTHING
+            ON CONFLICT (year_seq) DO UPDATE
+            SET status = 'pending', claimed_at = NULL, claimed_by = NULL, completed_at = NULL
+            WHERE scraper_queue.status IN ('completed', 'failed')
         """, (TARGET_TYPES,))
-        new_rows = cur.rowcount
+        queued_rows = cur.rowcount  # includes both new inserts and recycled completed/failed
         conn.commit()
 
         # Get total pending
         cur.execute("SELECT COUNT(*) FROM scraper_queue WHERE status = 'pending'")
         total_pending = cur.fetchone()[0]
 
-        return new_rows, total_pending
+        return queued_rows, total_pending
     finally:
         cur.close()
 
@@ -349,11 +351,11 @@ async def main():
     # with psycopg2.OperationalError when fetching final stats.
     conn = get_db_connection()
     try:
-        new_rows, total_pending = populate_queue(conn)
+        queued_rows, total_pending = populate_queue(conn)
     finally:
         conn.close()
 
-    log('INFO', '[orchestrator]', f'Queue: {new_rows} new rows added, {total_pending} total pending')
+    log('INFO', '[orchestrator]', f'Queue: {queued_rows} rows added/recycled, {total_pending} total pending')
 
     if total_pending == 0:
         log('INFO', '[orchestrator]', 'Nothing to scrape — queue is empty')

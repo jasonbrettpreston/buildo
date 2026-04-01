@@ -1190,19 +1190,21 @@ async def main():
         # Scoping prevents multi-worker sabotage where one worker kills another's Chrome.
         profile_name = f'worker-{args["worker_id"]}' if args['worker_id'] else 'standalone'
         profile_pattern = f'profile-{profile_name}'
+        # Use word boundary (\b) to prevent substring matches — e.g. profile-worker-1
+        # must NOT match profile-worker-10. Windows uses -match (regex) instead of -like (glob).
         try:
             import subprocess
             if sys.platform == 'win32':
                 subprocess.run(
                     ['powershell', '-Command',
                      "Get-Process chrome -ErrorAction SilentlyContinue | "
-                     f"Where-Object {{$_.CommandLine -like '*{profile_pattern}*'}} | "
+                     f"Where-Object {{$_.CommandLine -match '{profile_pattern}\\b'}} | "
                      "Stop-Process -Force -ErrorAction SilentlyContinue"],
                     capture_output=True, timeout=5,
                 )
             else:
                 subprocess.run(
-                    ['pkill', '-f', f'chrome.*{profile_pattern}'],
+                    ['pkill', '-f', f'chrome.*{profile_pattern}\\b'],
                     capture_output=True, timeout=5,
                 )
         except Exception:
