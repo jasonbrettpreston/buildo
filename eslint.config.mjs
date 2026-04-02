@@ -91,6 +91,10 @@ const eslintConfig = [
           message: 'new Pool() is banned in pipeline scripts. Use pipeline.createPool() via the SDK (§9.4).',
         },
         {
+          selector: "NewExpression[callee.property.name='Pool']",
+          message: 'new pg.Pool() is banned in pipeline scripts. Use pipeline.createPool() via the SDK (§9.4).',
+        },
+        {
           selector: "CallExpression[callee.object.name='process'][callee.property.name='exit']",
           message: 'process.exit() is banned in pipeline scripts. Let pipeline.run() handle lifecycle (§9.4).',
         },
