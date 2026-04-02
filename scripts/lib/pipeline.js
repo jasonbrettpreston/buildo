@@ -178,7 +178,7 @@ function emitMeta(reads, writes, external) {
 // ---------------------------------------------------------------------------
 
 /**
- * Log a progress update with percentage and elapsed time.
+ * Log a progress update with percentage, elapsed time, and velocity (B19).
  *
  * @param {string} label - Script name or step label
  * @param {number} current - Records processed so far
@@ -186,9 +186,10 @@ function emitMeta(reads, writes, external) {
  * @param {number} startMs - Date.now() when processing started
  */
 function progress(label, current, total, startMs) {
+  const elapsed = (Date.now() - startMs) / 1000;
   const pct = total > 0 ? ((current / total) * 100).toFixed(1) : '0.0';
-  const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
-  console.log(`  [${label}] ${current.toLocaleString()} / ${total.toLocaleString()} (${pct}%) — ${elapsed}s`);
+  const velocity = elapsed > 0 ? Math.round(current / elapsed) : 0;
+  console.log(`  [${label}] ${current.toLocaleString()} / ${total.toLocaleString()} (${pct}%) — ${elapsed.toFixed(1)}s — ${velocity} rows/s`);
 }
 
 // ---------------------------------------------------------------------------
@@ -424,6 +425,41 @@ function isFullMode() {
 }
 
 // ---------------------------------------------------------------------------
+// Streaming Query — prevents OOM on large result sets (B4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Execute a SQL query as an async iterable stream using pg-query-stream.
+ * Instead of loading all rows into memory, yields one row at a time.
+ *
+ * Usage:
+ *   for await (const row of pipeline.streamQuery(pool, 'SELECT * FROM big_table')) {
+ *     processRow(row);
+ *   }
+ *
+ * Requires: npm install pg-query-stream
+ *
+ * @param {Pool} pool
+ * @param {string} sql
+ * @param {any[]} [params=[]]
+ * @param {{ batchSize?: number }} [options={}]
+ * @yields {object} One row at a time
+ */
+async function* streamQuery(pool, sql, params = [], options = {}) {
+  const QueryStream = require('pg-query-stream');
+  const client = await pool.connect();
+  try {
+    const qs = new QueryStream(sql, params, { batchSize: options.batchSize || 100 });
+    const stream = client.query(qs);
+    for await (const row of stream) {
+      yield row;
+    }
+  } finally {
+    client.release();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Exports
 // ---------------------------------------------------------------------------
 
@@ -437,6 +473,7 @@ module.exports = {
   emitMeta,
   progress,
   run,
+  streamQuery,
   BATCH_SIZE,
   maxRowsPerInsert,
   isFullMode,

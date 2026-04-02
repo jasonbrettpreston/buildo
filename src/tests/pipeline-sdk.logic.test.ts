@@ -149,7 +149,7 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
-  // progress
+  // progress — with velocity tracking (B19)
   // -----------------------------------------------------------------------
   describe('progress()', () => {
     let logSpy: ReturnType<typeof vi.spyOn>;
@@ -174,6 +174,29 @@ describe('Pipeline SDK', () => {
       pipeline.progress('test', 0, 0, Date.now());
       const output = logSpy.mock.calls[0][0] as string;
       expect(output).toContain('0.0%');
+    });
+
+    it('includes velocity (rows/s) in progress output (B19)', () => {
+      const start = Date.now() - 10000; // 10 seconds ago
+      pipeline.progress('test', 5000, 10000, start);
+      const output = logSpy.mock.calls[0][0] as string;
+      expect(output).toMatch(/rows\/s/);
+      // 5000 rows in 10 seconds = ~500 rows/s
+      expect(output).toMatch(/\d+ rows\/s/);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // streamQuery — async generator for large result sets (B4)
+  // -----------------------------------------------------------------------
+  describe('streamQuery()', () => {
+    it('is exported as a function', () => {
+      expect(typeof pipeline.streamQuery).toBe('function');
+    });
+
+    it('is an async generator function', () => {
+      // AsyncGeneratorFunction constructor name check
+      expect(pipeline.streamQuery.constructor.name).toBe('AsyncGeneratorFunction');
     });
   });
 

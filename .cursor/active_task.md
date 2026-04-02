@@ -1,56 +1,89 @@
-# Active Task: WF2 — Bug Rubric Phase 0 (Archetype Taxonomy + Exemption Pruning)
+# Active Task: WF2 — Pipeline SDK Hardening (Phase 1 Step 1)
 **Status:** Planning
 **Workflow:** WF2 — Feature Enhancement
-**Rollback Anchor:** `da4a36f`
+**Rollback Anchor:** `7e45ee2`
 
 ## Context
-* **Goal:** Rewrite `docs/reports/15_bug_rubric_evaluation.md` to apply archetype taxonomy and exemption rules, replacing ~60% false positive FAILs with EXEMPT, and incorporating fixes already applied this session.
-* **Target Spec:** `docs/reports/15_bug_rubric_evaluation.md` (report, not a feature spec)
-* **Key Files:** `docs/reports/15_bug_rubric_evaluation.md`
+* **Goal:** Harden `scripts/lib/pipeline.js` and `scripts/run-chain.js` with 3 force-multiplier capabilities that unlock Priority 1 script fixes in the next step.
+* **Target Spec:** `docs/specs/pipeline/40_pipeline_system.md`
+* **Key Files:** `scripts/lib/pipeline.js`, `scripts/run-chain.js`, `src/tests/pipeline-sdk.logic.test.ts`, `src/tests/chain.logic.test.ts`
 
 ## Technical Implementation
-* **New/Modified Components:** Rewrite the evaluation report with:
-  1. Archetype taxonomy header (4 groups with script assignments)
-  2. Exemption rules (A-E) documented
-  3. All 8 category tables updated: FAIL→EXEMPT where rules apply, FAIL→PASS for this-session fixes
-  4. Summary section with true debt baseline grouped by priority
 
-### This-Session Fixes to Reflect as PASS
-| Script | Bugs Fixed |
-|--------|-----------|
-| classify-inspection-status.js | B13 (rowCount→RETURNING), temporal logic, cross-revision, terminal states |
-| classify-permit-phase.js | B13 (rowCount→rows.length), cross-revision, epoch dates, CDC |
-| classify-permits.js | B13 (rowCount→RETURNING), N+1 ghost cleanup, VACUUM removed |
+### Feature 1: `pipeline.streamQuery()` — Streaming query helper (B4)
+**Problem:** 6 scripts (compute-centroids, enrich-wsib, link-massing, load-massing, load-parcels, load-wsib) load entire result sets into V8 memory via `pool.query()`, risking OOM on large tables.
 
-### Exemption Rules to Apply
-| Rule | Bugs | Applies To | Exempt |
-|------|------|-----------|--------|
-| A (Spatial) | B10, B11, B12 | GIS scripts only (massing, parcels, neighbourhoods, centroids) | All others |
-| B (Mutation) | B13, B16, B18 | Ingestors + Mutators only | Observers |
-| C (Pagination) | B1, B3 | Mutators + Incremental Ingestors only | Scrapers, Observers |
-| D (Rate Limit) | B17 | Scrapers only | All internal |
-| E (Deep Metrics) | B19-B23 | Ingestors, Mutators, Scrapers | Observers |
+**Implementation:**
+* Install `pg-query-stream` as a dependency
+* Add `streamQuery(pool, sql, params)` to pipeline SDK that returns an async iterable
+* Scripts can then `for await (const row of pipeline.streamQuery(pool, sql))` instead of `const { rows } = await pool.query(sql)`
+* The SDK handles cursor cleanup in a finally block
 
-### WF5 Validation Findings to Incorporate
-| Bug | Rubric Claims | Verified Real | False Positive Rate |
-|-----|--------------|---------------|-------------------|
-| B1 (OFFSET) | 8 FAIL | 1 (reclassify-all.js) | 87.5% |
-| B6 (Orphaned DB) | 9 FAIL | 0 | 100% |
-| B11 (Bounding Box) | 25+ FAIL | 3 spatial scripts | 88% |
-| B13 (rowCount) | ~15 FAIL | 7 genuine (3 fixed this session) | ~53% |
-| B18 (Transactions) | ~30 FAIL | 1 (classify-permit-phase, intentional) | ~97% |
+```js
+async function* streamQuery(pool, sql, params = [], options = {}) {
+  const QueryStream = require('pg-query-stream');
+  const client = await pool.connect();
+  try {
+    const qs = new QueryStream(sql, params, { batchSize: options.batchSize || 100 });
+    const stream = client.query(qs);
+    for await (const row of stream) {
+      yield row;
+    }
+  } finally {
+    client.release();
+  }
+}
+```
+
+### Feature 2: Velocity tracking in `progress()` (B19)
+**Problem:** No visibility into pipeline throughput degradation over time.
+
+**Implementation:**
+* Enhance `progress()` to compute and log rows/sec
+* Add `_velocityWindow` array tracking last 5 progress checkpoints
+* Log velocity and velocity delta (acceleration/deceleration) in progress output
+* No breaking changes — existing callers get velocity for free
+
+```js
+function progress(label, current, total, startMs) {
+  const elapsed = (Date.now() - startMs) / 1000;
+  const pct = total > 0 ? ((current / total) * 100).toFixed(1) : '0.0';
+  const velocity = elapsed > 0 ? Math.round(current / elapsed) : 0;
+  console.log(`  [${label}] ${current.toLocaleString()} / ${total.toLocaleString()} (${pct}%) — ${elapsed.toFixed(1)}s — ${velocity} rows/s`);
+}
+```
+
+### Feature 3: Pre-flight bloat gate in `run-chain.js` (B24/B25)
+**Problem:** Heavy mutation chains can compound dead tuples if autovacuum hasn't caught up.
+
+**Implementation:**
+* Before each mutator step, query `pg_stat_user_tables` for `n_dead_tup` / `(n_live_tup + n_dead_tup)` ratio on the target tables
+* If dead_ratio > 0.20 (20%), log a warning but continue
+* If dead_ratio > 0.50 (50%), abort the chain with a clear error message
+* Uses `captureTelemetry()` already in the SDK — just needs a gate check added
+* Target tables derived from manifest.json `scripts[slug].writes` if available
 
 ## Database Impact
 NO
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — documentation only
-* **Unhappy Path Tests:** N/A
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A
+* **Try-Catch Boundary:** `streamQuery` has try/finally for client cleanup. `run-chain.js` gate errors are logged via pipeline SDK.
+* **Unhappy Path Tests:** Stream error handling, empty result stream, bloat gate threshold tests
+* **logError Mandate:** N/A — pipeline SDK logging (not API route)
+* **Mobile-First:** N/A — backend infrastructure
 
 ## Execution Plan
-- [ ] **State Verification:** Document WF5 audit findings
-- [ ] **Spec Update:** N/A — this IS the report
-- [ ] **Implementation:** Rewrite 15_bug_rubric_evaluation.md with taxonomy, exemptions, verified statuses, and true debt summary
-- [ ] **Green Light:** `npm run test` (no code changes, sanity check)
+- [ ] **State Verification:** SDK already has captureTelemetry with dead_ratio. progress() exists but lacks velocity. pg-query-stream not installed.
+- [ ] **Contract Definition:** N/A — SDK internal, no API route
+- [ ] **Spec Update:** Update `docs/specs/pipeline/40_pipeline_system.md` with new SDK exports. Run `npm run system-map`.
+- [ ] **Schema Evolution:** N/A — no DB changes
+- [ ] **Guardrail Test:** Add tests for streamQuery (mock), velocity progress output, bloat gate threshold logic
+- [ ] **Red Light:** Verify new tests fail
+- [ ] **Implementation:**
+  - [ ] `npm install pg-query-stream` 
+  - [ ] Add `streamQuery()` to pipeline.js + export
+  - [ ] Enhance `progress()` with velocity (rows/s)
+  - [ ] Add bloat gate to run-chain.js (before each step, check dead_ratio)
+  - [ ] Update spec with new SDK exports
+- [ ] **UI Regression Check:** N/A — backend only
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6

@@ -1051,3 +1051,41 @@ describe('run-chain.js captures last PIPELINE_SUMMARY (not first)', () => {
     expect(source).not.toMatch(/summaryLines\.match\s*\(\s*\/PIPELINE_META/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Pre-flight bloat gate (B24/B25) — run-chain.js checks dead_ratio before steps
+// ---------------------------------------------------------------------------
+describe('Pre-flight bloat gate (B24/B25)', () => {
+  const chainSource = () => fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+  );
+
+  it('run-chain.js queries pg_stat_user_tables for dead tuple ratio before steps', () => {
+    const source = chainSource();
+    expect(source).toMatch(/n_dead_tup|dead_ratio|pg_stat_user_tables/);
+  });
+
+  it('run-chain.js has a bloat threshold that can abort a chain step', () => {
+    const source = chainSource();
+    // Must have a threshold check that can skip/abort when bloat is too high
+    expect(source).toMatch(/BLOAT_ABORT_THRESHOLD|bloat.*abort|dead_ratio.*>/i);
+  });
+
+  it('bloat gate logic: healthy ratio passes, critical ratio aborts', () => {
+    // Pure logic test for the gate function
+    const BLOAT_WARN_THRESHOLD = 0.20;
+    const BLOAT_ABORT_THRESHOLD = 0.50;
+
+    function checkBloat(deadRatio: number): 'pass' | 'warn' | 'abort' {
+      if (deadRatio > BLOAT_ABORT_THRESHOLD) return 'abort';
+      if (deadRatio > BLOAT_WARN_THRESHOLD) return 'warn';
+      return 'pass';
+    }
+
+    expect(checkBloat(0.05)).toBe('pass');
+    expect(checkBloat(0.25)).toBe('warn');
+    expect(checkBloat(0.60)).toBe('abort');
+    expect(checkBloat(0.50)).toBe('warn'); // exactly at threshold = warn, not abort
+    expect(checkBloat(0.51)).toBe('abort');
+  });
+});

@@ -171,6 +171,40 @@ async function run() {
       break;
     }
 
+    // Pre-flight bloat gate (B24/B25): check dead tuple ratio on write targets
+    // before starting heavy mutation steps. Warns at 20%, aborts at 50%.
+    const BLOAT_WARN_THRESHOLD = 0.20;
+    const BLOAT_ABORT_THRESHOLD = 0.50;
+    const scriptMeta = manifest.scripts[slug];
+    const writeTables = scriptMeta?.telemetry_tables || [];
+    if (writeTables.length > 0) {
+      try {
+        for (const table of writeTables) {
+          const bloatRes = await pool.query(
+            `SELECT n_live_tup::bigint AS live, n_dead_tup::bigint AS dead
+             FROM pg_stat_user_tables WHERE relname = $1`,
+            [table]
+          );
+          if (bloatRes.rows[0]) {
+            const live = parseInt(bloatRes.rows[0].live, 10) || 0;
+            const dead = parseInt(bloatRes.rows[0].dead, 10) || 0;
+            const dead_ratio = (live + dead) > 0 ? dead / (live + dead) : 0;
+            if (dead_ratio > BLOAT_ABORT_THRESHOLD) {
+              pipeline.log.error('[run-chain]', `Bloat gate ABORT: ${table} dead_ratio=${(dead_ratio * 100).toFixed(1)}% exceeds ${(BLOAT_ABORT_THRESHOLD * 100)}% threshold. Run VACUUM ${table} manually.`, { table, dead_ratio, live, dead });
+              failedStep = slug;
+              break;
+            }
+            if (dead_ratio > BLOAT_WARN_THRESHOLD) {
+              pipeline.log.warn('[run-chain]', `Bloat gate WARN: ${table} dead_ratio=${(dead_ratio * 100).toFixed(1)}% exceeds ${(BLOAT_WARN_THRESHOLD * 100)}% threshold`, { table, dead_ratio, live, dead });
+            }
+          }
+        }
+        if (failedStep) break;
+      } catch (err) {
+        pipeline.log.warn('[run-chain]', `Bloat gate check failed (non-fatal): ${err.message}`);
+      }
+    }
+
     console.log(`${stepLabel} — starting...`);
 
     // Insert step tracking row — scoped to chain (e.g. permits:assert_schema)

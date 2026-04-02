@@ -39,7 +39,8 @@ The mandatory infrastructure layer for all pipeline scripts. No script may insta
 | `log.{info,warn,error}` | `(tag, msg, ctx?) => void` | Structured JSON logging to stdout/stderr. |
 | `emitSummary(stats)` | `(SummaryPayload) => void` | Emits `PIPELINE_SUMMARY:{json}` to stdout. |
 | `emitMeta(reads, writes, ext?)` | `(Record, Record, string[]?) => void` | Emits `PIPELINE_META:{json}` to stdout. |
-| `progress(label, cur, total, startMs)` | `(string, number, number, number) => void` | Progress percentage + elapsed time. |
+| `progress(label, cur, total, startMs)` | `(string, number, number, number) => void` | Progress percentage + elapsed time + velocity (rows/s). |
+| `streamQuery(pool, sql, params?, opts?)` | `async function*(Pool, string, any[], {batchSize?}) => AsyncGenerator<Row>` | Streaming cursor via `pg-query-stream`. Yields one row at a time, preventing OOM on large tables. |
 | `track(new, updated)` | `(number, number) => void` | Increment running record counters. |
 | `captureTelemetry(pool, tables, nullCols?)` | `(Pool, string[], Record?) => Promise<Snapshot>` | T1/T2/T4/T6 pre-run state capture. |
 | `diffTelemetry(pool, tables, pre)` | `(Pool, string[], Snapshot) => Promise<Diff>` | Post-run diff against pre-run snapshot. |
