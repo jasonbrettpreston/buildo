@@ -115,6 +115,7 @@ pipeline.run('compute-centroids', async (pool) => {
       } catch (err) {
         pipeline.log.warn('[compute-centroids]', `Skipping parcel ${row.id}: malformed geometry JSON — ${err.message}`);
         failed++;
+        processed++;
         continue;
       }
 
