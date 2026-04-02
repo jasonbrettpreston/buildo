@@ -220,6 +220,82 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
+  // B23: Error taxonomy — classifyError auto-categorizes errors
+  // -----------------------------------------------------------------------
+  describe('classifyError()', () => {
+    it('is exported as a function', () => {
+      expect(typeof pipeline.classifyError).toBe('function');
+    });
+
+    it('classifies ECONNRESET as network', () => {
+      const err: Error & { code?: string } = new Error('connection reset');
+      err.code = 'ECONNRESET';
+      expect(pipeline.classifyError(err)).toBe('network');
+    });
+
+    it('classifies ETIMEDOUT as timeout', () => {
+      const err: Error & { code?: string } = new Error('timed out');
+      err.code = 'ETIMEDOUT';
+      expect(pipeline.classifyError(err)).toBe('timeout');
+    });
+
+    it('classifies SyntaxError as parse', () => {
+      const err = new SyntaxError('Unexpected token');
+      expect(pipeline.classifyError(err)).toBe('parse');
+    });
+
+    it('classifies PG 23xxx codes as database', () => {
+      const err: Error & { code?: string } = new Error('unique violation');
+      err.code = '23505';
+      expect(pipeline.classifyError(err)).toBe('database');
+    });
+
+    it('classifies PG 42xxx codes as database', () => {
+      const err: Error & { code?: string } = new Error('undefined column');
+      err.code = '42703';
+      expect(pipeline.classifyError(err)).toBe('database');
+    });
+
+    it('classifies ENOENT as file_not_found', () => {
+      const err: Error & { code?: string } = new Error('no such file');
+      err.code = 'ENOENT';
+      expect(pipeline.classifyError(err)).toBe('file_not_found');
+    });
+
+    it('classifies unknown errors as unknown', () => {
+      expect(pipeline.classifyError(new Error('something weird'))).toBe('unknown');
+    });
+
+    it('log.error includes error_type field', () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const err: Error & { code?: string } = new Error('conn reset');
+      err.code = 'ECONNRESET';
+      pipeline.log.error('[test]', err);
+      const parsed = JSON.parse(spy.mock.calls[0][0]);
+      expect(parsed.error_type).toBe('network');
+      spy.mockRestore();
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // B20: Queue age helper — checkQueueAge
+  // -----------------------------------------------------------------------
+  describe('checkQueueAge()', () => {
+    it('is exported as a function', () => {
+      expect(typeof pipeline.checkQueueAge).toBe('function');
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // B22: Semantic bounds helper — checkBounds
+  // -----------------------------------------------------------------------
+  describe('checkBounds()', () => {
+    it('is exported as a function', () => {
+      expect(typeof pipeline.checkBounds).toBe('function');
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // log (structured logging)
   // -----------------------------------------------------------------------
   describe('log', () => {
@@ -680,6 +756,36 @@ describe('Pipeline SDK', () => {
         expect(content).not.toMatch(/new Pool\(/);
       });
     }
+  });
+
+  // -----------------------------------------------------------------------
+  // B21: Null rate tracking coverage in manifest.json
+  // -----------------------------------------------------------------------
+  describe('B21: manifest telemetry_null_cols coverage', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fsMan = require('fs');
+    const manifest = JSON.parse(fsMan.readFileSync(
+      path.resolve(__dirname, '../../scripts/manifest.json'), 'utf-8'
+    ));
+
+    it('at least 12 scripts declare telemetry_null_cols', () => {
+      const withNullCols = Object.entries(manifest.scripts)
+        .filter(([, v]) => (v as { telemetry_null_cols?: unknown }).telemetry_null_cols);
+      expect(withNullCols.length).toBeGreaterThanOrEqual(12);
+    });
+
+    it('load_permits declares null tracking for key permit columns', () => {
+      const entry = manifest.scripts.permits;
+      expect(entry.telemetry_null_cols).toBeDefined();
+      expect(entry.telemetry_null_cols.permits).toEqual(
+        expect.arrayContaining(['issued_date', 'description'])
+      );
+    });
+
+    it('classify_permits declares null tracking for classified_at', () => {
+      const entry = manifest.scripts.classify_permits;
+      expect(entry.telemetry_null_cols).toBeDefined();
+    });
   });
 
   // -----------------------------------------------------------------------

@@ -41,6 +41,9 @@ The mandatory infrastructure layer for all pipeline scripts. No script may insta
 | `emitMeta(reads, writes, ext?)` | `(Record, Record, string[]?) => void` | Emits `PIPELINE_META:{json}` to stdout. |
 | `progress(label, cur, total, startMs)` | `(string, number, number, number) => void` | Progress percentage + elapsed time + velocity (rows/s). |
 | `streamQuery(pool, sql, params?, opts?)` | `async function*(Pool, string, any[], {batchSize?}) => AsyncGenerator<Row>` | Streaming cursor via `pg-query-stream`. Yields one row at a time, preventing OOM on large tables. |
+| `classifyError(err)` | `(Error) => string` | Auto-categorize errors: network, timeout, parse, database, file_not_found, unknown (B23). |
+| `checkQueueAge(pool, table, col, opts?)` | `(Pool, string, string, {where?, warnMinutes?, label?}) => Promise<{maxAgeMinutes, count}>` | Check oldest unprocessed item age. Warns if above threshold (B20). |
+| `checkBounds(pool, table, bounds, label?)` | `(Pool, string, Record<string, {min?, max?}>, string?) => Promise<Array<{column, violations}>>` | Semantic bounds check on column values. Logs violations (B22). |
 | `track(new, updated)` | `(number, number) => void` | Increment running record counters. |
 | `captureTelemetry(pool, tables, nullCols?)` | `(Pool, string[], Record?) => Promise<Snapshot>` | T1/T2/T4/T6 pre-run state capture. |
 | `diffTelemetry(pool, tables, pre)` | `(Pool, string[], Snapshot) => Promise<Diff>` | Post-run diff against pre-run snapshot. |

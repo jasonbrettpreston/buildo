@@ -1,63 +1,88 @@
-# Active Task: WF2 — Pipeline Linting & CI/CD Guardrails
+# Active Task: WF2 — B20-B23 Deep Metrics SDK (Phase 4 Step 2)
 **Status:** Planning
 **Workflow:** WF2 — Feature Enhancement
-**Rollback Anchor:** `2b6eb35`
+**Rollback Anchor:** `092f8ae`
 
 ## Context
-* **Goal:** Prevent pipeline anti-patterns from entering the codebase via automated linting and CI enforcement. Currently `scripts/**` is entirely excluded from ESLint, and no CI workflow exists.
-* **Target Spec:** `docs/specs/00_engineering_standards.md` §9
-* **Key Files:** `eslint.config.mjs`, `ruff.toml` (new), `.github/workflows/pipeline-lint.yml` (new)
+* **Goal:** Add 4 remaining deep observability capabilities to the Pipeline SDK so all 32 non-Observer scripts automatically inherit them.
+* **Target Spec:** `docs/specs/pipeline/40_pipeline_system.md`
+* **Key Files:** `scripts/lib/pipeline.js`, `scripts/manifest.json`, `src/tests/pipeline-sdk.logic.test.ts`
+
+## State Verification
+| Feature | Status | Work Needed |
+|---------|--------|-------------|
+| B19 (Velocity) | **DONE** — commit `55ad567` | None |
+| B20 (Queue Age) | Missing | SDK helper + manifest schema |
+| B21 (Null Rates) | 7/28 scripts declare `telemetry_null_cols` | Expand declarations in manifest |
+| B22 (Semantic Bounds) | Partial — assert-data-bounds.js has domain-specific checks | Manifest-driven bounds schema |
+| B23 (Error Taxonomy) | Missing | Error categorization in SDK |
+| B24/B25 (Bloat Gate) | **DONE** — commit `55ad567` | None |
 
 ## Technical Implementation
 
-### Phase 1: ESLint for pipeline scripts
-**Current state:** `scripts/**` is in ESLint `ignores` — pipeline JS is completely unlinked.
+### Feature 1: Error Taxonomy (B23) — in `pipeline.js`
+**Problem:** All errors are logged as plain strings. No way to distinguish timeout vs network vs parse vs DB errors in dashboards.
 
-**Changes to `eslint.config.mjs`:**
-1. Remove `scripts/**` from global ignores
-2. Add a `scripts/**/*.js` config block with pipeline-specific rules:
-   - `no-restricted-syntax` selector for SQL OFFSET in template literals (B1 guard)
-   - `no-restricted-syntax` selector for `new Pool(` (force SDK usage)
-   - `no-restricted-syntax` selector for bare `process.exit()` 
-3. Exempt `scripts/lib/**` from certain rules (SDK internals)
-4. Keep `@typescript-eslint` rules off for `.js` files (scripts are CommonJS)
+**Implementation:** Enhance `log.error()` to auto-detect error category:
+```js
+function classifyError(err) {
+  if (err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') return 'network';
+  if (err.code === 'ENOENT') return 'file_not_found';
+  if (err.name === 'SyntaxError' || err.message?.includes('JSON')) return 'parse';
+  if (err.code?.startsWith('23') || err.code?.startsWith('42')) return 'database'; // PG error codes
+  if (err.code === 'ABORT_ERR' || err.message?.includes('timeout')) return 'timeout';
+  return 'unknown';
+}
+```
+Add `error_type` field to structured log output. Zero changes needed in scripts — they already use `pipeline.log.error()`.
 
-**Why not a custom ESLint plugin:** The `no-restricted-syntax` AST selectors already cover our needs (proven pattern in this codebase — lines 28-37 of current config). A custom plugin adds npm packaging overhead with no benefit. For the OFFSET check specifically, we use the existing source-level test pattern (already catching B1 in pipeline-sdk.logic.test.ts) as the primary guard, and the ESLint rule as a secondary net.
+### Feature 2: Queue Age Tracking (B20) — in `pipeline.js`
+**Problem:** No visibility into how long items sit unprocessed in work queues.
 
-### Phase 2: Ruff for Python scripts
-**Changes:**
-1. Create `ruff.toml` at project root with:
-   - `target-version = "py311"`
-   - Ban `psycopg2` import (force `asyncpg` for async code)
-   - Enable BLE (blind-except) and TRY (tryceratops) rule sets
-   - Scope to `scripts/*.py`
-2. Add `ruff check scripts/*.py` to the CI workflow
+**Implementation:** Add `checkQueueAge(pool, table, timestampCol, label)` helper that queries `MIN(timestampCol)` and logs the max queue age. Scripts that have queue-like patterns (incremental WHERE timestamp < X) can call this before processing.
 
-### Phase 3: CI workflow
-**New file:** `.github/workflows/pipeline-lint.yml`
-- Triggers on `pull_request` to `main`
-- Steps: checkout → setup Node → `npm run lint` → setup Python → `pip install ruff` → `ruff check scripts/*.py`
-- No branch protection rules yet (local enforcement via Husky is primary)
+### Feature 3: Null Rate Expansion (B21) — in `manifest.json`
+**Problem:** Only 7 of 28 scripts declare `telemetry_null_cols`. Key tables missing coverage.
 
-### Phase 4: Grandfather baseline
-**Strategy:** Rather than `eslint-disable` comments everywhere, keep the pipeline lint as **warn** (not error) for existing code initially. The Husky pre-commit already runs `npm run lint` — warnings won't block commits. New violations will be caught by tests (already have 35+ source-level assertions from this session).
+**Implementation:** Add `telemetry_null_cols` to 12 more scripts in manifest:
+- `permits`: load_permits (add issued_date, description, builder_name)
+- `builders/entities`: extract_builders (add phone, email)
+- `permit_trades`: classify_permits (add classified_at)
+- `parcels`: load_parcels (add centroid_lat)
+- `building_footprints`: load_massing (add centroid_lat)
+- `neighbourhoods`: load_neighbourhoods (add geometry)
+
+### Feature 4: Semantic Bounds Schema (B22) — in `manifest.json` + SDK
+**Problem:** Bounds checking only exists in assert-data-bounds.js for permits/CoA. No generalized system.
+
+**Implementation:** Add optional `telemetry_bounds` to manifest.json script entries:
+```json
+"telemetry_bounds": {
+  "permits": {
+    "est_const_cost": { "min": 0, "max": 500000000 },
+    "storeys": { "min": 1, "max": 100 }
+  }
+}
+```
+Add `checkBounds(pool, table, bounds)` to SDK that runs `SELECT COUNT(*) FILTER (WHERE col < min OR col > max)` and logs violations. Opt-in — only scripts with `telemetry_bounds` in manifest run the check.
 
 ## Database Impact
 NO
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — configuration only
-* **Unhappy Path Tests:** N/A — lint rules tested by the existing 2379 test suite
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A
+* **Try-Catch Boundary:** N/A — SDK internal (no API routes)
+* **Unhappy Path Tests:** Error classification unit tests, queue age edge cases
+* **logError Mandate:** N/A — enhancing the SDK log itself
+* **Mobile-First:** N/A — backend infrastructure
 
 ## Execution Plan
-- [ ] **State Verification:** ESLint ignores scripts/, no CI, no ruff
-- [ ] **Spec Update:** N/A — enforcing existing standards
+- [ ] **State Verification:** B19 + B24/B25 already done, 4 features remain
+- [ ] **Guardrail Test:** Tests for classifyError categories, checkQueueAge, manifest null_cols coverage
+- [ ] **Red Light:** Verify new tests fail
 - [ ] **Implementation:**
-  - [ ] Update `eslint.config.mjs` — add scripts/ config block, remove from ignores
-  - [ ] Create `ruff.toml` for Python pipeline scripts
-  - [ ] Create `.github/workflows/pipeline-lint.yml`
-  - [ ] Fix any lint errors that surface in scripts/ (warn-level only)
-  - [ ] Verify `npm run lint` still passes (Husky gate)
+  - [ ] Add `classifyError()` + `error_type` to `log.error()` (B23)
+  - [ ] Add `checkQueueAge()` helper (B20)
+  - [ ] Expand `telemetry_null_cols` in manifest.json (B21)
+  - [ ] Add `telemetry_bounds` schema + `checkBounds()` (B22)
+  - [ ] Update spec with new SDK exports
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6

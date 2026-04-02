@@ -44,6 +44,24 @@ function createPool() {
 // Structured Logging — replaces bare console.error/warn/log in scripts
 // ---------------------------------------------------------------------------
 
+/**
+ * Classify an error into a machine-readable category (B23 Error Taxonomy).
+ * Enables dashboards to filter/group by error type without parsing messages.
+ *
+ * @param {Error|unknown} err
+ * @returns {'network'|'timeout'|'parse'|'database'|'file_not_found'|'unknown'}
+ */
+function classifyError(err) {
+  if (!(err instanceof Error)) return 'unknown';
+  const code = /** @type {string|undefined} */ (/** @type {any} */ (err).code);
+  if (code === 'ECONNRESET' || code === 'ECONNREFUSED' || code === 'EPIPE') return 'network';
+  if (code === 'ETIMEDOUT' || code === 'ABORT_ERR' || (err.message && err.message.includes('timeout'))) return 'timeout';
+  if (code === 'ENOENT') return 'file_not_found';
+  if (err.name === 'SyntaxError' || (err.message && err.message.includes('JSON'))) return 'parse';
+  if (code && (code.startsWith('23') || code.startsWith('42') || code.startsWith('22') || code.startsWith('40'))) return 'database';
+  return 'unknown';
+}
+
 const log = {
   /** Informational message (non-error). */
   info(tag, msg, ctx) {
@@ -59,12 +77,13 @@ const log = {
     console.warn(JSON.stringify(entry));
   },
 
-  /** Error (may be fatal). */
+  /** Error (may be fatal). Includes auto-classified error_type (B23). */
   error(tag, err, ctx) {
     const entry = {
       level: 'ERROR',
       tag,
       msg: err instanceof Error ? err.message : String(err),
+      error_type: classifyError(err),
     };
     if (err instanceof Error && err.stack) entry.stack = err.stack;
     if (ctx) entry.context = ctx;
@@ -425,6 +444,80 @@ function isFullMode() {
 }
 
 // ---------------------------------------------------------------------------
+// Queue Age Check (B20) — detects stale unprocessed items
+// ---------------------------------------------------------------------------
+
+/**
+ * Check the age of the oldest unprocessed item in a queue-like table.
+ * Logs a warning if the max age exceeds the threshold.
+ *
+ * @param {Pool} pool
+ * @param {string} table - Table name (e.g. 'scraper_queue', 'permits')
+ * @param {string} timestampCol - Column holding the "queued at" timestamp
+ * @param {{ where?: string, warnMinutes?: number, label?: string }} [options]
+ * @returns {Promise<{ maxAgeMinutes: number, count: number }>}
+ */
+async function checkQueueAge(pool, table, timestampCol, options = {}) {
+  const where = options.where ? `WHERE ${options.where}` : '';
+  const label = options.label || `[queue-age:${table}]`;
+  const warnMinutes = options.warnMinutes || 60;
+
+  const result = await pool.query(
+    `SELECT
+       COUNT(*)::int AS cnt,
+       EXTRACT(EPOCH FROM (NOW() - MIN(${quoteIdent(timestampCol)}))) / 60 AS max_age_minutes
+     FROM ${quoteIdent(table)} ${where}`
+  );
+
+  const row = result.rows[0];
+  const maxAgeMinutes = parseFloat(row.max_age_minutes) || 0;
+  const count = row.cnt;
+
+  if (maxAgeMinutes > warnMinutes) {
+    log.warn(label, `Queue age warning: oldest item is ${Math.round(maxAgeMinutes)}m old (threshold: ${warnMinutes}m)`, { table, maxAgeMinutes, count });
+  }
+
+  return { maxAgeMinutes, count };
+}
+
+// ---------------------------------------------------------------------------
+// Semantic Bounds Check (B22) — detects out-of-range values
+// ---------------------------------------------------------------------------
+
+/**
+ * Check column values against declared bounds. Logs warnings for violations.
+ *
+ * @param {Pool} pool
+ * @param {string} table
+ * @param {Record<string, { min?: number, max?: number }>} bounds
+ * @param {string} [label]
+ * @returns {Promise<Array<{ column: string, violations: number, min?: number, max?: number }>>}
+ */
+async function checkBounds(pool, table, bounds, label) {
+  const tag = label || `[bounds:${table}]`;
+  const results = [];
+
+  for (const [col, { min, max }] of Object.entries(bounds)) {
+    const conditions = [];
+    if (min !== undefined) conditions.push(`${quoteIdent(col)} < ${min}`);
+    if (max !== undefined) conditions.push(`${quoteIdent(col)} > ${max}`);
+    if (conditions.length === 0) continue;
+
+    const result = await pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM ${quoteIdent(table)} WHERE ${conditions.join(' OR ')}`
+    );
+    const violations = result.rows[0].cnt;
+    results.push({ column: col, violations, min, max });
+
+    if (violations > 0) {
+      log.warn(tag, `Bounds violation: ${violations} rows in ${table}.${col} outside [${min ?? '-∞'}, ${max ?? '∞'}]`, { table, column: col, violations, min, max });
+    }
+  }
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
 // Streaming Query — prevents OOM on large result sets (B4)
 // ---------------------------------------------------------------------------
 
@@ -467,6 +560,7 @@ async function* streamQuery(pool, sql, params = [], options = {}) {
 
 module.exports = {
   createPool,
+  classifyError,
   log,
   withTransaction,
   track,
@@ -476,6 +570,8 @@ module.exports = {
   progress,
   run,
   streamQuery,
+  checkQueueAge,
+  checkBounds,
   BATCH_SIZE,
   maxRowsPerInsert,
   isFullMode,
