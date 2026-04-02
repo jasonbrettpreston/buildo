@@ -153,10 +153,85 @@ pipeline.run('link-massing', async (pool) => {
   const FULL_MODE = pipeline.isFullMode();
   const startTime = Date.now();
 
-  pipeline.log.info('[link-massing]', `Mode: ${FULL_MODE ? 'FULL (rescan all parcels)' : 'INCREMENTAL (unlinked parcels only)'}`);
+  // Detect PostGIS for fast-path ST_Contains
+  const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
+  const hasPostGIS = pgisCheck.rows.length > 0;
+
+  pipeline.log.info('[link-massing]', `Mode: ${FULL_MODE ? 'FULL (rescan all parcels)' : 'INCREMENTAL (unlinked parcels only)'}${hasPostGIS ? ' [PostGIS]' : ' [JS fallback]'}`);
 
   // -----------------------------------------------------------------------
-  // Phase 1: Load all building footprints into in-memory grid index
+  // PostGIS fast path: ST_Contains with GiST index (B10/B11/B12)
+  // Bypasses entire in-memory grid + streamQuery + Turf.js loop.
+  // Single SQL query per batch using native spatial index.
+  // -----------------------------------------------------------------------
+  let processed = 0;
+  let containsMatches = 0;
+  let nearestMatches = 0;
+  let noMatch = 0;
+  let buildingsUpserted = 0;
+
+  if (hasPostGIS) {
+    pipeline.log.info('[link-massing]', 'Using PostGIS ST_Contains (fast path — no in-memory grid)');
+
+    const baseFilter = 'centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL';
+    const incrementalFilter = FULL_MODE
+      ? ''
+      : ' AND NOT EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = parcels.id)';
+    const countResult = await pool.query(
+      `SELECT COUNT(*) as total FROM parcels WHERE ${baseFilter}${incrementalFilter}`
+    );
+    const totalParcels = parseInt(countResult.rows[0].total, 10);
+    pipeline.log.info('[link-massing]', `Parcels to process: ${totalParcels.toLocaleString()}`);
+
+    // Process in keyset-paginated batches
+    let lastId = 0;
+    while (true) {
+      const parcelBatch = await pool.query(
+        `SELECT id, centroid_lat, centroid_lng FROM parcels
+         WHERE ${baseFilter}${incrementalFilter} AND id > $2
+         ORDER BY id ASC
+         LIMIT $1`,
+        [pipeline.BATCH_SIZE, lastId]
+      );
+      if (parcelBatch.rows.length === 0) break;
+      lastId = parcelBatch.rows[parcelBatch.rows.length - 1].id;
+
+      const parcelIds = parcelBatch.rows.map(p => p.id);
+      const parcelLats = parcelBatch.rows.map(p => parseFloat(p.centroid_lat));
+      const parcelLngs = parcelBatch.rows.map(p => parseFloat(p.centroid_lng));
+
+      // ST_Contains: find buildings whose polygon contains the parcel centroid
+      const matchResult = await pool.query(
+        `SELECT v.pid AS parcel_id, bf.id AS building_id, bf.footprint_area_sqm
+         FROM (SELECT unnest($1::int[]) AS pid, unnest($2::float[]) AS lat, unnest($3::float[]) AS lng) v
+         JOIN building_footprints bf ON bf.geom IS NOT NULL
+           AND ST_Contains(bf.geom, ST_SetSRID(ST_MakePoint(v.lng, v.lat), 4326))`,
+        [parcelIds, parcelLats, parcelLngs]
+      );
+
+      // Upsert matched parcel-building links
+      if (matchResult.rows.length > 0) {
+        buildingsUpserted += await upsertParcelBuildings(pool, matchResult.rows.map(r => ({
+          parcel_id: r.parcel_id,
+          building_id: r.building_id,
+          match_type: 'spatial_polygon',
+          footprint_area_sqm: parseFloat(r.footprint_area_sqm) || 0,
+        })));
+        containsMatches += matchResult.rows.length;
+      }
+
+      processed += parcelBatch.rows.length;
+      const matchedParcelIds = new Set(matchResult.rows.map(r => r.parcel_id));
+      noMatch += parcelBatch.rows.filter(p => !matchedParcelIds.has(p.id)).length;
+
+      if (processed % 10000 === 0 || processed >= totalParcels) {
+        pipeline.progress('link-massing', processed, totalParcels, startTime);
+      }
+    }
+  } else {
+
+  // -----------------------------------------------------------------------
+  // Phase 1 (JS fallback): Load all building footprints into in-memory grid index
   // -----------------------------------------------------------------------
   pipeline.log.info('[link-massing]', 'Streaming building footprints into grid index...');
   const loadStart = Date.now();
@@ -219,13 +294,9 @@ pipeline.run('link-massing', async (pool) => {
     }
   }
 
-  let processed = 0;
   let parcelsLinked = 0;
   let buildingsMatched = 0;  // algorithmic matches (candidates that hit)
-  let buildingsUpserted = 0; // actual DB writes (rowCount from IS DISTINCT FROM)
   let centroidInParcelMatches = 0;
-  let nearestMatches = 0;
-  let noMatch = 0;
   let lastId = 0; // keyset cursor — O(1) per batch via index seek
 
   while (true) {
@@ -425,6 +496,7 @@ pipeline.run('link-massing', async (pool) => {
       pipeline.progress('link-massing', processed, totalParcels, startTime);
     }
   }
+  } // end else (JS fallback)
 
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[link-massing]', 'Linking complete', {

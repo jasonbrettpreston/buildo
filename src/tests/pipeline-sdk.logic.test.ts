@@ -863,6 +863,51 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
+  // B10/B11/B12: PostGIS offloading — spatial scripts use ST_Contains/ST_Centroid
+  // -----------------------------------------------------------------------
+  describe('B10/B11/B12: PostGIS spatial offloading', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fsSpatial = require('fs');
+    const scriptDirSpatial = path.resolve(__dirname, '../../scripts');
+
+    it('compute-centroids.js uses ST_Centroid when PostGIS is available', () => {
+      const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, 'compute-centroids.js'), 'utf-8');
+      expect(content).toMatch(/ST_Centroid/);
+    });
+
+    it('link-neighbourhoods.js uses ST_Contains when PostGIS is available', () => {
+      const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-neighbourhoods.js'), 'utf-8');
+      expect(content).toMatch(/ST_Contains/);
+    });
+
+    it('link-parcels.js uses ST_Contains or ST_DWithin when PostGIS is available', () => {
+      const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-parcels.js'), 'utf-8');
+      expect(content).toMatch(/ST_Contains|ST_DWithin/);
+    });
+
+    it('link-massing.js uses ST_Contains when PostGIS is available', () => {
+      const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-massing.js'), 'utf-8');
+      expect(content).toMatch(/ST_Contains/);
+    });
+
+    it('all 4 spatial scripts detect PostGIS availability (hasPostGIS pattern)', () => {
+      const scripts = ['compute-centroids.js', 'link-neighbourhoods.js', 'link-parcels.js', 'link-massing.js'];
+      for (const script of scripts) {
+        const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, script), 'utf-8');
+        expect(content).toMatch(/hasPostGIS|pg_extension.*postgis/i);
+      }
+    });
+
+    it('migration 065 adds geom column to building_footprints', () => {
+      const migrationPath = path.resolve(__dirname, '../../migrations/065_building_footprints_geom.sql');
+      const content = fsSpatial.readFileSync(migrationPath, 'utf-8');
+      expect(content).toContain('building_footprints');
+      expect(content).toContain('geom');
+      expect(content).toContain('GiST');
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // B4: Memory overflow migration — scripts must use streaming patterns
   // -----------------------------------------------------------------------
   describe('B4: memory overflow scripts use streaming patterns', () => {

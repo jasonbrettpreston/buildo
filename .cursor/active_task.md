@@ -1,88 +1,67 @@
-# Active Task: WF2 — B20-B23 Deep Metrics SDK (Phase 4 Step 2)
+# Active Task: WF1 — PostGIS Spatial Offloading (B10/B11/B12)
 **Status:** Planning
-**Workflow:** WF2 — Feature Enhancement
-**Rollback Anchor:** `092f8ae`
+**Workflow:** WF1 — New Feature Genesis
+**Rollback Anchor:** `01a8348`
 
 ## Context
-* **Goal:** Add 4 remaining deep observability capabilities to the Pipeline SDK so all 32 non-Observer scripts automatically inherit them.
-* **Target Spec:** `docs/specs/pipeline/40_pipeline_system.md`
-* **Key Files:** `scripts/lib/pipeline.js`, `scripts/manifest.json`, `src/tests/pipeline-sdk.logic.test.ts`
-
-## State Verification
-| Feature | Status | Work Needed |
-|---------|--------|-------------|
-| B19 (Velocity) | **DONE** — commit `55ad567` | None |
-| B20 (Queue Age) | Missing | SDK helper + manifest schema |
-| B21 (Null Rates) | 7/28 scripts declare `telemetry_null_cols` | Expand declarations in manifest |
-| B22 (Semantic Bounds) | Partial — assert-data-bounds.js has domain-specific checks | Manifest-driven bounds schema |
-| B23 (Error Taxonomy) | Missing | Error categorization in SDK |
-| B24/B25 (Bloat Gate) | **DONE** — commit `55ad567` | None |
+* **Goal:** Move heavy spatial operations from JavaScript (Turf.js + custom ray-casting) into PostgreSQL PostGIS, leveraging existing GiST indexes for O(log n) spatial queries instead of O(n) client-side loops.
+* **Target Spec:** `docs/specs/pipeline/60_shared_steps.md`
+* **Key Files:** `scripts/compute-centroids.js`, `scripts/link-neighbourhoods.js`, `scripts/link-parcels.js`, `scripts/link-massing.js`, `migrations/065_building_footprints_geom.sql` (new)
 
 ## Technical Implementation
 
-### Feature 1: Error Taxonomy (B23) — in `pipeline.js`
-**Problem:** All errors are logged as plain strings. No way to distinguish timeout vs network vs parse vs DB errors in dashboards.
+### Migration: `065_building_footprints_geom.sql`
+**Problem:** `parcels` and `neighbourhoods` already have `geom` GEOMETRY columns with GiST indexes (migration 039), but `building_footprints` only has JSONB `geometry`. link-massing needs a native PostGIS column for `ST_Contains`.
 
-**Implementation:** Enhance `log.error()` to auto-detect error category:
-```js
-function classifyError(err) {
-  if (err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') return 'network';
-  if (err.code === 'ENOENT') return 'file_not_found';
-  if (err.name === 'SyntaxError' || err.message?.includes('JSON')) return 'parse';
-  if (err.code?.startsWith('23') || err.code?.startsWith('42')) return 'database'; // PG error codes
-  if (err.code === 'ABORT_ERR' || err.message?.includes('timeout')) return 'timeout';
-  return 'unknown';
-}
+**Implementation:**
+```sql
+-- UP
+ALTER TABLE building_footprints ADD COLUMN IF NOT EXISTS geom GEOMETRY(Geometry, 4326);
+UPDATE building_footprints SET geom = ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 4326) WHERE geometry IS NOT NULL AND geom IS NULL;
+CREATE INDEX IF NOT EXISTS idx_building_footprints_geom_gist ON building_footprints USING GiST (geom);
+-- DOWN
+DROP INDEX IF EXISTS idx_building_footprints_geom_gist;
+ALTER TABLE building_footprints DROP COLUMN IF EXISTS geom;
 ```
-Add `error_type` field to structured log output. Zero changes needed in scripts — they already use `pipeline.log.error()`.
 
-### Feature 2: Queue Age Tracking (B20) — in `pipeline.js`
-**Problem:** No visibility into how long items sit unprocessed in work queues.
+### Fix 1: `compute-centroids.js` — Quick Win
+**Current:** Fetches geometry as JSON, computes arithmetic mean of vertices in JS, bulk UPDATE.
+**Fix:** Single SQL statement: `UPDATE parcels SET centroid_lat = ST_Y(ST_Centroid(geom)), centroid_lng = ST_X(ST_Centroid(geom)) WHERE geom IS NOT NULL AND centroid_lat IS NULL`
+**Impact:** Eliminates entire JS loop. ~1 SQL query replaces ~200K row fetch + JS math + bulk UPDATE.
 
-**Implementation:** Add `checkQueueAge(pool, table, timestampCol, label)` helper that queries `MIN(timestampCol)` and logs the max queue age. Scripts that have queue-like patterns (incremental WHERE timestamp < X) can call this before processing.
+### Fix 2: `link-neighbourhoods.js` — Medium
+**Current:** Loads 158 neighbourhood polygons into Turf objects, tests each permit against all 158 with BBOX pre-filter + `booleanPointInPolygon`.
+**Fix:** Single SQL JOIN: `UPDATE permits p SET neighbourhood_id = n.id FROM neighbourhoods n WHERE ST_Contains(n.geom, ST_SetSRID(ST_MakePoint(p.longitude, p.latitude), 4326))`
+**Impact:** Eliminates Turf.js dependency, BBOX pre-filter (GiST handles this), and 158-polygon loop.
 
-### Feature 3: Null Rate Expansion (B21) — in `manifest.json`
-**Problem:** Only 7 of 28 scripts declare `telemetry_null_cols`. Key tables missing coverage.
+### Fix 3: `link-parcels.js` — Medium
+**Current:** Hand-coded ray-casting + haversine distance per permit, BBOX_OFFSET pre-filter.
+**Fix:** PostGIS `ST_Contains(parcel.geom, permit_point)` for polygon match, `ST_DWithin` for nearest-centroid fallback.
+**Impact:** Eliminates custom ray-casting code, haversine function, BBOX constants.
 
-**Implementation:** Add `telemetry_null_cols` to 12 more scripts in manifest:
-- `permits`: load_permits (add issued_date, description, builder_name)
-- `builders/entities`: extract_builders (add phone, email)
-- `permit_trades`: classify_permits (add classified_at)
-- `parcels`: load_parcels (add centroid_lat)
-- `building_footprints`: load_massing (add centroid_lat)
-- `neighbourhoods`: load_neighbourhoods (add geometry)
-
-### Feature 4: Semantic Bounds Schema (B22) — in `manifest.json` + SDK
-**Problem:** Bounds checking only exists in assert-data-bounds.js for permits/CoA. No generalized system.
-
-**Implementation:** Add optional `telemetry_bounds` to manifest.json script entries:
-```json
-"telemetry_bounds": {
-  "permits": {
-    "est_const_cost": { "min": 0, "max": 500000000 },
-    "storeys": { "min": 1, "max": 100 }
-  }
-}
-```
-Add `checkBounds(pool, table, bounds)` to SDK that runs `SELECT COUNT(*) FILTER (WHERE col < min OR col > max)` and logs violations. Opt-in — only scripts with `telemetry_bounds` in manifest run the check.
+### Fix 4: `link-massing.js` — Heavy (Biggest Win)
+**Current:** Loads ALL 400K+ building_footprints into V8 memory for in-memory grid index, then Turf `booleanPointInPolygon` per parcel.
+**Fix:** PostGIS `ST_Contains(bf.geom, parcel_point)` with GiST index. Eliminates the entire in-memory grid + streamQuery load.
+**Impact:** Removes the single largest memory consumer in the pipeline. O(log n) spatial index vs O(n) grid scan.
 
 ## Database Impact
-NO
+**YES** — Migration 065: Add `geom` column + GiST index to `building_footprints`.
+- Table size: ~400K rows
+- Backfill: `ST_GeomFromGeoJSON(geometry::text)` — CPU-intensive but one-time
+- Index: GiST spatial index for O(log n) queries
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — SDK internal (no API routes)
-* **Unhappy Path Tests:** Error classification unit tests, queue age edge cases
-* **logError Mandate:** N/A — enhancing the SDK log itself
-* **Mobile-First:** N/A — backend infrastructure
+* **Try-Catch Boundary:** Pipeline SDK handles errors (§9.4)
+* **Unhappy Path Tests:** NULL geometry handling, missing PostGIS extension fallback
+* **logError Mandate:** N/A — pipeline SDK logging
+* **Mobile-First:** N/A — backend scripts
 
 ## Execution Plan
-- [ ] **State Verification:** B19 + B24/B25 already done, 4 features remain
-- [ ] **Guardrail Test:** Tests for classifyError categories, checkQueueAge, manifest null_cols coverage
-- [ ] **Red Light:** Verify new tests fail
-- [ ] **Implementation:**
-  - [ ] Add `classifyError()` + `error_type` to `log.error()` (B23)
-  - [ ] Add `checkQueueAge()` helper (B20)
-  - [ ] Expand `telemetry_null_cols` in manifest.json (B21)
-  - [ ] Add `telemetry_bounds` schema + `checkBounds()` (B22)
-  - [ ] Update spec with new SDK exports
+- [ ] **Contract Definition:** N/A — no API routes
+- [ ] **Spec & Registry Sync:** Update `docs/specs/pipeline/60_shared_steps.md` with PostGIS methods. Run `npm run system-map`.
+- [ ] **Schema Evolution:** Write `migrations/065_building_footprints_geom.sql` (UP + DOWN). `npm run migrate`. `npm run db:generate`. `npm run typecheck`.
+- [ ] **Test Scaffolding:** Source-level tests asserting ST_Contains/ST_Centroid usage, no Turf.js imports
+- [ ] **Red Light:** Run tests — must fail
+- [ ] **Implementation:** Rewrite 4 scripts to use PostGIS SQL
+- [ ] **Auth Boundary & Secrets:** N/A
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6

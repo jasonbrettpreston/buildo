@@ -103,6 +103,11 @@ pipeline.run('link-parcels', async (pool) => {
   const fullMode = pipeline.isFullMode();
   const startTime = Date.now();
 
+  // Detect PostGIS for spatial query optimization (ST_Contains, ST_DWithin)
+  const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
+  const hasPostGIS = pgisCheck.rows.length > 0;
+  if (hasPostGIS) pipeline.log.info('[link-parcels]', 'PostGIS detected — spatial queries will use ST_Contains/ST_DWithin');
+
   pipeline.log.info('[link-parcels]', `Mode: ${fullMode ? 'FULL (all permits)' : 'INCREMENTAL (unlinked only)'}`);
 
   const addressFilter = `(street_num IS NOT NULL AND street_num != ''
@@ -251,7 +256,61 @@ pipeline.run('link-parcels', async (pool) => {
 
     const spatialMatched = new Map();
 
-    if (spatialPermits.length > 0) {
+    if (spatialPermits.length > 0 && hasPostGIS) {
+      // PostGIS fast path: ST_Contains for polygon match, ST_DWithin for centroid fallback
+      const spNums = spatialPermits.map(p => p.permit_num);
+      const spRevs = spatialPermits.map(p => p.revision_num);
+      const spLngs = spatialPermits.map(p => p.lng);
+      const spLats = spatialPermits.map(p => p.lat);
+
+      // Step 1: Polygon containment matches
+      const polyResult = await pool.query(
+        `SELECT v.pn AS permit_num, v.rv AS revision_num, pa.id AS parcel_id
+         FROM (SELECT unnest($1::text[]) AS pn, unnest($2::text[]) AS rv,
+                      unnest($3::float[]) AS lng, unnest($4::float[]) AS lat) v
+         JOIN parcels pa ON pa.geom IS NOT NULL
+           AND ST_Contains(pa.geom, ST_SetSRID(ST_MakePoint(v.lng, v.lat), 4326))`,
+        [spNums, spRevs, spLngs, spLats]
+      );
+      for (const row of polyResult.rows) {
+        const key = `${row.permit_num}|${row.revision_num}`;
+        spatialMatched.set(key, { parcel_id: row.parcel_id, match_type: 'spatial_polygon', confidence: 0.90 });
+        linkedSpatialPolygon++;
+        linkedSpatial++;
+      }
+
+      // Step 2: Centroid proximity fallback for unmatched permits
+      const unmatchedPermits = spatialPermits.filter(p => !spatialMatched.has(`${p.permit_num}|${p.revision_num}`));
+      if (unmatchedPermits.length > 0) {
+        const umNums = unmatchedPermits.map(p => p.permit_num);
+        const umRevs = unmatchedPermits.map(p => p.revision_num);
+        const umLngs = unmatchedPermits.map(p => p.lng);
+        const umLats = unmatchedPermits.map(p => p.lat);
+
+        const nearResult = await pool.query(
+          `SELECT DISTINCT ON (v.pn, v.rv) v.pn AS permit_num, v.rv AS revision_num, pa.id AS parcel_id
+           FROM (SELECT unnest($1::text[]) AS pn, unnest($2::text[]) AS rv,
+                        unnest($3::float[]) AS lng, unnest($4::float[]) AS lat) v
+           JOIN parcels pa ON pa.centroid_lat IS NOT NULL
+             AND ST_DWithin(
+               ST_SetSRID(ST_MakePoint(pa.centroid_lng::float, pa.centroid_lat::float), 4326)::geography,
+               ST_SetSRID(ST_MakePoint(v.lng, v.lat), 4326)::geography,
+               $5
+             )
+           ORDER BY v.pn, v.rv, ST_Distance(
+             ST_SetSRID(ST_MakePoint(pa.centroid_lng::float, pa.centroid_lat::float), 4326)::geography,
+             ST_SetSRID(ST_MakePoint(v.lng, v.lat), 4326)::geography
+           )`,
+          [umNums, umRevs, umLngs, umLats, SPATIAL_MAX_DISTANCE_M]
+        );
+        for (const row of nearResult.rows) {
+          const key = `${row.permit_num}|${row.revision_num}`;
+          spatialMatched.set(key, { parcel_id: row.parcel_id, match_type: 'spatial', confidence: SPATIAL_CONFIDENCE });
+          linkedSpatial++;
+        }
+      }
+    } else if (spatialPermits.length > 0) {
+      // JS fallback: BBOX pre-filter + ray-casting + haversine
       for (const permit of spatialPermits) {
         const candidates = await pool.query(
           `SELECT id, centroid_lat, centroid_lng, geometry FROM parcels
@@ -279,7 +338,6 @@ pipeline.run('link-parcels', async (pool) => {
         }
 
         if (bestId !== null && bestDist <= SPATIAL_MAX_DISTANCE_M) {
-          // Defensive: ensure geometry is parsed object (JSONB auto-parses, but safety first)
           let parsedGeom = bestGeometry;
           if (typeof bestGeometry === 'string') {
             try { parsedGeom = JSON.parse(bestGeometry); } catch { parsedGeom = null; }

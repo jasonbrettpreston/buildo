@@ -83,76 +83,100 @@ pipeline.run('compute-centroids', async (pool) => {
     return;
   }
 
+  // Detect PostGIS for fast-path ST_Centroid
+  const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
+  const hasPostGIS = pgisCheck.rows.length > 0;
+
   let processed = 0;
   let computed = 0;
   let failed = 0;
-  let lastId = 0;
 
-  while (true) {
-    // Cursor-based pagination: id > lastId prevents infinite loop on bad geometries
-    const batch = await pool.query(
-      `SELECT id, geometry FROM parcels
-       WHERE geometry IS NOT NULL AND centroid_lat IS NULL AND id > $1
-       ORDER BY id
-       LIMIT $2`,
-      [lastId, pipeline.BATCH_SIZE]
+  if (hasPostGIS) {
+    // PostGIS fast path: single SQL statement using ST_Centroid on the native geom column
+    pipeline.log.info('[compute-centroids]', 'Using PostGIS ST_Centroid (fast path)');
+    const result = await pool.query(
+      `UPDATE parcels SET
+         centroid_lat = ST_Y(ST_Centroid(geom)),
+         centroid_lng = ST_X(ST_Centroid(geom))
+       WHERE geom IS NOT NULL AND centroid_lat IS NULL
+       RETURNING id`
     );
+    computed = result.rows.length;
+    processed = computed;
+    // Count failures: parcels with geometry but no geom (failed GeoJSON conversion)
+    const failedResult = await pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM parcels WHERE geometry IS NOT NULL AND geom IS NULL AND centroid_lat IS NULL`
+    );
+    failed = failedResult.rows[0].cnt;
+    processed += failed;
+  } else {
+    // JS fallback: batch loop with arithmetic mean centroid
+    pipeline.log.info('[compute-centroids]', 'PostGIS not available — using JS centroid computation');
+    let lastId = 0;
 
-    if (batch.rows.length === 0) break;
-    lastId = batch.rows[batch.rows.length - 1].id;
+    while (true) {
+      const batch = await pool.query(
+        `SELECT id, geometry FROM parcels
+         WHERE geometry IS NOT NULL AND centroid_lat IS NULL AND id > $1
+         ORDER BY id
+         LIMIT $2`,
+        [lastId, pipeline.BATCH_SIZE]
+      );
 
-    // Compute centroids for this batch
-    const ids = [];
-    const lngs = [];
-    const lats = [];
+      if (batch.rows.length === 0) break;
+      lastId = batch.rows[batch.rows.length - 1].id;
 
-    for (const row of batch.rows) {
-      let geom;
-      try {
-        geom = typeof row.geometry === 'string'
-          ? JSON.parse(row.geometry)
-          : row.geometry;
-      } catch (err) {
-        pipeline.log.warn('[compute-centroids]', `Skipping parcel ${row.id}: malformed geometry JSON — ${err.message}`);
-        failed++;
+      const ids = [];
+      const lngs = [];
+      const lats = [];
+
+      for (const row of batch.rows) {
+        let geom;
+        try {
+          geom = typeof row.geometry === 'string'
+            ? JSON.parse(row.geometry)
+            : row.geometry;
+        } catch (err) {
+          pipeline.log.warn('[compute-centroids]', `Skipping parcel ${row.id}: malformed geometry JSON — ${err.message}`);
+          failed++;
+          processed++;
+          continue;
+        }
+
+        const centroid = computeCentroid(geom);
+
+        if (centroid) {
+          ids.push(row.id);
+          lngs.push(centroid[0]);
+          lats.push(centroid[1]);
+          computed++;
+        } else {
+          failed++;
+        }
+
         processed++;
-        continue;
       }
 
-      const centroid = computeCentroid(geom);
-
-      if (centroid) {
-        ids.push(row.id);
-        lngs.push(centroid[0]);
-        lats.push(centroid[1]);
-        computed++;
-      } else {
-        failed++;
+      if (ids.length > 0) {
+        await pipeline.withTransaction(pool, async (client) => {
+          await client.query(
+            `UPDATE parcels AS p SET
+               centroid_lng = v.lng,
+               centroid_lat = v.lat
+             FROM (
+               SELECT unnest($1::int[]) AS id,
+                      unnest($2::float[]) AS lng,
+                      unnest($3::float[]) AS lat
+             ) AS v
+             WHERE p.id = v.id`,
+            [ids, lngs, lats]
+          );
+        });
       }
 
-      processed++;
-    }
-
-    // Bulk update using unnest — single query instead of N+1
-    if (ids.length > 0) {
-      await pipeline.withTransaction(pool, async (client) => {
-        await client.query(
-          `UPDATE parcels AS p SET
-             centroid_lng = v.lng,
-             centroid_lat = v.lat
-           FROM (
-             SELECT unnest($1::int[]) AS id,
-                    unnest($2::float[]) AS lng,
-                    unnest($3::float[]) AS lat
-           ) AS v
-           WHERE p.id = v.id`,
-          [ids, lngs, lats]
-        );
-      });
-    }
-
-    if (processed % 50000 === 0 || processed >= totalParcels) {
-      pipeline.progress('compute-centroids', processed, totalParcels, startTime);
+      if (processed % 50000 === 0 || processed >= totalParcels) {
+        pipeline.progress('compute-centroids', processed, totalParcels, startTime);
+      }
     }
   }
 

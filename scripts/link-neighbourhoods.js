@@ -60,6 +60,10 @@ function computeBBox(geom) {
 pipeline.run('link-neighbourhoods', async (pool) => {
   const startTime = Date.now();
 
+  // Detect PostGIS for fast-path ST_Contains
+  const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
+  const hasPostGIS = pgisCheck.rows.length > 0;
+
   pipeline.log.info('[link-neighbourhoods]', 'Loading neighbourhood boundaries...');
   const nhoods = await pool.query(
     'SELECT id, neighbourhood_id, name, geometry FROM neighbourhoods WHERE geometry IS NOT NULL'
@@ -140,6 +144,33 @@ pipeline.run('link-neighbourhoods', async (pool) => {
   let linked = 0;
   let noMatch = 0;
   let polygonTestsSkipped = 0;
+
+  // PostGIS fast path: single UPDATE using ST_Contains with GiST index
+  if (hasPostGIS) {
+    pipeline.log.info('[link-neighbourhoods]', 'Using PostGIS ST_Contains (fast path)');
+    const result = await pool.query(
+      `UPDATE permits p SET neighbourhood_id = n.id
+       FROM neighbourhoods n
+       WHERE n.geom IS NOT NULL
+         AND p.neighbourhood_id IS NULL
+         AND p.latitude IS NOT NULL AND p.longitude IS NOT NULL
+         AND ST_Contains(n.geom, ST_SetSRID(ST_MakePoint(p.longitude::float, p.latitude::float), 4326))
+       RETURNING p.permit_num`
+    );
+    linked = result.rows.length;
+    processed = linked;
+
+    // Count unmatched (permits with coords but no neighbourhood match)
+    const unmatchedResult = await pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM permits
+       WHERE neighbourhood_id IS NULL AND latitude IS NOT NULL AND longitude IS NOT NULL`
+    );
+    noMatch = unmatchedResult.rows[0].cnt;
+    processed += noMatch;
+  } else {
+    // JS fallback: batch loop with Turf.js booleanPointInPolygon
+    pipeline.log.info('[link-neighbourhoods]', 'PostGIS not available — using Turf.js point-in-polygon');
+
   let lastPermitNum = '';
   let lastRevisionNum = '';
 
@@ -264,6 +295,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
 
     pipeline.progress('link-neighbourhoods', processed, totalPermits, startTime);
   }
+  } // end else (JS fallback)
 
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[link-neighbourhoods]', 'Linking complete', {
