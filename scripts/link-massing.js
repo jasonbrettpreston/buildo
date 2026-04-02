@@ -158,18 +158,20 @@ pipeline.run('link-massing', async (pool) => {
   // -----------------------------------------------------------------------
   // Phase 1: Load all building footprints into in-memory grid index
   // -----------------------------------------------------------------------
-  pipeline.log.info('[link-massing]', 'Loading building footprints into memory...');
+  pipeline.log.info('[link-massing]', 'Streaming building footprints into grid index...');
   const loadStart = Date.now();
-  const bfResult = await pool.query(
+  let totalBuildings = 0;
+
+  // Build grid index: Map<cellKey, building[]>
+  // Uses streamQuery to avoid loading the entire building_footprints table into V8 memory.
+  // The grid Map itself must be in memory (it's the spatial index), but the raw pg result
+  // buffer is freed row-by-row instead of holding all rows simultaneously.
+  const grid = new Map();
+  for await (const row of pipeline.streamQuery(pool,
     `SELECT id, geometry, footprint_area_sqm, centroid_lat, centroid_lng
      FROM building_footprints
      WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL`
-  );
-  const totalBuildings = bfResult.rows.length;
-
-  // Build grid index: Map<cellKey, building[]>
-  const grid = new Map();
-  for (const row of bfResult.rows) {
+  )) {
     const lat = parseFloat(row.centroid_lat);
     const lng = parseFloat(row.centroid_lng);
     const key = gridKey(lat, lng);
@@ -181,9 +183,8 @@ pipeline.run('link-massing', async (pool) => {
       centroid_lat: lat,
       centroid_lng: lng,
     });
+    totalBuildings++;
   }
-  // Free the raw result rows — grid now owns the data
-  bfResult.rows.length = 0;
 
   const loadElapsed = ((Date.now() - loadStart) / 1000).toFixed(1);
   pipeline.log.info('[link-massing]', `Loaded ${totalBuildings.toLocaleString()} buildings into ${grid.size.toLocaleString()} grid cells (${loadElapsed}s)`);

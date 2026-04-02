@@ -682,6 +682,45 @@ describe('Pipeline SDK', () => {
     }
   });
 
+  // -----------------------------------------------------------------------
+  // B4: Memory overflow migration — scripts must use streaming patterns
+  // -----------------------------------------------------------------------
+  describe('B4: memory overflow scripts use streaming patterns', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fsB4 = require('fs');
+    const scriptDirB4 = path.resolve(__dirname, '../../scripts');
+
+    // link-massing.js: must use streamQuery for building footprints grid build
+    it('link-massing.js uses streamQuery for building footprint loading (not pool.query)', () => {
+      const content = fsB4.readFileSync(path.join(scriptDirB4, 'link-massing.js'), 'utf-8');
+      // The grid build section must use streamQuery, not pool.query for the full table load
+      const gridSection = content.slice(
+        content.indexOf('building footprints'),
+        content.indexOf('Phase 2') > 0 ? content.indexOf('Phase 2') : content.length
+      );
+      expect(gridSection).toMatch(/streamQuery/);
+      // Must NOT load all rows into memory via pool.query for the full footprints table
+      expect(gridSection).not.toMatch(/await pool\.query\(\s*\n?\s*`SELECT id, geometry/);
+    });
+
+    // enrich-wsib.js: must use streamQuery for enrichment queue
+    it('enrich-wsib.js uses streamQuery for enrichment queue (not destructured pool.query)', () => {
+      const content = fsB4.readFileSync(path.join(scriptDirB4, 'enrich-wsib.js'), 'utf-8');
+      // Must NOT destructure full result set: { rows: entries }
+      expect(content).not.toMatch(/\{\s*rows:\s*entries\s*\}\s*=\s*await pool\.query/);
+      // Must use streamQuery or cursor-based iteration
+      expect(content).toMatch(/streamQuery|for await/);
+    });
+
+    // load-wsib.js: dedup Map must flush in batches, not accumulate all rows
+    it('load-wsib.js flushes dedup batch periodically (not unbounded accumulation)', () => {
+      const content = fsB4.readFileSync(path.join(scriptDirB4, 'load-wsib.js'), 'utf-8');
+      // Must have a batch flush inside the parsing section (not just the initial declaration)
+      // Look for seen.clear() or a DEDUP_FLUSH_SIZE constant that triggers periodic upsert+clear
+      expect(content).toMatch(/seen\.clear\(\)|DEDUP_FLUSH/);
+    });
+  });
+
   describe('B22: early-exit scripts must still emit summary and meta', () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const fs2 = require('fs');

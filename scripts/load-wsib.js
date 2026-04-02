@@ -128,13 +128,81 @@ pipeline.run('load-wsib', async (pool) => {
     }
   }
 
-  // Parse CSV and collect Class G rows, de-duplicated
-  const seen = new Map(); // key: legal_name_normalized|mailing_address
+  // Parse CSV and collect Class G rows, de-duplicated.
+  // Uses batch-flush pattern (B4): the dedup key Set stays in memory (small strings),
+  // but row data is flushed to DB every DEDUP_FLUSH_SIZE rows to cap peak memory.
+  const DEDUP_FLUSH_SIZE = 5000;
+  const seenKeys = new Set(); // key: legal_name_normalized|mailing_address (dedup tracking)
+  let pendingRows = []; // row data buffer — flushed periodically
   let totalRows = 0;
   let gRows = 0;
   let skippedNonG = 0;
   let skippedNoName = 0;
   let headerValidated = false;
+  let inserted = 0;
+  let updated = 0;
+
+  // Upsert helper — flushes a batch of rows to wsib_registry
+  async function flushBatch(rowsToFlush) {
+    if (rowsToFlush.length === 0) return;
+    const BATCH = 2000;
+    await pipeline.withTransaction(pool, async (client) => {
+      for (let i = 0; i < rowsToFlush.length; i += BATCH) {
+        const batch = rowsToFlush.slice(i, i + BATCH);
+        const values = [];
+        const placeholders = [];
+
+        for (let j = 0; j < batch.length; j++) {
+          const r = batch[j];
+          const offset = j * 11;
+          placeholders.push(
+            `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, NOW())`
+          );
+          values.push(
+            r.legal_name, r.trade_name, r.legal_name_normalized, r.trade_name_normalized,
+            r.mailing_address, r.predominant_class, r.naics_code, r.naics_description,
+            r.subclass, r.subclass_description, r.business_size
+          );
+        }
+
+        if (values.length > 65000) {
+          throw new Error(`Batch too large: ${values.length} params (limit 65535)`);
+        }
+
+        const result = await client.query(`
+          INSERT INTO wsib_registry (
+            legal_name, trade_name, legal_name_normalized, trade_name_normalized,
+            mailing_address, predominant_class, naics_code, naics_description,
+            subclass, subclass_description, business_size, last_seen_at
+          ) VALUES ${placeholders.join(', ')}
+          ON CONFLICT (legal_name_normalized, mailing_address)
+          DO UPDATE SET
+            trade_name = EXCLUDED.trade_name,
+            trade_name_normalized = EXCLUDED.trade_name_normalized,
+            predominant_class = EXCLUDED.predominant_class,
+            naics_code = EXCLUDED.naics_code,
+            naics_description = EXCLUDED.naics_description,
+            subclass = EXCLUDED.subclass,
+            subclass_description = EXCLUDED.subclass_description,
+            business_size = EXCLUDED.business_size,
+            last_seen_at = NOW()
+          WHERE wsib_registry.trade_name IS DISTINCT FROM EXCLUDED.trade_name
+             OR wsib_registry.trade_name_normalized IS DISTINCT FROM EXCLUDED.trade_name_normalized
+             OR wsib_registry.predominant_class IS DISTINCT FROM EXCLUDED.predominant_class
+             OR wsib_registry.naics_code IS DISTINCT FROM EXCLUDED.naics_code
+             OR wsib_registry.naics_description IS DISTINCT FROM EXCLUDED.naics_description
+             OR wsib_registry.subclass IS DISTINCT FROM EXCLUDED.subclass
+             OR wsib_registry.subclass_description IS DISTINCT FROM EXCLUDED.subclass_description
+             OR wsib_registry.business_size IS DISTINCT FROM EXCLUDED.business_size
+          RETURNING (xmax = 0) AS is_insert
+        `, values);
+
+        const batchNew = result.rows.filter(r => r.is_insert).length;
+        inserted += batchNew;
+        updated += result.rows.length - batchNew;
+      }
+    });
+  }
 
   await new Promise((resolve, reject) => {
     const parser = fs.createReadStream(filePath, 'utf-8')
@@ -151,7 +219,6 @@ pipeline.run('load-wsib', async (pool) => {
       // Validate header on first row
       if (!headerValidated) {
         const cols = Object.keys(row);
-        // Check critical columns exist (CSV has duplicate "Description" so check by key names)
         const required = ['Legal name', 'Predominant class', 'Mailing Address'];
         for (const req of required) {
           if (!cols.includes(req)) {
@@ -165,7 +232,6 @@ pipeline.run('load-wsib', async (pool) => {
       const predominantClass = (row['Predominant class'] || '').trim();
       const subclass = (row['Class/subclass'] || '').trim();
 
-      // Filter: keep rows where predominant class OR subclass starts with G
       if (!predominantClass.startsWith('G') && !subclass.startsWith('G')) {
         skippedNonG++;
         return;
@@ -182,19 +248,24 @@ pipeline.run('load-wsib', async (pool) => {
       const tradeNorm = normalizeName(tradeName);
       const address = (row['Mailing Address'] || '').trim() || null;
 
-      // De-duplicate: keep first G-subclass row per (legal_name_normalized, address)
+      // De-duplicate: keep first G-subclass row per (legal_name_normalized, address).
+      // The key Set stays in memory (small strings); row data is flushed periodically.
       const dedupeKey = `${legalNorm}|${address || ''}`;
-      if (seen.has(dedupeKey)) {
-        // If existing entry doesn't have a G subclass but this one does, replace
-        const existing = seen.get(dedupeKey);
-        if (!existing.predominant_class.startsWith('G') && predominantClass.startsWith('G')) {
-          seen.set(dedupeKey, buildRow(row, legalName, legalNorm, tradeName, tradeNorm, address, predominantClass, subclass));
-        }
-        return;
-      }
+      if (seenKeys.has(dedupeKey)) return;
+      seenKeys.add(dedupeKey);
 
-      seen.set(dedupeKey, buildRow(row, legalName, legalNorm, tradeName, tradeNorm, address, predominantClass, subclass));
+      pendingRows.push(buildRow(row, legalName, legalNorm, tradeName, tradeNorm, address, predominantClass, subclass));
       gRows++;
+
+      // Batch-flush: upsert pending rows to DB and free memory
+      if (pendingRows.length >= DEDUP_FLUSH_SIZE) {
+        parser.pause();
+        flushBatch(pendingRows).then(() => {
+          pipeline.log.info('[load-wsib]', `Flushed ${pendingRows.length} rows (${gRows.toLocaleString()} total Class G)`);
+          pendingRows = [];
+          parser.resume();
+        }).catch(reject);
+      }
 
       if (totalRows % 50000 === 0) {
         pipeline.log.info('[load-wsib]', `${totalRows.toLocaleString()} rows read, ${gRows.toLocaleString()} Class G kept`);
@@ -205,78 +276,13 @@ pipeline.run('load-wsib', async (pool) => {
     parser.on('end', resolve);
   });
 
+  // Flush remaining rows
+  await flushBatch(pendingRows);
+  pendingRows = [];
+
   pipeline.log.info('[load-wsib]', 'Parsing complete', {
     total_csv_rows: totalRows, non_g_skipped: skippedNonG,
-    no_name_skipped: skippedNoName, unique_class_g: seen.size,
-  });
-
-  pipeline.log.info('[load-wsib]', 'Upserting into wsib_registry...');
-  let inserted = 0;
-  let updated = 0;
-
-  const rows = Array.from(seen.values());
-  const BATCH = 2000;
-
-  await pipeline.withTransaction(pool, async (client) => {
-    for (let i = 0; i < rows.length; i += BATCH) {
-      const batch = rows.slice(i, i + BATCH);
-      const values = [];
-      const placeholders = [];
-
-      for (let j = 0; j < batch.length; j++) {
-        const r = batch[j];
-        const offset = j * 11;
-        placeholders.push(
-          `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, NOW())`
-        );
-        values.push(
-          r.legal_name, r.trade_name, r.legal_name_normalized, r.trade_name_normalized,
-          r.mailing_address, r.predominant_class, r.naics_code, r.naics_description,
-          r.subclass, r.subclass_description, r.business_size
-        );
-      }
-
-      // Check param count stays under PostgreSQL 65535 limit
-      if (values.length > 65000) {
-        throw new Error(`Batch too large: ${values.length} params (limit 65535)`);
-      }
-
-      const result = await client.query(`
-        INSERT INTO wsib_registry (
-          legal_name, trade_name, legal_name_normalized, trade_name_normalized,
-          mailing_address, predominant_class, naics_code, naics_description,
-          subclass, subclass_description, business_size, last_seen_at
-        ) VALUES ${placeholders.join(', ')}
-        ON CONFLICT (legal_name_normalized, mailing_address)
-        DO UPDATE SET
-          trade_name = EXCLUDED.trade_name,
-          trade_name_normalized = EXCLUDED.trade_name_normalized,
-          predominant_class = EXCLUDED.predominant_class,
-          naics_code = EXCLUDED.naics_code,
-          naics_description = EXCLUDED.naics_description,
-          subclass = EXCLUDED.subclass,
-          subclass_description = EXCLUDED.subclass_description,
-          business_size = EXCLUDED.business_size,
-          last_seen_at = NOW()
-        WHERE wsib_registry.trade_name IS DISTINCT FROM EXCLUDED.trade_name
-           OR wsib_registry.trade_name_normalized IS DISTINCT FROM EXCLUDED.trade_name_normalized
-           OR wsib_registry.predominant_class IS DISTINCT FROM EXCLUDED.predominant_class
-           OR wsib_registry.naics_code IS DISTINCT FROM EXCLUDED.naics_code
-           OR wsib_registry.naics_description IS DISTINCT FROM EXCLUDED.naics_description
-           OR wsib_registry.subclass IS DISTINCT FROM EXCLUDED.subclass
-           OR wsib_registry.subclass_description IS DISTINCT FROM EXCLUDED.subclass_description
-           OR wsib_registry.business_size IS DISTINCT FROM EXCLUDED.business_size
-        RETURNING (xmax = 0) AS is_insert
-      `, values);
-
-      const batchNew = result.rows.filter(r => r.is_insert).length;
-      inserted += batchNew;
-      updated += result.rows.length - batchNew;
-
-      if ((i + BATCH) % 10000 < BATCH) {
-        pipeline.progress('load-wsib', Math.min(i + BATCH, rows.length), rows.length, startMs);
-      }
-    }
+    no_name_skipped: skippedNoName, unique_class_g: seenKeys.size,
   });
 
   const durationMs = Date.now() - startMs;
@@ -302,7 +308,7 @@ pipeline.run('load-wsib', async (pool) => {
     { "wsib_registry": ["legal_name", "trade_name", "legal_name_normalized", "trade_name_normalized", "mailing_address", "predominant_class", "naics_code", "naics_description", "subclass", "subclass_description", "business_size", "last_seen_at"] }
   );
 
-  const gRowCount = seen.size;
+  const gRowCount = seenKeys.size;
   const skipNoNameRate = gRowCount + skippedNoName > 0
     ? (skippedNoName / (gRowCount + skippedNoName)) * 100 : 0;
   const skipNoNameRateStr = skipNoNameRate.toFixed(1) + '%';

@@ -266,8 +266,33 @@ pipeline.run('enrich-wsib', async (pool) => {
     }
   }
 
-  // Queue: unenriched WSIB entries, prioritized by business size
-  const { rows: entries } = await pool.query(`
+  // Queue: unenriched WSIB entries, prioritized by business size.
+  // Uses streamQuery to avoid materializing the full result set upfront (B4).
+  // Pre-count for progress logging since streamQuery doesn't know total rows.
+  const countResult = await pool.query(`
+    SELECT COUNT(*) AS cnt FROM wsib_registry
+    WHERE last_enriched_at IS NULL
+      AND (trade_name IS NOT NULL OR legal_name IS NOT NULL)
+  `);
+  const totalEntries = Math.min(parseInt(countResult.rows[0].cnt, 10), limit);
+
+  pipeline.log.info('[enrich-wsib]', `Found ${totalEntries} unenriched WSIB entries`);
+  if (totalEntries === 0) {
+    pipeline.log.info('[enrich-wsib]', 'Nothing to enrich.');
+    await finalize(pool, runId, startMs, 0, 0, 0, { processed: 0, matched: 0, failed: 0, skipped: {} });
+    return;
+  }
+
+  let enriched = 0;
+  let contactsFound = 0;
+  let failed = 0;
+  const fieldCounts = { phone: 0, email: 0, website: 0 };
+  let websitesScraped = 0;
+  const skipped = { no_search_name: 0, generic_trade_name: 0 };
+  const sizeBreakdown = { large: 0, medium: 0, small: 0 };
+  let i = 0;
+
+  for await (const entry of pipeline.streamQuery(pool, `
     SELECT
       id,
       legal_name,
@@ -290,37 +315,17 @@ pipeline.run('enrich-wsib', async (pool) => {
       trade_name IS NOT NULL DESC,
       legal_name
     LIMIT $1
-  `, [limit]);
-
-  pipeline.log.info('[enrich-wsib]', `Found ${entries.length} unenriched WSIB entries`);
-  if (entries.length === 0) {
-    pipeline.log.info('[enrich-wsib]', 'Nothing to enrich.');
-    await finalize(pool, runId, startMs, 0, 0, 0, { processed: 0, matched: 0, failed: 0, skipped: {} });
-    return;
-  }
-
-  const sizeBreakdown = {
-    large: entries.filter(e => e.business_size === 'Large Business').length,
-    medium: entries.filter(e => e.business_size === 'Medium Business').length,
-    small: entries.filter(e => e.business_size === 'Small Business').length,
-  };
-  pipeline.log.info('[enrich-wsib]', `  Large: ${sizeBreakdown.large} | Medium: ${sizeBreakdown.medium} | Small: ${sizeBreakdown.small}`);
-
-  let enriched = 0;
-  let contactsFound = 0;
-  let failed = 0;
-  const fieldCounts = { phone: 0, email: 0, website: 0 };
-  let websitesScraped = 0;
-  const skipped = { no_search_name: 0, generic_trade_name: 0 };
-
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
+  `, [limit])) {
+    // Track size breakdown as we stream
+    if (entry.business_size === 'Large Business') sizeBreakdown.large++;
+    else if (entry.business_size === 'Medium Business') sizeBreakdown.medium++;
+    else if (entry.business_size === 'Small Business') sizeBreakdown.small++;
 
     // Pre-flight filter
     const skipResult = shouldSkipWsibEntry(entry);
     if (skipResult.skip) {
       skipped[skipResult.reason]++;
-      pipeline.log.info('[enrich-wsib]', `  [${i + 1}/${entries.length}] SKIP (${skipResult.reason}): ${entry.trade_name || entry.legal_name}`);
+      pipeline.log.info('[enrich-wsib]', `  [${i + 1}/${totalEntries}] SKIP (${skipResult.reason}): ${entry.trade_name || entry.legal_name}`);
       if (!dryRun) {
         await pool.query(
           'UPDATE wsib_registry SET last_enriched_at = NOW() WHERE id = $1',
@@ -334,7 +339,7 @@ pipeline.run('enrich-wsib', async (pool) => {
 
     try {
       if (dryRun) {
-        pipeline.log.info('[enrich-wsib]', `  [${i + 1}/${entries.length}] ${entry.trade_name || entry.legal_name} → query: ${query}`);
+        pipeline.log.info('[enrich-wsib]', `  [${i + 1}/${totalEntries}] ${entry.trade_name || entry.legal_name} → query: ${query}`);
         enriched++;
         continue;
       }
@@ -414,7 +419,7 @@ pipeline.run('enrich-wsib', async (pool) => {
         contacts.website ? '🌐' : '',
       ].filter(Boolean).join(' ') || 'no contacts';
 
-      pipeline.log.info('[enrich-wsib]', `  [${i + 1}/${entries.length}] ${entry.trade_name || entry.legal_name} (${entry.business_size || 'unknown'}) → ${summary}`);
+      pipeline.log.info('[enrich-wsib]', `  [${i + 1}/${totalEntries}] ${entry.trade_name || entry.legal_name} (${entry.business_size || 'unknown'}) → ${summary}`);
 
     } catch (err) {
       pipeline.log.error('[enrich-wsib]', err, { wsib_id: entry.id, name: entry.trade_name || entry.legal_name });
@@ -427,8 +432,11 @@ pipeline.run('enrich-wsib', async (pool) => {
     }
 
     // Rate limiting
-    if (i < entries.length - 1) await sleep(RATE_LIMIT_MS);
+    if (i < totalEntries - 1) await sleep(RATE_LIMIT_MS);
+    i++;
   }
+
+  pipeline.log.info('[enrich-wsib]', `  Large: ${sizeBreakdown.large} | Medium: ${sizeBreakdown.medium} | Small: ${sizeBreakdown.small}`);
 
   const totalSkipped = Object.values(skipped).reduce((a, b) => a + b, 0);
   pipeline.log.info('[enrich-wsib]', `Skipped ${totalSkipped} entries`, skipped);
