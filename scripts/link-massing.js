@@ -244,13 +244,12 @@ pipeline.run('link-massing', async (pool) => {
   // -----------------------------------------------------------------------
   pipeline.log.info('[link-massing]', 'Streaming building footprints into grid index...');
   const loadStart = Date.now();
-  let totalBuildings = 0;
 
   // Build grid index: Map<cellKey, building[]>
   // Uses streamQuery to avoid loading the entire building_footprints table into V8 memory.
   // The grid Map itself must be in memory (it's the spatial index), but the raw pg result
   // buffer is freed row-by-row instead of holding all rows simultaneously.
-  const grid = new Map();
+  // NOTE: grid and totalBuildings declared in outer scope (line 172/176) — no re-declaration here.
   for await (const row of pipeline.streamQuery(pool,
     `SELECT id, geometry, footprint_area_sqm, centroid_lat, centroid_lng
      FROM building_footprints
@@ -527,11 +526,11 @@ pipeline.run('link-massing', async (pool) => {
   const cumulativeLinked = parseInt(cumulativeResult.rows[0].linked, 10);
   const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
   const massingLinkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
-  const massingHasFails = totalBuildings === 0;
+  const massingHasFails = !hasPostGIS && totalBuildings === 0;
   const massingHasWarns = massingLinkRate < 50;
   const massingAuditRows = [
-    { metric: 'buildings_indexed', value: totalBuildings, threshold: '> 0', status: totalBuildings > 0 ? 'PASS' : 'FAIL' },
-    { metric: 'grid_cells', value: grid.size, threshold: null, status: 'INFO' },
+    { metric: 'buildings_indexed', value: totalBuildings, threshold: hasPostGIS ? null : '> 0', status: hasPostGIS ? 'INFO' : (totalBuildings > 0 ? 'PASS' : 'FAIL') },
+    { metric: 'grid_cells', value: hasPostGIS ? 'N/A (PostGIS)' : grid.size, threshold: null, status: 'INFO' },
     { metric: 'parcels_processed', value: processed, threshold: null, status: 'INFO' },
     { metric: 'run_matched', value: parcelsLinked, threshold: null, status: 'INFO' },
     { metric: 'match_centroid_in_parcel', value: centroidInParcelMatches, threshold: null, status: 'INFO' },

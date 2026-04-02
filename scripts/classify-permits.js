@@ -544,7 +544,7 @@ pipeline.run('classify-permits', async (pool) => {
   let permitsWithTrades = 0;
   let dbUpdated = 0;
   let lastPermitNum = '';
-  let lastRevisionNum = 0;
+  let lastRevisionNum = '';
 
   while (true) {
     // Keyset pagination — O(1) per batch via index seek on (permit_num, revision_num)
