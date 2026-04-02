@@ -683,6 +683,41 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
+  // B1/B3: reclassify-all.js — keyset pagination + SDK migration
+  // -----------------------------------------------------------------------
+  describe('B1/B3: reclassify-all.js uses keyset pagination and pipeline SDK', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fsB1 = require('fs');
+    const reclassifyPath = path.resolve(__dirname, '../../scripts/reclassify-all.js');
+
+    it('does NOT use SQL OFFSET (B1)', () => {
+      const content = fsB1.readFileSync(reclassifyPath, 'utf-8');
+      // Extract SQL queries (backtick-delimited) and check none use OFFSET
+      const sqlBlocks = content.match(/`[^`]+`/g) || [];
+      const withOffset = sqlBlocks.filter((b: string) => /\bOFFSET\b/i.test(b));
+      expect(withOffset).toHaveLength(0);
+    });
+
+    it('uses keyset WHERE pagination (composite tuple cursor)', () => {
+      const content = fsB1.readFileSync(reclassifyPath, 'utf-8');
+      // Must use (permit_num, revision_num) > ($x, $y) pattern
+      expect(content).toMatch(/permit_num.*revision_num.*>\s*\(\$\d/);
+    });
+
+    it('uses pipeline.run() for lifecycle management', () => {
+      const content = fsB1.readFileSync(reclassifyPath, 'utf-8');
+      expect(content).toMatch(/pipeline\.run\(/);
+      // Must NOT create its own Pool
+      expect(content).not.toMatch(/new pg\.Pool|new Pool\(/);
+    });
+
+    it('emits PIPELINE_SUMMARY', () => {
+      const content = fsB1.readFileSync(reclassifyPath, 'utf-8');
+      expect(content).toMatch(/pipeline\.emitSummary\(/);
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // B4: Memory overflow migration — scripts must use streaming patterns
   // -----------------------------------------------------------------------
   describe('B4: memory overflow scripts use streaming patterns', () => {
