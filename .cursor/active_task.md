@@ -1,36 +1,56 @@
-# Active Task: Fix classify-permits.js — 3 bugs
+# Active Task: WF2 — Bug Rubric Phase 0 (Archetype Taxonomy + Exemption Pruning)
 **Status:** Planning
-**Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `3a074ee`
+**Workflow:** WF2 — Feature Enhancement
+**Rollback Anchor:** `da4a36f`
 
 ## Context
-* **Goal:** Fix 3 bugs in the trade classification script: N+1 ghost cleanup, rowCount metric inaccuracy, and hardcoded VACUUM
-* **Target Spec:** `docs/specs/pipeline/80_taxonomies.md`
-* **Key Files:** `scripts/classify-permits.js`, `src/tests/classification.logic.test.ts`
-
-## Bug Inventory
-| # | Bug | Severity | Verdict |
-|---|-----|----------|---------|
-| 1 | N+1 Ghost Trade Cleanup | HIGH | **CONFIRMED** — Lines 660-669: individual DELETE per permit inside a for loop while holding a transaction lock. 900 permits = 900 sequential round-trips. Fix: batch with unnest(). |
-| 2 | rowCount Trap | MEDIUM | **CONFIRMED** — Line 641: `dbUpdated += result.rowCount` accumulates the raw rowCount from ON CONFLICT DO UPDATE upserts. Use RETURNING to count actual mutations accurately. |
-| 3 | Hardcoded VACUUM | MEDIUM | **CONFIRMED** — Line 706: `VACUUM ANALYZE permit_trades` causes I/O spikes, ties up connection pool. PostgreSQL autovacuum handles this. Remove. |
+* **Goal:** Rewrite `docs/reports/15_bug_rubric_evaluation.md` to apply archetype taxonomy and exemption rules, replacing ~60% false positive FAILs with EXEMPT, and incorporating fixes already applied this session.
+* **Target Spec:** `docs/reports/15_bug_rubric_evaluation.md` (report, not a feature spec)
+* **Key Files:** `docs/reports/15_bug_rubric_evaluation.md`
 
 ## Technical Implementation
-* **Fix 1:** Replace the for-loop DELETE with a single bulk DELETE using unnest() of parallel arrays (permit_nums, revision_nums, trade_id arrays). This matches the already-correct pattern used for zero-match cleanup at lines 675-684.
-* **Fix 2:** Add `RETURNING permit_num` to the upsert and use `result.rows.length` instead of `result.rowCount`.
-* **Fix 3:** Remove `VACUUM ANALYZE permit_trades` line entirely.
+* **New/Modified Components:** Rewrite the evaluation report with:
+  1. Archetype taxonomy header (4 groups with script assignments)
+  2. Exemption rules (A-E) documented
+  3. All 8 category tables updated: FAIL→EXEMPT where rules apply, FAIL→PASS for this-session fixes
+  4. Summary section with true debt baseline grouped by priority
+
+### This-Session Fixes to Reflect as PASS
+| Script | Bugs Fixed |
+|--------|-----------|
+| classify-inspection-status.js | B13 (rowCount→RETURNING), temporal logic, cross-revision, terminal states |
+| classify-permit-phase.js | B13 (rowCount→rows.length), cross-revision, epoch dates, CDC |
+| classify-permits.js | B13 (rowCount→RETURNING), N+1 ghost cleanup, VACUUM removed |
+
+### Exemption Rules to Apply
+| Rule | Bugs | Applies To | Exempt |
+|------|------|-----------|--------|
+| A (Spatial) | B10, B11, B12 | GIS scripts only (massing, parcels, neighbourhoods, centroids) | All others |
+| B (Mutation) | B13, B16, B18 | Ingestors + Mutators only | Observers |
+| C (Pagination) | B1, B3 | Mutators + Incremental Ingestors only | Scrapers, Observers |
+| D (Rate Limit) | B17 | Scrapers only | All internal |
+| E (Deep Metrics) | B19-B23 | Ingestors, Mutators, Scrapers | Observers |
+
+### WF5 Validation Findings to Incorporate
+| Bug | Rubric Claims | Verified Real | False Positive Rate |
+|-----|--------------|---------------|-------------------|
+| B1 (OFFSET) | 8 FAIL | 1 (reclassify-all.js) | 87.5% |
+| B6 (Orphaned DB) | 9 FAIL | 0 | 100% |
+| B11 (Bounding Box) | 25+ FAIL | 3 spatial scripts | 88% |
+| B13 (rowCount) | ~15 FAIL | 7 genuine (3 fixed this session) | ~53% |
+| B18 (Transactions) | ~30 FAIL | 1 (classify-permit-phase, intentional) | ~97% |
+
+## Database Impact
+NO
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — pipeline script, SDK handles errors
-* **Unhappy Path Tests:** N/A — infrastructure fixes, not logic changes
-* **logError Mandate:** N/A — uses pipeline SDK logging
-* **Mobile-First:** N/A — backend script
+* **Try-Catch Boundary:** N/A — documentation only
+* **Unhappy Path Tests:** N/A
+* **logError Mandate:** N/A
+* **Mobile-First:** N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `3a074ee`
-- [ ] **State Verification:** Confirmed N+1 loop, rowCount accumulation, VACUUM call
-- [ ] **Spec Review:** Script correctly implements classification logic; bugs are infrastructure-only
-- [ ] **Reproduction:** Create failing tests
-- [ ] **Red Light:** Run tests — must fail
-- [ ] **Fix:** Modify classify-permits.js
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6
+- [ ] **State Verification:** Document WF5 audit findings
+- [ ] **Spec Update:** N/A — this IS the report
+- [ ] **Implementation:** Rewrite 15_bug_rubric_evaluation.md with taxonomy, exemptions, verified statuses, and true debt summary
+- [ ] **Green Light:** `npm run test` (no code changes, sanity check)
