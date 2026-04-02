@@ -96,6 +96,10 @@ async function run() {
   let wasCancelled = false;
   const stepVerdicts = {}; // slug → 'PASS' | 'WARN' | 'FAIL'
 
+  // Pre-flight bloat gate thresholds (B24/B25)
+  const BLOAT_WARN_THRESHOLD = 0.20;
+  const BLOAT_ABORT_THRESHOLD = 0.50;
+
   for (let i = 0; i < steps.length; i++) {
     const slug = steps[i];
     const stepLabel = `[${i + 1}/${steps.length}] ${slug}`;
@@ -173,8 +177,6 @@ async function run() {
 
     // Pre-flight bloat gate (B24/B25): check dead tuple ratio on write targets
     // before starting heavy mutation steps. Warns at 20%, aborts at 50%.
-    const BLOAT_WARN_THRESHOLD = 0.20;
-    const BLOAT_ABORT_THRESHOLD = 0.50;
     const scriptMeta = manifest.scripts[slug];
     const writeTables = scriptMeta?.telemetry_tables || [];
     if (writeTables.length > 0) {

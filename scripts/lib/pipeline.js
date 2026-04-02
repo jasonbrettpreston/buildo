@@ -448,13 +448,15 @@ function isFullMode() {
 async function* streamQuery(pool, sql, params = [], options = {}) {
   const QueryStream = require('pg-query-stream');
   const client = await pool.connect();
+  let stream;
   try {
     const qs = new QueryStream(sql, params, { batchSize: options.batchSize || 100 });
-    const stream = client.query(qs);
+    stream = client.query(qs);
     for await (const row of stream) {
       yield row;
     }
   } finally {
+    if (stream) stream.destroy();
     client.release();
   }
 }

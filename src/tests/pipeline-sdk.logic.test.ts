@@ -170,10 +170,11 @@ describe('Pipeline SDK', () => {
       expect(output).toContain('50.0%');
     });
 
-    it('handles zero total gracefully', () => {
+    it('handles zero total gracefully and shows 0 rows/s', () => {
       pipeline.progress('test', 0, 0, Date.now());
       const output = logSpy.mock.calls[0][0] as string;
       expect(output).toContain('0.0%');
+      expect(output).toContain('0 rows/s');
     });
 
     it('includes velocity (rows/s) in progress output (B19)', () => {
@@ -197,6 +198,24 @@ describe('Pipeline SDK', () => {
     it('is an async generator function', () => {
       // AsyncGeneratorFunction constructor name check
       expect(pipeline.streamQuery.constructor.name).toBe('AsyncGeneratorFunction');
+    });
+
+    it('destroys stream and releases client in finally block (source check)', () => {
+      // Verify the implementation has the cursor-leak fix
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const nodeFs = require('fs');
+      const source = nodeFs.readFileSync(path.resolve(__dirname, '../../scripts/lib/pipeline.js'), 'utf-8');
+      const fnBlock = source.slice(
+        source.indexOf('async function* streamQuery'),
+        source.indexOf('// Exports') > 0 ? source.indexOf('// Exports') : source.length
+      );
+      // Must destroy the stream before releasing client
+      expect(fnBlock).toContain('stream.destroy()');
+      expect(fnBlock).toContain('client.release()');
+      // destroy must come before release in the finally block
+      const destroyIdx = fnBlock.indexOf('stream.destroy()');
+      const releaseIdx = fnBlock.indexOf('client.release()');
+      expect(destroyIdx).toBeLessThan(releaseIdx);
     });
   });
 
