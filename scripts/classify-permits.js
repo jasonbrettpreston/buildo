@@ -635,10 +635,11 @@ pipeline.run('classify-permits', async (pool) => {
            ON CONFLICT (permit_num, revision_num, trade_id)
            DO UPDATE SET tier = EXCLUDED.tier, confidence = EXCLUDED.confidence,
                          is_active = EXCLUDED.is_active, phase = EXCLUDED.phase,
-                         lead_score = EXCLUDED.lead_score, classified_at = NOW()`,
+                         lead_score = EXCLUDED.lead_score, classified_at = NOW()
+           RETURNING permit_num`,
           valChunk
         );
-        dbUpdated += result.rowCount || 0;
+        dbUpdated += result.rows.length;
       });
     }
 
@@ -650,23 +651,49 @@ pipeline.run('classify-permits', async (pool) => {
 
     await pipeline.withTransaction(pool, async (client) => {
       // Ghost trade cleanup: delete trades that no longer match after reclassification.
+      // Uses bulk unnest DELETE (single query) instead of per-permit loop to avoid N+1.
       const validTradeIds = new Map(); // "pnum--rev" -> Set<trade_id>
       for (let i = 0; i < insertValues.length; i += 8) {
         const key = `${insertValues[i]}--${insertValues[i + 1]}`;
         if (!validTradeIds.has(key)) validTradeIds.set(key, new Set());
         validTradeIds.get(key).add(insertValues[i + 2]);
       }
-      // For permits that had matches, delete trades not in the current match set
-      for (const [key, tradeIds] of validTradeIds) {
-        const [permitNum, revisionNum] = key.split('--');
-        const tradeIdArray = Array.from(tradeIds);
+
+      // For permits that had matches, delete trades not in the current match set.
+      // Builds (permit_num, revision_num) scope + valid trade_id tuples for bulk delete.
+      // Cannot use unnest on 2D arrays (PostgreSQL flattens all dimensions), so we
+      // delete all trades for affected permits then let the earlier UPSERT re-insert valid ones.
+      const entries = Array.from(validTradeIds.entries());
+      if (entries.length > 0) {
+        const scopeNums = entries.map(([key]) => key.split('--')[0]);
+        const scopeRevs = entries.map(([key]) => key.split('--')[1]);
+        // Collect all valid (permit_num, revision_num, trade_id) tuples
+        const keepNums = [];
+        const keepRevs = [];
+        const keepIds = [];
+        for (const [key, ids] of entries) {
+          const [pn, rv] = key.split('--');
+          for (const tid of ids) {
+            keepNums.push(pn);
+            keepRevs.push(rv);
+            keepIds.push(tid);
+          }
+        }
         await client.query(
-          `DELETE FROM permit_trades
-           WHERE permit_num = $1 AND revision_num = $2
-             AND trade_id != ALL($3)`,
-          [permitNum, revisionNum, tradeIdArray]
+          `DELETE FROM permit_trades pt
+           WHERE (pt.permit_num, pt.revision_num) IN (
+             SELECT unnest($1::text[]), unnest($2::text[])
+           )
+           AND NOT EXISTS (
+             SELECT 1 FROM (
+               SELECT unnest($3::text[]) AS kn, unnest($4::text[]) AS kr, unnest($5::int[]) AS ki
+             ) keep
+             WHERE keep.kn = pt.permit_num AND keep.kr = pt.revision_num AND keep.ki = pt.trade_id
+           )`,
+          [scopeNums, scopeRevs, keepNums, keepRevs, keepIds]
         );
       }
+
       // For permits that yielded ZERO matches, delete all existing trades
       const zeroMatchPermits = batch.rows.filter(p => {
         const key = `${p.permit_num}--${p.revision_num}`;
@@ -700,10 +727,6 @@ pipeline.run('classify-permits', async (pool) => {
       pipeline.progress('classify-permits', processed, totalPermits, startTime);
     }
   }
-
-  // VACUUM — classify_permits upserts up to 1.2M permit_trades rows.
-  // Clean dead tuples and update pg_stat estimates for query planner.
-  await pool.query('VACUUM ANALYZE permit_trades');
 
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[classify-permits]', 'Classification complete', {

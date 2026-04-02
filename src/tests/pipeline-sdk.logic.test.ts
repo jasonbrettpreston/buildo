@@ -531,11 +531,43 @@ describe('Pipeline SDK', () => {
       expect(upsertMatch![1]).not.toContain('IS DISTINCT FROM');
     });
 
-    // §9.3 — classify-permits.js records_updated must use dbUpdated (actual DB writes via rowCount)
+    // §9.3 — classify-permits.js records_updated must use dbUpdated (actual DB writes)
     it('classify-permits.js emitSummary records_updated uses dbUpdated not permitsWithTrades', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'classify-permits.js'), 'utf-8');
       // Check content directly — nested records_meta breaks single-line regex
       expect(content).toContain('records_updated: dbUpdated');
+    });
+
+    // Bug 1: N+1 ghost cleanup — must use bulk DELETE with unnest, not per-permit loop
+    it('classify-permits.js ghost trade cleanup uses bulk unnest DELETE (no N+1)', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'classify-permits.js'), 'utf-8');
+      // Extract the ghost cleanup section
+      const ghostSection = content.slice(
+        content.indexOf('Ghost trade cleanup'),
+        content.indexOf('Mark ALL processed')
+      );
+      // Must NOT have "for (const [key, tradeIds]" pattern that iterates permits with DELETE
+      expect(ghostSection).not.toMatch(/for\s*\(\s*const\s*\[key,\s*tradeIds\]/);
+      // Must use unnest for bulk deletion
+      expect(ghostSection).toMatch(/unnest/);
+    });
+
+    // Bug 2: rowCount trap — upsert must use RETURNING + rows.length, not rowCount
+    it('classify-permits.js upsert counts mutations via rows.length not rowCount', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'classify-permits.js'), 'utf-8');
+      // The INSERT ... ON CONFLICT block must use RETURNING and rows.length
+      const upsertSection = content.slice(
+        content.indexOf('INSERT INTO permit_trades'),
+        content.indexOf('Ghost cleanup')
+      );
+      expect(upsertSection).toMatch(/RETURNING/);
+      expect(upsertSection).not.toMatch(/result\.rowCount/);
+    });
+
+    // Bug 3: Hardcoded VACUUM — must not run VACUUM in application code
+    it('classify-permits.js does not hardcode VACUUM', () => {
+      const content = fs.readFileSync(path.join(scriptDir, 'classify-permits.js'), 'utf-8');
+      expect(content).not.toMatch(/VACUUM/i);
     });
 
     // §9.3 — link-coa.js Tier 3 LATERAL query must use "lat" alias not "p"

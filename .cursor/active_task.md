@@ -1,38 +1,36 @@
-# Active Task: Fix classify-permit-phase.js — 3 bugs
+# Active Task: Fix classify-permits.js — 3 bugs
 **Status:** Planning
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `d290f0c`
+**Rollback Anchor:** `3a074ee`
 
 ## Context
-* **Goal:** Fix 3 validated bugs in the permit phase classification script
-* **Target Spec:** `docs/specs/28_data_quality_dashboard.md`
-* **Key Files:** `scripts/classify-permit-phase.js`, `src/tests/inspections.logic.test.ts`
+* **Goal:** Fix 3 bugs in the trade classification script: N+1 ghost cleanup, rowCount metric inaccuracy, and hardcoded VACUUM
+* **Target Spec:** `docs/specs/pipeline/80_taxonomies.md`
+* **Key Files:** `scripts/classify-permits.js`, `src/tests/classification.logic.test.ts`
 
-## Bug Triage
+## Bug Inventory
 | # | Bug | Severity | Verdict |
 |---|-----|----------|---------|
-| 1 | Unhandled Promise Rejections | REPORTED | **NOT A BUG** — pipeline SDK `run()` already wraps callback in try/catch (pipeline.js:213-219). Errors are logged and re-thrown. |
-| 2 | Denominator Dilution | MEDIUM | **CONFIRMED** — `examRate` divides by `COUNT(*) FROM permits` (237K+ all-time permits). Should use relevant active pool. |
-| 3 | Cross-Revision State Bleed | HIGH | **CONFIRMED** — UPDATE targets all revision_nums. Multiple revisions per permit_num inflates counts and applies Examination to revisions that may have different lifecycle states. |
-| 4 | Epoch Date Bypass | LOW | **PARTIALLY CONFIRMED** — `issued_date` is type DATE so empty strings are impossible. But epoch dates (1970-01-01) from bad ETL could bypass `IS NULL`. Fixing defensively. |
+| 1 | N+1 Ghost Trade Cleanup | HIGH | **CONFIRMED** — Lines 660-669: individual DELETE per permit inside a for loop while holding a transaction lock. 900 permits = 900 sequential round-trips. Fix: batch with unnest(). |
+| 2 | rowCount Trap | MEDIUM | **CONFIRMED** — Line 641: `dbUpdated += result.rowCount` accumulates the raw rowCount from ON CONFLICT DO UPDATE upserts. Use RETURNING to count actual mutations accurately. |
+| 3 | Hardcoded VACUUM | MEDIUM | **CONFIRMED** — Line 706: `VACUUM ANALYZE permit_trades` causes I/O spikes, ties up connection pool. PostgreSQL autovacuum handles this. Remove. |
 
 ## Technical Implementation
-* **Fix 2:** Change denominator to `COUNT(*) FILTER (WHERE status = 'Inspection')` — the relevant pool
-* **Fix 3:** Add `AND revision_num = '00'` to both SELECT and UPDATE queries. Use `rows.length` instead of `rowCount` for metrics.
-* **Fix 4:** Expand `issued_date IS NULL` to `(issued_date IS NULL OR issued_date < '1970-01-02')` to catch epoch defaults
-* **Also:** Bump `last_seen_at = NOW()` on the UPDATE for CDC consistency (same pattern as classify-inspection-status.js)
+* **Fix 1:** Replace the for-loop DELETE with a single bulk DELETE using unnest() of parallel arrays (permit_nums, revision_nums, trade_id arrays). This matches the already-correct pattern used for zero-match cleanup at lines 675-684.
+* **Fix 2:** Add `RETURNING permit_num` to the upsert and use `result.rows.length` instead of `result.rowCount`.
+* **Fix 3:** Remove `VACUUM ANALYZE permit_trades` line entirely.
 
 ## Standards Compliance
 * **Try-Catch Boundary:** N/A — pipeline script, SDK handles errors
-* **Unhappy Path Tests:** Epoch dates, multi-revision permits
+* **Unhappy Path Tests:** N/A — infrastructure fixes, not logic changes
 * **logError Mandate:** N/A — uses pipeline SDK logging
 * **Mobile-First:** N/A — backend script
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `d290f0c`
-- [ ] **State Verification:** Pipeline SDK already handles errors; permits PK is composite
-- [ ] **Spec Review:** Read spec for intended behavior
+- [ ] **Rollback Anchor:** `3a074ee`
+- [ ] **State Verification:** Confirmed N+1 loop, rowCount accumulation, VACUUM call
+- [ ] **Spec Review:** Script correctly implements classification logic; bugs are infrastructure-only
 - [ ] **Reproduction:** Create failing tests
 - [ ] **Red Light:** Run tests — must fail
-- [ ] **Fix:** Modify classify-permit-phase.js
+- [ ] **Fix:** Modify classify-permits.js
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6
