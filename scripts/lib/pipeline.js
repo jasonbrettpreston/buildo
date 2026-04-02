@@ -455,6 +455,8 @@ function isFullMode() {
  * @param {string} table - Table name (e.g. 'scraper_queue', 'permits')
  * @param {string} timestampCol - Column holding the "queued at" timestamp
  * @param {{ where?: string, warnMinutes?: number, label?: string }} [options]
+ * WARNING: options.where is interpolated directly into SQL. Only pass trusted,
+ * hardcoded filter strings — never user input.
  * @returns {Promise<{ maxAgeMinutes: number, count: number }>}
  */
 async function checkQueueAge(pool, table, timestampCol, options = {}) {
@@ -499,12 +501,15 @@ async function checkBounds(pool, table, bounds, label) {
 
   for (const [col, { min, max }] of Object.entries(bounds)) {
     const conditions = [];
-    if (min !== undefined) conditions.push(`${quoteIdent(col)} < ${min}`);
-    if (max !== undefined) conditions.push(`${quoteIdent(col)} > ${max}`);
+    const params = [];
+    let paramIdx = 1;
+    if (min !== undefined) { conditions.push(`${quoteIdent(col)} < $${paramIdx++}`); params.push(min); }
+    if (max !== undefined) { conditions.push(`${quoteIdent(col)} > $${paramIdx++}`); params.push(max); }
     if (conditions.length === 0) continue;
 
     const result = await pool.query(
-      `SELECT COUNT(*)::int AS cnt FROM ${quoteIdent(table)} WHERE ${conditions.join(' OR ')}`
+      `SELECT COUNT(*)::int AS cnt FROM ${quoteIdent(table)} WHERE ${conditions.join(' OR ')}`,
+      params
     );
     const violations = result.rows[0].cnt;
     results.push({ column: col, violations, min, max });
