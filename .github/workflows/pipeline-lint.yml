@@ -1,0 +1,33 @@
+name: Pipeline Lint
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'eslint.config.mjs'
+      - 'ruff.toml'
+
+jobs:
+  eslint:
+    name: ESLint (Pipeline JS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx next lint --dir scripts
+
+  ruff:
+    name: Ruff (Pipeline Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install ruff
+      - run: ruff check scripts/*.py

@@ -1,0 +1,25 @@
+# Ruff configuration for Python pipeline scripts
+# Enforces architectural bans and exception hygiene
+# Run: ruff check scripts/*.py
+
+target-version = "py311"
+
+[lint]
+# Enable rule sets for exception handling
+select = [
+  "E",     # pycodestyle errors
+  "F",     # pyflakes
+  "BLE",   # flake8-blind-except — bans bare except:
+  "TRY",   # tryceratops — enforces explicit exception handling
+  "TID",   # flake8-tidy-imports — import bans
+]
+ignore = [
+  "TRY003", # avoid specifying long messages outside the exception class (too strict for scripts)
+  "TRY301", # abstract raise to inner function (not applicable to pipeline scripts)
+  "E501",   # line length (handled by formatter, not linter)
+]
+
+[lint.flake8-tidy-imports.banned-api]
+# Ban synchronous database drivers in async scraper code
+"psycopg2".msg = "psycopg2 is a blocking synchronous driver. Use asyncpg to prevent event loop deadlocks in async scripts."
+"psycopg2.extras".msg = "psycopg2 is a blocking synchronous driver. Use asyncpg instead."

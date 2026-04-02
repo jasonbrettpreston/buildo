@@ -14,7 +14,6 @@ const eslintConfig = [
     ignores: [
       '.next/**',
       'next-env.d.ts',
-      'scripts/**',
       'functions/**',
       'node_modules/**',
     ],
@@ -72,6 +71,50 @@ const eslintConfig = [
         },
       ],
     },
+  },
+  // ---------------------------------------------------------------------------
+  // Pipeline scripts (scripts/**/*.js) — CommonJS, not TypeScript
+  // Enforce pipeline-specific architectural rules (§9)
+  // ---------------------------------------------------------------------------
+  {
+    files: ['scripts/**/*.js', 'scripts/**/*.mjs'],
+    rules: {
+      // Disable TypeScript rules — scripts are CommonJS .js
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      // Pipeline architectural guards
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: "NewExpression[callee.name='Pool']",
+          message: 'new Pool() is banned in pipeline scripts. Use pipeline.createPool() via the SDK (§9.4).',
+        },
+        {
+          selector: "CallExpression[callee.object.name='process'][callee.property.name='exit']",
+          message: 'process.exit() is banned in pipeline scripts. Let pipeline.run() handle lifecycle (§9.4).',
+        },
+      ],
+      'no-empty': ['warn', { allowEmptyCatch: false }],
+    },
+  },
+  // Pipeline SDK internals — exempt from Pool ban (it IS the pool provider)
+  {
+    files: ['scripts/lib/**/*.js'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Pipeline utility/seed/legacy scripts — exempt from strict rules (one-off tooling)
+  {
+    files: ['scripts/seed-*.js', 'scripts/seed-*.ts', 'scripts/migrate.js', 'scripts/poc-*.js', 'scripts/backfill/**', 'scripts/analysis/**'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Ignore files ESLint cannot parse or shouldn't lint
+  {
+    ignores: ['scripts/**/*.py', 'scripts/seed-trades.ts'],
   },
 ];
 
