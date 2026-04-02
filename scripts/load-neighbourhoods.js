@@ -104,7 +104,12 @@ function parseNumeric(val) {
 async function loadBoundaries(pool, geojsonPath, hasPostGIS) {
   pipeline.log.info('[load-neighbourhoods]','Step 1: Loading neighbourhood boundaries...');
   const raw = fs.readFileSync(geojsonPath, 'utf8');
-  const geojson = JSON.parse(raw);
+  let geojson;
+  try {
+    geojson = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`Failed to parse GeoJSON file ${geojsonPath}: ${err.message} (first 100 chars: ${raw.slice(0, 100)})`);
+  }
 
   const geomLine = hasPostGIS
     ? ', geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326)'

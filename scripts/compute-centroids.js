@@ -107,9 +107,16 @@ pipeline.run('compute-centroids', async (pool) => {
     const lats = [];
 
     for (const row of batch.rows) {
-      const geom = typeof row.geometry === 'string'
-        ? JSON.parse(row.geometry)
-        : row.geometry;
+      let geom;
+      try {
+        geom = typeof row.geometry === 'string'
+          ? JSON.parse(row.geometry)
+          : row.geometry;
+      } catch (err) {
+        pipeline.log.warn('[compute-centroids]', `Skipping parcel ${row.id}: malformed geometry JSON — ${err.message}`);
+        failed++;
+        continue;
+      }
 
       const centroid = computeCentroid(geom);
 

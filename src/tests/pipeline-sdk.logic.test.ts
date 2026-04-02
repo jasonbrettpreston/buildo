@@ -718,6 +718,45 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
+  // B5: Unhandled JSON.parse — external data must be wrapped in try-catch
+  // -----------------------------------------------------------------------
+  describe('B5: JSON.parse on external data wrapped in try-catch', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fsB5 = require('fs');
+    const scriptDirB5 = path.resolve(__dirname, '../../scripts');
+
+    it('compute-centroids.js wraps geometry JSON.parse in try-catch', () => {
+      const content = fsB5.readFileSync(path.join(scriptDirB5, 'compute-centroids.js'), 'utf-8');
+      // The geometry parse must be inside a try block
+      const parseIdx = content.indexOf('JSON.parse(row.geometry)');
+      expect(parseIdx).toBeGreaterThan(-1);
+      // Look backward from JSON.parse for a try { within 200 chars
+      const preceding = content.slice(Math.max(0, parseIdx - 200), parseIdx);
+      expect(preceding).toMatch(/try\s*\{/);
+    });
+
+    it('load-neighbourhoods.js wraps GeoJSON file parse in try-catch', () => {
+      const content = fsB5.readFileSync(path.join(scriptDirB5, 'load-neighbourhoods.js'), 'utf-8');
+      // The file parse section must have try-catch
+      const loadSection = content.slice(
+        content.indexOf('Loading neighbourhood'),
+        content.indexOf('features') > 0 ? content.indexOf('features') : content.length
+      );
+      expect(loadSection).toMatch(/try\s*\{[\s\S]*?JSON\.parse/);
+    });
+
+    it('load-permits.js wraps local file JSON.parse in try-catch', () => {
+      const content = fsB5.readFileSync(path.join(scriptDirB5, 'load-permits.js'), 'utf-8');
+      // The --file mode section must have try-catch around JSON.parse
+      const fileSection = content.slice(
+        content.indexOf('--file mode'),
+        content.indexOf('Default: stream') > 0 ? content.indexOf('Default: stream') : content.length
+      );
+      expect(fileSection).toMatch(/try\s*\{[\s\S]*?JSON\.parse/);
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // B4: Memory overflow migration — scripts must use streaming patterns
   // -----------------------------------------------------------------------
   describe('B4: memory overflow scripts use streaming patterns', () => {

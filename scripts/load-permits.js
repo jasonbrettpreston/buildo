@@ -404,7 +404,12 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
     pipeline.log.info('[load-permits]', `File size: ${(fs.statSync(localFilePath).size / 1024 / 1024).toFixed(1)} MB`);
     const raw = fs.readFileSync(localFilePath, 'utf-8');
     pipeline.log.info('[load-permits]', 'Parsing JSON...');
-    const records = JSON.parse(raw);
+    let records;
+    try {
+      records = JSON.parse(raw);
+    } catch (err) {
+      throw new Error(`Failed to parse local permits file ${localFilePath}: ${err.message}`);
+    }
     pipeline.log.info('[load-permits]', `Parsed ${records.length} records`);
     allMapped = mapRawRecords(records, counters);
   } else {
