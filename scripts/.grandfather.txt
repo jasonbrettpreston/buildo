@@ -1,0 +1,22 @@
+# Pipeline Grandfather List — scripts with known lint warnings
+# These scripts predate the V2 SDK enforcement and have existing violations.
+#
+# BOY SCOUT RULE: If you modify any file listed here for a feature or bug fix,
+# you MUST fix its lint warnings and remove it from this list in the same PR.
+#
+# The CI workflow (enforce-boy-scout.sh) blocks PRs that touch these files
+# without removing them from this list.
+#
+# Current violations: process.exit() (should use pipeline.run lifecycle),
+# new Pool() (should use pipeline.createPool), empty catch blocks.
+#
+# To check remaining violations: npx eslint scripts/
+scripts/audit_all_specs.mjs
+scripts/generate-db-docs.mjs
+scripts/local-cron.js
+scripts/poc-aic-scraper-v2.js
+scripts/quality/assert-data-bounds.js
+scripts/quality/assert-engine-health.js
+scripts/quality/assert-schema.js
+scripts/run-chain.js
+scripts/task-init.mjs

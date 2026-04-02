@@ -957,6 +957,33 @@ describe('Pipeline SDK', () => {
       expect(ruffSource).toContain('psycopg2');
       expect(ruffSource).toContain('banned');
     });
+
+    it('grandfather list exists and contains only real scripts', () => {
+      const grandfatherPath = path.resolve(__dirname, '../../scripts/.grandfather.txt');
+      const content = fsLint.readFileSync(grandfatherPath, 'utf-8');
+      const files = content.split('\n').filter((l: string) => l.trim() && !l.startsWith('#'));
+      expect(files.length).toBeGreaterThan(0);
+      expect(files.length).toBeLessThanOrEqual(9); // should shrink over time
+      // All listed files must actually exist
+      for (const f of files) {
+        expect(fsLint.existsSync(path.resolve(__dirname, '../..', f))).toBe(true);
+      }
+    });
+
+    it('Boy Scout enforcer script exists and is executable-ready', () => {
+      const enforcerPath = path.resolve(__dirname, '../../scripts/enforce-boy-scout.sh');
+      expect(fsLint.existsSync(enforcerPath)).toBe(true);
+      const content = fsLint.readFileSync(enforcerPath, 'utf-8');
+      expect(content).toContain('.grandfather.txt');
+      expect(content).toContain('VIOLATION');
+    });
+
+    it('CI workflow includes Boy Scout Rule job', () => {
+      const ciPath = path.resolve(__dirname, '../../.github/workflows/pipeline-lint.yml');
+      const content = fsLint.readFileSync(ciPath, 'utf-8');
+      expect(content).toContain('boy-scout');
+      expect(content).toContain('enforce-boy-scout.sh');
+    });
   });
 
   describe('Chaos Test B: Pre-flight bloat gate in run-chain.js', () => {

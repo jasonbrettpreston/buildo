@@ -9,6 +9,15 @@ on:
       - 'ruff.toml'
 
 jobs:
+  boy-scout:
+    name: Boy Scout Rule
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: bash scripts/enforce-boy-scout.sh
+
   eslint:
     name: ESLint (Pipeline JS)
     runs-on: ubuntu-latest

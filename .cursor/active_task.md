@@ -1,34 +1,26 @@
-# Active Task: WF3 — Permanent Chaos Tests in CI Suite
-**Status:** Planning
+# Active Task: WF3 — Boy Scout Rule Enforcer
+**Status:** Implementation
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `6b26842`
+**Rollback Anchor:** `46807fc`
 
 ## Context
-* **Goal:** Convert the 4 manual chaos tests into permanent automated tests that prevent regressions.
-* **Target Spec:** `docs/specs/00_engineering_standards.md`
-* **Key Files:** `src/tests/pipeline-sdk.logic.test.ts`, `src/tests/chain.logic.test.ts`
+* **Goal:** Programmatically enforce the Boy Scout Rule — if a developer touches a grandfathered script, CI blocks the PR until the lint warnings are fixed.
+* **Key Files:** `scripts/.grandfather.txt` (new), `scripts/enforce-boy-scout.sh` (new), `.github/workflows/pipeline-lint.yml`
 
-## Bug
-Chaos tests A-D were run manually and passed, but there are no automated tests to prevent future regressions of these defenses.
-
-## Test Plan
-
-### Test A (Linter Guard): Feed bad code strings to ESLint programmatically
-- Load `eslint.config.mjs` and run ESLint API on inline bad code
-- Assert `new Pool()`, `new pg.Pool()`, `process.exit()` produce warnings
-- If someone weakens the linter rules, this test fails
-
-### Test B (Pre-Flight Gate): Pure logic test for bloat gate
-- Already partially exists (threshold logic test). Add: verify run-chain.js source contains Phase 0 audit_table with sys_db_bloat metrics and ABORT path
-
-### Test C (Telemetry Intercept): Assert emitSummary auto-injection
-- Already exists (7 tests from this session). Verify they cover: sys_* always present, err_*/dq_* opt-in, append-don't-replace, namespace isolation
-
-### Test D (Memory Squeeze): Verify streamQuery is async generator with destroy
-- Already partially exists. Add: verify streamQuery yields rows without buffering (mock stream test)
+## Grandfather List (9 scripts)
+1. scripts/audit_all_specs.mjs — process.exit()
+2. scripts/generate-db-docs.mjs — new Pool(), process.exit()
+3. scripts/local-cron.js — process.exit()
+4. scripts/poc-aic-scraper-v2.js — empty catch block
+5. scripts/quality/assert-data-bounds.js — process.exit()
+6. scripts/quality/assert-engine-health.js — process.exit()
+7. scripts/quality/assert-schema.js — process.exit()
+8. scripts/run-chain.js — process.exit()
+9. scripts/task-init.mjs — process.exit()
 
 ## Execution Plan
-- [ ] **Reproduction:** Identify which tests already exist vs need adding
-- [ ] **Red Light:** New tests fail
-- [ ] **Fix:** Add missing tests
-- [ ] **Green Light:** All pass
+- [ ] Create `scripts/.grandfather.txt` with the 9 scripts
+- [ ] Create `scripts/enforce-boy-scout.sh`
+- [ ] Wire into CI workflow
+- [ ] Add regression test
+- [ ] Green Light
