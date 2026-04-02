@@ -107,8 +107,7 @@ node scripts/run-chain.js <chain_id> [run_id] [--force]
    a. Check for cancellation (`pipeline_runs.status = 'cancelled'`)
    b. Check if step is disabled (`pipeline_schedules.enabled = FALSE`)
    c. Check gate-skip (primary ingest had 0 new records → skip non-infra steps)
-   d. **Per-step bloat gate:** Check dead tuple ratio on step's `telemetry_tables`. WARN at >20%, ABORT at >50%.
-   e. Insert step-scoped `pipeline_runs` row (`{chain}:{step}`)
+   d. Insert step-scoped `pipeline_runs` row (`{chain}:{step}`)
    f. Capture pre-telemetry (T1/T2/T4/T6)
    g. Spawn child process (`node` or `python3`) with `stdio: ['inherit', 'pipe', 'inherit']`
    h. Stream stdout, buffer `PIPELINE_SUMMARY:` and `PIPELINE_META:` lines

@@ -1003,12 +1003,12 @@ describe('Pipeline SDK', () => {
       expect(chainSource).toContain('BLOAT_ABORT_THRESHOLD');
     });
 
-    it('bloat gate sets failedStep on ABORT to halt chain', () => {
-      // The per-step bloat gate (inside the step loop) must set failedStep on abort
-      const bloatAbortIdx = chainSource.indexOf('Bloat gate ABORT');
-      expect(bloatAbortIdx).toBeGreaterThan(-1);
-      const afterAbort = chainSource.slice(bloatAbortIdx, bloatAbortIdx + 300);
-      expect(afterAbort).toContain('failedStep');
+    it('Phase 0 ABORT halts chain with visible failure (no per-step gate)', () => {
+      // Per-step bloat gate removed (normal upserts create 50-99% dead tuples).
+      // Phase 0 is the sole defense — ABORT creates a pipeline_runs failure row.
+      expect(chainSource).not.toContain('Bloat gate ABORT'); // per-step gate removed
+      expect(chainSource).toContain('Pre-flight bloat gate abort'); // Phase 0 abort message
+      expect(chainSource).toMatch(/preFlightVerdict\s*===\s*'FAIL'/); // Phase 0 ABORT check
     });
 
     it('Phase 0 Pre-Flight audit_table emitted with sys_db_bloat metrics', () => {
@@ -1017,12 +1017,13 @@ describe('Pipeline SDK', () => {
       expect(chainSource).toContain('sys_db_bloat_');
     });
 
-    it('bloat gate thresholds produce correct verdicts (pure logic)', () => {
-      const WARN = 0.20;
+    it('bloat gate thresholds produce correct verdicts (Phase 0 only)', () => {
+      // Phase 0 is the sole bloat defense — per-step gate removed
+      const WARN = 0.30;
       const ABORT = 0.50;
       const check = (r: number) => r > ABORT ? 'abort' : r > WARN ? 'warn' : 'pass';
       expect(check(0.05)).toBe('pass');
-      expect(check(0.25)).toBe('warn');
+      expect(check(0.35)).toBe('warn');
       expect(check(0.50)).toBe('warn');
       expect(check(0.51)).toBe('abort');
     });

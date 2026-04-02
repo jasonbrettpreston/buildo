@@ -97,7 +97,10 @@ async function run() {
   const stepVerdicts = {}; // slug → 'PASS' | 'WARN' | 'FAIL'
 
   // Pre-flight bloat gate thresholds (B24/B25)
-  const BLOAT_WARN_THRESHOLD = 0.20;
+  // Phase 0 is the SOLE bloat defense — checks BEFORE any steps run.
+  // Per-step bloat gate was removed: normal upserts create 50-99% dead tuples
+  // which autovacuum handles between runs. Phase 0 catches pre-existing stalls.
+  const BLOAT_WARN_THRESHOLD = 0.30;
   const BLOAT_ABORT_THRESHOLD = 0.50;
 
   // Phase 0: Pre-Flight Health Gate — collect bloat for all chain tables
@@ -122,7 +125,7 @@ async function run() {
         let status = 'PASS';
         if (ratio > BLOAT_ABORT_THRESHOLD) { status = 'FAIL'; preFlightVerdict = 'FAIL'; }
         else if (ratio > BLOAT_WARN_THRESHOLD) { status = 'WARN'; if (preFlightVerdict === 'PASS') preFlightVerdict = 'WARN'; }
-        preFlightRows.push({ metric: `sys_db_bloat_${table}`, value: pct, threshold: '< 50%', status });
+        preFlightRows.push({ metric: `sys_db_bloat_${table}`, value: pct, threshold: '< 50% (abort)', status });
       }
     }
   } catch (err) {
@@ -136,6 +139,28 @@ async function run() {
     rows: preFlightRows,
   };
   pipeline.log.info('[run-chain]', `Pre-Flight: ${preFlightVerdict} (${preFlightRows.length} tables checked)`);
+
+  // Phase 0 ABORT: halt chain before any steps run, create visible failure row
+  if (preFlightVerdict === 'FAIL') {
+    const abortMsg = 'Pre-flight bloat gate abort: database dead tuple ratio exceeds 50%. Run VACUUM on affected tables.';
+    pipeline.log.error('[run-chain]', abortMsg, { preFlightRows });
+
+    if (chainRunId) {
+      const chainDuration = Date.now() - chainStart;
+      const abortMeta = JSON.stringify({ pre_flight_audit: preFlightAudit });
+      await pool.query(
+        `UPDATE pipeline_runs
+         SET completed_at = NOW(), status = 'failed', duration_ms = $1,
+             error_message = $2,
+             records_meta = COALESCE(records_meta, '{}'::jsonb) || $4::jsonb
+         WHERE id = $3`,
+        [chainDuration, abortMsg, chainRunId, abortMeta]
+      ).catch((err) => pipeline.log.warn('[run-chain]', `Failed to update chain row: ${err.message}`));
+    }
+
+    await pool.end().catch(() => {});
+    process.exit(1);
+  }
 
   for (let i = 0; i < steps.length; i++) {
     const slug = steps[i];
@@ -210,38 +235,6 @@ async function run() {
       pipeline.log.error('[run-chain]', `Script not found: ${scriptRelPath}`);
       failedStep = slug;
       break;
-    }
-
-    // Pre-flight bloat gate (B24/B25): check dead tuple ratio on write targets
-    // before starting heavy mutation steps. Warns at 20%, aborts at 50%.
-    const scriptMeta = manifest.scripts[slug];
-    const writeTables = scriptMeta?.telemetry_tables || [];
-    if (writeTables.length > 0) {
-      try {
-        for (const table of writeTables) {
-          const bloatRes = await pool.query(
-            `SELECT n_live_tup::bigint AS live, n_dead_tup::bigint AS dead
-             FROM pg_stat_user_tables WHERE relname = $1`,
-            [table]
-          );
-          if (bloatRes.rows[0]) {
-            const live = parseInt(bloatRes.rows[0].live, 10) || 0;
-            const dead = parseInt(bloatRes.rows[0].dead, 10) || 0;
-            const dead_ratio = (live + dead) > 0 ? dead / (live + dead) : 0;
-            if (dead_ratio > BLOAT_ABORT_THRESHOLD) {
-              pipeline.log.error('[run-chain]', `Bloat gate ABORT: ${table} dead_ratio=${(dead_ratio * 100).toFixed(1)}% exceeds ${(BLOAT_ABORT_THRESHOLD * 100)}% threshold. Run VACUUM ${table} manually.`, { table, dead_ratio, live, dead });
-              failedStep = slug;
-              break;
-            }
-            if (dead_ratio > BLOAT_WARN_THRESHOLD) {
-              pipeline.log.warn('[run-chain]', `Bloat gate WARN: ${table} dead_ratio=${(dead_ratio * 100).toFixed(1)}% exceeds ${(BLOAT_WARN_THRESHOLD * 100)}% threshold`, { table, dead_ratio, live, dead });
-            }
-          }
-        }
-        if (failedStep) break;
-      } catch (err) {
-        pipeline.log.warn('[run-chain]', `Bloat gate check failed (non-fatal): ${err.message}`);
-      }
     }
 
     console.log(`${stepLabel} — starting...`);

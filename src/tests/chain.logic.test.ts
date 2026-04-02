@@ -1073,7 +1073,8 @@ describe('Pre-flight bloat gate (B24/B25)', () => {
 
   it('bloat gate logic: healthy ratio passes, critical ratio aborts', () => {
     // Pure logic test for the gate function
-    const BLOAT_WARN_THRESHOLD = 0.20;
+    // Phase 0 thresholds — sole bloat defense (per-step gate removed)
+    const BLOAT_WARN_THRESHOLD = 0.30;
     const BLOAT_ABORT_THRESHOLD = 0.50;
 
     function checkBloat(deadRatio: number): 'pass' | 'warn' | 'abort' {
@@ -1083,10 +1084,10 @@ describe('Pre-flight bloat gate (B24/B25)', () => {
     }
 
     expect(checkBloat(0.05)).toBe('pass');
-    expect(checkBloat(0.25)).toBe('warn');
-    expect(checkBloat(0.60)).toBe('abort');
-    expect(checkBloat(0.50)).toBe('warn'); // exactly at threshold = warn, not abort
-    expect(checkBloat(0.51)).toBe('abort');
+    expect(checkBloat(0.29)).toBe('pass');
+    expect(checkBloat(0.35)).toBe('warn');  // autovacuum falling behind
+    expect(checkBloat(0.50)).toBe('warn');  // exactly at abort threshold = warn
+    expect(checkBloat(0.51)).toBe('abort'); // autovacuum stalled — genuine crisis
   });
 
   it('run-chain.js emits Phase 0 Pre-Flight audit_table with bloat results', () => {
