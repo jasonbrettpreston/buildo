@@ -169,6 +169,11 @@ pipeline.run('link-massing', async (pool) => {
   let nearestMatches = 0;
   let noMatch = 0;
   let buildingsUpserted = 0;
+  let totalBuildings = 0;
+  let parcelsLinked = 0;
+  let buildingsMatched = 0;
+  let centroidInParcelMatches = 0;
+  const grid = new Map(); // empty unless JS fallback runs
 
   if (hasPostGIS) {
     pipeline.log.info('[link-massing]', 'Using PostGIS ST_Contains (fast path — no in-memory grid)');
@@ -209,15 +214,19 @@ pipeline.run('link-massing', async (pool) => {
         [parcelIds, parcelLats, parcelLngs]
       );
 
-      // Upsert matched parcel-building links
+      // Upsert matched parcel-building links using flushInsertBatch
       if (matchResult.rows.length > 0) {
-        buildingsUpserted += await upsertParcelBuildings(pool, matchResult.rows.map(r => ({
-          parcel_id: r.parcel_id,
-          building_id: r.building_id,
-          match_type: 'spatial_polygon',
-          footprint_area_sqm: parseFloat(r.footprint_area_sqm) || 0,
-        })));
+        const insertParams = [];
+        const insertValues = [];
+        let paramIdx = 1;
+        for (const r of matchResult.rows) {
+          const area = parseFloat(r.footprint_area_sqm) || 0;
+          insertParams.push(`($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`);
+          insertValues.push(r.parcel_id, r.building_id, 'spatial_polygon', area, area > 0, true);
+        }
+        buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
         containsMatches += matchResult.rows.length;
+        parcelsLinked += new Set(matchResult.rows.map(r => r.parcel_id)).size;
       }
 
       processed += parcelBatch.rows.length;
@@ -294,9 +303,6 @@ pipeline.run('link-massing', async (pool) => {
     }
   }
 
-  let parcelsLinked = 0;
-  let buildingsMatched = 0;  // algorithmic matches (candidates that hit)
-  let centroidInParcelMatches = 0;
   let lastId = 0; // keyset cursor — O(1) per batch via index seek
 
   while (true) {

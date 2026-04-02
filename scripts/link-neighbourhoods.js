@@ -160,12 +160,14 @@ pipeline.run('link-neighbourhoods', async (pool) => {
     linked = result.rows.length;
     processed = linked;
 
-    // Count unmatched (permits with coords but no neighbourhood match)
+    // Mark unmatched permits with -1 sentinel to prevent infinite re-processing
     const unmatchedResult = await pool.query(
-      `SELECT COUNT(*)::int AS cnt FROM permits
-       WHERE neighbourhood_id IS NULL AND latitude IS NOT NULL AND longitude IS NOT NULL`
+      `UPDATE permits SET neighbourhood_id = -1
+       WHERE neighbourhood_id IS NULL
+         AND latitude IS NOT NULL AND longitude IS NOT NULL
+       RETURNING permit_num`
     );
-    noMatch = unmatchedResult.rows[0].cnt;
+    noMatch = unmatchedResult.rows.length;
     processed += noMatch;
   } else {
     // JS fallback: batch loop with Turf.js booleanPointInPolygon
