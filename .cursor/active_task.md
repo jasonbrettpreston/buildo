@@ -1,23 +1,25 @@
-# Active Task: WF2 — Entity Type Classification
-**Status:** Implementation
-**Workflow:** WF2 — Feature Enhancement
+# Active Task: WF3 — Low-Severity Assessment Bugs (4 Fixes)
+**Status:** Planning
+**Workflow:** WF3 — Bug Fix
+**Rollback Anchor:** `ff71782`
 
 ## Context
-* **Goal:** Classify entities as Corporation or Individual during extraction, so enrichment queries can filter by `WHERE entity_type = 'Corporation'` and skip individuals permanently. Backfill existing 3,706 unclassified rows.
-* **Target Spec:** `docs/specs/platform/37_entity_model.md`
-* **Key Files:** `scripts/extract-builders.js`, `src/lib/builders/normalize.ts`
+* **Goal:** Fix 4 remaining lower-severity bugs from `docs/reports/independent_scripts_assessment.md`.
 
-## Technical Implementation
-- Add `entity_type` classification during normalize/dedup in `extract-builders.js`
-- Classification logic: `isIncorporated()` OR 4+ words OR has BUSINESS_KEYWORDS → Corporation, else Individual
-- Numbered corporations (`/^\d{5,}/`) → Corporation (they're shell companies but still corporate entities)
-- Include `entity_type` in INSERT and ON CONFLICT UPDATE
-- Backfill existing rows via UPDATE in the same script (runs after batch insert)
-- No migration needed — `entity_type` column already exists (migration 042)
-- No DB impact beyond populating existing NULL column
+## Bug Validation
+
+| # | Script | Severity | Bug | Verdict |
+|---|--------|----------|-----|---------|
+| 1 | ai-env-check.mjs | 3/10 | `.env` strips `#` inside quoted values — `SECRET="my #1 password"` truncated to `SECRET="my` | **CONFIRMED** — line 30: `val.replace(/\s+#.*$/, '')` runs BEFORE quote stripping on line 32. Fix: strip comments only on unquoted values (after checking if value starts with a quote). |
+| 2 | aic-scraper-nodriver.py | 4/10 | Windows PowerShell 5.1 `Get-Process` lacks `CommandLine` property — zombie Chrome cleanup fails silently | **CONFIRMED** — line 1229: `Get-Process chrome | Where-Object {$_.CommandLine -match ...}` silently passes (no error, no match). Fix: use `Get-CimInstance Win32_Process`. |
+| 3 | audit_all_specs.mjs | 2/10 | Regex only matches `.js` pipeline files — misses `.py` and `.mjs` | **CONFIRMED** — line 90: `/(scripts\/[a-zA-Z0-9_\-\.\/]+\.js)/g`. Fix: broaden to `\.(js|py|mjs)`. |
+| 4 | assert-data-bounds.js | 5/10 | Ghost record warning never added to `permitsAuditTable.rows` — dashboard stays green | **CONFIRMED** — lines 596-617: ghost check pushes to `warnings` array and logs, but `permitsAuditTable` was sealed at line 176. Fix: push ghost row into `permitsAuditTable.rows` and re-evaluate verdict. |
 
 ## Execution Plan
-- [ ] **Guardrail Test:** Add entity classification tests to `entities.logic.test.ts`
-- [ ] **Red Light:** Verify new tests fail
-- [ ] **Implementation:** Modify `extract-builders.js` + add `classifyEntityType` to `normalize.ts`
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6
+- [x] **Rollback Anchor:** `ff71782`
+- [ ] **Fix 1:** ai-env-check.mjs — strip comments only for unquoted values
+- [ ] **Fix 2:** aic-scraper-nodriver.py — `Get-CimInstance Win32_Process`
+- [ ] **Fix 3:** audit_all_specs.mjs — regex includes `.py` and `.mjs`
+- [ ] **Fix 4:** assert-data-bounds.js — push ghost rows into audit table
+- [ ] **Green Light:** `npm run test && npm run typecheck`
+- [ ] **Commit**
