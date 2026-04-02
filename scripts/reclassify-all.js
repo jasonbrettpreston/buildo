@@ -77,10 +77,16 @@ pipeline.run('reclassify-all', async (pool) => {
     lastPermitNum = lastRow.permit_num;
     lastRevisionNum = lastRow.revision_num;
 
-    // Process batch in a single transaction for atomicity
-    await pipeline.withTransaction(pool, async (client) => {
-      for (const permit of permits) {
-        try {
+    // Process batch in a single transaction for atomicity.
+    // Track batch-local counters — only added to totals after successful commit
+    // to prevent counter inflation on rollback.
+    let batchClassified = 0;
+    let batchTrades = 0;
+    let batchProducts = 0;
+
+    try {
+      await pipeline.withTransaction(pool, async (client) => {
+        for (const permit of permits) {
           // 1. Classify scope
           const scope = classifyScope(permit);
 
@@ -141,20 +147,21 @@ pipeline.run('reclassify-all', async (pool) => {
             );
           }
 
-          classifiedCount++;
-          tradeTotal += matches.length;
-          productTotal += products.length;
-        } catch (err) {
-          errorCount++;
-          if (errorCount <= 10) {
-            pipeline.log.warn('[reclassify-all]', `Error on ${permit.permit_num}/${permit.revision_num}: ${err.message}`);
-          }
-          // Per-permit error within batch transaction — throw to rollback entire batch
-          // and re-process on next run (safe failure mode)
-          throw err;
+          batchClassified++;
+          batchTrades += matches.length;
+          batchProducts += products.length;
         }
-      }
-    });
+      });
+
+      // Batch committed successfully — add to running totals
+      classifiedCount += batchClassified;
+      tradeTotal += batchTrades;
+      productTotal += batchProducts;
+    } catch (err) {
+      // Batch rolled back — counters not added. Log and continue to next batch.
+      errorCount += permits.length;
+      pipeline.log.warn('[reclassify-all]', `Batch failed (${permits.length} permits rolled back): ${err.message}`);
+    }
 
     processed += permits.length;
 
