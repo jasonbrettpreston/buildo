@@ -100,7 +100,7 @@ const eslintConfig = [
   },
   // Pipeline SDK internals — exempt from Pool ban (it IS the pool provider)
   {
-    files: ['scripts/lib/**/*.js'],
+    files: ['scripts/lib/**/*.js', 'scripts/lib/**/*.mjs'],
     rules: {
       'no-restricted-syntax': 'off',
     },
