@@ -1088,4 +1088,14 @@ describe('Pre-flight bloat gate (B24/B25)', () => {
     expect(checkBloat(0.50)).toBe('warn'); // exactly at threshold = warn, not abort
     expect(checkBloat(0.51)).toBe('abort');
   });
+
+  it('run-chain.js emits Phase 0 Pre-Flight audit_table with bloat results', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+    );
+    // Must have a Phase 0 pre-flight audit_table
+    expect(source).toMatch(/phase:\s*0/);
+    expect(source).toContain('Pre-Flight');
+    expect(source).toContain('sys_db_bloat');
+  });
 });

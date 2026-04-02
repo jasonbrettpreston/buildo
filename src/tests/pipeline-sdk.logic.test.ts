@@ -74,7 +74,9 @@ describe('Pipeline SDK', () => {
       const output = logSpy.mock.calls[0][0] as string;
       expect(output).toMatch(/^PIPELINE_SUMMARY:/);
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
-      expect(parsed).toEqual({ records_total: 100, records_new: 50, records_updated: 30 });
+      expect(parsed.records_total).toBe(100);
+      expect(parsed.records_new).toBe(50);
+      expect(parsed.records_updated).toBe(30);
     });
 
     it('includes records_meta when provided', () => {
@@ -86,21 +88,151 @@ describe('Pipeline SDK', () => {
       });
       const output = logSpy.mock.calls[0][0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
-      expect(parsed.records_meta).toEqual({ checks_passed: 4, checks_failed: 0 });
+      expect(parsed.records_meta.checks_passed).toBe(4);
+      expect(parsed.records_meta.checks_failed).toBe(0);
+      // Auto-injected audit_table also present
+      expect(parsed.records_meta.audit_table).toBeDefined();
     });
 
     it('defaults missing fields to 0', () => {
       pipeline.emitSummary({});
       const output = logSpy.mock.calls[0][0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
-      expect(parsed).toEqual({ records_total: 0, records_new: 0, records_updated: 0 });
+      expect(parsed.records_total).toBe(0);
+      expect(parsed.records_new).toBe(0);
+      expect(parsed.records_updated).toBe(0);
     });
 
     it('preserves null for records_new/records_updated (§3.5 CQA exemption)', () => {
       pipeline.emitSummary({ records_total: 5, records_new: null, records_updated: null });
       const output = logSpy.mock.calls[0][0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
-      expect(parsed).toEqual({ records_total: 5, records_new: null, records_updated: null });
+      expect(parsed.records_total).toBe(5);
+      expect(parsed.records_new).toBeNull();
+      expect(parsed.records_updated).toBeNull();
+    });
+
+    // --- Auto-injection tests (SDK payload upgrade) ---
+
+    it('auto-injects sys_velocity_rows_sec into audit_table.rows', () => {
+      pipeline.emitSummary({
+        records_total: 1000,
+        records_new: 500,
+        records_updated: 200,
+        records_meta: {
+          audit_table: {
+            phase: 4, name: 'Test', verdict: 'PASS',
+            rows: [{ metric: 'custom_metric', value: 42, threshold: null, status: 'INFO' }],
+          },
+        },
+      });
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      const rows = parsed.records_meta.audit_table.rows;
+      // Custom metric preserved (append, don't replace)
+      expect(rows.find((r: { metric: string }) => r.metric === 'custom_metric')).toBeDefined();
+      // sys_ metrics auto-injected
+      expect(rows.find((r: { metric: string }) => r.metric === 'sys_velocity_rows_sec')).toBeDefined();
+      expect(rows.find((r: { metric: string }) => r.metric === 'sys_duration_ms')).toBeDefined();
+    });
+
+    it('auto-injects sys_ metrics even without existing audit_table', () => {
+      pipeline.emitSummary({
+        records_total: 500,
+        records_new: 100,
+        records_updated: 50,
+        records_meta: { duration_ms: 5000 },
+      });
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      // Should create audit_table if records_meta exists but has no audit_table
+      const rows = parsed.records_meta.audit_table?.rows;
+      expect(rows).toBeDefined();
+      expect(rows.find((r: { metric: string }) => r.metric === 'sys_velocity_rows_sec')).toBeDefined();
+    });
+
+    it('injects err_* rows from telemetry_context.error_taxonomy (opt-in)', () => {
+      pipeline.emitSummary({
+        records_total: 100,
+        records_meta: {
+          audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] },
+        },
+        telemetry_context: {
+          error_taxonomy: { waf_blocks: 3, timeouts: 0, parse_failures: 1 },
+        },
+      });
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      const rows = parsed.records_meta.audit_table.rows;
+      const waf = rows.find((r: { metric: string }) => r.metric === 'err_waf_blocks');
+      expect(waf).toBeDefined();
+      expect(waf.value).toBe(3);
+      expect(waf.status).toBe('WARN');
+      const timeouts = rows.find((r: { metric: string }) => r.metric === 'err_timeouts');
+      expect(timeouts.value).toBe(0);
+      expect(timeouts.status).toBe('PASS');
+    });
+
+    it('injects dq_null_rate_* rows from telemetry_context.data_quality (opt-in)', () => {
+      pipeline.emitSummary({
+        records_total: 1000,
+        records_meta: {
+          audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] },
+        },
+        telemetry_context: {
+          data_quality: {
+            issued_date: { nulls: 120, total: 1000 },
+            description: { nulls: 5, total: 1000 },
+          },
+        },
+      });
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      const rows = parsed.records_meta.audit_table.rows;
+      const issuedDate = rows.find((r: { metric: string }) => r.metric === 'dq_null_rate_issued_date');
+      expect(issuedDate).toBeDefined();
+      expect(issuedDate.value).toBe('12.0%');
+      expect(issuedDate.status).toBe('PASS'); // < 50%
+    });
+
+    it('skips err_*/dq_* rows when telemetry_context is absent (opt-in rollout)', () => {
+      pipeline.emitSummary({
+        records_total: 100,
+        records_meta: {
+          audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] },
+        },
+      });
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      const rows = parsed.records_meta.audit_table.rows;
+      // No err_* or dq_* rows
+      expect(rows.filter((r: { metric: string }) => r.metric.startsWith('err_'))).toHaveLength(0);
+      expect(rows.filter((r: { metric: string }) => r.metric.startsWith('dq_'))).toHaveLength(0);
+      // But sys_* rows are present (always free)
+      expect(rows.filter((r: { metric: string }) => r.metric.startsWith('sys_')).length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('namespace isolation — sys_ prefix never collides with custom metrics', () => {
+      pipeline.emitSummary({
+        records_total: 100,
+        records_meta: {
+          audit_table: {
+            phase: 1, name: 'Test', verdict: 'PASS',
+            rows: [
+              { metric: 'velocity', value: 99, threshold: null, status: 'INFO' },
+              { metric: 'duration', value: 5000, threshold: null, status: 'INFO' },
+            ],
+          },
+        },
+      });
+      const output = logSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      const rows = parsed.records_meta.audit_table.rows;
+      // Custom 'velocity' and 'duration' preserved alongside sys_ versions
+      expect(rows.filter((r: { metric: string }) => r.metric === 'velocity')).toHaveLength(1);
+      expect(rows.filter((r: { metric: string }) => r.metric === 'sys_velocity_rows_sec')).toHaveLength(1);
+      expect(rows.filter((r: { metric: string }) => r.metric === 'duration')).toHaveLength(1);
+      expect(rows.filter((r: { metric: string }) => r.metric === 'sys_duration_ms')).toHaveLength(1);
     });
   });
 

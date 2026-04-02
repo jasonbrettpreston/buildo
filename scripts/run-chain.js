@@ -100,6 +100,43 @@ async function run() {
   const BLOAT_WARN_THRESHOLD = 0.20;
   const BLOAT_ABORT_THRESHOLD = 0.50;
 
+  // Phase 0: Pre-Flight Health Gate — collect bloat for all chain tables
+  const preFlightRows = [];
+  let preFlightVerdict = 'PASS';
+  try {
+    const allTables = new Set();
+    for (const slug of steps) {
+      const meta = manifest.scripts[slug];
+      if (meta?.telemetry_tables) meta.telemetry_tables.forEach((t) => allTables.add(t));
+    }
+    for (const table of allTables) {
+      const res = await pool.query(
+        `SELECT n_live_tup::bigint AS live, n_dead_tup::bigint AS dead
+         FROM pg_stat_user_tables WHERE relname = $1`, [table]
+      );
+      if (res.rows[0]) {
+        const live = parseInt(res.rows[0].live, 10) || 0;
+        const dead = parseInt(res.rows[0].dead, 10) || 0;
+        const ratio = (live + dead) > 0 ? dead / (live + dead) : 0;
+        const pct = (ratio * 100).toFixed(1) + '%';
+        let status = 'PASS';
+        if (ratio > BLOAT_ABORT_THRESHOLD) { status = 'FAIL'; preFlightVerdict = 'FAIL'; }
+        else if (ratio > BLOAT_WARN_THRESHOLD) { status = 'WARN'; if (preFlightVerdict === 'PASS') preFlightVerdict = 'WARN'; }
+        preFlightRows.push({ metric: `sys_db_bloat_${table}`, value: pct, threshold: '< 50%', status });
+      }
+    }
+  } catch (err) {
+    pipeline.log.warn('[run-chain]', `Pre-flight health check failed: ${err.message}`);
+  }
+  // Store Phase 0 in chain records_meta (available to dashboard)
+  const preFlightAudit = {
+    phase: 0,
+    name: 'Pre-Flight Health Gate',
+    verdict: preFlightVerdict,
+    rows: preFlightRows,
+  };
+  pipeline.log.info('[run-chain]', `Pre-Flight: ${preFlightVerdict} (${preFlightRows.length} tables checked)`);
+
   for (let i = 0; i < steps.length; i++) {
     const slug = steps[i];
     const stepLabel = `[${i + 1}/${steps.length}] ${slug}`;
@@ -444,10 +481,11 @@ async function run() {
       ? '0 new records — downstream steps skipped'
       : null;
 
-  // Include step verdicts in chain records_meta for drill-down
-  const chainMeta = Object.keys(stepVerdicts).length > 0
-    ? JSON.stringify({ step_verdicts: stepVerdicts })
-    : null;
+  // Include step verdicts + pre-flight audit in chain records_meta for drill-down
+  const metaObj = {};
+  if (Object.keys(stepVerdicts).length > 0) metaObj.step_verdicts = stepVerdicts;
+  if (preFlightRows.length > 0) metaObj.pre_flight_audit = preFlightAudit;
+  const chainMeta = Object.keys(metaObj).length > 0 ? JSON.stringify(metaObj) : null;
 
   if (chainRunId) {
     await pool.query(

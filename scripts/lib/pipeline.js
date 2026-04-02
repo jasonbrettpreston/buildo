@@ -158,6 +158,11 @@ function getTracked() {
 }
 
 // ---------------------------------------------------------------------------
+// Run Start Timestamp — set by run(), used by emitSummary for velocity
+// ---------------------------------------------------------------------------
+let _runStartMs = Date.now();
+
+// ---------------------------------------------------------------------------
 // PIPELINE_SUMMARY / PIPELINE_META Emission
 // ---------------------------------------------------------------------------
 
@@ -165,7 +170,12 @@ function getTracked() {
  * Emit a PIPELINE_SUMMARY line to stdout.
  * Parsed by run-chain.js and stored in pipeline_runs.
  *
- * @param {{ records_total: number, records_new: number, records_updated: number, records_meta?: object }} stats
+ * Auto-injects standardized health metrics into audit_table.rows:
+ * - sys_* (always): velocity, duration — free for all scripts
+ * - err_* (opt-in): from telemetry_context.error_taxonomy
+ * - dq_*  (opt-in): from telemetry_context.data_quality
+ *
+ * @param {{ records_total: number, records_new: number, records_updated: number, records_meta?: object, telemetry_context?: { error_taxonomy?: Record<string, number>, data_quality?: Record<string, { nulls: number, total: number }> } }} stats
  */
 function emitSummary(stats) {
   const payload = {
@@ -175,6 +185,44 @@ function emitSummary(stats) {
     records_updated: stats.records_updated !== undefined ? stats.records_updated : 0,
   };
   if (stats.records_meta) payload.records_meta = stats.records_meta;
+
+  // --- Auto-inject standardized health metrics (append, don't replace) ---
+  // Ensure records_meta and audit_table exist
+  if (!payload.records_meta) payload.records_meta = {};
+  if (!payload.records_meta.audit_table) {
+    payload.records_meta.audit_table = { phase: 0, name: 'Auto', verdict: 'PASS', rows: [] };
+  }
+  if (!payload.records_meta.audit_table.rows) {
+    payload.records_meta.audit_table.rows = [];
+  }
+  const rows = payload.records_meta.audit_table.rows;
+
+  // sys_* metrics (always injected — free for all 44 scripts)
+  const durationMs = Date.now() - _runStartMs;
+  const total = stats.records_total ?? 0;
+  const velocity = durationMs > 0 ? parseFloat((total / (durationMs / 1000)).toFixed(2)) : 0;
+  rows.push(
+    { metric: 'sys_velocity_rows_sec', value: velocity, threshold: null, status: 'INFO' },
+    { metric: 'sys_duration_ms', value: durationMs, threshold: null, status: 'INFO' }
+  );
+
+  // err_* metrics (opt-in via telemetry_context.error_taxonomy)
+  if (stats.telemetry_context?.error_taxonomy) {
+    for (const [key, count] of Object.entries(stats.telemetry_context.error_taxonomy)) {
+      rows.push({ metric: `err_${key}`, value: count, threshold: null, status: count > 0 ? 'WARN' : 'PASS' });
+    }
+  }
+
+  // dq_* metrics (opt-in via telemetry_context.data_quality)
+  if (stats.telemetry_context?.data_quality) {
+    for (const [field, info] of Object.entries(stats.telemetry_context.data_quality)) {
+      const { nulls, total: fieldTotal } = /** @type {{ nulls: number, total: number }} */ (info);
+      const pct = fieldTotal > 0 ? ((nulls / fieldTotal) * 100).toFixed(1) + '%' : '0.0%';
+      const pctNum = fieldTotal > 0 ? (nulls / fieldTotal) * 100 : 0;
+      rows.push({ metric: `dq_null_rate_${field}`, value: pct, threshold: '< 50%', status: pctNum >= 50 ? 'FAIL' : 'PASS' });
+    }
+  }
+
   console.log('PIPELINE_SUMMARY:' + JSON.stringify(payload));
 }
 
@@ -230,6 +278,7 @@ function progress(label, current, total, startMs) {
 async function run(name, fn) {
   const pool = createPool();
   const startMs = Date.now();
+  _runStartMs = startMs; // expose to emitSummary for velocity calc
   try {
     await fn(pool);
     const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
