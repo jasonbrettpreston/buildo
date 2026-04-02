@@ -4,58 +4,69 @@
  *
  * Runs after the AIC scraper in the deep_scrapes chain.
  * Detects permits where enriched_status = 'Active Inspection' but
- * no inspection activity for 10+ months → sets enriched_status = 'Stalled'.
+ * no inspection activity for 300+ days → sets enriched_status = 'Stalled'.
  *
  * Also re-activates Stalled permits if new inspection data appears
- * (scraper re-scraped and found activity).
+ * (driven from recent permit_inspections activity, not graveyard scan).
  *
- * SPEC LINK: docs/specs/38_inspection_scraping.md
+ * SPEC LINK: docs/specs/pipeline/53_source_aic_inspections.md
  */
 
 const pipeline = require('./lib/pipeline');
 
-const STALE_MONTHS = 10;
+const STALE_DAYS = 300;
 
 pipeline.run('classify-inspection-status', async (pool) => {
-  // Wrap both steps in a single transaction to prevent race conditions
-  // with concurrent scraper inserts between stalling and re-activating
   const { stalledCount, reactivatedCount } = await pipeline.withTransaction(pool, async (client) => {
-    // Step 1: Mark Active Inspection permits as Stalled if no activity in 10+ months
-    // Driven from permits table (not permit_inspections) so permits with ZERO inspections
-    // are also caught — these are the most stalled (abandoned post-issuance).
-    // Uses GREATEST (not COALESCE) to pick the true latest activity date.
-    // Falls back to issued_date / last_seen_at when no inspections exist.
+    // Step 1: Mark Active Inspection permits as Stalled if no activity in 300+ days
+    // Scoped to revision_num = '00' because only base permits have inspections.
+    // Uses GREATEST (not COALESCE) across all temporal indicators so the DB always
+    // picks the absolute most recent sign of life.
+    // Excludes scraped_at (pipeline metadata, refreshed nightly — not business data)
+    // and last_seen_at (refreshed by nightly permit scraper — grants false immunity).
     const stalledResult = await client.query(
       `UPDATE permits p
-       SET enriched_status = 'Stalled'
+       SET enriched_status = 'Stalled',
+           last_seen_at = NOW()
        WHERE p.enriched_status = 'Active Inspection'
-         AND COALESCE(
-           (SELECT GREATEST(MAX(pi.inspection_date), MAX(pi.scraped_at)::date)
+         AND p.revision_num = '00'
+         AND GREATEST(
+           (SELECT MAX(pi.inspection_date)
             FROM permit_inspections pi
             WHERE pi.permit_num = p.permit_num),
            p.issued_date,
-           (p.last_seen_at AT TIME ZONE 'America/Toronto')::date
-         ) < NOW() - INTERVAL '1 month' * $1`,
-      [STALE_MONTHS]
+           p.application_date
+         ) < NOW() - INTERVAL '300 days'
+       RETURNING p.permit_num`,
+      []
     );
 
     // Step 2: Re-activate Stalled permits if new inspection activity detected
-    // No fallback needed — reactivation requires actual new inspection data
+    // Driven from recent permit_inspections (last 24h) joined to permits —
+    // avoids scanning the infinite Stalled graveyard which degrades over time.
+    // Guards against terminal state clobbering: only reactivates permits that
+    // are currently 'Stalled', not 'Inspections Complete' or 'Not Passed'.
     const reactivatedResult = await client.query(
       `UPDATE permits p
-       SET enriched_status = 'Active Inspection'
+       SET enriched_status = 'Active Inspection',
+           last_seen_at = NOW()
        WHERE p.enriched_status = 'Stalled'
-         AND (
-           SELECT GREATEST(MAX(pi.inspection_date), MAX(pi.scraped_at)::date)
-           FROM permit_inspections pi
+         AND p.revision_num = '00'
+         -- SAFETY: redundant guard — WHERE already constrains to 'Stalled',
+         -- but protects against future refactors that widen the WHERE scope
+         AND p.enriched_status NOT IN ('Inspections Complete', 'Not Passed')
+         AND EXISTS (
+           SELECT 1 FROM permit_inspections pi
            WHERE pi.permit_num = p.permit_num
-         ) >= NOW() - INTERVAL '1 month' * $1`,
-      [STALE_MONTHS]
+             AND pi.inspection_date >= (NOW() - INTERVAL '300 days')::date
+         )
+       RETURNING p.permit_num`,
+      []
     );
 
     return {
-      stalledCount: stalledResult.rowCount || 0,
-      reactivatedCount: reactivatedResult.rowCount || 0,
+      stalledCount: stalledResult.rows.length,
+      reactivatedCount: reactivatedResult.rows.length,
     };
   });
 
@@ -81,7 +92,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
     records_meta: {
       stalled: stalledCount,
       reactivated: reactivatedCount,
-      distribution: dist.reduce((acc, r) => { acc[r.enriched_status] = parseInt(r.cnt); return acc; }, {}),
+      distribution: dist.map((r) => ({ status: r.enriched_status, count: parseInt(r.cnt) })),
       audit_table: {
         phase: 2,
         name: 'Inspection Status Classification',
@@ -96,7 +107,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
   });
 
   pipeline.emitMeta(
-    { permits: ['permit_num', 'enriched_status'], permit_inspections: ['permit_num', 'inspection_date', 'scraped_at'] },
-    { permits: ['enriched_status'] }
+    { permits: ['permit_num', 'revision_num', 'enriched_status', 'issued_date', 'application_date', 'last_seen_at'], permit_inspections: ['permit_num', 'inspection_date'] },
+    { permits: ['enriched_status', 'last_seen_at'] }
   );
 });

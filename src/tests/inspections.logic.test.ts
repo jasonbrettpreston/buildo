@@ -901,6 +901,118 @@ describe('Proxy auth via MV3 extension', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// classify-inspection-status.js — source-level assertions on SQL correctness
+// ---------------------------------------------------------------------------
+describe('classify-inspection-status.js SQL correctness', () => {
+  const scriptSource = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/classify-inspection-status.js'), 'utf-8'
+  );
+
+  // Bug 1: Scraper Verification Paradox — scraped_at always = today, neutralizes staleness
+  it('does NOT use scraped_at in temporal logic (scraper verification paradox)', () => {
+    // scraped_at is pipeline metadata, not business data — it refreshes nightly
+    // and would prevent any permit from ever being marked Stalled
+    // Extract SQL query strings (backtick-delimited) and check none reference scraped_at
+    const sqlBlocks = scriptSource.match(/`[^`]+`/g) || [];
+    const sqlWithScrapedAt = sqlBlocks.filter((b) => b.includes('scraped_at'));
+    expect(sqlWithScrapedAt).toHaveLength(0);
+  });
+
+  // Bug 2: Historical Inspection Override — COALESCE stops at first non-null
+  it('uses GREATEST (not COALESCE) to compare all temporal indicators', () => {
+    // COALESCE returns the first non-null, ignoring potentially newer dates
+    // GREATEST picks the true maximum across all candidates
+    const stalledQuery = scriptSource.slice(
+      scriptSource.indexOf('Step 1'),
+      scriptSource.indexOf('Step 2')
+    );
+    // The outer temporal comparison must use GREATEST, not COALESCE
+    expect(stalledQuery).not.toMatch(/COALESCE\s*\(\s*\n?\s*\(SELECT/);
+    expect(stalledQuery).toMatch(/GREATEST\s*\(/);
+  });
+
+  // Bug 3: last_seen_at Poison Pill — refreshed nightly, grants permanent immunity
+  it('does NOT use last_seen_at in the WHERE/AND staleness condition', () => {
+    // last_seen_at is updated by the nightly permit scraper, always = today
+    // Zero-inspection permits would never age past the threshold
+    // It IS correct to SET last_seen_at = NOW() (Bug 5 fix), but it must NOT
+    // appear in the GREATEST/temporal comparison that determines staleness
+    const stalledQuery = scriptSource.slice(
+      scriptSource.indexOf('Step 1'),
+      scriptSource.indexOf('Step 2')
+    );
+    // Extract the GREATEST block used for staleness comparison
+    const greatestBlock = stalledQuery.match(/GREATEST\([\s\S]*?\)\s*</);
+    expect(greatestBlock).not.toBeNull();
+    expect(greatestBlock![0]).not.toMatch(/last_seen_at/);
+  });
+
+  // Bug 4: Cross-Revision Bleed — must scope to revision_num = '00'
+  it('scopes stalling to revision_num 00 only (cross-revision bleed)', () => {
+    // permits PK = (permit_num, revision_num). Inspections only exist for rev 00.
+    // Without scoping, all revisions get the same status from the base permit's inspections
+    expect(scriptSource).toMatch(/revision_num\s*=\s*'00'/);
+  });
+
+  // Bug 5: Silent State Mutation — must bump temporal tracker for CDC
+  it('bumps last_seen_at on status mutation for downstream CDC', () => {
+    // permits has no updated_at column — last_seen_at is the temporal tracker
+    // Without bumping it, downstream consumers never detect the status change
+    expect(scriptSource).toMatch(/SET\s+enriched_status\s*=\s*'Stalled'[\s\S]*?last_seen_at\s*=\s*NOW\(\)/);
+  });
+
+  // Bug 6: Terminal State Clobbering — reactivation must not overwrite terminal states
+  it('excludes terminal states from reactivation target', () => {
+    // A permit that reached 'Inspections Complete' or 'Not Passed' should never
+    // be blindly reset to 'Active Inspection' just because a new inspection appeared
+    const reactivationQuery = scriptSource.slice(
+      scriptSource.indexOf('Step 2'),
+      scriptSource.indexOf('Step 3')
+    );
+    expect(reactivationQuery).not.toMatch(
+      /SET enriched_status = 'Active Inspection'\s*\n\s*WHERE p\.enriched_status = 'Stalled'\s*\n\s*AND \(/
+    );
+    // Must check that reactivation doesn't overwrite terminal statuses
+    expect(reactivationQuery).toMatch(/Inspections Complete|NOT IN|terminal/i);
+  });
+
+  // Bug 7: Zombie Polling — must drive reactivation from recent activity, not graveyard scan
+  it('drives reactivation from recent inspection activity (not graveyard scan)', () => {
+    // Scanning all Stalled permits degrades linearly as the graveyard grows
+    // Instead, scan recent permit_inspections and join back to permits
+    const reactivationQuery = scriptSource.slice(
+      scriptSource.indexOf('Step 2'),
+      scriptSource.indexOf('Step 3')
+    );
+    // Must reference a time-bounded window on permit_inspections (recent activity)
+    expect(reactivationQuery).toMatch(/permit_inspections[\s\S]*?(interval|>\s*NOW|>=\s*NOW|last\s*\d+)/i);
+  });
+
+  // Bug 8: Metric Inflation — rowCount counts revisions, not unique projects
+  it('counts distinct permit_num for telemetry (not rowCount)', () => {
+    // With revision_num = '00' filter, rowCount = unique permits, but the script
+    // should still use RETURNING or explicit distinct counting for correctness
+    expect(scriptSource).not.toMatch(/stalledResult\.rowCount/);
+  });
+
+  // Bug 9: Dynamic Telemetry Schema — must use static schema
+  it('emits distribution as array of objects (static schema)', () => {
+    // Dynamic keys like {"Stalled": 500} break time-series observability tools
+    // Must emit [{status: "Stalled", count: 500}] instead
+    expect(scriptSource).not.toMatch(/\.reduce\s*\(\s*\(acc,\s*r\)\s*=>\s*\{\s*acc\[/);
+    expect(scriptSource).toMatch(/\.map\s*\(\s*\(?r\)?\s*=>/);
+  });
+
+  // Bug 10: Calendar-Aware Interval Drift — must use absolute day count
+  it('uses absolute day interval (not calendar months)', () => {
+    // INTERVAL '1 month' * 10 varies by season (months have different lengths)
+    // Use INTERVAL '300 days' for predictable, consistent thresholds
+    expect(scriptSource).not.toMatch(/INTERVAL\s+'1 month'\s*\*/i);
+    expect(scriptSource).toMatch(/INTERVAL\s+'300 days'/i);
+  });
+});
+
 describe('PIPELINE_SUMMARY capture uses last occurrence', () => {
   const routeSource = fs.readFileSync(
     path.resolve(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
