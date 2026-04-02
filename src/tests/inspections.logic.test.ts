@@ -1013,6 +1013,51 @@ describe('classify-inspection-status.js SQL correctness', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// classify-permit-phase.js — source-level assertions on SQL correctness
+// ---------------------------------------------------------------------------
+describe('classify-permit-phase.js SQL correctness', () => {
+  const phaseSource = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/classify-permit-phase.js'), 'utf-8'
+  );
+
+  // Bug 2: Denominator Dilution — examRate denominator must use relevant pool
+  it('computes examination rate from relevant pool, not all-time permits', () => {
+    // Dividing by COUNT(*) FROM permits (237K+ all-time) makes the rate
+    // mathematically useless (~0.01%). Must use the relevant active pool.
+    const statsQuery = phaseSource.slice(
+      phaseSource.indexOf('Cumulative counts'),
+      phaseSource.indexOf('emitSummary')
+    );
+    // The denominator for exam_rate must NOT be total permits
+    expect(statsQuery).not.toMatch(/totalExamination\s*\/\s*totalPermits/);
+  });
+
+  // Bug 3: Cross-Revision State Bleed — must scope to revision_num = '00'
+  it('scopes UPDATE to revision_num 00 (cross-revision bleed)', () => {
+    // permits PK = (permit_num, revision_num). Without scoping, an UPDATE
+    // hits all revisions and inflates metrics by 3-5x
+    expect(phaseSource).toMatch(/revision_num\s*=\s*'00'/);
+  });
+
+  // Bug 3b: Metric Inflation — must not rely on rowCount for multi-revision data
+  it('uses rows.length instead of rowCount for accurate metrics', () => {
+    expect(phaseSource).not.toMatch(/examResult\.rowCount/);
+  });
+
+  // Bug 4: Epoch Date Bypass — issued_date check must catch epoch defaults
+  it('catches epoch default dates in addition to NULL', () => {
+    // Bad municipal ETL can insert 1970-01-01 instead of NULL for missing dates.
+    // DATE columns cannot hold empty strings, but epoch dates bypass IS NULL.
+    expect(phaseSource).toMatch(/1970/);
+  });
+
+  // CDC consistency — must bump last_seen_at on mutation
+  it('bumps last_seen_at on status mutation for downstream CDC', () => {
+    expect(phaseSource).toMatch(/SET\s+enriched_status\s*=\s*'Examination'[\s\S]*?last_seen_at\s*=\s*NOW\(\)/);
+  });
+});
+
 describe('PIPELINE_SUMMARY capture uses last occurrence', () => {
   const routeSource = fs.readFileSync(
     path.resolve(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'

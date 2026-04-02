@@ -11,6 +11,9 @@
  * upsert won't conflict — raw CKAN status is preserved, and enriched_status
  * reflects our derived classification.
  *
+ * Scoped to revision_num = '00' because sub-revisions (01, 02, etc.) inherit
+ * lifecycle state from the base permit and should not be independently classified.
+ *
  * Usage: node scripts/classify-permit-phase.js
  *
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
@@ -20,10 +23,16 @@ const pipeline = require('./lib/pipeline');
 pipeline.run('classify-permit-phase', async (pool) => {
   const startTime = Date.now();
 
-  // Count the eligible pool BEFORE updating (for accurate records_total)
+  // Count the eligible pool BEFORE updating (for records_total).
+  // This is the full pool including already-classified rows — records_updated
+  // will be lower due to the IS DISTINCT FROM guard in the UPDATE.
+  // Scoped to revision_num = '00' to avoid cross-revision inflation.
+  // Catches epoch default dates (1970-01-01) from bad municipal ETL in addition to NULL.
   const eligibleResult = await pool.query(
     `SELECT COUNT(*) AS cnt FROM permits
-     WHERE status = 'Inspection' AND issued_date IS NULL`
+     WHERE status = 'Inspection'
+       AND revision_num = '00'
+       AND (issued_date IS NULL OR issued_date < '1970-01-02')`
   );
   const eligibleCount = parseInt(eligibleResult.rows[0].cnt, 10);
 
@@ -32,28 +41,30 @@ pipeline.run('classify-permit-phase', async (pool) => {
   // Single UPDATE is inherently atomic — no transaction wrapper needed.
   const examResult = await pool.query(
     `UPDATE permits
-     SET enriched_status = 'Examination'
+     SET enriched_status = 'Examination',
+         last_seen_at = NOW()
      WHERE status = 'Inspection'
-       AND issued_date IS NULL
+       AND revision_num = '00'
+       AND (issued_date IS NULL OR issued_date < '1970-01-02')
        AND enriched_status IS DISTINCT FROM 'Examination'
      RETURNING permit_num`
   );
-  const examCount = examResult.rowCount || 0;
+  const examCount = examResult.rows.length;
   pipeline.log.info('[classify-phase]', `Examination: ${examCount.toLocaleString()} permits reclassified`);
 
-  // Cumulative counts
+  // Cumulative counts — denominator scoped to status = 'Inspection' AND revision_num = '00'
+  // to match the UPDATE scope and avoid denominator dilution from sub-revisions or all-time permits
   const statsResult = await pool.query(
     `SELECT
        COUNT(*) FILTER (WHERE enriched_status = 'Examination') AS total_examination,
-       COUNT(*) FILTER (WHERE status = 'Inspection') AS total_inspection,
-       COUNT(*) FILTER (WHERE status = 'Permit Issued') AS total_issued,
-       COUNT(*) AS total
-     FROM permits`
+       COUNT(*) AS total_inspection
+     FROM permits
+     WHERE status = 'Inspection'
+       AND revision_num = '00'`
   );
   const totalExamination = parseInt(statsResult.rows[0].total_examination, 10);
   const totalInspection = parseInt(statsResult.rows[0].total_inspection, 10);
-  const totalPermits = parseInt(statsResult.rows[0].total, 10);
-  const examRate = totalPermits > 0 ? (totalExamination / totalPermits * 100) : 0;
+  const examRate = totalInspection > 0 ? (totalExamination / totalInspection * 100) : 0;
 
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[classify-phase]', 'Complete', {
@@ -88,7 +99,7 @@ pipeline.run('classify-permit-phase', async (pool) => {
     },
   });
   pipeline.emitMeta(
-    { "permits": ["status", "issued_date", "enriched_status"] },
-    { "permits": ["enriched_status"] }
+    { "permits": ["status", "revision_num", "issued_date", "enriched_status", "last_seen_at"] },
+    { "permits": ["enriched_status", "last_seen_at"] }
   );
 });
