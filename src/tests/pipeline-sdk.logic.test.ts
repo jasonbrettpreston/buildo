@@ -921,6 +921,178 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
+  // CHAOS REGRESSION SUITE — permanent automated versions of manual chaos tests
+  // Prevents future regressions of CI/CD, SDK telemetry, and infra gates.
+  // -----------------------------------------------------------------------
+  describe('Chaos Test A: Linter guard rules are active', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fsLint = require('fs');
+    const eslintSource = fsLint.readFileSync(
+      path.resolve(__dirname, '../../eslint.config.mjs'), 'utf-8'
+    );
+
+    it('ESLint config bans new Pool() in pipeline scripts', () => {
+      expect(eslintSource).toContain("NewExpression[callee.name='Pool']");
+    });
+
+    it('ESLint config bans new pg.Pool() (member expression) in pipeline scripts', () => {
+      expect(eslintSource).toContain("NewExpression[callee.property.name='Pool']");
+    });
+
+    it('ESLint config bans process.exit() in pipeline scripts', () => {
+      expect(eslintSource).toMatch(/process.*exit.*banned.*pipeline/);
+    });
+
+    it('scripts/ directory is NOT in global ESLint ignores', () => {
+      // Extract the first ignores block (global)
+      const ignoresMatch = eslintSource.match(/ignores:\s*\[([\s\S]*?)\]/);
+      expect(ignoresMatch).not.toBeNull();
+      expect(ignoresMatch![1]).not.toContain("'scripts/**'");
+    });
+
+    it('Ruff config bans psycopg2 import', () => {
+      const ruffSource = fsLint.readFileSync(
+        path.resolve(__dirname, '../../ruff.toml'), 'utf-8'
+      );
+      expect(ruffSource).toContain('psycopg2');
+      expect(ruffSource).toContain('banned');
+    });
+  });
+
+  describe('Chaos Test B: Pre-flight bloat gate in run-chain.js', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fsBloat = require('fs');
+    const chainSource = fsBloat.readFileSync(
+      path.resolve(__dirname, '../../scripts/run-chain.js'), 'utf-8'
+    );
+
+    it('bloat gate queries pg_stat_user_tables for dead tuples', () => {
+      expect(chainSource).toContain('n_dead_tup');
+      expect(chainSource).toContain('pg_stat_user_tables');
+    });
+
+    it('bloat gate has WARN and ABORT thresholds', () => {
+      expect(chainSource).toContain('BLOAT_WARN_THRESHOLD');
+      expect(chainSource).toContain('BLOAT_ABORT_THRESHOLD');
+    });
+
+    it('bloat gate sets failedStep on ABORT to halt chain', () => {
+      // The per-step bloat gate (inside the step loop) must set failedStep on abort
+      const bloatAbortIdx = chainSource.indexOf('Bloat gate ABORT');
+      expect(bloatAbortIdx).toBeGreaterThan(-1);
+      const afterAbort = chainSource.slice(bloatAbortIdx, bloatAbortIdx + 300);
+      expect(afterAbort).toContain('failedStep');
+    });
+
+    it('Phase 0 Pre-Flight audit_table emitted with sys_db_bloat metrics', () => {
+      expect(chainSource).toMatch(/phase:\s*0/);
+      expect(chainSource).toContain('Pre-Flight Health Gate');
+      expect(chainSource).toContain('sys_db_bloat_');
+    });
+
+    it('bloat gate thresholds produce correct verdicts (pure logic)', () => {
+      const WARN = 0.20;
+      const ABORT = 0.50;
+      const check = (r: number) => r > ABORT ? 'abort' : r > WARN ? 'warn' : 'pass';
+      expect(check(0.05)).toBe('pass');
+      expect(check(0.25)).toBe('warn');
+      expect(check(0.50)).toBe('warn');
+      expect(check(0.51)).toBe('abort');
+    });
+  });
+
+  describe('Chaos Test C: Telemetry auto-injection in emitSummary', () => {
+    let logSpy: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => { logSpy = vi.spyOn(console, 'log').mockImplementation(() => {}); });
+    afterEach(() => { logSpy.mockRestore(); });
+
+    it('sys_velocity_rows_sec always injected (Day 1 free metric)', () => {
+      pipeline.emitSummary({ records_total: 100, records_meta: { audit_table: { phase: 1, name: 'T', verdict: 'PASS', rows: [] } } });
+      const parsed = JSON.parse((logSpy.mock.calls[0][0] as string).replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed.records_meta.audit_table.rows.find((r: { metric: string }) => r.metric === 'sys_velocity_rows_sec')).toBeDefined();
+    });
+
+    it('custom metrics survive auto-injection (append, don\'t replace)', () => {
+      pipeline.emitSummary({
+        records_total: 50,
+        records_meta: { audit_table: { phase: 1, name: 'T', verdict: 'PASS', rows: [{ metric: 'my_custom', value: 99, threshold: null, status: 'INFO' }] } },
+      });
+      const parsed = JSON.parse((logSpy.mock.calls[0][0] as string).replace('PIPELINE_SUMMARY:', ''));
+      const rows = parsed.records_meta.audit_table.rows;
+      expect(rows.find((r: { metric: string }) => r.metric === 'my_custom')).toBeDefined();
+      expect(rows.find((r: { metric: string }) => r.metric === 'sys_velocity_rows_sec')).toBeDefined();
+    });
+
+    it('err_* injected only when telemetry_context.error_taxonomy provided', () => {
+      pipeline.emitSummary({
+        records_total: 10,
+        records_meta: { audit_table: { phase: 1, name: 'T', verdict: 'PASS', rows: [] } },
+        telemetry_context: { error_taxonomy: { db_timeouts: 2 } },
+      });
+      const parsed = JSON.parse((logSpy.mock.calls[0][0] as string).replace('PIPELINE_SUMMARY:', ''));
+      const errRow = parsed.records_meta.audit_table.rows.find((r: { metric: string }) => r.metric === 'err_db_timeouts');
+      expect(errRow).toBeDefined();
+      expect(errRow.value).toBe(2);
+      expect(errRow.status).toBe('WARN');
+    });
+
+    it('dq_null_rate_* injected only when telemetry_context.data_quality provided', () => {
+      pipeline.emitSummary({
+        records_total: 200,
+        records_meta: { audit_table: { phase: 1, name: 'T', verdict: 'PASS', rows: [] } },
+        telemetry_context: { data_quality: { geometry: { nulls: 100, total: 200 } } },
+      });
+      const parsed = JSON.parse((logSpy.mock.calls[0][0] as string).replace('PIPELINE_SUMMARY:', ''));
+      const dqRow = parsed.records_meta.audit_table.rows.find((r: { metric: string }) => r.metric === 'dq_null_rate_geometry');
+      expect(dqRow).toBeDefined();
+      expect(dqRow.value).toBe('50.0%');
+      expect(dqRow.status).toBe('FAIL'); // >= 50% threshold
+    });
+
+    it('telemetry_context does NOT leak into PIPELINE_SUMMARY output', () => {
+      pipeline.emitSummary({
+        records_total: 10,
+        records_meta: { audit_table: { phase: 1, name: 'T', verdict: 'PASS', rows: [] } },
+        telemetry_context: { error_taxonomy: { waf: 1 } },
+      });
+      const raw = logSpy.mock.calls[0][0] as string;
+      expect(raw).not.toContain('telemetry_context');
+    });
+  });
+
+  describe('Chaos Test D: streamQuery memory safety', () => {
+    it('streamQuery is an async generator (yields rows, not arrays)', () => {
+      expect(pipeline.streamQuery.constructor.name).toBe('AsyncGeneratorFunction');
+    });
+
+    it('streamQuery destroys stream before releasing client (cursor leak prevention)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fsStream = require('fs');
+      const source = fsStream.readFileSync(path.resolve(__dirname, '../../scripts/lib/pipeline.js'), 'utf-8');
+      const fnBlock = source.slice(source.indexOf('async function* streamQuery'), source.indexOf('// Exports'));
+      const destroyIdx = fnBlock.indexOf('stream.destroy()');
+      const releaseIdx = fnBlock.indexOf('client.release()');
+      expect(destroyIdx).toBeGreaterThan(-1);
+      expect(releaseIdx).toBeGreaterThan(-1);
+      expect(destroyIdx).toBeLessThan(releaseIdx);
+    });
+
+    it('pg-query-stream is installed as a dependency', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fsStream = require('fs');
+      const pkg = JSON.parse(fsStream.readFileSync(path.resolve(__dirname, '../../package.json'), 'utf-8'));
+      expect(pkg.dependencies['pg-query-stream']).toBeDefined();
+    });
+
+    it('link-massing.js uses streamQuery (not pool.query for full table)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fsStream = require('fs');
+      const content = fsStream.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.js'), 'utf-8');
+      expect(content).toContain('pipeline.streamQuery');
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // B1/B3: reclassify-all.js — keyset pagination + SDK migration
   // -----------------------------------------------------------------------
   describe('B1/B3: reclassify-all.js uses keyset pagination and pipeline SDK', () => {
