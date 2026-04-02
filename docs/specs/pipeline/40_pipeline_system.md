@@ -37,7 +37,7 @@ The mandatory infrastructure layer for all pipeline scripts. No script may insta
 | `createPool()` | `() => Pool` | PostgreSQL pool using `PG_*` env vars. Called internally by `run()`. |
 | `withTransaction(pool, fn)` | `(Pool, (PoolClient) => Promise<T>) => Promise<T>` | BEGIN → fn → COMMIT. ROLLBACK on error (nested try-catch per §9.1). |
 | `log.{info,warn,error}` | `(tag, msg, ctx?) => void` | Structured JSON logging to stdout/stderr. |
-| `emitSummary(stats)` | `(SummaryPayload) => void` | Emits `PIPELINE_SUMMARY:{json}` to stdout. |
+| `emitSummary(stats)` | `(SummaryPayload) => void` | Emits `PIPELINE_SUMMARY:{json}` to stdout. Auto-injects `sys_velocity_rows_sec`, `sys_duration_ms`. Accepts opt-in `telemetry_context` for `err_*`/`dq_*` rows (see `30_pipeline_architecture.md` §3). |
 | `emitMeta(reads, writes, ext?)` | `(Record, Record, string[]?) => void` | Emits `PIPELINE_META:{json}` to stdout. |
 | `progress(label, cur, total, startMs)` | `(string, number, number, number) => void` | Progress percentage + elapsed time + velocity (rows/s). |
 | `streamQuery(pool, sql, params?, opts?)` | `async function*(Pool, string, any[], {batchSize?}) => AsyncGenerator<Row>` | Streaming cursor via `pg-query-stream`. Yields one row at a time, preventing OOM on large tables. |
@@ -102,17 +102,19 @@ node scripts/run-chain.js <chain_id> [run_id] [--force]
 
 1. Reads chain definition from `manifest.json`
 2. Inserts `pipeline_runs` row with `status='running'` for the chain
-3. For each step in sequence:
+3. **Phase 0 Pre-Flight Health Gate:** Queries `pg_stat_user_tables` for all chain tables' dead tuple ratio. Emits Phase 0 `audit_table` with `sys_db_bloat_*` metrics. Stored in chain `records_meta.pre_flight_audit`.
+4. For each step in sequence:
    a. Check for cancellation (`pipeline_runs.status = 'cancelled'`)
    b. Check if step is disabled (`pipeline_schedules.enabled = FALSE`)
    c. Check gate-skip (primary ingest had 0 new records → skip non-infra steps)
-   d. Insert step-scoped `pipeline_runs` row (`{chain}:{step}`)
-   e. Capture pre-telemetry (T1/T2/T4/T6)
-   f. Spawn child process (`node` or `python3`) with `stdio: ['inherit', 'pipe', 'inherit']`
-   g. Stream stdout, buffer `PIPELINE_SUMMARY:` and `PIPELINE_META:` lines
-   h. On exit code 0: parse summary, capture post-telemetry, update step row to `completed`
-   i. On exit code 1: update step row to `failed`, **stop chain** (no subsequent steps run)
-4. Update chain `pipeline_runs` row with aggregate duration, status, verdicts
+   d. **Per-step bloat gate:** Check dead tuple ratio on step's `telemetry_tables`. WARN at >20%, ABORT at >50%.
+   e. Insert step-scoped `pipeline_runs` row (`{chain}:{step}`)
+   f. Capture pre-telemetry (T1/T2/T4/T6)
+   g. Spawn child process (`node` or `python3`) with `stdio: ['inherit', 'pipe', 'inherit']`
+   h. Stream stdout, buffer `PIPELINE_SUMMARY:` and `PIPELINE_META:` lines
+   i. On exit code 0: parse summary, capture post-telemetry, update step row to `completed`
+   j. On exit code 1: update step row to `failed`, **stop chain** (no subsequent steps run)
+5. Update chain `pipeline_runs` row with aggregate duration, status, verdicts
 
 ### 3.2 Gate-Skip Logic
 
@@ -167,6 +169,7 @@ Ordered array of script slugs. Execution is strictly sequential, stop-on-failure
   "coa": ["assert_schema", "coa", "assert_coa_freshness", "link_coa", "create_pre_permits", "assert_pre_permit_aging", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"],
   "sources": ["assert_schema", "address_points", "geocode_permits", "parcels", "compute_centroids", "link_parcels", "massing", "link_massing", "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"],
   "entities": ["enrich_wsib_builders", "enrich_named_builders"],
+  "wsib": ["enrich_wsib_registry"],
   "deep_scrapes": ["inspections", "classify_inspection_status", "assert_network_health", "refresh_snapshot", "assert_data_bounds", "assert_staleness", "assert_engine_health"]
 }
 ```
