@@ -133,7 +133,7 @@ pipeline.run('load-wsib', async (pool) => {
   // but row data is flushed to DB every DEDUP_FLUSH_SIZE rows to cap peak memory.
   const DEDUP_FLUSH_SIZE = 5000;
   const seenKeys = new Set(); // key: legal_name_normalized|mailing_address (dedup tracking)
-  let pendingRows = []; // row data buffer — flushed periodically
+  let pendingMap = new Map(); // dedupeKey → row data buffer (supports G-subclass replacement)
   let totalRows = 0;
   let gRows = 0;
   let skippedNonG = 0;
@@ -248,21 +248,32 @@ pipeline.run('load-wsib', async (pool) => {
       const tradeNorm = normalizeName(tradeName);
       const address = (row['Mailing Address'] || '').trim() || null;
 
-      // De-duplicate: keep first G-subclass row per (legal_name_normalized, address).
-      // The key Set stays in memory (small strings); row data is flushed periodically.
+      // De-duplicate: keep G-predominant-class row per (legal_name_normalized, address).
+      // Uses a Map for pending rows so G-subclass replacement logic is preserved.
+      // The seenKeys Set tracks already-flushed keys (small strings, stays in memory).
       const dedupeKey = `${legalNorm}|${address || ''}`;
-      if (seenKeys.has(dedupeKey)) return;
-      seenKeys.add(dedupeKey);
-
-      pendingRows.push(buildRow(row, legalName, legalNorm, tradeName, tradeNorm, address, predominantClass, subclass));
+      if (seenKeys.has(dedupeKey)) return; // already flushed to DB
+      const builtRow = buildRow(row, legalName, legalNorm, tradeName, tradeNorm, address, predominantClass, subclass);
+      if (pendingMap.has(dedupeKey)) {
+        // Replace if existing entry doesn't have G predominant but this one does
+        const existing = pendingMap.get(dedupeKey);
+        if (!existing.predominant_class.startsWith('G') && predominantClass.startsWith('G')) {
+          pendingMap.set(dedupeKey, builtRow);
+        }
+        return;
+      }
+      pendingMap.set(dedupeKey, builtRow);
       gRows++;
 
-      // Batch-flush: upsert pending rows to DB and free memory
-      if (pendingRows.length >= DEDUP_FLUSH_SIZE) {
+      // Batch-flush: upsert pending rows to DB and free memory.
+      // After flush, move keys to seenKeys Set so future duplicates are skipped.
+      if (pendingMap.size >= DEDUP_FLUSH_SIZE) {
         parser.pause();
-        flushBatch(pendingRows).then(() => {
-          pipeline.log.info('[load-wsib]', `Flushed ${pendingRows.length} rows (${gRows.toLocaleString()} total Class G)`);
-          pendingRows = [];
+        const rowsToFlush = Array.from(pendingMap.values());
+        for (const k of pendingMap.keys()) seenKeys.add(k);
+        flushBatch(rowsToFlush).then(() => {
+          pipeline.log.info('[load-wsib]', `Flushed ${rowsToFlush.length} rows (${gRows.toLocaleString()} total Class G)`);
+          pendingMap = new Map();
           parser.resume();
         }).catch(reject);
       }
@@ -277,8 +288,10 @@ pipeline.run('load-wsib', async (pool) => {
   });
 
   // Flush remaining rows
-  await flushBatch(pendingRows);
-  pendingRows = [];
+  const remainingRows = Array.from(pendingMap.values());
+  for (const k of pendingMap.keys()) seenKeys.add(k);
+  await flushBatch(remainingRows);
+  pendingMap = new Map();
 
   pipeline.log.info('[load-wsib]', 'Parsing complete', {
     total_csv_rows: totalRows, non_g_skipped: skippedNonG,

@@ -316,6 +316,8 @@ pipeline.run('enrich-wsib', async (pool) => {
       legal_name
     LIMIT $1
   `, [limit])) {
+    i++;
+
     // Track size breakdown as we stream
     if (entry.business_size === 'Large Business') sizeBreakdown.large++;
     else if (entry.business_size === 'Medium Business') sizeBreakdown.medium++;
@@ -432,8 +434,7 @@ pipeline.run('enrich-wsib', async (pool) => {
     }
 
     // Rate limiting
-    if (i < totalEntries - 1) await sleep(RATE_LIMIT_MS);
-    i++;
+    if (i < totalEntries) await sleep(RATE_LIMIT_MS);
   }
 
   pipeline.log.info('[enrich-wsib]', `  Large: ${sizeBreakdown.large} | Medium: ${sizeBreakdown.medium} | Small: ${sizeBreakdown.small}`);
