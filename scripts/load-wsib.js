@@ -38,6 +38,22 @@ function normalizeName(name) {
   return n || null;
 }
 
+// GTA municipalities for is_gta classification
+const GTA_CITIES = [
+  'toronto', 'scarborough', 'etobicoke', 'north york', 'east york',
+  'mississauga', 'brampton', 'caledon',
+  'markham', 'vaughan', 'richmond hill', 'king city', 'aurora',
+  'newmarket', 'stouffville', 'georgina',
+  'oakville', 'burlington', 'milton', 'halton hills',
+  'ajax', 'pickering', 'oshawa', 'whitby', 'clarington',
+];
+
+function isGTA(address) {
+  if (!address) return false;
+  const lower = address.toLowerCase();
+  return GTA_CITIES.some((city) => lower.includes(city));
+}
+
 function buildRow(row, legalName, legalNorm, tradeName, tradeNorm, address, predominantClass, subclass) {
   // Handle duplicate "Description" columns — csv-parse names them Description and Description_1
   // or similar. We need to figure out which is NAICS desc and which is subclass desc.
@@ -58,6 +74,7 @@ function buildRow(row, legalName, legalNorm, tradeName, tradeNorm, address, pred
     subclass: subclass || null,
     subclass_description: subclassDesc || null,
     business_size: (row['Business size'] || '').trim() || null,
+    is_gta: isGTA(address),
   };
 }
 
@@ -154,14 +171,14 @@ pipeline.run('load-wsib', async (pool) => {
 
         for (let j = 0; j < batch.length; j++) {
           const r = batch[j];
-          const offset = j * 11;
+          const offset = j * 12;
           placeholders.push(
-            `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, NOW())`
+            `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, $${offset + 12}, NOW())`
           );
           values.push(
             r.legal_name, r.trade_name, r.legal_name_normalized, r.trade_name_normalized,
             r.mailing_address, r.predominant_class, r.naics_code, r.naics_description,
-            r.subclass, r.subclass_description, r.business_size
+            r.subclass, r.subclass_description, r.business_size, r.is_gta
           );
         }
 
@@ -173,7 +190,7 @@ pipeline.run('load-wsib', async (pool) => {
           INSERT INTO wsib_registry (
             legal_name, trade_name, legal_name_normalized, trade_name_normalized,
             mailing_address, predominant_class, naics_code, naics_description,
-            subclass, subclass_description, business_size, last_seen_at
+            subclass, subclass_description, business_size, is_gta, last_seen_at
           ) VALUES ${placeholders.join(', ')}
           ON CONFLICT (legal_name_normalized, mailing_address)
           DO UPDATE SET
@@ -185,6 +202,7 @@ pipeline.run('load-wsib', async (pool) => {
             subclass = EXCLUDED.subclass,
             subclass_description = EXCLUDED.subclass_description,
             business_size = EXCLUDED.business_size,
+            is_gta = EXCLUDED.is_gta,
             last_seen_at = NOW()
           WHERE wsib_registry.trade_name IS DISTINCT FROM EXCLUDED.trade_name
              OR wsib_registry.trade_name_normalized IS DISTINCT FROM EXCLUDED.trade_name_normalized
@@ -194,6 +212,7 @@ pipeline.run('load-wsib', async (pool) => {
              OR wsib_registry.subclass IS DISTINCT FROM EXCLUDED.subclass
              OR wsib_registry.subclass_description IS DISTINCT FROM EXCLUDED.subclass_description
              OR wsib_registry.business_size IS DISTINCT FROM EXCLUDED.business_size
+             OR wsib_registry.is_gta IS DISTINCT FROM EXCLUDED.is_gta
           RETURNING (xmax = 0) AS is_insert
         `, values);
 

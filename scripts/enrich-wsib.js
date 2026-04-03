@@ -218,7 +218,7 @@ async function searchSerper(query) {
       'X-API-KEY': SERPER_API_KEY,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ q: query, gl: 'ca', num: 10 }),
+    body: JSON.stringify({ q: query, gl: 'ca', location: 'Ontario, Canada', num: 10 }),
   });
 
   if (!res.ok) {
@@ -269,9 +269,11 @@ pipeline.run('enrich-wsib', async (pool) => {
   // Queue: unenriched WSIB entries, prioritized by business size.
   // Uses streamQuery to avoid materializing the full result set upfront (B4).
   // Pre-count for progress logging since streamQuery doesn't know total rows.
+  // Filter to GTA-only businesses to save Serper credits (~74K non-GTA excluded)
   const countResult = await pool.query(`
     SELECT COUNT(*) AS cnt FROM wsib_registry
     WHERE last_enriched_at IS NULL
+      AND is_gta = true
       AND (trade_name IS NOT NULL OR legal_name IS NOT NULL)
   `);
   const totalEntries = Math.min(parseInt(countResult.rows[0].cnt, 10), limit);
@@ -304,6 +306,7 @@ pipeline.run('enrich-wsib', async (pool) => {
       website
     FROM wsib_registry
     WHERE last_enriched_at IS NULL
+      AND is_gta = true
       AND (trade_name IS NOT NULL OR legal_name IS NOT NULL)
     ORDER BY
       CASE business_size
