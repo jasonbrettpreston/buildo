@@ -324,7 +324,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
   const cumulativeLinked = parseInt(cumulativeResult.rows[0].linked, 10);
   const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
   const nhoodLinkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
-  const nhoodCount = turfPolygons.length;
+  const nhoodCount = nhoods.rows.length;
   const nhoodAuditRows = [
     { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
     { metric: 'neighbourhoods_loaded', value: nhoodCount, threshold: '== 158', status: nhoodCount === 158 ? 'PASS' : 'WARN' },
