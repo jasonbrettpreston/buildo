@@ -18,7 +18,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
   // Declare query results in outer scope so they're accessible after the try/finally
   let permitsRes, tradesRes, tradeByTypeRes, buildersRes, permitsBuilderRes, parcelsRes, nhoodRes, geoRes;
   let coaRes, scopeRes, scopeTagsRes, detailedTagsRes, topTagsRes, scopeBreakdownRes;
-  let freshRes, syncRes, nullsRes, violationsRes, inspectionsRes;
+  let freshRes, syncRes, nullsRes, violationsRes;
 
   try {
     permitsRes = await snapClient.query(
