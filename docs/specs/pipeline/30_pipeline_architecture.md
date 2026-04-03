@@ -121,17 +121,17 @@ Key tracked columns: `issued_date`, `description`, `builder_name`, `latitude`, `
 
 ### 4.1 Pre-Flight Bloat Gate (B24/B25)
 
-**Phase 0 is the sole bloat defense.** Before any steps run, `run-chain.js` queries `pg_stat_user_tables` for the dead tuple ratio on all chain tables.
+**Phase 0 is observational (warn-only) — it never blocks chain execution.** Before any steps run, `run-chain.js` queries `pg_stat_user_tables` for the dead tuple ratio on all chain tables.
 
-| Dead Ratio | Action | Dashboard |
-|------------|--------|-----------|
-| < 30% | PASS — continue | Green |
-| 30-50% | WARN — continue with warning | Amber |
-| > 50% | ABORT — halt chain, create FAIL row | Red |
+| Dead Ratio | Verdict | Dashboard | Chain Execution |
+|------------|---------|-----------|-----------------|
+| < 30% | PASS | Green | Continues |
+| 30-50% | WARN | Amber | Continues |
+| > 50% | FAIL | Red | **Continues** (warn logged) |
 
-On ABORT, the chain's `pipeline_runs` row is updated with `status: 'failed'`, a descriptive `error_message`, and a `pre_flight_audit` with FAIL verdict and `sys_db_bloat_*` metrics. The dashboard shows a red indicator with bloat drill-down.
+The `pre_flight_audit` with `sys_db_bloat_*` metrics is always stored in the chain's `records_meta` for dashboard visibility, regardless of verdict.
 
-**Why no per-step gate:** Normal pipeline upserts (237K+ rows) generate 50-99% dead tuples within the run. This is expected PostgreSQL MVCC behavior — autovacuum handles it between runs. A per-step gate would falsely abort every chain after its first mutation step.
+**Why warn-only, never abort:** Pipeline upserts (237K+ rows) generate 50-99% dead tuples that linger until autovacuum runs. On local dev, autovacuum is lazy — dead tuples from a prior run are still present when the next run starts. An abort gate would block the very pipeline that needs to run. Bloat monitoring is for observability (dashboard alerts), not execution gating.
 
 ### 4.2 PostGIS Dual-Path (B10/B11/B12)
 

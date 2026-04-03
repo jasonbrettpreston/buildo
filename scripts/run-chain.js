@@ -143,7 +143,7 @@ async function run() {
         let status = 'PASS';
         if (ratio > BLOAT_ABORT_THRESHOLD) { status = 'FAIL'; preFlightVerdict = 'FAIL'; }
         else if (ratio > BLOAT_WARN_THRESHOLD) { status = 'WARN'; if (preFlightVerdict === 'PASS') preFlightVerdict = 'WARN'; }
-        preFlightRows.push({ metric: `sys_db_bloat_${table}`, value: pct, threshold: '< 50% (abort)', status });
+        preFlightRows.push({ metric: `sys_db_bloat_${table}`, value: pct, threshold: '< 50% (warn)', status });
       }
     }
   } catch (err) {
@@ -158,26 +158,11 @@ async function run() {
   };
   pipeline.log.info('[run-chain]', `Pre-Flight: ${preFlightVerdict} (${preFlightRows.length} tables checked)`);
 
-  // Phase 0 ABORT: halt chain before any steps run, create visible failure row
+  // Phase 0 is warn-only — never blocks chain execution.
+  // Dead tuples from prior runs are expected (MVCC); autovacuum handles cleanup.
+  // The pre_flight_audit is stored in chain records_meta for dashboard visibility.
   if (preFlightVerdict === 'FAIL') {
-    const abortMsg = 'Pre-flight bloat gate abort: database dead tuple ratio exceeds 50%. Run VACUUM on affected tables.';
-    pipeline.log.error('[run-chain]', abortMsg, { preFlightRows });
-
-    if (chainRunId) {
-      const chainDuration = Date.now() - chainStart;
-      const abortMeta = JSON.stringify({ pre_flight_audit: preFlightAudit });
-      await pool.query(
-        `UPDATE pipeline_runs
-         SET completed_at = NOW(), status = 'failed', duration_ms = $1,
-             error_message = $2,
-             records_meta = COALESCE(records_meta, '{}'::jsonb) || $4::jsonb
-         WHERE id = $3`,
-        [chainDuration, abortMsg, chainRunId, abortMeta]
-      ).catch((err) => pipeline.log.warn('[run-chain]', `Failed to update chain row: ${err.message}`));
-    }
-
-    await pool.end().catch(() => {});
-    process.exit(1);
+    pipeline.log.warn('[run-chain]', 'Pre-flight bloat WARNING: dead tuple ratio exceeds 50% on some tables. Consider running VACUUM.', { preFlightRows });
   }
 
   for (let i = 0; i < steps.length; i++) {

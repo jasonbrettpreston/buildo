@@ -1003,12 +1003,15 @@ describe('Pipeline SDK', () => {
       expect(chainSource).toContain('BLOAT_ABORT_THRESHOLD');
     });
 
-    it('Phase 0 ABORT halts chain with visible failure (no per-step gate)', () => {
-      // Per-step bloat gate removed (normal upserts create 50-99% dead tuples).
-      // Phase 0 is the sole defense — ABORT creates a pipeline_runs failure row.
-      expect(chainSource).not.toContain('Bloat gate ABORT'); // per-step gate removed
-      expect(chainSource).toContain('Pre-flight bloat gate abort'); // Phase 0 abort message
-      expect(chainSource).toMatch(/preFlightVerdict\s*===\s*'FAIL'/); // Phase 0 ABORT check
+    it('Phase 0 is warn-only (never blocks chain execution)', () => {
+      // Per-step bloat gate removed. Phase 0 is warn-only for observability.
+      // Pipeline must always be allowed to run — dead tuples from prior runs are expected.
+      expect(chainSource).not.toContain('Bloat gate ABORT'); // no abort anywhere
+      expect(chainSource).toContain('Pre-flight bloat WARNING'); // warn, not abort
+      expect(chainSource).toContain('pre_flight_audit'); // still stored for dashboard
+      // No process.exit in the bloat gate section (only exists for invalid chain_id)
+      const bloatSection = chainSource.slice(chainSource.indexOf('Phase 0'), chainSource.indexOf('for (let i'));
+      expect(bloatSection).not.toContain('process.exit');
     });
 
     it('Phase 0 Pre-Flight audit_table emitted with sys_db_bloat metrics', () => {
@@ -1017,15 +1020,16 @@ describe('Pipeline SDK', () => {
       expect(chainSource).toContain('sys_db_bloat_');
     });
 
-    it('bloat gate thresholds produce correct verdicts (Phase 0 only)', () => {
-      // Phase 0 is the sole bloat defense — per-step gate removed
+    it('bloat gate thresholds produce correct verdicts (warn-only, never abort)', () => {
+      // Phase 0 is warn-only — FAIL verdict stored for dashboard but never blocks execution
       const WARN = 0.30;
-      const ABORT = 0.50;
-      const check = (r: number) => r > ABORT ? 'abort' : r > WARN ? 'warn' : 'pass';
+      const FAIL = 0.50;
+      const check = (r: number) => r > FAIL ? 'fail' : r > WARN ? 'warn' : 'pass';
       expect(check(0.05)).toBe('pass');
       expect(check(0.35)).toBe('warn');
       expect(check(0.50)).toBe('warn');
-      expect(check(0.51)).toBe('abort');
+      expect(check(0.51)).toBe('fail'); // FAIL verdict for dashboard, but chain still runs
+      expect(check(0.998)).toBe('fail'); // 99.8% — logged as warning, chain continues
     });
   });
 
