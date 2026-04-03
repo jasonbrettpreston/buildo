@@ -27,8 +27,9 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
-const booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default;
-const { point: turfPoint } = require('@turf/helpers');
+// Turf.js imports are lazy-loaded inside the JS fallback path (else block).
+// PostGIS environments don't need Turf installed at all.
+let booleanPointInPolygon, turfPoint;
 
 const BATCH_SIZE = 500;
 const GRID_SIZE = 0.003; // ~333m grid cells (same as old BBOX_OFFSET)
@@ -242,6 +243,9 @@ pipeline.run('link-massing', async (pool) => {
   // -----------------------------------------------------------------------
   // Phase 1 (JS fallback): Load all building footprints into in-memory grid index
   // -----------------------------------------------------------------------
+  // Lazy-load Turf.js only when PostGIS is unavailable
+  booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default;
+  ({ point: turfPoint } = require('@turf/helpers'));
   pipeline.log.info('[link-massing]', 'Streaming building footprints into grid index...');
   const loadStart = Date.now();
 

@@ -18,9 +18,9 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
-const booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default;
-const turfCentroid = require('@turf/centroid').default;
-const { point, polygon, multiPolygon } = require('@turf/helpers');
+// Turf.js imports are lazy-loaded inside the JS fallback path (else block).
+// PostGIS environments don't need Turf installed at all.
+let booleanPointInPolygon, turfCentroid, point, polygon, multiPolygon;
 
 /**
  * Compute centroid of a GeoJSON polygon/multipolygon using Turf.js.
@@ -171,6 +171,10 @@ pipeline.run('link-neighbourhoods', async (pool) => {
     processed += noMatch;
   } else {
     // JS fallback: batch loop with Turf.js booleanPointInPolygon
+    // Lazy-load Turf.js only when PostGIS is unavailable
+    booleanPointInPolygon = require('@turf/boolean-point-in-polygon').default;
+    turfCentroid = require('@turf/centroid').default;
+    ({ point, polygon, multiPolygon } = require('@turf/helpers'));
     pipeline.log.info('[link-neighbourhoods]', 'PostGIS not available — using Turf.js point-in-polygon');
 
   let lastPermitNum = '';

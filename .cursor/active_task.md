@@ -1,30 +1,37 @@
-# Active Task: WF3 — Gate-Skip + refresh-snapshot Crash
+# Active Task: WF3 — link-neighbourhoods.js Missing Dependency + Legacy Upgrade
 **Status:** Planning
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `2a2fa96`
+**Rollback Anchor:** `795b7d1`
 
 ## Context
-* **Goal:** Fix two bugs discovered during permits pipeline production run.
-* **Key Files:** `scripts/run-chain.js` (gate-skip), `scripts/refresh-snapshot.js` (scoping)
+* **Goal:** Fix crash on `@turf/centroid` missing dependency. Upgrade link-neighbourhoods.js to properly gate Turf.js imports behind the hasPostGIS check so PostGIS environments don't need Turf at all.
+* **Target Spec:** `docs/specs/pipeline/60_shared_steps.md`
+* **Key Files:** `scripts/link-neighbourhoods.js`, `package.json`
 
-## Bug 1: Gate-Skip Ignores Unprocessed Records from Failed Prior Run
-**Reproduction:** Run 1 loaded 202 new records but bloat gate killed chain at step 3. Run 2 finds 0 new records → gate-skip skips enrichment steps (6-12, 14-15). 202 records never enriched.
+## Bug
+**Reproduction:** `node scripts/link-neighbourhoods.js` → `Error: Cannot find module '@turf/centroid'`
+**Root Cause:** `@turf/centroid` required at module level (line 22) but never added to `package.json` dependencies. The PostGIS fast path (added this session) doesn't use Turf, but the import crashes before the `hasPostGIS` check runs.
 
-**Root Cause:** Gate-skip only checks `records_new` from the CURRENT run's gate step. It doesn't know that a prior run's records were loaded but never processed downstream.
+## Technical Implementation
 
-**Fix:** The gate-skip should check if there are unclassified/unlinked permits, not just whether the current run loaded new ones. Change the gate condition: instead of `records_new === 0`, check `records_new === 0 AND no pending work exists`. Or simpler: **only gate-skip if records_new === 0 AND the previous chain completed successfully**. If the previous chain failed, always run all steps.
+### Fix 1: Lazy-require Turf.js inside the JS fallback path
+Move all `require('@turf/...')` calls from module level into the `else` block (JS fallback path). When PostGIS is available, Turf is never imported. When PostGIS is unavailable, the require runs and throws a clear error if not installed.
 
-Simplest approach: check if the previous chain_permits run completed successfully. If it failed, disable gate-skip (force all steps).
+### Fix 2: Install @turf/centroid as dependency
+Already done (`npm install @turf/centroid`). This ensures the JS fallback works in dev environments without PostGIS.
 
-## Bug 2: refresh-snapshot.js `total_permits` Not Defined
-**Reproduction:** `node scripts/refresh-snapshot.js` → `ReferenceError: total_permits is not defined` at line 368.
+### Fix 3: Apply same pattern to link-parcels.js and link-massing.js
+Check if they have the same module-level Turf imports that would crash in environments where Turf isn't installed. Ensure all Turf imports are lazy (inside the fallback path).
 
-**Root Cause:** `const total_permits` declared at line 154 inside a `try {}` block (lines 18-187). JavaScript `const` is block-scoped. Line 368 accesses it from `pipeline.withTransaction()` callback which is outside the try block.
-
-**Fix:** Move `total_permits` (and other variables declared in the try block) to the outer function scope by declaring them with `let` before the try block.
+## Standards Compliance
+* **Try-Catch Boundary:** N/A — import restructuring
+* **Unhappy Path Tests:** Add test that link-neighbourhoods.js doesn't require Turf at module level
+* **logError Mandate:** N/A
+* **Mobile-First:** N/A
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `2a2fa96`
-- [ ] **Fix 1:** Gate-skip: check previous chain status, disable skip if prior run failed
-- [ ] **Fix 2:** refresh-snapshot.js: hoist variables out of try block
+- [ ] **Rollback Anchor:** `795b7d1`
+- [ ] **Fix 1:** Move Turf require() calls into JS fallback else block in link-neighbourhoods.js
+- [ ] **Fix 2:** Verify @turf/centroid in package.json (already installed)
+- [ ] **Fix 3:** Check link-parcels.js and link-massing.js for same pattern
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
