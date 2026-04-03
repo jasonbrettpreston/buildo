@@ -96,6 +96,24 @@ async function run() {
   let wasCancelled = false;
   const stepVerdicts = {}; // slug → 'PASS' | 'WARN' | 'FAIL'
 
+  // Check if previous chain run failed — if so, disable gate-skip to ensure
+  // unprocessed records from the failed run get enriched downstream.
+  let prevChainFailed = false;
+  try {
+    const prevRun = await pool.query(
+      `SELECT status FROM pipeline_runs
+       WHERE pipeline = $1 AND id != COALESCE($2, 0)
+       ORDER BY started_at DESC LIMIT 1`,
+      [chainSlug, chainRunId]
+    );
+    if (prevRun.rows[0]?.status === 'failed') {
+      prevChainFailed = true;
+      pipeline.log.info('[run-chain]', 'Previous chain run failed — gate-skip disabled to process unfinished work');
+    }
+  } catch (err) {
+    pipeline.log.warn('[run-chain]', `Previous run check failed: ${err.message}`);
+  }
+
   // Pre-flight bloat gate thresholds (B24/B25)
   // Phase 0 is the SOLE bloat defense — checks BEFORE any steps run.
   // Per-step bloat gate was removed: normal upserts create 50-99% dead tuples
@@ -391,9 +409,10 @@ async function run() {
       // steps (assert_*, refresh_snapshot) still run — they check cumulative
       // DB state, not just the latest batch.
       // --force bypasses gate-skip entirely (recovery after mid-chain crash).
+      // prevChainFailed also bypasses: unprocessed records from failed prior run.
       const gate = manifest.chain_gates[chainId];
       // Defensive: null/undefined coerce to 0 (null === 0 is false in JS)
-      if (gate && slug === gate && (recordsNew || 0) === 0 && (recordsUpdated || 0) === 0 && !forceMode) {
+      if (gate && slug === gate && (recordsNew || 0) === 0 && (recordsUpdated || 0) === 0 && !forceMode && !prevChainFailed) {
         console.log(`${stepLabel} — 0 new records — skipping non-essential downstream steps`);
         gateSkipped = true;
       }
