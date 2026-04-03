@@ -70,35 +70,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
   );
   pipeline.log.info('[link-neighbourhoods]', `Loaded ${nhoods.rows.length} neighbourhoods with geometry`);
 
-  // Pre-build Turf polygon objects + bounding boxes
-  const turfPolygons = [];
-  for (const n of nhoods.rows) {
-    const geom = typeof n.geometry === 'string' ? JSON.parse(n.geometry) : n.geometry;
-    if (!geom || !geom.coordinates) continue;
-
-    let turfGeom;
-    try {
-      if (geom.type === 'Polygon') {
-        turfGeom = polygon(geom.coordinates);
-      } else if (geom.type === 'MultiPolygon') {
-        turfGeom = multiPolygon(geom.coordinates);
-      } else {
-        continue;
-      }
-    } catch {
-      pipeline.log.warn('[link-neighbourhoods]', `Invalid geometry for ${n.name} (${n.neighbourhood_id})`);
-      continue;
-    }
-
-    turfPolygons.push({
-      db_id: n.id,
-      neighbourhood_id: n.neighbourhood_id,
-      name: n.name,
-      geometry: turfGeom,
-      bounds: computeBBox(geom),
-    });
-  }
-  pipeline.log.info('[link-neighbourhoods]', `Built ${turfPolygons.length} Turf polygons with BBOX`);
+  // turfPolygons built inside the JS fallback else block (Turf not available at module level)
 
   // Count permits to process
   const countResult = await pool.query(
@@ -176,6 +148,36 @@ pipeline.run('link-neighbourhoods', async (pool) => {
     turfCentroid = require('@turf/centroid').default;
     ({ point, polygon, multiPolygon } = require('@turf/helpers'));
     pipeline.log.info('[link-neighbourhoods]', 'PostGIS not available — using Turf.js point-in-polygon');
+
+    // Pre-build Turf polygon objects + bounding boxes (JS fallback only)
+    const turfPolygons = [];
+    for (const n of nhoods.rows) {
+      const geom = typeof n.geometry === 'string' ? JSON.parse(n.geometry) : n.geometry;
+      if (!geom || !geom.coordinates) continue;
+
+      let turfGeom;
+      try {
+        if (geom.type === 'Polygon') {
+          turfGeom = polygon(geom.coordinates);
+        } else if (geom.type === 'MultiPolygon') {
+          turfGeom = multiPolygon(geom.coordinates);
+        } else {
+          continue;
+        }
+      } catch {
+        pipeline.log.warn('[link-neighbourhoods]', `Invalid geometry for ${n.name} (${n.neighbourhood_id})`);
+        continue;
+      }
+
+      turfPolygons.push({
+        db_id: n.id,
+        neighbourhood_id: n.neighbourhood_id,
+        name: n.name,
+        geometry: turfGeom,
+        bounds: computeBBox(geom),
+      });
+    }
+    pipeline.log.info('[link-neighbourhoods]', `Built ${turfPolygons.length} Turf polygons with BBOX`);
 
   let lastPermitNum = '';
   let lastRevisionNum = '';
