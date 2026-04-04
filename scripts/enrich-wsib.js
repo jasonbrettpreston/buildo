@@ -136,8 +136,7 @@ const DIRECTORY_DOMAINS = [
   'constructionassociation.ca', 'ogca.ca', 'rescon.com',
   'construction.com', 'sweets.construction.com',
   'trustedpros.ca', 'canpages.ca',
-  // Government / municipal sites
-  'toronto.ca', 'ontario.ca', 'canada.ca',
+  // Government / municipal sites (toronto.ca, ontario.ca, canada.ca already in main list above)
   'escribemeetings.com', 'investburlington.ca',
   'citywindsor.ca', 'skicanada.org', 'beachmetro.com',
   // Data brokers / scrapers
@@ -458,7 +457,7 @@ pipeline.run('enrich-wsib', async (pool) => {
     const skipResult = shouldSkipWsibEntry(entry);
     if (skipResult.skip) {
       skipped[skipResult.reason]++;
-      pipeline.log.info('[enrich-wsib]', `  [${i + 1}/${totalEntries}] SKIP (${skipResult.reason}): ${entry.trade_name || entry.legal_name}`);
+      pipeline.log.info('[enrich-wsib]', `  [${i}/${totalEntries}] SKIP (${skipResult.reason}): ${entry.trade_name || entry.legal_name}`);
       if (!dryRun) {
         await pool.query(
           'UPDATE wsib_registry SET last_enriched_at = NOW() WHERE id = $1',
@@ -472,7 +471,7 @@ pipeline.run('enrich-wsib', async (pool) => {
 
     try {
       if (dryRun) {
-        pipeline.log.info('[enrich-wsib]', `  [${i + 1}/${totalEntries}] ${entry.trade_name || entry.legal_name} → query: ${query}`);
+        pipeline.log.info('[enrich-wsib]', `  [${i}/${totalEntries}] ${entry.trade_name || entry.legal_name} → query: ${query}`);
         enriched++;
         continue;
       }
@@ -552,7 +551,7 @@ pipeline.run('enrich-wsib', async (pool) => {
         contacts.website ? '🌐' : '',
       ].filter(Boolean).join(' ') || 'no contacts';
 
-      pipeline.log.info('[enrich-wsib]', `  [${i + 1}/${totalEntries}] ${entry.trade_name || entry.legal_name} (${entry.business_size || 'unknown'}) → ${summary}`);
+      pipeline.log.info('[enrich-wsib]', `  [${i}/${totalEntries}] ${entry.trade_name || entry.legal_name} (${entry.business_size || 'unknown'}) → ${summary}`);
 
     } catch (err) {
       pipeline.log.error('[enrich-wsib]', err, { wsib_id: entry.id, name: entry.trade_name || entry.legal_name });
