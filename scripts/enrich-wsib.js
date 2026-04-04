@@ -69,6 +69,9 @@ const EMAIL_REJECT = [
   // Generic directory/platform emails
   'accessibility@', 'webmaster@', 'customerservice@', 'support@construction.com',
   'info@osmca.org',
+  // Wrong-company domains from batch 4
+  'bellnet.ca', 'markham.ca', 'crunchbase.com', 'hpacmag.com',
+  'brandingcentres.com', 'b-safe.ca',
 ];
 // Personal email providers — blocked for Medium+ but allowed for Small Business
 // (sole proprietor plumbers/electricians legitimately use gmail as business email)
@@ -166,6 +169,13 @@ const DIRECTORY_DOMAINS = [
   'eartotheground-digital.com', 'levelbyoxford.com',
   'apps.dot.illinois.gov', 'team-global-m-s-m-group-job-agency.wh',
   'scaffolding.ca',
+  // Batch 4 additions
+  'slideshare.net', 'hpacmag.com', 'd7leadfinder.com', 'ic.gc.ca',
+  'silo.tips', 'yumpu.com', 'workopolis.com', 'leasidelife.com',
+  'torontojobs.ca', 'frpo.org', 'crunchbase.com', 'fmcsa.dot.gov',
+  'li-public.fmcsa.dot.gov', 'firstgas.co.nz', 'conservationhamilton.ca',
+  'mcahamiltonniagara.org', 'citt.org', 'mover.net', 'wheree.com',
+  'b-safeelectric.ca', 'b-safe.ca',
 ];
 
 function extractWebsite(results) {
@@ -296,7 +306,7 @@ function shouldSkipWsibEntry(entry) {
   }
 
   // 4. Staffing/temp agencies (WSIB-registered but not construction companies)
-  if (/\bstaffing\b|\bpersonnel\b|\bmanpower\b|\bemployment service\b|\btemporary\b|\bworkforce\b|\btemp service\b|\brecruitment\b/i.test(lower)) {
+  if (/\bstaffing\b|\bpersonnel\b|\bmanpower\b|\bemployment service\b|\btemporary\b|\bworkforce\b|\btemp service\b|\brecruitment\b|\bcareer1\b|\bprostaff\b|\bprotemps\b|\bplacement\b/i.test(lower)) {
     return { skip: true, reason: 'staffing_agency' };
   }
 
