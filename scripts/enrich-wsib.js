@@ -58,7 +58,20 @@ function extractPhones(snippets) {
 }
 
 const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-const EMAIL_REJECT = ['noreply@', 'no-reply@', 'donotreply@', 'example@', 'example.com', 'yourdomain.com', 'test.com', 'email.com', 'sentry.io', 'wixpress.com', 'sampleemail.com'];
+const EMAIL_REJECT = [
+  // Auto-generated / template
+  'noreply@', 'no-reply@', 'donotreply@', 'example@', 'example.com', 'yourdomain.com',
+  'test.com', 'email.com', 'sentry.io', 'wixpress.com', 'sampleemail.com',
+  // Image filenames parsed as emails (Serper snippet artifacts)
+  '.png', '.jpg', '.gif', '.svg', '.webp', '@2x.', '@3x.',
+  // Government domains (wrong match for businesses)
+  '.gov.', 'toronto.ca', 'ontario.ca', 'canada.ca', '.gov.uk', '.gov.ca',
+  // Personal email providers (not business contacts)
+  'gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'live.com', 'aol.com',
+  // Generic directory/platform emails
+  'accessibility@', 'webmaster@', 'customerservice@', 'support@construction.com',
+  'info@osmca.org',
+];
 
 function extractEmails(snippets) {
   const emails = [];
@@ -116,11 +129,34 @@ const DIRECTORY_DOMAINS = [
   'homestars.com', 'homeadvisor.com', 'thumbtack.com', 'angi.com',
   'ontario.ca', 'canada.ca', 'gov.on.ca',
   'pagesjaunes.ca', 'nextdoor.com', 'bark.com',
-  // Construction directories / project listing sites (return template data, not company info)
+  // Construction directories / project listing sites
   'procore.com', 'constructconnect.com', 'canada.constructconnect.com',
   'projects.constructconnect.com', 'dcnonl.com', 'buildingconnected.com',
   'yorkmaps.ca', 'ww4.yorkmaps.ca', '31safer.ca',
   'constructionassociation.ca', 'ogca.ca', 'rescon.com',
+  'construction.com', 'sweets.construction.com',
+  'trustedpros.ca', 'canpages.ca',
+  // Government / municipal sites
+  'toronto.ca', 'ontario.ca', 'canada.ca',
+  'escribemeetings.com', 'investburlington.ca',
+  'citywindsor.ca', 'skicanada.org', 'beachmetro.com',
+  // Data brokers / scrapers
+  'rocketreach.co', 'datanyze.com', 'apollo.io',
+  // News / media / magazines
+  'insauga.com', 'ourtimes.ca',
+  // Cloud storage / CDN (not company websites)
+  's3.amazonaws.com', 'cc-production-uploads-bucket.s3',
+  // Website builders / platforms (not company websites)
+  'bold.pro', 'ca.bold.pro',
+  // Job boards
+  'ziprecruiter.com', 'monster.com',
+  // Other non-company sites
+  'scribd.com', 'prd.tecprd.ethicsefile.com',
+  'darien.il.us', 'cfcanada.fticonsulting.com', 'cmcsa.com',
+  'legacyclassic.com', 'epa.gov',
+  'hub.datanorthyorkshire.org', 'files.cityofportsmouth.com',
+  'northyorks.gov.uk', 'cityofportsmouth.com',
+  'pub-markham.escribemeetings.com',
 ];
 
 function extractWebsite(results) {
@@ -175,26 +211,47 @@ function extractCity(address) {
   return null;
 }
 
-function extractStreet(address) {
-  if (!address) return null;
-  // First part before the first comma is typically the street address
-  const street = address.split(',')[0]?.trim();
-  if (!street) return null;
-  // Skip PO Box / Suite-only entries
-  if (/^(PO\s+Box|P\.?O\.?\s*Box|Suite|Ste\.?|Unit|Apt\.?|#\d)/i.test(street)) return null;
-  return street;
-}
+// NAICS code → human-readable search terms (what people actually Google)
+const NAICS_SEARCH_TERMS = {
+  // Building Equipment (G4)
+  '238210': 'electrician electrical contractor',
+  '238220': 'plumber plumbing HVAC heating cooling contractor',
+  '238299': 'building equipment contractor',
+  '238291': 'building systems contractor',
+  // Specialty Trades (G5)
+  '238320': 'painter painting wall covering contractor',
+  '238350': 'finish carpentry cabinetry trim contractor',
+  '238310': 'drywall insulation contractor',
+  '238330': 'flooring contractor',
+  '238340': 'tile tiling terrazzo contractor',
+  '238990': 'specialty trades contractor',
+  '238910': 'excavation site preparation contractor',
+  '238390': 'specialty trades contractor',
+  // Foundation, Structure & Exterior (G3)
+  '238130': 'framing carpenter contractor',
+  '238170': 'siding exterior contractor',
+  '238160': 'roofing roofer contractor',
+  '238140': 'masonry bricklayer contractor',
+  '238190': 'exterior construction contractor',
+  '238110': 'concrete foundation contractor',
+  '238150': 'glass glazing window contractor',
+  '238120': 'structural steel contractor',
+  // Residential (G1)
+  '236110': 'home builder residential contractor',
+  // Non-Residential (G6)
+  '236220': 'commercial building general contractor',
+  '236210': 'industrial building contractor',
+  // Professional
+  '541370': 'surveying contractor',
+  '541340': 'drafting design services',
+  '541514': 'computer systems design',
+};
+const NAICS_FALLBACK = 'contractor';
 
 function buildSearchQuery(entry) {
   const name = entry.trade_name || entry.legal_name;
   const city = extractCity(entry.mailing_address) || 'Ontario';
-  const street = extractStreet(entry.mailing_address);
-  const trade = entry.naics_description || '';
-
-  // Use street address for precision when available, NAICS description as trade type
-  if (street) {
-    return `"${name}" "${street}" ${city} ${trade} phone email`;
-  }
+  const trade = NAICS_SEARCH_TERMS[entry.naics_code] || NAICS_FALLBACK;
   return `"${name}" ${city} ${trade} phone email`;
 }
 
@@ -210,16 +267,46 @@ const GENERIC_TRADE_NAMES = new Set([
 ]);
 
 function shouldSkipWsibEntry(entry) {
-  // Skip entries without a usable search name
   const searchName = (entry.trade_name || entry.legal_name || '').trim();
+  const lower = searchName.toLowerCase();
+
+  // 1. No usable search name
   if (!searchName || searchName.length < 4) {
     return { skip: true, reason: 'no_search_name' };
   }
 
-  // Skip generic trade names
+  // 2. Generic trade names (single-word trades like "ROOFING", "DRYWALL")
   const normalized = searchName.toUpperCase().replace(/[.,;'"]/g, '').replace(/\s+/g, ' ');
   if (GENERIC_TRADE_NAMES.has(normalized)) {
     return { skip: true, reason: 'generic_trade_name' };
+  }
+
+  // 3. Corporate accounting entries (never real company names)
+  if (/\baccount\b|\bhead office\b|\bmain office\b|\btarget account\b/i.test(lower)) {
+    return { skip: true, reason: 'corporate_account' };
+  }
+
+  // 4. Staffing/temp agencies (WSIB-registered but not construction companies)
+  if (/\bstaffing\b|\bpersonnel\b|\bmanpower\b|\bemployment service\b|\btemporary\b|\bworkforce\b|\btemp service\b|\brecruitment\b/i.test(lower)) {
+    return { skip: true, reason: 'staffing_agency' };
+  }
+
+  // 5. Division/subsidiary/region markers (internal names, not indexed online)
+  if (/\bdivision\b|\bdivsion\b|\bdiv\s|\bregion\s|\bdistrict\s/i.test(lower)) {
+    return { skip: true, reason: 'division_name' };
+  }
+
+  // 6. Non-construction despite NAICS classification
+  if (/\bfood service\b|\bcatering\b|\bcamp\s|\benvironmental service\b/i.test(lower)) {
+    return { skip: true, reason: 'non_construction' };
+  }
+
+  // 7. Unsearchable abbreviations (very short, no vowels, or parenthetical codes)
+  if (searchName.length <= 5 && !searchName.includes(' ')) {
+    return { skip: true, reason: 'abbreviation' };
+  }
+  if (/\(N\.?A\.?\)|\(Canada\)|\(East\)|\(West\)/i.test(searchName)) {
+    return { skip: true, reason: 'abbreviation' };
   }
 
   return { skip: false, reason: null };
@@ -325,7 +412,7 @@ pipeline.run('enrich-wsib', async (pool) => {
   let failed = 0;
   const fieldCounts = { phone: 0, email: 0, website: 0 };
   let websitesScraped = 0;
-  const skipped = { no_search_name: 0, generic_trade_name: 0 };
+  const skipped = { no_search_name: 0, generic_trade_name: 0, corporate_account: 0, staffing_agency: 0, division_name: 0, non_construction: 0, abbreviation: 0 };
   const sizeBreakdown = { large: 0, medium: 0, small: 0 };
   let i = 0;
 
@@ -338,6 +425,7 @@ pipeline.run('enrich-wsib', async (pool) => {
       legal_name,
       trade_name,
       mailing_address,
+      naics_code,
       naics_description,
       business_size,
       primary_phone,

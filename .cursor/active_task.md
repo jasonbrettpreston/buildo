@@ -1,51 +1,84 @@
-# Active Task: WF3 — Smarter Queries + Relevance Filter
+# Active Task: WF3 — WSIB Enrichment Quality Overhaul
 **Status:** Planning
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `34816fd`
+**Rollback Anchor:** `b3604d6`
 
 ## Context
-* **Goal:** (1) Rebuild search queries to use address + NAICS trade description. (2) Exclude non-building businesses from enrichment.
+* **Goal:** Fix 3 layers of enrichment quality: pre-screen garbage names, translate NAICS to human search terms, harden extraction to reject fake data.
 * **Key Files:** `scripts/enrich-wsib.js`
 
-## Fix 1: Smarter buildSearchQuery()
-Use the NAICS description as the trade descriptor instead of hardcoded "contractor". The NAICS description defines what the business actually does — far more useful than the company name alone.
+## Current Quality: 14.3% genuinely accurate, 35.2% garbage, 37.4% zero contacts
 
-**Current:** `"Active Mechanical" "Mississauga" contractor`
-**New:** `"Active Mechanical" "3153 Wharton Way" Mississauga "Building equipment construction" phone email`
+## Fix 1: NAICS Code → Human Search Term Lookup
+Replace bureaucratic NAICS descriptions with terms people actually search:
 
-Strategy:
-- Trade name (or legal name) — quoted exact match
-- Street address (extracted from mailing_address) — helps find exact business
-- City — unquoted for broader matching
-- NAICS description — the actual business type (replaces generic "contractor")
-- `phone email` — surfaces contact pages
-- Fallback if no street: `"name" "city" naics_description phone email`
+```js
+const NAICS_SEARCH_TERMS = {
+  '238210': 'electrician electrical contractor',
+  '238220': 'plumber plumbing HVAC contractor',
+  '238110': 'concrete foundation contractor',
+  '238120': 'structural steel contractor',
+  '238130': 'framing carpenter contractor',
+  '238140': 'masonry contractor',
+  '238150': 'glass glazing contractor',
+  '238160': 'roofing contractor',
+  '238170': 'siding contractor',
+  '238190': 'exterior construction contractor',
+  '238310': 'drywall insulation contractor',
+  '238320': 'painter painting contractor',
+  '238330': 'flooring contractor',
+  '238340': 'tile tiling contractor',
+  '238350': 'finish carpentry contractor',
+  '238390': 'specialty trades contractor',
+  '238910': 'excavation site preparation contractor',
+  '238990': 'specialty contractor',
+  '236110': 'home builder general contractor',
+  '236220': 'commercial building contractor',
+  '236210': 'industrial building contractor',
+  '238299': 'building equipment contractor',
+  '238291': 'building systems contractor',
+};
+// Fallback: 'contractor'
+```
 
-Script needs to accept `naics_description` in the streamQuery SELECT and pass it to buildSearchQuery().
+Query becomes: `"Active Mechanical" Mississauga plumber HVAC contractor phone email`
 
-## Fix 2: Exclude Non-Building Businesses
-**Exclude (679 entries):**
-- Infrastructure construction (624) — highway/bridge/sewer, not building
-- All non-construction categories (55) — mining, finance, nursing, retail, etc.
+## Fix 2: Expanded Pre-Screen Filter (7 patterns)
+Skip entries before Serper search — these NEVER return useful results:
 
-**Keep (46,358):**
-- G1: Residential building construction (11,083)
-- G3: Foundation, structure and building exterior (8,071)
-- G4: Building equipment — electrical, plumbing, HVAC (10,028)
-- G5: Specialty trades — painting, carpentry, drywall, flooring (15,397)
-- G6: Non-residential building construction (1,779)
-- Professional, scientific and technical (3) — surveying, drafting, testing
+1. **Corporate accounting entries:** `account`, `head office`, `main office`, `target account`
+2. **Staffing agencies:** `staffing`, `personnel`, `manpower`, `employment service`, `temporary`, `workforce`
+3. **Unsearchable abbreviations:** length ≤ 5, all-caps no vowels, contains `(N.A.)`
+4. **Division/subsidiary markers:** `division`, `divsion`, `div `, `region `
+5. **Non-construction:** `food`, `catering`, `camp `, `environmental service`
+6. **Duplicate compound names:** same word appears twice with `And`/`&`
+7. **Generic single words:** ≤ 6 chars AND no space (Gillam, Kaneff, Logixx) — likely unsearchable
 
-**Filter:** Use a whitelist of NAICS descriptions in the SQL WHERE clause.
+## Fix 3: Extraction Hardening
+Block fake data that the current extractors accept:
 
-## Savings
-- 679 fewer Serper credits (Infrastructure + non-construction)
-- Much higher hit rate from NAICS-enriched queries
+**Email blocklist additions:**
+- PNG/image filenames: reject if contains `.png`, `.jpg`, `.gif`, `@2x`
+- Government domains: `.gov`, `.gov.uk`, `.gov.ca`, `toronto.ca`, `ontario.ca`
+- Personal email providers: `gmail.com`, `hotmail.com`, `yahoo.com`, `outlook.com`
+- Generic directory emails: `support@construction.com`, `accessibility@`, `webmaster@`, `customerservice@`
+
+**Website blocklist additions:**
+- Government: `toronto.ca`, `ontario.ca`, `.gov`, `escribemeetings.com`
+- Data brokers: `rocketreach.co`, `zoominfo.com`
+- News/magazines: `insauga.com`, `beachmetro.com`, `ourtimes.ca`, `skicanada.org`
+- Cloud storage: `s3.amazonaws.com`, `s3.amazo` prefix
+- Website builders: `bold.pro`, `wix.com`
+- Job boards: `ziprecruiter.com`, `indeed.com`
+- Directories: `canpages.ca`, `trustedpros.ca`, `construction.com`
+
+## Fix 4: Revert Query to City-Based (drop street address)
+Street address over-constrains. Use: `"name" city trade_terms phone email`
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `34816fd`
-- [ ] **Fix 1:** Rewrite buildSearchQuery() to use address + naics_description
-- [ ] **Fix 2:** Add NAICS whitelist to count + stream queries
-- [ ] **Fix 3:** Add naics_description to streamQuery SELECT
-- [ ] **Test:** Dry-run 5 entries to verify query quality
+- [ ] **Fix 1:** NAICS_SEARCH_TERMS lookup + add naics_code to SELECT
+- [ ] **Fix 2:** Expand shouldSkipWsibEntry() with 7 patterns
+- [ ] **Fix 3:** Expand EMAIL_REJECT + DIRECTORY_DOMAINS
+- [ ] **Fix 4:** Revert buildSearchQuery to city-based with NAICS trade terms
+- [ ] **Test:** Dry-run 10 to verify query quality + pre-screen
 - [ ] **Green Light:** Tests pass
