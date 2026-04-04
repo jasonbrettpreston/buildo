@@ -55,10 +55,11 @@ const PIPELINE_SCRIPTS: Record<string, string> = {
   chain_coa: 'scripts/run-chain.js',
   chain_sources: 'scripts/run-chain.js',
   chain_entities: 'scripts/run-chain.js',
+  chain_wsib: 'scripts/run-chain.js',
   chain_deep_scrapes: 'scripts/run-chain.js',
 };
 
-const CHAIN_SLUGS = new Set(['chain_permits', 'chain_coa', 'chain_sources', 'chain_entities', 'chain_deep_scrapes']);
+const CHAIN_SLUGS = new Set(['chain_permits', 'chain_coa', 'chain_sources', 'chain_entities', 'chain_wsib', 'chain_deep_scrapes']);
 
 const ALLOWED_PIPELINES = Object.keys(PIPELINE_SCRIPTS);
 
