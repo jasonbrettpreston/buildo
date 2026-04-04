@@ -58,7 +58,7 @@ function extractPhones(snippets) {
 }
 
 const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-const EMAIL_REJECT = ['noreply@', 'no-reply@', 'donotreply@', 'example.com', 'test.com', 'email.com', 'sentry.io', 'wixpress.com'];
+const EMAIL_REJECT = ['noreply@', 'no-reply@', 'donotreply@', 'example@', 'example.com', 'yourdomain.com', 'test.com', 'email.com', 'sentry.io', 'wixpress.com', 'sampleemail.com'];
 
 function extractEmails(snippets) {
   const emails = [];
@@ -116,6 +116,11 @@ const DIRECTORY_DOMAINS = [
   'homestars.com', 'homeadvisor.com', 'thumbtack.com', 'angi.com',
   'ontario.ca', 'canada.ca', 'gov.on.ca',
   'pagesjaunes.ca', 'nextdoor.com', 'bark.com',
+  // Construction directories / project listing sites (return template data, not company info)
+  'procore.com', 'constructconnect.com', 'canada.constructconnect.com',
+  'projects.constructconnect.com', 'dcnonl.com', 'buildingconnected.com',
+  'yorkmaps.ca', 'ww4.yorkmaps.ca', '31safer.ca',
+  'constructionassociation.ca', 'ogca.ca', 'rescon.com',
 ];
 
 function extractWebsite(results) {
