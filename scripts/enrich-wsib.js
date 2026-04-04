@@ -66,12 +66,13 @@ const EMAIL_REJECT = [
   '.png', '.jpg', '.gif', '.svg', '.webp', '@2x.', '@3x.',
   // Government domains (wrong match for businesses)
   '.gov.', 'toronto.ca', 'ontario.ca', 'canada.ca', '.gov.uk', '.gov.ca',
-  // Personal email providers (not business contacts)
-  'gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'live.com', 'aol.com',
   // Generic directory/platform emails
   'accessibility@', 'webmaster@', 'customerservice@', 'support@construction.com',
   'info@osmca.org',
 ];
+// Personal email providers — blocked for Medium+ but allowed for Small Business
+// (sole proprietor plumbers/electricians legitimately use gmail as business email)
+const PERSONAL_EMAIL_REJECT = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'live.com', 'live.ca', 'aol.com'];
 
 function extractEmails(snippets) {
   const emails = [];
@@ -156,6 +157,15 @@ const DIRECTORY_DOMAINS = [
   'hub.datanorthyorkshire.org', 'files.cityofportsmouth.com',
   'northyorks.gov.uk', 'cityofportsmouth.com',
   'pub-markham.escribemeetings.com',
+  // Batch 3 additions
+  'sec.gov', 'scc-csc.ca', 'q4cdn.com', 'jooble.org', 'ca.jooble.org',
+  'bynder.cloud', 'flydenver.com', 'wapa.gov', 'petvalu.ca',
+  'jobs.siemens-energy.com', 'whatsapp.com', 'web.whatsapp.com',
+  'sentry10.bynder.cloud', 'assets.cadillacfairview.com',
+  'liftsuperstore.com', 'orka.ca',
+  'eartotheground-digital.com', 'levelbyoxford.com',
+  'apps.dot.illinois.gov', 'team-global-m-s-m-group-job-agency.wh',
+  'scaffolding.ca',
 ];
 
 function extractWebsite(results) {
@@ -281,7 +291,7 @@ function shouldSkipWsibEntry(entry) {
   }
 
   // 3. Corporate accounting entries (never real company names)
-  if (/\baccount\b|\bhead office\b|\bmain office\b|\btarget account\b/i.test(lower)) {
+  if (/\baccount\b|\bacct\b|\bhead office\b|\bmain office\b|\btarget account\b|\bparent account\b/i.test(lower)) {
     return { skip: true, reason: 'corporate_account' };
   }
 
@@ -291,7 +301,7 @@ function shouldSkipWsibEntry(entry) {
   }
 
   // 5. Division/subsidiary/region markers (internal names, not indexed online)
-  if (/\bdivision\b|\bdivsion\b|\bdiv\s|\bregion\s|\bdistrict\s/i.test(lower)) {
+  if (/\bdivision\b|\bdivsion\b|\bdiv\b|\bregion\s|\bdistrict\s/i.test(lower)) {
     return { skip: true, reason: 'division_name' };
   }
 
@@ -389,11 +399,12 @@ pipeline.run('enrich-wsib', async (pool) => {
   ];
   const naicsFilter = `AND naics_description IN (${NAICS_WHITELIST.map((_, i) => `$${i + 1}`).join(', ')})`;
 
-  // Filter to GTA + building trades only
+  // Filter to GTA + building trades + exclude Large Business conglomerates
   const countResult = await pool.query(`
     SELECT COUNT(*) AS cnt FROM wsib_registry
     WHERE last_enriched_at IS NULL
       AND is_gta = true
+      AND business_size != 'Large Business'
       AND (trade_name IS NOT NULL OR legal_name IS NOT NULL)
       ${naicsFilter}
   `, NAICS_WHITELIST);
@@ -433,6 +444,7 @@ pipeline.run('enrich-wsib', async (pool) => {
     FROM wsib_registry
     WHERE last_enriched_at IS NULL
       AND is_gta = true
+      AND business_size != 'Large Business'
       AND (trade_name IS NOT NULL OR legal_name IS NOT NULL)
       ${naicsFilter}
     ORDER BY
@@ -478,6 +490,14 @@ pipeline.run('enrich-wsib', async (pool) => {
 
       const response = await searchSerper(query);
       const contacts = extractContacts(response);
+
+      // Block personal email providers for Medium+ businesses (Small contractors legitimately use gmail)
+      if (contacts.email && entry.business_size !== 'Small Business') {
+        const emailLower = contacts.email.toLowerCase();
+        if (PERSONAL_EMAIL_REJECT.some((r) => emailLower.includes(r))) {
+          contacts.email = null;
+        }
+      }
 
       // Website scraping fallback for email
       let websiteUrl = contacts.website || entry.website;
