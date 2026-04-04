@@ -301,9 +301,11 @@ const NAICS_FALLBACK = 'contractor';
 
 function buildSearchQuery(entry) {
   const name = entry.trade_name || entry.legal_name;
-  const city = extractCity(entry.mailing_address) || 'Ontario';
-  const trade = NAICS_SEARCH_TERMS[entry.naics_code] || NAICS_FALLBACK;
-  return `"${name}" ${city} ${trade} phone email`;
+  // Simple, human-like query — no quotes, no trade terms, no "phone email".
+  // All GTA businesses serve the Toronto area. Quoted exact match and trade
+  // terms push Serper toward procurement PDFs and WSIB CSV files instead
+  // of the company's own website.
+  return `${name} Toronto`;
 }
 
 // ---------------------------------------------------------------------------
