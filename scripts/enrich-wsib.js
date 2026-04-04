@@ -78,6 +78,8 @@ const EMAIL_REJECT = [
   'roofingcanada.com', 'agmca.ca', 'cisc-icca.ca',
   // Script/code artifacts parsed as emails
   'jquery@', '.min.js',
+  // Website builder / hosting / font / test domains
+  'webador.com', 'micahrich.com', 'latofonts.com', 'godaddy.com',
 ];
 // Personal email providers — blocked for Medium+ but allowed for Small Business
 // (sole proprietor plumbers/electricians legitimately use gmail as business email)
@@ -216,6 +218,16 @@ const DIRECTORY_DOMAINS = [
   '411s.ca', 'preconrealestate.ca', 'northernontariolocal.ca',
   'canada.chamberofcommerce.com', 'ontarioconstructionnews.com',
   'controlfiresystems.biass.ca',
+  // Batch 1800 additions (high-frequency garbage from scaled run)
+  'napc.pro', 'ca.polomap.com', 'polomap.com', '411.ca',
+  'toronto.cdncompanies.com', 'cdncompanies.com', 'waze.com',
+  'renoquotes.com', 'shopmississauga.com', 'niagarastandsout.ca',
+  'members.mcatoronto.org', 'mcatoronto.org',
+  'canadianbusinessphonebook.com', 'manta.com', 'simplyhired.ca',
+  'proudlycan.com', 'members.mcac.ca', 'mcac.ca', 'cwbgroup.org',
+  'environmentalbids.link', 'emeryvillagebia.ca',
+  'pcn.procoretech-qa.com', 'procoretech-qa.com',
+  'fixone.ca', 'dki.ca', 'limengroup.com', 'astroenvironmental.ca',
 ];
 
 /**
