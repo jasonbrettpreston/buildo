@@ -195,21 +195,8 @@ function extractWebsite(results) {
   return null;
 }
 
-function extractContacts(response) {
-  const results = response.organic || [];
-  const snippets = results.map((r) => r.snippet || '');
-  if (response.knowledgeGraph?.phone) snippets.unshift(response.knowledgeGraph.phone);
-
-  const phones = extractPhones(snippets);
-  const emails = extractEmails(snippets);
-  const website = extractWebsite(results);
-
-  return {
-    phone: phones[0] || null,
-    email: emails[0] || null,
-    website: response.knowledgeGraph?.website || website,
-  };
-}
+// NOTE: extractContacts (snippet-based) removed in Method B migration.
+// Phone/email now extracted website-first in the main enrichment loop.
 
 // ---------------------------------------------------------------------------
 // Search query construction
@@ -526,13 +513,13 @@ pipeline.run('enrich-wsib', async (pool) => {
         websiteUrl = `https://${websiteUrl}`;
       }
       if (websiteUrl) {
-        websitesScraped++;
         try {
           const pageRes = await fetch(websiteUrl, {
             signal: AbortSignal.timeout(5000),
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Buildo/1.0)' },
           });
           if (pageRes.ok) {
+            websitesScraped++;
             const rawHtml = await pageRes.text();
             const scrapedEmails = extractEmailsFromHtml(rawHtml);
             if (scrapedEmails.length > 0) contacts.email = scrapedEmails[0];
