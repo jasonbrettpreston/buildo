@@ -74,6 +74,8 @@ const EMAIL_REJECT = [
   'brandingcentres.com', 'b-safe.ca',
   // Template/fake patterns
   'user@domain.com', '@domain.com',
+  // Trade association emails (not the company)
+  'roofingcanada.com', 'agmca.ca', 'cisc-icca.ca',
 ];
 // Personal email providers — blocked for Medium+ but allowed for Small Business
 // (sole proprietor plumbers/electricians legitimately use gmail as business email)
@@ -195,6 +197,12 @@ const DIRECTORY_DOMAINS = [
   'rfca.ca', 'tssa.org', 'stoakley.com', 'akademiya2063.org',
   'salmonarm.ca', 'pacermonitor.com', 'contractorimages.com',
   'listingsca.com', 'pickering.ca', 'corporate.pickering.ca',
+  // Batch 8 additions
+  'birdeye.com', 'reviews.birdeye.com', 'emcorgroup.com', 'robojob-usa.com',
+  'broward.org', 'loopnet.com', 'inmetrotoronto.com', 'dolcemag.com',
+  'thestar.com', 'hub.chba.ca', 'chba.ca', 'pitchbook.com', 'trane.com',
+  'blob.core.windows.net', 'crewcmsblob.blob.core.windows.net',
+  'cdn2.creativecirclemedia.com', 'roofingcanada.com',
 ];
 
 /**
