@@ -404,7 +404,7 @@ pipeline.run('enrich-wsib', async (pool) => {
     SELECT COUNT(*) AS cnt FROM wsib_registry
     WHERE last_enriched_at IS NULL
       AND is_gta = true
-      AND business_size != 'Large Business'
+      AND business_size IS DISTINCT FROM 'Large Business'
       AND (trade_name IS NOT NULL OR legal_name IS NOT NULL)
       ${naicsFilter}
   `, NAICS_WHITELIST);
@@ -444,7 +444,7 @@ pipeline.run('enrich-wsib', async (pool) => {
     FROM wsib_registry
     WHERE last_enriched_at IS NULL
       AND is_gta = true
-      AND business_size != 'Large Business'
+      AND business_size IS DISTINCT FROM 'Large Business'
       AND (trade_name IS NOT NULL OR legal_name IS NOT NULL)
       ${naicsFilter}
     ORDER BY
