@@ -291,7 +291,8 @@ pipeline.run('enrich-wsib', async (pool) => {
   // Queue: unenriched WSIB entries, prioritized by business size.
   // Uses streamQuery to avoid materializing the full result set upfront (B4).
   // Pre-count for progress logging since streamQuery doesn't know total rows.
-  // NAICS whitelist: building construction trades only (excludes infrastructure + non-construction)
+  // NAICS whitelist: building construction trades only (excludes infrastructure + non-construction).
+  // Rows with NULL naics_description are intentionally excluded (non-standard entries).
   const NAICS_WHITELIST = [
     'Specialty trades construction',
     'Residential building construction',
