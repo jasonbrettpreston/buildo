@@ -26,7 +26,7 @@ const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 const SERPER_URL = 'https://google.serper.dev/search';
 const SLUG = 'enrich_wsib_registry';
 const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
-const RATE_LIMIT_MS = parseInt(process.env.ENRICH_RATE_MS || '500', 10);
+const RATE_LIMIT_MS = parseInt(process.env.ENRICH_RATE_MS || '200', 10);
 
 // ---------------------------------------------------------------------------
 // Contact extraction (shared with enrich-web-search.js)
@@ -228,6 +228,12 @@ const DIRECTORY_DOMAINS = [
   'environmentalbids.link', 'emeryvillagebia.ca',
   'pcn.procoretech-qa.com', 'procoretech-qa.com',
   'fixone.ca', 'dki.ca', 'limengroup.com', 'astroenvironmental.ca',
+  // Mega run additions (high-frequency garbage from 44K run)
+  'tiktok.com', 'alignable.com', 'b2bhint.com', 'tripadvisor.ca', 'tripadvisor.com',
+  'realtor.ca', 'huddlemarkets.ca', 'threads.com', 'certapro.com',
+  'kijiji.ca', 'linktr.ee', 'urbantoronto.ca', 'renovationfind.com',
+  'newmarkettoday.ca', 'soumissionrenovation.ca', 'marketlister.ca',
+  'moovitapp.com', 'decks.ca', 'master.ca', 'inthegta.com',
 ];
 
 /**
@@ -587,7 +593,7 @@ pipeline.run('enrich-wsib', async (pool) => {
       if (websiteUrl && websiteTrusted) {
         try {
           const pageRes = await fetch(websiteUrl, {
-            signal: AbortSignal.timeout(5000),
+            signal: AbortSignal.timeout(2000),
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Buildo/1.0)' },
           });
           if (pageRes.ok) {
@@ -743,7 +749,7 @@ async function finalize(pool, runId, startMs, enriched, contactsFound, failed, m
     cleanedCount += emailClean.rows.length;
 
     // Clean websites matching blocked domains
-    const domainPatterns = DIRECTORY_DOMAINS.map(d => `%${d}%`);
+    const domainPatterns = DIRECTORY_DOMAINS.flatMap(d => [`%://${d}/%`, `%://${d}`, `%://www.${d}/%`, `%://www.${d}`]);
     const websiteClean = await pool.query(
       `UPDATE wsib_registry SET website = NULL
        WHERE last_enriched_at > NOW() - INTERVAL '1 hour'
