@@ -72,6 +72,8 @@ const EMAIL_REJECT = [
   // Wrong-company domains from batch 4
   'bellnet.ca', 'markham.ca', 'crunchbase.com', 'hpacmag.com',
   'brandingcentres.com', 'b-safe.ca',
+  // Template/fake patterns
+  'user@domain.com', '@domain.com',
 ];
 // Personal email providers — blocked for Medium+ but allowed for Small Business
 // (sole proprietor plumbers/electricians legitimately use gmail as business email)
@@ -181,7 +183,33 @@ const DIRECTORY_DOMAINS = [
   'signalhire.com', 'thebuildingsshow.com', 'infobel.ca', 'local.infobel.ca',
   'edsc-esdc.gc.ca', 'vaughan.ca', 'gocontinental.com', 'ksvadvisory.com',
   'icc.illinois.gov', 'agmca.ca', 'listshq.network',
+  // Batch 6 additions
+  'jobbank.gc.ca', 'usmodernist.org', 'canadianbusinessphonebook.ca',
+  'edmca.com', 'members.edmca.com', 'collingwoodinquiry.ca',
+  'opendata.usac.org', 'omniapartners.com', 'truecondos.com',
+  'mnp.ca', 'ohiolink.edu', 'etd.ohiolink.edu',
+  'securitysystemsnews.com', 'issuu.com', 'bldup.com',
+  'rtr-engineering.ca', 'theglobeandmail.com', 'markham.ca',
+  'worldmaterial.com', 'albertgelman.com',
 ];
+
+/**
+ * Check if a website domain plausibly belongs to the company.
+ * Prevents scraping trade associations, news sites, etc. that appear in search results.
+ * Matches if ANY word (4+ chars) from the company name appears in the domain.
+ */
+function websiteMatchesCompany(websiteUrl, companyName) {
+  if (!websiteUrl || !companyName) return false;
+  try {
+    const host = new URL(websiteUrl).hostname.replace(/^www\./, '').replace(/\.(com|ca|net|org|co)$/,'').toLowerCase();
+    // Split company name into searchable words (4+ chars, skip common words)
+    const SKIP_WORDS = new Set(['the','and','inc','ltd','corp','company','group','services','service','systems','construction','contracting','contractor','limited','canada','ontario','toronto','division']);
+    const words = companyName.toLowerCase()
+      .split(/[\s&,.'()\-/]+/)
+      .filter(w => w.length >= 4 && !SKIP_WORDS.has(w));
+    return words.some(w => host.includes(w));
+  } catch { return false; }
+}
 
 function extractWebsite(results) {
   for (const r of results) {
@@ -298,7 +326,7 @@ function shouldSkipWsibEntry(entry) {
   }
 
   // 4. Staffing/temp agencies (WSIB-registered but not construction companies)
-  if (/\bstaffing\b|\bpersonnel\b|\bmanpower\b|\bemployment service\b|\btemporary\b|\bworkforce\b|\btemp service\b|\brecruitment\b|\bcareer1\b|\bprostaff\b|\bprotemps\b|\bplacement\b|\bhuman resources\b|\bdriver service\b/i.test(lower)) {
+  if (/\bstaffing\b|\bpersonnel\b|\bmanpower\b|\bemployment service\b|\btemporary\b|\bworkforce\b|\btemp service\b|\brecruitment\b|\bcareer1\b|\bprostaff\b|\bprotemps\b|\bplacement\b|\bhuman resources\b|\bdriver service\b|\bpeople link\b|\barmor people\b/i.test(lower)) {
     return { skip: true, reason: 'staffing_agency' };
   }
 
@@ -508,11 +536,15 @@ pipeline.run('enrich-wsib', async (pool) => {
       };
 
       // Step 1: Scrape company website for contacts (primary, trusted source)
+      // Only scrape if the domain plausibly matches the company name — prevents
+      // extracting contacts from trade associations, news sites, directories, etc.
+      const companyName = entry.trade_name || entry.legal_name;
       let websiteUrl = contacts.website || entry.website;
       if (websiteUrl && !websiteUrl.startsWith('http')) {
         websiteUrl = `https://${websiteUrl}`;
       }
-      if (websiteUrl) {
+      const websiteTrusted = websiteUrl && websiteMatchesCompany(websiteUrl, companyName);
+      if (websiteUrl && websiteTrusted) {
         try {
           const pageRes = await fetch(websiteUrl, {
             signal: AbortSignal.timeout(5000),

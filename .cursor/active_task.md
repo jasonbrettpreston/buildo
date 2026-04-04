@@ -1,91 +1,44 @@
-# Active Task: WF2 — Website-First Extraction + Auto-Cleanup
+# Active Task: WF3 — Website Domain Validation + Blocklist Round 6
 **Status:** Planning
-**Workflow:** WF2 — Feature Enhancement
-**Rollback Anchor:** `6436ba4`
+**Workflow:** WF3 — Bug Fix
+**Rollback Anchor:** `720f497`
 
 ## Context
-* **Goal:** Improve genuine hit rate from ~28% by switching to website-first extraction (Method B), and add automated post-enrichment cleanup.
+* **Goal:** Validate website domain matches company name before trusting scraped data. Block 17 new garbage domains. Fix pre-screen gap.
 * **Key Files:** `scripts/enrich-wsib.js`
 
-## Problem
-Current flow (Method A):
-1. Serper search → get 10 generic web results
-2. Parse phone/email from search SNIPPETS (unstructured text)
-3. Pick first non-blocked website from results
-4. Fallback: scrape website for email if snippets had none
+## Root Cause of Remaining 34% Garbage
+Serper returns irrelevant websites (trade associations, news, directories) as top results. Method B scrapes those wrong websites and trusts the phone/email found there. The fix: verify the website domain contains words from the company name before accepting it.
 
-This produces garbage because snippets contain phone/email from ANY page mentioning the company — trade associations, news articles, government databases, job boards. The extracted contacts often belong to completely different entities.
+## Fixes
 
-## Solution: Method B — Website-First
+### Fix 1: Website Domain Validation
+Before scraping a website, check if the domain contains words from the company name:
+- "Canuck Door Systems" → website `canuckdoorsystems.com` → contains "canuck" → TRUST
+- "BLT Construction" → website `collingwoodinquiry.ca` → no match → REJECT
 
-New flow:
-1. Serper search → get results
-2. Find the company's OWN website (first non-blocked result) — this is already working
-3. **Primary extraction: scrape the company website** for phone + email
-4. **Fallback only:** if website scrape finds nothing, then try Knowledge Graph
-5. **Never trust snippet-extracted contacts** — too noisy
-
-Why this works: If we find `royalcrownconstruction.ca`, the phone/email ON that site belongs to Royal Crown Construction. The current approach grabs phone numbers from random snippets that could be from any page.
-
-## Additional: Auto-Cleanup Pass
-
-At the end of each enrichment run, scan enriched rows for known garbage patterns and NULL them out:
-- Emails matching EMAIL_REJECT patterns
-- Websites matching DIRECTORY_DOMAINS
-- Emails that don't share a domain with the website (cross-validation)
-
-## Technical Implementation
-
-### Change 1: Restructure extractContacts → website-first
-```
-function extractContactsV2(response, entry) {
-  const website = extractWebsite(response.organic || []);
-  const knowledgeGraph = response.knowledgeGraph;
-  
-  let phone = knowledgeGraph?.phone || null;
-  let email = null;
-  
-  // Primary: scrape company website for contacts
-  if (website) {
-    const scraped = await scrapeWebsite(website);
-    if (scraped.phone) phone = scraped.phone;
-    if (scraped.email) email = scraped.email;
-  }
-  
-  // Only fall back to snippets for phone (more reliable than email in snippets)
-  if (!phone) {
-    const snippets = (response.organic || []).map(r => r.snippet || '');
-    const phones = extractPhones(snippets);
-    if (phones[0]) phone = phones[0];
-  }
-  
-  // Never extract email from snippets — too noisy
-  
-  return { phone, email, website: knowledgeGraph?.website || website };
+Logic:
+```js
+function websiteMatchesCompany(websiteUrl, companyName) {
+  const host = new URL(websiteUrl).hostname.replace(/^www\./, '').toLowerCase();
+  const words = companyName.toLowerCase().split(/[\s&,.']+/).filter(w => w.length >= 4);
+  return words.some(w => host.includes(w));
 }
 ```
+If website doesn't match, still record the website but DON'T scrape it for phone/email. Only scrape trusted (matching) websites.
 
-### Change 2: Auto-cleanup pass at end of run
-After all entries processed, run a validation sweep on newly enriched rows.
+### Fix 2: Blocklist Round 6 — 17 new domains
+jobbank.gc.ca, usmodernist.org, canadianbusinessphonebook.ca, edmca.com, collingwoodinquiry.ca, opendata.usac.org, omniapartners.com, truecondos.com, mnp.ca, ohiolink.edu, securitysystemsnews.com, issuu.com, bldup.com, rtr-engineering.ca, theglobeandmail.com, markham.ca, worldmaterial.com
 
-### Change 3: Blocklist expansion (batch 5 domains)
-Add: ca.trabajo.org, phcppros.com, contractorlistshq.com, signalhire.com, thebuildingsshow.com, infobel.ca, edsc-esdc.gc.ca, vaughan.ca, gocontinental.com, ksvadvisory.com, icc.illinois.gov
+### Fix 3: EMAIL_REJECT — user@domain.com template
+Add `user@domain.com` and `@domain.com`
 
-### Change 4: Pre-screen expansion
-Add: `\bhuman resources\b`, `\bdriver service\b`
-
-## Database Impact
-NO
-
-## Standards Compliance
-* **Try-Catch Boundary:** Website scrape wrapped in try-catch with timeout
-* **Unhappy Path Tests:** Website timeout, empty HTML, no contacts found
-* **logError Mandate:** N/A — pipeline SDK logging
-* **Mobile-First:** N/A
+### Fix 4: Pre-screen — "people link" staffing pattern
+Add `\bpeople link\b`
 
 ## Execution Plan
-- [ ] **Restructure:** extractContacts → website-first with snippet-phone fallback
-- [ ] **Auto-cleanup:** Post-run validation pass
-- [ ] **Blocklists:** Batch 5 domains + pre-screen patterns
-- [ ] **Test:** Run 50 with Method B, compare to Method A results
+- [ ] **Fix 1:** websiteMatchesCompany() validation
+- [ ] **Fix 2:** Blocklist expansion
+- [ ] **Fix 3:** Email reject expansion
+- [ ] **Fix 4:** Pre-screen expansion
 - [ ] **Green Light:** Tests pass
