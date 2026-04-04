@@ -176,6 +176,11 @@ const DIRECTORY_DOMAINS = [
   'li-public.fmcsa.dot.gov', 'firstgas.co.nz', 'conservationhamilton.ca',
   'mcahamiltonniagara.org', 'citt.org', 'mover.net', 'wheree.com',
   'b-safeelectric.ca', 'b-safe.ca',
+  // Batch 5 additions
+  'ca.trabajo.org', 'trabajo.org', 'phcppros.com', 'contractorlistshq.com',
+  'signalhire.com', 'thebuildingsshow.com', 'infobel.ca', 'local.infobel.ca',
+  'edsc-esdc.gc.ca', 'vaughan.ca', 'gocontinental.com', 'ksvadvisory.com',
+  'icc.illinois.gov', 'agmca.ca', 'listshq.network',
 ];
 
 function extractWebsite(results) {
@@ -306,7 +311,7 @@ function shouldSkipWsibEntry(entry) {
   }
 
   // 4. Staffing/temp agencies (WSIB-registered but not construction companies)
-  if (/\bstaffing\b|\bpersonnel\b|\bmanpower\b|\bemployment service\b|\btemporary\b|\bworkforce\b|\btemp service\b|\brecruitment\b|\bcareer1\b|\bprostaff\b|\bprotemps\b|\bplacement\b/i.test(lower)) {
+  if (/\bstaffing\b|\bpersonnel\b|\bmanpower\b|\bemployment service\b|\btemporary\b|\bworkforce\b|\btemp service\b|\brecruitment\b|\bcareer1\b|\bprostaff\b|\bprotemps\b|\bplacement\b|\bhuman resources\b|\bdriver service\b/i.test(lower)) {
     return { skip: true, reason: 'staffing_agency' };
   }
 
@@ -499,23 +504,29 @@ pipeline.run('enrich-wsib', async (pool) => {
       }
 
       const response = await searchSerper(query);
-      const contacts = extractContacts(response);
 
-      // Block personal email providers for Medium+ businesses (Small contractors legitimately use gmail)
-      if (contacts.email && entry.business_size !== 'Small Business') {
-        const emailLower = contacts.email.toLowerCase();
-        if (PERSONAL_EMAIL_REJECT.some((r) => emailLower.includes(r))) {
-          contacts.email = null;
-        }
-      }
+      // Website-first extraction (Method B):
+      // 1. Find company website from search results
+      // 2. Scrape company website for phone + email (trusted source)
+      // 3. Fall back to Knowledge Graph for phone
+      // 4. Fall back to search snippets for phone ONLY (never email — too noisy)
+      const results = response.organic || [];
+      const knowledgeGraph = response.knowledgeGraph;
+      const websiteFromKG = knowledgeGraph?.website || null;
+      const websiteFromResults = extractWebsite(results);
+      const contacts = {
+        phone: null,
+        email: null,
+        website: websiteFromKG || websiteFromResults,
+      };
 
-      // Website scraping fallback for email
+      // Step 1: Scrape company website for contacts (primary, trusted source)
       let websiteUrl = contacts.website || entry.website;
       if (websiteUrl && !websiteUrl.startsWith('http')) {
         websiteUrl = `https://${websiteUrl}`;
       }
-      if (websiteUrl) websitesScraped++;
-      if (!contacts.email && !entry.primary_email && websiteUrl) {
+      if (websiteUrl) {
+        websitesScraped++;
         try {
           const pageRes = await fetch(websiteUrl, {
             signal: AbortSignal.timeout(5000),
@@ -523,15 +534,34 @@ pipeline.run('enrich-wsib', async (pool) => {
           });
           if (pageRes.ok) {
             const rawHtml = await pageRes.text();
-            const scraped = extractEmailsFromHtml(rawHtml);
-            if (scraped.length > 0) contacts.email = scraped[0];
-            if (!contacts.phone && !entry.primary_phone) {
-              const cleanText = stripHtmlNoise(rawHtml);
-              const pagePhones = extractPhones([cleanText]);
-              if (pagePhones.length > 0) contacts.phone = pagePhones[0];
-            }
+            const scrapedEmails = extractEmailsFromHtml(rawHtml);
+            if (scrapedEmails.length > 0) contacts.email = scrapedEmails[0];
+            const cleanText = stripHtmlNoise(rawHtml);
+            const scrapedPhones = extractPhones([cleanText]);
+            if (scrapedPhones.length > 0) contacts.phone = scrapedPhones[0];
           }
         } catch { /* timeout or fetch error — skip silently */ }
+      }
+
+      // Step 2: Knowledge Graph phone (Google's structured data — reliable)
+      if (!contacts.phone && knowledgeGraph?.phone) {
+        const kgPhones = extractPhones([knowledgeGraph.phone]);
+        if (kgPhones.length > 0) contacts.phone = kgPhones[0];
+      }
+
+      // Step 3: Snippet phone fallback (last resort — only phone, never email)
+      if (!contacts.phone) {
+        const snippets = results.map((r) => r.snippet || '');
+        const snippetPhones = extractPhones(snippets);
+        if (snippetPhones.length > 0) contacts.phone = snippetPhones[0];
+      }
+
+      // Block personal email providers for Medium+ businesses
+      if (contacts.email && entry.business_size !== 'Small Business') {
+        const emailLower = contacts.email.toLowerCase();
+        if (PERSONAL_EMAIL_REJECT.some((r) => emailLower.includes(r))) {
+          contacts.email = null;
+        }
       }
 
       // Update wsib_registry (COALESCE preserves existing data)
@@ -637,6 +667,39 @@ async function finalize(pool, runId, startMs, enriched, contactsFound, failed, m
   `);
   const s = stats.rows[0];
   pipeline.log.info('[enrich-wsib]', `DB stats: ${s.total} total | ${s.enriched} enriched | ${s.with_phone} phone | ${s.with_email} email | ${s.with_website} website`);
+
+  // Auto-cleanup: scrub newly enriched rows for known garbage patterns
+  let cleanedCount = 0;
+  try {
+    // Clean emails matching reject patterns
+    const emailPatterns = EMAIL_REJECT.map(r => `%${r}%`);
+    const emailClean = await pool.query(
+      `UPDATE wsib_registry SET primary_email = NULL
+       WHERE last_enriched_at > NOW() - INTERVAL '1 hour'
+         AND primary_email IS NOT NULL
+         AND primary_email ILIKE ANY($1)
+       RETURNING id`,
+      [emailPatterns]
+    );
+    cleanedCount += emailClean.rows.length;
+
+    // Clean websites matching blocked domains
+    const domainPatterns = DIRECTORY_DOMAINS.map(d => `%${d}%`);
+    const websiteClean = await pool.query(
+      `UPDATE wsib_registry SET website = NULL
+       WHERE last_enriched_at > NOW() - INTERVAL '1 hour'
+         AND website IS NOT NULL
+         AND website ILIKE ANY($1)
+       RETURNING id`,
+      [domainPatterns]
+    );
+    cleanedCount += websiteClean.rows.length;
+  } catch (err) {
+    pipeline.log.warn('[enrich-wsib]', `Auto-cleanup failed (non-fatal): ${err.message}`);
+  }
+  if (cleanedCount > 0) {
+    pipeline.log.info('[enrich-wsib]', `Auto-cleanup: scrubbed ${cleanedCount} garbage entries`);
+  }
 
   if (runId) {
     await pool.query(
