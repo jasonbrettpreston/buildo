@@ -76,6 +76,8 @@ const EMAIL_REJECT = [
   'user@domain.com', '@domain.com',
   // Trade association emails (not the company)
   'roofingcanada.com', 'agmca.ca', 'cisc-icca.ca',
+  // Script/code artifacts parsed as emails
+  'jquery@', '.min.js',
 ];
 // Personal email providers — blocked for Medium+ but allowed for Small Business
 // (sole proprietor plumbers/electricians legitimately use gmail as business email)
@@ -203,6 +205,11 @@ const DIRECTORY_DOMAINS = [
   'thestar.com', 'hub.chba.ca', 'chba.ca', 'pitchbook.com', 'trane.com',
   'blob.core.windows.net', 'crewcmsblob.blob.core.windows.net',
   'cdn2.creativecirclemedia.com', 'roofingcanada.com',
+  // Batch 10 additions
+  'shopoakville.com', 'evergreen.ca', 'york1.com', 'thebigredguide.com',
+  'youtube.com', 'starofservice.ca', 'contactbook.ca', 'maptons.com',
+  'lobbycanada.gc.ca', 'zolo.ca', 'ctfassets.net', 'assets.ctfassets.net',
+  'actionsxchangerepository.fidelity', 'whiteshark.ca',
 ];
 
 /**
@@ -323,8 +330,9 @@ function shouldSkipWsibEntry(entry) {
   const searchName = (entry.trade_name || entry.legal_name || '').trim();
   const lower = searchName.toLowerCase();
 
-  // 1. No usable search name
-  if (!searchName || searchName.length < 4) {
+  // 1. No usable search name (empty, whitespace, punctuation-only, too short)
+  const cleaned = searchName.replace(/[^a-zA-Z0-9]/g, '');
+  if (!cleaned || cleaned.length < 3) {
     return { skip: true, reason: 'no_search_name' };
   }
 
