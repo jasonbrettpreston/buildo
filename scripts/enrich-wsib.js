@@ -191,6 +191,10 @@ const DIRECTORY_DOMAINS = [
   'securitysystemsnews.com', 'issuu.com', 'bldup.com',
   'rtr-engineering.ca', 'theglobeandmail.com', 'markham.ca',
   'worldmaterial.com', 'albertgelman.com',
+  // Batch 7 additions
+  'rfca.ca', 'tssa.org', 'stoakley.com', 'akademiya2063.org',
+  'salmonarm.ca', 'pacermonitor.com', 'contractorimages.com',
+  'listingsca.com', 'pickering.ca', 'corporate.pickering.ca',
 ];
 
 /**
