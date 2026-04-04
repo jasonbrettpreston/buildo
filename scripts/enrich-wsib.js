@@ -175,10 +175,27 @@ function extractCity(address) {
   return null;
 }
 
+function extractStreet(address) {
+  if (!address) return null;
+  // First part before the first comma is typically the street address
+  const street = address.split(',')[0]?.trim();
+  if (!street) return null;
+  // Skip PO Box / Suite-only entries
+  if (/^(PO\s+Box|P\.?O\.?\s*Box|Suite|Ste\.?|Unit|Apt\.?|#\d)/i.test(street)) return null;
+  return street;
+}
+
 function buildSearchQuery(entry) {
   const name = entry.trade_name || entry.legal_name;
   const city = extractCity(entry.mailing_address) || 'Ontario';
-  return `"${name}" "${city}" contractor`;
+  const street = extractStreet(entry.mailing_address);
+  const trade = entry.naics_description || '';
+
+  // Use street address for precision when available, NAICS description as trade type
+  if (street) {
+    return `"${name}" "${street}" ${city} ${trade} phone email`;
+  }
+  return `"${name}" ${city} ${trade} phone email`;
 }
 
 // ---------------------------------------------------------------------------
@@ -274,13 +291,25 @@ pipeline.run('enrich-wsib', async (pool) => {
   // Queue: unenriched WSIB entries, prioritized by business size.
   // Uses streamQuery to avoid materializing the full result set upfront (B4).
   // Pre-count for progress logging since streamQuery doesn't know total rows.
-  // Filter to GTA-only businesses to save Serper credits (~74K non-GTA excluded)
+  // NAICS whitelist: building construction trades only (excludes infrastructure + non-construction)
+  const NAICS_WHITELIST = [
+    'Specialty trades construction',
+    'Residential building construction',
+    'Building equipment construction',
+    'Foundation, structure and building exterior construction',
+    'Non-residential building construction',
+    'Professional, scientific and technical',
+  ];
+  const naicsFilter = `AND naics_description IN (${NAICS_WHITELIST.map((_, i) => `$${i + 1}`).join(', ')})`;
+
+  // Filter to GTA + building trades only
   const countResult = await pool.query(`
     SELECT COUNT(*) AS cnt FROM wsib_registry
     WHERE last_enriched_at IS NULL
       AND is_gta = true
       AND (trade_name IS NOT NULL OR legal_name IS NOT NULL)
-  `);
+      ${naicsFilter}
+  `, NAICS_WHITELIST);
   const totalEntries = Math.min(parseInt(countResult.rows[0].cnt, 10), limit);
 
   pipeline.log.info('[enrich-wsib]', `Found ${totalEntries} unenriched WSIB entries`);
@@ -299,12 +328,16 @@ pipeline.run('enrich-wsib', async (pool) => {
   const sizeBreakdown = { large: 0, medium: 0, small: 0 };
   let i = 0;
 
+  const streamParams = [...NAICS_WHITELIST, limit];
+  const limitParam = `$${streamParams.length}`;
+
   for await (const entry of pipeline.streamQuery(pool, `
     SELECT
       id,
       legal_name,
       trade_name,
       mailing_address,
+      naics_description,
       business_size,
       primary_phone,
       primary_email,
@@ -313,6 +346,7 @@ pipeline.run('enrich-wsib', async (pool) => {
     WHERE last_enriched_at IS NULL
       AND is_gta = true
       AND (trade_name IS NOT NULL OR legal_name IS NOT NULL)
+      ${naicsFilter}
     ORDER BY
       CASE business_size
         WHEN 'Large Business' THEN 0
@@ -322,8 +356,8 @@ pipeline.run('enrich-wsib', async (pool) => {
       END,
       trade_name IS NOT NULL DESC,
       legal_name
-    LIMIT $1
-  `, [limit])) {
+    LIMIT ${limitParam}
+  `, streamParams)) {
     i++;
 
     // Track size breakdown as we stream
