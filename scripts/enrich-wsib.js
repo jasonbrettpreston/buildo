@@ -210,6 +210,12 @@ const DIRECTORY_DOMAINS = [
   'youtube.com', 'starofservice.ca', 'contactbook.ca', 'maptons.com',
   'lobbycanada.gc.ca', 'zolo.ca', 'ctfassets.net', 'assets.ctfassets.net',
   'actionsxchangerepository.fidelity', 'whiteshark.ca',
+  // Batch 11 additions
+  'canadianlawyermag.com', 'staffinghub.com', 'reviews.staffinghub.com',
+  'mycondovendor.com', 'ontariobusinessdir.com', 'canadacompanyregistry.com',
+  '411s.ca', 'preconrealestate.ca', 'northernontariolocal.ca',
+  'canada.chamberofcommerce.com', 'ontarioconstructionnews.com',
+  'controlfiresystems.biass.ca',
 ];
 
 /**
