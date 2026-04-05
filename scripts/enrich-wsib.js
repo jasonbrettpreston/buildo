@@ -234,6 +234,18 @@ const DIRECTORY_DOMAINS = [
   'kijiji.ca', 'linktr.ee', 'urbantoronto.ca', 'renovationfind.com',
   'newmarkettoday.ca', 'soumissionrenovation.ca', 'marketlister.ca',
   'moovitapp.com', 'decks.ca', 'master.ca', 'inthegta.com',
+  // Mega run round 2 — directories, news, retail, government, education
+  'toronto.ca', 'infobel.com', 'profilecanada.com', 'ctvnews.ca', 'cbc.ca',
+  'about.me', 'blogto.com', 'torontolife.com', 'humber.ca', 'torontomu.ca',
+  'archive.org', 'etsy.com', 'homedepot.ca', 'stores.homedepot.ca',
+  'canadiantire.ca', 'ca.pinterest.com', 'pinterest.com', 'amazon.ca',
+  'livabl.com', 'publications.gc.ca', 'cp24.com', 'n49.com',
+  'urbantasker.com', 'taskrabbit.ca', 'frasersdirectory.com',
+  'localtorontobusiness.ca', 'wanderboat.ai', 'ago.ca',
+  'findacontractor.esasafe.com', 'guildquality.com', 'toaf.ca',
+  'cylex-canada.ca', 'daniels.utoronto.ca', 'owtlibrary.on.ca',
+  'pmc.ncbi.nlm.nih.gov', 'condos.ca', 'puroclean.ca',
+  'torontoconstructionnetwork.com',
 ];
 
 /**
