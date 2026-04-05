@@ -127,13 +127,16 @@ export async function POST(
   // Stale-run cleanup: mark any orphaned 'running' rows older than the timeout
   // threshold as failed. This catches processes killed by timeout, server restart,
   // or crash where the callback never fired to update the row.
+  // Exclude LONG_RUNNING pipelines which can legitimately run for 24+ hours.
+  const LONG_RUNNING_PIPELINES = ['enrich_wsib_registry', 'enrich_wsib_builders', 'enrich_named_builders', 'inspections', 'chain_wsib'];
   try {
     await query(
       `UPDATE pipeline_runs
        SET status = 'failed', error_message = 'Process timed out or orphaned — cleaned up on next run', completed_at = NOW()
        WHERE status = 'running'
-         AND started_at < NOW() - INTERVAL '70 minutes'`,
-      []
+         AND started_at < NOW() - INTERVAL '70 minutes'
+         AND pipeline != ALL($1)`,
+      [LONG_RUNNING_PIPELINES]
     );
   } catch (err) {
     logError(`[pipelines/${slug}]`, err, { event: 'stale_orphan_cleanup_failed' });

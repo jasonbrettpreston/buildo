@@ -167,7 +167,7 @@ const DIRECTORY_DOMAINS = [
   'escribemeetings.com', 'investburlington.ca',
   'citywindsor.ca', 'skicanada.org', 'beachmetro.com',
   // Data brokers / scrapers
-  'rocketreach.co', 'datanyze.com', 'apollo.io',
+  'rocketreach.co', 'apollo.io',
   // News / media / magazines
   'insauga.com', 'ourtimes.ca',
   // Cloud storage / CDN (not company websites)
