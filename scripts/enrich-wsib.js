@@ -80,6 +80,12 @@ const EMAIL_REJECT = [
   'jquery@', '.min.js',
   // Website builder / hosting / font / test domains
   'webador.com', 'micahrich.com', 'latofonts.com', 'godaddy.com',
+  // Web design / font foundry emails scraped from "designed by" footers
+  'mysite.com', 'eyebytes.com', 'sansoxygen.com', 'astigmatic.com',
+  'pixelspread.com', 'indiantypefoundry.com', 'ndiscovered.com',
+  'typemade.mx',
+  // Data broker / legal research (not the company)
+  'lexisnexis.com',
 ];
 // Personal email providers — blocked for Medium+ but allowed for Small Business
 // (sole proprietor plumbers/electricians legitimately use gmail as business email)
@@ -246,6 +252,9 @@ const DIRECTORY_DOMAINS = [
   'cylex-canada.ca', 'daniels.utoronto.ca', 'owtlibrary.on.ca',
   'pmc.ncbi.nlm.nih.gov', 'condos.ca', 'puroclean.ca',
   'torontoconstructionnetwork.com',
+  // Mega run round 3 — popular contractors falsely matched to 5+ other companies
+  'ontariolists.ca', 'enterprise.ca', 'enercare.ca', 'renoquotes.com',
+  'eandm.contractors',
 ];
 
 /**
