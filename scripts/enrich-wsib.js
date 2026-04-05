@@ -86,6 +86,8 @@ const EMAIL_REJECT = [
   'typemade.mx',
   // Data broker / legal research (not the company)
   'lexisnexis.com',
+  // Popular contractor sites falsely matched to other companies
+  'mail.com', 'mystore.com',
 ];
 // Personal email providers — blocked for Medium+ but allowed for Small Business
 // (sole proprietor plumbers/electricians legitimately use gmail as business email)
@@ -255,6 +257,9 @@ const DIRECTORY_DOMAINS = [
   // Mega run round 3 — popular contractors falsely matched to 5+ other companies
   'ontariolists.ca', 'enterprise.ca', 'enercare.ca', 'renoquotes.com',
   'eandm.contractors',
+  // Mega run round 4 — news, municipal, directories, popular contractors (5+ false matches)
+  'globalnews.ca', 'toronto.citynews.ca', 'citynews.ca', 'designlinesmagazine.com',
+  'waterfrontoronto.ca', 'blueguia.com', 'shopto.ca', 'plumbing.ca', 'condos.ca',
 ];
 
 /**

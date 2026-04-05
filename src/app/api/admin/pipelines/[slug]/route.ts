@@ -167,7 +167,8 @@ export async function POST(
     const args = isChain
       ? [scriptPath, slug.replace(/^chain_/, ''), ...(runId ? [String(runId)] : []), ...(forceMode ? ['--force'] : [])]
       : [scriptPath];
-    const timeout = isChain ? 7_200_000 : 600_000; // 2 hours for chains, 10 min for individual
+    const LONG_RUNNING = new Set(['enrich_wsib_registry', 'enrich_wsib_builders', 'enrich_named_builders', 'inspections']);
+    const timeout = isChain ? 7_200_000 : LONG_RUNNING.has(slug) ? 86_400_000 : 600_000; // 2h chains, 24h enrichment/scrape, 10min individual
 
     // Detect Python scripts and use the correct runtime.
     const isPython = scriptPath.endsWith('.py');
