@@ -88,6 +88,13 @@ const EMAIL_REJECT = [
   'lexisnexis.com',
   // Popular contractor sites falsely matched to other companies
   'mail.com', 'mystore.com',
+  // Contractor emails scraped from wrong websites (matched to 5+ other companies)
+  'torontocarpentryco.ca', 'thefinishcarpenter.ca', 'precisionlandscaping.ca',
+  'delgrandehomes.com', 'primetiling.ca', 'tileshoppes.com', 'arenovation.ca',
+  'caulkingprofessionals.ca', 'orielrenovations.com', 'jdavispainting.com',
+  'sg-carpentry.com', 'rfuenzalida.com', 'pauldavis.ca', 'pcarpentry.ca',
+  'csflooring.ca', 'm2tilestone.com', 'proroofing.ca', 'masonsmasonry.com',
+  'gmrpainting.com', 'sstileandstone.ca',
 ];
 // Personal email providers — blocked for Medium+ but allowed for Small Business
 // (sole proprietor plumbers/electricians legitimately use gmail as business email)
@@ -260,6 +267,8 @@ const DIRECTORY_DOMAINS = [
   // Mega run round 4 — news, municipal, directories, popular contractors (5+ false matches)
   'globalnews.ca', 'toronto.citynews.ca', 'citynews.ca', 'designlinesmagazine.com',
   'waterfrontoronto.ca', 'blueguia.com', 'shopto.ca', 'plumbing.ca', 'condos.ca',
+  // Mega run round 5 — news, franchise/national chains, directories
+  'nowtoronto.com', 'reliancehomecomfort.com', 'pauldavis.ca', 'puroclean.ca',
 ];
 
 /**
