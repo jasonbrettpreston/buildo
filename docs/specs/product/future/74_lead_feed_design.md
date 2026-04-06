@@ -142,6 +142,14 @@ Competitive research showed our current PermitCard has 10-12 visible data points
 
 **Thumbnail:** 80x60px Google Street View image, rounded 6px corners. Falls back to neighbourhood map outline if no geocode. Positioned left of address for horizontal scanning.
 
+**Street View cost and caching (Google TOS compliant):**
+- Street View Static API costs **$7 per 1,000 requests** (as of 2026).
+- Google TOS **prohibits caching the actual image bytes**, but **allows caching `pano_id`** (the panorama identifier).
+- **Strategy:** Build a permit→pano_id lookup cache in a new table `permit_pano_cache(permit_num, revision_num, pano_id, fetched_at)`. Populate lazily on first feed render or in a pipeline step. The image URL is constructed client-side from `pano_id`, so the browser caches the HTTP response normally (1 request per unique pano per user).
+- **Lazy load:** Only render Street View images for cards currently in viewport (via `IntersectionObserver`). Prevents charging for cards users never scroll to.
+- **Daily cap per user:** Track requests in `lead_views.viewed_at` join; if a single user exceeds 500 image requests/day (indicating bot/scraping), return a placeholder tile.
+- **Expected cost at moderate usage:** 1,000 active users × 50 unique panos/day = 50K requests/day = ~$10/day = **~$300/month**. Scales linearly — monitor via Upstash analytics on the cache endpoint.
+
 **Visual hierarchy (top to bottom, 2-3 second scan):**
 1. **Address + thumbnail + distance** — "Where is this?" (0.5s)
 2. **Timing badge** — "Do I need to act?" (0.5s)

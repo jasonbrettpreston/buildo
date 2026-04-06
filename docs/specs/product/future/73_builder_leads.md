@@ -49,35 +49,48 @@ None — builder leads are served through the unified `GET /api/leads/feed` endp
 -- UPDATE permits SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography WHERE latitude IS NOT NULL;
 -- CREATE INDEX idx_permits_location ON permits USING GIST (location);
 
+-- Step 1: get per-permit distance in a subquery so we compute ST_Distance
+--         exactly once per row (MIN(ST_Distance(...)) would recompute inside
+--         the aggregate, defeating the GIST index advantage).
+WITH nearby_permits AS (
+  SELECT 
+    p.permit_num, p.revision_num, p.status, p.est_const_cost,
+    ep.entity_id,
+    (p.location <-> ST_MakePoint($lng, $lat)::geography) AS distance_m
+  FROM permits p
+  JOIN entity_projects ep 
+    ON ep.permit_num = p.permit_num 
+   AND ep.revision_num = p.revision_num 
+   AND ep.role = 'Builder'
+  JOIN permit_trades pt 
+    ON pt.permit_num = p.permit_num 
+   AND pt.revision_num = p.revision_num 
+   AND pt.is_active = true
+  JOIN trades t ON t.id = pt.trade_id AND t.slug = $trade_slug
+  WHERE p.status IN ('Permit Issued', 'Inspection')
+    AND p.location IS NOT NULL
+    AND ST_DWithin(p.location, ST_MakePoint($lng, $lat)::geography, $radius_m)
+)
 SELECT
   e.id, e.legal_name, e.trade_name, e.entity_type,
   e.primary_phone, e.primary_email, e.website, e.photo_url,
   e.permit_count, e.is_wsib_registered,
   w.business_size, w.naics_description,
-  COUNT(p.permit_num) FILTER (WHERE p.status IN ('Permit Issued','Inspection')) AS active_permits_nearby,
-  COUNT(DISTINCT t.slug) FILTER (WHERE t.slug = $trade_slug) AS matching_trade_permits,
-  MIN(ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography)) AS closest_permit_m,
-  AVG(p.est_const_cost) FILTER (WHERE p.est_const_cost > 0) AS avg_project_cost
+  COUNT(np.permit_num) AS active_permits_nearby,
+  MIN(np.distance_m) AS closest_permit_m,
+  AVG(np.est_const_cost) FILTER (WHERE np.est_const_cost > 0) AS avg_project_cost
 
-FROM entities e
+FROM nearby_permits np
+JOIN entities e ON e.id = np.entity_id
 JOIN wsib_registry w ON w.linked_entity_id = e.id
-JOIN entity_projects ep ON ep.entity_id = e.id AND ep.role = 'Builder'
-JOIN permits p ON p.permit_num = ep.permit_num AND p.revision_num = ep.revision_num
-JOIN permit_trades pt ON pt.permit_num = p.permit_num AND pt.revision_num = p.revision_num AND pt.is_active = true
-JOIN trades t ON t.id = pt.trade_id
 
-WHERE p.status IN ('Permit Issued', 'Inspection')
-  AND p.location IS NOT NULL
-  AND t.slug = $trade_slug
-  AND w.is_gta = true
+WHERE w.is_gta = true
   AND w.last_enriched_at IS NOT NULL
   AND w.business_size != 'Large Business'
   AND (w.website IS NOT NULL OR w.primary_phone IS NOT NULL)
-  -- PostGIS radius filter — uses GIST index, sub-millisecond even at 1M rows
-  AND ST_DWithin(p.location, ST_MakePoint($lng, $lat)::geography, $radius_m)
 
 GROUP BY e.id, w.id
-HAVING COUNT(p.permit_num) FILTER (WHERE p.status IN ('Permit Issued','Inspection')) >= 1
+HAVING COUNT(np.permit_num) >= 1
 ORDER BY active_permits_nearby DESC, closest_permit_m ASC
 LIMIT 20
 ```
@@ -103,9 +116,30 @@ LIMIT 20
 
 **Migration needed:**
 ```sql
+-- UP
 ALTER TABLE entities ADD COLUMN photo_url VARCHAR(500);
 ALTER TABLE entities ADD COLUMN photo_validated_at TIMESTAMPTZ;
+
+-- Constraint: must be HTTPS URL (prevents http:// or javascript: etc.)
+ALTER TABLE entities ADD CONSTRAINT entities_photo_url_https 
+  CHECK (photo_url IS NULL OR photo_url LIKE 'https://%');
+
+-- DOWN
+ALTER TABLE entities DROP CONSTRAINT IF EXISTS entities_photo_url_https;
+ALTER TABLE entities DROP COLUMN IF EXISTS photo_validated_at;
+ALTER TABLE entities DROP COLUMN IF EXISTS photo_url;
 ```
+
+**Content Security Policy (defense in depth):**
+Add to `next.config.js`:
+```js
+{
+  key: 'Content-Security-Policy',
+  value: "img-src 'self' data: https://*.googleapis.com https://*.ggpht.com https://*.gstatic.com https:"
+}
+```
+
+This limits `<img src>` to HTTPS origins only, defending against a compromised pipeline writing a malicious URL. Google Street View (`*.googleapis.com`, `*.ggpht.com`, `*.gstatic.com`) is explicitly allowed.
 
 **Fallback chain at display time (client-side only):**
 1. `entities.photo_url` from database (pipeline-validated)

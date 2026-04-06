@@ -33,15 +33,33 @@ Surface the most relevant construction leads to tradespeople based on their prox
 - `(permit_num, trade_slug)` — for permit-specific views
 - `(entity_id, trade_slug)` — for builder-specific views
 - `(user_id, viewed_at DESC)` — for user history
+- `(viewed_at)` — for retention sweep queries
 
 **Unique:** `(user_id, lead_key, trade_slug)` — uses computed lead_key to avoid nullable composite key
 
+**Foreign keys (ON DELETE CASCADE):**
+- `(permit_num, revision_num) REFERENCES permits(permit_num, revision_num) ON DELETE CASCADE` — permit deletion removes orphan view rows
+- `entity_id REFERENCES entities(id) ON DELETE CASCADE` — entity deletion removes orphan view rows
+- `user_id` NOT a FK (Firebase UID, not in `users` table)
+
 **Why `lead_key`:** Composite unique constraints with multiple nullable columns are awkward in PostgreSQL (NULLs are not equal). The `lead_key` computed column gives us a single non-null identifier for both lead types.
+
+**PII retention policy (PIPEDA/GDPR):**
+- Nightly pipeline step `scripts/purge-lead-views.js` deletes rows older than 90 days
+- On account deletion: immediate DELETE of all rows matching the Firebase UID (triggered via Firebase Auth deletion webhook)
+- `user_id` is pseudonymous (Firebase UID, not email/name)
+
+**DOWN migration required** (migration 067):
+```sql
+-- DOWN: drop table and FKs
+DROP TABLE IF EXISTS lead_views CASCADE;
+```
 
 ### API Endpoints
 
 **`GET /api/leads/feed`** — Personalized lead feed
-- **Params:** `lat`, `lng` (required), `trade_slug` (required), `radius_km` (default 10), `page`, `limit`
+- **Params:** `lat`, `lng` (required), `trade_slug` (required), `radius_km` (default 10), `cursor_score` + `cursor_permit_num` (optional — for pagination), `limit` (default 15, max 30)
+- **Pagination:** Cursor-based. Page 1 sends no cursor. Response `meta.next_cursor` is sent back for subsequent pages. Stable under concurrent inserts, no OFFSET.
 - **Response envelope:** `{ data: LeadFeedItem[], error: null, meta: { total, page, radius_km } }` per §4.4
 - **Error responses:**
   - `400 Bad Request` — Zod validation failure, returns `{ data: null, error: 'Invalid parameters', meta: { issues } }` with field-level error messages
@@ -70,41 +88,59 @@ Surface the most relevant construction leads to tradespeople based on their prox
 
 **Feed query:** `src/app/api/leads/feed/route.ts`
 - Thin route handler — delegates to `src/features/leads/lib/get-lead-feed.ts`
-- All scoring in a single PostgreSQL CTE query:
+- All scoring in a single PostgreSQL CTE query with **cursor-based pagination** (no intermediate LIMIT):
   ```sql
-  WITH candidates AS (
-    SELECT p.*, pt.trade_slug, pt.confidence, pt.phase,
-      ce.estimated_cost, ce.cost_tier,
-      ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography) AS distance_m
+  -- NOTE: pagination uses a relevance_score + permit_num cursor, NOT OFFSET.
+  -- The prior design (candidates LIMIT 200 then rank) was broken:
+  -- subsequent pages would return duplicates or gaps because the top-200
+  -- candidate set shifts as the offset changes.
+  
+  WITH scored AS (
+    SELECT 
+      p.permit_num, p.revision_num, p.status, p.permit_type, p.structure_type,
+      p.work, p.description, p.latitude, p.longitude, p.issued_date,
+      p.street_num, p.street_name, p.street_type, p.city, p.ward,
+      p.scope_tags, p.project_type, p.enriched_status,
+      pt.trade_slug, pt.confidence, pt.phase,
+      ce.estimated_cost, ce.cost_tier, ce.complexity_score, ce.premium_factor,
+      n.name AS neighbourhood_name, n.avg_household_income,
+      ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography) AS distance_m,
+      -- Proximity 0-30
+      CASE 
+        WHEN ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography) < 500 THEN 30
+        WHEN ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography) < 1000 THEN 25
+        WHEN ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography) < 2000 THEN 20
+        WHEN ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography) < 5000 THEN 15
+        WHEN ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography) < 10000 THEN 10
+        WHEN ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography) < 20000 THEN 5
+        ELSE 0
+      END AS proximity_score,
+      -- Timing, Value, Opportunity computed similarly via CASE expressions
+      ...
     FROM permits p
     JOIN permit_trades pt USING (permit_num, revision_num)
     LEFT JOIN cost_estimates ce USING (permit_num, revision_num)
     LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
-    WHERE pt.trade_slug = $trade_slug AND pt.is_active = true
+    WHERE pt.trade_slug = $trade_slug 
+      AND pt.is_active = true
+      AND pt.confidence >= 0.5
       AND ST_DWithin(p.location, ST_MakePoint($lng, $lat)::geography, $radius_m)
       AND p.status NOT IN ('Cancelled', 'Revoked', 'Closed')
-      AND pt.confidence >= 0.5
-    ORDER BY p.location <-> ST_MakePoint($lng, $lat)::geography
-    LIMIT 200
   ),
-  scored AS (
+  ranked AS (
     SELECT *,
-      -- Proximity 0-30
-      CASE WHEN distance_m < 500 THEN 30
-           WHEN distance_m < 1000 THEN 25
-           WHEN distance_m < 2000 THEN 20
-           WHEN distance_m < 5000 THEN 15
-           WHEN distance_m < 10000 THEN 10
-           WHEN distance_m < 20000 THEN 5 ELSE 0 END AS proximity_score,
-      -- Timing, Value, Opportunity computed similarly
-      ...
-    FROM candidates
+      (proximity_score + timing_score + value_score + opportunity_score) AS relevance_score
+    FROM scored
   )
-  SELECT *, (proximity_score + timing_score + value_score + opportunity_score) AS relevance_score
-  FROM scored
-  ORDER BY relevance_score DESC
-  LIMIT $limit OFFSET $offset;
+  SELECT * FROM ranked
+  WHERE 
+    -- Cursor pagination: page 1 has no cursor, page 2+ uses last row's score+permit_num
+    ($cursor_score IS NULL 
+     OR (relevance_score, permit_num) < ($cursor_score, $cursor_permit_num))
+  ORDER BY relevance_score DESC, permit_num DESC
+  LIMIT $limit;
   ```
+- **Cursor pagination contract:** Client sends no cursor for page 1. Response includes `meta.next_cursor = { score, permit_num }` from the last row. Client sends this back for page 2. Pagination is stable under concurrent inserts and requires no OFFSET.
 - Builder leads queried separately (see `73_builder_leads.md`) with same PostGIS approach
 - API layer interleaves permit + builder leads from two queries before returning
 

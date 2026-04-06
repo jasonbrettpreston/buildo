@@ -17,7 +17,7 @@ Estimate job cost and complexity for permits where `est_const_cost` is missing (
 **`cost_estimates`** — cached cost model output per permit
 | Column | Type | Constraints |
 |--------|------|-------------|
-| permit_num | VARCHAR(30) | PK (composite) |
+| permit_num | VARCHAR(30) | PK (composite), FK → permits ON DELETE CASCADE |
 | revision_num | VARCHAR(10) | PK (composite) |
 | estimated_cost | DECIMAL(15,2) | nullable — null if insufficient data |
 | cost_source | VARCHAR(20) | NOT NULL — 'permit' (actual) or 'model' (estimated) |
@@ -28,6 +28,24 @@ Estimate job cost and complexity for permits where `est_const_cost` is missing (
 | complexity_score | INTEGER | 0-100 from scope tags + massing |
 | model_version | INTEGER | DEFAULT 1 |
 | computed_at | TIMESTAMPTZ | DEFAULT NOW() |
+
+**Migration pattern:** UP creates table + FK + index. DOWN drops table cascade. Example:
+```sql
+-- UP (migration 068)
+CREATE TABLE cost_estimates (
+  permit_num VARCHAR(30) NOT NULL,
+  revision_num VARCHAR(10) NOT NULL,
+  -- ... columns as above
+  PRIMARY KEY (permit_num, revision_num),
+  FOREIGN KEY (permit_num, revision_num) 
+    REFERENCES permits(permit_num, revision_num) 
+    ON DELETE CASCADE
+);
+CREATE INDEX idx_cost_estimates_tier ON cost_estimates(cost_tier);
+
+-- DOWN
+DROP TABLE IF EXISTS cost_estimates CASCADE;
+```
 
 ### API Endpoints
 None — this is a library consumed by the lead feed API and pre-computed by a pipeline step.

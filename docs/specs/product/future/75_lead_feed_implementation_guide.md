@@ -207,7 +207,7 @@ import { z } from 'zod';
 import { logError, logInfo } from '@/lib/logger';
 import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
 import { getUserIdFromSession } from '@/lib/auth/server';
-import { leadFeedRateLimit } from '@/lib/ratelimit';
+import { checkLeadFeedLimit } from '@/lib/ratelimit';
 
 const paramsSchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
@@ -230,8 +230,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Rate limit
-  const { success, limit, remaining, reset } = await leadFeedRateLimit.limit(userId);
+  // Rate limit — fail-open if Redis is down (see src/lib/ratelimit.ts)
+  const { success, limit, remaining, reset } = await checkLeadFeedLimit(userId);
   if (!success) {
     return NextResponse.json(
       { data: null, error: 'Rate limit exceeded', meta: { limit, remaining, reset } },
@@ -304,26 +304,55 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-**Rate limiter setup** (`src/lib/ratelimit.ts`):
+**Rate limiter setup with fail-open policy** (`src/lib/ratelimit.ts`):
 ```tsx
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { logWarn } from '@/lib/logger';
 
 const redis = Redis.fromEnv();
 
-export const leadFeedRateLimit = new Ratelimit({
+const leadFeedLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(30, '60 s'),
   analytics: true,
   prefix: 'ratelimit:leads:feed',
 });
 
-export const leadViewRateLimit = new Ratelimit({
+const leadViewLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(60, '60 s'),
   analytics: true,
   prefix: 'ratelimit:leads:view',
 });
+
+// Fail-open: if Redis is unreachable, allow the request but log.
+// Better to serve a degraded experience than return 500 to every user.
+export async function checkLeadFeedLimit(userId: string) {
+  try {
+    return await leadFeedLimiter.limit(userId);
+  } catch (err) {
+    logWarn('[ratelimit]', 'redis_unreachable_failing_open', {
+      user_id: userId,
+      endpoint: 'feed',
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return { success: true, limit: 30, remaining: 30, reset: Date.now() + 60000 };
+  }
+}
+
+export async function checkLeadViewLimit(userId: string) {
+  try {
+    return await leadViewLimiter.limit(userId);
+  } catch (err) {
+    logWarn('[ratelimit]', 'redis_unreachable_failing_open', {
+      user_id: userId,
+      endpoint: 'view',
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return { success: true, limit: 60, remaining: 60, reset: Date.now() + 60000 };
+  }
+}
 ```
 
 Follows `§4.4 Multi-App API Design`: consistent `{ data, error, meta }` envelope, Zod validation with differentiated 400 errors, logError + logInfo observability, thin route that delegates to lib. Rate limited per user.
@@ -1310,8 +1339,16 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
 - `SkeletonLeadCard.ui.test.tsx` — matches card dimensions, no layout shift
 
 ### Infra tests (`*.infra.test.ts`)
-- `leads-feed.infra.test.ts` — API route returns correct structure, radius filter, auth enforcement
-- `leads-view.infra.test.ts` — view tracking upsert, competition count accuracy
+- `leads-feed.infra.test.ts` — API route returns correct structure, radius filter, auth enforcement, **cursor pagination stability** (page 1 + page 2 = disjoint, complete set), 400/401/429/500 response shapes
+- `leads-view.infra.test.ts` — view tracking upsert, competition count accuracy, `lead_key` collision handling (concurrent POSTs for same user+lead)
+- `ratelimit.infra.test.ts` — **fail-open behavior when Redis unreachable**, 429 response when limit exceeded, per-user isolation
+- `postgis.infra.test.ts` — **ST_DWithin correctness fixture**: known location + known set of nearby permits, assert returned set matches hand-computed haversine within 1m tolerance
+- `timing-siblings.infra.test.ts` — parent/child permit linkage: fixture with linked Demolition → New Building permits on same parcel, assert timing engine returns New Building timing for plumbing request on Demolition permit
+- `persist-query.infra.test.ts` — **offline rehydration**: simulate page reload with network cleared, assert cached leads render from IndexedDB
+- `geolocation-fallback.infra.test.ts` — fallback chain from browser GPS denial → saved home base → onboarding prompt
+- `cost-model.infra.test.ts` — validate model error margin against 100-permit fixture with known `est_const_cost`
+- `ssrf-pipeline.infra.test.ts` — `enrich-wsib.js` extension: assert hostname validation rejects `192.168.1.1`, `10.0.0.1`, `169.254.169.254` (AWS metadata), `localhost`, `127.0.0.1`
+- `error-boundary.ui.test.tsx` — simulate thrown render error, assert `app/leads/error.tsx` fallback renders with reset button
 
 ---
 
@@ -1355,32 +1392,177 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
 ### Phase 0: Foundation Fixes (NEW — blocks all other phases)
 
 **Infrastructure:**
+
 1. Install PostGIS extension in database:
    ```sql
    CREATE EXTENSION IF NOT EXISTS postgis;
    ```
-2. Add geography column to permits and backfill:
+
+2. Add geography column to permits (schema only — do NOT backfill in same migration):
    ```sql
+   -- migration 070_up.sql
    ALTER TABLE permits ADD COLUMN location geography(Point, 4326);
-   UPDATE permits 
-     SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography 
-     WHERE latitude IS NOT NULL;
-   CREATE INDEX idx_permits_location ON permits USING GIST (location);
    ```
-3. Add photo_url column for SSRF-safe builder photos:
+
+3. **Batched backfill script** `scripts/backfill-permits-location.js` to avoid locking 220K rows in a single transaction:
+   ```js
+   // Pseudocode — runs in 10K-row batches
+   const BATCH_SIZE = 10000;
+   let lastId = '';
+   while (true) {
+     const result = await pool.query(`
+       UPDATE permits 
+       SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography
+       WHERE (permit_num, revision_num) > ($1, $2)
+         AND latitude IS NOT NULL 
+         AND location IS NULL
+       ORDER BY permit_num, revision_num
+       LIMIT ${BATCH_SIZE}
+       RETURNING permit_num, revision_num
+     `, [lastId.permit_num || '', lastId.revision_num || '']);
+     if (result.rows.length === 0) break;
+     lastId = result.rows[result.rows.length - 1];
+     await sleep(100); // breathing room between batches
+   }
+   ```
+
+4. **Create GIST index CONCURRENTLY** (no table lock):
    ```sql
+   -- Must run outside a transaction
+   CREATE INDEX CONCURRENTLY idx_permits_location 
+     ON permits USING GIST (location);
+   ```
+
+5. **Keep `permits.location` in sync on ingest** (N6 — CRITICAL, day-2 break without this):
+   
+   Option A (preferred) — database trigger:
+   ```sql
+   CREATE OR REPLACE FUNCTION sync_permit_location() RETURNS trigger AS $$
+   BEGIN
+     IF NEW.latitude IS NOT NULL AND NEW.longitude IS NOT NULL THEN
+       NEW.location := ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326)::geography;
+     ELSE
+       NEW.location := NULL;
+     END IF;
+     RETURN NEW;
+   END;
+   $$ LANGUAGE plpgsql;
+   
+   CREATE TRIGGER trg_permits_location_sync
+     BEFORE INSERT OR UPDATE OF latitude, longitude ON permits
+     FOR EACH ROW EXECUTE FUNCTION sync_permit_location();
+   ```
+   
+   **Constraint exception:** This is the ONLY change to the permit ingestion path. `scripts/load-permits.js` and `scripts/geocode-permits.js` remain untouched — the trigger handles the sync automatically.
+
+6. Add photo_url column for SSRF-safe builder photos (migration 071):
+   ```sql
+   -- UP
    ALTER TABLE entities ADD COLUMN photo_url VARCHAR(500);
    ALTER TABLE entities ADD COLUMN photo_validated_at TIMESTAMPTZ;
+   ALTER TABLE entities ADD CONSTRAINT entities_photo_url_https 
+     CHECK (photo_url IS NULL OR photo_url LIKE 'https://%');
+   
+   -- DOWN
+   ALTER TABLE entities DROP CONSTRAINT IF EXISTS entities_photo_url_https;
+   ALTER TABLE entities DROP COLUMN IF EXISTS photo_validated_at;
+   ALTER TABLE entities DROP COLUMN IF EXISTS photo_url;
    ```
-4. Create `timing_calibration` table (see spec 71)
 
-**Security:**
-5. Wire Firebase `verifyIdToken` in middleware — either via `next-firebase-auth-edge` library or direct Firebase Admin SDK. **This is a pre-existing gap but is a production blocker.**
-6. Install `@upstash/ratelimit` and set up Upstash Redis. Create `src/lib/ratelimit.ts` with sliding window limiter (30 req/min feed, 60 req/min views).
-7. Extend `scripts/enrich-wsib.js` to extract OG images with `unfurl.js` in a sandboxed fashion:
-   - Validate URL hostname via DNS, reject RFC1918 private ranges
-   - Use `unfurl.js` with 5s timeout and 1MB max response size
-   - Store final validated URL in `entities.photo_url`
+7. Create `timing_calibration` table (see spec 71) with UP + DOWN migrations.
+
+**Logger extension:**
+
+8. Add `logInfo` function to `src/lib/logger.ts` alongside existing `logError` and `logWarn`:
+   ```typescript
+   export function logInfo(tag: string, event: string, context?: Record<string, unknown>): void {
+     console.log(JSON.stringify({ level: 'info', tag, event, timestamp: new Date().toISOString(), ...context }));
+   }
+   ```
+
+**Auth helper:**
+
+9. Create `src/lib/auth/server.ts` exporting `getUserIdFromSession` that properly verifies Firebase ID tokens:
+   ```typescript
+   import { cookies } from 'next/headers';
+   import { getAuth } from 'firebase-admin/auth';
+   import { logError } from '@/lib/logger';
+   
+   export async function getUserIdFromSession(request: NextRequest): Promise<string | null> {
+     try {
+       const cookieStore = await cookies();
+       const sessionCookie = cookieStore.get('__session')?.value;
+       if (!sessionCookie) {
+         // Admin API key fallback for CI / scripts
+         const adminKey = request.headers.get('X-Admin-Key');
+         if (adminKey === process.env.ADMIN_API_KEY) return 'admin';
+         return null;
+       }
+       const decoded = await getAuth().verifySessionCookie(sessionCookie, true);
+       return decoded.uid;
+     } catch (err) {
+       logError('[auth/server]', err, { event: 'session_verification_failed' });
+       return null;
+     }
+   }
+   ```
+
+10. Wire Firebase Admin SDK initialization if not already done:
+    ```typescript
+    // src/lib/firebase/admin.ts
+    import { initializeApp, getApps, cert } from 'firebase-admin/app';
+    
+    if (!getApps().length) {
+      initializeApp({
+        credential: cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        }),
+      });
+    }
+    ```
+
+**Rate limiting (with fail-open policy — N3):**
+
+11. Install `@upstash/ratelimit` + `@upstash/redis`. Create `src/lib/ratelimit.ts`:
+    ```typescript
+    import { Ratelimit } from '@upstash/ratelimit';
+    import { Redis } from '@upstash/redis';
+    import { logWarn } from '@/lib/logger';
+    
+    const redis = Redis.fromEnv();
+    
+    const leadFeedLimiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(30, '60 s'),
+      analytics: true,
+      prefix: 'ratelimit:leads:feed',
+    });
+    
+    // Fail-open wrapper: if Redis is down, allow the request but log a warning.
+    // Better to serve degraded than return 500 to every user.
+    export async function checkLeadFeedLimit(userId: string) {
+      try {
+        return await leadFeedLimiter.limit(userId);
+      } catch (err) {
+        logWarn('[ratelimit]', 'redis_unreachable_failing_open', { 
+          user_id: userId, 
+          error: err instanceof Error ? err.message : String(err) 
+        });
+        return { success: true, limit: 30, remaining: 30, reset: Date.now() + 60000 };
+      }
+    }
+    
+    // Same pattern for leadViewLimiter (60/min)
+    ```
+
+**SSRF-safe builder photos:**
+
+12. Extend `scripts/enrich-wsib.js` to extract OG images with `unfurl.js` in a sandboxed fashion:
+    - Validate URL hostname via DNS, reject RFC1918 private ranges (10.x, 172.16-31.x, 192.168.x, 169.254.x)
+    - Use `unfurl.js` with 5s timeout and 1MB max response size
+    - Store final validated URL in `entities.photo_url`
 
 **Keep the API server from ever fetching builder URLs at runtime.**
 
@@ -1404,8 +1586,49 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
 
 ### Phase 3: State & Hooks
 
-1. Zustand store `useLeadFeedState` with hoveredId, selectedId, filters
-2. TanStack Query hooks with **`PersistQueryClient`** for offline cache (24h IndexedDB):
+1. Zustand store `useLeadFeedState` with hoveredId, selectedId, filters — **use `persist` middleware** to retain `radiusKm` and `location` across page loads (N12):
+   ```typescript
+   import { create } from 'zustand';
+   import { persist, createJSONStorage } from 'zustand/middleware';
+   
+   export const useLeadFeedState = create<LeadFeedState>()(
+     persist(
+       (set) => ({
+         hoveredLeadId: null,
+         selectedLeadId: null,
+         radiusKm: 10,
+         location: null,
+         setHoveredLeadId: (id) => set({ hoveredLeadId: id }),
+         setSelectedLeadId: (id) => set({ selectedLeadId: id }),
+         setRadius: (km) => set({ radiusKm: km }),
+         setLocation: (loc) => set({ location: loc }),
+       }),
+       {
+         name: 'buildo-lead-feed',
+         storage: createJSONStorage(() => localStorage),
+         // Only persist filter state — not ephemeral hover/select
+         partialize: (state) => ({ radiusKm: state.radiusKm, location: state.location }),
+       }
+     )
+   );
+   ```
+
+2. TanStack Query hooks with **`PersistQueryClient`** for offline cache (24h IndexedDB). **Round lat/lng to ~3 decimals (~110m grid) in query key** to prevent GPS jitter from creating unbounded cache entries (N13):
+   ```typescript
+   export function useLeadFeed(params: LeadFeedParams) {
+     // Round location to 3 decimal places — ~110m grid, prevents GPS jitter
+     // from generating unique cache keys on every tiny location change
+     const roundedLat = Math.round(params.lat * 1000) / 1000;
+     const roundedLng = Math.round(params.lng * 1000) / 1000;
+     
+     return useInfiniteQuery({
+       queryKey: ['leadFeed', { ...params, lat: roundedLat, lng: roundedLng }],
+       // ... rest of hook
+     });
+   }
+   ```
+   
+   Then wrap with PersistQueryClient:
    ```tsx
    import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
    import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
@@ -1477,7 +1700,8 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
 2. Haptic feedback (feature-detect, iOS doesn't implement Vibration API)
 3. Accessibility audit (screen reader labels, keyboard nav, 320px viewport test)
 4. Observability: add `logInfo` with performance marks to feed API
-5. V2 preparation: evaluate adding `@tanstack/react-virtual` if feed length exceeds 50 items in production
+5. **V1 hard cap:** Infinite scroll limited to 5 pages of 15 cards = **75 cards max**. When the user hits the cap, show "Refine your search to see more." This is the V1 constraint replacing virtualization.
+6. **V2 upgrade path:** When production feed length regularly exceeds 50 cards OR frame drops are reported, add `@tanstack/react-virtual` to `LeadFeed` component. This is a self-contained change behind the existing component interface.
 
 ---
 
@@ -1493,10 +1717,17 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
 - `tailwind.config.ts` (additions only)
 
 ### Out-of-Scope Files
-- `scripts/` — no pipeline changes (frontend feature)
 - `src/lib/classification/` — existing scoring untouched
 - `src/components/permits/PermitCard.tsx` — existing search UI unchanged
 - `src/app/search/page.tsx` — existing search preserved
+
+### Scope Exception — Pipeline Changes Required
+Normally the frontend phase restricts changes to `scripts/`. This feature requires **three** targeted pipeline additions for Phase 0:
+1. `scripts/backfill-permits-location.js` — NEW batched backfill for PostGIS geography column
+2. `scripts/enrich-wsib.js` — EXTEND with OG image extraction (SSRF-safe, pipeline-side)
+3. `scripts/purge-lead-views.js` — NEW nightly retention cleanup for PIPEDA/GDPR compliance
+
+The `permits.location` sync is handled by a database trigger (`trg_permits_location_sync`), NOT by modifying `scripts/load-permits.js` or `scripts/geocode-permits.js`. The trigger is transparent to the ingestion pipeline — no pipeline code changes, just a schema migration.
 
 ### Cross-Spec Dependencies
 - **Relies on:** `70_lead_feed.md`, `71_lead_timing_engine.md`, `72_lead_cost_model.md`, `73_builder_leads.md`, `74_lead_feed_design.md`, `46_wsib_enrichment.md`, `53_source_aic_inspections.md`, `13_authentication.md`
