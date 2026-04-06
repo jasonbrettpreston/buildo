@@ -1,8 +1,10 @@
 # Lead Feed — Design Specification
 
 > **Status: FUTURE BUILD** — Design locked, not yet implemented.
-> **Companion Research:** `docs/reports/competitive_lead_gen_ux_research.md`
+> **Companion Research:** `docs/reports/competitive_lead_gen_ux_research.md` (Part 1: competitor analysis, Part 2: Airbnb/Zillow implementation patterns)
+> **React Best Practices:** `docs/reports/react_best_practices_deep_dive.md`
 > **Architecture Spec:** `70_lead_feed.md`, `71_lead_timing_engine.md`, `72_lead_cost_model.md`, `73_builder_leads.md`
+> **Implementation Guide:** `75_lead_feed_implementation_guide.md` (component-by-component code)
 
 ---
 
