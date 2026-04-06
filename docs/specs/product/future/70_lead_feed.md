@@ -19,6 +19,7 @@ Surface the most relevant construction leads to tradespeople based on their prox
 |--------|------|-------------|
 | id | SERIAL | PK |
 | user_id | VARCHAR(100) | NOT NULL — Firebase UID |
+| lead_key | VARCHAR(100) | NOT NULL — computed: 'permit:{permit_num}:{revision_num}' or 'builder:{entity_id}' |
 | lead_type | VARCHAR(20) | NOT NULL — 'permit' or 'builder' |
 | permit_num | VARCHAR(30) | nullable (null for builder leads) |
 | revision_num | VARCHAR(10) | nullable |
@@ -27,19 +28,35 @@ Surface the most relevant construction leads to tradespeople based on their prox
 | viewed_at | TIMESTAMPTZ | DEFAULT NOW() |
 | saved | BOOLEAN | DEFAULT false |
 
-**Indexes:** `(permit_num, trade_slug)`, `(entity_id, trade_slug)`, `(user_id, viewed_at DESC)`
-**Unique:** `(user_id, lead_type, permit_num, revision_num, entity_id, trade_slug)`
+**Indexes:**
+- `(lead_key, trade_slug)` — for competition count queries (hot path)
+- `(permit_num, trade_slug)` — for permit-specific views
+- `(entity_id, trade_slug)` — for builder-specific views
+- `(user_id, viewed_at DESC)` — for user history
+
+**Unique:** `(user_id, lead_key, trade_slug)` — uses computed lead_key to avoid nullable composite key
+
+**Why `lead_key`:** Composite unique constraints with multiple nullable columns are awkward in PostgreSQL (NULLs are not equal). The `lead_key` computed column gives us a single non-null identifier for both lead types.
 
 ### API Endpoints
 
 **`GET /api/leads/feed`** — Personalized lead feed
 - **Params:** `lat`, `lng` (required), `trade_slug` (required), `radius_km` (default 10), `page`, `limit`
-- **Response:** `{ data: LeadFeedItem[], meta: { total, page, radius_km } }`
-- **Logic:** Queries permits + builder entities within radius, scores each with the 4-pillar model, interleaves permit and builder leads, returns sorted by relevance_score DESC
+- **Response envelope:** `{ data: LeadFeedItem[], error: null, meta: { total, page, radius_km } }` per §4.4
+- **Error responses:**
+  - `400 Bad Request` — Zod validation failure, returns `{ data: null, error: 'Invalid parameters', meta: { issues } }` with field-level error messages
+  - `401 Unauthorized` — missing/invalid session
+  - `429 Too Many Requests` — rate limit exceeded (30/min per user)
+  - `500 Internal Server Error` — generic fallback with error digest
+- **Logic:** **All scoring happens in PostgreSQL, NOT Node memory.** Single CTE query using PostGIS `ST_DWithin` for radius pre-filter + `<->` KNN operator for proximity ordering. 4-pillar scoring computed via SQL `CASE` expressions and window functions.
+- **Rate limiting:** 30 requests per 60 seconds per `user_id`, enforced via `@upstash/ratelimit` middleware
+- **Observability:** Structured log per request: `{user_id, trade_slug, lat, lng, radius_km, result_count, duration_ms}`
 
 **`POST /api/leads/view`** — Record view or save
 - **Body:** `{ permit_num?, revision_num?, entity_id?, trade_slug, action: 'view' | 'save' | 'unsave' }`
-- **Response:** `{ success: true, competition_count: number }`
+- **Response envelope:** `{ data: { competition_count: number }, error: null, meta: null }`
+- **Rate limiting:** 60 requests per 60 seconds per user (higher than feed since save/unsave can be rapid)
+- **Logic:** Computes `lead_key` from input, upserts to `lead_views`, returns updated competition count
 
 ### Implementation
 
@@ -52,13 +69,48 @@ Surface the most relevant construction leads to tradespeople based on their prox
 - `LeadFeedItem`, `ScoredPermitLead`, `ScoredBuilderLead`, `PermitLeadCard`, `BuilderLeadCard`
 
 **Feed query:** `src/app/api/leads/feed/route.ts`
-- Bounding box pre-filter on permits.latitude/longitude
-- JOIN permit_trades for trade matching
-- LEFT JOIN entities via entity_projects for builder context
-- LEFT JOIN neighbourhoods for premium factor
-- LEFT JOIN cost_estimates for pre-computed cost tiers
-- Application-level scoring on top 50-100 candidates
-- Return top 20 sorted by composite relevance_score
+- Thin route handler — delegates to `src/features/leads/lib/get-lead-feed.ts`
+- All scoring in a single PostgreSQL CTE query:
+  ```sql
+  WITH candidates AS (
+    SELECT p.*, pt.trade_slug, pt.confidence, pt.phase,
+      ce.estimated_cost, ce.cost_tier,
+      ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography) AS distance_m
+    FROM permits p
+    JOIN permit_trades pt USING (permit_num, revision_num)
+    LEFT JOIN cost_estimates ce USING (permit_num, revision_num)
+    LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
+    WHERE pt.trade_slug = $trade_slug AND pt.is_active = true
+      AND ST_DWithin(p.location, ST_MakePoint($lng, $lat)::geography, $radius_m)
+      AND p.status NOT IN ('Cancelled', 'Revoked', 'Closed')
+      AND pt.confidence >= 0.5
+    ORDER BY p.location <-> ST_MakePoint($lng, $lat)::geography
+    LIMIT 200
+  ),
+  scored AS (
+    SELECT *,
+      -- Proximity 0-30
+      CASE WHEN distance_m < 500 THEN 30
+           WHEN distance_m < 1000 THEN 25
+           WHEN distance_m < 2000 THEN 20
+           WHEN distance_m < 5000 THEN 15
+           WHEN distance_m < 10000 THEN 10
+           WHEN distance_m < 20000 THEN 5 ELSE 0 END AS proximity_score,
+      -- Timing, Value, Opportunity computed similarly
+      ...
+    FROM candidates
+  )
+  SELECT *, (proximity_score + timing_score + value_score + opportunity_score) AS relevance_score
+  FROM scored
+  ORDER BY relevance_score DESC
+  LIMIT $limit OFFSET $offset;
+  ```
+- Builder leads queried separately (see `73_builder_leads.md`) with same PostGIS approach
+- API layer interleaves permit + builder leads from two queries before returning
+
+**View tracking:** `src/app/api/leads/view/route.ts`
+- Upsert to lead_views using `lead_key` computed column
+- Return updated competition_count for the lead+trade combination
 
 **View tracking:** `src/app/api/leads/view/route.ts`
 - Upsert to lead_views table
@@ -130,11 +182,15 @@ Surface the most relevant construction leads to tradespeople based on their prox
 - Builder leads: company name, contact info, active permits nearby, website photo
 
 ### Edge Cases
-1. **No GPS available:** Fall back to user's saved postal code or ward from profile preferences. Show "Set your location for better results" prompt.
+1. **No GPS available:** Fall back to user's saved postal code or ward from profile preferences. Show "Set your location for better results" prompt. Chain: browser geolocation → saved home base → onboarding prompt.
 2. **No leads in radius:** Suggest expanding radius. Show nearest lead distance: "Closest lead is 15km away."
 3. **Trade not classified for a permit:** Skip that permit for this trade — don't show irrelevant leads.
 4. **Builder with no active permits nearby:** Don't show — builder leads only appear when they have active work in the tradesperson's radius.
-5. **Newly filed permit with no inspections:** Use heuristic timing with "estimated" confidence label.
+5. **Newly filed permit with no inspections:** Use heuristic timing with "estimated" confidence label (see `71_lead_timing_engine.md`).
+6. **Offline / poor connectivity:** Serve cached results from TanStack Query PersistQueryClient (IndexedDB). Show "Last updated X minutes ago" banner. Detect via `navigator.onLine`.
+7. **Zod validation failure:** Return 400 with field-level error messages, NOT generic 500. Example: `{ error: 'Invalid parameters', meta: { issues: [{ path: ['lat'], message: 'Expected number' }] } }`
+8. **Rate limit exceeded:** Return 429 with retry-after header. Client displays "Too many requests, please wait" with auto-retry after delay.
+9. **API error:** React error boundary at `/app/leads/error.tsx` catches client errors. Wrap individual cards in local `ErrorBoundary` so one bad card doesn't break the feed.
 </behavior>
 
 ---

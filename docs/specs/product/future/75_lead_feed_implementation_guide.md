@@ -10,6 +10,7 @@ This guide synthesizes:
 - **Design spec:** `74_lead_feed_design.md`
 - **Competitive research:** `docs/reports/competitive_lead_gen_ux_research.md` (Part 1 + Part 2)
 - **React best practices:** `docs/reports/react_best_practices_deep_dive.md`
+- **Final assessment:** `docs/reports/lead_feed_final_assessment.md` (gap analysis, 10-vector rubric)
 - **Engineering standards:** `00_engineering_standards.md` (§4.3, §4.4, §10)
 
 ---
@@ -197,14 +198,16 @@ export function useLeadView() {
 }
 ```
 
-### 2.4 API Route Contract
+### 2.4 API Route Contract (with rate limiting + differentiated errors)
 
 `src/app/api/leads/feed/route.ts`:
 ```tsx
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { logError } from '@/lib/logger';
+import { logError, logInfo } from '@/lib/logger';
 import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
+import { getUserIdFromSession } from '@/lib/auth/server';
+import { leadFeedRateLimit } from '@/lib/ratelimit';
 
 const paramsSchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
@@ -216,12 +219,83 @@ const paramsSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  const startMs = Date.now();
+  
+  // Auth first
+  const userId = await getUserIdFromSession(request);
+  if (!userId) {
+    return NextResponse.json(
+      { data: null, error: 'Unauthorized', meta: null },
+      { status: 401 }
+    );
+  }
+
+  // Rate limit
+  const { success, limit, remaining, reset } = await leadFeedRateLimit.limit(userId);
+  if (!success) {
+    return NextResponse.json(
+      { data: null, error: 'Rate limit exceeded', meta: { limit, remaining, reset } },
+      { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': String(limit),
+          'X-RateLimit-Remaining': String(remaining),
+          'X-RateLimit-Reset': String(reset),
+        }
+      }
+    );
+  }
+
+  // Validation — differentiated 400 for Zod, 500 for everything else
+  let params;
   try {
-    const params = paramsSchema.parse(Object.fromEntries(request.nextUrl.searchParams));
-    const result = await getLeadFeed(params);
-    return NextResponse.json({ data: result.leads, error: null, meta: result.meta });
+    params = paramsSchema.parse(Object.fromEntries(request.nextUrl.searchParams));
   } catch (err) {
-    logError('[api/leads/feed]', err, { event: 'feed_query_failed' });
+    if (err instanceof z.ZodError) {
+      return NextResponse.json(
+        { 
+          data: null, 
+          error: 'Invalid parameters', 
+          meta: { 
+            issues: err.issues.map(i => ({ 
+              path: i.path.join('.'), 
+              message: i.message 
+            }))
+          }
+        },
+        { status: 400 }
+      );
+    }
+    throw err;
+  }
+
+  // Business logic
+  try {
+    const result = await getLeadFeed(params);
+    const durationMs = Date.now() - startMs;
+    
+    // Structured observability log
+    logInfo('[api/leads/feed]', 'feed_query_success', {
+      user_id: userId,
+      trade_slug: params.trade_slug,
+      lat: params.lat,
+      lng: params.lng,
+      radius_km: params.radius_km,
+      result_count: result.leads.length,
+      duration_ms: durationMs,
+    });
+    
+    return NextResponse.json({ 
+      data: result.leads, 
+      error: null, 
+      meta: result.meta 
+    });
+  } catch (err) {
+    logError('[api/leads/feed]', err, { 
+      event: 'feed_query_failed',
+      user_id: userId,
+      params,
+    });
     return NextResponse.json(
       { data: null, error: 'Failed to load leads', meta: null },
       { status: 500 }
@@ -230,7 +304,29 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-Follows `§4.4 Multi-App API Design`: consistent `{ data, error, meta }` envelope, Zod validation, logError mandate, thin route that delegates to lib.
+**Rate limiter setup** (`src/lib/ratelimit.ts`):
+```tsx
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
+
+export const leadFeedRateLimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(30, '60 s'),
+  analytics: true,
+  prefix: 'ratelimit:leads:feed',
+});
+
+export const leadViewRateLimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(60, '60 s'),
+  analytics: true,
+  prefix: 'ratelimit:leads:view',
+});
+```
+
+Follows `§4.4 Multi-App API Design`: consistent `{ data, error, meta }` envelope, Zod validation with differentiated 400 errors, logError + logInfo observability, thin route that delegates to lib. Rate limited per user.
 
 ---
 
@@ -1160,12 +1256,35 @@ const ibmPlexMono = IBM_Plex_Mono({
 ```bash
 npm install \
   @tanstack/react-query \
+  @tanstack/react-query-persist-client \
+  @tanstack/query-async-storage-persister \
+  idb-keyval \
+  @upstash/ratelimit \
+  @upstash/redis \
   zustand \
   vaul \
   motion \
   react-intersection-observer \
   react-simple-pull-to-refresh \
-  zod
+  zod \
+  unfurl.js
+```
+
+**What each solves:**
+- `@tanstack/react-query-persist-client` + `@tanstack/query-async-storage-persister` + `idb-keyval` → offline cache persistence (H1)
+- `@upstash/ratelimit` + `@upstash/redis` → rate limiting on API routes (C5)
+- `unfurl.js` → SSRF-safe OG image extraction in pipeline (C1)
+- `zustand` → map/list state sync without Redux
+- `vaul` → bottom sheet drawer
+- `motion` → spring animations (heart button, card expand)
+
+**Pipeline-only (install in `scripts/` context):**
+- `unfurl.js` runs in the Node pipeline `scripts/enrich-wsib.js`, never on the API server
+
+**Environment variables needed:**
+```bash
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
 ```
 
 For dev dependencies, existing Vitest + RTL are sufficient.
@@ -1199,13 +1318,19 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
 ## 9. Security Checklist (per §4.3)
 
 - [ ] No API keys in `use client` components — Google Maps key is `NEXT_PUBLIC_` (public) and scoped
-- [ ] API routes return projected fields, not `SELECT *` — enforced in `getLeadFeed` lib function
-- [ ] Zod validation on all API inputs — prevents injection
-- [ ] Authorization enforced server-side in API routes — middleware checks session cookie
+- [ ] API routes return projected fields, not `SELECT *` — enforced in `getLeadFeed` lib function with explicit column SELECT and `PermitLeadDTO` serializer
+- [ ] Zod validation on all API inputs with **400 differentiated error responses**
+- [ ] **Firebase `verifyIdToken` wired in middleware** — not shape-check only (H6)
+- [ ] **Rate limiting via `@upstash/ratelimit`** on `/api/leads/feed` (30/min) and `/api/leads/view` (60/min) (C5)
+- [ ] Authorization enforced server-side in API routes — middleware checks session cookie AND verifyIdToken
 - [ ] No user-provided HTML rendered — all text goes through JSX escaping
 - [ ] `rel="noopener noreferrer"` on external links — website buttons
 - [ ] `tel:` links use `.replace(/\D/g, '')` to sanitize phone numbers before href
-- [ ] TanStack Query data is never written to localStorage (default in-memory cache)
+- [ ] **OG image fetching happens in pipeline only**, never on API server (SSRF prevention — C1). API serves `entities.photo_url` pre-validated URLs.
+- [ ] **URL hostname validation before pipeline fetch** — reject RFC1918 private IPs, link-local ranges
+- [ ] **Max size + timeout on pipeline fetches** — 1MB body, 5s timeout via `unfurl.js`
+- [ ] TanStack Query data persisted to IndexedDB (NOT localStorage) for offline — IndexedDB has better storage quotas and same-origin isolation
+- [ ] TanStack Query cache buster invalidates stored data on schema changes
 
 ---
 
@@ -1225,41 +1350,134 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
 
 ## 11. Build Sequence (Implementation Order)
 
-### Phase 1: Data Layer (no UI)
-1. Build `src/features/leads/lib/scoring.ts`, `timing.ts`, `cost-model.ts`, `builder-query.ts`
-2. Write logic tests for each — must pass before moving on
-3. Build `getLeadFeed` orchestrator
-4. Build `/api/leads/feed` and `/api/leads/view` routes
-5. Write infra tests
+> **CRITICAL:** Phase 0 must complete before any other phase. The assessment identified 3 blockers (SSRF, Node-memory scoring, Haversine SQL) and 3 high-severity gaps (offline cache, error boundaries, verifyIdToken) that must be addressed in foundation before UI work begins.
 
-### Phase 2: State & Hooks
-1. Zustand store (`useLeadFeedState`)
-2. TanStack Query hooks (`useLeadFeed`, `useLeadView`)
-3. Tailwind config + font setup
+### Phase 0: Foundation Fixes (NEW — blocks all other phases)
 
-### Phase 3: Presentational Components (No Data)
+**Infrastructure:**
+1. Install PostGIS extension in database:
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS postgis;
+   ```
+2. Add geography column to permits and backfill:
+   ```sql
+   ALTER TABLE permits ADD COLUMN location geography(Point, 4326);
+   UPDATE permits 
+     SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography 
+     WHERE latitude IS NOT NULL;
+   CREATE INDEX idx_permits_location ON permits USING GIST (location);
+   ```
+3. Add photo_url column for SSRF-safe builder photos:
+   ```sql
+   ALTER TABLE entities ADD COLUMN photo_url VARCHAR(500);
+   ALTER TABLE entities ADD COLUMN photo_validated_at TIMESTAMPTZ;
+   ```
+4. Create `timing_calibration` table (see spec 71)
+
+**Security:**
+5. Wire Firebase `verifyIdToken` in middleware — either via `next-firebase-auth-edge` library or direct Firebase Admin SDK. **This is a pre-existing gap but is a production blocker.**
+6. Install `@upstash/ratelimit` and set up Upstash Redis. Create `src/lib/ratelimit.ts` with sliding window limiter (30 req/min feed, 60 req/min views).
+7. Extend `scripts/enrich-wsib.js` to extract OG images with `unfurl.js` in a sandboxed fashion:
+   - Validate URL hostname via DNS, reject RFC1918 private ranges
+   - Use `unfurl.js` with 5s timeout and 1MB max response size
+   - Store final validated URL in `entities.photo_url`
+
+**Keep the API server from ever fetching builder URLs at runtime.**
+
+### Phase 1: Data Layer (no UI, SQL-based scoring)
+
+1. Build lead scoring as a **single PostgreSQL CTE query** in `src/features/leads/lib/get-lead-feed.ts` — NOT Node-memory JavaScript scoring
+2. Build timing engine `src/features/leads/lib/timing.ts` with parent/child permit merge logic (query `permit_parcels` for siblings)
+3. Build cost model `src/features/leads/lib/cost-model.ts` (spec 72 as-is, cached in `cost_estimates` table via pipeline)
+4. Build builder query `src/features/leads/lib/builder-query.ts` using PostGIS `ST_DWithin` and `<->` KNN
+5. Build distance helper using PostGIS functions (no JS haversine)
+6. Write logic tests — must pass before moving on
+
+### Phase 2: API Layer
+
+1. `/api/leads/feed` — thin route delegating to `getLeadFeed`, with:
+   - Zod validation returning **400 on error** (not 500)
+   - Rate limiting middleware via `@upstash/ratelimit`
+   - Structured logging: `{user_id, trade_slug, lat, lng, result_count, duration_ms}`
+2. `/api/leads/view` — upsert to `lead_views` using `lead_key` column, rate-limited at 60/min
+3. Write infra tests covering: 200 success, 400 Zod failure, 401 unauthorized, 429 rate limit, 500 generic error
+
+### Phase 3: State & Hooks
+
+1. Zustand store `useLeadFeedState` with hoveredId, selectedId, filters
+2. TanStack Query hooks with **`PersistQueryClient`** for offline cache (24h IndexedDB):
+   ```tsx
+   import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+   import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+   import { get, set, del } from 'idb-keyval';
+
+   const persister = createAsyncStoragePersister({
+     storage: { getItem: get, setItem: set, removeItem: del },
+     key: 'buildo-leads-cache',
+     throttleTime: 1000,
+   });
+
+   <PersistQueryClientProvider 
+     client={queryClient} 
+     persistOptions={{ 
+       persister, 
+       maxAge: 24 * 60 * 60 * 1000,  // 24 hours
+       buster: '1',  // bump to invalidate all caches
+     }}
+   >
+     {children}
+   </PersistQueryClientProvider>
+   ```
+3. `useGeolocation` hook with fallback chain (browser → saved home base → onboarding prompt)
+4. Tailwind config + font setup
+
+### Phase 4: Presentational Components (No Data)
+
 1. `SkeletonLeadCard` — simplest, no props
 2. `TimingBadge`, `OpportunityBadge`, `SaveButton` — atomic
-3. `PermitLeadCard` (mock data) — UI test first
-4. `BuilderLeadCard` (mock data) — UI test first
-5. `EmptyLeadState`
+3. `PermitLeadCard` (mock data) — UI test first, wrapped in local `ErrorBoundary`
+4. `BuilderLeadCard` (mock data) — UI test first, photo from `entities.photo_url` only (no runtime fetching)
+5. `EmptyLeadState` with offline detection via `navigator.onLine`
 
-### Phase 4: Feed Integration
+### Phase 5: Feed Integration
+
 1. `LeadFeed` with real data + infinite scroll
-2. `LeadFeedHeader` sticky + filter button
-3. `LeadFilterSheet` with Vaul
-4. Pull-to-refresh integration
+2. **Error boundary at route level** — `app/leads/error.tsx` and `app/leads/global-error.tsx`:
+   ```tsx
+   'use client';
+   import { useEffect } from 'react';
+   export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+     useEffect(() => { console.error(error); }, [error]);
+     return (
+       <div className="min-h-screen flex flex-col items-center justify-center bg-[#1C1F26] p-6">
+         <h2 className="text-neutral-100 font-display text-lg font-bold mb-2">
+           Something went wrong loading leads
+         </h2>
+         <p className="text-neutral-400 text-sm mb-4">Error ID: {error.digest}</p>
+         <button onClick={reset} className="min-h-[44px] px-6 bg-amber-500 text-neutral-900 rounded-md">
+           Try again
+         </button>
+       </div>
+     );
+   }
+   ```
+3. `LeadFeedHeader` sticky + filter button
+4. `LeadFilterSheet` with Vaul
+5. Pull-to-refresh integration
 
-### Phase 5: Map + Desktop Layout
+### Phase 6: Map + Desktop Layout
+
 1. `LeadMapPane` desktop sidebar
 2. Map marker ↔ card sync via Zustand
 3. Feed page layout `app/leads/page.tsx`
 
-### Phase 6: Polish
+### Phase 7: Polish
+
 1. Animations (save button bounce, card expand)
-2. Haptic feedback
-3. Empty states and error boundaries
-4. Accessibility audit (screen reader labels, keyboard nav)
+2. Haptic feedback (feature-detect, iOS doesn't implement Vibration API)
+3. Accessibility audit (screen reader labels, keyboard nav, 320px viewport test)
+4. Observability: add `logInfo` with performance marks to feed API
+5. V2 preparation: evaluate adding `@tanstack/react-virtual` if feed length exceeds 50 items in production
 
 ---
 

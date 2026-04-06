@@ -82,10 +82,36 @@ None — this is a library consumed by the lead feed API (`70_lead_feed.md`).
 3. Add phase timing on top of estimated permit filing
 4. Display: "Pre-permit stage — your trade estimated 8-14 months out"
 
-**Calibration data (from audit):**
+**Calibration data (from audit — initial seed only):**
 - Issued → first inspection: Avg=182d, Median=105d, P25=44d, P75=238d (n=7,732)
 - Inspection activity by phase: 0-3mo=3,202 permits, 4-9mo=3,520, 10-18mo=2,738, 18+mo=1,379
 - Key stage sequence observed: Excavation → Footings → Framing → Insulation → Fire Separations → Finals
+
+**Dynamic calibration:** Hardcoded values will drift as construction practices change and more inspection data becomes available. A nightly pipeline step (`scripts/compute-timing-calibration.js`) re-computes median/percentile values per `permit_type` and writes to a new `timing_calibration` table:
+
+```sql
+CREATE TABLE timing_calibration (
+  id SERIAL PRIMARY KEY,
+  permit_type VARCHAR(100) NOT NULL,
+  median_days_to_first_inspection INTEGER NOT NULL,
+  p25_days INTEGER NOT NULL,
+  p75_days INTEGER NOT NULL,
+  sample_size INTEGER NOT NULL,
+  computed_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(permit_type)
+);
+```
+
+The timing engine reads the latest row per permit_type at query time. If no data exists for a permit_type (sample < 20), falls back to the global median.
+
+**Parent/child permit linkage:** Sites often have multiple linked permits — Demolition, then New Building, then revisions. The timing engine must check for sibling permits on the same parcel and prefer the permit whose phase matches the target trade.
+
+Logic in `getTradeTimingForPermit`:
+1. Query `permit_parcels` for all permits on the same parcel(s) as the target permit
+2. For each sibling, determine its current phase
+3. If a sibling's phase window matches the target trade better than the target permit's phase, use the sibling's timing
+4. Example: Request timing for plumbing on a Demolition permit → find linked New Building permit → return New Building's structural phase timing instead
+5. If no better sibling found, use the target permit's timing as-is
 
 </architecture>
 
@@ -126,6 +152,8 @@ interface TradeTimingEstimate {
 3. **Trade active in multiple phases:** Use the earliest applicable enabling stage.
 4. **Completed/Closed permit:** Return "Project complete — no longer active"
 5. **Inspection data with no dates:** Some inspection records have `inspection_date = NULL` (56,455 "Outstanding"). Use stage existence as a signal but not for timing.
+6. **Linked parent/child permits:** A Demolition permit with a linked New Building permit on the same parcel — timing engine checks siblings via `permit_parcels` and uses the sibling whose phase best matches the target trade.
+7. **Stage names not in `inspection_stage_map`:** 34 distinct stage names exist in DB — if a stage is unmapped, log it and fall back to phase-based timing. Nightly job can surface unmapped stages for manual review.
 </behavior>
 
 ---

@@ -40,17 +40,24 @@ None — builder leads are served through the unified `GET /api/leads/feed` endp
 **Builder lead query:** `src/lib/leads/builder-query.ts`
 - `queryBuilderLeads(trade_slug, lat, lng, radius_km): BuilderLeadCandidate[]`
 
-**Query pattern:**
+**Query pattern (PostGIS — not Haversine):**
+
 ```sql
+-- Prerequisites (run once in migration):
+-- CREATE EXTENSION postgis;
+-- ALTER TABLE permits ADD COLUMN location geography(Point, 4326);
+-- UPDATE permits SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography WHERE latitude IS NOT NULL;
+-- CREATE INDEX idx_permits_location ON permits USING GIST (location);
+
 SELECT
   e.id, e.legal_name, e.trade_name, e.entity_type,
-  e.primary_phone, e.primary_email, e.website,
+  e.primary_phone, e.primary_email, e.website, e.photo_url,
   e.permit_count, e.is_wsib_registered,
   w.business_size, w.naics_description,
-  COUNT(p.permit_num) FILTER (WHERE p.status IN ('Permit Issued','Inspection')) as active_permits_nearby,
-  COUNT(DISTINCT t.slug) FILTER (WHERE t.slug = $trade_slug) as matching_trade_permits,
-  MIN(haversine(lat, lng, p.latitude, p.longitude)) as closest_permit_m,
-  AVG(p.est_const_cost) FILTER (WHERE p.est_const_cost > 0) as avg_project_cost
+  COUNT(p.permit_num) FILTER (WHERE p.status IN ('Permit Issued','Inspection')) AS active_permits_nearby,
+  COUNT(DISTINCT t.slug) FILTER (WHERE t.slug = $trade_slug) AS matching_trade_permits,
+  MIN(ST_Distance(p.location, ST_MakePoint($lng, $lat)::geography)) AS closest_permit_m,
+  AVG(p.est_const_cost) FILTER (WHERE p.est_const_cost > 0) AS avg_project_cost
 
 FROM entities e
 JOIN wsib_registry w ON w.linked_entity_id = e.id
@@ -60,15 +67,14 @@ JOIN permit_trades pt ON pt.permit_num = p.permit_num AND pt.revision_num = p.re
 JOIN trades t ON t.id = pt.trade_id
 
 WHERE p.status IN ('Permit Issued', 'Inspection')
-  AND p.latitude IS NOT NULL
+  AND p.location IS NOT NULL
   AND t.slug = $trade_slug
   AND w.is_gta = true
   AND w.last_enriched_at IS NOT NULL
   AND w.business_size != 'Large Business'
   AND (w.website IS NOT NULL OR w.primary_phone IS NOT NULL)
-  -- bounding box pre-filter
-  AND p.latitude BETWEEN ($lat - $radius_deg) AND ($lat + $radius_deg)
-  AND p.longitude BETWEEN ($lng - $radius_deg) AND ($lng + $radius_deg)
+  -- PostGIS radius filter — uses GIST index, sub-millisecond even at 1M rows
+  AND ST_DWithin(p.location, ST_MakePoint($lng, $lat)::geography, $radius_m)
 
 GROUP BY e.id, w.id
 HAVING COUNT(p.permit_num) FILTER (WHERE p.status IN ('Permit Issued','Inspection')) >= 1
@@ -76,17 +82,36 @@ ORDER BY active_permits_nearby DESC, closest_permit_m ASC
 LIMIT 20
 ```
 
+**Why PostGIS:** Raw Haversine trigonometry across 242K+ rows would bottleneck the database. PostGIS `ST_DWithin` uses the GIST spatial index for O(log n) radius lookups. The `<->` KNN operator provides sub-millisecond distance-ordered queries regardless of database size.
+
 **Builder lead scoring:** `src/lib/leads/scoring.ts` (builderLeadScore function)
 1. Proximity (0-30): Distance to closest active permit
 2. Activity (0-30): Active permits nearby needing this trade. 5+=30, 3-4=25, 2=20, 1=15
 3. Contact (0-20): phone+website=20, phone OR website=15, email only=10
 4. Fit (0-20): permit_count 3-20=20, 20-50=15, 50+=10, <3=5. WSIB-registered=+3
 
-**Builder card photo:**
-- Attempt OG image from builder's website URL: fetch `<meta property="og:image">` from cached page
-- Fallback to favicon: `https://{domain}/favicon.ico`
-- Final fallback: initial letter avatar (e.g., "A" for ABC Construction)
-- Cache photo URLs in entity record to avoid repeated fetches
+**Builder card photo (SSRF-safe pipeline approach):**
+
+**CRITICAL SECURITY:** Do NOT fetch builder website URLs from the API server on user request. That creates an SSRF vulnerability — a malicious actor could register an entity with a website URL pointing to internal network IPs (10.x, 172.16-31.x, 192.168.x, 169.254.x) and force the server to probe internal services.
+
+**Correct approach:**
+1. **Pre-fetch in pipeline:** `scripts/enrich-wsib.js` (extended) fetches OG image / favicon during the enrichment run. The pipeline runs in a controlled environment, not on user request.
+2. **Validate URL hostname:** Before fetching, resolve the hostname via DNS, reject any IP that falls in RFC1918 private ranges or link-local (169.254.x).
+3. **Sandbox the fetch:** Use a library like `unfurl.js` with URL allowlisting, max response size (1MB), and 5-second timeout.
+4. **Store pre-validated URL:** New column `entities.photo_url VARCHAR(500)` stores the final CDN-safe image URL. Also `entities.photo_validated_at TIMESTAMPTZ`.
+5. **API serves pre-validated URLs only:** The feed API returns `photo_url` directly from the database — no runtime fetching.
+
+**Migration needed:**
+```sql
+ALTER TABLE entities ADD COLUMN photo_url VARCHAR(500);
+ALTER TABLE entities ADD COLUMN photo_validated_at TIMESTAMPTZ;
+```
+
+**Fallback chain at display time (client-side only):**
+1. `entities.photo_url` from database (pipeline-validated)
+2. If null: 2-letter initial avatar rendered with amber background and DM Sans 700
+
+**Reference library:** [`unfurl.js`](https://github.com/jacktuck/unfurl) — safely extracts OG metadata with timeout and size limits. Use with custom hostname validation.
 
 **Contact display:**
 - Phone: displayed as tap-to-call link on mobile
