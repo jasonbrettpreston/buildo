@@ -57,64 +57,79 @@ None — this is a library consumed by the lead feed API and pre-computed by a p
 
 **Model logic:**
 
-1. **If `est_const_cost` exists and > 0:** Use directly. Source = 'permit'. No estimation needed.
+1. **If `est_const_cost` exists and > $1,000:** Use directly. Source = 'permit'. The `> 1000` threshold filters out placeholder values like `$1` that are not real cost data — earlier draft used `> 0` which incorrectly accepted placeholders. For permit-reported costs: `cost_range_low = cost_range_high = estimated_cost` (no range).
 
 2. **If no cost, build estimate from:**
 
    **Base rate per sqm (by structure type + work type):**
-   | Category | Base Rate $/sqm |
-   |----------|----------------|
-   | New residential (SFD) | $2,500–$3,500 |
-   | New residential (semi/town) | $2,200–$3,000 |
-   | New multi-residential | $2,800–$4,000 |
-   | Addition/alteration | $1,500–$2,500 |
-   | Commercial new build | $3,000–$5,000 |
-   | Interior renovation | $800–$1,500 |
+   | Category | Base Rate $/sqm | Midpoint used |
+   |----------|----------------|---------------|
+   | New residential (SFD) | $2,500–$3,500 | $3,000 |
+   | New residential (semi/town) | $2,200–$3,000 | $2,600 |
+   | New multi-residential | $2,800–$4,000 | $3,400 |
+   | Addition/alteration | $1,500–$2,500 | $2,000 |
+   | Commercial new build | $3,000–$5,000 | $4,000 |
+   | Interior renovation | $800–$1,500 | $1,150 |
+
+   **Range derivation:** Calculations use the midpoint. The min/max bounds in the table become the ±25% range applied to the final estimate.
 
    **Building area:** `building_footprints.footprint_area_sqm × estimated_stories`
-   - If no massing data, fall back to `parcels.lot_size_sqm × 0.4` (typical coverage ratio) × 2 stories
+   - **Story height note:** `stories` is included once in the area calculation. The earlier draft formula `area × rate × premium × stories` was a copy-paste error that double-counted stories.
+   - **Urban-aware fallback if no massing:** Detect urban context via `neighbourhoods.tenure_renter_pct > 50%`. Urban lots have higher coverage ratios (row houses, condos):
+     - Urban (`tenure_renter_pct > 50%`): `parcels.lot_size_sqm × 0.7` × `floors_estimate`
+     - Suburban (`tenure_renter_pct ≤ 50%`): `parcels.lot_size_sqm × 0.4` × `floors_estimate`
+     - `floors_estimate` defaults to 2 for residential, 1 for commercial
+     - Both fallbacks lower confidence to 'low' and add ±50% range instead of ±25%
 
-   **Neighbourhood premium factor:**
+   **Neighbourhood premium factor (single signal, no double-counting):**
    - `neighbourhoods.avg_household_income` mapped to multiplier:
-   - <$60K → 1.0 (standard spec)
+   - <$60K → 1.0
    - $60K–$100K → 1.15
    - $100K–$150K → 1.35
    - $150K–$200K → 1.60
-   - >$200K → 1.85 (premium spec — marble, custom millwork, high-end appliances)
-   - `tenure_owner_pct > 80%` → additional +0.10 (owner-occupied = more invested in quality)
+   - >$200K → 1.85
+   - **Removed the `tenure_owner_pct` bonus.** It correlates strongly with `avg_household_income` and was double-counting the same signal. If we want a tenure-based adjustment in the future, it should REPLACE the income factor, not stack with it.
 
-   **Scope complexity multiplier:**
-   - Count high-value scope tags: pool (+$80K), elevator (+$60K), underpinning (+$40K), solar (+$25K)
-   - Additive to base estimate, not multiplicative
+   **Scope complexity additions (additive, not multiplicative):**
+   - pool: +$80K
+   - elevator: +$60K
+   - underpinning: +$40K
+   - solar: +$25K
+   - These are added AFTER the area × rate × premium calculation, never multiplied
 
-3. **Cost tiers:**
+3. **Cost tiers (boundaries are inclusive on the lower bound):**
    | Tier | Range | Display |
    |------|-------|---------|
-   | small | <$100K | "Small Job" |
-   | medium | $100K–$500K | "Medium Job" |
-   | large | $500K–$2M | "Large Job" |
-   | major | $2M–$10M | "Major Project" |
-   | mega | $10M+ | "Mega Project" |
+   | small | $0–$99,999 | "Small Job" |
+   | medium | $100,000–$499,999 | "Medium Job" |
+   | large | $500,000–$1,999,999 | "Large Job" |
+   | major | $2,000,000–$9,999,999 | "Major Project" |
+   | mega | $10,000,000+ | "Mega Project" |
 
-4. **Output includes range:** ±25% for model estimates (vs. exact for permit-reported costs)
+4. **Output range:** ±25% for model estimates with full data, ±50% for fallback estimates (urban-aware, no massing). For permit-reported costs (`source='permit'`), `cost_range_low = cost_range_high = estimated_cost` exactly.
 
-**Complexity score (0-100):** Independent of cost, measures job difficulty for the tradesperson.
+**Complexity score (0-100, capped):** Independent of cost, measures job difficulty for the tradesperson.
 - High-rise (estimated_stories > 6): +30
 - Multi-unit (dwelling_units > 4): +20
 - Large footprint (>300sqm): +15
-- Premium neighbourhood: +15
+- Premium neighbourhood (income > $150K): +15
 - Complex scope (underpinning, elevator, pool): +10 each
 - New build (vs. renovation): +10
+- **Cap with `LEAST(100, sum)`:** The maximum theoretical sum is 30+20+15+15+10+10+10+10 = 120. Without capping, the schema's 0-100 range would be violated. The cap is applied in the model code AND enforced by a CHECK constraint on the column.
 
 **Display strings:**
 - With actual cost: "$1,200,000 · Large Job · Premium neighbourhood"
 - With model estimate: "$1.2M–$1.8M estimated · Large Job · Premium neighbourhood · Complex scope"
 - Without sufficient data: "Large lot, premium neighbourhood — cost estimate unavailable"
 
-**Pipeline step (optional):** `scripts/compute-cost-estimates.js`
-- Pre-computes cost_estimates for all permits using the model
+**Pipeline step (REQUIRED — not optional):** `scripts/compute-cost-estimates.js`
+- Pre-computes cost_estimates for all permits using the model. **The lead feed API depends on this — it reads from `cost_estimates` cache, never computes on the fly.** Earlier draft labeled this "optional" which was misleading.
 - Runs after parcel linkage and massing linkage in the sources chain
 - Updates cost_estimates table; feed API reads from cache
+- **Concurrency safety:** Uses a PostgreSQL advisory lock (`pg_try_advisory_lock(74)`) to prevent two instances of the script from running concurrently with permit ingestion. If the lock can't be acquired, the script logs and exits cleanly.
+- **Idempotency:** Each run uses an UPSERT pattern keyed on `(permit_num, revision_num)`. Re-running is safe.
+- **Batched processing:** 5,000 permits per transaction to avoid long-running transactions and lock escalation.
+- **Failure recovery:** If a batch fails, the script logs the failure and continues with the next batch. The next nightly run picks up any permits that failed previously.
 
 **Calibration:**
 - 110K permits with actual `est_const_cost` serve as ground truth

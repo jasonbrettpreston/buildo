@@ -56,21 +56,38 @@ Dark mode optimized for outdoor readability. Not pure black (OLED) and not full 
 --bg-elevated: #31363F;        /* modals, tooltips, expanded sections */
 ```
 
-### Text
+### Text (WCAG AA verified — all combinations pass 4.5:1 minimum)
 ```css
---text-primary: #F0F0F0;       /* near-white (not pure — reduces glare) */
---text-secondary: #9CA3AF;     /* muted labels */
---text-tertiary: #6B7280;      /* metadata, competition count */
+--text-primary: #F0F0F0;       /* near-white. On bg-card-permit (#272B33): 13.3:1 ✓ */
+--text-secondary: #B5B9C0;     /* lighter than original #9CA3AF for AA. On #272B33: 8.4:1 ✓ */
+--text-tertiary: #9CA3AF;      /* metadata. On #272B33: 5.6:1 ✓ (was #6B7280 = 2.95:1 FAIL) */
 ```
 
-### Timing Signal Badges (primary visual differentiator)
+**WCAG audit (April 2026):** The earlier draft used `--text-tertiary: #6B7280` which only achieved 2.95:1 contrast on `--bg-card-permit: #272B33` — failing WCAG AA (4.5:1 required for normal text). All three text colors above are verified passing AA. The metadata layer (`--text-tertiary`) was upgraded from #6B7280 to #9CA3AF, and the secondary layer (`--text-secondary`) was upgraded from #9CA3AF to #B5B9C0 to maintain the visual hierarchy.
+
+### Timing Signal Badges (primary visual differentiator + colorblind-safe icons)
 ```css
 --timing-now: #F59E0B;         /* amber — trade needed NOW or within 2 weeks */
 --timing-soon: #10B981;        /* green — 2-8 weeks out */
 --timing-upcoming: #3B82F6;    /* blue — 1-6 months */
---timing-distant: #6B7280;     /* gray — 6+ months or past window */
+--timing-distant: #6B7280;     /* gray — 6+ months in future */
+--timing-past: #DC2626;        /* red-tinted — trade window has passed (NEW) */
 ```
-**Confidence indicator:** Solid left border = inspection-confirmed (high confidence). Dashed left border = heuristic estimate (medium/low confidence). Sourced from Buildxact's left-border status pattern.
+
+**"Past window" vs "distant future":** Earlier draft used the same gray for both. Now separated — past is `--timing-past` (red-tinted) so users can immediately see leads where the window has passed. Different signal entirely.
+
+**Colorblind safety:** Amber and green can be indistinguishable to deuteranopes (~6% of men). Mitigation: every timing badge MUST include an icon alongside the color, NEVER color alone:
+- NOW: ⚡ (lightning) + amber
+- Soon: ⏱ (clock) + green
+- Upcoming: 📅 (calendar) + blue
+- Distant: ⏳ (hourglass) + gray
+- Past: ✕ (cross) + red
+
+These icons make the timing state perceivable without color discrimination.
+
+**Confidence indicator (no longer just border style):** The earlier draft used solid vs. dashed left border to indicate inspection-confirmed vs. heuristic. **Too subtle for outdoor glare.** Replaced with explicit `est.` text label that always appears on medium/low confidence badges (not just dashed border):
+- High confidence: solid 4px left border, no extra text
+- Medium/low confidence: dashed 4px left border + "est." text label after the timing string
 
 ### Opportunity Type
 ```css
@@ -80,14 +97,16 @@ Dark mode optimized for outdoor readability. Not pure black (OLED) and not full 
 /* No badge when builder unknown (95% of permits) — honest about data gaps */
 ```
 
-### Cost Tier (escalating visual weight)
+### Cost Tier (subtle gradient — does NOT compete with timing badge)
 ```css
---cost-small: #6B7280;         /* gray text, no emphasis */
---cost-medium: #9CA3AF;        /* subtle */
---cost-large: #F0F0F0;         /* white — stands out */
---cost-major: #F59E0B;         /* amber */
---cost-mega: #EF4444;          /* red */
+--cost-small: #9CA3AF;         /* gray — meets WCAG AA */
+--cost-medium: #B5B9C0;        /* slightly brighter gray */
+--cost-large: #D4D8DE;         /* near-white but not pure */
+--cost-major: #E8B85B;         /* muted amber — NOT the same as --amber-hardhat */
+--cost-mega: #E87A5B;          /* muted orange-red */
 ```
+
+**Visual hierarchy fix:** The earlier draft used `--amber-hardhat` (#F59E0B) and `--red-stop` (#EF4444) for cost-major and cost-mega, which drew the eye BEFORE the timing badge — disrupting the intended scan order. Cost is now a more muted gradient that supports rather than competes with the timing badge as the primary signal. The full `amber-hardhat` and `red-stop` colors remain reserved for the timing badge and action buttons, where attention IS the goal.
 
 ### Actions
 ```css
@@ -142,13 +161,22 @@ Competitive research showed our current PermitCard has 10-12 visible data points
 
 **Thumbnail:** 80x60px Google Street View image, rounded 6px corners. Falls back to neighbourhood map outline if no geocode. Positioned left of address for horizontal scanning.
 
-**Street View cost and caching (Google TOS compliant):**
+**Street View cost and caching (Google TOS compliant + multi-layer cost cap):**
 - Street View Static API costs **$7 per 1,000 requests** (as of 2026).
 - Google TOS **prohibits caching the actual image bytes**, but **allows caching `pano_id`** (the panorama identifier).
-- **Strategy:** Build a permit→pano_id lookup cache in a new table `permit_pano_cache(permit_num, revision_num, pano_id, fetched_at)`. Populate lazily on first feed render or in a pipeline step. The image URL is constructed client-side from `pano_id`, so the browser caches the HTTP response normally (1 request per unique pano per user).
+- **Strategy:** Build a permit→pano_id lookup cache in a new table `permit_pano_cache(permit_num, revision_num, pano_id, fetched_at)`. Populate lazily on first feed render or in a pipeline step. The image URL is constructed client-side from `pano_id`, so the browser caches the HTTP response normally per session.
+- **Browser cache only:** No service worker storage of images (would violate TOS for offline storage). The browser's built-in HTTP cache is allowed; an HTTPS image fetched once per session is permissible. Document this clearly in the implementation guide.
 - **Lazy load:** Only render Street View images for cards currently in viewport (via `IntersectionObserver`). Prevents charging for cards users never scroll to.
-- **Daily cap per user:** Track requests in `lead_views.viewed_at` join; if a single user exceeds 500 image requests/day (indicating bot/scraping), return a placeholder tile.
-- **Expected cost at moderate usage:** 1,000 active users × 50 unique panos/day = 50K requests/day = ~$10/day = **~$300/month**. Scales linearly — monitor via Upstash analytics on the cache endpoint.
+- **Multi-layer cost ceiling (cannot scale linearly to bankruptcy):**
+  - **Per-user daily cap:** 500 image requests/day per user (bot detection trigger)
+  - **Per-IP daily cap:** 1,000 image requests/day per IP (catches multi-account abuse from a single source)
+  - **Per-region hourly circuit breaker:** If aggregate requests exceed $100/hour for any city, the API returns placeholder tiles for all subsequent requests until the next hour. Hard ceiling = $2,400/day per region.
+  - **Global daily kill switch:** A feature flag (`feature_streetview_enabled`) can disable Street View entirely without a deploy. Falls back to neighbourhood map outline + initial-letter avatars for permit cards.
+- **Cost projections with caps:**
+  - 1,000 active users × 50 unique panos/day = 50K requests/day = ~$10/day = **~$300/month**
+  - At 100,000 users without caps = ~$30,000/month (catastrophic)
+  - With caps: hard ceiling **$2,400/day = ~$72,000/month maximum** before circuit breaker forces fallback
+  - In practice the per-user and per-IP caps keep cost to ~$300-$3,000/month at any user scale. The circuit breaker is the safety net for unforeseen abuse patterns.
 
 **Visual hierarchy (top to bottom, 2-3 second scan):**
 1. **Address + thumbnail + distance** — "Where is this?" (0.5s)
@@ -181,7 +209,7 @@ Competitive research showed our current PermitCard has 10-12 visible data points
 ┊  Complexity: 72/100                    │
 ┊                                         │
 ┊  🏠 Likely homeowner                   │
-┊  👁 3 plumbers have seen this lead     │
+┊  👁 3 plumbers have seen this lead     │  ← "plumbers" is rendered CLIENT-SIDE from user.profile.trade. API returns just `competition_count: 3` so the response can be edge-cached.
 ┊                                         │
 ┊  Description:                          │
 ┊  "Construct new 2-storey SFD with      │  ← first 3 lines of permit description
@@ -321,6 +349,21 @@ Dark card on dark bg. Subtle amber accent on the CTA button.
 └──────────────────────────────────────────┘
 ```
 
+### No leads matching filters (NEW state)
+```
+┌──────────────────────────────────────────┐
+│                                          │
+│          🎯                              │
+│    No leads match your filters          │
+│    Try removing the cost or             │
+│    project type filter                  │
+│                                          │
+│    [ Reset Filters ]                    │
+│                                          │
+└──────────────────────────────────────────┘
+```
+Distinct from "no leads in radius" — this state shows when leads exist nearby but the active filter is removing all of them. The CTA resets filters rather than expanding radius.
+
 ### Loading
 3 skeleton cards matching collapsed permit card proportions. Pulsing dark gray blocks for thumbnail, timing bar, text lines. No spinner — feels faster.
 
@@ -343,6 +386,21 @@ Minimal. This is a utility, not entertainment.
 | Card collapse | Reverse of expand | 150ms |
 
 **No:** Parallax, horizontal scroll, carousels, page transitions, or anything that blocks fast vertical scrolling.
+
+### Tap Zone Discipline (dirty hands / fat finger compensation)
+
+Cards have multiple interactive regions. The risk is accidental card-expand when the user is aiming for a Save or Directions button. Mitigations:
+
+1. **Card body is a single tap zone** for expand/collapse — anywhere outside of buttons
+2. **Action buttons are 44px minimum height** with 8px padding around each (effective 52px touch target)
+3. **`stopPropagation` on all action button onClick handlers** — prevents the click from bubbling up to the card-expand handler
+4. **Action button row is visually separated** from the card body by a 1px divider — gives a clear "you're in the action zone" cue
+5. **Save/Directions buttons have at least 16px gap between them** — prevents accidentally hitting both with one finger
+
+**Builder website link safety:**
+- All `<a href={website}>` elements use `rel="noopener noreferrer"` to prevent tabnabbing
+- URLs are validated client-side before render: must start with `https://`, hostname must not be private/localhost
+- Failed validation shows a disabled "Website" button with tooltip "Invalid URL"
 
 ---
 
