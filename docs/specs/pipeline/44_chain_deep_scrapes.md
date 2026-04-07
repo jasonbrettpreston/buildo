@@ -76,7 +76,7 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
    - Any Not Passed → `'Not Passed'`
    - Mixed → `'Active Inspection'`
 4. **Network health** — verifies proxy connectivity, checks for WAF blocks in recent pipeline_runs
-5. **Staleness** — flags permits with stale `scraped_at` (>7 days), monitors consecutive empty streaks
+5. **Staleness** — flags permits with stale `scraped_at` (>30 days), monitors consecutive empty streaks
 
 ### Outputs
 - `permit_inspections` table: stage-level status records per permit
@@ -106,7 +106,7 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
 ### Staleness (assert_staleness)
 | Check | Threshold | Level |
 |-------|-----------|-------|
-| Permits with stale `scraped_at` (>7d) | > 20% of active | WARN |
+| Permits with stale `scraped_at` (>30d) | > 0 (production phase) | FAIL |
 | Consecutive empty max | > WAF_TRAP_THRESHOLD (20) | WARN |
 
 ### Data bounds (assert_data_bounds, deep_scrapes scope)

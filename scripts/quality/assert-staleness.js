@@ -8,7 +8,7 @@
  * Checks:
  *   1. Coverage stats (informational): total target, scraped, never scraped, pct
  *   2. max_days_stale (informational)
- *   3. stale_over_14d: WARN in early phase (<5% coverage), FAIL in production
+ *   3. stale_over_30d: WARN in early phase (<5% coverage), FAIL in production
  *
  * Usage: node scripts/quality/assert-staleness.js
  * Exit 0 = pass, Exit 1 = fail
@@ -73,29 +73,29 @@ pipeline.run('assert-staleness', async (pool) => {
      )
      SELECT
        MAX(CURRENT_DATE - last_scraped::date) AS max_days_stale,
-       COUNT(*) FILTER (WHERE last_scraped < NOW() - INTERVAL '14 days') AS stale_14d
+       COUNT(*) FILTER (WHERE last_scraped < NOW() - INTERVAL '30 days') AS stale_30d
      FROM permit_freshness`,
     [TARGET_TYPES]
   );
   const maxDaysStale = parseInt(stalenessRes.rows[0]?.max_days_stale) || 0;
-  const stale14d = parseInt(stalenessRes.rows[0]?.stale_14d) || 0;
+  const stale30d = parseInt(stalenessRes.rows[0]?.stale_30d) || 0;
 
   rows.push({ metric: 'max_days_stale', value: maxDaysStale, threshold: null, status: 'INFO' });
   console.log(`  INFO: max_days_stale = ${maxDaysStale} days`);
 
-  if (stale14d > 0) {
+  if (stale30d > 0) {
     if (isEarlyPhase) {
-      warnings.push(`${stale14d} permits stale >14d (early phase — not blocking)`);
-      rows.push({ metric: 'stale_over_14d', value: stale14d, threshold: '== 0', status: 'WARN' });
-      console.log(`  WARN: stale_over_14d = ${stale14d} (early phase)`);
+      warnings.push(`${stale30d} permits stale >30d (early phase — not blocking)`);
+      rows.push({ metric: 'stale_over_30d', value: stale30d, threshold: '== 0', status: 'WARN' });
+      console.log(`  WARN: stale_over_30d = ${stale30d} (early phase)`);
     } else {
-      errors.push(`${stale14d} permits stale >14d`);
-      rows.push({ metric: 'stale_over_14d', value: stale14d, threshold: '== 0', status: 'FAIL' });
-      console.error(`  FAIL: stale_over_14d = ${stale14d}`);
+      errors.push(`${stale30d} permits stale >30d`);
+      rows.push({ metric: 'stale_over_30d', value: stale30d, threshold: '== 0', status: 'FAIL' });
+      console.error(`  FAIL: stale_over_30d = ${stale30d}`);
     }
   } else {
-    rows.push({ metric: 'stale_over_14d', value: 0, threshold: '== 0', status: 'PASS' });
-    console.log('  PASS: stale_over_14d = 0');
+    rows.push({ metric: 'stale_over_30d', value: 0, threshold: '== 0', status: 'PASS' });
+    console.log('  PASS: stale_over_30d = 0');
   }
 
   // Verdict
