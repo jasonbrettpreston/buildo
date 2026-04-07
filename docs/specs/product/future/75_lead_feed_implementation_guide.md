@@ -403,6 +403,39 @@ npm install zustand
 
 ## 4. Component-by-Component Implementation
 
+### 4.0 Build vs Install Boundary
+
+> **Principle:** Use Shadcn UI primitives for all foundational plumbing (Button, Card, Avatar, Skeleton, Drawer, Badge, etc.). Only build custom components for genuinely feature-specific compositions and behaviors. The rule: **if Radix UI / Shadcn already solved it, install it.**
+
+| Component | Source | Why |
+|-----------|--------|-----|
+| `<Button>` | **Shadcn** `npx shadcn@latest add button` | Variants, sizes, disabled, accessibility, focus management — all built in |
+| `<Card>`, `<CardContent>`, `<CardHeader>`, `<CardFooter>` | **Shadcn** `npx shadcn@latest add card` | Consistent spacing primitive. Apply our dark tokens via CSS vars. |
+| `<Badge>` | **Shadcn** `npx shadcn@latest add badge` | Pill component with variant system |
+| `<Avatar>`, `<AvatarImage>`, `<AvatarFallback>` | **Shadcn** `npx shadcn@latest add avatar` | URL → fallback chain handled automatically |
+| `<Skeleton>` | **Shadcn** `npx shadcn@latest add skeleton` | Pulse animation primitive |
+| `<Drawer>`, `<DrawerContent>`, `<DrawerTrigger>` | **Shadcn** `npx shadcn@latest add drawer` | Wraps Vaul. Snap points + iOS feel. |
+| `<Sheet>` | **Shadcn** `npx shadcn@latest add sheet` | Side-sliding panel for desktop filters |
+| `<Sonner>` toast | **Shadcn** `npx shadcn@latest add sonner` | All success/error notifications |
+| `<Form>`, `<FormField>`, `<FormControl>` | **Shadcn** `npx shadcn@latest add form` | React Hook Form + Zod integration |
+| `<ToggleGroup>`, `<ToggleGroupItem>` | **Shadcn** `npx shadcn@latest add toggle-group` | Radius selector, view mode toggle |
+| `<Tooltip>`, `<TooltipProvider>` | **Shadcn** `npx shadcn@latest add tooltip` | "Why estimated?" hover hints |
+| `<Alert>`, `<AlertTitle>`, `<AlertDescription>` | **Shadcn** `npx shadcn@latest add alert` | Empty state shells |
+| `<Slider>` | **Shadcn** (if needed) | Continuous radius slider alternative |
+| `<HoverCard>` | **Shadcn** (if needed) | Map marker preview on desktop hover |
+| **`<TimingBadge>`** | **CUSTOM** | Hybrid layout: colored bg pill + score circle + dashed/solid border. No primitive matches the composition. |
+| **`<PermitLeadCard>`** | **CUSTOM composition** | Uses `<Card>`, `<Avatar>`, `<Badge>`, `<Button>` as building blocks. The composition is feature-specific. |
+| **`<BuilderLeadCard>`** | **CUSTOM composition** | Same — composes Shadcn primitives into a feature-specific card. |
+| **`<LeadFeed>`** | **CUSTOM container** | Manages infinite scroll, pull-to-refresh, interleaving logic. Not a UI primitive. |
+| **`<LeadFeedHeader>`** | **CUSTOM** | Custom sticky bar with backdrop-blur. Could use `<NavigationMenu>` but overkill. |
+| **`<LeadMapPane>`** | **CUSTOM** | Wraps Google Maps. No Shadcn equivalent. |
+| **`<EmptyLeadState>`** | **CUSTOM composition** | Composes `<Alert>` + `<Button>` for the two empty states. |
+| **`<SkeletonLeadCard>`** | **CUSTOM composition** | Composes `<Skeleton>` primitives to match `<PermitLeadCard>` exactly. |
+
+**Rule of thumb:** Anything you'd find in shadcn.com/docs/components → install it. Anything that's a feature-specific arrangement of those primitives → build it as a thin composition.
+
+---
+
 ### 4.1 LeadFeed (Container)
 
 **File:** `src/features/leads/components/LeadFeed.tsx`
@@ -562,87 +595,109 @@ export function LeadFeedHeader({ leadCount }: Props) {
 
 ---
 
-### 4.3 LeadFilterSheet (Vaul Bottom Sheet)
+### 4.3 LeadFilterSheet (Shadcn Drawer)
 
 **File:** `src/features/leads/components/LeadFilterSheet.tsx`
+**Shadcn primitives used:** `<Drawer>` (wraps Vaul), `<ToggleGroup>`, `<Label>`
 
 ```tsx
 'use client';
-import { Drawer } from 'vaul';
-import { useState } from 'react';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '@/components/ui/drawer';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Label } from '@/components/ui/label';
 import { useLeadFeedState } from '../hooks/useLeadFeedState';
+import { captureEvent } from '@/lib/observability/capture';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const RADIUS_OPTIONS = ['5', '10', '20', '30'] as const;
+
 export function LeadFilterSheet({ open, onOpenChange }: Props) {
   const { radiusKm, setRadius } = useLeadFeedState();
-  const [snap, setSnap] = useState<number | string | null>('355px');
+
+  const handleRadiusChange = (value: string) => {
+    if (!value) return; // ToggleGroup can return empty when deselecting
+    const km = parseInt(value, 10);
+    setRadius(km);
+    captureEvent('lead_feed.radius_changed', { from_km: radiusKm, to_km: km });
+  };
 
   return (
-    <Drawer.Root
-      open={open}
-      onOpenChange={onOpenChange}
-      snapPoints={['148px', '355px', 1]}
-      activeSnapPoint={snap}
-      setActiveSnapPoint={setSnap}
-    >
-      <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/60 z-40" />
-        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 rounded-t-lg bg-[#272B33] flex flex-col">
-          <div className="mx-auto mt-3 h-1 w-12 rounded-full bg-neutral-600" />
-          <div className="p-4 space-y-6">
-            <div>
-              <h2 className="font-display text-lg font-bold text-neutral-100 mb-4">
-                Filters
-              </h2>
-              <label className="block">
-                <span className="font-display text-sm text-neutral-400">
-                  Search radius
-                </span>
-                <div className="flex items-center gap-2 mt-2">
-                  {[5, 10, 20, 30].map(km => (
-                    <button
-                      key={km}
-                      onClick={() => setRadius(km)}
-                      className={`
-                        min-h-[44px] px-4 rounded-md font-data text-sm transition-colors
-                        ${radiusKm === km 
-                          ? 'bg-amber-500 text-neutral-900' 
-                          : 'bg-neutral-700 text-neutral-200 hover:bg-neutral-600'
-                        }
-                      `}
-                    >
-                      {km}km
-                    </button>
-                  ))}
-                </div>
-              </label>
-              {/* Additional filters: trade, cost range, project type */}
-            </div>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="bg-bg-card-permit">
+        <DrawerHeader>
+          <DrawerTitle className="font-display text-lg">Filters</DrawerTitle>
+          <DrawerDescription className="font-display text-gray-steel">
+            Adjust your search to find the right leads
+          </DrawerDescription>
+        </DrawerHeader>
+        
+        <div className="px-4 pb-6 space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="radius" className="font-display text-sm text-gray-steel">
+              Search radius
+            </Label>
+            <ToggleGroup
+              id="radius"
+              type="single"
+              value={String(radiusKm)}
+              onValueChange={handleRadiusChange}
+              className="flex gap-2 justify-start"
+            >
+              {RADIUS_OPTIONS.map(km => (
+                <ToggleGroupItem
+                  key={km}
+                  value={km}
+                  aria-label={`${km} kilometres`}
+                  className="min-h-[44px] px-4 font-data data-[state=on]:bg-amber-hardhat data-[state=on]:text-neutral-900"
+                >
+                  {km}km
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
           </div>
-        </Drawer.Content>
-      </Drawer.Portal>
-    </Drawer.Root>
+          
+          {/* Additional filters: trade, cost range, project type — same pattern */}
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 ```
 
-**Key decisions:**
-- Vaul snap points: peek (148px), half (355px), full (1)
-- Default open to half-screen — user can expand to full if needed
-- Background `#272B33` matches permit card background (elevated surface)
-- Drag handle at top (the rounded bar) — tells user it's draggable
-- Filter buttons are 44px min-height pills
-- Uses vaul's built-in iOS cubic-bezier `[0.32, 0.72, 0, 1]` automatically
+**Why Shadcn `<Drawer>` instead of direct Vaul:**
+- Shadcn's `<Drawer>` IS Vaul under the hood (same iOS physics, same cubic-bezier)
+- Adds `<DrawerHeader>`, `<DrawerTitle>`, `<DrawerDescription>` for accessibility (proper ARIA labels via Radix UI Dialog primitives)
+- Drag handle, overlay, and snap points handled by the wrapper — fewer props to manage
+- Consistent with the rest of the Shadcn-based UI
+
+**Why Shadcn `<ToggleGroup>` instead of `.map(km => <button>)`:**
+- Single-select radio behavior built in (`type="single"`)
+- Keyboard navigation (arrow keys move between options)
+- ARIA roles (`radiogroup`, `radio`)
+- Active state via `data-[state=on]` selector — clean styling without conditional className strings
+- 44px touch targets enforced via `min-h-[44px]` on each item
+
+**Telemetry built in:** Every radius change emits `captureEvent('lead_feed.radius_changed', {...})` for product analytics.
 
 ---
 
 ### 4.4 PermitLeadCard (Collapsed)
 
 **File:** `src/features/leads/components/PermitLeadCard.tsx`
+**Status:** **CUSTOM composition** of Shadcn primitives — see §4.0 Build vs Install
+**Shadcn primitives composed:** `<Card>`, `<CardContent>`, `<CardFooter>`, `<Button>`, `<Badge>`, plus custom `<TimingBadge>` and Motion wrapper
+
+> **Refactor note:** The code below shows the original raw-HTML pattern. When implementing Phase 4, replace `<motion.article>` with `<Card>` from `@/components/ui/card`, replace inline `<button>` Save/Directions with `<Button>` variants, and replace inline opportunity pills with `<Badge>` variants. The composition logic stays the same — only the primitive imports change. The Build vs Install table at §4.0 shows the mapping.
 
 ```tsx
 'use client';
@@ -828,6 +883,15 @@ function formatCostTier(tier: string): string {
 ### 4.5 BuilderLeadCard
 
 **File:** `src/features/leads/components/BuilderLeadCard.tsx`
+**Status:** **CUSTOM composition** of Shadcn primitives — see §4.0 Build vs Install
+**Shadcn primitives composed:** `<Card>`, `<CardContent>`, `<CardFooter>`, `<Avatar>`, `<AvatarImage>`, `<AvatarFallback>`, `<Badge>`, `<Button>`
+
+> **Refactor note:** The code below shows the original raw-HTML pattern. When implementing Phase 4:
+> - Replace the avatar `<div>` block with `<Avatar><AvatarImage src={lead.photo_url} /><AvatarFallback>{initials}</AvatarFallback></Avatar>` — fallback chain handled automatically
+> - Replace WSIB pill with `<Badge variant="outline" className="text-green-safety">`
+> - Replace `<motion.button>` Call with `<Button variant="default" size="lg">` (amber via `bg-amber-hardhat`)
+> - Replace `<a>` Website with `<Button variant="outline" asChild><a href={...}>` pattern (Shadcn `asChild` for polymorphism)
+> - Wrap the card itself in `<Card>` from `@/components/ui/card` instead of `<motion.article>`
 
 ```tsx
 'use client';
@@ -995,6 +1059,8 @@ function getBackgroundColor(score: number): string {
 ### 4.7 SaveButton
 
 **File:** `src/features/leads/components/badges/SaveButton.tsx`
+**Shadcn primitives used:** `<Button variant="ghost">`
+**Custom additions:** Motion wrapper for spring bounce, Sonner toast feedback
 
 ```tsx
 'use client';
@@ -1002,6 +1068,9 @@ import { motion } from 'motion/react';
 import { useState } from 'react';
 import { HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { captureEvent } from '@/lib/observability/capture';
 import { useLeadView } from '../../api/useLeadView';
 
 interface Props {
@@ -1009,6 +1078,8 @@ interface Props {
   leadType: 'permit' | 'builder';
   tradeSlug: string;
 }
+
+const MotionButton = motion(Button);
 
 export function SaveButton({ leadId, leadType, tradeSlug }: Props) {
   const [saved, setSaved] = useState(false);
@@ -1019,79 +1090,106 @@ export function SaveButton({ leadId, leadType, tradeSlug }: Props) {
     if ('vibrate' in navigator) navigator.vibrate(10);
     const newSaved = !saved;
     setSaved(newSaved);
+    
+    captureEvent(newSaved ? 'lead_feed.lead_saved' : 'lead_feed.lead_unsaved', {
+      lead_type: leadType,
+      lead_id: leadId,
+      trade_slug: tradeSlug,
+    });
+    
     viewMutation.mutate({
       lead_type: leadType,
       permit_num: leadType === 'permit' ? leadId : undefined,
       entity_id: leadType === 'builder' ? Number(leadId) : undefined,
       trade_slug: tradeSlug,
       action: newSaved ? 'save' : 'unsave',
+    }, {
+      onSuccess: () => {
+        toast.success(newSaved ? 'Saved to your leads' : 'Removed from saved');
+      },
+      onError: () => {
+        setSaved(!newSaved); // rollback
+        toast.error('Could not save — please try again');
+      },
     });
   };
 
   return (
-    <motion.button
+    <MotionButton
+      variant="ghost"
+      size="lg"
       onClick={handleClick}
-      className="flex-1 min-h-[44px] flex items-center justify-center gap-2 hover:bg-neutral-800/50 font-display text-sm font-semibold"
+      className="flex-1 min-h-[44px]"
       animate={{ scale: saved ? [1, 1.3, 1] : 1 }}
       whileTap={{ scale: 0.9 }}
-      transition={{
-        type: 'spring',
-        stiffness: 400,
-        damping: 20,
-        mass: 1,
-      }}
+      transition={{ type: 'spring', stiffness: 400, damping: 20, mass: 1 }}
       aria-label={saved ? 'Remove from saved' : 'Save lead'}
     >
       {saved ? (
-        <HeartSolid className="w-5 h-5 text-amber-500" />
+        <HeartSolid className="w-5 h-5 text-amber-hardhat mr-2" />
       ) : (
-        <HeartOutline className="w-5 h-5 text-neutral-400" />
+        <HeartOutline className="w-5 h-5 text-gray-steel mr-2" />
       )}
-      <span className={saved ? 'text-amber-500' : 'text-neutral-400'}>
+      <span className={saved ? 'text-amber-hardhat' : 'text-gray-steel'}>
         {saved ? 'Saved' : 'Save'}
       </span>
-    </motion.button>
+    </MotionButton>
   );
 }
 ```
 
-**Key decisions:**
-- Exact spring values from research: `stiffness: 400, damping: 20, mass: 1`
-- Bounce sequence on save: `[1, 1.3, 1]`
-- Haptic feedback via `navigator.vibrate(10)`
-- `stopPropagation` to prevent card-expand trigger
-- Color crossfade amber (saved) ↔ gray (unsaved)
+**Why Shadcn `<Button variant="ghost">`:**
+- Built-in focus management, keyboard activation, ARIA roles
+- `size="lg"` already enforces `min-h-[44px]` for touch targets
+- We wrap it with Motion (`motion(Button)`) to layer the spring physics on top
+- Variant system means consistent styling across save buttons everywhere
+
+**New additions in this refactor:**
+- **Sonner toast feedback** — `toast.success()` / `toast.error()` for save confirmation
+- **Optimistic rollback** — if the API fails, revert the saved state and show error toast
+- **`captureEvent()` telemetry** — both save and unsave actions tracked
+- Construction-material color tokens (`amber-hardhat`, `gray-steel`) instead of raw Tailwind
 
 ---
 
 ### 4.8 SkeletonLeadCard
 
 **File:** `src/features/leads/components/SkeletonLeadCard.tsx`
+**Shadcn primitives used:** `<Card>`, `<CardContent>`, `<Skeleton>`
 
 ```tsx
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+
 export function SkeletonLeadCard() {
   return (
-    <div className="bg-[#272B33] rounded-lg p-4 animate-pulse">
-      <div className="flex gap-3">
-        <div className="w-20 h-15 bg-neutral-700 rounded-md shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-neutral-700 rounded-full w-3/4" />
-          <div className="h-3 bg-neutral-700 rounded-full w-1/2" />
-          <div className="h-3 bg-neutral-700 rounded-full w-16" />
+    <Card className="bg-card-permit border-l-4 border-l-neutral-700">
+      <CardContent className="p-4">
+        <div className="flex gap-3">
+          {/* Thumbnail 80x60 */}
+          <Skeleton className="w-20 h-15 rounded-md shrink-0" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+            <Skeleton className="h-3 w-16" />
+          </div>
         </div>
-      </div>
-      <div className="h-11 bg-neutral-700 rounded-md mt-3 w-full" />
-      <div className="h-3 bg-neutral-700 rounded-full mt-3 w-2/3" />
-      <div className="space-y-2 mt-2">
-        <div className="h-2.5 bg-neutral-700 rounded-full w-1/2" />
-        <div className="h-2.5 bg-neutral-700 rounded-full w-1/3" />
-      </div>
-    </div>
+        {/* Timing badge placeholder */}
+        <Skeleton className="h-11 mt-3 w-full" />
+        {/* Cost line */}
+        <Skeleton className="h-3 mt-3 w-2/3" />
+        {/* Metadata lines */}
+        <div className="space-y-2 mt-2">
+          <Skeleton className="h-2.5 w-1/2" />
+          <Skeleton className="h-2.5 w-1/3" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 ```
 
-**Dimensions match PermitLeadCard exactly** to prevent CLS.
+**Why Shadcn `<Skeleton>`:** Provides the pulse animation primitive consistently. We compose it inside `<Card>` so the dimensions match `PermitLeadCard` exactly — preventing CLS during skeleton → real card transitions. The `border-l-4` placeholder mirrors the timing color border that real cards will have.
 
 ---
 
@@ -1100,52 +1198,88 @@ export function SkeletonLeadCard() {
 **File:** `src/features/leads/components/EmptyLeadState.tsx`
 
 ```tsx
-import { MapPinIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, MagnifyingGlassIcon, WifiIcon } from '@heroicons/react/24/outline';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { useLeadFeedState } from '../hooks/useLeadFeedState';
+import { captureEvent } from '@/lib/observability/capture';
 
 interface Props {
-  reason: 'no_location' | 'no_results';
+  reason: 'no_location' | 'no_results' | 'offline';
   radiusKm?: number;
 }
 
 export function EmptyLeadState({ reason, radiusKm }: Props) {
-  if (reason === 'no_location') {
+  const { setRadius } = useLeadFeedState();
+
+  // Detect offline state if not explicitly passed
+  const isOffline = reason === 'offline' || (typeof navigator !== 'undefined' && !navigator.onLine);
+
+  if (isOffline) {
+    captureEvent('lead_feed.empty_state_shown', { reason: 'offline' });
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#1C1F26] p-6 text-center">
-        <MapPinIcon className="w-12 h-12 text-neutral-500 mb-4" />
-        <h2 className="font-display text-lg font-bold text-neutral-100 mb-2">
-          Location needed for leads
-        </h2>
-        <p className="font-display text-sm text-neutral-400 mb-6">
-          Enable GPS or set your home base to see nearby opportunities
-        </p>
-        <div className="flex gap-3">
-          <button className="min-h-[44px] px-6 bg-amber-500 text-neutral-900 rounded-md font-display font-semibold">
-            Enable Location
-          </button>
-          <button className="min-h-[44px] px-6 border border-neutral-700 text-neutral-100 rounded-md font-display font-semibold">
-            Set Home Base
-          </button>
-        </div>
+      <div className="flex items-center justify-center min-h-screen bg-bg-feed p-6">
+        <Alert className="max-w-sm bg-bg-card-permit border-neutral-700">
+          <WifiIcon className="w-5 h-5" />
+          <AlertTitle className="font-display">You're offline</AlertTitle>
+          <AlertDescription className="font-display text-gray-steel">
+            Showing cached results. Pull down to refresh when you're back online.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
+  if (reason === 'no_location') {
+    captureEvent('lead_feed.empty_state_shown', { reason: 'no_location' });
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-bg-feed p-6">
+        <Alert className="max-w-sm bg-bg-card-permit border-neutral-700">
+          <MapPinIcon className="w-5 h-5" />
+          <AlertTitle className="font-display">Location needed for leads</AlertTitle>
+          <AlertDescription className="font-display text-gray-steel mb-4">
+            Enable GPS or set your home base to see nearby opportunities.
+          </AlertDescription>
+          <div className="flex gap-2 flex-wrap">
+            <Button size="lg" variant="default">
+              Enable Location
+            </Button>
+            <Button size="lg" variant="outline">
+              Set Home Base
+            </Button>
+          </div>
+        </Alert>
+      </div>
+    );
+  }
+
+  // no_results
+  captureEvent('lead_feed.empty_state_shown', { reason: 'no_results', radius_km: radiusKm });
+  const newRadius = (radiusKm ?? 10) * 2;
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#1C1F26] p-6 text-center">
-      <MagnifyingGlassIcon className="w-12 h-12 text-neutral-500 mb-4" />
-      <h2 className="font-display text-lg font-bold text-neutral-100 mb-2">
-        No leads within {radiusKm}km
-      </h2>
-      <p className="font-display text-sm text-neutral-400 mb-6">
-        Try expanding your search radius
-      </p>
-      <button className="min-h-[44px] px-6 bg-amber-500 text-neutral-900 rounded-md font-display font-semibold">
-        Expand to {(radiusKm ?? 10) * 2}km
-      </button>
+    <div className="flex items-center justify-center min-h-screen bg-bg-feed p-6">
+      <Alert className="max-w-sm bg-bg-card-permit border-neutral-700">
+        <MagnifyingGlassIcon className="w-5 h-5" />
+        <AlertTitle className="font-display">No leads within {radiusKm}km</AlertTitle>
+        <AlertDescription className="font-display text-gray-steel mb-4">
+          Try expanding your search radius to see more opportunities.
+        </AlertDescription>
+        <Button size="lg" variant="default" onClick={() => setRadius(newRadius)}>
+          Expand to {newRadius}km
+        </Button>
+      </Alert>
     </div>
   );
 }
 ```
+
+**Why Shadcn `<Alert>` + `<Button>`:**
+- `<Alert>` provides the icon + title + description structure with proper ARIA role (`alert`)
+- `<Button size="lg">` enforces 44px touch targets automatically
+- Variant system (`default`, `outline`) keeps styling consistent
+- Three states: `no_location`, `no_results`, `offline` (auto-detected via `navigator.onLine`)
+- All three emit `captureEvent('lead_feed.empty_state_shown')` so we can measure how often users hit each
+- Uses construction-material color tokens from Tailwind config (`bg-feed`, `bg-card-permit`, `gray-steel`)
 
 ---
 
@@ -1626,17 +1760,42 @@ rule:
     - pattern: createContext($$$)
 ```
 
-### Shadcn UI primitives
+### Shadcn UI primitives (full list)
 ```bash
 npx shadcn@latest init
-npx shadcn@latest add drawer    # Vaul-powered bottom sheet
-npx shadcn@latest add sonner    # Toast notifications
-npx shadcn@latest add form      # React Hook Form integration
-npx shadcn@latest add button
-npx shadcn@latest add card
+
+# Foundation
+npx shadcn@latest add button       # All buttons (Save, Call, Directions, etc.)
+npx shadcn@latest add card         # PermitLeadCard, BuilderLeadCard, SkeletonLeadCard shells
+npx shadcn@latest add badge        # Opportunity, WSIB, scope tag pills
+npx shadcn@latest add avatar       # BuilderLeadCard photo + initial fallback
+npx shadcn@latest add skeleton     # SkeletonLeadCard pulse blocks
+
+# Overlays & sheets
+npx shadcn@latest add drawer       # Vaul-powered bottom sheet (LeadFilterSheet)
+npx shadcn@latest add sheet        # Side-sliding panel for desktop filters
+npx shadcn@latest add tooltip      # "Why estimated?" hover hints on timing
+npx shadcn@latest add hover-card   # Map marker → card preview on desktop
+npx shadcn@latest add alert        # EmptyLeadState, error banners
+
+# Forms & controls
+npx shadcn@latest add form         # React Hook Form + Zod integration
+npx shadcn@latest add label        # Accessible form labels
+npx shadcn@latest add input        # Text inputs (search, custom radius)
+npx shadcn@latest add toggle-group # Radius selector, view mode toggle
+npx shadcn@latest add slider       # Continuous radius slider (V2 alternative)
+
+# Feedback
+npx shadcn@latest add sonner       # Toast notifications (save success/error)
 ```
 
-Restyle to match the industrial utilitarian design system from spec 74 — Shadcn provides the plumbing, our tokens provide the paint.
+**Apply construction-material tokens:** After installing each primitive, update the `className` defaults in `components/ui/[primitive].tsx` to use our tokens (`bg-bg-card-permit`, `text-gray-steel`, `bg-amber-hardhat`, etc.) from the Tailwind config in §6. Shadcn provides the plumbing (accessibility, keyboard nav, ARIA), our tokens provide the paint.
+
+**One-time customization checklist per primitive:**
+1. Open `src/components/ui/[primitive].tsx`
+2. Replace generic neutral classes with our tokens
+3. Verify `min-h-[44px]` on interactive elements for touch targets
+4. Run `npm run typecheck` to confirm no type breakage
 
 ---
 
