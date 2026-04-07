@@ -1314,9 +1314,331 @@ npm install \
 ```bash
 UPSTASH_REDIS_REST_URL=...
 UPSTASH_REDIS_REST_TOKEN=...
+NEXT_PUBLIC_POSTHOG_KEY=...
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+SENTRY_DSN=...
+SENTRY_AUTH_TOKEN=... (build-time only, for source map upload)
+FIREBASE_PROJECT_ID=...
+FIREBASE_CLIENT_EMAIL=...
+FIREBASE_PRIVATE_KEY=...
+ADMIN_API_KEY=... (CI/script access)
 ```
 
 For dev dependencies, existing Vitest + RTL are sufficient.
+
+---
+
+## 7a. Foundation Tooling Stack (Adopted 2026-04-07)
+
+This section codifies the foundation tools chosen during the WF3 review of the original "Mess Monster" proposal. Each was evaluated against Buildo's existing stack. Reference: `00_engineering_standards.md` §12 + §13.
+
+### Frontend logic linting — Biome (scoped)
+```bash
+npm install --save-dev @biomejs/biome
+npx @biomejs/biome init
+```
+
+`biome.json` (lints `src/features/leads/` only initially):
+```json
+{
+  "files": {
+    "include": ["src/features/leads/**/*.{ts,tsx}"]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noFloatingPromises": "error",
+        "useHookAtTopLevel": "error",
+        "useExhaustiveDependencies": "error"
+      }
+    }
+  },
+  "formatter": { "enabled": false }
+}
+```
+
+**Why scoped:** ESLint already lints the rest of the codebase. Biome's value is the strict React rules — apply them where the new code lives, expand once proven.
+
+### Telemetry & feature flags — PostHog
+```bash
+npm install posthog-js
+```
+
+`src/lib/observability/capture.ts`:
+```typescript
+import posthog from 'posthog-js';
+
+type EventName = 
+  | 'lead_feed.viewed'
+  | 'lead_feed.lead_clicked'
+  | 'lead_feed.lead_expanded'
+  | 'lead_feed.lead_saved'
+  | 'lead_feed.lead_unsaved'
+  | 'lead_feed.builder_called'
+  | 'lead_feed.builder_website_opened'
+  | 'lead_feed.directions_opened'
+  | 'lead_feed.filter_changed'
+  | 'lead_feed.radius_changed'
+  | 'lead_feed.location_set'
+  | 'lead_feed.error_displayed'
+  | 'lead_feed.empty_state_shown';
+
+let initialized = false;
+
+export function initObservability() {
+  if (typeof window === 'undefined' || initialized) return;
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    person_profiles: 'identified_only',
+    capture_pageview: false, // We capture manually with route context
+    autocapture: false, // Strict explicit events only
+  });
+  initialized = true;
+}
+
+export function captureEvent(name: EventName, properties?: Record<string, unknown>) {
+  if (typeof window === 'undefined') return;
+  posthog.capture(name, {
+    ...properties,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+export function identifyUser(userId: string, traits?: Record<string, unknown>) {
+  if (typeof window === 'undefined') return;
+  posthog.identify(userId, traits);
+}
+
+export function isFeatureEnabled(flag: string): boolean {
+  if (typeof window === 'undefined') return false;
+  return posthog.isFeatureEnabled(flag) ?? false;
+}
+```
+
+**Initialize once in `app/layout.tsx`** (client component wrapper). Wrap the lead feed route in `isFeatureEnabled('lead_feed_v1')`.
+
+### Error tracking — Sentry
+```bash
+npm install @sentry/nextjs
+npx @sentry/wizard@latest -i nextjs
+```
+
+Wired into route-level `error.tsx`:
+```typescript
+'use client';
+import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
+
+export default function LeadsError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    Sentry.captureException(error, { extra: { digest: error.digest, route: '/leads' } });
+  }, [error]);
+  return (/* UI */);
+}
+```
+
+### SQL linting — SQLFluff (new migrations only)
+```bash
+pip install sqlfluff
+```
+
+`.sqlfluff`:
+```ini
+[sqlfluff]
+dialect = postgres
+exclude_rules = structure.subqueries, layout.long_lines
+
+[sqlfluff:indentation]
+tab_space_size = 2
+```
+
+`package.json` script:
+```json
+"sql:lint:new": "git diff --name-only origin/main...HEAD -- 'migrations/*.sql' | xargs -r sqlfluff lint --dialect postgres"
+```
+
+### Migration safety validator (NEW script)
+`scripts/validate-migration.js`:
+```javascript
+#!/usr/bin/env node
+/**
+ * Pre-commit validator for new migration files. Catches dangerous patterns.
+ * Usage: node scripts/validate-migration.js migrations/070_new_thing.sql
+ */
+const fs = require('fs');
+const path = require('path');
+
+const DESTRUCTIVE_PATTERNS = [
+  { rx: /\bDROP\s+TABLE\b/i, msg: 'DROP TABLE detected — requires explicit user confirmation comment "-- CONFIRMED DESTRUCTIVE"' },
+  { rx: /\bDROP\s+COLUMN\b/i, msg: 'DROP COLUMN detected — requires explicit user confirmation comment "-- CONFIRMED DESTRUCTIVE"' },
+  { rx: /\bTRUNCATE\b/i, msg: 'TRUNCATE detected — requires explicit user confirmation comment' },
+];
+
+const REQUIRED_PATTERNS = [
+  { rx: /--\s*DOWN/i, msg: 'Missing -- DOWN section. All migrations must be reversible.' },
+];
+
+const WARNINGS = [
+  { rx: /CREATE\s+INDEX(?!\s+CONCURRENTLY)/i, msg: 'CREATE INDEX without CONCURRENTLY locks the table during build. Use CONCURRENTLY for tables >100K rows.' },
+  { rx: /UPDATE\s+\w+\s+SET[^;]*?(?<!WHERE\s[^;]+)(;|$)/i, msg: 'UPDATE without WHERE clause — full table scan/rewrite. Confirm intent.' },
+];
+
+function validate(filePath) {
+  const sql = fs.readFileSync(filePath, 'utf8');
+  const errors = [];
+  const warnings = [];
+  const confirmed = /CONFIRMED DESTRUCTIVE/i.test(sql);
+
+  for (const { rx, msg } of DESTRUCTIVE_PATTERNS) {
+    if (rx.test(sql) && !confirmed) errors.push(msg);
+  }
+  for (const { rx, msg } of REQUIRED_PATTERNS) {
+    if (!rx.test(sql)) errors.push(msg);
+  }
+  for (const { rx, msg } of WARNINGS) {
+    if (rx.test(sql)) warnings.push(msg);
+  }
+
+  console.log(`\n${path.basename(filePath)}:`);
+  errors.forEach(e => console.error(`  ❌ ${e}`));
+  warnings.forEach(w => console.warn(`  ⚠️  ${w}`));
+  if (errors.length === 0 && warnings.length === 0) console.log('  ✅ OK');
+  return errors.length === 0;
+}
+
+const files = process.argv.slice(2);
+if (files.length === 0) {
+  console.error('Usage: node validate-migration.js <migration.sql> [...]');
+  process.exit(2);
+}
+
+const ok = files.every(validate);
+process.exit(ok ? 0 : 1);
+```
+
+`package.json` script:
+```json
+"migration:validate": "node scripts/validate-migration.js"
+```
+
+### Performance budgets — Lighthouse CI
+```bash
+npm install --save-dev @lhci/cli
+```
+
+`.lighthouserc.json`:
+```json
+{
+  "ci": {
+    "collect": { "url": ["http://localhost:3000/leads"], "numberOfRuns": 3 },
+    "assert": {
+      "preset": "lighthouse:recommended",
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.9 }],
+        "categories:accessibility": ["error", { "minScore": 0.95 }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+        "total-blocking-time": ["error", { "maxNumericValue": 200 }]
+      }
+    }
+  }
+}
+```
+
+GitHub Actions runs on every PR. Hard fails below thresholds.
+
+### TypeScript strictness
+Update `tsconfig.json`:
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  }
+}
+```
+
+### lint-staged (additive to existing pre-commit hook)
+```bash
+npm install --save-dev lint-staged
+```
+
+`package.json`:
+```json
+"lint-staged": {
+  "src/features/leads/**/*.{ts,tsx}": [
+    "npx @biomejs/biome check --write --no-errors-on-unmatched"
+  ],
+  "src/**/*.{ts,tsx}": [
+    "npx eslint --fix"
+  ],
+  "migrations/*.sql": [
+    "sqlfluff lint --dialect postgres",
+    "node scripts/validate-migration.js"
+  ]
+}
+```
+
+`.husky/pre-commit` keeps existing typecheck + test + lint, ADDS lint-staged at the start:
+```bash
+#!/bin/sh
+npx lint-staged && npm run typecheck && npm run test
+```
+
+### AST-grep rules (Phase 1, after captureEvent wrapper exists)
+```bash
+npm install --save-dev @ast-grep/cli
+npx sg new
+```
+
+`rules/enforce-telemetry-on-click.yml`:
+```yaml
+id: enforce-telemetry-on-click
+message: "Observability Violation: onClick handler in src/features/leads/ must call captureEvent()"
+severity: error
+language: tsx
+files: 
+  - "src/features/leads/**/*.tsx"
+rule:
+  pattern: onClick={$_}
+  not:
+    pattern: onClick={() => { $$$ captureEvent($$$) $$$ }}
+```
+
+`rules/ban-react-context-in-leads.yml`:
+```yaml
+id: ban-react-context-in-leads
+message: "State Management Violation: Use Zustand instead of React Context inside src/features/leads/"
+severity: error
+language: tsx
+files:
+  - "src/features/leads/**/*.tsx"
+  - "src/features/leads/**/*.ts"
+rule:
+  any:
+    - pattern: React.createContext($$$)
+    - pattern: createContext($$$)
+```
+
+### Shadcn UI primitives
+```bash
+npx shadcn@latest init
+npx shadcn@latest add drawer    # Vaul-powered bottom sheet
+npx shadcn@latest add sonner    # Toast notifications
+npx shadcn@latest add form      # React Hook Form integration
+npx shadcn@latest add button
+npx shadcn@latest add card
+```
+
+Restyle to match the industrial utilitarian design system from spec 74 — Shadcn provides the plumbing, our tokens provide the paint.
+
+---
 
 ---
 

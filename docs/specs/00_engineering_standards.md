@@ -239,3 +239,120 @@ Before presenting "PLAN LOCKED", the plan MUST address each applicable item belo
 - [ ] No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)
 - [ ] API route returns stable field names, not raw DB columns (§10.3)
 - [ ] Business logic in `src/lib/`, not in route handlers (§10.3)
+
+### Frontend Foundation Check (new code in `src/features/`):
+- [ ] Biome check passes (§12.1)
+- [ ] No `useEffect` for data fetching — TanStack Query only (§12.2)
+- [ ] No `useState` for form fields — React Hook Form + Zod (§12.3)
+- [ ] No React Context inside `src/features/leads/` — Zustand only (§12.4)
+- [ ] All `onClick`/`onSubmit` handlers call `captureEvent()` (§13.1)
+- [ ] Centered modals replaced with Shadcn `<Drawer>` on mobile (§12.5)
+- [ ] Lists >50 items wrapped in TanStack Virtual (§12.6)
+- [ ] Toast notifications via Sonner — no custom alert banners (§12.7)
+
+### Database/Migration Check:
+- [ ] New migration has DOWN block (§3.2, §12.8)
+- [ ] SQLFluff lint passes for new migration files (§12.8)
+- [ ] `validate-migration.js` passes (no DROP without confirmation, no non-CONCURRENTLY indexes on tables >100K rows) (§12.8)
+- [ ] No raw SQL string concatenation — parameterized only (§4.2)
+
+---
+
+## 🛠️ 12. Frontend Foundation Tooling
+
+> **Status:** Adopted as of 2026-04-07 for the lead feed feature build (`src/features/leads/`). To be expanded to other frontend code as proven valuable.
+
+### 12.1 Biome (React Logic Linting)
+- **Rule:** Biome MUST pass on all files in `src/features/leads/` before commit. Initially scoped to leads; expand after 2-4 weeks of validation.
+- **Critical rules (never disable):** `useHookAtTopLevel`, `noFloatingPromises`, `useExhaustiveDependencies`, `useExhaustiveDependencies`, `noUnusedVariables`
+- **Why:** These three rules catch the React logic failures we want to prevent: hook ordering bugs, unawaited promises, stale closures
+- **Note:** ESLint (`next lint`) continues to run on `scripts/` and the rest of `src/`. Do NOT replace ESLint repo-wide.
+
+### 12.2 Server State (TanStack Query)
+- **Rule:** All API data fetching uses `useQuery` / `useMutation` / `useInfiniteQuery`. NEVER use `useEffect` for data fetching.
+- **Cache persistence:** Use `PersistQueryClientProvider` with IndexedDB (`idb-keyval`) for offline support. 24h `maxAge`.
+- **Query key normalization:** Round geographic coordinates to 3 decimals (~110m) before including in query keys to prevent GPS jitter from creating unbounded cache entries.
+- **Why:** Eliminates race conditions, automatic loading/error states, automatic background refetching, cache deduplication.
+
+### 12.3 Form Management (React Hook Form + Zod)
+- **Rule:** All forms use React Hook Form for state management and Zod for schema validation. Resolver: `@hookform/resolvers/zod`.
+- **Never:** Use local `useState` for form fields. Use uncontrolled inputs registered via RHF.
+- **Why:** RHF is uncontrolled, eliminating per-keystroke re-renders. Zod schemas double as TypeScript types.
+
+### 12.4 Global State (Zustand, NOT React Context)
+- **Rule (scoped):** Inside `src/features/leads/`, NEVER use `React.createContext` or `useContext` for global state. Use Zustand stores. AST-grep enforces.
+- **Persistence:** Use `zustand/middleware` `persist` for filter state that should survive page reloads.
+- **Allowed Context exceptions:** 3rd-party providers (`QueryClientProvider`, `ThemeProvider`, etc.) are not in scope of this rule because they are wrappers, not application state.
+- **Why:** Context triggers re-renders on every consumer for any state change. Zustand subscribes per-selector, avoiding the cascade.
+
+### 12.5 UI Primitives (Shadcn UI + Mobile-First)
+- **Rule:** Use Shadcn UI for foundational primitives — Modals, Drawers, Dropdowns, Forms, Date Pickers. Run `npx shadcn@latest add [component]` to install each.
+- **Mobile rule:** On mobile viewports, NEVER use centered `<Dialog>` modals. Use Shadcn `<Drawer>` (powered by Vaul) for all popups, sheets, contextual menus, and forms.
+- **Why:** Shadcn provides accessible, touch-friendly primitives out of the box. Vaul provides iOS-grade gesture physics (`cubic-bezier(0.32, 0.72, 0, 1)`) that reaching the close button on a centered modal cannot match on mobile.
+
+### 12.6 List Virtualization (TanStack Virtual)
+- **Rule:** Any list/feed/grid expected to render more than 50 items MUST be wrapped in `useVirtualizer` from `@tanstack/react-virtual`.
+- **Why:** Rendering thousands of DOM nodes crashes mobile browsers and tanks frame rate. Virtualization renders only visible items + a small overscan buffer.
+
+### 12.7 Toast Notifications (Sonner)
+- **Rule:** Use Shadcn's Sonner integration for all success/error/info notifications. Use `toast.success()`, `toast.error()`, `toast.info()`.
+- **Never:** Build custom alert banners. Never use `alert()`, `confirm()`, or `prompt()` (they freeze the entire mobile browser).
+- **Why:** Sonner stacks neatly, supports swipe-to-dismiss, and never blocks the UI thread.
+
+### 12.8 SQL Linting & Migration Safety
+- **Rule:** All NEW migration files must pass `sqlfluff lint --dialect postgres`. Existing migrations (001-069) are grandfathered.
+- **Rule:** All NEW migrations must pass `scripts/validate-migration.js`, which catches:
+  - `DROP TABLE` or `DROP COLUMN` without explicit user confirmation comment
+  - `CREATE INDEX` (non-CONCURRENT) on tables with >100K rows
+  - Missing `-- DOWN` block
+  - `UPDATE` without `WHERE` clause (full-table scan risk)
+- **Rule:** All migrations must include a DOWN section that reverses the UP changes.
+- **Why:** Backwards compatibility, rollback safety, no production lock incidents.
+
+### 12.9 Animation & Gestures (Motion for React)
+- **Rule:** Use `motion` package (formerly Framer Motion) for swipe-to-delete, layout transitions, drag interactions, and button press animations.
+- **Spring config standard:** `{ type: 'spring', stiffness: 400, damping: 20, mass: 1 }` for button interactions. The Motion default (stiffness 1, damping 10) is intentionally weak and feels sluggish.
+- **Never:** Write custom CSS keyframes for complex interactions. Never animate layout properties (use `transform` / `opacity`).
+- **Why:** Hardware-accelerated, gesture-tracking, declarative.
+
+---
+
+## 📊 13. Observability Standards
+
+> **Status:** Adopted as of 2026-04-07. Building observability in from day one of the frontend rebuild — lessons learned from the painful retrofit on the backend pipeline.
+
+### 13.1 Product Telemetry (PostHog)
+- **Tool:** PostHog (self-hosted free tier covers 1M events/month)
+- **Wrapper:** All event capture goes through `src/lib/observability/capture.ts` exporting `captureEvent(name, properties)`. The wrapper handles SSR safety, type-safe event names, and provider abstraction.
+- **Type-safe event names:** Define a `EventName` union type. New events require adding to the union (catches typos at compile time).
+- **Mandatory coverage:** Every interactive handler in `src/features/leads/` (`onClick`, `onSubmit`, `onChange` for filters) MUST call `captureEvent()`. AST-grep enforces inside the leads feature.
+- **PII handling:** Never include user names, emails, addresses in event properties. Use Firebase UID (pseudonymous) for user identification.
+
+### 13.2 Error Tracking (Sentry)
+- **Tool:** Sentry (free tier covers 5K events/month)
+- **Wiring:** All `app/[...]/error.tsx` route boundaries call `Sentry.captureException(error, { extra: { digest: error.digest } })` in their `useEffect`.
+- **Source maps:** Uploaded to Sentry on every production build via `@sentry/nextjs` plugin.
+- **Local dev:** Errors logged to console only (Sentry disabled in dev to preserve free tier).
+
+### 13.3 Backend Structured Logging (`logInfo` / `logWarn` / `logError`)
+- **Tool:** `src/lib/logger.ts` exports `logError`, `logWarn`, `logInfo`. Each emits a structured JSON line: `{ level, tag, event, timestamp, ...context }`.
+- **Rule:** API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}` for observability.
+- **Rule:** All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces.
+- **Rule:** Pipeline scripts use `pipeline.log.info/warn/error` from the SDK, which routes to the same underlying logger.
+
+### 13.4 Performance Monitoring (Lighthouse CI)
+- **Tool:** Lighthouse CI in GitHub Actions, runs on every PR.
+- **Hard budgets (CI fails below these):**
+  - Performance: ≥90 mobile (Moto G4 emulation)
+  - Accessibility: ≥95
+  - Best Practices: ≥90
+  - LCP: <2.5s
+  - CLS: <0.1
+  - TBT: <200ms
+- **Why:** Catches performance regressions before merge. Enforces the "right foundation" goal.
+
+### 13.5 Feature Flags (PostHog Flags)
+- **Tool:** PostHog feature flags (included in free tier, integrated with telemetry)
+- **Rule:** Any new user-facing feature MUST be wrapped in a feature flag check at the route level. The lead feed launches behind `feature_lead_feed_v1`.
+- **Rollout pattern:** 0% → 10% (internal testing) → 25% → 50% → 100%. Each step gated on no-error-rate-spike in Sentry.
+- **Why:** Decouples deploy from release. Enables instant rollback without redeploy.

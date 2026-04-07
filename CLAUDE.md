@@ -1,6 +1,6 @@
-# Engineering Master Protocol v4.0 — The Core 5 Pillars
+# Engineering Master Protocol v4.1 — Domain Modes + Foundation Tooling
 **Role:** You are the **Lead Software Engineer** on the Buildo project.
-**Goal:** Plan meticulously. Verify rigorously. Enforce the System Map.
+**Goal:** Plan meticulously. Verify rigorously. Enforce the System Map. **Declare your Domain Mode at task start (see §Domain Rules).**
 
 ---
 
@@ -371,4 +371,122 @@ If the implementor writes the checklist, the agent only validates what was inten
 
 ## Spec Boundary Requirements
 Every new spec MUST include an `## Operating Boundaries` section (Target Files, Out-of-Scope Files, Cross-Spec Dependencies). Copy from `docs/specs/_spec_template.md`.
+
+---
+
+## Domain Rules
+
+> **MANDATORY:** At the start of EVERY task, declare which Domain Mode you are operating in based on which directories you will modify. State the mode explicitly in your first response: "**Domain Mode: Frontend**" or "**Domain Mode: Backend/Pipeline**" or "**Domain Mode: Cross-Domain**" (rare — requires reading both rule sets).
+>
+> The Domain Mode determines which tools, libraries, and rules you must follow. Violating the rules of your declared domain is a §10 compliance failure that blocks the PLAN COMPLIANCE GATE.
+
+### Mode Selection Rule
+
+| If you will modify... | Declare mode |
+|----------------------|--------------|
+| `src/features/`, `src/components/`, `src/app/` (pages, NOT API routes), `src/hooks/`, frontend-only `src/lib/` modules | **Frontend Mode** |
+| `scripts/`, `migrations/`, `src/app/api/`, `src/lib/db/`, pipeline-related `src/lib/` modules | **Backend/Pipeline Mode** |
+| Both (e.g., adding a new API route + UI consumer) | **Cross-Domain Mode** — read BOTH rule blocks below before proceeding |
+| Doc-only changes, specs, reports | **Either** — follow whichever domain the documented work belongs to |
+
+---
+
+### 🎨 Frontend Mode
+
+When operating in Frontend Mode, you MUST adhere to these rules. Required reading before generating an active task:
+- `docs/specs/00_engineering_standards.md` §1 (Architecture & UI), §4.3 (Frontend Security), §10 (Boundary), §12 (Frontend Foundation Tooling), §13 (Observability Standards)
+- `docs/specs/product/future/74_lead_feed_design.md` (industrial utilitarian design system, color tokens, spacing)
+- `docs/specs/product/future/75_lead_feed_implementation_guide.md` (component-by-component blueprint, foundation tooling)
+
+**Required tooling stack (no substitutions without prior approval):**
+
+| Concern | Tool | Why |
+|---------|------|-----|
+| Linting | **Biome** (scoped to `src/features/leads/` initially, expanding) | Catches React logic failures: `useHookAtTopLevel`, `noFloatingPromises`, `useExhaustiveDependencies` |
+| Server state / data fetching | **TanStack Query** | NEVER use `useEffect` for API calls. Always handle loading/error states. |
+| Offline persistence | **TanStack Query Persist Client + IndexedDB (idb-keyval)** | 24h cache, key normalization on lat/lng to ~3 decimals |
+| Global UI state | **Zustand** with `persist` middleware for filter state | NEVER use React Context for global state inside `src/features/leads/` (AST-grep enforced). Context allowed elsewhere for 3rd-party providers only. |
+| Local form state | **React Hook Form + Zod resolver** | NEVER use `useState` for form fields |
+| API input validation | **Zod** with differentiated 400 error responses (NOT generic 500) | Field-level error messages |
+| UI primitives | **Shadcn UI** | Headless, accessible, mobile-touch-friendly. Run `npx shadcn@latest add [component]` for each. |
+| Bottom sheets | **Shadcn `<Drawer>`** (powered by Vaul) | iOS cubic-bezier `[0.32, 0.72, 0, 1]`. NEVER use centered `<Dialog>` modals on mobile. |
+| Animations / gestures | **Motion for React** (`motion` package, formerly Framer Motion) | Spring config: `stiffness: 400, damping: 20, mass: 1` for button interactions |
+| Toast notifications | **Sonner** (via Shadcn) | NEVER build custom alert banners or use `alert()`/`confirm()` |
+| Long lists | **TanStack Virtual** | Any list expected to exceed 50 items MUST be virtualized. NEVER `.map()` long arrays directly. |
+| Telemetry | **PostHog** via `src/lib/observability/capture.ts` `captureEvent()` wrapper | Every user interaction (`onClick`, `onSubmit`) MUST call `captureEvent()` (AST-grep enforced in `src/features/leads/`) |
+| Error tracking | **Sentry** wired into `app/[...]/error.tsx` route boundaries | Source maps uploaded on build |
+| Auth | **Firebase Auth** with `verifyIdToken` in middleware | Already in production. NEVER swap for Clerk or other providers without architectural approval. |
+
+**Rules to never violate:**
+
+1. **No floating promises** — every async call inside a handler must be `await`-ed or chained with `.catch()`. Biome enforces.
+2. **No `useEffect` for data fetching** — use TanStack Query. Period.
+3. **No React Context inside `src/features/leads/`** — use Zustand. AST-grep blocks the commit.
+4. **No `onClick` without `captureEvent()`** — telemetry is mandatory in `src/features/leads/`. AST-grep blocks the commit.
+5. **No centered modals on mobile** — use Shadcn `<Drawer>`. Required for any popup/sheet/menu.
+6. **No `.map()` over arrays expected to exceed 50 items** — wrap in TanStack Virtual.
+7. **No secrets in `'use client'` components** — public Firebase config only. Admin keys, API tokens, anything else stays server-side.
+8. **No `dangerouslySetInnerHTML` without DOMPurify** — XSS guard. JSX escaping handles 99% of cases.
+9. **No `console.log` in committed code** — use `captureEvent()` for product events, `Sentry.captureException()` for errors.
+10. **Mobile-first Tailwind** — base classes target mobile, `md:` and `lg:` add desktop. Touch targets ≥ 44px.
+
+**Pre-commit gauntlet (frontend files):**
+1. Biome check (logic correctness)
+2. AST-grep scan (telemetry + Context ban, scoped to `src/features/leads/`)
+3. TypeScript strict check
+4. Vitest related tests
+5. Lighthouse CI (on PRs only)
+
+---
+
+### 🛢️ Backend / Pipeline Mode
+
+When operating in Backend/Pipeline Mode, you MUST adhere to these rules. Required reading before generating an active task:
+- `docs/specs/00_engineering_standards.md` §2 (Error Handling), §3 (Database), §6 (Logging), §7 (Dual Code Path), §9 (Pipeline & Script Safety), §10 (Boundary)
+- `docs/specs/pipeline/30_pipeline_architecture.md` (V2 architecture)
+- `docs/specs/pipeline/40_pipeline_system.md` (pipeline_runs, manifest, telemetry contracts)
+- `docs/specs/01_database_schema.md` (current schema)
+
+**Required tooling stack:**
+
+| Concern | Tool | Why |
+|---------|------|-----|
+| Linting | **ESLint** (CommonJS scripts) — existing setup | Pipeline scripts use CommonJS, ESLint handles them well. Do NOT replace with Biome here. |
+| SQL linting | **SQLFluff** for new migrations only | Boy Scout Rule: existing migrations grandfathered. New migrations must pass `sqlfluff lint --dialect postgres` |
+| Migration safety | **`scripts/validate-migration.js`** pre-commit script | Catches `DROP TABLE`, `DROP COLUMN`, non-CONCURRENTLY indexes on big tables, missing DOWN block |
+| Database access | **`src/lib/db/client.ts`** pool | NEVER instantiate `new Pool()` directly. Use the shared client. |
+| Pipeline scripts | **Pipeline SDK** (`scripts/lib/pipeline.js`) | `pipeline.run`, `withTransaction`, `streamQuery`, `emitSummary`, `emitMeta`. NEVER hand-roll DB connection logic in scripts. |
+| Logging | **`src/lib/logger.ts`** (`logError`, `logWarn`, `logInfo`) | NEVER use bare `console.error`. Every API catch block must use `logError(tag, err, context)`. |
+| Type safety | **Drizzle ORM** generated types via `npm run db:generate` | Run after every migration |
+| Validation | **Zod** for API input + structured pipeline configs | Same standard as frontend |
+
+**Rules to never violate:**
+
+1. **No empty catch blocks** — ESLint `no-empty` rule enforces. Always log via `logError`.
+2. **No `process.exit()` in `src/`** — ESLint `no-restricted-syntax` enforces. Throw errors instead, let the framework handle them.
+3. **No `Pool` instantiation outside `src/lib/db/client.ts`** — use the shared pool.
+4. **No raw SQL string concatenation** — parameterized queries only (`$1, $2, ...`).
+5. **No migration without DOWN block** — `validate-migration.js` enforces.
+6. **No `CREATE INDEX` on tables >100K rows without `CONCURRENTLY`** — locks production.
+7. **No `DROP COLUMN` or `DROP TABLE` without explicit user confirmation** — destructive operations require approval.
+8. **Dual code path discipline** — when modifying classification/scoring/scope logic, update BOTH the TS module AND the JS pipeline script. §7 enforces.
+9. **Streaming for large datasets** — use `pipeline.streamQuery()` for any query expected to return >10K rows. NEVER load full result sets into memory.
+10. **Idempotent scripts** — every pipeline script must be re-runnable without producing duplicates or corrupted state.
+
+**Pre-commit gauntlet (backend/pipeline files):**
+1. ESLint (CommonJS + TypeScript)
+2. SQLFluff (new migration files)
+3. `validate-migration.js` (migration safety)
+4. TypeScript strict check
+5. Vitest related tests
+
+---
+
+### Cross-Domain Mode
+
+For tasks that span both domains (e.g., new API route + UI consumer):
+1. **Read BOTH rule blocks above** before proceeding.
+2. **Sequence the work:** backend first, frontend second. Never both at once.
+3. **Write a handoff note** in the active task between phases — what API contract was established, what the frontend will consume.
+4. **Two pre-commit gauntlets apply** — backend files run the backend gauntlet, frontend files run the frontend gauntlet.
 
