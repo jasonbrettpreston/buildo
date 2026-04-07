@@ -378,9 +378,14 @@ pipeline.run('link-coa', async (pool) => {
   const potentialMatches = parseInt(potentialRes.rows[0].could_link, 10) || 0;
 
   // Effective match rate denominator combines what we actually linked + what we
-  // COULD still link. Tier 1c (ward conflict) is intentionally excluded from the
-  // numerator since it's a flagged low-confidence match, not a success.
-  const highConfidenceLinks = tier1a + tier1b + tier2a + tier2b + desc;
+  // COULD still link. Tiers excluded from the numerator (must be consistent):
+  //   - Tier 1c (ward conflict) → 0.10 confidence, flagged for review
+  //   - Tier 3 (description FTS) → 0.10-0.50 confidence, includes 0.10 matches
+  // Including Tier 3 while excluding Tier 1c was inconsistent — both contain
+  // 0.10-confidence matches. The conservative fix excludes both tiers entirely,
+  // making the metric measure ONLY exact-address links (Tiers 1a/1b/2a/2b at
+  // 0.50-0.95 confidence). Tier 3 success is still tracked separately as INFO.
+  const highConfidenceLinks = tier1a + tier1b + tier2a + tier2b;
   const effectiveDenom = highConfidenceLinks + potentialMatches;
   const effectiveRate = effectiveDenom > 0 ? (highConfidenceLinks / effectiveDenom) * 100 : 100;
 
