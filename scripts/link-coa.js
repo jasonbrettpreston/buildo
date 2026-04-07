@@ -360,15 +360,46 @@ pipeline.run('link-coa', async (pool) => {
   );
   const crossWardCount = parseInt(crossWardLinks.rows[0].count, 10) || 0;
 
-  // Dynamic match rate threshold
-  const matchRateStatus = actualCandidates > 10 && matchRate < 5 ? 'FAIL'
-    : actualCandidates > 10 && matchRate < 20 ? 'WARN' : 'PASS';
+  // Effective match rate: measure against POTENTIAL matches (CoAs with a real
+  // permit at their exact address), not against all unlinked. The old rate
+  // measured linked/all_unlinked, which trips FAIL in steady state when the
+  // residual pool has no achievable matches. See link-coa audit fix WF3.
+  const potentialRes = await pool.query(
+    `SELECT COUNT(DISTINCT c.id) AS could_link
+     FROM coa_applications c
+     JOIN permits p
+       ON p.street_num = c.street_num
+      AND p.street_name_normalized = c.street_name_normalized
+     WHERE c.linked_permit_num IS NULL
+       AND c.street_num IS NOT NULL AND TRIM(c.street_num) != ''
+       AND c.street_name_normalized IS NOT NULL
+       AND p.permit_type != 'Pre-Permit'`
+  );
+  const potentialMatches = parseInt(potentialRes.rows[0].could_link, 10) || 0;
 
-  // Build audit_table
+  // Effective match rate denominator combines what we actually linked + what we
+  // COULD still link. Tier 1c (ward conflict) is intentionally excluded from the
+  // numerator since it's a flagged low-confidence match, not a success.
+  const highConfidenceLinks = tier1a + tier1b + tier2a + tier2b + desc;
+  const effectiveDenom = highConfidenceLinks + potentialMatches;
+  const effectiveRate = effectiveDenom > 0 ? (highConfidenceLinks / effectiveDenom) * 100 : 100;
+
+  // Verdict logic:
+  // - Nothing achievable (effectiveDenom = 0) → PASS (steady state)
+  // - Achievable matches but linker hit < 50% → FAIL (real regression)
+  // - >= 50% → PASS
+  const effectiveRateStatus = effectiveDenom === 0 ? 'PASS'
+    : effectiveRate < 50 ? 'FAIL'
+    : effectiveRate < 80 ? 'WARN'
+    : 'PASS';
+
+  // Build audit_table — match_rate_pct demoted to INFO, effective_match_rate_pct drives verdict
   const auditRows = [
     { metric: 'cross_ward_cleaned', value: crossWardCleaned, threshold: null, status: crossWardCleaned > 0 ? 'INFO' : 'PASS' },
     { metric: 'total_candidates', value: actualCandidates, threshold: null, status: 'INFO' },
-    { metric: 'match_rate_pct', value: Math.round(matchRate * 10) / 10, threshold: '>= 5%', status: matchRateStatus },
+    { metric: 'potential_matches', value: potentialMatches, threshold: null, status: 'INFO' },
+    { metric: 'effective_match_rate_pct', value: Math.round(effectiveRate * 10) / 10, threshold: '>= 50%', status: effectiveRateStatus },
+    { metric: 'match_rate_pct', value: Math.round(matchRate * 10) / 10, threshold: null, status: 'INFO' },
     { metric: 'matches_tier_1a_exact_ward', value: tier1a, threshold: null, status: 'INFO' },
     { metric: 'matches_tier_1b_exact_null_ward', value: tier1b, threshold: null, status: 'INFO' },
     { metric: 'matches_tier_1c_ward_conflict', value: tier1c, threshold: null, status: tier1c > 0 ? 'WARN' : 'PASS' },
@@ -380,8 +411,8 @@ pipeline.run('link-coa', async (pool) => {
     { metric: 'links_to_pre_permits', value: prePermitLinkCount, threshold: '== 0', status: prePermitLinkCount > 0 ? 'FAIL' : 'PASS' },
     { metric: 'cross_ward_links', value: crossWardCount, threshold: '== 0', status: crossWardCount > 0 ? 'WARN' : 'PASS' },
   ];
-  const linkAuditHasFails = prePermitLinkCount > 0 || matchRateStatus === 'FAIL';
-  const linkAuditHasWarns = descErrors > 0 || crossWardCount > 0 || tier1c > 0 || matchRateStatus === 'WARN';
+  const linkAuditHasFails = prePermitLinkCount > 0 || effectiveRateStatus === 'FAIL';
+  const linkAuditHasWarns = descErrors > 0 || crossWardCount > 0 || tier1c > 0 || effectiveRateStatus === 'WARN';
   const chainId = process.env.PIPELINE_CHAIN || null;
   const linkAuditTable = {
     phase: chainId === 'coa' ? 4 : 12,
@@ -401,6 +432,8 @@ pipeline.run('link-coa', async (pool) => {
     matches_tier_3_desc: desc,
     tier_3_errors: descErrors,
     match_rate_pct: Math.round(matchRate * 10) / 10,
+    potential_matches: potentialMatches,
+    effective_match_rate_pct: Math.round(effectiveRate * 10) / 10,
     unlinked_remaining: noMatch,
     audit_table: linkAuditTable,
   };

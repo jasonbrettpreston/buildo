@@ -64,7 +64,7 @@ assert_data_bounds → assert_engine_health
    - Tier 2a: `street_name_normalized` only + ward match → 0.60
    - Tier 2b: `street_name_normalized` only + permit ward NULL → 0.50
    - Tier 3: Description full-text search → 0.10-0.50 (ward as tiebreaker)
-   - Audit: dynamic match rate threshold (candidates > 10 + rate < 5% = FAIL, < 20% = WARN)
+   - Audit: `effective_match_rate_pct` measures `linked / (linked + potential_matches)` where `potential_matches` = unlinked CoAs with a real (non-Pre-Permit) permit at their exact address. Thresholds: `< 50%` = FAIL, `< 80%` = WARN, else PASS. When `potential_matches = 0` the verdict is PASS (steady state — nothing to link). The legacy `match_rate_pct` is preserved as INFO only.
 5. **Pre-permit generation** — approved CoA applications without linked permits become speculative leads
 6. **Aging check** — approved+unlinked applications older than 18 months flagged as expired (WARN)
 7. **Quality assertions** — CoA-scoped data bounds and engine health
