@@ -423,14 +423,14 @@ npm install zustand
 | `<Alert>`, `<AlertTitle>`, `<AlertDescription>` | **Shadcn** `npx shadcn@latest add alert` | Empty state shells |
 | `<Slider>` | **Shadcn** (if needed) | Continuous radius slider alternative |
 | `<HoverCard>` | **Shadcn** (if needed) | Map marker preview on desktop hover |
-| **`<TimingBadge>`** | **CUSTOM** | Hybrid layout: colored bg pill + score circle + dashed/solid border. No primitive matches the composition. |
-| **`<PermitLeadCard>`** | **CUSTOM composition** | Uses `<Card>`, `<Avatar>`, `<Badge>`, `<Button>` as building blocks. The composition is feature-specific. |
-| **`<BuilderLeadCard>`** | **CUSTOM composition** | Same — composes Shadcn primitives into a feature-specific card. |
-| **`<LeadFeed>`** | **CUSTOM container** | Manages infinite scroll, pull-to-refresh, interleaving logic. Not a UI primitive. |
-| **`<LeadFeedHeader>`** | **CUSTOM** | Custom sticky bar with backdrop-blur. Could use `<NavigationMenu>` but overkill. |
-| **`<LeadMapPane>`** | **CUSTOM** | Wraps Google Maps. No Shadcn equivalent. |
-| **`<EmptyLeadState>`** | **CUSTOM composition** | Composes `<Alert>` + `<Button>` for the two empty states. |
-| **`<SkeletonLeadCard>`** | **CUSTOM composition** | Composes `<Skeleton>` primitives to match `<PermitLeadCard>` exactly. |
+| **`<TimingBadge>`** | **CUSTOM composition** with Tremor | Score circle uses **Tremor `<ProgressCircle>`** (`@tremor/react`). Custom timing bar (colored full-width pill) is the unique element. |
+| **`<PermitLeadCard>`** | **CUSTOM composition** | Uses `<Card>`, `<Avatar>`, `<Badge>`, `<Button>` as building blocks. **Reference patterns:** [shadcn.io block library](https://www.shadcn.io/template/category/block-library). |
+| **`<BuilderLeadCard>`** | **CUSTOM composition** | Same — composes Shadcn primitives. **Reference patterns:** shadcn.io blocks for "contact card" + "stats card" layouts. |
+| **`<LeadFeed>`** | **CUSTOM container** with `react-infinite-scroll-component` | Single library handles BOTH infinite scroll AND pull-to-refresh — replaces the previous `react-intersection-observer` + `react-simple-pull-to-refresh` combo. |
+| **`<LeadFeedHeader>`** | **CUSTOM** | Sticky bar with backdrop-blur. Genuinely simple — no library needed. |
+| **`<LeadMapPane>`** | **CUSTOM** with `@vis.gl/react-google-maps` | Uses `AdvancedMarker` for V1. For richer marker visuals in V2, upgrade to OverlayView + createPortal pattern ([reference](https://dawchihliou.github.io/articles/building-custom-google-maps-marker-react-component-like-airbnb-in-nextjs)). |
+| **`<EmptyLeadState>`** | **CUSTOM composition** | Composes `<Alert>` + `<Button>` for the three empty states. |
+| **`<SkeletonLeadCard>`** | **CUSTOM composition** | Composes `<Skeleton>` primitives to match `<PermitLeadCard>` dimensions exactly. |
 
 **Rule of thumb:** Anything you'd find in shadcn.com/docs/components → install it. Anything that's a feature-specific arrangement of those primitives → build it as a thin composition.
 
@@ -442,11 +442,11 @@ npm install zustand
 
 **Purpose:** Top-level feed container. Manages infinite scroll, interleaves permit + builder cards, handles loading/empty states.
 
+**Library:** `react-infinite-scroll-component` (4.15kB) — provides infinite scroll AND pull-to-refresh in a single component. **Replaces** the previous two-library combo (`react-intersection-observer` + `react-simple-pull-to-refresh`) with one battle-tested package.
+
 ```tsx
 'use client';
-import { useInView } from 'react-intersection-observer';
-import { useEffect, useRef } from 'react';
-import PullToRefresh from 'react-simple-pull-to-refresh';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import { useLeadFeed } from '../api/useLeadFeed';
 import { useLeadFeedState } from '../hooks/useLeadFeedState';
 import { PermitLeadCard } from './PermitLeadCard';
@@ -461,20 +461,14 @@ interface LeadFeedProps {
 
 export function LeadFeed({ tradeSlug }: LeadFeedProps) {
   const { location, radiusKm } = useLeadFeedState();
-  const { ref: loadMoreRef, inView } = useInView({ threshold: 0 });
 
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, refetch } =
+  const { data, isLoading, hasNextPage, fetchNextPage, refetch } =
     useLeadFeed({
       lat: location?.lat ?? 0,
       lng: location?.lng ?? 0,
       tradeSlug,
       radiusKm,
     });
-
-  // Infinite scroll trigger
-  useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) fetchNextPage();
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (!location) return <EmptyLeadState reason="no_location" />;
   if (isLoading) return <LoadingFeed />;
@@ -483,51 +477,69 @@ export function LeadFeed({ tradeSlug }: LeadFeedProps) {
   if (leads.length === 0) return <EmptyLeadState reason="no_results" radiusKm={radiusKm} />;
 
   return (
-    <PullToRefresh
-      onRefresh={async () => { await refetch(); }}
-      pullDownThreshold={67}
-      maxPullDownDistance={95}
-      refreshingContent={<RefreshSpinner />}
-    >
-      <div className="flex flex-col min-h-screen bg-[#1C1F26]">
-        <LeadFeedHeader leadCount={data?.pages[0].meta.total ?? 0} />
-        <div className="flex flex-col gap-2 px-0 pt-2">
-          {leads.map(lead =>
-            lead.lead_type === 'permit' ? (
-              <PermitLeadCard key={lead.id} lead={lead} />
-            ) : (
-              <BuilderLeadCard key={lead.id} lead={lead} />
-            )
-          )}
-          {isFetchingNextPage && (
-            <>
-              <SkeletonLeadCard />
-              <SkeletonLeadCard />
-            </>
-          )}
-          <div ref={loadMoreRef} className="h-1" />
-        </div>
-      </div>
-    </PullToRefresh>
+    <div className="flex flex-col min-h-screen bg-bg-feed">
+      <LeadFeedHeader leadCount={data?.pages[0].meta.total ?? 0} />
+      <InfiniteScroll
+        dataLength={leads.length}
+        next={fetchNextPage}
+        hasMore={hasNextPage ?? false}
+        loader={<><SkeletonLeadCard /><SkeletonLeadCard /></>}
+        endMessage={
+          <p className="text-center font-display text-sm text-gray-steel py-6">
+            That's all the leads in your area. Pull to refresh.
+          </p>
+        }
+        // Pull-to-refresh built in to the same component
+        refreshFunction={refetch}
+        pullDownToRefresh
+        pullDownToRefreshThreshold={67}
+        pullDownToRefreshContent={
+          <div className="text-center py-3 font-display text-sm text-gray-steel">
+            ↓ Pull to refresh
+          </div>
+        }
+        releaseToRefreshContent={
+          <div className="text-center py-3 font-display text-sm text-amber-hardhat">
+            ↑ Release to refresh
+          </div>
+        }
+        scrollThreshold="80%"
+        className="flex flex-col gap-2 px-0 pt-2"
+      >
+        {leads.map(lead =>
+          lead.lead_type === 'permit' ? (
+            <PermitLeadCard key={lead.id} lead={lead} />
+          ) : (
+            <BuilderLeadCard key={lead.id} lead={lead} />
+          )
+        )}
+      </InfiniteScroll>
+    </div>
   );
 }
 
 function LoadingFeed() {
   return (
-    <div className="flex flex-col gap-2 px-0 pt-2 bg-[#1C1F26] min-h-screen">
+    <div className="flex flex-col gap-2 px-0 pt-2 bg-bg-feed min-h-screen">
       {Array.from({ length: 3 }).map((_, i) => <SkeletonLeadCard key={i} />)}
     </div>
   );
 }
-
-function RefreshSpinner() {
-  return (
-    <div className="flex justify-center py-4">
-      <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-    </div>
-  );
-}
 ```
+
+**Why `react-infinite-scroll-component`:**
+- **Single library for both behaviors** — infinite scroll + pull-to-refresh in one. Eliminates the manual `useInView` + separate `<PullToRefresh>` wrapper pattern.
+- **4.15kB gzipped** — tiny footprint
+- **Configurable pull threshold** (default 67px) and scroll threshold (`'80%'` triggers `next` when scrolled past 80% of content)
+- **Maintained** — actively used by thousands of projects, well-tested edge cases
+- **Built-in `endMessage`** — clean UX for "you've seen everything" state
+- **Loader and refresh content slots** — fully customizable visuals
+
+**What was removed:**
+- ❌ `react-intersection-observer` (replaced by built-in scroll trigger)
+- ❌ `react-simple-pull-to-refresh` (replaced by built-in pull-to-refresh)
+- ❌ Manual `useEffect` for scroll trigger
+- ❌ Custom `RefreshSpinner` component
 
 **Key decisions:**
 - `react-intersection-observer` for infinite scroll (no manual scroll listener)
@@ -1011,9 +1023,12 @@ function formatCompact(n: number): string {
 ### 4.6 TimingBadge
 
 **File:** `src/features/leads/components/badges/TimingBadge.tsx`
+**Status:** **CUSTOM composition** using Tremor `<ProgressCircle>` + custom timing bar
+**Library used:** `@tremor/react` for the score circle (saves us from building a custom doughnut chart)
 
 ```tsx
 import { ClockIcon } from '@heroicons/react/24/outline';
+import { ProgressCircle } from '@tremor/react';
 
 interface Props {
   display: string;
@@ -1022,12 +1037,13 @@ interface Props {
 }
 
 export function TimingBadge({ display, confidence, score }: Props) {
-  const bg = getBackgroundColor(score);
-  const textColor = score >= 20 ? 'text-neutral-900' : 'text-neutral-100';
+  const tone = getTone(score);
   
   return (
     <div className="flex items-center justify-between gap-2">
-      <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-md ${bg} ${textColor} min-h-[44px]`}>
+      {/* Custom timing bar — the unique element. No primitive matches the
+          colored full-width pill + clock icon + "est." indicator combo. */}
+      <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-md ${tone.bg} ${tone.text} min-h-[44px]`}>
         <ClockIcon className="w-4 h-4 shrink-0" />
         <span className="font-display text-sm font-semibold leading-tight">
           {display}
@@ -1036,23 +1052,46 @@ export function TimingBadge({ display, confidence, score }: Props) {
           <span className="font-data text-[10px] opacity-75 ml-auto">est.</span>
         )}
       </div>
-      <div className={`
-        w-12 h-12 rounded-md flex items-center justify-center shrink-0
-        bg-neutral-900/30 ring-1 ring-neutral-700
-      `}>
+      
+      {/* Tremor ProgressCircle — battle-tested SVG doughnut.
+          Variant prop maps score range to color. Children render in center. */}
+      <ProgressCircle
+        value={score}
+        max={100}
+        size="md"
+        color={tone.tremorColor}
+        radius={24}
+        strokeWidth={4}
+        className="shrink-0"
+      >
         <span className="font-data text-sm font-bold text-neutral-100">{score}</span>
-      </div>
+      </ProgressCircle>
     </div>
   );
 }
 
-function getBackgroundColor(score: number): string {
-  if (score >= 25) return 'bg-amber-500';   // NOW
-  if (score >= 20) return 'bg-green-500';   // Soon
-  if (score >= 10) return 'bg-blue-500';    // Upcoming
-  return 'bg-neutral-600';                  // Distant
+type Tone = { bg: string; text: string; tremorColor: 'amber' | 'emerald' | 'blue' | 'gray' };
+
+function getTone(score: number): Tone {
+  if (score >= 25) return { bg: 'bg-amber-hardhat', text: 'text-neutral-900', tremorColor: 'amber' };  // NOW
+  if (score >= 20) return { bg: 'bg-green-safety', text: 'text-neutral-900', tremorColor: 'emerald' }; // Soon
+  if (score >= 10) return { bg: 'bg-blue-blueprint', text: 'text-neutral-100', tremorColor: 'blue' };  // Upcoming
+  return { bg: 'bg-gray-concrete', text: 'text-neutral-100', tremorColor: 'gray' };                    // Distant
 }
 ```
+
+**Why Tremor `<ProgressCircle>` for the score:**
+- 35+ accessible dashboard primitives, MIT/Apache licensed, copy-paste like Shadcn
+- Built on Recharts + Radix UI — proven SVG doughnut without us writing path math
+- `value` + `max` props handle the 0-100 score → arc rendering automatically
+- `color` prop accepts Tremor's color palette which maps cleanly to our timing tones
+- Children render in the center — perfect for the score number display
+
+**Why the timing bar stays custom:**
+- The hybrid layout (full-width colored pill + leading icon + trailing "est." badge + dashed/solid border for confidence) doesn't match any pre-built primitive
+- Composed entirely from Tailwind utility classes — minimal code
+
+**Token reminder:** Uses construction-material color tokens (`bg-amber-hardhat`, `bg-green-safety`, `bg-blue-blueprint`, `bg-gray-concrete`) from the Tailwind config in §6.
 
 ---
 
@@ -1286,10 +1325,14 @@ export function EmptyLeadState({ reason, radiusKm }: Props) {
 ### 4.10 LeadMapPane (Desktop Sidebar)
 
 **File:** `src/features/leads/components/LeadMapPane.tsx`
+**Library:** `@vis.gl/react-google-maps` (the official Google wrapper supporting `AdvancedMarkerElement`)
+**Pattern:** OverlayView + React `createPortal` for fully custom React-rendered markers — based on Daw-Chih Liou's Airbnb-marker pattern (see references)
 
 ```tsx
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
+import { createPortal } from 'react-dom';
 import { useLeadFeedState } from '../hooks/useLeadFeedState';
 import type { LeadFeedItem } from '../types';
 
@@ -1297,34 +1340,127 @@ interface Props {
   leads: LeadFeedItem[];
 }
 
+/**
+ * OverlayView factory — wraps google.maps.OverlayView in a closure to avoid
+ * Next.js build errors. The class declaration must happen after the Maps API
+ * has loaded, otherwise SSR fails. Pattern from:
+ * https://dawchihliou.github.io/articles/building-custom-google-maps-marker-react-component-like-airbnb-in-nextjs
+ */
+function createOverlay(
+  container: HTMLElement,
+  pane: keyof google.maps.MapPanes,
+  position: google.maps.LatLngLiteral
+) {
+  class CustomOverlay extends google.maps.OverlayView {
+    private container: HTMLElement;
+    private pane: keyof google.maps.MapPanes;
+    private position: google.maps.LatLngLiteral;
+    
+    constructor(container: HTMLElement, pane: keyof google.maps.MapPanes, position: google.maps.LatLngLiteral) {
+      super();
+      this.container = container;
+      this.pane = pane;
+      this.position = position;
+    }
+    
+    onAdd() {
+      const panes = this.getPanes();
+      panes?.[this.pane].appendChild(this.container);
+    }
+    
+    draw() {
+      const projection = this.getProjection();
+      const point = projection?.fromLatLngToDivPixel(new google.maps.LatLng(this.position));
+      if (point) {
+        this.container.style.position = 'absolute';
+        this.container.style.left = `${point.x}px`;
+        this.container.style.top = `${point.y}px`;
+      }
+    }
+    
+    onRemove() {
+      this.container.parentNode?.removeChild(this.container);
+    }
+  }
+  return new CustomOverlay(container, pane, position);
+}
+
 export function LeadMapPane({ leads }: Props) {
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const { hoveredLeadId, selectedLeadId, setSelectedLeadId } = useLeadFeedState();
-
-  // Initialize map (reuse existing Google Maps setup from map page)
-  useEffect(() => {
-    // ... google maps init
-  }, []);
-
-  // Highlight marker when hovered/selected from list
-  useEffect(() => {
-    const activeId = selectedLeadId ?? hoveredLeadId;
-    // Update marker styles based on activeId
-  }, [hoveredLeadId, selectedLeadId]);
+  const map = useMap();
+  const { hoveredLeadId, selectedLeadId, setSelectedLeadId, setHoveredLeadId } = useLeadFeedState();
 
   return (
-    <div className="hidden lg:block sticky top-0 h-screen bg-[#1C1F26]">
-      <div id="lead-map" className="w-full h-full" />
+    <div className="hidden lg:block sticky top-0 h-screen bg-bg-feed">
+      <Map
+        defaultCenter={{ lat: 43.6532, lng: -79.3832 }}
+        defaultZoom={11}
+        gestureHandling="cooperative"
+        disableDefaultUI={false}
+        mapId="lead-map" // Required for AdvancedMarker
+      >
+        {leads.map(lead => {
+          if (!lead.latitude || !lead.longitude) return null;
+          const isActive = selectedLeadId === lead.id || hoveredLeadId === lead.id;
+          return (
+            <AdvancedMarker
+              key={lead.id}
+              position={{ lat: lead.latitude, lng: lead.longitude }}
+              onClick={() => setSelectedLeadId(lead.id)}
+              onMouseEnter={() => setHoveredLeadId(lead.id)}
+              onMouseLeave={() => setHoveredLeadId(null)}
+            >
+              <CustomMarker lead={lead} active={isActive} />
+            </AdvancedMarker>
+          );
+        })}
+      </Map>
+    </div>
+  );
+}
+
+/**
+ * CustomMarker — fully React-rendered marker. Because @vis.gl/react-google-maps
+ * supports AdvancedMarker which accepts arbitrary React children, we can use
+ * Tailwind, Motion, hover states, etc. — anything React can render.
+ */
+function CustomMarker({ lead, active }: { lead: LeadFeedItem; active: boolean }) {
+  return (
+    <div
+      className={`
+        px-3 py-1 rounded-full font-data text-xs font-bold shadow-lg
+        transition-all duration-150
+        ${active 
+          ? 'bg-amber-hardhat text-neutral-900 scale-110 z-10' 
+          : 'bg-bg-card-permit text-neutral-100 hover:scale-105'}
+      `}
+    >
+      {lead.lead_type === 'permit' && lead.cost_tier === 'major' ? '$$$$' : '$$'}
     </div>
   );
 }
 ```
 
+**Why `@vis.gl/react-google-maps`:**
+- Official Google library — actively maintained, supports `AdvancedMarkerElement` (the new marker API)
+- React-native lifecycle — markers are React components, no manual DOM manipulation
+- Built-in event handlers (`onClick`, `onMouseEnter`, `onMouseLeave`) eliminate manual hover state plumbing
+
+**Why the OverlayView + createPortal pattern is referenced:**
+- For markers that need the FULL power of React (Motion animations, complex compositions, conditional rendering trees), AdvancedMarker's child rendering has limitations
+- The OverlayView pattern wraps `google.maps.OverlayView` and uses `createPortal` to render React trees inside the overlay container
+- Reference: [Daw-Chih Liou's article](https://dawchihliou.github.io/articles/building-custom-google-maps-marker-react-component-like-airbnb-in-nextjs)
+- For V1 we use AdvancedMarker (simpler). If we need richer marker visuals (e.g., expanded preview cards on hover), we upgrade to OverlayView pattern in V2.
+
+**Map ↔ List sync:**
+- Hovering a list card sets `hoveredLeadId` in Zustand → marker re-renders with `active={true}` styling
+- Clicking a marker sets `selectedLeadId` → list parent calls `cardRef.scrollIntoView()` to bring the matching card into view
+- Bidirectional, no prop drilling, single source of truth in Zustand store
+
 **Key decisions:**
 - Hidden on mobile (`hidden lg:block`)
-- Subscribes to Zustand state for hoveredId/selectedId
-- Markers highlight when list cards are interacted with
-- Clicking a marker calls `setSelectedLeadId` → list scrolls to that card
+- `mapId="lead-map"` required for AdvancedMarker (Google's new marker API)
+- `gestureHandling="cooperative"` prevents accidental scroll-zoom on desktop
+- Custom markers use construction-material color tokens for consistency with cards
 
 ---
 
@@ -1421,25 +1557,36 @@ npm install \
   @tanstack/react-query \
   @tanstack/react-query-persist-client \
   @tanstack/query-async-storage-persister \
+  @tremor/react \
+  @vis.gl/react-google-maps \
   idb-keyval \
   @upstash/ratelimit \
   @upstash/redis \
   zustand \
-  vaul \
   motion \
-  react-intersection-observer \
-  react-simple-pull-to-refresh \
+  react-infinite-scroll-component \
+  react-hook-form \
+  @hookform/resolvers \
   zod \
   unfurl.js
 ```
 
 **What each solves:**
 - `@tanstack/react-query-persist-client` + `@tanstack/query-async-storage-persister` + `idb-keyval` → offline cache persistence (H1)
+- `@tremor/react` → `<ProgressCircle>` for TimingBadge score (battle-tested SVG doughnut)
+- `@vis.gl/react-google-maps` → official Google Maps wrapper with AdvancedMarker support
 - `@upstash/ratelimit` + `@upstash/redis` → rate limiting on API routes (C5)
 - `unfurl.js` → SSRF-safe OG image extraction in pipeline (C1)
 - `zustand` → map/list state sync without Redux
-- `vaul` → bottom sheet drawer
 - `motion` → spring animations (heart button, card expand)
+- `react-infinite-scroll-component` → infinite scroll AND pull-to-refresh in one (4.15kB)
+- `react-hook-form` + `@hookform/resolvers` → form management with Zod validation
+
+**Removed from earlier draft (replaced by single library):**
+- ❌ `react-intersection-observer` (replaced by `react-infinite-scroll-component`)
+- ❌ `react-simple-pull-to-refresh` (replaced by `react-infinite-scroll-component`)
+
+Note: `vaul` is NOT installed directly — Shadcn's `<Drawer>` (installed via `npx shadcn@latest add drawer`) wraps it.
 
 **Pipeline-only (install in `scripts/` context):**
 - `unfurl.js` runs in the Node pipeline `scripts/enrich-wsib.js`, never on the API server
@@ -1796,6 +1943,75 @@ npx shadcn@latest add sonner       # Toast notifications (save success/error)
 2. Replace generic neutral classes with our tokens
 3. Verify `min-h-[44px]` on interactive elements for touch targets
 4. Run `npm run typecheck` to confirm no type breakage
+
+### Impeccable — Claude Code Design Plugin
+
+**What it is:** A Claude Code plugin by Phil Bakaus that adds frontend design expertise to Claude. Includes 1 skill + **20 design-focused commands** specifically built as "the missing upgrade to Anthropic's frontend-design skill." Covers typography, color theory, spatial design, motion, interaction patterns, responsive design, and UX writing.
+
+**Install:**
+```bash
+npx claudepluginhub pbakaus/impeccable --plugin impeccable
+# Alternative: npx skills add pbakaus/impeccable
+```
+
+**Available commands (20 total):**
+
+| Command | Purpose |
+|---------|---------|
+| `/audit` | Run technical quality checks: a11y, performance, responsive |
+| `/critique` | UX design review focusing on hierarchy and clarity |
+| `/normalize` | Align with design system standards |
+| `/polish` | Final pre-deployment refinement |
+| `/animate` | Add purposeful animations and micro-interactions |
+| `/colorize` | Apply color theory and accessibility-aware palettes |
+| `/typeset` | Fix typography hierarchy and font pairing |
+| `/arrange` | Improve layout, spacing, and visual rhythm |
+| `/adapt` | Adapt to different screen sizes, devices, breakpoints, fluid layouts, touch targets |
+| Plus 11 others | Domain-specific design fixes |
+
+**License:** Apache 2.0
+**Repo:** [github.com/pbakaus/impeccable](https://github.com/pbakaus/impeccable)
+**Docs:** [impeccable.style](https://impeccable.style)
+
+**Workflow integration for Buildo lead feed:**
+
+| Phase | Impeccable command | When |
+|-------|--------------------|------|
+| Phase 4 (after PermitLeadCard built) | `/critique src/features/leads/components/PermitLeadCard.tsx` | Catch generic AI design output before it spreads across other cards |
+| Phase 4 (after BuilderLeadCard built) | `/critique src/features/leads/components/BuilderLeadCard.tsx` | Same |
+| Phase 5 (after feed integration) | `/arrange src/features/leads/components/LeadFeed.tsx` | Verify spacing rhythm and visual hierarchy across the whole feed |
+| Phase 5 (after sticky header + filter sheet) | `/adapt src/features/leads/` | Verify responsive behavior at 320/375/768/1024/1280px |
+| Phase 6 (after map integration) | `/critique src/features/leads/components/LeadMapPane.tsx` | Verify map ↔ list visual harmony |
+| Phase 7 (final pass) | `/polish src/features/leads/` | Pre-deployment refinement on the whole feature |
+| Phase 7 (accessibility audit) | `/audit src/features/leads/` | a11y + performance + responsive technical check |
+
+**Why this matters for Buildo:** The biggest risk with frontend AI work is that LLMs converge on generic "purple gradient on white" aesthetics. Impeccable's commands actively counter this with codified anti-patterns. Running `/critique` on each card after creation catches the generic output before it propagates.
+
+---
+
+### Per-Phase Tool Installation Breakdown
+
+This table makes explicit which tools get installed when, so Phase 0 doesn't try to install everything at once and Phase 4 doesn't need to scramble to find dependencies.
+
+| Phase | Day | Tools Installed | Why Now |
+|-------|-----|----------------|---------|
+| **Phase 0** | Day 1-2 | `@biomejs/biome`, `lint-staged`, stricter `tsconfig.json` | Logic safety net before any code is written |
+| **Phase 0** | Day 3-4 | `posthog-js`, `captureEvent` wrapper at `src/lib/observability/capture.ts` | Telemetry built in from first commit |
+| **Phase 0** | Day 5 | `@sentry/nextjs` via `npx @sentry/wizard@latest -i nextjs` | Error tracking before first deploy |
+| **Phase 0** | Day 6 | `pip install sqlfluff`, `scripts/validate-migration.js`, **Impeccable plugin** (`npx claudepluginhub pbakaus/impeccable --plugin impeccable`) | DB safety + design plugin available for upcoming UI work |
+| **Phase 0** | Day 7 | PostGIS extension + geography column + location sync trigger (DB-side, no npm install) | Database foundation |
+| **Phase 0** | Day 8-9 | `@lhci/cli` + `.lighthouserc.json` + GitHub Actions workflow | Performance budgets enforced on PRs |
+| **Phase 0** | Day 10 | `firebase-admin` (already installed), wire `verifyIdToken`, `@upstash/ratelimit`, `@upstash/redis`, rate limiter wrapper | Security foundation complete |
+| **Phase 1** | — | `@vis.gl/react-google-maps`, `@tremor/react` | Data layer + map library + score primitive (Tremor used by TimingBadge in Phase 4 but installed early so types are available) |
+| **Phase 2** | — | `zod` (already installed if frontend forms exist; otherwise install now) | API input validation |
+| **Phase 3** | — | `@tanstack/react-query`, `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister`, `idb-keyval`, `zustand` | State + offline cache |
+| **Phase 4** | — | `npx shadcn@latest init` + all 16 primitives, `motion`, `react-infinite-scroll-component`, `react-hook-form`, `@hookform/resolvers` | UI primitives + interaction libraries |
+| **Phase 5** | — | (no new tools — feed integration uses Phase 4 stack) | — |
+| **Phase 6** | — | (no new tools — desktop layout extension) | — |
+| **Phase 7** | — | `@tanstack/react-virtual` (conditional, only if feed > 50 cards), `playwright` (already installed for E2E), Impeccable `/polish` + `/audit` runs | Virtualization if needed + final design pass |
+
+**Pipeline-side (separate from Phase 0):**
+- `unfurl.js` — installed in `scripts/` for SSRF-safe OG image extraction in `enrich-wsib.js` extension
 
 ---
 

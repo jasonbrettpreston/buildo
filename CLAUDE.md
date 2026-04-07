@@ -416,6 +416,10 @@ When operating in Frontend Mode, you MUST adhere to these rules. Required readin
 | Telemetry | **PostHog** via `src/lib/observability/capture.ts` `captureEvent()` wrapper | Every user interaction (`onClick`, `onSubmit`) MUST call `captureEvent()` (AST-grep enforced in `src/features/leads/`) |
 | Error tracking | **Sentry** wired into `app/[...]/error.tsx` route boundaries | Source maps uploaded on build |
 | Auth | **Firebase Auth** with `verifyIdToken` in middleware | Already in production. NEVER swap for Clerk or other providers without architectural approval. |
+| Score circles / dashboard primitives | **Tremor** (`@tremor/react`) | `<ProgressCircle>`, `<BarList>`, `<Tracker>` for data viz. Pairs with Shadcn — both copy-paste, both Apache 2.0. |
+| Map (frontend) | **`@vis.gl/react-google-maps`** with `AdvancedMarker` | Official Google library. For richer marker visuals, escalate to OverlayView + createPortal pattern. |
+| Infinite scroll + pull-to-refresh | **`react-infinite-scroll-component`** | Single library handles BOTH behaviors (4.15kB). Do NOT install separate scroll-trigger + pull-refresh libraries. |
+| Design quality | **Impeccable** Claude Code plugin (`pbakaus/impeccable`) | 20 commands for layout, typography, motion, accessibility audits. Run `/critique` after building each component, `/polish` + `/audit` before final commit. |
 
 **Rules to never violate:**
 
