@@ -65,17 +65,21 @@ src/
 
 **Principle:** Default to Server Components. Only add `"use client"` at leaf interactive nodes.
 
+**Critical rule (Next.js 15):** A Client Component CANNOT import a Server Component via `import` and render it inline. Server Components can only be passed into Client Components via `children` props from a higher Server Component parent. If a child needs to be imported into a Client Component, it MUST itself be a Client Component.
+
 | Component | Type | Why |
 |-----------|------|-----|
-| `/leads/page.tsx` | Server | Renders metadata, auth check, initial data |
-| `LeadFeed.tsx` | Client | Needs state for hover/select sync with map |
-| `PermitLeadCard.tsx` | Client | Needs interaction (expand, save, navigate) |
-| `BuilderLeadCard.tsx` | Client | Needs tap-to-call, save interaction |
-| `LeadFeedHeader.tsx` | Client | Scroll detection, filter sheet trigger |
-| `LeadFilterSheet.tsx` | Client | Vaul drawer state |
-| `LeadMapPane.tsx` | Client | Map interaction, marker state |
-| `SkeletonLeadCard.tsx` | Server | Pure visual, no interaction |
-| `EmptyLeadState.tsx` | Server | Pure visual |
+| `/leads/page.tsx` | **Server** | Auth check, layout shell, metadata. Does NOT fetch lead data — that happens client-side via TanStack Query (see V2 SSR upgrade path note below). |
+| `LeadFeed.tsx` | **Client** | Needs state for hover/select sync, infinite scroll, pull-to-refresh |
+| `PermitLeadCard.tsx` | **Client** | Needs interaction (expand, save, navigate) |
+| `BuilderLeadCard.tsx` | **Client** | Needs tap-to-call, save interaction |
+| `LeadFeedHeader.tsx` | **Client** | Scroll detection, filter sheet trigger |
+| `LeadFilterSheet.tsx` | **Client** | Vaul drawer state |
+| `LeadMapPane.tsx` | **Client** | Map interaction, marker state |
+| `SkeletonLeadCard.tsx` | **Client** | Imported by `LeadFeed` (Client). Pure visual but must be Client for the import to work. No SSR benefit lost — it's a placeholder anyway. |
+| `EmptyLeadState.tsx` | **Client** | Same reason — imported by `LeadFeed`. Also uses `useLeadFeedState` to read filter state for the "expand radius" CTA, which requires client-side state. |
+
+**V2 SSR upgrade path (deferred):** If we want true server-side prefetching of leads for first-paint speed, the upgrade is to use TanStack Query's `dehydrate` + `<HydrationBoundary>` pattern in the Server Component page. The fetch would happen on the server, get serialized to HTML, and rehydrate client-side without a loading state. This is a larger refactor and not needed for V1 — call it out in the §11 build sequence as a V2 enhancement.
 
 ### 1.3 State Management (React Best Practices §2)
 
@@ -103,6 +107,8 @@ src/
 ```
 
 State flows down. Interactions flow up to Zustand. Both feed and map subscribe to the same store.
+
+**Critical: data deduplication via TanStack Query.** Both `LeadFeed` and `LeadMapPane` call `useLeadFeed(...)` with the same query key (lat/lng/trade/radius). TanStack Query deduplicates: only ONE network request goes out, both components consume the same cached result. This is the right pattern — DO NOT pass leads as a prop from the page to the map. Lifting fetch to the page would require either prop drilling through every component or a duplicate fetch in the map.
 
 ---
 
@@ -447,6 +453,8 @@ npm install zustand
 ```tsx
 'use client';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { useLeadFeed } from '../api/useLeadFeed';
 import { useLeadFeedState } from '../hooks/useLeadFeedState';
 import { PermitLeadCard } from './PermitLeadCard';
@@ -461,14 +469,36 @@ interface LeadFeedProps {
 
 export function LeadFeed({ tradeSlug }: LeadFeedProps) {
   const { location, radiusKm } = useLeadFeedState();
+  const queryClient = useQueryClient();
 
-  const { data, isLoading, hasNextPage, fetchNextPage, refetch } =
+  const { data, isLoading, hasNextPage, fetchNextPage } =
     useLeadFeed({
       lat: location?.lat ?? 0,
       lng: location?.lng ?? 0,
       tradeSlug,
       radiusKm,
     });
+
+  // Pull-to-refresh: invalidate ONLY the first page rather than the entire
+  // infinite query. Preserves scroll position by NOT replacing the cache.
+  // The user sees fresh items prepended at the top while their current
+  // scroll position stays put. V2 enhancement: diff page 1 against cached
+  // page 1 and animate the new items in.
+  const handleRefresh = async () => {
+    const result = await queryClient.fetchInfiniteQuery({
+      queryKey: ['leadFeed', { 
+        lat: Math.round((location?.lat ?? 0) * 1000) / 1000, 
+        lng: Math.round((location?.lng ?? 0) * 1000) / 1000, 
+        tradeSlug, 
+        radiusKm 
+      }],
+      pages: 1, // Only refetch first page
+    });
+    const newCount = result?.pages?.[0]?.data?.length ?? 0;
+    if (newCount > 0) {
+      toast.success(`Updated — ${newCount} leads in your area`);
+    }
+  };
 
   if (!location) return <EmptyLeadState reason="no_location" />;
   if (isLoading) return <LoadingFeed />;
@@ -482,15 +512,17 @@ export function LeadFeed({ tradeSlug }: LeadFeedProps) {
       <InfiniteScroll
         dataLength={leads.length}
         next={fetchNextPage}
-        hasMore={hasNextPage ?? false}
+        hasMore={(hasNextPage ?? false) && leads.length < 75 /* V1 hard cap */}
         loader={<><SkeletonLeadCard /><SkeletonLeadCard /></>}
         endMessage={
           <p className="text-center font-display text-sm text-gray-steel py-6">
-            That's all the leads in your area. Pull to refresh.
+            {leads.length >= 75 
+              ? 'Showing top 75 results — refine your search to see different leads.'
+              : "That's all the leads in your area. Pull to refresh."}
           </p>
         }
-        // Pull-to-refresh built in to the same component
-        refreshFunction={refetch}
+        // Pull-to-refresh: refetches only page 1, preserves scroll position
+        refreshFunction={handleRefresh}
         pullDownToRefresh
         pullDownToRefreshThreshold={67}
         pullDownToRefreshContent={
@@ -1334,10 +1366,11 @@ import { useEffect, useRef, useCallback } from 'react';
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { createPortal } from 'react-dom';
 import { useLeadFeedState } from '../hooks/useLeadFeedState';
+import { useLeadFeed } from '../api/useLeadFeed';
 import type { LeadFeedItem } from '../types';
 
 interface Props {
-  leads: LeadFeedItem[];
+  tradeSlug: string;
 }
 
 /**
@@ -1385,9 +1418,20 @@ function createOverlay(
   return new CustomOverlay(container, pane, position);
 }
 
-export function LeadMapPane({ leads }: Props) {
+export function LeadMapPane({ tradeSlug }: Props) {
   const map = useMap();
-  const { hoveredLeadId, selectedLeadId, setSelectedLeadId, setHoveredLeadId } = useLeadFeedState();
+  const { location, radiusKm, hoveredLeadId, selectedLeadId, setSelectedLeadId, setHoveredLeadId } = useLeadFeedState();
+  
+  // Subscribe to the SAME query key as LeadFeed. TanStack Query deduplicates —
+  // one network request, two consumers. The map gets the exact same data the
+  // feed is rendering, with zero coordination code.
+  const { data } = useLeadFeed({
+    lat: location?.lat ?? 0,
+    lng: location?.lng ?? 0,
+    tradeSlug,
+    radiusKm,
+  });
+  const leads = data?.pages.flatMap(p => p.data) ?? [];
 
   return (
     <div className="hidden lg:block sticky top-0 h-screen bg-bg-feed">
@@ -1456,6 +1500,8 @@ function CustomMarker({ lead, active }: { lead: LeadFeedItem; active: boolean })
 - Clicking a marker sets `selectedLeadId` → list parent calls `cardRef.scrollIntoView()` to bring the matching card into view
 - Bidirectional, no prop drilling, single source of truth in Zustand store
 
+**Active state priority (race condition resolution):** When a user is simultaneously hovering one card and has selected another, `selectedLeadId` wins. The `isActive` check is `selectedLeadId === lead.id || (selectedLeadId === null && hoveredLeadId === lead.id)` — selection is sticky, hover is a transient preview that only highlights when nothing is selected. Clicking elsewhere clears `selectedLeadId` to allow hover preview again.
+
 **Key decisions:**
 - Hidden on mobile (`hidden lg:block`)
 - `mapId="lead-map"` required for AdvancedMarker (Google's new marker API)
@@ -1481,23 +1527,22 @@ export default async function LeadsPage() {
   return (
     <main className="lg:grid lg:grid-cols-[500px_1fr] lg:gap-0 min-h-screen bg-[#1C1F26]">
       <div className="overflow-y-auto max-h-screen">
-        <Suspense fallback={<LoadingState />}>
-          <LeadFeed tradeSlug={tradeSlug} />
-        </Suspense>
+        <LeadFeed tradeSlug={tradeSlug} />
       </div>
-      <Suspense fallback={null}>
-        <LeadMapPane leads={[]} />
-      </Suspense>
+      <LeadMapPane tradeSlug={tradeSlug} />
     </main>
   );
 }
 ```
 
 **Key decisions:**
-- Server Component by default — auth check runs on server
-- Suspense boundaries for streaming
+- Server Component for auth check + layout shell only — does NOT fetch lead data
+- All data fetching happens client-side via TanStack Query in `LeadFeed` and `LeadMapPane`
+- Both child components subscribe to the same query key — TanStack Query deduplicates the network request
+- No `Suspense` boundary needed because there's no server-side data dependency. Loading states are handled by the components themselves via TanStack Query's `isLoading`.
 - Desktop grid `lg:grid-cols-[500px_1fr]` — feed fixed 500px, map fills rest (Zillow pattern)
 - Mobile: single column (grid breaks on `< lg`)
+- **V2 SSR upgrade path:** Implement `dehydrate` + `<HydrationBoundary>` from TanStack Query to enable server-side prefetch with hydration. Adds first-paint speed at the cost of complexity. Defer to V2.
 
 ---
 
@@ -2305,25 +2350,75 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
          storage: createJSONStorage(() => localStorage),
          // Only persist filter state — not ephemeral hover/select
          partialize: (state) => ({ radiusKm: state.radiusKm, location: state.location }),
+         // Versioning + migration: bump `version` whenever the persisted shape
+         // changes so existing users don't crash on stale localStorage data.
+         version: 1,
+         migrate: (persistedState: any, version: number) => {
+           if (version === 0) {
+             // Example: if v0 stored location as a string, convert to object
+             return { ...persistedState, location: null };
+           }
+           return persistedState;
+         },
        }
      )
    );
    ```
 
-2. TanStack Query hooks with **`PersistQueryClient`** for offline cache (24h IndexedDB). **Round lat/lng to ~3 decimals (~110m grid) in query key** to prevent GPS jitter from creating unbounded cache entries (N13):
+2. TanStack Query hooks with **`PersistQueryClient`** for offline cache (24h IndexedDB). **Two-layer location handling:** rounded query key prevents GPS jitter cache thrash, but a separate effect forces a refetch when the user genuinely moves >500m (N13):
    ```typescript
+   import { useEffect, useRef } from 'react';
+   import { useQueryClient } from '@tanstack/react-query';
+   
+   const FORCED_REFETCH_THRESHOLD_M = 500;
+   const COORD_PRECISION = 1000; // 3 decimals = ~110m grid
+   
+   function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+     const R = 6371000;
+     const dLat = (lat2 - lat1) * Math.PI / 180;
+     const dLng = (lng2 - lng1) * Math.PI / 180;
+     const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2) ** 2;
+     return 2 * R * Math.asin(Math.sqrt(a));
+   }
+   
    export function useLeadFeed(params: LeadFeedParams) {
-     // Round location to 3 decimal places — ~110m grid, prevents GPS jitter
-     // from generating unique cache keys on every tiny location change
-     const roundedLat = Math.round(params.lat * 1000) / 1000;
-     const roundedLng = Math.round(params.lng * 1000) / 1000;
+     // Layer 1: Round to ~110m grid for query key. Prevents GPS jitter from
+     // creating unique cache entries on every tiny coordinate change.
+     const roundedLat = Math.round(params.lat * COORD_PRECISION) / COORD_PRECISION;
+     const roundedLng = Math.round(params.lng * COORD_PRECISION) / COORD_PRECISION;
+     const queryKey = ['leadFeed', { ...params, lat: roundedLat, lng: roundedLng }];
+     
+     const queryClient = useQueryClient();
+     const lastQueriedRef = useRef<{ lat: number; lng: number } | null>(null);
+     
+     // Layer 2: Force refetch when user actually moves >500m. This catches the
+     // case where rounding hides legitimate movement (e.g., walking 100m doesn't
+     // change rounded coords, so the cache returns stale data without this effect).
+     useEffect(() => {
+       if (!lastQueriedRef.current) {
+         lastQueriedRef.current = { lat: params.lat, lng: params.lng };
+         return;
+       }
+       const moved = haversineMeters(
+         lastQueriedRef.current.lat, lastQueriedRef.current.lng,
+         params.lat, params.lng
+       );
+       if (moved > FORCED_REFETCH_THRESHOLD_M) {
+         lastQueriedRef.current = { lat: params.lat, lng: params.lng };
+         queryClient.invalidateQueries({ queryKey });
+       }
+     }, [params.lat, params.lng, queryKey, queryClient]);
      
      return useInfiniteQuery({
-       queryKey: ['leadFeed', { ...params, lat: roundedLat, lng: roundedLng }],
-       // ... rest of hook
+       queryKey,
+       queryFn: async ({ pageParam = 1 }) => { /* ... */ },
+       getNextPageParam: (lastPage, allPages) => { /* ... */ },
+       initialPageParam: 1,
      });
    }
    ```
+   
+   **Why both layers:** Layer 1 alone causes stale data when moving 50-499m. Layer 2 alone causes cache thrash from GPS jitter. Together: stable cache + responsive to real movement.
    
    Then wrap with PersistQueryClient:
    ```tsx
@@ -2348,7 +2443,15 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
      {children}
    </PersistQueryClientProvider>
    ```
-3. `useGeolocation` hook with fallback chain (browser → saved home base → onboarding prompt)
+3. `useGeolocation` hook with fallback chain (browser → saved home base → onboarding prompt). **Must check permission state via `navigator.permissions.query({ name: 'geolocation' })` and handle the `denied` state explicitly** — if the user has permanently denied geolocation, the "Enable Location" button in `EmptyLeadState` cannot programmatically re-prompt. Instead, show a "How to enable in browser settings" link with platform-specific instructions, and prefer the "Set Home Base" CTA. Pseudo-flow:
+   ```typescript
+   const permission = await navigator.permissions.query({ name: 'geolocation' });
+   if (permission.state === 'denied') {
+     // Cannot re-prompt — guide user to settings or fall back to home base
+     return { status: 'permanently_denied', cta: 'set_home_base' };
+   }
+   // ... normal getCurrentPosition flow
+   ```
 4. Tailwind config + font setup
 
 ### Phase 4: Presentational Components (No Data)
