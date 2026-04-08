@@ -152,9 +152,13 @@ function determineBaseRate(permit: CostModelPermitInput): number {
     return BASE_RATES.sfd; // default to SFD for unknown residential
   }
 
-  // Renovation / alteration path
+  // Renovation / alteration path. Check "interior" BEFORE "alteration" so
+  // "Interior Alteration" gets the interior_reno rate, not addition.
   const pt = (permit.permit_type ?? '').toLowerCase();
   const work = (permit.work ?? '').toLowerCase();
+  if (pt.includes('interior') || work.includes('interior')) {
+    return BASE_RATES.interior_reno;
+  }
   if (pt.includes('addition') || pt.includes('alteration') || work.includes('addition')) {
     return BASE_RATES.addition;
   }

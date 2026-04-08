@@ -134,7 +134,7 @@ describe('estimateCost — base rate categories', () => {
     expect(BASE_RATES.interior_reno).toBe(1150);
   });
 
-  it('applies SFD rate to a detached new build with full data', () => {
+  it('applies SFD rate to a detached new build with full data — exact $1,380,000', () => {
     // 200 sqm × 2 stories × 3000/sqm × 1.15 premium (80K income) = 1,380,000
     const result = estimateCost(
       makePermit({ permit_type: 'New Building', structure_type: 'Detached Dwelling' }),
@@ -143,8 +143,64 @@ describe('estimateCost — base rate categories', () => {
       makeNeighbourhood({ avg_household_income: 80000 }),
     );
     expect(result.cost_source).toBe('model');
-    expect(result.estimated_cost).toBeGreaterThan(1_000_000);
-    expect(result.estimated_cost).toBeLessThan(1_500_000);
+    expect(result.estimated_cost).toBeCloseTo(1_380_000, 0);
+    expect(result.cost_tier).toBe('large');
+  });
+
+  it('applies semi/town rate — 200 sqm × 2 × 2600 × 1.0 (no premium) = $1,040,000', () => {
+    const result = estimateCost(
+      makePermit({ permit_type: 'New Building', structure_type: 'Semi-detached' }),
+      makeParcel(),
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: 2 }),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(result.estimated_cost).toBeCloseTo(1_040_000, 0);
+  });
+
+  it('applies multi-res rate — 200 sqm × 2 × 3400 × 1.0 = $1,360,000', () => {
+    const result = estimateCost(
+      makePermit({ permit_type: 'New Building', structure_type: 'Multi-residential' }),
+      makeParcel(),
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: 2 }),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(result.estimated_cost).toBeCloseTo(1_360_000, 0);
+  });
+
+  it('applies commercial rate — 200 sqm × 2 × 4000 × 1.0 = $1,600,000', () => {
+    const result = estimateCost(
+      makePermit({ permit_type: 'New Building', structure_type: 'Commercial' }),
+      makeParcel(),
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: 2 }),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(result.estimated_cost).toBeCloseTo(1_600_000, 0);
+  });
+
+  it('applies addition rate — renovation path, 200 sqm × 2 × 2000 × 1.0 = $800,000', () => {
+    const result = estimateCost(
+      makePermit({
+        permit_type: 'Addition/Alteration',
+        structure_type: 'Detached Dwelling',
+      }),
+      makeParcel(),
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: 2 }),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(result.estimated_cost).toBeCloseTo(800_000, 0);
+  });
+
+  it('applies interior renovation rate — 200 sqm × 2 × 1150 × 1.0 = $460,000', () => {
+    const result = estimateCost(
+      makePermit({
+        permit_type: 'Interior Alteration',
+        structure_type: 'Detached Dwelling',
+      }),
+      makeParcel(),
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: 2 }),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(result.estimated_cost).toBeCloseTo(460_000, 0);
   });
 });
 
@@ -167,22 +223,27 @@ describe('estimateCost — urban-aware fallback (no footprint)', () => {
     expect(urban.estimated_cost ?? 0).toBeGreaterThan(suburban.estimated_cost ?? 0);
   });
 
-  it('residential defaults to 2 floors, commercial to 1', () => {
+  it('residential uses 2 floors, commercial uses 1 (distinct area calculations)', () => {
+    // Residential: 500 × 0.4 × 2 floors × 3000 rate × 1.15 premium = 1,380,000
+    // Commercial:  500 × 0.4 × 1 floor  × 4000 rate × 1.15 premium =   920,000
     const res = estimateCost(
       makePermit({ permit_type: 'New Building', structure_type: 'Detached Dwelling' }),
       makeParcel({ lot_size_sqm: 500 }),
       null,
-      makeNeighbourhood({ tenure_renter_pct: 40 }),
+      makeNeighbourhood({ tenure_renter_pct: 40, avg_household_income: 80_000 }),
     );
     const com = estimateCost(
       makePermit({ permit_type: 'New Building', structure_type: 'Commercial' }),
       makeParcel({ lot_size_sqm: 500 }),
       null,
-      makeNeighbourhood({ tenure_renter_pct: 40 }),
+      makeNeighbourhood({ tenure_renter_pct: 40, avg_household_income: 80_000 }),
     );
-    // Residential should have higher cost (more floors); commercial has higher per-sqm
-    // but lower floors_estimate — we check residential multiplier is > commercial's single-floor
-    expect(res.estimated_cost).not.toBe(com.estimated_cost);
+    expect(res.estimated_cost).not.toBeNull();
+    expect(com.estimated_cost).not.toBeNull();
+    expect(res.estimated_cost).toBeCloseTo(1_380_000, 0);
+    expect(com.estimated_cost).toBeCloseTo(920_000, 0);
+    // Direction check: residential > commercial in this scenario
+    expect(res.estimated_cost).toBeGreaterThan(com.estimated_cost ?? 0);
   });
 
   it('fallback path produces ±50% range, not ±25%', () => {
@@ -192,11 +253,15 @@ describe('estimateCost — urban-aware fallback (no footprint)', () => {
       null,
       makeNeighbourhood(),
     );
-    if (result.estimated_cost !== null && result.cost_range_low !== null && result.cost_range_high !== null) {
-      const spread = (result.cost_range_high - result.cost_range_low) / result.estimated_cost;
-      // ±50% → spread ≈ 1.0 (low is 0.5×, high is 1.5×)
-      expect(spread).toBeCloseTo(1.0, 1);
-    }
+    expect(result.estimated_cost).not.toBeNull();
+    expect(result.cost_range_low).not.toBeNull();
+    expect(result.cost_range_high).not.toBeNull();
+    const cost = result.estimated_cost ?? 0;
+    const low = result.cost_range_low ?? 0;
+    const high = result.cost_range_high ?? 0;
+    const spread = (high - low) / cost;
+    // ±50% → spread ≈ 1.0 (low is 0.5×, high is 1.5×)
+    expect(spread).toBeCloseTo(1.0, 1);
   });
 });
 

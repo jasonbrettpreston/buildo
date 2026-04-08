@@ -27,7 +27,12 @@ export function kilometersFromMeters(meters: number): number {
  *   ≥10000    → "10km" / "50km" (whole kilometers)
  */
 export function formatDistanceForDisplay(meters: number): string {
-  if (meters < 1000) return `${Math.round(meters)}m`;
+  // Defensive: reject non-finite and negative inputs. Returns a neutral
+  // placeholder rather than "-500m" or "NaNkm" which would leak to the UI.
+  if (!Number.isFinite(meters) || meters < 0) return '—';
+  // Floor sub-kilometer values so 999.9 → "999m" not "1000m" (which would
+  // shadow the 1.0km format for the very next input).
+  if (meters < 1000) return `${Math.floor(meters)}m`;
   const km = meters / 1000;
   if (km >= 10) return `${Math.round(km)}km`;
   return `${km.toFixed(1)}km`;

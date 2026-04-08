@@ -109,8 +109,13 @@ function determineBaseRate(permit) {
     return BASE_RATES.sfd;
   }
 
+  // Renovation / alteration path. Check "interior" BEFORE "alteration" so
+  // "Interior Alteration" gets the interior_reno rate, not addition.
   const pt = (permit.permit_type || '').toLowerCase();
   const work = (permit.work || '').toLowerCase();
+  if (pt.includes('interior') || work.includes('interior')) {
+    return BASE_RATES.interior_reno;
+  }
   if (pt.includes('addition') || pt.includes('alteration') || work.includes('addition')) {
     return BASE_RATES.addition;
   }
@@ -333,6 +338,10 @@ async function flushBatch(pool, rows) {
 }
 
 pipeline.run('compute-cost-estimates', async (pool) => {
+  // Session-scoped advisory lock. Postgres auto-releases the lock when the
+  // connection closes, which the Pipeline SDK does on script exit — so even
+  // a crash mid-run doesn't leak the lock. We still call pg_advisory_unlock
+  // in the finally block for the happy path.
   const lockRes = await pool.query('SELECT pg_try_advisory_lock($1) AS locked', [
     ADVISORY_LOCK_ID,
   ]);

@@ -37,6 +37,17 @@ describe('distance helpers', () => {
       expect(formatDistanceForDisplay(999)).toBe('999m');
     });
 
+    it('floors fractional meters below 1km (no round-up to 1000m)', () => {
+      expect(formatDistanceForDisplay(999.9)).toBe('999m');
+      expect(formatDistanceForDisplay(450.7)).toBe('450m');
+    });
+
+    it('rejects non-finite and negative inputs with neutral placeholder', () => {
+      expect(formatDistanceForDisplay(Number.NaN)).toBe('—');
+      expect(formatDistanceForDisplay(Number.POSITIVE_INFINITY)).toBe('—');
+      expect(formatDistanceForDisplay(-500)).toBe('—');
+    });
+
     it('formats 1-10 km with one decimal', () => {
       expect(formatDistanceForDisplay(1000)).toBe('1.0km');
       expect(formatDistanceForDisplay(1234)).toBe('1.2km');
