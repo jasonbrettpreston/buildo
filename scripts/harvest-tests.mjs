@@ -42,8 +42,7 @@ function extractDescribes(filePath) {
     const content = fs.readFileSync(filePath, 'utf-8');
     const describes = [];
     const regex = /^describe\(['"`]([^'"`]+)['"`]/gm;
-    let match;
-    while ((match = regex.exec(content)) !== null) {
+    for (const match of content.matchAll(regex)) {
       describes.push(match[1]);
     }
     return describes;

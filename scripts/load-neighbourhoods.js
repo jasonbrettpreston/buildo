@@ -222,7 +222,7 @@ async function loadProfiles(pool, xlsxPath) {
 
   if (Object.keys(neighbourhoodColumns).length === 0) {
     pipeline.log.info('[load-neighbourhoods]','  WARNING: No neighbourhood columns found. Listing first 5 headers:');
-    headerKeys.slice(0, 5).forEach(h => pipeline.log.info('[load-neighbourhoods]', `    "${h}"`));
+    headerKeys.slice(0, 5).forEach(h => { pipeline.log.info('[load-neighbourhoods]', `    "${h}"`); });
     return;
   }
 

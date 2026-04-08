@@ -6,7 +6,11 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["src/features/leads/**", "src/lib/observability/**"]
+    "includes": [
+      "src/features/leads/**",
+      "src/lib/observability/**",
+      "src/app/api/**"
+    ]
   },
   "formatter": {
     "enabled": false
@@ -28,5 +32,26 @@
         "noFloatingPromises": "error"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/app/api/**"],
+      "assist": {
+        "enabled": false
+      },
+      "linter": {
+        "rules": {
+          "recommended": false,
+          "suspicious": {
+            "noAssignInExpressions": "error",
+            "useIterableCallbackReturn": "error",
+            "noExplicitAny": "error"
+          },
+          "nursery": {
+            "noFloatingPromises": "error"
+          }
+        }
+      }
+    }
+  ]
 }

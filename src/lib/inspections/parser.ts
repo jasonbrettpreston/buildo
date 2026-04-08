@@ -18,16 +18,14 @@ export function parseInspectionTable(
 
   // Match each <tr> containing <td> cells
   const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-  let rowMatch;
 
-  while ((rowMatch = rowRegex.exec(html)) !== null) {
+  for (const rowMatch of html.matchAll(rowRegex)) {
     const rowHtml = rowMatch[1] ?? '';
 
     // Extract all <td> contents
     const cells: string[] = [];
     const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
-    let cellMatch;
-    while ((cellMatch = cellRegex.exec(rowHtml)) !== null) {
+    for (const cellMatch of rowHtml.matchAll(cellRegex)) {
       // Strip inner HTML tags and trim
       cells.push((cellMatch[1] ?? '').replace(/<[^>]*>/g, '').trim());
     }

@@ -128,7 +128,7 @@ async function run() {
     const allTables = new Set();
     for (const slug of steps) {
       const meta = manifest.scripts[slug];
-      if (meta?.telemetry_tables) meta.telemetry_tables.forEach((t) => allTables.add(t));
+      if (meta?.telemetry_tables) meta.telemetry_tables.forEach((t) => { allTables.add(t); });
     }
     for (const table of allTables) {
       const res = await pool.query(

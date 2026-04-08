@@ -165,8 +165,7 @@ async function fetchGeoJsonPropertyKeys(url, label) {
   // Extract key names from the properties object fragment
   const keys = [];
   const keyPattern = /"([^"]+)"\s*:/g;
-  let m;
-  while ((m = keyPattern.exec(match[1])) !== null) {
+  for (const m of match[1].matchAll(keyPattern)) {
     keys.push(m[1]);
   }
   return keys;

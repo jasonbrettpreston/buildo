@@ -170,10 +170,9 @@ function validateMigration(content, filename) {
 
   // Rule 1: DROP TABLE / DROP COLUMN / ALTER TABLE ... DROP COLUMN / TRUNCATE TABLE.
   const dropRe = /\b(DROP\s+(?:TABLE|COLUMN)|ALTER\s+TABLE\s+[^;]*?\s+DROP\s+COLUMN|TRUNCATE\s+TABLE)\b/gi;
-  let m;
-  while ((m = dropRe.exec(stripped)) !== null) {
+  for (const m of stripped.matchAll(dropRe)) {
     if (!allowDestructive) {
-      const line = lineOf(content, m.index);
+      const line = lineOf(content, m.index ?? 0);
       const raw = m[1].replace(/\s+/g, ' ').toUpperCase();
       let label;
       if (raw.startsWith('TRUNCATE')) label = 'TRUNCATE TABLE';
@@ -188,15 +187,14 @@ function validateMigration(content, filename) {
   // Rule 2: CREATE INDEX without CONCURRENTLY on large tables.
   // Match across newlines until a semicolon OR end of content.
   const indexRe = /CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:CONCURRENTLY\s+)?[\s\S]*?(?:;|$)/gi;
-  let im;
-  while ((im = indexRe.exec(stripped)) !== null) {
+  for (const im of stripped.matchAll(indexRe)) {
     const stmt = im[0];
     const isConcurrent = /\bCONCURRENTLY\b/i.test(stmt);
     const onMatch = /\bON\s+(?:ONLY\s+)?(?:"?([a-zA-Z_][a-zA-Z0-9_]*)"?\.)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?/i.exec(stmt);
     if (!onMatch) continue;
     const tableName = (onMatch[2] || '').toLowerCase();
     if (!isConcurrent && LARGE_TABLES.includes(tableName)) {
-      const line = lineOf(content, im.index);
+      const line = lineOf(content, im.index ?? 0);
       errors.push(
         `${display}:${line}: CREATE INDEX on large table '${tableName}' must use CONCURRENTLY`,
       );
@@ -208,15 +206,14 @@ function validateMigration(content, filename) {
   // multi-clause ALTERs (e.g. `ADD COLUMN a INT, ADD COLUMN b TEXT NOT NULL`)
   // are fully inspected.
   const alterRe = /ALTER\s+TABLE\s+[^;]*/gi;
-  let aMatch;
-  while ((aMatch = alterRe.exec(stripped)) !== null) {
+  for (const aMatch of stripped.matchAll(alterRe)) {
     const fullStmt = aMatch[0];
     // Strip the leading `ALTER TABLE <name>` — we only care about the clauses.
     const bodyMatch = /ALTER\s+TABLE\s+(?:ONLY\s+)?(?:"?[\w]+"?\.)?"?[\w]+"?\s+([\s\S]*)$/i.exec(fullStmt);
     if (!bodyMatch) continue;
     const body = bodyMatch[1];
     const clauses = splitTopLevelCommas(body);
-    let cursor = aMatch.index + (fullStmt.length - body.length);
+    let cursor = (aMatch.index ?? 0) + (fullStmt.length - body.length);
     for (const clause of clauses) {
       const addMatch = /^\s*ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?/i.exec(clause);
       if (addMatch) {
