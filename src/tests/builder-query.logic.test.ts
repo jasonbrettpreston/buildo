@@ -47,6 +47,16 @@ describe('BUILDER_QUERY_SQL — structure', () => {
     expect(BUILDER_QUERY_SQL).toMatch(/ST_MakePoint\(\$2::float8,\s*\$3::float8\)::geography/);
   });
 
+  it('explicitly casts p.location to ::geography for meter-based distance', () => {
+    // Regression: same as get-lead-feed.logic.test.ts. The column is stored
+    // as `geometry(Point, 4326)` for GIST compatibility but distance math
+    // must be meters. The explicit cast removes PostGIS function-resolution
+    // ambiguity. Caught by Gemini Phase 0+1 holistic review.
+    expect(BUILDER_QUERY_SQL).toMatch(/p\.location::geography/);
+    expect(BUILDER_QUERY_SQL).not.toMatch(/p\.location <->/);
+    expect(BUILDER_QUERY_SQL).not.toMatch(/ST_DWithin\(p\.location,/);
+  });
+
   it('includes the multi-WSIB tie-breaker subquery (most-recent enrichment wins)', () => {
     expect(BUILDER_QUERY_SQL).toMatch(/ORDER BY w\.last_enriched_at DESC LIMIT 1/);
   });

@@ -30,7 +30,11 @@ export const BUILDER_QUERY_SQL = `
     SELECT
       ep.entity_id,
       p.permit_num, p.revision_num, p.status, p.est_const_cost,
-      (p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) AS distance_m
+      -- Explicit ::geography cast on p.location forces meter-based KNN
+      -- distance regardless of PostGIS function-resolution behavior. The
+      -- column is stored as geometry(Point, 4326) (migration 067) for
+      -- GIST index compatibility, but distance math must be meters.
+      (p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) AS distance_m
     FROM permits p
     JOIN entity_projects ep
       ON ep.permit_num = p.permit_num
@@ -44,7 +48,7 @@ export const BUILDER_QUERY_SQL = `
     JOIN trades t ON t.id = pt.trade_id AND t.slug = $1
     WHERE p.status IN ('Permit Issued', 'Inspection')
       AND p.location IS NOT NULL
-      AND ST_DWithin(p.location, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)
+      AND ST_DWithin(p.location::geography, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)
   ),
   builder_aggregates AS (
     SELECT

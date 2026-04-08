@@ -76,15 +76,15 @@ export const LEAD_FEED_SQL = `
       NULL::text AS photo_url,
       p.latitude,
       p.longitude,
-      (p.location <-> ST_MakePoint($2::float8, $3::float8)::geography)::float8 AS distance_m,
+      (p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography)::float8 AS distance_m,
       -- Pillar 1: proximity (0-30)
       CASE
-        WHEN (p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 500   THEN 30
-        WHEN (p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 1000  THEN 25
-        WHEN (p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 2000  THEN 20
-        WHEN (p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 5000  THEN 15
-        WHEN (p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 10000 THEN 10
-        WHEN (p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 20000 THEN 5
+        WHEN (p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 500   THEN 30
+        WHEN (p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 1000  THEN 25
+        WHEN (p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 2000  THEN 20
+        WHEN (p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 5000  THEN 15
+        WHEN (p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 10000 THEN 10
+        WHEN (p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 20000 THEN 5
         ELSE 0
       END AS proximity_score,
       -- Pillar 2: timing (0-30) — fast SQL proxy via permit_trades.phase
@@ -119,7 +119,7 @@ export const LEAD_FEED_SQL = `
       AND pt.is_active = true
       AND pt.confidence >= 0.5
       AND p.location IS NOT NULL
-      AND ST_DWithin(p.location, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)
+      AND ST_DWithin(p.location::geography, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)
       AND p.status NOT IN ('Cancelled', 'Revoked', 'Closed')
   ),
   builder_candidates AS (
@@ -142,15 +142,15 @@ export const LEAD_FEED_SQL = `
       e.photo_url,
       NULL::numeric AS latitude,
       NULL::numeric AS longitude,
-      MIN(p.location <-> ST_MakePoint($2::float8, $3::float8)::geography)::float8 AS distance_m,
+      MIN(p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography)::float8 AS distance_m,
       -- Pillar 1: proximity (0-30) — closest active permit
       CASE
-        WHEN MIN(p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 500   THEN 30
-        WHEN MIN(p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 1000  THEN 25
-        WHEN MIN(p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 2000  THEN 20
-        WHEN MIN(p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 5000  THEN 15
-        WHEN MIN(p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 10000 THEN 10
-        WHEN MIN(p.location <-> ST_MakePoint($2::float8, $3::float8)::geography) < 20000 THEN 5
+        WHEN MIN(p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 500   THEN 30
+        WHEN MIN(p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 1000  THEN 25
+        WHEN MIN(p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 2000  THEN 20
+        WHEN MIN(p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 5000  THEN 15
+        WHEN MIN(p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 10000 THEN 10
+        WHEN MIN(p.location::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 20000 THEN 5
         ELSE 0
       END AS proximity_score,
       -- Pillar 2: timing (0-30) — builders are "ongoing capacity", fixed mid-band
@@ -197,7 +197,7 @@ export const LEAD_FEED_SQL = `
     ) w ON true
     WHERE p.location IS NOT NULL
       AND p.status IN ('Permit Issued', 'Inspection')
-      AND ST_DWithin(p.location, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)
+      AND ST_DWithin(p.location::geography, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)
       AND w.business_size IS NOT NULL
     GROUP BY
       e.id, e.legal_name, w.business_size,

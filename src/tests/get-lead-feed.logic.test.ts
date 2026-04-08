@@ -95,6 +95,19 @@ describe('LEAD_FEED_SQL — structure', () => {
     expect((LEAD_FEED_SQL.match(/ST_DWithin\(/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 
+  it('explicitly casts p.location to ::geography for meter-based distance (NOT degree-based)', () => {
+    // Regression: spec 70 unified feed expects radius_km in METERS via ST_DWithin
+    // and `<->`. The column is stored as `geometry(Point, 4326)` (migration 067)
+    // for GIST index compatibility, but distance math must be meters. Without
+    // an explicit `::geography` cast on `p.location`, PostGIS might resolve to
+    // the geometry overload of ST_DWithin/`<->` and interpret radius_m as
+    // DEGREES (1 degree ≈ 111km). Caught by Gemini Phase 0+1 holistic review.
+    expect(LEAD_FEED_SQL).toMatch(/p\.location::geography/);
+    // Should NOT have any bare `p.location` distance expressions
+    expect(LEAD_FEED_SQL).not.toMatch(/p\.location <->/);
+    expect(LEAD_FEED_SQL).not.toMatch(/ST_DWithin\(p\.location,/);
+  });
+
   it('filters builder candidates by WSIB business_size allowlist', () => {
     expect(LEAD_FEED_SQL).toMatch(/business_size IN \('Small Business', 'Medium Business'\)/);
   });
