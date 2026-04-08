@@ -12,6 +12,9 @@ import type {
   ProductMatch,
   Inspection,
   LeadView,
+  CostEstimate,
+  InspectionStageMapRow,
+  TimingCalibrationRow,
 } from '@/lib/permits/types';
 import type { Parcel } from '@/lib/parcels/types';
 import type { Neighbourhood } from '@/lib/neighbourhoods/types';
@@ -105,10 +108,66 @@ export function createMockPermit(overrides: Partial<Permit> = {}): Permit {
 
 export function createMockLeadView(overrides: Partial<LeadView> = {}): LeadView {
   return {
+    id: 1,
     user_id: 'firebase-uid-abc123',
+    lead_key: 'permit:24 101234:01',
+    lead_type: 'permit',
     permit_num: '24 101234',
-    revision_num: 0,
+    revision_num: '01',
+    entity_id: null,
+    trade_slug: 'plumbing',
     viewed_at: new Date('2024-03-01T12:00:00Z'),
+    saved: false,
+    ...overrides,
+  };
+}
+
+export function createMockCostEstimate(
+  overrides: Partial<CostEstimate> = {},
+): CostEstimate {
+  return {
+    permit_num: '24 101234',
+    revision_num: '01',
+    estimated_cost: 150000,
+    cost_source: 'permit',
+    cost_tier: 'medium',
+    cost_range_low: 120000,
+    cost_range_high: 180000,
+    premium_factor: 1.0,
+    complexity_score: 50,
+    model_version: 1,
+    computed_at: new Date('2024-03-01T12:00:00Z'),
+    ...overrides,
+  };
+}
+
+export function createMockInspectionStageMapRow(
+  overrides: Partial<InspectionStageMapRow> = {},
+): InspectionStageMapRow {
+  return {
+    id: 1,
+    stage_name: 'Structural Framing',
+    stage_sequence: 30,
+    trade_slug: 'plumbing',
+    relationship: 'follows',
+    min_lag_days: 5,
+    max_lag_days: 14,
+    precedence: 100,
+    ...overrides,
+  };
+}
+
+export function createMockTimingCalibrationRow(
+  overrides: Partial<TimingCalibrationRow> = {},
+): TimingCalibrationRow {
+  return {
+    id: 1,
+    permit_type: 'Building',
+    median_days_to_first_inspection: 21,
+    p25_days: 14,
+    p75_days: 35,
+    sample_size: 120,
+    computed_at: new Date('2024-03-01T12:00:00Z'),
     ...overrides,
   };
 }
@@ -179,6 +238,8 @@ export function createMockEntity(overrides: Partial<Entity> = {}): Entity {
     first_seen_at: new Date('2023-01-01'),
     last_seen_at: new Date('2024-03-01'),
     last_enriched_at: null,
+    photo_url: null,
+    photo_validated_at: null,
     ...overrides,
   };
 }

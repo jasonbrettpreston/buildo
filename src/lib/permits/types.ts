@@ -81,13 +81,67 @@ export interface Permit {
 }
 
 // ---------------------------------------------------------------------------
-// Lead Views (migration 069)
+// Lead Views (migration 070 — corrected shape per spec 70)
 // ---------------------------------------------------------------------------
+export type LeadType = 'permit' | 'builder';
+
 export interface LeadView {
+  id: number;
   user_id: string;
-  permit_num: string;
-  revision_num: number;
+  lead_key: string;
+  lead_type: LeadType;
+  permit_num: string | null;
+  revision_num: string | null;
+  entity_id: number | null;
+  trade_slug: string;
   viewed_at: Date;
+  saved: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Cost estimates (migration 071 — spec 72)
+// ---------------------------------------------------------------------------
+export type CostSource = 'permit' | 'model';
+export type CostTier = 'small' | 'medium' | 'large' | 'major' | 'mega';
+
+export interface CostEstimate {
+  permit_num: string;
+  revision_num: string;
+  estimated_cost: number | null;
+  cost_source: CostSource;
+  cost_tier: CostTier | null;
+  cost_range_low: number | null;
+  cost_range_high: number | null;
+  premium_factor: number | null;
+  complexity_score: number | null;
+  model_version: number;
+  computed_at: Date;
+}
+
+// ---------------------------------------------------------------------------
+// Inspection stage map + timing calibration (migrations 072/073 — spec 71)
+// ---------------------------------------------------------------------------
+export type StageRelationship = 'follows' | 'concurrent';
+
+export interface InspectionStageMapRow {
+  id: number;
+  stage_name: string;
+  stage_sequence: number;
+  trade_slug: string;
+  relationship: StageRelationship;
+  min_lag_days: number;
+  max_lag_days: number;
+  precedence: number;
+}
+
+export interface TimingCalibrationRow {
+  id: number;
+  permit_type: string;
+  median_days_to_first_inspection: number;
+  p25_days: number;
+  p75_days: number;
+  sample_size: number;
+  computed_at: Date;
 }
 
 // ---------------------------------------------------------------------------
@@ -188,6 +242,8 @@ export interface Entity {
   first_seen_at: Date;
   last_seen_at: Date;
   last_enriched_at: Date | null;
+  photo_url: string | null;
+  photo_validated_at: Date | null;
 }
 
 export interface EntityProject {
