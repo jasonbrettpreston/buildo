@@ -250,6 +250,11 @@ Before presenting "PLAN LOCKED", the plan MUST address each applicable item belo
 - [ ] Lists >50 items wrapped in TanStack Virtual (§12.6)
 - [ ] Toast notifications via Sonner — no custom alert banners (§12.7)
 
+### Cross-Layer Contracts Check (always applies):
+- [ ] Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)
+- [ ] If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure
+- [ ] If a threshold is changed, EVERY consumer file listed in `contracts.infra.test.ts` is updated in the same commit
+
 ### Database/Migration Check:
 - [ ] New migration has DOWN block (§3.2, §12.8)
 - [ ] SQLFluff lint passes for new migration files (§12.8)
@@ -308,6 +313,25 @@ Before presenting "PLAN LOCKED", the plan MUST address each applicable item belo
   - `UPDATE` without `WHERE` clause (full-table scan risk)
 - **Rule:** All migrations must include a DOWN section that reverses the UP changes.
 - **Why:** Backwards compatibility, rollback safety, no production lock incidents.
+
+### 12.10 Real-DB Integration Tests (testcontainers + CI service)
+- **Status:** Adopted 2026-04-08 after the Phase 0+1+2 holistic review. Mocked-pool tests cannot catch SQL syntax errors, constraint violations, FK cascades, geography casts, or column-width truncation — that bug class accounted for ~40% of recent holistic-review findings.
+- **Rule:** Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts` file under `src/tests/db/` that exercises the constraint against a real Postgres.
+- **Local opt-in:** `BUILDO_TEST_DB=1 npm run test:db` spawns a `postgis/postgis:16-3.4-alpine` container via testcontainers, applies migrations 001..NNN via `scripts/migrate.js`, runs the suite, tears down. Requires Docker.
+- **CI:** `.github/workflows/db-tests.yml` provides a Postgres service container; runs on every PR that touches migrations, db client, or db tests.
+- **Skip semantics:** When neither `DATABASE_URL` nor `BUILDO_TEST_DB=1` is set, every `*.db.test.ts` self-skips via `describe.skipIf(!dbAvailable())`. The standard `npm run test` is unaffected.
+- **Why:** A real DB catches the bugs that locked our team into "reading SQL by eye" for 3+ phases. The migration 030 self-heal that this section's WF shipped removes the 1a blocker that was forcing the mock-only fallback.
+
+### 12.11 Footgun Lint Gate (AST-grep + grep)
+- **Status:** Adopted 2026-04-08. Five pattern bans wired into pre-commit + manual `npm run ast-grep:leads`. Initially scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`. Expand per the §12 conservative model.
+- **Rules enforced** (each maps to a bug class the holistic reviews keep flagging):
+  1. **silent-catch-fallback** — bans `try/catch { return [] / null / emptyResult() }`. Caught Phase 2 holistic CRIT (`getLeadFeed` swallowing DB errors as 200 empty feeds, commit 0a3e680).
+  2. **env-default-in-lib** — bans `process.env.X || 'default'` inside `src/features/leads/`. A typo silently uses the default instead of failing loud. Suppressable per-line with justification.
+  3. **comment-rot** — grep heuristic: any file with `// never throws` / `// always returns` AND a `throw` statement is flagged. Caught Phase 0+1+2 holistic HIGH (stale "never throws" comment in feed/route.ts, commit 449fb2a).
+  4. **silent-row-drop** — grep heuristic: any file with `.filter((x): x is _ => x !== null)` AND no `logWarn` call is flagged. Caught Phase 0+1+2 holistic MED (`mapRow` silent null filter).
+  5. **pool-boundary** — bans `new Pool(` instantiation outside `src/lib/db/`, `src/tests/`, `scripts/`. Per CLAUDE.md Backend Mode rule 3.
+- **Suppression:** `// ast-grep-disable-next-line <rule-id>` with a one-line justification. Audited in code review.
+- **Files:** rule definitions live in `scripts/ast-grep-rules/*.yml`; the grep-based heuristics + runner live in `scripts/hooks/ast-grep-leads.sh`.
 
 ### 12.9 Animation & Gestures (Motion for React)
 - **Rule:** Use `motion` package (formerly Framer Motion) for swipe-to-delete, layout transitions, drag interactions, and button press animations.

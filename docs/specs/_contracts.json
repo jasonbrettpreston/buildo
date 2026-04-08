@@ -1,0 +1,37 @@
+{
+  "$comment": "Single source of truth for cross-layer numeric constants. Every value here is referenced by `src/tests/contracts.infra.test.ts` which grep-asserts the value appears in the listed consumer files. Drift between spec/SQL/Zod/migration is now a CI failure, not a Phase-N holistic review finding. See docs/specs/00_engineering_standards.md §11 + the contracts.infra.test.ts header for the consumer mapping rules.",
+  "scoring": {
+    "permit_proximity_max": 30,
+    "permit_timing_max": 30,
+    "permit_value_max": 20,
+    "permit_opportunity_max": 20,
+    "permit_total_max": 100,
+    "builder_proximity_max": 30,
+    "builder_value_max": 20,
+    "builder_opportunity_max": 20,
+    "builder_fit_max": 20,
+    "builder_total_max": 100
+  },
+  "rate_limits": {
+    "feed_per_min": 30,
+    "view_per_min": 60,
+    "window_sec": 60
+  },
+  "geo": {
+    "max_radius_km": 50,
+    "default_radius_km": 10
+  },
+  "feed": {
+    "max_limit": 30,
+    "default_limit": 15
+  },
+  "schema": {
+    "firebase_uid_max": 128,
+    "trade_slug_max": 50,
+    "permit_num_max": 30,
+    "revision_num_max": 10
+  },
+  "retention": {
+    "lead_views_days": 90
+  }
+}

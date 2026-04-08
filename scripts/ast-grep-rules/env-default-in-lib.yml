@@ -1,0 +1,19 @@
+id: env-default-in-lib
+language: typescript
+severity: error
+message: |
+  Hidden default for environment variable inside src/lib/. The `||` fallback
+  silently masks misconfiguration: a typo in the env var name produces the
+  default value with no log line and no startup failure. Force the
+  decision to be explicit at the boundary instead — read process.env at
+  the top of the module and throw if it's missing, or pass the value in
+  via dependency injection.
+
+  If the default is genuinely safe and intentional (e.g., a test harness),
+  add `// ast-grep-disable-next-line env-default-in-lib` with justification.
+rule:
+  any:
+    - pattern: process.env.$_ || $_
+    - pattern: process.env[$_] || $_
+    - pattern: process.env.$_ ?? $_
+    - pattern: process.env[$_] ?? $_

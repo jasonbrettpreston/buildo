@@ -1,0 +1,7 @@
+# ast-grep project config — see https://ast-grep.github.io/reference/sgconfig.html
+# Footgun rules live under scripts/ast-grep-rules/. Each rule file is one
+# pattern band that holistic reviews keep flagging across phases. Rules are
+# initially scoped to src/features/leads/ and src/lib/ via the runner script
+# at scripts/hooks/ast-grep-leads.sh — expand once proven valuable.
+ruleDirs:
+  - scripts/ast-grep-rules

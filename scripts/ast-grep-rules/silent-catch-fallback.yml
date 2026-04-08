@@ -1,0 +1,28 @@
+id: silent-catch-fallback
+language: typescript
+severity: error
+message: |
+  Silent catch fallback. This catch handler returns an empty array, an
+  empty result helper, or null without re-throwing — the caller can no
+  longer distinguish "no data" from "the database is on fire". Phase 2
+  holistic review caught getLeadFeed swallowing DB errors as HTTP 200
+  empty feeds (commit 0a3e680). Either re-throw, or return a discriminated
+  result the caller is forced to inspect.
+
+  If you genuinely need a silent fallback (e.g., a cache miss helper),
+  add `// ast-grep-disable-next-line silent-catch-fallback` with a one-line
+  justification on the previous line.
+rule:
+  any:
+    - pattern: |
+        try { $$$ } catch ($_) { return []; }
+    - pattern: |
+        try { $$$ } catch { return []; }
+    - pattern: |
+        try { $$$ } catch ($_) { return null; }
+    - pattern: |
+        try { $$$ } catch { return null; }
+    - pattern: |
+        try { $$$ } catch ($_) { return empty$_($$$); }
+    - pattern: |
+        try { $$$ } catch { return empty$_($$$); }
