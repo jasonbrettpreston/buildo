@@ -1,188 +1,177 @@
-# Active Task: WF1 — Lead Feed Phase 1b-iii: Builder Query + Unified Feed
+# Active Task: WF1 — Lead Feed Phase 2-i: API Foundation + User Profile
 **Status:** Implementation
 **Workflow:** WF1 — New Feature Genesis
-**Rollback Anchor:** `c66f21f`
+**Rollback Anchor:** `43f366a`
 
 ## Domain Mode
-**Backend/Pipeline Mode** — async DB-backed library, NO API routes, NO new migrations. Per CLAUDE.md Backend rules: §2/§6/§7/§9 of `00_engineering_standards.md`. All DB access via the `pool` parameter (consumers inject from `src/lib/db/client.ts`).
+**Cross-Domain** — one new migration (Backend), new server-only TS helpers, route-guard.ts edit (the only Frontend-Mode-relevant touch since middleware runs at the edge runtime). Per CLAUDE.md, both Backend Mode and Frontend Mode rules apply to their respective files.
 
 ## Context
-* **Goal:** Final sub-WF of the Phase 1b split. Ship spec 73's builder-leads query + spec 70's unified lead-feed CTE. After this WF, `getLeadFeed(input, pool)` is the single entry point Phase 2 wraps in `/api/leads/feed`. The unified query ranks permit and builder leads in one SQL pass with cursor pagination — no application-level interleaving (the foot-gun spec 70 explicitly calls out).
+* **Goal:** First of three sub-WFs splitting Phase 2 along Phase 1's pattern (foundation → consumers). After this WF the cross-cutting plumbing every Phase 2 leads route needs is shipped: a `user_profiles` table for trade-slug authorization, a `getCurrentUserContext` helper combining Firebase auth + DB profile lookup, shared Zod schemas, response envelope helpers, error → HTTP-status mapping, and structured request logging. Phase 2-ii (`/api/leads/feed`) and Phase 2-iii (`/api/leads/view`) will be thin wrappers on top.
+* **Critical gap from recon:** there is currently NO user_profiles table, NO Firebase custom claims wiring, NO way to map a Firebase UID to a trade slug. Spec 70 §API Endpoints explicitly requires "The server compares `trade_slug` against the authenticated user's profile trade. Mismatch returns 403 Forbidden." Phase 2-i closes this gap.
 * **Target Specs:**
-  - `docs/specs/product/future/70_lead_feed.md` §Implementation
-  - `docs/specs/product/future/73_builder_leads.md` §Implementation
-  - `docs/specs/product/future/75_lead_feed_implementation_guide.md` §11 Phase 1
-  - `docs/specs/00_engineering_standards.md` §2/§6
-* **Key Files:** new — `src/features/leads/lib/builder-query.ts`, `src/features/leads/lib/get-lead-feed.ts`, `src/tests/builder-query.logic.test.ts`, `src/tests/get-lead-feed.logic.test.ts`. Reads from (no modifications) — `src/features/leads/types.ts`, `src/features/leads/lib/distance.ts`.
+  - `docs/specs/product/future/70_lead_feed.md` §API Endpoints
+  - `docs/specs/product/future/75_lead_feed_implementation_guide.md` §11 Phase 2
+  - `docs/specs/00_engineering_standards.md` §2 / §4 / §4.4 / §6
+* **Key Files:** new — `migrations/075_user_profiles.sql`, `src/lib/auth/get-user-context.ts`, `src/features/leads/api/schemas.ts`, `src/features/leads/api/envelope.ts`, `src/features/leads/api/error-mapping.ts`, `src/features/leads/api/request-logging.ts`, 4 test files. Modified — `src/lib/auth/route-guard.ts`, `src/lib/permits/types.ts`, `src/tests/factories.ts`.
 
 ## Technical Implementation
 
-### File 1 — `src/features/leads/lib/builder-query.ts` (~200 lines)
+### Migration 075 — `user_profiles` table
 
-```ts
-export const BUILDER_QUERY_SQL: string;          // exported for tests
-export const BUILDER_QUERY_LIMIT = 20;
-export async function queryBuilderLeads(
-  trade_slug: string,
-  lat: number,
-  lng: number,
-  radius_km: number,
-  pool: Pool,
-): Promise<BuilderLeadCandidate[]>;
+```sql
+-- UP
+CREATE TABLE user_profiles (
+  user_id      VARCHAR(100) PRIMARY KEY,           -- Firebase UID
+  trade_slug   VARCHAR(50)  NOT NULL,
+  display_name VARCHAR(200),
+  created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  CONSTRAINT user_profiles_trade_slug_not_empty CHECK (length(trade_slug) > 0)
+);
+CREATE INDEX idx_user_profiles_trade_slug ON user_profiles (trade_slug);
+
+-- DOWN
+-- ALLOW-DESTRUCTIVE
+-- DROP INDEX IF EXISTS idx_user_profiles_trade_slug;
+-- DROP TABLE IF EXISTS user_profiles;
 ```
 
-**SQL = exact 3-CTE structure from spec 73 §Implementation:**
-- `nearby_permits`: joins permits + entity_projects (role='Builder') + permit_trades + trades; filters status IN ('Permit Issued', 'Inspection') and ST_DWithin
-- `builder_aggregates`: groups by entity_id, picks most-recent WSIB row via subquery (multi-WSIB tie-breaker per spec), filters via WSIB EXISTS, HAVING COUNT(np.permit_num) >= 1
-- `scored`: 4 pillars in SQL — proximity (closest_permit_m bands 500/1000/2000/5000/10000/20000), activity (count >=5/3/2/else), contact (website+phone/either/email/none), fit (count tiers + WSIB +3 bonus)
-- Final SELECT: `relevance_score = sum`, ORDER BY DESC + `closest_permit_m ASC` tiebreak, LIMIT 20
+Notes:
+- `user_id` is a Firebase UID, not a FK — same convention as `lead_views.user_id` in migration 070.
+- `trade_slug` is NOT a FK to a `trades` table per the existing codebase pattern (Phase 1a triage). The `length > 0` CHECK prevents empty-string drift.
+- `display_name` is optional metadata so the future onboarding UI can populate it without another migration.
+- No `email` column — Firebase owns identity.
 
-**Parameters:** `$1=trade_slug`, `$2=lng`, `$3=lat`, `$4=radius_m`. PostGIS `ST_MakePoint(lng, lat)` order. All casts explicit (`::float8`).
+### File 1 — `src/lib/auth/get-user-context.ts`
 
-**Function flow:** try → `pool.query(BUILDER_QUERY_SQL, [...])` → map rows → `BuilderLeadCandidate[]` → return. Catch → `logError` + return `[]`. Log success via `logInfo` with `{ trade_slug, count, duration_ms }`.
-
-### File 2 — `src/features/leads/lib/get-lead-feed.ts` (~350 lines)
+Combines `getUserIdFromSession` (Backend Phase 0) + DB profile lookup. Returns `{uid, trade_slug, display_name}` or null on ANY failure (no session, invalid cookie, JWT verify fail, no profile row, DB error). Phase 2 routes treat all four cases as 401.
 
 ```ts
-export const LEAD_FEED_SQL: string;     // single SQL, parameterized cursor
-export async function getLeadFeed(input: LeadFeedInput, pool: Pool): Promise<LeadFeedResult>;
+export interface UserContext { uid: string; trade_slug: string; display_name: string | null; }
+export async function getCurrentUserContext(request: NextRequest, pool: Pool): Promise<UserContext | null>;
 ```
 
-**Function flow:**
-1. `radius_km = Math.min(input.radius_km, MAX_RADIUS_KM)` — clamp DoS-bounded
-2. `radius_m = metersFromKilometers(radius_km)`
-3. Build params: `[trade_slug, lng, lat, radius_m, limit, cursor?.score ?? null, cursor?.lead_type ?? null, cursor?.lead_id ?? null]`
-4. `start = Date.now()`
-5. `pool.query<LeadFeedRow>(LEAD_FEED_SQL, params)`
-6. Map rows → `LeadFeedItem[]`
-7. `next_cursor = rows.length === limit ? { score, lead_type, lead_id } from last row : null`
-8. `logInfo('[lead-feed/get]', 'success', { user_id, trade_slug, lat, lng, radius_km, result_count, duration_ms })`
-9. Return `{ data, meta: { next_cursor, count, radius_km } }`
-10. Catch → `logError` + return empty result with safe meta
+Wraps the DB query in try/catch → `logError` → null. Never throws.
 
-**Unified CTE (verbatim from spec 70 §Implementation, with all 4 pillars completed in SQL — spec sketched only proximity):**
+### File 2 — `src/features/leads/api/schemas.ts`
 
-Four CTEs:
-- **`permit_candidates`**: SELECT FROM permits + permit_trades + LEFT JOIN cost_estimates. Computes:
-  - `proximity_score` (0-30): CASE on `(p.location <-> ST_MakePoint($2,$3)::geography)` distance bands
-  - `timing_score` (0-30): fast SQL proxy via `permit_trades.phase` (structural=30, finishing=25, early_construction=20, landscaping=15, else 10) — the full 3-tier engine from Phase 1b-ii is too slow per-row for the feed CTE; it's a per-permit detail call
-  - `value_score` (0-30): CASE on `cost_estimates.cost_tier` (mega=30, major=25, large=20, medium=15, small=10, NULL=5)
-  - `opportunity_score` (0-10): CASE on `permits.status` (Permit Issued=10, Inspection=7, Application=5, else 0)
-  - WHERE `pt.trade_slug = $1 AND pt.is_active = true AND pt.confidence >= 0.5 AND p.location IS NOT NULL AND ST_DWithin(...) AND p.status NOT IN ('Cancelled', 'Revoked', 'Closed')`
+Shared Zod schemas. **Returns 400** with field-level error messages (NOT 500) per spec 70.
 
-- **`builder_candidates`**: SELECT FROM entities + entity_projects + permits + permit_trades + LATERAL wsib_registry. Same 4 pillars, builder-specific:
-  - proximity from `MIN(p.location <-> ...)` (closest active permit)
-  - timing fixed at 15 (builders are "ongoing capacity")
-  - value from `AVG(p.est_const_cost)` bucketed
-  - opportunity from `COUNT(p.permit_num)` bucketed
-  - GROUP BY entity_id; WHERE WSIB filter (Small/Medium Business, GTA, has contact)
+- `leadFeedQuerySchema`: lat (-90..90), lng (-180..180), trade_slug (1-50), radius_km (0..MAX_RADIUS_KM, default DEFAULT_RADIUS_KM), limit (1..MAX_FEED_LIMIT, default DEFAULT_FEED_LIMIT), cursor_score/lead_type/lead_id (all-or-nothing via `.refine`), `z.coerce.number` for URL query string handling
+- `leadViewBodySchema`: trade_slug + action enum + `z.discriminatedUnion('lead_type', [permit branch, builder branch])` enforcing XOR
 
-- **`unified`**: `SELECT * FROM permit_candidates UNION ALL SELECT * FROM builder_candidates`
+Imports `MAX_FEED_LIMIT`/`DEFAULT_FEED_LIMIT` from `get-lead-feed.ts` and `MAX_RADIUS_KM`/`DEFAULT_RADIUS_KM` from `distance.ts` — single source of truth, no constant drift.
 
-- **`ranked`**: `SELECT *, (proximity_score + timing_score + value_score + opportunity_score) AS relevance_score FROM unified`
+### File 3 — `src/features/leads/api/envelope.ts`
 
-Final SELECT: `WHERE ($6::int IS NULL OR (relevance_score, lead_type, lead_id) < ($6::int, $7::text, $8::text)) ORDER BY relevance_score DESC, lead_type DESC, lead_id DESC LIMIT $5::int`
+Per spec 70 + §4.4 response envelope `{data, error, meta}`:
 
-**Cursor pagination:** Page 1 sends `cursor=undefined` → params `[..., null, null, null]` → `$6::int IS NULL` short-circuits the WHERE. Page N sends prior `next_cursor` tuple. Stable across concurrent inserts because the entire ranking happens in one SQL pass.
+```ts
+export function ok<T, M = null>(data: T, meta?: M, status?: number): NextResponse;
+export function err(code: string, message: string, status: number, details?: unknown): NextResponse;
+```
 
-**Lead ID format:** permits use `permit_num || ':' || revision_num` (e.g. `'24 101234:01'`), builders use `e.id::text` (e.g. `'9183'`). Colon vs no-colon makes them distinguishable; cursor comparison is text.
+### File 4 — `src/features/leads/api/error-mapping.ts`
+
+Spec 70 status code matrix → NextResponse helpers:
+- `unauthorized()` → 401 `UNAUTHORIZED`
+- `forbiddenTradeMismatch(requested, actual)` → 403 `FORBIDDEN_TRADE_MISMATCH` with mismatch detail
+- `rateLimited(remaining)` → 429 `RATE_LIMITED` with remaining
+- `badRequestZod(zodError)` → 400 `VALIDATION_FAILED` with `zodError.flatten()` field-level details
+- `internalError()` → 500 `INTERNAL_ERROR` (generic, no leaked stack)
+
+### File 5 — `src/features/leads/api/request-logging.ts`
+
+`logRequestComplete(tag, context, startMs)` — wraps `logInfo` with consistent shape per spec 70 observability requirement (`{user_id, trade_slug, lat, lng, radius_km, result_count, duration_ms}`). Tiny but enforces shape consistency between Phase 2-ii and 2-iii.
+
+### Type addition — `src/lib/permits/types.ts`
+
+```ts
+export interface UserProfile {
+  user_id: string;
+  trade_slug: string;
+  display_name: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+```
+
+### route-guard.ts update
+
+Add `/api/leads/` to the existing authenticated-API mechanism (recon will confirm exact shape; current file uses `PUBLIC_PREFIXES` for public-by-default). The fix is to ensure `/api/leads/feed` and `/api/leads/view` get classified as `'authenticated'` so middleware enforces the cookie shape pre-check before the handler runs `getCurrentUserContext`. Defense in depth.
+
+### Database Impact
+**YES.** One new migration on a brand-new empty table. Zero impact on existing tables. No backfill — table starts empty, populated by future onboarding flow.
 
 ### Tests
 
-**File 3 — `src/tests/builder-query.logic.test.ts`** (15-18 tests):
+**File 6 — `src/tests/user-profiles-schema.infra.test.ts`** (6-8 tests) — file-shape regex assertions on migration 075
 
-SQL structure (via `BUILDER_QUERY_SQL` constant):
-- All 3 CTEs present (`nearby_permits`, `builder_aggregates`, `scored`)
-- All 4 score pillars present
-- Multi-WSIB tie-breaker subquery: `ORDER BY w.last_enriched_at DESC LIMIT 1`
-- WSIB filter: `business_size IN ('Small Business', 'Medium Business')`
-- Status filter: `IN ('Permit Issued', 'Inspection')`
-- `ST_DWithin` + `ST_MakePoint($2::float8, $3::float8)::geography`
-- `ORDER BY relevance_score DESC, closest_permit_m ASC`
-- `LIMIT 20`
+**File 7 — `src/tests/get-user-context.logic.test.ts`** (10-12 tests):
+- No session → null
+- Session valid + profile row → returns context
+- Session valid + no profile row → null
+- Session valid + DB throws → null + logError
+- display_name null handling
+- Parameterized query verification
 
-Function behavior (mocked pool):
-- Happy path → `BuilderLeadCandidate[]`
-- Empty result → `[]`
-- Pool throws → `[]` + logError
-- `radius_km` correctly converted via `metersFromKilometers`
-- `lat`/`lng` parameter order verified (most common bug: ST_MakePoint takes lng FIRST)
-- `logInfo` called with structured fields
+**File 8 — `src/tests/api-schemas.logic.test.ts`** (15-20 tests):
+- leadFeedQuerySchema: lat/lng range bounds, radius/limit clamps, defaults, cursor partial/full, coerce from string, empty trade_slug
+- leadViewBodySchema: permit/builder happy paths, XOR violations, missing fields, action enum
 
-**File 4 — `src/tests/get-lead-feed.logic.test.ts`** (18-22 tests):
-
-SQL structure (via `LEAD_FEED_SQL` constant):
-- All 4 CTEs (`permit_candidates`, `builder_candidates`, `unified`, `ranked`)
-- `UNION ALL` between candidates
-- All 4 pillars in BOTH candidate CTEs
-- `relevance_score` sum in `ranked`
-- Cursor WHERE: `($6::int IS NULL OR (relevance_score, lead_type, lead_id) <`
-- ORDER BY `relevance_score DESC, lead_type DESC, lead_id DESC`
-- `ST_DWithin` filters in BOTH CTEs
-- Permit confidence filter: `pt.confidence >= 0.5`
-- Permit status exclusion: `NOT IN ('Cancelled', 'Revoked', 'Closed')`
-
-Function behavior:
-- Happy path with mocked rows → mapped LeadFeedItems
-- Full page (rows.length === limit) → next_cursor extracted from last row
-- Partial page (rows.length < limit) → next_cursor null
-- Empty result → empty data, null cursor, count 0
-- Pool throws → empty result + logError
-- First page (no cursor) → null/null/null in params $6/$7/$8
-- Subsequent page → cursor values in params
-- `radius_km > MAX_RADIUS_KM` → clamped to 50, reflected in meta
-- `logInfo` with `{ user_id, trade_slug, lat, lng, radius_km, result_count, duration_ms }`
-- Mixed permit + builder rows → both LeadFeedItem types in `data`
-
-### Database Impact
-**NO** — no migrations. Reads pre-existing tables + Phase 1a `cost_estimates`.
+**File 9 — `src/tests/api-envelope.logic.test.ts`** (8-10 tests):
+- ok/err shapes, custom status, details handling, all error helpers (unauthorized/forbiddenTradeMismatch/rateLimited/badRequestZod/internalError)
 
 ## Standards Compliance (§10)
 
 ### DB
-- ⬜ N/A — no migrations
-- ✅ Pool injected as parameter; never `new Pool()`
-- ✅ Parameterized queries only
-- ✅ Explicit `::float8` / `::int` casts at parameter sites
-- ✅ PostGIS `ST_DWithin` + `<->` KNN — uses GIST index from Phase 1a migration 067
-- ✅ LIMIT enforced server-side
-- ✅ Cursor pagination via row tuple comparison — stable per spec 70
+- ✅ Migration 075 with UP + DOWN blocks
+- ✅ ALLOW-DESTRUCTIVE marker on commented DOWN
+- ⬜ N/A CONCURRENTLY — single-column index on a brand-new empty table
+- ✅ CHECK constraint on trade_slug non-emptiness
+- ✅ Pool injected as parameter; no `new Pool()`
+- ✅ Parameterized query in `getCurrentUserContext`
+- ✅ Migration safety validator gates the commit
 
 ### API
-- ⬜ N/A — no routes (Phase 2)
-- ✅ Function signatures shaped for thin Phase 2 wrappers
+- ✅ Spec 70 status code matrix codified in `error-mapping.ts`
+- ✅ Spec 70 + §4.4 response envelope codified in `envelope.ts`
+- ✅ Zod returns 400 (not 500) via `badRequestZod`
+- ✅ XOR enforced via Zod `discriminatedUnion`
+- ✅ Foundation files don't ship route handlers themselves — Phase 2-ii/2-iii do
+- ✅ route-guard.ts updated to authenticate `/api/leads/*`
 
 ### UI
-- ⬜ N/A — backend-only
+- ⬜ N/A — backend foundation only
 
 ### Shared Logic (§7)
-- ✅ Imports `metersFromKilometers`, `MAX_RADIUS_KM` from Phase 1b-i `distance.ts`
-- ✅ Imports `BuilderLeadCandidate`, `LeadFeedInput`, `LeadFeedItem`, `LeadFeedResult`, `LeadFeedCursor` from Phase 1b-i `types.ts` — single source of truth, no churn
-- ✅ NO dual code path (no JS↔SQL port). The SQL↔SQL "duplication" between standalone `builder-query.ts` and inlined `builder_candidates` CTE is a deliberate spec choice (spec 73 + spec 70 unification) — documented inline in both files
-- ✅ NO modifications to `phases.ts`, `cost-model.ts`, `timing.ts`
+- ✅ Imports `MAX_FEED_LIMIT`/`DEFAULT_FEED_LIMIT` from `get-lead-feed.ts` (single source of truth)
+- ✅ Imports `MAX_RADIUS_KM`/`DEFAULT_RADIUS_KM` from `distance.ts` (single source of truth)
+- ✅ NO dual code path
+- ✅ Composes `getUserIdFromSession` from Backend Phase 0 — no duplication
 
 ### Pipeline (§9)
-- ⬜ N/A — no scripts in this WF
+- ⬜ N/A — no scripts
 
 ### Try/Catch (§2) + logError mandate
-- ✅ Both functions have top-level try/catch returning safe fallback (empty array / empty result)
-- ✅ `logError` for unexpected throws with full context
-- ✅ `logInfo` on success with structured fields
-- ✅ Never throws to caller — Phase 2 routes can rely on this
+- ✅ `getCurrentUserContext` wraps DB call, returns null on error, logs via `logError`
+- ✅ Envelope/error-mapping helpers are pure — no throws
+- ✅ Zod schemas throw `ZodError` by design — caught + mapped via `badRequestZod`
 
 ### Unhappy Path Tests
-- ✅ Pool throws → safe fallback for both functions
-- ✅ Empty result → empty array / empty result
-- ✅ Cursor null vs cursor populated paths
-- ✅ Limit boundary: < limit → next_cursor null; === limit → next_cursor extracted
-- ✅ radius_km > MAX_RADIUS_KM → clamped, reflected in meta
+- ✅ Pool throws → null + logError
+- ✅ Empty profile result → null
+- ✅ Each Zod boundary
+- ✅ XOR violations
+- ✅ Each error helper produces correct shape
 
 ### Mobile-First
 - ⬜ N/A — backend-only
 
 ## Review Plan (per `feedback_review_protocol.md`, this is WF1)
-- ✅ Independent review in worktree after commit (retry the 529 from prior sub-WFs)
-- ✅ BOTH adversarial models on **all 4 files** — 8 adversarial reviews + 1 independent ≈ $1.60
+- ✅ Independent review in worktree after commit
+- ✅ Gemini + DeepSeek on **all 10 files** (1 migration + 5 source + 4 test) = **20 adversarial reviews + 1 independent ≈ $4.00**
 - ✅ Triage via Real / Defensible / Out-of-scope tree
 - ✅ Append deferred items to `docs/reports/review_followups.md`
 - ✅ Post full triage table in the response
@@ -190,76 +179,78 @@ Function behavior:
 ## What's IN Scope
 | Deliverable | Why |
 |---|---|
-| `builder-query.ts` + 15-18 tests | Spec 73 standalone builder query — Phase 2 builder-only endpoints + spec 73 behavior coverage |
-| `get-lead-feed.ts` + 18-22 tests | Spec 70 unified CTE — main entry point Phase 2 wraps |
+| Migration 075 user_profiles | Spec 70 trade_slug authorization requires server-side profile lookup |
+| `getCurrentUserContext` helper | Single source of truth for "who is calling and what trade are they?" |
+| Shared Zod schemas | Both routes validate input; one definition prevents drift |
+| Response envelope helpers | Spec 70 + §4.4 envelope codified once |
+| Error → HTTP mapping | Spec 70 status code matrix codified once |
+| Request logging helper | Spec 70 observability shape codified once |
+| route-guard.ts update | Add `/api/leads/*` to authenticated paths |
+| `UserProfile` type | Schema row shape exposed to consumers |
 
 ## What's OUT of Scope
-- API routes — Phase 2
-- Auth wiring (`getUserIdFromSession` already exists from Backend Phase 0)
-- Rate limiting wiring (`withRateLimit` already exists from Backend Phase 0)
-- Pipeline scripts — none needed
-- Per-permit detail page — Phase 2+ via the timing engine from Phase 1b-ii
+- `/api/leads/feed` route handler — Phase 2-ii
+- `/api/leads/view` route handler — Phase 2-iii
+- User profile creation/onboarding flow — separate WF (UI-driven)
+- Email/notification fields on user_profiles — future expansion
+- Firebase custom claims as a faster trade lookup — V2 optimization
+- Firebase Admin reconciliation script for orphaned profile rows — separate WF
 
 ## Execution Plan
 
 ```
-- [ ] Contract Definition: queryBuilderLeads + getLeadFeed signatures
-      locked. LeadFeedInput / LeadFeedResult shapes already defined in
-      Phase 1b-i types.ts.
+- [ ] Contract Definition: getCurrentUserContext + envelope/error helpers
+      + Zod schemas signatures locked. No Phase 2-ii/iii route handlers
+      in this WF.
 
-- [ ] Spec & Registry Sync: Specs 70 + 73 already hardened. Run
-      `npm run system-map` AFTER commit.
+- [ ] Spec & Registry Sync: Specs 70/75 hardened. Run `npm run system-map`
+      AFTER commit.
 
-- [ ] Schema Evolution: N/A — Phase 1a created cost_estimates;
-      permits/permit_trades/entities/entity_projects/wsib_registry/trades
-      are pre-existing.
+- [ ] Schema Evolution: Migration 075 written, validate-migration.js
+      passes, factories updated, `npm run db:generate` deferred (local
+      DB still broken at migration 030).
 
-- [ ] Test Scaffolding: Create 2 test files. Run
-      `npx vitest run src/tests/builder-query.logic.test.ts
-       src/tests/get-lead-feed.logic.test.ts`
-      MUST fail (Red Light).
+- [ ] Test Scaffolding: 4 test files, run vitest, MUST fail (Red Light).
 
 - [ ] Red Light: Confirmed.
 
 - [ ] Implementation:
-      Step 1 — builder-query.ts (BUILDER_QUERY_SQL constant + queryBuilderLeads)
-      Step 2 — Iterate builder-query tests to green
-      Step 3 — get-lead-feed.ts (LEAD_FEED_SQL constant + getLeadFeed)
-      Step 4 — Iterate get-lead-feed tests to green
-      Step 5 — `npm run typecheck` clean
-      Step 6 — `npm run lint -- --fix` clean
-      Step 7 — `npm run test` full suite (2644 + ~38 ≈ 2680+)
+      Step 1 — migrations/075_user_profiles.sql + validator
+      Step 2 — UserProfile type + factory
+      Step 3 — get-user-context.ts
+      Step 4 — envelope.ts
+      Step 5 — error-mapping.ts
+      Step 6 — schemas.ts
+      Step 7 — request-logging.ts
+      Step 8 — route-guard.ts update
+      Step 9 — Iterate tests to green
+      Step 10 — typecheck / lint / full test (2699 + ~40 ≈ 2740+)
 
-- [ ] Auth Boundary & Secrets: N/A — no routes, no new secrets.
-      Both libraries are server-only (use Pool from pg).
+- [ ] Auth Boundary & Secrets:
+      - getCurrentUserContext is server-only (NextRequest + Pool)
+      - Never imported from 'use client'
+      - No new secrets
+      - Migration 075 has no PII beyond Firebase UID (already in lead_views)
+      - route-guard.ts update tightens, not loosens, security
 
 - [ ] Green Light: typecheck / lint / test all clean.
 
-- [ ] Reviews:
-      - Commit the implementation
-      - Run Gemini + DeepSeek on all 4 files in parallel (8 jobs)
-      - Run independent review agent in worktree (retry 529)
-      - Triage, apply real fixes in a follow-up commit, append deferred
-        items to review_followups.md
-      - Post full triage table
+- [ ] Reviews: 10 files × 2 adversarial + 1 independent worktree.
+      Triage, fix, post table.
 
 - [ ] WF6 close: 5-point sweep + final state summary
 ```
 
 ## Risk Notes
 
-1. **Local DB still broken at migration 030.** All SQL is mock-tested only. The unified CTE has 10+ join points and ~14 `<->` distance expressions — runtime errors will only surface in CI against a clean DB. Mitigation: SQL structure tests assert every pillar/CTE is present; mock-pool tests assert function flow; spec 70 SQL is the source of truth.
+1. **Local DB still broken at migration 030.** Migration 075 won't apply locally; validator + file-shape tests cover structural correctness. Same constraint as Phase 1.
 
-2. **`<->` operator repetition in builder_candidates CTE.** The KNN distance expression appears 7 times for proximity scoring. PostgreSQL caches expression evaluation per row, so structural readability cost only — not a runtime hit. Inline rather than LATERAL alias because builder uses `MIN(...)` across multiple permits per builder, not one row.
+2. **First-time user with no profile row → 401.** Onboarding flow must populate the row before they can use the leads API. Documented contract; UI WF will handle.
 
-3. **Cursor pagination param ordering.** Page 1 with `cursor=undefined` → params have `null, null, null` for $6/$7/$8 → `$6::int IS NULL` short-circuits. Tests verify the param array uses `null` literal (not `undefined`) so pg doesn't complain about parameter type inference.
+3. **Zod discriminated union with `.and()` for lead_view body.** Inference can be subtle. Tests verify shape parsing; if Phase 2-iii hits awkward narrowing, that sub-WF can refactor.
 
-4. **`p.est_const_cost::float8` cast on NULL.** PostgreSQL: NULL cast to float8 returns NULL. Verified safe.
+4. **route-guard.ts edit must compile in edge runtime.** Mitigation: only add string array entries, no new imports, no runtime logic beyond what's already there. Run middleware tests after the edit.
 
-5. **`avg_project_cost` from `AVG(...) FILTER (WHERE est_const_cost > 0)`.** Returns NULL when no rows match. JS mapping handles `null`.
+5. **`user_profiles` lacks FK to a `users` table because there isn't one.** Same convention as `lead_views.user_id`. Orphan reconciliation deferred to a separate WF + tracked in followups.
 
-6. **Lead ID collision risk.** Permits: `'24 101234:01'`. Builders: `'9183'`. Colon presence makes them distinguishable. Cursor comparison treats lead_id as text — same lead_type always has same lead_id format, so the tuple ordering is consistent.
-
-7. **Independent review agent has hit Anthropic 529 overload three times in 24h.** Phase 1b-iii reviews retry the same agent. If it fails again, the manual dual-walkthrough fallback (used in Phase 1b-i and Phase 1b-ii) is the recovery path.
-
-8. **`builder-query.ts` SQL is technically duplicated by `builder_candidates` CTE in `get-lead-feed.ts`.** This is the cost of having a standalone builder endpoint per spec 73 + a unified feed per spec 70. CLAUDE.md §7 dual code path rule applies to JS↔SQL, not SQL↔SQL — but it's still a maintenance gotcha. Documented inline. Future hardening could share a SQL fragment via a JS template helper.
+6. **Migration 075 numbering.** Sequential, documented. Solo project — no collision risk.

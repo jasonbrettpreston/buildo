@@ -145,6 +145,17 @@ export interface TimingCalibrationRow {
 }
 
 // ---------------------------------------------------------------------------
+// User profile (migration 075)
+// ---------------------------------------------------------------------------
+export interface UserProfile {
+  user_id: string; // Firebase UID
+  trade_slug: string;
+  display_name: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// ---------------------------------------------------------------------------
 // Change tracking
 // ---------------------------------------------------------------------------
 export interface PermitChange {

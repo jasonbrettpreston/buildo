@@ -65,6 +65,7 @@ const AUTHENTICATED_API_ROUTES = [
   '/api/sync',
   '/api/quality/refresh',
   '/api/notifications',
+  '/api/leads', // Phase 2 lead feed routes — require Firebase session
 ] as const;
 
 // ---------------------------------------------------------------------------

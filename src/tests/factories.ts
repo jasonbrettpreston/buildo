@@ -15,6 +15,7 @@ import type {
   CostEstimate,
   InspectionStageMapRow,
   TimingCalibrationRow,
+  UserProfile,
 } from '@/lib/permits/types';
 import type { Parcel } from '@/lib/parcels/types';
 import type { Neighbourhood } from '@/lib/neighbourhoods/types';
@@ -168,6 +169,17 @@ export function createMockTimingCalibrationRow(
     p75_days: 35,
     sample_size: 120,
     computed_at: new Date('2024-03-01T12:00:00Z'),
+    ...overrides,
+  };
+}
+
+export function createMockUserProfile(overrides: Partial<UserProfile> = {}): UserProfile {
+  return {
+    user_id: 'firebase-uid-abc123',
+    trade_slug: 'plumbing',
+    display_name: null,
+    created_at: new Date('2026-04-01T00:00:00Z'),
+    updated_at: new Date('2026-04-01T00:00:00Z'),
     ...overrides,
   };
 }
