@@ -261,17 +261,41 @@ function toNumber(v: number | string): number {
   return Number(v);
 }
 
-function mapRow(row: LeadFeedRow): LeadFeedItem {
-  return {
-    lead_type: row.lead_type,
+function mapRow(row: LeadFeedRow): LeadFeedItem | null {
+  const base = {
     lead_id: row.lead_id,
-    permit_num: row.permit_num,
-    revision_num: row.revision_num,
-    status: row.status,
-    permit_type: row.permit_type,
-    description: row.description,
-    street_num: row.street_num,
-    street_name: row.street_name,
+    distance_m: toNumber(row.distance_m),
+    proximity_score: row.proximity_score,
+    timing_score: row.timing_score,
+    value_score: row.value_score,
+    opportunity_score: row.opportunity_score,
+    relevance_score: row.relevance_score,
+  };
+
+  if (row.lead_type === 'permit') {
+    // The SQL UNION ALL guarantees these are non-null on permit rows. We
+    // narrow defensively because TypeScript can't see through the SQL CASE.
+    if (row.permit_num === null || row.revision_num === null) return null;
+    return {
+      ...base,
+      lead_type: 'permit',
+      permit_num: row.permit_num,
+      revision_num: row.revision_num,
+      status: row.status,
+      permit_type: row.permit_type,
+      description: row.description,
+      street_num: row.street_num,
+      street_name: row.street_name,
+      latitude: toNumberOrNull(row.latitude),
+      longitude: toNumberOrNull(row.longitude),
+    };
+  }
+
+  // Builder branch — same defensive narrowing on the entity-required fields
+  if (row.entity_id === null || row.legal_name === null) return null;
+  return {
+    ...base,
+    lead_type: 'builder',
     entity_id: row.entity_id,
     legal_name: row.legal_name,
     business_size: row.business_size,
@@ -279,14 +303,6 @@ function mapRow(row: LeadFeedRow): LeadFeedItem {
     primary_email: row.primary_email,
     website: row.website,
     photo_url: row.photo_url,
-    latitude: toNumberOrNull(row.latitude),
-    longitude: toNumberOrNull(row.longitude),
-    distance_m: toNumber(row.distance_m),
-    proximity_score: row.proximity_score,
-    timing_score: row.timing_score,
-    value_score: row.value_score,
-    opportunity_score: row.opportunity_score,
-    relevance_score: row.relevance_score,
   };
 }
 
@@ -328,7 +344,12 @@ export async function getLeadFeed(
     ];
 
     const res = await pool.query<LeadFeedRow>(LEAD_FEED_SQL, params);
-    const data = res.rows.map(mapRow);
+    // Filter out any defensively-null mapping (rows where the SQL UNION
+    // produced an unexpected shape — should never happen given the CASE
+    // structure but the DU forces explicit narrowing).
+    const data = res.rows
+      .map(mapRow)
+      .filter((item): item is LeadFeedItem => item !== null);
 
     let next_cursor: LeadFeedCursor | null = null;
     if (data.length === clampedLimit && data.length > 0) {

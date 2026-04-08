@@ -26,7 +26,7 @@ Estimate when a tradesperson's services will be needed on a specific permit, usi
 | max_lag_days | INTEGER | NOT NULL — upper bound (P75) of days between stage pass and trade start |
 | precedence | INTEGER | DEFAULT 100 — when multiple stages enable the same trade (e.g., painting after Fire Separations AND after Occupancy), lower precedence number wins. This makes the "earliest applicable stage" rule explicit. |
 
-**Unique:** `(stage_name, trade_slug)` — but a single trade can appear under multiple stage_names with different precedence values
+**Unique:** `(stage_name, trade_slug, precedence)` — `precedence` is part of the unique key so a single trade can appear under multiple stage_names AND under the same stage_name with different precedence values (e.g., painting under Fire Separations precedence 10 AND under Occupancy precedence 20). Migration 072 enforces this exact composite unique index.
 
 **Why min/max lag instead of single value:** The user story in §1 promises ranges ("plumbing rough-in in 2-4 weeks"). A single `typical_lag_days` integer cannot produce that output. The new schema captures the realistic spread.
 

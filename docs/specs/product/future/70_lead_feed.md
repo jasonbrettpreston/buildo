@@ -59,7 +59,7 @@ Surface the most relevant construction leads to tradespeople based on their prox
 - **Webhook failure mitigation:** If the Firebase deletion webhook fails (network error, processing failure), `lead_views` rows remain orphaned. The same nightly purge script runs a reconciliation pass: for each distinct `user_id` in `lead_views`, query the Firebase Admin SDK to verify the user still exists; if not, delete all rows for that UID. Reconciliation happens once per week to keep cost low.
 - **Trade change policy:** When a user changes their trade in their profile, their existing `lead_views` rows for the old trade are NOT deleted (they remain valid historical records of what they viewed). Future feed queries filter by the new trade automatically. The competition count for old leads remains accurate per-trade.
 
-**DOWN migration required** (migration 067):
+**DOWN migration required** (migration 070, after the spec-drift correction):
 ```sql
 -- DOWN: drop table and FKs
 DROP TABLE IF EXISTS lead_views CASCADE;

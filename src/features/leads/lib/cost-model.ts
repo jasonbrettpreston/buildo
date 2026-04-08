@@ -132,6 +132,22 @@ function isCommercial(permit: CostModelPermitInput): boolean {
   return st.includes('commercial') || st.includes('office') || st.includes('retail');
 }
 
+/**
+ * Map a permit to a per-sqm base rate per spec 72 §Implementation table.
+ *
+ * **Known gap:** spec 72 only enumerates 6 categories: SFD, semi/town,
+ * multi-residential, addition/alteration, commercial new build, interior
+ * renovation. Real Toronto permits include "Institutional", "Industrial",
+ * "Mixed-Use", and other structure types that fall through this dispatch.
+ * The current behaviour is:
+ *   - new builds with unrecognized structure_type → fall through to SFD rate
+ *   - renovations with unrecognized permit_type → fall through to interior_reno
+ * This is a deliberate "best-effort default" pending a spec 72 update that
+ * adds explicit Institutional / Industrial / Mixed-Use rates. Tracked in
+ * `docs/reports/review_followups.md` as MED-priority "Future spec 72 update".
+ * Don't add these branches in cost-model.ts in isolation — they must land
+ * with matching constants in `compute-cost-estimates.js` (dual code path).
+ */
 function determineBaseRate(permit: CostModelPermitInput): number {
   const st = (permit.structure_type ?? '').toLowerCase();
   const newBuild = isNewBuild(permit);

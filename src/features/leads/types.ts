@@ -24,13 +24,47 @@ export type {
 // ---------------------------------------------------------------------------
 // Timing engine (Phase 1b-ii) — from spec 71 §4 Outputs
 // ---------------------------------------------------------------------------
-export interface TradeTimingEstimate {
-  confidence: 'high' | 'medium' | 'low';
-  tier: 1 | 2 | 3;
+//
+// Discriminated union keyed on `tier`. Each tier has a fixed confidence level
+// per spec 71, so making them independent fields was a footgun (impossible
+// states like `{tier:1, confidence:'low'}` were representable). The DU
+// guarantees consumers handle each tier explicitly via narrowing.
+//
+// Mapping per spec 71:
+//   tier 1 (stage-based)        → 'high'   confidence
+//   tier 2 (issued heuristic)   → 'medium' confidence
+//   tier 3 (pre-permit)         → 'low'    confidence
+//
+// Exception: Tier 1 staleness fallback (>180d since latest passed inspection)
+// downgrades to 'low' confidence per spec — represented as `tier: 1` with
+// `confidence: 'low'`. To accommodate this, tier 1 allows both 'high' and
+// 'low' confidence.
+
+interface TradeTimingEstimateBase {
   min_days: number;
   max_days: number;
   display: string;
 }
+
+interface TradeTimingEstimateTier1 extends TradeTimingEstimateBase {
+  tier: 1;
+  confidence: 'high' | 'low'; // 'low' is the staleness fallback
+}
+
+interface TradeTimingEstimateTier2 extends TradeTimingEstimateBase {
+  tier: 2;
+  confidence: 'medium';
+}
+
+interface TradeTimingEstimateTier3 extends TradeTimingEstimateBase {
+  tier: 3;
+  confidence: 'low';
+}
+
+export type TradeTimingEstimate =
+  | TradeTimingEstimateTier1
+  | TradeTimingEstimateTier2
+  | TradeTimingEstimateTier3;
 
 // ---------------------------------------------------------------------------
 // Builder leads (Phase 1b-iii) — from spec 73 §Implementation
@@ -74,28 +108,14 @@ export interface LeadFeedInput {
   limit: number;
 }
 
-export interface LeadFeedItem {
-  lead_type: 'permit' | 'builder';
+// LeadFeedItem is a discriminated union on `lead_type`. The flat-with-nullable
+// shape that the SQL UNION ALL produces is normalized into one of two
+// branches at the mapRow boundary in get-lead-feed.ts. Phase 2 consumers and
+// the UI narrow on `lead_type` and get type-safe access to the relevant
+// fields without defensive null checks.
+
+interface LeadFeedItemBase {
   lead_id: string;
-  // Permit-specific (null for builder)
-  permit_num: string | null;
-  revision_num: string | null;
-  status: string | null;
-  permit_type: string | null;
-  description: string | null;
-  street_num: string | null;
-  street_name: string | null;
-  // Builder-specific (null for permit)
-  entity_id: number | null;
-  legal_name: string | null;
-  business_size: string | null;
-  primary_phone: string | null;
-  primary_email: string | null;
-  website: string | null;
-  photo_url: string | null;
-  // Shared
-  latitude: number | null;
-  longitude: number | null;
   distance_m: number;
   proximity_score: number;
   timing_score: number;
@@ -103,6 +123,32 @@ export interface LeadFeedItem {
   opportunity_score: number;
   relevance_score: number;
 }
+
+export interface PermitLeadFeedItem extends LeadFeedItemBase {
+  lead_type: 'permit';
+  permit_num: string;
+  revision_num: string;
+  status: string | null;
+  permit_type: string | null;
+  description: string | null;
+  street_num: string | null;
+  street_name: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+export interface BuilderLeadFeedItem extends LeadFeedItemBase {
+  lead_type: 'builder';
+  entity_id: number;
+  legal_name: string;
+  business_size: string | null;
+  primary_phone: string | null;
+  primary_email: string | null;
+  website: string | null;
+  photo_url: string | null;
+}
+
+export type LeadFeedItem = PermitLeadFeedItem | BuilderLeadFeedItem;
 
 export interface LeadFeedResult {
   data: LeadFeedItem[];
