@@ -226,13 +226,12 @@ describe('getLeadFeed — function behaviour', () => {
     expect(result.meta.count).toBe(0);
   });
 
-  it('returns safe empty result + does not throw on pool error', async () => {
+  it('THROWS on pool error so the route layer can return 500 (spec 70 §API Endpoints)', async () => {
     const mock = createMockPool();
     mock.query.mockRejectedValueOnce(new Error('connection refused'));
-    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
-    expect(result.data).toEqual([]);
-    expect(result.meta.next_cursor).toBeNull();
-    expect(result.meta.radius_km).toBe(10);
+    await expect(
+      getLeadFeed(makeInput(), mock as unknown as Pool),
+    ).rejects.toThrow('connection refused');
   });
 
   it('passes nulls for $6/$7/$8 on first page (no cursor)', async () => {

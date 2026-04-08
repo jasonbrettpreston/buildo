@@ -9,7 +9,7 @@
 // surface a 500 without its own try/catch.
 
 import type { Pool } from 'pg';
-import { logError, logInfo } from '@/lib/logger';
+import { logError } from '@/lib/logger';
 
 export type LeadViewAction = 'view' | 'save' | 'unsave';
 
@@ -57,9 +57,18 @@ export function buildLeadKey(input: RecordLeadViewInput): string {
  * than insert a new row. Spec 70 calls this an "upsert" not an event log.
  *
  * Action semantics:
- *   - 'view'   → upsert with `saved` left at its current value (or false on insert)
- *   - 'save'   → upsert with `saved = true`
- *   - 'unsave' → upsert with `saved = false`
+ *   - 'view'   → upsert, refresh `viewed_at = NOW()`, preserve `saved`
+ *   - 'save'   → upsert with `saved = true`,  **preserve existing `viewed_at`**
+ *   - 'unsave' → upsert with `saved = false`, **preserve existing `viewed_at`**
+ *
+ * Save/unsave deliberately do NOT update `viewed_at`. Spec 70 §Behavioral
+ * Contract line 249: "Only count views, not saves — saves are private."
+ * The competition count query filters by `viewed_at > NOW() - INTERVAL '30 days'`,
+ * so refreshing the timestamp on save/unsave would artificially keep a lead
+ * "hot" in the competition window for a user who hadn't actually looked at
+ * it recently. On first-insert via save (no prior view), `viewed_at` still
+ * defaults to NOW() because the column is NOT NULL — edge case; in the UI
+ * flow every save is preceded by a view.
  *
  * After the upsert, returns the competition_count for the (lead_key,
  * trade_slug) pair from the last 30 days. Per spec 70 §API Endpoints
@@ -72,7 +81,6 @@ export async function recordLeadView(
   pool: Pool,
 ): Promise<RecordLeadViewResult> {
   const lead_key = buildLeadKey(input);
-  const start = Date.now();
 
   try {
     // Upsert. The XOR CHECK constraint in migration 070 enforces that
@@ -102,8 +110,7 @@ export async function recordLeadView(
            entity_id, trade_slug, viewed_at, saved
          ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)
          ON CONFLICT (user_id, lead_key, trade_slug) DO UPDATE
-           SET viewed_at = NOW(),
-               saved = EXCLUDED.saved`,
+           SET saved = EXCLUDED.saved`,
         [input.user_id, lead_key, input.lead_type, permit_num, revision_num, entity_id, input.trade_slug, saved],
       );
     }
@@ -122,14 +129,8 @@ export async function recordLeadView(
     const count_raw = countRes.rows[0]?.count ?? '0';
     const competition_count = Number.parseInt(count_raw, 10);
 
-    logInfo('[record-lead-view]', input.action, {
-      user_id: input.user_id,
-      trade_slug: input.trade_slug,
-      lead_key,
-      competition_count,
-      duration_ms: Date.now() - start,
-    });
-
+    // Route owns the single success log via logRequestComplete — no
+    // duplicate logInfo here (prevents PII double-emission per request).
     return { ok: true, competition_count };
   } catch (err) {
     logError('[record-lead-view]', err, {

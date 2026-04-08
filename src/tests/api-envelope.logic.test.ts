@@ -28,9 +28,9 @@ describe('envelope.ok', () => {
     expect(body.meta).toEqual({ next_cursor: null });
   });
 
-  it('honors custom status code', async () => {
-    const res = ok({ id: 1 }, null, 201);
-    expect(res.status).toBe(201);
+  it('always returns status 200 (3-arg overload removed — ambiguous with 2-arg form)', async () => {
+    const res = ok({ id: 1 }, null);
+    expect(res.status).toBe(200);
   });
 });
 

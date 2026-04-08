@@ -182,6 +182,30 @@ describe('recordLeadView — function behaviour', () => {
     expect(params[7]).toBe(false);
   });
 
+  it('save/unsave do NOT refresh viewed_at (spec 70 §4 — saves are private, must not inflate competition window)', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    mock.query.mockResolvedValueOnce(qr([{ count: '0' }]));
+    await recordLeadView(
+      {
+        user_id: 'u1',
+        trade_slug: 'plumbing',
+        action: 'save',
+        lead_type: 'permit',
+        permit_num: '24 101234',
+        revision_num: '01',
+      },
+      mock as unknown as Pool,
+    );
+    const sql = String(mock.query.mock.calls[0]?.[0]);
+    // The conflict branch must update `saved` only — NOT touch `viewed_at`.
+    // Previously `SET viewed_at = NOW(), saved = EXCLUDED.saved` incorrectly
+    // refreshed the competition window on every save/unsave click.
+    const conflictClause = sql.split('DO UPDATE')[1] ?? '';
+    expect(conflictClause).toContain('saved = EXCLUDED.saved');
+    expect(conflictClause).not.toContain('viewed_at = NOW()');
+  });
+
   it('action=view does NOT regress saved state — uses non-saved-touching upsert', async () => {
     const mock = createMockPool();
     mock.query.mockResolvedValueOnce(qr([]));

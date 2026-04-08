@@ -371,7 +371,7 @@ describe('GET /api/leads/feed — 429 Rate Limited', () => {
 // ---------------------------------------------------------------------------
 
 describe('GET /api/leads/feed — 500 Internal Error (defensive)', () => {
-  it('returns 500 INTERNAL_ERROR when getLeadFeed throws (regression — never-throws contract)', async () => {
+  it('returns 500 INTERNAL_ERROR when getLeadFeed throws (DB failure must surface as 5xx per spec 70 §API Endpoints)', async () => {
     mockedGetUserContext.mockResolvedValueOnce(sampleContext);
     mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 29 });
     mockedGetLeadFeed.mockRejectedValueOnce(new Error('boom'));

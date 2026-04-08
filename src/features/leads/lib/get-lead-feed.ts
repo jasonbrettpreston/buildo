@@ -2,8 +2,10 @@
 //
 // Unified lead feed — ranks permit and builder leads in ONE SQL pass via
 // UNION ALL + cursor pagination on (relevance_score, lead_type, lead_id).
-// This is the entry point Phase 2 wraps in `/api/leads/feed`. Never throws
-// — returns empty result on error.
+// This is the entry point Phase 2 wraps in `/api/leads/feed`. THROWS on
+// pool/DB error so the route can return a 500 — an earlier version swallowed
+// errors and returned empty, which made full DB outages look like an empty
+// feed to clients (spec 70 §API Endpoints requires 500 on unexpected error).
 //
 // Spec 70 calls out an earlier-draft foot-gun: interleaving permit and
 // builder leads at the application layer breaks pagination because the
@@ -30,7 +32,7 @@ import type {
   LeadFeedItem,
   LeadFeedResult,
 } from '@/features/leads/types';
-import { logError, logInfo } from '@/lib/logger';
+import { logError } from '@/lib/logger';
 
 /**
  * Hard cap on the number of leads returned per request. Spec 70 §API
@@ -308,17 +310,12 @@ function mapRow(row: LeadFeedRow): LeadFeedItem | null {
   };
 }
 
-function emptyResult(radius_km: number): LeadFeedResult {
-  return {
-    data: [],
-    meta: { next_cursor: null, count: 0, radius_km },
-  };
-}
-
 /**
- * Run the unified spec 70 lead feed query against the pool. Never throws —
- * returns an empty `LeadFeedResult` on error so Phase 2 routes can call this
- * without their own try/catch.
+ * Run the unified spec 70 lead feed query against the pool. Throws on pool
+ * or query error — the caller (Phase 2 route) MUST wrap this in its own
+ * try/catch and surface a 500 envelope via `internalError()`. Earlier
+ * versions swallowed errors and returned empty; that made DB outages
+ * invisible as empty 200s.
  */
 export async function getLeadFeed(
   input: LeadFeedInput,
@@ -331,7 +328,6 @@ export async function getLeadFeed(
   const clampedKm = Math.min(input.radius_km, MAX_RADIUS_KM);
   const clampedLimit = Math.min(Math.max(1, input.limit), MAX_FEED_LIMIT);
   const radius_m = metersFromKilometers(clampedKm);
-  const start = Date.now();
 
   try {
     const params: unknown[] = [
@@ -365,16 +361,8 @@ export async function getLeadFeed(
       }
     }
 
-    logInfo('[lead-feed/get]', 'success', {
-      user_id: input.user_id,
-      trade_slug: input.trade_slug,
-      lat: input.lat,
-      lng: input.lng,
-      radius_km: clampedKm,
-      result_count: data.length,
-      duration_ms: Date.now() - start,
-    });
-
+    // Single success log at the route layer via logRequestComplete —
+    // duplicating here would double-emit user_id/lat/lng (PII) per request.
     return {
       data,
       meta: {
@@ -391,6 +379,6 @@ export async function getLeadFeed(
       lng: input.lng,
       radius_km: clampedKm,
     });
-    return emptyResult(clampedKm);
+    throw err;
   }
 }
