@@ -15,7 +15,7 @@
 // Per spec 70 §4 Behavioral Contract + spec 72 cost model + the Phase 2
 // holistic review fixes (commits 0a3e680, 449fb2a).
 
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'vitest';
 import * as fc from 'fast-check';
 
 import {
