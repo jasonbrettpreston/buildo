@@ -214,13 +214,18 @@ import { logError, logInfo } from '@/lib/logger';
 import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
 import { getUserIdFromSession } from '@/lib/auth/server';
 import { checkLeadFeedLimit } from '@/lib/ratelimit';
+import { TRADE_SLUGS } from '@/lib/classification/trades'; // exports the 32-item const array
 
 const paramsSchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
   lng: z.coerce.number().min(-180).max(180),
-  trade_slug: z.string().min(1),
+  // Restrict to known trade slugs — prevents enumeration attacks and typos
+  trade_slug: z.enum(TRADE_SLUGS),
   radius_km: z.coerce.number().min(1).max(50).default(10),
-  page: z.coerce.number().int().min(1).default(1),
+  // Cursor pagination params (replaces page/offset)
+  cursor_score: z.coerce.number().optional(),
+  cursor_lead_type: z.enum(['permit', 'builder']).optional(),
+  cursor_lead_id: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(30).default(15),
 });
 
@@ -1421,6 +1426,7 @@ function createOverlay(
 export function LeadMapPane({ tradeSlug }: Props) {
   const map = useMap();
   const { location, radiusKm, hoveredLeadId, selectedLeadId, setSelectedLeadId, setHoveredLeadId } = useLeadFeedState();
+  const [mapsFailed, setMapsFailed] = useState(false);
   
   // Subscribe to the SAME query key as LeadFeed. TanStack Query deduplicates —
   // one network request, two consumers. The map gets the exact same data the
@@ -1433,6 +1439,37 @@ export function LeadMapPane({ tradeSlug }: Props) {
   });
   const leads = data?.pages.flatMap(p => p.data) ?? [];
 
+  // Map load failure fallback — show a static neighbourhood placeholder
+  // instead of a broken map div. Common in restrictive networks (corporate
+  // firewalls, regions where Google Maps is blocked).
+  if (mapsFailed) {
+    return (
+      <div className="hidden lg:flex sticky top-0 h-screen bg-bg-feed items-center justify-center p-8">
+        <div className="max-w-sm text-center">
+          <MapIcon className="w-12 h-12 text-gray-steel mx-auto mb-4" />
+          <h3 className="font-display text-lg text-neutral-100 mb-2">Map unavailable</h3>
+          <p className="font-display text-sm text-gray-steel">
+            We can't load the map right now. The lead list still works — addresses are shown on each card.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Marker clustering for >50 markers — Google Maps performance falls off
+  // a cliff above ~200 markers. We use @googlemaps/markerclusterer when
+  // leads > 50, otherwise render markers individually for hover detail.
+  const useClustering = leads.length > 50;
+  
+  // Map pan debouncing — when the user pans the map, each pan event
+  // generates a new center lat/lng. Without debouncing, every pan would
+  // create a new query key and trigger a refetch, exploding the cache and
+  // hammering the API. Debounce the map-driven location updates to 500ms
+  // so the query only refetches after the user stops panning.
+  const onMapPan = useDebouncedCallback((newCenter: { lat: number; lng: number }) => {
+    setLocation(newCenter);
+  }, 500);
+
   return (
     <div className="hidden lg:block sticky top-0 h-screen bg-bg-feed">
       <Map
@@ -1441,6 +1478,7 @@ export function LeadMapPane({ tradeSlug }: Props) {
         gestureHandling="cooperative"
         disableDefaultUI={false}
         mapId="lead-map" // Required for AdvancedMarker
+        onError={() => setMapsFailed(true)} // Catches Maps JS load failures
       >
         {leads.map(lead => {
           if (!lead.latitude || !lead.longitude) return null;
@@ -1602,19 +1640,24 @@ npm install \
   @tanstack/react-query \
   @tanstack/react-query-persist-client \
   @tanstack/query-async-storage-persister \
+  @tanstack/react-virtual \
   @tremor/react \
   @vis.gl/react-google-maps \
   idb-keyval \
   @upstash/ratelimit \
   @upstash/redis \
   zustand \
-  motion \
+  motion@^11.0.0 \
   react-infinite-scroll-component \
   react-hook-form \
   @hookform/resolvers \
   zod \
   unfurl.js
 ```
+
+**Version pins:**
+- `motion@^11.0.0` — uses the modern `motion/react` import (LazyMotion API). Earlier versions have a different import path that breaks our component examples.
+- `@tanstack/react-virtual` — promoted from V2 to V1 dependency. Used as the **fallback** for `react-infinite-scroll-component` if it proves unmaintained or buggy. The infinite scroll component hasn't had a release since 2022 — if Phase 4 testing exposes critical issues, swap to TanStack Virtual + a custom pull-to-refresh handler. Both libraries should be installed from day 1 so the swap is contained.
 
 **What each solves:**
 - `@tanstack/react-query-persist-client` + `@tanstack/query-async-storage-persister` + `idb-keyval` → offline cache persistence (H1)
@@ -1712,6 +1755,11 @@ type EventName =
   | 'lead_feed.empty_state_shown';
 
 let initialized = false;
+// Queue for events fired before PostHog finishes loading. The init race
+// is real — components on the lead feed route can render and emit events
+// in the same tick as the layout-level init call. Without this queue,
+// early events would be silently dropped.
+const eventQueue: Array<{ name: EventName; properties?: Record<string, unknown> }> = [];
 
 export function initObservability() {
   if (typeof window === 'undefined' || initialized) return;
@@ -1720,12 +1768,24 @@ export function initObservability() {
     person_profiles: 'identified_only',
     capture_pageview: false, // We capture manually with route context
     autocapture: false, // Strict explicit events only
+    loaded: () => {
+      initialized = true;
+      // Drain queued events that fired before init completed
+      while (eventQueue.length > 0) {
+        const event = eventQueue.shift()!;
+        posthog.capture(event.name, { ...event.properties, timestamp: new Date().toISOString() });
+      }
+    },
   });
-  initialized = true;
 }
 
 export function captureEvent(name: EventName, properties?: Record<string, unknown>) {
   if (typeof window === 'undefined') return;
+  if (!initialized) {
+    // Queue the event — the loaded() callback will drain it
+    eventQueue.push({ name, properties });
+    return;
+  }
   posthog.capture(name, {
     ...properties,
     timestamp: new Date().toISOString(),
@@ -2092,6 +2152,15 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
 - `ssrf-pipeline.infra.test.ts` — `enrich-wsib.js` extension: assert hostname validation rejects `192.168.1.1`, `10.0.0.1`, `169.254.169.254` (AWS metadata), `localhost`, `127.0.0.1`
 - `error-boundary.ui.test.tsx` — simulate thrown render error, assert `app/leads/error.tsx` fallback renders with reset button
 
+### Integration tests (`*.integration.test.tsx`)
+Cross-component interaction tests that infra/ui tests miss:
+- `feed-map-sync.integration.test.tsx` — race condition: hover card while map marker is being clicked. Assert `selectedLeadId` wins over `hoveredLeadId` per the priority rule. Test reverse direction too (click map marker while hovering different card).
+- `pull-to-refresh-during-scroll.integration.test.tsx` — pull to refresh while infinite scroll is loading next page. Assert: refresh completes, next-page request is cancelled (or merges correctly), no duplicate cards rendered, scroll position preserved.
+- `tab-switch-loading.integration.test.tsx` — switch browser tabs mid-load and back. Assert: in-flight queries don't error, focus refetch behavior matches spec.
+- `geolocation-permission-change.integration.test.tsx` — start with denied permission, user enables in browser settings mid-session. Assert: hook subscribes to `permissions.change` event and re-runs the location flow.
+- `motion-shadcn-composition.integration.test.tsx` — `MotionButton = motion(Button)` composition renders correctly with both Shadcn variants AND Motion props (whileTap, animate). Catches the case where Shadcn's focus ring system conflicts with motion's transform.
+- `marker-clustering.integration.test.tsx` — feed with 60 leads triggers clustering on the map. Assert clusters render correctly, click expands to individual markers, sync state still works.
+
 ---
 
 ## 9. Security Checklist (per §4.3)
@@ -2104,7 +2173,8 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
 - [ ] Authorization enforced server-side in API routes — middleware checks session cookie AND verifyIdToken
 - [ ] No user-provided HTML rendered — all text goes through JSX escaping
 - [ ] `rel="noopener noreferrer"` on external links — website buttons
-- [ ] `tel:` links use `.replace(/\D/g, '')` to sanitize phone numbers before href
+- [ ] `tel:` links sanitize phone numbers: `.replace(/\D/g, '').slice(0, 15)` — strip non-digits AND clamp length to 15 (E.164 max). Validate result is 10-15 digits before rendering; otherwise disable the call button. Prevents tel-link injection and overflow attacks from corrupted WSIB data.
+- [ ] `trade_slug` validated as `z.enum(TRADE_SLUGS)` — prevents enumeration attacks via free-string parameters
 - [ ] **OG image fetching happens in pipeline only**, never on API server (SSRF prevention — C1). API serves `entities.photo_url` pre-validated URLs.
 - [ ] **URL hostname validation before pipeline fetch** — reject RFC1918 private IPs, link-local ranges
 - [ ] **Max size + timeout on pipeline fetches** — 1MB body, 5s timeout via `unfurl.js`
@@ -2168,11 +2238,13 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
    }
    ```
 
-4. **Create GIST index CONCURRENTLY** (no table lock):
+4. **Create GIST index CONCURRENTLY** (no table lock, partial WHERE clause to skip NULL rows):
    ```sql
-   -- Must run outside a transaction
-   CREATE INDEX CONCURRENTLY idx_permits_location 
-     ON permits USING GIST (location);
+   -- Must run outside a transaction. Partial index excludes rows with NULL
+   -- location (un-geocoded permits), keeping the index small and fast.
+   CREATE INDEX CONCURRENTLY idx_permits_location
+     ON permits USING GIST (location)
+     WHERE location IS NOT NULL;
    ```
 
 5. **Keep `permits.location` in sync on ingest** (N6 — CRITICAL, day-2 break without this):
@@ -2184,7 +2256,7 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
      IF NEW.latitude IS NOT NULL AND NEW.longitude IS NOT NULL THEN
        NEW.location := ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326)::geography;
      ELSE
-       NEW.location := NULL;
+       NEW.location := NULL;  -- handles geocoding rollbacks on revisions
      END IF;
      RETURN NEW;
    END;
@@ -2194,6 +2266,8 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
      BEFORE INSERT OR UPDATE OF latitude, longitude ON permits
      FOR EACH ROW EXECUTE FUNCTION sync_permit_location();
    ```
+   
+   **NULL location semantics:** When a permit revision loses its geocoding (e.g., address corrected to one that fails the geocoder), the trigger sets `location = NULL`. The lead feed query MUST filter `WHERE p.location IS NOT NULL` — already in the spec via `ST_DWithin` which excludes NULLs by default. The partial index below ensures these NULL rows don't waste index space.
    
    **Constraint exception:** This is the ONLY change to the permit ingestion path. `scripts/load-permits.js` and `scripts/geocode-permits.js` remain untouched — the trigger handles the sync automatically.
 
@@ -2354,11 +2428,25 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
          // changes so existing users don't crash on stale localStorage data.
          version: 1,
          migrate: (persistedState: any, version: number) => {
+           // Defensive shape guard: even when version matches, validate the
+           // persisted shape before trusting it. Catches localStorage tampering
+           // and edge cases where the schema drifted between deploys.
+           if (!persistedState || typeof persistedState !== 'object') {
+             return { radiusKm: 10, location: null };
+           }
            if (version === 0) {
-             // Example: if v0 stored location as a string, convert to object
              return { ...persistedState, location: null };
            }
-           return persistedState;
+           // v1+: validate fields
+           return {
+             radiusKm: typeof persistedState.radiusKm === 'number' ? persistedState.radiusKm : 10,
+             location: (persistedState.location && 
+                       typeof persistedState.location === 'object' &&
+                       typeof persistedState.location.lat === 'number' &&
+                       typeof persistedState.location.lng === 'number')
+               ? persistedState.location
+               : null,
+           };
          },
        }
      )
@@ -2443,14 +2531,31 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
      {children}
    </PersistQueryClientProvider>
    ```
-3. `useGeolocation` hook with fallback chain (browser → saved home base → onboarding prompt). **Must check permission state via `navigator.permissions.query({ name: 'geolocation' })` and handle the `denied` state explicitly** — if the user has permanently denied geolocation, the "Enable Location" button in `EmptyLeadState` cannot programmatically re-prompt. Instead, show a "How to enable in browser settings" link with platform-specific instructions, and prefer the "Set Home Base" CTA. Pseudo-flow:
+3. `useGeolocation` hook with fallback chain (browser → saved home base → onboarding prompt). **Permission state handling with feature detection** — `navigator.permissions.query` is unavailable in Safari < 16 and in non-secure contexts, so the hook must feature-detect:
    ```typescript
-   const permission = await navigator.permissions.query({ name: 'geolocation' });
-   if (permission.state === 'denied') {
-     // Cannot re-prompt — guide user to settings or fall back to home base
+   async function checkGeoPermission(): Promise<'granted' | 'prompt' | 'denied' | 'unsupported'> {
+     // Feature-detect — Safari < 16 and HTTP contexts don't have Permissions API
+     if (typeof navigator === 'undefined' || !navigator.permissions?.query) {
+       return 'unsupported';
+     }
+     try {
+       const result = await navigator.permissions.query({ name: 'geolocation' });
+       return result.state; // 'granted' | 'prompt' | 'denied'
+     } catch {
+       return 'unsupported'; // Safari throws on some permission names
+     }
+   }
+   
+   // Subscribe to permission changes too — user can grant/revoke while app is open
+   const result = await navigator.permissions.query({ name: 'geolocation' });
+   result.addEventListener('change', () => {
+     // re-check and update state
+   });
+   
+   // If permanently denied, cannot re-prompt — guide user to settings
+   if (state === 'denied') {
      return { status: 'permanently_denied', cta: 'set_home_base' };
    }
-   // ... normal getCurrentPosition flow
    ```
 4. Tailwind config + font setup
 
@@ -2460,7 +2565,7 @@ Per `00_engineering_standards.md` §5.2, tests colocate by triad:
 2. `TimingBadge`, `OpportunityBadge`, `SaveButton` — atomic
 3. `PermitLeadCard` (mock data) — UI test first, wrapped in local `ErrorBoundary`
 4. `BuilderLeadCard` (mock data) — UI test first, photo from `entities.photo_url` only (no runtime fetching)
-5. `EmptyLeadState` with offline detection via `navigator.onLine`
+5. `EmptyLeadState` with **two-layer offline detection** — `navigator.onLine` is unreliable (returns true for VPNs, captive portals, networks where DNS works but our API is unreachable). Use it as a fast path, then verify with the TanStack Query state: if the most recent fetch failed AND `navigator.onLine` is false → show offline state. If fetch succeeded recently but is now failing → show "Can't reach server" instead of "Offline". Three states: `offline` (both signals fail), `unreachable` (online but API errors), `no_results` (online + reachable + empty result).
 
 ### Phase 5: Feed Integration
 
