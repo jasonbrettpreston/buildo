@@ -1,4 +1,5 @@
 // 🔗 SPEC LINK: docs/specs/product/future/72_lead_cost_model.md §Implementation
+// 🔗 ADR: docs/adr/001-dual-code-path.md — dual TS↔JS path is an explicit design choice; do not re-litigate in review
 // 🔗 DUAL CODE PATH: scripts/compute-cost-estimates.js (inline JS port) — per
 // CLAUDE.md §7, these files MUST stay in sync. Any change to BASE_RATES,
 // PREMIUM_TIERS, SCOPE_ADDITIONS, COST_TIER_BOUNDARIES, or COMPLEXITY_SIGNALS

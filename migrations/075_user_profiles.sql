@@ -1,5 +1,6 @@
 -- Migration 075 — user_profiles
 -- 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints
+-- 🔗 ADR: docs/adr/006-firebase-uid-not-fk.md — user_id is a Firebase UID, not a FK
 --
 -- Maps Firebase UIDs to a tradesperson's selected trade. Required for the
 -- spec 70 server-side trade_slug authorization check ("server compares

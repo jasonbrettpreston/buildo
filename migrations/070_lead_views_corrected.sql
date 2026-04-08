@@ -1,5 +1,8 @@
 -- Migration 070 — lead_views corrected schema
 -- Spec: docs/specs/product/future/70_lead_feed.md §Database Schema
+-- ADR: docs/adr/002-polymorphic-lead-views.md — single polymorphic table is intentional
+-- ADR: docs/adr/003-on-delete-cascade-on-permits-fk.md — ON DELETE CASCADE is intentional
+-- ADR: docs/adr/006-firebase-uid-not-fk.md — user_id is a Firebase UID, not a FK
 --
 -- Backend Phase 0 migration 069 created lead_views with the wrong shape.
 -- This migration drops that brand-new table (zero data) and recreates it

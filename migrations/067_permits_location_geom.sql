@@ -1,5 +1,6 @@
 -- Migration 067: Add native PostGIS Point column to permits
 -- Spec: docs/specs/product/future/75_lead_feed_implementation_guide.md §11
+-- ADR: docs/adr/004-manual-create-index-concurrently.md — operator pre-creates the GIST index with CONCURRENTLY before applying this migration
 --
 -- Adds permits.location (geometry Point, SRID 4326) plus a BEFORE
 -- INSERT/UPDATE trigger that keeps it in sync with latitude/longitude.

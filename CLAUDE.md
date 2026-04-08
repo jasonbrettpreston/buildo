@@ -135,6 +135,15 @@ response (not just in active_task.md):
 - [ ] **Implementation:** Write code to pass tests.
 - [ ] **Auth Boundary & Secrets:** Verify middleware protection.
       No `.env` secrets in client components.
+- [ ] **Pre-Review Self-Checklist:** BEFORE Green Light, generate a 5-10 item
+      self-skeptical checklist from the spec's Behavioral Contract / API
+      Endpoints / Operating Boundaries / §4 Edge Cases sections. Each item
+      is one verifiable question ("does the diff handle X?"). Walk each item
+      against the ACTUAL diff (not the intended diff). If any item fails,
+      fix and re-verify. Output the checklist + per-item PASS/FAIL in the
+      response BEFORE running tests. Catches the spec-vs-code drift class
+      that costs reviewer cycles when only the reviewer side runs the
+      checklist. (Process added in commit landing Phase 2 review hardening.)
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
       Output visible execution summary using ✅/⬜ for every step above. → WF6.
 ```
@@ -160,6 +169,10 @@ response (not just in active_task.md):
 - [ ] **Implementation:** Modify code to pass.
 - [ ] **UI Regression Check:** If modifying shared component,
       `npx vitest run src/tests/*.ui.test.tsx`.
+- [ ] **Pre-Review Self-Checklist:** BEFORE Green Light, generate a 5-10 item
+      self-skeptical checklist from the spec section governing the change.
+      Walk each item against the ACTUAL diff. Output PASS/FAIL per item in
+      the response BEFORE running tests. See WF1 for full rationale.
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
       Output visible execution summary using ✅/⬜ for every step above. → WF6.
 ```
@@ -178,6 +191,11 @@ response (not just in active_task.md):
 - [ ] **Reproduction:** Create failing test that isolates the bug.
 - [ ] **Red Light:** Run test. MUST fail to confirm reproduction.
 - [ ] **Fix:** Modify code to resolve.
+- [ ] **Pre-Review Self-Checklist:** BEFORE Green Light, list 3-5 sibling
+      bugs that could share the same root cause (the same wrong assumption,
+      same data-shape gap, same boundary). For each, verify either that
+      the fix covers it OR that it doesn't apply. Catches the "fixed the
+      symptom, missed the class" pattern. See WF1 for full rationale.
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
       Output visible execution summary using ✅/⬜ for every step above. → WF6.
 ```

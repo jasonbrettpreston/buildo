@@ -1,4 +1,5 @@
 // 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints
+// 🔗 ADR: docs/adr/005-hardcoded-retry-after-60.md — hardcoded Retry-After is intentional
 //
 // Maps domain conditions to HTTP responses per spec 70's status code matrix.
 // Each helper returns a `NextResponse` directly so route handlers stay tiny.

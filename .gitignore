@@ -71,3 +71,8 @@ GEO_ID
 pipeline_meta
 telemetry
 pt.classified_at
+
+
+# Stryker mutation testing sandbox + reports
+.stryker-tmp/
+reports/mutation/

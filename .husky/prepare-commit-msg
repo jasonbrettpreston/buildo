@@ -1,0 +1,5 @@
+#!/bin/sh
+# Husky prepare-commit-msg hook. Gates on BUILDO_DIFF_NARRATOR=1 inside the
+# wrapper; runs as a no-op when the env var is not set. Fails-open on any
+# error so the commit always proceeds.
+bash scripts/hooks/diff-narrator.sh "$1" "$2" "$3"

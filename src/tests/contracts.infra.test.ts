@@ -219,6 +219,25 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
     });
   }
 
+  // ADR existence check: every accepted ADR in the docs/adr/ index must
+  // exist as a non-empty file. Prevents accidental deletion that would
+  // strand the source-file `// ADR:` header references.
+  const adrs = [
+    '001-dual-code-path.md',
+    '002-polymorphic-lead-views.md',
+    '003-on-delete-cascade-on-permits-fk.md',
+    '004-manual-create-index-concurrently.md',
+    '005-hardcoded-retry-after-60.md',
+    '006-firebase-uid-not-fk.md',
+  ];
+  for (const adr of adrs) {
+    it(`ADR exists and is non-empty: docs/adr/${adr}`, () => {
+      const p = path.join(REPO_ROOT, 'docs', 'adr', adr);
+      const stats = fs.statSync(p);
+      expect(stats.size).toBeGreaterThan(500);
+    });
+  }
+
   // Canary: prove the test would actually catch drift. Mutate a known
   // value in a copy of the contracts and confirm the rule fails.
   it('canary — fails when a contract value drifts (proves the assertion is real)', () => {
