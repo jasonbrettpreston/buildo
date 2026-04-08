@@ -42,6 +42,9 @@
 | LOW | Gemini | `src/lib/permits/types.ts` `Permit.location` typed as `unknown \| null` — no GeoJSON shape definition. Pre-existing. | Future types-hardening WF | OPEN |
 | LOW | Gemini | `src/lib/permits/types.ts` `SyncRun.status` typed as generic `string` — should be a literal union. Pre-existing. | Future types-hardening WF | OPEN |
 | LOW | Gemini | `src/lib/permits/types.ts` `Entity.is_wsib_registered: boolean` cannot represent the "unknown / not yet checked" state — should be `boolean \| null`. Pre-existing. | Future types-hardening WF | OPEN |
+| MED | Stryker baseline 2026-04-08 | `cost-model.ts` mutation score 64.14% — 117 surviving mutants. Highest-leverage gaps: branch coverage on `determineBaseRate` permit_type fallback chain, `computeComplexityScore` scope tag stacking, `buildDisplay` formatting branches. Threshold is ≥ 50% (not failing) but the score has the most headroom of the 4 targets. | Targeted test additions, weekly Stryker run will track | OPEN |
+| MED | Stryker baseline 2026-04-08 | `builder-query.ts` mutation score 50.00% — 11 surviving mutants. The SQL CASE expressions in the file are mostly tested via regex shape, not via behavior, so Stryker can flip thresholds (e.g., `>= 5 → > 5`) with no test failure. Add behavioral tests that exercise the SQL with mocked rows at each band boundary. | Targeted test additions | OPEN |
+| LOW | Stryker baseline 2026-04-08 | `record-lead-view.ts` mutation score 91.84% — 4 surviving mutants. Inspect after the cost-model + builder-query gaps are closed. | Reactive | OPEN |
 
 ---
 
