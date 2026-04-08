@@ -25,14 +25,20 @@ vi.mock('@/features/leads/lib/get-lead-feed', async () => {
   };
 });
 
+vi.mock('@/features/leads/api/request-logging', () => ({
+  logRequestComplete: vi.fn(),
+}));
+
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { withRateLimit } from '@/lib/auth/rate-limit';
+import { logRequestComplete } from '@/features/leads/api/request-logging';
 import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
 import { GET } from '@/app/api/leads/feed/route';
 
 const mockedGetUserContext = vi.mocked(getCurrentUserContext);
 const mockedWithRateLimit = vi.mocked(withRateLimit);
 const mockedGetLeadFeed = vi.mocked(getLeadFeed);
+const mockedLogRequestComplete = vi.mocked(logRequestComplete);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -103,7 +109,7 @@ async function readJson(res: Response): Promise<unknown> {
 // ---------------------------------------------------------------------------
 
 describe('GET /api/leads/feed — 200 happy paths', () => {
-  it('returns 200 with mapped feed result and envelope shape', async () => {
+  it('returns 200 with mapped feed result and envelope shape (data + error: null + meta)', async () => {
     setHappyPathMocks();
     const res = await GET(makeRequest(validQuery));
     expect(res.status).toBe(200);
@@ -111,6 +117,29 @@ describe('GET /api/leads/feed — 200 happy paths', () => {
     expect(body.data).toEqual(sampleResult.data);
     expect(body.error).toBeNull();
     expect(body.meta).toEqual(sampleResult.meta);
+  });
+
+  it('logRequestComplete is called with all 7 spec 70 observability fields', async () => {
+    setHappyPathMocks();
+    await GET(makeRequest(validQuery));
+    expect(mockedLogRequestComplete).toHaveBeenCalledTimes(1);
+    const call = mockedLogRequestComplete.mock.calls[0];
+    expect(call?.[0]).toBe('[api/leads/feed]');
+    const ctx = call?.[1] as Record<string, unknown>;
+    // Spec 70 §API Endpoints "Observability" requires all 6 of these (the
+    // 7th is duration_ms, which logRequestComplete adds itself).
+    expect(ctx).toHaveProperty('user_id');
+    expect(ctx).toHaveProperty('trade_slug');
+    expect(ctx).toHaveProperty('lat');
+    expect(ctx).toHaveProperty('lng');
+    expect(ctx).toHaveProperty('radius_km');
+    expect(ctx).toHaveProperty('result_count');
+  });
+
+  it('does NOT call logRequestComplete on error paths (only on 200)', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(null);
+    await GET(makeRequest(validQuery));
+    expect(mockedLogRequestComplete).not.toHaveBeenCalled();
   });
 
   it('passes the cursor triple to getLeadFeed when all 3 cursor params present', async () => {
@@ -184,18 +213,35 @@ describe('GET /api/leads/feed — 400 Validation', () => {
     expect(body.error.details).toBeDefined();
   });
 
-  it('returns 400 when trade_slug is missing', async () => {
+  it('returns 400 VALIDATION_FAILED when trade_slug is missing', async () => {
     mockedGetUserContext.mockResolvedValueOnce(sampleContext);
     const res = await GET(makeRequest('?lat=43.65&lng=-79.38'));
     expect(res.status).toBe(400);
+    const body = (await readJson(res)) as { error: { code: string } };
+    expect(body.error.code).toBe('VALIDATION_FAILED');
   });
 
-  it('returns 400 when cursor is partial (missing lead_id)', async () => {
+  it('returns 400 VALIDATION_FAILED when lat is non-numeric (NaN coercion guard)', async () => {
+    // Regression: Number("abc") === NaN, and NaN > -90 is false. Without
+    // .finite() in the schema, NaN would silently pass min/max gates and
+    // reach getLeadFeed. Schema test in api-schemas.logic.test.ts asserts
+    // .finite() at the schema level; this test asserts the route surfaces
+    // the failure as 400 (not 500).
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    const res = await GET(makeRequest('?lat=abc&lng=-79.38&trade_slug=plumbing'));
+    expect(res.status).toBe(400);
+    const body = (await readJson(res)) as { error: { code: string } };
+    expect(body.error.code).toBe('VALIDATION_FAILED');
+  });
+
+  it('returns 400 VALIDATION_FAILED when cursor is partial (missing lead_id)', async () => {
     mockedGetUserContext.mockResolvedValueOnce(sampleContext);
     const res = await GET(
       makeRequest(`${validQuery}&cursor_score=75&cursor_lead_type=permit`),
     );
     expect(res.status).toBe(400);
+    const body = (await readJson(res)) as { error: { code: string } };
+    expect(body.error.code).toBe('VALIDATION_FAILED');
   });
 
   it('does not call getLeadFeed on 400', async () => {
@@ -208,6 +254,34 @@ describe('GET /api/leads/feed — 400 Validation', () => {
     mockedGetUserContext.mockResolvedValueOnce(null);
     const res = await GET(makeRequest('?lat=999&lng=-79.38&trade_slug=plumbing'));
     expect(res.status).toBe(401);
+  });
+
+  it('handles HTTP parameter pollution deterministically (?trade_slug=plumbing&trade_slug=electrical)', async () => {
+    // `Object.fromEntries(URLSearchParams)` returns the LAST value for
+    // duplicated keys. So `?trade_slug=plumbing&trade_slug=electrical`
+    // becomes `{trade_slug: 'electrical'}`. The auth check uses that
+    // post-Object.fromEntries value, so there is NO bypass — the
+    // route's view of trade_slug is consistent across all uses.
+    //
+    // This test locks the deterministic behavior in. If the parsing
+    // strategy ever changes (e.g. someone introduces a query parser
+    // that takes the FIRST value), this test fails.
+    mockedGetUserContext.mockResolvedValueOnce({
+      uid: 'u1',
+      trade_slug: 'electrical', // matches the LAST query value
+      display_name: null,
+    });
+    mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 29 });
+    mockedGetLeadFeed.mockResolvedValueOnce(sampleResult);
+    const res = await GET(
+      makeRequest('?lat=43.65&lng=-79.38&trade_slug=plumbing&trade_slug=electrical'),
+    );
+    // Should succeed because the LAST trade_slug ('electrical') matches the
+    // user's profile trade. If parsing took the FIRST value ('plumbing'),
+    // this would return 403.
+    expect(res.status).toBe(200);
+    const call = mockedGetLeadFeed.mock.calls[0];
+    expect(call?.[0].trade_slug).toBe('electrical');
   });
 });
 

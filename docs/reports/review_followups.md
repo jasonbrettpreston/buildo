@@ -118,6 +118,23 @@
 | HIGH | Gemini+DeepSeek | timing.ts test "missing Tier 2 coverage" | n/a | DEFERRED to Phase 1b-iii follow-up test pass — current 20 tests cover the structural correctness; comprehensive Tier 2 calibration scenarios will land alongside `get-lead-feed.ts` tests in Phase 1b-iii. |
 | LOW | Independent (deferred) | Independent review agent hit Anthropic 529 overload twice on commit 13657da | Phase 1b-iii or standalone | Adversarial reviews (8 of 8) provided coverage. Dual code path verification (cost-model only) and structural walkthroughs done inline. Sample input traces verified manually below. |
 
+## 2026-04-08 — Phase 2-ii Lead Feed Route (commit TBD after this entry)
+
+| Sev | Source | Item | Closed in | Notes |
+|-----|--------|------|-----------|-------|
+| MED | Independent + Gemini test + DeepSeek test | Test improvements: assert `error.code` on all 400 paths (only one had it), assert `error: null` on 200 paths, lock the 7-field `logRequestComplete` log shape at the route level, prove logRequestComplete is NOT called on error paths, regression-test the `lat=abc` NaN coercion path, document the HTTP parameter pollution behavior | this commit | Added 4 new tests to api-leads-feed.infra.test.ts: (1) logRequestComplete called with 7-field shape on success, (2) logRequestComplete NOT called on error paths, (3) lat=abc → 400 (NaN coercion guard), (4) HTTP parameter pollution determinism (?trade_slug=plumbing&trade_slug=electrical resolves to last value via Object.fromEntries). Beefed up existing 400 tests to also assert `error.code === 'VALIDATION_FAILED'`. |
+| CRITICAL | Gemini route | Cursor partial silently treated as page 1 | n/a | FALSE ALARM — Zod's `.refine()` rejects partial cursors at the validation layer. Existing test `returns 400 VALIDATION_FAILED when cursor is partial (missing lead_id)` verifies this. The route's `&&` check is defense-in-depth on already-validated input. |
+| HIGH | Gemini route | If `getCurrentUserContext` throws, returns 500 instead of 401 | n/a | DEFENSIBLE — `get-user-context.ts` is hardened against throwing in commit `359bc9f` (Phase 2-i fixes) with its own try/catch around getUserIdFromSession. The "never throws" contract is enforced at the helper level. |
+| MED | Gemini route | `Object.fromEntries` silently picks last value on duplicate query params | n/a | DEFENSIBLE per spec 70 — no spec param has repeated semantics. **Now locked in by an explicit test** (item 1 above) so the behavior is documented and any future parser change fails tests. |
+| MED | Gemini route | `lat`/`lng` in logs is potentially sensitive PII | n/a | DEFENSIBLE per spec 70 §API Endpoints "Observability" which explicitly requires logging `{user_id, trade_slug, lat, lng, radius_km, result_count, duration_ms}`. The user opted in by using the location-based feed. |
+| LOW | Gemini route | "never throws" comment on getLeadFeed call is "dangerous assumption" | n/a | DEFENSIBLE — top-level try/catch wrapper handles any throw. Comment is documentation, not a runtime guarantee. The defensive 500 test path verifies this. |
+| HIGH | DeepSeek test | Test for SQL injection via cursor parameters | n/a | FALSE ALARM — `getLeadFeed` parameterizes EVERY value via `$1..$8`. Cursor values are passed as parameters, not interpolated. |
+| CRITICAL | DeepSeek test | No test validates relevance_score range/calculation | n/a | OUT OF SCOPE — relevance_score is calculated by Phase 1b-iii `getLeadFeed`, which has its own 24 tests covering the SQL CASE expressions. The route layer just passes the result through. |
+| MED | Gemini test | 403 message leaks user's actual trade | n/a | DEFENSIBLE — same finding from Phase 2-i triage. The user knows their own trade (they set it). Surfacing it back is a UX win. |
+| MED | DeepSeek test | Race condition test for "user deleted mid-request" | n/a | OUT OF SCOPE — covered by `getLeadFeed`'s pool throws → empty result → 500 path which IS tested. |
+| LOW | Independent | No test asserts retryAfterSec format | n/a | DEFERRED — header presence is verified, format is "60" (constant). |
+| LOW | Both reviewers | makeRequest helper uses minimal NextRequest stub | n/a | DEFENSIBLE — the route only accesses `request.nextUrl.searchParams`. Adding a real NextRequest would couple tests to Next.js internals without catching real bugs. |
+
 ## 2026-04-08 — Phase 2-i API Foundation (commit TBD after this entry)
 
 | Sev | Source | Item | Closed in | Notes |
