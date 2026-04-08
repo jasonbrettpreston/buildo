@@ -1,334 +1,249 @@
-# Active Task: WF1 — Lead Feed Phase 1b-i: Cost Model
+# Active Task: WF1 — Lead Feed Phase 1b-ii: Timing Engine
 **Status:** Implementation
 **Workflow:** WF1 — New Feature Genesis
-**Rollback Anchor:** `800b19a`
+**Rollback Anchor:** `cca37a7`
 
 ## Domain Mode
-**Backend/Pipeline Mode** — pure library + 1 pipeline script. NO API routes, NO UI, NO new migrations. Per CLAUDE.md Backend rules: §2/§6/§7/§9 of `00_engineering_standards.md`. Pipeline script via `scripts/lib/pipeline.js` SDK only — never `new Pool()`.
+**Backend/Pipeline Mode** — async DB-backed library + 1 pipeline script. NO API routes, NO UI, NO new migrations. Per CLAUDE.md Backend rules: §2/§6/§7/§9 of `00_engineering_standards.md`. All DB access via the shared pool from `src/lib/db/client.ts`. Pipeline script via `scripts/lib/pipeline.js` SDK only.
 
 ## Context
-* **Goal:** First of three sub-WFs replacing the too-large Phase 1b. Land the base of the lead feed data layer: shared types for `src/features/leads/`, the distance helpers, the pure `estimateCost` function (spec 72), and the nightly pipeline script that populates `cost_estimates`. This sub-WF proves the **dual code path discipline** (TS + JS port of the same formula) the later phases will follow. After this WF, `cost_estimates` table can be populated from real data, and the TS `estimateCost` function is importable by Phase 1b-iii's `get-lead-feed.ts`.
+* **Goal:** Second of three sub-WFs replacing the too-large Phase 1b. Ship the spec 71 timing engine — the 3-tier confidence model with parent/child permit merge, stage-based reasoning, and an in-memory calibration cache. Plus the nightly pipeline script that populates `timing_calibration` from real inspection data. After this WF, `getTradeTimingForPermit(permit_num, trade_slug, pool)` returns a `TradeTimingEstimate` ready for Phase 2 to wrap in an API endpoint. Phase 1b-iii's `get-lead-feed.ts` will NOT call this per-row (too slow for the feed CTE) — it uses a fast SQL proxy for the timing pillar; the full engine drives the per-permit detail page in Phase 2+.
 * **Target Specs (already hardened):**
-  - `docs/specs/product/future/72_lead_cost_model.md` §Implementation (`estimateCost`, base rates, premium tiers, scope additions, cost tiers, complexity score, pipeline step)
-  - `docs/specs/product/future/75_lead_feed_implementation_guide.md` §11 Phase 1 (distance helper + types boundaries)
-  - `docs/specs/00_engineering_standards.md` §2 (try/catch), §6 (logger), §7 (dual code path), §9 (pipeline safety)
-* **Key Files:** new — `src/features/leads/types.ts`, `src/features/leads/lib/distance.ts`, `src/features/leads/lib/cost-model.ts`, `scripts/compute-cost-estimates.js`, `src/tests/distance.logic.test.ts`, `src/tests/cost-model.logic.test.ts`, `src/tests/compute-cost-estimates.infra.test.ts`.
+  - `docs/specs/product/future/71_lead_timing_engine.md` §Implementation
+  - `docs/specs/product/future/75_lead_feed_implementation_guide.md` §11 Phase 1
+  - `docs/specs/00_engineering_standards.md` §2/§6/§9
+* **Key Files:** new — `src/features/leads/lib/timing.ts`, `scripts/compute-timing-calibration.js`, `src/tests/timing.logic.test.ts`, `src/tests/compute-timing-calibration.infra.test.ts`. Reads from (no modifications) — `src/lib/classification/phases.ts`, `src/features/leads/types.ts`, `src/lib/permits/types.ts`.
 
 ## Technical Implementation
 
-### File 1 — `src/features/leads/types.ts`
-
-Single import surface for everything `src/features/leads/` consumers will need. Re-exports from `src/lib/permits/types.ts` (added in Phase 1a) plus the new lib-local interfaces.
-
-**Re-exports (from `@/lib/permits/types`):** `CostEstimate`, `CostSource`, `CostTier`, `LeadView`, `LeadType`, `InspectionStageMapRow`, `StageRelationship`, `TimingCalibrationRow`.
-
-**New interfaces (defined here):**
-- `TradeTimingEstimate` — `{ confidence, tier, min_days, max_days, display }` per spec 71 §4 (used by Phase 1b-ii)
-- `BuilderLeadCandidate` — builder row shape from spec 73 (used by Phase 1b-iii)
-- `LeadFeedCursor` — `{ score, lead_type, lead_id }` per spec 70 cursor contract
-- `LeadFeedInput` — `{ user_id, trade_slug, lat, lng, radius_km, cursor?, limit }` per spec 70 API params
-- `LeadFeedItem` — unified row shape from the CTE (used by Phase 1b-iii)
-- `LeadFeedResult` — `{ data, meta: { next_cursor, count, radius_km } }`
-
-**Note:** Interfaces for Phase 1b-ii/iii are defined now so the types.ts file is complete after this sub-WF. This avoids type-surface churn in later sub-WFs. Only `CostEstimate` and the distance constants are consumed BY this sub-WF; the rest are inert until their consumers ship.
-
-### File 2 — `src/features/leads/lib/distance.ts`
-
-Pure helpers, no DB, ~25 lines. Per spec 75 §11 Phase 1 bullet 5, distance math stays in SQL via PostGIS `ST_Distance` — these helpers exist for unit conversion and display formatting only.
+### File 1 — `src/features/leads/lib/timing.ts` (~300 lines)
 
 ```ts
-export const DEFAULT_RADIUS_KM = 10;
-export const MAX_RADIUS_KM = 50;  // spec 70 enforces via Zod
-
-export function metersFromKilometers(km: number): number;
-export function kilometersFromMeters(meters: number): number;
-export function formatDistanceForDisplay(meters: number): string;
-// '450m', '999m', '1.0km', '12km' (whole km ≥10km)
+export async function getTradeTimingForPermit(
+  permit_num: string,
+  trade_slug: string,
+  pool: Pool,
+): Promise<TradeTimingEstimate>;
+export function _resetCalibrationCache(): void;
 ```
 
-### File 3 — `src/features/leads/lib/cost-model.ts`
-
-Pure `estimateCost` function implementing spec 72 §Implementation exactly. No DB calls. ~180 lines. Signature:
-
+Module-level state (process-wide cache):
 ```ts
-export function estimateCost(
-  permit: CostModelPermitInput,
-  parcel: CostModelParcelInput | null,
-  footprint: CostModelFootprintInput | null,
-  neighbourhood: CostModelNeighbourhoodInput | null,
-): CostEstimate;
+let calibrationCache: Map<string, TimingCalibrationRow> | null = null;
+let calibrationLoadedAt = 0;
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const STALENESS_DAYS = 180;
+const CALIBRATION_STALE_DAYS = 30;
+const NOT_PASSED_PENALTY_DAYS = 14;
+const STAGE_GAP_MEDIAN_DAYS = 30;
+const MIN_SAMPLE_SIZE = 20;
+const PRE_PERMIT_MIN_DAYS = 240;  // 8 months
+const PRE_PERMIT_MAX_DAYS = 420;  // 14 months
+const BOOTSTRAP_CALIBRATION = { p25: 44, median: 105, p75: 238 }; // spec 71 seed
 ```
 
-Input interfaces are defined locally (NOT exported from `@/lib/permits/types.ts`) to keep the cost-model surface small and self-documenting. Each input is the minimum shape needed for the calculation.
+Constants exported as `const` blocks so tests can assert exact values.
 
-**Algorithm (verbatim from spec 72 §Implementation):**
-1. If `permit.est_const_cost > 1000` → source='permit', `cost_range_low === cost_range_high === estimated_cost`
-2. Else model path:
-   - Determine `base_rate_per_sqm` from permit category (SFD $3000, semi/town $2600, multi-res $3400, addition $2000, commercial $4000, interior reno $1150)
-   - Compute building area: `footprint_area_sqm × estimated_stories` if footprint present; else urban-aware fallback (tenure_renter_pct > 50% → lot × 0.7 × floors_estimate, else → lot × 0.4 × floors_estimate; floors_estimate defaults: 2 residential, 1 commercial)
-   - Apply `premium_factor` from neighbourhood income tier (<60K→1.0, 60K-100K→1.15, 100K-150K→1.35, 150K-200K→1.6, >200K→1.85; null income → 1.0)
-   - `base = area × base_rate × premium`
-   - Add scope additions (pool +$80K, elevator +$60K, underpinning +$40K, solar +$25K) — ADDITIVE AFTER multiplication
-3. Compute `cost_tier` from numeric cost (<100K=small, <500K=medium, <2M=large, <10M=major, ≥10M=mega)
-4. Compute `complexity_score` independently:
-   - High-rise (stories > 6) +30
-   - Multi-unit (dwelling_units > 4) +20
-   - Large footprint (>300 sqm) +15
-   - Premium neighbourhood (income > 150K) +15
-   - Each of pool / elevator / underpinning +10 each
-   - New build +10
-   - Cap via `Math.min(100, sum)` — spec uses `LEAST(100, sum)` in SQL, JS mirrors
-5. Output range: ±25% for full-data model, ±50% for fallback (urban-aware)
-6. Build display string per spec variants
+**Algorithm:**
+1. **Top-level guard** — try/catch wrap; on throw → `logError` + safe fallback `{confidence:'low', tier:3, min_days:0, max_days:0, display:'Timing unavailable'}`.
+2. **Calibration cache lazy load** via `ensureCalibrationLoaded(pool)`. Errors logged, continues with empty/stale cache.
+3. **Parent/child merge** via `pickBestCandidate(permit_num, trade_slug, pool)`:
+   - Query `permit_parcels` for siblings on same parcel(s)
+   - Join `permits` for permit_type, issued_date, status
+   - Use `determinePhase` from phases.ts to compute each sibling's current phase
+   - Pick sibling whose phase contains `trade_slug` per `PHASE_TRADE_MAP[phase]`
+   - Falls back to original if no better match
+4. **Inspection routing**: query `permit_inspections`. If any rows → Tier 1; else if `issued_date` → Tier 2; else → Tier 3.
+5. **Tier 1 — Stage-Based:**
+   - Find latest PASSED inspection (case-insensitive status match)
+   - **Staleness:** if `latest_passed.inspection_date > 180 days old` → low confidence, "Project may be stalled — last activity X days ago"
+   - Look up enabling stage in `inspection_stage_map` ORDER BY precedence ASC LIMIT 1 (handles painting Fire Separations prec 10 vs Occupancy prec 20)
+   - If no enabling stage row → fall through to Tier 2
+   - Branch A — enabling stage PASSED: return high, lag from map row
+   - Branch B — enabling stage "Not Passed": +14d penalty + " (delayed — re-inspection pending)"
+   - Branch C — enabling stage outstanding/missing: count `stage_sequence` gap × 30d to bounds
+6. **Tier 2 — Issued Heuristic:**
+   - Read calibration row for permit_type from cache
+   - **Stale row check:** computed_at > 30 days → logWarn + global median fallback
+   - **Insufficient sample (<20):** global median fallback
+   - **Empty cache:** BOOTSTRAP_CALIBRATION (spec 71 seed values)
+   - Compute months since issued_date
+   - Use `determinePhase(permit)` from phases.ts → check `PHASE_TRADE_MAP[phase].includes(trade_slug)`
+   - Return medium confidence with bounds derived from p25/p75
+7. **Tier 3 — Pre-Permit:** No issued_date → low, 240-420d range, "Pre-permit stage — your trade estimated 8-14 months out"
 
-**Exports:**
-- `estimateCost(...)`
-- Input interface types (`CostModelPermitInput`, etc.)
-- Constants as exported `const` objects for tests + dual code path: `BASE_RATES`, `PREMIUM_TIERS`, `SCOPE_ADDITIONS`, `COST_TIER_BOUNDARIES`, `COMPLEXITY_SIGNALS`
+**Helpers:** `ensureCalibrationLoaded`, `pickBestCandidate`, `getGlobalMedianCalibration`, `findEnablingStage`, `findLatestPassedInspection`, `findEnablingInspection`, `formatTier1Display`, `formatTier2Display`.
 
-**File header comment:** cross-reference to `scripts/compute-cost-estimates.js` for dual code path discipline per CLAUDE.md §7.
+**Logging:** `logInfo` on successful tier resolution; `logWarn` for stale calibration, cache miss, sibling query failure; `logError` for unexpected throws.
 
-### File 4 — `scripts/compute-cost-estimates.js`
+### File 2 — `scripts/compute-timing-calibration.js` (~120 lines)
 
-CommonJS Pipeline SDK script, ~200 lines. Pre-computes `cost_estimates` rows for every permit using the model. Per spec 72 §Implementation "Pipeline step (REQUIRED — not optional)".
+CommonJS Pipeline SDK script. Single SQL query (no streaming — 50-200 distinct permit_types max):
 
-**Structure:**
-```js
-// 🔗 SPEC LINK: docs/specs/product/future/72_lead_cost_model.md §Implementation
-// 🔗 DUAL CODE PATH: src/features/leads/lib/cost-model.ts — these files MUST
-// stay in sync per CLAUDE.md §7. Any change to base rates / premium tiers /
-// scope additions / tier boundaries / complexity signals must land in BOTH.
-const pipeline = require('./lib/pipeline');
-
-const BASE_RATES = { /* same numbers as cost-model.ts */ };
-const PREMIUM_TIERS = [ /* same */ ];
-const SCOPE_ADDITIONS = { /* same */ };
-const COST_TIER_BOUNDARIES = [ /* same */ ];
-const COMPLEXITY_SIGNALS = { /* same */ };
-const ADVISORY_LOCK_ID = 74;
-const BATCH_SIZE = 5000;
-
-function estimateCostInline(permit, parcel, footprint, neighbourhood) {
-  // Mirrors cost-model.ts algorithm — same branches, same constants
-}
-
-pipeline.run('compute-cost-estimates', async (pool) => {
-  const lockRes = await pool.query('SELECT pg_try_advisory_lock($1) AS locked', [ADVISORY_LOCK_ID]);
-  if (!lockRes.rows[0].locked) {
-    pipeline.log.warn('[compute-cost-estimates]', 'Advisory lock 74 held — exiting');
-    return;
-  }
-  try {
-    // streamQuery with JOIN to parcels, building_footprints, neighbourhoods
-    // Batch of 5000, UPSERT per batch inside withTransaction
-    // Track inserted vs updated via xmax = 0 check
-  } finally {
-    await pool.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-  }
-});
+```sql
+WITH first_inspection AS (
+  SELECT p.permit_type, p.permit_num, p.revision_num, p.issued_date,
+         MIN(pi.inspection_date) AS first_inspection_date
+  FROM permits p
+  JOIN permit_inspections pi ON pi.permit_num = p.permit_num
+  WHERE p.issued_date IS NOT NULL
+    AND p.permit_type IS NOT NULL
+    AND pi.inspection_date IS NOT NULL
+    AND pi.inspection_date >= p.issued_date
+  GROUP BY p.permit_type, p.permit_num, p.revision_num, p.issued_date
+),
+deltas AS (
+  SELECT permit_type, (first_inspection_date - issued_date) AS days_to_first
+  FROM first_inspection
+  WHERE first_inspection_date - issued_date BETWEEN 0 AND 730
+)
+SELECT permit_type,
+       COUNT(*)::int AS sample_size,
+       PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY days_to_first)::int AS p25,
+       PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY days_to_first)::int AS median,
+       PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY days_to_first)::int AS p75
+FROM deltas
+GROUP BY permit_type
+HAVING COUNT(*) >= 5;
 ```
 
-**SQL source query:** joins `permits` LEFT JOIN `permit_parcels` LEFT JOIN `parcels` LEFT JOIN `building_footprints` LEFT JOIN `neighbourhoods`. `permit_parcels` may have multiple rows per permit — deduplicate by picking one parcel per permit (smallest parcel_id) so each permit produces exactly one estimate.
-
-**UPSERT target:** `cost_estimates (permit_num, revision_num, estimated_cost, cost_source, cost_tier, cost_range_low, cost_range_high, premium_factor, complexity_score, model_version, computed_at)` with `ON CONFLICT (permit_num, revision_num) DO UPDATE SET ... computed_at = NOW()`.
-
-**Emits:** `PIPELINE_META` reads `{permits, parcels, building_footprints, neighbourhoods}` writes `{cost_estimates}`, `PIPELINE_SUMMARY` with `{records_total, records_new, records_updated}` from the xmax counter.
-
-**Failure recovery:** each batch wrapped in try/catch via `pipeline.withTransaction`; if a batch throws, log with `pipeline.log.error`, continue with next batch. Single-permit failures inside a batch roll back the whole batch — acceptable because spec 72 says "next nightly run picks up failures".
+UPSERT loop inside `pipeline.withTransaction`. Emits `PIPELINE_META` reads `{permits, permit_inspections}` writes `{timing_calibration}` and `PIPELINE_SUMMARY` from xmax inserted/updated counts.
 
 ### Tests
 
-**File 5 — `src/tests/distance.logic.test.ts`** (8-10 tests)
-- Imports from `@/features/leads/lib/distance`
-- `metersFromKilometers(10) === 10000`, `(0.5) === 500`, `(0) === 0`
-- `kilometersFromMeters(1000) === 1`, round-trip symmetry
-- `formatDistanceForDisplay(0) === '0m'`
-- `(450) === '450m'`, `(999) === '999m'`
-- `(1000) === '1.0km'`, `(1234) === '1.2km'`, `(9999) === '10.0km'`
-- `(10000) === '10km'`, `(12345) === '12km'` (whole km ≥10km)
-- `DEFAULT_RADIUS_KM === 10`, `MAX_RADIUS_KM === 50`
+**File 3 — `src/tests/timing.logic.test.ts`** (28-32 tests):
+- Calibration cache: load on first call, reused within 5min, reloads after, error → empty cache + logError, empty → graceful
+- Parent/child merge: no siblings, sibling with better phase, multiple siblings, query failure
+- Tier 1: happy path PASSED, staleness >180d, outstanding gap, "Not Passed" penalty, painting precedence, no enabling stage → fallthrough
+- Tier 2: cache hit, cache miss → global median, stale row → logWarn, insufficient sample, in-phase, not-in-phase
+- Tier 3: pre-permit
+- Top-level error guard: pool throws at each query point
+- All tests use `vi.useFakeTimers({ now: '2026-04-08' })` + `_resetCalibrationCache()` in beforeEach
 
-**File 6 — `src/tests/cost-model.logic.test.ts`** (22-28 tests)
-Inline fixture builders `makePermit(overrides)`, `makeParcel`, `makeFootprint`, `makeNeighbourhood` at the top of the file with sensible defaults you override per test. Cover:
-
-- **Permit-reported cost path (3 tests):**
-  - `est_const_cost > 1000` → source='permit', range_low = range_high = cost, tier matches boundary
-  - `est_const_cost === 1000` → falls through to model (boundary: `> 1000`, not `>= 1000`)
-  - `est_const_cost === 1` → placeholder rejected, falls through to model
-
-- **Base rate categories (6 tests):**
-  - SFD → 3000
-  - Semi/town → 2600
-  - Multi-res → 3400
-  - Addition → 2000
-  - Commercial new → 4000
-  - Interior reno → 1150
-
-- **Urban-aware fallback (4 tests):**
-  - No footprint, tenure_renter_pct > 50 → coverage 0.7 × floors_estimate
-  - No footprint, tenure_renter_pct ≤ 50 → coverage 0.4
-  - Residential → floors_estimate=2; Commercial → floors_estimate=1
-  - Fallback path → ±50% range not ±25%, confidence implicit via range width
-
-- **Premium tiers (5 tests):**
-  - Each boundary: <60K→1.0, 60K-100K→1.15, 100K-150K→1.35, 150K-200K→1.6, >200K→1.85
-  - null income → 1.0
-
-- **Scope additions (4 tests):**
-  - pool +80K, elevator +60K, underpinning +40K, solar +25K
-  - All 4 stacked → +205K
-  - Additive, not multiplicative (verify total = base + sum)
-
-- **Cost tiers (5 tests):**
-  - <100K=small, 100K-500K=medium, 500K-2M=large, 2M-10M=major, ≥10M=mega
-  - Boundary cases: exactly 100K → medium, exactly 500K → large, exactly 2M → major, exactly 10M → mega
-
-- **Complexity score (5 tests):**
-  - Each signal in isolation hits the right number
-  - All signals together hit 120 → capped at 100
-  - Zero signals → 0
-
-- **Display strings (3 tests):**
-  - Permit-reported: `"$1,200,000 · Large Job · Premium neighbourhood"`
-  - Model with full data: `"$1.2M–$1.8M estimated · Large Job · Premium neighbourhood"`
-  - Without sufficient data: `"Large lot, premium neighbourhood — cost estimate unavailable"` (or the spec wording)
-
-**File 7 — `src/tests/compute-cost-estimates.infra.test.ts`** (10-12 tests)
-File-shape tests via `fs.readFileSync('scripts/compute-cost-estimates.js', 'utf-8')`:
-
-- `pipeline.run('compute-cost-estimates'` present
-- `pg_try_advisory_lock($1` with `ADVISORY_LOCK_ID = 74`
-- `pg_advisory_unlock` in finally block
-- `pipeline.streamQuery(` used (not `loadAll`)
-- `pipeline.withTransaction(` used
-- `ON CONFLICT (permit_num, revision_num) DO UPDATE` present
-- References `cost_estimates`, `parcels`, `building_footprints`, `neighbourhoods`, `permit_parcels`
-- `BATCH_SIZE = 5000`
-- `pipeline.emitSummary` with records_total / records_new / records_updated
-- `pipeline.emitMeta` present with correct reads/writes map
-- Cross-reference comment to `src/features/leads/lib/cost-model.ts` present (dual code path discipline)
-- Inline `estimateCostInline` function present
-- Constants (`BASE_RATES`, `PREMIUM_TIERS`, `SCOPE_ADDITIONS`, `COST_TIER_BOUNDARIES`, `COMPLEXITY_SIGNALS`) defined in the script file
-- `pipeline.log.error` used in catch block (NOT bare `console.error`)
+**File 4 — `src/tests/compute-timing-calibration.infra.test.ts`** (8-10 tests):
+File-shape regex assertions: pipeline.run name, PERCENTILE_CONT(0.25/0.50/0.75) all present, WITHIN GROUP ORDER BY, withTransaction, ON CONFLICT (permit_type), table refs, BETWEEN 0 AND 730, HAVING >= 5, emitSummary, emitMeta, pipeline.log.error in catch.
 
 ### Database Impact
-**NO** — this WF only consumes tables created in Phase 1a (`cost_estimates`, `parcels`, `building_footprints`, `neighbourhoods`, `permits`, `permit_parcels`). No new migrations.
+**NO** — no migrations. Phase 1a created `timing_calibration` and `inspection_stage_map`; `permit_inspections` and `permit_parcels` are pre-existing.
 
 ## Standards Compliance (§10)
 
 ### DB
 - ⬜ N/A — no migrations
-- ✅ Script uses Pipeline SDK (`pipeline.run`, `streamQuery`, `withTransaction`) — never `new Pool()`
-- ✅ Parameterized queries only (`$1` placeholder for advisory lock ID)
-- ✅ `ON CONFLICT` UPSERT for idempotency
-- ✅ Advisory lock `pg_try_advisory_lock(74)` per spec 72 concurrency safety
-- ✅ Batched writes (5000 per transaction) per spec 72 to avoid long transactions
+- ✅ Pool injected as parameter; no `new Pool()` anywhere
+- ✅ Script uses Pipeline SDK
+- ✅ Parameterized queries only
+- ✅ ON CONFLICT UPSERT for idempotency
+- ✅ HAVING >= 5 filters tiny samples
 
 ### API
-- ⬜ N/A — no API routes (Phase 2)
+- ⬜ N/A — no routes (Phase 2)
 
 ### UI
 - ⬜ N/A — backend-only
 
-### Shared Logic
-- ✅ **Dual code path (§7):** `cost-model.ts` (TS) and `compute-cost-estimates.js` (JS inline port) MUST use identical numeric constants. Cross-reference comments in both files. Infra test verifies both files reference the same constant names.
-- ✅ `src/features/leads/types.ts` re-exports Phase 1a types — single import surface for Phase 2
-- ✅ No existing consumers affected — this is pure addition
+### Shared Logic (§7)
+- ✅ `timing.ts` reads `PHASE_TRADE_MAP` and `determinePhase` from `phases.ts` per spec 71's read-only dependency note. NOT modifying phases.ts.
+- ✅ NO dual code path needed: `compute-timing-calibration.js` does percentile SQL only — no JS port of timing.ts logic. Different concerns: script writes the cache, library reads it.
+- ✅ `TradeTimingEstimate` already defined in `src/features/leads/types.ts` from Phase 1b-i — single source of truth.
 
 ### Pipeline (§9)
 - ✅ `pipeline.run` wrapper
-- ✅ `pipeline.withTransaction` for atomic batch writes
-- ✅ `pipeline.streamQuery` for the 237K-permit scan (no load-all)
+- ✅ `pipeline.withTransaction` for atomic UPSERT
+- ✅ Single SQL query (no streaming — small dataset)
 - ✅ Idempotent UPSERT
-- ✅ Advisory lock acquire + release in try/finally
 - ✅ `PIPELINE_META` + `PIPELINE_SUMMARY` emitted
-- ✅ Batch size 5000 — under PostgreSQL parameter limit
-- ✅ Per-batch failure recovery with `pipeline.log.error` — next run catches up
-- ✅ `pipeline.log.{info, warn, error}` instead of bare `console.*`
-- ✅ CommonJS script in `scripts/` — `process.exit` allowed (not `src/`)
+- ✅ `pipeline.log.{info,warn,error}` instead of bare console
+- ✅ CommonJS in `scripts/`
 
 ### Try/Catch (§2) + logError mandate
-- ✅ `estimateCost` is pure — no throws possible except on malformed input; input interfaces constrain shape
-- ✅ Script wraps each batch in try/catch via `pipeline.withTransaction`; failure logged, continues
-- ✅ Advisory unlock in `finally` block — never leaked
+- ✅ Top-level try/catch in `getTradeTimingForPermit` returns safe fallback
+- ✅ Calibration load wrapped, continues with empty cache on failure
+- ✅ Each tier has its own internal try semantics — no throws escape
+- ✅ `logError` for unexpected, `logWarn` for known degraded paths, `logInfo` for happy-path observability
 
 ### Unhappy Path Tests
-- ✅ `est_const_cost === 1` placeholder handling
-- ✅ No footprint / no parcel / no neighbourhood → fallback paths
-- ✅ Null income → premium factor 1.0 (not crash)
-- ✅ Complexity cap when all signals present (120 → 100)
+- ✅ Cache load failure
+- ✅ Pool throws at each query point
+- ✅ No matching enabling stage (trade not in inspection_stage_map)
+- ✅ Stale calibration (>30d)
+- ✅ Insufficient sample size (<20)
+- ✅ Empty cache → bootstrap fallback
+- ✅ Sibling query failure
+- ✅ 180-day staleness on latest passed stage
 
 ### Mobile-First
 - ⬜ N/A — backend-only
 
 ## Review Plan (per `feedback_review_protocol.md`, this is WF1)
-- ✅ **Independent review** in worktree after commit
-- ✅ **BOTH adversarial models** on EVERY changed/created file (7 files):
-  - `src/features/leads/types.ts`
-  - `src/features/leads/lib/distance.ts`
-  - `src/features/leads/lib/cost-model.ts`
-  - `scripts/compute-cost-estimates.js`
-  - `src/tests/distance.logic.test.ts`
-  - `src/tests/cost-model.logic.test.ts`
-  - `src/tests/compute-cost-estimates.infra.test.ts`
-- **7 files × 2 models = 14 adversarial reviews + 1 independent ≈ $2.80**
+- ✅ **Independent review** in worktree after commit (retry from Phase 1b-i 529 overload)
+- ✅ **BOTH adversarial models** on EVERY changed/created file (4 files):
+  - `src/features/leads/lib/timing.ts`
+  - `scripts/compute-timing-calibration.js`
+  - `src/tests/timing.logic.test.ts`
+  - `src/tests/compute-timing-calibration.infra.test.ts`
+- **4 files × 2 models = 8 adversarial reviews + 1 independent ≈ $1.60**
 - ✅ Triage via Real / Defensible / Out-of-scope tree
 - ✅ Append deferred items to `docs/reports/review_followups.md`
 - ✅ Post full triage table in the response
 
+## What's IN Scope
+| Deliverable | Why |
+|---|---|
+| `timing.ts` + 28-32 tests | Spec 71 3-tier engine; consumed by Phase 2 detail page |
+| `compute-timing-calibration.js` + 8-10 infra tests | Nightly populator for calibration cache |
+
+## What's OUT of Scope
+- `get-lead-feed.ts` — Phase 1b-iii
+- `builder-query.ts` — Phase 1b-iii
+- API routes — Phase 2
+- Adding the script to the sources chain — separate small WF after Phase 1b proves stable
+- Dual code path port — not applicable (script doesn't reuse timing.ts logic)
+
 ## Execution Plan
 
 ```
-- [ ] Contract Definition: All signatures locked in this plan.
-      Phase 2 will consume estimateCost via the cost_estimates cache,
-      not directly. Phase 1b-iii will import from src/features/leads/types.
+- [ ] Contract Definition: getTradeTimingForPermit signature locked at
+      `(permit_num, trade_slug, pool) => Promise<TradeTimingEstimate>`.
+      _resetCalibrationCache exported for tests only.
 
-- [ ] Spec & Registry Sync: Spec 72 already hardened. Run
-      `npm run system-map` AFTER commit to capture new src/features/leads/
-      paths.
+- [ ] Spec & Registry Sync: Spec 71 already hardened. Run
+      `npm run system-map` AFTER commit.
 
-- [ ] Schema Evolution: N/A — Phase 1a created all tables.
+- [ ] Schema Evolution: N/A — Phase 1a created timing_calibration and
+      inspection_stage_map; permit_inspections and permit_parcels are
+      pre-existing.
 
-- [ ] Test Scaffolding: Create the 3 test files. Run
-      `npx vitest run src/tests/distance.logic.test.ts
-       src/tests/cost-model.logic.test.ts
-       src/tests/compute-cost-estimates.infra.test.ts`
-      MUST fail — modules don't exist.
+- [ ] Test Scaffolding: Create 2 test files. Run
+      `npx vitest run src/tests/timing.logic.test.ts
+       src/tests/compute-timing-calibration.infra.test.ts`
+      MUST fail (Red Light).
 
-- [ ] Red Light: Confirmed (typecheck errors + vitest module-not-found).
+- [ ] Red Light: Confirmed.
 
 - [ ] Implementation:
-      Step 1 — src/features/leads/types.ts (re-exports + new interface
-        definitions; no implementation behavior)
-      Step 2 — src/features/leads/lib/distance.ts (3 functions + 2
-        constants)
-      Step 3 — Run distance tests — must pass
-      Step 4 — src/features/leads/lib/cost-model.ts (pure function,
-        ~180 lines, constants as exports)
-      Step 5 — Run cost-model tests — must pass
-      Step 6 — scripts/compute-cost-estimates.js (CommonJS, Pipeline
-        SDK, inline port of cost-model algorithm with IDENTICAL
-        constants, advisory lock, batched UPSERT)
-      Step 7 — Run compute-cost-estimates infra test — must pass
-      Step 8 — `npm run typecheck` — must be clean
-      Step 9 — `npm run lint -- --fix` — must be clean
-      Step 10 — `npm run test` full suite — 2541 + ~40 new ≈ 2580+
-      Step 11 — Manual constants audit: diff the exported constant
-        blocks between cost-model.ts and compute-cost-estimates.js;
-        values must match byte-for-byte
+      Step 1 — timing.ts skeleton (constants + ensureCalibrationLoaded + try/catch)
+      Step 2 — pickBestCandidate (parent/child merge query)
+      Step 3 — Tier 1 stage-based logic
+      Step 4 — Tier 2 issued heuristic + cache + global fallback + bootstrap
+      Step 5 — Tier 3 pre-permit
+      Step 6 — Iterate timing tests until 28-32 pass
+      Step 7 — compute-timing-calibration.js
+      Step 8 — Run infra test
+      Step 9 — `npm run typecheck` clean
+      Step 10 — `npm run lint -- --fix` clean
+      Step 11 — `npm run test` full suite (2613 + ~38 ≈ 2651+)
 
 - [ ] Auth Boundary & Secrets: N/A — no routes, no new secrets.
-      estimateCost is pure; script uses PG_* env vars via pipeline SDK.
+      timing.ts is server-only (uses Pool from pg).
 
-- [ ] Green Light:
-      - typecheck / lint / test all clean
-      - dual code path constant audit passes
-      Output visible execution summary ✅/⬜ for every step.
+- [ ] Green Light: typecheck / lint / test all clean.
 
 - [ ] Reviews:
       - Commit the implementation
-      - Run Gemini + DeepSeek on all 7 files in parallel (14 jobs)
-      - Run independent review agent in worktree against the commit
+      - Run Gemini + DeepSeek on all 4 files in parallel (8 jobs)
+      - Run independent review agent in worktree (retry the 529 from
+        Phase 1b-i)
       - Triage, apply real fixes in a follow-up commit, append deferred
         items to review_followups.md
       - Post full triage table
@@ -338,12 +253,16 @@ File-shape tests via `fs.readFileSync('scripts/compute-cost-estimates.js', 'utf-
 
 ## Risk Notes
 
-1. **Local DB broken at migration 030 (pre-existing).** All tests mock the pool or read script file shape — no real DB roundtrip. The compute-cost-estimates.js script's SQL will only be runtime-validated when CI runs against a clean DB or when the local DB is repaired. Mitigation: infra test asserts the SQL structure; adversarial reviews catch parameter mismatches; once the DB is repaired, a smoke run against real data before Phase 1b-iii wraps.
+1. **Cache consistency in serverless.** Module-level cache is per-process. In Next.js serverless each instance refreshes independently. Acceptable — calibration changes daily at most. Documented inline.
 
-2. **Dual code path drift.** cost-model.ts (TS) and compute-cost-estimates.js (JS inline) must use identical numeric constants. Any future rate change must land in BOTH. Mitigation: cross-reference comments in both files; infra test asserts constant names present in script; Step 11 of implementation explicitly diffs the constant blocks. Extracting to a shared JSON file is noted in `review_followups.md` as future hardening.
+2. **Date.now() in tests.** REFRESH_INTERVAL_MS and 180-day staleness depend on Date.now(). Use `vi.useFakeTimers({ now: new Date('2026-04-08') })` + `vi.advanceTimersByTime` rather than threading a clock parameter.
 
-3. **`permit_parcels` multi-parcel-per-permit.** Some permits link to multiple parcels (shared lots, condo units). The cost model expects a SINGLE parcel. Mitigation: SQL picks smallest parcel_id per permit (arbitrary but stable). A future enhancement could pick the largest or aggregate; acceptable for V1.
+3. **`permit_inspections.status` enum is undocumented.** The codebase has `lib/inspections/parser.ts` with `normalizeStatus`. During implementation, read parser.ts to learn canonical values. If they differ from spec 71's "PASSED", normalize at the boundary in timing.ts via case-insensitive comparison.
 
-4. **`parseFloat` vs `Number` parsing of DB DECIMAL fields.** pg returns DECIMAL(15,2) as a JS string by default. The cost-model input interface must accept `number | string` OR the SQL must `CAST` to float. Mitigation: script CASTs via `::float8` in the SELECT; cost-model.ts input types use `number`. Tested by the infra test asserting the `::float8` casts are present.
+4. **Parent/child merge query cost.** `pickBestCandidate` issues a permit_parcels JOIN per call. Fine on detail pages (1 call). Feed pages don't use this engine (use SQL proxy in Phase 1b-iii). Documented as "future batch query" follow-up.
 
-5. **Complexity cap.** Spec 72 says max theoretical sum is 120 (30+20+15+15+10+10+10+10). If a future signal is added, the cap still holds — defensive. Tests verify Math.min(100, sum) applied.
+5. **`determinePhase` from phases.ts is synchronous and date-based.** Reads issued_date, computes phase from elapsed months. If candidate has no issued_date the function still works (returns 'early_construction'). Verified during recon.
+
+6. **Bootstrap calibration values.** First run after `compute-timing-calibration.js` ships will populate the table. Until then, `BOOTSTRAP_CALIBRATION = {p25:44, median:105, p75:238}` (spec 71 seed values from audit) keeps Tier 2 functional from day 0.
+
+7. **Spec 71 says "PASSED" but DB might be "Passed"/"PASSED"/"passed".** Mitigation: case-insensitive comparison in `findLatestPassedInspection`. Tests verify both casings.

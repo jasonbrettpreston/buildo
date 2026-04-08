@@ -1,0 +1,131 @@
+#!/usr/bin/env node
+// 🔗 SPEC LINK: docs/specs/product/future/71_lead_timing_engine.md §Implementation
+//
+// Nightly job that populates timing_calibration with per-permit_type percentile
+// statistics of (issued_date → first inspection). Read by the request-path
+// src/features/leads/lib/timing.ts Tier 2 logic. This script does NOT share
+// logic with timing.ts — it only writes the cache the library reads.
+//
+// - Single aggregate query; no streaming (50-200 distinct permit_types max).
+// - UPSERT batch wrapped in one pipeline.withTransaction for atomicity.
+// - HAVING COUNT >= 5 filters tiny samples that would mislead Tier 2.
+// - BETWEEN 0 AND 730 day outlier filter excludes stale/weird data.
+
+const pipeline = require('./lib/pipeline');
+
+const CALIBRATION_SQL = `
+  WITH first_inspection AS (
+    SELECT
+      p.permit_type,
+      p.permit_num,
+      p.revision_num,
+      p.issued_date,
+      MIN(pi.inspection_date) AS first_inspection_date
+    FROM permits p
+    JOIN permit_inspections pi ON pi.permit_num = p.permit_num
+    WHERE p.issued_date IS NOT NULL
+      AND p.permit_type IS NOT NULL
+      AND pi.inspection_date IS NOT NULL
+      AND pi.inspection_date >= p.issued_date
+    GROUP BY p.permit_type, p.permit_num, p.revision_num, p.issued_date
+  ),
+  deltas AS (
+    SELECT
+      permit_type,
+      (first_inspection_date - issued_date) AS days_to_first
+    FROM first_inspection
+    WHERE first_inspection_date - issued_date BETWEEN 0 AND 730
+  )
+  SELECT
+    permit_type,
+    COUNT(*)::int AS sample_size,
+    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY days_to_first)::int AS p25,
+    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY days_to_first)::int AS median,
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY days_to_first)::int AS p75
+  FROM deltas
+  GROUP BY permit_type
+  HAVING COUNT(*) >= 5
+`;
+
+pipeline.run('compute-timing-calibration', async (pool) => {
+  let rows;
+  try {
+    const res = await pool.query(CALIBRATION_SQL);
+    rows = res.rows;
+  } catch (err) {
+    pipeline.log.error('[compute-timing-calibration]', 'calibration query failed', {
+      err: err && err.message,
+    });
+    throw err;
+  }
+
+  if (rows.length === 0) {
+    pipeline.log.warn(
+      '[compute-timing-calibration]',
+      'no permit_types met the HAVING COUNT >= 5 threshold — timing_calibration not updated',
+    );
+    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    pipeline.emitMeta(
+      { permits: ['*'], permit_inspections: ['*'] },
+      { timing_calibration: ['permit_type'] },
+    );
+    return;
+  }
+
+  const result = await pipeline.withTransaction(pool, async (client) => {
+    let inserted = 0;
+    let updated = 0;
+    for (const row of rows) {
+      try {
+        const upsert = await client.query(
+          `INSERT INTO timing_calibration (
+             permit_type,
+             median_days_to_first_inspection,
+             p25_days,
+             p75_days,
+             sample_size,
+             computed_at
+           ) VALUES ($1, $2, $3, $4, $5, NOW())
+           ON CONFLICT (permit_type) DO UPDATE
+             SET median_days_to_first_inspection = EXCLUDED.median_days_to_first_inspection,
+                 p25_days                         = EXCLUDED.p25_days,
+                 p75_days                         = EXCLUDED.p75_days,
+                 sample_size                      = EXCLUDED.sample_size,
+                 computed_at                      = NOW()
+           RETURNING (xmax = 0) AS inserted`,
+          [row.permit_type, row.median, row.p25, row.p75, row.sample_size],
+        );
+        if (upsert.rows[0] && upsert.rows[0].inserted) inserted++;
+        else updated++;
+      } catch (err) {
+        pipeline.log.error('[compute-timing-calibration]', 'upsert failed', {
+          permit_type: row.permit_type,
+          err: err && err.message,
+        });
+      }
+    }
+    return { inserted, updated };
+  });
+
+  pipeline.emitSummary({
+    records_total: rows.length,
+    records_new: result.inserted,
+    records_updated: result.updated,
+  });
+  pipeline.emitMeta(
+    {
+      permits: ['permit_num', 'revision_num', 'permit_type', 'issued_date'],
+      permit_inspections: ['permit_num', 'inspection_date'],
+    },
+    {
+      timing_calibration: [
+        'permit_type',
+        'median_days_to_first_inspection',
+        'p25_days',
+        'p75_days',
+        'sample_size',
+        'computed_at',
+      ],
+    },
+  );
+});
