@@ -11,6 +11,7 @@ import type {
   ProductGroup,
   ProductMatch,
   Inspection,
+  LeadView,
 } from '@/lib/permits/types';
 import type { Parcel } from '@/lib/parcels/types';
 import type { Neighbourhood } from '@/lib/neighbourhoods/types';
@@ -96,6 +97,18 @@ export function createMockPermit(overrides: Partial<Permit> = {}): Permit {
     last_seen_at: new Date('2024-03-01'),
     neighbourhood_id: null,
     raw_json: null,
+    location: null,
+    photo_url: null,
+    ...overrides,
+  };
+}
+
+export function createMockLeadView(overrides: Partial<LeadView> = {}): LeadView {
+  return {
+    user_id: 'firebase-uid-abc123',
+    permit_num: '24 101234',
+    revision_num: 0,
+    viewed_at: new Date('2024-03-01T12:00:00Z'),
     ...overrides,
   };
 }

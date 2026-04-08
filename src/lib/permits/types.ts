@@ -76,6 +76,18 @@ export interface Permit {
   last_seen_at: Date;
   neighbourhood_id: number | null;
   raw_json: Record<string, unknown> | null;
+  location: unknown | null;
+  photo_url: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Lead Views (migration 069)
+// ---------------------------------------------------------------------------
+export interface LeadView {
+  user_id: string;
+  permit_num: string;
+  revision_num: number;
+  viewed_at: Date;
 }
 
 // ---------------------------------------------------------------------------
