@@ -71,10 +71,18 @@ describe('LEAD_FEED_SQL — structure', () => {
     expect(LEAD_FEED_SQL).toMatch(/LIMIT \$5::int/);
   });
 
-  it('filters permits by trade_slug + active + confidence >= 0.5', () => {
-    expect(LEAD_FEED_SQL).toMatch(/pt\.trade_slug = \$1/);
+  it('joins to trades table by trade_id and filters by t.slug (NOT pt.trade_slug — that column does not exist on permit_trades)', () => {
+    // Regression: an earlier draft used `pt.trade_slug = $1` which would
+    // fail at runtime because permit_trades has `trade_id INTEGER` only.
+    // Caught by the holistic Phase 1 review.
+    expect(LEAD_FEED_SQL).toMatch(/JOIN trades t ON t\.id = pt\.trade_id/);
+    expect(LEAD_FEED_SQL).toMatch(/t\.slug = \$1/);
+    expect(LEAD_FEED_SQL).not.toMatch(/pt\.trade_slug/);
+  });
+
+  it('filters permits by is_active + confidence >= 0.5', () => {
     expect(LEAD_FEED_SQL).toMatch(/pt\.is_active = true/);
-    expect(LEAD_FEED_SQL).toMatch(/pt\.confidence >= 0\.5/);
+    expect((LEAD_FEED_SQL.match(/pt\.confidence >= 0\.5/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 
   it('excludes cancelled / revoked / closed permits', () => {

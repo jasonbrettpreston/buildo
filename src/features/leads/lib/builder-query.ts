@@ -40,6 +40,7 @@ export const BUILDER_QUERY_SQL = `
       ON pt.permit_num = p.permit_num
      AND pt.revision_num = p.revision_num
      AND pt.is_active = true
+     AND pt.confidence >= 0.5
     JOIN trades t ON t.id = pt.trade_id AND t.slug = $1
     WHERE p.status IN ('Permit Issued', 'Inspection')
       AND p.location IS NOT NULL

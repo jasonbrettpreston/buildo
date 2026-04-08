@@ -113,8 +113,9 @@ export const LEAD_FEED_SQL = `
       END AS opportunity_score
     FROM permits p
     JOIN permit_trades pt USING (permit_num, revision_num)
+    JOIN trades t ON t.id = pt.trade_id
     LEFT JOIN cost_estimates ce USING (permit_num, revision_num)
-    WHERE pt.trade_slug = $1
+    WHERE t.slug = $1
       AND pt.is_active = true
       AND pt.confidence >= 0.5
       AND p.location IS NOT NULL
@@ -180,8 +181,9 @@ export const LEAD_FEED_SQL = `
     JOIN permit_trades pt
       ON pt.permit_num = p.permit_num
      AND pt.revision_num = p.revision_num
-     AND pt.trade_slug = $1
      AND pt.is_active = true
+     AND pt.confidence >= 0.5
+    JOIN trades t ON t.id = pt.trade_id AND t.slug = $1
     LEFT JOIN LATERAL (
       SELECT business_size
       FROM wsib_registry w2
