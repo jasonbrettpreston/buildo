@@ -82,11 +82,14 @@ async function ensureCalibrationLoaded(pool: Pool): Promise<void> {
     calibrationLoadedAt = now;
   } catch (err) {
     logError('[timing/calibration]', err, { stage: 'load' });
-    // Never leave cache null after a failed load — use empty map so subsequent
-    // calls don't all stampede the DB.
+    // Never leave cache null after a failed load — use empty map so callers
+    // can proceed via Tier 2 BOOTSTRAP fallback. We DELIBERATELY do NOT
+    // bump calibrationLoadedAt: leaving it stale forces the very next call
+    // to retry, instead of locking the empty cache in for REFRESH_INTERVAL_MS
+    // and silently degrading every request for 5 minutes after a transient
+    // DB blip.
     if (calibrationCache === null) {
       calibrationCache = new Map();
-      calibrationLoadedAt = now;
     }
   }
 }
@@ -98,28 +101,32 @@ interface GlobalMedian {
 }
 
 /**
- * Compute the global median calibration across every cached permit_type.
- * Falls back to BOOTSTRAP_CALIBRATION when the cache is empty.
+ * Compute the global calibration as a sample-weighted average across every
+ * cached permit_type. Weighting by `sample_size` is statistically the right
+ * thing to do — a permit_type with 10 000 observations should outweigh one
+ * with 25. Falls back to BOOTSTRAP_CALIBRATION when the cache is empty.
  */
 function getGlobalMedianCalibration(): GlobalMedian {
   if (!calibrationCache || calibrationCache.size === 0) {
     return { ...BOOTSTRAP_CALIBRATION };
   }
-  let totalP25 = 0;
-  let totalMedian = 0;
-  let totalP75 = 0;
-  let count = 0;
+  let weightedP25 = 0;
+  let weightedMedian = 0;
+  let weightedP75 = 0;
+  let totalWeight = 0;
   for (const row of calibrationCache.values()) {
-    totalP25 += row.p25_days;
-    totalMedian += row.median_days_to_first_inspection;
-    totalP75 += row.p75_days;
-    count += 1;
+    const w = Math.max(0, row.sample_size);
+    if (w === 0) continue;
+    weightedP25 += row.p25_days * w;
+    weightedMedian += row.median_days_to_first_inspection * w;
+    weightedP75 += row.p75_days * w;
+    totalWeight += w;
   }
-  if (count === 0) return { ...BOOTSTRAP_CALIBRATION };
+  if (totalWeight === 0) return { ...BOOTSTRAP_CALIBRATION };
   return {
-    p25: Math.round(totalP25 / count),
-    median: Math.round(totalMedian / count),
-    p75: Math.round(totalP75 / count),
+    p25: Math.round(weightedP25 / totalWeight),
+    median: Math.round(weightedMedian / totalWeight),
+    p75: Math.round(weightedP75 / totalWeight),
   };
 }
 
@@ -146,6 +153,9 @@ async function pickBestCandidate(
     status: null,
   };
   try {
+    // Stable ordering: prefer the most recently-issued sibling first, ties
+    // broken by permit_num. Without ORDER BY, the fallback below would pick
+    // an arbitrary row on every call (non-deterministic).
     const res = await pool.query<Candidate>(
       `SELECT DISTINCT p.permit_num, p.permit_type, p.issued_date, p.status
          FROM permit_parcels pp_self
@@ -154,7 +164,8 @@ async function pickBestCandidate(
          JOIN permits p
            ON p.permit_num = pp_sibling.permit_num
           AND p.revision_num = pp_sibling.revision_num
-        WHERE pp_self.permit_num = $1`,
+        WHERE pp_self.permit_num = $1
+        ORDER BY p.issued_date DESC NULLS LAST, p.permit_num ASC`,
       [permit_num],
     );
     const siblings = res.rows;
@@ -395,6 +406,7 @@ function tier2IssuedHeuristic(
   const elapsedDays = Math.max(0, daysBetween(new Date(candidate.issued_date), now));
   const remainingMin = Math.max(0, p25 - elapsedDays);
   const remainingMax = Math.max(remainingMin, p75 - elapsedDays);
+  const weeksElapsed = Math.round(elapsedDays / 7);
 
   // Phase check: is the trade active in the currently-estimated phase?
   const phase = determinePhase({
@@ -404,7 +416,21 @@ function tier2IssuedHeuristic(
   const phaseTrades = PHASE_TRADE_MAP[phase] ?? [];
   const tradeInPhase = phaseTrades.includes(trade_slug);
 
-  const weeksElapsed = Math.round(elapsedDays / 7);
+  // Overdue: elapsed days exceed even the P75 calibration → the trade
+  // window has likely closed. Show a different message instead of "0-0
+  // weeks remaining" which is confusing.
+  if (elapsedDays > p75) {
+    return {
+      confidence: 'medium',
+      tier: 2,
+      min_days: 0,
+      max_days: 0,
+      display: tradeInPhase
+        ? `Permit issued ${weeksElapsed} weeks ago — your trade should be active now or recently completed`
+        : `Permit issued ${weeksElapsed} weeks ago — your trade window may have passed`,
+    };
+  }
+
   const minWeeks = Math.round(remainingMin / 7);
   const maxWeeks = Math.round(remainingMax / 7);
   const display = tradeInPhase

@@ -13,21 +13,34 @@
 
 const pipeline = require('./lib/pipeline');
 
+// permit_inspections has no revision_num column. Joining permits → inspections
+// on permit_num alone would associate every revision of the same permit with
+// the same first_inspection_date — biasing the percentiles. Collapse permits
+// to one row per permit_num (using the EARLIEST issued_date for that permit)
+// BEFORE the join, so each permit_num contributes exactly one delta to the
+// percentile calculation.
 const CALIBRATION_SQL = `
-  WITH first_inspection AS (
+  WITH permit_root AS (
+    SELECT DISTINCT ON (permit_num)
+      permit_num,
+      permit_type,
+      issued_date
+    FROM permits
+    WHERE issued_date IS NOT NULL
+      AND permit_type IS NOT NULL
+    ORDER BY permit_num, issued_date ASC
+  ),
+  first_inspection AS (
     SELECT
-      p.permit_type,
-      p.permit_num,
-      p.revision_num,
-      p.issued_date,
+      pr.permit_type,
+      pr.permit_num,
+      pr.issued_date,
       MIN(pi.inspection_date) AS first_inspection_date
-    FROM permits p
-    JOIN permit_inspections pi ON pi.permit_num = p.permit_num
-    WHERE p.issued_date IS NOT NULL
-      AND p.permit_type IS NOT NULL
-      AND pi.inspection_date IS NOT NULL
-      AND pi.inspection_date >= p.issued_date
-    GROUP BY p.permit_type, p.permit_num, p.revision_num, p.issued_date
+    FROM permit_root pr
+    JOIN permit_inspections pi ON pi.permit_num = pr.permit_num
+    WHERE pi.inspection_date IS NOT NULL
+      AND pi.inspection_date >= pr.issued_date
+    GROUP BY pr.permit_type, pr.permit_num, pr.issued_date
   ),
   deltas AS (
     SELECT
@@ -39,9 +52,9 @@ const CALIBRATION_SQL = `
   SELECT
     permit_type,
     COUNT(*)::int AS sample_size,
-    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY days_to_first)::int AS p25,
-    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY days_to_first)::int AS median,
-    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY days_to_first)::int AS p75
+    ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY days_to_first))::int AS p25,
+    ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY days_to_first))::int AS median,
+    ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY days_to_first))::int AS p75
   FROM deltas
   GROUP BY permit_type
   HAVING COUNT(*) >= 5
