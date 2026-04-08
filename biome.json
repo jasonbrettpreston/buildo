@@ -45,7 +45,8 @@
           "suspicious": {
             "noAssignInExpressions": "error",
             "useIterableCallbackReturn": "error",
-            "noExplicitAny": "error"
+            "noExplicitAny": "error",
+            "noConsole": { "level": "warn", "options": { "allow": ["error", "warn"] } }
           },
           "nursery": {
             "noFloatingPromises": "error"
