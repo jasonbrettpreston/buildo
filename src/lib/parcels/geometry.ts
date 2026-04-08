@@ -13,7 +13,7 @@ export function parseStatedArea(raw: string | null | undefined): number | null {
   const match = raw.trim().match(/^([\d.]+)\s*sq\.m/i);
   if (!match) return null;
 
-  const value = parseFloat(match[1]);
+  const value = parseFloat(match[1]!);
   if (isNaN(value) || value <= 0) return null;
 
   return value;
@@ -108,9 +108,10 @@ export function computeCentroid(
   if (!ring || ring.length < 4) return null; // need 3 unique + closing
 
   // Exclude closing point (same as first)
-  const last = ring[ring.length - 1];
+  const last = ring[ring.length - 1]!;
+  const first = ring[0]!;
   const n =
-    last[0] === ring[0][0] && last[1] === ring[0][1]
+    last[0] === first[0] && last[1] === first[1]
       ? ring.length - 1
       : ring.length;
 
@@ -119,8 +120,8 @@ export function computeCentroid(
   let sumLng = 0;
   let sumLat = 0;
   for (let i = 0; i < n; i++) {
-    sumLng += ring[i][0];
-    sumLat += ring[i][1];
+    sumLng += ring[i]![0];
+    sumLat += ring[i]![1];
   }
 
   return [sumLng / n, sumLat / n];
@@ -148,8 +149,8 @@ export function shoelaceArea(ring: [number, number][]): number | null {
   let cLat = 0;
   let cLng = 0;
   for (let i = 0; i < n; i++) {
-    cLng += ring[i][0];
-    cLat += ring[i][1];
+    cLng += ring[i]![0];
+    cLat += ring[i]![1];
   }
   cLat /= n;
   cLng /= n;
@@ -162,8 +163,8 @@ export function shoelaceArea(ring: [number, number][]): number | null {
   const points: [number, number][] = [];
   for (let i = 0; i < n; i++) {
     points.push([
-      (ring[i][0] - cLng) * mPerDegLng,
-      (ring[i][1] - cLat) * mPerDegLat,
+      (ring[i]![0] - cLng) * mPerDegLng,
+      (ring[i]![1] - cLat) * mPerDegLat,
     ]);
   }
 
@@ -171,7 +172,7 @@ export function shoelaceArea(ring: [number, number][]): number | null {
   let sum = 0;
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
-    sum += points[i][0] * points[j][1] - points[j][0] * points[i][1];
+    sum += points[i]![0] * points[j]![1] - points[j]![0] * points[i]![1];
   }
 
   return Math.abs(sum) / 2;
@@ -269,8 +270,8 @@ function minimumBoundingRect(
   let cLng = 0;
   const n = ring.length - 1; // exclude closing point
   for (let i = 0; i < n; i++) {
-    cLng += ring[i][0];
-    cLat += ring[i][1];
+    cLng += ring[i]![0];
+    cLat += ring[i]![1];
   }
   cLat /= n;
   cLng /= n;
@@ -283,8 +284,8 @@ function minimumBoundingRect(
   const points: [number, number][] = [];
   for (let i = 0; i < n; i++) {
     points.push([
-      (ring[i][0] - cLng) * mPerDegLng,
-      (ring[i][1] - cLat) * mPerDegLat,
+      (ring[i]![0] - cLng) * mPerDegLng,
+      (ring[i]![1] - cLat) * mPerDegLat,
     ]);
   }
 
@@ -295,8 +296,8 @@ function minimumBoundingRect(
 
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
-    const dx = points[j][0] - points[i][0];
-    const dy = points[j][1] - points[i][1];
+    const dx = points[j]![0] - points[i]![0];
+    const dy = points[j]![1] - points[i]![1];
     const angle = Math.atan2(dy, dx);
     const cos = Math.cos(-angle);
     const sin = Math.sin(-angle);

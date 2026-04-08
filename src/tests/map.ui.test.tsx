@@ -41,8 +41,8 @@ describe('Geocoded Permit Filtering', () => {
   it('filters to only geocoded permits', () => {
     const geocoded = getGeocodedPermits(permits);
     expect(geocoded).toHaveLength(2);
-    expect(geocoded[0].permit_num).toBe('24 001');
-    expect(geocoded[1].permit_num).toBe('24 003');
+    expect(geocoded[0]!.permit_num).toBe('24 001');
+    expect(geocoded[1]!.permit_num).toBe('24 003');
   });
 
   it('returns empty array when no permits are geocoded', () => {

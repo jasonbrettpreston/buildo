@@ -130,6 +130,7 @@ function resolveLastRun(slug: string, plr: Record<string, PipelineRunInfo>): Pip
   for (const key of Object.keys(plr)) {
     if (key.endsWith(`:${slug}`)) {
       const candidate = plr[key];
+      if (!candidate) continue;
       if (!best || (candidate.last_run_at && (!best.last_run_at || candidate.last_run_at >= best.last_run_at))) {
         best = candidate;
       }

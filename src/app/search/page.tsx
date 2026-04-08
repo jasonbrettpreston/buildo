@@ -172,7 +172,7 @@ function SearchContent() {
               <PermitCard
                 key={`${permit.permit_num}--${permit.revision_num}`}
                 permit={permit}
-                trades={permit.trades}
+                {...(permit.trades !== undefined && { trades: permit.trades })}
                 onView={() => handleView(permit)}
               />
             ))}

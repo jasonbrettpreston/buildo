@@ -46,7 +46,8 @@ export function parseLinearName(linearName: string): {
   const typeMatch = upper.match(STREET_TYPE_REGEX);
   let streetType = '';
   if (typeMatch) {
-    streetType = STREET_TYPE_MAP[typeMatch[1]] || typeMatch[1];
+    const matched = typeMatch[1]!;
+    streetType = STREET_TYPE_MAP[matched] || matched;
   }
 
   // Remove the street type and directional suffixes to get the name

@@ -151,21 +151,21 @@ describe('Dashboard Account Type Variants', () => {
 
   it('individual sees basic dashboard (no team, no analytics)', () => {
     const features = ACCOUNT_TYPE_FEATURES.individual;
-    expect(features.showTeam).toBe(false);
-    expect(features.showAnalytics).toBe(false);
-    expect(features.showSupplyChain).toBe(false);
+    expect(features!.showTeam).toBe(false);
+    expect(features!.showAnalytics).toBe(false);
+    expect(features!.showSupplyChain).toBe(false);
   });
 
   it('company sees team and analytics', () => {
     const features = ACCOUNT_TYPE_FEATURES.company;
-    expect(features.showTeam).toBe(true);
-    expect(features.showAnalytics).toBe(true);
+    expect(features!.showTeam).toBe(true);
+    expect(features!.showAnalytics).toBe(true);
   });
 
   it('supplier sees analytics and supply chain', () => {
     const features = ACCOUNT_TYPE_FEATURES.supplier;
-    expect(features.showAnalytics).toBe(true);
-    expect(features.showSupplyChain).toBe(true);
-    expect(features.showTeam).toBe(false);
+    expect(features!.showAnalytics).toBe(true);
+    expect(features!.showSupplyChain).toBe(true);
+    expect(features!.showTeam).toBe(false);
   });
 });

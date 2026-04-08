@@ -105,9 +105,9 @@ describe('Permit Diff', () => {
     const changes = diffPermitFields(oldPermit, newPermit);
 
     expect(changes).toHaveLength(1);
-    expect(changes[0].field_name).toBe('status');
-    expect(changes[0].old_value).toBe('Application Filed');
-    expect(changes[0].new_value).toBe('Issued');
+    expect(changes[0]!.field_name).toBe('status');
+    expect(changes[0]!.old_value).toBe('Application Filed');
+    expect(changes[0]!.new_value).toBe('Issued');
   });
 
   it('returns empty array when permits are identical', () => {

@@ -37,13 +37,13 @@ describe('Pipeline Chain Definitions', () => {
   it('permits and coa chains end with assert_engine_health', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa');
-    expect(permits!.steps[permits!.steps.length - 1].slug).toBe('assert_engine_health');
-    expect(coa!.steps[coa!.steps.length - 1].slug).toBe('assert_engine_health');
+    expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('assert_engine_health');
+    expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('assert_engine_health');
   });
 
   it('sources chain ends with assert_engine_health', () => {
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources');
-    expect(sources!.steps[sources!.steps.length - 1].slug).toBe('assert_engine_health');
+    expect(sources!.steps[sources!.steps.length - 1]!.slug).toBe('assert_engine_health');
   });
 
   it('every chain step slug exists in PIPELINE_REGISTRY', () => {
@@ -77,7 +77,7 @@ describe('Pipeline Chain Definitions', () => {
 
   it('each chain starts with an indent-0 step', () => {
     for (const chain of PIPELINE_CHAINS) {
-      expect(chain.steps[0].indent).toBe(0);
+      expect(chain!.steps[0]!.indent).toBe(0);
     }
   });
 });
@@ -100,7 +100,7 @@ describe('Entities Chain (4th Pillar)', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'wsib');
     expect(chain).toBeDefined();
     expect(chain!.steps).toHaveLength(1);
-    expect(chain!.steps[0].slug).toBe('enrich_wsib_registry');
+    expect(chain!.steps[0]!.slug).toBe('enrich_wsib_registry');
   });
 
   it('deep_scrapes chain has exactly 7 steps', () => {
@@ -190,7 +190,7 @@ describe('Sources Chain Completeness', () => {
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(sources).toBeDefined();
     const lastStep = sources!.steps[sources!.steps.length - 1];
-    expect(lastStep.slug).toBe('assert_engine_health');
+    expect(lastStep!.slug).toBe('assert_engine_health');
   });
 
   it('sources chain includes all reference data pipelines', () => {
@@ -360,9 +360,9 @@ describe('Quality Pipeline Group', () => {
 
   it('assert_schema and assert_data_bounds exist in PIPELINE_REGISTRY', () => {
     expect(PIPELINE_REGISTRY.assert_schema).toBeDefined();
-    expect(PIPELINE_REGISTRY.assert_schema.group).toBe('quality');
+    expect(PIPELINE_REGISTRY!.assert_schema!.group).toBe('quality');
     expect(PIPELINE_REGISTRY.assert_data_bounds).toBeDefined();
-    expect(PIPELINE_REGISTRY.assert_data_bounds.group).toBe('quality');
+    expect(PIPELINE_REGISTRY!.assert_data_bounds!.group).toBe('quality');
   });
 });
 
@@ -607,7 +607,7 @@ describe('Pipeline Manifest (§9.6)', () => {
       const simpleMatch = source.match(/const SLUG\s*=\s*['"]([^'"]+)['"]/);
       if (simpleMatch) {
         expect(
-          knownSlugs.has(simpleMatch[1]),
+          knownSlugs.has(simpleMatch[1]!),
           `Script "${entry.file}" has SLUG='${simpleMatch[1]}' which is not a manifest slug`
         ).toBe(true);
         continue;
@@ -615,7 +615,7 @@ describe('Pipeline Manifest (§9.6)', () => {
       // Match ternary: const SLUG = ... ? 'foo' : 'bar' — all string values must be valid slugs
       const ternaryMatch = source.match(/const SLUG\s*=\s*.+/);
       if (ternaryMatch) {
-        const allSlugs = [...ternaryMatch[0].matchAll(/['"]([a-z_]+)['"]/g)].map(m => m[1]);
+        const allSlugs = [...ternaryMatch[0].matchAll(/['"]([a-z_]+)['"]/g)].map(m => m[1]!);
         for (const s of allSlugs) {
           expect(
             knownSlugs.has(s),

@@ -289,9 +289,9 @@ describe('CQA Script Files', () => {
   it('both CQA slugs are registered in PIPELINE_REGISTRY with quality group', async () => {
     const { PIPELINE_REGISTRY } = await import('@/components/FreshnessTimeline');
     expect(PIPELINE_REGISTRY.assert_schema).toBeDefined();
-    expect(PIPELINE_REGISTRY.assert_schema.group).toBe('quality');
+    expect(PIPELINE_REGISTRY!.assert_schema!.group).toBe('quality');
     expect(PIPELINE_REGISTRY.assert_data_bounds).toBeDefined();
-    expect(PIPELINE_REGISTRY.assert_data_bounds.group).toBe('quality');
+    expect(PIPELINE_REGISTRY!.assert_data_bounds!.group).toBe('quality');
   });
 });
 
@@ -654,7 +654,7 @@ describe('Telemetry & Last Run labelling with expected behavior ranges', () => {
     ];
     for (const slug of telemetrySteps) {
       expect(funnel.STEP_EXPECTED_RANGES[slug], `Missing expected range for ${slug}`).toBeDefined();
-      expect(funnel.STEP_EXPECTED_RANGES[slug].behavior, `Missing behavior note for ${slug}`).toBeTruthy();
+      expect(funnel!.STEP_EXPECTED_RANGES[slug]!.behavior, `Missing behavior note for ${slug}`).toBeTruthy();
     }
   });
 

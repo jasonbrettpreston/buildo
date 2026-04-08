@@ -26,7 +26,7 @@ export async function GET() {
       : [];
 
     // Compute schema drift from last two snapshots
-    const schemaDrift = data.trends.length >= 2
+    const schemaDrift = data.trends.length >= 2 && data.trends[0] && data.trends[1]
       ? detectSchemaDrift(
           data.trends[0].schema_column_counts,
           data.trends[1].schema_column_counts
@@ -59,8 +59,9 @@ export async function GET() {
       );
       const runsByPipeline: Record<string, number[]> = {};
       for (const row of durationRows) {
-        if (!runsByPipeline[row.pipeline]) runsByPipeline[row.pipeline] = [];
-        runsByPipeline[row.pipeline].push(row.duration_ms);
+        const arr = runsByPipeline[row.pipeline] ?? [];
+        arr.push(row.duration_ms);
+        runsByPipeline[row.pipeline] = arr;
       }
       durationAnomalies = detectDurationAnomalies(runsByPipeline);
     } catch {

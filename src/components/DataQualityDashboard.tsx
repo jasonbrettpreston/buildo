@@ -153,7 +153,7 @@ const HealthBanner = React.memo(function HealthBanner({
                 scheduleStatus = 'Running'; scheduleColor = 'text-blue-600'; dotColor = 'bg-blue-500';
               } else {
                 const elapsed = now - new Date(info.last_run_at).getTime();
-                const threshold = CADENCE_THRESHOLDS_MS[c.cadence] ?? CADENCE_THRESHOLDS_MS.Daily;
+                const threshold = CADENCE_THRESHOLDS_MS[c.cadence] ?? CADENCE_THRESHOLDS_MS.Daily ?? 86_400_000;
                 if (elapsed > threshold * 2) {
                   scheduleStatus = 'Overdue'; scheduleColor = 'text-red-600'; dotColor = 'bg-red-500';
                 } else if (elapsed > threshold) {
@@ -472,8 +472,8 @@ export function DataQualityDashboard() {
             onToggle={togglePipeline}
             triggerError={pipelineErrors.length > 0 ? pipelineErrors.join('; ') : null}
             onCancel={cancelPipeline}
-            dbSchemaMap={stats?.db_schema_map}
-            liveTableCounts={stats?.live_table_counts}
+            {...(stats?.db_schema_map !== undefined && { dbSchemaMap: stats.db_schema_map })}
+            {...(stats?.live_table_counts !== undefined && { liveTableCounts: stats.live_table_counts })}
           />
           </div>
 

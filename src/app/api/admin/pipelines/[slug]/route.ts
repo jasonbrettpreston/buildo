@@ -83,10 +83,17 @@ export async function POST(
   }
 
   // Validate script exists before spawning
-  const scriptPath = path.resolve(process.cwd(), PIPELINE_SCRIPTS[slug]);
+  const scriptRel = PIPELINE_SCRIPTS[slug];
+  if (!scriptRel) {
+    return NextResponse.json(
+      { error: `No script mapping for pipeline: ${slug}` },
+      { status: 500 }
+    );
+  }
+  const scriptPath = path.resolve(process.cwd(), scriptRel);
   if (!fs.existsSync(scriptPath)) {
     return NextResponse.json(
-      { error: `Script not found: ${PIPELINE_SCRIPTS[slug]}` },
+      { error: `Script not found: ${scriptRel}` },
       { status: 500 }
     );
   }
@@ -152,7 +159,7 @@ export async function POST(
        RETURNING id`,
       [slug]
     );
-    runId = rows[0].id;
+    runId = rows[0]?.id ?? null;
   } catch (trackErr) {
     console.warn(`[pipelines/${slug}] pipeline_runs table not available, running without tracking:`, trackErr instanceof Error ? trackErr.message : trackErr);
   }
@@ -236,7 +243,7 @@ export async function POST(
       // workers stream theirs. .match() returns the first; we need the last.
       const summaryMatches = [...(stdout?.matchAll(/PIPELINE_SUMMARY:(.+)/g) ?? [])];
       const summaryMatch = summaryMatches.length > 0 ? summaryMatches[summaryMatches.length - 1] : null;
-      if (summaryMatch) {
+      if (summaryMatch && summaryMatch[1]) {
         try {
           const summary = JSON.parse(summaryMatch[1]);
           recordsTotal = summary.records_total ?? null;
@@ -249,7 +256,7 @@ export async function POST(
       // Parse PIPELINE_META from stdout for self-documented reads/writes
       const metaMatches = [...(stdout?.matchAll(/PIPELINE_META:(.+)/g) ?? [])];
       const metaMatch = metaMatches.length > 0 ? metaMatches[metaMatches.length - 1] : null;
-      if (metaMatch) {
+      if (metaMatch && metaMatch[1]) {
         try {
           const pipelineMeta = JSON.parse(metaMatch[1]);
           recordsMeta = { ...(recordsMeta || {}), pipeline_meta: pipelineMeta };

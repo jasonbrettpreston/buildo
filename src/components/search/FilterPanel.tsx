@@ -128,8 +128,8 @@ export function FilterPanel({ onFilterChange, initialFilters = {} }: FilterPanel
     const next = { ...filters };
     if (value) {
       const [sortBy, sortOrder] = value.split(':');
-      next.sort_by = sortBy;
-      next.sort_order = sortOrder;
+      next.sort_by = sortBy ?? '';
+      next.sort_order = sortOrder ?? '';
     } else {
       delete next.sort_by;
       delete next.sort_order;

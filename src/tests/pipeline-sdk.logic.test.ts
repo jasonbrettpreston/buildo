@@ -71,7 +71,7 @@ describe('Pipeline SDK', () => {
     it('emits PIPELINE_SUMMARY with correct JSON format', () => {
       pipeline.emitSummary({ records_total: 100, records_new: 50, records_updated: 30 });
       expect(logSpy).toHaveBeenCalledTimes(1);
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       expect(output).toMatch(/^PIPELINE_SUMMARY:/);
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       expect(parsed.records_total).toBe(100);
@@ -86,7 +86,7 @@ describe('Pipeline SDK', () => {
         records_updated: 3,
         records_meta: { checks_passed: 4, checks_failed: 0 },
       });
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       expect(parsed.records_meta.checks_passed).toBe(4);
       expect(parsed.records_meta.checks_failed).toBe(0);
@@ -96,7 +96,7 @@ describe('Pipeline SDK', () => {
 
     it('defaults missing fields to 0', () => {
       pipeline.emitSummary({});
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       expect(parsed.records_total).toBe(0);
       expect(parsed.records_new).toBe(0);
@@ -105,7 +105,7 @@ describe('Pipeline SDK', () => {
 
     it('preserves null for records_new/records_updated (§3.5 CQA exemption)', () => {
       pipeline.emitSummary({ records_total: 5, records_new: null, records_updated: null });
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       expect(parsed.records_total).toBe(5);
       expect(parsed.records_new).toBeNull();
@@ -126,7 +126,7 @@ describe('Pipeline SDK', () => {
           },
         },
       });
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       const rows = parsed.records_meta.audit_table.rows;
       // Custom metric preserved (append, don't replace)
@@ -143,7 +143,7 @@ describe('Pipeline SDK', () => {
         records_updated: 50,
         records_meta: { duration_ms: 5000 },
       });
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       // Should create audit_table if records_meta exists but has no audit_table
       const rows = parsed.records_meta.audit_table?.rows;
@@ -161,7 +161,7 @@ describe('Pipeline SDK', () => {
           error_taxonomy: { waf_blocks: 3, timeouts: 0, parse_failures: 1 },
         },
       });
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       const rows = parsed.records_meta.audit_table.rows;
       const waf = rows.find((r: { metric: string }) => r.metric === 'err_waf_blocks');
@@ -186,7 +186,7 @@ describe('Pipeline SDK', () => {
           },
         },
       });
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       const rows = parsed.records_meta.audit_table.rows;
       const issuedDate = rows.find((r: { metric: string }) => r.metric === 'dq_null_rate_issued_date');
@@ -202,7 +202,7 @@ describe('Pipeline SDK', () => {
           audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] },
         },
       });
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       const rows = parsed.records_meta.audit_table.rows;
       // No err_* or dq_* rows
@@ -225,7 +225,7 @@ describe('Pipeline SDK', () => {
           },
         },
       });
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
       const rows = parsed.records_meta.audit_table.rows;
       // Custom 'velocity' and 'duration' preserved alongside sys_ versions
@@ -254,7 +254,7 @@ describe('Pipeline SDK', () => {
         { permits: ['permit_num'] },
         { permit_trades: ['trade_slug'] }
       );
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       expect(output).toMatch(/^PIPELINE_META:/);
       const parsed = JSON.parse(output.replace('PIPELINE_META:', ''));
       expect(parsed.reads).toEqual({ permits: ['permit_num'] });
@@ -267,14 +267,14 @@ describe('Pipeline SDK', () => {
         { permits: ['permit_num'] },
         ['CKAN API']
       );
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_META:', ''));
       expect(parsed.external).toEqual(['CKAN API']);
     });
 
     it('omits external key when empty', () => {
       pipeline.emitMeta({ t: ['c'] }, { t2: ['c2'] });
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       const parsed = JSON.parse(output.replace('PIPELINE_META:', ''));
       expect(parsed.external).toBeUndefined();
     });
@@ -297,14 +297,14 @@ describe('Pipeline SDK', () => {
       const start = Date.now() - 5000; // 5 seconds ago
       pipeline.progress('test', 50, 100, start);
       expect(logSpy).toHaveBeenCalledTimes(1);
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       expect(output).toContain('[test]');
       expect(output).toContain('50.0%');
     });
 
     it('handles zero total gracefully and shows 0 rows/s', () => {
       pipeline.progress('test', 0, 0, Date.now());
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       expect(output).toContain('0.0%');
       expect(output).toContain('0 rows/s');
     });
@@ -312,7 +312,7 @@ describe('Pipeline SDK', () => {
     it('includes velocity (rows/s) in progress output (B19)', () => {
       const start = Date.now() - 10000; // 10 seconds ago
       pipeline.progress('test', 5000, 10000, start);
-      const output = logSpy.mock.calls[0][0] as string;
+      const output = logSpy!.mock.calls[0]![0] as string;
       expect(output).toMatch(/rows\/s/);
       // 5000 rows in 10 seconds = ~500 rows/s
       expect(output).toMatch(/\d+ rows\/s/);
@@ -403,7 +403,7 @@ describe('Pipeline SDK', () => {
       const err: Error & { code?: string } = new Error('conn reset');
       err.code = 'ECONNRESET';
       pipeline.log.error('[test]', err);
-      const parsed = JSON.parse(spy.mock.calls[0][0]);
+      const parsed = JSON.parse(spy!.mock.calls[0]![0]);
       expect(parsed.error_type).toBe('network');
       spy.mockRestore();
     });
@@ -434,7 +434,7 @@ describe('Pipeline SDK', () => {
     it('log.info emits structured JSON to console.log', () => {
       const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
       pipeline.log.info('[test]', 'hello', { key: 'val' });
-      const parsed = JSON.parse(spy.mock.calls[0][0]);
+      const parsed = JSON.parse(spy!.mock.calls[0]![0]);
       expect(parsed.level).toBe('INFO');
       expect(parsed.tag).toBe('[test]');
       expect(parsed.msg).toBe('hello');
@@ -445,7 +445,7 @@ describe('Pipeline SDK', () => {
     it('log.warn emits structured JSON to console.warn', () => {
       const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       pipeline.log.warn('[test]', 'caution');
-      const parsed = JSON.parse(spy.mock.calls[0][0]);
+      const parsed = JSON.parse(spy!.mock.calls[0]![0]);
       expect(parsed.level).toBe('WARN');
       spy.mockRestore();
     });
@@ -454,7 +454,7 @@ describe('Pipeline SDK', () => {
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const err = new Error('boom');
       pipeline.log.error('[test]', err, { phase: 'load' });
-      const parsed = JSON.parse(spy.mock.calls[0][0]);
+      const parsed = JSON.parse(spy!.mock.calls[0]![0]);
       expect(parsed.level).toBe('ERROR');
       expect(parsed.msg).toBe('boom');
       expect(parsed.stack).toContain('Error: boom');
@@ -465,7 +465,7 @@ describe('Pipeline SDK', () => {
     it('log.error handles non-Error values', () => {
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       pipeline.log.error('[test]', 'string error');
-      const parsed = JSON.parse(spy.mock.calls[0][0]);
+      const parsed = JSON.parse(spy!.mock.calls[0]![0]);
       expect(parsed.msg).toBe('string error');
       expect(parsed.stack).toBeUndefined();
       spy.mockRestore();
@@ -1040,7 +1040,7 @@ describe('Pipeline SDK', () => {
 
     it('sys_velocity_rows_sec always injected (Day 1 free metric)', () => {
       pipeline.emitSummary({ records_total: 100, records_meta: { audit_table: { phase: 1, name: 'T', verdict: 'PASS', rows: [] } } });
-      const parsed = JSON.parse((logSpy.mock.calls[0][0] as string).replace('PIPELINE_SUMMARY:', ''));
+      const parsed = JSON.parse((logSpy!.mock.calls[0]![0] as string).replace('PIPELINE_SUMMARY:', ''));
       expect(parsed.records_meta.audit_table.rows.find((r: { metric: string }) => r.metric === 'sys_velocity_rows_sec')).toBeDefined();
     });
 
@@ -1049,7 +1049,7 @@ describe('Pipeline SDK', () => {
         records_total: 50,
         records_meta: { audit_table: { phase: 1, name: 'T', verdict: 'PASS', rows: [{ metric: 'my_custom', value: 99, threshold: null, status: 'INFO' }] } },
       });
-      const parsed = JSON.parse((logSpy.mock.calls[0][0] as string).replace('PIPELINE_SUMMARY:', ''));
+      const parsed = JSON.parse((logSpy!.mock.calls[0]![0] as string).replace('PIPELINE_SUMMARY:', ''));
       const rows = parsed.records_meta.audit_table.rows;
       expect(rows.find((r: { metric: string }) => r.metric === 'my_custom')).toBeDefined();
       expect(rows.find((r: { metric: string }) => r.metric === 'sys_velocity_rows_sec')).toBeDefined();
@@ -1061,7 +1061,7 @@ describe('Pipeline SDK', () => {
         records_meta: { audit_table: { phase: 1, name: 'T', verdict: 'PASS', rows: [] } },
         telemetry_context: { error_taxonomy: { db_timeouts: 2 } },
       });
-      const parsed = JSON.parse((logSpy.mock.calls[0][0] as string).replace('PIPELINE_SUMMARY:', ''));
+      const parsed = JSON.parse((logSpy!.mock.calls[0]![0] as string).replace('PIPELINE_SUMMARY:', ''));
       const errRow = parsed.records_meta.audit_table.rows.find((r: { metric: string }) => r.metric === 'err_db_timeouts');
       expect(errRow).toBeDefined();
       expect(errRow.value).toBe(2);
@@ -1074,7 +1074,7 @@ describe('Pipeline SDK', () => {
         records_meta: { audit_table: { phase: 1, name: 'T', verdict: 'PASS', rows: [] } },
         telemetry_context: { data_quality: { geometry: { nulls: 100, total: 200 } } },
       });
-      const parsed = JSON.parse((logSpy.mock.calls[0][0] as string).replace('PIPELINE_SUMMARY:', ''));
+      const parsed = JSON.parse((logSpy!.mock.calls[0]![0] as string).replace('PIPELINE_SUMMARY:', ''));
       const dqRow = parsed.records_meta.audit_table.rows.find((r: { metric: string }) => r.metric === 'dq_null_rate_geometry');
       expect(dqRow).toBeDefined();
       expect(dqRow.value).toBe('50.0%');
@@ -1087,7 +1087,7 @@ describe('Pipeline SDK', () => {
         records_meta: { audit_table: { phase: 1, name: 'T', verdict: 'PASS', rows: [] } },
         telemetry_context: { error_taxonomy: { waf: 1 } },
       });
-      const raw = logSpy.mock.calls[0][0] as string;
+      const raw = logSpy!.mock.calls[0]![0] as string;
       expect(raw).not.toContain('telemetry_context');
     });
   });

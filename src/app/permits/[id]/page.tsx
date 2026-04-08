@@ -196,7 +196,7 @@ export default function PermitDetailPage() {
             </div>
             {(() => {
               const latest = data.inspections!.reduce((max, i) =>
-                i.scraped_at > max ? i.scraped_at : max, data.inspections![0].scraped_at);
+                i.scraped_at > max ? i.scraped_at : max, data.inspections![0]?.scraped_at ?? '');
               return (
                 <p className="text-xs text-gray-400 mt-3">
                   Last scraped {formatRelativeTime(latest)}

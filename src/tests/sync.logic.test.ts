@@ -34,9 +34,9 @@ describe('Streaming JSON Parser', () => {
 
     expect(total).toBe(12);
     expect(batches.length).toBe(3); // 5 + 5 + 2
-    expect(batches[0].length).toBe(5);
-    expect(batches[1].length).toBe(5);
-    expect(batches[2].length).toBe(2);
+    expect(batches[0]!.length).toBe(5);
+    expect(batches[1]!.length).toBe(5);
+    expect(batches[2]!.length).toBe(2);
 
     unlinkSync(filePath);
   });
@@ -74,7 +74,7 @@ describe('Streaming JSON Parser', () => {
 
     expect(total).toBe(1);
     expect(batches.length).toBe(1);
-    expect(batches[0][0].PERMIT_NUM).toBe('24 101234');
+    expect(batches[0]![0]!.PERMIT_NUM!).toBe('24 101234');
 
     unlinkSync(filePath);
   });
@@ -92,7 +92,7 @@ describe('Streaming JSON Parser', () => {
     await parsePermitsStream(
       filePath,
       async (batch) => {
-        parsed = batch[0];
+        parsed = batch[0] ?? null;
       },
       100
     );

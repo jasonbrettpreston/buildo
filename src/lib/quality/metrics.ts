@@ -258,6 +258,7 @@ export async function captureDataQualitySnapshot(): Promise<DataQualitySnapshot>
     ]
   );
 
+  if (!result[0]) throw new Error('data_quality_snapshots upsert returned no row');
   return result[0];
 }
 
@@ -294,9 +295,10 @@ async function queryPermitCounts() {
        COUNT(*) FILTER (WHERE status IN ('Permit Issued', 'Revision Issued', 'Under Review', 'Inspection', 'Examination')) as active
      FROM permits`
   );
+  const r = rows[0]!;
   return {
-    total: parseInt(rows[0].total, 10),
-    active: parseInt(rows[0].active, 10),
+    total: parseInt(r.total, 10),
+    active: parseInt(r.active, 10),
   };
 }
 
@@ -345,17 +347,19 @@ async function queryTradeCounts() {
        WHERE p.${ACTIVE_FILTER}`
     ),
   ]);
+  const o = overallRows[0]!;
+  const u = byUseTypeRows[0]!;
   return {
-    permits_with_trades: parseInt(overallRows[0].permits_with_trades, 10),
-    total_matches: parseInt(overallRows[0].total_matches, 10),
-    avg_confidence: overallRows[0].avg_confidence ? parseFloat(overallRows[0].avg_confidence) : null,
-    tier1: parseInt(overallRows[0].tier1, 10),
-    tier2: parseInt(overallRows[0].tier2, 10),
-    tier3: parseInt(overallRows[0].tier3, 10),
-    trade_residential_classified: parseInt(byUseTypeRows[0].res_classified, 10),
-    trade_residential_total: parseInt(byUseTypeRows[0].res_total, 10),
-    trade_commercial_classified: parseInt(byUseTypeRows[0].com_classified, 10),
-    trade_commercial_total: parseInt(byUseTypeRows[0].com_total, 10),
+    permits_with_trades: parseInt(o.permits_with_trades, 10),
+    total_matches: parseInt(o.total_matches, 10),
+    avg_confidence: o.avg_confidence ? parseFloat(o.avg_confidence) : null,
+    tier1: parseInt(o.tier1, 10),
+    tier2: parseInt(o.tier2, 10),
+    tier3: parseInt(o.tier3, 10),
+    trade_residential_classified: parseInt(u.res_classified, 10),
+    trade_residential_total: parseInt(u.res_total, 10),
+    trade_commercial_classified: parseInt(u.com_classified, 10),
+    trade_commercial_total: parseInt(u.com_total, 10),
   };
 }
 
@@ -384,15 +388,17 @@ async function queryBuilderCounts() {
       `SELECT COUNT(*) as count FROM permits WHERE builder_name IS NOT NULL AND builder_name != ''`
     ),
   ]);
+  const b = builderRows[0]!;
+  const p = permitRows[0]!;
   return {
-    total: parseInt(builderRows[0].total, 10),
-    enriched: parseInt(builderRows[0].enriched, 10),
-    with_phone: parseInt(builderRows[0].with_phone, 10),
-    with_email: parseInt(builderRows[0].with_email, 10),
-    with_website: parseInt(builderRows[0].with_website, 10),
-    with_google: parseInt(builderRows[0].with_google, 10),
-    with_wsib: parseInt(builderRows[0].with_wsib, 10),
-    permits_with_builder: parseInt(permitRows[0].count, 10),
+    total: parseInt(b.total, 10),
+    enriched: parseInt(b.enriched, 10),
+    with_phone: parseInt(b.with_phone, 10),
+    with_email: parseInt(b.with_email, 10),
+    with_website: parseInt(b.with_website, 10),
+    with_google: parseInt(b.with_google, 10),
+    with_wsib: parseInt(b.with_wsib, 10),
+    permits_with_builder: parseInt(p.count, 10),
   };
 }
 
@@ -412,12 +418,13 @@ async function queryParcelCounts() {
        AVG(confidence)::NUMERIC(4,3) as avg_confidence
      FROM permit_parcels`
   );
+  const r = rows[0]!;
   return {
-    permits_with_parcel: parseInt(rows[0].permits_with_parcel, 10),
-    exact_matches: parseInt(rows[0].exact_matches, 10),
-    name_matches: parseInt(rows[0].name_matches, 10),
-    spatial_matches: parseInt(rows[0].spatial_matches, 10),
-    avg_confidence: rows[0].avg_confidence ? parseFloat(rows[0].avg_confidence) : null,
+    permits_with_parcel: parseInt(r.permits_with_parcel, 10),
+    exact_matches: parseInt(r.exact_matches, 10),
+    name_matches: parseInt(r.name_matches, 10),
+    spatial_matches: parseInt(r.spatial_matches, 10),
+    avg_confidence: r.avg_confidence ? parseFloat(r.avg_confidence) : null,
   };
 }
 
@@ -427,14 +434,14 @@ async function queryNeighbourhoodCount(): Promise<number> {
      WHERE neighbourhood_id IS NOT NULL
        AND status IN ('Permit Issued', 'Revision Issued', 'Under Review', 'Inspection', 'Examination')`
   );
-  return parseInt(rows[0].count, 10);
+  return parseInt(rows[0]!.count, 10);
 }
 
 async function queryGeocodingCount(): Promise<number> {
   const rows = await query<{ count: string }>(
     `SELECT COUNT(*) as count FROM permits WHERE latitude IS NOT NULL AND longitude IS NOT NULL`
   );
-  return parseInt(rows[0].count, 10);
+  return parseInt(rows[0]!.count, 10);
 }
 
 async function queryCoaCounts() {
@@ -453,12 +460,13 @@ async function queryCoaCounts() {
        COUNT(*) FILTER (WHERE linked_confidence IS NOT NULL AND linked_confidence < 0.50) as low_confidence
      FROM coa_applications`
   );
+  const r = rows[0]!;
   return {
-    total: parseInt(rows[0].total, 10),
-    linked: parseInt(rows[0].linked, 10),
-    avg_confidence: rows[0].avg_confidence ? parseFloat(rows[0].avg_confidence) : null,
-    high_confidence: parseInt(rows[0].high_confidence, 10),
-    low_confidence: parseInt(rows[0].low_confidence, 10),
+    total: parseInt(r.total, 10),
+    linked: parseInt(r.linked, 10),
+    avg_confidence: r.avg_confidence ? parseFloat(r.avg_confidence) : null,
+    high_confidence: parseInt(r.high_confidence, 10),
+    low_confidence: parseInt(r.low_confidence, 10),
   };
 }
 
@@ -519,10 +527,10 @@ async function queryScopeCounts() {
   }
 
   return {
-    permits_with_scope: parseInt(countRows[0].count, 10),
+    permits_with_scope: parseInt(countRows[0]!.count, 10),
     breakdown: Object.keys(breakdown).length > 0 ? breakdown : null,
-    permits_with_scope_tags: parseInt(tagCountRows[0].count, 10),
-    permits_with_detailed_tags: parseInt(detailedTagRows[0].count, 10),
+    permits_with_scope_tags: parseInt(tagCountRows[0]!.count, 10),
+    permits_with_detailed_tags: parseInt(detailedTagRows[0]!.count, 10),
     scope_tags_top: Object.keys(tagsTop).length > 0 ? tagsTop : null,
   };
 }
@@ -539,10 +547,11 @@ async function queryFreshnessCounts() {
        COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '30 days') as updated_30d
      FROM permits`
   );
+  const r = rows[0]!;
   return {
-    updated_24h: parseInt(rows[0].updated_24h, 10),
-    updated_7d: parseInt(rows[0].updated_7d, 10),
-    updated_30d: parseInt(rows[0].updated_30d, 10),
+    updated_24h: parseInt(r.updated_24h, 10),
+    updated_7d: parseInt(r.updated_7d, 10),
+    updated_30d: parseInt(r.updated_30d, 10),
   };
 }
 
@@ -556,9 +565,10 @@ async function queryMassingCounts() {
          (SELECT COUNT(*) FROM building_footprints) as footprints_total,
          (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings) as parcels_with_buildings`
     );
+    const r = rows[0]!;
     return {
-      footprints_total: parseInt(rows[0].footprints_total, 10),
-      parcels_with_buildings: parseInt(rows[0].parcels_with_buildings, 10),
+      footprints_total: parseInt(r.footprints_total, 10),
+      parcels_with_buildings: parseInt(r.parcels_with_buildings, 10),
     };
   } catch {
     // Tables may not exist yet
@@ -585,13 +595,14 @@ async function queryNullCounts() {
      FROM permits
      WHERE ${ACTIVE_FILTER}`
   );
+  const r = rows[0]!;
   return {
-    null_description: parseInt(rows[0].null_description, 10),
-    null_builder_name: parseInt(rows[0].null_builder_name, 10),
-    null_est_const_cost: parseInt(rows[0].null_est_const_cost, 10),
-    null_street_num: parseInt(rows[0].null_street_num, 10),
-    null_street_name: parseInt(rows[0].null_street_name, 10),
-    null_geo_id: parseInt(rows[0].null_geo_id, 10),
+    null_description: parseInt(r.null_description, 10),
+    null_builder_name: parseInt(r.null_builder_name, 10),
+    null_est_const_cost: parseInt(r.null_est_const_cost, 10),
+    null_street_num: parseInt(r.null_street_num, 10),
+    null_street_name: parseInt(r.null_street_name, 10),
+    null_geo_id: parseInt(r.null_geo_id, 10),
   };
 }
 
@@ -608,10 +619,11 @@ async function queryViolations() {
      FROM permits
      WHERE ${ACTIVE_FILTER}`
   );
+  const r = rows[0]!;
   return {
-    cost_out_of_range: parseInt(rows[0].cost_out_of_range, 10),
-    future_issued_date: parseInt(rows[0].future_issued_date, 10),
-    missing_status: parseInt(rows[0].missing_status, 10),
+    cost_out_of_range: parseInt(r.cost_out_of_range, 10),
+    future_issued_date: parseInt(r.future_issued_date, 10),
+    missing_status: parseInt(r.missing_status, 10),
   };
 }
 
@@ -665,12 +677,13 @@ async function queryInspectionCounts() {
          COUNT(*) FILTER (WHERE status = 'Not Passed') as not_passed
        FROM permit_inspections`
     );
+    const r = rows[0]!;
     return {
-      total: parseInt(rows[0].total, 10),
-      permits_scraped: parseInt(rows[0].permits_scraped, 10),
-      outstanding: parseInt(rows[0].outstanding, 10),
-      passed: parseInt(rows[0].passed, 10),
-      not_passed: parseInt(rows[0].not_passed, 10),
+      total: parseInt(r.total, 10),
+      permits_scraped: parseInt(r.permits_scraped, 10),
+      outstanding: parseInt(r.outstanding, 10),
+      passed: parseInt(r.passed, 10),
+      not_passed: parseInt(r.not_passed, 10),
     };
   } catch {
     return { total: 0, permits_scraped: 0, outstanding: 0, passed: 0, not_passed: 0 };

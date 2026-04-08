@@ -24,6 +24,12 @@ export async function GET(
   }
 
   const [permitNum, revisionNum] = parts;
+  if (!permitNum || !revisionNum) {
+    return NextResponse.json(
+      { error: 'Invalid permit ID format. Use: permitNum--revisionNum' },
+      { status: 400 }
+    );
+  }
 
   // Handle COA- prefixed IDs (Pre-Permit detail from coa_applications)
   if (permitNum.startsWith('COA-')) {
@@ -53,10 +59,10 @@ export async function GET(
         LIMIT 1`,
         [appNum]
       );
-      if (rows.length === 0) {
+      const coa = rows[0];
+      if (!coa) {
         return NextResponse.json({ error: 'Pre-Permit not found' }, { status: 404 });
       }
-      const coa = rows[0];
       const permitDto = mapCoaToPermitDto({
         application_num: coa.application_num,
         address: coa.address,
@@ -93,7 +99,8 @@ export async function GET(
       [permitNum, revisionNum]
     );
 
-    if (permits.length === 0) {
+    const permit = permits[0];
+    if (!permit) {
       return NextResponse.json(
         { error: 'Permit not found' },
         { status: 404 }
@@ -154,7 +161,7 @@ export async function GET(
     // Fetch neighbourhood info if linked (graceful fallback if table doesn't exist yet)
     let neighbourhood = null;
     try {
-      if (permits[0].neighbourhood_id && permits[0].neighbourhood_id > 0) {
+      if (permit.neighbourhood_id && permit.neighbourhood_id > 0) {
         const nhoods = await query(
           `SELECT name, neighbourhood_id, avg_household_income, median_household_income,
                   avg_individual_income, low_income_pct, tenure_owner_pct, tenure_renter_pct,
@@ -162,7 +169,7 @@ export async function GET(
                   university_degree_pct, immigrant_pct, visible_minority_pct,
                   english_knowledge_pct, top_mother_tongue, census_year
            FROM neighbourhoods WHERE id = $1`,
-          [permits[0].neighbourhood_id]
+          [permit.neighbourhood_id]
         );
         if (nhoods.length > 0) neighbourhood = nhoods[0];
       }
@@ -183,9 +190,6 @@ export async function GET(
     } catch {
       // permit_inspections table may not exist yet
     }
-
-    // Compute scope classification on-the-fly if not in DB
-    const permit = permits[0];
 
     // Fetch building massing data if parcel is linked (graceful fallback)
     let massing = null;

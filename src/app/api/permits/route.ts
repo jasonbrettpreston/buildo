@@ -14,7 +14,11 @@ export async function GET(request: NextRequest) {
       const limit = Math.min(Number(params.get('limit') || '50'), 100);
       const search = params.get('search') || undefined;
       const ward = params.get('ward') || undefined;
-      const leads = await getUpcomingLeads({ limit, search, ward });
+      const leads = await getUpcomingLeads({
+        limit,
+        ...(search !== undefined && { search }),
+        ...(ward !== undefined && { ward }),
+      });
       return NextResponse.json({
         data: leads.map((l) => ({ ...l, trades: [] })),
         pagination: { page: 1, limit, total: leads.length, total_pages: 1 },
@@ -28,18 +32,27 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const rawStatus = params.get('status') || undefined;
+  const rawPermitType = params.get('permit_type') || undefined;
+  const rawStructureType = params.get('structure_type') || undefined;
+  const rawWork = params.get('work') || undefined;
+  const rawWard = params.get('ward') || undefined;
+  const rawTradeSlug = params.get('trade_slug') || undefined;
+  const rawProjectType = params.get('project_type') || undefined;
+  const rawScopeTagsStr = params.get('scope_tags');
+  const rawSearch = params.get('search') || undefined;
   const filter: PermitFilter = {
-    status: params.get('status') || undefined,
-    permit_type: params.get('permit_type') || undefined,
-    structure_type: params.get('structure_type') || undefined,
-    work: params.get('work') || undefined,
-    ward: params.get('ward') || undefined,
-    trade_slug: params.get('trade_slug') || undefined,
-    project_type: params.get('project_type') || undefined,
-    scope_tags: params.get('scope_tags') ? params.get('scope_tags')!.split(',') : undefined,
-    min_cost: params.get('min_cost') ? Number(params.get('min_cost')) : undefined,
-    max_cost: params.get('max_cost') ? Number(params.get('max_cost')) : undefined,
-    search: params.get('search') || undefined,
+    ...(rawStatus !== undefined && { status: rawStatus }),
+    ...(rawPermitType !== undefined && { permit_type: rawPermitType }),
+    ...(rawStructureType !== undefined && { structure_type: rawStructureType }),
+    ...(rawWork !== undefined && { work: rawWork }),
+    ...(rawWard !== undefined && { ward: rawWard }),
+    ...(rawTradeSlug !== undefined && { trade_slug: rawTradeSlug }),
+    ...(rawProjectType !== undefined && { project_type: rawProjectType }),
+    ...(rawScopeTagsStr && { scope_tags: rawScopeTagsStr.split(',') }),
+    ...(params.get('min_cost') && { min_cost: Number(params.get('min_cost')) }),
+    ...(params.get('max_cost') && { max_cost: Number(params.get('max_cost')) }),
+    ...(rawSearch !== undefined && { search: rawSearch }),
     page: params.get('page') ? Number(params.get('page')) : 1,
     limit: params.get('limit') ? Math.min(Number(params.get('limit')), 100) : 20,
     sort_by: params.get('sort_by') || 'issued_date',
@@ -118,7 +131,7 @@ export async function GET(request: NextRequest) {
       `SELECT COUNT(*) as total FROM permits p ${joinClause} ${whereClause}`,
       values
     );
-    const total = parseInt(countResult[0].total, 10);
+    const total = parseInt(countResult[0]?.total ?? '0', 10);
 
     // Get paginated results
     const permits = await query(

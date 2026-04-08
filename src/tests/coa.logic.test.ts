@@ -11,8 +11,8 @@ describe('CoA Address Parsing', () => {
       return { street_num: '', street_name: trimmed };
     }
     return {
-      street_num: match[1],
-      street_name: match[2].replace(/\s+(ST|AVE|RD|BLVD|DR|CRES|CT|PL|WAY|CIR|LANE|TERR)\.?$/i, '').trim(),
+      street_num: match[1]!,
+      street_name: match[2]!.replace(/\s+(ST|AVE|RD|BLVD|DR|CRES|CT|PL|WAY|CIR|LANE|TERR)\.?$/i, '').trim(),
     };
   }
 

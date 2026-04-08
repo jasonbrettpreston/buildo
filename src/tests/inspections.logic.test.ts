@@ -24,18 +24,18 @@ describe('Inspection Parser', () => {
       const result = parseInspectionTable(html, '24 101234');
 
       expect(result).toHaveLength(3);
-      expect(result[0].stage_name).toBe('Excavation/Shoring');
-      expect(result[0].status).toBe('Passed');
-      expect(result[0].inspection_date).toBe('2024-01-15');
-      expect(result[0].permit_num).toBe('24 101234');
+      expect(result[0]!.stage_name).toBe('Excavation/Shoring');
+      expect(result[0]!.status).toBe('Passed');
+      expect(result[0]!.inspection_date).toBe('2024-01-15');
+      expect(result[0]!.permit_num).toBe('24 101234');
 
-      expect(result[1].stage_name).toBe('Structural Framing');
-      expect(result[1].status).toBe('Outstanding');
-      expect(result[1].inspection_date).toBeNull();
+      expect(result[1]!.stage_name).toBe('Structural Framing');
+      expect(result[1]!.status).toBe('Outstanding');
+      expect(result[1]!.inspection_date).toBeNull();
 
-      expect(result[2].stage_name).toBe('Final Inspection');
-      expect(result[2].status).toBe('Not Passed');
-      expect(result[2].inspection_date).toBe('2024-03-20');
+      expect(result[2]!.stage_name).toBe('Final Inspection');
+      expect(result[2]!.status).toBe('Not Passed');
+      expect(result[2]!.inspection_date).toBe('2024-03-20');
     });
 
     it('skips header rows', () => {
@@ -47,7 +47,7 @@ describe('Inspection Parser', () => {
       `;
       const result = parseInspectionTable(html, 'PLB-001');
       expect(result).toHaveLength(1);
-      expect(result[0].stage_name).toBe('Rough-in Plumbing');
+      expect(result[0]!.stage_name).toBe('Rough-in Plumbing');
     });
 
     it('handles rows with only 2 columns (no date)', () => {
@@ -56,7 +56,7 @@ describe('Inspection Parser', () => {
       `;
       const result = parseInspectionTable(html, 'PLB-001');
       expect(result).toHaveLength(1);
-      expect(result[0].inspection_date).toBeNull();
+      expect(result[0]!.inspection_date).toBeNull();
     });
 
     it('returns empty array for empty table', () => {
@@ -74,8 +74,8 @@ describe('Inspection Parser', () => {
         <tr><td><b>Insulation</b></td><td><span>Partial</span></td><td>05/01/2024</td></tr>
       `;
       const result = parseInspectionTable(html, '24 101234');
-      expect(result[0].stage_name).toBe('Insulation');
-      expect(result[0].status).toBe('Partial');
+      expect(result[0]!.stage_name).toBe('Insulation');
+      expect(result[0]!.status).toBe('Partial');
     });
 
     it('handles Partially Completed status', () => {
@@ -83,7 +83,7 @@ describe('Inspection Parser', () => {
         <tr><td>Vapour Barrier</td><td>Partially Completed</td><td>04/12/2024</td></tr>
       `;
       const result = parseInspectionTable(html, '24 101234');
-      expect(result[0].status).toBe('Partial');
+      expect(result[0]!.status).toBe('Partial');
     });
 
     it('skips rows with unknown status', () => {
@@ -93,7 +93,7 @@ describe('Inspection Parser', () => {
       `;
       const result = parseInspectionTable(html, '24 101234');
       expect(result).toHaveLength(1);
-      expect(result[0].stage_name).toBe('Real Stage');
+      expect(result[0]!.stage_name).toBe('Real Stage');
     });
 
     it('handles all 4 AIC portal status values in one table', () => {
@@ -423,8 +423,8 @@ describe('Inspection Parser', () => {
       ];
       const claimed = simulateBatchClaim(queue, 'worker-1', 2);
       expect(claimed).toEqual(['24 100001', '24 100002']);
-      expect(queue[0].status).toBe('claimed');
-      expect(queue[2].status).toBe('pending');
+      expect(queue[0]!.status).toBe('claimed');
+      expect(queue[2]!.status).toBe('pending');
     });
 
     it('skips already claimed items', () => {

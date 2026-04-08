@@ -136,7 +136,7 @@ export function extractEmailsFromHtml(html: string): string[] {
   // portion, discarding query params (?subject=) that the regex boundary might miss.
   const mailtoMatches = html.matchAll(MAILTO_PATTERN);
   for (const m of mailtoMatches) {
-    const lower = m[1].toLowerCase();
+    const lower = m[1]!.toLowerCase();
     if (EMAIL_REJECT.some((r) => lower.includes(r))) continue;
     EMAIL_PATTERN.lastIndex = 0;
     const emailMatch = lower.match(EMAIL_PATTERN);

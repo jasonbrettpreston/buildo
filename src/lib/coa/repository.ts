@@ -60,6 +60,7 @@ export async function insertCoaApplication(
     ]
   );
 
+  if (!rows[0]) throw new Error('CoA application upsert returned no row');
   return rows[0];
 }
 

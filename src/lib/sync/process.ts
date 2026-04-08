@@ -33,7 +33,7 @@ async function findExistingPermit(
     'SELECT * FROM permits WHERE permit_num = $1 AND revision_num = $2 LIMIT 1',
     [permitNum, revisionNum]
   );
-  return rows.length > 0 ? rows[0] : null;
+  return rows[0] ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -240,6 +240,7 @@ export async function runSync(filePath: string): Promise<SyncRun> {
      VALUES (NOW(), 'running')
      RETURNING *`
   );
+  if (!syncRun) throw new Error('Failed to create sync_runs record');
 
   const aggregated: SyncStats = {
     total: 0,
@@ -285,6 +286,7 @@ export async function runSync(filePath: string): Promise<SyncRun> {
       ]
     );
 
+    if (!finished) throw new Error('sync_runs UPDATE returned no row');
     return finished;
   } catch (err) {
     // Mark the run as failed
@@ -312,6 +314,7 @@ export async function runSync(filePath: string): Promise<SyncRun> {
       ]
     );
 
+    if (!failed) throw new Error('sync_runs failure UPDATE returned no row');
     return failed;
   }
 }

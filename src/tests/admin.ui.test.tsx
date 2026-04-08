@@ -129,23 +129,23 @@ describe('Latest Sync Stats Display', () => {
 
   it('latest sync is the first in the array', () => {
     const latest = syncRuns[0];
-    expect(latest.id).toBe(3);
-    expect(latest.status).toBe('completed');
+    expect(latest!.id).toBe(3);
+    expect(latest!.status).toBe('completed');
   });
 
   it('calculates total processed correctly', () => {
     const latest = syncRuns[0];
     const totalProcessed =
-      latest.records_new +
-      latest.records_updated +
-      latest.records_unchanged +
-      latest.records_errors;
+      latest!.records_new +
+      latest!.records_updated +
+      latest!.records_unchanged +
+      latest!.records_errors;
     expect(totalProcessed).toBe(237000);
   });
 
   it('shows error message when present', () => {
     const failedRun: SyncRun = {
-      ...syncRuns[0],
+      ...syncRuns[0]!,
       status: 'failed',
       error_message: 'Connection timeout after 30s',
     };
@@ -1710,7 +1710,7 @@ describe('Pipeline Toggle — UI rendering logic', () => {
     const routePath = path.resolve(__dirname, '../components/FreshnessTimeline.tsx');
     const content = fs.readFileSync(routePath, 'utf-8');
     expect(content).toContain('disabledPipelines?: Set<string>');
-    expect(content).toContain('onToggle?: (slug: string, enabled: boolean) => void');
+    expect(content).toContain('onToggle?: ((slug: string, enabled: boolean) => void)');
   });
 
   it('toggle button has 44px minimum touch target for mobile', () => {
@@ -1826,8 +1826,8 @@ describe('Chain error summary box', () => {
       .map((s) => ({ slug: s.slug, info: pipelineLastRun[`permits:${s.slug}`] }))
       .filter((s) => s.info?.status === 'failed' && s.info.error_message);
     expect(failedSteps).toHaveLength(1);
-    expect(failedSteps[0].slug).toBe('classify_permits');
-    expect(failedSteps[0].info!.error_message).toBe('Script timed out');
+    expect(failedSteps[0]!.slug).toBe('classify_permits');
+    expect(failedSteps[0]!.info!.error_message).toBe('Script timed out');
   });
 });
 
@@ -1960,7 +1960,7 @@ describe('4-Pillar Architecture — chain_entities registration', () => {
 describe('Deep Scrapes pipeline group', () => {
   it('PIPELINE_REGISTRY includes coa_documents entry', () => {
     expect(PIPELINE_REGISTRY.coa_documents).toBeDefined();
-    expect(PIPELINE_REGISTRY.coa_documents.name).toBeTruthy();
+    expect(PIPELINE_REGISTRY!.coa_documents!.name).toBeTruthy();
   });
 
   it('deep_scrapes chain exists in PIPELINE_CHAINS with inspections', () => {
@@ -2616,7 +2616,7 @@ describe('Optimistic timer timeout', () => {
     // Find the setTimeout in optimistic timer context
     const timerMatch = source.match(/optimistic[\s\S]{0,500}},\s*(\d+)\)/);
     expect(timerMatch).not.toBeNull();
-    const timeoutMs = parseInt(timerMatch![1], 10);
+    const timeoutMs = parseInt(timerMatch![1]!, 10);
     expect(timeoutMs).toBeGreaterThanOrEqual(8000);
   });
 });

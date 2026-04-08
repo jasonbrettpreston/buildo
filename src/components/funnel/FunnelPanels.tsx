@@ -55,7 +55,7 @@ export interface TelemetryData {
 }
 
 /** Small inline range badge — green/yellow/red based on expected range */
-function RangeBadge({ value, range }: { value: number; range?: [number, number] }) {
+function RangeBadge({ value, range }: { value: number; range?: [number, number] | undefined }) {
   if (!range) return null;
   const status = getRangeStatus(value, range);
   if (status === 'normal') return <span className="text-[7px] px-1 py-0.5 rounded bg-green-50 text-green-600 font-medium" title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{'\u2713'}</span>;
@@ -319,7 +319,7 @@ export function FunnelLastRunPanel({ row }: { row: FunnelRowData }) {
 // Data Flow Tile — source → target visualization for pipeline descriptions
 // ---------------------------------------------------------------------------
 
-function ColGrid({ cols, highlights }: { cols: string[]; highlights?: Set<string> | null }) {
+function ColGrid({ cols, highlights }: { cols: string[]; highlights?: Set<string> | null | undefined }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-0">
       {cols.map((c) => {
@@ -352,7 +352,7 @@ function TableCard({ tableName, cols, highlights, label }: {
   );
 }
 
-function ExternalBadge({ label, cols }: { label: string; cols?: string[] }) {
+function ExternalBadge({ label, cols }: { label: string; cols?: string[] | undefined }) {
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-md px-3 py-2 flex-1 min-w-0">
       <div className="flex items-center gap-2">
@@ -408,7 +408,7 @@ export interface PipelineMeta {
 }
 
 export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
-  desc: StepDescription; dbSchemaMap?: Record<string, string[]>; pipelineMeta?: PipelineMeta | null;
+  desc: StepDescription; dbSchemaMap?: Record<string, string[]> | undefined; pipelineMeta?: PipelineMeta | null | undefined;
 }) {
   // Live pipeline_meta is the single source of truth for reads/writes.
   // It comes from PIPELINE_META emitted by each script and stored in
@@ -451,7 +451,7 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
         {/* Read sources */}
         <div className={`flex flex-col gap-2 ${readTables.length > 0 ? 'flex-1 min-w-0' : ''}`}>
           {readTables.map((table) => {
-            const cols = pipelineMeta!.reads![table];
+            const cols = pipelineMeta!.reads![table] ?? [];
             return isExternal(table)
               ? <div key={table}><ExternalBadge label={table} cols={cols} /></div>
               : <div key={table}>
@@ -468,7 +468,7 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
         {/* Write targets */}
         <div className={`flex flex-col gap-2 ${writeTables.length > 0 ? 'flex-1 min-w-0' : ''}`}>
           {writeTables.map((table) => {
-            const cols = pipelineMeta!.writes![table];
+            const cols = pipelineMeta!.writes![table] ?? [];
             return (
               <div key={table}>
                 <LiveColumnCard tableName={table} cols={cols} label="Writes" color="emerald" />

@@ -21,7 +21,7 @@ export function parseInspectionTable(
   let rowMatch;
 
   while ((rowMatch = rowRegex.exec(html)) !== null) {
-    const rowHtml = rowMatch[1];
+    const rowHtml = rowMatch[1] ?? '';
 
     // Extract all <td> contents
     const cells: string[] = [];
@@ -29,19 +29,19 @@ export function parseInspectionTable(
     let cellMatch;
     while ((cellMatch = cellRegex.exec(rowHtml)) !== null) {
       // Strip inner HTML tags and trim
-      cells.push(cellMatch[1].replace(/<[^>]*>/g, '').trim());
+      cells.push((cellMatch[1] ?? '').replace(/<[^>]*>/g, '').trim());
     }
 
     // Need at least 2 columns: stage_name, status
     if (cells.length < 2) continue;
 
-    const stageName = cells[0];
-    const status = normalizeStatus(cells[1]);
+    const stageName = cells[0]!;
+    const status = normalizeStatus(cells[1]!);
 
     // Skip header rows
     if (!status || stageName.toLowerCase() === 'inspection stage') continue;
 
-    const dateStr = cells.length >= 3 ? parseInspectionDate(cells[2]) : null;
+    const dateStr = cells.length >= 3 ? parseInspectionDate(cells[2]!) : null;
 
     results.push({
       permit_num: permitNum,
@@ -83,7 +83,7 @@ export function parseInspectionDate(raw: string): string | null {
   const slashMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (slashMatch) {
     const [, month, day, year] = slashMatch;
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    return `${year}-${month!.padStart(2, '0')}-${day!.padStart(2, '0')}`;
   }
 
   // Try "Mon D, YYYY" / "Month D, YYYY" format (AIC portal uses this)
@@ -93,9 +93,9 @@ export function parseInspectionDate(raw: string): string | null {
   };
   const namedMatch = trimmed.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
   if (namedMatch) {
-    const monthNum = MONTHS[namedMatch[1].slice(0, 3).toLowerCase()];
+    const monthNum = MONTHS[namedMatch[1]!.slice(0, 3).toLowerCase()];
     if (monthNum) {
-      return `${namedMatch[3]}-${monthNum}-${namedMatch[2].padStart(2, '0')}`;
+      return `${namedMatch[3]}-${monthNum}-${namedMatch[2]!.padStart(2, '0')}`;
     }
   }
 

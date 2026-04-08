@@ -213,17 +213,17 @@ export interface FreshnessTimelineProps {
   pipelineLastRun: Record<string, PipelineRunInfo>;
   runningPipelines: Set<string>;
   onTrigger: (slug: string) => void;
-  slaTargets?: Record<string, number>;
-  disabledPipelines?: Set<string>;
-  onToggle?: (slug: string, enabled: boolean) => void;
-  triggerError?: string | null;
+  slaTargets?: Record<string, number> | undefined;
+  disabledPipelines?: Set<string> | undefined;
+  onToggle?: ((slug: string, enabled: boolean) => void) | undefined;
+  triggerError?: string | null | undefined;
   /** Pre-computed funnel data keyed by pipeline statusSlug */
-  funnelData?: Record<string, FunnelRowData>;
-  onCancel?: (slug: string) => void;
+  funnelData?: Record<string, FunnelRowData> | undefined;
+  onCancel?: ((slug: string) => void) | undefined;
   /** Live DB schema map: table_name → column_name[] from information_schema */
-  dbSchemaMap?: Record<string, string[]>;
+  dbSchemaMap?: Record<string, string[]> | undefined;
   /** T3: Fast approximate row counts from pg_class.reltuples */
-  liveTableCounts?: Record<string, number>;
+  liveTableCounts?: Record<string, number> | undefined;
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -542,7 +542,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                     {[...chainTables].map((t) => (
                       <span key={t} className="text-[9px] text-gray-400 tabular-nums">
                         <span className="text-gray-500 font-medium">{t}</span>{' '}
-                        {compactNum(liveTableCounts[t])}
+                        {compactNum(liveTableCounts[t] ?? 0)}
                       </span>
                     ))}
                   </div>
@@ -819,7 +819,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           {/* SLA badge */}
                           {!isRunning && slaTargets && slaTargets[step.slug] && info?.last_run_at && (() => {
                             const hoursSince = (Date.now() - new Date(info.last_run_at).getTime()) / (1000 * 60 * 60);
-                            return hoursSince > slaTargets[step.slug] ? (
+                            return hoursSince > (slaTargets[step.slug] ?? Infinity) ? (
                               <span className="text-[8px] px-1 py-0.5 rounded bg-red-100 text-red-600 font-semibold shrink-0">SLA</span>
                             ) : null;
                           })()}
@@ -943,7 +943,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                         {/* Description tile — source → target data flow + telemetry */}
                         {STEP_DESCRIPTIONS[step.slug] && (
                           <DataFlowTile
-                            desc={STEP_DESCRIPTIONS[step.slug]}
+                            desc={STEP_DESCRIPTIONS[step.slug]!}
                             dbSchemaMap={dbSchemaMap}
                             // SAFETY: records_meta is JSONB (Record<string, unknown> | null), pipeline_meta is a known sub-key
                             pipelineMeta={(info?.records_meta as Record<string, unknown>)?.pipeline_meta as import('./funnel/FunnelPanels').PipelineMeta | undefined}

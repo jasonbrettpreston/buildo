@@ -83,8 +83,8 @@ export function pointInPolygon(
   const n = ring.length;
 
   for (let i = 0, j = n - 1; i < n; j = i++) {
-    const xi = ring[i][0], yi = ring[i][1];
-    const xj = ring[j][0], yj = ring[j][1];
+    const xi = ring[i]![0], yi = ring[i]![1];
+    const xj = ring[j]![0], yj = ring[j]![1];
 
     if (
       (yi > y) !== (yj > y) &&
@@ -112,8 +112,8 @@ export function computeFootprintArea(ring: [number, number][]): number | null {
   let cLat = 0;
   let cLng = 0;
   for (let i = 0; i < n; i++) {
-    cLng += ring[i][0];
-    cLat += ring[i][1];
+    cLng += ring[i]![0];
+    cLat += ring[i]![1];
   }
   cLat /= n;
   cLng /= n;
@@ -126,8 +126,8 @@ export function computeFootprintArea(ring: [number, number][]): number | null {
   const points: [number, number][] = [];
   for (let i = 0; i < n; i++) {
     points.push([
-      (ring[i][0] - cLng) * mPerDegLng,
-      (ring[i][1] - cLat) * mPerDegLat,
+      (ring[i]![0] - cLng) * mPerDegLng,
+      (ring[i]![1] - cLat) * mPerDegLat,
     ]);
   }
 
@@ -135,7 +135,7 @@ export function computeFootprintArea(ring: [number, number][]): number | null {
   let sum = 0;
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
-    sum += points[i][0] * points[j][1] - points[j][0] * points[i][1];
+    sum += points[i]![0] * points[j]![1] - points[j]![0] * points[i]![1];
   }
 
   return Math.abs(sum) / 2;

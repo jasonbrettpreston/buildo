@@ -314,6 +314,7 @@ export function detectVolumeAnomalies(trends: DataQualitySnapshot[]): VolumeAnom
   if (trends.length < 3) return [];
 
   const current = trends[0];
+  if (!current) return [];
   const historical = trends.slice(1);
 
   const values = historical.map((s) => s.permits_updated_24h);
@@ -364,11 +365,13 @@ export function detectSchemaDrift(
 
   const alerts: SchemaDriftAlert[] = [];
   for (const table of Object.keys(current)) {
-    if (previous[table] != null && current[table] !== previous[table]) {
+    const prev = previous[table];
+    const curr = current[table];
+    if (prev != null && curr != null && curr !== prev) {
       alerts.push({
         table,
-        previousCount: previous[table],
-        currentCount: current[table],
+        previousCount: prev,
+        currentCount: curr,
       });
     }
   }
@@ -403,6 +406,7 @@ export function detectDurationAnomalies(
     if (durations.length < 2) continue;
 
     const current = durations[0];
+    if (current === undefined) continue;
     const historical = durations.slice(1, 8).filter(d => d > 0); // exclude 0ms skipped/gated runs
     if (historical.length === 0) continue;
 
@@ -622,7 +626,7 @@ export function computeSystemHealth(
   if (pipelineFailures.length >= 2) {
     issues.push(`${pipelineFailures.length} pipelines have a failed latest run`);
   } else if (pipelineFailures.length === 1) {
-    const f = pipelineFailures[0];
+    const f = pipelineFailures[0]!;
     const msg = f.error_message.length > 120
       ? f.error_message.slice(0, 117) + '...'
       : f.error_message;
@@ -649,8 +653,9 @@ export function computeSystemHealth(
   }
 
   // Check SLA
-  if (snapshot.sla_permits_ingestion_hours != null && snapshot.sla_permits_ingestion_hours > SLA_TARGETS.permits) {
-    issues.push(`Permits SLA breach: ${snapshot.sla_permits_ingestion_hours.toFixed(1)}h (target: ${SLA_TARGETS.permits}h)`);
+  const permitsSla = SLA_TARGETS.permits;
+  if (permitsSla != null && snapshot.sla_permits_ingestion_hours != null && snapshot.sla_permits_ingestion_hours > permitsSla) {
+    issues.push(`Permits SLA breach: ${snapshot.sla_permits_ingestion_hours.toFixed(1)}h (target: ${permitsSla}h)`);
   }
 
   const level: HealthLevel = issues.length > 0 ? 'red' : warnings.length > 0 ? 'yellow' : 'green';

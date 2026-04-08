@@ -51,10 +51,10 @@ describe('getPermitsByDateRange', () => {
     );
 
     expect(mockQuery).toHaveBeenCalledTimes(1);
-    const sql = mockQuery.mock.calls[0][0] as string;
+    const sql = mockQuery!.mock.calls[0]![0] as string;
     expect(sql).toContain("date_trunc('month'");
     // groupBy is interpolated, not parameterized — params are only dates
-    const params = mockQuery.mock.calls[0][1] as unknown[];
+    const params = mockQuery!.mock.calls[0]![1] as unknown[];
     expect(params).toHaveLength(2);
   });
 
@@ -99,8 +99,8 @@ describe('getTradeDistribution', () => {
       new Date('2024-12-31')
     );
 
-    expect(typeof result[0].count).toBe('number');
-    expect(typeof result[0].avg_score).toBe('number');
+    expect(typeof result[0]!.count).toBe('number');
+    expect(typeof result[0]!.avg_score).toBe('number');
   });
 });
 
@@ -166,7 +166,7 @@ describe('getTopBuilders', () => {
     await getTopBuilders(5);
 
     const args = mockQuery.mock.calls[0];
-    expect(args[1]).toContain(5);
+    expect(args![1]!).toContain(5);
   });
 });
 
@@ -192,6 +192,6 @@ describe('getPermitTrends', () => {
     await getPermitTrends();
 
     const args = mockQuery.mock.calls[0];
-    expect(args[1]).toContain(30);
+    expect(args![1]!).toContain(30);
   });
 });

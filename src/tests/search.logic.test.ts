@@ -87,7 +87,7 @@ describe('Sort Option Parsing', () => {
   } {
     const [sort_by, sort_order] = value.split(':');
     return {
-      sort_by,
+      sort_by: sort_by!,
       sort_order: sort_order as 'asc' | 'desc',
     };
   }

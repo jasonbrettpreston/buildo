@@ -130,7 +130,7 @@ describe('Tag-Trade Matrix', () => {
     const results = lookupTradesForTags(['new:kitchen', 'new:bathroom']);
     const plumbMatches = results.filter((r) => r.tradeSlug === 'plumbing');
     expect(plumbMatches).toHaveLength(1);
-    expect(plumbMatches[0].confidence).toBe(0.85);
+    expect(plumbMatches[0]!.confidence).toBe(0.85);
   });
 
   it('returns empty for unknown tags', () => {
@@ -289,7 +289,7 @@ describe('Tag-Trade Matrix', () => {
   it('drain tag maps to drain-plumbing', () => {
     const results = lookupTradesForTags(['drain']);
     expect(results).toHaveLength(1);
-    expect(results[0].tradeSlug).toBe('drain-plumbing');
+    expect(results[0]!.tradeSlug).toBe('drain-plumbing');
   });
 
   it('balcony tag maps to framing, concrete, waterproofing', () => {
@@ -949,9 +949,9 @@ describe('Narrow-Scope Code-Based Fallback', () => {
     // Pass empty rules so no Tier 1 matches
     const matches = classifyPermit(permit, []);
     expect(matches).toHaveLength(1);
-    expect(matches[0].trade_slug).toBe('plumbing');
-    expect(matches[0].confidence).toBe(0.80);
-    expect(matches[0].tier).toBe(1);
+    expect(matches[0]!.trade_slug).toBe('plumbing');
+    expect(matches[0]!.confidence).toBe(0.80);
+    expect(matches[0]!.tier).toBe(1);
   });
 
   it('HVA permit with no matching Tier 1 rules falls back to hvac at 0.80', () => {
@@ -962,9 +962,9 @@ describe('Narrow-Scope Code-Based Fallback', () => {
     });
     const matches = classifyPermit(permit, []);
     expect(matches).toHaveLength(1);
-    expect(matches[0].trade_slug).toBe('hvac');
-    expect(matches[0].confidence).toBe(0.80);
-    expect(matches[0].tier).toBe(1);
+    expect(matches[0]!.trade_slug).toBe('hvac');
+    expect(matches[0]!.confidence).toBe(0.80);
+    expect(matches[0]!.tier).toBe(1);
   });
 
   it('DRN permit with no matching Tier 1 rules falls back to drain-plumbing at 0.80', () => {
@@ -975,9 +975,9 @@ describe('Narrow-Scope Code-Based Fallback', () => {
     });
     const matches = classifyPermit(permit, []);
     expect(matches).toHaveLength(1);
-    expect(matches[0].trade_slug).toBe('drain-plumbing');
-    expect(matches[0].confidence).toBe(0.80);
-    expect(matches[0].tier).toBe(1);
+    expect(matches[0]!.trade_slug).toBe('drain-plumbing');
+    expect(matches[0]!.confidence).toBe(0.80);
+    expect(matches[0]!.tier).toBe(1);
   });
 
   it('FSU permit with no matching Tier 1 rules falls back to fire-protection at 0.80', () => {
@@ -988,8 +988,8 @@ describe('Narrow-Scope Code-Based Fallback', () => {
     });
     const matches = classifyPermit(permit, []);
     expect(matches).toHaveLength(1);
-    expect(matches[0].trade_slug).toBe('fire-protection');
-    expect(matches[0].confidence).toBe(0.80);
+    expect(matches[0]!.trade_slug).toBe('fire-protection');
+    expect(matches[0]!.confidence).toBe(0.80);
   });
 
   it('SHO permit with no matching Tier 1 rules falls back to all allowed trades', () => {

@@ -17,7 +17,12 @@ let db: Firestore;
 
 function getFirebaseApp(): FirebaseApp {
   if (!app) {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    const existing = getApps();
+    const configWithoutUndefined: Record<string, string> = {};
+    for (const [key, value] of Object.entries(firebaseConfig)) {
+      if (value !== undefined) configWithoutUndefined[key] = value;
+    }
+    app = existing.length === 0 ? initializeApp(configWithoutUndefined) : existing[0]!;
   }
   return app;
 }

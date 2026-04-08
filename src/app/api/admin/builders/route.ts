@@ -25,10 +25,10 @@ export async function GET() {
     );
 
     return NextResponse.json({
-      total: parseInt(stats.total, 10),
-      enriched: parseInt(stats.enriched, 10),
-      unenriched: parseInt(stats.unenriched, 10),
-      failed_count: parseInt(stats.failed_count, 10),
+      total: parseInt(stats?.total ?? '0', 10),
+      enriched: parseInt(stats?.enriched ?? '0', 10),
+      unenriched: parseInt(stats?.unenriched ?? '0', 10),
+      failed_count: parseInt(stats?.failed_count ?? '0', 10),
     });
   } catch (err) {
     logError('[admin/builders]', err, { handler: 'GET' });

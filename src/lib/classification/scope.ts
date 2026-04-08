@@ -381,14 +381,14 @@ export function extractResidentialTags(
 
   // Match "N storey" / "N-storey" / "N story"
   const numericStorey = descLower.match(/\b(\d+)\s*[-]?\s*(storey|story|stories)\b/);
-  if (numericStorey) {
+  if (numericStorey && numericStorey[1]) {
     storeyCount = parseInt(numericStorey[1], 10);
   }
 
   // Match cardinal words: "one storey", "two storey", etc.
   if (storeyCount === 0) {
     const cardinalStorey = descLower.match(/\b(one|two|three|four|five)\s*[-]?\s*(storey|story|stories)\b/);
-    if (cardinalStorey) {
+    if (cardinalStorey && cardinalStorey[1]) {
       storeyCount = CARDINAL_MAP[cardinalStorey[1]] || 0;
     }
   }
@@ -685,7 +685,7 @@ export function extractNewHouseTags(
   // 1. proposed_use contains "houseplex" → extract unit count
   if (/houseplex/i.test(pu)) {
     const unitMatch = pu.match(/\((\d+)\s*Units?\)/i);
-    let units = unitMatch ? parseInt(unitMatch[1], 10) : (housingUnits > 1 ? housingUnits : 3);
+    let units = unitMatch && unitMatch[1] ? parseInt(unitMatch[1], 10) : (housingUnits > 1 ? housingUnits : 3);
     units = Math.max(2, Math.min(6, units));
     tags.add(`new:houseplex-${units}-unit`);
     buildingTypeSet = true;

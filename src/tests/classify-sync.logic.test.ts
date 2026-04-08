@@ -29,9 +29,9 @@ function extractJsAliases(): Map<string, string> {
   const match = scriptSource.match(/const TAG_ALIASES\s*=\s*\{([^}]+)\}/);
   if (!match) throw new Error('Could not find TAG_ALIASES in classify-permits.js');
   const aliases = new Map<string, string>();
-  const entries = match[1].matchAll(/'([^']+)':\s*'([^']+)'/g);
+  const entries = match[1]!.matchAll(/'([^']+)':\s*'([^']+)'/g);
   for (const [, key, value] of entries) {
-    aliases.set(key, value);
+    aliases.set(key!, value!);
   }
   return aliases;
 }
@@ -44,9 +44,9 @@ function extractJsMatrixKeys(): Set<string> {
   const match = scriptSource.match(/const TAG_TRADE_MATRIX\s*=\s*\{([\s\S]*?)\n\};\s*\n/);
   if (!match) throw new Error('Could not find TAG_TRADE_MATRIX in classify-permits.js');
   const keys = new Set<string>();
-  const entries = match[1].matchAll(/^\s+'?([a-z_-]+[a-z0-9_-]*)'?:\s*\[/gm);
+  const entries = match[1]!.matchAll(/^\s+'?([a-z_-]+[a-z0-9_-]*)'?:\s*\[/gm);
   for (const [, key] of entries) {
-    keys.add(key);
+    keys.add(key!);
   }
   return keys;
 }
@@ -62,9 +62,9 @@ function extractJsTradesForKey(tagKey: string): [string, number][] {
   const match = scriptSource.match(pattern);
   if (!match) return [];
   const trades: [string, number][] = [];
-  const tradeEntries = match[1].matchAll(/\['([a-z-]+)',\s*([\d.]+)\]/g);
+  const tradeEntries = match[1]!.matchAll(/\['([a-z-]+)',\s*([\d.]+)\]/g);
   for (const [, slug, conf] of tradeEntries) {
-    trades.push([slug, parseFloat(conf)]);
+    trades.push([slug!, parseFloat(conf!)]);
   }
   return trades;
 }
@@ -169,8 +169,8 @@ describe('Classification Sync Gate (§7.1)', () => {
       );
       expect(jsNarrowMatch).not.toBeNull();
       const jsNarrowKeys = new Set<string>();
-      const keyEntries = jsNarrowMatch![1].matchAll(/'([A-Z]{2,4})':/g);
-      for (const [, key] of keyEntries) jsNarrowKeys.add(key);
+      const keyEntries = jsNarrowMatch![1]!.matchAll(/'([A-Z]{2,4})':/g);
+      for (const [, key] of keyEntries) jsNarrowKeys.add(key!);
 
       // Read TS classifier
       const classifierSource = fs.readFileSync(
@@ -182,8 +182,8 @@ describe('Classification Sync Gate (§7.1)', () => {
       );
       expect(tsNarrowMatch).not.toBeNull();
       const tsNarrowKeys = new Set<string>();
-      const tsKeyEntries = tsNarrowMatch![1].matchAll(/'([A-Z]{2,4})':/g);
-      for (const [, key] of tsKeyEntries) tsNarrowKeys.add(key);
+      const tsKeyEntries = tsNarrowMatch![1]!.matchAll(/'([A-Z]{2,4})':/g);
+      for (const [, key] of tsKeyEntries) tsNarrowKeys.add(key!);
 
       // Every JS key should be in TS and vice versa
       for (const key of jsNarrowKeys) {

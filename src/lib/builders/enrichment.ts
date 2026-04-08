@@ -54,14 +54,14 @@ export async function enrichBuilder(entityId: number): Promise<Entity | null> {
       [entityId]
     );
 
-    if (rows.length === 0) return null;
-
     const entity = rows[0];
+    if (!entity) return null;
+
     const searchQuery = buildSearchQuery({
       name: entity.legal_name,
-      trade_name: entity.trade_name_wsib,
-      legal_name: entity.legal_name_wsib,
-      mailing_address: entity.mailing_address,
+      ...(entity.trade_name_wsib !== undefined && { trade_name: entity.trade_name_wsib }),
+      ...(entity.legal_name_wsib !== undefined && { legal_name: entity.legal_name_wsib }),
+      ...(entity.mailing_address !== undefined && { mailing_address: entity.mailing_address }),
     });
 
     const response = await searchSerper(searchQuery) as SerperResponse;
@@ -73,11 +73,11 @@ export async function enrichBuilder(entityId: number): Promise<Entity | null> {
       const html = await fetchWebsiteHtml(websiteUrl);
       if (html) {
         const scraped = extractEmailsFromHtml(html);
-        if (scraped.length > 0) contacts.email = scraped[0];
+        if (scraped[0]) contacts.email = scraped[0];
         if (!contacts.phone && !entity.primary_phone) {
           const cleanText = stripHtmlNoise(html);
           const pagePhones = extractPhoneNumbers([cleanText]);
-          if (pagePhones.length > 0) contacts.phone = pagePhones[0];
+          if (pagePhones[0]) contacts.phone = pagePhones[0];
         }
       }
       // If homepage had no email, try common /contact page paths
@@ -85,11 +85,11 @@ export async function enrichBuilder(entityId: number): Promise<Entity | null> {
         const contactHtml = await fetchContactPageHtml(websiteUrl);
         if (contactHtml) {
           const contactEmails = extractEmailsFromHtml(contactHtml);
-          if (contactEmails.length > 0) contacts.email = contactEmails[0];
+          if (contactEmails[0]) contacts.email = contactEmails[0];
           if (!contacts.phone && !entity.primary_phone) {
             const cleanText = stripHtmlNoise(contactHtml);
             const pagePhones = extractPhoneNumbers([cleanText]);
-            if (pagePhones.length > 0) contacts.phone = pagePhones[0];
+            if (pagePhones[0]) contacts.phone = pagePhones[0];
           }
         }
       }
@@ -187,7 +187,7 @@ export async function enrichUnenrichedBuilders(
     );
 
     for (let i = 0; i < unenriched.length; i++) {
-      const result = await enrichBuilder(unenriched[i].id);
+      const result = await enrichBuilder(unenriched[i]!.id);
       if (result) {
         stats.enriched++;
       } else {

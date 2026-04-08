@@ -532,9 +532,9 @@ describe('Pipeline Chains', () => {
   it('permits chain has 18 steps in dependency order (no enrichment)', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     expect(permits.steps).toHaveLength(18);
-    expect(permits.steps[0].slug).toBe('assert_schema');
-    expect(permits.steps[1].slug).toBe('permits');
-    expect(permits.steps[permits.steps.length - 1].slug).toBe('assert_engine_health');
+    expect(permits!.steps[0]!.slug).toBe('assert_schema');
+    expect(permits!.steps[1]!.slug).toBe('permits');
+    expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('assert_engine_health');
   });
 
   it('permits chain has link_wsib as indent-1 step (not sub-step)', () => {
@@ -550,8 +550,8 @@ describe('Pipeline Chains', () => {
   it('coa chain has 8 steps', () => {
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
     expect(coa.steps).toHaveLength(9);
-    expect(coa.steps[0].slug).toBe('assert_schema');
-    expect(coa.steps[1].slug).toBe('coa');
+    expect(coa!.steps[0]!.slug).toBe('assert_schema');
+    expect(coa!.steps[1]!.slug).toBe('coa');
   });
 
   it('sources chain has 15 steps including WSIB, compute_centroids and assert_engine_health', () => {
@@ -560,8 +560,8 @@ describe('Pipeline Chains', () => {
     expect(sources.steps.some((s) => s.slug === 'compute_centroids')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'load_wsib')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'link_wsib')).toBe(true);
-    expect(sources.steps[0].slug).toBe('assert_schema');
-    expect(sources.steps[sources.steps.length - 1].slug).toBe('assert_engine_health');
+    expect(sources!.steps[0]!.slug).toBe('assert_schema');
+    expect(sources!.steps[sources.steps.length - 1]!.slug).toBe('assert_engine_health');
   });
 
   it('every slug in chains exists in PIPELINE_REGISTRY', () => {
@@ -842,9 +842,9 @@ describe('detectVolumeAnomalies()', () => {
     const trends = [current, ...historical];
     const anomalies = detectVolumeAnomalies(trends);
     expect(anomalies).toHaveLength(1);
-    expect(anomalies[0].direction).toBe('drop');
-    expect(anomalies[0].source).toBe('permits');
-    expect(anomalies[0].deviations).toBeGreaterThanOrEqual(2);
+    expect(anomalies[0]!.direction).toBe('drop');
+    expect(anomalies[0]!.source).toBe('permits');
+    expect(anomalies[0]!.deviations).toBeGreaterThanOrEqual(2);
   });
 
   it('flags a volume spike exceeding 2 standard deviations', () => {
@@ -863,7 +863,7 @@ describe('detectVolumeAnomalies()', () => {
     const trends = [current, ...historical];
     const anomalies = detectVolumeAnomalies(trends);
     expect(anomalies).toHaveLength(1);
-    expect(anomalies[0].direction).toBe('spike');
+    expect(anomalies[0]!.direction).toBe('spike');
   });
 });
 
@@ -884,9 +884,9 @@ describe('detectSchemaDrift()', () => {
     const previous = { permits: 30, builders: 14 };
     const alerts = detectSchemaDrift(current, previous);
     expect(alerts).toHaveLength(1);
-    expect(alerts[0].table).toBe('builders');
-    expect(alerts[0].previousCount).toBe(14);
-    expect(alerts[0].currentCount).toBe(15);
+    expect(alerts[0]!.table).toBe('builders');
+    expect(alerts[0]!.previousCount).toBe(14);
+    expect(alerts[0]!.currentCount).toBe(15);
   });
 
   it('ignores new tables not present in previous', () => {
@@ -918,10 +918,10 @@ describe('detectDurationAnomalies()', () => {
     const runs = { classify_permits: [20000, 8000, 8000, 8000, 8000] };
     const anomalies = detectDurationAnomalies(runs);
     expect(anomalies).toHaveLength(1);
-    expect(anomalies[0].pipeline).toBe('classify_permits');
-    expect(anomalies[0].currentMs).toBe(20000);
-    expect(anomalies[0].avgMs).toBe(8000);
-    expect(anomalies[0].ratio).toBe(2.5);
+    expect(anomalies[0]!.pipeline).toBe('classify_permits');
+    expect(anomalies[0]!.currentMs).toBe(20000);
+    expect(anomalies[0]!.avgMs).toBe(8000);
+    expect(anomalies[0]!.ratio).toBe(2.5);
   });
 
   it('detects anomalies across multiple pipelines', () => {
@@ -940,7 +940,7 @@ describe('detectDurationAnomalies()', () => {
     const runs = { permits: [10000, 5000] };
     const anomalies = detectDurationAnomalies(runs);
     expect(anomalies).toHaveLength(1);
-    expect(anomalies[0].ratio).toBe(2);
+    expect(anomalies[0]!.ratio).toBe(2);
   });
 
   it('ignores pipelines with zero average duration', () => {
@@ -960,7 +960,7 @@ describe('detectDurationAnomalies()', () => {
     // After fix: only [100] used as historical → avg=100, ratio=83 → anomaly
     // Key assertion: avgMs should be 100 (not 14)
     expect(anomalies).toHaveLength(1);
-    expect(anomalies[0].avgMs).toBe(100);
+    expect(anomalies[0]!.avgMs).toBe(100);
   });
 
   it('computes average from only non-zero historical runs', () => {
@@ -969,7 +969,7 @@ describe('detectDurationAnomalies()', () => {
     const runs = { builders: [16000, 0, 7000, 0, 8000, 0] };
     const anomalies = detectDurationAnomalies(runs);
     expect(anomalies).toHaveLength(1);
-    expect(anomalies[0].avgMs).toBe(7500);
+    expect(anomalies[0]!.avgMs).toBe(7500);
   });
 
   it('uses at most 7 historical runs for average', () => {
@@ -978,7 +978,7 @@ describe('detectDurationAnomalies()', () => {
     const anomalies = detectDurationAnomalies(runs);
     // Avg of 7 historical: 8000, current: 20000 → 2.5x
     expect(anomalies).toHaveLength(1);
-    expect(anomalies[0].avgMs).toBe(8000);
+    expect(anomalies[0]!.avgMs).toBe(8000);
   });
 });
 
@@ -1145,7 +1145,7 @@ describe('computeSystemHealth()', () => {
       { pipeline: 'chain_permits', error_message: longMessage, failed_at: new Date().toISOString() },
     ];
     const health = computeSystemHealth(snapshot, [], [], [], failures);
-    expect(health.warnings[0].length).toBeLessThanOrEqual(200);
+    expect(health!.warnings[0]!.length).toBeLessThanOrEqual(200);
     expect(health.warnings[0]).toContain('...');
   });
 });
@@ -1808,9 +1808,9 @@ describe('detectEngineHealthIssues', () => {
     };
     const result = detectEngineHealthIssues([bloated]);
     expect(result).toHaveLength(1);
-    expect(result[0].type).toBe('dead_tuples');
-    expect(result[0].table).toBe('permits');
-    expect(result[0].value).toBeGreaterThan(ENGINE_HEALTH_THRESHOLDS.DEAD_TUPLE_RATIO * 100);
+    expect(result[0]!.type).toBe('dead_tuples');
+    expect(result[0]!.table).toBe('permits');
+    expect(result[0]!.value).toBeGreaterThan(ENGINE_HEALTH_THRESHOLDS.DEAD_TUPLE_RATIO * 100);
   });
 
   it('does not flag dead tuples on empty tables', () => {
@@ -1833,8 +1833,8 @@ describe('detectEngineHealthIssues', () => {
     };
     const result = detectEngineHealthIssues([seqHeavy]);
     expect(result).toHaveLength(1);
-    expect(result[0].type).toBe('seq_scan_heavy');
-    expect(result[0].value).toBeGreaterThan(ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_RATIO * 100);
+    expect(result[0]!.type).toBe('seq_scan_heavy');
+    expect(result[0]!.value).toBeGreaterThan(ENGINE_HEALTH_THRESHOLDS.SEQ_SCAN_RATIO * 100);
   });
 
   it('does not flag seq scan on small tables', () => {
@@ -1855,9 +1855,9 @@ describe('detectEngineHealthIssues', () => {
     };
     const result = detectEngineHealthIssues([], pgStats);
     expect(result).toHaveLength(1);
-    expect(result[0].type).toBe('update_ping_pong');
-    expect(result[0].table).toBe('permit_trades');
-    expect(result[0].value).toBe(5);
+    expect(result[0]!.type).toBe('update_ping_pong');
+    expect(result[0]!.table).toBe('permit_trades');
+    expect(result[0]!.value).toBe(5);
   });
 
   it('does not flag update ping-pong when ratio is below threshold', () => {
@@ -1981,7 +1981,7 @@ describe('Pipeline manifest includes assert_engine_health', () => {
   it('STEP_DESCRIPTIONS includes assert_engine_health', async () => {
     const { STEP_DESCRIPTIONS } = await import('@/lib/admin/funnel');
     expect(STEP_DESCRIPTIONS.assert_engine_health).toBeDefined();
-    expect(STEP_DESCRIPTIONS.assert_engine_health.summary).toContain('Engine health');
+    expect(STEP_DESCRIPTIONS!.assert_engine_health!.summary).toContain('Engine health');
   });
 
   it('PIPELINE_TABLE_MAP includes assert_engine_health', async () => {

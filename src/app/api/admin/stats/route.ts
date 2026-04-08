@@ -307,8 +307,9 @@ export async function GET() {
         [tables]
       );
       for (const row of schemaRows) {
-        if (!dbSchemaMap[row.table_name]) dbSchemaMap[row.table_name] = [];
-        dbSchemaMap[row.table_name].push(row.column_name);
+        const cols = dbSchemaMap[row.table_name] ?? [];
+        cols.push(row.column_name);
+        dbSchemaMap[row.table_name] = cols;
       }
     } catch {
       // Non-fatal — UI will show description without field list

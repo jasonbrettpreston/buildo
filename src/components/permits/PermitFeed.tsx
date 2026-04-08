@@ -111,14 +111,10 @@ export function PermitFeed({ filters = {}, savedPermitIds, onSave }: PermitFeedP
             <PermitCard
               key={permitId}
               permit={permit}
-              trades={permit.trades}
-              saved={savedPermitIds?.has(permitId)}
+              {...(permit.trades !== undefined && { trades: permit.trades })}
+              {...(savedPermitIds?.has(permitId) !== undefined && { saved: savedPermitIds.has(permitId) })}
               onView={() => handleView(permit)}
-              onSave={
-                onSave
-                  ? () => onSave(permit.permit_num, permit.revision_num)
-                  : undefined
-              }
+              {...(onSave && { onSave: () => onSave(permit.permit_num, permit.revision_num) })}
             />
           );
         })}

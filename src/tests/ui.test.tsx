@@ -243,15 +243,15 @@ describe('FilterPanel Logic', () => {
 
   it('has at least 10 permit type options from real data', () => {
     expect(PERMIT_TYPE_OPTIONS.length).toBeGreaterThanOrEqual(10);
-    expect(PERMIT_TYPE_OPTIONS[0].value).toBe('Small Residential Projects');
+    expect(PERMIT_TYPE_OPTIONS[0]!.value).toBe('Small Residential Projects');
     expect(PERMIT_TYPE_OPTIONS.find(o => o.value === 'Plumbing(PS)')).toBeDefined();
     expect(PERMIT_TYPE_OPTIONS.find(o => o.value === 'Demolition Folder (DM)')).toBeDefined();
   });
 
   it('has 4 sort options with correct default', () => {
     expect(SORT_OPTIONS).toHaveLength(4);
-    expect(SORT_OPTIONS[0].value).toBe('issued_date:desc');
-    expect(SORT_OPTIONS[0].label).toBe('Recently Issued');
+    expect(SORT_OPTIONS[0]!.value).toBe('issued_date:desc');
+    expect(SORT_OPTIONS[0]!.label).toBe('Recently Issued');
   });
 
   it('sort option parses into sort_by and sort_order', () => {
@@ -300,7 +300,7 @@ describe('FilterPanel Logic', () => {
 
   it('has at least 15 structure type options from real data', () => {
     expect(STRUCTURE_TYPE_OPTIONS.length).toBeGreaterThanOrEqual(15);
-    expect(STRUCTURE_TYPE_OPTIONS[0].value).toBe('SFD - Detached');
+    expect(STRUCTURE_TYPE_OPTIONS[0]!.value).toBe('SFD - Detached');
     expect(STRUCTURE_TYPE_OPTIONS.find(o => o.value === 'Apartment Building')).toBeDefined();
     expect(STRUCTURE_TYPE_OPTIONS.find(o => o.value === 'Industrial')).toBeDefined();
   });
@@ -326,7 +326,7 @@ describe('FilterPanel Logic', () => {
 
   it('has at least 15 work options from real data', () => {
     expect(WORK_OPTIONS.length).toBeGreaterThanOrEqual(15);
-    expect(WORK_OPTIONS[0].value).toBe('Building Permit Related(PS)');
+    expect(WORK_OPTIONS[0]!.value).toBe('Building Permit Related(PS)');
     expect(WORK_OPTIONS.find(o => o.value === 'Interior Alterations')).toBeDefined();
     expect(WORK_OPTIONS.find(o => o.value === 'Demolition')).toBeDefined();
   });

@@ -72,7 +72,7 @@ function getFieldValue(permit: Partial<Permit>, matchField: string): string | un
 export function extractPermitCode(permitNum: string | undefined): string | null {
   if (!permitNum) return null;
   const match = permitNum.match(/\s([A-Z]{2,4})(?:\s|$)/);
-  return match ? match[1] : null;
+  return match ? match[1]! : null;
 }
 
 /**
@@ -371,7 +371,7 @@ export function classifyPermit(
     if (limited.length > 0) return limited;
 
     // Fallback: assign code's allowed trades at 0.80 confidence
-    const allowed = NARROW_SCOPE_CODES[code!];
+    const allowed = NARROW_SCOPE_CODES[code!]!;
     const narrowFallback: TradeMatch[] = [];
     for (const slug of allowed) {
       const trade = getTradeBySlug(slug);
