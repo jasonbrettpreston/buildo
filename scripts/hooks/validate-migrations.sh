@@ -33,4 +33,9 @@ if [ "$FAILED" -eq 1 ]; then
   exit 1
 fi
 
+# Backstop: node-based safety checks (DROP guards, CONCURRENTLY, NOT NULL DEFAULT).
+if command -v node >/dev/null 2>&1; then
+  node scripts/validate-migration.js $STAGED_MIGRATIONS || exit 1
+fi
+
 exit 0

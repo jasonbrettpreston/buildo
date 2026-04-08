@@ -23,7 +23,8 @@
     "local-cron": "node scripts/local-cron.js",
     "prepare": "husky",
     "biome:check": "biome check",
-    "lighthouse:ci": "lhci autorun"
+    "lighthouse:ci": "lhci autorun",
+    "sql:lint": "sqlfluff lint --dialect postgres migrations/"
   },
   "lint-staged": {
     "src/features/leads/**/*.{ts,tsx}": [
@@ -39,6 +40,8 @@
     "@turf/boolean-point-in-polygon": "^7.3.4",
     "@turf/centroid": "^7.3.4",
     "@turf/helpers": "^7.3.4",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.37.0",
     "csv-parse": "^6.1.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.1",
