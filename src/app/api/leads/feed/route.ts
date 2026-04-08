@@ -1,0 +1,117 @@
+// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints
+//
+// GET /api/leads/feed — personalized lead feed for the authenticated user.
+// Returns permits + builders interleaved by relevance score, paginated via
+// the unified cursor from spec 70. Thin route handler — every behavior
+// delegates to a Phase 1 lib function or Phase 2-i foundation helper.
+//
+// Status code matrix (spec 70 §API Endpoints):
+//   200 — success
+//   400 — Zod validation failure
+//   401 — no session, no profile, or auth helper failure
+//   403 — trade_slug parameter doesn't match user's profile trade
+//   429 — rate limit exceeded (30 req/min per user)
+//   500 — unexpected error (logged via logError + returned as generic envelope)
+
+import type { NextRequest } from 'next/server';
+import { getCurrentUserContext } from '@/lib/auth/get-user-context';
+import { withRateLimit } from '@/lib/auth/rate-limit';
+import { pool } from '@/lib/db/client';
+import { ok } from '@/features/leads/api/envelope';
+import {
+  badRequestZod,
+  forbiddenTradeMismatch,
+  internalError,
+  rateLimited,
+  unauthorized,
+} from '@/features/leads/api/error-mapping';
+import { logRequestComplete } from '@/features/leads/api/request-logging';
+import { leadFeedQuerySchema } from '@/features/leads/api/schemas';
+import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
+
+const RATE_LIMIT_PER_MIN = 30;
+const RATE_LIMIT_WINDOW_SEC = 60;
+
+export async function GET(request: NextRequest) {
+  const start = Date.now();
+  try {
+    // 1. Auth — get the Firebase UID + user's trade from user_profiles.
+    const ctx = await getCurrentUserContext(request, pool);
+    if (!ctx) return unauthorized();
+
+    // 2. Validate query params via Zod (returns 400 with field-level details
+    //    on failure — NOT 500, per spec 70).
+    const parsed = leadFeedQuerySchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams),
+    );
+    if (!parsed.success) return badRequestZod(parsed.error);
+    const params = parsed.data;
+
+    // 3. Trade slug authorization — server compares the requested trade to
+    //    the user's profile trade. Mismatch returns 403 per spec 70.
+    if (params.trade_slug !== ctx.trade_slug) {
+      return forbiddenTradeMismatch(params.trade_slug, ctx.trade_slug);
+    }
+
+    // 4. Rate limit — 30 req/min per user, scoped to this endpoint via
+    //    the `leads-feed:` key prefix so other future leads endpoints
+    //    have their own buckets.
+    const rateLimit = await withRateLimit(request, {
+      key: `leads-feed:${ctx.uid}`,
+      limit: RATE_LIMIT_PER_MIN,
+      windowSec: RATE_LIMIT_WINDOW_SEC,
+    });
+    if (!rateLimit.allowed) return rateLimited(rateLimit.remaining);
+
+    // 5. Build the cursor from the validated optional triple. Conditional
+    //    spread satisfies exactOptionalPropertyTypes — `cursor: undefined`
+    //    would fail strict mode.
+    const cursor =
+      params.cursor_score !== undefined &&
+      params.cursor_lead_type !== undefined &&
+      params.cursor_lead_id !== undefined
+        ? {
+            score: params.cursor_score,
+            lead_type: params.cursor_lead_type,
+            lead_id: params.cursor_lead_id,
+          }
+        : undefined;
+
+    // 6. Call the Phase 1 lib function — never throws (try/catch wrapper
+    //    below is defense in depth).
+    const result = await getLeadFeed(
+      {
+        user_id: ctx.uid,
+        trade_slug: params.trade_slug,
+        lat: params.lat,
+        lng: params.lng,
+        radius_km: params.radius_km,
+        limit: params.limit,
+        ...(cursor !== undefined && { cursor }),
+      },
+      pool,
+    );
+
+    // 7. Structured logging — spec 70 §API Endpoints "Observability".
+    logRequestComplete(
+      '[api/leads/feed]',
+      {
+        user_id: ctx.uid,
+        trade_slug: params.trade_slug,
+        lat: params.lat,
+        lng: params.lng,
+        radius_km: result.meta.radius_km,
+        result_count: result.meta.count,
+      },
+      start,
+    );
+
+    // 8. Return the envelope.
+    return ok(result.data, result.meta);
+  } catch (cause) {
+    // Defensive — none of the above should throw because every helper is
+    // documented as never-throws, but if a regression slips through, this
+    // catches it and surfaces a 500 envelope with the cause logged.
+    return internalError(cause, { route: 'GET /api/leads/feed' });
+  }
+}

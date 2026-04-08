@@ -1,177 +1,265 @@
-# Active Task: WF1 — Lead Feed Phase 2-i: API Foundation + User Profile
+# Active Task: WF1 — Lead Feed Phase 2-ii: GET /api/leads/feed Route
 **Status:** Implementation
 **Workflow:** WF1 — New Feature Genesis
-**Rollback Anchor:** `43f366a`
+**Rollback Anchor:** `359bc9f`
 
 ## Domain Mode
-**Cross-Domain** — one new migration (Backend), new server-only TS helpers, route-guard.ts edit (the only Frontend-Mode-relevant touch since middleware runs at the edge runtime). Per CLAUDE.md, both Backend Mode and Frontend Mode rules apply to their respective files.
+**Backend/Pipeline Mode** — one new Next.js API route handler + tests. No new migrations, no new lib functions, no UI. Per CLAUDE.md Backend Mode: §2 (try/catch), §4 (auth), §6 (logger). The route runs in the Node runtime (not edge) so it can use firebase-admin via `getCurrentUserContext` and the pg pool.
 
 ## Context
-* **Goal:** First of three sub-WFs splitting Phase 2 along Phase 1's pattern (foundation → consumers). After this WF the cross-cutting plumbing every Phase 2 leads route needs is shipped: a `user_profiles` table for trade-slug authorization, a `getCurrentUserContext` helper combining Firebase auth + DB profile lookup, shared Zod schemas, response envelope helpers, error → HTTP-status mapping, and structured request logging. Phase 2-ii (`/api/leads/feed`) and Phase 2-iii (`/api/leads/view`) will be thin wrappers on top.
-* **Critical gap from recon:** there is currently NO user_profiles table, NO Firebase custom claims wiring, NO way to map a Firebase UID to a trade slug. Spec 70 §API Endpoints explicitly requires "The server compares `trade_slug` against the authenticated user's profile trade. Mismatch returns 403 Forbidden." Phase 2-i closes this gap.
-* **Target Specs:**
-  - `docs/specs/product/future/70_lead_feed.md` §API Endpoints
+* **Goal:** Second of three sub-WFs in Phase 2. Ship the `GET /api/leads/feed` route — a thin handler that composes the Phase 1 lib functions (`getLeadFeed`) with the Phase 2-i foundation (`getCurrentUserContext`, `leadFeedQuerySchema`, envelope helpers, error mapping, request logging) and the Backend Phase 0 rate limiter (`withRateLimit`). After this WF lands, the lead feed is end-to-end functional from URL → JSON response with the full status code matrix per spec 70.
+* **Target Specs (already hardened):**
+  - `docs/specs/product/future/70_lead_feed.md` §API Endpoints (full spec for `/api/leads/feed`)
   - `docs/specs/product/future/75_lead_feed_implementation_guide.md` §11 Phase 2
-  - `docs/specs/00_engineering_standards.md` §2 / §4 / §4.4 / §6
-* **Key Files:** new — `migrations/075_user_profiles.sql`, `src/lib/auth/get-user-context.ts`, `src/features/leads/api/schemas.ts`, `src/features/leads/api/envelope.ts`, `src/features/leads/api/error-mapping.ts`, `src/features/leads/api/request-logging.ts`, 4 test files. Modified — `src/lib/auth/route-guard.ts`, `src/lib/permits/types.ts`, `src/tests/factories.ts`.
+  - `docs/specs/00_engineering_standards.md` §2 (try/catch), §4 (auth), §4.4 (response envelope), §6 (logger)
+* **Key Files:** new — `src/app/api/leads/feed/route.ts`, `src/tests/api-leads-feed.infra.test.ts`. No modifications to existing files.
 
 ## Technical Implementation
 
-### Migration 075 — `user_profiles` table
+### File 1 — `src/app/api/leads/feed/route.ts`
 
-```sql
--- UP
-CREATE TABLE user_profiles (
-  user_id      VARCHAR(100) PRIMARY KEY,           -- Firebase UID
-  trade_slug   VARCHAR(50)  NOT NULL,
-  display_name VARCHAR(200),
-  created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  CONSTRAINT user_profiles_trade_slug_not_empty CHECK (length(trade_slug) > 0)
-);
-CREATE INDEX idx_user_profiles_trade_slug ON user_profiles (trade_slug);
-
--- DOWN
--- ALLOW-DESTRUCTIVE
--- DROP INDEX IF EXISTS idx_user_profiles_trade_slug;
--- DROP TABLE IF EXISTS user_profiles;
-```
-
-Notes:
-- `user_id` is a Firebase UID, not a FK — same convention as `lead_views.user_id` in migration 070.
-- `trade_slug` is NOT a FK to a `trades` table per the existing codebase pattern (Phase 1a triage). The `length > 0` CHECK prevents empty-string drift.
-- `display_name` is optional metadata so the future onboarding UI can populate it without another migration.
-- No `email` column — Firebase owns identity.
-
-### File 1 — `src/lib/auth/get-user-context.ts`
-
-Combines `getUserIdFromSession` (Backend Phase 0) + DB profile lookup. Returns `{uid, trade_slug, display_name}` or null on ANY failure (no session, invalid cookie, JWT verify fail, no profile row, DB error). Phase 2 routes treat all four cases as 401.
+Next.js App Router GET handler. ~90 lines. Composes the Phase 2-i + Phase 1 + Backend Phase 0 building blocks with NO new logic of its own — every behavior is delegated.
 
 ```ts
-export interface UserContext { uid: string; trade_slug: string; display_name: string | null; }
-export async function getCurrentUserContext(request: NextRequest, pool: Pool): Promise<UserContext | null>;
-```
+// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints
+//
+// GET /api/leads/feed — personalized lead feed for the authenticated user.
+// Returns permits + builders interleaved by relevance score, paginated via
+// the unified cursor from spec 70. Thin route handler — every behavior
+// delegates to a Phase 1 lib function or Phase 2-i foundation helper.
+//
+// Status code matrix (spec 70 §API Endpoints):
+//   200 — success
+//   400 — Zod validation failure
+//   401 — no session, no profile, or auth helper failure
+//   403 — trade_slug parameter doesn't match user's profile trade
+//   429 — rate limit exceeded (30 req/min per user)
+//   500 — unexpected error (logged via logError)
 
-Wraps the DB query in try/catch → `logError` → null. Never throws.
+import type { NextRequest } from 'next/server';
+import { pool } from '@/lib/db/client';
+import { getCurrentUserContext } from '@/lib/auth/get-user-context';
+import { withRateLimit } from '@/lib/auth/rate-limit';
+import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
+import { leadFeedQuerySchema } from '@/features/leads/api/schemas';
+import { ok } from '@/features/leads/api/envelope';
+import {
+  unauthorized,
+  forbiddenTradeMismatch,
+  rateLimited,
+  badRequestZod,
+  internalError,
+} from '@/features/leads/api/error-mapping';
+import { logRequestComplete } from '@/features/leads/api/request-logging';
 
-### File 2 — `src/features/leads/api/schemas.ts`
+const RATE_LIMIT_PER_MIN = 30;
+const RATE_LIMIT_WINDOW_SEC = 60;
 
-Shared Zod schemas. **Returns 400** with field-level error messages (NOT 500) per spec 70.
+export async function GET(request: NextRequest) {
+  const start = Date.now();
+  try {
+    // 1. Auth — get the Firebase UID + user's trade from user_profiles
+    const ctx = await getCurrentUserContext(request, pool);
+    if (!ctx) return unauthorized();
 
-- `leadFeedQuerySchema`: lat (-90..90), lng (-180..180), trade_slug (1-50), radius_km (0..MAX_RADIUS_KM, default DEFAULT_RADIUS_KM), limit (1..MAX_FEED_LIMIT, default DEFAULT_FEED_LIMIT), cursor_score/lead_type/lead_id (all-or-nothing via `.refine`), `z.coerce.number` for URL query string handling
-- `leadViewBodySchema`: trade_slug + action enum + `z.discriminatedUnion('lead_type', [permit branch, builder branch])` enforcing XOR
+    // 2. Validate query params via Zod (returns 400 with field-level details on failure)
+    const parsed = leadFeedQuerySchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams),
+    );
+    if (!parsed.success) return badRequestZod(parsed.error);
+    const params = parsed.data;
 
-Imports `MAX_FEED_LIMIT`/`DEFAULT_FEED_LIMIT` from `get-lead-feed.ts` and `MAX_RADIUS_KM`/`DEFAULT_RADIUS_KM` from `distance.ts` — single source of truth, no constant drift.
+    // 3. Trade slug authorization — server compares requested trade to user's profile
+    if (params.trade_slug !== ctx.trade_slug) {
+      return forbiddenTradeMismatch(params.trade_slug, ctx.trade_slug);
+    }
 
-### File 3 — `src/features/leads/api/envelope.ts`
+    // 4. Rate limit — 30 req/min per user
+    const rateLimit = await withRateLimit(request, {
+      key: `leads-feed:${ctx.uid}`,
+      limit: RATE_LIMIT_PER_MIN,
+      windowSec: RATE_LIMIT_WINDOW_SEC,
+    });
+    if (!rateLimit.allowed) return rateLimited(rateLimit.remaining);
 
-Per spec 70 + §4.4 response envelope `{data, error, meta}`:
+    // 5. Build the cursor from the validated optional triple
+    const cursor =
+      params.cursor_score !== undefined &&
+      params.cursor_lead_type !== undefined &&
+      params.cursor_lead_id !== undefined
+        ? {
+            score: params.cursor_score,
+            lead_type: params.cursor_lead_type,
+            lead_id: params.cursor_lead_id,
+          }
+        : undefined;
 
-```ts
-export function ok<T, M = null>(data: T, meta?: M, status?: number): NextResponse;
-export function err(code: string, message: string, status: number, details?: unknown): NextResponse;
-```
+    // 6. Call the Phase 1 lib function — never throws
+    const result = await getLeadFeed(
+      {
+        user_id: ctx.uid,
+        trade_slug: params.trade_slug,
+        lat: params.lat,
+        lng: params.lng,
+        radius_km: params.radius_km,
+        limit: params.limit,
+        ...(cursor !== undefined && { cursor }),
+      },
+      pool,
+    );
 
-### File 4 — `src/features/leads/api/error-mapping.ts`
+    // 7. Structured logging
+    logRequestComplete(
+      '[api/leads/feed]',
+      {
+        user_id: ctx.uid,
+        trade_slug: params.trade_slug,
+        lat: params.lat,
+        lng: params.lng,
+        radius_km: result.meta.radius_km,
+        result_count: result.meta.count,
+      },
+      start,
+    );
 
-Spec 70 status code matrix → NextResponse helpers:
-- `unauthorized()` → 401 `UNAUTHORIZED`
-- `forbiddenTradeMismatch(requested, actual)` → 403 `FORBIDDEN_TRADE_MISMATCH` with mismatch detail
-- `rateLimited(remaining)` → 429 `RATE_LIMITED` with remaining
-- `badRequestZod(zodError)` → 400 `VALIDATION_FAILED` with `zodError.flatten()` field-level details
-- `internalError()` → 500 `INTERNAL_ERROR` (generic, no leaked stack)
-
-### File 5 — `src/features/leads/api/request-logging.ts`
-
-`logRequestComplete(tag, context, startMs)` — wraps `logInfo` with consistent shape per spec 70 observability requirement (`{user_id, trade_slug, lat, lng, radius_km, result_count, duration_ms}`). Tiny but enforces shape consistency between Phase 2-ii and 2-iii.
-
-### Type addition — `src/lib/permits/types.ts`
-
-```ts
-export interface UserProfile {
-  user_id: string;
-  trade_slug: string;
-  display_name: string | null;
-  created_at: Date;
-  updated_at: Date;
+    // 8. Return the envelope
+    return ok(result.data, result.meta);
+  } catch (cause) {
+    // Defensive — none of the above should throw because all helpers are
+    // documented as never-throws, but if a regression slips through this
+    // catches it and surfaces a 500 with the cause logged.
+    return internalError(cause, { route: 'GET /api/leads/feed' });
+  }
 }
 ```
 
-### route-guard.ts update
+**Why this is correct (every line maps to a spec requirement):**
+- Step 1 → spec 70 §3 Auth Matrix "Authenticated only"
+- Step 2 → spec 70 §API Endpoints "400 Bad Request — Zod validation failure"
+- Step 3 → spec 70 §API Endpoints "Trade slug authorization: server compares trade_slug against user's profile trade — mismatch returns 403"
+- Step 4 → spec 70 §API Endpoints "Rate limiting: 30 requests per 60 seconds per user_id"
+- Step 5 → spec 70 §API Endpoints "Pagination (unified cursor): tuple (relevance_score, lead_type, lead_id)"
+- Step 6 → spec 70 §API Endpoints "Logic: All scoring happens in PostgreSQL"
+- Step 7 → spec 70 §API Endpoints "Observability: Structured log per request"
+- Step 8 → spec 70 §API Endpoints + §4.4 "Response envelope: { data, error: null, meta }"
 
-Add `/api/leads/` to the existing authenticated-API mechanism (recon will confirm exact shape; current file uses `PUBLIC_PREFIXES` for public-by-default). The fix is to ensure `/api/leads/feed` and `/api/leads/view` get classified as `'authenticated'` so middleware enforces the cookie shape pre-check before the handler runs `getCurrentUserContext`. Defense in depth.
+**Composition uses ONLY existing helpers:**
+- `pool` from Backend (existing)
+- `getCurrentUserContext` from Phase 2-i
+- `withRateLimit` from Backend Phase 0
+- `getLeadFeed` from Phase 1b-iii
+- `leadFeedQuerySchema` from Phase 2-i
+- `ok` / `unauthorized` / `forbiddenTradeMismatch` / `rateLimited` / `badRequestZod` / `internalError` / `logRequestComplete` from Phase 2-i
+
+The route handler adds ZERO new logic. If anything goes wrong it can ONLY be in the composition (parameter ordering, missing checks, etc.) — not in business logic.
+
+### File 2 — `src/tests/api-leads-feed.infra.test.ts` (~22-28 tests)
+
+Mocks the entire dependency surface via `vi.mock` so the test exercises the route handler's composition logic without spinning up a real DB or Firebase. The test pattern matches `src/tests/auth-get-user.logic.test.ts` (the most similar file in the codebase).
+
+**Test scenarios (per spec 70 status code matrix):**
+
+**200 OK happy path (3 tests):**
+- Valid auth + valid params + matching trade + within rate limit → 200 with mapped feed result, envelope shape `{data, error: null, meta}`
+- 200 with cursor params → cursor passed to getLeadFeed
+- 200 with empty result → returns empty data array, count 0, next_cursor null
+
+**401 Unauthorized (3 tests):**
+- `getCurrentUserContext` returns null → 401 with code `UNAUTHORIZED`, body shape `{data: null, error: {code, message}, meta: null}`
+- 401 path does NOT call getLeadFeed
+- 401 path does NOT call withRateLimit
+
+**400 Validation failure (5 tests):**
+- Invalid lat (out of range) → 400 with code `VALIDATION_FAILED`, field-level details
+- Missing trade_slug → 400
+- Invalid cursor (partial) → 400
+- 400 path does NOT call getLeadFeed
+- 400 happens AFTER auth check (i.e. unauthenticated invalid request still returns 401, not 400)
+
+**403 Forbidden (3 tests):**
+- Authenticated user requests trade != their profile → 403 `FORBIDDEN_TRADE_MISMATCH`, message includes both requested and actual
+- 403 path does NOT call getLeadFeed
+- 403 happens AFTER auth + Zod parse
+
+**429 Rate limited (3 tests):**
+- `withRateLimit` returns `{allowed: false}` → 429 `RATE_LIMITED` with `remaining` detail and `Retry-After` header
+- 429 path does NOT call getLeadFeed
+- Rate limit key uses `leads-feed:{uid}` format (so the leads endpoint has its own bucket separate from other future leads endpoints)
+
+**500 Internal error (3 tests):**
+- `getLeadFeed` somehow throws (regression — it's documented never-throws but defense in depth) → 500 `INTERNAL_ERROR` with logError called
+- `getCurrentUserContext` somehow throws → 500
+- `withRateLimit` somehow throws → 500
+
+**Composition correctness (3 tests):**
+- Order of operations: auth → parse → trade check → rate limit → lib call → ok
+- `getLeadFeed` receives `user_id: ctx.uid` (from auth context, NOT from query params)
+- `getLeadFeed` receives the validated params (from Zod, after coercion — i.e. lat is a number, not a string)
+- `logRequestComplete` called with the correct context shape
+
+**Mocking strategy:**
+```ts
+vi.mock('@/lib/auth/get-user-context');
+vi.mock('@/lib/auth/rate-limit');
+vi.mock('@/features/leads/lib/get-lead-feed');
+vi.mock('@/lib/db/client', () => ({ pool: {} }));
+
+// In each test:
+vi.mocked(getCurrentUserContext).mockResolvedValueOnce({ uid: 'u1', trade_slug: 'plumbing', display_name: null });
+vi.mocked(withRateLimit).mockResolvedValueOnce({ allowed: true, remaining: 29 });
+vi.mocked(getLeadFeed).mockResolvedValueOnce({ data: [...], meta: {...} });
+```
+
+Build a `NextRequest` via `new NextRequest('http://localhost/api/leads/feed?lat=43.65&lng=-79.38&trade_slug=plumbing')` and pass it directly to `GET`. Read the response via `await res.json()`.
 
 ### Database Impact
-**YES.** One new migration on a brand-new empty table. Zero impact on existing tables. No backfill — table starts empty, populated by future onboarding flow.
-
-### Tests
-
-**File 6 — `src/tests/user-profiles-schema.infra.test.ts`** (6-8 tests) — file-shape regex assertions on migration 075
-
-**File 7 — `src/tests/get-user-context.logic.test.ts`** (10-12 tests):
-- No session → null
-- Session valid + profile row → returns context
-- Session valid + no profile row → null
-- Session valid + DB throws → null + logError
-- display_name null handling
-- Parameterized query verification
-
-**File 8 — `src/tests/api-schemas.logic.test.ts`** (15-20 tests):
-- leadFeedQuerySchema: lat/lng range bounds, radius/limit clamps, defaults, cursor partial/full, coerce from string, empty trade_slug
-- leadViewBodySchema: permit/builder happy paths, XOR violations, missing fields, action enum
-
-**File 9 — `src/tests/api-envelope.logic.test.ts`** (8-10 tests):
-- ok/err shapes, custom status, details handling, all error helpers (unauthorized/forbiddenTradeMismatch/rateLimited/badRequestZod/internalError)
+**NO** — no migrations. Reads tables created by Phase 1a + Phase 2-i.
 
 ## Standards Compliance (§10)
 
 ### DB
-- ✅ Migration 075 with UP + DOWN blocks
-- ✅ ALLOW-DESTRUCTIVE marker on commented DOWN
-- ⬜ N/A CONCURRENTLY — single-column index on a brand-new empty table
-- ✅ CHECK constraint on trade_slug non-emptiness
-- ✅ Pool injected as parameter; no `new Pool()`
-- ✅ Parameterized query in `getCurrentUserContext`
-- ✅ Migration safety validator gates the commit
+- ⬜ N/A — no migrations
+- ✅ Uses the shared pool from `src/lib/db/client.ts` — never `new Pool()`
+- ✅ All DB access via the Phase 1 lib functions (`getLeadFeed`) — route doesn't issue raw queries
 
 ### API
-- ✅ Spec 70 status code matrix codified in `error-mapping.ts`
-- ✅ Spec 70 + §4.4 response envelope codified in `envelope.ts`
-- ✅ Zod returns 400 (not 500) via `badRequestZod`
-- ✅ XOR enforced via Zod `discriminatedUnion`
-- ✅ Foundation files don't ship route handlers themselves — Phase 2-ii/2-iii do
-- ✅ route-guard.ts updated to authenticate `/api/leads/*`
+- ✅ Spec 70 status code matrix fully covered (200/400/401/403/429/500)
+- ✅ Spec 70 + §4.4 response envelope `{data, error, meta}` via `ok()`/`err()`
+- ✅ Zod returns 400 (NOT 500) via `badRequestZod`
+- ✅ Trade slug authorization per spec 70 (server-side comparison, NOT client-trusted)
+- ✅ Rate limiting per spec 70 (30 req/min per user via `withRateLimit`)
+- ✅ Authenticated by middleware (route-guard added `/api/leads` to AUTHENTICATED_API_ROUTES in Phase 2-i)
+- ✅ Auth check happens at the route level too (defense in depth)
 
 ### UI
-- ⬜ N/A — backend foundation only
+- ⬜ N/A — backend route only
 
 ### Shared Logic (§7)
-- ✅ Imports `MAX_FEED_LIMIT`/`DEFAULT_FEED_LIMIT` from `get-lead-feed.ts` (single source of truth)
-- ✅ Imports `MAX_RADIUS_KM`/`DEFAULT_RADIUS_KM` from `distance.ts` (single source of truth)
+- ✅ Composes Phase 1b-iii `getLeadFeed`, Phase 2-i schemas + helpers, Backend Phase 0 `withRateLimit` + `getUserIdFromSession` (via `getCurrentUserContext`)
+- ✅ NO duplication of business logic — every line delegates
 - ✅ NO dual code path
-- ✅ Composes `getUserIdFromSession` from Backend Phase 0 — no duplication
+- ✅ Imports `pool` from the shared client
 
 ### Pipeline (§9)
 - ⬜ N/A — no scripts
 
 ### Try/Catch (§2) + logError mandate
-- ✅ `getCurrentUserContext` wraps DB call, returns null on error, logs via `logError`
-- ✅ Envelope/error-mapping helpers are pure — no throws
-- ✅ Zod schemas throw `ZodError` by design — caught + mapped via `badRequestZod`
+- ✅ Top-level try/catch around the entire handler
+- ✅ Catch calls `internalError(cause, context)` which logs via `logError` and returns the generic 500 envelope
+- ✅ Never throws to the Next.js framework — Next would otherwise return its default 500 page which doesn't match our envelope shape
 
 ### Unhappy Path Tests
-- ✅ Pool throws → null + logError
-- ✅ Empty profile result → null
-- ✅ Each Zod boundary
-- ✅ XOR violations
-- ✅ Each error helper produces correct shape
+- ✅ Each spec 70 status code (401/400/403/429/500) has at least one test
+- ✅ Order-of-operations tests verify auth happens BEFORE Zod parse (so unauthenticated invalid requests return 401, not 400)
+- ✅ Rate limit bypass test verifies the lib function isn't called when rate limit denies
+- ✅ Defensive 500 path tested (lib functions throwing despite never-throws contract)
 
 ### Mobile-First
-- ⬜ N/A — backend-only
+- ⬜ N/A — backend route
 
 ## Review Plan (per `feedback_review_protocol.md`, this is WF1)
 - ✅ Independent review in worktree after commit
-- ✅ Gemini + DeepSeek on **all 10 files** (1 migration + 5 source + 4 test) = **20 adversarial reviews + 1 independent ≈ $4.00**
+- ✅ Gemini + DeepSeek on **both files** (route + test) — **4 adversarial reviews + 1 independent ≈ $0.80**
 - ✅ Triage via Real / Defensible / Out-of-scope tree
 - ✅ Append deferred items to `docs/reports/review_followups.md`
 - ✅ Post full triage table in the response
@@ -179,78 +267,78 @@ Add `/api/leads/` to the existing authenticated-API mechanism (recon will confir
 ## What's IN Scope
 | Deliverable | Why |
 |---|---|
-| Migration 075 user_profiles | Spec 70 trade_slug authorization requires server-side profile lookup |
-| `getCurrentUserContext` helper | Single source of truth for "who is calling and what trade are they?" |
-| Shared Zod schemas | Both routes validate input; one definition prevents drift |
-| Response envelope helpers | Spec 70 + §4.4 envelope codified once |
-| Error → HTTP mapping | Spec 70 status code matrix codified once |
-| Request logging helper | Spec 70 observability shape codified once |
-| route-guard.ts update | Add `/api/leads/*` to authenticated paths |
-| `UserProfile` type | Schema row shape exposed to consumers |
+| `GET /api/leads/feed` route handler | Spec 70 §API Endpoints — primary entry point for the lead feed |
+| Route handler infra tests | Cover full status code matrix + composition correctness |
 
 ## What's OUT of Scope
-- `/api/leads/feed` route handler — Phase 2-ii
-- `/api/leads/view` route handler — Phase 2-iii
-- User profile creation/onboarding flow — separate WF (UI-driven)
-- Email/notification fields on user_profiles — future expansion
-- Firebase custom claims as a faster trade lookup — V2 optimization
-- Firebase Admin reconciliation script for orphaned profile rows — separate WF
+- `POST /api/leads/view` route — Phase 2-iii
+- Response envelope refinement (e.g. `withErrorBoundary` wrapper) — deferred from Phase 2-i followups
+- Real database integration tests — blocked by pre-existing migration 030 failure
+- API client SDK — UI WF (Phase 4+)
+- Caching headers (Cache-Control, ETag) — V2 perf optimization
 
 ## Execution Plan
 
 ```
-- [ ] Contract Definition: getCurrentUserContext + envelope/error helpers
-      + Zod schemas signatures locked. No Phase 2-ii/iii route handlers
-      in this WF.
+- [ ] Contract Definition: GET /api/leads/feed signature locked.
+      Returns ApiSuccess<LeadFeedItem[], LeadFeedMeta> on 200, ApiErrorBody
+      on 4xx/5xx. All param and response shapes already defined in Phase
+      1b-iii types + Phase 2-i schemas.
 
-- [ ] Spec & Registry Sync: Specs 70/75 hardened. Run `npm run system-map`
-      AFTER commit.
+- [ ] Spec & Registry Sync: Spec 70 already hardened. Run
+      `npm run system-map` AFTER commit.
 
-- [ ] Schema Evolution: Migration 075 written, validate-migration.js
-      passes, factories updated, `npm run db:generate` deferred (local
-      DB still broken at migration 030).
+- [ ] Schema Evolution: N/A — no migrations.
 
-- [ ] Test Scaffolding: 4 test files, run vitest, MUST fail (Red Light).
+- [ ] Test Scaffolding: Create src/tests/api-leads-feed.infra.test.ts.
+      Run `npx vitest run src/tests/api-leads-feed.infra.test.ts`.
+      MUST fail (Red Light).
 
 - [ ] Red Light: Confirmed.
 
 - [ ] Implementation:
-      Step 1 — migrations/075_user_profiles.sql + validator
-      Step 2 — UserProfile type + factory
-      Step 3 — get-user-context.ts
-      Step 4 — envelope.ts
-      Step 5 — error-mapping.ts
-      Step 6 — schemas.ts
-      Step 7 — request-logging.ts
-      Step 8 — route-guard.ts update
-      Step 9 — Iterate tests to green
-      Step 10 — typecheck / lint / full test (2699 + ~40 ≈ 2740+)
+      Step 1 — Create src/app/api/leads/feed/route.ts
+      Step 2 — Run the test file iteratively to green
+      Step 3 — `npm run typecheck` clean
+      Step 4 — `npm run lint -- --fix` clean
+      Step 5 — `npm run test` full suite (2754 + ~25 ≈ 2779+)
 
 - [ ] Auth Boundary & Secrets:
-      - getCurrentUserContext is server-only (NextRequest + Pool)
-      - Never imported from 'use client'
+      - Route is server-only (Node runtime, uses pool + firebase-admin)
+      - getCurrentUserContext + withRateLimit are the only auth/security
+        helpers; both already shipped and tested
       - No new secrets
-      - Migration 075 has no PII beyond Firebase UID (already in lead_views)
-      - route-guard.ts update tightens, not loosens, security
+      - Middleware route-guard already authenticates /api/leads/* (added
+        in Phase 2-i)
 
 - [ ] Green Light: typecheck / lint / test all clean.
 
-- [ ] Reviews: 10 files × 2 adversarial + 1 independent worktree.
-      Triage, fix, post table.
+- [ ] Reviews:
+      - Commit the implementation
+      - Run Gemini + DeepSeek on both files in parallel (4 jobs)
+      - Run independent review agent in worktree
+      - Triage, fix, append followups, post triage table
 
 - [ ] WF6 close: 5-point sweep + final state summary
 ```
 
 ## Risk Notes
 
-1. **Local DB still broken at migration 030.** Migration 075 won't apply locally; validator + file-shape tests cover structural correctness. Same constraint as Phase 1.
+1. **`withRateLimit` returns might confuse the route's flow.** The function returns `{allowed: boolean, remaining: number}`. The route checks `!rateLimit.allowed`. If the helper ever changes its return shape, the route silently allows everything. Mitigation: tests verify both true and false branches; type system catches structural changes.
 
-2. **First-time user with no profile row → 401.** Onboarding flow must populate the row before they can use the leads API. Documented contract; UI WF will handle.
+2. **`Object.fromEntries(request.nextUrl.searchParams)`** loses repeated query params (e.g. `?foo=1&foo=2` becomes `{foo: '2'}`). Spec 70 doesn't have any repeated params, so this is fine, but if a future param needs array semantics it'll need a different parsing strategy.
 
-3. **Zod discriminated union with `.and()` for lead_view body.** Inference can be subtle. Tests verify shape parsing; if Phase 2-iii hits awkward narrowing, that sub-WF can refactor.
+3. **Cursor build is conditional spread to satisfy `exactOptionalPropertyTypes`.** The `LeadFeedInput` type from Phase 1b-iii has `cursor?: LeadFeedCursor` (optional). Passing `cursor: undefined` would fail strict-mode typecheck. Hence the `...(cursor !== undefined && { cursor })` spread.
 
-4. **route-guard.ts edit must compile in edge runtime.** Mitigation: only add string array entries, no new imports, no runtime logic beyond what's already there. Run middleware tests after the edit.
+4. **Route runs in Node runtime (not edge)** because it uses firebase-admin via `getCurrentUserContext`. Next.js infers this from the imports. No `export const runtime = 'edge'` directive — keeping it Node-only is correct.
 
-5. **`user_profiles` lacks FK to a `users` table because there isn't one.** Same convention as `lead_views.user_id`. Orphan reconciliation deferred to a separate WF + tracked in followups.
+5. **Trade slug check happens AFTER Zod parse but BEFORE rate limit.** Order matters:
+   - Auth → Zod (cheap) → Trade check (cheap) → Rate limit (Upstash call) → DB query (expensive)
+   - Each layer fails fast before incurring the cost of the next layer.
+   - Tests verify this ordering.
 
-6. **Migration 075 numbering.** Sequential, documented. Solo project — no collision risk.
+6. **`getLeadFeed` is documented as never-throws.** The defensive `try/catch` around the entire handler is belt-and-suspenders — if a future regression makes any helper throw, the route still returns a clean 500 envelope instead of leaking a Next.js stack page.
+
+7. **Local DB still broken at migration 030.** Tests use mocks; route correctness against a real DB will only be verified in CI. Same constraint as Phase 1.
+
+8. **Independent review may flag missing 404.** Spec 70's status matrix doesn't include 404 for the feed endpoint (it always returns 200 with empty data when no leads match). If the reviewer thinks 404 is needed, the answer is "spec 70 explicitly returns 200 with empty array".
