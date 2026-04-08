@@ -23,7 +23,7 @@
 export default {
   packageManager: 'npm',
   testRunner: 'vitest',
-  reporters: ['clear-text', 'progress', 'html'],
+  reporters: ['clear-text', 'progress', 'html', 'json'],
 
   // Targeted file list — high-stakes pure modules with the most prior
   // review attention. Expand after the first weekly run delivers value.
@@ -49,9 +49,13 @@ export default {
   //   low:  warning band
   //   break: hard fail (script exits non-zero)
   thresholds: {
-    high: 80,
-    low: 60,
-    break: 50,
+    high: 85,
+    low: 70,
+    // Raised 50 → 75 on 2026-04-08 after the WF3 mutation-survivor
+    // triage landed (cost-model 64.14%→79.01%, builder-query 50.00%
+    // →63.64%, aggregate 68.56%→80.87%). Future regression below 75%
+    // fails the GH Actions mutation workflow on PR.
+    break: 75,
   },
 
   // Per-test timeout. Pure functions only — no DB tests in scope.

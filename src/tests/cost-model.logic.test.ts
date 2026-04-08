@@ -492,3 +492,514 @@ describe('estimateCost — display strings', () => {
     expect(result.display).toMatch(/estimated|—/);
   });
 });
+
+// ===========================================================================
+// Mutation-survivor triage — AT-boundary behaviour tests
+// Added 2026-04-08 after the first Stryker run (commit d8b508e) surfaced
+// 117 surviving mutants in cost-model.ts. Each describe block below kills
+// one high-leverage mutant cluster by exercising the branch at its exact
+// boundary and asserting the precise output. Tests reference spec 72
+// §Implementation constants (BASE_RATES, PREMIUM_TIERS, COST_TIER_BOUNDARIES,
+// COMPLEXITY_SIGNALS) so drift between spec and code fails at test time.
+// ===========================================================================
+
+const MODEL_PATH_PERMIT_OVERRIDES = { est_const_cost: null };
+
+describe('determineBaseRate — newBuild dispatch chain (mutation survivors)', () => {
+  function estimateWithKnownArea(structure_type: string, footprintSqm = 100) {
+    return estimateCost(
+      makePermit({
+        ...MODEL_PATH_PERMIT_OVERRIDES,
+        permit_type: 'New Building',
+        structure_type,
+        scope_tags: [],
+      }),
+      null,
+      makeFootprint({ footprint_area_sqm: footprintSqm, estimated_stories: 1 }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+  }
+
+  it('Multi-Residential hits multi_res rate (3400)', () => {
+    const r = estimateWithKnownArea('Multi-Residential');
+    expect(r.estimated_cost).toBe(BASE_RATES.multi_res * 100);
+  });
+
+  it('Apartment Building hits multi_res rate via apartment substring', () => {
+    const r = estimateWithKnownArea('Apartment Building');
+    expect(r.estimated_cost).toBe(BASE_RATES.multi_res * 100);
+  });
+
+  it('Condominium hits multi_res rate via condo substring', () => {
+    const r = estimateWithKnownArea('Condominium');
+    expect(r.estimated_cost).toBe(BASE_RATES.multi_res * 100);
+  });
+
+  it('Semi-Detached hits semi_town rate (2600)', () => {
+    const r = estimateWithKnownArea('Semi-Detached');
+    expect(r.estimated_cost).toBe(BASE_RATES.semi_town * 100);
+  });
+
+  it('Townhouse hits semi_town rate via town substring', () => {
+    const r = estimateWithKnownArea('Townhouse');
+    expect(r.estimated_cost).toBe(BASE_RATES.semi_town * 100);
+  });
+
+  it('Commercial Office hits commercial rate (4000)', () => {
+    const r = estimateWithKnownArea('Commercial Office');
+    expect(r.estimated_cost).toBe(BASE_RATES.commercial * 100);
+  });
+
+  it('Detached Dwelling hits sfd rate (3000)', () => {
+    const r = estimateWithKnownArea('Detached Dwelling');
+    expect(r.estimated_cost).toBe(BASE_RATES.sfd * 100);
+  });
+
+  it('unknown structure_type on a new build falls back to sfd rate', () => {
+    const r = estimateWithKnownArea('Institutional Complex');
+    expect(r.estimated_cost).toBe(BASE_RATES.sfd * 100);
+  });
+});
+
+describe('determineBaseRate — renovation dispatch chain (mutation survivors)', () => {
+  function estimateReno(permit_type: string, work = 'Renovation') {
+    return estimateCost(
+      makePermit({
+        ...MODEL_PATH_PERMIT_OVERRIDES,
+        permit_type,
+        work,
+        structure_type: 'Detached Dwelling',
+        scope_tags: [],
+      }),
+      null,
+      makeFootprint({ footprint_area_sqm: 100, estimated_stories: 1 }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+  }
+
+  it('Interior Alteration hits interior_reno rate not addition (regression)', () => {
+    const r = estimateReno('Interior Alteration');
+    expect(r.estimated_cost).toBe(BASE_RATES.interior_reno * 100);
+  });
+
+  it('work field with Interior Fit-Out hits interior_reno rate', () => {
+    const r = estimateReno('Alteration', 'Interior Fit-Out');
+    expect(r.estimated_cost).toBe(BASE_RATES.interior_reno * 100);
+  });
+
+  it('Addition hits addition rate (2000)', () => {
+    const r = estimateReno('Addition');
+    expect(r.estimated_cost).toBe(BASE_RATES.addition * 100);
+  });
+
+  it('Alteration without interior marker hits addition rate', () => {
+    const r = estimateReno('Alteration');
+    expect(r.estimated_cost).toBe(BASE_RATES.addition * 100);
+  });
+
+  it('unknown renovation type falls back to interior_reno rate', () => {
+    const r = estimateReno('Miscellaneous Permit');
+    expect(r.estimated_cost).toBe(BASE_RATES.interior_reno * 100);
+  });
+});
+
+describe('computePremiumFactor — tier boundaries (mutation survivors)', () => {
+  function premiumAt(income: number | null) {
+    const r = estimateCost(
+      makePermit({
+        ...MODEL_PATH_PERMIT_OVERRIDES,
+        permit_type: 'New Building',
+        structure_type: 'Detached Dwelling',
+      }),
+      null,
+      makeFootprint({ footprint_area_sqm: 100, estimated_stories: 1 }),
+      makeNeighbourhood({ avg_household_income: income, tenure_renter_pct: 0 }),
+    );
+    return r.premium_factor;
+  }
+
+  it('null income defaults to 1.0', () => {
+    expect(premiumAt(null)).toBe(1.0);
+  });
+
+  it('income 0 hits tier 0 multiplier 1.0', () => {
+    expect(premiumAt(0)).toBe(1.0);
+  });
+
+  it('income 59999 (just below boundary) stays at 1.0', () => {
+    expect(premiumAt(59_999)).toBe(1.0);
+  });
+
+  it('income 60000 (exact boundary) jumps to 1.15', () => {
+    expect(premiumAt(60_000)).toBe(1.15);
+  });
+
+  it('income 99999 stays at 1.15', () => {
+    expect(premiumAt(99_999)).toBe(1.15);
+  });
+
+  it('income 100000 (exact boundary) jumps to 1.35', () => {
+    expect(premiumAt(100_000)).toBe(1.35);
+  });
+
+  it('income 150000 (exact boundary) jumps to 1.6', () => {
+    expect(premiumAt(150_000)).toBe(1.6);
+  });
+
+  it('income 199999 stays at 1.6', () => {
+    expect(premiumAt(199_999)).toBe(1.6);
+  });
+
+  it('income 200000 (exact boundary, top tier max=null) jumps to 1.85', () => {
+    expect(premiumAt(200_000)).toBe(1.85);
+  });
+
+  it('income 500000 (well above top tier) stays at 1.85', () => {
+    expect(premiumAt(500_000)).toBe(1.85);
+  });
+});
+
+describe('computeBuildingArea — footprint vs parcel fallback (mutation survivors)', () => {
+  it('footprint with area 0 skips footprint path and uses parcel fallback', () => {
+    const r = estimateCost(
+      makePermit(MODEL_PATH_PERMIT_OVERRIDES),
+      makeParcel({ lot_size_sqm: 500 }),
+      makeFootprint({ footprint_area_sqm: 0, estimated_stories: 2 }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+    expect(r.estimated_cost).not.toBeNull();
+    expect(r.cost_source).toBe('model');
+  });
+
+  it('footprint with stories null skips footprint path', () => {
+    const r = estimateCost(
+      makePermit(MODEL_PATH_PERMIT_OVERRIDES),
+      makeParcel({ lot_size_sqm: 500 }),
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: null }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+    expect(Number.isFinite(r.estimated_cost ?? 0)).toBe(true);
+  });
+
+  it('footprint with valid values is preferred over parcel', () => {
+    const r = estimateCost(
+      makePermit(MODEL_PATH_PERMIT_OVERRIDES),
+      makeParcel({ lot_size_sqm: 5000 }),
+      makeFootprint({ footprint_area_sqm: 100, estimated_stories: 1 }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+    expect(r.estimated_cost).toBe(100 * BASE_RATES.sfd);
+  });
+
+  it('parcel fallback with rentPct 50 (boundary) uses SUBURBAN coverage 0.4', () => {
+    const r = estimateCost(
+      makePermit(MODEL_PATH_PERMIT_OVERRIDES),
+      makeParcel({ lot_size_sqm: 1000 }),
+      null,
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 50 }),
+    );
+    expect(r.estimated_cost).toBe(800 * BASE_RATES.sfd);
+  });
+
+  it('parcel fallback with rentPct 51 (above boundary) uses URBAN coverage 0.7', () => {
+    const r = estimateCost(
+      makePermit(MODEL_PATH_PERMIT_OVERRIDES),
+      makeParcel({ lot_size_sqm: 1000 }),
+      null,
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 51 }),
+    );
+    expect(r.estimated_cost).toBe(1400 * BASE_RATES.sfd);
+  });
+
+  it('commercial parcel fallback uses 1 floor not 2', () => {
+    const r = estimateCost(
+      makePermit({
+        ...MODEL_PATH_PERMIT_OVERRIDES,
+        permit_type: 'New Building',
+        structure_type: 'Commercial Office',
+      }),
+      makeParcel({ lot_size_sqm: 1000 }),
+      null,
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+    expect(r.estimated_cost).toBe(400 * BASE_RATES.commercial);
+  });
+
+  it('no footprint no parcel no est_const_cost returns null estimate', () => {
+    const r = estimateCost(
+      makePermit(MODEL_PATH_PERMIT_OVERRIDES),
+      null,
+      null,
+      null,
+    );
+    expect(r.estimated_cost).toBeNull();
+    expect(r.cost_tier).toBeNull();
+  });
+});
+
+describe('sumScopeAdditions — per-tag dispatch (mutation survivors)', () => {
+  function costWith(scope_tags: string[] | null) {
+    return estimateCost(
+      makePermit({
+        ...MODEL_PATH_PERMIT_OVERRIDES,
+        permit_type: 'New Building',
+        structure_type: 'Detached Dwelling',
+        scope_tags,
+      }),
+      null,
+      makeFootprint({ footprint_area_sqm: 100, estimated_stories: 1 }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+  }
+
+  const BASE = 100 * BASE_RATES.sfd;
+
+  it('pool tag adds SCOPE_ADDITIONS.pool', () => {
+    expect(costWith(['pool']).estimated_cost).toBe(BASE + SCOPE_ADDITIONS.pool);
+  });
+
+  it('elevator tag adds SCOPE_ADDITIONS.elevator', () => {
+    expect(costWith(['elevator']).estimated_cost).toBe(BASE + SCOPE_ADDITIONS.elevator);
+  });
+
+  it('underpinning tag adds SCOPE_ADDITIONS.underpinning', () => {
+    expect(costWith(['underpinning']).estimated_cost).toBe(
+      BASE + SCOPE_ADDITIONS.underpinning,
+    );
+  });
+
+  it('solar tag adds SCOPE_ADDITIONS.solar', () => {
+    expect(costWith(['solar']).estimated_cost).toBe(BASE + SCOPE_ADDITIONS.solar);
+  });
+
+  it('unknown tag adds nothing', () => {
+    expect(costWith(['unknown-tag']).estimated_cost).toBe(BASE);
+  });
+
+  it('uppercase POOL tag adds pool addition (case-insensitive)', () => {
+    expect(costWith(['POOL']).estimated_cost).toBe(BASE + SCOPE_ADDITIONS.pool);
+  });
+
+  it('null scope_tags adds nothing (guard branch)', () => {
+    expect(costWith(null).estimated_cost).toBe(BASE);
+  });
+
+  it('all four known tags stack additively', () => {
+    expect(costWith(['pool', 'elevator', 'underpinning', 'solar']).estimated_cost).toBe(
+      BASE +
+        SCOPE_ADDITIONS.pool +
+        SCOPE_ADDITIONS.elevator +
+        SCOPE_ADDITIONS.underpinning +
+        SCOPE_ADDITIONS.solar,
+    );
+  });
+});
+
+describe('determineCostTier — band boundaries (mutation survivors)', () => {
+  function tierAt(cost: number) {
+    const r = estimateCost(
+      makePermit({ est_const_cost: cost }),
+      null,
+      makeFootprint(),
+      makeNeighbourhood(),
+    );
+    return r.cost_tier;
+  }
+
+  it('99999 is small (just below medium)', () => {
+    expect(tierAt(99_999)).toBe('small');
+  });
+
+  it('100000 is medium (exact boundary)', () => {
+    expect(tierAt(100_000)).toBe('medium');
+  });
+
+  it('499999 is medium (just below large)', () => {
+    expect(tierAt(499_999)).toBe('medium');
+  });
+
+  it('500000 is large (exact boundary)', () => {
+    expect(tierAt(500_000)).toBe('large');
+  });
+
+  it('1999999 is large (just below major)', () => {
+    expect(tierAt(1_999_999)).toBe('large');
+  });
+
+  it('2000000 is major (exact boundary)', () => {
+    expect(tierAt(2_000_000)).toBe('major');
+  });
+
+  it('9999999 is major (just below mega)', () => {
+    expect(tierAt(9_999_999)).toBe('major');
+  });
+
+  it('10000000 is mega (exact boundary)', () => {
+    expect(tierAt(10_000_000)).toBe('mega');
+  });
+
+  it('1500 is small (just above placeholder threshold)', () => {
+    expect(tierAt(1_500)).toBe('small');
+  });
+});
+
+describe('computeComplexityScore — boundary thresholds (mutation survivors)', () => {
+  function complexityWith(overrides: {
+    storeys?: number | null;
+    dwelling_units_created?: number | null;
+    footprint_area_sqm?: number | null;
+    avg_household_income?: number | null;
+    scope_tags?: string[];
+    newBuild?: boolean;
+  }) {
+    const r = estimateCost(
+      makePermit({
+        est_const_cost: 5_000_000,
+        permit_type: overrides.newBuild === false ? 'Addition' : 'New Building',
+        structure_type: 'Detached Dwelling',
+        storeys: overrides.storeys ?? 1,
+        dwelling_units_created: overrides.dwelling_units_created ?? 0,
+        scope_tags: overrides.scope_tags ?? [],
+      }),
+      null,
+      makeFootprint({
+        footprint_area_sqm: overrides.footprint_area_sqm ?? 50,
+        estimated_stories: overrides.storeys ?? 1,
+      }),
+      makeNeighbourhood({
+        avg_household_income: overrides.avg_household_income ?? 0,
+        tenure_renter_pct: 0,
+      }),
+    );
+    return r.complexity_score ?? 0;
+  }
+
+  it('baseline new build scores 10 (newBuild signal only)', () => {
+    expect(complexityWith({})).toBe(10);
+  });
+
+  it('storeys 6 is boundary NOT triggered', () => {
+    expect(complexityWith({ storeys: 6 })).toBe(10);
+  });
+
+  it('storeys 7 triggers highRise +30 = 40', () => {
+    expect(complexityWith({ storeys: 7 })).toBe(40);
+  });
+
+  it('dwelling_units 4 is boundary NOT triggered', () => {
+    expect(complexityWith({ dwelling_units_created: 4 })).toBe(10);
+  });
+
+  it('dwelling_units 5 triggers multiUnit +20 = 30', () => {
+    expect(complexityWith({ dwelling_units_created: 5 })).toBe(30);
+  });
+
+  it('footprint 300 is boundary NOT triggered', () => {
+    expect(complexityWith({ footprint_area_sqm: 300 })).toBe(10);
+  });
+
+  it('footprint 301 triggers largeFootprint +15 = 25', () => {
+    expect(complexityWith({ footprint_area_sqm: 301 })).toBe(25);
+  });
+
+  it('income 150000 is boundary NOT triggered', () => {
+    expect(complexityWith({ avg_household_income: 150_000 })).toBe(10);
+  });
+
+  it('income 150001 triggers premiumNbhd +15 = 25', () => {
+    expect(complexityWith({ avg_household_income: 150_001 })).toBe(25);
+  });
+
+  it('single pool tag adds complexScope +10', () => {
+    expect(complexityWith({ scope_tags: ['pool'] })).toBe(20);
+  });
+
+  it('three complex tags stack to 10 + 30 = 40', () => {
+    expect(complexityWith({ scope_tags: ['pool', 'elevator', 'underpinning'] })).toBe(
+      40,
+    );
+  });
+
+  it('all signals max at 100 via Math.min cap', () => {
+    expect(
+      complexityWith({
+        storeys: 20,
+        dwelling_units_created: 100,
+        footprint_area_sqm: 10_000,
+        avg_household_income: 500_000,
+        scope_tags: ['pool', 'elevator', 'underpinning'],
+      }),
+    ).toBe(100);
+  });
+
+  it('Addition without newBuild returns 0', () => {
+    expect(complexityWith({ newBuild: false })).toBe(0);
+  });
+});
+
+describe('buildDisplay — output branches (mutation survivors)', () => {
+  it('null cost returns the unavailable placeholder', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: null }),
+      null,
+      null,
+      null,
+    );
+    expect(r.display).toBe('Cost estimate unavailable');
+  });
+
+  it('permit source uses full-dollar format', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: 1_234_567 }),
+      null,
+      makeFootprint(),
+      makeNeighbourhood(),
+    );
+    expect(r.display).toContain('$1,234,567');
+  });
+
+  it('model source uses K or M short format', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, permit_type: 'New Building', structure_type: 'Detached Dwelling' }),
+      null,
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: 2 }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+    expect(r.display).toMatch(/\$\d+K|\$\d+\.\d+M/);
+    expect(r.display).toContain('estimated');
+  });
+
+  it('premiumFactor 1.35 boundary triggers Premium neighbourhood label', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: 2_500_000 }),
+      null,
+      makeFootprint(),
+      makeNeighbourhood({ avg_household_income: 100_000 }),
+    );
+    expect(r.display).toContain('Premium neighbourhood');
+  });
+
+  it('premiumFactor 1.15 below boundary omits Premium neighbourhood label', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: 2_500_000 }),
+      null,
+      makeFootprint(),
+      makeNeighbourhood({ avg_household_income: 60_000 }),
+    );
+    expect(r.display).not.toContain('Premium neighbourhood');
+  });
+
+  it('complexity 40 boundary triggers Complex scope label', () => {
+    const r = estimateCost(
+      makePermit({
+        est_const_cost: 2_500_000,
+        storeys: 7,
+        permit_type: 'New Building',
+      }),
+      null,
+      makeFootprint(),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(r.display).toContain('Complex scope');
+  });
+});
