@@ -1,188 +1,188 @@
-# Active Task: WF1 — Lead Feed Phase 1b-ii: Timing Engine
+# Active Task: WF1 — Lead Feed Phase 1b-iii: Builder Query + Unified Feed
 **Status:** Implementation
 **Workflow:** WF1 — New Feature Genesis
-**Rollback Anchor:** `cca37a7`
+**Rollback Anchor:** `c66f21f`
 
 ## Domain Mode
-**Backend/Pipeline Mode** — async DB-backed library + 1 pipeline script. NO API routes, NO UI, NO new migrations. Per CLAUDE.md Backend rules: §2/§6/§7/§9 of `00_engineering_standards.md`. All DB access via the shared pool from `src/lib/db/client.ts`. Pipeline script via `scripts/lib/pipeline.js` SDK only.
+**Backend/Pipeline Mode** — async DB-backed library, NO API routes, NO new migrations. Per CLAUDE.md Backend rules: §2/§6/§7/§9 of `00_engineering_standards.md`. All DB access via the `pool` parameter (consumers inject from `src/lib/db/client.ts`).
 
 ## Context
-* **Goal:** Second of three sub-WFs replacing the too-large Phase 1b. Ship the spec 71 timing engine — the 3-tier confidence model with parent/child permit merge, stage-based reasoning, and an in-memory calibration cache. Plus the nightly pipeline script that populates `timing_calibration` from real inspection data. After this WF, `getTradeTimingForPermit(permit_num, trade_slug, pool)` returns a `TradeTimingEstimate` ready for Phase 2 to wrap in an API endpoint. Phase 1b-iii's `get-lead-feed.ts` will NOT call this per-row (too slow for the feed CTE) — it uses a fast SQL proxy for the timing pillar; the full engine drives the per-permit detail page in Phase 2+.
-* **Target Specs (already hardened):**
-  - `docs/specs/product/future/71_lead_timing_engine.md` §Implementation
+* **Goal:** Final sub-WF of the Phase 1b split. Ship spec 73's builder-leads query + spec 70's unified lead-feed CTE. After this WF, `getLeadFeed(input, pool)` is the single entry point Phase 2 wraps in `/api/leads/feed`. The unified query ranks permit and builder leads in one SQL pass with cursor pagination — no application-level interleaving (the foot-gun spec 70 explicitly calls out).
+* **Target Specs:**
+  - `docs/specs/product/future/70_lead_feed.md` §Implementation
+  - `docs/specs/product/future/73_builder_leads.md` §Implementation
   - `docs/specs/product/future/75_lead_feed_implementation_guide.md` §11 Phase 1
-  - `docs/specs/00_engineering_standards.md` §2/§6/§9
-* **Key Files:** new — `src/features/leads/lib/timing.ts`, `scripts/compute-timing-calibration.js`, `src/tests/timing.logic.test.ts`, `src/tests/compute-timing-calibration.infra.test.ts`. Reads from (no modifications) — `src/lib/classification/phases.ts`, `src/features/leads/types.ts`, `src/lib/permits/types.ts`.
+  - `docs/specs/00_engineering_standards.md` §2/§6
+* **Key Files:** new — `src/features/leads/lib/builder-query.ts`, `src/features/leads/lib/get-lead-feed.ts`, `src/tests/builder-query.logic.test.ts`, `src/tests/get-lead-feed.logic.test.ts`. Reads from (no modifications) — `src/features/leads/types.ts`, `src/features/leads/lib/distance.ts`.
 
 ## Technical Implementation
 
-### File 1 — `src/features/leads/lib/timing.ts` (~300 lines)
+### File 1 — `src/features/leads/lib/builder-query.ts` (~200 lines)
 
 ```ts
-export async function getTradeTimingForPermit(
-  permit_num: string,
+export const BUILDER_QUERY_SQL: string;          // exported for tests
+export const BUILDER_QUERY_LIMIT = 20;
+export async function queryBuilderLeads(
   trade_slug: string,
+  lat: number,
+  lng: number,
+  radius_km: number,
   pool: Pool,
-): Promise<TradeTimingEstimate>;
-export function _resetCalibrationCache(): void;
+): Promise<BuilderLeadCandidate[]>;
 ```
 
-Module-level state (process-wide cache):
+**SQL = exact 3-CTE structure from spec 73 §Implementation:**
+- `nearby_permits`: joins permits + entity_projects (role='Builder') + permit_trades + trades; filters status IN ('Permit Issued', 'Inspection') and ST_DWithin
+- `builder_aggregates`: groups by entity_id, picks most-recent WSIB row via subquery (multi-WSIB tie-breaker per spec), filters via WSIB EXISTS, HAVING COUNT(np.permit_num) >= 1
+- `scored`: 4 pillars in SQL — proximity (closest_permit_m bands 500/1000/2000/5000/10000/20000), activity (count >=5/3/2/else), contact (website+phone/either/email/none), fit (count tiers + WSIB +3 bonus)
+- Final SELECT: `relevance_score = sum`, ORDER BY DESC + `closest_permit_m ASC` tiebreak, LIMIT 20
+
+**Parameters:** `$1=trade_slug`, `$2=lng`, `$3=lat`, `$4=radius_m`. PostGIS `ST_MakePoint(lng, lat)` order. All casts explicit (`::float8`).
+
+**Function flow:** try → `pool.query(BUILDER_QUERY_SQL, [...])` → map rows → `BuilderLeadCandidate[]` → return. Catch → `logError` + return `[]`. Log success via `logInfo` with `{ trade_slug, count, duration_ms }`.
+
+### File 2 — `src/features/leads/lib/get-lead-feed.ts` (~350 lines)
+
 ```ts
-let calibrationCache: Map<string, TimingCalibrationRow> | null = null;
-let calibrationLoadedAt = 0;
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
-const STALENESS_DAYS = 180;
-const CALIBRATION_STALE_DAYS = 30;
-const NOT_PASSED_PENALTY_DAYS = 14;
-const STAGE_GAP_MEDIAN_DAYS = 30;
-const MIN_SAMPLE_SIZE = 20;
-const PRE_PERMIT_MIN_DAYS = 240;  // 8 months
-const PRE_PERMIT_MAX_DAYS = 420;  // 14 months
-const BOOTSTRAP_CALIBRATION = { p25: 44, median: 105, p75: 238 }; // spec 71 seed
+export const LEAD_FEED_SQL: string;     // single SQL, parameterized cursor
+export async function getLeadFeed(input: LeadFeedInput, pool: Pool): Promise<LeadFeedResult>;
 ```
 
-Constants exported as `const` blocks so tests can assert exact values.
+**Function flow:**
+1. `radius_km = Math.min(input.radius_km, MAX_RADIUS_KM)` — clamp DoS-bounded
+2. `radius_m = metersFromKilometers(radius_km)`
+3. Build params: `[trade_slug, lng, lat, radius_m, limit, cursor?.score ?? null, cursor?.lead_type ?? null, cursor?.lead_id ?? null]`
+4. `start = Date.now()`
+5. `pool.query<LeadFeedRow>(LEAD_FEED_SQL, params)`
+6. Map rows → `LeadFeedItem[]`
+7. `next_cursor = rows.length === limit ? { score, lead_type, lead_id } from last row : null`
+8. `logInfo('[lead-feed/get]', 'success', { user_id, trade_slug, lat, lng, radius_km, result_count, duration_ms })`
+9. Return `{ data, meta: { next_cursor, count, radius_km } }`
+10. Catch → `logError` + return empty result with safe meta
 
-**Algorithm:**
-1. **Top-level guard** — try/catch wrap; on throw → `logError` + safe fallback `{confidence:'low', tier:3, min_days:0, max_days:0, display:'Timing unavailable'}`.
-2. **Calibration cache lazy load** via `ensureCalibrationLoaded(pool)`. Errors logged, continues with empty/stale cache.
-3. **Parent/child merge** via `pickBestCandidate(permit_num, trade_slug, pool)`:
-   - Query `permit_parcels` for siblings on same parcel(s)
-   - Join `permits` for permit_type, issued_date, status
-   - Use `determinePhase` from phases.ts to compute each sibling's current phase
-   - Pick sibling whose phase contains `trade_slug` per `PHASE_TRADE_MAP[phase]`
-   - Falls back to original if no better match
-4. **Inspection routing**: query `permit_inspections`. If any rows → Tier 1; else if `issued_date` → Tier 2; else → Tier 3.
-5. **Tier 1 — Stage-Based:**
-   - Find latest PASSED inspection (case-insensitive status match)
-   - **Staleness:** if `latest_passed.inspection_date > 180 days old` → low confidence, "Project may be stalled — last activity X days ago"
-   - Look up enabling stage in `inspection_stage_map` ORDER BY precedence ASC LIMIT 1 (handles painting Fire Separations prec 10 vs Occupancy prec 20)
-   - If no enabling stage row → fall through to Tier 2
-   - Branch A — enabling stage PASSED: return high, lag from map row
-   - Branch B — enabling stage "Not Passed": +14d penalty + " (delayed — re-inspection pending)"
-   - Branch C — enabling stage outstanding/missing: count `stage_sequence` gap × 30d to bounds
-6. **Tier 2 — Issued Heuristic:**
-   - Read calibration row for permit_type from cache
-   - **Stale row check:** computed_at > 30 days → logWarn + global median fallback
-   - **Insufficient sample (<20):** global median fallback
-   - **Empty cache:** BOOTSTRAP_CALIBRATION (spec 71 seed values)
-   - Compute months since issued_date
-   - Use `determinePhase(permit)` from phases.ts → check `PHASE_TRADE_MAP[phase].includes(trade_slug)`
-   - Return medium confidence with bounds derived from p25/p75
-7. **Tier 3 — Pre-Permit:** No issued_date → low, 240-420d range, "Pre-permit stage — your trade estimated 8-14 months out"
+**Unified CTE (verbatim from spec 70 §Implementation, with all 4 pillars completed in SQL — spec sketched only proximity):**
 
-**Helpers:** `ensureCalibrationLoaded`, `pickBestCandidate`, `getGlobalMedianCalibration`, `findEnablingStage`, `findLatestPassedInspection`, `findEnablingInspection`, `formatTier1Display`, `formatTier2Display`.
+Four CTEs:
+- **`permit_candidates`**: SELECT FROM permits + permit_trades + LEFT JOIN cost_estimates. Computes:
+  - `proximity_score` (0-30): CASE on `(p.location <-> ST_MakePoint($2,$3)::geography)` distance bands
+  - `timing_score` (0-30): fast SQL proxy via `permit_trades.phase` (structural=30, finishing=25, early_construction=20, landscaping=15, else 10) — the full 3-tier engine from Phase 1b-ii is too slow per-row for the feed CTE; it's a per-permit detail call
+  - `value_score` (0-30): CASE on `cost_estimates.cost_tier` (mega=30, major=25, large=20, medium=15, small=10, NULL=5)
+  - `opportunity_score` (0-10): CASE on `permits.status` (Permit Issued=10, Inspection=7, Application=5, else 0)
+  - WHERE `pt.trade_slug = $1 AND pt.is_active = true AND pt.confidence >= 0.5 AND p.location IS NOT NULL AND ST_DWithin(...) AND p.status NOT IN ('Cancelled', 'Revoked', 'Closed')`
 
-**Logging:** `logInfo` on successful tier resolution; `logWarn` for stale calibration, cache miss, sibling query failure; `logError` for unexpected throws.
+- **`builder_candidates`**: SELECT FROM entities + entity_projects + permits + permit_trades + LATERAL wsib_registry. Same 4 pillars, builder-specific:
+  - proximity from `MIN(p.location <-> ...)` (closest active permit)
+  - timing fixed at 15 (builders are "ongoing capacity")
+  - value from `AVG(p.est_const_cost)` bucketed
+  - opportunity from `COUNT(p.permit_num)` bucketed
+  - GROUP BY entity_id; WHERE WSIB filter (Small/Medium Business, GTA, has contact)
 
-### File 2 — `scripts/compute-timing-calibration.js` (~120 lines)
+- **`unified`**: `SELECT * FROM permit_candidates UNION ALL SELECT * FROM builder_candidates`
 
-CommonJS Pipeline SDK script. Single SQL query (no streaming — 50-200 distinct permit_types max):
+- **`ranked`**: `SELECT *, (proximity_score + timing_score + value_score + opportunity_score) AS relevance_score FROM unified`
 
-```sql
-WITH first_inspection AS (
-  SELECT p.permit_type, p.permit_num, p.revision_num, p.issued_date,
-         MIN(pi.inspection_date) AS first_inspection_date
-  FROM permits p
-  JOIN permit_inspections pi ON pi.permit_num = p.permit_num
-  WHERE p.issued_date IS NOT NULL
-    AND p.permit_type IS NOT NULL
-    AND pi.inspection_date IS NOT NULL
-    AND pi.inspection_date >= p.issued_date
-  GROUP BY p.permit_type, p.permit_num, p.revision_num, p.issued_date
-),
-deltas AS (
-  SELECT permit_type, (first_inspection_date - issued_date) AS days_to_first
-  FROM first_inspection
-  WHERE first_inspection_date - issued_date BETWEEN 0 AND 730
-)
-SELECT permit_type,
-       COUNT(*)::int AS sample_size,
-       PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY days_to_first)::int AS p25,
-       PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY days_to_first)::int AS median,
-       PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY days_to_first)::int AS p75
-FROM deltas
-GROUP BY permit_type
-HAVING COUNT(*) >= 5;
-```
+Final SELECT: `WHERE ($6::int IS NULL OR (relevance_score, lead_type, lead_id) < ($6::int, $7::text, $8::text)) ORDER BY relevance_score DESC, lead_type DESC, lead_id DESC LIMIT $5::int`
 
-UPSERT loop inside `pipeline.withTransaction`. Emits `PIPELINE_META` reads `{permits, permit_inspections}` writes `{timing_calibration}` and `PIPELINE_SUMMARY` from xmax inserted/updated counts.
+**Cursor pagination:** Page 1 sends `cursor=undefined` → params `[..., null, null, null]` → `$6::int IS NULL` short-circuits the WHERE. Page N sends prior `next_cursor` tuple. Stable across concurrent inserts because the entire ranking happens in one SQL pass.
+
+**Lead ID format:** permits use `permit_num || ':' || revision_num` (e.g. `'24 101234:01'`), builders use `e.id::text` (e.g. `'9183'`). Colon vs no-colon makes them distinguishable; cursor comparison is text.
 
 ### Tests
 
-**File 3 — `src/tests/timing.logic.test.ts`** (28-32 tests):
-- Calibration cache: load on first call, reused within 5min, reloads after, error → empty cache + logError, empty → graceful
-- Parent/child merge: no siblings, sibling with better phase, multiple siblings, query failure
-- Tier 1: happy path PASSED, staleness >180d, outstanding gap, "Not Passed" penalty, painting precedence, no enabling stage → fallthrough
-- Tier 2: cache hit, cache miss → global median, stale row → logWarn, insufficient sample, in-phase, not-in-phase
-- Tier 3: pre-permit
-- Top-level error guard: pool throws at each query point
-- All tests use `vi.useFakeTimers({ now: '2026-04-08' })` + `_resetCalibrationCache()` in beforeEach
+**File 3 — `src/tests/builder-query.logic.test.ts`** (15-18 tests):
 
-**File 4 — `src/tests/compute-timing-calibration.infra.test.ts`** (8-10 tests):
-File-shape regex assertions: pipeline.run name, PERCENTILE_CONT(0.25/0.50/0.75) all present, WITHIN GROUP ORDER BY, withTransaction, ON CONFLICT (permit_type), table refs, BETWEEN 0 AND 730, HAVING >= 5, emitSummary, emitMeta, pipeline.log.error in catch.
+SQL structure (via `BUILDER_QUERY_SQL` constant):
+- All 3 CTEs present (`nearby_permits`, `builder_aggregates`, `scored`)
+- All 4 score pillars present
+- Multi-WSIB tie-breaker subquery: `ORDER BY w.last_enriched_at DESC LIMIT 1`
+- WSIB filter: `business_size IN ('Small Business', 'Medium Business')`
+- Status filter: `IN ('Permit Issued', 'Inspection')`
+- `ST_DWithin` + `ST_MakePoint($2::float8, $3::float8)::geography`
+- `ORDER BY relevance_score DESC, closest_permit_m ASC`
+- `LIMIT 20`
+
+Function behavior (mocked pool):
+- Happy path → `BuilderLeadCandidate[]`
+- Empty result → `[]`
+- Pool throws → `[]` + logError
+- `radius_km` correctly converted via `metersFromKilometers`
+- `lat`/`lng` parameter order verified (most common bug: ST_MakePoint takes lng FIRST)
+- `logInfo` called with structured fields
+
+**File 4 — `src/tests/get-lead-feed.logic.test.ts`** (18-22 tests):
+
+SQL structure (via `LEAD_FEED_SQL` constant):
+- All 4 CTEs (`permit_candidates`, `builder_candidates`, `unified`, `ranked`)
+- `UNION ALL` between candidates
+- All 4 pillars in BOTH candidate CTEs
+- `relevance_score` sum in `ranked`
+- Cursor WHERE: `($6::int IS NULL OR (relevance_score, lead_type, lead_id) <`
+- ORDER BY `relevance_score DESC, lead_type DESC, lead_id DESC`
+- `ST_DWithin` filters in BOTH CTEs
+- Permit confidence filter: `pt.confidence >= 0.5`
+- Permit status exclusion: `NOT IN ('Cancelled', 'Revoked', 'Closed')`
+
+Function behavior:
+- Happy path with mocked rows → mapped LeadFeedItems
+- Full page (rows.length === limit) → next_cursor extracted from last row
+- Partial page (rows.length < limit) → next_cursor null
+- Empty result → empty data, null cursor, count 0
+- Pool throws → empty result + logError
+- First page (no cursor) → null/null/null in params $6/$7/$8
+- Subsequent page → cursor values in params
+- `radius_km > MAX_RADIUS_KM` → clamped to 50, reflected in meta
+- `logInfo` with `{ user_id, trade_slug, lat, lng, radius_km, result_count, duration_ms }`
+- Mixed permit + builder rows → both LeadFeedItem types in `data`
 
 ### Database Impact
-**NO** — no migrations. Phase 1a created `timing_calibration` and `inspection_stage_map`; `permit_inspections` and `permit_parcels` are pre-existing.
+**NO** — no migrations. Reads pre-existing tables + Phase 1a `cost_estimates`.
 
 ## Standards Compliance (§10)
 
 ### DB
 - ⬜ N/A — no migrations
-- ✅ Pool injected as parameter; no `new Pool()` anywhere
-- ✅ Script uses Pipeline SDK
+- ✅ Pool injected as parameter; never `new Pool()`
 - ✅ Parameterized queries only
-- ✅ ON CONFLICT UPSERT for idempotency
-- ✅ HAVING >= 5 filters tiny samples
+- ✅ Explicit `::float8` / `::int` casts at parameter sites
+- ✅ PostGIS `ST_DWithin` + `<->` KNN — uses GIST index from Phase 1a migration 067
+- ✅ LIMIT enforced server-side
+- ✅ Cursor pagination via row tuple comparison — stable per spec 70
 
 ### API
 - ⬜ N/A — no routes (Phase 2)
+- ✅ Function signatures shaped for thin Phase 2 wrappers
 
 ### UI
 - ⬜ N/A — backend-only
 
 ### Shared Logic (§7)
-- ✅ `timing.ts` reads `PHASE_TRADE_MAP` and `determinePhase` from `phases.ts` per spec 71's read-only dependency note. NOT modifying phases.ts.
-- ✅ NO dual code path needed: `compute-timing-calibration.js` does percentile SQL only — no JS port of timing.ts logic. Different concerns: script writes the cache, library reads it.
-- ✅ `TradeTimingEstimate` already defined in `src/features/leads/types.ts` from Phase 1b-i — single source of truth.
+- ✅ Imports `metersFromKilometers`, `MAX_RADIUS_KM` from Phase 1b-i `distance.ts`
+- ✅ Imports `BuilderLeadCandidate`, `LeadFeedInput`, `LeadFeedItem`, `LeadFeedResult`, `LeadFeedCursor` from Phase 1b-i `types.ts` — single source of truth, no churn
+- ✅ NO dual code path (no JS↔SQL port). The SQL↔SQL "duplication" between standalone `builder-query.ts` and inlined `builder_candidates` CTE is a deliberate spec choice (spec 73 + spec 70 unification) — documented inline in both files
+- ✅ NO modifications to `phases.ts`, `cost-model.ts`, `timing.ts`
 
 ### Pipeline (§9)
-- ✅ `pipeline.run` wrapper
-- ✅ `pipeline.withTransaction` for atomic UPSERT
-- ✅ Single SQL query (no streaming — small dataset)
-- ✅ Idempotent UPSERT
-- ✅ `PIPELINE_META` + `PIPELINE_SUMMARY` emitted
-- ✅ `pipeline.log.{info,warn,error}` instead of bare console
-- ✅ CommonJS in `scripts/`
+- ⬜ N/A — no scripts in this WF
 
 ### Try/Catch (§2) + logError mandate
-- ✅ Top-level try/catch in `getTradeTimingForPermit` returns safe fallback
-- ✅ Calibration load wrapped, continues with empty cache on failure
-- ✅ Each tier has its own internal try semantics — no throws escape
-- ✅ `logError` for unexpected, `logWarn` for known degraded paths, `logInfo` for happy-path observability
+- ✅ Both functions have top-level try/catch returning safe fallback (empty array / empty result)
+- ✅ `logError` for unexpected throws with full context
+- ✅ `logInfo` on success with structured fields
+- ✅ Never throws to caller — Phase 2 routes can rely on this
 
 ### Unhappy Path Tests
-- ✅ Cache load failure
-- ✅ Pool throws at each query point
-- ✅ No matching enabling stage (trade not in inspection_stage_map)
-- ✅ Stale calibration (>30d)
-- ✅ Insufficient sample size (<20)
-- ✅ Empty cache → bootstrap fallback
-- ✅ Sibling query failure
-- ✅ 180-day staleness on latest passed stage
+- ✅ Pool throws → safe fallback for both functions
+- ✅ Empty result → empty array / empty result
+- ✅ Cursor null vs cursor populated paths
+- ✅ Limit boundary: < limit → next_cursor null; === limit → next_cursor extracted
+- ✅ radius_km > MAX_RADIUS_KM → clamped, reflected in meta
 
 ### Mobile-First
 - ⬜ N/A — backend-only
 
 ## Review Plan (per `feedback_review_protocol.md`, this is WF1)
-- ✅ **Independent review** in worktree after commit (retry from Phase 1b-i 529 overload)
-- ✅ **BOTH adversarial models** on EVERY changed/created file (4 files):
-  - `src/features/leads/lib/timing.ts`
-  - `scripts/compute-timing-calibration.js`
-  - `src/tests/timing.logic.test.ts`
-  - `src/tests/compute-timing-calibration.infra.test.ts`
-- **4 files × 2 models = 8 adversarial reviews + 1 independent ≈ $1.60**
+- ✅ Independent review in worktree after commit (retry the 529 from prior sub-WFs)
+- ✅ BOTH adversarial models on **all 4 files** — 8 adversarial reviews + 1 independent ≈ $1.60
 - ✅ Triage via Real / Defensible / Out-of-scope tree
 - ✅ Append deferred items to `docs/reports/review_followups.md`
 - ✅ Post full triage table in the response
@@ -190,60 +190,55 @@ File-shape regex assertions: pipeline.run name, PERCENTILE_CONT(0.25/0.50/0.75) 
 ## What's IN Scope
 | Deliverable | Why |
 |---|---|
-| `timing.ts` + 28-32 tests | Spec 71 3-tier engine; consumed by Phase 2 detail page |
-| `compute-timing-calibration.js` + 8-10 infra tests | Nightly populator for calibration cache |
+| `builder-query.ts` + 15-18 tests | Spec 73 standalone builder query — Phase 2 builder-only endpoints + spec 73 behavior coverage |
+| `get-lead-feed.ts` + 18-22 tests | Spec 70 unified CTE — main entry point Phase 2 wraps |
 
 ## What's OUT of Scope
-- `get-lead-feed.ts` — Phase 1b-iii
-- `builder-query.ts` — Phase 1b-iii
 - API routes — Phase 2
-- Adding the script to the sources chain — separate small WF after Phase 1b proves stable
-- Dual code path port — not applicable (script doesn't reuse timing.ts logic)
+- Auth wiring (`getUserIdFromSession` already exists from Backend Phase 0)
+- Rate limiting wiring (`withRateLimit` already exists from Backend Phase 0)
+- Pipeline scripts — none needed
+- Per-permit detail page — Phase 2+ via the timing engine from Phase 1b-ii
 
 ## Execution Plan
 
 ```
-- [ ] Contract Definition: getTradeTimingForPermit signature locked at
-      `(permit_num, trade_slug, pool) => Promise<TradeTimingEstimate>`.
-      _resetCalibrationCache exported for tests only.
+- [ ] Contract Definition: queryBuilderLeads + getLeadFeed signatures
+      locked. LeadFeedInput / LeadFeedResult shapes already defined in
+      Phase 1b-i types.ts.
 
-- [ ] Spec & Registry Sync: Spec 71 already hardened. Run
+- [ ] Spec & Registry Sync: Specs 70 + 73 already hardened. Run
       `npm run system-map` AFTER commit.
 
-- [ ] Schema Evolution: N/A — Phase 1a created timing_calibration and
-      inspection_stage_map; permit_inspections and permit_parcels are
-      pre-existing.
+- [ ] Schema Evolution: N/A — Phase 1a created cost_estimates;
+      permits/permit_trades/entities/entity_projects/wsib_registry/trades
+      are pre-existing.
 
 - [ ] Test Scaffolding: Create 2 test files. Run
-      `npx vitest run src/tests/timing.logic.test.ts
-       src/tests/compute-timing-calibration.infra.test.ts`
+      `npx vitest run src/tests/builder-query.logic.test.ts
+       src/tests/get-lead-feed.logic.test.ts`
       MUST fail (Red Light).
 
 - [ ] Red Light: Confirmed.
 
 - [ ] Implementation:
-      Step 1 — timing.ts skeleton (constants + ensureCalibrationLoaded + try/catch)
-      Step 2 — pickBestCandidate (parent/child merge query)
-      Step 3 — Tier 1 stage-based logic
-      Step 4 — Tier 2 issued heuristic + cache + global fallback + bootstrap
-      Step 5 — Tier 3 pre-permit
-      Step 6 — Iterate timing tests until 28-32 pass
-      Step 7 — compute-timing-calibration.js
-      Step 8 — Run infra test
-      Step 9 — `npm run typecheck` clean
-      Step 10 — `npm run lint -- --fix` clean
-      Step 11 — `npm run test` full suite (2613 + ~38 ≈ 2651+)
+      Step 1 — builder-query.ts (BUILDER_QUERY_SQL constant + queryBuilderLeads)
+      Step 2 — Iterate builder-query tests to green
+      Step 3 — get-lead-feed.ts (LEAD_FEED_SQL constant + getLeadFeed)
+      Step 4 — Iterate get-lead-feed tests to green
+      Step 5 — `npm run typecheck` clean
+      Step 6 — `npm run lint -- --fix` clean
+      Step 7 — `npm run test` full suite (2644 + ~38 ≈ 2680+)
 
 - [ ] Auth Boundary & Secrets: N/A — no routes, no new secrets.
-      timing.ts is server-only (uses Pool from pg).
+      Both libraries are server-only (use Pool from pg).
 
 - [ ] Green Light: typecheck / lint / test all clean.
 
 - [ ] Reviews:
       - Commit the implementation
       - Run Gemini + DeepSeek on all 4 files in parallel (8 jobs)
-      - Run independent review agent in worktree (retry the 529 from
-        Phase 1b-i)
+      - Run independent review agent in worktree (retry 529)
       - Triage, apply real fixes in a follow-up commit, append deferred
         items to review_followups.md
       - Post full triage table
@@ -253,16 +248,18 @@ File-shape regex assertions: pipeline.run name, PERCENTILE_CONT(0.25/0.50/0.75) 
 
 ## Risk Notes
 
-1. **Cache consistency in serverless.** Module-level cache is per-process. In Next.js serverless each instance refreshes independently. Acceptable — calibration changes daily at most. Documented inline.
+1. **Local DB still broken at migration 030.** All SQL is mock-tested only. The unified CTE has 10+ join points and ~14 `<->` distance expressions — runtime errors will only surface in CI against a clean DB. Mitigation: SQL structure tests assert every pillar/CTE is present; mock-pool tests assert function flow; spec 70 SQL is the source of truth.
 
-2. **Date.now() in tests.** REFRESH_INTERVAL_MS and 180-day staleness depend on Date.now(). Use `vi.useFakeTimers({ now: new Date('2026-04-08') })` + `vi.advanceTimersByTime` rather than threading a clock parameter.
+2. **`<->` operator repetition in builder_candidates CTE.** The KNN distance expression appears 7 times for proximity scoring. PostgreSQL caches expression evaluation per row, so structural readability cost only — not a runtime hit. Inline rather than LATERAL alias because builder uses `MIN(...)` across multiple permits per builder, not one row.
 
-3. **`permit_inspections.status` enum is undocumented.** The codebase has `lib/inspections/parser.ts` with `normalizeStatus`. During implementation, read parser.ts to learn canonical values. If they differ from spec 71's "PASSED", normalize at the boundary in timing.ts via case-insensitive comparison.
+3. **Cursor pagination param ordering.** Page 1 with `cursor=undefined` → params have `null, null, null` for $6/$7/$8 → `$6::int IS NULL` short-circuits. Tests verify the param array uses `null` literal (not `undefined`) so pg doesn't complain about parameter type inference.
 
-4. **Parent/child merge query cost.** `pickBestCandidate` issues a permit_parcels JOIN per call. Fine on detail pages (1 call). Feed pages don't use this engine (use SQL proxy in Phase 1b-iii). Documented as "future batch query" follow-up.
+4. **`p.est_const_cost::float8` cast on NULL.** PostgreSQL: NULL cast to float8 returns NULL. Verified safe.
 
-5. **`determinePhase` from phases.ts is synchronous and date-based.** Reads issued_date, computes phase from elapsed months. If candidate has no issued_date the function still works (returns 'early_construction'). Verified during recon.
+5. **`avg_project_cost` from `AVG(...) FILTER (WHERE est_const_cost > 0)`.** Returns NULL when no rows match. JS mapping handles `null`.
 
-6. **Bootstrap calibration values.** First run after `compute-timing-calibration.js` ships will populate the table. Until then, `BOOTSTRAP_CALIBRATION = {p25:44, median:105, p75:238}` (spec 71 seed values from audit) keeps Tier 2 functional from day 0.
+6. **Lead ID collision risk.** Permits: `'24 101234:01'`. Builders: `'9183'`. Colon presence makes them distinguishable. Cursor comparison treats lead_id as text — same lead_type always has same lead_id format, so the tuple ordering is consistent.
 
-7. **Spec 71 says "PASSED" but DB might be "Passed"/"PASSED"/"passed".** Mitigation: case-insensitive comparison in `findLatestPassedInspection`. Tests verify both casings.
+7. **Independent review agent has hit Anthropic 529 overload three times in 24h.** Phase 1b-iii reviews retry the same agent. If it fails again, the manual dual-walkthrough fallback (used in Phase 1b-i and Phase 1b-ii) is the recovery path.
+
+8. **`builder-query.ts` SQL is technically duplicated by `builder_candidates` CTE in `get-lead-feed.ts`.** This is the cost of having a standalone builder endpoint per spec 73 + a unified feed per spec 70. CLAUDE.md §7 dual code path rule applies to JS↔SQL, not SQL↔SQL — but it's still a maintenance gotcha. Documented inline. Future hardening could share a SQL fragment via a JS template helper.
