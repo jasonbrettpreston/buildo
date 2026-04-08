@@ -1,191 +1,161 @@
-# Active Task: WF1 — Frontend Phase 0 Foundation
+# Active Task: WF1 — Backend Phase 0 Foundation
 **Status:** Implementation
 **Workflow:** WF1 — New Feature Genesis (foundation infrastructure)
-**Rollback Anchor:** `6603cd6`
+**Rollback Anchor:** `ad85dcb`
 
 ## Domain Mode
-**Frontend Mode** — sets up the tooling, observability, and quality gates that all frontend work in `src/features/leads/` will rely on. Per CLAUDE.md Frontend Mode rules: required tooling stack from §12 + observability from §13.
+**Backend/Pipeline Mode** — DB migrations, pipeline scripts, API auth helpers. Per CLAUDE.md Backend rules: §2/§3/§6/§7/§9 of `00_engineering_standards.md`, Pipeline SDK only, `src/lib/db/client.ts` pool only, dual code path discipline.
 
 ## Context
-* **Goal:** Build the frontend tooling foundation for the lead feed feature. After this phase completes, every subsequent feature WF can rely on Biome catching React logic errors at commit time, PostHog capturing events, Sentry catching production exceptions, Lighthouse CI enforcing performance budgets, and the Impeccable plugin guiding design decisions. Lessons-learned: build observability + safety nets BEFORE feature code, not after.
-* **Target Spec:** `docs/specs/product/future/75_lead_feed_implementation_guide.md` §7a Foundation Tooling + §11 Phase 0 (frontend portions: days 1-2, 3-4, 5, 6 Impeccable, 8-9 Lighthouse). `docs/specs/00_engineering_standards.md` §12, §13.
-* **Key Files:** new — `biome.json`, `src/lib/observability/capture.ts`, `.lighthouserc.json`, `.github/workflows/lighthouse.yml`. Modified — `src/lib/logger.ts`, `tsconfig.json`, `eslint.config.mjs`, `.husky/pre-commit`, `package.json`, `src/app/layout.tsx`, `src/instrumentation.ts` (Sentry).
+* **Goal:** Land the database + auth + safety-net foundation that the Lead Feed feature depends on. Sibling to the already-shipped Frontend Phase 0 (`f4fc527`). After this lands, the lead feed query layer (Phase 1) can build on real spatial indexes, the API layer can verify Firebase tokens for real (not just cookie shape), and pipeline scripts get a SQL safety net.
+* **Target Spec:** `docs/specs/product/future/75_lead_feed_implementation_guide.md` §11 Phase 0 (backend portions: Day 6 SQLFluff, Day 7 PostGIS + permit columns, Day 10 auth + rate limit). `docs/specs/00_engineering_standards.md` §3 Database, §9 Pipeline Safety, §4 Auth.
+* **Key Files:** new — `migrations/067_permits_location_geom.sql`, `migrations/068_permits_photo_url.sql`, `migrations/069_lead_views.sql`, `scripts/validate-migration.js`, `scripts/backfill-permits-location.js`, `src/lib/auth/get-user.ts`, `src/lib/auth/rate-limit.ts`, `.sqlfluff`. Modified — `scripts/hooks/validate-migrations.sh`, `package.json`, `src/middleware.ts` (comment only), `.env.example`.
 
 ## Technical Implementation
 
-### New/Modified Components
-- **`src/lib/observability/capture.ts`** (NEW) — PostHog wrapper with type-safe `EventName` union, init queue for events fired before posthog loads, `captureEvent`, `identifyUser`, `isFeatureEnabled` exports
-- **`src/lib/observability/sentry.ts`** (NEW) — minimal Sentry helper for context enrichment, called by route-level `error.tsx`
-- **`src/lib/logger.ts`** (MODIFIED) — add `logInfo(tag, event, context)` function alongside existing `logError` and `logWarn`
-- **`src/app/layout.tsx`** (MODIFIED) — wrap children in PostHog provider, call `initObservability()`
-- **`src/instrumentation.ts`** (NEW per Sentry wizard) — Sentry SDK init for client + server runtimes
-- **`tsconfig.json`** (MODIFIED) — add `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, `noFallthroughCasesInSwitch`
-- **`biome.json`** (NEW) — scoped to `src/features/leads/**`, enforces `useHookAtTopLevel`, `noFloatingPromises`, `useExhaustiveDependencies` as errors
-- **`package.json`** (MODIFIED) — add `lint-staged` config, new scripts: `lighthouse:ci`, `biome:check`
-- **`.husky/pre-commit`** (MODIFIED) — ADD `npx lint-staged` at the start, KEEP existing typecheck + test runs
-- **`.lighthouserc.json`** (NEW) — performance ≥90 mobile, accessibility ≥95, LCP <2.5s, CLS <0.1, TBT <200ms
-- **`.github/workflows/lighthouse.yml`** (NEW) — runs Lighthouse CI on every PR
-- **`.claude/plugins/impeccable/`** (NEW via npx install) — Impeccable Claude plugin
+### New Migrations
+- **`067_permits_location_geom.sql`** — Add `permits.location geometry(Point, 4326)`, GIST index `CONCURRENTLY`, `BEFORE INSERT/UPDATE` trigger setting `location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)` when both non-null. Trigger uses `IS DISTINCT FROM` to no-op on unchanged updates. Backfill is a separate script.
+- **`068_permits_photo_url.sql`** — `ALTER TABLE permits ADD COLUMN photo_url TEXT NULL`. Pure column add.
+- **`069_lead_views.sql`** — `lead_views (user_id TEXT, permit_num TEXT, revision_num INT, viewed_at TIMESTAMPTZ DEFAULT NOW(), PRIMARY KEY(user_id, permit_num, revision_num))` + `idx_lead_views_user_viewed (user_id, viewed_at DESC)`. Drives the "3 plumbers have seen this lead" competition signal.
 
-### Data Hooks/Libs
-None — this phase has no data fetching. TanStack Query setup is Phase 3 of the broader rollout.
+### New Scripts
+- **`scripts/validate-migration.js`** — Pre-commit validator extending the existing `validate-migrations.sh`. New rules: detect `DROP TABLE` / `DROP COLUMN` (require explicit `-- ALLOW-DESTRUCTIVE` marker), detect `CREATE INDEX` without `CONCURRENTLY` on known-large tables (`permits`, `permit_trades`, `permit_parcels`, `wsib_registry`, `entities`), detect `ALTER TABLE ... ADD COLUMN ... NOT NULL` without `DEFAULT`. Wired into `validate-migrations.sh` via `node` exec.
+- **`scripts/backfill-permits-location.js`** — Pipeline SDK script. Streams permits with `location IS NULL AND latitude IS NOT NULL AND longitude IS NOT NULL` in 5K batches via `pipeline.streamQuery`. Uses `withTransaction` per batch. Idempotent. Emits `PIPELINE_SUMMARY`.
+
+### New Auth Helpers
+- **`src/lib/auth/get-user.ts`** — `getUserIdFromSession(request: NextRequest): Promise<string | null>`. Reads `__session` cookie, calls Firebase Admin `verifyIdToken()`. Returns uid on success, null on any failure (with `logWarn` for expired tokens, `logError` for unexpected). Used by API route handlers (Node runtime). Middleware stays edge-runtime fast and only does the cookie shape pre-check.
+- **`src/lib/auth/rate-limit.ts`** — Wrapper around `@upstash/ratelimit` + `@upstash/redis`. Exports `withRateLimit(request, opts)` returning `{ allowed, remaining }`. In-memory fallback when Upstash env vars missing (dev mode). Fail-closed on Redis errors in production, fail-open in development.
+
+### Modified
+- **`scripts/hooks/validate-migrations.sh`** — At the end, `node scripts/validate-migration.js "$STAGED_MIGRATIONS"` for the new safety checks.
+- **`package.json`** — Add `@upstash/ratelimit`, `@upstash/redis`. Add `sql:lint` script (`sqlfluff lint --dialect postgres migrations/`). SQLFluff itself is a Python tool — install via pip, documented in `.env.example`.
+- **`.sqlfluff`** — Postgres dialect, max line 120, indent 2 spaces. Boy Scout Rule: only NEW migrations enforced via include patterns.
+- **`src/middleware.ts`** — Add comment block explaining edge-runtime cookie pre-check vs node-runtime full verify split. No behavior change.
+- **`.env.example`** — Add `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`. Add SQLFluff install note.
 
 ### Database Impact
-**NO** — this phase explicitly excludes all database work. PostGIS, migrations 070-077, the location sync trigger, the cost_estimates table, etc. are all in a SEPARATE WF1 ("Backend Phase 0") that can run in parallel or sequentially. The two phases are independent: frontend tooling doesn't depend on the database, and backend foundation doesn't depend on the frontend tooling.
+**YES.** Three new migrations on the `permits` table (237K rows) and one new table.
+- 067 (location geom + trigger + index): column add is instant; GIST index uses `CONCURRENTLY` (no lock); trigger fires on subsequent writes. Backfill is a separate idempotent script.
+- 068 (photo_url): instant pure column add.
+- 069 (lead_views): new empty table, zero risk.
+
+UPDATE strategy for 237K existing rows: `backfill-permits-location.js` runs in 5K batches inside one transaction per batch with `IS DISTINCT FROM` guards. Re-runnable. Estimated wall time ~30 seconds locally.
 
 ## Standards Compliance
 
-* **Try-Catch Boundary:** N/A for tooling configs. Applies to the PostHog wrapper (`captureEvent` already swallows errors silently per spec — never crashes the calling component) and the Sentry helper (boundary catches everything via `app/[...]/error.tsx`).
-* **Unhappy Path Tests:** 
-  - `captureEvent` called before `initObservability()` → event queues, drains on load
-  - `captureEvent` called when PostHog is down → swallows error, doesn't crash
-  - Sentry init fails → app continues to render without telemetry
-  - `logInfo` called with non-serializable context → handles gracefully
-* **logError Mandate:** N/A — this phase ADDS `logInfo` to the existing `logger.ts` module that already has `logError` and `logWarn`. No API routes touched.
-* **Mobile-First:** Lighthouse CI mandate enforces mobile performance budget. The CI fails any PR that drops below 90 on the Moto G4 emulation profile. Touch target ≥44px and 375px viewport are part of the accessibility category (≥95).
+* **Try-Catch Boundary:** New auth helpers wrap firebase-admin and Upstash calls in try/catch with safe fallbacks. No new API routes in this WF — Phase 1 will add them.
+* **Unhappy Path Tests:**
+  - `getUserIdFromSession`: missing cookie → null; malformed cookie → null; expired token → null + `logWarn`; firebase-admin not initialized → null + `logError`
+  - `withRateLimit`: env missing → in-memory fallback; over limit → denied; Redis throws in prod → fail-closed; Redis throws in dev → fail-open
+  - `validate-migration.js`: DROP TABLE without marker → fail; CREATE INDEX without CONCURRENTLY on permits → fail; ADD NOT NULL without DEFAULT → fail; clean migration → pass
+  - `backfill-permits-location.js`: empty result → no-op; second run → 0 updates (idempotent)
+  - Migration 067 trigger: lat+lng → location set; null lat → location null; UPDATE clearing lat → location nulled
+* **logError Mandate:** All new auth helpers and rate-limit wrapper use `logError`/`logWarn` from `src/lib/logger.ts`. Rate-limit allow/deny telemetry uses `logInfo` (`[auth/ratelimit]` tag).
+* **Mobile-First:** N/A — backend-only.
 
 ## What's IN Scope (this WF)
 
-| Day | Deliverable | Standards alignment |
-|-----|-------------|---------------------|
-| **1-2** | Biome scoped to `src/features/leads/`, stricter tsconfig, lint-staged additive to existing pre-commit, `logInfo` added to logger | §12.1, §12.2 (logic safety net) |
-| **3-4** | PostHog SDK install, `src/lib/observability/capture.ts` wrapper with init queue, layout wiring, type-safe EventName union | §13.1 |
-| **5** | Sentry SDK install via `@sentry/wizard`, instrumentation.ts, route-level error boundary helper | §13.2 |
-| **6** | Impeccable Claude plugin install (`npx claudepluginhub pbakaus/impeccable --plugin impeccable`) | §12 design quality |
-| **8-9** | Lighthouse CI: `.lighthouserc.json` config, GitHub Actions workflow, hard performance budgets | §13.4 |
+| Day | Deliverable |
+|-----|-------------|
+| **1** | `validate-migration.js` + `.sqlfluff` + pre-commit wiring + `sql:lint` script |
+| **2** | Migration 067 (permits.location + GIST + trigger) + trigger semantics tests |
+| **3** | `backfill-permits-location.js` + dry-run + idempotency verification |
+| **4** | Migration 068 (photo_url) + Migration 069 (lead_views) + factories update |
+| **5** | `getUserIdFromSession` helper + tests + middleware comment |
+| **6** | `@upstash/ratelimit` install + `withRateLimit` wrapper + tests |
 
-## What's OUT of Scope (separate Backend Phase 0 WF1)
+## What's OUT of Scope
 
-These items are in spec 75 §11 Phase 0 but belong to Backend Mode and will be a sibling WF1:
-
-- Day 6 backend: SQLFluff install, `scripts/validate-migration.js` script
-- Day 7: PostGIS extension, migrations 070-072, `permits.location` column + trigger, photo_url column, batched backfill script
-- Day 10: Firebase `verifyIdToken` wiring, `@upstash/ratelimit` setup, `getUserIdFromSession` helper, rate limiter wrapper
-
-**Why separate:** Different domain (Backend/Pipeline Mode), different risk profile (DB migrations need careful rollout), different verification (no UI tests). Splitting reduces blast radius — if either WF hits an issue, the other can still proceed.
+- The lead feed feature itself (specs 70-75 implementation) — Phase 1+
+- Wiring `getUserIdFromSession` and `withRateLimit` into actual API routes — Phase 2
+- Migrations 070+ (cost_estimates, lead_claims, etc.) — Phase 2
+- Production deployment — separate operational task
 
 ## Execution Plan
 
-*Per WF1 protocol — every step verbatim, N/A explained where applicable:*
-
 ```
-- [ ] Contract Definition: N/A — no API routes created in this phase. The
-      observability wrappers (captureEvent, logInfo) are internal-only and
-      don't expose HTTP endpoints. API routes come in Phase 2.
+- [ ] Contract Definition: getUserIdFromSession signature locked at
+      `(request: NextRequest) => Promise<string | null>`. withRateLimit
+      signature locked at `(request, opts) => Promise<{allowed, remaining}>`.
+      No HTTP routes touched in this WF.
 
 - [ ] Spec & Registry Sync: Specs 70-75 already exist and are hardened.
-      Run `npm run system-map` AFTER implementation to capture the new
-      `src/lib/observability/` paths in the system map.
+      Run `npm run system-map` AFTER implementation.
 
-- [ ] Schema Evolution: N/A for this phase. Database work is explicitly
-      deferred to the Backend Phase 0 WF1. No migrations, no factory updates,
-      no `db:generate` run needed here.
+- [ ] Schema Evolution: 3 new migrations (067/068/069). All have UP + DOWN
+      blocks. 067 uses `CREATE INDEX CONCURRENTLY`. After writing migrations:
+      `npm run migrate`, `npm run db:generate`, update `src/tests/factories.ts`
+      with `lead_views` factory + `permits.location/photo_url` defaults.
+      `npm run typecheck` clean.
 
-- [ ] Test Scaffolding: Create three new test files following the triad pattern:
-      - `src/tests/observability.logic.test.ts` (15-20 tests)
-        * captureEvent queues events when called pre-init
-        * captureEvent drains queue on init via loaded() callback
-        * captureEvent swallows errors silently when PostHog is unavailable
-        * captureEvent no-ops on SSR (window === undefined)
-        * isFeatureEnabled returns false in SSR
-        * EventName type is enforced at compile time (TS-only check)
-      - `src/tests/sentry.logic.test.ts` (8-10 tests)
-        * Sentry helper passes context to captureException
-        * Dev mode bypass — Sentry not initialized when NODE_ENV=development
-        * Source map upload config validated at build time only
-      - `src/tests/logger.logic.test.ts` EXTEND existing
-        * logInfo emits structured JSON line with correct level
-        * logInfo includes timestamp, tag, event, context
-        * logInfo handles non-serializable context gracefully (Date, BigInt, circular)
+- [ ] Test Scaffolding: Create:
+      - `src/tests/auth-get-user.logic.test.ts` (8-10 tests)
+      - `src/tests/rate-limit.logic.test.ts` (6-8 tests)
+      - `src/tests/migration-validator.logic.test.ts` (10-12 tests)
+      - `src/tests/backfill-location.infra.test.ts` (4-6 tests)
+      - `src/tests/migration-067-trigger.infra.test.ts` (6 tests)
 
-- [ ] Red Light: Run `npm run test`. The new test files MUST fail because
-      `src/lib/observability/capture.ts`, `src/lib/observability/sentry.ts`,
-      and `src/lib/logger.ts` (logInfo function) don't exist yet.
+- [ ] Red Light: `npm run test`. New test files MUST fail because helpers,
+      migrations, and validator script don't exist yet.
 
 - [ ] Implementation:
-      Day 1-2 — Logic safety net:
-        a) Install: `npm install --save-dev @biomejs/biome lint-staged`
-        b) `npx @biomejs/biome init`, then edit `biome.json` to scope linting
-           to `src/features/leads/**` only (don't lint the rest of the repo,
-           ESLint stays in charge there)
-        c) Update `tsconfig.json` with the 5 new strict flags
-        d) Edit `src/lib/logger.ts` to add `logInfo` (matches existing
-           pattern of logError + logWarn)
-        e) Add `lint-staged` config to `package.json`
-        f) Update `.husky/pre-commit` to call `npx lint-staged` BEFORE the
-           existing `npm run typecheck && npm run test`
-        g) Verify: stage a file in src/features/leads/ (placeholder), commit,
-           confirm Biome runs
+      Day 1 — Migration safety net:
+        a) Create `.sqlfluff`
+        b) Create `scripts/validate-migration.js`
+        c) Append node validator call to `scripts/hooks/validate-migrations.sh`
+        d) Add `sql:lint` script to package.json
+        e) Verify with deliberately bad migration
 
-      Day 3-4 — PostHog telemetry:
-        a) Install: `npm install posthog-js`
-        b) Create `src/lib/observability/capture.ts` with the full wrapper
-           code from spec 75 §7a (init queue, type-safe EventName, captureEvent,
-           identifyUser, isFeatureEnabled)
-        c) Add env vars to `.env.example`: NEXT_PUBLIC_POSTHOG_KEY,
-           NEXT_PUBLIC_POSTHOG_HOST
-        d) Create `src/components/observability/PostHogProvider.tsx` —
-           client component wrapper that calls initObservability() in a useEffect
-        e) Wrap `src/app/layout.tsx` children with the provider
+      Day 2 — PostGIS column on permits:
+        a) Write `migrations/067_permits_location_geom.sql` (UP + DOWN)
+        b) `npm run migrate`
+        c) `npm run db:generate`
+        d) Run trigger semantics tests
 
-      Day 5 — Sentry error tracking:
-        a) Run `npx @sentry/wizard@latest -i nextjs` (interactive setup —
-           may need user input for project selection)
-        b) Verify it created `instrumentation.ts`, `sentry.client.config.ts`,
-           `sentry.server.config.ts`, `sentry.edge.config.ts`
-        c) Add SENTRY_DSN, SENTRY_AUTH_TOKEN to `.env.example`
-        d) Create `src/lib/observability/sentry.ts` helper for the
-           error.tsx route boundary integration (will be used in Phase 5
-           when error.tsx files are created)
-        e) Set `enabled: process.env.NODE_ENV === 'production'` in client config
+      Day 3 — Backfill script:
+        a) Create `scripts/backfill-permits-location.js` using Pipeline SDK
+        b) Dry run, then real run on local DB
+        c) Verify second run is no-op
 
-      Day 6 — Impeccable design plugin:
-        a) Run `npx claudepluginhub pbakaus/impeccable --plugin impeccable`
-        b) Verify the plugin loads in Claude Code (`/audit`, `/critique`,
-           `/polish` commands available)
-        c) Document the workflow integration in `.cursor/active_task.md`
-           template — note that future frontend WFs should run `/critique`
-           after Phase 4 component creation per the §7a workflow table
+      Day 4 — Remaining columns + lead_views:
+        a) Write `migrations/068_permits_photo_url.sql`
+        b) Write `migrations/069_lead_views.sql`
+        c) `npm run migrate && npm run db:generate`
+        d) Update `src/tests/factories.ts`
 
-      Day 8-9 — Lighthouse CI:
-        a) Install: `npm install --save-dev @lhci/cli`
-        b) Create `.lighthouserc.json` with the budget config from spec 75 §7a
-        c) Create `.github/workflows/lighthouse.yml` that runs on every PR
-        d) Add `lighthouse:ci` script to package.json
-        e) Verify locally: `npx lhci autorun --collect.url=http://localhost:3000`
+      Day 5 — Auth verification:
+        a) Verify `firebase-admin` already installed (it is, package.json line 37)
+        b) Create `src/lib/auth/get-user.ts`
+        c) Update `src/middleware.ts` comment block
+        d) Run auth tests
 
-- [ ] Auth Boundary & Secrets: 
-      - PostHog key (NEXT_PUBLIC_POSTHOG_KEY) is intentionally public — it's
-        scoped per-project at the PostHog level, not a secret. Documented in
-        §4.3 of engineering standards as an exception to the "no secrets in
-        client" rule.
-      - Sentry DSN (NEXT_PUBLIC_SENTRY_DSN) same — public by design.
-      - SENTRY_AUTH_TOKEN is build-time only, never exposed to client. Used
-        only for source map upload during `next build`. Goes in CI secrets,
-        not .env.
-      - No new API routes in this phase, so no middleware verification needed.
+      Day 6 — Rate limiting:
+        a) `npm install @upstash/ratelimit @upstash/redis`
+        b) Add env vars to `.env.example`
+        c) Create `src/lib/auth/rate-limit.ts`
+        d) Run rate-limit tests
 
-- [ ] Green Light: 
-      - `npm run test` — must show 2428 + new observability/sentry/logger
-        tests all passing (~2450+)
-      - `npm run lint -- --fix` — all pass
-      - `npm run typecheck` — verifies the new strict flags don't break
-        existing code (may surface latent issues that need fixing — addressed
-        as part of this WF)
-      - `npx lhci autorun` against local dev server — confirms Lighthouse CI
-        config works
-      - `git commit` — verifies the new pre-commit hook runs Biome correctly
+- [ ] Auth Boundary & Secrets:
+      - `UPSTASH_REDIS_REST_*` are server-only secrets, documented in
+        .env.example, never imported from client components.
+      - Firebase Admin private key handled via existing
+        `src/lib/auth/config.ts` server-only init.
+      - getUserIdFromSession is server-only (uses NextRequest from API
+        routes).
+
+- [ ] Green Light:
+      - `npm run test` — all 2442 + ~38 new tests passing
+      - `npm run lint -- --fix` — pass
+      - `npm run typecheck` — clean
+      - `node scripts/validate-migration.js migrations/067*.sql migrations/068*.sql migrations/069*.sql` — pass
+      - Commit pre-commit hook runs new validator
       Output visible execution summary using ✅/⬜ for every step above. → WF6.
 ```
 
 ## Risk Notes
 
-1. **Stricter tsconfig may surface existing latent issues.** `noUncheckedIndexedAccess` is the most likely culprit — anywhere we do `array[0]` without null check will now flag. **Mitigation:** Run `npm run typecheck` after the tsconfig change, fix issues iteratively before moving to PostHog. Budget extra time on Day 1-2 for this.
-
-2. **Sentry wizard is interactive and may need a real Sentry project.** **Mitigation:** Either set up the Sentry project manually first, OR run the wizard in non-interactive mode with project ID from the user. Document which approach in the implementation step.
-
-3. **Husky pre-commit changes affect everyone's workflow.** **Mitigation:** Test the new hook on at least 3 different commit scenarios (frontend file change, backend file change, mixed) before considering Day 1-2 complete.
-
-4. **Lighthouse CI may fail on the existing app at first.** Existing pages may not meet the new ≥90 mobile threshold. **Mitigation:** Run Lighthouse against the current `/search` and `/dashboard` pages BEFORE committing the workflow file. If they fail, either (a) fix them as part of this WF, or (b) scope Lighthouse CI to only run against `/leads` once it exists, deferring the full enforcement to Phase 5+. Decision required from user when this step is reached.
-
-5. **Impeccable plugin install path is unverified.** **Mitigation:** Already tested the install command earlier in this conversation (it worked for me — `npx claudepluginhub pbakaus/impeccable --plugin impeccable`). Should work the same way during implementation.
+1. **Migration 067 trigger may fire on no-op updates.** Mitigation: `IS DISTINCT FROM` inside the trigger function. Tests verify.
+2. **Backfill of 237K rows on production.** Mitigation: 5K batches, transaction per batch, idempotent. Production rollout is a separate operational task.
+3. **firebase-admin verifyIdToken latency (~5-15ms).** Mitigation: SDK caches keys after first call. Acceptable for V1.
+4. **Upstash Redis adds external dependency.** Mitigation: in-memory fallback for dev; fail-closed in prod.
+5. **SQLFluff is Python, not npm.** Mitigation: documented in .env.example. Hard gate is `validate-migration.js` (pure node).

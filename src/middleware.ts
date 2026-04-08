@@ -10,6 +10,22 @@ import {
   DEV_SESSION_COOKIE,
 } from '@/lib/auth/route-guard';
 
+/**
+ * Next.js middleware runs in the **edge runtime**, where firebase-admin (Node-only)
+ * cannot execute. We therefore split auth verification into two layers:
+ *
+ *   1. Edge layer (this file): a fast cookie *shape* pre-check via
+ *      `isValidSessionCookie` — confirms the `__session` cookie exists and looks
+ *      like a 3-segment JWT. Cheap, no network, no crypto.
+ *
+ *   2. Node layer (`src/lib/auth/get-user.ts`): full Firebase Admin
+ *      `verifyIdToken()` call inside individual API route handlers, which run
+ *      in the Node runtime and can use firebase-admin. Returns the verified
+ *      uid or null.
+ *
+ * Route handlers that need a real verified user MUST call
+ * `getUserIdFromSession(request)` — they cannot rely on middleware alone.
+ */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const routeClass = classifyRoute(pathname);
