@@ -1,347 +1,349 @@
-# Active Task: WF1 — Lead Feed Phase 1a: Data Schema
+# Active Task: WF1 — Lead Feed Phase 1b-i: Cost Model
 **Status:** Implementation
 **Workflow:** WF1 — New Feature Genesis
-**Rollback Anchor:** `0a9d4c3`
+**Rollback Anchor:** `800b19a`
 
 ## Domain Mode
-**Backend/Pipeline Mode** — pure database + pipeline work. No API routes, no UI, no client code. Per CLAUDE.md Backend rules: §2/§3/§6/§9 of `00_engineering_standards.md`, Pipeline SDK only, `src/lib/db/client.ts` pool only, dual code path discipline where applicable.
+**Backend/Pipeline Mode** — pure library + 1 pipeline script. NO API routes, NO UI, NO new migrations. Per CLAUDE.md Backend rules: §2/§6/§7/§9 of `00_engineering_standards.md`. Pipeline script via `scripts/lib/pipeline.js` SDK only — never `new Pool()`.
 
 ## Context
-* **Goal:** Land the four new database tables + the `entities.photo_url` column that the Phase 1b "Data Layer Code" WF depends on, AND correct a schema drift in `lead_views` (migration 069 shipped in Backend Phase 0 does not match spec 70's contract). After this WF lands, Phase 1b can write `get-lead-feed.ts`, `timing.ts`, `cost-model.ts`, `builder-query.ts`, and `distance.ts` against real schemas.
-* **Target Spec:**
-  - `docs/specs/product/future/70_lead_feed.md` §Database Schema (`lead_views` corrected shape)
-  - `docs/specs/product/future/71_lead_timing_engine.md` §Database Schema (`inspection_stage_map`, `timing_calibration`, seed data)
-  - `docs/specs/product/future/72_lead_cost_model.md` §Database Schema (`cost_estimates`)
-  - `docs/specs/product/future/73_builder_leads.md` §Migration needed (`entities.photo_url`)
-  - `docs/specs/product/future/75_lead_feed_implementation_guide.md` §11 Phase 1 (preconditions)
-  - `docs/specs/00_engineering_standards.md` §3 Database, §9 Pipeline Safety
-* **Key Files:** new — `migrations/070_lead_views_corrected.sql`, `migrations/071_cost_estimates.sql`, `migrations/072_inspection_stage_map.sql`, `migrations/073_timing_calibration.sql`, `migrations/074_entities_photo_url.sql`, `scripts/seed-inspection-stage-map.js` (if seed is script-driven not inline), `src/tests/lead-views-schema.infra.test.ts` (or extend existing), `src/tests/cost-estimates-schema.infra.test.ts`, `src/tests/inspection-stage-map.logic.test.ts`, `src/tests/timing-calibration-schema.infra.test.ts`, `src/tests/entities-photo-schema.infra.test.ts`. Modified — `src/tests/factories.ts`, `src/lib/permits/types.ts` (+ related if needed).
+* **Goal:** First of three sub-WFs replacing the too-large Phase 1b. Land the base of the lead feed data layer: shared types for `src/features/leads/`, the distance helpers, the pure `estimateCost` function (spec 72), and the nightly pipeline script that populates `cost_estimates`. This sub-WF proves the **dual code path discipline** (TS + JS port of the same formula) the later phases will follow. After this WF, `cost_estimates` table can be populated from real data, and the TS `estimateCost` function is importable by Phase 1b-iii's `get-lead-feed.ts`.
+* **Target Specs (already hardened):**
+  - `docs/specs/product/future/72_lead_cost_model.md` §Implementation (`estimateCost`, base rates, premium tiers, scope additions, cost tiers, complexity score, pipeline step)
+  - `docs/specs/product/future/75_lead_feed_implementation_guide.md` §11 Phase 1 (distance helper + types boundaries)
+  - `docs/specs/00_engineering_standards.md` §2 (try/catch), §6 (logger), §7 (dual code path), §9 (pipeline safety)
+* **Key Files:** new — `src/features/leads/types.ts`, `src/features/leads/lib/distance.ts`, `src/features/leads/lib/cost-model.ts`, `scripts/compute-cost-estimates.js`, `src/tests/distance.logic.test.ts`, `src/tests/cost-model.logic.test.ts`, `src/tests/compute-cost-estimates.infra.test.ts`.
 
 ## Technical Implementation
 
-### Schema Drift Fix: Migration 070 — lead_views corrected
+### File 1 — `src/features/leads/types.ts`
 
-Backend Phase 0 migration 069 created `lead_views` with `(user_id, permit_num, revision_num, viewed_at)` + composite PK. Spec 70 requires a richer schema with `lead_key`, `lead_type`, `trade_slug`, `entity_id`, `saved`, plus FK CASCADE and different indexing. Because the table is brand-new and has zero production writers, the cleanest correction is to DROP and re-CREATE with the correct shape inside a single migration.
+Single import surface for everything `src/features/leads/` consumers will need. Re-exports from `src/lib/permits/types.ts` (added in Phase 1a) plus the new lib-local interfaces.
 
-Migration 070 UP:
-```sql
--- UP
--- ALLOW-DESTRUCTIVE (lead_views is brand-new from 069, no data to preserve)
-DROP TABLE IF EXISTS lead_views CASCADE;
+**Re-exports (from `@/lib/permits/types`):** `CostEstimate`, `CostSource`, `CostTier`, `LeadView`, `LeadType`, `InspectionStageMapRow`, `StageRelationship`, `TimingCalibrationRow`.
 
-CREATE TABLE lead_views (
-  id           SERIAL       PRIMARY KEY,
-  user_id      VARCHAR(100) NOT NULL,
-  lead_key     VARCHAR(100) NOT NULL,
-  lead_type    VARCHAR(20)  NOT NULL CHECK (lead_type IN ('permit', 'builder')),
-  permit_num   VARCHAR(30),
-  revision_num VARCHAR(10),
-  entity_id    INTEGER,
-  trade_slug   VARCHAR(50)  NOT NULL,
-  viewed_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  saved        BOOLEAN      NOT NULL DEFAULT false,
-  UNIQUE (user_id, lead_key, trade_slug),
-  FOREIGN KEY (permit_num, revision_num)
-    REFERENCES permits(permit_num, revision_num) ON DELETE CASCADE,
-  FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE,
-  -- Ensure XOR: permit leads have permit cols, builder leads have entity_id
-  CHECK (
-    (lead_type = 'permit' AND permit_num IS NOT NULL AND revision_num IS NOT NULL AND entity_id IS NULL)
-    OR
-    (lead_type = 'builder' AND entity_id IS NOT NULL AND permit_num IS NULL AND revision_num IS NULL)
-  )
-);
+**New interfaces (defined here):**
+- `TradeTimingEstimate` — `{ confidence, tier, min_days, max_days, display }` per spec 71 §4 (used by Phase 1b-ii)
+- `BuilderLeadCandidate` — builder row shape from spec 73 (used by Phase 1b-iii)
+- `LeadFeedCursor` — `{ score, lead_type, lead_id }` per spec 70 cursor contract
+- `LeadFeedInput` — `{ user_id, trade_slug, lat, lng, radius_km, cursor?, limit }` per spec 70 API params
+- `LeadFeedItem` — unified row shape from the CTE (used by Phase 1b-iii)
+- `LeadFeedResult` — `{ data, meta: { next_cursor, count, radius_km } }`
 
--- Covering index for the hot competition-count path
-CREATE INDEX idx_lead_views_lead_trade_viewed ON lead_views (lead_key, trade_slug, viewed_at);
--- User history
-CREATE INDEX idx_lead_views_user_viewed ON lead_views (user_id, viewed_at DESC);
--- BRIN for retention sweep (insert-ordered timestamps)
-CREATE INDEX idx_lead_views_viewed_brin ON lead_views USING BRIN (viewed_at);
+**Note:** Interfaces for Phase 1b-ii/iii are defined now so the types.ts file is complete after this sub-WF. This avoids type-surface churn in later sub-WFs. Only `CostEstimate` and the distance constants are consumed BY this sub-WF; the rest are inert until their consumers ship.
+
+### File 2 — `src/features/leads/lib/distance.ts`
+
+Pure helpers, no DB, ~25 lines. Per spec 75 §11 Phase 1 bullet 5, distance math stays in SQL via PostGIS `ST_Distance` — these helpers exist for unit conversion and display formatting only.
+
+```ts
+export const DEFAULT_RADIUS_KM = 10;
+export const MAX_RADIUS_KM = 50;  // spec 70 enforces via Zod
+
+export function metersFromKilometers(km: number): number;
+export function kilometersFromMeters(meters: number): number;
+export function formatDistanceForDisplay(meters: number): string;
+// '450m', '999m', '1.0km', '12km' (whole km ≥10km)
 ```
 
-Migration 070 DOWN:
-```sql
--- DOWN
--- ALLOW-DESTRUCTIVE
--- DROP INDEX IF EXISTS idx_lead_views_viewed_brin;
--- DROP INDEX IF EXISTS idx_lead_views_user_viewed;
--- DROP INDEX IF EXISTS idx_lead_views_lead_trade_viewed;
--- DROP TABLE IF EXISTS lead_views CASCADE;
--- -- Note: recreating the 069 shape is not automatic; forward-only recovery.
+### File 3 — `src/features/leads/lib/cost-model.ts`
+
+Pure `estimateCost` function implementing spec 72 §Implementation exactly. No DB calls. ~180 lines. Signature:
+
+```ts
+export function estimateCost(
+  permit: CostModelPermitInput,
+  parcel: CostModelParcelInput | null,
+  footprint: CostModelFootprintInput | null,
+  neighbourhood: CostModelNeighbourhoodInput | null,
+): CostEstimate;
 ```
 
-Note: the DOWN block deliberately does NOT recreate the 069 shape. It just drops the 070 version. If a rollback is ever needed, the migration system applies the 070 DOWN then the 069 DOWN, which leaves the table gone — correct because the table is new and has no pre-069 state.
+Input interfaces are defined locally (NOT exported from `@/lib/permits/types.ts`) to keep the cost-model surface small and self-documenting. Each input is the minimum shape needed for the calculation.
 
-### Migration 071 — cost_estimates
+**Algorithm (verbatim from spec 72 §Implementation):**
+1. If `permit.est_const_cost > 1000` → source='permit', `cost_range_low === cost_range_high === estimated_cost`
+2. Else model path:
+   - Determine `base_rate_per_sqm` from permit category (SFD $3000, semi/town $2600, multi-res $3400, addition $2000, commercial $4000, interior reno $1150)
+   - Compute building area: `footprint_area_sqm × estimated_stories` if footprint present; else urban-aware fallback (tenure_renter_pct > 50% → lot × 0.7 × floors_estimate, else → lot × 0.4 × floors_estimate; floors_estimate defaults: 2 residential, 1 commercial)
+   - Apply `premium_factor` from neighbourhood income tier (<60K→1.0, 60K-100K→1.15, 100K-150K→1.35, 150K-200K→1.6, >200K→1.85; null income → 1.0)
+   - `base = area × base_rate × premium`
+   - Add scope additions (pool +$80K, elevator +$60K, underpinning +$40K, solar +$25K) — ADDITIVE AFTER multiplication
+3. Compute `cost_tier` from numeric cost (<100K=small, <500K=medium, <2M=large, <10M=major, ≥10M=mega)
+4. Compute `complexity_score` independently:
+   - High-rise (stories > 6) +30
+   - Multi-unit (dwelling_units > 4) +20
+   - Large footprint (>300 sqm) +15
+   - Premium neighbourhood (income > 150K) +15
+   - Each of pool / elevator / underpinning +10 each
+   - New build +10
+   - Cap via `Math.min(100, sum)` — spec uses `LEAST(100, sum)` in SQL, JS mirrors
+5. Output range: ±25% for full-data model, ±50% for fallback (urban-aware)
+6. Build display string per spec variants
 
-Per spec 72:
-```sql
--- UP
-CREATE TABLE cost_estimates (
-  permit_num       VARCHAR(30)   NOT NULL,
-  revision_num     VARCHAR(10)   NOT NULL,
-  estimated_cost   DECIMAL(15,2),
-  cost_source      VARCHAR(20)   NOT NULL CHECK (cost_source IN ('permit', 'model')),
-  cost_tier        VARCHAR(20)   CHECK (cost_tier IN ('small', 'medium', 'large', 'major', 'mega')),
-  cost_range_low   DECIMAL(15,2),
-  cost_range_high  DECIMAL(15,2),
-  premium_factor   DECIMAL(3,2),
-  complexity_score INTEGER       CHECK (complexity_score >= 0 AND complexity_score <= 100),
-  model_version    INTEGER       NOT NULL DEFAULT 1,
-  computed_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (permit_num, revision_num),
-  FOREIGN KEY (permit_num, revision_num)
-    REFERENCES permits(permit_num, revision_num) ON DELETE CASCADE
-);
-CREATE INDEX idx_cost_estimates_tier ON cost_estimates (cost_tier);
+**Exports:**
+- `estimateCost(...)`
+- Input interface types (`CostModelPermitInput`, etc.)
+- Constants as exported `const` objects for tests + dual code path: `BASE_RATES`, `PREMIUM_TIERS`, `SCOPE_ADDITIONS`, `COST_TIER_BOUNDARIES`, `COMPLEXITY_SIGNALS`
 
--- DOWN
--- ALLOW-DESTRUCTIVE
--- DROP INDEX IF EXISTS idx_cost_estimates_tier;
--- DROP TABLE IF EXISTS cost_estimates CASCADE;
+**File header comment:** cross-reference to `scripts/compute-cost-estimates.js` for dual code path discipline per CLAUDE.md §7.
+
+### File 4 — `scripts/compute-cost-estimates.js`
+
+CommonJS Pipeline SDK script, ~200 lines. Pre-computes `cost_estimates` rows for every permit using the model. Per spec 72 §Implementation "Pipeline step (REQUIRED — not optional)".
+
+**Structure:**
+```js
+// 🔗 SPEC LINK: docs/specs/product/future/72_lead_cost_model.md §Implementation
+// 🔗 DUAL CODE PATH: src/features/leads/lib/cost-model.ts — these files MUST
+// stay in sync per CLAUDE.md §7. Any change to base rates / premium tiers /
+// scope additions / tier boundaries / complexity signals must land in BOTH.
+const pipeline = require('./lib/pipeline');
+
+const BASE_RATES = { /* same numbers as cost-model.ts */ };
+const PREMIUM_TIERS = [ /* same */ ];
+const SCOPE_ADDITIONS = { /* same */ };
+const COST_TIER_BOUNDARIES = [ /* same */ ];
+const COMPLEXITY_SIGNALS = { /* same */ };
+const ADVISORY_LOCK_ID = 74;
+const BATCH_SIZE = 5000;
+
+function estimateCostInline(permit, parcel, footprint, neighbourhood) {
+  // Mirrors cost-model.ts algorithm — same branches, same constants
+}
+
+pipeline.run('compute-cost-estimates', async (pool) => {
+  const lockRes = await pool.query('SELECT pg_try_advisory_lock($1) AS locked', [ADVISORY_LOCK_ID]);
+  if (!lockRes.rows[0].locked) {
+    pipeline.log.warn('[compute-cost-estimates]', 'Advisory lock 74 held — exiting');
+    return;
+  }
+  try {
+    // streamQuery with JOIN to parcels, building_footprints, neighbourhoods
+    // Batch of 5000, UPSERT per batch inside withTransaction
+    // Track inserted vs updated via xmax = 0 check
+  } finally {
+    await pool.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+  }
+});
 ```
 
-### Migration 072 — inspection_stage_map + seed data
+**SQL source query:** joins `permits` LEFT JOIN `permit_parcels` LEFT JOIN `parcels` LEFT JOIN `building_footprints` LEFT JOIN `neighbourhoods`. `permit_parcels` may have multiple rows per permit — deduplicate by picking one parcel per permit (smallest parcel_id) so each permit produces exactly one estimate.
 
-Per spec 71. 21 seed rows from the spec table. Seed is inline in the migration (not a script) because it's reference data, small, and deterministic.
+**UPSERT target:** `cost_estimates (permit_num, revision_num, estimated_cost, cost_source, cost_tier, cost_range_low, cost_range_high, premium_factor, complexity_score, model_version, computed_at)` with `ON CONFLICT (permit_num, revision_num) DO UPDATE SET ... computed_at = NOW()`.
 
-```sql
--- UP
-CREATE TABLE inspection_stage_map (
-  id             SERIAL PRIMARY KEY,
-  stage_name     TEXT        NOT NULL,
-  stage_sequence INTEGER     NOT NULL,
-  trade_slug     VARCHAR(50) NOT NULL,
-  relationship   VARCHAR(20) NOT NULL CHECK (relationship IN ('follows', 'concurrent')),
-  min_lag_days   INTEGER     NOT NULL,
-  max_lag_days   INTEGER     NOT NULL,
-  precedence     INTEGER     NOT NULL DEFAULT 100
-);
-CREATE UNIQUE INDEX idx_inspection_stage_map_stage_trade_prec
-  ON inspection_stage_map (stage_name, trade_slug, precedence);
-CREATE INDEX idx_inspection_stage_map_trade ON inspection_stage_map (trade_slug);
+**Emits:** `PIPELINE_META` reads `{permits, parcels, building_footprints, neighbourhoods}` writes `{cost_estimates}`, `PIPELINE_SUMMARY` with `{records_total, records_new, records_updated}` from the xmax counter.
 
-INSERT INTO inspection_stage_map (stage_name, stage_sequence, trade_slug, relationship, min_lag_days, max_lag_days, precedence) VALUES
-('Excavation/Shoring', 10, 'concrete', 'follows', 5, 14, 100),
-('Excavation/Shoring', 10, 'waterproofing', 'follows', 7, 21, 100),
-('Excavation/Shoring', 10, 'drain-plumbing', 'concurrent', 0, 7, 100),
-('Footings/Foundations', 20, 'framing', 'follows', 7, 21, 100),
-('Footings/Foundations', 20, 'structural-steel', 'follows', 7, 21, 100),
-('Footings/Foundations', 20, 'masonry', 'follows', 14, 28, 100),
-('Structural Framing', 30, 'plumbing', 'follows', 5, 14, 100),
-('Structural Framing', 30, 'electrical', 'follows', 5, 14, 100),
-('Structural Framing', 30, 'hvac', 'follows', 5, 14, 100),
-('Structural Framing', 30, 'fire-protection', 'follows', 7, 21, 100),
-('Structural Framing', 30, 'roofing', 'concurrent', 0, 14, 100),
-('Insulation/Vapour Barrier', 40, 'drywall', 'follows', 5, 14, 100),
-('Fire Separations', 50, 'painting', 'follows', 7, 21, 10),
-('Fire Separations', 50, 'flooring', 'follows', 7, 21, 100),
-('Fire Separations', 50, 'tiling', 'follows', 7, 21, 100),
-('Fire Separations', 50, 'trim-work', 'follows', 14, 28, 100),
-('Fire Separations', 50, 'millwork-cabinetry', 'follows', 14, 28, 100),
-('Fire Separations', 50, 'stone-countertops', 'follows', 14, 28, 100),
-('Interior Final Inspection', 60, 'landscaping', 'follows', 0, 14, 100),
-('Interior Final Inspection', 60, 'decking-fences', 'follows', 0, 14, 100),
-('Occupancy', 70, 'painting', 'follows', 0, 7, 20);
+**Failure recovery:** each batch wrapped in try/catch via `pipeline.withTransaction`; if a batch throws, log with `pipeline.log.error`, continue with next batch. Single-permit failures inside a batch roll back the whole batch — acceptable because spec 72 says "next nightly run picks up failures".
 
--- DOWN
--- ALLOW-DESTRUCTIVE
--- DROP TABLE IF EXISTS inspection_stage_map;
-```
+### Tests
 
-Note: spec 70 uses `(stage_name, trade_slug)` UNIQUE. Spec 71 says "a single trade can appear under multiple stage_names with different precedence values" — painting appears under both Fire Separations (prec 10) and Occupancy (prec 20). So the UNIQUE cannot be just `(stage_name, trade_slug)`. Using `(stage_name, trade_slug, precedence)` as the unique index handles the painting case cleanly.
+**File 5 — `src/tests/distance.logic.test.ts`** (8-10 tests)
+- Imports from `@/features/leads/lib/distance`
+- `metersFromKilometers(10) === 10000`, `(0.5) === 500`, `(0) === 0`
+- `kilometersFromMeters(1000) === 1`, round-trip symmetry
+- `formatDistanceForDisplay(0) === '0m'`
+- `(450) === '450m'`, `(999) === '999m'`
+- `(1000) === '1.0km'`, `(1234) === '1.2km'`, `(9999) === '10.0km'`
+- `(10000) === '10km'`, `(12345) === '12km'` (whole km ≥10km)
+- `DEFAULT_RADIUS_KM === 10`, `MAX_RADIUS_KM === 50`
 
-### Migration 073 — timing_calibration
+**File 6 — `src/tests/cost-model.logic.test.ts`** (22-28 tests)
+Inline fixture builders `makePermit(overrides)`, `makeParcel`, `makeFootprint`, `makeNeighbourhood` at the top of the file with sensible defaults you override per test. Cover:
 
-Per spec 71:
-```sql
--- UP
-CREATE TABLE timing_calibration (
-  id                              SERIAL      PRIMARY KEY,
-  permit_type                     VARCHAR(100) NOT NULL,
-  median_days_to_first_inspection INTEGER     NOT NULL,
-  p25_days                        INTEGER     NOT NULL,
-  p75_days                        INTEGER     NOT NULL,
-  sample_size                     INTEGER     NOT NULL,
-  computed_at                     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (permit_type)
-);
+- **Permit-reported cost path (3 tests):**
+  - `est_const_cost > 1000` → source='permit', range_low = range_high = cost, tier matches boundary
+  - `est_const_cost === 1000` → falls through to model (boundary: `> 1000`, not `>= 1000`)
+  - `est_const_cost === 1` → placeholder rejected, falls through to model
 
--- DOWN
--- ALLOW-DESTRUCTIVE
--- DROP TABLE IF EXISTS timing_calibration;
-```
+- **Base rate categories (6 tests):**
+  - SFD → 3000
+  - Semi/town → 2600
+  - Multi-res → 3400
+  - Addition → 2000
+  - Commercial new → 4000
+  - Interior reno → 1150
 
-### Migration 074 — entities photo columns
+- **Urban-aware fallback (4 tests):**
+  - No footprint, tenure_renter_pct > 50 → coverage 0.7 × floors_estimate
+  - No footprint, tenure_renter_pct ≤ 50 → coverage 0.4
+  - Residential → floors_estimate=2; Commercial → floors_estimate=1
+  - Fallback path → ±50% range not ±25%, confidence implicit via range width
 
-Per spec 73 (modified to match our V1 decision: no photo fetching yet, column pre-created for V2):
-```sql
--- UP
-ALTER TABLE entities ADD COLUMN IF NOT EXISTS photo_url VARCHAR(500);
-ALTER TABLE entities ADD COLUMN IF NOT EXISTS photo_validated_at TIMESTAMPTZ;
+- **Premium tiers (5 tests):**
+  - Each boundary: <60K→1.0, 60K-100K→1.15, 100K-150K→1.35, 150K-200K→1.6, >200K→1.85
+  - null income → 1.0
 
-ALTER TABLE entities ADD CONSTRAINT entities_photo_url_https
-  CHECK (photo_url IS NULL OR photo_url LIKE 'https://%');
+- **Scope additions (4 tests):**
+  - pool +80K, elevator +60K, underpinning +40K, solar +25K
+  - All 4 stacked → +205K
+  - Additive, not multiplicative (verify total = base + sum)
 
--- DOWN
--- ALLOW-DESTRUCTIVE
--- ALTER TABLE entities DROP CONSTRAINT IF EXISTS entities_photo_url_https;
--- ALTER TABLE entities DROP COLUMN IF EXISTS photo_validated_at;
--- ALTER TABLE entities DROP COLUMN IF EXISTS photo_url;
-```
+- **Cost tiers (5 tests):**
+  - <100K=small, 100K-500K=medium, 500K-2M=large, 2M-10M=major, ≥10M=mega
+  - Boundary cases: exactly 100K → medium, exactly 500K → large, exactly 2M → major, exactly 10M → mega
 
-Note: V1 does not fetch builder photos. The columns are added now so Phase 1b types can reference them without null-weirdness, and V2 can wire the SSRF-safe pipeline fetcher later without another migration.
+- **Complexity score (5 tests):**
+  - Each signal in isolation hits the right number
+  - All signals together hit 120 → capped at 100
+  - Zero signals → 0
 
-### Types & Factories
+- **Display strings (3 tests):**
+  - Permit-reported: `"$1,200,000 · Large Job · Premium neighbourhood"`
+  - Model with full data: `"$1.2M–$1.8M estimated · Large Job · Premium neighbourhood"`
+  - Without sufficient data: `"Large lot, premium neighbourhood — cost estimate unavailable"` (or the spec wording)
 
-- `src/lib/permits/types.ts`: update `LeadView` interface to the new shape. Add `CostEstimate`, `InspectionStageMapRow`, `TimingCalibrationRow` interfaces (referenced from here, not from a new file, since they're all permit-adjacent).
-- `src/tests/factories.ts`: rewrite `createMockLeadView` to match new shape; add `createMockCostEstimate`, `createMockInspectionStageMapRow`, `createMockTimingCalibrationRow`. Update existing `createMockEntity` (if present) to include the new `photo_url`/`photo_validated_at` fields as nullable defaults.
+**File 7 — `src/tests/compute-cost-estimates.infra.test.ts`** (10-12 tests)
+File-shape tests via `fs.readFileSync('scripts/compute-cost-estimates.js', 'utf-8')`:
+
+- `pipeline.run('compute-cost-estimates'` present
+- `pg_try_advisory_lock($1` with `ADVISORY_LOCK_ID = 74`
+- `pg_advisory_unlock` in finally block
+- `pipeline.streamQuery(` used (not `loadAll`)
+- `pipeline.withTransaction(` used
+- `ON CONFLICT (permit_num, revision_num) DO UPDATE` present
+- References `cost_estimates`, `parcels`, `building_footprints`, `neighbourhoods`, `permit_parcels`
+- `BATCH_SIZE = 5000`
+- `pipeline.emitSummary` with records_total / records_new / records_updated
+- `pipeline.emitMeta` present with correct reads/writes map
+- Cross-reference comment to `src/features/leads/lib/cost-model.ts` present (dual code path discipline)
+- Inline `estimateCostInline` function present
+- Constants (`BASE_RATES`, `PREMIUM_TIERS`, `SCOPE_ADDITIONS`, `COST_TIER_BOUNDARIES`, `COMPLEXITY_SIGNALS`) defined in the script file
+- `pipeline.log.error` used in catch block (NOT bare `console.error`)
 
 ### Database Impact
-**YES.** Five new migrations. One is destructive-but-safe (070 drops and recreates brand-new 069 table). Others are pure column/table additions.
-
-- **070** (lead_views rebuild): destructive but zero-data (brand-new table from 069). Marked `ALLOW-DESTRUCTIVE` for the new validator.
-- **071** (cost_estimates): new empty table, zero risk.
-- **072** (inspection_stage_map + 21 seed rows): new table + small seed, zero risk.
-- **073** (timing_calibration): new empty table, zero risk.
-- **074** (entities.photo_url + photo_validated_at): 2 nullable columns on the existing `entities` table (~46K rows). Instant ADD COLUMN NULL, zero lock risk. CHECK constraint on photo_url is trivially satisfied on add (all rows are NULL).
-
-UPDATE strategy for the 237K permits row count: N/A — no permits changes in this WF.
+**NO** — this WF only consumes tables created in Phase 1a (`cost_estimates`, `parcels`, `building_footprints`, `neighbourhoods`, `permits`, `permit_parcels`). No new migrations.
 
 ## Standards Compliance (§10)
 
-### DB (§3)
-- ✅ **UP + DOWN blocks on every migration** (all 5)
-- ✅ **ALLOW-DESTRUCTIVE markers** on 070 (drop table) and on the commented DOWN blocks where DROP appears — per the validator convention established in commit `64c19e0`
-- ✅ **CONCURRENTLY** on indexes over large tables: N/A (no new indexes on permits or other >100K row tables; `entities` is ~46K so no CONCURRENTLY required per the validator rule, but the migration only ADDs columns, no indexes)
-- ✅ **CHECK constraints** protecting `cost_tier`, `complexity_score`, `lead_type`, `cost_source`, `relationship`, `photo_url` format
-- ✅ **FK + ON DELETE CASCADE** on lead_views → permits and lead_views → entities; cost_estimates → permits
-- ✅ **Composite PKs** preserved where spec requires them (cost_estimates uses `(permit_num, revision_num)`)
-- ✅ **UNIQUE constraints** on `lead_views (user_id, lead_key, trade_slug)`, `inspection_stage_map (stage_name, trade_slug, precedence)`, `timing_calibration (permit_type)`
-- ✅ **Pipeline SDK / db client discipline:** N/A for migrations themselves; Phase 1b will use the shared pool
-- ✅ **`src/tests/factories.ts` updated** for every new/modified table
-- ✅ **`npm run db:generate`** run after migrate to refresh Drizzle types
-- ✅ **`npm run typecheck`** must pass after types regenerate
+### DB
+- ⬜ N/A — no migrations
+- ✅ Script uses Pipeline SDK (`pipeline.run`, `streamQuery`, `withTransaction`) — never `new Pool()`
+- ✅ Parameterized queries only (`$1` placeholder for advisory lock ID)
+- ✅ `ON CONFLICT` UPSERT for idempotency
+- ✅ Advisory lock `pg_try_advisory_lock(74)` per spec 72 concurrency safety
+- ✅ Batched writes (5000 per transaction) per spec 72 to avoid long transactions
 
 ### API
-- ⬜ N/A — no API routes created in this WF (Phase 2 creates them)
+- ⬜ N/A — no API routes (Phase 2)
 
 ### UI
-- ⬜ N/A — no UI changes
+- ⬜ N/A — backend-only
 
 ### Shared Logic
-- ✅ **Type definitions** in `src/lib/permits/types.ts` consumed by Phase 1b lib files
-- ✅ **No dual code path changes** — classification/scoring logic untouched
-- ✅ **Factories updated** so existing tests that reference `createMockLeadView` don't break
+- ✅ **Dual code path (§7):** `cost-model.ts` (TS) and `compute-cost-estimates.js` (JS inline port) MUST use identical numeric constants. Cross-reference comments in both files. Infra test verifies both files reference the same constant names.
+- ✅ `src/features/leads/types.ts` re-exports Phase 1a types — single import surface for Phase 2
+- ✅ No existing consumers affected — this is pure addition
 
-### Pipeline
-- ✅ **Seed data is inline in migration 072** (not a separate script) because it's reference data; fits the existing migration pattern in the codebase
-- ✅ **No new pipeline scripts in this WF** — compute-cost-estimates.js and compute-timing-calibration.js ship in Phase 1b with the library code they populate
-- ✅ **`validate-migration.js`** will run against all 5 new files via the pre-commit hook (the validator we just shipped in commit `64c19e0`)
+### Pipeline (§9)
+- ✅ `pipeline.run` wrapper
+- ✅ `pipeline.withTransaction` for atomic batch writes
+- ✅ `pipeline.streamQuery` for the 237K-permit scan (no load-all)
+- ✅ Idempotent UPSERT
+- ✅ Advisory lock acquire + release in try/finally
+- ✅ `PIPELINE_META` + `PIPELINE_SUMMARY` emitted
+- ✅ Batch size 5000 — under PostgreSQL parameter limit
+- ✅ Per-batch failure recovery with `pipeline.log.error` — next run catches up
+- ✅ `pipeline.log.{info, warn, error}` instead of bare `console.*`
+- ✅ CommonJS script in `scripts/` — `process.exit` allowed (not `src/`)
 
-## What's IN Scope
-| Deliverable | Why |
-|---|---|
-| Migration 070 (lead_views corrected) | Closes spec 70 drift from Backend Phase 0 |
-| Migration 071 (cost_estimates) | Prereq for Phase 1b `cost-model.ts` + pipeline caching |
-| Migration 072 (inspection_stage_map + seed) | Prereq for Phase 1b `timing.ts` Tier 1 stage-based logic |
-| Migration 073 (timing_calibration) | Prereq for Phase 1b `timing.ts` Tier 2 heuristic |
-| Migration 074 (entities photo cols) | Allows Phase 1b `builder-query.ts` to reference photo_url fields cleanly |
-| Types + factories updates | Keeps typecheck + existing tests green |
-| Schema infra tests | Locks the schemas against drift |
+### Try/Catch (§2) + logError mandate
+- ✅ `estimateCost` is pure — no throws possible except on malformed input; input interfaces constrain shape
+- ✅ Script wraps each batch in try/catch via `pipeline.withTransaction`; failure logged, continues
+- ✅ Advisory unlock in `finally` block — never leaked
 
-## What's OUT of Scope
-- `src/features/leads/lib/*` — Phase 1b
-- API routes — Phase 2
-- Pipeline scripts `compute-cost-estimates.js`, `compute-timing-calibration.js` — Phase 1b
-- Backfill of cost_estimates / timing_calibration — Phase 1b (because the scripts that compute them live there)
-- UI — Phase 4+
-- Photo fetching / SSRF-safe pipeline — V2 (per spec 73 decision)
+### Unhappy Path Tests
+- ✅ `est_const_cost === 1` placeholder handling
+- ✅ No footprint / no parcel / no neighbourhood → fallback paths
+- ✅ Null income → premium factor 1.0 (not crash)
+- ✅ Complexity cap when all signals present (120 → 100)
+
+### Mobile-First
+- ⬜ N/A — backend-only
+
+## Review Plan (per `feedback_review_protocol.md`, this is WF1)
+- ✅ **Independent review** in worktree after commit
+- ✅ **BOTH adversarial models** on EVERY changed/created file (7 files):
+  - `src/features/leads/types.ts`
+  - `src/features/leads/lib/distance.ts`
+  - `src/features/leads/lib/cost-model.ts`
+  - `scripts/compute-cost-estimates.js`
+  - `src/tests/distance.logic.test.ts`
+  - `src/tests/cost-model.logic.test.ts`
+  - `src/tests/compute-cost-estimates.infra.test.ts`
+- **7 files × 2 models = 14 adversarial reviews + 1 independent ≈ $2.80**
+- ✅ Triage via Real / Defensible / Out-of-scope tree
+- ✅ Append deferred items to `docs/reports/review_followups.md`
+- ✅ Post full triage table in the response
 
 ## Execution Plan
 
 ```
-- [ ] Contract Definition: N/A — no API routes. LeadView TypeScript
-      interface updated in src/lib/permits/types.ts to match spec 70
-      as the "internal contract" for Phase 1b.
+- [ ] Contract Definition: All signatures locked in this plan.
+      Phase 2 will consume estimateCost via the cost_estimates cache,
+      not directly. Phase 1b-iii will import from src/features/leads/types.
 
-- [ ] Spec & Registry Sync: Specs 70-75 already hardened. Run
-      `npm run system-map` AFTER implementation to capture the new
-      migrations + types.
+- [ ] Spec & Registry Sync: Spec 72 already hardened. Run
+      `npm run system-map` AFTER commit to capture new src/features/leads/
+      paths.
 
-- [ ] Schema Evolution: Write all 5 migrations (070-074) with UP+DOWN
-      + ALLOW-DESTRUCTIVE markers. Run `npm run migrate` (verify all
-      apply clean locally; PostGIS-conditional check not needed here
-      since none of these use geometry). Run `npm run db:generate` to
-      refresh Drizzle types. Update `src/lib/permits/types.ts`. Update
-      `src/tests/factories.ts`. Run `npm run typecheck` — must be
-      clean.
+- [ ] Schema Evolution: N/A — Phase 1a created all tables.
 
-- [ ] Test Scaffolding: Create 5 new test files:
-      - `src/tests/lead-views-schema.infra.test.ts` (8-10 tests) —
-        verifies migration 070 file structure: columns present,
-        CHECK constraints, indexes, unique constraints, FKs.
-      - `src/tests/cost-estimates-schema.infra.test.ts` (6-8 tests) —
-        same approach for migration 071.
-      - `src/tests/inspection-stage-map.logic.test.ts` (8-10 tests) —
-        verifies migration 072 structure AND the 21 seed rows match
-        spec 71's table (including painting precedence 10/20 dual entry).
-      - `src/tests/timing-calibration-schema.infra.test.ts` (5-6 tests) —
-        migration 073 structure.
-      - `src/tests/entities-photo-schema.infra.test.ts` (5-6 tests) —
-        migration 074 structure + HTTPS CHECK constraint.
-      These mirror the existing migration-067-trigger.infra.test.ts
-      "file-shape" test pattern (no real DB connection).
+- [ ] Test Scaffolding: Create the 3 test files. Run
+      `npx vitest run src/tests/distance.logic.test.ts
+       src/tests/cost-model.logic.test.ts
+       src/tests/compute-cost-estimates.infra.test.ts`
+      MUST fail — modules don't exist.
 
-- [ ] Red Light: Run `npm run test`. New test files MUST fail because
-      the migrations don't exist yet.
+- [ ] Red Light: Confirmed (typecheck errors + vitest module-not-found).
 
 - [ ] Implementation:
-      Day 1 — Migrations:
-        a) Write migrations/070_lead_views_corrected.sql
-        b) Write migrations/071_cost_estimates.sql
-        c) Write migrations/072_inspection_stage_map.sql (with seed)
-        d) Write migrations/073_timing_calibration.sql
-        e) Write migrations/074_entities_photo_url.sql
-        f) `npm run migrate` — verify all apply clean
-        g) `npm run db:generate` — refresh Drizzle types
-      Day 2 — Types + factories:
-        a) Update `src/lib/permits/types.ts` LeadView interface
-        b) Add CostEstimate, InspectionStageMapRow, TimingCalibrationRow
-           interfaces to types.ts
-        c) Update entities type (wherever it lives) for photo_url/photo_validated_at
-        d) Update `src/tests/factories.ts`:
-           - Rewrite createMockLeadView to new shape
-           - Add createMockCostEstimate, createMockInspectionStageMapRow,
-             createMockTimingCalibrationRow
-           - Update createMockEntity with photo_url/photo_validated_at defaults
-        e) `npm run typecheck` — clean
+      Step 1 — src/features/leads/types.ts (re-exports + new interface
+        definitions; no implementation behavior)
+      Step 2 — src/features/leads/lib/distance.ts (3 functions + 2
+        constants)
+      Step 3 — Run distance tests — must pass
+      Step 4 — src/features/leads/lib/cost-model.ts (pure function,
+        ~180 lines, constants as exports)
+      Step 5 — Run cost-model tests — must pass
+      Step 6 — scripts/compute-cost-estimates.js (CommonJS, Pipeline
+        SDK, inline port of cost-model algorithm with IDENTICAL
+        constants, advisory lock, batched UPSERT)
+      Step 7 — Run compute-cost-estimates infra test — must pass
+      Step 8 — `npm run typecheck` — must be clean
+      Step 9 — `npm run lint -- --fix` — must be clean
+      Step 10 — `npm run test` full suite — 2541 + ~40 new ≈ 2580+
+      Step 11 — Manual constants audit: diff the exported constant
+        blocks between cost-model.ts and compute-cost-estimates.js;
+        values must match byte-for-byte
 
-- [ ] Auth Boundary & Secrets: N/A — no new routes, no new secrets.
+- [ ] Auth Boundary & Secrets: N/A — no routes, no new secrets.
+      estimateCost is pure; script uses PG_* env vars via pipeline SDK.
 
 - [ ] Green Light:
-      - `npm run test` — all passing (2502 existing + ~37 new ≈ 2539+)
-      - `npm run lint -- --fix` — clean
-      - `npm run typecheck` — clean
-      - `node scripts/validate-migration.js migrations/070*.sql
-        migrations/071*.sql migrations/072*.sql migrations/073*.sql
-        migrations/074*.sql` — pass (validator now enforces ALLOW-
-        DESTRUCTIVE marker on 070 DROP TABLE)
-      - `git commit` via pre-commit gauntlet
-      Output visible execution summary using ✅/⬜ for every step. → WF6.
+      - typecheck / lint / test all clean
+      - dual code path constant audit passes
+      Output visible execution summary ✅/⬜ for every step.
+
+- [ ] Reviews:
+      - Commit the implementation
+      - Run Gemini + DeepSeek on all 7 files in parallel (14 jobs)
+      - Run independent review agent in worktree against the commit
+      - Triage, apply real fixes in a follow-up commit, append deferred
+        items to review_followups.md
+      - Post full triage table
+
+- [ ] WF6 close: 5-point sweep + final state summary
 ```
 
 ## Risk Notes
 
-1. **Migration 070 destructive rebuild of lead_views.** Zero-data risk (table is 1 commit old, never populated). Mitigation: the destructive operation is gated by the `ALLOW-DESTRUCTIVE` marker our new validator enforces, and the migration explicitly documents WHY (spec drift, safe to rebuild). If somehow production was populated between 069 landing and this WF running, we'd lose that data — but production hasn't been deployed since Backend Phase 0.
+1. **Local DB broken at migration 030 (pre-existing).** All tests mock the pool or read script file shape — no real DB roundtrip. The compute-cost-estimates.js script's SQL will only be runtime-validated when CI runs against a clean DB or when the local DB is repaired. Mitigation: infra test asserts the SQL structure; adversarial reviews catch parameter mismatches; once the DB is repaired, a smoke run against real data before Phase 1b-iii wraps.
 
-2. **Migration 069 rows in the existing local DB.** Running `npm run migrate` now applies 070, which drops the table. Any rows a developer put there manually are lost. Acceptable — no real data in there.
+2. **Dual code path drift.** cost-model.ts (TS) and compute-cost-estimates.js (JS inline) must use identical numeric constants. Any future rate change must land in BOTH. Mitigation: cross-reference comments in both files; infra test asserts constant names present in script; Step 11 of implementation explicitly diffs the constant blocks. Extracting to a shared JSON file is noted in `review_followups.md` as future hardening.
 
-3. **Validator will flag 070's DROP TABLE.** The marker is in place. If the marker regex somehow fails against the particular formatting, the pre-commit hook will fail loudly — caught before commit.
+3. **`permit_parcels` multi-parcel-per-permit.** Some permits link to multiple parcels (shared lots, condo units). The cost model expects a SINGLE parcel. Mitigation: SQL picks smallest parcel_id per permit (arbitrary but stable). A future enhancement could pick the largest or aggregate; acceptable for V1.
 
-4. **inspection_stage_map seed drift.** If spec 71 ever changes a lag value, the seed data in migration 072 becomes stale. Mitigation: the `inspection-stage-map.logic.test.ts` test asserts exact values against the spec table, so any drift fails tests until the seed is updated.
+4. **`parseFloat` vs `Number` parsing of DB DECIMAL fields.** pg returns DECIMAL(15,2) as a JS string by default. The cost-model input interface must accept `number | string` OR the SQL must `CAST` to float. Mitigation: script CASTs via `::float8` in the SELECT; cost-model.ts input types use `number`. Tested by the infra test asserting the `::float8` casts are present.
 
-5. **factories.ts churn may break unrelated tests.** The existing `createMockLeadView` has consumers from the Backend Phase 0 work. Rewriting its shape requires updating every test that uses it. Mitigation: `npm run typecheck` will surface every consumer; fix iteratively before running the test suite.
-
-6. **photo_url CHECK constraint on entities.** The `LIKE 'https://%'` check is trivially satisfied on add (all rows NULL), but any future code inserting a non-HTTPS URL will fail the constraint at write time. This is desired behavior (defense in depth) but worth knowing for Phase 2 builder-query consumers.
+5. **Complexity cap.** Spec 72 says max theoretical sum is 120 (30+20+15+15+10+10+10+10). If a future signal is added, the cap still holds — defensive. Tests verify Math.min(100, sum) applied.
