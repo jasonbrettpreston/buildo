@@ -18,9 +18,9 @@ describe('Migration 075 — user_profiles', () => {
     expect(sql).toMatch(/--\s*DOWN/);
   });
 
-  it('creates user_profiles table with VARCHAR(100) PRIMARY KEY user_id', () => {
+  it('creates user_profiles table with VARCHAR(128) PRIMARY KEY user_id (Firebase max)', () => {
     expect(sql).toMatch(/CREATE TABLE user_profiles/);
-    expect(sql).toMatch(/user_id\s+VARCHAR\(100\)\s+PRIMARY KEY/);
+    expect(sql).toMatch(/user_id\s+VARCHAR\(128\)\s+PRIMARY KEY/);
   });
 
   it('declares trade_slug as VARCHAR(50) NOT NULL', () => {
@@ -36,12 +36,15 @@ describe('Migration 075 — user_profiles', () => {
     expect(sql).toMatch(/updated_at\s+TIMESTAMPTZ\s+NOT NULL DEFAULT NOW\(\)/);
   });
 
-  it('enforces non-empty trade_slug via CHECK constraint', () => {
-    expect(sql).toMatch(/CHECK\s*\(\s*length\(trade_slug\)\s*>\s*0\s*\)/);
+  it('enforces non-empty / non-whitespace trade_slug via CHECK constraint', () => {
+    expect(sql).toMatch(/CHECK\s*\(\s*trim\(trade_slug\)\s*<>\s*''\s*\)/);
   });
 
-  it('creates idx_user_profiles_trade_slug index', () => {
-    expect(sql).toMatch(/CREATE INDEX idx_user_profiles_trade_slug ON user_profiles \(trade_slug\)/);
+  it('does NOT create a secondary trade_slug index (PK lookup is the hot path)', () => {
+    // Earlier draft had CREATE INDEX idx_user_profiles_trade_slug; removed
+    // because no Phase 2 query uses it. Adversarial review (Gemini + DeepSeek)
+    // flagged it as premature.
+    expect(sql).not.toMatch(/CREATE INDEX idx_user_profiles_trade_slug/);
   });
 
   it('DOWN block has ALLOW-DESTRUCTIVE marker for the commented DROP TABLE', () => {

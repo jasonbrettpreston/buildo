@@ -19,21 +19,43 @@ export interface ApiErrorBody {
   meta: null;
 }
 
-export function ok<T, M = null>(
+/**
+ * HTTP status code unions — type-level constraint preventing the wrong
+ * code being passed to the wrong helper. `ok()` only accepts 2xx codes,
+ * `err()` only accepts 4xx/5xx codes.
+ */
+export type SuccessStatus = 200 | 201 | 202 | 204;
+export type ErrorStatus = 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500 | 502 | 503;
+
+export function ok<T>(data: T): NextResponse<ApiSuccess<T, null>>;
+export function ok<T, M>(data: T, meta: M): NextResponse<ApiSuccess<T, M>>;
+export function ok<T, M>(
   data: T,
-  meta: M = null as M,
-  status = 200,
-): NextResponse<ApiSuccess<T, M>> {
-  return NextResponse.json<ApiSuccess<T, M>>({ data, error: null, meta }, { status });
+  meta: M,
+  status: SuccessStatus,
+): NextResponse<ApiSuccess<T, M>>;
+export function ok<T, M>(
+  data: T,
+  meta?: M,
+  status: SuccessStatus = 200,
+): NextResponse<ApiSuccess<T, M | null>> {
+  const metaValue: M | null = meta === undefined ? null : meta;
+  return NextResponse.json<ApiSuccess<T, M | null>>(
+    { data, error: null, meta: metaValue },
+    { status },
+  );
 }
 
 export function err(
   code: string,
   message: string,
-  status: number,
+  status: ErrorStatus,
   details?: unknown,
+  headers?: Record<string, string>,
 ): NextResponse<ApiErrorBody> {
   const error: ApiErrorBody['error'] =
     details !== undefined ? { code, message, details } : { code, message };
-  return NextResponse.json<ApiErrorBody>({ data: null, error, meta: null }, { status });
+  const init: { status: ErrorStatus; headers?: Record<string, string> } = { status };
+  if (headers !== undefined) init.headers = headers;
+  return NextResponse.json<ApiErrorBody>({ data: null, error, meta: null }, init);
 }

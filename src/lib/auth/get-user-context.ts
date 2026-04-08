@@ -31,7 +31,16 @@ export async function getCurrentUserContext(
   request: NextRequest,
   pool: Pool,
 ): Promise<UserContext | null> {
-  const uid = await getUserIdFromSession(request);
+  // Defense in depth: getUserIdFromSession is documented as never-throws,
+  // but its contract isn't enforced at the type level. Wrap the call so
+  // a future regression in the auth helper can't escape this function.
+  let uid: string | null;
+  try {
+    uid = await getUserIdFromSession(request);
+  } catch (err) {
+    logError('[auth/get-user-context]', err, { stage: 'session-verify' });
+    return null;
+  }
   if (!uid) return null;
 
   try {

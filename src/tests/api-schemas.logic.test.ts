@@ -244,4 +244,57 @@ describe('leadViewBodySchema', () => {
       }),
     ).toThrow();
   });
+
+  it('rejects entity_id on a permit branch (strict XOR)', () => {
+    // Regression: without .strict() Zod silently strips entity_id from the
+    // permit branch instead of rejecting it. Adversarial review caught the
+    // misleading "fails parsing" comment in fcbe04a; this test locks the
+    // strict behavior in.
+    expect(() =>
+      leadViewBodySchema.parse({
+        trade_slug: 'plumbing',
+        action: 'view',
+        lead_type: 'permit',
+        permit_num: '24 101234',
+        revision_num: '01',
+        entity_id: 9183,
+      }),
+    ).toThrow();
+  });
+
+  it('rejects permit_num on a builder branch (strict XOR)', () => {
+    expect(() =>
+      leadViewBodySchema.parse({
+        trade_slug: 'plumbing',
+        action: 'view',
+        lead_type: 'builder',
+        entity_id: 9183,
+        permit_num: '24 101234',
+      }),
+    ).toThrow();
+  });
+
+  it('rejects unknown extra keys on either branch (strict)', () => {
+    expect(() =>
+      leadViewBodySchema.parse({
+        trade_slug: 'plumbing',
+        action: 'view',
+        lead_type: 'permit',
+        permit_num: '24 101234',
+        revision_num: '01',
+        unexpected_field: 'should be rejected',
+      }),
+    ).toThrow();
+  });
+
+  it('rejects entity_id > PostgreSQL INT max (2^31-1)', () => {
+    expect(() =>
+      leadViewBodySchema.parse({
+        trade_slug: 'plumbing',
+        action: 'view',
+        lead_type: 'builder',
+        entity_id: 2147483648,
+      }),
+    ).toThrow();
+  });
 });

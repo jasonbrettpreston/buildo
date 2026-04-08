@@ -17,18 +17,25 @@
 -- - No email column — Firebase already owns identity.
 
 -- UP
+-- VARCHAR(128) matches Firebase Authentication's documented max UID length
+-- (28 chars typical, up to 128). lead_views.user_id is VARCHAR(100) — that's
+-- a pre-existing inconsistency tracked in followups; this column uses the
+-- correct width.
 CREATE TABLE user_profiles (
-  user_id      VARCHAR(100) PRIMARY KEY,
+  user_id      VARCHAR(128) PRIMARY KEY,
   trade_slug   VARCHAR(50)  NOT NULL,
   display_name VARCHAR(200),
   created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  CONSTRAINT user_profiles_trade_slug_not_empty CHECK (length(trade_slug) > 0)
+  -- trim() <> '' rejects whitespace-only slugs in addition to the empty string
+  CONSTRAINT user_profiles_trade_slug_not_empty CHECK (trim(trade_slug) <> '')
 );
 
-CREATE INDEX idx_user_profiles_trade_slug ON user_profiles (trade_slug);
+-- No secondary indexes — the only Phase 2 query path is `WHERE user_id = $1`
+-- which uses the primary key. A trade_slug index was considered but no
+-- query needs it yet; can be added in a future migration if a "list users
+-- by trade" feature ships.
 
 -- DOWN
 -- ALLOW-DESTRUCTIVE
--- DROP INDEX IF EXISTS idx_user_profiles_trade_slug;
 -- DROP TABLE IF EXISTS user_profiles;
