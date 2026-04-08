@@ -14,13 +14,19 @@ CREATE TABLE cost_estimates (
   cost_tier        VARCHAR(20)   CHECK (cost_tier IN ('small', 'medium', 'large', 'major', 'mega')),
   cost_range_low   DECIMAL(15,2),
   cost_range_high  DECIMAL(15,2),
-  premium_factor   DECIMAL(3,2),
+  premium_factor   DECIMAL(3,2)  CHECK (premium_factor IS NULL OR premium_factor >= 1.0),
   complexity_score INTEGER       CHECK (complexity_score >= 0 AND complexity_score <= 100),
   model_version    INTEGER       NOT NULL DEFAULT 1,
   computed_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
   PRIMARY KEY (permit_num, revision_num),
   FOREIGN KEY (permit_num, revision_num)
-    REFERENCES permits(permit_num, revision_num) ON DELETE CASCADE
+    REFERENCES permits(permit_num, revision_num) ON DELETE CASCADE,
+  -- Invariant: if both range bounds are given, low <= high
+  CHECK (
+    cost_range_low IS NULL
+    OR cost_range_high IS NULL
+    OR cost_range_low <= cost_range_high
+  )
 );
 
 CREATE INDEX idx_cost_estimates_tier ON cost_estimates (cost_tier);

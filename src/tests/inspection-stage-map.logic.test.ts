@@ -59,4 +59,16 @@ describe('Migration 072 — inspection_stage_map', () => {
   it('includes drain-plumbing as concurrent with Excavation/Shoring', () => {
     expect(sql).toMatch(/\('Excavation\/Shoring',\s*10,\s*'drain-plumbing',\s*'concurrent',\s*0,\s*7,\s*100\)/);
   });
+
+  it('constrains stage_sequence to known vocabulary (10..70)', () => {
+    expect(sql).toMatch(/stage_sequence[\s\S]*CHECK \(stage_sequence IN \(10, 20, 30, 40, 50, 60, 70\)\)/);
+  });
+
+  it('enforces precedence > 0', () => {
+    expect(sql).toMatch(/precedence[\s\S]*CHECK \(precedence > 0\)/);
+  });
+
+  it('enforces min_lag_days <= max_lag_days lag-window invariant', () => {
+    expect(sql).toMatch(/CHECK \(min_lag_days >= 0 AND max_lag_days >= min_lag_days\)/);
+  });
 });

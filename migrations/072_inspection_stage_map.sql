@@ -11,12 +11,16 @@
 CREATE TABLE inspection_stage_map (
   id             SERIAL PRIMARY KEY,
   stage_name     TEXT        NOT NULL,
-  stage_sequence INTEGER     NOT NULL,
+  -- Known construction-stage vocabulary. Drives sequence-based ordering in
+  -- the Tier 1 timing engine; bad values (e.g. 15) would break comparisons.
+  stage_sequence INTEGER     NOT NULL CHECK (stage_sequence IN (10, 20, 30, 40, 50, 60, 70)),
   trade_slug     VARCHAR(50) NOT NULL,
   relationship   VARCHAR(20) NOT NULL CHECK (relationship IN ('follows', 'concurrent')),
   min_lag_days   INTEGER     NOT NULL,
   max_lag_days   INTEGER     NOT NULL,
-  precedence     INTEGER     NOT NULL DEFAULT 100
+  precedence     INTEGER     NOT NULL DEFAULT 100 CHECK (precedence > 0),
+  -- Data integrity: lag window must be non-degenerate
+  CHECK (min_lag_days >= 0 AND max_lag_days >= min_lag_days)
 );
 
 CREATE UNIQUE INDEX idx_inspection_stage_map_stage_trade_prec

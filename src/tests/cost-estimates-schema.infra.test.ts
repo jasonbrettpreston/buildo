@@ -56,4 +56,12 @@ describe('Migration 071 — cost_estimates', () => {
   it('creates the cost_tier index', () => {
     expect(sql).toMatch(/CREATE INDEX idx_cost_estimates_tier ON cost_estimates \(cost_tier\)/);
   });
+
+  it('constrains premium_factor to >= 1.0 (spec 72: range 1.0-2.0)', () => {
+    expect(sql).toMatch(/premium_factor[\s\S]*CHECK \(premium_factor IS NULL OR premium_factor >= 1\.0\)/);
+  });
+
+  it('enforces cost_range_low <= cost_range_high invariant', () => {
+    expect(sql).toMatch(/cost_range_low IS NULL[\s\S]*cost_range_high IS NULL[\s\S]*cost_range_low <= cost_range_high/);
+  });
 });
