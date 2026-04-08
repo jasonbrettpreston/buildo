@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Pool, QueryResult, QueryResultRow } from 'pg';
 import {
   LEAD_FEED_SQL,
+  MAX_FEED_LIMIT,
   getLeadFeed,
 } from '@/features/leads/lib/get-lead-feed';
 import { MAX_RADIUS_KM, metersFromKilometers } from '@/features/leads/lib/distance';
@@ -234,6 +235,23 @@ describe('getLeadFeed — function behaviour', () => {
     expect(params[5]).toBe(75);
     expect(params[6]).toBe('permit');
     expect(params[7]).toBe('24 101234:01');
+  });
+
+  it('clamps limit to MAX_FEED_LIMIT (30) when input exceeds it (DoS prevention)', async () => {
+    expect(MAX_FEED_LIMIT).toBe(30);
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    await getLeadFeed(makeInput({ limit: 1_000_000 }), mock as unknown as Pool);
+    const params = mock.query.mock.calls[0]?.[1];
+    expect(params[4]).toBe(MAX_FEED_LIMIT);
+  });
+
+  it('clamps limit to minimum of 1 when input is 0 or negative', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    await getLeadFeed(makeInput({ limit: 0 }), mock as unknown as Pool);
+    const params = mock.query.mock.calls[0]?.[1];
+    expect(params[4]).toBe(1);
   });
 
   it('clamps radius_km to MAX_RADIUS_KM (50) when input exceeds it', async () => {

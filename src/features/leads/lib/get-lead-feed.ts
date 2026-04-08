@@ -33,6 +33,15 @@ import type {
 import { logError, logInfo } from '@/lib/logger';
 
 /**
+ * Hard cap on the number of leads returned per request. Spec 70 §API
+ * Endpoints documents `limit: default 15, max 30`. Without this clamp,
+ * a malicious or misconfigured caller could request `limit: 1000000`
+ * and force the server to rank/sort the entire feed corpus — DoS vector.
+ */
+export const MAX_FEED_LIMIT = 30;
+export const DEFAULT_FEED_LIMIT = 15;
+
+/**
  * Spec 70 §Implementation — verbatim. Parameters:
  *   $1 = trade_slug (text)
  *   $2 = lng (float8)
@@ -145,8 +154,12 @@ export const LEAD_FEED_SQL = `
       END AS proximity_score,
       -- Pillar 2: timing (0-30) — builders are "ongoing capacity", fixed mid-band
       15 AS timing_score,
-      -- Pillar 3: value (0-30) — average project cost bucketed
+      -- Pillar 3: value (0-30) — average project cost bucketed.
+      -- NULL (no cost data on any nearby permit) is "unknown", NOT "small";
+      -- score it lower than the smallest known bucket so unknowns sort last
+      -- among value-tied builders.
       CASE
+        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) IS NULL    THEN 5
         WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 2000000 THEN 30
         WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 500000  THEN 20
         WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 100000  THEN 15
@@ -293,9 +306,12 @@ export async function getLeadFeed(
   input: LeadFeedInput,
   pool: Pool,
 ): Promise<LeadFeedResult> {
-  // Clamp radius_km BEFORE the empty-result fallback so meta.radius_km
-  // reflects the clamped value even on error.
+  // Clamp BOTH radius_km and limit BEFORE the empty-result fallback so the
+  // meta block reflects the clamped values even on error. The limit clamp
+  // is per spec 70 §API Endpoints (max 30) and prevents DoS via massive
+  // result-set requests.
   const clampedKm = Math.min(input.radius_km, MAX_RADIUS_KM);
+  const clampedLimit = Math.min(Math.max(1, input.limit), MAX_FEED_LIMIT);
   const radius_m = metersFromKilometers(clampedKm);
   const start = Date.now();
 
@@ -305,7 +321,7 @@ export async function getLeadFeed(
       input.lng,
       input.lat,
       radius_m,
-      input.limit,
+      clampedLimit,
       input.cursor?.score ?? null,
       input.cursor?.lead_type ?? null,
       input.cursor?.lead_id ?? null,
@@ -315,7 +331,7 @@ export async function getLeadFeed(
     const data = res.rows.map(mapRow);
 
     let next_cursor: LeadFeedCursor | null = null;
-    if (data.length === input.limit && data.length > 0) {
+    if (data.length === clampedLimit && data.length > 0) {
       const last = data[data.length - 1];
       if (last) {
         next_cursor = {

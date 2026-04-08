@@ -178,6 +178,13 @@ function mapRow(row: BuilderQueryRow): BuilderLeadCandidate {
 /**
  * Run the spec 73 builder query against the pool. Never throws — returns
  * empty array on error so Phase 2 can call this without its own try/catch.
+ *
+ * **PARAMETER ORDER WARNING:** the function signature is `(slug, lat, lng, ...)`
+ * — latitude FIRST, longitude SECOND — matching the rest of the codebase
+ * convention (LeadFeedInput, geocoded permit fields, lead cards). Internally
+ * we REORDER to PostGIS's `(lng, lat)` convention because `ST_MakePoint(x, y)`
+ * expects longitude as x. If you change this signature, also flip the
+ * parameter array on the `pool.query` call below.
  */
 export async function queryBuilderLeads(
   trade_slug: string,
