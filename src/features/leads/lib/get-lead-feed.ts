@@ -13,16 +13,21 @@
 // types into one ranked result set, then apply the cursor uniformly. This
 // file implements that fix.
 //
-// The 4 score pillars are computed in SQL (not JS) for the feed:
+// The 4 score pillars are computed in SQL (not JS) for the feed, aligned
+// with spec 70 §4 Behavioral Contract per-pillar boundaries:
 //   - proximity (0-30) from PostGIS distance bands
 //   - timing (0-30) from a fast SQL proxy via permit_trades.phase
 //     (the full 3-tier engine in src/features/leads/lib/timing.ts is too
 //     slow to call per row in a 15-item feed; that engine drives the
 //     per-permit detail page)
-//   - value (0-30) from cost_estimates.cost_tier (cached by Phase 1b-i
-//     compute-cost-estimates.js)
-//   - opportunity (0-10) from permits.status
-// Total max: 30 + 30 + 30 + 10 = 100 — confirms spec 70's 0-100 scale.
+//   - value (0-20) from cost_estimates.cost_tier (cached by Phase 1b-i
+//     compute-cost-estimates.js). Earlier drafts used a 0-30 range; spec
+//     70 §4 line 234 pins Value at 0-20.
+//   - opportunity (0-20) from permits.status. Earlier drafts used 0-10;
+//     spec 70 §4 line 235 pins Opportunity at 0-20.
+// Permit total: 30 + 30 + 20 + 20 = 100. Builder total: see builder CTE
+// comment below — builder pillar semantics differ from permit; the feed
+// uses a simplified proxy distinct from the full `builder-query.ts` engine.
 
 import type { Pool } from 'pg';
 import { MAX_RADIUS_KM, metersFromKilometers } from '@/features/leads/lib/distance';
@@ -32,7 +37,7 @@ import type {
   LeadFeedItem,
   LeadFeedResult,
 } from '@/features/leads/types';
-import { logError } from '@/lib/logger';
+import { logError, logWarn } from '@/lib/logger';
 
 /**
  * Hard cap on the number of leads returned per request. Spec 70 §API
@@ -61,7 +66,11 @@ export const LEAD_FEED_SQL = `
   WITH permit_candidates AS (
     SELECT
       'permit'::text AS lead_type,
-      (p.permit_num || ':' || p.revision_num) AS lead_id,
+      -- LPAD revision_num to 2 digits so the lead_id is stable across the
+      -- DB's historical '0' vs '00' drift (migration 001's loader uses
+      -- '00' but earlier ingestions left bare '0' values). Matches the
+      -- normalization in buildLeadKey() at record-lead-view.ts.
+      (p.permit_num || ':' || LPAD(p.revision_num, 2, '0')) AS lead_id,
       p.permit_num,
       p.revision_num,
       p.status,
@@ -97,20 +106,22 @@ export const LEAD_FEED_SQL = `
         WHEN 'landscaping'        THEN 15
         ELSE 10
       END AS timing_score,
-      -- Pillar 3: value (0-30) — from cost_estimates.cost_tier (cached)
+      -- Pillar 3: value (0-20) — from cost_estimates.cost_tier (cached).
+      -- Rescaled from a pre-review 0-30 draft to match spec 70 §4 line 234.
       CASE ce.cost_tier
-        WHEN 'mega'   THEN 30
-        WHEN 'major'  THEN 25
-        WHEN 'large'  THEN 20
-        WHEN 'medium' THEN 15
-        WHEN 'small'  THEN 10
-        ELSE 5
+        WHEN 'mega'   THEN 20
+        WHEN 'major'  THEN 16
+        WHEN 'large'  THEN 12
+        WHEN 'medium' THEN 8
+        WHEN 'small'  THEN 5
+        ELSE 3
       END AS value_score,
-      -- Pillar 4: opportunity (0-10) — permit lifecycle status
+      -- Pillar 4: opportunity (0-20) — permit lifecycle status.
+      -- Rescaled from a pre-review 0-10 draft to match spec 70 §4 line 235.
       CASE p.status
-        WHEN 'Permit Issued' THEN 10
-        WHEN 'Inspection'    THEN 7
-        WHEN 'Application'   THEN 5
+        WHEN 'Permit Issued' THEN 20
+        WHEN 'Inspection'    THEN 14
+        WHEN 'Application'   THEN 10
         ELSE 0
       END AS opportunity_score
     FROM permits p
@@ -157,22 +168,24 @@ export const LEAD_FEED_SQL = `
       END AS proximity_score,
       -- Pillar 2: timing (0-30) — builders are "ongoing capacity", fixed mid-band
       15 AS timing_score,
-      -- Pillar 3: value (0-30) — average project cost bucketed.
+      -- Pillar 3: value (0-20) — average project cost bucketed. Rescaled
+      -- from 0-30 to match the permit pillar boundaries (spec 70 §4).
       -- NULL (no cost data on any nearby permit) is "unknown", NOT "small";
       -- score it lower than the smallest known bucket so unknowns sort last
       -- among value-tied builders.
       CASE
-        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) IS NULL    THEN 5
-        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 2000000 THEN 30
-        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 500000  THEN 20
-        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 100000  THEN 15
-        ELSE 10
+        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) IS NULL    THEN 3
+        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 2000000 THEN 20
+        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 500000  THEN 14
+        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 100000  THEN 10
+        ELSE 6
       END AS value_score,
-      -- Pillar 4: opportunity (0-10) — count of active permits
+      -- Pillar 4: opportunity (0-20) — count of active permits. Rescaled
+      -- from 0-10 to match the permit pillar boundaries (spec 70 §4).
       CASE
-        WHEN COUNT(p.permit_num) >= 5 THEN 10
-        WHEN COUNT(p.permit_num) >= 3 THEN 7
-        WHEN COUNT(p.permit_num) >= 1 THEN 5
+        WHEN COUNT(p.permit_num) >= 5 THEN 20
+        WHEN COUNT(p.permit_num) >= 3 THEN 14
+        WHEN COUNT(p.permit_num) >= 1 THEN 10
         ELSE 0
       END AS opportunity_score
     FROM entities e
@@ -279,7 +292,16 @@ function mapRow(row: LeadFeedRow): LeadFeedItem | null {
   if (row.lead_type === 'permit') {
     // The SQL UNION ALL guarantees these are non-null on permit rows. We
     // narrow defensively because TypeScript can't see through the SQL CASE.
-    if (row.permit_num === null || row.revision_num === null) return null;
+    // If the invariant is ever violated (SQL refactor that changes the
+    // UNION shape), logWarn so the silent drop becomes visible in logs
+    // instead of a phantom "items disappeared from feed" bug.
+    if (row.permit_num === null || row.revision_num === null) {
+      logWarn('[lead-feed/get]', 'mapRow dropped malformed permit row', {
+        lead_id: row.lead_id,
+        lead_type: row.lead_type,
+      });
+      return null;
+    }
     return {
       ...base,
       lead_type: 'permit',
@@ -296,7 +318,13 @@ function mapRow(row: LeadFeedRow): LeadFeedItem | null {
   }
 
   // Builder branch — same defensive narrowing on the entity-required fields
-  if (row.entity_id === null || row.legal_name === null) return null;
+  if (row.entity_id === null || row.legal_name === null) {
+    logWarn('[lead-feed/get]', 'mapRow dropped malformed builder row', {
+      lead_id: row.lead_id,
+      lead_type: row.lead_type,
+    });
+    return null;
+  }
   return {
     ...base,
     lead_type: 'builder',

@@ -37,15 +37,25 @@ export interface RecordLeadViewResult {
 
 /**
  * Build the deterministic `lead_key` per spec 70 §Database Schema:
- *   permit lead → `permit:{permit_num}:{revision_num}` (revision defaults to '00' when null)
+ *   permit lead → `permit:{permit_num}:{revision_num}` (revision zero-padded to 2 digits)
  *   builder lead → `builder:{entity_id}`
+ *
+ * Normalization: the permits table has historical drift between `'0'` and
+ * `'00'` for the zero revision (migration 001 loader uses `'00'` but some
+ * earlier-ingested rows carry bare `'0'`). Without padding, the same permit
+ * revision could produce two different lead_keys depending on which ingest
+ * path wrote it — breaking the competition_count UNIQUE (user_id, lead_key,
+ * trade_slug) dedup. `padStart(2, '0')` collapses `'0'` and `'00'` to the
+ * same canonical `'00'`. Matches the `LPAD(p.revision_num, 2, '0')`
+ * normalization in `LEAD_FEED_SQL`.
  *
  * Exported so the API route layer (Phase 2) can echo the same key in its
  * response payload if needed.
  */
 export function buildLeadKey(input: RecordLeadViewInput): string {
   if (input.lead_type === 'permit') {
-    return `permit:${input.permit_num}:${input.revision_num}`;
+    const rev = input.revision_num.padStart(2, '0');
+    return `permit:${input.permit_num}:${rev}`;
   }
   return `builder:${input.entity_id}`;
 }

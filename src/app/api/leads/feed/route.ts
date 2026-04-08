@@ -77,8 +77,10 @@ export async function GET(request: NextRequest) {
           }
         : undefined;
 
-    // 6. Call the Phase 1 lib function — never throws (try/catch wrapper
-    //    below is defense in depth).
+    // 6. Call the Phase 1 lib function. This THROWS on DB/pool error
+    //    (post Phase-2 holistic review — earlier drafts swallowed errors
+    //    and returned empty). The outer try/catch below converts thrown
+    //    errors to a 500 envelope via `internalError()`.
     const result = await getLeadFeed(
       {
         user_id: ctx.uid,

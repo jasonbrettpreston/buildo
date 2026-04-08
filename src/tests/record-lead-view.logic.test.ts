@@ -49,6 +49,27 @@ describe('buildLeadKey', () => {
     ).toBe('builder:9183');
   });
 
+  it('normalizes revision_num by zero-padding to 2 digits ("0" → "00") for DB drift consistency', () => {
+    const padded = buildLeadKey({
+      user_id: 'u1',
+      trade_slug: 'plumbing',
+      action: 'view',
+      lead_type: 'permit',
+      permit_num: '24 101234',
+      revision_num: '0',
+    });
+    const canonical = buildLeadKey({
+      user_id: 'u1',
+      trade_slug: 'plumbing',
+      action: 'view',
+      lead_type: 'permit',
+      permit_num: '24 101234',
+      revision_num: '00',
+    });
+    expect(padded).toBe('permit:24 101234:00');
+    expect(padded).toBe(canonical);
+  });
+
   it('produces disjoint keys: permit IDs always contain `:`, builder IDs never do (after the prefix)', () => {
     const permitKey = buildLeadKey({
       user_id: 'u1',

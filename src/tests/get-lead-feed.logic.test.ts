@@ -67,6 +67,27 @@ describe('LEAD_FEED_SQL — structure', () => {
     );
   });
 
+  it('normalizes permit lead_id via LPAD(revision_num, 2, 0) to collapse DB "0"/"00" drift', () => {
+    // Phase 0/1/2 holistic review finding: DB has both '0' and '00' as
+    // revision_num values. Without padding, two ingest paths can produce
+    // different lead_keys for the same permit revision, breaking
+    // competition count dedup and cursor identity.
+    expect(LEAD_FEED_SQL).toMatch(
+      /permit_num \|\| ':' \|\| LPAD\(p\.revision_num, 2, '0'\)/,
+    );
+  });
+
+  it('permit pillar boundaries match spec 70 §4 (value 0-20, opportunity 0-20)', () => {
+    // Rescaled from pre-review drafts (value 0-30, opportunity 0-10) to
+    // honor the per-pillar contract in spec 70 §4 lines 234-235. The
+    // aggregate relevance_score ceiling is still 100 (30+30+20+20).
+    expect(LEAD_FEED_SQL).toMatch(/WHEN 'mega'\s+THEN 20/);
+    expect(LEAD_FEED_SQL).toMatch(/WHEN 'Permit Issued' THEN 20/);
+    // The obsolete 0-30/0-10 bands must NOT reappear.
+    expect(LEAD_FEED_SQL).not.toMatch(/WHEN 'mega'\s+THEN 30/);
+    expect(LEAD_FEED_SQL).not.toMatch(/WHEN 'Permit Issued' THEN 10/);
+  });
+
   it('limits via $5::int parameter', () => {
     expect(LEAD_FEED_SQL).toMatch(/LIMIT \$5::int/);
   });

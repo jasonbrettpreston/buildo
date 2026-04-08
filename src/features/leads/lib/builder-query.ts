@@ -113,15 +113,20 @@ export const BUILDER_QUERY_SQL = `
         WHEN primary_email IS NOT NULL THEN 10
         ELSE 0
       END AS contact_score,
-      -- Pillar 4: fit (0-23) — nearby count tiers + WSIB +3 bonus
-      CASE
-        WHEN active_permits_nearby >= 5 THEN 20
-        WHEN active_permits_nearby >= 3 THEN 17
-        WHEN active_permits_nearby = 2 THEN 14
-        ELSE 10
-      END
-      + CASE WHEN is_wsib_registered THEN 3 ELSE 0 END
-      AS fit_score
+      -- Pillar 4: fit (0-20) — nearby count tiers + WSIB +3 bonus, capped
+      -- at 20 so the 4-pillar total honors spec 70 §4 Builder "Fit (0-20)"
+      -- and keeps the relevance_score ceiling at 100. Pre-review drafts
+      -- allowed fit_score up to 23 (overflow to relevance_score=103).
+      LEAST(
+        (CASE
+          WHEN active_permits_nearby >= 5 THEN 20
+          WHEN active_permits_nearby >= 3 THEN 17
+          WHEN active_permits_nearby = 2 THEN 14
+          ELSE 10
+        END
+        + CASE WHEN is_wsib_registered THEN 3 ELSE 0 END),
+        20
+      ) AS fit_score
     FROM builder_aggregates
   )
   SELECT *,

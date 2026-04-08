@@ -42,6 +42,13 @@ describe('BUILDER_QUERY_SQL — structure', () => {
     expect(BUILDER_QUERY_SQL).toMatch(/fit_score/);
   });
 
+  it('caps fit_score at 20 so relevance_score cannot exceed 100 (spec 70 §4 builder fit)', () => {
+    // Phase 0/1/2 holistic review: base fit + WSIB +3 bonus could reach
+    // 23, pushing relevance_score to 103 and breaking any 0-100 client
+    // scale. LEAST(..., 20) is the cap.
+    expect(BUILDER_QUERY_SQL).toMatch(/LEAST\([\s\S]*?20\s*\)\s*AS fit_score/);
+  });
+
   it('uses ST_DWithin + ST_MakePoint with explicit float8 casts', () => {
     expect(BUILDER_QUERY_SQL).toMatch(/ST_DWithin\(/);
     expect(BUILDER_QUERY_SQL).toMatch(/ST_MakePoint\(\$2::float8,\s*\$3::float8\)::geography/);
