@@ -1,0 +1,61 @@
+name: Mutation Testing
+
+# Stryker mutation testing — automated so it cannot be forgotten.
+# Runs in two modes:
+#   1. Weekly cron — full mutation run on the 4 targeted lib files,
+#      surfaces drift in test quality even when no PR is open.
+#   2. Per-PR — only when one of the mutation targets actually changed.
+#      Skips otherwise so the 3-5 min run doesn't tax every PR.
+#
+# A failing run (mutation score < 50%) blocks merge per the threshold
+# in stryker.config.mjs. Adjust the threshold there, not here.
+#
+# See docs/specs/00_engineering_standards.md §12.13.
+
+on:
+  schedule:
+    # Mondays at 12:00 UTC (07:00 Toronto). Reports surviving mutants
+    # before the dev week starts so triage fits in Monday standup.
+    - cron: '0 12 * * 1'
+  pull_request:
+    paths:
+      - 'src/features/leads/lib/cost-model.ts'
+      - 'src/features/leads/lib/distance.ts'
+      - 'src/features/leads/lib/record-lead-view.ts'
+      - 'src/features/leads/lib/builder-query.ts'
+      - 'src/tests/cost-model.logic.test.ts'
+      - 'src/tests/distance.logic.test.ts'
+      - 'src/tests/record-lead-view.logic.test.ts'
+      - 'src/tests/builder-query.logic.test.ts'
+      - 'stryker.config.mjs'
+      - '.github/workflows/mutation.yml'
+  workflow_dispatch:
+    # Manual trigger from the Actions tab — useful for one-off audits
+    # without waiting for Monday.
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Stryker mutation testing
+        run: npm run test:mutation
+
+      - name: Upload Stryker HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stryker-report
+          path: reports/mutation/
+          retention-days: 30
