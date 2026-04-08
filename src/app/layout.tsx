@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { PostHogProvider } from '@/components/observability/PostHogProvider';
 
 export const metadata: Metadata = {
   title: 'Buildo - Lead Generation for Trades',
@@ -13,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased" suppressHydrationWarning>{children}</body>
+      <body className="antialiased" suppressHydrationWarning><PostHogProvider>{children}</PostHogProvider></body>
     </html>
   );
 }

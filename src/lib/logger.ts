@@ -9,7 +9,6 @@ let sentryCaptureException: ((err: unknown, ctx?: { extra?: ErrorContext }) => v
 // In local dev, this stays null and errors go to console only.
 // webpackIgnore comment prevents the "Critical dependency" warning.
 if (typeof process !== 'undefined' && process.env.SENTRY_DSN) {
-  // @ts-expect-error — @sentry/nextjs is an optional production dependency
   import(/* webpackIgnore: true */ '@sentry/nextjs')
     .then((Sentry: { init: (opts: Record<string, unknown>) => void; captureException: (err: unknown, ctx?: Record<string, unknown>) => void }) => {
       Sentry.init({
@@ -47,4 +46,45 @@ export function logError(tag: string, err: unknown, context?: ErrorContext): voi
  */
 export function logWarn(tag: string, message: string, context?: ErrorContext): void {
   console.warn(tag, message, context ?? '');
+}
+
+/**
+ * Log an informational event. Emits a structured JSON line that can be
+ * ingested by log aggregators (Datadog, CloudWatch, etc.) without parsing.
+ *
+ * Use for observability events that aren't errors or warnings:
+ *   - API request completion: { user_id, route, duration_ms }
+ *   - Pipeline progress: { script, batch, rows_processed }
+ *   - Feature usage: { event, user_id, ...metadata }
+ *
+ * Handles non-serializable values (circular refs, BigInt, etc.) gracefully —
+ * never throws, falls back to a safe stringification.
+ *
+ * @param tag    Short label like "[api/leads/feed]" or "[pipeline/permits]"
+ * @param event  Snake_case event name like "feed_query_success"
+ * @param context Optional structured data merged into the JSON line
+ */
+export function logInfo(tag: string, event: string, context?: ErrorContext): void {
+  const payload: Record<string, unknown> = {
+    level: 'info',
+    tag,
+    event,
+    timestamp: new Date().toISOString(),
+    ...(context ?? {}),
+  };
+  let line: string;
+  try {
+    line = JSON.stringify(payload);
+  } catch {
+    // Circular ref or other JSON.stringify failure — fall back to a safe
+    // shape that omits the problematic context but preserves the event.
+    line = JSON.stringify({
+      level: 'info',
+      tag,
+      event,
+      timestamp: payload.timestamp,
+      _context_serialization_failed: true,
+    });
+  }
+  console.log(line);
 }

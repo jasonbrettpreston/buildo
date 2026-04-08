@@ -21,24 +21,39 @@
     "spec:tests": "node scripts/harvest-tests.mjs",
     "db:docs": "node scripts/generate-db-docs.mjs",
     "local-cron": "node scripts/local-cron.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "biome:check": "biome check",
+    "lighthouse:ci": "lhci autorun"
+  },
+  "lint-staged": {
+    "src/features/leads/**/*.{ts,tsx}": [
+      "biome check --no-errors-on-unmatched"
+    ],
+    "src/lib/observability/**/*.{ts,tsx}": [
+      "biome check --no-errors-on-unmatched"
+    ]
   },
   "dependencies": {
+    "@google/genai": "^1.48.0",
+    "@sentry/nextjs": "^10.47.0",
     "@turf/boolean-point-in-polygon": "^7.3.4",
     "@turf/centroid": "^7.3.4",
     "@turf/helpers": "^7.3.4",
     "csv-parse": "^6.1.0",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.4.1",
     "drizzle-orm": "^0.45.1",
     "exceljs": "^4.4.0",
     "firebase": "^12.9.0",
     "firebase-admin": "^13.6.1",
     "next": "^15.1.0",
     "node-cron": "^4.2.1",
+    "openai": "^6.33.0",
     "pg": "^8.13.1",
     "pg-query-stream": "^4.14.0",
     "playwright": "^1.58.2",
     "playwright-extra": "^4.3.6",
+    "posthog-js": "^1.365.1",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -46,7 +61,9 @@
     "stream-json": "^1.8.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.10",
     "@eslint/eslintrc": "^3.3.3",
+    "@lhci/cli": "^0.15.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.1.0",
@@ -62,6 +79,7 @@
     "husky": "^9.1.7",
     "jsdom": "^25.0.0",
     "knip": "^5.85.0",
+    "lint-staged": "^16.4.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",

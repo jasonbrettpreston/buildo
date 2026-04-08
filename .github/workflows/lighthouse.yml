@@ -1,0 +1,30 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/features/leads/**'
+      - 'src/app/leads/**'
+      - 'src/components/**'
+      - 'package.json'
+      - '.lighthouserc.json'
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Run Lighthouse CI
+        run: |
+          npm run start &
+          npx wait-on http://localhost:3000
+          npx lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
