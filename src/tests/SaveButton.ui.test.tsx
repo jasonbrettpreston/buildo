@@ -27,6 +27,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // outlive the test teardown and emit unhandled errors. We replace
 // `motion.create(Button)` with a pass-through that forwards all
 // props except the Motion-specific animation props.
+const MOTION_PROP_KEYS = new Set([
+  'animate',
+  'whileTap',
+  'whileHover',
+  'whileFocus',
+  'whileDrag',
+  'transition',
+  'initial',
+  'exit',
+  'variants',
+  'layout',
+  'layoutId',
+  'drag',
+]);
+
 vi.mock('motion/react', () => ({
   motion: new Proxy(
     {},
@@ -37,14 +52,10 @@ vi.mock('motion/react', () => ({
         ) => {
           const Forward = React.forwardRef<unknown, Record<string, unknown>>(
             (props, ref) => {
-              const {
-                animate: _animate,
-                whileTap: _whileTap,
-                transition: _transition,
-                initial: _initial,
-                exit: _exit,
-                ...rest
-              } = props;
+              const rest: Record<string, unknown> = {};
+              for (const [k, v] of Object.entries(props)) {
+                if (!MOTION_PROP_KEYS.has(k)) rest[k] = v;
+              }
               return React.createElement(Component, { ...rest, ref });
             },
           );
