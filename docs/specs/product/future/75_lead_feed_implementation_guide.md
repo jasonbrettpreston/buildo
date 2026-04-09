@@ -746,6 +746,13 @@ export function LeadFilterSheet({ open, onOpenChange }: Props) {
 **Status:** **CUSTOM composition** of Shadcn primitives — see §4.0 Build vs Install
 **Shadcn primitives composed:** `<Card>`, `<CardContent>`, `<CardFooter>`, `<Button>`, `<Badge>`, plus custom `<TimingBadge>` and Motion wrapper
 
+> **Phase 3-iii reconciliation note (2026-04-09):** This sample code was written before Phase 1b-iii landed the `LeadFeedItem` discriminated union. The actual prop type is `PermitLeadFeedItem` from `src/features/leads/types.ts`. Field renames vs the sample below:
+> - `lead.address` → derived in TS as `formatAddress(lead.street_num, lead.street_name)` (helper in `src/features/leads/lib/format.ts`)
+> - `lead.cost_display` → derived in TS as `formatCostDisplay(lead.estimated_cost, lead.cost_tier)` — the SQL projects `cost_tier` + `estimated_cost` (raw DECIMAL), the card formats
+> - `lead.timing_display` → present on the type, but it is a **synthetic** display string mapped from `timing_confidence` at the `mapRow` boundary in `get-lead-feed.ts` (`TIMING_DISPLAY_BY_CONFIDENCE` table). The full spec-71 3-tier engine output is **not** in the feed — running the engine per row would join the inspection stage map + calibration table per permit and inflate p95. The detail-view phase (Phase 4) overlays the precise engine output via the `useLeadView` mutation response — no `LeadFeedItem` schema change at that time.
+> - `lead.competition_count` → **NOT on the feed prop**. Read from the `useLeadView` mutation cache by `lead_key` per spec 70 §API Endpoints (separate `/api/leads/view` endpoint).
+> - `lead.trade_slug` → **NOT on the feed prop**. The card receives `tradeSlug` separately from the parent `LeadFeed` (it's the same for every card in a single feed).
+>
 > **Refactor note:** The code below shows the original raw-HTML pattern. When implementing Phase 4, replace `<motion.article>` with `<Card>` from `@/components/ui/card`, replace inline `<button>` Save/Directions with `<Button>` variants, and replace inline opportunity pills with `<Badge>` variants. The composition logic stays the same — only the primitive imports change. The Build vs Install table at §4.0 shows the mapping.
 
 ```tsx
@@ -851,7 +858,7 @@ export function PermitLeadCard({ lead }: Props) {
 
       {/* Opportunity + competition */}
       <div className="px-4 pb-3 flex items-center gap-3">
-        <OpportunityBadge type={lead.opportunity_type} builderName={lead.builder_name} />
+        <OpportunityBadge type={lead.opportunity_type} builderName={lead.legal_name} />
         {lead.competition_count > 0 && (
           <span className="font-data text-xs text-neutral-500">
             👁 {lead.competition_count}
@@ -935,6 +942,16 @@ function formatCostTier(tier: string): string {
 **Status:** **CUSTOM composition** of Shadcn primitives — see §4.0 Build vs Install
 **Shadcn primitives composed:** `<Card>`, `<CardContent>`, `<CardFooter>`, `<Avatar>`, `<AvatarImage>`, `<AvatarFallback>`, `<Badge>`, `<Button>`
 
+> **Phase 3-iii reconciliation note (2026-04-09):** Field renames vs the sample below — actual prop type is `BuilderLeadFeedItem`:
+> - `lead.legal_name` → `lead.legal_name`
+> - `lead.phone` → `lead.primary_phone` (sanitize digits-only via `sanitizeTelHref()` before building the `tel:` URL — source data is dirty)
+> - `lead.closest_permit_m` → `lead.distance_m` (same number, just renamed in the type)
+> - `lead.wsib_registered` → **NOT on the feed prop in 3-iii.** The current builder CTE WHERE clause requires a WSIB row, so every builder in the feed is registered — adding the column would always be `true`. When the feed widens to include non-WSIB builders, add the column then; for now the card omits the WSIB badge entirely.
+> - `lead.active_permits_nearby` → present (`int`)
+> - `lead.avg_project_cost` → present (`number | null`)
+> - `lead.trade_slug` → **NOT on the feed prop.** Same as PermitLeadCard — passed from the parent `LeadFeed`.
+> - `navigator.vibrate(10)` haptic call → keep but feature-detect (`'vibrate' in navigator`); iOS Safari does not implement the Vibration API.
+
 > **Refactor note:** The code below shows the original raw-HTML pattern. When implementing Phase 4:
 > - Replace the avatar `<div>` block with `<Avatar><AvatarImage src={lead.photo_url} /><AvatarFallback>{initials}</AvatarFallback></Avatar>` — fallback chain handled automatically
 > - Replace WSIB pill with `<Badge variant="outline" className="text-green-safety">`
@@ -957,7 +974,7 @@ interface Props {
 export function BuilderLeadCard({ lead }: Props) {
   const handleCall = () => {
     if ('vibrate' in navigator) navigator.vibrate(10);
-    window.location.href = `tel:${lead.phone?.replace(/\D/g, '')}`;
+    window.location.href = `tel:${lead.primary_phone?.replace(/\D/g, '')}`;
   };
 
   return (
@@ -966,29 +983,29 @@ export function BuilderLeadCard({ lead }: Props) {
       style={{ borderLeft: '3px solid #F59E0B' }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      aria-label={`Builder lead: ${lead.builder_name}`}
+      aria-label={`Builder lead: ${lead.legal_name}`}
     >
       {/* Header: avatar + name */}
       <div className="flex items-center gap-3 p-4">
         <BuilderAvatar 
           photoUrl={lead.photo_url} 
-          name={lead.builder_name} 
+          name={lead.legal_name} 
           className="w-12 h-12 rounded-md shrink-0"
         />
         <div className="flex-1 min-w-0">
           <h3 className="font-display text-base font-bold text-neutral-100 truncate">
-            {lead.builder_name}
+            {lead.legal_name}
           </h3>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="font-display text-sm text-neutral-400">
               {lead.business_size}
             </span>
-            {lead.wsib_registered && (
-              <span className="flex items-center gap-1 text-xs text-green-400">
-                <CheckBadgeIcon className="w-3.5 h-3.5" />
-                WSIB
-              </span>
-            )}
+            {/* REMOVED in Phase 3-iii — `wsib_registered` is not on
+                BuilderLeadFeedItem. The current builder CTE WHERE
+                requires a WSIB row, so every builder in the feed is
+                already WSIB-registered. Re-add when the feed widens
+                to include non-WSIB builders. See §4.5 reconciliation
+                note above. */}
           </div>
         </div>
       </div>
@@ -996,17 +1013,17 @@ export function BuilderLeadCard({ lead }: Props) {
       {/* Stats */}
       <div className="px-4 pb-3">
         <p className="font-display text-sm font-semibold text-neutral-100">
-          🏗 {lead.active_permits_nearby} active permits within {Math.round(lead.closest_permit_m / 1000 * 10) / 10}km
+          🏗 {lead.active_permits_nearby} active permits within {Math.round(lead.distance_m / 1000 * 10) / 10}km
         </p>
         <p className="font-data text-xs text-neutral-400 mt-1">
-          Closest: {formatDistance(lead.closest_permit_m)}
+          Closest: {formatDistance(lead.distance_m)}
           {lead.avg_project_cost && ` · Avg: $${formatCompact(lead.avg_project_cost)}`}
         </p>
       </div>
 
       {/* Action row */}
       <div className="flex border-t border-neutral-800">
-        {lead.phone && (
+        {lead.primary_phone && (
           <motion.button
             onClick={handleCall}
             className="flex-1 min-h-[44px] flex items-center justify-center gap-2 bg-amber-500 text-neutral-900 font-display text-sm font-semibold active:bg-amber-600"

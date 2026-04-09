@@ -4,6 +4,7 @@ import type { Pool, QueryResult, QueryResultRow } from 'pg';
 import {
   LEAD_FEED_SQL,
   MAX_FEED_LIMIT,
+  TIMING_DISPLAY_BY_CONFIDENCE,
   getLeadFeed,
 } from '@/features/leads/lib/get-lead-feed';
 import { MAX_RADIUS_KM, metersFromKilometers } from '@/features/leads/lib/distance';
@@ -132,6 +133,63 @@ describe('LEAD_FEED_SQL — structure', () => {
   it('filters builder candidates by WSIB business_size allowlist', () => {
     expect(LEAD_FEED_SQL).toMatch(/business_size IN \('Small Business', 'Medium Business'\)/);
   });
+
+  // ---- Phase 3-iii widened SELECTs ----
+  it('joins permits to neighbourhoods (LEFT JOIN, NULL-safe)', () => {
+    expect(LEAD_FEED_SQL).toMatch(
+      /LEFT JOIN neighbourhoods n ON n\.neighbourhood_id = p\.neighbourhood_id/,
+    );
+  });
+
+  it('projects neighbourhood_name on permit_candidates', () => {
+    expect(LEAD_FEED_SQL).toMatch(/n\.name\s+AS neighbourhood_name/);
+  });
+
+  it('projects cost_tier and estimated_cost on permit_candidates', () => {
+    expect(LEAD_FEED_SQL).toMatch(/ce\.cost_tier\s+AS cost_tier/);
+    // DECIMAL(15,2) explicit cast prevents node-pg returning a string
+    expect(LEAD_FEED_SQL).toMatch(/ce\.estimated_cost::float8\s+AS estimated_cost/);
+  });
+
+  it('projects active_permits_nearby and avg_project_cost on builder_candidates', () => {
+    // COUNT DISTINCT defends against entity_projects duplication
+    expect(LEAD_FEED_SQL).toMatch(
+      /COUNT\(DISTINCT \(p\.permit_num, p\.revision_num\)\)::int AS active_permits_nearby/,
+    );
+    expect(LEAD_FEED_SQL).toMatch(
+      /AVG\(p\.est_const_cost::float8\) FILTER \(WHERE p\.est_const_cost > 0\) AS avg_project_cost/,
+    );
+  });
+
+  it('WSIB LATERAL has a deterministic tiebreaker on w2.id', () => {
+    // Without the secondary ORDER BY, two WSIB rows with the same
+    // last_enriched_at produce non-deterministic ordering, breaking
+    // cursor stability. (DeepSeek 2026-04-09 review.)
+    expect(LEAD_FEED_SQL).toMatch(/ORDER BY w2\.last_enriched_at DESC, w2\.id DESC/);
+  });
+
+  it('mirrors widened columns as NULL on the other branch (UNION ALL shape)', () => {
+    // Permit branch must NULL out builder-only stats
+    expect(LEAD_FEED_SQL).toMatch(/NULL::int\s+AS active_permits_nearby/);
+    expect(LEAD_FEED_SQL).toMatch(/NULL::float8\s+AS avg_project_cost/);
+    // Builder branch must NULL out permit-only address/cost columns
+    expect(LEAD_FEED_SQL).toMatch(/NULL::text\s+AS neighbourhood_name/);
+    expect(LEAD_FEED_SQL).toMatch(/NULL::text\s+AS cost_tier/);
+    expect(LEAD_FEED_SQL).toMatch(/NULL::float8\s+AS estimated_cost/);
+  });
+});
+
+describe('TIMING_DISPLAY_BY_CONFIDENCE', () => {
+  it('maps every confidence value to a non-empty display string', () => {
+    expect(TIMING_DISPLAY_BY_CONFIDENCE.high).toBeTruthy();
+    expect(TIMING_DISPLAY_BY_CONFIDENCE.medium).toBeTruthy();
+    expect(TIMING_DISPLAY_BY_CONFIDENCE.low).toBeTruthy();
+  });
+
+  it('returns distinct phrases per confidence level', () => {
+    const values = new Set(Object.values(TIMING_DISPLAY_BY_CONFIDENCE));
+    expect(values.size).toBe(3);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -148,6 +206,12 @@ const samplePermitRow = {
   description: 'New SFD',
   street_num: '47',
   street_name: 'Maple Ave',
+  // Phase 3-iii widened columns (permit branch)
+  neighbourhood_name: 'High Park',
+  cost_tier: 'large',
+  estimated_cost: 750000,
+  active_permits_nearby: null,
+  avg_project_cost: null,
   entity_id: null,
   legal_name: null,
   business_size: null,
@@ -161,8 +225,12 @@ const samplePermitRow = {
   proximity_score: 30,
   timing_score: 30,
   value_score: 20,
-  opportunity_score: 10,
-  relevance_score: 90,
+  // 'Permit Issued' maps to 20 in the SQL CASE (was 10 in a pre-review
+  // 0-10 draft; spec 70 §4 line 235 pins opportunity at 0-20). Independent
+  // review 2026-04-09 caught this fixture drift — kept the row otherwise
+  // identical so the relevance_score sum lines up at 100.
+  opportunity_score: 20,
+  relevance_score: 100,
   timing_confidence: 'high' as const,
   opportunity_type: 'newbuild' as const,
 };
@@ -177,6 +245,12 @@ const sampleBuilderRow = {
   description: null,
   street_num: null,
   street_name: null,
+  // Phase 3-iii widened columns (builder branch)
+  neighbourhood_name: null,
+  cost_tier: null,
+  estimated_cost: null,
+  active_permits_nearby: 4,
+  avg_project_cost: 425000,
   entity_id: 9183,
   legal_name: 'ACME CONSTRUCTION',
   business_size: 'Small Business',
@@ -225,6 +299,32 @@ describe('getLeadFeed — function behaviour', () => {
     mock.query.mockResolvedValueOnce(qr([samplePermitRow])); // 1 row, limit 15
     const result = await getLeadFeed(makeInput({ limit: 15 }), mock as unknown as Pool);
     expect(result.meta.next_cursor).toBeNull();
+  });
+
+  it('next_cursor uses RAW res.rows.length, not post-mapRow data.length (Gemini+DeepSeek 2026-04-09 CRITICAL)', async () => {
+    // Pre-fix: mapRow could drop a malformed row → data.length <
+    // clampedLimit → next_cursor=null → silent feed truncation. Now
+    // the cursor decision uses res.rows.length and the last raw row.
+    // Simulate by feeding 3 rows where the middle one is malformed
+    // (entity_id=null on a builder row → mapRow drops it).
+    const mock = createMockPool();
+    const goodPermit = { ...samplePermitRow, lead_id: 'p-good', relevance_score: 95 };
+    const malformedBuilder = {
+      ...sampleBuilderRow,
+      lead_id: 'b-bad',
+      entity_id: null, // forces mapRow to drop
+      relevance_score: 90,
+    };
+    const tailPermit = { ...samplePermitRow, lead_id: 'p-tail', relevance_score: 85 };
+    mock.query.mockResolvedValueOnce(qr([goodPermit, malformedBuilder, tailPermit]));
+    const result = await getLeadFeed(makeInput({ limit: 3 }), mock as unknown as Pool);
+    // data has only 2 items (the malformed one was dropped), but
+    // res.rows.length === 3 === limit so the cursor MUST be set,
+    // pointing at the last RAW row's lead_id.
+    expect(result.data).toHaveLength(2);
+    expect(result.meta.next_cursor).not.toBeNull();
+    expect(result.meta.next_cursor?.lead_id).toBe('p-tail');
+    expect(result.meta.next_cursor?.score).toBe(85);
   });
 
   it('extracts next_cursor from last row when rows.length === limit', async () => {
@@ -330,5 +430,127 @@ describe('getLeadFeed — function behaviour', () => {
     expect(result.data).toHaveLength(3);
     expect(result.data.filter((r) => r.lead_type === 'permit')).toHaveLength(2);
     expect(result.data.filter((r) => r.lead_type === 'builder')).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 3-iii widened mapRow coverage
+// ---------------------------------------------------------------------------
+
+describe('mapRow — widened columns', () => {
+  it('passes through neighbourhood_name, cost_tier, estimated_cost on permit rows', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([samplePermitRow]));
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    expect(item?.lead_type).toBe('permit');
+    if (item?.lead_type === 'permit') {
+      expect(item.neighbourhood_name).toBe('High Park');
+      expect(item.cost_tier).toBe('large');
+      expect(item.estimated_cost).toBe(750000);
+    }
+  });
+
+  it('handles permit row with NULL neighbourhood (orphan from geocoder)', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, neighbourhood_name: null }]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'permit') {
+      expect(item.neighbourhood_name).toBeNull();
+    }
+  });
+
+  it('handles permit row with NULL cost_estimate (no cached estimate)', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, cost_tier: null, estimated_cost: null }]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'permit') {
+      expect(item.cost_tier).toBeNull();
+      expect(item.estimated_cost).toBeNull();
+    }
+  });
+
+  it('narrows unknown cost_tier strings to null (defensive)', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, cost_tier: 'gigantic' }]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'permit') {
+      // Bad enum value from a future SQL drift should not crash mapRow
+      expect(item.cost_tier).toBeNull();
+    }
+  });
+
+  it('coerces estimated_cost from a string (node-pg DECIMAL fallback)', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, estimated_cost: '750000.50' }]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'permit') {
+      expect(item.estimated_cost).toBe(750000.5);
+    }
+  });
+
+  it('passes through active_permits_nearby and avg_project_cost on builder rows', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([sampleBuilderRow]));
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    expect(item?.lead_type).toBe('builder');
+    if (item?.lead_type === 'builder') {
+      expect(item.active_permits_nearby).toBe(4);
+      expect(item.avg_project_cost).toBe(425000);
+    }
+  });
+
+  it('handles builder row with NULL avg_project_cost (zero costed permits)', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...sampleBuilderRow, avg_project_cost: null }]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'builder') {
+      expect(item.avg_project_cost).toBeNull();
+    }
+  });
+
+  it('defaults active_permits_nearby to 0 if SQL drift returns null', async () => {
+    // mapRow falls back to 0 instead of dropping the row, since "0
+    // active permits" is a sensible card display
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...sampleBuilderRow, active_permits_nearby: null }]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'builder') {
+      expect(item.active_permits_nearby).toBe(0);
+    }
+  });
+
+  it('synthesizes timing_display from confidence on every row', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([
+        { ...samplePermitRow, timing_confidence: 'high' as const },
+        { ...samplePermitRow, lead_id: 'p2', timing_confidence: 'medium' as const },
+        { ...samplePermitRow, lead_id: 'p3', timing_confidence: 'low' as const },
+      ]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    expect(result.data[0]?.timing_display).toBe(TIMING_DISPLAY_BY_CONFIDENCE.high);
+    expect(result.data[1]?.timing_display).toBe(TIMING_DISPLAY_BY_CONFIDENCE.medium);
+    expect(result.data[2]?.timing_display).toBe(TIMING_DISPLAY_BY_CONFIDENCE.low);
   });
 });

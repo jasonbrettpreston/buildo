@@ -114,6 +114,12 @@ interface LeadFeedItemBase {
   // TimingBadge + OpportunityBadge without a JS-side reclassification.
   timing_confidence: 'high' | 'medium' | 'low';
   opportunity_type: 'homeowner' | 'newbuild' | 'builder-led' | 'unknown';
+  // Phase 3-iii synthetic timing display string. Computed at the mapRow
+  // boundary in get-lead-feed.ts from `timing_confidence`. The full
+  // spec-71 3-tier engine output is deferred to the detail-view phase
+  // and overlaid via the useLeadView mutation response — no schema
+  // change needed when that lands.
+  timing_display: string;
 }
 
 export interface PermitLeadFeedItem extends LeadFeedItemBase {
@@ -127,6 +133,12 @@ export interface PermitLeadFeedItem extends LeadFeedItemBase {
   street_name: string | null;
   latitude: number | null;
   longitude: number | null;
+  // Phase 3-iii widened columns. neighbourhood_name comes from a LEFT JOIN
+  // (NULL when the geocoder didn't bucket the permit). cost_tier and
+  // estimated_cost come from cost_estimates (NULL when no cached estimate).
+  neighbourhood_name: string | null;
+  cost_tier: 'small' | 'medium' | 'large' | 'major' | 'mega' | null;
+  estimated_cost: number | null;
 }
 
 export interface BuilderLeadFeedItem extends LeadFeedItemBase {
@@ -138,6 +150,17 @@ export interface BuilderLeadFeedItem extends LeadFeedItemBase {
   primary_email: string | null;
   website: string | null;
   photo_url: string | null;
+  // Phase 3-iii widened columns. active_permits_nearby is the COUNT from
+  // the builder CTE (the WHERE filters to status IN
+  // ('Permit Issued','Inspection') so the count IS already of active
+  // permits — name is accurate). avg_project_cost is the FILTER'd AVG
+  // (NULL when the builder has zero costed permits in radius).
+  // wsib_registered intentionally absent: the current builder CTE WHERE
+  // requires a WSIB row, so every builder in the feed is registered —
+  // a column would always be `true`. Add when the feed widens to
+  // include non-WSIB builders.
+  active_permits_nearby: number;
+  avg_project_cost: number | null;
 }
 
 export type LeadFeedItem = PermitLeadFeedItem | BuilderLeadFeedItem;

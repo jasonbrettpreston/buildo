@@ -87,6 +87,10 @@ const sampleResult = {
       relevance_score: 90,
       timing_confidence: 'high' as const,
       opportunity_type: 'newbuild' as const,
+      timing_display: 'Active build phase',
+      neighbourhood_name: 'High Park',
+      cost_tier: 'large' as const,
+      estimated_cost: 750000,
     },
   ],
   meta: {
