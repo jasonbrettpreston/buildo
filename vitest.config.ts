@@ -2,6 +2,13 @@ import { defineConfig } from 'vitest/config';
 import path from 'path';
 
 export default defineConfig({
+  // Use the automatic JSX runtime so component files don't need a
+  // manual `import React from 'react'` at the top. tsconfig.json uses
+  // `jsx: preserve` because Next.js owns the prod transform; vitest
+  // uses esbuild which needs an explicit hint here.
+  esbuild: {
+    jsx: 'automatic',
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
