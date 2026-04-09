@@ -21,7 +21,8 @@
 
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
-import { haversineMeters } from '@/features/leads/hooks/haversine';
+import { DEFAULT_FEED_LIMIT } from '@/features/leads/lib/get-lead-feed';
+import { haversineMeters } from '@/features/leads/lib/haversine';
 import {
   isLeadApiError,
   LeadApiClientError,
@@ -68,7 +69,7 @@ async function fetchLeadFeedPage(
     lat: String(input.lat),
     lng: String(input.lng),
     radius_km: String(input.radius_km),
-    limit: String(input.limit ?? 15),
+    limit: String(input.limit ?? DEFAULT_FEED_LIMIT),
   });
   if (cursor) {
     params.set('cursor_score', String(cursor.cursor_score));
@@ -149,7 +150,7 @@ export function useLeadFeed(input: UseLeadFeedInput) {
       lat: roundedLat,
       lng: roundedLng,
       radius_km: input.radius_km,
-      limit: input.limit ?? 15,
+      limit: input.limit ?? DEFAULT_FEED_LIMIT,
     },
   ] as const;
 

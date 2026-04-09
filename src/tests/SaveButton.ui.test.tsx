@@ -130,11 +130,14 @@ describe('SaveButton — initial render', () => {
     expect(screen.getByText('Save')).toBeDefined();
   });
 
-  it('renders with "Saved" label when initialSaved is true', () => {
+  it('renders with "Saved" text when initialSaved is true (aria-label stays stable per WCAG toggle pattern)', () => {
     render(<SaveButton {...permitProps} initialSaved={true} />);
-    expect(
-      screen.getByRole('button', { name: /remove from saved/i }),
-    ).toBeDefined();
+    // Phase 0-3 review fix: aria-label is now STABLE ("Save lead") and
+    // aria-pressed carries the state. Prior test asserted a changing
+    // aria-label; the fix makes the button a proper toggle.
+    const button = screen.getByRole('button', { name: 'Save lead' });
+    expect(button).toBeDefined();
+    expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByText('Saved')).toBeDefined();
   });
 
@@ -183,12 +186,14 @@ describe('SaveButton — click behavior (permit lead)', () => {
     });
   });
 
-  it('aria-label updates to "Remove from saved" after click (not stale)', () => {
+  it('aria-pressed reflects current saved state after click (stable aria-label)', () => {
     render(<SaveButton {...permitProps} />);
-    fireEvent.click(screen.getByRole('button'));
-    expect(
-      screen.getByRole('button').getAttribute('aria-label'),
-    ).toBe('Remove from saved');
+    const button = screen.getByRole('button');
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(button);
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+    // aria-label MUST NOT change — WCAG toggle button pattern.
+    expect(button.getAttribute('aria-label')).toBe('Save lead');
   });
 
   it('second click fires "lead_feed.lead_unsaved" + action: "unsave"', () => {

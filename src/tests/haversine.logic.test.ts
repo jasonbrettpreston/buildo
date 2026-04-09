@@ -7,7 +7,7 @@
 // the 500m threshold decision.
 
 import { describe, expect, it } from 'vitest';
-import { haversineMeters } from '@/features/leads/hooks/haversine';
+import { haversineMeters } from '@/features/leads/lib/haversine';
 
 describe('haversineMeters', () => {
   it('returns 0 for identical points', () => {

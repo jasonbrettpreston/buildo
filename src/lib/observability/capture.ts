@@ -15,6 +15,7 @@ export type EventName =
   | 'lead_feed.lead_clicked'
   | 'lead_feed.lead_saved'
   | 'lead_feed.lead_unsaved'
+  | 'lead_feed.lead_save_failed'
   | 'lead_feed.builder_called'
   | 'lead_feed.builder_emailed'
   | 'lead_feed.directions_opened'

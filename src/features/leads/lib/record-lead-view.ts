@@ -54,7 +54,15 @@ export interface RecordLeadViewResult {
  */
 export function buildLeadKey(input: RecordLeadViewInput): string {
   if (input.lead_type === 'permit') {
-    const rev = input.revision_num.padStart(2, '0');
+    // Normalize to EXACTLY 2 characters matching PostgreSQL's
+    // `LPAD(p.revision_num, 2, '0')` in LEAD_FEED_SQL. PostgreSQL
+    // LPAD TRUNCATES when the input exceeds target length, but JS
+    // `padStart` preserves longer strings. Without `.slice(-2)` a
+    // `revision_num = '000'` would produce `permit:X:000` in JS
+    // while SQL produces `permit:X:00` — a silent mismatch that
+    // breaks the UNIQUE dedup. Caught by the Phase 0-3 comprehensive
+    // review (DeepSeek Phase 1 HIGH finding).
+    const rev = input.revision_num.padStart(2, '0').slice(-2);
     return `permit:${input.permit_num}:${rev}`;
   }
   return `builder:${input.entity_id}`;

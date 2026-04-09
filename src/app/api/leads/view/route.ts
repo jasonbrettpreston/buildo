@@ -40,7 +40,22 @@ export async function POST(request: NextRequest) {
     const ctx = await getCurrentUserContext(request, pool);
     if (!ctx) return unauthorized();
 
-    // 2. Parse JSON body. Malformed JSON gets a distinct INVALID_JSON code
+    // 2. Content-Type validation — reject non-JSON bodies BEFORE parsing.
+    //    Without this check, a malicious client sending
+    //    `text/plain` or `multipart/form-data` could trip `request.json()`
+    //    into throwing a different error class than the INVALID_JSON path
+    //    below expects. Caught by Phase 0-3 comprehensive review
+    //    (DeepSeek Phase 2 CRIT).
+    const contentType = request.headers.get('content-type') ?? '';
+    if (!contentType.toLowerCase().includes('application/json')) {
+      return err(
+        'INVALID_CONTENT_TYPE',
+        'Content-Type must be application/json',
+        415,
+      );
+    }
+
+    // 3. Parse JSON body. Malformed JSON gets a distinct INVALID_JSON code
     //    so the client can differentiate "your bytes were unparseable" from
     //    "your shape was wrong" — both are 400 per spec 70 but the code
     //    distinguishes them.

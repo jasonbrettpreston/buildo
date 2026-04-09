@@ -40,7 +40,12 @@ interface Contracts {
   };
   rate_limits: { feed_per_min: number; view_per_min: number; window_sec: number };
   geo: { max_radius_km: number; default_radius_km: number };
-  feed: { max_limit: number; default_limit: number };
+  feed: {
+    max_limit: number;
+    default_limit: number;
+    forced_refetch_threshold_m: number;
+    coord_precision: number;
+  };
   schema: {
     firebase_uid_max: number;
     trade_slug_max: number;
@@ -84,6 +89,18 @@ const rules: Rule[] = [
     value: contracts.feed.default_limit,
     file: 'src/features/leads/lib/get-lead-feed.ts',
     pattern: new RegExp(`DEFAULT_FEED_LIMIT\\s*=\\s*${contracts.feed.default_limit}\\b`),
+  },
+  {
+    name: 'feed.forced_refetch_threshold_m → useLeadFeed movement threshold',
+    value: contracts.feed.forced_refetch_threshold_m,
+    file: 'src/features/leads/api/useLeadFeed.ts',
+    pattern: new RegExp(`FORCED_REFETCH_THRESHOLD_M\\s*=\\s*${contracts.feed.forced_refetch_threshold_m}\\b`),
+  },
+  {
+    name: 'feed.coord_precision → useLeadFeed coord rounding',
+    value: contracts.feed.coord_precision,
+    file: 'src/features/leads/api/useLeadFeed.ts',
+    pattern: new RegExp(`COORD_PRECISION\\s*=\\s*${contracts.feed.coord_precision}\\b`),
   },
   // ---- rate limits ----
   {

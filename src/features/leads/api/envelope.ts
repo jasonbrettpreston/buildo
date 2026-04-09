@@ -31,7 +31,7 @@ export interface ApiErrorBody {
  * `new NextResponse(null, { status: 204 })`.
  */
 export type SuccessStatus = 200 | 201 | 202;
-export type ErrorStatus = 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500 | 502 | 503;
+export type ErrorStatus = 400 | 401 | 403 | 404 | 409 | 415 | 422 | 429 | 500 | 502 | 503;
 
 /**
  * Success envelope builder. Two-arg form sets `meta`; there is deliberately
@@ -60,8 +60,23 @@ export function err(
   details?: unknown,
   headers?: Record<string, string>,
 ): NextResponse<ApiErrorBody> {
+  // Defensive: if `details` is non-serializable (circular ref, Error
+  // instance with getters, function, etc.), NextResponse.json() would
+  // throw and crash the route — violating the "err() never throws"
+  // contract. Round-trip through JSON.stringify to catch that before
+  // the response is constructed. If serialization fails, drop the
+  // details and log the problem. Caught by Phase 0-3 comprehensive
+  // review (DeepSeek Phase 2 MED).
+  let safeDetails: unknown;
+  if (details !== undefined) {
+    try {
+      safeDetails = JSON.parse(JSON.stringify(details));
+    } catch {
+      safeDetails = { _unserializable: true };
+    }
+  }
   const error: ApiErrorBody['error'] =
-    details !== undefined ? { code, message, details } : { code, message };
+    safeDetails !== undefined ? { code, message, details: safeDetails } : { code, message };
   const init: { status: ErrorStatus; headers?: Record<string, string> } = { status };
   if (headers !== undefined) init.headers = headers;
   return NextResponse.json<ApiErrorBody>({ data: null, error, meta: null }, init);

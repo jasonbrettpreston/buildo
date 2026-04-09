@@ -41,9 +41,20 @@ beforeEach(() => {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeRequest(body: unknown, opts?: { malformed?: boolean }): NextRequest {
-  // Minimal NextRequest stand-in. Only `.json()` is consumed by the route.
+function makeRequest(
+  body: unknown,
+  opts?: { malformed?: boolean; contentType?: string },
+): NextRequest {
+  // Minimal NextRequest stand-in. The route consumes `.json()` and
+  // `.headers.get()` (for the Content-Type check added in the Phase
+  // 0-3 comprehensive review).
+  const headers = new Map<string, string>([
+    ['content-type', opts?.contentType ?? 'application/json'],
+  ]);
   return {
+    headers: {
+      get: (name: string) => headers.get(name.toLowerCase()) ?? null,
+    },
     json: async () => {
       if (opts?.malformed) throw new SyntaxError('Unexpected token');
       return body;
@@ -167,6 +178,32 @@ describe('POST /api/leads/view — 200 happy paths', () => {
 // ---------------------------------------------------------------------------
 // 400 — malformed JSON / validation
 // ---------------------------------------------------------------------------
+
+describe('POST /api/leads/view — 415 Content-Type', () => {
+  it('returns 415 INVALID_CONTENT_TYPE when Content-Type is not application/json', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    const res = await POST(
+      makeRequest(validPermitBody, { contentType: 'text/plain' }),
+    );
+    expect(res.status).toBe(415);
+    const body = (await readJson(res)) as { error: { code: string } };
+    expect(body.error.code).toBe('INVALID_CONTENT_TYPE');
+  });
+
+  it('accepts application/json with charset suffix', async () => {
+    setHappyPathMocks();
+    const res = await POST(
+      makeRequest(validPermitBody, { contentType: 'application/json; charset=utf-8' }),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it('rejects missing Content-Type header with 415', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    const res = await POST(makeRequest(validPermitBody, { contentType: '' }));
+    expect(res.status).toBe(415);
+  });
+});
 
 describe('POST /api/leads/view — 400 Body parsing', () => {
   it('returns 400 INVALID_JSON when body is not valid JSON', async () => {

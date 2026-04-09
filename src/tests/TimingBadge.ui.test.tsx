@@ -50,13 +50,13 @@ describe('getTimingTone — score-band boundaries (spec 74 §Timing)', () => {
     expect(tone.tremorColor).toBe('blue');
   });
 
-  it('score 9 (just below Upcoming) → Future gray', () => {
-    expect(getTimingTone(9).label).toBe('Future');
+  it('score 9 (just below Upcoming) → Distant gray', () => {
+    expect(getTimingTone(9).label).toBe('Distant');
   });
 
-  it('score 0 (floor) → Future gray', () => {
+  it('score 0 (floor) → Distant gray', () => {
     const tone = getTimingTone(0);
-    expect(tone.label).toBe('Future');
+    expect(tone.label).toBe('Distant');
     expect(tone.tremorColor).toBe('gray');
   });
 
@@ -64,13 +64,25 @@ describe('getTimingTone — score-band boundaries (spec 74 §Timing)', () => {
     expect(getTimingTone(100).label).toBe('NOW');
   });
 
+  it('negative score → Past red (trade window passed, spec 74 §Timing)', () => {
+    // Phase 0-3 comprehensive review (Sonnet Phase 3 CRITICAL C1) —
+    // spec 74 has 5 timing tones including Past (red) for leads whose
+    // trade window has already closed. Consumers pass a negative score
+    // as the sentinel.
+    const tone = getTimingTone(-5);
+    expect(tone.label).toBe('Past');
+    expect(tone.tremorColor).toBe('red');
+    expect(tone.bg).toBe('bg-timing-past');
+  });
+
   it('every tone has contrasting text color against its background (WCAG sanity)', () => {
     // Amber + emerald backgrounds → dark text (neutral-900)
     expect(getTimingTone(25).text).toBe('text-neutral-900');
     expect(getTimingTone(20).text).toBe('text-neutral-900');
-    // Blue + gray backgrounds → light text (neutral-100)
+    // Blue + gray + red backgrounds → light text (neutral-100)
     expect(getTimingTone(10).text).toBe('text-neutral-100');
     expect(getTimingTone(0).text).toBe('text-neutral-100');
+    expect(getTimingTone(-5).text).toBe('text-neutral-100');
   });
 });
 

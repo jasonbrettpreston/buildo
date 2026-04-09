@@ -1,0 +1,1043 @@
+# Phase 0 Bundle — pinned to d360e0a
+## Scope: Backend foundation + database migrations for spec 70 lead feed
+
+===== FILE: migrations/067_permits_location_geom.sql =====
+
+-- Migration 067: Add native PostGIS Point column to permits
+-- Spec: docs/specs/product/future/75_lead_feed_implementation_guide.md §11
+-- ADR: docs/adr/004-manual-create-index-concurrently.md — operator pre-creates the GIST index with CONCURRENTLY before applying this migration
+--
+-- Adds permits.location (geometry Point, SRID 4326) plus a BEFORE
+-- INSERT/UPDATE trigger that keeps it in sync with latitude/longitude.
+-- IS DISTINCT FROM guards make the trigger a no-op when neither lat
+-- nor lng changed (avoids unnecessary index churn on the 237K-row table).
+--
+-- NOTE on CONCURRENTLY: scripts/migrate.js executes each migration file
+-- as a single multi-statement query, which prevents `CREATE INDEX
+-- CONCURRENTLY` from running. We use a regular `CREATE INDEX IF NOT
+-- EXISTS` here. On production (237K rows) the index should be created
+-- manually beforehand with:
+--   CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_location_gist
+--     ON permits USING GIST (location);
+-- so this migration's IF NOT EXISTS becomes a no-op.
+
+-- UP
+DO $mig$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'postgis') THEN
+    RAISE NOTICE 'PostGIS not installed — skipping permits.location column, trigger, and index';
+    RETURN;
+  END IF;
+
+  EXECUTE 'ALTER TABLE permits ADD COLUMN IF NOT EXISTS location geometry(Point, 4326)';
+
+  EXECUTE $fn$
+    CREATE OR REPLACE FUNCTION permits_set_location() RETURNS TRIGGER AS $body$
+    BEGIN
+      IF NEW.latitude IS NOT NULL AND NEW.longitude IS NOT NULL THEN
+        IF (TG_OP = 'INSERT')
+           OR (NEW.latitude IS DISTINCT FROM OLD.latitude)
+           OR (NEW.longitude IS DISTINCT FROM OLD.longitude) THEN
+          NEW.location := ST_SetSRID(ST_MakePoint(NEW.longitude::float8, NEW.latitude::float8), 4326);
+        END IF;
+      ELSE
+        NEW.location := NULL;
+      END IF;
+      RETURN NEW;
+    END;
+    $body$ LANGUAGE plpgsql;
+  $fn$;
+
+  EXECUTE 'DROP TRIGGER IF EXISTS trg_permits_set_location ON permits';
+  EXECUTE 'CREATE TRIGGER trg_permits_set_location
+           BEFORE INSERT OR UPDATE OF latitude, longitude ON permits
+           FOR EACH ROW EXECUTE FUNCTION permits_set_location()';
+
+  EXECUTE 'CREATE INDEX IF NOT EXISTS idx_permits_location_gist
+           ON permits USING GIST (location)';
+END
+$mig$;
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_permits_location_gist;
+-- DROP TRIGGER IF EXISTS trg_permits_set_location ON permits;
+-- DROP FUNCTION IF EXISTS permits_set_location();
+-- ALTER TABLE permits DROP COLUMN IF EXISTS location;
+
+===== FILE: migrations/068_permits_photo_url.sql =====
+
+-- Migration 068: Add photo_url column to permits
+-- Spec: docs/specs/product/future/75_lead_feed_implementation_guide.md §11
+--
+-- Pure column add. Stores a Street View / scraped photo URL for the
+-- lead feed card hero image. Null when no photo has been resolved.
+
+-- UP
+ALTER TABLE permits ADD COLUMN IF NOT EXISTS photo_url TEXT;
+
+-- DOWN
+-- ALLOW-DESTRUCTIVE
+-- ALTER TABLE permits DROP COLUMN IF EXISTS photo_url;
+
+===== FILE: migrations/069_lead_views.sql =====
+
+-- Migration 069: lead_views table
+-- Spec: docs/specs/product/future/75_lead_feed_implementation_guide.md §11
+--
+-- Tracks which authenticated users have viewed which permit-revisions.
+-- Drives the "N tradespeople have seen this lead" social-proof / scarcity
+-- signal in the lead feed UI.
+
+-- UP
+CREATE TABLE IF NOT EXISTS lead_views (
+  user_id      TEXT        NOT NULL,
+  permit_num   TEXT        NOT NULL,
+  revision_num INTEGER     NOT NULL DEFAULT 0,
+  viewed_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, permit_num, revision_num)
+);
+
+CREATE INDEX IF NOT EXISTS idx_lead_views_user_viewed
+  ON lead_views (user_id, viewed_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_lead_views_permit
+  ON lead_views (permit_num, revision_num);
+
+-- DOWN
+-- ALLOW-DESTRUCTIVE
+-- DROP TABLE IF EXISTS lead_views;
+
+===== FILE: migrations/070_lead_views_corrected.sql =====
+
+-- Migration 070 — lead_views corrected schema
+-- Spec: docs/specs/product/future/70_lead_feed.md §Database Schema
+-- ADR: docs/adr/002-polymorphic-lead-views.md — single polymorphic table is intentional
+-- ADR: docs/adr/003-on-delete-cascade-on-permits-fk.md — ON DELETE CASCADE is intentional
+-- ADR: docs/adr/006-firebase-uid-not-fk.md — user_id is a Firebase UID, not a FK
+--
+-- Backend Phase 0 migration 069 created lead_views with the wrong shape.
+-- This migration drops that brand-new table (zero data) and recreates it
+-- per spec 70: lead_key + lead_type + trade_slug + entity_id + saved, plus
+-- FK CASCADE to both permits and entities, an XOR CHECK across the two
+-- shapes, and three indexes for the hot competition-count and history paths.
+
+-- UP
+-- ALLOW-DESTRUCTIVE (lead_views is brand-new from 069, no data to preserve)
+DROP TABLE IF EXISTS lead_views CASCADE;
+
+CREATE TABLE lead_views (
+  id           SERIAL       PRIMARY KEY,
+  user_id      VARCHAR(100) NOT NULL,
+  lead_key     VARCHAR(100) NOT NULL,
+  lead_type    VARCHAR(20)  NOT NULL CHECK (lead_type IN ('permit', 'builder')),
+  permit_num   VARCHAR(30),
+  revision_num VARCHAR(10),
+  entity_id    INTEGER,
+  trade_slug   VARCHAR(50)  NOT NULL,
+  viewed_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  saved        BOOLEAN      NOT NULL DEFAULT false,
+  UNIQUE (user_id, lead_key, trade_slug),
+  FOREIGN KEY (permit_num, revision_num)
+    REFERENCES permits(permit_num, revision_num) ON DELETE CASCADE,
+  FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE,
+  -- XOR: permit leads have permit cols populated, builder leads have entity_id
+  CHECK (
+    (lead_type = 'permit' AND permit_num IS NOT NULL AND revision_num IS NOT NULL AND entity_id IS NULL)
+    OR
+    (lead_type = 'builder' AND entity_id IS NOT NULL AND permit_num IS NULL AND revision_num IS NULL)
+  )
+);
+
+-- Covering index for the hot competition-count path
+CREATE INDEX idx_lead_views_lead_trade_viewed ON lead_views (lead_key, trade_slug, viewed_at);
+-- User history
+CREATE INDEX idx_lead_views_user_viewed ON lead_views (user_id, viewed_at DESC);
+-- BRIN for retention sweep (insert-ordered timestamps)
+CREATE INDEX idx_lead_views_viewed_brin ON lead_views USING BRIN (viewed_at);
+
+-- DOWN
+-- ALLOW-DESTRUCTIVE
+-- DROP INDEX IF EXISTS idx_lead_views_viewed_brin;
+-- DROP INDEX IF EXISTS idx_lead_views_user_viewed;
+-- DROP INDEX IF EXISTS idx_lead_views_lead_trade_viewed;
+-- DROP TABLE IF EXISTS lead_views CASCADE;
+-- Note: recreating the 069 shape is not automatic; forward-only recovery.
+
+===== FILE: migrations/071_cost_estimates.sql =====
+
+-- Migration 071 — cost_estimates
+-- Spec: docs/specs/product/future/72_lead_cost_model.md §Database Schema
+--
+-- Cached cost estimates for permits, produced either from the permit's own
+-- declared cost or from the Phase 1b cost model. Composite PK keyed on
+-- (permit_num, revision_num) with CASCADE on the permits FK.
+
+-- UP
+CREATE TABLE cost_estimates (
+  permit_num       VARCHAR(30)   NOT NULL,
+  revision_num     VARCHAR(10)   NOT NULL,
+  estimated_cost   DECIMAL(15,2),
+  cost_source      VARCHAR(20)   NOT NULL CHECK (cost_source IN ('permit', 'model')),
+  cost_tier        VARCHAR(20)   CHECK (cost_tier IN ('small', 'medium', 'large', 'major', 'mega')),
+  cost_range_low   DECIMAL(15,2),
+  cost_range_high  DECIMAL(15,2),
+  premium_factor   DECIMAL(3,2)  CHECK (premium_factor IS NULL OR premium_factor >= 1.0),
+  complexity_score INTEGER       CHECK (complexity_score >= 0 AND complexity_score <= 100),
+  model_version    INTEGER       NOT NULL DEFAULT 1,
+  computed_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (permit_num, revision_num),
+  FOREIGN KEY (permit_num, revision_num)
+    REFERENCES permits(permit_num, revision_num) ON DELETE CASCADE,
+  -- Invariant: if both range bounds are given, low <= high
+  CHECK (
+    cost_range_low IS NULL
+    OR cost_range_high IS NULL
+    OR cost_range_low <= cost_range_high
+  )
+);
+
+CREATE INDEX idx_cost_estimates_tier ON cost_estimates (cost_tier);
+
+-- DOWN
+-- ALLOW-DESTRUCTIVE
+-- DROP INDEX IF EXISTS idx_cost_estimates_tier;
+-- DROP TABLE IF EXISTS cost_estimates CASCADE;
+
+===== FILE: migrations/072_inspection_stage_map.sql =====
+
+-- Migration 072 — inspection_stage_map + seed data
+-- Spec: docs/specs/product/future/71_lead_timing_engine.md §Database Schema
+--
+-- Reference table mapping construction inspection stages to downstream
+-- trade slugs with lag windows. Seed data is inline (21 rows, small and
+-- deterministic). `painting` appears under both Fire Separations (prec 10)
+-- and Occupancy (prec 20), so the unique key is on
+-- (stage_name, trade_slug, precedence).
+
+-- UP
+CREATE TABLE inspection_stage_map (
+  id             SERIAL PRIMARY KEY,
+  stage_name     TEXT        NOT NULL,
+  -- Known construction-stage vocabulary. Drives sequence-based ordering in
+  -- the Tier 1 timing engine; bad values (e.g. 15) would break comparisons.
+  stage_sequence INTEGER     NOT NULL CHECK (stage_sequence IN (10, 20, 30, 40, 50, 60, 70)),
+  trade_slug     VARCHAR(50) NOT NULL,
+  relationship   VARCHAR(20) NOT NULL CHECK (relationship IN ('follows', 'concurrent')),
+  min_lag_days   INTEGER     NOT NULL,
+  max_lag_days   INTEGER     NOT NULL,
+  precedence     INTEGER     NOT NULL DEFAULT 100 CHECK (precedence > 0),
+  -- Data integrity: lag window must be non-degenerate
+  CHECK (min_lag_days >= 0 AND max_lag_days >= min_lag_days)
+);
+
+CREATE UNIQUE INDEX idx_inspection_stage_map_stage_trade_prec
+  ON inspection_stage_map (stage_name, trade_slug, precedence);
+CREATE INDEX idx_inspection_stage_map_trade ON inspection_stage_map (trade_slug);
+
+INSERT INTO inspection_stage_map (stage_name, stage_sequence, trade_slug, relationship, min_lag_days, max_lag_days, precedence) VALUES
+('Excavation/Shoring', 10, 'concrete', 'follows', 5, 14, 100),
+('Excavation/Shoring', 10, 'waterproofing', 'follows', 7, 21, 100),
+('Excavation/Shoring', 10, 'drain-plumbing', 'concurrent', 0, 7, 100),
+('Footings/Foundations', 20, 'framing', 'follows', 7, 21, 100),
+('Footings/Foundations', 20, 'structural-steel', 'follows', 7, 21, 100),
+('Footings/Foundations', 20, 'masonry', 'follows', 14, 28, 100),
+('Structural Framing', 30, 'plumbing', 'follows', 5, 14, 100),
+('Structural Framing', 30, 'electrical', 'follows', 5, 14, 100),
+('Structural Framing', 30, 'hvac', 'follows', 5, 14, 100),
+('Structural Framing', 30, 'fire-protection', 'follows', 7, 21, 100),
+('Structural Framing', 30, 'roofing', 'concurrent', 0, 14, 100),
+('Insulation/Vapour Barrier', 40, 'drywall', 'follows', 5, 14, 100),
+('Fire Separations', 50, 'painting', 'follows', 7, 21, 10),
+('Fire Separations', 50, 'flooring', 'follows', 7, 21, 100),
+('Fire Separations', 50, 'tiling', 'follows', 7, 21, 100),
+('Fire Separations', 50, 'trim-work', 'follows', 14, 28, 100),
+('Fire Separations', 50, 'millwork-cabinetry', 'follows', 14, 28, 100),
+('Fire Separations', 50, 'stone-countertops', 'follows', 14, 28, 100),
+('Interior Final Inspection', 60, 'landscaping', 'follows', 0, 14, 100),
+('Interior Final Inspection', 60, 'decking-fences', 'follows', 0, 14, 100),
+('Occupancy', 70, 'painting', 'follows', 0, 7, 20);
+
+-- DOWN
+-- ALLOW-DESTRUCTIVE
+-- DROP TABLE IF EXISTS inspection_stage_map;
+
+===== FILE: migrations/073_timing_calibration.sql =====
+
+-- Migration 073 — timing_calibration
+-- Spec: docs/specs/product/future/71_lead_timing_engine.md §Database Schema
+--
+-- Per-permit-type calibration of median / p25 / p75 days from issue to
+-- first inspection. Populated by compute-timing-calibration.js in Phase 1b.
+
+-- UP
+CREATE TABLE timing_calibration (
+  id                              SERIAL       PRIMARY KEY,
+  permit_type                     VARCHAR(100) NOT NULL,
+  median_days_to_first_inspection INTEGER      NOT NULL,
+  p25_days                        INTEGER      NOT NULL,
+  p75_days                        INTEGER      NOT NULL,
+  sample_size                     INTEGER      NOT NULL,
+  computed_at                     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  UNIQUE (permit_type)
+);
+
+-- DOWN
+-- ALLOW-DESTRUCTIVE
+-- DROP TABLE IF EXISTS timing_calibration;
+
+===== FILE: migrations/074_entities_photo_url.sql =====
+
+-- Migration 074 — entities photo_url + photo_validated_at
+-- Spec: docs/specs/product/future/73_builder_leads.md §Migration needed
+--
+-- V1 does not fetch builder photos. These columns are added now so Phase 1b
+-- types and queries can reference them cleanly, and V2 can wire the
+-- SSRF-safe pipeline fetcher without another migration. The HTTPS CHECK
+-- enforces defense-in-depth at write time.
+
+-- UP
+ALTER TABLE entities ADD COLUMN IF NOT EXISTS photo_url VARCHAR(500);
+ALTER TABLE entities ADD COLUMN IF NOT EXISTS photo_validated_at TIMESTAMPTZ;
+
+ALTER TABLE entities ADD CONSTRAINT entities_photo_url_https
+  CHECK (photo_url IS NULL OR photo_url LIKE 'https://%');
+
+-- DOWN
+-- ALLOW-DESTRUCTIVE
+-- ALTER TABLE entities DROP CONSTRAINT IF EXISTS entities_photo_url_https;
+-- ALTER TABLE entities DROP COLUMN IF EXISTS photo_validated_at;
+-- ALTER TABLE entities DROP COLUMN IF EXISTS photo_url;
+
+===== FILE: migrations/075_user_profiles.sql =====
+
+-- Migration 075 — user_profiles
+-- 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints
+-- 🔗 ADR: docs/adr/006-firebase-uid-not-fk.md — user_id is a Firebase UID, not a FK
+--
+-- Maps Firebase UIDs to a tradesperson's selected trade. Required for the
+-- spec 70 server-side trade_slug authorization check ("server compares
+-- trade_slug against the authenticated user's profile trade — mismatch
+-- returns 403"). Phase 2 leads routes call src/lib/auth/get-user-context.ts
+-- which queries this table on every request.
+--
+-- - user_id is a Firebase UID, not a FK to anything (same convention as
+--   lead_views.user_id from migration 070).
+-- - trade_slug is NOT a FK to a trades lookup table per the codebase pattern
+--   (slugs are referenced by string everywhere). The CHECK on length > 0
+--   prevents empty-string drift.
+-- - display_name is optional metadata so the future onboarding UI can
+--   populate it without another migration.
+-- - No email column — Firebase already owns identity.
+
+-- UP
+-- VARCHAR(128) matches Firebase Authentication's documented max UID length
+-- (28 chars typical, up to 128). lead_views.user_id is VARCHAR(100) — that's
+-- a pre-existing inconsistency tracked in followups; this column uses the
+-- correct width.
+CREATE TABLE user_profiles (
+  user_id      VARCHAR(128) PRIMARY KEY,
+  trade_slug   VARCHAR(50)  NOT NULL,
+  display_name VARCHAR(200),
+  created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  -- trim() <> '' rejects whitespace-only slugs in addition to the empty string
+  CONSTRAINT user_profiles_trade_slug_not_empty CHECK (trim(trade_slug) <> '')
+);
+
+-- No secondary indexes — the only Phase 2 query path is `WHERE user_id = $1`
+-- which uses the primary key. A trade_slug index was considered but no
+-- query needs it yet; can be added in a future migration if a "list users
+-- by trade" feature ships.
+
+-- DOWN
+-- ALLOW-DESTRUCTIVE
+-- DROP TABLE IF EXISTS user_profiles;
+
+===== FILE: migrations/076_lead_views_user_id_widen.sql =====
+
+-- Migration 076 — widen lead_views.user_id from VARCHAR(100) to VARCHAR(128)
+-- 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §Database Schema
+--
+-- Fixes a latent data-integrity bug introduced by migration 070. Firebase
+-- Authentication documents UIDs up to 128 characters; migration 070 declared
+-- `user_id VARCHAR(100)` which silently truncates the upper range. Any user
+-- with a UID > 100 chars could authenticate + create a user_profiles row
+-- (migration 075 was correctly VARCHAR(128)) but every INSERT into
+-- lead_views would fail — blocking view tracking and competition_count for
+-- the affected users.
+--
+-- Caught by the Phase 2 holistic review (Gemini HIGH + DeepSeek MED +
+-- Independent L2). The previous Phase 2-i triage acknowledged the gap and
+-- tracked it in docs/reports/review_followups.md line 164 — this migration
+-- closes that followup.
+--
+-- Safe: ALTER COLUMN TYPE VARCHAR(100) → VARCHAR(128) is a metadata-only
+-- change on PostgreSQL (no full table rewrite) because VARCHAR length is a
+-- CHECK constraint, not a storage decision.
+
+-- UP
+ALTER TABLE lead_views
+  ALTER COLUMN user_id TYPE VARCHAR(128);
+
+-- DOWN
+-- ALTER TABLE lead_views
+--   ALTER COLUMN user_id TYPE VARCHAR(100);
+--
+-- Not executed automatically — narrowing the column would truncate any
+-- rows inserted with UIDs > 100 chars between the UP and a hypothetical
+-- rollback, causing silent data loss. Operator must manually verify no
+-- affected rows exist before narrowing.
+
+===== FILE: src/lib/auth/config.ts =====
+
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+
+function getFirebaseApp(): FirebaseApp {
+  if (!app) {
+    const existing = getApps();
+    const configWithoutUndefined: Record<string, string> = {};
+    for (const [key, value] of Object.entries(firebaseConfig)) {
+      if (value !== undefined) configWithoutUndefined[key] = value;
+    }
+    app = existing.length === 0 ? initializeApp(configWithoutUndefined) : existing[0]!;
+  }
+  return app;
+}
+
+export function getFirebaseAuth(): Auth {
+  if (!auth) {
+    auth = getAuth(getFirebaseApp());
+  }
+  return auth;
+}
+
+export function getFirebaseDb(): Firestore {
+  if (!db) {
+    db = getFirestore(getFirebaseApp());
+  }
+  return db;
+}
+
+===== FILE: src/lib/auth/route-guard.ts =====
+
+// Route classification and protection logic for Next.js middleware
+// SPEC LINK: docs/specs/13_auth.md
+
+export type RouteClass = 'public' | 'authenticated' | 'admin';
+
+// ---------------------------------------------------------------------------
+// Dev Mode — bypass auth for local development
+// ---------------------------------------------------------------------------
+
+/**
+ * Check if dev mode is enabled via NEXT_PUBLIC_DEV_MODE=true.
+ * When enabled, middleware auto-injects a dev session cookie so
+ * all routes are accessible without Firebase authentication.
+ */
+export function isDevMode(): boolean {
+  return process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+}
+
+/** A valid JWT-shaped cookie value used in dev mode to satisfy session checks. */
+export const DEV_SESSION_COOKIE = 'dev.buildo.local';
+
+// ---------------------------------------------------------------------------
+// Public paths — accessible without authentication
+// ---------------------------------------------------------------------------
+
+export const PUBLIC_PATHS = [
+  '/',
+  '/login',
+  '/signup',
+  '/search',
+  '/map',
+] as const;
+
+/** Path prefixes that are always public */
+const PUBLIC_PREFIXES = [
+  '/_next/',
+  '/api/auth/',
+  '/api/permits',
+  '/api/trades',
+  '/api/builders',
+  '/api/products',
+  '/api/coa',
+  '/api/quality',
+  '/permits/',
+] as const;
+
+/** Exact public file paths */
+const PUBLIC_FILES = [
+  '/favicon.ico',
+  '/robots.txt',
+  '/sitemap.xml',
+] as const;
+
+// ---------------------------------------------------------------------------
+// Admin paths — require admin role
+// ---------------------------------------------------------------------------
+
+export const ADMIN_PATH_PREFIX = '/admin';
+
+// ---------------------------------------------------------------------------
+// Mutation API routes — require authentication
+// ---------------------------------------------------------------------------
+
+const AUTHENTICATED_API_ROUTES = [
+  '/api/sync',
+  '/api/quality/refresh',
+  '/api/notifications',
+  '/api/leads', // Phase 2 lead feed routes — require Firebase session
+] as const;
+
+// ---------------------------------------------------------------------------
+// Classification
+// ---------------------------------------------------------------------------
+
+/**
+ * Classify a URL path as public, authenticated, or admin.
+ * Used by Next.js middleware to decide whether to allow/block/redirect.
+ */
+export function classifyRoute(pathname: string): RouteClass {
+  // Static files
+  if (PUBLIC_FILES.some(f => pathname === f)) return 'public';
+
+  // Next.js internals
+  if (pathname.startsWith('/_next/')) return 'public';
+
+  // Auth API routes — always public
+  if (pathname.startsWith('/api/auth/')) return 'public';
+
+  // Admin API routes — require admin
+  if (pathname.startsWith('/api/admin/')) return 'admin';
+
+  // Admin pages — require admin
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) return 'admin';
+
+  // Mutation API routes — require auth
+  if (AUTHENTICATED_API_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) {
+    return 'authenticated';
+  }
+
+  // Read-only data APIs — public (serve search/map pages)
+  if (PUBLIC_PREFIXES.some(p => pathname.startsWith(p))) return 'public';
+
+  // Exact public paths
+  if ((PUBLIC_PATHS as readonly string[]).includes(pathname)) return 'public';
+
+  // Protected pages: dashboard, onboarding
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')) {
+    return 'authenticated';
+  }
+
+  // Default: public (unknown routes handled by Next.js 404)
+  return 'public';
+}
+
+/** Check if a route is publicly accessible */
+export function isPublicRoute(pathname: string): boolean {
+  return classifyRoute(pathname) === 'public';
+}
+
+/** Check if a route requires admin privileges */
+export function isAdminRoute(pathname: string): boolean {
+  return classifyRoute(pathname) === 'admin';
+}
+
+/** Check if a path is an auth API endpoint */
+export function isAuthRoute(pathname: string): boolean {
+  return pathname.startsWith('/api/auth/');
+}
+
+// ---------------------------------------------------------------------------
+// Session cookie helpers
+// ---------------------------------------------------------------------------
+
+export const SESSION_COOKIE_NAME = '__session';
+
+/**
+ * Basic session cookie validation.
+ * Checks that the cookie exists and looks like a JWT (3 dot-separated base64 segments).
+ * Full verification (signature, expiry) requires Firebase Admin SDK.
+ */
+export function isValidSessionCookie(value: string | undefined): boolean {
+  if (!value) return false;
+  const parts = value.split('.');
+  return parts.length === 3 && parts.every(p => p.length > 0);
+}
+
+===== FILE: src/lib/auth/rate-limit.ts =====
+
+// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 + docs/specs/00_engineering_standards.md §4
+//
+// Rate limiting wrapper. Uses Upstash Redis when env vars are set,
+// falls back to an in-memory counter for dev. Fail-closed in production
+// on Redis errors, fail-open in development.
+
+import { createHash } from 'node:crypto';
+import type { NextRequest } from 'next/server';
+import { logError, logInfo } from '@/lib/logger';
+
+interface RateLimitOptions {
+  key: string; // identifier (uid or ip)
+  limit: number; // max requests
+  windowSec: number; // window length in seconds
+}
+
+interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+}
+
+interface UpstashLimiter {
+  limit: (key: string) => Promise<{ success: boolean; remaining: number }>;
+}
+
+interface MemBucket {
+  count: number;
+  expiresAt: number; // epoch ms
+}
+
+// Short, irreversible hash for logs — never log raw keys (uid/ip are PII).
+function hashKey(key: string): string {
+  return createHash('sha256').update(key).digest('hex').slice(0, 12);
+}
+
+// In-memory fallback. Map from "key:windowStart" -> { count, expiresAt }.
+//
+// DEV-ONLY in-memory fallback. Has a small race window under concurrent reads
+// of the same bucket (read-modify-write is not atomic); this is acceptable
+// because production uses Upstash. Do not use this in serverless/multi-instance
+// environments — counts are per-process and easily bypassed by load balancing.
+const memCounts = new Map<string, MemBucket>();
+
+function memoryRateLimit(opts: RateLimitOptions): RateLimitResult {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const windowStart = Math.floor(nowSec / opts.windowSec) * opts.windowSec;
+  const bucket = `${opts.key}:${windowStart}`;
+  const existing = memCounts.get(bucket);
+  const count = (existing?.count ?? 0) + 1;
+  const expiresAt = (windowStart + opts.windowSec) * 1000;
+  memCounts.set(bucket, { count, expiresAt });
+  // GC expired buckets occasionally (dev-only).
+  if (memCounts.size > 10_000) {
+    const nowMs = Date.now();
+    for (const [k, entry] of memCounts) {
+      if (nowMs > entry.expiresAt) memCounts.delete(k);
+    }
+  }
+  return { allowed: count <= opts.limit, remaining: Math.max(0, opts.limit - count) };
+}
+
+// Per-(limit, windowSec) cache of Upstash limiters. A single global client
+// cached on the first caller's options would misreport limits for every other
+// endpoint, since the sliding-window config is baked into the limiter.
+const upstashCache = new Map<string, UpstashLimiter>();
+let upstashConfigured: boolean | null = null;
+
+async function getUpstashClient(opts: RateLimitOptions): Promise<UpstashLimiter | null> {
+  if (upstashConfigured === false) return null;
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) {
+    upstashConfigured = false;
+    return null;
+  }
+  upstashConfigured = true;
+  const cacheKey = `${opts.limit}:${opts.windowSec}`;
+  const cached = upstashCache.get(cacheKey);
+  if (cached) return cached;
+  try {
+    const ratelimitMod = await import('@upstash/ratelimit');
+    const redisMod = await import('@upstash/redis');
+    const Ratelimit = ratelimitMod.Ratelimit;
+    const Redis = redisMod.Redis;
+    const redis = new Redis({ url, token });
+    const limiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(opts.limit, `${opts.windowSec} s` as `${number} s`),
+    }) as unknown as UpstashLimiter;
+    upstashCache.set(cacheKey, limiter);
+    return limiter;
+  } catch (err) {
+    logError('[auth/ratelimit]', err, { stage: 'init', key_hash: hashKey(opts.key) });
+    return null;
+  }
+}
+
+export async function withRateLimit(
+  _request: NextRequest,
+  opts: RateLimitOptions
+): Promise<RateLimitResult> {
+  const client = await getUpstashClient(opts);
+  if (!client) {
+    // No Upstash configured. In production this is a misconfig: fall back to
+    // in-memory (so we don't fail-closed on dev/test accidentally) but log
+    // loudly so ops sees it.
+    if (process.env.NODE_ENV === 'production') {
+      logError(
+        '[auth/ratelimit]',
+        new Error(
+          'Upstash not configured in production — falling back to in-memory rate limiter (per-instance, easily bypassed)',
+        ),
+        { stage: 'fallback', key_hash: hashKey(opts.key) },
+      );
+    }
+    return memoryRateLimit(opts);
+  }
+  try {
+    const res = await client.limit(opts.key);
+    logInfo('[auth/ratelimit]', res.success ? 'allowed' : 'denied', {
+      key_hash: hashKey(opts.key),
+      remaining: res.remaining,
+    });
+    return { allowed: res.success, remaining: res.remaining };
+  } catch (err) {
+    logError('[auth/ratelimit]', err, { stage: 'limit', key_hash: hashKey(opts.key) });
+    // Fail-closed in prod, fail-open in dev
+    if (process.env.NODE_ENV === 'production') {
+      return { allowed: false, remaining: 0 };
+    }
+    return { allowed: true, remaining: 0 };
+  }
+}
+
+// Test-only: reset module state between tests
+export function __resetRateLimitState(): void {
+  memCounts.clear();
+  upstashCache.clear();
+  upstashConfigured = null;
+}
+
+===== FILE: src/lib/auth/session.ts =====
+
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  type User,
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { getFirebaseAuth, getFirebaseDb } from './config';
+import type { UserProfile, UserPreferences, AccountType } from './types';
+import { DEFAULT_PREFERENCES } from './types';
+
+const googleProvider = new GoogleAuthProvider();
+
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  displayName: string,
+  accountType: AccountType
+): Promise<UserProfile> {
+  const auth = getFirebaseAuth();
+  const { user } = await createUserWithEmailAndPassword(auth, email, password);
+  const profile = await createUserProfile(user, displayName, accountType);
+  return profile;
+}
+
+export async function signInWithEmail(
+  email: string,
+  password: string
+): Promise<User> {
+  const auth = getFirebaseAuth();
+  const { user } = await signInWithEmailAndPassword(auth, email, password);
+  return user;
+}
+
+export async function signInWithGoogle(): Promise<User> {
+  const auth = getFirebaseAuth();
+  const { user } = await signInWithPopup(auth, googleProvider);
+
+  // Check if profile exists, create if not
+  const profile = await getUserProfile(user.uid);
+  if (!profile) {
+    await createUserProfile(user, user.displayName || 'User', 'individual');
+  }
+
+  return user;
+}
+
+export async function signOut(): Promise<void> {
+  const auth = getFirebaseAuth();
+  await firebaseSignOut(auth);
+}
+
+export function onAuthChange(callback: (user: User | null) => void): () => void {
+  const auth = getFirebaseAuth();
+  return onAuthStateChanged(auth, callback);
+}
+
+async function createUserProfile(
+  user: User,
+  displayName: string,
+  accountType: AccountType
+): Promise<UserProfile> {
+  const db = getFirebaseDb();
+  const profile: UserProfile = {
+    uid: user.uid,
+    email: user.email || '',
+    display_name: displayName,
+    account_type: accountType,
+    created_at: new Date(),
+    onboarding_completed: false,
+  };
+
+  await setDoc(doc(db, 'users', user.uid), profile);
+  await setDoc(
+    doc(db, 'users', user.uid, 'preferences', 'notifications'),
+    DEFAULT_PREFERENCES
+  );
+
+  return profile;
+}
+
+export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  const db = getFirebaseDb();
+  const snap = await getDoc(doc(db, 'users', uid));
+  if (!snap.exists()) return null;
+  return snap.data() as UserProfile;
+}
+
+export async function getUserPreferences(uid: string): Promise<UserPreferences> {
+  const db = getFirebaseDb();
+  const snap = await getDoc(doc(db, 'users', uid, 'preferences', 'notifications'));
+  if (!snap.exists()) return DEFAULT_PREFERENCES;
+  return snap.data() as UserPreferences;
+}
+
+export async function updateUserPreferences(
+  uid: string,
+  prefs: Partial<UserPreferences>
+): Promise<void> {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, 'users', uid, 'preferences', 'notifications'), prefs);
+}
+
+export async function completeOnboarding(uid: string): Promise<void> {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, 'users', uid), { onboarding_completed: true });
+}
+
+export async function savePermit(
+  uid: string,
+  permitNum: string,
+  revisionNum: string
+): Promise<void> {
+  const db = getFirebaseDb();
+  const permitId = `${permitNum}--${revisionNum}`;
+  await setDoc(doc(db, 'users', uid, 'savedPermits', permitId), {
+    permit_num: permitNum,
+    revision_num: revisionNum,
+    status: 'new',
+    notes: '',
+    saved_at: new Date(),
+    updated_at: new Date(),
+  });
+}
+
+export async function updateSavedPermitStatus(
+  uid: string,
+  permitId: string,
+  status: string,
+  notes?: string
+): Promise<void> {
+  const db = getFirebaseDb();
+  const update: Record<string, unknown> = { status, updated_at: new Date() };
+  if (notes !== undefined) update.notes = notes;
+  await updateDoc(doc(db, 'users', uid, 'savedPermits', permitId), update);
+}
+
+===== FILE: src/lib/db/client.ts =====
+
+import { Pool, PoolClient, QueryResultRow } from 'pg';
+import { logError } from '@/lib/logger';
+
+const poolConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+      connectionTimeoutMillis: 5000,
+      idleTimeoutMillis: 30000,
+    }
+  : {
+      host: process.env.PG_HOST || 'localhost',
+      port: parseInt(process.env.PG_PORT || '5432', 10),
+      database: process.env.PG_DATABASE || 'buildo',
+      user: process.env.PG_USER || 'postgres',
+      password: process.env.PG_PASSWORD || '',
+      connectionTimeoutMillis: 5000,
+      idleTimeoutMillis: 30000,
+    };
+
+// Next.js HMR connection leak prevention: cache pool on globalThis in dev
+// so hot reloads reuse the same pool instead of orphaning connections.
+const globalForPg = globalThis as unknown as { pgPool: Pool | undefined };
+const pool = globalForPg.pgPool ?? new Pool(poolConfig);
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPg.pgPool = pool;
+}
+
+if (pool.listenerCount('error') === 0) {
+  pool.on('error', (err) => {
+    logError('[db/pool]', err, { event: 'idle_client_error' });
+  });
+}
+
+/**
+ * Execute a parameterized query and return the resulting rows.
+ */
+export async function query<T extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params?: unknown[]
+): Promise<T[]> {
+  const result = await pool.query<T>(text, params);
+  return result.rows;
+}
+
+/**
+ * Safely execute database queries inside a managed transaction.
+ * Automatically handles BEGIN, COMMIT, ROLLBACK, and client.release().
+ */
+export async function withTransaction<T>(
+  fn: (client: PoolClient) => Promise<T>
+): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackErr) {
+      logError('[db/transaction]', rollbackErr as Error, { phase: 'rollback_failed' });
+    }
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * @deprecated Use {@link withTransaction} instead. getClient() requires manual
+ * BEGIN/COMMIT/ROLLBACK/release() which is error-prone.
+ */
+export async function getClient(): Promise<PoolClient> {
+  return pool.connect();
+}
+
+export { pool };
+
+===== FILE: src/lib/logger.ts =====
+
+// Centralized error logging — console.error locally, Sentry in production.
+// SPEC LINK: docs/reports/system_architecture_audit.md
+
+type ErrorContext = Record<string, unknown>;
+
+let sentryCaptureException: ((err: unknown, ctx?: { extra?: ErrorContext }) => void) | null = null;
+
+// Lazy-load Sentry only when DSN is configured (production).
+// In local dev, this stays null and errors go to console only.
+// webpackIgnore comment prevents the "Critical dependency" warning.
+if (typeof process !== 'undefined' && process.env.SENTRY_DSN) {
+  import(/* webpackIgnore: true */ '@sentry/nextjs')
+    .then((Sentry: { init: (opts: Record<string, unknown>) => void; captureException: (err: unknown, ctx?: Record<string, unknown>) => void }) => {
+      Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        environment: process.env.NODE_ENV || 'development',
+        tracesSampleRate: 0.1,
+      });
+      sentryCaptureException = (err, ctx) => Sentry.captureException(err, ctx);
+    })
+    .catch(() => {
+      // @sentry/nextjs not installed — stay in console-only mode
+    });
+}
+
+/**
+ * Log an error with structured context.
+ * Always writes to console.error. When SENTRY_DSN is set, also reports to Sentry.
+ *
+ * @param tag  Short label like "[sync]" or "[api/builders]"
+ * @param err  The error object or message
+ * @param context  Optional structured data (permit_num, pipeline, etc.)
+ */
+export function logError(tag: string, err: unknown, context?: ErrorContext): void {
+  console.error(tag, err);
+
+  if (sentryCaptureException) {
+    sentryCaptureException(err instanceof Error ? err : new Error(String(err)), {
+      extra: { tag, ...context },
+    });
+  }
+}
+
+/**
+ * Log a warning (non-fatal). Console-only — no Sentry report.
+ */
+export function logWarn(tag: string, message: string, context?: ErrorContext): void {
+  console.warn(tag, message, context ?? '');
+}
+
+/**
+ * Log an informational event. Emits a structured JSON line that can be
+ * ingested by log aggregators (Datadog, CloudWatch, etc.) without parsing.
+ *
+ * Use for observability events that aren't errors or warnings:
+ *   - API request completion: { user_id, route, duration_ms }
+ *   - Pipeline progress: { script, batch, rows_processed }
+ *   - Feature usage: { event, user_id, ...metadata }
+ *
+ * Handles non-serializable values (circular refs, BigInt, etc.) gracefully —
+ * never throws, falls back to a safe stringification.
+ *
+ * @param tag    Short label like "[api/leads/feed]" or "[pipeline/permits]"
+ * @param event  Snake_case event name like "feed_query_success"
+ * @param context Optional structured data merged into the JSON line
+ */
+export function logInfo(tag: string, event: string, context?: ErrorContext): void {
+  const payload: Record<string, unknown> = {
+    level: 'info',
+    tag,
+    event,
+    timestamp: new Date().toISOString(),
+    ...(context ?? {}),
+  };
+  let line: string;
+  try {
+    line = JSON.stringify(payload);
+  } catch {
+    // Circular ref or other JSON.stringify failure — fall back to a safe
+    // shape that omits the problematic context but preserves the event.
+    line = JSON.stringify({
+      level: 'info',
+      tag,
+      event,
+      timestamp: payload.timestamp,
+      _context_serialization_failed: true,
+    });
+  }
+  console.log(line);
+}

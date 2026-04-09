@@ -163,6 +163,8 @@ const samplePermitRow = {
   value_score: 20,
   opportunity_score: 10,
   relevance_score: 90,
+  timing_confidence: 'high' as const,
+  opportunity_type: 'newbuild' as const,
 };
 
 const sampleBuilderRow = {
@@ -190,6 +192,8 @@ const sampleBuilderRow = {
   value_score: 20,
   opportunity_score: 7,
   relevance_score: 67,
+  timing_confidence: 'high' as const,
+  opportunity_type: 'builder-led' as const,
 };
 
 function makeInput(overrides: Partial<LeadFeedInput> = {}): LeadFeedInput {

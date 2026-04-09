@@ -23,7 +23,9 @@
   },
   "feed": {
     "max_limit": 30,
-    "default_limit": 15
+    "default_limit": 15,
+    "forced_refetch_threshold_m": 500,
+    "coord_precision": 1000
   },
   "schema": {
     "firebase_uid_max": 128,

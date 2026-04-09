@@ -50,6 +50,20 @@ export async function getCurrentUserContext(
     );
     const row = res.rows[0];
     if (!row) return null;
+    // Defense in depth: the column is declared NOT NULL in migration
+    // 075 + constrained by `trim(trade_slug) <> ''`, but a null guard
+    // here ensures the UserContext type contract (`trade_slug: string`)
+    // holds even if a future migration accidentally relaxes the
+    // constraint. Caught by the Phase 0-3 comprehensive review
+    // (DeepSeek Phase 2 HIGH).
+    if (typeof row.trade_slug !== 'string' || row.trade_slug.length === 0) {
+      logError(
+        '[auth/get-user-context]',
+        new Error('user_profiles.trade_slug is null or empty — schema drift'),
+        { uid, stage: 'profile-validate' },
+      );
+      return null;
+    }
     return { uid, trade_slug: row.trade_slug, display_name: row.display_name };
   } catch (err) {
     logError('[auth/get-user-context]', err, { uid, stage: 'profile-lookup' });

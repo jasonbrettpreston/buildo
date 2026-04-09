@@ -190,6 +190,19 @@ export function SaveButton({
     mutation.mutate(payload, {
       onError: (err) => {
         setSaved(!nextSaved); // rollback
+        // Compensating telemetry — we logged the intent optimistically
+        // above, but the server rejected it. Without this, PostHog
+        // funnels that count `lead_feed.lead_saved` will be inflated
+        // by rejections. The compensating event makes the diff
+        // (`saved` minus `save_failed`) equal to the server's actual
+        // save count. Caught by Phase 0-3 review (Sonnet Overall M3).
+        captureEvent('lead_feed.lead_save_failed', {
+          lead_type: leadType,
+          lead_id: leadId,
+          trade_slug: tradeSlug,
+          intended_action: nextSaved ? 'save' : 'unsave',
+          error_code: err.code,
+        });
         onError?.(err);
       },
       onSuccess: () => {
@@ -209,7 +222,13 @@ export function SaveButton({
       animate={userInteractedRef.current && saved ? { scale: [1, 1.3, 1] } : { scale: 1 }}
       whileTap={{ scale: 0.9 }}
       transition={{ type: 'spring', stiffness: 400, damping: 20, mass: 1 }}
-      aria-label={saved ? 'Remove from saved' : 'Save lead'}
+      // Stable aria-label + aria-pressed is the WCAG-preferred toggle
+      // button pattern: the label describes the control ("Save lead"),
+      // aria-pressed carries the state. A changing aria-label in
+      // addition to aria-pressed creates a screen-reader double-
+      // announcement. Caught by Phase 0-3 comprehensive review
+      // (Sonnet Phase 3 MED M1).
+      aria-label="Save lead"
       aria-pressed={saved}
     >
       {saved ? (

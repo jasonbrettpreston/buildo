@@ -85,6 +85,8 @@ const sampleResult = {
       value_score: 20,
       opportunity_score: 10,
       relevance_score: 90,
+      timing_confidence: 'high' as const,
+      opportunity_type: 'newbuild' as const,
     },
   ],
   meta: {

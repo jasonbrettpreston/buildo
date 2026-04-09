@@ -124,6 +124,79 @@
 | HIGH | Gemini+DeepSeek | timing.ts test "missing Tier 2 coverage" | n/a | DEFERRED to Phase 1b-iii follow-up test pass — current 20 tests cover the structural correctness; comprehensive Tier 2 calibration scenarios will land alongside `get-lead-feed.ts` tests in Phase 1b-iii. |
 | LOW | Independent (deferred) | Independent review agent hit Anthropic 529 overload twice on commit 13657da | Phase 1b-iii or standalone | Adversarial reviews (8 of 8) provided coverage. Dual code path verification (cost-model only) and structural walkthroughs done inline. Sample input traces verified manually below. |
 
+## 2026-04-09 — Comprehensive Review Pass (DeepSeek + Sonnet Independent across Phases 0-3, commit TBD)
+
+Seven-review pass (DeepSeek phases 0/1/2/3/overall + Sonnet Phase 3 holistic + Sonnet overall holistic) against commit `d360e0a`. DeepSeek phase 3 and overall hit reasoning-token overflow on large bundles and returned empty bodies — covered by the Sonnet reviews instead. Total 5 usable reviews + 60 existing OPEN rows triaged.
+
+**Fixed in this commit (18 rows):**
+
+| Sev | Source | Item | Closed in |
+|-----|--------|------|-----------|
+| HIGH | DS-P0 | Migration 067 trigger missing lat/lng WGS84 range validation | this commit (migration 077) |
+| HIGH | DS-P0 | Migration 074 HTTPS CHECK allows malformed URLs (`https://`, `https:///`) | this commit (migration 077 regex tightening) |
+| HIGH | DS-P1 | `buildLeadKey` `padStart('000', 2, '0')` returns `'000'` but PG `LPAD('000', 2, '0')` truncates to `'00'` — silent mismatch for revision_num length > 2 | this commit (`.slice(-2)` normalization) |
+| HIGH | DS-P1 | `buildDisplay` `>= 1.35` hardcoded vs `PREMIUM_TIERS[2].multiplier` drift | this commit (index reference) |
+| CRIT | DS-P2 | POST /api/leads/view missing Content-Type validation — client can send text/plain and trip `request.json()` into cryptic errors | this commit (415 INVALID_CONTENT_TYPE + 3 tests) |
+| HIGH | DS-P2 | `getCurrentUserContext` may return non-string `trade_slug` despite TypeScript contract | this commit (defensive null/empty guard + logError) |
+| MED | DS-P2 | `envelope.err()` doesn't safely serialize `details` — circular refs crash NextResponse.json | this commit (JSON.stringify round-trip fallback) |
+| LOW | DS-P2 | `logRequestComplete` negative duration from clock skew | this commit (`Math.max(0, ...)`) |
+| CRIT | Sonnet-P3 | `--color-timing-past` tone from spec 74 never implemented — past leads render as distant gray instead of red | this commit (token + Past branch + test) |
+| HIGH | Sonnet-P3 | `--color-timing-future` naming drift vs spec 74 `--timing-distant` | this commit (renamed token + Tone label) |
+| MED | Sonnet-P3 | SaveButton `aria-pressed` + dynamic `aria-label` double-announcement | this commit (stable aria-label "Save lead") |
+| MED | Sonnet-P3 | `haversine.ts` in `hooks/` should be in `lib/` per spec 75 §1.1 | this commit (file move + 2 import updates) |
+| HIGH | Sonnet-OV | `TimingBadge` requires `confidence` but `PermitLeadFeedItem` never had it | this commit (SQL CASE + type + test fixtures) |
+| HIGH | Sonnet-OV | `OpportunityBadge` requires `OpportunityType` but feed only returns raw permit_type | this commit (SQL CASE ILIKE classifier + type) |
+| MED | Sonnet-OV | `FORCED_REFETCH_THRESHOLD_M` + `COORD_PRECISION` missing from `_contracts.json` | this commit (contracts + 2 new assertions) |
+| MED | Sonnet-OV | `DEFAULT_FEED_LIMIT = 15` hardcoded twice in `useLeadFeed` instead of imported | this commit (import from get-lead-feed) |
+| MED | Sonnet-OV | `captureEvent` fires before mutation → phantom telemetry on 403/429 rejection | this commit (compensating `lead_feed.lead_save_failed` event) |
+| MED | Existing followup line 138 | `scripts/purge-lead-views.js` unimplemented (PIPEDA 90-day retention release blocker) | this commit (batched retention script with dry-run + reconcile stub) |
+
+**Dismissed as false alarms (10 rows):**
+
+| Source | Claim | Why dismissed |
+|--------|-------|---------------|
+| DS-P0 CRIT | FK `revision_num INTEGER` vs `VARCHAR(10)` mismatch | Verified: `permits.revision_num IS VARCHAR(10)`. DeepSeek hallucinated integer type. |
+| DS-P0 HIGH | `route-guard.isValidSessionCookie` only shape-checks JWT | Edge middleware is intentionally shape-only; full `verifyIdToken` via firebase-admin runs in `src/lib/auth/get-user.ts`. |
+| DS-P0 HIGH | In-memory rate-limit production race | Prod fallback already logs critical error (line 108-115) + documented as bypass risk. |
+| DS-P0 MED | Upstash cache memory leak | Cache is keyed by `(limit, windowSec)` not per-user; max 2 entries ever for feed+view. |
+| DS-P1 HIGH | `mapRow` silent drop on malformed UNION rows | Already `logWarn`'d per Phase 0+1+2 fix (commit 449fb2a). |
+| DS-P1 HIGH | Cursor tuple comparison subtle | Works correctly per prior Phase 2 holistic verification. |
+| DS-P1 CRIT | `LPAD('A', 2, '0')` breaks uniqueness for non-numeric revision_num | `'0A'` is still a valid lead_id; permit_num is the discriminator. |
+| DS-P1 MED | `tier2IssuedHeuristic` negative elapsedDays | Already clamped at `timing.ts:406` via `Math.max(0, ...)`. |
+| DS-P2 HIGH | Trade slug comparison case-sensitive | Both sides come from the DB via the same insertion path; drift not possible without an explicit migration. |
+| DS-P2 MED | POST route body size limit | Next.js default is 1MB. |
+
+**Deferred to follow-up (24 rows):**
+
+| Sev | Source | Item | Planned home |
+|-----|--------|------|--------------|
+| MED | DS-P0 | Migration 072 `stage_sequence IN (10..70)` brittle enum | Future V2 migration |
+| MED | DS-P0 | Migration 067 PostGIS silent skip in dev | Documentation update |
+| LOW | DS-P0 | `session.ts` `--` separator collision risk | Reactive |
+| MED | DS-P1 | `computed_at: now()` per-call batch variation | Phase 2+ perf optimization |
+| MED | DS-P1 | `isCommercial` keyword gap (industrial/warehouse/hotel) | Spec 72 update |
+| MED | DS-P2 | Trade slug case collation | Deferred — both sides from DB |
+| MED | Sonnet-P3 | Button/Card primitives hardcoded to Buildo dark palette | ADR 7 draft (accept as leads-scoped) |
+| HIGH | Sonnet-P3 | `_hasHydrated` gate not consumed by any component yet | Phase 3-iii consumer must wire it |
+| HIGH | Sonnet-P3 | Tremor React 19 compat risk (runtime works, peer warning only) | Monitor |
+| CRIT | Sonnet-P3 | TimingBadge per-tone icons (spec 74 colorblind safety: lightning/clock/calendar/hourglass/cross) | Phase 3-vi polish |
+| MED | Sonnet-P3 | ProgressCircle non-standard `radius`/`strokeWidth` props silently dropped | Phase 3-vi polish |
+| MED | Sonnet-P3 | V1 75-card cap not enforced in hook | Phase 3-iv consumer enforcement |
+| LOW | Sonnet-P3 | ProgressCircle arc shows scaled 0-100 but label shows raw 0-30 | Phase 3-vi polish |
+| HIGH | Sonnet-OV | Feed-vs-view `logRequestComplete` shape asymmetry | Operational runbook note |
+| MED | Sonnet-OV | `lead_views` first-save sets `viewed_at=NOW()` even without prior view | Acceptable edge case per spec 70 §4 |
+| existing | MED | cost-model permit categorization brittle | Future hardening WF |
+| existing | MED | tenure_renter_pct 50% cliff effect | V2 cost model refinement |
+| existing | MED | compute-cost-estimates sequential INSERTs | Phase 2+ perf |
+| existing | MED | db:generate deferred on pre-existing migration 030 | Closed via prior self-heal commit |
+| existing | LOW × 8 | `src/lib/permits/types.ts` pre-existing typing gaps | Future types-hardening WF |
+| existing | LOW | Stryker builder-query 63.64% survivors | Future hardening |
+| existing | LOW | compute-cost-estimates.js no JS-side boundary tests | Future hardening |
+| existing | LOW | purge-lead-views Firebase reconciliation pass | Phase 4+ (stub exists in scripts/purge-lead-views.js via --reconcile flag) |
+| existing | LOW | inspection_stage_map 12 unmapped trades | Future seed expansion |
+
+---
+
 ## 2026-04-08 — Phase 0+1+2 Cross-Phase Holistic Review (Gemini + DeepSeek + Independent, commit TBD)
 
 Full-bundle review of `23a32a5^..HEAD` (migrations 067-076 + lib/ + api/ + routes). 3 reviewers, self-generated checklists, cross-phase focus (findings that per-file reviews missed).

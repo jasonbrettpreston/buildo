@@ -13,17 +13,23 @@
 // ProgressCircle showing the score. The pill's color tone comes from
 // a score-band function matching spec 74's timing color scale.
 //
-// Score boundaries (spec 74 §Timing):
+// Score boundaries (spec 74 §Timing). 5 tones:
+//   < 0   → Past (red) — trade window has passed, negative score sentinel
 //   >= 25 → NOW (amber)
 //   >= 20 → Soon (green)
 //   >= 10 → Upcoming (blue)
-//    < 10 → Future (gray)
+//   0..9  → Distant (gray) — renamed from "Future" to match spec 74
 //
 // NOTE: The timing pillar maxes at 30 per spec 70 §4, so the top band
 // starts at 25 (leaving headroom at the very top). The UI-side score
 // band boundaries are internal to this component and do NOT need to
 // match the server-side scoring pillars exactly. They are documented
 // inline and locked by tests.
+//
+// The Past tone is an explicit lower sentinel: consumers pass a
+// negative score when the trade window has passed (spec 71 Tier 1
+// stale fallback). Without this branch, past leads would render as
+// "distant" gray — a cross-phase Sonnet review finding.
 
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { ProgressCircle } from '@tremor/react';
@@ -42,8 +48,8 @@ export interface TimingBadgeProps {
 interface Tone {
   bg: string;
   text: string;
-  tremorColor: 'amber' | 'emerald' | 'blue' | 'gray';
-  label: 'NOW' | 'Soon' | 'Upcoming' | 'Future';
+  tremorColor: 'amber' | 'emerald' | 'blue' | 'gray' | 'red';
+  label: 'NOW' | 'Soon' | 'Upcoming' | 'Distant' | 'Past';
 }
 
 /**
@@ -55,12 +61,23 @@ interface Tone {
  * above 30 clamp to the NOW band (the first `>= 25` branch).
  */
 export function getTimingTone(score: number): Tone {
-  if (typeof score !== 'number' || !Number.isFinite(score) || score < 0) {
+  if (typeof score !== 'number' || !Number.isFinite(score)) {
     return {
       bg: 'bg-neutral-700',
       text: 'text-neutral-100',
       tremorColor: 'gray',
-      label: 'Future',
+      label: 'Distant',
+    };
+  }
+  if (score < 0) {
+    // Past: trade window has passed. Spec 74 uses a red tone to draw
+    // immediate attention — distinct from Distant (gray) which is
+    // "far in the future but still upcoming."
+    return {
+      bg: 'bg-timing-past',
+      text: 'text-neutral-100',
+      tremorColor: 'red',
+      label: 'Past',
     };
   }
   if (score >= 25) {
@@ -91,7 +108,7 @@ export function getTimingTone(score: number): Tone {
     bg: 'bg-neutral-700',
     text: 'text-neutral-100',
     tremorColor: 'gray',
-    label: 'Future',
+    label: 'Distant',
   };
 }
 

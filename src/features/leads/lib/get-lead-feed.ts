@@ -123,7 +123,29 @@ export const LEAD_FEED_SQL = `
         WHEN 'Inspection'    THEN 14
         WHEN 'Application'   THEN 10
         ELSE 0
-      END AS opportunity_score
+      END AS opportunity_score,
+      -- Semantic timing confidence — derived from the phase proxy
+      -- because the feed doesn't run the full 3-tier timing engine.
+      -- Phase 3 cards display "est." when confidence != 'high'.
+      -- Active build phases are 'high' (we have real phase data);
+      -- the generic 'ELSE' fallthrough is 'medium' (best-effort).
+      CASE
+        WHEN pt.phase IN ('structural', 'finishing', 'early_construction', 'landscaping')
+          THEN 'high'
+        ELSE 'medium'
+      END AS timing_confidence,
+      -- Semantic opportunity classification for card display. Spec 70
+      -- §4 defines 4 categories: homeowner (likely DIY-adjacent),
+      -- newbuild (full trade lineup needed), builder-led (established
+      -- contractor), unknown (fallback). We classify from permit_type
+      -- keywords because 95% of Toronto permits have no builder_name.
+      CASE
+        WHEN p.permit_type ILIKE '%small residential%'
+          OR p.permit_type ILIKE '%interior alteration%' THEN 'homeowner'
+        WHEN p.permit_type ILIKE '%new building%'
+          OR p.permit_type ILIKE '%new house%'          THEN 'newbuild'
+        ELSE 'unknown'
+      END AS opportunity_type
     FROM permits p
     JOIN permit_trades pt USING (permit_num, revision_num)
     JOIN trades t ON t.id = pt.trade_id
@@ -187,7 +209,12 @@ export const LEAD_FEED_SQL = `
         WHEN COUNT(p.permit_num) >= 3 THEN 14
         WHEN COUNT(p.permit_num) >= 1 THEN 10
         ELSE 0
-      END AS opportunity_score
+      END AS opportunity_score,
+      -- Semantic columns mirror the permit CTE so the UNION ALL shape
+      -- lines up. Builder leads are always 'high' confidence (we know
+      -- they have active permits) and always 'builder-led' opportunity.
+      'high'::text AS timing_confidence,
+      'builder-led'::text AS opportunity_type
     FROM entities e
     JOIN entity_projects ep ON ep.entity_id = e.id AND ep.role = 'Builder'
     JOIN permits p
@@ -264,6 +291,10 @@ interface LeadFeedRow {
   value_score: number;
   opportunity_score: number;
   relevance_score: number;
+  // Semantic columns for Phase 3-iii cards — added by the Phase 0-3
+  // comprehensive review as the cross-phase contract amendment.
+  timing_confidence: 'high' | 'medium' | 'low';
+  opportunity_type: 'homeowner' | 'newbuild' | 'builder-led' | 'unknown';
 }
 
 function toNumberOrNull(v: number | string | null): number | null {
@@ -287,6 +318,8 @@ function mapRow(row: LeadFeedRow): LeadFeedItem | null {
     value_score: row.value_score,
     opportunity_score: row.opportunity_score,
     relevance_score: row.relevance_score,
+    timing_confidence: row.timing_confidence,
+    opportunity_type: row.opportunity_type,
   };
 
   if (row.lead_type === 'permit') {

@@ -308,7 +308,12 @@ function buildDisplay(
   }
 
   parts.push(tierDisplay(tier));
-  if (premiumFactor >= 1.35) parts.push('Premium neighbourhood');
+  // "Premium neighbourhood" threshold = PREMIUM_TIERS[2].multiplier
+  // (the $100k-$150k income band). Referenced by index, not hardcoded,
+  // so the label auto-tracks any future spec 72 tier adjustment.
+  // Caught by Phase 0-3 comprehensive review (DeepSeek Phase 1 HIGH).
+  const PREMIUM_LABEL_THRESHOLD = PREMIUM_TIERS[2]?.multiplier ?? 1.35;
+  if (premiumFactor >= PREMIUM_LABEL_THRESHOLD) parts.push('Premium neighbourhood');
   if (complexityScore >= 40) parts.push('Complex scope');
 
   return parts.join(' · ');

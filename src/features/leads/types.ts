@@ -122,6 +122,12 @@ interface LeadFeedItemBase {
   value_score: number;
   opportunity_score: number;
   relevance_score: number;
+  // Semantic UI-display columns added in the Phase 0-3 comprehensive
+  // review (Sonnet overall HIGH H1/H2). The Phase 1 feed SQL computes
+  // these alongside the numeric pillars so Phase 3 cards can wire
+  // TimingBadge + OpportunityBadge without a JS-side reclassification.
+  timing_confidence: 'high' | 'medium' | 'low';
+  opportunity_type: 'homeowner' | 'newbuild' | 'builder-led' | 'unknown';
 }
 
 export interface PermitLeadFeedItem extends LeadFeedItemBase {

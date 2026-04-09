@@ -51,11 +51,18 @@
   --color-text-secondary: #B5B9C0;
   --color-text-tertiary: #9CA3AF;
 
-  /* Timing badge colors — spec 74 §Timing */
+  /* Timing badge colors — spec 74 §Timing.
+   * 5 tones: NOW / Soon / Upcoming / Distant / Past.
+   * `past` (red) is distinct from `distant` (gray) — a lead whose trade
+   * window has passed needs immediate visual contrast vs. a lead that's
+   * just far in the future. Caught by Phase 0-3 comprehensive review
+   * (Sonnet Phase 3 CRITICAL C1 + HIGH H3 — `future` was a naming drift
+   * from spec 74's `distant`). */
   --color-timing-now: #F59E0B;
   --color-timing-soon: #10B981;
   --color-timing-upcoming: #3B82F6;
-  --color-timing-future: #6B7280;
+  --color-timing-distant: #6B7280;
+  --color-timing-past: #DC2626;
 
   /* Opportunity badge colors — spec 74 §Opportunity */
   --color-opp-homeowner: #F59E0B;
