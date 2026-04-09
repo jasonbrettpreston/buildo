@@ -25,6 +25,7 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import { useLeadFeed } from '@/features/leads/api/useLeadFeed';
 import { BuilderLeadCard } from '@/features/leads/components/BuilderLeadCard';
 import { EmptyLeadState } from '@/features/leads/components/EmptyLeadState';
+import { LeadFeedHeader } from '@/features/leads/components/LeadFeedHeader';
 import { PermitLeadCard } from '@/features/leads/components/PermitLeadCard';
 import { SkeletonLeadCard } from '@/features/leads/components/SkeletonLeadCard';
 import { useLeadFeedState } from '@/features/leads/hooks/useLeadFeedState';
@@ -169,14 +170,18 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
 
   // ----- LOADING -----
   // First-page load with no data yet. Showing 3 skeletons matches the
-  // average card density on a 375px viewport.
+  // average card density on a 375px viewport. Header renders above
+  // every state so the filter sheet is reachable even while loading.
   if (query.isPending && !query.data) {
     return (
-      <div className="space-y-3 px-3 py-4">
-        <SkeletonLeadCard />
-        <SkeletonLeadCard />
-        <SkeletonLeadCard />
-      </div>
+      <>
+        <LeadFeedHeader leadCount={0} />
+        <div className="space-y-3 px-3 py-4">
+          <SkeletonLeadCard />
+          <SkeletonLeadCard />
+          <SkeletonLeadCard />
+        </div>
+      </>
     );
   }
 
@@ -190,15 +195,18 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
     // captureEvent moved to a useEffect above (ref-deduped) so it
     // doesn't fire on every re-render of the error state.
     return (
-      <EmptyLeadState
-        variant={variant}
-        currentRadiusKm={radiusKm}
-        maxRadiusKm={MAX_RADIUS_KM}
-        onRetry={() => {
-          captureEvent('lead_feed.refresh', { trade_slug: tradeSlug });
-          void query.refetch();
-        }}
-      />
+      <>
+        <LeadFeedHeader leadCount={0} />
+        <EmptyLeadState
+          variant={variant}
+          currentRadiusKm={radiusKm}
+          maxRadiusKm={MAX_RADIUS_KM}
+          onRetry={() => {
+            captureEvent('lead_feed.refresh', { trade_slug: tradeSlug });
+            void query.refetch();
+          }}
+        />
+      </>
     );
   }
 
@@ -207,20 +215,23 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
   if (query.isSuccess && items.length === 0) {
     // captureEvent moved to a useEffect above (ref-deduped).
     return (
-      <EmptyLeadState
-        variant="no_results"
-        currentRadiusKm={radiusKm}
-        maxRadiusKm={MAX_RADIUS_KM}
-        onExpandRadius={(nextRadiusKm) => {
-          captureEvent('lead_feed.filter_changed', {
-            field: 'radius',
-            from: radiusKm,
-            to: nextRadiusKm,
-            source: 'expand_cta',
-          });
-          setRadius(nextRadiusKm);
-        }}
-      />
+      <>
+        <LeadFeedHeader leadCount={0} />
+        <EmptyLeadState
+          variant="no_results"
+          currentRadiusKm={radiusKm}
+          maxRadiusKm={MAX_RADIUS_KM}
+          onExpandRadius={(nextRadiusKm) => {
+            captureEvent('lead_feed.filter_changed', {
+              field: 'radius',
+              from: radiusKm,
+              to: nextRadiusKm,
+              source: 'expand_cta',
+            });
+            setRadius(nextRadiusKm);
+          }}
+        />
+      </>
     );
   }
 
@@ -252,7 +263,9 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
   const endMessage = pageCapReached ? capBanner : exhaustedBanner;
 
   return (
-    <InfiniteScroll
+    <>
+      <LeadFeedHeader leadCount={items.length} />
+      <InfiniteScroll
       dataLength={items.length}
       next={() => {
         // TanStack Query's `isFetchingNextPage` flag exists exactly
@@ -328,5 +341,6 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
         })}
       </div>
     </InfiniteScroll>
+    </>
   );
 }

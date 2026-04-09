@@ -21,6 +21,7 @@ export type EventName =
   | 'lead_feed.builder_website_opened'
   | 'lead_feed.directions_opened'
   | 'lead_feed.filter_changed'
+  | 'lead_feed.filter_sheet_opened'
   | 'lead_feed.refresh'
   | 'lead_feed.empty_state_shown'
   // Phase 3-vi observability sibling: silent-failure visibility events.
