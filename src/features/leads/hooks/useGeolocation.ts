@@ -165,5 +165,45 @@ export function useGeolocation(): {
     };
   }, [request]);
 
+  // visibilitychange handler — re-poll the Permissions API whenever
+  // the page returns to the foreground. iOS WebKit kills the
+  // 'change' event listener registered above when the app is pushed
+  // to the background; if the user toggles GPS off in Settings and
+  // returns to the app, the change handler never fires and our
+  // status is stuck on the pre-suspend value. Force-polling on
+  // visibility return is the documented workaround.
+  // (User-supplied Gemini holistic 2026-04-09 — "Mobile OS Suspend Drift".)
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    // Cancellation guard mirroring the mount effect's `cancelled` ref:
+    // if the component unmounts while `checkPermissionState()` is
+    // awaiting, we must NOT call setStatus on the unmounted component.
+    // Independent reviewer C11 caught this in the WF3 holistic review.
+    let active = true;
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return;
+      void (async () => {
+        const polled = await checkPermissionState();
+        if (!active) return;
+        if (polled === 'denied') {
+          setStatus({ state: 'denied', permanent: true });
+        } else if (polled === 'prompt') {
+          setStatus({ state: 'prompt' });
+        } else if (polled === 'granted') {
+          // Re-fetch the position — iOS may have invalidated the
+          // last fix during the suspend window.
+          request();
+        }
+        // 'unsupported' — leave status alone, the original mount
+        // effect already set it correctly.
+      })();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      active = false;
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [request]);
+
   return { status, request };
 }

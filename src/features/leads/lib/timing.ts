@@ -278,19 +278,50 @@ async function findEnablingStage(
  * than STALENESS_DAYS old, return the stalled fallback regardless of trade.
  * Called BEFORE the enabling-stage lookup so it fires even when the trade
  * has no map entry.
+ *
+ * Two-branch behavior:
+ *   1. Has at least one passed inspection: stale if `daysSince > STALENESS_DAYS`.
+ *   2. ZERO passed inspections AND issued > STALENESS_DAYS days ago: also
+ *      stale. Pre-fix this branch returned null (not stale), and a permit
+ *      issued 15 years ago with no inspections fell through to
+ *      tier2IssuedHeuristic where it got the squishy "trade window may
+ *      have passed" message instead of definitively stalled. Caught by
+ *      user-supplied Gemini holistic review 2026-04-09 ("Infinity Stale").
  */
-function checkStaleness(inspections: InspectionRow[]): TradeTimingEstimate | null {
+function checkStaleness(
+  inspections: InspectionRow[],
+  issuedDate: Date | null,
+): TradeTimingEstimate | null {
   const latestPassed = findLatestPassedInspection(inspections);
-  if (!latestPassed?.inspection_date) return null;
-  const daysSince = daysBetween(latestPassed.inspection_date, new Date());
-  if (daysSince <= STALENESS_DAYS) return null;
-  return {
-    confidence: 'low',
-    tier: 1,
-    min_days: 0,
-    max_days: 0,
-    display: `Project may be stalled — last activity ${daysSince} days ago`,
-  };
+  if (latestPassed?.inspection_date) {
+    const daysSince = daysBetween(latestPassed.inspection_date, new Date());
+    if (daysSince <= STALENESS_DAYS) return null;
+    return {
+      confidence: 'low',
+      tier: 1,
+      min_days: 0,
+      max_days: 0,
+      display: `Project may be stalled — last activity ${daysSince} days ago`,
+    };
+  }
+  // Branch 2: no passed inspections at all. If the permit was issued
+  // more than STALENESS_DAYS ago and STILL has zero passed inspections,
+  // the project is dormant by any reasonable definition. (Permits with
+  // recent issued_date + zero inspections are normal — they're just
+  // pre-construction.)
+  if (issuedDate) {
+    const daysSinceIssued = daysBetween(issuedDate, new Date());
+    if (daysSinceIssued > STALENESS_DAYS) {
+      return {
+        confidence: 'low',
+        tier: 1,
+        min_days: 0,
+        max_days: 0,
+        display: `Project appears stalled — issued ${daysSinceIssued} days ago with no inspection activity`,
+      };
+    }
+  }
+  return null;
 }
 
 function tier1StageBased(
@@ -433,6 +464,26 @@ function tier2IssuedHeuristic(
 
   const minWeeks = Math.round(remainingMin / 7);
   const maxWeeks = Math.round(remainingMax / 7);
+
+  // Sub-week-resolution overdue: the day-based guard above
+  // (`elapsedDays > p75`) catches the obvious overdue case, but it
+  // doesn't catch the rounding cliff. Example: p75=238, elapsed=236
+  // → guard fails (236 < 238), but remainingMax = 2 → round(2/7) = 0
+  // → user sees "0-0 weeks remaining". Catch the rounding cliff
+  // explicitly and route to the same overdue branch. Caught by
+  // user-supplied Gemini holistic 2026-04-09 ("0-0 Weeks Math Gap").
+  if (maxWeeks <= 0) {
+    return {
+      confidence: 'medium',
+      tier: 2,
+      min_days: 0,
+      max_days: 0,
+      display: tradeInPhase
+        ? `Permit issued ${weeksElapsed} weeks ago — your trade should be active now or recently completed`
+        : `Permit issued ${weeksElapsed} weeks ago — your trade window may have passed`,
+    };
+  }
+
   const display = tradeInPhase
     ? `Permit issued ${weeksElapsed} weeks ago — your trade is active now (${minWeeks}-${maxWeeks} weeks remaining)`
     : `Permit issued ${weeksElapsed} weeks ago — your trade estimated in ${minWeeks}-${maxWeeks} weeks`;
@@ -493,17 +544,29 @@ export async function getTradeTimingForPermit(
       return safeFallback();
     }
 
+    // Staleness guard runs UNCONDITIONALLY — even for zero-inspection
+    // permits. The two-branch checkStaleness handles both:
+    //   (1) permits with passed inspections > 180 days old
+    //   (2) permits issued > 180 days ago with ZERO passed inspections
+    // Pre-fix this guard was gated on `inspections.length > 0`, which
+    // missed branch 2 entirely — a 15-year-old permit with no
+    // inspections fell through to tier2IssuedHeuristic and got the
+    // squishy "trade window may have passed" message instead of
+    // definitively stalled. User-supplied Gemini holistic 2026-04-09.
+    // candidate.issued_date is already typed `Date | null`, so we pass
+    // it directly — the `new Date(...)` wrap was redundant and would
+    // mask a regression that returned a string from the DB layer.
+    // (Gemini WF3 review 2026-04-09 line 875.)
+    const stalled = checkStaleness(inspections, candidate.issued_date);
+    if (stalled) {
+      logInfo('[timing/get-trade-timing]', 'tier_1_stalled', {
+        permit_num: candidate.permit_num,
+        trade_slug,
+      });
+      return stalled;
+    }
+
     if (inspections.length > 0) {
-      // Staleness guard — if the permit has been untouched for >180 days,
-      // we return 'stalled' regardless of whether the trade has a map entry.
-      const stalled = checkStaleness(inspections);
-      if (stalled) {
-        logInfo('[timing/get-trade-timing]', 'tier_1_stalled', {
-          permit_num: candidate.permit_num,
-          trade_slug,
-        });
-        return stalled;
-      }
 
       // Tier 1: need enabling stage lookup
       let enablingStage: InspectionStageMapRow | null = null;

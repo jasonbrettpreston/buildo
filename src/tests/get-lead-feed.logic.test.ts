@@ -156,16 +156,80 @@ describe('LEAD_FEED_SQL — structure', () => {
     expect(LEAD_FEED_SQL).toMatch(
       /COUNT\(DISTINCT \(p\.permit_num, p\.revision_num\)\)::int AS active_permits_nearby/,
     );
+    // avg_project_cost uses COALESCE(cache, GUARDED_raw) — Bug 1 fix
+    // from user-supplied Gemini holistic 2026-04-09 ("Cost Cache
+    // Bypass") + independent reviewer C5 (placeholder threshold guard).
+    // Look for the key invariants instead of the full expression
+    // (the SQL is multi-line and brittle to whitespace).
+    expect(LEAD_FEED_SQL).toMatch(/AVG\(COALESCE\([\s\S]*?ce_b\.estimated_cost/);
+    expect(LEAD_FEED_SQL).toMatch(/AS avg_project_cost/);
+  });
+
+  it('builder cost AVG guards raw fallback against PLACEHOLDER_COST_THRESHOLD (Independent C5)', () => {
+    // Pre-fix the FILTER was just `> 0`, which accepted $1 placeholder
+    // values from the raw CKAN field when the cache was not yet
+    // populated. The cost-model rejects raw values <= 1000; the
+    // builder CTE's COALESCE fallback must mirror that threshold.
     expect(LEAD_FEED_SQL).toMatch(
-      /AVG\(p\.est_const_cost::float8\) FILTER \(WHERE p\.est_const_cost > 0\) AS avg_project_cost/,
+      /CASE WHEN p\.est_const_cost > 1000 THEN p\.est_const_cost::float8 ELSE NULL END/,
     );
   });
 
-  it('WSIB LATERAL has a deterministic tiebreaker on w2.id', () => {
-    // Without the secondary ORDER BY, two WSIB rows with the same
-    // last_enriched_at produce non-deterministic ordering, breaking
-    // cursor stability. (DeepSeek 2026-04-09 review.)
-    expect(LEAD_FEED_SQL).toMatch(/ORDER BY w2\.last_enriched_at DESC, w2\.id DESC/);
+  it('JOINs cost_estimates ce_b for the builder cost-cache lookup (Bug 1 fix)', () => {
+    expect(LEAD_FEED_SQL).toMatch(
+      /LEFT JOIN cost_estimates ce_b\s+ON ce_b\.permit_num = p\.permit_num\s+AND ce_b\.revision_num = p\.revision_num/,
+    );
+  });
+
+  it('value_score CASE in builder CTE uses the same COALESCE expression as avg_project_cost (Bug 1 + C5 fix)', () => {
+    // The pre-fix value_score CASE used AVG(p.est_const_cost) which
+    // would have produced a different bucket than avg_project_cost
+    // when the cache and raw diverged. Both expressions now use the
+    // same COALESCE(cache, GUARDED_raw) shape so a builder's
+    // value_score is computed against the SAME numbers their
+    // avg_project_cost displays. The 2000000 boundary is the top tier.
+    expect(LEAD_FEED_SQL).toMatch(/>= 2000000 THEN 20/);
+    // Count the COALESCE(ce_b.estimated_cost...) occurrences — should
+    // appear in BOTH the avg_project_cost projection AND each WHEN
+    // arm of the value_score CASE (4 buckets + IS NULL = 5 occurrences
+    // in the CASE alone, plus 1 in the column projection = at least 6).
+    const matches = LEAD_FEED_SQL.match(/COALESCE\(\s*ce_b\.estimated_cost/g) ?? [];
+    expect(matches.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('uses a wsib_per_entity CTE instead of the per-row LEFT JOIN LATERAL (Bug 7 fix)', () => {
+    // The pre-fix LATERAL fired once per row of the post-JOIN cross
+    // product (entities × entity_projects × permits × permit_trades).
+    // With 150 permits per builder, that's 150 lateral evaluations
+    // for one builder. The CTE fires once per unique linked_entity_id
+    // for the whole query. User-supplied Gemini holistic 2026-04-09.
+    expect(LEAD_FEED_SQL).toMatch(/wsib_per_entity AS \(/);
+    // The CTE uses DISTINCT ON to preserve the LIMIT-1 row-pick semantics.
+    expect(LEAD_FEED_SQL).toMatch(
+      /SELECT DISTINCT ON \(linked_entity_id\)\s+linked_entity_id,\s+business_size/,
+    );
+    // Deterministic tiebreaker survives the refactor — DISTINCT ON's
+    // ORDER BY puts linked_entity_id first (required) then the same
+    // last_enriched_at DESC, id DESC tiebreaker the LATERAL had.
+    expect(LEAD_FEED_SQL).toMatch(
+      /ORDER BY linked_entity_id, last_enriched_at DESC, id DESC/,
+    );
+    // The builder CTE references the new CTE via a regular LEFT JOIN.
+    expect(LEAD_FEED_SQL).toMatch(
+      /LEFT JOIN wsib_per_entity w ON w\.linked_entity_id = e\.id/,
+    );
+    // The LEFT JOIN LATERAL is GONE — match `LATERAL (` with the
+    // open paren so we don't false-positive on the comment block
+    // that explains the refactor history.
+    expect(LEAD_FEED_SQL).not.toMatch(/LATERAL \(/);
+  });
+
+  it('wsib_per_entity CTE preserves the contact-info filter (Bug 7 fix doesnt regress filter)', () => {
+    // The original LATERAL filtered to (website OR primary_phone)
+    // non-null AND business_size IN allowlist. The CTE must keep
+    // both filters or builders without contact info would leak in.
+    expect(LEAD_FEED_SQL).toMatch(/business_size IN \('Small Business', 'Medium Business'\)/);
+    expect(LEAD_FEED_SQL).toMatch(/\(website IS NOT NULL OR primary_phone IS NOT NULL\)/);
   });
 
   it('mirrors widened columns as NULL on the other branch (UNION ALL shape)', () => {

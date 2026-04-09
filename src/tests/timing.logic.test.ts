@@ -285,6 +285,120 @@ describe('Tier 1 — stage-based (inspection data present)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Bug 2 (user-supplied Gemini holistic 2026-04-09 — "Infinity Stale")
+// ---------------------------------------------------------------------------
+// Pre-fix, the staleness guard returned null whenever inspections was
+// empty (no passed inspection to anchor the days-since calculation).
+// A permit issued 15 years ago with ZERO inspections fell through to
+// tier2IssuedHeuristic and got the squishy "trade window may have
+// passed" message. The fix: extend checkStaleness to a second branch
+// that triggers when issued_date is older than STALENESS_DAYS AND
+// there are no passed inspections at all.
+
+describe('Tier 1 staleness — zero-inspection branch (Bug 2 fix)', () => {
+  it('permit issued > 180 days ago with ZERO inspections returns tier_1_stalled', async () => {
+    const mock = createMockPool();
+    stub(
+      mock,
+      [], // empty calibration cache
+      [
+        {
+          permit_num: '24 101234',
+          permit_type: 'New Building',
+          issued_date: new Date('2025-01-01'), // ~460 days before frozen test time
+          status: 'Permit Issued',
+        },
+      ],
+      [], // ZERO inspections — pre-fix this skipped the guard entirely
+    );
+    const result = await getTradeTimingForPermit(
+      '24 101234',
+      'plumbing',
+      mock as unknown as Pool,
+    );
+    expect(result.confidence).toBe('low');
+    expect(result.tier).toBe(1);
+    expect(result.min_days).toBe(0);
+    expect(result.max_days).toBe(0);
+    expect(result.display).toMatch(/issued.*days ago.*no inspection activity/i);
+  });
+
+  it('permit issued < 180 days ago with ZERO inspections does NOT trigger the stalled branch', async () => {
+    // Recent permit + no inspections is normal pre-construction state.
+    // Should fall through to Tier 2 / Tier 3, NOT mark as stalled.
+    const mock = createMockPool();
+    stub(
+      mock,
+      [],
+      [
+        {
+          permit_num: '24 555:00',
+          permit_type: 'New Building',
+          issued_date: new Date('2026-03-01'), // ~38 days before frozen test time
+          status: 'Permit Issued',
+        },
+      ],
+      [], // no inspections — but recent permit
+    );
+    const result = await getTradeTimingForPermit(
+      '24 555:00',
+      'plumbing',
+      mock as unknown as Pool,
+    );
+    // Should NOT be the zero-inspection-stalled message
+    expect(result.display).not.toMatch(/no inspection activity/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Bug 8 (user-supplied Gemini holistic 2026-04-09 — "0-0 Weeks Math Gap")
+// ---------------------------------------------------------------------------
+// Pre-fix the day-based overdue guard `elapsedDays > p75` missed the
+// rounding cliff: when remainingMax < 4 days, Math.round(remainingMax/7)
+// rounds to 0 → user sees "0-0 weeks remaining". The fix adds a
+// `maxWeeks <= 0` check after the rounding step.
+
+describe('Tier 2 — sub-week rounding cliff (Bug 8 fix)', () => {
+  it('Tier 2 with elapsed=175, p75=178, zero inspections → overdue display (Bug 8)', async () => {
+    const mock = createMockPool();
+    const issuedDate = new Date('2026-04-08T12:00:00Z');
+    issuedDate.setDate(issuedDate.getDate() - 175); // 175 days ago, just inside STALENESS_DAYS=180
+    stub(
+      mock,
+      [
+        {
+          permit_type: 'New Building',
+          median_days_to_first_inspection: 105,
+          p25_days: 44,
+          p75_days: 178, // 178 - 175 = 3 days remaining → rounds to 0 weeks
+          sample_size: 50,
+          computed_at: new Date('2026-04-01'),
+        },
+      ],
+      [
+        {
+          permit_num: '24 101234',
+          permit_type: 'New Building',
+          issued_date: issuedDate,
+          status: 'Permit Issued',
+        },
+      ],
+      [],
+    );
+    const result = await getTradeTimingForPermit(
+      '24 101234',
+      'plumbing',
+      mock as unknown as Pool,
+    );
+    // Should NOT contain "0-0 weeks remaining"
+    expect(result.display).not.toMatch(/0-0 weeks remaining/);
+    // Should contain the overdue phrasing instead
+    expect(result.display).toMatch(/window may have passed|active now or recently completed/i);
+    expect(result.tier).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Tier 3 — Pre-permit
 // ---------------------------------------------------------------------------
 

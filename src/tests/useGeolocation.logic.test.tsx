@@ -32,6 +32,111 @@ function makePermissionStatus(state: PermissionState): FakePermissionStatus {
   };
 }
 
+describe('useGeolocation — visibilitychange polling (Bug 4 — iOS suspend drift)', () => {
+  // iOS WebKit kills the Permissions API change listener when the
+  // app is pushed to the background. If the user toggles GPS off in
+  // Settings and returns to the app, the change handler never fires
+  // and our `granted` status is stuck. The fix: re-poll the
+  // Permissions API on visibilitychange when document.visibilityState
+  // becomes 'visible'.
+
+  it('re-polls the Permissions API when document becomes visible (transitions granted → denied)', async () => {
+    // The hook calls permissions.query twice on mount (initial check
+    // + subscribe to change events). We mock those + one extra
+    // 'denied' for the visibility re-poll. Total = 3 calls expected.
+    const queryMock = vi
+      .fn()
+      .mockResolvedValueOnce(makePermissionStatus('granted')) // mount: initial check
+      .mockResolvedValueOnce(makePermissionStatus('granted')) // mount: subscribe
+      .mockResolvedValueOnce(makePermissionStatus('denied')); // visibility re-poll
+    vi.stubGlobal('navigator', {
+      ...window.navigator,
+      permissions: { query: queryMock },
+      geolocation: {
+        getCurrentPosition: vi.fn((success) =>
+          success({
+            coords: { latitude: 43.65, longitude: -79.38, accuracy: 10 },
+            timestamp: Date.now(),
+          } as GeolocationPosition),
+        ),
+      },
+    });
+
+    const { result } = renderHook(() => useGeolocation());
+    await waitFor(() => expect(result.current.status.state).toBe('granted'));
+    const callsAfterMount = queryMock.mock.calls.length;
+
+    // Simulate a visibilitychange event after the app returns from background.
+    // jsdom defaults visibilityState to 'visible'; we set it explicitly.
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'visible',
+    });
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await new Promise((r) => setTimeout(r, 10));
+    });
+
+    // The visibility re-poll should have called query at least once more.
+    expect(queryMock.mock.calls.length).toBeGreaterThan(callsAfterMount);
+    await waitFor(() => expect(result.current.status.state).toBe('denied'));
+  });
+
+  it('does NOT re-poll when document.visibilityState is hidden', async () => {
+    const queryMock = vi
+      .fn()
+      .mockResolvedValue(makePermissionStatus('granted'));
+    vi.stubGlobal('navigator', {
+      ...window.navigator,
+      permissions: { query: queryMock },
+      geolocation: {
+        getCurrentPosition: vi.fn((success) =>
+          success({
+            coords: { latitude: 43.65, longitude: -79.38, accuracy: 10 },
+            timestamp: Date.now(),
+          } as GeolocationPosition),
+        ),
+      },
+    });
+
+    const { result } = renderHook(() => useGeolocation());
+    await waitFor(() => expect(result.current.status.state).toBe('granted'));
+    const callsAfterMount = queryMock.mock.calls.length;
+
+    // Hidden visibility — the re-poll guard should bail BEFORE calling query.
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'hidden',
+    });
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await new Promise((r) => setTimeout(r, 10));
+    });
+    // Call count must be UNCHANGED — the visibility handler bailed early.
+    expect(queryMock.mock.calls.length).toBe(callsAfterMount);
+  });
+
+  it('removes the visibilitychange listener on unmount (no leak)', async () => {
+    const removeSpy = vi.spyOn(document, 'removeEventListener');
+    vi.stubGlobal('navigator', {
+      ...window.navigator,
+      permissions: { query: vi.fn().mockResolvedValue(makePermissionStatus('prompt')) },
+      geolocation: undefined,
+    });
+    const { unmount } = renderHook(() => useGeolocation());
+    await waitFor(() => {});
+    unmount();
+    // The cleanup must remove the visibilitychange listener (one of
+    // potentially multiple listeners removed on unmount; we only
+    // assert that visibilitychange was among them).
+    const visibilityRemovals = removeSpy.mock.calls.filter(
+      (c) => c[0] === 'visibilitychange',
+    );
+    expect(visibilityRemovals.length).toBeGreaterThan(0);
+    removeSpy.mockRestore();
+  });
+});
+
 describe('useGeolocation — cleanup correctness (Phase 3-i review fix)', () => {
   it('calls removeEventListener on unmount with the same function reference passed to addEventListener', async () => {
     // Phase 3-i adversarial review fix: pre-fix cleanup set

@@ -63,7 +63,32 @@ export const DEFAULT_FEED_LIMIT = 15;
  * we use a single SQL string for both first-page and cursor cases.
  */
 export const LEAD_FEED_SQL = `
-  WITH permit_candidates AS (
+  WITH
+  -- Pre-aggregated WSIB lookup keyed by entity_id. The previous
+  -- implementation used LEFT JOIN LATERAL inside builder_candidates,
+  -- which evaluates the lateral subquery ONCE PER ROW of the
+  -- (entities × entity_projects × permits × permit_trades × trades)
+  -- cross product. With 150 permits per builder, the lateral fired
+  -- 150 times for that single builder — Postgres doesn't dedupe
+  -- correlated lateral evaluations even when the correlation is on
+  -- a single column. Lifting the lookup into a CTE that's keyed by
+  -- entity makes it run ONCE per unique entity for the whole query.
+  -- The DISTINCT ON ... ORDER BY pair preserves the same row-pick
+  -- semantics as the original LATERAL ORDER BY w2.last_enriched_at
+  -- DESC, w2.id DESC. Caught by user-supplied Gemini holistic
+  -- 2026-04-09 ("Lateral Cartesian Explosion").
+  wsib_per_entity AS (
+    SELECT DISTINCT ON (linked_entity_id)
+      linked_entity_id,
+      business_size
+    FROM wsib_registry
+    WHERE is_gta = true
+      AND last_enriched_at IS NOT NULL
+      AND business_size IN ('Small Business', 'Medium Business')
+      AND (website IS NOT NULL OR primary_phone IS NOT NULL)
+    ORDER BY linked_entity_id, last_enriched_at DESC, id DESC
+  ),
+  permit_candidates AS (
     SELECT
       'permit'::text AS lead_type,
       -- LPAD revision_num to 2 digits so the lead_id is stable across the
@@ -203,7 +228,24 @@ export const LEAD_FEED_SQL = `
       -- as a column so the card can render the dollar figure. NULL when
       -- the builder has zero costed permits in radius (card omits the
       -- avg clause from the stats line).
-      AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) AS avg_project_cost,
+      -- Uses COALESCE(cache, GUARDED_RAW) so the builder's avg uses the
+      -- normalized cost_estimates value when available and falls back
+      -- to the raw CKAN field ONLY when it exceeds PLACEHOLDER_COST_THRESHOLD
+      -- (1000 — defined in spec 72 + cost-model.ts). The cost model
+      -- explicitly rejects raw values <= 1000 as placeholders ($1 is a
+      -- common Toronto CKAN placeholder); without this guard, placeholder
+      -- values from yet-uncached permits would leak into the builder
+      -- average and pull medium builders into the "small" tier.
+      -- Independent reviewer C5 caught this in the holistic Phase 3 WF3.
+      AVG(COALESCE(
+        ce_b.estimated_cost::float8,
+        CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END
+      ))
+        FILTER (WHERE COALESCE(
+          ce_b.estimated_cost::float8,
+          CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END
+        ) > 0)
+        AS avg_project_cost,
       e.id          AS entity_id,
       e.legal_name,
       w.business_size,
@@ -226,24 +268,43 @@ export const LEAD_FEED_SQL = `
       END AS proximity_score,
       -- Pillar 2: timing (0-30) — builders are "ongoing capacity", fixed mid-band
       15 AS timing_score,
-      -- Pillar 3: value (0-20) — average project cost bucketed. Rescaled
-      -- from 0-30 to match the permit pillar boundaries (spec 70 §4).
-      -- NULL (no cost data on any nearby permit) is "unknown", NOT "small";
-      -- score it lower than the smallest known bucket so unknowns sort last
-      -- among value-tied builders.
+      -- Pillar 3: value (0-20) — average project cost bucketed.
+      -- Same COALESCE(cache, GUARDED_raw) as avg_project_cost above so
+      -- value_score and avg_project_cost are computed against the
+      -- IDENTICAL set of permits. The PLACEHOLDER_COST_THRESHOLD guard
+      -- on the raw fallback prevents $1 placeholders from contaminating
+      -- the bucket selection. Independent reviewer C5 fix.
       CASE
-        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) IS NULL    THEN 3
-        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 2000000 THEN 20
-        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 500000  THEN 14
-        WHEN AVG(p.est_const_cost::float8) FILTER (WHERE p.est_const_cost > 0) >= 100000  THEN 10
+        WHEN AVG(COALESCE(ce_b.estimated_cost::float8,
+             CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END))
+             FILTER (WHERE COALESCE(ce_b.estimated_cost::float8,
+               CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END) > 0) IS NULL    THEN 3
+        WHEN AVG(COALESCE(ce_b.estimated_cost::float8,
+             CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END))
+             FILTER (WHERE COALESCE(ce_b.estimated_cost::float8,
+               CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END) > 0) >= 2000000 THEN 20
+        WHEN AVG(COALESCE(ce_b.estimated_cost::float8,
+             CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END))
+             FILTER (WHERE COALESCE(ce_b.estimated_cost::float8,
+               CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END) > 0) >= 500000  THEN 14
+        WHEN AVG(COALESCE(ce_b.estimated_cost::float8,
+             CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END))
+             FILTER (WHERE COALESCE(ce_b.estimated_cost::float8,
+               CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END) > 0) >= 100000  THEN 10
         ELSE 6
       END AS value_score,
       -- Pillar 4: opportunity (0-20) — count of active permits. Rescaled
       -- from 0-10 to match the permit pillar boundaries (spec 70 §4).
+      -- Uses COUNT(DISTINCT (permit_num, revision_num)) for the same
+      -- entity_projects-duplication defense as active_permits_nearby
+      -- above. Pre-fix this used plain COUNT(p.permit_num) which would
+      -- double-count when a builder is linked to the same permit
+      -- under multiple entity_projects rows. Caught by Gemini holistic
+      -- WF3 review 2026-04-09 (line 1165).
       CASE
-        WHEN COUNT(p.permit_num) >= 5 THEN 20
-        WHEN COUNT(p.permit_num) >= 3 THEN 14
-        WHEN COUNT(p.permit_num) >= 1 THEN 10
+        WHEN COUNT(DISTINCT (p.permit_num, p.revision_num)) >= 5 THEN 20
+        WHEN COUNT(DISTINCT (p.permit_num, p.revision_num)) >= 3 THEN 14
+        WHEN COUNT(DISTINCT (p.permit_num, p.revision_num)) >= 1 THEN 10
         ELSE 0
       END AS opportunity_score,
       -- Semantic columns mirror the permit CTE so the UNION ALL shape
@@ -262,22 +323,23 @@ export const LEAD_FEED_SQL = `
      AND pt.is_active = true
      AND pt.confidence >= 0.5
     JOIN trades t ON t.id = pt.trade_id AND t.slug = $1
-    LEFT JOIN LATERAL (
-      SELECT business_size
-      FROM wsib_registry w2
-      WHERE w2.linked_entity_id = e.id
-        AND w2.is_gta = true
-        AND w2.last_enriched_at IS NOT NULL
-        AND w2.business_size IN ('Small Business', 'Medium Business')
-        AND (w2.website IS NOT NULL OR w2.primary_phone IS NOT NULL)
-      -- Secondary tiebreaker on w2.id keeps the LATERAL deterministic
-      -- when two WSIB rows share the same last_enriched_at — without it
-      -- the row picked is undefined, which propagates into the cursor
-      -- and breaks pagination stability across requests. Caught by
-      -- DeepSeek 2026-04-09 review.
-      ORDER BY w2.last_enriched_at DESC, w2.id DESC
-      LIMIT 1
-    ) w ON true
+    -- Pre-aggregated WSIB join (see wsib_per_entity CTE above for the
+    -- rationale: the previous LATERAL fired per-row of the post-JOIN
+    -- cross product, this fires once per entity for the whole query).
+    LEFT JOIN wsib_per_entity w ON w.linked_entity_id = e.id
+    -- Cost cache JOIN: surface cost_estimates.estimated_cost (the
+    -- normalized/corrected value from compute-cost-estimates.js) so
+    -- the builder value_score uses the SAME cleaned data as the
+    -- permit value_score. Pre-fix, the builder CTE averaged the raw
+    -- p.est_const_cost CKAN field while permits used the cache —
+    -- creating a parity divergence where two cards based on the same
+    -- underlying permits could disagree. COALESCE falls back to the
+    -- raw value when a permit hasn't been cached yet (the cache is
+    -- populated incrementally by the nightly compute job). User-
+    -- supplied Gemini holistic 2026-04-09 ("Cost Cache Bypass").
+    LEFT JOIN cost_estimates ce_b
+      ON ce_b.permit_num = p.permit_num
+     AND ce_b.revision_num = p.revision_num
     WHERE p.location IS NOT NULL
       AND p.status IN ('Permit Issued', 'Inspection')
       AND ST_DWithin(p.location::geography, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)

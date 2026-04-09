@@ -793,6 +793,48 @@ describe('sumScopeAdditions — per-tag dispatch (mutation survivors)', () => {
         SCOPE_ADDITIONS.solar,
     );
   });
+
+  // Bug 5 (user-supplied Gemini holistic 2026-04-09 — "Scope Tags
+  // Double-Dip"): PostgreSQL TEXT[] doesn't enforce uniqueness, and
+  // the upstream classifier + inspector edits can append duplicate
+  // tags. Pre-fix, ['pool', 'pool'] added $80K twice.
+  it('duplicate pool tags do NOT double-count (Bug 5 dedupe)', () => {
+    expect(costWith(['pool', 'pool']).estimated_cost).toBe(
+      BASE + SCOPE_ADDITIONS.pool,
+    );
+  });
+
+  it('triple duplicate adds the bonus exactly once', () => {
+    expect(costWith(['elevator', 'elevator', 'elevator']).estimated_cost).toBe(
+      BASE + SCOPE_ADDITIONS.elevator,
+    );
+  });
+
+  it('mixed-case duplicates dedupe via lowercase normalization', () => {
+    expect(costWith(['pool', 'POOL', 'Pool']).estimated_cost).toBe(
+      BASE + SCOPE_ADDITIONS.pool,
+    );
+  });
+
+  it('duplicate-laden 4-tag input stacks each known tag exactly once', () => {
+    expect(
+      costWith([
+        'pool',
+        'pool',
+        'elevator',
+        'elevator',
+        'underpinning',
+        'underpinning',
+        'solar',
+      ]).estimated_cost,
+    ).toBe(
+      BASE +
+        SCOPE_ADDITIONS.pool +
+        SCOPE_ADDITIONS.elevator +
+        SCOPE_ADDITIONS.underpinning +
+        SCOPE_ADDITIONS.solar,
+    );
+  });
 });
 
 describe('determineCostTier — band boundaries (mutation survivors)', () => {

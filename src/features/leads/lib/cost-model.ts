@@ -228,9 +228,15 @@ function computeBuildingArea(
 
 function sumScopeAdditions(tags: string[] | null): number {
   if (!tags) return 0;
+  // DEDUP via Set BEFORE iterating: PostgreSQL TEXT[] does not enforce
+  // uniqueness, and the upstream classifier + inspector edits can
+  // append duplicate tags (e.g., ['pool', 'pool']). Without the
+  // Set, a duplicate 'pool' adds $80K TWICE — inflating the
+  // estimate by tens of thousands and corrupting the value_score
+  // pillar. Caught by user-supplied Gemini holistic review 2026-04-09.
+  const unique = new Set(tags.map((t) => t.toLowerCase()));
   let total = 0;
-  for (const tag of tags) {
-    const norm = tag.toLowerCase();
+  for (const norm of unique) {
     if (norm === 'pool') total += SCOPE_ADDITIONS.pool;
     else if (norm === 'elevator') total += SCOPE_ADDITIONS.elevator;
     else if (norm === 'underpinning') total += SCOPE_ADDITIONS.underpinning;
@@ -264,9 +270,10 @@ function computeComplexityScore(
   if ((neighbourhood?.avg_household_income ?? 0) > 150_000) {
     score += COMPLEXITY_SIGNALS.premiumNbhd;
   }
-  const tags = permit.scope_tags ?? [];
-  for (const tag of tags) {
-    const norm = tag.toLowerCase();
+  // Same dedup pattern as sumScopeAdditions — duplicate tags would
+  // double-count the +10 complexity signal per category.
+  const uniqueTags = new Set((permit.scope_tags ?? []).map((t) => t.toLowerCase()));
+  for (const norm of uniqueTags) {
     if (norm === 'pool' || norm === 'elevator' || norm === 'underpinning') {
       score += COMPLEXITY_SIGNALS.complexScope;
     }
