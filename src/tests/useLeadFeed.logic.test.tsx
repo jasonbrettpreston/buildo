@@ -16,6 +16,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Mock captureEvent before importing useLeadFeed so the Phase 3-vi
+// observability hook (lead_feed.client_error emit on query error)
+// is captured by the spy.
+const captureEventMock = vi.fn();
+vi.mock('@/lib/observability/capture', () => ({
+  captureEvent: (...args: unknown[]) => captureEventMock(...args),
+  initObservability: vi.fn(),
+}));
+
 import { useLeadFeed, __constants } from '@/features/leads/api/useLeadFeed';
 import { useLeadFeedState, DEFAULT_RADIUS_KM } from '@/features/leads/hooks/useLeadFeedState';
 
@@ -59,6 +69,7 @@ const happyResponse = {
 
 beforeEach(() => {
   fetchMock.mockReset();
+  captureEventMock.mockReset();
   // Reset Zustand store + localStorage between tests so snappedLocation
   // from one test doesn't bleed into the next.
   useLeadFeedState.setState({
@@ -521,5 +532,95 @@ describe('useLeadFeed — cursor pagination', () => {
     );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.hasNextPage).toBe(true);
+  });
+});
+
+describe('useLeadFeed — client_error observability (Phase 3-vi)', () => {
+  it('emits lead_feed.client_error when query enters error state with a typed LeadApiClientError', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        data: null,
+        error: { code: 'VALIDATION_FAILED', message: 'lat must be finite' },
+        meta: null,
+      }),
+    } as Response);
+
+    const { result } = renderHook(
+      () =>
+        useLeadFeed({
+          trade_slug: 'plumbing',
+          lat: Number.NaN,
+          lng: -79.38,
+          radius_km: 10,
+        }),
+      { wrapper: wrapper() },
+    );
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    // The observability hook should have fired with the typed error.
+    const calls = captureEventMock.mock.calls.filter(
+      (c) => c[0] === 'lead_feed.client_error',
+    );
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[0]?.[1]).toMatchObject({
+      code: 'VALIDATION_FAILED',
+      message: 'lat must be finite',
+      trade_slug: 'plumbing',
+    });
+  });
+
+  it('does NOT spam events when the SAME query refetches into the same error (sustained error state)', async () => {
+    // Independent reviewer caught that the previous test called
+    // rerender() with stable props — React skipped the effect
+    // entirely so the dedup ref code was never reached. The dedup
+    // ref protects against THIS scenario: the same query instance
+    // refetches repeatedly (e.g., pull-to-refresh, automatic retry,
+    // user retries after offline) and keeps producing the same
+    // error code+message. Each refetch produces a NEW query.error
+    // object reference, so the effect dep array sees a change, the
+    // effect re-runs, and the ref check is what stops the duplicate
+    // emit.
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        data: null,
+        error: { code: 'VALIDATION_FAILED', message: 'lat must be finite' },
+        meta: null,
+      }),
+    } as Response);
+
+    const { result } = renderHook(
+      () =>
+        useLeadFeed({
+          trade_slug: 'plumbing',
+          lat: Number.NaN,
+          lng: -79.38,
+          radius_km: 10,
+        }),
+      { wrapper: wrapper() },
+    );
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    // First emit fires.
+    expect(
+      captureEventMock.mock.calls.filter((c) => c[0] === 'lead_feed.client_error'),
+    ).toHaveLength(1);
+
+    // Refetch the SAME query. TanStack Query produces a new
+    // query.error object reference even when the underlying error
+    // content is identical. The effect dep array sees the change
+    // and re-runs. Without the ref dedup, this would emit again.
+    await result.current.refetch();
+    await result.current.refetch();
+    await result.current.refetch();
+
+    // Still exactly 1 emit — the ref guard suppressed all 3 refetch
+    // re-runs because the (code|message) key matches.
+    const calls = captureEventMock.mock.calls.filter(
+      (c) => c[0] === 'lead_feed.client_error',
+    );
+    expect(calls).toHaveLength(1);
   });
 });

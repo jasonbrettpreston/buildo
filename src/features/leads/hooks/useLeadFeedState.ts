@@ -27,6 +27,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 // the server's 400 VALIDATION_FAILED response. Caught by user
 // review 2026-04-09 ("Persistent Zod Deadlock"). Layer 1 fix.
 import { MAX_RADIUS_KM } from '@/features/leads/lib/distance';
+import { captureEvent } from '@/lib/observability/capture';
 
 /**
  * Default radius in kilometres. Matches `geo.default_radius_km` in
@@ -126,9 +127,75 @@ function validateLocation(raw: unknown): LeadLocation | null {
  * Accepts `unknown` because localStorage can contain anything a
  * malicious/buggy extension wrote — trusting the shape is how you crash
  * an app on mount. Returns the validated slice or a fresh default.
+ *
+ * Phase 3-vi observability: every clamp/recovery emits a
+ * `lead_feed.persisted_state_recovered` event so engineering can
+ * measure how often corrupted localStorage hits production. The
+ * captureEvent wrapper queues events until PostHog finishes init,
+ * so events fired during this synchronous migrate callback (which
+ * runs BEFORE PostHog has a chance to load) survive the timing gap.
+ * NO PII is emitted — only the field name and the recovered value.
+ * The original value is included only when it's a primitive type
+ * (number, boolean, string) — object/array originals are stringified
+ * to a sanitized type tag to avoid leaking nested structure.
  */
+// Long-string sanitization threshold — strings longer than this are
+// replaced with a `[string:N]` type tag instead of passed through.
+// Catches the edge case where a malicious extension stuffs a
+// JSON-stringified coordinate string into localStorage at the top
+// level (e.g., "43.6535,-79.3839") which would otherwise leak
+// coordinate values to PostHog through the original_value field.
+// Independent reviewer holistic 2026-04-09 caught this PII gap.
+const PII_STRING_LENGTH_LIMIT = 50;
+
+function emitRecovery(
+  field: 'radiusKm' | 'location' | 'snappedLocation' | '__slice__',
+  originalValue: unknown,
+  recoveredValue: unknown,
+): void {
+  // Sanitize the original value: pass through short primitives,
+  // replace objects/arrays with a type tag, and truncate long
+  // strings. NO PII leaks through this path:
+  //   - object/array → '[object:...]' tag
+  //   - long string  → '[string:N]'  tag (catches coordinate strings)
+  //   - short string → passed through (safe — too short for coords)
+  //   - number       → passed through (radius is the only number field)
+  //   - boolean      → passed through
+  //   - null/undef   → passed through
+  let sanitizedOriginal: unknown;
+  if (originalValue === null || originalValue === undefined) {
+    sanitizedOriginal = originalValue;
+  } else if (typeof originalValue === 'object') {
+    sanitizedOriginal = `[object:${Array.isArray(originalValue) ? 'array' : 'object'}]`;
+  } else if (
+    typeof originalValue === 'string' &&
+    originalValue.length > PII_STRING_LENGTH_LIMIT
+  ) {
+    sanitizedOriginal = `[string:${originalValue.length}]`;
+  } else {
+    sanitizedOriginal = originalValue;
+  }
+  captureEvent('lead_feed.persisted_state_recovered', {
+    field,
+    original_value: sanitizedOriginal,
+    original_type: typeof originalValue,
+    recovered_value: recoveredValue,
+  });
+}
+
 function validatePersistedSlice(raw: unknown): PersistedSlice {
-  if (!raw || typeof raw !== 'object') return defaultPersistedSlice();
+  if (!raw || typeof raw !== 'object') {
+    if (raw !== null && raw !== undefined) {
+      // Whole-slice corruption (something stored as not-an-object).
+      // Emit a rollup event with a distinct '__slice__' field
+      // sentinel so PostHog facets can distinguish whole-slice
+      // corruption from a per-field radiusKm recovery. Independent
+      // reviewer holistic 2026-04-09 caught the original sentinel
+      // ('radiusKm') polluting the field facet.
+      emitRecovery('__slice__', raw, null);
+    }
+    return defaultPersistedSlice();
+  }
   const r = raw as {
     radiusKm?: unknown;
     location?: unknown;
@@ -142,18 +209,31 @@ function validatePersistedSlice(raw: unknown): PersistedSlice {
   // localStorage held 51-100. Now any radiusKm that exceeds
   // MAX_RADIUS_KM (or is otherwise invalid) auto-recovers to the
   // default on the next page load. User review 2026-04-09.
-  const radiusKm =
+  const radiusKmValid =
     typeof r.radiusKm === 'number' &&
     Number.isFinite(r.radiusKm) &&
     r.radiusKm > 0 &&
-    r.radiusKm <= MAX_RADIUS_KM
-      ? r.radiusKm
-      : DEFAULT_RADIUS_KM;
-  return {
-    radiusKm,
-    location: validateLocation(r.location),
-    snappedLocation: validateLocation(r.snappedLocation),
-  };
+    r.radiusKm <= MAX_RADIUS_KM;
+  const radiusKm = radiusKmValid ? (r.radiusKm as number) : DEFAULT_RADIUS_KM;
+  if (!radiusKmValid && r.radiusKm !== undefined) {
+    emitRecovery('radiusKm', r.radiusKm, radiusKm);
+  }
+
+  const location = validateLocation(r.location);
+  if (location === null && r.location !== undefined && r.location !== null) {
+    emitRecovery('location', r.location, null);
+  }
+
+  const snappedLocation = validateLocation(r.snappedLocation);
+  if (
+    snappedLocation === null &&
+    r.snappedLocation !== undefined &&
+    r.snappedLocation !== null
+  ) {
+    emitRecovery('snappedLocation', r.snappedLocation, null);
+  }
+
+  return { radiusKm, location, snappedLocation };
 }
 
 export const useLeadFeedState = create<LeadFeedState>()(

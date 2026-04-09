@@ -27,10 +27,11 @@
 // the effect seeds it from the current input.
 
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLeadFeedState } from '@/features/leads/hooks/useLeadFeedState';
 import { DEFAULT_FEED_LIMIT } from '@/features/leads/lib/get-lead-feed';
 import { haversineMeters } from '@/features/leads/lib/haversine';
+import { captureEvent } from '@/lib/observability/capture';
 import {
   isLeadApiError,
   LeadApiClientError,
@@ -240,6 +241,32 @@ export function useLeadFeed(input: UseLeadFeedInput) {
       setSnappedLocation({ lat: input.lat, lng: input.lng });
     }
   }, [input.lat, input.lng, snappedLocation, setSnappedLocation, hasHydrated]);
+
+  // Phase 3-vi observability: emit `lead_feed.client_error` whenever
+  // the query enters an error state with a typed LeadApiClientError.
+  // Pre-fix, 4xx errors (e.g., 400 VALIDATION_FAILED from a stale
+  // snap location or a malformed cursor) surfaced in the UI as the
+  // 'unreachable' empty state but engineering had no telemetry. The
+  // ref-based dedupe (keyed on (code, message)) prevents spamming
+  // PostHog when the user is stuck in a sustained error state — the
+  // same pattern lead_feed.viewed uses.
+  const lastClientErrorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!query.isError) {
+      lastClientErrorRef.current = null;
+      return;
+    }
+    const err = query.error;
+    if (!(err instanceof LeadApiClientError)) return;
+    const key = `${err.code}|${err.message}`;
+    if (lastClientErrorRef.current === key) return;
+    lastClientErrorRef.current = key;
+    captureEvent('lead_feed.client_error', {
+      code: err.code,
+      message: err.message,
+      trade_slug: input.trade_slug,
+    });
+  }, [query.isError, query.error, input.trade_slug]);
 
   return query;
 }

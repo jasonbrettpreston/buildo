@@ -22,7 +22,13 @@ export type EventName =
   | 'lead_feed.directions_opened'
   | 'lead_feed.filter_changed'
   | 'lead_feed.refresh'
-  | 'lead_feed.empty_state_shown';
+  | 'lead_feed.empty_state_shown'
+  // Phase 3-vi observability sibling: silent-failure visibility events.
+  // These fire from non-user-driven code paths so engineering can see
+  // failure modes that the user never explicitly triggered.
+  | 'lead_feed.persisted_state_recovered'
+  | 'lead_feed.geolocation_query_failed'
+  | 'lead_feed.client_error';
 
 type EventProperties = Record<string, unknown>;
 
@@ -33,7 +39,22 @@ interface QueuedEvent {
 
 let initialized = false;
 let loaded = false;
+let initFailed = false;
 const queue: QueuedEvent[] = [];
+
+// Cap the queue to prevent unbounded memory growth in two scenarios:
+//   1. PostHog init throws (ad blocker, network failure, blocked
+//      domain) and the `loaded` callback never fires. Without a cap,
+//      every captureEvent for the entire session would queue forever.
+//   2. PostHog init succeeds but `loaded` is delayed by network
+//      latency, AND the page generates a burst of telemetry events
+//      faster than the load can complete.
+// 100 events is enough to capture the relevant pre-load activity
+// (page mount + a handful of user interactions) without becoming a
+// memory leak. Older events are dropped on overflow — the recent
+// ones are more diagnostically valuable. Caught by Gemini holistic
+// review of the Phase 3-vi observability sibling.
+const MAX_QUEUE_SIZE = 100;
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -49,7 +70,13 @@ export function initObservability(): void {
 
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
-  if (!key) return;
+  if (!key) {
+    // No PostHog key configured — mark init as failed so future
+    // captureEvents don't queue indefinitely.
+    initFailed = true;
+    queue.length = 0;
+    return;
+  }
 
   try {
     posthog.init(key, {
@@ -71,18 +98,30 @@ export function initObservability(): void {
       },
     });
   } catch {
-    // Init failed (network, blocked, etc.) — stay quiet.
+    // Init failed (network, blocked, etc.) — mark as failed and
+    // drop the queue so the queue doesn't grow unbounded for the
+    // rest of the session. Subsequent captureEvent calls will
+    // see initFailed and become a no-op.
+    initFailed = true;
+    queue.length = 0;
   }
 }
 
 /**
  * Capture a product event. SSR-safe, error-safe. If PostHog hasn't loaded
- * yet, the event is queued and drained on load.
+ * yet, the event is queued and drained on load (capped at MAX_QUEUE_SIZE
+ * to bound memory growth — older events are dropped on overflow).
+ * If init failed permanently, becomes a no-op.
  */
 export function captureEvent(name: EventName, props?: EventProperties): void {
   if (!isBrowser()) return;
+  if (initFailed) return; // No-op after permanent init failure.
   if (!loaded) {
     queue.push({ name, props });
+    // Drop oldest events on overflow.
+    if (queue.length > MAX_QUEUE_SIZE) {
+      queue.shift();
+    }
     return;
   }
   try {

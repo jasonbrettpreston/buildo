@@ -15,6 +15,7 @@
 // field. This hook only reports what the BROWSER knows.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { captureEvent } from '@/lib/observability/capture';
 
 export type GeolocationStatus =
   | { state: 'idle' }
@@ -34,8 +35,16 @@ async function checkPermissionState(): Promise<
   try {
     const result = await navigator.permissions.query({ name: 'geolocation' });
     return result.state as 'granted' | 'prompt' | 'denied';
-  } catch {
+  } catch (err) {
     // Safari throws for some permission names — treat as unsupported.
+    // Phase 3-vi observability: ping engineering so we can measure
+    // which Safari versions are still throwing. Pre-fix this catch
+    // was completely silent — we had no way to know how many users
+    // were hitting the Safari quirk path.
+    captureEvent('lead_feed.geolocation_query_failed', {
+      error_message: err instanceof Error ? err.message : String(err),
+      error_name: err instanceof Error ? err.name : 'unknown',
+    });
     return 'unsupported';
   }
 }

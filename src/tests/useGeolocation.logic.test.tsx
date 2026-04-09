@@ -14,6 +14,18 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
+
+// Hoist the captureEvent mock to module scope so it's in place
+// BEFORE useGeolocation is imported. The Phase 3-vi observability
+// emit (lead_feed.geolocation_query_failed) fires from inside
+// checkPermissionState, which the hook's useEffect calls during
+// mount — we need the spy in place at import time.
+const captureEventMock = vi.fn();
+vi.mock('@/lib/observability/capture', () => ({
+  captureEvent: (...args: unknown[]) => captureEventMock(...args),
+  initObservability: vi.fn(),
+}));
+
 import { useGeolocation } from '@/features/leads/hooks/useGeolocation';
 
 type FakePermissionStatus = {
@@ -31,6 +43,39 @@ function makePermissionStatus(state: PermissionState): FakePermissionStatus {
     onchange: null,
   };
 }
+
+describe('useGeolocation — observability emit on permission query failure (Phase 3-vi)', () => {
+  it('emits lead_feed.geolocation_query_failed when navigator.permissions.query throws (Safari quirk)', async () => {
+    // Pre-fix this catch was completely silent — the catch returned
+    // 'unsupported' without telling engineering. Now it pings PostHog
+    // so we can measure which Safari versions are still throwing.
+    captureEventMock.mockReset();
+    const queryError = new Error("Permission name 'geolocation' not supported");
+    queryError.name = 'TypeError';
+    vi.stubGlobal('navigator', {
+      ...window.navigator,
+      permissions: {
+        query: vi.fn().mockRejectedValue(queryError),
+      },
+      geolocation: undefined,
+    });
+
+    const { result } = renderHook(() => useGeolocation());
+    await waitFor(() =>
+      expect(result.current.status.state).toBe('unsupported'),
+    );
+
+    // The catch should have called captureEvent with the error info.
+    const calls = captureEventMock.mock.calls.filter(
+      (c) => c[0] === 'lead_feed.geolocation_query_failed',
+    );
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[0]?.[1]).toMatchObject({
+      error_message: expect.stringContaining('not supported'),
+      error_name: 'TypeError',
+    });
+  });
+});
 
 describe('useGeolocation — visibilitychange polling (Bug 4 — iOS suspend drift)', () => {
   // iOS WebKit kills the Permissions API change listener when the
