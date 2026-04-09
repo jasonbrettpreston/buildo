@@ -65,15 +65,19 @@ export interface LeadApiError {
  *   if (isLeadApiError(body)) throw new LeadApiClientError(body.error.code, body.error.message);
  */
 export function isLeadApiError(body: unknown): body is LeadApiError {
-  return (
-    typeof body === 'object' &&
-    body !== null &&
-    'error' in body &&
-    body.error !== null &&
-    typeof body.error === 'object' &&
-    'code' in body.error &&
-    typeof (body.error as { code: unknown }).code === 'string'
-  );
+  // Full envelope shape check: `{ data: null, error: { code, message }, meta: null }`.
+  // Tightened after the Phase 3-i DeepSeek adversarial review flagged
+  // the original loose check as prone to false positives on random
+  // JSON that happens to contain an `error` key.
+  if (typeof body !== 'object' || body === null) return false;
+  const b = body as { data?: unknown; error?: unknown; meta?: unknown };
+  if (b.data !== null) return false;
+  if (b.meta !== null) return false;
+  if (typeof b.error !== 'object' || b.error === null) return false;
+  const e = b.error as { code?: unknown; message?: unknown };
+  if (typeof e.code !== 'string') return false;
+  if (typeof e.message !== 'string') return false;
+  return true;
 }
 
 /**

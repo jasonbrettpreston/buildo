@@ -22,11 +22,16 @@ import { del, get, set } from 'idb-keyval';
  * Default options for all leads queries. Per spec 75 §2.1:
  * - `staleTime: 60s` — feed data is time-sensitive but doesn't change
  *   every render; a 1-minute stale window prevents refetch storms.
- * - `gcTime: 5min` — keep inactive queries around for 5 minutes so
- *   navigating away and back (e.g., to a detail page) reuses the cache.
+ * - `gcTime: 24h` — MUST equal `CACHE_MAX_AGE_MS` below. The Phase 3-i
+ *   adversarial review caught that a 5-minute gcTime with 24-hour
+ *   persistence creates a contract bug: queries evicted from the
+ *   in-memory cache after 5 minutes of inactivity are also removed
+ *   from the persister's next snapshot, defeating the offline promise.
+ *   Matching the two values makes the persister's retention the
+ *   single source of truth.
  * - `retry: 1` — one retry on network error. Spec 70 §API Endpoints
- *   documents the 30/min rate limit; aggressive retries would burn the
- *   bucket and get the user 429'd.
+ *   documents the 30/min rate limit; aggressive retries would burn
+ *   the bucket and get the user 429'd.
  * - `refetchOnWindowFocus: false` — mobile users background the app
  *   constantly; a refetch on every foreground would drain battery +
  *   data. Explicit pull-to-refresh (3-iv) is the refresh trigger.
@@ -34,7 +39,7 @@ import { del, get, set } from 'idb-keyval';
  *   re-validate the cache. This is distinct from window-focus refetch.
  */
 const DEFAULT_STALE_MS = 60_000;
-const DEFAULT_GC_MS = 5 * 60_000;
+const DEFAULT_GC_MS = 24 * 60 * 60 * 1000; // must equal CACHE_MAX_AGE_MS below
 
 let clientSingleton: QueryClient | null = null;
 

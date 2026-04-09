@@ -54,59 +54,12 @@ export function useGeolocation(): {
 } {
   const [status, setStatus] = useState<GeolocationStatus>({ state: 'idle' });
   const permissionStatusRef = useRef<PermissionStatus | null>(null);
-
-  // Initial permission check + subscription to permission changes.
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      const initial = await checkPermissionState();
-      if (cancelled) return;
-      if (initial === 'unsupported') {
-        setStatus({ state: 'unsupported' });
-        return;
-      }
-      if (initial === 'denied') {
-        setStatus({ state: 'denied', permanent: true });
-        return;
-      }
-      if (initial === 'prompt') {
-        setStatus({ state: 'prompt' });
-        return;
-      }
-      // granted — subscribe to changes so we can react if the user
-      // revokes permission while the app is open.
-      if (typeof navigator !== 'undefined' && navigator.permissions?.query) {
-        try {
-          const perm = await navigator.permissions.query({ name: 'geolocation' });
-          if (cancelled) return;
-          permissionStatusRef.current = perm;
-          const onChange = () => {
-            if (perm.state === 'denied') {
-              setStatus({ state: 'denied', permanent: true });
-            } else if (perm.state === 'prompt') {
-              setStatus({ state: 'prompt' });
-            }
-          };
-          perm.addEventListener('change', onChange);
-        } catch {
-          // Safari quirk; ignore.
-        }
-      }
-      setStatus({ state: 'prompt' }); // trigger the user to call request()
-    })();
-
-    return () => {
-      cancelled = true;
-      const perm = permissionStatusRef.current;
-      if (perm) {
-        // Remove all listeners by setting the event handler to null.
-        // The stored reference is sufficient — we re-subscribe fresh on
-        // each mount.
-        perm.onchange = null;
-      }
-    };
-  }, []);
+  // Store the onChange callback in a ref so the effect cleanup can
+  // pass the EXACT same function reference to removeEventListener.
+  // The Phase 3-i adversarial review caught a bug where cleanup set
+  // `perm.onchange = null`, which is a different subscription
+  // mechanism and leaks the addEventListener-registered handler.
+  const onChangeRef = useRef<(() => void) | null>(null);
 
   const request = useCallback(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
@@ -124,6 +77,11 @@ export function useGeolocation(): {
         });
       },
       (err) => {
+        // A PERMISSION_DENIED after an explicit getCurrentPosition call
+        // IS persistent — the user has just actively denied, or the
+        // browser has a site-level block. Unlike the initial
+        // Permissions API 'denied' state (which can mean "never asked
+        // in this session"), this one we can classify as permanent.
         if (err.code === err.PERMISSION_DENIED) {
           setStatus({ state: 'denied', permanent: true });
           return;
@@ -137,6 +95,75 @@ export function useGeolocation(): {
       },
     );
   }, []);
+
+  // Initial permission check + subscription to permission changes.
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      const initial = await checkPermissionState();
+      if (cancelled) return;
+      if (initial === 'unsupported') {
+        setStatus({ state: 'unsupported' });
+        return;
+      }
+      if (initial === 'denied') {
+        // Permissions API `denied` state can mean "user denied this
+        // session" OR "persistently blocked in site settings" —
+        // indistinguishable at this layer. Treat as non-permanent so
+        // the UI can still offer a re-prompt. The `permanent: true`
+        // flag is only set from the explicit getCurrentPosition error
+        // callback (in `request()` above), where the transition IS
+        // unambiguous.
+        setStatus({ state: 'denied', permanent: false });
+        return;
+      }
+      // 'granted' or 'prompt' — subscribe to permission-change events
+      // so we react if the user revokes permission via browser UI.
+      if (typeof navigator !== 'undefined' && navigator.permissions?.query) {
+        try {
+          const perm = await navigator.permissions.query({ name: 'geolocation' });
+          if (cancelled) return;
+          permissionStatusRef.current = perm;
+          const onChange = () => {
+            if (perm.state === 'denied') {
+              setStatus({ state: 'denied', permanent: true });
+            } else if (perm.state === 'prompt') {
+              setStatus({ state: 'prompt' });
+            } else if (perm.state === 'granted') {
+              request();
+            }
+          };
+          onChangeRef.current = onChange;
+          perm.addEventListener('change', onChange);
+        } catch {
+          // Safari quirk on some permission names — no subscription,
+          // fall through to initial state handling below.
+        }
+      }
+      if (initial === 'granted') {
+        // User has already granted permission in a prior session —
+        // auto-fetch the position instead of showing the "tap to
+        // share location" prompt UI. Emitting `prompt` here (the
+        // pre-fix behaviour) was a state machine error because the
+        // user is NOT in a prompt state.
+        request();
+      } else {
+        setStatus({ state: 'prompt' });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      const perm = permissionStatusRef.current;
+      const onChange = onChangeRef.current;
+      if (perm && onChange) {
+        perm.removeEventListener('change', onChange);
+      }
+      permissionStatusRef.current = null;
+      onChangeRef.current = null;
+    };
+  }, [request]);
 
   return { status, request };
 }

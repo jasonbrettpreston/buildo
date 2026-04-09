@@ -158,13 +158,12 @@ describe('useLeadFeed — error handling', () => {
     expect(result.current.error?.message).toBe('lat must be finite');
   });
 
-  it('surfaces NETWORK_ERROR when fetch throws or returns non-JSON', async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: async () => ({ data: null, error: null, meta: null }),
-    } as Response);
-
+  it('surfaces NETWORK_ERROR when fetch rejects (offline, DNS, CORS)', async () => {
+    // Phase 3-i adversarial review fix: pre-fix, an unhandled fetch
+    // rejection would break TanStack Query's error handling. The
+    // 3-layer error funnel now catches the reject and converts to
+    // a typed LeadApiClientError.
+    fetchMock.mockRejectedValueOnce(new Error('Failed to fetch'));
     const { result } = renderHook(
       () =>
         useLeadFeed({
@@ -175,9 +174,88 @@ describe('useLeadFeed — error handling', () => {
         }),
       { wrapper: wrapper() },
     );
-
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.code).toBe('NETWORK_ERROR');
+  });
+
+  it('surfaces NETWORK_ERROR when res.json() throws (non-JSON body e.g. proxy 502 HTML)', async () => {
+    // Phase 3-i adversarial review fix: pre-fix, `await res.json()`
+    // on an HTML 502 page would reject with a parse error and
+    // propagate as an unhandled rejection. The tightened handler
+    // catches the parse failure too.
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      json: async () => {
+        throw new SyntaxError('Unexpected token < in JSON at position 0');
+      },
+    } as unknown as Response);
+    const { result } = renderHook(
+      () =>
+        useLeadFeed({
+          trade_slug: 'plumbing',
+          lat: 43.65,
+          lng: -79.38,
+          radius_km: 10,
+        }),
+      { wrapper: wrapper() },
+    );
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.code).toBe('NETWORK_ERROR');
+  });
+
+  it('surfaces NETWORK_ERROR when server returns non-envelope 500 body', async () => {
+    // Pre-fix: `!res.ok || isLeadApiError(body)` would be TRUE
+    // (via !res.ok) and the loose error shape would return a
+    // generic NETWORK_ERROR — but then the code fell through to
+    // `return body as LeadFeedResponse`, which is the actual bug.
+    // The rewrite ensures the error branch always throws.
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({ data: null, error: null, meta: null }),
+    } as Response);
+    const { result } = renderHook(
+      () =>
+        useLeadFeed({
+          trade_slug: 'plumbing',
+          lat: 43.65,
+          lng: -79.38,
+          radius_km: 10,
+        }),
+      { wrapper: wrapper() },
+    );
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.code).toBe('NETWORK_ERROR');
+  });
+
+  it('throws on 2xx response with an error envelope (server contract violation)', async () => {
+    // Phase 3-i adversarial review fix: the original code only
+    // checked `!res.ok || isLeadApiError(body)` BEFORE returning —
+    // the || was inclusive so this case was handled, but the
+    // rewrite makes the success-with-error-body case an explicit
+    // branch for clarity. Locking the behavior here.
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: null,
+        error: { code: 'SERVER_LIED', message: 'Contract violation' },
+        meta: null,
+      }),
+    } as Response);
+    const { result } = renderHook(
+      () =>
+        useLeadFeed({
+          trade_slug: 'plumbing',
+          lat: 43.65,
+          lng: -79.38,
+          radius_km: 10,
+        }),
+      { wrapper: wrapper() },
+    );
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.code).toBe('SERVER_LIED');
   });
 });
 

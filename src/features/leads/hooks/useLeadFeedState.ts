@@ -31,6 +31,15 @@ export interface LeadLocation {
 }
 
 export interface LeadFeedState {
+  // Hydration gate — true after the persist middleware has rehydrated
+  // from localStorage. Consumers that render UI based on `radiusKm`
+  // or `location` MUST gate on this to avoid a flash of default
+  // values during the async rehydration window. Phase 3-i review
+  // flagged the architectural gap; landing the signal now so 3-ii
+  // consumers don't have to retrofit it.
+  _hasHydrated: boolean;
+  setHasHydrated: (v: boolean) => void;
+
   // Ephemeral — NOT persisted
   hoveredLeadId: string | null;
   selectedLeadId: string | null;
@@ -88,6 +97,12 @@ function validatePersistedSlice(raw: unknown): PersistedSlice {
 export const useLeadFeedState = create<LeadFeedState>()(
   persist(
     (set) => ({
+      // Hydration gate (NOT persisted — reset on every mount, flipped
+      // to true by `onRehydrateStorage` below once the middleware
+      // finishes loading from storage).
+      _hasHydrated: false,
+      setHasHydrated: (v) => set({ _hasHydrated: v }),
+
       // Ephemeral state
       hoveredLeadId: null,
       selectedLeadId: null,
@@ -105,14 +120,15 @@ export const useLeadFeedState = create<LeadFeedState>()(
     {
       name: 'buildo-lead-feed',
       storage: createJSONStorage(() => localStorage),
-      // Only persist filter state. Hover/select is per-session.
+      // Only persist filter state. Hover/select + _hasHydrated are
+      // per-session and must NOT be persisted (persisting _hasHydrated
+      // would serialize `true`, then on reload skip the rehydration
+      // gate entirely).
       partialize: (state): PersistedSlice => ({
         radiusKm: state.radiusKm,
         location: state.location,
       }),
       version: 1,
-      // `persistedState` is typed `unknown` because Zustand cannot know
-      // what shape the last schema version used. Validate, then return.
       migrate: (persistedState, version) => {
         // v0 had no `location` field (hypothetical). Add default.
         if (version === 0) {
@@ -121,6 +137,11 @@ export const useLeadFeedState = create<LeadFeedState>()(
         }
         // v1+: validate shape regardless — catches tampering.
         return validatePersistedSlice(persistedState);
+      },
+      // Flip the hydration gate after the rehydrated state is merged
+      // into the store. Consumers can now trust `radiusKm` + `location`.
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
       },
     },
   ),

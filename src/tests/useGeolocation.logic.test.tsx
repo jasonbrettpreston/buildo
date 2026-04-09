@@ -32,6 +32,32 @@ function makePermissionStatus(state: PermissionState): FakePermissionStatus {
   };
 }
 
+describe('useGeolocation — cleanup correctness (Phase 3-i review fix)', () => {
+  it('calls removeEventListener on unmount with the same function reference passed to addEventListener', async () => {
+    // Phase 3-i adversarial review fix: pre-fix cleanup set
+    // `perm.onchange = null` which is a completely different
+    // subscription mechanism from addEventListener and caused a
+    // listener leak. Every mount added a new onChange closure and
+    // none were ever removed. This test locks the fix.
+    const perm = makePermissionStatus('prompt');
+    vi.stubGlobal('navigator', {
+      ...window.navigator,
+      permissions: { query: vi.fn().mockResolvedValue(perm) },
+      geolocation: undefined,
+    });
+    const { unmount } = renderHook(() => useGeolocation());
+    // Wait for the async effect to install the listener.
+    await waitFor(() => expect(perm.addEventListener).toHaveBeenCalled());
+    const addedHandler = (perm.addEventListener as ReturnType<typeof vi.fn>)
+      .mock.calls[0]?.[1];
+    unmount();
+    // removeEventListener must be called with the SAME function reference.
+    await waitFor(() =>
+      expect(perm.removeEventListener).toHaveBeenCalledWith('change', addedHandler),
+    );
+  });
+});
+
 beforeEach(() => {
   // Reset global navigator shape per test
   vi.stubGlobal('navigator', {
@@ -79,7 +105,14 @@ describe('useGeolocation — permission states', () => {
     await waitFor(() => expect(result.current.status.state).toBe('unsupported'));
   });
 
-  it('returns "denied" permanently when initial permission is denied', async () => {
+  it('returns "denied" with permanent=false on initial check (cannot distinguish session vs persistent denial)', async () => {
+    // Phase 3-i adversarial review fix: the Permissions API `denied`
+    // state cannot tell us whether the user denied in this session or
+    // persistently blocked in site settings. Setting `permanent: true`
+    // on the initial check was too aggressive — the UI would send
+    // users to settings when a simple re-prompt could have worked.
+    // `permanent: true` is now only set from the explicit
+    // PERMISSION_DENIED error callback (tested separately below).
     vi.stubGlobal('navigator', {
       ...window.navigator,
       permissions: {
@@ -90,7 +123,7 @@ describe('useGeolocation — permission states', () => {
     const { result } = renderHook(() => useGeolocation());
     await waitFor(() => expect(result.current.status.state).toBe('denied'));
     if (result.current.status.state === 'denied') {
-      expect(result.current.status.permanent).toBe(true);
+      expect(result.current.status.permanent).toBe(false);
     }
   });
 
@@ -104,6 +137,71 @@ describe('useGeolocation — permission states', () => {
     });
     const { result } = renderHook(() => useGeolocation());
     await waitFor(() => expect(result.current.status.state).toBe('prompt'));
+  });
+
+  it('auto-calls getCurrentPosition when initial permission is "granted" (spec 75 state machine fix)', async () => {
+    // Phase 3-i adversarial review fix: the pre-fix behaviour was to
+    // emit `prompt` on the initial granted branch, forcing the user
+    // to re-grant permission via the prompt UI. The correct
+    // behaviour is to immediately fetch the position since the user
+    // already granted permission in a prior session.
+    const getCurrentPosition = vi.fn((success: PositionCallback) => {
+      success({
+        coords: {
+          latitude: 43.6535,
+          longitude: -79.3839,
+          accuracy: 10,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        } as GeolocationCoordinates,
+        timestamp: 1_000_000,
+      } as GeolocationPosition);
+    });
+    vi.stubGlobal('navigator', {
+      ...window.navigator,
+      permissions: {
+        query: vi.fn().mockResolvedValue(makePermissionStatus('granted')),
+      },
+      geolocation: { getCurrentPosition },
+    });
+    const { result } = renderHook(() => useGeolocation());
+    await waitFor(() => expect(result.current.status.state).toBe('granted'));
+    expect(getCurrentPosition).toHaveBeenCalled();
+    if (result.current.status.state === 'granted') {
+      expect(result.current.status.coords).toEqual({ lat: 43.6535, lng: -79.3839 });
+    }
+  });
+
+  it('explicit request() → PERMISSION_DENIED sets permanent=true (interaction-confirmed denial)', async () => {
+    const getCurrentPosition = vi.fn(
+      (_success: PositionCallback, error: PositionErrorCallback | undefined) => {
+        error?.({
+          code: 1,
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+          message: 'User denied',
+        } as GeolocationPositionError);
+      },
+    );
+    vi.stubGlobal('navigator', {
+      ...window.navigator,
+      permissions: {
+        query: vi.fn().mockResolvedValue(makePermissionStatus('prompt')),
+      },
+      geolocation: { getCurrentPosition },
+    });
+    const { result } = renderHook(() => useGeolocation());
+    await waitFor(() => expect(result.current.status.state).toBe('prompt'));
+    act(() => {
+      result.current.request();
+    });
+    await waitFor(() => expect(result.current.status.state).toBe('denied'));
+    if (result.current.status.state === 'denied') {
+      expect(result.current.status.permanent).toBe(true);
+    }
   });
 });
 

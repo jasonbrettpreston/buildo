@@ -30,10 +30,21 @@ describe('getQueryClient — singleton + defaults', () => {
     expect(defaults.queries?.staleTime).toBe(60_000);
   });
 
-  it('default gcTime is 5 minutes', () => {
+  it('default gcTime is 24 hours (must equal CACHE_MAX_AGE_MS so the persister contract holds)', () => {
+    // The Phase 3-i adversarial review caught that a 5-minute gcTime
+    // with 24h persistence was a real bug: queries evicted from
+    // memory after 5 min would also be dropped from the persister's
+    // next snapshot, defeating the offline promise. gcTime now
+    // matches CACHE_MAX_AGE_MS.
     const client = getQueryClient();
     const defaults = client.getDefaultOptions();
-    expect(defaults.queries?.gcTime).toBe(5 * 60_000);
+    expect(defaults.queries?.gcTime).toBe(24 * 60 * 60 * 1000);
+  });
+
+  it('default gcTime equals CACHE_MAX_AGE_MS exactly (contract invariant)', () => {
+    const client = getQueryClient();
+    const defaults = client.getDefaultOptions();
+    expect(defaults.queries?.gcTime).toBe(CACHE_MAX_AGE_MS);
   });
 
   it('default query retry is 1 (not the TanStack default of 3)', () => {

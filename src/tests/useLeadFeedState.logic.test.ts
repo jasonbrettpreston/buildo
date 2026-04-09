@@ -17,6 +17,7 @@ import {
 beforeEach(() => {
   // Reset to initial state + clear localStorage between tests.
   useLeadFeedState.setState({
+    _hasHydrated: false,
     hoveredLeadId: null,
     selectedLeadId: null,
     radiusKm: DEFAULT_RADIUS_KM,
@@ -60,6 +61,40 @@ describe('useLeadFeedState — state transitions', () => {
     useLeadFeedState.getState().setLocation({ lat: 43.65, lng: -79.38 });
     useLeadFeedState.getState().setLocation(null);
     expect(useLeadFeedState.getState().location).toBeNull();
+  });
+});
+
+describe('useLeadFeedState — hasHydrated signal (Phase 3-i review fix)', () => {
+  it('exposes a _hasHydrated field that starts false on fresh mount', () => {
+    // Phase 3-i adversarial review fix: consumers need a gate to
+    // avoid rendering UI with default filter values during the async
+    // rehydration window. This signal is flipped by
+    // onRehydrateStorage after persist middleware loads.
+    const s = useLeadFeedState.getState();
+    expect(s._hasHydrated).toBe(false);
+  });
+
+  it('setHasHydrated flips the flag', () => {
+    useLeadFeedState.getState().setHasHydrated(true);
+    expect(useLeadFeedState.getState()._hasHydrated).toBe(true);
+  });
+
+  it('partialize does NOT serialize _hasHydrated (persisting it would bypass the rehydration gate)', () => {
+    // We test the partialize function indirectly by setting the flag
+    // and inspecting what the middleware would persist. The partialize
+    // function is private to zustand internals, so we call the store
+    // with the expected post-hydration shape and verify the flag is
+    // not in the persisted localStorage output.
+    useLeadFeedState.getState().setHasHydrated(true);
+    useLeadFeedState.getState().setRadius(25);
+    // Give Zustand a microtask to flush.
+    const stored = localStorage.getItem('buildo-lead-feed');
+    if (stored) {
+      const parsed = JSON.parse(stored) as { state: Record<string, unknown> };
+      expect(parsed.state).not.toHaveProperty('_hasHydrated');
+      expect(parsed.state).not.toHaveProperty('hoveredLeadId');
+      expect(parsed.state).not.toHaveProperty('selectedLeadId');
+    }
   });
 });
 

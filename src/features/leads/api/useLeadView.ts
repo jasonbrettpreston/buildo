@@ -17,18 +17,48 @@ import {
 } from './types';
 
 async function postLeadView(input: LeadViewRequest): Promise<LeadViewResponse> {
-  const res = await fetch('/api/leads/view', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  });
-  const body = (await res.json()) as unknown;
-  if (!res.ok || isLeadApiError(body)) {
+  // Same 3-layer error funnel as useLeadFeed's fetchLeadFeedPage — see
+  // that function for the rationale. Shared pattern kept in sync by the
+  // two sibling files; future Phase 3-iv may extract to a shared helper.
+  let res: Response;
+  try {
+    res = await fetch('/api/leads/view', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
+  } catch (err) {
+    throw new LeadApiClientError(
+      'NETWORK_ERROR',
+      err instanceof Error ? err.message : 'View request failed',
+    );
+  }
+  let body: unknown;
+  try {
+    body = (await res.json()) as unknown;
+  } catch {
+    throw new LeadApiClientError(
+      'NETWORK_ERROR',
+      `View request failed: ${res.status} (non-JSON response)`,
+    );
+  }
+  if (!res.ok) {
     const err = isLeadApiError(body)
       ? body.error
       : { code: 'NETWORK_ERROR', message: `View request failed: ${res.status}` };
-    throw new LeadApiClientError(err.code, err.message, (err as { details?: unknown }).details);
+    throw new LeadApiClientError(
+      err.code,
+      err.message,
+      (err as { details?: unknown }).details,
+    );
+  }
+  if (isLeadApiError(body)) {
+    throw new LeadApiClientError(
+      body.error.code,
+      body.error.message,
+      body.error.details,
+    );
   }
   return body as LeadViewResponse;
 }

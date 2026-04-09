@@ -29,16 +29,20 @@ import {
 const queryClient = getQueryClient();
 const persister = createLeadsPersister();
 
+// Module-scope `persistOptions` — the Phase 3-i adversarial review
+// flagged that an inline object literal passed to
+// `PersistQueryClientProvider` is recreated on every render, causing
+// unnecessary rehydration checks in dev. Hoisting it to module scope
+// guarantees a stable reference for the provider.
+const persistOptions = {
+  persister,
+  maxAge: CACHE_MAX_AGE_MS,
+  buster: CACHE_BUSTER,
+} as const;
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{
-        persister,
-        maxAge: CACHE_MAX_AGE_MS,
-        buster: CACHE_BUSTER,
-      }}
-    >
+    <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       <PostHogProvider>{children}</PostHogProvider>
     </PersistQueryClientProvider>
   );
