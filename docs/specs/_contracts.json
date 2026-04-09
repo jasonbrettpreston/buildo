@@ -9,7 +9,6 @@
     "builder_proximity_max": 30,
     "builder_value_max": 20,
     "builder_opportunity_max": 20,
-    "builder_fit_max": 20,
     "builder_total_max": 100
   },
   "rate_limits": {

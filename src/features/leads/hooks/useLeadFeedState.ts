@@ -48,11 +48,28 @@ export interface LeadFeedState {
   radiusKm: number;
   location: LeadLocation | null;
 
+  /**
+   * Snapped feed location — ONLY updated when the user's real position
+   * moves more than `FORCED_REFETCH_THRESHOLD_M` (500m). `useLeadFeed`
+   * reads this for its query key so sub-threshold movements don't
+   * invalidate the infinite-scroll cache and reset the user to page 1.
+   *
+   * Persisted so offline sessions resume with the last snapped
+   * position — without persistence, every reload would start with
+   * `snappedLocation = null` and the first render would invalidate
+   * all cached feed entries.
+   *
+   * Added 2026-04-09 to fix the Gemini-flagged "110m grid boundary
+   * cache wipe" bug (queryKey was previously rounded-per-render).
+   */
+  snappedLocation: LeadLocation | null;
+
   // Actions
   setHoveredLeadId: (id: string | null) => void;
   setSelectedLeadId: (id: string | null) => void;
   setRadius: (km: number) => void;
   setLocation: (loc: LeadLocation | null) => void;
+  setSnappedLocation: (loc: LeadLocation | null) => void;
 }
 
 /**
@@ -62,10 +79,37 @@ export interface LeadFeedState {
 interface PersistedSlice {
   radiusKm: number;
   location: LeadLocation | null;
+  snappedLocation: LeadLocation | null;
 }
 
 function defaultPersistedSlice(): PersistedSlice {
-  return { radiusKm: DEFAULT_RADIUS_KM, location: null };
+  return { radiusKm: DEFAULT_RADIUS_KM, location: null, snappedLocation: null };
+}
+
+// Geographic range bounds — reject localStorage tampering that sets
+// lat/lng outside the valid WGS84 range. Flagged by both Gemini +
+// DeepSeek 2026-04-09 adversarial reviews as defense-in-depth.
+function validateLocation(raw: unknown): LeadLocation | null {
+  if (
+    raw &&
+    typeof raw === 'object' &&
+    typeof (raw as { lat?: unknown }).lat === 'number' &&
+    typeof (raw as { lng?: unknown }).lng === 'number'
+  ) {
+    const lat = (raw as { lat: number }).lat;
+    const lng = (raw as { lng: number }).lng;
+    if (
+      Number.isFinite(lat) &&
+      Number.isFinite(lng) &&
+      lat >= -90 &&
+      lat <= 90 &&
+      lng >= -180 &&
+      lng <= 180
+    ) {
+      return { lat, lng };
+    }
+  }
+  return null;
 }
 
 /**
@@ -76,22 +120,27 @@ function defaultPersistedSlice(): PersistedSlice {
  */
 function validatePersistedSlice(raw: unknown): PersistedSlice {
   if (!raw || typeof raw !== 'object') return defaultPersistedSlice();
-  const r = raw as { radiusKm?: unknown; location?: unknown };
+  const r = raw as {
+    radiusKm?: unknown;
+    location?: unknown;
+    snappedLocation?: unknown;
+  };
+  // Upper bound guards against tampered localStorage DoS'ing the feed
+  // query with an enormous radius. Server-side MAX_RADIUS_KM (50) is
+  // authoritative; this is client-side defense-in-depth (Gemini 2026-04-09).
+  const MAX_PERSISTED_RADIUS_KM = 100;
   const radiusKm =
-    typeof r.radiusKm === 'number' && Number.isFinite(r.radiusKm) && r.radiusKm > 0
+    typeof r.radiusKm === 'number' &&
+    Number.isFinite(r.radiusKm) &&
+    r.radiusKm > 0 &&
+    r.radiusKm <= MAX_PERSISTED_RADIUS_KM
       ? r.radiusKm
       : DEFAULT_RADIUS_KM;
-  const locRaw = r.location;
-  const location =
-    locRaw &&
-    typeof locRaw === 'object' &&
-    typeof (locRaw as { lat?: unknown }).lat === 'number' &&
-    typeof (locRaw as { lng?: unknown }).lng === 'number' &&
-    Number.isFinite((locRaw as { lat: number }).lat) &&
-    Number.isFinite((locRaw as { lng: number }).lng)
-      ? { lat: (locRaw as { lat: number }).lat, lng: (locRaw as { lng: number }).lng }
-      : null;
-  return { radiusKm, location };
+  return {
+    radiusKm,
+    location: validateLocation(r.location),
+    snappedLocation: validateLocation(r.snappedLocation),
+  };
 }
 
 export const useLeadFeedState = create<LeadFeedState>()(
@@ -110,12 +159,14 @@ export const useLeadFeedState = create<LeadFeedState>()(
       // Persisted state (initial values; rehydrated on mount)
       radiusKm: DEFAULT_RADIUS_KM,
       location: null,
+      snappedLocation: null,
 
       // Actions
       setHoveredLeadId: (id) => set({ hoveredLeadId: id }),
       setSelectedLeadId: (id) => set({ selectedLeadId: id }),
       setRadius: (km) => set({ radiusKm: km }),
       setLocation: (loc) => set({ location: loc }),
+      setSnappedLocation: (loc) => set({ snappedLocation: loc }),
     }),
     {
       name: 'buildo-lead-feed',
@@ -127,6 +178,7 @@ export const useLeadFeedState = create<LeadFeedState>()(
       partialize: (state): PersistedSlice => ({
         radiusKm: state.radiusKm,
         location: state.location,
+        snappedLocation: state.snappedLocation,
       }),
       version: 1,
       migrate: (persistedState, version) => {

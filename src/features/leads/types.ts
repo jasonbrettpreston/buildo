@@ -67,31 +67,17 @@ export type TradeTimingEstimate =
   | TradeTimingEstimateTier3;
 
 // ---------------------------------------------------------------------------
-// Builder leads (Phase 1b-iii) — from spec 73 §Implementation
-// ---------------------------------------------------------------------------
-export interface BuilderLeadCandidate {
-  entity_id: number;
-  legal_name: string;
-  trade_name: string | null;
-  business_size: string | null;
-  primary_phone: string | null;
-  primary_email: string | null;
-  website: string | null;
-  photo_url: string | null;
-  is_wsib_registered: boolean;
-  active_permits_nearby: number;
-  closest_permit_m: number;
-  avg_project_cost: number | null;
-  proximity_score: number;
-  activity_score: number;
-  contact_score: number;
-  fit_score: number;
-  relevance_score: number;
-}
-
-// ---------------------------------------------------------------------------
 // Unified feed (Phase 1b-iii) — from spec 70 §Implementation
 // ---------------------------------------------------------------------------
+//
+// NOTE on legacy `BuilderLeadCandidate` type (removed 2026-04-09):
+// The standalone builder-query.ts was deleted as dead code — no route
+// called it, and its fit_score math diverged from get-lead-feed.ts's
+// builder_candidates CTE per the Gemini deep-dive review. When the
+// standalone builder page ships (Phase 5+), it should consume the
+// unified feed path or build a fresh spec-70-aligned query; it should
+// NOT revive the legacy divergent code.
+
 export interface LeadFeedCursor {
   score: number;
   lead_type: 'permit' | 'builder';

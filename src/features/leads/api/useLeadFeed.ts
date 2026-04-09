@@ -2,25 +2,33 @@
 
 // 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §2.2 + §11 Phase 3 step 2
 //
-// TanStack Query infinite hook for GET /api/leads/feed. Implements the
-// 2-layer location handling from spec 75 §11 Phase 3:
+// TanStack Query infinite hook for GET /api/leads/feed. Uses a
+// SNAPPED location stored in the Zustand store as the queryKey
+// source — NOT the raw `input.lat`/`input.lng` props.
 //
-//   Layer 1: Round lat/lng to 3 decimals (~110m grid) in the query key
-//   so GPS jitter (seconds-scale drift of a stationary user) doesn't
-//   create a fresh cache entry on every tick.
+// Why: the prior implementation rounded coords to 3 decimals on every
+// render. A user walking across an invisible ~110m grid boundary
+// (lat 43.1235 → 43.1234) flipped the queryKey, which caused
+// TanStack Query to treat the feed as a brand-new infinite query.
+// The user's scroll state + all previously-fetched pages vanished
+// and they were thrown back to page 1. Gemini's 2026-04-09 deep-dive
+// review caught this.
 //
-//   Layer 2: A `useEffect` compares the current lat/lng to the last
-//   queried lat/lng via haversine. If the user has moved more than
-//   500 metres, invalidate the query so the NEXT render fetches fresh
-//   data. Without this, Layer 1's rounding would hide legitimate
-//   movement (walking 100m doesn't change rounded coords).
+// The fix: a single `snappedLocation` field in the Zustand store,
+// only updated when the user's REAL position moves more than
+// `FORCED_REFETCH_THRESHOLD_M` (500m). The queryKey reads from the
+// snap, not the raw input. Sub-threshold movements don't change the
+// queryKey at all — infinite scroll is preserved across GPS jitter,
+// natural walking drift, and any movement within the 500m window.
 //
-// The two layers together: stable cache under jitter + responsive to
-// real movement. Either alone is broken (Layer 1 alone: stale data
-// after walking; Layer 2 alone: cache thrash from GPS jitter).
+// Movement detection is a single `useEffect` that advances the snap
+// when the threshold is exceeded. That's the ONLY place the snap
+// changes during a session. On fresh mount with no persisted snap,
+// the effect seeds it from the current input.
 
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useLeadFeedState } from '@/features/leads/hooks/useLeadFeedState';
 import { DEFAULT_FEED_LIMIT } from '@/features/leads/lib/get-lead-feed';
 import { haversineMeters } from '@/features/leads/lib/haversine';
 import {
@@ -30,15 +38,20 @@ import {
 } from './types';
 
 /**
- * Round lat/lng to 3 decimals for query key stability. 3 decimals ~ 110m.
+ * Legacy constant — kept for the __constants export that
+ * `contracts.infra.test.ts` asserts against. The coord_precision is
+ * no longer used for queryKey rounding (that was the bug); we keep
+ * the constant + the contracts entry so the value stays locked
+ * against drift if a future refactor reintroduces any rounding.
  */
 const COORD_PRECISION = 1000;
 
 /**
- * Force a refetch when the user moves further than this many metres
- * since the last successful query. 500m is far enough that the lead
- * set meaningfully changes (new permits enter the 10km radius, old
- * ones leave the edge) but close enough to feel responsive when walking.
+ * Force a SNAP advance when the user's real position moves more than
+ * this many metres from the current snapped location. 500m is far
+ * enough that the lead set meaningfully changes (new permits enter
+ * the 10km radius, old ones leave the edge) but close enough to feel
+ * responsive when walking.
  */
 const FORCED_REFETCH_THRESHOLD_M = 500;
 
@@ -48,10 +61,6 @@ export interface UseLeadFeedInput {
   lng: number;
   radius_km: number;
   limit?: number;
-}
-
-function roundCoord(v: number): number {
-  return Math.round(v * COORD_PRECISION) / COORD_PRECISION;
 }
 
 interface CursorTriple {
@@ -129,56 +138,61 @@ async function fetchLeadFeedPage(
 }
 
 /**
- * Infinite-query hook for the lead feed. Consumers pass the current
- * filter inputs; the hook handles rounding, cursor wiring, and the
- * movement-based cache invalidation.
+ * Infinite-query hook for the lead feed. The queryKey is derived from
+ * the SNAPPED location in the Zustand store, not the raw input props.
+ * See the file header for the rationale.
  *
- * NOTE: the one `useEffect` in this file is for movement detection,
- * NOT for data fetching. Fetching is TanStack Query's job. This is the
- * explicit exception to the standards §12.2 "no useEffect for data
- * fetching" rule — we're reacting to a prop change, not triggering a
- * fetch directly.
+ * The single `useEffect` in this file advances the snap when the real
+ * position exceeds the 500m threshold. It is NOT a data-fetching
+ * effect — fetching is TanStack Query's job. The snap change triggers
+ * a natural queryKey change → TanStack fetches the new key.
  */
 export function useLeadFeed(input: UseLeadFeedInput) {
-  const roundedLat = roundCoord(input.lat);
-  const roundedLng = roundCoord(input.lng);
+  const snappedLocation = useLeadFeedState((s) => s.snappedLocation);
+  const setSnappedLocation = useLeadFeedState((s) => s.setSnappedLocation);
+  // Gemini 2026-04-09 CRITICAL: without gating on _hasHydrated, the
+  // snap-seed effect fires BEFORE the persist middleware finishes
+  // rehydrating. It overwrites the persisted snap with the current
+  // input coords, wasting a fetch and losing the user's resumed
+  // position from the prior session. Gate the effect + the query
+  // itself on _hasHydrated to eliminate the race entirely.
+  const hasHydrated = useLeadFeedState((s) => s._hasHydrated);
+
+  // Use the snapped location if it exists; otherwise fall back to the
+  // raw input on the first render (before the seed effect fires). The
+  // fallback means queryKey is always defined even on the first render.
+  const snapLat = snappedLocation?.lat ?? input.lat;
+  const snapLng = snappedLocation?.lng ?? input.lng;
 
   const queryKey = [
     'leadFeed',
     {
       trade_slug: input.trade_slug,
-      lat: roundedLat,
-      lng: roundedLng,
+      lat: snapLat,
+      lng: snapLng,
       radius_km: input.radius_km,
       limit: input.limit ?? DEFAULT_FEED_LIMIT,
     },
   ] as const;
 
-  const queryClient = useQueryClient();
-  // Reference position for the 500m movement check. Updated ONLY when
-  // a query for the current position has completed successfully (see
-  // the second effect below) — the Phase 3-i review caught a bug
-  // where eagerly updating this ref inside the movement check itself
-  // meant failed refetches could leave the ref "ahead" of the cache
-  // and subsequent moves wouldn't trigger re-invalidation.
-  const lastSuccessfulPositionRef = useRef<{ lat: number; lng: number } | null>(
-    null,
-  );
-  // Mirror of the current input position. Written on every render so
-  // the success-tracking effect can read the latest value without
-  // subscribing to `input.lat`/`input.lng` as dependencies (which
-  // would cause the effect to fire on every GPS tick instead of on
-  // every successful query completion).
-  const currentPositionRef = useRef<{ lat: number; lng: number }>({
-    lat: input.lat,
-    lng: input.lng,
-  });
-  currentPositionRef.current = { lat: input.lat, lng: input.lng };
-
   const query = useInfiniteQuery<LeadFeedResponse, LeadApiClientError>({
     queryKey,
+    // Don't fetch until Zustand has rehydrated — otherwise the first
+    // render could issue a fetch for the CURRENT location, then
+    // rehydration arrives with a different persisted snap, triggering
+    // a second fetch and a UI flicker.
+    enabled: hasHydrated,
     initialPageParam: undefined as CursorTriple | undefined,
-    queryFn: ({ pageParam }) => fetchLeadFeedPage(input, pageParam as CursorTriple | undefined),
+    queryFn: ({ pageParam }) =>
+      fetchLeadFeedPage(
+        // The fetch uses the SNAPPED coords so the cache and the
+        // server-side query agree on what position they're for. If
+        // we fetched with raw input but cached with snap, the cached
+        // data would claim to represent one position but come from
+        // another.
+        { ...input, lat: snapLat, lng: snapLng },
+        pageParam as CursorTriple | undefined,
+      ),
     getNextPageParam: (lastPage): CursorTriple | undefined => {
       const nc = lastPage.meta.next_cursor;
       if (!nc) return undefined;
@@ -189,48 +203,43 @@ export function useLeadFeed(input: UseLeadFeedInput) {
       };
     },
     // V1 hard cap: 5 pages × 15 = 75 cards max (spec 75 §11 Phase 7).
-    // Consumers enforce the cap in UI by checking allPages.length; this
-    // flag is set via a selector in the consumer if they want to stop
-    // early. The query itself doesn't cap pages — TanStack will keep
-    // fetching as long as getNextPageParam returns non-undefined.
+    // Consumers enforce the cap in UI by checking allPages.length.
   });
 
-  // Track the position of the last SUCCESSFUL query. This ref is the
-  // baseline for the 500m movement check below, so a failed refetch
-  // doesn't leave the baseline stranded at an unfetched location.
-  // Reads input.lat/lng from currentPositionRef (updated every
-  // render above) so this effect's deps are JUST the monotonic
-  // dataUpdatedAt + isSuccess — fires only on successful query
-  // completion, not on every GPS tick.
+  // Snap advancement effect. This is the ONLY place the snap changes
+  // during a session. Four cases:
+  //   1. Fresh mount, no persisted snap → seed from input.
+  //   2. Fresh mount, persisted snap from a prior session → don't
+  //      touch the snap; the user resumes their last feed position.
+  //   3. Sub-threshold movement (< 500m) → no-op. queryKey stable.
+  //   4. Super-threshold movement (> 500m) → advance the snap.
+  //      queryKey changes next render, TanStack naturally fetches the
+  //      new key. No invalidateQueries call needed — the key change
+  //      IS the invalidation (Gemini 2026-04-09: the previous explicit
+  //      invalidateQueries({queryKey: ['leadFeed']}) was redundant and
+  //      invalidated unrelated trade/radius entries for other consumers).
+  //
+  // Gated on `hasHydrated` so this effect doesn't race the persist
+  // middleware on mount. Before hydration completes, `snappedLocation`
+  // reflects the initial store state (null), not the persisted value
+  // — seeding during that window would silently overwrite the user's
+  // resumed session position.
   useEffect(() => {
-    if (query.isSuccess && query.dataUpdatedAt > 0) {
-      lastSuccessfulPositionRef.current = { ...currentPositionRef.current };
+    if (!hasHydrated) return;
+    if (snappedLocation === null) {
+      setSnappedLocation({ lat: input.lat, lng: input.lng });
+      return;
     }
-  }, [query.isSuccess, query.dataUpdatedAt]);
-
-  // Movement detection effect. Compares the CURRENT input position to
-  // the last successful-query position. If the user has moved more
-  // than 500m, cancel in-flight queries for the stale location (so
-  // they don't waste bandwidth completing a refetch we're about to
-  // throw away) then invalidate, which triggers a fresh fetch for the
-  // new location.
-  useEffect(() => {
-    const last = lastSuccessfulPositionRef.current;
-    // First render: no baseline yet. The active query is about to
-    // resolve and set the baseline via the effect above. Nothing to
-    // invalidate.
-    if (last === null) return;
-    const moved = haversineMeters(last.lat, last.lng, input.lat, input.lng);
+    const moved = haversineMeters(
+      snappedLocation.lat,
+      snappedLocation.lng,
+      input.lat,
+      input.lng,
+    );
     if (moved > FORCED_REFETCH_THRESHOLD_M) {
-      // Broaden invalidation to every leadFeed query — moving >500m
-      // makes ALL cached (trade_slug, radius, limit) entries for the
-      // old location stale. Cancel first so in-flight refetches for
-      // the stale position are aborted instead of completing and
-      // getting immediately invalidated.
-      void queryClient.cancelQueries({ queryKey: ['leadFeed'] });
-      void queryClient.invalidateQueries({ queryKey: ['leadFeed'] });
+      setSnappedLocation({ lat: input.lat, lng: input.lng });
     }
-  }, [input.lat, input.lng, queryClient]);
+  }, [input.lat, input.lng, snappedLocation, setSnappedLocation, hasHydrated]);
 
   return query;
 }

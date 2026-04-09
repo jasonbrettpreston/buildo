@@ -22,6 +22,7 @@ beforeEach(() => {
     selectedLeadId: null,
     radiusKm: DEFAULT_RADIUS_KM,
     location: null,
+    snappedLocation: null,
   });
   localStorage.clear();
 });
@@ -100,13 +101,14 @@ describe('useLeadFeedState — hasHydrated signal (Phase 3-i review fix)', () =>
 
 describe('validatePersistedSlice — defensive migrate guard', () => {
   it('returns defaults for null', () => {
-    expect(validate(null)).toEqual({ radiusKm: DEFAULT_RADIUS_KM, location: null });
+    expect(validate(null)).toEqual({ radiusKm: DEFAULT_RADIUS_KM, location: null, snappedLocation: null });
   });
 
   it('returns defaults for undefined', () => {
     expect(validate(undefined)).toEqual({
       radiusKm: DEFAULT_RADIUS_KM,
       location: null,
+      snappedLocation: null,
     });
   });
 
@@ -114,10 +116,12 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
     expect(validate('corrupted')).toEqual({
       radiusKm: DEFAULT_RADIUS_KM,
       location: null,
+      snappedLocation: null,
     });
     expect(validate(42)).toEqual({
       radiusKm: DEFAULT_RADIUS_KM,
       location: null,
+      snappedLocation: null,
     });
   });
 
@@ -125,6 +129,7 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
     expect(validate({ radiusKm: 5, location: { lat: 43.65, lng: -79.38 } })).toEqual({
       radiusKm: 5,
       location: { lat: 43.65, lng: -79.38 },
+      snappedLocation: null,
     });
   });
 
@@ -132,6 +137,7 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
     expect(validate({ radiusKm: 0, location: null })).toEqual({
       radiusKm: DEFAULT_RADIUS_KM,
       location: null,
+      snappedLocation: null,
     });
   });
 
@@ -139,6 +145,7 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
     expect(validate({ radiusKm: -5, location: null })).toEqual({
       radiusKm: DEFAULT_RADIUS_KM,
       location: null,
+      snappedLocation: null,
     });
   });
 
@@ -146,6 +153,7 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
     expect(validate({ radiusKm: Number.NaN, location: null })).toEqual({
       radiusKm: DEFAULT_RADIUS_KM,
       location: null,
+      snappedLocation: null,
     });
   });
 
@@ -153,6 +161,7 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
     expect(validate({ radiusKm: '10', location: null })).toEqual({
       radiusKm: DEFAULT_RADIUS_KM,
       location: null,
+      snappedLocation: null,
     });
   });
 
@@ -160,6 +169,7 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
     expect(validate({ radiusKm: 10, location: { lng: -79.38 } })).toEqual({
       radiusKm: 10,
       location: null,
+      snappedLocation: null,
     });
   });
 
@@ -167,6 +177,7 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
     expect(validate({ radiusKm: 10, location: { lat: 43.65 } })).toEqual({
       radiusKm: 10,
       location: null,
+      snappedLocation: null,
     });
   });
 
@@ -174,19 +185,21 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
     expect(validate({ radiusKm: 10, location: { lat: '43.65', lng: -79.38 } })).toEqual({
       radiusKm: 10,
       location: null,
+      snappedLocation: null,
     });
   });
 
   it('clears location when lat is NaN', () => {
     expect(
       validate({ radiusKm: 10, location: { lat: Number.NaN, lng: -79.38 } }),
-    ).toEqual({ radiusKm: 10, location: null });
+    ).toEqual({ radiusKm: 10, location: null, snappedLocation: null });
   });
 
   it('clears location when it is not an object', () => {
     expect(validate({ radiusKm: 10, location: 'Toronto' })).toEqual({
       radiusKm: 10,
       location: null,
+      snappedLocation: null,
     });
   });
 
@@ -201,6 +214,55 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
     ).toEqual({
       radiusKm: 10,
       location: { lat: 43.65, lng: -79.38 },
+      snappedLocation: null,
     });
+  });
+
+  it('preserves valid snappedLocation', () => {
+    expect(
+      validate({
+        radiusKm: 10,
+        location: null,
+        snappedLocation: { lat: 43.65, lng: -79.38 },
+      }),
+    ).toEqual({
+      radiusKm: 10,
+      location: null,
+      snappedLocation: { lat: 43.65, lng: -79.38 },
+    });
+  });
+
+  it('clears invalid snappedLocation (NaN lat) independently of location', () => {
+    expect(
+      validate({
+        radiusKm: 10,
+        location: { lat: 43.65, lng: -79.38 },
+        snappedLocation: { lat: Number.NaN, lng: -79.38 },
+      }),
+    ).toEqual({
+      radiusKm: 10,
+      location: { lat: 43.65, lng: -79.38 },
+      snappedLocation: null,
+    });
+  });
+});
+
+describe('useLeadFeedState — snappedLocation (Gemini 2026-04-09 fix)', () => {
+  it('snappedLocation starts null', () => {
+    expect(useLeadFeedState.getState().snappedLocation).toBeNull();
+  });
+
+  it('setSnappedLocation updates the field', () => {
+    useLeadFeedState.getState().setSnappedLocation({ lat: 43.65, lng: -79.38 });
+    expect(useLeadFeedState.getState().snappedLocation).toEqual({
+      lat: 43.65,
+      lng: -79.38,
+    });
+  });
+
+  it('setSnappedLocation(null) clears the field', () => {
+    useLeadFeedState.getState().setSnappedLocation({ lat: 43.65, lng: -79.38 });
+    useLeadFeedState.getState().setSnappedLocation(null);
+    expect(useLeadFeedState.getState().snappedLocation).toBeNull();
   });
 });

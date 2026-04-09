@@ -35,7 +35,6 @@ interface Contracts {
     builder_proximity_max: number;
     builder_value_max: number;
     builder_opportunity_max: number;
-    builder_fit_max: number;
     builder_total_max: number;
   };
   rate_limits: { feed_per_min: number; view_per_min: number; window_sec: number };
@@ -140,12 +139,12 @@ const rules: Rule[] = [
     file: 'src/features/leads/lib/get-lead-feed.ts',
     pattern: new RegExp(`WHEN 'Permit Issued' THEN ${contracts.scoring.permit_opportunity_max}\\b`),
   },
-  {
-    name: 'scoring.builder_fit_max → builder-query LEAST cap',
-    value: contracts.scoring.builder_fit_max,
-    file: 'src/features/leads/lib/builder-query.ts',
-    pattern: new RegExp(`LEAST\\([\\s\\S]*?${contracts.scoring.builder_fit_max}\\s*\\)\\s*AS fit_score`),
-  },
+  // NOTE: scoring.builder_fit_max was removed 2026-04-09 when the
+  // standalone builder-query.ts was deleted as dead code. The unified
+  // feed in get-lead-feed.ts uses proximity/value/opportunity pillars
+  // only — no separate "fit" cap. If a future standalone builder page
+  // reintroduces a fit score, add the constant back and re-point this
+  // check at the new consumer file.
   // ---- schema widths ----
   {
     name: 'schema.firebase_uid_max → user_profiles VARCHAR',

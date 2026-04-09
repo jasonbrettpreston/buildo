@@ -17,6 +17,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useLeadFeed, __constants } from '@/features/leads/api/useLeadFeed';
+import { useLeadFeedState, DEFAULT_RADIUS_KM } from '@/features/leads/hooks/useLeadFeedState';
 
 const fetchMock = vi.fn();
 vi.stubGlobal('fetch', fetchMock);
@@ -58,6 +59,20 @@ const happyResponse = {
 
 beforeEach(() => {
   fetchMock.mockReset();
+  // Reset Zustand store + localStorage between tests so snappedLocation
+  // from one test doesn't bleed into the next.
+  useLeadFeedState.setState({
+    // Seed as hydrated so the hook's enabled gate + snap-seed effect
+    // run in tests. The rehydration race is covered by a dedicated
+    // test below that explicitly starts with _hasHydrated: false.
+    _hasHydrated: true,
+    hoveredLeadId: null,
+    selectedLeadId: null,
+    radiusKm: DEFAULT_RADIUS_KM,
+    location: null,
+    snappedLocation: null,
+  });
+  localStorage.clear();
 });
 
 afterEach(() => {
@@ -100,8 +115,62 @@ describe('useLeadFeed — happy path', () => {
     expect(calledUrl).toContain('trade_slug=plumbing');
   });
 
-  it('rounds lat/lng to 3 decimals in the request (spec 75 §11 Phase 3 Layer 1)', async () => {
-    fetchMock.mockResolvedValueOnce({
+  it('sub-500m movement does NOT change the queryKey or trigger a refetch (Gemini 2026-04-09 fix)', async () => {
+    // Gemini deep-dive review caught that pre-fix the queryKey rounded
+    // lat/lng to 3 decimals per render. Walking across an invisible
+    // ~110m grid boundary (43.1235 → 43.1234) would wipe the infinite
+    // scroll cache and throw the user back to page 1. The fix: the
+    // queryKey now reads from a SNAPPED location in Zustand that only
+    // advances on >500m movement. Sub-threshold movements are no-ops.
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => happyResponse,
+    } as Response);
+
+    const Wrap = wrapper();
+    const { rerender } = renderHook(
+      ({ lat, lng }: { lat: number; lng: number }) =>
+        useLeadFeed({
+          trade_slug: 'plumbing',
+          lat,
+          lng,
+          radius_km: 10,
+        }),
+      {
+        wrapper: Wrap,
+        initialProps: { lat: 43.6535, lng: -79.3839 },
+      },
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    // Simulate ~50m of GPS drift (well under 500m threshold).
+    // 0.0005° lat ≈ 55m. Snap must NOT advance, fetch count must stay 1.
+    rerender({ lat: 43.6540, lng: -79.3839 });
+    rerender({ lat: 43.6541, lng: -79.3838 });
+
+    // Give any pending effects a tick to flush.
+    await new Promise((r) => setTimeout(r, 20));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // Independent review item 6: also assert the snap was NOT advanced.
+    // A fetch-count-only assertion could pass spuriously if a future
+    // regression advanced the snap but the new key happened to hit the
+    // cache. Locking the snap value directly proves sub-500m is a no-op.
+    expect(useLeadFeedState.getState().snappedLocation).toEqual({
+      lat: 43.6535,
+      lng: -79.3839,
+    });
+  });
+});
+
+describe('useLeadFeed — rehydration gate (Gemini 2026-04-09 CRITICAL fix)', () => {
+  it('does NOT fetch before the Zustand persist middleware has rehydrated', async () => {
+    // Pre-fix: the snap-seed useEffect would fire on mount with
+    // snappedLocation=null (initial store state) and overwrite the
+    // persisted snap with the current input coords, wasting a fetch
+    // for the WRONG location. Now the hook's `enabled` + the effect
+    // both gate on _hasHydrated.
+    useLeadFeedState.setState({ _hasHydrated: false, snappedLocation: null });
+    fetchMock.mockResolvedValue({
       ok: true,
       json: async () => happyResponse,
     } as Response);
@@ -110,23 +179,50 @@ describe('useLeadFeed — happy path', () => {
       () =>
         useLeadFeed({
           trade_slug: 'plumbing',
-          // Pass 6-decimal inputs — the fetch should receive the same
-          // because the hook only rounds the QUERY KEY; the actual
-          // request body uses raw input. But the cache dedup is driven
-          // by the key. We verify the key shape via the lack of a
-          // refetch when only sub-110m digits change.
-          lat: 43.653512,
-          lng: -79.383934,
+          lat: 43.65,
+          lng: -79.38,
           radius_km: 10,
         }),
       { wrapper: wrapper() },
     );
-    // One initial request fires; verify the URL contains the raw input
-    // (fetch sends the un-rounded values to the server).
+
+    // Let any microtasks + effects flush. No fetch should have fired
+    // because `enabled: hasHydrated` is still false.
+    await new Promise((r) => setTimeout(r, 20));
+    expect(fetchMock).toHaveBeenCalledTimes(0);
+    // Snap should also NOT have been seeded yet — the effect's first
+    // guard is `if (!hasHydrated) return`.
+    expect(useLeadFeedState.getState().snappedLocation).toBeNull();
+  });
+
+  it('fetches once hydration completes and seeds the snap from input', async () => {
+    useLeadFeedState.setState({ _hasHydrated: false, snappedLocation: null });
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => happyResponse,
+    } as Response);
+
+    const { rerender } = renderHook(
+      () =>
+        useLeadFeed({
+          trade_slug: 'plumbing',
+          lat: 43.65,
+          lng: -79.38,
+          radius_km: 10,
+        }),
+      { wrapper: wrapper() },
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(0);
+
+    // Simulate the persist middleware finishing rehydration.
+    useLeadFeedState.getState().setHasHydrated(true);
+    rerender();
+
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    const url = fetchMock.mock.calls[0]?.[0] as string;
-    expect(url).toContain('lat=43.653512');
-    expect(url).toContain('lng=-79.383934');
+    expect(useLeadFeedState.getState().snappedLocation).toEqual({
+      lat: 43.65,
+      lng: -79.38,
+    });
   });
 });
 
