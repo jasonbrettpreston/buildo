@@ -42,6 +42,9 @@
   "dependencies": {
     "@google/genai": "^1.48.0",
     "@sentry/nextjs": "^10.47.0",
+    "@tanstack/query-async-storage-persister": "^5.96.2",
+    "@tanstack/react-query": "^5.96.2",
+    "@tanstack/react-query-persist-client": "^5.96.2",
     "@turf/boolean-point-in-polygon": "^7.3.4",
     "@turf/centroid": "^7.3.4",
     "@turf/helpers": "^7.3.4",
@@ -54,6 +57,7 @@
     "exceljs": "^4.4.0",
     "firebase": "^12.9.0",
     "firebase-admin": "^13.6.1",
+    "idb-keyval": "^6.2.2",
     "next": "^15.1.0",
     "node-cron": "^4.2.1",
     "openai": "^6.33.0",
@@ -66,7 +70,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "shapefile": "^0.6.6",
-    "stream-json": "^1.8.0"
+    "stream-json": "^1.8.0",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@ast-grep/cli": "^0.42.1",
@@ -76,6 +81,7 @@
     "@stryker-mutator/core": "^8.7.1",
     "@stryker-mutator/vitest-runner": "^8.7.1",
     "@tailwindcss/postcss": "^4.0.0",
+    "@tanstack/react-query-devtools": "^5.96.2",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^22.10.0",

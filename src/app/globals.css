@@ -30,3 +30,55 @@
 .tile-flash-overdue {
   animation: tile-flash-purple 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* ============================================================================
+   Lead Feed Design System — spec 74 §Palette + §Type Scale
+   Industrial utilitarian palette. All text colors are WCAG AA verified on
+   the dark charcoal backgrounds (see spec 74 §WCAG audit April 2026). The
+   Tailwind v4 @theme directive makes utility classes like `bg-feed`,
+   `text-primary`, `border-timing-now` work without a config file.
+   ========================================================================== */
+@theme {
+  /* Backgrounds — spec 74 §Surfaces */
+  --color-feed: #1C1F26;
+  --color-card-permit: #272B33;
+  --color-card-builder: #1A2332;
+  --color-card-pressed: #2F3440;
+  --color-elevated: #31363F;
+
+  /* Text — WCAG AA verified on --color-card-permit */
+  --color-text-primary: #F5F6F7;
+  --color-text-secondary: #B5B9C0;
+  --color-text-tertiary: #9CA3AF;
+
+  /* Timing badge colors — spec 74 §Timing */
+  --color-timing-now: #F59E0B;
+  --color-timing-soon: #10B981;
+  --color-timing-upcoming: #3B82F6;
+  --color-timing-future: #6B7280;
+
+  /* Opportunity badge colors — spec 74 §Opportunity */
+  --color-opp-homeowner: #F59E0B;
+  --color-opp-newbuild: #10B981;
+  --color-opp-builder-led: #6B7280;
+
+  /* Cost tier colors — spec 74 §Cost (muted so they don't compete with timing) */
+  --color-cost-small: #9CA3AF;
+  --color-cost-medium: #B5B9C0;
+  --color-cost-large: #D4D8DD;
+  --color-cost-major: #E8B85B;
+  --color-cost-mega: #E87A5B;
+
+  /* Action colors — spec 74 §Actions */
+  --color-action-primary: #F59E0B;
+  --color-action-secondary: #3B82F6;
+
+  /* Semantic token aliases (Procore-inspired construction material naming) */
+  --color-amber-hardhat: #F59E0B;
+  --color-green-safety: #10B981;
+  --color-blue-blueprint: #3B82F6;
+  --color-red-stop: #EF4444;
+
+  /* Touch target constant — matches standards §1.1 minimum 44px */
+  --spacing-touch: 44px;
+}
