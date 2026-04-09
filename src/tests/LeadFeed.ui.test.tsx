@@ -449,6 +449,67 @@ describe('LeadFeed — V1 hard cap (5 pages)', () => {
   });
 });
 
+describe('LeadFeed — selectedLeadId cleanup on refetch (Independent reviewer holistic Phase 3)', () => {
+  it('clears selectedLeadId when the selected lead is no longer in items', async () => {
+    // Set up: user previously selected p-1, then a refetch returns
+    // a new set that no longer includes p-1.
+    useLeadFeedState.setState({ selectedLeadId: 'p-1' });
+    returnQuery(makeQuery({
+      data: { pages: [pageOf([{ ...samplePermit, lead_id: 'p-2' }])] },
+    }));
+    render(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    // The cleanup effect runs after render — wait one microtask.
+    await new Promise((r) => setTimeout(r, 0));
+    expect(useLeadFeedState.getState().selectedLeadId).toBeNull();
+  });
+
+  it('preserves selectedLeadId when the selected lead IS still in items', async () => {
+    useLeadFeedState.setState({ selectedLeadId: 'p-1' });
+    returnQuery(makeQuery({
+      data: { pages: [pageOf([{ ...samplePermit, lead_id: 'p-1' }])] },
+    }));
+    render(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(useLeadFeedState.getState().selectedLeadId).toBe('p-1');
+  });
+
+  it('does NOT clear selectedLeadId during loading (items briefly empty)', async () => {
+    useLeadFeedState.setState({ selectedLeadId: 'p-1' });
+    returnQuery({
+      ...makeQuery({}),
+      isPending: true,
+      isSuccess: false,
+      data: undefined,
+    });
+    render(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    await new Promise((r) => setTimeout(r, 0));
+    // Pending state should NOT clobber the selection.
+    expect(useLeadFeedState.getState().selectedLeadId).toBe('p-1');
+  });
+});
+
+describe('LeadFeed — empty_state_shown deduplication (Independent C1)', () => {
+  it('fires lead_feed.empty_state_shown exactly once per (trade, variant), not on every re-render', () => {
+    returnQuery(makeQuery({ data: { pages: [pageOf([])] } }));
+    const { rerender } = render(
+      <LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />,
+    );
+    // Three rerenders with the same state — pre-fix, this fired the
+    // event 3 times (once per render). With the useEffect+ref guard,
+    // it should fire exactly once.
+    rerender(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    rerender(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    rerender(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    const emptyStateCalls = captureEventMock.mock.calls.filter(
+      (c) => c[0] === 'lead_feed.empty_state_shown',
+    );
+    expect(emptyStateCalls).toHaveLength(1);
+    expect(emptyStateCalls[0]?.[1]).toEqual(
+      expect.objectContaining({ variant: 'no_results' }),
+    );
+  });
+});
+
 describe('LeadFeed — InfiniteScroll trigger wiring', () => {
   it('next prop calls query.fetchNextPage', () => {
     const fetchNextPage = vi.fn();

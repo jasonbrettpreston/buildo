@@ -18,6 +18,15 @@
 
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+// Import MAX_RADIUS_KM directly from the distance module so the
+// persisted-radius cap and the server-side Zod validator share a
+// SINGLE source of truth. The previous implementation hardcoded
+// MAX_PERSISTED_RADIUS_KM = 100, which exceeded the server's
+// MAX_RADIUS_KM = 50 — corrupted/tampered localStorage values in
+// the 51-100 range would persist, then deadlock the feed against
+// the server's 400 VALIDATION_FAILED response. Caught by user
+// review 2026-04-09 ("Persistent Zod Deadlock"). Layer 1 fix.
+import { MAX_RADIUS_KM } from '@/features/leads/lib/distance';
 
 /**
  * Default radius in kilometres. Matches `geo.default_radius_km` in
@@ -125,15 +134,19 @@ function validatePersistedSlice(raw: unknown): PersistedSlice {
     location?: unknown;
     snappedLocation?: unknown;
   };
-  // Upper bound guards against tampered localStorage DoS'ing the feed
-  // query with an enormous radius. Server-side MAX_RADIUS_KM (50) is
-  // authoritative; this is client-side defense-in-depth (Gemini 2026-04-09).
-  const MAX_PERSISTED_RADIUS_KM = 100;
+  // Layer 2 of the Zod-deadlock fix: defensively CLAMP an in-shape
+  // but out-of-range radiusKm to DEFAULT_RADIUS_KM rather than
+  // persist a value the server will reject. The previous version
+  // accepted 1-100 inclusive, then the server enforced .max(50),
+  // creating a permanently-broken state for any user whose
+  // localStorage held 51-100. Now any radiusKm that exceeds
+  // MAX_RADIUS_KM (or is otherwise invalid) auto-recovers to the
+  // default on the next page load. User review 2026-04-09.
   const radiusKm =
     typeof r.radiusKm === 'number' &&
     Number.isFinite(r.radiusKm) &&
     r.radiusKm > 0 &&
-    r.radiusKm <= MAX_PERSISTED_RADIUS_KM
+    r.radiusKm <= MAX_RADIUS_KM
       ? r.radiusKm
       : DEFAULT_RADIUS_KM;
   return {

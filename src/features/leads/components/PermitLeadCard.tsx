@@ -27,7 +27,7 @@
 
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { motion } from 'motion/react';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { OpportunityBadge } from '@/features/leads/components/badges/OpportunityBadge';
@@ -161,6 +161,24 @@ function PermitLeadCardComponent({ lead, tradeSlug }: PermitLeadCardProps) {
     },
     [setHoveredLeadId],
   );
+
+  // Hover-state unmount cleanup. If a card unmounts while it's the
+  // currently-hovered lead (e.g., scroll past, list refresh, filter
+  // change), the pointerLeave event never fires and `hoveredLeadId`
+  // would stay set to a lead that no longer renders. Phase 6 map
+  // would highlight a phantom marker. We clear ONLY if the unmounting
+  // card's own lead_id is the active hover — otherwise we'd clobber
+  // a hover that legitimately moved to a different card during the
+  // unmount cycle. Caught by holistic Phase 3 review (self-checklist
+  // item 1, independent reviewer C7).
+  useEffect(() => {
+    return () => {
+      const currentHover = useLeadFeedState.getState().hoveredLeadId;
+      if (currentHover === lead.lead_id) {
+        useLeadFeedState.getState().setHoveredLeadId(null);
+      }
+    };
+  }, [lead.lead_id]);
 
   const handleDirectionsClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {

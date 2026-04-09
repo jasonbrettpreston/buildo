@@ -155,9 +155,13 @@ export function TimingBadge({
       </div>
       {/* Tremor ProgressCircle accepts a 0-100 value. Our timing pillar
           score is 0-30 per spec 70 §4, so we scale for the visual arc
-          but display the raw score in the center label. */}
+          but display the raw score in the center label. The negative
+          sentinel for the Past tone (spec-71 staleness fallback) must
+          be clamped to 0 before scaling — a negative ProgressCircle
+          value renders an inverted/broken arc. DeepSeek holistic
+          2026-04-09 review. */}
       <ProgressCircle
-        value={Math.min(100, Math.round((score / 30) * 100))}
+        value={Math.min(100, Math.max(0, Math.round((score / 30) * 100)))}
         size="md"
         color={tone.tremorColor}
         radius={24}

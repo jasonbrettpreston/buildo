@@ -58,6 +58,10 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
   // exact pattern self-checklist item 13 bans.
   const radiusKm = useLeadFeedState((s) => s.radiusKm);
   const setRadius = useLeadFeedState((s) => s.setRadius);
+  // selectedLeadId is read so the cleanup effect below can detect
+  // when the selected lead has dropped out of the current items.
+  const selectedLeadId = useLeadFeedState((s) => s.selectedLeadId);
+  const setSelectedLeadId = useLeadFeedState((s) => s.setSelectedLeadId);
 
   const query = useLeadFeed({
     trade_slug: tradeSlug,
@@ -106,6 +110,52 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
     pageCount,
   ]);
 
+  // empty_state_shown telemetry — fires exactly once per
+  // (trade_slug, variant) combination. Pre-fix this was called
+  // directly in the render body of the error / empty branches,
+  // which fired on every re-render (Strict Mode double-invoke,
+  // background refetch, parent state change). Holistic Phase 3
+  // review caught this — independent reviewer C1/CRITICAL 1.
+  const lastEmptyStateKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    let variant: 'unreachable' | 'offline' | 'no_results' | null = null;
+    if (query.isError) {
+      const isBrowserOnline =
+        typeof navigator === 'undefined' ? true : navigator.onLine;
+      variant = isBrowserOnline ? 'unreachable' : 'offline';
+    } else if (query.isSuccess && items.length === 0) {
+      variant = 'no_results';
+    }
+    if (variant === null) {
+      lastEmptyStateKeyRef.current = null;
+      return;
+    }
+    const key = `${tradeSlug}|${variant}`;
+    if (lastEmptyStateKeyRef.current === key) return;
+    lastEmptyStateKeyRef.current = key;
+    captureEvent('lead_feed.empty_state_shown', {
+      trade_slug: tradeSlug,
+      variant,
+    });
+  }, [query.isError, query.isSuccess, items.length, tradeSlug]);
+
+  // selectedLeadId cleanup — when the feed refetches and the
+  // previously-selected lead is no longer in the result set (status
+  // changed server-side, dropped out of radius, etc.), clear the
+  // selection so the future map (Phase 6) doesn't render a phantom
+  // marker for a non-existent lead. The check is gated on
+  // query.isSuccess so we don't clear during loading windows where
+  // items is briefly empty by accident. Holistic Phase 3 review —
+  // independent reviewer C2/IMPORTANT 3.
+  useEffect(() => {
+    if (!query.isSuccess) return;
+    if (selectedLeadId === null) return;
+    const stillExists = items.some((lead) => lead.lead_id === selectedLeadId);
+    if (!stillExists) {
+      setSelectedLeadId(null);
+    }
+  }, [query.isSuccess, selectedLeadId, items, setSelectedLeadId]);
+
   // Compute the empty-state variant by combining BOTH navigator.onLine
   // AND the TanStack Query state. navigator.onLine alone is unreliable
   // (returns true for VPNs, captive portals, networks where DNS works
@@ -137,10 +187,8 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
     const variant: 'offline' | 'unreachable' = isBrowserOnline
       ? 'unreachable'
       : 'offline';
-    captureEvent('lead_feed.empty_state_shown', {
-      trade_slug: tradeSlug,
-      variant,
-    });
+    // captureEvent moved to a useEffect above (ref-deduped) so it
+    // doesn't fire on every re-render of the error state.
     return (
       <EmptyLeadState
         variant={variant}
@@ -157,10 +205,7 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
   // ----- EMPTY -----
   // Fetch succeeded but the server returned 0 items in radius.
   if (query.isSuccess && items.length === 0) {
-    captureEvent('lead_feed.empty_state_shown', {
-      trade_slug: tradeSlug,
-      variant: 'no_results',
-    });
+    // captureEvent moved to a useEffect above (ref-deduped).
     return (
       <EmptyLeadState
         variant="no_results"
@@ -241,11 +286,29 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
       refreshFunction={() => {
         captureEvent('lead_feed.refresh', { trade_slug: tradeSlug });
         void query.refetch();
+        // INTENTIONAL: when the user is at the 5-page cap and pulls to
+        // refresh, the refetch replaces all loaded pages with a fresh
+        // page-1 result. pageCount drops from 5 → 1, pageCapReached
+        // flips false, and the user can scroll to the cap again. This
+        // is intentional UX — pull-to-refresh is a "start over" gesture.
+        // Independent reviewer 2026-04-09 flagged the dataLength shift
+        // (75 → 15) as a potential confusion for the library's internal
+        // scroll position tracking, but in practice
+        // react-infinite-scroll-component recomputes from the new
+        // dataLength on its next pass and the tracking re-stabilizes.
+        // If 3-v's filter sheet introduces a new "reset to top"
+        // affordance, the cap-reset semantics should be unified there.
       }}
       // The library reads scrollableTarget when the scrollable
       // container is NOT the window itself. We use the window as the
       // scroll surface (mobile-first), so we DON'T set this prop.
       // Setting it to a missing element would silently break scroll.
+      // The `overflow: visible` style override prevents the library's
+      // default `overflow: auto` from creating a nested scroll
+      // container — without this, the page scrolls inside the
+      // InfiniteScroll element instead of the window, breaking
+      // pull-to-refresh on mobile (the gesture handler attaches to
+      // the document, not the inner element).
       style={{ overflow: 'visible' }}
     >
       <div className="space-y-3 px-3 py-4">

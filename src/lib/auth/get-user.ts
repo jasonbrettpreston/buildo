@@ -16,8 +16,21 @@ import { logError, logWarn } from '@/lib/logger';
  * in Phase 3-iv so Server Components can call it directly with
  * `cookies().get('__session')?.value` from `next/headers` — they don't
  * have access to the NextRequest object that the API-route variant takes.
+ *
+ * NAMING NOTE: this function calls `admin.auth().verifyIdToken(cookie)`,
+ * NOT `admin.auth().verifySessionCookie(cookie)`. Firebase Admin has two
+ * distinct token verification methods: `verifyIdToken` for short-lived
+ * Firebase ID tokens (~1hr), and `verifySessionCookie` for long-lived
+ * session cookies created via `createSessionCookie()` (~2 weeks). This
+ * project sets the `__session` cookie to a Firebase ID token (verified
+ * by the existing API route flow + middleware shape check), so
+ * `verifyIdToken` is the correct call. The function is named
+ * `verifyIdTokenCookie` to disambiguate — an earlier draft was named
+ * `verifySessionCookie` which mirrored the cookie NAME but suggested the
+ * wrong Admin SDK method, creating confusion that the holistic Phase 3
+ * review (independent reviewer C8/CRITICAL 2) flagged.
  */
-export async function verifySessionCookie(
+export async function verifyIdTokenCookie(
   cookie: string | undefined,
 ): Promise<string | null> {
   if (!cookie) return null;
@@ -57,5 +70,5 @@ export async function verifySessionCookie(
 }
 
 export async function getUserIdFromSession(request: NextRequest): Promise<string | null> {
-  return verifySessionCookie(request.cookies.get('__session')?.value);
+  return verifyIdTokenCookie(request.cookies.get('__session')?.value);
 }

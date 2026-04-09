@@ -162,6 +162,126 @@ describe('useLeadFeed — happy path', () => {
   });
 });
 
+describe('useLeadFeed — snap anchor regression lock (user review 2026-04-09 "sliding anchor")', () => {
+  // The user raised a concern that the snap anchor could be "dragged
+  // forward" by infinite-scroll-driven query.isSuccess events,
+  // preventing the 500m threshold from ever tripping. This test walks
+  // the snap through a 4km journey in 100m steps and asserts:
+  //   1. The snap advances at the correct boundaries (>500m from
+  //      current snap, NOT >500m from initial position).
+  //   2. Scrolling (simulated via repeated rerenders) does NOT update
+  //      the snap mid-step.
+  //   3. After 4km, the snap has advanced ~7 times (every ~600m),
+  //      proving the 500m logic IS tripping.
+  //
+  // This locks the absence of the sliding-anchor bug. If a future
+  // refactor reintroduces a setSnappedLocation call inside a success
+  // handler or anywhere outside the threshold check, this test will
+  // fail loudly.
+  it('snap advances in ~600m chunks across a 4km walk (40 × 100m steps)', async () => {
+    useLeadFeedState.setState({
+      _hasHydrated: true,
+      snappedLocation: null,
+    });
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => happyResponse,
+    } as Response);
+
+    // 100m of latitude is approximately 0.0009 degrees at Toronto's
+    // latitude. We use 0.0009 per step → 40 steps = 0.036 = ~4km.
+    const STEP_DEG = 0.0009;
+    const startLat = 43.6535;
+    const lng = -79.3839;
+
+    const Wrap = wrapper();
+    const { rerender } = renderHook(
+      ({ lat }: { lat: number }) =>
+        useLeadFeed({
+          trade_slug: 'plumbing',
+          lat,
+          lng,
+          radius_km: 10,
+        }),
+      { wrapper: Wrap, initialProps: { lat: startLat } },
+    );
+
+    // Track the sequence of snap positions over the walk.
+    const snapHistory: number[] = [];
+    let prevSnapLat = useLeadFeedState.getState().snappedLocation?.lat;
+    if (prevSnapLat !== undefined) snapHistory.push(prevSnapLat);
+
+    for (let step = 1; step <= 40; step++) {
+      const newLat = startLat + STEP_DEG * step;
+      rerender({ lat: newLat });
+      // Let the effect flush
+      await new Promise((r) => setTimeout(r, 5));
+      const currentSnapLat = useLeadFeedState.getState().snappedLocation?.lat;
+      if (currentSnapLat !== undefined && currentSnapLat !== prevSnapLat) {
+        snapHistory.push(currentSnapLat);
+        prevSnapLat = currentSnapLat;
+      }
+    }
+
+    // We expect the snap to advance at every >500m boundary. Over a
+    // 4km walk that's roughly 6-8 advances (the exact count depends
+    // on lat-to-meter conversion at Toronto's latitude). The key
+    // assertion is "more than 3 advances and fewer than 15" — proving
+    // (a) the snap is firing repeatedly (NOT stuck at the initial
+    // anchor), and (b) it's not firing on every step (which would
+    // mean the threshold is broken). The seed-from-null counts as
+    // the first entry.
+    expect(snapHistory.length).toBeGreaterThan(3);
+    expect(snapHistory.length).toBeLessThan(15);
+
+    // Each consecutive snap should be >= 500m from its predecessor
+    // (the snap can never advance by less than the threshold).
+    // Convert lat-deltas back to meters via the inverse of STEP_DEG:
+    // 0.0009 deg ≈ 100m, so 0.0045 deg ≈ 500m.
+    const MIN_SNAP_DELTA_DEG = 0.0045;
+    for (let i = 1; i < snapHistory.length; i++) {
+      const a = snapHistory[i - 1];
+      const b = snapHistory[i];
+      if (a !== undefined && b !== undefined) {
+        const delta = Math.abs(b - a);
+        expect(delta).toBeGreaterThanOrEqual(MIN_SNAP_DELTA_DEG);
+      }
+    }
+  });
+
+  it('rerendering with the SAME coords does NOT advance the snap (no sliding from no-op renders)', async () => {
+    useLeadFeedState.setState({
+      _hasHydrated: true,
+      snappedLocation: null,
+    });
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => happyResponse,
+    } as Response);
+
+    const Wrap = wrapper();
+    const { rerender } = renderHook(
+      ({ lat }: { lat: number }) =>
+        useLeadFeed({
+          trade_slug: 'plumbing',
+          lat,
+          lng: -79.3839,
+          radius_km: 10,
+        }),
+      { wrapper: Wrap, initialProps: { lat: 43.6535 } },
+    );
+    await new Promise((r) => setTimeout(r, 10));
+    const initialSnap = useLeadFeedState.getState().snappedLocation;
+
+    // 20 rerenders with the EXACT same coords. Should produce zero snap changes.
+    for (let i = 0; i < 20; i++) {
+      rerender({ lat: 43.6535 });
+    }
+    await new Promise((r) => setTimeout(r, 10));
+    expect(useLeadFeedState.getState().snappedLocation).toEqual(initialSnap);
+  });
+});
+
 describe('useLeadFeed — rehydration gate (Gemini 2026-04-09 CRITICAL fix)', () => {
   it('does NOT fetch before the Zustand persist middleware has rehydrated', async () => {
     // Pre-fix: the snap-seed useEffect would fire on mount with

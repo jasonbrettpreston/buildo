@@ -22,7 +22,7 @@
 
 import { GlobeAltIcon, PhoneIcon } from '@heroicons/react/24/outline';
 import { motion } from 'motion/react';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import {
   Avatar,
   AvatarFallback,
@@ -96,6 +96,17 @@ function BuilderLeadCardComponent({ lead, tradeSlug }: BuilderLeadCardProps) {
     },
     [setHoveredLeadId],
   );
+
+  // Unmount cleanup mirroring PermitLeadCard — see that file's
+  // comment for the rationale (Phase 6 map phantom hover prevention).
+  useEffect(() => {
+    return () => {
+      const currentHover = useLeadFeedState.getState().hoveredLeadId;
+      if (currentHover === lead.lead_id) {
+        useLeadFeedState.getState().setHoveredLeadId(null);
+      }
+    };
+  }, [lead.lead_id]);
 
   const handleCallClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {

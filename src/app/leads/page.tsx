@@ -10,9 +10,9 @@
 //      and redirects unauthenticated users to /login. This catches
 //      99% of cases at the edge.
 //   2. THIS Server Component re-verifies the cookie via
-//      verifySessionCookie() (the same firebase-admin call the API
-//      routes use). If middleware was bypassed somehow, the page
-//      still redirects.
+//      verifyIdTokenCookie() (the same firebase-admin call the API
+//      routes use under the hood). If middleware was bypassed
+//      somehow, the page still redirects.
 //   3. The actual /api/leads/feed call from inside the Client
 //      wrapper is independently auth-checked at the route handler
 //      via getCurrentUserContext().
@@ -22,7 +22,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { pool } from '@/lib/db/client';
-import { verifySessionCookie } from '@/lib/auth/get-user';
+import { verifyIdTokenCookie } from '@/lib/auth/get-user';
 import { logError } from '@/lib/logger';
 import { LeadsClientShell } from './LeadsClientShell';
 
@@ -39,7 +39,7 @@ export default async function LeadsPage() {
   // already caught a missing cookie, but defense in depth means we
   // re-verify here. A missing/invalid cookie → redirect to /login
   // with a return URL so the user lands back on /leads after auth.
-  const uid = await verifySessionCookie(sessionCookie);
+  const uid = await verifyIdTokenCookie(sessionCookie);
   if (!uid) {
     redirect('/login?redirect=/leads');
   }

@@ -355,6 +355,17 @@ interface LeadFeedRow {
  * needed at that time. The phrase table is intentionally short and
  * presentational, NOT a translation key (i18n is out of scope for V1).
  */
+// NOTE on the 'low' entry: the current feed SQL only produces 'high'
+// (matched phase) or 'medium' (ELSE fallthrough) for permits, and the
+// builder CTE hardcodes 'high'. The 'low' entry is dead code in the
+// feed path TODAY but matches the spec-71 TradeTimingEstimate type
+// which DOES have a 'low' confidence level (the staleness fallback
+// for tier 1 inspections older than 180 days). When the detail-view
+// phase wires the spec-71 engine, that engine's `confidence='low'`
+// output will overlay the card via the useLeadView mutation response,
+// and this phrase table is what the card will look up. Keeping the
+// entry here means the wiring is one prop change, not a schema change.
+// Independent reviewer holistic 2026-04-09 (C16).
 export const TIMING_DISPLAY_BY_CONFIDENCE: Record<
   'high' | 'medium' | 'low',
   string

@@ -28,6 +28,7 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { LeadFeed } from '@/features/leads/components/LeadFeed';
 import { useGeolocation } from '@/features/leads/hooks/useGeolocation';
+import { captureEvent } from '@/lib/observability/capture';
 
 export interface LeadsClientShellProps {
   tradeSlug: string;
@@ -97,7 +98,18 @@ export function LeadsClientShell({ tradeSlug }: LeadsClientShellProps) {
             : 'We need your location to find nearby permits. Tap the button below to grant access.'}
         </p>
         {!status.permanent && (
-          <Button type="button" variant="default" size="lg" onClick={() => request()}>
+          <Button
+            type="button"
+            variant="default"
+            size="lg"
+            onClick={() => {
+              captureEvent('lead_feed.filter_changed', {
+                field: 'geolocation',
+                source: 'permission_grant_cta',
+              });
+              request();
+            }}
+          >
             Grant location access
           </Button>
         )}
@@ -128,7 +140,18 @@ export function LeadsClientShell({ tradeSlug }: LeadsClientShellProps) {
         <p className="max-w-xs font-display text-sm text-text-secondary">
           {status.message}
         </p>
-        <Button type="button" variant="default" size="lg" onClick={() => request()}>
+        <Button
+          type="button"
+          variant="default"
+          size="lg"
+          onClick={() => {
+            captureEvent('lead_feed.filter_changed', {
+              field: 'geolocation',
+              source: 'error_retry_cta',
+            });
+            request();
+          }}
+        >
           Try again
         </Button>
       </main>

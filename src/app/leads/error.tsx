@@ -16,6 +16,7 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { captureEvent } from '@/lib/observability/capture';
 import { reportError } from '@/lib/observability/sentry';
 
 export default function LeadsErrorBoundary({
@@ -43,7 +44,20 @@ export default function LeadsErrorBoundary({
         We&apos;ve logged this and will look into it. You can try reloading
         the feed below.
       </p>
-      <Button type="button" variant="default" size="lg" onClick={() => reset()}>
+      <Button
+        type="button"
+        variant="default"
+        size="lg"
+        onClick={() => {
+          // AST-grep telemetry rule scope is `src/features/leads/` —
+          // this file lives in `src/app/leads/` and is OUTSIDE that
+          // scope, so the rule didn't catch the missing emit. Manual
+          // captureEvent here measures error-boundary recovery rates
+          // (independent of Sentry's exception capture above).
+          captureEvent('lead_feed.refresh', { source: 'error_boundary' });
+          reset();
+        }}
+      >
         Try again
       </Button>
     </div>

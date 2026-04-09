@@ -247,6 +247,41 @@ describe('validatePersistedSlice — defensive migrate guard', () => {
   });
 });
 
+describe('validatePersistedSlice — Zod deadlock prevention (user review 2026-04-09)', () => {
+  // The pre-fix validatePersistedSlice accepted radiusKm in [1, 100],
+  // but the server enforces .max(50) via Zod. localStorage holding
+  // 51-100 produced a permanently-broken state: every fetch returned
+  // 400 VALIDATION_FAILED, the user's "Try again" hit the same wall,
+  // and there was no UI failsafe to reset the radius. The fix
+  // (Layers 1+2): import MAX_RADIUS_KM from distance.ts as the
+  // single source of truth, AND clamp out-of-range values to
+  // DEFAULT_RADIUS_KM in the migrate path so corrupted clients
+  // self-heal on next page load.
+  it('clamps radiusKm > MAX_RADIUS_KM (50) to DEFAULT_RADIUS_KM', () => {
+    expect(validate({ radiusKm: 75, location: null }).radiusKm).toBe(
+      DEFAULT_RADIUS_KM,
+    );
+    expect(validate({ radiusKm: 51, location: null }).radiusKm).toBe(
+      DEFAULT_RADIUS_KM,
+    );
+    expect(validate({ radiusKm: 100, location: null }).radiusKm).toBe(
+      DEFAULT_RADIUS_KM,
+    );
+    expect(validate({ radiusKm: 999999, location: null }).radiusKm).toBe(
+      DEFAULT_RADIUS_KM,
+    );
+  });
+
+  it('preserves radiusKm exactly at MAX_RADIUS_KM (boundary)', () => {
+    expect(validate({ radiusKm: 50, location: null }).radiusKm).toBe(50);
+  });
+
+  it('preserves radiusKm just below the cap', () => {
+    expect(validate({ radiusKm: 49, location: null }).radiusKm).toBe(49);
+    expect(validate({ radiusKm: 25, location: null }).radiusKm).toBe(25);
+  });
+});
+
 describe('useLeadFeedState — snappedLocation (Gemini 2026-04-09 fix)', () => {
   it('snappedLocation starts null', () => {
     expect(useLeadFeedState.getState().snappedLocation).toBeNull();
