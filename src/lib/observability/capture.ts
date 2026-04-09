@@ -18,6 +18,7 @@ export type EventName =
   | 'lead_feed.lead_save_failed'
   | 'lead_feed.builder_called'
   | 'lead_feed.builder_emailed'
+  | 'lead_feed.builder_website_opened'
   | 'lead_feed.directions_opened'
   | 'lead_feed.filter_changed'
   | 'lead_feed.refresh'
