@@ -355,3 +355,70 @@ All Phase 2 sub-phases (2-i foundation, 2-ii feed route, 2-iii view route) revie
 | MED | Gemini test | "regex SQL structure tests are brittle" | n/a | DEFENSIBLE per locked-DB constraint, same triage as Phase 1a/1b-i/1b-ii. |
 | MED | DeepSeek | "happy path test only asserts 3 fields" | n/a | DEFENSIBLE — same coverage philosophy as prior sub-WFs. Mapping completeness is verified by typecheck (interface enforcement) + behavior tests on the critical paths. |
 | LOW | Independent | builder_candidates in get-lead-feed.ts uses different scoring dimensions than spec 73's standalone builder query | n/a | NOTED — intentional. Spec 70 unified feed uses 30/30/30/10 (proximity/timing/value/opportunity) while spec 73 standalone builder uses 30/30/20/23 (proximity/activity/contact/fit). Documented in builder-query.ts file header that downstream consumers must be aware the same builder gets different scores between the two endpoints. |
+
+## 2026-04-09 — Phase 3-iii backend bundle (commit e7c3a05 — widen feed SQL + types)
+
+Bundle: get-lead-feed.ts, types.ts, get-lead-feed.logic.test.ts, api-leads-feed.infra.test.ts, spec 75 §4.4/§4.5 reconciliation notes.
+
+| Sev | Source | Item | Closed in | Notes |
+|-----|--------|------|-----------|-------|
+| CRITICAL | Gemini + DeepSeek | Pagination truncation when mapRow drops a row — `data.length === clampedLimit` is false even when more raw rows exist → next_cursor=null → silent feed termination. PRE-EXISTING bug, not introduced by 3-iii. | e7c3a05 | Fixed: derive cursor from `res.rows.length` and the LAST RAW ROW (not post-filter `data`). Both cursor fields are present on the raw row regardless of mapRow's verdict. Regression test added. |
+| HIGH | DeepSeek | WSIB LEFT JOIN LATERAL had no tiebreaker on equal `last_enriched_at` → non-deterministic row pick → cursor instability across requests. | e7c3a05 | Fixed: added `, w2.id DESC` as secondary ORDER BY. Test asserts the SQL contains the tiebreaker. |
+| MED | DeepSeek | `COUNT(p.permit_num)` in builder CTE could double-count if entity_projects has duplicate `(entity, permit, role)` rows. | e7c3a05 | Fixed: replaced with `COUNT(DISTINCT (p.permit_num, p.revision_num))`. |
+| FAIL | Independent | spec 75 §4.5 sample code body still referenced `lead.builder_name`, `lead.phone`, `lead.closest_permit_m`, `lead.wsib_registered` after the reconciliation note was added → readers would copy stale fields. | e7c3a05 | Fixed all sample-code references. Replaced wsib_registered block with REMOVED-in-3-iii comment. |
+| FAIL | Independent | samplePermitRow fixture had stale `opportunity_score: 10` / `relevance_score: 90` from a pre-review 0-10 draft. SQL pins 'Permit Issued' at 20. | e7c3a05 | Fixed to 20 / 100. |
+| HIGH | Gemini | Distance calc repeated 7 times in proximity_score CASE — extreme perf hit | n/a | DEFENSIBLE — Postgres planner CSEs the expression. Same triage as Phase 1b-iii. Visual repetition is structural readability cost only. |
+| HIGH | Gemini | Migration 079 has commented-out DOWN block — all migrations must be reversible | n/a | DEFENSIBLE — project convention per ADR 004 (operator runbook documents the manual DOWN). Same pattern as migration 067/078. |
+| HIGH | Gemini | Migration 079 UP runs DROP+CREATE in same migration — guaranteed to fail in production if operator runbook was followed | n/a | DEFENSIBLE — header comment acknowledges this for dev. Production uses the CONCURRENTLY runbook out-of-band; the in-migration form is the dev fallback. |
+| MED | DeepSeek | LPAD assumes revision_num is numeric — if it contains letters, padding malforms lead_ids | n/a | DEFENSIBLE — verified against source data, revision_num is always numeric in CKAN feed. Pre-existing assumption from migration 001 + buildLeadKey. |
+| HIGH | DeepSeek | LeadFeedRow declares latitude/longitude as `number | string | null` but SQL casts inconsistently | n/a | DEFENSIBLE — toNumberOrNull handles either branch. Cast cleanup is cosmetic. |
+| MED | DeepSeek | `business_size IS NOT NULL` in builder WHERE excludes builders without WSIB records | n/a | DOCUMENTED — already noted in types.ts comment + spec 75 reconciliation note. The wsib_registered column is intentionally absent in 3-iii because the WHERE makes it structurally always-true. Re-add when feed widens. |
+| HIGH | DeepSeek | Error logging includes PII (user_id, lat, lng) — violates privacy regulations | n/a | DEFERRED — observability vs privacy tradeoff is a project-wide decision, not Phase 3-iii's call. Track as cross-cutting concern. |
+| MED | DeepSeek | Re-export of types from `@/lib/permits/types` creates tight coupling | n/a | DEFENSIBLE — standard pattern for Phase 1a barrel exports. |
+| LOW | DeepSeek | TIMING_DISPLAY_BY_CONFIDENCE could return undefined for unexpected confidence value | n/a | FALSE ALARM — type-narrowed to `'high' | 'medium' | 'low'` so unreachable. |
+| MED | DeepSeek | narrowCostTier returns null for unknown values — silently drops the tier | e7c3a05 | DEFENSIBLE + tested — defensive narrowing is intentional. Test covers the unknown-value case. |
+
+## 2026-04-09 — Phase 3-iii frontend bundle (commit f043dcc — composite cards)
+
+Bundle: PermitLeadCard.tsx, BuilderLeadCard.tsx, format.ts, avatar.tsx, observability/capture.ts, format.logic.test.ts, *LeadCard.ui.test.tsx.
+
+| Sev | Source | Item | Closed in | Notes |
+|-----|--------|------|-----------|-------|
+| CRITICAL | Independent | PermitLeadCard passing `Math.round(lead.relevance_score)` (0-100 composite) to TimingBadge whose bands + ProgressCircle scaling are calibrated for 0-30 timing pillar. Almost every lead would have rendered NOW regardless of actual urgency. | f043dcc | Fixed to pass `lead.timing_score`. Regression test added: `timing_score=5, relevance_score=85` asserts Distant band, not NOW. |
+| HIGH | Independent + Gemini | sanitizeTelHref two real bugs: (a) spec 75 §9 E.164 max not enforced; (b) extensions concatenated as digits — `(416) 555-1234 ext 99` produced `416555123499`, junk number some carriers will dial. | f043dcc | Fixed: `.slice(0, 15)` clamp + 10-digit floor + split on `x|ext\.?|#|,` BEFORE digit pass. 4 new tests cover the matrix. |
+| MED | DeepSeek | Hover gating used `=== 'mouse'` which excluded pen/stylus — tablet users got no hover feedback. | f043dcc | Fixed: changed to `!== 'touch'` so mouse, pen, stylus all trigger; only touch is excluded. |
+| MED | DeepSeek | Footer div had `onKeyDown={stopPropagation}` on `role="presentation"` element — dead code (presentation divs never receive keyboard focus). | f043dcc | Removed dead handler. Click stopPropagation kept (still required for synthetic event bubbling). |
+| ast-grep | rule | sanitizeWebsite originally used try/catch around `new URL()` — tripped silent-catch-fallback rule. | f043dcc | Refactored to `URL.canParse()` (Node 19.9+) so the validator expresses its contract without swallowing exceptions. |
+| HIGH | DeepSeek | lat/lng XSS via template literal injection in directionsHref | n/a | FALSE ALARM — `latitude/longitude` are typed as `number | null` and gated by `Number.isFinite()`. Type system prevents string injection. |
+| CRITICAL | DeepSeek | empty-string permit_type renders empty `<p>` | n/a | FALSE ALARM — `('' || null)` evaluates to falsy in JS, JSX correctly skips. Verified inline. |
+| MED | DeepSeek | URL constructor needs https:// prepend if scheme missing | n/a | DEFENSIBLE — implicit scheme prepending is a footgun. Source data should be canonical URLs from WSIB enrichment. |
+| MED | Gemini | BuilderLeadCard rounded-none inconsistency between footer buttons and SaveButton | n/a | DEFENSIBLE — Save button corners get clipped by Card `overflow-hidden` anyway. Cosmetic. |
+| MED | Gemini | Full-card click target prevents text selection inside the card | n/a | DEFENSIBLE — full-card-tap is the documented spec 75 pattern. Trade-off accepted. |
+| HIGH | DeepSeek | Magic numbers 25/20/10 in getTimingBorderClass | n/a | DEFENSIBLE — already documented inline + grep-tested against spec 74 §Timing. |
+| LOW | DeepSeek | Pluralization of `active_permits_nearby === 1` doesn't handle 0 case | n/a | DEFENSIBLE — "0 active permits nearby" is grammatical English with plural. Builder CTE WHERE filter ensures count >= 1 anyway. |
+| NIT | Gemini | MotionCard duplicated across PermitLeadCard + BuilderLeadCard files | n/a | DEFENSIBLE — they're in different files, not the same. Sharing would couple unrelated components. |
+
+## 2026-04-09 — Phase 3-iv (commit f619814 — /leads page + LeadFeed container)
+
+Bundle: LeadFeed.tsx, EmptyLeadState.tsx, app/leads/{page,LeadsClientShell,error,loading}.tsx, get-user.ts (verifySessionCookie extraction), route-guard.ts, *.ui.test.tsx.
+
+| Sev | Source | Item | Closed in | Notes |
+|-----|--------|------|-----------|-------|
+| CRITICAL | Independent | Duplicate `lead_feed.viewed` event: LeadsClientShell fired with `{stage: 'page_mount'}` AND LeadFeed fired with `{item_count, page_count}`. Two events with same name + different shapes — broken PostHog funnels. | f619814 | Removed shell-level emit. LeadFeed-level event is more meaningful (only fires after data loads + carries item_count + page_count). |
+| Independent | test | InfiniteScroll mock rendered `endMessage` whenever `!hasMore`, but real lib conditions on `!hasMore && dataLength > 0`. Mock contract gap could give false PASS on empty-list scenarios. | f619814 | Added `dataLength > 0` guard to mock. Mirrors real library contract. |
+| HIGH | Gemini + DeepSeek | `next` callback had no `isFetchingNextPage` guard — rapid scrolls past trigger threshold fired multiple `fetchNextPage` calls before first request resolved. | f619814 | Added the guard. |
+| MED | Gemini | `key={lead.lead_id}` could collide between permit shape (`'permit_num:revision_num'`) and builder shape (numeric `entity_id`). Low risk but cheap to fix. | f619814 | Composite key `${lead.lead_type}-${lead.lead_id}` guarantees uniqueness. |
+| MED | Gemini | EmptyLeadStateProps had `onExpandRadius?` and `onRetry?` both optional — developer could render `no_results` without `onExpandRadius` and silently ship a dead button. | f619814 | Refactored to discriminated union; type system enforces the right callback per variant. Test renders updated to pass required callbacks (typecheck immediately caught the missing ones — exactly the failure mode we wanted). |
+| MED | Gemini | Idle/prompt/requesting flicker in client shell — users saw "Loading…" then "Finding leads near you…" as two distinct frames. | f619814 | Collapsed three states into one render branch. |
+| MED | Gemini | Cap banner hardcoded `15` for page size — would lie if `DEFAULT_FEED_LIMIT` ever changes. | f619814 | Imported `DEFAULT_FEED_LIMIT` from get-lead-feed.ts. |
+| LOW | Gemini | Magic number `5` for radius increment in EmptyLeadState. | f619814 | Extracted `RADIUS_INCREMENT_KM = 5` constant. |
+| CRITICAL | DeepSeek | Page cap race: pageCount reaches MAX_PAGES but hasMore is briefly stale, allowing one extra fetchNextPage | n/a | FALSE ALARM — `pageCount` and `hasMore` are computed in the SAME render from the same source (`query.data?.pages.length`). Synchronously consistent. No race. |
+| HIGH | DeepSeek | navigator.onLine SSR hydration mismatch — React will throw a hydration error | n/a | FALSE ALARM verified by independent reviewer (PASS w/confidence 82). The `isError` branch only fires post-hydration; LeadFeed is a Client Component anyway. Latent hazard if branch ever moves outside isError — flagged as future hardening (use useSyncExternalStore). |
+| HIGH | DeepSeek | `query.isPending && !query.data` returns full feed instead of skeletons during pull-to-refresh | n/a | FALSE ALARM — `isPending` is only true on initial mount with no data. Refetch sets `isFetching` not `isPending`. The existing guard is correct. |
+| MED | DeepSeek | Many networks return navigator.onLine===true but block API calls — mislabels network failures as server outages | n/a | MISREAD — that's exactly what the 'unreachable' variant means in our code. Already handled. |
+| MED | DeepSeek | Telemetry effect deps cause unnecessary re-runs (items.length, pageCount in deps) | n/a | DEFENSIBLE — deps required so captureEvent emits FRESH `items.length`/`pageCount` values when the quad first matches. Removing them would close over stale values. The early-return guard makes the noise harmless. |
+| LOW | DeepSeek | `query.refetch()` refetches all pages, not just first — perf concern | n/a | DEFENSIBLE — that IS the correct pull-to-refresh semantic. User pulls, gets fresh versions of pages they've loaded. |
+| LOW | DeepSeek | flatMap assumes every page has `data` property — defensive check needed | n/a | DEFENSIBLE — Zod schema + mapRow guarantee shape. Over-defensive. |
+| MED | Gemini | useEffect with `request` dependency could infinite loop if request isn't memoized | n/a | FALSE ALARM verified — `useGeolocation` already memoizes `request` via `useCallback([], [])`. Independent reviewer also verified PASS. |
+| NIT | Gemini | Items array recomputed on every render — should useMemo | n/a | DEFENSIBLE — premature optimization. flatMap on a 75-item array max is microseconds. |
+| LOW | Gemini | Pull-to-refresh threshold 80px would fire on desktop mouse drag | n/a | FALSE ALARM — `react-infinite-scroll-component`'s pullDownToRefresh is gated to touch events only (touchstart/touchmove/touchend). Desktop mouse drag does not trigger it. |
