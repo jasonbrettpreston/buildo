@@ -81,14 +81,6 @@ export function SaveButton({
   onSaveChange,
 }: SaveButtonProps) {
   const [saved, setSaved] = useState(initialSaved);
-  // Sync local state with the parent prop. Without this, parent
-  // refetches that change `initialSaved` (e.g., refreshing the feed
-  // after a mutation elsewhere) would leave SaveButton with stale
-  // state — a controlled/uncontrolled anti-pattern flagged by Gemini
-  // Phase 3-ii adversarial review (CRITICAL).
-  useEffect(() => {
-    setSaved(initialSaved);
-  }, [initialSaved]);
 
   // Gate the Motion animation on USER interaction only. Without this,
   // a parent refetch that flips `initialSaved` would trigger the
@@ -96,6 +88,26 @@ export function SaveButton({
   // Phase 3-ii adversarial review (MED).
   const userInteractedRef = useRef(false);
   const mutation = useLeadView();
+
+  // Sync local state with the parent prop. Without this, parent
+  // refetches that change `initialSaved` (e.g., refreshing the feed
+  // after a mutation elsewhere) would leave SaveButton with stale
+  // state — a controlled/uncontrolled anti-pattern flagged by Gemini
+  // Phase 3-ii adversarial review (CRITICAL).
+  //
+  // The `mutation.isPending` gate is a Phase 3-vi addition: when the
+  // user clicks Save and immediately pulls to refresh, the parent
+  // refetch can arrive with a stale `is_saved: false` (from the
+  // pre-mutation snapshot) BEFORE the mutation resolves. Without
+  // the gate, the sync would clobber the optimistic state and the
+  // heart would flicker unsaved → saved → unsaved → saved as the
+  // refetch + mutation race. Gating on !isPending preserves the
+  // optimistic state until the mutation resolves; the next refetch
+  // after that point will have the canonical server value.
+  useEffect(() => {
+    if (mutation.isPending) return;
+    setSaved(initialSaved);
+  }, [initialSaved, mutation.isPending]);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();

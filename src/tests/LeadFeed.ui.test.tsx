@@ -182,6 +182,7 @@ const samplePermit: PermitLeadFeedItem = {
   neighbourhood_name: 'High Park',
   cost_tier: 'large',
   estimated_cost: 750000,
+  is_saved: false,
 };
 
 const sampleBuilder: BuilderLeadFeedItem = {
@@ -205,6 +206,7 @@ const sampleBuilder: BuilderLeadFeedItem = {
   timing_display: 'Active build phase',
   active_permits_nearby: 4,
   avg_project_cost: 425000,
+  is_saved: false,
 };
 
 function pageOf(items: LeadFeedItem[]) {

@@ -107,6 +107,7 @@ const baseLead: PermitLeadFeedItem = {
   neighbourhood_name: 'High Park',
   cost_tier: 'large',
   estimated_cost: 750000,
+  is_saved: false,
 };
 
 beforeEach(() => {
@@ -327,6 +328,36 @@ describe('PermitLeadCard — telemetry + interaction', () => {
 
     fireEvent.pointerLeave(card);
     expect(useLeadFeedState.getState().hoveredLeadId).toBeNull();
+  });
+});
+
+describe('PermitLeadCard — is_saved pass-through (Phase 3-vi)', () => {
+  it('passes is_saved=false → SaveButton renders unsaved heart', () => {
+    render(<PermitLeadCard lead={baseLead} tradeSlug="plumbing" />);
+    expect(screen.getByText('Save')).toBeDefined();
+    expect(screen.queryByText('Saved')).toBeNull();
+  });
+
+  it('passes is_saved=true → SaveButton renders saved heart', () => {
+    render(
+      <PermitLeadCard
+        lead={{ ...baseLead, is_saved: true }}
+        tradeSlug="plumbing"
+      />,
+    );
+    expect(screen.getByText('Saved')).toBeDefined();
+    expect(screen.queryByText(/^Save$/)).toBeNull();
+  });
+
+  it('SaveButton aria-pressed reflects is_saved', () => {
+    render(
+      <PermitLeadCard
+        lead={{ ...baseLead, is_saved: true }}
+        tradeSlug="plumbing"
+      />,
+    );
+    const saveBtn = screen.getByRole('button', { name: 'Save lead' });
+    expect(saveBtn.getAttribute('aria-pressed')).toBe('true');
   });
 });
 

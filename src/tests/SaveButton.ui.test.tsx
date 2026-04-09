@@ -297,6 +297,59 @@ describe('SaveButton — double-click guard', () => {
     render(<SaveButton {...permitProps} />);
     expect(screen.getByRole('button').hasAttribute('disabled')).toBe(true);
   });
+
+  // Phase 3-vi regression lock: the `mutation.isPending` gate in the
+  // initialSaved-sync useEffect must preserve the optimistic state
+  // when a parent refetch arrives mid-mutation. Pre-fix, the useEffect
+  // unconditionally called `setSaved(initialSaved)` on every prop
+  // change, which would clobber the optimistic flip and cause the
+  // heart to flicker (saved → unsaved → saved as the refetch +
+  // mutation race resolved). Independent reviewer Issue 2 caught the
+  // missing test for this central behavior.
+  it('Phase 3-vi: in-flight mutation gates the initialSaved sync (no flicker on refetch race)', () => {
+    isPending = true;
+    // Render with initialSaved=true (server says saved). User HASN'T
+    // clicked yet — the optimistic flip has not happened — but the
+    // mutation is hypothetically in-flight from a previous click on
+    // a different SaveButton instance, OR the parent re-rendered.
+    // The useEffect must NOT re-fire setSaved during the in-flight
+    // window because doing so would clobber any in-progress
+    // optimistic update.
+    const { rerender } = render(
+      <SaveButton {...permitProps} initialSaved={true} />,
+    );
+    expect(screen.getByText('Saved')).toBeDefined();
+
+    // Parent refetch arrives with stale `is_saved=false` (the
+    // pre-mutation snapshot from the server, before the user's
+    // save committed). Without the gate, the useEffect would fire
+    // setSaved(false) and flip the heart to "Save". With the gate,
+    // it stays "Saved".
+    rerender(<SaveButton {...permitProps} initialSaved={false} />);
+    // The heart MUST stay on "Saved" because isPending=true gates
+    // the sync.
+    expect(screen.getByText('Saved')).toBeDefined();
+
+    // Mutation resolves — isPending flips to false. Next refetch
+    // arrives with the canonical post-mutation value.
+    isPending = false;
+    rerender(<SaveButton {...permitProps} initialSaved={true} />);
+    // Now the sync fires (isPending is false), and the canonical
+    // value matches what we already showed → still "Saved".
+    expect(screen.getByText('Saved')).toBeDefined();
+  });
+
+  it('Phase 3-vi: when isPending is false, initialSaved changes ARE synced (no permanent divergence)', () => {
+    isPending = false;
+    const { rerender } = render(
+      <SaveButton {...permitProps} initialSaved={false} />,
+    );
+    expect(screen.getByText('Save')).toBeDefined();
+
+    // Parent prop change with isPending=false → sync fires immediately
+    rerender(<SaveButton {...permitProps} initialSaved={true} />);
+    expect(screen.getByText('Saved')).toBeDefined();
+  });
 });
 
 describe('SaveButton — input validation unhappy paths', () => {

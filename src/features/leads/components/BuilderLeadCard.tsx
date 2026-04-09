@@ -222,6 +222,7 @@ function BuilderLeadCardComponent({ lead, tradeSlug }: BuilderLeadCardProps) {
           leadType="builder"
           tradeSlug={tradeSlug}
           entityId={lead.entity_id}
+          initialSaved={lead.is_saved}
         />
       </div>
     </MotionCard>

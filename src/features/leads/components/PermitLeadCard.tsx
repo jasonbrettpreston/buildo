@@ -287,6 +287,7 @@ function PermitLeadCardComponent({ lead, tradeSlug }: PermitLeadCardProps) {
           tradeSlug={tradeSlug}
           permitNum={lead.permit_num}
           revisionNum={lead.revision_num}
+          initialSaved={lead.is_saved}
         />
         {directionsHref && (
           <Button asChild variant="ghost" size="default" className="flex-1">

@@ -120,6 +120,13 @@ interface LeadFeedItemBase {
   // and overlaid via the useLeadView mutation response — no schema
   // change needed when that lands.
   timing_display: string;
+  // Phase 3-vi: saved-state for the current user. Pre-fix, the
+  // SaveButton.initialSaved prop defaulted to false because this
+  // field didn't exist — every refetch / page reload reset every
+  // heart in the feed regardless of what lead_views.saved said
+  // server-side. Sourced via LEFT JOIN to lead_views in
+  // get-lead-feed.ts (COALESCE/bool_or to false for unviewed leads).
+  is_saved: boolean;
 }
 
 export interface PermitLeadFeedItem extends LeadFeedItemBase {

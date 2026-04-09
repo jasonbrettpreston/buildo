@@ -232,6 +232,53 @@ describe('LEAD_FEED_SQL — structure', () => {
     expect(LEAD_FEED_SQL).toMatch(/\(website IS NOT NULL OR primary_phone IS NOT NULL\)/);
   });
 
+  // ---- Phase 3-vi: is_saved projection (saved-state survives refetch) ----
+  it('LEFT JOINs lead_views lv_p in permit_candidates with lead_key equality (Issue 1 fix)', () => {
+    expect(LEAD_FEED_SQL).toMatch(/LEFT JOIN lead_views lv_p/);
+    expect(LEAD_FEED_SQL).toMatch(/lv_p\.user_id = \$9/);
+    // CRITICAL: lead_key equality matches the actual UNIQUE index on
+    // lead_views(user_id, lead_key, trade_slug). The decomposed
+    // (permit_num, revision_num) pair is NOT a unique key — pre-LPAD
+    // normalization rows could collide. Independent reviewer Issue 1.
+    expect(LEAD_FEED_SQL).toMatch(
+      /lv_p\.lead_key = \(p\.permit_num \|\| ':' \|\| LPAD\(p\.revision_num, 2, '0'\)\)/,
+    );
+    expect(LEAD_FEED_SQL).toMatch(/lv_p\.permit_num = p\.permit_num/);
+    expect(LEAD_FEED_SQL).toMatch(/lv_p\.revision_num = p\.revision_num/);
+    expect(LEAD_FEED_SQL).toMatch(/lv_p\.trade_slug = \$1/);
+    expect(LEAD_FEED_SQL).toMatch(/lv_p\.lead_type = 'permit'/);
+  });
+
+  it('LEFT JOINs lead_views lv_b in builder_candidates with lead_key equality (Issue 1 fix)', () => {
+    expect(LEAD_FEED_SQL).toMatch(/LEFT JOIN lead_views lv_b/);
+    expect(LEAD_FEED_SQL).toMatch(/lv_b\.user_id = \$9/);
+    // Same lead_key safety pattern — builder lead_keys are entity_id::text
+    expect(LEAD_FEED_SQL).toMatch(/lv_b\.lead_key = e\.id::text/);
+    expect(LEAD_FEED_SQL).toMatch(/lv_b\.entity_id = e\.id/);
+    expect(LEAD_FEED_SQL).toMatch(/lv_b\.trade_slug = \$1/);
+    expect(LEAD_FEED_SQL).toMatch(/lv_b\.lead_type = 'builder'/);
+  });
+
+  it('projects is_saved on permit_candidates via COALESCE(lv_p.saved, false)', () => {
+    expect(LEAD_FEED_SQL).toMatch(/COALESCE\(lv_p\.saved, false\) AS is_saved/);
+  });
+
+  it('projects is_saved on builder_candidates via bool_or aggregate', () => {
+    // bool_or defends against multiple matching lead_views rows even
+    // though the UNIQUE constraint on (user_id, lead_key, trade_slug)
+    // currently guarantees at most one. Future-proof.
+    expect(LEAD_FEED_SQL).toMatch(/COALESCE\(bool_or\(lv_b\.saved\), false\) AS is_saved/);
+  });
+
+  it('passes user_id as $9 parameter to LEAD_FEED_SQL', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    await getLeadFeed(makeInput({ user_id: 'firebase-uid-test-9' }), mock as unknown as Pool);
+    const params = mock.query.mock.calls[0]?.[1];
+    expect(params).toBeDefined();
+    expect(params[8]).toBe('firebase-uid-test-9');
+  });
+
   it('mirrors widened columns as NULL on the other branch (UNION ALL shape)', () => {
     // Permit branch must NULL out builder-only stats
     expect(LEAD_FEED_SQL).toMatch(/NULL::int\s+AS active_permits_nearby/);
@@ -276,6 +323,7 @@ const samplePermitRow = {
   estimated_cost: 750000,
   active_permits_nearby: null,
   avg_project_cost: null,
+  is_saved: false,
   entity_id: null,
   legal_name: null,
   business_size: null,
@@ -315,6 +363,7 @@ const sampleBuilderRow = {
   estimated_cost: null,
   active_permits_nearby: 4,
   avg_project_cost: 425000,
+  is_saved: false,
   entity_id: 9183,
   legal_name: 'ACME CONSTRUCTION',
   business_size: 'Small Business',
@@ -601,6 +650,26 @@ describe('mapRow — widened columns', () => {
     if (item?.lead_type === 'builder') {
       expect(item.active_permits_nearby).toBe(0);
     }
+  });
+
+  it('passes is_saved through to mapRow on permit branch (Phase 3-vi)', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, is_saved: true }]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    expect(item?.is_saved).toBe(true);
+  });
+
+  it('passes is_saved through to mapRow on builder branch (Phase 3-vi)', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...sampleBuilderRow, is_saved: true }]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    expect(item?.is_saved).toBe(true);
   });
 
   it('synthesizes timing_display from confidence on every row', async () => {

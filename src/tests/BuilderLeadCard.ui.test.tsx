@@ -93,6 +93,7 @@ const baseLead: BuilderLeadFeedItem = {
   timing_display: 'Active build phase',
   active_permits_nearby: 4,
   avg_project_cost: 425000,
+  is_saved: false,
 };
 
 beforeEach(() => {
@@ -308,6 +309,25 @@ describe('BuilderLeadCard — telemetry', () => {
     const calls = captureEventMock.mock.calls.map((c) => c[0]);
     expect(calls).toContain('lead_feed.builder_website_opened');
     expect(calls).not.toContain('lead_feed.lead_clicked');
+  });
+});
+
+describe('BuilderLeadCard — is_saved pass-through (Phase 3-vi)', () => {
+  it('passes is_saved=false → SaveButton renders unsaved heart', () => {
+    render(<BuilderLeadCard lead={baseLead} tradeSlug="plumbing" />);
+    expect(screen.getByText('Save')).toBeDefined();
+    expect(screen.queryByText('Saved')).toBeNull();
+  });
+
+  it('passes is_saved=true → SaveButton renders saved heart', () => {
+    render(
+      <BuilderLeadCard
+        lead={{ ...baseLead, is_saved: true }}
+        tradeSlug="plumbing"
+      />,
+    );
+    expect(screen.getByText('Saved')).toBeDefined();
+    expect(screen.queryByText(/^Save$/)).toBeNull();
   });
 });
 

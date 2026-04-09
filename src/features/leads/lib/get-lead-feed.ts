@@ -115,6 +115,14 @@ export const LEAD_FEED_SQL = `
       ce.estimated_cost::float8 AS estimated_cost,
       NULL::int        AS active_permits_nearby,
       NULL::float8     AS avg_project_cost,
+      -- Phase 3-vi: project the user's saved-state for this lead.
+      -- Pre-fix, SaveButton.initialSaved defaulted to false because
+      -- LeadFeedItem had no is_saved field — every refetch / page
+      -- reload reset every heart in the feed regardless of what
+      -- lead_views.saved said server-side. The LEFT JOIN to lv_p
+      -- below produces NULL when the user has never viewed/saved
+      -- this lead → COALESCE coerces to false.
+      COALESCE(lv_p.saved, false) AS is_saved,
       NULL::int  AS entity_id,
       NULL::text AS legal_name,
       NULL::text AS business_size,
@@ -191,6 +199,27 @@ export const LEAD_FEED_SQL = `
     -- permits the geocoder failed to bucket. neighbourhoods.neighbourhood_id
     -- is UNIQUE (migration 013 line 3) so this JOIN cannot multiply rows.
     LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
+    -- Phase 3-vi saved-state JOIN: lead_views is UNIQUE on
+    -- (user_id, lead_key, trade_slug) per migration 070 line 28.
+    -- The JOIN MUST match on lead_key to use the actual unique
+    -- index — the decomposed (permit_num, revision_num) pair is
+    -- NOT a unique key, and pre-LPAD-normalization rows could
+    -- coexist with lead_key=24-101234-1 and 24-101234-01 for the
+    -- same (permit_num=24 101234, revision_num=1),
+    -- which would multiply the permit row 2x without the lead_key
+    -- equality. The decomposed-column predicates remain for
+    -- index selectivity (idx_lead_views_user_viewed). Independent
+    -- reviewer Issue 1 caught the original JOIN's incorrect safety
+    -- claim. The lead_type='permit' guard is defense-in-depth
+    -- against a future schema where permit_num could collide with
+    -- an entity_id by accident.
+    LEFT JOIN lead_views lv_p
+      ON lv_p.user_id = $9::text
+     AND lv_p.lead_key = (p.permit_num || ':' || LPAD(p.revision_num, 2, '0'))
+     AND lv_p.permit_num = p.permit_num
+     AND lv_p.revision_num = p.revision_num
+     AND lv_p.trade_slug = $1
+     AND lv_p.lead_type = 'permit'
     WHERE t.slug = $1
       AND pt.is_active = true
       AND pt.confidence >= 0.5
@@ -246,6 +275,13 @@ export const LEAD_FEED_SQL = `
           CASE WHEN p.est_const_cost > 1000 THEN p.est_const_cost::float8 ELSE NULL END
         ) > 0)
         AS avg_project_cost,
+      -- Phase 3-vi saved-state — bool_or aggregate (instead of plain
+      -- COALESCE on the JOIN column) because the builder CTE has a
+      -- GROUP BY. lead_views is UNIQUE on (user_id, entity_id+lead_key,
+      -- trade_slug) so bool_or is structurally always single-value, but
+      -- using the aggregate keeps the SQL future-proof against a UNIQUE
+      -- constraint relaxation.
+      COALESCE(bool_or(lv_b.saved), false) AS is_saved,
       e.id          AS entity_id,
       e.legal_name,
       w.business_size,
@@ -340,6 +376,21 @@ export const LEAD_FEED_SQL = `
     LEFT JOIN cost_estimates ce_b
       ON ce_b.permit_num = p.permit_num
      AND ce_b.revision_num = p.revision_num
+    -- Phase 3-vi saved-state JOIN — same lead_key safety pattern as
+    -- the permit branch. Builder lead_keys are the entity_id
+    -- stringified per buildLeadKey() in record-lead-view.ts. Using
+    -- both the lead_key equality (matches the unique index) AND the
+    -- decomposed entity_id predicate (selectivity via the
+    -- idx_lead_views_user_viewed index path). The bool_or
+    -- aggregation in the SELECT collapses duplicates from the
+    -- post-JOIN cross product (every permit row for the same
+    -- builder sees the same lv_b row repeated).
+    LEFT JOIN lead_views lv_b
+      ON lv_b.user_id = $9::text
+     AND lv_b.lead_key = e.id::text
+     AND lv_b.entity_id = e.id
+     AND lv_b.trade_slug = $1
+     AND lv_b.lead_type = 'builder'
     WHERE p.location IS NOT NULL
       AND p.status IN ('Permit Issued', 'Inspection')
       AND ST_DWithin(p.location::geography, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)
@@ -384,6 +435,7 @@ interface LeadFeedRow {
   estimated_cost: number | string | null;
   active_permits_nearby: number | null;
   avg_project_cost: number | string | null;
+  is_saved: boolean;
   entity_id: number | null;
   legal_name: string | null;
   business_size: string | null;
@@ -472,6 +524,11 @@ function mapRow(row: LeadFeedRow): LeadFeedItem | null {
     // Synthetic Phase 3-iii display string. See TIMING_DISPLAY_BY_CONFIDENCE
     // header above for the rationale (heavy engine deferred to detail view).
     timing_display: TIMING_DISPLAY_BY_CONFIDENCE[row.timing_confidence],
+    // Phase 3-vi: saved-state from lead_views (per current user).
+    // The SQL projects this from a LEFT JOIN to lead_views with
+    // COALESCE/bool_or fallback to false, so the row value is
+    // ALWAYS a boolean — no narrowing needed here.
+    is_saved: row.is_saved,
   };
 
   if (row.lead_type === 'permit') {
@@ -562,6 +619,7 @@ export async function getLeadFeed(
       input.cursor?.score ?? null,
       input.cursor?.lead_type ?? null,
       input.cursor?.lead_id ?? null,
+      input.user_id, // $9 — Phase 3-vi: keyed for the lead_views LEFT JOIN
     ];
 
     const res = await pool.query<LeadFeedRow>(LEAD_FEED_SQL, params);

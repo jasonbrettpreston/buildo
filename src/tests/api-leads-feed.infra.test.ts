@@ -91,6 +91,7 @@ const sampleResult = {
       neighbourhood_name: 'High Park',
       cost_tier: 'large' as const,
       estimated_cost: 750000,
+      is_saved: false,
     },
   ],
   meta: {
