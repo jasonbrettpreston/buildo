@@ -9,8 +9,17 @@ import type { NextRequest } from 'next/server';
 import { logError, logWarn } from '@/lib/logger';
 
 // Lazy-import firebase-admin so dev without admin keys doesn't crash on import.
-export async function getUserIdFromSession(request: NextRequest): Promise<string | null> {
-  const cookie = request.cookies.get('__session')?.value;
+/**
+ * Verify a raw `__session` cookie value via Firebase Admin. Returns the
+ * uid on success, null on any failure (missing, malformed, expired,
+ * revoked, admin SDK uninitialized). Extracted from getUserIdFromSession
+ * in Phase 3-iv so Server Components can call it directly with
+ * `cookies().get('__session')?.value` from `next/headers` — they don't
+ * have access to the NextRequest object that the API-route variant takes.
+ */
+export async function verifySessionCookie(
+  cookie: string | undefined,
+): Promise<string | null> {
   if (!cookie) return null;
   // Quick shape check: must look like a JWT (3 segments)
   if (cookie.split('.').length !== 3) return null;
@@ -45,4 +54,8 @@ export async function getUserIdFromSession(request: NextRequest): Promise<string
     logError('[auth/get-user]', err, { stage: 'verifyIdToken' });
     return null;
   }
+}
+
+export async function getUserIdFromSession(request: NextRequest): Promise<string | null> {
+  return verifySessionCookie(request.cookies.get('__session')?.value);
 }

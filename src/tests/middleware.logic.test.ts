@@ -76,6 +76,9 @@ describe('Route Classification', () => {
       expect(classifyRoute('/dashboard/leads')).toBe('authenticated');
       expect(classifyRoute('/onboarding')).toBe('authenticated');
       expect(classifyRoute('/onboarding/step-2')).toBe('authenticated');
+      // Phase 3-iv: lead feed page
+      expect(classifyRoute('/leads')).toBe('authenticated');
+      expect(classifyRoute('/leads/123')).toBe('authenticated');
     });
 
     it('classifies search and map pages as public', () => {

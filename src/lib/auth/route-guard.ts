@@ -103,8 +103,13 @@ export function classifyRoute(pathname: string): RouteClass {
   // Exact public paths
   if ((PUBLIC_PATHS as readonly string[]).includes(pathname)) return 'public';
 
-  // Protected pages: dashboard, onboarding
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')) {
+  // Protected pages: dashboard, onboarding, leads (Phase 3-iv)
+  if (
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/onboarding') ||
+    pathname === '/leads' ||
+    pathname.startsWith('/leads/')
+  ) {
     return 'authenticated';
   }
 
