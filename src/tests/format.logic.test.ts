@@ -64,9 +64,14 @@ describe('formatCostDisplay', () => {
     expect(formatCostDisplay(1_000_000, 'mega')).toBe('$1.0M');
   });
 
-  it('formats >= $1K rounded to thousands', () => {
+  it('formats >= $1K floored to thousands (avoids $1000K glitch at M boundary)', () => {
     expect(formatCostDisplay(750_000, 'large')).toBe('$750K');
-    expect(formatCostDisplay(125_500, 'medium')).toBe('$126K');
+    // Phase 3-holistic WF3 Phase F: floor, not round. 125_500 → 125,
+    // not 126. Prevents the 999_500 → $1000K nonsense at the M edge.
+    expect(formatCostDisplay(125_500, 'medium')).toBe('$125K');
+    expect(formatCostDisplay(999_500, 'major')).toBe('$999K');
+    expect(formatCostDisplay(999_999, 'major')).toBe('$999K');
+    expect(formatCostDisplay(1_000_000, 'mega')).toBe('$1.0M');
   });
 
   it('formats < $1K as raw dollars', () => {

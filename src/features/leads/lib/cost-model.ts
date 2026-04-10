@@ -315,11 +315,14 @@ function buildDisplay(
   }
 
   parts.push(tierDisplay(tier));
-  // "Premium neighbourhood" threshold = PREMIUM_TIERS[2].multiplier
-  // (the $100k-$150k income band). Referenced by index, not hardcoded,
-  // so the label auto-tracks any future spec 72 tier adjustment.
-  // Caught by Phase 0-3 comprehensive review (DeepSeek Phase 1 HIGH).
-  const PREMIUM_LABEL_THRESHOLD = PREMIUM_TIERS[2]?.multiplier ?? 1.35;
+  // "Premium neighbourhood" threshold = the $100k-$150k income band's
+  // multiplier. Phase 3-holistic WF3 Phase F (Gemini Phase 0-3 HIGH):
+  // the previous implementation used `PREMIUM_TIERS[2]` which silently
+  // points to whatever row is third — reordering or inserting a tier
+  // would shift the label to the wrong band. Looking up by the exact
+  // income band anchors the threshold semantically.
+  const PREMIUM_LABEL_BAND = PREMIUM_TIERS.find((t) => t.min === 100_000);
+  const PREMIUM_LABEL_THRESHOLD = PREMIUM_LABEL_BAND?.multiplier ?? 1.35;
   if (premiumFactor >= PREMIUM_LABEL_THRESHOLD) parts.push('Premium neighbourhood');
   if (complexityScore >= 40) parts.push('Complex scope');
 

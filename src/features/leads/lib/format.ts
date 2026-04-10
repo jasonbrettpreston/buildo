@@ -71,9 +71,13 @@ export function formatCostDisplay(
       return `$${(estimatedCost / 1_000_000).toFixed(1)}M`;
     }
     if (estimatedCost >= 1_000) {
-      return `$${Math.round(estimatedCost / 1_000)}K`;
+      // Phase 3-holistic WF3 Phase F (2026-04-09, Independent reviewer
+      // Phase 0-3 I1): use Math.floor, not Math.round. Math.round on
+      // 999_500 → 1000 → "$1000K", which is incoherent at the $1M
+      // boundary. Math.floor on the same value → 999 → "$999K".
+      return `$${Math.floor(estimatedCost / 1_000)}K`;
     }
-    return `$${Math.round(estimatedCost)}`;
+    return `$${Math.floor(estimatedCost)}`;
   }
   if (tier === null) return null;
   const labels: Record<typeof tier & string, string> = {
