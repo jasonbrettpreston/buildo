@@ -50,6 +50,7 @@ vi.mock('motion/react', () => ({
       },
     },
   ),
+  useReducedMotion: () => false,
 }));
 
 // Mock useLeadView (consumed transitively by SaveButton inside the card)

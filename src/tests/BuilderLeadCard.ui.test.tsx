@@ -47,6 +47,7 @@ vi.mock('motion/react', () => ({
       },
     },
   ),
+  useReducedMotion: () => false,
 }));
 
 const mutateMock = vi.fn();

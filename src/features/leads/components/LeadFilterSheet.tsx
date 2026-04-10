@@ -96,7 +96,10 @@ export function LeadFilterSheet({ open, onOpenChange }: LeadFilterSheetProps) {
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent>
+      {/* Phase 3-holistic WF3 Phase D (Independent reviewer I3):
+          id matches `aria-controls` on the LeadFeedHeader trigger so
+          assistive tech knows which element the button opens. */}
+      <DrawerContent id="lead-filter-sheet">
         <DrawerHeader>
           <DrawerTitle>Filters</DrawerTitle>
           <DrawerDescription>
@@ -119,6 +122,11 @@ export function LeadFilterSheet({ open, onOpenChange }: LeadFilterSheetProps) {
               value={String(radiusKm)}
               onValueChange={handleRadiusChange}
               aria-label="Search radius in kilometres"
+              // Phase 3-holistic WF3 Phase D (Independent reviewer
+              // Phase 3 I2): 5 min-h-11 ToggleGroupItems + gaps exceed
+              // the drawer's usable width at 320px (iPhone SE). Without
+              // `flex-wrap` the last item clips off the right edge.
+              className="flex-wrap gap-2"
             >
               {RADIUS_OPTIONS.map((km) => (
                 <ToggleGroupItem

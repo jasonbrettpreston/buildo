@@ -69,6 +69,12 @@ export function LeadFeedHeader({ leadCount }: LeadFeedHeaderProps) {
             // it with a generic string. Gemini holistic review caught
             // this. aria-expanded announces the sheet state for AT.
             aria-expanded={filterOpen}
+            // Phase 3-holistic WF3 Phase D (Independent reviewer
+            // Phase 3 I3): link the button to the DrawerContent so
+            // AT knows which element opens. `aria-haspopup="dialog"`
+            // announces it as a modal rather than a menu.
+            aria-controls="lead-filter-sheet"
+            aria-haspopup="dialog"
           >
             <MapPinIcon
               className="h-4 w-4 text-amber-hardhat"

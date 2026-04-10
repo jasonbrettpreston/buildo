@@ -65,6 +65,11 @@ vi.mock('motion/react', () => ({
       },
     },
   ),
+  // Phase 3-holistic WF3 Phase D: components now read
+  // useReducedMotion() — return `false` so test renders the
+  // animated branch by default. Tests that need the reduced
+  // branch can re-mock per-suite.
+  useReducedMotion: () => false,
 }));
 
 // Mock useLeadView BEFORE importing SaveButton so the mock is in place.

@@ -21,8 +21,8 @@
 
 import { HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
-import { motion } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { LeadApiClientError } from '@/features/leads/api/types';
 import { useLeadView } from '@/features/leads/api/useLeadView';
@@ -88,6 +88,38 @@ export function SaveButton({
   // Phase 3-ii adversarial review (MED).
   const userInteractedRef = useRef(false);
   const mutation = useLeadView();
+
+  // Phase 3-holistic WF3 Phase D (2026-04-09): honour the OS
+  // `prefers-reduced-motion` setting. WCAG 2.1 Success Criterion 2.3.3.
+  // When reduced, we disable BOTH the pulse `animate` and the
+  // `whileTap` spring so the button is entirely static. Independent
+  // reviewer Phase 3 I1.
+  const reduceMotion = useReducedMotion();
+
+  // Phase 3-holistic WF3 Phase D (Independent reviewer Phase 3 I4):
+  // memoize the animate/whileTap/transition props so Motion doesn't
+  // see a new object identity on every render. Previously the inline
+  // object literals forced Motion to re-evaluate targets each tick.
+  const animateProp = useMemo(() => {
+    if (reduceMotion) return { scale: 1 };
+    return userInteractedRef.current && saved ? { scale: [1, 1.3, 1] } : { scale: 1 };
+    // userInteractedRef is a ref read at render time — the deps list
+    // intentionally omits it because refs don't participate in React's
+    // reactivity model. `saved` flipping (via setSaved) forces the
+    // re-render that reads the updated ref.
+     
+  }, [saved, reduceMotion]);
+  const whileTapProp = useMemo(
+    () => (reduceMotion ? { scale: 1 } : { scale: 0.9 }),
+    [reduceMotion],
+  );
+  const transitionProp = useMemo(
+    () =>
+      reduceMotion
+        ? { duration: 0 }
+        : { type: 'spring' as const, stiffness: 400, damping: 20, mass: 1 },
+    [reduceMotion],
+  );
 
   // Sync local state with the parent prop. Without this, parent
   // refetches that change `initialSaved` (e.g., refreshing the feed
@@ -231,9 +263,9 @@ export function SaveButton({
       onClick={handleClick}
       disabled={mutation.isPending}
       className="flex-1"
-      animate={userInteractedRef.current && saved ? { scale: [1, 1.3, 1] } : { scale: 1 }}
-      whileTap={{ scale: 0.9 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 20, mass: 1 }}
+      animate={animateProp}
+      whileTap={whileTapProp}
+      transition={transitionProp}
       // Stable aria-label + aria-pressed is the WCAG-preferred toggle
       // button pattern: the label describes the control ("Save lead"),
       // aria-pressed carries the state. A changing aria-label in

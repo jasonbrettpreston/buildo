@@ -26,7 +26,7 @@
 // Frontend Mode rule 4 (AST-grep enforced).
 
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { memo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -94,6 +94,11 @@ function PermitLeadCardComponent({ lead, tradeSlug }: PermitLeadCardProps) {
   const selectedLeadId = useLeadFeedState((s) => s.selectedLeadId);
   const setSelectedLeadId = useLeadFeedState((s) => s.setSelectedLeadId);
   const setHoveredLeadId = useLeadFeedState((s) => s.setHoveredLeadId);
+
+  // Phase 3-holistic WF3 Phase D (Independent reviewer Phase 3 I1):
+  // disable whileTap + spring transition when the OS asks for
+  // reduced motion. WCAG 2.1 Success Criterion 2.3.3.
+  const reduceMotion = useReducedMotion();
 
   const isActive = selectedLeadId === lead.lead_id;
 
@@ -201,8 +206,8 @@ function PermitLeadCardComponent({ lead, tradeSlug }: PermitLeadCardProps) {
       onKeyDown={handleKeyDown}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      whileTap={reduceMotion ? { scale: 1 } : { scale: 0.98 }}
+      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 30 }}
       className={cn(
         'cursor-pointer overflow-hidden border-l-4 p-0',
         border.color,

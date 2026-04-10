@@ -52,6 +52,7 @@ vi.mock('motion/react', () => ({
       },
     },
   ),
+  useReducedMotion: () => false,
 }));
 
 // Mock react-infinite-scroll-component as a pass-through. We expose
