@@ -43,6 +43,8 @@ export async function GET() {
       wsibLeadPoolResult,
       wsibWithTradeResult,
       permitsPropagatedResult,
+      leadViewsTotalResult,
+      leadViewsSavedResult,
     ] = await Promise.all([
       query<{ count: string }>(
         'SELECT COUNT(*)::text AS count FROM permits'
@@ -169,6 +171,13 @@ export async function GET() {
       // Permits with propagated scope tags (link_similar baseline)
       query<{ count: string }>(
         `SELECT COUNT(*)::text AS count FROM permits WHERE scope_source = 'propagated'`
+      ).catch(() => [{ count: '0' }]),
+      // Lead views engagement
+      query<{ count: string }>(
+        'SELECT COUNT(*)::text AS count FROM lead_views'
+      ).catch(() => [{ count: '0' }]),
+      query<{ count: string }>(
+        'SELECT COUNT(*)::text AS count FROM lead_views WHERE saved = true'
       ).catch(() => [{ count: '0' }]),
     ]);
 
@@ -324,7 +333,8 @@ export async function GET() {
          WHERE relname = ANY($1) AND relkind = 'r'`,
         [['permits', 'entities', 'coa_applications', 'parcels', 'address_points',
           'building_footprints', 'neighbourhoods', 'permit_trades', 'permit_parcels',
-          'parcel_buildings', 'wsib_registry', 'data_quality_snapshots', 'pipeline_runs']]
+          'parcel_buildings', 'wsib_registry', 'data_quality_snapshots', 'pipeline_runs',
+          'lead_views', 'cost_estimates', 'timing_calibration']]
       );
       for (const row of countRows) {
         liveTableCounts[row.relname] = Math.max(0, parseInt(row.reltuples, 10));
@@ -371,6 +381,9 @@ export async function GET() {
       wsib_lead_pool: p(wsibLeadPoolResult),
       wsib_with_trade: p(wsibWithTradeResult),
       permits_propagated: p(permitsPropagatedResult),
+      // Lead views engagement
+      lead_views_total: p(leadViewsTotalResult),
+      lead_views_saved: p(leadViewsSavedResult),
       // Pipeline freshness
       pipeline_last_run: pipelineLastRun,
       // Pipeline schedules

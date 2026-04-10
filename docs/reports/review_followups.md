@@ -697,3 +697,24 @@ Phase 3-v ships the sticky header chrome + Vaul bottom drawer filter sheet that 
 |----------|--------|------|--------------|--------|
 | LOW | Independent | PostGIS path uses confidence 0.90 vs JS fallback 0.95 for same centroid_in_parcel operation. Undocumented inconsistency. | Future harmonization | OPEN |
 | LOW | Adversarial | Migration 081 repair uses INNER JOIN to building_footprints — would miss orphan FK rows. FK constraint prevents orphans (no CASCADE) so safe in practice. | WONTFIX (FK enforced) | WONTFIX |
+
+## WF1: Lead Feed Health Dashboard — Phase A (2026-04-10)
+
+### Fixed during review
+
+| Source | Issue | Resolution |
+|--------|-------|------------|
+| Independent CRITICAL #1 | `permits_geocoded`/`permits_classified` count ALL permits, not just active — inflates readiness | Fixed — added active status filter to both queries |
+| Independent CRITICAL #2 | `/api/admin/stats` missing `lead_views_total` and `lead_views_saved` | Fixed — added queries + response fields |
+| Independent CRITICAL #3 | `TestFeedDebug` field names don't match spec | Fixed — updated spec to match implementation (`permits_in_results` more accurate than `permits_in_radius`) |
+
+### Deferred items
+
+| Severity | Source | Item | Planned home | Status |
+|----------|--------|------|--------------|--------|
+| HIGH | Adversarial | `saves_today` counts `viewed_at >= CURRENT_DATE AND saved=true`, not actual save timestamp. `lead_views` has no `saved_at` column — needs schema change for accurate engagement metrics. | WF2 migration + schema | OPEN |
+| HIGH | Adversarial | Admin auth is cookie-shape-only (no `getUserIdFromSession` call). Pre-existing across ALL admin routes, not specific to this feature. | Auth hardening WF | OPEN |
+| MEDIUM | Independent | `cost_coverage_in_results` and `timing_tier_distribution` missing from TestFeedDebug — LeadFeedItem doesn't carry the data needed. | Phase B (add fields to LeadFeedItem) | OPEN |
+| MEDIUM | Adversarial | Health endpoint runs 10 unthrottled DB queries per poll cycle, no cache. | Phase B (add 30s server-side cache) | OPEN |
+| LOW | Independent | Median/percentile uses floor-index (biased on even arrays). Test only covers odd-length. | Future hardening | OPEN |
+| LOW | Adversarial | `computeTestFeedDebug` parameter typed as inline object instead of `LeadFeedItem[]`. | Type hygiene | OPEN |

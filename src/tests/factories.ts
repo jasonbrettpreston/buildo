@@ -445,6 +445,14 @@ export function createMockDataQualitySnapshot(
     inspections_outstanding_count: 66,
     inspections_passed_count: 20,
     inspections_not_passed_count: 3,
+    // Lead feed observability (migration 080)
+    cost_estimates_total: null,
+    cost_estimates_from_permit: null,
+    cost_estimates_from_model: null,
+    cost_estimates_null_cost: null,
+    timing_calibration_total: null,
+    timing_calibration_avg_sample: null,
+    timing_calibration_freshness_hours: null,
     created_at: '2024-03-01T06:35:00Z',
     ...overrides,
   };

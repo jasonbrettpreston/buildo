@@ -27,7 +27,7 @@ export default function AdminPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           <Link
             href="/admin/data-quality"
             className="group bg-white rounded-xl border border-gray-200 p-8 hover:border-blue-300 hover:shadow-lg transition-all"
@@ -51,6 +51,19 @@ export default function AdminPage() {
             </h2>
             <p className="text-sm text-gray-500 mt-2">
               Permit trends, trade analysis, and market intelligence
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/lead-feed"
+            className="group bg-white rounded-xl border border-gray-200 p-8 hover:border-blue-300 hover:shadow-lg transition-all"
+          >
+            <div className="text-4xl mb-4">🎯</div>
+            <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+              Lead Feed Health
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              Feed readiness, cost/timing coverage, engagement, and test feed
             </p>
           </Link>
         </div>

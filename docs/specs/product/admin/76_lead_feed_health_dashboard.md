@@ -91,16 +91,17 @@ interface TestFeedResponse {
   meta: { next_cursor: LeadFeedCursor | null; count: number; radius_km: number };
   _debug: {
     query_duration_ms: number;
-    permits_in_radius: number;        // total permits within radius (before scoring)
-    builders_in_radius: number;
+    permits_in_results: number;       // permits in the returned results
+    builders_in_results: number;      // builders in the returned results
     score_distribution: {
       min: number; max: number; median: number; p25: number; p75: number;
-    };
+    } | null;                         // null when results are empty
     pillar_averages: {
       proximity: number; timing: number; value: number; opportunity: number;
-    };
-    cost_coverage_in_results: number; // % of returned permits with non-null cost
-    timing_tier_distribution: { tier1: number; tier2: number; tier3: number };
+    } | null;                         // null when results are empty
+    // Phase B additions (requires LeadFeedItem to carry cost/timing tier data):
+    // cost_coverage_in_results: number;
+    // timing_tier_distribution: { tier1: number; tier2: number; tier3: number };
   };
 }
 ```

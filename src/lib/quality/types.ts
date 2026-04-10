@@ -95,6 +95,15 @@ export interface DataQualitySnapshot {
   inspections_passed_count: number;
   inspections_not_passed_count: number;
 
+  // Lead feed observability (populated by refresh-snapshot.js, migration 080)
+  cost_estimates_total: number | null;
+  cost_estimates_from_permit: number | null;
+  cost_estimates_from_model: number | null;
+  cost_estimates_null_cost: number | null;
+  timing_calibration_total: number | null;
+  timing_calibration_avg_sample: number | null;
+  timing_calibration_freshness_hours: number | null;
+
   created_at: string;
 }
 
