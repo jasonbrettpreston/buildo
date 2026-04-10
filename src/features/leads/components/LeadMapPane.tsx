@@ -36,6 +36,7 @@
 // LeadsClientShell (also a Client Component). The Server Component
 // page.tsx never sees it, so no Maps API call happens during SSR.
 
+import type { MapCameraChangedEvent, MapMouseEvent } from '@vis.gl/react-google-maps';
 // Aliased to GoogleMap to avoid shadowing the JS built-in `Map`
 // global (Biome's noShadowRestrictedNames rule). The default-export
 // shape from @vis.gl/react-google-maps is `Map`; the alias is
@@ -45,10 +46,14 @@ import {
   APIProvider,
   Map as GoogleMap,
 } from '@vis.gl/react-google-maps';
-import { useEffect, useMemo, useRef } from 'react';
-import { useLeadFeed } from '@/features/leads/api/useLeadFeed';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  FORCED_REFETCH_THRESHOLD_M,
+  useLeadFeed,
+} from '@/features/leads/api/useLeadFeed';
 import { LeadMapMarker } from '@/features/leads/components/LeadMapMarker';
 import { useLeadFeedState } from '@/features/leads/hooks/useLeadFeedState';
+import { haversineMeters } from '@/features/leads/lib/haversine';
 import { isLeadActive } from '@/features/leads/lib/marker-state';
 import type { LeadFeedItem, PermitLeadFeedItem } from '@/features/leads/types';
 import { captureEvent } from '@/lib/observability/capture';
@@ -87,6 +92,7 @@ export function LeadMapPane({ tradeSlug, lat, lng }: LeadMapPaneProps) {
   const selectedLeadId = useLeadFeedState((s) => s.selectedLeadId);
   const setHoveredLeadId = useLeadFeedState((s) => s.setHoveredLeadId);
   const setSelectedLeadId = useLeadFeedState((s) => s.setSelectedLeadId);
+  const setSnappedLocation = useLeadFeedState((s) => s.setSnappedLocation);
 
   // The SAME useLeadFeed call shape that LeadFeed uses. TanStack Query
   // dedupes by query key, so this becomes a free read of the cached
@@ -99,10 +105,10 @@ export function LeadMapPane({ tradeSlug, lat, lng }: LeadMapPaneProps) {
     radius_km: radiusKm,
   });
 
-  const items: LeadFeedItem[] = query.data?.pages.flatMap((p) => p.data) ?? [];
   const plottableLeads = useMemo(
-    () => items.filter(isPlottablePermit),
-    [items],
+    () =>
+      (query.data?.pages.flatMap((p) => p.data) ?? []).filter(isPlottablePermit),
+    [query.data],
   );
 
   // Map default center reflects the user's location. We don't keep
@@ -116,6 +122,106 @@ export function LeadMapPane({ tradeSlug, lat, lng }: LeadMapPaneProps) {
   // 10 markers would emit 10x events per pass. Same ref-based dedupe
   // pattern that lead_feed.client_error uses in useLeadFeed.ts.
   const hoveredEmittedRef = useRef<Set<string>>(new Set());
+
+  // C1 fix: Google Maps fires AdvancedMarker onClick and Map onClick
+  // as INDEPENDENT events — marker clicks propagate to the map. Without
+  // a guard, clicking a marker would setSelectedLeadId then immediately
+  // clear it via handleMapClick. The ref is set to true in the marker's
+  // onClick and checked (then reset) in handleMapClick. Both run in the
+  // same synchronous event dispatch, so the flag is reliable.
+  const markerClickedRef = useRef(false);
+
+  // C2 fix: @vis.gl/react-google-maps fires onCameraChanged on the
+  // initial mount to communicate the initial viewport. Without this
+  // guard, the debounced handler would fire a false map_panned event
+  // (and potentially race with the GPS snap-advance in useLeadFeed).
+  // The flag flips false after the first camera event is received,
+  // allowing all subsequent events (real user pans) through.
+  const isInitialCameraEventRef = useRef(true);
+
+  // Phase 6 step 2: debounced map-pan refetch. When the user pans the
+  // map, each camera change generates a new center lat/lng. Without
+  // debouncing, every pan frame would trigger a snap advance + refetch,
+  // exploding the cache and hammering the API. The 500ms debounce
+  // means we only refetch after the user stops panning.
+  //
+  // The threshold gate (FORCED_REFETCH_THRESHOLD_M = 500m) reuses the
+  // same haversine check that useLeadFeed uses for GPS-based snap
+  // advances. Minor pans within a neighbourhood are no-ops — only a
+  // meaningful pan (>500m from the current snap) triggers a refetch.
+  const panTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleCameraChanged = useCallback(
+    (event: MapCameraChangedEvent) => {
+      // Skip the initial camera event that fires on mount — it's the
+      // library communicating the initial viewport, not a user pan.
+      if (isInitialCameraEventRef.current) {
+        isInitialCameraEventRef.current = false;
+        return;
+      }
+      // Extract values eagerly BEFORE the timeout. The event object
+      // could theoretically be pooled/recycled by the library between
+      // the synchronous call and the 500ms timeout. Reading now
+      // eliminates the hidden assumption about library internals.
+      const { lat: newLat, lng: newLng } = event.detail.center;
+      if (panTimerRef.current) clearTimeout(panTimerRef.current);
+      panTimerRef.current = setTimeout(() => {
+        const currentSnap = useLeadFeedState.getState().snappedLocation;
+        if (!currentSnap) return;
+        const delta = haversineMeters(
+          currentSnap.lat,
+          currentSnap.lng,
+          newLat,
+          newLng,
+        );
+        if (delta > FORCED_REFETCH_THRESHOLD_M) {
+          // TODO (step 3): pan and GPS both write to snappedLocation.
+          // The GPS snap-advance in useLeadFeed can override a deliberate
+          // pan within the same render cycle. Step 3 should introduce a
+          // `snapSource` discriminator ('gps' | 'pan') so the GPS effect
+          // defers when the user explicitly panned. Also: snappedLocation
+          // is persisted, so pan advances leak into the next session's
+          // resume position — decide if pan-resume is intentional UX.
+          setSnappedLocation({ lat: newLat, lng: newLng });
+          captureEvent('lead_feed.map_panned', {
+            delta_m: Math.round(delta),
+          });
+        }
+      }, 500);
+    },
+    [setSnappedLocation],
+  );
+
+  // Phase 6 step 2: click-to-deselect. Clicking the map background
+  // (not a marker) clears selectedLeadId so hover preview resumes.
+  //
+  // C1 guard: Google Maps fires BOTH AdvancedMarker.onClick and
+  // Map.onClick on a marker click — they are independent event
+  // channels (gmp-click DOM event vs. Maps API click event). Without
+  // the markerClickedRef guard, every marker click would select and
+  // then immediately deselect the lead. The ref is set to true in the
+  // marker's onClick handler (same synchronous dispatch), checked
+  // here, and reset so the next genuine background click works.
+  const handleMapClick = useCallback(
+    (_event: MapMouseEvent) => {
+      if (markerClickedRef.current) {
+        markerClickedRef.current = false;
+        return;
+      }
+      if (useLeadFeedState.getState().selectedLeadId !== null) {
+        setSelectedLeadId(null);
+        captureEvent('lead_feed.map_deselected', {});
+      }
+    },
+    [setSelectedLeadId],
+  );
+
+  // Cleanup the debounce timer on unmount to prevent state updates
+  // on an unmounted component.
+  useEffect(() => {
+    return () => {
+      if (panTimerRef.current) clearTimeout(panTimerRef.current);
+    };
+  }, []);
 
   // No-API-key + API-load-failed fallback. Both paths render the same
   // "Map unavailable" placeholder so the lead list still works (it's
@@ -163,6 +269,8 @@ export function LeadMapPane({ tradeSlug, lat, lng }: LeadMapPaneProps) {
           gestureHandling="cooperative"
           disableDefaultUI={false}
           mapId="lead-feed-map"
+          onCameraChanged={handleCameraChanged}
+          onClick={handleMapClick}
         >
           {plottableLeads.map((lead, index) => {
             const active = isLeadActive(
@@ -175,6 +283,9 @@ export function LeadMapPane({ tradeSlug, lat, lng }: LeadMapPaneProps) {
                 key={`permit-${lead.lead_id}`}
                 position={{ lat: lead.latitude, lng: lead.longitude }}
                 onClick={() => {
+                  // C1: flag that a marker was clicked so handleMapClick
+                  // skips its deselect logic on the same dispatch.
+                  markerClickedRef.current = true;
                   setSelectedLeadId(lead.lead_id);
                   captureEvent('lead_feed.map_marker_clicked', {
                     lead_type: 'permit',

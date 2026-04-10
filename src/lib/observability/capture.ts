@@ -40,7 +40,14 @@ export type EventName =
   // event volume on mousemove storms.
   | 'lead_feed.map_marker_clicked'
   | 'lead_feed.map_marker_hovered'
-  | 'lead_feed.map_unavailable';
+  | 'lead_feed.map_unavailable'
+  // Phase 6 step 2: map pan refetch + click-to-deselect.
+  // map_panned fires once per debounced pan that exceeds the 500m snap
+  // threshold (naturally deduplicated by the debounce timer + threshold
+  // gate). map_deselected fires when the user clicks the map background
+  // to clear the selected marker.
+  | 'lead_feed.map_panned'
+  | 'lead_feed.map_deselected';
 
 type EventProperties = Record<string, unknown>;
 

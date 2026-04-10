@@ -54,7 +54,7 @@ const COORD_PRECISION = 1000;
  * the 10km radius, old ones leave the edge) but close enough to feel
  * responsive when walking.
  */
-const FORCED_REFETCH_THRESHOLD_M = 500;
+export const FORCED_REFETCH_THRESHOLD_M = 500;
 
 export interface UseLeadFeedInput {
   trade_slug: string;

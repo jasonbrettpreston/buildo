@@ -1,13 +1,17 @@
 // @vitest-environment jsdom
 // 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.10
 //
-// LeadMapPane UI tests — Phase 6 step 1.
+// LeadMapPane UI tests — Phase 6 step 1 + step 2.
 //
 // We mock @vis.gl/react-google-maps so the tests don't try to load
 // the real Google Maps JS API. The mock renders <Map> as a plain div
 // with data-testid attributes, and <AdvancedMarker> as a clickable
 // div that calls the wired event handlers (onClick, onMouseEnter,
 // onMouseLeave) — exactly the contract LeadMapPane depends on.
+//
+// Step 2 additions: the Map mock now captures `onCameraChanged` and
+// `onClick` handlers so tests can simulate pan events and background
+// clicks.
 //
 // useLeadFeed is mocked to return a controllable canned response so
 // each test can assert the marker layer reacts to specific lead
@@ -33,6 +37,10 @@ vi.mock('motion/react', () => ({
 // shell that wires onClick / onMouseEnter / onMouseLeave to the
 // inner div, with the position serialised into a data attribute so
 // tests can correlate.
+// Capture the most recent onCameraChanged / onClick handlers passed
+// to <Map> so step 2 tests can invoke them programmatically.
+let lastMapOnCameraChanged: ((event: unknown) => void) | undefined;
+let lastMapOnClick: ((event: unknown) => void) | undefined;
 vi.mock('@vis.gl/react-google-maps', () => {
   const APIProvider: React.FC<React.PropsWithChildren<{ apiKey: string }>> = ({
     children,
@@ -48,9 +56,14 @@ vi.mock('@vis.gl/react-google-maps', () => {
       defaultCenter?: { lat: number; lng: number };
       defaultZoom?: number;
       mapId?: string;
+      onCameraChanged?: (event: unknown) => void;
+      onClick?: (event: unknown) => void;
     }>
-  > = ({ children, defaultCenter, defaultZoom, mapId }) =>
-    React.createElement(
+  > = ({ children, defaultCenter, defaultZoom, mapId, onCameraChanged, onClick }) => {
+    // Store callbacks so tests can invoke them.
+    lastMapOnCameraChanged = onCameraChanged;
+    lastMapOnClick = onClick;
+    return React.createElement(
       'div',
       {
         'data-testid': 'map',
@@ -60,6 +73,7 @@ vi.mock('@vis.gl/react-google-maps', () => {
       },
       children,
     );
+  };
   const AdvancedMarker: React.FC<
     React.PropsWithChildren<{
       position: { lat: number; lng: number };
@@ -106,6 +120,7 @@ let mockedFeedResponse: MockLeadFeedResult = {
 };
 vi.mock('@/features/leads/api/useLeadFeed', () => ({
   useLeadFeed: () => mockedFeedResponse,
+  FORCED_REFETCH_THRESHOLD_M: 500,
 }));
 
 import { LeadMapPane } from '@/features/leads/components/LeadMapPane';
@@ -177,8 +192,11 @@ function builderLead(
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
   captureEventMock.mockReset();
   reduceMotionMock.mockReturnValue(false);
+  lastMapOnCameraChanged = undefined;
+  lastMapOnClick = undefined;
   process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY = 'test-key';
   useLeadFeedState.setState({
     _hasHydrated: true,
@@ -197,6 +215,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   delete process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
 });
 
@@ -349,5 +368,239 @@ describe('LeadMapPane — fallback', () => {
       'lead_feed.map_unavailable',
       expect.objectContaining({ reason: 'missing_api_key' }),
     );
+  });
+});
+
+// --- Phase 6 step 2: debounced map-pan refetch + click-to-deselect ---
+
+/**
+ * Consume the initial-mount camera event that the library auto-fires.
+ * Must be called after render() and before simulating user pans,
+ * otherwise the first camera event is silently swallowed by the C2
+ * initial-fire guard in handleCameraChanged.
+ */
+function consumeInitialCameraEvent(): void {
+  lastMapOnCameraChanged!({
+    detail: { center: { lat: 0, lng: 0 }, bounds: {}, zoom: 13, heading: 0, tilt: 0 },
+  });
+}
+
+describe('LeadMapPane — debounced map-pan refetch (step 2)', () => {
+  beforeEach(() => {
+    // Seed snappedLocation at (43.65, -79.38) — the "current" position.
+    // The pan handler only fires a refetch when the camera center moves
+    // >500m from this snap.
+    useLeadFeedState.setState({ snappedLocation: { lat: 43.65, lng: -79.38 } });
+    mockedFeedResponse = {
+      data: {
+        pages: [
+          {
+            data: [permitLead({ lead_id: 'lead-a' })],
+            meta: { next_cursor: null, count: 1, radius_km: 10 },
+            error: null,
+          },
+        ],
+      },
+      isSuccess: true,
+      isError: false,
+      isPending: false,
+    };
+  });
+
+  it('skips the initial-mount camera event (library auto-fire) without updating snap', () => {
+    render(<LeadMapPane tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    expect(lastMapOnCameraChanged).toBeDefined();
+
+    // First onCameraChanged = initial mount fire. Even with a large
+    // delta, it should be ignored.
+    lastMapOnCameraChanged!({
+      detail: { center: { lat: 44.0, lng: -79.38 }, bounds: {}, zoom: 13, heading: 0, tilt: 0 },
+    });
+    vi.advanceTimersByTime(500);
+
+    // Snap unchanged — initial event was skipped
+    expect(useLeadFeedState.getState().snappedLocation).toEqual({ lat: 43.65, lng: -79.38 });
+    const panCalls = captureEventMock.mock.calls.filter(
+      (c) => c[0] === 'lead_feed.map_panned',
+    );
+    expect(panCalls.length).toBe(0);
+
+    // SECOND camera event (real user pan) should work
+    lastMapOnCameraChanged!({
+      detail: { center: { lat: 43.66, lng: -79.38 }, bounds: {}, zoom: 13, heading: 0, tilt: 0 },
+    });
+    vi.advanceTimersByTime(500);
+    expect(useLeadFeedState.getState().snappedLocation).toEqual({ lat: 43.66, lng: -79.38 });
+  });
+
+  it('updates snappedLocation after 500ms debounce when pan exceeds 500m threshold', () => {
+    render(<LeadMapPane tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    expect(lastMapOnCameraChanged).toBeDefined();
+    consumeInitialCameraEvent();
+
+    // Simulate a pan to a point ~1.1km north (≈ +0.01 lat ≈ 1.11km)
+    lastMapOnCameraChanged!({
+      detail: { center: { lat: 43.66, lng: -79.38 }, bounds: {}, zoom: 13, heading: 0, tilt: 0 },
+    });
+
+    // Before debounce fires, snap should be unchanged
+    expect(useLeadFeedState.getState().snappedLocation).toEqual({ lat: 43.65, lng: -79.38 });
+
+    // Advance timers past the 500ms debounce
+    vi.advanceTimersByTime(500);
+
+    // After debounce, snap should be updated to the new center
+    expect(useLeadFeedState.getState().snappedLocation).toEqual({ lat: 43.66, lng: -79.38 });
+
+    // Telemetry should fire
+    expect(captureEventMock).toHaveBeenCalledWith(
+      'lead_feed.map_panned',
+      expect.objectContaining({ delta_m: expect.any(Number) }),
+    );
+  });
+
+  it('does NOT update snappedLocation when pan is below 500m threshold', () => {
+    render(<LeadMapPane tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    expect(lastMapOnCameraChanged).toBeDefined();
+    consumeInitialCameraEvent();
+
+    // Simulate a pan to a point ~110m north (≈ +0.001 lat ≈ 111m)
+    lastMapOnCameraChanged!({
+      detail: { center: { lat: 43.651, lng: -79.38 }, bounds: {}, zoom: 13, heading: 0, tilt: 0 },
+    });
+
+    vi.advanceTimersByTime(500);
+
+    // Snap should remain unchanged — pan was too small
+    expect(useLeadFeedState.getState().snappedLocation).toEqual({ lat: 43.65, lng: -79.38 });
+
+    // No pan telemetry
+    const panCalls = captureEventMock.mock.calls.filter(
+      (c) => c[0] === 'lead_feed.map_panned',
+    );
+    expect(panCalls.length).toBe(0);
+  });
+
+  it('does nothing when snappedLocation is null (pre-seed state)', () => {
+    useLeadFeedState.setState({ snappedLocation: null });
+    render(<LeadMapPane tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    expect(lastMapOnCameraChanged).toBeDefined();
+    consumeInitialCameraEvent();
+
+    // Pan to a point far away — should still be a no-op because snap is null
+    lastMapOnCameraChanged!({
+      detail: { center: { lat: 43.7, lng: -79.38 }, bounds: {}, zoom: 13, heading: 0, tilt: 0 },
+    });
+    vi.advanceTimersByTime(500);
+
+    expect(useLeadFeedState.getState().snappedLocation).toBeNull();
+    const panCalls = captureEventMock.mock.calls.filter(
+      (c) => c[0] === 'lead_feed.map_panned',
+    );
+    expect(panCalls.length).toBe(0);
+  });
+
+  it('debounces multiple rapid pans — only the last one fires', () => {
+    render(<LeadMapPane tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    consumeInitialCameraEvent();
+
+    // Three rapid pans, each >500m from the snap
+    lastMapOnCameraChanged!({
+      detail: { center: { lat: 43.66, lng: -79.38 }, bounds: {}, zoom: 13, heading: 0, tilt: 0 },
+    });
+    vi.advanceTimersByTime(200);
+    lastMapOnCameraChanged!({
+      detail: { center: { lat: 43.67, lng: -79.38 }, bounds: {}, zoom: 13, heading: 0, tilt: 0 },
+    });
+    vi.advanceTimersByTime(200);
+    lastMapOnCameraChanged!({
+      detail: { center: { lat: 43.68, lng: -79.38 }, bounds: {}, zoom: 13, heading: 0, tilt: 0 },
+    });
+
+    // Only after the full 500ms from the LAST pan should it fire
+    vi.advanceTimersByTime(500);
+
+    // Snap should be the LAST center, not the first or second
+    expect(useLeadFeedState.getState().snappedLocation).toEqual({ lat: 43.68, lng: -79.38 });
+
+    // Only one pan telemetry event (for the last debounced pan)
+    const panCalls = captureEventMock.mock.calls.filter(
+      (c) => c[0] === 'lead_feed.map_panned',
+    );
+    expect(panCalls.length).toBe(1);
+  });
+});
+
+describe('LeadMapPane — click-to-deselect (step 2)', () => {
+  beforeEach(() => {
+    mockedFeedResponse = {
+      data: {
+        pages: [
+          {
+            data: [permitLead({ lead_id: 'lead-a' })],
+            meta: { next_cursor: null, count: 1, radius_km: 10 },
+            error: null,
+          },
+        ],
+      },
+      isSuccess: true,
+      isError: false,
+      isPending: false,
+    };
+  });
+
+  it('clicking the map background clears selectedLeadId and fires map_deselected', () => {
+    useLeadFeedState.setState({ selectedLeadId: 'lead-a' });
+    render(<LeadMapPane tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    expect(lastMapOnClick).toBeDefined();
+
+    // Simulate clicking the map background
+    lastMapOnClick!({});
+
+    expect(useLeadFeedState.getState().selectedLeadId).toBeNull();
+    expect(captureEventMock).toHaveBeenCalledWith(
+      'lead_feed.map_deselected',
+      {},
+    );
+  });
+
+  it('marker click sets the ref guard so handleMapClick does NOT deselect', () => {
+    // Simulates the real Google Maps event model where BOTH
+    // AdvancedMarker.onClick AND Map.onClick fire on a marker click.
+    render(<LeadMapPane tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    const markers = document.querySelectorAll('[data-testid="advanced-marker"]');
+    expect(markers.length).toBeGreaterThan(0);
+    expect(lastMapOnClick).toBeDefined();
+
+    // 1. Marker click fires first — sets selectedLeadId + ref guard
+    fireEvent.click(markers[0]!);
+    expect(useLeadFeedState.getState().selectedLeadId).toBe('lead-a');
+
+    // 2. Map click fires second (same dispatch in production)
+    lastMapOnClick!({});
+
+    // selectedLeadId must STILL be 'lead-a' — the ref guard prevented
+    // the deselect.
+    expect(useLeadFeedState.getState().selectedLeadId).toBe('lead-a');
+
+    // No map_deselected telemetry should have fired
+    const deselectCalls = captureEventMock.mock.calls.filter(
+      (c) => c[0] === 'lead_feed.map_deselected',
+    );
+    expect(deselectCalls.length).toBe(0);
+  });
+
+  it('clicking the map background when nothing is selected is a no-op', () => {
+    useLeadFeedState.setState({ selectedLeadId: null });
+    render(<LeadMapPane tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    expect(lastMapOnClick).toBeDefined();
+
+    lastMapOnClick!({});
+
+    // Should NOT fire deselected telemetry — nothing was selected
+    const deselectCalls = captureEventMock.mock.calls.filter(
+      (c) => c[0] === 'lead_feed.map_deselected',
+    );
+    expect(deselectCalls.length).toBe(0);
   });
 });
