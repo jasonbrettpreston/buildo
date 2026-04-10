@@ -366,6 +366,8 @@ pipeline.run('compute-cost-estimates', async (pool) => {
   let processed = 0;
   let inserted = 0;
   let updated = 0;
+  let failedBatches = 0;
+  let failedRows = 0;
   let batch = [];
 
   try {
@@ -379,6 +381,8 @@ pipeline.run('compute-cost-estimates', async (pool) => {
           inserted += res.inserted;
           updated += res.updated;
         } catch (err) {
+          failedBatches++;
+          failedRows += batch.length;
           pipeline.log.error('[compute-cost-estimates]', 'batch failed', {
             batch_size: batch.length,
             err: err && err.message,
@@ -394,6 +398,8 @@ pipeline.run('compute-cost-estimates', async (pool) => {
         inserted += res.inserted;
         updated += res.updated;
       } catch (err) {
+        failedBatches++;
+        failedRows += batch.length;
         pipeline.log.error('[compute-cost-estimates]', 'final batch failed', {
           batch_size: batch.length,
           err: err && err.message,
@@ -405,6 +411,9 @@ pipeline.run('compute-cost-estimates', async (pool) => {
       records_total: processed,
       records_new: inserted,
       records_updated: updated,
+      records_meta: failedBatches > 0
+        ? { failed_batches: failedBatches, failed_rows: failedRows }
+        : undefined,
     });
     pipeline.emitMeta(
       {

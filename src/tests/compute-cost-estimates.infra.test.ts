@@ -89,4 +89,17 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
   it('casts DECIMAL(15,2) columns to float8 for JS consumption', () => {
     expect(content).toMatch(/::float8/);
   });
+
+  it('tracks failed batches and rows in emitSummary records_meta', () => {
+    expect(content).toContain('failedBatches');
+    expect(content).toContain('failedRows');
+    expect(content).toContain('failed_batches');
+    expect(content).toContain('failed_rows');
+  });
+
+  it('emits PIPELINE_SUMMARY on advisory lock early return', () => {
+    const lockBlock = content.split('pg_try_advisory_lock')[1] || '';
+    const beforeReturn = lockBlock.split('return;')[0] || '';
+    expect(beforeReturn).toContain('emitSummary');
+  });
 });
