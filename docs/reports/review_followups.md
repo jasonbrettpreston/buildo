@@ -578,3 +578,64 @@ Phase 3-v ships the sticky header chrome + Vaul bottom drawer filter sheet that 
 | DEFERRED | DeepSeek | Intl.PluralRules for lead count | DEFERRED — same as i18n above. |
 | DEFERRED | DeepSeek | DrawerPortal conditional rendering for perf | DEFERRED — Shadcn default. Premature optimization for this use case. |
 | DEFERRED | Gemini | `DrawerHandle` extractable component for customization | DEFERRED — YAGNI. Only one Drawer consumer exists today. Extract when a second one has a different need. |
+
+---
+
+## Phase 3 + Phase 0-3 Holistic Review (2026-04-09)
+
+**Anchor:** `bd3c7de` (pre-WF3 HEAD)
+**Reviewers:** 2 independent worktree agents (Phase 3 bundle + Phase 0-3 bundle), DeepSeek Phase 3, Gemini Phase 0-3, DeepSeek Phase 0-3. (Gemini Phase 3 returned 503 — re-run skipped, DeepSeek + Independent provided full P3 coverage.)
+
+### Closed in this WF3 (Phase A-F)
+
+| Phase | Sev | Source | Item | Verdict |
+|-------|-----|--------|------|---------|
+| A | **BLOCK** | Independent P03 | Permit `lead_key` SQL JOIN missing `'permit:'` prefix → `is_saved` structurally always false for permits | CLOSED — `LEAD_FEED_SQL` lv_p predicate now `('permit:' \|\| ...)`. Test at get-lead-feed.logic.test.ts:244 was codifying the wrong format; both fixed. |
+| A | **BLOCK** | Independent P03 | Builder `lead_key` JOIN missing `'builder:'` prefix → `is_saved` always false for builders | CLOSED — lv_b predicate now `('builder:' \|\| e.id::text)`. |
+| C | HIGH | Gemini P03 | `classifyRoute` default `'public'` (fail-open) | CLOSED — flipped to `'authenticated'` + regression test. |
+| C | HIGH | Gemini P03 | `NEXT_PUBLIC_DEV_MODE` leaks server flag into client bundle | CLOSED — `isDevMode()` now reads server-only `DEV_MODE`; client `NEXT_PUBLIC_DEV_MODE` retained for cosmetic login button only (defense in depth: prod misconfig of one var alone can't bypass auth). |
+| C | HIGH | Indep P3 C1 | Auth 401 mid-session maps to `NETWORK_ERROR` | CLOSED — `fetchLeadFeedPage` now throws dedicated `AUTH_EXPIRED` code on 401. |
+| C | HIGH | Indep P3 C2 | Zustand `buildo-lead-feed` per-device key not cleared on sign-out → user A's `snappedLocation` leaks to user B | CLOSED — `resetLeadFeedState()` exported; `signOut()` calls it after Firebase sign-out. |
+| D | HIGH | Indep P3 I1 | No `prefers-reduced-motion` on Motion components (WCAG 2.1 SC 2.3.3) | CLOSED — `useReducedMotion` added to PermitLeadCard, BuilderLeadCard, SaveButton; `whileTap`/`transition` neutralized when reduced. |
+| D | MED | Indep P3 I2 | LeadFilterSheet ToggleGroup overflows at 320px (iPhone SE) | CLOSED — `flex-wrap gap-2` on ToggleGroup. |
+| D | MED | Indep P3 I3 | Filter trigger missing `aria-controls` / `aria-haspopup` | CLOSED — DrawerContent gets `id="lead-filter-sheet"`, header button gets matching `aria-controls` + `aria-haspopup="dialog"`. |
+| D | MED | Indep P3 I4 | `SaveButton.animate` inline object literals churn Motion identity | CLOSED — animate/whileTap/transition now `useMemo`-stable. |
+| E | MED | Indep P3 I5 | `lead_feed.client_error` emits unbounded `err.message` (PostHog cardinality) | CLOSED — telemetry now emits only the bounded `code`; dedupe key narrowed to `code`. |
+| E | MED | Indep P03 I2 | `get-lead-feed` error-path `logError` logs `user_id + lat + lng` (PIPEDA risk) | CLOSED — context scrubbed to `{ trade_slug, radius_km, limit }`. |
+| F | MED | Indep P03 I1 | `formatCostDisplay` Math.round produces "$1000K" at 999_500 | CLOSED — switched to `Math.floor`. Tests updated for 999_500 → "$999K", 999_999 → "$999K", boundary cases. |
+| F | LOW | Gemini P03 | `buildDisplay` uses `PREMIUM_TIERS[2]` magic index | CLOSED — replaced with `find(t => t.min === 100_000)` semantic lookup. |
+
+### DEFERRED (real but out of scope for this WF3)
+
+| Sev | Source | Item | Notes |
+|-----|--------|------|-------|
+| MED | Indep P3 I6 | `lead_feed.lead_clicked` emits `lead_id` (cardinality + PII-adjacent) | DEFERRED — `lead_id` is the core click-attribution analytic; dropping it kills funnel analysis. Product RFC required. |
+| MED | DeepSeek P3 | `active_permits_nearby` count vs WHERE status filter | NOT-A-BUG — already documented in `get-lead-feed.ts` lines 247-255. DeepSeek missed the comment. |
+| LOW | DeepSeek P03 | `getStageSequence` hardcoded stage strings (timing.ts) | DEFERRED — bundle with next timing-engine WF. |
+| LOW | DeepSeek P03 | `user_profiles.updated_at` missing trigger | DEFERRED — verify project convention before adding. Low impact. |
+| LOW | DeepSeek P03 | `tier2IssuedHeuristic` permit_type null guard | DEFERRED — bundle with next timing engine cleanup. |
+| LOW | Gemini P03 | cost-model dual-path TS↔JS | DEFERRED — acknowledged ADR; re-litigate via spec spike. |
+| LOW | DeepSeek P3 | `__opportunityLookup` test export | DEFERRED — minor; refactor when test churn warrants. |
+
+### FALSE POSITIVES / DEFENSIBLE
+
+| Source | Item | Verdict |
+|--------|------|---------|
+| DeepSeek P3 CRIT | Cursor tuple `<` drops tied relevance scores | FALSE — tuple compare with matching `ORDER BY ... DESC, lead_type DESC, lead_id DESC` cascades to (lead_type, lead_id) tiebreakers. Verified by trace. |
+| DeepSeek P3 HIGH | `next_cursor` built pre-filter → ghost page | FALSE — already builds from `res.rows.length` (raw) and last raw row. Existing test "next_cursor uses RAW res.rows.length" locks correct behaviour. DeepSeek inverted the claim. |
+| DeepSeek P3 MED | `leadViewBodySchema.strict()` rejects unknown fields | DEFENSIBLE — `.strict()` is intentional XOR enforcement, documented at schemas.ts:79-84. |
+| DeepSeek P3 MED | Builder `MIN(distance)` semantics | DEFENSIBLE — spec-intended "closest active permit". |
+| DeepSeek P3 MED | Migration 078 `DO` block index | DEFENSIBLE — small table. |
+| DeepSeek P3 MED | Haversine 0.5% Earth-radius error | DEFENSIBLE — within 500m snap tolerance. |
+| DeepSeek P3 LOW | `useLeadView` invalidate `exact: false` | DEFENSIBLE — TanStack prefix-match is intended. |
+| DeepSeek P3 NIT | `TIMING_DISPLAY_BY_CONFIDENCE['low']` dead code | NOT-A-BUG — documented at lines 472-482 as forward-compat for spec-71. |
+| DeepSeek P03 CRIT | `buildLeadKey` `padStart.slice(-2)` vs `LPAD` truncation direction | FALSE — DeepSeek mis-described LPAD's truncation direction. In practice every revision_num is ≤ 2 chars, so the truncation branch is unreachable and both implementations agree on the actual data domain. |
+| Gemini P03 MED | `trade_slug` not FK to `trades` | DEFENSIBLE — documented ADR. |
+| Gemini P03 NIT | `_resetCalibrationCache` test export | DEFENSIBLE — test-only, prefixed. |
+| DeepSeek P03 MED | `BASE_RATES.sfd` fallback overpriced | DEFENSIBLE — product decision; spec 72 baseline. |
+
+### Process notes
+
+- **Self-checklist generated BEFORE reviews** (19 items). Two findings that the checklist anticipated also surfaced in independent reviews (auth lifecycle + Zustand per-device leak), validating the pre-review checklist habit.
+- **Phase B (cursor + next_cursor) was DROPPED entirely** after verifying both findings as false positives mid-implementation. Verifying claims against the actual code before "fixing" prevented two no-op churn commits.
+- All 3256 tests pass; typecheck clean.
