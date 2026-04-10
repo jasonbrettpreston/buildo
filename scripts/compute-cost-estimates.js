@@ -360,7 +360,20 @@ pipeline.run('compute-cost-estimates', async (pool) => {
       records_total: 0,
       records_new: 0,
       records_updated: 0,
-      records_meta: { skipped: true, reason: 'advisory_lock_held' },
+      records_meta: {
+        skipped: true,
+        reason: 'advisory_lock_held',
+        audit_table: {
+          phase: 14,
+          name: 'Cost Estimates',
+          verdict: 'SKIP',
+          rows: [
+            { metric: 'permits_processed', value: 0, threshold: null, status: 'SKIP' },
+            { metric: 'permits_inserted', value: 0, threshold: null, status: 'SKIP' },
+            { metric: 'permits_updated', value: 0, threshold: null, status: 'SKIP' },
+          ],
+        },
+      },
     });
     pipeline.emitMeta(
       { permits: ['permit_num'] },
@@ -374,12 +387,15 @@ pipeline.run('compute-cost-estimates', async (pool) => {
   let updated = 0;
   let failedBatches = 0;
   let failedRows = 0;
+  let nullEstimates = 0;
   let batch = [];
 
   try {
     for await (const row of pipeline.streamQuery(pool, SOURCE_SQL)) {
-      batch.push(estimateCostInline(row));
+      const estimate = estimateCostInline(row);
+      batch.push(estimate);
       processed++;
+      if (estimate.estimated_cost == null) nullEstimates++;
 
       if (batch.length >= BATCH_SIZE) {
         try {
@@ -413,13 +429,47 @@ pipeline.run('compute-cost-estimates', async (pool) => {
       }
     }
 
+    // Build custom audit_table so the admin FreshnessTimeline surfaces
+    // meaningful throughput metrics. Without this, the SDK auto-injects
+    // only sys_velocity_rows_sec + sys_duration_ms, and the UI hides the
+    // default records_total/new/updated block whenever audit_table is
+    // present. WF3 2026-04-10 — user-reported observability gap.
+    //
+    // model_coverage_pct measures the fraction of processed permits that
+    // received a non-null estimated_cost (i.e., the cost model could produce
+    // a number, vs falling back to null because of zero area / missing
+    // footprint data). It is NOT upsert success rate — that's separately
+    // tracked via failed_rows. Reviewer-flagged HIGH severity.
+    const modelCoveragePct = processed > 0
+      ? ((processed - nullEstimates) / processed) * 100
+      : 0;
+    const costAuditRows = [
+      { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
+      { metric: 'permits_inserted', value: inserted, threshold: null, status: 'INFO' },
+      { metric: 'permits_updated', value: updated, threshold: null, status: 'INFO' },
+      { metric: 'model_coverage_pct', value: modelCoveragePct.toFixed(1) + '%', threshold: '>= 80%', status: modelCoveragePct >= 80 ? 'PASS' : 'WARN' },
+    ];
+    if (failedRows > 0) {
+      costAuditRows.push({ metric: 'failed_rows', value: failedRows, threshold: '== 0', status: 'WARN' });
+      costAuditRows.push({ metric: 'failed_batches', value: failedBatches, threshold: '== 0', status: 'WARN' });
+    }
+    const costVerdict = failedRows > 0 || modelCoveragePct < 80 ? 'WARN' : 'PASS';
+
     pipeline.emitSummary({
       records_total: processed,
       records_new: inserted,
       records_updated: updated,
-      records_meta: failedBatches > 0
-        ? { failed_batches: failedBatches, failed_rows: failedRows }
-        : undefined,
+      records_meta: {
+        audit_table: {
+          phase: 14,
+          name: 'Cost Estimates',
+          verdict: costVerdict,
+          rows: costAuditRows,
+        },
+        ...(failedBatches > 0
+          ? { failed_batches: failedBatches, failed_rows: failedRows }
+          : {}),
+      },
     });
     pipeline.emitMeta(
       {

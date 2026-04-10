@@ -747,3 +747,24 @@ Phase B ships the admin dashboard UI component with 4 sections (readiness gauge,
 | LOW | Independent | `saves_today` fetched in engagement response but not rendered as stat box. Spec focuses on 7-day window; today's saves is complementary data. | UX enhancement | OPEN |
 | LOW | Independent | Retry button in error state has no loading feedback — button text stays "Retry" during fetch. | UX polish | OPEN |
 | LOW | Adversarial | GREEN traffic light fires when `timing_freshness_hours` is null (never calibrated). Spec requires `< 48` for GREEN, but null ≠ "< 48". DEFENSIBLE: null timing = "never calibrated" is a separate state; treating as non-stale is a product decision, locked by test. | Spec clarification if product disagrees | OPEN |
+
+## 2026-04-10 — WF3 Cost/Timing Audit + Health 500 (commit TBD)
+
+Three user-reported bugs: (1) `compute-cost-estimates` only showed `sys_*` metrics in admin audit view, (2) same for `compute-timing-calibration`, (3) `/api/admin/leads/health` returned 500. Root causes: scripts never built custom `audit_table.rows`, and migration 070 was never applied to local DB (lead_views stuck on 069 schema). Two reviewers (independent + adversarial) ran in parallel against the fix bundle. Both independently flagged the same 2 HIGH issues.
+
+### Real fixes applied before commit (2 during triage)
+
+| Sev | Source | Item | Fix |
+|-----|--------|------|-----|
+| HIGH | Both (Independent+Adversarial) | `no_rows` path in timing calibration used `verdict: 'WARN'` — would escalate chain status to `completed_with_warnings` on fresh deploys where `permit_inspections` hasn't been populated yet. Prior behavior was silent (no audit_table → neutral PASS). | Changed verdict to `SKIP` (infra state, not data quality warning) |
+| HIGH | Both (Independent+Adversarial) | `coverage_pct` in cost-estimates was semantically `(inserted + updated) / processed` — actually upsert success rate, not model coverage. Always reads 100% when no batch failures, regardless of how many permits got `estimated_cost: null`. Label and threshold were misleading. | Added `nullEstimates` counter; renamed to `model_coverage_pct`; formula now `(processed - nullEstimates) / processed`; threshold lowered to 80% (realistic for a model with fallback nulls); verdict now downgrades to WARN on low coverage |
+
+### Deferred items
+
+| Severity | Source | Item | Planned home | Status |
+|----------|--------|------|--------------|--------|
+| HIGH | Self (sibling bug) | `scripts/enrich-web-search.js` and `scripts/enrich-wsib.js` have the same observability gap — they emit `emitSummary` without a custom `audit_table`, so the admin UI shows only sys_* rows. Both ARE in active chains (`enrich_wsib_builders`, `enrich_named_builders`, `enrich_wsib_registry`). Scope discipline: user reported steps 14/15 only; fix siblings in a separate WF3. | Dedicated sibling WF3 | OPEN |
+| MEDIUM | Both | New audit_table tests are pure file-text regex matching — cannot catch row-construction bugs where string literals exist but the audit_table is in a dead code branch, a comment, or has transposed values. DEFENSIBLE: pre-existing pattern across all `*.infra.test.ts` file-shape tests. A logic-level test (stub `emitSummary`, assert on captured payload) would catch this class. | Future test hardening WF | OPEN |
+| MEDIUM | Self | Migration runner (`scripts/migrate.js`) has no tracking — runs all files every time. Migration 070 apparently never ran on local DB despite being on disk, leading to this session's lead_views schema mismatch. No `schema_migrations` table to detect partial-apply state. | Migration runner hardening WF | OPEN |
+| LOW | Adversarial | `parseInt(r.sample_size, 10)` in `compute-timing-calibration.js` is unnecessary — `COUNT(*)::int` always returns JS number via pg driver. Harmless no-op defensive code. | Type hygiene | OPEN |
+| INFO | Self | Issue 3 (health endpoint 500) had NO code fix — resolution was applying migrations 070 + 076 + 079 manually to local DB. Production state may also need reconciliation if the same partial-apply occurred there. No test added (existing `lead-views-schema.infra.test.ts` already locks the expected schema, and it's covered by the migration files themselves). | DB reconciliation for prod if needed | OPEN |

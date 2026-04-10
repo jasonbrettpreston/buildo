@@ -61,4 +61,23 @@ describe('scripts/compute-timing-calibration.js — file shape', () => {
   it('logs errors via pipeline.log.error (not bare console.error)', () => {
     expect(content).toMatch(/pipeline\.log\.error\(/);
   });
+
+  // --- audit_table observability (WF3 2026-04-10) ---
+  // See compute-cost-estimates.infra.test.ts for the rationale — the admin
+  // UI hides records_total/new/updated when audit_table is present, so the
+  // auto-injected sys_* rows were the only thing users saw for this step.
+  it('builds a custom audit_table in the success path (not just SDK auto-inject)', () => {
+    expect(content).toMatch(/audit_table\s*:\s*\{/);
+    expect(content).toMatch(/verdict/);
+  });
+
+  it('includes permit_types_processed / permit_types_inserted / permit_types_updated audit rows', () => {
+    expect(content).toMatch(/metric:\s*['"]permit_types_processed['"]/);
+    expect(content).toMatch(/metric:\s*['"]permit_types_inserted['"]/);
+    expect(content).toMatch(/metric:\s*['"]permit_types_updated['"]/);
+  });
+
+  it('surfaces total_sample_size as an audit row', () => {
+    expect(content).toMatch(/metric:\s*['"]total_sample_size['"]/);
+  });
 });

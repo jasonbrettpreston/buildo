@@ -102,4 +102,25 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     const beforeReturn = lockBlock.split('return;')[0] || '';
     expect(beforeReturn).toContain('emitSummary');
   });
+
+  // --- audit_table observability (WF3 2026-04-10) ---
+  // Admin FreshnessTimeline renders records_meta.audit_table.rows in the
+  // expanded step view, and HIDES the default records_total/new/updated
+  // display whenever audit_table is present. Without a custom audit_table,
+  // the SDK auto-injects only sys_velocity_rows_sec + sys_duration_ms, so
+  // the admin UI shows no meaningful throughput numbers for this step.
+  it('builds a custom audit_table in the success path (not just SDK auto-inject)', () => {
+    expect(content).toMatch(/audit_table\s*:\s*\{/);
+    expect(content).toMatch(/verdict/);
+  });
+
+  it('includes permits_processed / permits_inserted / permits_updated audit rows', () => {
+    expect(content).toMatch(/metric:\s*['"]permits_processed['"]/);
+    expect(content).toMatch(/metric:\s*['"]permits_inserted['"]/);
+    expect(content).toMatch(/metric:\s*['"]permits_updated['"]/);
+  });
+
+  it('surfaces failed_rows as a WARN audit row when batch failures occur', () => {
+    expect(content).toMatch(/metric:\s*['"]failed_rows['"]/);
+  });
 });

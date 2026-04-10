@@ -76,7 +76,21 @@ pipeline.run('compute-timing-calibration', async (pool) => {
       });
       pipeline.emitSummary({
         records_total: 0, records_new: 0, records_updated: 0,
-        records_meta: { skipped: true, reason: 'permit_inspections_missing' },
+        records_meta: {
+          skipped: true,
+          reason: 'permit_inspections_missing',
+          audit_table: {
+            phase: 15,
+            name: 'Timing Calibration',
+            verdict: 'SKIP',
+            rows: [
+              { metric: 'permit_types_processed', value: 0, threshold: null, status: 'SKIP' },
+              { metric: 'permit_types_inserted', value: 0, threshold: null, status: 'SKIP' },
+              { metric: 'permit_types_updated', value: 0, threshold: null, status: 'SKIP' },
+              { metric: 'total_sample_size', value: 0, threshold: null, status: 'SKIP' },
+            ],
+          },
+        },
       });
       pipeline.emitMeta(
         { permits: ['*'], permit_inspections: ['*'] },
@@ -95,7 +109,25 @@ pipeline.run('compute-timing-calibration', async (pool) => {
       '[compute-timing-calibration]',
       'no permit_types met the HAVING COUNT >= 5 threshold — timing_calibration not updated',
     );
-    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    // Use SKIP (not WARN) to avoid poisoning chain status with
+    // `completed_with_warnings` on fresh deploys where permit_inspections
+    // hasn't been populated yet. Reviewer-flagged HIGH severity.
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        audit_table: {
+          phase: 15,
+          name: 'Timing Calibration',
+          verdict: 'SKIP',
+          rows: [
+            { metric: 'permit_types_processed', value: 0, threshold: null, status: 'SKIP' },
+            { metric: 'permit_types_inserted', value: 0, threshold: null, status: 'SKIP' },
+            { metric: 'permit_types_updated', value: 0, threshold: null, status: 'SKIP' },
+            { metric: 'total_sample_size', value: 0, threshold: '>= 50', status: 'SKIP' },
+          ],
+        },
+      },
+    });
     pipeline.emitMeta(
       { permits: ['*'], permit_inspections: ['*'] },
       { timing_calibration: ['permit_type'] },
@@ -147,7 +179,21 @@ pipeline.run('compute-timing-calibration', async (pool) => {
       });
       pipeline.emitSummary({
         records_total: rows.length, records_new: 0, records_updated: 0,
-        records_meta: { skipped: true, reason: 'timing_calibration_missing' },
+        records_meta: {
+          skipped: true,
+          reason: 'timing_calibration_missing',
+          audit_table: {
+            phase: 15,
+            name: 'Timing Calibration',
+            verdict: 'SKIP',
+            rows: [
+              { metric: 'permit_types_processed', value: rows.length, threshold: null, status: 'SKIP' },
+              { metric: 'permit_types_inserted', value: 0, threshold: null, status: 'SKIP' },
+              { metric: 'permit_types_updated', value: 0, threshold: null, status: 'SKIP' },
+              { metric: 'total_sample_size', value: 0, threshold: null, status: 'SKIP' },
+            ],
+          },
+        },
       });
       pipeline.emitMeta(
         { permits: ['*'], permit_inspections: ['*'] },
@@ -158,10 +204,30 @@ pipeline.run('compute-timing-calibration', async (pool) => {
     throw err;
   }
 
+  // Build custom audit_table so the admin FreshnessTimeline surfaces
+  // meaningful throughput metrics. See compute-cost-estimates.js for the
+  // rationale — WF3 2026-04-10 observability gap fix.
+  const totalSampleSize = rows.reduce((sum, r) => sum + (parseInt(r.sample_size, 10) || 0), 0);
+  const timingAuditRows = [
+    { metric: 'permit_types_processed', value: rows.length, threshold: null, status: 'INFO' },
+    { metric: 'permit_types_inserted', value: result.inserted, threshold: null, status: 'INFO' },
+    { metric: 'permit_types_updated', value: result.updated, threshold: null, status: 'INFO' },
+    { metric: 'total_sample_size', value: totalSampleSize, threshold: '>= 50', status: totalSampleSize >= 50 ? 'PASS' : 'WARN' },
+  ];
+  const timingVerdict = totalSampleSize >= 50 ? 'PASS' : 'WARN';
+
   pipeline.emitSummary({
     records_total: rows.length,
     records_new: result.inserted,
     records_updated: result.updated,
+    records_meta: {
+      audit_table: {
+        phase: 15,
+        name: 'Timing Calibration',
+        verdict: timingVerdict,
+        rows: timingAuditRows,
+      },
+    },
   });
   pipeline.emitMeta(
     {
