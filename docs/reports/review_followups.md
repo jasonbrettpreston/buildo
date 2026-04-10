@@ -687,6 +687,13 @@ Phase 3-v ships the sticky header chrome + Vaul bottom drawer filter sheet that 
 
 | Severity | Source | Item | Planned home | Status |
 |----------|--------|------|--------------|--------|
-| HIGH | Adversarial | `link-massing.js:226` PostGIS path pushes arguments in wrong column order: `is_primary` receives `'spatial_polygon'` (string coerced to true), `structure_type` receives area (float), `match_type` receives boolean. All buildings get `is_primary = true`. Pre-existing bug, separate script. | WF3 link-massing | OPEN |
-| HIGH | Adversarial | `parcel_buildings` has no partial unique index `(parcel_id) WHERE is_primary = true` — allows multiple primary buildings per parcel. Needs migration + link-massing fix together. | WF3 link-massing + migration | OPEN |
+| HIGH | Adversarial | `link-massing.js:226` PostGIS path pushes arguments in wrong column order: `is_primary` receives `'spatial_polygon'` (string coerced to true), `structure_type` receives area (float), `match_type` receives boolean. All buildings get `is_primary = true`. Pre-existing bug, separate script. | WF3 link-massing | closed-in-WF3 — PostGIS path rewritten with deterministic primary assignment + correct column order |
+| HIGH | Adversarial | `parcel_buildings` has no partial unique index `(parcel_id) WHERE is_primary = true` — allows multiple primary buildings per parcel. Needs migration + link-massing fix together. | WF3 link-massing + migration | closed-in-WF3 — migration 081 adds partial unique index after data repair |
 | LOW | Adversarial | No `ORDER BY` on compute-cost-estimates SOURCE_SQL — non-deterministic if fan-out occurs. Mitigated by LATERAL LIMIT 1 but not fully defended. | Future hardening | OPEN |
+
+### WF3 link-massing PostGIS fix review findings (2026-04-10)
+
+| Severity | Source | Item | Planned home | Status |
+|----------|--------|------|--------------|--------|
+| LOW | Independent | PostGIS path uses confidence 0.90 vs JS fallback 0.95 for same centroid_in_parcel operation. Undocumented inconsistency. | Future harmonization | OPEN |
+| LOW | Adversarial | Migration 081 repair uses INNER JOIN to building_footprints — would miss orphan FK rows. FK constraint prevents orphans (no CASCADE) so safe in practice. | WONTFIX (FK enforced) | WONTFIX |

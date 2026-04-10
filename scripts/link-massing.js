@@ -216,18 +216,54 @@ pipeline.run('link-massing', async (pool) => {
       );
 
       // Upsert matched parcel-building links using flushInsertBatch
+      // Group by parcel for deterministic primary assignment (mirrors JS fallback path)
       if (matchResult.rows.length > 0) {
         const insertParams = [];
         const insertValues = [];
         let paramIdx = 1;
+
+        // Group buildings by parcel_id
+        const byParcel = new Map();
         for (const r of matchResult.rows) {
-          const area = parseFloat(r.footprint_area_sqm) || 0;
-          insertParams.push(`($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`);
-          insertValues.push(r.parcel_id, r.building_id, 'spatial_polygon', area, area > 0, true);
+          const pid = r.parcel_id;
+          if (!byParcel.has(pid)) byParcel.set(pid, []);
+          byParcel.get(pid).push({
+            building_id: r.building_id,
+            footprint_area_sqm: parseFloat(r.footprint_area_sqm) || 0,
+          });
         }
+
+        // Clear is_primary for affected parcels before upserting — prevents
+        // partial unique index violation when primary shifts to a different building.
+        const parcelIdArray = [...byParcel.keys()];
+        await pool.query(
+          `UPDATE parcel_buildings SET is_primary = false WHERE parcel_id = ANY($1) AND is_primary = true`,
+          [parcelIdArray]
+        );
+
+        for (const [parcelId, buildings] of byParcel) {
+          // Sort by area DESC, building_id ASC for deterministic primary assignment
+          // (matches migration 081 repair ORDER BY and JS fallback tie-breaker)
+          buildings.sort((a, b) => b.footprint_area_sqm - a.footprint_area_sqm || a.building_id - b.building_id);
+          const allAreas = buildings.map(b => b.footprint_area_sqm);
+          const maxArea = Math.max(...allAreas);
+          const primaryBuildingId = buildings[0].building_id;
+
+          for (const b of buildings) {
+            let structureType = classifyStructure(b.footprint_area_sqm, allAreas);
+            if (structureType === 'primary' && b.building_id !== primaryBuildingId) {
+              structureType = b.footprint_area_sqm <= GARAGE_MAX_SQM ? 'garage' : 'other';
+            }
+            const isPrimary = structureType === 'primary';
+
+            insertParams.push(`($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`);
+            insertValues.push(parcelId, b.building_id, isPrimary, structureType, 'centroid_in_parcel', 0.90);
+          }
+        }
+
         buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
         containsMatches += matchResult.rows.length;
-        parcelsLinked += new Set(matchResult.rows.map(r => r.parcel_id)).size;
+        parcelsLinked += byParcel.size;
       }
 
       processed += parcelBatch.rows.length;
@@ -459,11 +495,12 @@ pipeline.run('link-massing', async (pool) => {
       }
 
       // Classify structures — deterministic primary assignment
-      // classifyStructure may return 'primary' for multiple tied buildings,
-      // so we enforce exactly one primary via building_id tie-breaker.
+      // Sort by area DESC, building_id ASC for deterministic tie-breaker
+      // (matches migration 081 repair ORDER BY and PostGIS path)
+      matchedBuildings.sort((a, b) => b.footprint_area_sqm - a.footprint_area_sqm || a.building_id - b.building_id);
       const allAreas = matchedBuildings.map(b => b.footprint_area_sqm);
       const maxArea = Math.max(...allAreas);
-      const primaryBuildingId = matchedBuildings.find(b => b.footprint_area_sqm === maxArea).building_id;
+      const primaryBuildingId = matchedBuildings[0].building_id;
       for (const mb of matchedBuildings) {
         let structureType = classifyStructure(mb.footprint_area_sqm, allAreas);
         // Enforce single primary: only the first building at max area gets 'primary'
