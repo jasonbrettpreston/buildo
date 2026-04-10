@@ -117,6 +117,19 @@ async function fetchLeadFeedPage(
     );
   }
   if (!res.ok) {
+    // Phase 3-holistic WF3 Phase C (2026-04-09): surface 401 as a
+    // DEDICATED `AUTH_EXPIRED` code distinct from `NETWORK_ERROR`.
+    // Pre-fix, a mid-session cookie expiry mapped to the generic
+    // NETWORK_ERROR path and the user saw an "unreachable" empty
+    // state forever — no prompt to re-login. The consuming LeadFeed
+    // component branches on this code to trigger a login redirect.
+    // Independent reviewer Phase 3 C1.
+    if (res.status === 401) {
+      throw new LeadApiClientError(
+        'AUTH_EXPIRED',
+        'Your session has expired. Please sign in again.',
+      );
+    }
     const err = isLeadApiError(body)
       ? body.error
       : { code: 'NETWORK_ERROR', message: `Feed request failed: ${res.status}` };
@@ -258,12 +271,16 @@ export function useLeadFeed(input: UseLeadFeedInput) {
     }
     const err = query.error;
     if (!(err instanceof LeadApiClientError)) return;
-    const key = `${err.code}|${err.message}`;
+    // Phase 3-holistic WF3 Phase E (2026-04-09): dedupe and emit ONLY
+    // the bounded `code` string — `err.message` is unbounded (server
+    // messages, validation details, JS runtime messages) and blew up
+    // PostHog event property cardinality, making the funnel unusable.
+    // Independent reviewer Phase 3 I5.
+    const key = err.code;
     if (lastClientErrorRef.current === key) return;
     lastClientErrorRef.current = key;
     captureEvent('lead_feed.client_error', {
       code: err.code,
-      message: err.message,
       trade_slug: input.trade_slug,
     });
   }, [query.isError, query.error, input.trade_slug]);

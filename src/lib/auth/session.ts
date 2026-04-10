@@ -11,6 +11,13 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb } from './config';
 import type { UserProfile, UserPreferences, AccountType } from './types';
 import { DEFAULT_PREFERENCES } from './types';
+// Cross-layer import intentional: sign-out MUST clear the lead feed
+// store to prevent user A's `snappedLocation` (home GPS coords) from
+// being inherited by user B on the same device. Phase 3-holistic WF3
+// Phase C (2026-04-09, Independent reviewer C2). No other features
+// currently persist user-scoped state; when more do, consider a
+// shared `useUserBoundStores` registry instead of direct imports.
+import { resetLeadFeedState } from '@/features/leads/hooks/useLeadFeedState';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -51,6 +58,11 @@ export async function signInWithGoogle(): Promise<User> {
 export async function signOut(): Promise<void> {
   const auth = getFirebaseAuth();
   await firebaseSignOut(auth);
+  // Wipe per-device Zustand state + localStorage slice. Run AFTER
+  // the Firebase sign-out so a mid-flight exception from Firebase
+  // doesn't clear the local store for a user who is still signed
+  // in. The reset is a local operation and will not throw.
+  resetLeadFeedState();
 }
 
 export function onAuthChange(callback: (user: User | null) => void): () => void {

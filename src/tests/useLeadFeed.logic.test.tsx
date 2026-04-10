@@ -564,11 +564,14 @@ describe('useLeadFeed — client_error observability (Phase 3-vi)', () => {
       (c) => c[0] === 'lead_feed.client_error',
     );
     expect(calls.length).toBeGreaterThan(0);
+    // Phase 3-holistic WF3 Phase E: telemetry now omits the unbounded
+    // `message` field to keep PostHog property cardinality bounded.
+    // The bounded `code` is still present.
     expect(calls[0]?.[1]).toMatchObject({
       code: 'VALIDATION_FAILED',
-      message: 'lat must be finite',
       trade_slug: 'plumbing',
     });
+    expect(calls[0]?.[1]).not.toHaveProperty('message');
   });
 
   it('does NOT spam events when the SAME query refetches into the same error (sustained error state)', async () => {

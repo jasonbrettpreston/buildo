@@ -8,12 +8,22 @@ export type RouteClass = 'public' | 'authenticated' | 'admin';
 // ---------------------------------------------------------------------------
 
 /**
- * Check if dev mode is enabled via NEXT_PUBLIC_DEV_MODE=true.
- * When enabled, middleware auto-injects a dev session cookie so
- * all routes are accessible without Firebase authentication.
+ * Check if dev mode is enabled via the SERVER-ONLY `DEV_MODE=true` env var.
+ * When enabled, middleware auto-injects a dev session cookie so all routes
+ * are accessible without Firebase authentication.
+ *
+ * Defense-in-depth (Phase 3-holistic WF3 Phase C, 2026-04-09 — Gemini
+ * Phase 0-3 HIGH): previously read `NEXT_PUBLIC_DEV_MODE`, which Next.js
+ * inlines into the client bundle. A misconfigured production build with
+ * that flag set would bypass auth for ALL users. The security-critical
+ * middleware check now reads the non-public `DEV_MODE` var; the login
+ * page's cosmetic "Continue as Dev" button still reads
+ * `NEXT_PUBLIC_DEV_MODE` so developers see the button locally, but even
+ * if that leaks into a prod bundle the middleware still enforces real
+ * auth because `DEV_MODE` is server-only.
  */
 export function isDevMode(): boolean {
-  return process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+  return process.env.DEV_MODE === 'true';
 }
 
 /** A valid JWT-shaped cookie value used in dev mode to satisfy session checks. */
@@ -113,8 +123,16 @@ export function classifyRoute(pathname: string): RouteClass {
     return 'authenticated';
   }
 
-  // Default: public (unknown routes handled by Next.js 404)
-  return 'public';
+  // Default: FAIL-CLOSED. Any route not explicitly whitelisted above
+  // requires authentication. Phase 3-holistic WF3 Phase C fix (Gemini
+  // Phase 0-3 CRITICAL): the previous default was `'public'` which
+  // meant a developer adding a new protected page and forgetting to
+  // whitelist it would ship it publicly accessible. Fail-closed makes
+  // the forgotten case a visible 401 redirect instead of a silent
+  // security hole. Unknown-nonexistent routes still reach a 404 after
+  // auth verification — only real cost is an extra middleware round
+  // trip for a 404-bound request, which is acceptable.
+  return 'authenticated';
 }
 
 /** Check if a route is publicly accessible */

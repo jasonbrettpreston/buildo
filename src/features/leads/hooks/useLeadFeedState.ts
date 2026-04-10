@@ -293,6 +293,45 @@ export const useLeadFeedState = create<LeadFeedState>()(
 );
 
 /**
+ * Hard-reset the lead feed store + its persisted localStorage slice.
+ * Call from `signOut()` so a shared device doesn't leak user A's
+ * snapped GPS position to user B's first feed fetch.
+ *
+ * Phase 3-holistic WF3 Phase C (2026-04-09, Independent reviewer C2):
+ * `useLeadFeedState` persists to `localStorage['buildo-lead-feed']`
+ * with a device-scoped key. Without this cleanup, user B signing in
+ * after user A on the same device would inherit A's `snappedLocation`,
+ * `location`, and `radiusKm` — and the first `/api/leads/feed` request
+ * would target A's home GPS position under B's auth token. Both a
+ * privacy leak (A's coords visible in B's query params / server logs)
+ * and a correctness bug (B sees leads in A's neighbourhood).
+ *
+ * Clears both the in-memory Zustand state AND the persist-middleware
+ * localStorage entry so a reload after sign-out doesn't restore A's
+ * slice from disk.
+ */
+export function resetLeadFeedState(): void {
+  useLeadFeedState.setState({
+    hoveredLeadId: null,
+    selectedLeadId: null,
+    radiusKm: DEFAULT_RADIUS_KM,
+    location: null,
+    snappedLocation: null,
+  });
+  // Best-effort clear of the persisted slice. `persist.clearStorage`
+  // is the official API; `localStorage.removeItem` is the hard
+  // fallback when the middleware handle isn't available (e.g., SSR
+  // environments where the API is undefined).
+  try {
+    useLeadFeedState.persist.clearStorage();
+  } catch {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('buildo-lead-feed');
+    }
+  }
+}
+
+/**
  * Exported for unit tests only. Production code uses the hook.
  */
 export const __validatePersistedSliceForTests = validatePersistedSlice;

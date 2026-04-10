@@ -92,6 +92,16 @@ describe('Route Classification', () => {
       expect(classifyRoute('/admin/data-quality')).toBe('admin');
       expect(classifyRoute('/admin/market-metrics')).toBe('admin');
     });
+
+    // Phase 3-holistic WF3 Phase C: fail-closed default. Previously
+    // unknown routes defaulted to `'public'`, which meant a new
+    // protected page added without updating classifyRoute would ship
+    // publicly accessible. Gemini Phase 0-3 CRITICAL finding.
+    it('defaults unknown routes to authenticated (fail-closed)', () => {
+      expect(classifyRoute('/unknown-page')).toBe('authenticated');
+      expect(classifyRoute('/some/nested/future/route')).toBe('authenticated');
+      expect(classifyRoute('/api/future-endpoint')).toBe('authenticated');
+    });
   });
 
   describe('isPublicRoute', () => {
@@ -198,32 +208,32 @@ describe('Session Cookie Validation', () => {
 // ---------------------------------------------------------------------------
 
 describe('Dev Mode', () => {
-  const originalEnv = process.env.NEXT_PUBLIC_DEV_MODE;
+  const originalEnv = process.env.DEV_MODE;
 
   afterEach(() => {
     if (originalEnv === undefined) {
-      delete process.env.NEXT_PUBLIC_DEV_MODE;
+      delete process.env.DEV_MODE;
     } else {
-      process.env.NEXT_PUBLIC_DEV_MODE = originalEnv;
+      process.env.DEV_MODE = originalEnv;
     }
   });
 
   it('isDevMode returns false by default', () => {
-    delete process.env.NEXT_PUBLIC_DEV_MODE;
+    delete process.env.DEV_MODE;
     expect(isDevMode()).toBe(false);
   });
 
-  it('isDevMode returns true when NEXT_PUBLIC_DEV_MODE=true', () => {
-    process.env.NEXT_PUBLIC_DEV_MODE = 'true';
+  it('isDevMode returns true when DEV_MODE=true (server-only, not NEXT_PUBLIC_)', () => {
+    process.env.DEV_MODE = 'true';
     expect(isDevMode()).toBe(true);
   });
 
   it('isDevMode returns false for non-true values', () => {
-    process.env.NEXT_PUBLIC_DEV_MODE = 'false';
+    process.env.DEV_MODE = 'false';
     expect(isDevMode()).toBe(false);
-    process.env.NEXT_PUBLIC_DEV_MODE = '1';
+    process.env.DEV_MODE = '1';
     expect(isDevMode()).toBe(false);
-    process.env.NEXT_PUBLIC_DEV_MODE = '';
+    process.env.DEV_MODE = '';
     expect(isDevMode()).toBe(false);
   });
 
