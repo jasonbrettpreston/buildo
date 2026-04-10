@@ -240,8 +240,16 @@ describe('LEAD_FEED_SQL — structure', () => {
     // lead_views(user_id, lead_key, trade_slug). The decomposed
     // (permit_num, revision_num) pair is NOT a unique key — pre-LPAD
     // normalization rows could collide. Independent reviewer Issue 1.
+    //
+    // Phase 3-holistic WF3 (Phase A, 2026-04-09): MUST include the
+    // 'permit:' prefix to match buildLeadKey() at record-lead-view.ts.
+    // The earlier Phase 3-vi implementation (+ this test) codified the
+    // wrong format — SQL wrote `{num}:{rev}` while buildLeadKey wrote
+    // `permit:{num}:{rev}`, so the LEFT JOIN never matched and is_saved
+    // was structurally always false for the entire feed. Silent
+    // regression caught by independent reviewer C1/I4.
     expect(LEAD_FEED_SQL).toMatch(
-      /lv_p\.lead_key = \(p\.permit_num \|\| ':' \|\| LPAD\(p\.revision_num, 2, '0'\)\)/,
+      /lv_p\.lead_key = \('permit:' \|\| p\.permit_num \|\| ':' \|\| LPAD\(p\.revision_num, 2, '0'\)\)/,
     );
     expect(LEAD_FEED_SQL).toMatch(/lv_p\.permit_num = p\.permit_num/);
     expect(LEAD_FEED_SQL).toMatch(/lv_p\.revision_num = p\.revision_num/);
@@ -252,8 +260,15 @@ describe('LEAD_FEED_SQL — structure', () => {
   it('LEFT JOINs lead_views lv_b in builder_candidates with lead_key equality (Issue 1 fix)', () => {
     expect(LEAD_FEED_SQL).toMatch(/LEFT JOIN lead_views lv_b/);
     expect(LEAD_FEED_SQL).toMatch(/lv_b\.user_id = \$9/);
-    // Same lead_key safety pattern — builder lead_keys are entity_id::text
-    expect(LEAD_FEED_SQL).toMatch(/lv_b\.lead_key = e\.id::text/);
+    // Same lead_key safety pattern — builder lead_keys are
+    // 'builder:' || entity_id::text per buildLeadKey() at
+    // record-lead-view.ts. Phase 3-holistic WF3 Phase A fix — the
+    // Phase 3-vi SQL wrote bare `e.id::text` and never matched the
+    // 'builder:{id}' prefix format the JS writer uses, making
+    // is_saved structurally always false for every builder lead.
+    expect(LEAD_FEED_SQL).toMatch(
+      /lv_b\.lead_key = \('builder:' \|\| e\.id::text\)/,
+    );
     expect(LEAD_FEED_SQL).toMatch(/lv_b\.entity_id = e\.id/);
     expect(LEAD_FEED_SQL).toMatch(/lv_b\.trade_slug = \$1/);
     expect(LEAD_FEED_SQL).toMatch(/lv_b\.lead_type = 'builder'/);

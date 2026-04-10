@@ -213,9 +213,16 @@ export const LEAD_FEED_SQL = `
     -- claim. The lead_type='permit' guard is defense-in-depth
     -- against a future schema where permit_num could collide with
     -- an entity_id by accident.
+    -- Phase 3-holistic WF3 Phase A (2026-04-09): MUST include the
+    -- 'permit:' prefix. buildLeadKey() at record-lead-view.ts writes
+    -- permit:{num}:{rev}; without the prefix here the LEFT JOIN
+    -- NEVER matches and is_saved is structurally always false for the
+    -- entire permit feed. Phase 3-vi shipped with this silent
+    -- regression because the test in get-lead-feed.logic.test.ts
+    -- codified the wrong format. Caught by independent reviewer I4.
     LEFT JOIN lead_views lv_p
       ON lv_p.user_id = $9::text
-     AND lv_p.lead_key = (p.permit_num || ':' || LPAD(p.revision_num, 2, '0'))
+     AND lv_p.lead_key = ('permit:' || p.permit_num || ':' || LPAD(p.revision_num, 2, '0'))
      AND lv_p.permit_num = p.permit_num
      AND lv_p.revision_num = p.revision_num
      AND lv_p.trade_slug = $1
@@ -385,9 +392,14 @@ export const LEAD_FEED_SQL = `
     -- aggregation in the SELECT collapses duplicates from the
     -- post-JOIN cross product (every permit row for the same
     -- builder sees the same lv_b row repeated).
+    -- Phase 3-holistic WF3 Phase A fix: MUST include the 'builder:'
+    -- prefix. buildLeadKey() writes builder:{entity_id}; bare
+    -- e.id::text never matches, so is_saved was structurally
+    -- always false for every builder lead in the feed. Independent
+    -- reviewer C1 (Phase 0-3 bundle).
     LEFT JOIN lead_views lv_b
       ON lv_b.user_id = $9::text
-     AND lv_b.lead_key = e.id::text
+     AND lv_b.lead_key = ('builder:' || e.id::text)
      AND lv_b.entity_id = e.id
      AND lv_b.trade_slug = $1
      AND lv_b.lead_type = 'builder'
@@ -662,12 +674,17 @@ export async function getLeadFeed(
       },
     };
   } catch (err) {
+    // Phase 3-holistic WF3 Phase E (2026-04-09, Independent reviewer
+    // Phase 0-3 I2): do NOT log user_id + lat + lng in the infra-error
+    // path. A pool exhaustion or DB timeout would bind a named user to
+    // their GPS coordinates at a specific timestamp inside third-party
+    // log aggregators — a PIPEDA/GDPR location-time record we don't
+    // need to debug query failures. Debug context is trade_slug +
+    // radius + limit; the user scope lives in per-request access logs.
     logError('[lead-feed/get]', err, {
-      user_id: input.user_id,
       trade_slug: input.trade_slug,
-      lat: input.lat,
-      lng: input.lng,
       radius_km: clampedKm,
+      limit: clampedLimit,
     });
     throw err;
   }
