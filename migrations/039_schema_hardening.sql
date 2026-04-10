@@ -2,6 +2,8 @@
 -- PostGIS extension, native geometry columns, FK constraints, partial indexes,
 -- and CQA pipeline schedule seeds.
 
+-- UP
+
 -- ---------------------------------------------------------------------------
 -- 1A: PostGIS + Native Geometry Columns
 -- ---------------------------------------------------------------------------
@@ -97,13 +99,24 @@ ALTER TABLE permit_parcels VALIDATE CONSTRAINT fk_permit_parcels_permits;
 -- 1C: Partial Indexes for Workers
 -- ---------------------------------------------------------------------------
 
-CREATE INDEX IF NOT EXISTS idx_permits_needs_geocode
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_needs_geocode
   ON permits(permit_num, revision_num)
   WHERE geocoded_at IS NULL;
 
+-- Phase 3-holistic WF2 (2026-04-09): the original predicate included
+-- `OR enriched_at < NOW() - INTERVAL '30 days'`, which Postgres rejects
+-- because NOW() is STABLE (not IMMUTABLE) and partial-index predicates
+-- must be immutable. The fresh-apply failure had silently broken the
+-- entire BUILDO_TEST_DB=1 testcontainer harness — every *.db.test.ts
+-- file was unable to boot a fresh database — which is precisely how
+-- the Phase 3-vi lead_key prefix regression slipped through (no
+-- integration coverage). The 30-day staleness condition belongs in
+-- the worker query, not the index predicate; the IS NULL half is the
+-- load-bearing one (workers need fast lookups for the never-enriched
+-- backlog, which is the bulk of the table).
 CREATE INDEX IF NOT EXISTS idx_builders_needs_enrich
   ON builders(id)
-  WHERE enriched_at IS NULL OR enriched_at < NOW() - INTERVAL '30 days';
+  WHERE enriched_at IS NULL;
 
 -- ---------------------------------------------------------------------------
 -- 1E: CQA Pipeline Schedule Seeds
@@ -113,3 +126,10 @@ INSERT INTO pipeline_schedules (pipeline, cadence) VALUES
   ('assert_schema',      'Daily'),
   ('assert_data_bounds', 'Daily')
 ON CONFLICT (pipeline) DO NOTHING;
+
+-- DOWN
+-- Schema hardening migration is forward-only by design (PostGIS
+-- enable, FK adds, partial indexes, pipeline_schedules seeds). A
+-- rollback would require manual review of which hardened constraints
+-- can be safely dropped. Intentionally left unspecified — restore
+-- from backup if a rollback becomes necessary.
