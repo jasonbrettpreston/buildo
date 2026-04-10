@@ -29,7 +29,18 @@ export type EventName =
   // failure modes that the user never explicitly triggered.
   | 'lead_feed.persisted_state_recovered'
   | 'lead_feed.geolocation_query_failed'
-  | 'lead_feed.client_error';
+  | 'lead_feed.client_error'
+  // Phase 6 step 1: LeadMapPane marker interactions. `position` is the
+  // index of the marker's lead in the feed list (bounded cardinality)
+  // — the lead_id is intentionally NOT a property to keep PostHog
+  // event property cardinality bounded and to avoid tying named users
+  // to specific permit/property activity beyond what we already do for
+  // lead_clicked. The hover variant is sampled (ref-deduped per
+  // (lead_type, marker) pair) at the call site so it doesn't blow up
+  // event volume on mousemove storms.
+  | 'lead_feed.map_marker_clicked'
+  | 'lead_feed.map_marker_hovered'
+  | 'lead_feed.map_unavailable';
 
 type EventProperties = Record<string, unknown>;
 

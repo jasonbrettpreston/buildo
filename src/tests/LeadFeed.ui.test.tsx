@@ -491,6 +491,57 @@ describe('LeadFeed — selectedLeadId cleanup on refetch (Independent reviewer h
   });
 });
 
+describe('LeadFeed — selectedLeadId scrollIntoView (Phase 6 step 1 bidirectional sync)', () => {
+  it('calls scrollIntoView on the matching card wrapper when selectedLeadId flips', async () => {
+    // Patch jsdom Element.prototype.scrollIntoView for the duration
+    // of this test (jsdom doesn't ship the method). The effect in
+    // LeadFeed.tsx feature-detects and bails when undefined, so we
+    // must install the spy BEFORE the effect runs.
+    const scrollSpy = vi.fn();
+    const original = (Element.prototype as { scrollIntoView?: () => void })
+      .scrollIntoView;
+    (Element.prototype as { scrollIntoView?: () => void }).scrollIntoView =
+      scrollSpy;
+    try {
+      // Two permit leads in items, none selected initially.
+      returnQuery(
+        makeQuery({
+          data: {
+            pages: [
+              pageOf([
+                { ...samplePermit, lead_id: 'p-1' },
+                { ...samplePermit, lead_id: 'p-2' },
+              ]),
+            ],
+          },
+        }),
+      );
+      render(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+
+      // Flip the Zustand selection externally — this is what a map
+      // marker click does in production.
+      useLeadFeedState.setState({ selectedLeadId: 'p-2' });
+      // Wait one microtask for the effect to run.
+      await new Promise((r) => setTimeout(r, 0));
+
+      expect(scrollSpy).toHaveBeenCalled();
+      const callArg = scrollSpy.mock.calls[0]?.[0] as
+        | { block?: string; behavior?: string }
+        | undefined;
+      expect(callArg?.block).toBe('nearest');
+    } finally {
+      // Restore — leaving a global patch in place poisons sibling tests.
+      if (original) {
+        (Element.prototype as { scrollIntoView?: () => void }).scrollIntoView =
+          original;
+      } else {
+        delete (Element.prototype as { scrollIntoView?: () => void })
+          .scrollIntoView;
+      }
+    }
+  });
+});
+
 describe('LeadFeed — empty_state_shown deduplication (Independent C1)', () => {
   it('fires lead_feed.empty_state_shown exactly once per (trade, variant), not on every re-render', () => {
     returnQuery(makeQuery({ data: { pages: [pageOf([])] } }));

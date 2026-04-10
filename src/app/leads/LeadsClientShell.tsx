@@ -27,6 +27,7 @@
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { LeadFeed } from '@/features/leads/components/LeadFeed';
+import { LeadMapPane } from '@/features/leads/components/LeadMapPane';
 import { useGeolocation } from '@/features/leads/hooks/useGeolocation';
 import { captureEvent } from '@/lib/observability/capture';
 
@@ -55,9 +56,21 @@ export function LeadsClientShell({ tradeSlug }: LeadsClientShellProps) {
   }, [status.state, request]);
 
   if (status.state === 'granted') {
+    // Phase 6 step 1: desktop two-column layout. Mobile (`< lg`)
+    // collapses to a single column and LeadMapPane self-hides via
+    // its own `hidden lg:block` classes. The grid template is
+    // 500px feed column + remainder for the map (Zillow pattern,
+    // spec 75 §5).
     return (
-      <main className="min-h-screen bg-feed">
-        <LeadFeed
+      <main className="min-h-screen bg-feed lg:grid lg:grid-cols-[500px_1fr]">
+        <div className="lg:max-h-screen lg:overflow-y-auto">
+          <LeadFeed
+            tradeSlug={tradeSlug}
+            lat={status.coords.lat}
+            lng={status.coords.lng}
+          />
+        </div>
+        <LeadMapPane
           tradeSlug={tradeSlug}
           lat={status.coords.lat}
           lng={status.coords.lng}

@@ -1,4 +1,5 @@
 'use client';
+
 // 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 5
 // 🔗 DESIGN: docs/specs/product/future/74_lead_feed_design.md
 //
@@ -20,6 +21,7 @@
 // (NOT captured in a closure) so the right banner renders when the
 // user crosses the threshold.
 
+import { useReducedMotion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useLeadFeed } from '@/features/leads/api/useLeadFeed';
@@ -156,6 +158,46 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
       setSelectedLeadId(null);
     }
   }, [query.isSuccess, selectedLeadId, items, setSelectedLeadId]);
+
+  // Phase 6 step 1: bidirectional map ↔ list sync. When a marker
+  // click sets `selectedLeadId` from the LeadMapPane, scroll the
+  // matching card in this list into view so the user can see the
+  // detail without manually hunting for it. The other direction
+  // (card hover/select → marker active state) already works because
+  // both the marker and the card read `hoveredLeadId`/`selectedLeadId`
+  // from the same Zustand store.
+  //
+  // Implementation: keep a Map of lead_id → card root element via
+  // ref callbacks attached to the wrapper divs in the render below.
+  // When `selectedLeadId` flips, find the corresponding element and
+  // call scrollIntoView. Honour `prefers-reduced-motion` (skip the
+  // smooth animation for users who've asked the OS for reduced
+  // motion — WCAG 2.1 SC 2.3.3, same Phase D fix carried forward).
+  const reduceMotion = useReducedMotion();
+  const cardRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const registerCardRef = (leadId: string) => (el: HTMLElement | null) => {
+    if (el === null) {
+      cardRefs.current.delete(leadId);
+    } else {
+      cardRefs.current.set(leadId, el);
+    }
+  };
+  useEffect(() => {
+    if (selectedLeadId === null) return;
+    const el = cardRefs.current.get(selectedLeadId);
+    if (!el) return;
+    // Feature-detect scrollIntoView. jsdom doesn't implement it (the
+    // method is undefined on jsdom Element instances), and a few
+    // exotic browser environments stub it as a no-op. The guard
+    // keeps tests green and prod safe.
+    if (typeof el.scrollIntoView !== 'function') return;
+    el.scrollIntoView({
+      block: 'nearest',
+      // 'auto' = instant snap, 'smooth' = animated. Reduced-motion
+      // users get the instant variant per WCAG 2.3.3.
+      behavior: reduceMotion ? 'auto' : 'smooth',
+    });
+  }, [selectedLeadId, reduceMotion]);
 
   // Compute the empty-state variant by combining BOTH navigator.onLine
   // AND the TanStack Query state. navigator.onLine alone is unreliable
@@ -333,10 +375,26 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
           // string. Prefixing with lead_type guarantees uniqueness
           // at near-zero cost. Caught by Gemini 2026-04-09 review.
           const key = `${lead.lead_type}-${lead.lead_id}`;
-          return lead.lead_type === 'permit' ? (
-            <PermitLeadCard key={key} lead={lead} tradeSlug={tradeSlug} />
-          ) : (
-            <BuilderLeadCard key={key} lead={lead} tradeSlug={tradeSlug} />
+          // Phase 6 step 1: each card is wrapped in a ref-attached
+          // div so the scrollIntoView effect can find the matching
+          // element by lead_id when a map marker is clicked. The
+          // wrapper is a normal block element (NOT display:contents
+          // — that breaks scrollIntoView in some browsers because
+          // the element has no box of its own). Visual diff is
+          // nil because the parent's `space-y-3` already targets
+          // direct children.
+          return (
+            <div
+              key={key}
+              ref={registerCardRef(lead.lead_id)}
+              data-lead-id={lead.lead_id}
+            >
+              {lead.lead_type === 'permit' ? (
+                <PermitLeadCard lead={lead} tradeSlug={tradeSlug} />
+              ) : (
+                <BuilderLeadCard lead={lead} tradeSlug={tradeSlug} />
+              )}
+            </div>
           );
         })}
       </div>
