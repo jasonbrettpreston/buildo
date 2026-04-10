@@ -1989,3 +1989,48 @@ describe('Pipeline manifest includes assert_engine_health', () => {
     expect(PIPELINE_TABLE_MAP.assert_engine_health).toBe('engine_health_snapshots');
   });
 });
+
+// ── Regression: assert-schema validateTypeSample handles CKAN junk rows ──
+
+describe('assert-schema.js EST_CONST_COST type validation resilience', () => {
+  const schemaSource = fs.readFileSync(
+    path.join(__dirname, '../../scripts/quality/assert-schema.js'), 'utf-8'
+  );
+
+  it('filters out CKAN sentinel rows before type checking', () => {
+    // CKAN returns junk rows like "DO NOT UPDATE OR DELETE THIS INFO FIELD"
+    // that must be excluded before checking if costs are parseable
+    expect(schemaSource).toContain('isSentinelValue');
+    expect(schemaSource).toContain('DO NOT UPDATE');
+    expect(schemaSource).toContain('DO NOT DELETE');
+  });
+
+  it('strips commas from formatted cost strings before parsing', () => {
+    // CKAN returns costs like "1,000" — Number("1,000") is NaN but
+    // stripping non-numeric chars makes it parseable, matching cleanCost()
+    // in load-permits.js
+    expect(schemaSource).toContain('parseCost');
+    expect(schemaSource).toContain("replace(/[^0-9.\\-]/g, '')");
+  });
+
+  it('samples 20 rows instead of 5 to reduce all-junk risk', () => {
+    expect(schemaSource).toContain('limit=20');
+    expect(schemaSource).not.toContain('limit=5');
+  });
+
+  it('warns instead of failing when all sampled rows are sentinel/empty', () => {
+    // If every row is junk, the schema is still valid — we just can't
+    // verify cost parseability. This should not block the pipeline.
+    expect(schemaSource).toContain('all sampled rows are sentinel/empty');
+  });
+
+  it('parseCost mirrors cleanCost regex from load-permits.js', () => {
+    const loadSource = fs.readFileSync(
+      path.join(__dirname, '../../scripts/load-permits.js'), 'utf-8'
+    );
+    // Both scripts must use the same non-numeric stripping regex
+    const regex = "[^0-9.\\-]";
+    expect(schemaSource).toContain(regex);
+    expect(loadSource).toContain(regex);
+  });
+});

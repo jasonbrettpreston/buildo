@@ -90,8 +90,28 @@ function checkColumns(actualFields, expectedColumns, label) {
   return true;
 }
 
+/**
+ * Check if a cost string is a CKAN sentinel/junk row (not real data).
+ * Mirrors the guard in load-permits.js cleanCost().
+ */
+function isSentinelValue(v) {
+  if (!v || typeof v !== 'string') return false;
+  const u = v.toUpperCase();
+  return u.includes('DO NOT UPDATE') || u.includes('DO NOT DELETE');
+}
+
+/**
+ * Parse a cost value the same way load-permits.js cleanCost() does:
+ * strip non-numeric chars (commas, $, spaces) then parseFloat.
+ */
+function parseCost(v) {
+  if (!v || String(v).trim() === '') return NaN;
+  const s = String(v).replace(/[^0-9.\-]/g, '');
+  return parseFloat(s);
+}
+
 async function validateTypeSample(resourceId, label) {
-  const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=5`;
+  const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=20`;
   const res = await fetch(url);
   if (!res.ok) return true; // non-fatal
 
@@ -103,23 +123,28 @@ async function validateTypeSample(resourceId, label) {
   }
 
   // Permits: check EST_CONST_COST is parseable as number.
-  // Skip metadata/junk rows (CKAN datasets sometimes include header rows
-  // like "DO NOT UPDATE OR DELETE THIS INFO FIELD").
+  // Filter out sentinel/junk rows that CKAN injects (e.g.
+  // "DO NOT UPDATE OR DELETE THIS INFO FIELD") and strip commas
+  // from formatted numbers (e.g. "1,000") — mirrors cleanCost()
+  // in load-permits.js.
   const costRows = records.filter(
-    (r) => r.EST_CONST_COST !== undefined && r.EST_CONST_COST !== null && r.EST_CONST_COST !== ''
+    (r) => r.EST_CONST_COST !== undefined && r.EST_CONST_COST !== null
+        && r.EST_CONST_COST !== '' && !isSentinelValue(r.EST_CONST_COST)
   );
   if (costRows.length > 0) {
-    const dataRows = costRows.filter((r) => !isNaN(Number(r.EST_CONST_COST)));
+    const dataRows = costRows.filter((r) => !isNaN(parseCost(r.EST_CONST_COST)));
     if (dataRows.length === 0) {
       console.error(`  FAIL: ${label} — no sampled rows have parseable EST_CONST_COST`);
       return false;
     }
     const skipped = costRows.length - dataRows.length;
     if (skipped > 0) {
-      console.log(`  OK: ${label} — EST_CONST_COST verified (${dataRows.length}/${costRows.length} rows numeric, ${skipped} metadata rows skipped)`);
+      console.log(`  OK: ${label} — EST_CONST_COST verified (${dataRows.length}/${costRows.length} rows numeric, ${skipped} unparseable rows skipped)`);
     } else {
       console.log(`  OK: ${label} — EST_CONST_COST type coercion verified`);
     }
+  } else {
+    console.warn(`  WARN: ${label} — all sampled rows are sentinel/empty for EST_CONST_COST, skipping type check`);
   }
 
   return true;
