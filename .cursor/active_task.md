@@ -1,189 +1,124 @@
-# Active Task: Lead Feed Health 3 bugs — test feed error, timing semantics, expanded readiness
+# Active Task: Debug lead feed health 500 regression
 **Status:** Planning
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `c669f46c` (c669f46c88dfe864ba53f803aa62188902d52ee8)
+**Rollback Anchor:** `8528f164` (8528f164534fd3ebb8fd4f3a9d349f43547dcb03)
 
 ## Context
-Three user-reported bugs on `/admin/lead-feed`:
-
-1. **Test Feed tool fails** with `[object Object]` error when the Run Test button is pressed.
-2. **Timing Calibration card confusing:** "4 permit types calibrated" — user asks what this means and how many actual permits/leads get accurate timing from it.
-3. **Lead feed readiness is incomplete** — not all scoring pillar inputs are surfaced. User wants a comprehensive review of all inputs into the feed and all of them displayed in the admin.
-
+* **Goal:** User reports `/admin/lead-feed` dashboard shows "Failed to load lead feed health: Internal server error". Previous WF3 commit `8528f164` added 7 new queries to `getLeadFeedReadiness`; all pass unit tests but the live endpoint returns 500.
 * **Target Specs:**
-  - `docs/specs/product/admin/76_lead_feed_health_dashboard.md` (dashboard contract)
-  - `docs/specs/product/future/70_lead_feed.md` §Implementation (feed SQL + score pillars)
-  - `docs/specs/product/future/71_lead_timing_engine.md` (timing 3-tier engine)
-  - `docs/specs/product/future/72_lead_cost_model.md` (cost model inputs)
-
+  - `docs/specs/product/admin/76_lead_feed_health_dashboard.md` §3.1
 * **Key Files:**
-  - `src/components/LeadFeedHealthDashboard.tsx` — error display bug + readiness UI
-  - `src/app/api/admin/leads/test-feed/route.ts` — returns structured `{error:{code,message}}` object
-  - `src/lib/admin/lead-feed-health.ts` — `getLeadFeedReadiness`, `getCostCoverage`, etc.
-  - `src/app/api/admin/leads/health/route.ts` — aggregation endpoint
-  - `src/features/leads/lib/get-lead-feed.ts` — the actual feed SQL (reference only, not modified)
+  - `src/app/api/admin/leads/health/route.ts` — handler with try/catch
+  - `src/lib/admin/lead-feed-health.ts` — `getLeadFeedReadiness`, `getCostCoverage`, `getEngagement`
+  - `src/lib/db/client.ts` — shared pool (no explicit `max`, defaults to 10)
+  - `src/lib/logger.ts` — `logError` that the route uses
 
-## Root Cause Analysis (completed during investigation)
+## State Verification (completed during investigation)
 
-### Bug 1 — Test Feed `[object Object]` Error (TWO distinct causes)
+Curl results against `http://localhost:3000` with dev server (PID 28416) running:
 
-**1A — Server-side crash:** Migration `067_permits_location_geom.sql` has NEVER been applied to the local DB. The permits table has no `location` (PostGIS geography) column. The feed SQL in `get-lead-feed.ts:135,234,301,304-311,408` queries `p.location::geography` everywhere, so `getLeadFeed()` throws `column "p.location" does not exist`. The endpoint catches it and returns:
-```json
-{ "error": { "code": "INTERNAL_ERROR", "message": "Feed query failed" } }
-```
+| Endpoint | Status | Notes |
+|----------|--------|-------|
+| `/api/admin/stats` | **200 OK** | 173KB response — data quality dashboard source works |
+| `/api/quality` | **200 OK** | Quality snapshots work |
+| `/api/admin/leads/health` | **500** | `{error:"Internal server error"}` — THE BUG |
+| `/api/admin/leads/test-feed?lat=43.6532&lng=-79.3832&trade_slug=plumbing` | **500** | `{error:{code:"INTERNAL_ERROR",message:"Feed query failed"}}` — expected, PostGIS not installed locally |
 
-**1B — Client can't render structured errors:** `LeadFeedHealthDashboard.tsx:135-136`:
-```ts
-const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-throw new Error(body.error || `HTTP ${res.status}`);
-```
-When `body.error` is an object `{code, message, details?}`, passing it to `new Error()` stringifies it as `"[object Object]"`. Same issue would happen for a 400 validation error. The health endpoint uses a different envelope (`{error: "string"}`) so it works by accident.
+All 14 SQL queries from `getLeadFeedReadiness` were tested individually against the DB via `psql`. Every one of them returns valid data:
+- feed_active: 234,842
+- classified_active: 103,014
+- with_phase: 103,014
+- with_timing_calibration_match: 143,997
+- opportunity breakdown: permit_issued=52687, inspection=140493, application=0, other_active=41662
+- feed_eligible: 92,485
+- builders_feed_eligible: 618
+- neighbourhoods: total=158, active_with_nbhd=222,751
+- engagement (`avg_competition_per_lead`): 0 (empty lead_views table)
+- cost_coverage: (verified in previous WF3)
 
-**Additional migrations NOT applied** (discovered during investigation):
-- `067_permits_location_geom.sql` — PostGIS Point column + trigger (CRITICAL — blocks feed)
-- `072_inspection_stage_map.sql` — seed data table for Tier 1 timing engine
-- `075_user_profiles.sql` — for user auth/profile
+**Conclusion:** the underlying SQL works. Something in the Next.js runtime path is failing — this is NOT a schema or query bug.
 
-Migrations 068, 070, 071, 073, 074, 076, 077, 078, 079, 080, 081 ARE applied (confirmed via `\d` inspections). This is a partial-apply state — not all migrations ran on this DB. The migration runner has no tracking table.
+## Hypotheses (ranked by likelihood)
 
-### Bug 2 — "4 permit types calibrated" is uninformative
+### H1 — Next.js dev server is serving stale compiled code (HIGH likelihood, ~50%)
+The previous commit changed the module interface (`LeadFeedReadiness` got 8 new required fields). If the dev server's HMR hot-reloaded the lib but not the route handler (or vice-versa), the route may be running a stale version that references a removed path, OR the response serializer fails because the return shape doesn't match the `LeadFeedHealthResponse` type. **Test:** kill the dev server and restart it. If 500 goes away, we need no code change — but we should still investigate why HMR failed.
 
-The `timing_calibration` table stores per-permit_type percentile statistics (one row per permit_type). "4 permit types calibrated" means 4 distinct `permit_type` values have rows in the table. What the user actually needs to know:
+### H2 — Response payload contains invalid JSON (BigInt, Infinity, NaN) (MED likelihood, ~20%)
+`NextResponse.json(...)` uses `JSON.stringify`, which throws on BigInt or non-finite numbers. `COUNT(DISTINCT (pt.permit_num, pt.revision_num))` returns a Postgres `bigint` type — `parseInt` at the read site coerces it to a number, but what if one of the new queries returns a bigger-than-`Number.MAX_SAFE_INTEGER` value, or what if a query returns `null` for an aggregate that `parseInt` then coerces to `NaN`? The `timing_freshness_hours` NULL path is already guarded, but the other new fields may not be.
 
-1. **How many active permits does this calibration cover?** i.e., `COUNT(*) FROM permits WHERE permit_type IN (SELECT permit_type FROM timing_calibration)` scoped to active/feed-eligible permits.
-2. **What fraction of feed-eligible permits get accurate timing from the calibration?**
+### H3 — Pool exhaustion (MED likelihood, ~15%)
+With 14 concurrent queries against a default pool size of 10, the 4 excess queries queue. If the dashboard is actively polling (10s interval), TWO simultaneous `getLeadFeedReadiness` invocations = 28 connections queued on a 10-slot pool. The `connectionTimeoutMillis: 5000` in `src/lib/db/client.ts` would cause excess waits to throw `timeout exceeded when trying to connect`. The route's top-level catch returns 500.
 
-**BUT IMPORTANT ARCHITECTURAL CLARIFICATION:** The timing_calibration table is NOT used by the feed SQL. The feed uses a SQL proxy based on `permit_trades.phase` (see `get-lead-feed.ts:147-153` comment). The 3-tier timing engine (`src/features/leads/lib/timing.ts`) that consumes `timing_calibration` runs on the per-permit DETAIL PAGE, not in the feed.
+### H4 — A new query references a column that exists in schema but is NULL-only (LOW likelihood, ~10%)
+`permit_trades.phase` has 0 NULL values (verified earlier: `null_phase: 0`), but what if a column referenced in a JOIN implicitly NULL-propagates and causes a `parseInt(null)` → `NaN` that then gets serialized? The `.c` reads assume the column is always present with a valid integer.
 
-So the current "Timing Calibration" card is **misleading** as a "feed readiness" indicator — it doesn't affect feed results at all. The card should be relabeled to "Detail Page Timing Engine" or similar, and a NEW card added for the actual feed timing input (`permit_trades.phase`).
+### H5 — Something unrelated — `lead_views_schema.infra.test.ts` or a cross-import broke (LOW likelihood, ~5%)
+Some test or module may have locked state that breaks at runtime but not at test time.
 
-### Bug 3 — Incomplete readiness view (comprehensive audit)
+## Investigation Plan (before making any fix)
 
-**Enumerated inputs to the lead feed** (per `get-lead-feed.ts` and spec 70 §Implementation):
+**Phase 1 — Get the real error (MUST be done first):**
+1. Read the current dev server's terminal output directly (ask user to paste the last 30 lines from the Next.js terminal after hitting the endpoint), OR
+2. Add temporary `console.error` in `src/app/api/admin/leads/health/route.ts` catch block that prints `err.stack` and the specific `err.message`, then curl the endpoint and read the dev server logs
+3. Alternative: write a tiny `scripts/probe-health.mjs` that imports the module via `tsx` / `ts-node` and calls `getLeadFeedReadiness(pool)` directly with verbose logging — isolates the runtime bug from Next.js
 
-**A. Permit Feed Path — 4 score pillars + hard filters**
+**Phase 2 — Reproduce in a test:**
+1. Once the error is known, add a regression test to `src/tests/lead-feed-health.logic.test.ts` that reproduces the failure mode (mock pool returning the exact shape that trips it up)
+2. Red light
 
-| Pillar | Required Input | Where | Currently Surfaced? |
-|---|---|---|---|
-| Hard filter | `permits.location IS NOT NULL` | `get-lead-feed.ts:233` | ✅ as `permits_geocoded` (but via latitude/longitude, not the actual `location` column the feed uses) |
-| Hard filter | `p.status NOT IN ('Cancelled','Revoked','Closed')` | `get-lead-feed.ts:235` | ❌ — current admin uses an inclusion list that doesn't match |
-| Hard filter | `permit_trades.is_active = true` | `get-lead-feed.ts:231` | ❌ — `permits_classified` counts ANY trade row, including inactive |
-| Hard filter | `permit_trades.confidence >= 0.5` | `get-lead-feed.ts:232` | ❌ — not counted |
-| Proximity | PostGIS distance from user | `get-lead-feed.ts:135-145` | ✅ implicit (needs location) |
-| Timing | `permit_trades.phase` ∈ (structural, finishing, early_construction, landscaping) | `get-lead-feed.ts:147-153` | ❌ — not surfaced at all |
-| Value | `cost_estimates.cost_tier IS NOT NULL` | `get-lead-feed.ts:156-163` | ✅ as `permits_with_cost` |
-| Opportunity | `permits.status ∈ (Permit Issued, Inspection, Application)` | `get-lead-feed.ts:166-171` | ❌ — not broken out |
-| Display | `neighbourhoods.name` (LEFT JOIN, optional) | `get-lead-feed.ts:201` | ❌ — no neighbourhood coverage stat |
+**Phase 3 — Fix:**
+1. Based on which hypothesis proves correct:
+   - H1: kill/restart dev server is the "fix" but we should also harden the route response to fail more gracefully (better error message, less generic "Internal server error")
+   - H2: add a `safeParseInt` helper that rejects NaN and throws with a descriptive message naming the field + query
+   - H3: either reduce query count via CTE consolidation, add a 30s server-side cache, or explicitly set `max: 20` on the pool
+   - H4: add field presence validation on each query result
+   - H5: whatever the specific cause is
 
-**B. Builder Feed Path — WSIB eligibility filter (AND clause)**
+**Phase 4 — Prevent regressions:**
+- Make the route return a MORE DESCRIPTIVE error (not just "Internal server error"). The spec at §3.1 says "500 on unexpected error" but nothing requires the message to be an opaque string. Use the `extractErrorMessage` helper on the client side to render whatever the server sends. This is the real lesson from this session + the last one: opaque 500s hide bugs for days.
+- Add a logic-level test that exercises `getLeadFeedReadiness` against a mock pool returning realistic shapes, catching serialization issues at test time instead of runtime.
 
-From `get-lead-feed.ts:80-89` (`wsib_per_entity` CTE):
-- `is_gta = true`
-- `last_enriched_at IS NOT NULL`
-- `business_size ∈ (Small Business, Medium Business)`
-- `(website IS NOT NULL OR primary_phone IS NOT NULL)`
-- Plus hard filter: permit row `status IN (Permit Issued, Inspection)` (line 407)
+## Technical Implementation (placeholder — depends on Phase 1 diagnosis)
 
-Measured: **618 feed-eligible builders** (intersection of all filters). Current dashboard shows `builders_total: 3741`, `builders_with_contact: 517`, `builders_wsib_verified: 903` — NONE of these is the intersection that matters for the feed.
-
-**C. Detail Page Timing Engine** (separate from feed, but user asked about it):
-- `timing_calibration` rows (current count: 4)
-- `permit_inspections` (not yet on this DB — but used by Tier 1 stage engine)
-- `inspection_stage_map` (migration 072 not applied)
-
-## Technical Implementation
-
-### Files to Modify
-
-1. **`src/components/LeadFeedHealthDashboard.tsx`**
-   - Fix client error extraction to handle `{error: string}` AND `{error: {code, message, details?}}` shapes
-   - Reshape readiness section UI to present pillar-by-pillar coverage
-   - Relabel "Timing Calibration" card to distinguish feed-path timing (phase) from detail-page timing (calibration)
-   - Add new cards: classification breakdown (active+high-conf), opportunity-status breakdown, feed-eligible builder count
-
-2. **`src/lib/admin/lead-feed-health.ts`**
-   - Extend `LeadFeedReadiness` interface with new fields:
-     - `permits_with_phase` — permits with at least one `permit_trades.phase` populated
-     - `permits_feed_eligible` — full intersection (location + active trade + high-conf + non-terminal status)
-     - `permits_with_timing_calibration_match` — active permits whose permit_type has a row in timing_calibration (the "what does 4 mean" answer)
-     - `permits_by_opportunity_status` — counts by (Permit Issued, Inspection, Application, other)
-     - `builders_feed_eligible` — full WSIB intersection (GTA + enriched + size + contact)
-     - `neighbourhoods_total`, `permits_with_neighbourhood` (display coverage)
-   - Update `getLeadFeedReadiness` to query these
-   - Keep backward compatibility — existing fields unchanged
-
-3. **`src/tests/lead-feed-health.logic.test.ts`** + **`src/tests/lead-feed-health.infra.test.ts`**
-   - Add tests for new fields
-   - Add tests for test-feed error extraction (structured object error rendering)
-
-4. **`src/tests/LeadFeedHealthDashboard.ui.test.tsx`**
-   - Add test reproducing `[object Object]` bug: mock fetch returning `{error: {code, message}}` and assert the UI displays `message` (not `[object Object]`)
-   - Add tests for new readiness cards (phase coverage, opportunity breakdown, feed-eligible builders)
-
-### Database Reconciliation (NOT a code change)
-
-Apply the 3 missing migrations to local DB during investigation / before tests:
-- `migrations/067_permits_location_geom.sql` — CRITICAL (unblocks test feed)
-- `migrations/072_inspection_stage_map.sql` — seed data (feeds Tier 1 engine)
-- `migrations/075_user_profiles.sql` — user profiles table
-
-These are existing migration files — no new migration file needed. Same pattern as the prior WF3 (applied 070/076/079). **The real root cause is the migration runner has no tracking table; a dedicated WF to add `schema_migrations` should land separately** (already deferred to `review_followups.md` from the last WF3).
+* **New/Modified Files:** TBD — either `src/app/api/admin/leads/health/route.ts` (better error message), `src/lib/admin/lead-feed-health.ts` (safer parsing), or `src/lib/db/client.ts` (pool size)
+* **Database Impact:** NO
 
 ## Standards Compliance
 
-* **Try-Catch Boundary:** Existing handlers unchanged. Error envelope shape is already correct per spec 76.
-* **Unhappy Path Tests:** Structured error object rendering, empty engagement, missing migration graceful degradation
-* **logError Mandate:** Existing `logError(TAG, err, ...)` unchanged
-* **Mobile-First:** New cards follow existing `grid-cols-1 md:grid-cols-2` pattern; touch targets ≥ 44px
+* **Try-Catch Boundary:** Existing catch in `route.ts` — will REFINE to log stack + message. Still return 500 but with descriptive body per §10.3
+* **Unhappy Path Tests:** Will add a `logic.test.ts` case that mocks pool returning a `null` count or a non-finite aggregate, asserts the route returns a clear error
+* **logError Mandate:** Already in route. Will augment with phase context (e.g., `logError(TAG, err, { phase: 'readiness_query' })`)
+* **Mobile-First:** N/A — server-side fix
 
 ## Execution Plan
 
-- [x] **Rollback Anchor:** `c669f46c` (recorded)
-- [x] **State Verification:** Done — DB schema inspected, feed SQL traced, current dashboard fields enumerated
-- [x] **Spec Review:** Read spec 70 §Implementation, spec 76 §2.1-§3.1
-- [ ] **Apply missing migrations:** Run 067, 072, 075 against local DB (reconcile partial-apply state — unblocks Bug 1A and lets tests exercise the real schema)
-- [ ] **Reproduction — Bug 1B (client error):**
-  - Add test to `LeadFeedHealthDashboard.ui.test.tsx`: mock fetch returning 500 with `{error:{code:'INTERNAL_ERROR',message:'Feed query failed'}}` → assert the UI displays `'Feed query failed'` not `'[object Object]'`
-  - Add test: mock 400 with `{error:{code:'VALIDATION_ERROR',message:'Invalid parameters'}}` → assert displays `'Invalid parameters'`
-- [ ] **Reproduction — Bug 3 (readiness fields):**
-  - Add tests to `lead-feed-health.logic.test.ts` asserting the new fields are computed and returned
-- [ ] **Red Light:** Both new test sets MUST fail
-- [ ] **Fix 1B — client error extraction:**
-  - Helper `extractErrorMessage(body)`: handles `body.error` as string, `body.error.message` when object, fallback `HTTP status`
-  - Apply to BOTH `runTestFeed` and `fetchHealth` for consistency
-- [ ] **Fix 2 — timing semantics:**
-  - Rename "Timing Calibration" card to "Detail Page Timing Engine" with sublabel "(not used by feed ranking)"
-  - Add a new "Timing Coverage (Feed Path)" metric showing how many active permits have `permit_trades.phase` populated in the feed-eligible phase values
-  - Display `permits_with_timing_calibration_match` under the existing Timing Calibration card as "active permits covered"
-- [ ] **Fix 3 — comprehensive readiness:**
-  - Extend `getLeadFeedReadiness` to query the 6 new fields (phase coverage, feed-eligible intersection, timing match, opportunity breakdown, feed-eligible builders, neighbourhood coverage)
-  - Add new "Feed-Path Coverage" section to dashboard with per-pillar bars:
-    - Hard filter: location + non-terminal status
-    - Classification: active + high-conf trades
-    - Timing (feed): phase populated
-    - Value: cost_tier
-    - Opportunity: status breakdown
-  - Add new "Feed-Eligible Builders" row to the builder readiness block (the 618 intersection number)
-- [ ] **Sibling Bug Check (5 items):**
-  1. Does the health endpoint have the same `body.error` object problem? No — it returns `{error: 'string'}`. But apply the same helper for consistency.
-  2. Are there other scripts/files that read `body.error` the same way? Grep for `body.error` usage.
-  3. Does the `feed_ready_pct` calculation in `getLeadFeedReadiness` need updating? YES — it currently does a 3-way intersection (geocoded+trade+cost) but should also include the `is_active = true` and `confidence >= 0.5` filters on `permit_trades` to match the actual feed.
-  4. Does the `computeTestFeedDebug` call path have any OTHER crash sites? No — it operates on already-mapped items.
-  5. Are any tests asserting the OLD `permits_classified` count logic that might break? Check `lead-feed-health.infra.test.ts`.
-- [ ] **Schema Evolution:** N/A — no new migrations. 3 existing migrations applied manually (067, 072, 075)
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All 3365+ tests must pass (plus new ones).
-- [ ] **Collateral Check:** `npx vitest related src/lib/admin/lead-feed-health.ts src/components/LeadFeedHealthDashboard.tsx src/app/api/admin/leads/test-feed/route.ts --run`
-- [ ] **Founder's Audit:** Verify new fields render, click Run Test in real browser (if dev server running) to confirm bug 1 is gone
-- [ ] **Adversarial + Independent Review** per user instructions
-- [ ] **Atomic Commit:** `git commit -m "fix(76_lead_feed_health_dashboard): test feed error rendering + expanded readiness + timing semantics"`
+- [x] **Rollback Anchor:** `8528f164` recorded
+- [x] **State Verification:** curl matrix done, SQL queries verified
+- [ ] **Diagnose actual error (Phase 1):**
+  - Option A: add a temporary `console.error(err.stack)` to the route handler's catch, curl the endpoint, read the dev server terminal output (via user paste), remove the temp log
+  - Option B: write `scripts/probe-health.mjs` that imports + calls the function directly, bypassing Next.js
+- [ ] **Confirm or reject H1 (stale dev server):** ask user to kill + restart dev server FIRST. If the 500 persists, H1 is ruled out. If gone, still harden error path in case of future HMR flakes.
+- [ ] **Red Light:** Add reproduction test in `src/tests/lead-feed-health.logic.test.ts` (or augment existing)
+- [ ] **Fix:** based on Phase 1 diagnosis
+- [ ] **Harden error message:** update `src/app/api/admin/leads/health/route.ts` to return `{ error: err.message }` (still 500) in dev mode, still return generic message in prod. Use NODE_ENV gate.
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`
+- [ ] **Collateral Check:** `npx vitest related src/lib/admin/lead-feed-health.ts src/app/api/admin/leads/health/route.ts --run`
+- [ ] **Pre-Review Self-Checklist (3-5 sibling bugs):**
+  1. Does `getCostCoverage` have the same fragility?
+  2. Does `getEngagement` have the same fragility?
+  3. Does the test-feed route need the same error-message hardening?
+  4. Are there other admin routes that return opaque 500s and would benefit from the same treatment?
+- [ ] **Reviews:** adversarial + independent after fix is applied
+- [ ] **Atomic Commit:** `git commit -m "fix(76_lead_feed_health_dashboard): health endpoint 500 regression + better error messages"`
 
-## Why Bugs 1A (migration 067) is NOT a code change
+## Why This Isn't Purely a "restart the dev server" Fix
 
-Same reasoning as last WF3: the code is correct against the authoritative schema (migration 067). The defect is the DB state. Fixing the code to be "defensive against missing columns" would violate §10.3 and hide real schema drift. The code-level fix for this class of bug is the migration runner tracking table (already deferred).
+Even if H1 is correct and restarting fixes the symptom, two follow-on fixes are needed:
+1. The client shows an **opaque** "Internal server error" message, which hides real bugs for days (this is the SECOND time this session we've debugged an opaque 500). The `extractErrorMessage` helper added last WF3 is USELESS when the server returns a canned string. The server should return the actual error in dev, and the spec already allows it.
+2. `getLeadFeedReadiness` has no logic-level tests that exercise the real return shape — a mock-pool test would have caught this at test time.
 
-## Scope Discipline / Deferred
+## Scope Discipline
 
-- **Migration runner hardening** (schema_migrations table) — deferred, tracked in review_followups.md
-- **`permit_inspections` table + scraping pipeline** — Tier 1 stage engine is out of scope; Bug 2 is only about labeling clarity
-- **Fixing `permits_classified` dual-counting** in `data_quality_snapshots` — that's a separate pipeline concern; the admin dashboard will compute the correct count directly from the live DB
-- **Updating spec 76** to reflect the new fields — do it if the fix introduces a logic change, else skip
+- NOT in scope: adding a route-level cache (deferred to perf WF)
+- NOT in scope: converting all 14 queries to a single CTE (perf optimization, not a bug fix)
+- NOT in scope: fixing the test-feed endpoint to work without PostGIS (install PostGIS locally)

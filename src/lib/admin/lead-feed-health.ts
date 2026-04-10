@@ -112,6 +112,26 @@ export interface TestFeedDebug {
 }
 
 // ---------------------------------------------------------------------------
+// Error sanitization
+// ---------------------------------------------------------------------------
+
+/**
+ * Strip database credentials from an error message before it leaves the
+ * server. node-postgres can embed the full DATABASE_URL (including the
+ * password component) in error messages when connection string parsing
+ * fails — see brianc/node-postgres#3145. Returning `error.message` raw in
+ * non-production would expose those credentials in the JSON response body.
+ *
+ * This masks any `postgres(ql)://user:pass@host` pattern with
+ * `postgres://***@`. Kept here (not in `src/lib/logger.ts`) because
+ * Next.js API route files cannot export non-handler functions and this
+ * is the nearest shared module already loaded by the health endpoint.
+ */
+export function sanitizePgErrorMessage(message: string): string {
+  return message.replace(/postgres(?:ql)?:\/\/[^\s@]*@/gi, 'postgres://***@');
+}
+
+// ---------------------------------------------------------------------------
 // Query functions
 // ---------------------------------------------------------------------------
 
@@ -131,80 +151,52 @@ const ADMIN_ACTIVE_STATUS_PREDICATE = `status IN ('Permit Issued','Revision Issu
 const FEED_TIMING_PHASES = `('structural','finishing','early_construction','landscaping')`;
 
 export async function getLeadFeedReadiness(pool: Pool): Promise<LeadFeedReadiness> {
-  // 14-query parallel batch. All Feed-Path fields share the same
-  // FEED_ACTIVE_STATUS_PREDICATE denominator via feed_active_permits,
-  // avoiding the apples-to-oranges predicate mismatch flagged in WF3
-  // review (adversarial H1, H3).
+  // WF3 2026-04-10 regression fix: consolidated from 14 queries to 7 to
+  // reduce pool pressure. The previous 14-parallel batch hit "timeout
+  // exceeded when trying to connect" on a default-10 pool because two
+  // queries (3-way JOIN intersection, timing-calibration EXISTS) took
+  // 2.6s and 4.2s respectively. Reducing query count + raising pool max
+  // to 20 (in db/client.ts) prevents connection starvation.
+  //
+  // Consolidation rules: COUNT/COUNT FILTER over the same table in the
+  // same WHERE can run in a single query. Joins stay separate.
   const [
-    activeRes,
-    feedActiveRes,
-    geocodedRes,
-    classifiedAllRes,
-    classifiedActiveRes,
-    phaseRes,
-    costRes,
-    timingRes,
-    timingMatchRes,
-    oppRes,
-    feedEligibleRes,
-    feedReadyRes,
-    buildersRes,
-    buildersFeedRes,
-    neighbourhoodsRes,
+    permitsStatusRes,        // active, feed_active, geocoded, opportunity breakdown, with_neighbourhood
+    tradesRes,               // classified_all, classified_active, with_phase
+    feedEligibleRes,         // feed-path intersection (lat/lng + active trade + high-conf)
+    feedReadyRes,            // legacy 3-way intersection (cost + trade + geocoded)
+    costTimingRes,           // cost_estimates + timing_calibration stats
+    timingMatchRes,          // active permits with calibrated permit_type
+    buildersRes,             // entities + WSIB intersection
+    neighbourhoodsRes,       // neighbourhoods total
   ] = await Promise.all([
-    pool.query(`SELECT COUNT(*) as c FROM permits WHERE ${ADMIN_ACTIVE_STATUS_PREDICATE}`),
-    pool.query(`SELECT COUNT(*) as c FROM permits WHERE ${FEED_ACTIVE_STATUS_PREDICATE}`),
-    pool.query(`SELECT COUNT(*) as c FROM permits WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND ${ADMIN_ACTIVE_STATUS_PREDICATE}`),
-    // Legacy: any trade row (preserved for backward compat — deprecated)
-    pool.query(`SELECT COUNT(DISTINCT (pt.permit_num, pt.revision_num)) as c FROM permit_trades pt JOIN permits p ON p.permit_num = pt.permit_num AND p.revision_num = pt.revision_num WHERE p.${ADMIN_ACTIVE_STATUS_PREDICATE}`),
-    // Feed-accurate: pt.is_active + confidence >= 0.5 per get-lead-feed.ts:231-232
-    pool.query(`
-      SELECT COUNT(DISTINCT (pt.permit_num, pt.revision_num)) as c
-      FROM permit_trades pt
-      JOIN permits p USING (permit_num, revision_num)
-      WHERE pt.is_active = true
-        AND pt.confidence >= 0.5
-        AND p.${FEED_ACTIVE_STATUS_PREDICATE}
-    `),
-    // Permits whose active+high-conf trades have a non-null phase in the
-    // 4 feed-recognized phases
-    pool.query(`
-      SELECT COUNT(DISTINCT (pt.permit_num, pt.revision_num)) as c
-      FROM permit_trades pt
-      JOIN permits p USING (permit_num, revision_num)
-      WHERE pt.is_active = true
-        AND pt.confidence >= 0.5
-        AND pt.phase IN ${FEED_TIMING_PHASES}
-        AND p.${FEED_ACTIVE_STATUS_PREDICATE}
-    `),
-    pool.query(`SELECT COUNT(*) as c FROM cost_estimates WHERE estimated_cost IS NOT NULL`),
-    pool.query(`SELECT COUNT(*) as total, ROUND(EXTRACT(EPOCH FROM (NOW() - MAX(computed_at))) / 3600.0, 1) as freshness_hours FROM timing_calibration`),
-    // Active permits whose permit_type has a row in timing_calibration —
-    // answers "what do 4 calibrated permit types mean for coverage"
-    pool.query(`
-      SELECT COUNT(*) as c
-      FROM permits p
-      WHERE p.${ADMIN_ACTIVE_STATUS_PREDICATE}
-        AND EXISTS (
-          SELECT 1 FROM timing_calibration tc
-          WHERE tc.permit_type = p.permit_type
-        )
-    `),
-    // Opportunity breakdown: status bands that the feed's opportunity_score
-    // CASE maps to 20/14/10/0 (get-lead-feed.ts:166-171)
+    // Single query over permits — all status-based counts via COUNT FILTER
     pool.query(`
       SELECT
-        COUNT(*) FILTER (WHERE status = 'Permit Issued') as permit_issued,
-        COUNT(*) FILTER (WHERE status = 'Inspection') as inspection,
-        COUNT(*) FILTER (WHERE status = 'Application') as application,
-        COUNT(*) FILTER (WHERE status NOT IN ('Permit Issued','Inspection','Application','Cancelled','Revoked','Closed')) as other_active
+        COUNT(*) FILTER (WHERE ${ADMIN_ACTIVE_STATUS_PREDICATE}) as admin_active,
+        COUNT(*) FILTER (WHERE ${FEED_ACTIVE_STATUS_PREDICATE}) as feed_active,
+        COUNT(*) FILTER (WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND ${ADMIN_ACTIVE_STATUS_PREDICATE}) as geocoded,
+        COUNT(*) FILTER (WHERE status = 'Permit Issued') as opp_permit_issued,
+        COUNT(*) FILTER (WHERE status = 'Inspection') as opp_inspection,
+        COUNT(*) FILTER (WHERE status = 'Application') as opp_application,
+        COUNT(*) FILTER (WHERE status NOT IN ('Permit Issued','Inspection','Application','Cancelled','Revoked','Closed')) as opp_other_active,
+        COUNT(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND ${FEED_ACTIVE_STATUS_PREDICATE}) as with_neighbourhood
       FROM permits
-      WHERE ${FEED_ACTIVE_STATUS_PREDICATE}
     `),
-    // Full feed eligibility intersection. Mirrors the permit_candidates
-    // WHERE clause in get-lead-feed.ts:230-235. No PostGIS required — we
-    // approximate the location check via latitude IS NOT NULL because
-    // the trigger in migration 067 keeps them in sync.
+    // Single query over permit_trades with JOIN to permits — 3 counts via COUNT FILTER
+    pool.query(`
+      SELECT
+        COUNT(DISTINCT (pt.permit_num, pt.revision_num)) FILTER (WHERE p.${ADMIN_ACTIVE_STATUS_PREDICATE}) as classified_all,
+        COUNT(DISTINCT (pt.permit_num, pt.revision_num)) FILTER (WHERE pt.is_active = true AND pt.confidence >= 0.5 AND p.${FEED_ACTIVE_STATUS_PREDICATE}) as classified_active,
+        COUNT(DISTINCT (pt.permit_num, pt.revision_num)) FILTER (WHERE pt.is_active = true AND pt.confidence >= 0.5 AND pt.phase IN ${FEED_TIMING_PHASES} AND p.${FEED_ACTIVE_STATUS_PREDICATE}) as with_phase
+      FROM permit_trades pt
+      JOIN permits p USING (permit_num, revision_num)
+      WHERE p.${FEED_ACTIVE_STATUS_PREDICATE} OR p.${ADMIN_ACTIVE_STATUS_PREDICATE}
+    `),
+    // Full feed eligibility intersection. Mirrors get-lead-feed.ts:230-235.
+    // Uses latitude IS NOT NULL as proxy for p.location (migration 067
+    // trigger keeps them in sync; on PostGIS-absent envs, location may be
+    // NULL while lat/lng are populated — see review_followups.md).
     pool.query(`
       SELECT COUNT(DISTINCT (p.permit_num, p.revision_num)) as c
       FROM permits p
@@ -215,9 +207,7 @@ export async function getLeadFeedReadiness(pool: Pool): Promise<LeadFeedReadines
         AND p.longitude IS NOT NULL
         AND p.${FEED_ACTIVE_STATUS_PREDICATE}
     `),
-    // Legacy 3-way intersection (backward compatible feed_ready_pct).
-    // Uses ADMIN predicate to match existing test fixtures. New consumers
-    // should prefer `permits_feed_eligible` which uses the FEED predicate.
+    // Legacy 3-way intersection for backward-compatible feed_ready_pct
     pool.query(`
       SELECT COUNT(DISTINCT p.permit_num || ':' || p.revision_num) as c
       FROM permits p
@@ -226,50 +216,63 @@ export async function getLeadFeedReadiness(pool: Pool): Promise<LeadFeedReadines
       WHERE p.latitude IS NOT NULL
         AND p.${ADMIN_ACTIVE_STATUS_PREDICATE}
     `),
-    pool.query(`SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE primary_phone IS NOT NULL OR primary_email IS NOT NULL) as with_contact, COUNT(*) FILTER (WHERE is_wsib_registered = true) as wsib FROM entities`),
-    // Builder feed eligibility intersection — mirrors wsib_per_entity CTE
-    // in get-lead-feed.ts:80-89. Count DISTINCT linked_entity_id because
-    // the CTE uses DISTINCT ON to collapse multi-row matches.
-    pool.query(`
-      SELECT COUNT(DISTINCT linked_entity_id) as c
-      FROM wsib_registry
-      WHERE is_gta = true
-        AND last_enriched_at IS NOT NULL
-        AND business_size IN ('Small Business','Medium Business')
-        AND (website IS NOT NULL OR primary_phone IS NOT NULL)
-        AND linked_entity_id IS NOT NULL
-    `),
+    // Cost estimates total + timing calibration total/freshness in one round-trip
     pool.query(`
       SELECT
-        (SELECT COUNT(*) FROM neighbourhoods) as total,
-        (SELECT COUNT(*) FROM permits WHERE neighbourhood_id IS NOT NULL AND ${FEED_ACTIVE_STATUS_PREDICATE}) as active_with_nbhd
+        (SELECT COUNT(*) FROM cost_estimates WHERE estimated_cost IS NOT NULL) as cost_count,
+        (SELECT COUNT(*) FROM timing_calibration) as timing_total,
+        (SELECT ROUND(EXTRACT(EPOCH FROM (NOW() - MAX(computed_at))) / 3600.0, 1) FROM timing_calibration) as timing_freshness_hours
     `),
+    // Active permits whose permit_type has a row in timing_calibration.
+    // Kept separate because the EXISTS + permit_type scan is the slowest
+    // query in the batch (~2.6s) and putting it in the consolidated
+    // permits query would serialize the other counts behind it.
+    pool.query(`
+      SELECT COUNT(*) as c
+      FROM permits p
+      WHERE p.${ADMIN_ACTIVE_STATUS_PREDICATE}
+        AND EXISTS (
+          SELECT 1 FROM timing_calibration tc
+          WHERE tc.permit_type = p.permit_type
+        )
+    `),
+    // Entities stats + WSIB feed-eligible builder intersection in one query
+    pool.query(`
+      SELECT
+        (SELECT COUNT(*) FROM entities) as total,
+        (SELECT COUNT(*) FROM entities WHERE primary_phone IS NOT NULL OR primary_email IS NOT NULL) as with_contact,
+        (SELECT COUNT(*) FROM entities WHERE is_wsib_registered = true) as wsib,
+        (SELECT COUNT(DISTINCT linked_entity_id) FROM wsib_registry WHERE is_gta = true AND last_enriched_at IS NOT NULL AND business_size IN ('Small Business','Medium Business') AND (website IS NOT NULL OR primary_phone IS NOT NULL) AND linked_entity_id IS NOT NULL) as feed_eligible
+    `),
+    pool.query(`SELECT COUNT(*) as c FROM neighbourhoods`),
   ]);
 
-  const active = parseInt(activeRes.rows[0].c, 10);
-  const feedActive = parseInt(feedActiveRes.rows[0].c, 10);
-  const geocoded = parseInt(geocodedRes.rows[0].c, 10);
-  const classified = parseInt(classifiedAllRes.rows[0].c, 10);
-  const classifiedActive = parseInt(classifiedActiveRes.rows[0].c, 10);
-  const withPhase = parseInt(phaseRes.rows[0].c, 10);
-  const withCost = parseInt(costRes.rows[0].c, 10);
-  const timingTotal = parseInt(timingRes.rows[0].total, 10);
-  const timingFreshness = timingRes.rows[0].freshness_hours !== null
-    ? parseFloat(timingRes.rows[0].freshness_hours)
+  const p = permitsStatusRes.rows[0];
+  const t = tradesRes.rows[0];
+  const ct = costTimingRes.rows[0];
+  const b = buildersRes.rows[0];
+
+  const active = parseInt(p.admin_active, 10);
+  const feedActive = parseInt(p.feed_active, 10);
+  const geocoded = parseInt(p.geocoded, 10);
+  const classified = parseInt(t.classified_all, 10);
+  const classifiedActive = parseInt(t.classified_active, 10);
+  const withPhase = parseInt(t.with_phase, 10);
+  const withCost = parseInt(ct.cost_count, 10);
+  const timingTotal = parseInt(ct.timing_total, 10);
+  const timingFreshness = ct.timing_freshness_hours !== null
+    ? parseFloat(ct.timing_freshness_hours)
     : null;
   const timingMatch = parseInt(timingMatchRes.rows[0].c, 10);
   const feedEligible = parseInt(feedEligibleRes.rows[0].c, 10);
   const feedReady = parseInt(feedReadyRes.rows[0].c, 10);
 
-  const oppRow = oppRes.rows[0];
   const byOpp = {
-    permit_issued: parseInt(oppRow.permit_issued, 10),
-    inspection: parseInt(oppRow.inspection, 10),
-    application: parseInt(oppRow.application, 10),
-    other_active: parseInt(oppRow.other_active, 10),
+    permit_issued: parseInt(p.opp_permit_issued, 10),
+    inspection: parseInt(p.opp_inspection, 10),
+    application: parseInt(p.opp_application, 10),
+    other_active: parseInt(p.opp_other_active, 10),
   };
-
-  const nbhdRow = neighbourhoodsRes.rows[0];
 
   return {
     active_permits: active,
@@ -279,9 +282,9 @@ export async function getLeadFeedReadiness(pool: Pool): Promise<LeadFeedReadines
     timing_types_calibrated: timingTotal,
     timing_freshness_hours: timingFreshness,
     feed_ready_pct: active > 0 ? Math.round((feedReady / active) * 1000) / 10 : 0,
-    builders_total: parseInt(buildersRes.rows[0].total, 10),
-    builders_with_contact: parseInt(buildersRes.rows[0].with_contact, 10),
-    builders_wsib_verified: parseInt(buildersRes.rows[0].wsib, 10),
+    builders_total: parseInt(b.total, 10),
+    builders_with_contact: parseInt(b.with_contact, 10),
+    builders_wsib_verified: parseInt(b.wsib, 10),
     // --- New fields ---
     feed_active_permits: feedActive,
     permits_classified_active: classifiedActive,
@@ -289,9 +292,9 @@ export async function getLeadFeedReadiness(pool: Pool): Promise<LeadFeedReadines
     permits_with_timing_calibration_match: timingMatch,
     permits_by_opportunity_status: byOpp,
     permits_feed_eligible: feedEligible,
-    builders_feed_eligible: parseInt(buildersFeedRes.rows[0].c, 10),
-    neighbourhoods_total: parseInt(nbhdRow.total, 10),
-    permits_with_neighbourhood: parseInt(nbhdRow.active_with_nbhd, 10),
+    builders_feed_eligible: parseInt(b.feed_eligible, 10),
+    neighbourhoods_total: parseInt(neighbourhoodsRes.rows[0].c, 10),
+    permits_with_neighbourhood: parseInt(p.with_neighbourhood, 10),
   };
 }
 

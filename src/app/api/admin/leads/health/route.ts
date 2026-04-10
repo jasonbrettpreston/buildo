@@ -10,6 +10,7 @@ import {
   getLeadFeedReadiness,
   getCostCoverage,
   getEngagement,
+  sanitizePgErrorMessage,
   type LeadFeedHealthResponse,
 } from '@/lib/admin/lead-feed-health';
 
@@ -37,9 +38,19 @@ export async function GET() {
 
     return NextResponse.json(response);
   } catch (err) {
-    logError(TAG, err instanceof Error ? err : new Error(String(err)), { phase: 'handler' });
+    const error = err instanceof Error ? err : new Error(String(err));
+    logError(TAG, error, { phase: 'handler' });
+    // Return the actual error message in non-production environments so
+    // operators can diagnose without digging through server logs. In
+    // production, keep the generic message to avoid leaking internals.
+    // WF3 2026-04-10: opaque 500s hid a pool exhaustion bug for 3+ commits.
+    // Dev-mode messages are passed through `sanitizePgErrorMessage` so that
+    // pg connection-string credentials never reach the client.
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Internal server error'
+      : sanitizePgErrorMessage(error.message);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: message },
       { status: 500 },
     );
   }
