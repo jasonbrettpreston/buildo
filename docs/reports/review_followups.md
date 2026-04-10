@@ -718,3 +718,32 @@ Phase 3-v ships the sticky header chrome + Vaul bottom drawer filter sheet that 
 | MEDIUM | Adversarial | Health endpoint runs 10 unthrottled DB queries per poll cycle, no cache. | Phase B (add 30s server-side cache) | OPEN |
 | LOW | Independent | Median/percentile uses floor-index (biased on even arrays). Test only covers odd-length. | Future hardening | OPEN |
 | LOW | Adversarial | `computeTestFeedDebug` parameter typed as inline object instead of `LeadFeedItem[]`. | Type hygiene | OPEN |
+
+## 2026-04-10 — Phase B WF1 (LeadFeedHealthDashboard UI)
+
+Phase B ships the admin dashboard UI component with 4 sections (readiness gauge, cost/timing coverage, engagement, test feed tool) consuming Phase A endpoints (committed as 9bc72e1). Two reviewers spawned: independent (worktree isolation) + adversarial. Self-checklist (18 items) walked against diff BEFORE reviews — all PASS.
+
+### Real fixes applied before commit (6)
+
+| Sev | Source | Item | Fix |
+|-----|--------|------|-----|
+| CRITICAL | Independent | Traffic light `noCostData` used `feedReadyPct === 0` instead of `cost_coverage.total === 0` — real spec RED condition was unimplemented | Added `costCoverageTotal` parameter to `getTrafficLight`, checks `costCoverageTotal === 0` |
+| CRITICAL | Independent | `runTestFeed` had no AbortController or timeout — spec §3.3 requires 30s timeout | Added AbortController with 30s timeout, unmount cleanup via `tfAbortRef` |
+| CRITICAL | Independent | Result cards used array index `key={i}` — React anti-pattern for re-rendered lists | Changed to `key={permit_num-i}` composite key |
+| IMPORTANT | Independent+Adversarial | `page.tsx` marked `'use client'` with no client code — prevents RSC optimization | Removed `'use client'` directive |
+| IMPORTANT | Adversarial+Independent | Stale timing test asserted `/YELLOW|RED/` — accepts wrong answer for spec-defined YELLOW condition | Tightened to `toContain('YELLOW')` |
+| IMPORTANT | Independent | No test for `timing_freshness_hours: null` traffic light behavior | Added test: null timing with pct > 80 → GREEN (locked as product decision) |
+
+### Deferred items
+
+| Severity | Source | Item | Planned home | Status |
+|----------|--------|------|--------------|--------|
+| HIGH | Adversarial | `useEffect` for data fetching in admin dashboard — technically violates §12.2 (TanStack Query). DEFENSIBLE: §12.2 scope is `src/features/leads/` per AST-grep, not `src/components/`. Same pattern as existing `DataQualityDashboard.tsx`. | Future admin TanStack Query migration | OPEN |
+| HIGH | Adversarial | Test feed form uses `useState` for form fields — violates §12.3 (React Hook Form). DEFENSIBLE: same scope reasoning as above, admin-only form. | Future admin RHF migration | OPEN |
+| MEDIUM | Adversarial | Race condition: overlapping interval fetches can overwrite fresh data with stale. DEFENSIBLE: 10s interval + 10s AbortController timeout means at most one in-flight. Same pattern as DataQualityDashboard. | Future TanStack Query migration (fixes both) | OPEN |
+| MEDIUM | Adversarial | `performance` section of `LeadFeedHealthResponse` fetched but not rendered — spec goal "Is the feed responding?" unmet. Spec explicitly marks performance fields as "Phase A: null (not yet instrumented)". | Phase C — when performance metrics instrumented | OPEN |
+| MEDIUM | Adversarial | No client-side input validation on test feed form — NaN/out-of-range coords sent to server. Server Zod catches with 400 but no inline UX feedback. | UX polish WF | OPEN |
+| MEDIUM | Adversarial | Polling test only verifies `setInterval` registration, never advances timers. Fake timers + async React rendering caused 5s timeout in initial implementation. | Future test hardening | OPEN |
+| LOW | Independent | `saves_today` fetched in engagement response but not rendered as stat box. Spec focuses on 7-day window; today's saves is complementary data. | UX enhancement | OPEN |
+| LOW | Independent | Retry button in error state has no loading feedback — button text stays "Retry" during fetch. | UX polish | OPEN |
+| LOW | Adversarial | GREEN traffic light fires when `timing_freshness_hours` is null (never calibrated). Spec requires `< 48` for GREEN, but null ≠ "< 48". DEFENSIBLE: null timing = "never calibrated" is a separate state; treating as non-stale is a product decision, locked by test. | Spec clarification if product disagrees | OPEN |
