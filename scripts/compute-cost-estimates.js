@@ -283,7 +283,13 @@ const SOURCE_SQL = `
     LIMIT 1
   ) pp ON true
   LEFT JOIN parcels pp_parcel ON pp_parcel.id = pp.parcel_id
-  LEFT JOIN building_footprints bf ON bf.parcel_id = pp.parcel_id
+  LEFT JOIN LATERAL (
+    SELECT building_id
+    FROM parcel_buildings
+    WHERE parcel_id = pp.parcel_id AND is_primary = true
+    LIMIT 1
+  ) pb ON true
+  LEFT JOIN building_footprints bf ON bf.id = pb.building_id
   LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
 `;
 
@@ -420,7 +426,8 @@ pipeline.run('compute-cost-estimates', async (pool) => {
         permits: ['permit_num', 'revision_num', 'permit_type', 'structure_type', 'est_const_cost', 'scope_tags'],
         permit_parcels: ['permit_num', 'revision_num', 'parcel_id'],
         parcels: ['id', 'lot_size_sqm'],
-        building_footprints: ['parcel_id', 'footprint_area_sqm', 'estimated_stories'],
+        parcel_buildings: ['parcel_id', 'building_id', 'is_primary'],
+        building_footprints: ['id', 'footprint_area_sqm', 'estimated_stories'],
         neighbourhoods: ['neighbourhood_id', 'avg_household_income', 'tenure_renter_pct'],
       },
       {

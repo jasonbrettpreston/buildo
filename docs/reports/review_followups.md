@@ -671,3 +671,22 @@ Phase 3-v ships the sticky header chrome + Vaul bottom drawer filter sheet that 
 | MEDIUM | DeepSeek F9 | compute-cost-estimates 237K single-row UPSERTs take 4-8 min. Future optimization: multi-row VALUES like classify-permits.js (MAX_ROWS_PER_INSERT pattern). | WF2 performance | OPEN |
 | MEDIUM | DeepSeek F6 | compute-timing-calibration has no advisory lock — asymmetry with cost script. Safe (small table + UPSERT) but inconsistent. | WF2 hardening | OPEN |
 | LOW | Independent | Migration 080 DOWN block commented out. Matches existing convention (071, 073) but rollback path is inoperable. | Design decision | OPEN |
+
+## WF3: Fix compute-cost-estimates SQL join + migration 037 idempotency (2026-04-10)
+
+### Fixed
+
+| Source | Issue | Resolution |
+|--------|-------|------------|
+| Pipeline run failure | `bf.parcel_id does not exist` — building_footprints has no parcel_id column | Fixed — join through `parcel_buildings` intermediate table with LATERAL LIMIT 1 |
+| Independent reviewer | Row multiplication risk from multiple `is_primary = true` rows per parcel | Fixed — LATERAL subquery with LIMIT 1 (defensive, matches permit_parcels pattern) |
+| Pre-existing | Migration 037 not idempotent — `ALTER TABLE ADD COLUMN` fails on re-run | Fixed — `IF NOT EXISTS` guards via DO $$ block |
+| Pre-existing | `cost_estimates` and `timing_calibration` tables not created (migrations 071/073 never applied) | Fixed — applied directly |
+
+### Deferred items
+
+| Severity | Source | Item | Planned home | Status |
+|----------|--------|------|--------------|--------|
+| HIGH | Adversarial | `link-massing.js:226` PostGIS path pushes arguments in wrong column order: `is_primary` receives `'spatial_polygon'` (string coerced to true), `structure_type` receives area (float), `match_type` receives boolean. All buildings get `is_primary = true`. Pre-existing bug, separate script. | WF3 link-massing | OPEN |
+| HIGH | Adversarial | `parcel_buildings` has no partial unique index `(parcel_id) WHERE is_primary = true` — allows multiple primary buildings per parcel. Needs migration + link-massing fix together. | WF3 link-massing + migration | OPEN |
+| LOW | Adversarial | No `ORDER BY` on compute-cost-estimates SOURCE_SQL — non-deterministic if fan-out occurs. Mitigated by LATERAL LIMIT 1 but not fully defended. | Future hardening | OPEN |
