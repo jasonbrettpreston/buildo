@@ -45,9 +45,11 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   inspections:                  { name: 'Inspection Stages',             group: 'link' },
   classify_inspection_status:   { name: 'Classify Inspection Status',    group: 'classify' },
   coa_documents:                { name: 'CoA Documents',                 group: 'link' },
-  // Classify (3) — derive fields
+  // Classify & Compute (5) — derive fields
   classify_scope:       { name: 'Scope Classification', group: 'classify' },
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
+  compute_cost_estimates:     { name: 'Cost Estimates',      group: 'classify' },
+  compute_timing_calibration: { name: 'Timing Calibration',  group: 'classify' },
   // Snapshot (1) — capture metrics
   refresh_snapshot:   { name: 'Refresh Snapshot',      group: 'snapshot' },
   // Quality (6) — CQA validation
@@ -98,6 +100,8 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_massing',         indent: 1 },
       { slug: 'link_similar',         indent: 1 },
       { slug: 'classify_permits',     indent: 1 },
+      { slug: 'compute_cost_estimates',     indent: 1 },
+      { slug: 'compute_timing_calibration', indent: 1 },
       { slug: 'link_coa',             indent: 1 },
       { slug: 'create_pre_permits',   indent: 1 },
       { slug: 'refresh_snapshot',     indent: 1 },

@@ -66,6 +66,24 @@ pipeline.run('compute-timing-calibration', async (pool) => {
     const res = await pool.query(CALIBRATION_SQL);
     rows = res.rows;
   } catch (err) {
+    // If permit_inspections table doesn't exist yet (fresh deploy before
+    // deep_scrapes chain has run), degrade gracefully instead of crashing
+    // the entire permits chain.
+    const isUndefinedTable = err && err.code === '42P01';
+    if (isUndefinedTable) {
+      pipeline.log.warn('[compute-timing-calibration]', 'permit_inspections table not found — skipping calibration (run deep_scrapes chain first)', {
+        err: err.message,
+      });
+      pipeline.emitSummary({
+        records_total: 0, records_new: 0, records_updated: 0,
+        records_meta: { skipped: true, reason: 'permit_inspections_missing' },
+      });
+      pipeline.emitMeta(
+        { permits: ['*'], permit_inspections: ['*'] },
+        { timing_calibration: ['permit_type'] },
+      );
+      return;
+    }
     pipeline.log.error('[compute-timing-calibration]', 'calibration query failed', {
       err: err && err.message,
     });
@@ -85,40 +103,60 @@ pipeline.run('compute-timing-calibration', async (pool) => {
     return;
   }
 
-  const result = await pipeline.withTransaction(pool, async (client) => {
-    let inserted = 0;
-    let updated = 0;
-    for (const row of rows) {
-      try {
-        const upsert = await client.query(
-          `INSERT INTO timing_calibration (
-             permit_type,
-             median_days_to_first_inspection,
-             p25_days,
-             p75_days,
-             sample_size,
-             computed_at
-           ) VALUES ($1, $2, $3, $4, $5, NOW())
-           ON CONFLICT (permit_type) DO UPDATE
-             SET median_days_to_first_inspection = EXCLUDED.median_days_to_first_inspection,
-                 p25_days                         = EXCLUDED.p25_days,
-                 p75_days                         = EXCLUDED.p75_days,
-                 sample_size                      = EXCLUDED.sample_size,
-                 computed_at                      = NOW()
-           RETURNING (xmax = 0) AS inserted`,
-          [row.permit_type, row.median, row.p25, row.p75, row.sample_size],
-        );
-        if (upsert.rows[0] && upsert.rows[0].inserted) inserted++;
-        else updated++;
-      } catch (err) {
-        pipeline.log.error('[compute-timing-calibration]', 'upsert failed', {
-          permit_type: row.permit_type,
-          err: err && err.message,
-        });
+  let result;
+  try {
+    result = await pipeline.withTransaction(pool, async (client) => {
+      let inserted = 0;
+      let updated = 0;
+      for (const row of rows) {
+        try {
+          const upsert = await client.query(
+            `INSERT INTO timing_calibration (
+               permit_type,
+               median_days_to_first_inspection,
+               p25_days,
+               p75_days,
+               sample_size,
+               computed_at
+             ) VALUES ($1, $2, $3, $4, $5, NOW())
+             ON CONFLICT (permit_type) DO UPDATE
+               SET median_days_to_first_inspection = EXCLUDED.median_days_to_first_inspection,
+                   p25_days                         = EXCLUDED.p25_days,
+                   p75_days                         = EXCLUDED.p75_days,
+                   sample_size                      = EXCLUDED.sample_size,
+                   computed_at                      = NOW()
+             RETURNING (xmax = 0) AS inserted`,
+            [row.permit_type, row.median, row.p25, row.p75, row.sample_size],
+          );
+          if (upsert.rows[0] && upsert.rows[0].inserted) inserted++;
+          else updated++;
+        } catch (err) {
+          pipeline.log.error('[compute-timing-calibration]', 'upsert failed', {
+            permit_type: row.permit_type,
+            err: err && err.message,
+          });
+        }
       }
+      return { inserted, updated };
+    });
+  } catch (err) {
+    // timing_calibration table may not exist on fresh deploy (migration not yet run)
+    if (err && err.code === '42P01') {
+      pipeline.log.warn('[compute-timing-calibration]', 'timing_calibration table not found — run migration first', {
+        err: err.message,
+      });
+      pipeline.emitSummary({
+        records_total: rows.length, records_new: 0, records_updated: 0,
+        records_meta: { skipped: true, reason: 'timing_calibration_missing' },
+      });
+      pipeline.emitMeta(
+        { permits: ['*'], permit_inspections: ['*'] },
+        { timing_calibration: ['permit_type'] },
+      );
+      return;
     }
-    return { inserted, updated };
-  });
+    throw err;
+  }
 
   pipeline.emitSummary({
     records_total: rows.length,

@@ -639,3 +639,35 @@ Phase 3-v ships the sticky header chrome + Vaul bottom drawer filter sheet that 
 - **Self-checklist generated BEFORE reviews** (19 items). Two findings that the checklist anticipated also surfaced in independent reviews (auth lifecycle + Zustand per-device leak), validating the pre-review checklist habit.
 - **Phase B (cursor + next_cursor) was DROPPED entirely** after verifying both findings as false positives mid-implementation. Verifying claims against the actual code before "fixing" prevented two no-op churn commits.
 - All 3256 tests pass; typecheck clean.
+
+---
+
+## WF2: Wire compute-cost-estimates + compute-timing-calibration into permits chain (2026-04-10)
+
+**Commit:** pending
+**Reviewers:** Independent code reviewer, Adversarial code reviewer, DeepSeek adversarial plan reviewer
+
+### Fixed during review
+
+| Source | Issue | Resolution |
+|--------|-------|------------|
+| Independent BLOCKER | `snapClient` used after `.release()` in refresh-snapshot.js | Fixed — changed to `pool.query()` |
+| Adversarial HIGH (BUG-2) | Empty catch block in assert-data-bounds.js violates `no-empty` | Fixed — added `piErr` logging |
+| Adversarial HIGH (BUG-3) | timing_calibration UPSERT not guarded for missing table (42P01) | Fixed — added try/catch around withTransaction |
+| Adversarial MEDIUM (BUG-6) | cost_estimates/timing_calibration missing from refresh-snapshot emitMeta reads | Fixed — added to emitMeta |
+| Plan review BLOCKER | `isInfraStep` doesn't cover `compute_*` — gate-skipped on 0-new-permit days | Fixed — added `slug.startsWith('compute_')` to predicate |
+| Plan review BLOCKER | Advisory lock early-return skips emitSummary | Fixed — added emitSummary + emitMeta before return |
+| Plan review HIGH | snapshotPhase hardcoded 14 → needs 18 | Fixed |
+| Plan review HIGH | assert-data-bounds checks must be inside runPermitChecks guard | Fixed |
+| Plan review HIGH | compute-timing-calibration fatal on missing permit_inspections | Fixed — defensive 42P01 catch |
+
+### Deferred items
+
+| Severity | Source | Item | Planned home | Status |
+|----------|--------|------|--------------|--------|
+| HIGH | Adversarial BUG-4 | `compute-cost-estimates.js` batch failures silently omitted from emitSummary counts — misleading chain status. Pre-existing, not introduced by this WF2. | WF2 hardening | OPEN |
+| MEDIUM | Adversarial BUG-5 | `compute_` prefix in isInfraStep also exempts `compute_centroids` in sources chain — latent if sources gate ever added. Consider slug-specific allow-list or rename to `recompute_centroids`. | WF2 if sources gate added | OPEN |
+| LOW | Adversarial BUG-7 | Cost/timing check results in assert-data-bounds not appended to `permitsAuditTable.rows` — invisible in dashboard drill-down. | WF2 polish | OPEN |
+| MEDIUM | DeepSeek F9 | compute-cost-estimates 237K single-row UPSERTs take 4-8 min. Future optimization: multi-row VALUES like classify-permits.js (MAX_ROWS_PER_INSERT pattern). | WF2 performance | OPEN |
+| MEDIUM | DeepSeek F6 | compute-timing-calibration has no advisory lock — asymmetry with cost script. Safe (small table + UPSERT) but inconsistent. | WF2 hardening | OPEN |
+| LOW | Independent | Migration 080 DOWN block commented out. Matches existing convention (071, 073) but rollback path is inoperable. | Design decision | OPEN |

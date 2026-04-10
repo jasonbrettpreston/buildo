@@ -24,6 +24,8 @@
     "enrich_wsib_registry": { "file": "scripts/enrich-wsib.js",          "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_LIMIT": "44000" }, "telemetry_tables": ["wsib_registry"], "telemetry_null_cols": { "wsib_registry": ["primary_phone", "primary_email", "website"] } },
     "classify_scope":       { "file": "scripts/classify-scope.js",        "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["scope_classified_at"] } },
     "classify_permits":     { "file": "scripts/classify-permits.js",      "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permit_trades", "permits"], "telemetry_null_cols": { "permits": ["trade_classified_at"] } },
+    "compute_cost_estimates":       { "file": "scripts/compute-cost-estimates.js",       "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["cost_estimates"], "telemetry_null_cols": { "cost_estimates": ["estimated_cost"] } },
+    "compute_timing_calibration":   { "file": "scripts/compute-timing-calibration.js",   "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["timing_calibration"] },
     "compute_centroids":    { "file": "scripts/compute-centroids.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcels"], "telemetry_null_cols": { "parcels": ["centroid_lat", "centroid_lng"] } },
     "link_similar":         { "file": "scripts/link-similar.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
     "create_pre_permits":   { "file": "scripts/create-pre-permits.js",    "supports_full": false, "supports_dry_run": false },
@@ -46,6 +48,7 @@
       "assert_schema", "permits", "close_stale_permits", "classify_permit_phase", "classify_scope",
       "builders", "link_wsib", "geocode_permits", "link_parcels",
       "link_neighbourhoods", "link_massing", "link_similar", "classify_permits",
+      "compute_cost_estimates", "compute_timing_calibration",
       "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
     ],
     "coa": [

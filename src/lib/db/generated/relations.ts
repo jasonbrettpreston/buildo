@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { trades, tradeMappingRules, permitTrades, entities, entityContacts, builders, builderContacts, parcels, permitParcels, parcelBuildings, buildingFootprints, wsibRegistry, entityProjects } from "./schema";
+import { trades, tradeMappingRules, permitTrades, entities, entityContacts, builders, builderContacts, parcels, permitParcels, parcelBuildings, buildingFootprints, wsibRegistry, entityProjects, productGroups, permitProducts } from "./schema";
 
 export const tradeMappingRulesRelations = relations(tradeMappingRules, ({one}) => ({
 	trade: one(trades, {
@@ -83,4 +83,15 @@ export const entityProjectsRelations = relations(entityProjects, ({one}) => ({
 		fields: [entityProjects.entityId],
 		references: [entities.id]
 	}),
+}));
+
+export const permitProductsRelations = relations(permitProducts, ({one}) => ({
+	productGroup: one(productGroups, {
+		fields: [permitProducts.productId],
+		references: [productGroups.id]
+	}),
+}));
+
+export const productGroupsRelations = relations(productGroups, ({many}) => ({
+	permitProducts: many(permitProducts),
 }));

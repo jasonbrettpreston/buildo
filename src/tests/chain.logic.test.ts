@@ -13,13 +13,39 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
-  it('defines permits chain with 18 steps (no enrichment scripts)', () => {
+  it('defines permits chain with 20 steps (no enrichment scripts)', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(18);
+    expect(chain!.steps).toHaveLength(20);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
+  });
+
+  it('permits chain includes compute_cost_estimates and compute_timing_calibration', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const slugs = chain.steps.map((s) => s.slug);
+    expect(slugs).toContain('compute_cost_estimates');
+    expect(slugs).toContain('compute_timing_calibration');
+  });
+
+  it('compute steps run after classify_permits and before link_coa', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const slugs = chain.steps.map((s) => s.slug);
+    const classifyIdx = slugs.indexOf('classify_permits');
+    const costIdx = slugs.indexOf('compute_cost_estimates');
+    const timingIdx = slugs.indexOf('compute_timing_calibration');
+    const linkCoaIdx = slugs.indexOf('link_coa');
+    expect(costIdx).toBeGreaterThan(classifyIdx);
+    expect(timingIdx).toBeGreaterThan(classifyIdx);
+    expect(costIdx).toBeLessThan(linkCoaIdx);
+    expect(timingIdx).toBeLessThan(linkCoaIdx);
+  });
+
+  it('compute_cost_estimates runs before compute_timing_calibration (more resilient first)', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const slugs = chain.steps.map((s) => s.slug);
+    expect(slugs.indexOf('compute_cost_estimates')).toBeLessThan(slugs.indexOf('compute_timing_calibration'));
   });
 
   it('defines coa chain with 9 steps', () => {
@@ -452,12 +478,14 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
     expect(source).toMatch(/SKIPPED.*gate|gate.*skip/i);
   });
 
-  it('gate-skip still runs quality/infrastructure steps (assert_*, refresh_snapshot)', () => {
+  it('gate-skip still runs quality/infrastructure steps (assert_*, compute_*, refresh_snapshot)', () => {
     const source = chainSource();
     // Quality steps must be exempted from gate-skip — they check cumulative DB state
     expect(source).toMatch(/assert_|refresh_snapshot/);
     // The exemption logic must reference slug patterns for quality steps
     expect(source).toMatch(/startsWith\(['"]assert_['"]\)|=== ['"]refresh_snapshot['"]/);
+    // compute_* steps process cumulative DB state, not just new records
+    expect(source).toContain("slug.startsWith('compute_')");
   });
 
   it('checks both records_new and records_updated before skipping', () => {

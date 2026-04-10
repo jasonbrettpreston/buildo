@@ -33,7 +33,7 @@ Every pipeline script belongs to exactly one archetype. The archetype determines
 | **Observers** | Read-only admin/orchestration — do not mutate business data | ai-env-check, audit_all_specs, generate-db-docs, generate-system-map, harvest-tests, local-cron, migrate, refresh-snapshot, run-chain, task-init | Mutation, pagination, spatial, deep metrics rules |
 | **Scrapers** | Reach out to external networks (AIC portal, CKAN, Google, Serper) | aic-orchestrator, aic-scraper-nodriver, enrich-web-search, geocode-permits, poc-aic-scraper-v2, spike-nodriver | Pagination, spatial rules |
 | **Ingestors** | Load raw data from external files/APIs into initial DB tables | load-address-points, load-coa, load-massing, load-neighbourhoods, load-parcels, load-permits, load-wsib, seed-coa, seed-parcels, seed-trades | Spatial rules |
-| **Mutators** | Read existing tables, apply business logic, update/link records | classify-*, close-stale-permits, compute-centroids, create-pre-permits, enrich-wsib, extract-builders, link-*, reclassify-all | None — all rules apply |
+| **Mutators** | Read existing tables, apply business logic, update/link records | classify-*, close-stale-permits, compute-centroids, compute-cost-estimates, compute-timing-calibration, create-pre-permits, enrich-wsib, extract-builders, link-*, reclassify-all | None — all rules apply |
 
 ### 2.2 Architectural Invariants
 

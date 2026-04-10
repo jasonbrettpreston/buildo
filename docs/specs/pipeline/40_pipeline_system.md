@@ -164,7 +164,7 @@ Ordered array of script slugs. Execution is strictly sequential, stop-on-failure
 
 ```json
 {
-  "permits": ["assert_schema", "permits", "close_stale_permits", "classify_permit_phase", "classify_scope", "builders", "link_wsib", "geocode_permits", "link_parcels", "link_neighbourhoods", "link_massing", "link_similar", "classify_permits", "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"],
+  "permits": ["assert_schema", "permits", "close_stale_permits", "classify_permit_phase", "classify_scope", "builders", "link_wsib", "geocode_permits", "link_parcels", "link_neighbourhoods", "link_massing", "link_similar", "classify_permits", "compute_cost_estimates", "compute_timing_calibration", "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"],
   "coa": ["assert_schema", "coa", "assert_coa_freshness", "link_coa", "create_pre_permits", "assert_pre_permit_aging", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"],
   "sources": ["assert_schema", "address_points", "geocode_permits", "parcels", "compute_centroids", "link_parcels", "massing", "link_massing", "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"],
   "entities": ["enrich_wsib_builders", "enrich_named_builders"],
@@ -173,7 +173,7 @@ Ordered array of script slugs. Execution is strictly sequential, stop-on-failure
 }
 ```
 
-### 4.3 Current Script Registry (33 scripts)
+### 4.3 Current Script Registry (35 scripts)
 
 | Slug | Script | Writes To | Chain(s) |
 |------|--------|-----------|----------|
@@ -195,6 +195,8 @@ Ordered array of script slugs. Execution is strictly sequential, stop-on-failure
 | `link_similar` | `link-similar.js` | permits | permits |
 | `classify_scope` | `classify-scope.js` | permits | permits |
 | `classify_permits` | `classify-permits.js` | permit_trades | permits |
+| `compute_cost_estimates` | `compute-cost-estimates.js` | cost_estimates | permits |
+| `compute_timing_calibration` | `compute-timing-calibration.js` | timing_calibration | permits |
 | `compute_centroids` | `compute-centroids.js` | parcels | sources |
 | `create_pre_permits` | `create-pre-permits.js` | — | permits, coa |
 | `refresh_snapshot` | `refresh-snapshot.js` | data_quality_snapshots | all |

@@ -12,13 +12,14 @@ As a business user, I expect this daily pipeline to ingest 237K+ raw Toronto bui
 
 **Trigger:** `node scripts/run-chain.js permits` or `POST /api/admin/pipelines/chain_permits`
 **Schedule:** Daily
-**Steps:** 18 (sequential, stop-on-failure)
+**Steps:** 20 (sequential, stop-on-failure)
 **Gate:** `permits` — if `records_new = 0`, downstream enrichment steps are skipped (infra steps still run)
 
 ```
 assert_schema → permits → close_stale_permits → classify_permit_phase →
 classify_scope → builders → link_wsib → geocode_permits → link_parcels →
 link_neighbourhoods → link_massing → link_similar → classify_permits →
+compute_cost_estimates → compute_timing_calibration →
 link_coa → create_pre_permits → refresh_snapshot → assert_data_bounds →
 assert_engine_health
 ```
@@ -40,11 +41,13 @@ assert_engine_health
 | 11 | `link_massing` | `link-massing.js` | Link parcels to 3D building footprint volumes | parcel_buildings |
 | 12 | `link_similar` | `link-similar.js` | Propagate scope tags between related permits at same address | permits |
 | 13 | `classify_permits` | `classify-permits.js` | Deep trade classification via tag-trade matrix (32 trades) | permit_trades |
-| 14 | `link_coa` | `link-coa.js` | Link CoA to permits via `street_name_normalized` + confidence matrix | coa_applications |
-| 15 | `create_pre_permits` | `create-pre-permits.js` | Generate pre-permit leads from approved CoA applications | — |
-| 16 | `refresh_snapshot` | `refresh-snapshot.js` | Update data_quality_snapshots for dashboard metrics | data_quality_snapshots |
-| 17 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Post-ingestion: cost outliers, null rates, duplicate PKs | pipeline_runs |
-| 18 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuples, seq scan ratio, update ping-pong | engine_health_snapshots |
+| 14 | `compute_cost_estimates` | `compute-cost-estimates.js` | Pre-compute cost model estimates for all permits | cost_estimates |
+| 15 | `compute_timing_calibration` | `compute-timing-calibration.js` | Calibrate timing percentiles per permit_type from inspection history | timing_calibration |
+| 16 | `link_coa` | `link-coa.js` | Link CoA to permits via `street_name_normalized` + confidence matrix | coa_applications |
+| 17 | `create_pre_permits` | `create-pre-permits.js` | Generate pre-permit leads from approved CoA applications | — |
+| 18 | `refresh_snapshot` | `refresh-snapshot.js` | Update data_quality_snapshots for dashboard metrics | data_quality_snapshots |
+| 19 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Post-ingestion: cost outliers, null rates, duplicate PKs | pipeline_runs |
+| 20 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuples, seq scan ratio, update ping-pong | engine_health_snapshots |
 </architecture>
 
 ---
@@ -124,7 +127,7 @@ assert_engine_health
 ## 5. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic:** `chain.logic.test.ts` (permits chain definition, step count, ordering)
-- **Logic:** `pipeline-sdk.logic.test.ts` (all 18 scripts use Pipeline SDK pattern)
+- **Logic:** `pipeline-sdk.logic.test.ts` (all 20 scripts use Pipeline SDK pattern)
 - **Infra:** `quality.infra.test.ts` (CQA scripts exist, emit correct PIPELINE_SUMMARY)
 <!-- TEST_INJECT_END -->
 </testing>
@@ -136,7 +139,7 @@ assert_engine_health
 
 ### Target Files
 - `scripts/manifest.json` (permits chain array)
-- All 18 scripts listed in the step breakdown above
+- All 20 scripts listed in the step breakdown above
 
 ### Out-of-Scope Files
 - `src/lib/classification/classifier.ts` — governed by trade classification step spec

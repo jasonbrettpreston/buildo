@@ -8,7 +8,7 @@
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
-| 00 | `00_engineering_standards.md` | Engineering Standards & Stability Guardrails | `src/lib/logger.ts`, `src/lib/classification/classifier.ts`, `src/lib/classification/scope.ts` | — | Done |
+| 00 | `00_engineering_standards.md` | Engineering Standards & Stability Guardrails | `src/lib/logger.ts`, `src/lib/classification/classifier.ts`, `src/lib/classification/scope.ts`, +2 more | `src/tests/contracts.infra.test.ts`, `src/tests/property/*.property.test.ts`, `src/tests/diff-narrator.logic.test.ts` | Done |
 | 01 | `01_database_schema.md` | Database Schema | `src/lib/db/client.ts`, `src/lib/permits/types.ts`, `scripts/migrate.js` | — | Done |
 
 ## Platform (Backend Infrastructure)
@@ -49,12 +49,14 @@
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
+| 30 | `pipeline/30_pipeline_architecture.md` | Pipeline Architecture v2.0 — SDK-First, Infrastructure-Defended | `scripts/lib/pipeline.js`, `scripts/run-chain.js`, `scripts/manifest.json`, +2 more | `src/tests/pipeline-sdk.logic.test.ts`, `src/tests/chain.logic.test.ts`, `src/tests/inspections.logic.test.ts`, +1 more | Done |
 | 40 | `pipeline/40_pipeline_system.md` | Pipeline System Architecture | `scripts/lib/pipeline.js`, `scripts/run-chain.js`, `scripts/manifest.json`, +1 more | `src/tests/chain.logic.test.ts`, `src/tests/pipeline-sdk.logic.test.ts`, `src/tests/quality.infra.test.ts` | Done |
 | 41 | `pipeline/41_chain_permits.md` | Permits | `scripts/manifest.json` | `src/tests/chain.logic.test.ts`, `src/tests/pipeline-sdk.logic.test.ts`, `src/tests/quality.infra.test.ts` | Done |
 | 42 | `pipeline/42_chain_coa.md` | Committee of Adjustment (CoA) | `scripts/manifest.json`, `scripts/lib/address.js`, `scripts/load-coa.js`, +1 more | `src/tests/coa.logic.test.ts`, `src/tests/chain.logic.test.ts`, `src/tests/quality.infra.test.ts` | Done |
 | 43 | `pipeline/43_chain_sources.md` | Sources (Spatial & Reference Data) | `scripts/manifest.json` | `src/tests/chain.logic.test.ts`, `src/tests/parcels.logic.test.ts`, `src/tests/neighbourhood.logic.test.ts`, +3 more | Done |
 | 44 | `pipeline/44_chain_deep_scrapes.md` | Deep Scrapes (AIC Inspection Portal) | `scripts/manifest.json`, `scripts/aic-scraper-nodriver.py`, `scripts/aic-orchestrator.py`, +2 more | `src/tests/inspections.logic.test.ts`, `src/tests/chain.logic.test.ts`, `src/tests/quality.infra.test.ts` | Done |
 | 45 | `pipeline/45_chain_entities.md` | Entities (Builder Web Enrichment) | `scripts/manifest.json`, `scripts/enrich-web-search.js` | `src/tests/enrichment.logic.test.ts`, `src/tests/enrichment.infra.test.ts`, `src/tests/chain.logic.test.ts` | Done |
+| 46 | `pipeline/46_wsib_enrichment.md` | WSIB Registry Enrichment | `scripts/enrich-wsib.js`, `scripts/manifest.json`, `scripts/link-wsib.js` | `src/tests/chain.logic.test.ts`, `src/tests/quality.logic.test.ts` | Done |
 | 50 | `pipeline/50_source_permits.md` | Toronto Building Permits | `scripts/load-permits.js`, `src/lib/permits/field-mapping.ts` | `src/tests/sync.logic.test.ts`, `src/tests/permits.logic.test.ts`, `src/tests/pipeline-sdk.logic.test.ts` | Done |
 | 51 | `pipeline/51_source_coa.md` | Committee of Adjustment (CoA) Applications | `scripts/load-coa.js` | `src/tests/coa.logic.test.ts`, `src/tests/pipeline-sdk.logic.test.ts` | Done |
 | 52 | `pipeline/52_source_wsib.md` | Ontario WSIB Contractor Registry | `scripts/load-wsib.js` | `src/tests/wsib.logic.test.ts`, `src/tests/wsib.infra.test.ts` | Done |

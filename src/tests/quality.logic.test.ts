@@ -493,15 +493,15 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 35 tracked pipelines', () => {
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(35);
+  it('has exactly 37 tracked pipelines', () => {
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(37);
   });
 
-  it('groups are correct: 10 ingest, 14 link, 3 classify, 1 snapshot, 7 quality', () => {
+  it('groups are correct: 10 ingest, 14 link, 5 classify, 1 snapshot, 7 quality', () => {
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(10);
     expect(groups.filter((g) => g === 'link')).toHaveLength(14);
-    expect(groups.filter((g) => g === 'classify')).toHaveLength(3);
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(5);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(7);
   });
@@ -529,9 +529,9 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'entities', 'wsib', 'sources', 'deep_scrapes']);
   });
 
-  it('permits chain has 18 steps in dependency order (no enrichment)', () => {
+  it('permits chain has 20 steps in dependency order (no enrichment)', () => {
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(18);
+    expect(permits.steps).toHaveLength(20);
     expect(permits!.steps[0]!.slug).toBe('assert_schema');
     expect(permits!.steps[1]!.slug).toBe('permits');
     expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('assert_engine_health');
@@ -1988,6 +1988,63 @@ describe('Pipeline manifest includes assert_engine_health', () => {
     const { PIPELINE_TABLE_MAP } = await import('@/lib/admin/funnel');
     expect(PIPELINE_TABLE_MAP.assert_engine_health).toBe('engine_health_snapshots');
   });
+
+  it('PIPELINE_TABLE_MAP includes compute_cost_estimates', async () => {
+    const { PIPELINE_TABLE_MAP } = await import('@/lib/admin/funnel');
+    expect(PIPELINE_TABLE_MAP.compute_cost_estimates).toBe('cost_estimates');
+  });
+
+  it('PIPELINE_TABLE_MAP includes compute_timing_calibration', async () => {
+    const { PIPELINE_TABLE_MAP } = await import('@/lib/admin/funnel');
+    expect(PIPELINE_TABLE_MAP.compute_timing_calibration).toBe('timing_calibration');
+  });
+});
+
+// ── Regression: refresh-snapshot captures cost + timing metrics ──
+
+describe('refresh-snapshot.js cost/timing observability', () => {
+  const snapshotSource = fs.readFileSync(
+    path.join(__dirname, '../../scripts/refresh-snapshot.js'), 'utf-8'
+  );
+
+  it('queries cost_estimates table', () => {
+    expect(snapshotSource).toContain('FROM cost_estimates');
+  });
+
+  it('queries timing_calibration table', () => {
+    expect(snapshotSource).toContain('FROM timing_calibration');
+  });
+
+  it('includes cost/timing columns in INSERT', () => {
+    expect(snapshotSource).toContain('cost_estimates_total');
+    expect(snapshotSource).toContain('timing_calibration_total');
+    expect(snapshotSource).toContain('timing_calibration_freshness_hours');
+  });
+});
+
+// ── Regression: assert-data-bounds validates cost + timing tables ──
+
+describe('assert-data-bounds.js cost/timing validation', () => {
+  const boundsSource = fs.readFileSync(
+    path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'), 'utf-8'
+  );
+
+  it('checks cost_estimates coverage', () => {
+    expect(boundsSource).toContain('FROM cost_estimates');
+    expect(boundsSource).toContain('estimated_cost IS NULL');
+  });
+
+  it('checks timing_calibration staleness', () => {
+    expect(boundsSource).toContain('FROM timing_calibration');
+    expect(boundsSource).toContain('freshness_hours');
+  });
+
+  it('gates cost/timing checks on runPermitChecks', () => {
+    // Both checks must be inside the permits-scoped block
+    const permitBlock = boundsSource.split('runPermitChecks').slice(1).join('');
+    expect(permitBlock).toContain('cost_estimates');
+    expect(permitBlock).toContain('timing_calibration');
+  });
 });
 
 // ── Regression: assert-schema validateTypeSample handles CKAN junk rows ──
@@ -2032,5 +2089,46 @@ describe('assert-schema.js EST_CONST_COST type validation resilience', () => {
     const regex = "[^0-9.\\-]";
     expect(schemaSource).toContain(regex);
     expect(loadSource).toContain(regex);
+  });
+});
+
+// ── Regression: compute-cost-estimates advisory lock emits telemetry ──
+
+describe('compute-cost-estimates.js advisory lock resilience', () => {
+  const costSource = fs.readFileSync(
+    path.join(__dirname, '../../scripts/compute-cost-estimates.js'), 'utf-8'
+  );
+
+  it('emits PIPELINE_SUMMARY on advisory lock early return', () => {
+    // When lock is held by another process, the script must still emit
+    // telemetry so the chain orchestrator has records_new = 0 (not null)
+    const lockBlock = costSource.split('pg_try_advisory_lock')[1] || '';
+    const beforeReturn = lockBlock.split('return;')[0] || '';
+    expect(beforeReturn).toContain('emitSummary');
+  });
+
+  it('runs inside the permits chain (not sources)', () => {
+    expect(costSource).toContain('inside the permits chain');
+    expect(costSource).not.toContain('inside the sources chain');
+  });
+});
+
+// ── Regression: compute-timing-calibration handles missing permit_inspections ──
+
+describe('compute-timing-calibration.js missing table resilience', () => {
+  const timingSource = fs.readFileSync(
+    path.join(__dirname, '../../scripts/compute-timing-calibration.js'), 'utf-8'
+  );
+
+  it('catches undefined table error (42P01) gracefully', () => {
+    expect(timingSource).toContain('42P01');
+    expect(timingSource).toContain('permit_inspections_missing');
+  });
+
+  it('emits PIPELINE_SUMMARY on missing table early return', () => {
+    expect(timingSource).toContain('emitSummary');
+    // Must contain two emitSummary calls — one for missing table, one for normal
+    const matches = timingSource.match(/emitSummary/g);
+    expect(matches!.length).toBeGreaterThanOrEqual(2);
   });
 });

@@ -593,6 +593,74 @@ async function run() {
       }
     }
 
+    // -----------------------------------------------------------------------
+    // Cost estimates & timing calibration checks (permits chain only)
+    // -----------------------------------------------------------------------
+    if (runPermitChecks) {
+      console.log('\n--- Cost Estimates Coverage ---');
+      try {
+        const ceTotal = await count(`SELECT COUNT(*) FROM cost_estimates`);
+        const ceNull = await count(`SELECT COUNT(*) FROM cost_estimates WHERE estimated_cost IS NULL`);
+        const ceTiers = await pool.query(`SELECT COUNT(DISTINCT cost_tier) as tiers FROM cost_estimates WHERE cost_tier IS NOT NULL`);
+        const tierCount = parseInt(ceTiers.rows[0].tiers, 10);
+        if (ceTotal === 0) {
+          warnings.push('cost_estimates table is empty — compute_cost_estimates has not run yet');
+          console.warn('  WARN: cost_estimates table is empty');
+        } else {
+          const nullPct = ((ceNull / ceTotal) * 100).toFixed(1);
+          console.log(`  OK: ${ceTotal} cost estimates (${nullPct}% null, ${tierCount} distinct tiers)`);
+          if (ceNull / ceTotal > 0.80) {
+            warnings.push(`cost_estimates NULL rate is ${nullPct}% (> 80%)`);
+            console.warn(`  WARN: ${nullPct}% of cost estimates have NULL estimated_cost`);
+          }
+          if (tierCount < 2) {
+            warnings.push(`cost_estimates has only ${tierCount} distinct tier(s) — expected >= 2`);
+            console.warn(`  WARN: Only ${tierCount} distinct cost tier(s)`);
+          }
+        }
+      } catch (ceErr) {
+        console.log(`  SKIP: cost_estimates check failed: ${ceErr.message}`);
+      }
+
+      console.log('\n--- Timing Calibration Coverage ---');
+      try {
+        const tcRes = await pool.query(
+          `SELECT COUNT(*) as total,
+                  MIN(sample_size) as min_sample,
+                  EXTRACT(EPOCH FROM (NOW() - MAX(computed_at))) / 3600.0 as freshness_hours
+           FROM timing_calibration`
+        );
+        const tc = tcRes.rows[0];
+        const tcTotal = parseInt(tc.total, 10);
+        const tcMinSample = parseInt(tc.min_sample, 10) || 0;
+        const tcFreshness = tc.freshness_hours !== null ? parseFloat(tc.freshness_hours) : null;
+        if (tcTotal === 0) {
+          warnings.push('timing_calibration table is empty — compute_timing_calibration has not run yet');
+          console.warn('  WARN: timing_calibration table is empty');
+        } else {
+          console.log(`  OK: ${tcTotal} permit_types calibrated (min sample=${tcMinSample}, freshness=${tcFreshness !== null ? tcFreshness.toFixed(1) + 'h' : 'N/A'})`);
+          if (tcMinSample < 5) {
+            errors.push(`timing_calibration has rows with sample_size < 5 (min=${tcMinSample}) — HAVING clause should prevent this`);
+            console.error(`  FAIL: sample_size < 5 found (min=${tcMinSample})`);
+          }
+          if (tcFreshness !== null && tcFreshness > 48) {
+            // Check if permit_inspections has data — staleness only matters if scraper has run
+            try {
+              const piCount = await count(`SELECT COUNT(*) FROM permit_inspections`);
+              if (piCount > 0) {
+                warnings.push(`timing_calibration is ${tcFreshness.toFixed(0)}h stale (> 48h threshold)`);
+                console.warn(`  WARN: timing_calibration last computed ${tcFreshness.toFixed(0)}h ago`);
+              }
+            } catch (piErr) {
+              console.log(`  SKIP: permit_inspections staleness check: ${piErr.message}`);
+            }
+          }
+        }
+      } catch (tcErr) {
+        console.log(`  SKIP: timing_calibration check failed: ${tcErr.message}`);
+      }
+    } // end runPermitChecks cost/timing checks
+
     // Ghost record detection — permits the City silently dropped from CKAN
     if (runPermitChecks) {
     console.log('\n--- Ghost Records (stale > 30 days) ---');

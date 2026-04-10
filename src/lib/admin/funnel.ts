@@ -563,6 +563,9 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   // Classify
   classify_scope:       { summary: 'Classifies project_type and extracts scope_tags for new/changed permits, then propagates BLD scope to companion permits', table: 'permits' },
   classify_permits:     { summary: 'Assigns trade classifications using tag-trade matrix and rules', table: 'permit_trades' },
+  // Compute (lead feed pre-computation)
+  compute_cost_estimates:     { summary: 'Pre-computes cost model estimates for all permits (permit-reported or model-based)', table: 'cost_estimates' },
+  compute_timing_calibration: { summary: 'Calibrates timing percentiles per permit_type from inspection history', table: 'timing_calibration' },
   // Snapshot
   refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', table: 'data_quality_snapshots' },
   // Quality (CQA)
@@ -800,6 +803,8 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   link_similar: 'permits', create_pre_permits: 'coa_applications',
   compute_centroids: 'parcels', classify_scope: 'permits',
   classify_permits: 'permit_trades',
+  compute_cost_estimates: 'cost_estimates',
+  compute_timing_calibration: 'timing_calibration',
   refresh_snapshot: 'data_quality_snapshots', assert_schema: 'pipeline_runs',
   assert_data_bounds: 'pipeline_runs', assert_engine_health: 'engine_health_snapshots',
   assert_network_health: 'pipeline_runs', assert_staleness: 'pipeline_runs',

@@ -7,7 +7,7 @@
 // can extract to a shared JSON file.
 //
 // Populates the cost_estimates table (FK'd to permits) used by the lead feed
-// API. Runs nightly after parcel + massing linkage, inside the sources chain.
+// API. Runs daily inside the permits chain, after classify_permits.
 
 const pipeline = require('./lib/pipeline');
 
@@ -349,6 +349,16 @@ pipeline.run('compute-cost-estimates', async (pool) => {
     pipeline.log.warn(
       '[compute-cost-estimates]',
       `Advisory lock ${ADVISORY_LOCK_ID} held by another process — exiting`,
+    );
+    pipeline.emitSummary({
+      records_total: 0,
+      records_new: 0,
+      records_updated: 0,
+      records_meta: { skipped: true, reason: 'advisory_lock_held' },
+    });
+    pipeline.emitMeta(
+      { permits: ['permit_num'] },
+      { cost_estimates: ['permit_num'] },
     );
     return;
   }

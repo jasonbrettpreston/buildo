@@ -283,6 +283,48 @@ pipeline.run('refresh-snapshot', async (pool) => {
     };
   }
 
+  // ── Cost estimates coverage ──
+  let costEst = { total: 0, from_permit: 0, from_model: 0, null_cost: 0 };
+  try {
+    const costRes = await pool.query(
+      `SELECT COUNT(*) as total,
+              COUNT(*) FILTER (WHERE cost_source = 'permit') as from_permit,
+              COUNT(*) FILTER (WHERE cost_source = 'model') as from_model,
+              COUNT(*) FILTER (WHERE estimated_cost IS NULL) as null_cost
+       FROM cost_estimates`
+    );
+    const cr = costRes.rows[0];
+    costEst = {
+      total: parseInt(cr.total),
+      from_permit: parseInt(cr.from_permit),
+      from_model: parseInt(cr.from_model),
+      null_cost: parseInt(cr.null_cost),
+    };
+    pipeline.log.info(TAG, `Cost Estimates: ${costEst.total} total (${costEst.from_permit} permit, ${costEst.from_model} model, ${costEst.null_cost} null)`);
+  } catch (err) {
+    pipeline.log.warn(TAG, `Cost estimates query failed — zeroes: ${err.message}`);
+  }
+
+  // ── Timing calibration coverage ──
+  let timingCal = { total: 0, avg_sample: 0, freshness_hours: null };
+  try {
+    const timingRes = await pool.query(
+      `SELECT COUNT(*) as total,
+              COALESCE(ROUND(AVG(sample_size))::int, 0) as avg_sample,
+              ROUND(EXTRACT(EPOCH FROM (NOW() - MAX(computed_at))) / 3600.0, 1) as freshness_hours
+       FROM timing_calibration`
+    );
+    const tr = timingRes.rows[0];
+    timingCal = {
+      total: parseInt(tr.total),
+      avg_sample: parseInt(tr.avg_sample),
+      freshness_hours: tr.freshness_hours !== null ? parseFloat(tr.freshness_hours) : null,
+    };
+    pipeline.log.info(TAG, `Timing Calibration: ${timingCal.total} permit_types, avg sample=${timingCal.avg_sample}, freshness=${timingCal.freshness_hours}h`);
+  } catch (err) {
+    pipeline.log.warn(TAG, `Timing calibration query failed — zeroes: ${err.message}`);
+  }
+
   // UPSERT snapshot
   let isNew, isUpdate;
   await pipeline.withTransaction(pool, async (client) => {
@@ -311,10 +353,12 @@ pipeline.run('refresh-snapshot', async (pool) => {
         violation_cost_out_of_range, violation_future_issued_date, violation_missing_status, violations_total,
         schema_column_counts, sla_permits_ingestion_hours,
         inspections_total, inspections_permits_scraped,
-        inspections_outstanding_count, inspections_passed_count, inspections_not_passed_count
+        inspections_outstanding_count, inspections_passed_count, inspections_not_passed_count,
+        cost_estimates_total, cost_estimates_from_permit, cost_estimates_from_model, cost_estimates_null_cost,
+        timing_calibration_total, timing_calibration_avg_sample, timing_calibration_freshness_hours
       ) VALUES (
         CURRENT_DATE,
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34::jsonb,$35,$36,$37::jsonb,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55::jsonb,$56,$57,$58,$59,$60,$61
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34::jsonb,$35,$36,$37::jsonb,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55::jsonb,$56,$57,$58,$59,$60,$61,$62,$63,$64,$65,$66,$67,$68
       )
       ON CONFLICT (snapshot_date) DO UPDATE SET
         total_permits=EXCLUDED.total_permits, active_permits=EXCLUDED.active_permits,
@@ -366,6 +410,13 @@ pipeline.run('refresh-snapshot', async (pool) => {
         inspections_outstanding_count=EXCLUDED.inspections_outstanding_count,
         inspections_passed_count=EXCLUDED.inspections_passed_count,
         inspections_not_passed_count=EXCLUDED.inspections_not_passed_count,
+        cost_estimates_total=EXCLUDED.cost_estimates_total,
+        cost_estimates_from_permit=EXCLUDED.cost_estimates_from_permit,
+        cost_estimates_from_model=EXCLUDED.cost_estimates_from_model,
+        cost_estimates_null_cost=EXCLUDED.cost_estimates_null_cost,
+        timing_calibration_total=EXCLUDED.timing_calibration_total,
+        timing_calibration_avg_sample=EXCLUDED.timing_calibration_avg_sample,
+        timing_calibration_freshness_hours=EXCLUDED.timing_calibration_freshness_hours,
         created_at=NOW()
       RETURNING (xmax::text::int = 0) AS is_insert, snapshot_date, permits_with_neighbourhood, active_permits, coa_total, coa_linked, permits_with_scope, permits_with_scope_tags, permits_with_detailed_tags`,
       [
@@ -397,6 +448,8 @@ pipeline.run('refresh-snapshot', async (pool) => {
         parseInt(v.cost_oor), parseInt(v.future_issued), parseInt(v.missing_status), violations_total,
         JSON.stringify(schemaColumnCounts), slaHours,
         insp.total, insp.permits_scraped, insp.outstanding, insp.passed, insp.not_passed,
+        costEst.total, costEst.from_permit, costEst.from_model, costEst.null_cost,
+        timingCal.total, timingCal.avg_sample, timingCal.freshness_hours,
       ]
     );
 
@@ -415,7 +468,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
 
   // Chain-aware phase number
   const chainId = process.env.PIPELINE_CHAIN || null;
-  const snapshotPhase = chainId === 'sources' ? 13 : chainId === 'coa' ? 7 : 14;
+  const snapshotPhase = chainId === 'sources' ? 13 : chainId === 'coa' ? 7 : 18;
   pipeline.emitSummary({
     records_total: 1, records_new: isNew, records_updated: isUpdate,
     records_meta: {
@@ -431,5 +484,5 @@ pipeline.run('refresh-snapshot', async (pool) => {
       },
     },
   });
-  pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"], "permit_inspections": ["*"] }, { "data_quality_snapshots": ["*"] });
+  pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"], "permit_inspections": ["*"], "cost_estimates": ["cost_source", "estimated_cost"], "timing_calibration": ["computed_at", "sample_size"] }, { "data_quality_snapshots": ["*"] });
 });

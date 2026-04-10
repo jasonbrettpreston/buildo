@@ -203,8 +203,9 @@ async function run() {
 
     // Gate-skip: when primary ingest had 0 new records, skip non-essential
     // downstream steps but still run quality/infrastructure steps (assert_*,
-    // refresh_snapshot) — they check cumulative DB state, not just the latest batch.
-    const isInfraStep = slug.startsWith('assert_') || slug.startsWith('classify_') || slug === 'refresh_snapshot' || slug === 'close_stale_permits';
+    // classify_*, compute_*, refresh_snapshot) — they check cumulative DB state,
+    // not just the latest batch.
+    const isInfraStep = slug.startsWith('assert_') || slug.startsWith('classify_') || slug.startsWith('compute_') || slug === 'refresh_snapshot' || slug === 'close_stale_permits';
     if (gateSkipped && !isInfraStep) {
       console.log(`${stepLabel} — SKIPPED (gate: 0 new records)`);
       const scopedSlug = `${chainId}:${slug}`;
