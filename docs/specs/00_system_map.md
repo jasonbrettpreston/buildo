@@ -26,6 +26,7 @@
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
 | 26 | `product/admin/26_admin_dashboard.md` | Admin Dashboard | `src/app/admin/page.tsx`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/market-metrics/route.ts`, +3 more | `src/tests/admin.ui.test.tsx`, `src/tests/analytics.logic.test.ts`, `src/tests/market-metrics.logic.test.ts` | Done |
+| 76 | `product/admin/76_lead_feed_health_dashboard.md` | Lead Feed Health Dashboard — Admin Observability for the Lead Generation System | `src/app/api/admin/leads/health/route.ts`, `src/app/api/admin/leads/test-feed/route.ts`, `src/lib/admin/lead-feed-health.ts`, +4 more | `src/tests/lead-feed-health.logic.test.ts`, `src/tests/lead-feed-health.infra.test.ts`, `src/tests/LeadFeedHealthDashboard.ui.test.tsx` | Done |
 
 ## Product — User Experience
 

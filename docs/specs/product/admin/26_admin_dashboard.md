@@ -84,4 +84,5 @@ As an admin, I want a unified dashboard to monitor pipeline health, trigger runs
 ### Cross-Spec Dependencies
 - **Relies on:** `13_authentication.md` (admin access control), `01_database_schema.md` (pipeline_runs table)
 - **Relies on:** `40_pipeline_system.md` (chain orchestrator, manifest)
+- **Extended by:** `76_lead_feed_health_dashboard.md` (lead feed observability, test feed tool — shares `src/app/admin/page.tsx`)
 </constraints>
