@@ -1,16 +1,79 @@
 #!/usr/bin/env node
 /**
- * Simple PostgreSQL migration runner.
- * Runs all SQL files in /migrations/ in alphabetical order.
+ * PostgreSQL migration runner with schema_migrations tracking.
  *
- * Usage: node scripts/migrate.js
+ * Tracks applied migrations in the `schema_migrations` table so repeat
+ * invocations are idempotent and a partial-apply state (some files
+ * ran, others didn't) becomes observable instead of silent.
+ *
+ * Columns tracked per row:
+ *   - filename (PK)        — e.g. '067_permits_location_geom.sql'
+ *   - applied_at           — when the file successfully finished
+ *   - checksum             — SHA-256 of the file contents at apply time
+ *                            (detects in-place edits to already-applied files)
+ *   - duration_ms          — how long the file took
+ *
+ * Flags:
+ *   --force       re-run all files, ignoring schema_migrations
+ *   --dry-run     print what would run, don't execute
+ *   --verify      exit non-zero if any checksum differs from what was applied
+ *
+ * Usage: node scripts/migrate.js [--force] [--dry-run] [--verify]
  * Requires DATABASE_URL or PG_* environment variables.
+ *
+ * WF3 2026-04-10: added tracking after two consecutive sessions uncovered
+ * partial-apply state (migration 070 missing after later migrations ran;
+ * migration 067 missing after postgis-less deploys). Root cause was the
+ * "run everything every time" loop with no record of what was applied.
  */
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+
+const TRACKING_TABLE_SQL = `
+  CREATE TABLE IF NOT EXISTS schema_migrations (
+    filename     TEXT PRIMARY KEY,
+    applied_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    checksum     TEXT NOT NULL,
+    duration_ms  INTEGER NOT NULL
+  )
+`;
+
+function sha256(str) {
+  return crypto.createHash('sha256').update(str).digest('hex');
+}
+
+async function ensureTrackingTable(pool) {
+  await pool.query(TRACKING_TABLE_SQL);
+}
+
+async function getAppliedMap(pool) {
+  const res = await pool.query(
+    'SELECT filename, checksum FROM schema_migrations'
+  );
+  const map = new Map();
+  for (const row of res.rows) map.set(row.filename, row.checksum);
+  return map;
+}
+
+async function recordApplied(pool, filename, checksum, durationMs) {
+  await pool.query(
+    `INSERT INTO schema_migrations (filename, checksum, duration_ms)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (filename) DO UPDATE
+       SET applied_at  = NOW(),
+           checksum    = EXCLUDED.checksum,
+           duration_ms = EXCLUDED.duration_ms`,
+    [filename, checksum, durationMs]
+  );
+}
 
 async function run() {
+  const force = process.argv.includes('--force');
+  const dryRun = process.argv.includes('--dry-run');
+  const verifyOnly = process.argv.includes('--verify');
+
   const pool = new Pool(
     process.env.DATABASE_URL
       ? { connectionString: process.env.DATABASE_URL }
@@ -23,6 +86,9 @@ async function run() {
         }
   );
 
+  await ensureTrackingTable(pool);
+  const applied = await getAppliedMap(pool);
+
   const migrationsDir = path.join(__dirname, '..', 'migrations');
   const files = fs
     .readdirSync(migrationsDir)
@@ -30,37 +96,129 @@ async function run() {
     .sort();
 
   console.log(`Found ${files.length} migration files`);
+  console.log(`Tracking table reports ${applied.size} previously applied`);
 
+  // --force safety: re-running all migrations can re-execute destructive
+  // statements (DROP TABLE, TRUNCATE, ALTER DROP COLUMN). Warn + require
+  // BUILDO_FORCE_CONFIRM=1 to proceed. WF3 review — adversarial C2.
+  if (force) {
+    console.warn('');
+    console.warn('  ⚠  WARNING: --force will re-run ALL migrations including destructive ones');
+    console.warn(`  ⚠  ${files.length} migrations will be executed from scratch.`);
+    console.warn('  ⚠  This may DROP TABLES, TRUNCATE data, or revert schema changes.');
+    console.warn('');
+    if (process.env.BUILDO_FORCE_CONFIRM !== '1') {
+      console.error('  Set BUILDO_FORCE_CONFIRM=1 to confirm and proceed.');
+      process.exit(1);
+    }
+    console.warn('  BUILDO_FORCE_CONFIRM=1 set — proceeding.');
+    console.warn('');
+  }
+
+  // --verify: checksum-only run. Exit non-zero on drift or missing files.
+  if (verifyOnly) {
+    let drift = 0;
+    let missing = 0;
+    for (const file of files) {
+      const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
+      const checksum = sha256(sql);
+      const prev = applied.get(file);
+      if (!prev) {
+        console.log(`  MISSING: ${file} (not yet applied)`);
+        missing++;
+      } else if (prev !== checksum) {
+        console.log(`  DRIFT:   ${file} (checksum changed since apply)`);
+        drift++;
+      }
+    }
+    console.log(`Verify: ${missing} missing, ${drift} drift`);
+    await pool.end();
+    if (missing > 0 || drift > 0) process.exit(1);
+    return;
+  }
+
+  let ranCount = 0;
+  let skippedCount = 0;
   for (const file of files) {
     const filePath = path.join(migrationsDir, file);
     const sql = fs.readFileSync(filePath, 'utf-8');
+    const checksum = sha256(sql);
+
+    if (!force && applied.has(file)) {
+      const prev = applied.get(file);
+      if (prev === checksum) {
+        skippedCount++;
+        continue; // Already applied, unchanged — skip silently
+      }
+      // Checksum drift: the file was edited after being applied. Warn
+      // but do NOT auto-rerun — rerunning a destructive migration on
+      // live data is a footgun. Operator must explicitly decide.
+      console.warn(
+        `  WARN: ${file} was previously applied but its checksum has changed. ` +
+        `Use --force to re-run, or revert the file.`
+      );
+      continue;
+    }
+
+    if (dryRun) {
+      console.log(`Would run ${file}`);
+      continue;
+    }
+
     console.log(`Running ${file}...`);
+    const startMs = Date.now();
     try {
       // Files containing CREATE INDEX CONCURRENTLY can NOT be sent as
       // a single multi-statement query — node-pg's simple-query
       // protocol wraps the batch in an implicit transaction, and
       // Postgres rejects CONCURRENTLY operations inside transaction
-      // blocks. Detect this and run statements individually.
-      // Phase 3-holistic WF2 (2026-04-09): silent breakage of the
-      // BUILDO_TEST_DB=1 testcontainer harness via this exact
-      // failure mode is how Phase 3-vi's lead_key regression slipped
-      // through the cracks (no integration coverage). Fix unblocks
-      // every *.db.test.ts file.
+      // blocks. The CONCURRENTLY path CANNOT be wrapped in an explicit
+      // transaction either, so apply+record is best-effort: if
+      // recordApplied fails after the CONCURRENTLY path, the migration
+      // runs again next time (idempotent via IF NOT EXISTS).
       if (/\bCONCURRENTLY\b/i.test(sql)) {
         for (const stmt of splitTopLevelStatements(sql)) {
           await pool.query(stmt);
         }
+        const durationMs = Date.now() - startMs;
+        await recordApplied(pool, file, checksum, durationMs);
+        console.log(`  OK (${durationMs}ms, concurrently)`);
       } else {
-        await pool.query(sql);
+        // Atomic apply+record: run the migration AND the tracking INSERT
+        // inside a single transaction. If recordApplied fails for any
+        // reason (pool exhaustion, client timeout), the migration itself
+        // rolls back — preventing the "destructive migration silently
+        // re-runs next time" footgun flagged in WF3 review.
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
+          await client.query(sql);
+          await client.query(
+            `INSERT INTO schema_migrations (filename, checksum, duration_ms)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (filename) DO UPDATE
+               SET applied_at  = NOW(),
+                   checksum    = EXCLUDED.checksum,
+                   duration_ms = EXCLUDED.duration_ms`,
+            [file, checksum, Date.now() - startMs],
+          );
+          await client.query('COMMIT');
+        } catch (err) {
+          await client.query('ROLLBACK').catch(() => {});
+          throw err;
+        } finally {
+          client.release();
+        }
+        console.log(`  OK (${Date.now() - startMs}ms)`);
       }
-      console.log(`  OK`);
+      ranCount++;
     } catch (err) {
       console.error(`  FAILED: ${err.message}`);
       process.exit(1);
     }
   }
 
-  console.log('All migrations completed successfully');
+  console.log(`Done: ${ranCount} applied, ${skippedCount} skipped (already applied)`);
   await pool.end();
 }
 

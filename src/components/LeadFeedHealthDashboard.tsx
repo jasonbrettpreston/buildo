@@ -22,6 +22,27 @@ const DEFAULT_TRADE = 'plumbing';
 const DEFAULT_RADIUS = 10;
 
 // ---------------------------------------------------------------------------
+// Error extraction helper
+// ---------------------------------------------------------------------------
+// API routes return errors in two shapes:
+//   1. { error: 'string' }                       — health endpoint
+//   2. { error: { code, message, details? } }   — test-feed envelope
+//
+// Without this helper, `new Error(body.error)` on shape 2 produces
+// "[object Object]" — exact user-reported bug from WF3 2026-04-10.
+function extractErrorMessage(body: unknown, fallback: string): string {
+  if (body && typeof body === 'object' && 'error' in body) {
+    const err = (body as { error: unknown }).error;
+    if (typeof err === 'string') return err;
+    if (err && typeof err === 'object' && 'message' in err) {
+      const msg = (err as { message: unknown }).message;
+      if (typeof msg === 'string') return msg;
+    }
+  }
+  return fallback;
+}
+
+// ---------------------------------------------------------------------------
 // Traffic light logic (spec §3.3)
 // ---------------------------------------------------------------------------
 
@@ -82,8 +103,8 @@ export function LeadFeedHealthDashboard() {
     try {
       const res = await fetch('/api/admin/leads/health', { signal: ctrl.signal });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        throw new Error(body.error || `HTTP ${res.status}`);
+        const body = await res.json().catch(() => null);
+        throw new Error(extractErrorMessage(body, `HTTP ${res.status}`));
       }
       const data: LeadFeedHealthResponse = await res.json();
       setHealth(data);
@@ -101,6 +122,10 @@ export function LeadFeedHealthDashboard() {
     }
   }, []);
 
+  // Declared BEFORE the useEffect that references it so the code order
+  // matches execution order (reviewer-flagged code clarity fix).
+  const tfAbortRef = useRef<AbortController | null>(null);
+
   // Initial fetch + polling
   useEffect(() => {
     fetchHealth();
@@ -110,8 +135,6 @@ export function LeadFeedHealthDashboard() {
       tfAbortRef.current?.abort();
     };
   }, [fetchHealth]);
-
-  const tfAbortRef = useRef<AbortController | null>(null);
 
   const runTestFeed = useCallback(async () => {
     // Cancel any in-flight test feed request
@@ -132,8 +155,8 @@ export function LeadFeedHealthDashboard() {
     try {
       const res = await fetch(`/api/admin/leads/test-feed?${params}`, { signal: ctrl.signal });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        throw new Error(body.error || `HTTP ${res.status}`);
+        const body = await res.json().catch(() => null);
+        throw new Error(extractErrorMessage(body, `HTTP ${res.status}`));
       }
       const data = await res.json();
       setTfResult(data);
@@ -242,8 +265,89 @@ export function LeadFeedHealthDashboard() {
                 <span className="text-gray-600">Total: <strong>{formatNumber(readiness.builders_total)}</strong></span>
                 <span className="text-gray-600">With Contact: <strong>{formatNumber(readiness.builders_with_contact)}</strong></span>
                 <span className="text-gray-600">WSIB: <strong>{formatNumber(readiness.builders_wsib_verified)}</strong></span>
+                <span className="text-gray-600 font-medium" data-testid="builders-feed-eligible">Feed-Eligible: <strong className="text-emerald-700">{formatNumber(readiness.builders_feed_eligible)}</strong></span>
               </div>
+              <p className="text-[10px] text-gray-400 mt-1">
+                Feed-Eligible = GTA + enriched + Small/Medium + contact. Only these show up in the builder feed.
+              </p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================================================================
+          Section 1b: Feed-Path Coverage (WF3 2026-04-10)
+          Per-pillar coverage matching the actual feed SQL inputs.
+          ALL rows use `feed_active_permits` as denominator so percentages
+          are directly comparable (reviewer-flagged H1, H3).
+      ================================================================ */}
+      <div data-testid="feed-path-coverage" className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-1">Feed-Path Coverage</h2>
+        <p className="text-xs text-gray-500 mb-4">
+          Coverage per scoring pillar as actually used by <code className="font-mono text-[11px]">get-lead-feed.ts</code>. A
+          permit must pass ALL hard filters and have data for all 4 pillars to rank well.
+          <br />
+          Denominator: <strong>{formatNumber(readiness.feed_active_permits)}</strong> non-terminal permits (status NOT IN Cancelled/Revoked/Closed).
+        </p>
+
+        <div className="space-y-3">
+          <FeedPathRow
+            label="Hard Filter: Geocoded"
+            sublabel="latitude IS NOT NULL (proxy for location)"
+            count={readiness.permits_geocoded}
+            total={readiness.feed_active_permits}
+            color="bg-blue-500"
+          />
+          <FeedPathRow
+            label="Classification (active + high-conf)"
+            sublabel="permit_trades.is_active AND confidence >= 0.5"
+            count={readiness.permits_classified_active}
+            total={readiness.feed_active_permits}
+            color="bg-indigo-500"
+          />
+          <FeedPathRow
+            label="Timing (Feed Path)"
+            sublabel="permit_trades.phase ∈ (structural, finishing, early_construction, landscaping)"
+            count={readiness.permits_with_phase}
+            total={readiness.feed_active_permits}
+            color="bg-cyan-500"
+          />
+          <FeedPathRow
+            label="Value (cost tier)"
+            sublabel="cost_estimates.estimated_cost IS NOT NULL"
+            count={readiness.permits_with_cost}
+            total={readiness.feed_active_permits}
+            color="bg-emerald-500"
+          />
+          <FeedPathRow
+            label="Neighbourhood (display)"
+            sublabel="LEFT JOIN — optional, used for card label"
+            count={readiness.permits_with_neighbourhood}
+            total={readiness.feed_active_permits}
+            color="bg-violet-500"
+          />
+        </div>
+
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider">Full Intersection</p>
+              <p className="text-[10px] text-gray-400">location + active trade + high-conf + non-terminal status</p>
+            </div>
+            <p className="text-2xl font-bold text-emerald-700 tabular-nums">
+              {formatNumber(readiness.permits_feed_eligible)}
+            </p>
+          </div>
+        </div>
+
+        {/* Opportunity status breakdown */}
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Opportunity Pillar (permit status)</p>
+          <div data-testid="opportunity-breakdown" className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <OpportunityPill label="Permit Issued" count={readiness.permits_by_opportunity_status.permit_issued} score={20} />
+            <OpportunityPill label="Inspection" count={readiness.permits_by_opportunity_status.inspection} score={14} />
+            <OpportunityPill label="Application" count={readiness.permits_by_opportunity_status.application} score={10} />
+            <OpportunityPill label="Other" count={readiness.permits_by_opportunity_status.other_active} score={0} />
           </div>
         </div>
       </div>
@@ -265,11 +369,29 @@ export function LeadFeedHealthDashboard() {
           </div>
         </div>
 
-        {/* Timing calibration */}
+        {/* Timing calibration — detail-page engine, NOT feed ranking */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Timing Calibration</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-1">Detail-Page Timing Engine</h2>
+          <p className="text-[10px] text-gray-400 mb-3">
+            Per-permit timing shown on the detail page. <strong>Not used by feed ranking</strong> — the feed uses
+            <code className="font-mono"> permit_trades.phase</code> (see Feed-Path Coverage above).
+          </p>
           <p className="text-3xl font-bold text-gray-900 mb-1">{readiness.timing_types_calibrated}</p>
-          <p className="text-xs text-gray-500 mb-4">permit types calibrated</p>
+          <p className="text-xs text-gray-500 mb-3">permit types in calibration table</p>
+
+          <div className="space-y-2 mb-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Active permits covered:</span>
+              <span className="font-semibold tabular-nums" data-testid="timing-coverage">
+                {formatNumber(readiness.permits_with_timing_calibration_match)}
+                <span className="text-xs text-gray-400 ml-1">
+                  ({readiness.active_permits > 0
+                    ? ((readiness.permits_with_timing_calibration_match / readiness.active_permits) * 100).toFixed(0)
+                    : 0}%)
+                </span>
+              </span>
+            </div>
+          </div>
 
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Freshness:</span>
@@ -503,6 +625,50 @@ function StatBox({ label, value }: { label: string; value: number }) {
     <div className="bg-gray-50 rounded-lg p-3">
       <p className="text-xs text-gray-500">{label}</p>
       <p className="text-xl font-bold text-gray-900">{formatNumber(value)}</p>
+    </div>
+  );
+}
+
+function FeedPathRow({
+  label,
+  sublabel,
+  count,
+  total,
+  color,
+}: {
+  label: string;
+  sublabel: string;
+  count: number;
+  total: number;
+  color: string;
+}) {
+  const pct = total > 0 ? (count / total) * 100 : 0;
+  return (
+    <div className="space-y-1">
+      <div className="flex items-baseline justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-700">{label}</p>
+          <p className="text-[10px] text-gray-400 font-mono truncate">{sublabel}</p>
+        </div>
+        <p className="text-sm font-semibold text-gray-900 tabular-nums shrink-0">
+          {formatNumber(count)}
+          <span className="text-xs text-gray-400 ml-1">({pct.toFixed(0)}%)</span>
+        </p>
+      </div>
+      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function OpportunityPill({ label, count, score }: { label: string; count: number; score: number }) {
+  const scoreColor = score >= 20 ? 'text-emerald-700' : score >= 14 ? 'text-blue-700' : score >= 10 ? 'text-yellow-700' : 'text-gray-500';
+  return (
+    <div className="bg-gray-50 rounded-md p-2">
+      <p className="text-[10px] text-gray-500 truncate">{label}</p>
+      <p className="text-base font-bold text-gray-900 tabular-nums">{formatNumber(count)}</p>
+      <p className={`text-[10px] font-mono ${scoreColor}`}>+{score} score</p>
     </div>
   );
 }

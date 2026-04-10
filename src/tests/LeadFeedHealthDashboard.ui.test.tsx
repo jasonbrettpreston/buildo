@@ -50,6 +50,21 @@ function makeHealthResponse(overrides?: Partial<LeadFeedHealthResponse>): LeadFe
       builders_total: 5000,
       builders_with_contact: 3200,
       builders_wsib_verified: 1800,
+      // WF3 2026-04-10: expanded readiness fields
+      feed_active_permits: 9800,
+      permits_classified_active: 6500,
+      permits_with_phase: 6100,
+      permits_with_timing_calibration_match: 8200,
+      permits_by_opportunity_status: {
+        permit_issued: 7500,
+        inspection: 1200,
+        application: 800,
+        other_active: 500,
+      },
+      permits_feed_eligible: 5800,
+      builders_feed_eligible: 618,
+      neighbourhoods_total: 158,
+      permits_with_neighbourhood: 9400,
     },
     cost_coverage: {
       total: 7200,
@@ -333,7 +348,8 @@ describe('Section 2 — Cost & Timing Coverage', () => {
   it('shows timing calibration count', async () => {
     await renderDashboard();
     await waitFor(() => {
-      const timingSection = screen.getByText('Timing Calibration').closest('div')!;
+      // Card relabeled in WF3 2026-04-10 to distinguish from feed-path timing
+      const timingSection = screen.getByText('Detail-Page Timing Engine').closest('div')!;
       expect(timingSection.textContent).toContain('12');
     });
   });
@@ -356,7 +372,10 @@ describe('Section 3 — User Engagement', () => {
   it('renders unique users count', async () => {
     await renderDashboard();
     await waitFor(() => {
-      expect(screen.getByText(/18/)).toBeDefined(); // unique_users_7d
+      // Scope to engagement section since the opportunity breakdown / feed-path
+      // coverage cards now include numbers that contain '18' as substrings.
+      const engagement = screen.getByTestId('engagement-section');
+      expect(engagement.textContent).toContain('18');
     });
   });
 
@@ -535,5 +554,210 @@ describe('Polling', () => {
     // Verify a 10s interval was set up
     expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 10_000);
     setIntervalSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF3 2026-04-10: Error object extraction (bug 1B)
+// ---------------------------------------------------------------------------
+
+describe('Error extraction — structured error objects (bug 1B)', () => {
+  it('displays body.error.message when test-feed returns {error: {code, message}}', async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.includes('test-feed')) {
+        return Promise.resolve({
+          ok: false,
+          status: 500,
+          json: () => Promise.resolve({
+            data: null,
+            error: { code: 'INTERNAL_ERROR', message: 'column "p.location" does not exist' },
+            meta: null,
+          }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(makeHealthResponse()) });
+    });
+
+    await renderDashboard();
+    await waitFor(() => screen.getByText(/Run Test/i));
+    fireEvent.click(screen.getByText(/Run Test/i));
+
+    await waitFor(() => {
+      const errMsg = document.body.textContent || '';
+      // Must display the actual message, NOT [object Object]
+      expect(errMsg).toContain('column "p.location" does not exist');
+      expect(errMsg).not.toContain('[object Object]');
+    });
+  });
+
+  it('displays body.error.message on 400 validation error', async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.includes('test-feed')) {
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          json: () => Promise.resolve({
+            data: null,
+            error: { code: 'VALIDATION_ERROR', message: 'Invalid parameters', details: { lat: ['Expected number'] } },
+            meta: null,
+          }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(makeHealthResponse()) });
+    });
+
+    await renderDashboard();
+    await waitFor(() => screen.getByText(/Run Test/i));
+    fireEvent.click(screen.getByText(/Run Test/i));
+
+    await waitFor(() => {
+      const errMsg = document.body.textContent || '';
+      expect(errMsg).toContain('Invalid parameters');
+      expect(errMsg).not.toContain('[object Object]');
+    });
+  });
+
+  it('still handles string-shaped {error: "..."} (health endpoint shape)', async () => {
+    // Make the health endpoint fail so we get to the error state
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.resolve({ error: 'Database connection lost' }),
+    });
+
+    await renderDashboard();
+    await waitFor(() => {
+      const err = screen.getByTestId('dashboard-error');
+      expect(err.textContent).toContain('Database connection lost');
+      expect(err.textContent).not.toContain('[object Object]');
+    });
+  });
+
+  it('falls back to HTTP status when body cannot be parsed', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: () => Promise.reject(new Error('not JSON')),
+    });
+
+    await renderDashboard();
+    await waitFor(() => {
+      const err = screen.getByTestId('dashboard-error');
+      expect(err.textContent).toContain('HTTP 502');
+    });
+  });
+
+  it('falls back to HTTP status when body.error is null', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: () => Promise.resolve({ error: null, data: null }),
+    });
+
+    await renderDashboard();
+    await waitFor(() => {
+      const err = screen.getByTestId('dashboard-error');
+      expect(err.textContent).toContain('HTTP 503');
+      expect(err.textContent).not.toContain('[object Object]');
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF3 2026-04-10: Expanded readiness fields (bug 3)
+// ---------------------------------------------------------------------------
+
+describe('Feed-Path Coverage section (bug 3)', () => {
+  it('renders Feed-Path Coverage section', async () => {
+    await renderDashboard();
+    await waitFor(() => {
+      expect(screen.getByTestId('feed-path-coverage')).toBeDefined();
+    });
+  });
+
+  it('shows classification (active + high-conf) row with correct count', async () => {
+    await renderDashboard();
+    await waitFor(() => {
+      const section = screen.getByTestId('feed-path-coverage');
+      expect(section.textContent).toContain('Classification');
+      expect(section.textContent).toContain('6,500'); // permits_classified_active
+      expect(section.textContent).toContain('is_active AND confidence');
+    });
+  });
+
+  it('shows timing (feed path) row with phase coverage count', async () => {
+    await renderDashboard();
+    await waitFor(() => {
+      const section = screen.getByTestId('feed-path-coverage');
+      expect(section.textContent).toContain('Timing (Feed Path)');
+      expect(section.textContent).toContain('6,100'); // permits_with_phase
+      expect(section.textContent).toContain('permit_trades.phase');
+    });
+  });
+
+  it('shows full intersection (feed eligible) count', async () => {
+    await renderDashboard();
+    await waitFor(() => {
+      const section = screen.getByTestId('feed-path-coverage');
+      expect(section.textContent).toContain('5,800'); // permits_feed_eligible
+      expect(section.textContent).toContain('Full Intersection');
+    });
+  });
+
+  it('shows opportunity status breakdown', async () => {
+    await renderDashboard();
+    await waitFor(() => {
+      const breakdown = screen.getByTestId('opportunity-breakdown');
+      expect(breakdown.textContent).toContain('7,500'); // permit_issued
+      expect(breakdown.textContent).toContain('1,200'); // inspection
+      expect(breakdown.textContent).toContain('Permit Issued');
+      expect(breakdown.textContent).toContain('+20 score');
+      expect(breakdown.textContent).toContain('+14 score');
+    });
+  });
+});
+
+describe('Builders feed-eligible count (bug 3)', () => {
+  it('shows feed-eligible builder count in builder readiness row', async () => {
+    await renderDashboard();
+    await waitFor(() => {
+      const row = screen.getByTestId('builders-feed-eligible');
+      expect(row.textContent).toContain('618');
+    });
+  });
+
+  it('explains the feed-eligible intersection criteria', async () => {
+    await renderDashboard();
+    await waitFor(() => {
+      const body = document.body.textContent || '';
+      expect(body).toContain('GTA');
+      expect(body).toContain('enriched');
+    });
+  });
+});
+
+describe('Timing semantics clarification (bug 2)', () => {
+  it('relabels the card to "Detail-Page Timing Engine"', async () => {
+    await renderDashboard();
+    await waitFor(() => {
+      expect(screen.getByText('Detail-Page Timing Engine')).toBeDefined();
+    });
+  });
+
+  it('clarifies that calibration is NOT used by feed ranking', async () => {
+    await renderDashboard();
+    await waitFor(() => {
+      const body = document.body.textContent || '';
+      expect(body.toLowerCase()).toContain('not used by feed');
+    });
+  });
+
+  it('shows active permits covered by calibration (answers the "what does 4 mean?" question)', async () => {
+    await renderDashboard();
+    await waitFor(() => {
+      const coverage = screen.getByTestId('timing-coverage');
+      expect(coverage.textContent).toContain('8,200'); // permits_with_timing_calibration_match
+      expect(coverage.textContent).toContain('%');
+    });
   });
 });
