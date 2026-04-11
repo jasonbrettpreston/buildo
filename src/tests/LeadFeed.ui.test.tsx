@@ -225,6 +225,7 @@ interface QueryShape {
   isError?: boolean;
   isSuccess?: boolean;
   hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
   data?: { pages: ReturnType<typeof pageOf>[] } | undefined;
   fetchNextPage?: () => void;
   refetch?: () => void;
@@ -236,6 +237,7 @@ function makeQuery(overrides: QueryShape): QueryShape {
     isError: false,
     isSuccess: true,
     hasNextPage: false,
+    isFetchingNextPage: false,
     data: { pages: [] },
     fetchNextPage: vi.fn(),
     refetch: vi.fn(),
@@ -604,5 +606,97 @@ describe('LeadFeed — InfiniteScroll trigger wiring', () => {
     );
     render(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
     expect(screen.getByTestId('infinite-scroll').getAttribute('data-data-length')).toBe('3');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 7 a11y audit (WF1 2026-04-11)
+// ---------------------------------------------------------------------------
+// The card list wrapper must carry ARIA Feed pattern attributes so screen
+// readers can navigate the dynamically-loaded items without reading the
+// entire DOM. Cap/exhausted banners must have role="status" + aria-live
+// so pagination state changes are announced. Regression locks so future
+// edits can't silently strip the a11y attributes.
+
+describe('LeadFeed — Phase 7 a11y audit', () => {
+  it('renders the card list wrapper with role="feed" + aria-label + aria-busy (ARIA Feed pattern)', () => {
+    returnQuery(
+      makeQuery({
+        data: { pages: [pageOf([samplePermit, sampleBuilder])] },
+      }),
+    );
+    render(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    const feed = screen.getByRole('feed', { name: 'Lead feed' });
+    expect(feed).toBeDefined();
+    // React serializes `aria-busy={false}` as an omitted attribute;
+    // ARIA's default for an absent aria-busy is "false". So either
+    // null (absent) or "false" is correct for the not-busy state.
+    const ariaBusy = feed.getAttribute('aria-busy');
+    expect(ariaBusy === null || ariaBusy === 'false').toBe(true);
+  });
+
+  it('flips aria-busy to true while a next page is fetching', () => {
+    returnQuery(
+      makeQuery({
+        data: { pages: [pageOf([samplePermit])] },
+        isFetchingNextPage: true,
+      }),
+    );
+    render(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    const feed = screen.getByRole('feed', { name: 'Lead feed' });
+    expect(feed.getAttribute('aria-busy')).toBe('true');
+  });
+
+  it('cap banner is announced via role="status" + aria-live when MAX_PAGES reached', () => {
+    // 5 pages of 1 card each = pageCount 5 → pageCapReached → capBanner
+    const pages = [1, 2, 3, 4, 5].map(() => pageOf([samplePermit]));
+    returnQuery(makeQuery({ data: { pages } }));
+    render(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    // Both the cap banner and the feed itself render with role="status"/"feed"
+    // — find the banner by its text content via getByText, then verify the
+    // wrapping element's ARIA attributes.
+    const heading = screen.getByText(/Refine your search to see more/);
+    const banner = heading.closest('[role="status"]');
+    expect(banner).not.toBeNull();
+    expect(banner?.getAttribute('aria-live')).toBe('polite');
+  });
+
+  it('exhausted banner is announced via role="status" + aria-live when hasNextPage false and under cap', () => {
+    returnQuery(
+      makeQuery({
+        data: { pages: [pageOf([samplePermit])] },
+        hasNextPage: false,
+      }),
+    );
+    render(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    const heading = screen.getByText(/seen all the leads in this area/);
+    const banner = heading.closest('[role="status"]');
+    expect(banner).not.toBeNull();
+    expect(banner?.getAttribute('aria-live')).toBe('polite');
+  });
+
+  it('each feed item has role="article" + aria-posinset + aria-setsize (WAI-ARIA Feed required-owned-elements)', () => {
+    // Adversarial review WF1 2026-04-11 IMPORTANT #2+#3: the feed
+    // pattern's `requiredOwnedElements: [['article']]` contract means
+    // direct children of role="feed" must carry role="article" for
+    // NVDA/JAWS to expose feed-navigation keystrokes (F → next article).
+    // `aria-posinset` must be 1-based; `aria-setsize={-1}` because
+    // cursor-paginated feeds have unknown totals.
+    returnQuery(
+      makeQuery({
+        data: { pages: [pageOf([samplePermit, sampleBuilder, samplePermit])] },
+      }),
+    );
+    render(<LeadFeed tradeSlug="plumbing" lat={43.65} lng={-79.38} />);
+    const articles = screen.getAllByRole('article');
+    expect(articles.length).toBe(3);
+    // Verify 1-based positional indexing
+    expect(articles[0]?.getAttribute('aria-posinset')).toBe('1');
+    expect(articles[1]?.getAttribute('aria-posinset')).toBe('2');
+    expect(articles[2]?.getAttribute('aria-posinset')).toBe('3');
+    // All children carry the unknown-size marker
+    for (const article of articles) {
+      expect(article.getAttribute('aria-setsize')).toBe('-1');
+    }
   });
 });

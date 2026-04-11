@@ -26,6 +26,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { LeadApiClientError } from '@/features/leads/api/types';
 import { useLeadView } from '@/features/leads/api/useLeadView';
+import { hapticTap } from '@/features/leads/lib/haptics';
 import { captureEvent } from '@/lib/observability/capture';
 
 // Module scope — NOT inside SaveButton's function body. Creating a
@@ -53,21 +54,10 @@ export interface SaveButtonProps {
   onSaveChange?: (saved: boolean) => void;
 }
 
-/**
- * Feature-detect the Vibration API. Safari (iOS) doesn't implement it;
- * the call must be guarded so it doesn't throw.
- */
-function vibrate(ms: number): void {
-  if (typeof navigator === 'undefined') return;
-  const nav = navigator as Navigator & { vibrate?: (pattern: number | number[]) => boolean };
-  if (typeof nav.vibrate === 'function') {
-    try {
-      nav.vibrate(ms);
-    } catch {
-      // Silent — vibration is a nice-to-have, not a contract.
-    }
-  }
-}
+// Phase 7 2026-04-11 — the inline `vibrate()` helper was extracted to
+// `src/features/leads/lib/haptics.ts` and now imported as `hapticTap`.
+// The shared helper adds a `prefers-reduced-motion` gate (WCAG 2.1 SC
+// 2.3.3) and is reused by the lead cards + filter sheet.
 
 export function SaveButton({
   leadId,
@@ -179,7 +169,9 @@ export function SaveButton({
     // telemetry, and mutation.
     userInteractedRef.current = true;
     setSaved(nextSaved);
-    vibrate(10);
+    // Stronger haptic tap (20ms) for state-changing actions. The
+    // shared helper respects prefers-reduced-motion.
+    hapticTap(20);
 
     captureEvent(nextSaved ? 'lead_feed.lead_saved' : 'lead_feed.lead_unsaved', {
       lead_type: leadType,

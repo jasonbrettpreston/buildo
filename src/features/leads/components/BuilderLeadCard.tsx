@@ -39,6 +39,7 @@ import {
   sanitizeTelHref,
   sanitizeWebsite,
 } from '@/features/leads/lib/format';
+import { hapticTap } from '@/features/leads/lib/haptics';
 import type { BuilderLeadFeedItem } from '@/features/leads/types';
 import { captureEvent } from '@/lib/observability/capture';
 import { cn } from '@/lib/utils';
@@ -69,6 +70,8 @@ function BuilderLeadCardComponent({ lead, tradeSlug }: BuilderLeadCardProps) {
   const avgCostLabel = formatCostDisplay(lead.avg_project_cost, null);
 
   const handleSelect = useCallback(() => {
+    // Phase 7 haptic feedback — light 10ms tap for card selection.
+    hapticTap(10);
     captureEvent('lead_feed.lead_clicked', {
       lead_type: 'builder',
       lead_id: lead.lead_id,

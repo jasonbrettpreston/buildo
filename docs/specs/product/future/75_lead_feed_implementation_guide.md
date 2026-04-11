@@ -2618,12 +2618,14 @@ Cross-component interaction tests that infra/ui tests miss:
 
 ### Phase 7: Polish
 
-1. Animations (save button bounce, card expand)
-2. Haptic feedback (feature-detect, iOS doesn't implement Vibration API)
-3. Accessibility audit (screen reader labels, keyboard nav, 320px viewport test)
-4. Observability: add `logInfo` with performance marks to feed API
-5. **V1 hard cap:** Infinite scroll limited to 5 pages of 15 cards = **75 cards max**. When the user hits the cap, show "Refine your search to see more." This is the V1 constraint replacing virtualization.
-6. **V2 upgrade path:** When production feed length regularly exceeds 50 cards OR frame drops are reported, add `@tanstack/react-virtual` to `LeadFeed` component. This is a self-contained change behind the existing component interface.
+1. Animations
+   - ✅ **save button bounce** — `SaveButton.tsx` uses `motion.create(Button)` with `animate={{ scale: [1, 1.3, 1] }}` gated on `useReducedMotion` (WCAG 2.1 SC 2.3.3). Shipped in Phase 3-ii.
+   - ⏸ **card expand** — deferred (no product UX design documented in spec 74). Resurrect when the product decision lands.
+2. ✅ **Haptic feedback** — `src/features/leads/lib/haptics.ts` exports `hapticTap(ms)` with Vibration API feature-detection (Safari/iOS no-op), `prefers-reduced-motion` gate at call time (WCAG 2.1 SC 2.3.3), and error swallow. Duration convention: 10ms = light (card tap), 15ms = medium (filter change), 20ms = stronger (save/unsave state change). Wired into `SaveButton`, `PermitLeadCard`, `BuilderLeadCard`, `LeadFilterSheet`. Shipped in WF1 Phase 7 commit (2026-04-11).
+3. ✅ **Accessibility audit** — systematic sweep of `LeadFeed`, `LeadFeedHeader`, `LeadFilterSheet`, `EmptyLeadState`, `PermitLeadCard`, `BuilderLeadCard`, `SaveButton`, `LeadMapPane`, `SkeletonLeadCard`. Findings: ARIA Feed pattern (`role="feed"` + `role="article"` owned children + `aria-posinset` + `aria-setsize` + `aria-busy`) added to `LeadFeed.tsx`; cap/exhausted banners gained `role="status"` + `aria-live="polite"`; next-page loader gained `role="status"` + `aria-label="Loading more leads"`. All other audited components already compliant. Fixed 2 `aria-query` `feed` contract violations caught by adversarial review.
+4. ✅ **Observability** — `src/features/leads/lib/perf-marks.ts` exports `createPerfMarks(scope)` builder using `performance.now()` with LOCAL storage (not Node's global `perf_hooks` registry — the first implementation was caught by adversarial review as a memory leak because `performance.mark()` entries accumulate without eviction). `request-logging.ts` accepts an optional `perfMarks` param and nests it as `perf_marks` in the existing `logInfo` payload. The `/api/leads/feed` route instruments auth/zod/postgis/ratelimit/query phases and the total. Regression test in `perf-marks.logic.test.ts` asserts zero global-timeline pollution.
+5. ✅ **V1 hard cap** — `MAX_PAGES = 5` in `LeadFeed.tsx`, `DEFAULT_FEED_LIMIT = 15` in `get-lead-feed.ts` → 75-card cap. "Refine your search to see more" banner appears when `pageCount >= MAX_PAGES`. Pull-to-refresh resets the cap. Shipped pre-Phase 7.
+6. ⏸ **V2 upgrade path:** When production feed length regularly exceeds 50 cards OR frame drops are reported, add `@tanstack/react-virtual` to `LeadFeed` component. This is a self-contained change behind the existing component interface. Neither condition met yet (2026-04-11).
 
 ---
 

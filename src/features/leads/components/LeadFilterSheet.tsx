@@ -32,6 +32,7 @@ import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { DEFAULT_RADIUS_KM, useLeadFeedState } from '@/features/leads/hooks/useLeadFeedState';
 import { MAX_RADIUS_KM } from '@/features/leads/lib/distance';
+import { hapticTap } from '@/features/leads/lib/haptics';
 import { captureEvent } from '@/lib/observability/capture';
 
 // Derived from MAX_RADIUS_KM so the top option is always the server
@@ -67,6 +68,9 @@ export function LeadFilterSheet({ open, onOpenChange }: LeadFilterSheetProps) {
     const km = Number.parseInt(value, 10);
     if (!Number.isFinite(km) || km <= 0) return;
     if (km === radiusKm) return; // no-op if already selected
+    // Phase 7 haptic feedback — medium 15ms tap for deliberate filter
+    // change. The helper respects prefers-reduced-motion.
+    hapticTap(15);
     captureEvent('lead_feed.filter_changed', {
       field: 'radius',
       from: radiusKm,
@@ -81,6 +85,8 @@ export function LeadFilterSheet({ open, onOpenChange }: LeadFilterSheetProps) {
   };
 
   const handleReset = () => {
+    // Phase 7 haptic feedback — medium 15ms tap for deliberate reset.
+    hapticTap(15);
     captureEvent('lead_feed.filter_changed', {
       field: 'reset',
       from: radiusKm,

@@ -30,22 +30,35 @@ import {
 import { logRequestComplete } from '@/features/leads/api/request-logging';
 import { leadFeedQuerySchema } from '@/features/leads/api/schemas';
 import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
+import { createPerfMarks } from '@/features/leads/lib/perf-marks';
 
 const RATE_LIMIT_PER_MIN = 30;
 const RATE_LIMIT_WINDOW_SEC = 60;
 
 export async function GET(request: NextRequest) {
   const start = Date.now();
+  // Phase 7 2026-04-11 — named phase-level perf instrumentation.
+  // Monotonic-clock-backed measurements via Node perf_hooks, logged
+  // alongside the existing duration_ms. Phase names are stable so
+  // downstream log dashboards can chart them over time.
+  const perf = createPerfMarks('leads-feed');
+  perf.mark('start');
   try {
     // 1. Auth — get the Firebase UID + user's trade from user_profiles.
+    perf.mark('auth_start');
     const ctx = await getCurrentUserContext(request, pool);
+    perf.mark('auth_end');
+    perf.measure('auth', 'auth_start', 'auth_end');
     if (!ctx) return unauthorized();
 
     // 2. Validate query params via Zod (returns 400 with field-level details
     //    on failure — NOT 500, per spec 70).
+    perf.mark('zod_start');
     const parsed = leadFeedQuerySchema.safeParse(
       Object.fromEntries(request.nextUrl.searchParams),
     );
+    perf.mark('zod_end');
+    perf.measure('zod', 'zod_start', 'zod_end');
     if (!parsed.success) return badRequestZod(parsed.error);
     const params = parsed.data;
 
@@ -70,18 +83,25 @@ export async function GET(request: NextRequest) {
     //     authz (403 on mismatch), and BEFORE rate limit (so a dev
     //     user hitting a stuck feed doesn't exhaust their 30/min
     //     window on a 503).
-    if (!(await isPostgisAvailable(pool))) {
+    perf.mark('postgis_start');
+    const postgisReady = await isPostgisAvailable(pool);
+    perf.mark('postgis_end');
+    perf.measure('postgis_preflight', 'postgis_start', 'postgis_end');
+    if (!postgisReady) {
       return devEnvMissingPostgis();
     }
 
     // 4. Rate limit — 30 req/min per user, scoped to this endpoint via
     //    the `leads-feed:` key prefix so other future leads endpoints
     //    have their own buckets.
+    perf.mark('ratelimit_start');
     const rateLimit = await withRateLimit(request, {
       key: `leads-feed:${ctx.uid}`,
       limit: RATE_LIMIT_PER_MIN,
       windowSec: RATE_LIMIT_WINDOW_SEC,
     });
+    perf.mark('ratelimit_end');
+    perf.measure('rate_limit', 'ratelimit_start', 'ratelimit_end');
     if (!rateLimit.allowed) return rateLimited(rateLimit.remaining);
 
     // 5. Build the cursor from the validated optional triple. Conditional
@@ -102,6 +122,7 @@ export async function GET(request: NextRequest) {
     //    (post Phase-2 holistic review — earlier drafts swallowed errors
     //    and returned empty). The outer try/catch below converts thrown
     //    errors to a 500 envelope via `internalError()`.
+    perf.mark('query_start');
     const result = await getLeadFeed(
       {
         user_id: ctx.uid,
@@ -114,8 +135,15 @@ export async function GET(request: NextRequest) {
       },
       pool,
     );
+    perf.mark('query_end');
+    perf.measure('query', 'query_start', 'query_end');
 
     // 7. Structured logging — spec 70 §API Endpoints "Observability".
+    //    Phase 7 2026-04-11 adds `perf_marks` nested field with phase-level
+    //    durations. Non-empty only when the request reached the logging
+    //    step (not an early-return auth/zod/403/503/429).
+    perf.mark('end');
+    perf.measure('total', 'start', 'end');
     logRequestComplete(
       '[api/leads/feed]',
       {
@@ -127,6 +155,7 @@ export async function GET(request: NextRequest) {
         result_count: result.meta.count,
       },
       start,
+      perf.toLog(),
     );
 
     // 8. Return the envelope.

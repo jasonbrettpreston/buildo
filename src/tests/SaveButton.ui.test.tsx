@@ -212,12 +212,17 @@ describe('SaveButton — click behavior (permit lead)', () => {
     expect(payload.action).toBe('unsave');
   });
 
-  it('calls navigator.vibrate(10) on click (feature-detected)', () => {
+  it('calls navigator.vibrate(20) on click (feature-detected, stronger feedback for state-changing action)', () => {
+    // Phase 7 (WF1 2026-04-11) upgraded the save-button haptic from
+    // 10ms to 20ms per the shared haptics.ts convention:
+    //   10ms = light tap (card selection)
+    //   15ms = medium tap (filter change)
+    //   20ms = stronger tap (state-changing action like save/unsave)
     const vibrateSpy = vi.fn(() => true);
     (navigator as unknown as { vibrate: typeof vibrateSpy }).vibrate = vibrateSpy;
     render(<SaveButton {...permitProps} />);
     fireEvent.click(screen.getByRole('button'));
-    expect(vibrateSpy).toHaveBeenCalledWith(10);
+    expect(vibrateSpy).toHaveBeenCalledWith(20);
   });
 
   it('does NOT crash when navigator.vibrate is undefined (Safari)', () => {

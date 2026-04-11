@@ -39,6 +39,7 @@ import {
   formatCostDisplay,
   formatDistance,
 } from '@/features/leads/lib/format';
+import { hapticTap } from '@/features/leads/lib/haptics';
 import type { PermitLeadFeedItem } from '@/features/leads/types';
 import { captureEvent } from '@/lib/observability/capture';
 import { cn } from '@/lib/utils';
@@ -128,6 +129,10 @@ function PermitLeadCardComponent({ lead, tradeSlug }: PermitLeadCardProps) {
   // captureEvent is fail-open per the wrapper's contract: a PostHog outage
   // must NEVER block the user interaction.
   const handleSelect = useCallback(() => {
+    // Phase 7 haptic feedback — light 10ms tap for card selection.
+    // The helper respects prefers-reduced-motion + feature-detects
+    // navigator.vibrate so it's safe on iOS Safari.
+    hapticTap(10);
     captureEvent('lead_feed.lead_clicked', {
       lead_type: 'permit',
       lead_id: lead.lead_id,

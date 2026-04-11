@@ -282,8 +282,17 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
   // exhaustiveness check on `lead.lead_type` lives in the type system
   // — adding a new variant to LeadFeedItem will produce a TypeScript
   // narrowing error here, which is the right failure mode.
+  //
+  // Phase 7 a11y audit: both banners get `role="status"` + `aria-live=
+  // "polite"` so screen readers announce when pagination reaches the
+  // cap / exhausts the feed. Visual users see the banner; AT users
+  // hear it.
   const capBanner = (
-    <div className="px-6 py-8 text-center">
+    <div
+      className="px-6 py-8 text-center"
+      role="status"
+      aria-live="polite"
+    >
       <p className="font-display text-sm font-semibold text-text-primary">
         Refine your search to see more
       </p>
@@ -294,7 +303,11 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
     </div>
   );
   const exhaustedBanner = (
-    <div className="px-6 py-8 text-center">
+    <div
+      className="px-6 py-8 text-center"
+      role="status"
+      aria-live="polite"
+    >
       <p className="font-display text-sm text-text-secondary">
         You&apos;ve seen all the leads in this area.
       </p>
@@ -320,7 +333,14 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
       }}
       hasMore={hasMore}
       loader={
-        <div className="space-y-3 px-3 py-4">
+        // Phase 7 a11y audit: the next-page loader is announced as a
+        // status region so screen readers know more content is on the
+        // way. Individual skeleton cards already carry aria-busy.
+        <div
+          className="space-y-3 px-3 py-4"
+          role="status"
+          aria-label="Loading more leads"
+        >
           <SkeletonLeadCard />
           <SkeletonLeadCard />
         </div>
@@ -366,8 +386,31 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
       // the document, not the inner element).
       style={{ overflow: 'visible' }}
     >
-      <div className="space-y-3 px-3 py-4">
-        {items.map((lead) => {
+      {/*
+        Phase 7 a11y audit: ARIA Feed pattern (WAI-ARIA 1.2). The
+        `role="feed"` tells assistive tech this is a scrollable list
+        of dynamically-loaded items, so screen readers can navigate
+        card-by-card without reading the entire DOM. `aria-busy`
+        reflects TanStack Query's next-page fetch state so AT
+        announces when loading starts and ends. `aria-label`
+        identifies the region distinctly from other feeds on the
+        page (if any).
+
+        Children MUST carry `role="article"` + `aria-posinset` +
+        `aria-setsize` per the feed pattern's `requiredOwnedElements`
+        contract (confirmed via aria-query's feedRole definition).
+        Without these, NVDA/JAWS won't expose feed-specific navigation
+        keystrokes (F → next article). `aria-setsize={-1}` because
+        pagination means the total count is unknown until exhausted.
+        Adversarial review WF1 2026-04-11 IMPORTANT #2+#3.
+      */}
+      <div
+        className="space-y-3 px-3 py-4"
+        role="feed"
+        aria-label="Lead feed"
+        aria-busy={query.isFetchingNextPage}
+      >
+        {items.map((lead, idx) => {
           // Composite key — `lead_id` shape differs between branches
           // (`permit_num:revision_num` for permits, numeric entity_id
           // for builders), so a collision is theoretically possible
@@ -383,18 +426,28 @@ export function LeadFeed({ tradeSlug, lat, lng }: LeadFeedProps) {
           // the element has no box of its own). Visual diff is
           // nil because the parent's `space-y-3` already targets
           // direct children.
+          //
+          // Phase 7 a11y: this wrapper is a SEMANTIC `<article>` (not
+          // `<div role="article">`) so the ARIA feed pattern's
+          // required-owned-elements contract is satisfied by native
+          // HTML semantics. Biome's `useSemanticElements` rule enforces
+          // this. `aria-posinset` is 1-based per the spec;
+          // `aria-setsize={-1}` because cursor-paginated feeds don't
+          // know their total size until the last page.
           return (
-            <div
+            <article
               key={key}
               ref={registerCardRef(lead.lead_id)}
               data-lead-id={lead.lead_id}
+              aria-posinset={idx + 1}
+              aria-setsize={-1}
             >
               {lead.lead_type === 'permit' ? (
                 <PermitLeadCard lead={lead} tradeSlug={tradeSlug} />
               ) : (
                 <BuilderLeadCard lead={lead} tradeSlug={tradeSlug} />
               )}
-            </div>
+            </article>
           );
         })}
       </div>
