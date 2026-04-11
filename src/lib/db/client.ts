@@ -16,7 +16,10 @@ import { logError } from '@/lib/logger';
 // a misconfigured env var produces NaN or a non-positive value, fall back
 // to the defaults rather than passing garbage to pg (which would either
 // block forever on `max: 0` or behave unpredictably on NaN).
-function parsePositiveIntEnv(value: string | undefined, fallback: number): number {
+//
+// Exported for reuse by other lib modules that parse positive-integer env
+// vars (e.g., cache TTLs). Testable in isolation.
+export function parsePositiveIntEnv(value: string | undefined, fallback: number): number {
   if (value === undefined || value === '') return fallback;
   const parsed = parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;

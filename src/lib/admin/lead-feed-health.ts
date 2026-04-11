@@ -4,6 +4,7 @@
 // Read-only aggregates against existing tables — no mutations.
 
 import type { Pool } from 'pg';
+import { parsePositiveIntEnv } from '@/lib/db/client';
 
 // ---------------------------------------------------------------------------
 // Response types
@@ -78,9 +79,17 @@ export interface CostCoverage {
   /**
    * Coverage of active permits: `permits_with_cost / active_permits`. This is
    * the headline metric for "how much of the real dataset is costed".
-   * Computed in the route handler from values already fetched by
+   * Computed by `getCachedLeadFeedHealth` from values already fetched via
    * `getLeadFeedReadiness` (zero extra DB load). Returns 0 when
    * `active_permits === 0` to avoid division by zero.
+   *
+   * **CAN EXCEED 100%** — `permits_with_cost` counts cost_estimates rows
+   * without a permit-status filter, while `active_permits` uses the
+   * ADMIN_ACTIVE inclusion list. If cost_estimates lags permit cancellations
+   * the numerator includes now-terminal permits and the ratio rises above
+   * 100. This is deliberate honest signaling that the cost cache has
+   * drifted from the permit state — NOT a bug to cap. See
+   * `review_followups.md` for the deferred query-hardening follow-up.
    *
    * Added by WF3 2026-04-10 Phase 1 — resolves external review's
    * "Denominational Isolation" concern (Claim 9).
@@ -332,11 +341,12 @@ export async function getCostCoverage(pool: Pool): Promise<CostCoverage> {
     from_model: parseInt(r.from_model, 10),
     null_cost: nullCost,
     coverage_pct: total > 0 ? Math.round(((total - nullCost) / total) * 1000) / 10 : 0,
-    // Injected by the route handler (see /api/admin/leads/health/route.ts)
-    // after readiness + cost_coverage are both fetched. Initialized to 0 here;
-    // the route overrides it with the real permit-scoped coverage. Kept out of
-    // this query to avoid a second pg round-trip — values already exist in
-    // LeadFeedReadiness.
+    // Placeholder — `getCachedLeadFeedHealth` (the Phase 2 cache wrapper)
+    // overrides this with the real permit-scoped coverage computed from
+    // LeadFeedReadiness values already fetched. Kept out of this query to
+    // avoid a second pg round-trip. Direct callers of `getCostCoverage`
+    // (not going through `getCachedLeadFeedHealth`) will see the placeholder
+    // 0 — see review_followups.md for a deferred type-safety hardening note.
     coverage_pct_vs_active_permits: 0,
   };
 }
@@ -425,4 +435,162 @@ export function computeTestFeedDebug(
     score_distribution: scoreDistribution,
     pillar_averages: pillarAverages,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Cached health fetcher — WF3 2026-04-10 Phase 2
+// ---------------------------------------------------------------------------
+// Server-side in-memory cache + single-flight guard for the lead feed health
+// endpoint. Protects the pg connection pool from concurrent admin tab polling.
+//
+// Problem: a single health fetch fans out ~12 parallel queries (8 readiness +
+// 1 cost + 3 engagement) against a pool of 20. With 2 admin tabs polling
+// every 10s, peak concurrent query count is 24 — over the pool budget. Under
+// sustained multi-tab activity + any unrelated admin query load, overflow
+// queries hit `connectionTimeoutMillis` and the endpoint returns 500.
+//
+// Solution: 30s in-memory cache. The dashboard polls every 10s but only the
+// first request per cache window actually hits the DB; cached hits cost
+// nothing. N concurrent tabs consume only 1 fetch's worth of pool capacity
+// per 30s window — a ~9x reduction in pool pressure for a 3-tab scenario.
+//
+// Single-flight: if a request arrives while another is mid-fetch, it awaits
+// the same promise instead of kicking off a parallel fetch. Prevents
+// thundering herd at cache expiry.
+//
+// Rejection semantics: failed fetches do NOT populate the cache. Subsequent
+// requests re-attempt immediately. `inFlight` is cleared on both success AND
+// rejection via try/finally so a wedged fetch cannot permanently block future
+// requests.
+//
+// NOTE for dev: Next.js dev HMR wipes module state on hot reload, so cache
+// behavior is unreliable during local development. Production builds (and
+// the test harness below) retain module state across requests.
+
+const DEFAULT_HEALTH_CACHE_TTL_MS = 30_000;
+const HEALTH_CACHE_TTL_MS = parsePositiveIntEnv(
+  process.env.HEALTH_CACHE_TTL_MS,
+  DEFAULT_HEALTH_CACHE_TTL_MS,
+);
+
+interface HealthCacheEntry {
+  data: LeadFeedHealthResponse;
+  expiresAt: number;
+}
+
+let cacheEntry: HealthCacheEntry | null = null;
+let inFlight: Promise<LeadFeedHealthResponse> | null = null;
+
+/**
+ * Fetch the aggregated lead feed health response, using a short-TTL
+ * in-memory cache with single-flight protection. The route handler for
+ * `/api/admin/leads/health` MUST go through this function — calling the
+ * underlying `getLeadFeedReadiness` / `getCostCoverage` / `getEngagement`
+ * helpers directly from a handler bypasses the cache and re-introduces the
+ * pool exhaustion class of bug.
+ *
+ * **Cache semantics (read before adding a new caller):**
+ * - **Pool identity is ignored.** The cache is a module-level singleton
+ *   keyed by nothing. If two callers pass different `Pool` instances within
+ *   the TTL window, both see the same cached data from whichever call
+ *   populated the cache first. Production has a single shared pool so this
+ *   is a non-issue; a future multi-pool setup would need a cache key.
+ * - **Response is returned by reference.** The cached `LeadFeedHealthResponse`
+ *   is returned as-is from the stored reference on cache hits. DO NOT
+ *   mutate the returned object — subsequent cache hits within the TTL
+ *   window will see the mutation. There is no defensive clone; the
+ *   assumption is that callers serialize via `NextResponse.json()` without
+ *   mutation.
+ * - **`HEALTH_CACHE_TTL_MS=0` silently falls back to default.** The env
+ *   parser rejects 0 as "not a positive int", so setting the env var to 0
+ *   cannot disable caching. Use the `ttlMs` parameter in tests to force
+ *   cache misses.
+ * - **Single-flight on failure cleared via try/finally.** A rejected fetch
+ *   does NOT populate the cache; the next caller re-attempts fresh.
+ *   `inFlight` is cleared in `finally` so a wedged fetch cannot
+ *   permanently block future requests.
+ *
+ * @param pool  pg pool (typically `src/lib/db/client.ts` shared instance)
+ * @param ttlMs override TTL in ms (default: `HEALTH_CACHE_TTL_MS` from env,
+ *              falling back to 30000)
+ */
+export async function getCachedLeadFeedHealth(
+  pool: Pool,
+  ttlMs: number = HEALTH_CACHE_TTL_MS,
+): Promise<LeadFeedHealthResponse> {
+  const now = Date.now();
+
+  // Cache hit: return immediately. Note: we use strict `>` so an entry
+  // expiring at exactly `now` is considered stale — matches the expected
+  // mental model that "TTL = lifetime" rather than "TTL = lifetime + 1ms".
+  if (cacheEntry !== null && cacheEntry.expiresAt > now) {
+    return cacheEntry.data;
+  }
+
+  // Single-flight: if another call already kicked off a fetch, await it
+  // instead of starting a parallel one. This deduplicates the thundering
+  // herd at cache expiry when N tabs all poll simultaneously.
+  if (inFlight !== null) {
+    return inFlight;
+  }
+
+  // Kick off a fresh fetch. `inFlight` is set BEFORE the async IIFE runs so
+  // any synchronously-subsequent call sees the in-flight promise (not a
+  // race window where the check above passes and a second fetch starts).
+  inFlight = (async () => {
+    try {
+      const [readiness, costCoverage, engagement] = await Promise.all([
+        getLeadFeedReadiness(pool),
+        getCostCoverage(pool),
+        getEngagement(pool),
+      ]);
+
+      // WF3 Phase 1: derive the permit-scoped coverage metric from values
+      // already fetched by getLeadFeedReadiness. See route handler comment
+      // for the predicate-mismatch note (can exceed 100% by design).
+      const coveragePctVsActivePermits = readiness.active_permits > 0
+        ? Math.round((readiness.permits_with_cost / readiness.active_permits) * 1000) / 10
+        : 0;
+
+      const response: LeadFeedHealthResponse = {
+        readiness,
+        cost_coverage: {
+          ...costCoverage,
+          coverage_pct_vs_active_permits: coveragePctVsActivePermits,
+        },
+        engagement,
+        performance: {
+          avg_latency_ms: null,
+          p95_latency_ms: null,
+          error_rate_pct: null,
+          avg_results_per_query: null,
+        },
+      };
+
+      // Only populate the cache AFTER the full response is built — if any
+      // step above throws, `cacheEntry` is left untouched and the next
+      // caller re-attempts fresh.
+      cacheEntry = { data: response, expiresAt: Date.now() + ttlMs };
+      return response;
+    } finally {
+      // Clear `inFlight` on BOTH success and rejection so a wedged fetch
+      // can never permanently block future requests. Rejection propagates
+      // through the promise to every awaiter; the next caller after that
+      // starts fresh (or hits the cache if a prior success populated it).
+      inFlight = null;
+    }
+  })();
+
+  return inFlight;
+}
+
+/**
+ * Test-only reset for module-level cache state. NEVER call from production
+ * code — there is no legitimate reason to reset the cache outside of tests.
+ * `beforeEach` / `afterEach` in logic tests should call this to guarantee
+ * clean state between cases.
+ */
+export function __resetLeadFeedHealthCacheForTests(): void {
+  cacheEntry = null;
+  inFlight = null;
 }

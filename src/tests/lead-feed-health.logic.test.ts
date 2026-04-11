@@ -1,10 +1,12 @@
 // SPEC LINK: docs/specs/product/admin/76_lead_feed_health_dashboard.md
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   computeTestFeedDebug,
   getLeadFeedReadiness,
   getCostCoverage,
+  getCachedLeadFeedHealth,
   sanitizePgErrorMessage,
+  __resetLeadFeedHealthCacheForTests,
 } from '@/lib/admin/lead-feed-health';
 import type { Pool } from 'pg';
 
@@ -253,5 +255,198 @@ describe('getCostCoverage — dual coverage contract', () => {
     const cc = await getCostCoverage(pool);
     expect(cc.coverage_pct).toBe(0);
     expect(cc.coverage_pct_vs_active_permits).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getCachedLeadFeedHealth — WF3 2026-04-10 Phase 2 pool-pressure relief
+// ---------------------------------------------------------------------------
+// 30s in-memory cache + single-flight guard. Protects the pg pool from
+// concurrent admin tab polling. The fetcher is the one the route handler
+// calls; its behavior under cache hit, cache miss, concurrent requests, and
+// rejection is the critical contract. Module-level state is reset between
+// tests via `__resetLeadFeedHealthCacheForTests`.
+
+describe('getCachedLeadFeedHealth — cache + single-flight', () => {
+  // A fabricated "all-zeros" row that every query in the fan-out can return.
+  // Every field that any destructuring in the fetcher reads is present with
+  // a string value (pg returns aggregates as strings).
+  const ZERO_ROW = {
+    // permits consolidated query
+    admin_active: '0',
+    feed_active: '0',
+    geocoded: '0',
+    opp_permit_issued: '0',
+    opp_inspection: '0',
+    opp_application: '0',
+    opp_other_active: '0',
+    with_neighbourhood: '0',
+    // trades consolidated
+    classified_all: '0',
+    classified_active: '0',
+    with_phase: '0',
+    // cost + timing consolidated
+    cost_count: '0',
+    timing_total: '0',
+    timing_freshness_hours: null,
+    // entities consolidated
+    total: '0',
+    with_contact: '0',
+    wsib: '0',
+    feed_eligible: '0',
+    // cost_estimates cache stats
+    from_permit: '0',
+    from_model: '0',
+    null_cost: '0',
+    // engagement daily
+    views_today: '0',
+    views_7d: '0',
+    saves_today: '0',
+    saves_7d: '0',
+    unique_users: '0',
+    // engagement competition
+    avg_competition: '0',
+    // generic count column
+    c: '0',
+  };
+
+  function makeMockPool() {
+    const mock = {
+      query: vi.fn(() => Promise.resolve({ rows: [ZERO_ROW] })),
+    };
+    return mock as unknown as Pool & { query: ReturnType<typeof vi.fn> };
+  }
+
+  beforeEach(() => {
+    __resetLeadFeedHealthCacheForTests();
+  });
+
+  it('caches a successful response — 2nd call within TTL does not re-hit the pool', async () => {
+    const pool = makeMockPool();
+    const first = await getCachedLeadFeedHealth(pool, 30_000);
+    const callCountAfterFirst = (pool.query as ReturnType<typeof vi.fn>).mock.calls.length;
+    const second = await getCachedLeadFeedHealth(pool, 30_000);
+    const callCountAfterSecond = (pool.query as ReturnType<typeof vi.fn>).mock.calls.length;
+
+    expect(callCountAfterFirst).toBeGreaterThan(0);
+    expect(callCountAfterSecond).toBe(callCountAfterFirst);
+    // Same reference from the cache — not a fresh rebuild
+    expect(second).toBe(first);
+  });
+
+  it('re-fetches after TTL expires — TTL=0 forces every call to miss', async () => {
+    const pool = makeMockPool();
+    await getCachedLeadFeedHealth(pool, 0);
+    const callCountAfterFirst = (pool.query as ReturnType<typeof vi.fn>).mock.calls.length;
+    await getCachedLeadFeedHealth(pool, 0);
+    const callCountAfterSecond = (pool.query as ReturnType<typeof vi.fn>).mock.calls.length;
+
+    // TTL=0 means expiresAt === now, strict `>` check fails, so every call
+    // re-fetches. Second call doubles the DB fan-out count.
+    expect(callCountAfterSecond).toBe(callCountAfterFirst * 2);
+  });
+
+  it('single-flight: concurrent callers share ONE fetch', async () => {
+    // Measure the baseline fan-out of a single call on a fresh pool.
+    const baselinePool = makeMockPool();
+    await getCachedLeadFeedHealth(baselinePool, 30_000);
+    const baselineFanout = (baselinePool.query as ReturnType<typeof vi.fn>).mock.calls.length;
+    expect(baselineFanout).toBeGreaterThan(0);
+
+    // Reset module state and build a pool where queries block until unblocked.
+    __resetLeadFeedHealthCacheForTests();
+    let resolveAllQueries: (() => void) | null = null;
+    const gate = new Promise<void>((resolve) => { resolveAllQueries = resolve; });
+    const pool = {
+      query: vi.fn(() => gate.then(() => ({ rows: [ZERO_ROW] }))),
+    } as unknown as Pool & { query: ReturnType<typeof vi.fn> };
+
+    // Two concurrent callers. Without single-flight, this would double the
+    // fan-out count. With single-flight, both share the same pending fetch.
+    const p1 = getCachedLeadFeedHealth(pool, 30_000);
+    const p2 = getCachedLeadFeedHealth(pool, 30_000);
+
+    resolveAllQueries!();
+    const [r1, r2] = await Promise.all([p1, p2]);
+
+    // Single-flight: fan-out must equal baseline, not 2x baseline.
+    const fanoutSize = (pool.query as ReturnType<typeof vi.fn>).mock.calls.length;
+    expect(fanoutSize).toBe(baselineFanout);
+    expect(r1).toBe(r2); // identical reference — both came from the same promise
+  });
+
+  it('does NOT cache a rejected fetch — next call re-attempts', async () => {
+    // First call: pool throws. Second call: pool succeeds.
+    let callNumber = 0;
+    const pool = {
+      query: vi.fn(() => {
+        callNumber++;
+        if (callNumber === 1) return Promise.reject(new Error('DB down'));
+        return Promise.resolve({ rows: [ZERO_ROW] });
+      }),
+    } as unknown as Pool;
+
+    await expect(getCachedLeadFeedHealth(pool, 30_000)).rejects.toThrow('DB down');
+    // Critical: a second call must not return cached-error data, it must
+    // attempt a fresh fetch. That fresh fetch succeeds.
+    const second = await getCachedLeadFeedHealth(pool, 30_000);
+    expect(second).toBeDefined();
+    expect(second.readiness).toBeDefined();
+  });
+
+  it('clears inFlight on rejection so a wedged fetch cannot permanently block', async () => {
+    // Two concurrent callers both see the same rejecting promise. After
+    // both reject, a THIRD caller must be able to re-fetch (inFlight was
+    // cleared in the finally block).
+    //
+    // Uses an explicit phase flag so query rejection is deterministic and
+    // does not depend on a numeric threshold that coincidentally falls
+    // within the fan-out size (previous version used `callNumber <= 10`
+    // which was fragile — adversarial review flagged that the actual fan-out
+    // is 12, so queries 11-12 succeeded but the test still passed for
+    // unrelated reasons).
+    let phase: 'reject' | 'resolve' = 'reject';
+    let resolveSecondAttempt: ((v: { rows: typeof ZERO_ROW[] }) => void) | null = null;
+    const secondAttemptGate = new Promise<{ rows: typeof ZERO_ROW[] }>((resolve) => {
+      resolveSecondAttempt = resolve;
+    });
+    const pool = {
+      query: vi.fn(() => {
+        if (phase === 'reject') return Promise.reject(new Error('wedge'));
+        return secondAttemptGate;
+      }),
+    } as unknown as Pool;
+
+    const p1 = getCachedLeadFeedHealth(pool, 30_000);
+    const p2 = getCachedLeadFeedHealth(pool, 30_000);
+    await expect(p1).rejects.toThrow('wedge');
+    await expect(p2).rejects.toThrow('wedge');
+
+    // Third caller must NOT be blocked by inFlight leftover from the
+    // rejected fetch. Flip the phase so queries now resolve, then trigger
+    // a new fan-out.
+    phase = 'resolve';
+    const p3 = getCachedLeadFeedHealth(pool, 30_000);
+    resolveSecondAttempt!({ rows: [ZERO_ROW] });
+    const r3 = await p3;
+    expect(r3).toBeDefined();
+  });
+
+  it('builds the dual cost coverage derived metric inside the cached response', async () => {
+    // Use a non-zero fixture so the derivation isn't trivial-zero.
+    const rowWithCost = {
+      ...ZERO_ROW,
+      admin_active: '1000',
+      feed_active: '1000',
+      // Note: `cost_count` feeds `permits_with_cost` in getLeadFeedReadiness
+      cost_count: '600',
+    };
+    const pool = {
+      query: vi.fn(() => Promise.resolve({ rows: [rowWithCost] })),
+    } as unknown as Pool;
+
+    const response = await getCachedLeadFeedHealth(pool, 30_000);
+    // 600 / 1000 = 60.0%
+    expect(response.cost_coverage.coverage_pct_vs_active_permits).toBe(60);
   });
 });

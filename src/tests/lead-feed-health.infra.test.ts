@@ -26,15 +26,12 @@ describe('Lead Feed Health API routes — file shape', () => {
     expect(healthRoute).toContain('catch (err)');
   });
 
-  it('health route calls getLeadFeedReadiness, getCostCoverage, getEngagement', () => {
-    expect(healthRoute).toContain('getLeadFeedReadiness');
-    expect(healthRoute).toContain('getCostCoverage');
-    expect(healthRoute).toContain('getEngagement');
-  });
-
-  it('health route returns performance block with null latency (Phase A)', () => {
-    expect(healthRoute).toContain('avg_latency_ms: null');
-    expect(healthRoute).toContain('p95_latency_ms: null');
+  it('health route uses the cached lead feed health fetcher (Phase 2)', () => {
+    // WF3 Phase 2: the route delegates to getCachedLeadFeedHealth, which
+    // wraps the 3 underlying query functions behind a 30s in-memory cache.
+    // The lib-level test below checks the cache wrapper invokes all 3
+    // underlying fetchers — here we only verify the handler indirection.
+    expect(healthRoute).toContain('getCachedLeadFeedHealth');
   });
 
   // Test feed endpoint
@@ -95,6 +92,21 @@ describe('Lead Feed Health lib — query function shape', () => {
 
   it('exports LeadFeedHealthResponse type', () => {
     expect(lib).toContain('export interface LeadFeedHealthResponse');
+  });
+
+  it('getCachedLeadFeedHealth wrapper invokes all 3 underlying fetchers (Phase 2)', () => {
+    // Moved out of the route.ts file-shape tests in Phase 2 when the cache
+    // wrapper took ownership of the fan-out. Verifies the relocation
+    // preserved the contract — all 3 queries still run on cache miss.
+    expect(lib).toContain('export async function getCachedLeadFeedHealth');
+    expect(lib).toContain('getLeadFeedReadiness(pool)');
+    expect(lib).toContain('getCostCoverage(pool)');
+    expect(lib).toContain('getEngagement(pool)');
+  });
+
+  it('getCachedLeadFeedHealth sets performance block with null latency (Phase A contract preserved)', () => {
+    expect(lib).toContain('avg_latency_ms: null');
+    expect(lib).toContain('p95_latency_ms: null');
   });
 });
 

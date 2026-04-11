@@ -2,62 +2,26 @@
 //
 // GET /api/admin/leads/health — aggregated lead feed health metrics.
 // Admin-only (middleware classifies /api/admin/** as 'admin').
+//
+// WF3 2026-04-10 Phase 2: the fetch path is wrapped by
+// `getCachedLeadFeedHealth` which provides a 30s in-memory cache and
+// single-flight guard. The handler is a thin shell — all the Phase 1 dual-
+// coverage derivation logic now lives in the cached fetcher so cache hits
+// serve the same shape as cache misses.
 
 import { NextResponse } from 'next/server';
 import { pool } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import {
-  getLeadFeedReadiness,
-  getCostCoverage,
-  getEngagement,
+  getCachedLeadFeedHealth,
   sanitizePgErrorMessage,
-  type LeadFeedHealthResponse,
 } from '@/lib/admin/lead-feed-health';
 
 const TAG = '[api/admin/leads/health]';
 
 export async function GET() {
   try {
-    const [readiness, costCoverage, engagement] = await Promise.all([
-      getLeadFeedReadiness(pool),
-      getCostCoverage(pool),
-      getEngagement(pool),
-    ]);
-
-    // WF3 2026-04-10 Phase 1: derive the permit-scoped coverage metric from
-    // values already fetched by getLeadFeedReadiness. Keeps the extra metric
-    // free of any new DB round-trips. Guards against division-by-zero on a
-    // fresh DB (active_permits === 0).
-    //
-    // Predicate mismatch note: `permits_with_cost` counts cost_estimates
-    // rows with `estimated_cost IS NOT NULL` (any permit status); while
-    // `active_permits` counts permits in the ADMIN_ACTIVE status inclusion
-    // list. If cost_estimates lags behind permit cancellations, the numerator
-    // can include rows for permits that are now Cancelled/Revoked/Closed,
-    // producing a value > 100%. The display is NOT capped — showing > 100%
-    // is an honest signal that the cost cache has drifted from the permit
-    // state, which is actionable information. Capping would hide the drift.
-    // (Flagged by adversarial + independent reviews; scope-limited per
-    // review_followups.md.)
-    const coveragePctVsActivePermits = readiness.active_permits > 0
-      ? Math.round((readiness.permits_with_cost / readiness.active_permits) * 1000) / 10
-      : 0;
-
-    const response: LeadFeedHealthResponse = {
-      readiness,
-      cost_coverage: {
-        ...costCoverage,
-        coverage_pct_vs_active_permits: coveragePctVsActivePermits,
-      },
-      engagement,
-      performance: {
-        avg_latency_ms: null,
-        p95_latency_ms: null,
-        error_rate_pct: null,
-        avg_results_per_query: null,
-      },
-    };
-
+    const response = await getCachedLeadFeedHealth(pool);
     return NextResponse.json(response);
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));
