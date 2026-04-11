@@ -76,3 +76,9 @@ pt.classified_at
 # Stryker mutation testing sandbox + reports
 .stryker-tmp/
 reports/mutation/
+
+# ad-hoc screenshots shared with Claude (bypass clipboard paste since
+# Windows terminals don't reliably handle image paste — save with
+# ShareX / Win+Shift+S → Save As / Paint → here, then reference the
+# file path in chat)
+.screenshots/
