@@ -45,3 +45,22 @@ export const internalError = (cause?: unknown, context?: Record<string, unknown>
   }
   return err('INTERNAL_ERROR', 'An unexpected error occurred', 500);
 };
+
+/**
+ * 503 for the "PostGIS extension is not installed" dev-env failure mode.
+ * `LEAD_FEED_SQL` uses `::geography` casts for radius filtering; local dev
+ * without the postgis extension throws `type "geography" does not exist`
+ * (pg code 42704). The route's pre-flight check catches this and returns
+ * this helper's structured response instead of a generic 500, giving the
+ * operator actionable install instructions instead of an opaque error.
+ *
+ * Production Cloud SQL has PostGIS installed, so this path NEVER fires in
+ * prod. Shipped alongside the admin test-feed variant (spec 76 §3.2) and
+ * the feed-route variant (spec 70) from WF3 2026-04-11.
+ */
+export const devEnvMissingPostgis = () =>
+  err(
+    'DEV_ENV_MISSING_POSTGIS',
+    'PostGIS extension is not installed in this database. The lead feed query requires PostGIS for geography-based radius filtering. Install the postgis package at the OS level (e.g. scoop install postgresql-postgis on Windows, apt install postgresql-16-postgis-3 on Linux, brew install postgis on Mac) and then run `CREATE EXTENSION postgis;` against the buildo database. Cloud SQL has PostGIS by default.',
+    503,
+  );

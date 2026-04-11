@@ -17,9 +17,11 @@ import type { NextRequest } from 'next/server';
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { withRateLimit } from '@/lib/auth/rate-limit';
 import { pool } from '@/lib/db/client';
+import { isPostgisAvailable } from '@/lib/admin/lead-feed-health';
 import { ok } from '@/features/leads/api/envelope';
 import {
   badRequestZod,
+  devEnvMissingPostgis,
   forbiddenTradeMismatch,
   internalError,
   rateLimited,
@@ -51,6 +53,25 @@ export async function GET(request: NextRequest) {
     //    the user's profile trade. Mismatch returns 403 per spec 70.
     if (params.trade_slug !== ctx.trade_slug) {
       return forbiddenTradeMismatch(params.trade_slug, ctx.trade_slug);
+    }
+
+    // 3b. PostGIS pre-flight (WF3 2026-04-11 — spec 70 §API Endpoints
+    //     extension). LEAD_FEED_SQL uses `::geography` casts for radius
+    //     filtering; local dev without the postgis extension throws
+    //     `type "geography" does not exist` (pg code 42704) which
+    //     surfaces as an opaque 500 in the UI. Return a structured 503
+    //     with install instructions instead. Production Cloud SQL has
+    //     PostGIS installed; `isPostgisAvailable` caches `true` on the
+    //     first request so prod cost is ~0 after process start.
+    //
+    //     Ordered AFTER auth (401 still fires for unauth'd), AFTER Zod
+    //     (400 still fires for garbage params so we don't leak the
+    //     dev-env message to bots fuzzing the endpoint), AFTER trade
+    //     authz (403 on mismatch), and BEFORE rate limit (so a dev
+    //     user hitting a stuck feed doesn't exhaust their 30/min
+    //     window on a 503).
+    if (!(await isPostgisAvailable(pool))) {
+      return devEnvMissingPostgis();
     }
 
     // 4. Rate limit — 30 req/min per user, scoped to this endpoint via

@@ -4,6 +4,10 @@ import type { NextRequest } from 'next/server';
 
 vi.mock('@/lib/db/client', () => ({
   pool: {} as unknown,
+  // Stub the parsePositiveIntEnv helper used by lead-feed-health.ts
+  // for HEALTH_CACHE_TTL_MS parsing at module load time. The real impl
+  // is a pure function so we return a fixed value for tests.
+  parsePositiveIntEnv: (_value: string | undefined, fallback: number) => fallback,
 }));
 
 vi.mock('@/lib/auth/get-user-context', () => ({
@@ -29,19 +33,45 @@ vi.mock('@/features/leads/api/request-logging', () => ({
   logRequestComplete: vi.fn(),
 }));
 
+// WF3 2026-04-11 — mock the PostGIS pre-flight helper so the feed route's
+// dev-env guard can be tested without a real DB. The `__resetPostgisCacheForTests`
+// export is required for module-level cache hygiene between tests.
+vi.mock('@/lib/admin/lead-feed-health', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/admin/lead-feed-health')>(
+    '@/lib/admin/lead-feed-health',
+  );
+  return {
+    ...actual,
+    isPostgisAvailable: vi.fn(),
+  };
+});
+
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { withRateLimit } from '@/lib/auth/rate-limit';
 import { logRequestComplete } from '@/features/leads/api/request-logging';
 import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
+import { isPostgisAvailable } from '@/lib/admin/lead-feed-health';
 import { GET } from '@/app/api/leads/feed/route';
 
 const mockedGetUserContext = vi.mocked(getCurrentUserContext);
 const mockedWithRateLimit = vi.mocked(withRateLimit);
 const mockedGetLeadFeed = vi.mocked(getLeadFeed);
 const mockedLogRequestComplete = vi.mocked(logRequestComplete);
+const mockedIsPostgisAvailable = vi.mocked(isPostgisAvailable);
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // WF3 2026-04-11 — default the PostGIS pre-flight to "available" for
+  // every test in this file. Tests that need to exercise the missing-
+  // PostGIS 503 path explicitly override with `mockResolvedValueOnce(false)`.
+  // This is in `beforeEach` (not `setHappyPathMocks`) so every test —
+  // including the 429/500/composition tests that don't call
+  // setHappyPathMocks — sees a defined pool-postgis result. Without this,
+  // running the 429 suite in isolation (`vitest -t "429"`) triggers the
+  // pre-flight with an unmocked `vi.fn()` that returns undefined, which
+  // short-circuits into 503 and the 429 assertion fails. Caught by
+  // adversarial review 2026-04-11.
+  mockedIsPostgisAvailable.mockResolvedValue(true);
 });
 
 // ---------------------------------------------------------------------------
@@ -105,6 +135,9 @@ function setHappyPathMocks() {
   mockedGetUserContext.mockResolvedValueOnce(sampleContext);
   mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 29 });
   mockedGetLeadFeed.mockResolvedValueOnce(sampleResult);
+  // isPostgisAvailable default = true is set in the file-level beforeEach
+  // (not here) so every test — including ones that don't call
+  // setHappyPathMocks — inherits the default.
 }
 
 async function readJson(res: Response): Promise<unknown> {
@@ -435,5 +468,77 @@ describe('GET /api/leads/feed — composition correctness', () => {
     await GET(makeRequest(validQuery));
     const input = mockedGetLeadFeed.mock.calls[0]?.[0];
     expect(input).not.toHaveProperty('cursor');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 503 DEV_ENV_MISSING_POSTGIS — dev-env pre-flight (WF3 2026-04-11)
+// ---------------------------------------------------------------------------
+// LEAD_FEED_SQL uses PostGIS `geography` casts for radius filtering. Local
+// dev may not have the postgis extension installed. Without a pre-flight
+// check, getLeadFeed throws `type "geography" does not exist` which
+// surfaces as an opaque 500 + "Can't reach the server" in the UI. The fix
+// pre-flights isPostgisAvailable after auth + Zod validation but BEFORE
+// rate limiting and getLeadFeed, returning a structured 503 with
+// install instructions instead of a generic 500.
+
+describe('GET /api/leads/feed — 503 DEV_ENV_MISSING_POSTGIS (dev-env pre-flight)', () => {
+  it('returns 503 with DEV_ENV_MISSING_POSTGIS code when PostGIS is not installed', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedIsPostgisAvailable.mockResolvedValueOnce(false);
+    const res = await GET(makeRequest(validQuery));
+    expect(res.status).toBe(503);
+    const body = (await readJson(res)) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe('DEV_ENV_MISSING_POSTGIS');
+    // Install instructions must be in the message so the user sees
+    // them in the error UI (via extractErrorMessage helper).
+    expect(body.error.message).toMatch(/postgis/i);
+    expect(body.error.message).toMatch(/install/i);
+  });
+
+  it('does NOT call getLeadFeed when PostGIS is missing (ordering proof)', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedIsPostgisAvailable.mockResolvedValueOnce(false);
+    await GET(makeRequest(validQuery));
+    expect(mockedGetLeadFeed).not.toHaveBeenCalled();
+  });
+
+  it('does NOT count against the rate limit when PostGIS is missing', async () => {
+    // Pre-flight fires BEFORE rate limit, so dev users hitting a stuck
+    // feed don't exhaust their 30-req/min window on a 503.
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedIsPostgisAvailable.mockResolvedValueOnce(false);
+    await GET(makeRequest(validQuery));
+    expect(mockedWithRateLimit).not.toHaveBeenCalled();
+  });
+
+  it('still returns 401 (not 503) when unauthenticated — auth runs first', async () => {
+    // Ordering: auth must always be checked before the dev-env guard so
+    // an unauth'd bot doesn't see "postgis not installed" and learn we
+    // run Next.js in dev mode. 401 is the universal "go away" response.
+    mockedGetUserContext.mockResolvedValueOnce(null);
+    // No isPostgisAvailable mock — would throw if the handler called it.
+    const res = await GET(makeRequest(validQuery));
+    expect(res.status).toBe(401);
+    expect(mockedIsPostgisAvailable).not.toHaveBeenCalled();
+  });
+
+  it('still returns 400 (not 503) when Zod validation fails — validation runs before pre-flight', async () => {
+    // Same ordering logic — garbage params return 400 without leaking
+    // the dev-env message.
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    const res = await GET(makeRequest('?lat=not-a-number&lng=-79.38&trade_slug=plumbing'));
+    expect(res.status).toBe(400);
+    expect(mockedIsPostgisAvailable).not.toHaveBeenCalled();
+  });
+
+  it('passes through to getLeadFeed when PostGIS is available (production regression guard)', async () => {
+    // Production has PostGIS installed; isPostgisAvailable returns true;
+    // the 200 happy path must still run. This is the regression guard
+    // for accidentally inverting the check.
+    setHappyPathMocks();
+    const res = await GET(makeRequest(validQuery));
+    expect(res.status).toBe(200);
+    expect(mockedGetLeadFeed).toHaveBeenCalled();
   });
 });

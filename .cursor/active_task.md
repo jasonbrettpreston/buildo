@@ -1,210 +1,151 @@
-# Active Task: Leads page dev-mode auth bypass (3 bugs)
+# Active Task: User feed PostGIS pre-flight + dev profile trade switcher
 **Status:** Planning
-**Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `53dcb292` (docs(76_lead_feed_health_dashboard): defer PostGIS drift repair)
-**Domain Mode:** Backend (middleware + server-side auth + Server Component page — no UI component changes)
+**Workflow:** WF3 — Bug Fix (+ small dev UX add-on)
+**Rollback Anchor:** `61b68bcf` (fix(13_authentication): dev-mode /leads end-to-end)
+**Domain Mode:** Backend (API route + Server Component — no UI component changes)
 
 ## Context
-User reports `http://localhost:3000/leads` redirects to `/login` in local dev with `NEXT_PUBLIC_DEV_MODE=true` and `DEV_MODE=true` set. Three compounding bugs break the dev-mode bypass end-to-end. The user's diagnosis (bugs #1 and #2) is correct, and I confirmed a latent bug #3 (empty `user_profiles` table) that would surface immediately after fixing the first two.
+User reports `http://localhost:3000/leads` now loads (per the prior WF3) but the `LeadFeed` component shows: *"Can't reach the server — Your connection looks fine, but we couldn't load leads."* Confirmed via dev server log: `/api/leads/feed` throws **`type "geography" does not exist`** at `getLeadFeed` (same PostGIS root cause as the admin test-feed endpoint fixed in commit `390a945`). The independent review of that earlier WF3 explicitly flagged at Gap #13 that the user-facing feed route had the same latent problem and deserved the same pre-flight treatment; I deferred it as LOW. It's now actively blocking the dev user's workflow, so it's in scope.
+
+User also asks: "how do we change profiles?" — the prior WF3 hardcoded the dev-user `trade_slug = 'plumbing'` in both the page and `getCurrentUserContext` seed. The user needs a way to test other trade slugs without manual psql UPDATEs.
 
 ## Target Specs
-- `docs/specs/13_auth.md` (if present — the middleware file references it in its SPEC LINK header)
-- `docs/specs/product/future/75_lead_feed_implementation_guide.md` §11 Phase 5 (leads page auth flow)
-- `docs/specs/00_engineering_standards.md` §4 (auth boundary), §10 (boundary)
+- `docs/specs/product/future/70_lead_feed.md` §API Endpoints (status code matrix, error envelope shape)
+- `docs/specs/product/admin/76_lead_feed_health_dashboard.md` §3.2 (the pattern this fix mirrors)
+- `docs/specs/00_engineering_standards.md` §2 (error handling), §4 (auth boundary), §10 (boundary)
 
 ## Key Files (read + confirmed)
-- `src/middleware.ts:29-53` — the edge middleware with the dev-mode cookie injection
-- `src/lib/auth/route-guard.ts:25-30` — `isDevMode()` + `DEV_SESSION_COOKIE = 'dev.buildo.local'`
-- `src/lib/auth/get-user.ts:33-74` — `verifyIdTokenCookie` + `getUserIdFromSession` (Node runtime, calls Firebase Admin)
-- `src/lib/auth/get-user-context.ts:30-72` — `getCurrentUserContext` (used by `/api/leads/feed`)
-- `src/app/leads/page.tsx:34-74` — Server Component that reads the cookie via `next/headers` and looks up the profile
-- `src/app/login/page.tsx:12-18` — "Continue as Dev" button (client-only, just calls `router.push(redirect)`)
-- `src/app/onboarding/page.tsx` — client-only mockup that DOES NOT persist to `user_profiles`
+- `src/app/api/leads/feed/route.ts:35-119` — the GET handler with the current try/catch that routes all errors through `internalError()` (opaque 500)
+- `src/features/leads/lib/get-lead-feed.ts:637` — `pool.query(LEAD_FEED_SQL, params)` — the throw site, confirmed via dev log
+- `src/lib/admin/lead-feed-health.ts` — already exports `isPostgisAvailable(pool)` + `sanitizePgErrorMessage()` from the earlier WF3
+- `src/features/leads/api/error-mapping.ts` — existing error helpers; 503 is in `ErrorStatus` union
+- `src/features/leads/api/envelope.ts:34` — `ErrorStatus` includes 503
+- `src/app/leads/page.tsx` — the Server Component with the dev-user seed (needs the `?trade_slug=X` switcher)
+- `src/lib/auth/get-user-context.ts` — the API-side dev seed (keeps seeding `'plumbing'` — must respect the updated profile)
+- `src/lib/classification/trades.ts` — the canonical 32-slug list for validation
+- `psql SELECT slug FROM trades` — confirmed 32 active slugs, matches CLAUDE.md documentation
 
-## The Three Bugs
+## Confirmed root cause
 
-### Bug #1 — Middleware attaches dev cookie to RESPONSE, not REQUEST
-
-**Location:** `src/middleware.ts:41-50`
-
-**Current code:**
-```ts
-if (isDevMode()) {
-  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  if (!sessionCookie) {
-    const response = NextResponse.next();
-    response.cookies.set(SESSION_COOKIE_NAME, DEV_SESSION_COOKIE, { ... });
-    return response;
-  }
-  ...
-}
+```
+[lead-feed/get] error: type "geography" does not exist
+    at async getLeadFeed (src/features/leads/lib/get-lead-feed.ts:637:17)
+    at async GET (src/app/api/leads/feed/route.ts:84:20)
+pg code 42704 (undefined_object), position 3306 of LEAD_FEED_SQL
 ```
 
-**The bug:** `response.cookies.set(...)` tells the BROWSER to store this cookie for subsequent requests. The CURRENT request's downstream Server Components read cookies from the `NextRequest`, not the outgoing response. Since nothing mutated the incoming `NextRequest.cookies`, `cookies().get('__session')` in `/leads/page.tsx` returns `undefined` on the first navigation. Redirect to login fires.
+Same `::geography` cast issue as the admin test-feed endpoint. Production Cloud SQL has PostGIS; local dev doesn't (deferred per commit `53dcb292`).
 
-**Fix:** Mutate the incoming request's cookies BEFORE calling `NextResponse.next()`, and forward the modified headers so Server Components see the cookie. Also set the cookie on the response so the browser persists it.
+## The two fixes
 
-```ts
-if (isDevMode()) {
-  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  if (!sessionCookie) {
-    // Mutate incoming request so downstream Server Components see the cookie
-    request.cookies.set(SESSION_COOKIE_NAME, DEV_SESSION_COOKIE);
-    // Forward the modified request headers to the next handler
-    const response = NextResponse.next({
-      request: { headers: request.headers },
-    });
-    // Also set on the outgoing response so the browser persists it
-    response.cookies.set(SESSION_COOKIE_NAME, DEV_SESSION_COOKIE, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-    });
-    return response;
-  }
-  return NextResponse.next();
-}
+### Fix 1 — PostGIS pre-flight on `/api/leads/feed` (API hardening)
+
+**File:** `src/app/api/leads/feed/route.ts`
+
+Mirror the exact pattern already shipped for the admin test-feed:
+
+1. After `getCurrentUserContext` succeeds and Zod validates, call `isPostgisAvailable(pool)` BEFORE `getLeadFeed`
+2. If false → return `err('DEV_ENV_MISSING_POSTGIS', '<install message>', 503)` using the existing envelope helper
+3. Update the catch block to surface `sanitizePgErrorMessage(error.message)` in non-production via a new tiny helper in `error-mapping.ts` (or inline in the route)
+
+**503 message** matches the admin test-feed message:
+```
+"PostGIS extension is not installed in this database. The lead feed query requires PostGIS for geography-based radius filtering. Install the postgis package at the OS level (e.g. scoop install postgresql-postgis on Windows, apt install postgresql-16-postgis-3 on Linux, brew install postgis on Mac) and then run `CREATE EXTENSION postgis;` against the buildo database. Cloud SQL has PostGIS by default."
 ```
 
-This is the canonical Next.js 15 pattern for in-middleware cookie injection visible to Server Components.
+**Ordering:** The pre-flight MUST fire AFTER Zod validation (so garbage params still return 400 first and don't leak the dev-env message to bots fuzzing the endpoint), BEFORE rate limiting (so the pre-flight doesn't count against the user's limit), and BEFORE `getLeadFeed`. Concretely: between steps 4 and 5 in the existing handler flow.
 
-### Bug #2 — Verifier calls Firebase on the fake local cookie
+Wait — actually, re-reading the existing handler: steps are `ctx → Zod → trade_slug authz → rate limit → cursor → getLeadFeed`. The pre-flight should fire AFTER `ctx` (so an unauthenticated request still returns 401) and AFTER Zod (so garbage returns 400), but BEFORE rate limit (so the pre-flight doesn't exhaust the user's rate limit window in dev). Place it right after step 2 (Zod).
 
-**Location:** `src/lib/auth/get-user.ts:33-70` (`verifyIdTokenCookie`)
+### Fix 2 — Dev profile trade_slug switcher (query param)
 
-**Current flow when `cookie === 'dev.buildo.local'`:**
-1. Shape check passes (3 segments) ✓
-2. `admin.auth().verifyIdToken('dev.buildo.local')` calls Firebase Admin ✗
-3. Firebase rejects the fake cookie
-4. Catch block returns `null`
-5. Caller redirects to `/login`
+**File:** `src/app/leads/page.tsx`
 
-**The bug:** The verifier has no dev-mode branch. Even with `DEV_MODE=true` set, it tries to verify the fake local cookie against Google's real endpoints.
+Accept `?trade_slug=<slug>` as a searchParam. When present AND `isDevMode() && uid === 'dev-user'`:
+1. Validate the slug against the canonical 32-slug allowlist from `TRADES` (imported from `src/lib/classification/trades.ts`) — rejects typos/XSS attempts at the server boundary
+2. UPSERT the dev profile with the new slug via `INSERT ... ON CONFLICT (user_id) DO UPDATE SET trade_slug = EXCLUDED.trade_slug`
+3. Use the new slug as `tradeSlug` for the render
 
-**Fix:** Add a short-circuit at the top of `verifyIdTokenCookie`:
+Example usage once deployed:
+- `/leads?trade_slug=electrical` → updates dev profile to electrical, renders feed
+- `/leads?trade_slug=invalid` → rejected, falls through to the existing dev seed (plumbing) as the safe default
+- `/leads` (no param) → existing behavior
 
-```ts
-import { isDevMode, DEV_SESSION_COOKIE } from './route-guard';
+Non-dev users are unaffected because the `isDevMode() && uid === 'dev-user'` gate excludes them. Production path is untouched.
 
-export async function verifyIdTokenCookie(
-  cookie: string | undefined,
-): Promise<string | null> {
-  if (!cookie) return null;
-  if (cookie.split('.').length !== 3) return null;
+### Signature update
 
-  // Dev-mode bypass: the middleware injects DEV_SESSION_COOKIE when
-  // DEV_MODE=true. Skip Firebase verification entirely and return a
-  // stable dev uid. NEVER enabled in production because isDevMode()
-  // reads the server-only DEV_MODE env var.
-  if (isDevMode() && cookie === DEV_SESSION_COOKIE) {
-    return 'dev-user';
-  }
+The existing Server Component is declared as `export default async function LeadsPage()` — no props. For searchParams access in Next.js 15 App Router, the signature becomes `export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> })`. Next.js 15 changed searchParams to async/await.
 
-  try {
-    const admin = await import('firebase-admin');
-    ...
-  }
-}
-```
+### What this does NOT do
 
-**Why `'dev-user'`:** stable, predictable uid that the dev profile seed (Bug #3 fix) targets. Not a real Firebase uid format (28 chars base64url), so it can never collide with a real user.
+- ❌ Make `/api/leads/feed` return actual lead data (that requires PostGIS install, deferred per `53dcb292`)
+- ❌ Thread the structured 503 message through to `EmptyLeadState` UI — the client will still show "Can't reach the server" text even though the API response now carries the install instructions. Surfacing the structured error in the UI requires touching `useLeadFeed`, `LeadFeed`, `EmptyLeadState` — too many files for this WF3. Deferred as LOW. The dev user can see the real message by curling the endpoint directly, same as the admin test-feed user.
+- ❌ Add a UI picker for trade_slug — the query param approach is the minimum viable dev tool. A UI picker is scope creep for something only dev-users need.
+- ❌ Migrate off the placeholder `display_name = 'Dev User'` — cosmetic, irrelevant to the reported problem
+- ❌ PostGIS install (still deferred per `53dcb292`)
 
-### Bug #3 — `user_profiles` is empty; leads page redirects to /onboarding
-
-**Location:** `src/app/leads/page.tsx:69-71`
-
-**Current flow after fixing #1 and #2:**
-1. Middleware injects cookie → Server Component reads it ✓
-2. Verifier returns `'dev-user'` ✓
-3. `SELECT trade_slug FROM user_profiles WHERE user_id = 'dev-user'` → 0 rows (confirmed empty via psql)
-4. `tradeSlug` is null → redirect to `/onboarding`
-5. Onboarding page is a client-only mockup that doesn't persist → dead-end
-
-**Fix:** Auto-seed a default `dev-user` profile in the leads page when dev mode is active and no row exists. Localized so the side effect is scoped.
-
-```ts
-import { isDevMode } from '@/lib/auth/route-guard';
-
-if (!tradeSlug) {
-  if (isDevMode() && uid === 'dev-user') {
-    // Dev-mode convenience seed: /leads is usable out of the box
-    // without completing the onboarding wizard (client-only mockup).
-    // Idempotent via ON CONFLICT DO NOTHING. Gated on both
-    // isDevMode() AND uid === 'dev-user' so the production path is
-    // unreachable.
-    await pool.query(
-      `INSERT INTO user_profiles (user_id, trade_slug, display_name)
-       VALUES ('dev-user', 'plumbing', 'Dev User')
-       ON CONFLICT (user_id) DO NOTHING`,
-    );
-    tradeSlug = 'plumbing';
-  } else {
-    redirect('/onboarding');
-  }
-}
-```
-
-Idempotent + dev-gated + safe in production.
-
-## Technical Implementation Summary
+## Technical Implementation
 
 * **Modified Files:**
-  - `src/middleware.ts` — dev-mode branch mutates `request.cookies` + `NextResponse.next({ request })`
-  - `src/lib/auth/get-user.ts` — imports `isDevMode` + `DEV_SESSION_COOKIE`, adds bypass early return
-  - `src/app/leads/page.tsx` — imports `isDevMode`, auto-seeds when tradeSlug missing in dev
-  - `src/tests/middleware.logic.test.ts` — new test(s) asserting request.cookies visibility after middleware
-  - `src/tests/auth-get-user.logic.test.ts` — new test for dev bypass branch (and prod-mode regression guard)
-* **Database Impact:** NO schema change. One `INSERT ... ON CONFLICT DO NOTHING` runs only in dev when the profile is missing.
+  - `src/app/api/leads/feed/route.ts` — pre-flight + sanitized catch
+  - `src/app/leads/page.tsx` — searchParams prop + trade_slug switcher UPSERT
+  - `src/features/leads/api/error-mapping.ts` — new helper `devEnvMissingPostgis()` that wraps `err('DEV_ENV_MISSING_POSTGIS', ..., 503)` for reuse + tidy route code
+  - `src/tests/api-leads-feed.infra.test.ts` — new file-shape tests asserting pre-flight + 503 + ordering
+  - `src/tests/middleware.logic.test.ts` — extend Leads Page dev seed block with query-param switcher assertions (same file-shape pattern used earlier)
+* **Database Impact:** NO schema change. UPSERTs use existing `user_profiles` columns.
 
 ## Standards Compliance
 
-* **Try-Catch Boundary:** Unchanged. Dev bypass returns before the existing try block. Page-level seed runs without try/catch — any DB error propagates through `src/app/leads/error.tsx`.
+* **Try-Catch Boundary:** Existing `internalError()` catch in `feed/route.ts` becomes dev-aware — surfaces `sanitizePgErrorMessage(cause.message)` in non-production, canned 500 message in production. Matches the pattern already shipped for `/api/admin/leads/health` and `/api/admin/leads/test-feed`.
 * **Unhappy Path Tests:**
-  - Middleware: dev-mode + no incoming cookie → `request.cookies.get(SESSION_COOKIE_NAME)` returns the dev cookie AFTER middleware runs
-  - verifyIdTokenCookie: `cookie === DEV_SESSION_COOKIE` in dev → returns `'dev-user'` without importing firebase-admin
-  - verifyIdTokenCookie: `cookie === DEV_SESSION_COOKIE` in PROD mode → still calls Firebase Admin (security regression guard)
-  - verifyIdTokenCookie: `cookie === 'some.other.token'` in dev → still calls Firebase Admin (bypass scoped to exact DEV_SESSION_COOKIE value)
-  - Leads page: file-shape test asserting dev-seed branch present with `isDevMode()` gate
-* **logError Mandate:** Unchanged — no new API routes or catch blocks.
-* **Mobile-First:** N/A — server-side only.
-* **Fail-Closed Security §4:** Dev bypass ONLY active when `DEV_MODE=true` (server-only env var, never `NEXT_PUBLIC_*`). Route-guard.ts:15-23 documents the server-only design for exactly this class of risk. A prod build without `DEV_MODE` set takes the normal Firebase path. Verified by the prod-mode regression test.
+  - `isPostgisAvailable` returns false → route returns 503 with `DEV_ENV_MISSING_POSTGIS` (file-shape)
+  - Pre-flight ordering: `isPostgisAvailable(pool)` appears BEFORE `getLeadFeed(` in source (file-shape positional)
+  - Leads page with `?trade_slug=electrical` in dev mode → UPSERTs new slug (file-shape grep)
+  - Leads page with `?trade_slug=not_a_real_slug` in dev mode → rejected, falls back to 'plumbing' (file-shape: presence of allowlist check)
+* **logError Mandate:** Existing `internalError()` helper already calls `logError` internally. The pre-flight 503 is a happy-path early return that does NOT go through the catch, so no logError call needed (matches admin pattern).
+* **Mobile-First:** N/A — backend only, no UI changes.
+* **Auth Boundary §4:** Trade slug switcher gated on `isDevMode() && uid === 'dev-user'` — both false in prod, path unreachable. Same defense-in-depth as the existing dev seed. Regression tests will lock this.
 
 ## Execution Plan
 
-- [x] **Rollback Anchor:** `53dcb292`
-- [x] **State Verification:** confirmed all 3 bugs via file reads + psql query
-- [ ] **Spec Review:** read spec 13 / spec 75 §11 Phase 5 if they exist
-- [ ] **Red Light tests** (middleware + verifyIdTokenCookie + leads page file-shape)
-- [ ] **Red Light run** — all new tests fail
-- [ ] **Fix 1 — middleware.ts**
-- [ ] **Fix 2 — get-user.ts**
-- [ ] **Fix 3 — leads/page.tsx**
+- [x] **Rollback Anchor:** `61b68bcf`
+- [x] **State Verification:** confirmed via dev log + psql trades count
+- [ ] **Spec Review:** read spec 70 §API Endpoints for 503 semantics (is 503 in the documented matrix or is this an extension?)
+- [ ] **Red Light tests:**
+  - `api-leads-feed.infra.test.ts`: file-shape asserts `isPostgisAvailable` imported + called + 503 + position-before-`getLeadFeed`
+  - `middleware.logic.test.ts` (Leads page describe): file-shape asserts `searchParams` prop + allowlist validation + UPSERT DO UPDATE
+  - `error-mapping` file-shape: new `devEnvMissingPostgis` helper exported
+- [ ] **Red Light run:** all new tests fail
+- [ ] **Fix 1 — error-mapping:** add `devEnvMissingPostgis()` helper
+- [ ] **Fix 2 — feed route:** import + call pre-flight + sanitized catch
+- [ ] **Fix 3 — leads page:** searchParams prop + allowlist validation + UPSERT DO UPDATE
 - [ ] **Green Light:** typecheck + lint + full test suite
-- [ ] **Collateral Check:** vitest related on the 3 modified files + route-guard
-- [ ] **Pre-Review Self-Checklist (5 sibling-bug items):**
-  1. Does the middleware fix break the non-dev path? (Non-dev branch unchanged — passes through or redirects to login as before.)
-  2. Does `verifyIdTokenCookie` dev bypass fire in production? (No — `isDevMode()` reads server-only `DEV_MODE`. Regression test locks this.)
-  3. Does the dev-user seed match `user_profiles` schema? (Yes — `user_id varchar(128)`, `trade_slug varchar(50)`, `display_name varchar(200)` verified via psql `\d user_profiles`.)
-  4. Does the seed leak a dev-user row into production? (No — gated on `isDevMode() && uid === 'dev-user'`; both false in prod.)
-  5. Does "Continue as Dev" login button still work? (Yes — it just `router.push(redirect)`; the redirect now succeeds because middleware correctly injects the visible cookie.)
-- [ ] **Live verification:** navigate to `http://localhost:3000/leads`, confirm page renders (not redirect)
+- [ ] **Collateral Check:** `npx vitest related src/app/api/leads/feed/route.ts src/app/leads/page.tsx src/features/leads/api/error-mapping.ts --run`
+- [ ] **Pre-Review Self-Checklist (5 items):**
+  1. Does the pre-flight fire for production users too? (Yes, but in prod `isPostgisAvailable` returns `true` on the first call and caches forever — net cost ~1ms on the first request of the process lifetime.)
+  2. Can the dev slug switcher be abused by a non-dev user? (No — gated on `isDevMode() && uid === 'dev-user'`. Prod users are `isDevMode()=false` so the branch never fires.)
+  3. Is the allowlist validation complete? (32 slugs from TRADES, matching the canonical CLAUDE.md list. A real-but-obscure slug like `stone-countertops` works; typos fail closed.)
+  4. Does the UPSERT race with `getCurrentUserContext`'s dev seed? (No — both UPSERTs use `ON CONFLICT (user_id)` on the same row; one wins, both converge to the same `trade_slug` eventually. The leads page's UPDATE happens inside the Server Component render, so by the time the client issues the first feed API call, the row is settled.)
+  5. Is `searchParams` the right Next.js 15 prop shape? (Yes — `Promise<Record<string, string | string[] | undefined>>` per Next.js 15 breaking change. Must `await` before reading.)
+- [ ] **Live verification:** curl `/api/leads/feed` → 503 with structured message; curl `/leads?trade_slug=electrical` → 200, then psql confirms `dev-user.trade_slug = 'electrical'`
 - [ ] **Independent review agent**
-- [ ] **Adversarial review agent** — attack vectors: fail-closed bypass, cookie ordering, prod regression, data contamination
+- [ ] **Adversarial review agent** — attack vectors: query-param injection, allowlist bypass, prod regression, trade-authz conflict (`/api/leads/feed` has a separate trade authz that compares requested slug to profile slug)
 - [ ] **Triage + apply fixes**
 - [ ] **Full test suite re-run**
-- [ ] **Atomic Commit:** `fix(13_auth): dev-mode leads page end-to-end — middleware + verifier + profile seed`
-- [ ] **Update `review_followups.md`** with any deferred items
+- [ ] **Atomic Commit:** `fix(70_lead_feed): feed route PostGIS pre-flight + dev profile trade switcher`
 
 ## Scope Discipline — EXPLICITLY OUT
 
-- ❌ Making the onboarding flow actually persist to user_profiles (separate concern, different WF)
-- ❌ Firebase service account setup for dev (orthogonal — the whole point of dev mode is to avoid this)
-- ❌ Seeding multiple dev users (one is enough for the reported bug)
-- ❌ Restructuring route-guard or `DEV_SESSION_COOKIE` (existing design is sound; it just wasn't wired end-to-end)
-- ❌ PostGIS drift repair (deferred per `53dcb292`)
-- ❌ Opaque-500 sweep on other admin routes (separate WF6)
+- ❌ Installing PostGIS locally (deferred per `53dcb29`)
+- ❌ Threading structured 503 message through `LeadFeed` → `EmptyLeadState` UI (scope creep; deferred)
+- ❌ UI picker for trade_slug (query param is sufficient for dev)
+- ❌ Backfill the 237K `permits.location` column (that's the full drift repair, deferred)
+- ❌ Rewriting `LEAD_FEED_SQL` to use haversine math without PostGIS (changes production code for dev convenience; architecturally wrong)
 
-## Why This Is One WF3, Not Three
+## Why One WF3
 
-All 3 bugs are on the same code path and must be fixed together to make the reported symptom go away. Fixing only #1 leaves the page redirecting (verifier rejects fake cookie). Fixing #1+#2 leaves it redirecting to the onboarding dead-end. The user's reported goal — "localhost:3000/leads doesn't work" — is only resolved when all three land. Bundling also lets the review cycle audit the dev-mode auth path as a coherent whole.
+Both fixes are on the same `/leads` flow. The user reported the bug AND asked about profile switching in the same message. Bundling:
+1. Avoids two review cycles for a tightly related dev UX surface
+2. The reviews can audit the full dev-mode /leads path coherently
+3. Single commit captures the user's complete ask

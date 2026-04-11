@@ -378,4 +378,52 @@ describe('Leads page dev seed (Bug #3 regression lock)', () => {
     // must still redirect to /onboarding. The dev branch is additive.
     expect(leadsPageSource).toContain("redirect('/onboarding')");
   });
+
+  // -------------------------------------------------------------------------
+  // Dev profile trade_slug switcher (WF3 2026-04-11 — user request)
+  // -------------------------------------------------------------------------
+  // The prior WF3 hardcoded dev-user trade_slug = 'plumbing'. The user
+  // asked how to change profiles. Fix: accept ?trade_slug=<slug> as a
+  // query param on /leads, validate against the canonical 32-slug
+  // allowlist from src/lib/classification/trades.ts, and UPSERT the dev
+  // profile with DO UPDATE. Production path is unreachable via the
+  // existing isDevMode() && uid === 'dev-user' gate.
+
+  it('accepts searchParams as a Next.js 15 async prop', () => {
+    // Next.js 15 changed searchParams to Promise<...> on Server Components.
+    // The signature must be async and await searchParams before reading.
+    expect(leadsPageSource).toMatch(/searchParams\s*:\s*Promise/);
+  });
+
+  it('imports the TRADES allowlist from classification for server-boundary validation', () => {
+    // Server-side validation is critical — a query param goes straight
+    // to a SQL UPDATE, so the allowlist must gate unknown slugs before
+    // the DB call.
+    expect(leadsPageSource).toContain('TRADES');
+    expect(leadsPageSource).toContain("from '@/lib/classification/trades'");
+  });
+
+  it('UPSERTs the requested trade_slug via DO UPDATE when a valid slug is provided in dev mode', () => {
+    // Must include the DO UPDATE SET clause — ON CONFLICT DO NOTHING
+    // alone (the earlier seed pattern) wouldn't actually change the
+    // existing trade_slug for an already-seeded dev-user.
+    expect(leadsPageSource).toContain('ON CONFLICT (user_id) DO UPDATE');
+    expect(leadsPageSource).toContain('trade_slug = EXCLUDED.trade_slug');
+  });
+
+  it('validates the query param against the allowlist BEFORE the UPSERT', () => {
+    // Positional check: the allowlist membership test (e.g. TRADES.some,
+    // TRADES.find, or a Set lookup) must appear in the source BEFORE
+    // the INSERT with the DO UPDATE clause. A regression that skipped
+    // validation would allow arbitrary strings into the SQL UPDATE.
+    const allowlistIdx = Math.max(
+      leadsPageSource.indexOf('TRADES.some'),
+      leadsPageSource.indexOf('TRADES.find'),
+      leadsPageSource.indexOf('TRADES.map'),
+    );
+    const updateIdx = leadsPageSource.indexOf('ON CONFLICT (user_id) DO UPDATE');
+    expect(allowlistIdx).toBeGreaterThan(-1);
+    expect(updateIdx).toBeGreaterThan(-1);
+    expect(allowlistIdx).toBeLessThan(updateIdx);
+  });
 });
