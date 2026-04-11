@@ -6,8 +6,10 @@ import {
   getCostCoverage,
   getCachedLeadFeedHealth,
   getEngagement,
+  isPostgisAvailable,
   sanitizePgErrorMessage,
   __resetLeadFeedHealthCacheForTests,
+  __resetPostgisCacheForTests,
 } from '@/lib/admin/lead-feed-health';
 import type { Pool } from 'pg';
 
@@ -569,5 +571,98 @@ describe('getEngagement — saved_at filtering (WF3 Phase 3)', () => {
     expect(tradeQuery).toContain(
       "WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days'\n         OR (saved = true AND saved_at >= CURRENT_DATE - INTERVAL '7 days')",
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isPostgisAvailable — dev-env pre-flight for the test-feed route
+// ---------------------------------------------------------------------------
+// The /api/admin/leads/test-feed route calls getLeadFeed which issues
+// LEAD_FEED_SQL — a query that uses PostGIS `geography` casts for radius
+// filtering. Production Cloud SQL has PostGIS; local dev may not. Without
+// detection, the route fails with an opaque `"Feed query failed"` 500.
+//
+// isPostgisAvailable queries pg_extension once per process lifetime and
+// caches the result. The test-feed route uses it to return a clear 503 +
+// DEV_ENV_MISSING_POSTGIS when the extension isn't installed, instead of
+// letting the query fail inside getLeadFeed.
+
+describe('isPostgisAvailable — dev-env pre-flight', () => {
+  beforeEach(() => {
+    __resetPostgisCacheForTests();
+  });
+
+  function makeMockPool(installed: boolean): Pool & { query: ReturnType<typeof vi.fn> } {
+    return {
+      query: vi.fn(() => Promise.resolve({ rows: [{ installed }] })),
+    } as unknown as Pool & { query: ReturnType<typeof vi.fn> };
+  }
+
+  it('returns true when postgis is present in pg_extension', async () => {
+    const pool = makeMockPool(true);
+    await expect(isPostgisAvailable(pool)).resolves.toBe(true);
+  });
+
+  it('returns false when postgis is absent', async () => {
+    const pool = makeMockPool(false);
+    await expect(isPostgisAvailable(pool)).resolves.toBe(false);
+  });
+
+  it('caches the result — second call does not re-query the pool', async () => {
+    const pool = makeMockPool(true);
+    await isPostgisAvailable(pool);
+    await isPostgisAvailable(pool);
+    expect(pool.query).toHaveBeenCalledTimes(1);
+  });
+
+  it('__resetPostgisCacheForTests clears the cache so the next call re-queries', async () => {
+    const pool = makeMockPool(true);
+    await isPostgisAvailable(pool);
+    __resetPostgisCacheForTests();
+    await isPostgisAvailable(pool);
+    expect(pool.query).toHaveBeenCalledTimes(2);
+  });
+
+  it('issues a SELECT against pg_extension with the exact extname = postgis filter', async () => {
+    const pool = makeMockPool(true);
+    await isPostgisAvailable(pool);
+    const sql = String(pool.query.mock.calls[0]?.[0] ?? '');
+    expect(sql).toContain('pg_extension');
+    expect(sql).toContain("extname = 'postgis'");
+  });
+
+  it('returns false on query rejection WITHOUT caching — next call retries (WF3 2026-04-11 review)', async () => {
+    // If the query cannot run at all (e.g., transient pool hiccup on the
+    // first request), return `false` for this call so the caller returns
+    // a 503 dev-env message, but DO NOT cache the failure. Next call
+    // re-attempts — a persistent problem would re-query forever, but
+    // getLeadFeed would also be failing on every click, so marginal cost
+    // is trivial. This prevents the "first-call blip wedges the cache
+    // for the entire process lifetime" trap flagged by the adversarial
+    // review. A successful subsequent call populates the cache normally.
+    let shouldReject = true;
+    const pool = {
+      query: vi.fn(() => {
+        if (shouldReject) return Promise.reject(new Error('connection refused'));
+        return Promise.resolve({ rows: [{ installed: true }] });
+      }),
+    } as unknown as Pool & { query: ReturnType<typeof vi.fn> };
+
+    // First call: pool rejects → returns false, does NOT cache
+    await expect(isPostgisAvailable(pool)).resolves.toBe(false);
+    expect(pool.query).toHaveBeenCalledTimes(1);
+
+    // Second call: pool rejects again → returns false, still does NOT cache
+    await expect(isPostgisAvailable(pool)).resolves.toBe(false);
+    expect(pool.query).toHaveBeenCalledTimes(2);
+
+    // Third call: pool recovers → returns true, caches true
+    shouldReject = false;
+    await expect(isPostgisAvailable(pool)).resolves.toBe(true);
+    expect(pool.query).toHaveBeenCalledTimes(3);
+
+    // Fourth call: cached → no new query
+    await expect(isPostgisAvailable(pool)).resolves.toBe(true);
+    expect(pool.query).toHaveBeenCalledTimes(3);
   });
 });

@@ -66,6 +66,37 @@ describe('Lead Feed Health API routes — file shape', () => {
   it('test-feed route returns 400 on validation failure (not 500)', () => {
     expect(testFeedRoute).toContain('status: 400');
   });
+
+  it('test-feed route pre-flights PostGIS before calling getLeadFeed (WF3 2026-04-11)', () => {
+    // Missing PostGIS is the #1 cause of "Feed query failed" in dev. The
+    // route must check isPostgisAvailable BEFORE calling getLeadFeed and
+    // return a clear 503 + DEV_ENV_MISSING_POSTGIS when absent, so devs
+    // see an actionable message instead of an opaque 500.
+    expect(testFeedRoute).toContain('isPostgisAvailable');
+    expect(testFeedRoute).toContain('DEV_ENV_MISSING_POSTGIS');
+    expect(testFeedRoute).toContain('status: 503');
+
+    // ORDERING CHECK (adversarial review 2026-04-11): a regression that
+    // moved the isPostgisAvailable call INSIDE the catch block or AFTER
+    // the getLeadFeed call would still pass the token-presence checks
+    // above but silently re-introduce the opaque-500 bug. Assert the
+    // check fires BEFORE the getLeadFeed invocation by comparing source
+    // positions. If both strings appear and the pre-flight is first,
+    // this passes; otherwise it fails loudly.
+    const preflightIdx = testFeedRoute.indexOf('isPostgisAvailable(pool)');
+    const getLeadFeedIdx = testFeedRoute.indexOf('getLeadFeed(');
+    expect(preflightIdx).toBeGreaterThan(-1);
+    expect(getLeadFeedIdx).toBeGreaterThan(-1);
+    expect(preflightIdx).toBeLessThan(getLeadFeedIdx);
+  });
+
+  it('test-feed route surfaces sanitized error message in non-production (WF3 2026-04-11)', () => {
+    // Catch block must mirror the health route pattern: canned message in
+    // production, sanitizePgErrorMessage(error.message) in dev/test so
+    // operators can diagnose without digging through server logs.
+    expect(testFeedRoute).toContain('sanitizePgErrorMessage');
+    expect(testFeedRoute).toMatch(/NODE_ENV\s*===\s*['"]production['"]/);
+  });
 });
 
 describe('Lead Feed Health lib — query function shape', () => {

@@ -158,6 +158,74 @@ export function sanitizePgErrorMessage(message: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// PostGIS pre-flight — WF3 2026-04-11
+// ---------------------------------------------------------------------------
+// Dev-env pre-flight for the /api/admin/leads/test-feed route.
+// `LEAD_FEED_SQL` (in features/leads/lib/get-lead-feed.ts) uses PostGIS
+// `geography` casts for radius filtering. Production Cloud SQL has PostGIS;
+// local dev may not. Without detection, the route fails with an opaque
+// `"Feed query failed"` 500 at position 3306 of the SQL (pg code 42704:
+// type "geography" does not exist).
+//
+// This helper queries `pg_extension` and caches SUCCESSFUL results for the
+// process lifetime. In production with PostGIS present, the first call
+// returns `true` and every subsequent call is a cache hit — zero DB load
+// beyond the first request. In dev without PostGIS, the first call caches
+// `false` and subsequent calls short-circuit.
+//
+// Cache semantics:
+// - Only SUCCESSFUL query results are cached. Query FAILURES (e.g., a
+//   transient pool error on first request) return `false` for that
+//   specific call but leave the cache unpopulated, so the next request
+//   retries. This prevents the "transient blip wedges the cache for the
+//   entire process lifetime" trap that the initial WF3 pass had.
+//   (Adversarial + independent review, 2026-04-11.)
+// - Process-lifetime for successful results — a dev who installs PostGIS
+//   mid-session needs a server restart. Acceptable for a dev tool because
+//   `true` is sticky in production too (Cloud SQL's PostGIS isn't going
+//   anywhere).
+// - `__resetPostgisCacheForTests` clears state for isolated test cases.
+// - NO single-flight guard. The check is one-shot, ~1-2ms. Multiple
+//   concurrent first-time callers would each issue one query; all results
+//   are identical in practice (PostGIS either is or isn't installed).
+
+let postgisChecked: boolean | null = null;
+
+/**
+ * Check whether the PostGIS extension is installed in the current database.
+ * Cached process-wide on first SUCCESSFUL check. Intended for dev-env pre-
+ * flights in routes that require PostGIS (e.g. the test-feed endpoint).
+ *
+ * Query failures (e.g., transient pool error) return `false` for the
+ * current call but are NOT cached — the next call retries. This prevents
+ * a first-request hiccup from wedging the endpoint for the whole process
+ * lifetime.
+ */
+export async function isPostgisAvailable(pool: Pool): Promise<boolean> {
+  if (postgisChecked !== null) return postgisChecked;
+  try {
+    const res = await pool.query<{ installed: boolean }>(
+      `SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'postgis') AS installed`,
+    );
+    // Only cache on successful query — see cache semantics comment above.
+    postgisChecked = res.rows[0]?.installed ?? false;
+    return postgisChecked;
+  } catch {
+    // Don't cache. Return `false` for THIS call so the caller returns a
+    // dev-env 503, but leave `postgisChecked === null` so the next call
+    // will re-attempt. A persistent pool failure will keep re-querying,
+    // but the main query (getLeadFeed) would also be failing on every
+    // click, so the marginal cost is trivial.
+    return false;
+  }
+}
+
+/** Test-only reset for module-level PostGIS cache. Never call from prod. */
+export function __resetPostgisCacheForTests(): void {
+  postgisChecked = null;
+}
+
+// ---------------------------------------------------------------------------
 // Query functions
 // ---------------------------------------------------------------------------
 

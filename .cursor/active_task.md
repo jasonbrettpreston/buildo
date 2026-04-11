@@ -1,154 +1,170 @@
-# Active Task: Dashboard review bundle — null-timing, pool cache, saved_at, cost coverage
-**Status:** Phase 1 — Red Light
-**Workflow:** WF3 — Bug Fix (3-phase bundle)
-**Rollback Anchor:** `1321b972` (1321b972dee3f536360b886ff843301d565ba57a)
-**Domain Mode:** Cross-Domain (frontend component + backend API lib + database migration)
+# Active Task: Test feed opaque 500 + PostGIS dev-env detection
+**Status:** Planning
+**Workflow:** WF3 — Bug Fix
+**Rollback Anchor:** `5e519cc4` (5e519cc4b1b7425d3a9652f80c449b7da7881897)
+**Domain Mode:** Backend (API route + server-side helper, no UI or schema)
 
 ## Context
-External review `docs/reports/lead_feed_health_dashboard_review.md` (Antigravity, 2026-04-10) graded the dashboard D. Validated all 10 claims: **4 real bugs** (2, 3, 7, 9), **6 false positives** (1, 4, 5, 6, 8, 10).
+* **Goal:** User reports `/api/admin/leads/test-feed` returns `{error:{code:"INTERNAL_ERROR",message:"Feed query failed"}}` in the dashboard's Test Feed tool. The message is opaque and the user can't tell why. Verified root cause via dev server log: **`type "geography" does not exist`** (pg code 42704) — `LEAD_FEED_SQL` in `get-lead-feed.ts` uses PostGIS `geography` casts, and PostGIS isn't installed in the local dev DB (`pg_available_extensions` has no `postgis` entry).
+* **Target Specs:**
+  * `docs/specs/product/admin/76_lead_feed_health_dashboard.md` §3.2 (test feed endpoint)
+  * `docs/specs/00_engineering_standards.md` §2 (error handling), §10 (boundary)
+* **Key Files:**
+  * `src/app/api/admin/leads/test-feed/route.ts` — the handler with the canned 500
+  * `src/features/leads/lib/get-lead-feed.ts:637` — the `pool.query(LEAD_FEED_SQL, params)` that throws
+  * `src/lib/admin/lead-feed-health.ts` — already has `sanitizePgErrorMessage`; may add a PostGIS pre-flight helper here since it's the existing admin-health lib
 
-**Target specs:**
-- `docs/specs/product/admin/76_lead_feed_health_dashboard.md` §2.1, §3.3, §3.5
-- `docs/specs/00_engineering_standards.md` §1, §2, §3, §7, §10, §12
+## State Verification
 
-## Phase Structure — 3 commits, 3 review cycles
+**Confirmed via psql:**
+- `pg_extension`: only `plpgsql`, `pg_trgm` installed. No `postgis`.
+- `pg_available_extensions` WHERE name LIKE 'postgis%': zero rows — the OS-level package is NOT installed, so a plain `CREATE EXTENSION postgis` would fail too.
+- `schema_migrations`: 039 + 067 + 077 + 078 all marked applied despite the extension being absent. Historical drift — either the DB was restored from a PostGIS-less dump, or the extension was uninstalled after migration time. Not Phase 3's concern to fix the historical state.
 
-Sequential: Phase 1 → Phase 2 → Phase 3. Each phase runs its own red-light / implement / self-checklist / independent review / adversarial review / triage / commit cycle on a clean working tree.
+**Confirmed via curl:**
+```
+GET /api/admin/leads/test-feed?lat=43.6532&lng=-79.3832&trade_slug=plumbing&radius_km=10
+→ 500 {"data":null,"error":{"code":"INTERNAL_ERROR","message":"Feed query failed"},"meta":null}
+```
 
----
+**Dev server log confirms the real error:**
+```
+[api/admin/leads/test-feed] error: type "geography" does not exist
+    at getLeadFeed (get-lead-feed.ts:637) — pool.query(LEAD_FEED_SQL, params)
+    pg code: 42704, position: 3306, routine: typenameType
+```
 
-## Phase 1 — Honest Signaling (UI/display logic, zero infra risk)
+## Why this is in scope for WF3 (not an env-setup doc change)
 
-**Status:** In progress
+The user flagged this as a distinct class from the earlier "[object Object]" UI bug — they want it resolved by code. Two real code bugs land here:
 
-**Fixes:**
-- **Claim 2** (REAL MED): `getTrafficLight` treats `timing_freshness_hours === null` as not-stale → dashboard goes GREEN when the timing_calibration cron has vanished or truncated. Fix: treat `null` as stale.
-- **Claim 4** (PARTIALLY REAL LOW): `getCostCoverage` measures coverage within `cost_estimates` cache, not over the full active-permits universe. Fix: add a derived `coverage_pct_vs_active_permits` computed in the route handler (zero new DB load — uses values already fetched by `getLeadFeedReadiness` + `getCostCoverage`).
+1. **Opaque 500:** The route returns a canned `"Feed query failed"` message even in dev. This is the same class of bug we closed for `/api/admin/leads/health` in the first WF3 of this session — and we specifically said "opaque 500s in sibling admin routes" would be swept in a later WF6. Here it directly blocks dev diagnosis. Fix inline.
+2. **No pre-flight detection of missing PostGIS:** Even with the real error surfaced, the user would see `type "geography" does not exist` with no guidance. A dev-env pre-flight check that returns a `503 DEV_ENV_MISSING_POSTGIS` with install instructions is much more actionable.
 
-**Files:**
-- `src/components/LeadFeedHealthDashboard.tsx` — `getTrafficLight` null treatment + UI shows both cost percentages
-- `src/lib/admin/lead-feed-health.ts` — `CostCoverage` interface adds `coverage_pct_vs_active_permits: number`
-- `src/app/api/admin/leads/health/route.ts` — compute derived metric from already-fetched readiness/cost values, inject into response
-- `src/tests/LeadFeedHealthDashboard.ui.test.tsx` — null-timing → YELLOW assertion + dual cost metric render
-- `src/tests/lead-feed-health.logic.test.ts` — dual metric presence in response shape
-- `docs/specs/product/admin/76_lead_feed_health_dashboard.md` — spec §3.3 null-timing clarification + §2.1 dual denominator doc
+What this is NOT:
+- Not an attempt to make the query work without PostGIS. The production code path requires PostGIS and that's correct. This WF3 improves the DEV experience, not the production code path.
+- Not a migration. PostGIS installation is an OS-level concern handled by scoop/apt/brew, not migration 039.
+- Not a refactor of `get-lead-feed.ts`. That file's SQL is production-correct.
 
-**Self-checklist (to walk against diff BEFORE green-lighting):**
-1. Does the null-timing change produce YELLOW in ALL cases where timing is missing — including when `feedReadyPct > 80` (the code path that previously returned GREEN)?
-2. Does the change leave GREEN untouched for the happy path (`timingFreshnessHours < 48 && feedReadyPct > 80`)?
-3. Is `active_permits === 0` handled safely in `coverage_pct_vs_active_permits` (no division by zero)?
-4. Is the new field additive (doesn't break existing `cost_coverage` consumers)?
-5. Does the spec update match the code behavior exactly (no documentation drift)?
-6. Does the existing `LeadFeedHealthDashboard.ui.test.tsx` have snapshot/assertion tests that would BREAK under the new YELLOW behavior and need updating?
-7. Does the dual-metric UI still fit mobile (<375px)?
+## Technical Implementation
 
-**Risks for adversarial review:**
-- Off-by-one: `timingFreshnessHours === 0` (impossibly fresh) — does it still count as fresh-not-stale?
-- Division by zero on fresh DB (active_permits=0)
-- Label wrapping when 2 percentages render on narrow viewport
-- Snapshot test breakage in existing UI suite
-- Rounding mismatch: `coverage_pct` uses `Math.round(... * 1000) / 10`; does the new metric use the same rounding?
+### Fix 1 — Dev-mode error transparency (same pattern as health route)
+**File:** `src/app/api/admin/leads/test-feed/route.ts:72-78` (the catch block)
 
-**Commit message:** `fix(76_lead_feed_health_dashboard): honest signaling — null-timing yellow + dual cost coverage`
+Current:
+```ts
+catch (err) {
+  logError(TAG, err instanceof Error ? err : new Error(String(err)), { phase: 'handler' });
+  return NextResponse.json(
+    { data: null, error: { code: 'INTERNAL_ERROR', message: 'Feed query failed' }, meta: null },
+    { status: 500 },
+  );
+}
+```
 
----
+New: surface `error.message` in non-production, sanitized via `sanitizePgErrorMessage` to strip any credential patterns. Keep `"Feed query failed"` in production. Follows the exact pattern landed in the health route catch block.
 
-## Phase 2 — Pool pressure relief (server-side cache)
+### Fix 2 — PostGIS pre-flight check (dev-env specific)
+**File:** `src/lib/admin/lead-feed-health.ts` — add a new exported helper.
 
-**Status:** Pending (blocked by Phase 1)
+```ts
+// Module-level cache: null = unchecked, true = present, false = missing
+let postgisChecked: boolean | null = null;
 
-**Fixes:**
-- **Claim 3** (REAL MED): 12 parallel queries × N tabs crushes 20-slot pool. Fix: 30s in-memory cache + single-flight promise in `route.ts`. **Decision: Layer A only** (no sequencing) — keeping `Promise.all` preserves response latency within the dashboard's 10s client timeout.
+export async function isPostgisAvailable(pool: Pool): Promise<boolean> {
+  if (postgisChecked !== null) return postgisChecked;
+  try {
+    const res = await pool.query<{ installed: boolean }>(
+      `SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'postgis') AS installed`
+    );
+    postgisChecked = res.rows[0]?.installed ?? false;
+  } catch {
+    postgisChecked = false;
+  }
+  return postgisChecked;
+}
 
-**Files:**
-- `src/app/api/admin/leads/health/route.ts` — module-level cache entry + single-flight
-- `src/tests/lead-feed-health.logic.test.ts` — cache hit/miss/single-flight/rejection tests
+export function __resetPostgisCacheForTests(): void {
+  postgisChecked = null;
+}
+```
 
-**Self-checklist:**
-1. Does the cache TTL use `>` or `>=`? Is there an off-by-one on the expiry boundary?
-2. Does the `inFlight` promise get cleared on BOTH success AND rejection?
-3. Does the rejection path leave `cacheEntry` untouched (don't cache errors)?
-4. Does Next.js dev HMR wipe the module state between edits? Comment must document this.
-5. Does the handler still return the same response shape on cache hit AS on cache miss?
-6. Is the TTL env-overridable with `parsePositiveIntEnv`-style safety?
-7. Does the single-flight handle reject-propagation to all awaiters without unhandled rejections?
+**Cache rationale:** cheap query but runs on every test-feed click. Cache is process-lifetime only — a user installing PostGIS mid-session would need a restart, which is acceptable for a dev tool.
 
-**Risks for adversarial review:**
-- `inFlight` never cleared on rejection → permanent hang
-- Cache populated with partial data if readiness succeeds but cost fails mid-`Promise.all`
-- Clock skew between `Date.now()` calls within the same request flow
-- Two requests exactly at `expiresAt` — race
-- HMR module reload mid-request
-- `cacheEntry` mutation from a stale closure after TTL expiry
+### Fix 3 — Use the pre-flight in the test-feed route
+**File:** `src/app/api/admin/leads/test-feed/route.ts`
 
-**Commit message:** `fix(76_lead_feed_health_dashboard): 30s server-side cache + single-flight to protect pg pool`
+At the top of the handler, after Zod validation, before the `getLeadFeed` call:
 
----
+```ts
+const postgisReady = await isPostgisAvailable(pool);
+if (!postgisReady) {
+  return NextResponse.json(
+    {
+      data: null,
+      error: {
+        code: 'DEV_ENV_MISSING_POSTGIS',
+        message:
+          'PostGIS extension is not installed in this database. The lead feed query requires PostGIS for geography-based distance filtering. Install with: `CREATE EXTENSION postgis;` (requires the postgis package at the OS level — e.g. scoop install postgis, apt install postgresql-postgis, or Cloud SQL has it by default).',
+      },
+      meta: null,
+    },
+    { status: 503 },
+  );
+}
+```
 
-## Phase 3 — saved_at column (schema evolution)
+Why **503** not 500: the service is unavailable due to a missing dependency, not because of a code bug. The distinction matters for dev because:
+- `500` implies "your code broke" — debugger bait
+- `503` with a descriptive code says "service not ready, and here's why"
 
-**Status:** Pending (blocked by Phase 2)
+### Fix 4 — Apply the same pattern to the health endpoint's OTHER query paths?
+**Decision: out of scope.** The health endpoint doesn't use PostGIS — only `getLeadFeed` does. Spot-checked `getLeadFeedReadiness`, `getCostCoverage`, `getEngagement`: none reference PostGIS types or functions.
 
-**Fixes:**
-- **Claim 7** (REAL MED): `lead_views.saved_at` column doesn't exist; saves are timestamped against `viewed_at` which is preserved on save → old-view + recent-save is invisible to `saves_7d`. Fix: add column + backfill + update recorder + update query.
+## Database Impact
+**NO.** No schema changes. PostGIS installation is OS-level, handled outside migrations.
 
-**Files:**
-- `migrations/082_lead_views_saved_at.sql` (UP + DOWN, CONCURRENTLY index)
-- `src/db/schema/*` — regenerated via `npm run db:generate`
-- `src/features/leads/lib/record-lead-view.ts` — SAVE/UNSAVE populates/clears saved_at
-- `src/lib/admin/lead-feed-health.ts` — `getEngagement` uses `saved_at` for saves, keeps `viewed_at` for views and unique_users
-- `src/tests/record-lead-view.logic.test.ts` — recorder behavior
-- `src/tests/lead-feed-health.logic.test.ts` — old-view + recent-save counted
-- `src/tests/lead-views-schema.infra.test.ts` — column presence
+## Standards Compliance
 
-**Self-checklist:**
-1. Does the backfill UPDATE race with in-flight writes? (Single-statement UPDATE is atomic; rows written after backfill go through the updated INSERT path)
-2. Should there be a CHECK constraint `(saved = false AND saved_at IS NULL) OR (saved = true AND saved_at IS NOT NULL)`?
-3. Does UNSAVE correctly reset `saved_at = NULL`?
-4. Does `unique_users_7d` STILL use `viewed_at`, not `saved_at`?
-5. Does `avg_competition_per_lead` keep its `viewed_at` filter (scoped by view recency is intentional)?
-6. Does removing the outer `WHERE viewed_at >= 7d` in `getEngagement` harm performance on a growing table? (Partial index on `saved_at` mitigates)
-7. Is there a JS-side dual-path sibling to `record-lead-view.ts`? (Verified: no)
+* **Try-Catch Boundary:** Catch block refined to surface `sanitizePgErrorMessage(error.message)` in non-production. Still logs via `logError`. Pre-flight 503 is a happy-path early return, not in the catch.
+* **Unhappy Path Tests:** 
+  - Logic test: `isPostgisAvailable` with mock pool returning `{installed: true}`, `{installed: false}`, and rejection.
+  - Infra test: file-shape grep for `isPostgisAvailable` import + call in test-feed route.
+  - Logic test for the sanitized dev-mode error: same mock-pool rejection pattern used in the existing sanitizePgErrorMessage tests.
+* **logError Mandate:** Already present. Retained with added phase context.
+* **Mobile-First:** N/A — backend only. The dashboard UI already handles the error shape via `extractErrorMessage` helper (Phase 1 from earlier session), so the new `DEV_ENV_MISSING_POSTGIS` message will render cleanly in the red error box.
 
-**Risks for adversarial review:**
-- Backfill sets `saved_at = viewed_at` — but if `viewed_at` is older than the true save time, `saves_today/7d` for historical data will be wrong. Acceptable for historical approximation?
-- Spec 76 §3.5 doesn't explicitly define whether "Saves (7d)" means "saves recorded in last 7d" or "saves of leads viewed in last 7d". Need spec clarification to confirm intent.
-- `saved_at` column nullable vs constrained CHECK
-- Drizzle type regen may drift if any other table's schema changed since last regen
-- `lead_views` partial index on `(saved_at) WHERE saved = true` vs queries that FILTER by `saved = true AND saved_at >= ...` — index coverage
+## Execution Plan
 
-**Commit message:** `fix(76_lead_feed_health_dashboard): saved_at column fixes silent engagement dropping`
-
----
-
-## Per-Phase Review Cycle Template
-
-For each phase, execute in strict order:
-
-- [ ] **Rollback Anchor** recorded at start (Phase 1: `1321b97`; Phases 2/3: the SHA of the previous phase's commit)
-- [ ] **Spec Review** — read relevant spec 76 sections IN FULL
-- [ ] **Red Light** — add failing tests for that phase only
-- [ ] **Implement Fix**
-- [ ] **Typecheck + lint + related tests**
-- [ ] **Pre-Review Self-Checklist** — walk items above against the ACTUAL diff, report PASS/FAIL inline
-- [ ] **Independent Review Agent** (worktree-isolated Explore) — generates own checklist from spec + diff
-- [ ] **Adversarial Review Agent** (code-reviewer) — uses phase-specific attack vectors
-- [ ] **Triage** — classify each finding as real/false-positive with written reasoning; fix real bugs; reject false positives in active_task.md
-- [ ] **Full test suite re-run**
-- [ ] **Atomic commit**
-- [ ] **Update `docs/reports/review_followups.md`** with phase closures
+- [x] **Rollback Anchor:** `5e519cc4`
+- [x] **State Verification:** psql + dev log confirmed root cause = `type "geography" does not exist`
+- [ ] **Spec Review:** Read spec 76 §3.2 (test feed) to ensure 503 + DEV_ENV_MISSING_POSTGIS doesn't violate the documented response contract
+- [ ] **Red Light tests:**
+  - `isPostgisAvailable` — mock pool returns `{installed: false}` → helper returns false, returns true on `{installed: true}`, cache is sticky across calls
+  - `__resetPostgisCacheForTests` — after reset, helper re-queries the pool
+  - Route infra test (file-shape): test-feed route imports `isPostgisAvailable` and uses `sanitizePgErrorMessage` in the catch
+- [ ] **Implementation:**
+  - Add `isPostgisAvailable` + `__resetPostgisCacheForTests` to `lead-feed-health.ts`
+  - Update test-feed route handler: pre-flight check + dev-mode sanitize pattern
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix && npm run typecheck`
+- [ ] **Collateral Check:** `npx vitest related src/app/api/admin/leads/test-feed/route.ts src/lib/admin/lead-feed-health.ts --run`
+- [ ] **Pre-Review Self-Checklist (5 sibling-bug items):**
+  1. Does the pre-flight cache correctly handle the "PostGIS was just installed" case? (Answer: no — requires restart, documented)
+  2. Does the sanitized error leak any credentials from `get-lead-feed.ts` errors? (The existing sanitizer handles postgres:// patterns; pg errors typically don't include the connection string but the regex catches them if they do)
+  3. Does the 503 confuse monitoring / alerting in production? (Production has PostGIS, so this path NEVER fires in prod — the early return is a no-op)
+  4. Is `isPostgisAvailable` cache shared across multiple requests safely? (JS single-threaded + module-level = safe)
+  5. Does the helper need single-flight protection? (Query is one-shot, ~2ms, not worth the complexity)
+- [ ] **Independent review agent (worktree isolation NOT used — changes uncommitted)**
+- [ ] **Adversarial review agent (user explicitly requested both in prior WF3s; continuing the pattern)**
+- [ ] **Triage review findings**
+- [ ] **Full test suite + manual curl verification through the dashboard**
+- [ ] **Atomic Commit:** `fix(76_lead_feed_health_dashboard): test-feed pre-flights PostGIS + surfaces dev-mode errors`
+- [ ] **Update `review_followups.md`** with any deferred items
 
 ## Scope Discipline — EXPLICITLY OUT
 
-- ❌ Claims 1, 5, 6, 8, 10 — false positives, documented in review_followups.md WONTFIX with evidence
-- ❌ `builders_feed_eligible` geo constraint (prior WF3 deferral)
-- ❌ Sibling opaque 500s (WF6 sweep)
-- ❌ `/api/admin/stats` 37-query refactor
-- ❌ Exponential backoff on frontend polling (UX polish, not a bug)
-- ❌ Cross-phase changes in a single phase — strict isolation
-
-## Why Phased
-
-1. **Blast radius isolation:** Phase 1 is UI-only (revertable by CSS). Phase 2 is a pure backend cache (revertable by removing the module-level vars). Phase 3 is schema (requires migration rollback). Each rollback point stands alone.
-2. **Review cycle clarity:** Each review gets a clean, focused diff instead of a 6-file bundle that's hard to audit coherently.
-3. **Failure isolation:** If Phase 3's migration breaks in an unexpected way, Phases 1 + 2 are already landed and the revert leaves the dashboard in a partially-improved state, not fully reverted.
+- ❌ Rewriting `LEAD_FEED_SQL` to not need PostGIS — production code is correct
+- ❌ New migration for PostGIS — it's OS-level, not DB-schema-level
+- ❌ Sweeping opaque 500s across OTHER admin routes (deferred WF6)
+- ❌ Installing PostGIS in the user's local env — I can't run OS package managers; the dev env setup is user-managed
+- ❌ Changing the health endpoint — test-feed is the only route using PostGIS

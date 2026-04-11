@@ -12,7 +12,11 @@ import { logError } from '@/lib/logger';
 import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
 import { DEFAULT_RADIUS_KM, MAX_RADIUS_KM } from '@/features/leads/lib/distance';
 import { DEFAULT_FEED_LIMIT, MAX_FEED_LIMIT } from '@/features/leads/lib/get-lead-feed';
-import { computeTestFeedDebug } from '@/lib/admin/lead-feed-health';
+import {
+  computeTestFeedDebug,
+  isPostgisAvailable,
+  sanitizePgErrorMessage,
+} from '@/lib/admin/lead-feed-health';
 
 const TAG = '[api/admin/leads/test-feed]';
 
@@ -36,6 +40,30 @@ export async function GET(request: NextRequest) {
       );
     }
     const params = parsed.data;
+
+    // WF3 2026-04-11: Pre-flight check for PostGIS. The main query in
+    // getLeadFeed uses `geography` casts for radius filtering, which
+    // require the postgis extension. Production Cloud SQL has it; local
+    // dev may not. Without this check, dev hits an opaque 500 "Feed query
+    // failed" at pool.query(LEAD_FEED_SQL) (pg code 42704). Return a
+    // 503 + DEV_ENV_MISSING_POSTGIS instead so the operator sees an
+    // actionable message. In production this check is a cache hit (~0ms)
+    // after the first request of the process lifetime.
+    const postgisReady = await isPostgisAvailable(pool);
+    if (!postgisReady) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: 'DEV_ENV_MISSING_POSTGIS',
+            message:
+              'PostGIS extension is not installed in this database. The lead feed query requires PostGIS for geography-based radius filtering. Install the postgis package at the OS level (e.g. scoop install postgresql-postgis on Windows, apt install postgresql-16-postgis-3 on Linux, brew install postgis on Mac) and then run `CREATE EXTENSION postgis;` against the buildo database. Cloud SQL has PostGIS by default.',
+          },
+          meta: null,
+        },
+        { status: 503 },
+      );
+    }
 
     const start = Date.now();
     const result = await getLeadFeed(
@@ -70,9 +98,19 @@ export async function GET(request: NextRequest) {
       _debug,
     });
   } catch (err) {
-    logError(TAG, err instanceof Error ? err : new Error(String(err)), { phase: 'handler' });
+    const error = err instanceof Error ? err : new Error(String(err));
+    logError(TAG, error, { phase: 'handler' });
+    // WF3 2026-04-11: surface the real error message in non-production so
+    // operators can diagnose the test-feed without digging through server
+    // logs. Production keeps the canned message to avoid leaking internals.
+    // Dev-mode messages are passed through `sanitizePgErrorMessage` to
+    // strip any pg connection-string credentials (node-postgres#3145).
+    // Matches the pattern in /api/admin/leads/health/route.ts.
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Feed query failed'
+      : sanitizePgErrorMessage(error.message);
     return NextResponse.json(
-      { data: null, error: { code: 'INTERNAL_ERROR', message: 'Feed query failed' }, meta: null },
+      { data: null, error: { code: 'INTERNAL_ERROR', message }, meta: null },
       { status: 500 },
     );
   }

@@ -219,16 +219,19 @@ The test-feed endpoint does NOT require a `user_profiles` entry — it construct
 - **Inputs:** Admin auth + query params: `lat`, `lng`, `trade_slug`, `radius_km` (default 10), `limit` (default 15)
 - **Core Logic:**
   1. Validate params with Zod (same schema as `/api/leads/feed` minus the cursor)
-  2. Construct `LeadFeedInput` with a synthetic `user_id = 'admin-test'`
-  3. Call `getLeadFeed(input, pool)` — same function the real feed uses
-  4. Compute `_debug` block from results: score stats, pillar averages, coverage metrics
-  5. Return full response with debug overlay
+  2. **Pre-flight:** verify PostGIS extension is installed via `isPostgisAvailable(pool)`. If missing (local dev without the extension), short-circuit to `503 DEV_ENV_MISSING_POSTGIS` with install instructions. Production Cloud SQL has PostGIS so this path is a cache hit in prod.
+  3. Construct `LeadFeedInput` with a synthetic `user_id = 'admin-test'`
+  4. Call `getLeadFeed(input, pool)` — same function the real feed uses
+  5. Compute `_debug` block from results: score stats, pillar averages, coverage metrics
+  6. Return full response with debug overlay
 - **Outputs:** Feed results + debug scoring breakdown
 - **Edge Cases:**
   - No permits in radius → `data: []`, `_debug.permits_in_radius: 0`
   - Invalid trade_slug → 400 with field-level error
   - Trade has no permits → empty results (valid, shows feed gap)
   - `is_saved` field on LeadFeedItem always `false` for admin-test user (the `lead_views.saved` DB column has no rows for synthetic user_id)
+  - **PostGIS missing (dev only):** 503 with `code: 'DEV_ENV_MISSING_POSTGIS'` and a message describing OS-level install steps. The production Cloud SQL instance has PostGIS by default.
+  - **Runtime query error:** 500 with sanitized dev-mode message (via `sanitizePgErrorMessage`), production returns the canned `"Feed query failed"`. Added WF3 2026-04-11 to close the last opaque-500 in the Lead Feed Health endpoints.
 
 ### 3.3 Dashboard UI
 
