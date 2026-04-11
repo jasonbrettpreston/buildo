@@ -609,9 +609,11 @@ export const leadViews = pgTable("lead_views", {
 	tradeSlug: varchar("trade_slug", { length: 50 }).notNull(),
 	viewedAt: timestamp("viewed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	saved: boolean().default(false).notNull(),
+	savedAt: timestamp("saved_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
-	index("idx_lead_views_lead_trade_viewed").using("btree", table.leadKey.asc().nullsLast().op("timestamptz_ops"), table.tradeSlug.asc().nullsLast().op("timestamptz_ops"), table.viewedAt.asc().nullsLast().op("timestamptz_ops"), table.userId.asc().nullsLast().op("text_ops")),
-	index("idx_lead_views_user_viewed").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.viewedAt.desc().nullsFirst().op("timestamptz_ops")),
+	index("idx_lead_views_lead_trade_viewed").using("btree", table.leadKey.asc().nullsLast().op("text_ops"), table.tradeSlug.asc().nullsLast().op("timestamptz_ops"), table.viewedAt.asc().nullsLast().op("timestamptz_ops"), table.userId.asc().nullsLast().op("text_ops")),
+	index("idx_lead_views_saved_at").using("btree", table.savedAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(saved = true)`),
+	index("idx_lead_views_user_viewed").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.viewedAt.desc().nullsFirst().op("text_ops")),
 	index("idx_lead_views_viewed_brin").using("brin", table.viewedAt.asc().nullsLast().op("timestamptz_minmax_ops")),
 	foreignKey({
 			columns: [table.permitNum, table.revisionNum],

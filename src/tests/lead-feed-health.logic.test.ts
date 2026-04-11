@@ -5,6 +5,7 @@ import {
   getLeadFeedReadiness,
   getCostCoverage,
   getCachedLeadFeedHealth,
+  getEngagement,
   sanitizePgErrorMessage,
   __resetLeadFeedHealthCacheForTests,
 } from '@/lib/admin/lead-feed-health';
@@ -448,5 +449,125 @@ describe('getCachedLeadFeedHealth — cache + single-flight', () => {
     const response = await getCachedLeadFeedHealth(pool, 30_000);
     // 600 / 1000 = 60.0%
     expect(response.cost_coverage.coverage_pct_vs_active_permits).toBe(60);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getEngagement — saved_at-based saves counts (WF3 2026-04-10 Phase 3)
+// ---------------------------------------------------------------------------
+// External review 2026-04-10 (Antigravity "Silent Engagement Dropping")
+// flagged that saves_7d previously counted rows with `saved = true AND
+// viewed_at >= CURRENT_DATE - 7d`. Because the recorder preserves viewed_at
+// on save (by design, to avoid inflating the 30d competition window), a
+// user saving today a lead they viewed 10 days ago would NOT be counted in
+// saves_7d. Migration 082 added a dedicated `saved_at` column so saves can
+// be counted independently of the view timestamp.
+//
+// The tests below lock the SQL shape of getEngagement so saves counts use
+// `saved_at` while views counts, unique_users, and the competition query
+// continue to use `viewed_at`.
+
+describe('getEngagement — saved_at filtering (WF3 Phase 3)', () => {
+  function captureQueries(): { pool: Pool; queries: string[] } {
+    const queries: string[] = [];
+    const mock = {
+      query: vi.fn((sql: string) => {
+        queries.push(sql);
+        // Return a shape that satisfies every destructure in getEngagement
+        return Promise.resolve({
+          rows: [{
+            views_today: '0',
+            views_7d: '0',
+            saves_today: '0',
+            saves_7d: '0',
+            unique_users: '0',
+            avg_competition: '0',
+            trade_slug: 'plumbing',
+            views: '0',
+            saves: '0',
+          }],
+        });
+      }),
+    };
+    return { pool: mock as unknown as Pool, queries };
+  }
+
+  // These tests assert the EXACT FILTER clauses that define each metric.
+  // Using `.toContain()` on the exact expression catches any drift where a
+  // metric alias gets bound to the wrong column. Adversarial review flagged
+  // that the earlier `[\s\S]*` regexes were matching by accident across
+  // query boundaries, so every assertion here is now a direct substring.
+
+  it('saves_7d filters on saved_at (NOT viewed_at)', async () => {
+    const { pool, queries } = captureQueries();
+    await getEngagement(pool);
+    const combined = queries.join('\n');
+    // Exact FILTER clause for saves_7d
+    expect(combined).toContain(
+      "COUNT(*) FILTER (WHERE saved = true AND saved_at >= CURRENT_DATE - INTERVAL '7 days') as saves_7d",
+    );
+    // Regression guard: the old (buggy) filter must NOT appear
+    expect(combined).not.toContain("saved = true AND viewed_at >= CURRENT_DATE - INTERVAL '7 days') as saves_7d");
+  });
+
+  it('saves_today filters on saved_at (NOT viewed_at)', async () => {
+    const { pool, queries } = captureQueries();
+    await getEngagement(pool);
+    const combined = queries.join('\n');
+    expect(combined).toContain(
+      'COUNT(*) FILTER (WHERE saved = true AND saved_at >= CURRENT_DATE) as saves_today',
+    );
+    expect(combined).not.toContain('saved = true AND viewed_at >= CURRENT_DATE) as saves_today');
+  });
+
+  it('views_today and views_7d continue to filter on viewed_at', async () => {
+    // Regression guard: Phase 3 must NOT accidentally switch view counts
+    // to saved_at. Users active recently (viewing leads) is a distinct
+    // metric from users saving recently.
+    const { pool, queries } = captureQueries();
+    await getEngagement(pool);
+    const combined = queries.join('\n');
+    expect(combined).toContain('COUNT(*) FILTER (WHERE viewed_at >= CURRENT_DATE) as views_today');
+    expect(combined).toContain(
+      "COUNT(*) FILTER (WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days') as views_7d",
+    );
+  });
+
+  it('unique_users_7d still anchors on viewed_at (users ACTIVE recently)', async () => {
+    // Per spec 76 §3.3 mental model: "unique users" in the engagement
+    // panel means "users who viewed leads recently", not "users who
+    // saved leads recently". Must keep viewed_at filter.
+    const { pool, queries } = captureQueries();
+    await getEngagement(pool);
+    const combined = queries.join('\n');
+    expect(combined).toContain(
+      "COUNT(DISTINCT user_id) FILTER (WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days') as unique_users",
+    );
+  });
+
+  it('competition query keeps viewed_at filter (30d window unchanged)', async () => {
+    // The avg_competition_per_lead inner query scopes by viewed_at so
+    // the 30-day "hot" window for competition counts is unchanged.
+    // Phase 3 explicitly preserves this — only save counts move to
+    // saved_at, NOT the competition math.
+    const { pool, queries } = captureQueries();
+    await getEngagement(pool);
+    // The competition sub-query is the 3rd query in the Promise.all array.
+    const competitionQuery = queries[2] ?? '';
+    expect(competitionQuery).toContain('GROUP BY lead_key');
+    expect(competitionQuery).toContain("WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days'");
+  });
+
+  it('trade breakdown uses disjunctive scoping (recent views OR recent saves)', async () => {
+    // Adversarial review finding: the initial Phase 3 implementation kept
+    // the outer `WHERE viewed_at >= 7d` on the trade breakdown, causing
+    // top_trades.saves to undercount relative to saves_7d. Fix: scope by
+    // either recent views OR recent saves so both metrics agree.
+    const { pool, queries } = captureQueries();
+    await getEngagement(pool);
+    const tradeQuery = queries[1] ?? '';
+    expect(tradeQuery).toContain(
+      "WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days'\n         OR (saved = true AND saved_at >= CURRENT_DATE - INTERVAL '7 days')",
+    );
   });
 });

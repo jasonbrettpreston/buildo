@@ -227,6 +227,92 @@ describe('recordLeadView — function behaviour', () => {
     expect(conflictClause).not.toContain('viewed_at = NOW()');
   });
 
+  it('action=save populates saved_at in BOTH the INSERT and the ON CONFLICT update (WF3 Phase 3)', async () => {
+    // WF3 Phase 3: the lead_views table gained a `saved_at` column in
+    // migration 082 so `getEngagement.saves_7d` can reflect recent save
+    // activity independently of the view timestamp. The recorder must
+    // populate it on save (both fresh insert and upsert-on-save).
+    //
+    // Adversarial review tightening: verify the exact CASE expression
+    // appears in the conflict clause — a loose `.toContain('saved_at')`
+    // would pass if a regression wrote `saved_at = NULL` unconditionally.
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    mock.query.mockResolvedValueOnce(qr([{ count: '0' }]));
+    await recordLeadView(
+      {
+        user_id: 'u1',
+        trade_slug: 'plumbing',
+        action: 'save',
+        lead_type: 'permit',
+        permit_num: '24 101234',
+        revision_num: '01',
+      },
+      mock as unknown as Pool,
+    );
+    const sql = String(mock.query.mock.calls[0]?.[0]);
+    // Fresh insert VALUES must include saved_at with a CASE expression.
+    expect(sql).toMatch(/CASE WHEN \$8 THEN NOW\(\) ELSE NULL END/);
+    // ON CONFLICT update must set saved_at via the CASE expression so
+    // save→NOW() and unsave→NULL in a single code path.
+    const conflictClause = sql.split('DO UPDATE')[1] ?? '';
+    expect(conflictClause).toMatch(/saved_at\s*=\s*CASE WHEN EXCLUDED\.saved THEN NOW\(\) ELSE NULL END/);
+  });
+
+  it('action=unsave sets saved_at = NULL in the ON CONFLICT update (WF3 Phase 3)', async () => {
+    // Semantic invariant: `saved = false` implies `saved_at IS NULL` (no
+    // active save timestamp on an unsaved lead). Unsave must clear
+    // saved_at, not leave it pointing at the previous save time.
+    //
+    // Uses exact CASE regex (not `.toContain('NULL')`) so a regression to
+    // `saved_at = NULL` hardcoded (which would break saves) is caught.
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    mock.query.mockResolvedValueOnce(qr([{ count: '0' }]));
+    await recordLeadView(
+      {
+        user_id: 'u1',
+        trade_slug: 'plumbing',
+        action: 'unsave',
+        lead_type: 'permit',
+        permit_num: '24 101234',
+        revision_num: '01',
+      },
+      mock as unknown as Pool,
+    );
+    const sql = String(mock.query.mock.calls[0]?.[0]);
+    const conflictClause = sql.split('DO UPDATE')[1] ?? '';
+    // Same single code path as save — the CASE expression handles both
+    // actions because `EXCLUDED.saved` comes from the $8 parameter which
+    // is false for unsave. A regression to unconditional NULL would break
+    // the save path and fail this regex.
+    expect(conflictClause).toMatch(/saved_at\s*=\s*CASE WHEN EXCLUDED\.saved THEN NOW\(\) ELSE NULL END/);
+  });
+
+  it('action=view does NOT mention saved_at in the upsert (WF3 Phase 3)', async () => {
+    // View upserts only refresh `viewed_at`. They must not touch
+    // `saved_at` at all — otherwise a view on a saved lead could reset
+    // the saved_at timestamp.
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    mock.query.mockResolvedValueOnce(qr([{ count: '0' }]));
+    await recordLeadView(
+      {
+        user_id: 'u1',
+        trade_slug: 'plumbing',
+        action: 'view',
+        lead_type: 'permit',
+        permit_num: '24 101234',
+        revision_num: '01',
+      },
+      mock as unknown as Pool,
+    );
+    const sql = String(mock.query.mock.calls[0]?.[0]);
+    const conflictClause = sql.split('DO UPDATE')[1] ?? '';
+    // View upserts do not touch saved_at on conflict — only viewed_at.
+    expect(conflictClause).not.toContain('saved_at');
+  });
+
   it('action=view does NOT regress saved state — uses non-saved-touching upsert', async () => {
     const mock = createMockPool();
     mock.query.mockResolvedValueOnce(qr([]));

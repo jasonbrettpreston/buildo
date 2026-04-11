@@ -75,9 +75,9 @@ export function buildLeadKey(input: RecordLeadViewInput): string {
  * than insert a new row. Spec 70 calls this an "upsert" not an event log.
  *
  * Action semantics:
- *   - 'view'   → upsert, refresh `viewed_at = NOW()`, preserve `saved`
- *   - 'save'   → upsert with `saved = true`,  **preserve existing `viewed_at`**
- *   - 'unsave' → upsert with `saved = false`, **preserve existing `viewed_at`**
+ *   - 'view'   → upsert, refresh `viewed_at = NOW()`, preserve `saved`, preserve `saved_at`
+ *   - 'save'   → upsert with `saved = true`,  set `saved_at = NOW()`, preserve existing `viewed_at`
+ *   - 'unsave' → upsert with `saved = false`, set `saved_at = NULL`,  preserve existing `viewed_at`
  *
  * Save/unsave deliberately do NOT update `viewed_at`. Spec 70 §Behavioral
  * Contract line 249: "Only count views, not saves — saves are private."
@@ -87,6 +87,12 @@ export function buildLeadKey(input: RecordLeadViewInput): string {
  * it recently. On first-insert via save (no prior view), `viewed_at` still
  * defaults to NOW() because the column is NOT NULL — edge case; in the UI
  * flow every save is preceded by a view.
+ *
+ * `saved_at` (migration 082, WF3 Phase 3) tracks the save timestamp
+ * INDEPENDENTLY of `viewed_at` so `getEngagement.saves_7d` can reflect
+ * recent save activity without refreshing `viewed_at`. Invariant:
+ * `saved = false` implies `saved_at IS NULL`. Set on save, cleared on
+ * unsave. Views do not touch it.
  *
  * After the upsert, returns the competition_count for the (lead_key,
  * trade_slug) pair from the last 30 days. Per spec 70 §API Endpoints
@@ -110,25 +116,38 @@ export async function recordLeadView(
 
     // 'view' should not regress a saved state — use COALESCE to keep the
     // existing `saved` value on the upsert path. 'save'/'unsave' force.
+    // View upserts NEVER touch `saved_at` — the save timestamp is only
+    // written or cleared by the save/unsave branches.
     if (input.action === 'view') {
       await pool.query(
         `INSERT INTO lead_views (
            user_id, lead_key, lead_type, permit_num, revision_num,
-           entity_id, trade_slug, viewed_at, saved
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), false)
+           entity_id, trade_slug, viewed_at, saved, saved_at
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), false, NULL)
          ON CONFLICT (user_id, lead_key, trade_slug) DO UPDATE
            SET viewed_at = NOW()`,
         [input.user_id, lead_key, input.lead_type, permit_num, revision_num, entity_id, input.trade_slug],
       );
     } else {
       const saved = input.action === 'save';
+      // `saved_at` follows the invariant: `saved = true → saved_at = NOW()`,
+      // `saved = false → saved_at = NULL`. The CASE expression inside the
+      // ON CONFLICT DO UPDATE runs per-row with EXCLUDED.saved referencing
+      // the new incoming value, and since we know the incoming value at
+      // the application layer we could just hardcode it — but keeping the
+      // CASE makes the invariant visible in the SQL itself and survives
+      // any future refactor that parameterizes `saved` differently.
       await pool.query(
         `INSERT INTO lead_views (
            user_id, lead_key, lead_type, permit_num, revision_num,
-           entity_id, trade_slug, viewed_at, saved
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)
+           entity_id, trade_slug, viewed_at, saved, saved_at
+         ) VALUES (
+           $1, $2, $3, $4, $5, $6, $7, NOW(), $8,
+           CASE WHEN $8 THEN NOW() ELSE NULL END
+         )
          ON CONFLICT (user_id, lead_key, trade_slug) DO UPDATE
-           SET saved = EXCLUDED.saved`,
+           SET saved = EXCLUDED.saved,
+               saved_at = CASE WHEN EXCLUDED.saved THEN NOW() ELSE NULL END`,
         [input.user_id, lead_key, input.lead_type, permit_num, revision_num, entity_id, input.trade_slug, saved],
       );
     }

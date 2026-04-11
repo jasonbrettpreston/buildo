@@ -352,23 +352,39 @@ export async function getCostCoverage(pool: Pool): Promise<CostCoverage> {
 }
 
 export async function getEngagement(pool: Pool): Promise<Engagement> {
+  // WF3 2026-04-10 Phase 3: saves counts use `saved_at` (migration 082)
+  // while views counts + unique_users stay on `viewed_at`. The competition
+  // sub-query also keeps `viewed_at` because it answers "leads a user
+  // might view next" — scoped by view recency is intentional.
+  //
+  // The daily-aggregation query loses its outer `WHERE viewed_at >=
+  // CURRENT_DATE - INTERVAL '7 days'` clause because each metric filter
+  // is now independently scoped (views by viewed_at, saves by saved_at,
+  // unique_users by viewed_at). A lead saved today but viewed 30 days
+  // ago would have been excluded by the outer WHERE.
   const [dailyRes, tradesRes, competitionRes] = await Promise.all([
     pool.query(`
       SELECT
         COUNT(*) FILTER (WHERE viewed_at >= CURRENT_DATE) as views_today,
-        COUNT(*) as views_7d,
-        COUNT(*) FILTER (WHERE saved = true AND viewed_at >= CURRENT_DATE) as saves_today,
-        COUNT(*) FILTER (WHERE saved = true) as saves_7d,
-        COUNT(DISTINCT user_id) as unique_users
+        COUNT(*) FILTER (WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days') as views_7d,
+        COUNT(*) FILTER (WHERE saved = true AND saved_at >= CURRENT_DATE) as saves_today,
+        COUNT(*) FILTER (WHERE saved = true AND saved_at >= CURRENT_DATE - INTERVAL '7 days') as saves_7d,
+        COUNT(DISTINCT user_id) FILTER (WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days') as unique_users
       FROM lead_views
-      WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days'
     `),
     pool.query(`
+      -- Trade breakdown: a trade appears if it has EITHER recent views OR
+      -- recent saves. Scoping by viewed_at alone would drop saves on old-
+      -- viewed leads (the same class of bug fixed in the daily aggregation
+      -- above). Each FILTER then scopes its own metric independently so
+      -- top_trades.saves matches saves_7d semantically. Adversarial review
+      -- flagged this inconsistency in the first Phase 3 pass.
       SELECT trade_slug,
-             COUNT(*) as views,
-             COUNT(*) FILTER (WHERE saved = true) as saves
+             COUNT(*) FILTER (WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days') as views,
+             COUNT(*) FILTER (WHERE saved = true AND saved_at >= CURRENT_DATE - INTERVAL '7 days') as saves
       FROM lead_views
       WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days'
+         OR (saved = true AND saved_at >= CURRENT_DATE - INTERVAL '7 days')
       GROUP BY trade_slug
       ORDER BY views DESC
       LIMIT 10

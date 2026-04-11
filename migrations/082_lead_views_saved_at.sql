@@ -1,0 +1,64 @@
+-- Migration 082 — lead_views.saved_at column + partial index
+-- 🔗 SPEC LINK: docs/specs/product/admin/76_lead_feed_health_dashboard.md §3.3
+--            (Dashboard UI — engagement metrics)
+--
+-- BACKGROUND:
+-- Migration 070 created `lead_views` with a single timestamp column `viewed_at`
+-- that is updated on every view but preserved on save/unsave (see
+-- src/features/leads/lib/record-lead-view.ts:82-89 for the rationale — the
+-- competition count query scopes by `viewed_at > NOW() - INTERVAL '30 days'`
+-- and refreshing on save would artificially keep a lead "hot" in the
+-- competition window for users who hadn't actually looked at it recently).
+--
+-- The consequence was a silent engagement-metric bug flagged by external
+-- review 2026-04-10 (Antigravity "Silent Engagement Dropping"): a user who
+-- views a lead on day 1 and saves it on day 10 has a lead_views row with
+-- `viewed_at = day 1`, placing it outside the `getEngagement` query's 7-day
+-- window (`WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days'`). The save
+-- is NOT counted in `saves_7d` or `saves_today` even though it happened
+-- recently. The dashboard understates real engagement activity.
+--
+-- THE FIX: Add a nullable `saved_at` column that tracks the timestamp of
+-- the save action independently of `viewed_at`. Backfill existing `saved =
+-- true` rows with `viewed_at` as the best-effort historical attribution.
+-- New saves populate `saved_at = NOW()`; unsaves reset it to NULL.
+-- `getEngagement` will filter saves counts by `saved_at` instead of
+-- `viewed_at`, while keeping view counts and unique_users on `viewed_at`.
+-- Competition count continues to use `viewed_at` (the window-scoping logic
+-- that motivated the original design is unchanged).
+--
+-- SAFETY:
+-- - Additive column (ADD COLUMN) — no data loss risk, no lock on reads.
+-- - Backfill UPDATE is atomic in a single statement. `lead_views` is a
+--   relatively small new table (migration 070 is recent), so the update
+--   runs in seconds with no practical lock concern even on dev.
+-- - Partial index on `(saved_at) WHERE saved = true` is created
+--   CONCURRENTLY in production per ADR 004 (the in-migration command uses
+--   the non-CONCURRENT form for dev simplicity; operators run the
+--   CONCURRENT version in prod).
+-- - Nullable column allows existing code to continue functioning during
+--   the migration window without errors. Code that uses `saved_at` must
+--   handle NULL gracefully (e.g., unsave rows have `saved = false AND
+--   saved_at IS NULL` after migration 082).
+--
+-- OPERATOR RUNBOOK (production):
+--
+--   BEGIN;
+--     ALTER TABLE lead_views ADD COLUMN saved_at timestamp with time zone;
+--     UPDATE lead_views SET saved_at = viewed_at WHERE saved = true;
+--   COMMIT;
+--   CREATE INDEX CONCURRENTLY idx_lead_views_saved_at
+--     ON lead_views (saved_at) WHERE saved = true;
+--
+-- The in-migration commands below are the simpler non-transactional form
+-- for dev. `IF NOT EXISTS` / `IF EXISTS` make this idempotent.
+
+-- UP
+ALTER TABLE lead_views ADD COLUMN IF NOT EXISTS saved_at timestamp with time zone;
+UPDATE lead_views SET saved_at = viewed_at WHERE saved = true AND saved_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_lead_views_saved_at
+  ON lead_views (saved_at) WHERE saved = true;
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_lead_views_saved_at;
+-- ALTER TABLE lead_views DROP COLUMN IF EXISTS saved_at;
