@@ -7,6 +7,7 @@
 
 import type { NextRequest } from 'next/server';
 import { logError, logWarn } from '@/lib/logger';
+import { isDevMode, DEV_SESSION_COOKIE } from '@/lib/auth/route-guard';
 
 // Lazy-import firebase-admin so dev without admin keys doesn't crash on import.
 /**
@@ -36,6 +37,25 @@ export async function verifyIdTokenCookie(
   if (!cookie) return null;
   // Quick shape check: must look like a JWT (3 segments)
   if (cookie.split('.').length !== 3) return null;
+
+  // WF3 2026-04-11 Bug #2 fix: dev-mode bypass. The middleware injects
+  // DEV_SESSION_COOKIE when DEV_MODE=true so the browser (and now,
+  // after Bug #1 fix, the current-request Server Component) see a
+  // session. Skip Firebase verification for this exact fake cookie and
+  // return a stable dev uid — the real flow would reject it because
+  // it's not a Google-signed JWT.
+  //
+  // Security: scoped to isDevMode() (reads server-only DEV_MODE env
+  // var, NEVER NEXT_PUBLIC_*) AND exact-match DEV_SESSION_COOKIE. A
+  // production build with DEV_MODE unset takes the normal Firebase
+  // path. A dev build receiving a REAL Firebase token (e.g., dev testing
+  // with their own account) ALSO takes the normal path because the
+  // cookie value doesn't match DEV_SESSION_COOKIE exactly. Regression
+  // tests in src/tests/auth-get-user.logic.test.ts lock these
+  // properties in place.
+  if (isDevMode() && cookie === DEV_SESSION_COOKIE) {
+    return 'dev-user';
+  }
 
   try {
     const admin = await import('firebase-admin');

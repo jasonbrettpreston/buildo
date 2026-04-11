@@ -237,6 +237,17 @@ describe('Dev Mode', () => {
     expect(isDevMode()).toBe(false);
   });
 
+  it('isDevMode returns false when NODE_ENV=production, EVEN WITH DEV_MODE=true (WF3 2026-04-11 adversarial defense-in-depth)', () => {
+    // Defense-in-depth layer 2: if an operator somehow sets DEV_MODE=true
+    // in a production deployment, the NODE_ENV guard prevents auth
+    // bypass activation. Both flags must agree.
+    const prevNodeEnv = process.env.NODE_ENV;
+    (process.env as Record<string, string>).NODE_ENV = 'production';
+    process.env.DEV_MODE = 'true';
+    expect(isDevMode()).toBe(false);
+    (process.env as Record<string, string>).NODE_ENV = prevNodeEnv ?? 'test';
+  });
+
   it('DEV_SESSION_COOKIE is a valid JWT-shaped string', () => {
     expect(DEV_SESSION_COOKIE).toBeDefined();
     const parts = DEV_SESSION_COOKIE.split('.');
@@ -265,5 +276,106 @@ describe('Security Files', () => {
   it('src/lib/auth/route-guard.ts exists', () => {
     const filePath = path.join(__dirname, '../lib/auth/route-guard.ts');
     expect(fs.existsSync(filePath)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Middleware — dev-mode cookie visibility to Server Components
+// (WF3 2026-04-11 — Bug #1 fix)
+// ---------------------------------------------------------------------------
+// Next.js middleware can either set cookies on the OUTGOING response (browser
+// stores for the NEXT request) or mutate the INCOMING request (current-request
+// Server Components see the value). For a dev-mode bypass where we want the
+// user to land directly on a protected page on the first navigation, we MUST
+// do BOTH: mutate the request so the current Server Component reads it, AND
+// set the response so the browser persists it for subsequent navigations.
+//
+// The prior implementation only set on response — Server Components saw no
+// cookie on the first navigation and redirected to /login. These file-shape
+// tests lock the fix in place: the middleware must call request.cookies.set
+// BEFORE NextResponse.next({ request }) AND also set on the response.
+
+describe('Middleware dev-mode cookie injection (Bug #1 regression lock)', () => {
+  const middlewareSource = fs.readFileSync(
+    path.join(__dirname, '../middleware.ts'),
+    'utf-8',
+  );
+
+  it('mutates the incoming request cookies in the dev-mode branch', () => {
+    // Must call request.cookies.set so downstream Server Components
+    // read the dev cookie from `cookies()` in next/headers.
+    expect(middlewareSource).toMatch(
+      /request\.cookies\.set\(\s*SESSION_COOKIE_NAME\s*,\s*DEV_SESSION_COOKIE\s*\)/,
+    );
+  });
+
+  it('forwards modified request headers to NextResponse.next in the dev-mode branch', () => {
+    // Must pass { request: { headers: request.headers } } to
+    // NextResponse.next so the Server Component runtime sees the
+    // mutated cookie header, not the pristine original. Use a
+    // substring check rather than a strict object-literal regex so
+    // the test tolerates trailing commas / formatting variations.
+    expect(middlewareSource).toContain('NextResponse.next({');
+    expect(middlewareSource).toContain('request: { headers: request.headers }');
+  });
+
+  it('still sets cookie on the outgoing response for browser persistence', () => {
+    // Belt-and-braces: the browser needs to persist the cookie for
+    // subsequent navigations so the response.cookies.set stays.
+    expect(middlewareSource).toContain('response.cookies.set(SESSION_COOKIE_NAME, DEV_SESSION_COOKIE');
+  });
+
+  it('places request.cookies.set BEFORE NextResponse.next in the source', () => {
+    // Ordering check: mutating the cookies AFTER calling next() would
+    // be too late — headers are already snapshotted. A regression that
+    // swapped the order would silently re-introduce Bug #1.
+    const requestSetIdx = middlewareSource.indexOf('request.cookies.set(SESSION_COOKIE_NAME');
+    const nextCallIdx = middlewareSource.indexOf('NextResponse.next({');
+    expect(requestSetIdx).toBeGreaterThan(-1);
+    expect(nextCallIdx).toBeGreaterThan(-1);
+    expect(requestSetIdx).toBeLessThan(nextCallIdx);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Leads page dev-mode profile seed (WF3 2026-04-11 Bug #3 regression lock)
+// ---------------------------------------------------------------------------
+// In dev mode, user_profiles may be empty on a fresh local DB. Without a
+// dev-mode convenience seed, the leads page redirects to /onboarding —
+// which is a client-only mockup that doesn't persist anything, creating a
+// dead-end loop. The fix: when tradeSlug lookup returns empty AND we're in
+// dev mode with uid === 'dev-user', UPSERT a default profile and proceed.
+// These tests lock the shape of the fix in place.
+
+describe('Leads page dev seed (Bug #3 regression lock)', () => {
+  const leadsPageSource = fs.readFileSync(
+    path.join(__dirname, '../app/leads/page.tsx'),
+    'utf-8',
+  );
+
+  it('imports isDevMode from route-guard', () => {
+    expect(leadsPageSource).toContain('isDevMode');
+    expect(leadsPageSource).toContain("from '@/lib/auth/route-guard'");
+  });
+
+  it('has a dev-mode branch that checks uid === "dev-user" before redirecting to onboarding', () => {
+    // Gate: the seed fires ONLY when BOTH isDevMode() is true AND
+    // uid === 'dev-user'. Either condition false → fall through to the
+    // normal redirect path.
+    expect(leadsPageSource).toMatch(/isDevMode\(\)\s*&&\s*uid\s*===\s*['"]dev-user['"]/);
+  });
+
+  it('UPSERTs dev-user into user_profiles with ON CONFLICT DO NOTHING', () => {
+    // Idempotent seed: first visit creates the row, subsequent visits
+    // are a no-op via the conflict clause.
+    expect(leadsPageSource).toContain('INSERT INTO user_profiles');
+    expect(leadsPageSource).toContain("'dev-user'");
+    expect(leadsPageSource).toContain('ON CONFLICT (user_id) DO NOTHING');
+  });
+
+  it('preserves the normal /onboarding redirect path for non-dev users', () => {
+    // Regression guard: production (non-dev) users without a profile
+    // must still redirect to /onboarding. The dev branch is additive.
+    expect(leadsPageSource).toContain("redirect('/onboarding')");
   });
 });

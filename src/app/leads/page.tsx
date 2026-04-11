@@ -23,6 +23,7 @@ import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { pool } from '@/lib/db/client';
 import { verifyIdTokenCookie } from '@/lib/auth/get-user';
+import { isDevMode } from '@/lib/auth/route-guard';
 import { logError } from '@/lib/logger';
 import { LeadsClientShell } from './LeadsClientShell';
 
@@ -67,7 +68,36 @@ export default async function LeadsPage() {
     throw err;
   }
   if (!tradeSlug) {
-    redirect('/onboarding');
+    // WF3 2026-04-11 Bug #3 fix: dev-mode convenience seed. On a fresh
+    // local DB, user_profiles is empty, and without this branch /leads
+    // redirects to /onboarding — which is a client-only mockup that
+    // doesn't persist anything, creating a dead-end. UPSERT a default
+    // dev-user profile so /leads is usable out of the box. Gated on
+    // BOTH isDevMode() (server-only DEV_MODE env var, prod-guarded via
+    // NODE_ENV check) AND uid matches the dev bypass value from
+    // verifyIdTokenCookie, so the production path is unreachable.
+    // Default trade_slug is arbitrary — the user can change it later
+    // via direct psql or a future onboarding flow that actually
+    // persists.
+    if (isDevMode() && uid === 'dev-user') {
+      try {
+        await pool.query(
+          `INSERT INTO user_profiles (user_id, trade_slug, display_name)
+           VALUES ('dev-user', 'plumbing', 'Dev User')
+           ON CONFLICT (user_id) DO NOTHING`,
+        );
+      } catch (err) {
+        // Per engineering standards §Backend Rules: every DB call must
+        // route errors through logError. This branch is dev-only but
+        // the mandate is universal. Re-throw to the error boundary so
+        // the operator sees a clear stack trace.
+        logError('[leads/page]', err, { stage: 'dev-user-seed' });
+        throw err;
+      }
+      tradeSlug = 'plumbing';
+    } else {
+      redirect('/onboarding');
+    }
   }
 
   return <LeadsClientShell tradeSlug={tradeSlug} />;

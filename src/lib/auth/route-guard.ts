@@ -12,18 +12,25 @@ export type RouteClass = 'public' | 'authenticated' | 'admin';
  * When enabled, middleware auto-injects a dev session cookie so all routes
  * are accessible without Firebase authentication.
  *
- * Defense-in-depth (Phase 3-holistic WF3 Phase C, 2026-04-09 — Gemini
- * Phase 0-3 HIGH): previously read `NEXT_PUBLIC_DEV_MODE`, which Next.js
- * inlines into the client bundle. A misconfigured production build with
- * that flag set would bypass auth for ALL users. The security-critical
- * middleware check now reads the non-public `DEV_MODE` var; the login
- * page's cosmetic "Continue as Dev" button still reads
- * `NEXT_PUBLIC_DEV_MODE` so developers see the button locally, but even
- * if that leaks into a prod bundle the middleware still enforces real
- * auth because `DEV_MODE` is server-only.
+ * Defense-in-depth layer 1 (Phase 3-holistic WF3 Phase C, 2026-04-09):
+ * previously read `NEXT_PUBLIC_DEV_MODE`, which Next.js inlines into the
+ * client bundle. The security-critical middleware check now reads the
+ * non-public `DEV_MODE` var; the login page's cosmetic "Continue as Dev"
+ * button still reads `NEXT_PUBLIC_DEV_MODE` so developers see the button
+ * locally, but even if that leaks into a prod bundle the middleware still
+ * enforces real auth because `DEV_MODE` is server-only.
+ *
+ * Defense-in-depth layer 2 (WF3 2026-04-11 adversarial review): an AND
+ * guard on `NODE_ENV !== 'production'`. A single operator mistake of
+ * setting `DEV_MODE=true` in production would otherwise silently disable
+ * all auth (middleware injects fake cookie, verifier returns dev-user,
+ * leads page seeds dev-user profile). The NODE_ENV check ensures dev
+ * mode requires BOTH a server-only flag AND a non-production build,
+ * reducing the blast radius of misconfiguration from "one flag" to
+ * "two independent misconfigurations at the same time".
  */
 export function isDevMode(): boolean {
-  return process.env.DEV_MODE === 'true';
+  return process.env.NODE_ENV !== 'production' && process.env.DEV_MODE === 'true';
 }
 
 /** A valid JWT-shaped cookie value used in dev mode to satisfy session checks. */

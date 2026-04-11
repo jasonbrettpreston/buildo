@@ -19,6 +19,7 @@
 import type { NextRequest } from 'next/server';
 import type { Pool } from 'pg';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
+import { isDevMode } from '@/lib/auth/route-guard';
 import { logError } from '@/lib/logger';
 
 export interface UserContext {
@@ -44,6 +45,21 @@ export async function getCurrentUserContext(
   if (!uid) return null;
 
   try {
+    // WF3 2026-04-11 dev-env symmetry: if the dev bypass returned
+    // 'dev-user' but user_profiles is empty (fresh local DB and the
+    // operator hit an API route before visiting /leads to trigger the
+    // page-level seed), UPSERT a default profile here so API routes
+    // return 200 instead of a confusing 401. Gated on the same
+    // (isDevMode() && uid === 'dev-user') as the leads page seed so
+    // production is unreachable. Idempotent via ON CONFLICT DO NOTHING.
+    if (isDevMode() && uid === 'dev-user') {
+      await pool.query(
+        `INSERT INTO user_profiles (user_id, trade_slug, display_name)
+         VALUES ('dev-user', 'plumbing', 'Dev User')
+         ON CONFLICT (user_id) DO NOTHING`,
+      );
+    }
+
     const res = await pool.query<{ trade_slug: string; display_name: string | null }>(
       `SELECT trade_slug, display_name FROM user_profiles WHERE user_id = $1`,
       [uid],

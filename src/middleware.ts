@@ -39,8 +39,22 @@ export function middleware(request: NextRequest) {
   if (isDevMode()) {
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
     if (!sessionCookie) {
-      // Set the dev cookie so downstream code sees a valid session
-      const response = NextResponse.next();
+      // WF3 2026-04-11 fix: the dev cookie must be visible BOTH to the
+      // downstream Server Components of the CURRENT request AND to the
+      // browser for subsequent navigations. Setting it only on the
+      // outgoing response (the prior implementation) meant Server
+      // Components on the first navigation saw no cookie and redirected
+      // to /login. The Next.js canonical pattern is:
+      //   1. Mutate request.cookies so the incoming request carries it
+      //   2. Pass the modified request.headers through NextResponse.next
+      //      so downstream handlers see the mutated cookie header
+      //   3. Also set on the outgoing response so the browser persists
+      //      it for subsequent requests (belt-and-braces — step 1+2
+      //      cover the current request only).
+      request.cookies.set(SESSION_COOKIE_NAME, DEV_SESSION_COOKIE);
+      const response = NextResponse.next({
+        request: { headers: request.headers },
+      });
       response.cookies.set(SESSION_COOKIE_NAME, DEV_SESSION_COOKIE, {
         httpOnly: true,
         secure: false,
