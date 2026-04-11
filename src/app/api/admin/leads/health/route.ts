@@ -24,9 +24,31 @@ export async function GET() {
       getEngagement(pool),
     ]);
 
+    // WF3 2026-04-10 Phase 1: derive the permit-scoped coverage metric from
+    // values already fetched by getLeadFeedReadiness. Keeps the extra metric
+    // free of any new DB round-trips. Guards against division-by-zero on a
+    // fresh DB (active_permits === 0).
+    //
+    // Predicate mismatch note: `permits_with_cost` counts cost_estimates
+    // rows with `estimated_cost IS NOT NULL` (any permit status); while
+    // `active_permits` counts permits in the ADMIN_ACTIVE status inclusion
+    // list. If cost_estimates lags behind permit cancellations, the numerator
+    // can include rows for permits that are now Cancelled/Revoked/Closed,
+    // producing a value > 100%. The display is NOT capped — showing > 100%
+    // is an honest signal that the cost cache has drifted from the permit
+    // state, which is actionable information. Capping would hide the drift.
+    // (Flagged by adversarial + independent reviews; scope-limited per
+    // review_followups.md.)
+    const coveragePctVsActivePermits = readiness.active_permits > 0
+      ? Math.round((readiness.permits_with_cost / readiness.active_permits) * 1000) / 10
+      : 0;
+
     const response: LeadFeedHealthResponse = {
       readiness,
-      cost_coverage: costCoverage,
+      cost_coverage: {
+        ...costCoverage,
+        coverage_pct_vs_active_permits: coveragePctVsActivePermits,
+      },
       engagement,
       performance: {
         avg_latency_ms: null,

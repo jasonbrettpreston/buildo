@@ -51,7 +51,19 @@ function getTrafficLight(
   timingFreshnessHours: number | null,
   costCoverageTotal: number,
 ): { label: string; color: string; bgClass: string } {
-  const isTimingStale = timingFreshnessHours !== null && timingFreshnessHours > 48;
+  // WF3 2026-04-10 Phase 1: treat `null` timing as stale, not as "never
+  // calibrated and therefore fine". Null means the timing_calibration cron
+  // has never run OR the table was truncated — both are failure states that
+  // must surface in the traffic light, not hide behind GREEN. External
+  // review (Antigravity) flagged this as "Missing-Cron Green Light".
+  //
+  // Spec 76 §3.3: GREEN requires `timing_freshness_hours < 48` (strict).
+  // So the stale boundary must be `>= 48` (inclusive) — exactly 48.0h is
+  // stale, not fresh. This also aligns with `getTimingFreshnessClass` below
+  // which uses `hours <= 48` for yellow (the badge and traffic light must
+  // agree at the boundary). Adversarial review found the pre-fix `> 48`
+  // disagreed with the badge at 48.0 exactly.
+  const isTimingStale = timingFreshnessHours === null || timingFreshnessHours >= 48;
 
   if (feedReadyPct < 50 || costCoverageTotal === 0) {
     return { label: 'RED', color: 'red', bgClass: 'bg-red-500' };
@@ -356,11 +368,39 @@ export function LeadFeedHealthDashboard() {
           Section 2: Cost & Timing Coverage
       ================================================================ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Cost coverage */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
+        {/* Cost coverage — dual denominator (WF3 2026-04-10 Phase 1).
+            `coverage_pct_vs_active_permits` is the headline metric for
+            "how much of the real permit universe is costed"; `coverage_pct`
+            is secondary and measures cache cleanliness. Both are shown so
+            operators can spot divergence (e.g., 94% cache + 60% permits
+            means the cache is clean but sparse). */}
+        <div
+          data-testid="cost-coverage-section"
+          className="bg-white rounded-xl border border-gray-200 p-4 md:p-6"
+        >
           <h2 className="text-lg font-bold text-gray-900 mb-4">Cost Coverage</h2>
-          <p className="text-3xl font-bold text-gray-900 mb-1">{cost_coverage.coverage_pct}%</p>
-          <p className="text-xs text-gray-500 mb-4">{formatNumber(cost_coverage.total)} total estimates</p>
+
+          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 mb-1">
+            <div>
+              <p className="text-3xl font-bold text-gray-900 tabular-nums">
+                {cost_coverage.coverage_pct_vs_active_permits}%
+              </p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider">
+                Permit coverage
+              </p>
+            </div>
+            <div>
+              <p className="text-xl font-semibold text-gray-600 tabular-nums">
+                {cost_coverage.coverage_pct}%
+              </p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider">
+                Cache coverage
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mb-4">
+            {formatNumber(cost_coverage.total)} estimates in cache
+          </p>
 
           <div className="space-y-2">
             <CostRow label="Permit-Reported" count={cost_coverage.from_permit} total={cost_coverage.total} color="bg-blue-500" />

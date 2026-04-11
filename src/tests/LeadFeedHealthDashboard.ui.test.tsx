@@ -72,6 +72,8 @@ function makeHealthResponse(overrides?: Partial<LeadFeedHealthResponse>): LeadFe
       from_model: 2800,
       null_cost: 400,
       coverage_pct: 94.4,
+      // 7200 - 400 = 6800 cost-populated rows out of 10000 active permits = 68.0%
+      coverage_pct_vs_active_permits: 68.0,
     },
     engagement: {
       views_today: 45,
@@ -217,7 +219,36 @@ describe('Section 1 — Feed Readiness Gauge', () => {
     });
   });
 
-  it('shows GREEN when timing_freshness_hours is null and pct > 80', async () => {
+  it('shows YELLOW at the exact 48.0h timing boundary (spec: GREEN requires <48)', async () => {
+    // WF3 Phase 1 adversarial review finding: the pre-fix code used
+    // `timingFreshnessHours > 48` for the stale check, letting exactly 48.0h
+    // produce GREEN. Spec §3.3 requires `< 48` (strict) for GREEN, so 48.0
+    // must be YELLOW. This also aligns with `getTimingFreshnessClass` which
+    // uses `<= 48` for yellow — badge and traffic light now agree at the
+    // boundary.
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(makeHealthResponse({
+        readiness: {
+          ...makeHealthResponse().readiness,
+          feed_ready_pct: 85.0,
+          timing_freshness_hours: 48.0,
+        },
+      })),
+    });
+    await renderDashboard();
+    await waitFor(() => {
+      const el = screen.getByTestId('traffic-light');
+      expect(el.textContent).toContain('YELLOW');
+    });
+  });
+
+  it('shows YELLOW when timing_freshness_hours is null (cron vanished) even if pct > 80', async () => {
+    // Previous behavior: null = "never calibrated" was treated as non-stale,
+    // producing GREEN. External review 2026-04-10 (Antigravity) flagged this
+    // as the "Missing-Cron Green Light" bug: if the timing_calibration cron
+    // dies or the table truncates, the dashboard should SURFACE the failure,
+    // not hide it behind a green light. WF3 Phase 1 treats null as stale.
     fetchMock.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(makeHealthResponse({
@@ -231,8 +262,7 @@ describe('Section 1 — Feed Readiness Gauge', () => {
     await renderDashboard();
     await waitFor(() => {
       const el = screen.getByTestId('traffic-light');
-      // null timing = "never calibrated" treated as non-stale for traffic light
-      expect(el.textContent).toContain('GREEN');
+      expect(el.textContent).toContain('YELLOW');
     });
   });
 
@@ -250,6 +280,7 @@ describe('Section 1 — Feed Readiness Gauge', () => {
           from_model: 0,
           null_cost: 0,
           coverage_pct: 0,
+          coverage_pct_vs_active_permits: 0,
         },
       })),
     });
@@ -300,6 +331,29 @@ describe('Section 2 — Cost & Timing Coverage', () => {
       expect(costSection.textContent).toContain('Model-Estimated');
       expect(costSection.textContent).toContain('4,000');
       expect(costSection.textContent).toContain('2,800');
+    });
+  });
+
+  it('shows BOTH cost coverage percentages — cache-scoped and permit-scoped', async () => {
+    // WF3 Phase 1 (external review Claim 9): the dashboard previously showed
+    // only `coverage_pct` which measures coverage WITHIN the cost_estimates
+    // cache, not coverage over the active-permits universe. A sparse cache
+    // could show 95% "coverage" while only 60% of real permits had costs.
+    // This test asserts both metrics render with clear labels so operators
+    // can see the divergence.
+    await renderDashboard();
+    await waitFor(() => {
+      const costSection = screen.getByTestId('cost-coverage-section');
+      // Fixture: coverage_pct = 94.4% (within cache)
+      expect(costSection.textContent).toContain('94.4%');
+      // Fixture: coverage_pct_vs_active_permits = 68.0% (vs active permits)
+      expect(costSection.textContent).toContain('68%');
+      // Both labels must be present with EXACT strings. Using exact-text
+      // matches here (not regex) because the section also contains
+      // "Permit-Reported" from the breakdown rows — a regex `/permit/i`
+      // would match both and the assertion would be meaningless.
+      expect(costSection.textContent).toContain('Permit coverage');
+      expect(costSection.textContent).toContain('Cache coverage');
     });
   });
 

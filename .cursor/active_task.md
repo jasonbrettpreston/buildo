@@ -1,124 +1,154 @@
-# Active Task: Debug lead feed health 500 regression
-**Status:** Planning
-**Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `8528f164` (8528f164534fd3ebb8fd4f3a9d349f43547dcb03)
+# Active Task: Dashboard review bundle — null-timing, pool cache, saved_at, cost coverage
+**Status:** Phase 1 — Red Light
+**Workflow:** WF3 — Bug Fix (3-phase bundle)
+**Rollback Anchor:** `1321b972` (1321b972dee3f536360b886ff843301d565ba57a)
+**Domain Mode:** Cross-Domain (frontend component + backend API lib + database migration)
 
 ## Context
-* **Goal:** User reports `/admin/lead-feed` dashboard shows "Failed to load lead feed health: Internal server error". Previous WF3 commit `8528f164` added 7 new queries to `getLeadFeedReadiness`; all pass unit tests but the live endpoint returns 500.
-* **Target Specs:**
-  - `docs/specs/product/admin/76_lead_feed_health_dashboard.md` §3.1
-* **Key Files:**
-  - `src/app/api/admin/leads/health/route.ts` — handler with try/catch
-  - `src/lib/admin/lead-feed-health.ts` — `getLeadFeedReadiness`, `getCostCoverage`, `getEngagement`
-  - `src/lib/db/client.ts` — shared pool (no explicit `max`, defaults to 10)
-  - `src/lib/logger.ts` — `logError` that the route uses
+External review `docs/reports/lead_feed_health_dashboard_review.md` (Antigravity, 2026-04-10) graded the dashboard D. Validated all 10 claims: **4 real bugs** (2, 3, 7, 9), **6 false positives** (1, 4, 5, 6, 8, 10).
 
-## State Verification (completed during investigation)
+**Target specs:**
+- `docs/specs/product/admin/76_lead_feed_health_dashboard.md` §2.1, §3.3, §3.5
+- `docs/specs/00_engineering_standards.md` §1, §2, §3, §7, §10, §12
 
-Curl results against `http://localhost:3000` with dev server (PID 28416) running:
+## Phase Structure — 3 commits, 3 review cycles
 
-| Endpoint | Status | Notes |
-|----------|--------|-------|
-| `/api/admin/stats` | **200 OK** | 173KB response — data quality dashboard source works |
-| `/api/quality` | **200 OK** | Quality snapshots work |
-| `/api/admin/leads/health` | **500** | `{error:"Internal server error"}` — THE BUG |
-| `/api/admin/leads/test-feed?lat=43.6532&lng=-79.3832&trade_slug=plumbing` | **500** | `{error:{code:"INTERNAL_ERROR",message:"Feed query failed"}}` — expected, PostGIS not installed locally |
+Sequential: Phase 1 → Phase 2 → Phase 3. Each phase runs its own red-light / implement / self-checklist / independent review / adversarial review / triage / commit cycle on a clean working tree.
 
-All 14 SQL queries from `getLeadFeedReadiness` were tested individually against the DB via `psql`. Every one of them returns valid data:
-- feed_active: 234,842
-- classified_active: 103,014
-- with_phase: 103,014
-- with_timing_calibration_match: 143,997
-- opportunity breakdown: permit_issued=52687, inspection=140493, application=0, other_active=41662
-- feed_eligible: 92,485
-- builders_feed_eligible: 618
-- neighbourhoods: total=158, active_with_nbhd=222,751
-- engagement (`avg_competition_per_lead`): 0 (empty lead_views table)
-- cost_coverage: (verified in previous WF3)
+---
 
-**Conclusion:** the underlying SQL works. Something in the Next.js runtime path is failing — this is NOT a schema or query bug.
+## Phase 1 — Honest Signaling (UI/display logic, zero infra risk)
 
-## Hypotheses (ranked by likelihood)
+**Status:** In progress
 
-### H1 — Next.js dev server is serving stale compiled code (HIGH likelihood, ~50%)
-The previous commit changed the module interface (`LeadFeedReadiness` got 8 new required fields). If the dev server's HMR hot-reloaded the lib but not the route handler (or vice-versa), the route may be running a stale version that references a removed path, OR the response serializer fails because the return shape doesn't match the `LeadFeedHealthResponse` type. **Test:** kill the dev server and restart it. If 500 goes away, we need no code change — but we should still investigate why HMR failed.
+**Fixes:**
+- **Claim 2** (REAL MED): `getTrafficLight` treats `timing_freshness_hours === null` as not-stale → dashboard goes GREEN when the timing_calibration cron has vanished or truncated. Fix: treat `null` as stale.
+- **Claim 4** (PARTIALLY REAL LOW): `getCostCoverage` measures coverage within `cost_estimates` cache, not over the full active-permits universe. Fix: add a derived `coverage_pct_vs_active_permits` computed in the route handler (zero new DB load — uses values already fetched by `getLeadFeedReadiness` + `getCostCoverage`).
 
-### H2 — Response payload contains invalid JSON (BigInt, Infinity, NaN) (MED likelihood, ~20%)
-`NextResponse.json(...)` uses `JSON.stringify`, which throws on BigInt or non-finite numbers. `COUNT(DISTINCT (pt.permit_num, pt.revision_num))` returns a Postgres `bigint` type — `parseInt` at the read site coerces it to a number, but what if one of the new queries returns a bigger-than-`Number.MAX_SAFE_INTEGER` value, or what if a query returns `null` for an aggregate that `parseInt` then coerces to `NaN`? The `timing_freshness_hours` NULL path is already guarded, but the other new fields may not be.
+**Files:**
+- `src/components/LeadFeedHealthDashboard.tsx` — `getTrafficLight` null treatment + UI shows both cost percentages
+- `src/lib/admin/lead-feed-health.ts` — `CostCoverage` interface adds `coverage_pct_vs_active_permits: number`
+- `src/app/api/admin/leads/health/route.ts` — compute derived metric from already-fetched readiness/cost values, inject into response
+- `src/tests/LeadFeedHealthDashboard.ui.test.tsx` — null-timing → YELLOW assertion + dual cost metric render
+- `src/tests/lead-feed-health.logic.test.ts` — dual metric presence in response shape
+- `docs/specs/product/admin/76_lead_feed_health_dashboard.md` — spec §3.3 null-timing clarification + §2.1 dual denominator doc
 
-### H3 — Pool exhaustion (MED likelihood, ~15%)
-With 14 concurrent queries against a default pool size of 10, the 4 excess queries queue. If the dashboard is actively polling (10s interval), TWO simultaneous `getLeadFeedReadiness` invocations = 28 connections queued on a 10-slot pool. The `connectionTimeoutMillis: 5000` in `src/lib/db/client.ts` would cause excess waits to throw `timeout exceeded when trying to connect`. The route's top-level catch returns 500.
+**Self-checklist (to walk against diff BEFORE green-lighting):**
+1. Does the null-timing change produce YELLOW in ALL cases where timing is missing — including when `feedReadyPct > 80` (the code path that previously returned GREEN)?
+2. Does the change leave GREEN untouched for the happy path (`timingFreshnessHours < 48 && feedReadyPct > 80`)?
+3. Is `active_permits === 0` handled safely in `coverage_pct_vs_active_permits` (no division by zero)?
+4. Is the new field additive (doesn't break existing `cost_coverage` consumers)?
+5. Does the spec update match the code behavior exactly (no documentation drift)?
+6. Does the existing `LeadFeedHealthDashboard.ui.test.tsx` have snapshot/assertion tests that would BREAK under the new YELLOW behavior and need updating?
+7. Does the dual-metric UI still fit mobile (<375px)?
 
-### H4 — A new query references a column that exists in schema but is NULL-only (LOW likelihood, ~10%)
-`permit_trades.phase` has 0 NULL values (verified earlier: `null_phase: 0`), but what if a column referenced in a JOIN implicitly NULL-propagates and causes a `parseInt(null)` → `NaN` that then gets serialized? The `.c` reads assume the column is always present with a valid integer.
+**Risks for adversarial review:**
+- Off-by-one: `timingFreshnessHours === 0` (impossibly fresh) — does it still count as fresh-not-stale?
+- Division by zero on fresh DB (active_permits=0)
+- Label wrapping when 2 percentages render on narrow viewport
+- Snapshot test breakage in existing UI suite
+- Rounding mismatch: `coverage_pct` uses `Math.round(... * 1000) / 10`; does the new metric use the same rounding?
 
-### H5 — Something unrelated — `lead_views_schema.infra.test.ts` or a cross-import broke (LOW likelihood, ~5%)
-Some test or module may have locked state that breaks at runtime but not at test time.
+**Commit message:** `fix(76_lead_feed_health_dashboard): honest signaling — null-timing yellow + dual cost coverage`
 
-## Investigation Plan (before making any fix)
+---
 
-**Phase 1 — Get the real error (MUST be done first):**
-1. Read the current dev server's terminal output directly (ask user to paste the last 30 lines from the Next.js terminal after hitting the endpoint), OR
-2. Add temporary `console.error` in `src/app/api/admin/leads/health/route.ts` catch block that prints `err.stack` and the specific `err.message`, then curl the endpoint and read the dev server logs
-3. Alternative: write a tiny `scripts/probe-health.mjs` that imports the module via `tsx` / `ts-node` and calls `getLeadFeedReadiness(pool)` directly with verbose logging — isolates the runtime bug from Next.js
+## Phase 2 — Pool pressure relief (server-side cache)
 
-**Phase 2 — Reproduce in a test:**
-1. Once the error is known, add a regression test to `src/tests/lead-feed-health.logic.test.ts` that reproduces the failure mode (mock pool returning the exact shape that trips it up)
-2. Red light
+**Status:** Pending (blocked by Phase 1)
 
-**Phase 3 — Fix:**
-1. Based on which hypothesis proves correct:
-   - H1: kill/restart dev server is the "fix" but we should also harden the route response to fail more gracefully (better error message, less generic "Internal server error")
-   - H2: add a `safeParseInt` helper that rejects NaN and throws with a descriptive message naming the field + query
-   - H3: either reduce query count via CTE consolidation, add a 30s server-side cache, or explicitly set `max: 20` on the pool
-   - H4: add field presence validation on each query result
-   - H5: whatever the specific cause is
+**Fixes:**
+- **Claim 3** (REAL MED): 12 parallel queries × N tabs crushes 20-slot pool. Fix: 30s in-memory cache + single-flight promise in `route.ts`. **Decision: Layer A only** (no sequencing) — keeping `Promise.all` preserves response latency within the dashboard's 10s client timeout.
 
-**Phase 4 — Prevent regressions:**
-- Make the route return a MORE DESCRIPTIVE error (not just "Internal server error"). The spec at §3.1 says "500 on unexpected error" but nothing requires the message to be an opaque string. Use the `extractErrorMessage` helper on the client side to render whatever the server sends. This is the real lesson from this session + the last one: opaque 500s hide bugs for days.
-- Add a logic-level test that exercises `getLeadFeedReadiness` against a mock pool returning realistic shapes, catching serialization issues at test time instead of runtime.
+**Files:**
+- `src/app/api/admin/leads/health/route.ts` — module-level cache entry + single-flight
+- `src/tests/lead-feed-health.logic.test.ts` — cache hit/miss/single-flight/rejection tests
 
-## Technical Implementation (placeholder — depends on Phase 1 diagnosis)
+**Self-checklist:**
+1. Does the cache TTL use `>` or `>=`? Is there an off-by-one on the expiry boundary?
+2. Does the `inFlight` promise get cleared on BOTH success AND rejection?
+3. Does the rejection path leave `cacheEntry` untouched (don't cache errors)?
+4. Does Next.js dev HMR wipe the module state between edits? Comment must document this.
+5. Does the handler still return the same response shape on cache hit AS on cache miss?
+6. Is the TTL env-overridable with `parsePositiveIntEnv`-style safety?
+7. Does the single-flight handle reject-propagation to all awaiters without unhandled rejections?
 
-* **New/Modified Files:** TBD — either `src/app/api/admin/leads/health/route.ts` (better error message), `src/lib/admin/lead-feed-health.ts` (safer parsing), or `src/lib/db/client.ts` (pool size)
-* **Database Impact:** NO
+**Risks for adversarial review:**
+- `inFlight` never cleared on rejection → permanent hang
+- Cache populated with partial data if readiness succeeds but cost fails mid-`Promise.all`
+- Clock skew between `Date.now()` calls within the same request flow
+- Two requests exactly at `expiresAt` — race
+- HMR module reload mid-request
+- `cacheEntry` mutation from a stale closure after TTL expiry
 
-## Standards Compliance
+**Commit message:** `fix(76_lead_feed_health_dashboard): 30s server-side cache + single-flight to protect pg pool`
 
-* **Try-Catch Boundary:** Existing catch in `route.ts` — will REFINE to log stack + message. Still return 500 but with descriptive body per §10.3
-* **Unhappy Path Tests:** Will add a `logic.test.ts` case that mocks pool returning a `null` count or a non-finite aggregate, asserts the route returns a clear error
-* **logError Mandate:** Already in route. Will augment with phase context (e.g., `logError(TAG, err, { phase: 'readiness_query' })`)
-* **Mobile-First:** N/A — server-side fix
+---
 
-## Execution Plan
+## Phase 3 — saved_at column (schema evolution)
 
-- [x] **Rollback Anchor:** `8528f164` recorded
-- [x] **State Verification:** curl matrix done, SQL queries verified
-- [ ] **Diagnose actual error (Phase 1):**
-  - Option A: add a temporary `console.error(err.stack)` to the route handler's catch, curl the endpoint, read the dev server terminal output (via user paste), remove the temp log
-  - Option B: write `scripts/probe-health.mjs` that imports + calls the function directly, bypassing Next.js
-- [ ] **Confirm or reject H1 (stale dev server):** ask user to kill + restart dev server FIRST. If the 500 persists, H1 is ruled out. If gone, still harden error path in case of future HMR flakes.
-- [ ] **Red Light:** Add reproduction test in `src/tests/lead-feed-health.logic.test.ts` (or augment existing)
-- [ ] **Fix:** based on Phase 1 diagnosis
-- [ ] **Harden error message:** update `src/app/api/admin/leads/health/route.ts` to return `{ error: err.message }` (still 500) in dev mode, still return generic message in prod. Use NODE_ENV gate.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`
-- [ ] **Collateral Check:** `npx vitest related src/lib/admin/lead-feed-health.ts src/app/api/admin/leads/health/route.ts --run`
-- [ ] **Pre-Review Self-Checklist (3-5 sibling bugs):**
-  1. Does `getCostCoverage` have the same fragility?
-  2. Does `getEngagement` have the same fragility?
-  3. Does the test-feed route need the same error-message hardening?
-  4. Are there other admin routes that return opaque 500s and would benefit from the same treatment?
-- [ ] **Reviews:** adversarial + independent after fix is applied
-- [ ] **Atomic Commit:** `git commit -m "fix(76_lead_feed_health_dashboard): health endpoint 500 regression + better error messages"`
+**Status:** Pending (blocked by Phase 2)
 
-## Why This Isn't Purely a "restart the dev server" Fix
+**Fixes:**
+- **Claim 7** (REAL MED): `lead_views.saved_at` column doesn't exist; saves are timestamped against `viewed_at` which is preserved on save → old-view + recent-save is invisible to `saves_7d`. Fix: add column + backfill + update recorder + update query.
 
-Even if H1 is correct and restarting fixes the symptom, two follow-on fixes are needed:
-1. The client shows an **opaque** "Internal server error" message, which hides real bugs for days (this is the SECOND time this session we've debugged an opaque 500). The `extractErrorMessage` helper added last WF3 is USELESS when the server returns a canned string. The server should return the actual error in dev, and the spec already allows it.
-2. `getLeadFeedReadiness` has no logic-level tests that exercise the real return shape — a mock-pool test would have caught this at test time.
+**Files:**
+- `migrations/082_lead_views_saved_at.sql` (UP + DOWN, CONCURRENTLY index)
+- `src/db/schema/*` — regenerated via `npm run db:generate`
+- `src/features/leads/lib/record-lead-view.ts` — SAVE/UNSAVE populates/clears saved_at
+- `src/lib/admin/lead-feed-health.ts` — `getEngagement` uses `saved_at` for saves, keeps `viewed_at` for views and unique_users
+- `src/tests/record-lead-view.logic.test.ts` — recorder behavior
+- `src/tests/lead-feed-health.logic.test.ts` — old-view + recent-save counted
+- `src/tests/lead-views-schema.infra.test.ts` — column presence
 
-## Scope Discipline
+**Self-checklist:**
+1. Does the backfill UPDATE race with in-flight writes? (Single-statement UPDATE is atomic; rows written after backfill go through the updated INSERT path)
+2. Should there be a CHECK constraint `(saved = false AND saved_at IS NULL) OR (saved = true AND saved_at IS NOT NULL)`?
+3. Does UNSAVE correctly reset `saved_at = NULL`?
+4. Does `unique_users_7d` STILL use `viewed_at`, not `saved_at`?
+5. Does `avg_competition_per_lead` keep its `viewed_at` filter (scoped by view recency is intentional)?
+6. Does removing the outer `WHERE viewed_at >= 7d` in `getEngagement` harm performance on a growing table? (Partial index on `saved_at` mitigates)
+7. Is there a JS-side dual-path sibling to `record-lead-view.ts`? (Verified: no)
 
-- NOT in scope: adding a route-level cache (deferred to perf WF)
-- NOT in scope: converting all 14 queries to a single CTE (perf optimization, not a bug fix)
-- NOT in scope: fixing the test-feed endpoint to work without PostGIS (install PostGIS locally)
+**Risks for adversarial review:**
+- Backfill sets `saved_at = viewed_at` — but if `viewed_at` is older than the true save time, `saves_today/7d` for historical data will be wrong. Acceptable for historical approximation?
+- Spec 76 §3.5 doesn't explicitly define whether "Saves (7d)" means "saves recorded in last 7d" or "saves of leads viewed in last 7d". Need spec clarification to confirm intent.
+- `saved_at` column nullable vs constrained CHECK
+- Drizzle type regen may drift if any other table's schema changed since last regen
+- `lead_views` partial index on `(saved_at) WHERE saved = true` vs queries that FILTER by `saved = true AND saved_at >= ...` — index coverage
+
+**Commit message:** `fix(76_lead_feed_health_dashboard): saved_at column fixes silent engagement dropping`
+
+---
+
+## Per-Phase Review Cycle Template
+
+For each phase, execute in strict order:
+
+- [ ] **Rollback Anchor** recorded at start (Phase 1: `1321b97`; Phases 2/3: the SHA of the previous phase's commit)
+- [ ] **Spec Review** — read relevant spec 76 sections IN FULL
+- [ ] **Red Light** — add failing tests for that phase only
+- [ ] **Implement Fix**
+- [ ] **Typecheck + lint + related tests**
+- [ ] **Pre-Review Self-Checklist** — walk items above against the ACTUAL diff, report PASS/FAIL inline
+- [ ] **Independent Review Agent** (worktree-isolated Explore) — generates own checklist from spec + diff
+- [ ] **Adversarial Review Agent** (code-reviewer) — uses phase-specific attack vectors
+- [ ] **Triage** — classify each finding as real/false-positive with written reasoning; fix real bugs; reject false positives in active_task.md
+- [ ] **Full test suite re-run**
+- [ ] **Atomic commit**
+- [ ] **Update `docs/reports/review_followups.md`** with phase closures
+
+## Scope Discipline — EXPLICITLY OUT
+
+- ❌ Claims 1, 5, 6, 8, 10 — false positives, documented in review_followups.md WONTFIX with evidence
+- ❌ `builders_feed_eligible` geo constraint (prior WF3 deferral)
+- ❌ Sibling opaque 500s (WF6 sweep)
+- ❌ `/api/admin/stats` 37-query refactor
+- ❌ Exponential backoff on frontend polling (UX polish, not a bug)
+- ❌ Cross-phase changes in a single phase — strict isolation
+
+## Why Phased
+
+1. **Blast radius isolation:** Phase 1 is UI-only (revertable by CSS). Phase 2 is a pure backend cache (revertable by removing the module-level vars). Phase 3 is schema (requires migration rollback). Each rollback point stands alone.
+2. **Review cycle clarity:** Each review gets a clean, focused diff instead of a 6-file bundle that's hard to audit coherently.
+3. **Failure isolation:** If Phase 3's migration breaks in an unexpected way, Phases 1 + 2 are already landed and the revert leaves the dashboard in a partially-improved state, not fully reverted.

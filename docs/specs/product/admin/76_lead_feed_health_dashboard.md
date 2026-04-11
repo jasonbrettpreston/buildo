@@ -47,7 +47,8 @@ interface LeadFeedHealthResponse {
     from_permit: number;              // est_const_cost reported by City
     from_model: number;               // computed by cost model
     null_cost: number;                // model couldn't estimate
-    coverage_pct: number;
+    coverage_pct: number;              // cache-scoped: (total - null_cost) / total
+    coverage_pct_vs_active_permits: number; // headline: permits_with_cost / active_permits (computed in route handler from readiness values)
   };
 
   // User engagement (from lead_views table)
@@ -235,11 +236,20 @@ The test-feed endpoint does NOT require a `user_profiles` entry — it construct
 - **Core Logic:**
   - Polls `/api/admin/leads/health` every 10 seconds (same pattern as DataQualityDashboard)
   - Test Feed form is on-demand (no polling)
-  - Traffic light logic: GREEN = feed_ready_pct > 80 AND timing_freshness_hours < 48; YELLOW = 50-80% OR stale timing; RED = <50% OR no cost data
+  - Traffic light logic:
+    - **GREEN** = `feed_ready_pct > 80` AND `timing_freshness_hours !== null` AND `timing_freshness_hours < 48`
+    - **YELLOW** = `50 <= feed_ready_pct <= 80` OR `timing_freshness_hours === null` OR `timing_freshness_hours > 48`
+    - **RED** = `feed_ready_pct < 50` OR `cost_coverage.total === 0`
+  - `timing_freshness_hours === null` MUST produce YELLOW, never GREEN. Null indicates the `timing_calibration` cron has never run OR the table was truncated — both are failure states that must be surfaced, not hidden behind a green light. (External review 2026-04-10 Antigravity flagged this as "Missing-Cron Green Light" bug.)
+- **Cost Coverage (Section 2)** shows TWO percentages:
+  - **Permit coverage** (headline) = `permits_with_cost / active_permits` — fraction of active permits that have a cost estimate. Computed in the route handler from values already fetched by `getLeadFeedReadiness`, no extra DB round-trip.
+  - **Cache coverage** (secondary) = `(cost_estimates.total - cost_estimates.null_cost) / cost_estimates.total` — cleanliness of the estimate cache itself.
+  - Both metrics are displayed to expose divergence (e.g., 94% cache + 60% permits means the cache is clean but sparse, pointing to incomplete cost computation runs).
 - **Outputs:** 4-section dashboard + interactive test feed tool
 - **Edge Cases:**
   - API timeout → show stale data with "Last updated X ago" badge
   - Test feed timeout (>10s) → show loading spinner, warn if >30s
+  - `active_permits === 0` (fresh DB) → `coverage_pct_vs_active_permits === 0` (no division by zero)
 
 </behavior>
 

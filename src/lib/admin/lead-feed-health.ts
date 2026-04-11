@@ -68,7 +68,24 @@ export interface CostCoverage {
   from_permit: number;
   from_model: number;
   null_cost: number;
+  /**
+   * Coverage WITHIN the cost_estimates cache: (total - null_cost) / total.
+   * Tells you how clean the estimate table is. Does NOT tell you how much of
+   * the permit universe is covered — use {@link coverage_pct_vs_active_permits}
+   * for that.
+   */
   coverage_pct: number;
+  /**
+   * Coverage of active permits: `permits_with_cost / active_permits`. This is
+   * the headline metric for "how much of the real dataset is costed".
+   * Computed in the route handler from values already fetched by
+   * `getLeadFeedReadiness` (zero extra DB load). Returns 0 when
+   * `active_permits === 0` to avoid division by zero.
+   *
+   * Added by WF3 2026-04-10 Phase 1 — resolves external review's
+   * "Denominational Isolation" concern (Claim 9).
+   */
+  coverage_pct_vs_active_permits: number;
 }
 
 export interface TradeEngagement {
@@ -315,6 +332,12 @@ export async function getCostCoverage(pool: Pool): Promise<CostCoverage> {
     from_model: parseInt(r.from_model, 10),
     null_cost: nullCost,
     coverage_pct: total > 0 ? Math.round(((total - nullCost) / total) * 1000) / 10 : 0,
+    // Injected by the route handler (see /api/admin/leads/health/route.ts)
+    // after readiness + cost_coverage are both fetched. Initialized to 0 here;
+    // the route overrides it with the real permit-scoped coverage. Kept out of
+    // this query to avoid a second pg round-trip — values already exist in
+    // LeadFeedReadiness.
+    coverage_pct_vs_active_permits: 0,
   };
 }
 

@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   computeTestFeedDebug,
   getLeadFeedReadiness,
+  getCostCoverage,
   sanitizePgErrorMessage,
 } from '@/lib/admin/lead-feed-health';
 import type { Pool } from 'pg';
@@ -196,5 +197,61 @@ describe('sanitizePgErrorMessage', () => {
   it('is case-insensitive on scheme', () => {
     expect(sanitizePgErrorMessage('POSTGRES://u:p@h/d')).toBe('postgres://***@h/d');
     expect(sanitizePgErrorMessage('PostgreSQL://u:p@h/d')).toBe('postgres://***@h/d');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getCostCoverage — dual coverage metric (WF3 2026-04-10 Phase 1, external
+// review Claim 9)
+// ---------------------------------------------------------------------------
+// The library's `coverage_pct` measures coverage WITHIN the cost_estimates
+// cache. The `coverage_pct_vs_active_permits` field is the headline metric
+// for "how much of the active permit universe has a cost estimate". It's
+// computed by the route handler from LeadFeedReadiness values already
+// fetched, so getCostCoverage initializes it to 0 as a placeholder.
+
+describe('getCostCoverage — dual coverage contract', () => {
+  function makeMockPool(rows: Record<string, string>) {
+    return {
+      query: vi.fn(() => Promise.resolve({ rows: [rows] })),
+    } as unknown as Pool;
+  }
+
+  it('returns the legacy cache-scoped coverage_pct', async () => {
+    const pool = makeMockPool({
+      total: '7200',
+      from_permit: '4000',
+      from_model: '2800',
+      null_cost: '400',
+    });
+    const cc = await getCostCoverage(pool);
+    expect(cc.total).toBe(7200);
+    // (7200 - 400) / 7200 = 94.44% → rounded to 94.4
+    expect(cc.coverage_pct).toBe(94.4);
+  });
+
+  it('initializes coverage_pct_vs_active_permits to 0 (route handler overrides)', async () => {
+    const pool = makeMockPool({
+      total: '1000',
+      from_permit: '500',
+      from_model: '500',
+      null_cost: '0',
+    });
+    const cc = await getCostCoverage(pool);
+    // The library placeholder — route handler computes the real value from
+    // LeadFeedReadiness.permits_with_cost / LeadFeedReadiness.active_permits.
+    expect(cc.coverage_pct_vs_active_permits).toBe(0);
+  });
+
+  it('handles the empty-table edge (total=0) without division by zero', async () => {
+    const pool = makeMockPool({
+      total: '0',
+      from_permit: '0',
+      from_model: '0',
+      null_cost: '0',
+    });
+    const cc = await getCostCoverage(pool);
+    expect(cc.coverage_pct).toBe(0);
+    expect(cc.coverage_pct_vs_active_permits).toBe(0);
   });
 });
