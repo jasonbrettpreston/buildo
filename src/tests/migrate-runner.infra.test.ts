@@ -71,4 +71,28 @@ describe('scripts/migrate.js — file shape', () => {
     expect(content).toMatch(/CONCURRENTLY/);
     expect(content).toMatch(/splitTopLevelStatements/);
   });
+
+  it('strips SQL comments and dollar-quoted bodies before CONCURRENTLY detection (WF3 2026-04-11)', () => {
+    // Adversarial review found that migrate.js used to match
+    // /\bCONCURRENTLY\b/i against the raw file contents, so a
+    // migration that mentioned "CREATE INDEX CONCURRENTLY" in its
+    // operator runbook COMMENT would be routed through the non-
+    // transactional path even if the actual SQL didn't need it.
+    // The fix strips line comments, block comments, and dollar-quoted
+    // function bodies before testing. These assertions lock the
+    // strip logic literally in place — regex-matching regex literals
+    // in source code is fragile, so we use `.toContain()` with the
+    // exact substring.
+    expect(content).toContain('const sqlNoComments = sql');
+    // Line-comment strip
+    expect(content).toContain(".replace(/--.*$/gm, '')");
+    // Block-comment strip
+    expect(content).toContain(".replace(/\\/\\*[\\s\\S]*?\\*\\//g, '')");
+    // Dollar-quoted body strip — full `$tag$ ... $tag$` span
+    expect(content).toContain('\\$[A-Za-z0-9_]*\\$[\\s\\S]*?\\$[A-Za-z0-9_]*\\$');
+    // Detection test runs against the stripped source, not raw sql
+    expect(content).toContain('.test(sqlNoComments)');
+    // Raw-sql test form should NO LONGER appear (regression guard)
+    expect(content).not.toMatch(/\.test\(\s*sql\s*\)/);
+  });
 });

@@ -176,7 +176,23 @@ async function run() {
       // transaction either, so apply+record is best-effort: if
       // recordApplied fails after the CONCURRENTLY path, the migration
       // runs again next time (idempotent via IF NOT EXISTS).
-      if (/\bCONCURRENTLY\b/i.test(sql)) {
+      //
+      // WF3 2026-04-11 — strip SQL comments and dollar-quoted bodies
+      // BEFORE testing for CONCURRENTLY so the detection isn't fooled
+      // by operator-runbook comments that mention the keyword. Adversarial
+      // review caught that migration 083's header documents the
+      // `CREATE INDEX CONCURRENTLY` runbook in line comments, which
+      // used to match the bare `/\bCONCURRENTLY\b/` regex and route
+      // the whole migration through the non-transactional path —
+      // making the DROP TRIGGER / CREATE TRIGGER cycle non-atomic and
+      // the 221K-row backfill transaction-less. Comment stripping
+      // restores the transactional path for migrations that only
+      // reference CONCURRENTLY in documentation.
+      const sqlNoComments = sql
+        .replace(/--.*$/gm, '')                        // line comments
+        .replace(/\/\*[\s\S]*?\*\//g, '')              // block comments
+        .replace(/\$[A-Za-z0-9_]*\$[\s\S]*?\$[A-Za-z0-9_]*\$/g, ''); // dollar-quoted bodies
+      if (/\bCONCURRENTLY\b/i.test(sqlNoComments)) {
         for (const stmt of splitTopLevelStatements(sql)) {
           await pool.query(stmt);
         }

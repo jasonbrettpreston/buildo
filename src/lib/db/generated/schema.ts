@@ -1,4 +1,4 @@
-import { pgTable, index, foreignKey, check, serial, integer, varchar, numeric, boolean, timestamp, text, unique, date, jsonb, uniqueIndex, bigint, primaryKey, pgMaterializedView, pgEnum } from "drizzle-orm/pg-core"
+import { pgTable, index, foreignKey, check, serial, integer, varchar, numeric, boolean, timestamp, text, unique, date, jsonb, geometry, uniqueIndex, bigint, primaryKey, pgMaterializedView, pgEnum } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const entityTypeEnum = pgEnum("entity_type_enum", ['Corporation', 'Individual'])
@@ -283,6 +283,39 @@ export const notifications = pgTable("notifications", {
 	index("idx_notifications_user_read").using("btree", table.userId.asc().nullsLast().op("bool_ops"), table.isRead.asc().nullsLast().op("bool_ops")),
 ]);
 
+export const parcels = pgTable("parcels", {
+	id: serial().primaryKey().notNull(),
+	parcelId: varchar("parcel_id", { length: 20 }).notNull(),
+	featureType: varchar("feature_type", { length: 20 }),
+	addressNumber: varchar("address_number", { length: 20 }),
+	linearNameFull: varchar("linear_name_full", { length: 200 }),
+	addrNumNormalized: varchar("addr_num_normalized", { length: 20 }),
+	streetNameNormalized: varchar("street_name_normalized", { length: 200 }),
+	streetTypeNormalized: varchar("street_type_normalized", { length: 20 }),
+	statedAreaRaw: varchar("stated_area_raw", { length: 100 }),
+	lotSizeSqm: numeric("lot_size_sqm", { precision: 12, scale:  2 }),
+	lotSizeSqft: numeric("lot_size_sqft", { precision: 12, scale:  2 }),
+	frontageM: numeric("frontage_m", { precision: 8, scale:  2 }),
+	frontageFt: numeric("frontage_ft", { precision: 8, scale:  2 }),
+	depthM: numeric("depth_m", { precision: 8, scale:  2 }),
+	depthFt: numeric("depth_ft", { precision: 8, scale:  2 }),
+	geometry: jsonb(),
+	dateEffective: date("date_effective"),
+	dateExpiry: date("date_expiry"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	centroidLat: numeric("centroid_lat", { precision: 10, scale:  7 }),
+	centroidLng: numeric("centroid_lng", { precision: 10, scale:  7 }),
+	isIrregular: boolean("is_irregular").default(false),
+	geom: geometry({ type: "geometry", srid: 4326 }),
+}, (table) => [
+	index("idx_parcels_address").using("btree", table.addrNumNormalized.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")),
+	index("idx_parcels_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")).where(sql`(centroid_lat IS NOT NULL)`),
+	index("idx_parcels_feature_type").using("btree", table.featureType.asc().nullsLast().op("text_ops")),
+	index("idx_parcels_geom_gist").using("gist", table.geom.asc().nullsLast().op("gist_geometry_ops_2d")),
+	index("idx_parcels_street_name").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")),
+	unique("parcels_parcel_id_key").on(table.parcelId),
+]);
+
 export const builderContacts = pgTable("builder_contacts", {
 	id: serial().primaryKey().notNull(),
 	builderId: integer("builder_id").notNull(),
@@ -324,7 +357,9 @@ export const neighbourhoods = pgTable("neighbourhoods", {
 	topMotherTongue: varchar("top_mother_tongue", { length: 50 }),
 	censusYear: integer("census_year").default(2021),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	geom: geometry({ type: "geometry", srid: 4326 }),
 }, (table) => [
+	index("idx_neighbourhoods_geom_gist").using("gist", table.geom.asc().nullsLast().op("gist_geometry_ops_2d")),
 	index("idx_neighbourhoods_nid").using("btree", table.neighbourhoodId.asc().nullsLast().op("int4_ops")),
 	unique("neighbourhoods_neighbourhood_id_key").on(table.neighbourhoodId),
 ]);
@@ -346,37 +381,6 @@ export const permitParcels = pgTable("permit_parcels", {
 			name: "permit_parcels_parcel_id_fkey"
 		}),
 	unique("permit_parcels_permit_num_revision_num_parcel_id_key").on(table.parcelId, table.permitNum, table.revisionNum),
-]);
-
-export const parcels = pgTable("parcels", {
-	id: serial().primaryKey().notNull(),
-	parcelId: varchar("parcel_id", { length: 20 }).notNull(),
-	featureType: varchar("feature_type", { length: 20 }),
-	addressNumber: varchar("address_number", { length: 20 }),
-	linearNameFull: varchar("linear_name_full", { length: 200 }),
-	addrNumNormalized: varchar("addr_num_normalized", { length: 20 }),
-	streetNameNormalized: varchar("street_name_normalized", { length: 200 }),
-	streetTypeNormalized: varchar("street_type_normalized", { length: 20 }),
-	statedAreaRaw: varchar("stated_area_raw", { length: 100 }),
-	lotSizeSqm: numeric("lot_size_sqm", { precision: 12, scale:  2 }),
-	lotSizeSqft: numeric("lot_size_sqft", { precision: 12, scale:  2 }),
-	frontageM: numeric("frontage_m", { precision: 8, scale:  2 }),
-	frontageFt: numeric("frontage_ft", { precision: 8, scale:  2 }),
-	depthM: numeric("depth_m", { precision: 8, scale:  2 }),
-	depthFt: numeric("depth_ft", { precision: 8, scale:  2 }),
-	geometry: jsonb(),
-	dateEffective: date("date_effective"),
-	dateExpiry: date("date_expiry"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	centroidLat: numeric("centroid_lat", { precision: 10, scale:  7 }),
-	centroidLng: numeric("centroid_lng", { precision: 10, scale:  7 }),
-	isIrregular: boolean("is_irregular").default(false),
-}, (table) => [
-	index("idx_parcels_address").using("btree", table.addrNumNormalized.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")),
-	index("idx_parcels_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")).where(sql`(centroid_lat IS NOT NULL)`),
-	index("idx_parcels_feature_type").using("btree", table.featureType.asc().nullsLast().op("text_ops")),
-	index("idx_parcels_street_name").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")),
-	unique("parcels_parcel_id_key").on(table.parcelId),
 ]);
 
 export const addressPoints = pgTable("address_points", {
@@ -527,31 +531,6 @@ export const engineHealthSnapshots = pgTable("engine_health_snapshots", {
 	uniqueIndex("uq_engine_health_table_date").using("btree", table.tableName.asc().nullsLast().op("date_ops"), table.snapshotDate.asc().nullsLast().op("date_ops")),
 ]);
 
-export const entities = pgTable("entities", {
-	id: serial().primaryKey().notNull(),
-	legalName: varchar("legal_name", { length: 500 }).notNull(),
-	tradeName: varchar("trade_name", { length: 500 }),
-	nameNormalized: varchar("name_normalized", { length: 750 }).notNull(),
-	entityType: entityTypeEnum("entity_type"),
-	primaryPhone: varchar("primary_phone", { length: 50 }),
-	primaryEmail: varchar("primary_email", { length: 200 }),
-	website: varchar({ length: 500 }),
-	linkedinUrl: varchar("linkedin_url", { length: 500 }),
-	googlePlaceId: varchar("google_place_id", { length: 200 }),
-	googleRating: numeric("google_rating", { precision: 2, scale:  1 }),
-	googleReviewCount: integer("google_review_count"),
-	isWsibRegistered: boolean("is_wsib_registered").default(false),
-	permitCount: integer("permit_count").default(0).notNull(),
-	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	lastEnrichedAt: timestamp("last_enriched_at", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	index("idx_entities_name_norm").using("btree", table.nameNormalized.asc().nullsLast().op("text_ops")),
-	index("idx_entities_name_trgm").using("gin", table.nameNormalized.asc().nullsLast().op("gin_trgm_ops")),
-	index("idx_entities_permit_count").using("btree", table.permitCount.desc().nullsFirst().op("int4_ops")),
-	unique("entities_name_normalized_key").on(table.nameNormalized),
-]);
-
 export const entityProjects = pgTable("entity_projects", {
 	id: serial().primaryKey().notNull(),
 	entityId: integer("entity_id").notNull(),
@@ -655,6 +634,34 @@ export const schemaMigrations = pgTable("schema_migrations", {
 	durationMs: integer("duration_ms").notNull(),
 });
 
+export const entities = pgTable("entities", {
+	id: serial().primaryKey().notNull(),
+	legalName: varchar("legal_name", { length: 500 }).notNull(),
+	tradeName: varchar("trade_name", { length: 500 }),
+	nameNormalized: varchar("name_normalized", { length: 750 }).notNull(),
+	entityType: entityTypeEnum("entity_type"),
+	primaryPhone: varchar("primary_phone", { length: 50 }),
+	primaryEmail: varchar("primary_email", { length: 200 }),
+	website: varchar({ length: 500 }),
+	linkedinUrl: varchar("linkedin_url", { length: 500 }),
+	googlePlaceId: varchar("google_place_id", { length: 200 }),
+	googleRating: numeric("google_rating", { precision: 2, scale:  1 }),
+	googleReviewCount: integer("google_review_count"),
+	isWsibRegistered: boolean("is_wsib_registered").default(false),
+	permitCount: integer("permit_count").default(0).notNull(),
+	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	lastEnrichedAt: timestamp("last_enriched_at", { withTimezone: true, mode: 'string' }),
+	photoUrl: varchar("photo_url", { length: 500 }),
+	photoValidatedAt: timestamp("photo_validated_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("idx_entities_name_norm").using("btree", table.nameNormalized.asc().nullsLast().op("text_ops")),
+	index("idx_entities_name_trgm").using("gin", table.nameNormalized.asc().nullsLast().op("gin_trgm_ops")),
+	index("idx_entities_permit_count").using("btree", table.permitCount.desc().nullsFirst().op("int4_ops")),
+	unique("entities_name_normalized_key").on(table.nameNormalized),
+	check("entities_photo_url_https", sql`(photo_url IS NULL) OR ((photo_url)::text ~~ 'https://%'::text)`),
+]);
+
 export const permitProducts = pgTable("permit_products", {
 	permitNum: varchar("permit_num", { length: 20 }).notNull(),
 	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
@@ -749,6 +756,7 @@ export const permits = pgTable("permits", {
 	tradeClassifiedAt: timestamp("trade_classified_at", { withTimezone: true, mode: 'string' }),
 	parcelLinkedAt: timestamp("parcel_linked_at", { withTimezone: true, mode: 'string' }),
 	photoUrl: text("photo_url"),
+	location: geometry({ type: "point", srid: 4326 }),
 }, (table) => [
 	index("idx_permits_addr_normalized").using("btree", table.streetNum.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")).where(sql`(street_name_normalized IS NOT NULL)`),
 	index("idx_permits_application_date").using("btree", table.applicationDate.asc().nullsLast().op("date_ops")),
@@ -760,6 +768,8 @@ export const permits = pgTable("permits", {
 	index("idx_permits_est_const_cost").using("btree", table.estConstCost.asc().nullsLast().op("numeric_ops")),
 	index("idx_permits_issued_date").using("btree", table.issuedDate.asc().nullsLast().op("date_ops")),
 	index("idx_permits_last_scraped_at").using("btree", table.lastScrapedAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(last_scraped_at IS NOT NULL)`),
+	index("idx_permits_location_geography_gist").using("gist", sql`((location)::geography)`),
+	index("idx_permits_location_gist").using("gist", table.location.asc().nullsLast().op("gist_geometry_ops_2d")),
 	index("idx_permits_neighbourhood_id").using("btree", table.neighbourhoodId.asc().nullsLast().op("int4_ops")),
 	index("idx_permits_permit_type").using("btree", table.permitType.asc().nullsLast().op("text_ops")),
 	index("idx_permits_project_type").using("btree", table.projectType.asc().nullsLast().op("text_ops")).where(sql`(project_type IS NOT NULL)`),
