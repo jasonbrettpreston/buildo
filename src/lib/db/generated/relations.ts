@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { trades, tradeMappingRules, permitTrades, entities, entityContacts, builders, builderContacts, parcels, permitParcels, parcelBuildings, buildingFootprints, wsibRegistry, entityProjects, productGroups, permitProducts } from "./schema";
+import { trades, tradeMappingRules, permitTrades, entities, entityContacts, builders, builderContacts, parcels, permitParcels, parcelBuildings, buildingFootprints, wsibRegistry, entityProjects, permits, leadViews, productGroups, permitProducts, costEstimates } from "./schema";
 
 export const tradeMappingRulesRelations = relations(tradeMappingRules, ({one}) => ({
 	trade: one(trades, {
@@ -31,6 +31,7 @@ export const entitiesRelations = relations(entities, ({many}) => ({
 	entityContacts: many(entityContacts),
 	wsibRegistries: many(wsibRegistry),
 	entityProjects: many(entityProjects),
+	leadViews: many(leadViews),
 }));
 
 export const builderContactsRelations = relations(builderContacts, ({one}) => ({
@@ -85,6 +86,22 @@ export const entityProjectsRelations = relations(entityProjects, ({one}) => ({
 	}),
 }));
 
+export const leadViewsRelations = relations(leadViews, ({one}) => ({
+	permit: one(permits, {
+		fields: [leadViews.permitNum],
+		references: [permits.permitNum]
+	}),
+	entity: one(entities, {
+		fields: [leadViews.entityId],
+		references: [entities.id]
+	}),
+}));
+
+export const permitsRelations = relations(permits, ({many}) => ({
+	leadViews: many(leadViews),
+	costEstimates: many(costEstimates),
+}));
+
 export const permitProductsRelations = relations(permitProducts, ({one}) => ({
 	productGroup: one(productGroups, {
 		fields: [permitProducts.productId],
@@ -94,4 +111,11 @@ export const permitProductsRelations = relations(permitProducts, ({one}) => ({
 
 export const productGroupsRelations = relations(productGroups, ({many}) => ({
 	permitProducts: many(permitProducts),
+}));
+
+export const costEstimatesRelations = relations(costEstimates, ({one}) => ({
+	permit: one(permits, {
+		fields: [costEstimates.permitNum],
+		references: [permits.permitNum]
+	}),
 }));
