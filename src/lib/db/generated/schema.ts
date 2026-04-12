@@ -775,7 +775,7 @@ export const tradeForecasts = pgTable("trade_forecasts", {
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.permitNum, table.revisionNum, table.tradeSlug], name: "trade_forecasts_pkey"}),
 	check("chk_forecast_confidence", sql`(confidence)::text = ANY ((ARRAY['low'::character varying, 'medium'::character varying, 'high'::character varying])::text[])`),
-	check("chk_forecast_urgency", sql`(urgency)::text = ANY ((ARRAY['unknown'::character varying, 'on_time'::character varying, 'upcoming'::character varying, 'imminent'::character varying, 'delayed'::character varying, 'overdue'::character varying])::text[])`),
+	check("chk_forecast_urgency", sql`(urgency)::text = ANY ((ARRAY['unknown'::character varying, 'on_time'::character varying, 'upcoming'::character varying, 'imminent'::character varying, 'delayed'::character varying, 'overdue'::character varying, 'expired'::character varying, 'on_hold'::character varying])::text[])`),
 ]);
 
 export const permits = pgTable("permits", {

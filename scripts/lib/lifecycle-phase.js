@@ -377,58 +377,72 @@ const NORMALIZED_DEAD_DECISIONS_ARRAY = Object.freeze([...NORMALIZED_DEAD_DECISI
 //
 // The calibration engine provides the (from_phase → to_phase) median
 // days. TRADE_TARGET_PHASE bridges that to per-trade predictions.
+// Bimodal trade target mapping: each trade has TWO windows.
+//
+// bid_phase:  the early phase where a builder starts looking for
+//             subcontractors (the "get on the shortlist" window).
+//             For most trades this is shortly after permit issuance.
+// work_phase: the construction phase where the trade is physically
+//             on-site doing the work (the "boots on the ground" window).
+//
+// The flight tracker routes to bid_phase if the permit hasn't reached
+// it yet, otherwise to work_phase. This creates a self-healing pipeline:
+// - A freshly issued permit shows "plumbing bidding in 30 days"
+// - If the permit ages past the bid window, it shifts to "plumbing
+//   rough-in in 82 days from framing" (the Rescue Mission)
+// - If the permit gets a framing inspection, the prediction tightens
+//   to actual construction calibration data
+//
+// WF3: replaces the single-phase mapping that caused 5,304 plumbing
+// and 4,849 HVAC leads to land in the "overdue graveyard."
 const TRADE_TARGET_PHASE = Object.freeze({
-  // P9 — Site prep trades
-  excavation: 'P9',
-  shoring: 'P9',
-  demolition: 'P9',
-  'temporary-fencing': 'P9',
+  // Site prep — bid early, work at P9
+  excavation:         { bid_phase: 'P7a', work_phase: 'P9' },
+  shoring:            { bid_phase: 'P7a', work_phase: 'P9' },
+  demolition:         { bid_phase: 'P7a', work_phase: 'P9' },
+  'temporary-fencing': { bid_phase: 'P7a', work_phase: 'P9' },
 
-  // P10 — Foundation trades
-  concrete: 'P10',
-  waterproofing: 'P10',
+  // Foundation — bid early, work at P10
+  concrete:           { bid_phase: 'P7a', work_phase: 'P10' },
+  waterproofing:      { bid_phase: 'P7a', work_phase: 'P10' },
 
-  // P11 — Structural trades
-  framing: 'P11',
-  'structural-steel': 'P11',
-  masonry: 'P11',
-  elevator: 'P11',
+  // Structural — bid during foundation, work at P11
+  framing:            { bid_phase: 'P9',  work_phase: 'P11' },
+  'structural-steel': { bid_phase: 'P9',  work_phase: 'P11' },
+  masonry:            { bid_phase: 'P9',  work_phase: 'P11' },
+  elevator:           { bid_phase: 'P9',  work_phase: 'P11' },
 
-  // P12 — Rough-in trades (MEP)
-  plumbing: 'P12',
-  hvac: 'P12',
-  electrical: 'P12',
-  'fire-protection': 'P12',
-  'drain-plumbing': 'P12',
+  // MEP rough-in — bid during framing, work at P12
+  plumbing:           { bid_phase: 'P7a', work_phase: 'P12' },
+  hvac:               { bid_phase: 'P7a', work_phase: 'P12' },
+  electrical:         { bid_phase: 'P7a', work_phase: 'P12' },
+  'fire-protection':  { bid_phase: 'P7a', work_phase: 'P12' },
+  'drain-plumbing':   { bid_phase: 'P7a', work_phase: 'P12' },
 
-  // P13 — Insulation
-  insulation: 'P13',
+  // Insulation — bid during rough-in, work at P13
+  insulation:         { bid_phase: 'P11', work_phase: 'P13' },
 
-  // P14 — Fire separations (typically same crews as fire-protection)
-  // fire-protection already mapped to P12 (rough-in); P14 is the
-  // compartmentalization inspection, not a trade-specific phase.
+  // Interior finishing — bid during insulation, work at P15
+  drywall:            { bid_phase: 'P11', work_phase: 'P15' },
+  painting:           { bid_phase: 'P13', work_phase: 'P15' },
+  flooring:           { bid_phase: 'P13', work_phase: 'P15' },
+  tiling:             { bid_phase: 'P13', work_phase: 'P15' },
+  'trim-work':        { bid_phase: 'P13', work_phase: 'P15' },
+  'millwork-cabinetry': { bid_phase: 'P13', work_phase: 'P15' },
+  'stone-countertops': { bid_phase: 'P13', work_phase: 'P15' },
+  security:           { bid_phase: 'P13', work_phase: 'P15' },
 
-  // P15 — Interior finishing trades
-  drywall: 'P15',
-  painting: 'P15',
-  flooring: 'P15',
-  tiling: 'P15',
-  'trim-work': 'P15',
-  'millwork-cabinetry': 'P15',
-  'stone-countertops': 'P15',
-  security: 'P15',
+  // Exterior finishing — bid during framing, work at P16
+  roofing:            { bid_phase: 'P11', work_phase: 'P16' },
+  glazing:            { bid_phase: 'P11', work_phase: 'P16' },
+  'eavestrough-siding': { bid_phase: 'P11', work_phase: 'P16' },
+  caulking:           { bid_phase: 'P13', work_phase: 'P16' },
+  solar:              { bid_phase: 'P13', work_phase: 'P16' },
 
-  // P16 — Exterior finishing trades
-  roofing: 'P16',
-  glazing: 'P16',
-  'eavestrough-siding': 'P16',
-  caulking: 'P16',
-  solar: 'P16',
-
-  // P17 — Landscaping / final trades
-  landscaping: 'P17',
-  'decking-fences': 'P17',
-  'pool-installation': 'P17',
+  // Landscaping / final — bid late, work at P17
+  landscaping:        { bid_phase: 'P11', work_phase: 'P17' },
+  'decking-fences':   { bid_phase: 'P11', work_phase: 'P17' },
+  'pool-installation': { bid_phase: 'P11', work_phase: 'P17' },
 });
 
 module.exports = {

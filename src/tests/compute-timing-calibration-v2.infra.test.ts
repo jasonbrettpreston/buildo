@@ -99,11 +99,15 @@ describe('TRADE_TARGET_PHASE — shared trade→phase mapping', () => {
     // JS side — dynamic import to avoid ESLint no-require-imports
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jsLib = require('../../scripts/lib/lifecycle-phase') as {
-      TRADE_TARGET_PHASE: Record<string, string>;
+      TRADE_TARGET_PHASE: Record<string, { bid_phase: string; work_phase: string }>;
     };
     const jsMap = jsLib.TRADE_TARGET_PHASE;
     for (const slug of EXPECTED_SLUGS) {
-      expect(jsMap[slug], `JS TRADE_TARGET_PHASE missing "${slug}"`).toBeDefined();
+      const entry = jsMap[slug];
+      expect(entry, `JS TRADE_TARGET_PHASE missing "${slug}"`).toBeDefined();
+      // WF3: bimodal shape — both bid_phase and work_phase must exist
+      expect(entry!.bid_phase, `JS ${slug} missing bid_phase`).toBeTruthy();
+      expect(entry!.work_phase, `JS ${slug} missing work_phase`).toBeTruthy();
     }
     expect(Object.keys(jsMap).length).toBe(EXPECTED_SLUGS.length);
 
@@ -112,20 +116,28 @@ describe('TRADE_TARGET_PHASE — shared trade→phase mapping', () => {
       '@/lib/classification/lifecycle-phase'
     );
     for (const slug of EXPECTED_SLUGS) {
-      expect(tsMap[slug], `TS TRADE_TARGET_PHASE missing "${slug}"`).toBeDefined();
-      expect(tsMap[slug]).toBe(jsMap[slug]); // dual code path parity
+      const tsEntry = tsMap[slug];
+      const jsEntry = jsMap[slug];
+      expect(tsEntry, `TS TRADE_TARGET_PHASE missing "${slug}"`).toBeDefined();
+      // Dual code path parity: both phases must match
+      expect(tsEntry!.bid_phase).toBe(jsEntry!.bid_phase);
+      expect(tsEntry!.work_phase).toBe(jsEntry!.work_phase);
     }
     expect(Object.keys(tsMap).length).toBe(EXPECTED_SLUGS.length);
   });
 
-  it('all target phases are in the VALID_PHASES set', async () => {
+  it('all target phases (bid + work) are in the VALID_PHASES set', async () => {
     const { TRADE_TARGET_PHASE, VALID_PHASES } = await import(
       '@/lib/classification/lifecycle-phase'
     );
-    for (const [slug, phase] of Object.entries(TRADE_TARGET_PHASE)) {
+    for (const [slug, target] of Object.entries(TRADE_TARGET_PHASE)) {
       expect(
-        VALID_PHASES.has(phase),
-        `${slug} → ${phase} is not a valid lifecycle phase`,
+        VALID_PHASES.has(target.bid_phase),
+        `${slug} → bid_phase ${target.bid_phase} is not a valid phase`,
+      ).toBe(true);
+      expect(
+        VALID_PHASES.has(target.work_phase),
+        `${slug} → work_phase ${target.work_phase} is not a valid phase`,
       ).toBe(true);
     }
   });

@@ -16,18 +16,32 @@ const { TRADE_TARGET_PHASE } = require('./lib/lifecycle-phase');
 
 // Phase ordinals for forward-progression comparison.
 // Permits at or past the target phase → overdue (window closed).
-// Phase ordinals for forward-progression comparison.
-// P18 = "construction active, has passed inspection" — conservatively
-// placed at ordinal 4 (same as P12 rough-in) since we know at least
-// one inspection passed but don't know the exact sub-stage. This means
-// P18 permits are "past" P9-P12 targets but "before" P13+ targets.
-// Without this, P18 permits with target P9 (excavation) would never
-// be marked overdue via the ordinal path. See independent D2 +
-// adversarial Probe 3.
+// Phase ordinals for forward-progression comparison AND bimodal routing.
+//
+// MUST cover every phase that appears as a bid_phase or work_phase in
+// TRADE_TARGET_PHASE, plus every phase a permit can be in. Without
+// complete coverage, the bimodal routing falls to `else → work_phase`
+// for any phase with undefined ordinal, making the bid window dead
+// for all pre-construction permits. See WF3 adversarial Probe 1.
+//
+// Pre-construction phases (negative ordinals) are BEFORE all
+// construction phases. A P4 permit with plumbing bid_phase P7a:
+// ordinal(-5) < ordinal(-2) → targets bid_phase → "bidding starts
+// when permit is issued." Once the permit reaches P7a, ordinal(-2)
+// is no longer < ordinal(-2) → shifts to work_phase P12 → "rough-in
+// expected in 39 days."
 const PHASE_ORDINAL = {
+  // Pre-issuance
+  P3: -6, P4: -5, P5: -4, P6: -3,
+  // Issued, pre-construction (all at -2: same tier for bid routing)
+  P7a: -2, P7b: -2, P7c: -2, P7d: -2,
+  // Revised
+  P8: -1,
+  // Construction sub-stages
   P9: 1, P10: 2, P11: 3, P12: 4, P13: 5,
   P14: 6, P15: 7, P16: 8, P17: 9,
-  P18: 4, // conservative: at least past rough-in
+  // Generic active (at least past rough-in)
+  P18: 4,
 };
 
 // Phases that should NOT produce trade forecasts
@@ -52,11 +66,32 @@ const PRE_CONSTRUCTION_PHASES = new Set([
 const FORECAST_BATCH_SIZE = 1000;
 const DEFAULT_MEDIAN_DAYS = 30;
 
-// Urgency classification thresholds (days until predicted_start)
-function classifyUrgency(daysUntil, isPastTarget) {
+// Urgency classification with stalled check + expired decay.
+//
+// WF3 "Overdue Graveyard" fix: the old logic had no decay — a permit
+// issued 2 years ago with no inspections was "600 days overdue" forever.
+// That's not a hot lead; that's dead data. The 'expired' tier (>90 days
+// past) cleans this out. The 'on_hold' tier surfaces stalled permits
+// separately so operators can see them without polluting the urgency feed.
+function classifyUrgency(daysUntil, isPastTarget, isStalled) {
+  if (isStalled) return 'on_hold';
+
+  // Physically passed the target phase → window closed (active signal).
+  // This MUST come before the expired check: a permit at P13 targeting
+  // P12 is overdue (builder may still urgently need this trade), NOT
+  // expired (dead data). Adversarial WF3 Probe 3.
   if (isPastTarget) return 'overdue';
+
+  // THE GRAVEYARD FIX: >90 days past predicted date → dead data, not a lead.
+  // Only fires for permits that haven't physically passed the target
+  // (the isPastTarget check above catches those first).
+  if (daysUntil <= -90) return 'expired';
+
+  // 0-30 days late → the "delayed" sweet spot (builder is behind schedule)
   if (daysUntil <= -30) return 'overdue';
   if (daysUntil <= 0) return 'delayed';
+
+  // Forward-looking tracking
   if (daysUntil <= 14) return 'imminent';
   if (daysUntil <= 30) return 'upcoming';
   return 'on_time';
@@ -127,7 +162,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   pipeline.log.info('[trade-forecasts]', 'Querying active permit-trade pairs...');
   const { rows: permitTradeRows } = await pool.query(`
     SELECT p.permit_num, p.revision_num, t.slug AS trade_slug,
-           p.lifecycle_phase, p.phase_started_at, p.permit_type
+           p.lifecycle_phase, p.phase_started_at, p.permit_type,
+           p.lifecycle_stalled
       FROM permit_trades pt
       JOIN trades t ON t.id = pt.trade_id
       JOIN permits p ON p.permit_num = pt.permit_num
@@ -149,7 +185,11 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   let unmappedTrades = 0;
 
   for (const row of permitTradeRows) {
-    const { permit_num, revision_num, trade_slug, lifecycle_phase, phase_started_at, permit_type } = row;
+    const {
+      permit_num, revision_num, trade_slug,
+      lifecycle_phase, phase_started_at, permit_type,
+      lifecycle_stalled,
+    } = row;
 
     // Skip terminal/orphan/CoA phases
     if (SKIP_PHASES.has(lifecycle_phase)) {
@@ -157,17 +197,36 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       continue;
     }
 
-    // Look up target phase for this trade
-    const targetPhase = TRADE_TARGET_PHASE[trade_slug];
-    if (!targetPhase) {
+    // Look up bimodal targets for this trade
+    const targets = TRADE_TARGET_PHASE[trade_slug];
+    if (!targets) {
       unmappedTrades++;
       continue;
     }
 
     const currentOrdinal = PHASE_ORDINAL[lifecycle_phase];
-    const targetOrdinal = PHASE_ORDINAL[targetPhase];
+    const bidOrdinal = PHASE_ORDINAL[targets.bid_phase];
 
-    // If permit is already at or past the target phase → overdue
+    // ── BIMODAL ROUTING ─────────────────────────────────────────
+    // Target the bid_phase if we haven't reached it yet (the
+    // "get on the shortlist" window). Once the permit passes the
+    // bid_phase, shift to work_phase (the "Rescue Mission" — the
+    // trade is physically needed on-site soon).
+    //
+    // This is the self-healing core: an HVAC permit issued 2 years
+    // ago burned through bid_phase → expired. But if that permit
+    // gets a "Framing Passed" inspection tomorrow, it shifts to
+    // work_phase (P12). The calibration recalculates from the new
+    // phase anchor, daysUntil becomes positive, and the lead
+    // resurrects from expired → upcoming/imminent.
+    let targetPhase;
+    if (currentOrdinal != null && bidOrdinal != null && currentOrdinal < bidOrdinal) {
+      targetPhase = targets.bid_phase;
+    } else {
+      targetPhase = targets.work_phase;
+    }
+
+    const targetOrdinal = PHASE_ORDINAL[targetPhase];
     const isPastTarget = currentOrdinal != null && targetOrdinal != null
       && currentOrdinal >= targetOrdinal;
 
@@ -188,7 +247,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       (predictedStart.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
     );
 
-    const urgency = classifyUrgency(daysUntil, isPastTarget);
+    // Consolidates: stalled check + bimodal past-target + expired decay
+    const urgency = classifyUrgency(daysUntil, isPastTarget, lifecycle_stalled);
     const confidence = classifyConfidence(cal.sample, cal.method === 'default');
 
     forecasts.push({
@@ -219,13 +279,24 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   // it (SKIP_PHASES). Without cleanup, the old forecast row persists with
   // a stale urgency. The feed would show "delayed" for a closed permit.
   // Independent D4 + adversarial Probe 4.
+  // Ironclad ghost purge: deletes forecasts if EITHER the permit died
+  // (terminal/orphan/dead phase) OR the specific trade was deactivated
+  // on the permit. The NOT EXISTS ensures no orphan forecast rows
+  // persist between runs. This replaces the simpler IN-based DELETE
+  // that only caught phase-based invalidation.
   const { rows: staleRows } = await pool.query(
-    `DELETE FROM trade_forecasts
-      WHERE (permit_num, revision_num) IN (
-        SELECT permit_num, revision_num
-          FROM permits
-         WHERE lifecycle_phase IS NULL
-            OR lifecycle_phase IN ('P19','P20','O1','O2','O3','O4','P1','P2')
+    `DELETE FROM trade_forecasts tf
+      WHERE NOT EXISTS (
+        SELECT 1 FROM permit_trades pt
+          JOIN permits p ON p.permit_num = pt.permit_num
+                        AND p.revision_num = pt.revision_num
+          JOIN trades t ON t.id = pt.trade_id
+         WHERE pt.permit_num = tf.permit_num
+           AND pt.revision_num = tf.revision_num
+           AND t.slug = tf.trade_slug
+           AND pt.is_active = true
+           AND p.lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','O4','P1','P2')
+           AND p.lifecycle_phase IS NOT NULL
       )
     RETURNING 1`,
   );

@@ -104,6 +104,8 @@
 | MED | WF1 Phase 4 2026-04-12 Both | 92% of forecasts are `overdue` — architecturally correct for old permits (issued_date months/years ago + median_days < today) but has low signal value for the feed. Product decision: either recalibrate urgency tiers for aged permits, or filter overdue from the default feed view and surface only the 8% actionable forecasts. | Product design | OPEN |
 | MED | WF1 Phase 4 2026-04-12 Both | Infra tests are regex shape-only — no behavioral coverage for `classifyUrgency`, `classifyConfidence`, `lookupCalibration`, or the `isPastTarget` ordinal logic. These are pure functions easily unit-testable. | Future test hardening | OPEN |
 | LOW | WF1 Phase 4 2026-04-12 Independent (D5) | Reviewer flagged p25/p75 as nullable, but migration 087 has `NOT NULL` on those columns. False positive — no fix needed. | N/A | WONTFIX |
+| MED | WF3 Phase 4 2026-04-12 Independent (Issue 3) | Ghost purge DELETE runs before batch UPSERT — if the script crashes mid-batch, purged rows are not replenished until the next run. Consistent with existing pipeline pattern (non-transactional). Transient consistency gap only, not data corruption. | Existing pattern | OPEN |
+| MED | WF3 Phase 4 2026-04-12 Adversarial (Probe 2) | Ghost purge race with concurrent reclassification — if permit_trades has a brief gap during reclassification (old trades deleted, new not yet inserted), the NOT EXISTS fires and deletes the forecast. Re-created on next run. Eventually consistent. | Existing pattern | OPEN |
 
 ---
 

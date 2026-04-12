@@ -176,16 +176,50 @@ export const VALID_PHASES: ReadonlySet<string> = new Set([
  * to per-trade predictions. Dual code path: must match the JS version
  * in scripts/lib/lifecycle-phase.js.
  */
-export const TRADE_TARGET_PHASE: Readonly<Record<string, string>> = Object.freeze({
-  excavation: 'P9', shoring: 'P9', demolition: 'P9', 'temporary-fencing': 'P9',
-  concrete: 'P10', waterproofing: 'P10',
-  framing: 'P11', 'structural-steel': 'P11', masonry: 'P11', elevator: 'P11',
-  plumbing: 'P12', hvac: 'P12', electrical: 'P12', 'fire-protection': 'P12', 'drain-plumbing': 'P12',
-  insulation: 'P13',
-  drywall: 'P15', painting: 'P15', flooring: 'P15', tiling: 'P15',
-  'trim-work': 'P15', 'millwork-cabinetry': 'P15', 'stone-countertops': 'P15', security: 'P15',
-  roofing: 'P16', glazing: 'P16', 'eavestrough-siding': 'P16', caulking: 'P16', solar: 'P16',
-  landscaping: 'P17', 'decking-fences': 'P17', 'pool-installation': 'P17',
+/** Bimodal trade target: bid_phase = when to start bidding, work_phase = when on-site. */
+export interface TradeTarget {
+  bid_phase: string;
+  work_phase: string;
+}
+
+/**
+ * Bimodal trade target mapping. Each trade has TWO windows:
+ * bid_phase (get on the shortlist) and work_phase (boots on the ground).
+ * Dual code path: must match scripts/lib/lifecycle-phase.js.
+ */
+export const TRADE_TARGET_PHASE: Readonly<Record<string, TradeTarget>> = Object.freeze({
+  excavation: { bid_phase: 'P7a', work_phase: 'P9' },
+  shoring: { bid_phase: 'P7a', work_phase: 'P9' },
+  demolition: { bid_phase: 'P7a', work_phase: 'P9' },
+  'temporary-fencing': { bid_phase: 'P7a', work_phase: 'P9' },
+  concrete: { bid_phase: 'P7a', work_phase: 'P10' },
+  waterproofing: { bid_phase: 'P7a', work_phase: 'P10' },
+  framing: { bid_phase: 'P9', work_phase: 'P11' },
+  'structural-steel': { bid_phase: 'P9', work_phase: 'P11' },
+  masonry: { bid_phase: 'P9', work_phase: 'P11' },
+  elevator: { bid_phase: 'P9', work_phase: 'P11' },
+  plumbing: { bid_phase: 'P7a', work_phase: 'P12' },
+  hvac: { bid_phase: 'P7a', work_phase: 'P12' },
+  electrical: { bid_phase: 'P7a', work_phase: 'P12' },
+  'fire-protection': { bid_phase: 'P7a', work_phase: 'P12' },
+  'drain-plumbing': { bid_phase: 'P7a', work_phase: 'P12' },
+  insulation: { bid_phase: 'P11', work_phase: 'P13' },
+  drywall: { bid_phase: 'P11', work_phase: 'P15' },
+  painting: { bid_phase: 'P13', work_phase: 'P15' },
+  flooring: { bid_phase: 'P13', work_phase: 'P15' },
+  tiling: { bid_phase: 'P13', work_phase: 'P15' },
+  'trim-work': { bid_phase: 'P13', work_phase: 'P15' },
+  'millwork-cabinetry': { bid_phase: 'P13', work_phase: 'P15' },
+  'stone-countertops': { bid_phase: 'P13', work_phase: 'P15' },
+  security: { bid_phase: 'P13', work_phase: 'P15' },
+  roofing: { bid_phase: 'P11', work_phase: 'P16' },
+  glazing: { bid_phase: 'P11', work_phase: 'P16' },
+  'eavestrough-siding': { bid_phase: 'P11', work_phase: 'P16' },
+  caulking: { bid_phase: 'P13', work_phase: 'P16' },
+  solar: { bid_phase: 'P13', work_phase: 'P16' },
+  landscaping: { bid_phase: 'P11', work_phase: 'P17' },
+  'decking-fences': { bid_phase: 'P11', work_phase: 'P17' },
+  'pool-installation': { bid_phase: 'P11', work_phase: 'P17' },
 });
 
 // ─────────────────────────────────────────────────────────────────

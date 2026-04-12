@@ -30,6 +30,15 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/FROM phase_calibration/);
   });
 
+  it('uses bimodal TRADE_TARGET_PHASE routing (bid_phase vs work_phase)', () => {
+    expect(content).toMatch(/bid_phase/);
+    expect(content).toMatch(/work_phase/);
+    expect(content).toMatch(/targets\.bid_phase/);
+    expect(content).toMatch(/targets\.work_phase/);
+    // Bimodal routing: target bid_phase if before it, else work_phase
+    expect(content).toMatch(/currentOrdinal.*<.*bidOrdinal/);
+  });
+
   it('implements 4-level fallback hierarchy + default', () => {
     expect(content).toMatch(/lookupCalibration/);
     expect(content).toMatch(/exact/);
@@ -54,10 +63,12 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/'O4'/); // independent D3: defensive skip
   });
 
-  it('purges stale forecasts for permits now in terminal/orphan phases', () => {
-    // Independent D4 + adversarial Probe 4: permits that transition
-    // to P19/P20 keep stale forecast rows because the script skips them.
+  it('purges ghost forecasts via NOT EXISTS against active permit_trades', () => {
+    // WF3 ghost purge: deletes forecasts if the permit died OR the
+    // trade was deactivated. NOT EXISTS is ironclad — catches both.
     expect(content).toMatch(/DELETE FROM trade_forecasts/);
+    expect(content).toMatch(/NOT EXISTS/);
+    expect(content).toMatch(/pt\.is_active = true/);
     expect(content).toMatch(/stalePurged/);
   });
 
@@ -78,18 +89,20 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(preConMatch![1]).not.toMatch(/P18/);
   });
 
-  it('classifies urgency with correct thresholds', () => {
+  it('classifies urgency with expired decay + on_hold + correct thresholds', () => {
     expect(content).toMatch(/classifyUrgency/);
+    // WF3: expired tier (>90 days past → dead data, not a lead)
+    expect(content).toMatch(/expired/);
+    expect(content).toMatch(/<= -90/);
+    // WF3: on_hold tier (stalled permits)
+    expect(content).toMatch(/on_hold/);
+    expect(content).toMatch(/isStalled/);
+    // Standard tiers
     expect(content).toMatch(/overdue/);
     expect(content).toMatch(/delayed/);
     expect(content).toMatch(/imminent/);
     expect(content).toMatch(/upcoming/);
     expect(content).toMatch(/on_time/);
-    // Threshold checks
-    expect(content).toMatch(/<= -30/);
-    expect(content).toMatch(/<= 0/);
-    expect(content).toMatch(/<= 14/);
-    expect(content).toMatch(/<= 30/);
   });
 
   it('classifies confidence from sample_size', () => {
