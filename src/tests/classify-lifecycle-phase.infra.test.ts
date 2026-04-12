@@ -257,6 +257,86 @@ describe('scripts/classify-lifecycle-phase.js — concurrency guard (advisory lo
   });
 });
 
+describe('scripts/classify-lifecycle-phase.js — Phase 2 state machine', () => {
+  let content: string;
+  beforeAll(() => {
+    content = read('scripts/classify-lifecycle-phase.js');
+  });
+
+  it('reads old_phase from dirty permits SELECT for transition detection', () => {
+    expect(content).toMatch(/lifecycle_phase AS old_phase/);
+  });
+
+  it('conditionally stamps phase_started_at only on actual phase changes', () => {
+    // The CASE ensures phase_started_at resets ONLY when lifecycle_phase
+    // changes, NOT when only lifecycle_stalled changes. This is the
+    // critical invariant for countdown math.
+    expect(content).toMatch(
+      /phase_started_at\s*=\s*CASE[\s\S]*?WHEN\s+p\.lifecycle_phase\s+IS DISTINCT FROM\s+v\.phase[\s\S]*?THEN\s+NOW\(\)[\s\S]*?ELSE\s+p\.phase_started_at/,
+    );
+  });
+
+  it('inserts transition rows into permit_phase_transitions per batch', () => {
+    expect(content).toMatch(
+      /INSERT INTO permit_phase_transitions/,
+    );
+    // Transitions filtered: only rows where old_phase !== new phase
+    // (implemented as early-return-false on equality)
+    expect(content).toMatch(/r\.phase\s*===\s*r\.old_phase/);
+  });
+
+  it('suppresses P7a/P7b/P7c time-bucket transitions as calibration noise', () => {
+    // Adversarial HIGH-1 + independent Item 5: these are purely
+    // time-driven sub-phase shifts (permit ages past 30/90 day boundary),
+    // not real construction events. Logging them floods the calibration
+    // table with tautological data.
+    expect(content).toMatch(/TIME_BUCKET_GROUPS/);
+    expect(content).toMatch(/P7a.*P7_time/);
+    expect(content).toMatch(/P7b.*P7_time/);
+    expect(content).toMatch(/P7c.*P7_time/);
+    // O2↔O3 also suppressed (orphan active → stalled at 180d)
+    expect(content).toMatch(/O2.*O_time/);
+    expect(content).toMatch(/O3.*O_time/);
+  });
+
+  it('uses j * 6 (not j * 7) for transition INSERT param numbering', () => {
+    // Adversarial CRITICAL-1: NOW() is inline SQL, not a param.
+    // j*7 caused param misalignment on batches with 2+ transitions.
+    expect(content).toMatch(/const base = j \* 6/);
+  });
+
+  it('backfills phase_started_at for existing permits using proxy dates', () => {
+    // Idempotent guard: WHERE phase_started_at IS NULL
+    expect(content).toMatch(/phase_started_at IS NULL/);
+    // Uses issued_date for P7* phases
+    expect(content).toMatch(/lifecycle_phase IN \('P7a','P7b','P7c','P7d'/);
+    expect(content).toMatch(/issued_date::timestamptz/);
+    // Uses application_date for P3-P6
+    expect(content).toMatch(/lifecycle_phase IN \('P3','P4','P5','P6'\)/);
+    expect(content).toMatch(/application_date::timestamptz/);
+  });
+
+  it('backfills initial transition rows with NOT EXISTS guard', () => {
+    expect(content).toMatch(
+      /INSERT INTO permit_phase_transitions[\s\S]*?NOT EXISTS/,
+    );
+    // from_phase is NULL for initial classification
+    expect(content).toMatch(/NULL,\s*lifecycle_phase/);
+  });
+
+  it('reports phase_transitions_logged and backfill counts in PIPELINE_SUMMARY', () => {
+    expect(content).toMatch(/phase_transitions_logged/);
+    expect(content).toMatch(/phase_started_at_backfilled/);
+    expect(content).toMatch(/initial_transitions_backfilled/);
+  });
+
+  it('declares permit_phase_transitions in PIPELINE_META writes', () => {
+    expect(content).toMatch(
+      /permit_phase_transitions.*?from_phase.*?to_phase.*?transitioned_at/,
+    );
+  });
+});
+
 describe('scripts/link-coa.js — permits.last_seen_at bump for downstream re-classification', () => {
   let content: string;
   beforeAll(() => {

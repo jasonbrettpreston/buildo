@@ -45,11 +45,21 @@ function buildPermitUpdateSQL(batchSize) {
       `($${base + 1}::varchar, $${base + 2}::varchar, $${base + 3}::varchar, $${base + 4}::boolean)`,
     );
   }
+  // Phase 2 state machine: phase_started_at is stamped ONLY when
+  // lifecycle_phase actually changes (IS DISTINCT FROM), NOT when only
+  // lifecycle_stalled changes. This creates the immutable "start time"
+  // anchor required for countdown math. If only stalled changed, the
+  // existing phase_started_at is preserved.
   return `
     UPDATE permits p
        SET lifecycle_phase = v.phase,
            lifecycle_stalled = v.stalled,
-           lifecycle_classified_at = NOW()
+           lifecycle_classified_at = NOW(),
+           phase_started_at = CASE
+             WHEN p.lifecycle_phase IS DISTINCT FROM v.phase
+             THEN NOW()
+             ELSE p.phase_started_at
+           END
       FROM (VALUES ${tuples.join(', ')}) AS v(permit_num, revision_num, phase, stalled)
      WHERE p.permit_num = v.permit_num
        AND p.revision_num = v.revision_num
@@ -200,7 +210,8 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
 
   pipeline.log.info('[classify-lifecycle-phase]', 'Querying dirty permits...');
   const permitsResult = await pool.query(
-    `SELECT permit_num, revision_num, status, enriched_status, issued_date, last_seen_at
+    `SELECT permit_num, revision_num, status, enriched_status, issued_date, last_seen_at,
+            lifecycle_phase AS old_phase, permit_type, neighbourhood_id
        FROM permits
       WHERE lifecycle_classified_at IS NULL
          OR last_seen_at > lifecycle_classified_at`,
@@ -316,10 +327,17 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       revision_num: row.revision_num,
       phase: result.phase,
       stalled: result.stalled,
+      // Phase 2 state machine: carry the old phase + context for
+      // transition logging. old_phase is the value BEFORE this run's
+      // classification. If old_phase !== phase, we log a transition.
+      old_phase: row.old_phase,
+      permit_type: row.permit_type,
+      neighbourhood_id: row.neighbourhood_id,
     };
   });
 
   let permitsUpdated = 0;
+  let transitionsLogged = 0;
   if (permitUpdates.length > 0) {
     // Per-batch small transactions — each batch commits independently.
     //
@@ -343,20 +361,73 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       const batchPnums = batch.map((r) => r.permit_num);
       const batchRnums = batch.map((r) => r.revision_num);
 
+      // Identify rows in this batch where lifecycle_phase actually
+      // changes (not just stalled). These are the transitions we log.
+      //
+      // Suppress intra-bucket time-driven transitions (HIGH-1 from
+      // adversarial + independent reviews): P7a/P7b/P7c are purely
+      // time-bucketed sub-phases — a P7a→P7b "transition" is just
+      // the permit aging past 30 days, not a real construction event.
+      // Logging these would flood the calibration table with thousands
+      // of tautological 60-day "transitions." Same for O2↔O3 (orphan
+      // active → orphan stalled at 180 days).
+      // P7d (Not Started) is NOT suppressed — P7d→P7a means the status
+      // changed from "Work Not Started" to "Permit Issued", which IS real.
+      const TIME_BUCKET_GROUPS = {
+        P7a: 'P7_time', P7b: 'P7_time', P7c: 'P7_time',
+        O2: 'O_time', O3: 'O_time',
+      };
+      const transitions = batch.filter((r) => {
+        if (r.phase === r.old_phase || r.phase === null) return false;
+        // Suppress intra-bucket shifts
+        const oldGroup = TIME_BUCKET_GROUPS[r.old_phase];
+        const newGroup = TIME_BUCKET_GROUPS[r.phase];
+        if (oldGroup && oldGroup === newGroup) return false;
+        return true;
+      });
+
       await pipeline.withTransaction(pool, async (client) => {
-        // (a) Phase/stalled UPDATE — IS DISTINCT FROM guards skip
-        // rows whose values are already correct, avoiding write
-        // amplification. result.rowCount counts only actually-changed
-        // rows, which is the metric operators care about.
+        // (a) Phase/stalled UPDATE + conditional phase_started_at stamp.
         const result = await client.query(sql, params);
         permitsUpdated += result.rowCount || 0;
 
-        // (b) Stamp classified_at for every row in this batch that is
+        // (b) Log phase transitions to permit_phase_transitions.
+        // Only fires for rows where the phase actually changed (not
+        // stalled-only). Runs inside the same transaction so the
+        // permit row and its transition history are always consistent.
+        if (transitions.length > 0) {
+          const tVals = [];
+          const tParams = [];
+          for (let j = 0; j < transitions.length; j++) {
+            const t = transitions[j];
+            // 6 params per row (NOW() is inline SQL, not a param).
+            // CRITICAL fix: was j*7, causing param misalignment on
+            // batches with 2+ transitions. Adversarial CRITICAL-1.
+            const base = j * 6;
+            tVals.push(
+              `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, NOW(), $${base + 5}, $${base + 6}::int)`,
+            );
+            tParams.push(
+              t.permit_num, t.revision_num,
+              t.old_phase,  // from_phase (NULL on first classification)
+              t.phase,      // to_phase
+              t.permit_type,
+              t.neighbourhood_id,
+            );
+          }
+          const insertResult = await client.query(
+            `INSERT INTO permit_phase_transitions
+               (permit_num, revision_num, from_phase, to_phase, transitioned_at, permit_type, neighbourhood_id)
+             VALUES ${tVals.join(', ')}`,
+            tParams,
+          );
+          transitionsLogged += insertResult.rowCount || 0;
+        }
+
+        // (c) Stamp classified_at for every row in this batch that is
         // still dirty (last_seen_at > classified_at). This covers both
         // (i) rows just updated by (a) — redundant, idempotent — and
         // (ii) rows (a) skipped because phase was already correct.
-        // Running under the same transaction means operators never see
-        // a "phase updated but stamp missing" state.
         await client.query(
           `UPDATE permits
               SET lifecycle_classified_at = NOW()
@@ -429,6 +500,87 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
         );
       });
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Phase 2b: backfill phase_started_at for existing permits
+  // ═══════════════════════════════════════════════════════════
+  //
+  // One-time backfill: permits that have a lifecycle_phase but no
+  // phase_started_at (set by the Phase 1 migration or prior runs
+  // before the state-machine upgrade). Uses best-available proxies:
+  //   P7* / P8 / P18 → issued_date
+  //   P3-P6          → application_date
+  //   P9-P17         → latest inspection_date (from rollup)
+  //   P19 / P20      → last_seen_at
+  //   O1-O3          → COALESCE(application_date, first_seen_at)
+  //
+  // Idempotent: WHERE phase_started_at IS NULL. Second run = 0 rows.
+  const { rows: backfillRows } = await pool.query(
+    `UPDATE permits
+        SET phase_started_at = CASE
+          WHEN lifecycle_phase IN ('P7a','P7b','P7c','P7d','P8','P18')
+            THEN COALESCE(issued_date::timestamptz, first_seen_at)
+          WHEN lifecycle_phase IN ('P3','P4','P5','P6')
+            THEN COALESCE(application_date::timestamptz, first_seen_at)
+          WHEN lifecycle_phase IN ('P9','P10','P11','P12','P13','P14','P15','P16','P17')
+            THEN COALESCE(
+              (SELECT MAX(i.inspection_date)::timestamptz
+                 FROM permit_inspections i
+                WHERE i.permit_num = permits.permit_num
+                  AND i.status = 'Passed'),
+              issued_date::timestamptz,
+              first_seen_at
+            )
+          WHEN lifecycle_phase IN ('P19','P20')
+            THEN last_seen_at
+          WHEN lifecycle_phase IN ('O1','O2','O3')
+            THEN COALESCE(application_date::timestamptz, first_seen_at)
+          ELSE first_seen_at
+        END
+      WHERE lifecycle_phase IS NOT NULL
+        AND phase_started_at IS NULL
+    RETURNING 1`,
+  );
+  const backfilledCount = backfillRows.length;
+  if (backfilledCount > 0) {
+    pipeline.log.info(
+      '[classify-lifecycle-phase]',
+      `Backfilled phase_started_at for ${backfilledCount.toLocaleString()} permits`,
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Phase 2c: backfill initial transition rows
+  // ═══════════════════════════════════════════════════════════
+  //
+  // For existing classified permits that have no transition history
+  // yet, write a single "initial classification" row with
+  // from_phase = NULL. This gives the calibration engine baseline
+  // data from day 1.
+  //
+  // Idempotent: NOT EXISTS guard. Second run = 0 rows.
+  const { rows: initialTransRows } = await pool.query(
+    `INSERT INTO permit_phase_transitions
+       (permit_num, revision_num, from_phase, to_phase, transitioned_at, permit_type, neighbourhood_id)
+     SELECT permit_num, revision_num, NULL, lifecycle_phase,
+            COALESCE(phase_started_at, NOW()),
+            permit_type, neighbourhood_id
+       FROM permits
+      WHERE lifecycle_phase IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM permit_phase_transitions t
+           WHERE t.permit_num = permits.permit_num
+             AND t.revision_num = permits.revision_num
+        )
+    RETURNING 1`,
+  );
+  const initialTransCount = initialTransRows.length;
+  if (initialTransCount > 0) {
+    pipeline.log.info(
+      '[classify-lifecycle-phase]',
+      `Backfilled ${initialTransCount.toLocaleString()} initial transition rows`,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -537,6 +689,9 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     records_updated: permitsUpdated + coasUpdated,
     records_meta: {
       permits_updated: permitsUpdated,
+      phase_transitions_logged: transitionsLogged,
+      phase_started_at_backfilled: backfilledCount,
+      initial_transitions_backfilled: initialTransCount,
       coas_updated: coasUpdated,
       phase_distribution: phaseDistribution,
       coa_distribution: coaDistribution,
@@ -573,7 +728,8 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       ],
     },
     {
-      permits: ['lifecycle_phase', 'lifecycle_stalled', 'lifecycle_classified_at'],
+      permits: ['lifecycle_phase', 'lifecycle_stalled', 'lifecycle_classified_at', 'phase_started_at'],
+      permit_phase_transitions: ['permit_num', 'revision_num', 'from_phase', 'to_phase', 'transitioned_at', 'permit_type', 'neighbourhood_id'],
       coa_applications: ['lifecycle_phase', 'lifecycle_classified_at'],
     },
   );
