@@ -395,54 +395,55 @@ const NORMALIZED_DEAD_DECISIONS_ARRAY = Object.freeze([...NORMALIZED_DEAD_DECISI
 //
 // WF3: replaces the single-phase mapping that caused 5,304 plumbing
 // and 4,849 HVAC leads to land in the "overdue graveyard."
+// WF3: bid_phase values recalibrated to match when GCs actually
+// start soliciting subs. Major trades (MEP, structural, drywall,
+// elevator) bid from P3 (application intake) — GCs line up subs
+// before the permit even issues. Specialty finishes bid later (P7a
+// or P11). Landscaping/decking bid during rough-in (P12).
 const TRADE_TARGET_PHASE = Object.freeze({
-  // Site prep — bid early, work at P9
-  excavation:         { bid_phase: 'P7a', work_phase: 'P9' },
-  shoring:            { bid_phase: 'P7a', work_phase: 'P9' },
-  demolition:         { bid_phase: 'P7a', work_phase: 'P9' },
-  'temporary-fencing': { bid_phase: 'P7a', work_phase: 'P9' },
+  // --- SITE PREP & FOUNDATION ---
+  excavation:          { bid_phase: 'P3',  work_phase: 'P9' },
+  shoring:             { bid_phase: 'P3',  work_phase: 'P9' },
+  demolition:          { bid_phase: 'P3',  work_phase: 'P9' },
+  'temporary-fencing': { bid_phase: 'P3',  work_phase: 'P9' },
+  concrete:            { bid_phase: 'P3',  work_phase: 'P10' },
+  waterproofing:       { bid_phase: 'P3',  work_phase: 'P10' },
 
-  // Foundation — bid early, work at P10
-  concrete:           { bid_phase: 'P7a', work_phase: 'P10' },
-  waterproofing:      { bid_phase: 'P7a', work_phase: 'P10' },
+  // --- STRUCTURAL ---
+  framing:             { bid_phase: 'P3',  work_phase: 'P11' },
+  'structural-steel':  { bid_phase: 'P3',  work_phase: 'P11' },
+  masonry:             { bid_phase: 'P7a', work_phase: 'P11' },
+  elevator:            { bid_phase: 'P3',  work_phase: 'P11' },
 
-  // Structural — bid during foundation, work at P11
-  framing:            { bid_phase: 'P9',  work_phase: 'P11' },
-  'structural-steel': { bid_phase: 'P9',  work_phase: 'P11' },
-  masonry:            { bid_phase: 'P9',  work_phase: 'P11' },
-  elevator:           { bid_phase: 'P9',  work_phase: 'P11' },
+  // --- MEP (Mechanical, Electrical, Plumbing) ---
+  plumbing:            { bid_phase: 'P3',  work_phase: 'P12' },
+  hvac:                { bid_phase: 'P3',  work_phase: 'P12' },
+  electrical:          { bid_phase: 'P3',  work_phase: 'P12' },
+  'drain-plumbing':    { bid_phase: 'P3',  work_phase: 'P12' },
+  'fire-protection':   { bid_phase: 'P3',  work_phase: 'P12' },
 
-  // MEP rough-in — bid during framing, work at P12
-  plumbing:           { bid_phase: 'P7a', work_phase: 'P12' },
-  hvac:               { bid_phase: 'P7a', work_phase: 'P12' },
-  electrical:         { bid_phase: 'P7a', work_phase: 'P12' },
-  'fire-protection':  { bid_phase: 'P7a', work_phase: 'P12' },
-  'drain-plumbing':   { bid_phase: 'P7a', work_phase: 'P12' },
+  // --- ENVELOPE & INSULATION ---
+  roofing:             { bid_phase: 'P7a', work_phase: 'P16' },
+  insulation:          { bid_phase: 'P7a', work_phase: 'P13' },
+  glazing:             { bid_phase: 'P7a', work_phase: 'P16' },
 
-  // Insulation — bid during rough-in, work at P13
-  insulation:         { bid_phase: 'P11', work_phase: 'P13' },
+  // --- FINISHES (Interior) ---
+  drywall:             { bid_phase: 'P3',  work_phase: 'P15' },
+  painting:            { bid_phase: 'P7a', work_phase: 'P15' },
+  flooring:            { bid_phase: 'P7a', work_phase: 'P15' },
+  tiling:              { bid_phase: 'P7a', work_phase: 'P15' },
+  'trim-work':         { bid_phase: 'P11', work_phase: 'P15' },
+  'millwork-cabinetry': { bid_phase: 'P7a', work_phase: 'P15' },
+  'stone-countertops': { bid_phase: 'P11', work_phase: 'P15' },
+  security:            { bid_phase: 'P11', work_phase: 'P15' },
 
-  // Interior finishing — bid during insulation, work at P15
-  drywall:            { bid_phase: 'P11', work_phase: 'P15' },
-  painting:           { bid_phase: 'P13', work_phase: 'P15' },
-  flooring:           { bid_phase: 'P13', work_phase: 'P15' },
-  tiling:             { bid_phase: 'P13', work_phase: 'P15' },
-  'trim-work':        { bid_phase: 'P13', work_phase: 'P15' },
-  'millwork-cabinetry': { bid_phase: 'P13', work_phase: 'P15' },
-  'stone-countertops': { bid_phase: 'P13', work_phase: 'P15' },
-  security:           { bid_phase: 'P13', work_phase: 'P15' },
-
-  // Exterior finishing — bid during framing, work at P16
-  roofing:            { bid_phase: 'P11', work_phase: 'P16' },
-  glazing:            { bid_phase: 'P11', work_phase: 'P16' },
-  'eavestrough-siding': { bid_phase: 'P11', work_phase: 'P16' },
-  caulking:           { bid_phase: 'P13', work_phase: 'P16' },
-  solar:              { bid_phase: 'P13', work_phase: 'P16' },
-
-  // Landscaping / final — bid late, work at P17
-  landscaping:        { bid_phase: 'P11', work_phase: 'P17' },
-  'decking-fences':   { bid_phase: 'P11', work_phase: 'P17' },
-  'pool-installation': { bid_phase: 'P11', work_phase: 'P17' },
+  // --- EXTERIOR & SPECIALTY ---
+  'eavestrough-siding': { bid_phase: 'P7a', work_phase: 'P16' },
+  caulking:            { bid_phase: 'P7a', work_phase: 'P16' },
+  solar:               { bid_phase: 'P7a', work_phase: 'P16' },
+  landscaping:         { bid_phase: 'P12', work_phase: 'P17' },
+  'decking-fences':    { bid_phase: 'P12', work_phase: 'P17' },
+  'pool-installation': { bid_phase: 'P7a', work_phase: 'P17' },
 });
 
 module.exports = {

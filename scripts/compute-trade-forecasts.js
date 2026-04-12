@@ -106,7 +106,7 @@ function classifyConfidence(sampleSize, isFallback) {
 
 pipeline.run('compute-trade-forecasts', async (pool) => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // normalize to midnight
+  today.setUTCHours(0, 0, 0, 0); // normalize to UTC midnight
 
   // ═══════════════════════════════════════════════════════════
   // Step 1: Load calibration data into nested Map
@@ -220,14 +220,27 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     // phase anchor, daysUntil becomes positive, and the lead
     // resurrects from expired → upcoming/imminent.
     let targetPhase;
-    if (currentOrdinal != null && bidOrdinal != null && currentOrdinal < bidOrdinal) {
+    // WF3 Bug Fix: was `<`, now `<=`. The old `<` meant a permit
+    // currently AT the bid_phase (e.g., P3 with bid_phase P3) would
+    // skip to work_phase — giving the tradesperson zero days to bid.
+    // With `<=`, the bid window stays open while the permit is IN
+    // the bid phase, so the feed shows "Bid Window Open."
+    if (currentOrdinal != null && bidOrdinal != null && currentOrdinal <= bidOrdinal) {
       targetPhase = targets.bid_phase;
     } else {
       targetPhase = targets.work_phase;
     }
 
     const targetOrdinal = PHASE_ORDINAL[targetPhase];
-    const isPastTarget = currentOrdinal != null && targetOrdinal != null
+
+    // isPastTarget only applies when targeting work_phase. For bid_phase
+    // targeting: being AT the bid phase means the window is OPEN, not
+    // closed. Without this guard, a P3 permit targeting bid_phase P3
+    // gets isPastTarget=true (ordinal -6 >= -6) → urgency="overdue",
+    // contradicting the `<=` fix that keeps the bid window open.
+    // Adversarial WF3 Defect 1.
+    const isPastTarget = targetPhase === targets.work_phase
+      && currentOrdinal != null && targetOrdinal != null
       && currentOrdinal >= targetOrdinal;
 
     // Determine calibration lookup key
@@ -237,11 +250,15 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
 
     const cal = lookupCalibration(fromPhase, targetPhase, permit_type);
 
-    // Compute predicted start date
+    // Compute predicted start date — all math in UTC to prevent
+    // timezone-induced off-by-one errors. setHours(0) uses local TZ
+    // but toISOString() outputs UTC, which can shift the date backward
+    // by a full day when the server TZ differs from the DB TZ.
+    // WF3 Bug Fix: use setUTCHours + setUTCDate for consistent dates.
     const anchorDate = new Date(phase_started_at);
-    anchorDate.setHours(0, 0, 0, 0);
+    anchorDate.setUTCHours(0, 0, 0, 0);
     const predictedStart = new Date(anchorDate);
-    predictedStart.setDate(predictedStart.getDate() + cal.median);
+    predictedStart.setUTCDate(predictedStart.getUTCDate() + cal.median);
 
     const daysUntil = Math.floor(
       (predictedStart.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),

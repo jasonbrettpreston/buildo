@@ -35,8 +35,10 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/work_phase/);
     expect(content).toMatch(/targets\.bid_phase/);
     expect(content).toMatch(/targets\.work_phase/);
-    // Bimodal routing: target bid_phase if before it, else work_phase
-    expect(content).toMatch(/currentOrdinal.*<.*bidOrdinal/);
+    // Bimodal routing: target bid_phase if AT or before it, else work_phase.
+    // WF3: was `<`, now `<=` so permits AT the bid_phase still target it
+    // (the bid window is open, not closed).
+    expect(content).toMatch(/currentOrdinal\s*<=\s*bidOrdinal/);
   });
 
   it('implements 4-level fallback hierarchy + default', () => {
@@ -133,6 +135,15 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/pipeline\.emitSummary/);
     expect(content).toMatch(/urgency_distribution/);
     expect(content).toMatch(/forecasts_computed/);
+  });
+
+  it('uses UTC date math to prevent timezone off-by-one', () => {
+    // WF3: setHours(0) uses local TZ but toISOString() outputs UTC.
+    // On a Toronto server, this can shift dates backward by a full day.
+    expect(content).toMatch(/setUTCHours\(0,\s*0,\s*0,\s*0\)/);
+    expect(content).toMatch(/setUTCDate/);
+    // Must NOT use local-TZ setHours for date normalization
+    expect(content).not.toMatch(/\.setHours\(0,\s*0,\s*0,\s*0\)/);
   });
 
   it('logs unmapped trades as a warning', () => {
