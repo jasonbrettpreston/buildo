@@ -17,7 +17,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 - **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback. CoA FK to permits is intentionally omitted (composite PK incompatible with single-column reference) — enforced via CQA Tier 2 referential audit instead. PostgreSQL ENUMs deferred for `status` columns to accommodate upstream Toronto Open Data changes.
 
 <!-- DB_SCHEMA_START -->
-### Tables (19)
+### Tables (35)
 
 | Table | Columns | Indexes |
 |-------|---------|--------|
@@ -25,21 +25,37 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `builder_contacts` | 8 | 2 |
 | `builders` | 15 | 3 |
 | `building_footprints` | 12 | 3 |
-| `coa_applications` | 18 | 6 |
-| `data_quality_snapshots` | 59 | 2 |
-| `neighbourhoods` | 21 | 2 |
+| `coa_applications` | 21 | 10 |
+| `cost_estimates` | 11 | 1 |
+| `data_quality_snapshots` | 71 | 2 |
+| `engine_health_snapshots` | 10 | 1 |
+| `entities` | 19 | 4 |
+| `entity_contacts` | 8 | 2 |
+| `entity_projects` | 7 | 5 |
+| `inspection_stage_map` | 8 | 2 |
+| `lead_views` | 11 | 5 |
+| `neighbourhoods` | 22 | 3 |
 | `notifications` | 12 | 2 |
-| `parcel_buildings` | 8 | 3 |
-| `parcels` | 22 | 5 |
+| `parcel_buildings` | 8 | 4 |
+| `parcels` | 23 | 6 |
 | `permit_history` | 8 | 2 |
+| `permit_inspections` | 7 | 3 |
 | `permit_parcels` | 7 | 3 |
+| `permit_products` | 7 | 1 |
 | `permit_trades` | 10 | 5 |
-| `permits` | 42 | 10 |
-| `pipeline_runs` | 10 | 1 |
-| `pipeline_schedules` | 4 | 0 |
+| `permits` | 52 | 21 |
+| `pipeline_runs` | 11 | 1 |
+| `pipeline_schedules` | 5 | 0 |
+| `product_groups` | 5 | 2 |
+| `schema_migrations` | 4 | 0 |
+| `scraper_queue` | 8 | 1 |
+| `spatial_ref_sys` | 5 | 0 |
 | `sync_runs` | 12 | 0 |
-| `trade_mapping_rules` | 10 | 2 |
+| `timing_calibration` | 7 | 1 |
+| `trade_mapping_rules` | 11 | 2 |
 | `trades` | 7 | 1 |
+| `user_profiles` | 5 | 0 |
+| `wsib_registry` | 22 | 9 |
 
 ### Materialized Views (1)
 
@@ -103,9 +119,9 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `estimated_stories` | INTEGER | YES | - |
 | `centroid_lat` | NUMERIC(10,7) | YES | - |
 | `centroid_lng` | NUMERIC(10,7) | YES | - |
-| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
-#### `coa_applications` (18 columns)
+#### `coa_applications` (21 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -124,11 +140,30 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `linked_permit_num` | CHARACTER VARYING(30) | YES | - |
 | `linked_confidence` | NUMERIC(3,2) | YES | - |
 | `data_hash` | CHARACTER VARYING(64) | YES | - |
-| `first_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
-| `last_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `first_seen_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `last_seen_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 | `sub_type` | TEXT | YES | - |
+| `street_name_normalized` | CHARACTER VARYING | YES | - |
+| `lifecycle_phase` | CHARACTER VARYING(10) | YES | NULL |
+| `lifecycle_classified_at` | TIMESTAMP WITH TIME ZONE | YES | - |
 
-#### `data_quality_snapshots` (59 columns)
+#### `cost_estimates` (11 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `permit_num` | CHARACTER VARYING(30) | NO | - |
+| `revision_num` | CHARACTER VARYING(10) | NO | - |
+| `estimated_cost` | NUMERIC(15,2) | YES | - |
+| `cost_source` | CHARACTER VARYING(20) | NO | - |
+| `cost_tier` | CHARACTER VARYING(20) | YES | - |
+| `cost_range_low` | NUMERIC(15,2) | YES | - |
+| `cost_range_high` | NUMERIC(15,2) | YES | - |
+| `premium_factor` | NUMERIC(3,2) | YES | - |
+| `complexity_score` | INTEGER | YES | - |
+| `model_version` | INTEGER | NO | 1 |
+| `computed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `data_quality_snapshots` (71 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -191,8 +226,113 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `violations_total` | INTEGER | YES | 0 |
 | `schema_column_counts` | JSONB | YES | - |
 | `sla_permits_ingestion_hours` | NUMERIC(8,2) | YES | NULL |
+| `inspections_total` | INTEGER | YES | 0 |
+| `inspections_permits_scraped` | INTEGER | YES | 0 |
+| `inspections_outstanding_count` | INTEGER | YES | 0 |
+| `inspections_passed_count` | INTEGER | YES | 0 |
+| `inspections_not_passed_count` | INTEGER | YES | 0 |
+| `cost_estimates_total` | INTEGER | YES | - |
+| `cost_estimates_from_permit` | INTEGER | YES | - |
+| `cost_estimates_from_model` | INTEGER | YES | - |
+| `cost_estimates_null_cost` | INTEGER | YES | - |
+| `timing_calibration_total` | INTEGER | YES | - |
+| `timing_calibration_avg_sample` | INTEGER | YES | - |
+| `timing_calibration_freshness_hours` | NUMERIC(6,1) | YES | - |
 
-#### `neighbourhoods` (21 columns)
+#### `engine_health_snapshots` (10 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(engine_health_snapshots_id_seq) |
+| `table_name` | TEXT | NO | - |
+| `snapshot_date` | DATE | NO | CURRENT_DATE |
+| `n_live_tup` | BIGINT | NO | 0 |
+| `n_dead_tup` | BIGINT | NO | 0 |
+| `dead_ratio` | NUMERIC(6,4) | NO | 0 |
+| `seq_scan` | BIGINT | NO | 0 |
+| `idx_scan` | BIGINT | NO | 0 |
+| `seq_ratio` | NUMERIC(6,4) | NO | 0 |
+| `captured_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `entities` (19 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(entities_id_seq) |
+| `legal_name` | CHARACTER VARYING(500) | NO | - |
+| `trade_name` | CHARACTER VARYING(500) | YES | - |
+| `name_normalized` | CHARACTER VARYING(750) | NO | - |
+| `entity_type` | USER-DEFINED | YES | - |
+| `primary_phone` | CHARACTER VARYING(50) | YES | - |
+| `primary_email` | CHARACTER VARYING(200) | YES | - |
+| `website` | CHARACTER VARYING(500) | YES | - |
+| `linkedin_url` | CHARACTER VARYING(500) | YES | - |
+| `google_place_id` | CHARACTER VARYING(200) | YES | - |
+| `google_rating` | NUMERIC(2,1) | YES | - |
+| `google_review_count` | INTEGER | YES | - |
+| `is_wsib_registered` | BOOLEAN | YES | false |
+| `permit_count` | INTEGER | NO | 0 |
+| `first_seen_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `last_seen_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `last_enriched_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `photo_url` | CHARACTER VARYING(500) | YES | - |
+| `photo_validated_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+
+#### `entity_contacts` (8 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(entity_contacts_id_seq) |
+| `entity_id` | INTEGER | NO | - |
+| `contact_type` | CHARACTER VARYING(20) | YES | - |
+| `contact_value` | CHARACTER VARYING(500) | YES | - |
+| `source` | CHARACTER VARYING(50) | NO | user |
+| `contributed_by` | CHARACTER VARYING(100) | YES | - |
+| `verified` | BOOLEAN | NO | false |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `entity_projects` (7 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(entity_projects_id_seq) |
+| `entity_id` | INTEGER | NO | - |
+| `permit_num` | CHARACTER VARYING(50) | YES | - |
+| `revision_num` | CHARACTER VARYING(10) | YES | - |
+| `coa_file_num` | CHARACTER VARYING(50) | YES | - |
+| `role` | USER-DEFINED | NO | - |
+| `observed_at` | TIMESTAMP WITH TIME ZONE | YES | now() |
+
+#### `inspection_stage_map` (8 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(inspection_stage_map_id_seq) |
+| `stage_name` | TEXT | NO | - |
+| `stage_sequence` | INTEGER | NO | - |
+| `trade_slug` | CHARACTER VARYING(50) | NO | - |
+| `relationship` | CHARACTER VARYING(20) | NO | - |
+| `min_lag_days` | INTEGER | NO | - |
+| `max_lag_days` | INTEGER | NO | - |
+| `precedence` | INTEGER | NO | 100 |
+
+#### `lead_views` (11 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(lead_views_id_seq) |
+| `user_id` | CHARACTER VARYING(128) | NO | - |
+| `lead_key` | CHARACTER VARYING(100) | NO | - |
+| `lead_type` | CHARACTER VARYING(20) | NO | - |
+| `permit_num` | CHARACTER VARYING(30) | YES | - |
+| `revision_num` | CHARACTER VARYING(10) | YES | - |
+| `entity_id` | INTEGER | YES | - |
+| `trade_slug` | CHARACTER VARYING(50) | NO | - |
+| `viewed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `saved` | BOOLEAN | NO | false |
+| `saved_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+
+#### `neighbourhoods` (22 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -216,7 +356,8 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `english_knowledge_pct` | NUMERIC(5,2) | YES | - |
 | `top_mother_tongue` | CHARACTER VARYING(50) | YES | - |
 | `census_year` | INTEGER | YES | 2021 |
-| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `geom` | USER-DEFINED | YES | - |
 
 #### `notifications` (12 columns)
 
@@ -232,8 +373,8 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `channel` | CHARACTER VARYING(20) | NO | in_app |
 | `is_read` | BOOLEAN | NO | false |
 | `is_sent` | BOOLEAN | NO | false |
-| `sent_at` | TIMESTAMP WITHOUT TIME ZONE | YES | - |
-| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `sent_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
 #### `parcel_buildings` (8 columns)
 
@@ -244,11 +385,11 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `building_id` | INTEGER | NO | - |
 | `is_primary` | BOOLEAN | NO | false |
 | `structure_type` | CHARACTER VARYING(20) | NO | other |
-| `linked_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `linked_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 | `match_type` | CHARACTER VARYING(30) | NO | polygon |
 | `confidence` | NUMERIC(3,2) | NO | 0.85 |
 
-#### `parcels` (22 columns)
+#### `parcels` (23 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -270,10 +411,11 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `geometry` | JSONB | YES | - |
 | `date_effective` | DATE | YES | - |
 | `date_expiry` | DATE | YES | - |
-| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 | `centroid_lat` | NUMERIC(10,7) | YES | - |
 | `centroid_lng` | NUMERIC(10,7) | YES | - |
 | `is_irregular` | BOOLEAN | YES | false |
+| `geom` | USER-DEFINED | YES | - |
 
 #### `permit_history` (8 columns)
 
@@ -286,7 +428,19 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `field_name` | CHARACTER VARYING(100) | NO | - |
 | `old_value` | TEXT | YES | - |
 | `new_value` | TEXT | YES | - |
-| `changed_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `changed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `permit_inspections` (7 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(permit_inspections_id_seq) |
+| `permit_num` | CHARACTER VARYING(30) | NO | - |
+| `stage_name` | TEXT | NO | - |
+| `status` | CHARACTER VARYING(20) | NO | - |
+| `inspection_date` | DATE | YES | - |
+| `scraped_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
 #### `permit_parcels` (7 columns)
 
@@ -298,7 +452,19 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `parcel_id` | INTEGER | NO | - |
 | `match_type` | CHARACTER VARYING(30) | NO | - |
 | `confidence` | NUMERIC(3,2) | NO | - |
-| `linked_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `linked_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `permit_products` (7 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `permit_num` | CHARACTER VARYING(20) | NO | - |
+| `revision_num` | CHARACTER VARYING(10) | NO | - |
+| `product_id` | INTEGER | NO | - |
+| `product_slug` | CHARACTER VARYING(50) | NO | - |
+| `product_name` | CHARACTER VARYING(100) | NO | - |
+| `confidence` | NUMERIC(3,2) | NO | 0.75 |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
 #### `permit_trades` (10 columns)
 
@@ -313,9 +479,9 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `is_active` | BOOLEAN | NO | true |
 | `phase` | CHARACTER VARYING(20) | YES | - |
 | `lead_score` | INTEGER | NO | 0 |
-| `classified_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `classified_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
-#### `permits` (42 columns)
+#### `permits` (52 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -351,18 +517,28 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `storeys` | INTEGER | YES | - |
 | `latitude` | NUMERIC(10,7) | YES | - |
 | `longitude` | NUMERIC(10,7) | YES | - |
-| `geocoded_at` | TIMESTAMP WITHOUT TIME ZONE | YES | - |
+| `geocoded_at` | TIMESTAMP WITH TIME ZONE | YES | - |
 | `data_hash` | CHARACTER VARYING(64) | YES | - |
-| `first_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
-| `last_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `first_seen_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `last_seen_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 | `raw_json` | JSONB | YES | - |
 | `neighbourhood_id` | INTEGER | YES | - |
 | `project_type` | CHARACTER VARYING(20) | YES | - |
 | `scope_tags` | ARRAY | YES | - |
 | `scope_classified_at` | TIMESTAMP WITH TIME ZONE | YES | - |
 | `scope_source` | CHARACTER VARYING(20) | YES | classified |
+| `enriched_status` | CHARACTER VARYING(30) | YES | NULL |
+| `street_name_normalized` | CHARACTER VARYING | YES | - |
+| `last_scraped_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `trade_classified_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `parcel_linked_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `photo_url` | TEXT | YES | - |
+| `location` | USER-DEFINED | YES | - |
+| `lifecycle_phase` | CHARACTER VARYING(10) | YES | NULL |
+| `lifecycle_stalled` | BOOLEAN | NO | false |
+| `lifecycle_classified_at` | TIMESTAMP WITH TIME ZONE | YES | - |
 
-#### `pipeline_runs` (10 columns)
+#### `pipeline_runs` (11 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -376,8 +552,9 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `records_updated` | INTEGER | YES | 0 |
 | `error_message` | TEXT | YES | - |
 | `duration_ms` | INTEGER | YES | - |
+| `records_meta` | JSONB | YES | - |
 
-#### `pipeline_schedules` (4 columns)
+#### `pipeline_schedules` (5 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -385,14 +562,57 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `cadence` | TEXT | NO | Daily |
 | `cron_expression` | TEXT | YES | - |
 | `updated_at` | TIMESTAMP WITH TIME ZONE | YES | now() |
+| `enabled` | BOOLEAN | NO | true |
+
+#### `product_groups` (5 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(product_groups_id_seq) |
+| `slug` | CHARACTER VARYING(50) | NO | - |
+| `name` | CHARACTER VARYING(100) | NO | - |
+| `sort_order` | INTEGER | NO | 0 |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `schema_migrations` (4 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `filename` | TEXT | NO | - |
+| `applied_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `checksum` | TEXT | NO | - |
+| `duration_ms` | INTEGER | NO | - |
+
+#### `scraper_queue` (8 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `year_seq` | CHARACTER VARYING(20) | NO | - |
+| `permit_type` | TEXT | NO | - |
+| `claimed_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `claimed_by` | TEXT | YES | - |
+| `completed_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `status` | CHARACTER VARYING(20) | NO | pending |
+| `error_msg` | TEXT | YES | - |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `spatial_ref_sys` (5 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `srid` | INTEGER | NO | - |
+| `auth_name` | CHARACTER VARYING(256) | YES | - |
+| `auth_srid` | INTEGER | YES | - |
+| `srtext` | CHARACTER VARYING(2048) | YES | - |
+| `proj4text` | CHARACTER VARYING(2048) | YES | - |
 
 #### `sync_runs` (12 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
 | `id` | INTEGER | NO | nextval(sync_runs_id_seq) |
-| `started_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
-| `completed_at` | TIMESTAMP WITHOUT TIME ZONE | YES | - |
+| `started_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `completed_at` | TIMESTAMP WITH TIME ZONE | YES | - |
 | `status` | CHARACTER VARYING(20) | NO | running |
 | `records_total` | INTEGER | NO | 0 |
 | `records_new` | INTEGER | NO | 0 |
@@ -403,7 +623,19 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `snapshot_path` | CHARACTER VARYING(500) | YES | - |
 | `duration_ms` | INTEGER | YES | - |
 
-#### `trade_mapping_rules` (10 columns)
+#### `timing_calibration` (7 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(timing_calibration_id_seq) |
+| `permit_type` | CHARACTER VARYING(100) | NO | - |
+| `median_days_to_first_inspection` | INTEGER | NO | - |
+| `p25_days` | INTEGER | NO | - |
+| `p75_days` | INTEGER | NO | - |
+| `sample_size` | INTEGER | NO | - |
+| `computed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `trade_mapping_rules` (11 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -416,7 +648,8 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `phase_start` | INTEGER | YES | - |
 | `phase_end` | INTEGER | YES | - |
 | `is_active` | BOOLEAN | NO | true |
-| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `updated_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
 #### `trades` (7 columns)
 
@@ -428,7 +661,44 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `icon` | CHARACTER VARYING(50) | YES | - |
 | `color` | CHARACTER VARYING(7) | YES | - |
 | `sort_order` | INTEGER | YES | - |
-| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `user_profiles` (5 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `user_id` | CHARACTER VARYING(128) | NO | - |
+| `trade_slug` | CHARACTER VARYING(50) | NO | - |
+| `display_name` | CHARACTER VARYING(200) | YES | - |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `updated_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `wsib_registry` (22 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(wsib_registry_id_seq) |
+| `legal_name` | CHARACTER VARYING(500) | NO | - |
+| `trade_name` | CHARACTER VARYING(500) | YES | - |
+| `legal_name_normalized` | CHARACTER VARYING(500) | NO | - |
+| `trade_name_normalized` | CHARACTER VARYING(500) | YES | - |
+| `mailing_address` | CHARACTER VARYING(500) | YES | - |
+| `predominant_class` | CHARACTER VARYING(10) | NO | - |
+| `naics_code` | CHARACTER VARYING(20) | YES | - |
+| `naics_description` | CHARACTER VARYING(500) | YES | - |
+| `subclass` | CHARACTER VARYING(50) | YES | - |
+| `subclass_description` | TEXT | YES | - |
+| `business_size` | CHARACTER VARYING(100) | YES | - |
+| `match_confidence` | NUMERIC(3,2) | YES | - |
+| `matched_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `first_seen_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `last_seen_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `linked_entity_id` | INTEGER | YES | - |
+| `primary_email` | CHARACTER VARYING(200) | YES | - |
+| `website` | CHARACTER VARYING(500) | YES | - |
+| `last_enriched_at` | TIMESTAMP WITHOUT TIME ZONE | YES | - |
+| `primary_phone` | CHARACTER VARYING(50) | YES | - |
+| `is_gta` | BOOLEAN | YES | false |
 
 <!-- DB_SCHEMA_END -->
 

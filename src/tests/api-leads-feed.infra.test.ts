@@ -122,6 +122,8 @@ const sampleResult = {
       cost_tier: 'large' as const,
       estimated_cost: 750000,
       is_saved: false,
+      lifecycle_phase: 'P7a',
+      lifecycle_stalled: false,
     },
   ],
   meta: {

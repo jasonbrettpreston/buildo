@@ -43,6 +43,8 @@ function permitLead(
     neighbourhood_name: 'King West',
     cost_tier: 'major',
     estimated_cost: 1_500_000,
+    lifecycle_phase: 'P7a',
+    lifecycle_stalled: false,
     ...overrides,
   };
 }

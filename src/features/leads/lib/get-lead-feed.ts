@@ -31,6 +31,7 @@
 
 import type { Pool } from 'pg';
 import { MAX_RADIUS_KM, metersFromKilometers } from '@/features/leads/lib/distance';
+import { displayLifecyclePhase } from '@/features/leads/lib/lifecycle-phase-display';
 import type {
   LeadFeedCursor,
   LeadFeedInput,
@@ -113,6 +114,14 @@ export const LEAD_FEED_SQL = `
       -- mapRow's toNumberOrNull handles either, but the explicit cast
       -- avoids the silent string-vs-number mismatch on JSON serialize.
       ce.estimated_cost::float8 AS estimated_cost,
+      -- Lifecycle phase (migration 085, WF2 2026-04-11).
+      -- Replaces the fake 'Active build phase' label that TIMING_DISPLAY_BY_CONFIDENCE
+      -- previously returned for every card. Now each card shows a real
+      -- phase name (Framing / Freshly issued / Under review / etc.).
+      -- Populated by scripts/classify-lifecycle-phase.js. NULL for dead
+      -- states (filter already excludes them) or unclassified edge cases.
+      p.lifecycle_phase,
+      p.lifecycle_stalled,
       NULL::int        AS active_permits_nearby,
       NULL::float8     AS avg_project_cost,
       -- Phase 3-vi: project the user's saved-state for this lead.
@@ -354,7 +363,14 @@ export const LEAD_FEED_SQL = `
       -- lines up. Builder leads are always 'high' confidence (we know
       -- they have active permits) and always 'builder-led' opportunity.
       'high'::text AS timing_confidence,
-      'builder-led'::text AS opportunity_type
+      'builder-led'::text AS opportunity_type,
+      -- Builder leads don't have a single lifecycle phase — they have
+      -- N active permits each with their own phase. Surface NULL here
+      -- and let the card render a builder-specific label via
+      -- displayLifecyclePhase(). The UNION ALL shape requires these
+      -- columns to be present on both sides.
+      NULL::text AS lifecycle_phase,
+      false AS lifecycle_stalled
     FROM entities e
     JOIN entity_projects ep ON ep.entity_id = e.id AND ep.role = 'Builder'
     JOIN permits p
@@ -467,6 +483,12 @@ interface LeadFeedRow {
   // comprehensive review as the cross-phase contract amendment.
   timing_confidence: 'high' | 'medium' | 'low';
   opportunity_type: 'homeowner' | 'newbuild' | 'builder-led' | 'unknown';
+  // Lifecycle phase (migration 085, WF2). NULL on builder rows and on
+  // unclassified permits. The mapRow boundary passes it through to
+  // PermitLeadFeedItem.lifecycle_phase where displayLifecyclePhase()
+  // builds the card label.
+  lifecycle_phase: string | null;
+  lifecycle_stalled: boolean;
 }
 
 /**
@@ -492,6 +514,14 @@ interface LeadFeedRow {
 // and this phrase table is what the card will look up. Keeping the
 // entry here means the wiring is one prop change, not a schema change.
 // Independent reviewer holistic 2026-04-09 (C16).
+/**
+ * @deprecated WF2 2026-04-11 — the feed no longer uses this lookup.
+ * `timing_display` on each card is now built from the real
+ * `lifecycle_phase` column (migration 085) via `displayLifecyclePhase()`.
+ * Kept exported for tests that still reference the constant shape
+ * during the transition. Remove once all consumers have migrated to
+ * `LIFECYCLE_PHASE_DISPLAY` in `lifecycle-phase-display.ts`.
+ */
 export const TIMING_DISPLAY_BY_CONFIDENCE: Record<
   'high' | 'medium' | 'low',
   string
@@ -533,9 +563,16 @@ function mapRow(row: LeadFeedRow): LeadFeedItem | null {
     relevance_score: row.relevance_score,
     timing_confidence: row.timing_confidence,
     opportunity_type: row.opportunity_type,
-    // Synthetic Phase 3-iii display string. See TIMING_DISPLAY_BY_CONFIDENCE
-    // header above for the rationale (heavy engine deferred to detail view).
-    timing_display: TIMING_DISPLAY_BY_CONFIDENCE[row.timing_confidence],
+    // WF2 2026-04-11: timing_display now reads from the real
+    // lifecycle_phase column (migration 085) instead of returning the
+    // placeholder 'Active build phase' for every permit. Builder rows
+    // have null lifecycle_phase — displayLifecyclePhase() returns
+    // 'Unknown' for those, which the card currently overrides to a
+    // builder-specific label upstream (not in scope for this WF2).
+    timing_display: displayLifecyclePhase(
+      row.lifecycle_phase,
+      row.lifecycle_stalled,
+    ),
     // Phase 3-vi: saved-state from lead_views (per current user).
     // The SQL projects this from a LEFT JOIN to lead_views with
     // COALESCE/bool_or fallback to false, so the row value is
@@ -571,6 +608,8 @@ function mapRow(row: LeadFeedRow): LeadFeedItem | null {
       neighbourhood_name: row.neighbourhood_name,
       cost_tier: narrowCostTier(row.cost_tier),
       estimated_cost: toNumberOrNull(row.estimated_cost),
+      lifecycle_phase: row.lifecycle_phase,
+      lifecycle_stalled: row.lifecycle_stalled,
     };
   }
 

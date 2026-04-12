@@ -82,8 +82,12 @@ vi.mock('@tremor/react', () => ({
 }));
 
 import { PermitLeadCard } from '@/features/leads/components/PermitLeadCard';
+import { displayLifecyclePhase } from '@/features/leads/lib/lifecycle-phase-display';
 import type { PermitLeadFeedItem } from '@/features/leads/types';
 
+// Base fixture mirrors what mapRow() produces: timing_display is
+// derived from (lifecycle_phase, lifecycle_stalled) via displayLifecyclePhase.
+// Default phase P11 → "Framing".
 const baseLead: PermitLeadFeedItem = {
   lead_type: 'permit',
   lead_id: '24 101234:01',
@@ -104,11 +108,13 @@ const baseLead: PermitLeadFeedItem = {
   relevance_score: 100,
   timing_confidence: 'high',
   opportunity_type: 'newbuild',
-  timing_display: 'Active build phase',
+  timing_display: displayLifecyclePhase('P11', false),
   neighbourhood_name: 'High Park',
   cost_tier: 'large',
   estimated_cost: 750000,
   is_saved: false,
+  lifecycle_phase: 'P11',
+  lifecycle_stalled: false,
 };
 
 beforeEach(() => {
@@ -183,6 +189,65 @@ describe('PermitLeadCard — happy path', () => {
     expect(screen.queryByLabelText(/Timing NOW/i)).toBeNull();
     // ProgressCircle (mocked) renders the score number as a child
     expect(screen.getByText('5')).toBeDefined();
+  });
+});
+
+describe('PermitLeadCard — lifecycle phase display (WF2 lifecycle rollout)', () => {
+  // These tests lock the end-to-end mapping from lifecycle_phase
+  // through displayLifecyclePhase() to the rendered TimingBadge label.
+  // They catch the regression where every card showed "Active build
+  // phase" regardless of actual phase.
+  it('P7a (freshly issued) renders "Freshly issued"', () => {
+    render(
+      <PermitLeadCard
+        lead={{
+          ...baseLead,
+          lifecycle_phase: 'P7a',
+          lifecycle_stalled: false,
+          timing_display: displayLifecyclePhase('P7a', false),
+        }}
+        tradeSlug="plumbing"
+      />,
+    );
+    expect(screen.getByText('Freshly issued')).toBeDefined();
+    expect(screen.queryByText('Active build phase')).toBeNull();
+  });
+
+  it('P11 (framing) renders "Framing"', () => {
+    render(<PermitLeadCard lead={baseLead} tradeSlug="plumbing" />);
+    expect(screen.getByText('Framing')).toBeDefined();
+  });
+
+  it('stalled P7c renders "(stalled)" suffix', () => {
+    render(
+      <PermitLeadCard
+        lead={{
+          ...baseLead,
+          lifecycle_phase: 'P7c',
+          lifecycle_stalled: true,
+          timing_display: displayLifecyclePhase('P7c', true),
+        }}
+        tradeSlug="plumbing"
+      />,
+    );
+    expect(screen.getByText(/\(stalled\)/)).toBeDefined();
+    // Base label is preserved alongside the suffix
+    expect(screen.getByText(/Recently issued/)).toBeDefined();
+  });
+
+  it('null lifecycle_phase renders "Unknown" fallback', () => {
+    render(
+      <PermitLeadCard
+        lead={{
+          ...baseLead,
+          lifecycle_phase: null,
+          lifecycle_stalled: false,
+          timing_display: displayLifecyclePhase(null, false),
+        }}
+        tradeSlug="plumbing"
+      />,
+    );
+    expect(screen.getByText('Unknown')).toBeDefined();
   });
 });
 

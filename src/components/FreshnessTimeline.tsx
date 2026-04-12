@@ -48,6 +48,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   // Classify & Compute (5) — derive fields
   classify_scope:       { name: 'Scope Classification', group: 'classify' },
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
+  classify_lifecycle_phase:   { name: 'Classify Lifecycle Phase', group: 'classify' },
   compute_cost_estimates:     { name: 'Cost Estimates',      group: 'classify' },
   compute_timing_calibration: { name: 'Timing Calibration',  group: 'classify' },
   // Snapshot (1) — capture metrics
@@ -107,6 +108,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'refresh_snapshot',     indent: 1 },
       { slug: 'assert_data_bounds',   indent: 0 },
       { slug: 'assert_engine_health', indent: 0 },
+      { slug: 'classify_lifecycle_phase', indent: 0 },
     ],
   },
   {
@@ -123,6 +125,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'refresh_snapshot',         indent: 1 },
       { slug: 'assert_data_bounds',       indent: 0 },
       { slug: 'assert_engine_health',     indent: 0 },
+      { slug: 'classify_lifecycle_phase', indent: 0 },
     ],
   },
   // Group 2: Corporate Entities Enrichment (slow daily scrapes)

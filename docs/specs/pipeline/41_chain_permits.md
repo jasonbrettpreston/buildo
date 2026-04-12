@@ -12,7 +12,7 @@ As a business user, I expect this daily pipeline to ingest 237K+ raw Toronto bui
 
 **Trigger:** `node scripts/run-chain.js permits` or `POST /api/admin/pipelines/chain_permits`
 **Schedule:** Daily
-**Steps:** 20 (sequential, stop-on-failure)
+**Steps:** 21 (sequential, stop-on-failure)
 **Gate:** `permits` — if `records_new = 0`, downstream enrichment steps are skipped (infra steps still run)
 
 ```
@@ -21,7 +21,7 @@ classify_scope → builders → link_wsib → geocode_permits → link_parcels �
 link_neighbourhoods → link_massing → link_similar → classify_permits →
 compute_cost_estimates → compute_timing_calibration →
 link_coa → create_pre_permits → refresh_snapshot → assert_data_bounds →
-assert_engine_health
+assert_engine_health → classify_lifecycle_phase
 ```
 
 ### Step Breakdown
@@ -48,6 +48,22 @@ assert_engine_health
 | 18 | `refresh_snapshot` | `refresh-snapshot.js` | Update data_quality_snapshots for dashboard metrics | data_quality_snapshots |
 | 19 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Post-ingestion: cost outliers, null rates, duplicate PKs | pipeline_runs |
 | 20 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuples, seq scan ratio, update ping-pong | engine_health_snapshots |
+| 21 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Computes `lifecycle_phase` + `lifecycle_stalled` for dirty permits and CoA applications. Uses `pg_try_advisory_lock(85)` to single-thread concurrent runs. Per-batch small transactions keep row-level locks bounded. | permits, coa_applications |
+
+**Trailing lifecycle classifier (step 21)** runs synchronously as the
+final chain step (originally a detached handoff, but that was replaced
+during review per adversarial review C1-C3 — advisory lock + direct
+chain wiring gives a clean `pipeline_runs` verdict and avoids Windows
+detached-spawn uncertainty). The classifier's incremental predicate
+(`last_seen_at > lifecycle_classified_at`) keeps re-runs cheap (~5-7
+seconds when no rows are dirty). First-run backfill is ~130 seconds
+across ~240K rows; steady-state runs are incremental and negligible.
+If two chains (permits + coa) finish within seconds of each other, the
+second classifier invocation finds the advisory lock held and exits
+cleanly with `skipped:true` in the records_meta. See
+`docs/reports/lifecycle_phase_implementation.md` for the full decision
+tree and `scripts/quality/lifecycle-phase-sql-reproducer.sql` for the
+round-trip correctness gate.
 </architecture>
 
 ---

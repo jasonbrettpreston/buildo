@@ -1,0 +1,377 @@
+// 🔗 SPEC LINK: docs/reports/lifecycle_phase_implementation.md §1.1–§1.6
+// 🔗 DUAL CODE PATH: src/lib/classification/lifecycle-phase.ts (CLAUDE.md §7)
+//
+// JavaScript mirror of the TypeScript lifecycle-phase classifier.
+// This file MUST stay in sync with the TS version bit-for-bit. The
+// Tier 1 sync rule: if you edit one, edit the other in the same commit.
+//
+// Pure function — no DB access, no side effects. Consumed by
+// scripts/classify-lifecycle-phase.js which handles the DB I/O.
+
+'use strict';
+
+// ─────────────────────────────────────────────────────────────────
+// Constant sets
+// ─────────────────────────────────────────────────────────────────
+
+const DEAD_STATUS_SET = new Set([
+  'Cancelled',
+  'Revoked',
+  'Permit Revoked',
+  'Refused',
+  'Refusal Notice',
+  'Application Withdrawn',
+  'Abandoned',
+  'Not Accepted',
+  'Work Suspended',
+  'VIOLATION',
+  'Order Issued',
+  'Tenant Notice Period',
+  'Follow-up Required',
+]);
+
+const TERMINAL_P20_SET = new Set([
+  'Closed',
+  'File Closed',
+  'Permit Issued/Close File',
+]);
+
+const WINDDOWN_P19_SET = new Set([
+  'Pending Closed',
+  'Pending Cancellation',
+  'Revocation Pending',
+  'Revocation Notice Sent',
+  // Gap status: pre-cancellation of an inspection request
+  'Inspection Request to Cancel',
+]);
+
+const INTAKE_P3_SET = new Set([
+  'Application Received',
+  'Application Acceptable',
+  'Plan Review Complete',
+  'Open',
+  'Active',
+  'Request Received',
+]);
+
+const REVIEW_P4_SET = new Set([
+  'Under Review',
+  'Examination',
+  "Examiner's Notice Sent",
+  'Consultation Completed',
+]);
+
+const HOLD_P5_SET = new Set([
+  'Application On Hold',
+  'Application on Hold',
+  'Deficiency Notice Issued',
+  'Response Received',
+  'Pending Parent Folder Review',
+]);
+
+const READY_P6_SET = new Set([
+  'Ready for Issuance',
+  'Forwarded for Issuance',
+  'Issuance Pending',
+  'Approved',
+  'Agreement in Progress',
+  'Licence Issued',
+]);
+
+const REVISION_P8_SET = new Set([
+  'Revision Issued',
+  'Revised',
+  'Order Complied',
+]);
+
+const NOT_STARTED_P7D_SET = new Set([
+  'Work Not Started',
+  'Not Started',
+  'Not Started - Express',
+  'Extension Granted',
+  'Extension in Progress',
+]);
+
+const INSPECTION_PIPELINE_P18_SET = new Set([
+  'Forward to Inspector',
+  'Rescheduled',
+]);
+
+const VALID_PHASES = new Set([
+  'P1', 'P2', 'P3', 'P4', 'P5', 'P6',
+  'P7a', 'P7b', 'P7c', 'P7d',
+  'P8', 'P9', 'P10', 'P11', 'P12', 'P13',
+  'P14', 'P15', 'P16', 'P17', 'P18',
+  'P19', 'P20',
+  'O1', 'O2', 'O3', 'O4',
+]);
+
+const NORMALIZED_APPROVED_DECISIONS = new Set([
+  'approved',
+  'conditional approval',
+  'conditional approved',
+  'conditionally approved',
+  'approved conditionally',
+  'approved on condition',
+  'approved on conditional',
+  'approved on condation',
+  'approved on condtion',
+  'approved with conditions',
+  'approved with condition',
+  'approved wih conditions',
+  'approved, as amended, on condition',
+  'partially approved',
+  'conitional approval',
+  'modified approval',
+]);
+
+const NORMALIZED_DEAD_DECISIONS = new Set([
+  'refused',
+  'withdrawn',
+  'application withdrawn',
+  'application closed',
+  'closed',
+  'delegated consent refused',
+]);
+
+// ─────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function daysBetween(earlier, later) {
+  return Math.floor((later.getTime() - earlier.getTime()) / MS_PER_DAY);
+}
+
+function normalizeStatus(s) {
+  if (s == null) return null;
+  const trimmed = String(s).trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+function normalizeCoaDecision(d) {
+  if (d == null) return null;
+  const trimmed = String(d).trim().toLowerCase().replace(/\s+/g, ' ');
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+function mapInspectionStageToPhase(stageLower) {
+  if (
+    stageLower.includes('excavation') ||
+    stageLower.includes('shoring') ||
+    stageLower.includes('site grading') ||
+    stageLower.includes('demolition')
+  ) {
+    return 'P9';
+  }
+  if (
+    stageLower.includes('footings') ||
+    stageLower.includes('foundations') ||
+    stageLower === 'foundation'
+  ) {
+    return 'P10';
+  }
+  if (stageLower.includes('structural framing') || stageLower.includes('framing')) {
+    return 'P11';
+  }
+  if (stageLower.includes('insulation') || stageLower.includes('vapour')) {
+    return 'P13';
+  }
+  if (stageLower.includes('fire separations')) {
+    return 'P14';
+  }
+  if (
+    stageLower.includes('interior final') ||
+    stageLower.includes('plumbing final') ||
+    stageLower.includes('hvac final')
+  ) {
+    return 'P15';
+  }
+  if (stageLower.includes('exterior final')) {
+    return 'P16';
+  }
+  if (stageLower.includes('occupancy') || stageLower.includes('final inspection')) {
+    return 'P17';
+  }
+  if (
+    stageLower.includes('hvac') ||
+    stageLower.includes('plumbing') ||
+    stageLower.includes('electrical') ||
+    stageLower.includes('fire protection') ||
+    stageLower.includes('fire access') ||
+    stageLower.includes('water service') ||
+    stageLower.includes('water distribution') ||
+    stageLower.includes('drain') ||
+    stageLower.includes('sewers') ||
+    stageLower.includes('fire service')
+  ) {
+    return 'P12';
+  }
+  return null;
+}
+
+function computeStalled(input) {
+  if (input.enriched_status === 'Stalled') return true;
+
+  if (
+    input.status === 'Permit Issued' &&
+    !input.has_passed_inspection &&
+    input.issued_date != null
+  ) {
+    const daysSinceIssued = daysBetween(input.issued_date, input.now);
+    if (daysSinceIssued > 730) return true;
+  }
+
+  if (input.status === 'Inspection' && input.latest_inspection_date != null) {
+    const daysSinceInspection = daysBetween(input.latest_inspection_date, input.now);
+    if (daysSinceInspection > 180) return true;
+  }
+
+  return false;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Main classifiers
+// ─────────────────────────────────────────────────────────────────
+
+function classifyLifecyclePhase(input) {
+  const status = normalizeStatus(input.status);
+
+  // Null / empty status → always unclassified. These rows are
+  // explicitly excluded from the CQA unclassified-count gate in
+  // classify-lifecycle-phase.js, so we must not assign O1 via the
+  // orphan fallback — doing so would diverge from the SQL reproducer
+  // and contradict the spec's "status IS NULL" carve-out.
+  if (status == null) {
+    return { phase: null, stalled: false };
+  }
+
+  if (DEAD_STATUS_SET.has(status)) {
+    return { phase: null, stalled: false };
+  }
+
+  if (TERMINAL_P20_SET.has(status)) {
+    return { phase: 'P20', stalled: false };
+  }
+  if (WINDDOWN_P19_SET.has(status)) {
+    return { phase: 'P19', stalled: false };
+  }
+
+  const stalled = computeStalled(input);
+
+  if (input.is_orphan) {
+    return classifyOrphan(input, status, stalled);
+  }
+
+  return classifyBldLed(input, status, stalled);
+}
+
+function classifyOrphan(input, status, stalled) {
+  if (
+    status === 'Permit Issued' ||
+    status === 'Inspection' ||
+    status === 'Revision Issued' ||
+    status === 'Revised'
+  ) {
+    if (input.issued_date != null && !input.has_passed_inspection) {
+      const daysSinceIssued = daysBetween(input.issued_date, input.now);
+      if (daysSinceIssued > 180) {
+        return { phase: 'O3', stalled };
+      }
+    }
+    return { phase: 'O2', stalled };
+  }
+
+  if (
+    status != null &&
+    (INTAKE_P3_SET.has(status) ||
+      REVIEW_P4_SET.has(status) ||
+      HOLD_P5_SET.has(status) ||
+      READY_P6_SET.has(status))
+  ) {
+    return { phase: 'O1', stalled };
+  }
+
+  return { phase: 'O1', stalled };
+}
+
+function classifyBldLed(input, status, stalled) {
+  if (status == null) {
+    return { phase: null, stalled: false };
+  }
+
+  if (REVIEW_P4_SET.has(status)) return { phase: 'P4', stalled };
+  if (HOLD_P5_SET.has(status)) return { phase: 'P5', stalled };
+  if (READY_P6_SET.has(status)) return { phase: 'P6', stalled };
+  if (INTAKE_P3_SET.has(status)) return { phase: 'P3', stalled };
+
+  if (REVISION_P8_SET.has(status)) return { phase: 'P8', stalled };
+
+  if (NOT_STARTED_P7D_SET.has(status)) return { phase: 'P7d', stalled };
+
+  if (status === 'Permit Issued') {
+    if (input.has_passed_inspection) {
+      return { phase: 'P18', stalled };
+    }
+    if (input.issued_date == null) {
+      return { phase: 'P7c', stalled };
+    }
+    const daysSinceIssued = daysBetween(input.issued_date, input.now);
+    if (daysSinceIssued <= 30) return { phase: 'P7a', stalled };
+    if (daysSinceIssued <= 90) return { phase: 'P7b', stalled };
+    return { phase: 'P7c', stalled };
+  }
+
+  if (status === 'Inspection') {
+    if (input.latest_passed_stage == null) {
+      return { phase: 'P18', stalled };
+    }
+    const stageLower = String(input.latest_passed_stage).toLowerCase();
+    const mapped = mapInspectionStageToPhase(stageLower);
+    return { phase: mapped || 'P18', stalled };
+  }
+
+  if (INSPECTION_PIPELINE_P18_SET.has(status)) {
+    return { phase: 'P18', stalled };
+  }
+
+  return { phase: null, stalled: false };
+}
+
+function classifyCoaPhase(input) {
+  if (input.linked_permit_num != null && String(input.linked_permit_num).trim() !== '') {
+    return { phase: null };
+  }
+
+  const normalized = normalizeCoaDecision(input.decision);
+
+  if (normalized != null && NORMALIZED_DEAD_DECISIONS.has(normalized)) {
+    return { phase: null };
+  }
+
+  if (normalized != null && NORMALIZED_APPROVED_DECISIONS.has(normalized)) {
+    return { phase: 'P2' };
+  }
+
+  return { phase: 'P1' };
+}
+
+module.exports = {
+  classifyLifecyclePhase,
+  classifyCoaPhase,
+  normalizeCoaDecision,
+  DEAD_STATUS_SET,
+  TERMINAL_P20_SET,
+  WINDDOWN_P19_SET,
+  INTAKE_P3_SET,
+  REVIEW_P4_SET,
+  HOLD_P5_SET,
+  READY_P6_SET,
+  REVISION_P8_SET,
+  NOT_STARTED_P7D_SET,
+  INSPECTION_PIPELINE_P18_SET,
+  NORMALIZED_APPROVED_DECISIONS,
+  NORMALIZED_DEAD_DECISIONS,
+  VALID_PHASES,
+};

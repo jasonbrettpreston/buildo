@@ -13,10 +13,16 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
-  it('defines permits chain with 20 steps (no enrichment scripts)', () => {
+  it('defines permits chain with 21 steps (no enrichment scripts)', () => {
+    // WF2 2026-04-11 — +1 step from the lifecycle classifier wired
+    // directly as the final chain step (replacing the detached
+    // trigger_lifecycle_sync handoff that was dropped per adversarial
+    // review C3: synchronous wiring propagates verdict to pipeline_runs
+    // cleanly, avoids Windows detached-spawn uncertainty, and the
+    // classifier's advisory lock (ID 85) handles concurrency).
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(20);
+    expect(chain!.steps).toHaveLength(21);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
@@ -48,10 +54,13 @@ describe('Pipeline Chain Definitions', () => {
     expect(slugs.indexOf('compute_cost_estimates')).toBeLessThan(slugs.indexOf('compute_timing_calibration'));
   });
 
-  it('defines coa chain with 9 steps', () => {
+  it('defines coa chain with 10 steps', () => {
+    // WF2 2026-04-11 — added classify_lifecycle_phase as the final
+    // step so every CoA chain run reclassifies permits whose
+    // last_seen_at was just bumped by link-coa.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(9);
+    expect(chain!.steps).toHaveLength(10);
   });
 
   it('defines sources chain with 15 steps', () => {
@@ -60,11 +69,22 @@ describe('Pipeline Chain Definitions', () => {
     expect(chain!.steps).toHaveLength(15);
   });
 
-  it('permits and coa chains end with assert_engine_health', () => {
+  it('permits and coa chains end with classify_lifecycle_phase', () => {
+    // WF2 2026-04-11 — classifier is wired directly as the final
+    // chain step. The previous detached trigger_lifecycle_sync
+    // handoff was removed per adversarial review C3 (Windows detach
+    // uncertainty + silent-no-op risk if the spawned child crashed
+    // within ms of spawn). Synchronous wiring gives a clean
+    // pipeline_runs verdict and the classifier's own pg_try_advisory_lock
+    // prevents concurrent runs from corrupting audit telemetry.
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa');
-    expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('assert_engine_health');
-    expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('assert_engine_health');
+    expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('classify_lifecycle_phase');
+    expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('classify_lifecycle_phase');
+    // Penultimate step is still assert_engine_health — classifier
+    // depends on a clean engine-health checkpoint.
+    expect(permits!.steps[permits!.steps.length - 2]!.slug).toBe('assert_engine_health');
+    expect(coa!.steps[coa!.steps.length - 2]!.slug).toBe('assert_engine_health');
   });
 
   it('sources chain ends with assert_engine_health', () => {
@@ -262,8 +282,9 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     const disabledSlugs = new Set(['enrich_wsib_builders', 'enrich_named_builders']);
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
     const activeSteps = coa.steps.filter((s) => !disabledSlugs.has(s.slug));
-    // CoA chain has no enrichment steps — all 9 remain
-    expect(activeSteps).toHaveLength(9);
+    // CoA chain has no enrichment steps — all 10 remain
+    // (9 + classify_lifecycle_phase as of WF2 2026-04-11)
+    expect(activeSteps).toHaveLength(10);
   });
 
   it('empty disabled set leaves all steps active', () => {

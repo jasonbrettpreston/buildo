@@ -306,6 +306,47 @@ pipeline.run('link-coa', async (pool) => {
   pipeline.log.info('[link-coa]', `Tier 3 linked: ${desc.toLocaleString()} (confidence 0.10-0.50)${descErrors > 0 ? `, ${descErrors} batch errors` : ''}`);
 
   // ------------------------------------------------------------------
+  // Bump permits.last_seen_at for every permit that was newly linked
+  // during this run. This is REQUIRED for the downstream lifecycle
+  // classifier (scripts/classify-lifecycle-phase.js) to see those
+  // permits as dirty on its next incremental pass. Without this bump,
+  // a permit whose CoA linkage just changed (e.g. the CoA phase flipped
+  // from "linked" to a different parent) wouldn't trigger a permit
+  // lifecycle re-classification.
+  //
+  // Scope: permits whose linked_permit_num was set during this run.
+  // We detect them via coa_applications.last_seen_at >= startTime
+  // since each tier UPDATE sets last_seen_at = NOW() on the CoA row.
+  // Idempotency guard: don't bump a permit whose last_seen_at is
+  // already within the last 1 second (avoids redundant writes when
+  // the linker is re-run quickly).
+  //
+  // Skipped in dry-run mode.
+  //
+  // SPEC LINK: docs/reports/lifecycle_phase_implementation.md §2.7
+  let permitsBumped = 0;
+  if (!dryRun) {
+    const bumpStart = new Date(startTime).toISOString();
+    const bumpResult = await pool.query(
+      `UPDATE permits
+          SET last_seen_at = NOW()
+        WHERE permit_num IN (
+          SELECT DISTINCT linked_permit_num
+            FROM coa_applications
+           WHERE linked_permit_num IS NOT NULL
+             AND last_seen_at >= $1::timestamptz
+        )
+          AND last_seen_at < NOW() - INTERVAL '1 second'`,
+      [bumpStart],
+    );
+    permitsBumped = bumpResult.rowCount || 0;
+    pipeline.log.info(
+      '[link-coa]',
+      `Bumped permits.last_seen_at on ${permitsBumped.toLocaleString()} newly-linked permits (for downstream lifecycle re-classification)`,
+    );
+  }
+
+  // ------------------------------------------------------------------
   // Summary
   // ------------------------------------------------------------------
   const durationMs = Date.now() - startTime;

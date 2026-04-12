@@ -78,6 +78,12 @@ export interface Permit {
   raw_json: Record<string, unknown> | null;
   location: unknown | null;
   photo_url: string | null;
+  // Lifecycle phase classification (migration 085, WF2 2026-04-11).
+  // See docs/reports/lifecycle_phase_implementation.md §1 for the
+  // 24-value enum domain. NULL = dead state or out of scope.
+  lifecycle_phase: string | null;
+  lifecycle_stalled: boolean;
+  lifecycle_classified_at: Date | null;
 }
 
 // ---------------------------------------------------------------------------

@@ -360,6 +360,10 @@ const samplePermitRow = {
   relevance_score: 100,
   timing_confidence: 'high' as const,
   opportunity_type: 'newbuild' as const,
+  // WF2 2026-04-11 — lifecycle columns projected from migration 085.
+  // mapRow() now derives timing_display from these via displayLifecyclePhase().
+  lifecycle_phase: 'P7a' as string | null,
+  lifecycle_stalled: false,
 };
 
 const sampleBuilderRow = {
@@ -396,6 +400,11 @@ const sampleBuilderRow = {
   relevance_score: 67,
   timing_confidence: 'high' as const,
   opportunity_type: 'builder-led' as const,
+  // Builder branch of the UNION ALL has hardcoded NULL lifecycle_phase
+  // because builders aggregate multiple permits — no single phase makes
+  // sense. displayLifecyclePhase(null, false) → "Unknown" on the card.
+  lifecycle_phase: null as string | null,
+  lifecycle_stalled: false,
 };
 
 function makeInput(overrides: Partial<LeadFeedInput> = {}): LeadFeedInput {
@@ -687,18 +696,64 @@ describe('mapRow — widened columns', () => {
     expect(item?.is_saved).toBe(true);
   });
 
-  it('synthesizes timing_display from confidence on every row', async () => {
+  it('derives timing_display from lifecycle_phase via displayLifecyclePhase (WF2 lifecycle rollout)', async () => {
+    // Replaces the old "synthesizes timing_display from confidence"
+    // assertion. mapRow no longer reads timing_confidence to decide the
+    // label — it reads the real lifecycle_phase column (migration 085)
+    // and dispatches through displayLifecyclePhase(). That gives every
+    // card a distinct, meaningful label instead of "Active build phase".
     const mock = createMockPool();
     mock.query.mockResolvedValueOnce(
       qr([
-        { ...samplePermitRow, timing_confidence: 'high' as const },
-        { ...samplePermitRow, lead_id: 'p2', timing_confidence: 'medium' as const },
-        { ...samplePermitRow, lead_id: 'p3', timing_confidence: 'low' as const },
+        { ...samplePermitRow, lifecycle_phase: 'P7a', lifecycle_stalled: false },
+        {
+          ...samplePermitRow,
+          lead_id: 'p2',
+          lifecycle_phase: 'P11',
+          lifecycle_stalled: false,
+        },
+        {
+          ...samplePermitRow,
+          lead_id: 'p3',
+          lifecycle_phase: 'P7c',
+          lifecycle_stalled: true,
+        },
+        {
+          ...samplePermitRow,
+          lead_id: 'p4',
+          lifecycle_phase: null,
+          lifecycle_stalled: false,
+        },
       ]),
     );
     const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
-    expect(result.data[0]?.timing_display).toBe(TIMING_DISPLAY_BY_CONFIDENCE.high);
-    expect(result.data[1]?.timing_display).toBe(TIMING_DISPLAY_BY_CONFIDENCE.medium);
-    expect(result.data[2]?.timing_display).toBe(TIMING_DISPLAY_BY_CONFIDENCE.low);
+    expect(result.data[0]?.timing_display).toBe('Freshly issued');
+    expect(result.data[1]?.timing_display).toBe('Framing');
+    expect(result.data[2]?.timing_display).toBe('Recently issued (stalled)');
+    expect(result.data[3]?.timing_display).toBe('Unknown');
+  });
+
+  it('passes lifecycle_phase + lifecycle_stalled through to the PermitLeadFeedItem', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([
+        {
+          ...samplePermitRow,
+          lifecycle_phase: 'P18',
+          lifecycle_stalled: true,
+        },
+      ]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const permit = result.data[0] as
+      | (typeof result.data)[number]
+      | undefined;
+    // Type narrow — permit branch
+    if (permit && 'lifecycle_phase' in permit) {
+      expect(permit.lifecycle_phase).toBe('P18');
+      expect(permit.lifecycle_stalled).toBe(true);
+    } else {
+      throw new Error('expected permit lead to expose lifecycle fields');
+    }
   });
 });

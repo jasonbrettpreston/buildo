@@ -154,6 +154,7 @@ vi.mock('@/lib/observability/capture', () => ({
 import { LeadFeed, MAX_PAGES } from '@/features/leads/components/LeadFeed';
 import type { LeadFeedItem, PermitLeadFeedItem, BuilderLeadFeedItem } from '@/features/leads/types';
 import { useLeadFeedState } from '@/features/leads/hooks/useLeadFeedState';
+import { displayLifecyclePhase } from '@/features/leads/lib/lifecycle-phase-display';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -179,11 +180,14 @@ const samplePermit: PermitLeadFeedItem = {
   relevance_score: 100,
   timing_confidence: 'high',
   opportunity_type: 'newbuild',
-  timing_display: 'Active build phase',
+  // mirrors prod mapRow: timing_display = displayLifecyclePhase(lifecycle_phase, lifecycle_stalled)
+  timing_display: displayLifecyclePhase('P7a', false),
   neighbourhood_name: 'High Park',
   cost_tier: 'large',
   estimated_cost: 750000,
   is_saved: false,
+  lifecycle_phase: 'P7a',
+  lifecycle_stalled: false,
 };
 
 const sampleBuilder: BuilderLeadFeedItem = {

@@ -12,13 +12,13 @@ As a lead generator, I want Committee of Adjustment variance hearings imported, 
 
 **Trigger:** `node scripts/run-chain.js coa` or `POST /api/admin/pipelines/chain_coa`
 **Schedule:** Daily
-**Steps:** 9 (sequential, stop-on-failure)
+**Steps:** 10 (sequential, stop-on-failure)
 **Gate:** `coa` — if `records_new = 0`, downstream enrichment steps are skipped
 
 ```
 assert_schema → coa → assert_coa_freshness → link_coa →
 create_pre_permits → assert_pre_permit_aging → refresh_snapshot →
-assert_data_bounds → assert_engine_health
+assert_data_bounds → assert_engine_health → classify_lifecycle_phase
 ```
 
 ### Step Breakdown
@@ -34,6 +34,18 @@ assert_data_bounds → assert_engine_health
 | 7 | `refresh_snapshot` | `refresh-snapshot.js` | Update dashboard metrics snapshot | data_quality_snapshots |
 | 8 | `assert_data_bounds` | `quality/assert-data-bounds.js` | CoA-scoped: row counts, null rates, linkage integrity | pipeline_runs |
 | 9 | `assert_engine_health` | `quality/assert-engine-health.js` | CoA table engine health | engine_health_snapshots |
+| 10 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Runs the lifecycle classifier synchronously to pick up any permits whose `last_seen_at` was bumped by `link_coa` in step 4. Same advisory-locked single-threaded script the permits chain uses. | permits, coa_applications |
+
+**Trailing lifecycle classifier (step 10)** is the only path that routes
+CoA linking results into the classifier, because `link-coa.js` bumps
+`permits.last_seen_at` on newly-linked permits and the classifier reads
+`last_seen_at > lifecycle_classified_at` to find dirty rows. Without this
+step, a CoA that becomes linked would never update its host permit's
+`lifecycle_phase` until the next full permits-chain run. If the permits
+chain fires immediately before or after the CoA chain, the classifier's
+advisory lock (ID 85) single-threads the two invocations — the second
+one exits cleanly with `skipped:true`. See
+`docs/reports/lifecycle_phase_implementation.md` for the full rationale.
 </architecture>
 
 ---

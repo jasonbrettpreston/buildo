@@ -103,6 +103,9 @@ export function createMockPermit(overrides: Partial<Permit> = {}): Permit {
     raw_json: null,
     location: null,
     photo_url: null,
+    lifecycle_phase: null,
+    lifecycle_stalled: false,
+    lifecycle_classified_at: null,
     ...overrides,
   };
 }

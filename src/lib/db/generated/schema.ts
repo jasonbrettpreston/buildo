@@ -212,37 +212,6 @@ export const timingCalibration = pgTable("timing_calibration", {
 	unique("timing_calibration_permit_type_key").on(table.permitType),
 ]);
 
-export const coaApplications = pgTable("coa_applications", {
-	id: serial().primaryKey().notNull(),
-	applicationNumber: varchar("application_number", { length: 50 }),
-	address: varchar({ length: 500 }),
-	streetNum: varchar("street_num", { length: 20 }),
-	streetName: varchar("street_name", { length: 200 }),
-	ward: varchar({ length: 10 }),
-	status: varchar({ length: 50 }),
-	decision: varchar({ length: 50 }),
-	decisionDate: date("decision_date"),
-	hearingDate: date("hearing_date"),
-	description: text(),
-	applicant: varchar({ length: 500 }),
-	linkedPermitNum: varchar("linked_permit_num", { length: 30 }),
-	linkedConfidence: numeric("linked_confidence", { precision: 3, scale:  2 }),
-	dataHash: varchar("data_hash", { length: 64 }),
-	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	subType: text("sub_type"),
-	streetNameNormalized: varchar("street_name_normalized"),
-}, (table) => [
-	index("idx_coa_applications_address").using("btree", table.address.asc().nullsLast().op("text_ops")),
-	index("idx_coa_applications_linked_permit").using("btree", table.linkedPermitNum.asc().nullsLast().op("text_ops")),
-	index("idx_coa_applications_ward").using("btree", table.ward.asc().nullsLast().op("text_ops")),
-	index("idx_coa_decision_date").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")),
-	index("idx_coa_hearing_date").using("btree", table.hearingDate.asc().nullsLast().op("date_ops")),
-	index("idx_coa_street_name_normalized").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")).where(sql`(street_name_normalized IS NOT NULL)`),
-	index("idx_coa_upcoming_leads").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")).where(sql`(((decision)::text = ANY ((ARRAY['Approved'::character varying, 'Approved with Conditions'::character varying])::text[])) AND (linked_permit_num IS NULL))`),
-	unique("coa_applications_application_number_key").on(table.applicationNumber),
-]);
-
 export const builders = pgTable("builders", {
 	id: serial().primaryKey().notNull(),
 	name: varchar({ length: 500 }).notNull(),
@@ -662,6 +631,41 @@ export const entities = pgTable("entities", {
 	check("entities_photo_url_https", sql`(photo_url IS NULL) OR ((photo_url)::text ~~ 'https://%'::text)`),
 ]);
 
+export const coaApplications = pgTable("coa_applications", {
+	id: serial().primaryKey().notNull(),
+	applicationNumber: varchar("application_number", { length: 50 }),
+	address: varchar({ length: 500 }),
+	streetNum: varchar("street_num", { length: 20 }),
+	streetName: varchar("street_name", { length: 200 }),
+	ward: varchar({ length: 10 }),
+	status: varchar({ length: 50 }),
+	decision: varchar({ length: 50 }),
+	decisionDate: date("decision_date"),
+	hearingDate: date("hearing_date"),
+	description: text(),
+	applicant: varchar({ length: 500 }),
+	linkedPermitNum: varchar("linked_permit_num", { length: 30 }),
+	linkedConfidence: numeric("linked_confidence", { precision: 3, scale:  2 }),
+	dataHash: varchar("data_hash", { length: 64 }),
+	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	subType: text("sub_type"),
+	streetNameNormalized: varchar("street_name_normalized"),
+	lifecyclePhase: varchar("lifecycle_phase", { length: 10 }).default(sql`NULL`),
+	lifecycleClassifiedAt: timestamp("lifecycle_classified_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("idx_coa_applications_address").using("btree", table.address.asc().nullsLast().op("text_ops")),
+	index("idx_coa_applications_linked_permit").using("btree", table.linkedPermitNum.asc().nullsLast().op("text_ops")),
+	index("idx_coa_applications_ward").using("btree", table.ward.asc().nullsLast().op("text_ops")),
+	index("idx_coa_decision_date").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")),
+	index("idx_coa_hearing_date").using("btree", table.hearingDate.asc().nullsLast().op("date_ops")),
+	index("idx_coa_lifecycle_dirty").using("btree", table.id.asc().nullsLast().op("int4_ops")).where(sql`(lifecycle_classified_at IS NULL)`),
+	index("idx_coa_lifecycle_phase").using("btree", table.lifecyclePhase.asc().nullsLast().op("text_ops")).where(sql`(lifecycle_phase IS NOT NULL)`),
+	index("idx_coa_street_name_normalized").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")).where(sql`(street_name_normalized IS NOT NULL)`),
+	index("idx_coa_upcoming_leads").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")).where(sql`(((decision)::text = ANY ((ARRAY['Approved'::character varying, 'Approved with Conditions'::character varying])::text[])) AND (linked_permit_num IS NULL))`),
+	unique("coa_applications_application_number_key").on(table.applicationNumber),
+]);
+
 export const permitProducts = pgTable("permit_products", {
 	permitNum: varchar("permit_num", { length: 20 }).notNull(),
 	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
@@ -757,6 +761,9 @@ export const permits = pgTable("permits", {
 	parcelLinkedAt: timestamp("parcel_linked_at", { withTimezone: true, mode: 'string' }),
 	photoUrl: text("photo_url"),
 	location: geometry({ type: "point", srid: 4326 }),
+	lifecyclePhase: varchar("lifecycle_phase", { length: 10 }).default(sql`NULL`),
+	lifecycleStalled: boolean("lifecycle_stalled").default(false).notNull(),
+	lifecycleClassifiedAt: timestamp("lifecycle_classified_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
 	index("idx_permits_addr_normalized").using("btree", table.streetNum.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")).where(sql`(street_name_normalized IS NOT NULL)`),
 	index("idx_permits_application_date").using("btree", table.applicationDate.asc().nullsLast().op("date_ops")),
@@ -768,6 +775,8 @@ export const permits = pgTable("permits", {
 	index("idx_permits_est_const_cost").using("btree", table.estConstCost.asc().nullsLast().op("numeric_ops")),
 	index("idx_permits_issued_date").using("btree", table.issuedDate.asc().nullsLast().op("date_ops")),
 	index("idx_permits_last_scraped_at").using("btree", table.lastScrapedAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(last_scraped_at IS NOT NULL)`),
+	index("idx_permits_lifecycle_dirty").using("btree", table.permitNum.asc().nullsLast().op("text_ops")).where(sql`(lifecycle_classified_at IS NULL)`),
+	index("idx_permits_lifecycle_phase").using("btree", table.lifecyclePhase.asc().nullsLast().op("text_ops")).where(sql`(lifecycle_phase IS NOT NULL)`),
 	index("idx_permits_location_geography_gist").using("gist", sql`((location)::geography)`),
 	index("idx_permits_location_gist").using("gist", table.location.asc().nullsLast().op("gist_geometry_ops_2d")),
 	index("idx_permits_neighbourhood_id").using("btree", table.neighbourhoodId.asc().nullsLast().op("int4_ops")),

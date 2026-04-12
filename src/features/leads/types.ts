@@ -146,6 +146,11 @@ export interface PermitLeadFeedItem extends LeadFeedItemBase {
   neighbourhood_name: string | null;
   cost_tier: 'small' | 'medium' | 'large' | 'major' | 'mega' | null;
   estimated_cost: number | null;
+  // Lifecycle phase classification (migration 085, WF2 2026-04-11).
+  // Drives the timing_display label on the card via
+  // displayLifecyclePhase(). NULL = dead state or not yet classified.
+  lifecycle_phase: string | null;
+  lifecycle_stalled: boolean;
 }
 
 export interface BuilderLeadFeedItem extends LeadFeedItemBase {
