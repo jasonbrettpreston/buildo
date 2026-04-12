@@ -17,7 +17,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 - **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback. CoA FK to permits is intentionally omitted (composite PK incompatible with single-column reference) — enforced via CQA Tier 2 referential audit instead. PostgreSQL ENUMs deferred for `status` columns to accommodate upstream Toronto Open Data changes.
 
 <!-- DB_SCHEMA_START -->
-### Tables (38)
+### Tables (39)
 
 | Table | Columns | Indexes |
 |-------|---------|--------|
@@ -26,7 +26,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `builders` | 15 | 3 |
 | `building_footprints` | 12 | 3 |
 | `coa_applications` | 21 | 10 |
-| `cost_estimates` | 11 | 1 |
+| `cost_estimates` | 12 | 1 |
 | `data_quality_snapshots` | 71 | 2 |
 | `engine_health_snapshots` | 10 | 1 |
 | `entities` | 19 | 4 |
@@ -54,6 +54,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `spatial_ref_sys` | 5 | 0 |
 | `sync_runs` | 12 | 0 |
 | `timing_calibration` | 7 | 1 |
+| `tracked_projects` | 8 | 3 |
 | `trade_forecasts` | 12 | 2 |
 | `trade_mapping_rules` | 11 | 2 |
 | `trades` | 7 | 1 |
@@ -150,7 +151,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `lifecycle_phase` | CHARACTER VARYING(10) | YES | NULL |
 | `lifecycle_classified_at` | TIMESTAMP WITH TIME ZONE | YES | - |
 
-#### `cost_estimates` (11 columns)
+#### `cost_estimates` (12 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -165,6 +166,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `complexity_score` | INTEGER | YES | - |
 | `model_version` | INTEGER | NO | 1 |
 | `computed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `trade_contract_values` | JSONB | NO | {} |
 
 #### `data_quality_snapshots` (71 columns)
 
@@ -665,6 +667,19 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `p75_days` | INTEGER | NO | - |
 | `sample_size` | INTEGER | NO | - |
 | `computed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `tracked_projects` (8 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(tracked_projects_id_seq) |
+| `user_id` | CHARACTER VARYING(128) | NO | - |
+| `permit_num` | CHARACTER VARYING(30) | NO | - |
+| `revision_num` | CHARACTER VARYING(10) | NO | - |
+| `trade_slug` | CHARACTER VARYING(50) | NO | - |
+| `status` | CHARACTER VARYING(50) | NO | claimed_unverified |
+| `claimed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `updated_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
 #### `trade_forecasts` (12 columns)
 

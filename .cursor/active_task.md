@@ -1,137 +1,62 @@
-# Active Task: Phase 4 — Flight Tracker (compute-trade-forecasts.js)
+# Active Task: WF3 — Fix Migration 089 (Valuation + Claiming Schema)
 **Status:** Planning
-**Workflow:** WF1 — New Feature Genesis
+**Workflow:** WF3 — Bug Fix
+**Rollback Anchor:** `91af55e` (fix(88_forecast_urgency): migration safety + header fix + deferred items)
 **Domain Mode:** **Backend/Pipeline**
 
 ---
 
 ## Context
-* **Goal:** Generate per-permit, per-trade predicted start dates and urgency statuses that the lead feed will surface. This script replaces the cosmetic "Active build phase" placeholder with actionable countdown data: "Plumbing rough-in expected in 47 days — On Time" or "HVAC delayed by 12 days."
-* **Why now:** Phases 1-3 are shipped. `phase_started_at` is populated on 242K permits. `phase_calibration` has 131 rows of historical medians. `TRADE_TARGET_PHASE` maps 32 trades to their lifecycle phase. `trade_forecasts` table exists but is empty. This script is the consumer that turns all three inputs into user-facing predictions.
-* **Target Spec:** `docs/reports/lifecycle_phase_implementation.md`
-* **Key Files:** `scripts/compute-trade-forecasts.js` (new), `src/tests/compute-trade-forecasts.infra.test.ts` (new)
+* **Goal:** Fix 3 bugs in migration 089 found by independent + adversarial review agents before any application code consumes these tables.
+* **Target Spec:** `migrations/089_valuation_claiming_schema.sql`
+* **Key Files:** `migrations/089_valuation_claiming_schema.sql`, `src/tests/migration-089.infra.test.ts`
 
-## Technical Implementation
+## Bugs
 
-### Algorithm
+### Bug 1 (CRITICAL) — `user_id UUID` type mismatch
+Firebase Auth UIDs are 28-char base64 strings, NOT UUID format. Every INSERT would fail with `invalid input syntax for type uuid`. The project convention (ADR 006, migrations 010/070/075/076) uses `VARCHAR(128)`. Both reviewers flagged at 100% confidence.
 
-For each permit with an active trade assignment:
+### Bug 2 (HIGH) — UNIQUE includes `revision_num`
+When a permit gets a new revision ("01" → "02"), the user's claim on revision "01" does NOT carry over. The user must re-claim manually. Fix: remove `revision_num` from the UNIQUE constraint so claims survive revisions. Keep `revision_num` as an informational column (the revision at time of claim).
 
-```
-1. Look up trade's target phase:  TRADE_TARGET_PHASE[trade_slug] → target_phase
-2. Compare current phase to target phase:
-   a. If current_phase ordinal >= target_phase ordinal → overdue (window closed)
-   b. If current_phase is pre-construction (P3-P8, P7*) → use ISSUED calibration
-   c. If current_phase is construction (P9-P17) → use phase-to-phase calibration
-   d. If current_phase is terminal/orphan/dead → skip
-
-3. Calibration lookup (fallback hierarchy):
-   (current_phase, target_phase, permit_type) → exact match
-   (current_phase, target_phase, NULL)        → all-types aggregate
-   (ISSUED, target_phase, permit_type)        → issued-based fallback
-   (ISSUED, target_phase, NULL)               → issued-based all-types
-   30 days                                    → hardcoded floor
-
-4. Compute prediction:
-   predicted_start = phase_started_at + median_days
-   days_until = predicted_start - today
-
-5. Classify urgency:
-   overdue:   current phase past target   OR  days_until <= -30
-   delayed:   -30 < days_until <= 0
-   imminent:  0 < days_until <= 14
-   upcoming:  14 < days_until <= 30
-   on_time:   days_until > 30
-
-6. Classify confidence:
-   high:    sample_size >= 30
-   medium:  sample_size >= 10
-   low:     sample_size < 10 or fallback used
-```
-
-### Data flow
-
-```
-[permit_trades × trades × permits]  →  93K active permit-trade pairs
-[phase_calibration]                  →  131 calibration rows (loaded to JS Map)
-[TRADE_TARGET_PHASE]                 →  32 trade → target_phase mappings
-
-         ↓ compute in JS ↓
-
-[trade_forecasts]  ←  UPSERT per-permit, per-trade predictions
-```
-
-### Script structure
-
-1. **Load calibration** into a nested Map: `Map<from_phase, Map<to_phase, Map<permit_type|'__ALL__', {median, p25, p75, sample}>>>`
-2. **Query active permit-trades**: single JOIN across `permit_trades × trades × permits` — returns ~93K rows with `(permit_num, revision_num, trade_slug, lifecycle_phase, phase_started_at, permit_type)`
-3. **Compute forecasts in JS**: O(1) Map lookup per permit-trade pair. Phase ordinal comparison for overdue detection.
-4. **Batch UPSERT** into `trade_forecasts`: VALUES + ON CONFLICT DO UPDATE, batched at 1000 rows × 11 params = 11,000 params per batch (under 65535 limit)
-
-### Urgency value semantics (for the feed)
-
-| Value | Meaning | Feed behavior |
-|-------|---------|---------------|
-| `overdue` | Permit has passed the target phase or predicted_start is >30 days ago | Deprioritize or hide |
-| `delayed` | Predicted date passed but within 30 days | HIGH urgency — builder is behind schedule |
-| `imminent` | Due within 14 days | HIGHEST urgency — trade needed NOW |
-| `upcoming` | Due within 30 days | Moderate urgency — trade needed soon |
-| `on_time` | Due in 30+ days | Standard urgency — track but not urgent |
-| `unknown` | No calibration data or missing inputs | Neutral — show but don't rank on urgency |
-
-### Permits to skip
-
-- `lifecycle_phase IS NULL` (dead/unclassified)
-- `lifecycle_phase IN ('P19', 'P20')` (terminal — no active construction)
-- `lifecycle_phase IN ('O1', 'O2', 'O3')` (orphan trade permits — separate from BLD-led)
-- `phase_started_at IS NULL` (pre-backfill edge case)
-- No active trade assignment
-
-* **Database Impact:** YES — writes to existing `trade_forecasts` table (Phase 1 created it). Potentially 93K rows on first run.
+### Bug 3 (HIGH) — No `updated_at` column
+Status transitions (claimed_unverified → verified → expired) have no timestamp. Blocks admin analytics, expiry jobs, and debugging. Fix: add `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
 ## Standards Compliance
-* **Try-Catch Boundary:** Pipeline SDK `pipeline.run` wrapper.
-* **Unhappy Path Tests:** Infra shape tests for batch structure, fallback hierarchy, urgency classification.
-* **logError Mandate:** Uses `pipeline.log`.
-* **Mobile-First:** N/A — backend-only.
+* **Try-Catch Boundary:** N/A — schema only.
+* **Unhappy Path Tests:** Update infra test to assert VARCHAR(128), updated UNIQUE, and updated_at column.
+* **logError Mandate:** N/A.
+* **Mobile-First:** N/A.
 
 ## Execution Plan
 
-- [ ] **Contract Definition:** The `trade_forecasts` table shape (Phase 1 migration 086) IS the contract. The feed will JOIN on `(permit_num, revision_num, trade_slug)`.
-
-- [ ] **Spec & Registry Sync:** Wire into manifest + FreshnessTimeline + funnel. Add to permits chain after `compute_timing_calibration_v2`.
-
-- [ ] **Test Scaffolding:** `src/tests/compute-trade-forecasts.infra.test.ts` — script shape, batch structure, urgency classification logic, fallback hierarchy.
-
-- [ ] **Red Light:** Tests must FAIL before implementation.
-
-- [ ] **Implementation:**
-  1. Write `scripts/compute-trade-forecasts.js`
-  2. Wire into manifest + FreshnessTimeline + funnel
-  3. Run against live DB, verify forecasts
-  4. Verify urgency distribution (sanity check)
-
+- [x] **Rollback Anchor:** `91af55e`
+- [x] **State Verification:** Confirmed UUID type mismatch via `information_schema`. Confirmed existing tables use VARCHAR(128). Confirmed revision_num in UNIQUE. Confirmed no updated_at column.
+- [x] **Spec Review:** ADR 006 (`docs/adr/006-firebase-uid-not-fk.md`) documents the Firebase UID convention.
+- [x] **Reproduction:** Both review agents flagged Bug 1 at 100% confidence. Bug 2 confirmed by reviewing the UNIQUE constraint. Bug 3 confirmed by column listing.
+- [ ] **Red Light:** N/A — these are schema-level bugs, not logic bugs reproducible via failing tests.
+- [ ] **Fix:**
+  1. Rollback migration 089 manually (DROP table + DROP column)
+  2. Rewrite migration: `user_id VARCHAR(128)`, UNIQUE without `revision_num`, add `updated_at`
+  3. Re-apply migration
+  4. Regen Drizzle
+  5. Update infra test assertions
 - [ ] **Pre-Review Self-Checklist:**
-  1. Does the phase ordinal comparison correctly detect "permit already past target"?
-  2. Does the fallback hierarchy exhaust all 4 levels before using the 30-day default?
-  3. Are the batch UPSERT params correctly aligned (no j*7 repeat)?
-  4. Is the script idempotent? (ON CONFLICT DO UPDATE)
-  5. Does the urgency classification handle negative days_until correctly?
-  6. Are orphan/terminal/dead permits excluded from forecasting?
-  7. Does the script handle trades not in TRADE_TARGET_PHASE? (skip with warning)
+  1. Does VARCHAR(128) match the convention in migrations 075/076?
+  2. Does the UNIQUE without revision_num still prevent double-claiming?
+  3. Does updated_at have a DEFAULT NOW()?
+  4. Are all 3 fixes reflected in the infra test?
+- [ ] **Green Light:** `npm run test && npm run typecheck`. All pass.
+- [ ] → Commit.
 
-- [ ] **Green Light:** Full test suite + live DB verification.
-
-- [ ] **Independent + adversarial review agents.** Triage, WF3, defer.
-
-- [ ] → WF6 + commit.
+## Deferred to review_followups.md
+- Expiry mechanism for stale claimed_unverified rows (application-layer concern — future WF1 for claiming API)
 
 ---
 
 ## §10 Compliance
-
-- ✅ **DB:** Writes to existing `trade_forecasts` table. CHECK constraints (Phase 1) enforce urgency/confidence values. FK cascade handles permit deletion. Batch UPSERT idempotent.
+- ✅ **DB:** Fix type mismatch before any application code consumes it. UNIQUE constraint redesigned. Audit column added.
 - ⬜ **API:** N/A
 - ⬜ **UI:** N/A
-- ✅ **Shared Logic:** Uses `TRADE_TARGET_PHASE` from shared lib (dual code path).
-- ✅ **Pipeline:** Pipeline SDK · PIPELINE_SUMMARY + PIPELINE_META · batch UPSERT · wired into manifest + chain
+- ⬜ **Shared Logic:** N/A
+- ⬜ **Pipeline:** N/A

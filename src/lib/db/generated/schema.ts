@@ -707,6 +707,22 @@ export const phaseCalibration = pgTable("phase_calibration", {
 	check("chk_calibration_to_phase", sql`(to_phase)::text = ANY ((ARRAY['P1'::character varying, 'P2'::character varying, 'P3'::character varying, 'P4'::character varying, 'P5'::character varying, 'P6'::character varying, 'P7a'::character varying, 'P7b'::character varying, 'P7c'::character varying, 'P7d'::character varying, 'P8'::character varying, 'P9'::character varying, 'P10'::character varying, 'P11'::character varying, 'P12'::character varying, 'P13'::character varying, 'P14'::character varying, 'P15'::character varying, 'P16'::character varying, 'P17'::character varying, 'P18'::character varying, 'P19'::character varying, 'P20'::character varying, 'O1'::character varying, 'O2'::character varying, 'O3'::character varying, 'O4'::character varying])::text[])`),
 ]);
 
+export const trackedProjects = pgTable("tracked_projects", {
+	id: serial().primaryKey().notNull(),
+	userId: varchar("user_id", { length: 128 }).notNull(),
+	permitNum: varchar("permit_num", { length: 30 }).notNull(),
+	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
+	tradeSlug: varchar("trade_slug", { length: 50 }).notNull(),
+	status: varchar({ length: 50 }).default('claimed_unverified').notNull(),
+	claimedAt: timestamp("claimed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_tracked_projects_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
+	index("idx_tracked_projects_user").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.claimedAt.desc().nullsFirst().op("text_ops")),
+	unique("uq_tracked_user_permit_trade").on(table.permitNum, table.revisionNum, table.tradeSlug, table.userId),
+	check("chk_tracked_status", sql`(status)::text = ANY ((ARRAY['claimed_unverified'::character varying, 'verified'::character varying, 'expired'::character varying])::text[])`),
+]);
+
 export const permitProducts = pgTable("permit_products", {
 	permitNum: varchar("permit_num", { length: 20 }).notNull(),
 	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
@@ -737,6 +753,7 @@ export const costEstimates = pgTable("cost_estimates", {
 	complexityScore: integer("complexity_score"),
 	modelVersion: integer("model_version").default(1).notNull(),
 	computedAt: timestamp("computed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	tradeContractValues: jsonb("trade_contract_values").default({}).notNull(),
 }, (table) => [
 	index("idx_cost_estimates_tier").using("btree", table.costTier.asc().nullsLast().op("text_ops")),
 	foreignKey({

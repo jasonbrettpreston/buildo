@@ -113,6 +113,8 @@
 | HIGH | WF3 2026-04-12 Adversarial (D2) | Rolling snowplow stores a daily-moving `predicted_start` in trade_forecasts. For stalled permits, the stored date is `today + penalty`, not a real prediction. Changes by +1 day per daily run. By design per user spec ("every day it stays stalled, the date must push forward") but consumers should be aware the date is synthetic. Document or add `stall_adjusted BOOLEAN` column. | Documentation / schema | OPEN |
 | HIGH | WF3 2026-04-12 Adversarial (D3) | `isPastTarget` overrides stall penalty for permits physically past the work_phase. The 14-day penalty math is wasted. Accepted: if the permit passed P12, the plumbing window is closed regardless of stall. | Accepted design | OPEN |
 | MED | WF3 2026-04-12 Adversarial (D5) | 45-day bureaucracy penalty is undersized for P3-P5 stalls (Toronto zoning appeals take 6-18 months). Consider proportional penalty: `max(45, Math.round(cal.median * 0.5))` or stall-duration calibration table. | Future calibration | OPEN |
+| MED | WF2 089 2026-04-12 Adversarial | `tracked_projects.updated_at` has no Postgres trigger for auto-update on row changes. Application must explicitly `SET updated_at = NOW()` on every UPDATE. If forgotten, the column shows stale timestamps. Consider a `BEFORE UPDATE` trigger function, or accept as application-layer responsibility and document. | Claiming API WF1 | OPEN |
+| MED | WF2 089 2026-04-12 Adversarial | No TTL/expiry mechanism for stale `claimed_unverified` rows in `tracked_projects`. A user can claim and never verify, blocking others indefinitely. The claiming API (future WF1) should include an expiry job or `expires_at` column. | Claiming API WF1 | OPEN |
 
 ---
 
