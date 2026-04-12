@@ -1,10 +1,10 @@
--- Migration 088: Add 'expired' and 'on_hold' urgency values
+-- Migration 088: Add 'expired' urgency tier; remove 'on_hold'
 --
--- WF3: The adversarial review found that 92% of trade forecasts were
--- 'overdue' — a graveyard of dead leads with no signal value. Two new
--- urgency tiers solve this:
---   'expired' — >90 days past predicted date; dead data, not a lead
---   'on_hold' — permit is stalled (lifecycle_stalled = true)
+-- WF3: Stalled permits now get real urgency values via the "Instant
+-- Stall Recalibration" math (penalty + rolling snowplow). The frontend
+-- reads lifecycle_stalled directly from the permits table JOIN.
+-- 'on_hold' is removed; 'expired' is added for permits >90 days past
+-- their predicted date (dead data, not actionable leads).
 --
 -- SPEC LINK: docs/reports/lifecycle_phase_implementation.md
 
@@ -12,10 +12,11 @@
 -- UP
 -- ═══════════════════════════════════════════════════════════════════
 
--- on_hold removed: stalled permits now get real urgency values via the
--- "Instant Stall Recalibration" math (penalty + rolling snowplow).
--- The frontend reads lifecycle_stalled from the permits JOIN, not from
--- trade_forecasts.urgency.
+-- Clear any existing on_hold rows BEFORE swapping the constraint.
+-- Without this, the ADD CONSTRAINT fails if on_hold rows exist in the
+-- DB when the migration runs. Adversarial WF3 Defect 4.
+UPDATE trade_forecasts SET urgency = 'overdue' WHERE urgency = 'on_hold';
+
 ALTER TABLE trade_forecasts
   DROP CONSTRAINT chk_forecast_urgency,
   ADD CONSTRAINT chk_forecast_urgency
@@ -24,7 +25,7 @@ ALTER TABLE trade_forecasts
 -- ═══════════════════════════════════════════════════════════════════
 -- DOWN
 -- ═══════════════════════════════════════════════════════════════════
--- UPDATE trade_forecasts SET urgency = 'overdue' WHERE urgency IN ('expired', 'on_hold');
+-- UPDATE trade_forecasts SET urgency = 'overdue' WHERE urgency = 'expired';
 -- ALTER TABLE trade_forecasts
 --   DROP CONSTRAINT chk_forecast_urgency,
 --   ADD CONSTRAINT chk_forecast_urgency
