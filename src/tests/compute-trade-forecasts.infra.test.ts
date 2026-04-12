@@ -91,20 +91,31 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(preConMatch![1]).not.toMatch(/P18/);
   });
 
-  it('classifies urgency with expired decay + on_hold + correct thresholds', () => {
+  it('classifies urgency with expired decay + correct thresholds (no on_hold)', () => {
     expect(content).toMatch(/classifyUrgency/);
     // WF3: expired tier (>90 days past → dead data, not a lead)
     expect(content).toMatch(/expired/);
     expect(content).toMatch(/<= -90/);
-    // WF3: on_hold tier (stalled permits)
-    expect(content).toMatch(/on_hold/);
-    expect(content).toMatch(/isStalled/);
+    // Stall handling is now via Instant Recalibration math, NOT a
+    // separate urgency tier. classifyUrgency has no isStalled param.
+    expect(content).not.toMatch(/return 'on_hold'/);
     // Standard tiers
     expect(content).toMatch(/overdue/);
     expect(content).toMatch(/delayed/);
     expect(content).toMatch(/imminent/);
     expect(content).toMatch(/upcoming/);
     expect(content).toMatch(/on_time/);
+  });
+
+  it('applies stall recalibration with context-aware penalty + rolling snowplow', () => {
+    // Pre-construction stalls = 45 day penalty (bureaucracy)
+    // Active construction stalls = 14 day penalty
+    expect(content).toMatch(/stallPenalty/);
+    expect(content).toMatch(/\? 45 : 14/);
+    // Rolling snowplow: predicted date can never be closer than
+    // penalty buffer from today
+    expect(content).toMatch(/minimumStallDate/);
+    expect(content).toMatch(/predictedStart < minimumStallDate/);
   });
 
   it('classifies confidence from sample_size', () => {

@@ -12,10 +12,14 @@
 -- UP
 -- ═══════════════════════════════════════════════════════════════════
 
+-- on_hold removed: stalled permits now get real urgency values via the
+-- "Instant Stall Recalibration" math (penalty + rolling snowplow).
+-- The frontend reads lifecycle_stalled from the permits JOIN, not from
+-- trade_forecasts.urgency.
 ALTER TABLE trade_forecasts
   DROP CONSTRAINT chk_forecast_urgency,
   ADD CONSTRAINT chk_forecast_urgency
-    CHECK (urgency IN ('unknown', 'on_time', 'upcoming', 'imminent', 'delayed', 'overdue', 'expired', 'on_hold'));
+    CHECK (urgency IN ('unknown', 'on_time', 'upcoming', 'imminent', 'delayed', 'overdue', 'expired'));
 
 -- ═══════════════════════════════════════════════════════════════════
 -- DOWN

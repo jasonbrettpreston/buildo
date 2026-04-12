@@ -66,32 +66,32 @@ const PRE_CONSTRUCTION_PHASES = new Set([
 const FORECAST_BATCH_SIZE = 1000;
 const DEFAULT_MEDIAN_DAYS = 30;
 
-// Urgency classification with stalled check + expired decay.
+// Urgency classification — no isStalled parameter.
 //
-// WF3 "Overdue Graveyard" fix: the old logic had no decay — a permit
-// issued 2 years ago with no inspections was "600 days overdue" forever.
-// That's not a hot lead; that's dead data. The 'expired' tier (>90 days
-// past) cleans this out. The 'on_hold' tier surfaces stalled permits
-// separately so operators can see them without polluting the urgency feed.
-function classifyUrgency(daysUntil, isPastTarget, isStalled) {
-  if (isStalled) return 'on_hold';
-
-  // Physically passed the target phase → window closed (active signal).
-  // This MUST come before the expired check: a permit at P13 targeting
-  // P12 is overdue (builder may still urgently need this trade), NOT
-  // expired (dead data). Adversarial WF3 Probe 3.
-  if (isPastTarget) return 'overdue';
-
-  // THE GRAVEYARD FIX: >90 days past predicted date → dead data, not a lead.
-  // Only fires for permits that haven't physically passed the target
-  // (the isPastTarget check above catches those first).
+// Stall handling is now done BEFORE this function via the "Instant
+// Stall Recalibration" math that pushes predictedStart forward by a
+// penalty buffer. The urgency function receives the adjusted daysUntil
+// and classifies based on the recalibrated date. The frontend reads
+// lifecycle_stalled directly from the permits table JOIN, not from
+// trade_forecasts.
+//
+// Precedence: expired FIRST (>90 days past = dead data regardless of
+// whether the permit physically passed the target). Then isPastTarget
+// (recent overdue = active signal). This ensures 5-year-old permits
+// that passed P12 get buried as expired, not stuck as overdue forever.
+function classifyUrgency(daysUntil, isPastTarget) {
+  // 1. THE GRAVEYARD FIX — must be first. If it's 90+ days past the
+  // predicted date, it's dead data. We don't care if it's also past
+  // the target phase — both cases are dead.
   if (daysUntil <= -90) return 'expired';
 
-  // 0-30 days late → the "delayed" sweet spot (builder is behind schedule)
+  // 2. Physically passed the target phase but within 90 days → active
+  // signal. Builder may still urgently need this trade.
+  if (isPastTarget) return 'overdue';
+
+  // 3. Actionable tracking
   if (daysUntil <= -30) return 'overdue';
   if (daysUntil <= 0) return 'delayed';
-
-  // Forward-looking tracking
   if (daysUntil <= 14) return 'imminent';
   if (daysUntil <= 30) return 'upcoming';
   return 'on_time';
@@ -255,17 +255,44 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     // but toISOString() outputs UTC, which can shift the date backward
     // by a full day when the server TZ differs from the DB TZ.
     // WF3 Bug Fix: use setUTCHours + setUTCDate for consistent dates.
+    // 1. Compute original predicted start date from calibration medians
     const anchorDate = new Date(phase_started_at);
     anchorDate.setUTCHours(0, 0, 0, 0);
-    const predictedStart = new Date(anchorDate);
+    let predictedStart = new Date(anchorDate);
     predictedStart.setUTCDate(predictedStart.getUTCDate() + cal.median);
 
+    // 2. INSTANT STALL RECALIBRATION — context-aware penalty + rolling snowplow.
+    //
+    // When lifecycle_stalled flips to true:
+    //   a) Instant penalty: push predicted_start forward by a buffer that
+    //      reflects how long this KIND of stall typically takes to resolve.
+    //      Pre-construction stalls (zoning, permits) = 45 days (bureaucracy).
+    //      Active construction stalls (failed inspection) = 14 days.
+    //   b) Rolling snowplow: if the project remains stalled across multiple
+    //      daily runs, the predicted date must keep rolling forward. It can
+    //      never be closer than stallPenalty days from today. This prevents
+    //      the date from drifting into the past while stalled.
+    if (lifecycle_stalled) {
+      const stallPenalty = PRE_CONSTRUCTION_PHASES.has(lifecycle_phase) ? 45 : 14;
+
+      // Apply the instant shockwave to the original estimate
+      predictedStart.setUTCDate(predictedStart.getUTCDate() + stallPenalty);
+
+      // The rolling snowplow: floor at today + penalty
+      const minimumStallDate = new Date(today);
+      minimumStallDate.setUTCDate(minimumStallDate.getUTCDate() + stallPenalty);
+
+      if (predictedStart < minimumStallDate) {
+        predictedStart = minimumStallDate;
+      }
+    }
+
+    // 3. Calculate final daysUntil based on recalibrated date
     const daysUntil = Math.floor(
       (predictedStart.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
     );
 
-    // Consolidates: stalled check + bimodal past-target + expired decay
-    const urgency = classifyUrgency(daysUntil, isPastTarget, lifecycle_stalled);
+    const urgency = classifyUrgency(daysUntil, isPastTarget);
     const confidence = classifyConfidence(cal.sample, cal.method === 'default');
 
     forecasts.push({
