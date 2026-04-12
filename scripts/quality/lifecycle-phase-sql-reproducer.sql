@@ -43,7 +43,7 @@ latest_passed AS (
   SELECT DISTINCT ON (permit_num) permit_num, stage_name
   FROM permit_inspections
   WHERE status = 'Passed'
-  ORDER BY permit_num, inspection_date DESC NULLS LAST
+  ORDER BY permit_num, inspection_date DESC NULLS LAST, stage_name
 ),
 inspection_rollup AS (
   SELECT

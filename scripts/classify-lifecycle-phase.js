@@ -24,6 +24,8 @@ const pipeline = require('./lib/pipeline');
 const {
   classifyLifecyclePhase,
   classifyCoaPhase,
+  DEAD_STATUS_ARRAY,
+  NORMALIZED_DEAD_DECISIONS_ARRAY,
 } = require('./lib/lifecycle-phase');
 
 // ─────────────────────────────────────────────────────────────────
@@ -100,6 +102,15 @@ function chunkArray(arr, size) {
 // Main run
 // ─────────────────────────────────────────────────────────────────
 
+// Startup validation — `<> ALL(ARRAY[]::text[])` is vacuously true
+// in Postgres, which would silently zero-out the unclassified count.
+if (DEAD_STATUS_ARRAY.length === 0) {
+  throw new Error('DEAD_STATUS_ARRAY is empty — refusing to run');
+}
+if (NORMALIZED_DEAD_DECISIONS_ARRAY.length === 0) {
+  throw new Error('NORMALIZED_DEAD_DECISIONS_ARRAY is empty — refusing to run');
+}
+
 // Advisory lock ID — must be stable across runs so two classifier
 // instances contend for the same lock. Chosen as the migration number
 // (085) to keep the ID human-traceable to the feature that added it.
@@ -114,31 +125,46 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // Concurrency guard — single-threaded classifier
   // ═══════════════════════════════════════════════════════════
   //
-  // pg_try_advisory_lock returns true/false immediately. If another
-  // instance holds the lock we emit a no-op summary and exit 0 so the
-  // chain step still shows PASS — the already-running instance will
-  // finish whatever work is dirty.
-  const { rows: lockRows } = await pool.query(
-    'SELECT pg_try_advisory_lock($1) AS got',
-    [ADVISORY_LOCK_ID],
-  );
-  if (!lockRows[0].got) {
-    pipeline.log.info(
-      '[classify-lifecycle-phase]',
-      `Advisory lock ${ADVISORY_LOCK_ID} already held by another classifier instance — skipping this run.`,
+  // CRITICAL: We must hold the advisory lock on a DEDICATED client
+  // (pool.connect), NOT via pool.query. pool.query checks out an
+  // ephemeral connection, runs the query, and immediately returns it
+  // to the pool. During the 20-60s CPU-bound Map-building phase where
+  // no SQL queries execute, the pool's default idleTimeoutMillis (10s)
+  // can reap that connection — silently releasing the lock mid-run.
+  // A dedicated client stays checked out (not idle in the pool) for
+  // the full run duration. See WF3 Bug #1.
+  const lockClient = await pool.connect();
+  try {
+    const { rows: lockRows } = await lockClient.query(
+      'SELECT pg_try_advisory_lock($1) AS got',
+      [ADVISORY_LOCK_ID],
     );
-    pipeline.emitSummary({
-      records_total: 0,
-      records_new: 0,
-      records_updated: 0,
-      records_meta: {
-        skipped: true,
-        reason: 'advisory_lock_held_elsewhere',
-        advisory_lock_id: ADVISORY_LOCK_ID,
-      },
-    });
-    pipeline.emitMeta({}, {});
-    return;
+    if (!lockRows[0].got) {
+      pipeline.log.info(
+        '[classify-lifecycle-phase]',
+        `Advisory lock ${ADVISORY_LOCK_ID} already held by another classifier instance — skipping this run.`,
+      );
+      pipeline.emitSummary({
+        records_total: 0,
+        records_new: 0,
+        records_updated: 0,
+        records_meta: {
+          skipped: true,
+          reason: 'advisory_lock_held_elsewhere',
+          advisory_lock_id: ADVISORY_LOCK_ID,
+        },
+      });
+      pipeline.emitMeta({}, {});
+      // CRITICAL: release the lockClient BEFORE returning. Without
+      // this, the return escapes before the outer try/finally where
+      // lockClient.release() lives, leaking one pool connection on
+      // every skipped run. Found by independent review, Item 1.
+      lockClient.release();
+      return;
+    }
+  } catch (lockErr) {
+    lockClient.release();
+    throw lockErr;
   }
 
   try {
@@ -155,9 +181,22 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   //   1. Load the minimal dirty-permit columns (partial index covers this)
   //   2. Load BLD/CMB permit_nums and build Map<prefix, Set<permit_num>>
   //      for in-memory orphan detection
-  //   3. Load inspection rollups (94K rows) and build a Map<permit_num,
-  //      { latest_passed_stage, latest_inspection_date, has_passed }>
+  //   3. Load inspection rollups via SQL aggregation (Postgres returns
+  //      ~10K pre-aggregated rows, not the full 94K raw table)
   //   4. Classify each dirty permit in JS using the two Maps
+  //
+  // WATERMARK RACE NOTE (WF3 Bug #5, document only):
+  // Between the dirty-SELECT and the per-batch UPDATE that writes
+  // lifecycle_classified_at = NOW(), a concurrent writer (e.g.,
+  // load-permits.js or link-coa.js) can bump a permit's last_seen_at.
+  // The classifier sees stale data for that row but stamps it with a
+  // classified_at AFTER the concurrent writer's last_seen_at, so the
+  // row won't appear dirty on the NEXT run — meaning the stale
+  // classification sticks until another pipeline step bumps
+  // last_seen_at again. This is the accepted best-effort incremental
+  // trade-off: the next daily chain run will re-classify with fresh
+  // data. No code fix needed — the alternative (SELECT FOR UPDATE)
+  // would block the entire permits pipeline for ~170s.
 
   pipeline.log.info('[classify-lifecycle-phase]', 'Querying dirty permits...');
   const permitsResult = await pool.query(
@@ -197,35 +236,41 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     `BLD/CMB prefixes tracked: ${bldCmbByPrefix.size.toLocaleString()}`,
   );
 
-  // Build inspection rollup map in one pass across permit_inspections
+  // Build inspection rollup map — SQL-side aggregation so Node receives
+  // ~10K rows (one per permit with inspections) instead of the full 94K+
+  // raw permit_inspections table. Postgres is faster at this than JS, and
+  // the approach avoids shipping 94K rows over the wire and building a
+  // manual rollup in a for-loop. See WF3 Bug #2.
   pipeline.log.info('[classify-lifecycle-phase]', 'Building inspection rollup map...');
   const inspResult = await pool.query(
-    `SELECT permit_num, stage_name, status, inspection_date
-       FROM permit_inspections`,
+    `WITH latest_passed AS (
+       SELECT DISTINCT ON (permit_num) permit_num, stage_name
+         FROM permit_inspections
+        WHERE status = 'Passed'
+        ORDER BY permit_num, inspection_date DESC NULLS LAST, stage_name
+     ),
+     rollup AS (
+       SELECT permit_num,
+              MAX(inspection_date) AS latest_inspection_date,
+              BOOL_OR(status = 'Passed') AS has_passed_inspection
+         FROM permit_inspections
+        GROUP BY permit_num
+     )
+     SELECT r.permit_num,
+            lp.stage_name AS latest_passed_stage,
+            r.latest_inspection_date,
+            r.has_passed_inspection
+       FROM rollup r
+       LEFT JOIN latest_passed lp USING (permit_num)`,
   );
   const inspByPermit = new Map();
   for (const row of inspResult.rows) {
-    let agg = inspByPermit.get(row.permit_num);
-    if (!agg) {
-      agg = {
-        latest_passed_stage: null,
-        latest_passed_date: null,
-        latest_inspection_date: null,
-        has_passed_inspection: false,
-      };
-      inspByPermit.set(row.permit_num, agg);
-    }
-    const d = row.inspection_date ? new Date(row.inspection_date) : null;
-    if (d && (!agg.latest_inspection_date || d > agg.latest_inspection_date)) {
-      agg.latest_inspection_date = d;
-    }
-    if (row.status === 'Passed') {
-      agg.has_passed_inspection = true;
-      if (d && (!agg.latest_passed_date || d > agg.latest_passed_date)) {
-        agg.latest_passed_date = d;
-        agg.latest_passed_stage = row.stage_name;
-      }
-    }
+    inspByPermit.set(row.permit_num, {
+      latest_passed_stage: row.latest_passed_stage,
+      latest_inspection_date: row.latest_inspection_date
+        ? new Date(row.latest_inspection_date) : null,
+      has_passed_inspection: row.has_passed_inspection,
+    });
   }
   pipeline.log.info(
     '[classify-lifecycle-phase]',
@@ -415,31 +460,39 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   );
   const stalledCount = stalledRows[0].n;
 
-  // Unclassified count — excludes rows in dead-state set because those
-  // legitimately have NULL phase. The "bad" NULL is one where a permit
-  // has a non-dead status but fell through every branch. That's what
-  // the ≤ 100 threshold protects against.
+  // Unclassified count — uses DEAD_STATUS_ARRAY from the shared lib
+  // (single source of truth) instead of hardcoding 13 statuses inline.
+  // See WF3 Bug #4 (drift risk from 3 independent copies).
   //
   // Note `TRIM(status) <> ''`: the JS classifier's `normalizeStatus`
   // trims whitespace-only statuses to null BEFORE checking the dead
   // set, so whitespace-only rows get phase=null but should be excluded
-  // from the unclassified count (they are legitimately unclassifiable).
-  // Bare `status <> ''` would count `'  '` as unclassified and diverge
-  // from `assert-lifecycle-phase-distribution.js` which uses TRIM.
-  // See independent review Defect 2.
-  const { rows: unclassifiedRows } = await pool.query(
+  // from the unclassified count. See independent review Defect 2.
+  const { rows: unclPermitRows } = await pool.query(
     `SELECT COUNT(*)::int AS n
        FROM permits
       WHERE lifecycle_phase IS NULL
-        AND status NOT IN (
-          'Cancelled','Revoked','Permit Revoked','Refused','Refusal Notice',
-          'Application Withdrawn','Abandoned','Not Accepted','Work Suspended',
-          'VIOLATION','Order Issued','Tenant Notice Period','Follow-up Required'
-        )
+        AND status <> ALL($1::text[])
         AND status IS NOT NULL
         AND TRIM(status) <> ''`,
+    [DEAD_STATUS_ARRAY],
   );
-  const unclassifiedCount = unclassifiedRows[0].n;
+  // WF3 Bug #3: also check CoA unclassified count. The CoA classifier
+  // can silently leave rows with NULL phase if the decision-matching
+  // logic breaks. Dead CoA decisions are excluded via the shared
+  // NORMALIZED_DEAD_DECISIONS_ARRAY.
+  const { rows: unclCoaRows } = await pool.query(
+    `SELECT COUNT(*)::int AS n
+       FROM coa_applications
+      WHERE lifecycle_phase IS NULL
+        AND linked_permit_num IS NULL
+        AND lower(trim(regexp_replace(COALESCE(decision,''), '\\s+', ' ', 'g')))
+            <> ALL($1::text[])
+        AND decision IS NOT NULL
+        AND TRIM(decision) <> ''`,
+    [NORMALIZED_DEAD_DECISIONS_ARRAY],
+  );
+  const unclassifiedCount = unclPermitRows[0].n + unclCoaRows[0].n;
 
   // Build audit_table rows for the admin dashboard
   const auditRows = [
@@ -463,16 +516,13 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       `SELECT status, COUNT(*)::int AS n
          FROM permits
         WHERE lifecycle_phase IS NULL
-          AND status NOT IN (
-            'Cancelled','Revoked','Permit Revoked','Refused','Refusal Notice',
-            'Application Withdrawn','Abandoned','Not Accepted','Work Suspended',
-            'VIOLATION','Order Issued','Tenant Notice Period','Follow-up Required'
-          )
+          AND status <> ALL($1::text[])
           AND status IS NOT NULL
           AND TRIM(status) <> ''
         GROUP BY status
         ORDER BY n DESC
         LIMIT 20`,
+      [DEAD_STATUS_ARRAY],
     );
     pipeline.log.warn(
       '[classify-lifecycle-phase]',
@@ -536,17 +586,19 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     );
   }
   } finally {
-    // Always release the advisory lock so a crashed/errored run
-    // doesn't block the next chain run. pg_advisory_unlock is
-    // idempotent — safe to call even if we weren't the holder.
+    // Release advisory lock on the SAME dedicated client that acquired
+    // it, then return the client to the pool. The lock is session-level
+    // so releasing on a different connection would be a no-op.
     try {
-      await pool.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
     } catch (unlockErr) {
       pipeline.log.warn(
         '[classify-lifecycle-phase]',
         'Failed to release advisory lock — it will expire when the session ends.',
         { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
       );
+    } finally {
+      lockClient.release();
     }
   }
 });

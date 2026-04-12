@@ -357,11 +357,22 @@ function classifyCoaPhase(input) {
   return { phase: 'P1' };
 }
 
+// Frozen array form of DEAD_STATUS_SET — for SQL parameterization in
+// pipeline scripts so they don't hardcode the 13 dead statuses. Import
+// this + use `ANY($1::text[])` or `= ANY($N)` instead of inline NOT IN.
+// Single source of truth per WF3 review finding (drift risk from 3 places).
+const DEAD_STATUS_ARRAY = Object.freeze([...DEAD_STATUS_SET]);
+
+// Frozen array form of NORMALIZED_DEAD_DECISIONS — same rationale for CoA.
+const NORMALIZED_DEAD_DECISIONS_ARRAY = Object.freeze([...NORMALIZED_DEAD_DECISIONS]);
+
 module.exports = {
   classifyLifecyclePhase,
   classifyCoaPhase,
   normalizeCoaDecision,
   DEAD_STATUS_SET,
+  DEAD_STATUS_ARRAY,
+  NORMALIZED_DEAD_DECISIONS_ARRAY,
   TERMINAL_P20_SET,
   WINDDOWN_P19_SET,
   INTAKE_P3_SET,

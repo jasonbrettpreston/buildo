@@ -83,14 +83,17 @@ describe('scripts/classify-lifecycle-phase.js — pipeline shape', () => {
     );
   });
 
-  it('builds an in-memory inspection rollup Map (no scalar subqueries)', () => {
+  it('builds inspection rollup via SQL aggregation (WF3 Bug #2)', () => {
     expect(content).toMatch(/inspByPermit/);
-    expect(content).toMatch(
-      /SELECT\s+permit_num,\s*stage_name,\s*status,\s*inspection_date[\s\S]*?FROM\s+permit_inspections/,
-    );
-    // Assert no scalar subquery pattern reading permit_inspections
+    // WF3: replaced full-table-load + JS-side rollup with SQL-side
+    // DISTINCT ON + GROUP BY. Postgres returns ~10K pre-aggregated
+    // rows instead of the full 94K raw table.
+    expect(content).toMatch(/DISTINCT ON \(permit_num\)/);
+    expect(content).toMatch(/BOOL_OR\(status\s*=\s*'Passed'\)/);
+    expect(content).toMatch(/GROUP BY permit_num/);
+    // Assert no full-table-load pattern (the old approach)
     expect(content).not.toMatch(
-      /SELECT\s+stage_name\s+FROM\s+permit_inspections\s+i[\s\S]*?LIMIT\s+1/,
+      /SELECT\s+permit_num,\s*stage_name,\s*status,\s*inspection_date\s+FROM\s+permit_inspections[^G]/,
     );
   });
 
@@ -169,17 +172,22 @@ describe('scripts/classify-lifecycle-phase.js — concurrency guard (advisory lo
     content = read('scripts/classify-lifecycle-phase.js');
   });
 
-  it('acquires advisory lock 85 via pg_try_advisory_lock', () => {
-    // Adversarial review C1: without a lock, two chains finishing
-    // close in time would each fire the classifier and the second
-    // run would read mid-transaction state from the first. Advisory
-    // lock ID 85 matches the migration number for traceability.
+  it('acquires advisory lock 85 on a DEDICATED client (WF3 Bug #1)', () => {
+    // WF3: pool.query for advisory lock uses ephemeral connections
+    // that can be reaped by idleTimeoutMillis (10s default) during
+    // the 20-60s CPU-bound Map-building phase. Dedicated client
+    // stays checked out (not idle) for the full run.
     expect(content).toMatch(/ADVISORY_LOCK_ID\s*=\s*85/);
-    expect(content).toMatch(/pg_try_advisory_lock/);
+    expect(content).toMatch(/pool\.connect\(\)/);
+    expect(content).toMatch(/lockClient\.query[\s\S]*?pg_try_advisory_lock/);
+    // Must NOT use pool.query for the lock (tight window to avoid
+    // cross-file false positives from pool.query elsewhere in the file)
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
   });
 
-  it('releases advisory lock in finally block via pg_advisory_unlock', () => {
-    expect(content).toMatch(/pg_advisory_unlock/);
+  it('releases advisory lock on the SAME dedicated client in finally block', () => {
+    expect(content).toMatch(/lockClient\.query[\s\S]*?pg_advisory_unlock/);
+    expect(content).toMatch(/lockClient\.release\(\)/);
     expect(content).toMatch(/finally\s*\{/);
   });
 
@@ -226,11 +234,26 @@ describe('scripts/classify-lifecycle-phase.js — concurrency guard (advisory lo
   });
 
   it('uses TRIM(status) in the unclassified-count gate', () => {
-    // Independent review Defect 2: bare `status <> ''` diverges from
-    // assert-lifecycle-phase-distribution.js which uses TRIM. The
-    // authoritative form matches the JS classifier's normalizeStatus
-    // (which trims), so the CQA gate must also trim.
     expect(content).toMatch(/AND TRIM\(status\) <> ''/);
+  });
+
+  it('imports DEAD_STATUS_ARRAY from shared lib instead of hardcoding (WF3 Bug #4)', () => {
+    // The dead-status list was hardcoded in 3 places (JS pure fn,
+    // classifier SQL, assertion SQL). Now both scripts import the
+    // canonical array from scripts/lib/lifecycle-phase.js.
+    expect(content).toMatch(/require\(['"]\.\/lib\/lifecycle-phase['"]\)/);
+    expect(content).toMatch(/DEAD_STATUS_ARRAY/);
+    // Must NOT have inline NOT IN with the 13 dead statuses
+    expect(content).not.toMatch(
+      /NOT IN[\s\S]*?'Cancelled'[\s\S]*?'Revoked'[\s\S]*?'Permit Revoked'/,
+    );
+    // Uses parameterized $1::text[] instead
+    expect(content).toMatch(/<> ALL\(\$1::text\[\]\)/);
+  });
+
+  it('checks CoA unclassified count in addition to permits (WF3 Bug #3)', () => {
+    expect(content).toMatch(/coa_applications[\s\S]*?lifecycle_phase IS NULL/);
+    expect(content).toMatch(/NORMALIZED_DEAD_DECISIONS_ARRAY/);
   });
 });
 
