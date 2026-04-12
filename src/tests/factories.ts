@@ -106,6 +106,7 @@ export function createMockPermit(overrides: Partial<Permit> = {}): Permit {
     lifecycle_phase: null,
     lifecycle_stalled: false,
     lifecycle_classified_at: null,
+    phase_started_at: null,
     ...overrides,
   };
 }

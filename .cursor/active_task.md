@@ -1,85 +1,118 @@
-# Active Task: Fix critical bugs in classify-lifecycle-phase.js + assert-lifecycle-phase-distribution.js
+# Active Task: Phase 1 — Predictive Timing Schema Architecture
 **Status:** Planning
-**Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `6f45012` (feat(75_lead_feed_implementation): lifecycle phase classifier V1 + review hardening)
+**Workflow:** WF1 — New Feature Genesis
 **Domain Mode:** **Backend/Pipeline**
 
 ---
 
 ## Context
-* **Goal:** Fix 10 bugs across the classifier and assertion scripts identified by external code review. The most dangerous bug is the advisory lock using `pool.query` (ephemeral connections) which can lose the lock mid-run due to the pool's 10-second idle timeout during the 20-60s CPU-bound Map-building phase. Other bugs include silent cross-check passes (SQL NOT IN ignores NULL), object-spread key collisions, missing CoA unclassified checks, a too-strict Strangler Fig cross-check, and hardcoded dead-status lists in 3 places.
-* **Target Spec:** `docs/reports/lifecycle_phase_implementation.md`
-* **Key Files:** `scripts/classify-lifecycle-phase.js`, `scripts/quality/assert-lifecycle-phase-distribution.js`, `scripts/lib/lifecycle-phase.js`
+* **Goal:** Establish the database infrastructure required to support time-series phase tracking and 1-to-many predictive trade forecasting. Three new structures: (1) `phase_started_at` column on permits — the immutable anchor for countdown math, (2) `permit_phase_transitions` table — the full history of phase changes enabling calibration, (3) `trade_forecasts` table — per-permit, per-trade predictions that the feed will surface.
+* **Why now:** The lifecycle classifier (commit `6f45012`) tells users WHAT phase a permit is in. This schema enables the next 3 phases (state machine, calibration engine V2, flight tracker) to tell users WHEN their trade is needed — and whether it's on time, imminent, or delayed.
+* **Target Spec:** `docs/reports/lifecycle_phase_implementation.md` (extends §2 with timing infrastructure)
+* **Key Files:** `migrations/086_predictive_timing_schema.sql`, `src/tests/factories.ts`, `src/lib/permits/types.ts`, `src/tests/migration-086.infra.test.ts`
 
 ## Technical Implementation
-* **New/Modified Components:** None
-* **Data Hooks/Libs:** `scripts/lib/lifecycle-phase.js` (export DEAD_STATUS_ARRAY for SQL interpolation)
-* **Database Impact:** NO
+
+### 1. `permits` table addition
+```sql
+ALTER TABLE permits ADD COLUMN phase_started_at TIMESTAMPTZ;
+```
+- Nullable — Phase 2 (classifier upgrade) writes this; migration does NOT backfill
+- Only updated by the classifier when `lifecycle_phase` actually changes (the CASE logic described in the user's Phase 2 plan)
+- Backfill strategy: Phase 2's classifier upgrade will compute `phase_started_at` from best-available proxies (issued_date for P7*, latest inspection_date for P9-P18, application_date for P3-P6)
+
+### 2. `permit_phase_transitions` table (new)
+```sql
+CREATE TABLE permit_phase_transitions (
+  id               SERIAL PRIMARY KEY,
+  permit_num       VARCHAR(30) NOT NULL,
+  revision_num     VARCHAR(10) NOT NULL,
+  from_phase       VARCHAR(10),           -- NULL on first classification
+  to_phase         VARCHAR(10) NOT NULL,
+  transitioned_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  -- Denormalized context for calibration queries (avoids JOINing
+  -- back to permits for the 2 most common GROUP BY dimensions)
+  permit_type      VARCHAR(100),
+  neighbourhood_id INTEGER
+);
+```
+**Indexes:**
+- `(permit_num, revision_num, transitioned_at DESC)` — permit timeline lookup
+- `(from_phase, to_phase)` — calibration queries: "median days from P11→P12"
+- `(to_phase, transitioned_at DESC)` — "most recent permits entering phase X"
+
+**Why a separate table instead of just `phase_started_at`?**
+A single timestamp on permits only tells you when the CURRENT phase started. The calibration engine (Phase 3) needs to measure how long PREVIOUS phases took — "what's the median duration of P11 for BLD permits in Scarborough?" That requires the full transition history. `phase_started_at` is a denormalized shortcut for the most common query (current phase duration).
+
+### 3. `trade_forecasts` table (new)
+```sql
+CREATE TABLE trade_forecasts (
+  permit_num          VARCHAR(30) NOT NULL,
+  revision_num        VARCHAR(10) NOT NULL,
+  trade_slug          VARCHAR(50) NOT NULL,
+  -- The prediction
+  predicted_start     DATE,               -- when this trade is expected on-site
+  confidence          VARCHAR(10) NOT NULL DEFAULT 'low',
+  urgency             VARCHAR(20) NOT NULL DEFAULT 'unknown',
+  -- Calibration source metadata (for debugging + operator trust)
+  calibration_method  VARCHAR(30),        -- exact / fallback_type / fallback_global
+  sample_size         INT,
+  median_days         INT,
+  p25_days            INT,
+  p75_days            INT,
+  -- Bookkeeping
+  computed_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (permit_num, revision_num, trade_slug)
+);
+```
+**Indexes:**
+- PK covers per-permit lookups
+- `(trade_slug, urgency)` — feed filtering: "show me delayed plumbing leads"
+- `(trade_slug, predicted_start)` WHERE predicted_start IS NOT NULL — "imminent leads for HVAC within 30 days"
+
+**Urgency values:** `unknown`, `on_time`, `imminent`, `delayed`, `overdue` (computed by Phase 4 script)
+**Confidence values:** `high` (sample ≥ 30), `medium` (sample 10-29), `low` (sample < 10 or fallback method)
+
+* **Database Impact:** YES — migration 086 adds 1 column + 2 tables + 5 indexes. Zero-row write at migration time.
 
 ## Standards Compliance
-* **Try-Catch Boundary:** Both scripts already use pipeline.run + try/finally. Advisory lock now uses dedicated client with explicit release.
-* **Unhappy Path Tests:** Infra shape tests updated to lock the new patterns (dedicated client, SQL rollup, NOT IN + IS NULL guards).
-* **logError Mandate:** N/A — both scripts use pipeline.log.
-* **Mobile-First:** N/A — backend-only.
+* **Try-Catch Boundary:** N/A — no API routes in this phase.
+* **Unhappy Path Tests:** Migration file-shape test verifying exact columns, indexes, and DOWN block. Factory test verifying new fields have correct defaults.
+* **logError Mandate:** N/A — no runtime code.
+* **Mobile-First:** N/A — backend-only schema work.
 
 ## Execution Plan
 
-- [ ] **Rollback Anchor:** `6f45012`
+- [ ] **Contract Definition:** N/A — no API route changes. The trade_forecasts table shape IS the contract for Phase 4's script and the eventual feed JOIN.
 
-- [ ] **State Verification:**
-  - Confirm pg Pool default `idleTimeoutMillis` is 10000ms (the root cause of the lock-reap bug)
-  - Confirm `scripts/lib/lifecycle-phase.js` exports `DEAD_STATUS_SET` (verified: line 364)
-  - Confirm the classifier spends 20-60s on CPU-bound Map building between the lock acquire and the first batch UPDATE — this is the idle-timeout danger window
+- [ ] **Spec & Registry Sync:** Document the 3 new structures in target spec. Run `npm run system-map`.
 
-- [ ] **Spec Review:** Read `docs/reports/lifecycle_phase_implementation.md` §2.3 (classifier) + §3.3 (distribution assertion)
+- [ ] **Schema Evolution:**
+  - Write `migrations/086_predictive_timing_schema.sql` (UP: 1 ALTER + 2 CREATE TABLE + 5 CREATE INDEX + DOWN: DROP tables + DROP column)
+  - `npm run migrate` to apply locally
+  - `npm run db:generate` to regen Drizzle schema
+  - Update `src/tests/factories.ts` — add optional `phase_started_at` to permit factory
+  - Update `src/lib/permits/types.ts` — add `phase_started_at` field to Permit interface
+  - `npm run typecheck` to confirm no downstream break
 
-- [ ] **Reproduction:** The pool.query advisory-lock bug is structural (code review, not runtime). The NOT IN + NULL bug can be demonstrated by inserting a row with lifecycle_phase=NULL + enriched_status='Permit Issued' and running the cross-check query. Add test assertions for both patterns.
+- [ ] **Test Scaffolding:** Create `src/tests/migration-086.infra.test.ts` with:
+  - File-shape assertions: exact column names + types on all 3 structures
+  - Index existence assertions
+  - DOWN block presence assertion
+  - Constraint assertions (PKs, NOT NULL, defaults)
 
-- [ ] **Red Light:** Shape test assertions for the new patterns must FAIL before the fix.
+- [ ] **Red Light:** Run migration test — must FAIL before migration is written.
 
-- [ ] **Fix — classify-lifecycle-phase.js (5 changes):**
-  1. **Advisory lock: dedicated client.** `pool.connect()` → `client.query(pg_try_advisory_lock)` → hold client for entire run → `client.query(pg_advisory_unlock)` → `client.release()` in finally. The dedicated client is immune to idle-timeout reaping because it's checked out, not idle.
-  2. **Inspection rollup: SQL aggregation.** Replace the full-table-load + JS-side rollup with a SQL query using `DISTINCT ON` + `GROUP BY`:
-     ```sql
-     WITH latest_passed AS (
-       SELECT DISTINCT ON (permit_num) permit_num, stage_name
-       FROM permit_inspections WHERE status='Passed'
-       ORDER BY permit_num, inspection_date DESC NULLS LAST
-     ),
-     rollup AS (
-       SELECT permit_num,
-              MAX(inspection_date) AS latest_inspection_date,
-              BOOL_OR(status='Passed') AS has_passed_inspection
-       FROM permit_inspections GROUP BY permit_num
-     )
-     SELECT r.permit_num, lp.stage_name AS latest_passed_stage,
-            r.latest_inspection_date, r.has_passed_inspection
-     FROM rollup r LEFT JOIN latest_passed lp USING (permit_num)
-     ```
-     Node receives ~10K rows (one per permit with inspections) instead of 94K raw rows.
-  3. **CoA unclassified check.** Add a secondary query counting coa_applications with `lifecycle_phase IS NULL AND decision NOT IN (dead set) AND decision IS NOT NULL`. Sum into `unclassifiedCount`.
-  4. **Dead status list: import from shared lib.** Replace the 2 hardcoded `NOT IN (...)` SQL lists with a dynamically built `$N` parameterized list from `require('./lib/lifecycle-phase').DEAD_STATUS_SET`.
-  5. **Document watermark race.** Add a code comment explaining the best-effort incremental pattern and why the race is acceptable (next run re-classifies with fresh data).
+- [ ] **Implementation:** Write the migration SQL + apply.
 
-- [ ] **Fix — assert-lifecycle-phase-distribution.js (5 changes):**
-  1. **Object spread: explicit summing.** Replace `{ ...permitCounts, ...coaCounts }` with an additive merge that sums shared keys (the `null` key is the collision vector).
-  2. **NOT IN + IS NULL: fix 3 cross-check queries.** Add `OR lifecycle_phase IS NULL` to cross-check 2 (`Active Inspection`) and cross-check 3 (`Permit Issued`). Cross-check 1 (`Stalled`) uses `lifecycle_stalled = false` (boolean, not IN), so no change needed there.
-  3. **CoA unclassified check.** Add a secondary query mirroring the classifier's CoA dead-decision set. Sum into `unclassifiedCount`.
-  4. **Strangler Fig stalled cross-check: FAIL → WARN.** The new classifier uses more accurate date math than the legacy `enriched_status='Stalled'` column. Holding the new logic hostage to legacy bugs is counterproductive. Change to WARN with threshold < 1000 before escalating to FAIL.
-  5. **Advisory lock awareness.** Add `pg_try_advisory_lock(85)` check at the top. If the classifier is mid-write, skip the assertion with an INFO log and `skipped:true` summary (same pattern as the classifier's own skip).
-  6. **Dead status list: import from shared lib.** Same fix as the classifier — parameterized list from `DEAD_STATUS_SET`.
-
-- [ ] **Fix — scripts/lib/lifecycle-phase.js (1 change):**
-  1. Export `DEAD_STATUS_ARRAY` (a plain `[...DEAD_STATUS_SET]` frozen array) alongside the existing Set export, so SQL interpolation in both scripts can use `$1::text[]` parameterization instead of string concat.
+- [ ] **Auth Boundary & Secrets:** N/A — no endpoints.
 
 - [ ] **Pre-Review Self-Checklist:**
-  1. Does the dedicated client survive the 20-60s idle window without being reaped?
-  2. Does the SQL inspection rollup produce the same Map shape as the JS-side rollup?
-  3. Does the NOT IN + IS NULL fix actually catch rows where lifecycle_phase is NULL?
-  4. Does the object-spread fix correctly sum the `null` key from both tables?
-  5. Does the advisory lock skip in the assertion script produce a valid pipeline_runs row?
-  6. Is the DEAD_STATUS_ARRAY import used consistently in both scripts' SQL queries?
-  7. Does downgrading stalled cross-check to WARN still catch massive divergences (> 1000)?
+  1. Does the migration ALTER avoid locking the 243K-row permits table? (ADD COLUMN with no DEFAULT is instant in Postgres 11+)
+  2. Are all indexes non-blocking? (Standard CREATE INDEX on empty tables is instant)
+  3. Does the DOWN block cleanly reverse all changes?
+  4. Does the trade_forecasts PK match the expected feed JOIN pattern (permit_num, revision_num, trade_slug)?
+  5. Are the denormalized columns (permit_type, neighbourhood_id) on permit_phase_transitions worth the write amplification vs JOIN cost?
 
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix && npm run typecheck`. All pass. → WF6.
 
@@ -87,8 +120,8 @@
 
 ## §10 Compliance
 
-- ⬜ **DB:** N/A — no schema changes
-- ⬜ **API:** N/A — no route changes
-- ⬜ **UI:** N/A — backend-only
-- ✅ **Shared Logic:** DEAD_STATUS_ARRAY export added to the dual-code-path JS module
-- ✅ **Pipeline:** Advisory lock uses dedicated client · inspection rollup in SQL · CoA unclassified check · dead-status list from shared source · NOT IN + IS NULL guards
+- ✅ **DB:** UP+DOWN migration · ADD COLUMN with no DEFAULT (instant, no table rewrite) · CREATE TABLE on empty tables (instant) · No CONCURRENTLY needed · validate-migration.js will run
+- ⬜ **API:** N/A
+- ⬜ **UI:** N/A
+- ⬜ **Shared Logic:** N/A — no dual-code-path changes
+- ⬜ **Pipeline:** N/A — no script changes (Phase 2 handles the classifier upgrade)

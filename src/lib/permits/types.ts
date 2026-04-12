@@ -84,6 +84,11 @@ export interface Permit {
   lifecycle_phase: string | null;
   lifecycle_stalled: boolean;
   lifecycle_classified_at: Date | null;
+  // Immutable anchor: when the permit entered its current lifecycle_phase.
+  // Only updated by the classifier when lifecycle_phase actually changes
+  // (not every run). NULL = not yet classified or pre-backfill.
+  // Migration 086, Phase 1 of predictive timing.
+  phase_started_at: Date | null;
 }
 
 // ---------------------------------------------------------------------------
