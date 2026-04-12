@@ -27,6 +27,7 @@
     "compute_cost_estimates":       { "file": "scripts/compute-cost-estimates.js",       "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["cost_estimates"], "telemetry_null_cols": { "cost_estimates": ["estimated_cost"] } },
     "compute_timing_calibration":   { "file": "scripts/compute-timing-calibration.js",   "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["timing_calibration"] },
     "compute_timing_calibration_v2": { "file": "scripts/compute-timing-calibration-v2.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["phase_calibration"] },
+    "compute_trade_forecasts": { "file": "scripts/compute-trade-forecasts.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["trade_forecasts"] },
     "compute_centroids":    { "file": "scripts/compute-centroids.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcels"], "telemetry_null_cols": { "parcels": ["centroid_lat", "centroid_lng"] } },
     "link_similar":         { "file": "scripts/link-similar.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
     "create_pre_permits":   { "file": "scripts/create-pre-permits.js",    "supports_full": false, "supports_dry_run": false },

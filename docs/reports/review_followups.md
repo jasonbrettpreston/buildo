@@ -100,6 +100,10 @@
 | MED | WF1 Phase 3 2026-04-12 Adversarial (Probe 1) | `PREV_STAGE_TO_PHASE_SQL` built via `.replace(/stage_name/g, 'prev_stage')` — works today but fragile if a future edit adds `stage_name` in a comment or string literal. Refactor to a template function `stageToPhaseCase(colName)`. | Future hardening | OPEN |
 | LOW | WF1 Phase 3 2026-04-12 Adversarial (Probe 2) | Per-row UPSERT (207 individual `pool.query()` calls) is 200x more round-trips than necessary. A single multi-row `INSERT...VALUES ON CONFLICT` would be cleaner. Not blocking at 1.1s for a daily batch. | Future perf cleanup | OPEN |
 | LOW | WF1 Phase 3 2026-04-12 Independent (Gap 1) | No concrete stage-name parity test: infra test checks structural patterns but never executes SQL CASE against known inputs and compares to `mapInspectionStageToPhase()` output. | Future test hardening | OPEN |
+| MED | WF1 Phase 4 2026-04-12 Adversarial (Probe 5) | Flight tracker has no advisory lock. Concurrent runs produce identical outputs (ON CONFLICT safe), but pre/post row count telemetry could be wrong. Add `pg_try_advisory_lock(86)` matching the classifier pattern. | Future hardening | OPEN |
+| MED | WF1 Phase 4 2026-04-12 Both | 92% of forecasts are `overdue` — architecturally correct for old permits (issued_date months/years ago + median_days < today) but has low signal value for the feed. Product decision: either recalibrate urgency tiers for aged permits, or filter overdue from the default feed view and surface only the 8% actionable forecasts. | Product design | OPEN |
+| MED | WF1 Phase 4 2026-04-12 Both | Infra tests are regex shape-only — no behavioral coverage for `classifyUrgency`, `classifyConfidence`, `lookupCalibration`, or the `isPastTarget` ordinal logic. These are pure functions easily unit-testable. | Future test hardening | OPEN |
+| LOW | WF1 Phase 4 2026-04-12 Independent (D5) | Reviewer flagged p25/p75 as nullable, but migration 087 has `NOT NULL` on those columns. False positive — no fix needed. | N/A | WONTFIX |
 
 ---
 
