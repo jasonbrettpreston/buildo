@@ -716,11 +716,13 @@ export const trackedProjects = pgTable("tracked_projects", {
 	status: varchar({ length: 50 }).default('claimed_unverified').notNull(),
 	claimedAt: timestamp("claimed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	lastNotifiedUrgency: varchar("last_notified_urgency", { length: 50 }),
+	lastNotifiedStalled: boolean("last_notified_stalled").default(false),
 }, (table) => [
 	index("idx_tracked_projects_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
 	index("idx_tracked_projects_user").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.claimedAt.desc().nullsFirst().op("text_ops")),
 	unique("uq_tracked_user_permit_trade").on(table.permitNum, table.revisionNum, table.tradeSlug, table.userId),
-	check("chk_tracked_status", sql`(status)::text = ANY ((ARRAY['claimed_unverified'::character varying, 'verified'::character varying, 'expired'::character varying])::text[])`),
+	check("chk_tracked_status", sql`(status)::text = ANY ((ARRAY['saved'::character varying, 'claimed_unverified'::character varying, 'claimed'::character varying, 'verified'::character varying, 'archived'::character varying, 'expired'::character varying])::text[])`),
 ]);
 
 export const permitProducts = pgTable("permit_products", {

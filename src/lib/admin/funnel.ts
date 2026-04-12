@@ -566,6 +566,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   classify_lifecycle_phase: { summary: 'Computes lifecycle_phase + lifecycle_stalled for dirty permits and CoA applications. Runs as the final step of permits + coa chains. Uses pg_try_advisory_lock(85) to single-thread concurrent runs.', table: 'permits' },
   compute_timing_calibration_v2: { summary: 'Computes phase-to-phase median lead times from inspection history. Mines sequential passed-stage pairs, maps to lifecycle phases, stores in phase_calibration for the flight tracker.', table: 'phase_calibration' },
   compute_trade_forecasts: { summary: 'Generates per-permit, per-trade predicted start dates and urgency statuses. Marries phase_started_at anchor with phase_calibration medians and TRADE_TARGET_PHASE mapping.', table: 'trade_forecasts' },
+  update_tracked_projects: { summary: 'Nightly CRM assistant: processes saved + claimed projects, detects state changes (stalled, urgency shifts), generates alerts, auto-archives dead leads. Memory columns prevent duplicate notifications.', table: 'tracked_projects' },
   // Compute (lead feed pre-computation)
   compute_cost_estimates:     { summary: 'Pre-computes cost model estimates for all permits (permit-reported or model-based)', table: 'cost_estimates' },
   compute_timing_calibration: { summary: 'Calibrates timing percentiles per permit_type from inspection history', table: 'timing_calibration' },

@@ -1,0 +1,257 @@
+#!/usr/bin/env node
+/**
+ * Update Tracked Projects — the CRM Assistant.
+ *
+ * Nightly pipeline script that processes saved + claimed projects,
+ * detects state changes (stalled, urgency shifts, window closures),
+ * generates alerts ONLY when reality shifts, and auto-archives dead
+ * leads. Two "memory" columns (last_notified_urgency, last_notified_stalled)
+ * prevent duplicate notifications across runs.
+ *
+ * Two routing paths:
+ *   Path A (Saved): passive watchlist — auto-archive only, no alerts
+ *   Path B (Claimed): active flight board — stall/recovery/imminent alerts
+ *
+ * SPEC LINK: docs/reports/lifecycle_phase_implementation.md
+ */
+'use strict';
+
+const pipeline = require('./lib/pipeline');
+const { TRADE_TARGET_PHASE, PHASE_ORDINAL } = require('./lib/lifecycle-phase');
+
+// Terminal phases that should trigger auto-archive regardless of
+// ordinal comparison. PHASE_ORDINAL omits these, so isWindowClosed
+// would never fire for P19/P20 permits. Independent review gap.
+const TERMINAL_PHASES = new Set(['P19', 'P20']);
+
+// Claimed statuses — these get the full alert treatment
+const CLAIMED_STATUSES = new Set([
+  'claimed_unverified', 'claimed', 'verified',
+]);
+
+pipeline.run('update-tracked-projects', async (pool) => {
+  // ═══════════════════════════════════════════════════════════
+  // Step 1: Query all active tracked projects with forecast data
+  // ═══════════════════════════════════════════════════════════
+  pipeline.log.info('[tracked-projects]', 'Querying active tracked projects...');
+
+  const { rows } = await pool.query(`
+    SELECT
+      tp.id AS tracking_id,
+      tp.user_id,
+      tp.status AS tracking_status,
+      tp.trade_slug,
+      tp.permit_num,
+      tp.revision_num,
+      p.lifecycle_phase,
+      p.lifecycle_stalled,
+      tf.predicted_start,
+      tf.urgency,
+      tp.last_notified_urgency,
+      tp.last_notified_stalled
+    FROM tracked_projects tp
+    JOIN permits p ON tp.permit_num = p.permit_num
+                  AND tp.revision_num = p.revision_num
+    LEFT JOIN trade_forecasts tf ON tp.permit_num = tf.permit_num
+                                 AND tp.revision_num = tf.revision_num
+                                 AND tp.trade_slug = tf.trade_slug
+    WHERE tp.status IN ('saved', 'claimed_unverified', 'claimed', 'verified')
+  `);
+
+  pipeline.log.info(
+    '[tracked-projects]',
+    `Active tracked projects: ${rows.length}`,
+  );
+
+  // ═══════════════════════════════════════════════════════════
+  // Step 2: Process each row through the routing engine
+  // ═══════════════════════════════════════════════════════════
+  const updates = [];  // {id, fields} — batched DB updates
+  const alerts = [];   // {user_id, type, message} — notification payloads
+
+  let archived = 0;
+  let stallAlerts = 0;
+  let recoveryAlerts = 0;
+  let imminentAlerts = 0;
+
+  for (const row of rows) {
+    const targets = TRADE_TARGET_PHASE[row.trade_slug];
+    if (!targets) continue; // unmapped trade — skip
+
+    const currentOrdinal = PHASE_ORDINAL[row.lifecycle_phase];
+    const targetOrdinal = PHASE_ORDINAL[targets.work_phase];
+
+    // Window closed: permit physically passed the trade's work phase,
+    // OR permit reached a terminal phase (P19/P20). Terminal phases
+    // are not in PHASE_ORDINAL so the ordinal check would miss them.
+    const isWindowClosed = TERMINAL_PHASES.has(row.lifecycle_phase)
+      || (currentOrdinal != null && targetOrdinal != null
+          && currentOrdinal >= targetOrdinal);
+
+    // ─── Path A: Saved (passive watchlist) ──────────────────
+    if (row.tracking_status === 'saved') {
+      if (isWindowClosed || row.urgency === 'expired') {
+        updates.push({ id: row.tracking_id, status: 'archived' });
+        archived++;
+      }
+      // No alerts for saves — passive watchlist
+      continue;
+    }
+
+    // ─── Path B: Claimed (active flight board) ──────────────
+    if (!CLAIMED_STATUSES.has(row.tracking_status)) continue;
+
+    // B1. Auto-archive: window closed → job is starting/done
+    if (isWindowClosed) {
+      updates.push({ id: row.tracking_id, status: 'archived' });
+      archived++;
+      continue; // No alerts on closed jobs
+    }
+
+    // B2. Stall alert: site just stalled (state-change detection)
+    if (row.lifecycle_stalled === true && row.last_notified_stalled !== true) {
+      const dateStr = row.predicted_start
+        ? new Date(row.predicted_start).toISOString().slice(0, 10)
+        : 'TBD';
+      alerts.push({
+        user_id: row.user_id,
+        type: 'STALL_WARNING',
+        permit_num: row.permit_num,
+        trade_slug: row.trade_slug,
+        message: `Schedule Alert: The site at ${row.permit_num} just stalled. Your ${row.trade_slug} target date has been pushed back to ${dateStr}.`,
+      });
+      updates.push({
+        id: row.tracking_id,
+        last_notified_stalled: true,
+      });
+      stallAlerts++;
+    }
+
+    // B3. Recovery alert: site just unstalled
+    if (row.lifecycle_stalled === false && row.last_notified_stalled === true) {
+      alerts.push({
+        user_id: row.user_id,
+        type: 'STALL_CLEARED',
+        permit_num: row.permit_num,
+        trade_slug: row.trade_slug,
+        message: `Schedule Alert: The stop-work at ${row.permit_num} has been cleared. Construction is resuming.`,
+      });
+      updates.push({
+        id: row.tracking_id,
+        last_notified_stalled: false,
+      });
+      recoveryAlerts++;
+    }
+
+    // B4. Imminent alert: urgency just shifted to imminent.
+    // Skip if stalled — a stalled site with "imminent" urgency is
+    // contradictory (the predicted_start is unreliable during stall).
+    // WF3: both reviewers flagged the double-alert scenario.
+    if (row.urgency === 'imminent' && row.last_notified_urgency !== 'imminent'
+        && row.lifecycle_stalled !== true) {
+      const dateStr = row.predicted_start
+        ? new Date(row.predicted_start).toISOString().slice(0, 10)
+        : 'soon';
+      alerts.push({
+        user_id: row.user_id,
+        type: 'START_IMMINENT',
+        permit_num: row.permit_num,
+        trade_slug: row.trade_slug,
+        message: `Action Required: Your ${row.trade_slug} job at ${row.permit_num} is IMMINENT. Expected start: ${dateStr}.`,
+      });
+      updates.push({
+        id: row.tracking_id,
+        last_notified_urgency: 'imminent',
+      });
+      imminentAlerts++;
+    }
+  }
+
+  pipeline.log.info('[tracked-projects]', `Archived: ${archived}`);
+  pipeline.log.info('[tracked-projects]', `Alerts: stall=${stallAlerts}, recovery=${recoveryAlerts}, imminent=${imminentAlerts}`);
+
+  // ═══════════════════════════════════════════════════════════
+  // Step 3: Merge + batch UPDATE tracked_projects
+  // ═══════════════════════════════════════════════════════════
+  //
+  // WF3 fix #1: merge updates by ID before executing. A single row
+  // can generate multiple update entries (e.g., stall alert sets
+  // last_notified_stalled + imminent alert sets last_notified_urgency).
+  // Without merging, we'd issue 2 UPDATEs for the same row.
+  const merged = new Map();
+  for (const upd of updates) {
+    const existing = merged.get(upd.id);
+    if (existing) {
+      Object.assign(existing, upd); // later fields overwrite earlier
+    } else {
+      merged.set(upd.id, { ...upd });
+    }
+  }
+
+  const mergedUpdates = [...merged.values()];
+  if (mergedUpdates.length > 0) {
+    // WF3 fix #2: wrap in withTransaction to prevent partial state
+    // on crash. Without this, a crash mid-loop leaves some memory
+    // flags updated and others not → duplicate alerts on next run.
+    await pipeline.withTransaction(pool, async (client) => {
+      for (const upd of mergedUpdates) {
+        const setClauses = [];
+        const params = [];
+        let paramIdx = 1;
+
+        if (upd.status != null) {
+          setClauses.push(`status = $${paramIdx++}`);
+          params.push(upd.status);
+        }
+        if (upd.last_notified_stalled != null) {
+          setClauses.push(`last_notified_stalled = $${paramIdx++}`);
+          params.push(upd.last_notified_stalled);
+        }
+        if (upd.last_notified_urgency != null) {
+          setClauses.push(`last_notified_urgency = $${paramIdx++}`);
+          params.push(upd.last_notified_urgency);
+        }
+
+        // Always bump updated_at on any change
+        setClauses.push(`updated_at = NOW()`);
+
+        params.push(upd.id);
+        await client.query(
+          `UPDATE tracked_projects SET ${setClauses.join(', ')} WHERE id = $${paramIdx}`,
+          params,
+        );
+      }
+    });
+    pipeline.log.info('[tracked-projects]', `Applied ${mergedUpdates.length} DB updates (merged from ${updates.length} raw)`);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Step 4: Telemetry
+  // ═══════════════════════════════════════════════════════════
+  pipeline.emitSummary({
+    records_total: rows.length,
+    records_new: 0,
+    records_updated: updates.length,
+    records_meta: {
+      active_tracked: rows.length,
+      archived,
+      stall_alerts: stallAlerts,
+      recovery_alerts: recoveryAlerts,
+      imminent_alerts: imminentAlerts,
+      total_alerts: alerts.length,
+      // The alerts array is available for downstream notification dispatch
+      alerts,
+    },
+  });
+
+  pipeline.emitMeta(
+    {
+      tracked_projects: ['id', 'user_id', 'status', 'trade_slug', 'permit_num', 'revision_num', 'last_notified_urgency', 'last_notified_stalled'],
+      permits: ['permit_num', 'revision_num', 'lifecycle_phase', 'lifecycle_stalled'],
+      trade_forecasts: ['permit_num', 'revision_num', 'trade_slug', 'predicted_start', 'urgency'],
+    },
+    {
+      tracked_projects: ['status', 'last_notified_urgency', 'last_notified_stalled', 'updated_at'],
+    },
+  );
+});

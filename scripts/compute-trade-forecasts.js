@@ -12,37 +12,11 @@
 'use strict';
 
 const pipeline = require('./lib/pipeline');
-const { TRADE_TARGET_PHASE } = require('./lib/lifecycle-phase');
+const { TRADE_TARGET_PHASE, PHASE_ORDINAL } = require('./lib/lifecycle-phase');
 
-// Phase ordinals for forward-progression comparison.
-// Permits at or past the target phase → overdue (window closed).
-// Phase ordinals for forward-progression comparison AND bimodal routing.
-//
-// MUST cover every phase that appears as a bid_phase or work_phase in
-// TRADE_TARGET_PHASE, plus every phase a permit can be in. Without
-// complete coverage, the bimodal routing falls to `else → work_phase`
-// for any phase with undefined ordinal, making the bid window dead
-// for all pre-construction permits. See WF3 adversarial Probe 1.
-//
-// Pre-construction phases (negative ordinals) are BEFORE all
-// construction phases. A P4 permit with plumbing bid_phase P7a:
-// ordinal(-5) < ordinal(-2) → targets bid_phase → "bidding starts
-// when permit is issued." Once the permit reaches P7a, ordinal(-2)
-// is no longer < ordinal(-2) → shifts to work_phase P12 → "rough-in
-// expected in 39 days."
-const PHASE_ORDINAL = {
-  // Pre-issuance
-  P3: -6, P4: -5, P5: -4, P6: -3,
-  // Issued, pre-construction (all at -2: same tier for bid routing)
-  P7a: -2, P7b: -2, P7c: -2, P7d: -2,
-  // Revised
-  P8: -1,
-  // Construction sub-stages
-  P9: 1, P10: 2, P11: 3, P12: 4, P13: 5,
-  P14: 6, P15: 7, P16: 8, P17: 9,
-  // Generic active (at least past rough-in)
-  P18: 4,
-};
+// PHASE_ORDINAL imported from shared lib (scripts/lib/lifecycle-phase.js).
+// WF3: was duplicated in this file + update-tracked-projects.js.
+// See the shared lib for the full ordinal map and design rationale.
 
 // Phases that should NOT produce trade forecasts
 const SKIP_PHASES = new Set([

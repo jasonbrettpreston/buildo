@@ -446,10 +446,24 @@ const TRADE_TARGET_PHASE = Object.freeze({
   'pool-installation': { bid_phase: 'P7a', work_phase: 'P17' },
 });
 
+// Phase ordinals for forward-progression comparison. Single source of
+// truth — imported by compute-trade-forecasts.js, update-tracked-projects.js,
+// and compute-timing-calibration-v2.js. Previously duplicated across 3 files.
+// WF3 review fix: extracted to shared lib to prevent silent drift.
+const PHASE_ORDINAL = Object.freeze({
+  P3: -6, P4: -5, P5: -4, P6: -3,
+  P7a: -2, P7b: -2, P7c: -2, P7d: -2,
+  P8: -1,
+  P9: 1, P10: 2, P11: 3, P12: 4, P13: 5,
+  P14: 6, P15: 7, P16: 8, P17: 9,
+  P18: 4,
+});
+
 module.exports = {
   classifyLifecyclePhase,
   classifyCoaPhase,
   normalizeCoaDecision,
+  PHASE_ORDINAL,
   DEAD_STATUS_SET,
   DEAD_STATUS_ARRAY,
   NORMALIZED_DEAD_DECISIONS_ARRAY,

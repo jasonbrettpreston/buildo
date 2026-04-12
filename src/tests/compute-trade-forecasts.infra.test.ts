@@ -74,12 +74,13 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/stalePurged/);
   });
 
-  it('detects permits already past target phase via ordinal comparison (including P18)', () => {
+  it('imports PHASE_ORDINAL from shared lib and uses for ordinal comparison', () => {
+    // WF3: was duplicated, now imported from scripts/lib/lifecycle-phase.js
     expect(content).toMatch(/PHASE_ORDINAL/);
     expect(content).toMatch(/isPastTarget/);
     expect(content).toMatch(/currentOrdinal.*>=.*targetOrdinal/);
-    // P18 must have an ordinal (independent D2 + adversarial Probe 3)
-    expect(content).toMatch(/P18:\s*4/);
+    // Must NOT define PHASE_ORDINAL locally (it's imported)
+    expect(content).not.toMatch(/const PHASE_ORDINAL\s*=\s*\{/);
   });
 
   it('uses pre-construction → ISSUED fallback for P3-P8/P7* but NOT P18', () => {

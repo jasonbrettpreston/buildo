@@ -54,7 +54,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `spatial_ref_sys` | 5 | 0 |
 | `sync_runs` | 12 | 0 |
 | `timing_calibration` | 7 | 1 |
-| `tracked_projects` | 8 | 3 |
+| `tracked_projects` | 10 | 3 |
 | `trade_forecasts` | 12 | 2 |
 | `trade_mapping_rules` | 11 | 2 |
 | `trades` | 7 | 1 |
@@ -668,7 +668,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `sample_size` | INTEGER | NO | - |
 | `computed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
-#### `tracked_projects` (8 columns)
+#### `tracked_projects` (10 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -680,6 +680,8 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `status` | CHARACTER VARYING(50) | NO | claimed_unverified |
 | `claimed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 | `updated_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+| `last_notified_urgency` | CHARACTER VARYING(50) | YES | - |
+| `last_notified_stalled` | BOOLEAN | YES | false |
 
 #### `trade_forecasts` (12 columns)
 
