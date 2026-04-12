@@ -493,20 +493,17 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 38 tracked pipelines', () => {
-    // WF2 2026-04-11: +1 (classify_lifecycle_phase) — started from 37,
-    // briefly 39 with trigger_lifecycle_sync, then back to 38 after C3
-    // dropped the trigger script in favour of direct chain wiring.
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(38);
+  it('has exactly 39 tracked pipelines', () => {
+    // Phase 3: +1 (compute_timing_calibration_v2)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(39);
   });
 
-  it('groups are correct: 10 ingest, 14 link, 6 classify, 1 snapshot, 7 quality', () => {
-    // WF2 2026-04-11: classify group went 5 → 6 (only classify_lifecycle_phase,
-    // not trigger_lifecycle_sync — the trigger was dropped per adversarial C3).
+  it('groups are correct: 10 ingest, 14 link, 7 classify, 1 snapshot, 7 quality', () => {
+    // Phase 3: classify group 6 → 7 after adding calibration V2
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(10);
     expect(groups.filter((g) => g === 'link')).toHaveLength(14);
-    expect(groups.filter((g) => g === 'classify')).toHaveLength(6);
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(7);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(7);
   });

@@ -17,7 +17,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 - **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback. CoA FK to permits is intentionally omitted (composite PK incompatible with single-column reference) — enforced via CQA Tier 2 referential audit instead. PostgreSQL ENUMs deferred for `status` columns to accommodate upstream Toronto Open Data changes.
 
 <!-- DB_SCHEMA_START -->
-### Tables (37)
+### Tables (38)
 
 | Table | Columns | Indexes |
 |-------|---------|--------|
@@ -45,6 +45,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `permit_products` | 7 | 1 |
 | `permit_trades` | 10 | 5 |
 | `permits` | 53 | 21 |
+| `phase_calibration` | 9 | 2 |
 | `pipeline_runs` | 11 | 1 |
 | `pipeline_schedules` | 5 | 0 |
 | `product_groups` | 5 | 2 |
@@ -553,6 +554,20 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `lifecycle_stalled` | BOOLEAN | NO | false |
 | `lifecycle_classified_at` | TIMESTAMP WITH TIME ZONE | YES | - |
 | `phase_started_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+
+#### `phase_calibration` (9 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | INTEGER | NO | nextval(phase_calibration_id_seq) |
+| `from_phase` | CHARACTER VARYING(10) | NO | - |
+| `to_phase` | CHARACTER VARYING(10) | NO | - |
+| `permit_type` | CHARACTER VARYING(100) | YES | - |
+| `median_days` | INTEGER | NO | - |
+| `p25_days` | INTEGER | NO | - |
+| `p75_days` | INTEGER | NO | - |
+| `sample_size` | INTEGER | NO | - |
+| `computed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
 #### `pipeline_runs` (11 columns)
 

@@ -169,6 +169,25 @@ export const VALID_PHASES: ReadonlySet<string> = new Set([
   'O1', 'O2', 'O3', 'O4',
 ]);
 
+/**
+ * Trade → Target Phase mapping. Maps each of the 32 trade slugs to the
+ * lifecycle phase where that trade becomes "active" on-site. The flight
+ * tracker uses this to bridge calibration data (phase-to-phase medians)
+ * to per-trade predictions. Dual code path: must match the JS version
+ * in scripts/lib/lifecycle-phase.js.
+ */
+export const TRADE_TARGET_PHASE: Readonly<Record<string, string>> = Object.freeze({
+  excavation: 'P9', shoring: 'P9', demolition: 'P9', 'temporary-fencing': 'P9',
+  concrete: 'P10', waterproofing: 'P10',
+  framing: 'P11', 'structural-steel': 'P11', masonry: 'P11', elevator: 'P11',
+  plumbing: 'P12', hvac: 'P12', electrical: 'P12', 'fire-protection': 'P12', 'drain-plumbing': 'P12',
+  insulation: 'P13',
+  drywall: 'P15', painting: 'P15', flooring: 'P15', tiling: 'P15',
+  'trim-work': 'P15', 'millwork-cabinetry': 'P15', 'stone-countertops': 'P15', security: 'P15',
+  roofing: 'P16', glazing: 'P16', 'eavestrough-siding': 'P16', caulking: 'P16', solar: 'P16',
+  landscaping: 'P17', 'decking-fences': 'P17', 'pool-installation': 'P17',
+});
+
 // ─────────────────────────────────────────────────────────────────
 // CoA decision normalization + canonical sets
 // ─────────────────────────────────────────────────────────────────

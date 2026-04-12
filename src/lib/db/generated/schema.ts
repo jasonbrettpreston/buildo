@@ -689,6 +689,24 @@ export const permitPhaseTransitions = pgTable("permit_phase_transitions", {
 	check("chk_transitions_to_phase", sql`(to_phase)::text = ANY ((ARRAY['P1'::character varying, 'P2'::character varying, 'P3'::character varying, 'P4'::character varying, 'P5'::character varying, 'P6'::character varying, 'P7a'::character varying, 'P7b'::character varying, 'P7c'::character varying, 'P7d'::character varying, 'P8'::character varying, 'P9'::character varying, 'P10'::character varying, 'P11'::character varying, 'P12'::character varying, 'P13'::character varying, 'P14'::character varying, 'P15'::character varying, 'P16'::character varying, 'P17'::character varying, 'P18'::character varying, 'P19'::character varying, 'P20'::character varying, 'O1'::character varying, 'O2'::character varying, 'O3'::character varying, 'O4'::character varying])::text[])`),
 ]);
 
+export const phaseCalibration = pgTable("phase_calibration", {
+	id: serial().primaryKey().notNull(),
+	fromPhase: varchar("from_phase", { length: 10 }).notNull(),
+	toPhase: varchar("to_phase", { length: 10 }).notNull(),
+	permitType: varchar("permit_type", { length: 100 }),
+	medianDays: integer("median_days").notNull(),
+	p25Days: integer("p25_days").notNull(),
+	p75Days: integer("p75_days").notNull(),
+	sampleSize: integer("sample_size").notNull(),
+	computedAt: timestamp("computed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_phase_calibration_from").using("btree", table.fromPhase.asc().nullsLast().op("text_ops"), table.permitType.asc().nullsLast().op("text_ops")),
+	uniqueIndex("idx_phase_calibration_unique").using("btree", sql`from_phase`, sql`to_phase`, sql`COALESCE(permit_type, '__ALL__'::character varying)`),
+	check("chk_calibration_from_phase", sql`(from_phase)::text = ANY ((ARRAY['P1'::character varying, 'P2'::character varying, 'P3'::character varying, 'P4'::character varying, 'P5'::character varying, 'P6'::character varying, 'P7a'::character varying, 'P7b'::character varying, 'P7c'::character varying, 'P7d'::character varying, 'P8'::character varying, 'P9'::character varying, 'P10'::character varying, 'P11'::character varying, 'P12'::character varying, 'P13'::character varying, 'P14'::character varying, 'P15'::character varying, 'P16'::character varying, 'P17'::character varying, 'P18'::character varying, 'P19'::character varying, 'P20'::character varying, 'O1'::character varying, 'O2'::character varying, 'O3'::character varying, 'O4'::character varying, 'ISSUED'::character varying])::text[])`),
+	check("chk_calibration_sample", sql`sample_size >= 5`),
+	check("chk_calibration_to_phase", sql`(to_phase)::text = ANY ((ARRAY['P1'::character varying, 'P2'::character varying, 'P3'::character varying, 'P4'::character varying, 'P5'::character varying, 'P6'::character varying, 'P7a'::character varying, 'P7b'::character varying, 'P7c'::character varying, 'P7d'::character varying, 'P8'::character varying, 'P9'::character varying, 'P10'::character varying, 'P11'::character varying, 'P12'::character varying, 'P13'::character varying, 'P14'::character varying, 'P15'::character varying, 'P16'::character varying, 'P17'::character varying, 'P18'::character varying, 'P19'::character varying, 'P20'::character varying, 'O1'::character varying, 'O2'::character varying, 'O3'::character varying, 'O4'::character varying])::text[])`),
+]);
+
 export const permitProducts = pgTable("permit_products", {
 	permitNum: varchar("permit_num", { length: 20 }).notNull(),
 	revisionNum: varchar("revision_num", { length: 10 }).notNull(),

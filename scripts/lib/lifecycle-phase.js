@@ -366,6 +366,71 @@ const DEAD_STATUS_ARRAY = Object.freeze([...DEAD_STATUS_SET]);
 // Frozen array form of NORMALIZED_DEAD_DECISIONS — same rationale for CoA.
 const NORMALIZED_DEAD_DECISIONS_ARRAY = Object.freeze([...NORMALIZED_DEAD_DECISIONS]);
 
+// ─────────────────────────────────────────────────────────────────
+// Trade → Target Phase mapping (Phase 3 calibration + Phase 4 flight tracker)
+// ─────────────────────────────────────────────────────────────────
+//
+// Maps each of the 32 trade slugs to the lifecycle phase where that
+// trade becomes "active" on-site. The flight tracker (Phase 4) uses
+// this to answer: "given a permit currently at phase X, how many days
+// until the plumber's target phase P12?"
+//
+// The calibration engine provides the (from_phase → to_phase) median
+// days. TRADE_TARGET_PHASE bridges that to per-trade predictions.
+const TRADE_TARGET_PHASE = Object.freeze({
+  // P9 — Site prep trades
+  excavation: 'P9',
+  shoring: 'P9',
+  demolition: 'P9',
+  'temporary-fencing': 'P9',
+
+  // P10 — Foundation trades
+  concrete: 'P10',
+  waterproofing: 'P10',
+
+  // P11 — Structural trades
+  framing: 'P11',
+  'structural-steel': 'P11',
+  masonry: 'P11',
+  elevator: 'P11',
+
+  // P12 — Rough-in trades (MEP)
+  plumbing: 'P12',
+  hvac: 'P12',
+  electrical: 'P12',
+  'fire-protection': 'P12',
+  'drain-plumbing': 'P12',
+
+  // P13 — Insulation
+  insulation: 'P13',
+
+  // P14 — Fire separations (typically same crews as fire-protection)
+  // fire-protection already mapped to P12 (rough-in); P14 is the
+  // compartmentalization inspection, not a trade-specific phase.
+
+  // P15 — Interior finishing trades
+  drywall: 'P15',
+  painting: 'P15',
+  flooring: 'P15',
+  tiling: 'P15',
+  'trim-work': 'P15',
+  'millwork-cabinetry': 'P15',
+  'stone-countertops': 'P15',
+  security: 'P15',
+
+  // P16 — Exterior finishing trades
+  roofing: 'P16',
+  glazing: 'P16',
+  'eavestrough-siding': 'P16',
+  caulking: 'P16',
+  solar: 'P16',
+
+  // P17 — Landscaping / final trades
+  landscaping: 'P17',
+  'decking-fences': 'P17',
+  'pool-installation': 'P17',
+});
+
 module.exports = {
   classifyLifecyclePhase,
   classifyCoaPhase,
@@ -385,4 +450,6 @@ module.exports = {
   NORMALIZED_APPROVED_DECISIONS,
   NORMALIZED_DEAD_DECISIONS,
   VALID_PHASES,
+  TRADE_TARGET_PHASE,
+  mapInspectionStageToPhase,
 };

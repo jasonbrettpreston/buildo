@@ -1,4 +1,4 @@
-# Active Task: Phase 2 — Classifier State Machine Upgrade
+# Active Task: Phase 3 — Calibration Engine V2
 **Status:** Planning
 **Workflow:** WF1 — New Feature Genesis
 **Domain Mode:** **Backend/Pipeline**
@@ -6,181 +6,180 @@
 ---
 
 ## Context
-* **Goal:** Upgrade the lifecycle classifier from a static state-reporter into a time-tracking state machine. When a permit's `lifecycle_phase` changes (e.g., P11 → P12), the classifier must: (a) stamp `phase_started_at = NOW()` on the permit, (b) write a row to `permit_phase_transitions`, and (c) backfill `phase_started_at` for all 243K existing permits using best-available proxies. The critical invariant is: `phase_started_at` must ONLY update when the phase actually changes — not every nightly run — so countdown math never resets.
-* **Why now:** Phase 1 (commit `258c5aa`) created the schema infrastructure. Without Phase 2 populating it, the tables are empty shells. Phases 3 (calibration) and 4 (forecasting) cannot start until transition data is flowing.
+* **Goal:** Compute historically accurate lead times between construction milestones to fuel Phase 4's flight tracker. The V1 calibration engine measures one gap: "issued → first inspection" (useless for downstream trades). V2 measures the gaps between sequential lifecycle phases: "median days from P11 (Framing) → P12 (Rough-in)" — the data the flight tracker needs to predict when a specific trade will be on-site.
+* **Why now:** Phase 2 (commit `a329d64`) populated `permit_phase_transitions` with 242K initial rows + the real-time transition logging pipeline. The inspection stage data has 5,265 permits with 2+ sequential passed stages — enough for robust medians. Phase 4 cannot start until these medians exist.
 * **Target Spec:** `docs/reports/lifecycle_phase_implementation.md`
-* **Key Files:** `scripts/classify-lifecycle-phase.js`, `src/tests/classify-lifecycle-phase.infra.test.ts`
+* **Key Files:** `migrations/087_phase_calibration.sql`, `scripts/compute-timing-calibration-v2.js`, `scripts/lib/lifecycle-phase.js`
 
 ## Technical Implementation
 
-### Change 1: Modify `buildPermitUpdateSQL` to conditionally stamp `phase_started_at`
+### 1. Migration 087: `phase_calibration` table
 
-The current SQL:
 ```sql
-UPDATE permits p
-   SET lifecycle_phase = v.phase,
-       lifecycle_stalled = v.stalled,
-       lifecycle_classified_at = NOW()
-  FROM (VALUES ...) AS v(permit_num, revision_num, phase, stalled)
- WHERE p.permit_num = v.permit_num
-   AND p.revision_num = v.revision_num
-   AND (p.lifecycle_phase IS DISTINCT FROM v.phase
-        OR p.lifecycle_stalled IS DISTINCT FROM v.stalled)
+CREATE TABLE phase_calibration (
+  id              SERIAL PRIMARY KEY,
+  from_phase      VARCHAR(10) NOT NULL,
+  to_phase        VARCHAR(10) NOT NULL,
+  permit_type     VARCHAR(100),  -- NULL = all types aggregated
+  median_days     INT NOT NULL,
+  p25_days        INT NOT NULL,
+  p75_days        INT NOT NULL,
+  sample_size     INT NOT NULL,
+  computed_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (from_phase, to_phase, permit_type)
+);
 ```
 
-**New SQL** adds a CASE for `phase_started_at`:
-```sql
-UPDATE permits p
-   SET lifecycle_phase = v.phase,
-       lifecycle_stalled = v.stalled,
-       lifecycle_classified_at = NOW(),
-       phase_started_at = CASE
-         WHEN p.lifecycle_phase IS DISTINCT FROM v.phase
-         THEN NOW()
-         ELSE p.phase_started_at   -- keep existing anchor
-       END
-  FROM (VALUES ...) AS v(...)
- WHERE ...same IS DISTINCT FROM guard...
-```
+Also includes a `trade_target_phases` reference table (32 trades → their "active" lifecycle phase) to bridge calibration data → trade predictions in Phase 4. Or: export this as a shared constant from `scripts/lib/lifecycle-phase.js` (cheaper, no migration needed, matches the existing pattern).
 
-The `IS DISTINCT FROM` in the WHERE ensures only rows with actual changes are UPDATEd. The inner CASE further discriminates: if ONLY `lifecycle_stalled` changed (but phase is the same), `phase_started_at` is preserved. Only a real phase transition resets the clock.
+### 2. New script: `compute-timing-calibration-v2.js`
 
-### Change 2: Write transition rows to `permit_phase_transitions`
+**Data source:** `permit_inspections` — mining sequential passed-stage pairs.
 
-After each batch UPDATE, collect the rows that had a phase change (not just a stalled change) and INSERT into `permit_phase_transitions`. The classifier already knows the new phase (`v.phase`) and can capture the old phase by including `p.lifecycle_phase` as a RETURNING column from the UPDATE, or by querying the batch result.
+**Algorithm:**
+1. Query all permits with 2+ distinct passed inspection stages
+2. For each permit, build a timeline: stages ordered by `inspection_date ASC`
+3. For each consecutive pair (stage_A at date_A, stage_B at date_B), compute `days = date_B - date_A`
+4. Map both stages to lifecycle phases via `mapInspectionStageToPhase`
+5. Group by `(from_phase, to_phase, permit_type)` and compute `PERCENTILE_CONT(0.5)` median, p25, p75
+6. Also compute "issued → phase_X" calibration: for permits where we know `issued_date` and the first inspection stage, compute `days = first_inspection_date - issued_date` as the "P7 → P_X" gap
+7. UPSERT into `phase_calibration` (the UNIQUE constraint on `(from_phase, to_phase, permit_type)` makes this idempotent)
 
-**Approach:** Modify the batch UPDATE to use `RETURNING permit_num, revision_num, (old phase)`. PostgreSQL's UPDATE...RETURNING can't directly return the pre-UPDATE value, so we use a CTE:
+**The entire computation is a single SQL query** — Postgres can do this with window functions + percentile aggregation:
 
 ```sql
-WITH old_phases AS (
-  SELECT permit_num, revision_num, lifecycle_phase AS old_phase,
-         permit_type, neighbourhood_id
-    FROM permits
-   WHERE (permit_num, revision_num) IN (VALUES ...)
+WITH stage_timeline AS (
+  SELECT i.permit_num, p.permit_type,
+         i.stage_name, i.inspection_date,
+         LAG(i.stage_name) OVER w AS prev_stage,
+         LAG(i.inspection_date) OVER w AS prev_date
+    FROM permit_inspections i
+    JOIN permits p USING (permit_num)
+   WHERE i.status = 'Passed'
+  WINDOW w AS (PARTITION BY i.permit_num ORDER BY i.inspection_date, i.stage_name)
 ),
-do_update AS (
-  UPDATE permits p
-     SET lifecycle_phase = v.phase,
-         lifecycle_stalled = v.stalled,
-         lifecycle_classified_at = NOW(),
-         phase_started_at = CASE
-           WHEN p.lifecycle_phase IS DISTINCT FROM v.phase THEN NOW()
-           ELSE p.phase_started_at
-         END
-    FROM (VALUES ...) AS v(permit_num, revision_num, phase, stalled)
-   WHERE p.permit_num = v.permit_num
-     AND p.revision_num = v.revision_num
-     AND (p.lifecycle_phase IS DISTINCT FROM v.phase
-          OR p.lifecycle_stalled IS DISTINCT FROM v.stalled)
-  RETURNING p.permit_num, p.revision_num, p.lifecycle_phase AS new_phase
+phase_pairs AS (
+  SELECT permit_type,
+         map_stage_to_phase(prev_stage) AS from_phase,
+         map_stage_to_phase(stage_name) AS to_phase,
+         (inspection_date - prev_date) AS gap_days
+    FROM stage_timeline
+   WHERE prev_stage IS NOT NULL
+     AND map_stage_to_phase(prev_stage) IS NOT NULL
+     AND map_stage_to_phase(stage_name) IS NOT NULL
+     AND map_stage_to_phase(prev_stage) <> map_stage_to_phase(stage_name)
 )
-INSERT INTO permit_phase_transitions
-  (permit_num, revision_num, from_phase, to_phase, transitioned_at, permit_type, neighbourhood_id)
-SELECT du.permit_num, du.revision_num, op.old_phase, du.new_phase, NOW(),
-       op.permit_type, op.neighbourhood_id
-  FROM do_update du
-  JOIN old_phases op USING (permit_num, revision_num)
- WHERE op.old_phase IS DISTINCT FROM du.new_phase
+SELECT from_phase, to_phase, permit_type,
+       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY gap_days)::int AS median_days,
+       PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY gap_days)::int AS p25_days,
+       PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY gap_days)::int AS p75_days,
+       COUNT(*) AS sample_size
+  FROM phase_pairs
+ GROUP BY 1, 2, 3
+HAVING COUNT(*) >= 5
 ```
 
-This is a single atomic CTE that: reads the old phase, writes the new phase, and logs the transition — all in one statement per batch. No round-trip between JS and SQL for the old value. The `WHERE old_phase IS DISTINCT FROM new_phase` filter at the INSERT level catches the case where only `lifecycle_stalled` changed (no transition to log).
+Since `mapInspectionStageToPhase` is a JS function (not a SQL function), we can either:
+(a) Create a temporary SQL function via `DO $$` block that mirrors the JS mapping
+(b) Load the raw data into JS, apply the mapping, then compute percentiles in JS
+(c) Build the mapping as a SQL CASE expression inline
 
-### Change 3: Backfill `phase_started_at` for 243K existing permits
-
-After the main classification loop, run a one-time backfill for permits that have `lifecycle_phase IS NOT NULL AND phase_started_at IS NULL`:
-
-| Phase bucket | Proxy for `phase_started_at` |
-|---|---|
-| P7a/P7b/P7c/P7d | `issued_date` (exact — we know when it was issued) |
-| P3-P6 | `application_date` (best available for pre-issuance) |
-| P8 | `issued_date` (revision is post-issuance) |
-| P9-P17 | Latest passed inspection_date from `permit_inspections` (already loaded in the rollup Map) |
-| P18 | `issued_date` as fallback (generic active, no sub-stage data) |
-| P19/P20 | `last_seen_at` (when we last observed the terminal status) |
-| O1-O3 | `application_date` or `first_seen_at` |
-| null (dead) | Leave NULL — dead permits don't need countdown math |
-
-This runs ONCE — guarded by `WHERE phase_started_at IS NULL AND lifecycle_phase IS NOT NULL`. Subsequent runs only stamp `phase_started_at` on actual phase transitions (Change 1).
-
-### Change 4: Backfill initial transition rows
-
-For the 243K existing permits that already have a `lifecycle_phase`, write a single "initial classification" transition row with `from_phase = NULL`:
-
+Option (c) is simplest and avoids function creation:
 ```sql
-INSERT INTO permit_phase_transitions
-  (permit_num, revision_num, from_phase, to_phase, transitioned_at, permit_type, neighbourhood_id)
-SELECT permit_num, revision_num, NULL, lifecycle_phase, phase_started_at,
-       permit_type, neighbourhood_id
-  FROM permits
- WHERE lifecycle_phase IS NOT NULL
-   AND NOT EXISTS (
-     SELECT 1 FROM permit_phase_transitions t
-      WHERE t.permit_num = permits.permit_num
-        AND t.revision_num = permits.revision_num
-   )
+CASE
+  WHEN lower(stage_name) LIKE '%excavation%' OR ... THEN 'P9'
+  WHEN lower(stage_name) LIKE '%footings%' OR ... THEN 'P10'
+  ...
+END AS phase
 ```
 
-This also runs ONCE — the `NOT EXISTS` guard makes it idempotent.
+### 3. `TRADE_TARGET_PHASE` mapping
 
-* **New/Modified Components:** `scripts/classify-lifecycle-phase.js`
-* **Data Hooks/Libs:** None (pure function unchanged — the state machine is in the pipeline script, not the classifier logic)
-* **Database Impact:** YES — writes to existing `permits.phase_started_at` + `permit_phase_transitions`. No new columns/tables (Phase 1 already created them).
+New constant exported from `scripts/lib/lifecycle-phase.js` (and TS dual path):
+
+```js
+const TRADE_TARGET_PHASE = {
+  // Phase 4 uses this to answer "which phase must a permit reach
+  // for trade X to become active?"
+  excavation: 'P9', shoring: 'P9', demolition: 'P9', 'temporary-fencing': 'P9',
+  concrete: 'P10', waterproofing: 'P10',
+  framing: 'P11', 'structural-steel': 'P11', masonry: 'P11',
+  plumbing: 'P12', hvac: 'P12', electrical: 'P12', 'fire-protection': 'P12',
+  'drain-plumbing': 'P12',
+  insulation: 'P13',
+  drywall: 'P15', painting: 'P15', flooring: 'P15', tiling: 'P15',
+  'trim-work': 'P15', 'millwork-cabinetry': 'P15', 'stone-countertops': 'P15',
+  roofing: 'P16', glazing: 'P16', 'eavestrough-siding': 'P16',
+  elevator: 'P11', // needs structural complete
+  landscaping: 'P17', 'decking-fences': 'P17', 'pool-installation': 'P17',
+  solar: 'P16', security: 'P15', caulking: 'P16',
+};
+```
+
+### 4. Fallback hierarchy
+
+The calibration engine also computes "all permit types" aggregates (permit_type = NULL):
+1. **(from_phase, to_phase, permit_type)** — exact match (e.g., P11→P12 for "New Houses")
+2. **(from_phase, to_phase, NULL)** — all types combined
+3. If neither exists, the flight tracker falls back to a hardcoded default (30 days)
+
+### 5. Chain integration
+
+Wire `compute_timing_calibration_v2` into the permits chain after `classify_lifecycle_phase` and before the flight tracker (Phase 4). The calibration only needs to run when inspection data changes, but running daily is cheap (~5s query on 17K stage pairs).
+
+* **Database Impact:** YES — migration 087 adds 1 table + 1 index. Script writes ~50-100 calibration rows.
 
 ## Standards Compliance
-* **Try-Catch Boundary:** CTE-based UPDATE+INSERT runs inside existing `pipeline.withTransaction` per-batch. Error propagation unchanged.
-* **Unhappy Path Tests:** Infra shape tests for the new CTE pattern, transition INSERT guard, backfill idempotency guard.
-* **logError Mandate:** N/A — uses pipeline.log.
-* **Mobile-First:** N/A — backend-only.
+* **Try-Catch Boundary:** Script uses pipeline.run + pipeline SDK.
+* **Unhappy Path Tests:** Infra shape test for migration + script. Logic test for the TRADE_TARGET_PHASE completeness (all 32 trade slugs mapped).
+* **logError Mandate:** Uses pipeline.log.
+* **Mobile-First:** N/A.
 
 ## Execution Plan
 
-- [ ] **Contract Definition:** N/A — no API changes.
+- [ ] **Contract Definition:** The `phase_calibration` table shape IS the contract between the calibration engine (writer) and the flight tracker (reader).
 
-- [ ] **Spec & Registry Sync:** Update target spec §2.3 with state-machine design. Run `npm run system-map`.
+- [ ] **Spec & Registry Sync:** Update target spec §3. Add to manifest + FreshnessTimeline.
 
-- [ ] **Schema Evolution:** N/A — Phase 1 already created the tables.
+- [ ] **Schema Evolution:**
+  - Write `migrations/087_phase_calibration.sql` (UP: CREATE TABLE + UNIQUE constraint. DOWN: commented DROP)
+  - `npm run migrate && npm run db:generate`
+  - `npm run typecheck`
 
-- [ ] **Test Scaffolding:** Update `src/tests/classify-lifecycle-phase.infra.test.ts` with:
-  - Shape test: batch UPDATE SQL includes `phase_started_at = CASE` conditional stamp
-  - Shape test: CTE includes `INSERT INTO permit_phase_transitions`
-  - Shape test: backfill queries guarded by `phase_started_at IS NULL`
-  - Shape test: initial transition INSERT guarded by `NOT EXISTS`
+- [ ] **Test Scaffolding:**
+  - `src/tests/migration-087.infra.test.ts` — table shape
+  - `src/tests/compute-timing-calibration-v2.infra.test.ts` — script shape
+  - Logic test: TRADE_TARGET_PHASE covers all 32 trade slugs
 
-- [ ] **Red Light:** Run updated infra tests — must FAIL before implementation.
+- [ ] **Red Light:** Tests must FAIL before implementation.
 
 - [ ] **Implementation:**
-  1. Rewrite `buildPermitUpdateSQL` to produce the CTE-based UPDATE+INSERT (Change 1+2)
-  2. Update `flattenPermitBatch` to match new VALUES shape (still 4 params per row — no change needed since the CTE reads the VALUES the same way)
-  3. Add backfill function for `phase_started_at` proxies (Change 3) — runs after the main dirty-permit loop, guarded by `WHERE phase_started_at IS NULL AND lifecycle_phase IS NOT NULL`
-  4. Add initial transition backfill (Change 4) — runs after Change 3, guarded by `NOT EXISTS`
-  5. Update `permitsUpdated` counter to distinguish phase changes vs stalled-only changes (for telemetry: `phase_transitions_logged` metric)
-  6. Add `phase_transitions_logged` and `phase_started_at_backfilled` to PIPELINE_SUMMARY records_meta
-  7. Update PIPELINE_META writes map to include `phase_started_at` + `permit_phase_transitions`
-
-- [ ] **Auth Boundary & Secrets:** N/A.
+  1. Write migration 087
+  2. Write `TRADE_TARGET_PHASE` in `scripts/lib/lifecycle-phase.js` + TS dual path
+  3. Write `compute-timing-calibration-v2.js`
+  4. Wire into manifest + FreshnessTimeline
+  5. Run against live DB, verify calibration rows
 
 - [ ] **Pre-Review Self-Checklist:**
-  1. Does the CTE correctly capture the PRE-update phase via the `old_phases` sub-SELECT?
-  2. Does the `IS DISTINCT FROM` filter in the transition INSERT correctly exclude stalled-only changes?
-  3. Does the backfill use the correct proxy per phase bucket?
-  4. Is the backfill idempotent? (Second run touches 0 rows)
-  5. Does the initial transition backfill handle permits with `phase_started_at = NULL` gracefully? (It should use `COALESCE(phase_started_at, NOW())` for the transitioned_at)
-  6. Does the per-batch transaction still wrap both the CTE UPDATE+INSERT and the classified_at stamp atomically?
-  7. What happens on the first run after this upgrade? (243K permits have lifecycle_phase but phase_started_at=NULL — the backfill handles this)
-  8. Does the CTE-based SQL stay under the 65535 param limit? (Same 4 params × 500 batch size = 2000 — well under)
+  1. Does the SQL CASE for stage→phase mapping match `mapInspectionStageToPhase` exactly?
+  2. Does the LAG window function correctly pair consecutive stages (not skip stages)?
+  3. Does the HAVING COUNT(*) >= 5 filter prevent noisy medians from tiny samples?
+  4. Does TRADE_TARGET_PHASE cover all 32 trade slugs from the CLAUDE.md list?
+  5. Is the UNIQUE constraint on (from_phase, to_phase, permit_type) correct for UPSERT?
+  6. Does the "all types" aggregate (permit_type = NULL) work with the UNIQUE constraint? (Yes — NULL is distinct in UNIQUE constraints in Postgres)
 
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix && npm run typecheck`. All pass. Verify on live DB: (a) run classifier, (b) check `phase_started_at IS NOT NULL` count matches `lifecycle_phase IS NOT NULL` count, (c) check `permit_phase_transitions` row count > 0.
+- [ ] **Green Light:** Full test suite + typecheck + live DB verification.
 
-- [ ] **Independent + adversarial review agents** (parallel, isolated worktrees). Triage results, WF3 any fixes, defer remainder to review_followups.md.
+- [ ] **Independent + adversarial review agents** (parallel). Triage, WF3 fixes, defer to review_followups.md.
 
-- [ ] → WF6 review gate + atomic commit.
+- [ ] → WF6 + commit.
 
 ---
 
 ## §10 Compliance
 
-- ✅ **DB:** No new columns/tables (Phase 1 covers). Writes to existing columns via guarded UPDATE. Backfill is idempotent (WHERE IS NULL guard). Per-batch transactions (bounded locks). Advisory lock (concurrency safe).
+- ✅ **DB:** Migration 087 with UP + commented DOWN. UNIQUE constraint for idempotent UPSERT. No large-table ALTER.
 - ⬜ **API:** N/A
 - ⬜ **UI:** N/A
-- ⬜ **Shared Logic:** N/A — pure function unchanged; state machine logic lives in the pipeline script only.
-- ✅ **Pipeline:** Uses Pipeline SDK · per-batch withTransaction · advisory lock · PIPELINE_SUMMARY + PIPELINE_META updated · idempotent backfill
+- ✅ **Shared Logic:** TRADE_TARGET_PHASE in both JS + TS dual code path. Stage→phase SQL CASE must match JS `mapInspectionStageToPhase`.
+- ✅ **Pipeline:** Pipeline SDK · PIPELINE_SUMMARY + PIPELINE_META · idempotent UPSERT · wired into manifest + chain
