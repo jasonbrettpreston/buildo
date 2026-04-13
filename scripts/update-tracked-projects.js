@@ -226,7 +226,64 @@ pipeline.run('update-tracked-projects', async (pool) => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Step 4: Telemetry
+  // Step 4: Analytics Sync — populate lead_analytics
+  // ═══════════════════════════════════════════════════════════
+  //
+  // Aggregates all tracked_projects by permit into lead_analytics so
+  // the competition discount (opportunity score) reflects real user
+  // behavior. Runs as a single SQL UPSERT — Postgres does the GROUP BY.
+  // Uses LPAD to match the canonical lead_key format.
+  pipeline.log.info('[tracked-projects]', 'Syncing lead_analytics...');
+
+  // Wrap both UPSERT + zero-out in a single transaction so a crash
+  // between them doesn't leave stale non-zero counts alongside fresh
+  // counts. Adversarial review: data corruption vector without atomicity.
+  let analyticsSynced = 0;
+  let analyticsZeroed = 0;
+
+  await pipeline.withTransaction(pool, async (client) => {
+    const { rows: syncedRows } = await client.query(`
+      INSERT INTO lead_analytics (lead_key, tracking_count, saving_count, updated_at)
+      SELECT
+        'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num::text, 2, '0') AS lead_key,
+        COUNT(*) FILTER (WHERE tp.status IN ('claimed_unverified', 'claimed', 'verified'))::int AS tracking_count,
+        COUNT(*) FILTER (WHERE tp.status = 'saved')::int AS saving_count,
+        NOW()
+      FROM tracked_projects tp
+      WHERE tp.status NOT IN ('archived', 'expired')
+      GROUP BY tp.permit_num, tp.revision_num
+      ON CONFLICT (lead_key) DO UPDATE SET
+        tracking_count = EXCLUDED.tracking_count,
+        saving_count = EXCLUDED.saving_count,
+        updated_at = NOW()
+      RETURNING 1
+    `);
+    analyticsSynced = syncedRows.length;
+
+    // Zero out lead_analytics rows where all trackers have been archived.
+    // Operand order: la.lead_key on the left so Postgres can use the PK
+    // index. Independent review Issue 1.
+    const { rows: zeroedRows } = await client.query(`
+      UPDATE lead_analytics la
+         SET tracking_count = 0, saving_count = 0, updated_at = NOW()
+       WHERE NOT EXISTS (
+         SELECT 1 FROM tracked_projects tp
+          WHERE la.lead_key = 'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num::text, 2, '0')
+            AND tp.status NOT IN ('archived', 'expired')
+       )
+       AND (la.tracking_count > 0 OR la.saving_count > 0)
+      RETURNING 1
+    `);
+    analyticsZeroed = zeroedRows.length;
+  });
+
+  pipeline.log.info(
+    '[tracked-projects]',
+    `Analytics sync: ${analyticsSynced} upserted, ${analyticsZeroed} zeroed`,
+  );
+
+  // ═══════════════════════════════════════════════════════════
+  // Step 5: Telemetry
   // ═══════════════════════════════════════════════════════════
   pipeline.emitSummary({
     records_total: rows.length,
@@ -239,7 +296,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
       recovery_alerts: recoveryAlerts,
       imminent_alerts: imminentAlerts,
       total_alerts: alerts.length,
-      // The alerts array is available for downstream notification dispatch
+      analytics_synced: analyticsSynced,
+      analytics_zeroed: analyticsZeroed,
       alerts,
     },
   });
@@ -252,6 +310,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
     },
     {
       tracked_projects: ['status', 'last_notified_urgency', 'last_notified_stalled', 'updated_at'],
+      lead_analytics: ['lead_key', 'tracking_count', 'saving_count', 'updated_at'],
     },
   );
 });

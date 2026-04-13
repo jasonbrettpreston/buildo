@@ -82,6 +82,32 @@ describe('scripts/update-tracked-projects.js — CRM assistant shape', () => {
     expect(content).toMatch(/updated_at = NOW\(\)/);
   });
 
+  it('syncs lead_analytics via SQL UPSERT after processing', () => {
+    // WF2: aggregates tracked_projects into lead_analytics so the
+    // competition discount stays in sync with actual user behavior.
+    expect(content).toMatch(/INSERT INTO lead_analytics/);
+    expect(content).toMatch(/ON CONFLICT \(lead_key\) DO UPDATE/);
+    expect(content).toMatch(/tracking_count/);
+    expect(content).toMatch(/saving_count/);
+    // Uses LPAD with ::text cast to match canonical key format
+    expect(content).toMatch(/LPAD\(tp\.revision_num::text, 2, '0'\)/);
+  });
+
+  it('zeros out lead_analytics for fully-archived permits', () => {
+    expect(content).toMatch(/UPDATE lead_analytics/);
+    expect(content).toMatch(/tracking_count = 0/);
+    expect(content).toMatch(/NOT EXISTS/);
+  });
+
+  it('reports analytics sync counts in telemetry', () => {
+    expect(content).toMatch(/analytics_synced/);
+    expect(content).toMatch(/analytics_zeroed/);
+  });
+
+  it('declares lead_analytics in PIPELINE_META writes', () => {
+    expect(content).toMatch(/lead_analytics.*lead_key.*tracking_count/);
+  });
+
   it('emits alerts array in PIPELINE_SUMMARY for downstream dispatch', () => {
     expect(content).toMatch(/pipeline\.emitSummary/);
     expect(content).toMatch(/alerts/);

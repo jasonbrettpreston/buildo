@@ -124,6 +124,9 @@
 | MED | WF1 091 2026-04-12 Adversarial (MEDIUM-4) | `trade_forecasts.target_window` allows NULL. All 13K existing rows have NULL. Downstream consumers must handle 3 states (bid, work, NULL). NULL = "not yet classified" — acceptable until compute-trade-forecasts.js populates it. Document the semantics. | Future forecaster update | OPEN |
 | HIGH | WF1 Phase 2 2026-04-12 Adversarial | Opportunity score elite tier (>=80) is mathematically unreachable: max base=30, max multiplier=2.5, max raw=75. Either raise the multiplier/cap, lower the elite threshold to 70+, or accept that elite is aspirational. | Product formula calibration | OPEN |
 | MED | WF1 Phase 2 2026-04-12 Independent | Competition penalty of 50 per tracker is too aggressive: 2 trackers = penalty 100, which exceeds the max base*urgency (75). Every lead with 2+ trackers scores 0 regardless of dollar value. Consider reducing to 5-10 per tracker. | Product formula calibration | OPEN |
+| HIGH | WF2 Phase 3 2026-04-12 Adversarial | Zero-out subquery uses per-row string concatenation in a correlated NOT EXISTS. At 100K tracked_projects × 50K lead_analytics this is O(n²) string ops. Fix: materialize the distinct key set in a CTE, then anti-join. At current scale (0 rows) this is moot. | Future scaling | OPEN |
+| MED | WF2 Phase 3 2026-04-12 Adversarial | lead_analytics rows are never deleted, only zeroed. Unbounded accumulation of dead (0,0) rows. Add periodic `DELETE WHERE counts=0 AND updated_at < now() - 90 days`. | Future cleanup | OPEN |
+| MED | WF2 Phase 3 2026-04-12 Independent | No behavioral test for multi-status GROUP BY (same permit saved + claimed). Shape tests only. | Future test hardening | OPEN |
 
 ---
 

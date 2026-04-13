@@ -1,62 +1,81 @@
-# Active Task: WF3 — Accuracy Layer Bug Fixes
-**Status:** Planning → Implementation
-**Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `4dcc635` (feat(91_signal_evolution))
+# Active Task: WF2 — CRM & Analytics Sync
+**Status:** Planning
+**Workflow:** WF2 — Feature Enhancement
+**Rollback Anchor:** `fd91c68` (feat(91_signal_evolution): accuracy layer)
 **Domain Mode:** **Backend/Pipeline**
 
 ---
 
 ## Context
-* **Goal:** Fix 4 bugs found by independent + adversarial review agents in the Accuracy Layer scripts (compute-cost-estimates.js, compute-trade-forecasts.js, compute-opportunity-scores.js).
-* **Target Spec:** Valuation Engine + Opportunity Scoring
+* **Goal:** Connect the existing CRM assistant (update-tracked-projects.js) to the lead_analytics table so the "Marketplace Social Proof" (competition discount) stays in sync with actual user behavior every night. After processing alerts + archiving, the script aggregates all tracked_projects rows by permit and writes tracking_count + saving_count to lead_analytics.
+* **Why now:** Migration 091 created `lead_analytics` but nothing populates it. The opportunity score engine reads from it (via LEFT JOIN) but gets COALESCE(0) for everything. Wiring the CRM script to aggregate and sync ensures the competition signal flows end-to-end.
+* **Target Spec:** Signal Evolution
+* **Key Files:** `scripts/update-tracked-projects.js`
 
-## Bugs
+## Technical Implementation
 
-### Bug 1 (CRITICAL) — TRADE_ALLOCATION_PCT sums to 1.23
-The 32 trade allocation percentages sum to 1.23, not ~1.0. Every `trade_contract_values` JSONB over-allocates by 23%. A $1M permit produces $1.23M in total trade values, systematically inflating opportunity scores by ~23%. Both reviewers flagged.
+### New Step 5 in update-tracked-projects.js: Analytics Sync
 
-### Bug 2 (CRITICAL) — lead_analytics JOIN missing LPAD
-`compute-opportunity-scores.js` concatenates `'permit:' || tf.permit_num || ':' || tf.revision_num` but the canonical key format uses `LPAD(revision_num, 2, '0')`. Revision `'0'` produces key `'permit:X:0'` but the actual lead_analytics row has `'permit:X:00'`. The LEFT JOIN silently fails → zero competition penalty → inflated scores.
+After the existing Steps 1-4 (query → process → update → telemetry), add:
 
-### Bug 3 (HIGH) — emitMeta missing new cost_estimates columns
-The `emitMeta` write declaration in compute-cost-estimates.js omits `is_geometric_override`, `modeled_gfa_sqm`, and `trade_contract_values` — all 3 are written in the UPSERT. Admin DataFlowTile shows incomplete write footprint.
+```sql
+-- Aggregate all tracked_projects into lead_analytics
+INSERT INTO lead_analytics (lead_key, tracking_count, saving_count, updated_at)
+SELECT
+  'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num, 2, '0') AS lead_key,
+  COUNT(*) FILTER (WHERE tp.status IN ('claimed_unverified', 'claimed', 'verified')) AS tracking_count,
+  COUNT(*) FILTER (WHERE tp.status = 'saved') AS saving_count,
+  NOW()
+FROM tracked_projects tp
+WHERE tp.status NOT IN ('archived', 'expired')
+GROUP BY tp.permit_num, tp.revision_num
+ON CONFLICT (lead_key) DO UPDATE SET
+  tracking_count = EXCLUDED.tracking_count,
+  saving_count = EXCLUDED.saving_count,
+  updated_at = NOW()
+```
 
-### Bug 4 (HIGH) — Liar's Gate on fallback estimates
-When `usedFallback=true` (building area from lot-size, not massing), the model has ±50% uncertainty. A $1,500 interior reno on a large lot → model = $368K → Liar's Gate triggers override. Legitimate small permits get flagged as liars. Fix: skip Liar's Gate when `usedFallback`.
+This runs as a single statement — no JS-side aggregation needed. Postgres does the GROUP BY, and ON CONFLICT handles the UPSERT. Uses LPAD to match the canonical lead_key format.
+
+Also: zero out lead_analytics rows where no active tracked_projects remain (permits that were fully archived):
+```sql
+UPDATE lead_analytics la
+   SET tracking_count = 0, saving_count = 0, updated_at = NOW()
+ WHERE NOT EXISTS (
+   SELECT 1 FROM tracked_projects tp
+    WHERE 'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num, 2, '0') = la.lead_key
+      AND tp.status NOT IN ('archived', 'expired')
+ )
+ AND (la.tracking_count > 0 OR la.saving_count > 0)
+```
+
+* **Database Impact:** Writes to existing `lead_analytics` table. No schema changes.
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — script-internal fixes.
-* **Unhappy Path Tests:** Infra test already covers script shapes. No new tests needed for these fixes.
-* **logError Mandate:** pipeline.log (unchanged).
+* **Try-Catch Boundary:** Pipeline SDK (existing).
+* **Unhappy Path Tests:** Update infra test to assert analytics sync step.
+* **logError Mandate:** pipeline.log.
 * **Mobile-First:** N/A.
 
 ## Execution Plan
 
-- [x] **Rollback Anchor:** `4dcc635`
-- [x] **State Verification:** TRADE_ALLOCATION_PCT confirmed 1.23 via node. LPAD mismatch confirmed via code review. emitMeta confirmed missing columns. usedFallback confirmed in scope at the Liar's Gate check.
-- [x] **Spec Review:** Valuation Engine spec (in active_task from prior WF1).
-- [ ] **Reproduction:** Bug 1 verified numerically. Bug 2 would surface when lead_analytics has rows. Bug 3 visible in admin DataFlowTile. Bug 4 reproducible with any interior reno on a large lot.
-- [ ] **Fix:**
-  1. Normalize TRADE_ALLOCATION_PCT: divide each value by the sum (1.23) so they total 1.0
-  2. Add LPAD to opportunity scores JOIN
-  3. Add 3 columns to cost_estimates emitMeta
-  4. Add `&& !usedFallback` guard to Liar's Gate condition
+- [x] **State Verification:** lead_analytics table exists (migration 091). Currently 0 rows. update-tracked-projects.js has Steps 1-4.
+- [ ] **Contract Definition:** lead_analytics.lead_key format must match LPAD convention.
+- [ ] **Guardrail Test:** Update infra test for analytics sync.
+- [ ] **Implementation:** Add Step 5 to update-tracked-projects.js.
 - [ ] **Pre-Review Self-Checklist:**
-  1. Does the normalized sum equal exactly 1.0? (verify via node)
-  2. Does LPAD match the canonical format in record-lead-view.ts?
-  3. Are all 3 new columns in emitMeta?
-  4. Does the fallback guard prevent false overrides without blocking real liars?
-- [ ] **Green Light:** `npm run test && npm run typecheck`. Re-run cost estimates + opportunity scores on live DB.
+  1. Does the LPAD match the canonical key format?
+  2. Does the zero-out query correctly detect "no active trackers"?
+  3. Does the UPSERT handle the first run (empty lead_analytics)?
+  4. Does the script still complete in <1s with 0 tracked_projects?
+- [ ] **Green Light:** Full test suite + live DB verification.
+- [ ] **Review agents.** Triage, WF3, defer.
 - [ ] → Commit.
-
-## Deferred to review_followups.md
-- Elite tier unreachable (max score 75, elite threshold 80) — product formula calibration
-- Competition penalty too aggressive (50 per tracker, 2 trackers = score 0) — product formula calibration
 
 ---
 
 ## §10 Compliance
-- ✅ **DB:** No schema changes. Script-internal fixes only.
+- ✅ **DB:** Writes to existing lead_analytics. No schema changes.
 - ⬜ **API / UI:** N/A
-- ⬜ **Shared Logic:** TRADE_ALLOCATION_PCT is pipeline-only (no dual path).
-- ✅ **Pipeline:** All 3 scripts use Pipeline SDK. emitMeta corrected.
+- ��� **Shared Logic:** N/A
+- ✅ **Pipeline:** Pipeline SDK. PIPELINE_META updated to declare lead_analytics write.
