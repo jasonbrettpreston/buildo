@@ -109,10 +109,12 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
   });
 
   it('applies stall recalibration with context-aware penalty + rolling snowplow', () => {
-    // Pre-construction stalls = 45 day penalty (bureaucracy)
-    // Active construction stalls = 14 day penalty
+    // Pre-construction stalls = stall_penalty_precon (bureaucracy)
+    // Active construction stalls = stall_penalty_active
+    // Now loaded from control panel via logicVars (was hardcoded 45/14)
     expect(content).toMatch(/stallPenalty/);
-    expect(content).toMatch(/\? 45 : 14/);
+    expect(content).toMatch(/logicVars\.stall_penalty_precon/);
+    expect(content).toMatch(/logicVars\.stall_penalty_active/);
     // Rolling snowplow: predicted date can never be closer than
     // penalty buffer from today
     expect(content).toMatch(/minimumStallDate/);

@@ -77,9 +77,13 @@ Upserts rows to `trade_forecasts`; purges stale rows for terminal or deactivated
 - **Relies on:** Lifecycle Phase Engine (for anchors), `72_lead_cost_model` (for allocation).
 - **Consumed by:** `70_lead_feed` (to sort by timing) and Opportunity Score Engine (for the urgency multiplier).
 
-### Control Panel (migration 092)
-- `trade_configurations.bid_phase_cutoff` + `work_phase_target` define the bimodal routing per trade (loaded by the flight tracker from the shared lib, seeded from DB)
+### Control Panel (migrations 092 + 093)
+- `trade_configurations.bid_phase_cutoff` + `work_phase_target` define the bimodal routing per trade
 - `trade_configurations.imminent_window_days` defines the per-trade alert threshold for the CRM assistant
-- `logic_variables.stall_penalty_precon` (45) + `stall_penalty_active` (14) drive the stall recalibration math
+- `trade_configurations.multiplier_bid` + `multiplier_work` (migration 093) — per-trade urgency multipliers consumed by the Opportunity Score Engine
+- `logic_variables.stall_penalty_precon` (45) + `stall_penalty_active` (14) drive the stall recalibration math (now loaded via shared `loadMarketplaceConfigs()`)
 - `logic_variables.expired_threshold_days` (-90) drives the expired urgency classification
 - `target_window` column on `trade_forecasts` stamps 'bid' or 'work' at the bimodal routing decision point
+
+### Shared Config Loader
+All config is loaded via `scripts/lib/config-loader.js` `loadMarketplaceConfigs(pool)` which returns `{ tradeConfigs, logicVars }` with hardcoded fallbacks on DB failure.

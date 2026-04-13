@@ -87,8 +87,8 @@ Mutates `tracked_projects` (status/memory) and `lead_analytics`.
 ### Future Updates
 Plan to move manual variables into a Retool or Admin Panel UI for non-technical adjustments. Create tables for manual changes to important variables like `imminent_window_days`. Alert driven by the trade configurations.
 
-### Control Panel (migration 092)
-The CRM assistant now JOINs `trade_configurations` to get per-trade `imminent_window_days` instead of the hardcoded 14. Operators can set excavation to 7 days (heavy equipment scheduling), elevator to 21 days (long lead time), etc.
+### Control Panel (migrations 092 + 093)
+The CRM assistant now JOINs `trade_configurations` to get per-trade `imminent_window_days` instead of the hardcoded 14. Operators can set excavation to 7 days (heavy equipment scheduling), elevator to 21 days (long lead time), etc. Config is loaded via the shared `loadMarketplaceConfigs(pool)` loader in `scripts/lib/config-loader.js`.
 
 ### Seed: Trade Configurations (migration 092, replaces 091 reference)
 This logic calibrates the Bid Cutoff (when the 2.5x multiplier expires), the Work Target (the date the pro is aiming for), and the Imminent Window (when the final "Last Minute" alert fires).

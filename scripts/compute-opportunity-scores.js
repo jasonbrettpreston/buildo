@@ -14,36 +14,15 @@
 'use strict';
 
 const pipeline = require('./lib/pipeline');
+const { loadMarketplaceConfigs } = require('./lib/config-loader');
 
 pipeline.run('compute-opportunity-scores', async (pool) => {
-  // ─── Load Control Panel from DB ─────────────────────────────
-  let vars = {
-    los_multiplier_bid: 2.5,
-    los_multiplier_work: 1.5,
-    los_penalty_tracking: 50,
-    los_penalty_saving: 10,
-    los_base_cap: 30,
-    los_base_divisor: 10000,
-  };
-  try {
-    const { rows: logicVars } = await pool.query(
-      'SELECT variable_key, variable_value FROM logic_variables',
-    );
-    if (logicVars.length > 0) {
-      const dbVars = Object.fromEntries(
-        logicVars.map((v) => [v.variable_key, parseFloat(v.variable_value)]),
-      );
-      vars = { ...vars, ...dbVars };
-      pipeline.log.info('[opportunity-scores]', `Loaded ${logicVars.length} scoring variables from control panel`);
-    }
-  } catch (err) {
-    pipeline.log.warn('[opportunity-scores]', 'Control panel query failed — using hardcoded defaults', {
-      err: err instanceof Error ? err.message : String(err),
-    });
-  }
+  // ─── Load Control Panel via shared loader ──────────────────
+  const { tradeConfigs, logicVars: vars } = await loadMarketplaceConfigs(pool, 'opportunity-scores');
 
   // ═══════════════════════════════════════════════════════════
   // Step 1: Load trade forecasts + cost + competition data
+  // JOIN trade_configurations for per-trade multipliers (Bug 2 fix).
   // ═══════════════════════════════════════════════════════════
   pipeline.log.info('[opportunity-scores]', 'Loading forecast + cost + competition data...');
 
@@ -59,12 +38,16 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
       ce.is_geometric_override,
       ce.modeled_gfa_sqm,
       COALESCE(la.tracking_count, 0) AS tracking_count,
-      COALESCE(la.saving_count, 0) AS saving_count
+      COALESCE(la.saving_count, 0) AS saving_count,
+      tc.multiplier_bid,
+      tc.multiplier_work
     FROM trade_forecasts tf
     LEFT JOIN cost_estimates ce
       ON ce.permit_num = tf.permit_num AND ce.revision_num = tf.revision_num
     LEFT JOIN lead_analytics la
       ON la.lead_key = 'permit:' || tf.permit_num || ':' || LPAD(tf.revision_num, 2, '0')
+    LEFT JOIN trade_configurations tc
+      ON tc.trade_slug = tf.trade_slug
     WHERE tf.urgency NOT IN ('expired')
   `);
 
@@ -84,10 +67,12 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     // Base: trade value normalized, capped (from control panel)
     const base = Math.min(tradeValue / vars.los_base_divisor, vars.los_base_cap);
 
-    // Urgency multiplier (from control panel)
+    // Per-trade urgency multiplier from trade_configurations (Bug 2 fix).
+    // Falls back to global logic_variables if the trade has no row in
+    // trade_configurations (defensive — all 32 trades should have one).
     const urgencyMultiplier = row.target_window === 'bid'
-      ? vars.los_multiplier_bid
-      : vars.los_multiplier_work;
+      ? (row.multiplier_bid != null ? parseFloat(row.multiplier_bid) : vars.los_multiplier_bid)
+      : (row.multiplier_work != null ? parseFloat(row.multiplier_work) : vars.los_multiplier_work);
 
     // Competition discount (from control panel)
     const competitionPenalty =
@@ -144,7 +129,8 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
         FROM (VALUES ${vals.join(', ')}) AS v(permit_num, revision_num, trade_slug, score)
        WHERE tf.permit_num = v.permit_num
          AND tf.revision_num = v.revision_num
-         AND tf.trade_slug = v.trade_slug`,
+         AND tf.trade_slug = v.trade_slug
+         AND tf.opportunity_score IS DISTINCT FROM v.score`,
       params,
     );
     updated += batch.length;
@@ -183,6 +169,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
       trade_forecasts: ['permit_num', 'revision_num', 'trade_slug', 'target_window', 'urgency'],
       cost_estimates: ['permit_num', 'revision_num', 'estimated_cost', 'trade_contract_values', 'is_geometric_override', 'modeled_gfa_sqm'],
       lead_analytics: ['lead_key', 'tracking_count', 'saving_count'],
+      trade_configurations: ['trade_slug', 'multiplier_bid', 'multiplier_work'],
     },
     {
       trade_forecasts: ['opportunity_score'],

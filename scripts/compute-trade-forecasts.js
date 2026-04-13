@@ -16,9 +16,10 @@ const {
   TRADE_TARGET_PHASE: TRADE_TARGET_PHASE_FALLBACK,
   PHASE_ORDINAL,
 } = require('./lib/lifecycle-phase');
+const { loadMarketplaceConfigs } = require('./lib/config-loader');
 
 // PHASE_ORDINAL imported from shared lib. TRADE_TARGET_PHASE loaded from
-// trade_configurations at runtime (Control Panel Step 5). Falls back to
+// trade_configurations at runtime via shared config loader. Falls back to
 // the hardcoded shared lib if the DB query fails.
 let TRADE_TARGET_PHASE = TRADE_TARGET_PHASE_FALLBACK;
 
@@ -83,25 +84,16 @@ function classifyConfidence(sampleSize, isFallback) {
 }
 
 pipeline.run('compute-trade-forecasts', async (pool) => {
-  // ─── Load Control Panel: bimodal targets from trade_configurations ──
-  try {
-    const { rows: configs } = await pool.query(
-      'SELECT trade_slug, bid_phase_cutoff, work_phase_target FROM trade_configurations',
-    );
-    if (configs.length > 0) {
-      TRADE_TARGET_PHASE = Object.fromEntries(
-        configs.map((c) => [c.trade_slug, {
-          bid_phase: c.bid_phase_cutoff,
-          work_phase: c.work_phase_target,
-        }]),
-      );
-      pipeline.log.info('[trade-forecasts]', `Loaded ${configs.length} bimodal targets from control panel`);
-    }
-  } catch (err) {
-    pipeline.log.warn('[trade-forecasts]', 'Control panel query failed — using hardcoded TRADE_TARGET_PHASE', {
-      err: err instanceof Error ? err.message : String(err),
-    });
-  }
+  // ─── Load Control Panel via shared loader ──────────────────
+  const { tradeConfigs, logicVars } = await loadMarketplaceConfigs(pool, 'trade-forecasts');
+
+  // Build TRADE_TARGET_PHASE from loaded trade configs
+  TRADE_TARGET_PHASE = Object.fromEntries(
+    Object.entries(tradeConfigs).map(([slug, tc]) => [slug, {
+      bid_phase: tc.bid_phase_cutoff,
+      work_phase: tc.work_phase_target,
+    }]),
+  );
 
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0); // normalize to UTC midnight
@@ -269,7 +261,9 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     //      never be closer than stallPenalty days from today. This prevents
     //      the date from drifting into the past while stalled.
     if (lifecycle_stalled) {
-      const stallPenalty = PRE_CONSTRUCTION_PHASES.has(lifecycle_phase) ? 45 : 14;
+      const stallPenalty = PRE_CONSTRUCTION_PHASES.has(lifecycle_phase)
+        ? logicVars.stall_penalty_precon
+        : logicVars.stall_penalty_active;
 
       // Apply the instant shockwave to the original estimate
       predictedStart.setUTCDate(predictedStart.getUTCDate() + stallPenalty);

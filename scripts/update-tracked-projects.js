@@ -17,7 +17,11 @@
 'use strict';
 
 const pipeline = require('./lib/pipeline');
-const { TRADE_TARGET_PHASE, PHASE_ORDINAL } = require('./lib/lifecycle-phase');
+const {
+  TRADE_TARGET_PHASE: TRADE_TARGET_PHASE_FALLBACK,
+  PHASE_ORDINAL,
+} = require('./lib/lifecycle-phase');
+const { loadMarketplaceConfigs } = require('./lib/config-loader');
 
 // Terminal phases that should trigger auto-archive regardless of
 // ordinal comparison. PHASE_ORDINAL omits these, so isWindowClosed
@@ -30,6 +34,15 @@ const CLAIMED_STATUSES = new Set([
 ]);
 
 pipeline.run('update-tracked-projects', async (pool) => {
+  // ─── Load Control Panel via shared loader ──────────────────
+  const { tradeConfigs } = await loadMarketplaceConfigs(pool, 'tracked-projects');
+  const TRADE_TARGET_PHASE = Object.fromEntries(
+    Object.entries(tradeConfigs).map(([slug, tc]) => [slug, {
+      bid_phase: tc.bid_phase_cutoff,
+      work_phase: tc.work_phase_target,
+    }]),
+  );
+
   // ═══════════════════════════════════════════════════════════
   // Step 1: Query all active tracked projects with forecast data
   // ═══════════════════════════════════════════════════════════

@@ -74,7 +74,8 @@ describe('scripts/update-tracked-projects.js — CRM assistant shape', () => {
 
   it('imports PHASE_ORDINAL from shared lib (not duplicated)', () => {
     // WF3 fix #3: was duplicated across 3 files
-    expect(content).toMatch(/PHASE_ORDINAL.*require/);
+    expect(content).toMatch(/PHASE_ORDINAL/);
+    expect(content).toMatch(/require\('\.\/lib\/lifecycle-phase'\)/);
     expect(content).not.toMatch(/const PHASE_ORDINAL\s*=/);
   });
 

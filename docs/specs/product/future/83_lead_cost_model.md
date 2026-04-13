@@ -72,8 +72,8 @@ Updated `cost_estimates` table with trade-level dollar values.
 - `migrations/091_signal_evolution.sql`
 - `migrations/092_control_panel.sql` (trade_configurations + logic_variables)
 
-**Control Panel (migration 092):**
-`allocation_pct` is now loaded from `trade_configurations` at runtime. The Liar's Gate threshold (`liar_gate_threshold`) is loaded from `logic_variables`. Both fall back to hardcoded defaults if the DB query fails. Operators can tune per-trade allocation percentages without code deployments.
+**Control Panel (migrations 092 + 093):**
+`allocation_pct` is now loaded from `trade_configurations` at runtime via the shared `loadMarketplaceConfigs(pool)` loader in `scripts/lib/config-loader.js`. The Liar's Gate threshold (`liar_gate_threshold`) is loaded from `logic_variables`. Both fall back to hardcoded defaults if the DB query fails. Operators can tune per-trade allocation percentages without code deployments.
 
 **Out-of-Scope Files:**
 - `src/lib/classification/scoring.ts` — This script handles project stage, not project value.

@@ -877,3 +877,23 @@ Three user-reported bugs: (1) test feed tool throws `[object Object]` error on R
 | LOW | Self | Feed-Path Coverage section has no explicit 375px mobile viewport test. Uses existing responsive patterns (flex-col md:flex-row, grid-cols-1 md:grid-cols-2) but untested | Future test hardening | OPEN |
 | INFO | Self | Migrations 067, 072, 075 were not applied on local DB at the start of this session. 067 gracefully no-ops without PostGIS. 072 + 075 applied successfully. All 78 existing migrations are now backfilled into `schema_migrations` as applied | DB reconciliation | closed-in-(this session) |
 | INFO | Self | Test feed will still fail locally until PostGIS is installed (`permits.location` doesn't exist without the extension). The client error message now shows the real error (e.g., `column "p.location" does not exist`) instead of `[object Object]`, so the operator can diagnose. Install PostGIS: Scoop → `scoop install postgresql`, WSL2 → `sudo apt install postgis` + `CREATE EXTENSION postgis` | Dev env setup doc | OPEN |
+
+---
+
+## WF3 — Control Panel Pipeline Gaps (2026-04-13)
+
+**Scope:** Migration 093 + shared config loader + per-trade multipliers + 4-script refactor.
+
+| Severity | Source | Item | Planned home | Status |
+|----------|--------|------|--------------|--------|
+| HIGH | Adversarial (Probe 3) | `config-loader.js` allocation_pct validation warned but did not normalize — log message said "normalizing" but code did nothing. Sum drift (e.g., 1.23) would corrupt trade_contract_values. | **FIXED in this WF3** — now actually normalizes when sum drifts >0.001 from 1.0 | closed-in-WF3-093 |
+| HIGH | Adversarial (Probe 4+6) | `compute-cost-estimates.js` had dead inline `FALLBACK_ALLOCATION_PCT` with framing=0.0976 diverged from config-loader/migration (0.0974). Dead code with active correctness risk. | **FIXED in this WF3** — removed inline fallbacks, shared loader is single source of truth | closed-in-WF3-093 |
+| MEDIUM | Adversarial (Probe 1) | If migration 093 hasn't run but scripts are deployed, the LEFT JOIN to `tc.multiplier_bid`/`tc.multiplier_work` in compute-opportunity-scores will hard-fail (column doesn't exist). Config loader fallback doesn't help — it's the main data query that fails. | Deploy runbook: enforce `npm run migrate` before script deployment | OPEN |
+| LOW | Adversarial (Probe 2) | If someone manually NULLs `multiplier_bid` in trade_configurations (bypassing NOT NULL DEFAULT), parseFloat(null) → NaN would silently produce NaN scores stored as NULL. Cannot happen post-migration since column is NOT NULL. | Defensive — no action needed unless NOT NULL constraint is dropped | OPEN |
+| LOW | Adversarial (Probe 5) | If operator sets `stall_penalty_precon=0` in logic_variables, stall recalibration is silently disabled. Seed is 45, fallback is 45 — only reachable via manual SQL UPDATE. | Doc: note in Admin UI that 0 disables stall penalty | OPEN |
+| INFO | Self-checklist | Spec 81/86 use `los_base_unit` but code/seed use `los_base_divisor` — naming drift between spec and implementation. Functionality is correct. | Spec doc update | OPEN |
+| HIGH | Independent (C3) | `compute-opportunity-scores.js` batch UPDATE missing `IS DISTINCT FROM` guard — unconditionally writes all scores each run causing dead tuple bloat. Established project pattern requires the guard. | **FIXED in this WF3** — added `IS DISTINCT FROM` to UPDATE WHERE clause | closed-in-WF3-093 |
+| MEDIUM | Independent (B5/E1) | `lead_expiry_days` seeded in migration 093 and in config-loader fallback, but no consuming logic in `update-tracked-projects.js`. Spec §1 says it controls TTL auto-archive for `claimed_unverified` projects. Need to add age-based check with `created_at` in the Step 1 query. | Future WF1 — age-based TTL auto-archive | OPEN |
+| MEDIUM | Independent (Gap 2) | `coa_stall_threshold` seeded but not consumed by any script. Spec §1 says "Days without CoA activity before marking a pre-permit lead as stalled." No wiring to classify-lifecycle-phase.js or CoA scripts. | Future WF1 — CoA stall detection | OPEN |
+| LOW | Independent (B6) | `expired_threshold_days=-90` is in logic_variables and fallback but `classifyUrgency` in compute-trade-forecasts.js hardcodes `<= -90`. Pre-existing gap, not introduced by this WF3. | Future WF2 — wire expired threshold from logicVars | OPEN |
+| LOW | Independent (F4) | SPEC LINK in compute-opportunity-scores.js and update-tracked-projects.js point to `lifecycle_phase_implementation.md` report instead of their canonical specs (81/82). | Doc cleanup | OPEN |

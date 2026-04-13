@@ -27,20 +27,29 @@ describe('scripts/compute-opportunity-scores.js — script shape', () => {
     expect(content).toMatch(/tradeValue/);
   });
 
+  it('uses shared config loader for control panel variables', () => {
+    expect(content).toMatch(/loadMarketplaceConfigs/);
+    expect(content).toMatch(/require\('\.\/lib\/config-loader'\)/);
+  });
+
   it('computes base from trade value normalized by control panel divisor', () => {
     // Now uses vars.los_base_divisor from logic_variables (was hardcoded 10000)
     expect(content).toMatch(/tradeValue \/ vars\.los_base_divisor/);
     expect(content).toMatch(/Math\.min/);
   });
 
-  it('applies urgency multiplier (bid=2.5, work=1.5)', () => {
-    expect(content).toMatch(/2\.5/);
-    expect(content).toMatch(/1\.5/);
-    expect(content).toMatch(/target_window === 'bid'/);
+  it('uses per-trade multipliers from trade_configurations JOIN', () => {
+    // Bug 2 fix: JOINs trade_configurations for per-trade multipliers
+    // instead of global los_multiplier_bid / los_multiplier_work
+    expect(content).toMatch(/LEFT JOIN trade_configurations tc/);
+    expect(content).toMatch(/tc\.multiplier_bid/);
+    expect(content).toMatch(/tc\.multiplier_work/);
+    // Falls back to global vars when trade config is missing
+    expect(content).toMatch(/vars\.los_multiplier_bid/);
+    expect(content).toMatch(/vars\.los_multiplier_work/);
   });
 
   it('applies competition penalty from control panel variables', () => {
-    // Now uses vars.los_penalty_tracking + vars.los_penalty_saving
     expect(content).toMatch(/tracking_count \* vars\.los_penalty_tracking/);
     expect(content).toMatch(/saving_count \* vars\.los_penalty_saving/);
   });

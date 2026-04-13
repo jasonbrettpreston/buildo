@@ -50,9 +50,11 @@ Nightly run processing all active `trade_forecasts` where `urgency <> 'expired'`
 ### Core Logic
 - **Financial Base:** Extract `trade_contract_values[row.trade_slug]`.
 - **Math:** `MIN(trade_value / logic_variables['los_base_unit'], 30)`.
-- **Strategic Multiplier:**
-  - If `target_window === 'bid'` use `los_multiplier_bid` (2.5).
-  - If `target_window === 'work'` use `los_multiplier_work` (1.5).
+- **Strategic Multiplier (Per-Trade):**
+  - JOINs `trade_configurations` for per-trade `multiplier_bid` / `multiplier_work`.
+  - If `target_window === 'bid'` use `tc.multiplier_bid` (e.g., 3.0 for excavation, 2.0 for painting).
+  - If `target_window === 'work'` use `tc.multiplier_work` (e.g., 1.8 for structural-steel, 1.2 for caulking).
+  - Falls back to global `los_multiplier_bid` / `los_multiplier_work` from `logic_variables` if trade config is missing.
 - **Competition Discount:**
   - Math: `(tracking_count * los_penalty_tracking) + (saving_count * los_penalty_saving)`.
 - **Final LOS:** `Clamp((Base * Multiplier) - Discount, 0, 100)`.
@@ -81,8 +83,8 @@ Mutates `trade_forecasts.opportunity_score`.
 - `migrations/091_signal_evolution.sql`
 - `migrations/092_control_panel.sql` (trade_configurations + logic_variables + seed data)
 
-**Control Panel (migration 092):**
-All scoring constants are now DB-driven via `logic_variables` table. The script loads them at runtime with hardcoded fallback. Operators can tune `los_multiplier_bid`, `los_penalty_tracking`, etc. without code deployments.
+**Control Panel (migrations 092 + 093):**
+All scoring constants are now DB-driven. Global constants (`los_penalty_tracking`, `los_base_divisor`, etc.) come from `logic_variables`. Per-trade urgency multipliers (`multiplier_bid`, `multiplier_work`) come from `trade_configurations` via a LEFT JOIN. The script loads all config via the shared `loadMarketplaceConfigs()` loader in `scripts/lib/config-loader.js` with hardcoded fallback. Operators can tune multipliers per-trade (e.g., framing bid=2.8 vs painting bid=2.0) without code deployments.
 
 **Out-of-Scope Files:**
 - `src/lib/classification/scoring.ts` — Original `lead_score` is a static property of the permit; `opportunity_score` is a dynamic property of the marketplace.
