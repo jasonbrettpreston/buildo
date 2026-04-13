@@ -27,8 +27,9 @@ describe('scripts/compute-opportunity-scores.js — script shape', () => {
     expect(content).toMatch(/tradeValue/);
   });
 
-  it('computes base from trade value normalized to $10K', () => {
-    expect(content).toMatch(/tradeValue \/ 10000/);
+  it('computes base from trade value normalized by control panel divisor', () => {
+    // Now uses vars.los_base_divisor from logic_variables (was hardcoded 10000)
+    expect(content).toMatch(/tradeValue \/ vars\.los_base_divisor/);
     expect(content).toMatch(/Math\.min/);
   });
 
@@ -38,9 +39,10 @@ describe('scripts/compute-opportunity-scores.js — script shape', () => {
     expect(content).toMatch(/target_window === 'bid'/);
   });
 
-  it('applies competition penalty from tracking + saving counts', () => {
-    expect(content).toMatch(/tracking_count \* 50/);
-    expect(content).toMatch(/saving_count \* 10/);
+  it('applies competition penalty from control panel variables', () => {
+    // Now uses vars.los_penalty_tracking + vars.los_penalty_saving
+    expect(content).toMatch(/tracking_count \* vars\.los_penalty_tracking/);
+    expect(content).toMatch(/saving_count \* vars\.los_penalty_saving/);
   });
 
   it('clamps score to 0-100', () => {

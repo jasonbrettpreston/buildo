@@ -17,7 +17,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 - **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback. CoA FK to permits is intentionally omitted (composite PK incompatible with single-column reference) — enforced via CQA Tier 2 referential audit instead. PostgreSQL ENUMs deferred for `status` columns to accommodate upstream Toronto Open Data changes.
 
 <!-- DB_SCHEMA_START -->
-### Tables (40)
+### Tables (42)
 
 | Table | Columns | Indexes |
 |-------|---------|--------|
@@ -35,6 +35,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `inspection_stage_map` | 8 | 2 |
 | `lead_analytics` | 4 | 0 |
 | `lead_views` | 11 | 5 |
+| `logic_variables` | 4 | 0 |
 | `neighbourhoods` | 22 | 3 |
 | `notifications` | 12 | 2 |
 | `parcel_buildings` | 8 | 4 |
@@ -56,6 +57,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `sync_runs` | 12 | 0 |
 | `timing_calibration` | 7 | 1 |
 | `tracked_projects` | 10 | 3 |
+| `trade_configurations` | 6 | 0 |
 | `trade_forecasts` | 14 | 2 |
 | `trade_mapping_rules` | 11 | 2 |
 | `trades` | 7 | 1 |
@@ -348,6 +350,15 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `viewed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 | `saved` | BOOLEAN | NO | false |
 | `saved_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+
+#### `logic_variables` (4 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `variable_key` | CHARACTER VARYING(100) | NO | - |
+| `variable_value` | NUMERIC | NO | - |
+| `description` | TEXT | YES | - |
+| `updated_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
 #### `neighbourhoods` (22 columns)
 
@@ -694,6 +705,17 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `updated_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 | `last_notified_urgency` | CHARACTER VARYING(50) | YES | - |
 | `last_notified_stalled` | BOOLEAN | YES | false |
+
+#### `trade_configurations` (6 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `trade_slug` | CHARACTER VARYING(50) | NO | - |
+| `bid_phase_cutoff` | CHARACTER VARYING(10) | NO | - |
+| `work_phase_target` | CHARACTER VARYING(10) | NO | - |
+| `imminent_window_days` | INTEGER | NO | 14 |
+| `allocation_pct` | NUMERIC(5,4) | NO | 0.0500 |
+| `updated_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
 #### `trade_forecasts` (14 columns)
 

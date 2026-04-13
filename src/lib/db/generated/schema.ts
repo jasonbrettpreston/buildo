@@ -735,6 +735,24 @@ export const leadAnalytics = pgTable("lead_analytics", {
 	check("chk_tracking_count", sql`tracking_count >= 0`),
 ]);
 
+export const logicVariables = pgTable("logic_variables", {
+	variableKey: varchar("variable_key", { length: 100 }).primaryKey().notNull(),
+	variableValue: numeric("variable_value").notNull(),
+	description: text(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+});
+
+export const tradeConfigurations = pgTable("trade_configurations", {
+	tradeSlug: varchar("trade_slug", { length: 50 }).primaryKey().notNull(),
+	bidPhaseCutoff: varchar("bid_phase_cutoff", { length: 10 }).notNull(),
+	workPhaseTarget: varchar("work_phase_target", { length: 10 }).notNull(),
+	imminentWindowDays: integer("imminent_window_days").default(14).notNull(),
+	allocationPct: numeric("allocation_pct", { precision: 5, scale:  4 }).default('0.0500').notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	check("chk_allocation_pct", sql`(allocation_pct >= (0)::numeric) AND (allocation_pct <= (1)::numeric)`),
+]);
+
 export const permitProducts = pgTable("permit_products", {
 	permitNum: varchar("permit_num", { length: 20 }).notNull(),
 	revisionNum: varchar("revision_num", { length: 10 }).notNull(),

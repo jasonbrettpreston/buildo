@@ -127,6 +127,7 @@
 | HIGH | WF2 Phase 3 2026-04-12 Adversarial | Zero-out subquery uses per-row string concatenation in a correlated NOT EXISTS. At 100K tracked_projects × 50K lead_analytics this is O(n²) string ops. Fix: materialize the distinct key set in a CTE, then anti-join. At current scale (0 rows) this is moot. | Future scaling | OPEN |
 | MED | WF2 Phase 3 2026-04-12 Adversarial | lead_analytics rows are never deleted, only zeroed. Unbounded accumulation of dead (0,0) rows. Add periodic `DELETE WHERE counts=0 AND updated_at < now() - 90 days`. | Future cleanup | OPEN |
 | MED | WF2 Phase 3 2026-04-12 Independent | No behavioral test for multi-status GROUP BY (same permit saved + claimed). Shape tests only. | Future test hardening | OPEN |
+| LOW | WF3 092 2026-04-13 Independent | `let` module-scope reassignment for DB-loaded config (TRADE_ALLOCATION_PCT, LIAR_GATE_THRESHOLD, TRADE_TARGET_PHASE) is structurally fragile. A future developer calling these outside pipeline.run gets fallback values. Safer: pass as params. Not a current bug. | Future refactor | OPEN |
 
 ---
 

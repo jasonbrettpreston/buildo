@@ -16,6 +16,32 @@
 const pipeline = require('./lib/pipeline');
 
 pipeline.run('compute-opportunity-scores', async (pool) => {
+  // ─── Load Control Panel from DB ─────────────────────────────
+  let vars = {
+    los_multiplier_bid: 2.5,
+    los_multiplier_work: 1.5,
+    los_penalty_tracking: 50,
+    los_penalty_saving: 10,
+    los_base_cap: 30,
+    los_base_divisor: 10000,
+  };
+  try {
+    const { rows: logicVars } = await pool.query(
+      'SELECT variable_key, variable_value FROM logic_variables',
+    );
+    if (logicVars.length > 0) {
+      const dbVars = Object.fromEntries(
+        logicVars.map((v) => [v.variable_key, parseFloat(v.variable_value)]),
+      );
+      vars = { ...vars, ...dbVars };
+      pipeline.log.info('[opportunity-scores]', `Loaded ${logicVars.length} scoring variables from control panel`);
+    }
+  } catch (err) {
+    pipeline.log.warn('[opportunity-scores]', 'Control panel query failed — using hardcoded defaults', {
+      err: err instanceof Error ? err.message : String(err),
+    });
+  }
+
   // ═══════════════════════════════════════════════════════════
   // Step 1: Load trade forecasts + cost + competition data
   // ═══════════════════════════════════════════════════════════
@@ -55,15 +81,17 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     const tradeValues = row.trade_contract_values || {};
     const tradeValue = tradeValues[row.trade_slug] || 0;
 
-    // Base: trade value normalized to $10K units, capped at 30
-    const base = Math.min(tradeValue / 10000, 30);
+    // Base: trade value normalized, capped (from control panel)
+    const base = Math.min(tradeValue / vars.los_base_divisor, vars.los_base_cap);
 
-    // Urgency multiplier: bid window is higher value (earlier = more valuable)
-    const urgencyMultiplier = row.target_window === 'bid' ? 2.5 : 1.5;
+    // Urgency multiplier (from control panel)
+    const urgencyMultiplier = row.target_window === 'bid'
+      ? vars.los_multiplier_bid
+      : vars.los_multiplier_work;
 
-    // Competition discount: more trackers = less opportunity
+    // Competition discount (from control panel)
     const competitionPenalty =
-      (row.tracking_count * 50) + (row.saving_count * 10);
+      (row.tracking_count * vars.los_penalty_tracking) + (row.saving_count * vars.los_penalty_saving);
 
     // Raw score
     const raw = (base * urgencyMultiplier) - competitionPenalty;

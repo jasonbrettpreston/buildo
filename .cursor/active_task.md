@@ -1,73 +1,78 @@
-# Active Task: WF2 — CRM & Analytics Sync
+# Active Task: WF3 — Control Panel Architecture
 **Status:** Planning
-**Workflow:** WF2 — Feature Enhancement
-**Rollback Anchor:** `fd91c68` (feat(91_signal_evolution): accuracy layer)
+**Workflow:** WF3 — Bug Fix (refactor hardcoded constants → DB-driven)
+**Rollback Anchor:** `334858e`
 **Domain Mode:** **Backend/Pipeline**
 
 ---
 
 ## Context
-* **Goal:** Connect the existing CRM assistant (update-tracked-projects.js) to the lead_analytics table so the "Marketplace Social Proof" (competition discount) stays in sync with actual user behavior every night. After processing alerts + archiving, the script aggregates all tracked_projects rows by permit and writes tracking_count + saving_count to lead_analytics.
-* **Why now:** Migration 091 created `lead_analytics` but nothing populates it. The opportunity score engine reads from it (via LEFT JOIN) but gets COALESCE(0) for everything. Wiring the CRM script to aggregate and sync ensures the competition signal flows end-to-end.
-* **Target Spec:** Signal Evolution
-* **Key Files:** `scripts/update-tracked-projects.js`
+* **Goal:** Replace hardcoded JS constants (trade allocation percentages, scoring multipliers, imminent window thresholds) with database-driven configuration tables. This creates a "Control Panel" that operators can tune without code deployments.
+* **Why now:** The accuracy layer scripts (commits `fd91c68`, `334858e`) work but have hardcoded values scattered across 3 scripts. Changing a scoring multiplier requires a code commit + pipeline restart. DB-driven config enables runtime tuning.
+* **Key Files:**
+  - `migrations/092_control_panel.sql` (new: trade_configurations + logic_variables + seed data)
+  - `scripts/compute-cost-estimates.js` (refactor: read allocation_pct from DB)
+  - `scripts/compute-opportunity-scores.js` (refactor: read multipliers from DB)
+  - `scripts/update-tracked-projects.js` (refactor: read imminent_window_days from DB)
+
+## State Verification
+- `lead_analytics` already exists (migration 091). NOT recreated.
+- `trade_configurations` does NOT exist. CREATE.
+- `logic_variables` does NOT exist. CREATE.
+- Migration numbering: 091 taken, next = 092.
 
 ## Technical Implementation
 
-### New Step 5 in update-tracked-projects.js: Analytics Sync
+### Migration 092: trade_configurations + logic_variables + seed data
 
-After the existing Steps 1-4 (query → process → update → telemetry), add:
-
+**trade_configurations** — 32 rows, one per trade:
 ```sql
--- Aggregate all tracked_projects into lead_analytics
-INSERT INTO lead_analytics (lead_key, tracking_count, saving_count, updated_at)
-SELECT
-  'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num, 2, '0') AS lead_key,
-  COUNT(*) FILTER (WHERE tp.status IN ('claimed_unverified', 'claimed', 'verified')) AS tracking_count,
-  COUNT(*) FILTER (WHERE tp.status = 'saved') AS saving_count,
-  NOW()
-FROM tracked_projects tp
-WHERE tp.status NOT IN ('archived', 'expired')
-GROUP BY tp.permit_num, tp.revision_num
-ON CONFLICT (lead_key) DO UPDATE SET
-  tracking_count = EXCLUDED.tracking_count,
-  saving_count = EXCLUDED.saving_count,
-  updated_at = NOW()
+CREATE TABLE trade_configurations (
+  trade_slug           VARCHAR(50) PRIMARY KEY,
+  bid_phase_cutoff     VARCHAR(10) NOT NULL,
+  work_phase_target    VARCHAR(10) NOT NULL,
+  imminent_window_days INTEGER NOT NULL DEFAULT 14,
+  allocation_pct       DECIMAL(5,4) NOT NULL DEFAULT 0.0500,
+  updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 ```
 
-This runs as a single statement — no JS-side aggregation needed. Postgres does the GROUP BY, and ON CONFLICT handles the UPSERT. Uses LPAD to match the canonical lead_key format.
-
-Also: zero out lead_analytics rows where no active tracked_projects remain (permits that were fully archived):
+**logic_variables** — key-value store for global scoring constants:
 ```sql
-UPDATE lead_analytics la
-   SET tracking_count = 0, saving_count = 0, updated_at = NOW()
- WHERE NOT EXISTS (
-   SELECT 1 FROM tracked_projects tp
-    WHERE 'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num, 2, '0') = la.lead_key
-      AND tp.status NOT IN ('archived', 'expired')
- )
- AND (la.tracking_count > 0 OR la.saving_count > 0)
+CREATE TABLE logic_variables (
+  variable_key   VARCHAR(100) PRIMARY KEY,
+  variable_value DECIMAL NOT NULL,
+  description    TEXT,
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 ```
 
-* **Database Impact:** Writes to existing `lead_analytics` table. No schema changes.
+**Seed data** — INSERT the 32 trades from TRADE_TARGET_PHASE + TRADE_ALLOCATION_PCT, and the scoring variables from compute-opportunity-scores.js.
+
+### Script refactors (3 scripts)
+
+1. **compute-cost-estimates.js**: Replace `TRADE_ALLOCATION_RAW` / `TRADE_ALLOCATION_PCT` with a DB query at script start: `SELECT trade_slug, allocation_pct FROM trade_configurations`.
+
+2. **compute-opportunity-scores.js**: Replace hardcoded `2.5` / `1.5` / `50` / `10` / `30` with: `SELECT variable_key, variable_value FROM logic_variables`.
+
+3. **update-tracked-projects.js**: JOIN `trade_configurations` in the query to get `imminent_window_days` per trade instead of the hardcoded `14`.
 
 ## Standards Compliance
-* **Try-Catch Boundary:** Pipeline SDK (existing).
-* **Unhappy Path Tests:** Update infra test to assert analytics sync step.
-* **logError Mandate:** pipeline.log.
+* **Try-Catch Boundary:** Pipeline SDK (unchanged).
+* **Unhappy Path Tests:** Migration shape test + script shape tests updated.
+* **logError Mandate:** pipeline.log (unchanged).
 * **Mobile-First:** N/A.
 
 ## Execution Plan
 
-- [x] **State Verification:** lead_analytics table exists (migration 091). Currently 0 rows. update-tracked-projects.js has Steps 1-4.
-- [ ] **Contract Definition:** lead_analytics.lead_key format must match LPAD convention.
-- [ ] **Guardrail Test:** Update infra test for analytics sync.
-- [ ] **Implementation:** Add Step 5 to update-tracked-projects.js.
+- [ ] **Schema Evolution:** Write migration 092 (CREATE + seed). Apply.
+- [ ] **Test Scaffolding:** migration-092 infra test.
+- [ ] **Implementation:** Refactor 3 scripts to read from DB.
 - [ ] **Pre-Review Self-Checklist:**
-  1. Does the LPAD match the canonical key format?
-  2. Does the zero-out query correctly detect "no active trackers"?
-  3. Does the UPSERT handle the first run (empty lead_analytics)?
-  4. Does the script still complete in <1s with 0 tracked_projects?
+  1. Does the seed data match the current hardcoded values exactly?
+  2. Do scripts gracefully handle empty config tables (fallback to hardcoded defaults)?
+  3. Does the imminent_window_days JOIN work with LEFT JOIN trade_configurations?
+  4. Is the allocation_pct seed normalized to sum=1.0?
 - [ ] **Green Light:** Full test suite + live DB verification.
 - [ ] **Review agents.** Triage, WF3, defer.
 - [ ] → Commit.
@@ -75,7 +80,7 @@ UPDATE lead_analytics la
 ---
 
 ## §10 Compliance
-- ✅ **DB:** Writes to existing lead_analytics. No schema changes.
+- ✅ **DB:** 2 new tables + seed data. No ALTER on existing tables.
 - ⬜ **API / UI:** N/A
-- ��� **Shared Logic:** N/A
-- ✅ **Pipeline:** Pipeline SDK. PIPELINE_META updated to declare lead_analytics write.
+- ⬜ **Shared Logic:** The hardcoded constants remain as fallback defaults in the scripts, but the DB values take precedence.
+- ✅ **Pipeline:** 3 scripts refactored to read config from DB at runtime.

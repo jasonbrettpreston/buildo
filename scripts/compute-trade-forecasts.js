@@ -12,11 +12,15 @@
 'use strict';
 
 const pipeline = require('./lib/pipeline');
-const { TRADE_TARGET_PHASE, PHASE_ORDINAL } = require('./lib/lifecycle-phase');
+const {
+  TRADE_TARGET_PHASE: TRADE_TARGET_PHASE_FALLBACK,
+  PHASE_ORDINAL,
+} = require('./lib/lifecycle-phase');
 
-// PHASE_ORDINAL imported from shared lib (scripts/lib/lifecycle-phase.js).
-// WF3: was duplicated in this file + update-tracked-projects.js.
-// See the shared lib for the full ordinal map and design rationale.
+// PHASE_ORDINAL imported from shared lib. TRADE_TARGET_PHASE loaded from
+// trade_configurations at runtime (Control Panel Step 5). Falls back to
+// the hardcoded shared lib if the DB query fails.
+let TRADE_TARGET_PHASE = TRADE_TARGET_PHASE_FALLBACK;
 
 // Phases that should NOT produce trade forecasts
 const SKIP_PHASES = new Set([
@@ -79,6 +83,26 @@ function classifyConfidence(sampleSize, isFallback) {
 }
 
 pipeline.run('compute-trade-forecasts', async (pool) => {
+  // ─── Load Control Panel: bimodal targets from trade_configurations ──
+  try {
+    const { rows: configs } = await pool.query(
+      'SELECT trade_slug, bid_phase_cutoff, work_phase_target FROM trade_configurations',
+    );
+    if (configs.length > 0) {
+      TRADE_TARGET_PHASE = Object.fromEntries(
+        configs.map((c) => [c.trade_slug, {
+          bid_phase: c.bid_phase_cutoff,
+          work_phase: c.work_phase_target,
+        }]),
+      );
+      pipeline.log.info('[trade-forecasts]', `Loaded ${configs.length} bimodal targets from control panel`);
+    }
+  } catch (err) {
+    pipeline.log.warn('[trade-forecasts]', 'Control panel query failed — using hardcoded TRADE_TARGET_PHASE', {
+      err: err instanceof Error ? err.message : String(err),
+    });
+  }
+
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0); // normalize to UTC midnight
 

@@ -64,30 +64,28 @@ const MODEL_RANGE_PCT = 0.25;
 const FALLBACK_RANGE_PCT = 0.5;
 const PLACEHOLDER_COST_THRESHOLD = 1000;
 
-// Trade allocation percentages — approximate GC subcontract breakdown.
-// Used by the Slicer to generate per-trade dollar values in
-// trade_contract_values JSONB. Raw weights are normalized at load time
-// so they sum to exactly 1.0 (WF3: was 1.23 before normalization).
-const TRADE_ALLOCATION_RAW = {
-  excavation: 0.03, shoring: 0.02, demolition: 0.02, concrete: 0.08,
-  waterproofing: 0.02, framing: 0.12, 'structural-steel': 0.10,
-  masonry: 0.06, roofing: 0.05, plumbing: 0.08, hvac: 0.10,
-  electrical: 0.08, 'fire-protection': 0.03, 'drain-plumbing': 0.04,
-  insulation: 0.03, drywall: 0.04, painting: 0.03, flooring: 0.04,
-  glazing: 0.03, tiling: 0.02, 'trim-work': 0.01, 'millwork-cabinetry': 0.02,
-  'stone-countertops': 0.01, elevator: 0.05, landscaping: 0.02,
-  'decking-fences': 0.01, 'eavestrough-siding': 0.02,
-  'pool-installation': 0.02, solar: 0.02, security: 0.01,
-  'temporary-fencing': 0.01, caulking: 0.01,
+// ─── Control Panel: loaded from DB at runtime (fallback to hardcoded) ───
+// Trade allocations come from trade_configurations.allocation_pct.
+// Liar's Gate threshold comes from logic_variables.liar_gate_threshold.
+// Fallback values match the DB seed (migration 092) so behavior is
+// identical if the query fails.
+const FALLBACK_ALLOCATION_PCT = {
+  excavation: 0.0244, shoring: 0.0163, demolition: 0.0163, concrete: 0.0650,
+  waterproofing: 0.0163, framing: 0.0976, 'structural-steel': 0.0813,
+  masonry: 0.0488, roofing: 0.0407, plumbing: 0.0650, hvac: 0.0813,
+  electrical: 0.0650, 'fire-protection': 0.0244, 'drain-plumbing': 0.0325,
+  insulation: 0.0244, drywall: 0.0325, painting: 0.0244, flooring: 0.0325,
+  glazing: 0.0244, tiling: 0.0163, 'trim-work': 0.0081, 'millwork-cabinetry': 0.0163,
+  'stone-countertops': 0.0081, elevator: 0.0407, landscaping: 0.0163,
+  'decking-fences': 0.0081, 'eavestrough-siding': 0.0163,
+  'pool-installation': 0.0163, solar: 0.0163, security: 0.0081,
+  'temporary-fencing': 0.0081, caulking: 0.0081,
 };
-// Normalize so sum === 1.0
-const RAW_SUM = Object.values(TRADE_ALLOCATION_RAW).reduce((a, b) => a + b, 0);
-const TRADE_ALLOCATION_PCT = Object.fromEntries(
-  Object.entries(TRADE_ALLOCATION_RAW).map(([k, v]) => [k, v / RAW_SUM]),
-);
+const FALLBACK_LIAR_GATE = 0.25;
 
-// Liar's Gate threshold: if reported < modeled * this factor, override
-const LIAR_GATE_THRESHOLD = 0.25;
+// These are set inside pipeline.run after querying the control panel
+let TRADE_ALLOCATION_PCT = FALLBACK_ALLOCATION_PCT;
+let LIAR_GATE_THRESHOLD = FALLBACK_LIAR_GATE;
 
 const ADVISORY_LOCK_ID = 74;
 const BATCH_SIZE = 5000;
@@ -401,6 +399,29 @@ async function flushBatch(pool, rows) {
 }
 
 pipeline.run('compute-cost-estimates', async (pool) => {
+  // ─── Load Control Panel from DB ─────────────────────────────
+  try {
+    const { rows: configs } = await pool.query(
+      'SELECT trade_slug, allocation_pct FROM trade_configurations',
+    );
+    if (configs.length > 0) {
+      TRADE_ALLOCATION_PCT = Object.fromEntries(
+        configs.map((c) => [c.trade_slug, parseFloat(c.allocation_pct)]),
+      );
+      pipeline.log.info('[compute-cost-estimates]', `Loaded ${configs.length} trade allocations from control panel`);
+    }
+    const { rows: vars } = await pool.query(
+      "SELECT variable_value FROM logic_variables WHERE variable_key = 'liar_gate_threshold'",
+    );
+    if (vars.length > 0) {
+      LIAR_GATE_THRESHOLD = parseFloat(vars[0].variable_value);
+    }
+  } catch (err) {
+    pipeline.log.warn('[compute-cost-estimates]', 'Control panel query failed — using hardcoded defaults', {
+      err: err instanceof Error ? err.message : String(err),
+    });
+  }
+
   // Session-scoped advisory lock. Postgres auto-releases the lock when the
   // connection closes, which the Pipeline SDK does on script exit — so even
   // a crash mid-run doesn't leak the lock. We still call pg_advisory_unlock

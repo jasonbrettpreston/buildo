@@ -48,13 +48,15 @@ pipeline.run('update-tracked-projects', async (pool) => {
       tf.predicted_start,
       tf.urgency,
       tp.last_notified_urgency,
-      tp.last_notified_stalled
+      tp.last_notified_stalled,
+      COALESCE(tc.imminent_window_days, 14) AS imminent_window_days
     FROM tracked_projects tp
     JOIN permits p ON tp.permit_num = p.permit_num
                   AND tp.revision_num = p.revision_num
     LEFT JOIN trade_forecasts tf ON tp.permit_num = tf.permit_num
                                  AND tp.revision_num = tf.revision_num
                                  AND tp.trade_slug = tf.trade_slug
+    LEFT JOIN trade_configurations tc ON tc.trade_slug = tp.trade_slug
     WHERE tp.status IN ('saved', 'claimed_unverified', 'claimed', 'verified')
   `);
 
@@ -157,7 +159,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
         type: 'START_IMMINENT',
         permit_num: row.permit_num,
         trade_slug: row.trade_slug,
-        message: `Action Required: Your ${row.trade_slug} job at ${row.permit_num} is IMMINENT. Expected start: ${dateStr}.`,
+        message: `Action Required: Your ${row.trade_slug} job at ${row.permit_num} is IMMINENT (within ${row.imminent_window_days} days). Expected start: ${dateStr}.`,
       });
       updates.push({
         id: row.tracking_id,
