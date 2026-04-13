@@ -205,7 +205,17 @@ async function run() {
     // downstream steps but still run quality/infrastructure steps (assert_*,
     // classify_*, compute_*, refresh_snapshot) — they check cumulative DB state,
     // not just the latest batch.
-    const isInfraStep = slug.startsWith('assert_') || slug.startsWith('classify_') || slug.startsWith('compute_') || slug === 'refresh_snapshot' || slug === 'close_stale_permits';
+    //
+    // `update_tracked_projects` is explicitly included because it processes
+    // existing tracked rows to emit time-sensitive CRM alerts (stall, recovery,
+    // imminent). A stall that happens on a no-ingest day must still trigger a
+    // notification. See adversarial Probe 8 / independent FAIL-4.
+    const isInfraStep = slug.startsWith('assert_')
+      || slug.startsWith('classify_')
+      || slug.startsWith('compute_')
+      || slug === 'refresh_snapshot'
+      || slug === 'close_stale_permits'
+      || slug === 'update_tracked_projects';
     if (gateSkipped && !isInfraStep) {
       console.log(`${stepLabel} — SKIPPED (gate: 0 new records)`);
       const scopedSlug = `${chainId}:${slug}`;

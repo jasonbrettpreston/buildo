@@ -13,26 +13,36 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
-  it('defines permits chain with 21 steps (no enrichment scripts)', () => {
-    // WF2 2026-04-11 — +1 step from the lifecycle classifier wired
-    // directly as the final chain step (replacing the detached
-    // trigger_lifecycle_sync handoff that was dropped per adversarial
-    // review C3: synchronous wiring propagates verdict to pipeline_runs
-    // cleanly, avoids Windows detached-spawn uncertainty, and the
-    // classifier's advisory lock (ID 85) handles concurrency).
+  it('defines permits chain with 25 steps (no enrichment scripts)', () => {
+    // WF2 2026-04-13 — +4 steps: compute_timing_calibration_v2 (added, NOT
+    // replacing v1), compute_trade_forecasts, compute_opportunity_scores,
+    // update_tracked_projects wired after classify_lifecycle_phase.
+    // v1 and v2 calibration serve DIFFERENT engines (v1 → spec 71 detail-page
+    // timing, v2 → spec 85 flight tracker) — both must run nightly.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(21);
+    expect(chain!.steps).toHaveLength(25);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
   });
 
-  it('permits chain includes compute_cost_estimates and compute_timing_calibration', () => {
+  it('permits chain runs BOTH timing_calibration v1 AND v2', () => {
+    // WF2 2026-04-13 — v1 feeds spec 71 detail-page timing (timing.ts
+    // reads timing_calibration table). v2 feeds spec 85 flight tracker
+    // (compute-trade-forecasts reads phase_calibration table). Both engines
+    // are live in production; removing v1 would break the detail-page
+    // timing display. See adversarial Probe 1.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     const slugs = chain.steps.map((s) => s.slug);
     expect(slugs).toContain('compute_cost_estimates');
     expect(slugs).toContain('compute_timing_calibration');
+    expect(slugs).toContain('compute_timing_calibration_v2');
+    // v1 runs before v2 — v1's output isn't a dependency of v2 but
+    // keeping them adjacent simplifies reasoning.
+    expect(slugs.indexOf('compute_timing_calibration')).toBeLessThan(
+      slugs.indexOf('compute_timing_calibration_v2'),
+    );
   });
 
   it('compute steps run after classify_permits and before link_coa', () => {
@@ -40,7 +50,7 @@ describe('Pipeline Chain Definitions', () => {
     const slugs = chain.steps.map((s) => s.slug);
     const classifyIdx = slugs.indexOf('classify_permits');
     const costIdx = slugs.indexOf('compute_cost_estimates');
-    const timingIdx = slugs.indexOf('compute_timing_calibration');
+    const timingIdx = slugs.indexOf('compute_timing_calibration_v2');
     const linkCoaIdx = slugs.indexOf('link_coa');
     expect(costIdx).toBeGreaterThan(classifyIdx);
     expect(timingIdx).toBeGreaterThan(classifyIdx);
@@ -48,10 +58,43 @@ describe('Pipeline Chain Definitions', () => {
     expect(timingIdx).toBeLessThan(linkCoaIdx);
   });
 
-  it('compute_cost_estimates runs before compute_timing_calibration (more resilient first)', () => {
+  it('compute_cost_estimates runs before compute_timing_calibration_v2 (more resilient first)', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     const slugs = chain.steps.map((s) => s.slug);
-    expect(slugs.indexOf('compute_cost_estimates')).toBeLessThan(slugs.indexOf('compute_timing_calibration'));
+    expect(slugs.indexOf('compute_cost_estimates')).toBeLessThan(slugs.indexOf('compute_timing_calibration_v2'));
+  });
+
+  it('permits chain ends with the 4-script marketplace tail', () => {
+    // WF2 2026-04-13 — Spec 80/81/82/85: the final 4 steps must be
+    // classify_lifecycle_phase → compute_trade_forecasts →
+    // compute_opportunity_scores → update_tracked_projects (in order).
+    // This order encodes the dependency graph:
+    //   - trade_forecasts needs lifecycle_phase + phase_started_at
+    //   - opportunity_scores needs trade_forecasts + cost_estimates
+    //   - tracked_projects needs trade_forecasts + trade_configurations
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const slugs = chain.steps.map((s) => s.slug);
+    const tail = slugs.slice(-4);
+    expect(tail).toEqual([
+      'classify_lifecycle_phase',
+      'compute_trade_forecasts',
+      'compute_opportunity_scores',
+      'update_tracked_projects',
+    ]);
+  });
+
+  it('marketplace tail scripts appear only in permits chain', () => {
+    // The CoA chain does not include trade_forecasts / opportunity_scores
+    // / update_tracked_projects because CoA applications are pre-permit —
+    // they have no trade classification, no cost estimates yet.
+    const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
+    const coaSlugs = coa.steps.map((s) => s.slug);
+    expect(coaSlugs).not.toContain('compute_trade_forecasts');
+    expect(coaSlugs).not.toContain('compute_opportunity_scores');
+    expect(coaSlugs).not.toContain('update_tracked_projects');
+    expect(coaSlugs).not.toContain('compute_cost_estimates');
+    expect(coaSlugs).not.toContain('compute_timing_calibration');
+    expect(coaSlugs).not.toContain('compute_timing_calibration_v2');
   });
 
   it('defines coa chain with 10 steps', () => {
@@ -69,22 +112,17 @@ describe('Pipeline Chain Definitions', () => {
     expect(chain!.steps).toHaveLength(15);
   });
 
-  it('permits and coa chains end with classify_lifecycle_phase', () => {
-    // WF2 2026-04-11 — classifier is wired directly as the final
-    // chain step. The previous detached trigger_lifecycle_sync
-    // handoff was removed per adversarial review C3 (Windows detach
-    // uncertainty + silent-no-op risk if the spawned child crashed
-    // within ms of spawn). Synchronous wiring gives a clean
-    // pipeline_runs verdict and the classifier's own pg_try_advisory_lock
-    // prevents concurrent runs from corrupting audit telemetry.
+  it('coa chain ends with classify_lifecycle_phase; permits chain ends with the marketplace tail', () => {
+    // WF2 2026-04-13 — CoA chain still ends with classify_lifecycle_phase
+    // (no forecasts/scores to run on pre-permit data). Permits chain now
+    // extends past the classifier with 3 marketplace scripts — see
+    // "permits chain ends with the 4-script marketplace tail" test.
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa');
-    expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('classify_lifecycle_phase');
     expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('classify_lifecycle_phase');
-    // Penultimate step is still assert_engine_health — classifier
-    // depends on a clean engine-health checkpoint.
-    expect(permits!.steps[permits!.steps.length - 2]!.slug).toBe('assert_engine_health');
     expect(coa!.steps[coa!.steps.length - 2]!.slug).toBe('assert_engine_health');
+    // Permits chain: classify_lifecycle_phase is at position -4 (4 from end)
+    expect(permits!.steps[permits!.steps.length - 4]!.slug).toBe('classify_lifecycle_phase');
   });
 
   it('sources chain ends with assert_engine_health', () => {

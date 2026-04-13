@@ -897,3 +897,20 @@ Three user-reported bugs: (1) test feed tool throws `[object Object]` error on R
 | MEDIUM | Independent (Gap 2) | `coa_stall_threshold` seeded but not consumed by any script. Spec §1 says "Days without CoA activity before marking a pre-permit lead as stalled." No wiring to classify-lifecycle-phase.js or CoA scripts. | Future WF1 — CoA stall detection | OPEN |
 | LOW | Independent (B6) | `expired_threshold_days=-90` is in logic_variables and fallback but `classifyUrgency` in compute-trade-forecasts.js hardcodes `<= -90`. Pre-existing gap, not introduced by this WF3. | Future WF2 — wire expired threshold from logicVars | OPEN |
 | LOW | Independent (F4) | SPEC LINK in compute-opportunity-scores.js and update-tracked-projects.js point to `lifecycle_phase_implementation.md` report instead of their canonical specs (81/82). | Doc cleanup | OPEN |
+
+---
+
+## WF2 — Pipeline Chain Wiring (2026-04-13)
+
+**Scope:** manifest.json chains, FreshnessTimeline PIPELINE_CHAINS, spec 40 §4.2/§4.3, spec 41, specs 80-86 — added 3 marketplace tail scripts + v2 timing calibration to permits chain.
+
+| Severity | Source | Item | Planned home | Status |
+|----------|--------|------|--------------|--------|
+| HIGH | Adversarial (Probe 1) | **Near-miss.** Original plan was to REPLACE compute_timing_calibration (v1) with v2. Discovered v1 and v2 serve different engines (v1 → spec 71 detail-page timing, v2 → spec 85 flight tracker). Both must run. Implementation corrected mid-WF2 to keep both. | **FIXED in this WF2** — both v1 and v2 in chain (step 15 = v1, step 16 = v2) | closed-in-WF2-chain |
+| HIGH | Adversarial (Probe 7) / Independent (B3 equivalent) | `docs/specs/pipeline/41_chain_permits.md` was stale (21 steps, referenced v1 only). | **FIXED in this WF2** — spec 41 now shows 25 steps with all new wiring documented | closed-in-WF2-chain |
+| MEDIUM | Adversarial (Probe 8) / Independent (FAIL-4) | `update_tracked_projects` was gate-skipped on no-ingest days, silently suppressing time-sensitive CRM alerts (stall/recovery/imminent). The script processes existing tracked rows, not just new permits. | **FIXED in this WF2** — added to `isInfraStep` in run-chain.js | closed-in-WF2-chain |
+| MEDIUM | Independent (FAIL-2) | `deep_scrapes` chain step order diverged between manifest.json (engine_health before staleness) and spec 40 §4.2 (staleness before engine_health). | **FIXED in this WF2** — spec 40 updated to match manifest order | closed-in-WF2-chain |
+| MEDIUM | Independent (FAIL-5) | `update_tracked_projects.telemetry_tables` was missing `lead_analytics` — the feedback loop table had no dashboard visibility. | **FIXED in this WF2** — added to manifest.json | closed-in-WF2-chain |
+| LOW | Independent (FAIL-1) | `compute_opportunity_scores.telemetry_tables` lists `trade_forecasts` but the script only UPDATEs one column — pre/post row-count diff will always show 0. Dashboard telemetry cosmetic issue. | Future WF2 — custom telemetry for UPDATE-only scripts | OPEN |
+| LOW | Adversarial (Probe 3) | Pre-existing: `opportunity_score` column on `expired` urgency rows is never recomputed (WHERE clause excludes them). Score from last non-expired computation persists. Existed before this WF2 but more visible now. | Future WF3 — scrub opportunity_score when urgency flips to expired | OPEN |
+| LOW | Adversarial (Probe 4 caveat) | CoA chain reclassifies lifecycle_phase but does NOT run the marketplace tail. CoA-triggered reclassification takes until next permits chain run (~24h) to propagate into trade_forecasts. | Document or wire tail to CoA chain | OPEN |

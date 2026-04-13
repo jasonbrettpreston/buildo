@@ -65,11 +65,16 @@ Run a single SQL migration to create the three infrastructure tables: `trade_con
 Execute a 32-row `INSERT` that populates every trade with calibrated values including the new per-trade multipliers and windows.
 
 ### Step 3: Script "Dynamic Wiring"
-Refactor the four scripts to perform a "Config Load" at the start of their run.
-- **Opportunity Score:** Fetches the -50/-10 penalties from `logic_variables`. Fetches per-trade multipliers via `JOIN trade_configurations`.
-- **Cost Slicer:** Fetches the 32 percentages from `trade_configurations`.
-- **Forecast (Flight Tracker):** Fetches the stall constraints and bid cutoff logic.
-- **CRM Assistant:** Fetches the `imminent_window` and auto-archive toggles.
+Refactor the four scripts to perform a "Config Load" at the start of their run via the shared `loadMarketplaceConfigs(pool)` helper in `scripts/lib/config-loader.js`.
+
+| Script | Permits Chain Step | Role |
+|---|---|---|
+| `compute-cost-estimates.js` | **14** | Fetches the 32 percentages from `trade_configurations` + Liar's Gate threshold from `logic_variables`. |
+| `compute-trade-forecasts.js` | **23** | Fetches bimodal targets (`bid_phase_cutoff`, `work_phase_target`) + stall penalties from `logic_variables`. |
+| `compute-opportunity-scores.js` | **24** | JOINs `trade_configurations` for per-trade `multiplier_bid`/`multiplier_work`. Fetches `los_penalty_tracking`/`los_penalty_saving` from `logic_variables`. |
+| `update-tracked-projects.js` | **25** | JOINs `trade_configurations` for per-trade `imminent_window_days`. |
+
+The 3 marketplace scripts (23-25) run AFTER `classify_lifecycle_phase` (step 22) because they depend on fresh lifecycle_phase + phase_started_at anchors from the classifier.
 
 ### Step 4: Admin UI (The Control Page)
 Create a single React page in the Admin dashboard with:

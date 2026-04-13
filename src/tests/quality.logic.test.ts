@@ -531,17 +531,20 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'entities', 'wsib', 'sources', 'deep_scrapes']);
   });
 
-  it('permits chain has 21 steps ending with classify_lifecycle_phase', () => {
-    // WF2 2026-04-11: +1 (classify_lifecycle_phase) — was 20 before.
-    // Wired directly as the final chain step rather than via a
-    // detached trigger (adversarial C3).
+  it('permits chain has 25 steps ending with the marketplace tail', () => {
+    // WF2 2026-04-13: +4 steps —
+    // compute_timing_calibration_v2 (added, NOT replacing v1),
+    // compute_trade_forecasts, compute_opportunity_scores,
+    // update_tracked_projects. v1 still feeds the spec 71 detail-page
+    // timing engine; v2 feeds the spec 85 flight tracker.
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(21);
+    expect(permits.steps).toHaveLength(25);
     expect(permits!.steps[0]!.slug).toBe('assert_schema');
     expect(permits!.steps[1]!.slug).toBe('permits');
-    expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('classify_lifecycle_phase');
-    // Penultimate step remains the engine-health gate.
-    expect(permits!.steps[permits.steps.length - 2]!.slug).toBe('assert_engine_health');
+    // Final step is update_tracked_projects; classify_lifecycle_phase
+    // is at position -4.
+    expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('update_tracked_projects');
+    expect(permits!.steps[permits.steps.length - 4]!.slug).toBe('classify_lifecycle_phase');
   });
 
   it('permits chain has link_wsib as indent-1 step (not sub-step)', () => {

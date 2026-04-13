@@ -72,6 +72,9 @@ Updated `cost_estimates` table with trade-level dollar values.
 - `migrations/091_signal_evolution.sql`
 - `migrations/092_control_panel.sql` (trade_configurations + logic_variables)
 
+**Pipeline Wiring:**
+Permits Chain step 14 of 25. Runs after `classify_permits` (13) so trade assignments exist before the slicer generates `trade_contract_values`. Precedes the two timing calibrations (step 15 = v1 for detail-page timing, step 16 = v2 for flight tracker) — cost modeling is independent of timing but keeping it first means timing failures don't block cost telemetry. The downstream marketplace tail (`compute_opportunity_scores` at 24) reads this table for per-trade dollar values.
+
 **Control Panel (migrations 092 + 093):**
 `allocation_pct` is now loaded from `trade_configurations` at runtime via the shared `loadMarketplaceConfigs(pool)` loader in `scripts/lib/config-loader.js`. The Liar's Gate threshold (`liar_gate_threshold`) is loaded from `logic_variables`. Both fall back to hardcoded defaults if the DB query fails. Operators can tune per-trade allocation percentages without code deployments.
 

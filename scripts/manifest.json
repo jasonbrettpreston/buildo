@@ -29,7 +29,7 @@
     "compute_timing_calibration_v2": { "file": "scripts/compute-timing-calibration-v2.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["phase_calibration"] },
     "compute_trade_forecasts": { "file": "scripts/compute-trade-forecasts.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["trade_forecasts"] },
     "compute_opportunity_scores": { "file": "scripts/compute-opportunity-scores.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["trade_forecasts"] },
-    "update_tracked_projects": { "file": "scripts/update-tracked-projects.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["tracked_projects"] },
+    "update_tracked_projects": { "file": "scripts/update-tracked-projects.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["tracked_projects", "lead_analytics"] },
     "compute_centroids":    { "file": "scripts/compute-centroids.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcels"], "telemetry_null_cols": { "parcels": ["centroid_lat", "centroid_lng"] } },
     "link_similar":         { "file": "scripts/link-similar.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
     "create_pre_permits":   { "file": "scripts/create-pre-permits.js",    "supports_full": false, "supports_dry_run": false },
@@ -54,9 +54,10 @@
       "assert_schema", "permits", "close_stale_permits", "classify_permit_phase", "classify_scope",
       "builders", "link_wsib", "geocode_permits", "link_parcels",
       "link_neighbourhoods", "link_massing", "link_similar", "classify_permits",
-      "compute_cost_estimates", "compute_timing_calibration",
+      "compute_cost_estimates", "compute_timing_calibration", "compute_timing_calibration_v2",
       "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
-      "classify_lifecycle_phase"
+      "classify_lifecycle_phase",
+      "compute_trade_forecasts", "compute_opportunity_scores", "update_tracked_projects"
     ],
     "coa": [
       "assert_schema", "coa", "assert_coa_freshness", "link_coa", "create_pre_permits",

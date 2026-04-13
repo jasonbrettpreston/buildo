@@ -623,6 +623,12 @@ async function run() {
       }
 
       console.log('\n--- Timing Calibration Coverage ---');
+      // WF2 2026-04-13: Chain now runs BOTH v1 (compute_timing_calibration →
+      // timing_calibration table, consumed by spec 71 detail-page timing
+      // engine) AND v2 (compute_timing_calibration_v2 → phase_calibration
+      // table, consumed by spec 85 flight tracker). Both tables must stay
+      // fresh. We check v1's table here; v2's freshness is covered by the
+      // trade_forecasts assertions downstream.
       try {
         const tcRes = await pool.query(
           `SELECT COUNT(*) as total,

@@ -106,13 +106,25 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_similar',         indent: 1 },
       { slug: 'classify_permits',     indent: 1 },
       { slug: 'compute_cost_estimates',     indent: 1 },
+      // v1 still runs — feeds spec 71 detail-page timing engine
+      // (src/features/leads/lib/timing.ts reads timing_calibration).
       { slug: 'compute_timing_calibration', indent: 1 },
+      // v2 also runs — feeds spec 85 flight tracker
+      // (compute-trade-forecasts reads phase_calibration).
+      { slug: 'compute_timing_calibration_v2', indent: 1 },
       { slug: 'link_coa',             indent: 1 },
       { slug: 'create_pre_permits',   indent: 1 },
       { slug: 'refresh_snapshot',     indent: 1 },
       { slug: 'assert_data_bounds',   indent: 0 },
       { slug: 'assert_engine_health', indent: 0 },
       { slug: 'classify_lifecycle_phase', indent: 0 },
+      // WF2 2026-04-13 — marketplace tail (specs 81/82/85):
+      // forecasts → scores → tracked projects. Depends on
+      // classify_lifecycle_phase having stamped fresh lifecycle_phase
+      // + phase_started_at anchors on all active permits.
+      { slug: 'compute_trade_forecasts',    indent: 1 },
+      { slug: 'compute_opportunity_scores', indent: 1 },
+      { slug: 'update_tracked_projects',    indent: 1 },
     ],
   },
   {

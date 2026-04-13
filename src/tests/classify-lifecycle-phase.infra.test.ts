@@ -389,13 +389,23 @@ describe('scripts/manifest.json — chain integration', () => {
     expect(manifest.scripts.trigger_lifecycle_sync).toBeUndefined();
   });
 
-  it('permits chain ends with classify_lifecycle_phase', () => {
+  it('permits chain includes classify_lifecycle_phase before the marketplace tail', () => {
+    // WF2 2026-04-13: permits chain no longer ends with
+    // classify_lifecycle_phase — it's followed by the 3-script
+    // marketplace tail (compute_trade_forecasts, compute_opportunity_scores,
+    // update_tracked_projects). The classifier must still run BEFORE them
+    // because they depend on fresh lifecycle_phase + phase_started_at.
     const permitsChain = manifest.chains.permits;
     expect(permitsChain).toBeDefined();
     expect(Array.isArray(permitsChain)).toBe(true);
     const steps = permitsChain as string[];
-    expect(steps[steps.length - 1]).toBe('classify_lifecycle_phase');
+    expect(steps).toContain('classify_lifecycle_phase');
     expect(steps).not.toContain('trigger_lifecycle_sync');
+    // Classifier runs before the 3 dependent marketplace scripts
+    const classifierIdx = steps.indexOf('classify_lifecycle_phase');
+    expect(steps.indexOf('compute_trade_forecasts')).toBeGreaterThan(classifierIdx);
+    expect(steps.indexOf('compute_opportunity_scores')).toBeGreaterThan(classifierIdx);
+    expect(steps.indexOf('update_tracked_projects')).toBeGreaterThan(classifierIdx);
   });
 
   it('coa chain ends with classify_lifecycle_phase', () => {

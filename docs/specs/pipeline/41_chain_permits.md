@@ -12,16 +12,17 @@ As a business user, I expect this daily pipeline to ingest 237K+ raw Toronto bui
 
 **Trigger:** `node scripts/run-chain.js permits` or `POST /api/admin/pipelines/chain_permits`
 **Schedule:** Daily
-**Steps:** 21 (sequential, stop-on-failure)
+**Steps:** 25 (sequential, stop-on-failure)
 **Gate:** `permits` — if `records_new = 0`, downstream enrichment steps are skipped (infra steps still run)
 
 ```
 assert_schema → permits → close_stale_permits → classify_permit_phase →
 classify_scope → builders → link_wsib → geocode_permits → link_parcels →
 link_neighbourhoods → link_massing → link_similar → classify_permits →
-compute_cost_estimates → compute_timing_calibration →
+compute_cost_estimates → compute_timing_calibration → compute_timing_calibration_v2 →
 link_coa → create_pre_permits → refresh_snapshot → assert_data_bounds →
-assert_engine_health → classify_lifecycle_phase
+assert_engine_health → classify_lifecycle_phase →
+compute_trade_forecasts → compute_opportunity_scores → update_tracked_projects
 ```
 
 ### Step Breakdown
@@ -41,29 +42,44 @@ assert_engine_health → classify_lifecycle_phase
 | 11 | `link_massing` | `link-massing.js` | Link parcels to 3D building footprint volumes | parcel_buildings |
 | 12 | `link_similar` | `link-similar.js` | Propagate scope tags between related permits at same address | permits |
 | 13 | `classify_permits` | `classify-permits.js` | Deep trade classification via tag-trade matrix (32 trades) | permit_trades |
-| 14 | `compute_cost_estimates` | `compute-cost-estimates.js` | Pre-compute cost model estimates for all permits | cost_estimates |
-| 15 | `compute_timing_calibration` | `compute-timing-calibration.js` | Calibrate timing percentiles per permit_type from inspection history | timing_calibration |
-| 16 | `link_coa` | `link-coa.js` | Link CoA to permits via `street_name_normalized` + confidence matrix | coa_applications |
-| 17 | `create_pre_permits` | `create-pre-permits.js` | Generate pre-permit leads from approved CoA applications | — |
-| 18 | `refresh_snapshot` | `refresh-snapshot.js` | Update data_quality_snapshots for dashboard metrics | data_quality_snapshots |
-| 19 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Post-ingestion: cost outliers, null rates, duplicate PKs | pipeline_runs |
-| 20 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuples, seq scan ratio, update ping-pong | engine_health_snapshots |
-| 21 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Computes `lifecycle_phase` + `lifecycle_stalled` for dirty permits and CoA applications. Uses `pg_try_advisory_lock(85)` to single-thread concurrent runs. Per-batch small transactions keep row-level locks bounded. | permits, coa_applications |
+| 14 | `compute_cost_estimates` | `compute-cost-estimates.js` | Pre-compute cost model estimates + Liar's Gate + 32-trade allocation slicer | cost_estimates |
+| 15 | `compute_timing_calibration` | `compute-timing-calibration.js` | Calibrate per-permit_type percentile timing from inspection history — feeds the **spec 71 detail-page timing engine** (`src/features/leads/lib/timing.ts`). | timing_calibration |
+| 16 | `compute_timing_calibration_v2` | `compute-timing-calibration-v2.js` | Compute phase-to-phase calibration medians from inspection stage pairs (P11→P12, etc.) — feeds the **spec 85 flight tracker** (step 23). Independent of v1; both tables are consumed by different engines. | phase_calibration |
+| 17 | `link_coa` | `link-coa.js` | Link CoA to permits via `street_name_normalized` + confidence matrix | coa_applications |
+| 18 | `create_pre_permits` | `create-pre-permits.js` | Generate pre-permit leads from approved CoA applications | — |
+| 19 | `refresh_snapshot` | `refresh-snapshot.js` | Update data_quality_snapshots for dashboard metrics | data_quality_snapshots |
+| 20 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Post-ingestion: cost outliers, null rates, duplicate PKs | pipeline_runs |
+| 21 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuples, seq scan ratio, update ping-pong | engine_health_snapshots |
+| 22 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Computes `lifecycle_phase` + `lifecycle_stalled` for dirty permits and CoA applications. Uses `pg_try_advisory_lock(85)` to single-thread concurrent runs. Per-batch small transactions keep row-level locks bounded. | permits, coa_applications, permit_phase_transitions |
+| 23 | `compute_trade_forecasts` | `compute-trade-forecasts.js` | Phase 4 flight tracker: bimodal routing (bid_phase vs work_phase from `trade_configurations`) + stall recalibration + urgency classification. Needs fresh lifecycle_phase anchors from step 22 and `phase_calibration` from step 16. | trade_forecasts |
+| 24 | `compute_opportunity_scores` | `compute-opportunity-scores.js` | Intrinsic Value Engine: `clamp((tradeValue/divisor × perTradeMultiplier) − competitionPenalty, 0, 100)`. JOINs `trade_configurations` for per-trade `multiplier_bid`/`multiplier_work`. | trade_forecasts (opportunity_score) |
+| 25 | `update_tracked_projects` | `update-tracked-projects.js` | CRM Assistant: two-path routing (saved vs claimed), state-change detection, stall/recovery/imminent alerts. UPSERTs `lead_analytics` with per-permit aggregate tracking/saving counts that feed back into step 24's competition penalty on next run. | tracked_projects, lead_analytics |
 
-**Trailing lifecycle classifier (step 21)** runs synchronously as the
-final chain step (originally a detached handoff, but that was replaced
-during review per adversarial review C1-C3 — advisory lock + direct
-chain wiring gives a clean `pipeline_runs` verdict and avoids Windows
-detached-spawn uncertainty). The classifier's incremental predicate
-(`last_seen_at > lifecycle_classified_at`) keeps re-runs cheap (~5-7
-seconds when no rows are dirty). First-run backfill is ~130 seconds
-across ~240K rows; steady-state runs are incremental and negligible.
-If two chains (permits + coa) finish within seconds of each other, the
-second classifier invocation finds the advisory lock held and exits
-cleanly with `skipped:true` in the records_meta. See
-`docs/reports/lifecycle_phase_implementation.md` for the full decision
-tree and `scripts/quality/lifecycle-phase-sql-reproducer.sql` for the
-round-trip correctness gate.
+**Lifecycle classifier (step 22)** runs synchronously. The classifier's
+incremental predicate (`last_seen_at > lifecycle_classified_at`) keeps
+re-runs cheap (~5-7 seconds when no rows are dirty). First-run backfill
+is ~130 seconds across ~240K rows; steady-state runs are incremental
+and negligible. If two chains (permits + coa) finish within seconds of
+each other, the second classifier invocation finds the advisory lock
+(ID 85) held and exits cleanly with `skipped:true` in the records_meta.
+
+**Marketplace tail (steps 23-25)** runs after the classifier because
+the three scripts depend on fresh `lifecycle_phase` + `phase_started_at`
+anchors. The tail is ordered by data dependency:
+- Step 23 (`compute_trade_forecasts`) reads lifecycle anchors + phase
+  calibration medians (step 16) + trade configurations.
+- Step 24 (`compute_opportunity_scores`) reads the fresh forecasts +
+  cost estimates (step 14) + lead_analytics (populated by step 25 on
+  previous run).
+- Step 25 (`update_tracked_projects`) reads the fresh scores + urgency
+  stamps to decide which alerts to emit, then UPSERTs `lead_analytics`
+  for tomorrow's step 24.
+
+All 4 marketplace scripts load their config via the shared
+`loadMarketplaceConfigs(pool)` helper in `scripts/lib/config-loader.js`.
+See `docs/reports/lifecycle_phase_implementation.md` for the full
+decision tree and `scripts/quality/lifecycle-phase-sql-reproducer.sql`
+for the round-trip correctness gate.
 </architecture>
 
 ---
@@ -143,7 +159,7 @@ round-trip correctness gate.
 ## 5. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic:** `chain.logic.test.ts` (permits chain definition, step count, ordering)
-- **Logic:** `pipeline-sdk.logic.test.ts` (all 20 scripts use Pipeline SDK pattern)
+- **Logic:** `pipeline-sdk.logic.test.ts` (all 25 scripts use Pipeline SDK pattern)
 - **Infra:** `quality.infra.test.ts` (CQA scripts exist, emit correct PIPELINE_SUMMARY)
 <!-- TEST_INJECT_END -->
 </testing>
@@ -155,7 +171,7 @@ round-trip correctness gate.
 
 ### Target Files
 - `scripts/manifest.json` (permits chain array)
-- All 20 scripts listed in the step breakdown above
+- All 25 scripts listed in the step breakdown above
 
 ### Out-of-Scope Files
 - `src/lib/classification/classifier.ts` — governed by trade classification step spec

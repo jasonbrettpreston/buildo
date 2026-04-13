@@ -2728,12 +2728,14 @@ describe('Funnel panel components extracted to separate file', () => {
     expect(source).toContain("from './funnel/FunnelPanels'");
   });
 
-  it('FreshnessTimeline.tsx is under 950 lines after extraction', () => {
+  it('FreshnessTimeline.tsx is under the size budget after extraction', () => {
+    // WF2 2026-04-13: bumped from 1350 to 1400 after adding v1+v2
+    // timing_calibration entries + 3 marketplace tail steps to PIPELINE_CHAINS.
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const lineCount = source.split('\n').length;
-    expect(lineCount).toBeLessThan(1350);
+    expect(lineCount).toBeLessThan(1400);
   });
 
   it('FunnelPanels.tsx exports CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS, DataFlowTile', () => {

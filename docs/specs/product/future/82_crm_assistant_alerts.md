@@ -40,7 +40,7 @@ Monitor user-tracked leads and deliver high-signal alerts only when project real
 ### Implementation
 - **Script:** `scripts/update-tracked-projects.js`
 - **Logic:** The script fetches settings from `trade_configurations` at runtime to decide when to notify.
-- **Wired Into:** Nightly Chain (Final Step).
+- **Wired Into:** Permits Chain — final step 25 of 25. Runs after `compute_opportunity_scores` (24) so alerts and lead_analytics UPSERTs see the freshest `opportunity_score` and `urgency` values from this chain.
 
 ---
 
