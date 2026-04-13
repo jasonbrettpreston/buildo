@@ -120,6 +120,8 @@
 | MED | WF1 090 2026-04-12 Adversarial | last_notified_urgency only tracks 'imminent'. The 'upcoming' tier is silently ignored — users get zero signal until the final tier. Intentional per user spec (imminent-only alerting). Document or rename column. | Documentation | OPEN |
 | MED | WF1 090 2026-04-12 Adversarial | last_notified_stalled DEFAULT false vs last_notified_urgency NULL asymmetry. Both NULL and false mean "never notified" and the check `!== true` handles both. But a future `=== false` check would miss NULL rows. Pick one convention. | Future hardening | OPEN |
 | HIGH | WF3 090 2026-04-12 Adversarial | Single withTransaction wraps ALL merged updates. At 5K+ updates, row-level locks are held for the full loop duration, blocking concurrent API writes (user claiming a project mid-pipeline). Fix: batch into chunks of ~500 with separate transactions. Not critical at current scale (tracked_projects is small). | Future scaling | OPEN |
+| MED | WF1 091 2026-04-12 Adversarial (CRITICAL-1) | `lead_analytics.lead_key` is a VARCHAR(100) synthetic key ('permit:num:rev') instead of a composite FK to permits. Intentional: behavioral signal table is decoupled from permits to retain history. No FK means orphan rows accumulate silently — plan a periodic cleanup job. | Future cleanup job | OPEN |
+| MED | WF1 091 2026-04-12 Adversarial (MEDIUM-4) | `trade_forecasts.target_window` allows NULL. All 13K existing rows have NULL. Downstream consumers must handle 3 states (bid, work, NULL). NULL = "not yet classified" — acceptable until compute-trade-forecasts.js populates it. Document the semantics. | Future forecaster update | OPEN |
 
 ---
 

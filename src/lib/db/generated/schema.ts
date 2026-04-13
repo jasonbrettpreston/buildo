@@ -725,6 +725,16 @@ export const trackedProjects = pgTable("tracked_projects", {
 	check("chk_tracked_status", sql`(status)::text = ANY ((ARRAY['saved'::character varying, 'claimed_unverified'::character varying, 'claimed'::character varying, 'verified'::character varying, 'archived'::character varying, 'expired'::character varying])::text[])`),
 ]);
 
+export const leadAnalytics = pgTable("lead_analytics", {
+	leadKey: varchar("lead_key", { length: 100 }).primaryKey().notNull(),
+	trackingCount: integer("tracking_count").default(0).notNull(),
+	savingCount: integer("saving_count").default(0).notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	check("chk_saving_count", sql`saving_count >= 0`),
+	check("chk_tracking_count", sql`tracking_count >= 0`),
+]);
+
 export const permitProducts = pgTable("permit_products", {
 	permitNum: varchar("permit_num", { length: 20 }).notNull(),
 	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
@@ -756,6 +766,8 @@ export const costEstimates = pgTable("cost_estimates", {
 	modelVersion: integer("model_version").default(1).notNull(),
 	computedAt: timestamp("computed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	tradeContractValues: jsonb("trade_contract_values").default({}).notNull(),
+	isGeometricOverride: boolean("is_geometric_override").default(false).notNull(),
+	modeledGfaSqm: numeric("modeled_gfa_sqm"),
 }, (table) => [
 	index("idx_cost_estimates_tier").using("btree", table.costTier.asc().nullsLast().op("text_ops")),
 	foreignKey({
@@ -784,6 +796,8 @@ export const tradeForecasts = pgTable("trade_forecasts", {
 	p25Days: integer("p25_days"),
 	p75Days: integer("p75_days"),
 	computedAt: timestamp("computed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	opportunityScore: integer("opportunity_score").default(0).notNull(),
+	targetWindow: varchar("target_window", { length: 20 }),
 }, (table) => [
 	index("idx_trade_forecasts_trade_start").using("btree", table.tradeSlug.asc().nullsLast().op("date_ops"), table.predictedStart.asc().nullsLast().op("text_ops")).where(sql`(predicted_start IS NOT NULL)`),
 	index("idx_trade_forecasts_trade_urgency").using("btree", table.tradeSlug.asc().nullsLast().op("text_ops"), table.urgency.asc().nullsLast().op("text_ops")),
@@ -795,6 +809,8 @@ export const tradeForecasts = pgTable("trade_forecasts", {
 	primaryKey({ columns: [table.permitNum, table.revisionNum, table.tradeSlug], name: "trade_forecasts_pkey"}),
 	check("chk_forecast_confidence", sql`(confidence)::text = ANY ((ARRAY['low'::character varying, 'medium'::character varying, 'high'::character varying])::text[])`),
 	check("chk_forecast_urgency", sql`(urgency)::text = ANY ((ARRAY['unknown'::character varying, 'on_time'::character varying, 'upcoming'::character varying, 'imminent'::character varying, 'delayed'::character varying, 'overdue'::character varying, 'expired'::character varying])::text[])`),
+	check("chk_opportunity_score", sql`(opportunity_score >= 0) AND (opportunity_score <= 100)`),
+	check("chk_target_window", sql`(target_window IS NULL) OR ((target_window)::text = ANY ((ARRAY['bid'::character varying, 'work'::character varying])::text[]))`),
 ]);
 
 export const permits = pgTable("permits", {
