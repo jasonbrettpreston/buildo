@@ -53,6 +53,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   compute_timing_calibration: { name: 'Timing Calibration',  group: 'classify' },
   compute_timing_calibration_v2: { name: 'Timing Calibration V2', group: 'classify' },
   compute_trade_forecasts:       { name: 'Trade Forecasts',       group: 'classify' },
+  compute_opportunity_scores:    { name: 'Opportunity Scores',    group: 'classify' },
   update_tracked_projects:       { name: 'Update Tracked Projects', group: 'classify' },
   // Snapshot (1) — capture metrics
   refresh_snapshot:   { name: 'Refresh Snapshot',      group: 'snapshot' },

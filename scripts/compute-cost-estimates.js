@@ -64,6 +64,31 @@ const MODEL_RANGE_PCT = 0.25;
 const FALLBACK_RANGE_PCT = 0.5;
 const PLACEHOLDER_COST_THRESHOLD = 1000;
 
+// Trade allocation percentages — approximate GC subcontract breakdown.
+// Used by the Slicer to generate per-trade dollar values in
+// trade_contract_values JSONB. Raw weights are normalized at load time
+// so they sum to exactly 1.0 (WF3: was 1.23 before normalization).
+const TRADE_ALLOCATION_RAW = {
+  excavation: 0.03, shoring: 0.02, demolition: 0.02, concrete: 0.08,
+  waterproofing: 0.02, framing: 0.12, 'structural-steel': 0.10,
+  masonry: 0.06, roofing: 0.05, plumbing: 0.08, hvac: 0.10,
+  electrical: 0.08, 'fire-protection': 0.03, 'drain-plumbing': 0.04,
+  insulation: 0.03, drywall: 0.04, painting: 0.03, flooring: 0.04,
+  glazing: 0.03, tiling: 0.02, 'trim-work': 0.01, 'millwork-cabinetry': 0.02,
+  'stone-countertops': 0.01, elevator: 0.05, landscaping: 0.02,
+  'decking-fences': 0.01, 'eavestrough-siding': 0.02,
+  'pool-installation': 0.02, solar: 0.02, security: 0.01,
+  'temporary-fencing': 0.01, caulking: 0.01,
+};
+// Normalize so sum === 1.0
+const RAW_SUM = Object.values(TRADE_ALLOCATION_RAW).reduce((a, b) => a + b, 0);
+const TRADE_ALLOCATION_PCT = Object.fromEntries(
+  Object.entries(TRADE_ALLOCATION_RAW).map(([k, v]) => [k, v / RAW_SUM]),
+);
+
+// Liar's Gate threshold: if reported < modeled * this factor, override
+const LIAR_GATE_THRESHOLD = 0.25;
+
 const ADVISORY_LOCK_ID = 74;
 const BATCH_SIZE = 5000;
 
@@ -192,35 +217,53 @@ function computeComplexityScore(row) {
   return Math.min(100, score);
 }
 
-function estimateCostInline(row) {
-  // Path 1: permit-reported cost above placeholder threshold
-  if (row.est_const_cost !== null && row.est_const_cost > PLACEHOLDER_COST_THRESHOLD) {
-    const cost = row.est_const_cost;
-    const tier = determineCostTier(cost);
-    const complexity = computeComplexityScore(row);
-    const premiumFactor = computePremiumFactor(row.avg_household_income);
-    return {
-      permit_num: row.permit_num,
-      revision_num: row.revision_num,
-      estimated_cost: cost,
-      cost_source: 'permit',
-      cost_tier: tier,
-      cost_range_low: cost,
-      cost_range_high: cost,
-      premium_factor: premiumFactor,
-      complexity_score: complexity,
-    };
+// The Slicer: generates per-trade dollar values from total cost
+function sliceTradeValues(totalCost) {
+  if (totalCost == null || totalCost <= 0) return {};
+  const values = {};
+  for (const [slug, pct] of Object.entries(TRADE_ALLOCATION_PCT)) {
+    const val = Math.round(totalCost * pct);
+    if (val > 0) values[slug] = val;
   }
+  return values;
+}
 
-  // Path 2: model-based estimate
+function estimateCostInline(row) {
+  // Always compute the geometric model for Liar's Gate comparison
   const { area, usedFallback } = computeBuildingArea(row);
   const baseRate = determineBaseRate(row);
   const premiumFactor = computePremiumFactor(row.avg_household_income);
   const scopeAdditions = sumScopeAdditions(row.scope_tags);
-  const rawCost = area * baseRate * premiumFactor + scopeAdditions;
+  const modelCost = area > 0 ? area * baseRate * premiumFactor + scopeAdditions : 0;
+  const complexity = computeComplexityScore(row);
 
-  if (area <= 0) {
-    const complexity = computeComplexityScore(row);
+  let estimatedCost;
+  let costSource;
+  let isGeometricOverride = false;
+  let modeledGfaSqm = area > 0 ? area : null;
+
+  // Path 1: permit-reported cost above placeholder threshold
+  if (row.est_const_cost !== null && row.est_const_cost > PLACEHOLDER_COST_THRESHOLD) {
+    // THE LIAR'S GATE: if reported < modeled * 0.25, the permit is
+    // likely underreporting (common for permit-fee minimization).
+    // Override with the geometric estimate.
+    // WF3 Bug 4: skip when usedFallback=true — the fallback model has
+    // ±50% uncertainty (lot-size-based, not massing-based), so it can
+    // dramatically overstate cost for small renovations on large lots.
+    if (modelCost > 0 && !usedFallback && row.est_const_cost < modelCost * LIAR_GATE_THRESHOLD) {
+      estimatedCost = modelCost;
+      costSource = 'model';
+      isGeometricOverride = true;
+    } else {
+      estimatedCost = row.est_const_cost;
+      costSource = 'permit';
+    }
+  } else if (area > 0) {
+    // Path 2: no reported cost → use model
+    estimatedCost = modelCost;
+    costSource = 'model';
+  } else {
+    // Path 3: no reported cost AND no geometry → null
     return {
       permit_num: row.permit_num,
       revision_num: row.revision_num,
@@ -231,25 +274,32 @@ function estimateCostInline(row) {
       cost_range_high: null,
       premium_factor: premiumFactor,
       complexity_score: complexity,
+      is_geometric_override: false,
+      modeled_gfa_sqm: null,
+      trade_contract_values: {},
     };
   }
 
-  const rangePct = usedFallback ? FALLBACK_RANGE_PCT : MODEL_RANGE_PCT;
-  const low = rawCost * (1 - rangePct);
-  const high = rawCost * (1 + rangePct);
-  const tier = determineCostTier(rawCost);
-  const complexity = computeComplexityScore(row);
+  const rangePct = (costSource === 'permit' && !isGeometricOverride)
+    ? 0 // permit-reported costs have no range
+    : (usedFallback ? FALLBACK_RANGE_PCT : MODEL_RANGE_PCT);
+  const low = rangePct > 0 ? estimatedCost * (1 - rangePct) : estimatedCost;
+  const high = rangePct > 0 ? estimatedCost * (1 + rangePct) : estimatedCost;
+  const tier = determineCostTier(estimatedCost);
 
   return {
     permit_num: row.permit_num,
     revision_num: row.revision_num,
-    estimated_cost: rawCost,
-    cost_source: 'model',
+    estimated_cost: estimatedCost,
+    cost_source: costSource,
     cost_tier: tier,
     cost_range_low: low,
     cost_range_high: high,
     premium_factor: premiumFactor,
     complexity_score: complexity,
+    is_geometric_override: isGeometricOverride,
+    modeled_gfa_sqm: modeledGfaSqm,
+    trade_contract_values: sliceTradeValues(estimatedCost),
   };
 }
 
@@ -303,18 +353,22 @@ async function flushBatch(pool, rows) {
           `INSERT INTO cost_estimates (
              permit_num, revision_num, estimated_cost, cost_source, cost_tier,
              cost_range_low, cost_range_high, premium_factor, complexity_score,
-             model_version, computed_at
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+             model_version, is_geometric_override, modeled_gfa_sqm,
+             trade_contract_values, computed_at
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, NOW())
            ON CONFLICT (permit_num, revision_num) DO UPDATE
-             SET estimated_cost   = EXCLUDED.estimated_cost,
-                 cost_source      = EXCLUDED.cost_source,
-                 cost_tier        = EXCLUDED.cost_tier,
-                 cost_range_low   = EXCLUDED.cost_range_low,
-                 cost_range_high  = EXCLUDED.cost_range_high,
-                 premium_factor   = EXCLUDED.premium_factor,
-                 complexity_score = EXCLUDED.complexity_score,
-                 model_version    = EXCLUDED.model_version,
-                 computed_at      = NOW()
+             SET estimated_cost          = EXCLUDED.estimated_cost,
+                 cost_source             = EXCLUDED.cost_source,
+                 cost_tier               = EXCLUDED.cost_tier,
+                 cost_range_low          = EXCLUDED.cost_range_low,
+                 cost_range_high         = EXCLUDED.cost_range_high,
+                 premium_factor          = EXCLUDED.premium_factor,
+                 complexity_score        = EXCLUDED.complexity_score,
+                 model_version           = EXCLUDED.model_version,
+                 is_geometric_override   = EXCLUDED.is_geometric_override,
+                 modeled_gfa_sqm         = EXCLUDED.modeled_gfa_sqm,
+                 trade_contract_values   = EXCLUDED.trade_contract_values,
+                 computed_at             = NOW()
            RETURNING (xmax = 0) AS inserted`,
           [
             r.permit_num,
@@ -326,7 +380,10 @@ async function flushBatch(pool, rows) {
             r.cost_range_high,
             r.premium_factor,
             r.complexity_score,
-            1,
+            1, // model_version
+            r.is_geometric_override,
+            r.modeled_gfa_sqm,
+            JSON.stringify(r.trade_contract_values || {}),
           ],
         );
         if (res.rows[0] && res.rows[0].inserted) inserted++;
@@ -492,6 +549,9 @@ pipeline.run('compute-cost-estimates', async (pool) => {
           'premium_factor',
           'complexity_score',
           'model_version',
+          'is_geometric_override',
+          'modeled_gfa_sqm',
+          'trade_contract_values',
           'computed_at',
         ],
       },

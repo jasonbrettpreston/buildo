@@ -122,6 +122,8 @@
 | HIGH | WF3 090 2026-04-12 Adversarial | Single withTransaction wraps ALL merged updates. At 5K+ updates, row-level locks are held for the full loop duration, blocking concurrent API writes (user claiming a project mid-pipeline). Fix: batch into chunks of ~500 with separate transactions. Not critical at current scale (tracked_projects is small). | Future scaling | OPEN |
 | MED | WF1 091 2026-04-12 Adversarial (CRITICAL-1) | `lead_analytics.lead_key` is a VARCHAR(100) synthetic key ('permit:num:rev') instead of a composite FK to permits. Intentional: behavioral signal table is decoupled from permits to retain history. No FK means orphan rows accumulate silently — plan a periodic cleanup job. | Future cleanup job | OPEN |
 | MED | WF1 091 2026-04-12 Adversarial (MEDIUM-4) | `trade_forecasts.target_window` allows NULL. All 13K existing rows have NULL. Downstream consumers must handle 3 states (bid, work, NULL). NULL = "not yet classified" — acceptable until compute-trade-forecasts.js populates it. Document the semantics. | Future forecaster update | OPEN |
+| HIGH | WF1 Phase 2 2026-04-12 Adversarial | Opportunity score elite tier (>=80) is mathematically unreachable: max base=30, max multiplier=2.5, max raw=75. Either raise the multiplier/cap, lower the elite threshold to 70+, or accept that elite is aspirational. | Product formula calibration | OPEN |
+| MED | WF1 Phase 2 2026-04-12 Independent | Competition penalty of 50 per tracker is too aggressive: 2 trackers = penalty 100, which exceeds the max base*urgency (75). Every lead with 2+ trackers scores 0 regardless of dollar value. Consider reducing to 5-10 per tracker. | Product formula calibration | OPEN |
 
 ---
 

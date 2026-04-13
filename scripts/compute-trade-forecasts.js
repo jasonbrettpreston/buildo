@@ -194,15 +194,13 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     // phase anchor, daysUntil becomes positive, and the lead
     // resurrects from expired → upcoming/imminent.
     let targetPhase;
-    // WF3 Bug Fix: was `<`, now `<=`. The old `<` meant a permit
-    // currently AT the bid_phase (e.g., P3 with bid_phase P3) would
-    // skip to work_phase — giving the tradesperson zero days to bid.
-    // With `<=`, the bid window stays open while the permit is IN
-    // the bid phase, so the feed shows "Bid Window Open."
+    let targetWindow;
     if (currentOrdinal != null && bidOrdinal != null && currentOrdinal <= bidOrdinal) {
       targetPhase = targets.bid_phase;
+      targetWindow = 'bid';
     } else {
       targetPhase = targets.work_phase;
+      targetWindow = 'work';
     }
 
     const targetOrdinal = PHASE_ORDINAL[targetPhase];
@@ -273,9 +271,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       permit_num,
       revision_num,
       trade_slug,
-      predicted_start: predictedStart.toISOString().slice(0, 10), // YYYY-MM-DD
+      predicted_start: predictedStart.toISOString().slice(0, 10),
       confidence,
       urgency,
+      target_window: targetWindow,
       calibration_method: cal.method,
       sample_size: cal.sample,
       median_days: cal.median,
@@ -347,14 +346,14 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       const params = [];
       for (let j = 0; j < batch.length; j++) {
         const f = batch[j];
-        const base = j * 11;
+        const base = j * 12;
         vals.push(
-          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}::int, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int)`,
+          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int, $${base + 12}::int)`,
         );
         params.push(
           f.permit_num, f.revision_num, f.trade_slug,
           f.predicted_start, f.confidence, f.urgency,
-          f.calibration_method, f.sample_size,
+          f.target_window, f.calibration_method, f.sample_size,
           f.median_days, f.p25_days, f.p75_days,
         );
       }
@@ -362,14 +361,15 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       await pool.query(
         `INSERT INTO trade_forecasts
            (permit_num, revision_num, trade_slug, predicted_start,
-            confidence, urgency, calibration_method, sample_size,
-            median_days, p25_days, p75_days)
+            confidence, urgency, target_window, calibration_method,
+            sample_size, median_days, p25_days, p75_days)
          VALUES ${vals.join(', ')}
          ON CONFLICT (permit_num, revision_num, trade_slug)
          DO UPDATE SET
            predicted_start = EXCLUDED.predicted_start,
            confidence = EXCLUDED.confidence,
            urgency = EXCLUDED.urgency,
+           target_window = EXCLUDED.target_window,
            calibration_method = EXCLUDED.calibration_method,
            sample_size = EXCLUDED.sample_size,
            median_days = EXCLUDED.median_days,

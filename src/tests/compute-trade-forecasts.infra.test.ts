@@ -133,13 +133,14 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/DO UPDATE SET/);
   });
 
-  it('uses 11 params per row (no computed_at in VALUES — DEFAULT handles it)', () => {
-    expect(content).toMatch(/j \* 11/);
-    // The INSERT column list must NOT include computed_at
+  it('uses 12 params per row (includes target_window, no computed_at)', () => {
+    expect(content).toMatch(/j \* 12/);
+    // The INSERT column list must include target_window
     const insertMatch = content.match(
       /INSERT INTO trade_forecasts\s*\([^)]+\)/,
     );
     expect(insertMatch).toBeTruthy();
+    expect(insertMatch![0]).toMatch(/target_window/);
     expect(insertMatch![0]).not.toMatch(/computed_at/);
   });
 
