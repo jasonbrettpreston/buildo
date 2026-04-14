@@ -1,5 +1,5 @@
 # Active Task: Advisory locks + transaction boundaries — WF3-03 (H-W1+H-W2)
-**Status:** Implementation — authorized via /proceed (PR-A in flight)
+**Status:** Implementation — PR-A SHIPPED `b91d8b2`; PR-B in flight
 **Workflow:** WF3 — Bug Fix
 **Domain Mode:** Backend/Pipeline
 **Finding:** H-W1 + H-W2 (paired) · 81-W1/W4, 82-W13, 83-W5/W6/W7, 84-W3, 85-W2/W3, 86-W1/W2, RC-W7
@@ -142,4 +142,24 @@ PostgreSQL `hashtext` returns int4. Compute in SQL via `SELECT hashtext($1)::int
 
 All deferred + rejected items logged in `docs/reports/review_followups.md`.
 
-**Status: PR-A READY FOR COMMIT — awaiting user authorization.**
+**Status: PR-A SHIPPED `b91d8b2`.**
+
+---
+
+## PR-B Execution Summary (post-WF6 + reviews)
+
+**Scope landed:**
+- `scripts/compute-opportunity-scores.js` — `ADVISORY_LOCK_ID = 81` on pinned `pool.connect()` client; outer try/finally; multi-batch UPDATE loop wrapped in `pipeline.withTransaction` (`pool.query` → `client.query` inside).
+- `scripts/update-tracked-projects.js` — `ADVISORY_LOCK_ID = 82` on pinned client + outer try/finally; existing `withTransaction` blocks unchanged (already covered atomicity).
+- `src/tests/{compute-opportunity-scores,update-tracked-projects}.infra.test.ts` — regex assertions for lock acquisition pattern + (81) `withTransaction` wrap; negative anchors against `pool.query`-based lock acquire/release.
+
+**Results:** Full suite 3,862/3,862 pass; lint + typecheck clean.
+
+## Adversarial + Independent Review Triage
+- **Independent (worktree):** 9 PASS / 0 FAIL / 2 WARN (both non-blocking) — test-expressiveness gap deferred; 81-W5 IS-DISTINCT-FROM overcount already tracked from holistic triage.
+- **DeepSeek:** 8 findings, all rejected as restatements / false positives / premature (1 HIGH "fragile lock release" + 3 MEDIUM same-class as PR-A + 4 LOW/NIT). Independent independently verified the rejection class.
+- **Gemini:** API 503'd both attempts during the review window; coverage from DeepSeek + Independent sufficient.
+
+All deferred + rejected items logged in `docs/reports/review_followups.md`.
+
+**Status: PR-B READY FOR COMMIT — awaiting user authorization. PR-C remains.**

@@ -76,4 +76,30 @@ describe('scripts/compute-opportunity-scores.js — script shape', () => {
     expect(content).toMatch(/strong/);
     expect(content).toMatch(/moderate/);
   });
+
+  it('acquires advisory lock 81 on a pinned pool.connect() client (WF3-03 PR-B / H-W1)', () => {
+    // Lock ID convention: lock_id = spec number. Mirrors the canonical
+    // pattern in classify-lifecycle-phase.js. Lock acquired on a dedicated
+    // `pool.connect()` client because session locks are bound to the
+    // backend that acquired them — `pool.query` would acquire on an
+    // ephemeral connection and the unlock would no-op (cf. 83-W5).
+    expect(content).toMatch(/const ADVISORY_LOCK_ID = 81/);
+    expect(content).toMatch(/await pool\.connect\(\)/);
+    expect(content).toMatch(/SELECT pg_try_advisory_lock\(\$1\)/);
+    expect(content).toMatch(/SELECT pg_advisory_unlock\(\$1\)/);
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+  });
+
+  it('wraps the multi-batch UPDATE loop in a single withTransaction (WF3-03 PR-B / H-W2 / 81-W1)', () => {
+    // Crash mid-loop used to leave trade_forecasts in mixed-vintage state
+    // (some rows had this run's scores, others had yesterday's). The full
+    // batch sequence now runs inside one transaction — crash → rollback.
+    expect(content).toMatch(/pipeline\.withTransaction/);
+    // Regression anchor: the inner UPDATE inside the for-loop must NOT
+    // bypass the transaction by going to pool.query.
+    expect(content).not.toMatch(
+      /for \(let i = 0[\s\S]{0,200}await pool\.query\(\s*`UPDATE trade_forecasts/,
+    );
+  });
 });

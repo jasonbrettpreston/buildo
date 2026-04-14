@@ -124,4 +124,19 @@ describe('scripts/update-tracked-projects.js — CRM assistant shape', () => {
     expect(content).toMatch(/stall_alerts/);
     expect(content).toMatch(/imminent_alerts/);
   });
+
+  it('acquires advisory lock 82 on a pinned pool.connect() client (WF3-03 PR-B / H-W1)', () => {
+    // Lock ID convention: lock_id = spec number. Mirrors classify-lifecycle-phase.js.
+    // Existing two pipeline.withTransaction blocks (memory-column UPDATEs +
+    // analytics UPSERT/zero-out) already cover atomicity (§9.1) — only the
+    // advisory lock was missing. Per-script lock prevents two concurrent
+    // runs from racing on tracked_projects memory columns and
+    // double-firing CRM alerts.
+    expect(content).toMatch(/const ADVISORY_LOCK_ID = 82/);
+    expect(content).toMatch(/await pool\.connect\(\)/);
+    expect(content).toMatch(/SELECT pg_try_advisory_lock\(\$1\)/);
+    expect(content).toMatch(/SELECT pg_advisory_unlock\(\$1\)/);
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+  });
 });

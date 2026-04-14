@@ -16,7 +16,40 @@
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs } = require('./lib/config-loader');
 
+// WF3-03 PR-B (H-W1): lock ID = spec number convention.
+const ADVISORY_LOCK_ID = 81;
+
 pipeline.run('compute-opportunity-scores', async (pool) => {
+  // ─── Concurrency guard — single-threaded scorer ──────────────
+  // Lock acquired on a DEDICATED `pool.connect()` client (mirrors
+  // classify-lifecycle-phase.js). pool.query would acquire on an
+  // ephemeral connection and the unlock would no-op (cf. 83-W5).
+  const lockClient = await pool.connect();
+  try {
+    const { rows: lockRows } = await lockClient.query(
+      'SELECT pg_try_advisory_lock($1) AS got',
+      [ADVISORY_LOCK_ID],
+    );
+    if (!lockRows[0].got) {
+      pipeline.log.info(
+        '[opportunity-scores]',
+        `Advisory lock ${ADVISORY_LOCK_ID} held by another instance — skipping this run.`,
+      );
+      pipeline.emitSummary({
+        records_total: 0, records_new: 0, records_updated: 0,
+        records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere',
+          advisory_lock_id: ADVISORY_LOCK_ID },
+      });
+      pipeline.emitMeta({}, {});
+      lockClient.release();
+      return;
+    }
+  } catch (lockErr) {
+    lockClient.release();
+    throw lockErr;
+  }
+
+  try {
   // ─── Load Control Panel via shared loader ──────────────────
   const { tradeConfigs, logicVars: vars } = await loadMarketplaceConfigs(pool, 'opportunity-scores');
 
@@ -106,34 +139,43 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Step 3: Batch UPDATE trade_forecasts.opportunity_score
+  // Step 3: Batch UPDATE trade_forecasts.opportunity_score (atomic)
   // ═══════════════════════════════════════════════════════════
+  // WF3-03 PR-B (H-W2 / 81-W1): wrap the multi-batch UPDATE loop in a
+  // single pipeline.withTransaction so a crash mid-loop rolls back to
+  // the pre-run state. Without this, the table would carry a mix of
+  // this-run and last-run scores, contaminating downstream consumers
+  // (compute-cost-estimates, update-tracked-projects, the lead feed).
   const BATCH_SIZE = 1000;
   let updated = 0;
 
-  for (let i = 0; i < updates.length; i += BATCH_SIZE) {
-    const batch = updates.slice(i, i + BATCH_SIZE);
-    const vals = [];
-    const params = [];
+  if (updates.length > 0) {
+    await pipeline.withTransaction(pool, async (client) => {
+      for (let i = 0; i < updates.length; i += BATCH_SIZE) {
+        const batch = updates.slice(i, i + BATCH_SIZE);
+        const vals = [];
+        const params = [];
 
-    for (let j = 0; j < batch.length; j++) {
-      const u = batch[j];
-      const base = j * 4;
-      vals.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::int)`);
-      params.push(u.permit_num, u.revision_num, u.trade_slug, u.score);
-    }
+        for (let j = 0; j < batch.length; j++) {
+          const u = batch[j];
+          const base = j * 4;
+          vals.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::int)`);
+          params.push(u.permit_num, u.revision_num, u.trade_slug, u.score);
+        }
 
-    await pool.query(
-      `UPDATE trade_forecasts tf
-          SET opportunity_score = v.score
-        FROM (VALUES ${vals.join(', ')}) AS v(permit_num, revision_num, trade_slug, score)
-       WHERE tf.permit_num = v.permit_num
-         AND tf.revision_num = v.revision_num
-         AND tf.trade_slug = v.trade_slug
-         AND tf.opportunity_score IS DISTINCT FROM v.score`,
-      params,
-    );
-    updated += batch.length;
+        await client.query(
+          `UPDATE trade_forecasts tf
+              SET opportunity_score = v.score
+            FROM (VALUES ${vals.join(', ')}) AS v(permit_num, revision_num, trade_slug, score)
+           WHERE tf.permit_num = v.permit_num
+             AND tf.revision_num = v.revision_num
+             AND tf.trade_slug = v.trade_slug
+             AND tf.opportunity_score IS DISTINCT FROM v.score`,
+          params,
+        );
+        updated += batch.length;
+      }
+    });
   }
 
   pipeline.log.info('[opportunity-scores]', `Updated ${updated} scores`);
@@ -175,4 +217,18 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
       trade_forecasts: ['opportunity_score'],
     },
   );
+  } finally {
+    // Release advisory lock on the SAME pinned client that acquired it.
+    try {
+      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+    } catch (unlockErr) {
+      pipeline.log.warn(
+        '[opportunity-scores]',
+        'Failed to release advisory lock — it will expire when the session ends.',
+        { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
+      );
+    } finally {
+      lockClient.release();
+    }
+  }
 });
