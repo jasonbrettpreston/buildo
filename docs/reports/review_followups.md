@@ -1028,3 +1028,23 @@ Date: 2026-04-14. Reviewers: DeepSeek (output OK), Claude independent (worktree)
 | NIT (rejected) | DeepSeek | "Comment 'mirrors classify-lifecycle-phase.js' doesn't verify pattern; extract to shared utility." | **REJECTED** — pattern is documented in spec 40 §3.5 + anchored by the canonical reference. Extracting a 30-line idiom into the SDK is premature for a 6-script ecosystem. | REJECTED |
 | NIT (rejected) | DeepSeek | "Tests only verify static patterns, not actual concurrent behavior." | **REJECTED** — codebase convention is regex-only infra tests. Same disposition as WF3-01/02/05 + PR-A. | REJECTED |
 | INFO | Operational | Gemini 503 throughout PR-B review window. DeepSeek + Independent provided sufficient coverage. | n/a | n/a |
+
+## WF3-03 PR-C (H-W1+H-W2, scripts 83 + 84) — review triage
+
+Date: 2026-04-14. Reviewers: Gemini, DeepSeek, Claude independent (worktree).
+
+| Sev | Source | Finding | Disposition | Status |
+|---|---|---|---|---|
+| WARN | Independent W-2 | 84 Phase 2c test backtick-only negative anchor — single-quote regression would slip through. | **FIXED** — broadened anchor to `['"`]INSERT INTO permit_phase_transitions`. | closed-in-WF3-03 |
+| WARN | Independent W-3 | Plan/code drift: active_task.md PR-C scope said "chunked execution / ctid pagination" but implementation is single-statement INSERT…SELECT (correct, atomic, idempotent). | **FIXED** — updated active_task.md PR-C scope to document why chunking was intentionally not implemented (WAL is incremental, NOT EXISTS guard, idempotency simplicity). | closed-in-WF3-03 |
+| WARN | Independent W-1 | Cosmetic: in 83, `let processed=0` etc. declarations sit between lock-acquire-catch and main `try` opener. Cannot throw in practice (primitive inits) but deviates from canonical pattern. | Defer — pure cosmetic; structural follow-up if future linter enforces this pattern. | OPEN |
+| NIT | Gemini | 83 lockErr catch's `lockClient.release()` could throw and mask the original error. | **FIXED** — wrapped in nested try/catch (symmetric with main finally pattern). | closed-in-WF3-03 |
+| HIGH | Gemini | flushBatch N+1 row-by-row INSERTs (5000 round trips per batch) — performance bottleneck. | Defer — pre-existing issue, not introduced by PR-C. Tracked from holistic triage. Future bulk-UPSERT WF would address it (multi-row VALUES or UNNEST or COPY FROM STDIN). | OPEN |
+| MEDIUM | Gemini | `lockClient` declared with `const` instead of `let` inside try block. | **REJECTED** — current pattern matches the canonical (84:161); mutation isn't needed because the lock client is acquired before the try opens. Refactor would add boilerplate without risk reduction. | REJECTED |
+| MEDIUM | Gemini | Tests are regex-based, brittle to formatting changes. | **REJECTED** — codebase convention is regex-only infra tests. Same disposition as every prior PR. | REJECTED |
+| CRITICAL (rejected) | DeepSeek | "Lock client double-release in early return path — released at L438 AND L580." | **REJECTED** — same false-positive class as DeepSeek's claims on PR-A and prior 84 review. The lock-not-acquired path returns at L442 BEFORE the outer `try { ... } finally { ... }` at L457 is ever entered. Independent verified all four exit paths release exactly once. | REJECTED |
+| HIGH (rejected) | DeepSeek | "Silent lock retention on unlock failure — could deadlock for hours." | **REJECTED** — `pool.end()` at script exit terminates the TCP session releasing all advisory locks; "hours" is overstated. Connection-destroy fallback is unnecessary operational hardening. | REJECTED |
+| MEDIUM (rejected) | DeepSeek | "Loss of error granularity — savepoints for row isolation." | **REJECTED** — intentional behaviour change documented in plan. ON CONFLICT idempotency makes batch retry safe; failed_rows audit metric now non-zero on real failures (fixes the original 83-W6 false-green). | REJECTED |
+| MEDIUM (rejected) | DeepSeek | "84 metric counts rolled-back rows — initialTransCount false-positive on rollback." | **REJECTED** — `initialTransCount` is assigned AFTER successful `await client.query(...)` inside the callback; if the INSERT throws, control jumps to withTransaction's ROLLBACK + rethrow, the assignment is skipped, the outer await rethrows. Independent confirmed. | REJECTED |
+| LOW (rejected) | DeepSeek | "Missing timeout handling on lock acquisition." | **REJECTED** — `pg_try_advisory_lock` is non-blocking by definition (returns false if held); no timeout needed. | REJECTED |
+| LOW + NIT | DeepSeek | "Hard-coded model_version=1; magic number." | Defer — pre-existing concern, not introduced by PR-C. Already tracked from holistic triage. | OPEN |

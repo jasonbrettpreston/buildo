@@ -344,6 +344,34 @@ describe('scripts/classify-lifecycle-phase.js — Phase 2 state machine', () => 
       /permit_phase_transitions.*?from_phase.*?to_phase.*?transitioned_at/,
     );
   });
+
+  it('Phase 2c initial-transition backfill is wrapped in withTransaction (WF3-03 PR-C / 84-W3)', () => {
+    // Pre-PR-C: a single bare pool.query INSERT INTO permit_phase_transitions
+    // ran outside any transaction. On first-run backfill it could write
+    // up to ~237K rows in one statement; a crash mid-write left partial
+    // state (and the NOT EXISTS guard would not re-attempt the partial
+    // set until the next dirty-classification cycle).
+    //
+    // Locate the Phase 2c block — from the section header through to
+    // the Phase 3 section header (slurp across the closing divider so
+    // the matched body covers the actual implementation lines, not just
+    // the section header).
+    const phase2cMatch = content.match(/Phase 2c:[\s\S]*?(?=Phase 3:)/);
+    expect(phase2cMatch, 'Phase 2c block not found').toBeTruthy();
+    const phase2cBody = phase2cMatch![0];
+    // withTransaction wrapper required.
+    expect(
+      phase2cBody,
+      'Phase 2c backfill must run inside pipeline.withTransaction',
+    ).toMatch(/pipeline\.withTransaction/);
+    // Regression anchor: bare pool.query single-statement INSERT is gone.
+    // Match both backtick-quoted and single/double-quoted SQL strings so a
+    // refactor that switches quote style still trips the regression.
+    expect(
+      phase2cBody,
+      'Phase 2c bare pool.query INSERT (no transaction) is forbidden',
+    ).not.toMatch(/await pool\.query\(\s*['"`]INSERT INTO permit_phase_transitions/);
+  });
 });
 
 describe('scripts/link-coa.js — permits.last_seen_at bump for downstream re-classification', () => {

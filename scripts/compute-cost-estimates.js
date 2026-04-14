@@ -73,7 +73,11 @@ const PLACEHOLDER_COST_THRESHOLD = 1000;
 let TRADE_ALLOCATION_PCT = {};
 let LIAR_GATE_THRESHOLD = 0.25;
 
-const ADVISORY_LOCK_ID = 74;
+// WF3-03 PR-C (83-W7): lock ID = spec number convention (was 74, a leftover
+// from spec 72_lead_cost_model.md). Aligns with classify-lifecycle-phase.js
+// (85), compute-trade-forecasts.js (85), compute-timing-calibration-v2.js (86),
+// compute-opportunity-scores.js (81), update-tracked-projects.js (82).
+const ADVISORY_LOCK_ID = 83;
 const BATCH_SIZE = 5000;
 
 // ---------------------------------------------------------------------------
@@ -331,54 +335,53 @@ async function flushBatch(pool, rows) {
   return await pipeline.withTransaction(pool, async (client) => {
     let inserted = 0;
     let updated = 0;
+    // WF3-03 PR-C (83-W6): NO per-row try/catch here. The pre-PR-C inner
+    // catch swallowed row errors and let withTransaction COMMIT anyway,
+    // producing missing rows + a permanently 0 failed_rows audit metric
+    // (false-green observability). Letting the row error propagate
+    // triggers withTransaction's ROLLBACK, the outer catch in the
+    // streaming loop increments failedBatches + failedRows, and the
+    // audit_table surfaces the failure.
     for (const r of rows) {
-      try {
-        const res = await client.query(
-          `INSERT INTO cost_estimates (
-             permit_num, revision_num, estimated_cost, cost_source, cost_tier,
-             cost_range_low, cost_range_high, premium_factor, complexity_score,
-             model_version, is_geometric_override, modeled_gfa_sqm,
-             trade_contract_values, computed_at
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, NOW())
-           ON CONFLICT (permit_num, revision_num) DO UPDATE
-             SET estimated_cost          = EXCLUDED.estimated_cost,
-                 cost_source             = EXCLUDED.cost_source,
-                 cost_tier               = EXCLUDED.cost_tier,
-                 cost_range_low          = EXCLUDED.cost_range_low,
-                 cost_range_high         = EXCLUDED.cost_range_high,
-                 premium_factor          = EXCLUDED.premium_factor,
-                 complexity_score        = EXCLUDED.complexity_score,
-                 model_version           = EXCLUDED.model_version,
-                 is_geometric_override   = EXCLUDED.is_geometric_override,
-                 modeled_gfa_sqm         = EXCLUDED.modeled_gfa_sqm,
-                 trade_contract_values   = EXCLUDED.trade_contract_values,
-                 computed_at             = NOW()
-           RETURNING (xmax = 0) AS inserted`,
-          [
-            r.permit_num,
-            r.revision_num,
-            r.estimated_cost,
-            r.cost_source,
-            r.cost_tier,
-            r.cost_range_low,
-            r.cost_range_high,
-            r.premium_factor,
-            r.complexity_score,
-            1, // model_version
-            r.is_geometric_override,
-            r.modeled_gfa_sqm,
-            JSON.stringify(r.trade_contract_values || {}),
-          ],
-        );
-        if (res.rows[0] && res.rows[0].inserted) inserted++;
-        else updated++;
-      } catch (err) {
-        pipeline.log.error('[compute-cost-estimates]', 'row upsert failed', {
-          permit_num: r.permit_num,
-          revision_num: r.revision_num,
-          err: err && err.message,
-        });
-      }
+      const res = await client.query(
+        `INSERT INTO cost_estimates (
+           permit_num, revision_num, estimated_cost, cost_source, cost_tier,
+           cost_range_low, cost_range_high, premium_factor, complexity_score,
+           model_version, is_geometric_override, modeled_gfa_sqm,
+           trade_contract_values, computed_at
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, NOW())
+         ON CONFLICT (permit_num, revision_num) DO UPDATE
+           SET estimated_cost          = EXCLUDED.estimated_cost,
+               cost_source             = EXCLUDED.cost_source,
+               cost_tier               = EXCLUDED.cost_tier,
+               cost_range_low          = EXCLUDED.cost_range_low,
+               cost_range_high         = EXCLUDED.cost_range_high,
+               premium_factor          = EXCLUDED.premium_factor,
+               complexity_score        = EXCLUDED.complexity_score,
+               model_version           = EXCLUDED.model_version,
+               is_geometric_override   = EXCLUDED.is_geometric_override,
+               modeled_gfa_sqm         = EXCLUDED.modeled_gfa_sqm,
+               trade_contract_values   = EXCLUDED.trade_contract_values,
+               computed_at             = NOW()
+         RETURNING (xmax = 0) AS inserted`,
+        [
+          r.permit_num,
+          r.revision_num,
+          r.estimated_cost,
+          r.cost_source,
+          r.cost_tier,
+          r.cost_range_low,
+          r.cost_range_high,
+          r.premium_factor,
+          r.complexity_score,
+          1, // model_version
+          r.is_geometric_override,
+          r.modeled_gfa_sqm,
+          JSON.stringify(r.trade_contract_values || {}),
+        ],
+      );
+      if (res.rows[0] && res.rows[0].inserted) inserted++;
+      else updated++;
     }
     return { inserted, updated };
   });
@@ -392,42 +395,58 @@ pipeline.run('compute-cost-estimates', async (pool) => {
   );
   LIAR_GATE_THRESHOLD = logicVars.liar_gate_threshold;
 
-  // Session-scoped advisory lock. Postgres auto-releases the lock when the
-  // connection closes, which the Pipeline SDK does on script exit — so even
-  // a crash mid-run doesn't leak the lock. We still call pg_advisory_unlock
-  // in the finally block for the happy path.
-  const lockRes = await pool.query('SELECT pg_try_advisory_lock($1) AS locked', [
-    ADVISORY_LOCK_ID,
-  ]);
-  if (!lockRes.rows[0] || !lockRes.rows[0].locked) {
-    pipeline.log.warn(
-      '[compute-cost-estimates]',
-      `Advisory lock ${ADVISORY_LOCK_ID} held by another process — exiting`,
+  // ─── Concurrency guard — single-threaded cost estimator ──────
+  // WF3-03 PR-C (83-W5): lock acquired on a DEDICATED `pool.connect()`
+  // client (not pool.query). pool.query checks out an ephemeral
+  // connection that returns to the pool immediately after the query,
+  // so the session-scoped advisory lock would be released when that
+  // connection is reaped, OR a different connection would be checked
+  // out for the unlock and silently no-op. Mirrors the canonical
+  // pattern in classify-lifecycle-phase.js.
+  const lockClient = await pool.connect();
+  try {
+    const { rows: lockRows } = await lockClient.query(
+      'SELECT pg_try_advisory_lock($1) AS got',
+      [ADVISORY_LOCK_ID],
     );
-    pipeline.emitSummary({
-      records_total: 0,
-      records_new: 0,
-      records_updated: 0,
-      records_meta: {
-        skipped: true,
-        reason: 'advisory_lock_held',
-        audit_table: {
-          phase: 14,
-          name: 'Cost Estimates',
-          verdict: 'SKIP',
-          rows: [
-            { metric: 'permits_processed', value: 0, threshold: null, status: 'SKIP' },
-            { metric: 'permits_inserted', value: 0, threshold: null, status: 'SKIP' },
-            { metric: 'permits_updated', value: 0, threshold: null, status: 'SKIP' },
-          ],
+    if (!lockRows[0].got) {
+      pipeline.log.warn(
+        '[compute-cost-estimates]',
+        `Advisory lock ${ADVISORY_LOCK_ID} held by another process — exiting`,
+      );
+      pipeline.emitSummary({
+        records_total: 0,
+        records_new: 0,
+        records_updated: 0,
+        records_meta: {
+          skipped: true,
+          reason: 'advisory_lock_held_elsewhere',
+          advisory_lock_id: ADVISORY_LOCK_ID,
+          audit_table: {
+            phase: 14,
+            name: 'Cost Estimates',
+            verdict: 'SKIP',
+            rows: [
+              { metric: 'permits_processed', value: 0, threshold: null, status: 'SKIP' },
+              { metric: 'permits_inserted', value: 0, threshold: null, status: 'SKIP' },
+              { metric: 'permits_updated', value: 0, threshold: null, status: 'SKIP' },
+            ],
+          },
         },
-      },
-    });
-    pipeline.emitMeta(
-      { permits: ['permit_num'] },
-      { cost_estimates: ['permit_num'] },
-    );
-    return;
+      });
+      pipeline.emitMeta(
+        { permits: ['permit_num'] },
+        { cost_estimates: ['permit_num'] },
+      );
+      lockClient.release();
+      return;
+    }
+  } catch (lockErr) {
+    // Nested try around release so a release failure doesn't mask the
+    // original lockErr (Gemini PR-C NIT — symmetric with the main
+    // finally block's pattern below).
+    try { lockClient.release(); } catch { /* swallow — original error wins */ }
+    throw lockErr;
   }
 
   let processed = 0;
@@ -548,6 +567,19 @@ pipeline.run('compute-cost-estimates', async (pool) => {
       },
     );
   } finally {
-    await pool.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+    // Release advisory lock on the SAME pinned client that acquired it.
+    // Lock release on a different connection would no-op silently (the
+    // bug 83-W5 documented).
+    try {
+      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+    } catch (unlockErr) {
+      pipeline.log.warn(
+        '[compute-cost-estimates]',
+        'Failed to release advisory lock — it will expire when the session ends.',
+        { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
+      );
+    } finally {
+      lockClient.release();
+    }
   }
 });

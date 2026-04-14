@@ -579,7 +579,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Phase 2c: backfill initial transition rows
+  // Phase 2c: backfill initial transition rows (atomic)
   // ═══════════════════════════════════════════════════════════
   //
   // For existing classified permits that have no transition history
@@ -587,23 +587,33 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // from_phase = NULL. This gives the calibration engine baseline
   // data from day 1.
   //
-  // Idempotent: NOT EXISTS guard. Second run = 0 rows.
-  const { rows: initialTransRows } = await pool.query(
-    `INSERT INTO permit_phase_transitions
-       (permit_num, revision_num, from_phase, to_phase, transitioned_at, permit_type, neighbourhood_id)
-     SELECT permit_num, revision_num, NULL, lifecycle_phase,
-            COALESCE(phase_started_at, NOW()),
-            permit_type, neighbourhood_id
-       FROM permits
-      WHERE lifecycle_phase IS NOT NULL
-        AND NOT EXISTS (
-          SELECT 1 FROM permit_phase_transitions t
-           WHERE t.permit_num = permits.permit_num
-             AND t.revision_num = permits.revision_num
-        )
-    RETURNING 1`,
-  );
-  const initialTransCount = initialTransRows.length;
+  // WF3-03 PR-C (84-W3): wrapped in pipeline.withTransaction so a
+  // first-run backfill that could write up to ~237K rows in one
+  // statement no longer leaves partial state on crash. The NOT EXISTS
+  // guard makes re-runs idempotent (subsequent runs see 0 rows after
+  // the backfill commits). The single-statement INSERT…SELECT runs
+  // fine inside one transaction at this row count — Postgres holds
+  // the WAL frame in memory and commits at COMMIT, with rollback on
+  // any error.
+  let initialTransCount = 0;
+  await pipeline.withTransaction(pool, async (client) => {
+    const { rows: initialTransRows } = await client.query(
+      `INSERT INTO permit_phase_transitions
+         (permit_num, revision_num, from_phase, to_phase, transitioned_at, permit_type, neighbourhood_id)
+       SELECT permit_num, revision_num, NULL, lifecycle_phase,
+              COALESCE(phase_started_at, NOW()),
+              permit_type, neighbourhood_id
+         FROM permits
+        WHERE lifecycle_phase IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM permit_phase_transitions t
+             WHERE t.permit_num = permits.permit_num
+               AND t.revision_num = permits.revision_num
+          )
+      RETURNING 1`,
+    );
+    initialTransCount = initialTransRows.length;
+  });
   if (initialTransCount > 0) {
     pipeline.log.info(
       '[classify-lifecycle-phase]',

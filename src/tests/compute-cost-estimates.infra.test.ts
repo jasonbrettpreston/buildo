@@ -17,9 +17,9 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     expect(content).toMatch(/pipeline\.run\(\s*['"]compute-cost-estimates['"]/);
   });
 
-  it('acquires advisory lock 74 via pg_try_advisory_lock', () => {
+  it('acquires advisory lock 83 via pg_try_advisory_lock (WF3-03 PR-C: was 74; lock_id = spec number)', () => {
     expect(content).toMatch(/pg_try_advisory_lock\(/);
-    expect(content).toMatch(/ADVISORY_LOCK_ID\s*=\s*74/);
+    expect(content).toMatch(/ADVISORY_LOCK_ID\s*=\s*83/);
   });
 
   it('releases advisory lock in finally block via pg_advisory_unlock', () => {
@@ -122,5 +122,49 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
 
   it('surfaces failed_rows as a WARN audit row when batch failures occur', () => {
     expect(content).toMatch(/metric:\s*['"]failed_rows['"]/);
+  });
+
+  it('uses ADVISORY_LOCK_ID = 83 (lock_id = spec number convention) (WF3-03 PR-C / 83-W7)', () => {
+    // Pre-PR-C the lock ID was 74 (a leftover from spec 72_lead_cost_model.md).
+    // Spec 40 §3.5 mandates lock_id = spec number — this script's spec is 83.
+    expect(content).toMatch(/const ADVISORY_LOCK_ID = 83/);
+    expect(content).not.toMatch(/const ADVISORY_LOCK_ID = 74/);
+  });
+
+  it('acquires advisory lock on a pinned pool.connect() client (WF3-03 PR-C / 83-W5)', () => {
+    // Pre-PR-C the lock used pool.query for both acquire and release. pg
+    // pool.query checks out an EPHEMERAL connection and returns it after
+    // the query completes, so the session-scoped advisory lock would be
+    // released when the connection is reaped (or persist on a different
+    // backend if a different connection was reused for the unlock). The
+    // unlock would no-op silently. Mirrors classify-lifecycle-phase.js.
+    expect(content).toMatch(/await pool\.connect\(\)/);
+    expect(content).toMatch(/SELECT pg_try_advisory_lock\(\$1\)/);
+    expect(content).toMatch(/SELECT pg_advisory_unlock\(\$1\)/);
+    // Negative anchor: must not use pool.query for the lock pair.
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+  });
+
+  it('does NOT swallow per-row errors inside flushBatch — let withTransaction rollback (WF3-03 PR-C / 83-W6)', () => {
+    // Pre-PR-C: the per-row try-catch inside flushBatch's withTransaction
+    // callback caught client.query errors, logged them, and continued.
+    // withTransaction then COMMITs anyway with missing rows. failed_rows
+    // counter stays at 0 even when 100s silently dropped — false-green
+    // observability. Outer try/catch around flushBatch (in the main
+    // streaming loop) is the correct level: row failure → batch rollback
+    // → failed_rows += batch.length.
+    //
+    // Locate flushBatch and verify there is NO inner try/catch wrapping
+    // the per-row client.query INSERT.
+    const flushBatchMatch = content.match(/async function flushBatch[\s\S]*?^}/m);
+    expect(flushBatchMatch, 'flushBatch function not found').toBeTruthy();
+    const flushBody = flushBatchMatch![0];
+    // The for-loop over rows must not contain a try/catch with
+    // client.query inside; the row error must propagate to withTransaction
+    // which rolls back and rethrows to the outer catch.
+    expect(flushBody, 'per-row try/catch inside flushBatch defeats withTransaction atomicity (83-W6)').not.toMatch(
+      /for \(const r of rows\)[\s\S]*?try\s*\{[\s\S]*?await client\.query/,
+    );
   });
 });

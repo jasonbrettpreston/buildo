@@ -49,7 +49,7 @@ Splitting into 3 PRs to keep each reviewable in isolation. Each PR runs its own 
 
 ### PR-C — 83 lock-pin fix + remove row-catch + 84 Phase 2c chunking
 - **83 (compute-cost-estimates.js):** restructure to use a pinned `pool.connect()` client for the advisory lock (mirror 84 pattern). Change `ADVISORY_LOCK_ID` from 74 → 83 (convention: lock ID = spec number). The existing `withTransaction(pool, ...)` calls at L331 stay using pool — only the lock acquire+release move to the pinned client. Remove the per-row try-catch at L375-381 inside flushBatch — let the row error propagate, withTransaction rolls back the entire batch, outer catch (L453-460) increments `failedBatches += 1` and `failedRows += batch.length`. This is the H-W6 fix that finally makes `failed_rows` non-zero on real failures.
-- **84 (classify-lifecycle-phase.js):** Phase 2c backfill at L591-605 — the unbatched `INSERT INTO permit_phase_transitions … SELECT … FROM permits WHERE NOT EXISTS (...)` runs as a single bare `pool.query`. Wrap in `pipeline.withTransaction` and switch to chunked execution: SELECT rows in pages of 5000 by `ctid`-based pagination OR stream via `pipeline.streamQuery` with batched INSERTs. The `NOT EXISTS` predicate ensures idempotency on retry. No new advisory lock needed — script already holds lock 85.
+- **84 (classify-lifecycle-phase.js):** Phase 2c backfill at L591-605 — the unbatched `INSERT INTO permit_phase_transitions … SELECT … FROM permits WHERE NOT EXISTS (...)` runs as a single bare `pool.query`. Wrap in `pipeline.withTransaction`. Single-statement `INSERT…SELECT` is left intact rather than chunked: PostgreSQL writes WAL incrementally during the single statement (no in-memory buffering of the full ~237K-row result), the `NOT EXISTS` predicate ensures idempotency on crash-then-retry, and chunking would require ctid pagination + a loop that complicates the idempotency guard. No new advisory lock needed — script already holds lock 85. (Independent PR-C review confirmed the unchunked approach is correctness-equivalent; original "chunked execution" plan wording was over-spec'd.)
 
 ## Technical Implementation Details
 
@@ -162,4 +162,24 @@ All deferred + rejected items logged in `docs/reports/review_followups.md`.
 
 All deferred + rejected items logged in `docs/reports/review_followups.md`.
 
-**Status: PR-B READY FOR COMMIT — awaiting user authorization. PR-C remains.**
+**Status: PR-B SHIPPED `dc67c4e`. PR-C READY FOR COMMIT.**
+
+---
+
+## PR-C Execution Summary (post-WF6 + reviews)
+
+**Scope landed:**
+- `scripts/compute-cost-estimates.js`: `ADVISORY_LOCK_ID` 74 → 83 (lock_id = spec number convention); lock acquired on pinned `pool.connect()` client + outer try/finally with logged-warn on unlock failure (fixes 83-W5/W7); per-row try/catch inside `flushBatch` REMOVED — row error now propagates to withTransaction → ROLLBACK → outer catch increments `failedBatches+failedRows` (fixes 83-W6 false-green).
+- `scripts/classify-lifecycle-phase.js`: Phase 2c initial-transition backfill wrapped in `pipeline.withTransaction`; bare `pool.query` INSERT replaced with `client.query` inside the transaction callback. Single-statement `INSERT…SELECT` left unchunked — atomicity provides crash safety, NOT EXISTS guard provides idempotency, WAL is written incrementally so no in-memory buffering of 237K rows (fixes 84-W3).
+- `src/tests/{compute-cost-estimates,classify-lifecycle-phase}.infra.test.ts`: regex assertions for new patterns; updated existing 74→83 anchor.
+
+**Results:** Full suite 3,866/3,866 pass; lint + typecheck clean.
+
+## Adversarial + Independent Review Triage
+- **Independent (worktree):** 10 PASS / 0 FAIL / 3 WARN. WARN-2 (test anchor) → **FIXED inline**; WARN-3 (plan/code drift on chunking) → **FIXED inline** (active_task wording updated); WARN-1 (cosmetic struct gap) → deferred.
+- **Gemini:** 1 HIGH (pre-existing N+1 in flushBatch) → deferred; 1 MEDIUM (let vs const cosmetic) → rejected; 1 NIT (catch-in-catch symmetry) → **FIXED inline**; 1 MEDIUM (regex tests) → rejected (codebase convention).
+- **DeepSeek:** 1 CRITICAL (double-release) → REJECTED (same false-positive class as every prior PR; lock-not-acquired path returns BEFORE outer try); 1 HIGH (silent unlock failure) → rejected (pool.end TCP-closes session); 2 MEDIUM (savepoints / rollback metric) → REJECTED as overstated; 2 LOW + 1 NIT → rejected/deferred (pre-existing or invalid).
+
+All deferred + rejected items logged in `docs/reports/review_followups.md`.
+
+**Status: PR-C READY FOR COMMIT — awaiting user authorization. WF3-03 complete after PR-C lands.**
