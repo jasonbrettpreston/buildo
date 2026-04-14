@@ -50,11 +50,11 @@ export const LIFECYCLE_PHASE_DISPLAY: Record<string, string> = {
   P19: 'Wind-down',
   P20: 'Closed',
 
-  // Orphan trade-permit lifecycle
+  // Orphan trade-permit lifecycle.
+  // WF3-04 (H-W14 / 84-W10): O4 removed — phantom phase, no classifier produces it.
   O1: 'Trade permit applied',
   O2: 'Trade permit active',
   O3: 'Trade permit stalled',
-  O4: 'Trade permit closed',
 };
 
 /**

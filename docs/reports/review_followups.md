@@ -128,6 +128,7 @@
 | MED | WF2 Phase 3 2026-04-12 Adversarial | lead_analytics rows are never deleted, only zeroed. Unbounded accumulation of dead (0,0) rows. Add periodic `DELETE WHERE counts=0 AND updated_at < now() - 90 days`. | Future cleanup | OPEN |
 | MED | WF2 Phase 3 2026-04-12 Independent | No behavioral test for multi-status GROUP BY (same permit saved + claimed). Shape tests only. | Future test hardening | OPEN |
 | LOW | WF3 092 2026-04-13 Independent | `let` module-scope reassignment for DB-loaded config (TRADE_ALLOCATION_PCT, LIAR_GATE_THRESHOLD, TRADE_TARGET_PHASE) is structurally fragile. A future developer calling these outside pipeline.run gets fallback values. Safer: pass as params. Not a current bug. | Future refactor | OPEN |
+| HIGH | WF3-04 2026-04-14 Independent | 82-W6 (`update-tracked-projects.js` L381): `records_updated: updates.length` is the pre-merge accumulator count, inflates telemetry when a single row has both stall+imminent deltas. Fix is one-liner: `records_updated: mergedUpdates.length`. Out of scope for WF3-04 (H-W14); file as standalone WF3. | Standalone WF3 | OPEN |
 
 ---
 

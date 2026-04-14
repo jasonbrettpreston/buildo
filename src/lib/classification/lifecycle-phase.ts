@@ -166,13 +166,14 @@ export const INSPECTION_PIPELINE_P18_SET: ReadonlySet<string> = new Set([
 ]);
 
 /** The full valid phase domain, including CoA phases (P1, P2). Exported for fuzz tests. */
+// WF3-04 (H-W14 / 84-W10): O4 removed — phantom phase, no classifier produces it.
 export const VALID_PHASES: ReadonlySet<string> = new Set([
   'P1', 'P2', 'P3', 'P4', 'P5', 'P6',
   'P7a', 'P7b', 'P7c', 'P7d',
   'P8', 'P9', 'P10', 'P11', 'P12', 'P13',
   'P14', 'P15', 'P16', 'P17', 'P18',
   'P19', 'P20',
-  'O1', 'O2', 'O3', 'O4',
+  'O1', 'O2', 'O3',
 ]);
 
 /**

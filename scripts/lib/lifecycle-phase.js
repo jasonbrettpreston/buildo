@@ -97,13 +97,14 @@ const INSPECTION_PIPELINE_P18_SET = new Set([
   'Rescheduled',
 ]);
 
+// WF3-04 (H-W14 / 84-W10): O4 removed — phantom phase with no classifier rule.
 const VALID_PHASES = new Set([
   'P1', 'P2', 'P3', 'P4', 'P5', 'P6',
   'P7a', 'P7b', 'P7c', 'P7d',
   'P8', 'P9', 'P10', 'P11', 'P12', 'P13',
   'P14', 'P15', 'P16', 'P17', 'P18',
   'P19', 'P20',
-  'O1', 'O2', 'O3', 'O4',
+  'O1', 'O2', 'O3',
 ]);
 
 const NORMALIZED_APPROVED_DECISIONS = new Set([
@@ -468,9 +469,18 @@ const TRADE_TARGET_PHASE = Object.freeze({
 });
 
 // Phase ordinals for forward-progression comparison. Single source of
-// truth — imported by compute-trade-forecasts.js, update-tracked-projects.js,
-// and compute-timing-calibration-v2.js. Previously duplicated across 3 files.
-// WF3 review fix: extracted to shared lib to prevent silent drift.
+// truth — imported by compute-trade-forecasts.js and
+// update-tracked-projects.js. Previously duplicated; extracted here to
+// prevent silent drift.
+//
+// WF3-04 (H-W14): O1/O2/O3 = 20 — orphan permits have a missing/
+// detached parent folder; their phase cannot be reliably progressed
+// through P9-P17 via inspections. Treating them as past all
+// work_phase_targets (max P17 = 9) makes isWindowClosed in
+// update-tracked-projects.js fire naturally, so orphan-tracked leads
+// auto-archive instead of silently accumulating. compute-trade-
+// forecasts.js still filters them via SKIP_PHASES (runs before
+// PHASE_ORDINAL lookup), so these ordinals don't affect forecasting.
 const PHASE_ORDINAL = Object.freeze({
   P3: -6, P4: -5, P5: -4, P6: -3,
   P7a: -2, P7b: -2, P7c: -2, P7d: -2,
@@ -478,6 +488,7 @@ const PHASE_ORDINAL = Object.freeze({
   P9: 1, P10: 2, P11: 3, P12: 4, P13: 5,
   P14: 6, P15: 7, P16: 8, P17: 9,
   P18: 4,
+  O1: 20, O2: 20, O3: 20,
 });
 
 module.exports = {

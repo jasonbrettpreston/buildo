@@ -23,11 +23,12 @@ const { loadMarketplaceConfigs } = require('./lib/config-loader');
 // the hardcoded shared lib if the DB query fails.
 let TRADE_TARGET_PHASE = TRADE_TARGET_PHASE_FALLBACK;
 
-// Phases that should NOT produce trade forecasts
+// Phases that should NOT produce trade forecasts.
+// WF3-04 (H-W14 / 84-W10): O4 removed — phantom phase, no classifier produces it.
 const SKIP_PHASES = new Set([
-  'P19', 'P20',              // terminal
-  'O1', 'O2', 'O3', 'O4',  // orphan (O4 is architecturally unreachable but defensive)
-  'P1', 'P2',               // CoA pre-permit
+  'P19', 'P20',        // terminal
+  'O1', 'O2', 'O3',    // orphan
+  'P1', 'P2',          // CoA pre-permit
 ]);
 
 // Pre-construction phases use ISSUED calibration instead of phase-to-phase.
@@ -392,7 +393,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
              AND pt.revision_num = tf.revision_num
              AND t.slug = tf.trade_slug
              AND pt.is_active = true
-             AND p.lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','O4','P1','P2')
+             AND p.lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','P1','P2')
              AND p.lifecycle_phase IS NOT NULL
         )
       RETURNING 1`,

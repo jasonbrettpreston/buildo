@@ -126,12 +126,45 @@ pipeline.run('update-tracked-projects', async (pool) => {
   let recoveryAlerts = 0;
   let imminentAlerts = 0;
 
+  // WF3-04 (H-W14 / 82-W7): defensive telemetry for lifecycle_phase
+  // values that are neither in PHASE_ORDINAL nor TERMINAL_PHASES.
+  // Without this, any future orphan-like value would silently render
+  // isWindowClosed=false forever with zero signal. Dedup by distinct
+  // value so one unknown phase doesn't spam N WARNs per nightly run.
+  let unknown_phase_skipped = 0;
+  const unknownPhasesSeen = new Set();
+
   for (const row of rows) {
     const targets = TRADE_TARGET_PHASE[row.trade_slug];
     if (!targets) continue; // unmapped trade — skip
 
     const currentOrdinal = PHASE_ORDINAL[row.lifecycle_phase];
     const targetOrdinal = PHASE_ORDINAL[targets.work_phase];
+
+    // Null lifecycle_phase = unclassified or dead-state permit (expected,
+    // not an anomaly). Skip silently without WARN to avoid polluting the
+    // "unknown phase" telemetry with routine null rows. Separate concern
+    // from 82-W4 (archive-on-null), which is out of scope for this WF3.
+    if (row.lifecycle_phase == null) {
+      continue;
+    }
+
+    // Defensive WARN for genuinely unknown phase values (non-null, not
+    // in PHASE_ORDINAL, not in TERMINAL_PHASES). See counter declaration.
+    if (currentOrdinal == null && !TERMINAL_PHASES.has(row.lifecycle_phase)) {
+      unknown_phase_skipped++;
+      if (!unknownPhasesSeen.has(row.lifecycle_phase)) {
+        unknownPhasesSeen.add(row.lifecycle_phase);
+        pipeline.log.warn(
+          '[tracked-projects]',
+          `Unknown lifecycle_phase="${row.lifecycle_phase}" — neither in PHASE_ORDINAL nor TERMINAL_PHASES. `
+            + 'Row will not auto-archive; investigate producer.',
+          { permit_num: row.permit_num, revision_num: row.revision_num,
+            trade_slug: row.trade_slug },
+        );
+      }
+      continue;
+    }
 
     // Window closed: permit physically passed the trade's work phase,
     // OR permit reached a terminal phase (P19/P20). Terminal phases
@@ -364,6 +397,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
       total_alerts: alerts.length,
       analytics_synced: analyticsSynced,
       analytics_zeroed: analyticsZeroed,
+      unknown_phase_skipped,
+      unknown_phase_values: [...unknownPhasesSeen],
       alerts,
     },
   });

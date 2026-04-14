@@ -57,12 +57,18 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/pt\.is_active = true/);
   });
 
-  it('skips terminal, orphan (including O4), and CoA phases', () => {
+  it('skips terminal, orphan, and CoA phases (WF3-04: O4 phantom removed)', () => {
+    // WF3-04 (H-W14 / 84-W10): O4 is a phantom phase — listed in
+    // VALID_PHASES / SKIP_PHASES but no classifier rule produces it.
+    // Removed from both JS and the SQL NOT IN filter.
     expect(content).toMatch(/SKIP_PHASES/);
     expect(content).toMatch(/'P19'/);
     expect(content).toMatch(/'P20'/);
     expect(content).toMatch(/'O1'/);
-    expect(content).toMatch(/'O4'/); // independent D3: defensive skip
+    expect(content).toMatch(/'O2'/);
+    expect(content).toMatch(/'O3'/);
+    // SKIP_PHASES set and SQL NOT IN must both exclude O4
+    expect(content).not.toMatch(/'O4'/);
   });
 
   it('purges ghost forecasts via NOT EXISTS against active permit_trades', () => {

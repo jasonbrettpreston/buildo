@@ -125,6 +125,50 @@ describe('scripts/update-tracked-projects.js — CRM assistant shape', () => {
     expect(content).toMatch(/imminent_alerts/);
   });
 
+  it('WF3-04 (H-W14): assigns orphan phases O1/O2/O3 high ordinals so isWindowClosed fires', () => {
+    // Producer/consumer contract: classify-lifecycle-phase.js writes
+    // O1/O2/O3 values, but PHASE_ORDINAL omitted them — currentOrdinal
+    // was always undefined, so isWindowClosed returned false and
+    // orphan-tracked leads never auto-archived (H-W14).
+    //
+    // Fix (D3=b pure ordinals): give orphans high ordinals (>= 10)
+    // so `currentOrdinal >= targetOrdinal` fires against any
+    // work_phase_target (max P17 = 9).
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const lib = require('../../scripts/lib/lifecycle-phase') as {
+      PHASE_ORDINAL: Record<string, number>;
+    };
+    expect(lib.PHASE_ORDINAL.O1, 'PHASE_ORDINAL missing O1').toBeDefined();
+    expect(lib.PHASE_ORDINAL.O2, 'PHASE_ORDINAL missing O2').toBeDefined();
+    expect(lib.PHASE_ORDINAL.O3, 'PHASE_ORDINAL missing O3').toBeDefined();
+
+    // Max work_phase_target is P17 (ordinal 9). Orphan ordinals must
+    // be strictly greater so isWindowClosed fires for any trade target.
+    const workPhases = ['P9', 'P10', 'P11', 'P12', 'P13', 'P14', 'P15', 'P16', 'P17'];
+    const maxWorkPhase = Math.max(
+      ...workPhases.map((p) => {
+        const v = lib.PHASE_ORDINAL[p];
+        expect(v, `PHASE_ORDINAL missing ${p}`).toBeDefined();
+        return v as number;
+      }),
+    );
+    expect(lib.PHASE_ORDINAL.O1!).toBeGreaterThan(maxWorkPhase);
+    expect(lib.PHASE_ORDINAL.O2!).toBeGreaterThan(maxWorkPhase);
+    expect(lib.PHASE_ORDINAL.O3!).toBeGreaterThan(maxWorkPhase);
+  });
+
+  it('WF3-04 (H-W14 / 82-W7): warns on unknown lifecycle_phase values (defensive telemetry)', () => {
+    // Closes 82-W7: before the fix, any lifecycle_phase value not in
+    // PHASE_ORDINAL and not in TERMINAL_PHASES would silently produce
+    // isWindowClosed=false forever with no telemetry. Add a
+    // deduped-per-value WARN + unknown_phase_skipped counter.
+    expect(content).toMatch(/unknown_phase_skipped/);
+    // The counter must be emitted in PIPELINE_SUMMARY records_meta
+    expect(content).toMatch(/unknown_phase_skipped/);
+    // And a WARN must be logged when the condition hits
+    expect(content).toMatch(/pipeline\.log\.warn/);
+  });
+
   it('acquires advisory lock 82 on a pinned pool.connect() client (WF3-03 PR-B / H-W1)', () => {
     // Lock ID convention: lock_id = spec number. Mirrors classify-lifecycle-phase.js.
     // Existing two pipeline.withTransaction blocks (memory-column UPDATEs +

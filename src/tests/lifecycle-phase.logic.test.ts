@@ -726,18 +726,21 @@ describe('Constant sets — integrity', () => {
     }
   });
 
-  test('VALID_PHASES covers all 24 expected values', () => {
+  test('VALID_PHASES covers all expected values (WF3-04: O4 phantom removed)', () => {
+    // WF3-04 (H-W14 / 84-W10): O4 is a phantom phase — listed in
+    // VALID_PHASES but no classifier rule produces it. Removed.
     const expected = [
       'P1', 'P2', 'P3', 'P4', 'P5', 'P6',
       'P7a', 'P7b', 'P7c', 'P7d',
       'P8', 'P9', 'P10', 'P11', 'P12', 'P13',
       'P14', 'P15', 'P16', 'P17', 'P18',
       'P19', 'P20',
-      'O1', 'O2', 'O3', 'O4',
+      'O1', 'O2', 'O3',
     ];
     for (const phase of expected) {
       expect(VALID_PHASES.has(phase)).toBe(true);
     }
+    expect(VALID_PHASES.has('O4')).toBe(false);
   });
 });
 
