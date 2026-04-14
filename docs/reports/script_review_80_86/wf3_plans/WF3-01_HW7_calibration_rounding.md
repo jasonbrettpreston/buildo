@@ -1,8 +1,7 @@
 # Active Task: Fix PERCENTILE_CONT ::int truncation in calibration
-**Status:** Implementation — authorized via /proceed
+**Status:** Planning
 **Domain Mode:** Backend/Pipeline
 **Finding:** H-W7 · 86-W3
-**Rollback Anchor:** `c9c1eb8` (fix(86_control_panel): wire deferred logic_variables + v1 chain removal)
 
 ## Context
 * **Goal:** Replace `::int` casts on `PERCENTILE_CONT` results with `ROUND(…)::int` so calibration medians are rounded rather than truncated. Current truncation introduces systematic downward bias (10.9 days → 10; compounds across multi-phase paths).
@@ -43,26 +42,4 @@
 - ✅ Shared Logic: Single file, 4 sites; paired p25/median/p75 must all land
 - ✅ Pipeline: §9.1 N/A (read-only percentile math), §9.3 idempotency preserved, §3.2 N/A (no new queries)
 
-**PLAN LOCKED. Do you authorize this Bug Fix plan? (y/n)** — YES (user /proceed)
-
----
-
-## Execution Summary (post-WF6)
-
-- ✅ **Rollback Anchor:** `c9c1eb8`
-- ✅ **State Verification:** migration 087 confirms `median_days INT`; consumer `compute-trade-forecasts.js:257` uses `cal.median` additively — rounding is safer than truncation.
-- ✅ **Spec Review:** N/A (algorithm undocumented; tracked as H-S40).
-- ✅ **Reproduction:** regex shape test asserting all PERCENTILE_CONT calls wrapped in ROUND (ratio-based).
-- ✅ **Red Light confirmed:** 12 bare `::int` sites detected → test failed.
-- ✅ **Fix:** 12 sites converted to `ROUND(PERCENTILE_CONT(...))::int` idiom matching v1 sibling (`compute-timing-calibration.js`).
-- ✅ **Pre-Review Self-Checklist:** verified sibling scripts (compute-cost-estimates, compute-opportunity-scores) have no analogous truncation paths; p25/p75 fixed alongside median at all 4 query sites.
-- ✅ **Green Light:** `npm run test` → 3846/3846 pass; `npm run lint` clean; `npm run typecheck` clean; calibration-related 42/42 pass.
-
-## Adversarial + Independent Review
-- Gemini: 1 CRITICAL (SQLi on `${STAGE_TO_PHASE_SQL}`) — REJECTED as false positive; 1 MEDIUM (brittle test count) — FIXED (ratio-based); 1 LOW (half-away-from-zero bias) — DEFERRED; 1 LOW (`::numeric` redundancy) — FIXED; 1 LOW (gitattributes) — DEFERRED; 1 NIT (`NULL::varchar`) — DEFERRED.
-- DeepSeek: 2 MEDIUM (brittle regex + string-only test) — FIXED (ratio-based shape test per codebase convention); 2 LOW/NIT duplicates of Gemini.
-- Claude Independent (worktree): FAIL-C5 (data-fixture test absent) — DEFERRED per codebase convention of regex-only infra tests; confirmed Gemini SQLi is false positive; approves otherwise. 9 PASS / 1 FAIL / 1 NOTE.
-
-All deferred items + rejected CRITICAL logged to `docs/reports/review_followups.md`.
-
-**Status: READY FOR COMMIT — awaiting user authorization.**
+**PLAN LOCKED. Do you authorize this Bug Fix plan? (y/n)**

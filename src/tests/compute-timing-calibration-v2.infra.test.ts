@@ -47,6 +47,35 @@ describe('scripts/compute-timing-calibration-v2.js — script shape', () => {
     expect(content).toMatch(/PERCENTILE_CONT\(0\.75\)/);
   });
 
+  it('rounds percentile results rather than truncating (H-W7 / 86-W3)', () => {
+    // PERCENTILE_CONT returns a float8; bare ::int truncates toward zero
+    // (10.9 → 10), producing systematic downward bias that compounds across
+    // multi-phase prediction paths. The fix is `ROUND(PERCENTILE_CONT(...))::int`.
+    //
+    // Ratio-based assertion: every PERCENTILE_CONT call must be wrapped in
+    // ROUND(...). Avoids hardcoding a site count so future additions/removals
+    // don't break this test, only drift in the rounding pattern does.
+    const allPercentile = content.match(/PERCENTILE_CONT\(/g) ?? [];
+    const wrappedInRound = content.match(/ROUND\(\s*PERCENTILE_CONT\(/g) ?? [];
+    expect(allPercentile.length, 'no PERCENTILE_CONT calls found — script shape changed').toBeGreaterThan(0);
+    expect(
+      wrappedInRound.length,
+      'every PERCENTILE_CONT must be wrapped in ROUND(...) to avoid truncation bias',
+    ).toBe(allPercentile.length);
+
+    // Regression anchor: assert no bare `::int` directly on a PERCENTILE_CONT
+    // result (i.e., no `...)::int` following the aggregate without an
+    // intervening ROUND closing paren). If someone reintroduces truncation,
+    // this fires.
+    const bareTruncate = content.match(
+      /PERCENTILE_CONT\([^)]+\) WITHIN GROUP \([^)]+\)::int/g,
+    );
+    expect(
+      bareTruncate,
+      'bare ::int cast on PERCENTILE_CONT result reintroduces truncation bias',
+    ).toBeNull();
+  });
+
   it('filters out same-phase pairs and negative gaps', () => {
     expect(content).toMatch(/from_phase <> to_phase/);
     expect(content).toMatch(/gap_days >= 0/);

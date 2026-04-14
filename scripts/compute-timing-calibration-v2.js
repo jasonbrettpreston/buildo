@@ -122,9 +122,9 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
          AND prev_date IS NOT NULL
     )
     SELECT from_phase, to_phase, permit_type,
-           PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY gap_days)::int AS median_days,
-           PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY gap_days)::int AS p25_days,
-           PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY gap_days)::int AS p75_days,
+           ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY gap_days))::int AS median_days,
+           ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY gap_days))::int AS p25_days,
+           ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY gap_days))::int AS p75_days,
            COUNT(*) AS sample_size
       FROM phase_pairs
      WHERE from_phase IS NOT NULL
@@ -164,9 +164,9 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
          AND prev_date IS NOT NULL
     )
     SELECT from_phase, to_phase, NULL::varchar AS permit_type,
-           PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY gap_days)::int AS median_days,
-           PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY gap_days)::int AS p25_days,
-           PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY gap_days)::int AS p75_days,
+           ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY gap_days))::int AS median_days,
+           ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY gap_days))::int AS p25_days,
+           ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY gap_days))::int AS p75_days,
            COUNT(*) AS sample_size
       FROM phase_pairs
      WHERE from_phase IS NOT NULL
@@ -209,9 +209,9 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
     SELECT 'ISSUED' AS from_phase,
            ${STAGE_TO_PHASE_SQL} AS to_phase,
            permit_type,
-           PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY inspection_date - issued_date)::int AS median_days,
-           PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY inspection_date - issued_date)::int AS p25_days,
-           PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY inspection_date - issued_date)::int AS p75_days,
+           ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY inspection_date - issued_date))::int AS median_days,
+           ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY inspection_date - issued_date))::int AS p25_days,
+           ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY inspection_date - issued_date))::int AS p75_days,
            COUNT(*) AS sample_size
       FROM first_inspection
      WHERE ${STAGE_TO_PHASE_SQL} IS NOT NULL
@@ -242,9 +242,9 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
     SELECT 'ISSUED' AS from_phase,
            ${STAGE_TO_PHASE_SQL} AS to_phase,
            NULL::varchar AS permit_type,
-           PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY inspection_date - issued_date)::int AS median_days,
-           PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY inspection_date - issued_date)::int AS p25_days,
-           PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY inspection_date - issued_date)::int AS p75_days,
+           ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY inspection_date - issued_date))::int AS median_days,
+           ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY inspection_date - issued_date))::int AS p25_days,
+           ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY inspection_date - issued_date))::int AS p75_days,
            COUNT(*) AS sample_size
       FROM first_inspection
      WHERE ${STAGE_TO_PHASE_SQL} IS NOT NULL

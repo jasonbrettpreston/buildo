@@ -931,3 +931,15 @@ Three user-reported bugs: (1) test feed tool throws `[object Object]` error on R
 | LOW | Adversarial (Probe 4) | `coa_stall_threshold = 0` means "feature off", not "flag immediately" — surprising UX. Not a bug, but undocumented in admin UI spec. | Admin UI copy when Control Panel card ships | OPEN |
 | LOW | Adversarial (Probe 5) / Convention | Project uses commented-out DOWN blocks. Adversarial flagged migration 094 as non-compliant with CLAUDE.md rule. Investigating reveals ALL project migrations (090-094) use the same commented pattern. | Spec clarification in CLAUDE.md §Backend Mode Rule 5 | OPEN |
 | INFO | User decision | v1 `compute_timing_calibration` removed from chain (Path A). `timing_calibration` table will go stale. `src/features/leads/lib/timing.ts` (spec 71 detail-page timing), `src/lib/admin/lead-feed-health.ts`, `scripts/refresh-snapshot.js` still read the stale table. | Future frontend WF — migrate timing.ts to phase_calibration | OPEN |
+
+## WF3-01 (H-W7 / 86-W3) — Calibration ROUND fix — deferred items
+
+Date: 2026-04-14. Reviewers: Gemini, DeepSeek, Claude independent (worktree).
+
+| Sev | Source | Finding | Disposition | Status |
+|---|---|---|---|---|
+| LOW | Gemini + DeepSeek | PostgreSQL `ROUND(numeric)` rounds half-away-from-zero → slight upward bias across large datasets vs round-half-to-even ("banker's rounding"). Current fix swaps truncation's downward bias for rounding's tiny upward bias. Statistically neutral approach would require `CASE` expression or custom function. | Defer — improvement over truncation regardless; consider in future recalibration WF if bias becomes observable in drift telemetry. | OPEN |
+| LOW | Gemini | Repo lacks `.gitattributes` — diff noise from CRLF/LF line-ending drift between contributors. | Defer — repo-wide concern, out of scope for H-W7. File as infra hardening WF1. | OPEN |
+| NIT | Gemini | `NULL::varchar AS permit_type` (L166, L244) cast is redundant when type can be inferred. | Defer — pre-existing pattern, cosmetic only. | OPEN |
+| FALSE POSITIVE | Gemini (CRITICAL) | "SQL injection via `${STAGE_TO_PHASE_SQL}` template interpolation." | Rejected — `STAGE_TO_PHASE_SQL` is a module-top-level string literal constant with no user-input taint path. Standard pattern used across all pipeline scripts. Verified by Claude independent review. | REJECTED |
+| INFO | Plan deviation | WF3-01 plan specified a `logic.test.ts` with data fixture asserting `ROUND(10.9)::int = 11` against a live DB. Repo convention (documented in `classify-lifecycle-phase.infra.test.ts` header) is regex-only infra tests; end-to-end correctness covered by separate SQL reproducer scripts in `scripts/quality/`. Shipped with ratio-based regex test; data-driven reproducer deferred. | Consider adding `scripts/quality/calibration-rounding-reproducer.sql` for manual DB-side verification in a future WF. | OPEN |
