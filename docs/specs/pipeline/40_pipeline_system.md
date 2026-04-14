@@ -144,6 +144,23 @@ Each step receives:
 - `PIPELINE_CHAIN={chain_id}` — lets scripts adjust behavior per chain
 - Step-specific env from `manifest.scripts[slug].env`
 - Chain-specific args from `manifest.scripts[slug].chain_args[chain_id]`
+
+### 3.5 Concurrency Guards (Advisory Lock Convention) — WF3-03
+
+Two lock layers prevent compound corruption from concurrent runs (RC-W7).
+
+**Per-script locks** (six scripts on the 80-86 marketplace tail today: 81/82/83/84/85/86; convention extends to any future per-script lock):
+- Lock ID = the spec number that owns the script (e.g., `compute-trade-forecasts.js` uses `pg_try_advisory_lock(85)`).
+- Acquired on a dedicated `pool.connect()` client held for the full run; **must not** use `pool.query` for acquire/release because session locks are bound to the backend that acquired them — `pool.query` checks out an ephemeral connection and the unlock would silently no-op (the bug 83-W5 documented).
+- On lock-held, the script emits a `PIPELINE_SUMMARY` with `records_meta.skipped = true` and `records_meta.reason = 'advisory_lock_held_elsewhere'`, then exits 0.
+- Release in nested `finally` with try/catch on the unlock query so an unlock failure doesn't mask the real error.
+
+**Chain-level lock** (`run-chain.js`):
+- Lock ID = `pg_try_advisory_lock(2, hashtext('chain_' || chain_id))` — the 2-arg form keeps chain locks in a distinct keyspace from per-script locks (1-arg form), so a `hashtext` collision with a spec number can never wedge a per-script lock. The leading `2` is a namespace marker.
+- Same pinned-`pool.connect()` discipline as per-script locks.
+- On lock-held, marks any pre-created `externalRunId` row as `cancelled` with a clear `error_message` (logged on failure, not silently swallowed), then exits 0.
+
+The two layers compose: the chain lock serialises orchestrator entry; per-script locks serialise individual writes if a step is also triggered standalone (admin manual re-run). The reference implementation pattern lives in `scripts/classify-lifecycle-phase.js` — see the lock-acquisition block at the top of `pipeline.run('classify-lifecycle-phase', …)` and the symmetrical release inside the outer `finally`. Line numbers omitted intentionally so this spec doesn't drift when the implementation is edited.
 </behavior>
 
 ---

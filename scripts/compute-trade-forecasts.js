@@ -94,7 +94,41 @@ function classifyConfidence(sampleSize, isFallback) {
   return 'low';
 }
 
+// WF3-03 (H-W1): lock ID = spec number convention.
+const ADVISORY_LOCK_ID = 85;
+
 pipeline.run('compute-trade-forecasts', async (pool) => {
+  // ─── Concurrency guard — single-threaded forecaster ──────────
+  // Lock acquired on a DEDICATED `pool.connect()` client (mirrors the
+  // canonical pattern in classify-lifecycle-phase.js). pool.query would
+  // acquire on an ephemeral connection and the unlock would no-op
+  // (cf. 83-W5).
+  const lockClient = await pool.connect();
+  try {
+    const { rows: lockRows } = await lockClient.query(
+      'SELECT pg_try_advisory_lock($1) AS got',
+      [ADVISORY_LOCK_ID],
+    );
+    if (!lockRows[0].got) {
+      pipeline.log.info(
+        '[trade-forecasts]',
+        `Advisory lock ${ADVISORY_LOCK_ID} held by another instance — skipping this run.`,
+      );
+      pipeline.emitSummary({
+        records_total: 0, records_new: 0, records_updated: 0,
+        records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere',
+          advisory_lock_id: ADVISORY_LOCK_ID },
+      });
+      pipeline.emitMeta({}, {});
+      lockClient.release();
+      return;
+    }
+  } catch (lockErr) {
+    lockClient.release();
+    throw lockErr;
+  }
+
+  try {
   // ─── Load Control Panel via shared loader ──────────────────
   const { tradeConfigs, logicVars } = await loadMarketplaceConfigs(pool, 'trade-forecasts');
 
@@ -327,109 +361,116 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Step 3b: Delete stale forecasts for permits now in terminal/orphan/dead phases
+  // Steps 3b + 4: stale-purge + batch UPSERT — atomic together
   // ═══════════════════════════════════════════════════════════
-  // When a permit transitions from P7c → P20 (closed), the script skips
-  // it (SKIP_PHASES). Without cleanup, the old forecast row persists with
-  // a stale urgency. The feed would show "delayed" for a closed permit.
-  // Independent D4 + adversarial Probe 4.
+  //
+  // WF3-03 (H-W2 / 85-W2): Both phases run inside a single
+  // pipeline.withTransaction so a crash between DELETE and the first
+  // UPSERT batch can no longer leave stale rows purged + new rows
+  // missing. The pre/post counts are also captured inside the
+  // transaction so telemetry deltas reflect the same atomic snapshot
+  // as the writes.
+  //
   // Ironclad ghost purge: deletes forecasts if EITHER the permit died
   // (terminal/orphan/dead phase) OR the specific trade was deactivated
   // on the permit. The NOT EXISTS ensures no orphan forecast rows
-  // persist between runs. This replaces the simpler IN-based DELETE
-  // that only caught phase-based invalidation.
-  const { rows: staleRows } = await pool.query(
-    `DELETE FROM trade_forecasts tf
-      WHERE NOT EXISTS (
-        SELECT 1 FROM permit_trades pt
-          JOIN permits p ON p.permit_num = pt.permit_num
-                        AND p.revision_num = pt.revision_num
-          JOIN trades t ON t.id = pt.trade_id
-         WHERE pt.permit_num = tf.permit_num
-           AND pt.revision_num = tf.revision_num
-           AND t.slug = tf.trade_slug
-           AND pt.is_active = true
-           AND p.lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','O4','P1','P2')
-           AND p.lifecycle_phase IS NOT NULL
-      )
-    RETURNING 1`,
-  );
-  const stalePurged = staleRows.length;
-  if (stalePurged > 0) {
-    pipeline.log.info(
-      '[trade-forecasts]',
-      `Purged ${stalePurged.toLocaleString()} stale forecasts for terminal/orphan/dead permits`,
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // Step 4: Batch UPSERT into trade_forecasts
-  // ═══════════════════════════════════════════════════════════
-  const { rows: preCount } = await pool.query(
-    'SELECT COUNT(*)::int AS n FROM trade_forecasts',
-  );
-  const preRowCount = preCount[0].n;
-
+  // persist between runs.
+  let stalePurged = 0;
   let upserted = 0;
-  if (forecasts.length > 0) {
-    const batches = [];
-    for (let i = 0; i < forecasts.length; i += FORECAST_BATCH_SIZE) {
-      batches.push(forecasts.slice(i, i + FORECAST_BATCH_SIZE));
-    }
+  let preRowCount = 0;
+  let postRowCount = 0;
 
-    for (let bi = 0; bi < batches.length; bi++) {
-      const batch = batches[bi];
-      const vals = [];
-      const params = [];
-      for (let j = 0; j < batch.length; j++) {
-        const f = batch[j];
-        const base = j * 12;
-        vals.push(
-          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int, $${base + 12}::int)`,
-        );
-        params.push(
-          f.permit_num, f.revision_num, f.trade_slug,
-          f.predicted_start, f.confidence, f.urgency,
-          f.target_window, f.calibration_method, f.sample_size,
-          f.median_days, f.p25_days, f.p75_days,
-        );
-      }
-
-      await pool.query(
-        `INSERT INTO trade_forecasts
-           (permit_num, revision_num, trade_slug, predicted_start,
-            confidence, urgency, target_window, calibration_method,
-            sample_size, median_days, p25_days, p75_days)
-         VALUES ${vals.join(', ')}
-         ON CONFLICT (permit_num, revision_num, trade_slug)
-         DO UPDATE SET
-           predicted_start = EXCLUDED.predicted_start,
-           confidence = EXCLUDED.confidence,
-           urgency = EXCLUDED.urgency,
-           target_window = EXCLUDED.target_window,
-           calibration_method = EXCLUDED.calibration_method,
-           sample_size = EXCLUDED.sample_size,
-           median_days = EXCLUDED.median_days,
-           p25_days = EXCLUDED.p25_days,
-           p75_days = EXCLUDED.p75_days,
-           computed_at = NOW()`,
-        params,
+  await pipeline.withTransaction(pool, async (client) => {
+    const { rows: staleRows } = await client.query(
+      `DELETE FROM trade_forecasts tf
+        WHERE NOT EXISTS (
+          SELECT 1 FROM permit_trades pt
+            JOIN permits p ON p.permit_num = pt.permit_num
+                          AND p.revision_num = pt.revision_num
+            JOIN trades t ON t.id = pt.trade_id
+           WHERE pt.permit_num = tf.permit_num
+             AND pt.revision_num = tf.revision_num
+             AND t.slug = tf.trade_slug
+             AND pt.is_active = true
+             AND p.lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','O4','P1','P2')
+             AND p.lifecycle_phase IS NOT NULL
+        )
+      RETURNING 1`,
+    );
+    stalePurged = staleRows.length;
+    if (stalePurged > 0) {
+      pipeline.log.info(
+        '[trade-forecasts]',
+        `Purged ${stalePurged.toLocaleString()} stale forecasts for terminal/orphan/dead permits`,
       );
-      upserted += batch.length;
+    }
 
-      if ((bi + 1) % 10 === 0 || bi === batches.length - 1) {
-        pipeline.log.info(
-          '[trade-forecasts]',
-          `Batch ${bi + 1}/${batches.length} (${upserted.toLocaleString()} upserted)`,
+    const { rows: preCount } = await client.query(
+      'SELECT COUNT(*)::int AS n FROM trade_forecasts',
+    );
+    preRowCount = preCount[0].n;
+
+    if (forecasts.length > 0) {
+      const batches = [];
+      for (let i = 0; i < forecasts.length; i += FORECAST_BATCH_SIZE) {
+        batches.push(forecasts.slice(i, i + FORECAST_BATCH_SIZE));
+      }
+
+      for (let bi = 0; bi < batches.length; bi++) {
+        const batch = batches[bi];
+        const vals = [];
+        const params = [];
+        for (let j = 0; j < batch.length; j++) {
+          const f = batch[j];
+          const base = j * 12;
+          vals.push(
+            `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int, $${base + 12}::int)`,
+          );
+          params.push(
+            f.permit_num, f.revision_num, f.trade_slug,
+            f.predicted_start, f.confidence, f.urgency,
+            f.target_window, f.calibration_method, f.sample_size,
+            f.median_days, f.p25_days, f.p75_days,
+          );
+        }
+
+        await client.query(
+          `INSERT INTO trade_forecasts
+             (permit_num, revision_num, trade_slug, predicted_start,
+              confidence, urgency, target_window, calibration_method,
+              sample_size, median_days, p25_days, p75_days)
+           VALUES ${vals.join(', ')}
+           ON CONFLICT (permit_num, revision_num, trade_slug)
+           DO UPDATE SET
+             predicted_start = EXCLUDED.predicted_start,
+             confidence = EXCLUDED.confidence,
+             urgency = EXCLUDED.urgency,
+             target_window = EXCLUDED.target_window,
+             calibration_method = EXCLUDED.calibration_method,
+             sample_size = EXCLUDED.sample_size,
+             median_days = EXCLUDED.median_days,
+             p25_days = EXCLUDED.p25_days,
+             p75_days = EXCLUDED.p75_days,
+             computed_at = NOW()`,
+          params,
         );
+        upserted += batch.length;
+
+        if ((bi + 1) % 10 === 0 || bi === batches.length - 1) {
+          pipeline.log.info(
+            '[trade-forecasts]',
+            `Batch ${bi + 1}/${batches.length} (${upserted.toLocaleString()} upserted)`,
+          );
+        }
       }
     }
-  }
 
-  const { rows: postCount } = await pool.query(
-    'SELECT COUNT(*)::int AS n FROM trade_forecasts',
-  );
-  const postRowCount = postCount[0].n;
+    const { rows: postCount } = await client.query(
+      'SELECT COUNT(*)::int AS n FROM trade_forecasts',
+    );
+    postRowCount = postCount[0].n;
+  });
+
   const newRows = Math.max(0, postRowCount - preRowCount);
 
   // Urgency distribution for telemetry
@@ -463,4 +504,18 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       trade_forecasts: ['permit_num', 'revision_num', 'trade_slug', 'predicted_start', 'confidence', 'urgency', 'calibration_method', 'sample_size', 'median_days', 'p25_days', 'p75_days'],
     },
   );
+  } finally {
+    // Release advisory lock on the SAME pinned client that acquired it.
+    try {
+      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+    } catch (unlockErr) {
+      pipeline.log.warn(
+        '[trade-forecasts]',
+        'Failed to release advisory lock — it will expire when the session ends.',
+        { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
+      );
+    } finally {
+      lockClient.release();
+    }
+  }
 });

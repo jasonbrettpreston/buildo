@@ -92,6 +92,36 @@ describe('scripts/compute-timing-calibration-v2.js — script shape', () => {
     expect(content).toMatch(/TO_ORDINAL_SQL.*>.*FROM_ORDINAL_SQL/);
   });
 
+  it('acquires advisory lock 86 on a pinned pool.connect() client (WF3-03 / H-W1)', () => {
+    // Lock ID convention: lock_id = spec number. Mirrors the canonical
+    // pattern in classify-lifecycle-phase.js. Lock MUST be acquired on a
+    // dedicated `pool.connect()` client because session locks are bound to
+    // the backend that acquired them — `pool.query` would acquire on an
+    // ephemeral connection and the unlock would no-op (cf. 83-W5).
+    expect(content).toMatch(/const ADVISORY_LOCK_ID = 86/);
+    expect(content).toMatch(/await pool\.connect\(\)/);
+    expect(content).toMatch(/SELECT pg_try_advisory_lock\(\$1\)/);
+    expect(content).toMatch(/SELECT pg_advisory_unlock\(\$1\)/);
+    // Negative anchor: must not use pool.query for the lock pair (the
+    // 83-style leak). Tightly scoped regex avoids cross-block false hits.
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+  });
+
+  it('replaces N+1 UPSERT loop with single multi-row VALUES inside withTransaction (WF3-03 / H-W2 / 86-W1)', () => {
+    // Per-row UPSERT inside a for-loop = N round-trips per run + no atomic
+    // crash recovery. Replaced with a single multi-row INSERT … VALUES (…),(…)
+    // wrapped in pipeline.withTransaction.
+    expect(content).toMatch(/pipeline\.withTransaction/);
+    // Multi-row VALUES with parameterized placeholders (e.g. `$1, $2, $3, …`)
+    expect(content).toMatch(/INSERT INTO phase_calibration[\s\S]*?VALUES\s+\$\{/);
+    // Regression anchor: the per-row loop pattern is gone. The old code did
+    // `for (const row of allRows) { await pool.query(`INSERT … VALUES ($1,…)`, [row.from_phase, …]); }`.
+    expect(content).not.toMatch(
+      /for \(const row of allRows\)[\s\S]{0,200}await pool\.query/,
+    );
+  });
+
   it('computes ISSUED → first-phase calibration', () => {
     expect(content).toMatch(/'ISSUED' AS from_phase/);
     expect(content).toMatch(/DISTINCT ON \(i\.permit_num\)/);

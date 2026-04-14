@@ -980,3 +980,32 @@ Date: 2026-04-14. Reviewers: DeepSeek, Claude independent (worktree). Gemini 503
 | NIT (rejected) | DeepSeek | Tests use regex shape-matching, not AST or behavioural. | **REJECTED** — codebase convention per `classify-lifecycle-phase.infra.test.ts` header. Already deferred similarly in WF3-01/02. | REJECTED |
 | NIT | DeepSeek | Comment claims "callers should always pass the per-trade value" but the default parameter undermines this. | Defer — trivial wording polish. | OPEN |
 | INFO | Operational | Gemini API 503 throughout this review window. DeepSeek + independent review provided sufficient coverage. Re-run Gemini if disagreement surfaces in production. | n/a | n/a |
+
+## WF3-03 PR-A (H-W1+H-W2, scripts 85 + 86 + run-chain) — review triage
+
+Date: 2026-04-14. Reviewers: Gemini, DeepSeek (output empty/timeout — re-run pending), Claude independent (worktree).
+
+| Sev | Source | Finding | Disposition | Status |
+|---|---|---|---|---|
+| CRITICAL | Independent FAIL-1 | Script 86 pre-count was outside the `withTransaction` (script 85 had it correctly inside). Telemetry delta could race with concurrent writers. | **FIXED** — moved `preRowCount` capture inside `withTransaction` callback alongside post-count. | closed-in-WF3-03 |
+| CRITICAL | Gemini | Script 86 single multi-row INSERT had no parameter cap — would fail at ~9362 rows (65535/7). | **FIXED** — added `CALIBRATION_BATCH_SIZE = 5000` chunking inside `withTransaction`. Atomicity preserved (chunks share the same transaction). | closed-in-WF3-03 |
+| MEDIUM | Gemini | run-chain lock-held early-return swallowed `UPDATE pipeline_runs … SET status='cancelled'` errors silently with `.catch(() => {})`. | **FIXED** — replaced with logged catch via `pipeline.log.error`; failure to cancel an external run row now surfaces in logs. | closed-in-WF3-03 |
+| LOW | Gemini | Theoretical `hashtext('chain_X')` collision with a per-script lock ID (e.g., `85`) — both used the 1-arg `pg_try_advisory_lock` keyspace. | **FIXED** — chain lock switched to 2-arg form `pg_try_advisory_lock(2, hashtext(...))`. PostgreSQL keeps 1-arg and 2-arg lock keyspaces fully separate, so collision is now impossible by construction. Spec §3.5 + chain.logic.test.ts updated. | closed-in-WF3-03 |
+| LOW | Independent WARN-3 | Spec §3.5 said "eight scripts" but listed six. | **FIXED** — wording corrected to "six scripts on the 80-86 marketplace tail today". | closed-in-WF3-03 |
+| HIGH | Gemini | "Connection leak if error occurs after chain lock acquired but before step loop" — `chainLockClient.release()` not called from the fatal handler. | Defer — `_pool.end()` in the fatal handler closes the underlying TCP session, which causes PostgreSQL to release ALL session-level advisory locks on that connection. No phantom DB-side lock. The pool client is also reaped on process exit. Code-quality concern (explicit `try/finally` would be cleaner) but not a correctness/leak bug. | OPEN |
+| WARN | Independent WARN-1 | Same finding as Gemini HIGH from a different angle: fatal handler omits explicit `chainLockClient.release()`. | Same disposition — defer; rely on `pool.end()` TCP-close to release. | OPEN |
+| INFO | Operational | DeepSeek output file came back 0 bytes — background task killed/hung mid-stream. Retry pending. Independent + Gemini provided sufficient coverage; if DeepSeek surfaces a unique CRITICAL on retry, address before commit. | n/a | n/a |
+
+## WF3-03 PR-A — DeepSeek retry triage (addendum to PR-A review)
+
+| Sev | DeepSeek finding | Disposition | Status |
+|---|---|---|---|
+| HIGH | "Returning after lock acquisition without releasing... outer finally still executes... double-release" (compute-timing-calibration-v2.js) | **REJECTED** — same false-positive class as DeepSeek's earlier 84 review (rejected by both Independent and Claude-adv). The lock-not-acquired path releases once and returns BEFORE the outer try block; outer finally only runs when outer try entered. Verified by re-reading the file. | REJECTED |
+| CRITICAL | "Missing transaction rollback on lock acquisition failure" / "lock persists if script crashes between acquire and withTransaction" (86 + 85) | **REJECTED** — outer try/finally guarantees release on any throw inside the try body, including throws between lock-acquire and withTransaction. Session-level locks also auto-release on connection close (TCP). Not a real production hazard. | REJECTED |
+| HIGH | Script 86 no batch size limit | **ALREADY ADDRESSED** in this PR via `CALIBRATION_BATCH_SIZE = 5000` chunking. DeepSeek reviewed the pre-fix diff. | n/a |
+| MEDIUM | Silent .catch in run-chain external-run cancellation | **ALREADY ADDRESSED** in this PR — replaced with logged `pipeline.log.error`. DeepSeek reviewed the pre-fix diff. | n/a |
+| MEDIUM | DELETE NOT EXISTS performance bottleneck risk | Defer — pre-existing query unchanged structurally by this PR (only wrapped in `withTransaction`). Index optimization is separate concern. | OPEN |
+| MEDIUM | "Chain lock ID collision risk between different chain IDs (hashtext collision)" | Defer — collision space 2^32 vs 4 chain IDs ≈ negligible. The 2-arg fix already addresses the script↔chain collision; cross-chain hashtext collision behaviour is "two chains can't run concurrently" (annoying, not corrupting). | OPEN |
+| LOW | Spec §3.5 references line numbers in classify-lifecycle-phase.js — would drift with edits | **FIXED** — line numbers removed; pattern referenced by structural anchor (lock-acquisition block at top of `pipeline.run` and symmetrical release in outer finally). | closed-in-WF3-03 |
+| LOW | Unlock failure has no retry-with-backoff | **REJECTED** — logged as warn; lock auto-expires on session end (documented). Retry would mask intermittent network errors that should surface. | REJECTED |
+| NIT | Hardcoded lock IDs (85, 86) are magic numbers | **REJECTED** — the lock-ID convention IS the spec number; documented in spec 40 §3.5. Indirecting through a config would dilute the convention. | REJECTED |

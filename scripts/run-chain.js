@@ -61,6 +61,57 @@ async function run() {
 
   console.log(`\n=== Chain: ${chainId} (${steps.length} steps)${forceMode ? ' [FORCE]' : ''} ===\n`);
 
+  // ─── Concurrency guard — single-threaded chain orchestration (WF3-03 / RC-W7) ──
+  // Two simultaneous run-chain.js invocations of the same chain (manual
+  // re-trigger during nightly + cron overlap) would otherwise race on
+  // shared mutations. Per-script locks (81/82/85/86) close most of the
+  // gap; this chain-level lock closes the rest by serialising the entire
+  // step sequence including unprotected steps.
+  //
+  // Lock ID uses the TWO-INT form `pg_try_advisory_lock(2, hashtext(...))`.
+  // PostgreSQL keeps the 1-arg and 2-arg key spaces fully separate, so
+  // chain locks can never collide with per-script locks (which use the
+  // 1-arg form with the spec number). The leading `2` is a namespace
+  // marker — chain locks live in space `2`, future lock-types could use
+  // other namespaces. Acquired on a pinned `pool.connect()` client because
+  // session locks are bound to the backend that acquired them (cf. 83-W5).
+  const chainLockClient = await pool.connect();
+  let chainLockHeld = false;
+  try {
+    const { rows: lockRows } = await chainLockClient.query(
+      `SELECT pg_try_advisory_lock(2, hashtext('chain_' || $1)) AS got`,
+      [chainId],
+    );
+    chainLockHeld = lockRows[0].got;
+    if (!chainLockHeld) {
+      pipeline.log.warn(
+        '[run-chain]',
+        `Chain lock for "${chainId}" already held by another orchestrator instance — exiting`,
+      );
+      // Mark any pre-created external run as cancelled so it doesn't
+      // ghost in the UI as 'running' forever. Log (not silently swallow)
+      // any failure so an inconsistent UI state surfaces as an error.
+      if (externalRunId) {
+        await pool.query(
+          `UPDATE pipeline_runs SET status = 'cancelled', completed_at = NOW(),
+                 error_message = $1 WHERE id = $2`,
+          ['Chain lock held by concurrent orchestrator', externalRunId],
+        ).catch((dbErr) => pipeline.log.error(
+          '[run-chain]',
+          'Failed to mark externalRunId as cancelled after lock-held exit',
+          { externalRunId, err: dbErr instanceof Error ? dbErr.message : String(dbErr) },
+        ));
+      }
+      chainLockClient.release();
+      await pool.end().catch(() => {});
+      return;
+    }
+  } catch (lockErr) {
+    chainLockClient.release();
+    await pool.end().catch(() => {});
+    throw lockErr;
+  }
+
   let chainRunId = null;
   const chainStart = Date.now();
   if (externalRunId) {
@@ -525,6 +576,26 @@ async function run() {
   }
   if (gateSkipped) {
     pipeline.log.info('[run-chain]', '0 new records — downstream steps skipped (stale data, not a failure)');
+  }
+
+  // Release chain lock on the SAME pinned client that acquired it,
+  // using the matching 2-arg form (1-arg `pg_advisory_unlock` would
+  // operate on a different keyspace and silently no-op).
+  if (chainLockHeld) {
+    try {
+      await chainLockClient.query(
+        `SELECT pg_advisory_unlock(2, hashtext('chain_' || $1))`,
+        [chainId],
+      );
+    } catch (unlockErr) {
+      pipeline.log.warn(
+        '[run-chain]',
+        'Failed to release chain advisory lock — it will expire when the session ends.',
+        { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
+      );
+    } finally {
+      chainLockClient.release();
+    }
   }
 
   await pool.end().catch((dbErr) => { pipeline.log.warn('[run-chain]', `pool.end failed: ${dbErr.message}`); });

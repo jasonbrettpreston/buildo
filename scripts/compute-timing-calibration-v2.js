@@ -90,7 +90,43 @@ const PHASE_ORDINAL_SQL = `
 const FROM_ORDINAL_SQL = PHASE_ORDINAL_SQL.replace(/phase/g, 'from_phase');
 const TO_ORDINAL_SQL = PHASE_ORDINAL_SQL.replace(/phase/g, 'to_phase');
 
+// WF3-03 (H-W1): lock ID = spec number convention.
+const ADVISORY_LOCK_ID = 86;
+
 pipeline.run('compute-timing-calibration-v2', async (pool) => {
+  // ─── Concurrency guard — single-threaded calibrator ──────────
+  // Lock acquired on a DEDICATED `pool.connect()` client (NOT pool.query).
+  // pool.query checks out an ephemeral connection that returns to the pool
+  // after the query, so the session-level advisory lock would be released
+  // when the connection is reaped — exactly the bug 83-W5 documented for
+  // compute-cost-estimates.js. Mirrors the canonical pattern in
+  // classify-lifecycle-phase.js (lock 85).
+  const lockClient = await pool.connect();
+  try {
+    const { rows: lockRows } = await lockClient.query(
+      'SELECT pg_try_advisory_lock($1) AS got',
+      [ADVISORY_LOCK_ID],
+    );
+    if (!lockRows[0].got) {
+      pipeline.log.info(
+        '[calibration-v2]',
+        `Advisory lock ${ADVISORY_LOCK_ID} held by another instance — skipping this run.`,
+      );
+      pipeline.emitSummary({
+        records_total: 0, records_new: 0, records_updated: 0,
+        records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere',
+          advisory_lock_id: ADVISORY_LOCK_ID },
+      });
+      pipeline.emitMeta({}, {});
+      lockClient.release();
+      return;
+    }
+  } catch (lockErr) {
+    lockClient.release();
+    throw lockErr;
+  }
+
+  try {
   // ═══════════════════════════════════════════════════════════
   // Step 1: Compute phase-to-phase calibration from inspection pairs
   // ═══════════════════════════════════════════════════════════
@@ -264,42 +300,70 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
   const allRows = [...phasePairRows, ...allTypesRows, ...issuedRows, ...issuedAllRows];
   pipeline.log.info('[calibration-v2]', `Total calibration rows to upsert: ${allRows.length}`);
 
-  // Track new vs updated for telemetry (independent review Defect 1)
-  const { rows: preCount } = await pool.query(
-    'SELECT COUNT(*)::int AS n FROM phase_calibration',
-  );
-  const preRowCount = preCount[0].n;
-
+  // WF3-03 (H-W2 / 86-W1): atomic UPSERT pipeline with chunking.
+  //
+  // Chunk size guards the §9.2 PostgreSQL 65535-parameter limit
+  // (7 cols × CALIBRATION_BATCH_SIZE params per chunk). At today's
+  // geometry allRows ≈ 500–800; cap is defensive against future phase-
+  // taxonomy growth without requiring a code change. Independent +
+  // Gemini PR-A review.
+  //
+  // Pre/post counts are captured INSIDE withTransaction so telemetry
+  // deltas reflect the same atomic snapshot as the writes (would
+  // otherwise race with concurrent writers — though the advisory lock
+  // mitigates this in practice). Fixes independent FAIL-1.
+  const CALIBRATION_BATCH_SIZE = 5000;  // 5000 × 7 = 35K params per batch
   let upserted = 0;
-  if (allRows.length > 0) {
-    // Batch UPSERT using the unique index on (from_phase, to_phase, COALESCE(permit_type, '__ALL__'))
-    for (const row of allRows) {
-      await pool.query(
-        `INSERT INTO phase_calibration
-           (from_phase, to_phase, permit_type, median_days, p25_days, p75_days, sample_size, computed_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-         ON CONFLICT (from_phase, to_phase, COALESCE(permit_type, '__ALL__'))
-         DO UPDATE SET
-           median_days = EXCLUDED.median_days,
-           p25_days = EXCLUDED.p25_days,
-           p75_days = EXCLUDED.p75_days,
-           sample_size = EXCLUDED.sample_size,
-           computed_at = NOW()`,
-        [row.from_phase, row.to_phase, row.permit_type,
-         row.median_days, row.p25_days, row.p75_days, row.sample_size],
-      );
-      upserted++;
+  let preRowCount = 0;
+  let postRowCount = 0;
+
+  await pipeline.withTransaction(pool, async (client) => {
+    const { rows: preCount } = await client.query(
+      'SELECT COUNT(*)::int AS n FROM phase_calibration',
+    );
+    preRowCount = preCount[0].n;
+
+    if (allRows.length > 0) {
+      for (let off = 0; off < allRows.length; off += CALIBRATION_BATCH_SIZE) {
+        const chunk = allRows.slice(off, off + CALIBRATION_BATCH_SIZE);
+        const vals = [];
+        const params = [];
+        for (let i = 0; i < chunk.length; i++) {
+          const row = chunk[i];
+          const base = i * 7;
+          vals.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, NOW())`);
+          params.push(
+            row.from_phase, row.to_phase, row.permit_type,
+            row.median_days, row.p25_days, row.p75_days, row.sample_size,
+          );
+        }
+        await client.query(
+          `INSERT INTO phase_calibration
+             (from_phase, to_phase, permit_type, median_days, p25_days, p75_days, sample_size, computed_at)
+           VALUES ${vals.join(', ')}
+           ON CONFLICT (from_phase, to_phase, COALESCE(permit_type, '__ALL__'))
+           DO UPDATE SET
+             median_days = EXCLUDED.median_days,
+             p25_days = EXCLUDED.p25_days,
+             p75_days = EXCLUDED.p75_days,
+             sample_size = EXCLUDED.sample_size,
+             computed_at = NOW()`,
+          params,
+        );
+        upserted += chunk.length;
+      }
     }
-  }
+
+    const { rows: postCount } = await client.query(
+      'SELECT COUNT(*)::int AS n FROM phase_calibration',
+    );
+    postRowCount = postCount[0].n;
+  });
   pipeline.log.info('[calibration-v2]', `Upserted ${upserted} calibration rows`);
 
   // ═══════════════════════════════════════════════════════════
   // Step 4: Telemetry
   // ═══════════════════════════════════════════════════════════
-  const { rows: calRows } = await pool.query(
-    'SELECT COUNT(*)::int AS n FROM phase_calibration',
-  );
-  const postRowCount = calRows[0].n;
   const newRows = postRowCount - preRowCount;
 
   pipeline.emitSummary({
@@ -311,7 +375,7 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
       phase_pairs_all_types: allTypesRows.length,
       issued_pairs_by_type: issuedRows.length,
       issued_pairs_all_types: issuedAllRows.length,
-      total_calibration_rows: calRows[0].n,
+      total_calibration_rows: postRowCount,
     },
   });
 
@@ -324,4 +388,19 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
       phase_calibration: ['from_phase', 'to_phase', 'permit_type', 'median_days', 'p25_days', 'p75_days', 'sample_size'],
     },
   );
+  } finally {
+    // Release advisory lock on the SAME dedicated client that acquired it.
+    // Session lock release on a different connection would no-op (cf. 83-W5).
+    try {
+      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+    } catch (unlockErr) {
+      pipeline.log.warn(
+        '[calibration-v2]',
+        'Failed to release advisory lock — it will expire when the session ends.',
+        { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
+      );
+    } finally {
+      lockClient.release();
+    }
+  }
 });

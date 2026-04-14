@@ -111,6 +111,32 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/on_time/);
   });
 
+  it('acquires advisory lock 85 on a pinned pool.connect() client (WF3-03 / H-W1)', () => {
+    // Lock ID convention: lock_id = spec number. Mirrors the canonical
+    // pattern in classify-lifecycle-phase.js. Lock MUST be acquired on a
+    // dedicated `pool.connect()` client because session locks are bound to
+    // the backend that acquired them — `pool.query` would acquire on an
+    // ephemeral connection and the unlock would no-op (cf. 83-W5).
+    expect(content).toMatch(/const ADVISORY_LOCK_ID = 85/);
+    expect(content).toMatch(/await pool\.connect\(\)/);
+    expect(content).toMatch(/SELECT pg_try_advisory_lock\(\$1\)/);
+    expect(content).toMatch(/SELECT pg_advisory_unlock\(\$1\)/);
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+  });
+
+  it('wraps stale-purge DELETE + batch UPSERT loop in a single withTransaction (WF3-03 / H-W2 / 85-W2)', () => {
+    // Crash between DELETE and UPSERT used to leave stale rows purged but
+    // new rows missing. Both phases now run inside a single transaction —
+    // crash → rollback → table unchanged.
+    expect(content).toMatch(/pipeline\.withTransaction/);
+    // Regression anchor: the old code had bare pool.query for both DELETE
+    // (stale purge) and UPSERT loop. Both are now client.query inside the
+    // transaction callback.
+    expect(content).not.toMatch(/await pool\.query\([\s\S]{0,40}DELETE FROM trade_forecasts/);
+    expect(content).not.toMatch(/await pool\.query\(\s*`INSERT INTO trade_forecasts/);
+  });
+
   it('consumes per-trade imminent_window_days from trade_configurations (WF3-05, H-W13)', () => {
     // H-W13: the Control Panel `trade_configurations.imminent_window_days`
     // knob must drive the `urgency='imminent'` threshold, not the hardcoded 14.

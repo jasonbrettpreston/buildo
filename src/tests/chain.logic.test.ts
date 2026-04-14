@@ -338,6 +338,24 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     );
   });
 
+  it('run-chain.js acquires a chain-level advisory lock via hashtext (WF3-03 / H-W1 / RC-W7)', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/run-chain.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    // Chain-level lock prevents two concurrent runs of the same chain from
+    // racing on shared mutations. Convention: 2-arg form
+    // `pg_try_advisory_lock(2, hashtext('chain_'+chainId))` — the leading
+    // `2` namespace marker keeps chain locks in a distinct keyspace from
+    // per-script locks (1-arg form with spec number). Postgres treats
+    // 1-arg and 2-arg lock forms as separate keyspaces so a hashtext
+    // collision with a per-script lock ID is impossible by construction.
+    expect(content).toMatch(/pg_try_advisory_lock\(\s*2\s*,\s*hashtext\(\s*'chain_'\s*\|\|\s*\$1\s*\)\s*\)/);
+    expect(content).toMatch(/pg_advisory_unlock\(\s*2\s*,\s*hashtext\(\s*'chain_'\s*\|\|\s*\$1\s*\)\s*\)/);
+    // Lock must be held on a pinned client so the session survives the
+    // run. `pool.query` would lose the lock when the connection returns
+    // to the pool. See 83-W5 / 84:154 canonical pattern.
+    expect(content).toMatch(/await pool\.connect\(\)/);
+  });
+
   it('run-chain.js passes chainId parameter to the disabled-steps query (H-W19)', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/run-chain.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');
