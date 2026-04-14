@@ -66,10 +66,20 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'pipeline (string) and enabled (boolean) are required' }, { status: 400 });
     }
 
+    // WF3-02 (H-W19): after migration 095, the unique constraint is an
+    // EXPRESSION index `(pipeline, COALESCE(chain_id, '__ALL__'))`.
+    // Postgres matches ON CONFLICT via INDEX INFERENCE when the same
+    // expression is supplied here — `ON CONFLICT ON CONSTRAINT <index>`
+    // does NOT work because bare CREATE UNIQUE INDEX does not register
+    // a catalog constraint. Mirrors the pattern used by migration 087
+    // + compute-timing-calibration-v2.js for phase_calibration.
+    // Admin UI continues to write chain_id = NULL (global); explicit
+    // per-chain scoping is future WF1 scope.
     const result = await query<{ pipeline: string; enabled: boolean }>(
       `INSERT INTO pipeline_schedules (pipeline, cadence, enabled, updated_at)
        VALUES ($2, 'Daily', $1, NOW())
-       ON CONFLICT (pipeline) DO UPDATE SET enabled = $1, updated_at = NOW()
+       ON CONFLICT (pipeline, COALESCE(chain_id, '__ALL__'))
+         DO UPDATE SET enabled = $1, updated_at = NOW()
        RETURNING pipeline, enabled`,
       [enabled, pipeline]
     );

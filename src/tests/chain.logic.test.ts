@@ -331,7 +331,23 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     const content = fs.readFileSync(scriptPath, 'utf-8');
     expect(content).toContain('SKIPPED (disabled)');
     expect(content).toContain("'skipped'");
-    expect(content).toContain('pipeline_schedules WHERE enabled = FALSE');
+    // WF3-02 (H-W19): query MUST filter by chain so disabling for one chain
+    // doesn't silently skip the same step in a sibling chain. NULL = global.
+    expect(content).toMatch(
+      /SELECT pipeline FROM pipeline_schedules\s+WHERE enabled = FALSE\s+AND \(chain_id IS NULL OR chain_id = \$1\)/,
+    );
+  });
+
+  it('run-chain.js passes chainId parameter to the disabled-steps query (H-W19)', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/run-chain.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    // The query must be parameterized — no bare string interpolation of chainId.
+    // Find the schedules block and assert [chainId] is the bound parameter.
+    const block = content.match(
+      /pipeline_schedules[\s\S]{0,400}chain_id = \$1[\s\S]{0,200}/,
+    );
+    expect(block, 'schedules query block not found').not.toBeNull();
+    expect(block![0]).toMatch(/\[chainId\]/);
   });
 });
 

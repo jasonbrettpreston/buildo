@@ -943,3 +943,22 @@ Date: 2026-04-14. Reviewers: Gemini, DeepSeek, Claude independent (worktree).
 | NIT | Gemini | `NULL::varchar AS permit_type` (L166, L244) cast is redundant when type can be inferred. | Defer — pre-existing pattern, cosmetic only. | OPEN |
 | FALSE POSITIVE | Gemini (CRITICAL) | "SQL injection via `${STAGE_TO_PHASE_SQL}` template interpolation." | Rejected — `STAGE_TO_PHASE_SQL` is a module-top-level string literal constant with no user-input taint path. Standard pattern used across all pipeline scripts. Verified by Claude independent review. | REJECTED |
 | INFO | Plan deviation | WF3-01 plan specified a `logic.test.ts` with data fixture asserting `ROUND(10.9)::int = 11` against a live DB. Repo convention (documented in `classify-lifecycle-phase.infra.test.ts` header) is regex-only infra tests; end-to-end correctness covered by separate SQL reproducer scripts in `scripts/quality/`. Shipped with ratio-based regex test; data-driven reproducer deferred. | Consider adding `scripts/quality/calibration-rounding-reproducer.sql` for manual DB-side verification in a future WF. | OPEN |
+
+## WF3-02 (H-W19 / RC-W1) — pipeline_schedules chain_id — deferred items
+
+Date: 2026-04-14. Reviewers: Gemini, DeepSeek, Claude independent (worktree).
+
+| Sev | Source | Finding | Disposition | Status |
+|---|---|---|---|---|
+| CRITICAL | Independent CK-1 | `ON CONFLICT ON CONSTRAINT <index>` fails at runtime — bare `CREATE UNIQUE INDEX` does not register a catalog constraint. | **FIXED** — switched to index-inference form `ON CONFLICT (pipeline, COALESCE(chain_id, '__ALL__'))` matching phase_calibration precedent. | closed-in-WF3-02 |
+| HIGH | Independent CK-2 | DOWN block had redundant `DROP CONSTRAINT`; PK re-add unsafe if per-chain rows exist. | **FIXED** — removed DROP CONSTRAINT; added prerequisite note with pre-check query. | closed-in-WF3-02 |
+| MEDIUM | Independent CK-3 | `src/lib/db/generated/schema.ts` Drizzle types not regenerated — still shows old PK and lacks `chain_id` column. | Defer — table is accessed only via raw SQL in this codebase; run `npm run db:generate` post-migrate in the deploy. File follow-up if Drizzle consumers are ever added. | OPEN |
+| HIGH | Gemini | PATCH endpoint hardcodes `cadence='Daily'` on INSERT path — could overwrite a pre-existing cadence. | Defer — pre-existing behaviour from migration 047, not introduced by WF3-02. File as independent hardening ticket. | OPEN |
+| HIGH | DeepSeek / Gemini | Admin API can only write global rows (`chain_id=NULL`); per-chain disable is inaccessible through UI. | Defer — explicit out-of-scope per WF3-02 plan; front-end work deferred to user's separate UI pass. Future WF1 to expose the knob. | OPEN |
+| HIGH | DeepSeek | Mixed-version rolling deploy could break if app binary ships before migration 095 applies. | Defer — operational concern common to all schema migrations; CLAUDE.md deploy model runs migrations before code. Document in runbook. | OPEN |
+| MEDIUM | Gemini + DeepSeek | Tests are shape-only (regex over source); no behavioural integration test that proves disable for coa chain does NOT affect permits chain. | Defer — codebase convention is regex-only infra tests per `classify-lifecycle-phase.infra.test.ts` header; SQL reproducer script is the established pattern for DB-level verification. Consider adding `scripts/quality/pipeline-schedules-chain-scope-reproducer.sql` in a future WF. | OPEN |
+| LOW | Gemini | Spec §3.1.1 precedence wording ambiguous (AND vs OR). | **FIXED** — tightened the §3.1 step-4b language to show the full predicate with parens explicit. | closed-in-WF3-02 |
+| LOW | DeepSeek | `chain.logic.test.ts` regex-anchors `[chainId]` but not `$1` placeholder. | Defer — typo-level concern; existing test sufficient for the primary drift modes. | OPEN |
+| LOW | Gemini | No FK from `pipeline_schedules.chain_id` to a real `chains` table. | Defer — no `chains` table exists; CHECK constraint is sufficient for the 4 known chains. Consider if `chains` table is ever added. | OPEN |
+| NIT | Gemini | Test organization could split more finely (migration vs API vs orchestrator). | Rejected — tests are already split across 3 files (`migration-095.infra.test.ts`, `chain.logic.test.ts`, `admin.ui.test.tsx`). | REJECTED |
+| FALSE POSITIVE | DeepSeek | "SQL injection via chainId variable". | Rejected — `chainId` is validated at `run-chain.js:44` against whitelist `CHAINS[chainId]`; `$1` parameter binding is used in the query. No taint path. | REJECTED |

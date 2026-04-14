@@ -1498,7 +1498,13 @@ describe('Pipeline API route fixes', () => {
       path.join(__dirname, '../../src/app/api/admin/pipelines/schedules/route.ts'),
       'utf-8'
     );
-    expect(source).toContain('ON CONFLICT (pipeline) DO UPDATE');
+    // WF3-02 (H-W19, migration 095): PK dropped, replaced by unique index
+    // on `(pipeline, COALESCE(chain_id, '__ALL__'))`. ON CONFLICT uses
+    // the EXPRESSION form (index inference) — `ON CONFLICT ON CONSTRAINT
+    // <index>` does NOT work because bare CREATE UNIQUE INDEX does not
+    // register a catalog constraint. Mirrors phase_calibration pattern.
+    expect(source).toContain("ON CONFLICT (pipeline, COALESCE(chain_id, '__ALL__'))");
+    expect(source).toContain('DO UPDATE SET enabled');
   });
 });
 

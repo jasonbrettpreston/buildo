@@ -80,11 +80,19 @@ async function run() {
     }
   }
 
-  // Pre-fetch enabled/disabled state for all pipeline steps
+  // Pre-fetch enabled/disabled state for pipeline steps in THIS chain.
+  // H-W19: chain_id = NULL means "disabled globally across all chains";
+  // chain_id = '<chain>' scopes the disable to that chain only. Without
+  // the chain filter, disabling classify_lifecycle_phase for coa
+  // maintenance would also silently kill it in the permits chain.
+  // NULL = global sentinel mirrors phase_calibration.permit_type.
   const disabledSlugs = new Set();
   try {
     const res = await pool.query(
-      `SELECT pipeline FROM pipeline_schedules WHERE enabled = FALSE`
+      `SELECT pipeline FROM pipeline_schedules
+        WHERE enabled = FALSE
+          AND (chain_id IS NULL OR chain_id = $1)`,
+      [chainId]
     );
     for (const row of res.rows) disabledSlugs.add(row.pipeline);
   } catch (err) {

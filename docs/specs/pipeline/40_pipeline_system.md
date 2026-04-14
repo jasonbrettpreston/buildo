@@ -105,7 +105,7 @@ node scripts/run-chain.js <chain_id> [run_id] [--force]
 3. **Phase 0 Pre-Flight Health Gate:** Queries `pg_stat_user_tables` for all chain tables' dead tuple ratio. Emits Phase 0 `audit_table` with `sys_db_bloat_*` metrics. Stored in chain `records_meta.pre_flight_audit`.
 4. For each step in sequence:
    a. Check for cancellation (`pipeline_runs.status = 'cancelled'`)
-   b. Check if step is disabled (`pipeline_schedules.enabled = FALSE`)
+   b. Check if step is disabled — a step is disabled for the current chain iff a row exists with `enabled = FALSE AND (chain_id IS NULL OR chain_id = <current_chain>)` (see §3.1.1)
    c. Check gate-skip (primary ingest had 0 new records → skip non-infra steps)
    d. Insert step-scoped `pipeline_runs` row (`{chain}:{step}`)
    f. Capture pre-telemetry (T1/T2/T4/T6)
@@ -114,6 +114,15 @@ node scripts/run-chain.js <chain_id> [run_id] [--force]
    i. On exit code 0: parse summary, capture post-telemetry, update step row to `completed`
    j. On exit code 1: update step row to `failed`, **stop chain** (no subsequent steps run)
 5. Update chain `pipeline_runs` row with aggregate duration, status, verdicts
+
+#### 3.1.1 Chain-Scoped Disable (H-W19, migration 095)
+
+`pipeline_schedules` supports per-chain disable semantics. A row's `chain_id` column:
+
+- `NULL` → **global disable** across every chain that references the step slug
+- `'permits'` / `'coa'` / `'sources'` / `'entities'` → scoped to that chain only
+
+The orchestrator's disabled-steps query is `SELECT pipeline FROM pipeline_schedules WHERE enabled = FALSE AND (chain_id IS NULL OR chain_id = $1)` with the current chain bound to `$1`. Uniqueness is enforced by the named index `idx_pipeline_schedules_scope ON (pipeline, COALESCE(chain_id, '__ALL__'))` so a pipeline can have one global row plus one row per chain. The admin UI currently writes only NULL rows (global); per-chain scoping is planned UI work.
 
 ### 3.2 Gate-Skip Logic
 
