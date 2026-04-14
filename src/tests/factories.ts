@@ -142,6 +142,9 @@ export function createMockCostEstimate(
     complexity_score: 50,
     model_version: 1,
     computed_at: new Date('2024-03-01T12:00:00Z'),
+    is_geometric_override: false,
+    modeled_gfa_sqm: null,
+    trade_contract_values: {},
     ...overrides,
   };
 }

@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/72_lead_cost_model.md §Implementation
+// 🔗 SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §Implementation
 import { describe, it, expect } from 'vitest';
 import {
   estimateCost,
@@ -97,15 +97,37 @@ describe('estimateCost — permit-reported path', () => {
     expect(result.cost_source).toBe('model');
   });
 
-  it('$1,001 is used directly', () => {
+  it('$1,001 is used directly when no geometry is available (gate quiet)', () => {
+    // WF3-06 note: with geometry present the Liar's Gate would fire
+    // against $1,001 vs a ~$1.4M model (0.07% ratio). Passing null
+    // parcel + footprint means modelCost=0 → gate condition
+    // `modelCost > 0` is false → permit path passes through.
+    const result = estimateCost(
+      makePermit({ est_const_cost: 1001 }),
+      null,
+      null,
+      makeNeighbourhood(),
+    );
+    expect(result.cost_source).toBe('permit');
+    expect(result.estimated_cost).toBe(1001);
+    expect(result.is_geometric_override).toBe(false);
+  });
+
+  it('$1,001 with valid geometry triggers the Liar\'s Gate and reclassifies to model', () => {
+    // Mutation-survivor coverage: a permit just above the placeholder
+    // threshold against a non-trivial model must fire the gate. Catches
+    // a class of regressions where the gate accidentally skips small
+    // values.
     const result = estimateCost(
       makePermit({ est_const_cost: 1001 }),
       makeParcel(),
       makeFootprint(),
       makeNeighbourhood(),
     );
-    expect(result.cost_source).toBe('permit');
-    expect(result.estimated_cost).toBe(1001);
+    expect(result.cost_source).toBe('model');
+    expect(result.is_geometric_override).toBe(true);
+    // Model cost: 200 × 2 × 3000 × 1.15 premium (80K income tier) = 1,380,000
+    expect(result.estimated_cost).toBeCloseTo(1_380_000, 0);
   });
 });
 
@@ -356,11 +378,15 @@ describe('estimateCost — cost tiers', () => {
   });
 
   it('boundaries: exactly $100K → medium', () => {
+    // WF3-06: $100K against a ~$1.4M model would trip the Liar's Gate
+    // and reclassify as 'large'. Pass threshold=0 to pin tier-boundary
+    // semantics without interference from the gate.
     const result = estimateCost(
       makePermit({ est_const_cost: 100_000 }),
       makeParcel(),
       makeFootprint(),
       makeNeighbourhood(),
+      { liarGateThreshold: 0 },
     );
     expect(result.cost_tier).toBe('medium');
   });
@@ -839,11 +865,15 @@ describe('sumScopeAdditions — per-tag dispatch (mutation survivors)', () => {
 
 describe('determineCostTier — band boundaries (mutation survivors)', () => {
   function tierAt(cost: number) {
+    // WF3-06: disable the Liar's Gate (threshold=0 means strict `<` can
+    // never fire since cost > 0) so these tests pin only the tier
+    // classification behavior, not the gate override.
     const r = estimateCost(
       makePermit({ est_const_cost: cost }),
       null,
       makeFootprint(),
       makeNeighbourhood(),
+      { liarGateThreshold: 0 },
     );
     return r.cost_tier;
   }
@@ -1044,4 +1074,283 @@ describe('buildDisplay — output branches (mutation survivors)', () => {
     );
     expect(r.display).toContain('Complex scope');
   });
+});
+
+// ═════════════════════════════════════════════════════════════════
+// WF3-06 (H-W8 + H-W9) — Dual-path convergence: dedup + Liar's Gate
+// ═════════════════════════════════════════════════════════════════
+
+describe('WF3-06 (H-W8) — scope_tags dedup', () => {
+  // TS side is known-correct (already uses new Set). These tests pin
+  // the contract so any future regression is caught.
+
+  it('TS sumScopeAdditions: duplicate "pool" tags add $80K once, not twice', () => {
+    const r = estimateCost(
+      makePermit({
+        est_const_cost: null,
+        scope_tags: ['pool', 'pool'],
+      }),
+      makeParcel(),
+      makeFootprint(),
+      makeNeighbourhood(),
+    );
+    // 200 sqm × 2 stories × 3000/sqm × 1.15 premium + 80K scope = 1,460,000
+    // (NOT 1,540,000 which would be double-counted pool)
+    expect(r.cost_source).toBe('model');
+    expect(r.estimated_cost).toBeCloseTo(1_460_000, 0);
+  });
+
+  it('TS sumScopeAdditions: case-insensitive dedup ("POOL" = "pool")', () => {
+    const r = estimateCost(
+      makePermit({
+        est_const_cost: null,
+        scope_tags: ['POOL', 'Pool', 'pool'],
+      }),
+      makeParcel(),
+      makeFootprint(),
+      makeNeighbourhood(),
+    );
+    expect(r.estimated_cost).toBeCloseTo(1_460_000, 0);
+  });
+
+  it('TS computeComplexityScore: duplicate "elevator" only adds +10 once', () => {
+    const r = estimateCost(
+      makePermit({
+        est_const_cost: 500_000,
+        scope_tags: ['elevator', 'elevator'],
+      }),
+      makeParcel(),
+      makeFootprint(),
+      makeNeighbourhood(),
+    );
+    // newBuild +10, complexScope elevator +10 (once, not twice). No
+    // highRise/multiUnit/largeFootprint/premiumNbhd triggered.
+    expect(r.complexity_score).toBe(20);
+  });
+});
+
+describe('WF3-06 (H-W9) — Liar\'s Gate in TS estimateCost', () => {
+  it('fires when permit-reported cost < modelCost × threshold (default 0.25)', () => {
+    // 200 × 2 × 3000 × 1.0 (income 50K → premium 1.0) = 1,200,000 model.
+    // Reported 100K is 8.3% of model, below 25% threshold → gate fires.
+    const r = estimateCost(
+      makePermit({
+        est_const_cost: 100_000,
+        scope_tags: [],
+      }),
+      makeParcel(),
+      makeFootprint(),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(r.cost_source).toBe('model');
+    expect(r.is_geometric_override).toBe(true);
+    expect(r.estimated_cost).toBeCloseTo(1_200_000, 0);
+    expect(r.modeled_gfa_sqm).toBe(400); // 200 × 2
+  });
+
+  it('does NOT fire when permit-reported cost is reasonable vs model', () => {
+    // Same model 1.2M, reported 1.0M = 83% of model. Above 25% → gate silent.
+    const r = estimateCost(
+      makePermit({
+        est_const_cost: 1_000_000,
+        scope_tags: [],
+      }),
+      makeParcel(),
+      makeFootprint(),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(r.cost_source).toBe('permit');
+    expect(r.is_geometric_override).toBe(false);
+    expect(r.estimated_cost).toBe(1_000_000);
+  });
+
+  it('is suppressed when area came from lot-size fallback (usedFallback=true)', () => {
+    // No footprint row → lot-size fallback fires. Reported 100K would
+    // normally trigger the gate, but the fallback's ±50% uncertainty
+    // means the model is unreliable — gate suppressed per JS L241.
+    const r = estimateCost(
+      makePermit({
+        est_const_cost: 100_000,
+        scope_tags: [],
+      }),
+      makeParcel({ lot_size_sqm: 500 }),
+      null, // no footprint
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(r.cost_source).toBe('permit');
+    expect(r.is_geometric_override).toBe(false);
+  });
+
+  it('strict < boundary: reported === modelCost × threshold does NOT fire', () => {
+    // Model = 1,200,000. Threshold 0.25. Boundary = 300,000.
+    // JS uses strict `<`, so reported=300000 does NOT fire gate.
+    const r = estimateCost(
+      makePermit({
+        est_const_cost: 300_000,
+        scope_tags: [],
+      }),
+      makeParcel(),
+      makeFootprint(),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(r.cost_source).toBe('permit');
+    expect(r.is_geometric_override).toBe(false);
+  });
+
+  it('custom liarGateThreshold param fires on values above default threshold', () => {
+    // Model 1,200,000. Reported 500K. Default threshold 0.25 → boundary
+    // 300K, so 500K would NOT fire at default. But with threshold 0.5,
+    // boundary becomes 600K, so 500K < 600K → gate fires.
+    const r = estimateCost(
+      makePermit({
+        est_const_cost: 500_000,
+        scope_tags: [],
+      }),
+      makeParcel(),
+      makeFootprint(),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+      { liarGateThreshold: 0.5 },
+    );
+    expect(r.cost_source).toBe('model');
+    expect(r.is_geometric_override).toBe(true);
+  });
+
+  it('returns is_geometric_override=false and empty trade_contract_values on null-area permit', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, scope_tags: [] }),
+      null,
+      null,
+      makeNeighbourhood(),
+    );
+    expect(r.estimated_cost).toBe(null);
+    expect(r.is_geometric_override).toBe(false);
+    expect(r.modeled_gfa_sqm).toBe(null);
+    expect(r.trade_contract_values).toEqual({});
+  });
+
+  it('slices trade_contract_values when tradeAllocationPct config provided', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: 1_000_000, scope_tags: [] }),
+      makeParcel(),
+      makeFootprint(),
+      makeNeighbourhood(),
+      { tradeAllocationPct: { plumbing: 0.1, electrical: 0.08 } },
+    );
+    expect(r.trade_contract_values).toEqual({
+      plumbing: 100_000,
+      electrical: 80_000,
+    });
+  });
+});
+
+describe('WF3-06 (H-W8/W9) — JS↔TS parity battery', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const js = require('../../scripts/compute-cost-estimates') as {
+    estimateCostInline: (row: Record<string, unknown>) => {
+      estimated_cost: number | null;
+      cost_source: string;
+      cost_tier: string | null;
+      premium_factor: number;
+      complexity_score: number;
+      is_geometric_override: boolean;
+      modeled_gfa_sqm: number | null;
+    };
+    LIAR_GATE_THRESHOLD_DEFAULT: number;
+    BASE_RATES: Record<string, number>;
+    SCOPE_ADDITIONS: Record<string, number>;
+    PLACEHOLDER_COST_THRESHOLD: number;
+    MODEL_RANGE_PCT: number;
+    FALLBACK_RANGE_PCT: number;
+  };
+
+  it('LIAR_GATE_THRESHOLD_DEFAULT matches byte-for-byte across JS and TS', async () => {
+    const { LIAR_GATE_THRESHOLD_DEFAULT: tsDefault } = await import(
+      '@/features/leads/lib/cost-model'
+    );
+    expect(js.LIAR_GATE_THRESHOLD_DEFAULT).toBe(tsDefault);
+    expect(js.LIAR_GATE_THRESHOLD_DEFAULT).toBe(0.25);
+  });
+
+  it('numeric constants match byte-for-byte across JS and TS', async () => {
+    const ts = await import('@/features/leads/lib/cost-model');
+    expect(js.BASE_RATES).toEqual({ ...ts.BASE_RATES });
+    expect(js.SCOPE_ADDITIONS).toEqual({ ...ts.SCOPE_ADDITIONS });
+    expect(js.PLACEHOLDER_COST_THRESHOLD).toBe(1000);
+    expect(js.MODEL_RANGE_PCT).toBe(0.25);
+    expect(js.FALLBACK_RANGE_PCT).toBe(0.5);
+  });
+
+  // JS uses a single flat row shape. Helper to map TS-style inputs to it.
+  function flatten(
+    permit: CostModelPermitInput,
+    parcel: CostModelParcelInput | null,
+    footprint: CostModelFootprintInput | null,
+    nbhd: CostModelNeighbourhoodInput | null,
+  ): Record<string, unknown> {
+    return {
+      permit_num: permit.permit_num,
+      revision_num: permit.revision_num,
+      permit_type: permit.permit_type,
+      structure_type: permit.structure_type,
+      work: permit.work,
+      est_const_cost: permit.est_const_cost,
+      scope_tags: permit.scope_tags,
+      dwelling_units_created: permit.dwelling_units_created,
+      storeys: permit.storeys,
+      lot_size_sqm: parcel?.lot_size_sqm ?? null,
+      frontage_m: parcel?.frontage_m ?? null,
+      footprint_area_sqm: footprint?.footprint_area_sqm ?? null,
+      estimated_stories: footprint?.estimated_stories ?? null,
+      avg_household_income: nbhd?.avg_household_income ?? null,
+      tenure_renter_pct: nbhd?.tenure_renter_pct ?? null,
+    };
+  }
+
+  const fixtures: Array<{
+    name: string;
+    permit: Partial<CostModelPermitInput>;
+    parcel?: Partial<CostModelParcelInput> | null;
+    footprint?: Partial<CostModelFootprintInput> | null;
+    nbhd?: Partial<CostModelNeighbourhoodInput>;
+  }> = [
+    { name: 'baseline new SFD', permit: { est_const_cost: null } },
+    { name: 'duplicate pool tags', permit: { est_const_cost: null, scope_tags: ['pool', 'pool'] } },
+    { name: 'duplicate elevator + solar', permit: { est_const_cost: null, scope_tags: ['elevator', 'elevator', 'solar'] } },
+    { name: 'case-mixed pool', permit: { est_const_cost: null, scope_tags: ['POOL', 'Pool', 'pool'] } },
+    { name: 'liar-gate fires', permit: { est_const_cost: 50_000 }, nbhd: { avg_household_income: 50_000 } },
+    { name: 'liar-gate quiet', permit: { est_const_cost: 1_000_000 }, nbhd: { avg_household_income: 50_000 } },
+    { name: 'liar-gate suppressed by fallback', permit: { est_const_cost: 50_000 }, footprint: null, parcel: { lot_size_sqm: 500 } },
+    { name: 'no area (Path 3)', permit: { est_const_cost: null }, parcel: null, footprint: null },
+    { name: 'commercial new build', permit: { est_const_cost: 3_000_000, structure_type: 'Commercial Office', permit_type: 'New Building' } },
+    { name: 'storeys=0 edge', permit: { est_const_cost: null, storeys: 0, dwelling_units_created: 0 } },
+  ];
+
+  for (const fx of fixtures) {
+    it(`parity: ${fx.name}`, () => {
+      const permit = makePermit(fx.permit);
+      const parcel = fx.parcel === null ? null : makeParcel(fx.parcel ?? {});
+      const footprint = fx.footprint === null ? null : makeFootprint(fx.footprint ?? {});
+      const nbhd = makeNeighbourhood(fx.nbhd ?? {});
+
+      const tsResult = estimateCost(permit, parcel, footprint, nbhd);
+      const jsResult = js.estimateCostInline(flatten(permit, parcel, footprint, nbhd));
+
+      // Compare numeric fields with tolerance for floating-point drift
+      if (tsResult.estimated_cost === null || jsResult.estimated_cost === null) {
+        expect(tsResult.estimated_cost).toBe(jsResult.estimated_cost);
+      } else {
+        expect(tsResult.estimated_cost).toBeCloseTo(jsResult.estimated_cost, 0);
+      }
+      expect(tsResult.cost_source).toBe(jsResult.cost_source);
+      expect(tsResult.cost_tier).toBe(jsResult.cost_tier);
+      expect(tsResult.premium_factor).toBeCloseTo(jsResult.premium_factor, 6);
+      expect(tsResult.complexity_score).toBe(jsResult.complexity_score);
+      expect(tsResult.is_geometric_override).toBe(jsResult.is_geometric_override);
+      if (tsResult.modeled_gfa_sqm === null || jsResult.modeled_gfa_sqm === null) {
+        expect(tsResult.modeled_gfa_sqm).toBe(jsResult.modeled_gfa_sqm);
+      } else {
+        expect(tsResult.modeled_gfa_sqm).toBeCloseTo(jsResult.modeled_gfa_sqm, 4);
+      }
+    });
+  }
 });

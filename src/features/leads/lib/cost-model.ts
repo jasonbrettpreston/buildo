@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/72_lead_cost_model.md §Implementation
+// 🔗 SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §Implementation
 // 🔗 ADR: docs/adr/001-dual-code-path.md — dual TS↔JS path is an explicit design choice; do not re-litigate in review
 // 🔗 DUAL CODE PATH: scripts/compute-cost-estimates.js (inline JS port) — per
 // CLAUDE.md §7, these files MUST stay in sync. Any change to BASE_RATES,
@@ -8,7 +8,7 @@
 //
 // Pure function — no DB, no side effects, no throws on well-typed input.
 
-import type { CostEstimate, CostTier } from '@/lib/permits/types';
+import type { CostEstimate, CostSource, CostTier } from '@/lib/permits/types';
 
 // ---------------------------------------------------------------------------
 // Input interfaces — narrow, lib-local shapes (not re-exported from
@@ -107,6 +107,18 @@ const FALLBACK_COMMERCIAL_FLOORS = 1;
 const MODEL_RANGE_PCT = 0.25;
 const FALLBACK_RANGE_PCT = 0.5;
 const PLACEHOLDER_COST_THRESHOLD = 1000;
+
+/**
+ * Liar's Gate default threshold. When a permit's reported `est_const_cost`
+ * is less than `modelCost * LIAR_GATE_THRESHOLD_DEFAULT`, the reported
+ * value is considered fee-minimization and overridden with the geometric
+ * model. Mirrors `LIAR_GATE_THRESHOLD` fallback in
+ * `scripts/compute-cost-estimates.js`. Operator overrides via
+ * `logic_variables.liar_gate_threshold` in the pipeline runtime; the
+ * TS read-path accepts the override via the `config` parameter of
+ * `estimateCost`.
+ */
+export const LIAR_GATE_THRESHOLD_DEFAULT = 0.25;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -234,7 +246,10 @@ function sumScopeAdditions(tags: string[] | null): number {
   // Set, a duplicate 'pool' adds $80K TWICE — inflating the
   // estimate by tens of thousands and corrupting the value_score
   // pillar. Caught by user-supplied Gemini holistic review 2026-04-09.
-  const unique = new Set(tags.map((t) => t.toLowerCase()));
+  // WF3-06: `(t ?? '')` guard — PostgreSQL TEXT[] permits NULL elements
+  // (ARRAY['pool', NULL, 'elevator']). JS uses the same `(t || '')`
+  // defence; without it, a null element throws on .toLowerCase().
+  const unique = new Set(tags.map((t) => (t ?? '').toLowerCase()));
   let total = 0;
   for (const norm of unique) {
     if (norm === 'pool') total += SCOPE_ADDITIONS.pool;
@@ -271,8 +286,12 @@ function computeComplexityScore(
     score += COMPLEXITY_SIGNALS.premiumNbhd;
   }
   // Same dedup pattern as sumScopeAdditions — duplicate tags would
-  // double-count the +10 complexity signal per category.
-  const uniqueTags = new Set((permit.scope_tags ?? []).map((t) => t.toLowerCase()));
+  // double-count the +10 complexity signal per category. `(t ?? '')`
+  // guards against NULL elements in a PostgreSQL TEXT[] — see
+  // sumScopeAdditions above for the full rationale.
+  const uniqueTags = new Set(
+    (permit.scope_tags ?? []).map((t) => (t ?? '').toLowerCase()),
+  );
   for (const norm of uniqueTags) {
     if (norm === 'pool' || norm === 'elevator' || norm === 'underpinning') {
       score += COMPLEXITY_SIGNALS.complexScope;
@@ -334,45 +353,61 @@ function buildDisplay(
 // ---------------------------------------------------------------------------
 
 /**
+ * Per-trade allocation percentages (slug → fraction of total cost).
+ * Passed in because the pipeline loads operator overrides from
+ * `trade_configurations.allocation_pct`; the TS read-path accepts the
+ * same shape so the JS↔TS parity contract is real, not cosmetic.
+ */
+export type TradeAllocationPct = Record<string, number>;
+
+/**
+ * Runtime config for `estimateCost`. Both fields are optional and
+ * default to the same fallbacks the JS pipeline uses before it loads
+ * Control Panel overrides.
+ */
+export interface EstimateCostConfig {
+  /** Override for `LIAR_GATE_THRESHOLD_DEFAULT` (0.25). */
+  liarGateThreshold?: number;
+  /** Per-trade allocation percentages. Defaults to `{}` → no slicing. */
+  tradeAllocationPct?: TradeAllocationPct;
+}
+
+/** The Slicer: per-trade dollar values from total cost. Mirrors JS sliceTradeValues. */
+function sliceTradeValues(
+  totalCost: number | null,
+  pct: TradeAllocationPct,
+): Record<string, number> {
+  if (totalCost == null || totalCost <= 0) return {};
+  const out: Record<string, number> = {};
+  for (const [slug, p] of Object.entries(pct)) {
+    const val = Math.round(totalCost * p);
+    if (val > 0) out[slug] = val;
+  }
+  return out;
+}
+
+/**
  * Estimate construction cost for a permit. Pure function — no DB, no side
  * effects. Returns a CostEstimate matching the `cost_estimates` table row
  * shape. The pipeline script `compute-cost-estimates.js` is the only writer
- * to that table; the lead feed API reads from the cache.
+ * to that table; the lead feed API reads from the cache. This function
+ * exists as a dual-path parity checker (CLAUDE.md §7.1) — if this function
+ * and `estimateCostInline` in the JS script disagree on any input, the
+ * parity battery test in `src/tests/cost-model.logic.test.ts` fails.
  */
 export function estimateCost(
   permit: CostModelPermitInput,
   parcel: CostModelParcelInput | null,
   footprint: CostModelFootprintInput | null,
   neighbourhood: CostModelNeighbourhoodInput | null,
+  config: EstimateCostConfig = {},
 ): CostModelResult {
   const now = new Date();
+  const liarGateThreshold = config.liarGateThreshold ?? LIAR_GATE_THRESHOLD_DEFAULT;
+  const tradeAllocationPct = config.tradeAllocationPct ?? {};
 
-  // Path 1: permit-reported cost above placeholder threshold
-  if (
-    permit.est_const_cost !== null &&
-    permit.est_const_cost > PLACEHOLDER_COST_THRESHOLD
-  ) {
-    const cost = permit.est_const_cost;
-    const tier = determineCostTier(cost);
-    const complexity = computeComplexityScore(permit, footprint, neighbourhood);
-    const premiumFactor = computePremiumFactor(neighbourhood);
-    return {
-      permit_num: permit.permit_num,
-      revision_num: permit.revision_num,
-      estimated_cost: cost,
-      cost_source: 'permit',
-      cost_tier: tier,
-      cost_range_low: cost,
-      cost_range_high: cost,
-      premium_factor: premiumFactor,
-      complexity_score: complexity,
-      model_version: 1,
-      computed_at: now,
-      display: buildDisplay(cost, tier, 'permit', cost, cost, premiumFactor, complexity),
-    };
-  }
-
-  // Path 2: model-based estimate
+  // WF3-06 (H-W9): Always compute the geometric model so Path 1 can
+  // run the Liar's Gate. Mirrors JS estimateCostInline L221-225.
   const { area, usedFallback } = computeBuildingArea(
     permit,
     parcel,
@@ -382,11 +417,43 @@ export function estimateCost(
   const baseRate = determineBaseRate(permit);
   const premiumFactor = computePremiumFactor(neighbourhood);
   const scopeAdditions = sumScopeAdditions(permit.scope_tags);
-  const rawCost = area * baseRate * premiumFactor + scopeAdditions;
+  const modelCost = area > 0 ? area * baseRate * premiumFactor + scopeAdditions : 0;
+  const complexity = computeComplexityScore(permit, footprint, neighbourhood);
+  const modeledGfaSqm = area > 0 ? area : null;
 
-  // If we have no area at all, we can't estimate a cost
-  if (area <= 0) {
-    const complexity = computeComplexityScore(permit, footprint, neighbourhood);
+  let estimatedCost: number | null;
+  let costSource: CostSource;
+  let isGeometricOverride = false;
+
+  // Path 1: permit-reported cost above placeholder threshold.
+  if (
+    permit.est_const_cost !== null &&
+    permit.est_const_cost > PLACEHOLDER_COST_THRESHOLD
+  ) {
+    // WF3-06 (H-W9): THE LIAR'S GATE. If reported cost is less than
+    // modelCost × threshold, the permit is likely fee-minimization.
+    // Override with the geometric estimate. Suppressed when
+    // usedFallback=true — the lot-size fallback has ±50% uncertainty
+    // and can dramatically overstate cost for small renos on large
+    // lots (JS L241 carve-out, mirrored byte-for-byte).
+    if (
+      modelCost > 0 &&
+      !usedFallback &&
+      permit.est_const_cost < modelCost * liarGateThreshold
+    ) {
+      estimatedCost = modelCost;
+      costSource = 'model';
+      isGeometricOverride = true;
+    } else {
+      estimatedCost = permit.est_const_cost;
+      costSource = 'permit';
+    }
+  } else if (area > 0) {
+    // Path 2: no reported cost → use model.
+    estimatedCost = modelCost;
+    costSource = 'model';
+  } else {
+    // Path 3: no reported cost AND no geometry → null.
     return {
       permit_num: permit.permit_num,
       revision_num: permit.revision_num,
@@ -399,21 +466,28 @@ export function estimateCost(
       complexity_score: complexity,
       model_version: 1,
       computed_at: now,
+      is_geometric_override: false,
+      modeled_gfa_sqm: null,
+      trade_contract_values: {},
       display: buildDisplay(null, null, 'model', null, null, premiumFactor, complexity),
     };
   }
 
-  const rangePct = usedFallback ? FALLBACK_RANGE_PCT : MODEL_RANGE_PCT;
-  const low = rawCost * (1 - rangePct);
-  const high = rawCost * (1 + rangePct);
-  const tier = determineCostTier(rawCost);
-  const complexity = computeComplexityScore(permit, footprint, neighbourhood);
+  const rangePct =
+    costSource === 'permit' && !isGeometricOverride
+      ? 0 // permit-reported costs have no range
+      : usedFallback
+        ? FALLBACK_RANGE_PCT
+        : MODEL_RANGE_PCT;
+  const low = rangePct > 0 ? estimatedCost * (1 - rangePct) : estimatedCost;
+  const high = rangePct > 0 ? estimatedCost * (1 + rangePct) : estimatedCost;
+  const tier = determineCostTier(estimatedCost);
 
   return {
     permit_num: permit.permit_num,
     revision_num: permit.revision_num,
-    estimated_cost: rawCost,
-    cost_source: 'model',
+    estimated_cost: estimatedCost,
+    cost_source: costSource,
     cost_tier: tier,
     cost_range_low: low,
     cost_range_high: high,
@@ -421,6 +495,9 @@ export function estimateCost(
     complexity_score: complexity,
     model_version: 1,
     computed_at: now,
-    display: buildDisplay(rawCost, tier, 'model', low, high, premiumFactor, complexity),
+    is_geometric_override: isGeometricOverride,
+    modeled_gfa_sqm: modeledGfaSqm,
+    trade_contract_values: sliceTradeValues(estimatedCost, tradeAllocationPct),
+    display: buildDisplay(estimatedCost, tier, costSource, low, high, premiumFactor, complexity),
   };
 }

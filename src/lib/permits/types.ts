@@ -127,6 +127,14 @@ export interface CostEstimate {
   complexity_score: number | null;
   model_version: number;
   computed_at: Date;
+  // WF3-06: Geometric Truth fields required for Spec 83 frontend
+  // (Trade Slicer + Geometric Override badge). Columns added in
+  // migrations 089 (trade_contract_values) and 091 (is_geometric_override,
+  // modeled_gfa_sqm). All three are NOT NULL in DB except modeled_gfa_sqm
+  // (DECIMAL, nullable when no geometric data available).
+  is_geometric_override: boolean;
+  modeled_gfa_sqm: number | null;
+  trade_contract_values: Record<string, number>;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 🔗 SPEC LINK: docs/specs/product/future/72_lead_cost_model.md §Implementation
+// 🔗 SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §Implementation
 // 🔗 DUAL CODE PATH: src/features/leads/lib/cost-model.ts — per CLAUDE.md §7,
 // these files MUST stay in sync. BASE_RATES, PREMIUM_TIERS, SCOPE_ADDITIONS,
 // COST_TIER_BOUNDARIES, COMPLEXITY_SIGNALS below MUST match the TS module
@@ -70,8 +70,12 @@ const PLACEHOLDER_COST_THRESHOLD = 1000;
 // Liar's Gate threshold comes from logic_variables.liar_gate_threshold.
 // Fallback values live in scripts/lib/config-loader.js (single source of truth).
 // These module-level vars are assigned inside pipeline.run after loading config.
+// WF3-06: LIAR_GATE_THRESHOLD_DEFAULT is the constant default exported for
+// parity against the TS counterpart; LIAR_GATE_THRESHOLD is the mutable
+// runtime variable the pipeline reassigns after reading the Control Panel.
+const LIAR_GATE_THRESHOLD_DEFAULT = 0.25;
 let TRADE_ALLOCATION_PCT = {};
-let LIAR_GATE_THRESHOLD = 0.25;
+let LIAR_GATE_THRESHOLD = LIAR_GATE_THRESHOLD_DEFAULT;
 
 // WF3-03 PR-C (83-W7): lock ID = spec number convention (was 74, a leftover
 // from spec 72_lead_cost_model.md). Aligns with classify-lifecycle-phase.js
@@ -168,9 +172,14 @@ function computeBuildingArea(row) {
 
 function sumScopeAdditions(tags) {
   if (!tags) return 0;
+  // WF3-06 (H-W8): dedup via Set BEFORE iterating. PostgreSQL TEXT[]
+  // does not enforce uniqueness, and upstream classifiers can append
+  // duplicate tags (e.g., ['pool', 'pool']). Without the Set, a
+  // duplicate 'pool' adds $80K TWICE, inflating DB-stored cost and
+  // diverging from the TS read-path which already dedups (cost-model.ts).
+  const unique = new Set(tags.map((t) => (t || '').toLowerCase()));
   let total = 0;
-  for (const tag of tags) {
-    const norm = (tag || '').toLowerCase();
+  for (const norm of unique) {
     if (norm === 'pool') total += SCOPE_ADDITIONS.pool;
     else if (norm === 'elevator') total += SCOPE_ADDITIONS.elevator;
     else if (norm === 'underpinning') total += SCOPE_ADDITIONS.underpinning;
@@ -194,9 +203,10 @@ function computeComplexityScore(row) {
   if ((row.dwelling_units_created || 0) > 4) score += COMPLEXITY_SIGNALS.multiUnit;
   if ((row.footprint_area_sqm || 0) > 300) score += COMPLEXITY_SIGNALS.largeFootprint;
   if ((row.avg_household_income || 0) > 150000) score += COMPLEXITY_SIGNALS.premiumNbhd;
-  const tags = row.scope_tags || [];
-  for (const tag of tags) {
-    const norm = (tag || '').toLowerCase();
+  // WF3-06 (H-W8): same dedup pattern as sumScopeAdditions — duplicate
+  // tags would double-count the +10 complexity signal per category.
+  const uniqueTags = new Set((row.scope_tags || []).map((t) => (t || '').toLowerCase()));
+  for (const norm of uniqueTags) {
     if (norm === 'pool' || norm === 'elevator' || norm === 'underpinning') {
       score += COMPLEXITY_SIGNALS.complexScope;
     }
@@ -387,7 +397,9 @@ async function flushBatch(pool, rows) {
   });
 }
 
-pipeline.run('compute-cost-estimates', async (pool) => {
+// WF3-06 (H-W8/W9): guard pipeline execution so the module can be
+// require()-d from dual-path parity tests (mirrors load-permits.js pattern).
+if (require.main === module) pipeline.run('compute-cost-estimates', async (pool) => {
   // ─── Load Control Panel via shared loader ──────────────────
   const { tradeConfigs, logicVars } = await loadMarketplaceConfigs(pool, 'compute-cost-estimates');
   TRADE_ALLOCATION_PCT = Object.fromEntries(
@@ -583,3 +595,33 @@ pipeline.run('compute-cost-estimates', async (pool) => {
     }
   }
 });
+
+// ---------------------------------------------------------------------------
+// Exports for dual-path parity tests (WF3-06). The pipeline entry above is
+// guarded by require.main === module so require()-ing this file from a test
+// does NOT start the pool or execute the run.
+// ---------------------------------------------------------------------------
+module.exports = {
+  // Pure functions
+  isNewBuild,
+  isResidential,
+  isCommercial,
+  determineBaseRate,
+  computePremiumFactor,
+  computeBuildingArea,
+  sumScopeAdditions,
+  determineCostTier,
+  computeComplexityScore,
+  sliceTradeValues,
+  estimateCostInline,
+  // Constants
+  BASE_RATES,
+  PREMIUM_TIERS,
+  SCOPE_ADDITIONS,
+  COST_TIER_BOUNDARIES,
+  COMPLEXITY_SIGNALS,
+  PLACEHOLDER_COST_THRESHOLD,
+  MODEL_RANGE_PCT,
+  FALLBACK_RANGE_PCT,
+  LIAR_GATE_THRESHOLD_DEFAULT,
+};
