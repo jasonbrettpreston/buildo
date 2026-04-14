@@ -13,36 +13,29 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
-  it('defines permits chain with 25 steps (no enrichment scripts)', () => {
-    // WF2 2026-04-13 — +4 steps: compute_timing_calibration_v2 (added, NOT
-    // replacing v1), compute_trade_forecasts, compute_opportunity_scores,
-    // update_tracked_projects wired after classify_lifecycle_phase.
-    // v1 and v2 calibration serve DIFFERENT engines (v1 → spec 71 detail-page
-    // timing, v2 → spec 85 flight tracker) — both must run nightly.
+  it('defines permits chain with 24 steps (no enrichment scripts)', () => {
+    // WF3 2026-04-13 — v1 `compute_timing_calibration` removed from chain
+    // per user decision (Path A). v1's table `timing_calibration` will
+    // go stale; the detail-page timing engine (spec 71) will be migrated
+    // to read from `phase_calibration` in a future frontend WF.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(25);
+    expect(chain!.steps).toHaveLength(24);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
   });
 
-  it('permits chain runs BOTH timing_calibration v1 AND v2', () => {
-    // WF2 2026-04-13 — v1 feeds spec 71 detail-page timing (timing.ts
-    // reads timing_calibration table). v2 feeds spec 85 flight tracker
-    // (compute-trade-forecasts reads phase_calibration table). Both engines
-    // are live in production; removing v1 would break the detail-page
-    // timing display. See adversarial Probe 1.
+  it('permits chain runs v2 timing_calibration only (v1 removed)', () => {
+    // WF3 2026-04-13 — v1 removed, only v2 remains. v2 feeds spec 85
+    // flight tracker via phase_calibration. The detail-page timing
+    // engine (spec 71) reads v1's table and will be migrated to v2
+    // in a future frontend WF; until then that engine degrades.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     const slugs = chain.steps.map((s) => s.slug);
     expect(slugs).toContain('compute_cost_estimates');
-    expect(slugs).toContain('compute_timing_calibration');
+    expect(slugs).not.toContain('compute_timing_calibration');
     expect(slugs).toContain('compute_timing_calibration_v2');
-    // v1 runs before v2 — v1's output isn't a dependency of v2 but
-    // keeping them adjacent simplifies reasoning.
-    expect(slugs.indexOf('compute_timing_calibration')).toBeLessThan(
-      slugs.indexOf('compute_timing_calibration_v2'),
-    );
   });
 
   it('compute steps run after classify_permits and before link_coa', () => {

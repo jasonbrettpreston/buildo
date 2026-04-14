@@ -1,86 +1,79 @@
-# Active Task: WF2 — Pipeline Chain Wiring + Spec Alignment
-**Status:** Implementation
-**Workflow:** WF2 — Feature Enhancement
-**Rollback Anchor:** `30e4100` (fix(93_control_panel))
+# Active Task: WF3 — Deferred Control Panel Wiring + v1 Removal
+**Status:** Implementation — Path A authorized
+**Workflow:** WF3 — Bug Fix
+**Rollback Anchor:** `e0a25b6` (feat(41_chain_permits))
 **Domain Mode:** **Backend/Pipeline**
 
 ---
 
 ## Context
-* **Goal:** Wire 4 missing scripts into the permits chain, replace timing calibration v1 with v2, and align both the pipeline spec (40) and product specs (80-86) with the actual chain ordering. Also wire `classify_lifecycle_phase` into spec 40's chain definition + script registry (it's in the manifest but not in the spec).
-* **Target Spec:** `docs/specs/pipeline/40_pipeline_system.md` + `docs/specs/product/future/80-86`
+* **Goal:** Close 4 deferred items from the previous WF3/WF2 reviews. Variables were seeded in migration 093 but no consuming logic was written. Plus remove deprecated v1 timing calibration from the permits chain.
+* **Target Spec:** `docs/specs/product/future/86_control_panel.md` (control panel), `docs/specs/product/future/84_lifecycle_phase_engine.md` (stall), `docs/specs/product/future/82_crm_assistant_alerts.md` (auto-archive)
 
-## Key Files
-* `scripts/manifest.json` — chain definitions + script registry
-* `docs/specs/pipeline/40_pipeline_system.md` §4.2 + §4.3 — chain definition + script registry table
-* `docs/specs/product/future/80_lead_feed.md` — references pipeline ordering
-* `docs/specs/product/future/81_opportunity_score_engine.md` — "runs nightly in permits chain"
-* `docs/specs/product/future/82_crm_assistant_alerts.md` — "final step in chain"
-* `docs/specs/product/future/83_lead_cost_model.md` — "permits chain step 14"
-* `docs/specs/product/future/84_lifecycle_phase_engine.md` — "end of permits + coa chains"
-* `docs/specs/product/future/85_trade_forecast_engine.md` — "after lifecycle phase engine"
-* `docs/specs/product/future/86_control_panel.md` — references all 4 scripts
+## Bugs
 
-## Technical Implementation
+### Bug 1 — Remove v1 `compute_timing_calibration` from permits chain
+**⚠️ BLOCKING DECISION NEEDED — see top of response.** v1 feeds spec 71 detail-page timing engine (`src/features/leads/lib/timing.ts`), admin health dashboard, and CQA. Removing v1 from chain will cause `timing_calibration` table to go stale. Must decide whether to:
+- (A) Just remove from chain (detail-page timing degrades over time)
+- (B) Remove + migrate `timing.ts` to read `phase_calibration` (v2's table) in same WF
+- (C) Keep v1, only do bugs 2-4
 
-### 4 Gaps in `manifest.json` chains:
+Assuming Path A for the plan below.
 
-| Gap | Fix |
-|-----|-----|
-| `compute_timing_calibration` (v1) at permits step 15 | Replace with `compute_timing_calibration_v2` |
-| `compute_trade_forecasts` not in any chain | Add to permits chain after `classify_lifecycle_phase` |
-| `compute_opportunity_scores` not in any chain | Add to permits chain after `compute_trade_forecasts` |
-| `update_tracked_projects` not in any chain | Add to permits chain as final step |
-
-### Proposed Permits Chain (25 steps):
+### Bug 2 — `classifyUrgency` hardcodes `-90` instead of using `logic_variables.expired_threshold_days` / `lead_expiry_days`
+`scripts/compute-trade-forecasts.js` line 64:
+```js
+if (daysUntil <= -90) return 'expired';
 ```
-assert_schema → permits → close_stale_permits → classify_permit_phase → classify_scope
-→ builders → link_wsib → geocode_permits → link_parcels → link_neighbourhoods
-→ link_massing → link_similar → classify_permits → compute_cost_estimates
-→ compute_timing_calibration_v2 → link_coa → create_pre_permits → refresh_snapshot
-→ assert_data_bounds → assert_engine_health → classify_lifecycle_phase
-→ compute_trade_forecasts → compute_opportunity_scores → update_tracked_projects
-```
+Should use `logicVars.expired_threshold_days` (already in seed as `-90`) and also respect `lead_expiry_days` (90) for TTL consistency.
 
-Note: The 3 new scripts go AFTER `classify_lifecycle_phase` because:
-- `compute_trade_forecasts` needs lifecycle_phase + phase_started_at (from classifier)
-- `compute_opportunity_scores` needs trade_forecasts + cost_estimates
-- `update_tracked_projects` needs trade_forecasts + trade_configurations
+### Bug 3 — `coa_stall_threshold` seeded but not consumed
+`scripts/classify-lifecycle-phase.js` should use `logicVars.coa_stall_threshold` (30 days) when deciding if a CoA application has been inactive long enough to flag `lifecycle_stalled = true`. Currently the classifier has no CoA-specific stall logic (only generic construction stall detection).
 
-### Spec alignment:
-- `40_pipeline_system.md` §4.2: Update chain JSON to match manifest
-- `40_pipeline_system.md` §4.3: Add 5 missing scripts to registry table (classify_lifecycle_phase, compute_timing_calibration_v2, compute_trade_forecasts, compute_opportunity_scores, update_tracked_projects)
-- `80-86`: Update pipeline wiring references to cite correct step numbers
-
-## Standards Compliance
-* **Try-Catch Boundary:** N/A — no API routes modified
-* **Unhappy Path Tests:** N/A — manifest is JSON config, no logic tests
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A — backend-only
+### Bug 4 — CRM Assistant not auto-archiving `expired` urgency claimed leads
+`scripts/update-tracked-projects.js` currently only archives on `isWindowClosed` or `urgency === 'expired'` for **saved** status. For **claimed** projects, the `isWindowClosed` branch archives, but `urgency === 'expired'` is NOT archived — it just silently accumulates. Per roadmap: claimed projects with `urgency = 'expired'` should auto-archive after the `lead_expiry_days` TTL.
 
 ## Execution Plan
-- [ ] **State Verification:** Confirm all 6 script files exist on disk and all are in manifest scripts section.
-- [ ] **Contract Definition:** N/A — no API route changes.
-- [ ] **Spec Update:** Update `docs/specs/pipeline/40_pipeline_system.md` §4.2 chain definition + §4.3 script registry.
-- [ ] **Schema Evolution:** N/A — no DB changes.
-- [ ] **Guardrail Test:** Update `src/tests/chain.logic.test.ts` to verify new chain ordering includes the 4 new steps.
-- [ ] **Red Light:** Verify new test fails before making manifest change.
-- [ ] **Implementation:** Update `scripts/manifest.json` chains. Update specs 80-86 with correct step numbers and chain membership.
-- [ ] **UI Regression Check:** N/A.
-- [ ] **Pre-Review Self-Checklist:** Verify chain ordering matches dependency graph, no circular dependencies, all script files exist.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
+
+- [ ] **Rollback Anchor:** `e0a25b6` recorded.
+- [ ] **State Verification:** Confirm logic_variables has `expired_threshold_days=-90`, `lead_expiry_days=90`, `coa_stall_threshold=30`. Confirm v1 script still exists and is referenced by `timing.ts`.
+- [ ] **Spec Review:** Read spec 82 (CRM auto-archive), 84 (CoA stall), 85 (urgency classification).
+- [ ] **Reproduction Tests (Red Light):**
+  - Test: `classifyUrgency(-95, false)` must return 'expired' when `expired_threshold_days=-90`
+  - Test: compute-trade-forecasts script source contains `logicVars.expired_threshold_days` (not hardcoded `-90`)
+  - Test: classify-lifecycle-phase script source contains `coa_stall_threshold` consumption for CoA rows
+  - Test: update-tracked-projects source contains branch that archives claimed projects with `urgency === 'expired'`
+  - Test: manifest permits chain does NOT contain `compute_timing_calibration` (only v2)
+- [ ] **Fix 1:** Remove `compute_timing_calibration` from `scripts/manifest.json` permits chain (keep v2). Remove from `FreshnessTimeline.tsx` PIPELINE_CHAINS. Update chain.logic.test.ts 25→24 step expectation. Update spec 40/41.
+- [ ] **Fix 2:** Update `compute-trade-forecasts.js` to use `logicVars.expired_threshold_days` in classifyUrgency. Pass `logicVars` into the classifier closure.
+- [ ] **Fix 3:** Update `classify-lifecycle-phase.js` to load `logicVars.coa_stall_threshold` via shared config loader and apply it when classifying CoA lifecycle_stalled.
+- [ ] **Fix 4:** Update `update-tracked-projects.js` to archive claimed projects where `urgency === 'expired'` (in addition to existing `isWindowClosed` branch).
+- [ ] **Pre-Review Self-Checklist:** List 3-5 sibling bugs — hardcoded 90-day TTL elsewhere? Other DB constants not loaded? Other CRM paths missing archive?
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
+- [ ] **Review Agents:** Independent + adversarial, triage, defer to review_followups.
+- [ ] **Migration 093 Runbook:** Document ops procedure (pause pipeline → apply migration → deploy JS → resume) in `docs/specs/pipeline/41_chain_permits.md` or a new runbook file.
+- [ ] **Commit.**
+
+## Standards Compliance
+* **Try-Catch Boundary:** N/A — no new API routes
+* **Unhappy Path Tests:** Red Light tests for each bug before fix
+* **logError Mandate:** N/A — existing pipeline scripts already use `pipeline.log.warn`
+* **Mobile-First:** N/A — backend-only
+* **Dual-Code Path:** `classifyLifecyclePhase` in `scripts/lib/lifecycle-phase.js` is pure logic — if CoA stall detection needs TS parity, the TS module in `src/lib/classification/lifecycle-phase.ts` must also be updated.
 
 ---
 
 **§10 Compliance:**
 
-- ⬜ DB: N/A — no database changes
-- ⬜ API: N/A — no API routes
+- ⬜ DB: N/A — variables already seeded in migration 093
+- ⬜ API: N/A — no routes
 - ⬜ UI: N/A — no frontend
-- ⬜ Shared Logic: N/A — no dual-code-path changes
-- ✅ Pipeline: Uses Pipeline SDK manifest pattern. No script logic changes.
-- ✅ Pre-Review Self-Checklist: Will verify dependency ordering
-- ⬜ Cross-Layer Contracts: N/A — no threshold changes
+- ✅ Shared Logic: `lifecycle-phase.js` has a TS twin. If CoA stall logic lives in the pure function, dual-path applies.
+- ✅ Pipeline: Uses shared `loadMarketplaceConfigs` helper. No new SDK patterns.
+- ✅ Pre-Review Self-Checklist: Listed in execution plan
+- ⬜ Cross-Layer Contracts: N/A — no new thresholds, only wiring existing seeded values
 - ⬜ Database/Migration: N/A
 
-**PLAN LOCKED. Do you authorize this Enhancement plan? (y/n)**
+**PLAN LOCKED. Do you authorize? (y/n)**
+
+Specifically confirm which v1-removal path to take (A/B/C above).

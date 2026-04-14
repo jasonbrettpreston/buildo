@@ -119,10 +119,27 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
     );
 
     if (lvRows.length > 0) {
-      const dbVars = Object.fromEntries(
-        lvRows.map((v) => [v.variable_key, parseFloat(v.variable_value)]),
-      );
-      logicVars = { ...logicVars, ...dbVars };
+      // Guard against NaN (e.g. DECIMAL NULL in DB → parseFloat(null) = NaN)
+      // and against zero on variables where 0 is semantically wrong
+      // (e.g. expired_threshold_days = 0 would mark every permit expired
+      // the day it starts). Fall back to hardcoded default for non-finite
+      // or zero-sentinel values. Adversarial Probe 1.
+      const ZERO_IS_INVALID = new Set([
+        'expired_threshold_days', 'los_base_divisor', 'stall_penalty_precon',
+        'stall_penalty_active', 'lead_expiry_days', 'coa_stall_threshold',
+      ]);
+      for (const { variable_key, variable_value } of lvRows) {
+        const parsed = parseFloat(variable_value);
+        if (!Number.isFinite(parsed)) {
+          pipeline.log.warn(`[${tag}]`, `logic_variables.${variable_key} is non-finite — keeping fallback`, { raw: variable_value });
+          continue;
+        }
+        if (parsed === 0 && ZERO_IS_INVALID.has(variable_key)) {
+          pipeline.log.warn(`[${tag}]`, `logic_variables.${variable_key} is 0 (invalid) — keeping fallback`);
+          continue;
+        }
+        logicVars[variable_key] = parsed;
+      }
       pipeline.log.info(`[${tag}]`, `Loaded ${lvRows.length} logic variables from control panel`);
     }
   } catch (err) {

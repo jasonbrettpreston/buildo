@@ -39,6 +39,15 @@ describe('scripts/update-tracked-projects.js — CRM assistant shape', () => {
   });
 
   // Path B: Claimed
+  it('auto-archives claimed projects when urgency is expired (WF3 2026-04-13)', () => {
+    // WF3 fix: claimed projects with urgency === 'expired' must auto-archive.
+    // Previously only saved projects archived on expired; claimed projects
+    // silently accumulated in the tracked_projects table.
+    expect(content).toMatch(/CLAIMED_STATUSES\.has\(row\.tracking_status\)/);
+    // Must check urgency === 'expired' in claimed path (not just saved)
+    expect(content).toMatch(/urgency === 'expired'/);
+  });
+
   it('generates STALL_WARNING on state change (stalled=true, not previously notified)', () => {
     expect(content).toMatch(/STALL_WARNING/);
     expect(content).toMatch(/lifecycle_stalled === true/);

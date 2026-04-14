@@ -339,22 +339,43 @@ function classifyBldLed(input, status, stalled) {
   return { phase: null, stalled: false };
 }
 
+// WF3 2026-04-13 — `stalled` flag added. Operator can tune the
+// threshold via `logic_variables.coa_stall_threshold`. The classifier
+// script passes `daysSinceActivity` (derived from last_seen_at) and
+// `stallThresholdDays` (from control panel) into the pure function.
+//
+// Stall rule: only P1 (Intake) / P2 (Review) phases can stall. Approved,
+// dead, or linked CoAs don't stall — they're terminal or have moved on.
 function classifyCoaPhase(input) {
   if (input.linked_permit_num != null && String(input.linked_permit_num).trim() !== '') {
-    return { phase: null };
+    return { phase: null, stalled: false };
   }
 
   const normalized = normalizeCoaDecision(input.decision);
 
   if (normalized != null && NORMALIZED_DEAD_DECISIONS.has(normalized)) {
-    return { phase: null };
+    return { phase: null, stalled: false };
   }
 
-  if (normalized != null && NORMALIZED_APPROVED_DECISIONS.has(normalized)) {
-    return { phase: 'P2' };
-  }
+  const phase = normalized != null && NORMALIZED_APPROVED_DECISIONS.has(normalized)
+    ? 'P2'
+    : 'P1';
 
-  return { phase: 'P1' };
+  // Stall detection: only for in-flight phases (P1/P2). A CoA that has
+  // had no activity for longer than the threshold is treated as stuck.
+  // Guard against Number(null) = 0 which would silently disable stall
+  // detection for rows with NULL last_seen_at (adversarial Probe 6).
+  const days = input.daysSinceActivity == null
+    ? null
+    : Number(input.daysSinceActivity);
+  const threshold = input.stallThresholdDays == null
+    ? null
+    : Number(input.stallThresholdDays);
+  const stalled = days != null && threshold != null
+    && Number.isFinite(days) && Number.isFinite(threshold)
+    && threshold > 0 && days > threshold;
+
+  return { phase, stalled };
 }
 
 // Frozen array form of DEAD_STATUS_SET — for SQL parameterization in

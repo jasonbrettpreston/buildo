@@ -164,7 +164,7 @@ Ordered array of script slugs. Execution is strictly sequential, stop-on-failure
 
 ```json
 {
-  "permits": ["assert_schema", "permits", "close_stale_permits", "classify_permit_phase", "classify_scope", "builders", "link_wsib", "geocode_permits", "link_parcels", "link_neighbourhoods", "link_massing", "link_similar", "classify_permits", "compute_cost_estimates", "compute_timing_calibration", "compute_timing_calibration_v2", "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health", "classify_lifecycle_phase", "compute_trade_forecasts", "compute_opportunity_scores", "update_tracked_projects"],
+  "permits": ["assert_schema", "permits", "close_stale_permits", "classify_permit_phase", "classify_scope", "builders", "link_wsib", "geocode_permits", "link_parcels", "link_neighbourhoods", "link_massing", "link_similar", "classify_permits", "compute_cost_estimates", "compute_timing_calibration_v2", "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health", "classify_lifecycle_phase", "compute_trade_forecasts", "compute_opportunity_scores", "update_tracked_projects"],
   "coa": ["assert_schema", "coa", "assert_coa_freshness", "link_coa", "create_pre_permits", "assert_pre_permit_aging", "refresh_snapshot", "assert_data_bounds", "assert_engine_health", "classify_lifecycle_phase"],
   "sources": ["assert_schema", "address_points", "geocode_permits", "parcels", "compute_centroids", "link_parcels", "massing", "link_massing", "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"],
   "entities": ["enrich_wsib_builders", "enrich_named_builders"],
@@ -197,8 +197,8 @@ Ordered array of script slugs. Execution is strictly sequential, stop-on-failure
 | `classify_permits` | `classify-permits.js` | permit_trades | permits |
 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | permits, coa_applications, permit_phase_transitions | permits, coa |
 | `compute_cost_estimates` | `compute-cost-estimates.js` | cost_estimates | permits |
-| `compute_timing_calibration` | `compute-timing-calibration.js` | timing_calibration | permits (feeds spec 71 detail-page timing) |
-| `compute_timing_calibration_v2` | `compute-timing-calibration-v2.js` | phase_calibration | permits (feeds spec 85 flight tracker) |
+| `compute_timing_calibration` | `compute-timing-calibration.js` | timing_calibration | — (DEPRECATED; WF3 2026-04-13 removed from chain. Table will go stale until frontend migrates to phase_calibration) |
+| `compute_timing_calibration_v2` | `compute-timing-calibration-v2.js` | phase_calibration | permits (feeds spec 85 flight tracker; sole calibration step) |
 | `compute_trade_forecasts` | `compute-trade-forecasts.js` | trade_forecasts | permits |
 | `compute_opportunity_scores` | `compute-opportunity-scores.js` | trade_forecasts (opportunity_score) | permits |
 | `update_tracked_projects` | `update-tracked-projects.js` | tracked_projects, lead_analytics | permits |

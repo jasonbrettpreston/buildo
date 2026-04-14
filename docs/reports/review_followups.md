@@ -914,3 +914,20 @@ Three user-reported bugs: (1) test feed tool throws `[object Object]` error on R
 | LOW | Independent (FAIL-1) | `compute_opportunity_scores.telemetry_tables` lists `trade_forecasts` but the script only UPDATEs one column — pre/post row-count diff will always show 0. Dashboard telemetry cosmetic issue. | Future WF2 — custom telemetry for UPDATE-only scripts | OPEN |
 | LOW | Adversarial (Probe 3) | Pre-existing: `opportunity_score` column on `expired` urgency rows is never recomputed (WHERE clause excludes them). Score from last non-expired computation persists. Existed before this WF2 but more visible now. | Future WF3 — scrub opportunity_score when urgency flips to expired | OPEN |
 | LOW | Adversarial (Probe 4 caveat) | CoA chain reclassifies lifecycle_phase but does NOT run the marketplace tail. CoA-triggered reclassification takes until next permits chain run (~24h) to propagate into trade_forecasts. | Document or wire tail to CoA chain | OPEN |
+
+---
+
+## WF3 — Deferred Control Panel Wiring (2026-04-13)
+
+**Scope:** 4 fixes — remove v1 from chain (Path A), wire expired_threshold_days, wire coa_stall_threshold (+migration 094), auto-archive expired claimed leads.
+
+| Severity | Source | Item | Planned home | Status |
+|----------|--------|------|--------------|--------|
+| CRITICAL | Adversarial (Probe 6) | `GREATEST(0, NULL)` returns NULL → `Number(null) = 0` → stall silently disabled for every CoA row with NULL `last_seen_at`. | **FIXED** — SQL uses explicit CASE to return NULL; classifier treats null as "unknown, not stalled" | closed-in-WF3-v1removal |
+| HIGH | Adversarial (Probe 1) | `expired_threshold_days = 0` marks every permit expired; DB `NULL` → `parseFloat(null) = NaN` silently overwrites fallback. | **FIXED** — config-loader guards against NaN and against sentinel-zero on critical variables | closed-in-WF3-v1removal |
+| HIGH | Both (Adv Probe 2 / Ind CL-10) | `classifyCoaPhase` stall path had zero test coverage — 8 new tests added covering days > threshold, boundary, terminal cases, null/zero threshold. | **FIXED** — 8 tests added to lifecycle-phase.logic.test.ts | closed-in-WF3-v1removal |
+| HIGH | Independent (CL-13) | `classify-lifecycle-phase.js` `emitMeta` writes missing `lifecycle_stalled` for `coa_applications`. Admin Data Flow Tile would show wrong column list. | **FIXED** — added to writes list | closed-in-WF3-v1removal |
+| MEDIUM | Independent (CL-16) | Runbook rollback section didn't mandate JS-revert-before-column-drop sequence. Operator under pressure could drop column while new JS is live. | **FIXED** — added 5-step mandatory sequence to runbook | closed-in-WF3-v1removal |
+| LOW | Adversarial (Probe 4) | `coa_stall_threshold = 0` means "feature off", not "flag immediately" — surprising UX. Not a bug, but undocumented in admin UI spec. | Admin UI copy when Control Panel card ships | OPEN |
+| LOW | Adversarial (Probe 5) / Convention | Project uses commented-out DOWN blocks. Adversarial flagged migration 094 as non-compliant with CLAUDE.md rule. Investigating reveals ALL project migrations (090-094) use the same commented pattern. | Spec clarification in CLAUDE.md §Backend Mode Rule 5 | OPEN |
+| INFO | User decision | v1 `compute_timing_calibration` removed from chain (Path A). `timing_calibration` table will go stale. `src/features/leads/lib/timing.ts` (spec 71 detail-page timing), `src/lib/admin/lead-feed-health.ts`, `scripts/refresh-snapshot.js` still read the stale table. | Future frontend WF — migrate timing.ts to phase_calibration | OPEN |

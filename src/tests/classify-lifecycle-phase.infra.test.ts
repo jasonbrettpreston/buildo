@@ -47,6 +47,15 @@ describe('scripts/classify-lifecycle-phase.js — pipeline shape', () => {
     expect(content).toMatch(/classifyCoaPhase/);
   });
 
+  it('consumes coa_stall_threshold from control panel (WF3 2026-04-13)', () => {
+    // Spec 86 §1: coa_stall_threshold drives the "days without CoA
+    // activity before marking a pre-permit lead as stalled" decision.
+    // Was seeded in migration 093 but not consumed. Now flows through
+    // loadMarketplaceConfigs into classifyCoaPhase for the stall branch.
+    expect(content).toMatch(/loadMarketplaceConfigs/);
+    expect(content).toMatch(/coa_stall_threshold/);
+  });
+
   it('filters dirty permits incrementally via lifecycle_classified_at vs last_seen_at', () => {
     expect(content).toMatch(/lifecycle_classified_at IS NULL/);
     expect(content).toMatch(/last_seen_at\s*>\s*lifecycle_classified_at/);

@@ -54,17 +54,24 @@ const DEFAULT_MEDIAN_DAYS = 30;
 // lifecycle_stalled directly from the permits table JOIN, not from
 // trade_forecasts.
 //
-// Precedence: expired FIRST (>90 days past = dead data regardless of
-// whether the permit physically passed the target). Then isPastTarget
+// Precedence: expired FIRST (threshold days past = dead data regardless
+// of whether the permit physically passed the target). Then isPastTarget
 // (recent overdue = active signal). This ensures 5-year-old permits
 // that passed P12 get buried as expired, not stuck as overdue forever.
-function classifyUrgency(daysUntil, isPastTarget) {
-  // 1. THE GRAVEYARD FIX — must be first. If it's 90+ days past the
-  // predicted date, it's dead data. We don't care if it's also past
-  // the target phase — both cases are dead.
-  if (daysUntil <= -90) return 'expired';
+//
+// WF3 2026-04-13: `expiredThreshold` is now loaded from logic_variables
+// (expired_threshold_days, seeded as -90). Previously hardcoded.
+function classifyUrgency(daysUntil, isPastTarget, expiredThreshold) {
+  // 1. THE GRAVEYARD FIX — must be first. If it's past the expired
+  // threshold, it's dead data. We don't care if it's also past the
+  // target phase — both cases are dead.
+  // Normalize: DB stores -90 but callers may pass either sign; coerce
+  // to the negative form so we always compare daysUntil against a
+  // negative threshold.
+  const threshold = -Math.abs(expiredThreshold);
+  if (daysUntil <= threshold) return 'expired';
 
-  // 2. Physically passed the target phase but within 90 days → active
+  // 2. Physically passed the target phase but within threshold → active
   // signal. Builder may still urgently need this trade.
   if (isPastTarget) return 'overdue';
 
@@ -282,7 +289,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       (predictedStart.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
     );
 
-    const urgency = classifyUrgency(daysUntil, isPastTarget);
+    const urgency = classifyUrgency(daysUntil, isPastTarget, logicVars.expired_threshold_days);
     const confidence = classifyConfidence(cal.sample, cal.method === 'default');
 
     forecasts.push({

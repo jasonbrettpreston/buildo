@@ -123,6 +123,20 @@ pipeline.run('update-tracked-projects', async (pool) => {
       continue; // No alerts on closed jobs
     }
 
+    // B1b. Auto-archive claimed leads whose urgency is 'expired'
+    // (WF3 2026-04-13). Previously only saved leads archived on
+    // urgency=expired; claimed leads would accumulate in the
+    // tracked_projects table indefinitely even after the forecast
+    // engine had given up on them. The expired threshold itself is
+    // controlled by logic_variables.expired_threshold_days (consumed
+    // upstream by compute-trade-forecasts.classifyUrgency), so this
+    // archive is effectively the lead_expiry_days TTL enforcement.
+    if (row.urgency === 'expired') {
+      updates.push({ id: row.tracking_id, status: 'archived' });
+      archived++;
+      continue;
+    }
+
     // B2. Stall alert: site just stalled (state-change detection)
     if (row.lifecycle_stalled === true && row.last_notified_stalled !== true) {
       const dateStr = row.predicted_start

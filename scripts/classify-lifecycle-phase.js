@@ -27,6 +27,7 @@ const {
   DEAD_STATUS_ARRAY,
   NORMALIZED_DEAD_DECISIONS_ARRAY,
 } = require('./lib/lifecycle-phase');
+const { loadMarketplaceConfigs } = require('./lib/config-loader');
 
 // ─────────────────────────────────────────────────────────────────
 // Batch UPDATE SQL builders — batched via VALUES clause to avoid
@@ -71,16 +72,21 @@ function buildPermitUpdateSQL(batchSize) {
 function buildCoaUpdateSQL(batchSize) {
   const tuples = [];
   for (let i = 0; i < batchSize; i++) {
-    const base = i * 2;
-    tuples.push(`($${base + 1}::int, $${base + 2}::varchar)`);
+    const base = i * 3;
+    tuples.push(`($${base + 1}::int, $${base + 2}::varchar, $${base + 3}::boolean)`);
   }
+  // WF3 2026-04-13 — lifecycle_stalled added (migration 094).
+  // IS DISTINCT FROM guard on EITHER phase or stalled so we don't
+  // bump lifecycle_classified_at when nothing actually changed.
   return `
     UPDATE coa_applications ca
        SET lifecycle_phase = v.phase,
+           lifecycle_stalled = v.stalled,
            lifecycle_classified_at = NOW()
-      FROM (VALUES ${tuples.join(', ')}) AS v(id, phase)
+      FROM (VALUES ${tuples.join(', ')}) AS v(id, phase, stalled)
      WHERE ca.id = v.id
-       AND ca.lifecycle_phase IS DISTINCT FROM v.phase
+       AND (ca.lifecycle_phase IS DISTINCT FROM v.phase
+            OR ca.lifecycle_stalled IS DISTINCT FROM v.stalled)
   `;
 }
 
@@ -95,7 +101,7 @@ function flattenPermitBatch(rows) {
 function flattenCoaBatch(rows) {
   const out = [];
   for (const r of rows) {
-    out.push(r.id, r.phase);
+    out.push(r.id, r.phase, r.stalled);
   }
   return out;
 }
@@ -130,6 +136,15 @@ const ADVISORY_LOCK_ID = 85;
 
 pipeline.run('classify-lifecycle-phase', async (pool) => {
   const now = new Date();
+
+  // ═══════════════════════════════════════════════════════════
+  // Load Control Panel (WF3 2026-04-13)
+  // ═══════════════════════════════════════════════════════════
+  // Pulls `coa_stall_threshold` (logic_variables, default 30 days) used
+  // to flag CoAs stuck in P1/P2 for too long. Falls back gracefully if
+  // the control panel query fails.
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'classify-lifecycle-phase');
+  const COA_STALL_THRESHOLD_DAYS = logicVars.coa_stall_threshold;
 
   // ═══════════════════════════════════════════════════════════
   // Concurrency guard — single-threaded classifier
@@ -454,8 +469,19 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // Phase 2: classify dirty CoA rows
   // ═══════════════════════════════════════════════════════════
   pipeline.log.info('[classify-lifecycle-phase]', 'Querying dirty CoAs...');
+  // WF3 2026-04-13 — days_since_activity computed in SQL so the pure
+  // classifier stays portable (no `new Date()` in the library). Days is
+  // since the most recent activity signal we have (last_seen_at).
+  // Adversarial Probe 6: NULL last_seen_at must not silently degrade to
+  // days_since_activity = 0. `GREATEST(0, NULL) = NULL` → Number(null) = 0
+  // in JS, masking the null. Use an explicit CASE so the classifier sees
+  // null (→ stalled=false, the only safe default for unknown activity).
   const coaResult = await pool.query(
-    `SELECT id, decision, linked_permit_num, status, last_seen_at
+    `SELECT id, decision, linked_permit_num, status, last_seen_at,
+            CASE
+              WHEN last_seen_at IS NULL THEN NULL
+              ELSE GREATEST(0, EXTRACT(EPOCH FROM (NOW() - last_seen_at)) / 86400.0)
+            END::float AS days_since_activity
        FROM coa_applications
       WHERE lifecycle_classified_at IS NULL
          OR last_seen_at > lifecycle_classified_at`,
@@ -463,7 +489,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   const dirtyCoAs = coaResult.rows;
   pipeline.log.info(
     '[classify-lifecycle-phase]',
-    `Dirty CoAs: ${dirtyCoAs.length.toLocaleString()}`,
+    `Dirty CoAs: ${dirtyCoAs.length.toLocaleString()} (stall threshold=${COA_STALL_THRESHOLD_DAYS}d)`,
   );
 
   const coaUpdates = dirtyCoAs.map((row) => {
@@ -471,8 +497,10 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       decision: row.decision,
       linked_permit_num: row.linked_permit_num,
       status: row.status,
+      daysSinceActivity: row.days_since_activity,
+      stallThresholdDays: COA_STALL_THRESHOLD_DAYS,
     });
-    return { id: row.id, phase: result.phase };
+    return { id: row.id, phase: result.phase, stalled: result.stalled };
   });
 
   let coasUpdated = 0;
@@ -730,7 +758,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     {
       permits: ['lifecycle_phase', 'lifecycle_stalled', 'lifecycle_classified_at', 'phase_started_at'],
       permit_phase_transitions: ['permit_num', 'revision_num', 'from_phase', 'to_phase', 'transitioned_at', 'permit_type', 'neighbourhood_id'],
-      coa_applications: ['lifecycle_phase', 'lifecycle_classified_at'],
+      coa_applications: ['lifecycle_phase', 'lifecycle_stalled', 'lifecycle_classified_at'],
     },
   );
 

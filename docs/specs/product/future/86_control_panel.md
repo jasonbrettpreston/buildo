@@ -70,11 +70,12 @@ Refactor the four scripts to perform a "Config Load" at the start of their run v
 | Script | Permits Chain Step | Role |
 |---|---|---|
 | `compute-cost-estimates.js` | **14** | Fetches the 32 percentages from `trade_configurations` + Liar's Gate threshold from `logic_variables`. |
-| `compute-trade-forecasts.js` | **23** | Fetches bimodal targets (`bid_phase_cutoff`, `work_phase_target`) + stall penalties from `logic_variables`. |
-| `compute-opportunity-scores.js` | **24** | JOINs `trade_configurations` for per-trade `multiplier_bid`/`multiplier_work`. Fetches `los_penalty_tracking`/`los_penalty_saving` from `logic_variables`. |
-| `update-tracked-projects.js` | **25** | JOINs `trade_configurations` for per-trade `imminent_window_days`. |
+| `classify-lifecycle-phase.js` | **21** | Fetches `coa_stall_threshold` from `logic_variables` to flag stuck CoAs as `lifecycle_stalled=TRUE` (WF3 2026-04-13). |
+| `compute-trade-forecasts.js` | **22** | Fetches bimodal targets (`bid_phase_cutoff`, `work_phase_target`) + stall penalties + `expired_threshold_days` from `logic_variables`. |
+| `compute-opportunity-scores.js` | **23** | JOINs `trade_configurations` for per-trade `multiplier_bid`/`multiplier_work`. Fetches `los_penalty_tracking`/`los_penalty_saving` from `logic_variables`. |
+| `update-tracked-projects.js` | **24** | JOINs `trade_configurations` for per-trade `imminent_window_days`. Auto-archives claimed leads where `urgency='expired'` (WF3 2026-04-13 — enforces `lead_expiry_days` TTL). |
 
-The 3 marketplace scripts (23-25) run AFTER `classify_lifecycle_phase` (step 22) because they depend on fresh lifecycle_phase + phase_started_at anchors from the classifier.
+The 3 marketplace scripts (22-24) run AFTER `classify_lifecycle_phase` (step 21) because they depend on fresh lifecycle_phase + phase_started_at anchors from the classifier.
 
 ### Step 4: Admin UI (The Control Page)
 Create a single React page in the Admin dashboard with:

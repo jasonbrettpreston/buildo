@@ -748,6 +748,8 @@ interface CoaInput {
   decision?: string | null;
   linked_permit_num?: string | null;
   status?: string | null;
+  daysSinceActivity?: number | null;
+  stallThresholdDays?: number | null;
 }
 
 function coa(overrides: CoaInput = {}) {
@@ -865,6 +867,69 @@ describe('classifyCoaPhase — CoA branch', () => {
       coa({ decision: 'decision not made - appeal was made due to that' }),
     );
     expect(result.phase).toBe('P1');
+  });
+
+  // ─── WF3 2026-04-13: Stall detection ─────────────────────────────
+  // coa_stall_threshold from logic_variables drives lifecycle_stalled
+  // on in-flight CoAs (P1/P2). Adversarial Probe 6 + Independent CL-10.
+  describe('stall detection via coa_stall_threshold', () => {
+    test('P1 stalls when daysSinceActivity exceeds threshold', () => {
+      const result = classifyCoaPhase(
+        coa({ decision: null, daysSinceActivity: 35, stallThresholdDays: 30 }),
+      );
+      expect(result.phase).toBe('P1');
+      expect(result.stalled).toBe(true);
+    });
+
+    test('P2 (approved) stalls when daysSinceActivity exceeds threshold', () => {
+      const result = classifyCoaPhase(
+        coa({ decision: 'Approved', daysSinceActivity: 45, stallThresholdDays: 30 }),
+      );
+      expect(result.phase).toBe('P2');
+      expect(result.stalled).toBe(true);
+    });
+
+    test('days === threshold is NOT stalled (strict greater-than)', () => {
+      const result = classifyCoaPhase(
+        coa({ decision: null, daysSinceActivity: 30, stallThresholdDays: 30 }),
+      );
+      expect(result.stalled).toBe(false);
+    });
+
+    test('linked CoA is never stalled (terminal)', () => {
+      const result = classifyCoaPhase(
+        coa({ linked_permit_num: '25 123 BLD', daysSinceActivity: 999, stallThresholdDays: 30 }),
+      );
+      expect(result.stalled).toBe(false);
+    });
+
+    test('dead-decision CoA is never stalled (terminal)', () => {
+      const result = classifyCoaPhase(
+        coa({ decision: 'application closed', daysSinceActivity: 999, stallThresholdDays: 30 }),
+      );
+      expect(result.stalled).toBe(false);
+    });
+
+    test('null daysSinceActivity → not stalled (unknown activity)', () => {
+      const result = classifyCoaPhase(
+        coa({ decision: null, daysSinceActivity: null, stallThresholdDays: 30 }),
+      );
+      expect(result.stalled).toBe(false);
+    });
+
+    test('null threshold → not stalled (feature off)', () => {
+      const result = classifyCoaPhase(
+        coa({ decision: null, daysSinceActivity: 100, stallThresholdDays: null }),
+      );
+      expect(result.stalled).toBe(false);
+    });
+
+    test('zero threshold → not stalled (feature off, prevents thrashing)', () => {
+      const result = classifyCoaPhase(
+        coa({ decision: null, daysSinceActivity: 100, stallThresholdDays: 0 }),
+      );
+      expect(result.stalled).toBe(false);
+    });
   });
 });
 

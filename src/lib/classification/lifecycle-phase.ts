@@ -56,10 +56,16 @@ export interface CoaClassifierInput {
   decision: string | null;
   linked_permit_num: string | null;
   status: string | null;
+  /** Days since last_seen_at (or equivalent activity signal). Used for stall detection. */
+  daysSinceActivity?: number | null;
+  /** Threshold in days — from logic_variables.coa_stall_threshold. */
+  stallThresholdDays?: number | null;
 }
 
 export interface CoaClassifierResult {
   phase: 'P1' | 'P2' | null;
+  /** WF3 2026-04-13: true when a P1/P2 CoA has been inactive longer than stallThresholdDays. */
+  stalled: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -579,21 +585,34 @@ export function classifyCoaPhase(
 ): CoaClassifierResult {
   // Linked CoAs don't carry their own phase — the permit does
   if (input.linked_permit_num != null && String(input.linked_permit_num).trim() !== '') {
-    return { phase: null };
+    return { phase: null, stalled: false };
   }
 
   const normalized = normalizeCoaDecision(input.decision);
 
   // Dead-state decisions → null
   if (normalized != null && NORMALIZED_DEAD_DECISIONS.has(normalized)) {
-    return { phase: null };
+    return { phase: null, stalled: false };
   }
 
-  // Canonical approved → P2
-  if (normalized != null && NORMALIZED_APPROVED_DECISIONS.has(normalized)) {
-    return { phase: 'P2' };
-  }
+  // Canonical approved → P2. Everything else → P1.
+  const phase = normalized != null && NORMALIZED_APPROVED_DECISIONS.has(normalized)
+    ? 'P2'
+    : 'P1';
 
-  // Everything else (null, deferred variants, postponed, garbage) → P1
-  return { phase: 'P1' };
+  // WF3 2026-04-13: stall detection. Only in-flight phases (P1/P2) can
+  // stall. See scripts/lib/lifecycle-phase.js for the canonical twin.
+  // Guard against Number(null) = 0 which would silently disable stall
+  // detection for rows with NULL last_seen_at (adversarial Probe 6).
+  const days = input.daysSinceActivity == null
+    ? null
+    : Number(input.daysSinceActivity);
+  const threshold = input.stallThresholdDays == null
+    ? null
+    : Number(input.stallThresholdDays);
+  const stalled = days != null && threshold != null
+    && Number.isFinite(days) && Number.isFinite(threshold)
+    && threshold > 0 && days > threshold;
+
+  return { phase, stalled };
 }

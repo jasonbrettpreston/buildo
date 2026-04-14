@@ -94,9 +94,12 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
 
   it('classifies urgency with expired decay + correct thresholds (no on_hold)', () => {
     expect(content).toMatch(/classifyUrgency/);
-    // WF3: expired tier (>90 days past → dead data, not a lead)
+    // WF3 2026-04-13: expired threshold now loaded from logic_variables
+    // (expired_threshold_days, seeded as -90). Previously hardcoded.
     expect(content).toMatch(/expired/);
-    expect(content).toMatch(/<= -90/);
+    expect(content).toMatch(/expired_threshold_days/);
+    // Ensure the hardcoded -90 is gone from the classify function
+    expect(content).not.toMatch(/daysUntil <= -90/);
     // Stall handling is now via Instant Recalibration math, NOT a
     // separate urgency tier. classifyUrgency has no isStalled param.
     expect(content).not.toMatch(/return 'on_hold'/);

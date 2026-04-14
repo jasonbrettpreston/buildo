@@ -27,7 +27,7 @@ Predict actionable work dates for all 32 trades by marrying current lifecycle st
 ### Implementation
 - **Script:** `scripts/compute-trade-forecasts.js`
 - **Logic:** Combines `phase_started_at` anchors with `phase_calibration` medians and `TRADE_TARGET_PHASE` mappings.
-- **Pipeline Wiring:** Permits Chain step 23 of 25. Runs after `classify_lifecycle_phase` (22) so lifecycle_phase + phase_started_at anchors are fresh. Consumes `phase_calibration` written by `compute_timing_calibration_v2` (step 16). Precedes `compute_opportunity_scores` (24) which reads the `target_window` and `urgency` stamps this script produces.
+- **Pipeline Wiring:** Permits Chain step 22 of 24. Runs after `classify_lifecycle_phase` (21) so lifecycle_phase + phase_started_at anchors are fresh. Consumes `phase_calibration` written by `compute_timing_calibration_v2` (step 15). Precedes `compute_opportunity_scores` (23) which reads the `target_window` and `urgency` stamps this script produces. `expired` urgency threshold is loaded from `logic_variables.expired_threshold_days` (WF3 2026-04-13).
 
 ---
 

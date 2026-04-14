@@ -37,9 +37,10 @@ The engine mutates core tables and populates a historical transition ledger.
 - **Script:** `scripts/classify-lifecycle-phase.js`
 - **Logic Library:** `scripts/lib/lifecycle-phase.js` (Pure function `classifyLifecyclePhase`)
 - **Pipeline Wiring:**
-  - **Permits Chain:** Step 22 of 25. Runs after `assert_engine_health` (21) — the classifier depends on a clean engine-health checkpoint — and before the marketplace tail (`compute_trade_forecasts` at 23, `compute_opportunity_scores` at 24, `update_tracked_projects` at 25).
+  - **Permits Chain:** Step 21 of 24. Runs after `assert_engine_health` (20) — the classifier depends on a clean engine-health checkpoint — and before the marketplace tail (`compute_trade_forecasts` at 22, `compute_opportunity_scores` at 23, `update_tracked_projects` at 24).
   - **CoA Chain:** Step 10 of 10 (final step). No forecasts/scores run on pre-permit CoA data because there is no trade classification or cost estimate yet.
   - Holds `pg_try_advisory_lock(85)` on a dedicated `pool.connect()` client to prevent concurrent runs.
+  - **CoA Stall Detection (WF3 2026-04-13):** Consumes `logic_variables.coa_stall_threshold` (seeded 30 days) to flag `coa_applications.lifecycle_stalled = TRUE` when a CoA in P1/P2 has had no activity for longer than the threshold (migration 094 added the column).
 
 ---
 

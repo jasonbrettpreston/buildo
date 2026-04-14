@@ -38,7 +38,7 @@ Calculate a stable "Intrinsic Value" (0-100) for every trade opportunity based o
 ### Implementation
 - **Script:** `scripts/compute-opportunity-scores.js`
 - **Data Flow:** Marries `trade_forecasts` with `cost_estimates` (for trade-specific $) and `lead_analytics` (for competition counts).
-- **Pipeline Wiring:** Permits Chain step 24 of 25. Runs after `classify_lifecycle_phase` (22) → `compute_trade_forecasts` (23). Depends on `compute_cost_estimates` (step 14) for trade_contract_values in `cost_estimates`. Precedes `update_tracked_projects` (25) so CRM alerts see fresh scores.
+- **Pipeline Wiring:** Permits Chain step 23 of 24. Runs after `classify_lifecycle_phase` (21) → `compute_trade_forecasts` (22). Depends on `compute_cost_estimates` (step 14) for trade_contract_values in `cost_estimates`. Precedes `update_tracked_projects` (24) so CRM alerts see fresh scores.
 
 ---
 

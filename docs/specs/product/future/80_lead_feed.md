@@ -62,17 +62,17 @@ Tracks high and low intensity competition signals.
 
 ## 3. Implementation: The Pipeline Engine
 
-The feed is powered by four nightly scripts running in the Permits Chain (step numbers below refer to the 25-step chain in `docs/specs/pipeline/40_pipeline_system.md` §4.2):
+The feed is powered by four nightly scripts running in the Permits Chain (step numbers below refer to the 24-step chain in `docs/specs/pipeline/40_pipeline_system.md` §4.2):
 
 1. **`compute-cost-estimates.js`** (step **14**): Establishes Geometric Truth. Discards permit costs < 25% of modeled cost. Slices total cost into 32 trade-specific JSONB values.
-2. **`compute-trade-forecasts.js`** (step **23**, after `classify_lifecycle_phase`): Stamps the Bimodal Window. Identifies if the trade is in the relationship-building phase (`early_bid`) or the site-active phase (`rescue_mission`).
-3. **`compute-opportunity-scores.js`** (step **24**): Calculates the Intrinsic Score.
+2. **`compute-trade-forecasts.js`** (step **22**, after `classify_lifecycle_phase`): Stamps the Bimodal Window. Identifies if the trade is in the relationship-building phase (`early_bid`) or the site-active phase (`rescue_mission`). Urgency `expired` threshold loaded from `logic_variables.expired_threshold_days`.
+3. **`compute-opportunity-scores.js`** (step **23**): Calculates the Intrinsic Score.
    - **Base:** (Trade Value / $10k).
    - **Urgency Multiplier:** per-trade `multiplier_bid` / `multiplier_work` from `trade_configurations` (e.g., excavation 3.0/1.8 vs painting 2.0/1.2).
    - **Competition Discount:** `-(tracking_count * 50) - (saving_count * 10)`.
-4. **`update-tracked-projects.js`** (step **25**, final): The CRM Assistant. Syncs user behavior back to `lead_analytics` and generates state-change alerts.
+4. **`update-tracked-projects.js`** (step **24**, final): The CRM Assistant. Auto-archives claimed leads where `urgency='expired'`. Syncs user behavior back to `lead_analytics` and generates state-change alerts.
 
-Lifecycle anchors come from `classify-lifecycle-phase.js` (step **22**, runs in both permits and coa chains). Flight-tracker timing comes from `compute_timing_calibration_v2` (step **16**) which writes `phase_calibration` medians. The detail-page timing engine (spec 71) uses `compute_timing_calibration` (step **15**) writing the `timing_calibration` table — both calibration scripts run nightly because they feed different engines.
+Lifecycle anchors come from `classify-lifecycle-phase.js` (step **21**, runs in both permits and coa chains). Flight-tracker timing comes from `compute_timing_calibration_v2` (step **15**) which writes `phase_calibration` medians. The legacy v1 calibration was removed from the chain in WF3 2026-04-13 — the detail-page timing engine (spec 71) will be migrated to `phase_calibration` in a future frontend WF.
 
 ---
 
