@@ -50,10 +50,10 @@ Active `permit_trades`, `permits` with lifecycle data, and `phase_calibration` r
 Upserts rows to `trade_forecasts`; purges stale rows for terminal or deactivated permits.
 
 ### Urgency Classification
-- **`expired`:** > 90 days in the past (dead lead).
+- **`expired`:** > `logic_variables.expired_threshold_days` (default 90) days in the past (dead lead).
 - **`overdue`:** Physically passed the target phase OR > 30 days past predicted start.
-- **`imminent`:** < 14 days until predicted start.
-- **`upcoming`:** 15–30 days until predicted start.
+- **`imminent`:** ≤ `trade_configurations.imminent_window_days` (per-trade; fallback 14) until predicted start. **This script is the authoritative consumer of the per-trade knob** — `update-tracked-projects.js` routes on the resulting `urgency` value and uses the same config only for alert message text (WF3-05 / H-W13). Setting `imminent_window_days = 0` disables the imminent tier for that trade — permits flow directly from `delayed` to `upcoming` because the `daysUntil <= 0` branch (delayed) fires first.
+- **`upcoming`:** `imminent_window_days` < daysUntil ≤ 30 days until predicted start.
 
 ---
 

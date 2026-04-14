@@ -61,7 +61,11 @@ const DEFAULT_MEDIAN_DAYS = 30;
 //
 // WF3 2026-04-13: `expiredThreshold` is now loaded from logic_variables
 // (expired_threshold_days, seeded as -90). Previously hardcoded.
-function classifyUrgency(daysUntil, isPastTarget, expiredThreshold) {
+// WF3-05 (H-W13): `imminentWindow` is loaded per-trade from
+// trade_configurations.imminent_window_days (spec 85 / spec 82 §6).
+// Default 14 is a safety net only — callers should always pass the
+// per-trade value.
+function classifyUrgency(daysUntil, isPastTarget, expiredThreshold, imminentWindow = 14) {
   // 1. THE GRAVEYARD FIX — must be first. If it's past the expired
   // threshold, it's dead data. We don't care if it's also past the
   // target phase — both cases are dead.
@@ -78,7 +82,7 @@ function classifyUrgency(daysUntil, isPastTarget, expiredThreshold) {
   // 3. Actionable tracking
   if (daysUntil <= -30) return 'overdue';
   if (daysUntil <= 0) return 'delayed';
-  if (daysUntil <= 14) return 'imminent';
+  if (daysUntil <= imminentWindow) return 'imminent';
   if (daysUntil <= 30) return 'upcoming';
   return 'on_time';
 }
@@ -289,7 +293,15 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       (predictedStart.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
     );
 
-    const urgency = classifyUrgency(daysUntil, isPastTarget, logicVars.expired_threshold_days);
+    // WF3-05 (H-W13): per-trade imminent window from Control Panel.
+    // `?? 14` (not `|| 14`) preserves a legitimate 0-day window — the
+    // spec allows trades to opt out of the imminent tier entirely.
+    const urgency = classifyUrgency(
+      daysUntil,
+      isPastTarget,
+      logicVars.expired_threshold_days,
+      tradeConfigs[trade_slug]?.imminent_window_days ?? 14,
+    );
     const confidence = classifyConfidence(cal.sample, cal.method === 'default');
 
     forecasts.push({

@@ -962,3 +962,21 @@ Date: 2026-04-14. Reviewers: Gemini, DeepSeek, Claude independent (worktree).
 | LOW | Gemini | No FK from `pipeline_schedules.chain_id` to a real `chains` table. | Defer — no `chains` table exists; CHECK constraint is sufficient for the 4 known chains. Consider if `chains` table is ever added. | OPEN |
 | NIT | Gemini | Test organization could split more finely (migration vs API vs orchestrator). | Rejected — tests are already split across 3 files (`migration-095.infra.test.ts`, `chain.logic.test.ts`, `admin.ui.test.tsx`). | REJECTED |
 | FALSE POSITIVE | DeepSeek | "SQL injection via chainId variable". | Rejected — `chainId` is validated at `run-chain.js:44` against whitelist `CHAINS[chainId]`; `$1` parameter binding is used in the query. No taint path. | REJECTED |
+
+## WF3-05 (H-W13) — per-trade imminent_window_days — deferred items
+
+Date: 2026-04-14. Reviewers: DeepSeek, Claude independent (worktree). Gemini 503'd (skipped).
+
+| Sev | Source | Finding | Disposition | Status |
+|---|---|---|---|---|
+| LOW | Independent C2 | `imminent_window_days = 0` silently disables the imminent tier (`delayed` branch fires first); spec didn't document the opt-out. | **FIXED** inline — spec 85 §Urgency Classification now documents the 0-opt-out behaviour. | closed-in-WF3-05 |
+| MEDIUM | Independent C8 | Plan called for 3 behavioural fixtures in `compute-trade-forecasts.logic.test.ts` (e.g. `classifyUrgency(10,false,-90,7) → 'upcoming'`). Only shape tests landed because `classifyUrgency` is not exported from the script (would require pipeline.run restructuring outside this WF's scope). | Defer — codebase convention is regex-only infra tests + SQL/eval reproducer scripts; consider exporting `classifyUrgency` in a future refactor WF and adding the 3 fixtures then. | OPEN |
+| CRITICAL (rejected) | DeepSeek | "Default `imminentWindow = 14` is a ticking time bomb — callers might forget to pass it." | **REJECTED** — independent reviewer (CK-4) verified the script has exactly one call site; the infra test's regex anchors that call site explicitly so a regression that drops the 4th arg also drops the regex match. The default is a deliberate safety net. | REJECTED |
+| HIGH | DeepSeek | No validation on `imminent_window_days` from DB — could be `-1`, `999`, or non-numeric string. | Defer — generic concern across all numeric configs in `config-loader.js`; address as a single config-loader hardening WF3 (`Number.isFinite` + range checks for all numeric keys). The current `??` handles null/undefined; non-numeric strings would fail at the `<=` comparison loudly. | OPEN |
+| HIGH (rejected) | DeepSeek | "Boundary collision when `daysUntil=0` and `imminentWindow=0` between delayed/imminent tiers." | **REJECTED** — independent CK-2 + the spec's documented opt-out confirm: `delayed` fires before `imminent`, which is intentional and now documented. | REJECTED |
+| MEDIUM | DeepSeek | `imminentWindow > 30` makes the `upcoming` tier unreachable. | Defer — current fallback config maxes at 21 days; not reachable in practice. Add a spec note when an operator surface enables setting >30. | OPEN |
+| LOW (rejected) | DeepSeek | Spec wording about `upcoming` boundary mathematically ambiguous. | **REJECTED** — spec L56 already states `imminent_window_days < daysUntil ≤ 30` which exactly matches the code's `daysUntil <= 30` after the `imminent` check fires. | REJECTED |
+| LOW (rejected) | DeepSeek | `classifyUrgency` should accept a config object for future extensibility. | **REJECTED** — premature refactor; spec lists exactly 4 inputs which is well within positional-arg readability. | REJECTED |
+| NIT (rejected) | DeepSeek | Tests use regex shape-matching, not AST or behavioural. | **REJECTED** — codebase convention per `classify-lifecycle-phase.infra.test.ts` header. Already deferred similarly in WF3-01/02. | REJECTED |
+| NIT | DeepSeek | Comment claims "callers should always pass the per-trade value" but the default parameter undermines this. | Defer — trivial wording polish. | OPEN |
+| INFO | Operational | Gemini API 503 throughout this review window. DeepSeek + independent review provided sufficient coverage. Re-run Gemini if disagreement surfaces in production. | n/a | n/a |

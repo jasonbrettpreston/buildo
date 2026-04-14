@@ -111,6 +111,40 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/on_time/);
   });
 
+  it('consumes per-trade imminent_window_days from trade_configurations (WF3-05, H-W13)', () => {
+    // H-W13: the Control Panel `trade_configurations.imminent_window_days`
+    // knob must drive the `urgency='imminent'` threshold, not the hardcoded 14.
+    // Signature must accept a 4th parameter (the per-trade window).
+    expect(
+      content,
+      'classifyUrgency signature must accept an imminentWindow parameter',
+    ).toMatch(/function classifyUrgency\([^)]*imminentWindow/);
+
+    // Body must use the parameter, not the hardcoded 14.
+    expect(
+      content,
+      'imminent classification must compare against the parameter, not 14',
+    ).toMatch(/daysUntil <= imminentWindow/);
+    expect(
+      content,
+      'hardcoded `daysUntil <= 14` must be removed from classifyUrgency',
+    ).not.toMatch(/if \(daysUntil <= 14\) return 'imminent'/);
+
+    // Call site must pass the per-trade value from tradeConfigs with
+    // nullish-coalesce (NOT || 14, which would erase a legitimate 0-day
+    // window).
+    expect(
+      content,
+      'call site must thread tradeConfigs[trade_slug]?.imminent_window_days',
+    ).toMatch(
+      /classifyUrgency\([^)]*logicVars\.expired_threshold_days[^)]*tradeConfigs\[[^\]]+\]\?\.imminent_window_days\s*\?\?\s*14/,
+    );
+    expect(
+      content,
+      '`|| 14` would silently rewrite a legitimate 0-day window; use `?? 14`',
+    ).not.toMatch(/imminent_window_days\s*\|\|\s*14/);
+  });
+
   it('applies stall recalibration with context-aware penalty + rolling snowplow', () => {
     // Pre-construction stalls = stall_penalty_precon (bureaucracy)
     // Active construction stalls = stall_penalty_active
