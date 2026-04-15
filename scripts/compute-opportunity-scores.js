@@ -9,15 +9,36 @@
  * Also runs an integrity audit: flags permits where tracking_count > 0
  * but modeled_gfa_sqm is null (tracked leads with no geometric basis).
  *
- * SPEC LINK: docs/reports/lifecycle_phase_implementation.md
+ * SPEC LINK: docs/specs/product/future/81_opportunity_score_engine.md
+ *
+ * DUAL PATH NOTE: N/A — per spec §5 Operating Boundaries, opportunity_score
+ * is a dynamic marketplace property written only by this pipeline script.
+ * src/lib/classification/scoring.ts computes a different field (lead_score)
+ * and must NOT be modified alongside this script.
  */
 'use strict';
 
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
-const { loadMarketplaceConfigs } = require('./lib/config-loader');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
 // WF3-03 PR-B (H-W1): lock ID = spec number convention.
 const ADVISORY_LOCK_ID = 81;
+
+// 4 params per row: permit_num, revision_num, trade_slug, score
+const BATCH_SIZE = pipeline.maxRowsPerInsert(4); // Math.floor(65535 / 4) = 16383
+
+// Zod schema for the logicVars used by this script.
+// los_base_divisor=0 would cause division by zero; fail fast before scoring.
+// spec 47 §4 — validate before entering main loop.
+const LOGIC_VARS_SCHEMA = z.object({
+  los_base_divisor:     z.number().finite().positive(),
+  los_base_cap:         z.number().finite().positive(),
+  los_multiplier_bid:   z.number().finite().positive(),
+  los_multiplier_work:  z.number().finite().positive(),
+  los_penalty_tracking: z.number().finite().min(0),
+  los_penalty_saving:   z.number().finite().min(0),
+}).passthrough();
 
 pipeline.run('compute-opportunity-scores', async (pool) => {
   // ─── Concurrency guard — single-threaded scorer ──────────────
@@ -37,8 +58,16 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
       );
       pipeline.emitSummary({
         records_total: 0, records_new: 0, records_updated: 0,
-        records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere',
-          advisory_lock_id: ADVISORY_LOCK_ID },
+        records_meta: {
+          skipped: true, reason: 'advisory_lock_held_elsewhere',
+          advisory_lock_id: ADVISORY_LOCK_ID,
+          audit_table: {
+            phase: 23,
+            name: 'Opportunity Score Engine',
+            verdict: 'PASS',
+            rows: [{ metric: 'skipped_lock_held', value: 1, threshold: null, status: 'INFO' }],
+          },
+        },
       });
       pipeline.emitMeta({}, {});
       lockClient.release();
@@ -51,15 +80,25 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
 
   try {
   // ─── Load Control Panel via shared loader ──────────────────
-  const { tradeConfigs, logicVars: vars } = await loadMarketplaceConfigs(pool, 'opportunity-scores');
+  // tradeConfigs not used here — per-trade multipliers come from the SQL JOIN on trade_configurations.
+  const { logicVars: vars } = await loadMarketplaceConfigs(pool, 'opportunity-scores');
+
+  // Fail fast if any required variable is missing, zero, or non-finite.
+  // Prevents division-by-zero (los_base_divisor) and NaN score propagation.
+  const validation = validateLogicVars(vars, LOGIC_VARS_SCHEMA, 'opportunity-scores');
+  if (!validation.valid) {
+    throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  }
 
   // ═══════════════════════════════════════════════════════════
-  // Step 1: Load trade forecasts + cost + competition data
+  // Step 1: Stream trade forecasts + cost + competition data
+  // spec 47 §6.1 — streamQuery required for trade_forecasts (2.5M+ rows).
   // JOIN trade_configurations for per-trade multipliers (Bug 2 fix).
+  // spec §7 #6 — include NULL urgency rows (urgency IS NULL OR <> 'expired').
   // ═══════════════════════════════════════════════════════════
-  pipeline.log.info('[opportunity-scores]', 'Loading forecast + cost + competition data...');
+  pipeline.log.info('[opportunity-scores]', 'Streaming forecast + cost + competition data...');
 
-  const { rows } = await pool.query(`
+  const SQL = `
     SELECT
       tf.permit_num,
       tf.revision_num,
@@ -81,18 +120,19 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
       ON la.lead_key = 'permit:' || tf.permit_num || ':' || LPAD(tf.revision_num, 2, '0')
     LEFT JOIN trade_configurations tc
       ON tc.trade_slug = tf.trade_slug
-    WHERE tf.urgency NOT IN ('expired')
-  `);
-
-  pipeline.log.info('[opportunity-scores]', `Rows to score: ${rows.length}`);
+    WHERE (tf.urgency IS NULL OR tf.urgency <> 'expired')
+  `;
 
   // ═══════════════════════════════════════════════════════════
-  // Step 2: Compute scores in JS
+  // Step 2: Compute scores in JS (streamed row-by-row)
   // ═══════════════════════════════════════════════════════════
   const updates = [];
+  let totalRows = 0;
   let integrityFlags = 0;
 
-  for (const row of rows) {
+  for await (const row of pipeline.streamQuery(pool, SQL, [])) {
+    totalRows++;
+
     // Extract trade-specific dollar value from JSONB
     const tradeValues = row.trade_contract_values || {};
     const tradeValue = tradeValues[row.trade_slug] || 0;
@@ -103,9 +143,26 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     // Per-trade urgency multiplier from trade_configurations (Bug 2 fix).
     // Falls back to global logic_variables if the trade has no row in
     // trade_configurations (defensive — all 32 trades should have one).
+    // spec 47 §4 — guard parseFloat with isFinite; log warn + use global fallback on NaN.
+    const rawBid = parseFloat(row.multiplier_bid);
+    const rawWork = parseFloat(row.multiplier_work);
+    if (row.multiplier_bid != null && !Number.isFinite(rawBid)) {
+      pipeline.log.warn(
+        '[opportunity-scores]',
+        `Non-finite multiplier_bid for trade ${row.trade_slug} — using global fallback`,
+        { raw: row.multiplier_bid },
+      );
+    }
+    if (row.multiplier_work != null && !Number.isFinite(rawWork)) {
+      pipeline.log.warn(
+        '[opportunity-scores]',
+        `Non-finite multiplier_work for trade ${row.trade_slug} — using global fallback`,
+        { raw: row.multiplier_work },
+      );
+    }
     const urgencyMultiplier = row.target_window === 'bid'
-      ? (row.multiplier_bid != null ? parseFloat(row.multiplier_bid) : vars.los_multiplier_bid)
-      : (row.multiplier_work != null ? parseFloat(row.multiplier_work) : vars.los_multiplier_work);
+      ? (row.multiplier_bid != null && Number.isFinite(rawBid) ? rawBid : vars.los_multiplier_bid)
+      : (row.multiplier_work != null && Number.isFinite(rawWork) ? rawWork : vars.los_multiplier_work);
 
     // Competition discount (from control panel)
     const competitionPenalty =
@@ -130,6 +187,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     }
   }
 
+  pipeline.log.info('[opportunity-scores]', `Rows to score: ${totalRows}`);
   pipeline.log.info('[opportunity-scores]', `Scores computed: ${updates.length}`);
   if (integrityFlags > 0) {
     pipeline.log.warn(
@@ -146,7 +204,6 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   // the pre-run state. Without this, the table would carry a mix of
   // this-run and last-run scores, contaminating downstream consumers
   // (compute-cost-estimates, update-tracked-projects, the lead feed).
-  const BATCH_SIZE = 1000;
   let updated = 0;
 
   if (updates.length > 0) {
@@ -163,7 +220,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
           params.push(u.permit_num, u.revision_num, u.trade_slug, u.score);
         }
 
-        await client.query(
+        const result = await client.query(
           `UPDATE trade_forecasts tf
               SET opportunity_score = v.score
             FROM (VALUES ${vals.join(', ')}) AS v(permit_num, revision_num, trade_slug, score)
@@ -173,7 +230,9 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
              AND tf.opportunity_score IS DISTINCT FROM v.score`,
           params,
         );
-        updated += batch.length;
+        // spec §7 #5: use rowCount not batch.length — IS DISTINCT FROM guard
+        // means some rows in each batch may be skipped as unchanged.
+        updated += result.rowCount ?? 0;
       }
     });
   }
@@ -181,6 +240,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   pipeline.log.info('[opportunity-scores]', `Updated ${updated} scores`);
 
   // Score distribution for telemetry
+  // spec §7 #6: apply NULL-safe urgency filter consistently
   const { rows: dist } = await pool.query(`
     SELECT
       CASE
@@ -191,18 +251,46 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
       END AS tier,
       COUNT(*)::int AS n
     FROM trade_forecasts
-    WHERE urgency NOT IN ('expired')
+    WHERE (urgency IS NULL OR urgency <> 'expired')
     GROUP BY 1
   `);
   const scoreDist = Object.fromEntries(dist.map((r) => [r.tier, r.n]));
 
+  // ═══════════════════════════════════════════════════════════
+  // Step 4: Post-UPDATE audit (spec 47 §8.2 — real audit_table)
+  // ═══════════════════════════════════════════════════════════
+  const { rows: auditRows } = await pool.query(`
+    SELECT
+      SUM(CASE WHEN opportunity_score IS NULL THEN 1 ELSE 0 END)::int     AS null_scores,
+      SUM(CASE WHEN opportunity_score NOT BETWEEN 0 AND 100 THEN 1 ELSE 0 END)::int AS out_of_range
+    FROM trade_forecasts
+    WHERE (urgency IS NULL OR urgency <> 'expired')
+  `);
+  const nullScores  = auditRows[0]?.null_scores  ?? 0;
+  const outOfRange  = auditRows[0]?.out_of_range  ?? 0;
+
+  const auditTableRows = [
+    { metric: 'null_scores',     value: nullScores,     threshold: 0, status: nullScores > 0  ? 'WARN' : 'PASS' },
+    { metric: 'out_of_range',    value: outOfRange,     threshold: 0, status: outOfRange > 0  ? 'FAIL' : 'PASS' },
+    { metric: 'integrity_flags', value: integrityFlags, threshold: null, status: 'INFO' },
+  ];
+  const auditVerdict =
+    auditTableRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
+    auditTableRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+
   pipeline.emitSummary({
-    records_total: rows.length,
+    records_total: totalRows,
     records_new: 0,
     records_updated: updated,
     records_meta: {
       score_distribution: scoreDist,
       integrity_flags: integrityFlags,
+      audit_table: {
+        phase: 23,
+        name: 'Opportunity Score Engine',
+        verdict: auditVerdict,
+        rows: auditTableRows,
+      },
     },
   });
 

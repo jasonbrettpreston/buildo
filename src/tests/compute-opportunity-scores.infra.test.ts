@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: Opportunity Score Engine
+// SPEC LINK: docs/specs/product/future/81_opportunity_score_engine.md
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -101,5 +101,61 @@ describe('scripts/compute-opportunity-scores.js — script shape', () => {
     expect(content).not.toMatch(
       /for \(let i = 0[\s\S]{0,200}await pool\.query\(\s*`UPDATE trade_forecasts/,
     );
+  });
+});
+
+// ── WF3-09 spec 47 compliance tests (added as failing tests before fixes) ──
+
+describe('scripts/compute-opportunity-scores.js — spec 47 compliance (WF3-09)', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(path.resolve(__dirname, '../..', 'scripts/compute-opportunity-scores.js'), 'utf-8');
+  });
+
+  it('has correct SPEC LINK pointing to spec 81 (not lifecycle report)', () => {
+    expect(content).toMatch(/SPEC LINK:.*81_opportunity_score_engine\.md/);
+    expect(content).not.toMatch(/SPEC LINK:.*lifecycle_phase_implementation/);
+  });
+
+  it('validates logicVars with Zod schema via validateLogicVars (spec 47 §4)', () => {
+    expect(content).toMatch(/validateLogicVars/);
+    expect(content).toMatch(/LOGIC_VARS_SCHEMA/);
+    expect(content).toMatch(/los_base_divisor/);
+    expect(content).toMatch(/los_base_cap/);
+  });
+
+  it('guards parseFloat multipliers with Number.isFinite to prevent NaN scores (spec 47 §4)', () => {
+    expect(content).toMatch(/Number\.isFinite/);
+  });
+
+  it('uses streamQuery for the unbounded trade_forecasts JOIN — not pool.query (spec 47 §6.1)', () => {
+    expect(content).toMatch(/pipeline\.streamQuery/);
+    // The main 4-table JOIN must not go through pool.query
+    expect(content).not.toMatch(
+      /await pool\.query\(`[\s\S]{0,100}trade_forecasts tf[\s\S]{0,500}WHERE/,
+    );
+  });
+
+  it('includes a real audit_table in emitSummary — not the UNKNOWN auto-stub (spec 47 §8.2)', () => {
+    expect(content).toMatch(/audit_table/);
+    expect(content).toMatch(/null_scores/);
+    expect(content).toMatch(/out_of_range/);
+  });
+
+  it('uses pipeline.maxRowsPerInsert(4) for BATCH_SIZE — not hardcoded 1000 (spec 47 §6.2)', () => {
+    expect(content).toMatch(/maxRowsPerInsert\(4\)/);
+    expect(content).not.toMatch(/const BATCH_SIZE = 1000/);
+  });
+
+  it('accumulates result.rowCount not batch.length for records_updated (spec §7 #5)', () => {
+    expect(content).toMatch(/result\.rowCount/);
+    // The old pattern that overcounts
+    expect(content).not.toMatch(/updated \+= batch\.length/);
+  });
+
+  it('filters with NULL-safe urgency clause (spec §7 #6)', () => {
+    expect(content).toMatch(/urgency IS NULL OR/);
+    // The old clause that excludes NULL urgency leads must be gone
+    expect(content).not.toMatch(/urgency NOT IN \('expired'\)/);
   });
 });
