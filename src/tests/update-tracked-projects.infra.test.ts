@@ -439,3 +439,45 @@ describe('scripts/update-tracked-projects.js — WF3-02 urgency reset', () => {
     expect(content).toMatch(/isReset\s*=\s*upd\.last_notified_urgency === null/);
   });
 });
+
+// ── WF3-03: NULL lifecycle_phase + NULL urgency dead lead archive ──
+
+describe('scripts/update-tracked-projects.js — WF3-03 dead lead archive', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/update-tracked-projects.js'),
+      'utf-8',
+    );
+  });
+
+  it('archives leads with null lifecycle_phase AND null urgency (spec 82 §8.4)', () => {
+    // Both null = no phase classification + no forecast data.
+    // The lead will never generate an alert, never auto-archive via isWindowClosed,
+    // and never expire via urgency === 'expired'. Without this check it accumulates
+    // in tracked_projects as a ghost lead that clogs the user's CRM board forever.
+    expect(content).toMatch(/row\.lifecycle_phase == null[\s\S]{0,200}row\.urgency == null[\s\S]{0,100}status: 'archived'/);
+  });
+
+  it('silently continues when lifecycle_phase is null but urgency is non-null (no archive)', () => {
+    // A permit with no phase yet but an active forecast signal (upcoming/imminent/etc.)
+    // should not be archived — it may still become trackable once the phase is assigned.
+    // The continue after the archive block must be unconditional (fires for both branches).
+    const nullPhaseBlock = content.slice(
+      content.indexOf('row.lifecycle_phase == null'),
+      content.indexOf('continue;', content.indexOf('row.lifecycle_phase == null')) + 10,
+    );
+    expect(nullPhaseBlock).toMatch(/continue/);
+    // The block must NOT send an alert for the null-urgency archive path
+    expect(nullPhaseBlock).not.toMatch(/alerts\.push/);
+  });
+
+  it('reuses existing archiveIds SQL path — no new SQL needed (spec 47 §7.5)', () => {
+    // The null-phase archive pushes { id, status: 'archived' } into updates[].
+    // The batch categorizer routes it to archiveIds, which is already handled
+    // by the ANY($2::int[]) UPDATE. Zero new SQL roundtrips introduced.
+    // Verify by checking that there is only ONE 'archived' UPDATE statement.
+    const archivedMatches = content.match(/SET status = 'archived'/g);
+    expect(archivedMatches).toHaveLength(1); // single consolidated archive UPDATE
+  });
+});

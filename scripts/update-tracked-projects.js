@@ -236,10 +236,28 @@ pipeline.run('update-tracked-projects', async (pool) => {
     const currentOrdinal = PHASE_ORDINAL[row.lifecycle_phase];
     const targetOrdinal = PHASE_ORDINAL[targets.work_phase];
 
-    // Null lifecycle_phase = unclassified or dead-state permit (expected,
-    // not an anomaly). Skip silently without WARN to avoid polluting the
-    // "unknown phase" telemetry with routine null rows.
+    // ═══════════════════════════════════════════════════════════
+    // WF3-03: Dead Lead Cleanup
+    //
+    // Null lifecycle_phase = unclassified or dead-state permit.
+    // If it also has no forecast (urgency is null), it is a ghost
+    // lead that will never trigger an alert and can never auto-archive
+    // via isWindowClosed or urgency='expired'. Archive it to keep the
+    // user's CRM flight-board clean. The update is routed through the
+    // existing archiveIds SQL path — no new SQL statement needed.
+    //
+    // If urgency is non-null the permit has an active forecast signal
+    // despite missing phase data — skip silently (don't archive) since
+    // the phase may be assigned in a future classify run.
+    //
+    // Always continue regardless to skip the rest of the alerting logic
+    // and avoid polluting the "unknown phase" telemetry with null rows.
+    // ═══════════════════════════════════════════════════════════
     if (row.lifecycle_phase == null) {
+      if (row.urgency == null) {
+        updates.push({ id: row.tracking_id, status: 'archived' });
+        archived++;
+      }
       continue;
     }
 
