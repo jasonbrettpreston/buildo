@@ -1091,3 +1091,16 @@ Date: 2026-04-14. Reviewers: Gemini, DeepSeek, Claude independent (worktree).
 | HIGH | Gemini | Broad try/catch in `loadMarketplaceConfigs` masks DB failures | WONTFIX — intentional: graceful fallback is the design contract; pipeline scripts must run even when control panel is down (degraded-mode operation) |
 | NIT | DeepSeek | `withAdvisoryLock` lock leak if fn() throws | FALSE POSITIVE — fn() is called inside the inner try; the inner finally always runs unlock regardless of whether fn() threw |
 | MED | Gemini | `createPool()` not configurable (`max`, timeouts) | OUT OF SCOPE — pool sizing and timeout config is a separate WF; the port guard was the only change to createPool |
+
+---
+
+## WF2-2 — 83_lead_cost_model Surgical Muscle · base commit 90c3709 · 2026-04-15
+
+**Phase 3 ops hardening items (WF2-3):**
+
+| Sev | Source | Item | Planned home | Status |
+|-----|--------|------|--------------|--------|
+| CRITICAL (fixed inline) | Phase 3 EXPLAIN | `ARRAY_AGG(trade_slug)` in LATERAL join — column does not exist on `permit_trades` (table uses `trade_id` FK). Script would throw on first real run. Fixed in same session: `ARRAY_AGG(t.slug)` via `JOIN trades t ON t.id = pt2.trade_id` plus `AND pt2.is_active = true` filter. See `docs/reports/cost_estimates_query_plan.md`. | Fixed in 90c3709+hotfix | closed-in-phase3-hotfix |
+| HIGH | Phase 3 ops | Wire `liar_gate_overrides` metric to alerting. Threshold: `liar_gate_overrides / permits_processed > 0.15` (>15% of permits hit the geometric override path) should page on-call — indicates either systematic permit cost under-reporting or a valuation model regression. `liar_gate_overrides` is already emitted in `audit_table` (metric row, status INFO). The counter is also written to `data_quality_snapshots.cost_estimates_liar_gate_overrides` each nightly run. | WF1 ticket: wire to Grafana/PagerDuty alert. Dashboard panel at `cost_estimates` step in pipeline chain. | OPEN |
+| MED | Phase 3 ops | `is_active` is a post-filter on `permit_trades` index scan (not index-pushed). Currently adds ~1M extra row reads per run (negligible at 243K permits). If `permit_trades` grows past ~5M rows, add a partial index: `CREATE INDEX CONCURRENTLY idx_permit_trades_active ON permit_trades (permit_num, revision_num) WHERE is_active = true`. | Follow-up migration 097 — only if query plan degrades. File WF3 when `Rows Removed by Filter` > 20 per probe on average. | OPEN |
+| LOW | Phase 3 ops | `model_version` is hardcoded to `MODEL_VERSION = 2` in the Muscle. When the surgical formula is updated, this constant must be bumped and a migration or backfill strategy agreed (V1 rows would coexist until re-processed). Document bump protocol in spec 83 §9 before next formula change. | Spec update WF2 — low urgency, next formula change triggers it. | OPEN |

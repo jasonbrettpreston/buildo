@@ -87,9 +87,11 @@ const SOURCE_SQL = `
   LEFT JOIN building_footprints bf ON bf.id = pb.building_id
   LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
   LEFT JOIN LATERAL (
-    SELECT ARRAY_AGG(trade_slug) AS active_trades
-    FROM permit_trades
-    WHERE permit_num = p.permit_num AND revision_num = p.revision_num
+    SELECT ARRAY_AGG(t.slug) AS active_trades
+    FROM permit_trades pt2
+    JOIN trades t ON t.id = pt2.trade_id
+    WHERE pt2.permit_num = p.permit_num AND pt2.revision_num = p.revision_num
+      AND pt2.is_active = true
   ) pt ON true
 `;
 

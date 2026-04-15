@@ -184,8 +184,11 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
 
   it('SOURCE_SQL includes permit_trades LATERAL JOIN for active_trade_slugs (spec 83 §7)', () => {
     expect(content).toMatch(/permit_trades/);
-    expect(content).toMatch(/ARRAY_AGG\(trade_slug\)/i);
+    // Joins trades to resolve slug (permit_trades has trade_id FK, not trade_slug column)
+    expect(content).toMatch(/ARRAY_AGG\(t\.slug\)/i);
     expect(content).toMatch(/active_trade_slugs/);
+    // Filters to is_active = true (the "active" in active_trade_slugs)
+    expect(content).toMatch(/is_active\s*=\s*true/);
   });
 
   it('COALESCE prevents NULL active_trade_slugs (spec 83 §7)', () => {
