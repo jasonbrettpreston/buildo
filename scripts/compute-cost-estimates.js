@@ -1,310 +1,56 @@
 #!/usr/bin/env node
-// 🔗 SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §Implementation
-// 🔗 DUAL CODE PATH: src/features/leads/lib/cost-model.ts — per CLAUDE.md §7,
-// these files MUST stay in sync. BASE_RATES, PREMIUM_TIERS, SCOPE_ADDITIONS,
-// COST_TIER_BOUNDARIES, COMPLEXITY_SIGNALS below MUST match the TS module
-// byte-for-byte. Any formula change lands in BOTH files. A future hardening WF
-// can extract to a shared JSON file.
-//
-// Populates the cost_estimates table (FK'd to permits) used by the lead feed
-// API. Runs daily inside the permits chain, after classify_permits.
+/**
+ * compute-cost-estimates.js — Surgical Cost Estimation Muscle
+ *
+ * SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §7
+ * DUAL CODE PATH: Both this Muscle and src/features/leads/lib/cost-model.ts
+ * delegate all formula logic to estimateCostShared() in
+ * src/features/leads/lib/cost-model-shared.js (the Brain). No valuation
+ * math lives in this file. Any formula change must land in the Brain.
+ *
+ * CHAIN: Runs inside the permits chain (step 14 of 14). Not the sources chain.
+ *
+ * RUNBOOK: Script is idempotent — ON CONFLICT DO UPDATE is safe to re-run
+ * after a crash. Stream-level batch failures emit failed_rows in audit_table;
+ * investigate before re-running. Advisory lock 83 prevents concurrent runs.
+ */
+'use strict';
 
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
-const { loadMarketplaceConfigs } = require('./lib/config-loader');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+// Brain: pure valuation logic shared by this Muscle and the TS read-path.
+const { estimateCostShared, MODEL_VERSION } = require('../src/features/leads/lib/cost-model-shared');
 
-// ---------------------------------------------------------------------------
-// Constants — mirror src/features/leads/lib/cost-model.ts EXACTLY
-// ---------------------------------------------------------------------------
-
-const BASE_RATES = {
-  sfd: 3000,
-  semi_town: 2600,
-  multi_res: 3400,
-  addition: 2000,
-  commercial: 4000,
-  interior_reno: 1150,
-};
-
-const PREMIUM_TIERS = [
-  { min: 0, max: 60000, multiplier: 1.0 },
-  { min: 60000, max: 100000, multiplier: 1.15 },
-  { min: 100000, max: 150000, multiplier: 1.35 },
-  { min: 150000, max: 200000, multiplier: 1.6 },
-  { min: 200000, max: null, multiplier: 1.85 },
-];
-
-const SCOPE_ADDITIONS = {
-  pool: 80000,
-  elevator: 60000,
-  underpinning: 40000,
-  solar: 25000,
-};
-
-const COST_TIER_BOUNDARIES = {
-  small: { min: 0, max: 100000 },
-  medium: { min: 100000, max: 500000 },
-  large: { min: 500000, max: 2000000 },
-  major: { min: 2000000, max: 10000000 },
-  mega: { min: 10000000, max: null },
-};
-
-const COMPLEXITY_SIGNALS = {
-  highRise: 30,
-  multiUnit: 20,
-  largeFootprint: 15,
-  premiumNbhd: 15,
-  complexScope: 10,
-  newBuild: 10,
-};
-
-const FALLBACK_URBAN_COVERAGE = 0.7;
-const FALLBACK_SUBURBAN_COVERAGE = 0.4;
-const FALLBACK_RESIDENTIAL_FLOORS = 2;
-const FALLBACK_COMMERCIAL_FLOORS = 1;
-const MODEL_RANGE_PCT = 0.25;
-const FALLBACK_RANGE_PCT = 0.5;
-const PLACEHOLDER_COST_THRESHOLD = 1000;
-
-// ─── Control Panel: loaded from DB at runtime via shared config-loader ───
-// Trade allocations come from trade_configurations.allocation_pct.
-// Liar's Gate threshold comes from logic_variables.liar_gate_threshold.
-// Fallback values live in scripts/lib/config-loader.js (single source of truth).
-// These module-level vars are assigned inside pipeline.run after loading config.
-// WF3-06: LIAR_GATE_THRESHOLD_DEFAULT is the constant default exported for
-// parity against the TS counterpart; LIAR_GATE_THRESHOLD is the mutable
-// runtime variable the pipeline reassigns after reading the Control Panel.
-const LIAR_GATE_THRESHOLD_DEFAULT = 0.25;
-let TRADE_ALLOCATION_PCT = {};
-let LIAR_GATE_THRESHOLD = LIAR_GATE_THRESHOLD_DEFAULT;
-
-// WF3-03 PR-C (83-W7): lock ID = spec number convention (was 74, a leftover
-// from spec 72_lead_cost_model.md). Aligns with classify-lifecycle-phase.js
-// (85), compute-trade-forecasts.js (85), compute-timing-calibration-v2.js (86),
-// compute-opportunity-scores.js (81), update-tracked-projects.js (82).
+// ─── Constants ───────────────────────────────────────────────────────────────
+// Spec 40 §3.5: advisory lock ID = spec number convention.
 const ADVISORY_LOCK_ID = 83;
-const BATCH_SIZE = 5000;
 
-// ---------------------------------------------------------------------------
-// Inline cost model — mirrors cost-model.ts estimateCost
-// ---------------------------------------------------------------------------
+// Spec 47 §6.3: BATCH_SIZE = Math.floor((65535 - 1) / column_count).
+// cost_estimates bulk UPSERT writes 15 columns per row:
+// permit_num, revision_num, estimated_cost, cost_source, cost_tier,
+// cost_range_low, cost_range_high, premium_factor, complexity_score,
+// model_version, is_geometric_override, modeled_gfa_sqm,
+// effective_area_sqm, trade_contract_values, computed_at.
+const BULK_COLUMN_COUNT = 15;
+const BATCH_SIZE = Math.floor((65535 - 1) / BULK_COLUMN_COUNT); // 4368
 
-function isNewBuild(permit) {
-  const pt = (permit.permit_type || '').toLowerCase();
-  return pt.includes('new building') || pt.includes('new construction');
-}
+// ─── Zod config schema ───────────────────────────────────────────────────────
+// Every logic_variable consumed by this script must appear here. Validated at
+// startup — bad DB values (NULL, 0, wrong type) throw immediately with a clear
+// message instead of silently producing NaN or corrupting estimates.
+const COST_MODEL_CONFIG_SCHEMA = z.object({
+  urban_coverage_ratio:    z.number().positive().max(1),
+  suburban_coverage_ratio: z.number().positive().max(1),
+  trust_threshold_pct:     z.number().positive().max(1),
+  liar_gate_threshold:     z.number().positive().max(1),
+});
 
-function isResidential(permit) {
-  const st = (permit.structure_type || '').toLowerCase();
-  return (
-    st.includes('dwelling') ||
-    st.includes('residential') ||
-    st.includes('detached') ||
-    st.includes('semi') ||
-    st.includes('town')
-  );
-}
-
-function isCommercial(permit) {
-  const st = (permit.structure_type || '').toLowerCase();
-  return st.includes('commercial') || st.includes('office') || st.includes('retail');
-}
-
-function determineBaseRate(permit) {
-  const st = (permit.structure_type || '').toLowerCase();
-  const newBuild = isNewBuild(permit);
-
-  if (newBuild) {
-    if (st.includes('multi') || st.includes('apartment') || st.includes('condo')) {
-      return BASE_RATES.multi_res;
-    }
-    if (st.includes('semi') || st.includes('town')) {
-      return BASE_RATES.semi_town;
-    }
-    if (isCommercial(permit)) {
-      return BASE_RATES.commercial;
-    }
-    return BASE_RATES.sfd;
-  }
-
-  // Renovation / alteration path. Check "interior" BEFORE "alteration" so
-  // "Interior Alteration" gets the interior_reno rate, not addition.
-  const pt = (permit.permit_type || '').toLowerCase();
-  const work = (permit.work || '').toLowerCase();
-  if (pt.includes('interior') || work.includes('interior')) {
-    return BASE_RATES.interior_reno;
-  }
-  if (pt.includes('addition') || pt.includes('alteration') || work.includes('addition')) {
-    return BASE_RATES.addition;
-  }
-  return BASE_RATES.interior_reno;
-}
-
-function computePremiumFactor(avgIncome) {
-  if (avgIncome === null || avgIncome === undefined) return 1.0;
-  for (const tier of PREMIUM_TIERS) {
-    if (avgIncome >= tier.min && (tier.max === null || avgIncome < tier.max)) {
-      return tier.multiplier;
-    }
-  }
-  return 1.0;
-}
-
-function computeBuildingArea(row) {
-  if (
-    row.footprint_area_sqm !== null &&
-    row.estimated_stories !== null &&
-    row.footprint_area_sqm > 0
-  ) {
-    return { area: row.footprint_area_sqm * row.estimated_stories, usedFallback: false };
-  }
-
-  if (row.lot_size_sqm !== null && row.lot_size_sqm > 0) {
-    const rentPct = row.tenure_renter_pct || 0;
-    const coverage = rentPct > 50 ? FALLBACK_URBAN_COVERAGE : FALLBACK_SUBURBAN_COVERAGE;
-    const floors = isCommercial(row)
-      ? FALLBACK_COMMERCIAL_FLOORS
-      : FALLBACK_RESIDENTIAL_FLOORS;
-    return { area: row.lot_size_sqm * coverage * floors, usedFallback: true };
-  }
-
-  return { area: 0, usedFallback: true };
-}
-
-function sumScopeAdditions(tags) {
-  if (!tags) return 0;
-  // WF3-06 (H-W8): dedup via Set BEFORE iterating. PostgreSQL TEXT[]
-  // does not enforce uniqueness, and upstream classifiers can append
-  // duplicate tags (e.g., ['pool', 'pool']). Without the Set, a
-  // duplicate 'pool' adds $80K TWICE, inflating DB-stored cost and
-  // diverging from the TS read-path which already dedups (cost-model.ts).
-  const unique = new Set(tags.map((t) => (t || '').toLowerCase()));
-  let total = 0;
-  for (const norm of unique) {
-    if (norm === 'pool') total += SCOPE_ADDITIONS.pool;
-    else if (norm === 'elevator') total += SCOPE_ADDITIONS.elevator;
-    else if (norm === 'underpinning') total += SCOPE_ADDITIONS.underpinning;
-    else if (norm === 'solar') total += SCOPE_ADDITIONS.solar;
-  }
-  return total;
-}
-
-function determineCostTier(cost) {
-  if (cost < COST_TIER_BOUNDARIES.medium.min) return 'small';
-  if (cost < COST_TIER_BOUNDARIES.large.min) return 'medium';
-  if (cost < COST_TIER_BOUNDARIES.major.min) return 'large';
-  if (cost < COST_TIER_BOUNDARIES.mega.min) return 'major';
-  return 'mega';
-}
-
-function computeComplexityScore(row) {
-  let score = 0;
-  const stories = row.storeys || row.estimated_stories || 0;
-  if (stories > 6) score += COMPLEXITY_SIGNALS.highRise;
-  if ((row.dwelling_units_created || 0) > 4) score += COMPLEXITY_SIGNALS.multiUnit;
-  if ((row.footprint_area_sqm || 0) > 300) score += COMPLEXITY_SIGNALS.largeFootprint;
-  if ((row.avg_household_income || 0) > 150000) score += COMPLEXITY_SIGNALS.premiumNbhd;
-  // WF3-06 (H-W8): same dedup pattern as sumScopeAdditions — duplicate
-  // tags would double-count the +10 complexity signal per category.
-  const uniqueTags = new Set((row.scope_tags || []).map((t) => (t || '').toLowerCase()));
-  for (const norm of uniqueTags) {
-    if (norm === 'pool' || norm === 'elevator' || norm === 'underpinning') {
-      score += COMPLEXITY_SIGNALS.complexScope;
-    }
-  }
-  if (isNewBuild(row)) score += COMPLEXITY_SIGNALS.newBuild;
-  return Math.min(100, score);
-}
-
-// The Slicer: generates per-trade dollar values from total cost
-function sliceTradeValues(totalCost) {
-  if (totalCost == null || totalCost <= 0) return {};
-  const values = {};
-  for (const [slug, pct] of Object.entries(TRADE_ALLOCATION_PCT)) {
-    const val = Math.round(totalCost * pct);
-    if (val > 0) values[slug] = val;
-  }
-  return values;
-}
-
-function estimateCostInline(row) {
-  // Always compute the geometric model for Liar's Gate comparison
-  const { area, usedFallback } = computeBuildingArea(row);
-  const baseRate = determineBaseRate(row);
-  const premiumFactor = computePremiumFactor(row.avg_household_income);
-  const scopeAdditions = sumScopeAdditions(row.scope_tags);
-  const modelCost = area > 0 ? area * baseRate * premiumFactor + scopeAdditions : 0;
-  const complexity = computeComplexityScore(row);
-
-  let estimatedCost;
-  let costSource;
-  let isGeometricOverride = false;
-  let modeledGfaSqm = area > 0 ? area : null;
-
-  // Path 1: permit-reported cost above placeholder threshold
-  if (row.est_const_cost !== null && row.est_const_cost > PLACEHOLDER_COST_THRESHOLD) {
-    // THE LIAR'S GATE: if reported < modeled * 0.25, the permit is
-    // likely underreporting (common for permit-fee minimization).
-    // Override with the geometric estimate.
-    // WF3 Bug 4: skip when usedFallback=true — the fallback model has
-    // ±50% uncertainty (lot-size-based, not massing-based), so it can
-    // dramatically overstate cost for small renovations on large lots.
-    if (modelCost > 0 && !usedFallback && row.est_const_cost < modelCost * LIAR_GATE_THRESHOLD) {
-      estimatedCost = modelCost;
-      costSource = 'model';
-      isGeometricOverride = true;
-    } else {
-      estimatedCost = row.est_const_cost;
-      costSource = 'permit';
-    }
-  } else if (area > 0) {
-    // Path 2: no reported cost → use model
-    estimatedCost = modelCost;
-    costSource = 'model';
-  } else {
-    // Path 3: no reported cost AND no geometry → null
-    return {
-      permit_num: row.permit_num,
-      revision_num: row.revision_num,
-      estimated_cost: null,
-      cost_source: 'model',
-      cost_tier: null,
-      cost_range_low: null,
-      cost_range_high: null,
-      premium_factor: premiumFactor,
-      complexity_score: complexity,
-      is_geometric_override: false,
-      modeled_gfa_sqm: null,
-      trade_contract_values: {},
-    };
-  }
-
-  const rangePct = (costSource === 'permit' && !isGeometricOverride)
-    ? 0 // permit-reported costs have no range
-    : (usedFallback ? FALLBACK_RANGE_PCT : MODEL_RANGE_PCT);
-  const low = rangePct > 0 ? estimatedCost * (1 - rangePct) : estimatedCost;
-  const high = rangePct > 0 ? estimatedCost * (1 + rangePct) : estimatedCost;
-  const tier = determineCostTier(estimatedCost);
-
-  return {
-    permit_num: row.permit_num,
-    revision_num: row.revision_num,
-    estimated_cost: estimatedCost,
-    cost_source: costSource,
-    cost_tier: tier,
-    cost_range_low: low,
-    cost_range_high: high,
-    premium_factor: premiumFactor,
-    complexity_score: complexity,
-    is_geometric_override: isGeometricOverride,
-    modeled_gfa_sqm: modeledGfaSqm,
-    trade_contract_values: sliceTradeValues(estimatedCost),
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Pipeline entry point
-// ---------------------------------------------------------------------------
-
+// ─── Source query ─────────────────────────────────────────────────────────────
+// Joins permits with parcel massing, neighbourhood demographics, and the
+// LATERAL permit_trades subquery that provides active_trade_slugs.
+// COALESCE(pt.active_trades, ARRAY[]::text[]) ensures the column is always an
+// array, never NULL — prevents the Brain from seeing a null active_trade_slugs.
 const SOURCE_SQL = `
   SELECT
     p.permit_num,
@@ -312,16 +58,17 @@ const SOURCE_SQL = `
     p.permit_type,
     p.structure_type,
     p.work,
-    p.est_const_cost::float8 AS est_const_cost,
+    p.est_const_cost::float8              AS est_const_cost,
     p.scope_tags,
     p.dwelling_units_created,
     p.storeys,
-    pp_parcel.lot_size_sqm::float8 AS lot_size_sqm,
-    pp_parcel.frontage_m::float8 AS frontage_m,
-    bf.footprint_area_sqm::float8 AS footprint_area_sqm,
+    pp_parcel.lot_size_sqm::float8        AS lot_size_sqm,
+    pp_parcel.frontage_m::float8          AS frontage_m,
+    bf.footprint_area_sqm::float8         AS footprint_area_sqm,
     bf.estimated_stories,
-    n.avg_household_income::float8 AS avg_household_income,
-    n.tenure_renter_pct::float8 AS tenure_renter_pct
+    n.avg_household_income::float8        AS avg_household_income,
+    n.tenure_renter_pct::float8           AS tenure_renter_pct,
+    COALESCE(pt.active_trades, ARRAY[]::text[]) AS active_trade_slugs
   FROM permits p
   LEFT JOIN LATERAL (
     SELECT parcel_id
@@ -339,249 +86,405 @@ const SOURCE_SQL = `
   ) pb ON true
   LEFT JOIN building_footprints bf ON bf.id = pb.building_id
   LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
+  LEFT JOIN LATERAL (
+    SELECT ARRAY_AGG(trade_slug) AS active_trades
+    FROM permit_trades
+    WHERE permit_num = p.permit_num AND revision_num = p.revision_num
+  ) pt ON true
 `;
 
-async function flushBatch(pool, rows) {
+// ─── Bulk UPSERT SQL builder ──────────────────────────────────────────────────
+// Builds a parameterized multi-row VALUES INSERT for batchSize rows.
+// IS DISTINCT FROM guard on 5 columns prevents WAL bloat from no-op rewrites.
+function buildBulkUpsertSQL(batchSize) {
+  const valueGroups = [];
+  for (let i = 0; i < batchSize; i++) {
+    const b = i * BULK_COLUMN_COUNT;
+    valueGroups.push(
+      `($${b+1},$${b+2},$${b+3},$${b+4},$${b+5},$${b+6},$${b+7},$${b+8},$${b+9},$${b+10},$${b+11},$${b+12},$${b+13},$${b+14}::jsonb,$${b+15}::timestamptz)`,
+    );
+  }
+  return `
+    INSERT INTO cost_estimates (
+      permit_num, revision_num, estimated_cost, cost_source, cost_tier,
+      cost_range_low, cost_range_high, premium_factor, complexity_score,
+      model_version, is_geometric_override, modeled_gfa_sqm,
+      effective_area_sqm, trade_contract_values, computed_at
+    ) VALUES
+      ${valueGroups.join(',\n      ')}
+    ON CONFLICT (permit_num, revision_num) DO UPDATE SET
+      estimated_cost        = EXCLUDED.estimated_cost,
+      cost_source           = EXCLUDED.cost_source,
+      cost_tier             = EXCLUDED.cost_tier,
+      cost_range_low        = EXCLUDED.cost_range_low,
+      cost_range_high       = EXCLUDED.cost_range_high,
+      premium_factor        = EXCLUDED.premium_factor,
+      complexity_score      = EXCLUDED.complexity_score,
+      model_version         = EXCLUDED.model_version,
+      is_geometric_override = EXCLUDED.is_geometric_override,
+      modeled_gfa_sqm       = EXCLUDED.modeled_gfa_sqm,
+      effective_area_sqm    = EXCLUDED.effective_area_sqm,
+      trade_contract_values = EXCLUDED.trade_contract_values,
+      computed_at           = EXCLUDED.computed_at
+    WHERE EXCLUDED.estimated_cost        IS DISTINCT FROM cost_estimates.estimated_cost
+       OR EXCLUDED.cost_source           IS DISTINCT FROM cost_estimates.cost_source
+       OR EXCLUDED.is_geometric_override IS DISTINCT FROM cost_estimates.is_geometric_override
+       OR EXCLUDED.effective_area_sqm    IS DISTINCT FROM cost_estimates.effective_area_sqm
+       OR EXCLUDED.trade_contract_values::text IS DISTINCT FROM cost_estimates.trade_contract_values::text
+    RETURNING (xmax = 0) AS inserted
+  `;
+}
+
+// ─── Batch flush ──────────────────────────────────────────────────────────────
+// Flushes a batch of cost estimates as a single bulk VALUES UPSERT in one
+// transaction. No per-row try/catch — errors propagate to withTransaction which
+// rolls back the entire batch, and the outer catch increments failedBatches.
+async function flushBatch(pool, rows, RUN_AT) {
+  if (rows.length === 0) return { inserted: 0, updated: 0, skipped: 0 };
   return await pipeline.withTransaction(pool, async (client) => {
-    let inserted = 0;
-    let updated = 0;
-    // WF3-03 PR-C (83-W6): NO per-row try/catch here. The pre-PR-C inner
-    // catch swallowed row errors and let withTransaction COMMIT anyway,
-    // producing missing rows + a permanently 0 failed_rows audit metric
-    // (false-green observability). Letting the row error propagate
-    // triggers withTransaction's ROLLBACK, the outer catch in the
-    // streaming loop increments failedBatches + failedRows, and the
-    // audit_table surfaces the failure.
+    const sql = buildBulkUpsertSQL(rows.length);
+    const params = [];
     for (const r of rows) {
-      const res = await client.query(
-        `INSERT INTO cost_estimates (
-           permit_num, revision_num, estimated_cost, cost_source, cost_tier,
-           cost_range_low, cost_range_high, premium_factor, complexity_score,
-           model_version, is_geometric_override, modeled_gfa_sqm,
-           trade_contract_values, computed_at
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, NOW())
-         ON CONFLICT (permit_num, revision_num) DO UPDATE
-           SET estimated_cost          = EXCLUDED.estimated_cost,
-               cost_source             = EXCLUDED.cost_source,
-               cost_tier               = EXCLUDED.cost_tier,
-               cost_range_low          = EXCLUDED.cost_range_low,
-               cost_range_high         = EXCLUDED.cost_range_high,
-               premium_factor          = EXCLUDED.premium_factor,
-               complexity_score        = EXCLUDED.complexity_score,
-               model_version           = EXCLUDED.model_version,
-               is_geometric_override   = EXCLUDED.is_geometric_override,
-               modeled_gfa_sqm         = EXCLUDED.modeled_gfa_sqm,
-               trade_contract_values   = EXCLUDED.trade_contract_values,
-               computed_at             = NOW()
-         RETURNING (xmax = 0) AS inserted`,
-        [
-          r.permit_num,
-          r.revision_num,
-          r.estimated_cost,
-          r.cost_source,
-          r.cost_tier,
-          r.cost_range_low,
-          r.cost_range_high,
-          r.premium_factor,
-          r.complexity_score,
-          1, // model_version
-          r.is_geometric_override,
-          r.modeled_gfa_sqm,
-          JSON.stringify(r.trade_contract_values || {}),
-        ],
+      params.push(
+        r.permit_num,
+        r.revision_num,
+        r.estimated_cost,
+        r.cost_source,
+        r.cost_tier,
+        r.cost_range_low,
+        r.cost_range_high,
+        r.premium_factor,
+        r.complexity_score,
+        MODEL_VERSION,
+        r.is_geometric_override,
+        r.modeled_gfa_sqm,
+        r.effective_area_sqm,
+        JSON.stringify(r.trade_contract_values || {}),
+        RUN_AT,
       );
-      if (res.rows[0] && res.rows[0].inserted) inserted++;
-      else updated++;
     }
-    return { inserted, updated };
+    const res = await client.query(sql, params);
+    const inserted = res.rows.filter((r) => r.inserted).length;
+    const updated = res.rows.filter((r) => !r.inserted).length;
+    // Rows unchanged (IS DISTINCT FROM filter rejected them) return no RETURNING row
+    const skipped = rows.length - res.rows.length;
+    return { inserted, updated, skipped };
   });
 }
 
-// WF3-06 (H-W8/W9): guard pipeline execution so the module can be
-// require()-d from dual-path parity tests (mirrors load-permits.js pattern).
-if (require.main === module) pipeline.run('compute-cost-estimates', async (pool) => {
-  // ─── Load Control Panel via shared loader ──────────────────
-  const { tradeConfigs, logicVars } = await loadMarketplaceConfigs(pool, 'compute-cost-estimates');
-  TRADE_ALLOCATION_PCT = Object.fromEntries(
-    Object.entries(tradeConfigs).map(([slug, tc]) => [slug, tc.allocation_pct]),
-  );
-  LIAR_GATE_THRESHOLD = logicVars.liar_gate_threshold;
+// ─── Pipeline entry point ──────────────────────────────────────────────────────
+// Guarded by require.main === module so the module can be require()-d from
+// parity-battery tests without starting the pool or executing the run.
+if (require.main === module) {
+  // ── CLI flags ──────────────────────────────────────────────────────────────
+  const args = process.argv.slice(2);
+  const dryRun = args.includes('--dry-run');
+  const limitArg = args.find((a) => a.startsWith('--limit='));
+  const rowLimit = limitArg ? parseInt(limitArg.split('=')[1], 10) : null;
+  if (dryRun) pipeline.log.info('[compute-cost-estimates]', 'DRY-RUN mode — no DB writes will occur');
+  if (rowLimit) pipeline.log.info('[compute-cost-estimates]', `Row limit: ${rowLimit}`);
 
-  // ─── Concurrency guard — single-threaded cost estimator ──────
-  // WF3-03 PR-C (83-W5): lock acquired on a DEDICATED `pool.connect()`
-  // client (not pool.query). pool.query checks out an ephemeral
-  // connection that returns to the pool immediately after the query,
-  // so the session-scoped advisory lock would be released when that
-  // connection is reaped, OR a different connection would be checked
-  // out for the unlock and silently no-op. Mirrors the canonical
-  // pattern in classify-lifecycle-phase.js.
-  const lockClient = await pool.connect();
-  try {
-    const { rows: lockRows } = await lockClient.query(
-      'SELECT pg_try_advisory_lock($1) AS got',
-      [ADVISORY_LOCK_ID],
+  pipeline.run('compute-cost-estimates', async (pool) => {
+    // ── 1. Load control panel ──────────────────────────────────────────────
+    const { logicVars } = await loadMarketplaceConfigs(pool, 'compute-cost-estimates');
+
+    // ── 2. Zod validation — fail fast if any critical knob is invalid ──────
+    const validation = validateLogicVars(logicVars, COST_MODEL_CONFIG_SCHEMA, 'compute-cost-estimates');
+    if (!validation.valid) {
+      throw new Error(`[compute-cost-estimates] Config validation failed: ${validation.errors.join(', ')}`);
+    }
+
+    // ── 3. Pre-fetch surgical rate tables (before lock — read-only) ────────
+    const [tradeRatesRes, scopeMatrixRes] = await Promise.all([
+      pool.query(
+        'SELECT trade_slug, base_rate_sqft::float8, structure_complexity_factor::float8 FROM trade_sqft_rates',
+      ),
+      pool.query(
+        'SELECT permit_type, structure_type, gfa_allocation_percentage::float8 FROM scope_intensity_matrix',
+      ),
+    ]);
+    const tradeRates = Object.fromEntries(
+      tradeRatesRes.rows.map((r) => [r.trade_slug, {
+        base_rate_sqft: r.base_rate_sqft,
+        structure_complexity_factor: r.structure_complexity_factor,
+      }]),
     );
-    if (!lockRows[0].got) {
+    const scopeMatrix = Object.fromEntries(
+      scopeMatrixRes.rows.map((r) => [
+        `${r.permit_type.toLowerCase()}::${r.structure_type.toLowerCase()}`,
+        r.gfa_allocation_percentage,
+      ]),
+    );
+    if (tradeRatesRes.rows.length === 0) {
+      throw new Error('trade_sqft_rates table is empty — aborting to prevent zero-cost estimates for all permits');
+    }
+    pipeline.log.info(
+      '[compute-cost-estimates]',
+      `Pre-fetched ${tradeRatesRes.rows.length} trade rates, ${scopeMatrixRes.rows.length} matrix entries`,
+    );
+
+    // ── 4. Build Brain config ──────────────────────────────────────────────
+    const config = {
+      tradeRates,
+      scopeMatrix,
+      urbanCoverageRatio:    logicVars.urban_coverage_ratio,
+      suburbanCoverageRatio: logicVars.suburban_coverage_ratio,
+      liarGateThreshold:     logicVars.liar_gate_threshold,
+    };
+
+    // ── 5. Concurrency guard — advisory lock on dedicated client ───────────
+    // CRITICAL: lock on pool.connect() not pool.query. pool.query checks out
+    // an ephemeral connection that returns to the pool after the query — the
+    // session-scoped advisory lock would be released when the connection is
+    // reaped. The dedicated client stays checked-out for the full run.
+    // (WF3-03 PR-C / 83-W5 — mirrors classify-lifecycle-phase.js pattern)
+    const lockClient = await pool.connect();
+    let lockClientReleased = false;
+
+    // §5.5 — Graceful shutdown: register SIGTERM immediately after pool.connect()
+    // so a container preemption (Kubernetes scale-down, OOM kill, manual kill -15)
+    // releases advisory lock 83 before process exits. Without this, a forced kill
+    // bypasses the finally block, orphaning the lock and blocking future runs.
+    process.on('SIGTERM', async () => {
       pipeline.log.warn(
         '[compute-cost-estimates]',
-        `Advisory lock ${ADVISORY_LOCK_ID} held by another process — exiting`,
+        'SIGTERM — releasing advisory lock and shutting down gracefully',
       );
-      pipeline.emitSummary({
-        records_total: 0,
-        records_new: 0,
-        records_updated: 0,
-        records_meta: {
-          skipped: true,
-          reason: 'advisory_lock_held_elsewhere',
-          advisory_lock_id: ADVISORY_LOCK_ID,
-          audit_table: {
-            phase: 14,
-            name: 'Cost Estimates',
-            verdict: 'SKIP',
-            rows: [
-              { metric: 'permits_processed', value: 0, threshold: null, status: 'SKIP' },
-              { metric: 'permits_inserted', value: 0, threshold: null, status: 'SKIP' },
-              { metric: 'permits_updated', value: 0, threshold: null, status: 'SKIP' },
-            ],
+      try {
+        await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+      } catch (e) { /* best-effort — lock expires with session anyway */ }
+      if (!lockClientReleased) {
+        lockClientReleased = true;
+        lockClient.release();
+      }
+      process.exit(143);
+    });
+
+    try {
+      const { rows: lockRows } = await lockClient.query(
+        'SELECT pg_try_advisory_lock($1) AS got',
+        [ADVISORY_LOCK_ID],
+      );
+      if (!lockRows[0].got) {
+        pipeline.log.warn(
+          '[compute-cost-estimates]',
+          `Advisory lock ${ADVISORY_LOCK_ID} held by another process — exiting`,
+        );
+        pipeline.emitSummary({
+          records_total: 0,
+          records_new: 0,
+          records_updated: 0,
+          records_meta: {
+            skipped: true,
+            reason: 'advisory_lock_held_elsewhere',
+            advisory_lock_id: ADVISORY_LOCK_ID,
+            audit_table: {
+              phase: 14,
+              name: 'Cost Estimates',
+              verdict: 'SKIP',
+              rows: [
+                { metric: 'permits_processed', value: 0, threshold: null, status: 'SKIP' },
+                { metric: 'permits_inserted',  value: 0, threshold: null, status: 'SKIP' },
+                { metric: 'permits_updated',   value: 0, threshold: null, status: 'SKIP' },
+              ],
+            },
           },
-        },
-      });
-      pipeline.emitMeta(
-        { permits: ['permit_num'] },
-        { cost_estimates: ['permit_num'] },
-      );
+        });
+        pipeline.emitMeta(
+          {
+            permits:                ['permit_num'],
+            permit_trades:          ['permit_num', 'revision_num', 'trade_slug'],
+            trade_sqft_rates:       ['trade_slug'],
+            scope_intensity_matrix: ['permit_type', 'structure_type'],
+          },
+          { cost_estimates: ['permit_num'] },
+        );
+        lockClientReleased = true;
+        lockClient.release();
+        return;
+      }
+    } catch (lockErr) {
+      lockClientReleased = true;
       lockClient.release();
-      return;
+      throw lockErr;
     }
-  } catch (lockErr) {
-    // Nested try around release so a release failure doesn't mask the
-    // original lockErr (Gemini PR-C NIT — symmetric with the main
-    // finally block's pattern below).
-    try { lockClient.release(); } catch { /* swallow — original error wins */ }
-    throw lockErr;
-  }
 
-  let processed = 0;
-  let inserted = 0;
-  let updated = 0;
-  let failedBatches = 0;
-  let failedRows = 0;
-  let nullEstimates = 0;
-  let batch = [];
+    // ── 6. RUN_AT: single DB timestamp captured once after lock ────────────
+    // Using SELECT NOW() here (not in batched SQL) prevents Midnight Cross
+    // drift: if the run starts just before midnight and flushes batches just
+    // after, all computed_at values are anchored to the same instant.
+    // (Spec 47 §8 — no NOW() in WHERE/SET clauses of the batch UPSERT)
+    const { rows: [{ now: RUN_AT }] } = await lockClient.query('SELECT NOW()');
 
-  try {
-    for await (const row of pipeline.streamQuery(pool, SOURCE_SQL)) {
-      const estimate = estimateCostInline(row);
-      batch.push(estimate);
-      processed++;
-      if (estimate.estimated_cost == null) nullEstimates++;
+    // ── 7. Stream + batch ──────────────────────────────────────────────────
+    let processed  = 0;
+    let inserted   = 0;
+    let updated    = 0;
+    let skipped    = 0;
+    let failedBatches = 0;
+    let failedRows = 0;
+    let nullEstimates     = 0;
+    let liarsGateOverrides  = 0;
+    let zeroTotalBypasses   = 0;
+    let batch = [];
 
-      if (batch.length >= BATCH_SIZE) {
+    try {
+      const sourceSQL = rowLimit ? `${SOURCE_SQL} LIMIT ${rowLimit}` : SOURCE_SQL;
+
+      for await (const row of pipeline.streamQuery(pool, sourceSQL)) {
+        processed++;
+
+        if (dryRun) continue; // count rows without writing
+
+        const estimate = estimateCostShared(row, config);
+        batch.push(estimate);
+
+        if (estimate.estimated_cost == null) nullEstimates++;
+        if (estimate._liarsGateOverride) liarsGateOverrides++;
+        if (estimate._zeroTotalBypass)   zeroTotalBypasses++;
+
+        if (batch.length >= BATCH_SIZE) {
+          try {
+            const res = await flushBatch(pool, batch, RUN_AT);
+            inserted += res.inserted;
+            updated  += res.updated;
+            skipped  += res.skipped;
+          } catch (err) {
+            failedBatches++;
+            failedRows += batch.length;
+            pipeline.log.error('[compute-cost-estimates]', 'batch failed', {
+              batch_size: batch.length,
+              err: err && err.message,
+            });
+          }
+          batch.length = 0; // reuse array allocation (faster than batch = [])
+        }
+      }
+
+      // Final partial batch
+      if (batch.length > 0) {
         try {
-          const res = await flushBatch(pool, batch);
+          const res = await flushBatch(pool, batch, RUN_AT);
           inserted += res.inserted;
-          updated += res.updated;
+          updated  += res.updated;
+          skipped  += res.skipped;
         } catch (err) {
           failedBatches++;
           failedRows += batch.length;
-          pipeline.log.error('[compute-cost-estimates]', 'batch failed', {
+          pipeline.log.error('[compute-cost-estimates]', 'final batch failed', {
             batch_size: batch.length,
             err: err && err.message,
           });
         }
-        batch = [];
       }
-    }
-
-    if (batch.length > 0) {
-      try {
-        const res = await flushBatch(pool, batch);
-        inserted += res.inserted;
-        updated += res.updated;
-      } catch (err) {
+    } catch (streamErr) {
+      // If a batch was in-flight when the stream died, those rows are lost.
+      // Count them as failed so emitSummary reflects reality.
+      if (batch.length > 0) {
         failedBatches++;
         failedRows += batch.length;
-        pipeline.log.error('[compute-cost-estimates]', 'final batch failed', {
-          batch_size: batch.length,
-          err: err && err.message,
+        pipeline.log.error('[compute-cost-estimates]', 'stream error — dropping in-flight batch', {
+          dropped_rows: batch.length,
+          err: streamErr && streamErr.message,
+        });
+      } else {
+        pipeline.log.error('[compute-cost-estimates]', 'stream error', {
+          err: streamErr && streamErr.message,
+        });
+      }
+      throw streamErr;
+    }
+
+    // ── 8. data_quality_snapshots — observability counters ─────────────────
+    // Best-effort UPDATE for today's snapshot row (if it exists). The snapshot
+    // row is created by refresh-snapshot.js which runs later in the chain;
+    // if absent, this UPDATE is a no-op and the values appear only in
+    // audit_table for this pipeline_run.
+    if (!dryRun) {
+      try {
+        const snapResult = await pool.query(
+          `UPDATE data_quality_snapshots
+              SET cost_estimates_liar_gate_overrides = $1,
+                  cost_estimates_zero_total_bypass   = $2
+            WHERE snapshot_date = ($3::timestamptz AT TIME ZONE 'UTC')::date`,
+          [liarsGateOverrides, zeroTotalBypasses, RUN_AT],
+        );
+        if (snapResult.rowCount === 0) {
+          pipeline.log.info(
+            '[compute-cost-estimates]',
+            'data_quality_snapshots: no row for today — counters stored in audit_table only',
+          );
+        }
+      } catch (snapErr) {
+        pipeline.log.warn('[compute-cost-estimates]', 'data_quality_snapshots update failed', {
+          err: snapErr && snapErr.message,
         });
       }
     }
 
-    // Build custom audit_table so the admin FreshnessTimeline surfaces
-    // meaningful throughput metrics. Without this, the SDK auto-injects
-    // only sys_velocity_rows_sec + sys_duration_ms, and the UI hides the
-    // default records_total/new/updated block whenever audit_table is
-    // present. WF3 2026-04-10 — user-reported observability gap.
-    //
-    // model_coverage_pct measures the fraction of processed permits that
-    // received a non-null estimated_cost (i.e., the cost model could produce
-    // a number, vs falling back to null because of zero area / missing
-    // footprint data). It is NOT upsert success rate — that's separately
-    // tracked via failed_rows. Reviewer-flagged HIGH severity.
+    // ── 9. Emit summary ────────────────────────────────────────────────────
     const modelCoveragePct = processed > 0
       ? ((processed - nullEstimates) / processed) * 100
       : 0;
     const costAuditRows = [
-      { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
-      { metric: 'permits_inserted', value: inserted, threshold: null, status: 'INFO' },
-      { metric: 'permits_updated', value: updated, threshold: null, status: 'INFO' },
-      { metric: 'model_coverage_pct', value: modelCoveragePct.toFixed(1) + '%', threshold: '>= 80%', status: modelCoveragePct >= 80 ? 'PASS' : 'WARN' },
+      { metric: 'permits_processed',         value: processed,          threshold: null,    status: 'INFO' },
+      { metric: 'permits_inserted',          value: inserted,           threshold: null,    status: 'INFO' },
+      { metric: 'permits_updated',           value: updated,            threshold: null,    status: 'INFO' },
+      { metric: 'permits_skipped_unchanged', value: skipped,            threshold: null,    status: 'INFO' },
+      { metric: 'liar_gate_overrides',       value: liarsGateOverrides, threshold: null,    status: 'INFO' },
+      { metric: 'zero_total_bypass',         value: zeroTotalBypasses,  threshold: null,    status: 'INFO' },
+      { metric: 'model_coverage_pct',        value: modelCoveragePct.toFixed(1) + '%', threshold: '>= 80%', status: modelCoveragePct >= 80 ? 'PASS' : 'WARN' },
     ];
     if (failedRows > 0) {
-      costAuditRows.push({ metric: 'failed_rows', value: failedRows, threshold: '== 0', status: 'WARN' });
+      costAuditRows.push({ metric: 'failed_rows',    value: failedRows,    threshold: '== 0', status: 'WARN' });
       costAuditRows.push({ metric: 'failed_batches', value: failedBatches, threshold: '== 0', status: 'WARN' });
     }
     const costVerdict = failedRows > 0 || modelCoveragePct < 80 ? 'WARN' : 'PASS';
 
     pipeline.emitSummary({
-      records_total: processed,
-      records_new: inserted,
+      records_total:   processed,
+      records_new:     inserted,
       records_updated: updated,
       records_meta: {
         audit_table: {
-          phase: 14,
-          name: 'Cost Estimates',
+          phase:   14,
+          name:    'Cost Estimates',
           verdict: costVerdict,
-          rows: costAuditRows,
+          rows:    costAuditRows,
         },
-        ...(failedBatches > 0
-          ? { failed_batches: failedBatches, failed_rows: failedRows }
-          : {}),
+        ...(failedBatches > 0 ? { failed_batches: failedBatches, failed_rows: failedRows } : {}),
+        ...(dryRun ? { dry_run: true } : {}),
       },
     });
+
     pipeline.emitMeta(
       {
-        permits: ['permit_num', 'revision_num', 'permit_type', 'structure_type', 'est_const_cost', 'scope_tags'],
-        permit_parcels: ['permit_num', 'revision_num', 'parcel_id'],
-        parcels: ['id', 'lot_size_sqm'],
-        parcel_buildings: ['parcel_id', 'building_id', 'is_primary'],
-        building_footprints: ['id', 'footprint_area_sqm', 'estimated_stories'],
-        neighbourhoods: ['neighbourhood_id', 'avg_household_income', 'tenure_renter_pct'],
+        permits:                ['permit_num', 'revision_num', 'permit_type', 'structure_type', 'est_const_cost', 'scope_tags'],
+        permit_trades:          ['permit_num', 'revision_num', 'trade_slug'],
+        permit_parcels:         ['permit_num', 'revision_num', 'parcel_id'],
+        parcels:                ['id', 'lot_size_sqm'],
+        parcel_buildings:       ['parcel_id', 'building_id', 'is_primary'],
+        building_footprints:    ['id', 'footprint_area_sqm', 'estimated_stories'],
+        neighbourhoods:         ['neighbourhood_id', 'avg_household_income', 'tenure_renter_pct'],
+        trade_sqft_rates:       ['trade_slug', 'base_rate_sqft', 'structure_complexity_factor'],
+        scope_intensity_matrix: ['permit_type', 'structure_type', 'gfa_allocation_percentage'],
       },
       {
         cost_estimates: [
-          'permit_num',
-          'revision_num',
-          'estimated_cost',
-          'cost_source',
-          'cost_tier',
-          'cost_range_low',
-          'cost_range_high',
-          'premium_factor',
-          'complexity_score',
-          'model_version',
-          'is_geometric_override',
-          'modeled_gfa_sqm',
-          'trade_contract_values',
-          'computed_at',
+          'permit_num', 'revision_num', 'estimated_cost', 'cost_source', 'cost_tier',
+          'cost_range_low', 'cost_range_high', 'premium_factor', 'complexity_score',
+          'model_version', 'is_geometric_override', 'modeled_gfa_sqm',
+          'effective_area_sqm', 'trade_contract_values', 'computed_at',
         ],
+        data_quality_snapshots: ['cost_estimates_liar_gate_overrides', 'cost_estimates_zero_total_bypass'],
       },
     );
+
+    // Lock released in outer finally block.
+
   } finally {
     // Release advisory lock on the SAME pinned client that acquired it.
-    // Lock release on a different connection would no-op silently (the
-    // bug 83-W5 documented).
+    // Lock release on a different connection would be a silent no-op.
     try {
       await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
     } catch (unlockErr) {
@@ -591,37 +494,17 @@ if (require.main === module) pipeline.run('compute-cost-estimates', async (pool)
         { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
       );
     } finally {
-      lockClient.release();
+      if (!lockClientReleased) {
+        lockClientReleased = true;
+        lockClient.release();
+      }
     }
   }
-});
+}); // pipeline.run
 
-// ---------------------------------------------------------------------------
-// Exports for dual-path parity tests (WF3-06). The pipeline entry above is
-// guarded by require.main === module so require()-ing this file from a test
-// does NOT start the pool or execute the run.
-// ---------------------------------------------------------------------------
-module.exports = {
-  // Pure functions
-  isNewBuild,
-  isResidential,
-  isCommercial,
-  determineBaseRate,
-  computePremiumFactor,
-  computeBuildingArea,
-  sumScopeAdditions,
-  determineCostTier,
-  computeComplexityScore,
-  sliceTradeValues,
-  estimateCostInline,
-  // Constants
-  BASE_RATES,
-  PREMIUM_TIERS,
-  SCOPE_ADDITIONS,
-  COST_TIER_BOUNDARIES,
-  COMPLEXITY_SIGNALS,
-  PLACEHOLDER_COST_THRESHOLD,
-  MODEL_RANGE_PCT,
-  FALLBACK_RANGE_PCT,
-  LIAR_GATE_THRESHOLD_DEFAULT,
-};
+} // if (require.main === module)
+
+// ─── Exports ──────────────────────────────────────────────────────────────────
+// Re-export the Brain's estimateCostShared so parity-battery tests can access
+// both JS and TS paths via a single require() of this file.
+module.exports = { estimateCostShared };

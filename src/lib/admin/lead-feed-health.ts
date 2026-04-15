@@ -68,6 +68,8 @@ export interface CostCoverage {
   total: number;
   from_permit: number;
   from_model: number;
+  /** Zero-Total Bypass rows (spec 83 §3): active_trade_slugs was empty → no estimate possible */
+  from_none: number;
   null_cost: number;
   /**
    * Coverage WITHIN the cost_estimates cache: (total - null_cost) / total.
@@ -397,6 +399,7 @@ export async function getCostCoverage(pool: Pool): Promise<CostCoverage> {
     SELECT COUNT(*) as total,
            COUNT(*) FILTER (WHERE cost_source = 'permit') as from_permit,
            COUNT(*) FILTER (WHERE cost_source = 'model') as from_model,
+           COUNT(*) FILTER (WHERE cost_source = 'none') as from_none,
            COUNT(*) FILTER (WHERE estimated_cost IS NULL) as null_cost
     FROM cost_estimates
   `);
@@ -407,6 +410,7 @@ export async function getCostCoverage(pool: Pool): Promise<CostCoverage> {
     total,
     from_permit: parseInt(r.from_permit, 10),
     from_model: parseInt(r.from_model, 10),
+    from_none: parseInt(r.from_none, 10),
     null_cost: nullCost,
     coverage_pct: total > 0 ? Math.round(((total - nullCost) / total) * 1000) / 10 : 0,
     // Placeholder — `getCachedLeadFeedHealth` (the Phase 2 cache wrapper)

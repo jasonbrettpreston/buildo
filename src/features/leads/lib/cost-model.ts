@@ -1,14 +1,24 @@
 // 🔗 SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §Implementation
 // 🔗 ADR: docs/adr/001-dual-code-path.md — dual TS↔JS path is an explicit design choice; do not re-litigate in review
-// 🔗 DUAL CODE PATH: scripts/compute-cost-estimates.js (inline JS port) — per
-// CLAUDE.md §7, these files MUST stay in sync. Any change to BASE_RATES,
-// PREMIUM_TIERS, SCOPE_ADDITIONS, COST_TIER_BOUNDARIES, or COMPLEXITY_SIGNALS
-// must land in BOTH. A future hardening WF can extract to a shared JSON file
-// consumable by both.
+// 🔗 DUAL CODE PATH: scripts/compute-cost-estimates.js (Muscle) delegates all
+// formula logic to cost-model-shared.js (Brain). This file mirrors that
+// delegation: when `config.tradeRates` is provided, estimateCost() calls
+// estimateCostShared() from the Brain, producing byte-identical output.
+// When `config.tradeRates` is absent (legacy callers, existing test suite),
+// the v1 inline path runs unchanged — no test regressions.
 //
 // Pure function — no DB, no side effects, no throws on well-typed input.
 
 import type { CostEstimate, CostSource, CostTier } from '@/lib/permits/types';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const brainModule = require('./cost-model-shared') as {
+  estimateCostShared: (
+    row: Record<string, unknown>,
+    config: Record<string, unknown>,
+  ) => Record<string, unknown>;
+  MODEL_VERSION: number;
+};
 
 // ---------------------------------------------------------------------------
 // Input interfaces — narrow, lib-local shapes (not re-exported from
@@ -33,6 +43,8 @@ export interface CostModelPermitInput {
   scope_tags: string[] | null;
   dwelling_units_created: number | null;
   storeys: number | null;
+  /** Surgical path only — trade slugs with active permit_trades rows */
+  active_trade_slugs?: string[];
 }
 
 export interface CostModelParcelInput {
@@ -360,16 +372,37 @@ function buildDisplay(
  */
 export type TradeAllocationPct = Record<string, number>;
 
+/** Surgical Brain per-trade rate row from trade_sqft_rates (spec 83 §2). */
+export interface TradeRate {
+  base_rate_sqft: number;
+  structure_complexity_factor: number;
+}
+
 /**
- * Runtime config for `estimateCost`. Both fields are optional and
- * default to the same fallbacks the JS pipeline uses before it loads
- * Control Panel overrides.
+ * Runtime config for `estimateCost`. When `tradeRates` is provided the
+ * surgical Brain path runs (spec 83). When absent the v1 inline path runs
+ * (preserves all existing tests).
  */
 export interface EstimateCostConfig {
-  /** Override for `LIAR_GATE_THRESHOLD_DEFAULT` (0.25). */
+  /** Override for `LIAR_GATE_THRESHOLD_DEFAULT` (0.25). V1 path only. */
   liarGateThreshold?: number;
-  /** Per-trade allocation percentages. Defaults to `{}` → no slicing. */
+  /** Per-trade allocation percentages. V1 path only. Defaults to `{}` → no slicing. */
   tradeAllocationPct?: TradeAllocationPct;
+  // -------------------------------------------------------------------
+  // Surgical Brain config — presence of tradeRates activates the Brain path
+  // -------------------------------------------------------------------
+  /** Per-trade $/sqft rates + complexity factor from trade_sqft_rates (spec 83 §2). */
+  tradeRates?: Record<string, TradeRate>;
+  /** Scope intensity matrix keyed as `${permit_type}::${structure_type}` (spec 83 §2). */
+  scopeMatrix?: Record<string, number>;
+  /** Urban GFA coverage ratio from logic_variables.urban_coverage_ratio. */
+  urbanCoverageRatio?: number;
+  /** Suburban GFA coverage ratio from logic_variables.suburban_coverage_ratio. */
+  suburbanCoverageRatio?: number;
+  /** Liar's Gate trust threshold from logic_variables.trust_threshold_pct. */
+  trustThresholdPct?: number;
+  /** Premium income tiers for neighbourhood factor. Defaults to PREMIUM_TIERS. */
+  premiumTiers?: Array<{ min: number; max: number | null; multiplier: number }>;
 }
 
 /** The Slicer: per-trade dollar values from total cost. Mirrors JS sliceTradeValues. */
@@ -390,10 +423,15 @@ function sliceTradeValues(
  * Estimate construction cost for a permit. Pure function — no DB, no side
  * effects. Returns a CostEstimate matching the `cost_estimates` table row
  * shape. The pipeline script `compute-cost-estimates.js` is the only writer
- * to that table; the lead feed API reads from the cache. This function
- * exists as a dual-path parity checker (CLAUDE.md §7.1) — if this function
- * and `estimateCostInline` in the JS script disagree on any input, the
- * parity battery test in `src/tests/cost-model.logic.test.ts` fails.
+ * to that table; the lead feed API reads from the cache.
+ *
+ * **Surgical path (spec 83):** when `config.tradeRates` is provided this
+ * function delegates to `estimateCostShared()` in cost-model-shared.js (the
+ * Brain), producing byte-identical output to the pipeline. The parity battery
+ * test in `src/tests/parity-battery.test.ts` enforces this contract.
+ *
+ * **V1 legacy path:** when `config.tradeRates` is absent the original inline
+ * implementation runs unchanged, preserving all existing tests.
  */
 export function estimateCost(
   permit: CostModelPermitInput,
@@ -403,6 +441,76 @@ export function estimateCost(
   config: EstimateCostConfig = {},
 ): CostModelResult {
   const now = new Date();
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SURGICAL BRAIN PATH (spec 83 §3): delegate when tradeRates is present
+  // ─────────────────────────────────────────────────────────────────────────
+  if (config.tradeRates) {
+    const row: Record<string, unknown> = {
+      permit_num: permit.permit_num,
+      revision_num: permit.revision_num,
+      permit_type: permit.permit_type,
+      structure_type: permit.structure_type,
+      work: permit.work,
+      est_const_cost: permit.est_const_cost,
+      scope_tags: permit.scope_tags,
+      storeys: permit.storeys,
+      dwelling_units_created: permit.dwelling_units_created,
+      footprint_area_sqm: footprint?.footprint_area_sqm ?? null,
+      estimated_stories: footprint?.estimated_stories ?? null,
+      lot_size_sqm: parcel?.lot_size_sqm ?? null,
+      avg_household_income: neighbourhood?.avg_household_income ?? null,
+      tenure_renter_pct: neighbourhood?.tenure_renter_pct ?? null,
+      active_trade_slugs: permit.active_trade_slugs ?? [],
+    };
+    const brainConfig: Record<string, unknown> = {
+      tradeRates: config.tradeRates,
+      scopeMatrix: config.scopeMatrix ?? {},
+      urbanCoverageRatio: config.urbanCoverageRatio ?? FALLBACK_URBAN_COVERAGE,
+      suburbanCoverageRatio: config.suburbanCoverageRatio ?? FALLBACK_SUBURBAN_COVERAGE,
+      liarGateThreshold: config.liarGateThreshold ?? config.trustThresholdPct ?? LIAR_GATE_THRESHOLD_DEFAULT,
+      premiumTiers: config.premiumTiers ?? PREMIUM_TIERS.map((t) => ({ min: t.min, max: t.max, multiplier: t.multiplier })),
+    };
+    const result = brainModule.estimateCostShared(row, brainConfig);
+
+    const estimatedCost = result.estimated_cost as number | null;
+    const costTier = result.cost_tier as CostTier | null;
+    const costSource = result.cost_source as CostSource;
+    // 'none' cost_source means Zero-Total Bypass → null cost → display = "unavailable"
+    const displaySource: 'permit' | 'model' = costSource === 'permit' ? 'permit' : 'model';
+    const display = buildDisplay(
+      estimatedCost,
+      costTier,
+      displaySource,
+      result.cost_range_low as number | null,
+      result.cost_range_high as number | null,
+      (result.premium_factor as number | null) ?? 1.0,
+      (result.complexity_score as number | null) ?? 0,
+    );
+
+    return {
+      permit_num: permit.permit_num,
+      revision_num: permit.revision_num,
+      estimated_cost: estimatedCost,
+      cost_source: costSource,
+      cost_tier: costTier,
+      cost_range_low: result.cost_range_low as number | null,
+      cost_range_high: result.cost_range_high as number | null,
+      premium_factor: result.premium_factor as number | null,
+      complexity_score: result.complexity_score as number | null,
+      model_version: brainModule.MODEL_VERSION,
+      computed_at: now,
+      is_geometric_override: result.is_geometric_override as boolean,
+      modeled_gfa_sqm: result.modeled_gfa_sqm as number | null,
+      effective_area_sqm: result.effective_area_sqm as number | null,
+      trade_contract_values: (result.trade_contract_values as Record<string, number>) ?? {},
+      display,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // V1 LEGACY PATH: inline implementation (no tradeRates → no Brain)
+  // ─────────────────────────────────────────────────────────────────────────
   const liarGateThreshold = config.liarGateThreshold ?? LIAR_GATE_THRESHOLD_DEFAULT;
   const tradeAllocationPct = config.tradeAllocationPct ?? {};
 

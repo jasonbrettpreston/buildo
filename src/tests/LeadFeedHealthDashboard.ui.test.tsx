@@ -70,6 +70,7 @@ function makeHealthResponse(overrides?: Partial<LeadFeedHealthResponse>): LeadFe
       total: 7200,
       from_permit: 4000,
       from_model: 2800,
+      from_none: 0,
       null_cost: 400,
       coverage_pct: 94.4,
       // 7200 - 400 = 6800 cost-populated rows out of 10000 active permits = 68.0%
@@ -278,6 +279,7 @@ describe('Section 1 — Feed Readiness Gauge', () => {
           total: 0,
           from_permit: 0,
           from_model: 0,
+          from_none: 0,
           null_cost: 0,
           coverage_pct: 0,
           coverage_pct_vs_active_permits: 0,
