@@ -311,6 +311,7 @@ if (require.main === module) {
       throw lockErr;
     }
 
+  try {
     // ── 6. RUN_AT: single DB timestamp captured once after lock ────────────
     // Using SELECT NOW() here (not in batched SQL) prevents Midnight Cross
     // drift: if the run starts just before midnight and flushes batches just
