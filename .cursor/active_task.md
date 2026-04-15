@@ -1,254 +1,141 @@
-# Active Task: WF3-08 — Pipeline SDK Hardening (Zod · withAdvisoryLock · emitSummary · checkJs)
-**Status:** Implementation
+# Active Task: WF3-12 — classify-lifecycle-phase.js Spec 47 Compliance Gaps
+**Status:** Done
 **Domain Mode:** Backend/Pipeline
 **Workflow:** WF3 (Bug Fix)
-**Findings:** H-W11 (NaN propagation from bad env), H-W18 (false-green emitSummary stub), 83-W5 (advisory lock on ephemeral client), systemic (no checkJs on scripts/)
+**Rollback Anchor:** `fe932ff9c2452644517ff66a906260ef7d819e0f`
 
 ## Context
-* **Goal:** Eliminate four classes of future pipeline bugs by hardening the shared SDK layer.
-  1. **Bad env values** — `PG_PORT='abc'` silently becomes `NaN` inside `createPool()`. Any script that starts will try to connect on port `NaN`, get a connection error, and that error will be logged without indicating the root cause.
-  2. **NaN propagation from `logic_variables`** — `loadMarketplaceConfigs` has `isFinite` guards but no schema contract; callers get unvalidated `logicVars` objects with no guarantee required keys exist.
-  3. **Advisory lock on ephemeral client** — pre-PR-C pattern `pool.query('SELECT pg_try_advisory_lock($1)')` acquires a session-level lock on a connection that's returned to the pool immediately after the query, so the lock is silently released. Scripts need a `withAdvisoryLock` helper that pins to a dedicated `pool.connect()` client.
-  4. **False-green dashboard** — `emitSummary` auto-injects `{ verdict: 'PASS', ... }` when a script provides no `audit_table`. Admin FreshnessTimeline shows a green check for scripts that haven't wired any real quality checks (H-W18). Verdict should be `'UNKNOWN'` with a warn log.
-  5. **`run()` pool leak on bad env** — `createPool()` is called before `try { ... } finally { pool.end() }`, so if env validation throws, `pool.end()` is never reached (pool leak / unhandled rejection).
-  6. **No IDE type checking on scripts/** — `tsconfig.json` excludes `scripts/`; a `jsconfig.json` with `checkJs + strictNullChecks` enables VS Code / ts-server inline type errors without requiring a build step.
-* **Target Spec:** `docs/specs/pipeline/47_pipeline_script_protocol.md` §4 (config validation), §5 (advisory lock), §8 (observability)
+* **Goal:** Fix 6 spec 47 violations in `scripts/classify-lifecycle-phase.js` identified by compliance review (3 CRITICAL, 3 WARNING).
+* **Target Spec:** `docs/specs/pipeline/47_pipeline_script_protocol.md`
 * **Key Files:**
-  - `scripts/lib/pipeline.js` (createPool, run, emitSummary — all modified)
-  - `scripts/lib/config-loader.js` (add validateLogicVars export)
-  - `scripts/jsconfig.json` (NEW — checkJs)
-  - `src/tests/pipeline-sdk.logic.test.ts` (NEW — failing tests first)
+  - `scripts/classify-lifecycle-phase.js` (primary target)
+  - `src/tests/classify-lifecycle-phase.infra.test.ts` (update + add tests)
 
-## Technical Implementation
+## Bugs to Fix
 
-### 1. `scripts/lib/pipeline.js` — `createPool()` env validation
+| # | Severity | Spec § | Issue | Fix |
+|---|---------|--------|-------|-----|
+| 1 | CRITICAL | §5.5 | Missing SIGTERM handler — advisory lock 85 orphaned on container preemption | Add `process.on('SIGTERM', ...)` + `lockClientReleased` flag |
+| 2 | CRITICAL | §6.2 | `pool.query()` for dirty permits (L227) and dirty CoAs (L479) — mandatory streaming tables, OOM on backfill | Replace both with `pipeline.streamQuery`, process inline per batch |
+| 3 | CRITICAL | §4.2 | `coa_stall_threshold` read from `logicVars` without Zod validation | Import `validateLogicVars`, define schema, throw on failure |
+| 4 | WARNING | §14.1/14.2 | `NOW()` used in SQL batch loops — Midnight Cross drift risk | Capture `RUN_AT` from `SELECT NOW()` at startup; pass as `$N` param to all UPDATEs/INSERTs |
+| 5 | WARNING | §3.0 | SPEC LINK points to `docs/reports/lifecycle_phase_implementation.md` (a report, not a spec) | Point to `docs/specs/product/future/84_lifecycle_phase_engine.md` |
+| 6 | WARNING | §6.3 | `PERMIT_BATCH_SIZE = 500`, `COA_BATCH_SIZE = 1000` — hardcoded magic numbers | Replace with `Math.floor((65535-1)/N)` formula constants |
 
-Replace the bare `parseInt(process.env.PG_PORT || '5432', 10)` pattern with guarded parsing that throws a clear error on startup:
+## Detailed Fix Notes
 
+### Fix 1: SIGTERM handler + lockClientReleased flag
+Register immediately after `pool.connect()`. Use `lockClientReleased` boolean to prevent double-release in finally/SIGTERM race:
 ```js
-function createPool() {
-  const rawPort = process.env.PG_PORT || '5432';
-  const port = parseInt(rawPort, 10);
-  if (!Number.isFinite(port) || port < 1 || port > 65535) {
-    throw new Error(`PG_PORT must be a valid port number (1-65535), got: ${JSON.stringify(rawPort)}`);
-  }
-  return new Pool({
-    host: process.env.PG_HOST || 'localhost',
-    port,
-    database: process.env.PG_DATABASE || 'buildo',
-    user: process.env.PG_USER || 'postgres',
-    password: process.env.PG_PASSWORD || 'postgres',
-  });
-}
+const lockClient = await pool.connect();
+let lockClientReleased = false;
+process.on('SIGTERM', async () => {
+  pipeline.log.warn('[classify-lifecycle-phase]', 'Received SIGTERM. Releasing lock and shutting down gracefully...');
+  try { await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]); } catch (e) {}
+  if (!lockClientReleased) { lockClientReleased = true; lockClient.release(); }
+  process.exit(143);
+});
 ```
+Skip path sets `lockClientReleased = true` before release. catch block sets flag. finally checks flag.
 
-No Zod dependency needed here — the guard is a single range check. Zod is higher-value in config-loader where the schema is complex.
+### Fix 2: Streaming dirty permits + dirty CoAs
+**Reorder**: Build bldCmbByPrefix + inspByPermit maps BEFORE streaming (so maps are ready during stream).
 
-### 2. `scripts/lib/pipeline.js` — `run()` restructure
-
-Move `createPool()` inside the try block so `pool.end()` in finally is always guarded by `if (pool)`:
-
+Stream dirty permits — classify inline, flush per PERMIT_BATCH_SIZE:
 ```js
-async function run(name, fn) {
-  let pool;
-  const startMs = Date.now();
-  _runStartMs = startMs;
-  try {
-    pool = createPool();
-    await fn(pool);
-    const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
-    console.log(`\n[${name}] completed in ${elapsed}s`);
-  } catch (err) {
-    log.error(`[${name}]`, err, { phase: 'fatal' });
-    throw err;
-  } finally {
-    if (pool) {
-      await pool.end().catch((endErr) => {
-        log.warn(`[${name}]`, `pool.end failed: ${endErr.message}`);
-      });
-    }
+let dirtyPermitsCount = 0;
+let permitBatch = [];
+for await (const row of pipeline.streamQuery(pool, DIRTY_PERMITS_SQL)) {
+  dirtyPermitsCount++;
+  /* inline classify via bldCmbByPrefix + inspByPermit */
+  permitBatch.push(classified);
+  if (permitBatch.length >= PERMIT_BATCH_SIZE) {
+    await flushPermitBatch(); // withTransaction: phase UPDATE + transitions INSERT + stamp UPDATE
+    permitBatch = [];
   }
 }
+if (permitBatch.length > 0) await flushPermitBatch(); // flush remainder
 ```
 
-### 3. `scripts/lib/pipeline.js` — `withAdvisoryLock(pool, lockId, fn)`
+Stream dirty CoAs — same per-batch inline pattern. Use `dirtyPermitsCount` / `dirtyCoAsCount` in place of removed `dirtyPermits.length` / `dirtyCoAs.length`.
 
-New export. Acquires a session-level advisory lock on a dedicated `pool.connect()` client (not `pool.query`). Mirrors the pattern in `classify-lifecycle-phase.js` L161-193. Lock ID = spec number convention (§5 of spec 47).
-
-```js
-/**
- * Acquire a PostgreSQL advisory lock on a dedicated client, run fn(), then
- * release. The lock is session-scoped so it MUST stay on the same connection.
- *
- * @param {import('pg').Pool} pool
- * @param {number} lockId  - Convention: lock_id = spec number (§5.2 of spec 47)
- * @param {() => Promise<T>} fn
- * @returns {Promise<{ acquired: false } | { acquired: true; result: T }>}
- * @template T
- */
-async function withAdvisoryLock(pool, lockId, fn) {
-  const client = await pool.connect();
-  try {
-    const lockRes = await client.query('SELECT pg_try_advisory_lock($1) AS acquired', [lockId]);
-    if (!lockRes.rows[0].acquired) {
-      return { acquired: false };
-    }
-    try {
-      const result = await fn();
-      return { acquired: true, result };
-    } finally {
-      await client.query('SELECT pg_advisory_unlock($1)', [lockId]);
-    }
-  } finally {
-    client.release();
-  }
-}
-```
-
-Callers check `acquired` and gracefully return (with an `emitSummary` skipped-run) when `false`.
-
-### 4. `scripts/lib/pipeline.js` — `emitSummary` stub verdict fix
-
-Change auto-injected stub verdict from `'PASS'` to `'UNKNOWN'` and emit a warn log so the Admin UI correctly shows an ambiguous state rather than a false green:
-
-```js
-if (!payload.records_meta.audit_table) {
-  log.warn('[pipeline]', 'emitSummary called with no audit_table — admin UI will show UNKNOWN verdict. Wire a real audit_table for meaningful observability.');
-  payload.records_meta.audit_table = { phase: 0, name: 'Auto', verdict: 'UNKNOWN', rows: [] };
-}
-```
-
-Scripts that already provide a real `audit_table` are unaffected (the condition only fires when absent).
-
-### 5. `scripts/lib/config-loader.js` — `validateLogicVars(logicVars, schema, tag)`
-
-New export that callers use after `loadMarketplaceConfigs` to assert required keys exist and are valid numbers. Uses Zod for structured error messages. Returns `{ valid: true }` or `{ valid: false; errors: string[] }`.
-
+### Fix 3: Zod validation
 ```js
 const { z } = require('zod');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
-/**
- * Validate a logicVars object against a Zod schema.
- * Call this after loadMarketplaceConfigs() to fail fast if required keys
- * are missing or non-finite (e.g. DB returned NULL, fallback was skipped).
- *
- * @param {Record<string, number>} logicVars
- * @param {import('zod').ZodSchema} schema
- * @param {string} [tag='config-loader']
- * @returns {{ valid: true } | { valid: false; errors: string[] }}
- */
-function validateLogicVars(logicVars, schema, tag = 'config-loader') {
-  const result = schema.safeParse(logicVars);
-  if (!result.success) {
-    const errors = result.error.issues.map(
-      (i) => `${i.path.join('.')}: ${i.message}`
-    );
-    pipeline.log.error(`[${tag}]`, new Error('logicVars validation failed'), { errors });
-    return { valid: false, errors };
-  }
-  return { valid: true };
+const LIFECYCLE_CONFIG_SCHEMA = z.object({
+  coa_stall_threshold: z.number().positive(),
+});
+// after loadMarketplaceConfigs:
+const validation = validateLogicVars(logicVars, LIFECYCLE_CONFIG_SCHEMA, 'classify-lifecycle-phase');
+if (!validation.valid) {
+  throw new Error(`[classify-lifecycle-phase] config validation failed: ${validation.errors.join('; ')}`);
 }
 ```
 
-### 6. `scripts/jsconfig.json` — checkJs
+### Fix 4: RUN_AT — no NOW() in loops
+- First query: `const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');`
+- Replace `const now = new Date()` with `RUN_AT` (same JS Date, from DB clock)
+- `buildPermitUpdateSQL(batchSize)`: `lifecycle_classified_at = $${batchSize*4+1}::timestamptz`, same param for `phase_started_at CASE THEN`
+- `buildCoaUpdateSQL(batchSize)`: `lifecycle_classified_at = $${batchSize*3+1}::timestamptz`
+- Transition INSERT: RUN_AT as param 5 per row → `j * 7` (7 params, not 6)
+- Permit stamp UPDATE: `lifecycle_classified_at = $3::timestamptz`
+- CoA stamp UPDATE: `lifecycle_classified_at = $2::timestamptz`
+- Phase_started_at backfill: `$1::timestamptz` with `[RUN_AT]`
+- Initial transitions backfill: `COALESCE(phase_started_at, $1::timestamptz)` with `[RUN_AT]`
+- CoA dirty query days_since_activity: `EXTRACT(EPOCH FROM ($1::timestamptz - last_seen_at))` with `[RUN_AT]` as streamQuery param
 
-New file. Enables inline TypeScript checking in VS Code and `tsc --noEmit` for scripts:
+### Fix 5: SPEC LINK
+```js
+ * SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md
+```
+Also update SPEC LINK in test file header.
 
-```json
-{
-  "compilerOptions": {
-    "checkJs": true,
-    "strictNullChecks": true,
-    "noEmit": true,
-    "target": "ES2020",
-    "module": "CommonJS",
-    "lib": ["ES2020"],
-    "allowSyntheticDefaultImports": true
-  },
-  "include": ["**/*.js"],
-  "exclude": ["node_modules"]
-}
+### Fix 6: Batch size formula
+```js
+// Transition INSERT is the most param-dense query (7 cols): limits PERMIT_BATCH_SIZE
+const PERMIT_TRANSITION_COLS = 7; // permit_num, revision_num, from_phase, to_phase, RUN_AT, permit_type, neighbourhood_id
+const PERMIT_BATCH_SIZE = Math.floor((65535 - 1) / PERMIT_TRANSITION_COLS); // = 9362
+// CoA UPDATE: 3 data cols + 1 RUN_AT appended = 4 params/row
+const COA_COLS = 3; // id, phase, stalled
+const COA_BATCH_SIZE = Math.floor((65535 - 1) / (COA_COLS + 1)); // = 16383
 ```
 
-### Test strategy (`src/tests/pipeline-sdk.logic.test.ts`)
+## Tests to Add / Update
 
-Tests use `createRequire(import.meta.url)` for CJS module imports. No real DB — all pool/client calls are `vi.fn()` mocks. `vi.stubEnv()` for env var testing. `vi.resetModules()` before each test that needs a fresh `pipeline.js` instance (module-level state reset).
+### Update (existing tests broken by fixes):
+- `'uses j * 6 (not j * 7)'` → change to `j * 7` (RUN_AT is now param 5)
+- `'bumps lifecycle_classified_at ... NOW()'` → match `$3::timestamptz` pattern
+- `'runs phase UPDATE and classified_at stamp in the same transaction'` → update NOW() regex to timestamptz
+- `'conditionally stamps phase_started_at ... THEN NOW()'` → match `$N::timestamptz`
+- `'uses per-batch small transactions'` → update regex for streaming loop pattern
 
-**Test cases (must fail RED before implementation):**
-
-#### `createPool` env validation
-1. `PG_PORT='abc'` → throws with message matching `PG_PORT must be a valid port number`
-2. `PG_PORT='0'` → throws (out of range)
-3. `PG_PORT='65536'` → throws (out of range)
-4. `PG_PORT=''` (empty string) → uses default 5432 (same as `|| '5432'` path)
-5. `PG_PORT='5432'` → resolves to valid pool config (port 5432)
-
-#### `withAdvisoryLock`
-6. When `pg_try_advisory_lock` returns `{ acquired: false }` → returns `{ acquired: false }`, `fn` never called, `pg_advisory_unlock` never called
-7. When `pg_try_advisory_lock` returns `{ acquired: true }` and `fn` succeeds → returns `{ acquired: true, result }`, `pg_advisory_unlock` called exactly once
-8. When `fn` throws → `pg_advisory_unlock` still called (finally), error re-thrown
-9. `pool.connect()` used (not `pool.query`) for the lock pair
-
-#### `emitSummary` stub verdict
-10. When called with no `audit_table` in `records_meta` → emitted JSON contains `verdict: 'UNKNOWN'` (not `'PASS'`)
-11. When called with a real `audit_table` → existing verdict preserved unchanged
-12. `log.warn` called exactly once when auto-stub is injected
-
-#### `validateLogicVars`
-13. Valid schema + valid data → `{ valid: true }`
-14. Required field missing → `{ valid: false, errors: [...] }` with field name in error string
-15. Field present but NaN (non-finite) → validation fails with descriptive message
-16. `log.error` called when validation fails
-
-#### `run()` pool safety
-17. When `createPool()` throws (bad PG_PORT env) → error is caught and re-thrown by `run()`, `pool.end()` never called (no pool to end — no crash)
-
-## Standards Compliance
-* **Try-Catch Boundary:** All new code paths either throw or propagate — no empty catches.
-* **Unhappy Path Tests:** 17 test cases covering invalid env, lock failure, fn failure, missing audit_table, schema violations.
-* **logError Mandate:** N/A — `validateLogicVars` uses `pipeline.log.error` (the pipeline equivalent).
-* **Mobile-First:** N/A — backend only.
+### Add (new spec 47 requirements):
+- SIGTERM handler registered after `pool.connect()`
+- `lockClientReleased` flag prevents double-release
+- `pipeline.streamQuery` used for dirty permits
+- `pipeline.streamQuery` used for dirty CoAs
+- `validateLogicVars` called with Zod schema for `coa_stall_threshold`
+- `RUN_AT` captured from `SELECT NOW()` as first query
+- PERMIT_BATCH_SIZE uses `Math.floor` formula, not magic number
+- SPEC LINK points to spec file, not report
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `bb8c341787e9b536f0276a8a44af3f82e0889e6a` (current HEAD).
-- [ ] **State Verification:** Confirmed (from prior reads): `createPool()` has unguarded `parseInt(PG_PORT)` at L36; `emitSummary` auto-injects `verdict: 'PASS'` at L193; `run()` calls `createPool()` at L279 before the try block; no `withAdvisoryLock` exists; `config-loader.js` has no `validateLogicVars` export; `scripts/` excluded from `tsconfig.json`.
-- [ ] **Spec Review:** `docs/specs/pipeline/47_pipeline_script_protocol.md` §4, §5, §8 — all items in this plan are mandated there.
-- [ ] **Reproduction:** Write `src/tests/pipeline-sdk.logic.test.ts` with all 17 failing tests.
-- [ ] **Red Light:** `npx vitest run src/tests/pipeline-sdk.logic.test.ts` — all 17 fail.
-- [ ] **Fix:**
-  1. `scripts/lib/pipeline.js` — `createPool()` port range guard.
-  2. `scripts/lib/pipeline.js` — `run()` restructure (`let pool; try { pool = createPool(); ... }`).
-  3. `scripts/lib/pipeline.js` — add `withAdvisoryLock(pool, lockId, fn)`.
-  4. `scripts/lib/pipeline.js` — `emitSummary` stub verdict `'PASS'` → `'UNKNOWN'` + `log.warn`.
-  5. `scripts/lib/pipeline.js` — add `withAdvisoryLock` to `module.exports`.
-  6. `scripts/lib/config-loader.js` — add `const { z } = require('zod')`, add `validateLogicVars(logicVars, schema, tag)` function, add to `module.exports`.
-  7. `scripts/jsconfig.json` — create new file with `checkJs: true, strictNullChecks: true`.
-- [ ] **Pre-Review Self-Checklist — sibling bugs sharing root cause:**
-  1. **`withAdvisoryLock` used in existing scripts?** No existing script calls `withAdvisoryLock` (it doesn't exist yet). Each existing script (classify-lifecycle-phase.js, compute-cost-estimates.js) implements the lock pattern inline. New helper doesn't break them — they continue using their own inline pattern until a follow-up WF2 migrates them. ✓ No regression.
-  2. **`emitSummary` verdict change breaks CQA parsing?** `run-chain.js` reads `records_meta.audit_table.verdict`. CQA throws on `'FAIL'`; passes on `'PASS'`. `'UNKNOWN'` is a new value — confirm `run-chain.js` treats unknown verdicts as non-failing (permissive). If not, scripts with no audit_table would start failing the chain. Need to verify.
-  3. **`validateLogicVars` export: `zod` available in scripts/?** Confirmed: `zod` is in `package.json` dependencies, available in CommonJS `require`. ✓
-  4. **`jsconfig.json` conflicts with root `tsconfig.json`?** `tsconfig.json` excludes `scripts/`. `jsconfig.json` is scoped to `scripts/` directory. No conflict — they're separate projects. ✓
-  5. **`run()` restructure: `_runStartMs` set before or after `createPool()`?** Currently `_runStartMs = startMs` is set immediately after `const startMs = Date.now()`. With the restructure, this stays the same — the assignment is before the try block so velocity calculation still works correctly even when `createPool()` throws. ✓
-- [ ] **Green Light:**
-  - `npx vitest run src/tests/pipeline-sdk.logic.test.ts` — all 17 pass.
-  - `npm run test && npm run lint -- --fix` — all pass.
-  - Visible ✅/⬜ summary. → WF6.
+- [x] **Rollback Anchor:** `fe932ff9c2452644517ff66a906260ef7d819e0f`
+- [ ] **State Verification:** Script uses `pool.query` for dirty permits/CoAs; no SIGTERM; no Zod; hardcoded batch sizes; NOW() in loops; spec link rot.
+- [ ] **Spec Review:** Read §3, §4.2, §5.5, §6.2, §6.3, §14 of spec 47 — done above.
+- [ ] **Reproduction:** Update/add failing tests locking in all 6 fixes.
+- [ ] **Red Light:** `npx vitest run src/tests/classify-lifecycle-phase.infra.test.ts` — new tests MUST fail.
+- [ ] **Fix:** Apply all 6 fixes to `scripts/classify-lifecycle-phase.js`.
+- [ ] **Pre-Review Self-Checklist:** 5 sibling bugs checked below.
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
 
-## §10 Plan Compliance Checklist
-- ⬜ **DB:** N/A — no migrations, no schema changes.
-- ⬜ **API:** N/A — no API routes modified.
-- ⬜ **UI:** N/A — no components modified.
-- ✅ **Shared Logic (§7.1 dual-code-path):**
-  - These changes are to the Pipeline SDK and config-loader — consumed by JS pipeline scripts only. No TS API consumer uses `pipeline.js` or `config-loader.js` directly. Dual-path discipline applies when *business logic* changes; SDK infrastructure changes are single-path (scripts/ only). ✓
-- ✅ **Pipeline (§9):**
-  - Changes harden the SDK layer that all pipeline scripts depend on.
-  - `withAdvisoryLock` enforces the spec 47 §5 pattern (dedicated client, try/finally, lock ID = spec number).
-  - `validateLogicVars` enforces the spec 47 §4 pattern (fail fast on bad config).
-  - `emitSummary` fix resolves H-W18 (false-green admin dashboard).
-  - `createPool()` guard and `run()` restructure resolve startup reliability gap.
-  - All changes are backward-compatible: existing callers continue to work unchanged.
-  - `jsconfig.json` adds IDE-level type checking without changing runtime behavior.
-
----
-
-**PLAN LOCKED. Do you authorize this WF3-08 Bug Fix plan? (y/n)**
+## Sibling Bug Check (WF3 Pre-Review)
+| Sibling | Root cause shared? | Status |
+|---------|-------------------|--------|
+| Same NOW() pattern in compute-trade-forecasts.js | WF3-11 scope; addressed separately | Deferred |
+| bldCmbByPrefix also queries permits table via pool.query | Single-column query, builds Map<string,Set<string>> ~5MB; bounded; not flagged by reviewer | Acceptable |
+| Phase_started_at backfill UPDATE also uses NOW() | Yes — fixed in Fix 4 as part of this task | ✅ Covered |
+| days_since_activity in CoA query uses NOW() | Yes — fixed in Fix 4 using RUN_AT as streamQuery param | ✅ Covered |
+| Initial transitions backfill uses NOW() | Yes — fixed in Fix 4 | ✅ Covered |
