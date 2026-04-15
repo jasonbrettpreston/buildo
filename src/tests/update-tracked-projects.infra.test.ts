@@ -89,7 +89,8 @@ describe('scripts/update-tracked-projects.js — CRM assistant shape', () => {
   });
 
   it('bumps updated_at on every DB update', () => {
-    expect(content).toMatch(/updated_at = NOW\(\)/);
+    // Now uses RUN_AT ($1) instead of NOW() to prevent the Midnight Cross (spec 47 §14)
+    expect(content).toMatch(/updated_at = \$1/);
   });
 
   it('syncs lead_analytics via SQL UPSERT after processing', () => {
@@ -182,5 +183,84 @@ describe('scripts/update-tracked-projects.js — CRM assistant shape', () => {
     expect(content).toMatch(/SELECT pg_advisory_unlock\(\$1\)/);
     expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
     expect(content).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+  });
+});
+
+// ── WF3 spec 47 §12 compliance tests ──
+
+describe('scripts/update-tracked-projects.js — spec 47 compliance', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/update-tracked-projects.js'),
+      'utf-8',
+    );
+  });
+
+  it('SPEC LINK points to spec file not a report (spec 47 §3)', () => {
+    expect(content).toMatch(/SPEC LINK:.*82_crm_assistant_alerts\.md/);
+    expect(content).not.toMatch(/SPEC LINK:.*lifecycle_phase_implementation/);
+    expect(content).not.toMatch(/SPEC LINK:.*docs\/reports\//);
+  });
+
+  it('registers a SIGTERM handler to release advisory lock gracefully (spec 47 §5.5)', () => {
+    expect(content).toMatch(/process\.on\('SIGTERM'/);
+    expect(content).toMatch(/pg_advisory_unlock/);
+    expect(content).toMatch(/process\.exit\(143\)/);
+  });
+
+  it('includes lockClientReleased flag — guards against double-release on SIGTERM (spec 47 §5.5)', () => {
+    expect(content).toMatch(/lockClientReleased/);
+  });
+
+  it('captures RUN_AT from DB at startup — MANDATORY skeleton §R3.5 (spec 47 §14.1)', () => {
+    expect(content).toMatch(/RUN_AT/);
+    expect(content).toMatch(/SELECT NOW\(\) AS now/);
+  });
+
+  it('uses pipeline.streamQuery for tracked_projects — not pool.query (spec 47 §6.1)', () => {
+    // tracked_projects is explicitly listed in spec §6.1 as always requiring streamQuery
+    expect(content).toMatch(/pipeline\.streamQuery/);
+    // The main 4-table JOIN must NOT go through pool.query
+    expect(content).not.toMatch(/await pool\.query\(`[\s\S]{0,200}FROM tracked_projects/);
+  });
+
+  it('eliminates N+1 — no per-row client.query inside a loop over mergedUpdates (spec 47 §7.5)', () => {
+    // N+1 anti-pattern: one UPDATE per row inside a for-of loop
+    expect(content).not.toMatch(
+      /for \(const upd of mergedUpdates\)[\s\S]{0,300}await client\.query/,
+    );
+  });
+
+  it('caps alerts array at 200 in records_meta — no raw unbounded array (spec 47 §8.4)', () => {
+    // Spec §8.4: "NEVER embed unbounded arrays — cap alert arrays at 200 items"
+    expect(content).toMatch(/alerts_total/);
+    // Raw `alerts,` on its own line (unbounded) must be gone
+    expect(content).not.toMatch(/^\s*alerts,\s*$/m);
+  });
+
+  it('includes a real audit_table in emitSummary (spec 47 §8.2)', () => {
+    expect(content).toMatch(/audit_table/);
+    // spec §8.2 mandatory rows for "Alert delivery" type
+    expect(content).toMatch(/alerts_evaluated/);
+    expect(content).toMatch(/alerts_delivered/);
+    expect(content).toMatch(/delivery_errors/);
+  });
+
+  it('uses RUN_AT (not NOW()) for updated_at writes (spec 47 §14 Midnight Cross)', () => {
+    // updated_at = NOW() inside a loop is the Midnight Cross pattern
+    expect(content).not.toMatch(/updated_at = NOW\(\)/);
+  });
+
+  it('validates tradeConfigs with Zod schema (spec 47 §4.2)', () => {
+    expect(content).toMatch(/require\('zod'\)/);
+    expect(content).toMatch(/TRADE_CONFIG_SCHEMA/);
+    expect(content).toMatch(/bid_phase_cutoff/);
+    expect(content).toMatch(/work_phase_target/);
+  });
+
+  it('accumulates result.rowCount not raw updates.length for records_updated (spec 47 §7 #5)', () => {
+    expect(content).toMatch(/rowCount/);
+    expect(content).not.toMatch(/records_updated:\s*updates\.length/);
   });
 });

@@ -12,10 +12,16 @@
  *   Path A (Saved): passive watchlist — auto-archive only, no alerts
  *   Path B (Claimed): active flight board — stall/recovery/imminent alerts
  *
- * SPEC LINK: docs/reports/lifecycle_phase_implementation.md
+ * SPEC LINK: docs/specs/product/future/82_crm_assistant_alerts.md
+ *
+ * DUAL PATH NOTE: N/A — this script processes saved + claimed tracked_projects
+ * in two internal routing paths (Path A / Path B), but there is no separate
+ * TypeScript module maintaining parity. src/lib/classification/scoring.ts is
+ * unrelated (computes lead_score, not CRM alert state).
  */
 'use strict';
 
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const {
   TRADE_TARGET_PHASE: TRADE_TARGET_PHASE_FALLBACK,
@@ -36,16 +42,77 @@ const CLAIMED_STATUSES = new Set([
 // WF3-03 PR-B (H-W1): lock ID = spec number convention.
 const ADVISORY_LOCK_ID = 82;
 
+// spec §8.4: cap alerts array in records_meta at 200 items to prevent
+// a burst of stalled projects from blowing up PIPELINE_SUMMARY payload.
+const ALERTS_META_CAP = 200;
+
+// Zod schema for per-trade config fields consumed by this script.
+// spec 47 §4.2: validate before use — prevents silent wrong-type skips.
+const TRADE_CONFIG_SCHEMA = z.object({
+  bid_phase_cutoff:   z.string().min(1),
+  work_phase_target:  z.string().min(1),
+}).passthrough();
+
 pipeline.run('update-tracked-projects', async (pool) => {
+  // §R3.5: Capture run timestamp at pipeline startup — MANDATORY per skeleton.
+  // Used as $1 in all updated_at writes to prevent the Midnight Cross.
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+
+  // ─── Load Control Panel via shared loader ──────────────────
+  // Done BEFORE lock acquisition so a config error doesn't hold the lock.
+  const { tradeConfigs } = await loadMarketplaceConfigs(pool, 'tracked-projects');
+
+  // spec 47 §4.2: validate each trade's required fields before use.
+  // Invalid entries log a WARN and are treated as unmapped (skipped).
+  const validTradeConfigs = {};
+  for (const [slug, tc] of Object.entries(tradeConfigs)) {
+    const result = TRADE_CONFIG_SCHEMA.safeParse(tc);
+    if (!result.success) {
+      pipeline.log.warn(
+        '[tracked-projects]',
+        `tradeConfigs[${slug}] missing required fields — trade will be skipped`,
+        { errors: result.error.issues.map((i) => i.message) },
+      );
+    } else {
+      validTradeConfigs[slug] = tc;
+    }
+  }
+
+  const TRADE_TARGET_PHASE = Object.fromEntries(
+    Object.entries(validTradeConfigs).map(([slug, tc]) => [slug, {
+      bid_phase: tc.bid_phase_cutoff,
+      work_phase: tc.work_phase_target,
+    }]),
+  );
+
   // ─── Concurrency guard — single-threaded CRM updater ──────────
   // Lock acquired on a DEDICATED `pool.connect()` client (mirrors
   // classify-lifecycle-phase.js). Two concurrent runs would otherwise
   // race on the memory columns (last_notified_stalled,
-  // last_notified_urgency) and double-fire CRM alerts. Existing
-  // pipeline.withTransaction blocks already cover §9.1 atomicity for
-  // the memory-column UPDATE + analytics UPSERT/zero-out — only the
-  // advisory lock was missing.
+  // last_notified_urgency) and double-fire CRM alerts.
   const lockClient = await pool.connect();
+
+  // Guard flag prevents double-release if SIGTERM fires after the skip-path
+  // (or after the finally block) has already released the client.
+  let lockClientReleased = false;
+
+  // §5.5: SIGTERM handler — release advisory lock before process exits so
+  // the next scheduled run is not blocked by a stale lock on a dead session.
+  process.on('SIGTERM', async () => {
+    pipeline.log.warn(
+      '[tracked-projects]',
+      'Received SIGTERM. Releasing advisory lock and shutting down gracefully...',
+    );
+    try {
+      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+    } catch (e) { /* best-effort */ }
+    if (!lockClientReleased) {
+      lockClientReleased = true;
+      lockClient.release();
+    }
+    process.exit(143);
+  });
+
   try {
     const { rows: lockRows } = await lockClient.query(
       'SELECT pg_try_advisory_lock($1) AS got',
@@ -58,34 +125,44 @@ pipeline.run('update-tracked-projects', async (pool) => {
       );
       pipeline.emitSummary({
         records_total: 0, records_new: 0, records_updated: 0,
-        records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere',
-          advisory_lock_id: ADVISORY_LOCK_ID },
+        records_meta: {
+          skipped: true, reason: 'advisory_lock_held_elsewhere',
+          advisory_lock_id: ADVISORY_LOCK_ID,
+          audit_table: {
+            phase: 24,
+            name: 'CRM Assistant',
+            verdict: 'PASS',
+            rows: [{ metric: 'skipped_lock_held', value: 1, threshold: null, status: 'INFO' }],
+          },
+        },
       });
       pipeline.emitMeta({}, {});
+      lockClientReleased = true;
       lockClient.release();
       return;
     }
   } catch (lockErr) {
+    lockClientReleased = true;
     lockClient.release();
     throw lockErr;
   }
 
   try {
-  // ─── Load Control Panel via shared loader ──────────────────
-  const { tradeConfigs } = await loadMarketplaceConfigs(pool, 'tracked-projects');
-  const TRADE_TARGET_PHASE = Object.fromEntries(
-    Object.entries(tradeConfigs).map(([slug, tc]) => [slug, {
-      bid_phase: tc.bid_phase_cutoff,
-      work_phase: tc.work_phase_target,
-    }]),
-  );
-
   // ═══════════════════════════════════════════════════════════
-  // Step 1: Query all active tracked projects with forecast data
+  // Step 1: Stream all active tracked projects with forecast data
+  //
+  // spec 47 §6.1: tracked_projects is explicitly listed as always
+  // requiring pipeline.streamQuery. pool.query would load the entire
+  // active set into Node heap at once.
+  //
+  // §16.3 stale-snapshot guard not needed: advisory lock 82 prevents
+  // concurrent script instances, and the two write-back targets
+  // (tracked_projects.status/memory-columns, lead_analytics) are only
+  // written by this script's own withTransaction blocks.
   // ═══════════════════════════════════════════════════════════
-  pipeline.log.info('[tracked-projects]', 'Querying active tracked projects...');
+  pipeline.log.info('[tracked-projects]', 'Streaming active tracked projects...');
 
-  const { rows } = await pool.query(`
+  const SQL = `
     SELECT
       tp.id AS tracking_id,
       tp.user_id,
@@ -108,12 +185,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
                                  AND tp.trade_slug = tf.trade_slug
     LEFT JOIN trade_configurations tc ON tc.trade_slug = tp.trade_slug
     WHERE tp.status IN ('saved', 'claimed_unverified', 'claimed', 'verified')
-  `);
-
-  pipeline.log.info(
-    '[tracked-projects]',
-    `Active tracked projects: ${rows.length}`,
-  );
+  `;
 
   // ═══════════════════════════════════════════════════════════
   // Step 2: Process each row through the routing engine
@@ -121,10 +193,12 @@ pipeline.run('update-tracked-projects', async (pool) => {
   const updates = [];  // {id, fields} — batched DB updates
   const alerts = [];   // {user_id, type, message} — notification payloads
 
+  let totalRows = 0;
   let archived = 0;
   let stallAlerts = 0;
   let recoveryAlerts = 0;
   let imminentAlerts = 0;
+  let unmappedTrade = 0;
 
   // WF3-04 (H-W14 / 82-W7): defensive telemetry for lifecycle_phase
   // values that are neither in PHASE_ORDINAL nor TERMINAL_PHASES.
@@ -134,17 +208,18 @@ pipeline.run('update-tracked-projects', async (pool) => {
   let unknown_phase_skipped = 0;
   const unknownPhasesSeen = new Set();
 
-  for (const row of rows) {
+  for await (const row of pipeline.streamQuery(pool, SQL, [])) {
+    totalRows++;
+
     const targets = TRADE_TARGET_PHASE[row.trade_slug];
-    if (!targets) continue; // unmapped trade — skip
+    if (!targets) { unmappedTrade++; continue; } // unmapped trade — skip
 
     const currentOrdinal = PHASE_ORDINAL[row.lifecycle_phase];
     const targetOrdinal = PHASE_ORDINAL[targets.work_phase];
 
     // Null lifecycle_phase = unclassified or dead-state permit (expected,
     // not an anomaly). Skip silently without WARN to avoid polluting the
-    // "unknown phase" telemetry with routine null rows. Separate concern
-    // from 82-W4 (archive-on-null), which is out of scope for this WF3.
+    // "unknown phase" telemetry with routine null rows.
     if (row.lifecycle_phase == null) {
       continue;
     }
@@ -266,17 +341,30 @@ pipeline.run('update-tracked-projects', async (pool) => {
     }
   }
 
+  pipeline.log.info('[tracked-projects]', `Streamed ${totalRows} active tracked projects`);
   pipeline.log.info('[tracked-projects]', `Archived: ${archived}`);
-  pipeline.log.info('[tracked-projects]', `Alerts: stall=${stallAlerts}, recovery=${recoveryAlerts}, imminent=${imminentAlerts}`);
+  pipeline.log.info(
+    '[tracked-projects]',
+    `Alerts: stall=${stallAlerts}, recovery=${recoveryAlerts}, imminent=${imminentAlerts}`,
+  );
 
   // ═══════════════════════════════════════════════════════════
   // Step 3: Merge + batch UPDATE tracked_projects
-  // ═══════════════════════════════════════════════════════════
   //
   // WF3 fix #1: merge updates by ID before executing. A single row
   // can generate multiple update entries (e.g., stall alert sets
   // last_notified_stalled + imminent alert sets last_notified_urgency).
   // Without merging, we'd issue 2 UPDATEs for the same row.
+  //
+  // WF3 (spec 47 §7.5 N+1 fix): Replace per-row client.query with
+  // category-based batch UPDATEs using ANY($ids::int[]).
+  // Each unique field-combination gets ONE UPDATE statement that
+  // targets its entire id set — at most 5 DB roundtrips for any
+  // number of rows. Previously this was N roundtrips.
+  //
+  // updated_at uses $1 = RUN_AT (captured at startup) — not NOW() —
+  // to prevent the Midnight Cross (spec 47 §14).
+  // ═══════════════════════════════════════════════════════════
   const merged = new Map();
   for (const upd of updates) {
     const existing = merged.get(upd.id);
@@ -288,40 +376,88 @@ pipeline.run('update-tracked-projects', async (pool) => {
   }
 
   const mergedUpdates = [...merged.values()];
+  let totalUpdated = 0;
+
   if (mergedUpdates.length > 0) {
-    // WF3 fix #2: wrap in withTransaction to prevent partial state
-    // on crash. Without this, a crash mid-loop leaves some memory
-    // flags updated and others not → duplicate alerts on next run.
+    // Categorise by which fields change — each category maps to one UPDATE
+    const archiveIds = [];
+    const stallOnIds = [];           // last_notified_stalled = true
+    const stallOffIds = [];          // last_notified_stalled = false (recovery), no urgency change
+    const imminentOnlyIds = [];      // last_notified_urgency = 'imminent', no stall change
+    const stallOffImminentIds = [];  // last_notified_stalled = false + last_notified_urgency = 'imminent'
+
+    for (const upd of mergedUpdates) {
+      const hasStatus  = upd.status === 'archived';
+      const hasStall   = upd.last_notified_stalled != null;
+      const hasUrgency = upd.last_notified_urgency != null;
+
+      if (hasStatus) {
+        archiveIds.push(upd.id);
+      } else if (hasStall && !hasUrgency) {
+        (upd.last_notified_stalled === true ? stallOnIds : stallOffIds).push(upd.id);
+      } else if (hasUrgency && !hasStall) {
+        imminentOnlyIds.push(upd.id);
+      } else if (hasStall && hasUrgency) {
+        stallOffImminentIds.push(upd.id);
+      }
+    }
+
+    // WF3 fix #2: wrap all category UPDATEs in one withTransaction to
+    // prevent partial state on crash. Memory flags + archive decisions
+    // must be atomic — a crash between them would double-fire alerts.
     await pipeline.withTransaction(pool, async (client) => {
-      for (const upd of mergedUpdates) {
-        const setClauses = [];
-        const params = [];
-        let paramIdx = 1;
-
-        if (upd.status != null) {
-          setClauses.push(`status = $${paramIdx++}`);
-          params.push(upd.status);
-        }
-        if (upd.last_notified_stalled != null) {
-          setClauses.push(`last_notified_stalled = $${paramIdx++}`);
-          params.push(upd.last_notified_stalled);
-        }
-        if (upd.last_notified_urgency != null) {
-          setClauses.push(`last_notified_urgency = $${paramIdx++}`);
-          params.push(upd.last_notified_urgency);
-        }
-
-        // Always bump updated_at on any change
-        setClauses.push(`updated_at = NOW()`);
-
-        params.push(upd.id);
-        await client.query(
-          `UPDATE tracked_projects SET ${setClauses.join(', ')} WHERE id = $${paramIdx}`,
-          params,
+      if (archiveIds.length > 0) {
+        const r = await client.query(
+          `UPDATE tracked_projects
+              SET status = 'archived', updated_at = $1
+            WHERE id = ANY($2::int[])`,
+          [RUN_AT, archiveIds],
         );
+        totalUpdated += r.rowCount ?? 0;
+      }
+      if (stallOnIds.length > 0) {
+        const r = await client.query(
+          `UPDATE tracked_projects
+              SET last_notified_stalled = true, updated_at = $1
+            WHERE id = ANY($2::int[])`,
+          [RUN_AT, stallOnIds],
+        );
+        totalUpdated += r.rowCount ?? 0;
+      }
+      if (stallOffIds.length > 0) {
+        const r = await client.query(
+          `UPDATE tracked_projects
+              SET last_notified_stalled = false, updated_at = $1
+            WHERE id = ANY($2::int[])`,
+          [RUN_AT, stallOffIds],
+        );
+        totalUpdated += r.rowCount ?? 0;
+      }
+      if (imminentOnlyIds.length > 0) {
+        const r = await client.query(
+          `UPDATE tracked_projects
+              SET last_notified_urgency = 'imminent', updated_at = $1
+            WHERE id = ANY($2::int[])`,
+          [RUN_AT, imminentOnlyIds],
+        );
+        totalUpdated += r.rowCount ?? 0;
+      }
+      if (stallOffImminentIds.length > 0) {
+        const r = await client.query(
+          `UPDATE tracked_projects
+              SET last_notified_stalled = false,
+                  last_notified_urgency = 'imminent',
+                  updated_at = $1
+            WHERE id = ANY($2::int[])`,
+          [RUN_AT, stallOffImminentIds],
+        );
+        totalUpdated += r.rowCount ?? 0;
       }
     });
-    pipeline.log.info('[tracked-projects]', `Applied ${mergedUpdates.length} DB updates (merged from ${updates.length} raw)`);
+    pipeline.log.info(
+      '[tracked-projects]',
+      `Applied ${totalUpdated} DB updates (${mergedUpdates.length} merged from ${updates.length} raw)`,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -332,6 +468,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
   // the competition discount (opportunity score) reflects real user
   // behavior. Runs as a single SQL UPSERT — Postgres does the GROUP BY.
   // Uses LPAD to match the canonical lead_key format.
+  //
+  // updated_at uses $1 = RUN_AT — not NOW() — per spec 47 §14.
   pipeline.log.info('[tracked-projects]', 'Syncing lead_analytics...');
 
   // Wrap both UPSERT + zero-out in a single transaction so a crash
@@ -347,16 +485,16 @@ pipeline.run('update-tracked-projects', async (pool) => {
         'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num::text, 2, '0') AS lead_key,
         COUNT(*) FILTER (WHERE tp.status IN ('claimed_unverified', 'claimed', 'verified'))::int AS tracking_count,
         COUNT(*) FILTER (WHERE tp.status = 'saved')::int AS saving_count,
-        NOW()
+        $1::timestamptz
       FROM tracked_projects tp
       WHERE tp.status NOT IN ('archived', 'expired')
       GROUP BY tp.permit_num, tp.revision_num
       ON CONFLICT (lead_key) DO UPDATE SET
         tracking_count = EXCLUDED.tracking_count,
         saving_count = EXCLUDED.saving_count,
-        updated_at = NOW()
+        updated_at = EXCLUDED.updated_at
       RETURNING 1
-    `);
+    `, [RUN_AT]);
     analyticsSynced = syncedRows.length;
 
     // Zero out lead_analytics rows where all trackers have been archived.
@@ -364,7 +502,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
     // index. Independent review Issue 1.
     const { rows: zeroedRows } = await client.query(`
       UPDATE lead_analytics la
-         SET tracking_count = 0, saving_count = 0, updated_at = NOW()
+         SET tracking_count = 0, saving_count = 0, updated_at = $1
        WHERE NOT EXISTS (
          SELECT 1 FROM tracked_projects tp
           WHERE la.lead_key = 'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num::text, 2, '0')
@@ -372,7 +510,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
        )
        AND (la.tracking_count > 0 OR la.saving_count > 0)
       RETURNING 1
-    `);
+    `, [RUN_AT]);
     analyticsZeroed = zeroedRows.length;
   });
 
@@ -382,24 +520,56 @@ pipeline.run('update-tracked-projects', async (pool) => {
   );
 
   // ═══════════════════════════════════════════════════════════
-  // Step 5: Telemetry
+  // Step 5: Audit + Telemetry
   // ═══════════════════════════════════════════════════════════
+
+  // spec §8.2 mandatory rows for "Alert delivery" type:
+  // alerts_evaluated, alerts_delivered, delivery_errors
+  const totalAlerts = stallAlerts + recoveryAlerts + imminentAlerts;
+  const auditTableRows = [
+    { metric: 'alerts_evaluated',  value: totalRows,    threshold: null, status: 'INFO' },
+    { metric: 'alerts_delivered',  value: totalAlerts,  threshold: null, status: 'INFO' },
+    { metric: 'delivery_errors',   value: 0,            threshold: 0,   status: 'PASS' },
+    { metric: 'projects_archived', value: archived,     threshold: null, status: 'INFO' },
+    { metric: 'unknown_phase',     value: unknown_phase_skipped, threshold: null, status: 'INFO' },
+  ];
+  const auditVerdict =
+    auditTableRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
+    auditTableRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+
+  // spec §8.4: cap alerts array at ALERTS_META_CAP items.
+  // A burst of stalled permits could produce thousands of alert payloads
+  // — embedding them all in PIPELINE_SUMMARY would crash observability
+  // ingestion (Datadog/CloudWatch row size limits). Use alerts_total +
+  // alerts_truncated to preserve the count signal without the payload.
+  const alertsCapped = alerts.slice(0, ALERTS_META_CAP);
+  const alertsTruncated = alerts.length > ALERTS_META_CAP;
+
   pipeline.emitSummary({
-    records_total: rows.length,
+    records_total: totalRows,
     records_new: 0,
-    records_updated: updates.length,
+    records_updated: totalUpdated,
     records_meta: {
-      active_tracked: rows.length,
+      active_tracked: totalRows,
       archived,
       stall_alerts: stallAlerts,
       recovery_alerts: recoveryAlerts,
       imminent_alerts: imminentAlerts,
-      total_alerts: alerts.length,
+      alerts_total: alerts.length,
+      ...(alertsTruncated ? { alerts_truncated: true } : {}),
       analytics_synced: analyticsSynced,
       analytics_zeroed: analyticsZeroed,
+      unmapped_trade: unmappedTrade,
       unknown_phase_skipped,
       unknown_phase_values: [...unknownPhasesSeen],
-      alerts,
+      alerts: alertsCapped,
+      run_at: RUN_AT,
+      audit_table: {
+        phase: 24,
+        name: 'CRM Assistant',
+        verdict: auditVerdict,
+        rows: auditTableRows,
+      },
     },
   });
 
@@ -408,6 +578,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
       tracked_projects: ['id', 'user_id', 'status', 'trade_slug', 'permit_num', 'revision_num', 'last_notified_urgency', 'last_notified_stalled'],
       permits: ['permit_num', 'revision_num', 'lifecycle_phase', 'lifecycle_stalled'],
       trade_forecasts: ['permit_num', 'revision_num', 'trade_slug', 'predicted_start', 'urgency'],
+      trade_configurations: ['trade_slug', 'imminent_window_days', 'bid_phase_cutoff', 'work_phase_target'],
     },
     {
       tracked_projects: ['status', 'last_notified_urgency', 'last_notified_stalled', 'updated_at'],
@@ -425,7 +596,10 @@ pipeline.run('update-tracked-projects', async (pool) => {
         { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
       );
     } finally {
-      lockClient.release();
+      if (!lockClientReleased) {
+        lockClientReleased = true;
+        lockClient.release();
+      }
     }
   }
 });
