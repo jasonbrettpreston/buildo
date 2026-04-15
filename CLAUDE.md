@@ -467,6 +467,7 @@ When operating in Backend/Pipeline Mode, you MUST adhere to these rules. Require
 - `docs/specs/00_engineering_standards.md` §2 (Error Handling), §3 (Database), §6 (Logging), §7 (Dual Code Path), §9 (Pipeline & Script Safety), §10 (Boundary)
 - `docs/specs/pipeline/30_pipeline_architecture.md` (V2 architecture)
 - `docs/specs/pipeline/40_pipeline_system.md` (pipeline_runs, manifest, telemetry contracts)
+- `docs/specs/pipeline/47_pipeline_script_protocol.md` (NEW SCRIPT PROTOCOL — mandatory for any new pipeline step or WF3 on existing scripts)
 - `docs/specs/01_database_schema.md` (current schema)
 
 **Required tooling stack:**
