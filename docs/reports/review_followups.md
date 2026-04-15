@@ -1049,3 +1049,45 @@ Date: 2026-04-14. Reviewers: Gemini, DeepSeek, Claude independent (worktree).
 | MEDIUM (rejected) | DeepSeek | "84 metric counts rolled-back rows — initialTransCount false-positive on rollback." | **REJECTED** — `initialTransCount` is assigned AFTER successful `await client.query(...)` inside the callback; if the INSERT throws, control jumps to withTransaction's ROLLBACK + rethrow, the assignment is skipped, the outer await rethrows. Independent confirmed. | REJECTED |
 | LOW (rejected) | DeepSeek | "Missing timeout handling on lock acquisition." | **REJECTED** — `pg_try_advisory_lock` is non-blocking by definition (returns false if held); no timeout needed. | REJECTED |
 | LOW + NIT | DeepSeek | "Hard-coded model_version=1; magic number." | Defer — pre-existing concern, not introduced by PR-C. Already tracked from holistic triage. | OPEN |
+
+---
+
+## WF3-08 — Pipeline SDK Hardening · base commit bb8c341 · 2026-04-15
+
+**Fixed in this WF (before commit):**
+- CRITICAL: `withAdvisoryLock` unlock failure unlogged + suppresses fn() error → wrapped unlock in `try/catch` + `log.warn`
+- HIGH: Missing test for `pool.connect()` throwing in `withAdvisoryLock`
+- HIGH: Missing test asserting `lockId` passed as `$1` to both lock and unlock queries
+- HIGH: Missing test for unlock-throws-but-client-still-released path
+
+**Deferred items (all pre-existing code, not introduced by WF3-08):**
+
+| Sev | Source | File | Item | Planned home | Status |
+|-----|--------|------|------|--------------|--------|
+| CRITICAL | Gemini+DeepSeek | `pipeline.js:465` | `checkQueueAge` interpolates raw `options.where` SQL — injection vector if caller passes user data. Comment warns but library must be safe by default. | Future WF2 on pipeline.js — refactor to accept `{ clause, params }` object | OPEN |
+| CRITICAL | DeepSeek | `config-loader.js:105` | `allocSum=0` division by zero during normalization. If all `allocation_pct` rows are 0, loop divides by zero, producing `Infinity`/`NaN` allocations throughout pipeline. | WF3 on config-loader — add `if (allocSum <= 0) { log.warn; tradeConfigs = FALLBACK_TRADE_CONFIGS; }` guard | OPEN |
+| HIGH | Gemini+DeepSeek | `pipeline.js:40` | `PG_PASSWORD` defaults to `'postgres'` — security risk if env var omitted in staging/prod. | Future WF2 — remove default; throw if `PG_PASSWORD` not set in `NODE_ENV=production` | OPEN |
+| HIGH | Gemini | `pipeline.js:538` | `streamQuery` outer finally calls `client.release()` — if `pool.connect()` throws, `client` is undefined → secondary TypeError masks the original. Add `if (client)` guard. | Next WF2/WF3 on pipeline.js | OPEN |
+| HIGH | Gemini | `pipeline.js:353-399` | `parseInt` on PostgreSQL `bigint` columns in `captureTelemetry`/`diffTelemetry` silently truncates values > `Number.MAX_SAFE_INTEGER` for very active tables. | Future WF2 — cast to `::text` and use `BigInt()` or `Number()` with overflow guard | OPEN |
+| HIGH | Gemini | `config-loader.js:89` | `FALLBACK_TRADE_CONFIGS` assigned by reference (not deep-copied) — consumer mutation of nested objects corrupts the global fallback for subsequent calls. | WF3 on config-loader — `let tradeConfigs = JSON.parse(JSON.stringify(FALLBACK_TRADE_CONFIGS));` | OPEN |
+| HIGH | DeepSeek | `config-loader.js:78-86` | `parseFloat(c.allocation_pct)` etc with no `isFinite` guard — `NaN` propagates silently if DB returns NULL or non-numeric. `tradeConfigs` validation should mirror the `ZERO_IS_INVALID` logic already applied to `logicVars`. | WF3 on config-loader — add per-field `isFinite` guards with fallback to `FALLBACK_TRADE_CONFIGS[slug]` value | OPEN |
+| HIGH | DeepSeek | `config-loader.js:120-135` | `ZERO_IS_INVALID` guards against 0 but not negative values. `expired_threshold_days < 0` is intended (days in past) but `los_base_divisor < 0` would flip multiplier sign; range constraints missing. | WF2 — encode per-key ranges in Zod schema used by `validateLogicVars`; individual scripts can add `.refine(v => v > 0)` | OPEN |
+| HIGH | DeepSeek | `pipeline.js:140-145` | Global mutable `_trackedNew/_trackedUpdated` — if pipeline module is `require`d in multiple scripts in same process (e.g., test runner), counters bleed across runs. | Future WF2 — move counters into `run()` closure context | OPEN |
+| MED | Gemini | `pipeline.js:89` | `log.error` passes ctx directly to `JSON.stringify` — circular references in ctx throw, preventing the error from being logged. | WF2 — wrap stringify in try/catch with fallback string | OPEN |
+| MED | Gemini+DeepSeek | `pipeline.js:212` | `dq_null_rate_*` metric `value` stored as formatted string `'X.X%'` — can't be compared numerically by dashboards. | WF2 — store `value: pctNum`, add `display_value: pct` | OPEN |
+| MED | DeepSeek | `pipeline.js:176` | `emitSummary` assigns `payload.records_meta = stats.records_meta` by reference then mutates `audit_table` — caller's original `stats` object is silently modified. | WF2 — shallow-clone `records_meta`: `payload.records_meta = { ...stats.records_meta }` | OPEN |
+| MED | DeepSeek | `config-loader.js:63` | No query timeout on `pool.query()` — DB hang blocks pipeline indefinitely. | WF2 — `pool.query({ text: ..., query_timeout: 5000 })` | OPEN |
+| MED | DeepSeek | `config-loader.js:78` | Duplicate `trade_slug` rows silently overwrite each other (last wins). | WF3 on config-loader — add dedup warning | OPEN |
+| LOW | Gemini | `pipeline.js:422` | `quoteIdent` rejects valid hyphened identifiers (e.g. `my-table`). Low impact — all Buildo table names are `[a-z_]` only. | Future WF2 — implement proper `"${name.replace(/"/g, '""')}"` quoting | OPEN |
+| LOW | DeepSeek | `config-loader.js:78` | `imminent_window_days` not parsed to integer (`parseInt`) — left as raw DB string, downstream `<` comparisons may coerce unexpectedly. | WF3 on config-loader | OPEN |
+| LOW | Gemini+DeepSeek | `config-loader.js:138` | `ZERO_IS_INVALID` hardcoded set — new logic vars with same constraint must be manually added. `validateLogicVars` Zod schemas can encode this per-variable now. Migration of existing ZERO_IS_INVALID set to per-script schemas is future work. | Future WF2 per script | OPEN |
+| NIT | DeepSeek | `config-loader.js:106` | In-place normalization mutation — modifies row-derived objects directly. Low risk now; add `Object.assign({}, tc, { allocation_pct: ... })` if caching added. | Future WF2 | OPEN |
+
+**Rejected (false positives or intentional design):**
+
+| Sev | Source | Item | Reason |
+|-----|--------|------|--------|
+| MED | Gemini | `validateLogicVars` not called internally — caller-opt-in | WONTFIX — intentional: each pipeline script defines its own required keys; loader cannot know which vars are required for which caller |
+| HIGH | Gemini | Broad try/catch in `loadMarketplaceConfigs` masks DB failures | WONTFIX — intentional: graceful fallback is the design contract; pipeline scripts must run even when control panel is down (degraded-mode operation) |
+| NIT | DeepSeek | `withAdvisoryLock` lock leak if fn() throws | FALSE POSITIVE — fn() is called inside the inner try; the inner finally always runs unlock regardless of whether fn() threw |
+| MED | Gemini | `createPool()` not configurable (`max`, timeouts) | OUT OF SCOPE — pool sizing and timeout config is a separate WF; the port guard was the only change to createPool |

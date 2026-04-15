@@ -1313,5 +1313,309 @@ describe('Pipeline SDK', () => {
         expect(chainSkipBlock).toMatch(/emitMeta/);
       });
   });
+
+  // -----------------------------------------------------------------------
+  // WF3-08: createPool() env validation (H-W11 class)
+  // -----------------------------------------------------------------------
+  describe('createPool() env validation', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('throws when PG_PORT is non-numeric (e.g. "abc")', () => {
+      vi.stubEnv('PG_PORT', 'abc');
+      expect(() => pipeline.createPool()).toThrow(/PG_PORT must be a valid port number/);
+    });
+
+    it('throws when PG_PORT is "0" (out of range)', () => {
+      vi.stubEnv('PG_PORT', '0');
+      expect(() => pipeline.createPool()).toThrow(/PG_PORT must be a valid port number/);
+    });
+
+    it('throws when PG_PORT is "65536" (out of range)', () => {
+      vi.stubEnv('PG_PORT', '65536');
+      expect(() => pipeline.createPool()).toThrow(/PG_PORT must be a valid port number/);
+    });
+
+    it('uses default 5432 when PG_PORT is empty string', () => {
+      vi.stubEnv('PG_PORT', '');
+      // Empty string → falls back to '5432' via || '5432'
+      const pool = pipeline.createPool();
+      expect(pool).toBeDefined();
+      pool.end().catch(() => {});
+    });
+
+    it('succeeds when PG_PORT is "5432"', () => {
+      vi.stubEnv('PG_PORT', '5432');
+      const pool = pipeline.createPool();
+      expect(pool).toBeDefined();
+      pool.end().catch(() => {});
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // WF3-08: withAdvisoryLock() (spec 47 §5 — dedicated client pattern)
+  // -----------------------------------------------------------------------
+  describe('withAdvisoryLock()', () => {
+    it('is exported as a function', () => {
+      expect(typeof pipeline.withAdvisoryLock).toBe('function');
+    });
+
+    it('returns { acquired: false } and never calls fn when lock not acquired', async () => {
+      const mockClient = {
+        query: vi.fn(async () => ({ rows: [{ acquired: false }] })),
+        release: vi.fn(),
+      };
+      const mockPool = { connect: vi.fn(async () => mockClient) };
+      const fn = vi.fn();
+
+      const result = await pipeline.withAdvisoryLock(mockPool, 83, fn);
+
+      expect(result).toEqual({ acquired: false });
+      expect(fn).not.toHaveBeenCalled();
+      // unlock must NOT be called if lock was never acquired
+      const unlockCall = mockClient.query.mock.calls.find(
+        (c: string[]) => c[0] && String(c[0]).includes('pg_advisory_unlock')
+      );
+      expect(unlockCall).toBeUndefined();
+      expect(mockClient.release).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls fn and returns { acquired: true, result } when lock acquired', async () => {
+      const mockClient = {
+        query: vi.fn(async (sql: string) => {
+          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
+          return { rows: [] };
+        }),
+        release: vi.fn(),
+      };
+      const mockPool = { connect: vi.fn(async () => mockClient) };
+
+      const result = await pipeline.withAdvisoryLock(mockPool, 83, async () => 'done');
+
+      expect(result).toEqual({ acquired: true, result: 'done' });
+      const unlockCall = mockClient.query.mock.calls.find(
+        (c: string[]) => c[0] && String(c[0]).includes('pg_advisory_unlock')
+      );
+      expect(unlockCall).toBeDefined();
+      expect(mockClient.release).toHaveBeenCalledTimes(1);
+    });
+
+    it('still releases lock and client when fn throws', async () => {
+      const mockClient = {
+        query: vi.fn(async (sql: string) => {
+          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
+          return { rows: [] };
+        }),
+        release: vi.fn(),
+      };
+      const mockPool = { connect: vi.fn(async () => mockClient) };
+
+      await expect(
+        pipeline.withAdvisoryLock(mockPool, 83, async () => { throw new Error('fn failed'); })
+      ).rejects.toThrow('fn failed');
+
+      // unlock must be called even when fn throws
+      const unlockCall = mockClient.query.mock.calls.find(
+        (c: string[]) => c[0] && String(c[0]).includes('pg_advisory_unlock')
+      );
+      expect(unlockCall).toBeDefined();
+      expect(mockClient.release).toHaveBeenCalledTimes(1);
+    });
+
+    it('uses pool.connect() not pool.query() for the lock pair', async () => {
+      const mockClient = {
+        query: vi.fn(async (sql: string) => {
+          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
+          return { rows: [] };
+        }),
+        release: vi.fn(),
+      };
+      const mockPool = {
+        connect: vi.fn(async () => mockClient),
+        query: vi.fn(),
+      };
+
+      await pipeline.withAdvisoryLock(mockPool, 83, async () => {});
+
+      expect(mockPool.connect).toHaveBeenCalledTimes(1);
+      // pool.query must NOT be used for the advisory lock operations
+      expect(mockPool.query).not.toHaveBeenCalled();
+    });
+
+    it('propagates error when pool.connect() throws', async () => {
+      const mockPool = { connect: vi.fn(async () => { throw new Error('connection refused'); }) };
+      await expect(
+        pipeline.withAdvisoryLock(mockPool, 83, async () => {})
+      ).rejects.toThrow('connection refused');
+    });
+
+    it('passes lockId as $1 parameter to both lock and unlock queries', async () => {
+      const mockClient = {
+        query: vi.fn(async (sql: string, _params?: unknown[]) => {
+          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
+          return { rows: [] };
+        }),
+        release: vi.fn(),
+      };
+      const mockPool = { connect: vi.fn(async () => mockClient) };
+
+      await pipeline.withAdvisoryLock(mockPool, 83, async () => {});
+
+      const lockCall = mockClient.query.mock.calls.find(
+        (c) => String(c[0]).includes('pg_try_advisory_lock')
+      );
+      expect(lockCall![1]).toEqual([83]);
+
+      const unlockCall = mockClient.query.mock.calls.find(
+        (c) => String(c[0]).includes('pg_advisory_unlock')
+      );
+      expect(unlockCall![1]).toEqual([83]);
+    });
+
+    it('logs warn and still releases client when pg_advisory_unlock throws', async () => {
+      const mockClient = {
+        query: vi.fn(async (sql: string) => {
+          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
+          if (String(sql).includes('pg_advisory_unlock')) throw new Error('unlock failed');
+          return { rows: [] };
+        }),
+        release: vi.fn(),
+      };
+      const mockPool = { connect: vi.fn(async () => mockClient) };
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // fn succeeds but unlock throws — result should be returned, warn emitted, client released
+      const result = await pipeline.withAdvisoryLock(mockPool, 83, async () => 'ok');
+
+      expect(result).toEqual({ acquired: true, result: 'ok' });
+      expect(warnSpy).toHaveBeenCalled();
+      expect(mockClient.release).toHaveBeenCalledTimes(1);
+      warnSpy.mockRestore();
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // WF3-08: emitSummary() UNKNOWN verdict stub (H-W18 false-green fix)
+  // -----------------------------------------------------------------------
+  describe('emitSummary() H-W18 — UNKNOWN verdict when no audit_table', () => {
+    let logSpy: ReturnType<typeof vi.spyOn>;
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      logSpy.mockRestore();
+      warnSpy.mockRestore();
+    });
+
+    it('auto-stub verdict is UNKNOWN (not PASS) when no audit_table provided', () => {
+      pipeline.emitSummary({ records_total: 100, records_new: 50, records_updated: 10 });
+      const output = logSpy!.mock.calls[0]![0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed.records_meta.audit_table.verdict).toBe('UNKNOWN');
+      expect(parsed.records_meta.audit_table.verdict).not.toBe('PASS');
+    });
+
+    it('emits log.warn when auto-stub is injected', () => {
+      pipeline.emitSummary({ records_total: 10, records_new: 5, records_updated: 2 });
+      // log.warn uses console.warn — it should be called once for the missing audit_table
+      expect(warnSpy).toHaveBeenCalled();
+      const warnOutput = warnSpy!.mock.calls[0]![0] as string;
+      const parsed = JSON.parse(warnOutput);
+      expect(parsed.level).toBe('WARN');
+      expect(parsed.msg).toMatch(/audit_table/i);
+    });
+
+    it('preserves existing audit_table verdict when script provides one', () => {
+      pipeline.emitSummary({
+        records_total: 200,
+        records_meta: {
+          audit_table: { phase: 3, name: 'Custom', verdict: 'PASS', rows: [] },
+        },
+      });
+      const output = logSpy!.mock.calls[0]![0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed.records_meta.audit_table.verdict).toBe('PASS');
+      // warn must NOT be called when a real audit_table is provided
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // WF3-08: run() pool safety — createPool() inside try block
+  // -----------------------------------------------------------------------
+  describe('run() pool safety', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('propagates createPool() error when PG_PORT is invalid (no unhandled rejection)', async () => {
+      vi.stubEnv('PG_PORT', 'not-a-port');
+      // run() must throw (not unhandled rejection) when createPool() throws
+      // pool.end() must NOT be called (there is no pool to end)
+      await expect(
+        pipeline.run('test-script', async () => {})
+      ).rejects.toThrow(/PG_PORT must be a valid port number/);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // WF3-08: validateLogicVars() in config-loader (spec 47 §4)
+  // -----------------------------------------------------------------------
+  describe('validateLogicVars() in config-loader', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const configLoader = require(path.resolve(__dirname, '../../scripts/lib/config-loader'));
+
+    it('is exported as a function', () => {
+      expect(typeof configLoader.validateLogicVars).toBe('function');
+    });
+
+    it('returns { valid: true } when all required fields pass schema', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { z } = require('zod');
+      const schema = z.object({
+        expired_threshold_days: z.number(),
+        lead_expiry_days: z.number(),
+      });
+      const result = configLoader.validateLogicVars(
+        { expired_threshold_days: -90, lead_expiry_days: 90 },
+        schema,
+        'test'
+      );
+      expect(result).toEqual({ valid: true });
+    });
+
+    it('returns { valid: false, errors: [...] } when required field is missing', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { z } = require('zod');
+      const schema = z.object({ required_key: z.number() });
+      const result = configLoader.validateLogicVars({}, schema, 'test');
+      expect(result.valid).toBe(false);
+      expect(Array.isArray(result.errors)).toBe(true);
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('required_key');
+    });
+
+    it('returns { valid: false } when field is NaN (non-finite)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { z } = require('zod');
+      const schema = z.object({ threshold: z.number().finite() });
+      const result = configLoader.validateLogicVars({ threshold: NaN }, schema, 'test');
+      expect(result.valid).toBe(false);
+    });
+
+    it('calls log.error when validation fails', () => {
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { z } = require('zod');
+      const schema = z.object({ missing_key: z.number() });
+      configLoader.validateLogicVars({}, schema, 'test');
+      expect(errSpy).toHaveBeenCalled();
+      errSpy.mockRestore();
+    });
+  });
 });
 

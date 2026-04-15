@@ -31,9 +31,16 @@ const { Pool } = require('pg');
  * Every pipeline script MUST use this instead of inline `new Pool(...)`.
  */
 function createPool() {
+  const rawPort = process.env.PG_PORT || '5432';
+  const port = parseInt(rawPort, 10);
+  if (!Number.isFinite(port) || port < 1 || port > 65535) {
+    throw new Error(
+      `PG_PORT must be a valid port number (1-65535), got: ${JSON.stringify(rawPort)}`
+    );
+  }
   return new Pool({
     host: process.env.PG_HOST || 'localhost',
-    port: parseInt(process.env.PG_PORT || '5432', 10),
+    port,
     database: process.env.PG_DATABASE || 'buildo',
     user: process.env.PG_USER || 'postgres',
     password: process.env.PG_PASSWORD || 'postgres',
@@ -190,7 +197,8 @@ function emitSummary(stats) {
   // Ensure records_meta and audit_table exist
   if (!payload.records_meta) payload.records_meta = {};
   if (!payload.records_meta.audit_table) {
-    payload.records_meta.audit_table = { phase: 0, name: 'Auto', verdict: 'PASS', rows: [] };
+    log.warn('[pipeline]', 'emitSummary called with no audit_table — admin UI will show UNKNOWN verdict. Wire a real audit_table for meaningful observability.');
+    payload.records_meta.audit_table = { phase: 0, name: 'Auto', verdict: 'UNKNOWN', rows: [] };
   }
   if (!payload.records_meta.audit_table.rows) {
     payload.records_meta.audit_table.rows = [];
@@ -276,10 +284,11 @@ function progress(label, current, total, startMs) {
  * @param {(pool: Pool) => Promise<void>} fn - The main pipeline logic
  */
 async function run(name, fn) {
-  const pool = createPool();
+  let pool;
   const startMs = Date.now();
   _runStartMs = startMs; // expose to emitSummary for velocity calc
   try {
+    pool = createPool();
     await fn(pool);
     const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
     console.log(`\n[${name}] completed in ${elapsed}s`);
@@ -287,9 +296,11 @@ async function run(name, fn) {
     log.error(`[${name}]`, err, { phase: 'fatal' });
     throw err;
   } finally {
-    await pool.end().catch((endErr) => {
-      log.warn(`[${name}]`, `pool.end failed: ${endErr.message}`);
-    });
+    if (pool) {
+      await pool.end().catch((endErr) => {
+        log.warn(`[${name}]`, `pool.end failed: ${endErr.message}`);
+      });
+    }
   }
 }
 
@@ -609,6 +620,49 @@ async function* streamQuery(pool, sql, params = [], options = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Advisory Lock Lifecycle — spec 47 §5 (dedicated client pattern)
+// ---------------------------------------------------------------------------
+
+/**
+ * Acquire a session-level PostgreSQL advisory lock on a dedicated client,
+ * execute fn(), then release the lock. The lock MUST stay on the same
+ * connection — use pool.connect() (session-scoped), NOT pool.query()
+ * (connection returned to pool after each query, silently releasing the lock).
+ *
+ * Convention: lock_id = spec number (e.g. script for spec 83 → lockId=83).
+ *
+ * @param {import('pg').Pool} pool
+ * @param {number} lockId  - Advisory lock ID. Convention: lock_id = spec number.
+ * @param {() => Promise<T>} fn - Work to perform while lock is held.
+ * @returns {Promise<{ acquired: false } | { acquired: true; result: T }>}
+ * @template T
+ */
+async function withAdvisoryLock(pool, lockId, fn) {
+  const client = await pool.connect();
+  try {
+    const lockRes = await client.query(
+      'SELECT pg_try_advisory_lock($1) AS acquired',
+      [lockId]
+    );
+    if (!lockRes.rows[0].acquired) {
+      return { acquired: false };
+    }
+    try {
+      const result = await fn();
+      return { acquired: true, result };
+    } finally {
+      try {
+        await client.query('SELECT pg_advisory_unlock($1)', [lockId]);
+      } catch (unlockErr) {
+        log.warn('[pipeline]', `pg_advisory_unlock failed for lockId=${lockId}: ${unlockErr instanceof Error ? unlockErr.message : String(unlockErr)}`);
+      }
+    }
+  } finally {
+    client.release();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Exports
 // ---------------------------------------------------------------------------
 
@@ -617,6 +671,7 @@ module.exports = {
   classifyError,
   log,
   withTransaction,
+  withAdvisoryLock,
   track,
   getTracked,
   emitSummary,

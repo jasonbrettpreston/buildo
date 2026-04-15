@@ -16,6 +16,7 @@
 'use strict';
 
 const pipeline = require('./pipeline');
+const { z } = require('zod');
 
 // ── Fallback trade allocations (match migration 092 seed) ────────
 const FALLBACK_TRADE_CONFIGS = {
@@ -151,4 +152,26 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
   return { tradeConfigs, logicVars };
 }
 
-module.exports = { loadMarketplaceConfigs, FALLBACK_TRADE_CONFIGS, FALLBACK_LOGIC_VARS };
+/**
+ * Validate a logicVars object against a Zod schema.
+ * Call this after loadMarketplaceConfigs() to fail fast if required keys
+ * are missing or non-finite (e.g. DB returned NULL, fallback was skipped).
+ *
+ * @param {Record<string, number>} logicVars
+ * @param {import('zod').ZodSchema} schema
+ * @param {string} [tag='config-loader']
+ * @returns {{ valid: true } | { valid: false; errors: string[] }}
+ */
+function validateLogicVars(logicVars, schema, tag = 'config-loader') {
+  const result = schema.safeParse(logicVars);
+  if (!result.success) {
+    const errors = result.error.issues.map(
+      (i) => `${i.path.join('.')}: ${i.message}`
+    );
+    pipeline.log.error(`[${tag}]`, new Error('logicVars validation failed'), { errors });
+    return { valid: false, errors };
+  }
+  return { valid: true };
+}
+
+module.exports = { loadMarketplaceConfigs, validateLogicVars, FALLBACK_TRADE_CONFIGS, FALLBACK_LOGIC_VARS };
