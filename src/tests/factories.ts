@@ -593,3 +593,42 @@ export function createMockWsibRegistryEntry(
     ...overrides,
   };
 }
+
+// ─── Control Panel factories (Spec 86) ─────────────────────────────────────────
+
+import type { LogicVariableRow, TradeConfigRow, ScopeMatrixRow } from '@/lib/admin/control-panel';
+
+export function makeLogicVariable(overrides: Partial<LogicVariableRow> = {}): LogicVariableRow {
+  return {
+    key: 'los_base_divisor',
+    value: 10000,
+    jsonValue: null,
+    description: 'Base divisor for LOS score calculation',
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+export function makeTradeConfig(overrides: Partial<TradeConfigRow> = {}): TradeConfigRow {
+  return {
+    tradeSlug: 'plumbing',
+    bidPhaseCutoff: 'P3',
+    workPhaseTarget: 'P12',
+    imminentWindowDays: 14,
+    allocationPct: 0.065,
+    multiplierBid: 2.8,
+    multiplierWork: 1.6,
+    baseRateSqft: 195,
+    structureComplexityFactor: 1.4,
+    ...overrides,
+  };
+}
+
+export function makeScopeMatrixCell(overrides: Partial<ScopeMatrixRow> = {}): ScopeMatrixRow {
+  return {
+    permitType: 'new building',
+    structureType: 'sfd',
+    gfaAllocationPercentage: 1.0,
+    ...overrides,
+  };
+}

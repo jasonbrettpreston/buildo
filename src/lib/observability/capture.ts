@@ -47,7 +47,12 @@ export type EventName =
   // gate). map_deselected fires when the user clicks the map background
   // to clear the selected marker.
   | 'lead_feed.map_panned'
-  | 'lead_feed.map_deselected';
+  | 'lead_feed.map_deselected'
+  // Admin Control Panel (Spec 86) — operator gravity-config events
+  | 'admin_gravity_adjusted'
+  | 'admin_gravity_discarded'
+  | 'admin_gravity_save_failed'
+  | 'admin_pipeline_resync_triggered';
 
 type EventProperties = Record<string, unknown>;
 

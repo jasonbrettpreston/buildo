@@ -1,84 +1,160 @@
 # 86 Master Configuration List: The "Control Panel" Schema
 
-> **Status:** IMPLEMENTED — Migrations 092+093 + Shared Config Loader (April 2026).
+> **Status:** IMPLEMENTED — Migrations 092+093+097 + Shared Config Loader (April 2026).
 > **Purpose:** Centralize hardcoded variables into a database-driven Control Panel, allowing operators to tune system "Gravity" via the Admin UI.
 
-These variables will be managed via the Admin UI and stored in the database to drive the four core scripts.
-
----
-
 ## 1. Global Platform Logic (`logic_variables`)
-These are universal "Gravity" constants. They do not change by trade.
+
+These are universal "Gravity" constants. They act as baseline rules, fallbacks, and mathematical thresholds for the pipeline engines.
 
 | Variable Key | Script | Impact of Adjustment |
 |---|---|---|
-| `los_base_unit` | Score | Change from 10k to 5k to double the importance of contract size. |
-| `los_penalty_tracking` | Score | Increase to 70 to "cool down" leads that are being claimed too fast. |
-| `los_penalty_saving` | Score | Increase to 20 to penalize leads that everyone is watching but no one is taking. |
-| `lead_expiry_days` | Forecast | Change to 60 to "clean" the feed of old data faster. |
-| `coa_stall_threshold` | Lifecycle | Change to 45 to be more patient with the City's CoA approval process. |
-| `stall_penalty_precon` | Forecast | Adjust the "Snowplow" push for zoning/permit delays. |
-| `stall_penalty_active` | Forecast | Adjust the "Snowplow" push for failed site inspections. |
-
----
+| `los_base_divisor` | Score | Change from 10k to 5k to double the point-value of contract size. |
+| `los_penalty_tracking` | Score | Increase to 50 to heavily penalize leads claimed by flight-trackers. |
+| `los_penalty_saving` | Score | Increase to 10 to penalize leads being watched by competitors. |
+| `los_multiplier_bid` | Score | Global fallback (e.g., 2.5) if a trade lacks a specific bid multiplier. |
+| `los_multiplier_work` | Score | Global fallback (e.g., 1.5) if a trade lacks a specific work multiplier. |
+| `expired_threshold_days` | Forecast | Sets the TTL (e.g., 90) before a lead classifies as expired and auto-archives. |
+| `coa_stall_threshold` | Lifecycle | Change to 30 to be more patient with the City's pre-con CoA process. |
+| `stall_penalty_precon` | Forecast | Days to push the "Snowplow" forward for zoning/permit delays (e.g., 45). |
+| `stall_penalty_active` | Forecast | Days to push the "Snowplow" forward for active site stalls (e.g., 14). |
+| `liar_gate_threshold_pct` | Cost | The % window (e.g., 0.25) before city cost data is discarded as a lie. |
+| `urban_coverage_ratio` | Cost | Default footprint % (e.g., 0.70) for high-density lots missing massing. |
+| `suburban_coverage_ratio` | Cost | Default footprint % (e.g., 0.40) for low-density lots missing massing. |
+| `commercial_shell_multiplier` | Cost | **NEW:** The penalty multiplier (e.g., 0.60) applied to interior trades on Shell builds. |
+| `placeholder_cost_threshold` | Cost | **NEW:** The minimum city cost (e.g., $1000) before the model assumes total override control. |
+| `income_premium_tiers` | Cost | **NEW:** JSON mapping of neighborhood income brackets to cost multipliers (e.g., `{"100000": 1.2, "150000": 1.5}`). |
 
 ## 2. Trade Matrix Logic (`trade_configurations`)
-This is your Per-Trade Control Panel. You can now adjust the multipliers here.
+
+This is your Per-Trade Control Panel, heavily expanded to support Surgical Estimation (Spec 83) and Bimodal Routing (Spec 85). (Note: `trade_sqft_rates` from early Spec 83 drafts has been cleanly merged into this table).
 
 | Field | Consumed By | Your Manual Control Ability |
 |---|---|---|
-| `multiplier_bid` | Score | **NEW:** Set the Early Bid weight per trade (e.g., 2.5 for Plumbing, 3.5 for Framing). |
-| `multiplier_work` | Score | **NEW:** Set the Rescue weight per trade (e.g., 1.5 for Plumbing, 1.2 for Painting). |
-| `allocation_pct` | Cost | Slices the total construction $ into trade estimates. |
-| `bid_phase_cutoff` | Forecast | The phase (P1-P18) where the `multiplier_bid` drops to `multiplier_work`. |
-| `work_phase_target` | Forecast | The physical phase the pro is physically aiming for. |
-| `imminent_window` | CRM | Days of notice before "Starting Soon" alert fires. |
-
----
+| `base_rate_sqft` | Cost | Standard $/sqft for the trade (replaces legacy global allocation). |
+| `structure_complexity_factor` | Cost | Multiplier for multi-unit vs. SFD builds (applied per-trade). |
+| `multiplier_bid` | Score | Set the Early Bid weight per trade (e.g., 3.0 for Excavation). |
+| `multiplier_work` | Score | Set the Rescue weight per trade (e.g., 1.8 for Structural Steel). |
+| `bid_phase_cutoff` | Forecast | The phase (e.g., P6) where `multiplier_bid` drops to work. |
+| `work_phase_target` | Forecast | The physical phase the pro is actively aiming for (e.g., P12). |
+| `imminent_window_days` | CRM | Days of notice before "Starting Soon" alert fires (Disables tier if set to 0). |
 
 ## 3. How this looks in your Admin UI
-When you open your Admin page to manage trades, you will see a 32-row table that looks like this:
 
-| Trade Slug | % Alloc | Bid Cutoff | Early Bid Mult | Rescue Mult |
-|---|---|---|---|---|
-| `plumbing` | `0.0800` | P6 | `2.5` | `1.5` |
-| `framing` | `0.1500` | P9 | `3.5` | `1.8` |
-| `painting` | `0.0200` | P13 | `2.0` | `1.1` |
+When you open your Admin page to manage trades, you will see a 32-row table bridging pricing, timing, and strategic value:
 
-### Why this change is necessary:
-- **Granular Value:** You can acknowledge that a Framing "Early Bid" is more strategically valuable to the platform than a Painting "Early Bid" and reward it with a higher score.
-- **Market Balancing:** If you have too many plumbers fighting over "Rescue" leads, you can drop the `multiplier_work` for plumbing to `1.1` to deprioritize them in the feed without affecting other trades.
-- **Total Manual Control:** You have moved the final "hardcoded" piece of the Opportunity Score into the database.
-
-**Script Refactor (DONE — migration 093 + config-loader.js):**
-- `compute-opportunity-scores.js`: Now JOINs `trade_configurations` for per-trade `multiplier_bid` / `multiplier_work`. Falls back to global `logic_variables` if trade config is missing.
-- All 4 scripts (`compute-opportunity-scores`, `compute-trade-forecasts`, `compute-cost-estimates`, `update-tracked-projects`) use the shared `loadMarketplaceConfigs(pool)` loader in `scripts/lib/config-loader.js`.
-
----
+| Trade Slug | $/sqft | Complex X | Bid Cutoff | Work Target | Bid Mult | Rescue Mult | Imminent Window |
+|---|---|---|---|---|---|---|---|
+| `plumbing` | `$12.00` | 1.5 | P6 | P12 | 2.5 | 1.5 | 14 days |
+| `framing` | `$25.00` | 1.1 | P8 | P11 | 3.5 | 1.8 | 21 days |
+| `painting` | `$4.00` | 1.0 | P13 | P16 | 2.0 | 1.1 | 7 days |
 
 ## 4. Implementation Plan: The "Bridge" Strategy
 
-### Step 1: Infrastructure (Migration 091/092)
-Run a single SQL migration to create the three infrastructure tables: `trade_configurations`, `logic_variables`, and `lead_analytics`.
+### Step 1: Infrastructure (Migrations 091, 092, 093, 097)
 
-### Step 2: The Master Seed
-Execute a 32-row `INSERT` that populates every trade with calibrated values including the new per-trade multipliers and windows.
+Ensure the database schema is aligned. This includes the expanded `trade_configurations` table, the newly expanded 15-key `logic_variables` table, and the creation of the `scope_intensity_matrix` table.
 
-### Step 3: Script "Dynamic Wiring"
-Refactor the four scripts to perform a "Config Load" at the start of their run via the shared `loadMarketplaceConfigs(pool)` helper in `scripts/lib/config-loader.js`.
+### Step 2: The Script Sequence (The Permits Chain)
 
-| Script | Permits Chain Step | Role |
+Refactor the scripts to load via `scripts/lib/config-loader.js`. They must execute in this exact sequence to ensure anchors and scores compound correctly:
+
+| Step | Script | Role & Config Consumption |
 |---|---|---|
-| `compute-cost-estimates.js` | **14** | Fetches the 32 percentages from `trade_configurations` + Liar's Gate threshold from `logic_variables`. |
-| `classify-lifecycle-phase.js` | **21** | Fetches `coa_stall_threshold` from `logic_variables` to flag stuck CoAs as `lifecycle_stalled=TRUE` (WF3 2026-04-13). |
-| `compute-trade-forecasts.js` | **22** | Fetches bimodal targets (`bid_phase_cutoff`, `work_phase_target`) + stall penalties + `expired_threshold_days` from `logic_variables`. |
-| `compute-opportunity-scores.js` | **23** | JOINs `trade_configurations` for per-trade `multiplier_bid`/`multiplier_work`. Fetches `los_penalty_tracking`/`los_penalty_saving` from `logic_variables`. |
-| `update-tracked-projects.js` | **24** | JOINs `trade_configurations` for per-trade `imminent_window_days`. Auto-archives claimed leads where `urgency='expired'` (WF3 2026-04-13 — enforces `lead_expiry_days` TTL). |
+| **14** | `compute-cost-estimates` | Fetches `base_rate_sqft` + `structure_complexity_factor`. Applies `liar_gate_threshold_pct`, `commercial_shell_multiplier`, `placeholder_cost_threshold`, and `income_premium_tiers`. |
+| **15** | `compute_timing_calibrations` | Establishes the historical medians needed for forecasts. |
+| **21** | `classify-lifecycle-phase` | Reads `coa_stall_threshold` to flag `lifecycle_stalled = TRUE`. Updates `phase_started_at` anchors. |
+| **22** | `compute-trade-forecasts` | Reads `bid_phase_cutoff`, `work_phase_target`, `imminent_window_days`, stall penalties, and `expired_threshold_days` to stamp `target_window` and `urgency`. |
+| **23** | `compute-opportunity-scores` | Reads `multiplier_bid/work` based on the stamped window. Applies penalties for tracking/saving. |
+| **24** | `update-tracked-projects` | The CRM Assistant. Reads `imminent_window_days` for payload text, auto-archives dead leads, and syncs `lead_analytics`. |
 
-The 3 marketplace scripts (22-24) run AFTER `classify_lifecycle_phase` (step 21) because they depend on fresh lifecycle_phase + phase_started_at anchors from the classifier.
+### Step 3: Admin UI (The Control Page)
 
-### Step 4: Admin UI (The Control Page)
-Create a single React page in the Admin dashboard with:
-- **Marketplace Constants Card:** A list of the global variables.
-- **Trade Configuration Table:** A searchable 32-row table for cost, timing, and multipliers.
-- **Global Apply Button:** A button that clears the cache and triggers a re-score of all leads.
+Create a single React page (or tabbed view) in the Admin dashboard with four distinct sections:
+- **Marketplace Constants Card:** A form to edit the 15 universal `logic_variables` (including a JSON editor or tiered inputs for `income_premium_tiers`).
+- **Trade Configuration Table:** A searchable 32-row data grid to manage the `trade_configurations` table.
+- **The Scope Intensity Matrix:** A grid editor mapping `permit_type` vs. `structure_type` to manage the percentages (The Surgical Triangle).
+- **Global Apply Button:** A button that clears the Node cache and triggers a pipeline re-run (Steps 14-24) to immediately reflect the new "Gravity" across the marketplace.
+
+---
+
+## 5. Implementation Checklist
+
+### Phase 1: Foundation & Tooling
+**Objective:** Establish the directory structure, install UI primitives, and enforce type safety.
+
+- [ ] **Initialize Feature Folder:** Create `src/features/admin-controls/` with `api/`, `components/`, `lib/`, and `store/` subdirectories.
+- [ ] **Install Shadcn Primitives:** Run the CLI to add the required UI blocks:
+  - `npx shadcn@latest add tabs`
+  - `npx shadcn@latest add table`
+  - `npx shadcn@latest add card`
+  - `npx shadcn@latest add form input slider`
+  - `npx shadcn@latest add sonner`
+  - `npx shadcn@latest add dialog`
+- [ ] **Define TypeScript Interfaces (`lib/types.ts`):** Create the `MarketplaceConfig` interface explicitly typing all 23 variables (15 global, 7 per-trade, 1 scope intensity matrix).
+- [ ] **Create Zod Schema (`lib/schemas.ts`):** Build the client-side Zod validation schema. **Crucial:** Ensure 1:1 parity with the backend `config-loader.js` schema to prevent drift.
+- [ ] **Implement Delta Guard Utility:** Write a helper function that compares a draft value against the system default and returns a boolean if the deviation exceeds 50% (to trigger the amber warning UI).
+- [ ] **Write Schema Parity Test:** Assert frontend `MarketplaceConfig` matches backend `config-loader.js` exactly.
+- [ ] **Implement Feature Error Boundary:** Wrap the `admin-controls` route in a strict React Error Boundary (`error.tsx`).
+- [ ] **Wire Sentry / Exception Tracking:** Ensure the Error Boundary `useEffect` pushes the error and stack trace directly to Sentry (or your equivalent error tracker) with the tag `feature: admin-controls`.
+
+### Phase 2: State Management & API Layer
+**Objective:** Manage the "Draft vs. Production" state and wire up data fetching.
+
+- [ ] **Create Zustand Store (`store/useAdminStore.ts`):** 
+  - Initialize state to hold `productionConfig` and `draftConfig`.
+  - Add actions: `updateDraftValue`, `resetDrafts`, and `commitDrafts`.
+  - Add a derived selector `hasUnsavedChanges` to conditionally enable the Global Apply button.
+- [ ] **Build Query Hooks (`api/useMarketplaceConfigs.ts`):**
+  - `useGetConfigs`: Fetches the current live state from the database.
+  - `useUpdateConfigs`: Mutation hook to save the `draftConfig` payload to the database.
+  - `useTriggerPipeline`: Mutation hook to hit the endpoint that triggers backend Steps 14–24.
+- [ ] **Add API Error Interceptors:** Update the `useUpdateConfigs` and `useTriggerPipeline` hooks to catch 500 and 400 errors. If the backend Zod validation rejects the payload, the frontend must capture that specific rejection reason and expose it to the UI.
+- [ ] **Write Store Tests:** Assert draft mutations, discard rollbacks, and dirty-state tracking in Zustand work flawlessly.
+
+### Phase 3: Global Platform Logic View
+**Objective:** Build the UI for the 15 universal `logic_variables`.
+
+- [ ] **Create Layout Shell:** Implement the main Tabs component to switch between Global, Trade, and Matrix views.
+- [ ] **Build `GlobalConfigCard.tsx`:** Group variables logically into UI sections using Shadcn Cards: Scoring (divisors, multipliers, penalties), Timing (thresholds, windows), and Geography/Cost (coverage ratios, liar gate).
+- [ ] **Wire Inputs & Sliders:** Map the 14 numeric variables to Shadcn Sliders and number inputs, hooked into the Zustand `updateDraftValue` action.
+- [ ] **Build JSON Editor Component:** Create a specialized input block for the `income_premium_tiers` mapping.
+- [ ] **Apply Delta Guard UI:** Wrap inputs in a validation state that turns the border/text amber if the user adjusts a value by >50%.
+- [ ] **Write Delta Guard UI Tests:** Assert that changing a value by >50% visually triggers the amber warning state in the DOM.
+
+### Phase 4: Trade Matrix Logic View
+**Objective:** Build the 32-row data table for per-trade configuration.
+
+- [ ] **Build `TradeGrid.tsx`:** Implement the Shadcn DataTable.
+- [ ] **Configure Columns:** Set up the 7 required columns: `base_rate_sqft`, `structure_complexity_factor`, `multiplier_bid`, `multiplier_work`, `bid_phase_cutoff`, `work_phase_target`, and `imminent_window_days`.
+- [ ] **Enable Inline Editing:** Transform table cells into editable inputs that update the Zustand store for that specific `trade_slug`.
+- [ ] **Add Search/Filter:** Implement a text filter for `trade_slug` to easily find and tune specific trades.
+- [ ] **Write Trade Grid UI Tests:** Ensure that inline edits correctly trigger the Delta Guard warnings and update the Zustand store state specifically for the edited trade row.
+
+### Phase 5: The Surgical Triangle View
+**Objective:** Build the matrix editor for `scope_intensity_matrix`.
+
+- [ ] **Build `IntensityMatrix.tsx`:** Create a 2D grid UI where rows are `permit_type` (Addition, New Build, etc.) and columns are `structure_type` (SFD, 4-Unit, etc.).
+- [ ] **Wire Matrix Inputs:** Populate the intersecting cells with the `gfa_allocation_pct` values.
+- [ ] **Connect to Draft State:** Ensure changing a cell updates the specific composite key in the Zustand store.
+
+### Phase 6: The "Apply & Re-Sync" Workflow
+**Objective:** Safely push draft changes to production and trigger the pipeline.
+
+- [ ] **Build Sticky Action Bar:** Create a bottom or top bar containing "Discard Changes" and "Apply & Re-Sync" buttons, visible only when `hasUnsavedChanges` is true.
+- [ ] **Build Diff Dialog (`ConfirmSyncModal.tsx`):**
+  - Intercept the "Apply" click with a Shadcn Dialog.
+  - Render a list of changed variables showing Old Value -> New Value.
+- [ ] **Wire the Execution Chain:**
+  - On confirm, trigger `useUpdateConfigs` to write to DB.
+  - On success, trigger `useTriggerPipeline` to flush the Node.js cache and run Steps 14–24.
+- [ ] **Add Observability/Feedback:** Implement Sonner toasts to display "Configs Saved" and "Pipeline Re-Run Initiated."
+- [ ] **Implement Audit Telemetry:** Inside the submit handler, right before the Sonner success toast fires, execute a telemetry call (e.g., `captureEvent('admin_gravity_adjusted', { diff: changesPayload, user_id: currentAdmin.id })`).
+- [ ] **Implement Graceful Error Toasts:** If the API fails, the UI must NOT clear the draft state. It must fire a red Sonner toast displaying the exact error message (e.g., "Sync Failed: Base Rate must be a positive number"), allowing the Admin to fix the typo and try again.
+
+### Phase 7: End-to-End Validation & Handoff
+**Objective:** Prove the Admin UI successfully drives the backend pipeline from end to end before clearing it for production use.
+
+- [ ] **Write Playwright/Cypress E2E Test:** Automate a browser session that logs in as Admin, alters a specific trade multiplier, and clicks "Apply & Re-Sync."
+- [ ] **Assert Database Mutation:** The E2E test directly queries the staging DB to confirm `trade_configurations` and `logic_variables` were actually updated with the new values.
+- [ ] **Assert Pipeline Execution:** The E2E test verifies that the `cost_estimates` and `trade_forecasts` tables reflect updated `updated_at` timestamps, proving Steps 14-24 ran successfully via the UI trigger.

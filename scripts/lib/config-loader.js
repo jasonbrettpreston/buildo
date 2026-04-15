@@ -54,7 +54,9 @@ const FALLBACK_TRADE_CONFIGS = {
   'pool-installation': { allocation_pct: 0.0163, bid_phase_cutoff: 'P7a', work_phase_target: 'P17', imminent_window_days: 21, multiplier_bid: 2.5, multiplier_work: 1.5 },
 };
 
-// ── Fallback logic variables (match migration 092 seed) ──────────
+// ── Fallback logic variables (match migration 092 + 093 + 096 seed) ──────────
+// NOTE: keep in sync with src/lib/admin/control-panel.ts LOGIC_VAR_DEFAULTS.
+// Schema parity is enforced by src/tests/control-panel.logic.test.ts.
 const FALLBACK_LOGIC_VARS = {
   los_multiplier_bid: 2.5,
   los_multiplier_work: 1.5,
@@ -69,6 +71,13 @@ const FALLBACK_LOGIC_VARS = {
   lead_expiry_days: 90,
   coa_stall_threshold: 30,
   calibration_min_sample_size: 5,
+  // migration 096 (Spec 83 surgical valuation)
+  urban_coverage_ratio: 0.70,
+  suburban_coverage_ratio: 0.40,
+  trust_threshold_pct: 0.25,
+  // migration 097 (Spec 86 control panel)
+  commercial_shell_multiplier: 0.60,
+  placeholder_cost_threshold: 1000,
 };
 
 /**

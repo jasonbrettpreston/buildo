@@ -182,6 +182,13 @@ const rules: Rule[] = [
     file: 'migrations/070_lead_views_corrected.sql',
     pattern: new RegExp(`revision_num\\s+VARCHAR\\(${contracts.schema.revision_num_max}\\)`),
   },
+  // ---- control panel Zod constraints (Spec 86) ----
+  {
+    name: 'schema.trade_slug_max → TradeConfigUpdateSchema .max() constraint',
+    value: contracts.schema.trade_slug_max,
+    file: 'src/lib/admin/control-panel.ts',
+    pattern: new RegExp(`tradeSlug.*max\\(${contracts.schema.trade_slug_max}\\)`),
+  },
 ];
 
 describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', () => {

@@ -186,8 +186,8 @@ describe('Admin page has Lead Feed tile', () => {
     expect(page).toContain('/admin/lead-feed');
   });
 
-  it('has 3 navigation tiles (Data Quality + Market Metrics + Lead Feed)', () => {
+  it('has 4 navigation tiles (Data Quality + Market Metrics + Lead Feed + Control Panel)', () => {
     const linkMatches = page.match(/href="\/admin\//g);
-    expect(linkMatches).toHaveLength(3);
+    expect(linkMatches).toHaveLength(4);
   });
 });
