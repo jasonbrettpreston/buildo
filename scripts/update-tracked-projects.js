@@ -184,6 +184,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
                                  AND tp.revision_num = tf.revision_num
                                  AND tp.trade_slug = tf.trade_slug
     LEFT JOIN trade_configurations tc ON tc.trade_slug = tp.trade_slug
+    -- 'saved' = Path A + CLAIMED_STATUSES set ('claimed_unverified','claimed','verified') = Path B.
+    -- Must stay in sync with the CLAIMED_STATUSES constant defined above.
     WHERE tp.status IN ('saved', 'claimed_unverified', 'claimed', 'verified')
   `;
 
@@ -199,6 +201,9 @@ pipeline.run('update-tracked-projects', async (pool) => {
   let recoveryAlerts = 0;
   let imminentAlerts = 0;
   let unmappedTrade = 0;
+  // spec §8.2: computed not hardcoded — increment if a dispatch step is added.
+  // Currently this script queues alerts for downstream delivery; no sends here.
+  let deliveryErrors = 0;
 
   // WF3-04 (H-W14 / 82-W7): defensive telemetry for lifecycle_phase
   // values that are neither in PHASE_ORDINAL nor TERMINAL_PHASES.
@@ -284,8 +289,12 @@ pipeline.run('update-tracked-projects', async (pool) => {
 
     // B2. Stall alert: site just stalled (state-change detection)
     if (row.lifecycle_stalled === true && row.last_notified_stalled !== true) {
-      const dateStr = row.predicted_start
-        ? new Date(row.predicted_start).toISOString().slice(0, 10)
+      // spec 47 §14.4: guard against invalid date strings from the DB before
+      // calling .toISOString() — a corrupt predicted_start would throw, not
+      // fall through the ternary. Number.isNaN(d.getTime()) catches that case.
+      const _ps1 = row.predicted_start ? new Date(row.predicted_start) : null;
+      const dateStr = (_ps1 && !Number.isNaN(_ps1.getTime()))
+        ? _ps1.toISOString().slice(0, 10)
         : 'TBD';
       alerts.push({
         user_id: row.user_id,
@@ -323,8 +332,9 @@ pipeline.run('update-tracked-projects', async (pool) => {
     // WF3: both reviewers flagged the double-alert scenario.
     if (row.urgency === 'imminent' && row.last_notified_urgency !== 'imminent'
         && row.lifecycle_stalled !== true) {
-      const dateStr = row.predicted_start
-        ? new Date(row.predicted_start).toISOString().slice(0, 10)
+      const _ps2 = row.predicted_start ? new Date(row.predicted_start) : null;
+      const dateStr = (_ps2 && !Number.isNaN(_ps2.getTime()))
+        ? _ps2.toISOString().slice(0, 10)
         : 'soon';
       alerts.push({
         user_id: row.user_id,
@@ -399,6 +409,17 @@ pipeline.run('update-tracked-projects', async (pool) => {
         imminentOnlyIds.push(upd.id);
       } else if (hasStall && hasUrgency) {
         stallOffImminentIds.push(upd.id);
+      } else {
+        // Defensive invariant: all update objects pushed by the routing engine
+        // must set status, last_notified_stalled, or last_notified_urgency.
+        // An empty update here indicates a new push() callsite was added above
+        // without a corresponding category — it would be silently dropped.
+        pipeline.log.warn(
+          '[tracked-projects]',
+          'Batch categorizer: update object has no recognized fields — will not be written',
+          { id: upd.id, fields: Object.keys(upd) },
+        );
+        deliveryErrors++;
       }
     }
 
@@ -406,11 +427,15 @@ pipeline.run('update-tracked-projects', async (pool) => {
     // prevent partial state on crash. Memory flags + archive decisions
     // must be atomic — a crash between them would double-fire alerts.
     await pipeline.withTransaction(pool, async (client) => {
+      // IS DISTINCT FROM guards on all 5 categories (spec 47 §12):
+      // prevents re-writing rows whose state already matches the target,
+      // keeping rowCount accurate and making re-runs truly idempotent.
       if (archiveIds.length > 0) {
         const r = await client.query(
           `UPDATE tracked_projects
               SET status = 'archived', updated_at = $1
-            WHERE id = ANY($2::int[])`,
+            WHERE id = ANY($2::int[])
+              AND status IS DISTINCT FROM 'archived'`,
           [RUN_AT, archiveIds],
         );
         totalUpdated += r.rowCount ?? 0;
@@ -419,7 +444,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
         const r = await client.query(
           `UPDATE tracked_projects
               SET last_notified_stalled = true, updated_at = $1
-            WHERE id = ANY($2::int[])`,
+            WHERE id = ANY($2::int[])
+              AND last_notified_stalled IS DISTINCT FROM true`,
           [RUN_AT, stallOnIds],
         );
         totalUpdated += r.rowCount ?? 0;
@@ -428,7 +454,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
         const r = await client.query(
           `UPDATE tracked_projects
               SET last_notified_stalled = false, updated_at = $1
-            WHERE id = ANY($2::int[])`,
+            WHERE id = ANY($2::int[])
+              AND last_notified_stalled IS DISTINCT FROM false`,
           [RUN_AT, stallOffIds],
         );
         totalUpdated += r.rowCount ?? 0;
@@ -437,7 +464,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
         const r = await client.query(
           `UPDATE tracked_projects
               SET last_notified_urgency = 'imminent', updated_at = $1
-            WHERE id = ANY($2::int[])`,
+            WHERE id = ANY($2::int[])
+              AND last_notified_urgency IS DISTINCT FROM 'imminent'`,
           [RUN_AT, imminentOnlyIds],
         );
         totalUpdated += r.rowCount ?? 0;
@@ -448,7 +476,9 @@ pipeline.run('update-tracked-projects', async (pool) => {
               SET last_notified_stalled = false,
                   last_notified_urgency = 'imminent',
                   updated_at = $1
-            WHERE id = ANY($2::int[])`,
+            WHERE id = ANY($2::int[])
+              AND (last_notified_stalled IS DISTINCT FROM false
+                   OR last_notified_urgency IS DISTINCT FROM 'imminent')`,
           [RUN_AT, stallOffImminentIds],
         );
         totalUpdated += r.rowCount ?? 0;
@@ -529,7 +559,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
   const auditTableRows = [
     { metric: 'alerts_evaluated',  value: totalRows,    threshold: null, status: 'INFO' },
     { metric: 'alerts_delivered',  value: totalAlerts,  threshold: null, status: 'INFO' },
-    { metric: 'delivery_errors',   value: 0,            threshold: 0,   status: 'PASS' },
+    { metric: 'delivery_errors',   value: deliveryErrors, threshold: 0, status: deliveryErrors > 0 ? 'FAIL' : 'PASS' },
     { metric: 'projects_archived', value: archived,     threshold: null, status: 'INFO' },
     { metric: 'unknown_phase',     value: unknown_phase_skipped, threshold: null, status: 'INFO' },
   ];

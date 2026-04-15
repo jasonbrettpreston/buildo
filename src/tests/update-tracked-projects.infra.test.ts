@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: CRM Assistant (update-tracked-projects.js)
+// SPEC LINK: docs/specs/product/future/82_crm_assistant_alerts.md
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -262,5 +262,38 @@ describe('scripts/update-tracked-projects.js — spec 47 compliance', () => {
   it('accumulates result.rowCount not raw updates.length for records_updated (spec 47 §7 #5)', () => {
     expect(content).toMatch(/rowCount/);
     expect(content).not.toMatch(/records_updated:\s*updates\.length/);
+  });
+
+  it('guards all 5 category UPDATEs with IS DISTINCT FROM (spec 47 §12 idempotency)', () => {
+    // IS DISTINCT FROM prevents re-writing rows already at the target value,
+    // keeps rowCount accurate, and makes re-runs safe under concurrent clients.
+    // Each of the 5 category UPDATE statements must carry the guard.
+    expect(content).toMatch(/status IS DISTINCT FROM 'archived'/);
+    expect(content).toMatch(/last_notified_stalled IS DISTINCT FROM true/);
+    expect(content).toMatch(/last_notified_stalled IS DISTINCT FROM false/);
+    expect(content).toMatch(/last_notified_urgency IS DISTINCT FROM 'imminent'/);
+  });
+
+  it('uses a computed deliveryErrors variable — not hardcoded 0 — for audit table (spec 47 §8.1)', () => {
+    // Hardcoding 0 is an §8.1 anti-pattern: if a dispatch step is added later,
+    // the audit table would silently misreport. Named variable documents intent
+    // and provides an increment point.
+    expect(content).toMatch(/let deliveryErrors = 0/);
+    expect(content).toMatch(/value: deliveryErrors/);
+    // Must NOT hardcode 0 directly in the audit table row
+    expect(content).not.toMatch(/delivery_errors.*value:\s*0[^;]/);
+  });
+
+  it('guards predicted_start date conversion with Number.isNaN (spec 47 §14.4)', () => {
+    // A corrupt predicted_start string would cause new Date().toISOString()
+    // to throw — the ternary alone does not protect against invalid dates.
+    expect(content).toMatch(/Number\.isNaN/);
+  });
+
+  it('logs a WARN for uncategorized update entries in the batch categorizer', () => {
+    // Silent drop of an update object that matches no category is a data loss
+    // risk — future callsites that push a new field combination would
+    // silently do nothing. The invariant log surfaces the gap immediately.
+    expect(content).toMatch(/Batch categorizer.*no recognized fields/i);
   });
 });
