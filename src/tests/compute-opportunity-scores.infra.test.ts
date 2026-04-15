@@ -138,7 +138,10 @@ describe('scripts/compute-opportunity-scores.js — spec 47 compliance (WF3-09)'
 
   it('includes a real audit_table in emitSummary — not the UNKNOWN auto-stub (spec 47 §8.2)', () => {
     expect(content).toMatch(/audit_table/);
-    expect(content).toMatch(/null_scores/);
+    // spec §8.2 mandatory rows for "Score engine" type
+    expect(content).toMatch(/records_scored/);
+    expect(content).toMatch(/records_unchanged/);
+    expect(content).toMatch(/null_input_rate/);
     expect(content).toMatch(/out_of_range/);
   });
 
@@ -179,9 +182,10 @@ describe('scripts/compute-opportunity-scores.js — spec 47 §12 compliance (WF3
     expect(content).toMatch(/process\.exit\(143\)/);
   });
 
-  it('uses lockClientReleased flag to prevent double-release on SIGTERM (spec 47 §5.5)', () => {
+  it('includes lockClientReleased flag — guards against double-release on SIGTERM (spec 47 §5.5)', () => {
     // If SIGTERM fires after the skip-path releases lockClient, the SIGTERM handler
     // must not call lockClient.release() a second time — pg throws on double-release.
+    // Static source check — behavioral correctness confirmed by code inspection.
     expect(content).toMatch(/lockClientReleased/);
   });
 

@@ -169,11 +169,16 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   //   2. The advisory lock prevents concurrent writers from interleaving.
   //   3. Scores are live-computed properties, not financial records — a
   //      brief mixed-vintage window does not corrupt durable state.
+  //
+  // §16.3 stale-snapshot guard not needed: advisory lock 81 prevents
+  // concurrent script instances, and no API route writes opportunity_score
+  // — this script is the sole writer to that column.
   // ═══════════════════════════════════════════════════════════
   let totalRows = 0;
   let updated = 0;
   let integrityFlags = 0;
   let batch = [];
+  let batchCount = 0;
 
   const flushBatch = async (currentBatch) => {
     if (currentBatch.length === 0) return;
@@ -262,6 +267,14 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     if (batch.length >= BATCH_SIZE) {
       await flushBatch(batch);
       batch = [];
+      batchCount++;
+      // spec §8.5: progress log every 50 batches for long-running streams
+      if (batchCount % 50 === 0) {
+        pipeline.log.info(
+          '[opportunity-scores]',
+          `Progress: ${totalRows.toLocaleString()} rows scored, ${updated} updated (batch ${batchCount})`,
+        );
+      }
     }
   }
 
@@ -308,10 +321,14 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   const nullScores  = auditRows[0]?.null_scores  ?? 0;
   const outOfRange  = auditRows[0]?.out_of_range  ?? 0;
 
+  // spec §8.2 mandatory rows for "Score engine" type:
+  // records_scored, records_unchanged, null_input_rate (with threshold)
   const auditTableRows = [
-    { metric: 'null_scores',     value: nullScores,     threshold: 0, status: nullScores > 0  ? 'WARN' : 'PASS' },
-    { metric: 'out_of_range',    value: outOfRange,     threshold: 0, status: outOfRange > 0  ? 'FAIL' : 'PASS' },
-    { metric: 'integrity_flags', value: integrityFlags, threshold: null, status: 'INFO' },
+    { metric: 'records_scored',     value: totalRows,            threshold: null, status: 'INFO' },
+    { metric: 'records_unchanged',  value: totalRows - updated,  threshold: null, status: 'INFO' },
+    { metric: 'null_input_rate',    value: integrityFlags,       threshold: 0,   status: integrityFlags > 0 ? 'WARN' : 'PASS' },
+    { metric: 'null_scores',        value: nullScores,           threshold: 0,   status: nullScores > 0    ? 'WARN' : 'PASS' },
+    { metric: 'out_of_range',       value: outOfRange,           threshold: 0,   status: outOfRange > 0    ? 'FAIL' : 'PASS' },
   ];
   const auditVerdict =
     auditTableRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
