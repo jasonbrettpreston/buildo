@@ -234,4 +234,26 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/unmappedTrades/);
     expect(content).toMatch(/pipeline\.log\.warn/);
   });
+
+  it('WF3-12 Zod defense — validates logicVars before running math (spec 85 §6 item 4)', () => {
+    // spec 47 §4 + spec 85 §6 item 4: fail fast before any math runs.
+    // stall_penalty_precon, stall_penalty_active → corrupt setUTCDate calls.
+    // expired_threshold_days → silently classifies every permit as non-expired.
+    expect(content).toMatch(/require\(['"]zod['"]\)/);
+    expect(content).toMatch(/LOGIC_VARS_SCHEMA\s*=\s*z\.object/);
+    expect(content).toMatch(/stall_penalty_precon/);
+    expect(content).toMatch(/stall_penalty_active/);
+    expect(content).toMatch(/expired_threshold_days/);
+    expect(content).toMatch(/validateLogicVars\(\s*logicVars\s*,\s*LOGIC_VARS_SCHEMA/);
+  });
+
+  it('WF3-12 streamQuery — no unbounded pool.query over permit-trade JOIN (spec 85 §6 item 1)', () => {
+    // spec 47 §6.1: streaming required for queries returning >10K rows.
+    // The permit_trades ⋈ trades ⋈ permits JOIN returns ~183K rows.
+    // pool.query loads all rows into V8 heap; streamQuery bounds it to O(BATCH_SIZE).
+    expect(content).toMatch(/pipeline\.streamQuery\(\s*pool\s*,/);
+    expect(content).toMatch(/for\s+await\s*\(\s*const\s+\w+\s+of\s+pipeline\.streamQuery/);
+    // Regression guard — the old unbounded-load pattern must be gone.
+    expect(content).not.toMatch(/const\s+\{\s*rows:\s*permitTradeRows\s*\}\s*=\s*await\s+pool\.query/);
+  });
 });

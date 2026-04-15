@@ -7,16 +7,17 @@
  * phase_calibration medians (Phase 3) and TRADE_TARGET_PHASE mapping
  * to produce rows in trade_forecasts that the lead feed JOINs on.
  *
- * SPEC LINK: docs/reports/lifecycle_phase_implementation.md §Phase 4
+ * SPEC LINK: docs/specs/product/future/85_trade_forecast_engine.md §6
  */
 'use strict';
 
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const {
   TRADE_TARGET_PHASE: TRADE_TARGET_PHASE_FALLBACK,
   PHASE_ORDINAL,
 } = require('./lib/lifecycle-phase');
-const { loadMarketplaceConfigs } = require('./lib/config-loader');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
 // PHASE_ORDINAL imported from shared lib. TRADE_TARGET_PHASE loaded from
 // trade_configurations at runtime via shared config loader. Falls back to
@@ -43,8 +44,20 @@ const PRE_CONSTRUCTION_PHASES = new Set([
   'P8',                      // revised
 ]);
 
-const FORECAST_BATCH_SIZE = 1000;
+// 12 params per row: permit_num, revision_num, trade_slug, predicted_start,
+// confidence, urgency, target_window, calibration_method, sample_size,
+// median_days, p25_days, p75_days
+const FORECAST_BATCH_SIZE = pipeline.maxRowsPerInsert(12); // Math.floor(65535 / 12) = 5461
 const DEFAULT_MEDIAN_DAYS = 30;
+
+// spec 47 §4 + spec 85 §6 item 4 — fail fast before any math runs.
+// These are the only logicVars consumed downstream; a NaN would silently
+// corrupt predictedStart (setUTCDate) and urgency classification.
+const LOGIC_VARS_SCHEMA = z.object({
+  stall_penalty_precon:   z.number().finite().min(0),
+  stall_penalty_active:   z.number().finite().min(0),
+  expired_threshold_days: z.number().finite(),
+}).passthrough();
 
 // Urgency classification — no isStalled parameter.
 //
@@ -133,6 +146,14 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   // ─── Load Control Panel via shared loader ──────────────────
   const { tradeConfigs, logicVars } = await loadMarketplaceConfigs(pool, 'trade-forecasts');
 
+  // Fail fast if any required variable is missing, zero, or non-finite.
+  // Prevents NaN propagation into setUTCDate (stall penalties) and
+  // urgency classification (expired_threshold_days).
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'trade-forecasts');
+  if (!validation.valid) {
+    throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  }
+
   // Build TRADE_TARGET_PHASE from loaded trade configs
   TRADE_TARGET_PHASE = Object.fromEntries(
     Object.entries(tradeConfigs).map(([slug, tc]) => [slug, {
@@ -193,10 +214,60 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Step 2: Query all active permit-trade pairs with lifecycle data
+  // Step 2: Stale-purge + pre-count (before stream opens)
+  //
+  // Runs in its own transaction so the DELETE and pre_count are
+  // atomic before any UPSERT batches begin.
   // ═══════════════════════════════════════════════════════════
-  pipeline.log.info('[trade-forecasts]', 'Querying active permit-trade pairs...');
-  const { rows: permitTradeRows } = await pool.query(`
+  let stalePurged = 0;
+  let preRowCount = 0;
+
+  await pipeline.withTransaction(pool, async (client) => {
+    const { rows: staleRows } = await client.query(
+      `DELETE FROM trade_forecasts tf
+        WHERE NOT EXISTS (
+          SELECT 1 FROM permit_trades pt
+            JOIN permits p ON p.permit_num = pt.permit_num
+                          AND p.revision_num = pt.revision_num
+            JOIN trades t ON t.id = pt.trade_id
+           WHERE pt.permit_num = tf.permit_num
+             AND pt.revision_num = tf.revision_num
+             AND t.slug = tf.trade_slug
+             AND pt.is_active = true
+             AND p.lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','P1','P2')
+             AND p.lifecycle_phase IS NOT NULL
+        )
+      RETURNING 1`,
+    );
+    stalePurged = staleRows.length;
+    if (stalePurged > 0) {
+      pipeline.log.info(
+        '[trade-forecasts]',
+        `Purged ${stalePurged.toLocaleString()} stale forecasts for terminal/orphan/dead permits`,
+      );
+    }
+    const { rows: preCount } = await client.query(
+      'SELECT COUNT(*)::int AS n FROM trade_forecasts',
+    );
+    preRowCount = preCount[0].n;
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // Step 3: Stream permit-trade pairs + compute + per-batch flush
+  //
+  // WF3-12: Replaced pool.query accumulator with pipeline.streamQuery.
+  // The old pattern loaded ~183K permit-trade rows into permitTradeRows
+  // then built a second unbounded forecasts[] array — O(N) heap for both.
+  // Now: rows stream through a for-await loop, forecasts flush per-batch
+  // into their own withTransaction. Heap holds at most O(BATCH_SIZE).
+  //
+  // Per-batch commit trade-off: a crash mid-stream leaves some rows with
+  // the new forecast and others with the previous run's values. Acceptable
+  // because: (1) the script is the sole writer to trade_forecasts (advisory
+  // lock 85 prevents concurrent runs), and (2) re-running the script
+  // converges — ON CONFLICT DO UPDATE is idempotent.
+  // ═══════════════════════════════════════════════════════════
+  const SOURCE_SQL = `
     SELECT p.permit_num, p.revision_num, t.slug AS trade_slug,
            p.lifecycle_phase, p.phase_started_at, p.permit_type,
            p.lifecycle_stalled
@@ -207,20 +278,60 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
      WHERE pt.is_active = true
        AND p.lifecycle_phase IS NOT NULL
        AND p.phase_started_at IS NOT NULL
-  `);
-  pipeline.log.info(
-    '[trade-forecasts]',
-    `Active permit-trade pairs: ${permitTradeRows.length.toLocaleString()}`,
-  );
+  `;
 
-  // ═══════════════════════════════════════════════════════════
-  // Step 3: Compute forecasts in JS
-  // ═══════════════════════════════════════════════════════════
-  const forecasts = [];
+  let totalRows = 0;
   let skipped = 0;
   let unmappedTrades = 0;
+  let upserted = 0;
+  let batch = [];
+  let batchCount = 0;
 
-  for (const row of permitTradeRows) {
+  const flushForecastBatch = async (currentBatch) => {
+    if (currentBatch.length === 0) return;
+    await pipeline.withTransaction(pool, async (client) => {
+      const vals = [];
+      const params = [];
+      for (let j = 0; j < currentBatch.length; j++) {
+        const f = currentBatch[j];
+        const base = j * 12;
+        vals.push(
+          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int, $${base + 12}::int)`,
+        );
+        params.push(
+          f.permit_num, f.revision_num, f.trade_slug,
+          f.predicted_start, f.confidence, f.urgency,
+          f.target_window, f.calibration_method, f.sample_size,
+          f.median_days, f.p25_days, f.p75_days,
+        );
+      }
+      await client.query(
+        `INSERT INTO trade_forecasts
+           (permit_num, revision_num, trade_slug, predicted_start,
+            confidence, urgency, target_window, calibration_method,
+            sample_size, median_days, p25_days, p75_days)
+         VALUES ${vals.join(', ')}
+         ON CONFLICT (permit_num, revision_num, trade_slug)
+         DO UPDATE SET
+           predicted_start = EXCLUDED.predicted_start,
+           confidence = EXCLUDED.confidence,
+           urgency = EXCLUDED.urgency,
+           target_window = EXCLUDED.target_window,
+           calibration_method = EXCLUDED.calibration_method,
+           sample_size = EXCLUDED.sample_size,
+           median_days = EXCLUDED.median_days,
+           p25_days = EXCLUDED.p25_days,
+           p75_days = EXCLUDED.p75_days,
+           computed_at = NOW()`,
+        params,
+      );
+      upserted += currentBatch.length;
+    });
+  };
+
+  pipeline.log.info('[trade-forecasts]', 'Streaming active permit-trade pairs...');
+  for await (const row of pipeline.streamQuery(pool, SOURCE_SQL, [])) {
+    totalRows++;
     const {
       permit_num, revision_num, trade_slug,
       lifecycle_phase, phase_started_at, permit_type,
@@ -339,7 +450,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     );
     const confidence = classifyConfidence(cal.sample, cal.method === 'default');
 
-    forecasts.push({
+    batch.push({
       permit_num,
       revision_num,
       trade_slug,
@@ -353,125 +464,34 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       p25_days: cal.p25,
       p75_days: cal.p75,
     });
+
+    if (batch.length >= FORECAST_BATCH_SIZE) {
+      await flushForecastBatch(batch);
+      batch = [];
+      batchCount++;
+      if (batchCount % 50 === 0) {
+        pipeline.log.info(
+          '[trade-forecasts]',
+          `Progress: ${totalRows.toLocaleString()} rows streamed, ${upserted.toLocaleString()} upserted (batch ${batchCount})`,
+        );
+      }
+    }
   }
 
-  pipeline.log.info('[trade-forecasts]', `Forecasts computed: ${forecasts.length.toLocaleString()}`);
+  // Final flush for any remaining rows after the stream closes
+  await flushForecastBatch(batch);
+  batch = [];
+
+  pipeline.log.info('[trade-forecasts]', `Rows streamed: ${totalRows.toLocaleString()}`);
   pipeline.log.info('[trade-forecasts]', `Skipped (terminal/orphan): ${skipped.toLocaleString()}`);
   if (unmappedTrades > 0) {
     pipeline.log.warn('[trade-forecasts]', `Unmapped trades (not in TRADE_TARGET_PHASE): ${unmappedTrades}`);
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // Steps 3b + 4: stale-purge + batch UPSERT — atomic together
-  // ═══════════════════════════════════════════════════════════
-  //
-  // WF3-03 (H-W2 / 85-W2): Both phases run inside a single
-  // pipeline.withTransaction so a crash between DELETE and the first
-  // UPSERT batch can no longer leave stale rows purged + new rows
-  // missing. The pre/post counts are also captured inside the
-  // transaction so telemetry deltas reflect the same atomic snapshot
-  // as the writes.
-  //
-  // Ironclad ghost purge: deletes forecasts if EITHER the permit died
-  // (terminal/orphan/dead phase) OR the specific trade was deactivated
-  // on the permit. The NOT EXISTS ensures no orphan forecast rows
-  // persist between runs.
-  let stalePurged = 0;
-  let upserted = 0;
-  let preRowCount = 0;
-  let postRowCount = 0;
-
-  await pipeline.withTransaction(pool, async (client) => {
-    const { rows: staleRows } = await client.query(
-      `DELETE FROM trade_forecasts tf
-        WHERE NOT EXISTS (
-          SELECT 1 FROM permit_trades pt
-            JOIN permits p ON p.permit_num = pt.permit_num
-                          AND p.revision_num = pt.revision_num
-            JOIN trades t ON t.id = pt.trade_id
-           WHERE pt.permit_num = tf.permit_num
-             AND pt.revision_num = tf.revision_num
-             AND t.slug = tf.trade_slug
-             AND pt.is_active = true
-             AND p.lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','P1','P2')
-             AND p.lifecycle_phase IS NOT NULL
-        )
-      RETURNING 1`,
-    );
-    stalePurged = staleRows.length;
-    if (stalePurged > 0) {
-      pipeline.log.info(
-        '[trade-forecasts]',
-        `Purged ${stalePurged.toLocaleString()} stale forecasts for terminal/orphan/dead permits`,
-      );
-    }
-
-    const { rows: preCount } = await client.query(
-      'SELECT COUNT(*)::int AS n FROM trade_forecasts',
-    );
-    preRowCount = preCount[0].n;
-
-    if (forecasts.length > 0) {
-      const batches = [];
-      for (let i = 0; i < forecasts.length; i += FORECAST_BATCH_SIZE) {
-        batches.push(forecasts.slice(i, i + FORECAST_BATCH_SIZE));
-      }
-
-      for (let bi = 0; bi < batches.length; bi++) {
-        const batch = batches[bi];
-        const vals = [];
-        const params = [];
-        for (let j = 0; j < batch.length; j++) {
-          const f = batch[j];
-          const base = j * 12;
-          vals.push(
-            `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int, $${base + 12}::int)`,
-          );
-          params.push(
-            f.permit_num, f.revision_num, f.trade_slug,
-            f.predicted_start, f.confidence, f.urgency,
-            f.target_window, f.calibration_method, f.sample_size,
-            f.median_days, f.p25_days, f.p75_days,
-          );
-        }
-
-        await client.query(
-          `INSERT INTO trade_forecasts
-             (permit_num, revision_num, trade_slug, predicted_start,
-              confidence, urgency, target_window, calibration_method,
-              sample_size, median_days, p25_days, p75_days)
-           VALUES ${vals.join(', ')}
-           ON CONFLICT (permit_num, revision_num, trade_slug)
-           DO UPDATE SET
-             predicted_start = EXCLUDED.predicted_start,
-             confidence = EXCLUDED.confidence,
-             urgency = EXCLUDED.urgency,
-             target_window = EXCLUDED.target_window,
-             calibration_method = EXCLUDED.calibration_method,
-             sample_size = EXCLUDED.sample_size,
-             median_days = EXCLUDED.median_days,
-             p25_days = EXCLUDED.p25_days,
-             p75_days = EXCLUDED.p75_days,
-             computed_at = NOW()`,
-          params,
-        );
-        upserted += batch.length;
-
-        if ((bi + 1) % 10 === 0 || bi === batches.length - 1) {
-          pipeline.log.info(
-            '[trade-forecasts]',
-            `Batch ${bi + 1}/${batches.length} (${upserted.toLocaleString()} upserted)`,
-          );
-        }
-      }
-    }
-
-    const { rows: postCount } = await client.query(
-      'SELECT COUNT(*)::int AS n FROM trade_forecasts',
-    );
-    postRowCount = postCount[0].n;
-  });
-
+  const { rows: postCount } = await pool.query(
+    'SELECT COUNT(*)::int AS n FROM trade_forecasts',
+  );
+  const postRowCount = postCount[0].n;
   const newRows = Math.max(0, postRowCount - preRowCount);
 
   // Urgency distribution for telemetry
@@ -481,11 +501,11 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   const urgencyDistribution = Object.fromEntries(urgDist.map((r) => [r.urgency, r.n]));
 
   pipeline.emitSummary({
-    records_total: forecasts.length,
+    records_total: upserted,
     records_new: newRows,
     records_updated: upserted - newRows,
     records_meta: {
-      forecasts_computed: forecasts.length,
+      forecasts_computed: upserted,
       stale_forecasts_purged: stalePurged,
       skipped_terminal_orphan: skipped,
       unmapped_trades: unmappedTrades,

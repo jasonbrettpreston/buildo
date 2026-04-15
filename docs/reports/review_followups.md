@@ -1137,3 +1137,14 @@ Date: 2026-04-14. Reviewers: Gemini, DeepSeek, Claude independent (worktree).
 | MED | Adversarial | `cost-model-shared.js` | `premiumTiers` processed in insertion order. If tiers are loaded from DB with a non-ascending sort, the first matching band wins by insertion order, not by min value. Add explicit sort by `tier.min` ascending in `computePremiumFactor`. Affects TS path (`cost-model.ts` builds the tiers array) and pipeline path (pre-fetched from DB). | WF2 on `computePremiumFactor` | OPEN |
 | LOW | Adversarial | `cost-model-shared.js` | Negative `estimated_stories` from bad DB data produces a negative GFA. `computeGfa` checks `footprint_area_sqm > 0` but not `stories > 0`. Add `&& stories > 0` guard to the primary massing path. | WF2 on Brain — minor defensive | OPEN |
 | LOW | Adversarial | `compute-cost-estimates.js` WAL guard | IS DISTINCT FROM covers 5 of the 15 upsert columns (estimated_cost, cost_source, is_geometric_override, effective_area_sqm, trade_contract_values::text). The remaining 10 columns (cost_tier, cost_range_low, cost_range_high, premium_factor, complexity_score, model_version, modeled_gfa_sqm, computed_at, cost_range_low, cost_range_high) always write on conflict even when unchanged. Low risk — these are derived fields that change whenever the main 5 change. Adding all 15 to the guard would over-complicate the SQL. | Deferred — monitor WAL volume if replication lag increases | OPEN |
+
+## WF3-12 spec-85 streamQuery + Zod · 2026-04-15
+
+Items 1129 (pool.query memory risk) and Zod defense closed by commit `fix(85_trade_forecast_engine): WF3-12 streamQuery + Zod defense`.
+
+| Sev | Source | Location | Description | Recommended Action | Status |
+|-----|--------|----------|-------------|-------------------|--------|
+| MED | WF3-12 | `compute-trade-forecasts.js:455` | `computed_at = NOW()` inside batch UPSERT (item 1128 — still open). Per-batch `withTransaction` makes this txn-scoped, but passing an explicit `RUN_AT` param would align with spec 47 §8. | WF2 spec-47 hardening pass | OPEN |
+| LOW | WF3-12 | `compute-trade-forecasts.js` | No SIGTERM handler (item 1130 — still open). Advisory lock 85 orphaned if process is killed during flush. Add `process.on('SIGTERM', ...)` with `lockClientReleased` flag per canonical `classify-lifecycle-phase.js` pattern. | WF2 spec-47 hardening pass | OPEN |
+| LOW | WF3-12 | `compute-trade-forecasts.infra.test.ts:1` | SPEC LINK header points to `docs/reports/lifecycle_phase_implementation.md (Phase 4)` — should be `docs/specs/product/future/85_trade_forecast_engine.md §6`. | One-line fix in next touch of this file | OPEN |
+| LOW | WF3-12 | `src/tests/` | No `compute-trade-forecasts.logic.test.ts` — spec 85 §4 Testing Mandate requires a logic test covering bimodal routing, urgency classification, stall recalibration, and 4-level calibration fallback. | WF1 test scaffolding | OPEN |
