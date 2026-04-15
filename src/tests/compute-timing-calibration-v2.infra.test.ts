@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/reports/lifecycle_phase_implementation.md (Phase 3)
+// SPEC LINK: docs/specs/product/future/86_control_panel.md
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -81,8 +81,13 @@ describe('scripts/compute-timing-calibration-v2.js — script shape', () => {
     expect(content).toMatch(/gap_days >= 0/);
   });
 
-  it('enforces minimum sample size of 5', () => {
-    expect(content).toMatch(/HAVING COUNT\(\*\) >= 5/);
+  it('loads calibration_min_sample_size from logicVars — no hardcoded HAVING threshold (spec 47 §4.1)', () => {
+    // Hardcoded HAVING COUNT(*) >= 5 violates §4.1: business-logic thresholds
+    // must come from DB logic_variables, not source code. Dynamic param replaces literal.
+    expect(content).toMatch(/loadMarketplaceConfigs/);
+    expect(content).toMatch(/calibration_min_sample_size/);
+    expect(content).toMatch(/HAVING COUNT\(\*\) >= \$1/);
+    expect(content).not.toMatch(/HAVING COUNT\(\*\) >= 5/);
   });
 
   it('filters backwards transitions via ordinal comparison (adversarial HIGH-3)', () => {
@@ -139,6 +144,64 @@ describe('scripts/compute-timing-calibration-v2.js — script shape', () => {
     expect(content).toMatch(/pipeline\.emitSummary/);
     expect(content).toMatch(/pipeline\.emitMeta/);
     expect(content).toMatch(/phase_calibration/);
+  });
+});
+
+// ── WF3-10 spec 47 compliance tests (added as failing tests before fixes) ──
+
+describe('scripts/compute-timing-calibration-v2.js — spec 47 compliance (WF3-10)', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/compute-timing-calibration-v2.js'),
+      'utf-8',
+    );
+  });
+
+  it('has correct SPEC LINK pointing to spec 86 (not lifecycle report)', () => {
+    expect(content).toMatch(/SPEC LINK:.*86_control_panel\.md/);
+    expect(content).not.toMatch(/SPEC LINK:.*lifecycle_phase_implementation/);
+  });
+
+  it('registers a SIGTERM handler to release advisory lock gracefully (spec 47 §5.5)', () => {
+    expect(content).toMatch(/process\.on\('SIGTERM'/);
+    expect(content).toMatch(/pg_advisory_unlock/);
+    expect(content).toMatch(/process\.exit\(143\)/);
+  });
+
+  it('includes a real audit_table in the main emitSummary — not omitted (spec 47 §8.2)', () => {
+    expect(content).toMatch(/audit_table/);
+    expect(content).toMatch(/phase_pairs_computed/);
+    expect(content).toMatch(/negative_gap_count/);
+  });
+
+  it('includes audit_table in the lock-skipped early-return emitSummary (spec 47 §8.2)', () => {
+    // Both call sites must have audit_table — the early-return skipped path included.
+    const auditTableCount = (content.match(/audit_table/g) ?? []).length;
+    expect(auditTableCount).toBeGreaterThanOrEqual(2);
+  });
+
+  it('captures RUN_AT from DB at startup — no inline NOW() in UPSERT values (spec 47 §14.1)', () => {
+    expect(content).toMatch(/RUN_AT/);
+    expect(content).toMatch(/SELECT NOW\(\) AS now/);
+    // NOW() must not appear inside a VALUES placeholder
+    expect(content).not.toMatch(/vals\.push\(`[^`]*NOW\(\)/);
+  });
+
+  it('uses pipeline.maxRowsPerInsert(8) for CALIBRATION_BATCH_SIZE — not hardcoded 5000 (spec 47 §6.2)', () => {
+    expect(content).toMatch(/maxRowsPerInsert\(8\)/);
+    expect(content).not.toMatch(/const CALIBRATION_BATCH_SIZE = 5000/);
+  });
+
+  it('accumulates result.rowCount not chunk.length for upserted count (spec 47 §8.1)', () => {
+    expect(content).toMatch(/result\.rowCount/);
+    expect(content).not.toMatch(/upserted \+= chunk\.length/);
+  });
+
+  it('validates logicVars with Zod schema via validateLogicVars (spec 47 §4.2)', () => {
+    expect(content).toMatch(/validateLogicVars/);
+    expect(content).toMatch(/CALIB_SCHEMA/);
+    expect(content).toMatch(/calibration_min_sample_size/);
   });
 });
 

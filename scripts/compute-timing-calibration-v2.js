@@ -10,12 +10,18 @@
  * Output: rows in `phase_calibration` table, consumed by Phase 4's
  * flight tracker to generate per-permit, per-trade predictions.
  *
- * SPEC LINK: docs/reports/lifecycle_phase_implementation.md §Phase 3
+ * SPEC LINK: docs/specs/product/future/86_control_panel.md
+ *
+ * DUAL PATH NOTE: N/A — per spec §5 Operating Boundaries, phase_calibration
+ * is written only by this pipeline script. No TS module computes the same
+ * field.
  */
 'use strict';
 
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const { mapInspectionStageToPhase } = require('./lib/lifecycle-phase');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
 // Build a SQL CASE expression that mirrors the JS mapInspectionStageToPhase
 // function. This lets Postgres do the mapping server-side in a single query
@@ -93,7 +99,33 @@ const TO_ORDINAL_SQL = PHASE_ORDINAL_SQL.replace(/phase/g, 'to_phase');
 // WF3-03 (H-W1): lock ID = spec number convention.
 const ADVISORY_LOCK_ID = 86;
 
+// Zod schema for the logicVars used by this script.
+// calibration_min_sample_size=0 would admit single-observation noise into
+// the calibration table; fail fast before computing. spec 47 §4.2.
+const CALIB_SCHEMA = z.object({
+  calibration_min_sample_size: z.number().finite().int().min(1),
+}).passthrough();
+
+// 8 params per row: from_phase, to_phase, permit_type, median_days, p25_days,
+// p75_days, sample_size, computed_at (RUN_AT). spec 47 §6.2.
+const CALIBRATION_BATCH_SIZE = pipeline.maxRowsPerInsert(8); // Math.floor(65535 / 8) = 8191
+
 pipeline.run('compute-timing-calibration-v2', async (pool) => {
+  // §14.1: Capture run timestamp at pipeline startup — used as computed_at
+  // for all UPSERT rows. Prevents "Midnight Cross" where NOW() in a loop
+  // yields different calendar dates for rows in the same logical run.
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+
+  // ─── Load + validate control panel variables ──────────────────
+  // calibration_min_sample_size must come from DB (§4.1 — no hardcoded
+  // business-logic thresholds in source code).
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'calibration-v2');
+  const validation = validateLogicVars(logicVars, CALIB_SCHEMA, 'calibration-v2');
+  if (!validation.valid) {
+    throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  }
+  const minSampleSize = logicVars.calibration_min_sample_size;
+
   // ─── Concurrency guard — single-threaded calibrator ──────────
   // Lock acquired on a DEDICATED `pool.connect()` client (NOT pool.query).
   // pool.query checks out an ephemeral connection that returns to the pool
@@ -102,6 +134,31 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
   // compute-cost-estimates.js. Mirrors the canonical pattern in
   // classify-lifecycle-phase.js (lock 85).
   const lockClient = await pool.connect();
+
+  // Guard flag prevents double-release if SIGTERM fires after the skip-path
+  // (or after the finally block) has already released the client. Without
+  // this, calling lockClient.release() on an already-released client throws.
+  let lockClientReleased = false;
+
+  // §5.5: SIGTERM handler — release advisory lock before process exits so
+  // the next scheduled run is not blocked by a stale lock on a dead session.
+  // Registered immediately after lockClient is obtained so the handler
+  // always has a valid client reference, even if the lock attempt below fails.
+  process.on('SIGTERM', async () => {
+    pipeline.log.warn(
+      '[calibration-v2]',
+      'Received SIGTERM. Releasing advisory lock and shutting down gracefully...',
+    );
+    try {
+      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+    } catch (e) { /* best-effort */ }
+    if (!lockClientReleased) {
+      lockClientReleased = true;
+      lockClient.release();
+    }
+    process.exit(143);
+  });
+
   try {
     const { rows: lockRows } = await lockClient.query(
       'SELECT pg_try_advisory_lock($1) AS got',
@@ -114,10 +171,19 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
       );
       pipeline.emitSummary({
         records_total: 0, records_new: 0, records_updated: 0,
-        records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere',
-          advisory_lock_id: ADVISORY_LOCK_ID },
+        records_meta: {
+          skipped: true, reason: 'advisory_lock_held_elsewhere',
+          advisory_lock_id: ADVISORY_LOCK_ID,
+          audit_table: {
+            phase: 15,
+            name: 'Timing Calibration V2',
+            verdict: 'PASS',
+            rows: [{ metric: 'skipped_lock_held', value: 1, threshold: null, status: 'INFO' }],
+          },
+        },
       });
       pipeline.emitMeta({}, {});
+      lockClientReleased = true;
       lockClient.release();
       return;
     }
@@ -171,8 +237,8 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
        -- like P11→P10 (framing before foundation). Adversarial review HIGH-3.
        AND (${TO_ORDINAL_SQL}) > (${FROM_ORDINAL_SQL})
      GROUP BY 1, 2, 3
-    HAVING COUNT(*) >= 5
-  `);
+    HAVING COUNT(*) >= $1
+  `, [minSampleSize]);
   const phasePairRows = phasePairsResult.rows;
   pipeline.log.info(
     '[calibration-v2]',
@@ -211,8 +277,8 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
        AND gap_days >= 0
        AND (${TO_ORDINAL_SQL}) > (${FROM_ORDINAL_SQL})
      GROUP BY 1, 2
-    HAVING COUNT(*) >= 5
-  `);
+    HAVING COUNT(*) >= $1
+  `, [minSampleSize]);
   const allTypesRows = allTypesResult.rows;
   pipeline.log.info(
     '[calibration-v2]',
@@ -240,7 +306,7 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
        WHERE i.status = 'Passed'
          AND i.inspection_date IS NOT NULL
          AND p.issued_date IS NOT NULL
-       ORDER BY i.permit_num, i.inspection_date ASC
+       ORDER BY i.permit_num, i.inspection_date ASC, i.stage_name ASC
     )
     SELECT 'ISSUED' AS from_phase,
            ${STAGE_TO_PHASE_SQL} AS to_phase,
@@ -253,8 +319,8 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
      WHERE ${STAGE_TO_PHASE_SQL} IS NOT NULL
        AND (inspection_date - issued_date) >= 0
      GROUP BY 1, 2, 3
-    HAVING COUNT(*) >= 5
-  `);
+    HAVING COUNT(*) >= $1
+  `, [minSampleSize]);
   const issuedRows = issuedResult.rows;
   pipeline.log.info(
     '[calibration-v2]',
@@ -273,7 +339,7 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
        WHERE i.status = 'Passed'
          AND i.inspection_date IS NOT NULL
          AND p.issued_date IS NOT NULL
-       ORDER BY i.permit_num, i.inspection_date ASC
+       ORDER BY i.permit_num, i.inspection_date ASC, i.stage_name ASC
     )
     SELECT 'ISSUED' AS from_phase,
            ${STAGE_TO_PHASE_SQL} AS to_phase,
@@ -286,8 +352,8 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
      WHERE ${STAGE_TO_PHASE_SQL} IS NOT NULL
        AND (inspection_date - issued_date) >= 0
      GROUP BY 1, 2
-    HAVING COUNT(*) >= 5
-  `);
+    HAVING COUNT(*) >= $1
+  `, [minSampleSize]);
   const issuedAllRows = issuedAllResult.rows;
   pipeline.log.info(
     '[calibration-v2]',
@@ -303,16 +369,14 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
   // WF3-03 (H-W2 / 86-W1): atomic UPSERT pipeline with chunking.
   //
   // Chunk size guards the §9.2 PostgreSQL 65535-parameter limit
-  // (7 cols × CALIBRATION_BATCH_SIZE params per chunk). At today's
-  // geometry allRows ≈ 500–800; cap is defensive against future phase-
-  // taxonomy growth without requiring a code change. Independent +
-  // Gemini PR-A review.
+  // (8 cols × CALIBRATION_BATCH_SIZE params per chunk, after adding RUN_AT).
+  // At today's geometry allRows ≈ 500–800; cap is defensive against future
+  // phase-taxonomy growth without requiring a code change.
   //
   // Pre/post counts are captured INSIDE withTransaction so telemetry
   // deltas reflect the same atomic snapshot as the writes (would
   // otherwise race with concurrent writers — though the advisory lock
   // mitigates this in practice). Fixes independent FAIL-1.
-  const CALIBRATION_BATCH_SIZE = 5000;  // 5000 × 7 = 35K params per batch
   let upserted = 0;
   let preRowCount = 0;
   let postRowCount = 0;
@@ -330,14 +394,14 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
         const params = [];
         for (let i = 0; i < chunk.length; i++) {
           const row = chunk[i];
-          const base = i * 7;
-          vals.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, NOW())`);
+          const base = i * 8;
+          vals.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`);
           params.push(
             row.from_phase, row.to_phase, row.permit_type,
-            row.median_days, row.p25_days, row.p75_days, row.sample_size,
+            row.median_days, row.p25_days, row.p75_days, row.sample_size, RUN_AT,
           );
         }
-        await client.query(
+        const result = await client.query(
           `INSERT INTO phase_calibration
              (from_phase, to_phase, permit_type, median_days, p25_days, p75_days, sample_size, computed_at)
            VALUES ${vals.join(', ')}
@@ -347,10 +411,13 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
              p25_days = EXCLUDED.p25_days,
              p75_days = EXCLUDED.p75_days,
              sample_size = EXCLUDED.sample_size,
-             computed_at = NOW()`,
+             computed_at = EXCLUDED.computed_at`,
           params,
         );
-        upserted += chunk.length;
+        // spec §8.1: use rowCount not chunk.length — ON CONFLICT guard means
+        // unchanged rows may be skipped (implementation-dependent on PG version,
+        // but rowCount is always the authoritative count of rows touched).
+        upserted += result.rowCount ?? 0;
       }
     }
 
@@ -362,7 +429,30 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
   pipeline.log.info('[calibration-v2]', `Upserted ${upserted} calibration rows`);
 
   // ═══════════════════════════════════════════════════════════
-  // Step 4: Telemetry
+  // Step 4: Post-UPSERT audit (spec 47 §8.2 — real audit_table)
+  // ═══════════════════════════════════════════════════════════
+  const { rows: auditDbRows } = await pool.query(`
+    SELECT
+      COUNT(*)::int AS total_rows,
+      SUM(CASE WHEN median_days < 0 THEN 1 ELSE 0 END)::int AS negative_gap_count,
+      SUM(CASE WHEN p25_days IS NULL OR p75_days IS NULL OR sample_size IS NULL THEN 1 ELSE 0 END)::int AS null_stats_count
+    FROM phase_calibration
+  `);
+  const negativeGapCount = auditDbRows[0]?.negative_gap_count ?? 0;
+  const nullStatsCount   = auditDbRows[0]?.null_stats_count   ?? 0;
+
+  const auditTableRows = [
+    { metric: 'phase_pairs_computed',   value: allRows.length,   threshold: null, status: 'INFO' },
+    { metric: 'pairs_above_threshold',  value: allRows.length,   threshold: 1,    status: allRows.length >= 1  ? 'PASS' : 'WARN' },
+    { metric: 'negative_gap_count',     value: negativeGapCount, threshold: 0,    status: negativeGapCount > 0 ? 'WARN' : 'PASS' },
+    { metric: 'null_stats_count',       value: nullStatsCount,   threshold: 0,    status: nullStatsCount > 0   ? 'WARN' : 'PASS' },
+  ];
+  const auditVerdict =
+    auditTableRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
+    auditTableRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+
+  // ═══════════════════════════════════════════════════════════
+  // Step 5: Telemetry
   // ═══════════════════════════════════════════════════════════
   const newRows = postRowCount - preRowCount;
 
@@ -376,6 +466,13 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
       issued_pairs_by_type: issuedRows.length,
       issued_pairs_all_types: issuedAllRows.length,
       total_calibration_rows: postRowCount,
+      min_sample_size: minSampleSize,
+      audit_table: {
+        phase: 15,
+        name: 'Timing Calibration V2',
+        verdict: auditVerdict,
+        rows: auditTableRows,
+      },
     },
   });
 
@@ -385,7 +482,7 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
       permits: ['permit_num', 'permit_type', 'issued_date'],
     },
     {
-      phase_calibration: ['from_phase', 'to_phase', 'permit_type', 'median_days', 'p25_days', 'p75_days', 'sample_size'],
+      phase_calibration: ['from_phase', 'to_phase', 'permit_type', 'median_days', 'p25_days', 'p75_days', 'sample_size', 'computed_at'],
     },
   );
   } finally {
@@ -400,7 +497,10 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
         { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
       );
     } finally {
-      lockClient.release();
+      if (!lockClientReleased) {
+        lockClientReleased = true;
+        lockClient.release();
+      }
     }
   }
 });

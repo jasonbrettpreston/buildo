@@ -68,6 +68,7 @@ const FALLBACK_LOGIC_VARS = {
   liar_gate_threshold: 0.25,
   lead_expiry_days: 90,
   coa_stall_threshold: 30,
+  calibration_min_sample_size: 5,
 };
 
 /**
