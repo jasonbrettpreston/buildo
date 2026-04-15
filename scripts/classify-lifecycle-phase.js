@@ -16,10 +16,11 @@
  * First-run backfill processes all ~237K permits + ~33K CoAs in one pass.
  * Typical incremental runs process ~5K-15K rows in 2-5 seconds.
  *
- * SPEC LINK: docs/reports/lifecycle_phase_implementation.md §2.3
+ * SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md
  */
 'use strict';
 
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const {
   classifyLifecyclePhase,
@@ -27,16 +28,39 @@ const {
   DEAD_STATUS_ARRAY,
   NORMALIZED_DEAD_DECISIONS_ARRAY,
 } = require('./lib/lifecycle-phase');
-const { loadMarketplaceConfigs } = require('./lib/config-loader');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+
+// ─────────────────────────────────────────────────────────────────
+// Config schema — §4.2: every logic_variable consumed by this script
+// must appear in this Zod schema. Validated at startup before any
+// computation so bad DB values (NULL, empty string, wrong type) throw
+// immediately with a clear message instead of silently producing NaN.
+// ─────────────────────────────────────────────────────────────────
+
+const LIFECYCLE_CONFIG_SCHEMA = z.object({
+  coa_stall_threshold: z.number().positive(),
+});
 
 // ─────────────────────────────────────────────────────────────────
 // Batch UPDATE SQL builders — batched via VALUES clause to avoid
-// 65535-parameter PG limit. Batch size 500 × 4 params = 2000 params
-// per UPDATE, well under the limit.
-// ─────────────────────────────────────────────────────────────────
+// 65535-parameter PG limit.
+//
+// §6.3: batch sizes MUST be computed via Math.floor(65535 / column_count).
+//
+// PERMIT_BATCH_SIZE limited by the transition INSERT (7 params/row:
+// permit_num, revision_num, from_phase, to_phase, RUN_AT, permit_type,
+// neighbourhood_id). Transitions can equal the full batch on first-run
+// backfill. (65535 - 1) / 7 = 9362.
+// The phase UPDATE uses 4 data params/row + 1 RUN_AT appended =
+// 9362*4+1 = 37449 — well under the 65535 limit.
+const PERMIT_TRANSITION_COLS = 7;
+const PERMIT_BATCH_SIZE = Math.floor((65535 - 1) / PERMIT_TRANSITION_COLS); // = 9362
 
-const PERMIT_BATCH_SIZE = 500;
-const COA_BATCH_SIZE = 1000;
+// COA_BATCH_SIZE: 3 data cols (id, phase, stalled) + 1 RUN_AT appended = 4 params/row.
+// (65535 - 1) / 4 = 16383.
+const COA_COLS = 3;
+const COA_BATCH_SIZE = Math.floor((65535 - 1) / (COA_COLS + 1)); // = 16383
+// ─────────────────────────────────────────────────────────────────
 
 function buildPermitUpdateSQL(batchSize) {
   const tuples = [];
@@ -51,14 +75,20 @@ function buildPermitUpdateSQL(batchSize) {
   // lifecycle_stalled changes. This creates the immutable "start time"
   // anchor required for countdown math. If only stalled changed, the
   // existing phase_started_at is preserved.
+  //
+  // §14.2: RUN_AT ($runAtParam) is appended as the last parameter after all
+  // batch rows. Using a single captured DB timestamp prevents Midnight Cross
+  // drift where batches processed after 00:00 get a different date than
+  // earlier batches in the same run.
+  const runAtParam = batchSize * 4 + 1;
   return `
     UPDATE permits p
        SET lifecycle_phase = v.phase,
            lifecycle_stalled = v.stalled,
-           lifecycle_classified_at = NOW(),
+           lifecycle_classified_at = $${runAtParam}::timestamptz,
            phase_started_at = CASE
              WHEN p.lifecycle_phase IS DISTINCT FROM v.phase
-             THEN NOW()
+             THEN $${runAtParam}::timestamptz
              ELSE p.phase_started_at
            END
       FROM (VALUES ${tuples.join(', ')}) AS v(permit_num, revision_num, phase, stalled)
@@ -78,11 +108,15 @@ function buildCoaUpdateSQL(batchSize) {
   // WF3 2026-04-13 — lifecycle_stalled added (migration 094).
   // IS DISTINCT FROM guard on EITHER phase or stalled so we don't
   // bump lifecycle_classified_at when nothing actually changed.
+  //
+  // §14.2: RUN_AT ($runAtParam) appended as last parameter — same clock
+  // source as the permit path, preventing Midnight Cross drift.
+  const runAtParam = batchSize * 3 + 1;
   return `
     UPDATE coa_applications ca
        SET lifecycle_phase = v.phase,
            lifecycle_stalled = v.stalled,
-           lifecycle_classified_at = NOW()
+           lifecycle_classified_at = $${runAtParam}::timestamptz
       FROM (VALUES ${tuples.join(', ')}) AS v(id, phase, stalled)
      WHERE ca.id = v.id
        AND (ca.lifecycle_phase IS DISTINCT FROM v.phase
@@ -102,14 +136,6 @@ function flattenCoaBatch(rows) {
   const out = [];
   for (const r of rows) {
     out.push(r.id, r.phase, r.stalled);
-  }
-  return out;
-}
-
-function chunkArray(arr, size) {
-  const out = [];
-  for (let i = 0; i < arr.length; i += size) {
-    out.push(arr.slice(i, i + size));
   }
   return out;
 }
@@ -135,7 +161,14 @@ if (NORMALIZED_DEAD_DECISIONS_ARRAY.length === 0) {
 const ADVISORY_LOCK_ID = 85;
 
 pipeline.run('classify-lifecycle-phase', async (pool) => {
-  const now = new Date();
+
+  // §R3.5 / §14.1 — Capture DB clock ONCE as the very first query.
+  // All batch UPDATEs/INSERTs that set a timestamp column pass RUN_AT
+  // as $N — never calling NOW() inside loops. Using the DB timestamp
+  // (not new Date()) ensures the JS and SQL sides share the same clock
+  // source and TZ session, preventing Midnight Cross drift where batches
+  // processed across midnight get different dates.
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
 
   // ═══════════════════════════════════════════════════════════
   // Load Control Panel (WF3 2026-04-13)
@@ -144,6 +177,20 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // to flag CoAs stuck in P1/P2 for too long. Falls back gracefully if
   // the control panel query fails.
   const { logicVars } = await loadMarketplaceConfigs(pool, 'classify-lifecycle-phase');
+
+  // §4.2 — Validate all logic_variables consumed by this script BEFORE
+  // any computation. Throws if coa_stall_threshold is missing, non-numeric,
+  // or non-positive (e.g. DB NULL → undefined → Zod .positive() rejects).
+  // Prevents the silent-NaN failure mode (H-W11): bad value → NaN →
+  // stall logic quietly disabled for all CoAs.
+  const configValidation = validateLogicVars(
+    logicVars, LIFECYCLE_CONFIG_SCHEMA, 'classify-lifecycle-phase',
+  );
+  if (!configValidation.valid) {
+    throw new Error(
+      `[classify-lifecycle-phase] config validation failed: ${configValidation.errors.join('; ')}`,
+    );
+  }
   const COA_STALL_THRESHOLD_DAYS = logicVars.coa_stall_threshold;
 
   // ═══════════════════════════════════════════════════════════
@@ -159,6 +206,29 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // A dedicated client stays checked out (not idle in the pool) for
   // the full run duration. See WF3 Bug #1.
   const lockClient = await pool.connect();
+  let lockClientReleased = false;
+
+  // §5.5 — Graceful shutdown: register SIGTERM handler immediately after
+  // pool.connect() so any container preemption (Kubernetes scale-down,
+  // OOM kill, manual kill -15) releases advisory lock 85 before the
+  // process exits. Without this, a forced kill bypasses the finally block,
+  // orphaning the lock permanently — blocking all future classifier runs
+  // until a DBA manually runs pg_advisory_unlock(85).
+  process.on('SIGTERM', async () => {
+    pipeline.log.warn(
+      '[classify-lifecycle-phase]',
+      'Received SIGTERM. Releasing advisory lock and shutting down gracefully...',
+    );
+    try {
+      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+    } catch (e) { /* best-effort — lock expires with the session anyway */ }
+    if (!lockClientReleased) {
+      lockClientReleased = true;
+      lockClient.release();
+    }
+    process.exit(143);
+  });
+
   try {
     const { rows: lockRows } = await lockClient.query(
       'SELECT pg_try_advisory_lock($1) AS got',
@@ -184,10 +254,12 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       // this, the return escapes before the outer try/finally where
       // lockClient.release() lives, leaking one pool connection on
       // every skipped run. Found by independent review, Item 1.
+      lockClientReleased = true;
       lockClient.release();
       return;
     }
   } catch (lockErr) {
+    lockClientReleased = true;
     lockClient.release();
     throw lockErr;
   }
@@ -203,16 +275,23 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // across 243K permits (→ multi-hour classifier run).
   //
   // Instead we do three O(n) passes:
-  //   1. Load the minimal dirty-permit columns (partial index covers this)
-  //   2. Load BLD/CMB permit_nums and build Map<prefix, Set<permit_num>>
+  //   1. Load BLD/CMB permit_nums and build Map<prefix, Set<permit_num>>
   //      for in-memory orphan detection
-  //   3. Load inspection rollups via SQL aggregation (Postgres returns
+  //   2. Load inspection rollups via SQL aggregation (Postgres returns
   //      ~10K pre-aggregated rows, not the full 94K raw table)
-  //   4. Classify each dirty permit in JS using the two Maps
+  //   3. Stream dirty permits via pipeline.streamQuery, classify each row
+  //      inline using the two Maps, flush per PERMIT_BATCH_SIZE batch
+  //
+  // §6.2: `permits` is a mandatory streaming table. Loading all dirty
+  // permits into a single Node array via pool.query() risks OOM on
+  // first-run backfill where 200K+ rows may be dirty simultaneously.
+  // streamQuery provides backpressure — the cursor pauses during each
+  // flushPermitBatch() withTransaction, so the heap holds at most
+  // PERMIT_BATCH_SIZE rows (9362) at a time, not the full dirty set.
   //
   // WATERMARK RACE NOTE (WF3 Bug #5, document only):
   // Between the dirty-SELECT and the per-batch UPDATE that writes
-  // lifecycle_classified_at = NOW(), a concurrent writer (e.g.,
+  // lifecycle_classified_at = RUN_AT, a concurrent writer (e.g.,
   // load-permits.js or link-coa.js) can bump a permit's last_seen_at.
   // The classifier sees stale data for that row but stamps it with a
   // classified_at AFTER the concurrent writer's last_seen_at, so the
@@ -223,23 +302,10 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // data. No code fix needed — the alternative (SELECT FOR UPDATE)
   // would block the entire permits pipeline for ~170s.
 
-  pipeline.log.info('[classify-lifecycle-phase]', 'Querying dirty permits...');
-  const permitsResult = await pool.query(
-    `SELECT permit_num, revision_num, status, enriched_status, issued_date, last_seen_at,
-            lifecycle_phase AS old_phase, permit_type, neighbourhood_id
-       FROM permits
-      WHERE lifecycle_classified_at IS NULL
-         OR last_seen_at > lifecycle_classified_at`,
-  );
-  const dirtyPermits = permitsResult.rows;
-  pipeline.log.info(
-    '[classify-lifecycle-phase]',
-    `Dirty permits: ${dirtyPermits.length.toLocaleString()}`,
-  );
-
-  // Build orphan-detection map: prefix ("YY NNNNNNN") → Set of permit_nums
-  // for permits whose third token is BLD or CMB. A dirty permit is an
-  // orphan iff no OTHER permit with the same prefix is in the set.
+  // Build orphan-detection map FIRST so it is ready when streaming begins.
+  // Uses pool.query (not streamQuery) because only one column (permit_num)
+  // is fetched — ~5MB of string data for ~237K rows, well within heap bounds.
+  // The bldCmbByPrefix Map stores only Set<string> per prefix, not full rows.
   pipeline.log.info('[classify-lifecycle-phase]', 'Building BLD/CMB prefix map...');
   const bldCmbResult = await pool.query(
     `SELECT permit_num FROM permits
@@ -267,6 +333,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // raw permit_inspections table. Postgres is faster at this than JS, and
   // the approach avoids shipping 94K rows over the wire and building a
   // manual rollup in a for-loop. See WF3 Bug #2.
+  // Acceptable as pool.query: result is a bounded aggregate (~10K rows).
   pipeline.log.info('[classify-lifecycle-phase]', 'Building inspection rollup map...');
   const inspResult = await pool.query(
     `WITH latest_passed AS (
@@ -303,13 +370,151 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     `Inspection rollups built for ${inspByPermit.size.toLocaleString()} permits`,
   );
 
-  // Apply pure function to every dirty row — all lookups are O(1)
+  // Apply pure function to every dirty row during streaming — all lookups are O(1)
   const EMPTY_INSP = {
     latest_passed_stage: null,
     latest_inspection_date: null,
     has_passed_inspection: false,
   };
-  const permitUpdates = dirtyPermits.map((row) => {
+
+  // Suppress intra-bucket time-driven transitions (HIGH-1 from
+  // adversarial + independent reviews): P7a/P7b/P7c are purely
+  // time-bucketed sub-phases — a P7a→P7b "transition" is just
+  // the permit aging past 30 days, not a real construction event.
+  // Logging these would flood the calibration table with thousands
+  // of tautological 60-day "transitions." Same for O2↔O3 (orphan
+  // active → orphan stalled at 180 days).
+  // P7d (Not Started) is NOT suppressed — P7d→P7a means the status
+  // changed from "Work Not Started" to "Permit Issued", which IS real.
+  const TIME_BUCKET_GROUPS = {
+    P7a: 'P7_time', P7b: 'P7_time', P7c: 'P7_time',
+    O2: 'O_time', O3: 'O_time',
+  };
+
+  let dirtyPermitsCount = 0;
+  let permitsUpdated = 0;
+  let transitionsLogged = 0;
+  let permitBatchIndex = 0;
+
+  // Per-batch flush — called from the streaming loop below and again for
+  // the remainder. Closes over pool, RUN_AT, and the counters above.
+  //
+  // Design notes (adversarial review C2 + independent Defect 1):
+  //   • The prior version wrapped all 484 batches in ONE transaction,
+  //     holding row-level locks on every dirty permit for ~130s during
+  //     the first-run backfill. That blocked concurrent writers.
+  //   • It also ran the `classified_at` stamp for unchanged rows
+  //     OUTSIDE the transaction, creating a consistency gap where a
+  //     crash after phase-commit but before stamp-commit would leave
+  //     the "unchanged rows" bucket unable to drain on future runs.
+  //   • Fix: each batch's phase UPDATE + per-batch stamp UPDATE run
+  //     together inside a single small withTransaction. Locks are
+  //     released between batches (concurrent writers can interleave),
+  //     and phase+stamp always commit atomically per batch.
+  const flushPermitBatch = async (batch) => {
+    if (batch.length === 0) return;
+    permitBatchIndex++;
+
+    const sql = buildPermitUpdateSQL(batch.length);
+    // RUN_AT appended as last param — matches $${batchSize*4+1}::timestamptz
+    // in the SQL returned by buildPermitUpdateSQL.
+    const params = [...flattenPermitBatch(batch), RUN_AT];
+    const batchPnums = batch.map((r) => r.permit_num);
+    const batchRnums = batch.map((r) => r.revision_num);
+
+    // Identify rows in this batch where lifecycle_phase actually
+    // changes (not just stalled). These are the transitions we log.
+    const transitions = batch.filter((r) => {
+      if (r.phase === r.old_phase || r.phase === null) return false;
+      // Suppress intra-bucket shifts
+      const oldGroup = TIME_BUCKET_GROUPS[r.old_phase];
+      const newGroup = TIME_BUCKET_GROUPS[r.phase];
+      if (oldGroup && oldGroup === newGroup) return false;
+      return true;
+    });
+
+    await pipeline.withTransaction(pool, async (client) => {
+      // (a) Phase/stalled UPDATE + conditional phase_started_at stamp.
+      const result = await client.query(sql, params);
+      permitsUpdated += result.rowCount || 0;
+
+      // (b) Log phase transitions to permit_phase_transitions.
+      // Only fires for rows where the phase actually changed (not
+      // stalled-only). Runs inside the same transaction so the
+      // permit row and its transition history are always consistent.
+      if (transitions.length > 0) {
+        const tVals = [];
+        const tParams = [];
+        for (let j = 0; j < transitions.length; j++) {
+          const t = transitions[j];
+          // 7 params per row: permit_num, revision_num, from_phase,
+          // to_phase, RUN_AT (§14.2), permit_type, neighbourhood_id.
+          // base = j * 7.
+          // Prior adversarial CRITICAL-1 fixed j*7 → j*6 when NOW()
+          // was inline SQL (only 6 real params per row). Now that RUN_AT
+          // is an explicit parameter, 7 params/row is correct — j*6
+          // would cause param misalignment on batches with 2+ transitions.
+          const base = j * 7;
+          tVals.push(
+            `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}::timestamptz, $${base + 6}, $${base + 7}::int)`,
+          );
+          tParams.push(
+            t.permit_num, t.revision_num,
+            t.old_phase,  // from_phase (NULL on first classification)
+            t.phase,      // to_phase
+            RUN_AT,       // transitioned_at — §14.2 RUN_AT, not NOW()
+            t.permit_type,
+            t.neighbourhood_id,
+          );
+        }
+        const insertResult = await client.query(
+          `INSERT INTO permit_phase_transitions
+             (permit_num, revision_num, from_phase, to_phase, transitioned_at, permit_type, neighbourhood_id)
+           VALUES ${tVals.join(', ')}`,
+          tParams,
+        );
+        transitionsLogged += insertResult.rowCount || 0;
+      }
+
+      // (c) Stamp classified_at for every row in this batch that is
+      // still dirty (last_seen_at > classified_at). This covers both
+      // (i) rows just updated by (a) — redundant, idempotent — and
+      // (ii) rows (a) skipped because phase was already correct.
+      // §14.2: $3 is RUN_AT — same snapshot timestamp used throughout the run.
+      await client.query(
+        `UPDATE permits
+            SET lifecycle_classified_at = $3::timestamptz
+           FROM unnest($1::text[], $2::text[]) AS t(permit_num, revision_num)
+          WHERE permits.permit_num = t.permit_num
+            AND permits.revision_num = t.revision_num
+            AND (permits.lifecycle_classified_at IS NULL
+                 OR permits.last_seen_at > permits.lifecycle_classified_at)`,
+        [batchPnums, batchRnums, RUN_AT],
+      );
+    });
+
+    // Progress log every 50 batches
+    if (permitBatchIndex % 50 === 0) {
+      pipeline.log.info(
+        '[classify-lifecycle-phase]',
+        `Permits batch ${permitBatchIndex} (${permitsUpdated.toLocaleString()} updated so far)`,
+      );
+    }
+  };
+
+  pipeline.log.info('[classify-lifecycle-phase]', 'Streaming dirty permits...');
+  let permitBatch = [];
+  for await (const row of pipeline.streamQuery(
+    pool,
+    `SELECT permit_num, revision_num, status, enriched_status, issued_date, last_seen_at,
+            lifecycle_phase AS old_phase, permit_type, neighbourhood_id
+       FROM permits
+      WHERE lifecycle_classified_at IS NULL
+         OR last_seen_at > lifecycle_classified_at`,
+  )) {
+    dirtyPermitsCount++;
+
+    // Orphan detection — O(1) lookup via bldCmbByPrefix Map
     const parts = row.permit_num.split(' ');
     let is_orphan = true;
     if (parts.length >= 3) {
@@ -335,9 +540,9 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       latest_passed_stage: insp.latest_passed_stage,
       latest_inspection_date: insp.latest_inspection_date,
       has_passed_inspection: insp.has_passed_inspection,
-      now,
+      now: RUN_AT,
     });
-    return {
+    permitBatch.push({
       permit_num: row.permit_num,
       revision_num: row.revision_num,
       phase: result.phase,
@@ -348,151 +553,84 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       old_phase: row.old_phase,
       permit_type: row.permit_type,
       neighbourhood_id: row.neighbourhood_id,
-    };
-  });
+    });
 
-  let permitsUpdated = 0;
-  let transitionsLogged = 0;
-  if (permitUpdates.length > 0) {
-    // Per-batch small transactions — each batch commits independently.
-    //
-    // Design notes (adversarial review C2 + independent Defect 1):
-    //   • The prior version wrapped all 484 batches in ONE transaction,
-    //     holding row-level locks on every dirty permit for ~130s during
-    //     the first-run backfill. That blocked concurrent writers.
-    //   • It also ran the `classified_at` stamp for unchanged rows
-    //     OUTSIDE the transaction, creating a consistency gap where a
-    //     crash after phase-commit but before stamp-commit would leave
-    //     the "unchanged rows" bucket unable to drain on future runs.
-    //   • Fix: each batch's phase UPDATE + per-batch stamp UPDATE run
-    //     together inside a single small withTransaction. Locks are
-    //     released between batches (concurrent writers can interleave),
-    //     and phase+stamp always commit atomically per batch.
-    const batches = chunkArray(permitUpdates, PERMIT_BATCH_SIZE);
-    for (let i = 0; i < batches.length; i++) {
-      const batch = batches[i];
-      const sql = buildPermitUpdateSQL(batch.length);
-      const params = flattenPermitBatch(batch);
-      const batchPnums = batch.map((r) => r.permit_num);
-      const batchRnums = batch.map((r) => r.revision_num);
-
-      // Identify rows in this batch where lifecycle_phase actually
-      // changes (not just stalled). These are the transitions we log.
-      //
-      // Suppress intra-bucket time-driven transitions (HIGH-1 from
-      // adversarial + independent reviews): P7a/P7b/P7c are purely
-      // time-bucketed sub-phases — a P7a→P7b "transition" is just
-      // the permit aging past 30 days, not a real construction event.
-      // Logging these would flood the calibration table with thousands
-      // of tautological 60-day "transitions." Same for O2↔O3 (orphan
-      // active → orphan stalled at 180 days).
-      // P7d (Not Started) is NOT suppressed — P7d→P7a means the status
-      // changed from "Work Not Started" to "Permit Issued", which IS real.
-      const TIME_BUCKET_GROUPS = {
-        P7a: 'P7_time', P7b: 'P7_time', P7c: 'P7_time',
-        O2: 'O_time', O3: 'O_time',
-      };
-      const transitions = batch.filter((r) => {
-        if (r.phase === r.old_phase || r.phase === null) return false;
-        // Suppress intra-bucket shifts
-        const oldGroup = TIME_BUCKET_GROUPS[r.old_phase];
-        const newGroup = TIME_BUCKET_GROUPS[r.phase];
-        if (oldGroup && oldGroup === newGroup) return false;
-        return true;
-      });
-
-      await pipeline.withTransaction(pool, async (client) => {
-        // (a) Phase/stalled UPDATE + conditional phase_started_at stamp.
-        const result = await client.query(sql, params);
-        permitsUpdated += result.rowCount || 0;
-
-        // (b) Log phase transitions to permit_phase_transitions.
-        // Only fires for rows where the phase actually changed (not
-        // stalled-only). Runs inside the same transaction so the
-        // permit row and its transition history are always consistent.
-        if (transitions.length > 0) {
-          const tVals = [];
-          const tParams = [];
-          for (let j = 0; j < transitions.length; j++) {
-            const t = transitions[j];
-            // 6 params per row (NOW() is inline SQL, not a param).
-            // CRITICAL fix: was j*7, causing param misalignment on
-            // batches with 2+ transitions. Adversarial CRITICAL-1.
-            const base = j * 6;
-            tVals.push(
-              `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, NOW(), $${base + 5}, $${base + 6}::int)`,
-            );
-            tParams.push(
-              t.permit_num, t.revision_num,
-              t.old_phase,  // from_phase (NULL on first classification)
-              t.phase,      // to_phase
-              t.permit_type,
-              t.neighbourhood_id,
-            );
-          }
-          const insertResult = await client.query(
-            `INSERT INTO permit_phase_transitions
-               (permit_num, revision_num, from_phase, to_phase, transitioned_at, permit_type, neighbourhood_id)
-             VALUES ${tVals.join(', ')}`,
-            tParams,
-          );
-          transitionsLogged += insertResult.rowCount || 0;
-        }
-
-        // (c) Stamp classified_at for every row in this batch that is
-        // still dirty (last_seen_at > classified_at). This covers both
-        // (i) rows just updated by (a) — redundant, idempotent — and
-        // (ii) rows (a) skipped because phase was already correct.
-        await client.query(
-          `UPDATE permits
-              SET lifecycle_classified_at = NOW()
-            FROM unnest($1::text[], $2::text[]) AS t(permit_num, revision_num)
-           WHERE permits.permit_num = t.permit_num
-             AND permits.revision_num = t.revision_num
-             AND (permits.lifecycle_classified_at IS NULL
-                  OR permits.last_seen_at > permits.lifecycle_classified_at)`,
-          [batchPnums, batchRnums],
-        );
-      });
-
-      // Progress log every 50 batches
-      if ((i + 1) % 50 === 0 || i === batches.length - 1) {
-        pipeline.log.info(
-          '[classify-lifecycle-phase]',
-          `Permits batch ${i + 1}/${batches.length} (${permitsUpdated.toLocaleString()} updated so far)`,
-        );
-      }
+    if (permitBatch.length >= PERMIT_BATCH_SIZE) {
+      await flushPermitBatch(permitBatch);
+      permitBatch = [];
     }
   }
+  // Flush remainder
+  if (permitBatch.length > 0) {
+    await flushPermitBatch(permitBatch);
+    permitBatch = [];
+  }
+  pipeline.log.info(
+    '[classify-lifecycle-phase]',
+    `Permits streaming complete: ${dirtyPermitsCount.toLocaleString()} dirty, ${permitsUpdated.toLocaleString()} updated, ${transitionsLogged.toLocaleString()} transitions`,
+  );
 
   // ═══════════════════════════════════════════════════════════
   // Phase 2: classify dirty CoA rows
   // ═══════════════════════════════════════════════════════════
-  pipeline.log.info('[classify-lifecycle-phase]', 'Querying dirty CoAs...');
-  // WF3 2026-04-13 — days_since_activity computed in SQL so the pure
-  // classifier stays portable (no `new Date()` in the library). Days is
-  // since the most recent activity signal we have (last_seen_at).
+  //
+  // §6.2: `coa_applications` is a mandatory streaming table. Using
+  // pipeline.streamQuery prevents OOM on backfills where all 33K+
+  // CoA rows may be dirty simultaneously.
+  //
+  // §14.2: days_since_activity computed against $1::timestamptz (RUN_AT)
+  // so all rows in the stream use the same instant — no NOW() drift.
+  //
   // Adversarial Probe 6: NULL last_seen_at must not silently degrade to
   // days_since_activity = 0. `GREATEST(0, NULL) = NULL` → Number(null) = 0
   // in JS, masking the null. Use an explicit CASE so the classifier sees
   // null (→ stalled=false, the only safe default for unknown activity).
-  const coaResult = await pool.query(
+  pipeline.log.info(
+    '[classify-lifecycle-phase]',
+    `Streaming dirty CoAs (stall threshold=${COA_STALL_THRESHOLD_DAYS}d)...`,
+  );
+
+  let dirtyCoAsCount = 0;
+  let coasUpdated = 0;
+
+  const flushCoaBatch = async (batch) => {
+    if (batch.length === 0) return;
+
+    const sql = buildCoaUpdateSQL(batch.length);
+    // RUN_AT appended as last param — matches $${batchSize*3+1}::timestamptz.
+    const params = [...flattenCoaBatch(batch), RUN_AT];
+    const batchIds = batch.map((r) => r.id);
+
+    await pipeline.withTransaction(pool, async (client) => {
+      const result = await client.query(sql, params);
+      coasUpdated += result.rowCount || 0;
+
+      // §14.2: $2 is RUN_AT — same snapshot as the phase UPDATE above.
+      await client.query(
+        `UPDATE coa_applications
+            SET lifecycle_classified_at = $2::timestamptz
+          WHERE id = ANY($1::int[])
+            AND (lifecycle_classified_at IS NULL
+                 OR last_seen_at > lifecycle_classified_at)`,
+        [batchIds, RUN_AT],
+      );
+    });
+  };
+
+  let coaBatch = [];
+  for await (const row of pipeline.streamQuery(
+    pool,
     `SELECT id, decision, linked_permit_num, status, last_seen_at,
             CASE
               WHEN last_seen_at IS NULL THEN NULL
-              ELSE GREATEST(0, EXTRACT(EPOCH FROM (NOW() - last_seen_at)) / 86400.0)
+              ELSE GREATEST(0, EXTRACT(EPOCH FROM ($1::timestamptz - last_seen_at)) / 86400.0)
             END::float AS days_since_activity
        FROM coa_applications
       WHERE lifecycle_classified_at IS NULL
          OR last_seen_at > lifecycle_classified_at`,
-  );
-  const dirtyCoAs = coaResult.rows;
-  pipeline.log.info(
-    '[classify-lifecycle-phase]',
-    `Dirty CoAs: ${dirtyCoAs.length.toLocaleString()} (stall threshold=${COA_STALL_THRESHOLD_DAYS}d)`,
-  );
-
-  const coaUpdates = dirtyCoAs.map((row) => {
+    [RUN_AT],
+  )) {
+    dirtyCoAsCount++;
     const result = classifyCoaPhase({
       decision: row.decision,
       linked_permit_num: row.linked_permit_num,
@@ -500,35 +638,22 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       daysSinceActivity: row.days_since_activity,
       stallThresholdDays: COA_STALL_THRESHOLD_DAYS,
     });
-    return { id: row.id, phase: result.phase, stalled: result.stalled };
-  });
+    coaBatch.push({ id: row.id, phase: result.phase, stalled: result.stalled });
 
-  let coasUpdated = 0;
-  if (coaUpdates.length > 0) {
-    // Per-batch small transactions — same design as the permit path.
-    // Phase UPDATE + per-batch classified_at stamp run under a single
-    // withTransaction so partial commits are impossible.
-    const batches = chunkArray(coaUpdates, COA_BATCH_SIZE);
-    for (const batch of batches) {
-      const sql = buildCoaUpdateSQL(batch.length);
-      const params = flattenCoaBatch(batch);
-      const batchIds = batch.map((r) => r.id);
-
-      await pipeline.withTransaction(pool, async (client) => {
-        const result = await client.query(sql, params);
-        coasUpdated += result.rowCount || 0;
-
-        await client.query(
-          `UPDATE coa_applications
-              SET lifecycle_classified_at = NOW()
-            WHERE id = ANY($1::int[])
-              AND (lifecycle_classified_at IS NULL
-                   OR last_seen_at > lifecycle_classified_at)`,
-          [batchIds],
-        );
-      });
+    if (coaBatch.length >= COA_BATCH_SIZE) {
+      await flushCoaBatch(coaBatch);
+      coaBatch = [];
     }
   }
+  // Flush remainder
+  if (coaBatch.length > 0) {
+    await flushCoaBatch(coaBatch);
+    coaBatch = [];
+  }
+  pipeline.log.info(
+    '[classify-lifecycle-phase]',
+    `CoAs streaming complete: ${dirtyCoAsCount.toLocaleString()} dirty, ${coasUpdated.toLocaleString()} updated`,
+  );
 
   // ═══════════════════════════════════════════════════════════
   // Phase 2b: backfill phase_started_at for existing permits
@@ -544,6 +669,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   //   O1-O3          → COALESCE(application_date, first_seen_at)
   //
   // Idempotent: WHERE phase_started_at IS NULL. Second run = 0 rows.
+  // All timestamp sources are existing DB column values — no NOW() needed.
   const { rows: backfillRows } = await pool.query(
     `UPDATE permits
         SET phase_started_at = CASE
@@ -595,13 +721,16 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // fine inside one transaction at this row count — Postgres holds
   // the WAL frame in memory and commits at COMMIT, with rollback on
   // any error.
+  //
+  // §14.2: COALESCE(phase_started_at, $1::timestamptz) — RUN_AT as
+  // the fallback when phase_started_at is NULL, avoiding an inline NOW().
   let initialTransCount = 0;
   await pipeline.withTransaction(pool, async (client) => {
     const { rows: initialTransRows } = await client.query(
       `INSERT INTO permit_phase_transitions
          (permit_num, revision_num, from_phase, to_phase, transitioned_at, permit_type, neighbourhood_id)
        SELECT permit_num, revision_num, NULL, lifecycle_phase,
-              COALESCE(phase_started_at, NOW()),
+              COALESCE(phase_started_at, $1::timestamptz),
               permit_type, neighbourhood_id
          FROM permits
         WHERE lifecycle_phase IS NOT NULL
@@ -611,6 +740,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
                AND t.revision_num = permits.revision_num
           )
       RETURNING 1`,
+      [RUN_AT],
     );
     initialTransCount = initialTransRows.length;
   });
@@ -686,9 +816,9 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
 
   // Build audit_table rows for the admin dashboard
   const auditRows = [
-    { metric: 'permits_dirty', value: dirtyPermits.length, threshold: null, status: 'INFO' },
+    { metric: 'permits_dirty', value: dirtyPermitsCount, threshold: null, status: 'INFO' },
     { metric: 'permits_updated', value: permitsUpdated, threshold: null, status: 'INFO' },
-    { metric: 'coas_dirty', value: dirtyCoAs.length, threshold: null, status: 'INFO' },
+    { metric: 'coas_dirty', value: dirtyCoAsCount, threshold: null, status: 'INFO' },
     { metric: 'coas_updated', value: coasUpdated, threshold: null, status: 'INFO' },
     { metric: 'stalled_count', value: stalledCount, threshold: null, status: 'INFO' },
     {
@@ -722,7 +852,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   }
 
   pipeline.emitSummary({
-    records_total: dirtyPermits.length + dirtyCoAs.length,
+    records_total: dirtyPermitsCount + dirtyCoAsCount,
     records_new: 0,
     records_updated: permitsUpdated + coasUpdated,
     records_meta: {
@@ -792,7 +922,10 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
         { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
       );
     } finally {
-      lockClient.release();
+      if (!lockClientReleased) {
+        lockClientReleased = true;
+        lockClient.release();
+      }
     }
   }
 });

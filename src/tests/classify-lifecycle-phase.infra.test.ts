@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/reports/lifecycle_phase_implementation.md §2.3 §2.4 §3.3
+// 🔗 SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §2.3 §2.4 §3.3
 //
 // File-shape infra tests for the lifecycle-phase pipeline scripts and
 // their chain wiring. These tests do not hit a live DB — they regex
@@ -31,6 +31,36 @@ describe('scripts/classify-lifecycle-phase.js — pipeline shape', () => {
   let content: string;
   beforeAll(() => {
     content = read('scripts/classify-lifecycle-phase.js');
+  });
+
+  it('SPEC LINK header points to the canonical spec file, not a report', () => {
+    // §3.0: SPEC LINK must reference docs/specs/... never docs/reports/...
+    // Common failure mode caught in 81/82/84/85/86 — report links meant reviewers
+    // had no authoritative source, causing spec-vs-code drift to go undetected.
+    expect(content).toMatch(
+      /SPEC LINK:\s*docs\/specs\/product\/future\/84_lifecycle_phase_engine\.md/,
+    );
+    expect(content).not.toMatch(/SPEC LINK:.*docs\/reports\//);
+  });
+
+  it('captures RUN_AT from SELECT NOW() as the first query inside pipeline.run', () => {
+    // §14.1 / §R3.5: RUN_AT must be captured from the DB clock before config
+    // load, lock acquisition, and any batch writes. Using DB timestamp (not
+    // new Date()) ensures JS and SQL share the same clock source and TZ session.
+    expect(content).toMatch(/SELECT NOW\(\)\s*AS\s*now/i);
+    expect(content).toMatch(/RUN_AT/);
+    // Must NOT derive run timestamp from JS new Date()
+    expect(content).not.toMatch(/const\s+(?:now|RUN_AT)\s*=\s*new Date\(\)/);
+  });
+
+  it('derives PERMIT_BATCH_SIZE from Math.floor formula (not a hardcoded magic number)', () => {
+    // §6.3: batch sizes MUST be computed via Math.floor(65535 / column_count).
+    // Hardcoded magic numbers (e.g. 500, 1000) bypass the guard and become
+    // stale when column counts change.
+    expect(content).toMatch(/PERMIT_BATCH_SIZE\s*=\s*Math\.floor\(/);
+    expect(content).toMatch(/COA_BATCH_SIZE\s*=\s*Math\.floor\(/);
+    expect(content).not.toMatch(/const PERMIT_BATCH_SIZE\s*=\s*\d+;/);
+    expect(content).not.toMatch(/const COA_BATCH_SIZE\s*=\s*\d+;/);
   });
 
   it('uses pipeline.run wrapper with correct name', () => {
@@ -128,10 +158,17 @@ describe('scripts/classify-lifecycle-phase.js — pipeline shape', () => {
     // won't be touched by the UPDATE (IS DISTINCT FROM is false), so
     // we need a second pass to bump classified_at. Otherwise every
     // run re-examines the same 243K rows.
+    //
+    // §14.2: stamp uses $N::timestamptz (RUN_AT), not NOW(), to prevent
+    // Midnight Cross drift where batches across midnight get different dates.
     expect(content).toMatch(
-      /UPDATE permits[\s\S]*?SET\s+lifecycle_classified_at\s*=\s*NOW\(\)/,
+      /UPDATE permits[\s\S]*?SET\s+lifecycle_classified_at\s*=\s*\$\d+::timestamptz/,
     );
     expect(content).toMatch(/unnest\(/);
+    // Must NOT use bare NOW() in the permit stamp UPDATE
+    expect(content).not.toMatch(
+      /SET\s+lifecycle_classified_at\s*=\s*NOW\(\)[\s\S]*?unnest\(/,
+    );
   });
 
   it('enforces blocking unclassified threshold of 100', () => {
@@ -175,6 +212,63 @@ describe('scripts/classify-lifecycle-phase.js — pipeline shape', () => {
   });
 });
 
+describe('scripts/classify-lifecycle-phase.js — Spec 47 §4 config validation', () => {
+  let content: string;
+  beforeAll(() => {
+    content = read('scripts/classify-lifecycle-phase.js');
+  });
+
+  it('imports validateLogicVars from config-loader', () => {
+    // §4.2: validateLogicVars is the Zod-backed validation helper exported
+    // by config-loader. Scripts must import and call it after loadMarketplaceConfigs.
+    expect(content).toMatch(/validateLogicVars/);
+    expect(content).toMatch(
+      /require\(['"]\.\/lib\/config-loader['"]\)/,
+    );
+  });
+
+  it('validates coa_stall_threshold with a Zod schema before computation', () => {
+    // §4.2: all logic_variables consumed by this script must pass Zod
+    // validation at startup. Prevents silent NaN/undefined propagation
+    // (e.g. DB NULL → parseFloat(null) → NaN → stall logic silently disabled).
+    expect(content).toMatch(/z\.object\(/);
+    expect(content).toMatch(/coa_stall_threshold[\s\S]{0,50}z\.number\(\)/);
+    expect(content).toMatch(/validateLogicVars\(\s*logicVars/);
+    // Validation result must be checked and thrown on failure
+    expect(content).toMatch(/if\s*\(.*\.valid/);
+  });
+});
+
+describe('scripts/classify-lifecycle-phase.js — Spec 47 §6 streaming compliance', () => {
+  let content: string;
+  beforeAll(() => {
+    content = read('scripts/classify-lifecycle-phase.js');
+  });
+
+  it('uses pipeline.streamQuery for dirty permits (§6.2 mandatory streaming table)', () => {
+    // §6.2: `permits` is a mandatory streaming table. pool.query() for dirty
+    // permits risks OOM on first-run backfill where 200K+ rows may be dirty.
+    // streamQuery provides backpressure — the cursor pauses during each batch
+    // commit so the heap holds at most PERMIT_BATCH_SIZE rows at a time.
+    expect(content).toMatch(/pipeline\.streamQuery\(/);
+    // Dirty permits SQL is inside a streamQuery call, not pool.query
+    expect(content).not.toMatch(
+      /const\s+(?:permitsResult|dirtyPermits)\s*=\s*await\s+pool\.query/,
+    );
+  });
+
+  it('uses pipeline.streamQuery for dirty CoAs (§6.2 mandatory streaming table)', () => {
+    // §6.2: `coa_applications` is a mandatory streaming table.
+    // At least two streamQuery calls: one for permits, one for CoAs.
+    const streamQueryCount = (content.match(/pipeline\.streamQuery\(/g) || []).length;
+    expect(streamQueryCount).toBeGreaterThanOrEqual(2);
+    // Must NOT load all dirty CoAs into a single array via pool.query
+    expect(content).not.toMatch(
+      /const\s+(?:coaResult|dirtyCoAs)\s*=\s*await\s+pool\.query/,
+    );
+  });
+});
+
 describe('scripts/classify-lifecycle-phase.js — concurrency guard (advisory lock)', () => {
   let content: string;
   beforeAll(() => {
@@ -194,6 +288,24 @@ describe('scripts/classify-lifecycle-phase.js — concurrency guard (advisory lo
     expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
   });
 
+  it('registers a SIGTERM handler for graceful advisory lock release', () => {
+    // §5.5: SIGTERM handler prevents lock 85 from being orphaned when the
+    // process is killed by a Kubernetes scale-down or deployment. Without
+    // this, a kill -15 bypasses the finally block and the lock is permanently
+    // stuck until a DBA manually runs pg_advisory_unlock(85).
+    expect(content).toMatch(/process\.on\(\s*'SIGTERM'/);
+    expect(content).toMatch(/pg_advisory_unlock/);
+    expect(content).toMatch(/process\.exit\(143\)/);
+  });
+
+  it('uses lockClientReleased flag to prevent double-release in SIGTERM race', () => {
+    // §5.5: if SIGTERM fires while the finally block is executing,
+    // both paths would call lockClient.release(). The lockClientReleased
+    // flag prevents a double-release crash on the same pg client.
+    expect(content).toMatch(/lockClientReleased/);
+    expect(content).toMatch(/if\s*\(!lockClientReleased\)/);
+  });
+
   it('releases advisory lock on the SAME dedicated client in finally block', () => {
     expect(content).toMatch(/lockClient\.query[\s\S]*?pg_advisory_unlock/);
     expect(content).toMatch(/lockClient\.release\(\)/);
@@ -207,36 +319,22 @@ describe('scripts/classify-lifecycle-phase.js — concurrency guard (advisory lo
     expect(content).toMatch(/advisory_lock_held_elsewhere/);
   });
 
-  it('uses per-batch small transactions instead of a single mega-transaction', () => {
-    // Adversarial review C2: the prior design wrapped all 484 batches
-    // in one BEGIN/COMMIT, holding row-level locks for ~130s. The fix
-    // is per-batch withTransaction calls inside the batch loop.
-    // Assert there is NO `pipeline.withTransaction` call that wraps
-    // the for-loop (the old pattern) and that the withTransaction
-    // call IS inside the loop body.
-    //
-    // The cleanest check: the content must contain a sequence where
-    // `for (... batches ...)` precedes `pipeline.withTransaction` — i.e.,
-    // the transaction is per-iteration.
-    const forLoopBeforeWithTx =
-      /for\s*\([^)]*batches[^)]*\)[\s\S]{0,200}?pipeline\.withTransaction/;
-    expect(content).toMatch(forLoopBeforeWithTx);
+  it('processes permits in per-batch transactions via streaming (not a single mega-transaction)', () => {
+    // §6.2 + per-batch atomicity: dirty permits are streamed via pipeline.streamQuery
+    // and flushed in PERMIT_BATCH_SIZE chunks, each with its own withTransaction.
+    // This replaces the old pattern of loading all rows into memory then chunkArray-ing.
+    expect(content).toMatch(/pipeline\.streamQuery\(/);
+    // withTransaction is still used for per-batch atomicity
+    expect(content).toMatch(/pipeline\.withTransaction\(pool/);
   });
 
   it('runs phase UPDATE and classified_at stamp in the same transaction per batch', () => {
-    // Independent review Defect 1: the prior design stamped
-    // unchanged rows OUTSIDE the transaction, creating a consistency
-    // gap on partial failure. The fix runs both inside withTransaction.
-    // The batch UPDATE sql/params are constructed before the
-    // withTransaction call, so the regex looks for the pattern:
-    //   withTransaction ... client.query(sql, params)    // phase
-    //                    ... client.query(...stamp SQL)  // classified_at
-    // inside the same callback body. No `pool.query` between them.
+    // Phase UPDATE + stamp UPDATE must be atomic per batch.
+    // §14.2: stamp now uses $N::timestamptz (RUN_AT), not NOW().
     const stampInsideTx =
-      /pipeline\.withTransaction\(pool,\s*async\s*\(client\)\s*=>\s*\{[\s\S]*?client\.query\(sql,\s*params\)[\s\S]*?client\.query\([\s\S]*?SET\s+lifecycle_classified_at\s*=\s*NOW\(\)[\s\S]*?\}\)/;
+      /pipeline\.withTransaction\(pool,\s*async\s*\(client\)\s*=>\s*\{[\s\S]*?client\.query\(sql,\s*params\)[\s\S]*?client\.query\([\s\S]*?SET\s+lifecycle_classified_at\s*=\s*\$\d+::timestamptz[\s\S]*?\}\)/;
     expect(content).toMatch(stampInsideTx);
-    // Also assert the stamp UPDATE is NOT called outside a
-    // withTransaction via `pool.query` anywhere in the file.
+    // Must NOT call pool.query for the stamp (would be outside the transaction)
     expect(content).not.toMatch(
       /pool\.query\([\s\S]{0,300}?SET\s+lifecycle_classified_at\s*=\s*NOW\(\)/,
     );
@@ -280,8 +378,15 @@ describe('scripts/classify-lifecycle-phase.js — Phase 2 state machine', () => 
     // The CASE ensures phase_started_at resets ONLY when lifecycle_phase
     // changes, NOT when only lifecycle_stalled changes. This is the
     // critical invariant for countdown math.
+    //
+    // §14.2: THEN clause now uses $N::timestamptz (RUN_AT) instead of NOW(),
+    // preventing Midnight Cross drift on long first-run backfills.
     expect(content).toMatch(
-      /phase_started_at\s*=\s*CASE[\s\S]*?WHEN\s+p\.lifecycle_phase\s+IS DISTINCT FROM\s+v\.phase[\s\S]*?THEN\s+NOW\(\)[\s\S]*?ELSE\s+p\.phase_started_at/,
+      /phase_started_at\s*=\s*CASE[\s\S]*?WHEN\s+p\.lifecycle_phase\s+IS DISTINCT FROM\s+v\.phase[\s\S]*?THEN\s+\$[\s\S]{0,40}::timestamptz[\s\S]*?ELSE\s+p\.phase_started_at/,
+    );
+    // Must NOT use NOW() in this CASE — would differ between first and last batch
+    expect(content).not.toMatch(
+      /THEN\s+NOW\(\)[\s\S]{0,20}ELSE\s+p\.phase_started_at/,
     );
   });
 
@@ -308,10 +413,14 @@ describe('scripts/classify-lifecycle-phase.js — Phase 2 state machine', () => 
     expect(content).toMatch(/O3.*O_time/);
   });
 
-  it('uses j * 6 (not j * 7) for transition INSERT param numbering', () => {
-    // Adversarial CRITICAL-1: NOW() is inline SQL, not a param.
-    // j*7 caused param misalignment on batches with 2+ transitions.
-    expect(content).toMatch(/const base = j \* 6/);
+  it('uses j * 7 for transition INSERT param numbering (RUN_AT is now param 5 of 7)', () => {
+    // §14.2: RUN_AT is now an explicit parameter ($${base+5}::timestamptz),
+    // making 7 params per transition row:
+    //   permit_num, revision_num, from_phase, to_phase, RUN_AT, permit_type, neighbourhood_id
+    // Prior adversarial CRITICAL-1 fixed j*7 → j*6 when NOW() was inline SQL
+    // (only 6 real params per row). Now that RUN_AT is a real param, j*7 is
+    // correct — j*6 would cause param misalignment on 2+ transitions per batch.
+    expect(content).toMatch(/const base = j \* 7/);
   });
 
   it('backfills phase_started_at for existing permits using proxy dates', () => {
