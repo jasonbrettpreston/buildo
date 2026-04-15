@@ -366,6 +366,23 @@ pipeline.run('update-tracked-projects', async (pool) => {
       });
       imminentAlerts++;
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // WF3-02 (B5): Urgency Reset
+    //
+    // If a project was previously marked imminent but the city delays
+    // the permit (forecast shifts back to 'delayed' or 'upcoming'),
+    // clear last_notified_urgency so the script can re-alert the user
+    // when it approaches again.
+    //
+    // Silent state reset — no alert payload generated here.
+    // ═══════════════════════════════════════════════════════════
+    if (row.last_notified_urgency === 'imminent' && row.urgency !== 'imminent') {
+      updates.push({
+        id: row.tracking_id,
+        last_notified_urgency: null,
+      });
+    }
   }
 
   pipeline.log.info('[tracked-projects]', `Streamed ${totalRows} active tracked projects`);
@@ -386,8 +403,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
   // WF3 (spec 47 §7.5 N+1 fix): Replace per-row client.query with
   // category-based batch UPDATEs using ANY($ids::int[]).
   // Each unique field-combination gets ONE UPDATE statement that
-  // targets its entire id set — at most 5 DB roundtrips for any
-  // number of rows. Previously this was N roundtrips.
+  // targets its entire id set — at most 8 DB roundtrips for any
+  // number of rows (5 original + 3 WF3-02 reset categories).
   //
   // updated_at uses $1 = RUN_AT (captured at startup) — not NOW() —
   // to prevent the Midnight Cross (spec 47 §14).
@@ -406,31 +423,44 @@ pipeline.run('update-tracked-projects', async (pool) => {
   let totalUpdated = 0;
 
   if (mergedUpdates.length > 0) {
-    // Categorise by which fields change — each category maps to one UPDATE
+    // Categorise by which fields change — each category maps to one UPDATE.
+    //
+    // WF3-02: Added 3 reset categories for last_notified_urgency = NULL.
+    // The old `hasUrgency = upd.last_notified_urgency != null` evaluated to
+    // false for null values, causing reset updates to silently fall through
+    // to the invariant warning. isImminent / isReset replace it.
     const archiveIds = [];
-    const stallOnIds = [];           // last_notified_stalled = true
-    const stallOffIds = [];          // last_notified_stalled = false (recovery), no urgency change
-    const imminentOnlyIds = [];      // last_notified_urgency = 'imminent', no stall change
-    const stallOffImminentIds = [];  // last_notified_stalled = false + last_notified_urgency = 'imminent'
+    const stallOnIds = [];              // stalled = true
+    const stallOffIds = [];             // stalled = false, no urgency change
+    const imminentOnlyIds = [];         // urgency = 'imminent', no stall change
+    const stallOffImminentIds = [];     // stalled = false + urgency = 'imminent'
+    const resetUrgencyOnlyIds = [];     // urgency = NULL (WF3-02 reset)
+    const stallOnResetUrgencyIds = [];  // stalled = true  + urgency = NULL (WF3-02)
+    const stallOffResetUrgencyIds = []; // stalled = false + urgency = NULL (WF3-02)
 
     for (const upd of mergedUpdates) {
       const hasStatus  = upd.status === 'archived';
       const hasStall   = upd.last_notified_stalled != null;
-      const hasUrgency = upd.last_notified_urgency != null;
+      const isImminent = upd.last_notified_urgency === 'imminent';
+      const isReset    = upd.last_notified_urgency === null;
 
       if (hasStatus) {
         archiveIds.push(upd.id);
-      } else if (hasStall && !hasUrgency) {
+      } else if (hasStall && !isImminent && !isReset) {
         (upd.last_notified_stalled === true ? stallOnIds : stallOffIds).push(upd.id);
-      } else if (hasUrgency && !hasStall) {
+      } else if (isImminent && !hasStall) {
         imminentOnlyIds.push(upd.id);
-      } else if (hasStall && hasUrgency) {
+      } else if (hasStall && isImminent) {
+        // B3 (stall recovery) + B4 (imminent) fired together — stall is always false here
+        // because B4 requires lifecycle_stalled !== true.
         stallOffImminentIds.push(upd.id);
+      } else if (isReset && !hasStall) {
+        resetUrgencyOnlyIds.push(upd.id);
+      } else if (hasStall && isReset) {
+        (upd.last_notified_stalled === true ? stallOnResetUrgencyIds : stallOffResetUrgencyIds).push(upd.id);
       } else {
         // Defensive invariant: all update objects pushed by the routing engine
         // must set status, last_notified_stalled, or last_notified_urgency.
-        // An empty update here indicates a new push() callsite was added above
-        // without a corresponding category — it would be silently dropped.
         pipeline.log.warn(
           '[tracked-projects]',
           'Batch categorizer: update object has no recognized fields — will not be written',
@@ -497,6 +527,49 @@ pipeline.run('update-tracked-projects', async (pool) => {
               AND (last_notified_stalled IS DISTINCT FROM false
                    OR last_notified_urgency IS DISTINCT FROM 'imminent')`,
           [RUN_AT, stallOffImminentIds],
+        );
+        totalUpdated += r.rowCount ?? 0;
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // WF3-02: Urgency Reset SQL Executions
+      // IS NOT NULL guard (not IS DISTINCT FROM) because the target
+      // value IS null — IS DISTINCT FROM NULL would be equivalent to
+      // IS NOT NULL, but making it explicit keeps the intent clear.
+      // ═══════════════════════════════════════════════════════════
+      if (resetUrgencyOnlyIds.length > 0) {
+        const r = await client.query(
+          `UPDATE tracked_projects
+              SET last_notified_urgency = NULL, updated_at = $1
+            WHERE id = ANY($2::int[])
+              AND last_notified_urgency IS NOT NULL`,
+          [RUN_AT, resetUrgencyOnlyIds],
+        );
+        totalUpdated += r.rowCount ?? 0;
+      }
+      if (stallOnResetUrgencyIds.length > 0) {
+        const r = await client.query(
+          `UPDATE tracked_projects
+              SET last_notified_stalled = true,
+                  last_notified_urgency = NULL,
+                  updated_at = $1
+            WHERE id = ANY($2::int[])
+              AND (last_notified_stalled IS DISTINCT FROM true
+                   OR last_notified_urgency IS NOT NULL)`,
+          [RUN_AT, stallOnResetUrgencyIds],
+        );
+        totalUpdated += r.rowCount ?? 0;
+      }
+      if (stallOffResetUrgencyIds.length > 0) {
+        const r = await client.query(
+          `UPDATE tracked_projects
+              SET last_notified_stalled = false,
+                  last_notified_urgency = NULL,
+                  updated_at = $1
+            WHERE id = ANY($2::int[])
+              AND (last_notified_stalled IS DISTINCT FROM false
+                   OR last_notified_urgency IS NOT NULL)`,
+          [RUN_AT, stallOffResetUrgencyIds],
         );
         totalUpdated += r.rowCount ?? 0;
       }

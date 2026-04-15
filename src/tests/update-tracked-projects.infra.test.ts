@@ -375,3 +375,67 @@ describe('scripts/update-tracked-projects.js — WF3-01 notification dispatch', 
     expect(content).toMatch(/START_IMMINENT/);
   });
 });
+
+// ── WF3-02: last_notified_urgency reset tests ──
+
+describe('scripts/update-tracked-projects.js — WF3-02 urgency reset', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/update-tracked-projects.js'),
+      'utf-8',
+    );
+  });
+
+  it('B5: resets last_notified_urgency when forecast leaves imminent state (spec 82 §8.3)', () => {
+    // Without this reset, once a project is flagged imminent the flag sticks
+    // forever. If the city delays the permit and it later approaches again,
+    // the script skips the alert thinking it already sent it.
+    expect(content).toMatch(/row\.last_notified_urgency === 'imminent'[\s\S]{0,100}row\.urgency !== 'imminent'/);
+    expect(content).toMatch(/last_notified_urgency: null/);
+  });
+
+  it('B5 is a silent reset — no alert payload is generated', () => {
+    // The reset is an internal memory correction, not a user-facing event.
+    // Confirm no alert is pushed inside the B5 block.
+    const b5Start = content.indexOf("row.last_notified_urgency === 'imminent' && row.urgency !== 'imminent'");
+    const b5End = content.indexOf('// End B5', b5Start) !== -1
+      ? content.indexOf('// End B5', b5Start)
+      : content.indexOf('\n  }', b5Start);
+    // No alerts.push() call between the B5 condition and the next block boundary
+    const b5Slice = content.slice(b5Start, b5End + 200);
+    expect(b5Slice).not.toMatch(/alerts\.push/);
+  });
+
+  it('categorizer routes reset-only updates to resetUrgencyOnlyIds', () => {
+    // A B5-only update has last_notified_urgency = null and no stall change.
+    // Without an explicit isReset branch, it falls through to the invariant
+    // warning and is silently dropped.
+    expect(content).toMatch(/resetUrgencyOnlyIds/);
+  });
+
+  it('categorizer handles stall-on + urgency-reset combo (stallOnResetUrgencyIds)', () => {
+    // B2 (stall alert) + B5 (urgency reset) can fire in the same run for the
+    // same row — after merge: { last_notified_stalled: true, last_notified_urgency: null }
+    expect(content).toMatch(/stallOnResetUrgencyIds/);
+  });
+
+  it('categorizer handles stall-recovery + urgency-reset combo (stallOffResetUrgencyIds)', () => {
+    // B3 (recovery) + B5 (urgency reset): { last_notified_stalled: false, last_notified_urgency: null }
+    expect(content).toMatch(/stallOffResetUrgencyIds/);
+  });
+
+  it('reset UPDATE uses IS NOT NULL guard — prevents no-op writes (spec 47 §12)', () => {
+    // Without the guard a reset UPDATE hits every row in the id list even
+    // when last_notified_urgency is already NULL, inflating rowCount and
+    // generating spurious updated_at changes.
+    expect(content).toMatch(/SET last_notified_urgency = NULL[\s\S]{0,100}AND last_notified_urgency IS NOT NULL/);
+  });
+
+  it('categorizer uses isImminent and isReset — not the old hasUrgency != null pattern', () => {
+    // The old `hasUrgency = upd.last_notified_urgency != null` evaluated to false
+    // for null values, causing reset updates to fall into the invariant warning.
+    expect(content).toMatch(/isImminent\s*=\s*upd\.last_notified_urgency === 'imminent'/);
+    expect(content).toMatch(/isReset\s*=\s*upd\.last_notified_urgency === null/);
+  });
+});
