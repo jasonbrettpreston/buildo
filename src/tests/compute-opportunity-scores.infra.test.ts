@@ -159,3 +159,46 @@ describe('scripts/compute-opportunity-scores.js — spec 47 compliance (WF3-09)'
     expect(content).not.toMatch(/urgency NOT IN \('expired'\)/);
   });
 });
+
+// ── WF3-11 spec 47 §12 compliance tests ──
+
+describe('scripts/compute-opportunity-scores.js — spec 47 §12 compliance (WF3-11)', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/compute-opportunity-scores.js'),
+      'utf-8',
+    );
+  });
+
+  it('registers a SIGTERM handler to release advisory lock gracefully (spec 47 §5.5)', () => {
+    // MANDATORY: Cloud/K8s SIGTERM bypasses finally blocks. Without this,
+    // advisory lock 81 stays held on a dead session and bricks the pipeline.
+    expect(content).toMatch(/process\.on\('SIGTERM'/);
+    expect(content).toMatch(/pg_advisory_unlock/);
+    expect(content).toMatch(/process\.exit\(143\)/);
+  });
+
+  it('uses lockClientReleased flag to prevent double-release on SIGTERM (spec 47 §5.5)', () => {
+    // If SIGTERM fires after the skip-path releases lockClient, the SIGTERM handler
+    // must not call lockClient.release() a second time — pg throws on double-release.
+    expect(content).toMatch(/lockClientReleased/);
+  });
+
+  it('captures RUN_AT from DB at startup — MANDATORY skeleton §R3.5 (spec 47 §14.1)', () => {
+    // Required by the pipeline skeleton even when no timestamp column is written.
+    // Documents run identity and prevents Midnight Cross on any future timestamp writes.
+    expect(content).toMatch(/RUN_AT/);
+    expect(content).toMatch(/SELECT NOW\(\) AS now/);
+  });
+
+  it('flushes scores per-batch during streaming — no global updates[] accumulator (spec 47 §6.2)', () => {
+    // The old pattern accumulated ALL rows into `const updates = []` before any writes,
+    // loading the entire 2.5M row trade_forecasts join into Node heap and defeating
+    // the memory-backpressure benefit of streamQuery.
+    // Fix: flush each batch immediately inside the for-await loop.
+    expect(content).not.toMatch(/const updates = \[\]/);
+    // Regression anchor: the flush must happen inside the streaming loop
+    expect(content).toMatch(/batch\.length >= BATCH_SIZE/);
+  });
+});

@@ -41,11 +41,49 @@ const LOGIC_VARS_SCHEMA = z.object({
 }).passthrough();
 
 pipeline.run('compute-opportunity-scores', async (pool) => {
+  // §R3.5: Capture run timestamp at pipeline startup — MANDATORY per skeleton
+  // even though opportunity_score is an int and no timestamp column is written.
+  // Documents run identity and prevents Midnight Cross on any future additions.
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+
+  // ─── Load Control Panel via shared loader ──────────────────
+  // tradeConfigs not used here — per-trade multipliers come from the SQL JOIN on trade_configurations.
+  const { logicVars: vars } = await loadMarketplaceConfigs(pool, 'opportunity-scores');
+
+  // Fail fast if any required variable is missing, zero, or non-finite.
+  // Prevents division-by-zero (los_base_divisor) and NaN score propagation.
+  const validation = validateLogicVars(vars, LOGIC_VARS_SCHEMA, 'opportunity-scores');
+  if (!validation.valid) {
+    throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  }
+
   // ─── Concurrency guard — single-threaded scorer ──────────────
   // Lock acquired on a DEDICATED `pool.connect()` client (mirrors
   // classify-lifecycle-phase.js). pool.query would acquire on an
   // ephemeral connection and the unlock would no-op (cf. 83-W5).
   const lockClient = await pool.connect();
+
+  // Guard flag prevents double-release if SIGTERM fires after the skip-path
+  // (or after the finally block) has already released the client.
+  let lockClientReleased = false;
+
+  // §5.5: SIGTERM handler — release advisory lock before process exits so
+  // the next scheduled run is not blocked by a stale lock on a dead session.
+  process.on('SIGTERM', async () => {
+    pipeline.log.warn(
+      '[opportunity-scores]',
+      'Received SIGTERM. Releasing advisory lock and shutting down gracefully...',
+    );
+    try {
+      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
+    } catch (e) { /* best-effort */ }
+    if (!lockClientReleased) {
+      lockClientReleased = true;
+      lockClient.release();
+    }
+    process.exit(143);
+  });
+
   try {
     const { rows: lockRows } = await lockClient.query(
       'SELECT pg_try_advisory_lock($1) AS got',
@@ -70,26 +108,17 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
         },
       });
       pipeline.emitMeta({}, {});
+      lockClientReleased = true;
       lockClient.release();
       return;
     }
   } catch (lockErr) {
+    lockClientReleased = true;
     lockClient.release();
     throw lockErr;
   }
 
   try {
-  // ─── Load Control Panel via shared loader ──────────────────
-  // tradeConfigs not used here — per-trade multipliers come from the SQL JOIN on trade_configurations.
-  const { logicVars: vars } = await loadMarketplaceConfigs(pool, 'opportunity-scores');
-
-  // Fail fast if any required variable is missing, zero, or non-finite.
-  // Prevents division-by-zero (los_base_divisor) and NaN score propagation.
-  const validation = validateLogicVars(vars, LOGIC_VARS_SCHEMA, 'opportunity-scores');
-  if (!validation.valid) {
-    throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
-  }
-
   // ═══════════════════════════════════════════════════════════
   // Step 1: Stream trade forecasts + cost + competition data
   // spec 47 §6.1 — streamQuery required for trade_forecasts (2.5M+ rows).
@@ -124,11 +153,54 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   `;
 
   // ═══════════════════════════════════════════════════════════
-  // Step 2: Compute scores in JS (streamed row-by-row)
+  // Step 2: Score rows + flush per-batch (true streaming)
+  //
+  // WF3-11: Replaced global `updates[]` accumulator with per-batch flush.
+  // The old pattern loaded the entire 2.5M row result set into Node heap,
+  // defeating the memory-backpressure benefit of streamQuery. Each batch
+  // of BATCH_SIZE rows is now written atomically via its own withTransaction
+  // immediately after it fills. Heap holds at most one batch at a time.
+  //
+  // Atomicity trade-off: per-batch commits (not run-wide) mean a crash
+  // mid-stream leaves some rows with the new score and others with the
+  // previous run's score ("mixed vintage"). This is acceptable because:
+  //   1. The IS DISTINCT FROM guard makes re-runs convergent — the next
+  //      scheduled run will finish the remaining rows.
+  //   2. The advisory lock prevents concurrent writers from interleaving.
+  //   3. Scores are live-computed properties, not financial records — a
+  //      brief mixed-vintage window does not corrupt durable state.
   // ═══════════════════════════════════════════════════════════
-  const updates = [];
   let totalRows = 0;
+  let updated = 0;
   let integrityFlags = 0;
+  let batch = [];
+
+  const flushBatch = async (currentBatch) => {
+    if (currentBatch.length === 0) return;
+    const vals = [];
+    const params = [];
+    for (let j = 0; j < currentBatch.length; j++) {
+      const u = currentBatch[j];
+      const base = j * 4;
+      vals.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::int)`);
+      params.push(u.permit_num, u.revision_num, u.trade_slug, u.score);
+    }
+    await pipeline.withTransaction(pool, async (client) => {
+      const result = await client.query(
+        `UPDATE trade_forecasts tf
+            SET opportunity_score = v.score
+          FROM (VALUES ${vals.join(', ')}) AS v(permit_num, revision_num, trade_slug, score)
+         WHERE tf.permit_num = v.permit_num
+           AND tf.revision_num = v.revision_num
+           AND tf.trade_slug = v.trade_slug
+           AND tf.opportunity_score IS DISTINCT FROM v.score`,
+        params,
+      );
+      // spec §7 #5: use rowCount not batch size — IS DISTINCT FROM guard
+      // means some rows in each batch may be skipped as unchanged.
+      updated += result.rowCount ?? 0;
+    });
+  };
 
   for await (const row of pipeline.streamQuery(pool, SQL, [])) {
     totalRows++;
@@ -140,7 +212,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     // Base: trade value normalized, capped (from control panel)
     const base = Math.min(tradeValue / vars.los_base_divisor, vars.los_base_cap);
 
-    // Per-trade urgency multiplier from trade_configurations (Bug 2 fix).
+    // Per-trade urgency multiplier from trade_configurations JOIN (Bug 2 fix).
     // Falls back to global logic_variables if the trade has no row in
     // trade_configurations (defensive — all 32 trades should have one).
     // spec 47 §4 — guard parseFloat with isFinite; log warn + use global fallback on NaN.
@@ -174,7 +246,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     // Clamp to 0-100
     const score = Math.max(0, Math.min(100, Math.round(raw)));
 
-    updates.push({
+    batch.push({
       permit_num: row.permit_num,
       revision_num: row.revision_num,
       trade_slug: row.trade_slug,
@@ -185,59 +257,26 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     if (row.tracking_count > 0 && row.modeled_gfa_sqm == null) {
       integrityFlags++;
     }
+
+    // Flush full batch immediately — keeps heap at O(BATCH_SIZE), not O(total rows)
+    if (batch.length >= BATCH_SIZE) {
+      await flushBatch(batch);
+      batch = [];
+    }
   }
 
-  pipeline.log.info('[opportunity-scores]', `Rows to score: ${totalRows}`);
-  pipeline.log.info('[opportunity-scores]', `Scores computed: ${updates.length}`);
+  // Flush any remaining rows after the stream closes
+  await flushBatch(batch);
+  batch = [];
+
+  pipeline.log.info('[opportunity-scores]', `Rows scored: ${totalRows}`);
+  pipeline.log.info('[opportunity-scores]', `Updated ${updated} scores`);
   if (integrityFlags > 0) {
     pipeline.log.warn(
       '[opportunity-scores]',
       `Integrity audit: ${integrityFlags} tracked leads have no modeled_gfa_sqm`,
     );
   }
-
-  // ═══════════════════════════════════════════════════════════
-  // Step 3: Batch UPDATE trade_forecasts.opportunity_score (atomic)
-  // ═══════════════════════════════════════════════════════════
-  // WF3-03 PR-B (H-W2 / 81-W1): wrap the multi-batch UPDATE loop in a
-  // single pipeline.withTransaction so a crash mid-loop rolls back to
-  // the pre-run state. Without this, the table would carry a mix of
-  // this-run and last-run scores, contaminating downstream consumers
-  // (compute-cost-estimates, update-tracked-projects, the lead feed).
-  let updated = 0;
-
-  if (updates.length > 0) {
-    await pipeline.withTransaction(pool, async (client) => {
-      for (let i = 0; i < updates.length; i += BATCH_SIZE) {
-        const batch = updates.slice(i, i + BATCH_SIZE);
-        const vals = [];
-        const params = [];
-
-        for (let j = 0; j < batch.length; j++) {
-          const u = batch[j];
-          const base = j * 4;
-          vals.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::int)`);
-          params.push(u.permit_num, u.revision_num, u.trade_slug, u.score);
-        }
-
-        const result = await client.query(
-          `UPDATE trade_forecasts tf
-              SET opportunity_score = v.score
-            FROM (VALUES ${vals.join(', ')}) AS v(permit_num, revision_num, trade_slug, score)
-           WHERE tf.permit_num = v.permit_num
-             AND tf.revision_num = v.revision_num
-             AND tf.trade_slug = v.trade_slug
-             AND tf.opportunity_score IS DISTINCT FROM v.score`,
-          params,
-        );
-        // spec §7 #5: use rowCount not batch.length — IS DISTINCT FROM guard
-        // means some rows in each batch may be skipped as unchanged.
-        updated += result.rowCount ?? 0;
-      }
-    });
-  }
-
-  pipeline.log.info('[opportunity-scores]', `Updated ${updated} scores`);
 
   // Score distribution for telemetry
   // spec §7 #6: apply NULL-safe urgency filter consistently
@@ -257,7 +296,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   const scoreDist = Object.fromEntries(dist.map((r) => [r.tier, r.n]));
 
   // ═══════════════════════════════════════════════════════════
-  // Step 4: Post-UPDATE audit (spec 47 §8.2 — real audit_table)
+  // Step 3: Post-UPDATE audit (spec 47 §8.2 — real audit_table)
   // ═══════════════════════════════════════════════════════════
   const { rows: auditRows } = await pool.query(`
     SELECT
@@ -285,6 +324,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     records_meta: {
       score_distribution: scoreDist,
       integrity_flags: integrityFlags,
+      run_at: RUN_AT,
       audit_table: {
         phase: 23,
         name: 'Opportunity Score Engine',
@@ -316,7 +356,10 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
         { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
       );
     } finally {
-      lockClient.release();
+      if (!lockClientReleased) {
+        lockClientReleased = true;
+        lockClient.release();
+      }
     }
   }
 });
