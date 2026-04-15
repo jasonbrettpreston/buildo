@@ -87,3 +87,15 @@ Upserts rows to `trade_forecasts`; purges stale rows for terminal or deactivated
 
 ### Shared Config Loader
 All config is loaded via `scripts/lib/config-loader.js` `loadMarketplaceConfigs(pool)` which returns `{ tradeConfigs, logicVars }` with hardcoded fallbacks on DB failure.
+
+---
+
+## 6. Engineering Requirements (Spec 47 & Bimodal Parity)
+
+When refactoring `scripts/compute-trade-forecasts.js`, the following structural and logistical defenses must be implemented:
+
+1. **Stream Execution (Spec 47 §6.1):** Prevent OOM errors by querying massive historical permit batches through `pipeline.streamQuery()`, processing via in-loop backpressure array limits.
+2. **Graceful Locks (Spec 47 §5.5):** Acquire an advisory lock on a dedicated client and attach a `process.on('SIGTERM')` listener to ensure lock unbinding during forced shutdown.
+3. **Bimodal Data Path:** The database join must retrieve `bid_phase_cutoff` and `work_phase_target` from the `trade_configurations` table, routing "Rescue Mission" states dynamically instead of hardcoding target dates.
+4. **Zod Defense:** Extract the raw JSON definitions of `logic_variables.stall_penalty_active` and `logic_variables.expired_threshold_days`, filtering them strictly via `Zod` prior to running math calculations so `NaN` propagation is impossible.
+5. **Atomic Commit (Spec 47 §6.3):** Ensure `ON CONFLICT DO UPDATE` upserts for forecasts occur exclusively within ephemeral `pipeline.withTransaction()` wrappers.

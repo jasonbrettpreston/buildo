@@ -291,6 +291,16 @@ describe('computeSurgicalTotal', () => {
     expect('ghost-trade' in tradeValues).toBe(false);
     expect('plumbing' in tradeValues).toBe(true);
   });
+
+  it('deduplicates duplicate slugs — double slug must not inflate total (WF3-fix)', () => {
+    // Duplicate slug would inflate surgical total by 2×, shifting Liar's Gate
+    const row = makeRow({ active_trade_slugs: ['plumbing', 'plumbing'] });
+    const { total, tradeValues } = computeSurgicalTotal(row, 100, false, 1.0, BASE_CONFIG);
+    // Must equal single-slug total (195 × 1.40 × 100 = 27300), not 54600
+    expect(Object.keys(tradeValues)).toHaveLength(1);
+    expect(tradeValues['plumbing']).toBe(27300);
+    expect(total).toBeCloseTo(27300, 0);
+  });
 });
 
 // ---------------------------------------------------------------------------

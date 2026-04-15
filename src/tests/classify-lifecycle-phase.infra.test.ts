@@ -275,12 +275,14 @@ describe('scripts/classify-lifecycle-phase.js — concurrency guard (advisory lo
     content = read('scripts/classify-lifecycle-phase.js');
   });
 
-  it('acquires advisory lock 85 on a DEDICATED client (WF3 Bug #1)', () => {
+  it('acquires advisory lock 84 on a DEDICATED client (WF3 Bug #1 + WF3-adversarial lock-collision fix)', () => {
     // WF3: pool.query for advisory lock uses ephemeral connections
     // that can be reaped by idleTimeoutMillis (10s default) during
     // the 20-60s CPU-bound Map-building phase. Dedicated client
     // stays checked out (not idle) for the full run.
-    expect(content).toMatch(/ADVISORY_LOCK_ID\s*=\s*85/);
+    // Lock ID = 84 (spec number). Was 85 (migration number) — collided with
+    // compute-trade-forecasts.js (spec 85), causing both scripts to block each other.
+    expect(content).toMatch(/ADVISORY_LOCK_ID\s*=\s*84/);
     expect(content).toMatch(/pool\.connect\(\)/);
     expect(content).toMatch(/lockClient\.query[\s\S]*?pg_try_advisory_lock/);
     // Must NOT use pool.query for the lock (tight window to avoid
@@ -289,10 +291,10 @@ describe('scripts/classify-lifecycle-phase.js — concurrency guard (advisory lo
   });
 
   it('registers a SIGTERM handler for graceful advisory lock release', () => {
-    // §5.5: SIGTERM handler prevents lock 85 from being orphaned when the
+    // §5.5: SIGTERM handler prevents lock 84 from being orphaned when the
     // process is killed by a Kubernetes scale-down or deployment. Without
     // this, a kill -15 bypasses the finally block and the lock is permanently
-    // stuck until a DBA manually runs pg_advisory_unlock(85).
+    // stuck until a DBA manually runs pg_advisory_unlock(84).
     expect(content).toMatch(/process\.on\(\s*'SIGTERM'/);
     expect(content).toMatch(/pg_advisory_unlock/);
     expect(content).toMatch(/process\.exit\(143\)/);

@@ -294,7 +294,10 @@ function computeTradeValue(slug, areaEff, isShell, premium, config) {
  * @returns {{ total: number, tradeValues: Record<string,number> }}
  */
 function computeSurgicalTotal(row, areaEff, isShell, premium, config) {
-  const slugs = Array.isArray(row.active_trade_slugs) ? row.active_trade_slugs : [];
+  // Deduplicate slugs — LATERAL ARRAY_AGG can produce duplicate slugs if the
+  // permit_trades JOIN returns multiple rows for the same trade. Without the
+  // Set, a duplicated slug inflates the surgical total and shifts Liar's Gate.
+  const slugs = [...new Set(Array.isArray(row.active_trade_slugs) ? row.active_trade_slugs : [])];
   const tradeValues = {};
   let total = 0;
   for (const slug of slugs) {

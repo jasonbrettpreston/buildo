@@ -113,14 +113,16 @@ The Front-end utilizes these fields to explain the score and trigger alerts.
 
 ## 7. Temporary: Bug Fixes (The "WF3" Critical List)
 
-These six items must be resolved in the `scripts/compute-opportunity-scores.js` refactor to ensure production stability.
+These eight items must be resolved in the `scripts/compute-opportunity-scores.js` refactor to ensure production stability and Spec 47 compliance.
 
-1. **Multi-Batch Transaction Boundary:** Wrap the scoring loop in `pipeline.withTransaction`. This ensures that if the script crashes mid-run, the database rolls back, preventing a "split-score" marketplace where some leads use old logic and others use new logic.
-2. **Unbounded SELECT (OOM Guard):** Replace `pool.query` with `pipeline.streamQuery`. This processes the ~2.5M rows in memory-efficient chunks, preventing Heap Out-of-Memory crashes.
-3. **NaN Propagation Guard:** Implement `Number.isFinite()` checks on all multipliers. If an Admin enters a typo (e.g., "2.5x") in the UI, the script will log a warning and fall back to the global default instead of crashing the batch.
-4. **Advisory Locking:** Add `pg_try_advisory_lock(81)` at script entry. This prevents a manual Admin "Re-Sync" from colliding with the nightly automated run, which would cause data corruption.
-5. **Telemetry Accuracy:** Update `records_updated` using the actual `result.rowCount` from the `UPDATE` call rather than the batch size to ensure the Admin dashboard reflects real physical changes.
-6. **NULL Urgency Support:** Change the filter to `WHERE (tf.urgency IS NULL OR tf.urgency <> 'expired')`. This ensures leads aren't hidden from the feed if the Forecast step fails or hasn't run yet.
+1. **Multi-Batch Transaction Boundary (Spec 47 §6.3):** Wrap the scoring loop in `pipeline.withTransaction`. This ensures that if the script crashes mid-run, the database rolls back, preventing a "split-score" marketplace where some leads use old logic and others use new logic.
+2. **Unbounded SELECT (OOM Guard) (Spec 47 §6.1):** Replace `pool.query` with `pipeline.streamQuery`. This processes the ~2.5M rows in memory-efficient chunks. Must include `flushBatch()` inside the loop and clear the array to prevent Node Heap crashes.
+3. **NaN Propagation Guard & Zod Validation:** Implement `Number.isFinite()` checks on all multipliers, and strictly validate the global `logic_variables` through `Zod` upon load.
+4. **Advisory Locking:** Add `pg_try_advisory_lock(81)` utilizing a dedicated pinned `lockClient` at script entry.
+5. **Graceful Shutdown (Spec 47 §5.5):** Implement a `process.on('SIGTERM', ...)` listener to guarantee the lock is released if Kubernetes preempts or scales down the container mid-run.
+6. **Telemetry Accuracy:** Update `records_updated` using the actual `result.rowCount` from the `UPDATE` call rather than the batch size.
+7. **NULL Urgency Support:** Change the filter to `WHERE (tf.urgency IS NULL OR tf.urgency <> 'expired')`.
+8. **Bimodal Sourcing:** Ensure logic properly executes a LEFT JOIN on `trade_configurations` to source `multiplier_bid` and `multiplier_work` dynamically based on the current target window.
 
 ---
 

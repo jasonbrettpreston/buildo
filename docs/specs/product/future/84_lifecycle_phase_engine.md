@@ -151,17 +151,18 @@ The `assert-lifecycle-phase-distribution.js` script acts as the "Internal Audito
 
 ---
 
-## 6. Temporary: Bug Fixes (The "WF3" Critical List)
+## 6. Temporary: Bug Fixes & Spec 47 Alignment
 
 | Bug ID | Issue & Fix Action | Status |
 |---|---|---|
-| 84-W1 | **Orphan Ordinal Gap:** Orphans (O1-O3) have no rank, so they never archive. Fix: Assign negative ordinals (Decision D3). | Ready (Awaiting Migration 093) |
-| 84-W4 | **Dead Transition Write:** Ledger is written but not used. Fix: Wire Spec 86 Calibration to read this ledger (Decision D4 - Choice A). | Ready (High Impact) |
-| 84-W11 | **ID Collision:** P3/P4/P5 mean different things in CoA vs Permits. Fix: Prefix Permit-Intake phases (e.g., `INTAKE_P3`). | Pending Implementation |
-| 84-W5 | **Magic Stall Numbers:** Thresholds (180/730 days) are hardcoded. Fix: Move to `logic_variables` (Decision D2 pattern). | Ready |
-| 84-W2 | **O2/O3 Suppression:** Stall events for trades are ignored. Fix: Remove from suppression list so the ledger records the stall. | Ready |
-| 84-W3 | **Mega-Insert Risk:** 237k-row backfill could crash DB. Fix: Implement batching/chunking (5,000 rows per transaction). | Ready |
-| 84-W9 | **SQL/JS Drift:** CoA normalization is duplicated in two places. Fix: Consolidate into a single SQL helper function. | Pending Implementation |
+| 84-W1 | **Orphan Ordinal Gap:** Orphans (O1-O3) have no rank, so they never archive. Fix: Assign negative ordinals. | Pending Refactor |
+| 84-W4 | **Dead Transition Write:** Ledger is written but not used. Fix: Wire Spec 86 Calibration to read this ledger. | Pending Refactor |
+| 84-W11 | **ID Collision:** P3/P4/P5 mean different things in CoA vs Permits. Fix: Prefix Permit-Intake phases (e.g., `INTAKE_P3`). | Pending Refactor |
+| 84-W5 | **Magic Stall Numbers:** Thresholds (180/730 days) are hardcoded. Fix: Move to `Zod` validated `logic_variables`. | Pending Refactor |
+| 84-W3 | **Mega-Insert Risk (Spec 47 §6.1):** 237k-row backfill crashes DB on `.query()`. Fix: Wire `pipeline.streamQuery` and standard chunking with loop arrays. | Pending Refactor |
+| 84-W9 | **SQL/JS Drift:** CoA normalization is duplicated in two places. Fix: Consolidate into a single SQL helper function. | Pending Refactor |
+| 84-S47 | **SIGTERM Release (Spec 47 §5.5):** No lock release on container preemption. Fix: Add process `SIGTERM` trap. | Pending Refactor |
+| 84-S47 | **Midnight Drift (Spec 47 §8):** Multiple `NOW()` executions inside loops. Fix: Extract `RUN_TIMESTAMP` from a single query before streaming begins. | Pending Refactor |
 
 ---
 

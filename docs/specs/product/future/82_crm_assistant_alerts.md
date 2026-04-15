@@ -207,15 +207,17 @@ These fields drive the "High Signal" updates on the user's active board:
 
 ## 8. Temporary: Bug Fixes (The "WF3" Critical List)
 
-These six fixes are mandatory to ensure the "Communication Layer" actually communicates.
+These nine fixes are mandatory to ensure the "Communication Layer" actually communicates and aligns with Spec 47.
 
-1. **Notification Sink Wiring (CRITICAL):** The script was logging alerts but not saving them. We are adding an `INSERT INTO notifications` block. Without this, the tradesperson never receives the "Back to Work" or "Imminent" alerts promised in the user stories.
-2. **Cosmetic Knob Resolution (CRITICAL):** The `imminent_window_days` from the database was only used for text labels. We are refactoring the logic so this variable acts as the actual gate for the `START_IMMINENT` alert.
-3. **Memory Flag Reset Path:** Fixed the "One-and-Done" bug. `last_notified_urgency` is now reset if a project moves out of a critical window, allowing the system to re-alert the user if a schedule shifts back into the danger zone.
-4. **NULL Urgency Archive:** Added a safety check for leads with missing forecast data. If `urgency` is `NULL`, the script now uses the physical `lifecycle_phase` to archive the lead, preventing "ghost leads" from staying on the user's board forever.
-5. **Off-by-One Boundary Fix:** The `isWindowClosed` logic was archiving leads the day they started. We have changed the operator to `>` (Greater Than), ensuring the lead stays visible on the Pro's board throughout their work phase and only disappears once they have physically passed it.
-6. **Concurrency Advisory Lock:** Implemented `pg_try_advisory_lock(82)` to prevent the nightly automated run from colliding with a manual Admin "Re-Sync," which would cause duplicate notifications.
-
+1. **Notification Sink Wiring (CRITICAL):** The script was logging alerts but not saving them. We are adding an batched `INSERT INTO notifications` block instead of an N+1 looping query structure.
+2. **N+1 Query Elimination (Spec 47 §6.2):** Ban all queries mapping inside the loop. Process the notification generation offline in memory and flush out via ephemeral `pipeline.withTransaction()`.
+3. **Graceful Shutdown (Spec 47 §5.5):** Bind a `SIGTERM` unlocker to the dedicated `pg_try_advisory_lock(82)` connection to prevent deadlocks.
+4. **PII Logging Guard (Spec 47 §9.2):** Remove unbounded payload dumps; strictly ban the use of `raw: row` inside pipeline error logs.
+5. **Cosmetic Knob Resolution (CRITICAL):** The `imminent_window_days` from the database was only used for text labels. Refactor the logic so this variable acts as the physical gate for the `START_IMMINENT` alert.
+6. **Memory Flag Reset Path:** `last_notified_urgency` must be reset if a project moves out of a critical window, allowing re-alerting.
+7. **NULL Urgency Archive:** If `urgency` is `NULL`, use the physical `lifecycle_phase` to archive the lead.
+8. **Off-by-One Boundary Fix:** Change the `isWindowClosed` logic to `>` (Greater Than).
+9. **Streaming Architecture:** Wrap the lookup in a bounded `for await (const row of pipeline.streamQuery)` instead of loading all tracked tasks simultaneously.
 ---
 
 ## 9. Implementation Plan

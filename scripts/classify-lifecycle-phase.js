@@ -153,12 +153,13 @@ if (NORMALIZED_DEAD_DECISIONS_ARRAY.length === 0) {
   throw new Error('NORMALIZED_DEAD_DECISIONS_ARRAY is empty — refusing to run');
 }
 
-// Advisory lock ID — must be stable across runs so two classifier
-// instances contend for the same lock. Chosen as the migration number
-// (085) to keep the ID human-traceable to the feature that added it.
-// See adversarial review C1: without this, two chains finishing close
-// in time would each fire the classifier and race on the UPDATE set.
-const ADVISORY_LOCK_ID = 85;
+// Advisory lock ID = spec number (84) per project convention.
+// WF3-fix: was incorrectly set to 85 (migration number), which
+// collided with compute-trade-forecasts.js (spec 85). The collision
+// caused both scripts to mutually block each other when run concurrently.
+// See adversarial review C1: without this lock, two chains finishing
+// close in time would race on the UPDATE set.
+const ADVISORY_LOCK_ID = 84;
 
 pipeline.run('classify-lifecycle-phase', async (pool) => {
 
