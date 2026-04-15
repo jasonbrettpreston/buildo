@@ -109,6 +109,25 @@ const eslintConfig = [
       'no-restricted-syntax': 'off',
     },
   },
+  // Surgical Valuation Brain — shared CommonJS module (spec 83 §6).
+  // Lives in src/ for co-location with cost-model.ts but requires CommonJS
+  // because it is require()-d by the pipeline script (Node.js, no ts-node).
+  {
+    files: ['src/features/leads/lib/cost-model-shared.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-undef': 'off',
+    },
+  },
+  // Tests that require()-import the Brain JS module directly.
+  // require() is intentional here — the Brain is CommonJS; TS import
+  // would need a .d.ts shim which is Phase 2 work.
+  {
+    files: ['src/tests/cost-model-shared.logic.test.ts'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
   // Pipeline utility/seed/legacy scripts — exempt from strict rules (one-off tooling)
   {
     files: ['scripts/seed-*.js', 'scripts/seed-*.ts', 'scripts/migrate.js', 'scripts/poc-*.js', 'scripts/backfill/**', 'scripts/analysis/**'],

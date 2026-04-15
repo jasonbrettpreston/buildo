@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { trades, tradeMappingRules, permitTrades, entities, entityContacts, builders, builderContacts, parcels, permitParcels, buildingFootprints, parcelBuildings, wsibRegistry, entityProjects, leadViews, permits, permitPhaseTransitions, productGroups, permitProducts, costEstimates, tradeForecasts } from "./schema";
+import { trades, tradeMappingRules, permitTrades, entities, entityContacts, builders, builderContacts, parcels, permitParcels, buildingFootprints, parcelBuildings, wsibRegistry, entityProjects, leadViews, permits, permitPhaseTransitions, productGroups, permitProducts, tradeForecasts, costEstimates } from "./schema";
 
 export const tradeMappingRulesRelations = relations(tradeMappingRules, ({one}) => ({
 	trade: one(trades, {
@@ -100,8 +100,8 @@ export const leadViewsRelations = relations(leadViews, ({one}) => ({
 export const permitsRelations = relations(permits, ({many}) => ({
 	leadViews: many(leadViews),
 	permitPhaseTransitions: many(permitPhaseTransitions),
-	costEstimates: many(costEstimates),
 	tradeForecasts: many(tradeForecasts),
+	costEstimates: many(costEstimates),
 }));
 
 export const permitPhaseTransitionsRelations = relations(permitPhaseTransitions, ({one}) => ({
@@ -122,16 +122,16 @@ export const productGroupsRelations = relations(productGroups, ({many}) => ({
 	permitProducts: many(permitProducts),
 }));
 
-export const costEstimatesRelations = relations(costEstimates, ({one}) => ({
+export const tradeForecastsRelations = relations(tradeForecasts, ({one}) => ({
 	permit: one(permits, {
-		fields: [costEstimates.permitNum],
+		fields: [tradeForecasts.permitNum],
 		references: [permits.permitNum]
 	}),
 }));
 
-export const tradeForecastsRelations = relations(tradeForecasts, ({one}) => ({
+export const costEstimatesRelations = relations(costEstimates, ({one}) => ({
 	permit: one(permits, {
-		fields: [tradeForecasts.permitNum],
+		fields: [costEstimates.permitNum],
 		references: [permits.permitNum]
 	}),
 }));

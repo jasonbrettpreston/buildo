@@ -129,6 +129,10 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
       const ZERO_IS_INVALID = new Set([
         'expired_threshold_days', 'los_base_divisor', 'stall_penalty_precon',
         'stall_penalty_active', 'lead_expiry_days', 'coa_stall_threshold',
+        // Spec 83 §4 — Liar's Gate + coverage ratios must never be 0.
+        // A zero liar_gate_threshold would silently disable geometric overrides.
+        // Zero coverage ratios would produce a zero GFA fallback, suppressing all estimates.
+        'liar_gate_threshold', 'urban_coverage_ratio', 'suburban_coverage_ratio', 'trust_threshold_pct',
       ]);
       for (const { variable_key, variable_value } of lvRows) {
         const parsed = parseFloat(variable_value);

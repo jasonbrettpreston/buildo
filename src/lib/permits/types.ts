@@ -112,7 +112,7 @@ export interface LeadView {
 // ---------------------------------------------------------------------------
 // Cost estimates (migration 071 — spec 72)
 // ---------------------------------------------------------------------------
-export type CostSource = 'permit' | 'model';
+export type CostSource = 'permit' | 'model' | 'none'; // 'none' = zero-total surgical bypass (spec 83 §3 Step D)
 export type CostTier = 'small' | 'medium' | 'large' | 'major' | 'mega';
 
 export interface CostEstimate {
@@ -135,6 +135,8 @@ export interface CostEstimate {
   is_geometric_override: boolean;
   modeled_gfa_sqm: number | null;
   trade_contract_values: Record<string, number>;
+  // Spec 83 §2 — surgical effective work area (Step B result). Added in migration 096.
+  effective_area_sqm?: number | null;
 }
 
 // ---------------------------------------------------------------------------

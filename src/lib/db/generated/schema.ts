@@ -44,6 +44,16 @@ export const syncRuns = pgTable("sync_runs", {
 	durationMs: integer("duration_ms"),
 });
 
+export const userProfiles = pgTable("user_profiles", {
+	userId: varchar("user_id", { length: 128 }).primaryKey().notNull(),
+	tradeSlug: varchar("trade_slug", { length: 50 }).notNull(),
+	displayName: varchar("display_name", { length: 200 }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	check("user_profiles_trade_slug_not_empty", sql`TRIM(BOTH FROM trade_slug) <> ''::text`),
+]);
+
 export const dataQualitySnapshots = pgTable("data_quality_snapshots", {
 	id: serial().primaryKey().notNull(),
 	snapshotDate: date("snapshot_date").default(sql`CURRENT_DATE`).notNull(),
@@ -116,19 +126,11 @@ export const dataQualitySnapshots = pgTable("data_quality_snapshots", {
 	timingCalibrationTotal: integer("timing_calibration_total"),
 	timingCalibrationAvgSample: integer("timing_calibration_avg_sample"),
 	timingCalibrationFreshnessHours: numeric("timing_calibration_freshness_hours", { precision: 6, scale:  1 }),
+	costEstimatesLiarGateOverrides: integer("cost_estimates_liar_gate_overrides"),
+	costEstimatesZeroTotalBypass: integer("cost_estimates_zero_total_bypass"),
 }, (table) => [
 	index("idx_dqs_snapshot_date").using("btree", table.snapshotDate.desc().nullsFirst().op("date_ops")),
 	unique("data_quality_snapshots_snapshot_date_key").on(table.snapshotDate),
-]);
-
-export const userProfiles = pgTable("user_profiles", {
-	userId: varchar("user_id", { length: 128 }).primaryKey().notNull(),
-	tradeSlug: varchar("trade_slug", { length: 50 }).notNull(),
-	displayName: varchar("display_name", { length: 200 }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	check("user_profiles_trade_slug_not_empty", sql`TRIM(BOTH FROM trade_slug) <> ''::text`),
 ]);
 
 export const permitHistory = pgTable("permit_history", {
@@ -384,6 +386,18 @@ export const parcelBuildings = pgTable("parcel_buildings", {
 	unique("parcel_buildings_parcel_id_building_id_key").on(table.buildingId, table.parcelId),
 ]);
 
+export const pipelineSchedules = pgTable("pipeline_schedules", {
+	pipeline: text().notNull(),
+	cadence: text().default('Daily').notNull(),
+	cronExpression: text("cron_expression"),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	enabled: boolean().default(true).notNull(),
+	chainId: text("chain_id"),
+}, (table) => [
+	uniqueIndex("idx_pipeline_schedules_scope").using("btree", sql`pipeline`, sql`COALESCE(chain_id, '__ALL__'::text)`),
+	check("pipeline_schedules_chain_id_check", sql`(chain_id = ANY (ARRAY['permits'::text, 'coa'::text, 'sources'::text, 'entities'::text])) OR (chain_id IS NULL)`),
+]);
+
 export const pipelineRuns = pgTable("pipeline_runs", {
 	id: serial().primaryKey().notNull(),
 	pipeline: text().notNull(),
@@ -399,14 +413,6 @@ export const pipelineRuns = pgTable("pipeline_runs", {
 }, (table) => [
 	index("idx_pipeline_runs_lookup").using("btree", table.pipeline.asc().nullsLast().op("text_ops"), table.startedAt.desc().nullsFirst().op("text_ops")),
 ]);
-
-export const pipelineSchedules = pgTable("pipeline_schedules", {
-	pipeline: text().primaryKey().notNull(),
-	cadence: text().default('Daily').notNull(),
-	cronExpression: text("cron_expression"),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
-	enabled: boolean().default(true).notNull(),
-});
 
 export const buildingFootprints = pgTable("building_footprints", {
 	id: serial().primaryKey().notNull(),
@@ -631,41 +637,6 @@ export const entities = pgTable("entities", {
 	check("entities_photo_url_https", sql`(photo_url IS NULL) OR ((photo_url)::text ~~ 'https://%'::text)`),
 ]);
 
-export const coaApplications = pgTable("coa_applications", {
-	id: serial().primaryKey().notNull(),
-	applicationNumber: varchar("application_number", { length: 50 }),
-	address: varchar({ length: 500 }),
-	streetNum: varchar("street_num", { length: 20 }),
-	streetName: varchar("street_name", { length: 200 }),
-	ward: varchar({ length: 10 }),
-	status: varchar({ length: 50 }),
-	decision: varchar({ length: 50 }),
-	decisionDate: date("decision_date"),
-	hearingDate: date("hearing_date"),
-	description: text(),
-	applicant: varchar({ length: 500 }),
-	linkedPermitNum: varchar("linked_permit_num", { length: 30 }),
-	linkedConfidence: numeric("linked_confidence", { precision: 3, scale:  2 }),
-	dataHash: varchar("data_hash", { length: 64 }),
-	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	subType: text("sub_type"),
-	streetNameNormalized: varchar("street_name_normalized"),
-	lifecyclePhase: varchar("lifecycle_phase", { length: 10 }).default(sql`NULL`),
-	lifecycleClassifiedAt: timestamp("lifecycle_classified_at", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	index("idx_coa_applications_address").using("btree", table.address.asc().nullsLast().op("text_ops")),
-	index("idx_coa_applications_linked_permit").using("btree", table.linkedPermitNum.asc().nullsLast().op("text_ops")),
-	index("idx_coa_applications_ward").using("btree", table.ward.asc().nullsLast().op("text_ops")),
-	index("idx_coa_decision_date").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")),
-	index("idx_coa_hearing_date").using("btree", table.hearingDate.asc().nullsLast().op("date_ops")),
-	index("idx_coa_lifecycle_dirty").using("btree", table.id.asc().nullsLast().op("int4_ops")).where(sql`(lifecycle_classified_at IS NULL)`),
-	index("idx_coa_lifecycle_phase").using("btree", table.lifecyclePhase.asc().nullsLast().op("text_ops")).where(sql`(lifecycle_phase IS NOT NULL)`),
-	index("idx_coa_street_name_normalized").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")).where(sql`(street_name_normalized IS NOT NULL)`),
-	index("idx_coa_upcoming_leads").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")).where(sql`(((decision)::text = ANY ((ARRAY['Approved'::character varying, 'Approved with Conditions'::character varying])::text[])) AND (linked_permit_num IS NULL))`),
-	unique("coa_applications_application_number_key").on(table.applicationNumber),
-]);
-
 export const permitPhaseTransitions = pgTable("permit_phase_transitions", {
 	id: serial().primaryKey().notNull(),
 	permitNum: varchar("permit_num", { length: 30 }).notNull(),
@@ -742,6 +713,42 @@ export const logicVariables = pgTable("logic_variables", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 });
 
+export const coaApplications = pgTable("coa_applications", {
+	id: serial().primaryKey().notNull(),
+	applicationNumber: varchar("application_number", { length: 50 }),
+	address: varchar({ length: 500 }),
+	streetNum: varchar("street_num", { length: 20 }),
+	streetName: varchar("street_name", { length: 200 }),
+	ward: varchar({ length: 10 }),
+	status: varchar({ length: 50 }),
+	decision: varchar({ length: 50 }),
+	decisionDate: date("decision_date"),
+	hearingDate: date("hearing_date"),
+	description: text(),
+	applicant: varchar({ length: 500 }),
+	linkedPermitNum: varchar("linked_permit_num", { length: 30 }),
+	linkedConfidence: numeric("linked_confidence", { precision: 3, scale:  2 }),
+	dataHash: varchar("data_hash", { length: 64 }),
+	firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	subType: text("sub_type"),
+	streetNameNormalized: varchar("street_name_normalized"),
+	lifecyclePhase: varchar("lifecycle_phase", { length: 10 }).default(sql`NULL`),
+	lifecycleClassifiedAt: timestamp("lifecycle_classified_at", { withTimezone: true, mode: 'string' }),
+	lifecycleStalled: boolean("lifecycle_stalled").default(false).notNull(),
+}, (table) => [
+	index("idx_coa_applications_address").using("btree", table.address.asc().nullsLast().op("text_ops")),
+	index("idx_coa_applications_linked_permit").using("btree", table.linkedPermitNum.asc().nullsLast().op("text_ops")),
+	index("idx_coa_applications_ward").using("btree", table.ward.asc().nullsLast().op("text_ops")),
+	index("idx_coa_decision_date").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")),
+	index("idx_coa_hearing_date").using("btree", table.hearingDate.asc().nullsLast().op("date_ops")),
+	index("idx_coa_lifecycle_dirty").using("btree", table.id.asc().nullsLast().op("int4_ops")).where(sql`(lifecycle_classified_at IS NULL)`),
+	index("idx_coa_lifecycle_phase").using("btree", table.lifecyclePhase.asc().nullsLast().op("text_ops")).where(sql`(lifecycle_phase IS NOT NULL)`),
+	index("idx_coa_street_name_normalized").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")).where(sql`(street_name_normalized IS NOT NULL)`),
+	index("idx_coa_upcoming_leads").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")).where(sql`(((decision)::text = ANY ((ARRAY['Approved'::character varying, 'Approved with Conditions'::character varying])::text[])) AND (linked_permit_num IS NULL))`),
+	unique("coa_applications_application_number_key").on(table.applicationNumber),
+]);
+
 export const tradeConfigurations = pgTable("trade_configurations", {
 	tradeSlug: varchar("trade_slug", { length: 50 }).primaryKey().notNull(),
 	bidPhaseCutoff: varchar("bid_phase_cutoff", { length: 10 }).notNull(),
@@ -749,8 +756,30 @@ export const tradeConfigurations = pgTable("trade_configurations", {
 	imminentWindowDays: integer("imminent_window_days").default(14).notNull(),
 	allocationPct: numeric("allocation_pct", { precision: 5, scale:  4 }).default('0.0500').notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	multiplierBid: numeric("multiplier_bid", { precision: 4, scale:  2 }).default('2.5').notNull(),
+	multiplierWork: numeric("multiplier_work", { precision: 4, scale:  2 }).default('1.5').notNull(),
 }, (table) => [
 	check("chk_allocation_pct", sql`(allocation_pct >= (0)::numeric) AND (allocation_pct <= (1)::numeric)`),
+]);
+
+export const tradeSqftRates = pgTable("trade_sqft_rates", {
+	tradeSlug: varchar("trade_slug", { length: 50 }).primaryKey().notNull(),
+	baseRateSqft: numeric("base_rate_sqft", { precision: 10, scale:  2 }).notNull(),
+	structureComplexityFactor: numeric("structure_complexity_factor", { precision: 4, scale:  2 }).default('1.00').notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	check("trade_sqft_rates_base_rate_sqft_check", sql`base_rate_sqft > (0)::numeric`),
+	check("trade_sqft_rates_structure_complexity_factor_check", sql`(structure_complexity_factor >= 0.50) AND (structure_complexity_factor <= 3.00)`),
+]);
+
+export const scopeIntensityMatrix = pgTable("scope_intensity_matrix", {
+	permitType: varchar("permit_type", { length: 100 }).notNull(),
+	structureType: varchar("structure_type", { length: 100 }).notNull(),
+	gfaAllocationPercentage: numeric("gfa_allocation_percentage", { precision: 5, scale:  4 }).notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	primaryKey({ columns: [table.permitType, table.structureType], name: "scope_intensity_matrix_pkey"}),
+	check("scope_intensity_matrix_gfa_allocation_percentage_check", sql`(gfa_allocation_percentage > (0)::numeric) AND (gfa_allocation_percentage <= 1.0000)`),
 ]);
 
 export const permitProducts = pgTable("permit_products", {
@@ -769,36 +798,6 @@ export const permitProducts = pgTable("permit_products", {
 			name: "permit_products_product_id_fkey"
 		}),
 	primaryKey({ columns: [table.permitNum, table.productId, table.revisionNum], name: "permit_products_pkey"}),
-]);
-
-export const costEstimates = pgTable("cost_estimates", {
-	permitNum: varchar("permit_num", { length: 30 }).notNull(),
-	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
-	estimatedCost: numeric("estimated_cost", { precision: 15, scale:  2 }),
-	costSource: varchar("cost_source", { length: 20 }).notNull(),
-	costTier: varchar("cost_tier", { length: 20 }),
-	costRangeLow: numeric("cost_range_low", { precision: 15, scale:  2 }),
-	costRangeHigh: numeric("cost_range_high", { precision: 15, scale:  2 }),
-	premiumFactor: numeric("premium_factor", { precision: 3, scale:  2 }),
-	complexityScore: integer("complexity_score"),
-	modelVersion: integer("model_version").default(1).notNull(),
-	computedAt: timestamp("computed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	tradeContractValues: jsonb("trade_contract_values").default({}).notNull(),
-	isGeometricOverride: boolean("is_geometric_override").default(false).notNull(),
-	modeledGfaSqm: numeric("modeled_gfa_sqm"),
-}, (table) => [
-	index("idx_cost_estimates_tier").using("btree", table.costTier.asc().nullsLast().op("text_ops")),
-	foreignKey({
-			columns: [table.permitNum, table.revisionNum],
-			foreignColumns: [permits.permitNum, permits.revisionNum],
-			name: "cost_estimates_permit_num_revision_num_fkey"
-		}).onDelete("cascade"),
-	primaryKey({ columns: [table.permitNum, table.revisionNum], name: "cost_estimates_pkey"}),
-	check("cost_estimates_check", sql`(cost_range_low IS NULL) OR (cost_range_high IS NULL) OR (cost_range_low <= cost_range_high)`),
-	check("cost_estimates_complexity_score_check", sql`(complexity_score >= 0) AND (complexity_score <= 100)`),
-	check("cost_estimates_cost_source_check", sql`(cost_source)::text = ANY ((ARRAY['permit'::character varying, 'model'::character varying])::text[])`),
-	check("cost_estimates_cost_tier_check", sql`(cost_tier)::text = ANY ((ARRAY['small'::character varying, 'medium'::character varying, 'large'::character varying, 'major'::character varying, 'mega'::character varying])::text[])`),
-	check("cost_estimates_premium_factor_check", sql`(premium_factor IS NULL) OR (premium_factor >= 1.0)`),
 ]);
 
 export const tradeForecasts = pgTable("trade_forecasts", {
@@ -829,6 +828,37 @@ export const tradeForecasts = pgTable("trade_forecasts", {
 	check("chk_forecast_urgency", sql`(urgency)::text = ANY ((ARRAY['unknown'::character varying, 'on_time'::character varying, 'upcoming'::character varying, 'imminent'::character varying, 'delayed'::character varying, 'overdue'::character varying, 'expired'::character varying])::text[])`),
 	check("chk_opportunity_score", sql`(opportunity_score >= 0) AND (opportunity_score <= 100)`),
 	check("chk_target_window", sql`(target_window IS NULL) OR ((target_window)::text = ANY ((ARRAY['bid'::character varying, 'work'::character varying])::text[]))`),
+]);
+
+export const costEstimates = pgTable("cost_estimates", {
+	permitNum: varchar("permit_num", { length: 30 }).notNull(),
+	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
+	estimatedCost: numeric("estimated_cost", { precision: 15, scale:  2 }),
+	costSource: varchar("cost_source", { length: 20 }).notNull(),
+	costTier: varchar("cost_tier", { length: 20 }),
+	costRangeLow: numeric("cost_range_low", { precision: 15, scale:  2 }),
+	costRangeHigh: numeric("cost_range_high", { precision: 15, scale:  2 }),
+	premiumFactor: numeric("premium_factor", { precision: 3, scale:  2 }),
+	complexityScore: integer("complexity_score"),
+	modelVersion: integer("model_version").default(1).notNull(),
+	computedAt: timestamp("computed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	tradeContractValues: jsonb("trade_contract_values").default({}).notNull(),
+	isGeometricOverride: boolean("is_geometric_override").default(false).notNull(),
+	modeledGfaSqm: numeric("modeled_gfa_sqm"),
+	effectiveAreaSqm: numeric("effective_area_sqm", { precision: 12, scale:  2 }),
+}, (table) => [
+	index("idx_cost_estimates_tier").using("btree", table.costTier.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.permitNum, table.revisionNum],
+			foreignColumns: [permits.permitNum, permits.revisionNum],
+			name: "cost_estimates_permit_num_revision_num_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.permitNum, table.revisionNum], name: "cost_estimates_pkey"}),
+	check("cost_estimates_check", sql`(cost_range_low IS NULL) OR (cost_range_high IS NULL) OR (cost_range_low <= cost_range_high)`),
+	check("cost_estimates_complexity_score_check", sql`(complexity_score >= 0) AND (complexity_score <= 100)`),
+	check("cost_estimates_cost_source_check", sql`(cost_source)::text = ANY ((ARRAY['permit'::character varying, 'model'::character varying, 'none'::character varying])::text[])`),
+	check("cost_estimates_cost_tier_check", sql`(cost_tier)::text = ANY ((ARRAY['small'::character varying, 'medium'::character varying, 'large'::character varying, 'major'::character varying, 'mega'::character varying])::text[])`),
+	check("cost_estimates_premium_factor_check", sql`(premium_factor IS NULL) OR (premium_factor >= 1.0)`),
 ]);
 
 export const permits = pgTable("permits", {
