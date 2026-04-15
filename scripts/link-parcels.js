@@ -113,10 +113,21 @@ pipeline.run('link-parcels', async (pool) => {
   const addressFilter = `(street_num IS NOT NULL AND street_num != ''
        AND street_name IS NOT NULL AND street_name != '')
        OR (latitude IS NOT NULL AND longitude IS NOT NULL)`;
-  // Timestamp-based incremental: evaluate permits never linked or changed since last linking.
-  // Avoids infinite re-evaluation of unmatchable permits (NOT EXISTS would loop forever
-  // on permits that yield zero parcel matches, since no child row is inserted).
-  const incrementalFilter = `AND (p.parcel_linked_at IS NULL OR p.parcel_linked_at < p.last_seen_at)`;
+  // Incremental filter: re-link only permits never linked, or newly geocoded since last link.
+  //
+  // WHY NOT `parcel_linked_at < last_seen_at`:
+  //   load-permits.js touches last_seen_at = NOW() for EVERY permit in the daily feed
+  //   (even unchanged ones) so that close-stale-permits.js can detect feed disappearance.
+  //   Using last_seen_at here causes link_parcels to process the entire 232K-permit table
+  //   on every chain run, defeating the incremental design.
+  //
+  // WHY geocoded_at:
+  //   geocoded_at is set ONLY when geocode-permits.js writes new lat/lng. The key
+  //   re-link case is: permit arrives address-only → links by address → later gets
+  //   geocoded → should re-link spatially for a higher-confidence spatial match.
+  //   Address-only changes (no geocode update) are rare; use --full for those.
+  const incrementalFilter = `AND (p.parcel_linked_at IS NULL
+       OR (p.geocoded_at IS NOT NULL AND p.parcel_linked_at < p.geocoded_at))`;
   const extraFilter = fullMode ? '' : incrementalFilter;
 
   // Count permits to process
