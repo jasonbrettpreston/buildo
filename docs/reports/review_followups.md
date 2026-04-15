@@ -1148,3 +1148,18 @@ Items 1129 (pool.query memory risk) and Zod defense closed by commit `fix(85_tra
 | LOW | WF3-12 | `compute-trade-forecasts.js` | No SIGTERM handler (item 1130 — still open). Advisory lock 85 orphaned if process is killed during flush. Add `process.on('SIGTERM', ...)` with `lockClientReleased` flag per canonical `classify-lifecycle-phase.js` pattern. | WF2 spec-47 hardening pass | OPEN |
 | LOW | WF3-12 | `compute-trade-forecasts.infra.test.ts:1` | SPEC LINK header points to `docs/reports/lifecycle_phase_implementation.md (Phase 4)` — should be `docs/specs/product/future/85_trade_forecast_engine.md §6`. | One-line fix in next touch of this file | OPEN |
 | LOW | WF3-12 | `src/tests/` | No `compute-trade-forecasts.logic.test.ts` — spec 85 §4 Testing Mandate requires a logic test covering bimodal routing, urgency classification, stall recalibration, and 4-level calibration fallback. | WF1 test scaffolding | OPEN |
+
+## WF1 86_control_panel Admin Control Panel · 2026-04-15
+
+Commit: `d4af46c feat(86_control_panel): WF1 — Admin Control Panel UI + API + migration 097`
+
+Independent review agent found 6 issues (all fixed before commit). The following items are deferred out-of-scope, logged here per §WF6 protocol.
+
+| Sev | Source | Item | Planned home | Status |
+|-----|--------|------|--------------|--------|
+| MED | Plan (deferred) | **Phase 7 Playwright E2E** — spec 86 §5 Phase 7 mandates a browser E2E test that logs in as Admin, alters a trade multiplier, clicks "Apply & Re-Sync", and asserts the DB + pipeline timestamps changed. Current WF1 shipped without it (Phase 7 is listed as out-of-scope). | Future WF1 (Playwright E2E for Control Panel) | OPEN |
+| MED | Plan (deferred) | **`trade_sqft_rates` → `trade_configurations` data migration** — spec 86 §2 prose implies `base_rate_sqft` and `structure_complexity_factor` live on `trade_configurations` ("cleanly merged"). They actually remain on `trade_sqft_rates` (migration 096). The Control Panel UI and GET/PUT routes JOIN the tables and present them as one unified view (correct for now), but the physical merge is unfinished. | Future WF2 on `trade_sqft_rates` merge | OPEN |
+| LOW | Plan (deferred) | **Biome scope expansion** — `biome.json` is currently scoped to `src/features/leads/`. The new `src/features/admin-controls/` module should be added to Biome's `include` paths for consistent lint coverage (hook order, floating promises, telemetry enforcement). | Next Biome config update | OPEN |
+| LOW | Plan (deferred) | **Migrate existing admin pages** — `src/app/admin/data-quality/`, `src/app/admin/market-metrics/`, `src/app/admin/lead-feed/` still use vanilla `useState` + `fetch` (no TanStack Query, no Zustand). The Control Panel is now the first fully-conformant admin page. Harmonize in a future WF2 sweep. | Future WF2 admin pages harmonization | OPEN |
+| LOW | Plan (deferred) | **`npm run migrate` + `npm run db:generate` + `npm run system-map`** — migration 097 is written and committed but has not yet been applied to the local or production DB. Drizzle types and system map will drift from the new `variable_value_json` column and 3 new `logic_variables` rows until these commands are run against a live DB connection. | Run locally before next DB-touching WF | OPEN |
+| LOW | Independent review | **Missing `## Operating Boundaries` and `## 5. Mobile & Responsive Behavior` sections in spec 86** — CLAUDE.md §Spec Boundary Requirements mandates both in every spec. The spec was updated for status + variable counts but these two sections were not added. | Doc-only WF2 on spec 86 | OPEN |

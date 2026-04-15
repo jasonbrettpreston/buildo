@@ -158,3 +158,54 @@ Create a single React page (or tabbed view) in the Admin dashboard with four dis
 - [ ] **Write Playwright/Cypress E2E Test:** Automate a browser session that logs in as Admin, alters a specific trade multiplier, and clicks "Apply & Re-Sync."
 - [ ] **Assert Database Mutation:** The E2E test directly queries the staging DB to confirm `trade_configurations` and `logic_variables` were actually updated with the new values.
 - [ ] **Assert Pipeline Execution:** The E2E test verifies that the `cost_estimates` and `trade_forecasts` tables reflect updated `updated_at` timestamps, proving Steps 14-24 ran successfully via the UI trigger.
+
+---
+
+## 5. Mobile & Responsive Behavior
+
+All Control Panel UI is built mobile-first (base Tailwind classes = mobile; `md:` / `lg:` = desktop).
+
+| Component | Mobile (< 640px) | Desktop (≥ 640px) |
+|-----------|------------------|--------------------|
+| **ConfirmSyncModal** | Renders as bottom `<Drawer>` (Vaul) that slides up from the bottom edge | Renders as centered `<Dialog>` with max-w-lg |
+| **StickyActionBar** | Full-width bar pinned to the bottom of the viewport; stacks buttons vertically if needed | Bar spans the full content width; buttons are inline-flex on the right |
+| **GlobalConfigCard** | Single-column layout; labels stacked above inputs | Two-column label + input layout within each group card |
+| **TradeGrid** | Horizontally scrollable `<div>` wrapping the table; columns freeze at `min-w-[120px]` | Full-width table; all 7 editable columns visible simultaneously |
+| **IntensityMatrix** | Horizontally scrollable container; sticky first column (permit_type) | Full-width grid; all structure_type columns visible |
+
+**Touch targets:** All interactive elements (buttons, inputs, editable cells, sliders) must maintain a minimum tap target of 44 × 44 px (enforced via `min-h-11` / `h-11` Tailwind classes and tested in `control-panel.ui.test.tsx` at 375px viewport).
+
+---
+
+## Operating Boundaries
+
+### Target Files
+
+| Layer | File(s) |
+|-------|---------|
+| **Database migration** | `migrations/097_control_panel_final.sql` |
+| **Shared types + DB helpers** | `src/lib/admin/control-panel.ts` |
+| **API routes** | `src/app/api/admin/control-panel/configs/route.ts`, `src/app/api/admin/control-panel/resync/route.ts` |
+| **Feature module** | `src/features/admin-controls/**` (store, api hooks, components, lib) |
+| **Page + error boundary** | `src/app/admin/control-panel/page.tsx`, `src/app/admin/control-panel/error.tsx` |
+| **Hub tile** | `src/app/admin/page.tsx` |
+| **Tests** | `src/tests/control-panel.*.test.{ts,tsx}` |
+| **Factories** | `src/tests/factories.ts` (appended — no existing code modified) |
+| **Contracts** | `docs/specs/_contracts.json` |
+
+### Out-of-Scope Files
+
+- `scripts/lib/config-loader.js` — read-only reference; dual code path discipline forbids modifications from this spec's UI work. Only add fallback keys when the DB migration adds new rows.
+- `scripts/compute-cost-estimates.js`, `scripts/compute-trade-forecasts.js`, etc. — pipeline scripts are not modified by the Control Panel UI; the resync endpoint spawns them unchanged via the existing chain runner.
+- Existing admin pages (`admin/data-quality/`, `admin/market-metrics/`, `admin/lead-feed/`) — grandfathered `useState`+`fetch` pattern; harmonization is a separate WF2.
+- `trade_sqft_rates` physical merge into `trade_configurations` — future WF2; the UI JOINs the tables and presents them as one grid but does not perform the data migration.
+
+### Cross-Spec Dependencies
+
+| Spec | Dependency |
+|------|-----------|
+| `docs/specs/pipeline/47_pipeline_script_protocol.md` | Resync endpoint fires scripts that must follow the §12 script protocol |
+| `docs/specs/product/future/83_lead_cost_model.md` | `commercial_shell_multiplier`, `placeholder_cost_threshold`, `income_premium_tiers` directly feed this model |
+| `docs/specs/product/future/85_trade_forecast_engine.md` | `bid_phase_cutoff`, `work_phase_target`, `imminent_window_days`, stall penalties all configure this engine |
+| `docs/specs/00_engineering_standards.md §12` | Frontend Foundation Tooling (Zustand, TanStack Query, RHF+Zod, Shadcn) enforced |
+| `docs/specs/_contracts.json` | Numeric thresholds for 18 logic_variables + 7 trade_config columns mapped here |
