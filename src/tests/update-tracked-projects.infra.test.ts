@@ -297,3 +297,81 @@ describe('scripts/update-tracked-projects.js — spec 47 compliance', () => {
     expect(content).toMatch(/Batch categorizer.*no recognized fields/i);
   });
 });
+
+// ── WF3-01: Notification dispatch tests ──
+
+describe('scripts/update-tracked-projects.js — WF3-01 notification dispatch', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/update-tracked-projects.js'),
+      'utf-8',
+    );
+  });
+
+  it('INSERTs into notifications table — not just emitting to PIPELINE_SUMMARY (spec 82 §4)', () => {
+    // Before WF3-01 the script only queued alerts in memory and emitted them
+    // to PIPELINE_SUMMARY for Datadog. Users never received the actual alerts.
+    expect(content).toMatch(/INSERT INTO notifications/);
+    expect(content).toMatch(/user_id,\s*type,\s*permit_num,\s*trade_slug,\s*title,\s*body,\s*created_at/);
+  });
+
+  it('notification INSERT is inside the same withTransaction as memory flag UPDATEs (spec 47 §7.1)', () => {
+    // Atomicity requirement: if the flag UPDATE commits but the INSERT rolls back
+    // (or vice versa), the user either loses the alert forever or receives it twice.
+    // Both operations must share one transaction boundary.
+    // Structural check: INSERT INTO notifications appears AFTER the category UPDATEs
+    // and BEFORE the closing of the withTransaction block.
+    const txStart = content.indexOf('await pipeline.withTransaction(pool, async (client) => {');
+    const insertPos = content.indexOf('INSERT INTO notifications');
+    const txEnd = content.indexOf('});', txStart); // first close after txStart
+    // The INSERT must appear inside the transaction block
+    expect(txStart).toBeGreaterThan(-1);
+    expect(insertPos).toBeGreaterThan(txStart);
+    expect(insertPos).toBeLessThan(
+      content.indexOf('});', insertPos), // closing bracket after the INSERT loop
+    );
+  });
+
+  it('uses batched multi-row VALUES INSERT — not per-row N+1 (spec 47 §7.6)', () => {
+    // A per-row INSERT inside a for-of alerts loop would be N+1 roundtrips.
+    // The batched VALUES pattern collapses all alerts into at most
+    // ceil(alerts.length / ALERT_BATCH_SIZE) statements.
+    expect(content).toMatch(/VALUES \$\{tuples\}/);
+    expect(content).toMatch(/flatMap/); // params built with flatMap, not per-row push
+  });
+
+  it('chunks at ALERT_BATCH_SIZE to stay under 65,535 params (spec 47 §6.3)', () => {
+    // With 7 columns per row, ALERT_BATCH_SIZE = Math.floor(65535 / 7) = 9362.
+    // A burst stall event could generate 15,000 alerts — without chunking the
+    // postgres driver would crash with "too many bind parameters".
+    expect(content).toMatch(/ALERT_INSERT_COLS/);
+    expect(content).toMatch(/ALERT_BATCH_SIZE/);
+    expect(content).toMatch(/Math\.floor\(65535 \/ ALERT_INSERT_COLS\)/);
+    expect(content).toMatch(/alerts\.slice\(i, i \+ ALERT_BATCH_SIZE\)/);
+  });
+
+  it('uses RUN_AT — not NOW() — for notifications.created_at (spec 47 §14.2)', () => {
+    // Midnight Cross: using NOW() inside the loop means alerts created near
+    // midnight get a different date than the updated_at on tracked_projects.
+    // RUN_AT is captured once at startup and passed as the final param.
+    expect(content).not.toMatch(/INSERT INTO notifications[\s\S]{0,500}NOW\(\)/);
+    // RUN_AT must be in the params flatMap for the notification INSERT
+    expect(content).toMatch(/a\.user_id[\s\S]{0,200}a\.type[\s\S]{0,200}a\.body[\s\S]{0,200}RUN_AT/);
+  });
+
+  it('alert objects carry title and body — not a bare message field (matches notifications schema)', () => {
+    // notifications table has title VARCHAR(200) + body TEXT — no "message" column.
+    // Inserting a.message would silently fail or map to the wrong column.
+    expect(content).toMatch(/title: NOTIFICATION_TITLES\./);
+    expect(content).toMatch(/body: `/); // body is the full contextual sentence
+    expect(content).not.toMatch(/alerts\.push\([\s\S]{0,200}message:/); // old field gone
+  });
+
+  it('defines NOTIFICATION_TITLES constant with all three alert types (spec 82 §4)', () => {
+    expect(content).toMatch(/NOTIFICATION_TITLES/);
+    expect(content).toMatch(/STALL_WARNING/);
+    expect(content).toMatch(/STALL_CLEARED/);
+    expect(content).toMatch(/START_IMMINENT/);
+  });
+});

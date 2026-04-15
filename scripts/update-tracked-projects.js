@@ -46,6 +46,20 @@ const ADVISORY_LOCK_ID = 82;
 // a burst of stalled projects from blowing up PIPELINE_SUMMARY payload.
 const ALERTS_META_CAP = 200;
 
+// WF3-01: Short push-friendly notification titles per spec 82 §4.
+// The longer contextual sentence goes to notifications.body (see alerts.push calls).
+const NOTIFICATION_TITLES = {
+  STALL_WARNING:  'Site Stalled — Check your schedule.',
+  STALL_CLEARED:  'Back to Work — Site is active again.',
+  START_IMMINENT: 'Job Starting Soon — Confirm your crew.',
+};
+
+// spec 47 §6.3: stay under 65,535 parameters.
+// notifications INSERT: 7 cols per row — user_id, type, permit_num,
+// trade_slug, title, body, created_at → Math.floor(65535 / 7) = 9362.
+const ALERT_INSERT_COLS = 7;
+const ALERT_BATCH_SIZE  = Math.floor(65535 / ALERT_INSERT_COLS);
+
 // Zod schema for per-trade config fields consumed by this script.
 // spec 47 §4.2: validate before use — prevents silent wrong-type skips.
 const TRADE_CONFIG_SCHEMA = z.object({
@@ -301,7 +315,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
         type: 'STALL_WARNING',
         permit_num: row.permit_num,
         trade_slug: row.trade_slug,
-        message: `Schedule Alert: The site at ${row.permit_num} just stalled. Your ${row.trade_slug} target date has been pushed back to ${dateStr}.`,
+        title: NOTIFICATION_TITLES.STALL_WARNING,
+        body: `Schedule Alert: The site at ${row.permit_num} just stalled. Your ${row.trade_slug} target date has been pushed back to ${dateStr}.`,
       });
       updates.push({
         id: row.tracking_id,
@@ -317,7 +332,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
         type: 'STALL_CLEARED',
         permit_num: row.permit_num,
         trade_slug: row.trade_slug,
-        message: `Schedule Alert: The stop-work at ${row.permit_num} has been cleared. Construction is resuming.`,
+        title: NOTIFICATION_TITLES.STALL_CLEARED,
+        body: `Schedule Alert: The stop-work at ${row.permit_num} has been cleared. Construction is resuming.`,
       });
       updates.push({
         id: row.tracking_id,
@@ -341,7 +357,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
         type: 'START_IMMINENT',
         permit_num: row.permit_num,
         trade_slug: row.trade_slug,
-        message: `Action Required: Your ${row.trade_slug} job at ${row.permit_num} is IMMINENT (within ${row.imminent_window_days} days). Expected start: ${dateStr}.`,
+        title: NOTIFICATION_TITLES.START_IMMINENT,
+        body: `Action Required: Your ${row.trade_slug} job at ${row.permit_num} is IMMINENT (within ${row.imminent_window_days} days). Expected start: ${dateStr}.`,
       });
       updates.push({
         id: row.tracking_id,
@@ -482,6 +499,44 @@ pipeline.run('update-tracked-projects', async (pool) => {
           [RUN_AT, stallOffImminentIds],
         );
         totalUpdated += r.rowCount ?? 0;
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // WF3-01: Atomic Notification Dispatch
+      //
+      // Spec 82 §4: the CRM Assistant MUST INSERT into the notifications
+      // table for every generated alert. This block was previously missing —
+      // alerts were queued in memory and emitted to PIPELINE_SUMMARY for
+      // Datadog, but never persisted to the DB and never delivered to users.
+      //
+      // Atomicity (spec 47 §7.1): INSERT runs inside the SAME transaction
+      // as the memory flag UPDATEs above. If the flag UPDATE commits but
+      // the INSERT fails (or vice versa), the user either loses the alert
+      // permanently or receives it again tomorrow. Atomic commit prevents both.
+      //
+      // Batching (spec 47 §7.6): multi-row VALUES INSERT — no N+1.
+      // Parameter guard (spec 47 §6.3): chunk at ALERT_BATCH_SIZE to stay
+      // under the 65,535 param hard limit even on burst-stall days.
+      // Midnight Cross (spec 47 §14.2): use RUN_AT (captured at startup),
+      // never NOW(), so created_at matches updated_at on tracked_projects.
+      // ═══════════════════════════════════════════════════════════
+      if (alerts.length > 0) {
+        for (let i = 0; i < alerts.length; i += ALERT_BATCH_SIZE) {
+          const batch = alerts.slice(i, i + ALERT_BATCH_SIZE);
+          const tuples = batch.map((_, idx) => {
+            const base = idx * ALERT_INSERT_COLS;
+            return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7})`;
+          }).join(', ');
+          const params = batch.flatMap((a) => [
+            a.user_id, a.type, a.permit_num, a.trade_slug, a.title, a.body, RUN_AT,
+          ]);
+          await client.query(
+            `INSERT INTO notifications
+               (user_id, type, permit_num, trade_slug, title, body, created_at)
+             VALUES ${tuples}`,
+            params,
+          );
+        }
       }
     });
     pipeline.log.info(
