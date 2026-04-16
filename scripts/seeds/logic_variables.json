@@ -104,6 +104,20 @@
     "min": 1,
     "max": 365
   },
+  "pre_permit_expiry_months": {
+    "default": 18,
+    "type": "number",
+    "description": "Months after CoA approval before an unlinked Pre-Permit lead is reclassified as Expired/Abandoned",
+    "min": 6,
+    "max": 36
+  },
+  "pre_permit_stale_months": {
+    "default": 12,
+    "type": "number",
+    "description": "Months after CoA approval before an unlinked Pre-Permit is flagged as stale in the aging audit (early-warning bucket)",
+    "min": 3,
+    "max": 24
+  },
   "calibration_min_sample_size": {
     "default": 5,
     "type": "number",

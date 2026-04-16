@@ -20,9 +20,20 @@
  *
  * SPEC LINK: docs/specs/12_coa_integration.md
  */
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  pre_permit_expiry_months: z.number().finite().positive().int(),
+}).passthrough();
 
 pipeline.run('create-pre-permits', async (pool) => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'create-pre-permits');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'create-pre-permits');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+
+  const expiryMonths = logicVars.pre_permit_expiry_months;
   const startTime = Date.now();
 
   pipeline.log.info('[create-pre-permits]', 'Generating pre-permit leads from CoA applications...');
@@ -89,13 +100,13 @@ pipeline.run('create-pre-permits', async (pool) => {
           last_seen_at = NOW()
       WHERE permit_type = 'Pre-Permit'
         AND status = 'Forecasted'
-        AND application_date < NOW() - INTERVAL '18 months'
-    `);
+        AND application_date < NOW() - $1 * INTERVAL '1 month'
+    `, [expiryMonths]);
     return result.rowCount || 0;
   });
 
   if (expired > 0) {
-    pipeline.log.info('[create-pre-permits]', `Expired ${expired.toLocaleString()} aging Pre-Permits (>18 months)`);
+    pipeline.log.info('[create-pre-permits]', `Expired ${expired.toLocaleString()} aging Pre-Permits (>${expiryMonths} months)`);
   }
 
   // Step 3: Reconcile ghost Pre-Permits — when a CoA gets linked to a real permit,

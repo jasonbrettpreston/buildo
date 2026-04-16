@@ -17,25 +17,40 @@
  *
  * SPEC LINK: docs/specs/12_coa_integration.md
  */
+const { z } = require('zod');
 const pipeline = require('../lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  pre_permit_expiry_months: z.number().finite().positive().int(),
+  pre_permit_stale_months:  z.number().finite().positive().int(),
+}).passthrough();
 
 pipeline.run('assert-pre-permit-aging', async (pool) => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-pre-permit-aging');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-pre-permit-aging');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+
+  const expiryMonths = logicVars.pre_permit_expiry_months;
+  const staleMonths  = logicVars.pre_permit_stale_months;
+
   pipeline.log.info('[assert-pre-permit-aging]', 'Phase 6: Pre-Permit Aging Monitor');
 
   // Count approved+unlinked CoA applications by age bucket
-  const result = await pool.query(`
-    SELECT
+  const result = await pool.query(
+    `SELECT
       COUNT(*) AS total_approved_unlinked,
       COUNT(*) FILTER (
-        WHERE decision_date < NOW() - INTERVAL '18 months'
+        WHERE decision_date < NOW() - $1 * INTERVAL '1 month'
       ) AS stale_18m,
       COUNT(*) FILTER (
-        WHERE decision_date < NOW() - INTERVAL '12 months'
+        WHERE decision_date < NOW() - $2 * INTERVAL '1 month'
       ) AS stale_12m
     FROM coa_applications
     WHERE decision ILIKE 'approved%'
-      AND linked_permit_num IS NULL
-  `);
+      AND linked_permit_num IS NULL`,
+    [expiryMonths, staleMonths]
+  );
 
   const row = result.rows[0];
   const totalApprovedUnlinked = parseInt(row.total_approved_unlinked, 10) || 0;
