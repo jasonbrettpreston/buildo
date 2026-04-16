@@ -1,19 +1,38 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    "src/app/**/*.{ts,tsx}"
+    "src/app/**/*.{ts,tsx}",
+    "functions/src/**/*.ts"
   ],
   "project": [
-    "src/**/*.{ts,tsx}"
+    "src/**/*.{ts,tsx}",
+    "functions/src/**/*.ts"
   ],
   "ignore": [
-    "src/tests/**"
+    "src/tests/**",
+    "src/lib/db/generated/**"
   ],
   "ignoreDependencies": [
     "tailwindcss",
     "@vitejs/plugin-react",
     "exceljs",
     "shapefile",
-    "csv-parse"
-  ]
+    "csv-parse",
+    "@turf/boolean-point-in-polygon",
+    "@turf/centroid",
+    "@turf/helpers",
+    "dotenv",
+    "drizzle-orm",
+    "pg-query-stream",
+    "playwright",
+    "@google/genai",
+    "openai",
+    "@ast-grep/cli",
+    "eslint-config-next",
+    "@stryker-mutator/api",
+    "@google-cloud/storage",
+    "@google-cloud/functions-framework",
+    "@google-cloud/pubsub"
+  ],
+  "ignoreBinaries": ["tsx", "sqlfluff", "wait-on"]
 }
