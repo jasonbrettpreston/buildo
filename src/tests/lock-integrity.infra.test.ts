@@ -4,7 +4,10 @@
  * SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §5 Testing Mandate
  *
  * File-shape infra tests verifying that compute-cost-estimates.js implements
- * the advisory lock + SIGTERM concurrency contract from Spec 47 §5 and §8.
+ * the advisory lock + concurrency contract from Spec 47 §5 and §8.
+ *
+ * Phase 2 migration: hand-rolled lockClient + SIGTERM boilerplate replaced with
+ * pipeline.withAdvisoryLock. Tests updated to assert the new delegation pattern.
  *
  * All tests are deterministic file-reads — no live DB required.
  * This matches the infra test convention used by every other *.infra.test.ts
@@ -25,107 +28,43 @@ describe('compute-cost-estimates.js — advisory lock integrity (spec 47 §5)', 
     script = read('scripts/compute-cost-estimates.js');
   });
 
-  // ─── Lock acquisition on dedicated client ───────────────────────────────────
-  it('uses pool.connect() for lock (not pool.query — ephemeral connection)', () => {
-    // pg advisory locks are session-scoped. pool.query() checks out an ephemeral
-    // connection that returns to the pool after the query — the lock would be
-    // released when the connection is reaped, not when the run ends.
-    expect(script).toMatch(/const lockClient = await pool\.connect\(\)/);
+  it('delegates advisory lock 83 to pipeline.withAdvisoryLock — Phase 2 migration (spec 47 §5)', () => {
+    // Phase 1 SDK helper manages: pool.connect(), SIGTERM/SIGINT traps,
+    // SKIP emitSummary, double-cleanup guard. Scripts must not hand-roll.
+    expect(script).toMatch(/const ADVISORY_LOCK_ID = 83/);
+    expect(script).toMatch(/pipeline\.withAdvisoryLock\(pool,\s*ADVISORY_LOCK_ID/);
+    // Must NOT hand-roll — any direct lock call bypasses the spec helper
+    expect(script).not.toMatch(/pg_try_advisory_lock/);
+    expect(script).not.toMatch(/pg_advisory_unlock/);
+    // Must NOT install its own SIGTERM — helper handles it
+    expect(script).not.toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
   });
 
-  it('queries pg_try_advisory_lock on lockClient (not pool.query)', () => {
-    expect(script).toMatch(/lockClient\.query\([^)]*pg_try_advisory_lock/);
-    expect(script).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
+  it('passes skipEmit: false so the caller controls the rich SKIP emit', () => {
+    // compute-cost-estimates has a richer SKIP payload (with audit_table rows)
+    // than the default SKIP the helper emits. skipEmit:false tells the helper
+    // to skip its own emit so the caller can send the custom one.
+    expect(script).toMatch(/skipEmit\s*:\s*false/);
   });
 
-  it('queries pg_advisory_unlock on lockClient (not pool.query)', () => {
-    expect(script).toMatch(/lockClient\.query\([^)]*pg_advisory_unlock/);
-    expect(script).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+  it('checks lockResult.acquired and emits rich SKIP payload with audit_table when lock held', () => {
+    // On lock-not-acquired, the script emits a custom SKIP summary with the
+    // same audit_table shape as the main path — FreshnessTimeline needs it
+    // to render a real verdict rather than UNKNOWN.
+    expect(script).toMatch(/lockResult\.acquired/);
+    expect(script).toMatch(/advisory_lock_held_elsewhere/);
+    // The skip path must include an audit_table
+    expect(script).toMatch(/audit_table/);
   });
 
-  it('declares lockClientReleased = false immediately after pool.connect()', () => {
-    expect(script).toMatch(/let lockClientReleased = false/);
-  });
-
-  // ─── Lock release in finally ────────────────────────────────────────────────
-  it('releases lock in finally block using the same lockClient', () => {
-    const finallyBlock = script.match(/\} finally \{[\s\S]*?lockClient\.release\(\)/)?.[0];
-    expect(finallyBlock, 'finally block with lockClient.release() not found').toBeTruthy();
-    expect(finallyBlock).toContain('pg_advisory_unlock');
-    expect(finallyBlock).toContain('lockClientReleased');
-  });
-
-  it('guards lockClient.release() in finally with lockClientReleased flag', () => {
-    const finallyBlock = script.match(/\} finally \{[\s\S]*?lockClient\.release\(\)/)?.[0] ?? '';
-    // The release must be guarded by the flag — prevents double-release when
-    // SIGTERM already released and set the flag to true.
-    expect(finallyBlock).toMatch(/if\s*\(\s*!lockClientReleased\s*\)/);
-  });
-
-  it('sets lockClientReleased = true before lockClient.release() in finally', () => {
-    const finallyBlock = script.match(/\} finally \{[\s\S]*?lockClient\.release\(\)/)?.[0] ?? '';
-    // Find the position of assignment relative to release() call
-    const assignPos = finallyBlock.lastIndexOf('lockClientReleased = true');
-    const releasePos = finallyBlock.lastIndexOf('lockClient.release()');
-    expect(assignPos, 'lockClientReleased = true not found in finally').toBeGreaterThan(-1);
-    expect(assignPos).toBeLessThan(releasePos);
-  });
-
-  // ─── SIGTERM handler ────────────────────────────────────────────────────────
-  it('registers process.on("SIGTERM") handler after pool.connect()', () => {
-    const afterConnect = script.split('const lockClient = await pool.connect()')[1] ?? '';
-    expect(afterConnect).toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
-  });
-
-  it('SIGTERM handler calls pg_advisory_unlock before exit', () => {
-    const sigtermBlock = script.match(/process\.on\(\s*['"]SIGTERM['"][\s\S]*?process\.exit\(143\)/)?.[0] ?? '';
-    expect(sigtermBlock, 'SIGTERM handler block not found').toBeTruthy();
-    expect(sigtermBlock).toContain('pg_advisory_unlock');
-  });
-
-  it('SIGTERM handler catches unlock errors to avoid masking the exit (best-effort)', () => {
-    const sigtermBlock = script.match(/process\.on\(\s*['"]SIGTERM['"][\s\S]*?process\.exit\(143\)/)?.[0] ?? '';
-    // The pg_advisory_unlock inside SIGTERM must be wrapped in try/catch
-    // so a DB error doesn't block process.exit(143).
-    expect(sigtermBlock).toMatch(/try\s*\{[\s\S]*?pg_advisory_unlock[\s\S]*?\}\s*catch/);
-  });
-
-  it('SIGTERM handler sets lockClientReleased = true before releasing', () => {
-    const sigtermBlock = script.match(/process\.on\(\s*['"]SIGTERM['"][\s\S]*?process\.exit\(143\)/)?.[0] ?? '';
-    expect(sigtermBlock).toContain('lockClientReleased = true');
-  });
-
-  it('SIGTERM handler exits with code 143 (128 + SIGTERM signal 15)', () => {
-    // 143 = 128 + 15. Correct signal-aware exit code for SIGTERM.
-    expect(script).toMatch(/process\.exit\(143\)/);
-  });
-
-  // ─── Lock skip path ────────────────────────────────────────────────────────
-  it('emits SKIP summary when lock is already held elsewhere', () => {
-    const afterLock = script.split('pg_try_advisory_lock')[1] ?? '';
-    const skipSection = afterLock.split('return;')[0] ?? '';
-    expect(skipSection).toContain('emitSummary');
-    expect(skipSection).toContain('advisory_lock_held_elsewhere');
-  });
-
-  it('releases lockClient before returning on lock skip (no leak)', () => {
-    const afterLock = script.split('pg_try_advisory_lock')[1] ?? '';
-    const skipSection = afterLock.split('return;')[0] ?? '';
-    expect(skipSection).toContain('lockClientReleased = true');
-    expect(skipSection).toContain('lockClient.release()');
-  });
-
-  // ─── Lock error path ────────────────────────────────────────────────────────
-  it('releases lockClient and rethrows if pg_try_advisory_lock itself throws', () => {
-    // The catch (lockErr) block must release the client and rethrow.
-    // Split on the literal catch clause to get only its body.
-    expect(script).toContain('} catch (lockErr)');
-    const afterCatch = script.split('} catch (lockErr)')[1] ?? '';
-    // Verify the catch body has the three required statements before the next }
-    const catchBody = afterCatch.split(/\n\s*\}/)[0] ?? '';
-    expect(catchBody, 'lockClientReleased not set in catch (lockErr)').toContain('lockClientReleased = true');
-    expect(catchBody, 'lockClient.release() not in catch (lockErr)').toContain('lockClient.release()');
-    expect(catchBody, 'throw lockErr not in catch (lockErr)').toContain('throw lockErr');
+  it('emits pipeline.emitMeta on the lock-skip path too', () => {
+    // Both paths (acquired + skip) must emit pipeline.emitMeta so the chain
+    // orchestrator always gets a full meta record, even on SKIP.
+    const skipPathMatch = script.match(
+      /if\s*\(!lockResult\.acquired\)([\s\S]{0,2000})/,
+    );
+    expect(skipPathMatch, 'lockResult.acquired guard not found').toBeTruthy();
+    expect(skipPathMatch![0]).toMatch(/pipeline\.emitMeta/);
   });
 });
 
@@ -136,14 +75,15 @@ describe('compute-cost-estimates.js — RUN_AT timestamp discipline (spec 47 §8
     script = read('scripts/compute-cost-estimates.js');
   });
 
-  it('captures RUN_AT from SELECT NOW() after lock — not before', () => {
-    // RUN_AT after lock prevents midnight-cross drift: if the lock check
-    // spans midnight, all batch writes use the same logical "run time".
-    const afterLock = script.split('pg_advisory_unlock')[0] ?? '';
-    // Check lock acquisition comes before RUN_AT
-    const lockPos = afterLock.indexOf('pg_try_advisory_lock');
-    const runAtPos = afterLock.indexOf('RUN_AT');
-    expect(runAtPos).toBeGreaterThan(lockPos);
+  it('captures RUN_AT via pool.query inside the withAdvisoryLock callback (not on a dedicated lockClient)', () => {
+    // After Phase 2 migration, no lockClient exists. RUN_AT must be obtained
+    // via pool.query() inside the withAdvisoryLock callback — still "after lock
+    // acquired" by construction (the callback only runs on lock success).
+    expect(script).toMatch(/pool\.query\([^)]*SELECT NOW/);
+    // Must NOT use a dedicated lockClient for RUN_AT
+    expect(script).not.toMatch(/lockClient\.query\([^)]*SELECT NOW/);
+    // Must NOT use lockClient at all
+    expect(script).not.toMatch(/const lockClient/);
   });
 
   it('batch UPSERT uses RUN_AT parameter (not NOW() in SQL)', () => {

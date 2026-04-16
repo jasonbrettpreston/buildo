@@ -2107,11 +2107,12 @@ describe('compute-cost-estimates.js advisory lock resilience', () => {
     path.join(__dirname, '../../scripts/compute-cost-estimates.js'), 'utf-8'
   );
 
-  it('emits PIPELINE_SUMMARY on advisory lock early return', () => {
+  it('emits PIPELINE_SUMMARY on advisory lock early return (Phase 2: lockResult.acquired guard)', () => {
     // When lock is held by another process, the script must still emit
-    // telemetry so the chain orchestrator has records_new = 0 (not null)
-    const lockBlock = costSource.split('pg_try_advisory_lock')[1] || '';
-    const beforeReturn = lockBlock.split('return;')[0] || '';
+    // telemetry so the chain orchestrator has records_new = 0 (not null).
+    // Phase 2: split on lockResult.acquired guard, not pg_try_advisory_lock.
+    const skipBlock = costSource.match(/if\s*\(!lockResult\.acquired\)([\s\S]{0,2000})/)?.[0] ?? '';
+    const beforeReturn = skipBlock.split('return;')[0] || '';
     expect(beforeReturn).toContain('emitSummary');
   });
 

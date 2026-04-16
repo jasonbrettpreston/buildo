@@ -17,14 +17,20 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     expect(content).toMatch(/pipeline\.run\(\s*['"]compute-cost-estimates['"]/);
   });
 
-  it('acquires advisory lock 83 via pg_try_advisory_lock (WF3-03 PR-C: was 74; lock_id = spec number)', () => {
-    expect(content).toMatch(/pg_try_advisory_lock\(/);
-    expect(content).toMatch(/ADVISORY_LOCK_ID\s*=\s*83/);
+  it('delegates advisory lock 83 to pipeline.withAdvisoryLock — Phase 2 migration (spec 47 §5)', () => {
+    // Hand-rolled lockClient + SIGTERM boilerplate replaced with SDK helper.
+    expect(content).toMatch(/const ADVISORY_LOCK_ID = 83/);
+    expect(content).toMatch(/pipeline\.withAdvisoryLock\(pool,\s*ADVISORY_LOCK_ID/);
+    // Must NOT hand-roll — direct lock calls bypass the spec helper
+    expect(content).not.toMatch(/pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pg_advisory_unlock/);
+    // Must NOT install its own SIGTERM — helper handles it
+    expect(content).not.toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
   });
 
-  it('releases advisory lock in finally block via pg_advisory_unlock', () => {
-    expect(content).toMatch(/pg_advisory_unlock\(/);
-    expect(content).toMatch(/finally\s*\{/);
+  it('does not hand-roll lockClient — pool.connect() replaced by withAdvisoryLock helper', () => {
+    expect(content).not.toMatch(/const lockClient\s*=\s*await pool\.connect\(\)/);
+    expect(content).not.toMatch(/let lockClientReleased/);
   });
 
   it('streams permits via pipeline.streamQuery (no load-all)', () => {
@@ -99,10 +105,12 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     expect(content).toContain('failed_rows');
   });
 
-  it('emits PIPELINE_SUMMARY on advisory lock early return', () => {
-    const lockBlock = content.split('pg_try_advisory_lock')[1] || '';
-    const beforeReturn = lockBlock.split('return;')[0] || '';
-    expect(beforeReturn).toContain('emitSummary');
+  it('emits PIPELINE_SUMMARY on advisory lock early return (skipEmit:false + lockResult guard)', () => {
+    // The skip path is the if (!lockResult.acquired) block — must emit summary before return.
+    const skipBlock = content.match(/if\s*\(!lockResult\.acquired\)([\s\S]{0,2000})/)?.[0] ?? '';
+    expect(skipBlock, 'lockResult.acquired guard not found').toBeTruthy();
+    expect(skipBlock).toContain('emitSummary');
+    expect(skipBlock).toContain('return;');
   });
 
   // --- audit_table observability ---
@@ -126,12 +134,11 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     expect(content).not.toMatch(/const ADVISORY_LOCK_ID = 74/);
   });
 
-  it('acquires advisory lock on a pinned pool.connect() client (WF3-03 PR-C / 83-W5)', () => {
-    expect(content).toMatch(/await pool\.connect\(\)/);
-    expect(content).toMatch(/SELECT pg_try_advisory_lock\(\$1\)/);
-    expect(content).toMatch(/SELECT pg_advisory_unlock\(\$1\)/);
-    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
-    expect(content).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+  it('passes skipEmit: false to withAdvisoryLock — caller controls the rich SKIP emit (Phase 2)', () => {
+    // compute-cost-estimates has a richer SKIP payload (with audit_table rows)
+    // than the default SKIP the helper emits. skipEmit:false tells the helper
+    // to skip its own emit so the caller can send the custom one on lock-held.
+    expect(content).toMatch(/skipEmit\s*:\s*false/);
   });
 
   it('does NOT swallow per-row errors inside flushBatch — let withTransaction rollback (WF3-03 PR-C / 83-W6)', () => {
@@ -147,25 +154,25 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
   // Phase 2 — Spec 83 Surgical additions
   // ─────────────────────────────────────────────────────────────────────────────
 
-  it('registers SIGTERM handler immediately after pool.connect() (spec 47 §5.5)', () => {
-    expect(content).toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
-    expect(content).toMatch(/SIGTERM.*releasing/i);
+  it('does NOT install its own SIGTERM handler — delegated to withAdvisoryLock helper (spec 47 §5.5)', () => {
+    // Phase 2: helper handles SIGTERM/SIGINT traps. Installing a second handler
+    // would create a race between the helper cleanup and the script's own cleanup.
+    expect(content).not.toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
   });
 
-  it('uses lockClientReleased flag to prevent double-release race (spec 47 §5.5)', () => {
-    expect(content).toMatch(/let\s+lockClientReleased\s*=\s*false/);
-    // Flag must be set in both SIGTERM handler and finally block
-    const sigtermBlock = content.match(/process\.on\(\s*['"]SIGTERM['"][\s\S]*?\}\s*\)/)?.[0] ?? '';
-    expect(sigtermBlock, 'lockClientReleased not set in SIGTERM handler').toContain('lockClientReleased = true');
-    const finallyBlock = content.match(/finally\s*\{[\s\S]*?lockClient\.release\(\)/)?.[0] ?? '';
-    expect(finallyBlock, 'lockClientReleased not checked in finally').toContain('lockClientReleased');
+  it('checks lockResult.acquired and emits rich SKIP payload with audit_table (Phase 2)', () => {
+    // On lock-not-acquired, the script emits a custom SKIP summary with the
+    // same audit_table shape as the main path — FreshnessTimeline renders it.
+    expect(content).toMatch(/lockResult\.acquired/);
+    expect(content).toMatch(/advisory_lock_held_elsewhere/);
+    expect(content).toMatch(/audit_table/);
   });
 
-  it('captures RUN_AT via SELECT NOW() once after lock acquisition (spec 47 §8)', () => {
-    // Must appear after the lock section, not before
-    const afterLock = content.split('pg_try_advisory_lock')[1] ?? '';
-    expect(afterLock).toMatch(/SELECT NOW\(\)/);
-    expect(afterLock).toMatch(/RUN_AT/);
+  it('captures RUN_AT via pool.query inside the withAdvisoryLock callback — not on lockClient (spec 47 §8)', () => {
+    // After Phase 2 migration, no lockClient exists. RUN_AT must be obtained
+    // via pool.query() inside the withAdvisoryLock callback.
+    expect(content).toMatch(/pool\.query\([^)]*SELECT NOW/);
+    expect(content).not.toMatch(/lockClient\.query\([^)]*SELECT NOW/);
   });
 
   it('validates logic_variables via Zod COST_MODEL_CONFIG_SCHEMA (spec 83 §4)', () => {
@@ -232,7 +239,8 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
   });
 
   it('emitMeta writes include effective_area_sqm and data_quality_snapshots', () => {
-    const metaSection = content.split('pipeline.emitMeta(').pop() ?? '';
+    // Use [1] (first emitMeta = main path) not .pop() (last = skip path which is brief).
+    const metaSection = content.split('pipeline.emitMeta(')[1] ?? '';
     expect(metaSection).toContain('effective_area_sqm');
     expect(metaSection).toContain('data_quality_snapshots');
   });

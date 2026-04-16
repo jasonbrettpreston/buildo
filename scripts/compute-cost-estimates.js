@@ -234,90 +234,16 @@ if (require.main === module) {
       liarGateThreshold:     logicVars.liar_gate_threshold,
     };
 
-    // ── 5. Concurrency guard — advisory lock on dedicated client ───────────
-    // CRITICAL: lock on pool.connect() not pool.query. pool.query checks out
-    // an ephemeral connection that returns to the pool after the query — the
-    // session-scoped advisory lock would be released when the connection is
-    // reaped. The dedicated client stays checked-out for the full run.
-    // (WF3-03 PR-C / 83-W5 — mirrors classify-lifecycle-phase.js pattern)
-    const lockClient = await pool.connect();
-    let lockClientReleased = false;
-
-    // §5.5 — Graceful shutdown: register SIGTERM immediately after pool.connect()
-    // so a container preemption (Kubernetes scale-down, OOM kill, manual kill -15)
-    // releases advisory lock 83 before process exits. Without this, a forced kill
-    // bypasses the finally block, orphaning the lock and blocking future runs.
-    process.on('SIGTERM', async () => {
-      pipeline.log.warn(
-        '[compute-cost-estimates]',
-        'SIGTERM — releasing advisory lock and shutting down gracefully',
-      );
-      try {
-        await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-      } catch (e) { /* best-effort — lock expires with session anyway */ }
-      if (!lockClientReleased) {
-        lockClientReleased = true;
-        lockClient.release();
-      }
-      process.exit(143);
-    });
-
-    try {
-      const { rows: lockRows } = await lockClient.query(
-        'SELECT pg_try_advisory_lock($1) AS got',
-        [ADVISORY_LOCK_ID],
-      );
-      if (!lockRows[0].got) {
-        pipeline.log.warn(
-          '[compute-cost-estimates]',
-          `Advisory lock ${ADVISORY_LOCK_ID} held by another process — exiting`,
-        );
-        pipeline.emitSummary({
-          records_total: 0,
-          records_new: 0,
-          records_updated: 0,
-          records_meta: {
-            skipped: true,
-            reason: 'advisory_lock_held_elsewhere',
-            advisory_lock_id: ADVISORY_LOCK_ID,
-            audit_table: {
-              phase: 14,
-              name: 'Cost Estimates',
-              verdict: 'SKIP',
-              rows: [
-                { metric: 'permits_processed', value: 0, threshold: null, status: 'SKIP' },
-                { metric: 'permits_inserted',  value: 0, threshold: null, status: 'SKIP' },
-                { metric: 'permits_updated',   value: 0, threshold: null, status: 'SKIP' },
-              ],
-            },
-          },
-        });
-        pipeline.emitMeta(
-          {
-            permits:                ['permit_num'],
-            permit_trades:          ['permit_num', 'revision_num', 'trade_slug'],
-            trade_sqft_rates:       ['trade_slug'],
-            scope_intensity_matrix: ['permit_type', 'structure_type'],
-          },
-          { cost_estimates: ['permit_num'] },
-        );
-        lockClientReleased = true;
-        lockClient.release();
-        return;
-      }
-    } catch (lockErr) {
-      lockClientReleased = true;
-      lockClient.release();
-      throw lockErr;
-    }
-
-  try {
+    // ── 5. Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
+    // Replaces hand-rolled lockClient + SIGTERM boilerplate. skipEmit:false so
+    // the script emits its own rich SKIP payload (with audit_table) on lock-held.
+    const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     // ── 6. RUN_AT: single DB timestamp captured once after lock ────────────
     // Using SELECT NOW() here (not in batched SQL) prevents Midnight Cross
     // drift: if the run starts just before midnight and flushes batches just
     // after, all computed_at values are anchored to the same instant.
     // (Spec 47 §8 — no NOW() in WHERE/SET clauses of the batch UPSERT)
-    const { rows: [{ now: RUN_AT }] } = await lockClient.query('SELECT NOW()');
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
 
     // ── 7. Stream + batch ──────────────────────────────────────────────────
     let processed  = 0;
@@ -483,25 +409,40 @@ if (require.main === module) {
       },
     );
 
-    // Lock released in outer finally block.
+  }, { skipEmit: false }); // end withAdvisoryLock
 
-  } finally {
-    // Release advisory lock on the SAME pinned client that acquired it.
-    // Lock release on a different connection would be a silent no-op.
-    try {
-      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-    } catch (unlockErr) {
-      pipeline.log.warn(
-        '[compute-cost-estimates]',
-        'Failed to release advisory lock — it will expire when the session ends.',
-        { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
-      );
-    } finally {
-      if (!lockClientReleased) {
-        lockClientReleased = true;
-        lockClient.release();
-      }
-    }
+  // Lock held — emit rich SKIP with audit_table (FreshnessTimeline verdict).
+  if (!lockResult.acquired) {
+    pipeline.emitSummary({
+      records_total: 0,
+      records_new: 0,
+      records_updated: 0,
+      records_meta: {
+        skipped: true,
+        reason: 'advisory_lock_held_elsewhere',
+        advisory_lock_id: ADVISORY_LOCK_ID,
+        audit_table: {
+          phase: 14,
+          name: 'Cost Estimates',
+          verdict: 'SKIP',
+          rows: [
+            { metric: 'permits_processed', value: 0, threshold: null, status: 'SKIP' },
+            { metric: 'permits_inserted',  value: 0, threshold: null, status: 'SKIP' },
+            { metric: 'permits_updated',   value: 0, threshold: null, status: 'SKIP' },
+          ],
+        },
+      },
+    });
+    pipeline.emitMeta(
+      {
+        permits:                ['permit_num'],
+        permit_trades:          ['permit_num', 'revision_num', 'trade_slug'],
+        trade_sqft_rates:       ['trade_slug'],
+        scope_intensity_matrix: ['permit_type', 'structure_type'],
+      },
+      { cost_estimates: ['permit_num'] },
+    );
+    return;
   }
 }); // pipeline.run
 
