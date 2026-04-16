@@ -195,4 +195,15 @@ describe('scripts/compute-opportunity-scores.js — spec 47 §12 compliance (WF3
     // Regression anchor: the flush must happen inside the streaming loop
     expect(content).toMatch(/batch\.length >= BATCH_SIZE/);
   });
+
+  it('reads score tier thresholds from logicVars — no hardcoded 80/50/20 in SQL (WF3-E15)', () => {
+    // E15: score_tier_elite, score_tier_strong, score_tier_moderate externalized to logic_variables.
+    expect(content).toMatch(/vars\.score_tier_elite/);
+    expect(content).toMatch(/vars\.score_tier_strong/);
+    expect(content).toMatch(/vars\.score_tier_moderate/);
+    // Hardcoded values must be gone from the CASE expression
+    expect(content).not.toMatch(/opportunity_score >= 80 THEN 'elite'/);
+    expect(content).not.toMatch(/opportunity_score >= 50 THEN 'strong'/);
+    expect(content).not.toMatch(/opportunity_score >= 20 THEN 'moderate'/);
+  });
 });

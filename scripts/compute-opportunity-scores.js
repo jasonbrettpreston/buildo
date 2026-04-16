@@ -38,6 +38,9 @@ const LOGIC_VARS_SCHEMA = z.object({
   los_multiplier_work:  z.number().finite().positive(),
   los_penalty_tracking: z.number().finite().min(0),
   los_penalty_saving:   z.number().finite().min(0),
+  score_tier_elite:     z.number().finite().positive(),
+  score_tier_strong:    z.number().finite().positive(),
+  score_tier_moderate:  z.number().finite().positive(),
 }).passthrough();
 
 pipeline.run('compute-opportunity-scores', async (pool) => {
@@ -238,16 +241,16 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   const { rows: dist } = await pool.query(`
     SELECT
       CASE
-        WHEN opportunity_score >= 80 THEN 'elite'
-        WHEN opportunity_score >= 50 THEN 'strong'
-        WHEN opportunity_score >= 20 THEN 'moderate'
+        WHEN opportunity_score >= $1 THEN 'elite'
+        WHEN opportunity_score >= $2 THEN 'strong'
+        WHEN opportunity_score >= $3 THEN 'moderate'
         ELSE 'low'
       END AS tier,
       COUNT(*)::int AS n
     FROM trade_forecasts
     WHERE (urgency IS NULL OR urgency <> 'expired')
     GROUP BY 1
-  `);
+  `, [vars.score_tier_elite, vars.score_tier_strong, vars.score_tier_moderate]);
   const scoreDist = Object.fromEntries(dist.map((r) => [r.tier, r.n]));
 
   // ═══════════════════════════════════════════════════════════
