@@ -42,7 +42,6 @@
     "assert_pre_permit_aging": { "file": "scripts/quality/assert-pre-permit-aging.js", "supports_full": false, "supports_dry_run": false },
     "assert_coa_freshness": { "file": "scripts/quality/assert-coa-freshness.js", "supports_full": false, "supports_dry_run": false },
     "inspections":          { "file": "scripts/aic-orchestrator.py", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permit_inspections", "permits", "scraper_queue"] },
-    "inspections_legacy":   { "file": "scripts/poc-aic-scraper-v2.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permit_inspections", "permits"], "deprecated": true },
     "classify_inspection_status": { "file": "scripts/classify-inspection-status.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
     "purge_lead_views":     { "file": "scripts/purge-lead-views.js",    "supports_full": false, "supports_dry_run": true, "telemetry_tables": ["lead_views"] },
     "classify_lifecycle_phase": { "file": "scripts/classify-lifecycle-phase.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits", "coa_applications"] },
