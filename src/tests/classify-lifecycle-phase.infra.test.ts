@@ -275,50 +275,24 @@ describe('scripts/classify-lifecycle-phase.js — concurrency guard (advisory lo
     content = read('scripts/classify-lifecycle-phase.js');
   });
 
-  it('acquires advisory lock 84 on a DEDICATED client (WF3 Bug #1 + WF3-adversarial lock-collision fix)', () => {
-    // WF3: pool.query for advisory lock uses ephemeral connections
-    // that can be reaped by idleTimeoutMillis (10s default) during
-    // the 20-60s CPU-bound Map-building phase. Dedicated client
-    // stays checked out (not idle) for the full run.
+  it('delegates advisory lock 84 to pipeline.withAdvisoryLock — Phase 2 migration (spec 47 §5)', () => {
+    // Phase 2: hand-rolled lockClient + SIGTERM boilerplate replaced with SDK helper.
     // Lock ID = 84 (spec number). Was 85 (migration number) — collided with
     // compute-trade-forecasts.js (spec 85), causing both scripts to block each other.
     expect(content).toMatch(/ADVISORY_LOCK_ID\s*=\s*84/);
-    expect(content).toMatch(/pool\.connect\(\)/);
-    expect(content).toMatch(/lockClient\.query[\s\S]*?pg_try_advisory_lock/);
-    // Must NOT use pool.query for the lock (tight window to avoid
-    // cross-file false positives from pool.query elsewhere in the file)
-    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
+    expect(content).toMatch(/pipeline\.withAdvisoryLock\(pool,\s*ADVISORY_LOCK_ID/);
+    // Must NOT hand-roll — any direct lock call bypasses the spec helper
+    expect(content).not.toMatch(/pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pg_advisory_unlock/);
+    // Must NOT install its own SIGTERM — helper handles it
+    expect(content).not.toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
   });
 
-  it('registers a SIGTERM handler for graceful advisory lock release', () => {
-    // §5.5: SIGTERM handler prevents lock 84 from being orphaned when the
-    // process is killed by a Kubernetes scale-down or deployment. Without
-    // this, a kill -15 bypasses the finally block and the lock is permanently
-    // stuck until a DBA manually runs pg_advisory_unlock(84).
-    expect(content).toMatch(/process\.on\(\s*'SIGTERM'/);
-    expect(content).toMatch(/pg_advisory_unlock/);
-    expect(content).toMatch(/process\.exit\(143\)/);
-  });
-
-  it('uses lockClientReleased flag to prevent double-release in SIGTERM race', () => {
-    // §5.5: if SIGTERM fires while the finally block is executing,
-    // both paths would call lockClient.release(). The lockClientReleased
-    // flag prevents a double-release crash on the same pg client.
-    expect(content).toMatch(/lockClientReleased/);
-    expect(content).toMatch(/if\s*\(!lockClientReleased\)/);
-  });
-
-  it('releases advisory lock on the SAME dedicated client in finally block', () => {
-    expect(content).toMatch(/lockClient\.query[\s\S]*?pg_advisory_unlock/);
-    expect(content).toMatch(/lockClient\.release\(\)/);
-    expect(content).toMatch(/finally\s*\{/);
-  });
-
-  it('emits a no-op summary and exits 0 when another instance holds the lock', () => {
-    // The skipped-run summary must have skipped:true so operators
-    // can distinguish "ran but did nothing" from "skipped due to lock".
-    expect(content).toMatch(/skipped:\s*true/);
-    expect(content).toMatch(/advisory_lock_held_elsewhere/);
+  it('emits a no-op summary when another instance holds the lock (helper-delegated)', () => {
+    // Helper emits spec-mandated SKIP summary on lock-held path.
+    // Script must check lockResult.acquired and emit emitMeta on skip path.
+    expect(content).toMatch(/lockResult\.acquired/);
+    expect(content).toMatch(/pipeline\.emitMeta\(\{\},\s*\{\}\)/);
   });
 
   it('processes permits in per-batch transactions via streaming (not a single mega-transaction)', () => {

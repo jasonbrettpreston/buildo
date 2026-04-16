@@ -195,77 +195,12 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   const COA_STALL_THRESHOLD_DAYS = logicVars.coa_stall_threshold;
 
   // ═══════════════════════════════════════════════════════════
-  // Concurrency guard — single-threaded classifier
+  // Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration)
   // ═══════════════════════════════════════════════════════════
-  //
-  // CRITICAL: We must hold the advisory lock on a DEDICATED client
-  // (pool.connect), NOT via pool.query. pool.query checks out an
-  // ephemeral connection, runs the query, and immediately returns it
-  // to the pool. During the 20-60s CPU-bound Map-building phase where
-  // no SQL queries execute, the pool's default idleTimeoutMillis (10s)
-  // can reap that connection — silently releasing the lock mid-run.
-  // A dedicated client stays checked out (not idle in the pool) for
-  // the full run duration. See WF3 Bug #1.
-  const lockClient = await pool.connect();
-  let lockClientReleased = false;
-
-  // §5.5 — Graceful shutdown: register SIGTERM handler immediately after
-  // pool.connect() so any container preemption (Kubernetes scale-down,
-  // OOM kill, manual kill -15) releases advisory lock 85 before the
-  // process exits. Without this, a forced kill bypasses the finally block,
-  // orphaning the lock permanently — blocking all future classifier runs
-  // until a DBA manually runs pg_advisory_unlock(85).
-  process.on('SIGTERM', async () => {
-    pipeline.log.warn(
-      '[classify-lifecycle-phase]',
-      'Received SIGTERM. Releasing advisory lock and shutting down gracefully...',
-    );
-    try {
-      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-    } catch (e) { /* best-effort — lock expires with the session anyway */ }
-    if (!lockClientReleased) {
-      lockClientReleased = true;
-      lockClient.release();
-    }
-    process.exit(143);
-  });
-
-  try {
-    const { rows: lockRows } = await lockClient.query(
-      'SELECT pg_try_advisory_lock($1) AS got',
-      [ADVISORY_LOCK_ID],
-    );
-    if (!lockRows[0].got) {
-      pipeline.log.info(
-        '[classify-lifecycle-phase]',
-        `Advisory lock ${ADVISORY_LOCK_ID} already held by another classifier instance — skipping this run.`,
-      );
-      pipeline.emitSummary({
-        records_total: 0,
-        records_new: 0,
-        records_updated: 0,
-        records_meta: {
-          skipped: true,
-          reason: 'advisory_lock_held_elsewhere',
-          advisory_lock_id: ADVISORY_LOCK_ID,
-        },
-      });
-      pipeline.emitMeta({}, {});
-      // CRITICAL: release the lockClient BEFORE returning. Without
-      // this, the return escapes before the outer try/finally where
-      // lockClient.release() lives, leaking one pool connection on
-      // every skipped run. Found by independent review, Item 1.
-      lockClientReleased = true;
-      lockClient.release();
-      return;
-    }
-  } catch (lockErr) {
-    lockClientReleased = true;
-    lockClient.release();
-    throw lockErr;
-  }
-
-  try {
+  // Replaces hand-rolled lockClient + SIGTERM boilerplate. Helper handles
+  // dedicated pool.connect() client, advisory lock acquire/release,
+  // SIGTERM/SIGINT trap, double-cleanup guard, and spec-mandated SKIP emit.
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   // ═══════════════════════════════════════════════════════════
   // Phase 1: classify dirty permit rows
   // ═══════════════════════════════════════════════════════════
@@ -910,23 +845,11 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       `BLOCKING: ${unclassifiedCount} unclassified permits exceed threshold of 100. See log for top unhandled statuses.`,
     );
   }
-  } finally {
-    // Release advisory lock on the SAME dedicated client that acquired
-    // it, then return the client to the pool. The lock is session-level
-    // so releasing on a different connection would be a no-op.
-    try {
-      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-    } catch (unlockErr) {
-      pipeline.log.warn(
-        '[classify-lifecycle-phase]',
-        'Failed to release advisory lock — it will expire when the session ends.',
-        { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
-      );
-    } finally {
-      if (!lockClientReleased) {
-        lockClientReleased = true;
-        lockClient.release();
-      }
-    }
+  }); // end withAdvisoryLock
+
+  // Lock was held by another instance — helper already emitted SKIP summary.
+  if (!lockResult.acquired) {
+    pipeline.emitMeta({}, {});
+    return;
   }
 });
