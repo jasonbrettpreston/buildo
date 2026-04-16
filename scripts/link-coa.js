@@ -20,9 +20,22 @@
  *
  * SPEC LINK: docs/specs/12_coa_integration.md
  */
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  coa_match_conf_high:   z.number().finite().positive().max(1),
+  coa_match_conf_medium: z.number().finite().positive().max(1),
+}).passthrough();
 
 pipeline.run('link-coa', async (pool) => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'link-coa');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-coa');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  const confHigh   = logicVars.coa_match_conf_high;
+  const confMedium = logicVars.coa_match_conf_medium;
+
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const startTime = Date.now();
@@ -371,12 +384,12 @@ pipeline.run('link-coa', async (pool) => {
     SELECT
       COUNT(*) AS total,
       COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL) AS linked,
-      COUNT(*) FILTER (WHERE linked_confidence >= 0.90) AS high_conf,
-      COUNT(*) FILTER (WHERE linked_confidence >= 0.50 AND linked_confidence < 0.90) AS med_conf,
-      COUNT(*) FILTER (WHERE linked_confidence > 0 AND linked_confidence < 0.50) AS low_conf,
+      COUNT(*) FILTER (WHERE linked_confidence >= $1) AS high_conf,
+      COUNT(*) FILTER (WHERE linked_confidence >= $2 AND linked_confidence < $1) AS med_conf,
+      COUNT(*) FILTER (WHERE linked_confidence > 0 AND linked_confidence < $2) AS low_conf,
       COUNT(*) FILTER (WHERE decision ILIKE 'approved%' AND linked_permit_num IS NULL AND decision_date >= NOW() - INTERVAL '90 days') AS upcoming
     FROM coa_applications
-  `);
+  `, [confHigh, confMedium]);
   const s = stats.rows[0];
   pipeline.log.info('[link-coa]', `DB stats: ${s.total} total | ${s.linked} linked (${s.high_conf} high, ${s.med_conf} med, ${s.low_conf} low) | ${s.upcoming} upcoming leads`);
 

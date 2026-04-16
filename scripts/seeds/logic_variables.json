@@ -292,5 +292,26 @@
     "description": "Minimum percentage of processed permits that must receive a non-null cost estimate; below this threshold the cost estimate run emits a WARN verdict",
     "min": 1,
     "max": 100
+  },
+  "coa_match_conf_high": {
+    "default": 0.90,
+    "type": "number",
+    "description": "CoA→permit match confidence at or above which the link is classified as 'high confidence' in the link-coa run summary",
+    "min": 0.01,
+    "max": 1.0
+  },
+  "coa_match_conf_medium": {
+    "default": 0.50,
+    "type": "number",
+    "description": "CoA→permit match confidence floor for the 'medium confidence' bucket (link-coa summary: >= this AND < high); also used as the low-confidence boundary in the CoA snapshot",
+    "min": 0.01,
+    "max": 1.0
+  },
+  "snapshot_coa_conf_high": {
+    "default": 0.80,
+    "type": "number",
+    "description": "Minimum linked_confidence for a CoA application to be counted as 'high_confidence' in the refresh-snapshot dashboard metrics",
+    "min": 0.01,
+    "max": 1.0
   }
 }

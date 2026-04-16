@@ -3,12 +3,25 @@
 // Refresh the data quality snapshot by re-running all counting queries
 // Usage: node scripts/refresh-snapshot.js
 
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 const TAG = '[refresh-snapshot]';
+
+const LOGIC_VARS_SCHEMA = z.object({
+  snapshot_coa_conf_high:  z.number().finite().positive().max(1),
+  coa_match_conf_medium:   z.number().finite().positive().max(1),
+}).passthrough();
 
 pipeline.run('refresh-snapshot', async (pool) => {
   const t0 = Date.now();
   pipeline.log.info(TAG, 'Recapturing data quality snapshot...');
+
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'refresh-snapshot');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'refresh-snapshot');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  const snapshotCoaConfHigh = logicVars.snapshot_coa_conf_high;
+  const coaConfMedium       = logicVars.coa_match_conf_medium;
 
   // All queries run sequentially on a single REPEATABLE READ client.
   // This guarantees point-in-time consistency (no "torn snapshot" from concurrent writes)
@@ -89,9 +102,10 @@ pipeline.run('refresh-snapshot', async (pool) => {
       `SELECT COUNT(*) as total,
               COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL) as linked,
               AVG(linked_confidence) FILTER (WHERE linked_permit_num IS NOT NULL)::NUMERIC(4,3) as avg_confidence,
-              COUNT(*) FILTER (WHERE linked_confidence >= 0.80) as high_confidence,
-              COUNT(*) FILTER (WHERE linked_confidence IS NOT NULL AND linked_confidence < 0.50) as low_confidence
-       FROM coa_applications`
+              COUNT(*) FILTER (WHERE linked_confidence >= $1) as high_confidence,
+              COUNT(*) FILTER (WHERE linked_confidence IS NOT NULL AND linked_confidence < $2) as low_confidence
+       FROM coa_applications`,
+      [snapshotCoaConfHigh, coaConfMedium]
     );
     scopeRes = await snapClient.query(
       `SELECT COUNT(*) as count FROM permits
