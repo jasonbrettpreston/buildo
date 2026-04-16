@@ -44,10 +44,10 @@ const PRE_CONSTRUCTION_PHASES = new Set([
   'P8',                      // revised
 ]);
 
-// 12 params per row: permit_num, revision_num, trade_slug, predicted_start,
+// 13 params per row: permit_num, revision_num, trade_slug, predicted_start,
 // confidence, urgency, target_window, calibration_method, sample_size,
-// median_days, p25_days, p75_days
-const FORECAST_BATCH_SIZE = pipeline.maxRowsPerInsert(12); // Math.floor(65535 / 12) = 5461
+// median_days, p25_days, p75_days, computed_at (§47 §6.1 runAt snapshot)
+const FORECAST_BATCH_SIZE = pipeline.maxRowsPerInsert(13); // Math.floor(65535 / 13) = 5041
 
 // spec 47 §4 + spec 85 §6 item 4 — fail fast before any math runs.
 // These are the only logicVars consumed downstream; a NaN would silently
@@ -143,6 +143,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     }]),
   );
 
+  const runAt = new Date(); // §47 §6.1 — captured once; bound to every computed_at write
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0); // normalize to UTC midnight
 
@@ -275,22 +276,23 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       const params = [];
       for (let j = 0; j < currentBatch.length; j++) {
         const f = currentBatch[j];
-        const base = j * 12;
+        const base = j * 13;
         vals.push(
-          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int, $${base + 12}::int)`,
+          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int, $${base + 12}::int, $${base + 13}::timestamptz)`,
         );
         params.push(
           f.permit_num, f.revision_num, f.trade_slug,
           f.predicted_start, f.confidence, f.urgency,
           f.target_window, f.calibration_method, f.sample_size,
           f.median_days, f.p25_days, f.p75_days,
+          runAt, // §47 §6.1 — same timestamp for every row in this run
         );
       }
       await client.query(
         `INSERT INTO trade_forecasts
            (permit_num, revision_num, trade_slug, predicted_start,
             confidence, urgency, target_window, calibration_method,
-            sample_size, median_days, p25_days, p75_days)
+            sample_size, median_days, p25_days, p75_days, computed_at)
          VALUES ${vals.join(', ')}
          ON CONFLICT (permit_num, revision_num, trade_slug)
          DO UPDATE SET
@@ -303,7 +305,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
            median_days = EXCLUDED.median_days,
            p25_days = EXCLUDED.p25_days,
            p75_days = EXCLUDED.p75_days,
-           computed_at = NOW()`,
+           computed_at = EXCLUDED.computed_at`,
         params,
       );
       upserted += currentBatch.length;

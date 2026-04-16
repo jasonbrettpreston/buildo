@@ -203,15 +203,26 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/DO UPDATE SET/);
   });
 
-  it('uses 12 params per row (includes target_window, no computed_at)', () => {
-    expect(content).toMatch(/j \* 12/);
-    // The INSERT column list must include target_window
+  it('uses 13 params per row (includes target_window AND computed_at runAt snapshot)', () => {
+    // §47 §6.1: computed_at is now an explicit param bound to runAt (not NOW()).
+    // Row width: 12 forecast fields + 1 timestamp = 13 per row.
+    expect(content).toMatch(/j \* 13/);
     const insertMatch = content.match(
       /INSERT INTO trade_forecasts\s*\([^)]+\)/,
     );
     expect(insertMatch).toBeTruthy();
     expect(insertMatch![0]).toMatch(/target_window/);
-    expect(insertMatch![0]).not.toMatch(/computed_at/);
+    expect(insertMatch![0]).toMatch(/computed_at/);
+  });
+
+  it('§47 §6.1 — computed_at binds $N not NOW() (runAt snapshot, not per-row DB clock)', () => {
+    // NOW() evaluates at INSERT time, so rows in a long streaming run get
+    // different computed_at values. runAt is captured once at script startup
+    // and threaded as $N so every row in the run shares the same timestamp,
+    // enabling point-in-time queries and run-level observability histograms.
+    expect(content).not.toMatch(/computed_at\s*=\s*NOW\(\)/);
+    expect(content).toMatch(/computed_at\s*=\s*EXCLUDED\.computed_at/);
+    expect(content).toMatch(/const runAt\s*=\s*new Date\(\)/);
   });
 
   it('emits PIPELINE_SUMMARY with urgency distribution', () => {
