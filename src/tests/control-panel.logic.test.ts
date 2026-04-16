@@ -109,10 +109,11 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'massing_shed_threshold_sqm',    // E19
   'massing_garage_max_sqm',        // E19
   'massing_nearest_max_distance_m', // E19
+  'wsib_fuzzy_match_threshold',    // E20
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
-  it('contains all 50 expected logic variable keys', () => {
+  it('contains all 51 expected logic variable keys', () => {
     for (const key of EXPECTED_LOGIC_VAR_KEYS) {
       expect(LOGIC_VAR_DEFAULTS).toHaveProperty(key);
     }
@@ -160,7 +161,7 @@ describe('Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ conf
     expect(jsonKeys.length).toBeGreaterThan(0);
   });
 
-  it('logic_variables.json contains all 50 expected keys', () => {
+  it('logic_variables.json contains all 51 expected keys', () => {
     for (const key of EXPECTED_LOGIC_VAR_KEYS) {
       expect(jsonData, `JSON missing key: ${key}`).toHaveProperty(key);
     }

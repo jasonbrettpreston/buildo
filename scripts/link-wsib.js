@@ -18,8 +18,19 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
+const { z } = require('zod');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  wsib_fuzzy_match_threshold: z.number().finite().positive().max(1),
+}).passthrough();
 
 pipeline.run('link-wsib', async (pool) => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'link-wsib');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-wsib');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  const wsibFuzzyMatchThreshold = logicVars.wsib_fuzzy_match_threshold;
+
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const startTime = Date.now();
@@ -91,7 +102,7 @@ pipeline.run('link-wsib', async (pool) => {
         AND w.trade_name_normalized IS NOT NULL
         AND LENGTH(w.trade_name_normalized) >= 5
         AND LENGTH(e.name_normalized) >= 5
-        AND similarity(w.trade_name_normalized, e.name_normalized) > 0.6
+        AND similarity(w.trade_name_normalized, e.name_normalized) > ${wsibFuzzyMatchThreshold}
         ${extraFilter}
     ),
     legal_matches AS (
@@ -104,7 +115,7 @@ pipeline.run('link-wsib', async (pool) => {
       WHERE w.linked_entity_id IS NULL
         AND LENGTH(w.legal_name_normalized) >= 5
         AND LENGTH(e.name_normalized) >= 5
-        AND similarity(w.legal_name_normalized, e.name_normalized) > 0.6
+        AND similarity(w.legal_name_normalized, e.name_normalized) > ${wsibFuzzyMatchThreshold}
         ${extraFilter}
     ),
     combined AS (
@@ -161,7 +172,7 @@ pipeline.run('link-wsib', async (pool) => {
       : '';
     const tier3Params = excludedIds.length > 0 ? [excludedIds] : [];
     // Set pg_trgm threshold for dry-run too (default 0.3 would produce different counts)
-    await pool.query('SET pg_trgm.similarity_threshold = 0.6');
+    await pool.query(`SET pg_trgm.similarity_threshold = ${wsibFuzzyMatchThreshold}`);
     const dr3 = await pool.query(
       `WITH ${buildTier3Ctes(tier3ExcludeClause)} SELECT COUNT(*) as cnt FROM (${TIER3_SELECT}) sub`,
       tier3Params
@@ -256,7 +267,7 @@ pipeline.run('link-wsib', async (pool) => {
       pipeline.log.info('[link-wsib]', 'Tier 3: Fuzzy name matching (pg_trgm)...');
       // Set pg_trgm threshold to 0.6 so the GIN index only returns relevant pairs
       // (default 0.3 fetches too many garbage pairs before the WHERE filter)
-      await client.query('SET pg_trgm.similarity_threshold = 0.6');
+      await client.query(`SET pg_trgm.similarity_threshold = ${wsibFuzzyMatchThreshold}`);
       const result3 = await client.query(`
         WITH ${buildTier3Ctes()},
         matched AS (${TIER3_SELECT})

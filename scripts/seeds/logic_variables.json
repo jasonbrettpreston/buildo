@@ -348,5 +348,12 @@
     "description": "Maximum haversine distance (metres) for the nearest-building fallback in link-massing when no polygon match is found",
     "min": 1,
     "max": 500
+  },
+  "wsib_fuzzy_match_threshold": {
+    "default": 0.6,
+    "type": "number",
+    "description": "pg_trgm similarity threshold for Tier 3 fuzzy builder→WSIB name matching; controls both the GIN index filter and the WHERE similarity() comparison",
+    "min": 0.1,
+    "max": 1.0
   }
 }
