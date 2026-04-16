@@ -1275,3 +1275,89 @@ Document the decision either way with a comment:
 - **Relies on:** `docs/specs/00_engineering_standards.md` §9 (pipeline & script safety)
 - **Consumed by:** Any WF1 that adds a new pipeline step
 - **Consumed by:** Any WF3 reviewing an existing script against the reference standard
+
+---
+
+## Appendix A — Phase 3 WF3 Non-Migration Registry
+
+This appendix documents scripts and constants that were considered for Phase 3 WF3
+externalization or transaction-squash treatment but were explicitly decided against.
+Future auditors MUST consult this appendix before filing new WF3s against these locations.
+
+### A.1 Intentional Non-Migrations (Split-Transaction Exceptions)
+
+#### X1 — `scripts/migrate.js` (lines 208–227)
+**Pattern:** DDL `CREATE`/`ALTER`/`CREATE INDEX` statements followed immediately by an
+`INSERT INTO schema_migrations` record.
+
+**Why NOT wrapped in `withTransaction`:**
+The apply-and-record block at lines 203–207 is intentionally atomic by a different mechanism:
+`pg_try_advisory_lock(MIGRATE_LOCK_ID)` prevents concurrent runs, and each migration file is
+applied in its own transaction so that a partial DDL crash does not poison later migrations.
+Wrapping the DDL + schema_migrations INSERT in `withTransaction` would cause 40P01 retry to
+re-run a partially-applied `CREATE INDEX CONCURRENTLY` or `ALTER TABLE`, which PostgreSQL
+prohibits on active DDL. The current pattern (DDL in isolation, schema_migrations INSERT
+immediately after) is the correct PostgreSQL migration idiom.
+
+**Action:** Do NOT file WF3 against `scripts/migrate.js` for transaction squash.
+
+#### X2 — `scripts/refresh-snapshot.js` (lines 16–160)
+**Pattern:** Hand-rolled `BEGIN ... SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY`
+for snapshot-consistent dashboard reads.
+
+**Why NOT migrated to `withTransaction`:**
+`pipeline.withTransaction` defaults to `READ COMMITTED` isolation. The snapshot requires
+`REPEATABLE READ` so that the entire dashboard query set sees a consistent DB state even
+under concurrent writes. Replacing the hand-rolled block with `withTransaction` would silently
+downgrade isolation and produce non-deterministic dashboard metrics.
+
+**Future path:** A `pipeline.withReadSnapshot(pool, async (client) => {...})` helper should
+wrap this pattern when a second REPEATABLE READ consumer appears. Until then, the hand-rolled
+BEGIN/COMMIT block is the only instance and does not warrant extraction.
+
+**Action:** Do NOT file WF3 against `scripts/refresh-snapshot.js` for transaction squash.
+The hardcoded confidence thresholds *were* externalized (WF3-E17, commit `29b2ea8`).
+
+---
+
+### A.2 Tier 2 — Marginal Constants (Require Stakeholder Conversation Before WF3)
+
+These constants passed fewer than 3 of the Phase 3 triage criteria (§ "Triage rule" in the
+active plan). Do NOT externalize without a written stakeholder request naming the human role
+that would tune the value.
+
+| File | Location | Constant | Why Deferred |
+|------|----------|----------|--------------|
+| `quality/assert-engine-health.js` | lines 28–31 | `DEAD_TUPLE_RATIO`, `SEQ_SCAN_RATIO`, `SEQ_SCAN_MIN_ROWS`, `PING_PONG_RATIO` | Ops-tunable but not user-visible; no PM/RevOps stakeholder identified |
+| `run-chain.js` | lines 180–181 | `BLOAT_WARN_THRESHOLD=0.30`, `BLOAT_ABORT_THRESHOLD=0.50` | Pre-flight bloat policy; tuning without engineering review could abort production chains silently |
+| `load-parcels.js` | line 115 | `IRREGULARITY_THRESHOLD=0.95` | Affects geometric overrides; unclear stakeholder, no spec coverage |
+| `purge-lead-views.js` | line 37 | `RETENTION_DAYS=90` | PIPEDA/legal compliance constant; requires legal sign-off before making user-tunable |
+
+---
+
+### A.3 Indefinite Deferral — Do NOT Externalize
+
+These constants are implementation details or snapshot-calibrated engineering constants that
+have no business stakeholder and no user-visible effect. Do NOT externalize regardless of
+future requests; the pattern is intentional.
+
+#### Throughput knobs (pure performance, not business logic)
+- `BATCH_SIZE` — `classify-permits.js:17`, `extract-builders.js:97`
+- `MAX_ITERATIONS` — `classify-permits.js:623`
+- `DEDUP_FLUSH_SIZE` — `extract-builders.js:147`
+- `MAX_RETRIES`, `RETRY_BASE_MS` — `load-coa.js`, `load-permits.js`, `poc-aic-scraper-v2.js`
+- `SESSION_REFRESH_INTERVAL=200` — `poc-aic-scraper-v2.js:67` (WAF cadence; operational, not business)
+- `load-wsib.js:153,167` batch/flush sizes
+
+#### E11 — `LIFECYCLE_PHASE_BOUNDS` (`quality/assert-lifecycle-phase-distribution.js:60–67`)
+17 distribution bands (min/max per phase) calibrated against a specific DB snapshot at the
+time the assert script was written. These constants fail triage criterion 1: **no stakeholder
+tunes these without first querying the current DB counts**. Making them user-tunable in the
+Control Panel would require the tuner to re-run `SELECT lifecycle_phase, COUNT(*)` first,
+which is an engineering task, not a product decision. The `UNCLASSIFIED_MAX=100` bound (E12)
+was externalized (commit `ada56b1`) because it has a clear ops meaning independent of DB
+counts. The other 17 bounds remain hardcoded.
+
+**Action:** Do NOT file WF3 for `LIFECYCLE_PHASE_BOUNDS`. If the bounds become consistently
+wrong as the DB grows, update them via a normal code commit with a PR comment explaining the
+new snapshot calibration.
