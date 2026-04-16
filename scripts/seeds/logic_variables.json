@@ -118,6 +118,13 @@
     "min": 3,
     "max": 24
   },
+  "coa_freshness_warn_days": {
+    "default": 45,
+    "type": "number",
+    "description": "Days since last CoA ingestion before assert-coa-freshness emits a portal-rot WARN (data may be frozen in CKAN)",
+    "min": 7,
+    "max": 180
+  },
   "calibration_min_sample_size": {
     "default": 5,
     "type": "number",

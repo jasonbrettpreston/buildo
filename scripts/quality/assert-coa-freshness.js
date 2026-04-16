@@ -15,16 +15,28 @@
  *   max_hearing_date: latest hearing (may be future, informational only)
  *
  * Pass Criteria:
- *   ingestion_days_ago < 45 (WARN if >= 45, data may be frozen)
+ *   ingestion_days_ago < coa_freshness_warn_days (WARN if exceeded, data may be frozen)
  *
  * Usage: node scripts/quality/assert-coa-freshness.js
  *
  * SPEC LINK: docs/specs/12_coa_integration.md
  */
+const { z } = require('zod');
 const pipeline = require('../lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  coa_freshness_warn_days: z.number().finite().positive().int(),
+}).passthrough();
 
 pipeline.run('assert-coa-freshness', async (pool) => {
   const startTime = Date.now();
+
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-coa-freshness');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-coa-freshness');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+
+  const freshnessDays = logicVars.coa_freshness_warn_days;
 
   pipeline.log.info('[assert-coa-freshness]', 'Checking CoA source data freshness...');
 
@@ -65,7 +77,7 @@ pipeline.run('assert-coa-freshness', async (pool) => {
     ? Math.max(0, Math.round((Date.now() - lastSeenMs) / (1000 * 60 * 60 * 24)))
     : null;
 
-  const isStale = ingestionDaysAgo !== null && ingestionDaysAgo >= 45;
+  const isStale = ingestionDaysAgo !== null && ingestionDaysAgo >= freshnessDays;
 
   pipeline.log.info('[assert-coa-freshness]', 'Freshness check complete', {
     total_records: totalRecords,
@@ -84,7 +96,7 @@ pipeline.run('assert-coa-freshness', async (pool) => {
   const rows = [
     { metric: 'total_records', value: totalRecords, threshold: null, status: 'INFO' },
     { metric: 'last_ingestion', value: maxLastSeen ? new Date(maxLastSeen).toISOString().split('T')[0] : 'never', threshold: null, status: 'INFO' },
-    { metric: 'ingestion_days_ago', value: ingestionDaysAgo, threshold: '< 45', status: isStale ? 'WARN' : 'PASS' },
+    { metric: 'ingestion_days_ago', value: ingestionDaysAgo, threshold: `< ${freshnessDays}`, status: isStale ? 'WARN' : 'PASS' },
     { metric: 'max_decision_date', value: maxDecisionDate || 'none', threshold: null, status: 'INFO' },
     { metric: 'max_hearing_date', value: maxHearingDate || 'none', threshold: null, status: 'INFO' },
   ];
