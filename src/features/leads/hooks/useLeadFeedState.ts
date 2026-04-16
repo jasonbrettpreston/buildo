@@ -294,7 +294,7 @@ export const useLeadFeedState = create<LeadFeedState>()(
 
 /**
  * Hard-reset the lead feed store + its persisted localStorage slice.
- * Call from `signOut()` so a shared device doesn't leak user A's
+ * Must be called on sign-out so a shared device doesn't leak user A's
  * snapped GPS position to user B's first feed fetch.
  *
  * Phase 3-holistic WF3 Phase C (2026-04-09, Independent reviewer C2):
