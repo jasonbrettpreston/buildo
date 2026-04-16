@@ -126,73 +126,10 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
   }
   const minSampleSize = logicVars.calibration_min_sample_size;
 
-  // ─── Concurrency guard — single-threaded calibrator ──────────
-  // Lock acquired on a DEDICATED `pool.connect()` client (NOT pool.query).
-  // pool.query checks out an ephemeral connection that returns to the pool
-  // after the query, so the session-level advisory lock would be released
-  // when the connection is reaped — exactly the bug 83-W5 documented for
-  // compute-cost-estimates.js. Mirrors the canonical pattern in
-  // classify-lifecycle-phase.js (lock 85).
-  const lockClient = await pool.connect();
-
-  // Guard flag prevents double-release if SIGTERM fires after the skip-path
-  // (or after the finally block) has already released the client. Without
-  // this, calling lockClient.release() on an already-released client throws.
-  let lockClientReleased = false;
-
-  // §5.5: SIGTERM handler — release advisory lock before process exits so
-  // the next scheduled run is not blocked by a stale lock on a dead session.
-  // Registered immediately after lockClient is obtained so the handler
-  // always has a valid client reference, even if the lock attempt below fails.
-  process.on('SIGTERM', async () => {
-    pipeline.log.warn(
-      '[calibration-v2]',
-      'Received SIGTERM. Releasing advisory lock and shutting down gracefully...',
-    );
-    try {
-      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-    } catch (e) { /* best-effort */ }
-    if (!lockClientReleased) {
-      lockClientReleased = true;
-      lockClient.release();
-    }
-    process.exit(143);
-  });
-
-  try {
-    const { rows: lockRows } = await lockClient.query(
-      'SELECT pg_try_advisory_lock($1) AS got',
-      [ADVISORY_LOCK_ID],
-    );
-    if (!lockRows[0].got) {
-      pipeline.log.info(
-        '[calibration-v2]',
-        `Advisory lock ${ADVISORY_LOCK_ID} held by another instance — skipping this run.`,
-      );
-      pipeline.emitSummary({
-        records_total: 0, records_new: 0, records_updated: 0,
-        records_meta: {
-          skipped: true, reason: 'advisory_lock_held_elsewhere',
-          advisory_lock_id: ADVISORY_LOCK_ID,
-          audit_table: {
-            phase: 15,
-            name: 'Timing Calibration V2',
-            verdict: 'PASS',
-            rows: [{ metric: 'skipped_lock_held', value: 1, threshold: null, status: 'INFO' }],
-          },
-        },
-      });
-      pipeline.emitMeta({}, {});
-      lockClientReleased = true;
-      lockClient.release();
-      return;
-    }
-  } catch (lockErr) {
-    lockClient.release();
-    throw lockErr;
-  }
-
-  try {
+  // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
+  // Replaces hand-rolled lockClient + SIGTERM boilerplate. skipEmit:false so
+  // the script emits its own rich SKIP payload (with audit_table) on lock-held.
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   // ═══════════════════════════════════════════════════════════
   // Step 1: Compute phase-to-phase calibration from inspection pairs
   // ═══════════════════════════════════════════════════════════
@@ -485,22 +422,23 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
       phase_calibration: ['from_phase', 'to_phase', 'permit_type', 'median_days', 'p25_days', 'p75_days', 'sample_size', 'computed_at'],
     },
   );
-  } finally {
-    // Release advisory lock on the SAME dedicated client that acquired it.
-    // Session lock release on a different connection would no-op (cf. 83-W5).
-    try {
-      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-    } catch (unlockErr) {
-      pipeline.log.warn(
-        '[calibration-v2]',
-        'Failed to release advisory lock — it will expire when the session ends.',
-        { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
-      );
-    } finally {
-      if (!lockClientReleased) {
-        lockClientReleased = true;
-        lockClient.release();
-      }
-    }
+  }, { skipEmit: false }); // end withAdvisoryLock
+
+  // Lock held — emit rich SKIP with audit_table (FreshnessTimeline verdict).
+  if (!lockResult.acquired) {
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        skipped: true, reason: 'advisory_lock_held_elsewhere',
+        audit_table: {
+          phase: 15,
+          name: 'Timing Calibration V2',
+          verdict: 'PASS',
+          rows: [{ metric: 'skipped_lock_held', value: 1, threshold: null, status: 'INFO' }],
+        },
+      },
+    });
+    pipeline.emitMeta({}, {});
+    return;
   }
 });

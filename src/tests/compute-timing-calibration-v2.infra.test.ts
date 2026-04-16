@@ -97,20 +97,15 @@ describe('scripts/compute-timing-calibration-v2.js — script shape', () => {
     expect(content).toMatch(/TO_ORDINAL_SQL.*>.*FROM_ORDINAL_SQL/);
   });
 
-  it('acquires advisory lock 86 on a pinned pool.connect() client (WF3-03 / H-W1)', () => {
-    // Lock ID convention: lock_id = spec number. Mirrors the canonical
-    // pattern in classify-lifecycle-phase.js. Lock MUST be acquired on a
-    // dedicated `pool.connect()` client because session locks are bound to
-    // the backend that acquired them — `pool.query` would acquire on an
-    // ephemeral connection and the unlock would no-op (cf. 83-W5).
+  it('delegates advisory lock 86 to pipeline.withAdvisoryLock — Phase 2 migration (spec 47 §5)', () => {
+    // Phase 2: hand-rolled lockClient + SIGTERM boilerplate replaced with SDK helper.
     expect(content).toMatch(/const ADVISORY_LOCK_ID = 86/);
-    expect(content).toMatch(/await pool\.connect\(\)/);
-    expect(content).toMatch(/SELECT pg_try_advisory_lock\(\$1\)/);
-    expect(content).toMatch(/SELECT pg_advisory_unlock\(\$1\)/);
-    // Negative anchor: must not use pool.query for the lock pair (the
-    // 83-style leak). Tightly scoped regex avoids cross-block false hits.
-    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
-    expect(content).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+    expect(content).toMatch(/pipeline\.withAdvisoryLock\(pool,\s*ADVISORY_LOCK_ID/);
+    // Must NOT hand-roll — any direct lock call bypasses the spec helper
+    expect(content).not.toMatch(/pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pg_advisory_unlock/);
+    // Must NOT install its own SIGTERM — helper handles it
+    expect(content).not.toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
   });
 
   it('replaces N+1 UPSERT loop with single multi-row VALUES inside withTransaction (WF3-03 / H-W2 / 86-W1)', () => {
@@ -163,10 +158,11 @@ describe('scripts/compute-timing-calibration-v2.js — spec 47 compliance (WF3-1
     expect(content).not.toMatch(/SPEC LINK:.*lifecycle_phase_implementation/);
   });
 
-  it('registers a SIGTERM handler to release advisory lock gracefully (spec 47 §5.5)', () => {
-    expect(content).toMatch(/process\.on\('SIGTERM'/);
-    expect(content).toMatch(/pg_advisory_unlock/);
-    expect(content).toMatch(/process\.exit\(143\)/);
+  it('handles lock-held path: checks lockResult.acquired and emits skip with audit_table (spec 47 §5)', () => {
+    // Rich SKIP path (skipEmit:false): script emits custom summary with audit_table.
+    expect(content).toMatch(/lockResult\.acquired/);
+    expect(content).toMatch(/skipEmit\s*:\s*false/);
+    expect(content).toMatch(/advisory_lock_held_elsewhere/);
   });
 
   it('includes a real audit_table in the main emitSummary — not omitted (spec 47 §8.2)', () => {

@@ -77,18 +77,15 @@ describe('scripts/compute-opportunity-scores.js — script shape', () => {
     expect(content).toMatch(/moderate/);
   });
 
-  it('acquires advisory lock 81 on a pinned pool.connect() client (WF3-03 PR-B / H-W1)', () => {
-    // Lock ID convention: lock_id = spec number. Mirrors the canonical
-    // pattern in classify-lifecycle-phase.js. Lock acquired on a dedicated
-    // `pool.connect()` client because session locks are bound to the
-    // backend that acquired them — `pool.query` would acquire on an
-    // ephemeral connection and the unlock would no-op (cf. 83-W5).
+  it('delegates advisory lock 81 to pipeline.withAdvisoryLock — Phase 2 migration (spec 47 §5)', () => {
+    // Phase 2: hand-rolled lockClient + SIGTERM boilerplate replaced with SDK helper.
     expect(content).toMatch(/const ADVISORY_LOCK_ID = 81/);
-    expect(content).toMatch(/await pool\.connect\(\)/);
-    expect(content).toMatch(/SELECT pg_try_advisory_lock\(\$1\)/);
-    expect(content).toMatch(/SELECT pg_advisory_unlock\(\$1\)/);
-    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
-    expect(content).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+    expect(content).toMatch(/pipeline\.withAdvisoryLock\(pool,\s*ADVISORY_LOCK_ID/);
+    // Must NOT hand-roll — any direct lock call bypasses the spec helper
+    expect(content).not.toMatch(/pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pg_advisory_unlock/);
+    // Must NOT install its own SIGTERM — helper handles it
+    expect(content).not.toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
   });
 
   it('wraps the multi-batch UPDATE loop in a single withTransaction (WF3-03 PR-B / H-W2 / 81-W1)', () => {
@@ -174,19 +171,12 @@ describe('scripts/compute-opportunity-scores.js — spec 47 §12 compliance (WF3
     );
   });
 
-  it('registers a SIGTERM handler to release advisory lock gracefully (spec 47 §5.5)', () => {
-    // MANDATORY: Cloud/K8s SIGTERM bypasses finally blocks. Without this,
-    // advisory lock 81 stays held on a dead session and bricks the pipeline.
-    expect(content).toMatch(/process\.on\('SIGTERM'/);
-    expect(content).toMatch(/pg_advisory_unlock/);
-    expect(content).toMatch(/process\.exit\(143\)/);
-  });
-
-  it('includes lockClientReleased flag — guards against double-release on SIGTERM (spec 47 §5.5)', () => {
-    // If SIGTERM fires after the skip-path releases lockClient, the SIGTERM handler
-    // must not call lockClient.release() a second time — pg throws on double-release.
-    // Static source check — behavioral correctness confirmed by code inspection.
-    expect(content).toMatch(/lockClientReleased/);
+  it('handles lock-held path: checks lockResult.acquired and emits skip meta (spec 47 §5)', () => {
+    // Rich SKIP path (skipEmit:false): script emits custom summary with audit_table,
+    // then emitMeta. Helper suppresses its own SKIP emit on opts.skipEmit:false.
+    expect(content).toMatch(/lockResult\.acquired/);
+    expect(content).toMatch(/skipEmit\s*:\s*false/);
+    expect(content).toMatch(/advisory_lock_held_elsewhere/);
   });
 
   it('captures RUN_AT from DB at startup — MANDATORY skeleton §R3.5 (spec 47 §14.1)', () => {

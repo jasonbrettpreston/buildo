@@ -99,69 +99,11 @@ pipeline.run('update-tracked-projects', async (pool) => {
     }]),
   );
 
-  // ─── Concurrency guard — single-threaded CRM updater ──────────
-  // Lock acquired on a DEDICATED `pool.connect()` client (mirrors
-  // classify-lifecycle-phase.js). Two concurrent runs would otherwise
-  // race on the memory columns (last_notified_stalled,
-  // last_notified_urgency) and double-fire CRM alerts.
-  const lockClient = await pool.connect();
-
-  // Guard flag prevents double-release if SIGTERM fires after the skip-path
-  // (or after the finally block) has already released the client.
-  let lockClientReleased = false;
-
-  // §5.5: SIGTERM handler — release advisory lock before process exits so
-  // the next scheduled run is not blocked by a stale lock on a dead session.
-  process.on('SIGTERM', async () => {
-    pipeline.log.warn(
-      '[tracked-projects]',
-      'Received SIGTERM. Releasing advisory lock and shutting down gracefully...',
-    );
-    try {
-      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-    } catch (e) { /* best-effort */ }
-    if (!lockClientReleased) {
-      lockClientReleased = true;
-      lockClient.release();
-    }
-    process.exit(143);
-  });
-
-  try {
-    const { rows: lockRows } = await lockClient.query(
-      'SELECT pg_try_advisory_lock($1) AS got',
-      [ADVISORY_LOCK_ID],
-    );
-    if (!lockRows[0].got) {
-      pipeline.log.info(
-        '[tracked-projects]',
-        `Advisory lock ${ADVISORY_LOCK_ID} held by another instance — skipping this run.`,
-      );
-      pipeline.emitSummary({
-        records_total: 0, records_new: 0, records_updated: 0,
-        records_meta: {
-          skipped: true, reason: 'advisory_lock_held_elsewhere',
-          advisory_lock_id: ADVISORY_LOCK_ID,
-          audit_table: {
-            phase: 24,
-            name: 'CRM Assistant',
-            verdict: 'PASS',
-            rows: [{ metric: 'skipped_lock_held', value: 1, threshold: null, status: 'INFO' }],
-          },
-        },
-      });
-      pipeline.emitMeta({}, {});
-      lockClientReleased = true;
-      lockClient.release();
-      return;
-    }
-  } catch (lockErr) {
-    lockClientReleased = true;
-    lockClient.release();
-    throw lockErr;
-  }
-
-  try {
+  // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
+  // Replaces hand-rolled lockClient + SIGTERM boilerplate. Two concurrent runs
+  // would race on memory columns and double-fire CRM alerts. skipEmit:false so
+  // the script emits its own rich SKIP payload (with audit_table) on lock-held.
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   // ═══════════════════════════════════════════════════════════
   // Step 1: Stream all active tracked projects with forecast data
   //
@@ -761,21 +703,23 @@ pipeline.run('update-tracked-projects', async (pool) => {
       lead_analytics: ['lead_key', 'tracking_count', 'saving_count', 'updated_at'],
     },
   );
-  } finally {
-    // Release advisory lock on the SAME pinned client that acquired it.
-    try {
-      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-    } catch (unlockErr) {
-      pipeline.log.warn(
-        '[tracked-projects]',
-        'Failed to release advisory lock — it will expire when the session ends.',
-        { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
-      );
-    } finally {
-      if (!lockClientReleased) {
-        lockClientReleased = true;
-        lockClient.release();
-      }
-    }
+  }, { skipEmit: false }); // end withAdvisoryLock
+
+  // Lock held — emit rich SKIP with audit_table (FreshnessTimeline verdict).
+  if (!lockResult.acquired) {
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        skipped: true, reason: 'advisory_lock_held_elsewhere',
+        audit_table: {
+          phase: 24,
+          name: 'CRM Assistant',
+          verdict: 'PASS',
+          rows: [{ metric: 'skipped_lock_held', value: 1, threshold: null, status: 'INFO' }],
+        },
+      },
+    });
+    pipeline.emitMeta({}, {});
+    return;
   }
 });
