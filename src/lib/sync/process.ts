@@ -54,7 +54,7 @@ async function findExistingPermit(
  * Each record is wrapped in its own transaction so a single bad record
  * does not roll back the entire batch.
  */
-export async function processBatch(
+async function processBatch(
   batch: RawPermitRecord[],
   syncRunId: number
 ): Promise<SyncStats> {
