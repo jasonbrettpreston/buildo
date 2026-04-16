@@ -111,7 +111,10 @@ export const LogicVariableUpdateSchema = z.object({
   key: z.string().min(1).max(100),
   value: z.number().finite().nullable().optional(),
   jsonValue: z.record(z.string(), z.number().finite()).nullable().optional(),
-});
+}).refine(
+  (d) => !(typeof d.value === 'number' && d.jsonValue !== null && d.jsonValue !== undefined),
+  { message: 'Provide either value (numeric) or jsonValue (JSON object), not both' },
+);
 
 /** Validates a single trade_config update in the diff payload. */
 export const TradeConfigUpdateSchema = z.object({

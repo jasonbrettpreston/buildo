@@ -49,12 +49,27 @@ export async function POST() {
         stdio: ['ignore', 'ignore', 'pipe'],
       });
 
-      child.stderr?.on('data', () => {
-        // Stderr buffered silently — chain logs to pipeline_runs, not here
+      // Accumulate stderr so we can log it on non-zero exit.
+      // The chain normally logs to pipeline_runs, but if it crashes before
+      // connecting to the DB (e.g. missing env var), stderr is the only trace.
+      const stderrChunks: Buffer[] = [];
+      child.stderr?.on('data', (chunk: Buffer) => {
+        stderrChunks.push(chunk);
       });
 
       child.on('error', (err) => {
         logError('[control-panel/resync]', err, { event: 'chain_spawn_failed' });
+      });
+
+      child.on('close', (code) => {
+        if (code !== 0 && code !== null) {
+          const stderr = Buffer.concat(stderrChunks).toString('utf8').slice(0, 2000);
+          logError(
+            '[control-panel/resync]',
+            new Error(`run-chain.js exited with code ${code}`),
+            { event: 'chain_nonzero_exit', exit_code: code, stderr },
+          );
+        }
       });
 
       // Detach so the API response isn't blocked

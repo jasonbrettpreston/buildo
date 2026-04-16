@@ -151,4 +151,48 @@ describe('useAdminControlsStore', () => {
     expect(diff.tradeConfigs ?? []).toHaveLength(0);
     expect(diff.scopeMatrix ?? []).toHaveLength(0);
   });
+
+  // ── refreshProductionConfig ────────────────────────────────────────────────
+  // This action is the critical guard against the race condition where in-flight
+  // edits made DURING a pending PUT would be silently orphaned if setProductionConfig
+  // (which resets draftConfig) were called on the re-fetch after a successful save.
+
+  it('refreshProductionConfig updates production without overwriting draftConfig', async () => {
+    const store = await getStore();
+    const original = makeProductionConfig();
+    store.getState().setProductionConfig(original);
+    // User makes a draft edit
+    store.getState().updateDraftLogicVar('los_base_divisor', 7777);
+    expect(store.getState().hasUnsavedChanges).toBe(true);
+
+    // Simulate a DB re-fetch returning a new production config (e.g. another
+    // operator just saved). The draft edit must survive.
+    const newProduction = makeProductionConfig();
+    newProduction.logicVariables[0]!.value = 9000; // server side changed
+    store.getState().refreshProductionConfig(newProduction);
+
+    const state = store.getState();
+    // Production is updated
+    expect(state.productionConfig?.logicVariables[0]!.value).toBe(9000);
+    // Draft still has the user's pending edit
+    const draftVar = state.draftConfig?.logicVariables.find(
+      (v: LogicVariableRow) => v.key === 'los_base_divisor',
+    );
+    expect(draftVar?.value).toBe(7777);
+    // hasUnsavedChanges reflects that draft differs from new production
+    expect(state.hasUnsavedChanges).toBe(true);
+  });
+
+  it('refreshProductionConfig sets hasUnsavedChanges=false when draft already matches new production', async () => {
+    const store = await getStore();
+    const original = makeProductionConfig();
+    store.getState().setProductionConfig(original);
+    // No edits — draft equals production
+    expect(store.getState().hasUnsavedChanges).toBe(false);
+
+    // Re-fetch returns the same config (nothing changed server-side)
+    store.getState().refreshProductionConfig(makeProductionConfig());
+
+    expect(store.getState().hasUnsavedChanges).toBe(false);
+  });
 });

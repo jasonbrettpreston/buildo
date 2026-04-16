@@ -39,7 +39,7 @@ export function TradeGrid({ trades }: TradeGridProps) {
   const updateDraftTradeConfig = useAdminControlsStore((s) => s.updateDraftTradeConfig);
 
   const filtered = search
-    ? trades.filter((t) => t.tradeSlug.includes(search.toLowerCase()))
+    ? trades.filter((t) => t.tradeSlug.toLowerCase().includes(search.toLowerCase()))
     : trades;
 
   return (

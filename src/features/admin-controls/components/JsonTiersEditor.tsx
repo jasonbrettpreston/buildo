@@ -6,7 +6,7 @@
  * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 3
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface JsonTiersEditorProps {
   /** Current JSON value — null means not yet set */
@@ -19,6 +19,13 @@ export function JsonTiersEditor({ value, onChange }: JsonTiersEditorProps) {
     value ? JSON.stringify(value, null, 2) : '{}',
   );
   const [parseError, setParseError] = useState<string | null>(null);
+
+  // Sync textarea when the parent resets the value (e.g. after resetDrafts()).
+  // Without this, the textarea shows stale draft JSON after discard.
+  useEffect(() => {
+    setRaw(value ? JSON.stringify(value, null, 2) : '{}');
+    setParseError(null);
+  }, [value]);
 
   function handleBlur() {
     try {

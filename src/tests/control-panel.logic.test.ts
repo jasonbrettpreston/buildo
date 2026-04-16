@@ -125,10 +125,39 @@ describe('Schema parity — LOGIC_VAR_DEFAULTS ↔ config-loader FALLBACK_LOGIC_
   // block in config-loader.js. This catches key additions to either side.
   for (const key of EXPECTED_LOGIC_VAR_KEYS) {
     it(`key "${key}" present in config-loader FALLBACK_LOGIC_VARS`, () => {
-      const inFallback = configLoaderSource.includes(`  ${key}:`);
-      expect(inFallback).toBe(true);
+      // Match the key followed by a colon anywhere in the source — handles
+      // varying indentation styles without being brittle to whitespace changes.
+      const pattern = new RegExp(`\\b${key}:\\s`);
+      expect(pattern.test(configLoaderSource)).toBe(true);
     });
   }
+
+  // Reverse direction: every key in config-loader FALLBACK_LOGIC_VARS must
+  // also be present in LOGIC_VAR_DEFAULTS. Catches pipeline-side additions
+  // that are never exposed to the admin UI or Delta Guard.
+  it('all FALLBACK_LOGIC_VARS keys are present in LOGIC_VAR_DEFAULTS', () => {
+    // Extract the FALLBACK_LOGIC_VARS block — use [\s\S] instead of . with s-flag
+    // (project tsconfig target is ES2017; the s/dotAll flag requires ES2018+).
+    const blockMatch = configLoaderSource.match(
+      /const FALLBACK_LOGIC_VARS\s*=\s*\{([\s\S]*?)\}/,
+    );
+    expect(blockMatch).not.toBeNull();
+    const block: string = blockMatch?.[1] ?? '';
+    expect(block.length).toBeGreaterThan(0);
+    // Each key is a bare identifier followed by a colon (2-space indent).
+    const jsKeys: string[] = [];
+    for (const m of block.matchAll(/^\s{2}(\w+):/gm)) {
+      const key = m[1];
+      if (key !== undefined) jsKeys.push(key);
+    }
+    expect(jsKeys.length).toBeGreaterThan(0);
+    for (const jsKey of jsKeys) {
+      expect(
+        LOGIC_VAR_DEFAULTS,
+        `config-loader key "${jsKey}" is missing from LOGIC_VAR_DEFAULTS`,
+      ).toHaveProperty(jsKey);
+    }
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -152,6 +181,15 @@ describe('LogicVariableUpdateSchema', () => {
 
   it('rejects an empty key', () => {
     const result = LogicVariableUpdateSchema.safeParse({ key: '', value: 5 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a payload with both numeric value and jsonValue populated (XOR invariant)', () => {
+    const result = LogicVariableUpdateSchema.safeParse({
+      key: 'income_premium_tiers',
+      value: 5,
+      jsonValue: { 100000: 1.2 },
+    });
     expect(result.success).toBe(false);
   });
 });

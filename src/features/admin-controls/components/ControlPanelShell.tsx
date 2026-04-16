@@ -64,13 +64,15 @@ export function ControlPanelShell() {
 
   async function handleConfirm() {
     try {
-      // useUpdateConfigs calls computeDiff() internally — no arg needed
+      // useUpdateConfigs calls computeDiff() internally — no arg needed.
+      // admin_gravity_save_failed telemetry is fired in useUpdateConfigs.onError;
+      // admin_gravity_adjusted telemetry is fired in useUpdateConfigs.onSuccess.
+      // Do not duplicate either here.
       await applyUpdate();
       await triggerPipeline();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       toast.error(`Failed to apply: ${msg}`);
-      captureAdminEvent('admin_gravity_save_failed', { error: msg });
     } finally {
       setShowConfirm(false);
     }

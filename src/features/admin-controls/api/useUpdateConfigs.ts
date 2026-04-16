@@ -40,6 +40,7 @@ export function useUpdateConfigs() {
       // to prevent the race where edits made during an in-flight PUT would be silently
       // orphaned (hasUnsavedChanges would reset to false while new edits exist).
       void queryClient.invalidateQueries({ queryKey: controlPanelKeys.configs() });
+      captureAdminEvent('admin_gravity_adjusted', { rows_updated: data.data.rows_updated });
       toast.success(`Configs Saved — ${data.data.rows_updated} row(s) updated`);
     },
     onError: (err: Error) => {

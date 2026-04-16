@@ -126,7 +126,7 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
 
     // ── Logic variables ──────────────────────────────────────
     const { rows: lvRows } = await pool.query(
-      'SELECT variable_key, variable_value FROM logic_variables',
+      'SELECT variable_key, variable_value, variable_value_json FROM logic_variables',
     );
 
     if (lvRows.length > 0) {
@@ -143,7 +143,14 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
         // Zero coverage ratios would produce a zero GFA fallback, suppressing all estimates.
         'liar_gate_threshold', 'urban_coverage_ratio', 'suburban_coverage_ratio', 'trust_threshold_pct',
       ]);
-      for (const { variable_key, variable_value } of lvRows) {
+      for (const { variable_key, variable_value, variable_value_json } of lvRows) {
+        // JSON-type variables (e.g. income_premium_tiers) store their value in
+        // variable_value_json; variable_value holds a sentinel 0. Read the JSON
+        // object directly — never try to parse it as a float.
+        if (variable_value_json !== null && typeof variable_value_json === 'object') {
+          logicVars[variable_key] = variable_value_json;
+          continue;
+        }
         const parsed = parseFloat(variable_value);
         if (!Number.isFinite(parsed)) {
           pipeline.log.warn(`[${tag}]`, `logic_variables.${variable_key} is non-finite — keeping fallback`, { raw: variable_value });
