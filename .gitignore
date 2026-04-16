@@ -64,6 +64,13 @@ tmp_*.json
 # claude code agent worktrees
 .claude/worktrees/
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# cursor workflow artifacts (active task done files, prev_completed state)
+.cursor/active_task*
+
+# ad-hoc git log dumps
+.git_log*.txt
 
 # accidental zero-byte files from CLI typos
 nul
