@@ -90,11 +90,30 @@ while IFS=: read -r f _; do
 done < <(grep -rEln 'new Pool\(' src/ 2>/dev/null | grep -v 'interface Pool\|type Pool' || true)
 [ $boundary -eq 1 ] && fail=1
 
+# ---------------------------------------------------------------------------
+# 6. Direct pg_try_advisory_lock — banned in scripts/ after Bundle A migration.
+#    scripts/run-chain.js uses the 2-arg form (separate key namespace) and is
+#    exempt. scripts/lib/pipeline.js is the helper implementation — also exempt.
+# ---------------------------------------------------------------------------
+advisory_lock=0
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  case "$f" in
+    scripts/run-chain.js) ;;           # 2-arg form, separate namespace — exempt
+    scripts/lib/pipeline.js) ;;        # helper implementation — exempt
+    *)
+      echo "footgun[direct-advisory-lock]: $f calls pg_try_advisory_lock directly. Use pipeline.withAdvisoryLock() instead (spec 47 §5, Bundle A migration). Exception: scripts/run-chain.js (2-arg form) and scripts/lib/pipeline.js (helper)."
+      advisory_lock=1
+      ;;
+  esac
+done < <(grep -rEln 'pg_try_advisory_lock' scripts/ 2>/dev/null | grep -v 'scripts/hooks/' || true)
+[ $advisory_lock -eq 1 ] && fail=1
+
 if [ $fail -ne 0 ]; then
   echo
   echo "❌ Footgun gate failed. See messages above. To suppress a single line, add \`// ast-grep-disable-next-line <rule-id>\` with a justification."
   exit 1
 fi
 
-echo "✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary)"
+echo "✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock)"
 exit 0
