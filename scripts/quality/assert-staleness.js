@@ -15,7 +15,14 @@
  *
  * SPEC LINK: docs/specs/38_inspection_scraping.md §3.6 Step 5
  */
+const { z } = require('zod');
 const pipeline = require('../lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  scrape_early_phase_threshold_pct: z.number().finite().positive(),
+  scrape_stale_days:                z.number().finite().positive().int(),
+}).passthrough();
 
 // Must match scraper TARGET_TYPES (Spec 38 §3.6 — stage-level scrape targets only)
 const TARGET_TYPES = [
@@ -25,6 +32,13 @@ const TARGET_TYPES = [
 ];
 
 pipeline.run('assert-staleness', async (pool) => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-staleness');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-staleness');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+
+  const earlyPhasePct = logicVars.scrape_early_phase_threshold_pct;
+  const staleDays     = logicVars.scrape_stale_days;
+
   console.log('\n=== Phase 4: Staleness Monitor ===\n');
 
   const errors = [];
@@ -46,7 +60,7 @@ pipeline.run('assert-staleness', async (pool) => {
   const scraped = parseInt(coverageRes.rows[0].scraped) || 0;
   const neverScraped = totalTarget - scraped;
   const coveragePct = totalTarget > 0 ? ((scraped / totalTarget) * 100).toFixed(1) + '%' : '0%';
-  const isEarlyPhase = totalTarget > 0 && (scraped / totalTarget) < 0.05;
+  const isEarlyPhase = totalTarget > 0 && (scraped / totalTarget) * 100 < earlyPhasePct;
 
   rows.push({ metric: 'total_target_permits', value: totalTarget, threshold: null, status: 'INFO' });
   rows.push({ metric: 'scraped_permits', value: scraped, threshold: null, status: 'INFO' });
@@ -73,9 +87,9 @@ pipeline.run('assert-staleness', async (pool) => {
      )
      SELECT
        MAX(CURRENT_DATE - last_scraped::date) AS max_days_stale,
-       COUNT(*) FILTER (WHERE last_scraped < NOW() - INTERVAL '30 days') AS stale_30d
+       COUNT(*) FILTER (WHERE last_scraped < NOW() - $2 * INTERVAL '1 day') AS stale_30d
      FROM permit_freshness`,
-    [TARGET_TYPES]
+    [TARGET_TYPES, staleDays]
   );
   const maxDaysStale = parseInt(stalenessRes.rows[0]?.max_days_stale) || 0;
   const stale30d = parseInt(stalenessRes.rows[0]?.stale_30d) || 0;

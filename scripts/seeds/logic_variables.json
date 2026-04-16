@@ -125,6 +125,20 @@
     "min": 7,
     "max": 180
   },
+  "scrape_early_phase_threshold_pct": {
+    "default": 5,
+    "type": "number",
+    "description": "Scrape coverage percentage below which the staleness monitor treats stale permits as WARN (early phase) rather than FAIL (production)",
+    "min": 1,
+    "max": 50
+  },
+  "scrape_stale_days": {
+    "default": 30,
+    "type": "number",
+    "description": "Days since last scrape_at before a permit inspection is considered stale in the staleness monitor",
+    "min": 1,
+    "max": 180
+  },
   "calibration_min_sample_size": {
     "default": 5,
     "type": "number",
