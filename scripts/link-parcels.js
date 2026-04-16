@@ -23,9 +23,13 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
+const { z } = require('zod');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
-const SPATIAL_MAX_DISTANCE_M = 100;
-const SPATIAL_CONFIDENCE = 0.65;
+const LOGIC_VARS_SCHEMA = z.object({
+  spatial_match_max_distance_m: z.number().finite().positive(),
+  spatial_match_confidence:     z.number().finite().positive().max(1),
+}).passthrough();
 const BBOX_OFFSET = 0.001; // ~111m lat, ~82m lng at Toronto latitude
 
 /**
@@ -100,6 +104,12 @@ function haversineDistance(p1, p2) {
 }
 
 pipeline.run('link-parcels', async (pool) => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'link-parcels');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-parcels');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  const spatialMaxDistanceM = logicVars.spatial_match_max_distance_m;
+  const spatialConfidence   = logicVars.spatial_match_confidence;
+
   const fullMode = pipeline.isFullMode();
   const startTime = Date.now();
 
@@ -312,11 +322,11 @@ pipeline.run('link-parcels', async (pool) => {
              ST_SetSRID(ST_MakePoint(pa.centroid_lng::float, pa.centroid_lat::float), 4326)::geography,
              ST_SetSRID(ST_MakePoint(v.lng, v.lat), 4326)::geography
            )`,
-          [umNums, umRevs, umLngs, umLats, SPATIAL_MAX_DISTANCE_M]
+          [umNums, umRevs, umLngs, umLats, spatialMaxDistanceM]
         );
         for (const row of nearResult.rows) {
           const key = `${row.permit_num}|${row.revision_num}`;
-          spatialMatched.set(key, { parcel_id: row.parcel_id, match_type: 'spatial', confidence: SPATIAL_CONFIDENCE });
+          spatialMatched.set(key, { parcel_id: row.parcel_id, match_type: 'spatial', confidence: spatialConfidence });
           linkedSpatial++;
         }
       }
@@ -348,7 +358,7 @@ pipeline.run('link-parcels', async (pool) => {
           }
         }
 
-        if (bestId !== null && bestDist <= SPATIAL_MAX_DISTANCE_M) {
+        if (bestId !== null && bestDist <= spatialMaxDistanceM) {
           let parsedGeom = bestGeometry;
           if (typeof bestGeometry === 'string') {
             try { parsedGeom = JSON.parse(bestGeometry); } catch { parsedGeom = null; }
@@ -360,7 +370,7 @@ pipeline.run('link-parcels', async (pool) => {
             spatialMatched.set(key, { parcel_id: bestId, match_type: 'spatial_polygon', confidence: 0.90 });
             linkedSpatialPolygon++;
           } else {
-            spatialMatched.set(key, { parcel_id: bestId, match_type: 'spatial', confidence: SPATIAL_CONFIDENCE });
+            spatialMatched.set(key, { parcel_id: bestId, match_type: 'spatial', confidence: spatialConfidence });
           }
           linkedSpatial++;
         }

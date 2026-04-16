@@ -313,5 +313,19 @@
     "description": "Minimum linked_confidence for a CoA application to be counted as 'high_confidence' in the refresh-snapshot dashboard metrics",
     "min": 0.01,
     "max": 1.0
+  },
+  "spatial_match_max_distance_m": {
+    "default": 100,
+    "type": "number",
+    "description": "Maximum metres between a permit geocode and a parcel centroid for a spatial match (Strategy 3 in link-parcels)",
+    "min": 1,
+    "max": 1000
+  },
+  "spatial_match_confidence": {
+    "default": 0.65,
+    "type": "number",
+    "description": "Confidence score assigned to a permit→parcel spatial match (Strategy 3); upgraded to 0.90 if permit geocode falls inside the parcel polygon",
+    "min": 0.01,
+    "max": 1.0
   }
 }
