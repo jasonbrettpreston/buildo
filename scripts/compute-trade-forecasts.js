@@ -112,37 +112,11 @@ function classifyConfidence(sampleSize, isFallback) {
 const ADVISORY_LOCK_ID = 85;
 
 pipeline.run('compute-trade-forecasts', async (pool) => {
-  // ─── Concurrency guard — single-threaded forecaster ──────────
-  // Lock acquired on a DEDICATED `pool.connect()` client (mirrors the
-  // canonical pattern in classify-lifecycle-phase.js). pool.query would
-  // acquire on an ephemeral connection and the unlock would no-op
-  // (cf. 83-W5).
-  const lockClient = await pool.connect();
-  try {
-    const { rows: lockRows } = await lockClient.query(
-      'SELECT pg_try_advisory_lock($1) AS got',
-      [ADVISORY_LOCK_ID],
-    );
-    if (!lockRows[0].got) {
-      pipeline.log.info(
-        '[trade-forecasts]',
-        `Advisory lock ${ADVISORY_LOCK_ID} held by another instance — skipping this run.`,
-      );
-      pipeline.emitSummary({
-        records_total: 0, records_new: 0, records_updated: 0,
-        records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere',
-          advisory_lock_id: ADVISORY_LOCK_ID },
-      });
-      pipeline.emitMeta({}, {});
-      lockClient.release();
-      return;
-    }
-  } catch (lockErr) {
-    lockClient.release();
-    throw lockErr;
-  }
-
-  try {
+  // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
+  // Replaces hand-rolled lockClient + SIGTERM boilerplate. Helper handles:
+  // dedicated pool.connect() client, advisory lock acquire/release,
+  // SIGTERM/SIGINT trap, double-cleanup guard, and spec-mandated SKIP emit.
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   // ─── Load Control Panel via shared loader ──────────────────
   const { tradeConfigs, logicVars } = await loadMarketplaceConfigs(pool, 'trade-forecasts');
 
@@ -573,18 +547,11 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       trade_forecasts: ['permit_num', 'revision_num', 'trade_slug', 'predicted_start', 'confidence', 'urgency', 'calibration_method', 'sample_size', 'median_days', 'p25_days', 'p75_days'],
     },
   );
-  } finally {
-    // Release advisory lock on the SAME pinned client that acquired it.
-    try {
-      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-    } catch (unlockErr) {
-      pipeline.log.warn(
-        '[trade-forecasts]',
-        'Failed to release advisory lock — it will expire when the session ends.',
-        { err: unlockErr instanceof Error ? unlockErr.message : String(unlockErr) },
-      );
-    } finally {
-      lockClient.release();
-    }
+  }); // end withAdvisoryLock
+
+  // Lock was held by another instance — helper already emitted SKIP summary.
+  if (!lockResult.acquired) {
+    pipeline.emitMeta({}, {});
+    return;
   }
 });

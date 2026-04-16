@@ -117,18 +117,17 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/on_time/);
   });
 
-  it('acquires advisory lock 85 on a pinned pool.connect() client (WF3-03 / H-W1)', () => {
-    // Lock ID convention: lock_id = spec number. Mirrors the canonical
-    // pattern in classify-lifecycle-phase.js. Lock MUST be acquired on a
-    // dedicated `pool.connect()` client because session locks are bound to
-    // the backend that acquired them — `pool.query` would acquire on an
-    // ephemeral connection and the unlock would no-op (cf. 83-W5).
+  it('delegates advisory lock 85 to pipeline.withAdvisoryLock — Phase 2 migration (spec 47 §5)', () => {
+    // Phase 2: hand-rolled lock boilerplate replaced with pipeline.withAdvisoryLock.
+    // Helper handles: dedicated pool.connect() client, pg_try_advisory_lock,
+    // pg_advisory_unlock, SIGTERM/SIGINT trap, double-cleanup guard, SKIP emit.
     expect(content).toMatch(/const ADVISORY_LOCK_ID = 85/);
-    expect(content).toMatch(/await pool\.connect\(\)/);
-    expect(content).toMatch(/SELECT pg_try_advisory_lock\(\$1\)/);
-    expect(content).toMatch(/SELECT pg_advisory_unlock\(\$1\)/);
-    expect(content).not.toMatch(/pool\.query\([^)]*pg_try_advisory_lock/);
-    expect(content).not.toMatch(/pool\.query\([^)]*pg_advisory_unlock/);
+    expect(content).toMatch(/pipeline\.withAdvisoryLock\(pool,\s*ADVISORY_LOCK_ID/);
+    // Must NOT hand-roll — any direct lock call bypasses the spec helper
+    expect(content).not.toMatch(/pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pg_advisory_unlock/);
+    // Must NOT install its own SIGTERM — helper installs and removes it
+    expect(content).not.toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
   });
 
   it('wraps stale-purge DELETE + batch UPSERT loop in a single withTransaction (WF3-03 / H-W2 / 85-W2)', () => {
