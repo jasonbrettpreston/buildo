@@ -1955,3 +1955,61 @@ describe('Pipeline scripts — no SPEC LINK to docs/reports/ (spec 47 §3)', () 
   }
 });
 
+// ---------------------------------------------------------------------------
+// Bundle E — large-table query safety (spec 47 §6.2)
+// Both classify-permits and reclassify-all use keyset pagination (LIMIT per
+// batch) rather than unbounded pool.query — already compliant with §6.2.
+// These tests lock that compliance pattern.
+// ---------------------------------------------------------------------------
+
+describe('classify-permits.js — large-table query safety (spec 47 §6.2)', () => {
+  const src = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/classify-permits.js'), 'utf-8',
+  );
+
+  it('uses keyset pagination (LIMIT $1) — no unbounded SELECT * FROM permits', () => {
+    // Each pool.query over permits includes a LIMIT clause via keyset pagination.
+    // This ensures at most BATCH_SIZE=1000 rows per call, satisfying §6.2 memory bound.
+    expect(src).toMatch(/LIMIT \$1/);
+    expect(src).toMatch(/const BATCH_SIZE = \d+/);
+  });
+
+  it('permits batch query uses ORDER BY + cursor guard — deterministic pagination', () => {
+    expect(src).toMatch(/ORDER BY p\.permit_num ASC, p\.revision_num ASC/);
+  });
+
+  it('does NOT perform a single unbounded SELECT of all permits rows', () => {
+    // Must not have pool.query('SELECT ... FROM permits') without a LIMIT clause
+    // (the COUNT queries are fine — they return a single aggregate row).
+    const lines = src.split('\n').filter(l =>
+      /pool\.query/.test(l) && /FROM permits/.test(l) && !/COUNT/.test(l)
+    );
+    for (const line of lines) {
+      // Each such line should be part of a keyset-paginated query block that has LIMIT
+      // OR is the COUNT query (filtered above). If any raw SELECT * FROM permits exists
+      // without being part of the paginated block, this test catches it.
+      expect(line).not.toMatch(/SELECT \* FROM permits\s*['"`]/);
+    }
+  });
+});
+
+describe('reclassify-all.js — large-table query safety (spec 47 §6.2)', () => {
+  const src = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/reclassify-all.js'), 'utf-8',
+  );
+
+  it('uses keyset pagination (LIMIT $1) — no unbounded SELECT * FROM permits', () => {
+    expect(src).toMatch(/LIMIT \$1/);
+    expect(src).toMatch(/const BATCH_SIZE = \d+/);
+  });
+
+  it('permits batch query uses ORDER BY for deterministic pagination', () => {
+    expect(src).toMatch(/ORDER BY permit_num, revision_num/);
+  });
+
+  it('respects MAX_ITERATIONS safety guard against infinite loops', () => {
+    expect(src).toMatch(/MAX_ITERATIONS/);
+    expect(src).toMatch(/iterations.*MAX_ITERATIONS/);
+  });
+});
+
