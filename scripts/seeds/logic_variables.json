@@ -222,5 +222,12 @@
     "description": "Hours since last compute_timing_calibration run after which the timing_calibration table is considered stale and a warning is emitted",
     "min": 1,
     "max": 720
+  },
+  "lifecycle_unclassified_max": {
+    "default": 100,
+    "type": "number",
+    "description": "Maximum number of non-terminal permits/CoAs with a NULL lifecycle_phase before assert-lifecycle-phase-distribution emits a FAIL (strongest correctness gate)",
+    "min": 0,
+    "max": 10000
   }
 }

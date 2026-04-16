@@ -14,11 +14,17 @@
  */
 'use strict';
 
+const { z } = require('zod');
 const pipeline = require('./../lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./../lib/config-loader');
 const {
   DEAD_STATUS_ARRAY,
   NORMALIZED_DEAD_DECISIONS_ARRAY,
 } = require('./../lib/lifecycle-phase');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  lifecycle_unclassified_max: z.number().finite().nonnegative().int(),
+}).passthrough();
 
 // Advisory lock ID — same as the classifier (85). If the classifier is
 // mid-write we skip rather than reading half-updated data and throwing
@@ -66,7 +72,7 @@ const EXPECTED_BANDS = {
   P2:  { min: 120, max: 200 },
 };
 
-const UNCLASSIFIED_MAX = 100;
+// unclassifiedMax externalized to logic_variables as lifecycle_unclassified_max (WF3-E12)
 
 // Phases that roll into the P9-P17 aggregate bucket
 const ACTIVE_SUBPHASES = new Set([
@@ -86,6 +92,11 @@ if (NORMALIZED_DEAD_DECISIONS_ARRAY.length === 0) {
 }
 
 pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-lifecycle-phase-distribution');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-lifecycle-phase-distribution');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  const unclassifiedMax = logicVars.lifecycle_unclassified_max;
+
   // ─── Advisory lock awareness — pipeline.withAdvisoryLock (Phase 2 migration) ──
   // If the classifier is mid-write we skip gracefully (reason: 'classifier_running')
   // rather than reading half-updated distribution counts. skipEmit:false preserves
@@ -184,12 +195,12 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
   auditRows.push({
     metric: 'unclassified_count',
     value: unclassifiedCount,
-    threshold: `<= ${UNCLASSIFIED_MAX}`,
-    status: unclassifiedCount <= UNCLASSIFIED_MAX ? 'PASS' : 'FAIL',
+    threshold: `<= ${unclassifiedMax}`,
+    status: unclassifiedCount <= unclassifiedMax ? 'PASS' : 'FAIL',
   });
-  if (unclassifiedCount > UNCLASSIFIED_MAX) {
+  if (unclassifiedCount > unclassifiedMax) {
     failures.push(
-      `unclassified_count ${unclassifiedCount} exceeds hard limit ${UNCLASSIFIED_MAX}`,
+      `unclassified_count ${unclassifiedCount} exceeds hard limit ${unclassifiedMax}`,
     );
   }
 
