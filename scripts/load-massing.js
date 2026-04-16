@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 🔗 SPEC LINK: docs/specs/pipeline/56_source_massing.md
+ *
  * Load Toronto 3D Massing shapefile into building_footprints table.
  * Downloads the SHP ZIP from Toronto Open Data, extracts, and streams
  * features into PostgreSQL in batches of 1000.

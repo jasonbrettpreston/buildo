@@ -1905,3 +1905,33 @@ describe('Pipeline SDK', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Bundle C — SPEC LINK headers (spec 47 §3)
+// ---------------------------------------------------------------------------
+
+import fs from 'fs';
+
+describe('Pipeline scripts — SPEC LINK headers (spec 47 §3 mandate)', () => {
+  const ROOT = path.resolve(__dirname, '../..');
+  const targets = [
+    'scripts/enrich-web-search.js',
+    'scripts/load-wsib.js',
+    'scripts/load-neighbourhoods.js',
+    'scripts/load-parcels.js',
+    'scripts/load-massing.js',
+    'scripts/refresh-snapshot.js',
+    'scripts/classify-permits.js',
+    'scripts/classify-scope.js',
+    'scripts/quality/assert-data-bounds.js',
+    'scripts/quality/assert-schema.js',
+  ];
+
+  for (const rel of targets) {
+    it(`${rel} contains SPEC LINK pointing to docs/specs/ in first 30 lines`, () => {
+      const content = fs.readFileSync(path.join(ROOT, rel), 'utf-8');
+      const first30 = content.split('\n').slice(0, 30).join('\n');
+      expect(first30).toMatch(/SPEC LINK:\s*docs\/specs\//);
+    });
+  }
+});
+

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 🔗 SPEC LINK: docs/specs/pipeline/80_taxonomies.md §scope
+ *
  * Batch classify all permits by project scope (project_type + scope_tags).
  *
  * Processes permits in batches of 1000, applying the deterministic

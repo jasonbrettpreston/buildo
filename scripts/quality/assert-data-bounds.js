@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 🔗 SPEC LINK: docs/specs/pipeline/40_pipeline_system.md §CQA-Tier2
+ *
  * CQA Tier 2: Post-Ingestion Data Bounds Validation
  *
  * Runs SQL-based validation queries against the local database to detect

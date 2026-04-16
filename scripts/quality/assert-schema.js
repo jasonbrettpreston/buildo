@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 🔗 SPEC LINK: docs/specs/pipeline/40_pipeline_system.md §CQA-Tier1
+ *
  * CQA Tier 1: Pre-Ingestion Schema Validation
  *
  * Fetches CKAN metadata for permits and CoA resources, CSV headers for

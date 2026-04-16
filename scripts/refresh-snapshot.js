@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// 🔗 SPEC LINK: docs/specs/pipeline/40_pipeline_system.md §6.6
 // Refresh the data quality snapshot by re-running all counting queries
 // Usage: node scripts/refresh-snapshot.js
 

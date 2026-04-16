@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 🔗 SPEC LINK: docs/specs/pipeline/46_wsib_enrichment.md
+ *
  * Load WSIB Businesses Classification Details CSV into wsib_registry.
  *
  * Filters to Class G (Construction) rows only. De-duplicates by

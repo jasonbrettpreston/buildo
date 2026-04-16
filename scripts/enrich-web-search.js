@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * 🔗 SPEC LINK: docs/specs/pipeline/45_chain_entities.md
+ *
  * Enrich builders with contact data via Serper web search API.
  *
  * Prioritizes WSIB-matched builders (have trade name + legal name + mailing address).
