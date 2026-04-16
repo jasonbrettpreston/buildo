@@ -17,9 +17,24 @@
  *
  * SPEC LINK: docs/specs/38_inspection_scraping.md §3.6 Step 2
  */
+const { z } = require('zod');
 const pipeline = require('../lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  scraper_error_rate_warn_pct:   z.number().finite().positive(),
+  scraper_latency_p50_warn_ms:   z.number().finite().positive(),
+  scraper_empty_streak_warn:     z.number().finite().positive().int(),
+}).passthrough();
 
 pipeline.run('assert-network-health', async (pool) => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-network-health');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-network-health');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  const errorRateWarnPct   = logicVars.scraper_error_rate_warn_pct;
+  const latencyP50WarnMs   = logicVars.scraper_latency_p50_warn_ms;
+  const emptyStreakWarn    = logicVars.scraper_empty_streak_warn;
+
   console.log('\n=== Phase 2: Scraper Network Health ===\n');
 
   const errors = [];
@@ -73,9 +88,9 @@ pipeline.run('assert-network-health', async (pool) => {
   const proxyErrors = scTel.proxy_errors || 0;
   const errorRate = attempted > 0 ? ((proxyErrors / attempted) * 100) : 0;
   const errorRateStr = errorRate.toFixed(1) + '%';
-  if (attempted > 0 && errorRate >= 5) {
+  if (attempted > 0 && errorRate >= errorRateWarnPct) {
     errors.push(`Proxy error rate ${errorRateStr} (${proxyErrors}/${attempted})`);
-    rows.push({ metric: 'proxy_error_rate', value: errorRateStr, threshold: '< 5%', status: 'FAIL' });
+    rows.push({ metric: 'proxy_error_rate', value: errorRateStr, threshold: `< ${errorRateWarnPct}%`, status: 'FAIL' });
     console.error(`  FAIL: proxy_error_rate = ${errorRateStr}`);
     if (scTel.error_categories) {
       const breakdown = Object.entries(scTel.error_categories).map(([k, v]) => `${k}:${v}`).join(', ');
@@ -85,19 +100,19 @@ pipeline.run('assert-network-health', async (pool) => {
       console.log(`        last_error: ${scTel.last_error}`);
     }
   } else {
-    rows.push({ metric: 'proxy_error_rate', value: errorRateStr, threshold: '< 5%', status: 'PASS' });
+    rows.push({ metric: 'proxy_error_rate', value: errorRateStr, threshold: `< ${errorRateWarnPct}%`, status: 'PASS' });
     console.log(`  PASS: proxy_error_rate = ${errorRateStr}`);
   }
 
   // Check 3: Latency (p50)
   const p50 = scTel.latency?.p50 ?? 0;
   const maxLatency = scTel.latency?.max ?? 0;
-  if (p50 >= 2000) {
-    warnings.push(`Latency p50 = ${p50}ms (threshold: <2000ms)`);
-    rows.push({ metric: 'avg_latency_ms', value: p50, threshold: '< 2000', status: 'WARN' });
+  if (p50 >= latencyP50WarnMs) {
+    warnings.push(`Latency p50 = ${p50}ms (threshold: <${latencyP50WarnMs}ms)`);
+    rows.push({ metric: 'avg_latency_ms', value: p50, threshold: `< ${latencyP50WarnMs}`, status: 'WARN' });
     console.log(`  WARN: avg_latency_ms (p50) = ${p50}ms`);
   } else {
-    rows.push({ metric: 'avg_latency_ms', value: p50, threshold: '< 2000', status: 'PASS' });
+    rows.push({ metric: 'avg_latency_ms', value: p50, threshold: `< ${latencyP50WarnMs}`, status: 'PASS' });
     console.log(`  PASS: avg_latency_ms (p50) = ${p50}ms`);
   }
   rows.push({ metric: 'max_latency_ms', value: maxLatency, threshold: null, status: 'INFO' });
@@ -105,7 +120,7 @@ pipeline.run('assert-network-health', async (pool) => {
 
   // Check 4: Consecutive empty (WAF trap)
   const emptyMax = scTel.consecutive_empty_max || 0;
-  const emptyHit = emptyMax >= 20;
+  const emptyHit = emptyMax >= emptyStreakWarn;
   if (emptyHit) {
     warnings.push(`WAF trap: ${emptyMax} consecutive empty responses`);
     rows.push({ metric: 'consecutive_empty_hit', value: true, threshold: '== false', status: 'WARN' });
