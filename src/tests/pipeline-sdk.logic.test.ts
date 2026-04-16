@@ -1617,5 +1617,283 @@ describe('Pipeline SDK', () => {
       errSpy.mockRestore();
     });
   });
+
+  // -----------------------------------------------------------------------
+  // Task A: withTransaction — 40P01 auto-retry (spec 47 §7.6)
+  // -----------------------------------------------------------------------
+  describe('withTransaction — 40P01 deadlock retry (spec 47 §7.6)', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function makeClient() {
+      return {
+        query: vi.fn(async (_sql: string) => ({ rows: [] })),
+        release: vi.fn(),
+      };
+    }
+
+    it('retries once on 40P01 and succeeds on 2nd attempt', async () => {
+      let fnCalls = 0;
+      const client1 = makeClient();
+      const client2 = makeClient();
+      const mockPool = {
+        connect: vi.fn()
+          .mockResolvedValueOnce(client1)
+          .mockResolvedValueOnce(client2),
+      };
+
+      const promise = pipeline.withTransaction(mockPool, async () => {
+        fnCalls++;
+        if (fnCalls === 1) throw Object.assign(new Error('deadlock'), { code: '40P01' });
+        return 'recovered';
+      });
+
+      await vi.runAllTimersAsync();
+      const result = await promise;
+
+      expect(result).toBe('recovered');
+      expect(fnCalls).toBe(2);
+      // Each attempt gets a fresh client connection
+      expect(mockPool.connect).toHaveBeenCalledTimes(2);
+      // First client: BEGIN + ROLLBACK; second client: BEGIN + COMMIT
+      const firstQueries = client1.query.mock.calls.map((c: [string]) => c[0]);
+      expect(firstQueries).toContain('BEGIN');
+      expect(firstQueries).toContain('ROLLBACK');
+      const secondQueries = client2.query.mock.calls.map((c: [string]) => c[0]);
+      expect(secondQueries).toContain('BEGIN');
+      expect(secondQueries).toContain('COMMIT');
+    });
+
+    it('exhausts 3 attempts and re-throws original 40P01 error', async () => {
+      let fnCalls = 0;
+      const mockPool = { connect: vi.fn(async () => makeClient()) };
+      const deadlock = Object.assign(new Error('deadlock_detected'), { code: '40P01' });
+
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      // Attach rejection handler immediately to prevent unhandled-rejection window
+      let caughtErr: unknown;
+      const settled = pipeline.withTransaction(mockPool, async () => {
+        fnCalls++;
+        throw deadlock;
+      }).catch((e: unknown) => { caughtErr = e; });
+
+      await vi.runAllTimersAsync();
+      await settled;
+
+      expect(caughtErr).toBe(deadlock);
+      expect(fnCalls).toBe(3); // 3 total attempts
+      expect(mockPool.connect).toHaveBeenCalledTimes(3);
+      warnSpy.mockRestore();
+      errSpy.mockRestore();
+    });
+
+    it('does NOT retry on non-40P01 error (e.g. 23505 unique violation)', async () => {
+      let fnCalls = 0;
+      const mockPool = { connect: vi.fn(async () => makeClient()) };
+      const uniqueErr = Object.assign(new Error('unique violation'), { code: '23505' });
+
+      // Immediate rejection — no timers involved. Attach handler immediately.
+      let caughtErr: unknown;
+      const settled = pipeline.withTransaction(mockPool, async () => {
+        fnCalls++;
+        throw uniqueErr;
+      }).catch((e: unknown) => { caughtErr = e; });
+
+      await vi.runAllTimersAsync();
+      await settled;
+
+      expect(caughtErr).toBe(uniqueErr);
+      expect(fnCalls).toBe(1); // no retry
+      expect(mockPool.connect).toHaveBeenCalledTimes(1);
+    });
+
+    it('does NOT retry plain Error with no .code property', async () => {
+      let fnCalls = 0;
+      const mockPool = { connect: vi.fn(async () => makeClient()) };
+      const plainErr = new Error('plain error, no code');
+
+      let caughtErr: unknown;
+      const settled = pipeline.withTransaction(mockPool, async () => {
+        fnCalls++;
+        throw plainErr;
+      }).catch((e: unknown) => { caughtErr = e; });
+
+      await vi.runAllTimersAsync();
+      await settled;
+
+      expect(caughtErr).toBe(plainErr);
+      expect(fnCalls).toBe(1);
+    });
+
+    it('success on first attempt — no retry, exactly 1 BEGIN + 1 COMMIT', async () => {
+      const client = makeClient();
+      const mockPool = { connect: vi.fn(async () => client) };
+
+      const promise = pipeline.withTransaction(mockPool, async () => 'fast');
+      await vi.runAllTimersAsync();
+      const result = await promise;
+
+      expect(result).toBe('fast');
+      expect(mockPool.connect).toHaveBeenCalledTimes(1);
+      const queries = client.query.mock.calls.map((c: [string]) => c[0]);
+      expect(queries).toEqual(['BEGIN', 'COMMIT']);
+    });
+
+    it('applies exponential backoff between retry attempts', async () => {
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+      const mockPool = { connect: vi.fn(async () => makeClient()) };
+      let fnCalls = 0;
+
+      // Succeeds on 3rd attempt → no unhandled rejection
+      const promise = pipeline.withTransaction(mockPool, async () => {
+        fnCalls++;
+        if (fnCalls < 3) throw Object.assign(new Error('dl'), { code: '40P01' });
+        return 'ok';
+      });
+
+      await vi.runAllTimersAsync();
+      const result = await promise;
+      expect(result).toBe('ok');
+
+      // Two retries → two setTimeout calls with increasing delays
+      const timerCalls = setTimeoutSpy.mock.calls.map((c) => c[1] as number);
+      expect(timerCalls.length).toBeGreaterThanOrEqual(2);
+      expect(timerCalls[0]).toBeGreaterThan(0); // first backoff > 0
+      expect(timerCalls[1]).toBeGreaterThan(timerCalls[0]!); // second > first (exponential)
+      setTimeoutSpy.mockRestore();
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Task B: withAdvisoryLock — SIGTERM trap + SKIP emit (spec 47 §5)
+  // -----------------------------------------------------------------------
+  describe('withAdvisoryLock — SIGTERM trap + SKIP emit (spec 47 §5)', () => {
+    function makeLockedClient(acquired: boolean) {
+      return {
+        query: vi.fn(async (sql: string) => {
+          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired }] };
+          return { rows: [] };
+        }),
+        release: vi.fn(),
+      };
+    }
+
+    it('emits PIPELINE_SUMMARY with skipped:true when lock is held elsewhere', async () => {
+      const mockClient = makeLockedClient(false);
+      const mockPool = { connect: vi.fn(async () => mockClient) };
+      const fn = vi.fn();
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const result = await pipeline.withAdvisoryLock(mockPool, 42, fn);
+
+      expect(result).toEqual({ acquired: false });
+      expect(fn).not.toHaveBeenCalled();
+      // Must emit PIPELINE_SUMMARY with skipped:true
+      const summaryCall = logSpy.mock.calls.find((c) =>
+        typeof c[0] === 'string' && c[0].startsWith('PIPELINE_SUMMARY:')
+      );
+      expect(summaryCall).toBeDefined();
+      const payload = JSON.parse((summaryCall![0] as string).replace('PIPELINE_SUMMARY:', ''));
+      expect(payload.records_meta.skipped).toBe(true);
+      expect(payload.records_meta.reason).toBe('advisory_lock_held_elsewhere');
+      // unlock must NOT be called (lock was never acquired)
+      const unlockCall = mockClient.query.mock.calls.find(
+        (c: [string]) => String(c[0]).includes('pg_advisory_unlock')
+      );
+      expect(unlockCall).toBeUndefined();
+      expect(mockClient.release).toHaveBeenCalledTimes(1);
+
+      logSpy.mockRestore();
+      warnSpy.mockRestore();
+    });
+
+    it('opts.skipEmit: false — no PIPELINE_SUMMARY on lock-held path', async () => {
+      const mockClient = makeLockedClient(false);
+      const mockPool = { connect: vi.fn(async () => mockClient) };
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await pipeline.withAdvisoryLock(mockPool, 42, vi.fn(), { skipEmit: false });
+
+      const summaryCall = logSpy.mock.calls.find((c) =>
+        typeof c[0] === 'string' && c[0].startsWith('PIPELINE_SUMMARY:')
+      );
+      expect(summaryCall).toBeUndefined();
+
+      logSpy.mockRestore();
+      warnSpy.mockRestore();
+    });
+
+    it('installs SIGTERM handler and cleans up when fn throws', async () => {
+      const mockClient = makeLockedClient(true);
+      const mockPool = { connect: vi.fn(async () => mockClient) };
+      const baseline = process.listenerCount('SIGTERM');
+
+      await expect(
+        pipeline.withAdvisoryLock(mockPool, 42, async () => { throw new Error('fn boom'); })
+      ).rejects.toThrow('fn boom');
+
+      // Listener must be removed after fn completes (even via throw)
+      expect(process.listenerCount('SIGTERM')).toBe(baseline);
+      // unlock must still be called
+      const unlockCall = mockClient.query.mock.calls.find(
+        (c: [string]) => String(c[0]).includes('pg_advisory_unlock')
+      );
+      expect(unlockCall).toBeDefined();
+      expect(mockClient.release).toHaveBeenCalledTimes(1);
+    });
+
+    it('no listener accumulation across 5 sequential calls', async () => {
+      const baseline = process.listenerCount('SIGTERM');
+
+      for (let i = 0; i < 5; i++) {
+        const mockClient = makeLockedClient(true);
+        const mockPool = { connect: vi.fn(async () => mockClient) };
+        await pipeline.withAdvisoryLock(mockPool, 42, async () => 'ok');
+      }
+
+      expect(process.listenerCount('SIGTERM')).toBe(baseline);
+    });
+
+    it('SIGTERM while fn is running — triggers unlock + release, no double-unlock', async () => {
+      const mockClient = makeLockedClient(true);
+      const mockPool = { connect: vi.fn(async () => mockClient) };
+
+      let sigHandlerInstalled = false;
+      let resolveSignal: () => void;
+      const sigObs = new Promise<void>((r) => { resolveSignal = r; });
+
+      // fn pauses and waits for SIGTERM to fire
+      const fnDone = pipeline.withAdvisoryLock(mockPool, 42, async () => {
+        sigHandlerInstalled = true;
+        await sigObs;
+        return 'late';
+      });
+
+      // Wait until fn has started (handler is installed)
+      await new Promise<void>((r) => { const t = setInterval(() => { if (sigHandlerInstalled) { clearInterval(t); r(); } }, 5); });
+
+      // Fire SIGTERM — triggers the cleanup handler
+      process.emit('SIGTERM');
+      resolveSignal!();
+
+      // fn resolves, withAdvisoryLock continues to its own finally
+      const result = await fnDone;
+      expect(result).toEqual({ acquired: true, result: 'late' });
+
+      // pg_advisory_unlock must have been called exactly once (idempotency guard)
+      const unlockCalls = mockClient.query.mock.calls.filter(
+        (c: [string]) => String(c[0]).includes('pg_advisory_unlock')
+      );
+      expect(unlockCalls.length).toBe(1);
+    });
+  });
 });
 

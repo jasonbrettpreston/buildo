@@ -99,36 +99,68 @@ const log = {
 };
 
 // ---------------------------------------------------------------------------
-// Transaction Management — §9.1 compliance
+// Transaction Management — §9.1 compliance + §7.6 deadlock retry
 // ---------------------------------------------------------------------------
+
+/** Maximum total attempts for a deadlock-retried transaction (1 initial + 2 retries). */
+const TRANSACTION_MAX_ATTEMPTS = 3;
+/** Base delay (ms) for exponential backoff between 40P01 retry attempts: 50ms, 100ms, … */
+const TRANSACTION_RETRY_BASE_MS = 50;
 
 /**
  * Execute `fn(client)` inside a BEGIN/COMMIT transaction.
  * On error: ROLLBACK (with nested try-catch per §9.1) then re-throw.
  * Always releases the client back to the pool.
  *
- * @param {Pool} pool
+ * **40P01 retry (spec 47 §7.6 — MANDATORY):** If `fn` throws a PostgreSQL
+ * deadlock error (code `40P01`), the transaction is rolled back and retried up
+ * to `TRANSACTION_MAX_ATTEMPTS` times total with exponential backoff before
+ * re-throwing. A fresh pool client is used for each attempt so that an
+ * aborted-state connection is never reused.
+ *
+ * fn MUST be idempotent — spec 47 §6.5 (ON CONFLICT) and §7.4 (no row-level
+ * swallow) compliance is assumed. Retry for `40001` (serialization_failure) is
+ * deliberately excluded — spec §7.6 names only `40P01`.
+ *
+ * @param {import('pg').Pool} pool
  * @param {(client: import('pg').PoolClient) => Promise<T>} fn
+ * @param {{ maxAttempts?: number }} [opts]
  * @returns {Promise<T>}
  * @template T
  */
-async function withTransaction(pool, fn) {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const result = await fn(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (err) {
+async function withTransaction(pool, fn, opts) {
+  const maxAttempts = (opts && opts.maxAttempts != null) ? opts.maxAttempts : TRANSACTION_MAX_ATTEMPTS;
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const client = await pool.connect();
     try {
-      await client.query('ROLLBACK');
-    } catch (rollbackErr) {
-      log.error('[pipeline]', rollbackErr, { phase: 'rollback_failed' });
+      await client.query('BEGIN');
+      const result = await fn(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (err) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackErr) {
+        log.error('[pipeline]', rollbackErr, { phase: 'rollback_failed', attempt });
+      }
+      lastErr = err;
+      const isDeadlock = err != null && err.code === '40P01';
+      if (!isDeadlock || attempt === maxAttempts) {
+        if (isDeadlock) {
+          log.error('[pipeline]', err, { phase: 'deadlock_retry_exhausted', attempts: attempt });
+        }
+        throw err;
+      }
+      const backoffMs = TRANSACTION_RETRY_BASE_MS * Math.pow(2, attempt - 1);
+      log.warn('[pipeline]', `40P01 deadlock — retrying (attempt ${attempt}/${maxAttempts - 1}) after ${backoffMs}ms`);
+      await new Promise((resolve) => setTimeout(resolve, backoffMs));
+    } finally {
+      client.release();
     }
-    throw err;
-  } finally {
-    client.release();
   }
+  // Defensive: loop guarantees return-or-throw above, but satisfies static analysis
+  throw lastErr;
 }
 
 // ---------------------------------------------------------------------------
@@ -631,34 +663,94 @@ async function* streamQuery(pool, sql, params = [], options = {}) {
  *
  * Convention: lock_id = spec number (e.g. script for spec 83 → lockId=83).
  *
+ * **SIGTERM/SIGINT trap (spec 47 §5):** A signal handler is installed for the
+ * duration of `fn()`. If the process receives SIGTERM or SIGINT while the lock
+ * is held, the lock is released and the client is returned to the pool before
+ * the process exits. The handler is always removed in `finally` — no listener
+ * accumulation across sequential calls.
+ *
+ * **SKIP emit (spec 47 §R6):** When the lock cannot be acquired (another
+ * instance is running), emits PIPELINE_SUMMARY with `skipped: true` so the
+ * admin UI shows the step as skipped rather than UNKNOWN. Opt out with
+ * `opts.skipEmit: false` if the caller wants to emit its own skip payload.
+ *
  * @param {import('pg').Pool} pool
  * @param {number} lockId  - Advisory lock ID. Convention: lock_id = spec number.
  * @param {() => Promise<T>} fn - Work to perform while lock is held.
+ * @param {{ skipEmit?: boolean }} [opts]
  * @returns {Promise<{ acquired: false } | { acquired: true; result: T }>}
  * @template T
  */
-async function withAdvisoryLock(pool, lockId, fn) {
+async function withAdvisoryLock(pool, lockId, fn, opts) {
+  const skipEmit = !opts || opts.skipEmit !== false; // default: emit per spec
   const client = await pool.connect();
+  let released = false;
+  let unlocked = false;
+
+  /**
+   * Idempotent cleanup: unlock the advisory lock and release the pg client.
+   * Safe to call from both the normal finally path and the SIGTERM handler —
+   * the `unlocked`/`released` guards prevent double-unlock and double-release.
+   */
+  const cleanup = async () => {
+    if (unlocked) return;
+    unlocked = true;
+    try {
+      await client.query('SELECT pg_advisory_unlock($1)', [lockId]);
+    } catch (unlockErr) {
+      log.warn('[pipeline]', `pg_advisory_unlock failed for lockId=${lockId}: ${unlockErr instanceof Error ? unlockErr.message : String(unlockErr)}`);
+    }
+    if (!released) {
+      released = true;
+      try { client.release(); } catch (_) { /* already released */ }
+    }
+  };
+
+  /** Best-effort SIGTERM/SIGINT handler — fire-and-forget because process is exiting. */
+  const sigHandler = () => {
+    log.warn('[pipeline]', `Signal received while holding advisory lock ${lockId} — releasing.`);
+    void cleanup();
+  };
+
   try {
     const lockRes = await client.query(
       'SELECT pg_try_advisory_lock($1) AS acquired',
       [lockId]
     );
     if (!lockRes.rows[0].acquired) {
+      // Release immediately — no fn to run
+      released = true;
+      client.release();
+      log.info('[pipeline]', `Advisory lock ${lockId} held elsewhere — skipping.`);
+      if (skipEmit) {
+        emitSummary({
+          records_total: 0,
+          records_new: 0,
+          records_updated: 0,
+          records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere' },
+        });
+      }
       return { acquired: false };
     }
+
+    // Lock acquired — install signal handlers for the duration of fn()
+    process.on('SIGTERM', sigHandler);
+    process.on('SIGINT', sigHandler);
     try {
       const result = await fn();
       return { acquired: true, result };
     } finally {
-      try {
-        await client.query('SELECT pg_advisory_unlock($1)', [lockId]);
-      } catch (unlockErr) {
-        log.warn('[pipeline]', `pg_advisory_unlock failed for lockId=${lockId}: ${unlockErr instanceof Error ? unlockErr.message : String(unlockErr)}`);
-      }
+      process.removeListener('SIGTERM', sigHandler);
+      process.removeListener('SIGINT', sigHandler);
+      await cleanup();
     }
-  } finally {
-    client.release();
+  } catch (err) {
+    // Lock query itself threw (connection error, etc.) — ensure client is released
+    if (!released) {
+      released = true;
+      try { client.release(); } catch (_) { /* ignore */ }
+    }
+    throw err;
   }
 }
 
