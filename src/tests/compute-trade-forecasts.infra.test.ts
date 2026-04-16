@@ -285,4 +285,16 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     // Must be surfaced as a WARN, not buried in a console.log.
     expect(content).toMatch(/unmapped_trades[\s\S]*?threshold[\s\S]*?==\s*0/);
   });
+
+  it('reads urgency bucket thresholds from logicVars — no hardcoded -30 or 30 (WF3-E14)', () => {
+    // E14: urgency_overdue_days and urgency_upcoming_days externalized to logic_variables.
+    expect(content).toMatch(/logicVars\.urgency_overdue_days/);
+    expect(content).toMatch(/logicVars\.urgency_upcoming_days/);
+    // Hardcoded -30 and 30 boundaries must be gone from classifyUrgency
+    expect(content).not.toMatch(/daysUntil <= -30\b/);
+    expect(content).not.toMatch(/daysUntil <= 30\b/);
+    // Function signature accepts overdueWindow and upcomingWindow parameters
+    expect(content).toMatch(/function classifyUrgency\([^)]*overdueWindow/);
+    expect(content).toMatch(/function classifyUrgency\([^)]*upcomingWindow/);
+  });
 });

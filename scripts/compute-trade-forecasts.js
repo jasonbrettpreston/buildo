@@ -57,6 +57,8 @@ const LOGIC_VARS_SCHEMA = z.object({
   stall_penalty_precon:   z.number().finite().min(0),
   stall_penalty_active:   z.number().finite().min(0),
   expired_threshold_days: z.number().finite(),
+  urgency_overdue_days:   z.number().finite().positive(),
+  urgency_upcoming_days:  z.number().finite().positive(),
 }).passthrough();
 
 // Urgency classification — no isStalled parameter.
@@ -79,7 +81,7 @@ const LOGIC_VARS_SCHEMA = z.object({
 // trade_configurations.imminent_window_days (spec 85 / spec 82 §6).
 // Default 14 is a safety net only — callers should always pass the
 // per-trade value.
-function classifyUrgency(daysUntil, isPastTarget, expiredThreshold, imminentWindow = 14) {
+function classifyUrgency(daysUntil, isPastTarget, expiredThreshold, imminentWindow = 14, overdueWindow = 30, upcomingWindow = 30) {
   // 1. THE GRAVEYARD FIX — must be first. If it's past the expired
   // threshold, it's dead data. We don't care if it's also past the
   // target phase — both cases are dead.
@@ -94,10 +96,10 @@ function classifyUrgency(daysUntil, isPastTarget, expiredThreshold, imminentWind
   if (isPastTarget) return 'overdue';
 
   // 3. Actionable tracking
-  if (daysUntil <= -30) return 'overdue';
+  if (daysUntil <= -overdueWindow) return 'overdue';
   if (daysUntil <= 0) return 'delayed';
   if (daysUntil <= imminentWindow) return 'imminent';
-  if (daysUntil <= 30) return 'upcoming';
+  if (daysUntil <= upcomingWindow) return 'upcoming';
   return 'on_time';
 }
 
@@ -421,6 +423,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       isPastTarget,
       logicVars.expired_threshold_days,
       tradeConfigs[trade_slug]?.imminent_window_days ?? 14,
+      logicVars.urgency_overdue_days,
+      logicVars.urgency_upcoming_days,
     );
     const confidence = classifyConfidence(cal.sample, cal.method === 'default');
 

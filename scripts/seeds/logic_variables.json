@@ -250,5 +250,19 @@
     "description": "Number of consecutive empty scraper responses at or above which assert-network-health emits a WARN (WAF shadow-ban detection)",
     "min": 1,
     "max": 1000
+  },
+  "urgency_overdue_days": {
+    "default": 30,
+    "type": "number",
+    "description": "Days past the predicted start date (as a positive integer) before a trade forecast is classified as 'overdue' rather than 'delayed' (code: daysUntil <= -urgency_overdue_days)",
+    "min": 1,
+    "max": 365
+  },
+  "urgency_upcoming_days": {
+    "default": 30,
+    "type": "number",
+    "description": "Days until the predicted start date at or below which a trade forecast is classified as 'upcoming' rather than 'on_time'",
+    "min": 1,
+    "max": 365
   }
 }
