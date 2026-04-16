@@ -1,46 +1,38 @@
-# Active Task: WF3-E1 — externalize inspection_stall_days
+# Active Task: WF3-E2+E3 — externalize close-stale-permits thresholds
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `529671d`
+**Rollback Anchor:** `7e4b55c`
 
 ## Context
-* **Goal:** Replace the hardcoded `STALE_DAYS = 300` (and the two inline
-  `INTERVAL '300 days'` SQL literals) in scripts/classify-inspection-status.js
-  with a `logic_variables`-backed `inspection_stall_days` key so Ops can tune
-  the Active Inspection → Stalled SLA without a code deploy.
+* **Goal:** Replace two hardcoded constants in scripts/close-stale-permits.js:
+  - E2 (line 63): `pendingClosedRate >= 10` — 10% safety abort gate
+  - E3 (line 115): `INTERVAL '30 days'` — Pending Closed → Closed grace period
+  Both are Ops-tunable thresholds that should be externalized to logic_variables.
 * **Target Spec:** docs/specs/pipeline/47_pipeline_script_protocol.md §6.4
 * **Key Files:**
-  - scripts/seeds/logic_variables.json              (add inspection_stall_days)
-  - scripts/classify-inspection-status.js           (add LOGIC_VARS_SCHEMA, load logicVars, parameterize SQL)
-  - src/tests/classify-inspection-status.infra.test.ts (NEW — source-scan assertions)
+  - scripts/seeds/logic_variables.json              (add stale_closure_abort_pct + pending_closed_grace_days)
+  - scripts/close-stale-permits.js                  (add LOGIC_VARS_SCHEMA + logicVars load; replace both constants)
+  - src/tests/close-stale-permits.infra.test.ts     (NEW — source-scan assertions)
 
 ## Technical Implementation
 * **New/Modified Components:**
-  - scripts/seeds/logic_variables.json — add `inspection_stall_days: { default:300, type:"number", min:30, max:730 }`
-  - scripts/classify-inspection-status.js — add zod + config-loader imports; define LOGIC_VARS_SCHEMA;
-    load logicVars before withTransaction; replace STALE_DAYS constant and both SQL INTERVAL literals
-    with `$1 * INTERVAL '1 day'` parameterized form
-  - src/tests/classify-inspection-status.infra.test.ts — source-scan: key consumed, no hardcode,
-    LOGIC_VARS_SCHEMA present with correct type
-* **Database Impact:** NO — no schema change. The JSON seed loader idempotently inserts the new key
-  on next `npm run migrate`.
-* **Backwards compatibility:** Default 300 preserves current behaviour exactly.
+  - scripts/seeds/logic_variables.json — add two keys:
+      `stale_closure_abort_pct` (default:10, type:"number", min:1, max:50)
+      `pending_closed_grace_days` (default:30, type:"number", min:1, max:365)
+  - scripts/close-stale-permits.js — add zod + config-loader; LOGIC_VARS_SCHEMA;
+    load logicVars before queries; replace >= 10 and INTERVAL '30 days'
+  - src/tests/close-stale-permits.infra.test.ts — source-scan: both keys consumed, no hardcodes
+* **Database Impact:** NO — seed loader idempotently inserts new keys on npm run migrate.
+* **Backwards compatibility:** Both defaults preserve current behaviour exactly.
 
 ## Execution Plan
-- [x] **Rollback Anchor:** `529671d`
-- [x] **State Verification:** `STALE_DAYS = 300` at line 17 defined but NOT used in SQL;
-      both queries hard-code `INTERVAL '300 days'` at lines 39 and 61. No logicVars wiring.
-- [x] **Spec Review:** §6.4 — business-logic constants must be externalized to logic_variables.
-- [ ] **Seed Edit:** Add `inspection_stall_days` to logic_variables.json.
-- [ ] **Reproduction:** Infra test asserts (a) `logicVars.inspection_stall_days` consumed,
-      (b) LOGIC_VARS_SCHEMA includes the key, (c) no hardcoded `INTERVAL '300 days'`.
-- [ ] **Red Light:** Must fail.
-- [ ] **Fix:** Wire logicVars; parameterize both SQL INTERVALs.
-- [ ] **Pre-Review Self-Checklist (6 items):**
-      1. Seed-schema parity — seed JSON entry and Zod schema agree on type + default
-      2. SQL duplication — all 3 occurrences replaced (lines 17, 39, 61)
-      3. Range plausibility — min=30, max=730, default=300 sane
-      4. Cross-script consumption — only this script uses this concept; no siblings
-      5. Verdict-table churn — none; no threshold-based verdicts in this script
-      6. Dual-path API latency — N/A; pipeline-only consumer, no src/lib/ read path
+- [x] **Rollback Anchor:** `7e4b55c`
+- [x] **State Verification:** Line 63 `>= 10` and line 115 `INTERVAL '30 days'`. No logicVars.
+- [x] **Spec Review:** §6.4 — Ops-tunable constants externalized to logic_variables.
+- [ ] **Seed Edit:** Add both keys to logic_variables.json.
+- [ ] **Reproduction + Red Light:** Infra test fails on both assertions.
+- [ ] **Fix:** Wire logicVars; replace constants.
+- [ ] **Pre-Review Self-Checklist (6 items per finding):**
+      E2: 1. Parity ✓  2. No other >= 10 sites  3. min=1,max=50,default=10 sane  4. No siblings  5. Audit threshold strings updated  6. N/A pipeline-only
+      E3: 1. Parity ✓  2. One INTERVAL site  3. min=1,max=365,default=30 sane  4. No siblings  5. No verdict churn  6. N/A pipeline-only
 - [ ] **Green Light:** npm run test && npm run lint -- --fix && npm run typecheck

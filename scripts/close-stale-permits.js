@@ -21,10 +21,24 @@
  *
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  stale_closure_abort_pct:    z.number().finite().positive(),
+  pending_closed_grace_days:  z.number().finite().positive().int(),
+}).passthrough();
 
 pipeline.run('close-stale-permits', async (pool) => {
   const startTime = Date.now();
+
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'close-stale-permits');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'close-stale-permits');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+
+  const abortPct = logicVars.stale_closure_abort_pct;
+  const graceDays = logicVars.pending_closed_grace_days;
 
   // Find the most recent successful permits load timestamp
   const lastLoadResult = await pool.query(
@@ -60,8 +74,8 @@ pipeline.run('close-stale-permits', async (pool) => {
   const totalPermits = parseInt(preCheckResult.rows[0].total, 10);
   const pendingClosedRate = totalPermits > 0 ? (wouldClose / totalPermits * 100) : 0;
 
-  if (pendingClosedRate >= 10) {
-    pipeline.log.error('[close-stale]', `Safety guard ABORT: ${pendingClosedRate.toFixed(1)}% closure rate (${wouldClose.toLocaleString()}/${totalPermits.toLocaleString()}) exceeds 10% — possible partial CKAN download upstream. No permits modified.`);
+  if (pendingClosedRate >= abortPct) {
+    pipeline.log.error('[close-stale]', `Safety guard ABORT: ${pendingClosedRate.toFixed(1)}% closure rate (${wouldClose.toLocaleString()}/${totalPermits.toLocaleString()}) exceeds ${abortPct}% — possible partial CKAN download upstream. No permits modified.`);
     pipeline.emitSummary({
       records_total: 0,
       records_new: 0,
@@ -75,7 +89,7 @@ pipeline.run('close-stale-permits', async (pool) => {
           name: 'Stale Permit Closure',
           verdict: 'FAIL',
           rows: [
-            { metric: 'pending_closed_rate', value: pendingClosedRate.toFixed(1) + '%', threshold: '< 10%', status: 'FAIL' },
+            { metric: 'pending_closed_rate', value: pendingClosedRate.toFixed(1) + '%', threshold: `< ${abortPct}%`, status: 'FAIL' },
             { metric: 'would_close', value: wouldClose, threshold: null, status: 'INFO' },
           ],
         },
@@ -112,8 +126,9 @@ pipeline.run('close-stale-permits', async (pool) => {
       `UPDATE permits
        SET status = 'Closed'
        WHERE status = 'Pending Closed'
-         AND completed_date < NOW() - INTERVAL '30 days'
-       RETURNING permit_num`
+         AND completed_date < NOW() - $1 * INTERVAL '1 day'
+       RETURNING permit_num`,
+      [graceDays]
     );
   });
   const closedCount = closedResult.rowCount || 0;
@@ -144,7 +159,7 @@ pipeline.run('close-stale-permits', async (pool) => {
   const auditRows = [
     { metric: 'last_load_at', value: new Date(lastLoadAt).toISOString().split('T')[0], threshold: null, status: 'INFO' },
     { metric: 'pending_closed', value: pendingCount, threshold: null, status: 'INFO' },
-    { metric: 'pending_closed_rate', value: pendingClosedRate.toFixed(1) + '%', threshold: '< 10%', status: 'PASS' },
+    { metric: 'pending_closed_rate', value: pendingClosedRate.toFixed(1) + '%', threshold: `< ${abortPct}%`, status: 'PASS' },
     { metric: 'promoted_to_closed', value: closedCount, threshold: null, status: 'INFO' },
     { metric: 'total_pending', value: totalPending, threshold: null, status: 'INFO' },
     { metric: 'total_closed', value: totalClosed, threshold: null, status: 'INFO' },

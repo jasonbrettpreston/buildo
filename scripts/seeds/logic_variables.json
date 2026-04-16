@@ -90,6 +90,20 @@
     "min": 30,
     "max": 730
   },
+  "stale_closure_abort_pct": {
+    "default": 10,
+    "type": "number",
+    "description": "Maximum percentage of permits that may be closed in a single run; exceeding this aborts the pipeline as a safety guard against partial CKAN downloads",
+    "min": 1,
+    "max": 50
+  },
+  "pending_closed_grace_days": {
+    "default": 30,
+    "type": "number",
+    "description": "Days a permit must remain in Pending Closed status before being promoted to Closed",
+    "min": 1,
+    "max": 365
+  },
   "calibration_min_sample_size": {
     "default": 5,
     "type": "number",
