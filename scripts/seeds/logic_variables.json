@@ -355,5 +355,26 @@
     "description": "pg_trgm similarity threshold for Tier 3 fuzzy builder→WSIB name matching; controls both the GIN index filter and the WHERE similarity() comparison",
     "min": 0.1,
     "max": 1.0
+  },
+  "calibration_default_median_days": {
+    "default": 30,
+    "type": "number",
+    "description": "Fallback median days used by compute-trade-forecasts when no calibration data exists for a phase transition (level-5 default)",
+    "min": 1,
+    "max": 365
+  },
+  "calibration_default_p25_days": {
+    "default": 15,
+    "type": "number",
+    "description": "Fallback p25 (25th-percentile days) used by compute-trade-forecasts when no calibration data exists for a phase transition (level-5 default)",
+    "min": 1,
+    "max": 365
+  },
+  "calibration_default_p75_days": {
+    "default": 60,
+    "type": "number",
+    "description": "Fallback p75 (75th-percentile days) used by compute-trade-forecasts when no calibration data exists for a phase transition (level-5 default)",
+    "min": 1,
+    "max": 365
   }
 }

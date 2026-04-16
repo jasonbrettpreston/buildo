@@ -48,17 +48,19 @@ const PRE_CONSTRUCTION_PHASES = new Set([
 // confidence, urgency, target_window, calibration_method, sample_size,
 // median_days, p25_days, p75_days
 const FORECAST_BATCH_SIZE = pipeline.maxRowsPerInsert(12); // Math.floor(65535 / 12) = 5461
-const DEFAULT_MEDIAN_DAYS = 30;
 
 // spec 47 §4 + spec 85 §6 item 4 — fail fast before any math runs.
 // These are the only logicVars consumed downstream; a NaN would silently
 // corrupt predictedStart (setUTCDate) and urgency classification.
 const LOGIC_VARS_SCHEMA = z.object({
-  stall_penalty_precon:   z.number().finite().min(0),
-  stall_penalty_active:   z.number().finite().min(0),
-  expired_threshold_days: z.number().finite(),
-  urgency_overdue_days:   z.number().finite().positive(),
-  urgency_upcoming_days:  z.number().finite().positive(),
+  stall_penalty_precon:               z.number().finite().min(0),
+  stall_penalty_active:               z.number().finite().min(0),
+  expired_threshold_days:             z.number().finite(),
+  urgency_overdue_days:               z.number().finite().positive(),
+  urgency_upcoming_days:              z.number().finite().positive(),
+  calibration_default_median_days:    z.number().finite().positive(),
+  calibration_default_p25_days:       z.number().finite().positive(),
+  calibration_default_p75_days:       z.number().finite().positive(),
 }).passthrough();
 
 // Urgency classification — no isStalled parameter.
@@ -129,6 +131,9 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   if (!validation.valid) {
     throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   }
+  const defaultMedianDays = logicVars.calibration_default_median_days;
+  const defaultP25Days    = logicVars.calibration_default_p25_days;
+  const defaultP75Days    = logicVars.calibration_default_p75_days;
 
   // Build TRADE_TARGET_PHASE from loaded trade configs
   TRADE_TARGET_PHASE = Object.fromEntries(
@@ -185,8 +190,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     const l4 = calMap.get('ISSUED')?.get(toPhase)?.get('__ALL__');
     if (l4) return { ...l4, method: 'fallback_issued_all' };
 
-    // Level 5: hardcoded default
-    return { median: DEFAULT_MEDIAN_DAYS, p25: 15, p75: 60, sample: 0, method: 'default' };
+    // Level 5: default (from logicVars)
+    return { median: defaultMedianDays, p25: defaultP25Days, p75: defaultP75Days, sample: 0, method: 'default' };
   }
 
   // ═══════════════════════════════════════════════════════════

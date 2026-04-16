@@ -297,4 +297,19 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/function classifyUrgency\([^)]*overdueWindow/);
     expect(content).toMatch(/function classifyUrgency\([^)]*upcomingWindow/);
   });
+
+  it('reads calibration fallback defaults from logicVars — no hardcoded DEFAULT_MEDIAN_DAYS=30, p25=15, p75=60 (WF3-E21)', () => {
+    // E21: calibration_default_median_days, _p25_days, _p75_days externalized.
+    expect(content).toMatch(/logicVars\.calibration_default_median_days/);
+    expect(content).toMatch(/logicVars\.calibration_default_p25_days/);
+    expect(content).toMatch(/logicVars\.calibration_default_p75_days/);
+    // Hardcoded constants must be gone
+    expect(content).not.toMatch(/DEFAULT_MEDIAN_DAYS\s*=/);
+    expect(content).not.toMatch(/p25:\s*15\b/);
+    expect(content).not.toMatch(/p75:\s*60\b/);
+    // Level-5 fallback must use the derived variables
+    expect(content).toMatch(/defaultMedianDays/);
+    expect(content).toMatch(/defaultP25Days/);
+    expect(content).toMatch(/defaultP75Days/);
+  });
 });
