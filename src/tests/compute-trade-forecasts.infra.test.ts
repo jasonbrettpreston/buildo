@@ -256,4 +256,34 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     // Regression guard — the old unbounded-load pattern must be gone.
     expect(content).not.toMatch(/const\s+\{\s*rows:\s*permitTradeRows\s*\}\s*=\s*await\s+pool\.query/);
   });
+
+  it('emits audit_table with a real verdict (not UNKNOWN) per spec 47 §8.2', () => {
+    // The SDK auto-injects { verdict: "UNKNOWN", rows: [] } when audit_table is absent.
+    // This test verifies the script provides its own audit_table so the FreshnessTimeline
+    // shows a meaningful PASS/WARN/FAIL instead of the UNKNOWN sentinel.
+    expect(content).toMatch(/audit_table\s*:/);
+    // Must have phase: 22 (chain position in permits chain)
+    expect(content).toMatch(/phase\s*:\s*22/);
+    // Name must be human-readable, not the SDK auto-inject "Auto"
+    expect(content).toMatch(/name\s*:\s*['"]Trade Forecasts['"]/);
+    // Verdict must be computed from row statuses, not hardcoded
+    // Allow both `some(r =>` and `some((r) =>` forms
+    expect(content).toMatch(/auditRows\.some\(\(?\s*r\s*\)?\s*=>\s*r\.status\s*===\s*['"]FAIL['"]\)/);
+    expect(content).toMatch(/auditRows\.some\(\(?\s*r\s*\)?\s*=>\s*r\.status\s*===\s*['"]WARN['"]\)/);
+  });
+
+  it('includes default_calibration_pct threshold row per spec 47 §8.2 forecast-engine minimum', () => {
+    // spec 47 §8.2 requires forecast engines to include default_calibration_pct with a threshold.
+    // High default rate means phase_calibration is missing data for too many (from_phase, to_phase) pairs.
+    expect(content).toMatch(/default_calibration_pct/);
+    // Must query calibration_method distribution from trade_forecasts after the run
+    expect(content).toMatch(/calibration_method/);
+  });
+
+  it('includes unmapped_trades threshold row (WARN when > 0)', () => {
+    // unmapped_trades > 0 means classify-permits produced a trade slug that
+    // has no entry in TRADE_TARGET_PHASE — forecasts silently skipped for those trades.
+    // Must be surfaced as a WARN, not buried in a console.log.
+    expect(content).toMatch(/unmapped_trades[\s\S]*?threshold[\s\S]*?==\s*0/);
+  });
 });

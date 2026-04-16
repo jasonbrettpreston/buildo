@@ -500,6 +500,47 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   );
   const urgencyDistribution = Object.fromEntries(urgDist.map((r) => [r.urgency, r.n]));
 
+  // Calibration method distribution — required by spec 47 §8.2 (forecast engine minimum)
+  const { rows: calDist } = await pool.query(
+    'SELECT calibration_method, COUNT(*)::int AS n FROM trade_forecasts GROUP BY 1',
+  );
+  const calibrationDistribution = Object.fromEntries(calDist.map((r) => [r.calibration_method, r.n]));
+  // Avoid div-by-zero on an empty table (e.g., fresh environment)
+  const totalForecasts = postRowCount > 0 ? postRowCount : 1;
+  const defaultPct = ((calibrationDistribution.default ?? 0) / totalForecasts) * 100;
+  const expiredPct = ((urgencyDistribution.expired ?? 0) / totalForecasts) * 100;
+
+  // Build audit table per spec 47 §8.2 — forecast engine minimum:
+  // forecasts_computed, stale_purged, default_calibration_pct (with threshold)
+  const auditRows = [
+    { metric: 'forecasts_computed',        value: upserted,                threshold: null,    status: 'INFO' },
+    { metric: 'new_forecasts',             value: newRows,                 threshold: null,    status: 'INFO' },
+    { metric: 'stale_purged',              value: stalePurged,             threshold: null,    status: 'INFO' },
+    { metric: 'skipped_terminal_orphan',   value: skipped,                 threshold: null,    status: 'INFO' },
+    {
+      metric: 'unmapped_trades',
+      value: unmappedTrades,
+      threshold: '== 0',
+      status: unmappedTrades > 0 ? 'WARN' : 'PASS',
+    },
+    {
+      metric: 'default_calibration_pct',
+      value: defaultPct.toFixed(1) + '%',
+      threshold: '< 20%',
+      status: defaultPct >= 50 ? 'FAIL' : defaultPct >= 20 ? 'WARN' : 'PASS',
+    },
+    {
+      metric: 'expired_urgency_pct',
+      value: expiredPct.toFixed(1) + '%',
+      threshold: '< 30%',
+      status: expiredPct >= 60 ? 'FAIL' : expiredPct >= 30 ? 'WARN' : 'PASS',
+    },
+    { metric: 'total_forecast_rows', value: postRowCount, threshold: null, status: 'INFO' },
+  ];
+  const auditVerdict =
+    auditRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
+    auditRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+
   pipeline.emitSummary({
     records_total: upserted,
     records_new: newRows,
@@ -510,7 +551,14 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       skipped_terminal_orphan: skipped,
       unmapped_trades: unmappedTrades,
       urgency_distribution: urgencyDistribution,
+      calibration_distribution: calibrationDistribution,
       total_forecast_rows: postRowCount,
+      audit_table: {
+        phase: 22,
+        name: 'Trade Forecasts',
+        verdict: auditVerdict,
+        rows: auditRows,
+      },
     },
   });
 
