@@ -462,6 +462,7 @@ async function searchSerper(query) {
 // Main
 // ---------------------------------------------------------------------------
 
+if (require.main === module) {
 pipeline.run('enrich-wsib', async (pool) => {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
@@ -745,6 +746,60 @@ pipeline.run('enrich-wsib', async (pool) => {
 
   await finalize(pool, runId, startMs, enriched, contactsFound, failed, meta);
 });
+} // require.main === module
+
+// ---------------------------------------------------------------------------
+// Cleanup helper (exported for testing)
+// ---------------------------------------------------------------------------
+
+/**
+ * Auto-cleanup: scrub newly enriched rows for known garbage patterns.
+ * Both UPDATEs share a single transaction so a partial scrub is never
+ * visible between them (WF3-S3 §7.6 paired-mutation atomicity).
+ * Non-fatal — on failure logs a warning and returns 0.
+ *
+ * @param {import('pg').Pool} pool
+ * @param {{ withTransaction?: typeof pipeline.withTransaction }} [opts]
+ * @returns {Promise<number>} Number of rows scrubbed (0 on error/rollback)
+ */
+async function runAutoCleanup(pool, opts) {
+  const withTransaction = (opts && opts.withTransaction) ? opts.withTransaction : pipeline.withTransaction.bind(pipeline);
+  try {
+    const count = await withTransaction(pool, async (client) => {
+      let n = 0;
+
+      // Clean emails matching reject patterns
+      const emailPatterns = EMAIL_REJECT.map(r => `%${r}%`);
+      const emailClean = await client.query(
+        `UPDATE wsib_registry SET primary_email = NULL
+         WHERE last_enriched_at > NOW() - INTERVAL '1 hour'
+           AND primary_email IS NOT NULL
+           AND primary_email ILIKE ANY($1)
+         RETURNING id`,
+        [emailPatterns]
+      );
+      n += emailClean.rows.length;
+
+      // Clean websites matching blocked domains
+      const domainPatterns = DIRECTORY_DOMAINS.flatMap(d => [`%://${d}/%`, `%://${d}`, `%://www.${d}/%`, `%://www.${d}`]);
+      const websiteClean = await client.query(
+        `UPDATE wsib_registry SET website = NULL
+         WHERE last_enriched_at > NOW() - INTERVAL '1 hour'
+           AND website IS NOT NULL
+           AND website ILIKE ANY($1)
+         RETURNING id`,
+        [domainPatterns]
+      );
+      n += websiteClean.rows.length;
+
+      return n;
+    });
+    return count ?? 0;
+  } catch (err) {
+    pipeline.log.warn('[enrich-wsib]', `Auto-cleanup failed (non-fatal): ${err.message}`);
+    return 0;
+  }
+}
 
 async function finalize(pool, runId, startMs, enriched, contactsFound, failed, meta) {
   const durationMs = Date.now() - startMs;
@@ -769,34 +824,7 @@ async function finalize(pool, runId, startMs, enriched, contactsFound, failed, m
   pipeline.log.info('[enrich-wsib]', `DB stats: ${s.total} total | ${s.enriched} enriched | ${s.with_phone} phone | ${s.with_email} email | ${s.with_website} website`);
 
   // Auto-cleanup: scrub newly enriched rows for known garbage patterns
-  let cleanedCount = 0;
-  try {
-    // Clean emails matching reject patterns
-    const emailPatterns = EMAIL_REJECT.map(r => `%${r}%`);
-    const emailClean = await pool.query(
-      `UPDATE wsib_registry SET primary_email = NULL
-       WHERE last_enriched_at > NOW() - INTERVAL '1 hour'
-         AND primary_email IS NOT NULL
-         AND primary_email ILIKE ANY($1)
-       RETURNING id`,
-      [emailPatterns]
-    );
-    cleanedCount += emailClean.rows.length;
-
-    // Clean websites matching blocked domains
-    const domainPatterns = DIRECTORY_DOMAINS.flatMap(d => [`%://${d}/%`, `%://${d}`, `%://www.${d}/%`, `%://www.${d}`]);
-    const websiteClean = await pool.query(
-      `UPDATE wsib_registry SET website = NULL
-       WHERE last_enriched_at > NOW() - INTERVAL '1 hour'
-         AND website IS NOT NULL
-         AND website ILIKE ANY($1)
-       RETURNING id`,
-      [domainPatterns]
-    );
-    cleanedCount += websiteClean.rows.length;
-  } catch (err) {
-    pipeline.log.warn('[enrich-wsib]', `Auto-cleanup failed (non-fatal): ${err.message}`);
-  }
+  const cleanedCount = await runAutoCleanup(pool);
   if (cleanedCount > 0) {
     pipeline.log.info('[enrich-wsib]', `Auto-cleanup: scrubbed ${cleanedCount} garbage entries`);
   }
@@ -839,3 +867,5 @@ async function finalize(pool, runId, startMs, enriched, contactsFound, failed, m
     { "wsib_registry": ["primary_phone", "primary_email", "website", "last_enriched_at"] }
   );
 }
+
+module.exports = { runAutoCleanup };
