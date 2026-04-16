@@ -94,7 +94,6 @@ All scoring constants are now DB-driven. Global constants (`los_penalty_tracking
 ## 6. Front-end Preparation (Admin & Pro App)
 
 ### A. Admin Panel (Marketplace Control)
-- **The 100% Guard:** A real-time validator that sums all trade `allocation_pct` fields. The "Save" button is disabled unless the total equals `1.00`.
 - **The Bimodal Switch:** Dropdowns for every trade to set the `bid_phase_cutoff` (P1-P18).
 - **The Re-Sync Trigger:** A button that executes the script chain: Cost Engine → Forecast Engine → Score Engine.
 
