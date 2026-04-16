@@ -1,6 +1,6 @@
 // Infra Layer Tests - Data quality API routes and snapshot table schema
 // SPEC LINK: docs/specs/28_data_quality_dashboard.md
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import type { DataQualityResponse } from '@/lib/quality/types';
@@ -766,5 +766,43 @@ describe('Duration anomaly SQL normalization', () => {
     );
     expect(durationSection.length).toBeGreaterThan(0);
     expect(durationSection).toMatch(/SPLIT_PART.*pipeline.*:.*2/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Bundle A: assert-lifecycle-phase-distribution.js advisory lock migration
+// ---------------------------------------------------------------------------
+
+describe('assert-lifecycle-phase-distribution.js — advisory lock delegation (spec 47 §5)', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-lifecycle-phase-distribution.js'),
+      'utf-8',
+    );
+  });
+
+  it('delegates advisory lock to pipeline.withAdvisoryLock — Phase 2 migration (spec 47 §5)', () => {
+    expect(content).toMatch(/const ADVISORY_LOCK_ID = 85/);
+    expect(content).toMatch(/pipeline\.withAdvisoryLock\(pool,\s*ADVISORY_LOCK_ID/);
+    // Must NOT hand-roll
+    expect(content).not.toMatch(/pg_try_advisory_lock/);
+    expect(content).not.toMatch(/pg_advisory_unlock/);
+    expect(content).not.toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
+  });
+
+  it('emits SKIP with reason classifier_running when lock held (custom reason preserved)', () => {
+    // This script uses reason:'classifier_running' (not the standard
+    // 'advisory_lock_held_elsewhere') because it skips to avoid reading
+    // half-written phase data from a concurrent classify run.
+    expect(content).toMatch(/lockResult\.acquired/);
+    expect(content).toMatch(/classifier_running/);
+    expect(content).not.toMatch(/advisory_lock_held_elsewhere/);
+  });
+
+  it('SPEC LINK points to canonical spec (not docs/reports/)', () => {
+    // Bundle D: de-report fix — SPEC LINK must point to docs/specs/, not docs/reports/
+    expect(content).toMatch(/SPEC LINK:.*docs\/specs\//);
+    expect(content).not.toMatch(/SPEC LINK:.*docs\/reports\//);
   });
 });

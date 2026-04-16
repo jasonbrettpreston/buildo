@@ -10,7 +10,7 @@
  * separate assert step, OR invoked standalone after a manual
  * classifier run.
  *
- * SPEC LINK: docs/reports/lifecycle_phase_implementation.md §3.3
+ * SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §3.3
  */
 'use strict';
 
@@ -86,53 +86,11 @@ if (NORMALIZED_DEAD_DECISIONS_ARRAY.length === 0) {
 }
 
 pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
-  // ─── Advisory lock awareness (WF3 Bug #10) ───────────────────────
-  // If the classifier is mid-write we skip gracefully rather than
-  // reading half-updated distribution counts and throwing false-positive
-  // band violations.
-  const lockClient = await pool.connect();
-  let gotLock = false;
-  try {
-    const { rows: lockRows } = await lockClient.query(
-      'SELECT pg_try_advisory_lock($1) AS got',
-      [ADVISORY_LOCK_ID],
-    );
-    gotLock = lockRows[0].got;
-    if (!gotLock) {
-      pipeline.log.info(
-        '[assert-lifecycle-phase-distribution]',
-        `Advisory lock ${ADVISORY_LOCK_ID} held by classifier — skipping assertion to avoid false-positive.`,
-      );
-      pipeline.emitSummary({
-        records_total: 0,
-        records_new: 0,
-        records_updated: 0,
-        records_meta: {
-          skipped: true,
-          reason: 'classifier_running',
-          advisory_lock_id: ADVISORY_LOCK_ID,
-        },
-      });
-      pipeline.emitMeta({}, {});
-      // CRITICAL: release lockClient before returning. Without this,
-      // the return escapes before the outer try/finally, leaking one
-      // pool connection on every skipped run. Independent review Item 2.
-      lockClient.release();
-      return;
-    }
-  } catch (lockErr) {
-    lockClient.release();
-    throw lockErr;
-  }
-
-  // Track whether the outer finally should release. The catch block
-  // above already releases on lock-acquisition error; the skip path
-  // above already releases before returning. Without this flag, the
-  // outer finally's unconditional lockClient.release() would double-
-  // release in the lock-error path. See adversarial Defect 1.
-  let lockClientReleased = false;
-
-  try {
+  // ─── Advisory lock awareness — pipeline.withAdvisoryLock (Phase 2 migration) ──
+  // If the classifier is mid-write we skip gracefully (reason: 'classifier_running')
+  // rather than reading half-updated distribution counts. skipEmit:false preserves
+  // the custom reason — the helper's default SKIP emit omits it.
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   // Distribution from permits.lifecycle_phase
   const { rows: permitRows } = await pool.query(
     `SELECT lifecycle_phase, COUNT(*)::int AS n
@@ -370,19 +328,25 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
       `Distribution sanity check FAILED (${failures.length} failures):\n${failures.join('\n')}`,
     );
   }
-  } finally {
-    // Release advisory lock on the same dedicated client, then return
-    // the client to the pool. The lockClientReleased guard prevents
-    // double-release in the lock-acquisition error path (catch block
-    // above already calls release + re-throw → this finally fires too).
-    if (!lockClientReleased) {
-      if (gotLock) {
-        try {
-          await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-        } catch (_) { /* lock released when session closes */ }
-      }
-      lockClient.release();
-      lockClientReleased = true;
-    }
+  }, { skipEmit: false }); // end withAdvisoryLock
+
+  // Classifier is mid-write — skip assertion to avoid false-positive band violations.
+  if (!lockResult.acquired) {
+    pipeline.log.info(
+      '[assert-lifecycle-phase-distribution]',
+      `Advisory lock ${ADVISORY_LOCK_ID} held by classifier — skipping assertion to avoid false-positive.`,
+    );
+    pipeline.emitSummary({
+      records_total: 0,
+      records_new: 0,
+      records_updated: 0,
+      records_meta: {
+        skipped: true,
+        reason: 'classifier_running',
+        advisory_lock_id: ADVISORY_LOCK_ID,
+      },
+    });
+    pipeline.emitMeta({}, {});
+    return;
   }
 });
