@@ -327,5 +327,26 @@
     "description": "Confidence score assigned to a permit→parcel spatial match (Strategy 3); upgraded to 0.90 if permit geocode falls inside the parcel polygon",
     "min": 0.01,
     "max": 1.0
+  },
+  "massing_shed_threshold_sqm": {
+    "default": 20,
+    "type": "number",
+    "description": "Building footprint area (m²) below which a secondary structure is classified as a shed in link-massing",
+    "min": 1,
+    "max": 200
+  },
+  "massing_garage_max_sqm": {
+    "default": 60,
+    "type": "number",
+    "description": "Maximum building footprint area (m²) for a secondary structure to be classified as a garage in link-massing",
+    "min": 1,
+    "max": 500
+  },
+  "massing_nearest_max_distance_m": {
+    "default": 50,
+    "type": "number",
+    "description": "Maximum haversine distance (metres) for the nearest-building fallback in link-massing when no polygon match is found",
+    "min": 1,
+    "max": 500
   }
 }

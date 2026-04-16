@@ -106,10 +106,13 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'snapshot_coa_conf_high',
   'spatial_match_max_distance_m',  // E18
   'spatial_match_confidence',      // E18
+  'massing_shed_threshold_sqm',    // E19
+  'massing_garage_max_sqm',        // E19
+  'massing_nearest_max_distance_m', // E19
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
-  it('contains all 47 expected logic variable keys', () => {
+  it('contains all 50 expected logic variable keys', () => {
     for (const key of EXPECTED_LOGIC_VAR_KEYS) {
       expect(LOGIC_VAR_DEFAULTS).toHaveProperty(key);
     }
@@ -157,7 +160,7 @@ describe('Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ conf
     expect(jsonKeys.length).toBeGreaterThan(0);
   });
 
-  it('logic_variables.json contains all 47 expected keys', () => {
+  it('logic_variables.json contains all 50 expected keys', () => {
     for (const key of EXPECTED_LOGIC_VAR_KEYS) {
       expect(jsonData, `JSON missing key: ${key}`).toHaveProperty(key);
     }

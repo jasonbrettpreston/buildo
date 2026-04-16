@@ -27,15 +27,20 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
+const { z } = require('zod');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 // Turf.js imports are lazy-loaded inside the JS fallback path (else block).
 // PostGIS environments don't need Turf installed at all.
 let booleanPointInPolygon, turfPoint;
 
+const LOGIC_VARS_SCHEMA = z.object({
+  massing_shed_threshold_sqm:    z.number().finite().positive(),
+  massing_garage_max_sqm:        z.number().finite().positive(),
+  massing_nearest_max_distance_m: z.number().finite().positive(),
+}).passthrough();
+
 const BATCH_SIZE = 500;
 const GRID_SIZE = 0.003; // ~333m grid cells (same as old BBOX_OFFSET)
-const SHED_THRESHOLD_SQM = 20;
-const GARAGE_MAX_SQM = 60;
-const NEAREST_MAX_DISTANCE_M = 50;
 const PARAM_FLUSH_THRESHOLD = 30000; // §9.2: flush before hitting PG 65,535 limit
 
 /**
@@ -75,12 +80,12 @@ function reprojectGeometry(geom) {
   return geom;
 }
 
-function classifyStructure(areaSqm, allAreas) {
+function classifyStructure(areaSqm, allAreas, shedThreshold, garageMax) {
   if (allAreas.length <= 1) return 'primary';
   const maxArea = Math.max(...allAreas);
   if (areaSqm >= maxArea) return 'primary';
-  if (areaSqm < SHED_THRESHOLD_SQM) return 'shed';
-  if (areaSqm <= GARAGE_MAX_SQM) return 'garage';
+  if (areaSqm < shedThreshold) return 'shed';
+  if (areaSqm <= garageMax) return 'garage';
   return 'other';
 }
 
@@ -151,6 +156,13 @@ async function flushInsertBatch(pool, insertParams, insertValues) {
 }
 
 pipeline.run('link-massing', async (pool) => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'link-massing');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-massing');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  const shedThresholdSqm    = logicVars.massing_shed_threshold_sqm;
+  const garageMaxSqm        = logicVars.massing_garage_max_sqm;
+  const nearestMaxDistanceM = logicVars.massing_nearest_max_distance_m;
+
   const FULL_MODE = pipeline.isFullMode();
   const startTime = Date.now();
 
@@ -266,9 +278,9 @@ pipeline.run('link-massing', async (pool) => {
           const primaryBuildingId = buildings[0].building_id;
 
           for (const b of buildings) {
-            let structureType = classifyStructure(b.footprint_area_sqm, allAreas);
+            let structureType = classifyStructure(b.footprint_area_sqm, allAreas, shedThresholdSqm, garageMaxSqm);
             if (structureType === 'primary' && b.building_id !== primaryBuildingId) {
-              structureType = b.footprint_area_sqm <= GARAGE_MAX_SQM ? 'garage' : 'other';
+              structureType = b.footprint_area_sqm <= garageMaxSqm ? 'garage' : 'other';
             }
             const isPrimary = structureType === 'primary';
 
@@ -488,7 +500,7 @@ pipeline.run('link-massing', async (pool) => {
           }
         }
 
-        if (nearestId !== null && nearestDist <= NEAREST_MAX_DISTANCE_M) {
+        if (nearestId !== null && nearestDist <= nearestMaxDistanceM) {
           matchedBuildings.push({
             building_id: nearestId,
             footprint_area_sqm: nearestArea,
@@ -518,10 +530,10 @@ pipeline.run('link-massing', async (pool) => {
       const maxArea = Math.max(...allAreas);
       const primaryBuildingId = matchedBuildings[0].building_id;
       for (const mb of matchedBuildings) {
-        let structureType = classifyStructure(mb.footprint_area_sqm, allAreas);
+        let structureType = classifyStructure(mb.footprint_area_sqm, allAreas, shedThresholdSqm, garageMaxSqm);
         // Enforce single primary: only the first building at max area gets 'primary'
         if (structureType === 'primary' && mb.building_id !== primaryBuildingId) {
-          structureType = mb.footprint_area_sqm <= GARAGE_MAX_SQM ? 'garage' : 'other';
+          structureType = mb.footprint_area_sqm <= garageMaxSqm ? 'garage' : 'other';
         }
         const isPrimary = structureType === 'primary';
 
