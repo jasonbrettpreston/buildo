@@ -151,3 +151,31 @@ describe('Web Search Enrichment Infrastructure', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Bundle B: audit_table additions
+// ---------------------------------------------------------------------------
+
+describe('enrich-web-search.js — audit_table in emitSummary (Bundle B, spec 47 §8.2)', () => {
+  const src = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/enrich-web-search.js'), 'utf-8',
+  );
+  it('includes audit_table in records_meta — not SDK auto-inject UNKNOWN', () => {
+    expect(src).toMatch(/audit_table\s*:/);
+    expect(src).toMatch(/phase\s*:/);
+    expect(src).toMatch(/rows\s*:/);
+    expect(src).toMatch(/verdict\s*:/);
+  });
+});
+
+describe('enrich-wsib.js — audit_table in emitSummary (Bundle B, spec 47 §8.2)', () => {
+  const src = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/enrich-wsib.js'), 'utf-8',
+  );
+  it('includes audit_table in records_meta — not SDK auto-inject UNKNOWN', () => {
+    expect(src).toMatch(/audit_table\s*:/);
+    expect(src).toMatch(/phase\s*:/);
+    expect(src).toMatch(/rows\s*:/);
+    expect(src).toMatch(/verdict\s*:/);
+  });
+});

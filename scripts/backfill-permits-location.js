@@ -112,11 +112,26 @@ pipeline.run(SCRIPT_NAME, async (pool) => {
     { permits: ['permit_num', 'revision_num', 'latitude', 'longitude', 'location'] },
     DRY_RUN ? {} : { permits: ['location'] }
   );
+  const notUpdated = candidateCount - updatedCount;
+  const backfillVerdict = DRY_RUN || notUpdated === 0 ? 'PASS' : 'WARN';
   pipeline.emitSummary({
     records_total: candidateCount,
     records_new: 0,
     records_updated: updatedCount,
-    records_meta: { dry_run: DRY_RUN, batches: batchNum, batch_size: BATCH_SIZE },
+    records_meta: {
+      dry_run: DRY_RUN,
+      batches: batchNum,
+      batch_size: BATCH_SIZE,
+      audit_table: {
+        phase: 0,
+        name: 'Backfill Permits Location',
+        verdict: backfillVerdict,
+        rows: [
+          { metric: 'permits_backfilled', value: updatedCount,  threshold: null,   status: 'INFO' },
+          { metric: 'permits_not_updated', value: notUpdated,   threshold: '== 0', status: DRY_RUN || notUpdated === 0 ? 'PASS' : 'WARN' },
+        ],
+      },
+    },
   });
 }).catch((err) => {
   pipeline.log.error(`[${SCRIPT_NAME}]`, err, { phase: 'fatal' });

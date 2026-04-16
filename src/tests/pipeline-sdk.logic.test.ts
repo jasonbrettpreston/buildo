@@ -1157,6 +1157,14 @@ describe('Pipeline SDK', () => {
       const content = fsB1.readFileSync(reclassifyPath, 'utf-8');
       expect(content).toMatch(/pipeline\.emitSummary\(/);
     });
+
+    it('includes audit_table in emitSummary records_meta — not SDK auto-inject UNKNOWN (Bundle B)', () => {
+      const content = fsB1.readFileSync(reclassifyPath, 'utf-8');
+      expect(content).toMatch(/audit_table\s*:/);
+      expect(content).toMatch(/phase\s*:/);
+      expect(content).toMatch(/rows\s*:/);
+      expect(content).toMatch(/verdict\s*:/);
+    });
   });
 
   // -----------------------------------------------------------------------

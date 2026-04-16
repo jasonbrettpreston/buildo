@@ -187,6 +187,7 @@ pipeline.run('reclassify-all', async (pool) => {
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
+  const reclassifyVerdict = errorCount > 0 ? 'WARN' : 'PASS';
   pipeline.emitSummary({
     records_total: total,
     records_new: 0,
@@ -197,6 +198,15 @@ pipeline.run('reclassify-all', async (pool) => {
       errors: errorCount,
       trade_matches: tradeTotal,
       product_matches: productTotal,
+      audit_table: {
+        phase: 0,
+        name: 'Reclassify All',
+        verdict: reclassifyVerdict,
+        rows: [
+          { metric: 'permits_reclassified', value: classifiedCount, threshold: null,  status: 'INFO' },
+          { metric: 'permits_errored',      value: errorCount,      threshold: '== 0', status: errorCount === 0 ? 'PASS' : 'WARN' },
+        ],
+      },
     },
   });
   pipeline.emitMeta(

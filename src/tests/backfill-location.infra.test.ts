@@ -47,4 +47,15 @@ describe('scripts/backfill-permits-location.js', () => {
   it('idempotent guard via IS DISTINCT FROM in the UPDATE', () => {
     expect(src).toMatch(/IS DISTINCT FROM ST_SetSRID/);
   });
+
+  it('includes audit_table in emitSummary records_meta — not SDK auto-inject UNKNOWN (Bundle B)', () => {
+    // SDK auto-injects { verdict: 'UNKNOWN', rows: [] } when audit_table is absent.
+    // FreshnessTimeline renders UNKNOWN instead of a real PASS/WARN/FAIL verdict.
+    expect(src).toMatch(/audit_table\s*:/);
+    expect(src).toMatch(/phase\s*:/);
+    expect(src).not.toMatch(/name\s*:\s*['"]Auto['"]/);
+    expect(src).toMatch(/rows\s*:/);
+    // Verdict must reference a computed variable, not be hardcoded
+    expect(src).toMatch(/verdict\s*:/);
+  });
 });

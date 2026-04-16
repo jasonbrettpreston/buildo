@@ -811,13 +811,27 @@ async function finalize(pool, runId, startMs, enriched, contactsFound, failed, m
     ).catch((dbErr) => { pipeline.log.error('[enrich-wsib]', `Failed to update pipeline_runs: ${dbErr.message}`); });
   }
 
+  const wsibTotal = enriched + failed;
+  const wsibFailRate = wsibTotal > 0 ? (failed / wsibTotal) * 100 : 0;
+  const wsibVerdict = wsibFailRate >= 2 ? 'FAIL' : failed > 0 ? 'WARN' : 'PASS';
   pipeline.emitSummary({
-    records_total: enriched + failed,
+    records_total: wsibTotal,
     records_new: contactsFound,
     records_updated: enriched - contactsFound,
     records_meta: {
       duration_ms: durationMs,
       ...meta,
+      audit_table: {
+        phase: 1,
+        name: 'WSIB Enrichment',
+        verdict: wsibVerdict,
+        rows: [
+          { metric: 'builders_enriched', value: enriched,      threshold: null,  status: 'INFO' },
+          { metric: 'contacts_found',    value: contactsFound, threshold: null,  status: 'INFO' },
+          { metric: 'cleaned',           value: cleanedCount,  threshold: null,  status: 'INFO' },
+          { metric: 'failures',          value: failed,        threshold: '< 2%', status: wsibFailRate >= 2 ? 'FAIL' : failed > 0 ? 'WARN' : 'PASS' },
+        ],
+      },
     },
   });
   pipeline.emitMeta(

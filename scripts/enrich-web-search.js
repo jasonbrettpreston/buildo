@@ -544,13 +544,26 @@ async function finalize(pool, runId, startMs, enriched, contactsFound, failed, m
     ).catch((dbErr) => { pipeline.log.error('[enrich-web-search]', `Failed to update pipeline_runs: ${dbErr.message}`); });
   }
 
+  const webEnrichTotal = enriched + failed;
+  const webFailRate = webEnrichTotal > 0 ? (failed / webEnrichTotal) * 100 : 0;
+  const webVerdict = webFailRate >= 10 ? 'FAIL' : failed > 0 ? 'WARN' : 'PASS';
   pipeline.emitSummary({
-    records_total: enriched + failed,
+    records_total: webEnrichTotal,
     records_new: contactsFound,
     records_updated: enriched - contactsFound,
     records_meta: {
       duration_ms: durationMs,
       ...meta,
+      audit_table: {
+        phase: 1,
+        name: 'Web Search Enrichment',
+        verdict: webVerdict,
+        rows: [
+          { metric: 'builders_enriched', value: enriched,      threshold: null,    status: 'INFO' },
+          { metric: 'contacts_found',    value: contactsFound, threshold: null,    status: 'INFO' },
+          { metric: 'failures',          value: failed,        threshold: '< 10%', status: webFailRate >= 10 ? 'FAIL' : failed > 0 ? 'WARN' : 'PASS' },
+        ],
+      },
     },
   });
   pipeline.emitMeta({ "entities": ["id", "legal_name", "primary_phone", "primary_email", "website", "last_enriched_at", "permit_count"], "wsib_registry": ["trade_name", "legal_name", "mailing_address"] }, { "entities": ["primary_phone", "primary_email", "website", "last_enriched_at"], "entity_contacts": ["entity_id", "contact_type", "contact_value", "source"] });
