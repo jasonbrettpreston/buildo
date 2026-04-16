@@ -1,0 +1,128 @@
+{
+  "los_multiplier_bid": {
+    "default": 2.5,
+    "type": "number",
+    "description": "LoS score multiplier applied when a lead is in active bidding phase",
+    "min": 0.5,
+    "max": 10.0
+  },
+  "los_multiplier_work": {
+    "default": 1.5,
+    "type": "number",
+    "description": "LoS score multiplier applied when a lead is in active work phase",
+    "min": 0.5,
+    "max": 10.0
+  },
+  "los_penalty_tracking": {
+    "default": 50,
+    "type": "number",
+    "description": "LoS penalty (points) deducted when a lead has been viewed/tracked without conversion",
+    "min": 0,
+    "max": 100
+  },
+  "los_penalty_saving": {
+    "default": 10,
+    "type": "number",
+    "description": "LoS penalty (points) deducted when a lead is saved but not acted on",
+    "min": 0,
+    "max": 100
+  },
+  "los_base_cap": {
+    "default": 30,
+    "type": "number",
+    "description": "Maximum LoS base score before multipliers are applied",
+    "min": 1,
+    "max": 100
+  },
+  "los_base_divisor": {
+    "default": 10000,
+    "type": "number",
+    "description": "Divisor applied to construction cost when computing the LoS base score",
+    "min": 100,
+    "max": 100000
+  },
+  "stall_penalty_precon": {
+    "default": 45,
+    "type": "number",
+    "description": "Days without phase progression before a pre-construction lead is considered stalled",
+    "min": 1,
+    "max": 365
+  },
+  "stall_penalty_active": {
+    "default": 14,
+    "type": "number",
+    "description": "Days without phase progression before an active-construction lead is considered stalled",
+    "min": 1,
+    "max": 365
+  },
+  "expired_threshold_days": {
+    "default": -90,
+    "type": "number",
+    "description": "Negative offset (days) used to classify a permit as expired; permits older than this are excluded from leads",
+    "min": -730,
+    "max": -1
+  },
+  "liar_gate_threshold": {
+    "default": 0.25,
+    "type": "number",
+    "description": "Minimum fraction of active permits with cost estimate before the Liar's Gate override triggers (Spec 83 §4)",
+    "min": 0.01,
+    "max": 1.0
+  },
+  "lead_expiry_days": {
+    "default": 90,
+    "type": "number",
+    "description": "Days after which a lead is considered expired and removed from the active feed",
+    "min": 1,
+    "max": 730
+  },
+  "coa_stall_threshold": {
+    "default": 30,
+    "type": "number",
+    "description": "Days without CoA update before a linked application is considered stalled",
+    "min": 1,
+    "max": 365
+  },
+  "calibration_min_sample_size": {
+    "default": 5,
+    "type": "number",
+    "description": "Minimum number of historical leads required before trade calibration data is trusted",
+    "min": 1,
+    "max": 100
+  },
+  "urban_coverage_ratio": {
+    "default": 0.70,
+    "type": "number",
+    "description": "GFA coverage ratio applied to urban parcels when estimating construction area (Spec 83 §3)",
+    "min": 0.01,
+    "max": 1.0
+  },
+  "suburban_coverage_ratio": {
+    "default": 0.40,
+    "type": "number",
+    "description": "GFA coverage ratio applied to suburban parcels when estimating construction area (Spec 83 §3)",
+    "min": 0.01,
+    "max": 1.0
+  },
+  "trust_threshold_pct": {
+    "default": 0.25,
+    "type": "number",
+    "description": "Minimum fraction of permits with parcel-linked cost data before a coverage ratio is trusted (Spec 83 §4)",
+    "min": 0.01,
+    "max": 1.0
+  },
+  "commercial_shell_multiplier": {
+    "default": 0.60,
+    "type": "number",
+    "description": "Discount multiplier applied to commercial shell-and-core permits for cost estimation (Spec 86)",
+    "min": 0.1,
+    "max": 2.0
+  },
+  "placeholder_cost_threshold": {
+    "default": 1000,
+    "type": "number",
+    "description": "Construction cost values below this threshold (CAD) are treated as placeholder/zero and excluded from analysis",
+    "min": 100,
+    "max": 10000000
+  }
+}

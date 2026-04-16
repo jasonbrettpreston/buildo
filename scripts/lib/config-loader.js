@@ -54,31 +54,15 @@ const FALLBACK_TRADE_CONFIGS = {
   'pool-installation': { allocation_pct: 0.0163, bid_phase_cutoff: 'P7a', work_phase_target: 'P17', imminent_window_days: 21, multiplier_bid: 2.5, multiplier_work: 1.5 },
 };
 
-// ── Fallback logic variables (match migration 092 + 093 + 096 seed) ──────────
-// NOTE: keep in sync with src/lib/admin/control-panel.ts LOGIC_VAR_DEFAULTS.
-// Schema parity is enforced by src/tests/control-panel.logic.test.ts.
-const FALLBACK_LOGIC_VARS = {
-  los_multiplier_bid: 2.5,
-  los_multiplier_work: 1.5,
-  los_penalty_tracking: 50,
-  los_penalty_saving: 10,
-  los_base_cap: 30,
-  los_base_divisor: 10000,
-  stall_penalty_precon: 45,
-  stall_penalty_active: 14,
-  expired_threshold_days: -90,
-  liar_gate_threshold: 0.25,
-  lead_expiry_days: 90,
-  coa_stall_threshold: 30,
-  calibration_min_sample_size: 5,
-  // migration 096 (Spec 83 surgical valuation)
-  urban_coverage_ratio: 0.70,
-  suburban_coverage_ratio: 0.40,
-  trust_threshold_pct: 0.25,
-  // migration 097 (Spec 86 control panel)
-  commercial_shell_multiplier: 0.60,
-  placeholder_cost_threshold: 1000,
-};
+// ── Fallback logic variables (derived from scripts/seeds/logic_variables.json) ──
+// Single source of truth: edit logic_variables.json to add/change defaults.
+// Schema parity with src/lib/admin/control-panel.ts LOGIC_VAR_DEFAULTS is
+// enforced by src/tests/control-panel.logic.test.ts (both surfaces derive
+// from the same JSON — WF3-0 seed refactor).
+const _LOGIC_VARS_JSON = require('../seeds/logic_variables.json');
+const FALLBACK_LOGIC_VARS = Object.fromEntries(
+  Object.entries(_LOGIC_VARS_JSON).map(([key, meta]) => [key, meta.default]),
+);
 
 /**
  * Load all marketplace configuration from the control panel tables.

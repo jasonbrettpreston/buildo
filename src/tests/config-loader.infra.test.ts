@@ -30,13 +30,15 @@ describe('scripts/lib/config-loader.js — shared config loader', () => {
     expect(content).toMatch(/0\.02/);
   });
 
-  it('has hardcoded fallbacks for all logic variables', () => {
+  it('derives FALLBACK_LOGIC_VARS from logic_variables.json (WF3-0 seed refactor)', () => {
+    // After WF3-0, fallbacks are no longer inline — they're derived from the seed JSON.
     expect(content).toMatch(/FALLBACK_LOGIC_VARS/);
-    expect(content).toMatch(/los_multiplier_bid/);
-    expect(content).toMatch(/stall_penalty_precon/);
-    expect(content).toMatch(/lead_expiry_days/);
-    expect(content).toMatch(/coa_stall_threshold/);
-    expect(content).toMatch(/liar_gate_threshold/);
+    expect(content).toMatch(/require.*seeds\/logic_variables/);
+    // The seed JSON must contain the critical keys
+    const json = JSON.parse(read('scripts/seeds/logic_variables.json')) as Record<string, unknown>;
+    for (const key of ['los_multiplier_bid', 'stall_penalty_precon', 'lead_expiry_days', 'coa_stall_threshold', 'liar_gate_threshold']) {
+      expect(json, `Seed JSON missing key: ${key}`).toHaveProperty(key);
+    }
   });
 
   it('falls back gracefully on DB query failure', () => {

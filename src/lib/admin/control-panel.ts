@@ -14,6 +14,7 @@
 
 import { z } from 'zod';
 import type { Pool } from 'pg';
+import _logicVarsJson from '../../../scripts/seeds/logic_variables.json';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // §1 — TypeScript interfaces (stable API field names — see §10.3)
@@ -144,34 +145,20 @@ export const ConfigUpdatePayloadSchema = z.object({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// §3 — System defaults (mirror of scripts/lib/config-loader.js FALLBACK_LOGIC_VARS)
+// §3 — System defaults (derived from scripts/seeds/logic_variables.json)
 //
+// Single source of truth: edit logic_variables.json to add/change defaults.
 // These are the "ground truth" defaults the Delta Guard compares drafts against.
 // Schema parity with config-loader.js FALLBACK_LOGIC_VARS is enforced by:
-//   src/tests/control-panel.logic.test.ts — reads config-loader.js as text and
-//   asserts every key here is present there.
+//   src/tests/control-panel.logic.test.ts — asserts both surfaces derive from
+//   the same JSON (WF3-0 seed refactor).
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const LOGIC_VAR_DEFAULTS: Record<string, number> = {
-  los_multiplier_bid: 2.5,
-  los_multiplier_work: 1.5,
-  los_penalty_tracking: 50,
-  los_penalty_saving: 10,
-  los_base_cap: 30,
-  los_base_divisor: 10000,
-  stall_penalty_precon: 45,
-  stall_penalty_active: 14,
-  expired_threshold_days: -90,
-  liar_gate_threshold: 0.25,
-  lead_expiry_days: 90,
-  coa_stall_threshold: 30,
-  calibration_min_sample_size: 5,
-  urban_coverage_ratio: 0.70,
-  suburban_coverage_ratio: 0.40,
-  trust_threshold_pct: 0.25,
-  commercial_shell_multiplier: 0.60,
-  placeholder_cost_threshold: 1000,
-};
+type _LogicVarEntry = { readonly default: number; readonly type: string; readonly description?: string; readonly min?: number; readonly max?: number };
+
+export const LOGIC_VAR_DEFAULTS: Record<string, number> = Object.fromEntries(
+  (Object.entries(_logicVarsJson) as Array<[string, _LogicVarEntry]>).map(([k, v]) => [k, v.default]),
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // §4 — Delta Guard utility

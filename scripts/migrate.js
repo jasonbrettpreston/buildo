@@ -235,6 +235,15 @@ async function run() {
   }
 
   console.log(`Done: ${ranCount} applied, ${skippedCount} skipped (already applied)`);
+
+  // Apply logic variable seeds after all migrations complete.
+  // ON CONFLICT DO NOTHING: operator-tuned values in the DB are never overwritten.
+  // Skipped on --dry-run and --verify (no mutations in those modes).
+  if (!dryRun && !verifyOnly) {
+    const applyLogicVariables = require('./seeds/apply-logic-variables');
+    await applyLogicVariables(pool);
+  }
+
   await pool.end();
 }
 

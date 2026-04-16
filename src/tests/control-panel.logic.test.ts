@@ -95,68 +95,71 @@ describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Schema parity test — TS LOGIC_VAR_DEFAULTS ↔ JS config-loader FALLBACK_LOGIC_VARS
+// Schema parity test — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ config-loader
 //
-// Reads scripts/lib/config-loader.js as text and asserts every key in
-// LOGIC_VAR_DEFAULTS appears in the FALLBACK_LOGIC_VARS object declaration.
-// This is the drift guard: if someone adds a key to config-loader but forgets
-// LOGIC_VAR_DEFAULTS (or vice-versa), this test fails in CI.
+// After WF3-0 (seed refactor), both LOGIC_VAR_DEFAULTS (TS) and
+// FALLBACK_LOGIC_VARS (JS) are derived from scripts/seeds/logic_variables.json.
+// This test verifies:
+//   1. The JSON exists and contains all expected keys.
+//   2. LOGIC_VAR_DEFAULTS keys + values match the JSON (both directions).
+//   3. config-loader.js derives FALLBACK_LOGIC_VARS from the JSON
+//      (text check for the require statement — prevents manual drift).
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Schema parity — LOGIC_VAR_DEFAULTS ↔ config-loader FALLBACK_LOGIC_VARS', () => {
+describe('Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ config-loader', () => {
+  const jsonPath = path.join(REPO_ROOT, 'scripts', 'seeds', 'logic_variables.json');
   const configLoaderPath = path.join(REPO_ROOT, 'scripts', 'lib', 'config-loader.js');
-  let configLoaderSource: string;
+
+  type LogicVarMeta = { default: number; type: string; description?: string };
+  let jsonData: Record<string, LogicVarMeta> = {};
+  let configLoaderSource = '';
+
+  try {
+    jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8')) as Record<string, LogicVarMeta>;
+  } catch { /* handled by the readable test below */ }
 
   try {
     configLoaderSource = fs.readFileSync(configLoaderPath, 'utf-8');
-  } catch {
-    configLoaderSource = '';
-  }
+  } catch { /* handled by the readable test below */ }
 
-  it('config-loader.js is readable', () => {
+  const jsonKeys = Object.keys(jsonData);
+
+  it('logic_variables.json is readable and non-empty', () => {
+    expect(jsonKeys.length).toBeGreaterThan(0);
+  });
+
+  it('logic_variables.json contains all 18 expected keys', () => {
+    for (const key of EXPECTED_LOGIC_VAR_KEYS) {
+      expect(jsonData, `JSON missing key: ${key}`).toHaveProperty(key);
+    }
+  });
+
+  it('logic_variables.json has no extra keys beyond the expected set', () => {
+    const extra = jsonKeys.filter((k) => !EXPECTED_LOGIC_VAR_KEYS.includes(k));
+    expect(extra).toHaveLength(0);
+  });
+
+  it('LOGIC_VAR_DEFAULTS keys match logic_variables.json keys (both directions)', () => {
+    for (const key of jsonKeys) {
+      expect(LOGIC_VAR_DEFAULTS, `LOGIC_VAR_DEFAULTS missing JSON key: ${key}`).toHaveProperty(key);
+    }
+    for (const key of Object.keys(LOGIC_VAR_DEFAULTS)) {
+      expect(jsonData, `JSON missing LOGIC_VAR_DEFAULTS key: ${key}`).toHaveProperty(key);
+    }
+  });
+
+  it('LOGIC_VAR_DEFAULTS values match logic_variables.json defaults', () => {
+    for (const [key, meta] of Object.entries(jsonData)) {
+      expect(LOGIC_VAR_DEFAULTS[key]).toBe(meta.default);
+    }
+  });
+
+  it('config-loader.js derives FALLBACK_LOGIC_VARS from logic_variables.json', () => {
     expect(configLoaderSource.length).toBeGreaterThan(100);
-  });
-
-  it('config-loader defines FALLBACK_LOGIC_VARS', () => {
+    // After WF3-0, config-loader requires the seed JSON — no inline key list.
+    expect(configLoaderSource).toMatch(/require.*seeds\/logic_variables/);
+    // The derived assignment must still exist.
     expect(configLoaderSource).toMatch(/FALLBACK_LOGIC_VARS\s*=/);
-  });
-
-  // For each TS default key, assert it appears inside the FALLBACK_LOGIC_VARS
-  // block in config-loader.js. This catches key additions to either side.
-  for (const key of EXPECTED_LOGIC_VAR_KEYS) {
-    it(`key "${key}" present in config-loader FALLBACK_LOGIC_VARS`, () => {
-      // Match the key followed by a colon anywhere in the source — handles
-      // varying indentation styles without being brittle to whitespace changes.
-      const pattern = new RegExp(`\\b${key}:\\s`);
-      expect(pattern.test(configLoaderSource)).toBe(true);
-    });
-  }
-
-  // Reverse direction: every key in config-loader FALLBACK_LOGIC_VARS must
-  // also be present in LOGIC_VAR_DEFAULTS. Catches pipeline-side additions
-  // that are never exposed to the admin UI or Delta Guard.
-  it('all FALLBACK_LOGIC_VARS keys are present in LOGIC_VAR_DEFAULTS', () => {
-    // Extract the FALLBACK_LOGIC_VARS block — use [\s\S] instead of . with s-flag
-    // (project tsconfig target is ES2017; the s/dotAll flag requires ES2018+).
-    const blockMatch = configLoaderSource.match(
-      /const FALLBACK_LOGIC_VARS\s*=\s*\{([\s\S]*?)\}/,
-    );
-    expect(blockMatch).not.toBeNull();
-    const block: string = blockMatch?.[1] ?? '';
-    expect(block.length).toBeGreaterThan(0);
-    // Each key is a bare identifier followed by a colon (2-space indent).
-    const jsKeys: string[] = [];
-    for (const m of block.matchAll(/^\s{2}(\w+):/gm)) {
-      const key = m[1];
-      if (key !== undefined) jsKeys.push(key);
-    }
-    expect(jsKeys.length).toBeGreaterThan(0);
-    for (const jsKey of jsKeys) {
-      expect(
-        LOGIC_VAR_DEFAULTS,
-        `config-loader key "${jsKey}" is missing from LOGIC_VAR_DEFAULTS`,
-      ).toHaveProperty(jsKey);
-    }
   });
 });
 
