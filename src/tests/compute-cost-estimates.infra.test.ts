@@ -273,4 +273,10 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     const headerComment = content.slice(0, 500);
     expect(headerComment).not.toMatch(/72_lead_cost_model/);
   });
+
+  it('reads cost_model_coverage_warn_pct from logicVars — no hardcoded >= 80 coverage check (WF3-E16)', () => {
+    expect(content).toMatch(/logicVars\.cost_model_coverage_warn_pct/);
+    expect(content).not.toMatch(/modelCoveragePct >= 80\b/);
+    expect(content).not.toMatch(/modelCoveragePct < 80\b/);
+  });
 });

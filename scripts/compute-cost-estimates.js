@@ -40,11 +40,12 @@ const BATCH_SIZE = Math.floor((65535 - 1) / BULK_COLUMN_COUNT); // 4368
 // startup — bad DB values (NULL, 0, wrong type) throw immediately with a clear
 // message instead of silently producing NaN or corrupting estimates.
 const COST_MODEL_CONFIG_SCHEMA = z.object({
-  urban_coverage_ratio:    z.number().positive().max(1),
-  suburban_coverage_ratio: z.number().positive().max(1),
-  trust_threshold_pct:     z.number().positive().max(1),
-  liar_gate_threshold:     z.number().positive().max(1),
-});
+  urban_coverage_ratio:           z.number().positive().max(1),
+  suburban_coverage_ratio:        z.number().positive().max(1),
+  trust_threshold_pct:            z.number().positive().max(1),
+  liar_gate_threshold:            z.number().positive().max(1),
+  cost_model_coverage_warn_pct:   z.number().finite().positive(),
+}).passthrough();
 
 // ─── Source query ─────────────────────────────────────────────────────────────
 // Joins permits with parcel massing, neighbourhood demographics, and the
@@ -362,13 +363,13 @@ if (require.main === module) {
       { metric: 'permits_skipped_unchanged', value: skipped,            threshold: null,    status: 'INFO' },
       { metric: 'liar_gate_overrides',       value: liarsGateOverrides, threshold: null,    status: 'INFO' },
       { metric: 'zero_total_bypass',         value: zeroTotalBypasses,  threshold: null,    status: 'INFO' },
-      { metric: 'model_coverage_pct',        value: modelCoveragePct.toFixed(1) + '%', threshold: '>= 80%', status: modelCoveragePct >= 80 ? 'PASS' : 'WARN' },
+      { metric: 'model_coverage_pct',        value: modelCoveragePct.toFixed(1) + '%', threshold: `>= ${logicVars.cost_model_coverage_warn_pct}%`, status: modelCoveragePct >= logicVars.cost_model_coverage_warn_pct ? 'PASS' : 'WARN' },
     ];
     if (failedRows > 0) {
       costAuditRows.push({ metric: 'failed_rows',    value: failedRows,    threshold: '== 0', status: 'WARN' });
       costAuditRows.push({ metric: 'failed_batches', value: failedBatches, threshold: '== 0', status: 'WARN' });
     }
-    const costVerdict = failedRows > 0 || modelCoveragePct < 80 ? 'WARN' : 'PASS';
+    const costVerdict = failedRows > 0 || modelCoveragePct < logicVars.cost_model_coverage_warn_pct ? 'WARN' : 'PASS';
 
     pipeline.emitSummary({
       records_total:   processed,
