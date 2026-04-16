@@ -154,9 +154,25 @@ pipeline.run('link-massing', async (pool) => {
   const FULL_MODE = pipeline.isFullMode();
   const startTime = Date.now();
 
-  // Detect PostGIS for fast-path ST_Contains
-  const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
-  const hasPostGIS = pgisCheck.rows.length > 0;
+  // Detect PostGIS fast path: requires BOTH the PostGIS extension AND the
+  // building_footprints.geom column (added by migration 065/098). Migration 065
+  // conditionally skips the column if PostGIS was not installed at migration time,
+  // so we must check column existence independently to avoid a crash.
+  const pgisCheck = await pool.query(`
+    SELECT
+      EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'postgis') AS has_ext,
+      EXISTS(
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'building_footprints' AND column_name = 'geom'
+      ) AS has_geom_col
+  `);
+  const { has_ext, has_geom_col } = pgisCheck.rows[0];
+  const hasPostGIS = has_ext === true && has_geom_col === true;
+  if (has_ext && !has_geom_col) {
+    pipeline.log.warn('[link-massing]',
+      'PostGIS installed but building_footprints.geom missing — ' +
+      'falling back to JS path. Apply migration 098 to restore fast path.');
+  }
 
   pipeline.log.info('[link-massing]', `Mode: ${FULL_MODE ? 'FULL (rescan all parcels)' : 'INCREMENTAL (unlinked parcels only)'}${hasPostGIS ? ' [PostGIS]' : ' [JS fallback]'}`);
 

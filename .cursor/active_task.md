@@ -1,141 +1,108 @@
-# Active Task: WF3-12 — classify-lifecycle-phase.js Spec 47 Compliance Gaps
+# Active Task: WF3-13 — link-massing PostGIS column guard
 **Status:** Done
 **Domain Mode:** Backend/Pipeline
 **Workflow:** WF3 (Bug Fix)
-**Rollback Anchor:** `fe932ff9c2452644517ff66a906260ef7d819e0f`
+**Rollback Anchor:** `efc1043`
 
 ## Context
-* **Goal:** Fix 6 spec 47 violations in `scripts/classify-lifecycle-phase.js` identified by compliance review (3 CRITICAL, 3 WARNING).
-* **Target Spec:** `docs/specs/pipeline/47_pipeline_script_protocol.md`
+* **Goal:** Fix `link-massing.js` crash: `column bf.geom does not exist` (PG error 42703). Chain step 11 fails every run; steps 12–24 never execute.
+* **Target Spec:** `docs/specs/pipeline/56_source_massing.md`
 * **Key Files:**
-  - `scripts/classify-lifecycle-phase.js` (primary target)
-  - `src/tests/classify-lifecycle-phase.infra.test.ts` (update + add tests)
+  - `scripts/link-massing.js` (primary fix — line 157-159)
+  - `migrations/098_building_footprints_geom_repair.sql` (new — restore geom column)
+  - `src/tests/massing.logic.test.ts` (add regression test)
 
-## Bugs to Fix
+## Root Cause
 
-| # | Severity | Spec § | Issue | Fix |
-|---|---------|--------|-------|-----|
-| 1 | CRITICAL | §5.5 | Missing SIGTERM handler — advisory lock 85 orphaned on container preemption | Add `process.on('SIGTERM', ...)` + `lockClientReleased` flag |
-| 2 | CRITICAL | §6.2 | `pool.query()` for dirty permits (L227) and dirty CoAs (L479) — mandatory streaming tables, OOM on backfill | Replace both with `pipeline.streamQuery`, process inline per batch |
-| 3 | CRITICAL | §4.2 | `coa_stall_threshold` read from `logicVars` without Zod validation | Import `validateLogicVars`, define schema, throw on failure |
-| 4 | WARNING | §14.1/14.2 | `NOW()` used in SQL batch loops — Midnight Cross drift risk | Capture `RUN_AT` from `SELECT NOW()` at startup; pass as `$N` param to all UPDATEs/INSERTs |
-| 5 | WARNING | §3.0 | SPEC LINK points to `docs/reports/lifecycle_phase_implementation.md` (a report, not a spec) | Point to `docs/specs/product/future/84_lifecycle_phase_engine.md` |
-| 6 | WARNING | §6.3 | `PERMIT_BATCH_SIZE = 500`, `COA_BATCH_SIZE = 1000` — hardcoded magic numbers | Replace with `Math.floor((65535-1)/N)` formula constants |
+Migration 065 adds `building_footprints.geom` conditionally: if PostGIS was NOT installed when 065 ran, the column was silently skipped with `RAISE NOTICE`. PostGIS was later installed (migrations 039/065 sequence). The script detects PostGIS extension presence via `pg_extension` (line 158) but never checks whether `building_footprints.geom` was actually created. When `hasPostGIS = true` but the column doesn't exist, the JOIN at line 213–214 crashes immediately.
 
-## Detailed Fix Notes
+## Technical Implementation
 
-### Fix 1: SIGTERM handler + lockClientReleased flag
-Register immediately after `pool.connect()`. Use `lockClientReleased` boolean to prevent double-release in finally/SIGTERM race:
+### Fix 1 — `scripts/link-massing.js` (defensive detection)
+
+Replace the single-table `hasPostGIS` check with a two-predicate query that verifies BOTH the PostGIS extension AND the `geom` column exist before choosing the fast path. If extension is present but column is missing, emit a warning and fall back to the JS path gracefully.
+
+**Before (line 157–159):**
 ```js
-const lockClient = await pool.connect();
-let lockClientReleased = false;
-process.on('SIGTERM', async () => {
-  pipeline.log.warn('[classify-lifecycle-phase]', 'Received SIGTERM. Releasing lock and shutting down gracefully...');
-  try { await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]); } catch (e) {}
-  if (!lockClientReleased) { lockClientReleased = true; lockClient.release(); }
-  process.exit(143);
-});
-```
-Skip path sets `lockClientReleased = true` before release. catch block sets flag. finally checks flag.
-
-### Fix 2: Streaming dirty permits + dirty CoAs
-**Reorder**: Build bldCmbByPrefix + inspByPermit maps BEFORE streaming (so maps are ready during stream).
-
-Stream dirty permits — classify inline, flush per PERMIT_BATCH_SIZE:
-```js
-let dirtyPermitsCount = 0;
-let permitBatch = [];
-for await (const row of pipeline.streamQuery(pool, DIRTY_PERMITS_SQL)) {
-  dirtyPermitsCount++;
-  /* inline classify via bldCmbByPrefix + inspByPermit */
-  permitBatch.push(classified);
-  if (permitBatch.length >= PERMIT_BATCH_SIZE) {
-    await flushPermitBatch(); // withTransaction: phase UPDATE + transitions INSERT + stamp UPDATE
-    permitBatch = [];
-  }
-}
-if (permitBatch.length > 0) await flushPermitBatch(); // flush remainder
+const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
+const hasPostGIS = pgisCheck.rows.length > 0;
 ```
 
-Stream dirty CoAs — same per-batch inline pattern. Use `dirtyPermitsCount` / `dirtyCoAsCount` in place of removed `dirtyPermits.length` / `dirtyCoAs.length`.
-
-### Fix 3: Zod validation
+**After:**
 ```js
-const { z } = require('zod');
-const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
-
-const LIFECYCLE_CONFIG_SCHEMA = z.object({
-  coa_stall_threshold: z.number().positive(),
-});
-// after loadMarketplaceConfigs:
-const validation = validateLogicVars(logicVars, LIFECYCLE_CONFIG_SCHEMA, 'classify-lifecycle-phase');
-if (!validation.valid) {
-  throw new Error(`[classify-lifecycle-phase] config validation failed: ${validation.errors.join('; ')}`);
+const pgisCheck = await pool.query(`
+  SELECT
+    EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'postgis') AS has_ext,
+    EXISTS(
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'building_footprints' AND column_name = 'geom'
+    ) AS has_geom_col
+`);
+const { has_ext, has_geom_col } = pgisCheck.rows[0];
+const hasPostGIS = has_ext === true && has_geom_col === true;
+if (has_ext && !has_geom_col) {
+  pipeline.log.warn('[link-massing]',
+    'PostGIS installed but building_footprints.geom missing — ' +
+    'falling back to JS path. Apply migration 098 to restore fast path.');
 }
 ```
 
-### Fix 4: RUN_AT — no NOW() in loops
-- First query: `const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');`
-- Replace `const now = new Date()` with `RUN_AT` (same JS Date, from DB clock)
-- `buildPermitUpdateSQL(batchSize)`: `lifecycle_classified_at = $${batchSize*4+1}::timestamptz`, same param for `phase_started_at CASE THEN`
-- `buildCoaUpdateSQL(batchSize)`: `lifecycle_classified_at = $${batchSize*3+1}::timestamptz`
-- Transition INSERT: RUN_AT as param 5 per row → `j * 7` (7 params, not 6)
-- Permit stamp UPDATE: `lifecycle_classified_at = $3::timestamptz`
-- CoA stamp UPDATE: `lifecycle_classified_at = $2::timestamptz`
-- Phase_started_at backfill: `$1::timestamptz` with `[RUN_AT]`
-- Initial transitions backfill: `COALESCE(phase_started_at, $1::timestamptz)` with `[RUN_AT]`
-- CoA dirty query days_since_activity: `EXTRACT(EPOCH FROM ($1::timestamptz - last_seen_at))` with `[RUN_AT]` as streamQuery param
+### Fix 2 — `migrations/098_building_footprints_geom_repair.sql` (restore fast path)
 
-### Fix 5: SPEC LINK
-```js
- * SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md
+Idempotent migration: adds `geom` column + populates from existing `geometry` JSONB + creates GiST index. Uses `ADD COLUMN IF NOT EXISTS` so safe to run even if column already exists (e.g. if future env had 065 succeed). DOWN block mirrors migration 065 DOWN.
+
+```sql
+-- Migration 098: Repair building_footprints.geom if missed by migration 065
+-- Spec: docs/specs/pipeline/56_source_massing.md
+
+-- UP
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'postgis') THEN
+    EXECUTE 'ALTER TABLE building_footprints ADD COLUMN IF NOT EXISTS geom GEOMETRY(Geometry, 4326)';
+    EXECUTE 'UPDATE building_footprints SET geom = ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 4326) WHERE geometry IS NOT NULL AND geom IS NULL';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_building_footprints_geom_gist ON building_footprints USING GiST (geom)';
+    RAISE NOTICE 'building_footprints.geom column repaired (migration 098)';
+  ELSE
+    RAISE NOTICE 'PostGIS not installed — skipping (migration 098)';
+  END IF;
+END
+$$;
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_building_footprints_geom_gist;
+-- ALTER TABLE building_footprints DROP COLUMN IF EXISTS geom;
 ```
-Also update SPEC LINK in test file header.
 
-### Fix 6: Batch size formula
-```js
-// Transition INSERT is the most param-dense query (7 cols): limits PERMIT_BATCH_SIZE
-const PERMIT_TRANSITION_COLS = 7; // permit_num, revision_num, from_phase, to_phase, RUN_AT, permit_type, neighbourhood_id
-const PERMIT_BATCH_SIZE = Math.floor((65535 - 1) / PERMIT_TRANSITION_COLS); // = 9362
-// CoA UPDATE: 3 data cols + 1 RUN_AT appended = 4 params/row
-const COA_COLS = 3; // id, phase, stalled
-const COA_BATCH_SIZE = Math.floor((65535 - 1) / (COA_COLS + 1)); // = 16383
-```
+### Fix 3 — `src/tests/massing.logic.test.ts` (regression guard)
 
-## Tests to Add / Update
+Add source-inspection test (parallel to parity tests in `control-panel.logic.test.ts`) that reads `scripts/link-massing.js` as text and asserts:
+1. The `hasPostGIS` check includes `information_schema.columns` (not just `pg_extension`)
+2. The `has_geom_col` predicate is present (guards against the column-blind detection regressing)
 
-### Update (existing tests broken by fixes):
-- `'uses j * 6 (not j * 7)'` → change to `j * 7` (RUN_AT is now param 5)
-- `'bumps lifecycle_classified_at ... NOW()'` → match `$3::timestamptz` pattern
-- `'runs phase UPDATE and classified_at stamp in the same transaction'` → update NOW() regex to timestamptz
-- `'conditionally stamps phase_started_at ... THEN NOW()'` → match `$N::timestamptz`
-- `'uses per-batch small transactions'` → update regex for streaming loop pattern
+## Standards Compliance
 
-### Add (new spec 47 requirements):
-- SIGTERM handler registered after `pool.connect()`
-- `lockClientReleased` flag prevents double-release
-- `pipeline.streamQuery` used for dirty permits
-- `pipeline.streamQuery` used for dirty CoAs
-- `validateLogicVars` called with Zod schema for `coa_stall_threshold`
-- `RUN_AT` captured from `SELECT NOW()` as first query
-- PERMIT_BATCH_SIZE uses `Math.floor` formula, not magic number
-- SPEC LINK points to spec file, not report
+* **Try-Catch Boundary:** Script fix is additive — no new async path, all pool.query calls already in the pipeline.run wrapper which catches and surfaces errors via `logError`.
+* **Unhappy Path Tests:** Test covers the column-absent case via source inspection.
+* **logError Mandate:** N/A — no new API routes. Script uses `pipeline.log.warn` (correct for non-fatal fast-path demotion).
+* **Mobile-First:** N/A — backend only.
+* **Migration Safety:** `ADD COLUMN IF NOT EXISTS` + `UPDATE ... WHERE geom IS NULL` — fully idempotent. DOWN block provided. No DROP, no full-table replace, no index without IF NOT EXISTS.
+* **Dual Code Path:** N/A — `link-massing.js` has no TypeScript counterpart (pure pipeline script).
 
 ## Execution Plan
-- [x] **Rollback Anchor:** `fe932ff9c2452644517ff66a906260ef7d819e0f`
-- [ ] **State Verification:** Script uses `pool.query` for dirty permits/CoAs; no SIGTERM; no Zod; hardcoded batch sizes; NOW() in loops; spec link rot.
-- [ ] **Spec Review:** Read §3, §4.2, §5.5, §6.2, §6.3, §14 of spec 47 — done above.
-- [ ] **Reproduction:** Update/add failing tests locking in all 6 fixes.
-- [ ] **Red Light:** `npx vitest run src/tests/classify-lifecycle-phase.infra.test.ts` — new tests MUST fail.
-- [ ] **Fix:** Apply all 6 fixes to `scripts/classify-lifecycle-phase.js`.
-- [ ] **Pre-Review Self-Checklist:** 5 sibling bugs checked below.
+- [ ] **Rollback Anchor:** `efc1043`
+- [ ] **State Verification:** `building_footprints.geom` column absent; PostGIS extension present; migration 065 silently skipped at install time.
+- [ ] **Spec Review:** `docs/specs/pipeline/56_source_massing.md` §3 Behavioral Contract — PostGIS fast path optional; JS fallback is the stable baseline.
+- [ ] **Reproduction:** Add failing test to `massing.logic.test.ts` asserting `information_schema.columns` check is present in `link-massing.js`.
+- [ ] **Red Light:** `npx vitest run src/tests/massing.logic.test.ts` — new test MUST fail (script currently only checks `pg_extension`).
+- [ ] **Fix:** Apply Fix 1 to `scripts/link-massing.js` + write `migrations/098_building_footprints_geom_repair.sql`.
+- [ ] **Pre-Review Self-Checklist:** 3–5 sibling bugs checked (see below).
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → WF6.
 
 ## Sibling Bug Check (WF3 Pre-Review)
 | Sibling | Root cause shared? | Status |
 |---------|-------------------|--------|
-| Same NOW() pattern in compute-trade-forecasts.js | WF3-11 scope; addressed separately | Deferred |
-| bldCmbByPrefix also queries permits table via pool.query | Single-column query, builds Map<string,Set<string>> ~5MB; bounded; not flagged by reviewer | Acceptable |
-| Phase_started_at backfill UPDATE also uses NOW() | Yes — fixed in Fix 4 as part of this task | ✅ Covered |
-| days_since_activity in CoA query uses NOW() | Yes — fixed in Fix 4 using RUN_AT as streamQuery param | ✅ Covered |
-| Initial transitions backfill uses NOW() | Yes — fixed in Fix 4 | ✅ Covered |
+| `link-parcels.js` uses PostGIS path — same blind detection? | No — `parcels.geom` was added by migration 039 which ran before PostGIS was conditional; verified in migration 039 | Not affected |
+| `link-neighbourhoods.js` same issue? | Same — `neighbourhoods.geom` from migration 039 (unconditional); not affected | Not affected |
+| `load-massing.js` uses `geometry` JSONB (not `geom`) — would 098 UPDATE break anything? | No — 098 sets `geom` only WHERE `geom IS NULL`; existing rows with valid `geom` are untouched | Safe |
+| Other scripts referencing `building_footprints` — do any expect `geom` absent? | Grep: only `link-massing.js` references `bf.geom` | Not affected |

@@ -426,3 +426,36 @@ describe('link-massing.js performance optimization (B13)', () => {
     expect(source).toContain('pipeline.emitMeta');
   });
 });
+
+// ---------------------------------------------------------------------------
+// link-massing.js PostGIS detection guard (WF3-13)
+// Regression guard: hasPostGIS must check geom column existence, not just
+// the pg_extension row — otherwise crashes if 065 migration silently skipped.
+// ---------------------------------------------------------------------------
+
+describe('link-massing.js PostGIS detection guard', () => {
+  const scriptSource = () =>
+    fs.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.js'), 'utf-8');
+
+  it('checks information_schema.columns for geom column (not just pg_extension)', () => {
+    const source = scriptSource();
+    // Must verify the geom column actually exists, not just that PostGIS is installed
+    expect(source).toMatch(/information_schema\.columns/);
+    expect(source).toMatch(/column_name.*geom|geom.*column_name/);
+  });
+
+  it('uses a compound hasPostGIS guard (has_ext AND has_geom_col)', () => {
+    const source = scriptSource();
+    // Both predicates must appear together — guards against the column-blind detection regressing
+    expect(source).toMatch(/has_ext/);
+    expect(source).toMatch(/has_geom_col/);
+  });
+
+  it('emits a warning when PostGIS is installed but geom column is missing', () => {
+    const source = scriptSource();
+    // Must log a warning so operators know to run migration 098
+    // Use [\s\S] instead of . with s-flag — project targets ES2017 (s requires ES2018+)
+    expect(source).toMatch(/has_ext[\s\S]*has_geom_col|has_geom_col[\s\S]*has_ext/);
+    expect(source).toMatch(/pipeline\.log\.warn.*link-massing/);
+  });
+});
