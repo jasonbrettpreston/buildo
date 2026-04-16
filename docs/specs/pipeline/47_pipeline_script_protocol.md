@@ -1361,3 +1361,39 @@ counts. The other 17 bounds remain hardcoded.
 **Action:** Do NOT file WF3 for `LIFECYCLE_PHASE_BOUNDS`. If the bounds become consistently
 wrong as the DB grows, update them via a normal code commit with a PR comment explaining the
 new snapshot calibration.
+
+---
+
+### A.4 — knip "Unused Exports" That Are Intentionally Kept
+
+The dual-code-path discipline (§7) requires that types and constants mirrored between TS modules
+and JS pipeline scripts remain `export`-ed in TS, even when no TS consumer imports them. This
+surface serves as the authoritative schema for the JS side. Future knip runs will continue to
+report these as unused; that is expected and documented here.
+
+#### Component prop types
+`*Props` interfaces (e.g., `LeadFeedProps`, `LeadMapPaneProps`) — public TS ergonomics surface
+for component consumers. Keep exported even when no current TS file imports them directly.
+
+#### API envelope and contract types
+`ApiSuccess`, `ApiErrorBody`, `LeadApiError`, `LeadFeedRequest`, and related envelope types —
+documented contract between server route handlers and client consumers. Keep exported.
+
+#### Scope taxonomy types
+`WorkType`, `ResidentialTagSlug`, `ScopeTag`, `UseType`, and all scope classification enums —
+mirrored by `classify-permits.js` under the §7 dual-code-path rule. The JS pipeline script
+must stay in sync with the TS definitions; the export is the canonical source.
+
+#### Cost-model contract
+`COMPLEXITY_SIGNALS`, `LIAR_GATE_THRESHOLD_DEFAULT`, `CostModelResult`, `TradeRate`,
+`EstimateCostConfig` — documented dual-path surface for `scripts/compute-cost-estimates.js`
+and `cost-model-shared.js`. Keep exported.
+
+#### Shadcn UI re-exported primitives
+Shadcn components that are re-exported from wrapper files for convenience (e.g., barrel
+re-exports in `src/components/ui/`) — knip may flag these if the direct Shadcn path is used
+at some call sites. Keep exported for consistency.
+
+**Triage rule:** Before removing any of the above, confirm the export is NOT in the §7
+dual-path surface by checking `scripts/` for the corresponding JS consumer. If there is none,
+the export is a genuine candidate for deletion (not merely a knip false positive).
