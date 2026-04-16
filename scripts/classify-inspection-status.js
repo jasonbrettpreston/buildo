@@ -12,11 +12,21 @@
  * SPEC LINK: docs/specs/pipeline/53_source_aic_inspections.md
  */
 
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
-const STALE_DAYS = 300;
+const LOGIC_VARS_SCHEMA = z.object({
+  inspection_stall_days: z.number().finite().positive().int(),
+}).passthrough();
 
 pipeline.run('classify-inspection-status', async (pool) => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'classify-inspection-status');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'classify-inspection-status');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+
+  const staleDays = logicVars.inspection_stall_days;
+
   const { stalledCount, reactivatedCount } = await pipeline.withTransaction(pool, async (client) => {
     // Step 1: Mark Active Inspection permits as Stalled if no activity in 300+ days
     // Scoped to revision_num = '00' because only base permits have inspections.
@@ -36,9 +46,9 @@ pipeline.run('classify-inspection-status', async (pool) => {
             WHERE pi.permit_num = p.permit_num),
            p.issued_date,
            p.application_date
-         ) < NOW() - INTERVAL '300 days'
+         ) < NOW() - $1 * INTERVAL '1 day'
        RETURNING p.permit_num`,
-      []
+      [staleDays]
     );
 
     // Step 2: Re-activate Stalled permits if new inspection activity detected
@@ -58,10 +68,10 @@ pipeline.run('classify-inspection-status', async (pool) => {
          AND EXISTS (
            SELECT 1 FROM permit_inspections pi
            WHERE pi.permit_num = p.permit_num
-             AND pi.inspection_date >= (NOW() - INTERVAL '300 days')::date
+             AND pi.inspection_date >= (NOW() - $1 * INTERVAL '1 day')::date
          )
        RETURNING p.permit_num`,
-      []
+      [staleDays]
     );
 
     return {

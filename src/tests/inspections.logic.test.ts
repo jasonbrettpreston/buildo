@@ -1006,10 +1006,11 @@ describe('classify-inspection-status.js SQL correctness', () => {
 
   // Bug 10: Calendar-Aware Interval Drift — must use absolute day count
   it('uses absolute day interval (not calendar months)', () => {
-    // INTERVAL '1 month' * 10 varies by season (months have different lengths)
-    // Use INTERVAL '300 days' for predictable, consistent thresholds
+    // INTERVAL '1 month' * N varies by season (months have different lengths).
+    // The threshold is now logicVars-backed, parameterized as $N * INTERVAL '1 day'.
     expect(scriptSource).not.toMatch(/INTERVAL\s+'1 month'\s*\*/i);
-    expect(scriptSource).toMatch(/INTERVAL\s+'300 days'/i);
+    // Parameterized form — still absolute days, just tunable via logicVars
+    expect(scriptSource).toMatch(/INTERVAL\s+'1 day'/i);
   });
 });
 

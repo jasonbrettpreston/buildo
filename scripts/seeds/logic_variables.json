@@ -83,6 +83,13 @@
     "min": 1,
     "max": 365
   },
+  "inspection_stall_days": {
+    "default": 300,
+    "type": "number",
+    "description": "Days without inspection activity before an Active Inspection permit is reclassified as Stalled",
+    "min": 30,
+    "max": 730
+  },
   "calibration_min_sample_size": {
     "default": 5,
     "type": "number",
