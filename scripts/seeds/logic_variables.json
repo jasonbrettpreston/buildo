@@ -180,5 +180,47 @@
     "description": "Construction cost values below this threshold (CAD) are treated as placeholder/zero and excluded from analysis",
     "min": 100,
     "max": 10000000
+  },
+  "cost_outlier_ceiling_cad": {
+    "default": 500000000,
+    "type": "number",
+    "description": "Construction cost ceiling (CAD) above which a permit est_const_cost is flagged as a data-quality outlier (assert-data-bounds E7)",
+    "min": 1000000,
+    "max": 10000000000
+  },
+  "desc_null_rate_warn_pct": {
+    "default": 5,
+    "type": "number",
+    "description": "Maximum acceptable percentage of recent permits (last 24h) with a NULL description before a data-quality warning is emitted",
+    "min": 1,
+    "max": 100
+  },
+  "builder_null_rate_warn_pct": {
+    "default": 95,
+    "type": "number",
+    "description": "Maximum acceptable percentage of recent permits (last 24h) with a NULL builder_name before a data-quality warning is emitted",
+    "min": 1,
+    "max": 100
+  },
+  "cost_est_null_rate_warn_pct": {
+    "default": 80,
+    "type": "number",
+    "description": "Maximum acceptable percentage of NULL estimated_cost rows in cost_estimates before a data-quality warning is emitted",
+    "min": 1,
+    "max": 100
+  },
+  "cost_est_min_tiers": {
+    "default": 2,
+    "type": "number",
+    "description": "Minimum number of distinct cost_tier values expected in cost_estimates; fewer triggers a data-quality warning",
+    "min": 1,
+    "max": 20
+  },
+  "calibration_freshness_warn_hours": {
+    "default": 48,
+    "type": "number",
+    "description": "Hours since last compute_timing_calibration run after which the timing_calibration table is considered stale and a warning is emitted",
+    "min": 1,
+    "max": 720
   }
 }

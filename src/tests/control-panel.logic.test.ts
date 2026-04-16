@@ -55,7 +55,7 @@ describe('deltaExceeds50pct — Delta Guard utility', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LOGIC_VAR_DEFAULTS — verify all 26 expected keys are present
+// LOGIC_VAR_DEFAULTS — verify all 32 expected keys are present
 // ─────────────────────────────────────────────────────────────────────────────
 
 const EXPECTED_LOGIC_VAR_KEYS = [
@@ -85,10 +85,16 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'trust_threshold_pct',
   'commercial_shell_multiplier',
   'placeholder_cost_threshold',
+  'cost_outlier_ceiling_cad',
+  'desc_null_rate_warn_pct',
+  'builder_null_rate_warn_pct',
+  'cost_est_null_rate_warn_pct',
+  'cost_est_min_tiers',
+  'calibration_freshness_warn_hours',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
-  it('contains all 26 expected logic variable keys', () => {
+  it('contains all 32 expected logic variable keys', () => {
     for (const key of EXPECTED_LOGIC_VAR_KEYS) {
       expect(LOGIC_VAR_DEFAULTS).toHaveProperty(key);
     }
@@ -136,7 +142,7 @@ describe('Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ conf
     expect(jsonKeys.length).toBeGreaterThan(0);
   });
 
-  it('logic_variables.json contains all 26 expected keys', () => {
+  it('logic_variables.json contains all 32 expected keys', () => {
     for (const key of EXPECTED_LOGIC_VAR_KEYS) {
       expect(jsonData, `JSON missing key: ${key}`).toHaveProperty(key);
     }

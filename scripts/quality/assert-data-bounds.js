@@ -13,7 +13,18 @@
  * Exit 0 = pass (warnings are OK)
  * Exit 1 = fail (errors detected — orphans, duplicates, or critical nulls)
  */
+const { z } = require('zod');
 const pipeline = require('../lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  cost_outlier_ceiling_cad:        z.number().finite().positive(),
+  desc_null_rate_warn_pct:         z.number().finite().positive(),
+  builder_null_rate_warn_pct:      z.number().finite().positive(),
+  cost_est_null_rate_warn_pct:     z.number().finite().positive(),
+  cost_est_min_tiers:              z.number().finite().positive().int(),
+  calibration_freshness_warn_hours: z.number().finite().positive(),
+}).passthrough();
 
 const pool = pipeline.createPool();
 
@@ -29,6 +40,17 @@ async function count(sql) {
 
 async function run() {
   console.log('\n=== CQA Tier 2: Data Bounds Validation ===\n');
+
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-data-bounds');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-data-bounds');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+
+  const costOutlierCeiling    = logicVars.cost_outlier_ceiling_cad;
+  const descNullWarnPct       = logicVars.desc_null_rate_warn_pct;
+  const builderNullWarnPct    = logicVars.builder_null_rate_warn_pct;
+  const costEstNullWarnPct    = logicVars.cost_est_null_rate_warn_pct;
+  const costEstMinTiers       = logicVars.cost_est_min_tiers;
+  const calibFreshnessHours   = logicVars.calibration_freshness_warn_hours;
 
   const startMs = Date.now();
   let runId = null;
@@ -67,9 +89,11 @@ async function run() {
     // -----------------------------------------------------------------------
     if (runPermitChecks) {
       // 1. Cost bounds
-      const costOutliers = await count(
-        `SELECT COUNT(*) FROM permits WHERE est_const_cost < 0 OR est_const_cost > 500000000`
+      const costOutliersRes = await pool.query(
+        `SELECT COUNT(*) FROM permits WHERE est_const_cost < 0 OR est_const_cost > $1`,
+        [costOutlierCeiling]
       );
+      const costOutliers = parseInt(costOutliersRes.rows[0].count, 10);
       if (costOutliers >= 20) {
         warnings.push(`${costOutliers} permits with negative cost or > $500M`);
         console.log(`  WARN: ${costOutliers} permits with cost outliers`);
@@ -91,7 +115,7 @@ async function run() {
           `SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND description IS NULL`
         );
         descPct = (descNull / recentTotal * 100).toFixed(1);
-        if (descNull / recentTotal > 0.05) {
+        if (descNull / recentTotal * 100 > descNullWarnPct) {
           warnings.push(`Description null rate ${descPct}% (${descNull}/${recentTotal})`);
           console.log(`  WARN: Description null rate ${descPct}%`);
         } else {
@@ -102,7 +126,7 @@ async function run() {
           `SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND builder_name IS NULL`
         );
         builderPct = (builderNull / recentTotal * 100).toFixed(1);
-        if (builderNull / recentTotal > 0.95) {
+        if (builderNull / recentTotal * 100 > builderNullWarnPct) {
           warnings.push(`Builder name null rate ${builderPct}% (${builderNull}/${recentTotal})`);
           console.log(`  WARN: Builder name null rate ${builderPct}%`);
         } else {
@@ -165,8 +189,8 @@ async function run() {
       const permitAuditRows = [
         { metric: 'cost_outliers', value: costOutliers, threshold: '< 20', status: costOutliers >= 20 ? 'WARN' : 'PASS' },
         ...(recentTotal > 0 ? [
-          { metric: 'null_descriptions_24h', value: `${descPct}%`, threshold: '< 5%', status: (descNull / recentTotal > 0.05) ? 'WARN' : 'PASS' },
-          { metric: 'null_builders_24h', value: `${builderPct}%`, threshold: '< 95%', status: (builderNull / recentTotal > 0.95) ? 'WARN' : 'PASS' },
+          { metric: 'null_descriptions_24h', value: `${descPct}%`, threshold: `< ${descNullWarnPct}%`, status: (descNull / recentTotal * 100 > descNullWarnPct) ? 'WARN' : 'PASS' },
+          { metric: 'null_builders_24h', value: `${builderPct}%`, threshold: `< ${builderNullWarnPct}%`, status: (builderNull / recentTotal * 100 > builderNullWarnPct) ? 'WARN' : 'PASS' },
           { metric: 'null_status_24h', value: statusNull, threshold: '== 0', status: statusNull > 0 ? 'WARN' : 'PASS' },
         ] : []),
         { metric: 'orphaned_permit_trades', value: orphanTrades, threshold: '== 0', status: orphanTrades > 0 ? 'FAIL' : 'PASS' },
@@ -611,12 +635,12 @@ async function run() {
         } else {
           const nullPct = ((ceNull / ceTotal) * 100).toFixed(1);
           console.log(`  OK: ${ceTotal} cost estimates (${nullPct}% null, ${tierCount} distinct tiers)`);
-          if (ceNull / ceTotal > 0.80) {
-            warnings.push(`cost_estimates NULL rate is ${nullPct}% (> 80%)`);
+          if (ceNull / ceTotal * 100 > costEstNullWarnPct) {
+            warnings.push(`cost_estimates NULL rate is ${nullPct}% (> ${costEstNullWarnPct}%)`);
             console.warn(`  WARN: ${nullPct}% of cost estimates have NULL estimated_cost`);
           }
-          if (tierCount < 2) {
-            warnings.push(`cost_estimates has only ${tierCount} distinct tier(s) — expected >= 2`);
+          if (tierCount < costEstMinTiers) {
+            warnings.push(`cost_estimates has only ${tierCount} distinct tier(s) — expected >= ${costEstMinTiers}`);
             console.warn(`  WARN: Only ${tierCount} distinct cost tier(s)`);
           }
         }
@@ -651,12 +675,12 @@ async function run() {
             errors.push(`timing_calibration has rows with sample_size < 5 (min=${tcMinSample}) — HAVING clause should prevent this`);
             console.error(`  FAIL: sample_size < 5 found (min=${tcMinSample})`);
           }
-          if (tcFreshness !== null && tcFreshness > 48) {
+          if (tcFreshness !== null && tcFreshness > calibFreshnessHours) {
             // Check if permit_inspections has data — staleness only matters if scraper has run
             try {
               const piCount = await count(`SELECT COUNT(*) FROM permit_inspections`);
               if (piCount > 0) {
-                warnings.push(`timing_calibration is ${tcFreshness.toFixed(0)}h stale (> 48h threshold)`);
+                warnings.push(`timing_calibration is ${tcFreshness.toFixed(0)}h stale (> ${calibFreshnessHours}h threshold)`);
                 console.warn(`  WARN: timing_calibration last computed ${tcFreshness.toFixed(0)}h ago`);
               }
             } catch (piErr) {
