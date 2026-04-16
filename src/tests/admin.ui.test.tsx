@@ -1442,30 +1442,6 @@ describe('FreshnessTimeline pipeline tiles', () => {
     expect(source).toContain('accordion-tile');
   });
 
-  it('FunnelAllTimePanel sub-zones have nested tile cards for alignment', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'),
-      'utf-8'
-    );
-    // Each sub-zone (Baseline, Intersection, Yield) should be in its own nested card
-    const panelIdx = source.indexOf('function FunnelAllTimePanel');
-    expect(panelIdx).toBeGreaterThan(-1);
-    const panelBlock = source.slice(panelIdx, panelIdx + 3000);
-    // Nested tiles within the All Time panel
-    expect(panelBlock).toContain('nested-tile');
-  });
-
-  it('FunnelLastRunPanel sub-zones have nested tile cards for alignment', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'),
-      'utf-8'
-    );
-    const panelIdx = source.indexOf('function FunnelLastRunPanel');
-    expect(panelIdx).toBeGreaterThan(-1);
-    const panelBlock = source.slice(panelIdx, panelIdx + 3000);
-    expect(panelBlock).toContain('nested-tile');
-  });
-
   it('right-hand controls have adequate spacing (gap-3)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'),
@@ -1998,33 +1974,6 @@ describe('Run All disabled when all steps disabled or comingSoon', () => {
     );
     // Should check if all toggleable steps are disabled
     expect(source).toMatch(/allStepsDisabled|allDisabled|everyDisabled/i);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Fix 2: FunnelLastRunPanel has 3 tiles to align with FunnelAllTimePanel
-// ---------------------------------------------------------------------------
-
-describe('FunnelLastRunPanel has 3 tiles matching FunnelAllTimePanel columns', () => {
-  it('FunnelLastRunPanel renders a Run Baseline tile as first column', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
-    );
-    // Extract the FunnelLastRunPanel function body
-    const panelStart = source.indexOf('function FunnelLastRunPanel');
-    const panelBody = source.slice(panelStart, panelStart + 5000);
-    // Count nested-tile divs — exactly 3 (Run Baseline + Run Intersection + Run Yield)
-    const tileCount = (panelBody.match(/nested-tile/g) || []).length;
-    expect(tileCount).toBe(3);
-  });
-
-  it('FunnelLastRunPanel first tile is labeled Run Baseline', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
-    );
-    const panelStart = source.indexOf('function FunnelLastRunPanel');
-    const panelBody = source.slice(panelStart, panelStart + 2000);
-    expect(panelBody).toContain('Run Baseline');
   });
 });
 
@@ -2628,62 +2577,6 @@ describe('Optimistic timer timeout', () => {
 });
 
 // ---------------------------------------------------------------------------
-// WF5 Audit Fix: Contextual Intersection Labels
-// ---------------------------------------------------------------------------
-
-describe('Contextual intersection labels (INTERSECTION_LABELS)', () => {
-  it('INTERSECTION_LABELS constant exists with processedLabel and matchedLabel', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
-    );
-    expect(source).toContain('INTERSECTION_LABELS');
-    expect(source).toContain('processedLabel');
-    expect(source).toContain('matchedLabel');
-  });
-
-  it('geocode_permits has "To Geocode" / "Geocoded" labels', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
-    );
-    const labelsStart = source.indexOf('INTERSECTION_LABELS');
-    const labelsBlock = source.slice(labelsStart, labelsStart + 2000);
-    expect(labelsBlock).toContain('geocode_permits');
-    expect(labelsBlock).toContain('To Geocode');
-    expect(labelsBlock).toContain('Geocoded');
-  });
-
-  it('link_parcels has "Unlinked" / "Linked" labels', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
-    );
-    const labelsStart = source.indexOf('INTERSECTION_LABELS');
-    const labelsBlock = source.slice(labelsStart, labelsStart + 2000);
-    expect(labelsBlock).toContain('link_parcels');
-    expect(labelsBlock).toContain('Unlinked');
-    expect(labelsBlock).toContain('Linked');
-  });
-
-  it('classify_permits has "To Classify" / "Classified" labels', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
-    );
-    const labelsStart = source.indexOf('INTERSECTION_LABELS');
-    const labelsBlock = source.slice(labelsStart, labelsStart + 2000);
-    expect(labelsBlock).toContain('classify_permits');
-    expect(labelsBlock).toContain('To Classify');
-    expect(labelsBlock).toContain('Classified');
-  });
-
-  it('FunnelLastRunPanel uses INTERSECTION_LABELS via statusSlug lookup', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
-    );
-    // The panel should look up labels from statusSlug
-    expect(source).toMatch(/INTERSECTION_LABELS\[[\s\S]{0,50}statusSlug/);
-  });
-});
-
-// ---------------------------------------------------------------------------
 // WF5 Audit Fix: CQA records_meta in non-funnel drill-down
 // ---------------------------------------------------------------------------
 
@@ -2744,15 +2637,11 @@ describe('Funnel panel components extracted to separate file', () => {
     expect(lineCount).toBeLessThan(1400);
   });
 
-  it('FunnelPanels.tsx exports CircularBadge, MetricRow, FunnelAllTimePanel, FunnelLastRunPanel, INTERSECTION_LABELS, DataFlowTile', () => {
+  it('FunnelPanels.tsx exports CircularBadge and DataFlowTile', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/funnel/FunnelPanels.tsx'), 'utf-8'
     );
     expect(source).toContain('export function CircularBadge');
-    expect(source).toContain('function MetricRow');
-    expect(source).toContain('export function FunnelAllTimePanel');
-    expect(source).toContain('export function FunnelLastRunPanel');
-    expect(source).toContain('export const INTERSECTION_LABELS');
     expect(source).toContain('export function DataFlowTile');
   });
 });
