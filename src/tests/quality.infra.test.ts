@@ -636,6 +636,29 @@ describe('Ghost record detection in assert-data-bounds', () => {
     );
     expect(source).toMatch(/last_seen_at[\s\S]{0,100}30\s*days/i);
   });
+
+  it('excludes already-terminal permits (P19/P20) from ghost count so vacuumed permits are not double-counted', () => {
+    // close-stale-permits.js vacuums stale permits into P19 (Pending Closed)
+    // then P20 (Closed). The assert must not re-count them as "ghosts" —
+    // otherwise the warning grows unboundedly with every successful vacuum run.
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'),
+      'utf-8'
+    );
+    // Must filter lifecycle_phase IS NOT NULL (excludes dead states: Cancelled, Revoked, Withdrawn)
+    expect(source).toMatch(/lifecycle_phase\s+IS\s+NOT\s+NULL/i);
+    // Must exclude P19 (Pending Closed / Pending Cancellation) and P20 (Closed)
+    expect(source).toMatch(/lifecycle_phase\s+NOT\s+IN\s*\(\s*'P19'\s*,\s*'P20'\s*\)/i);
+  });
+
+  it('WARN message describes non-terminal scope (not all stale permits)', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-data-bounds.js'),
+      'utf-8'
+    );
+    // The warning should reflect that terminal permits are excluded
+    expect(source).toMatch(/non-terminal/i);
+  });
 });
 
 describe('Telemetry & Last Run labelling with expected behavior ranges', () => {

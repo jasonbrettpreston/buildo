@@ -674,13 +674,15 @@ async function run() {
       const ghostRes = await pool.query(
         `SELECT COUNT(*) AS count, MIN(last_seen_at) AS oldest
          FROM permits
-         WHERE last_seen_at < CURRENT_DATE - INTERVAL '30 days'`
+         WHERE last_seen_at < CURRENT_DATE - INTERVAL '30 days'
+           AND lifecycle_phase IS NOT NULL
+           AND lifecycle_phase NOT IN ('P19', 'P20')`
       );
       const ghostCount = parseInt(ghostRes.rows[0].count, 10);
       if (ghostCount > 0) {
         const oldest = ghostRes.rows[0].oldest;
-        warnings.push(`${ghostCount} permits not seen in 30+ days (oldest: ${oldest})`);
-        console.warn(`  WARN: ${ghostCount} ghost permits — oldest last_seen_at: ${oldest}`);
+        warnings.push(`${ghostCount} non-terminal permits not seen in 30+ days (oldest: ${oldest})`);
+        console.warn(`  WARN: ${ghostCount} ghost permits (non-terminal, unseen 30+ days) — oldest last_seen_at: ${oldest}`);
         // Push into audit table so the dashboard reflects the warning (not just console)
         if (permitsAuditTable) {
           permitsAuditTable.rows.push({
