@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/reports/lifecycle_phase_implementation.md §1.1–§1.6
+// 🔗 SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §1.1–§1.6
 // 🔗 DUAL CODE PATH: src/lib/classification/lifecycle-phase.ts (CLAUDE.md §7)
 //
 // JavaScript mirror of the TypeScript lifecycle-phase classifier.

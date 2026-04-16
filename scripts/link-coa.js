@@ -323,7 +323,7 @@ pipeline.run('link-coa', async (pool) => {
   //
   // Skipped in dry-run mode.
   //
-  // SPEC LINK: docs/reports/lifecycle_phase_implementation.md §2.7
+  // SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §2.7
   let permitsBumped = 0;
   if (!dryRun) {
     const bumpStart = new Date(startTime).toISOString();

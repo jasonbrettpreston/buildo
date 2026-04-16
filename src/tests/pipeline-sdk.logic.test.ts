@@ -1935,3 +1935,23 @@ describe('Pipeline scripts — SPEC LINK headers (spec 47 §3 mandate)', () => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Bundle D — SPEC LINK de-reports (spec 47 §3): no link to docs/reports/
+// ---------------------------------------------------------------------------
+
+describe('Pipeline scripts — no SPEC LINK to docs/reports/ (spec 47 §3)', () => {
+  const ROOT = path.resolve(__dirname, '../..');
+  const scriptsToScan = [
+    'scripts/lib/lifecycle-phase.js',
+    'scripts/quality/assert-lifecycle-phase-distribution.js',
+    'scripts/link-coa.js',
+  ];
+
+  for (const rel of scriptsToScan) {
+    it(`${rel} has no SPEC LINK pointing to docs/reports/`, () => {
+      const content = fs.readFileSync(path.join(ROOT, rel), 'utf-8');
+      expect(content).not.toMatch(/SPEC LINK:\s*docs\/reports\//);
+    });
+  }
+});
+
