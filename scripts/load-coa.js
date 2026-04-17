@@ -216,58 +216,84 @@ function mapRecord(raw, schemaDrift) {
 async function upsertBatch(client, batch, RUN_AT) {
   if (batch.length === 0) return { inserted: 0, updated: 0 };
 
-  let inserted = 0;
-  let updated = 0;
+  // Collect arrays for UNNEST batch insert (O(1) round-trips instead of O(batch.length)).
+  // 14 column arrays + scalar RUN_AT = 15 params; 500 rows × 14 cols = 7,000 params
+  // per batch — well under PostgreSQL's 65,535 limit.
+  const applicationNumbers = [], addresses = [], streetNums = [], streetNames = [],
+    streetNamesNormalized = [], wards = [], statuses = [], decisions = [],
+    decisionDates = [], hearingDates = [], descriptions = [], applicants = [],
+    subTypes = [], dataHashes = [];
 
   for (const rec of batch) {
-    const result = await client.query(
-      `INSERT INTO coa_applications (
-        application_number, address, street_num, street_name, street_name_normalized, ward,
-        status, decision, decision_date, hearing_date, description,
-        applicant, sub_type, data_hash, first_seen_at, last_seen_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::timestamptz, $15::timestamptz)
-      ON CONFLICT (application_number) DO UPDATE SET
-        address = EXCLUDED.address,
-        street_num = EXCLUDED.street_num,
-        street_name = EXCLUDED.street_name,
-        street_name_normalized = EXCLUDED.street_name_normalized,
-        ward = EXCLUDED.ward,
-        status = EXCLUDED.status,
-        decision = EXCLUDED.decision,
-        decision_date = EXCLUDED.decision_date,
-        hearing_date = EXCLUDED.hearing_date,
-        description = EXCLUDED.description,
-        applicant = EXCLUDED.applicant,
-        sub_type = EXCLUDED.sub_type,
-        data_hash = EXCLUDED.data_hash,
-        last_seen_at = $15::timestamptz
-      WHERE coa_applications.data_hash IS DISTINCT FROM EXCLUDED.data_hash
-      RETURNING (xmax = 0) AS is_insert`,
-      [
-        rec.application_number,
-        rec.address,
-        rec.street_num,
-        rec.street_name,
-        rec.street_name_normalized,
-        rec.ward,
-        rec.status,
-        rec.decision,
-        rec.decision_date,
-        rec.hearing_date,
-        rec.description,
-        rec.applicant,
-        rec.sub_type,
-        rec.data_hash,
-        RUN_AT,
-      ]
-    );
-
-    if (result.rows.length > 0) {
-      if (result.rows[0].is_insert) inserted++;
-      else updated++;
-    }
+    applicationNumbers.push(rec.application_number);
+    addresses.push(rec.address);
+    streetNums.push(rec.street_num);
+    streetNames.push(rec.street_name);
+    streetNamesNormalized.push(rec.street_name_normalized);
+    wards.push(rec.ward);
+    statuses.push(rec.status);
+    decisions.push(rec.decision);
+    decisionDates.push(rec.decision_date ?? null);
+    hearingDates.push(rec.hearing_date ?? null);
+    descriptions.push(rec.description ?? null);
+    applicants.push(rec.applicant ?? null);
+    subTypes.push(rec.sub_type ?? null);
+    dataHashes.push(rec.data_hash);
   }
 
+  const result = await client.query(
+    `INSERT INTO coa_applications (
+       application_number, address, street_num, street_name, street_name_normalized, ward,
+       status, decision, decision_date, hearing_date, description,
+       applicant, sub_type, data_hash, first_seen_at, last_seen_at
+     )
+     SELECT
+       unnest($1::text[]),
+       unnest($2::text[]),
+       unnest($3::text[]),
+       unnest($4::text[]),
+       unnest($5::text[]),
+       unnest($6::text[]),
+       unnest($7::text[]),
+       unnest($8::text[]),
+       unnest($9::timestamptz[]),
+       unnest($10::timestamptz[]),
+       unnest($11::text[]),
+       unnest($12::text[]),
+       unnest($13::text[]),
+       unnest($14::text[]),
+       $15::timestamptz,
+       $15::timestamptz
+     ON CONFLICT (application_number) DO UPDATE SET
+       address = EXCLUDED.address,
+       street_num = EXCLUDED.street_num,
+       street_name = EXCLUDED.street_name,
+       street_name_normalized = EXCLUDED.street_name_normalized,
+       ward = EXCLUDED.ward,
+       status = EXCLUDED.status,
+       decision = EXCLUDED.decision,
+       decision_date = EXCLUDED.decision_date,
+       hearing_date = EXCLUDED.hearing_date,
+       description = EXCLUDED.description,
+       applicant = EXCLUDED.applicant,
+       sub_type = EXCLUDED.sub_type,
+       data_hash = EXCLUDED.data_hash,
+       last_seen_at = $15::timestamptz
+     WHERE coa_applications.data_hash IS DISTINCT FROM EXCLUDED.data_hash
+     RETURNING (xmax = 0) AS is_insert`,
+    [
+      applicationNumbers, addresses, streetNums, streetNames, streetNamesNormalized,
+      wards, statuses, decisions, decisionDates, hearingDates, descriptions,
+      applicants, subTypes, dataHashes, RUN_AT,
+    ]
+  );
+
+  let inserted = 0;
+  let updated = 0;
+  for (const row of result.rows) {
+    if (row.is_insert) inserted++;
+    else updated++;
+  }
   return { inserted, updated };
 }
 

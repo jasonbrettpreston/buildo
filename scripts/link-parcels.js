@@ -444,12 +444,24 @@ pipeline.run('link-parcels', async (pool) => {
         const match = sqlMatched.get(key) || spatialMatched.get(key);
         if (match) matchedParcelIds.set(key, match.parcel_id);
       }
-      for (const [key, parcelId] of matchedParcelIds) {
-        const [permitNum, revisionNum] = key.split('|');
+      // Batch delete stale links for matched permits (O(1) instead of O(matches)).
+      if (matchedParcelIds.size > 0) {
+        const delNums = [], delRevs = [], keepIds = [];
+        for (const [key, parcelId] of matchedParcelIds) {
+          const [permitNum, revisionNum] = key.split('|');
+          delNums.push(permitNum);
+          delRevs.push(revisionNum);
+          keepIds.push(parcelId);
+        }
         await client.query(
-          `DELETE FROM permit_parcels
-           WHERE permit_num = $1 AND revision_num = $2 AND parcel_id != $3`,
-          [permitNum, revisionNum, parcelId]
+          `DELETE FROM permit_parcels pp
+           USING (SELECT unnest($1::text[]) AS permit_num,
+                         unnest($2::text[]) AS revision_num,
+                         unnest($3::int[])  AS keep_parcel_id) AS v
+           WHERE pp.permit_num   = v.permit_num
+             AND pp.revision_num = v.revision_num
+             AND pp.parcel_id   != v.keep_parcel_id`,
+          [delNums, delRevs, keepIds]
         );
       }
 
