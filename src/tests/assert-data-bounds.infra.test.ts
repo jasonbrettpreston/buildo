@@ -22,10 +22,10 @@ const SEED = JSON.parse(
 
 describe('assert-data-bounds.js — threshold externalization (§6.4)', () => {
   // ── E7: cost outlier ceiling ────────────────────────────────────────────
-  it('seed has cost_outlier_ceiling_cad (default 500000000, bounds sane)', () => {
+  it('seed has cost_outlier_ceiling_cad (default 2000000000, bounds sane)', () => {
     const entry = SEED.cost_outlier_ceiling_cad;
     if (!entry) throw new Error('cost_outlier_ceiling_cad missing from seed JSON');
-    expect(entry.default).toBe(500000000);
+    expect(entry.default).toBe(2000000000);
     expect(entry.type).toBe('number');
     expect(entry.min).toBeGreaterThan(0);
     expect(entry.max).toBeGreaterThan(entry.default);

@@ -175,9 +175,9 @@
     "max": 10000000
   },
   "cost_outlier_ceiling_cad": {
-    "default": 500000000,
+    "default": 2000000000,
     "type": "number",
-    "description": "Construction cost ceiling (CAD) above which a permit est_const_cost is flagged as a data-quality outlier (assert-data-bounds E7)",
+    "description": "Construction cost ceiling (CAD) above which a permit est_const_cost is flagged as a data-quality outlier (assert-data-bounds E7). $500M was too tight for legitimate Toronto megaprojects (hospitals, transit stations, mixed-use towers); raised to $2B.",
     "min": 1000000,
     "max": 10000000000
   },

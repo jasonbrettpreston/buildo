@@ -140,12 +140,12 @@ async function loadBoundaries(pool, geojsonPath, hasPostGIS) {
         `INSERT INTO neighbourhoods (neighbourhood_id, name, geometry)
          SELECT unnest($1::int[]),
                 unnest($2::text[]),
-                unnest($3::text[])
+                unnest($3::jsonb[])
          ON CONFLICT (neighbourhood_id) DO UPDATE SET
            name = EXCLUDED.name,
            geometry = EXCLUDED.geometry${geomLine}
          WHERE neighbourhoods.name IS DISTINCT FROM EXCLUDED.name
-            OR neighbourhoods.geometry::text IS DISTINCT FROM EXCLUDED.geometry::text`,
+            OR neighbourhoods.geometry IS DISTINCT FROM EXCLUDED.geometry`,
         [ids, names, geometries]
       );
     });
