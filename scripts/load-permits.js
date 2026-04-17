@@ -291,7 +291,7 @@ async function insertBatch(client, batch, RUN_AT) {
       housing_units = EXCLUDED.housing_units,
       storeys = EXCLUDED.storeys,
       data_hash = EXCLUDED.data_hash,
-      last_seen_at = ${values.length + 1}::timestamptz,
+      last_seen_at = $${values.length + 1}::timestamptz,
       raw_json = EXCLUDED.raw_json
     WHERE permits.data_hash IS DISTINCT FROM EXCLUDED.data_hash
     RETURNING (xmax = 0) AS is_insert
