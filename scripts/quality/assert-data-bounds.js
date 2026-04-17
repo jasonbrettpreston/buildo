@@ -95,9 +95,9 @@ pipeline.run('assert-data-bounds', async (pool) => {
         [costOutlierCeiling]
       );
       const costOutliers = parseInt(costOutliersRes.rows[0].count, 10);
-      if (costOutliers >= 20) {
-        warnings.push(`${costOutliers} permits with negative cost or > $500M`);
-        console.log(`  WARN: ${costOutliers} permits with cost outliers`);
+      if (costOutliers > 0) {
+        errors.push(`${costOutliers} permits with cost out of bounds (negative or > ${costOutlierCeiling.toLocaleString()})`);
+        console.log(`  FAIL: ${costOutliers} permits with cost outliers`);
       } else {
         console.log('  OK: Cost bounds — no outliers');
       }
