@@ -20,6 +20,8 @@
  */
 const pipeline = require('./lib/pipeline');
 
+const ADVISORY_LOCK_ID = 45;
+
 const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 const SERPER_URL = 'https://google.serper.dev/search';
 const SLUG = process.env.ENRICH_WSIB_ONLY === '1' ? 'enrich_wsib_builders' : 'enrich_named_builders';
@@ -283,7 +285,9 @@ async function searchSerper(query) {
 // ---------------------------------------------------------------------------
 
 pipeline.run('enrich-web-search', async (pool) => {
-  const args = process.argv.slice(2);
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const limitIdx = args.indexOf('--limit');
   const limit = limitIdx !== -1 && args[limitIdx + 1]
@@ -374,8 +378,8 @@ pipeline.run('enrich-web-search', async (pool) => {
       // Mark as enriched to prevent re-processing on next run
       if (!dryRun) {
         await pool.query(
-          'UPDATE entities SET last_enriched_at = NOW() WHERE id = $1',
-          [b.id]
+          'UPDATE entities SET last_enriched_at = $2::timestamptz WHERE id = $1',
+          [b.id, RUN_AT]
         ).catch((err) => { pipeline.log.error('[enrich-web-search]', `Failed to mark skipped: ${err.message}`); });
       }
       continue;
@@ -450,7 +454,9 @@ pipeline.run('enrich-web-search', async (pool) => {
       }
 
       // Always mark as enriched (even if no contacts found — prevents retry loops)
-      updates.push('last_enriched_at = NOW()');
+      updates.push(`last_enriched_at = $${paramIdx}::timestamptz`);
+      params.push(RUN_AT);
+      paramIdx++;
       params.push(b.id);
 
       await pipeline.withTransaction(pool, async (client) => {
@@ -502,8 +508,8 @@ pipeline.run('enrich-web-search', async (pool) => {
 
       // On API error, still mark as enriched to avoid infinite retry
       await pool.query(
-        'UPDATE entities SET last_enriched_at = NOW() WHERE id = $1',
-        [b.id]
+        'UPDATE entities SET last_enriched_at = $2::timestamptz WHERE id = $1',
+        [b.id, RUN_AT]
       ).catch((dbErr) => { pipeline.log.error('[enrich-web-search]', `Failed to mark enriched: ${dbErr.message}`); });
     }
 
@@ -524,7 +530,9 @@ pipeline.run('enrich-web-search', async (pool) => {
     extracted_fields: fieldCounts,
   };
 
-  await finalize(pool, runId, startMs, enriched, contactsFound, failed, meta);
+    await finalize(pool, runId, startMs, enriched, contactsFound, failed, meta);
+  });
+  if (!lockResult.acquired) return;
 });
 
 async function finalize(pool, runId, startMs, enriched, contactsFound, failed, meta) {

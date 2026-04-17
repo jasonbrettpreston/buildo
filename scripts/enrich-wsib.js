@@ -22,6 +22,8 @@
  */
 const pipeline = require('./lib/pipeline');
 
+const ADVISORY_LOCK_ID = 46;
+
 const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 const SERPER_URL = 'https://google.serper.dev/search';
 const SLUG = 'enrich_wsib_registry';
@@ -464,7 +466,9 @@ async function searchSerper(query) {
 
 if (require.main === module) {
 pipeline.run('enrich-wsib', async (pool) => {
-  const args = process.argv.slice(2);
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const limitIdx = args.indexOf('--limit');
   const limit = limitIdx !== -1 && args[limitIdx + 1]
@@ -584,8 +588,8 @@ pipeline.run('enrich-wsib', async (pool) => {
       pipeline.log.info('[enrich-wsib]', `  [${i}/${totalEntries}] SKIP (${skipResult.reason}): ${entry.trade_name || entry.legal_name}`);
       if (!dryRun) {
         await pool.query(
-          'UPDATE wsib_registry SET last_enriched_at = NOW() WHERE id = $1',
-          [entry.id]
+          'UPDATE wsib_registry SET last_enriched_at = $2::timestamptz WHERE id = $1',
+          [entry.id, RUN_AT]
         ).catch((err) => { pipeline.log.error('[enrich-wsib]', `Failed to mark skipped: ${err.message}`); });
       }
       continue;
@@ -690,7 +694,9 @@ pipeline.run('enrich-wsib', async (pool) => {
         pendingFields.website = true;
       }
 
-      updates.push('last_enriched_at = NOW()');
+      updates.push(`last_enriched_at = $${paramIdx}::timestamptz`);
+      params.push(RUN_AT);
+      paramIdx++;
       params.push(entry.id);
 
       await pool.query(
@@ -719,8 +725,8 @@ pipeline.run('enrich-wsib', async (pool) => {
       failed++;
 
       await pool.query(
-        'UPDATE wsib_registry SET last_enriched_at = NOW() WHERE id = $1',
-        [entry.id]
+        'UPDATE wsib_registry SET last_enriched_at = $2::timestamptz WHERE id = $1',
+        [entry.id, RUN_AT]
       ).catch((dbErr) => { pipeline.log.error('[enrich-wsib]', `Failed to mark enriched: ${dbErr.message}`); });
     }
 
@@ -744,7 +750,9 @@ pipeline.run('enrich-wsib', async (pool) => {
     size_breakdown: sizeBreakdown,
   };
 
-  await finalize(pool, runId, startMs, enriched, contactsFound, failed, meta);
+    await finalize(pool, runId, startMs, enriched, contactsFound, failed, meta);
+  });
+  if (!lockResult.acquired) return;
 });
 } // require.main === module
 
