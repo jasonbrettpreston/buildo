@@ -49,7 +49,11 @@ function normalizeBuilderName(name) {
   return normalized;
 }
 
+const ADVISORY_LOCK_ID = 11;
+
 pipeline.run('extract-builders', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
   const startTime = Date.now();
 
   pipeline.log.info('[extract-builders]', 'Extracting builders from permits...');
@@ -108,18 +112,18 @@ pipeline.run('extract-builders', async (pool) => {
 
       for (let j = 0; j < batch.length; j++) {
         const b = batch[j];
-        const offset = j * 4;
-        placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4})`);
-        values.push(b.name, b.name_normalized, b.permit_count, b.entity_type);
+        const offset = j * 5;
+        placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}::timestamptz)`);
+        values.push(b.name, b.name_normalized, b.permit_count, b.entity_type, RUN_AT);
       }
 
       const result = await client.query(`
-        INSERT INTO entities (legal_name, name_normalized, permit_count, entity_type)
+        INSERT INTO entities (legal_name, name_normalized, permit_count, entity_type, last_seen_at)
         VALUES ${placeholders.join(', ')}
         ON CONFLICT (name_normalized) DO UPDATE SET
           permit_count = EXCLUDED.permit_count,
           entity_type = COALESCE(entities.entity_type, EXCLUDED.entity_type),
-          last_seen_at = NOW()
+          last_seen_at = EXCLUDED.last_seen_at
         WHERE entities.permit_count IS DISTINCT FROM EXCLUDED.permit_count
            OR entities.entity_type IS NULL
         RETURNING (xmax = 0) AS is_insert
@@ -230,4 +234,7 @@ pipeline.run('extract-builders', async (pool) => {
     { "permits": ["builder_name"] },
     { "entities": ["legal_name", "name_normalized", "permit_count", "entity_type", "last_seen_at"] }
   );
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

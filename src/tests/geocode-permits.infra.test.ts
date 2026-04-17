@@ -29,6 +29,7 @@ function makePool(opts?: { throwOnUpdateCall?: number }) {
           throw new Error(`Injected failure on UPDATE call ${updateCallCount}`);
         }
       }
+      if (norm.startsWith('SELECT NOW')) return { rows: [{ now: new Date() }], rowCount: 1 };
       if (norm.startsWith('SELECT COUNT')) return { rows: [STAT_ROW], rowCount: 1 };
       return { rows: [], rowCount: 1 };
     }),

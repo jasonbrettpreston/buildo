@@ -211,7 +211,7 @@ function mapRecord(raw, schemaDrift) {
   };
 }
 
-async function upsertBatch(client, batch) {
+async function upsertBatch(client, batch, RUN_AT) {
   if (batch.length === 0) return { inserted: 0, updated: 0 };
 
   let inserted = 0;
@@ -223,7 +223,7 @@ async function upsertBatch(client, batch) {
         application_number, address, street_num, street_name, street_name_normalized, ward,
         status, decision, decision_date, hearing_date, description,
         applicant, sub_type, data_hash, first_seen_at, last_seen_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::timestamptz, $15::timestamptz)
       ON CONFLICT (application_number) DO UPDATE SET
         address = EXCLUDED.address,
         street_num = EXCLUDED.street_num,
@@ -238,7 +238,7 @@ async function upsertBatch(client, batch) {
         applicant = EXCLUDED.applicant,
         sub_type = EXCLUDED.sub_type,
         data_hash = EXCLUDED.data_hash,
-        last_seen_at = NOW()
+        last_seen_at = $15::timestamptz
       WHERE coa_applications.data_hash IS DISTINCT FROM EXCLUDED.data_hash
       RETURNING (xmax = 0) AS is_insert`,
       [
@@ -256,6 +256,7 @@ async function upsertBatch(client, batch) {
         rec.applicant,
         rec.sub_type,
         rec.data_hash,
+        RUN_AT,
       ]
     );
 
@@ -268,7 +269,12 @@ async function upsertBatch(client, batch) {
   return { inserted, updated };
 }
 
+const ADVISORY_LOCK_ID = 95;
+
 pipeline.run('load-coa', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+
   const fullMode = pipeline.isFullMode();
   const startMs = Date.now();
 
@@ -368,7 +374,7 @@ pipeline.run('load-coa', async (pool) => {
   for (let i = 0; i < deduplicated.length; i += BATCH_SIZE) {
     const batch = deduplicated.slice(i, i + BATCH_SIZE);
     const { inserted, updated } = await pipeline.withTransaction(pool, async (client) => {
-      return upsertBatch(client, batch);
+      return upsertBatch(client, batch, RUN_AT);
     });
     totalInserted += inserted;
     totalUpdated += updated;
@@ -465,4 +471,7 @@ pipeline.run('load-coa', async (pool) => {
   `);
   const s = stats.rows[0];
   pipeline.log.info('[load-coa]', `Stats: ${s.total} total | ${s.approved} approved | ${s.linked} linked | ${s.upcoming} upcoming leads`);
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

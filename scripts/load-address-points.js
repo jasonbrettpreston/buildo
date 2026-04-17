@@ -62,10 +62,13 @@ function downloadFile(url, destPath) {
   });
 }
 
+const ADVISORY_LOCK_ID = 96;
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 pipeline.run('load-address-points', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const startTime = Date.now();
 
   let csvPath = process.argv[2];
@@ -246,4 +249,7 @@ pipeline.run('load-address-points', async (pool) => {
     { "Toronto Open Data CSV": ["ADDRESS_POINT_ID", "LONGITUDE", "LATITUDE", "geometry"] },
     { "address_points": ["address_point_id", "latitude", "longitude"] }
   );
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

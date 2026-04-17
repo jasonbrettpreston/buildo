@@ -80,6 +80,8 @@ function buildRow(row, legalName, legalNorm, tradeName, tradeNorm, address, pred
   };
 }
 
+const ADVISORY_LOCK_ID = 97;
+
 pipeline.run('load-wsib', async (pool) => {
   const args = process.argv.slice(2);
   const fileIdx = args.indexOf('--file');
@@ -129,6 +131,9 @@ pipeline.run('load-wsib', async (pool) => {
     throw new Error(`File not found: ${filePath}`);
   }
 
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+
   pipeline.log.info('[load-wsib]', `Source: ${filePath}`);
 
   const startMs = Date.now();
@@ -173,14 +178,14 @@ pipeline.run('load-wsib', async (pool) => {
 
         for (let j = 0; j < batch.length; j++) {
           const r = batch[j];
-          const offset = j * 12;
+          const offset = j * 13;
           placeholders.push(
-            `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, $${offset + 12}, NOW())`
+            `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, $${offset + 12}, $${offset + 13}::timestamptz)`
           );
           values.push(
             r.legal_name, r.trade_name, r.legal_name_normalized, r.trade_name_normalized,
             r.mailing_address, r.predominant_class, r.naics_code, r.naics_description,
-            r.subclass, r.subclass_description, r.business_size, r.is_gta
+            r.subclass, r.subclass_description, r.business_size, r.is_gta, RUN_AT
           );
         }
 
@@ -205,7 +210,7 @@ pipeline.run('load-wsib', async (pool) => {
             subclass_description = EXCLUDED.subclass_description,
             business_size = EXCLUDED.business_size,
             is_gta = EXCLUDED.is_gta,
-            last_seen_at = NOW()
+            last_seen_at = EXCLUDED.last_seen_at
           WHERE wsib_registry.trade_name IS DISTINCT FROM EXCLUDED.trade_name
              OR wsib_registry.trade_name_normalized IS DISTINCT FROM EXCLUDED.trade_name_normalized
              OR wsib_registry.predominant_class IS DISTINCT FROM EXCLUDED.predominant_class
@@ -390,4 +395,7 @@ pipeline.run('load-wsib', async (pool) => {
       [status, durationMs, inserted + updated, inserted, runId]
     ).catch(() => {});
   }
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

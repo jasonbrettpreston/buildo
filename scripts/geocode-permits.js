@@ -32,6 +32,7 @@ const pipeline = require('./lib/pipeline');
  */
 async function geocodePermits(pool, opts) {
   const withTransaction = (opts && opts.withTransaction) ? opts.withTransaction : pipeline.withTransaction.bind(pipeline);
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
   const startTime = Date.now();
 
   pipeline.log.info('[geocode-permits]', 'Starting permit geocoding (Address Points lookup)');
@@ -73,7 +74,7 @@ async function geocodePermits(pool, opts) {
       UPDATE permits p
       SET latitude = ap.latitude,
           longitude = ap.longitude,
-          geocoded_at = NOW()
+          geocoded_at = $1::timestamptz
       FROM address_points ap
       WHERE p.geo_id IS NOT NULL
         AND p.geo_id != ''
@@ -81,7 +82,7 @@ async function geocodePermits(pool, opts) {
         AND ap.address_point_id = CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END
         AND (p.latitude IS DISTINCT FROM ap.latitude
           OR p.longitude IS DISTINCT FROM ap.longitude)
-    `);
+    `, [RUN_AT]);
     updated = geocodeResult.rowCount;
 
     // UPDATE 2: zombie cleanup — clear stale coordinates on permits that lost
@@ -168,8 +169,13 @@ async function geocodePermits(pool, opts) {
 
 module.exports = { geocodePermits };
 
+const ADVISORY_LOCK_ID = 5;
+
 if (require.main === module) {
   pipeline.run('geocode-permits', async (pool) => {
-    await geocodePermits(pool);
+    const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+      await geocodePermits(pool);
+    });
+    if (!lockResult.acquired) return;
   });
 }

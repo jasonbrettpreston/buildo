@@ -227,10 +227,13 @@ function downloadFile(url, destPath) {
   });
 }
 
+const ADVISORY_LOCK_ID = 55;
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 pipeline.run('load-parcels', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   pipeline.log.info('[load-parcels]','=== Buildo Property Boundaries Loader ===');
   pipeline.log.info('[load-parcels]','');
 
@@ -492,4 +495,7 @@ pipeline.run('load-parcels', async (pool) => {
       throw err;
     }
   }
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

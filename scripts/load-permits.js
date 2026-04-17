@@ -221,7 +221,7 @@ async function* fetchFromCKAN(tel) {
   }
 }
 
-async function insertBatch(client, batch) {
+async function insertBatch(client, batch, RUN_AT) {
   if (batch.length === 0) return [];
 
   // Deduplicate within batch - last occurrence wins
@@ -291,13 +291,13 @@ async function insertBatch(client, batch) {
       housing_units = EXCLUDED.housing_units,
       storeys = EXCLUDED.storeys,
       data_hash = EXCLUDED.data_hash,
-      last_seen_at = NOW(),
+      last_seen_at = ${values.length + 1}::timestamptz,
       raw_json = EXCLUDED.raw_json
     WHERE permits.data_hash IS DISTINCT FROM EXCLUDED.data_hash
     RETURNING (xmax = 0) AS is_insert
   `;
 
-  const result = await client.query(sql, values);
+  const result = await client.query(sql, [...values, RUN_AT]);
 
   // Always touch last_seen_at for every permit in the batch — even if data_hash
   // didn't change. This is the "seen in feed" signal used by close-stale-permits.js
@@ -312,11 +312,11 @@ async function insertBatch(client, batch) {
     touchParams.push(r.permit_num, r.revision_num);
   }
   await client.query(
-    `UPDATE permits SET last_seen_at = NOW()
+    `UPDATE permits SET last_seen_at = $${touchParams.length + 1}::timestamptz
      FROM (VALUES ${touchPlaceholders.join(',')}) AS v(pn, rn)
      WHERE permits.permit_num = v.pn AND permits.revision_num = v.rn
        AND permits.last_seen_at < NOW() - INTERVAL '1 hour'`,
-    touchParams
+    [...touchParams, RUN_AT]
   );
 
   return result.rows;
@@ -347,7 +347,7 @@ function mapRawRecords(records, counters) {
  * Upsert mapped records in batches.
  * Strips _ckan_id (dedup-only field, not a DB column) before insertion.
  */
-async function upsertRecords(pool, records, counters, startTime) {
+async function upsertRecords(pool, records, counters, startTime, RUN_AT) {
   let batch = [];
 
   for (const record of records) {
@@ -356,7 +356,7 @@ async function upsertRecords(pool, records, counters, startTime) {
     batch.push(dbRecord);
     if (batch.length >= pipeline.BATCH_SIZE) {
       const rows = await pipeline.withTransaction(pool, async (client) => {
-        return insertBatch(client, batch);
+        return insertBatch(client, batch, RUN_AT);
       });
       for (const r of rows) {
         if (r.is_insert) counters.newInserts++;
@@ -373,7 +373,7 @@ async function upsertRecords(pool, records, counters, startTime) {
   // Flush remaining batch
   if (batch.length > 0) {
     const rows = await pipeline.withTransaction(pool, async (client) => {
-      return insertBatch(client, batch);
+      return insertBatch(client, batch, RUN_AT);
     });
     for (const r of rows) {
       if (r.is_insert) counters.newInserts++;
@@ -383,8 +383,13 @@ async function upsertRecords(pool, records, counters, startTime) {
   }
 }
 
+const ADVISORY_LOCK_ID = 2;
+
 // Only run when executed directly (not when required for testing)
 if (require.main === module) pipeline.run('load-permits', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+
   const counters = { newInserts: 0, updated: 0, processed: 0, errors: 0 };
   const startTime = Date.now();
 
@@ -447,7 +452,7 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
   }
 
   // Phase 3: Upsert deduplicated records in batches
-  await upsertRecords(pool, allMapped, counters, startTime);
+  await upsertRecords(pool, allMapped, counters, startTime, RUN_AT);
 
   const { newInserts, updated, processed, errors } = counters;
   const unchanged = processed - newInserts - updated;
@@ -520,6 +525,9 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
     [processed, newInserts, updated, unchanged, errors, durationMs, durationSeconds]
   );
   pipeline.log.info('[load-permits]', 'Sync run logged');
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });
 
 // Export for testing (used by sync.logic.test.ts)

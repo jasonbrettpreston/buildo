@@ -113,10 +113,13 @@ function downloadFile(url, destPath) {
   });
 }
 
+const ADVISORY_LOCK_ID = 56;
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 pipeline.run('load-massing', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const startTime = Date.now();
   pipeline.log.info('[load-massing]', '3D Massing Loader starting...');
 
@@ -415,4 +418,7 @@ pipeline.run('load-massing', async (pool) => {
     { "building_footprints": ["source_id", "geometry", "footprint_area_sqm", "footprint_area_sqft", "max_height_m", "min_height_m", "elev_z", "estimated_stories", "centroid_lat", "centroid_lng"] }
   );
   // Note: link-massing.js runs as the next chain step — no longer coupled via execSync
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });
