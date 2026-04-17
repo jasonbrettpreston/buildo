@@ -143,9 +143,13 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     }]),
   );
 
-  const runAt = new Date(); // §47 §6.1 — captured once; bound to every computed_at write
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0); // normalize to UTC midnight
+  // §47 §6.1 — DB clock, captured once; bound to every computed_at write.
+  // Also derive today as UTC midnight from the same DB clock so phase/urgency
+  // comparisons are consistent for the entire run (no Midnight Cross drift).
+  const { rows: [{ run_at: runAt, today }] } = await pool.query(
+    `SELECT NOW() AS run_at,
+            DATE_TRUNC('day', NOW() AT TIME ZONE 'UTC')::timestamptz AS today`,
+  );
 
   // ═══════════════════════════════════════════════════════════
   // Step 1: Load calibration data into nested Map
@@ -288,7 +292,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
           runAt, // §47 §6.1 — same timestamp for every row in this run
         );
       }
-      await client.query(
+      const insertResult = await client.query(
         `INSERT INTO trade_forecasts
            (permit_num, revision_num, trade_slug, predicted_start,
             confidence, urgency, target_window, calibration_method,
@@ -308,7 +312,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
            computed_at = EXCLUDED.computed_at`,
         params,
       );
-      upserted += currentBatch.length;
+      // §47 §6.3: use actual rowCount, not batch size. ON CONFLICT DO UPDATE
+      // returns rowCount for both INSERTs and UPDATEs; rows skipped by IS DISTINCT FROM
+      // guards elsewhere would return 0. Counting batch size was over-reporting.
+      upserted += insertResult.rowCount || 0;
     });
   };
 
@@ -555,7 +562,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       phase_calibration: ['from_phase', 'to_phase', 'permit_type', 'median_days', 'p25_days', 'p75_days', 'sample_size'],
     },
     {
-      trade_forecasts: ['permit_num', 'revision_num', 'trade_slug', 'predicted_start', 'confidence', 'urgency', 'calibration_method', 'sample_size', 'median_days', 'p25_days', 'p75_days'],
+      trade_forecasts: ['permit_num', 'revision_num', 'trade_slug', 'predicted_start', 'confidence', 'urgency', 'calibration_method', 'sample_size', 'median_days', 'p25_days', 'p75_days', 'computed_at'],
     },
   );
   }); // end withAdvisoryLock

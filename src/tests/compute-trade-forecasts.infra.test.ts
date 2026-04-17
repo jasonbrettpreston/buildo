@@ -218,11 +218,15 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
   it('§47 §6.1 — computed_at binds $N not NOW() (runAt snapshot, not per-row DB clock)', () => {
     // NOW() evaluates at INSERT time, so rows in a long streaming run get
     // different computed_at values. runAt is captured once at script startup
-    // and threaded as $N so every row in the run shares the same timestamp,
-    // enabling point-in-time queries and run-level observability histograms.
+    // via SELECT NOW() (DB clock) and threaded as $N so every row in the run
+    // shares the same timestamp, enabling point-in-time queries and run-level
+    // observability histograms. JS wall clock (new Date()) was replaced by DB
+    // clock to eliminate Midnight Cross drift across a long streaming run.
     expect(content).not.toMatch(/computed_at\s*=\s*NOW\(\)/);
     expect(content).toMatch(/computed_at\s*=\s*EXCLUDED\.computed_at/);
-    expect(content).toMatch(/const runAt\s*=\s*new Date\(\)/);
+    // runAt must come from DB clock (SELECT NOW()), NOT JS wall clock (new Date())
+    expect(content).not.toMatch(/const runAt\s*=\s*new Date\(\)/);
+    expect(content).toMatch(/SELECT NOW\(\) AS run_at/);
   });
 
   it('emits PIPELINE_SUMMARY with urgency distribution', () => {
