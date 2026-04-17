@@ -25,11 +25,15 @@ cd "$repo_root" || exit 2
 # ---------------------------------------------------------------------------
 amnesty_bare_mutation=""
 amnesty_sql_now=""
+amnesty_loop_query=""
+amnesty_push_in_stream=""
 if [ -f "scripts/amnesty.json" ]; then
   # Merge permanent + temporary entries: temporary entries are Phase B mop-up work items.
   # Remove temporary entries from amnesty.json as each violation is fixed in Phase B.
   amnesty_bare_mutation=$(node -e "const a=require('./scripts/amnesty.json');const r=a.rules['bare-mutation'];const all=[...(r.permanent||[]),...(r.temporary||[])];process.stdout.write(all.map(e=>e.file).join('\n'))" 2>/dev/null || true)
   amnesty_sql_now=$(node -e "const a=require('./scripts/amnesty.json');const r=a.rules['sql-now'];const all=[...(r.permanent||[]),...(r.temporary||[])];process.stdout.write(all.map(e=>e.file).join('\n'))" 2>/dev/null || true)
+  amnesty_loop_query=$(node -e "const a=require('./scripts/amnesty.json');const r=a.rules['loop-query'];const all=[...(r.permanent||[]),...(r.temporary||[])];process.stdout.write(all.map(e=>e.file).join('\n'))" 2>/dev/null || true)
+  amnesty_push_in_stream=$(node -e "const a=require('./scripts/amnesty.json');const r=a.rules['unbounded-push-in-stream'];const all=[...(r.permanent||[]),...(r.temporary||[])];process.stdout.write(all.map(e=>e.file).join('\n'))" 2>/dev/null || true)
 fi
 
 is_amnestied() {
@@ -182,11 +186,48 @@ while IFS= read -r f; do
 done < <(find scripts -maxdepth 1 -name '*.js' 2>/dev/null | sort || true)
 [ $sql_now -eq 1 ] && fail=1
 
+# ---------------------------------------------------------------------------
+# 10. loop-query: pool.query/client.query inside a loop (N+1 query risk).
+#     Uses AST-grep for accurate loop detection on scripts/*.js pipeline files.
+#     Exempt: scripts/amnesty.json rules['loop-query'].permanent + temporary
+# ---------------------------------------------------------------------------
+loop_query=0
+while IFS= read -r filepath; do
+  [ -z "$filepath" ] && continue
+  is_amnestied "$filepath" "$amnesty_loop_query" && continue
+  echo "footgun[loop-query]: $filepath has pool.query/client.query inside a for/forEach/.map loop (N+1 queries — O(rows) round-trips to PostgreSQL). Refactor to UNNEST-based batch INSERT/UPDATE outside the loop (§47 §7.6, Phase 7 B1). Add to scripts/amnesty.json only if the loop is bounded (config lookups ≤5 iterations, not row-level data)."
+  loop_query=1
+done < <(
+  npx ast-grep scan --rule scripts/ast-grep-rules/loop-query.yml scripts/ 2>/dev/null \
+  | grep '  --> scripts/' \
+  | sed 's/.*--> \(scripts\/[^:]*\):.*/\1/' \
+  | sort -u \
+  || true
+)
+[ $loop_query -eq 1 ] && fail=1
+
+# ---------------------------------------------------------------------------
+# 11. unbounded-push-in-stream: .push() inside for-await without a batch-flush
+#     guard (OOM risk). Informational only — does NOT set fail=1.
+#     Exempt: scripts/amnesty.json rules['unbounded-push-in-stream'].permanent + temporary
+# ---------------------------------------------------------------------------
+while IFS= read -r filepath; do
+  [ -z "$filepath" ] && continue
+  is_amnestied "$filepath" "$amnesty_push_in_stream" && continue
+  echo "footgun[unbounded-push-in-stream] (info): $filepath pushes into an array inside a for-await loop without a visible batch-flush guard. If the stream returns 100K+ rows, this array grows without bound and will OOM the process. Add: if (batch.length >= BATCH_SIZE) { await flush(batch); batch = []; } (§47 Phase 7 B4)."
+done < <(
+  npx ast-grep scan --rule scripts/ast-grep-rules/unbounded-push-in-stream.yml scripts/ 2>/dev/null \
+  | grep '  --> scripts/' \
+  | sed 's/.*--> \(scripts\/[^:]*\):.*/\1/' \
+  | sort -u \
+  || true
+)
+
 if [ $fail -ne 0 ]; then
   echo
   echo "❌ Footgun gate failed. See messages above. To suppress a single line, add \`// ast-grep-disable-next-line <rule-id>\` with a justification."
   exit 1
 fi
 
-echo "✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now)"
+echo "✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now, loop-query, unbounded-push-in-stream)"
 exit 0

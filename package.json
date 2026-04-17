@@ -38,6 +38,9 @@
     ],
     "src/lib/observability/**/*.{ts,tsx}": [
       "biome check --no-errors-on-unmatched"
+    ],
+    "src/app/api/**/*.ts": [
+      "biome check --no-errors-on-unmatched"
     ]
   },
   "dependencies": {
