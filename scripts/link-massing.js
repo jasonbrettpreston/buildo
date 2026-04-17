@@ -133,26 +133,24 @@ function gridNeighbourKeys(lat, lng) {
  * Flush accumulated INSERT params to DB within a transaction.
  * Returns the number of actual DB writes (rowCount from IS DISTINCT FROM).
  */
-async function flushInsertBatch(pool, insertParams, insertValues, RUN_AT) {
+async function flushInsertBatch(pool, insertParams, insertValues) {
   if (insertParams.length === 0) return 0;
-  // Append RUN_AT as last param; its index = insertValues.length + 1 (6 params per row)
-  const runAtIdx = insertValues.length + 1;
   let upserted = 0;
   await pipeline.withTransaction(pool, async (client) => {
     const result = await client.query(
-      `INSERT INTO parcel_buildings (parcel_id, building_id, is_primary, structure_type, match_type, confidence)
+      `INSERT INTO parcel_buildings (parcel_id, building_id, is_primary, structure_type, match_type, confidence, linked_at)
        VALUES ${insertParams.join(', ')}
        ON CONFLICT (parcel_id, building_id) DO UPDATE SET
          is_primary = EXCLUDED.is_primary,
          structure_type = EXCLUDED.structure_type,
          match_type = EXCLUDED.match_type,
          confidence = EXCLUDED.confidence,
-         linked_at = $${runAtIdx}::timestamptz
+         linked_at = EXCLUDED.linked_at
        WHERE parcel_buildings.is_primary IS DISTINCT FROM EXCLUDED.is_primary
          OR parcel_buildings.structure_type IS DISTINCT FROM EXCLUDED.structure_type
          OR parcel_buildings.match_type IS DISTINCT FROM EXCLUDED.match_type
          OR parcel_buildings.confidence IS DISTINCT FROM EXCLUDED.confidence`,
-      [...insertValues, RUN_AT]
+      insertValues
     );
     upserted = result.rowCount || 0;
   });
@@ -290,12 +288,12 @@ pipeline.run('link-massing', async (pool) => {
             }
             const isPrimary = structureType === 'primary';
 
-            insertParams.push(`($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`);
-            insertValues.push(parcelId, b.building_id, isPrimary, structureType, 'centroid_in_parcel', 0.90);
+            insertParams.push(`($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}::timestamptz)`);
+            insertValues.push(parcelId, b.building_id, isPrimary, structureType, 'centroid_in_parcel', 0.90, RUN_AT); // §47 §6.1 — linked_at on INSERT
           }
         }
 
-        buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues, RUN_AT);
+        buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
         containsMatches += matchResult.rows.length;
         parcelsLinked += byParcel.size;
       }
@@ -544,10 +542,11 @@ pipeline.run('link-massing', async (pool) => {
         const isPrimary = structureType === 'primary';
 
         insertParams.push(
-          `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`
+          `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}::timestamptz)`
         );
         insertValues.push(
-          parcel.id, mb.building_id, isPrimary, structureType, mb.match_type, mb.confidence
+          parcel.id, mb.building_id, isPrimary, structureType, mb.match_type, mb.confidence,
+          RUN_AT, // §47 §6.1 — linked_at on INSERT so first-time links are never NULL
         );
         buildingsMatched++;
       }
@@ -557,7 +556,7 @@ pipeline.run('link-massing', async (pool) => {
 
       // §9.2 safeguard: flush if approaching PG 65,535 param limit
       if (insertValues.length >= PARAM_FLUSH_THRESHOLD) {
-        buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues, RUN_AT);
+        buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
         parcelsLinked += batchParcelsCount;
         insertParams = [];
         insertValues = [];
@@ -568,7 +567,7 @@ pipeline.run('link-massing', async (pool) => {
 
     // Flush remaining batch
     if (insertParams.length > 0) {
-      buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues, RUN_AT);
+      buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
       parcelsLinked += batchParcelsCount;
     }
 
