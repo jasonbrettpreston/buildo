@@ -397,11 +397,12 @@ pipeline.run('link-parcels', async (pool) => {
         else if (match.match_type === 'name_only') linkedName++;
 
         insertParams.push(
-          `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`
+          `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}::timestamptz)`
         );
         insertValues.push(
           permit.permit_num, permit.revision_num,
-          match.parcel_id, match.match_type, match.confidence
+          match.parcel_id, match.match_type, match.confidence,
+          RUN_AT, // §47 §6.1 — linked_at set on INSERT so first-time links are never NULL
         );
       } else {
         noMatch++;
@@ -413,18 +414,16 @@ pipeline.run('link-parcels', async (pool) => {
     // Batch insert within a transaction — IS DISTINCT FROM prevents dead tuple bloat (§9.3)
     if (insertParams.length > 0) {
       await pipeline.withTransaction(pool, async (client) => {
-        // Append RUN_AT as last param; its index = insertValues.length + 1 (5 params per row)
-        const runAtIdx = insertValues.length + 1;
         const result = await client.query(
-          `INSERT INTO permit_parcels (permit_num, revision_num, parcel_id, match_type, confidence)
+          `INSERT INTO permit_parcels (permit_num, revision_num, parcel_id, match_type, confidence, linked_at)
            VALUES ${insertParams.join(', ')}
            ON CONFLICT (permit_num, revision_num, parcel_id) DO UPDATE SET
              match_type = EXCLUDED.match_type,
              confidence = EXCLUDED.confidence,
-             linked_at = $${runAtIdx}::timestamptz
+             linked_at = EXCLUDED.linked_at
            WHERE permit_parcels.match_type IS DISTINCT FROM EXCLUDED.match_type
               OR permit_parcels.confidence IS DISTINCT FROM EXCLUDED.confidence`,
-          [...insertValues, RUN_AT]
+          insertValues
         );
         dbUpserted += result.rowCount || 0;
       });
