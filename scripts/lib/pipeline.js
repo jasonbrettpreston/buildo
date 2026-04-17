@@ -652,6 +652,29 @@ async function* streamQuery(pool, sql, params = [], options = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// DB Timestamp — spec 47 §15 (single-capture RUN_AT pattern)
+// ---------------------------------------------------------------------------
+
+/**
+ * Capture the current DB clock as a single timestamp for use as RUN_AT.
+ *
+ * Call ONCE at the top of the withAdvisoryLock callback, before any loop or batch logic.
+ * Pass the result as a $N parameter to all SQL writes that set a timestamp column.
+ *
+ * Never call inside a loop — that would defeat the single-capture guarantee and
+ * re-introduce Midnight Cross drift where batch rows processed early vs. late in
+ * a long run get different timestamps.
+ *
+ * @param {import('pg').Pool} pool
+ * @returns {Promise<Date>}
+ */
+async function getDbTimestamp(pool) {
+  const { rows: [{ now }] } = await pool.query('SELECT NOW() AS now');
+  return now;
+}
+
+// ---------------------------------------------------------------------------
 // Advisory Lock Lifecycle — spec 47 §5 (dedicated client pattern)
 // ---------------------------------------------------------------------------
 
@@ -764,6 +787,7 @@ module.exports = {
   log,
   withTransaction,
   withAdvisoryLock,
+  getDbTimestamp,
   track,
   getTracked,
   emitSummary,
