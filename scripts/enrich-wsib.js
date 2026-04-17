@@ -21,6 +21,7 @@
  * SPEC LINK: docs/specs/pipeline/46_wsib_enrichment.md
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 
 const ADVISORY_LOCK_ID = 46;
 
@@ -28,7 +29,7 @@ const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 const SERPER_URL = 'https://google.serper.dev/search';
 const SLUG = 'enrich_wsib_registry';
 const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
-const RATE_LIMIT_MS = parseInt(process.env.ENRICH_RATE_MS || '200', 10);
+const RATE_LIMIT_MS = safeParsePositiveInt(process.env.ENRICH_RATE_MS || '200', 'ENRICH_RATE_MS');
 
 // ---------------------------------------------------------------------------
 // Contact extraction (shared with enrich-web-search.js)
@@ -472,8 +473,8 @@ pipeline.run('enrich-wsib', async (pool) => {
   const dryRun = args.includes('--dry-run');
   const limitIdx = args.indexOf('--limit');
   const limit = limitIdx !== -1 && args[limitIdx + 1]
-    ? parseInt(args[limitIdx + 1], 10)
-    : parseInt(process.env.ENRICH_LIMIT || '50', 10);
+    ? safeParsePositiveInt(args[limitIdx + 1], 'limit')
+    : safeParsePositiveInt(process.env.ENRICH_LIMIT || '50', 'ENRICH_LIMIT');
 
   if (!SERPER_API_KEY) {
     pipeline.log.info('[enrich-wsib]', 'SERPER_API_KEY not set — skipping WSIB enrichment');
@@ -524,7 +525,7 @@ pipeline.run('enrich-wsib', async (pool) => {
       AND (trade_name IS NOT NULL OR legal_name IS NOT NULL)
       ${naicsFilter}
   `, NAICS_WHITELIST);
-  const totalEntries = Math.min(parseInt(countResult.rows[0].cnt, 10), limit);
+  const totalEntries = Math.min(safeParsePositiveInt(countResult.rows[0].cnt, 'cnt'), limit);
 
   pipeline.log.info('[enrich-wsib]', `Found ${totalEntries} unenriched WSIB entries`);
   if (totalEntries === 0) {

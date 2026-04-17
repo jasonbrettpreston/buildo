@@ -13,6 +13,7 @@
  *   node scripts/classify-permits.js --full     # re-classify all permits
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 
 const ADVISORY_LOCK_ID = 88;
 
@@ -108,7 +109,7 @@ function calculateLeadScore(permit, match, phase, runAt) {
   let score = statusBaseScore(permit.status);
 
   // Cost boost (0-15)
-  const cost = parseFloat(permit.est_const_cost) || 0;
+  const cost = permit.est_const_cost != null ? safeParseFloat(permit.est_const_cost, 'est_const_cost') : 0;
   if (cost >= 5000000) score += 15;
   else if (cost >= 1000000) score += 12;
   else if (cost >= 500000) score += 10;
@@ -538,14 +539,14 @@ pipeline.run('classify-permits', async (pool) => {
   const countResult = await pool.query(
     `SELECT COUNT(*) as total FROM permits p ${whereClause}`
   );
-  const totalPermits = parseInt(countResult.rows[0].total, 10);
+  const totalPermits = safeParsePositiveInt(countResult.rows[0].total, 'total');
   pipeline.log.info('[classify-permits]', `Mode: ${fullMode ? 'FULL' : 'INCREMENTAL'}, permits to classify: ${totalPermits.toLocaleString()}`);
 
   // Count truly new permits (never classified before) for accurate reporting
   const newCountResult = await pool.query(
     `SELECT COUNT(*) as cnt FROM permits WHERE trade_classified_at IS NULL`
   );
-  const trulyNewPermits = parseInt(newCountResult.rows[0].cnt, 10);
+  const trulyNewPermits = safeParsePositiveInt(newCountResult.rows[0].cnt, 'cnt');
 
   let processed = 0;
   let totalMatches = 0;
@@ -755,8 +756,8 @@ pipeline.run('classify-permits', async (pool) => {
        (SELECT COUNT(DISTINCT (permit_num, revision_num)) FROM permit_trades) AS classified,
        (SELECT COUNT(*) FROM permits) AS total`
   );
-  const cumulativeClassified = parseInt(cumulativeResult.rows[0].classified, 10);
-  const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
+  const cumulativeClassified = safeParsePositiveInt(cumulativeResult.rows[0].classified, 'classified');
+  const cumulativeTotal = safeParsePositiveInt(cumulativeResult.rows[0].total, 'total');
   const classificationCoverage = cumulativeTotal > 0 ? (cumulativeClassified / cumulativeTotal) * 100 : 0;
   const avgTradesPerPermit = totalMatches / Math.max(permitsWithTrades, 1);
   const classifyHasWarns = classificationCoverage < 95;
@@ -777,7 +778,7 @@ pipeline.run('classify-permits', async (pool) => {
       permits_processed: processed,
       permits_with_trades: permitsWithTrades,
       total_trade_matches: totalMatches,
-      avg_trades_per_permit: parseFloat(avgTradesPerPermit.toFixed(2)),
+      avg_trades_per_permit: safeParseFloat(avgTradesPerPermit.toFixed(2), 'avg_trades_per_permit'),
       db_updated: dbUpdated,
       audit_table: {
         phase: 11,

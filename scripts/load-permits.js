@@ -18,6 +18,7 @@
  */
 const pipeline = require('./lib/pipeline');
 const { normalizeStreetName } = require('./lib/address');
+const { safeParseIntOrNull } = require('./lib/safe-math');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -118,14 +119,14 @@ function mapRecord(raw) {
     est_const_cost: cleanCost(raw.EST_CONST_COST),
     builder_name: raw.BUILDER_NAME || null,
     owner: raw.OWNER || null,
-    dwelling_units_created: parseInt(raw.DWELLING_UNITS_CREATED, 10) || 0,
-    dwelling_units_lost: parseInt(raw.DWELLING_UNITS_LOST, 10) || 0,
+    dwelling_units_created: safeParseIntOrNull(raw.DWELLING_UNITS_CREATED) ?? 0,
+    dwelling_units_lost: safeParseIntOrNull(raw.DWELLING_UNITS_LOST) ?? 0,
     ward: extractWard(raw),
     council_district: raw.COUNCIL_DISTRICT || null,
     current_use: raw.CURRENT_USE || null,
     proposed_use: raw.PROPOSED_USE || null,
-    housing_units: parseInt(raw.HOUSING_UNITS, 10) || 0,
-    storeys: parseInt(raw.STOREYS, 10) || 0,
+    housing_units: safeParseIntOrNull(raw.HOUSING_UNITS) ?? 0,
+    storeys: safeParseIntOrNull(raw.STOREYS) ?? 0,
   };
   // Hash the mapped fields only — excludes raw_json, data_hash, and _ckan_id
   mapped.data_hash = computeHash(mapped);

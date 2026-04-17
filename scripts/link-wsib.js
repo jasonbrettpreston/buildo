@@ -20,6 +20,7 @@
 const pipeline = require('./lib/pipeline');
 const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 
 const LOGIC_VARS_SCHEMA = z.object({
   wsib_fuzzy_match_threshold: z.number().finite().positive().max(1),
@@ -44,7 +45,7 @@ pipeline.run('link-wsib', async (pool) => {
   const beforeResult = await pool.query(
     `SELECT COUNT(*) as total FROM wsib_registry WHERE linked_entity_id IS NULL`
   );
-  const totalUnlinked = parseInt(beforeResult.rows[0].total, 10);
+  const totalUnlinked = safeParsePositiveInt(beforeResult.rows[0].total, 'total');
   pipeline.log.info('[link-wsib]', `Unlinked WSIB entries: ${totalUnlinked.toLocaleString()}`);
 
   if (totalUnlinked === 0) {
@@ -182,7 +183,7 @@ pipeline.run('link-wsib', async (pool) => {
       tier3Params
     );
     await pool.query('RESET pg_trgm.similarity_threshold');
-    tier3 = parseInt(dr3.rows[0].cnt, 10);
+    tier3 = safeParsePositiveInt(dr3.rows[0].cnt, 'cnt');
     pipeline.log.info('[link-wsib]', `Tier 3 (simulated): ${tier3.toLocaleString()} matches`);
   } else {
     await pipeline.withTransaction(pool, async (client) => {
@@ -336,8 +337,8 @@ pipeline.run('link-wsib', async (pool) => {
   // Build audit_table for WSIB matching observability
   // Cumulative link rate from the stats query above — run-specific rate is misleading
   // because most WSIB entries (121K) have no matching entity in our 3.7K builder pool.
-  const cumulativeTotal = parseInt(s.total, 10);
-  const cumulativeLinked = parseInt(s.linked, 10);
+  const cumulativeTotal = safeParsePositiveInt(s.total, 'total');
+  const cumulativeLinked = safeParsePositiveInt(s.linked, 'linked');
   const linkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
   const wsibAuditRows = [
     { metric: 'unlinked_start', value: totalUnlinked, threshold: null, status: 'INFO' },

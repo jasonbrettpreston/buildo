@@ -18,6 +18,7 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 
 const ADVISORY_LOCK_ID = 92;
 
@@ -88,7 +89,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
          OR pa.geometry IS NOT NULL
        )`
   );
-  const totalPermits = parseInt(countResult.rows[0].total, 10);
+  const totalPermits = safeParsePositiveInt(countResult.rows[0].total, 'total');
   pipeline.log.info('[link-neighbourhoods]', `Permits to link: ${totalPermits.toLocaleString()}`);
 
   if (totalPermits === 0) {
@@ -218,8 +219,8 @@ pipeline.run('link-neighbourhoods', async (pool) => {
       let lng, lat;
 
       if (permit.latitude && permit.longitude) {
-        lng = parseFloat(permit.longitude);
-        lat = parseFloat(permit.latitude);
+        lng = safeParseFloat(permit.longitude, 'longitude');
+        lat = safeParseFloat(permit.latitude, 'latitude');
       } else if (permit.parcel_geometry) {
         let geom;
         try {
@@ -300,7 +301,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
            FROM (SELECT unnest($2::text[]) AS pn, unnest($3::text[]) AS rn) v
            WHERE p.permit_num = v.pn AND p.revision_num = v.rn
              AND p.neighbourhood_id IS DISTINCT FROM $1`,
-          [parseInt(dbId, 10), permitNums, revisionNums]
+          [safeParsePositiveInt(dbId, 'neighbourhood_id'), permitNums, revisionNums]
         );
       }
     });
@@ -325,8 +326,8 @@ pipeline.run('link-neighbourhoods', async (pool) => {
        (SELECT COUNT(*) FROM permits WHERE neighbourhood_id IS NOT NULL AND neighbourhood_id != -1) AS linked,
        (SELECT COUNT(*) FROM permits) AS total`
   );
-  const cumulativeLinked = parseInt(cumulativeResult.rows[0].linked, 10);
-  const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
+  const cumulativeLinked = safeParsePositiveInt(cumulativeResult.rows[0].linked, 'linked');
+  const cumulativeTotal = safeParsePositiveInt(cumulativeResult.rows[0].total, 'total');
   const nhoodLinkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
   const nhoodCount = nhoods.rows.length;
   const nhoodAuditRows = [
