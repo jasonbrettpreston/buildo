@@ -24,7 +24,7 @@ const ADVISORY_LOCK_ID = 89;
 
 pipeline.run('classify-permit-phase', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const RUN_AT = await pipeline.getDbTimestamp(pool);
     const startTime = Date.now();
 
   // Count the eligible pool BEFORE updating (for records_total).
@@ -42,19 +42,20 @@ pipeline.run('classify-permit-phase', async (pool) => {
 
   // Reclassify: permits with status = 'Inspection' but no issued_date
   // are in the city examination phase, not active construction inspection.
-  // Single UPDATE is inherently atomic — no transaction wrapper needed.
-  const examResult = await pool.query(
-    `UPDATE permits
-     SET enriched_status = 'Examination',
-         last_seen_at = $1::timestamptz
-     WHERE status = 'Inspection'
-       AND revision_num = '00'
-       AND (issued_date IS NULL OR issued_date < '1970-01-02')
-       AND enriched_status IS DISTINCT FROM 'Examination'
-     RETURNING permit_num`,
-    [RUN_AT]
-  );
-  const examCount = examResult.rows.length;
+  const { examCount } = await pipeline.withTransaction(pool, async (client) => {
+    const examResult = await client.query(
+      `UPDATE permits
+       SET enriched_status = 'Examination',
+           last_seen_at = $1::timestamptz
+       WHERE status = 'Inspection'
+         AND revision_num = '00'
+         AND (issued_date IS NULL OR issued_date < '1970-01-02')
+         AND enriched_status IS DISTINCT FROM 'Examination'
+       RETURNING permit_num`,
+      [RUN_AT]
+    );
+    return { examCount: examResult.rows.length };
+  });
   pipeline.log.info('[classify-phase]', `Examination: ${examCount.toLocaleString()} permits reclassified`);
 
   // Cumulative counts — denominator scoped to status = 'Inspection' AND revision_num = '00'
