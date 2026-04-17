@@ -17,6 +17,7 @@
  *   node scripts/classify-scope.js --full     # re-classify all permits
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt, safeParseIntOrNull } = require('./lib/safe-math');
 
 const ADVISORY_LOCK_ID = 87;
 
