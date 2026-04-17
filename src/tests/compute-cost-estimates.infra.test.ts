@@ -194,13 +194,20 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     expect(content).toMatch(/Config validation failed/i);
   });
 
-  it('SOURCE_SQL includes permit_trades LATERAL JOIN for active_trade_slugs (spec 83 §7)', () => {
+  it('SOURCE_SQL uses ALL classified trades (no is_active filter) for cost distribution (spec 83 §7, WF3-L2)', () => {
+    // Cost estimation must distribute total project cost across all classified trades,
+    // regardless of construction phase. The is_active flag is for lead scoring
+    // (phase-relevance for tradespeople) not for cost valuation.
+    // Alteration permits with interior-only trades (drywall, electrical, hvac) are
+    // classified as early_construction phase — filtering to is_active=true would
+    // exclude all their trades and silently discard declared costs up to $1.7M.
     expect(content).toMatch(/permit_trades/);
-    // Joins trades to resolve slug (permit_trades has trade_id FK, not trade_slug column)
+    // Joins trades to resolve slug (permit_trades has trade_id FK, not slug column)
     expect(content).toMatch(/ARRAY_AGG\(t\.slug\)/i);
     expect(content).toMatch(/active_trade_slugs/);
-    // Filters to is_active = true (the "active" in active_trade_slugs)
-    expect(content).toMatch(/is_active\s*=\s*true/);
+    // is_active filter MUST NOT appear in the cost estimation JOIN — phase gate
+    // belongs in lead scoring (get-lead-feed.ts), not in cost distribution
+    expect(content).not.toMatch(/pt2\.is_active\s*=\s*true/);
   });
 
   it('COALESCE prevents NULL active_trade_slugs (spec 83 §7)', () => {

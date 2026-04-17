@@ -207,7 +207,7 @@ Final audit against city `est_const_cost`:
 | Table | Required Fields |
 | :--- | :--- |
 | `permits` | `permit_num`, `revision_num`, `est_const_cost`, `scope_tags`, `project_type`. |
-| `permit_trades` | `trade_id`, `trade_slug` (Joined to filter active scope). |
+| `permit_trades` | `trade_id`, `trade_slug` (ALL classified trades joined — no `is_active` filter; phase relevance is a lead-scoring concern, not a cost-distribution concern). |
 | `permit_parcels` | `neighbourhood_id` (To route the geographic premium). |
 | `neighbourhoods` | `avg_household_income` (Joined via permit_parcels to determine the premium tier). |
 | `cost_estimates` | `effective_area_sqm`, `trade_contract_values` (JSONB), `is_geometric_override`. |

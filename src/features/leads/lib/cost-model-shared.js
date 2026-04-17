@@ -23,7 +23,10 @@
 /**
  * Flat permit row as returned by the pipeline SOURCE_SQL JOIN.
  * The `active_trade_slugs` array comes from the permit_trades LATERAL JOIN
- * (ARRAY_AGG). An empty array means no classified trades — Zero-Total Bypass.
+ * (ARRAY_AGG). Contains ALL classified trades regardless of construction phase —
+ * the is_active phase filter is intentionally excluded here so alteration permits
+ * with interior-only scope are not zero-bypassed. An empty array (no classified
+ * trades at all) still triggers Zero-Total Bypass.
  *
  * @typedef {Object} PermitRow
  * @property {string}        permit_num
@@ -40,7 +43,7 @@
  * @property {number|null}   tenure_renter_pct
  * @property {number|null}   avg_household_income
  * @property {number|null}   dwelling_units_created
- * @property {string[]}      active_trade_slugs  — from permit_trades LATERAL JOIN
+ * @property {string[]}      active_trade_slugs  — all classified trades from permit_trades LATERAL JOIN (phase-agnostic for cost distribution)
  */
 
 /**

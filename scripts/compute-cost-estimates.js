@@ -93,7 +93,10 @@ const SOURCE_SQL = `
     FROM permit_trades pt2
     JOIN trades t ON t.id = pt2.trade_id
     WHERE pt2.permit_num = p.permit_num AND pt2.revision_num = p.revision_num
-      AND pt2.is_active = true
+    -- All classified trades included regardless of construction phase.
+    -- is_active filters for lead-scoring (phase relevance for tradespeople);
+    -- cost distribution requires the full classified trade set so declared
+    -- costs on alteration permits are not silently discarded. (WF3-L2)
   ) pt ON true
 `;
 
