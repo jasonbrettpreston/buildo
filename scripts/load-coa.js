@@ -190,25 +190,27 @@ function mapRecord(raw, schemaDrift) {
   const applicant = trimToNull(raw.CONTACT_NAME);
   const subType = trimToNull(raw.SUB_TYPE);
 
-  return {
-    record: {
-      application_number: appNum,
-      address,
-      street_num: streetNum,
-      street_name: fullStreetName,
-      street_name_normalized: normalizeStreetName(fullStreetName),
-      ward,
-      status,
-      decision,
-      decision_date: decisionDate,
-      hearing_date: hearingDate,
-      description,
-      applicant,
-      sub_type: subType,
-      data_hash: computeHash(raw),
-    },
-    skipReason: null,
+  // Build record first, then hash its own mapped fields — NOT the raw CKAN object.
+  // Raw CKAN records include _id, _full_text, rank which change between fetches
+  // and cause phantom updates even when the actual data is identical.
+  const record = {
+    application_number: appNum,
+    address,
+    street_num: streetNum,
+    street_name: fullStreetName,
+    street_name_normalized: normalizeStreetName(fullStreetName),
+    ward,
+    status,
+    decision,
+    decision_date: decisionDate,
+    hearing_date: hearingDate,
+    description,
+    applicant,
+    sub_type: subType,
   };
+  record.data_hash = computeHash(record);
+
+  return { record, skipReason: null };
 }
 
 async function upsertBatch(client, batch, RUN_AT) {
@@ -379,6 +381,27 @@ pipeline.run('load-coa', async (pool) => {
     totalInserted += inserted;
     totalUpdated += updated;
     pipeline.progress('load-coa', Math.min(i + BATCH_SIZE, deduplicated.length), deduplicated.length, startMs);
+  }
+
+  // Touch last_seen_at for ALL records seen this run — even unchanged ones.
+  // The IS DISTINCT FROM guard in upsertBatch correctly prevents phantom writes
+  // for content fields, but it also blocks last_seen_at updates for stable records,
+  // causing false staleness positives in downstream assert-coa-freshness checks.
+  // This bulk UPDATE is a no-op for records already touched by the upsert.
+  if (deduplicated.length > 0) {
+    const allAppNums = deduplicated.map((r) => r.application_number);
+    // Process in BATCH_SIZE slices to stay within PG param limit
+    for (let i = 0; i < allAppNums.length; i += BATCH_SIZE) {
+      const slice = allAppNums.slice(i, i + BATCH_SIZE);
+      await pool.query(
+        `UPDATE coa_applications
+            SET last_seen_at = $1::timestamptz
+          WHERE application_number = ANY($2)
+            AND last_seen_at IS DISTINCT FROM $1::timestamptz`,
+        [RUN_AT, slice],
+      );
+    }
+    pipeline.log.info('[load-coa]', `last_seen_at refreshed for ${allAppNums.length} records`);
   }
 
   // Portal rot detection: how stale is the most recent hearing?
