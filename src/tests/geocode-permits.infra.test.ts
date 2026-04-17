@@ -12,7 +12,7 @@ const { geocodePermits } = require('../../scripts/geocode-permits.js') as {
 
 // ── Mock helpers ─────────────────────────────────────────────────────────────
 
-const STAT_ROW = { total: '100', already_geocoded: '80', has_geo_id: '95', to_geocode: '15', geocoded: '95', has_geo_id_no_match: '5', no_geo_id: '5' };
+const STAT_ROW = { count: '100', total: '100', already_geocoded: '80', has_geo_id: '95', to_geocode: '15', geocoded: '95', has_geo_id_no_match: '5', no_geo_id: '5' };
 
 function makePool(opts?: { throwOnUpdateCall?: number }) {
   let updateCallCount = 0;

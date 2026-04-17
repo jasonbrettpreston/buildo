@@ -21,6 +21,7 @@
  * comment "Single UPDATE is inherently atomic" was wrong — there are two.
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 
 /**
  * Core geocoding logic. Accepts an optional withTransaction override for
@@ -51,15 +52,15 @@ async function geocodePermits(pool, opts) {
   `);
   const before = beforeCounts.rows[0];
   pipeline.log.info('[geocode-permits]', 'Before', {
-    total: parseInt(before.total),
-    already_geocoded: parseInt(before.already_geocoded),
-    has_geo_id: parseInt(before.has_geo_id),
-    to_geocode: parseInt(before.to_geocode),
+    total: safeParsePositiveInt(before.total, 'total'),
+    already_geocoded: safeParsePositiveInt(before.already_geocoded, 'already_geocoded'),
+    has_geo_id: safeParsePositiveInt(before.has_geo_id, 'has_geo_id'),
+    to_geocode: safeParsePositiveInt(before.to_geocode, 'to_geocode'),
   });
 
   // Count address points available
   const apCount = await pool.query('SELECT COUNT(*) as count FROM address_points');
-  pipeline.log.info('[geocode-permits]', `Address points loaded: ${parseInt(apCount.rows[0].count).toLocaleString()}`);
+  pipeline.log.info('[geocode-permits]', `Address points loaded: ${safeParsePositiveInt(apCount.rows[0].count, 'count').toLocaleString()}`);
 
   // Both UPDATEs share a single transaction: if the zombie cleanup fails,
   // the main geocode is rolled back so the permits table is never left in
@@ -123,35 +124,35 @@ async function geocodePermits(pool, opts) {
 
   pipeline.log.info('[geocode-permits]', 'Geocoding complete', {
     updated,
-    total_geocoded: parseInt(after.geocoded),
-    has_geo_id_no_match: parseInt(after.has_geo_id_no_match),
-    no_geo_id: parseInt(after.no_geo_id),
+    total_geocoded: safeParsePositiveInt(after.geocoded, 'geocoded'),
+    has_geo_id_no_match: safeParsePositiveInt(after.has_geo_id_no_match, 'has_geo_id_no_match'),
+    no_geo_id: safeParsePositiveInt(after.no_geo_id, 'no_geo_id'),
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
   // Build audit_table for geocoding observability
-  const totalPermits = parseInt(after.total);
-  const totalGeocoded = parseInt(after.geocoded);
+  const totalPermits = safeParsePositiveInt(after.total, 'total');
+  const totalGeocoded = safeParsePositiveInt(after.geocoded, 'geocoded');
   const geocodeCoverage = totalPermits > 0 ? (totalGeocoded / totalPermits) * 100 : 0;
   const geocodeAuditRows = [
     { metric: 'total_permits', value: totalPermits, threshold: null, status: 'INFO' },
-    { metric: 'already_geocoded', value: parseInt(before.already_geocoded), threshold: null, status: 'INFO' },
+    { metric: 'already_geocoded', value: safeParsePositiveInt(before.already_geocoded, 'already_geocoded'), threshold: null, status: 'INFO' },
     { metric: 'newly_geocoded', value: updated, threshold: null, status: 'INFO' },
     { metric: 'total_geocoded', value: totalGeocoded, threshold: null, status: 'INFO' },
     { metric: 'geocode_coverage', value: geocodeCoverage.toFixed(1) + '%', threshold: '>= 95%', status: geocodeCoverage >= 95 ? 'PASS' : 'WARN' },
-    { metric: 'no_geo_id', value: parseInt(after.no_geo_id), threshold: null, status: 'INFO' },
+    { metric: 'no_geo_id', value: safeParsePositiveInt(after.no_geo_id, 'no_geo_id'), threshold: null, status: 'INFO' },
   ];
 
   pipeline.emitSummary({
-    records_total: parseInt(before.to_geocode),
+    records_total: safeParsePositiveInt(before.to_geocode, 'to_geocode'),
     records_new: 0,
     records_updated: updated + zombiesCleaned,
     records_meta: {
       duration_ms: durationMs,
       permits_total: totalPermits,
       total_geocoded: totalGeocoded,
-      has_geo_id_no_match: parseInt(after.has_geo_id_no_match),
-      no_geo_id: parseInt(after.no_geo_id),
+      has_geo_id_no_match: safeParsePositiveInt(after.has_geo_id_no_match, 'has_geo_id_no_match'),
+      no_geo_id: safeParsePositiveInt(after.no_geo_id, 'no_geo_id'),
       zombies_cleaned: zombiesCleaned,
       audit_table: {
         phase: (process.env.PIPELINE_CHAIN === 'sources') ? 3 : 6,

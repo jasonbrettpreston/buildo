@@ -5,6 +5,7 @@
 
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 const TAG = '[refresh-snapshot]';
 
@@ -177,8 +178,8 @@ pipeline.run('refresh-snapshot', async (pool) => {
   }
 
   // Extract results — declared in outer scope so pipeline.withTransaction can access them
-  const total_permits = parseInt(permitsRes.rows[0].total);
-  const active_permits = parseInt(permitsRes.rows[0].active);
+  const total_permits = safeParsePositiveInt(permitsRes.rows[0].total, 'total');
+  const active_permits = safeParsePositiveInt(permitsRes.rows[0].active, 'active');
   pipeline.log.info(TAG, `Permits: ${total_permits} total, ${active_permits} active`);
 
   const t = tradesRes.rows[0];
@@ -188,18 +189,18 @@ pipeline.run('refresh-snapshot', async (pool) => {
 
   const p = parcelsRes.rows[0];
 
-  const neighbourhood_count = parseInt(nhoodRes.rows[0].count);
+  const neighbourhood_count = safeParsePositiveInt(nhoodRes.rows[0].count, 'count');
   pipeline.log.info(TAG, `Neighbourhoods (active): ${neighbourhood_count} / ${active_permits} = ${active_permits > 0 ? (neighbourhood_count/active_permits*100).toFixed(1) : '0.0'}%`);
 
   const c = coaRes.rows[0];
-  const coaTotal = parseInt(c.total);
-  pipeline.log.info(TAG, `CoA: ${c.total} total, ${c.linked} linked = ${coaTotal > 0 ? (parseInt(c.linked)/coaTotal*100).toFixed(1) : '0.0'}%`);
+  const coaTotal = safeParsePositiveInt(c.total, 'total');
+  pipeline.log.info(TAG, `CoA: ${c.total} total, ${c.linked} linked = ${coaTotal > 0 ? (safeParsePositiveInt(c.linked, 'linked')/coaTotal*100).toFixed(1) : '0.0'}%`);
 
   const breakdown = {};
-  for (const r of scopeBreakdownRes.rows) breakdown[r.tag] = parseInt(r.count);
+  for (const r of scopeBreakdownRes.rows) breakdown[r.tag] = safeParsePositiveInt(r.count, 'count');
 
   const tagsTop = {};
-  for (const r of topTagsRes.rows) tagsTop[r.tag] = parseInt(r.count);
+  for (const r of topTagsRes.rows) tagsTop[r.tag] = safeParsePositiveInt(r.count, 'count');
   pipeline.log.info(TAG, `Scope tags: ${scopeTagsRes.rows[0].count} total, ${detailedTagsRes.rows[0].count} detailed`);
   pipeline.log.info(TAG, `Top tags: ${Object.entries(tagsTop).slice(0,5).map(([k,v])=>k+':'+v).join(', ')}`);
 
@@ -207,7 +208,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
   pipeline.log.info(TAG, `Nulls: desc=${n.null_description}, builder=${n.null_builder_name}, cost=${n.null_est_const_cost}`);
 
   const v = violationsRes.rows[0];
-  const violations_total = parseInt(v.cost_oor) + parseInt(v.future_issued) + parseInt(v.missing_status);
+  const violations_total = safeParsePositiveInt(v.cost_oor, 'cost_oor') + safeParsePositiveInt(v.future_issued, 'future_issued') + safeParsePositiveInt(v.missing_status, 'missing_status');
   pipeline.log.info(TAG, `Violations: cost_oor=${v.cost_oor}, future_issued=${v.future_issued}, missing_status=${v.missing_status}, total=${violations_total}`);
 
   // Optional queries: on failure, carry forward previous snapshot values
@@ -231,7 +232,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
       `SELECT (SELECT COUNT(*) FROM building_footprints) as footprints_total,
               (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings) as parcels_with_buildings`
     );
-    massing = { footprints_total: parseInt(m.rows[0].footprints_total), parcels_with_buildings: parseInt(m.rows[0].parcels_with_buildings) };
+    massing = { footprints_total: safeParsePositiveInt(m.rows[0].footprints_total, 'footprints_total'), parcels_with_buildings: safeParsePositiveInt(m.rows[0].parcels_with_buildings, 'parcels_with_buildings') };
   } catch (err) {
     pipeline.log.warn(TAG, `Massing query failed — carrying forward previous snapshot: ${err.message}`);
     const prev = await getPrevSnapshot();
@@ -248,7 +249,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
          AND table_name IN ('permits', 'builders', 'coa_applications', 'parcels', 'permit_trades', 'permit_parcels')
        GROUP BY table_name ORDER BY table_name`
     );
-    for (const row of schemaCols.rows) schemaColumnCounts[row.table_name] = parseInt(row.col_count);
+    for (const row of schemaCols.rows) schemaColumnCounts[row.table_name] = safeParsePositiveInt(row.col_count, 'col_count');
   } catch (err) {
     pipeline.log.warn(TAG, `Schema column count query failed — carrying forward: ${err.message}`);
     const prev = await getPrevSnapshot();
@@ -261,7 +262,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
     const sla = await pool.query(
       `SELECT EXTRACT(EPOCH FROM (NOW() - MAX(first_seen_at))) / 3600 as hours FROM permits`
     );
-    slaHours = sla.rows[0]?.hours ? Math.round(parseFloat(sla.rows[0].hours) * 100) / 100 : null;
+    slaHours = sla.rows[0]?.hours ? Math.round(safeParseFloat(sla.rows[0].hours, 'hours') * 100) / 100 : null;
   } catch (err) {
     pipeline.log.warn(TAG, `SLA query failed — carrying forward: ${err.message}`);
     const prev = await getPrevSnapshot();
@@ -282,11 +283,11 @@ pipeline.run('refresh-snapshot', async (pool) => {
     );
     const ir = inspResult.rows[0];
     insp = {
-      total: parseInt(ir.total),
-      permits_scraped: parseInt(ir.permits_scraped),
-      outstanding: parseInt(ir.outstanding),
-      passed: parseInt(ir.passed),
-      not_passed: parseInt(ir.not_passed),
+      total: safeParsePositiveInt(ir.total, 'total'),
+      permits_scraped: safeParsePositiveInt(ir.permits_scraped, 'permits_scraped'),
+      outstanding: safeParsePositiveInt(ir.outstanding, 'outstanding'),
+      passed: safeParsePositiveInt(ir.passed, 'passed'),
+      not_passed: safeParsePositiveInt(ir.not_passed, 'not_passed'),
     };
     pipeline.log.info(TAG, `Inspections: ${insp.total} stages, ${insp.permits_scraped} permits, ${insp.outstanding} outstanding, ${insp.passed} passed, ${insp.not_passed} not passed`);
   } catch (err) {
@@ -313,10 +314,10 @@ pipeline.run('refresh-snapshot', async (pool) => {
     );
     const cr = costRes.rows[0];
     costEst = {
-      total: parseInt(cr.total),
-      from_permit: parseInt(cr.from_permit),
-      from_model: parseInt(cr.from_model),
-      null_cost: parseInt(cr.null_cost),
+      total: safeParsePositiveInt(cr.total, 'total'),
+      from_permit: safeParsePositiveInt(cr.from_permit, 'from_permit'),
+      from_model: safeParsePositiveInt(cr.from_model, 'from_model'),
+      null_cost: safeParsePositiveInt(cr.null_cost, 'null_cost'),
     };
     pipeline.log.info(TAG, `Cost Estimates: ${costEst.total} total (${costEst.from_permit} permit, ${costEst.from_model} model, ${costEst.null_cost} null)`);
   } catch (err) {
@@ -334,9 +335,9 @@ pipeline.run('refresh-snapshot', async (pool) => {
     );
     const tr = timingRes.rows[0];
     timingCal = {
-      total: parseInt(tr.total),
-      avg_sample: parseInt(tr.avg_sample),
-      freshness_hours: tr.freshness_hours !== null ? parseFloat(tr.freshness_hours) : null,
+      total: safeParsePositiveInt(tr.total, 'total'),
+      avg_sample: safeParsePositiveInt(tr.avg_sample, 'avg_sample'),
+      freshness_hours: tr.freshness_hours !== null ? safeParseFloat(tr.freshness_hours, 'freshness_hours') : null,
     };
     pipeline.log.info(TAG, `Timing Calibration: ${timingCal.total} permit_types, avg sample=${timingCal.avg_sample}, freshness=${timingCal.freshness_hours}h`);
   } catch (err) {
@@ -439,31 +440,31 @@ pipeline.run('refresh-snapshot', async (pool) => {
       RETURNING (xmax::text::int = 0) AS is_insert, snapshot_date, permits_with_neighbourhood, active_permits, coa_total, coa_linked, permits_with_scope, permits_with_scope_tags, permits_with_detailed_tags`,
       [
         total_permits, active_permits,
-        parseInt(t.permits_with_trades), parseInt(t.total_matches),
-        t.avg_confidence ? parseFloat(t.avg_confidence) : null,
-        parseInt(t.tier1), parseInt(t.tier2), parseInt(t.tier3),
-        parseInt(tt.res_classified), parseInt(tt.res_total),
-        parseInt(tt.com_classified), parseInt(tt.com_total),
-        parseInt(permitsBuilderRes.rows[0].count), parseInt(b.total),
-        parseInt(b.enriched), parseInt(b.with_phone), parseInt(b.with_email),
-        parseInt(b.with_website), parseInt(b.with_google), parseInt(b.with_wsib),
-        parseInt(p.permits_with_parcel), parseInt(p.exact_matches),
-        parseInt(p.name_matches), parseInt(p.spatial_matches),
-        p.avg_confidence ? parseFloat(p.avg_confidence) : null,
+        safeParsePositiveInt(t.permits_with_trades, 'permits_with_trades'), safeParsePositiveInt(t.total_matches, 'total_matches'),
+        t.avg_confidence ? safeParseFloat(t.avg_confidence, 'avg_confidence') : null,
+        safeParsePositiveInt(t.tier1, 'tier1'), safeParsePositiveInt(t.tier2, 'tier2'), safeParsePositiveInt(t.tier3, 'tier3'),
+        safeParsePositiveInt(tt.res_classified, 'res_classified'), safeParsePositiveInt(tt.res_total, 'res_total'),
+        safeParsePositiveInt(tt.com_classified, 'com_classified'), safeParsePositiveInt(tt.com_total, 'com_total'),
+        safeParsePositiveInt(permitsBuilderRes.rows[0].count, 'count'), safeParsePositiveInt(b.total, 'total'),
+        safeParsePositiveInt(b.enriched, 'enriched'), safeParsePositiveInt(b.with_phone, 'with_phone'), safeParsePositiveInt(b.with_email, 'with_email'),
+        safeParsePositiveInt(b.with_website, 'with_website'), safeParsePositiveInt(b.with_google, 'with_google'), safeParsePositiveInt(b.with_wsib, 'with_wsib'),
+        safeParsePositiveInt(p.permits_with_parcel, 'permits_with_parcel'), safeParsePositiveInt(p.exact_matches, 'exact_matches'),
+        safeParsePositiveInt(p.name_matches, 'name_matches'), safeParsePositiveInt(p.spatial_matches, 'spatial_matches'),
+        p.avg_confidence ? safeParseFloat(p.avg_confidence, 'avg_confidence') : null,
         neighbourhood_count,
-        parseInt(geoRes.rows[0].count),
-        parseInt(c.total), parseInt(c.linked),
-        c.avg_confidence ? parseFloat(c.avg_confidence) : null,
-        parseInt(c.high_confidence), parseInt(c.low_confidence),
-        parseInt(scopeRes.rows[0].count), JSON.stringify(breakdown),
-        parseInt(scopeTagsRes.rows[0].count), parseInt(detailedTagsRes.rows[0].count), JSON.stringify(tagsTop),
-        parseInt(freshRes.rows[0].updated_24h), parseInt(freshRes.rows[0].updated_7d),
-        parseInt(freshRes.rows[0].updated_30d),
+        safeParsePositiveInt(geoRes.rows[0].count, 'count'),
+        safeParsePositiveInt(c.total, 'total'), safeParsePositiveInt(c.linked, 'linked'),
+        c.avg_confidence ? safeParseFloat(c.avg_confidence, 'avg_confidence') : null,
+        safeParsePositiveInt(c.high_confidence, 'high_confidence'), safeParsePositiveInt(c.low_confidence, 'low_confidence'),
+        safeParsePositiveInt(scopeRes.rows[0].count, 'count'), JSON.stringify(breakdown),
+        safeParsePositiveInt(scopeTagsRes.rows[0].count, 'count'), safeParsePositiveInt(detailedTagsRes.rows[0].count, 'count'), JSON.stringify(tagsTop),
+        safeParsePositiveInt(freshRes.rows[0].updated_24h, 'updated_24h'), safeParsePositiveInt(freshRes.rows[0].updated_7d, 'updated_7d'),
+        safeParsePositiveInt(freshRes.rows[0].updated_30d, 'updated_30d'),
         syncRes.rows[0]?.started_at || null, syncRes.rows[0]?.status || null,
         massing.footprints_total, massing.parcels_with_buildings,
-        parseInt(n.null_description), parseInt(n.null_builder_name), parseInt(n.null_est_const_cost),
-        parseInt(n.null_street_num), parseInt(n.null_street_name), parseInt(n.null_geo_id),
-        parseInt(v.cost_oor), parseInt(v.future_issued), parseInt(v.missing_status), violations_total,
+        safeParsePositiveInt(n.null_description, 'null_description'), safeParsePositiveInt(n.null_builder_name, 'null_builder_name'), safeParsePositiveInt(n.null_est_const_cost, 'null_est_const_cost'),
+        safeParsePositiveInt(n.null_street_num, 'null_street_num'), safeParsePositiveInt(n.null_street_name, 'null_street_name'), safeParsePositiveInt(n.null_geo_id, 'null_geo_id'),
+        safeParsePositiveInt(v.cost_oor, 'cost_oor'), safeParsePositiveInt(v.future_issued, 'future_issued'), safeParsePositiveInt(v.missing_status, 'missing_status'), violations_total,
         JSON.stringify(schemaColumnCounts), slaHours,
         insp.total, insp.permits_scraped, insp.outstanding, insp.passed, insp.not_passed,
         costEst.total, costEst.from_permit, costEst.from_model, costEst.null_cost,

@@ -130,7 +130,7 @@ function extractScopeTags(permit) {
     }
   }
 
-  const storeys = parseInt(permit.storeys) || 0;
+  const storeys = safeParseIntOrNull(permit.storeys) || 0;
   if (storeys >= 10) tags.add('high-rise');
   else if (storeys >= 5) tags.add('mid-rise');
   else if (storeys >= 2) tags.add('low-rise');
@@ -175,7 +175,7 @@ function extractResidentialTags(permit) {
 
   const numericStorey = descLower.match(/\b(\d+)\s*[-]?\s*(storey|story|stories)\b/);
   if (numericStorey) {
-    storeyCount = parseInt(numericStorey[1], 10);
+    storeyCount = safeParsePositiveInt(numericStorey[1], 'storey_count');
   }
 
   if (storeyCount === 0) {
@@ -281,7 +281,7 @@ function extractNewHouseTags(permit) {
   const descLower = desc.toLowerCase();
   const st = (permit.structure_type || '').trim();
   const pu = (permit.proposed_use || '').trim();
-  const housingUnits = parseInt(permit.housing_units) || 0;
+  const housingUnits = safeParseIntOrNull(permit.housing_units) || 0;
 
   const tags = new Set();
   let buildingTypeSet = false;
@@ -289,7 +289,7 @@ function extractNewHouseTags(permit) {
   // 1. proposed_use contains "houseplex"
   if (/houseplex/i.test(pu)) {
     const unitMatch = pu.match(/\((\d+)\s*Units?\)/i);
-    let units = unitMatch ? parseInt(unitMatch[1], 10) : (housingUnits > 1 ? housingUnits : 3);
+    let units = unitMatch ? safeParsePositiveInt(unitMatch[1], 'unit_count') : (housingUnits > 1 ? housingUnits : 3);
     units = Math.max(2, Math.min(6, units));
     tags.add(`new:houseplex-${units}-unit`);
     buildingTypeSet = true;
@@ -403,7 +403,7 @@ pipeline.run('classify-scope', async (pool) => {
 
   // Get total count
   const countResult = await pool.query(`SELECT COUNT(*) as total FROM permits${incrementalFilter}`);
-  const total = parseInt(countResult.rows[0].total, 10);
+  const total = safeParsePositiveInt(countResult.rows[0].total, 'permits_total');
   pipeline.log.info('[classify-scope]', `Permits to classify: ${total.toLocaleString()}`);
 
   // Track distribution
@@ -593,8 +593,8 @@ pipeline.run('classify-scope', async (pool) => {
        (SELECT COUNT(*) FROM permits WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0) AS with_tags,
        (SELECT COUNT(*) FROM permits) AS total`
   );
-  const cumulativeWithTags = parseInt(cumulativeResult.rows[0].with_tags, 10);
-  const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
+  const cumulativeWithTags = safeParsePositiveInt(cumulativeResult.rows[0].with_tags, 'with_tags');
+  const cumulativeTotal = safeParsePositiveInt(cumulativeResult.rows[0].total, 'cumulative_total');
   const tagsCoverage = cumulativeTotal > 0 ? (cumulativeWithTags / cumulativeTotal) * 100 : 0;
   const scopeAuditRows = [
     { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },

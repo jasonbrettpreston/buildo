@@ -22,6 +22,7 @@
  */
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt, safeParseIntOrNull } = require('./lib/safe-math');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
 const LOGIC_VARS_SCHEMA = z.object({
@@ -50,7 +51,7 @@ pipeline.run('link-coa', async (pool) => {
   const beforeResult = await pool.query(
     `SELECT COUNT(*) as total FROM coa_applications WHERE linked_permit_num IS NULL`
   );
-  const totalUnlinked = parseInt(beforeResult.rows[0].total, 10);
+  const totalUnlinked = safeParsePositiveInt(beforeResult.rows[0].total, 'total_unlinked');
   pipeline.log.info('[link-coa]', `Unlinked CoA applications: ${totalUnlinked.toLocaleString()}`);
 
   if (totalUnlinked === 0) {
@@ -91,7 +92,7 @@ pipeline.run('link-coa', async (pool) => {
         AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')
         AND ca.linked_confidence != 0.10
     `);
-    crossWardCleaned = parseInt(preview.rows[0].count, 10) || 0;
+    crossWardCleaned = safeParseIntOrNull(preview.rows[0].count) || 0;
   }
   pipeline.log.info('[link-coa]', `Pre-pass: ${crossWardCleaned.toLocaleString()} cross-ward mismatches unlinked`);
 
@@ -177,7 +178,7 @@ pipeline.run('link-coa', async (pool) => {
         JOIN permits p ON ${joinWhere}
         WHERE ${filterWhere}
       `);
-      return parseInt(result.rows[0].cnt, 10) || 0;
+      return safeParseIntOrNull(result.rows[0].cnt) || 0;
     }
   }
 
@@ -311,7 +312,7 @@ pipeline.run('link-coa', async (pool) => {
             LIMIT 1
           ) lat
         `, [ids, wards, queries]);
-        desc += parseInt(result.rows[0].cnt, 10);
+        desc += safeParseIntOrNull(result.rows[0].cnt);
       } catch {
         descErrors++;
       }
@@ -405,7 +406,7 @@ pipeline.run('link-coa', async (pool) => {
      WHERE ca.linked_permit_num IS NOT NULL
        AND p.permit_type = 'Pre-Permit'`
   );
-  const prePermitLinkCount = parseInt(linksToPrePermits.rows[0].count, 10) || 0;
+  const prePermitLinkCount = safeParseIntOrNull(linksToPrePermits.rows[0].count) || 0;
 
   // Exclude Tier 1c links (confidence = 0.10) — those are intentional ward-conflict
   // matches already reported via matches_tier_1c_ward_conflict metric.
@@ -417,7 +418,7 @@ pipeline.run('link-coa', async (pool) => {
        AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')
        AND ca.linked_confidence != 0.10`
   );
-  const crossWardCount = parseInt(crossWardLinks.rows[0].count, 10) || 0;
+  const crossWardCount = safeParseIntOrNull(crossWardLinks.rows[0].count) || 0;
 
   // Effective match rate: measure against POTENTIAL matches (CoAs with a real
   // permit at their exact address), not against all unlinked. The old rate
@@ -434,7 +435,7 @@ pipeline.run('link-coa', async (pool) => {
        AND c.street_name_normalized IS NOT NULL
        AND p.permit_type != 'Pre-Permit'`
   );
-  const potentialMatches = parseInt(potentialRes.rows[0].could_link, 10) || 0;
+  const potentialMatches = safeParseIntOrNull(potentialRes.rows[0].could_link) || 0;
 
   // Effective match rate denominator combines what we actually linked + what we
   // COULD still link. Tiers excluded from the numerator (must be consistent):

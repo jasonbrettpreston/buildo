@@ -11,6 +11,7 @@
  * If no paths given, downloads from Toronto Open Data.
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt, safeParseIntOrNull } = require('./lib/safe-math');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -62,7 +63,7 @@ function downloadFile(url, destPath) {
         fs.unlinkSync(destPath);
         return reject(new Error(`Download failed: HTTP ${response.statusCode}`));
       }
-      const total = parseInt(response.headers['content-length'] || '0', 10);
+      const total = safeParsePositiveInt(response.headers['content-length'] || '0', 'content_length');
       let downloaded = 0;
       response.on('data', (chunk) => {
         downloaded += chunk.length;
@@ -86,7 +87,7 @@ function downloadFile(url, destPath) {
 function parseColumnHeader(header) {
   const match = String(header).match(/^(.+)\s*\((\d+)\)$/);
   if (!match) return null;
-  return { name: match[1].trim(), neighbourhood_id: parseInt(match[2], 10) };
+  return { name: match[1].trim(), neighbourhood_id: safeParsePositiveInt(match[2], 'neighbourhood_id') };
 }
 
 // ---------------------------------------------------------------------------
@@ -121,7 +122,7 @@ async function loadBoundaries(pool, geojsonPath, hasPostGIS) {
   await pipeline.withTransaction(pool, async (client) => {
     for (const feature of geojson.features) {
       const props = feature.properties;
-      const neighbourhoodId = parseInt(props.AREA_S_CD || props.AREA_SHORT_CODE || props.AREA_ID || '0', 10);
+      const neighbourhoodId = safeParsePositiveInt(props.AREA_S_CD || props.AREA_SHORT_CODE || props.AREA_ID || '0', 'neighbourhood_id');
       const name = props.AREA_NAME || props.AREA_LONG_CODE || '';
 
       if (!neighbourhoodId || !name) {
@@ -214,7 +215,7 @@ async function loadProfiles(pool, xlsxPath) {
 
     // Try format 2: column name is neighbourhood name, row 0 has the ID
     if (row0Char === 'Neighbourhood Number' || row0Char === 'Neighbourhood ID') {
-      const idVal = parseInt(row0[col], 10);
+      const idVal = safeParseIntOrNull(row0[col]);
       if (idVal > 0) {
         neighbourhoodColumns[col] = { name: col, neighbourhood_id: idVal };
       }
@@ -455,7 +456,7 @@ async function loadProfiles(pool, xlsxPath) {
     if (total > 0) {
       await pool.query(
         'UPDATE neighbourhoods SET tenure_owner_pct = $1, tenure_renter_pct = $2 WHERE neighbourhood_id = $3',
-        [Math.round((data.owner / total) * 1000) / 10, Math.round((data.renter / total) * 1000) / 10, parseInt(nid, 10)]
+        [Math.round((data.owner / total) * 1000) / 10, Math.round((data.renter / total) * 1000) / 10, safeParsePositiveInt(nid, 'neighbourhood_id')]
       );
     }
   }
@@ -480,7 +481,7 @@ async function loadProfiles(pool, xlsxPath) {
     if (dominant) {
       await pool.query(
         'UPDATE neighbourhoods SET period_of_construction = $1 WHERE neighbourhood_id = $2',
-        [periodMap[dominant] || dominant, parseInt(nid, 10)]
+        [periodMap[dominant] || dominant, safeParsePositiveInt(nid, 'neighbourhood_id')]
       );
     }
   }
@@ -491,7 +492,7 @@ async function loadProfiles(pool, xlsxPath) {
     if (total > 0) {
       await pool.query(
         'UPDATE neighbourhoods SET couples_pct = $1, lone_parent_pct = $2 WHERE neighbourhood_id = $3',
-        [Math.round((data.couples / total) * 1000) / 10, Math.round((data.loneParent / total) * 1000) / 10, parseInt(nid, 10)]
+        [Math.round((data.couples / total) * 1000) / 10, Math.round((data.loneParent / total) * 1000) / 10, safeParsePositiveInt(nid, 'neighbourhood_id')]
       );
     }
   }
@@ -506,7 +507,7 @@ async function loadProfiles(pool, xlsxPath) {
   ])];
 
   if (censusIds.length > 0) {
-    const ids = censusIds.map(id => parseInt(id, 10));
+    const ids = censusIds.map(id => safeParsePositiveInt(id, 'census_id'));
     const marriedPcts = ids.map(id => {
       const d = marriedData[id]; return d && d.total > 0 ? Math.round((d.married / d.total) * 1000) / 10 : null;
     });
