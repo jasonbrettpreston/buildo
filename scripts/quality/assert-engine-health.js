@@ -27,7 +27,7 @@ const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
 const DEAD_TUPLE_RATIO = 0.10;       // 10%
 const SEQ_SCAN_RATIO = 0.80;         // 80%
 const SEQ_SCAN_MIN_ROWS = 10000;     // Only flag large tables
-const PING_PONG_RATIO = 10;          // updates > 10x inserts (dimensional tables naturally accumulate 5-6x lifecycle updates per insert)
+const PING_PONG_RATIO = 10;           // updates > 10x inserts — see review_followups.md: spec says >2x but operational baseline is 5-6x; 10x avoids chronic false-positive WARNs
 
 pipeline.run('assert-engine-health', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
