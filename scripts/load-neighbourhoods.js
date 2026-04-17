@@ -118,31 +118,38 @@ async function loadBoundaries(pool, geojsonPath, hasPostGIS) {
     ? ', geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326)'
     : '';
 
-  let inserted = 0;
-  await pipeline.withTransaction(pool, async (client) => {
-    for (const feature of geojson.features) {
-      const props = feature.properties;
-      const neighbourhoodId = safeParsePositiveInt(props.AREA_S_CD || props.AREA_SHORT_CODE || props.AREA_ID || '0', 'neighbourhood_id');
-      const name = props.AREA_NAME || props.AREA_LONG_CODE || '';
-
-      if (!neighbourhoodId || !name) {
-        pipeline.log.info('[load-neighbourhoods]',`  Skipping feature with missing ID or name`);
-        continue;
-      }
-
+  // Collect all features first, then batch-insert via UNNEST (O(1) round-trip
+  // instead of O(features)). Reference: §7.6 UNNEST batch pattern.
+  const ids = [], names = [], geometries = [];
+  for (const feature of geojson.features) {
+    const props = feature.properties;
+    const neighbourhoodId = safeParsePositiveInt(props.AREA_S_CD || props.AREA_SHORT_CODE || props.AREA_ID || '0', 'neighbourhood_id');
+    const name = props.AREA_NAME || props.AREA_LONG_CODE || '';
+    if (!neighbourhoodId || !name) {
+      pipeline.log.info('[load-neighbourhoods]',`  Skipping feature with missing ID or name`);
+      continue;
+    }
+    ids.push(neighbourhoodId);
+    names.push(name);
+    geometries.push(JSON.stringify(feature.geometry));
+  }
+  const inserted = ids.length;
+  if (ids.length > 0) {
+    await pipeline.withTransaction(pool, async (client) => {
       await client.query(
         `INSERT INTO neighbourhoods (neighbourhood_id, name, geometry)
-         VALUES ($1, $2, $3)
+         SELECT unnest($1::int[]),
+                unnest($2::text[]),
+                unnest($3::text[])
          ON CONFLICT (neighbourhood_id) DO UPDATE SET
            name = EXCLUDED.name,
            geometry = EXCLUDED.geometry${geomLine}
          WHERE neighbourhoods.name IS DISTINCT FROM EXCLUDED.name
             OR neighbourhoods.geometry::text IS DISTINCT FROM EXCLUDED.geometry::text`,
-        [neighbourhoodId, name, JSON.stringify(feature.geometry)]
+        [ids, names, geometries]
       );
-      inserted++;
-    }
-  });
+    });
+  }
 
   pipeline.log.info('[load-neighbourhoods]',`  Inserted ${inserted} neighbourhood boundaries.`);
   return inserted;
@@ -243,6 +250,10 @@ async function loadProfiles(pool, xlsxPath) {
   const minorityData = {};
   const languageData = {};
   const constructionData = {};
+  // Income accumulators: dbCol → { neighbourhood_id → value }
+  // Collected during the main loop and batch-UPDATEd after via UNNEST.
+  const incomeData = {};
+  const lowIncomeData = {};
 
   let matchedRows = 0;
 
@@ -250,31 +261,27 @@ async function loadProfiles(pool, xlsxPath) {
     const characteristic = String(record[charColName] || '').trim();
     if (!characteristic) continue;
 
-    // Direct income updates
+    // Direct income updates — accumulate per dbCol instead of firing N UPDATEs.
+    // Batch UNNEST UPDATE runs after the main loop below.
     if (INCOME_CHARACTERISTICS[characteristic]) {
       const dbCol = INCOME_CHARACTERISTICS[characteristic];
       matchedRows++;
+      if (!incomeData[dbCol]) incomeData[dbCol] = {};
       for (const [col, info] of Object.entries(neighbourhoodColumns)) {
         const val = parseNumeric(record[col]);
         if (val !== null) {
-          await pool.query(
-            `UPDATE neighbourhoods SET ${dbCol} = $1 WHERE neighbourhood_id = $2`,
-            [Math.round(val), info.neighbourhood_id]
-          );
+          incomeData[dbCol][info.neighbourhood_id] = Math.round(val);
         }
       }
     }
 
-    // Low income percentage
+    // Low income percentage — accumulate, batch UNNEST UPDATE below.
     if (characteristic === PCT_CHARACTERISTIC) {
       matchedRows++;
       for (const [col, info] of Object.entries(neighbourhoodColumns)) {
         const val = parseNumeric(record[col]);
         if (val !== null) {
-          await pool.query(
-            'UPDATE neighbourhoods SET low_income_pct = $1 WHERE neighbourhood_id = $2',
-            [val, info.neighbourhood_id]
-          );
+          lowIncomeData[info.neighbourhood_id] = val;
         }
       }
     }
@@ -450,14 +457,55 @@ async function loadProfiles(pool, xlsxPath) {
   pipeline.log.info('[load-neighbourhoods]',`  Matched ${matchedRows} characteristic rows for updates.`);
   pipeline.log.info('[load-neighbourhoods]','  Computing derived percentages...');
 
-  // Compute tenure percentages
-  for (const [nid, data] of Object.entries(tenureData)) {
-    const total = data.owner + data.renter;
-    if (total > 0) {
-      await pool.query(
-        'UPDATE neighbourhoods SET tenure_owner_pct = $1, tenure_renter_pct = $2 WHERE neighbourhood_id = $3',
-        [Math.round((data.owner / total) * 1000) / 10, Math.round((data.renter / total) * 1000) / 10, safeParsePositiveInt(nid, 'neighbourhood_id')]
-      );
+  // ── Batch UNNEST UPDATEs (O(1) round-trips, replacing O(N) per-neighbourhood loops) ──
+
+  // Income columns (avg/median household + avg individual)
+  for (const [dbCol, byNid] of Object.entries(incomeData)) {
+    const nids = Object.keys(byNid).map(id => safeParsePositiveInt(id, 'neighbourhood_id'));
+    const vals = nids.map(id => byNid[id]);
+    if (nids.length > 0) {
+      await pool.query(`
+        UPDATE neighbourhoods AS n SET ${dbCol} = v.val
+        FROM (SELECT unnest($1::int[]) AS neighbourhood_id, unnest($2::int[]) AS val) AS v
+        WHERE n.neighbourhood_id = v.neighbourhood_id
+      `, [nids, vals]);
+    }
+  }
+
+  // Low income percentage
+  {
+    const nids = Object.keys(lowIncomeData).map(id => safeParsePositiveInt(id, 'neighbourhood_id'));
+    const vals = nids.map(id => lowIncomeData[id]);
+    if (nids.length > 0) {
+      await pool.query(`
+        UPDATE neighbourhoods AS n SET low_income_pct = v.val
+        FROM (SELECT unnest($1::int[]) AS neighbourhood_id, unnest($2::float[]) AS val) AS v
+        WHERE n.neighbourhood_id = v.neighbourhood_id
+      `, [nids, vals]);
+    }
+  }
+
+  // Tenure percentages
+  {
+    const nids = [], ownerPcts = [], renterPcts = [];
+    for (const [nid, data] of Object.entries(tenureData)) {
+      const total = data.owner + data.renter;
+      if (total > 0) {
+        nids.push(safeParsePositiveInt(nid, 'neighbourhood_id'));
+        ownerPcts.push(Math.round((data.owner / total) * 1000) / 10);
+        renterPcts.push(Math.round((data.renter / total) * 1000) / 10);
+      }
+    }
+    if (nids.length > 0) {
+      await pool.query(`
+        UPDATE neighbourhoods AS n SET
+          tenure_owner_pct = v.owner_pct,
+          tenure_renter_pct = v.renter_pct
+        FROM (SELECT unnest($1::int[]) AS neighbourhood_id,
+                     unnest($2::float[]) AS owner_pct,
+                     unnest($3::float[]) AS renter_pct) AS v
+        WHERE n.neighbourhood_id = v.neighbourhood_id
+      `, [nids, ownerPcts, renterPcts]);
     }
   }
 
@@ -472,28 +520,49 @@ async function loadProfiles(pool, xlsxPath) {
     '2011 to 2015': '2011-2015',
     '2016 to 2021': '2016-2021',
   };
-  for (const [nid, periods] of Object.entries(constructionData)) {
-    let maxCount = 0;
-    let dominant = null;
-    for (const [period, count] of Object.entries(periods)) {
-      if (count > maxCount) { maxCount = count; dominant = period; }
+  {
+    const nids = [], periods = [];
+    for (const [nid, periodCounts] of Object.entries(constructionData)) {
+      let maxCount = 0;
+      let dominant = null;
+      for (const [period, count] of Object.entries(periodCounts)) {
+        if (count > maxCount) { maxCount = count; dominant = period; }
+      }
+      if (dominant) {
+        nids.push(safeParsePositiveInt(nid, 'neighbourhood_id'));
+        periods.push(periodMap[dominant] || dominant);
+      }
     }
-    if (dominant) {
-      await pool.query(
-        'UPDATE neighbourhoods SET period_of_construction = $1 WHERE neighbourhood_id = $2',
-        [periodMap[dominant] || dominant, safeParsePositiveInt(nid, 'neighbourhood_id')]
-      );
+    if (nids.length > 0) {
+      await pool.query(`
+        UPDATE neighbourhoods AS n SET period_of_construction = v.period
+        FROM (SELECT unnest($1::int[]) AS neighbourhood_id, unnest($2::text[]) AS period) AS v
+        WHERE n.neighbourhood_id = v.neighbourhood_id
+      `, [nids, periods]);
     }
   }
 
   // Family percentages
-  for (const [nid, data] of Object.entries(familyData)) {
-    const total = data.couples + data.loneParent;
-    if (total > 0) {
-      await pool.query(
-        'UPDATE neighbourhoods SET couples_pct = $1, lone_parent_pct = $2 WHERE neighbourhood_id = $3',
-        [Math.round((data.couples / total) * 1000) / 10, Math.round((data.loneParent / total) * 1000) / 10, safeParsePositiveInt(nid, 'neighbourhood_id')]
-      );
+  {
+    const nids = [], couplePcts = [], loneParentPcts = [];
+    for (const [nid, data] of Object.entries(familyData)) {
+      const total = data.couples + data.loneParent;
+      if (total > 0) {
+        nids.push(safeParsePositiveInt(nid, 'neighbourhood_id'));
+        couplePcts.push(Math.round((data.couples / total) * 1000) / 10);
+        loneParentPcts.push(Math.round((data.loneParent / total) * 1000) / 10);
+      }
+    }
+    if (nids.length > 0) {
+      await pool.query(`
+        UPDATE neighbourhoods AS n SET
+          couples_pct = v.couples_pct,
+          lone_parent_pct = v.lone_parent_pct
+        FROM (SELECT unnest($1::int[]) AS neighbourhood_id,
+                     unnest($2::float[]) AS couples_pct,
+                     unnest($3::float[]) AS lone_parent_pct) AS v
+        WHERE n.neighbourhood_id = v.neighbourhood_id
+      `, [nids, couplePcts, loneParentPcts]);
     }
   }
 
