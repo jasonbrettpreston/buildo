@@ -1469,3 +1469,76 @@ bookkeeping are left as-is.
 grep -rn "NOW()" scripts/*.js scripts/quality/*.js \
   | grep -v "WHERE\|pipeline_runs\|sync_runs\|SELECT NOW() AS now\|lib/pipeline\|run-chain\|local-cron\|migrate\|seed-coa\|reclassify-all\|> NOW()\|< NOW()\|>= NOW()\|<= NOW()\|EXTRACT.*NOW\|captured_at = NOW()\|created_at=NOW()"
 ```
+
+---
+
+## 15. `pipeline.getDbTimestamp(pool)` — Standardized Clock Capture
+
+**Added:** Phase 7 / Bug Prevention Strategy implementation.
+
+The `pipeline` SDK exports a convenience function that encapsulates the `SELECT NOW()` single-capture pattern:
+
+```js
+// In any pipeline script that needs a RUN_AT timestamp:
+const RUN_AT = await pipeline.getDbTimestamp(pool);
+// Equivalent to:
+// const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+```
+
+**Rules:**
+1. Call `getDbTimestamp` **once** at the top of the `withAdvisoryLock` callback, before any loop or batch logic.
+2. Pass `RUN_AT` as a `$N` parameter to all SQL writes that set a timestamp column — never call `getDbTimestamp` inside a loop.
+3. `Date.now()` in scripts is only permitted for elapsed-time measurement (`const startMs = Date.now()`). Using `new Date()` for any timestamp written to the DB is banned by the ESLint Time Cop rule.
+
+---
+
+## 16. Phase 7 Lint Rules — "The Gauntlet"
+
+**Added:** Phase 7 / Bug Prevention Strategy implementation.
+
+The following rules are enforced in the pre-commit hook (`scripts/hooks/ast-grep-leads.sh`) and ESLint for all active pipeline scripts. Inert files (seeds, backfills, analysis scripts, SDK itself) are listed in `scripts/amnesty.json`.
+
+### B1 — ACID Radar: Loop Query Ban
+**Rule:** `pool.query()` or `client.query()` inside `for`, `for...of`, `for...in`, `.map()`, or `.forEach()` loops is forbidden. Every loop-query pattern is an N+1 that causes O(rows) round-trips to PostgreSQL.
+
+**Enforcement:** AST-grep rule `loop-query.yml` (warning severity).
+
+**Fix pattern:** Collect values into an array, then do a single `UNNEST`-based batch INSERT/UPDATE outside the loop.
+
+**Suppression:** `// ast-grep-disable-next-line loop-query: <justification>` when the query inside the loop is genuinely bounded (e.g., ≤3 iterations for config lookups).
+
+### B2 — ACID Radar: Bare Mutation Ban
+**Rule:** Any `pool.query` containing `INSERT`, `UPDATE`, or `DELETE` must be lexically inside a `pipeline.withTransaction()` closure. Scripts with mutations but no `withTransaction` call are flagged.
+
+**Enforcement:** Grep heuristic in `ast-grep-leads.sh` check 7.
+
+**Exceptions:** Quality assertion scripts write to `pipeline_runs` as observation records (not data mutations). Logged in `scripts/amnesty.json`.
+
+### B3 — Time Cop: new Date() Ban
+**Rule:** `new Date()` in `scripts/` is banned when used to produce a timestamp written to the database. Use `pipeline.getDbTimestamp(pool)` instead.
+
+**Enforcement:** ESLint `no-restricted-syntax` selector `NewExpression[callee.name='Date']`.
+
+**Exception:** `Date.now()` for elapsed-time measurement (`const startMs = Date.now()`) is explicitly allowed.
+
+### B4 — OOM Radar: Unbounded Push in Stream Ban
+**Rule:** `.push()` into an outer-scope array inside a `for await` loop (streaming callback) without a subsequent batch-flush guard is banned. Unbounded accumulation causes OOM crashes as data grows.
+
+**Enforcement:** AST-grep rule `unbounded-push-in-stream.yml` (warning severity).
+
+**Fix pattern:** Check `if (batch.length >= BATCH_SIZE) { await flush(batch); batch = []; }` after every `.push()` in a streaming loop.
+
+**Suppression:** `// ast-grep-disable-next-line unbounded-push-in-stream: bounded by <reason>` when the accumulation is provably bounded.
+
+### B5 — Safe Integer: Raw parseInt/parseFloat Ban
+**Rule:** Raw `parseInt()` and `parseFloat()` are banned in `scripts/` in favour of `safeParsePositiveInt(value, label)`, `safeParseFloat(value, label)`, and `safeParseIntOrNull(value)` from `scripts/lib/safe-math.js`. Raw parsing silently propagates `NaN` into DB writes.
+
+**Enforcement:** ESLint `no-restricted-globals` + `no-restricted-properties` rules.
+
+**Safe-math functions:**
+- `safeParsePositiveInt(value, label)` — throws on NaN, Infinity, negative, or non-integer.
+- `safeParseFloat(value, label)` — throws on NaN or Infinity.
+- `safeParseIntOrNull(value)` — returns `null` for missing/null/undefined/NaN (for optional fields).
+
+### Amnesty List
+`scripts/amnesty.json` documents all files exempt from Phase 7 rules with a `reason` field per entry. Permanent entries (SDK, seeds, analysis tools) never need to comply. There are no temporary entries once Phase B mop-up is complete.
