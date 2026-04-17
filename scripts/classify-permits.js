@@ -68,14 +68,16 @@ const PHASE_TRADES = {
   landscaping: ['landscaping','painting','decking-fences','eavestrough-siding','pool-installation'],
 };
 
-function determinePhase(permit) {
+function determinePhase(permit, runAt) {
   const status = (permit.status || '').toLowerCase();
   if (status.includes('completed') || status.includes('closed')) return 'landscaping';
   if (status.includes('application') || status.includes('not started')) return 'early_construction';
 
   if (!permit.issued_date) return 'early_construction';
   const issued = new Date(permit.issued_date);
-  const months = Math.floor((Date.now() - issued.getTime()) / (1000 * 60 * 60 * 24 * 30));
+  // Use RUN_AT (DB clock) not Date.now() to prevent Midnight Cross drift —
+  // same run timestamp for all permits in this batch.
+  const months = Math.floor((runAt.getTime() - issued.getTime()) / (1000 * 60 * 60 * 24 * 30));
 
   if (months <= 3) return 'early_construction';
   if (months <= 9) return 'structural';
@@ -102,7 +104,7 @@ function statusBaseScore(status) {
   return 25;
 }
 
-function calculateLeadScore(permit, match, phase) {
+function calculateLeadScore(permit, match, phase, runAt) {
   let score = statusBaseScore(permit.status);
 
   // Cost boost (0-15)
@@ -113,9 +115,9 @@ function calculateLeadScore(permit, match, phase) {
   else if (cost >= 100000) score += 7;
   else if (cost >= 50000) score += 4;
 
-  // Freshness boost (0-20)
+  // Freshness boost (0-20) — use RUN_AT (DB clock) for Midnight Cross consistency
   if (permit.issued_date) {
-    const days = Math.floor((Date.now() - new Date(permit.issued_date).getTime()) / (1000 * 60 * 60 * 24));
+    const days = Math.floor((runAt.getTime() - new Date(permit.issued_date).getTime()) / (1000 * 60 * 60 * 24));
     if (days <= 7) score += 20;
     else if (days <= 30) score += 15;
     else if (days <= 90) score += 10;
@@ -130,9 +132,9 @@ function calculateLeadScore(permit, match, phase) {
   // Confidence boost (0-10)
   score += Math.round((match.confidence || 0) * 10);
 
-  // Staleness penalty (0-20)
+  // Staleness penalty (0-20) — use RUN_AT (DB clock) for Midnight Cross consistency
   if (permit.issued_date) {
-    const days = Math.floor((Date.now() - new Date(permit.issued_date).getTime()) / (1000 * 60 * 60 * 24));
+    const days = Math.floor((runAt.getTime() - new Date(permit.issued_date).getTime()) / (1000 * 60 * 60 * 24));
     if (days > 730) score -= 20;
     else if (days > 365) score -= 10;
     else if (days > 180) score -= 5;
@@ -386,8 +388,8 @@ function getFieldValue(permit, matchField) {
   return permit[matchField] || null;
 }
 
-function classifyPermit(permit, rules) {
-  const phase = determinePhase(permit);
+function classifyPermit(permit, rules, runAt) {
+  const phase = determinePhase(permit, runAt);
   const code = extractPermitCode(permit.permit_num);
   const isNarrowScope = code != null && NARROW_SCOPE_CODES[code] != null;
 
@@ -415,7 +417,7 @@ function classifyPermit(permit, rules) {
       is_active: isActive,
       phase,
     };
-    tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase);
+    tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
 
     const existing = ruleMap.get(trade.slug);
     if (!existing || existing.confidence < confidence) {
@@ -444,7 +446,7 @@ function classifyPermit(permit, rules) {
         is_active: isActive,
         phase,
       };
-      tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase);
+      tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
       return tradeMatch;
     }).filter(Boolean);
   }
@@ -469,7 +471,7 @@ function classifyPermit(permit, rules) {
         is_active: isActive,
         phase,
       };
-      tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase);
+      tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
 
       const existing = merged.get(slug);
       if (!existing || existing.confidence < confidence) {
@@ -495,7 +497,7 @@ function classifyPermit(permit, rules) {
         is_active: isActive,
         phase,
       };
-      tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase);
+      tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
       merged.set(slug, tradeMatch);
     }
   }
@@ -592,7 +594,7 @@ pipeline.run('classify-permits', async (pool) => {
     let paramIdx = 1;
 
     for (const permit of batch.rows) {
-      const matches = classifyPermit(permit, allRules);
+      const matches = classifyPermit(permit, allRules, RUN_AT);
       if (matches.length > 0) {
         // Dedup by (permit_num, revision_num, trade_id) - keep highest confidence
         const dedupMap = new Map();
