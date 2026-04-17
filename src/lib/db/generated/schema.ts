@@ -360,6 +360,27 @@ export const addressPoints = pgTable("address_points", {
 	longitude: numeric({ precision: 10, scale:  7 }).notNull(),
 });
 
+export const buildingFootprints = pgTable("building_footprints", {
+	id: serial().primaryKey().notNull(),
+	sourceId: varchar("source_id", { length: 50 }).notNull(),
+	geometry: jsonb().notNull(),
+	footprintAreaSqm: numeric("footprint_area_sqm", { precision: 12, scale:  2 }),
+	footprintAreaSqft: numeric("footprint_area_sqft", { precision: 12, scale:  2 }),
+	maxHeightM: numeric("max_height_m", { precision: 8, scale:  2 }),
+	minHeightM: numeric("min_height_m", { precision: 8, scale:  2 }),
+	elevZ: numeric("elev_z", { precision: 8, scale:  2 }),
+	estimatedStories: integer("estimated_stories"),
+	centroidLat: numeric("centroid_lat", { precision: 10, scale:  7 }),
+	centroidLng: numeric("centroid_lng", { precision: 10, scale:  7 }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	geom: geometry({ type: "geometry", srid: 4326 }),
+}, (table) => [
+	index("idx_building_footprints_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")),
+	index("idx_building_footprints_geom_gist").using("gist", table.geom.asc().nullsLast().op("gist_geometry_ops_2d")),
+	index("idx_building_footprints_source").using("btree", table.sourceId.asc().nullsLast().op("text_ops")),
+	unique("building_footprints_source_id_key").on(table.sourceId),
+]);
+
 export const parcelBuildings = pgTable("parcel_buildings", {
 	id: serial().primaryKey().notNull(),
 	parcelId: integer("parcel_id").notNull(),
@@ -412,25 +433,6 @@ export const pipelineRuns = pgTable("pipeline_runs", {
 	recordsMeta: jsonb("records_meta"),
 }, (table) => [
 	index("idx_pipeline_runs_lookup").using("btree", table.pipeline.asc().nullsLast().op("text_ops"), table.startedAt.desc().nullsFirst().op("text_ops")),
-]);
-
-export const buildingFootprints = pgTable("building_footprints", {
-	id: serial().primaryKey().notNull(),
-	sourceId: varchar("source_id", { length: 50 }).notNull(),
-	geometry: jsonb().notNull(),
-	footprintAreaSqm: numeric("footprint_area_sqm", { precision: 12, scale:  2 }),
-	footprintAreaSqft: numeric("footprint_area_sqft", { precision: 12, scale:  2 }),
-	maxHeightM: numeric("max_height_m", { precision: 8, scale:  2 }),
-	minHeightM: numeric("min_height_m", { precision: 8, scale:  2 }),
-	elevZ: numeric("elev_z", { precision: 8, scale:  2 }),
-	estimatedStories: integer("estimated_stories"),
-	centroidLat: numeric("centroid_lat", { precision: 10, scale:  7 }),
-	centroidLng: numeric("centroid_lng", { precision: 10, scale:  7 }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_building_footprints_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")),
-	index("idx_building_footprints_source").using("btree", table.sourceId.asc().nullsLast().op("text_ops")),
-	unique("building_footprints_source_id_key").on(table.sourceId),
 ]);
 
 export const permitInspections = pgTable("permit_inspections", {
@@ -696,23 +698,6 @@ export const trackedProjects = pgTable("tracked_projects", {
 	check("chk_tracked_status", sql`(status)::text = ANY ((ARRAY['saved'::character varying, 'claimed_unverified'::character varying, 'claimed'::character varying, 'verified'::character varying, 'archived'::character varying, 'expired'::character varying])::text[])`),
 ]);
 
-export const leadAnalytics = pgTable("lead_analytics", {
-	leadKey: varchar("lead_key", { length: 100 }).primaryKey().notNull(),
-	trackingCount: integer("tracking_count").default(0).notNull(),
-	savingCount: integer("saving_count").default(0).notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	check("chk_saving_count", sql`saving_count >= 0`),
-	check("chk_tracking_count", sql`tracking_count >= 0`),
-]);
-
-export const logicVariables = pgTable("logic_variables", {
-	variableKey: varchar("variable_key", { length: 100 }).primaryKey().notNull(),
-	variableValue: numeric("variable_value").notNull(),
-	description: text(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-});
-
 export const coaApplications = pgTable("coa_applications", {
 	id: serial().primaryKey().notNull(),
 	applicationNumber: varchar("application_number", { length: 50 }),
@@ -748,6 +733,24 @@ export const coaApplications = pgTable("coa_applications", {
 	index("idx_coa_upcoming_leads").using("btree", table.decisionDate.desc().nullsFirst().op("date_ops")).where(sql`(((decision)::text = ANY ((ARRAY['Approved'::character varying, 'Approved with Conditions'::character varying])::text[])) AND (linked_permit_num IS NULL))`),
 	unique("coa_applications_application_number_key").on(table.applicationNumber),
 ]);
+
+export const leadAnalytics = pgTable("lead_analytics", {
+	leadKey: varchar("lead_key", { length: 100 }).primaryKey().notNull(),
+	trackingCount: integer("tracking_count").default(0).notNull(),
+	savingCount: integer("saving_count").default(0).notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	check("chk_saving_count", sql`saving_count >= 0`),
+	check("chk_tracking_count", sql`tracking_count >= 0`),
+]);
+
+export const logicVariables = pgTable("logic_variables", {
+	variableKey: varchar("variable_key", { length: 100 }).primaryKey().notNull(),
+	variableValue: numeric("variable_value").notNull(),
+	description: text(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	variableValueJson: jsonb("variable_value_json"),
+});
 
 export const tradeConfigurations = pgTable("trade_configurations", {
 	tradeSlug: varchar("trade_slug", { length: 50 }).primaryKey().notNull(),
