@@ -20,6 +20,7 @@ const crypto = require('crypto');
 const { execSync } = require('child_process');
 const { platform } = require('os');
 const shapefile = require('shapefile');
+const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 
 const SQM_TO_SQFT = 10.7639;
 const STORY_HEIGHT_M = 3.0;
@@ -95,7 +96,7 @@ function downloadFile(url, destPath) {
         fs.unlinkSync(destPath);
         return reject(new Error(`Download failed: HTTP ${response.statusCode}`));
       }
-      const total = parseInt(response.headers['content-length'] || '0', 10);
+      const total = safeParsePositiveInt(response.headers['content-length'] || '0', 'content-length');
       let downloaded = 0;
       response.on('data', (chunk) => {
         downloaded += chunk.length;
@@ -187,7 +188,7 @@ pipeline.run('load-massing', async (pool) => {
     const staleCheck = await pool.query(
       `SELECT COUNT(*) AS cnt FROM building_footprints WHERE source_id NOT LIKE 'hash_%' LIMIT 1`
     );
-    const staleCount = parseInt(staleCheck.rows[0].cnt, 10);
+    const staleCount = safeParsePositiveInt(staleCheck.rows[0].cnt, 'cnt');
     if (staleCount > 0) {
       pipeline.log.info('[load-massing]', `Detected source_id format change: ${staleCount.toLocaleString()} old non-hash rows → cleaning up`);
       await pool.query(`DELETE FROM parcel_buildings WHERE building_id IN (SELECT id FROM building_footprints WHERE source_id NOT LIKE 'hash_%')`);
@@ -201,7 +202,7 @@ pipeline.run('load-massing', async (pool) => {
     const staleCheck = await pool.query(
       `SELECT COUNT(*) AS cnt FROM building_footprints WHERE source_id LIKE 'hash_%' LIMIT 1`
     );
-    const staleCount = parseInt(staleCheck.rows[0].cnt, 10);
+    const staleCount = safeParsePositiveInt(staleCheck.rows[0].cnt, 'cnt');
     if (staleCount > 0) {
       pipeline.log.info('[load-massing]', `Detected source_id format change: ${staleCount.toLocaleString()} old hash rows → cleaning up`);
       await pool.query(`DELETE FROM parcel_buildings WHERE building_id IN (SELECT id FROM building_footprints WHERE source_id LIKE 'hash_%')`);
@@ -307,9 +308,9 @@ pipeline.run('load-massing', async (pool) => {
     }
 
     const props = feature.properties || {};
-    const maxHeight = props.MAX_HEIGHT != null ? parseFloat(props.MAX_HEIGHT) : null;
-    const minHeight = props.MIN_HEIGHT != null ? parseFloat(props.MIN_HEIGHT) : null;
-    const elevZ = props.ELEVZ != null ? parseFloat(props.ELEVZ) : (props.SURF_ELEV != null ? parseFloat(props.SURF_ELEV) : null);
+    const maxHeight = props.MAX_HEIGHT != null ? safeParseFloat(props.MAX_HEIGHT, 'MAX_HEIGHT') : null;
+    const minHeight = props.MIN_HEIGHT != null ? safeParseFloat(props.MIN_HEIGHT, 'MIN_HEIGHT') : null;
+    const elevZ = props.ELEVZ != null ? safeParseFloat(props.ELEVZ, 'ELEVZ') : (props.SURF_ELEV != null ? safeParseFloat(props.SURF_ELEV, 'SURF_ELEV') : null);
     // Stable deterministic ID: prefer OBJECTID, fall back to geometry hash
     // (loop counter would cause PK collisions on re-runs with different shapefiles)
     let sourceId;
@@ -328,7 +329,7 @@ pipeline.run('load-massing', async (pool) => {
     // Prefer explicit LONGITUDE/LATITUDE properties over computing from ring coords
     // (ring may be in projected CRS even if file claims WGS84)
     const centroid = (props.LONGITUDE != null && props.LATITUDE != null)
-      ? [parseFloat(props.LONGITUDE), parseFloat(props.LATITUDE)]
+      ? [safeParseFloat(props.LONGITUDE, 'LONGITUDE'), safeParseFloat(props.LATITUDE, 'LATITUDE')]
       : computeCentroid(ring);
     const stories = estimateStories(maxHeight);
 

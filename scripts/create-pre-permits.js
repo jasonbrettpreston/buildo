@@ -23,6 +23,7 @@
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 
 const LOGIC_VARS_SCHEMA = z.object({
   pre_permit_expiry_months: z.number().finite().positive().int(),
@@ -60,10 +61,10 @@ pipeline.run('create-pre-permits', async (pool) => {
      FROM coa_applications`
   );
 
-  const eligible = parseInt(counts.eligible);
-  const linked = parseInt(counts.already_linked);
-  const approved = parseInt(counts.total_approved);
-  const total = parseInt(counts.total);
+  const eligible = safeParsePositiveInt(counts.eligible, 'eligible');
+  const linked = safeParsePositiveInt(counts.already_linked, 'already_linked');
+  const approved = safeParsePositiveInt(counts.total_approved, 'total_approved');
+  const total = safeParsePositiveInt(counts.total, 'total');
 
   pipeline.log.info('[create-pre-permits]', `CoA: ${total.toLocaleString()} total, ${approved.toLocaleString()} approved, ${linked.toLocaleString()} linked, ${eligible.toLocaleString()} eligible leads`);
 
@@ -157,7 +158,7 @@ pipeline.run('create-pre-permits', async (pool) => {
 
   if (byWard.length > 0) {
     pipeline.log.info('[create-pre-permits]', 'Top wards', {
-      wards: Object.fromEntries(byWard.map(r => [r.ward, parseInt(r.count)])),
+      wards: Object.fromEntries(byWard.map(r => [r.ward, safeParsePositiveInt(r.count, 'count')])),
     });
   }
 

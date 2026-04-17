@@ -25,6 +25,7 @@
 const pipeline = require('./lib/pipeline');
 const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 
 const LOGIC_VARS_SCHEMA = z.object({
   spatial_match_max_distance_m: z.number().finite().positive(),
@@ -149,15 +150,16 @@ pipeline.run('link-parcels', async (pool) => {
     `SELECT COUNT(*) as total FROM permits p
      WHERE (${addressFilter}) ${extraFilter}`
   );
-  const totalPermits = parseInt(countResult.rows[0].total, 10);
+  const totalPermits = safeParsePositiveInt(countResult.rows[0].total, 'total');
   pipeline.log.info('[link-parcels]', `Permits to process: ${totalPermits.toLocaleString()}`);
 
   // Check if centroids are available for Strategy 3
   const centroidCount = await pool.query(
     'SELECT COUNT(*) as total FROM parcels WHERE centroid_lat IS NOT NULL'
   );
-  const hasCentroids = parseInt(centroidCount.rows[0].total, 10) > 0;
-  pipeline.log.info('[link-parcels]', `Parcels with centroids: ${parseInt(centroidCount.rows[0].total, 10).toLocaleString()} ${hasCentroids ? '(Strategy 3 enabled)' : '(Strategy 3 disabled)'}`);
+  const centroidsTotal = safeParsePositiveInt(centroidCount.rows[0].total, 'total');
+  const hasCentroids = centroidsTotal > 0;
+  pipeline.log.info('[link-parcels]', `Parcels with centroids: ${centroidsTotal.toLocaleString()} ${hasCentroids ? '(Strategy 3 enabled)' : '(Strategy 3 disabled)'}`);
 
   if (totalPermits === 0) {
     pipeline.log.info('[link-parcels]', 'No permits to process. Done.');
@@ -207,8 +209,8 @@ pipeline.run('link-parcels', async (pool) => {
         num: (permit.street_num || '').trim().toUpperCase().replace(/^0+(?=\d)/, ''),
         name: (permit.street_name || '').trim().toUpperCase(),
         type: (permit.street_type || '').trim().toUpperCase(),
-        lat: permit.latitude ? parseFloat(permit.latitude) : null,
-        lng: permit.longitude ? parseFloat(permit.longitude) : null,
+        lat: permit.latitude ? safeParseFloat(permit.latitude, 'latitude') : null,
+        lng: permit.longitude ? safeParseFloat(permit.longitude, 'longitude') : null,
       });
     }
 
@@ -353,7 +355,7 @@ pipeline.run('link-parcels', async (pool) => {
         for (const c of candidates.rows) {
           const dist = haversineDistance(
             [permit.lng, permit.lat],
-            [parseFloat(c.centroid_lng), parseFloat(c.centroid_lat)]
+            [safeParseFloat(c.centroid_lng, 'centroid_lng'), safeParseFloat(c.centroid_lat, 'centroid_lat')]
           );
           if (dist < bestDist) {
             bestDist = dist;
@@ -502,8 +504,8 @@ pipeline.run('link-parcels', async (pool) => {
        (SELECT COUNT(DISTINCT (permit_num, revision_num)) FROM permit_parcels) AS linked,
        (SELECT COUNT(*) FROM permits) AS total`
   );
-  const cumulativeLinked = parseInt(cumulativeResult.rows[0].linked, 10);
-  const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
+  const cumulativeLinked = safeParsePositiveInt(cumulativeResult.rows[0].linked, 'linked');
+  const cumulativeTotal = safeParsePositiveInt(cumulativeResult.rows[0].total, 'total');
   const parcelLinkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
 
   const parcelAuditRows = [

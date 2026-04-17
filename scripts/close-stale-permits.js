@@ -24,6 +24,7 @@
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 
 const LOGIC_VARS_SCHEMA = z.object({
   stale_closure_abort_pct:    z.number().finite().positive(),
@@ -73,8 +74,8 @@ pipeline.run('close-stale-permits', async (pool) => {
      FROM permits`,
     [lastLoadAt]
   );
-  const wouldClose = parseInt(preCheckResult.rows[0].would_close, 10);
-  const totalPermits = parseInt(preCheckResult.rows[0].total, 10);
+  const wouldClose = safeParsePositiveInt(preCheckResult.rows[0].would_close, 'would_close');
+  const totalPermits = safeParsePositiveInt(preCheckResult.rows[0].total, 'total');
   const pendingClosedRate = totalPermits > 0 ? (wouldClose / totalPermits * 100) : 0;
 
   if (pendingClosedRate >= abortPct) {
@@ -145,9 +146,9 @@ pipeline.run('close-stale-permits', async (pool) => {
        COUNT(*) AS total
      FROM permits`
   );
-  const totalPending = parseInt(statsResult.rows[0].total_pending, 10);
-  const totalClosed = parseInt(statsResult.rows[0].total_closed, 10);
-  const finalTotal = parseInt(statsResult.rows[0].total, 10);
+  const totalPending = safeParsePositiveInt(statsResult.rows[0].total_pending, 'total_pending');
+  const totalClosed = safeParsePositiveInt(statsResult.rows[0].total_closed, 'total_closed');
+  const finalTotal = safeParsePositiveInt(statsResult.rows[0].total, 'total');
   const closureRate = finalTotal > 0 ? ((totalPending + totalClosed) / finalTotal * 100) : 0;
 
   const durationMs = Date.now() - startTime;

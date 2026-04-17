@@ -13,6 +13,7 @@
  * SPEC LINK: docs/specs/11_builder_enrichment.md
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 
 // Entity type classification (mirrors src/lib/builders/normalize.ts classifyEntityType)
 const NUMBERED_CORP_PATTERN = /^\d{5,}/;
@@ -77,19 +78,20 @@ pipeline.run('extract-builders', async (pool) => {
     if (!normalized) continue;
 
     const existing = builderMap.get(normalized);
+    const rowPermitCount = safeParsePositiveInt(row.permit_count, 'permit_count');
     if (existing) {
-      existing.permit_count += parseInt(row.permit_count, 10);
+      existing.permit_count += rowPermitCount;
       // Keep the most common raw name
-      if (parseInt(row.permit_count, 10) > existing.max_count) {
+      if (rowPermitCount > existing.max_count) {
         existing.name = row.builder_name.trim();
-        existing.max_count = parseInt(row.permit_count, 10);
+        existing.max_count = rowPermitCount;
       }
     } else {
       builderMap.set(normalized, {
         name: row.builder_name.trim(),
         name_normalized: normalized,
-        permit_count: parseInt(row.permit_count, 10),
-        max_count: parseInt(row.permit_count, 10),
+        permit_count: rowPermitCount,
+        max_count: rowPermitCount,
         entity_type: classifyEntityType(row.builder_name.trim()),
       });
     }
@@ -185,7 +187,7 @@ pipeline.run('extract-builders', async (pool) => {
   const indivCount = builders.filter(b => b.entity_type === 'Individual').length;
 
   pipeline.log.info('[extract-builders]', 'Complete', {
-    total_in_db: parseInt(countResult.rows[0].total),
+    total_in_db: safeParsePositiveInt(countResult.rows[0].total, 'total'),
     raw_names: rawNamesCount,
     normalized: builderMap.size,
     corporations: corpCount,
@@ -198,7 +200,7 @@ pipeline.run('extract-builders', async (pool) => {
   });
 
   // Build audit_table for builder extraction observability
-  const totalInDb = parseInt(countResult.rows[0].total);
+  const totalInDb = safeParsePositiveInt(countResult.rows[0].total, 'total');
   const dedupRatio = rawNamesCount > 0 ? ((1 - builderMap.size / rawNamesCount) * 100).toFixed(1) + '%' : '0%';
   const buildersAuditRows = [
     { metric: 'raw_names_distinct', value: rawNamesCount, threshold: null, status: 'INFO' },
