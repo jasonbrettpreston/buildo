@@ -69,7 +69,6 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'stall_penalty_active',
   'expired_threshold_days',
   'liar_gate_threshold',
-  'lead_expiry_days',
   'coa_stall_threshold',
   'inspection_stall_days',        // WF3-E1
   'stale_closure_abort_pct',      // WF3-E2

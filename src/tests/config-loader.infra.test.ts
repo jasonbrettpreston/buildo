@@ -36,7 +36,7 @@ describe('scripts/lib/config-loader.js — shared config loader', () => {
     expect(content).toMatch(/require.*seeds\/logic_variables/);
     // The seed JSON must contain the critical keys
     const json = JSON.parse(read('scripts/seeds/logic_variables.json')) as Record<string, unknown>;
-    for (const key of ['los_multiplier_bid', 'stall_penalty_precon', 'lead_expiry_days', 'coa_stall_threshold', 'liar_gate_threshold']) {
+    for (const key of ['los_multiplier_bid', 'stall_penalty_precon', 'coa_stall_threshold', 'liar_gate_threshold']) {
       expect(json, `Seed JSON missing key: ${key}`).toHaveProperty(key);
     }
   });

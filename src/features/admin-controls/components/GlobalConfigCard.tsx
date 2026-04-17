@@ -41,7 +41,6 @@ const GROUPS: Array<{ label: string; keys: string[] }> = [
       'stall_penalty_precon',
       'stall_penalty_active',
       'expired_threshold_days',
-      'lead_expiry_days',
       'coa_stall_threshold',
     ],
   },

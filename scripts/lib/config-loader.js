@@ -121,7 +121,7 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
       // or zero-sentinel values. Adversarial Probe 1.
       const ZERO_IS_INVALID = new Set([
         'expired_threshold_days', 'los_base_divisor', 'stall_penalty_precon',
-        'stall_penalty_active', 'lead_expiry_days', 'coa_stall_threshold',
+        'stall_penalty_active', 'coa_stall_threshold',
         // Spec 83 §4 — Liar's Gate + coverage ratios must never be 0.
         // A zero liar_gate_threshold would silently disable geometric overrides.
         // Zero coverage ratios would produce a zero GFA fallback, suppressing all estimates.
