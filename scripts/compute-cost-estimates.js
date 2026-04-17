@@ -19,6 +19,7 @@
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 // Brain: pure valuation logic shared by this Muscle and the TS read-path.
 const { estimateCostShared, MODEL_VERSION } = require('../src/features/leads/lib/cost-model-shared');
 
@@ -183,7 +184,7 @@ if (require.main === module) {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const limitArg = args.find((a) => a.startsWith('--limit='));
-  const rowLimit = limitArg ? parseInt(limitArg.split('=')[1], 10) : null;
+  const rowLimit = limitArg ? safeParsePositiveInt(limitArg.split('=')[1], 'limit') : null;
   if (dryRun) pipeline.log.info('[compute-cost-estimates]', 'DRY-RUN mode — no DB writes will occur');
   if (rowLimit) pipeline.log.info('[compute-cost-estimates]', `Row limit: ${rowLimit}`);
 

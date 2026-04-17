@@ -16,6 +16,7 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 
 /**
  * Compute centroid [lng, lat] from a GeoJSON geometry.
@@ -63,7 +64,7 @@ pipeline.run('compute-centroids', async (pool) => {
   const countResult = await pool.query(
     `SELECT COUNT(*) as total FROM parcels WHERE geometry IS NOT NULL AND centroid_lat IS NULL`
   );
-  const totalParcels = parseInt(countResult.rows[0].total, 10);
+  const totalParcels = safeParsePositiveInt(countResult.rows[0].total, 'total');
   pipeline.log.info('[compute-centroids]', `Parcels to compute: ${totalParcels.toLocaleString()}`);
 
   if (totalParcels === 0) {
@@ -194,9 +195,9 @@ pipeline.run('compute-centroids', async (pool) => {
     { metric: 'parcels_processed', value: processed, threshold: null, status: 'INFO' },
     { metric: 'centroids_computed', value: computed, threshold: null, status: 'INFO' },
     { metric: 'failed_geometries', value: failed, threshold: '== 0', status: failed > 0 ? 'WARN' : 'PASS' },
-    { metric: 'compute_rate', value: `${computeRate}%`, threshold: '>= 98%', status: parseFloat(computeRate) < 98 ? 'WARN' : 'PASS' },
+    { metric: 'compute_rate', value: `${computeRate}%`, threshold: '>= 98%', status: safeParseFloat(computeRate, 'compute_rate') < 98 ? 'WARN' : 'PASS' },
   ];
-  const hasWarns = failed > 0 || parseFloat(computeRate) < 98;
+  const hasWarns = failed > 0 || safeParseFloat(computeRate, 'compute_rate') < 98;
 
   pipeline.emitSummary({
     records_total: processed,

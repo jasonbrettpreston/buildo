@@ -19,6 +19,7 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 
 const ADVISORY_LOCK_ID = 89;
 
@@ -38,7 +39,7 @@ pipeline.run('classify-permit-phase', async (pool) => {
        AND revision_num = '00'
        AND (issued_date IS NULL OR issued_date < '1970-01-02')`
   );
-  const eligibleCount = parseInt(eligibleResult.rows[0].cnt, 10);
+  const eligibleCount = safeParsePositiveInt(eligibleResult.rows[0].cnt, 'cnt');
 
   // Reclassify: permits with status = 'Inspection' but no issued_date
   // are in the city examination phase, not active construction inspection.
@@ -68,8 +69,8 @@ pipeline.run('classify-permit-phase', async (pool) => {
      WHERE status = 'Inspection'
        AND revision_num = '00'`
   );
-  const totalExamination = parseInt(statsResult.rows[0].total_examination, 10);
-  const totalInspection = parseInt(statsResult.rows[0].total_inspection, 10);
+  const totalExamination = safeParsePositiveInt(statsResult.rows[0].total_examination, 'total_examination');
+  const totalInspection = safeParsePositiveInt(statsResult.rows[0].total_inspection, 'total_inspection');
   const examRate = totalInspection > 0 ? (totalExamination / totalInspection * 100) : 0;
 
   const durationMs = Date.now() - startTime;

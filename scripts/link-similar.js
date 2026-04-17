@@ -23,6 +23,7 @@
  * SPEC LINK: docs/specs/30_permit_scope_classification.md
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 
 const ADVISORY_LOCK_ID = 30;
 
@@ -95,8 +96,8 @@ pipeline.run('link-similar', async (pool) => {
        (SELECT COUNT(*) FROM permits WHERE scope_source = 'propagated') AS propagated,
        (SELECT COUNT(*) FROM permits WHERE scope_source IS NOT NULL) AS classified`
   );
-  const cumulativePropagated = parseInt(cumulativeResult.rows[0].propagated, 10);
-  const cumulativeClassified = parseInt(cumulativeResult.rows[0].classified, 10);
+  const cumulativePropagated = safeParsePositiveInt(cumulativeResult.rows[0].propagated, 'propagated');
+  const cumulativeClassified = safeParsePositiveInt(cumulativeResult.rows[0].classified, 'classified');
   const propagationRate = cumulativeClassified > 0 ? (cumulativePropagated / cumulativeClassified) * 100 : 0;
 
   const similarAuditRows = [

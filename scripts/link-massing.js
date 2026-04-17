@@ -27,6 +27,7 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 // Turf.js imports are lazy-loaded inside the JS fallback path (else block).
@@ -218,7 +219,7 @@ pipeline.run('link-massing', async (pool) => {
     const countResult = await pool.query(
       `SELECT COUNT(*) as total FROM parcels WHERE ${baseFilter}${incrementalFilter}`
     );
-    const totalParcels = parseInt(countResult.rows[0].total, 10);
+    const totalParcels = safeParsePositiveInt(countResult.rows[0].total, 'total');
     pipeline.log.info('[link-massing]', `Parcels to process: ${totalParcels.toLocaleString()}`);
 
     // Process in keyset-paginated batches
@@ -235,8 +236,8 @@ pipeline.run('link-massing', async (pool) => {
       lastId = parcelBatch.rows[parcelBatch.rows.length - 1].id;
 
       const parcelIds = parcelBatch.rows.map(p => p.id);
-      const parcelLats = parcelBatch.rows.map(p => parseFloat(p.centroid_lat));
-      const parcelLngs = parcelBatch.rows.map(p => parseFloat(p.centroid_lng));
+      const parcelLats = parcelBatch.rows.map(p => safeParseFloat(p.centroid_lat, 'centroid_lat'));
+      const parcelLngs = parcelBatch.rows.map(p => safeParseFloat(p.centroid_lng, 'centroid_lng'));
 
       // ST_Contains: find buildings whose polygon contains the parcel centroid
       const matchResult = await pool.query(
@@ -261,7 +262,7 @@ pipeline.run('link-massing', async (pool) => {
           if (!byParcel.has(pid)) byParcel.set(pid, []);
           byParcel.get(pid).push({
             building_id: r.building_id,
-            footprint_area_sqm: parseFloat(r.footprint_area_sqm) || 0,
+            footprint_area_sqm: r.footprint_area_sqm != null ? safeParseFloat(r.footprint_area_sqm, 'footprint_area_sqm') : 0,
           });
         }
 
@@ -327,14 +328,14 @@ pipeline.run('link-massing', async (pool) => {
      FROM building_footprints
      WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL`
   )) {
-    const lat = parseFloat(row.centroid_lat);
-    const lng = parseFloat(row.centroid_lng);
+    const lat = safeParseFloat(row.centroid_lat, 'centroid_lat');
+    const lng = safeParseFloat(row.centroid_lng, 'centroid_lng');
     const key = gridKey(lat, lng);
     if (!grid.has(key)) grid.set(key, []);
     grid.get(key).push({
       id: row.id,
       geometry: reprojectGeometry(row.geometry),
-      footprint_area_sqm: parseFloat(row.footprint_area_sqm) || 0,
+      footprint_area_sqm: row.footprint_area_sqm != null ? safeParseFloat(row.footprint_area_sqm, 'footprint_area_sqm') : 0,
       centroid_lat: lat,
       centroid_lng: lng,
     });
@@ -356,7 +357,7 @@ pipeline.run('link-massing', async (pool) => {
   const countResult = await pool.query(
     `SELECT COUNT(*) as total FROM parcels WHERE ${baseFilter}${incrementalFilter}`
   );
-  const totalParcels = parseInt(countResult.rows[0].total, 10);
+  const totalParcels = safeParsePositiveInt(countResult.rows[0].total, 'total');
   pipeline.log.info('[link-massing]', `Parcels to process: ${totalParcels.toLocaleString()}`);
 
   // In FULL_MODE, clean stale parcel_buildings links before re-evaluation.
@@ -395,8 +396,8 @@ pipeline.run('link-massing', async (pool) => {
     let batchParcelsCount = 0;
 
     for (const parcel of parcelBatch.rows) {
-      const lat = parseFloat(parcel.centroid_lat);
-      const lng = parseFloat(parcel.centroid_lng);
+      const lat = safeParseFloat(parcel.centroid_lat, 'centroid_lat');
+      const lng = safeParseFloat(parcel.centroid_lng, 'centroid_lng');
 
       // Compute parcel envelope to dynamically scale BBOX for large parcels
       // (airports, campuses, industrial complexes can exceed the default 333m grid)
@@ -597,8 +598,8 @@ pipeline.run('link-massing', async (pool) => {
        (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings) AS linked,
        (SELECT COUNT(*) FROM parcels WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL) AS total`
   );
-  const cumulativeLinked = parseInt(cumulativeResult.rows[0].linked, 10);
-  const cumulativeTotal = parseInt(cumulativeResult.rows[0].total, 10);
+  const cumulativeLinked = safeParsePositiveInt(cumulativeResult.rows[0].linked, 'linked');
+  const cumulativeTotal = safeParsePositiveInt(cumulativeResult.rows[0].total, 'total');
   const massingLinkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
   const massingHasFails = !hasPostGIS && totalBuildings === 0;
   const massingHasWarns = massingLinkRate < 50;

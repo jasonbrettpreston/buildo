@@ -12,6 +12,7 @@
 // - BETWEEN 0 AND 730 day outlier filter excludes stale/weird data.
 
 const pipeline = require('./lib/pipeline');
+const { safeParseIntOrNull } = require('./lib/safe-math');
 
 // permit_inspections has no revision_num column. Joining permits → inspections
 // on permit_num alone would associate every revision of the same permit with
@@ -211,7 +212,7 @@ pipeline.run('compute-timing-calibration', async (pool) => {
   // Build custom audit_table so the admin FreshnessTimeline surfaces
   // meaningful throughput metrics. See compute-cost-estimates.js for the
   // rationale — WF3 2026-04-10 observability gap fix.
-  const totalSampleSize = rows.reduce((sum, r) => sum + (parseInt(r.sample_size, 10) || 0), 0);
+  const totalSampleSize = rows.reduce((sum, r) => sum + (safeParseIntOrNull(r.sample_size) ?? 0), 0);
   const timingAuditRows = [
     { metric: 'permit_types_processed', value: rows.length, threshold: null, status: 'INFO' },
     { metric: 'permit_types_inserted', value: result.inserted, threshold: null, status: 'INFO' },

@@ -17,6 +17,7 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -44,7 +45,7 @@ function downloadFile(url, destPath) {
         fs.unlinkSync(destPath);
         return reject(new Error(`Download failed: HTTP ${response.statusCode}`));
       }
-      const total = parseInt(response.headers['content-length'] || '0', 10);
+      const total = safeParsePositiveInt(response.headers['content-length'] || '0', 'content-length');
       let downloaded = 0;
       response.on('data', (chunk) => {
         downloaded += chunk.length;

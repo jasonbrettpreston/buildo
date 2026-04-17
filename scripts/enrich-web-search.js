@@ -22,11 +22,13 @@ const pipeline = require('./lib/pipeline');
 
 const ADVISORY_LOCK_ID = 45;
 
+const { safeParsePositiveInt } = require('./lib/safe-math');
+
 const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 const SERPER_URL = 'https://google.serper.dev/search';
 const SLUG = process.env.ENRICH_WSIB_ONLY === '1' ? 'enrich_wsib_builders' : 'enrich_named_builders';
 const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
-const RATE_LIMIT_MS = parseInt(process.env.ENRICH_RATE_MS || '500', 10);
+const RATE_LIMIT_MS = safeParsePositiveInt(process.env.ENRICH_RATE_MS || '500', 'ENRICH_RATE_MS');
 const WSIB_ONLY = process.env.ENRICH_WSIB_ONLY === '1';
 const UNMATCHED_ONLY = process.env.ENRICH_UNMATCHED_ONLY === '1';
 
@@ -291,8 +293,8 @@ pipeline.run('enrich-web-search', async (pool) => {
   const dryRun = args.includes('--dry-run');
   const limitIdx = args.indexOf('--limit');
   const limit = limitIdx !== -1 && args[limitIdx + 1]
-    ? parseInt(args[limitIdx + 1], 10)
-    : parseInt(process.env.ENRICH_LIMIT || '50', 10);
+    ? safeParsePositiveInt(args[limitIdx + 1], 'limit')
+    : safeParsePositiveInt(process.env.ENRICH_LIMIT || '50', 'ENRICH_LIMIT');
 
   if (!SERPER_API_KEY) {
     pipeline.log.info('[enrich-web-search]','SERPER_API_KEY not set — skipping web search enrichment');

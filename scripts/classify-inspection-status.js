@@ -15,6 +15,7 @@
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+const { safeParsePositiveInt } = require('./lib/safe-math');
 
 const ADVISORY_LOCK_ID = 53;
 
@@ -106,7 +107,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
     records_meta: {
       stalled: stalledCount,
       reactivated: reactivatedCount,
-      distribution: dist.map((r) => ({ status: r.enriched_status, count: parseInt(r.cnt) })),
+      distribution: dist.map((r) => ({ status: r.enriched_status, count: safeParsePositiveInt(r.cnt, 'cnt') })),
       audit_table: {
         phase: 2,
         name: 'Inspection Status Classification',
@@ -114,7 +115,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
         rows: [
           { metric: 'newly_stalled', value: stalledCount, threshold: null, status: 'INFO' },
           { metric: 'reactivated', value: reactivatedCount, threshold: null, status: 'INFO' },
-          ...dist.map((r) => ({ metric: `enriched_${r.enriched_status.toLowerCase().replace(/\s/g, '_')}`, value: parseInt(r.cnt), threshold: null, status: 'INFO' })),
+          ...dist.map((r) => ({ metric: `enriched_${r.enriched_status.toLowerCase().replace(/\s/g, '_')}`, value: safeParsePositiveInt(r.cnt, 'cnt'), threshold: null, status: 'INFO' })),
         ],
       },
     },
