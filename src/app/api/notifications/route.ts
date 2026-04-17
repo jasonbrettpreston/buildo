@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
-export async function GET(request: NextRequest) {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const userId = searchParams.get('user_id');
   const unreadOnly = searchParams.get('unread_only') === 'true';
@@ -51,9 +52,9 @@ export async function GET(request: NextRequest) {
           10
         ),
   });
-}
+});
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) {
   const body = await request.json();
   const { notification_id, user_id, action } = body;
 
@@ -80,4 +81,4 @@ export async function PATCH(request: NextRequest) {
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-}
+});

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
-export async function GET(
+export const GET = withApiEnvelope(async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context?: unknown
 ) {
-  const { id } = await params;
+  // SAFETY: Next.js App Router always passes { params } in context for dynamic segments
+  const { id } = await (context as { params: Promise<{ id: string }> }).params;
   const entityId = parseInt(id, 10);
 
   if (isNaN(entityId)) {
@@ -58,10 +60,10 @@ export async function GET(
       wsib: wsibLinks.length > 0 ? wsibLinks[0] : null,
     });
   } catch (err) {
-    logError('[api/entities]', err, { handler: 'GET' });
+    logError('[api/entities]', err, { handler: 'GET', entityId });
     return NextResponse.json(
       { error: 'Failed to fetch entity' },
       { status: 500 }
     );
   }
-}
+});

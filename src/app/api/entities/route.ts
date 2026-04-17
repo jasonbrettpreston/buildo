@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
-export async function GET(request: NextRequest) {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const search = searchParams.get('search');
   const role = searchParams.get('role');
@@ -53,4 +54,4 @@ export async function GET(request: NextRequest) {
       total_pages: Math.ceil(total / limit),
     },
   });
-}
+});

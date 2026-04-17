@@ -568,7 +568,12 @@ describe('API Route Exports', () => {
       expect(fs.existsSync(filePath)).toBe(true);
       const src = fs.readFileSync(filePath, 'utf-8');
       for (const method of route.methods) {
-        expect(src).toMatch(new RegExp(`export\\s+(async\\s+)?function\\s+${method}\\b`));
+        // Accept either: `export async function GET(` or `export const GET = withApiEnvelope(`
+        const exportFn = new RegExp(`export\\s+(async\\s+)?function\\s+${method}\\b`);
+        const exportConst = new RegExp(`export\\s+const\\s+${method}\\s*=`);
+        expect(exportFn.test(src) || exportConst.test(src),
+          `${route.path} should export ${method} (as function or const)`
+        ).toBe(true);
       }
     });
   }
