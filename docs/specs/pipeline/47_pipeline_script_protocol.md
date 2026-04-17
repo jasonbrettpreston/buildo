@@ -1397,3 +1397,75 @@ at some call sites. Keep exported for consistency.
 **Triage rule:** Before removing any of the above, confirm the export is NOT in the §7
 dual-path surface by checking `scripts/` for the corresponding JS consumer. If there is none,
 the export is a genuine candidate for deletion (not merely a knip false positive).
+
+---
+
+### A.5 — Bundle G Advisory Lock ID Registry
+
+All 40 JS pipeline scripts have been retrofitted with `ADVISORY_LOCK_ID` + `pipeline.withAdvisoryLock`
+as of Bundle G (April 2026). The registry below is the canonical source of truth for lock ID
+assignments. The infra test `src/tests/pipeline-advisory-lock.infra.test.ts` enforces uniqueness
+and registry-vs-code agreement.
+
+**ID Assignment Rules (§R2):**
+- Where a script's spec number is globally unique across all scripts, use the spec number as the ID.
+- Where multiple scripts share a spec (e.g., 7 scripts under spec 28), sequential IDs from the
+  87+ range are assigned to prevent false-skip on concurrent runs.
+- Bundle A scripts (compliant pre-Bundle G) retain their spec-number IDs.
+
+| Lock ID | Script | Wave | Writes Timestamps? |
+|---------|--------|------|--------------------|
+| **2** | `scripts/load-permits.js` | 4 — Load/Ingest | YES — `last_seen_at` |
+| **5** | `scripts/geocode-permits.js` | 4 — Load/Ingest | YES — `geocoded_at` |
+| **11** | `scripts/extract-builders.js` | 4 — Load/Ingest | YES — `last_seen_at` |
+| **30** | `scripts/link-similar.js` | 2 — Link | YES — `scope_classified_at` |
+| **40** | `scripts/refresh-snapshot.js` | 5 — Maintenance | NO — snapshot recording |
+| **45** | `scripts/enrich-web-search.js` | 3 — Enrich | YES — `last_enriched_at` |
+| **46** | `scripts/enrich-wsib.js` | 3 — Enrich | YES — `last_enriched_at` |
+| **53** | `scripts/classify-inspection-status.js` | 1 — Classify | YES — `last_seen_at` |
+| **55** | `scripts/load-parcels.js` | 4 — Load/Ingest | NO |
+| **56** | `scripts/load-massing.js` | 4 — Load/Ingest | NO |
+| **57** | `scripts/load-neighbourhoods.js` | 4 — Load/Ingest | NO |
+| **71** | `scripts/compute-timing-calibration.js` | 5 — Maintenance | YES — `computed_at` |
+| **81** | `scripts/compute-opportunity-scores.js` | Bundle A | YES — `computed_at` |
+| **82** | `scripts/update-tracked-projects.js` | Bundle A | YES — timestamps |
+| **83** | `scripts/compute-cost-estimates.js` | Bundle A | YES — timestamps |
+| **84** | `scripts/classify-lifecycle-phase.js` | Bundle A | YES — `lifecycle_classified_at` |
+| **85** | `scripts/compute-trade-forecasts.js` | Bundle A | YES — `computed_at` |
+| **86** | `scripts/compute-timing-calibration-v2.js` | Bundle A | YES — `computed_at` |
+| **87** | `scripts/classify-scope.js` | 1 — Classify | YES — `scope_classified_at` |
+| **88** | `scripts/classify-permits.js` | 1 — Classify | YES — `classified_at`, `trade_classified_at` |
+| **89** | `scripts/classify-permit-phase.js` | 1 — Classify | YES — `last_seen_at` |
+| **90** | `scripts/link-parcels.js` | 2 — Link | YES — `linked_at`, `parcel_linked_at` |
+| **91** | `scripts/link-massing.js` | 2 — Link | YES — `linked_at` |
+| **92** | `scripts/link-neighbourhoods.js` | 2 — Link | NO |
+| **93** | `scripts/link-coa.js` | 2 — Link | YES — `last_seen_at` |
+| **94** | `scripts/link-wsib.js` | 2 — Link | YES — `matched_at` |
+| **95** | `scripts/load-coa.js` | 4 — Load/Ingest | YES — `first_seen_at`, `last_seen_at` |
+| **96** | `scripts/load-address-points.js` | 4 — Load/Ingest | NO |
+| **97** | `scripts/load-wsib.js` | 4 — Load/Ingest | YES — `last_seen_at` |
+| **98** | `scripts/close-stale-permits.js` | 5 — Maintenance | NO — `NOW()` in WHERE only |
+| **99** | `scripts/compute-centroids.js` | 5 — Maintenance | NO |
+| **100** | `scripts/create-pre-permits.js` | 5 — Maintenance | YES — `last_seen_at` |
+| **101** | `scripts/purge-lead-views.js` | 5 — Maintenance | NO — deletes only |
+| **102** | `scripts/quality/assert-schema.js` | 6 — Quality | NO — read-only probe |
+| **103** | `scripts/quality/assert-data-bounds.js` | 6 — Quality | NO — read-only probe |
+| **104** | `scripts/quality/assert-engine-health.js` | 6 — Quality | NO — snapshot recording |
+| **105** | `scripts/quality/assert-network-health.js` | 6 — Quality | NO — read-only probe |
+| **106** | `scripts/quality/assert-staleness.js` | 6 — Quality | NO — read-only probe |
+| **107** | `scripts/quality/assert-pre-permit-aging.js` | 6 — Quality | NO — read-only probe |
+| **108** | `scripts/quality/assert-coa-freshness.js` | 6 — Quality | NO — read-only probe |
+
+**`RUN_AT` Snapshot Convention:**
+Scripts that write timestamps (`Writes Timestamps? = YES`) capture a single `RUN_AT` timestamp
+at the top of the locked scope via `const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now')`.
+All `SET col = NOW()` / `VALUES (..., NOW())` write-path calls are replaced with `$N::timestamptz`
+bound to `RUN_AT`. `NOW()` in `WHERE` clauses (read-side age filters) and `pipeline_runs`
+bookkeeping are left as-is.
+
+**Grep Verification (run periodically in CI):**
+```sh
+# Should return 0 results after Bundle G is complete
+grep -rn "NOW()" scripts/*.js scripts/quality/*.js \
+  | grep -v "WHERE\|pipeline_runs\|sync_runs\|SELECT NOW() AS now\|lib/pipeline\|run-chain\|local-cron\|migrate\|seed-coa\|reclassify-all\|> NOW()\|< NOW()\|>= NOW()\|<= NOW()\|EXTRACT.*NOW\|captured_at = NOW()\|created_at=NOW()"
+```
