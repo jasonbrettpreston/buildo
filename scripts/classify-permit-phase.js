@@ -20,8 +20,12 @@
  */
 const pipeline = require('./lib/pipeline');
 
+const ADVISORY_LOCK_ID = 89;
+
 pipeline.run('classify-permit-phase', async (pool) => {
-  const startTime = Date.now();
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const startTime = Date.now();
 
   // Count the eligible pool BEFORE updating (for records_total).
   // This is the full pool including already-classified rows — records_updated
@@ -42,12 +46,13 @@ pipeline.run('classify-permit-phase', async (pool) => {
   const examResult = await pool.query(
     `UPDATE permits
      SET enriched_status = 'Examination',
-         last_seen_at = NOW()
+         last_seen_at = $1::timestamptz
      WHERE status = 'Inspection'
        AND revision_num = '00'
        AND (issued_date IS NULL OR issued_date < '1970-01-02')
        AND enriched_status IS DISTINCT FROM 'Examination'
-     RETURNING permit_num`
+     RETURNING permit_num`,
+    [RUN_AT]
   );
   const examCount = examResult.rows.length;
   pipeline.log.info('[classify-phase]', `Examination: ${examCount.toLocaleString()} permits reclassified`);
@@ -102,4 +107,6 @@ pipeline.run('classify-permit-phase', async (pool) => {
     { "permits": ["status", "revision_num", "issued_date", "enriched_status", "last_seen_at"] },
     { "permits": ["enriched_status", "last_seen_at"] }
   );
+  });
+  if (!lockResult.acquired) return;
 });

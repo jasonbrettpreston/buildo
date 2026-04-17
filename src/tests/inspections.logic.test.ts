@@ -959,7 +959,8 @@ describe('classify-inspection-status.js SQL correctness', () => {
   it('bumps last_seen_at on status mutation for downstream CDC', () => {
     // permits has no updated_at column — last_seen_at is the temporal tracker
     // Without bumping it, downstream consumers never detect the status change
-    expect(scriptSource).toMatch(/SET\s+enriched_status\s*=\s*'Stalled'[\s\S]*?last_seen_at\s*=\s*NOW\(\)/);
+    // §47 Bundle G: NOW() → $2::timestamptz (RUN_AT param) — accept either pattern
+    expect(scriptSource).toMatch(/SET\s+enriched_status\s*=\s*'Stalled'[\s\S]*?last_seen_at\s*=\s*(?:NOW\(\)|\$\d+::timestamptz)/);
   });
 
   // Bug 6: Terminal State Clobbering — reactivation must not overwrite terminal states
@@ -1055,7 +1056,8 @@ describe('classify-permit-phase.js SQL correctness', () => {
 
   // CDC consistency — must bump last_seen_at on mutation
   it('bumps last_seen_at on status mutation for downstream CDC', () => {
-    expect(phaseSource).toMatch(/SET\s+enriched_status\s*=\s*'Examination'[\s\S]*?last_seen_at\s*=\s*NOW\(\)/);
+    // §47 Bundle G: NOW() → $1::timestamptz (RUN_AT param) — accept either pattern
+    expect(phaseSource).toMatch(/SET\s+enriched_status\s*=\s*'Examination'[\s\S]*?last_seen_at\s*=\s*(?:NOW\(\)|\$\d+::timestamptz)/);
   });
 });
 

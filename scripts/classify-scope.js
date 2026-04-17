@@ -18,6 +18,8 @@
  */
 const pipeline = require('./lib/pipeline');
 
+const ADVISORY_LOCK_ID = 87;
+
 const BATCH_SIZE = 1000;
 
 // ---------------------------------------------------------------------------
@@ -388,7 +390,9 @@ function isBLDPermit(permitNum) {
 const fullMode = pipeline.isFullMode();
 
 pipeline.run('classify-scope', async (pool) => {
-  const startTime = Date.now();
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const startTime = Date.now();
 
   pipeline.log.info('[classify-scope]', `Mode: ${fullMode ? 'FULL' : 'INCREMENTAL'}`);
 
@@ -491,7 +495,7 @@ pipeline.run('classify-scope', async (pool) => {
         `UPDATE permits AS p SET
            project_type = v.project_type,
            scope_tags = v.scope_tags::TEXT[],
-           scope_classified_at = NOW(),
+           scope_classified_at = $5::timestamptz,
            scope_source = 'classified'
          FROM (
            SELECT unnest($1::TEXT[]) AS permit_num,
@@ -504,7 +508,7 @@ pipeline.run('classify-scope', async (pool) => {
                 OR p.scope_tags IS DISTINCT FROM v.scope_tags::TEXT[]
                 OR p.scope_classified_at IS NULL
                 OR p.scope_classified_at < p.last_seen_at)`,
-        [permitNums, revisionNums, projectTypes, scopeTagArrays]
+        [permitNums, revisionNums, projectTypes, scopeTagArrays, RUN_AT]
       );
     });
 
@@ -527,7 +531,7 @@ pipeline.run('classify-scope', async (pool) => {
        SET
          scope_tags = bld.scope_tags,
          project_type = bld.project_type,
-         scope_classified_at = NOW(),
+         scope_classified_at = $1::timestamptz,
          scope_source = 'propagated'
        FROM (
          SELECT DISTINCT ON (base_num)
@@ -544,7 +548,8 @@ pipeline.run('classify-scope', async (pool) => {
          AND companion.permit_num !~ '\\sBLD(\\s|$)'
          AND companion.permit_num ~ '\\s[A-Z]{2,4}(\\s|$)'
          AND (companion.scope_tags IS DISTINCT FROM bld.scope_tags
-              OR companion.project_type IS DISTINCT FROM bld.project_type)`
+              OR companion.project_type IS DISTINCT FROM bld.project_type)`,
+      [RUN_AT]
     );
     return propagateResult.rowCount || 0;
   });
@@ -620,4 +625,6 @@ pipeline.run('classify-scope', async (pool) => {
     },
   });
   pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "current_use", "proposed_use", "storeys", "housing_units", "dwelling_units_created", "scope_classified_at", "last_seen_at"] }, { "permits": ["project_type", "scope_tags", "scope_classified_at", "scope_source"] });
+  });
+  if (!lockResult.acquired) return;
 });

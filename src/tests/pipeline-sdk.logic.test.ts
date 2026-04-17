@@ -772,7 +772,8 @@ describe('Pipeline SDK', () => {
     // §9.3 — classify-permits.js upsert must always update classified_at (no sticky record bug)
     it('classify-permits.js upsert updates classified_at unconditionally', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'classify-permits.js'), 'utf-8');
-      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE SET[\s\S]*?classified_at\s*=\s*NOW\(\)/i);
+      // §47 Bundle G: NOW() → $${runAtIdx}::timestamptz (RUN_AT param) — verify classified_at is set
+      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE SET[\s\S]*?classified_at\s*=/i);
       // Must NOT have WHERE IS DISTINCT FROM guard that prevents classified_at from updating
       const upsertMatch = content.match(
         /ON CONFLICT \(permit_num, revision_num, trade_id\)\s*\n\s*DO UPDATE SET([\s\S]*?)(?:;|`)/

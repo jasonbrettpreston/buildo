@@ -14,6 +14,8 @@
  */
 const pipeline = require('./lib/pipeline');
 
+const ADVISORY_LOCK_ID = 88;
+
 const BATCH_SIZE = 1000;
 
 // ---------------------------------------------------------------------------
@@ -507,7 +509,9 @@ function classifyPermit(permit, rules) {
 const fullMode = pipeline.isFullMode();
 
 pipeline.run('classify-permits', async (pool) => {
-  const startTime = Date.now();
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const startTime = Date.now();
 
   pipeline.log.info('[classify-permits]', 'Trade classification — inferred from permit metadata, not actual building plans');
 
@@ -619,11 +623,13 @@ pipeline.run('classify-permits', async (pool) => {
     // Collect permit keys for ghost trade cleanup
     const batchPermitKeys = batch.rows.map(p => `${p.permit_num}--${p.revision_num}`);
 
-    // Batch insert — sub-batch to stay under 65535 param limit (8 params per row → max 8000 rows)
+    // Batch insert — sub-batch to stay under 65535 param limit (8 params per row + 1 RUN_AT → max 4000 rows)
     const MAX_ROWS_PER_INSERT = 4000;
     for (let i = 0; i < insertParams.length; i += MAX_ROWS_PER_INSERT) {
       const chunk = insertParams.slice(i, i + MAX_ROWS_PER_INSERT);
-      const valChunk = insertValues.slice(i * 8, (i + MAX_ROWS_PER_INSERT) * 8);
+      // Append RUN_AT as the last param; its index = chunk.length * 8 + 1
+      const valChunk = [...insertValues.slice(i * 8, (i + MAX_ROWS_PER_INSERT) * 8), RUN_AT];
+      const runAtIdx = chunk.length * 8 + 1;
       // Re-number params for this chunk
       let pIdx = 1;
       const renumbered = [];
@@ -637,7 +643,7 @@ pipeline.run('classify-permits', async (pool) => {
            ON CONFLICT (permit_num, revision_num, trade_id)
            DO UPDATE SET tier = EXCLUDED.tier, confidence = EXCLUDED.confidence,
                          is_active = EXCLUDED.is_active, phase = EXCLUDED.phase,
-                         lead_score = EXCLUDED.lead_score, classified_at = NOW()
+                         lead_score = EXCLUDED.lead_score, classified_at = $${runAtIdx}::timestamptz
            RETURNING permit_num`,
           valChunk
         );
@@ -715,11 +721,11 @@ pipeline.run('classify-permits', async (pool) => {
 
       // Mark ALL processed permits as evaluated (regardless of match count)
       await client.query(
-        `UPDATE permits SET trade_classified_at = NOW()
+        `UPDATE permits SET trade_classified_at = $3::timestamptz
          WHERE (permit_num, revision_num) IN (
            SELECT unnest($1::text[]), unnest($2::text[])
          )`,
-        [allNums, allRevs]
+        [allNums, allRevs, RUN_AT]
       );
     });
 
@@ -780,4 +786,6 @@ pipeline.run('classify-permits', async (pool) => {
     },
   });
   pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"] });
+  });
+  if (!lockResult.acquired) return;
 });

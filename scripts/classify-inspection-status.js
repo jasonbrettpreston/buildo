@@ -16,12 +16,16 @@ const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
+const ADVISORY_LOCK_ID = 53;
+
 const LOGIC_VARS_SCHEMA = z.object({
   inspection_stall_days: z.number().finite().positive().int(),
 }).passthrough();
 
 pipeline.run('classify-inspection-status', async (pool) => {
-  const { logicVars } = await loadMarketplaceConfigs(pool, 'classify-inspection-status');
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const { logicVars } = await loadMarketplaceConfigs(pool, 'classify-inspection-status');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'classify-inspection-status');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
 
@@ -37,7 +41,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
     const stalledResult = await client.query(
       `UPDATE permits p
        SET enriched_status = 'Stalled',
-           last_seen_at = NOW()
+           last_seen_at = $2::timestamptz
        WHERE p.enriched_status = 'Active Inspection'
          AND p.revision_num = '00'
          AND GREATEST(
@@ -48,7 +52,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
            p.application_date
          ) < NOW() - $1 * INTERVAL '1 day'
        RETURNING p.permit_num`,
-      [staleDays]
+      [staleDays, RUN_AT]
     );
 
     // Step 2: Re-activate Stalled permits if new inspection activity detected
@@ -59,7 +63,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
     const reactivatedResult = await client.query(
       `UPDATE permits p
        SET enriched_status = 'Active Inspection',
-           last_seen_at = NOW()
+           last_seen_at = $2::timestamptz
        WHERE p.enriched_status = 'Stalled'
          AND p.revision_num = '00'
          -- SAFETY: redundant guard — WHERE already constrains to 'Stalled',
@@ -71,7 +75,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
              AND pi.inspection_date >= (NOW() - $1 * INTERVAL '1 day')::date
          )
        RETURNING p.permit_num`,
-      [staleDays]
+      [staleDays, RUN_AT]
     );
 
     return {
@@ -120,4 +124,6 @@ pipeline.run('classify-inspection-status', async (pool) => {
     { permits: ['permit_num', 'revision_num', 'enriched_status', 'issued_date', 'application_date', 'last_seen_at'], permit_inspections: ['permit_num', 'inspection_date'] },
     { permits: ['enriched_status', 'last_seen_at'] }
   );
+  });
+  if (!lockResult.acquired) return;
 });
