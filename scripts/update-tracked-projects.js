@@ -70,7 +70,7 @@ const TRADE_CONFIG_SCHEMA = z.object({
 pipeline.run('update-tracked-projects', async (pool) => {
   // §R3.5: Capture run timestamp at pipeline startup — MANDATORY per skeleton.
   // Used as $1 in all updated_at writes to prevent the Midnight Cross.
-  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
 
   // ─── Load Control Panel via shared loader ──────────────────
   // Done BEFORE lock acquisition so a config error doesn't hold the lock.

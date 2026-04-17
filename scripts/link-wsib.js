@@ -29,7 +29,7 @@ const ADVISORY_LOCK_ID = 94;
 
 pipeline.run('link-wsib', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const RUN_AT = await pipeline.getDbTimestamp(pool);
     const { logicVars } = await loadMarketplaceConfigs(pool, 'link-wsib');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-wsib');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);

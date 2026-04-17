@@ -171,7 +171,12 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
   it('captures RUN_AT via pool.query inside the withAdvisoryLock callback — not on lockClient (spec 47 §8)', () => {
     // After Phase 2 migration, no lockClient exists. RUN_AT must be obtained
     // via pool.query() inside the withAdvisoryLock callback.
-    expect(content).toMatch(/pool\.query\([^)]*SELECT NOW/);
+    // Accepts either the old inline pattern or the new SDK helper (pipeline.getDbTimestamp).
+    const hasInlineNow = /pool\.query\([^)]*SELECT NOW/.test(content);
+    const hasSdkHelper = /pipeline\.getDbTimestamp\s*\(/.test(content);
+    expect(hasInlineNow || hasSdkHelper,
+      'Must capture RUN_AT via pool.query(SELECT NOW) or pipeline.getDbTimestamp()'
+    ).toBe(true);
     expect(content).not.toMatch(/lockClient\.query\([^)]*SELECT NOW/);
   });
 

@@ -24,7 +24,7 @@ const LOGIC_VARS_SCHEMA = z.object({
 
 pipeline.run('classify-inspection-status', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const RUN_AT = await pipeline.getDbTimestamp(pool);
     const { logicVars } = await loadMarketplaceConfigs(pool, 'classify-inspection-status');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'classify-inspection-status');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);

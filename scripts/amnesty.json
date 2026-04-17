@@ -37,9 +37,6 @@
         { "file": "scripts/quality/assert-coa-freshness.js", "reason": "CQA script — read-only probe" },
         { "file": "scripts/quality/assert-lifecycle-phase-distribution.js", "reason": "CQA script — read-only probe" },
         { "file": "scripts/purge-lead-views.js",        "reason": "Batched DELETE is idempotent and crash-safe; each batch is independent" }
-      ],
-      "temporary": [
-        { "file": "scripts/classify-permit-phase.js",   "reason": "Phase B mop-up — needs withTransaction wrapper added (B2)" }
       ]
     },
     "new-date-ban": {
@@ -75,38 +72,20 @@
         { "file": "scripts/create-pre-permits.js",      "reason": "NOW() in WHERE clause only (freshness filter, not a write)" },
         { "file": "scripts/purge-lead-views.js",        "reason": "NOW() in WHERE clause only (age filter for DELETE boundary)" },
         { "file": "scripts/reclassify-all.js",          "reason": "One-off maintenance — not in active chain" },
-        { "file": "scripts/load-parcels.js",            "reason": "NOW() in WHERE clause only (permit expiry age filter, not a write)" }
-      ],
-      "temporary": [
-        { "file": "scripts/backfill-permits-location.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/classify-inspection-status.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/classify-lifecycle-phase.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/classify-permit-phase.js",   "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/classify-permits.js",        "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through all mutation SQL" },
-        { "file": "scripts/classify-scope.js",          "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/compute-centroids.js",       "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/compute-cost-estimates.js",  "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/compute-opportunity-scores.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/compute-timing-calibration.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/compute-timing-calibration-v2.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/compute-trade-forecasts.js", "reason": "Phase B mop-up B3 — partial; RUN_AT used for forecasts table but NOW() remains in other mutations" },
-        { "file": "scripts/enrich-web-search.js",       "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/enrich-wsib.js",             "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/extract-builders.js",        "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/geocode-permits.js",         "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/link-coa.js",                "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through all mutation SQL" },
-        { "file": "scripts/link-massing.js",            "reason": "Phase B mop-up B3 — linked_at fixed but other NOW() mutations remain" },
-        { "file": "scripts/link-neighbourhoods.js",     "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/link-parcels.js",            "reason": "Phase B mop-up B3 — linked_at fixed but other NOW() mutations remain" },
-        { "file": "scripts/link-similar.js",            "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/link-wsib.js",               "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/load-address-points.js",     "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/load-coa.js",                "reason": "Phase B mop-up B3 — hash/last_seen_at fixed but other NOW() mutations remain" },
-        { "file": "scripts/load-massing.js",            "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/load-neighbourhoods.js",     "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/load-permits.js",            "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/load-wsib.js",               "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
-        { "file": "scripts/update-tracked-projects.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" }
+        { "file": "scripts/load-parcels.js",            "reason": "NOW() in WHERE clause only (permit expiry age filter, not a write)" },
+        { "file": "scripts/classify-inspection-status.js", "reason": "NOW() in WHERE clauses only (age filters, not writes); RUN_AT used for SET clauses" },
+        { "file": "scripts/link-coa.js",                "reason": "NOW() in WHERE clause only (last_seen_at < NOW() - 1s freshness guard, not a write)" },
+        { "file": "scripts/enrich-web-search.js",       "reason": "pipeline_runs NOW() records observation time (when script ran), not a data timestamp" },
+        { "file": "scripts/enrich-wsib.js",             "reason": "pipeline_runs NOW() records observation time (when script ran), not a data timestamp" },
+        { "file": "scripts/load-wsib.js",               "reason": "pipeline_runs NOW() records observation time (when script ran), not a data timestamp" },
+        { "file": "scripts/load-permits.js",            "reason": "sync_runs NOW() records observation time (when sync ran), not a data timestamp" },
+        { "file": "scripts/update-tracked-projects.js", "reason": "NOW() appears in code comments only (documenting what the code does NOT do); all SET clauses use RUN_AT" },
+        { "file": "scripts/load-coa.js",                "reason": "NOW() in SELECT COUNT FILTER only (read-only aggregation reporting upcoming decisions, not a write)" },
+        { "file": "scripts/link-parcels.js",            "reason": "NOW() appears in code comment only (documenting what load-permits does); all SET clauses use RUN_AT" },
+        { "file": "scripts/classify-lifecycle-phase.js","reason": "NOW() appears in code comments only; all SET clauses use RUN_AT" },
+        { "file": "scripts/compute-cost-estimates.js",  "reason": "NOW() appears in comments only (documenting the anti-pattern avoided); batch UPSERT uses RUN_AT" },
+        { "file": "scripts/compute-timing-calibration-v2.js", "reason": "NOW() appears in comment only (documenting Midnight Cross prevention); UPSERT uses RUN_AT" },
+        { "file": "scripts/compute-trade-forecasts.js", "reason": "NOW() in SELECT-only query (captures run_at + today for forecast logic, not in a SET clause)" }
       ]
     },
     "unbounded-push-in-stream": {

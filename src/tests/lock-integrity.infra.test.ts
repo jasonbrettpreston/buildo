@@ -79,7 +79,12 @@ describe('compute-cost-estimates.js — RUN_AT timestamp discipline (spec 47 §8
     // After Phase 2 migration, no lockClient exists. RUN_AT must be obtained
     // via pool.query() inside the withAdvisoryLock callback — still "after lock
     // acquired" by construction (the callback only runs on lock success).
-    expect(script).toMatch(/pool\.query\([^)]*SELECT NOW/);
+    // Accepts either the old inline pattern or the new SDK helper (pipeline.getDbTimestamp).
+    const hasInlineNow = /pool\.query\([^)]*SELECT NOW/.test(script);
+    const hasSdkHelper = /pipeline\.getDbTimestamp\s*\(/.test(script);
+    expect(hasInlineNow || hasSdkHelper,
+      'Must capture RUN_AT via pool.query(SELECT NOW) or pipeline.getDbTimestamp()'
+    ).toBe(true);
     // Must NOT use a dedicated lockClient for RUN_AT
     expect(script).not.toMatch(/lockClient\.query\([^)]*SELECT NOW/);
     // Must NOT use lockClient at all

@@ -182,8 +182,13 @@ describe('scripts/compute-opportunity-scores.js — spec 47 §12 compliance (WF3
   it('captures RUN_AT from DB at startup — MANDATORY skeleton §R3.5 (spec 47 §14.1)', () => {
     // Required by the pipeline skeleton even when no timestamp column is written.
     // Documents run identity and prevents Midnight Cross on any future timestamp writes.
+    // Accepts either the old inline pattern or the new SDK helper (pipeline.getDbTimestamp).
     expect(content).toMatch(/RUN_AT/);
-    expect(content).toMatch(/SELECT NOW\(\) AS now/);
+    const hasInlineNow = /SELECT NOW\(\) AS now/.test(content);
+    const hasSdkHelper = /pipeline\.getDbTimestamp\s*\(/.test(content);
+    expect(hasInlineNow || hasSdkHelper,
+      'Must capture RUN_AT via SELECT NOW() inline or pipeline.getDbTimestamp()'
+    ).toBe(true);
   });
 
   it('flushes scores per-batch during streaming — no global updates[] accumulator (spec 47 §6.2)', () => {

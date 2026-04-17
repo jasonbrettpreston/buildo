@@ -275,7 +275,7 @@ const ADVISORY_LOCK_ID = 95;
 
 pipeline.run('load-coa', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
 
   const fullMode = pipeline.isFullMode();
   const startMs = Date.now();

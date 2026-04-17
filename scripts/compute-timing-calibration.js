@@ -64,7 +64,7 @@ const ADVISORY_LOCK_ID = 71;
 
 pipeline.run('compute-timing-calibration', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
   let rows;
   try {
     const res = await pool.query(CALIBRATION_SQL);

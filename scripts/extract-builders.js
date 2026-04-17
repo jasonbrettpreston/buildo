@@ -53,7 +53,7 @@ const ADVISORY_LOCK_ID = 11;
 
 pipeline.run('extract-builders', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
   const startTime = Date.now();
 
   pipeline.log.info('[extract-builders]', 'Extracting builders from permits...');

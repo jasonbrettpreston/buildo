@@ -47,7 +47,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   // §R3.5: Capture run timestamp at pipeline startup — MANDATORY per skeleton
   // even though opportunity_score is an int and no timestamp column is written.
   // Documents run identity and prevents Midnight Cross on any future additions.
-  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
 
   // ─── Load Control Panel via shared loader ──────────────────
   // tradeConfigs not used here — per-trade multipliers come from the SQL JOIN on trade_configurations.

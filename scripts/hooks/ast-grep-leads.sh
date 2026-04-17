@@ -173,8 +173,9 @@ while IFS= read -r f; do
   [ -z "$f" ] && continue
   rel="${f#./}"
   is_amnestied "$rel" "$amnesty_sql_now" && continue
+  # Case-sensitive NOW() to avoid false positives from JavaScript's Date.now()
   if grep -qEi '\b(INSERT INTO|UPDATE |DELETE FROM)\b' "$f" && \
-     grep -qEi '\bNOW\(\)|CURRENT_DATE\b' "$f"; then
+     grep -qE '\bNOW\(\)|CURRENT_DATE\b' "$f"; then
     echo "footgun[sql-now]: $f uses NOW() or CURRENT_DATE in a file that also contains data mutations. Capture the DB clock once at startup via pipeline.getDbTimestamp(pool) and pass it as \$N to all mutation SQL (§47 §R3.5, Phase 7 B3)."
     sql_now=1
   fi

@@ -114,7 +114,7 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
   // §14.1: Capture run timestamp at pipeline startup — used as computed_at
   // for all UPSERT rows. Prevents "Midnight Cross" where NOW() in a loop
   // yields different calendar dates for rows in the same logical run.
-  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
 
   // ─── Load + validate control panel variables ──────────────────
   // calibration_min_sample_size must come from DB (§4.1 — no hardcoded

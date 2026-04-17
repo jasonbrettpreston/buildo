@@ -209,8 +209,13 @@ describe('scripts/update-tracked-projects.js — spec 47 compliance', () => {
   });
 
   it('captures RUN_AT from DB at startup — MANDATORY skeleton §R3.5 (spec 47 §14.1)', () => {
+    // Accepts either the old inline pattern or the new SDK helper (pipeline.getDbTimestamp).
     expect(content).toMatch(/RUN_AT/);
-    expect(content).toMatch(/SELECT NOW\(\) AS now/);
+    const hasInlineNow = /SELECT NOW\(\) AS now/.test(content);
+    const hasSdkHelper = /pipeline\.getDbTimestamp\s*\(/.test(content);
+    expect(hasInlineNow || hasSdkHelper,
+      'Must capture RUN_AT via SELECT NOW() inline or pipeline.getDbTimestamp()'
+    ).toBe(true);
   });
 
   it('uses pipeline.streamQuery for tracked_projects — not pool.query (spec 47 §6.1)', () => {

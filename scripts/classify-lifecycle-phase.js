@@ -169,7 +169,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // (not new Date()) ensures the JS and SQL sides share the same clock
   // source and TZ session, preventing Midnight Cross drift where batches
   // processed across midnight get different dates.
-  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
 
   // ═══════════════════════════════════════════════════════════
   // Load Control Panel (WF3 2026-04-13)

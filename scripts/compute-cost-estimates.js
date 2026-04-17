@@ -244,7 +244,7 @@ if (require.main === module) {
     // drift: if the run starts just before midnight and flushes batches just
     // after, all computed_at values are anchored to the same instant.
     // (Spec 47 §8 — no NOW() in WHERE/SET clauses of the batch UPSERT)
-    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const RUN_AT = await pipeline.getDbTimestamp(pool);
 
     // ── 7. Stream + batch ──────────────────────────────────────────────────
     let processed  = 0;

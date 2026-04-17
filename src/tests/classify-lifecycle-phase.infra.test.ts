@@ -43,11 +43,16 @@ describe('scripts/classify-lifecycle-phase.js — pipeline shape', () => {
     expect(content).not.toMatch(/SPEC LINK:.*docs\/reports\//);
   });
 
-  it('captures RUN_AT from SELECT NOW() as the first query inside pipeline.run', () => {
+  it('captures RUN_AT from DB clock at startup inside pipeline.run', () => {
     // §14.1 / §R3.5: RUN_AT must be captured from the DB clock before config
     // load, lock acquisition, and any batch writes. Using DB timestamp (not
     // new Date()) ensures JS and SQL share the same clock source and TZ session.
-    expect(content).toMatch(/SELECT NOW\(\)\s*AS\s*now/i);
+    // Accepts either the old inline pattern or the new SDK helper.
+    const hasInlineNow = /SELECT NOW\(\)\s*AS\s*now/i.test(content);
+    const hasSdkHelper = /pipeline\.getDbTimestamp\s*\(/.test(content);
+    expect(hasInlineNow || hasSdkHelper,
+      'Must capture RUN_AT via SELECT NOW() inline or pipeline.getDbTimestamp()'
+    ).toBe(true);
     expect(content).toMatch(/RUN_AT/);
     // Must NOT derive run timestamp from JS new Date()
     expect(content).not.toMatch(/const\s+(?:now|RUN_AT)\s*=\s*new Date\(\)/);

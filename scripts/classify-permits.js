@@ -512,7 +512,7 @@ const fullMode = pipeline.isFullMode();
 
 pipeline.run('classify-permits', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const RUN_AT = await pipeline.getDbTimestamp(pool);
     const startTime = Date.now();
 
   pipeline.log.info('[classify-permits]', 'Trade classification — inferred from permit metadata, not actual building plans');

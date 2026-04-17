@@ -32,7 +32,7 @@ const pipeline = require('./lib/pipeline');
  */
 async function geocodePermits(pool, opts) {
   const withTransaction = (opts && opts.withTransaction) ? opts.withTransaction : pipeline.withTransaction.bind(pipeline);
-  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
   const startTime = Date.now();
 
   pipeline.log.info('[geocode-permits]', 'Starting permit geocoding (Address Points lookup)');

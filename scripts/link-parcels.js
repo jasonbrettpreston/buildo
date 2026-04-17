@@ -107,7 +107,7 @@ function haversineDistance(p1, p2) {
 
 pipeline.run('link-parcels', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const RUN_AT = await pipeline.getDbTimestamp(pool);
     const { logicVars } = await loadMarketplaceConfigs(pool, 'link-parcels');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-parcels');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);

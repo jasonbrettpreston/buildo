@@ -388,7 +388,7 @@ const ADVISORY_LOCK_ID = 2;
 // Only run when executed directly (not when required for testing)
 if (require.main === module) pipeline.run('load-permits', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
 
   const counters = { newInserts: 0, updated: 0, processed: 0, errors: 0 };
   const startTime = Date.now();

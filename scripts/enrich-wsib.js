@@ -467,7 +467,7 @@ async function searchSerper(query) {
 if (require.main === module) {
 pipeline.run('enrich-wsib', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const RUN_AT = await pipeline.getDbTimestamp(pool);
     const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const limitIdx = args.indexOf('--limit');

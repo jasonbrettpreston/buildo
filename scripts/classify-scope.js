@@ -391,7 +391,7 @@ const fullMode = pipeline.isFullMode();
 
 pipeline.run('classify-scope', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const RUN_AT = await pipeline.getDbTimestamp(pool);
     const startTime = Date.now();
 
   pipeline.log.info('[classify-scope]', `Mode: ${fullMode ? 'FULL' : 'INCREMENTAL'}`);

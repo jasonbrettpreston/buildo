@@ -178,8 +178,13 @@ describe('scripts/compute-timing-calibration-v2.js — spec 47 compliance (WF3-1
   });
 
   it('captures RUN_AT from DB at startup — no inline NOW() in UPSERT values (spec 47 §14.1)', () => {
+    // Accepts either the old inline pattern or the new SDK helper (pipeline.getDbTimestamp).
     expect(content).toMatch(/RUN_AT/);
-    expect(content).toMatch(/SELECT NOW\(\) AS now/);
+    const hasInlineNow = /SELECT NOW\(\) AS now/.test(content);
+    const hasSdkHelper = /pipeline\.getDbTimestamp\s*\(/.test(content);
+    expect(hasInlineNow || hasSdkHelper,
+      'Must capture RUN_AT via SELECT NOW() inline or pipeline.getDbTimestamp()'
+    ).toBe(true);
     // NOW() must not appear inside a VALUES placeholder
     expect(content).not.toMatch(/vals\.push\(`[^`]*NOW\(\)/);
   });

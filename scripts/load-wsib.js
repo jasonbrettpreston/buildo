@@ -132,7 +132,7 @@ pipeline.run('load-wsib', async (pool) => {
   }
 
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
 
   pipeline.log.info('[load-wsib]', `Source: ${filePath}`);
 
