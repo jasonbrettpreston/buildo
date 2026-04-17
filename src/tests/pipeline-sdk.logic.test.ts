@@ -652,6 +652,15 @@ describe('Pipeline SDK', () => {
         const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
         expect(content).toContain('pipeline.emitMeta(');
       });
+
+      it(`${script} uses pipeline.withAdvisoryLock() — no hand-rolled pg_try_advisory_lock (spec 47 §5.3, WF3-B)`, () => {
+        const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
+        // Direct pg_try_advisory_lock usage bypasses the WF3-L1 xact_lock migration
+        // and reintroduces zombie-lock behavior (SIGKILL holds lock indefinitely).
+        // All script-level locks must go through pipeline.withAdvisoryLock().
+        expect(content).not.toMatch(/\bpg_try_advisory_lock\b/);
+        expect(content).not.toMatch(/\bpg_advisory_unlock\b/);
+      });
     }
 
     // run-chain.js is the orchestrator — it uses SDK for pool/logging but not pipeline.run()
