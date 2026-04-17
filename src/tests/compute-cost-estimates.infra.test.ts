@@ -184,8 +184,18 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     expect(content).toMatch(/COST_MODEL_CONFIG_SCHEMA\s*=\s*z\.object\(/);
     expect(content).toMatch(/urban_coverage_ratio/);
     expect(content).toMatch(/suburban_coverage_ratio/);
-    expect(content).toMatch(/trust_threshold_pct/);
     expect(content).toMatch(/liar_gate_threshold/);
+  });
+
+  it('does NOT validate trust_threshold_pct as a Zod key in COST_MODEL_CONFIG_SCHEMA — reserved for Spec 83 Phase 2 (WF3-A)', () => {
+    // trust_threshold_pct governs a per-dataset coverage trust gate not yet implemented
+    // in the Brain. Validating a key the script never consumes creates false confidence.
+    // It remains seeded in logic_variables.json and ZERO_IS_INVALID for future use.
+    // The comment explaining the exclusion is allowed — only the Zod key line is banned.
+    const schemaBlock = content.match(/COST_MODEL_CONFIG_SCHEMA\s*=\s*z\.object\(([\s\S]*?)\)\.passthrough\(\)/)?.[0] ?? '';
+    expect(schemaBlock, 'COST_MODEL_CONFIG_SCHEMA block not found').toBeTruthy();
+    // Match the Zod key pattern: `  trust_threshold_pct:` — comments are allowed
+    expect(schemaBlock).not.toMatch(/^\s*trust_threshold_pct\s*:/m);
   });
 
   it('calls validateLogicVars and throws on invalid config', () => {

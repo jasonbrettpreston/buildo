@@ -58,7 +58,8 @@
  *   — keyed as `${permit_type}::${structure_type}`; comes from scope_intensity_matrix
  * @property {number} urbanCoverageRatio       — logic_variables.urban_coverage_ratio
  * @property {number} suburbanCoverageRatio    — logic_variables.suburban_coverage_ratio
- * @property {number} trustThresholdPct        — logic_variables.trust_threshold_pct
+ * @property {number} [trustThresholdPct]       — logic_variables.trust_threshold_pct
+ *   (reserved for Spec 83 Phase 2 coverage trust gate — not yet consumed by any Brain function)
  * @property {number} liarGateThreshold        — logic_variables.liar_gate_threshold
  * @property {Array<{min:number,max:number|null,multiplier:number}>} premiumTiers
  *   — income → neighbourhood premium multiplier table
