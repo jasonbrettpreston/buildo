@@ -1,0 +1,28 @@
+id: unbounded-push-in-stream
+language: JavaScript
+severity: warning
+message: |
+  OOM risk: .push() inside a for-await streaming loop without a visible batch-flush guard.
+  If the stream source returns hundreds of thousands of rows, this array grows without bound
+  and will eventually exhaust Node.js heap memory (V8 OOM crash).
+  Fix: add a batch-flush check after every .push():
+    if (batch.length >= BATCH_SIZE) { await flushBatch(pool, batch); batch = []; }
+  Suppression: // ast-grep-disable-next-line unbounded-push-in-stream: bounded by <reason>
+  SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §16 Rule B4
+note: Ban applies to all active pipeline scripts. See scripts/amnesty.json for exempt files.
+rule:
+  any:
+    # for await...of with .push() inside
+    - pattern: |
+        for await (const $_ of $_) {
+          $$$
+          $ARRAY.push($$$)
+          $$$
+        }
+    # for await...of with direct push call
+    - pattern: |
+        for await (const $_ of $_) {
+          $$$
+          $METHOD($ARRAY.push($$$))
+          $$$
+        }

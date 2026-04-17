@@ -1,0 +1,63 @@
+id: loop-query
+language: JavaScript
+severity: warning
+message: |
+  N+1 query detected: pool.query() / client.query() inside a loop.
+  Every iteration issues a separate round-trip to PostgreSQL. At pipeline scale
+  (100K+ rows) this causes O(rows) latency and can overwhelm the connection pool.
+  Fix: collect values into an array outside the loop, then do a single UNNEST-based
+  batch INSERT/UPDATE after the loop.
+  Suppression: // ast-grep-disable-next-line loop-query: <justification>
+  SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §16 Rule B1
+note: Ban applies to all active pipeline scripts. See scripts/amnesty.json for exempt files.
+rule:
+  any:
+    # for...of loop
+    - pattern: |
+        for (const $_ of $_) {
+          $$$
+          $POOL.query($$$)
+          $$$
+        }
+    # for...of loop with await
+    - pattern: |
+        for (const $_ of $_) {
+          $$$
+          await $POOL.query($$$)
+          $$$
+        }
+    # for...in loop
+    - pattern: |
+        for (const $_ in $_) {
+          $$$
+          $POOL.query($$$)
+          $$$
+        }
+    # classic for loop
+    - pattern: |
+        for ($$$; $$$; $$$) {
+          $$$
+          $POOL.query($$$)
+          $$$
+        }
+    # while loop
+    - pattern: |
+        while ($_) {
+          $$$
+          $POOL.query($$$)
+          $$$
+        }
+    # arrow function callback to forEach
+    - pattern: |
+        $_.forEach(async ($_) => {
+          $$$
+          $POOL.query($$$)
+          $$$
+        })
+    # arrow function callback to map (async)
+    - pattern: |
+        $_.map(async ($_) => {
+          $$$
+          $POOL.query($$$)
+          $$$
+        })
