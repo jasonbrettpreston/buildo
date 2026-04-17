@@ -54,7 +54,10 @@ function computeCentroid(geom) {
   return [sumLng / n, sumLat / n];
 }
 
+const ADVISORY_LOCK_ID = 99;
+
 pipeline.run('compute-centroids', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const startTime = Date.now();
 
   const countResult = await pool.query(
@@ -216,4 +219,7 @@ pipeline.run('compute-centroids', async (pool) => {
     { "parcels": ["id", "geometry"] },
     { "parcels": ["centroid_lat", "centroid_lng"] }
   );
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

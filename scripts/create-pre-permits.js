@@ -28,7 +28,11 @@ const LOGIC_VARS_SCHEMA = z.object({
   pre_permit_expiry_months: z.number().finite().positive().int(),
 }).passthrough();
 
+const ADVISORY_LOCK_ID = 100;
+
 pipeline.run('create-pre-permits', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
   const { logicVars } = await loadMarketplaceConfigs(pool, 'create-pre-permits');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'create-pre-permits');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
@@ -80,13 +84,13 @@ pipeline.run('create-pre-permits', async (pool) => {
         'Pre-Permit',
         'Forecasted',
         description, ward, street_num, street_name, decision_date,
-        NOW()
+        $1::timestamptz
       FROM coa_applications
       WHERE decision ILIKE 'approved%'
         AND linked_permit_num IS NULL
         AND application_number IS NOT NULL
       ON CONFLICT (permit_num, revision_num) DO NOTHING
-    `);
+    `, [RUN_AT]);
     return result.rowCount || 0;
   });
 
@@ -97,11 +101,11 @@ pipeline.run('create-pre-permits', async (pool) => {
     const result = await client.query(`
       UPDATE permits
       SET status = 'Expired/Abandoned',
-          last_seen_at = NOW()
+          last_seen_at = $2::timestamptz
       WHERE permit_type = 'Pre-Permit'
         AND status = 'Forecasted'
         AND application_date < NOW() - $1 * INTERVAL '1 month'
-    `, [expiryMonths]);
+    `, [expiryMonths, RUN_AT]);
     return result.rowCount || 0;
   });
 
@@ -198,4 +202,7 @@ pipeline.run('create-pre-permits', async (pool) => {
     { "coa_applications": ["application_number", "decision", "linked_permit_num", "decision_date", "ward", "street_num", "street_name", "description"] },
     { "permits": ["permit_num", "revision_num", "permit_type", "status", "description", "ward", "street_num", "street_name", "application_date", "last_seen_at"] }
   );
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

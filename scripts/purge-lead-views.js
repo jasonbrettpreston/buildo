@@ -20,49 +20,23 @@
  *
  * Environment:
  *   PG_HOST, PG_PORT, PG_USER, PG_PASSWORD, PG_DATABASE — DB connection
- *   PIPELINE_META_EMIT — set to '1' for orchestrator integration
  *
- * Exit codes:
- *   0 — success (including dry-run)
- *   1 — DB connection failure
- *   2 — argument parse failure
- *   3 — partial failure (some rows purged, some errored)
+ * SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md
  */
 
 // Load dotenv to populate PG_* + Firebase vars from .env
 require('dotenv').config();
 
-const { Pool } = require('pg');
+const pipeline = require('./lib/pipeline');
 
 const RETENTION_DAYS = 90;
 const DRY_RUN = process.argv.includes('--dry-run');
 const RECONCILE = process.argv.includes('--reconcile');
-const EMIT_META = process.env.PIPELINE_META_EMIT === '1';
 
-function emitMeta(meta) {
-  if (EMIT_META) {
-    // eslint-disable-next-line no-console
-    console.log(`PIPELINE_META:${JSON.stringify(meta)}`);
-  }
-}
+const ADVISORY_LOCK_ID = 101;
 
-function emitSummary(summary) {
-  if (EMIT_META) {
-    // eslint-disable-next-line no-console
-    console.log(`PIPELINE_SUMMARY:${JSON.stringify(summary)}`);
-  }
-}
-
-async function run() {
-  const pool = new Pool({
-    host: process.env.PG_HOST,
-    port: process.env.PG_PORT ? Number(process.env.PG_PORT) : 5432,
-    user: process.env.PG_USER,
-    password: process.env.PG_PASSWORD,
-    database: process.env.PG_DATABASE,
-  });
-
-  try {
+pipeline.run('purge-lead-views', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     // Count rows that would be purged first (for dry-run + logging).
     const countRes = await pool.query(
       `SELECT COUNT(*)::int AS stale
@@ -72,17 +46,14 @@ async function run() {
     );
     const stale = countRes.rows[0]?.stale ?? 0;
 
-    emitMeta({
-      reads: { lead_views: stale },
-      writes: DRY_RUN ? {} : { lead_views: stale },
-    });
+    pipeline.emitMeta(
+      { "lead_views": ["id", "viewed_at"] },
+      DRY_RUN ? {} : { "lead_views": ["id"] },
+    );
 
     if (DRY_RUN) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `[dry-run] ${stale} lead_views rows older than ${RETENTION_DAYS} days would be deleted`,
-      );
-      emitSummary({
+      pipeline.log.info('[purge-lead-views]', `[dry-run] ${stale} lead_views rows older than ${RETENTION_DAYS} days would be deleted`);
+      pipeline.emitSummary({
         records_total: stale,
         records_new: 0,
         records_updated: 0,
@@ -92,9 +63,8 @@ async function run() {
     }
 
     if (stale === 0) {
-      // eslint-disable-next-line no-console
-      console.log(`[purge-lead-views] nothing to delete (retention ${RETENTION_DAYS}d)`);
-      emitSummary({
+      pipeline.log.info('[purge-lead-views]', `nothing to delete (retention ${RETENTION_DAYS}d)`);
+      pipeline.emitSummary({
         records_total: 0,
         records_new: 0,
         records_updated: 0,
@@ -106,6 +76,7 @@ async function run() {
     // Batched delete to avoid a long lock on the viewed_at BRIN index.
     const BATCH_SIZE = 5000;
     let totalDeleted = 0;
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const res = await pool.query(
         `DELETE FROM lead_views
@@ -120,11 +91,8 @@ async function run() {
       if ((res.rowCount ?? 0) === 0) break;
     }
 
-    // eslint-disable-next-line no-console
-    console.log(
-      `[purge-lead-views] deleted ${totalDeleted} rows older than ${RETENTION_DAYS} days`,
-    );
-    emitSummary({
+    pipeline.log.info('[purge-lead-views]', `deleted ${totalDeleted} rows older than ${RETENTION_DAYS} days`);
+    pipeline.emitSummary({
       records_total: totalDeleted,
       records_new: 0,
       records_updated: totalDeleted, // deletions tracked as "updates" in the records_meta contract
@@ -132,19 +100,9 @@ async function run() {
     });
 
     if (RECONCILE) {
-      // eslint-disable-next-line no-console
-      console.log(
-        '[purge-lead-views] --reconcile requested but Firebase Admin reconciliation is not yet implemented. ' +
-          'Spec 70 §Operating Boundaries — tracked as a follow-up for Phase 4+.',
-      );
+      pipeline.log.info('[purge-lead-views]', '--reconcile requested but Firebase Admin reconciliation is not yet implemented. Spec 70 §Operating Boundaries — tracked as a follow-up for Phase 4+.');
     }
-  } finally {
-    await pool.end();
-  }
-}
+  }); // withAdvisoryLock
 
-run().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error('[purge-lead-views] failed:', err);
-  process.exit(1);
+  if (!lockResult.acquired) return;
 });

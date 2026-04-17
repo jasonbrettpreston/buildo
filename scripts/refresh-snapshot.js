@@ -13,7 +13,10 @@ const LOGIC_VARS_SCHEMA = z.object({
   coa_match_conf_medium:   z.number().finite().positive().max(1),
 }).passthrough();
 
+const ADVISORY_LOCK_ID = 40;
+
 pipeline.run('refresh-snapshot', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const t0 = Date.now();
   pipeline.log.info(TAG, 'Recapturing data quality snapshot...');
 
@@ -500,4 +503,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
     },
   });
   pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"], "permit_inspections": ["*"], "cost_estimates": ["cost_source", "estimated_cost"], "timing_calibration": ["computed_at", "sample_size"] }, { "data_quality_snapshots": ["*"] });
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

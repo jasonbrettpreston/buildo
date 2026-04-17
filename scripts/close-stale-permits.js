@@ -30,7 +30,10 @@ const LOGIC_VARS_SCHEMA = z.object({
   pending_closed_grace_days:  z.number().finite().positive().int(),
 }).passthrough();
 
+const ADVISORY_LOCK_ID = 98;
+
 pipeline.run('close-stale-permits', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const startTime = Date.now();
 
   const { logicVars } = await loadMarketplaceConfigs(pool, 'close-stale-permits');
@@ -188,4 +191,7 @@ pipeline.run('close-stale-permits', async (pool) => {
     { "permits": ["status", "last_seen_at", "completed_date"], "pipeline_runs": ["pipeline", "status", "started_at"] },
     { "permits": ["status", "completed_date"] }
   );
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

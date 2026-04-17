@@ -60,7 +60,11 @@ const CALIBRATION_SQL = `
   HAVING COUNT(*) >= 5
 `;
 
+const ADVISORY_LOCK_ID = 71;
+
 pipeline.run('compute-timing-calibration', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
   let rows;
   try {
     const res = await pool.query(CALIBRATION_SQL);
@@ -150,15 +154,15 @@ pipeline.run('compute-timing-calibration', async (pool) => {
                p75_days,
                sample_size,
                computed_at
-             ) VALUES ($1, $2, $3, $4, $5, NOW())
+             ) VALUES ($1, $2, $3, $4, $5, $6::timestamptz)
              ON CONFLICT (permit_type) DO UPDATE
                SET median_days_to_first_inspection = EXCLUDED.median_days_to_first_inspection,
                    p25_days                         = EXCLUDED.p25_days,
                    p75_days                         = EXCLUDED.p75_days,
                    sample_size                      = EXCLUDED.sample_size,
-                   computed_at                      = NOW()
+                   computed_at                      = EXCLUDED.computed_at
              RETURNING (xmax = 0) AS inserted`,
-            [row.permit_type, row.median, row.p25, row.p75, row.sample_size],
+            [row.permit_type, row.median, row.p25, row.p75, row.sample_size, RUN_AT],
           );
           if (upsert.rows[0] && upsert.rows[0].inserted) inserted++;
           else updated++;
@@ -245,4 +249,7 @@ pipeline.run('compute-timing-calibration', async (pool) => {
       ],
     },
   );
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });
