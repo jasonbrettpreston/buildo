@@ -129,6 +129,9 @@
 | MED | WF2 Phase 3 2026-04-12 Independent | No behavioral test for multi-status GROUP BY (same permit saved + claimed). Shape tests only. | Future test hardening | OPEN |
 | LOW | WF3 092 2026-04-13 Independent | `let` module-scope reassignment for DB-loaded config (TRADE_ALLOCATION_PCT, LIAR_GATE_THRESHOLD, TRADE_TARGET_PHASE) is structurally fragile. A future developer calling these outside pipeline.run gets fallback values. Safer: pass as params. Not a current bug. | Future refactor | OPEN |
 | HIGH | WF3-04 2026-04-14 Independent | 82-W6 (`update-tracked-projects.js` L381): `records_updated: updates.length` is the pre-merge accumulator count, inflates telemetry when a single row has both stall+imminent deltas. Fix is one-liner: `records_updated: mergedUpdates.length`. Out of scope for WF3-04 (H-W14); file as standalone WF3. | Standalone WF3 | OPEN |
+| LOW | WF2 Phase 5 2026-04-17 Independent | `ConfirmSyncModal.tsx` uses custom responsive CSS (`items-end sm:items-center`, `rounded-t-2xl sm:rounded-2xl`) instead of Shadcn `<Drawer>` (mobile) + `<Dialog>` (desktop) as required by spec 86 §5 Mobile & Responsive Behavior. Pre-existing; not introduced by Phase 5. | Future WF2 86_control_panel mobile polish | OPEN |
+| NIT | WF2 Phase 5 2026-04-17 Independent | Spec 86 §1 table labels the variable `liar_gate_threshold_pct` but the codebase (seed JSON, DB migration, config-loader, API, tests, UI) consistently uses `liar_gate_threshold`. Docs-only drift, code is internally consistent. | Docs WF — update spec 86 §1 table label | OPEN |
+| NIT | WF2 Phase 5 2026-04-17 Independent | `StickyActionBar` uses `flex gap-3` without `flex-col sm:flex-row` — spec 86 §5 requires buttons to stack vertically on mobile (< 640px). Pre-existing. | Future WF2 86_control_panel mobile polish | OPEN |
 
 ---
 

@@ -15,6 +15,9 @@ import path from 'path';
 import fs from 'fs';
 import { logError } from '@/lib/logger';
 
+// Prevent Next.js from caching the resync response — each POST must hit the server.
+export const dynamic = 'force-dynamic';
+
 /**
  * The downstream steps that depend on Gravity config (logic_variables,
  * trade_configurations, scope_intensity_matrix). Steps 14–24 of the

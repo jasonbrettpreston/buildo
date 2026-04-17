@@ -15,6 +15,17 @@ import {
   ConfigUpdatePayloadSchema,
 } from '@/lib/admin/control-panel';
 
+// Prevent Next.js and any CDN/proxy from caching admin config responses.
+// Config data must always reflect the current DB state — staleness is unsafe.
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+} as const;
+
 /**
  * GET /api/admin/control-panel/configs
  * Returns the complete current state of all control-panel tables.
@@ -22,10 +33,10 @@ import {
 export async function GET() {
   try {
     const config = await loadAllConfigs(pool);
-    return NextResponse.json({
-      data: config,
-      meta: { fetched_at: new Date().toISOString() },
-    });
+    return NextResponse.json(
+      { data: config, meta: { fetched_at: new Date().toISOString() } },
+      { headers: NO_CACHE_HEADERS },
+    );
   } catch (err) {
     logError('[control-panel/configs]', err, { event: 'get_configs_failed' });
     return NextResponse.json(
@@ -61,11 +72,14 @@ export async function PUT(request: Request) {
 
   try {
     const rowsUpdated = await applyConfigUpdate(pool, parsed.data);
-    return NextResponse.json({
-      data: { rows_updated: rowsUpdated },
-      error: null,
-      meta: { updated_at: new Date().toISOString() },
-    });
+    return NextResponse.json(
+      {
+        data: { rows_updated: rowsUpdated },
+        error: null,
+        meta: { updated_at: new Date().toISOString() },
+      },
+      { headers: NO_CACHE_HEADERS },
+    );
   } catch (err) {
     logError('[control-panel/configs]', err, { event: 'apply_config_failed' });
     return NextResponse.json(

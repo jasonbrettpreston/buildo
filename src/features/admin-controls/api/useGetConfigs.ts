@@ -33,7 +33,8 @@ export function useGetConfigs() {
       }
       return result;
     },
-    staleTime: 30_000, // 30s — admin page; don't need sub-second freshness
+    staleTime: 0,  // Always refetch on mount/window-focus — admin panel must show live DB state
+    gcTime: 0,     // Don't keep stale config snapshots in the React Query cache
     retry: 2,
   });
 }
