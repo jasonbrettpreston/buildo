@@ -67,27 +67,11 @@ pipeline.run('[script-slug]', async (pool) => {
     throw new Error('[script-slug] SOME_REQUIRED_ARRAY is empty — refusing to run');
   }
 
-  // §R6 — Advisory lock on dedicated client (MANDATORY — see §5)
-  const lockClient = await pool.connect();
-  try {
-    const { rows: lockRows } = await lockClient.query(
-      'SELECT pg_try_advisory_lock($1) AS got',
-      [ADVISORY_LOCK_ID],
-    );
-    if (!lockRows[0].got) {
-      pipeline.log.info('[script-slug]', `Lock ${ADVISORY_LOCK_ID} held — skipping.`);
-      pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0,
-        records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere' } });
-      pipeline.emitMeta({}, {});
-      lockClient.release();
-      return; // CRITICAL: release BEFORE return, not in finally
-    }
-  } catch (lockErr) {
-    lockClient.release();
-    throw lockErr;
-  }
-
-  try {
+  // §R6 — Advisory lock via SDK helper (MANDATORY — see §5)
+  // pipeline.withAdvisoryLock uses pg_try_advisory_xact_lock (transaction-level).
+  // The lock is released automatically when the transaction ends — no explicit unlock
+  // call, no SIGTERM handler, no lockClient bookkeeping needed.
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
 
     // §R7 — Data read (MANDATORY — see §6)
     // Use streamQuery for any table expected to return >10K rows.
@@ -120,16 +104,15 @@ pipeline.run('[script-slug]', async (pool) => {
       throw new Error(`BLOCKING: ${unclassifiedCount} exceed threshold`);
     }
 
-  } finally {
-    // §R13 — Lock release on the SAME dedicated client (MANDATORY)
-    try {
-      await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-    } catch (unlockErr) {
-      pipeline.log.warn('[script-slug]', 'Failed to release advisory lock.', { err: unlockErr.message });
-    } finally {
-      lockClient.release();
-    }
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) {
+    // SDK already emitted PIPELINE_SUMMARY with skipped:true (skipEmit default).
+    // If the script needs a richer SKIP payload (custom audit_table), pass
+    // { skipEmit: false } to withAdvisoryLock and emit manually here.
+    return;
   }
+
 });
 ```
 
@@ -283,69 +266,52 @@ This makes lock IDs human-traceable in `pg_locks` and prevents silent collisions
 scripts. **Failure mode (83-W7):** `compute-cost-estimates.js` used lock ID 74 (wrong spec
 number). Any script that legitimately uses lock 74 would silently contend with it.
 
-### 5.3 Lock MUST be held on a dedicated client
+### 5.3 Lock MUST be acquired via `pipeline.withAdvisoryLock()`
 
 ```js
-// WRONG — pool.query checks out an ephemeral connection that can be
-// reaped by the pool's idleTimeoutMillis during CPU-heavy phases.
+// WRONG — session-level lock survives SIGKILL. A zombie connection holds the lock
+// indefinitely, permanently blocking the pipeline until manual pg_advisory_unlock().
+const lockClient = await pool.connect();
+await lockClient.query('SELECT pg_try_advisory_lock($1)', [ADVISORY_LOCK_ID]);
+
+// WRONG — pool.query checks out an ephemeral connection that can be reaped by the
+// pool's idleTimeoutMillis during CPU-heavy phases (Failure mode 83-W5).
 await pool.query('SELECT pg_try_advisory_lock($1)', [ADVISORY_LOCK_ID]);
 
-// RIGHT — dedicated client stays checked out for the full run.
-const lockClient = await pool.connect();
-const { rows } = await lockClient.query('SELECT pg_try_advisory_lock($1) AS got', [ADVISORY_LOCK_ID]);
-```
-
-**Failure mode (83-W5):** `compute-cost-estimates.js` acquired the lock via `pool.query`.
-During the CPU-bound computation phase (~20s), the pool's idle-timeout reaped the connection.
-The lock was silently released mid-run, and a second instance acquired it. Two instances ran
-simultaneously, each committing partial results.
-
-### 5.4 Lock release: always in a try/finally wrapping the entire run body
-
-```js
-const lockClient = await pool.connect();
-try {
-  // acquire + skip-if-held (see skeleton §R6)
-} catch (lockErr) {
-  lockClient.release();
-  throw lockErr;
-}
-
-try {
-  // all script logic here
-} finally {
-  try {
-    await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-  } catch (unlockErr) {
-    pipeline.log.warn('[script-slug]', 'Failed to release advisory lock.', { err: unlockErr.message });
-  } finally {
-    lockClient.release();
-  }
-}
-```
-
-### 5.5 Graceful Shutdown (SIGTERM)
-
-**The Reality:** Cloud environments routinely kill processes to balance loads or deploy updates. A `kill -15` (SIGTERM) bypasses your `finally` block.
-**The Impact:** Your script dies, the advisory lock is never released, and the pipeline is permanently bricked until a human logs into the database to manually run `pg_advisory_unlock()`.
-
-**MANDATORY:** Add a `process.on('SIGTERM', ...)` listener that safely releases the lock before `process.exit()`:
-
-```js
-process.on('SIGTERM', async () => {
-  pipeline.log.warn('[script-slug]', 'Received SIGTERM. Releasing lock and shutting down gracefully...');
-  try {
-    await lockClient.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_ID]);
-  } catch(e) {}
-  lockClient.release();
-  process.exit(143);
+// RIGHT — SDK helper uses pg_try_advisory_xact_lock (transaction-level).
+// Lock auto-releases when the transaction ends — SIGKILL-safe.
+const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  // ... entire script body here
 });
+if (!lockResult.acquired) return; // SDK already emitted SKIP summary
 ```
 
+**Failure mode (83-W5):** The old session-lock via `pool.query` was silently released mid-run when the pool's idle-timeout reaped the connection during CPU-bound work. Two instances ran simultaneously, each committing partial results.
 
-The outer try/finally ensures the lock is always released even if the script throws. The
-inner try/catch around `pg_advisory_unlock` means an unlock failure is logged (not fatal)
-but the `lockClient.release()` in the innermost finally always runs.
+### 5.4 Lock lifecycle is fully managed by the SDK helper
+
+`pipeline.withAdvisoryLock()` handles all lock lifecycle concerns:
+
+- Uses `BEGIN` + `pg_try_advisory_xact_lock($1)` inside a single dedicated client
+- On lock-not-acquired: issues `ROLLBACK`, releases client, emits default SKIP summary (or skips emit if `{ skipEmit: false }`)
+- On `fn()` success: issues `COMMIT` — this releases the xact_lock atomically
+- On `fn()` error: issues `ROLLBACK` — lock released, error re-thrown, client released in `finally`
+- On `pool.connect()` failure: error propagates, no client to release
+
+No explicit `pg_advisory_unlock` call is ever needed or correct — you cannot manually unlock a transaction-level advisory lock; only `COMMIT`/`ROLLBACK` releases it.
+
+### 5.5 Graceful Shutdown (SIGTERM) — not needed with xact_lock
+
+**The old concern:** Session-level locks survived SIGKILL, so a `SIGTERM` handler was needed to call `pg_advisory_unlock` before `process.exit`. Installing a handler was MANDATORY under the old pattern.
+
+**With xact_lock (current SDK):** When the process is killed:
+- The OS closes the PostgreSQL backend connection
+- PostgreSQL detects the backend died and rolls back any open transaction
+- The transaction-level advisory lock is released as part of that rollback
+
+No explicit SIGTERM handler is needed or should be installed. Installing one would create a race condition between the script's `process.exit` and the SDK's own `ROLLBACK`-on-close behavior.
+
+**Do NOT add `process.on('SIGTERM', ...)` to new pipeline scripts.** The `compute-cost-estimates.infra.test.ts` adoption test asserts its absence.
 
 ---
 
