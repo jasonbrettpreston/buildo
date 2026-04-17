@@ -706,44 +706,29 @@ async function getDbTimestamp(pool) {
  */
 async function withAdvisoryLock(pool, lockId, fn, opts) {
   const skipEmit = !opts || opts.skipEmit !== false; // default: emit per spec
+
+  // ── Transaction-level advisory lock (SIGKILL-safe) ───────────────────────
+  // The lock is tied to the transaction lifetime. When the transaction ends —
+  // via COMMIT, ROLLBACK, or backend connection close (including SIGKILL) —
+  // PostgreSQL automatically releases the lock. No explicit unlock call or
+  // SIGTERM/SIGINT handlers are needed; zombie locks cannot form.
+  //
+  // Pattern: BEGIN → xact_lock → fn() → COMMIT (lock released with transaction)
+  //   Lock not acquired → ROLLBACK → { acquired: false }
+  //   fn() throws       → ROLLBACK → rethrow
+  //   SIGKILL           → PostgreSQL rollback on disconnect → lock released
   const client = await pool.connect();
-  let released = false;
-  let unlocked = false;
-
-  /**
-   * Idempotent cleanup: unlock the advisory lock and release the pg client.
-   * Safe to call from both the normal finally path and the SIGTERM handler —
-   * the `unlocked`/`released` guards prevent double-unlock and double-release.
-   */
-  const cleanup = async () => {
-    if (unlocked) return;
-    unlocked = true;
-    try {
-      await client.query('SELECT pg_advisory_unlock($1)', [lockId]);
-    } catch (unlockErr) {
-      log.warn('[pipeline]', `pg_advisory_unlock failed for lockId=${lockId}: ${unlockErr instanceof Error ? unlockErr.message : String(unlockErr)}`);
-    }
-    if (!released) {
-      released = true;
-      try { client.release(); } catch (_) { /* already released */ }
-    }
-  };
-
-  /** Best-effort SIGTERM/SIGINT handler — fire-and-forget because process is exiting. */
-  const sigHandler = () => {
-    log.warn('[pipeline]', `Signal received while holding advisory lock ${lockId} — releasing.`);
-    void cleanup();
-  };
 
   try {
+    await client.query('BEGIN');
+
     const lockRes = await client.query(
-      'SELECT pg_try_advisory_lock($1) AS acquired',
-      [lockId]
+      'SELECT pg_try_advisory_xact_lock($1) AS acquired',
+      [lockId],
     );
+
     if (!lockRes.rows[0].acquired) {
-      // Release immediately — no fn to run
-      released = true;
-      client.release();
+      await client.query('ROLLBACK');
       log.info('[pipeline]', `Advisory lock ${lockId} held elsewhere — skipping.`);
       if (skipEmit) {
         emitSummary({
@@ -756,24 +741,21 @@ async function withAdvisoryLock(pool, lockId, fn, opts) {
       return { acquired: false };
     }
 
-    // Lock acquired — install signal handlers for the duration of fn()
-    process.on('SIGTERM', sigHandler);
-    process.on('SIGINT', sigHandler);
+    // Lock acquired — fn() runs while the transaction (and lock) is open
     try {
       const result = await fn();
+      await client.query('COMMIT'); // lock released with transaction
       return { acquired: true, result };
-    } finally {
-      process.removeListener('SIGTERM', sigHandler);
-      process.removeListener('SIGINT', sigHandler);
-      await cleanup();
+    } catch (fnErr) {
+      try { await client.query('ROLLBACK'); } catch (_) { /* connection may be dead */ }
+      throw fnErr;
     }
   } catch (err) {
-    // Lock query itself threw (connection error, etc.) — ensure client is released
-    if (!released) {
-      released = true;
-      try { client.release(); } catch (_) { /* ignore */ }
-    }
+    // BEGIN or lock query threw — rethrow; finally releases the client
     throw err;
+  } finally {
+    // Always return the client to the pool, regardless of path taken above
+    try { client.release(); } catch (_) { /* ignore */ }
   }
 }
 

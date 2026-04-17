@@ -1363,18 +1363,28 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
-  // WF3-08: withAdvisoryLock() (spec 47 §5 — dedicated client pattern)
+  // WF3-08: withAdvisoryLock() (spec 47 §5 — transaction-level xact_lock pattern)
+  // Updated WF3-L1: uses pg_try_advisory_xact_lock inside BEGIN/COMMIT transaction.
+  // Lock auto-releases on COMMIT, ROLLBACK, or backend connection close (SIGKILL-safe).
   // -----------------------------------------------------------------------
   describe('withAdvisoryLock()', () => {
+    /** Build a mock client whose query() returns based on the SQL issued. */
+    function makeXactClient(acquired: boolean) {
+      return {
+        query: vi.fn(async (sql: string, _params?: unknown[]) => {
+          if (String(sql).includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired }] };
+          return { rows: [] }; // BEGIN, COMMIT, ROLLBACK all return empty rows
+        }),
+        release: vi.fn(),
+      };
+    }
+
     it('is exported as a function', () => {
       expect(typeof pipeline.withAdvisoryLock).toBe('function');
     });
 
     it('returns { acquired: false } and never calls fn when lock not acquired', async () => {
-      const mockClient = {
-        query: vi.fn(async () => ({ rows: [{ acquired: false }] })),
-        release: vi.fn(),
-      };
+      const mockClient = makeXactClient(false);
       const mockPool = { connect: vi.fn(async () => mockClient) };
       const fn = vi.fn();
 
@@ -1382,64 +1392,57 @@ describe('Pipeline SDK', () => {
 
       expect(result).toEqual({ acquired: false });
       expect(fn).not.toHaveBeenCalled();
-      // unlock must NOT be called if lock was never acquired
-      const unlockCall = mockClient.query.mock.calls.find(
-        (c: string[]) => c[0] && String(c[0]).includes('pg_advisory_unlock')
+      // ROLLBACK must be called to end the transaction
+      const rollbackCall = mockClient.query.mock.calls.find(
+        (c) => String(c[0]).includes('ROLLBACK')
       );
-      expect(unlockCall).toBeUndefined();
+      expect(rollbackCall).toBeDefined();
+      // COMMIT must NOT be called (lock was never acquired)
+      const commitCall = mockClient.query.mock.calls.find(
+        (c) => String(c[0]).includes('COMMIT')
+      );
+      expect(commitCall).toBeUndefined();
       expect(mockClient.release).toHaveBeenCalledTimes(1);
     });
 
     it('calls fn and returns { acquired: true, result } when lock acquired', async () => {
-      const mockClient = {
-        query: vi.fn(async (sql: string) => {
-          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
-          return { rows: [] };
-        }),
-        release: vi.fn(),
-      };
+      const mockClient = makeXactClient(true);
       const mockPool = { connect: vi.fn(async () => mockClient) };
 
       const result = await pipeline.withAdvisoryLock(mockPool, 83, async () => 'done');
 
       expect(result).toEqual({ acquired: true, result: 'done' });
-      const unlockCall = mockClient.query.mock.calls.find(
-        (c: string[]) => c[0] && String(c[0]).includes('pg_advisory_unlock')
+      // COMMIT must be called — this releases the xact_lock
+      const commitCall = mockClient.query.mock.calls.find(
+        (c) => String(c[0]).includes('COMMIT')
       );
-      expect(unlockCall).toBeDefined();
+      expect(commitCall).toBeDefined();
       expect(mockClient.release).toHaveBeenCalledTimes(1);
     });
 
     it('still releases lock and client when fn throws', async () => {
-      const mockClient = {
-        query: vi.fn(async (sql: string) => {
-          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
-          return { rows: [] };
-        }),
-        release: vi.fn(),
-      };
+      const mockClient = makeXactClient(true);
       const mockPool = { connect: vi.fn(async () => mockClient) };
 
       await expect(
         pipeline.withAdvisoryLock(mockPool, 83, async () => { throw new Error('fn failed'); })
       ).rejects.toThrow('fn failed');
 
-      // unlock must be called even when fn throws
-      const unlockCall = mockClient.query.mock.calls.find(
-        (c: string[]) => c[0] && String(c[0]).includes('pg_advisory_unlock')
+      // ROLLBACK must be called when fn throws — this releases the xact_lock
+      const rollbackCall = mockClient.query.mock.calls.find(
+        (c) => String(c[0]).includes('ROLLBACK')
       );
-      expect(unlockCall).toBeDefined();
+      expect(rollbackCall).toBeDefined();
+      // COMMIT must NOT be called on error path
+      const commitCall = mockClient.query.mock.calls.find(
+        (c) => String(c[0]).includes('COMMIT')
+      );
+      expect(commitCall).toBeUndefined();
       expect(mockClient.release).toHaveBeenCalledTimes(1);
     });
 
     it('uses pool.connect() not pool.query() for the lock pair', async () => {
-      const mockClient = {
-        query: vi.fn(async (sql: string) => {
-          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
-          return { rows: [] };
-        }),
-        release: vi.fn(),
-      };
+      const mockClient = makeXactClient(true);
       const mockPool = {
         connect: vi.fn(async () => mockClient),
         query: vi.fn(),
@@ -1459,48 +1462,39 @@ describe('Pipeline SDK', () => {
       ).rejects.toThrow('connection refused');
     });
 
-    it('passes lockId as $1 parameter to both lock and unlock queries', async () => {
-      const mockClient = {
-        query: vi.fn(async (sql: string, _params?: unknown[]) => {
-          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
-          return { rows: [] };
-        }),
-        release: vi.fn(),
-      };
+    it('passes lockId as $1 parameter to the xact_lock query', async () => {
+      const mockClient = makeXactClient(true);
       const mockPool = { connect: vi.fn(async () => mockClient) };
 
       await pipeline.withAdvisoryLock(mockPool, 83, async () => {});
 
       const lockCall = mockClient.query.mock.calls.find(
-        (c) => String(c[0]).includes('pg_try_advisory_lock')
+        (c) => String(c[0]).includes('pg_try_advisory_xact_lock')
       );
       expect(lockCall![1]).toEqual([83]);
-
-      const unlockCall = mockClient.query.mock.calls.find(
-        (c) => String(c[0]).includes('pg_advisory_unlock')
+      // BEGIN and COMMIT are called without parameters
+      const commitCall = mockClient.query.mock.calls.find(
+        (c) => String(c[0]).includes('COMMIT')
       );
-      expect(unlockCall![1]).toEqual([83]);
+      expect(commitCall![1]).toBeUndefined();
     });
 
-    it('logs warn and still releases client when pg_advisory_unlock throws', async () => {
+    it('client is always released when COMMIT throws (e.g. network drop mid-commit)', async () => {
       const mockClient = {
         query: vi.fn(async (sql: string) => {
-          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
-          if (String(sql).includes('pg_advisory_unlock')) throw new Error('unlock failed');
+          if (String(sql).includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired: true }] };
+          if (String(sql).includes('COMMIT')) throw new Error('commit failed');
           return { rows: [] };
         }),
         release: vi.fn(),
       };
       const mockPool = { connect: vi.fn(async () => mockClient) };
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      // fn succeeds but unlock throws — result should be returned, warn emitted, client released
-      const result = await pipeline.withAdvisoryLock(mockPool, 83, async () => 'ok');
+      await expect(
+        pipeline.withAdvisoryLock(mockPool, 83, async () => 'ok')
+      ).rejects.toThrow('commit failed');
 
-      expect(result).toEqual({ acquired: true, result: 'ok' });
-      expect(warnSpy).toHaveBeenCalled();
       expect(mockClient.release).toHaveBeenCalledTimes(1);
-      warnSpy.mockRestore();
     });
   });
 
@@ -1780,21 +1774,22 @@ describe('Pipeline SDK', () => {
   });
 
   // -----------------------------------------------------------------------
-  // Task B: withAdvisoryLock — SIGTERM trap + SKIP emit (spec 47 §5)
+  // Task B: withAdvisoryLock — SKIP emit + transaction safety (spec 47 §5)
+  // Updated WF3-L1: xact_lock releases with transaction — no SIGTERM handler needed.
   // -----------------------------------------------------------------------
-  describe('withAdvisoryLock — SIGTERM trap + SKIP emit (spec 47 §5)', () => {
-    function makeLockedClient(acquired: boolean) {
+  describe('withAdvisoryLock — SKIP emit + transaction safety (spec 47 §5)', () => {
+    function makeXactLockedClient(acquired: boolean) {
       return {
         query: vi.fn(async (sql: string) => {
-          if (String(sql).includes('pg_try_advisory_lock')) return { rows: [{ acquired }] };
-          return { rows: [] };
+          if (String(sql).includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired }] };
+          return { rows: [] }; // BEGIN, COMMIT, ROLLBACK
         }),
         release: vi.fn(),
       };
     }
 
     it('emits PIPELINE_SUMMARY with skipped:true when lock is held elsewhere', async () => {
-      const mockClient = makeLockedClient(false);
+      const mockClient = makeXactLockedClient(false);
       const mockPool = { connect: vi.fn(async () => mockClient) };
       const fn = vi.fn();
       const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -1812,11 +1807,11 @@ describe('Pipeline SDK', () => {
       const payload = JSON.parse((summaryCall![0] as string).replace('PIPELINE_SUMMARY:', ''));
       expect(payload.records_meta.skipped).toBe(true);
       expect(payload.records_meta.reason).toBe('advisory_lock_held_elsewhere');
-      // unlock must NOT be called (lock was never acquired)
-      const unlockCall = mockClient.query.mock.calls.find(
-        (c: [string]) => String(c[0]).includes('pg_advisory_unlock')
+      // ROLLBACK called (no lock acquired → end the BEGIN transaction)
+      const rollbackCall = mockClient.query.mock.calls.find(
+        (c: [string]) => String(c[0]).includes('ROLLBACK')
       );
-      expect(unlockCall).toBeUndefined();
+      expect(rollbackCall).toBeDefined();
       expect(mockClient.release).toHaveBeenCalledTimes(1);
 
       logSpy.mockRestore();
@@ -1824,7 +1819,7 @@ describe('Pipeline SDK', () => {
     });
 
     it('opts.skipEmit: false — no PIPELINE_SUMMARY on lock-held path', async () => {
-      const mockClient = makeLockedClient(false);
+      const mockClient = makeXactLockedClient(false);
       const mockPool = { connect: vi.fn(async () => mockClient) };
       const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -1840,68 +1835,58 @@ describe('Pipeline SDK', () => {
       warnSpy.mockRestore();
     });
 
-    it('installs SIGTERM handler and cleans up when fn throws', async () => {
-      const mockClient = makeLockedClient(true);
+    it('fn() error causes ROLLBACK and client release — no SIGTERM handler needed (WF3-L1)', async () => {
+      // With xact_lock, the lock is tied to the transaction. No signal handlers
+      // are needed — PostgreSQL rolls back the transaction and releases the lock
+      // when the connection closes (including on SIGKILL).
+      const mockClient = makeXactLockedClient(true);
       const mockPool = { connect: vi.fn(async () => mockClient) };
-      const baseline = process.listenerCount('SIGTERM');
+      const baselineSIGTERM = process.listenerCount('SIGTERM');
 
       await expect(
         pipeline.withAdvisoryLock(mockPool, 42, async () => { throw new Error('fn boom'); })
       ).rejects.toThrow('fn boom');
 
-      // Listener must be removed after fn completes (even via throw)
-      expect(process.listenerCount('SIGTERM')).toBe(baseline);
-      // unlock must still be called
-      const unlockCall = mockClient.query.mock.calls.find(
-        (c: [string]) => String(c[0]).includes('pg_advisory_unlock')
+      // ROLLBACK must be called (lock released with transaction)
+      const rollbackCall = mockClient.query.mock.calls.find(
+        (c: [string]) => String(c[0]).includes('ROLLBACK')
       );
-      expect(unlockCall).toBeDefined();
+      expect(rollbackCall).toBeDefined();
       expect(mockClient.release).toHaveBeenCalledTimes(1);
+      // No SIGTERM listeners installed or leaked
+      expect(process.listenerCount('SIGTERM')).toBe(baselineSIGTERM);
     });
 
-    it('no listener accumulation across 5 sequential calls', async () => {
-      const baseline = process.listenerCount('SIGTERM');
+    it('client is always released across 5 sequential calls — no connection leak (WF3-L1)', async () => {
+      const baselineSIGTERM = process.listenerCount('SIGTERM');
 
       for (let i = 0; i < 5; i++) {
-        const mockClient = makeLockedClient(true);
+        const mockClient = makeXactLockedClient(true);
         const mockPool = { connect: vi.fn(async () => mockClient) };
         await pipeline.withAdvisoryLock(mockPool, 42, async () => 'ok');
+        expect(mockClient.release).toHaveBeenCalledTimes(1);
       }
 
-      expect(process.listenerCount('SIGTERM')).toBe(baseline);
+      // No SIGTERM listener accumulation
+      expect(process.listenerCount('SIGTERM')).toBe(baselineSIGTERM);
     });
 
-    it('SIGTERM while fn is running — triggers unlock + release, no double-unlock', async () => {
-      const mockClient = makeLockedClient(true);
+    it('COMMIT is called exactly once on success — no double-commit (WF3-L1)', async () => {
+      const mockClient = makeXactLockedClient(true);
       const mockPool = { connect: vi.fn(async () => mockClient) };
 
-      let sigHandlerInstalled = false;
-      let resolveSignal: () => void;
-      const sigObs = new Promise<void>((r) => { resolveSignal = r; });
+      const result = await pipeline.withAdvisoryLock(mockPool, 42, async () => 'done');
 
-      // fn pauses and waits for SIGTERM to fire
-      const fnDone = pipeline.withAdvisoryLock(mockPool, 42, async () => {
-        sigHandlerInstalled = true;
-        await sigObs;
-        return 'late';
-      });
-
-      // Wait until fn has started (handler is installed)
-      await new Promise<void>((r) => { const t = setInterval(() => { if (sigHandlerInstalled) { clearInterval(t); r(); } }, 5); });
-
-      // Fire SIGTERM — triggers the cleanup handler
-      process.emit('SIGTERM');
-      resolveSignal!();
-
-      // fn resolves, withAdvisoryLock continues to its own finally
-      const result = await fnDone;
-      expect(result).toEqual({ acquired: true, result: 'late' });
-
-      // pg_advisory_unlock must have been called exactly once (idempotency guard)
-      const unlockCalls = mockClient.query.mock.calls.filter(
-        (c: [string]) => String(c[0]).includes('pg_advisory_unlock')
+      expect(result).toEqual({ acquired: true, result: 'done' });
+      const commitCalls = mockClient.query.mock.calls.filter(
+        (c: [string]) => String(c[0]).includes('COMMIT')
       );
-      expect(unlockCalls.length).toBe(1);
+      expect(commitCalls.length).toBe(1);
+      // ROLLBACK must NOT be called on success path
+      const rollbackCalls = mockClient.query.mock.calls.filter(
+        (c: [string]) => String(c[0]).includes('ROLLBACK')
+      );
+      expect(rollbackCalls.length).toBe(0);
     });
   });
 });
@@ -2011,6 +1996,47 @@ describe('reclassify-all.js — large-table query safety (spec 47 §6.2)', () =>
   it('respects MAX_ITERATIONS safety guard against infinite loops', () => {
     expect(src).toMatch(/MAX_ITERATIONS/);
     expect(src).toMatch(/iterations.*MAX_ITERATIONS/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF3-L1: withAdvisoryLock uses transaction-level xact_lock (SIGKILL-safe)
+// SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §5
+// ---------------------------------------------------------------------------
+describe('pipeline.js — withAdvisoryLock() uses pg_try_advisory_xact_lock (WF3-L1)', () => {
+  const pipelineSrc = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/lib/pipeline.js'), 'utf-8',
+  );
+
+  it('uses pg_try_advisory_xact_lock (transaction-level) — not the session-level pg_try_advisory_lock', () => {
+    // Transaction-level locks auto-release when the transaction ends or the
+    // backend connection closes (including SIGKILL). Session-level locks survive
+    // process death and can hold indefinitely as zombie connections.
+    expect(pipelineSrc).toMatch(/pg_try_advisory_xact_lock/);
+    // Must NOT use the session-level variant in withAdvisoryLock
+    // (the 2-arg form pg_try_advisory_lock(2, hashtext(...)) in run-chain.js is a
+    // separate chain-level lock and is explicitly excluded from this requirement)
+    const withAdvisoryLockFn = pipelineSrc.match(/async function withAdvisoryLock[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(withAdvisoryLockFn, 'withAdvisoryLock function not found').toBeTruthy();
+    expect(withAdvisoryLockFn).not.toMatch(/pg_try_advisory_lock\b/);
+  });
+
+  it('wraps lock acquisition in BEGIN/COMMIT — required for xact_lock to bind to a transaction', () => {
+    const withAdvisoryLockFn = pipelineSrc.match(/async function withAdvisoryLock[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(withAdvisoryLockFn).toMatch(/['"]BEGIN['"]/);
+    expect(withAdvisoryLockFn).toMatch(/['"]COMMIT['"]/);
+    expect(withAdvisoryLockFn).toMatch(/['"]ROLLBACK['"]/);
+  });
+
+  it('does NOT call pg_advisory_unlock — not needed for xact_lock (released with transaction)', () => {
+    const withAdvisoryLockFn = pipelineSrc.match(/async function withAdvisoryLock[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(withAdvisoryLockFn).not.toMatch(/pg_advisory_unlock/);
+  });
+
+  it('does NOT install SIGTERM/SIGINT handlers — not needed for xact_lock', () => {
+    const withAdvisoryLockFn = pipelineSrc.match(/async function withAdvisoryLock[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(withAdvisoryLockFn).not.toMatch(/process\.on\(\s*['"]SIGTERM['"]/);
+    expect(withAdvisoryLockFn).not.toMatch(/process\.on\(\s*['"]SIGINT['"]/);
   });
 });
 
