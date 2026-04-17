@@ -26,7 +26,10 @@ const LOGIC_VARS_SCHEMA = z.object({
   pre_permit_stale_months:  z.number().finite().positive().int(),
 }).passthrough();
 
+const ADVISORY_LOCK_ID = 107;
+
 pipeline.run('assert-pre-permit-aging', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-pre-permit-aging');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-pre-permit-aging');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
@@ -98,4 +101,7 @@ pipeline.run('assert-pre-permit-aging', async (pool) => {
     { coa_applications: ['decision', 'linked_permit_num', 'decision_date'] },
     { pipeline_runs: ['records_meta'] }
   );
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

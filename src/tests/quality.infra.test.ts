@@ -491,8 +491,8 @@ describe('Engine Health CQA Tier 3', () => {
     );
     expect(source).toContain("require('../lib/pipeline')");
     expect(source).toMatch(/pipeline\.emitSummary|PIPELINE_SUMMARY:/);
-    expect(source).toContain('PIPELINE_META:');
-    expect(source).toContain('pipeline.createPool()');
+    expect(source).toContain('pipeline.emitMeta');
+    expect(source).toContain('pipeline.run');
   });
 
   it('assert-engine-health.js queries pg_stat_user_tables', () => {

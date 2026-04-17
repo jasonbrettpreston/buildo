@@ -27,7 +27,10 @@ const LOGIC_VARS_SCHEMA = z.object({
   scraper_empty_streak_warn:     z.number().finite().positive().int(),
 }).passthrough();
 
+const ADVISORY_LOCK_ID = 105;
+
 pipeline.run('assert-network-health', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-network-health');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-network-health');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
@@ -171,4 +174,7 @@ pipeline.run('assert-network-health', async (pool) => {
   );
 
   if (errors.length > 0) throw new Error(`Network health check failed: ${errors.join('; ')}`);
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

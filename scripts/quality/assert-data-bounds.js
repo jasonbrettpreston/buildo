@@ -26,20 +26,21 @@ const LOGIC_VARS_SCHEMA = z.object({
   calibration_freshness_warn_hours: z.number().finite().positive(),
 }).passthrough();
 
-const pool = pipeline.createPool();
-
 const SLUG = 'assert_data_bounds';
+const ADVISORY_LOCK_ID = 103;
 
 // When run from a chain (via run-chain.js), PIPELINE_CHAIN env var is set.
 const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
 
-async function count(sql) {
-  const res = await pool.query(sql);
-  return parseInt(res.rows[0].count, 10);
-}
+pipeline.run('assert-data-bounds', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
 
-async function run() {
-  console.log('\n=== CQA Tier 2: Data Bounds Validation ===\n');
+  async function count(sql) {
+    const res = await pool.query(sql);
+    return parseInt(res.rows[0].count, 10);
+  }
+
+  console.log('\n=== CQA Tier 2: Data Bounds Validation ===\n'); // eslint-disable-line no-console
 
   const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-data-bounds');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-data-bounds');
@@ -770,7 +771,10 @@ async function run() {
 
   // Always emit PIPELINE_SUMMARY so chain orchestrator can capture records_meta
   pipeline.emitSummary({ records_total: 0, records_new: null, records_updated: null, records_meta: JSON.parse(meta) });
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "permits": ["*"], "parcels": ["*"], "address_points": ["*"], "building_footprints": ["*"], "neighbourhoods": ["*"], "coa_applications": ["*"], "permit_inspections": ["*"] }, writes: { "pipeline_runs": ["checks_passed", "checks_failed", "checks_warned"] } }));
+  pipeline.emitMeta(
+    { "permits": ["*"], "parcels": ["*"], "address_points": ["*"], "building_footprints": ["*"], "neighbourhoods": ["*"], "coa_applications": ["*"], "permit_inspections": ["*"] },
+    { "pipeline_runs": ["checks_passed", "checks_failed", "checks_warned"] }
+  );
 
   if (warnings.length > 0) {
     console.log(`\n  Warnings: ${warnings.length}`);
@@ -781,13 +785,8 @@ async function run() {
 
   console.log(`\n=== Data Bounds: ${status.toUpperCase()} (${(durationMs / 1000).toFixed(1)}s) ===\n`);
 
-  await pool.end();
+  if (hasErrors) throw new Error('Data bounds validation failed');
+  }); // withAdvisoryLock
 
-  if (hasErrors) process.exit(1);
-}
-
-run().catch((err) => {
-  console.error('Data bounds validation error:', err);
-  pool.end().catch((endErr) => pipeline.log.warn('[assert-data-bounds]', `pool.end failed: ${endErr.message}`));
-  process.exit(1);
+  if (!lockResult.acquired) return;
 });

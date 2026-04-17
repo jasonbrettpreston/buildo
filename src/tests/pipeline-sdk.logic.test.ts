@@ -871,7 +871,7 @@ describe('Pipeline SDK', () => {
       expect(content).not.toMatch(/catch\s*(\([^)]*\))?\s*\{\s*\}/);
     });
 
-    // Quality scripts use SDK for pool creation but have unique lifecycle (chain-context)
+    // Quality scripts use pipeline.run() SDK lifecycle (migrated from createPool in Bundle G Wave 6)
     const QUALITY_SCRIPTS = ['quality/assert-schema.js', 'quality/assert-data-bounds.js'];
     for (const script of QUALITY_SCRIPTS) {
       it(`${script} imports the pipeline SDK`, () => {
@@ -879,9 +879,9 @@ describe('Pipeline SDK', () => {
         expect(content).toContain("require('../lib/pipeline')");
       });
 
-      it(`${script} uses pipeline.createPool()`, () => {
+      it(`${script} uses pipeline.run()`, () => {
         const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
-        expect(content).toContain('pipeline.createPool()');
+        expect(content).toContain('pipeline.run');
       });
 
       it(`${script} has no bare new Pool() instantiation`, () => {

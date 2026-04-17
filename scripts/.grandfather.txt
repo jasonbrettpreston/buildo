@@ -14,8 +14,6 @@
 scripts/audit_all_specs.mjs
 scripts/generate-db-docs.mjs
 scripts/local-cron.js
-scripts/quality/assert-data-bounds.js
-scripts/quality/assert-engine-health.js
-scripts/quality/assert-schema.js
+
 scripts/run-chain.js
 scripts/task-init.mjs

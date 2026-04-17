@@ -16,8 +16,6 @@
  */
 const pipeline = require('../lib/pipeline');
 
-const pool = pipeline.createPool();
-
 const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
 
 // Resource IDs
@@ -60,6 +58,7 @@ const EXPECTED_PARCEL_COLUMNS = [
 const NEIGHBOURHOOD_ID_PROPS = ['AREA_SHORT_CODE', 'AREA_ID'];
 
 const SLUG = 'assert_schema';
+const ADVISORY_LOCK_ID = 102;
 
 // When run from a chain (via run-chain.js), PIPELINE_CHAIN env var is set.
 // The chain orchestrator handles its own pipeline_runs tracking, so we skip
@@ -211,8 +210,9 @@ async function checkUrlAccessible(url, label) {
   return true;
 }
 
-async function run() {
-  console.log('\n=== CQA Tier 1: Schema Validation ===\n');
+pipeline.run('assert-schema', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  console.log('\n=== CQA Tier 1: Schema Validation ===\n'); // eslint-disable-line no-console
 
   const startMs = Date.now();
   let runId = null;
@@ -412,19 +412,17 @@ async function run() {
 
   // Always emit PIPELINE_SUMMARY so chain orchestrator can capture records_meta
   pipeline.emitSummary({ records_total: 0, records_new: null, records_updated: null, records_meta: JSON.parse(meta) });
-  console.log('PIPELINE_META:' + JSON.stringify({ reads: { "CKAN API": ["metadata"] }, writes: { "pipeline_runs": ["checks_passed", "checks_failed"] } }));
+  pipeline.emitMeta(
+    { "CKAN API": ["metadata"] },
+    { "pipeline_runs": ["checks_passed", "checks_failed"] }
+  );
 
   console.log(`\n=== Schema Validation: ${status.toUpperCase()} (${(durationMs / 1000).toFixed(1)}s) ===\n`);
 
-  await pool.end();
-
   // Schema drift must halt the chain — allowing downstream scripts to run
   // with malformed data would silently corrupt 240K+ permit records.
-  if (!allPassed) process.exit(1);
-}
+  if (!allPassed) throw new Error('Schema validation failed — schema drift detected');
+  }); // withAdvisoryLock
 
-run().catch((err) => {
-  console.error('Schema validation error:', err);
-  pool.end().catch((endErr) => pipeline.log.warn('[assert-schema]', `pool.end failed: ${endErr.message}`));
-  process.exit(1);
+  if (!lockResult.acquired) return;
 });

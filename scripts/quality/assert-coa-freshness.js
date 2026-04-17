@@ -29,7 +29,10 @@ const LOGIC_VARS_SCHEMA = z.object({
   coa_freshness_warn_days: z.number().finite().positive().int(),
 }).passthrough();
 
+const ADVISORY_LOCK_ID = 108;
+
 pipeline.run('assert-coa-freshness', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const startTime = Date.now();
 
   const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-coa-freshness');
@@ -117,4 +120,7 @@ pipeline.run('assert-coa-freshness', async (pool) => {
     { coa_applications: ['last_seen_at', 'hearing_date', 'decision_date'] },
     {}
   );
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

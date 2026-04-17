@@ -31,7 +31,10 @@ const TARGET_TYPES = [
   'New Houses',
 ];
 
+const ADVISORY_LOCK_ID = 106;
+
 pipeline.run('assert-staleness', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-staleness');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-staleness');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
@@ -131,4 +134,7 @@ pipeline.run('assert-staleness', async (pool) => {
   );
 
   if (errors.length > 0) throw new Error(`Staleness check failed: ${errors.join('; ')}`);
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

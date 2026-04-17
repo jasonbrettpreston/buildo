@@ -18,9 +18,8 @@
  */
 const pipeline = require('../lib/pipeline');
 
-const pool = pipeline.createPool();
-
 const SLUG = 'assert_engine_health';
+const ADVISORY_LOCK_ID = 104;
 
 const CHAIN_ID = process.env.PIPELINE_CHAIN || null;
 
@@ -30,8 +29,9 @@ const SEQ_SCAN_RATIO = 0.80;         // 80%
 const SEQ_SCAN_MIN_ROWS = 10000;     // Only flag large tables
 const PING_PONG_RATIO = 10;          // updates > 10x inserts (dimensional tables naturally accumulate 5-6x lifecycle updates per insert)
 
-async function run() {
-  console.log('\n=== CQA Tier 3: Engine Health & Volume Volatility ===\n');
+pipeline.run('assert-engine-health', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  console.log('\n=== CQA Tier 3: Engine Health & Volume Volatility ===\n'); // eslint-disable-line no-console
 
   const startMs = Date.now();
   let runId = null;
@@ -292,10 +292,10 @@ async function run() {
   }
 
   pipeline.emitSummary({ records_total: tableResults.length, records_new: null, records_updated: recordsUpdated, records_meta: JSON.parse(meta) });
-  console.log('PIPELINE_META:' + JSON.stringify({
-    reads: { pg_stat_user_tables: ['relname', 'n_live_tup', 'n_dead_tup', 'seq_scan', 'idx_scan', 'n_tup_ins', 'n_tup_upd'] },
-    writes: { engine_health_snapshots: ['table_name', 'n_live_tup', 'n_dead_tup', 'dead_ratio', 'seq_scan', 'idx_scan', 'seq_ratio'] },
-  }));
+  pipeline.emitMeta(
+    { "pg_stat_user_tables": ['relname', 'n_live_tup', 'n_dead_tup', 'seq_scan', 'idx_scan', 'n_tup_ins', 'n_tup_upd'] },
+    { "engine_health_snapshots": ['table_name', 'n_live_tup', 'n_dead_tup', 'dead_ratio', 'seq_scan', 'idx_scan', 'seq_ratio'] }
+  );
 
   if (warnings.length > 0) {
     console.log(`\n  Warnings: ${warnings.length}`);
@@ -306,13 +306,8 @@ async function run() {
 
   console.log(`\n=== Engine Health: ${status.toUpperCase()} (${(durationMs / 1000).toFixed(1)}s) ===\n`);
 
-  await pool.end();
+  if (hasErrors) throw new Error('Engine health check failed');
+  }); // withAdvisoryLock
 
-  if (hasErrors) process.exit(1);
-}
-
-run().catch((err) => {
-  console.error('Engine health check error:', err);
-  pool.end().catch((endErr) => pipeline.log.warn('[assert-engine-health]', `pool.end failed: ${endErr.message}`));
-  process.exit(1);
+  if (!lockResult.acquired) return;
 });
