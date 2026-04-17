@@ -98,6 +98,23 @@ const eslintConfig = [
           selector: "CallExpression[callee.object.name='process'][callee.property.name='exit']",
           message: 'process.exit() is banned in pipeline scripts. Let pipeline.run() handle lifecycle (§9.4).',
         },
+        // Phase 7 B3 — Time Cop: ban new Date() for DB timestamp generation.
+        // Use pipeline.getDbTimestamp(pool) to capture the DB clock once at script start.
+        // Date.now() for elapsed-time measurement is NOT banned (no selector added for it).
+        {
+          selector: "NewExpression[callee.name='Date']",
+          message: 'new Date() is banned in pipeline scripts. Use pipeline.getDbTimestamp(pool) to capture the DB clock once at script start (§47 §R3.5, Phase 7 B3).',
+        },
+        // Phase 7 B5 — Safe Integer: ban raw parseInt/parseFloat (NaN propagation risk).
+        // Use safeParsePositiveInt / safeParseFloat / safeParseIntOrNull from scripts/lib/safe-math.
+        {
+          selector: "CallExpression[callee.name='parseInt']",
+          message: 'Raw parseInt() is banned in pipeline scripts. Use safeParsePositiveInt() or safeParseIntOrNull() from ./lib/safe-math (§47, Phase 7 B5).',
+        },
+        {
+          selector: "CallExpression[callee.name='parseFloat']",
+          message: 'Raw parseFloat() is banned in pipeline scripts. Use safeParseFloat() from ./lib/safe-math (§47, Phase 7 B5).',
+        },
       ],
       'no-empty': ['warn', { allowEmptyCatch: false }],
     },
@@ -131,6 +148,22 @@ const eslintConfig = [
   // Pipeline utility/seed/legacy scripts — exempt from strict rules (one-off tooling)
   {
     files: ['scripts/seed-*.js', 'scripts/seed-*.ts', 'scripts/migrate.js', 'scripts/poc-*.js', 'scripts/backfill/**', 'scripts/analysis/**'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  // Phase 7 — Inert tooling: exempt from new-Date/parseInt/parseFloat bans.
+  // These files are documented in scripts/amnesty.json (new-date-ban, raw-parseint).
+  // Active pipeline scripts are NOT in this list — they must comply.
+  {
+    files: [
+      'scripts/run-chain.js',           // Orchestrator — parseInt for config (bounded, validated); Date for logging only
+      'scripts/reclassify-all.js',      // One-off maintenance — not in active chain
+      'scripts/load-parcels.js',        // new Date() used for date string comparison (expiry), not DB write
+      'scripts/audit_all_specs.mjs',    // Spec audit tool — new Date() for report headers
+      'scripts/generate-script.mjs',   // Generator tool — new Date() for template comments
+      'scripts/task-init.mjs',          // Task scaffolder — new Date() for date stamps
+    ],
     rules: {
       'no-restricted-syntax': 'off',
     },

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Footgun gate — runs the AST-grep rules + 3 grep-based pattern checks
+# Footgun gate — runs the AST-grep rules + grep-based pattern checks
 # that AST-grep can't easily express (comment-rot near throws, silent
-# row dropping after .map, pool boundary). Each rule maps to a bug class
-# the holistic reviews keep catching across phases. Initially scoped to
-# src/features/leads/ and src/lib/ per CLAUDE.md §12 expansion model.
+# row dropping after .map, pool boundary, bare mutations, sql-now).
+# Each rule maps to a bug class the holistic reviews keep catching.
+# Initially scoped to src/features/leads/ and src/lib/ per CLAUDE.md §12
+# expansion model. Phase 7 checks (7-9) scope to scripts/*.js pipeline steps.
 #
 # Wired into .husky/pre-commit before npm run test so it fails fast.
 # Manually: `npm run ast-grep:leads`.
@@ -16,6 +17,27 @@ fail=0
 
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root" || exit 2
+
+# ---------------------------------------------------------------------------
+# Phase 7 amnesty: load per-rule exempt file lists from scripts/amnesty.json.
+# Only inert files (seeds, SDK, orchestrator, migration runner, analysis tools)
+# are amnestied. Active pipeline scripts are NOT eligible.
+# ---------------------------------------------------------------------------
+amnesty_bare_mutation=""
+amnesty_sql_now=""
+if [ -f "scripts/amnesty.json" ]; then
+  # Merge permanent + temporary entries: temporary entries are Phase B mop-up work items.
+  # Remove temporary entries from amnesty.json as each violation is fixed in Phase B.
+  amnesty_bare_mutation=$(node -e "const a=require('./scripts/amnesty.json');const r=a.rules['bare-mutation'];const all=[...(r.permanent||[]),...(r.temporary||[])];process.stdout.write(all.map(e=>e.file).join('\n'))" 2>/dev/null || true)
+  amnesty_sql_now=$(node -e "const a=require('./scripts/amnesty.json');const r=a.rules['sql-now'];const all=[...(r.permanent||[]),...(r.temporary||[])];process.stdout.write(all.map(e=>e.file).join('\n'))" 2>/dev/null || true)
+fi
+
+is_amnestied() {
+  local file="$1"
+  local list="$2"
+  [ -z "$list" ] && return 1
+  echo "$list" | grep -qxF "$file"
+}
 
 scope_leads="src/features/leads"
 scope_lib="src/lib"
@@ -109,11 +131,61 @@ while IFS= read -r f; do
 done < <(grep -rEln 'pg_try_advisory_lock' scripts/ 2>/dev/null | grep -v 'scripts/hooks/' || true)
 [ $advisory_lock -eq 1 ] && fail=1
 
+# ---------------------------------------------------------------------------
+# 7. bare-mutation: pool.query/client.query with INSERT/UPDATE/DELETE but no
+#    withTransaction wrapper. All data mutations MUST use withTransaction.
+#    Exempt: scripts/amnesty.json rules['bare-mutation'].permanent
+# ---------------------------------------------------------------------------
+bare_mutation=0
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  rel="${f#./}"
+  is_amnestied "$rel" "$amnesty_bare_mutation" && continue
+  if grep -qEi '\b(INSERT INTO|UPDATE |DELETE FROM)\b' "$f" && \
+     ! grep -qE '\bwithTransaction\b' "$f"; then
+    echo "footgun[bare-mutation]: $f has INSERT/UPDATE/DELETE without a withTransaction wrapper. All data mutations MUST be inside pipeline.withTransaction() (§47 §R9, Phase 7 B2). Add to scripts/amnesty.json only if this is an inert seed/backfill/maintenance script."
+    bare_mutation=1
+  fi
+done < <(find scripts -maxdepth 1 -name '*.js' 2>/dev/null | sort || true)
+[ $bare_mutation -eq 1 ] && fail=1
+
+# ---------------------------------------------------------------------------
+# 8. multi-transaction: 2+ withTransaction calls in a single script.
+#    Multiple transactions risk partial writes. Informational only — does NOT
+#    set fail=1. Review each flagged file manually to confirm independence.
+# ---------------------------------------------------------------------------
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  count=$(grep -cE '\bwithTransaction\b' "$f" 2>/dev/null) || count=0
+  count=$(echo "$count" | tr -d '[:space:]')
+  if [ -n "$count" ] && [ "$count" -ge 2 ] 2>/dev/null; then
+    echo "footgun[multi-transaction] (info): $f has $count withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9)."
+  fi
+done < <(find scripts -maxdepth 1 -name '*.js' 2>/dev/null | sort || true)
+
+# ---------------------------------------------------------------------------
+# 9. sql-now: NOW() or CURRENT_DATE in a script that also contains mutations.
+#    Use RUN_AT (captured once via pipeline.getDbTimestamp()) instead.
+#    Exempt: scripts/amnesty.json rules['sql-now'].permanent
+# ---------------------------------------------------------------------------
+sql_now=0
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  rel="${f#./}"
+  is_amnestied "$rel" "$amnesty_sql_now" && continue
+  if grep -qEi '\b(INSERT INTO|UPDATE |DELETE FROM)\b' "$f" && \
+     grep -qEi '\bNOW\(\)|CURRENT_DATE\b' "$f"; then
+    echo "footgun[sql-now]: $f uses NOW() or CURRENT_DATE in a file that also contains data mutations. Capture the DB clock once at startup via pipeline.getDbTimestamp(pool) and pass it as \$N to all mutation SQL (§47 §R3.5, Phase 7 B3)."
+    sql_now=1
+  fi
+done < <(find scripts -maxdepth 1 -name '*.js' 2>/dev/null | sort || true)
+[ $sql_now -eq 1 ] && fail=1
+
 if [ $fail -ne 0 ]; then
   echo
   echo "❌ Footgun gate failed. See messages above. To suppress a single line, add \`// ast-grep-disable-next-line <rule-id>\` with a justification."
   exit 1
 fi
 
-echo "✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock)"
+echo "✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now)"
 exit 0

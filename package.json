@@ -26,6 +26,7 @@
     "lighthouse:ci": "lhci autorun",
     "sql:lint": "sqlfluff lint --dialect postgres migrations/",
     "ast-grep:leads": "bash scripts/hooks/ast-grep-leads.sh",
+    "generate:script": "node scripts/generate-script.mjs",
     "test:db": "BUILDO_TEST_DB=1 vitest run src/tests/db",
     "test:property": "vitest run src/tests/property",
     "test:mutation": "stryker run",

@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "description": "Files exempt from Phase 7 lint rules. Permanent entries document WHY the file is structurally exempt. Temporary entries track active pipeline scripts with known violations awaiting Phase B mop-up — remove each entry as the violation is fixed. Active pipeline scripts are NOT eligible for permanent amnesty.",
+  "rules": {
+    "loop-query": {
+      "note": "Ban: pool.query() inside for/for-of/forEach/.map() loops (N+1 queries)",
+      "permanent": [
+        { "file": "scripts/lib/pipeline.js",            "reason": "SDK implementation — pool.query in loops is the internal retry/batch mechanism" },
+        { "file": "scripts/lib/config-loader.js",       "reason": "Utility lib — bounded loop over config keys, not row-level data" },
+        { "file": "scripts/run-chain.js",               "reason": "Orchestrator — per-step pool.query UPDATEs are bounded (≤24 steps)" },
+        { "file": "scripts/migrate.js",                 "reason": "Migration runner — one query per migration file, not a pipeline step" },
+        { "file": "scripts/seed-parcels.js",            "reason": "Seed script — inert, not in active chain" },
+        { "file": "scripts/seed-coa.js",                "reason": "Seed script — inert, not in active chain" },
+        { "file": "scripts/reclassify-all.js",          "reason": "One-off maintenance script — not in active chain" },
+        { "file": "scripts/generate-script.mjs",        "reason": "Generator tool — uses no pool.query at all" },
+        { "file": "scripts/task-init.mjs",              "reason": "Task scaffolder — uses no pool.query at all" },
+        { "file": "scripts/audit_all_specs.mjs",        "reason": "Spec audit tool — uses no pool.query" }
+      ]
+    },
+    "bare-mutation": {
+      "note": "Ban: pool.query(INSERT/UPDATE/DELETE) without withTransaction wrapper",
+      "permanent": [
+        { "file": "scripts/lib/pipeline.js",            "reason": "SDK — implements withTransaction itself; internal mutations are the implementation" },
+        { "file": "scripts/run-chain.js",               "reason": "Orchestrator — pipeline_runs bookkeeping is intentionally outside transaction (observation records)" },
+        { "file": "scripts/migrate.js",                 "reason": "Migration runner — DDL cannot run inside a transaction" },
+        { "file": "scripts/seed-parcels.js",            "reason": "Seed script — inert, not in active chain" },
+        { "file": "scripts/seed-coa.js",                "reason": "Seed script — inert, not in active chain" },
+        { "file": "scripts/seeds/apply-logic-variables.js", "reason": "Seed script — inert, not in active chain" },
+        { "file": "scripts/backfill/seed-pipeline-runs.js", "reason": "One-time backfill — inert, not in active chain" },
+        { "file": "scripts/reclassify-all.js",          "reason": "One-off maintenance script — not in active chain" },
+        { "file": "scripts/quality/assert-schema.js",   "reason": "CQA script — pipeline_runs INSERT is observation time recording, not data mutation" },
+        { "file": "scripts/quality/assert-data-bounds.js", "reason": "CQA script — pipeline_runs INSERT is observation time recording" },
+        { "file": "scripts/quality/assert-engine-health.js", "reason": "CQA script — engine_health_snapshots INSERT is observation time recording" },
+        { "file": "scripts/quality/assert-staleness.js", "reason": "CQA script — read-only probe" },
+        { "file": "scripts/quality/assert-network-health.js", "reason": "CQA script — read-only probe" },
+        { "file": "scripts/quality/assert-pre-permit-aging.js", "reason": "CQA script — read-only probe" },
+        { "file": "scripts/quality/assert-coa-freshness.js", "reason": "CQA script — read-only probe" },
+        { "file": "scripts/quality/assert-lifecycle-phase-distribution.js", "reason": "CQA script — read-only probe" },
+        { "file": "scripts/purge-lead-views.js",        "reason": "Batched DELETE is idempotent and crash-safe; each batch is independent" }
+      ],
+      "temporary": [
+        { "file": "scripts/classify-permit-phase.js",   "reason": "Phase B mop-up — needs withTransaction wrapper added (B2)" }
+      ]
+    },
+    "new-date-ban": {
+      "note": "Ban: new Date() in scripts/ for DB timestamp generation (use pipeline.getDbTimestamp instead)",
+      "permanent": [
+        { "file": "scripts/lib/pipeline.js",            "reason": "SDK — uses new Date().toISOString() for snapshot captured_at (observation metadata, not data timestamp)" },
+        { "file": "scripts/load-parcels.js",            "reason": "Uses new Date().toISOString().slice(0,10) to compare expiry dates as strings (date comparison, not DB write)" },
+        { "file": "scripts/audit_all_specs.mjs",        "reason": "Report generator — uses new Date() for report date in file headers" },
+        { "file": "scripts/generate-script.mjs",        "reason": "Generator tool — uses new Date() for template comments" },
+        { "file": "scripts/task-init.mjs",              "reason": "Task scaffolder — uses new Date() for date stamps in task files" },
+        { "file": "scripts/migrate.js",                 "reason": "Migration runner — uses Date for logging only" },
+        { "file": "scripts/run-chain.js",               "reason": "Orchestrator — uses Date for chain start/end logging only" }
+      ]
+    },
+    "sql-now": {
+      "note": "Ban: NOW() or CURRENT_DATE inside mutation SQL (INSERT/UPDATE/DELETE) — use RUN_AT parameter instead",
+      "permanent": [
+        { "file": "scripts/lib/pipeline.js",            "reason": "SDK — checkQueueAge uses NOW() in WHERE clause (read-only filter, not write)" },
+        { "file": "scripts/run-chain.js",               "reason": "Orchestrator — pipeline_runs timestamps are observation time (when chain ran), not data timestamps" },
+        { "file": "scripts/migrate.js",                 "reason": "Migration runner — DDL DEFAULT NOW() is appropriate in schema definitions" },
+        { "file": "scripts/refresh-snapshot.js",        "reason": "All mutations are inside REPEATABLE READ transaction — NOW() is stable for the transaction duration" },
+        { "file": "scripts/quality/assert-schema.js",   "reason": "CQA script — pipeline_runs NOW() records observation time, not data timestamps" },
+        { "file": "scripts/quality/assert-data-bounds.js", "reason": "CQA script — pipeline_runs NOW() records observation time" },
+        { "file": "scripts/quality/assert-engine-health.js", "reason": "CQA script — observation time recording" },
+        { "file": "scripts/quality/assert-staleness.js", "reason": "CQA script — NOW() in WHERE clause (read-only age filter)" },
+        { "file": "scripts/quality/assert-network-health.js", "reason": "CQA script — read-only probe" },
+        { "file": "scripts/quality/assert-pre-permit-aging.js", "reason": "CQA script — NOW() in WHERE clause" },
+        { "file": "scripts/quality/assert-coa-freshness.js", "reason": "CQA script — NOW() in WHERE clause" },
+        { "file": "scripts/quality/assert-lifecycle-phase-distribution.js", "reason": "CQA script — read-only probe" },
+        { "file": "scripts/seed-coa.js",                "reason": "Seed script — inert, not in active chain" },
+        { "file": "scripts/backfill/seed-pipeline-runs.js", "reason": "One-time backfill — inert" },
+        { "file": "scripts/close-stale-permits.js",     "reason": "CURRENT_DATE in WHERE clause only (age filter, not a write)" },
+        { "file": "scripts/create-pre-permits.js",      "reason": "NOW() in WHERE clause only (freshness filter, not a write)" },
+        { "file": "scripts/purge-lead-views.js",        "reason": "NOW() in WHERE clause only (age filter for DELETE boundary)" },
+        { "file": "scripts/reclassify-all.js",          "reason": "One-off maintenance — not in active chain" },
+        { "file": "scripts/load-parcels.js",            "reason": "NOW() in WHERE clause only (permit expiry age filter, not a write)" }
+      ],
+      "temporary": [
+        { "file": "scripts/backfill-permits-location.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/classify-inspection-status.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/classify-lifecycle-phase.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/classify-permit-phase.js",   "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/classify-permits.js",        "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through all mutation SQL" },
+        { "file": "scripts/classify-scope.js",          "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/compute-centroids.js",       "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/compute-cost-estimates.js",  "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/compute-opportunity-scores.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/compute-timing-calibration.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/compute-timing-calibration-v2.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/compute-trade-forecasts.js", "reason": "Phase B mop-up B3 — partial; RUN_AT used for forecasts table but NOW() remains in other mutations" },
+        { "file": "scripts/enrich-web-search.js",       "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/enrich-wsib.js",             "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/extract-builders.js",        "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/geocode-permits.js",         "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/link-coa.js",                "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through all mutation SQL" },
+        { "file": "scripts/link-massing.js",            "reason": "Phase B mop-up B3 — linked_at fixed but other NOW() mutations remain" },
+        { "file": "scripts/link-neighbourhoods.js",     "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/link-parcels.js",            "reason": "Phase B mop-up B3 — linked_at fixed but other NOW() mutations remain" },
+        { "file": "scripts/link-similar.js",            "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/link-wsib.js",               "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/load-address-points.js",     "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/load-coa.js",                "reason": "Phase B mop-up B3 — hash/last_seen_at fixed but other NOW() mutations remain" },
+        { "file": "scripts/load-massing.js",            "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/load-neighbourhoods.js",     "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/load-permits.js",            "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/load-wsib.js",               "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" },
+        { "file": "scripts/update-tracked-projects.js", "reason": "Phase B mop-up B3 — RUN_AT not yet threaded through mutation SQL" }
+      ]
+    },
+    "unbounded-push-in-stream": {
+      "note": "Ban: .push() into outer array inside for-await without batch-flush guard (OOM risk)",
+      "permanent": [
+        { "file": "scripts/lib/pipeline.js",            "reason": "SDK — streamQuery implementation uses bounded internal buffers" },
+        { "file": "scripts/load-permits.js",            "reason": "Phase B mop-up: known accumulation pattern; tracked in review_followups.md B2" }
+      ]
+    },
+    "raw-parseint": {
+      "note": "Ban: raw parseInt()/parseFloat() in scripts/ without safe-math wrappers (NaN propagation risk)",
+      "permanent": [
+        { "file": "scripts/lib/pipeline.js",            "reason": "SDK — parseInt for port parsing is validated before use" },
+        { "file": "scripts/lib/config-loader.js",       "reason": "Utility lib — config values validated via Zod after parsing" },
+        { "file": "scripts/lib/safe-math.js",           "reason": "Safe-math implementation — uses parseInt internally with guards" },
+        { "file": "scripts/migrate.js",                 "reason": "Migration runner — not a pipeline step" },
+        { "file": "scripts/audit_all_specs.mjs",        "reason": "Spec audit tool" },
+        { "file": "scripts/generate-script.mjs",        "reason": "Generator tool" },
+        { "file": "scripts/task-init.mjs",              "reason": "Task scaffolder" },
+        { "file": "scripts/seed-parcels.js",            "reason": "Seed script — inert" },
+        { "file": "scripts/seed-coa.js",                "reason": "Seed script — inert" },
+        { "file": "scripts/reclassify-all.js",          "reason": "One-off maintenance — inert" },
+        { "file": "scripts/backfill/seed-pipeline-runs.js", "reason": "One-time backfill — inert" },
+        { "file": "scripts/run-chain.js",               "reason": "Orchestrator — parseInt for config (bounded, validated)" }
+      ]
+    }
+  }
+}
