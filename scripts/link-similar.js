@@ -24,8 +24,12 @@
  */
 const pipeline = require('./lib/pipeline');
 
+const ADVISORY_LOCK_ID = 30;
+
 pipeline.run('link-similar', async (pool) => {
-  const startTime = Date.now();
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const startTime = Date.now();
 
   pipeline.log.info('[link-similar]', 'Linking similar permits (BLD → companion propagation)...');
 
@@ -47,7 +51,7 @@ pipeline.run('link-similar', async (pool) => {
            ) AS tag
          ),
          project_type = bld.project_type,
-         scope_classified_at = NOW(),
+         scope_classified_at = $1::timestamptz,
          scope_source = 'propagated'
        FROM (
          SELECT DISTINCT ON (base_num)
@@ -70,7 +74,8 @@ pipeline.run('link-similar', async (pool) => {
              COALESCE(companion.scope_tags, '{}') || bld.scope_tags ||
              CASE WHEN companion.permit_type = 'Demolition Folder (DM)' THEN ARRAY['demolition'] ELSE '{}'::text[] END
            ) AS tag
-         ) OR companion.project_type IS DISTINCT FROM bld.project_type)`
+         ) OR companion.project_type IS DISTINCT FROM bld.project_type)`,
+      [RUN_AT]
     );
 
     return propagateResult.rowCount || 0;
@@ -120,4 +125,6 @@ pipeline.run('link-similar', async (pool) => {
     { "permits": ["permit_num", "revision_num", "scope_tags", "project_type", "permit_type"] },
     { "permits": ["scope_tags", "project_type", "scope_classified_at", "scope_source"] }
   );
+  });
+  if (!lockResult.acquired) return;
 });

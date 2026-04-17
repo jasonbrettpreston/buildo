@@ -32,6 +32,8 @@ const LOGIC_VARS_SCHEMA = z.object({
 }).passthrough();
 const BBOX_OFFSET = 0.001; // ~111m lat, ~82m lng at Toronto latitude
 
+const ADVISORY_LOCK_ID = 90;
+
 /**
  * Ray-casting point-in-polygon test.
  * Point is [lng, lat], ring is array of [lng, lat] (closed polygon).
@@ -104,7 +106,9 @@ function haversineDistance(p1, p2) {
 }
 
 pipeline.run('link-parcels', async (pool) => {
-  const { logicVars } = await loadMarketplaceConfigs(pool, 'link-parcels');
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const { logicVars } = await loadMarketplaceConfigs(pool, 'link-parcels');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-parcels');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   const spatialMaxDistanceM = logicVars.spatial_match_max_distance_m;
@@ -409,16 +413,18 @@ pipeline.run('link-parcels', async (pool) => {
     // Batch insert within a transaction — IS DISTINCT FROM prevents dead tuple bloat (§9.3)
     if (insertParams.length > 0) {
       await pipeline.withTransaction(pool, async (client) => {
+        // Append RUN_AT as last param; its index = insertValues.length + 1 (5 params per row)
+        const runAtIdx = insertValues.length + 1;
         const result = await client.query(
           `INSERT INTO permit_parcels (permit_num, revision_num, parcel_id, match_type, confidence)
            VALUES ${insertParams.join(', ')}
            ON CONFLICT (permit_num, revision_num, parcel_id) DO UPDATE SET
              match_type = EXCLUDED.match_type,
              confidence = EXCLUDED.confidence,
-             linked_at = NOW()
+             linked_at = $${runAtIdx}::timestamptz
            WHERE permit_parcels.match_type IS DISTINCT FROM EXCLUDED.match_type
               OR permit_parcels.confidence IS DISTINCT FROM EXCLUDED.confidence`,
-          insertValues
+          [...insertValues, RUN_AT]
         );
         dbUpserted += result.rowCount || 0;
       });
@@ -460,9 +466,9 @@ pipeline.run('link-parcels', async (pool) => {
 
       // Mark ALL processed permits as evaluated (regardless of match count)
       await client.query(
-        `UPDATE permits SET parcel_linked_at = NOW()
+        `UPDATE permits SET parcel_linked_at = $3::timestamptz
          WHERE (permit_num, revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))`,
-        [allNums, allRevs]
+        [allNums, allRevs, RUN_AT]
       );
     });
 
@@ -539,4 +545,6 @@ pipeline.run('link-parcels', async (pool) => {
     { "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"], "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"] },
     { "permit_parcels": ["permit_num", "revision_num", "parcel_id", "match_type", "confidence", "linked_at"] }
   );
+  });
+  if (!lockResult.acquired) return;
 });

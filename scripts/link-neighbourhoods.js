@@ -18,6 +18,9 @@
  * SPEC LINK: docs/specs/28_data_quality_dashboard.md
  */
 const pipeline = require('./lib/pipeline');
+
+const ADVISORY_LOCK_ID = 92;
+
 // Turf.js imports are lazy-loaded inside the JS fallback path (else block).
 // PostGIS environments don't need Turf installed at all.
 let booleanPointInPolygon, turfCentroid, point, polygon, multiPolygon;
@@ -58,7 +61,8 @@ function computeBBox(geom) {
 }
 
 pipeline.run('link-neighbourhoods', async (pool) => {
-  const startTime = Date.now();
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const startTime = Date.now();
 
   // Detect PostGIS for fast-path ST_Contains
   const pgisCheck = await pool.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
@@ -357,4 +361,6 @@ pipeline.run('link-neighbourhoods', async (pool) => {
     { "permits": ["permit_num", "revision_num", "latitude", "longitude", "neighbourhood_id"], "neighbourhoods": ["id", "neighbourhood_id", "name", "geometry"], "parcels": ["id", "geometry"] },
     { "permits": ["neighbourhood_id"] }
   );
+  });
+  if (!lockResult.acquired) return;
 });

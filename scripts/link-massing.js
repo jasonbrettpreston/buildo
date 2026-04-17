@@ -33,6 +33,8 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-load
 // PostGIS environments don't need Turf installed at all.
 let booleanPointInPolygon, turfPoint;
 
+const ADVISORY_LOCK_ID = 91;
+
 const LOGIC_VARS_SCHEMA = z.object({
   massing_shed_threshold_sqm:    z.number().finite().positive(),
   massing_garage_max_sqm:        z.number().finite().positive(),
@@ -131,8 +133,10 @@ function gridNeighbourKeys(lat, lng) {
  * Flush accumulated INSERT params to DB within a transaction.
  * Returns the number of actual DB writes (rowCount from IS DISTINCT FROM).
  */
-async function flushInsertBatch(pool, insertParams, insertValues) {
+async function flushInsertBatch(pool, insertParams, insertValues, RUN_AT) {
   if (insertParams.length === 0) return 0;
+  // Append RUN_AT as last param; its index = insertValues.length + 1 (6 params per row)
+  const runAtIdx = insertValues.length + 1;
   let upserted = 0;
   await pipeline.withTransaction(pool, async (client) => {
     const result = await client.query(
@@ -143,12 +147,12 @@ async function flushInsertBatch(pool, insertParams, insertValues) {
          structure_type = EXCLUDED.structure_type,
          match_type = EXCLUDED.match_type,
          confidence = EXCLUDED.confidence,
-         linked_at = NOW()
+         linked_at = $${runAtIdx}::timestamptz
        WHERE parcel_buildings.is_primary IS DISTINCT FROM EXCLUDED.is_primary
          OR parcel_buildings.structure_type IS DISTINCT FROM EXCLUDED.structure_type
          OR parcel_buildings.match_type IS DISTINCT FROM EXCLUDED.match_type
          OR parcel_buildings.confidence IS DISTINCT FROM EXCLUDED.confidence`,
-      insertValues
+      [...insertValues, RUN_AT]
     );
     upserted = result.rowCount || 0;
   });
@@ -156,7 +160,9 @@ async function flushInsertBatch(pool, insertParams, insertValues) {
 }
 
 pipeline.run('link-massing', async (pool) => {
-  const { logicVars } = await loadMarketplaceConfigs(pool, 'link-massing');
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const { logicVars } = await loadMarketplaceConfigs(pool, 'link-massing');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-massing');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   const shedThresholdSqm    = logicVars.massing_shed_threshold_sqm;
@@ -289,7 +295,7 @@ pipeline.run('link-massing', async (pool) => {
           }
         }
 
-        buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
+        buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues, RUN_AT);
         containsMatches += matchResult.rows.length;
         parcelsLinked += byParcel.size;
       }
@@ -551,7 +557,7 @@ pipeline.run('link-massing', async (pool) => {
 
       // §9.2 safeguard: flush if approaching PG 65,535 param limit
       if (insertValues.length >= PARAM_FLUSH_THRESHOLD) {
-        buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
+        buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues, RUN_AT);
         parcelsLinked += batchParcelsCount;
         insertParams = [];
         insertValues = [];
@@ -562,7 +568,7 @@ pipeline.run('link-massing', async (pool) => {
 
     // Flush remaining batch
     if (insertParams.length > 0) {
-      buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues);
+      buildingsUpserted += await flushInsertBatch(pool, insertParams, insertValues, RUN_AT);
       parcelsLinked += batchParcelsCount;
     }
 
@@ -634,4 +640,6 @@ pipeline.run('link-massing', async (pool) => {
     { "parcels": ["id", "centroid_lat", "centroid_lng", "geometry"], "building_footprints": ["id", "geometry", "footprint_area_sqm", "centroid_lat", "centroid_lng"] },
     { "parcel_buildings": ["parcel_id", "building_id", "is_primary", "structure_type", "match_type", "confidence", "linked_at"] }
   );
+  });
+  if (!lockResult.acquired) return;
 });

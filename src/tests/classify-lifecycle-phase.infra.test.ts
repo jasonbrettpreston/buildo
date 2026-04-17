@@ -470,9 +470,10 @@ describe('scripts/link-coa.js — permits.last_seen_at bump for downstream re-cl
     // uses `last_seen_at > lifecycle_classified_at`. If link-coa.js
     // doesn't bump permits.last_seen_at on the permit side, newly
     // linked CoAs would not trigger re-classification of their permit.
+    // §47 Bundle G: NOW() → $2::timestamptz (RUN_AT param) — accept either pattern
     expect(content).toMatch(/permits\.last_seen_at/);
     expect(content).toMatch(
-      /UPDATE\s+permits[\s\S]*?SET\s+last_seen_at\s*=\s*NOW\(\)/,
+      /UPDATE\s+permits[\s\S]*?SET\s+last_seen_at\s*=\s*(?:NOW\(\)|\$\d+::timestamptz)/,
     );
   });
 

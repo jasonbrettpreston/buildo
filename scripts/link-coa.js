@@ -29,8 +29,12 @@ const LOGIC_VARS_SCHEMA = z.object({
   coa_match_conf_medium: z.number().finite().positive().max(1),
 }).passthrough();
 
+const ADVISORY_LOCK_ID = 93;
+
 pipeline.run('link-coa', async (pool) => {
-  const { logicVars } = await loadMarketplaceConfigs(pool, 'link-coa');
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const { logicVars } = await loadMarketplaceConfigs(pool, 'link-coa');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-coa');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   const confHigh   = logicVars.coa_match_conf_high;
@@ -149,11 +153,11 @@ pipeline.run('link-coa', async (pool) => {
   async function runTier(label, confidence, joinWhere, filterWhere) {
     if (!dryRun) {
       return await pipeline.withTransaction(pool, async (client) => {
-        const result = await client.query(`
-          UPDATE coa_applications ca
+        const result = await client.query(
+          `UPDATE coa_applications ca
           SET linked_permit_num = matched.permit_num,
               linked_confidence = ${confidence},
-              last_seen_at = NOW()
+              last_seen_at = $1::timestamptz
           FROM (
             SELECT DISTINCT ON (ca2.id) ca2.id, p.permit_num
             FROM coa_applications ca2
@@ -161,8 +165,9 @@ pipeline.run('link-coa', async (pool) => {
             WHERE ${filterWhere}
             ORDER BY ca2.id, COALESCE(p.issued_date, p.application_date) DESC NULLS LAST, p.permit_num DESC
           ) matched
-          WHERE ca.id = matched.id
-        `);
+          WHERE ca.id = matched.id`,
+          [RUN_AT]
+        );
         return result.rowCount || 0;
       });
     } else {
@@ -242,7 +247,7 @@ pipeline.run('link-coa', async (pool) => {
             UPDATE coa_applications ca
             SET linked_permit_num = matched.permit_num,
                 linked_confidence = matched.conf,
-                last_seen_at = NOW()
+                last_seen_at = $4::timestamptz
             FROM (
               SELECT DISTINCT ON (c.coa_id) c.coa_id, lat.permit_num,
                 CASE
@@ -270,7 +275,7 @@ pipeline.run('link-coa', async (pool) => {
               ORDER BY c.coa_id
             ) matched
             WHERE ca.id = matched.coa_id
-          `, [ids, wards, queries]);
+          `, [ids, wards, queries, RUN_AT]);
           desc += result.rowCount || 0;
         });
       } catch (err) {
@@ -342,7 +347,7 @@ pipeline.run('link-coa', async (pool) => {
     const bumpStart = new Date(startTime).toISOString();
     const bumpResult = await pool.query(
       `UPDATE permits
-          SET last_seen_at = NOW()
+          SET last_seen_at = $2::timestamptz
         WHERE permit_num IN (
           SELECT DISTINCT linked_permit_num
             FROM coa_applications
@@ -350,7 +355,7 @@ pipeline.run('link-coa', async (pool) => {
              AND last_seen_at >= $1::timestamptz
         )
           AND last_seen_at < NOW() - INTERVAL '1 second'`,
-      [bumpStart],
+      [bumpStart, RUN_AT],
     );
     permitsBumped = bumpResult.rowCount || 0;
     pipeline.log.info(
@@ -501,4 +506,6 @@ pipeline.run('link-coa', async (pool) => {
     { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name_normalized", "ward", "issued_date", "description"] },
     { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"] }
   );
+  });
+  if (!lockResult.acquired) return;
 });

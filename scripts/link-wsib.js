@@ -25,8 +25,12 @@ const LOGIC_VARS_SCHEMA = z.object({
   wsib_fuzzy_match_threshold: z.number().finite().positive().max(1),
 }).passthrough();
 
+const ADVISORY_LOCK_ID = 94;
+
 pipeline.run('link-wsib', async (pool) => {
-  const { logicVars } = await loadMarketplaceConfigs(pool, 'link-wsib');
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [{ now: RUN_AT }] } = await pool.query('SELECT NOW() AS now');
+    const { logicVars } = await loadMarketplaceConfigs(pool, 'link-wsib');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-wsib');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   const wsibFuzzyMatchThreshold = logicVars.wsib_fuzzy_match_threshold;
@@ -186,8 +190,8 @@ pipeline.run('link-wsib', async (pool) => {
       // Tier 1: Exact trade name match (0.95)
       // ------------------------------------------------------------------
       pipeline.log.info('[link-wsib]', 'Tier 1: Exact trade name matching...');
-      const result1 = await client.query(`
-        WITH matched AS (
+      const result1 = await client.query(
+        `WITH matched AS (
           SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
           FROM wsib_registry w
           JOIN entities e ON e.name_normalized = w.trade_name_normalized
@@ -199,10 +203,11 @@ pipeline.run('link-wsib', async (pool) => {
         UPDATE wsib_registry w
         SET linked_entity_id = m.entity_id,
             match_confidence = 0.95,
-            matched_at = NOW()
+            matched_at = $1::timestamptz
         FROM matched m
-        WHERE w.id = m.wsib_id
-      `);
+        WHERE w.id = m.wsib_id`,
+        [RUN_AT]
+      );
       tier1 = result1.rowCount || 0;
 
       if (tier1 > 0) {
@@ -225,8 +230,8 @@ pipeline.run('link-wsib', async (pool) => {
       // Tier 2: Exact legal name match (0.90)
       // ------------------------------------------------------------------
       pipeline.log.info('[link-wsib]', 'Tier 2: Exact legal name matching...');
-      const result2 = await client.query(`
-        WITH matched AS (
+      const result2 = await client.query(
+        `WITH matched AS (
           SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
           FROM wsib_registry w
           JOIN entities e ON e.name_normalized = w.legal_name_normalized
@@ -237,10 +242,11 @@ pipeline.run('link-wsib', async (pool) => {
         UPDATE wsib_registry w
         SET linked_entity_id = m.entity_id,
             match_confidence = 0.90,
-            matched_at = NOW()
+            matched_at = $1::timestamptz
         FROM matched m
-        WHERE w.id = m.wsib_id
-      `);
+        WHERE w.id = m.wsib_id`,
+        [RUN_AT]
+      );
       tier2 = result2.rowCount || 0;
 
       if (tier2 > 0) {
@@ -268,16 +274,17 @@ pipeline.run('link-wsib', async (pool) => {
       // Set pg_trgm threshold to 0.6 so the GIN index only returns relevant pairs
       // (default 0.3 fetches too many garbage pairs before the WHERE filter)
       await client.query(`SET pg_trgm.similarity_threshold = ${wsibFuzzyMatchThreshold}`);
-      const result3 = await client.query(`
-        WITH ${buildTier3Ctes()},
+      const result3 = await client.query(
+        `WITH ${buildTier3Ctes()},
         matched AS (${TIER3_SELECT})
         UPDATE wsib_registry w
         SET linked_entity_id = m.entity_id,
             match_confidence = 0.60,
-            matched_at = NOW()
+            matched_at = $1::timestamptz
         FROM matched m
-        WHERE w.id = m.wsib_id
-      `);
+        WHERE w.id = m.wsib_id`,
+        [RUN_AT]
+      );
       tier3 = result3.rowCount || 0;
 
       await client.query('RESET pg_trgm.similarity_threshold');
@@ -365,4 +372,6 @@ pipeline.run('link-wsib', async (pool) => {
     { "wsib_registry": ["id", "trade_name_normalized", "legal_name_normalized", "linked_entity_id"], "entities": ["id", "name_normalized", "permit_count"] },
     { "wsib_registry": ["linked_entity_id", "match_confidence", "matched_at"], "entities": ["is_wsib_registered", "primary_phone", "primary_email", "website"] }
   );
+  });
+  if (!lockResult.acquired) return;
 });
