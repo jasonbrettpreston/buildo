@@ -12,13 +12,14 @@ As a lead generator, I want Committee of Adjustment variance hearings imported, 
 
 **Trigger:** `node scripts/run-chain.js coa` or `POST /api/admin/pipelines/chain_coa`
 **Schedule:** Daily
-**Steps:** 10 (sequential, stop-on-failure)
+**Steps:** 11 (sequential, stop-on-failure)
 **Gate:** `coa` — if `records_new = 0`, downstream enrichment steps are skipped
 
 ```
 assert_schema → coa → assert_coa_freshness → link_coa →
 create_pre_permits → assert_pre_permit_aging → refresh_snapshot →
-assert_data_bounds → assert_engine_health → classify_lifecycle_phase
+assert_data_bounds → assert_engine_health → classify_lifecycle_phase →
+assert_lifecycle_phase_distribution
 ```
 
 ### Step Breakdown
@@ -35,6 +36,7 @@ assert_data_bounds → assert_engine_health → classify_lifecycle_phase
 | 8 | `assert_data_bounds` | `quality/assert-data-bounds.js` | CoA-scoped: row counts, null rates, linkage integrity | pipeline_runs |
 | 9 | `assert_engine_health` | `quality/assert-engine-health.js` | CoA table engine health | engine_health_snapshots |
 | 10 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Runs the lifecycle classifier synchronously to pick up any permits whose `last_seen_at` was bumped by `link_coa` in step 4. Same advisory-locked single-threaded script the permits chain uses. | permits, coa_applications |
+| 11 | `assert_lifecycle_phase_distribution` | `quality/assert-lifecycle-phase-distribution.js` | Tier 3 CQA: validates phase distribution bands after the classifier runs. Uses advisory lock 109 — skips gracefully if classifier from a concurrent permits chain is still writing. Throws on failure (halting). | pipeline_runs |
 
 **Trailing lifecycle classifier (step 10)** is the only path that routes
 CoA linking results into the classifier, because `link-coa.js` bumps
@@ -43,8 +45,9 @@ CoA linking results into the classifier, because `link-coa.js` bumps
 step, a CoA that becomes linked would never update its host permit's
 `lifecycle_phase` until the next full permits-chain run. If the permits
 chain fires immediately before or after the CoA chain, the classifier's
-advisory lock (ID 85) single-threads the two invocations — the second
-one exits cleanly with `skipped:true`. See
+advisory lock (ID 84) single-threads the two invocations — the second
+one exits cleanly with `skipped:true`. The phase distribution gate (step 11) uses its own
+advisory lock (ID 109), so concurrent chain runs cannot produce duplicate assert checks. See
 `docs/reports/lifecycle_phase_implementation.md` for the full rationale.
 </architecture>
 
@@ -100,7 +103,7 @@ one exits cleanly with `skipped:true`. See
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic:** `coa.logic.test.ts` (linker tiers, confidence thresholds, address normalization)
-- **Logic:** `chain.logic.test.ts` (coa chain definition, step count)
+- **Logic:** `chain.logic.test.ts` (coa chain definition, step count, assert_lifecycle_phase_distribution wired as step 11)
 - **Infra:** `quality.infra.test.ts` (assert-coa-freshness exists, assert-pre-permit-aging exists)
 <!-- TEST_INJECT_END -->
 </testing>

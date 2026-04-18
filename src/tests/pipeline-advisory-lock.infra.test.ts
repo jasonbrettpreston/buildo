@@ -69,6 +69,8 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/quality/assert-staleness.js':        106,
   'scripts/quality/assert-pre-permit-aging.js': 107,
   'scripts/quality/assert-coa-freshness.js':    108,
+  'scripts/quality/assert-lifecycle-phase-distribution.js': 109,
+  'scripts/quality/assert-entity-tracing.js':   110,
 };
 
 // ---------------------------------------------------------------------------

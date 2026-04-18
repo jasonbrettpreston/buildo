@@ -65,6 +65,8 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   assert_staleness:           { name: 'Staleness Monitor',       group: 'quality' },
   assert_pre_permit_aging:    { name: 'Pre-Permit Aging',        group: 'quality' },
   assert_coa_freshness:       { name: 'Source Freshness',         group: 'quality' },
+  assert_lifecycle_phase_distribution: { name: 'Phase Distribution',  group: 'quality' },
+  assert_entity_tracing:      { name: 'Entity Tracing',           group: 'quality' },
 };
 
 // ---------------------------------------------------------------------------
@@ -118,6 +120,9 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'assert_data_bounds',   indent: 0 },
       { slug: 'assert_engine_health', indent: 0 },
       { slug: 'classify_lifecycle_phase', indent: 0 },
+      // WF2 2026-04-18 — phase distribution gate (spec 84 §3.3):
+      // validates classifier output before marketplace tail reads it.
+      { slug: 'assert_lifecycle_phase_distribution', indent: 0 },
       // WF2 2026-04-13 — marketplace tail (specs 81/82/85):
       // forecasts → scores → tracked projects. Depends on
       // classify_lifecycle_phase having stamped fresh lifecycle_phase
@@ -125,6 +130,9 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'compute_trade_forecasts',    indent: 1 },
       { slug: 'compute_opportunity_scores', indent: 1 },
       { slug: 'update_tracked_projects',    indent: 1 },
+      // WF2 2026-04-18 — entity tracing gate (spec 41 §4):
+      // end-to-end coverage check across all downstream tables.
+      { slug: 'assert_entity_tracing',      indent: 0 },
     ],
   },
   {
@@ -142,6 +150,8 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'assert_data_bounds',       indent: 0 },
       { slug: 'assert_engine_health',     indent: 0 },
       { slug: 'classify_lifecycle_phase', indent: 0 },
+      // WF2 2026-04-18 — phase distribution gate after CoA classifier run.
+      { slug: 'assert_lifecycle_phase_distribution', indent: 0 },
     ],
   },
   // Group 2: Corporate Entities Enrichment (slow daily scrapes)
@@ -214,6 +224,8 @@ export const NON_TOGGLEABLE_SLUGS = new Set([
   'assert_engine_health',
   'assert_pre_permit_aging',
   'assert_coa_freshness',
+  'assert_lifecycle_phase_distribution',
+  'assert_entity_tracing',
   'refresh_snapshot',
 ]);
 

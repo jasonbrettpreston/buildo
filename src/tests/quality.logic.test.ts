@@ -493,19 +493,19 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 42 tracked pipelines', () => {
-    // +1 (compute_opportunity_scores)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(42);
+  it('has exactly 44 tracked pipelines', () => {
+    // +2 (assert_lifecycle_phase_distribution, assert_entity_tracing) WF2 2026-04-18
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(44);
   });
 
-  it('groups are correct: 10 ingest, 14 link, 10 classify, 1 snapshot, 7 quality', () => {
-    // +1 classify (compute_opportunity_scores)
+  it('groups are correct: 10 ingest, 14 link, 10 classify, 1 snapshot, 9 quality', () => {
+    // WF2 2026-04-18: +2 quality (assert_lifecycle_phase_distribution, assert_entity_tracing)
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(10);
     expect(groups.filter((g) => g === 'link')).toHaveLength(14);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(10);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
-    expect(groups.filter((g) => g === 'quality')).toHaveLength(7);
+    expect(groups.filter((g) => g === 'quality')).toHaveLength(9);
   });
 
   it('every pipeline has a non-empty human-readable name', () => {
@@ -531,16 +531,16 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'entities', 'wsib', 'sources', 'deep_scrapes']);
   });
 
-  it('permits chain has 24 steps ending with the marketplace tail', () => {
+  it('permits chain has 26 steps ending with assert_entity_tracing', () => {
     // WF3 2026-04-13: v1 `compute_timing_calibration` removed per Path A.
-    // Only v2 remains. Detail-page timing engine (spec 71) will be
-    // migrated to v2's `phase_calibration` in a future frontend WF.
+    // WF2 2026-04-18: +2 steps (assert_lifecycle_phase_distribution step 22,
+    // assert_entity_tracing step 26).
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(24);
+    expect(permits.steps).toHaveLength(26);
     expect(permits!.steps[0]!.slug).toBe('assert_schema');
     expect(permits!.steps[1]!.slug).toBe('permits');
-    expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('update_tracked_projects');
-    expect(permits!.steps[permits.steps.length - 4]!.slug).toBe('classify_lifecycle_phase');
+    expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('assert_entity_tracing');
+    expect(permits!.steps[permits.steps.length - 6]!.slug).toBe('classify_lifecycle_phase');
   });
 
   it('permits chain has link_wsib as indent-1 step (not sub-step)', () => {
@@ -553,13 +553,14 @@ describe('Pipeline Chains', () => {
     expect(indent2plus).toHaveLength(0);
   });
 
-  it('coa chain has 10 steps ending with classify_lifecycle_phase', () => {
+  it('coa chain has 11 steps ending with assert_lifecycle_phase_distribution', () => {
     // WF2 2026-04-11: +1 (classify_lifecycle_phase) — was 9 before.
+    // WF2 2026-04-18: +1 (assert_lifecycle_phase_distribution as step 11).
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
-    expect(coa.steps).toHaveLength(10);
+    expect(coa.steps).toHaveLength(11);
     expect(coa!.steps[0]!.slug).toBe('assert_schema');
     expect(coa!.steps[1]!.slug).toBe('coa');
-    expect(coa!.steps[coa.steps.length - 1]!.slug).toBe('classify_lifecycle_phase');
+    expect(coa!.steps[coa.steps.length - 1]!.slug).toBe('assert_lifecycle_phase_distribution');
   });
 
   it('sources chain has 15 steps including WSIB, compute_centroids and assert_engine_health', () => {

@@ -783,7 +783,9 @@ describe('assert-lifecycle-phase-distribution.js — advisory lock delegation (s
   });
 
   it('delegates advisory lock to pipeline.withAdvisoryLock — Phase 2 migration (spec 47 §5)', () => {
-    expect(content).toMatch(/const ADVISORY_LOCK_ID = 85/);
+    // WF2 2026-04-18: ADVISORY_LOCK_ID changed from 85 → 109 (unique per §A.5).
+    // Lock 85 belongs to compute-trade-forecasts.js; sharing it was misleading.
+    expect(content).toMatch(/const ADVISORY_LOCK_ID = 109/);
     expect(content).toMatch(/pipeline\.withAdvisoryLock\(pool,\s*ADVISORY_LOCK_ID/);
     // Must NOT hand-roll
     expect(content).not.toMatch(/pg_try_advisory_lock/);

@@ -45,6 +45,8 @@
     "classify_inspection_status": { "file": "scripts/classify-inspection-status.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
     "purge_lead_views":     { "file": "scripts/purge-lead-views.js",    "supports_full": false, "supports_dry_run": true, "telemetry_tables": ["lead_views"] },
     "classify_lifecycle_phase": { "file": "scripts/classify-lifecycle-phase.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits", "coa_applications"] },
+    "assert_lifecycle_phase_distribution": { "file": "scripts/quality/assert-lifecycle-phase-distribution.js", "supports_full": false, "supports_dry_run": false },
+    "assert_entity_tracing": { "file": "scripts/quality/assert-entity-tracing.js", "supports_full": false, "supports_dry_run": false },
     "coa_documents":        { "file": null, "supports_full": false, "supports_dry_run": false, "coming_soon": true }
   },
 
@@ -55,13 +57,14 @@
       "link_neighbourhoods", "link_massing", "link_similar", "classify_permits",
       "compute_cost_estimates", "compute_timing_calibration_v2",
       "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
-      "classify_lifecycle_phase",
-      "compute_trade_forecasts", "compute_opportunity_scores", "update_tracked_projects"
+      "classify_lifecycle_phase", "assert_lifecycle_phase_distribution",
+      "compute_trade_forecasts", "compute_opportunity_scores", "update_tracked_projects",
+      "assert_entity_tracing"
     ],
     "coa": [
       "assert_schema", "coa", "assert_coa_freshness", "link_coa", "create_pre_permits",
       "assert_pre_permit_aging", "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
-      "classify_lifecycle_phase"
+      "classify_lifecycle_phase", "assert_lifecycle_phase_distribution"
     ],
     "sources": [
       "assert_schema", "address_points", "geocode_permits", "parcels",

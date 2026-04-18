@@ -563,7 +563,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   // Classify
   classify_scope:       { summary: 'Classifies project_type and extracts scope_tags for new/changed permits, then propagates BLD scope to companion permits', table: 'permits' },
   classify_permits:     { summary: 'Assigns trade classifications using tag-trade matrix and rules', table: 'permit_trades' },
-  classify_lifecycle_phase: { summary: 'Computes lifecycle_phase + lifecycle_stalled for dirty permits and CoA applications. Runs as the final step of permits + coa chains. Uses pg_try_advisory_lock(85) to single-thread concurrent runs.', table: 'permits' },
+  classify_lifecycle_phase: { summary: 'Computes lifecycle_phase + lifecycle_stalled for dirty permits and CoA applications. Runs as the final step of permits + coa chains. Uses pg_try_advisory_lock(84) to single-thread concurrent runs.', table: 'permits' },
   compute_timing_calibration_v2: { summary: 'Computes phase-to-phase median lead times from inspection history. Mines sequential passed-stage pairs, maps to lifecycle phases, stores in phase_calibration for the flight tracker.', table: 'phase_calibration' },
   compute_trade_forecasts: { summary: 'Generates per-permit, per-trade predicted start dates and urgency statuses. Marries phase_started_at anchor with phase_calibration medians and TRADE_TARGET_PHASE mapping.', table: 'trade_forecasts' },
   compute_opportunity_scores: { summary: 'Calculates 0-100 composite opportunity score per trade forecast from trade value, urgency window multiplier, and competition discount.', table: 'trade_forecasts' },
@@ -581,6 +581,8 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   assert_staleness:      { summary: 'Detects stale inspection permits not scraped within 14 days', table: 'pipeline_runs' },
   assert_pre_permit_aging: { summary: 'Detects approved+unlinked CoA applications aging past 12/18 months', table: 'pipeline_runs' },
   assert_coa_freshness:    { summary: 'Checks CKAN portal freshness — warns if newest CoA data is >45 days stale', table: 'pipeline_runs' },
+  assert_lifecycle_phase_distribution: { summary: 'Validates lifecycle phase distribution bands and unclassified count after classifier runs', table: 'pipeline_runs' },
+  assert_entity_tracing:   { summary: 'Checks coverage of new permits across 5 downstream tables: permit_trades, cost_estimates, trade_forecasts, lifecycle_phase, opportunity_score', table: 'pipeline_runs' },
   // Deep Scrapes
   inspections:                    { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections' },
   classify_inspection_status:     { summary: 'Detects stalled permits (10+ months inactive) and classifies enriched_status', table: 'permits' },

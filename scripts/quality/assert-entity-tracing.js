@@ -1,0 +1,228 @@
+#!/usr/bin/env node
+/**
+ * Assert Entity Tracing — Tier 3 CQA check.
+ *
+ * Runs after compute_opportunity_scores (step 25). For permits seen in
+ * the last 26 hours, checks that each one has made it through all five
+ * key downstream tables/columns:
+ *   1. permit_trades    — classify_permits ran
+ *   2. cost_estimates   — compute_cost_estimates ran
+ *   3. trade_forecasts  — compute_trade_forecasts ran
+ *   4. lifecycle_phase  — classify_lifecycle_phase ran (column on permits)
+ *   5. opportunity_score— compute_opportunity_scores ran (column on trade_forecasts)
+ *
+ * Non-halting on business-logic FAILs: emits FAIL rows to the audit_table
+ * but does NOT throw when coverage falls below threshold. Infrastructure
+ * failures (DB connectivity, query errors) will re-throw as intended.
+ *
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md §4
+ */
+'use strict';
+
+const pipeline = require('./../lib/pipeline');
+
+// Advisory lock ID — unique to this assert script (§47 §A.5, ID 110).
+// Prevents two concurrent chain runs from executing the entity tracing
+// check simultaneously, which could produce misleading coverage readings.
+const ADVISORY_LOCK_ID = 110;
+
+// 26-hour window: slightly wider than the assert-data-bounds 24h window to
+// tolerate timing drift in daily chain scheduling. The two windows are NOT
+// identical by design — this script uses 26h to avoid missing permits that
+// arrived just outside the previous 24h boundary.
+const TRACE_WINDOW = '26 hours';
+
+const THRESHOLDS = {
+  permit_trades:     0.95,
+  cost_estimates:    0.90,
+  trade_forecasts:   0.90,
+  lifecycle_phase:   0.95,
+  opportunity_score: 0.80,
+};
+
+pipeline.run('assert-entity-tracing', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const { rows: [baseRow] } = await pool.query(
+      `SELECT COUNT(*)::int AS new_permits
+         FROM permits
+        WHERE last_seen_at > NOW() - $1::interval`,
+      [TRACE_WINDOW],
+    );
+    const newPermits = baseRow.new_permits;
+
+    if (newPermits === 0) {
+      pipeline.emitSummary({
+        records_total: 0,
+        records_new: 0,
+        records_updated: 0,
+        records_meta: {
+          skipped: true,
+          reason: 'no_permits_in_window',
+          window: TRACE_WINDOW,
+        },
+      });
+      pipeline.emitMeta({}, {});
+      return;
+    }
+
+    const auditRows = [];
+    const failures = [];
+
+    // ── 1. permit_trades ──────────────────────────────────────────────────────
+    const { rows: [pt] } = await pool.query(
+      `SELECT COUNT(DISTINCT pt.permit_num || '--' || pt.revision_num)::int AS matched
+         FROM permit_trades pt
+         JOIN permits p ON p.permit_num = pt.permit_num
+                       AND p.revision_num = pt.revision_num
+        WHERE p.last_seen_at > NOW() - $1::interval`,
+      [TRACE_WINDOW],
+    );
+    auditRows.push(traceRow('permit_trades', pt.matched, newPermits, THRESHOLDS.permit_trades, failures));
+
+    // ── 2. cost_estimates ─────────────────────────────────────────────────────
+    const { rows: [ce] } = await pool.query(
+      `SELECT COUNT(*)::int AS matched
+         FROM cost_estimates ce
+         JOIN permits p ON p.permit_num = ce.permit_num
+                       AND p.revision_num = ce.revision_num
+        WHERE p.last_seen_at > NOW() - $1::interval`,
+      [TRACE_WINDOW],
+    );
+    auditRows.push(traceRow('cost_estimates', ce.matched, newPermits, THRESHOLDS.cost_estimates, failures));
+
+    // ── 3. trade_forecasts ────────────────────────────────────────────────────
+    const { rows: [tf] } = await pool.query(
+      `SELECT COUNT(DISTINCT tf.permit_num || '--' || tf.revision_num)::int AS matched
+         FROM trade_forecasts tf
+         JOIN permits p ON p.permit_num = tf.permit_num
+                       AND p.revision_num = tf.revision_num
+        WHERE p.last_seen_at > NOW() - $1::interval`,
+      [TRACE_WINDOW],
+    );
+    auditRows.push(traceRow('trade_forecasts', tf.matched, newPermits, THRESHOLDS.trade_forecasts, failures));
+
+    // ── 4. lifecycle_phase (column on permits) ────────────────────────────────
+    const { rows: [lp] } = await pool.query(
+      `SELECT COUNT(*)::int AS matched
+         FROM permits
+        WHERE last_seen_at > NOW() - $1::interval
+          AND lifecycle_phase IS NOT NULL`,
+      [TRACE_WINDOW],
+    );
+    auditRows.push(traceRow('lifecycle_phase', lp.matched, newPermits, THRESHOLDS.lifecycle_phase, failures));
+
+    // ── 5. opportunity_score (column on trade_forecasts, default 0) ───────────
+    // opportunity_score defaults to 0. Checks whether compute_opportunity_scores
+    // populated scores: denominator is trade_forecasts rows (not permits),
+    // since permits without classifications will have no forecast rows.
+    const { rows: [os] } = await pool.query(
+      `SELECT
+         COUNT(*)::int                                                          AS forecast_rows,
+         SUM(CASE WHEN tf.opportunity_score > 0 THEN 1 ELSE 0 END)::int        AS matched
+         FROM trade_forecasts tf
+         JOIN permits p ON p.permit_num = tf.permit_num
+                       AND p.revision_num = tf.revision_num
+        WHERE p.last_seen_at > NOW() - $1::interval`,
+      [TRACE_WINDOW],
+    );
+    const osDenominator = os.forecast_rows || 0;
+    const osMatched = os.matched || 0;
+    const osCoverage = osDenominator > 0 ? osMatched / osDenominator : 1;
+    const osThreshold = THRESHOLDS.opportunity_score;
+    const osStatus = osCoverage >= osThreshold ? 'PASS' : 'FAIL';
+    if (osStatus === 'FAIL') {
+      failures.push(
+        `opportunity_score: ${(osCoverage * 100).toFixed(1)}% of forecast rows scored > 0 ` +
+        `(${osMatched}/${osDenominator}) below ${(osThreshold * 100).toFixed(0)}% threshold`,
+      );
+    }
+    auditRows.push({
+      metric: 'opportunity_score_coverage_pct',
+      value: Math.round(osCoverage * 1000) / 10,
+      threshold: `>= ${(osThreshold * 100).toFixed(0)}% of forecast rows`,
+      matched: osMatched,
+      denominator: osDenominator,
+      status: osStatus,
+    });
+
+    const verdict = failures.length > 0 ? 'FAIL' : 'PASS';
+
+    if (failures.length > 0) {
+      pipeline.log.warn('[assert-entity-tracing]', 'TRACE COVERAGE FAILURES', { failures });
+    }
+
+    pipeline.emitSummary({
+      records_total: newPermits,
+      records_new: 0,
+      records_updated: 0,
+      records_meta: {
+        window: TRACE_WINDOW,
+        audit_table: {
+          phase: 26,
+          name: 'Assert Entity Tracing',
+          verdict,
+          rows: auditRows,
+        },
+      },
+    });
+
+    pipeline.emitMeta(
+      {
+        permits:         ['permit_num', 'revision_num', 'last_seen_at', 'lifecycle_phase'],
+        permit_trades:   ['permit_num', 'revision_num'],
+        cost_estimates:  ['permit_num', 'revision_num'],
+        trade_forecasts: ['permit_num', 'revision_num', 'opportunity_score'],
+      },
+      {},
+    );
+
+    // Non-halting: FAIL is logged in audit_table but we do NOT throw.
+    // Coverage gaps are expected for some permits (missing cost data,
+    // legitimately zero opportunity scores, etc.).
+  }, { skipEmit: false }); // end withAdvisoryLock
+
+  if (!lockResult.acquired) {
+    pipeline.log.info(
+      '[assert-entity-tracing]',
+      `Advisory lock ${ADVISORY_LOCK_ID} held — skipping to avoid duplicate coverage check.`,
+    );
+    pipeline.emitSummary({
+      records_total: 0,
+      records_new: 0,
+      records_updated: 0,
+      records_meta: {
+        skipped: true,
+        reason: 'lock_held',
+        advisory_lock_id: ADVISORY_LOCK_ID,
+      },
+    });
+    pipeline.emitMeta({}, {});
+  }
+});
+
+/**
+ * Build a standard trace coverage audit row and accumulate failures.
+ * @param {string} table
+ * @param {number} matched
+ * @param {number} total
+ * @param {number} threshold  0-1 fraction
+ * @param {string[]} failures  mutated in place
+ */
+function traceRow(table, matched, total, threshold, failures) {
+  const coverage = total > 0 ? matched / total : 1;
+  const status = coverage >= threshold ? 'PASS' : 'FAIL';
+  if (status === 'FAIL') {
+    failures.push(
+      `${table}: ${(coverage * 100).toFixed(1)}% coverage (${matched}/${total}) ` +
+      `below ${(threshold * 100).toFixed(0)}% threshold`,
+    );
+  }
+  return {
+    metric: `${table}_coverage_pct`,
+    value: Math.round(coverage * 1000) / 10,
+    threshold: `>= ${(threshold * 100).toFixed(0)}%`,
+    matched,
+    new_permits: total,
+    status,
+  };
+}

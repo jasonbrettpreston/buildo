@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Assert Lifecycle Phase Distribution — Tier 2 CQA check.
+ * Assert Lifecycle Phase Distribution — Tier 3 CQA check.
  *
  * Runs after the lifecycle classifier. Asserts that every phase's
  * count is within ±5% of the expected value, and that the unclassified
@@ -26,10 +26,12 @@ const LOGIC_VARS_SCHEMA = z.object({
   lifecycle_unclassified_max: z.number().finite().nonnegative().int(),
 }).passthrough();
 
-// Advisory lock ID — same as the classifier (85). If the classifier is
-// mid-write we skip rather than reading half-updated data and throwing
-// a false-positive band violation. See WF3 Bug #10.
-const ADVISORY_LOCK_ID = 85;
+// Advisory lock ID — unique to this assert script (§47 §A.5, ID 109).
+// Prevents two concurrent chain runs from executing the distribution
+// check simultaneously. If the classifier (lock 84) is concurrently
+// mid-write, the skipEmit-false pattern below still guards via the
+// lock-is-held check on the shared lock (see WF3 Bug #10 rationale).
+const ADVISORY_LOCK_ID = 109;
 
 // Expected distribution bands. Wide enough (±5%) to absorb normal
 // day-to-day fluctuation but tight enough to catch a rule regression.
@@ -329,8 +331,8 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
   });
 
   pipeline.emitMeta(
-    { permits: ['lifecycle_phase', 'lifecycle_stalled', 'enriched_status'],
-      coa_applications: ['lifecycle_phase'] },
+    { permits: ['lifecycle_phase', 'lifecycle_stalled', 'enriched_status', 'status'],
+      coa_applications: ['lifecycle_phase', 'linked_permit_num', 'decision'] },
     {},
   );
 

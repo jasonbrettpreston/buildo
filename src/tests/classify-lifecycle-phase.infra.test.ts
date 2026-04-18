@@ -536,12 +536,14 @@ describe('scripts/manifest.json — chain integration', () => {
     expect(steps.indexOf('update_tracked_projects')).toBeGreaterThan(classifierIdx);
   });
 
-  it('coa chain ends with classify_lifecycle_phase', () => {
+  it('coa chain ends with assert_lifecycle_phase_distribution (after classify_lifecycle_phase)', () => {
+    // WF2 2026-04-18: phase distribution gate added as final CoA step.
     const coaChain = manifest.chains.coa;
     expect(coaChain).toBeDefined();
     expect(Array.isArray(coaChain)).toBe(true);
     const steps = coaChain as string[];
-    expect(steps[steps.length - 1]).toBe('classify_lifecycle_phase');
+    expect(steps[steps.length - 1]).toBe('assert_lifecycle_phase_distribution');
+    expect(steps[steps.length - 2]).toBe('classify_lifecycle_phase');
     expect(steps).not.toContain('trigger_lifecycle_sync');
   });
 });

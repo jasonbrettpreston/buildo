@@ -13,14 +13,16 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
-  it('defines permits chain with 24 steps (no enrichment scripts)', () => {
+  it('defines permits chain with 26 steps (no enrichment scripts)', () => {
     // WF3 2026-04-13 — v1 `compute_timing_calibration` removed from chain
     // per user decision (Path A). v1's table `timing_calibration` will
     // go stale; the detail-page timing engine (spec 71) will be migrated
     // to read from `phase_calibration` in a future frontend WF.
+    // WF2 2026-04-18 — +2 steps: assert_lifecycle_phase_distribution (step 22)
+    // and assert_entity_tracing (step 26).
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(24);
+    expect(chain!.steps).toHaveLength(26);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
@@ -57,22 +59,24 @@ describe('Pipeline Chain Definitions', () => {
     expect(slugs.indexOf('compute_cost_estimates')).toBeLessThan(slugs.indexOf('compute_timing_calibration_v2'));
   });
 
-  it('permits chain ends with the 4-script marketplace tail', () => {
-    // WF2 2026-04-13 — Spec 80/81/82/85: the final 4 steps must be
-    // classify_lifecycle_phase → compute_trade_forecasts →
-    // compute_opportunity_scores → update_tracked_projects (in order).
-    // This order encodes the dependency graph:
+  it('permits chain: classifier → phase gate → marketplace tail → entity tracing (correct order)', () => {
+    // WF2 2026-04-13 — Spec 80/81/82/85: dependency order is:
     //   - trade_forecasts needs lifecycle_phase + phase_started_at
     //   - opportunity_scores needs trade_forecasts + cost_estimates
     //   - tracked_projects needs trade_forecasts + trade_configurations
+    // WF2 2026-04-18 — assert_lifecycle_phase_distribution inserted after
+    // classify_lifecycle_phase (phase gate validates before marketplace reads
+    // fresh anchors). assert_entity_tracing appended as final CQA step.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     const slugs = chain.steps.map((s) => s.slug);
-    const tail = slugs.slice(-4);
+    const tail = slugs.slice(-6);
     expect(tail).toEqual([
       'classify_lifecycle_phase',
+      'assert_lifecycle_phase_distribution',
       'compute_trade_forecasts',
       'compute_opportunity_scores',
       'update_tracked_projects',
+      'assert_entity_tracing',
     ]);
   });
 
@@ -90,13 +94,14 @@ describe('Pipeline Chain Definitions', () => {
     expect(coaSlugs).not.toContain('compute_timing_calibration_v2');
   });
 
-  it('defines coa chain with 10 steps', () => {
+  it('defines coa chain with 11 steps', () => {
     // WF2 2026-04-11 — added classify_lifecycle_phase as the final
     // step so every CoA chain run reclassifies permits whose
     // last_seen_at was just bumped by link-coa.
+    // WF2 2026-04-18 — +1 step: assert_lifecycle_phase_distribution (step 11).
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(10);
+    expect(chain!.steps).toHaveLength(11);
   });
 
   it('defines sources chain with 15 steps', () => {
@@ -105,17 +110,18 @@ describe('Pipeline Chain Definitions', () => {
     expect(chain!.steps).toHaveLength(15);
   });
 
-  it('coa chain ends with classify_lifecycle_phase; permits chain ends with the marketplace tail', () => {
-    // WF2 2026-04-13 — CoA chain still ends with classify_lifecycle_phase
-    // (no forecasts/scores to run on pre-permit data). Permits chain now
-    // extends past the classifier with 3 marketplace scripts — see
-    // "permits chain ends with the 4-script marketplace tail" test.
+  it('coa chain ends with assert_lifecycle_phase_distribution; permits chain ends with assert_entity_tracing', () => {
+    // WF2 2026-04-18 — CoA chain now ends with assert_lifecycle_phase_distribution
+    // (phase distribution gate after classifier). Permits chain now ends with
+    // assert_entity_tracing (end-to-end coverage check).
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa');
-    expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('classify_lifecycle_phase');
-    expect(coa!.steps[coa!.steps.length - 2]!.slug).toBe('assert_engine_health');
-    // Permits chain: classify_lifecycle_phase is at position -4 (4 from end)
-    expect(permits!.steps[permits!.steps.length - 4]!.slug).toBe('classify_lifecycle_phase');
+    expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('assert_lifecycle_phase_distribution');
+    expect(coa!.steps[coa!.steps.length - 2]!.slug).toBe('classify_lifecycle_phase');
+    expect(coa!.steps[coa!.steps.length - 3]!.slug).toBe('assert_engine_health');
+    // Permits chain: assert_entity_tracing is last; classify_lifecycle_phase is at position -6
+    expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('assert_entity_tracing');
+    expect(permits!.steps[permits!.steps.length - 6]!.slug).toBe('classify_lifecycle_phase');
   });
 
   it('sources chain ends with assert_engine_health', () => {
@@ -313,9 +319,9 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     const disabledSlugs = new Set(['enrich_wsib_builders', 'enrich_named_builders']);
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
     const activeSteps = coa.steps.filter((s) => !disabledSlugs.has(s.slug));
-    // CoA chain has no enrichment steps — all 10 remain
-    // (9 + classify_lifecycle_phase as of WF2 2026-04-11)
-    expect(activeSteps).toHaveLength(10);
+    // CoA chain has no enrichment steps — all 11 remain
+    // (WF2 2026-04-18 added assert_lifecycle_phase_distribution as step 11)
+    expect(activeSteps).toHaveLength(11);
   });
 
   it('empty disabled set leaves all steps active', () => {
@@ -463,11 +469,12 @@ describe('Incremental Processing Guards', () => {
 });
 
 describe('Quality Pipeline Group', () => {
-  it('quality group has 7 registry entries', () => {
+  it('quality group has 9 registry entries', () => {
+    // WF2 2026-04-18 — +2: assert_lifecycle_phase_distribution, assert_entity_tracing
     const qualityEntries = Object.entries(PIPELINE_REGISTRY).filter(
       ([, entry]) => entry.group === 'quality'
     );
-    expect(qualityEntries).toHaveLength(7);
+    expect(qualityEntries).toHaveLength(9);
   });
 
   it('assert_schema and assert_data_bounds exist in PIPELINE_REGISTRY', () => {
@@ -1316,5 +1323,53 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
     expect(content).not.toMatch(/records_updated\s*:\s*profileUpdates/);
     // census data must remain visible as a named audit row
     expect(content).toContain('census_rows_matched');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Entity Tracing + Phase Distribution Wiring (WF2 2026-04-18)
+// SPEC LINK: docs/specs/pipeline/41_chain_permits.md §4 §6
+//            docs/specs/pipeline/42_chain_coa.md §4
+// ---------------------------------------------------------------------------
+
+describe('Entity Tracing + Phase Distribution Wiring', () => {
+  const manifestPath = path.resolve(__dirname, '../../scripts/manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  const qualityDir = path.resolve(__dirname, '../../scripts/quality');
+  const qSrc = (name: string) => fs.readFileSync(path.join(qualityDir, name), 'utf-8');
+
+  it('manifest: assert_lifecycle_phase_distribution is in permits chain immediately after classify_lifecycle_phase', () => {
+    const chain: string[] = manifest.chains.permits;
+    const lcpIdx = chain.indexOf('classify_lifecycle_phase');
+    const alpdIdx = chain.indexOf('assert_lifecycle_phase_distribution');
+    expect(alpdIdx).toBeGreaterThan(-1);
+    expect(alpdIdx).toBe(lcpIdx + 1);
+  });
+
+  it('manifest: assert_lifecycle_phase_distribution is the final step of the coa chain', () => {
+    const chain: string[] = manifest.chains.coa;
+    expect(chain[chain.length - 1]).toBe('assert_lifecycle_phase_distribution');
+  });
+
+  it('manifest: assert_entity_tracing is the final step of the permits chain', () => {
+    const chain: string[] = manifest.chains.permits;
+    expect(chain[chain.length - 1]).toBe('assert_entity_tracing');
+  });
+
+  it('assert-entity-tracing.js: uses pipeline.run() not a hand-rolled Pool', () => {
+    const content = qSrc('assert-entity-tracing.js');
+    expect(content).toContain('pipeline.run(');
+    expect(content).not.toContain('new Pool(');
+    expect(content).not.toMatch(/require\(['"]pg['"]\)/);
+  });
+
+  it('assert-entity-tracing.js: is non-halting — does not throw after coverage failures', () => {
+    const content = qSrc('assert-entity-tracing.js');
+    // Must explicitly document its non-halting contract inline.
+    expect(content).toContain('Non-halting');
+    // Unlike assert-lifecycle-phase-distribution.js, must not throw after
+    // accumulating failures — FAILs go to audit_table only.
+    const afterSummary = content.split('pipeline.emitSummary').at(-1)!;
+    expect(afterSummary).not.toMatch(/throw new Error/);
   });
 });
