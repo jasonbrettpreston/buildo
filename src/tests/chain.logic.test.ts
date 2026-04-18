@@ -1284,4 +1284,37 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
     // cross_ward_cleaned must remain visible in audit_table
     expect(content).toContain('cross_ward_cleaned');
   });
+
+  // Sources pipeline fixes
+  it('link-massing: records_updated uses parcelsLinked (parcels), not buildingsUpserted (parcel_buildings rows)', () => {
+    const content = src('link-massing.js');
+    // Must NOT use buildingsUpserted (join-table row count) as records_updated
+    expect(content).not.toMatch(/records_updated\s*:\s*buildingsUpserted/);
+    // parcel_buildings mutation count must be visible as a named audit row
+    expect(content).toContain('parcel_buildings_written');
+  });
+
+  it('link-wsib: records_total uses totalUnlinked (full evaluation scope), not totalLinked (matched only)', () => {
+    const content = src('link-wsib.js');
+    // Must NOT use totalLinked as records_total (only matched entries, not full scope)
+    expect(content).not.toMatch(/records_total\s*:\s*totalLinked/);
+    // unlinked_start must remain in audit_table so the scope is still visible
+    expect(content).toContain('unlinked_start');
+  });
+
+  it('link-parcels: records_updated uses totalLinked (permits), not dbUpserted (permit_parcels rows)', () => {
+    const content = src('link-parcels.js');
+    // Must NOT use dbUpserted (join-table row count) as records_updated
+    expect(content).not.toMatch(/records_updated\s*:\s*dbUpserted/);
+    // permit_parcels mutation count must be visible as a named audit row
+    expect(content).toContain('permit_parcels_written');
+  });
+
+  it('load-neighbourhoods: records_updated is boundary count, not census characteristic rows', () => {
+    const content = src('load-neighbourhoods.js');
+    // Must NOT use profileUpdates (census rows matched) as records_updated
+    expect(content).not.toMatch(/records_updated\s*:\s*profileUpdates/);
+    // census data must remain visible as a named audit row
+    expect(content).toContain('census_rows_matched');
+  });
 });

@@ -612,13 +612,13 @@ pipeline.run('link-massing', async (pool) => {
     { metric: 'match_nearest_fallback', value: nearestMatches, threshold: null, status: 'INFO' },
     { metric: 'link_rate', value: massingLinkRate.toFixed(1) + '%', threshold: '>= 50%', status: massingLinkRate >= 50 ? 'PASS' : 'WARN' },
     { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
-    { metric: 'db_upserted', value: buildingsUpserted, threshold: null, status: 'INFO' },
+    { metric: 'parcel_buildings_written', value: buildingsUpserted, threshold: null, status: 'INFO' },
   ];
 
   pipeline.emitSummary({
     records_total: processed,
     records_new: 0,
-    records_updated: buildingsUpserted,
+    records_updated: parcelsLinked,
     records_meta: {
       duration_ms: durationMs,
       parcels_processed: processed,

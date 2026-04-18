@@ -351,7 +351,7 @@ pipeline.run('link-wsib', async (pool) => {
   ];
 
   pipeline.emitSummary({
-    records_total: totalLinked,
+    records_total: totalUnlinked,
     records_new: 0,
     records_updated: totalLinked,
     records_meta: {

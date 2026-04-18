@@ -722,11 +722,13 @@ describe('Pipeline SDK', () => {
       expect(content).toMatch(/records_new:\s*inserted/);
     });
 
-    // §3.5 — load-neighbourhoods.js must report real records_new count
-    it('load-neighbourhoods.js emitSummary uses real records_new count', () => {
+    // §11 — load-neighbourhoods.js records_new must be 0 (upsert path can't distinguish
+    // inserts from no-ops without SQL rowCount; records_updated carries boundary count)
+    it('load-neighbourhoods.js emitSummary records_new is 0, records_updated is boundaryCount', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'load-neighbourhoods.js'), 'utf-8');
-      // Check content directly — nested records_meta breaks single-line regex
-      expect(content).toMatch(/records_new:\s*boundaryCount/);
+      expect(content).toMatch(/records_new:\s*0/);
+      expect(content).not.toMatch(/records_new:\s*boundaryCount/);
+      expect(content).toMatch(/records_updated:\s*boundaryCount/);
     });
 
     // §9.3 — load-permits.js must hash mapped fields, not raw CKAN object
@@ -843,11 +845,12 @@ describe('Pipeline SDK', () => {
       expect(content).toContain('lat.permit_num');
     });
 
-    // §9.3 — link-massing.js records_updated must use buildingsUpserted (actual DB writes)
-    it('link-massing.js emitSummary records_updated uses buildingsUpserted not parcelsLinked', () => {
+    // §11 — link-massing.js records_updated must use parcelsLinked (parcels matched),
+    // not buildingsUpserted (parcel_buildings JOIN TABLE rows).
+    it('link-massing.js emitSummary records_updated uses parcelsLinked not buildingsUpserted', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'link-massing.js'), 'utf-8');
-      // emitSummary has records_meta so regex won't match single-line — check content directly
-      expect(content).toContain('records_updated: buildingsUpserted');
+      expect(content).not.toContain('records_updated: buildingsUpserted');
+      expect(content).toContain('records_updated: parcelsLinked');
     });
 
     // §11 — classify-scope.js records_total must be permit-scoped (processed only),

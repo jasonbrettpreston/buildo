@@ -529,13 +529,13 @@ pipeline.run('link-parcels', async (pool) => {
     { metric: 'run_matched', value: totalMatched, threshold: null, status: 'INFO' },
     { metric: 'link_rate', value: parcelLinkRate.toFixed(1) + '%', threshold: '>= 75%', status: parcelLinkRate >= 75 ? 'PASS' : 'WARN' },
     { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
-    { metric: 'db_upserted', value: dbUpserted, threshold: null, status: 'INFO' },
+    { metric: 'permit_parcels_written', value: dbUpserted, threshold: null, status: 'INFO' },
   ];
 
   pipeline.emitSummary({
     records_total: processed,
     records_new: 0,
-    records_updated: dbUpserted,
+    records_updated: totalLinked,
     records_meta: {
       duration_ms: durationMs,
       permits_processed: processed,

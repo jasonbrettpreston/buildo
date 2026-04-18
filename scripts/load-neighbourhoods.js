@@ -688,8 +688,8 @@ pipeline.run('load-neighbourhoods', async (pool) => {
 
   pipeline.emitSummary({
     records_total: boundaryCount,
-    records_new: boundaryCount,
-    records_updated: profileUpdates,
+    records_new: 0,
+    records_updated: boundaryCount,
     records_meta: {
       duration_ms: durationMs,
       boundaries_loaded: boundaryCount,
