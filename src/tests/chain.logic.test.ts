@@ -1275,4 +1275,13 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
     const content = src('compute-opportunity-scores.js');
     expect(content).toContain('permits_in_scope');
   });
+
+  it('link-coa: records_total/updated uses totalLinked only, not totalLinked + crossWardCleaned', () => {
+    const content = src('link-coa.js');
+    // crossWardCleaned is stale-link cleanup (DELETEs), already in audit_table as cross_ward_cleaned
+    expect(content).not.toMatch(/records_total:\s*totalLinked\s*\+\s*crossWardCleaned/);
+    expect(content).not.toMatch(/records_updated:\s*totalLinked\s*\+\s*crossWardCleaned/);
+    // cross_ward_cleaned must remain visible in audit_table
+    expect(content).toContain('cross_ward_cleaned');
+  });
 });

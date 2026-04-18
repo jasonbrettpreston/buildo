@@ -502,7 +502,7 @@ pipeline.run('link-coa', async (pool) => {
     unlinked_remaining: noMatch,
     audit_table: linkAuditTable,
   };
-  pipeline.emitSummary({ records_total: totalLinked + crossWardCleaned, records_new: 0, records_updated: totalLinked + crossWardCleaned, records_meta: meta });
+  pipeline.emitSummary({ records_total: totalLinked, records_new: 0, records_updated: totalLinked, records_meta: meta });
   pipeline.emitMeta(
     { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name_normalized", "ward", "issued_date", "description"] },
     { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"] }
