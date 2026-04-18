@@ -129,6 +129,11 @@ pipeline.run('[script-slug]', async (pool) => {
 Rules:
 - Point to the **spec file**, never a report or implementation document.
 - The spec number in the link MUST match `ADVISORY_LOCK_ID` at `§R2`.
+  **Exception — CQA assert scripts (`scripts/quality/`):** These use sequential IDs from the
+  100+ block (102, 103, ...) regardless of their owning spec number, because they frequently
+  govern multiple specs or have no single dedicated spec number. Their SPEC LINK points to
+  the functional spec that defines their correctness contract. The canonical registry is in
+  §A.5. The lock ID uniqueness rule from §5.2 still applies.
 - If the spec does not yet exist, create it before committing the script.
 - If the script is governed by multiple specs (e.g., produces data for spec 85 but is
   described in spec 86), list both:
