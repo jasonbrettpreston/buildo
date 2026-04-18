@@ -143,10 +143,16 @@ async function geocodePermits(pool, opts) {
     { metric: 'no_geo_id', value: safeParsePositiveInt(after.no_geo_id, 'no_geo_id'), threshold: null, status: 'INFO' },
   ];
 
+  const backlogRemaining = Math.max(0, safeParsePositiveInt(before.to_geocode, 'to_geocode') - updated);
+  geocodeAuditRows.push(
+    { metric: 'zombies_cleaned', value: zombiesCleaned, threshold: null, status: 'INFO' },
+    { metric: 'backlog_remaining', value: backlogRemaining, threshold: null, status: 'INFO' },
+  );
+
   pipeline.emitSummary({
-    records_total: safeParsePositiveInt(before.to_geocode, 'to_geocode'),
+    records_total: updated,
     records_new: 0,
-    records_updated: updated + zombiesCleaned,
+    records_updated: updated,
     records_meta: {
       duration_ms: durationMs,
       permits_total: totalPermits,

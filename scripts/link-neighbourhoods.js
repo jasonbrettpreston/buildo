@@ -335,7 +335,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
     { metric: 'neighbourhoods_loaded', value: nhoodCount, threshold: '== 158', status: nhoodCount === 158 ? 'PASS' : 'WARN' },
     { metric: 'run_linked', value: linked, threshold: null, status: 'INFO' },
     { metric: 'link_rate', value: nhoodLinkRate.toFixed(1) + '%', threshold: '>= 95%', status: nhoodLinkRate >= 95 ? 'PASS' : 'WARN' },
-    { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
+    { metric: 'no_neighbourhood_match', value: noMatch, threshold: null, status: 'INFO' },
     { metric: 'polygon_tests_skipped', value: polygonTestsSkipped, threshold: null, status: 'INFO' },
   ];
   const nhoodHasWarns = nhoodLinkRate < 95 || nhoodCount !== 158;
@@ -343,7 +343,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
   pipeline.emitSummary({
     records_total: processed,
     records_new: 0,
-    records_updated: linked + noMatch,
+    records_updated: linked,
     records_meta: {
       duration_ms: durationMs,
       permits_processed: processed,

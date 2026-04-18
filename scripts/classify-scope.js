@@ -602,15 +602,15 @@ pipeline.run('classify-scope', async (pool) => {
     { metric: 'run_classified', value: withTags, threshold: null, status: 'INFO' },
     { metric: 'tags_coverage_rate', value: tagsCoverage.toFixed(1) + '%', threshold: '>= 50%', status: tagsCoverage >= 50 ? 'PASS' : 'WARN' },
     { metric: 'newly_classified', value: newlyClassified, threshold: null, status: 'INFO' },
-    { metric: 'scope_tags_propagated', value: propagated, threshold: null, status: 'INFO' },
-    { metric: 'demolition_tags_restored', value: demFixed, threshold: null, status: 'INFO' },
+    { metric: 'scope_propagations', value: propagated, threshold: null, status: 'INFO' },
+    { metric: 'dem_tag_fixes', value: demFixed, threshold: null, status: 'INFO' },
     { metric: 'top_project_type', value: topTypes[0] ? topTypes[0][0] : 'N/A', threshold: null, status: 'INFO' },
   ];
 
   pipeline.emitSummary({
-    records_total: total + propagated + demFixed,
+    records_total: processed,
     records_new: newlyClassified,
-    records_updated: processed - newlyClassified + propagated + demFixed,
+    records_updated: processed - newlyClassified,
     records_meta: {
       duration_ms: durationMs,
       permits_processed: processed,

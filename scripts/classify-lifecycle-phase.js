@@ -754,8 +754,8 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   const auditRows = [
     { metric: 'permits_dirty', value: dirtyPermitsCount, threshold: null, status: 'INFO' },
     { metric: 'permits_updated', value: permitsUpdated, threshold: null, status: 'INFO' },
-    { metric: 'coas_dirty', value: dirtyCoAsCount, threshold: null, status: 'INFO' },
-    { metric: 'coas_updated', value: coasUpdated, threshold: null, status: 'INFO' },
+    { metric: 'coa_evaluated', value: dirtyCoAsCount, threshold: null, status: 'INFO' },
+    { metric: 'coa_phase_changes', value: coasUpdated, threshold: null, status: 'INFO' },
     { metric: 'stalled_count', value: stalledCount, threshold: null, status: 'INFO' },
     {
       metric: 'unclassified_count',
@@ -788,9 +788,9 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   }
 
   pipeline.emitSummary({
-    records_total: dirtyPermitsCount + dirtyCoAsCount,
+    records_total: dirtyPermitsCount,
     records_new: 0,
-    records_updated: permitsUpdated + coasUpdated,
+    records_updated: permitsUpdated,
     records_meta: {
       permits_updated: permitsUpdated,
       phase_transitions_logged: transitionsLogged,

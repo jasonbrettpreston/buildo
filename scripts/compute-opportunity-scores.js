@@ -259,17 +259,20 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   const { rows: auditRows } = await pool.query(`
     SELECT
       SUM(CASE WHEN opportunity_score IS NULL THEN 1 ELSE 0 END)::int     AS null_scores,
-      SUM(CASE WHEN opportunity_score NOT BETWEEN 0 AND 100 THEN 1 ELSE 0 END)::int AS out_of_range
+      SUM(CASE WHEN opportunity_score NOT BETWEEN 0 AND 100 THEN 1 ELSE 0 END)::int AS out_of_range,
+      COUNT(DISTINCT permit_num)::int AS permits_in_scope
     FROM trade_forecasts
     WHERE (urgency IS NULL OR urgency <> 'expired')
   `);
-  const nullScores  = auditRows[0]?.null_scores  ?? 0;
-  const outOfRange  = auditRows[0]?.out_of_range  ?? 0;
+  const nullScores     = auditRows[0]?.null_scores     ?? 0;
+  const outOfRange     = auditRows[0]?.out_of_range     ?? 0;
+  const permitsInScope = auditRows[0]?.permits_in_scope ?? 0;
 
   // spec §8.2 mandatory rows for "Score engine" type:
   // records_scored, records_unchanged, null_input_rate (with threshold)
   const auditTableRows = [
     { metric: 'records_scored',     value: totalRows,            threshold: null, status: 'INFO' },
+    { metric: 'permits_in_scope',   value: permitsInScope,       threshold: null, status: 'INFO' },
     { metric: 'records_unchanged',  value: totalRows - updated,  threshold: null, status: 'INFO' },
     { metric: 'null_input_rate',    value: integrityFlags,       threshold: 0,   status: integrityFlags > 0 ? 'WARN' : 'PASS' },
     { metric: 'null_scores',        value: nullScores,           threshold: 0,   status: nullScores > 0    ? 'WARN' : 'PASS' },

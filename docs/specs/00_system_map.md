@@ -20,6 +20,8 @@
 | 10 | `platform/10_lead_scoring.md` | Lead Scoring | `src/lib/classification/scoring.ts` | `src/tests/scoring.logic.test.ts` | Done |
 | 13 | `platform/13_authentication.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/session.ts`, `src/lib/auth/types.ts`, +4 more | `src/tests/auth.logic.test.ts`, `src/tests/middleware.logic.test.ts` | Done |
 | 37 | `platform/37_entity_model.md` | Corporate Identity Hub | `src/lib/permits/types.ts`, `src/lib/builders/normalize.ts`, `src/tests/factories.ts`, +22 more | `src/tests/entities.logic.test.ts`, `src/tests/entities.infra.test.ts` | Done |
+| 70 | `platform/70_frontend_platform_foundation.md` | 70 Frontend Platform Foundation | — | — | IMPLEMENTED (Baseline Architecture) |
+| 71 | `platform/71_lead_feed_discovery_interface.md` | 71 Lead Feed (Discovery Interface) | `src/app/api/leads/feed/route.ts` | — | IMPLEMENTED (V1) -> PENDING UPGRADE (V2) |
 
 ## Product — Admin
 
@@ -33,8 +35,6 @@
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
 | 14 | `product/user/14_onboarding_wizard.md` | Onboarding Wizard | `src/app/onboarding/page.tsx`, `src/components/onboarding/OnboardingWizard.tsx` | `src/tests/onboarding.ui.test.tsx` | Done |
-| 15 | `product/user/15_permit_feed_dashboard.md` | Tradesperson Dashboard | `src/app/dashboard/page.tsx`, `src/components/permits/PermitCard.tsx`, `src/components/permits/PermitFeed.tsx`, +3 more | `src/tests/dashboard.ui.test.tsx` | PARTIAL |
-| 18 | `product/user/18_permit_detail_page.md` | Permit Detail View | `src/app/permits/[id]/page.tsx`, `src/components/permits/BuildingMassing.tsx`, `src/components/permits/NeighbourhoodProfile.tsx`, +1 more | `src/tests/permits.logic.test.ts` | Done |
 | 19 | `product/user/19_search_and_filter.md` | Search & Filter | `src/app/search/page.tsx`, `src/components/search/FilterPanel.tsx` | `src/tests/search.logic.test.ts` | Done |
 | 20 | `product/user/20_map_view.md` | Map View | `src/app/map/page.tsx`, `src/app/api/permits/geo/route.ts` | `src/tests/map.ui.test.tsx` | Done |
 | 24 | `product/user/24_csv_pdf_export.md` | Data Export | `src/lib/export/csv.ts`, `src/lib/export/pdf.ts` | `src/tests/export.logic.test.ts` | Done |
@@ -58,6 +58,7 @@
 | 44 | `pipeline/44_chain_deep_scrapes.md` | Deep Scrapes (AIC Inspection Portal) | `scripts/manifest.json`, `scripts/aic-scraper-nodriver.py`, `scripts/aic-orchestrator.py`, +2 more | `src/tests/inspections.logic.test.ts`, `src/tests/chain.logic.test.ts`, `src/tests/quality.infra.test.ts` | Done |
 | 45 | `pipeline/45_chain_entities.md` | Entities (Builder Web Enrichment) | `scripts/manifest.json`, `scripts/enrich-web-search.js` | `src/tests/enrichment.logic.test.ts`, `src/tests/enrichment.infra.test.ts`, `src/tests/chain.logic.test.ts` | Done |
 | 46 | `pipeline/46_wsib_enrichment.md` | WSIB Registry Enrichment | `scripts/enrich-wsib.js`, `scripts/manifest.json`, `scripts/link-wsib.js` | `src/tests/chain.logic.test.ts`, `src/tests/quality.logic.test.ts` | Done |
+| 47 | `pipeline/47_pipeline_script_protocol.md` | Pipeline Script Protocol — New Step Authoring Standard | `scripts/[new-script].js`, `scripts/lib/[feature]-shared.js` | `src/tests/[feature].logic.test.ts`, `src/tests/pipeline-advisory-lock.infra.test.ts` | Done |
 | 50 | `pipeline/50_source_permits.md` | Toronto Building Permits | `scripts/load-permits.js`, `src/lib/permits/field-mapping.ts` | `src/tests/sync.logic.test.ts`, `src/tests/permits.logic.test.ts`, `src/tests/pipeline-sdk.logic.test.ts` | Done |
 | 51 | `pipeline/51_source_coa.md` | Committee of Adjustment (CoA) Applications | `scripts/load-coa.js` | `src/tests/coa.logic.test.ts`, `src/tests/pipeline-sdk.logic.test.ts` | Done |
 | 52 | `pipeline/52_source_wsib.md` | Ontario WSIB Contractor Registry | `scripts/load-wsib.js` | `src/tests/wsib.logic.test.ts`, `src/tests/wsib.infra.test.ts` | Done |

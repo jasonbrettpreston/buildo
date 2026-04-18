@@ -1508,3 +1508,46 @@ The following rules are enforced in the pre-commit hook (`scripts/hooks/ast-grep
 
 ### Amnesty List
 `scripts/amnesty.json` documents all files exempt from Phase 7 rules with a `reason` field per entry. Permanent entries (SDK, seeds, analysis tools) never need to comply. There are no temporary entries once Phase B mop-up is complete.
+
+---
+
+## §11. Counter Semantic Contract
+
+Every call to `pipeline.emitSummary()` MUST satisfy this contract. Violations are a §10 Plan
+Compliance failure that blocks the review gate.
+
+### §11.1 — The Three Generic Counters
+
+| Counter | Semantic | What it MUST represent |
+|---------|----------|------------------------|
+| `records_total` | Primary entity rows **evaluated** this run | The subject of the step — the entity being processed (permits, forecasts, cost_estimates, etc.). Used by the SDK to compute `sys_velocity_rows_sec`. MUST be a permit-scoped (or primary-entity-scoped) count, never a join-table row count. |
+| `records_new` | Net-new rows **inserted** into the primary write target | INSERTs only. Zero for read-only and update-only steps. |
+| `records_updated` | Existing rows that **changed** in the primary write target | Changes that passed an IS DISTINCT FROM guard. MUST match the same entity as `records_total`. Never include rows that were evaluated but unchanged, or rows in secondary write targets. |
+
+### §11.2 — The Overflow Rule (Secondary Writes → audit_table)
+
+Any metric that does not fit the primary-entity contract belongs in a named `audit_table` row, not
+in a generic counter. Common overflow cases:
+
+- **Join-table mutations** — e.g., `permit_trades` rows written by `classify-permits`. Goes in `audit_table` as `permit_trades_written`.
+- **Companion propagations** — e.g., scope propagations in `classify-scope`. Goes in `audit_table` as `scope_propagations`.
+- **Cleanup operations** — e.g., zombie coordinate resets in `geocode-permits`. Goes in `audit_table` as `zombies_cleaned`.
+- **Failure/no-match counts** — e.g., unlinked permits in `link-neighbourhoods`. Goes in `audit_table` as `no_neighbourhood_match`. MUST NOT inflate `records_updated`.
+- **Secondary entity types** — e.g., CoA application phase changes in `classify-lifecycle-phase`. Goes in `audit_table` as `coa_phase_changes`. MUST NOT be summed into permits counters.
+- **Pre-run backlog sizes** — e.g., `before.to_geocode` in `geocode-permits`. Goes in `audit_table` as `backlog_remaining`. MUST NOT be used as `records_total`.
+
+### §11.3 — Velocity Integrity
+
+`sys_velocity_rows_sec` is auto-computed by the SDK as `records_total / (duration_ms / 1000)`.
+This metric is only meaningful when `records_total` is the primary entity count. Scripts that pass
+inflated totals (join-table rows, multi-source sums) produce artificially high velocity figures
+that mislead the admin UI. Fix `records_total` first; velocity fixes itself.
+
+### §11.4 — Traceability Requirement
+
+Every step in the permit chain must allow an operator to answer: **"What happened to the N new
+permits that entered in Step 2?"** This means:
+
+1. Every step that processes new permits MUST report `records_new = N` (the same N) if it inserts a row for them in its write target.
+2. Every step that only updates existing rows for new permits MUST have a named `audit_table` row (e.g., `new_permits_processed: N`) if the update is not already visible in `records_updated`.
+3. Steps that skip a subset of permits (terminal, orphan, no-match) MUST report the skip count in a named `audit_table` row so the skip is traceable, not silent.

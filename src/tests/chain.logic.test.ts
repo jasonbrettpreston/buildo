@@ -1214,3 +1214,65 @@ describe('Pre-flight bloat gate (B24/B25)', () => {
     expect(source).toContain('sys_db_bloat');
   });
 });
+
+// ---------------------------------------------------------------------------
+// §11 Counter Semantic Contract — verify emitSummary arguments are
+// permit-scoped (primary entity), not join-table rows or multi-source sums.
+// See docs/specs/pipeline/47_pipeline_script_protocol.md §11.
+// ---------------------------------------------------------------------------
+
+describe('§11 Counter Semantic Contract — emitSummary uses primary-entity counts', () => {
+  const scriptsDir = path.resolve(__dirname, '../../scripts');
+  const src = (name: string) => fs.readFileSync(path.join(scriptsDir, name), 'utf-8');
+
+  it('classify-scope: records_total uses `processed` (permits), not the multi-source sum', () => {
+    const content = src('classify-scope.js');
+    // Must use `processed` as records_total, not the inflated sum
+    expect(content).toMatch(/records_total\s*:\s*processed[^+]/);
+    // Must NOT sum multiple sources into records_total
+    expect(content).not.toMatch(/records_total\s*:\s*total\s*\+\s*propagated/);
+  });
+
+  it('classify-scope: propagated and demFixed go to audit_table, not generic counters', () => {
+    const content = src('classify-scope.js');
+    expect(content).toContain('scope_propagations');
+    expect(content).toContain('dem_tag_fixes');
+  });
+
+  it('geocode-permits: records_total uses `updated` (geocoded today), not pre-run backlog', () => {
+    const content = src('geocode-permits.js');
+    // Must NOT use before.to_geocode as records_total
+    expect(content).not.toMatch(/records_total\s*:[^,}]+to_geocode/);
+    // Must have zombies_cleaned in audit_table
+    expect(content).toContain('zombies_cleaned');
+  });
+
+  it('link-neighbourhoods: records_updated uses `linked` only, not linked + noMatch', () => {
+    const content = src('link-neighbourhoods.js');
+    // Must NOT sum failures into records_updated
+    expect(content).not.toMatch(/records_updated\s*:\s*linked\s*\+\s*noMatch/);
+    // Must have no_neighbourhood_match in audit_table
+    expect(content).toContain('no_neighbourhood_match');
+  });
+
+  it('classify-permits: records_updated uses permitsWithTrades (permit count), not dbUpdated (permit_trades rows)', () => {
+    const content = src('classify-permits.js');
+    // Must NOT use dbUpdated (join-table row count) as records_updated
+    expect(content).not.toMatch(/records_updated\s*:\s*dbUpdated/);
+    // Must expose permit_trades_written as a named audit row
+    expect(content).toContain('permit_trades_written');
+  });
+
+  it('classify-lifecycle-phase: records_total uses dirtyPermitsCount only, not mixed with CoA count', () => {
+    const content = src('classify-lifecycle-phase.js');
+    // Must NOT sum CoA count into records_total
+    expect(content).not.toMatch(/records_total\s*:\s*dirtyPermitsCount\s*\+\s*dirtyCoAsCount/);
+    // Must expose CoA metrics as named audit rows
+    expect(content).toContain('coa_phase_changes');
+  });
+
+  it('compute-opportunity-scores: audit_table includes permits_in_scope (not just forecasts_scored)', () => {
+    const content = src('compute-opportunity-scores.js');
+    expect(content).toContain('permits_in_scope');
+  });
+});

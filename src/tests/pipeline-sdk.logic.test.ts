@@ -791,11 +791,14 @@ describe('Pipeline SDK', () => {
       expect(upsertMatch![1]).not.toContain('IS DISTINCT FROM');
     });
 
-    // §9.3 — classify-permits.js records_updated must use dbUpdated (actual DB writes)
-    it('classify-permits.js emitSummary records_updated uses dbUpdated not permitsWithTrades', () => {
+    // §11 — classify-permits.js records_updated must use permitsWithTrades (permit count),
+    // not dbUpdated (permit_trades join-table row count). dbUpdated goes to audit_table
+    // as permit_trades_written so the 1.1M row count is visible but not the headline metric.
+    it('classify-permits.js emitSummary records_updated uses permitsWithTrades (permit count), permit_trades_written in audit_table', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'classify-permits.js'), 'utf-8');
-      // Check content directly — nested records_meta breaks single-line regex
-      expect(content).toContain('records_updated: dbUpdated');
+      expect(content).toContain('records_updated: permitsWithTrades');
+      expect(content).not.toContain('records_updated: dbUpdated');
+      expect(content).toContain('permit_trades_written');
     });
 
     // Bug 1: N+1 ghost cleanup — must use bulk DELETE with unnest, not per-permit loop
@@ -847,11 +850,12 @@ describe('Pipeline SDK', () => {
       expect(content).toContain('records_updated: buildingsUpserted');
     });
 
-    // §3.5 — classify-scope.js records_total must include propagated permits
-    it('classify-scope.js emitSummary records_total includes propagated count', () => {
+    // §11 — classify-scope.js records_total must be permit-scoped (processed only),
+    // not a multi-source sum. Propagated companions go to audit_table.
+    it('classify-scope.js emitSummary records_total is processed (permits), not multi-source sum', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'classify-scope.js'), 'utf-8');
-      // Check content directly — nested records_meta breaks single-line regex
-      expect(content).toMatch(/records_total:\s*total\s*\+\s*propagated/);
+      expect(content).toMatch(/records_total:\s*processed[^+]/);
+      expect(content).not.toMatch(/records_total:\s*total\s*\+\s*propagated/);
     });
 
     // SQL Parameterization — no raw user values interpolated in SQL (§4.2)

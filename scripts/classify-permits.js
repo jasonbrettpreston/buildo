@@ -766,13 +766,13 @@ pipeline.run('classify-permits', async (pool) => {
     { metric: 'run_classified', value: permitsWithTrades, threshold: null, status: 'INFO' },
     { metric: 'classification_coverage', value: classificationCoverage.toFixed(1) + '%', threshold: '>= 95%', status: classificationCoverage >= 95 ? 'PASS' : 'WARN' },
     { metric: 'total_trade_matches', value: totalMatches, threshold: null, status: 'INFO' },
-    { metric: 'db_mutations', value: dbUpdated, threshold: null, status: 'INFO' },
+    { metric: 'permit_trades_written', value: dbUpdated, threshold: null, status: 'INFO' },
   ];
 
   pipeline.emitSummary({
     records_total: processed,
-    records_new: Math.min(trulyNewPermits, permitsWithTrades),
-    records_updated: dbUpdated,
+    records_new: trulyNewPermits,
+    records_updated: permitsWithTrades,
     records_meta: {
       duration_ms: durationMs,
       permits_processed: processed,
