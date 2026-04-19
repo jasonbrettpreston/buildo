@@ -49,6 +49,14 @@ advisory lock (ID 84) single-threads the two invocations — the second
 one exits cleanly with `skipped:true`. The phase distribution gate (step 11) uses its own
 advisory lock (ID 109), so concurrent chain runs cannot produce duplicate assert checks. See
 `docs/reports/lifecycle_phase_implementation.md` for the full rationale.
+
+**SKIP_PHASES exclusion in bump:** `link-coa.js` does NOT bump `last_seen_at` for permits
+in SKIP_PHASES (`P19`/`P20` terminal, `O1`–`O3` orphan, `P1`/`P2` CoA pre-permit).
+These phases are phase-stable and won't be processed by `compute-trade-forecasts.js` regardless.
+Bumping them conflates `last_seen_at`'s "last seen in Open Data feed" semantic with
+"CoA linkage changed," causing false positives in `assert-entity-tracing`'s 26h window.
+Permits with `lifecycle_phase IS NULL` (unclassified) are still bumped. SKIP_PHASES permits
+with new CoA linkage are reclassified on the next daily permits chain run (≤24h delay).
 </architecture>
 
 ---

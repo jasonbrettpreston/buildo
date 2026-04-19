@@ -1,68 +1,46 @@
-# Active Task: Fix assert-entity-tracing denominator + audit table n column
+# Active Task: Fix link-coa.js last_seen_at bump — exclude SKIP_PHASES
 **Status:** Implementation
 **Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `1efd17e`
+**Rollback Anchor:** `9cd863a`
 
 ---
 
 ## Context
-* **Goal:** Two related fixes:
-  (A) False FAIL on no-new-records permit runs — assert-entity-tracing metric 3
-      (trade_forecasts) uses the wrong denominator: all permits in 26h window,
-      including SKIP_PHASES permits bumped by link-coa.js that compute-trade-forecasts
-      explicitly skips. Fix: split denominator into windowPermits (metrics 1,2,4) and
-      eligiblePermits (metric 3 only, mirroring compute-trade-forecasts eligibility).
-  (B) Audit table UI shows coverage % but not the raw count, making 5% on 8 permits
-      look identical to 5% on 8000. Fix: add "n" column (matched/denominator) to the
-      audit table in FreshnessTimeline.tsx.
-* **Target Spec:** `docs/specs/pipeline/41_chain_permits.md` §4 (step 26)
+* **Goal:** `link-coa.js` bumps `permits.last_seen_at` for every CoA-newly-linked permit, including SKIP_PHASES (P1/P2 pre-permit, P19/P20 terminal, O1-O3 orphan). On no-new-records runs these are the only permits in the 26h window, polluting `last_seen_at`'s Open-Data-feed semantic. The previous WF3 mitigated the symptom in `assert-entity-tracing`; this WF3 fixes the root cause.
+* **Target Spec:** `docs/specs/pipeline/42_chain_coa.md` §2 (step 4: link_coa)
 * **Key Files:**
-  - `scripts/quality/assert-entity-tracing.js` — backend fix A
-  - `src/components/FreshnessTimeline.tsx` — frontend fix B (audit table render)
+  - `scripts/link-coa.js` — bump WHERE clause (~line 350)
+  - `docs/specs/pipeline/42_chain_coa.md` — update step 4 description
+  - `src/tests/chain.logic.test.ts` — reproduction tests
 
 ---
 
 ## Technical Implementation
-* **Backend (assert-entity-tracing.js):**
-  1. Keep existing base query as `windowPermits` — used for metrics 1, 2, 4
-  2. Add `eligiblePermits` query: `lifecycle_phase IS NOT NULL AND phase_started_at IS NOT NULL
-     AND lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','P1','P2')`
-  3. Metric 3 (trade_forecasts): use `eligiblePermits` as denominator; add same phase
-     filter to the numerator SQL for consistency
-  4. When `eligiblePermits = 0`: emit SKIP row for metric 3 (not FAIL)
-  5. `traceRow()`: add `denominatorType` param; rename `new_permits` → `denominator`
-  6. Metric 5 (opportunity_score): add `matched` and `denominator` fields to its
-     manually-built audit row (`denominator_type: 'forecast_rows'`)
-  7. `emitSummary records_total`: keep as `windowPermits`; add `eligible_permits`
-     to `records_meta` for transparency
-* **Frontend (FreshnessTimeline.tsx):**
-  1. Update audit row TypeScript cast (line 1144) to include `matched?: number`,
-     `denominator?: number`
-  2. Add "n" column between Value and Threshold in BOTH audit table renders
-     (non-funnel line ~1175; funnel line ~1252)
-  3. Render `matched/denominator` in new cell; "—" when absent
+* Add `AND (lifecycle_phase IS NULL OR lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','P1','P2'))` to the bump UPDATE WHERE clause in `link-coa.js`
+* **Tradeoff:** SKIP_PHASES permits with a newly-changed CoA linkage won't get the trailing `classify_lifecycle_phase` run in the CoA chain. Reclassification happens on the next daily permits chain run (≤24h delay). Acceptable — P19/P20/O1-O3 are terminal/orphan (phase-stable); P1/P2 are synthetic pre-permits whose phase can't advance from CoA linkage alone.
+* NULL lifecycle_phase permits still get bumped — unclassified permits need the dirty signal.
 * **Database Impact:** NO
 
 ---
 
 ## Standards Compliance
 * **Try-Catch Boundary:** N/A
-* **Unhappy Path Tests:** eligiblePermits=0 → SKIP not FAIL; windowPermits=0 → whole skip; denominator field present; UI column renders
+* **Unhappy Path Tests:** NULL lifecycle_phase included in bump; SKIP_PHASES excluded; non-SKIP_PHASES still bumped
 * **logError Mandate:** N/A
-* **Mobile-First:** Audit table has `overflow-x-auto`; new column is `tabular-nums text-[10px]`
+* **Mobile-First:** N/A
 
 ---
 
 ## Execution Plan
-- [x] **Rollback Anchor:** 1efd17e recorded
-- [ ] **State Verification:** Confirm SKIP_PHASES set matches exclusion list
-- [ ] **Spec Review:** Read 41_chain_permits.md §4 step 26
-- [ ] **Reproduction tests:** chain.logic.test.ts + admin.ui
+- [x] **Rollback Anchor:** 9cd863a recorded
+- [ ] **State Verification:** Confirm SKIP_PHASES set matches compute-trade-forecasts
+- [ ] **Spec Review:** Read 42_chain_coa.md §2 step 4 rationale
+- [ ] **Reproduction tests:** chain.logic.test.ts (bump excludes SKIP_PHASES; NULL phase still bumped)
 - [ ] **Red Light:** npx vitest run src/tests/chain.logic.test.ts — MUST fail
-- [ ] **Backend Fix:** Modify assert-entity-tracing.js
-- [ ] **Frontend Fix:** Modify FreshnessTimeline.tsx
+- [ ] **Fix:** Add SKIP_PHASES filter to bump WHERE clause in link-coa.js
+- [ ] **Spec Update:** Update 42_chain_coa.md step 4 documentation
 - [ ] **Pre-Review Self-Checklist:** 3-5 sibling bug check
 - [ ] **Green Light:** npm run test && npm run lint -- --fix → WF6
-- [ ] **Adversarial Review:** Gemini + Independent worktree agent
+- [ ] **Independent worktree agent review**
 - [ ] **WF3 Triage:** Fix FAILs in-scope; defer rest to review_followups.md
-- [ ] **Atomic Commit:** fix(41_chain_permits): WF3 — eligible-permit denominator + audit table n column
+- [ ] **Atomic Commit:** fix(42_chain_coa): WF3 — exclude SKIP_PHASES from last_seen_at bump

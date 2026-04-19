@@ -1292,6 +1292,18 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
     expect(content).toContain('cross_ward_cleaned');
   });
 
+  it('link-coa: last_seen_at bump excludes SKIP_PHASES to preserve Open Data semantic', () => {
+    const content = src('link-coa.js');
+    // Bump must exclude terminal/orphan/pre-permit phases that compute-trade-forecasts skips.
+    // Without this filter, CoA-link-only runs drag ineligible permits into the 26h window,
+    // polluting last_seen_at's "last seen in Open Data feed" meaning.
+    // Must include IS NULL guard so unclassified permits still receive the dirty signal.
+    expect(content).toMatch(/lifecycle_phase IS NULL OR lifecycle_phase NOT IN/);
+    // Must cover the full SKIP_PHASES set matching compute-trade-forecasts.js — all 7 phases.
+    // Exact string match prevents partial coverage (e.g. dropping O1-O3 would still match a regex).
+    expect(content).toContain("NOT IN ('P19','P20','O1','O2','O3','P1','P2')");
+  });
+
   // Sources pipeline fixes
   it('link-massing: records_updated uses parcelsLinked (parcels), not buildingsUpserted (parcel_buildings rows)', () => {
     const content = src('link-massing.js');

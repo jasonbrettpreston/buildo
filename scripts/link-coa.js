@@ -340,6 +340,16 @@ pipeline.run('link-coa', async (pool) => {
   // already within the last 1 second (avoids redundant writes when
   // the linker is re-run quickly).
   //
+  // SKIP_PHASES exclusion: last_seen_at's semantic is "last seen in the
+  // Toronto Open Data feed." Bumping it for terminal (P19/P20), orphan
+  // (O1-O3), or CoA pre-permit (P1/P2) phases conflates two meanings
+  // and pollutes the 26h window used by assert-entity-tracing with
+  // permits that compute-trade-forecasts will never process. SKIP_PHASES
+  // permits are phase-stable; their reclassification can wait for the
+  // next daily permits chain run. NULL lifecycle_phase is preserved —
+  // unclassified permits still need the dirty signal.
+  // Must stay in sync with compute-trade-forecasts.js SKIP_PHASES set.
+  //
   // Skipped in dry-run mode.
   //
   // SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §2.7
@@ -355,7 +365,8 @@ pipeline.run('link-coa', async (pool) => {
            WHERE linked_permit_num IS NOT NULL
              AND last_seen_at >= $1::timestamptz
         )
-          AND last_seen_at < NOW() - INTERVAL '1 second'`,
+          AND last_seen_at < NOW() - INTERVAL '1 second'
+          AND (lifecycle_phase IS NULL OR lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','P1','P2'))`,
       [bumpStart, RUN_AT],
     );
     permitsBumped = bumpResult.rowCount || 0;
@@ -460,6 +471,7 @@ pipeline.run('link-coa', async (pool) => {
 
   // Build audit_table — match_rate_pct demoted to INFO, effective_match_rate_pct drives verdict
   const auditRows = [
+    { metric: 'permits_bumped_last_seen_at', value: permitsBumped, threshold: null, status: 'INFO' },
     { metric: 'cross_ward_cleaned', value: crossWardCleaned, threshold: null, status: crossWardCleaned > 0 ? 'INFO' : 'PASS' },
     { metric: 'total_candidates', value: actualCandidates, threshold: null, status: 'INFO' },
     { metric: 'potential_matches', value: potentialMatches, threshold: null, status: 'INFO' },
