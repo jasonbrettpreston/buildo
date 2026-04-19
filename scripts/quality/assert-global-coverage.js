@@ -108,7 +108,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE permit_num LIKE 'PRE-%')                                  AS pre_permit_total,
           COUNT(*) FILTER (WHERE permit_num LIKE 'PRE-%' AND issued_date < NOW() - INTERVAL '18 months') AS aged_pre_permits,
           (SELECT COUNT(*) FROM data_quality_snapshots WHERE snapshot_date = CURRENT_DATE) AS snapshot_today,
-          (SELECT COUNT(*) FROM engine_health_snapshots WHERE recorded_at > NOW() - INTERVAL '25 hours') AS engine_health_today,
+          (SELECT COUNT(*) FROM engine_health_snapshots WHERE captured_at > NOW() - INTERVAL '25 hours') AS engine_health_today,
           (SELECT COUNT(*) FROM (
             SELECT application_number, COUNT(*) FROM coa_applications GROUP BY 1 HAVING COUNT(*) > 1
           ) sub)                                                                             AS dup_coa_pks
@@ -286,7 +286,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
           (SELECT COUNT(*) FROM data_quality_snapshots
             WHERE snapshot_date = CURRENT_DATE)                                 AS snapshot_today,
           (SELECT COUNT(*) FROM engine_health_snapshots
-            WHERE recorded_at > NOW() - INTERVAL '25 hours')                   AS engine_health_today,
+            WHERE captured_at > NOW() - INTERVAL '25 hours')                   AS engine_health_today,
           (SELECT COUNT(*) FROM (
             SELECT permit_num, revision_num FROM permits
              GROUP BY 1, 2 HAVING COUNT(*) > 1

@@ -369,5 +369,19 @@
     "description": "Fallback p75 (75th-percentile days) used by compute-trade-forecasts when no calibration data exists for a phase transition (level-5 default)",
     "min": 1,
     "max": 365
+  },
+  "profiling_coverage_pass_pct": {
+    "default": 90,
+    "type": "number",
+    "description": "assert-global-coverage: coverage >= this integer pct -> PASS (spec 49)",
+    "min": 0,
+    "max": 100
+  },
+  "profiling_coverage_warn_pct": {
+    "default": 70,
+    "type": "number",
+    "description": "assert-global-coverage: coverage >= this integer pct -> WARN; below -> FAIL (spec 49)",
+    "min": 0,
+    "max": 100
   }
 }
