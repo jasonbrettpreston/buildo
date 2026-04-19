@@ -2646,11 +2646,13 @@ describe('Funnel panel components extracted to separate file', () => {
   it('FreshnessTimeline.tsx is under the size budget after extraction', () => {
     // WF2 2026-04-13: bumped from 1350 to 1400 after adding v1+v2
     // timing_calibration entries + 3 marketplace tail steps to PIPELINE_CHAINS.
+    // WF1 2026-04-19 (spec 49): bumped from 1400 to 1500 after adding columnar
+    // audit_table render path for assert-global-coverage (two render sites).
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const lineCount = source.split('\n').length;
-    expect(lineCount).toBeLessThan(1400);
+    expect(lineCount).toBeLessThan(1500);
   });
 
   it('FunnelPanels.tsx exports CircularBadge and DataFlowTile', () => {

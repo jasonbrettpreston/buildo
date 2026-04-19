@@ -12,7 +12,7 @@ As a business user, I expect this daily pipeline to ingest 237K+ raw Toronto bui
 
 **Trigger:** `node scripts/run-chain.js permits` or `POST /api/admin/pipelines/chain_permits`
 **Schedule:** Daily
-**Steps:** 26 (sequential, stop-on-failure)
+**Steps:** 27 (sequential, stop-on-failure)
 **Gate:** `permits` — if `records_new = 0`, downstream enrichment steps are skipped (infra steps still run)
 
 ```
@@ -23,7 +23,7 @@ compute_cost_estimates → compute_timing_calibration_v2 →
 link_coa → create_pre_permits → refresh_snapshot → assert_data_bounds →
 assert_engine_health → classify_lifecycle_phase → assert_lifecycle_phase_distribution →
 compute_trade_forecasts → compute_opportunity_scores → update_tracked_projects →
-assert_entity_tracing
+assert_entity_tracing → assert_global_coverage
 ```
 
 > **WF3 2026-04-13:** v1 `compute_timing_calibration` removed from the chain.
@@ -61,6 +61,7 @@ assert_entity_tracing
 | 24 | `compute_opportunity_scores` | `compute-opportunity-scores.js` | Intrinsic Value Engine: `clamp((tradeValue/divisor × perTradeMultiplier) − competitionPenalty, 0, 100)`. JOINs `trade_configurations` for per-trade `multiplier_bid`/`multiplier_work`. | trade_forecasts (opportunity_score) |
 | 25 | `update_tracked_projects` | `update-tracked-projects.js` | CRM Assistant: two-path routing, state-change alerts, auto-archive on `urgency='expired'` (WF3 2026-04-13), lead_analytics sync. | tracked_projects, lead_analytics |
 | 26 | `assert_entity_tracing` | `quality/assert-entity-tracing.js` | Tier 3 CQA: for permits seen in the last 26 hours, checks coverage rate across 5 downstream tables/columns (permit_trades ≥95%, cost_estimates ≥90%, trade_forecasts ≥90%, lifecycle_phase ≥95%, opportunity_score >0 rate ≥80%). Non-halting (observational). | pipeline_runs |
+| 27 | `assert_global_coverage` | `quality/assert-global-coverage.js` | Tier 3 CQA: field-level coverage profile for every step. One row per table.column in the denominator matrix. PASS/WARN/FAIL per configurable thresholds from logic_variables. Non-halting (observational). Uses advisory lock 111. | pipeline_runs |
 
 **Lifecycle classifier (step 21)** runs synchronously. The classifier's
 incremental predicate (`last_seen_at > lifecycle_classified_at`) keeps

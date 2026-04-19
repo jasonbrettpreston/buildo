@@ -1426,6 +1426,9 @@ and registry-vs-code agreement.
 | **106** | `scripts/quality/assert-staleness.js` | 6 — Quality | NO — read-only probe |
 | **107** | `scripts/quality/assert-pre-permit-aging.js` | 6 — Quality | NO — read-only probe |
 | **108** | `scripts/quality/assert-coa-freshness.js` | 6 — Quality | NO — read-only probe |
+| **109** | `scripts/quality/assert-lifecycle-phase-distribution.js` | 6 — Quality | NO — read-only probe |
+| **110** | `scripts/quality/assert-entity-tracing.js` | 6 — Quality | NO — read-only probe |
+| **111** | `scripts/quality/assert-global-coverage.js` | 6 — Quality | NO — read-only probe |
 
 **`RUN_AT` Snapshot Convention:**
 Scripts that write timestamps (`Writes Timestamps? = YES`) capture a single `RUN_AT` timestamp

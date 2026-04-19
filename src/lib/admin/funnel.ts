@@ -583,6 +583,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   assert_coa_freshness:    { summary: 'Checks CKAN portal freshness — warns if newest CoA data is >45 days stale', table: 'pipeline_runs' },
   assert_lifecycle_phase_distribution: { summary: 'Validates lifecycle phase distribution bands and unclassified count after classifier runs', table: 'pipeline_runs' },
   assert_entity_tracing:   { summary: 'Checks coverage of new permits across 5 downstream tables: permit_trades, cost_estimates, trade_forecasts, lifecycle_phase, opportunity_score', table: 'pipeline_runs' },
+  assert_global_coverage:  { summary: 'Field-level coverage profile for every table/column written by every upstream step in the permits and CoA chains', table: 'pipeline_runs' },
   // Deep Scrapes
   inspections:                    { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections' },
   classify_inspection_status:     { summary: 'Detects stalled permits (10+ months inactive) and classifies enriched_status', table: 'permits' },

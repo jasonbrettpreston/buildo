@@ -12,14 +12,14 @@ As a lead generator, I want Committee of Adjustment variance hearings imported, 
 
 **Trigger:** `node scripts/run-chain.js coa` or `POST /api/admin/pipelines/chain_coa`
 **Schedule:** Daily
-**Steps:** 11 (sequential, stop-on-failure)
+**Steps:** 12 (sequential, stop-on-failure)
 **Gate:** `coa` — if `records_new = 0`, downstream enrichment steps are skipped
 
 ```
 assert_schema → coa → assert_coa_freshness → link_coa →
 create_pre_permits → assert_pre_permit_aging → refresh_snapshot →
 assert_data_bounds → assert_engine_health → classify_lifecycle_phase →
-assert_lifecycle_phase_distribution
+assert_lifecycle_phase_distribution → assert_global_coverage
 ```
 
 ### Step Breakdown
@@ -37,6 +37,7 @@ assert_lifecycle_phase_distribution
 | 9 | `assert_engine_health` | `quality/assert-engine-health.js` | CoA table engine health | engine_health_snapshots |
 | 10 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Runs the lifecycle classifier synchronously to pick up any permits whose `last_seen_at` was bumped by `link_coa` in step 4. Same advisory-locked single-threaded script the permits chain uses. | permits, coa_applications |
 | 11 | `assert_lifecycle_phase_distribution` | `quality/assert-lifecycle-phase-distribution.js` | Tier 3 CQA: validates phase distribution bands after the classifier runs. Uses advisory lock 109 — skips gracefully if classifier from a concurrent permits chain is still writing. Throws on failure (halting). | pipeline_runs |
+| 12 | `assert_global_coverage` | `quality/assert-global-coverage.js` | Tier 3 CQA: field-level coverage profile scoped to CoA tables and linked data. Thresholds from logic_variables. Non-halting (observational). Uses advisory lock 111. | pipeline_runs |
 
 **Trailing lifecycle classifier (step 10)** is the only path that routes
 CoA linking results into the classifier, because `link-coa.js` bumps

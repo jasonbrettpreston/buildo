@@ -13,16 +13,17 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
-  it('defines permits chain with 26 steps (no enrichment scripts)', () => {
+  it('defines permits chain with 27 steps (no enrichment scripts)', () => {
     // WF3 2026-04-13 — v1 `compute_timing_calibration` removed from chain
     // per user decision (Path A). v1's table `timing_calibration` will
     // go stale; the detail-page timing engine (spec 71) will be migrated
     // to read from `phase_calibration` in a future frontend WF.
     // WF2 2026-04-18 — +2 steps: assert_lifecycle_phase_distribution (step 22)
     // and assert_entity_tracing (step 26).
+    // WF1 2026-04-19 — +1 step: assert_global_coverage (step 27).
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(26);
+    expect(chain!.steps).toHaveLength(27);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
@@ -59,7 +60,7 @@ describe('Pipeline Chain Definitions', () => {
     expect(slugs.indexOf('compute_cost_estimates')).toBeLessThan(slugs.indexOf('compute_timing_calibration_v2'));
   });
 
-  it('permits chain: classifier → phase gate → marketplace tail → entity tracing (correct order)', () => {
+  it('permits chain: classifier → phase gate → marketplace tail → entity tracing → global coverage (correct order)', () => {
     // WF2 2026-04-13 — Spec 80/81/82/85: dependency order is:
     //   - trade_forecasts needs lifecycle_phase + phase_started_at
     //   - opportunity_scores needs trade_forecasts + cost_estimates
@@ -67,9 +68,10 @@ describe('Pipeline Chain Definitions', () => {
     // WF2 2026-04-18 — assert_lifecycle_phase_distribution inserted after
     // classify_lifecycle_phase (phase gate validates before marketplace reads
     // fresh anchors). assert_entity_tracing appended as final CQA step.
+    // WF1 2026-04-19 — assert_global_coverage appended as new final step 27.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     const slugs = chain.steps.map((s) => s.slug);
-    const tail = slugs.slice(-6);
+    const tail = slugs.slice(-7);
     expect(tail).toEqual([
       'classify_lifecycle_phase',
       'assert_lifecycle_phase_distribution',
@@ -77,6 +79,7 @@ describe('Pipeline Chain Definitions', () => {
       'compute_opportunity_scores',
       'update_tracked_projects',
       'assert_entity_tracing',
+      'assert_global_coverage',
     ]);
   });
 
@@ -94,14 +97,15 @@ describe('Pipeline Chain Definitions', () => {
     expect(coaSlugs).not.toContain('compute_timing_calibration_v2');
   });
 
-  it('defines coa chain with 11 steps', () => {
+  it('defines coa chain with 12 steps', () => {
     // WF2 2026-04-11 — added classify_lifecycle_phase as the final
     // step so every CoA chain run reclassifies permits whose
     // last_seen_at was just bumped by link-coa.
     // WF2 2026-04-18 — +1 step: assert_lifecycle_phase_distribution (step 11).
+    // WF1 2026-04-19 — +1 step: assert_global_coverage (step 12).
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(11);
+    expect(chain!.steps).toHaveLength(12);
   });
 
   it('defines sources chain with 15 steps', () => {
@@ -110,18 +114,18 @@ describe('Pipeline Chain Definitions', () => {
     expect(chain!.steps).toHaveLength(15);
   });
 
-  it('coa chain ends with assert_lifecycle_phase_distribution; permits chain ends with assert_entity_tracing', () => {
-    // WF2 2026-04-18 — CoA chain now ends with assert_lifecycle_phase_distribution
-    // (phase distribution gate after classifier). Permits chain now ends with
-    // assert_entity_tracing (end-to-end coverage check).
+  it('coa chain ends with assert_global_coverage; permits chain ends with assert_global_coverage', () => {
+    // WF2 2026-04-18 — CoA chain ends with assert_lifecycle_phase_distribution (step 11).
+    // WF1 2026-04-19 — Both chains now end with assert_global_coverage (permits step 27, coa step 12).
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa');
-    expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('assert_lifecycle_phase_distribution');
-    expect(coa!.steps[coa!.steps.length - 2]!.slug).toBe('classify_lifecycle_phase');
-    expect(coa!.steps[coa!.steps.length - 3]!.slug).toBe('assert_engine_health');
-    // Permits chain: assert_entity_tracing is last; classify_lifecycle_phase is at position -6
-    expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('assert_entity_tracing');
-    expect(permits!.steps[permits!.steps.length - 6]!.slug).toBe('classify_lifecycle_phase');
+    expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('assert_global_coverage');
+    expect(coa!.steps[coa!.steps.length - 2]!.slug).toBe('assert_lifecycle_phase_distribution');
+    expect(coa!.steps[coa!.steps.length - 3]!.slug).toBe('classify_lifecycle_phase');
+    // Permits chain: assert_global_coverage is last; assert_entity_tracing is second-to-last
+    expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('assert_global_coverage');
+    expect(permits!.steps[permits!.steps.length - 2]!.slug).toBe('assert_entity_tracing');
+    expect(permits!.steps[permits!.steps.length - 7]!.slug).toBe('classify_lifecycle_phase');
   });
 
   it('sources chain ends with assert_engine_health', () => {
@@ -319,9 +323,10 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     const disabledSlugs = new Set(['enrich_wsib_builders', 'enrich_named_builders']);
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
     const activeSteps = coa.steps.filter((s) => !disabledSlugs.has(s.slug));
-    // CoA chain has no enrichment steps — all 11 remain
-    // (WF2 2026-04-18 added assert_lifecycle_phase_distribution as step 11)
-    expect(activeSteps).toHaveLength(11);
+    // CoA chain has no enrichment steps — all 12 remain
+    // (WF2 2026-04-18 added assert_lifecycle_phase_distribution as step 11;
+    //  WF1 2026-04-19 added assert_global_coverage as step 12)
+    expect(activeSteps).toHaveLength(12);
   });
 
   it('empty disabled set leaves all steps active', () => {
@@ -469,12 +474,13 @@ describe('Incremental Processing Guards', () => {
 });
 
 describe('Quality Pipeline Group', () => {
-  it('quality group has 9 registry entries', () => {
+  it('quality group has 10 registry entries', () => {
     // WF2 2026-04-18 — +2: assert_lifecycle_phase_distribution, assert_entity_tracing
+    // WF1 2026-04-19 — +1: assert_global_coverage
     const qualityEntries = Object.entries(PIPELINE_REGISTRY).filter(
       ([, entry]) => entry.group === 'quality'
     );
-    expect(qualityEntries).toHaveLength(9);
+    expect(qualityEntries).toHaveLength(10);
   });
 
   it('assert_schema and assert_data_bounds exist in PIPELINE_REGISTRY', () => {
@@ -1358,14 +1364,18 @@ describe('Entity Tracing + Phase Distribution Wiring', () => {
     expect(alpdIdx).toBe(lcpIdx + 1);
   });
 
-  it('manifest: assert_lifecycle_phase_distribution is the final step of the coa chain', () => {
+  it('manifest: assert_global_coverage is the final step of the coa chain (assert_lifecycle_phase_distribution is penultimate)', () => {
+    // WF1 2026-04-19: assert_global_coverage appended as new step 12.
     const chain: string[] = manifest.chains.coa;
-    expect(chain[chain.length - 1]).toBe('assert_lifecycle_phase_distribution');
+    expect(chain[chain.length - 1]).toBe('assert_global_coverage');
+    expect(chain[chain.length - 2]).toBe('assert_lifecycle_phase_distribution');
   });
 
-  it('manifest: assert_entity_tracing is the final step of the permits chain', () => {
+  it('manifest: assert_global_coverage is the final step of the permits chain (assert_entity_tracing is penultimate)', () => {
+    // WF1 2026-04-19: assert_global_coverage appended as new step 27.
     const chain: string[] = manifest.chains.permits;
-    expect(chain[chain.length - 1]).toBe('assert_entity_tracing');
+    expect(chain[chain.length - 1]).toBe('assert_global_coverage');
+    expect(chain[chain.length - 2]).toBe('assert_entity_tracing');
   });
 
   it('assert-entity-tracing.js: uses pipeline.run() not a hand-rolled Pool', () => {
