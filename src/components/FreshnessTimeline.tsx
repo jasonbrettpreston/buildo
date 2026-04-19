@@ -313,7 +313,7 @@ function ColumnarAuditTable({ cat, wrapperClass }: { cat: ColumnarAuditData; wra
           <thead>
             <tr className="text-gray-500 text-left">
               {cat.columns.map((col) => (
-                <th key={col} className={`py-0.5 font-medium ${col === 'step_target' ? 'sticky left-0 bg-white pr-3 min-w-[140px]' : 'px-2'}`}>{col}</th>
+                <th key={col} className={`py-0.5 font-medium ${col === 'step_target' ? 'sticky left-0 bg-white pr-3 min-w-[280px]' : col === 'field' ? 'px-2 min-w-[180px]' : 'px-2'}`}>{col}</th>
               ))}
             </tr>
           </thead>

@@ -75,11 +75,13 @@ describe('assert-global-coverage.js — denominator gates (source-script mirrori
     expect(src()).toContain("NOT LIKE 'PRE-%'");
   });
 
-  it('geocode denominator gates on geo_id IS NOT NULL AND geo_id != empty string AND numeric regex (mirrors geocode-permits.js)', () => {
+  it('geo_id Step 2 coverage uses simple IS NOT NULL (Denom A — permitsTotal; geocodeable regex removed, Step 8 now uses permitsTotal)', () => {
     const content = src();
+    // geo_id simple IS NOT NULL present (Step 2 Denom A field coverage)
     expect(content).toContain("geo_id IS NOT NULL");
-    expect(content).toContain("geo_id != ''");
-    expect(content).toContain("geo_id ~ '^[0-9]+$'");
+    // The old geocodeable denominator filter (geo_id != '' AND geo_id ~ '^[0-9]+$') is gone —
+    // Step 8 denominator is now permitsTotal (Denom A) to report end-to-end geocode coverage.
+    expect(content).not.toContain("geo_id ~ '^[0-9]+$'");
   });
 
   it('massing denominator uses parcel centroid_lat/centroid_lng (mirrors link-massing.js: processes parcels not permits)', () => {
