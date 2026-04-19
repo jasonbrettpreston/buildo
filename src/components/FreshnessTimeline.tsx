@@ -1141,7 +1141,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                     {!!(meta.audit_table && typeof meta.audit_table === 'object') && (() => {
                                       const atRaw = meta.audit_table; const atIdx = 0;
                                       if (!atRaw || typeof atRaw !== 'object') return null;
-                                      const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string }> };
+                                      const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string; matched?: number; denominator?: number }> };
                                       const verdictColor = at.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200'
                                         : at.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200'
                                         : at.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
@@ -1175,6 +1175,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                                 <tr className="text-gray-500 text-left">
                                                   <th className="pr-2 py-0.5 font-medium">Metric</th>
                                                   <th className="px-2 py-0.5 font-medium text-right">Value</th>
+                                                  <th className="px-2 py-0.5 font-medium text-right">n</th>
                                                   <th className="px-2 py-0.5 font-medium text-right">Threshold</th>
                                                   <th className="px-2 py-0.5 font-medium text-center">Status</th>
                                                 </tr>
@@ -1184,6 +1185,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                                   <tr key={r.metric} className="border-t border-gray-50">
                                                     <td className="pr-2 py-0.5 font-mono text-gray-700">{r.metric}</td>
                                                     <td className="px-2 py-0.5 text-right text-gray-900 font-medium">{r.value === null ? '\u2014' : typeof r.value === 'boolean' ? String(r.value) : typeof r.value === 'number' ? r.value.toLocaleString() : String(r.value)}</td>
+                                                    <td className="px-2 py-0.5 text-right text-gray-400">{r.matched != null && r.denominator != null ? `${r.matched}/${r.denominator}` : '\u2014'}</td>
                                                     <td className="px-2 py-0.5 text-right text-gray-400">{r.threshold ?? '\u2014'}</td>
                                                     <td className={`px-2 py-0.5 text-center font-semibold ${statusColor(r.status)}`}>{statusIcon(r.status)}</td>
                                                   </tr>
@@ -1221,7 +1223,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                               <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Performance Metrics</h4>
                               {tables.map((atRaw, atIdx) => {
                                 if (!atRaw || typeof atRaw !== 'object') return null;
-                                const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string }> };
+                                const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string; matched?: number; denominator?: number }> };
                                 const verdictColor = at.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200'
                                   : at.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200'
                                   : at.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
@@ -1252,6 +1254,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                         <thead><tr className="text-gray-500 text-left">
                                           <th className="pr-2 py-0.5 font-medium">Metric</th>
                                           <th className="px-2 py-0.5 font-medium text-right">Value</th>
+                                          <th className="px-2 py-0.5 font-medium text-right">n</th>
                                           <th className="px-2 py-0.5 font-medium text-right">Threshold</th>
                                           <th className="px-2 py-0.5 font-medium text-center">Status</th>
                                         </tr></thead>
@@ -1260,6 +1263,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                             <tr key={r.metric} className="border-t border-gray-50">
                                               <td className="pr-2 py-0.5 font-mono text-gray-700">{r.metric}</td>
                                               <td className="px-2 py-0.5 text-right text-gray-900 font-medium">{r.value === null ? '\u2014' : typeof r.value === 'boolean' ? String(r.value) : typeof r.value === 'number' ? r.value.toLocaleString() : String(r.value)}</td>
+                                              <td className="px-2 py-0.5 text-right text-gray-400">{r.matched != null && r.denominator != null ? `${r.matched}/${r.denominator}` : '\u2014'}</td>
                                               <td className="px-2 py-0.5 text-right text-gray-400">{r.threshold ?? '\u2014'}</td>
                                               <td className={`px-2 py-0.5 text-center font-semibold ${statusColor(r.status)}`}>{statusIcon(r.status)}</td>
                                             </tr>

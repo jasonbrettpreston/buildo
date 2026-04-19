@@ -2314,6 +2314,22 @@ describe('Full-tile status coloring (no more dots)', () => {
     expect(footerSection).toContain('text-orange-500');
   });
 
+  // WF3 2026-04-18 — audit table n column (matched/denominator)
+  it('audit table renders n column showing matched/denominator for each metric row', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
+    );
+    // Must appear in BOTH audit table render paths: non-funnel (line ~1178)
+    // and funnel (line ~1257). A single match would leave the funnel path broken.
+    const nColMatches = [...source.matchAll(/<th[^>]*>\s*n\s*<\/th>/g)];
+    expect(nColMatches.length).toBeGreaterThanOrEqual(2);
+    // Must render matched/denominator when both present (e.g. "143/150")
+    expect(source).toMatch(/r\.matched\b/);
+    expect(source).toMatch(/r\.denominator\b/);
+    // Must fall back to em-dash when absent
+    expect(source).toMatch(/r\.matched\s*!=\s*null.*r\.denominator|'\u2014'|"\\u2014"/);
+  });
+
   it('drilldown status-bar indicator dot handles skipped and cancelled', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'

@@ -15,6 +15,17 @@
  * but does NOT throw when coverage falls below threshold. Infrastructure
  * failures (DB connectivity, query errors) will re-throw as intended.
  *
+ * Denominator design:
+ *   windowPermits   — all permits with last_seen_at > NOW() - 26h.
+ *                     Used for metrics 1 (permit_trades), 2 (cost_estimates),
+ *                     4 (lifecycle_phase) — scripts that process all phases.
+ *   eligiblePermits — permits in window that compute-trade-forecasts would
+ *                     process (lifecycle_phase IS NOT NULL, phase_started_at
+ *                     IS NOT NULL, and NOT IN SKIP_PHASES). Used for
+ *                     metric 3 (trade_forecasts) only.
+ *   forecast_rows   — trade_forecasts rows for window permits. Used for
+ *                     metric 5 (opportunity_score) only.
+ *
  * SPEC LINK: docs/specs/pipeline/41_chain_permits.md §4
  */
 'use strict';
@@ -32,6 +43,10 @@ const ADVISORY_LOCK_ID = 110;
 // arrived just outside the previous 24h boundary.
 const TRACE_WINDOW = '26 hours';
 
+// Phases excluded from compute-trade-forecasts (SKIP_PHASES mirror).
+// Must stay in sync with scripts/compute-trade-forecasts.js SKIP_PHASES.
+const SKIP_PHASES_SQL = `('P19','P20','O1','O2','O3','P1','P2')`;
+
 const THRESHOLDS = {
   permit_trades:     0.95,
   cost_estimates:    0.90,
@@ -42,15 +57,16 @@ const THRESHOLDS = {
 
 pipeline.run('assert-entity-tracing', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    // ── Base denominator: all permits touched in the 26h window ──────────────
     const { rows: [baseRow] } = await pool.query(
-      `SELECT COUNT(*)::int AS new_permits
+      `SELECT COUNT(*)::int AS window_permits
          FROM permits
         WHERE last_seen_at > NOW() - $1::interval`,
       [TRACE_WINDOW],
     );
-    const newPermits = baseRow.new_permits;
+    const windowPermits = baseRow.window_permits;
 
-    if (newPermits === 0) {
+    if (windowPermits === 0) {
       pipeline.emitSummary({
         records_total: 0,
         records_new: 0,
@@ -65,6 +81,29 @@ pipeline.run('assert-entity-tracing', async (pool) => {
       return;
     }
 
+    // ── Eligible denominator: permits compute-trade-forecasts would process ──
+    // Mirrors compute-trade-forecasts.js SOURCE_SQL + SKIP_PHASES in-process filter.
+    // On CoA-link-only runs, link-coa.js bumps last_seen_at for CoA-linked permits —
+    // many of which are in SKIP_PHASES (P1/P2 pre-permit, P19/P20 terminal,
+    // O1-O3 orphan). Using windowPermits as the denominator for trade_forecasts
+    // would produce ~5% coverage on those runs (false FAIL). eligiblePermits
+    // excludes those phases AND requires at least one active trade (matching
+    // compute-trade-forecasts.js SOURCE_SQL: `pt.is_active = true`) so the
+    // denominator represents exactly the permits the script produces forecast rows for.
+    const { rows: [eligRow] } = await pool.query(
+      `SELECT COUNT(DISTINCT p.permit_num || '--' || p.revision_num)::int AS eligible_permits
+         FROM permits p
+         JOIN permit_trades pt ON pt.permit_num = p.permit_num
+                              AND pt.revision_num = p.revision_num
+                              AND pt.is_active = true
+        WHERE p.last_seen_at > NOW() - $1::interval
+          AND p.lifecycle_phase IS NOT NULL
+          AND p.phase_started_at IS NOT NULL
+          AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}`,
+      [TRACE_WINDOW],
+    );
+    const eligiblePermits = eligRow.eligible_permits;
+
     const auditRows = [];
     const failures = [];
 
@@ -77,7 +116,7 @@ pipeline.run('assert-entity-tracing', async (pool) => {
         WHERE p.last_seen_at > NOW() - $1::interval`,
       [TRACE_WINDOW],
     );
-    auditRows.push(traceRow('permit_trades', pt.matched, newPermits, THRESHOLDS.permit_trades, failures));
+    auditRows.push(traceRow('permit_trades', pt.matched, windowPermits, THRESHOLDS.permit_trades, failures, 'window_permits'));
 
     // ── 2. cost_estimates ─────────────────────────────────────────────────────
     const { rows: [ce] } = await pool.query(
@@ -88,18 +127,36 @@ pipeline.run('assert-entity-tracing', async (pool) => {
         WHERE p.last_seen_at > NOW() - $1::interval`,
       [TRACE_WINDOW],
     );
-    auditRows.push(traceRow('cost_estimates', ce.matched, newPermits, THRESHOLDS.cost_estimates, failures));
+    auditRows.push(traceRow('cost_estimates', ce.matched, windowPermits, THRESHOLDS.cost_estimates, failures, 'window_permits'));
 
     // ── 3. trade_forecasts ────────────────────────────────────────────────────
-    const { rows: [tf] } = await pool.query(
-      `SELECT COUNT(DISTINCT tf.permit_num || '--' || tf.revision_num)::int AS matched
-         FROM trade_forecasts tf
-         JOIN permits p ON p.permit_num = tf.permit_num
-                       AND p.revision_num = tf.revision_num
-        WHERE p.last_seen_at > NOW() - $1::interval`,
-      [TRACE_WINDOW],
-    );
-    auditRows.push(traceRow('trade_forecasts', tf.matched, newPermits, THRESHOLDS.trade_forecasts, failures));
+    // Uses eligiblePermits denominator — compute-trade-forecasts skips SKIP_PHASES,
+    // so the denominator must also exclude them to avoid false FAILs on
+    // CoA-link-only runs where all bumped permits are ineligible phases.
+    if (eligiblePermits === 0) {
+      auditRows.push({
+        metric: 'trade_forecasts_coverage_pct',
+        value: null,
+        threshold: `>= ${(THRESHOLDS.trade_forecasts * 100).toFixed(0)}%`,
+        matched: 0,
+        denominator: 0,
+        denominator_type: 'eligible_permits',
+        status: 'SKIP',
+      });
+    } else {
+      const { rows: [tf] } = await pool.query(
+        `SELECT COUNT(DISTINCT tf.permit_num || '--' || tf.revision_num)::int AS matched
+           FROM trade_forecasts tf
+           JOIN permits p ON p.permit_num = tf.permit_num
+                         AND p.revision_num = tf.revision_num
+          WHERE p.last_seen_at > NOW() - $1::interval
+            AND p.lifecycle_phase IS NOT NULL
+            AND p.phase_started_at IS NOT NULL
+            AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}`,
+        [TRACE_WINDOW],
+      );
+      auditRows.push(traceRow('trade_forecasts', tf.matched, eligiblePermits, THRESHOLDS.trade_forecasts, failures, 'eligible_permits'));
+    }
 
     // ── 4. lifecycle_phase (column on permits) ────────────────────────────────
     const { rows: [lp] } = await pool.query(
@@ -109,7 +166,7 @@ pipeline.run('assert-entity-tracing', async (pool) => {
           AND lifecycle_phase IS NOT NULL`,
       [TRACE_WINDOW],
     );
-    auditRows.push(traceRow('lifecycle_phase', lp.matched, newPermits, THRESHOLDS.lifecycle_phase, failures));
+    auditRows.push(traceRow('lifecycle_phase', lp.matched, windowPermits, THRESHOLDS.lifecycle_phase, failures, 'window_permits'));
 
     // ── 5. opportunity_score (column on trade_forecasts, default 0) ───────────
     // opportunity_score defaults to 0. Checks whether compute_opportunity_scores
@@ -142,6 +199,7 @@ pipeline.run('assert-entity-tracing', async (pool) => {
       threshold: `>= ${(osThreshold * 100).toFixed(0)}% of forecast rows`,
       matched: osMatched,
       denominator: osDenominator,
+      denominator_type: 'forecast_rows',
       status: osStatus,
     });
 
@@ -152,11 +210,12 @@ pipeline.run('assert-entity-tracing', async (pool) => {
     }
 
     pipeline.emitSummary({
-      records_total: newPermits,
+      records_total: windowPermits,
       records_new: 0,
       records_updated: 0,
       records_meta: {
         window: TRACE_WINDOW,
+        eligible_permits: eligiblePermits,
         audit_table: {
           phase: 26,
           name: 'Assert Entity Tracing',
@@ -207,8 +266,9 @@ pipeline.run('assert-entity-tracing', async (pool) => {
  * @param {number} total
  * @param {number} threshold  0-1 fraction
  * @param {string[]} failures  mutated in place
+ * @param {string} denominatorType  'window_permits' | 'eligible_permits'
  */
-function traceRow(table, matched, total, threshold, failures) {
+function traceRow(table, matched, total, threshold, failures, denominatorType) {
   const coverage = total > 0 ? matched / total : 1;
   const status = coverage >= threshold ? 'PASS' : 'FAIL';
   if (status === 'FAIL') {
@@ -222,7 +282,8 @@ function traceRow(table, matched, total, threshold, failures) {
     value: Math.round(coverage * 1000) / 10,
     threshold: `>= ${(threshold * 100).toFixed(0)}%`,
     matched,
-    new_permits: total,
+    denominator: total,
+    denominator_type: denominatorType,
     status,
   };
 }

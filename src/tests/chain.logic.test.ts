@@ -1372,4 +1372,37 @@ describe('Entity Tracing + Phase Distribution Wiring', () => {
     const afterSummary = content.split('pipeline.emitSummary').at(-1)!;
     expect(afterSummary).not.toMatch(/throw new Error/);
   });
+
+  // WF3 2026-04-18 — denominator fix for false FAILs on CoA-link-only runs
+  it('assert-entity-tracing.js: trade_forecasts uses eligiblePermits denominator (excludes SKIP_PHASES + no active trades)', () => {
+    const content = qSrc('assert-entity-tracing.js');
+    // Must declare a separate eligiblePermits denominator for metric 3
+    expect(content).toContain('eligiblePermits');
+    // Must require lifecycle_phase IS NOT NULL (mirrors compute-trade-forecasts SOURCE_SQL)
+    expect(content).toContain('lifecycle_phase IS NOT NULL');
+    // Must require phase_started_at IS NOT NULL
+    expect(content).toContain('phase_started_at IS NOT NULL');
+    // Must exclude SKIP_PHASES (terminal + orphan + CoA pre-permit)
+    expect(content).toMatch(/P19[\s\S]*P20|NOT IN[\s\S]*P19/);
+    // Must join permit_trades with is_active = true — mirrors compute-trade-forecasts
+    // SOURCE_SQL which only processes permits with at least one active trade classification.
+    // Permits with valid lifecycle data but no active trades inflate the denominator
+    // without having trade_forecasts rows → false FAIL without this guard.
+    expect(content).toContain('is_active = true');
+  });
+
+  it('assert-entity-tracing.js: emits SKIP row for trade_forecasts when eligiblePermits is 0', () => {
+    const content = qSrc('assert-entity-tracing.js');
+    // Must guard against eligiblePermits === 0 (link-coa-only run, all bumped permits in SKIP_PHASES)
+    expect(content).toMatch(/eligiblePermits\s*===\s*0/);
+    // SKIP is the correct status — not FAIL (no eligible permits = nothing to check)
+    expect(content).toContain("status: 'SKIP'");
+  });
+
+  it('assert-entity-tracing.js: traceRow returns denominator field (not new_permits)', () => {
+    const content = qSrc('assert-entity-tracing.js');
+    // Renamed for clarity — denominator is a general term covering both windowPermits and eligiblePermits
+    expect(content).toContain('denominator:');
+    expect(content).not.toContain('new_permits:');
+  });
 });
