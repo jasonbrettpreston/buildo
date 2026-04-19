@@ -232,13 +232,19 @@ pipeline.run('assert-global-coverage', async (pool) => {
       `);
       const entitiesTotal = parseInt(ea.entities_total, 10) || 0;
 
-      // Denominator for entities: distinct non-null builder_names in permits
+      // Denominator: distinct non-null builder_names in permits.
+      // Numerator: how many of those names actually have a matching entity row
+      // (LEFT JOIN to avoid inflating with entities from other sources).
       const { rows: [bnd] } = await pool.query(`
-        SELECT COUNT(DISTINCT builder_name) AS builder_name_total
-        FROM permits
-        WHERE builder_name IS NOT NULL AND permit_num NOT LIKE 'PRE-%'
+        SELECT
+          COUNT(DISTINCT p.builder_name)    AS builder_name_total,
+          COUNT(DISTINCT e.name_normalized) AS matched_builder_names
+        FROM permits p
+        LEFT JOIN entities e ON e.name_normalized = p.builder_name
+        WHERE p.builder_name IS NOT NULL AND p.permit_num NOT LIKE 'PRE-%'
       `);
       const builderNameTotal = parseInt(bnd.builder_name_total, 10) || 0;
+      const matchedBuilderNames = parseInt(bnd.matched_builder_names, 10) || 0;
 
       // ── WSIB registry aggregate ────────────────────────────────
       const { rows: [wa] } = await pool.query(`
@@ -270,6 +276,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
           (SELECT COUNT(*) FROM coa_applications
             WHERE linked_permit_num IS NOT NULL)                                AS coa_linked_pop,
           (SELECT COUNT(*) FROM coa_applications)                               AS coa_total,
+          (SELECT COUNT(*) FROM coa_applications
+            WHERE lifecycle_phase IS NOT NULL)                                  AS coa_lifecycle_phase_pop,
           (SELECT COUNT(*) FROM coa_applications
             WHERE decision = 'Approved' AND linked_permit_num IS NULL)          AS coa_approved_unlinked,
           (SELECT COUNT(*) FROM tracked_projects WHERE status != 'archived')    AS tracked_active,
@@ -327,14 +335,6 @@ pipeline.run('assert-global-coverage', async (pool) => {
          WHERE table_schema = 'public' AND table_name = 'permits'
       `);
 
-      // ── CoA applications (Step 21 — lifecycle on coa_applications) ──
-      const { rows: [coaLc] } = await pool.query(`
-        SELECT
-          COUNT(*)                                                        AS coa_total,
-          COUNT(*) FILTER (WHERE lifecycle_phase IS NOT NULL)             AS lifecycle_phase_pop
-        FROM coa_applications
-      `);
-
       // ═══════════════════════════════════════════════════════════
       // Build rows — permits chain full profile
       // ═══════════════════════════════════════════════════════════
@@ -363,7 +363,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 5 — classify_scope', 'permits.scope_source',       parseInt(pa.scope_source_pop, 10),    permitsTotal));
 
       // Step 6 — extract_builders
-      rows.push(coverageRow('Step 6 — extract_builders', 'entities.name_normalized', entitiesTotal, builderNameTotal));
+      rows.push(coverageRow('Step 6 — extract_builders', 'entities.name_normalized', matchedBuilderNames, builderNameTotal));
       rows.push(coverageRow('Step 6 — extract_builders', 'entities.primary_phone',   parseInt(ea.phone_pop, 10),          entitiesTotal));
       rows.push(coverageRow('Step 6 — extract_builders', 'entities.primary_email',   parseInt(ea.email_pop, 10),          entitiesTotal));
 
@@ -418,7 +418,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'permits.lifecycle_phase',         lifecyclePhaseTotal,                                permitsTotal));
       rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'permits.phase_started_at',         parseInt(pa.phase_started_pop, 10),                 lifecyclePhaseTotal));
       rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'permits.lifecycle_classified_at',  parseInt(pa.lifecycle_classified_pop, 10),           permitsTotal));
-      rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'coa_applications.lifecycle_phase', parseInt(coaLc.lifecycle_phase_pop, 10),             parseInt(coaLc.coa_total, 10) || null));
+      rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'coa_applications.lifecycle_phase', parseInt(misc.coa_lifecycle_phase_pop, 10),           coaTotal || null));
 
       // Step 22 — assert_lifecycle_phase_distribution
       rows.push(infoRow('Step 22 — assert_lifecycle_phase_distribution', 'permits.unclassified_count', parseInt(pa.unclassified_count, 10), permitsTotal));

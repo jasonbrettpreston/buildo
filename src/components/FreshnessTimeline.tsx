@@ -292,6 +292,53 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
+type ColumnarAuditRow = Record<string, unknown>;
+type ColumnarAuditData = { name: string; verdict: string; columns: string[]; rows: ColumnarAuditRow[] };
+
+function ColumnarAuditTable({ cat, wrapperClass }: { cat: ColumnarAuditData; wrapperClass: string }) {
+  const verdictColor = cat.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200'
+    : cat.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200'
+    : cat.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+    : 'bg-gray-50 text-gray-500 border-gray-200';
+  const statusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : s === 'INFO' ? 'text-blue-400' : 'text-gray-400';
+  const statusIcon = (s: string) => s === 'PASS' ? '\u2714' : s === 'FAIL' ? '\u2718' : s === 'WARN' ? '\u26A0' : '\u2022';
+  return (
+    <div className={wrapperClass}>
+      <div className="flex items-center gap-2 mb-1">
+        <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">{cat.name}</h5>
+        <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${verdictColor}`}>{cat.verdict}</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[10px] tabular-nums">
+          <thead>
+            <tr className="text-gray-500 text-left">
+              {cat.columns.map((col) => (
+                <th key={col} className={`py-0.5 font-medium ${col === 'step_target' ? 'sticky left-0 bg-white pr-3 min-w-[140px]' : 'px-2'}`}>{col}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {(cat.rows ?? []).map((row) => {
+              const rowKey = `${String(row.step_target ?? '')}-${String(row.field ?? '')}`;
+              return (
+                <tr key={rowKey} className="border-t border-gray-50">
+                  {cat.columns.map((col) => {
+                    const val = row[col];
+                    if (col === 'step_target') return <td key={col} className="sticky left-0 bg-white pr-3 py-0.5 font-mono text-gray-700 whitespace-nowrap">{String(val ?? '\u2014')}</td>;
+                    if (col === 'status') return <td key={col} className={`px-2 py-0.5 text-center font-semibold ${statusColor(String(val))}`}>{statusIcon(String(val))}{' '}{String(val)}</td>;
+                    if (col === 'coverage_pct') return <td key={col} className="px-2 py-0.5 text-right text-gray-900 font-medium">{val == null ? '\u2014' : `${val}%`}</td>;
+                    return <td key={col} className="px-2 py-0.5 text-right text-gray-600">{val == null ? '\u2014' : typeof val === 'number' ? val.toLocaleString() : String(val)}</td>;
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export function formatDuration(ms: number | null | undefined): string {
   if (ms == null) return '';
   if (ms < 1000) return `${ms}ms`;
@@ -1149,42 +1196,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                       if (!atRaw || typeof atRaw !== 'object') return null;
                                       // Columnar format (assert-global-coverage): has `columns` string[]
                                       if ('columns' in atRaw && Array.isArray((atRaw as Record<string, unknown>).columns)) {
-                                        const cat = atRaw as { name: string; verdict: string; columns: string[]; rows: Array<Record<string, unknown>> };
-                                        const cVerdictColor = cat.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200' : cat.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200' : cat.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-gray-50 text-gray-500 border-gray-200';
-                                        const cStatusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : s === 'INFO' ? 'text-blue-400' : 'text-gray-400';
-                                        const cStatusIcon = (s: string) => s === 'PASS' ? '\u2714' : s === 'FAIL' ? '\u2718' : s === 'WARN' ? '\u26A0' : '\u2022';
-                                        return (
-                                          <div key={`audit-${atIdx}`} className="mt-2">
-                                            <div className="flex items-center gap-2 mb-1">
-                                              <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">{cat.name}</h5>
-                                              <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${cVerdictColor}`}>{cat.verdict}</span>
-                                            </div>
-                                            <div className="overflow-x-auto">
-                                              <table className="w-full text-[10px] tabular-nums">
-                                                <thead>
-                                                  <tr className="text-gray-500 text-left">
-                                                    {cat.columns.map((col) => (
-                                                      <th key={col} className={`py-0.5 font-medium ${col === 'step_target' ? 'sticky left-0 bg-white pr-3 min-w-[140px]' : 'px-2'}`}>{col}</th>
-                                                    ))}
-                                                  </tr>
-                                                </thead>
-                                                <tbody>
-                                                  {(cat.rows ?? []).map((row, ri) => (
-                                                    <tr key={ri} className="border-t border-gray-50">
-                                                      {cat.columns.map((col) => {
-                                                        const val = row[col];
-                                                        if (col === 'step_target') return <td key={col} className="sticky left-0 bg-white pr-3 py-0.5 font-mono text-gray-700 whitespace-nowrap">{String(val ?? '\u2014')}</td>;
-                                                        if (col === 'status') return <td key={col} className={`px-2 py-0.5 text-center font-semibold ${cStatusColor(String(val))}`}>{cStatusIcon(String(val))}{' '}{String(val)}</td>;
-                                                        if (col === 'coverage_pct') return <td key={col} className="px-2 py-0.5 text-right text-gray-900 font-medium">{val == null ? '\u2014' : `${val}%`}</td>;
-                                                        return <td key={col} className="px-2 py-0.5 text-right text-gray-600">{val == null ? '\u2014' : typeof val === 'number' ? val.toLocaleString() : String(val)}</td>;
-                                                      })}
-                                                    </tr>
-                                                  ))}
-                                                </tbody>
-                                              </table>
-                                            </div>
-                                          </div>
-                                        );
+                                        const cat = atRaw as ColumnarAuditData;
+                                        return <ColumnarAuditTable key={`audit-${atIdx}`} cat={cat} wrapperClass="mt-2" />;
                                       }
                                       // Legacy metric-row format (all other assert scripts)
                                       const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string; matched?: number; denominator?: number }> };
@@ -1271,42 +1284,8 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 if (!atRaw || typeof atRaw !== 'object') return null;
                                 // Columnar format (assert-global-coverage): has `columns` string[]
                                 if ('columns' in atRaw && Array.isArray((atRaw as Record<string, unknown>).columns)) {
-                                  const cat = atRaw as { name: string; verdict: string; columns: string[]; rows: Array<Record<string, unknown>> };
-                                  const fcVerdictColor = cat.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200' : cat.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200' : cat.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-gray-50 text-gray-500 border-gray-200';
-                                  const fcStatusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : s === 'INFO' ? 'text-blue-400' : 'text-gray-400';
-                                  const fcStatusIcon = (s: string) => s === 'PASS' ? '\u2714' : s === 'FAIL' ? '\u2718' : s === 'WARN' ? '\u26A0' : '\u2022';
-                                  return (
-                                    <div key={`funnel-audit-${atIdx}`} className="mt-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">{cat.name}</h5>
-                                        <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${fcVerdictColor}`}>{cat.verdict}</span>
-                                      </div>
-                                      <div className="overflow-x-auto">
-                                        <table className="w-full text-[10px] tabular-nums">
-                                          <thead>
-                                            <tr className="text-gray-500 text-left">
-                                              {cat.columns.map((col) => (
-                                                <th key={col} className={`py-0.5 font-medium ${col === 'step_target' ? 'sticky left-0 bg-white pr-3 min-w-[140px]' : 'px-2'}`}>{col}</th>
-                                              ))}
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {cat.rows.map((row, ri) => (
-                                              <tr key={ri} className="border-t border-gray-50">
-                                                {cat.columns.map((col) => {
-                                                  const val = row[col];
-                                                  if (col === 'step_target') return <td key={col} className="sticky left-0 bg-white pr-3 py-0.5 font-mono text-gray-700 whitespace-nowrap">{String(val ?? '\u2014')}</td>;
-                                                  if (col === 'status') return <td key={col} className={`px-2 py-0.5 text-center font-semibold ${fcStatusColor(String(val))}`}>{fcStatusIcon(String(val))}{' '}{String(val)}</td>;
-                                                  if (col === 'coverage_pct') return <td key={col} className="px-2 py-0.5 text-right text-gray-900 font-medium">{val == null ? '\u2014' : `${val}%`}</td>;
-                                                  return <td key={col} className="px-2 py-0.5 text-right text-gray-600">{val == null ? '\u2014' : typeof val === 'number' ? val.toLocaleString() : String(val)}</td>;
-                                                })}
-                                              </tr>
-                                            ))}
-                                          </tbody>
-                                        </table>
-                                      </div>
-                                    </div>
-                                  );
+                                  const cat = atRaw as ColumnarAuditData;
+                                  return <ColumnarAuditTable key={`funnel-audit-${atIdx}`} cat={cat} wrapperClass="mt-1" />;
                                 }
                                 // Legacy metric-row format
                                 const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string; matched?: number; denominator?: number }> };
