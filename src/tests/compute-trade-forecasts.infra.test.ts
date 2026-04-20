@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/reports/lifecycle_phase_implementation.md (Phase 4)
+// SPEC LINK: docs/specs/product/future/85_trade_forecast_engine.md §3 (Historic Snowplow + Behavioral Contract)
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -361,5 +361,32 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
 
   it('PIPELINE_META reads include permit_inspections for fallback anchor', () => {
     expect(content).toMatch(/permit_inspections/);
+  });
+
+  it('Historic Snowplow: snaps past predicted_start forward when anchorIsFallback (WF3-B2)', () => {
+    // Fallback anchors (issued_date/application_date) are often years in the
+    // past → predictedStart lands in the past → expired urgency (76.9% FAIL).
+    // Snowplow snaps to today + logicVars.snowplow_buffer_days so rescued leads are
+    // Rescue Missions, not dead leads. Buffer is DB-driven per spec 47 §4.1.
+    expect(content).toMatch(/snowplow_buffer_days/);
+    expect(content).toMatch(/anchorIsFallback && predictedStart < today/);
+    // Must use setUTCDate for consistent UTC date math (same pattern as stall snowplow)
+    expect(content).toMatch(/setUTCDate[\s\S]{0,80}logicVars\.snowplow_buffer_days/);
+    // Must be in LOGIC_VARS_SCHEMA — not a hardcoded constant (spec 47 §4.1)
+    expect(content).toMatch(/snowplow_buffer_days\s*:\s*z\.number\(\)\.finite\(\)\.positive\(\)/);
+    // Old hardcoded constant must be gone
+    expect(content).not.toMatch(/const SNOWPLOW_BUFFER_DAYS = 7/);
+  });
+
+  it('Historic Snowplow tracks snowplowCount counter in telemetry (WF3-B2)', () => {
+    expect(content).toMatch(/snowplowCount/);
+    expect(content).toMatch(/snowplowCount\+\+/);
+    expect(content).toMatch(/snowplow_applied/);
+  });
+
+  it('Historic Snowplow exposes snowplow_applied in records_meta (WF3-B2)', () => {
+    // Chain orchestrator surfaces this so operators can see how many leads
+    // were rescued by the snowplow vs. expired naturally.
+    expect(content).toMatch(/snowplow_applied\s*:\s*snowplowCount/);
   });
 });

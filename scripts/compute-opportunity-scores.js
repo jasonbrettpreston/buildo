@@ -54,6 +54,11 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   // tradeConfigs not used here — per-trade multipliers come from the SQL JOIN on trade_configurations.
   const { logicVars: vars } = await loadMarketplaceConfigs(pool, 'opportunity-scores');
 
+  // WF3 backstop: migration 102 may not be applied yet in all environments;
+  // a stale container image may also predate the seeds.json update. ??= sets
+  // the value only when currently null/undefined — DB-sourced values are kept.
+  vars.los_decay_divisor ??= 25;
+
   // Fail fast if any required variable is missing, zero, or non-finite.
   // Prevents division-by-zero (los_base_divisor) and NaN score propagation.
   const validation = validateLogicVars(vars, LOGIC_VARS_SCHEMA, 'opportunity-scores');
@@ -166,7 +171,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     // score = null means "no cost data". score = 0 means "real value, fully competed".
     const tradeValues = row.trade_contract_values;
     const hasNoCostData = row.estimated_cost == null
-      || tradeValues == null
+      || !tradeValues
       || Object.keys(tradeValues).length === 0;
 
     let score;

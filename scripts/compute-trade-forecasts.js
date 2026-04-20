@@ -58,6 +58,7 @@ const LOGIC_VARS_SCHEMA = z.object({
   expired_threshold_days:             z.number().finite(),
   urgency_overdue_days:               z.number().finite().positive(),
   urgency_upcoming_days:              z.number().finite().positive(),
+  snowplow_buffer_days:               z.number().finite().positive(),
   calibration_default_median_days:    z.number().finite().positive(),
   calibration_default_p25_days:       z.number().finite().positive(),
   calibration_default_p75_days:       z.number().finite().positive(),
@@ -278,6 +279,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   let unmappedTrades = 0;
   let upserted = 0;
   let anchorFallbackCount = 0;
+  let snowplowCount = 0;
   let batch = [];
   let batchCount = 0;
 
@@ -422,7 +424,19 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     let predictedStart = new Date(anchorDate);
     predictedStart.setUTCDate(predictedStart.getUTCDate() + cal.median);
 
-    // 2. INSTANT STALL RECALIBRATION — context-aware penalty + rolling snowplow.
+    // 2. HISTORIC SNOWPLOW (spec 85 §3 WF3 April 2026):
+    // Fallback anchors (issued_date / application_date) are often 1-3 years in
+    // the past. predictedStart = oldAnchor + median still lands in the past →
+    // large negative daysUntil → expired urgency (was 76.9% FAIL after WF1).
+    // Snap to today + snowplow_buffer_days (DB-driven, spec 47 §4.1) so rescued
+    // leads are Rescue Missions. Only fires for fallback anchors.
+    if (anchorIsFallback && predictedStart < today) {
+      predictedStart = new Date(today);
+      predictedStart.setUTCDate(predictedStart.getUTCDate() + logicVars.snowplow_buffer_days);
+      snowplowCount++;
+    }
+
+    // 3. INSTANT STALL RECALIBRATION — context-aware penalty + rolling snowplow.
     //
     // When lifecycle_stalled flips to true:
     //   a) Instant penalty: push predicted_start forward by a buffer that
@@ -536,6 +550,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     { metric: 'new_forecasts',             value: newRows,                 threshold: null,    status: 'INFO' },
     { metric: 'stale_purged',              value: stalePurged,             threshold: null,    status: 'INFO' },
     { metric: 'skipped_terminal_orphan',   value: skipped,                 threshold: null,    status: 'INFO' },
+    { metric: 'snowplow_applied',          value: snowplowCount,           threshold: null,    status: 'INFO' },
     {
       metric: 'unmapped_trades',
       value: unmappedTrades,
@@ -570,6 +585,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       skipped_terminal_orphan: skipped,
       unmapped_trades: unmappedTrades,
       anchor_fallbacks_used: anchorFallbackCount,
+      snowplow_applied: snowplowCount,
       urgency_distribution: urgencyDistribution,
       calibration_distribution: calibrationDistribution,
       total_forecast_rows: postRowCount,

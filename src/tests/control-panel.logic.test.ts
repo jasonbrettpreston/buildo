@@ -115,6 +115,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'calibration_default_p75_days',     // E21
   'profiling_coverage_pass_pct',      // spec 49
   'profiling_coverage_warn_pct',      // spec 49
+  'snowplow_buffer_days',             // WF3 spec 85 §3 — Historic Snowplow buffer (spec 47 §4.1)
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
@@ -166,7 +167,7 @@ describe('Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ conf
     expect(jsonKeys.length).toBeGreaterThan(0);
   });
 
-  it('logic_variables.json contains all 56 expected keys', () => {
+  it('logic_variables.json contains all 57 expected keys', () => {
     for (const key of EXPECTED_LOGIC_VAR_KEYS) {
       expect(jsonData, `JSON missing key: ${key}`).toHaveProperty(key);
     }

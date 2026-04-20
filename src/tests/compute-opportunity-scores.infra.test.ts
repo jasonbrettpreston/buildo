@@ -285,3 +285,29 @@ describe('scripts/compute-opportunity-scores.js — asymptotic decay + NULL guar
     expect(content).toMatch(/null_input_scores\s*:\s*nullInputScores/);
   });
 });
+
+// ── WF3 production crash fixes ──────────────────────────────────────────────
+
+describe('scripts/compute-opportunity-scores.js — WF3 crash fixes', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/compute-opportunity-scores.js'),
+      'utf-8',
+    );
+  });
+
+  it('has los_decay_divisor ??= 25 backstop before Zod validation (WF3-B1A)', () => {
+    // If migration 102 not applied AND container image predates seeds.json update,
+    // vars.los_decay_divisor is undefined → Zod .positive() rejects → 1-second crash.
+    // The ??= backstop prevents this without silencing legitimate DB values.
+    expect(content).toMatch(/vars\.los_decay_divisor\s*\?\?=\s*25/);
+  });
+
+  it('NULL guard uses !tradeValues not tradeValues == null (WF3-B1B)', () => {
+    // !tradeValues catches null, undefined, and any other falsy value from the
+    // pg JSONB driver without relying on == null short-circuit ordering.
+    expect(content).toMatch(/!tradeValues/);
+    expect(content).not.toMatch(/tradeValues\s*==\s*null/);
+  });
+});

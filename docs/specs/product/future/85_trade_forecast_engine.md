@@ -50,8 +50,8 @@ Priority order when `phase_started_at` is NULL:
 4. `permits.application_date`
 
 When any fallback is used, `calibration_method` is stamped `'fallback_issued'` to signal a lower-confidence estimate. If no date is available at all the row is silently skipped and counted in `skipped_terminal_orphan`.
-- **Instant Stall Recalibration:**
-  - If `lifecycle_stalled` is `TRUE`, apply a Stall Penalty (45 days for pre-con, 14 days for active construction).
+- **Historic Snowplow (WF3 April 2026):** Applied immediately after the initial `predictedStart = anchor + cal.median` calculation, before Stall Recalibration. If `anchorIsFallback` is `true` AND `predictedStart < today` (the calculated date landed in the past), snap `predictedStart` forward to `today + logic_variables.snowplow_buffer_days` (default 7, DB-driven per spec 47 §4.1). This converts rescued fallback-anchor leads from `expired` urgency to `imminent/upcoming` — treating them as Rescue Missions rather than dead leads. Only fires for fallback anchors; real `phase_started_at` anchors are never touched. Tracked via `snowplow_applied` in `records_meta`.
+- **Instant Stall Recalibration:** If `lifecycle_stalled` is `TRUE`, apply a Stall Penalty (45 days for pre-con, 14 days for active construction).
 - **Rolling Snowplow:** The date rolls forward daily if the stall persists, ensuring the prediction never drifts into the past.
 - **Calibration Fallback:** Exact Match -> Permit Type Fallback -> Issued Date Fallback -> Default (30 days).
 
