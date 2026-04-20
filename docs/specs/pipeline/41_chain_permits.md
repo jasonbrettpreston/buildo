@@ -290,6 +290,8 @@ for the round-trip correctness gate.
 3. Determine construction phase per match (early_construction/structural/finishing/landscaping)
 4. DELETE existing `permit_trades`, INSERT new matches with sub-batch at 4000 rows (§9.2)
 
-**PHASE_TRADES:** early_construction (excavation, shoring, demolition, concrete, waterproofing, drain-plumbing, temporary-fencing), structural (framing, structural-steel, masonry, roofing, plumbing, hvac, electrical, elevator, fire-protection), finishing (insulation, drywall, painting, flooring, glazing, trim-work, millwork-cabinetry, tiling, stone-countertops, caulking, solar, security), landscaping (landscaping, painting, decking-fences, eavestrough-siding, pool-installation)
+**`is_active` is ALWAYS `true` (WF1, April 2026):** Phase-based time-gating was removed. Every classified trade match is immediately visible regardless of construction phase — a roofer sees a P3 (intake) permit as soon as it is classified. `PHASE_TRADES` mapping is retained solely for the `calculateLeadScore` +15 phase-match boost.
+
+**PHASE_TRADES (lead-score boost only):** early_construction (excavation, shoring, demolition, concrete, waterproofing, drain-plumbing, temporary-fencing), structural (framing, structural-steel, masonry, roofing, plumbing, hvac, electrical, elevator, fire-protection), finishing (insulation, drywall, painting, flooring, glazing, trim-work, millwork-cabinetry, tiling, stone-countertops, caulking, solar, security), landscaping (landscaping, painting, decking-fences, eavestrough-siding, pool-installation)
 
 **Testing:** `classification.logic.test.ts` (104 tests), `classify-sync.logic.test.ts`, `pipeline-sdk.logic.test.ts` (32 trades present)

@@ -254,22 +254,30 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   // converges — ON CONFLICT DO UPDATE is idempotent.
   // ═══════════════════════════════════════════════════════════
   const SOURCE_SQL = `
+    WITH last_passed AS (
+      SELECT permit_num, MAX(inspection_date)::timestamptz AS last_passed_inspection_date
+        FROM permit_inspections
+       WHERE status = 'Passed'
+       GROUP BY permit_num
+    )
     SELECT p.permit_num, p.revision_num, t.slug AS trade_slug,
            p.lifecycle_phase, p.phase_started_at, p.permit_type,
-           p.lifecycle_stalled
+           p.lifecycle_stalled, p.issued_date, p.application_date,
+           lp.last_passed_inspection_date
       FROM permit_trades pt
       JOIN trades t ON t.id = pt.trade_id
       JOIN permits p ON p.permit_num = pt.permit_num
                     AND p.revision_num = pt.revision_num
+      LEFT JOIN last_passed lp ON lp.permit_num = p.permit_num
      WHERE pt.is_active = true
        AND p.lifecycle_phase IS NOT NULL
-       AND p.phase_started_at IS NOT NULL
   `;
 
   let totalRows = 0;
   let skipped = 0;
   let unmappedTrades = 0;
   let upserted = 0;
+  let anchorFallbackCount = 0;
   let batch = [];
   let batchCount = 0;
 
@@ -325,7 +333,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     const {
       permit_num, revision_num, trade_slug,
       lifecycle_phase, phase_started_at, permit_type,
-      lifecycle_stalled,
+      lifecycle_stalled, last_passed_inspection_date,
+      issued_date, application_date,
     } = row;
 
     // Skip terminal/orphan/CoA phases
@@ -334,12 +343,27 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       continue;
     }
 
+    // Fallback Anchor Hierarchy (spec 85 §3): phase_started_at → last passed
+    // inspection → issued_date → application_date. Stamps 'fallback_issued'
+    // on calibration_method when a fallback is used.
+    const effectiveAnchor = phase_started_at
+      || last_passed_inspection_date
+      || (issued_date ? new Date(issued_date + 'T00:00:00Z') : null)
+      || (application_date ? new Date(application_date + 'T00:00:00Z') : null);
+
+    if (!effectiveAnchor) { skipped++; continue; }
+
+    const anchorIsFallback = !phase_started_at;
+
     // Look up bimodal targets for this trade
     const targets = TRADE_TARGET_PHASE[trade_slug];
     if (!targets) {
       unmappedTrades++;
       continue;
     }
+
+    // Count fallback anchor usage only for rows that will produce a forecast
+    if (anchorIsFallback) anchorFallbackCount++;
 
     const currentOrdinal = PHASE_ORDINAL[lifecycle_phase];
     const bidOrdinal = PHASE_ORDINAL[targets.bid_phase];
@@ -391,7 +415,9 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     // by a full day when the server TZ differs from the DB TZ.
     // WF3 Bug Fix: use setUTCHours + setUTCDate for consistent dates.
     // 1. Compute original predicted start date from calibration medians
-    const anchorDate = new Date(phase_started_at);
+    const anchorDate = new Date(effectiveAnchor);
+    // §47 §14.4: guard Invalid Date before any arithmetic (new Date(bad-string) is truthy but NaN)
+    if (isNaN(anchorDate.getTime())) { skipped++; continue; }
     anchorDate.setUTCHours(0, 0, 0, 0);
     let predictedStart = new Date(anchorDate);
     predictedStart.setUTCDate(predictedStart.getUTCDate() + cal.median);
@@ -441,6 +467,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       logicVars.urgency_upcoming_days,
     );
     const confidence = classifyConfidence(cal.sample, cal.method === 'default');
+    const finalCalMethod = anchorIsFallback ? 'fallback_issued' : cal.method;
 
     batch.push({
       permit_num,
@@ -450,7 +477,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       confidence,
       urgency,
       target_window: targetWindow,
-      calibration_method: cal.method,
+      calibration_method: finalCalMethod,
       sample_size: cal.sample,
       median_days: cal.median,
       p25_days: cal.p25,
@@ -542,6 +569,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       stale_forecasts_purged: stalePurged,
       skipped_terminal_orphan: skipped,
       unmapped_trades: unmappedTrades,
+      anchor_fallbacks_used: anchorFallbackCount,
       urgency_distribution: urgencyDistribution,
       calibration_distribution: calibrationDistribution,
       total_forecast_rows: postRowCount,
@@ -558,7 +586,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     {
       permit_trades: ['permit_num', 'revision_num', 'trade_id', 'is_active'],
       trades: ['id', 'slug'],
-      permits: ['permit_num', 'revision_num', 'lifecycle_phase', 'phase_started_at', 'permit_type'],
+      permits: ['permit_num', 'revision_num', 'lifecycle_phase', 'phase_started_at', 'permit_type', 'issued_date', 'application_date'],
+      permit_inspections: ['permit_num', 'inspection_date', 'status'],
       phase_calibration: ['from_phase', 'to_phase', 'permit_type', 'median_days', 'p25_days', 'p75_days', 'sample_size'],
     },
     {

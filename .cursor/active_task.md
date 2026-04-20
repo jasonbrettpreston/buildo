@@ -1,271 +1,163 @@
-# Active Task: assert-global-coverage — Exhaustive Field Profile Rewrite
-**Status:** Planning
-**Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `b107009`
+# Active Task: Always-Active Trade Visibility + Forecast Fallback Anchors
+**Status:** Implementation
+**Workflow:** WF1 — New Feature / Enhancement
+**Rollback Anchor:** `c632274`
 
 ---
 
 ## Context
-* **Goal:** Rewrite `scripts/quality/assert-global-coverage.js` to fix four classes of bugs: (1) >100% coverage from row-level numerators vs permit-level denominators; (2) drastically incomplete field mapping — the original script covered ~20 fields; the exhaustive spec requires ~100 fields across 8 denominator groups; (3) naive uniform thresholds that FAIL scraper-sparse fields; (4) `step_target` column too narrow in the FreshnessTimeline UI.
-* **Target Spec:** `docs/specs/pipeline/49_data_completeness_profiling.md`
+* **Goal:** (1) Remove phase-based time-gating from `classify-permits.js` so every classified trade is `is_active: true` regardless of which construction phase the permit is in. This unblocks early bidding — a roofer can see a P3 permit before framing starts. (2) Remove the hard `phase_started_at IS NOT NULL` filter from `compute-trade-forecasts.js` and replace it with a 3-level fallback anchor (last passed inspection → issued_date → application_date) so permits without a real phase anchor still produce forecasts with `calibration_method = 'fallback_issued'`.
+* **Target Specs:**
+  - `docs/specs/product/future/85_trade_forecast_engine.md`
+  - `docs/specs/pipeline/47_pipeline_script_protocol.md`
+  - `docs/specs/pipeline/41_chain_permits.md`
 * **Key Files:**
-  - `scripts/quality/assert-global-coverage.js`
-  - `src/components/FreshnessTimeline.tsx` (ColumnarAuditTable width)
+  - `scripts/classify-permits.js` — remove `isTradeActiveInPhase` gate from `is_active` assignment
+  - `src/lib/classification/classifier.ts` — dual code path mirror (§7.1)
+  - `scripts/compute-trade-forecasts.js` — SOURCE_SQL + anchor fallback logic
+  - `docs/specs/product/future/85_trade_forecast_engine.md` — spec update
+  - `src/tests/compute-trade-forecasts.infra.test.ts` — new anchor fallback test
+  - `src/tests/classify-permits.infra.test.ts` — new is_active = true always test
 
 ---
 
-## Bug Analysis
+## Technical Implementation
 
-### Bug 1 — >100% Coverage (Grain Mismatch) — Confirmed live
+### Part 1 — classify-permits.js (+ classifier.ts dual path)
 
-| Step | Field | Root Cause | Fix |
-|------|-------|-----------|-----|
-| Step 9 | `permit_parcels.linked_permits` | Numerator=227,845 DISTINCT permits in permit_parcels; denominator=222,890 geocoded permits. Address-matched links exist for non-geocoded permits. | Change denominator → `permitsTotal` (all permits) |
-| Step 23 | `predicted_start`, `urgency` | Numerator=raw `COUNT(*) FILTER` over forecast rows (1 row/trade per permit); denominator=`forecastEligible` (DISTINCT permits). Multiple trades per permit → rows > permits. | Numerator → `COUNT(DISTINCT permit_num\|\|revision_num) FILTER (...)` |
-
----
-
-### Bug 2 — Exhaustive Field Mapping (Complete Gap Analysis)
-
-The rewrite is organized around **8 exact denominator groups**. Fields in the user's spec that were **missing from my previous plan** are marked `NEW`. Fields I had but with the wrong denominator are marked `FIX DENOM`.
-
----
-
-#### Denominator A — `SELECT COUNT(*) FROM permits` (ALL permits including PRE-%)
-
-**Base fields (Step 2 — load_permits):**
-
-| Field | Status | Notes |
-|-------|--------|-------|
-| `permit_type` | NEW | |
-| `structure_type` | NEW | |
-| `work` | NEW | |
-| `street_num` | NEW | |
-| `street_name` | NEW | |
-| `street_name_normalized` | NEW | |
-| `street_type` | NEW | |
-| `street_direction` | NEW | |
-| `city` | NEW | |
-| `postal` | NEW | |
-| `geo_id` | HAD | Change: simple `IS NOT NULL` (not the geocodeable filter — that's Step 8 denom) |
-| `building_type` | NEW | |
-| `category` | NEW | |
-| `application_date` | NEW | |
-| `issued_date` | HAD | FIX DENOM: was non-PRE only, now all permits |
-| `completed_date` | HAD | FIX DENOM: was stale-only denominator, now all permits |
-| `status` | NEW | |
-| `description` | HAD | FIX DENOM |
-| `est_const_cost` | HAD | Use `externalRow` (scraper data, ~54% structural sparsity) |
-| `builder_name` | HAD | FIX DENOM |
-| `owner` | NEW | |
-| `dwelling_units_created` | NEW | |
-| `dwelling_units_lost` | NEW | |
-| `ward` | NEW | |
-| `council_district` | NEW | |
-| `current_use` | NEW | |
-| `proposed_use` | NEW | |
-| `housing_units` | NEW | |
-| `storeys` | NEW | |
-| `data_hash` | NEW | Nullable — confirms hash written |
-| `raw_json` | NEW | Nullable — confirms raw source preserved |
-
-**Enriched fields (Steps 4, 5, 8, 10, 21):**
-
-| Field | Step | Status |
-|-------|------|--------|
-| `enriched_status` | Step 4 | HAD |
-| `last_seen_at` | Step 2 | NEW — NOT NULL in schema, serves as integrity check |
-| `project_type` | Step 5 | HAD |
-| `scope_tags` (array_length > 0) | Step 5 | HAD |
-| `scope_classified_at` | Step 5 | HAD |
-| `scope_source` | Step 5 | HAD |
-| `latitude` | Step 8 | HAD (FIX DENOM: all permits, not geocodeable) |
-| `longitude` | Step 8 | HAD (FIX DENOM) |
-| `location` (geometry IS NOT NULL) | Step 8 | NEW |
-| `geocoded_at` | Step 8 | NEW |
-| `neighbourhood_id` | Step 10 | HAD (FIX DENOM) |
-| `lifecycle_phase` | Step 21 | HAD |
-| `phase_started_at` | Step 21 | HAD |
-| `lifecycle_stalled` | Step 21 | NEW |
-| `lifecycle_classified_at` | Step 21 | HAD |
-
-**Table coverage metrics (cross-table, Denom A):**
-
-| Metric | Status |
-|--------|--------|
-| % permits with ≥1 row in `permit_parcels` | NEW — `COUNT(DISTINCT pp.permit_num\|\|revision_num)` / permitsTotal |
-| % permits with ≥1 active row in `permit_trades` | HAD (was non-PRE only, FIX DENOM) |
-| % permits with ≥1 row in `cost_estimates` | HAD (FIX DENOM) |
-
----
-
-#### Denominator B — `SELECT COUNT(*) FROM entities`
-
-| Field | Status | Threshold |
-|-------|--------|-----------|
-| `legal_name` | NEW | standard (NOT NULL in schema → 100% expected) |
-| `name_normalized` | HAD | standard |
-| `permit_count` | NEW | standard (NOT NULL) |
-| `entity_type` | NEW | standard |
-| `last_seen_at` | NEW | standard (NOT NULL) |
-| `is_wsib_registered` | HAD | standard |
-| `primary_phone` | HAD | `externalRow` (scraped) |
-| `primary_email` | HAD | `externalRow` |
-| `website` | NEW (was in previous plan) | `externalRow` |
-
----
-
-#### Denominator C — `SELECT COUNT(*) FROM permits WHERE latitude IS NOT NULL` (geocoded permits)
-
-All `permit_parcels` columns are `NOT NULL` in schema — coverage equals "% geocoded permits with any parcel link".
-
-| Field | Table | Status |
-|-------|-------|--------|
-| `match_type` | `permit_parcels` | NEW |
-| `confidence` | `permit_parcels` | NEW |
-| `linked_at` | `permit_parcels` | NEW |
-
-Numerator for each: `COUNT(DISTINCT pp.permit_num||revision_num) FROM permit_parcels pp JOIN permits p ON ... WHERE p.latitude IS NOT NULL AND pp.X IS NOT NULL`
-
----
-
-#### Denominator D — `SELECT COUNT(*) FROM parcel_buildings`
-
-All columns `NOT NULL` — serves as completeness/integrity check.
-
-| Field | Status |
-|-------|--------|
-| `is_primary` | NEW |
-| `structure_type` | NEW |
-| `match_type` | NEW |
-| `confidence` | NEW |
-| `linked_at` | NEW |
-
----
-
-#### Denominator E — `SELECT COUNT(*) FROM permit_trades`
-
-| Field | Nullable | Status | Threshold |
-|-------|----------|--------|-----------|
-| `tier` | YES | HAD (was adding) | standard |
-| `confidence` | YES | HAD (was adding) | standard |
-| `is_active` | NO | NEW | standard (NOT NULL → ~100%) |
-| `phase` | YES | HAD (was adding) | standard |
-| `lead_score` | NO | NEW | standard (NOT NULL → ~100%) |
-| `classified_at` | NO | NEW | standard (NOT NULL → ~100%) |
-
----
-
-#### Denominator F — `SELECT COUNT(*) FROM cost_estimates`
-
-| Field | Nullable | Status |
-|-------|----------|--------|
-| `estimated_cost` | YES | HAD |
-| `cost_source` | NO | NEW (NOT NULL → ~100%) |
-| `cost_tier` | YES | HAD (was adding) |
-| `cost_range_low` | YES | NEW |
-| `cost_range_high` | YES | NEW |
-| `premium_factor` | YES | HAD (was adding) |
-| `complexity_score` | YES | HAD (was adding) |
-| `model_version` | NO | NEW (NOT NULL → ~100%) |
-| `is_geometric_override` | NO | HAD (was adding, NOT NULL) |
-| `modeled_gfa_sqm` | YES | HAD (was adding) |
-| `effective_area_sqm` | YES | NEW |
-| `trade_contract_values` | NO | NEW (NOT NULL JSONB → ~100%) |
-| `computed_at` | NO | NEW (NOT NULL → ~100%) |
-
----
-
-#### Denominator G — Eligible Forecast Permits (DISTINCT permits with active trade, non-skip phase)
-
-Exact query matches existing `forecastEligible` computation:
-```sql
-SELECT COUNT(DISTINCT p.permit_num || '--' || p.revision_num)
-FROM permits p
-JOIN permit_trades pt ON pt.permit_num = p.permit_num AND pt.revision_num = p.revision_num AND pt.is_active = true
-WHERE p.lifecycle_phase IS NOT NULL
-  AND p.phase_started_at IS NOT NULL
-  AND p.lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','P1','P2')
+**Current code (4 call sites — lines 410/418, 439/447, 464/472, 490/498):**
+```js
+const isActive = isTradeActiveInPhase(trade.slug, phase);
+const tradeMatch = { ..., is_active: isActive, ... };
 ```
 
-| Metric | Status |
-|--------|--------|
-| % eligible permits with ≥1 row in `trade_forecasts` | HAD (partial — was numerator vs this denominator) |
+**New code (all 4 sites):**
+```js
+const tradeMatch = { ..., is_active: true, ... };
+```
+
+Remove the `const isActive = isTradeActiveInPhase(...)` variable from `classifyPermit()` at all 4 sites (it's only used for the `is_active` field). The `isTradeActiveInPhase` function STAYS because `calculateLeadScore` (line 129) still calls it for the +15 phase-match boost. The function itself is not deleted.
+
+**Dual code path**: Mirror identical change in `src/lib/classification/classifier.ts` at all equivalent `is_active: isActive` assignments (lines 165, 179, 217, 231, 315, 329, 388, 402).
+
+**`--full` re-run**: Already supported via `pipeline.isFullMode()` (line 512). Post-deploy, run `node scripts/classify-permits.js --full` to backfill existing rows from `is_active: false` → `true`.
 
 ---
 
-#### Denominator H — `SELECT COUNT(*) FROM trade_forecasts`
+### Part 2 — compute-trade-forecasts.js
 
-| Field | Nullable | Status |
-|-------|----------|--------|
-| `trade_slug` | NO | NEW (NOT NULL → ~100%) |
-| `predicted_start` | YES | FIX: change numerator to DISTINCT permit count |
-| `target_window` | YES | NEW |
-| `confidence` | NO | NEW (NOT NULL → ~100%) |
-| `urgency` | NO | FIX: DISTINCT permit numerator |
-| `calibration_method` | YES | NEW |
-| `sample_size` | YES | NEW |
-| `median_days` | YES | NEW |
-| `p25_days` | YES | NEW |
-| `p75_days` | YES | NEW |
-| `opportunity_score` | NO | HAD (NOT NULL → ~100% expected) |
-| `computed_at` | NO | NEW (NOT NULL → ~100%) |
+**SOURCE_SQL change:**
+1. Remove `AND p.phase_started_at IS NOT NULL` from WHERE clause
+2. Add `p.issued_date`, `p.application_date` to SELECT
+3. Add a CTE (`WITH last_passed AS (...)`) for last passed inspection date — aggregated once in Postgres, not N+1
+
+```sql
+WITH last_passed AS (
+  SELECT permit_num, MAX(inspection_date)::timestamptz AS last_passed_inspection_date
+  FROM permit_inspections
+  WHERE status = 'Passed'
+  GROUP BY permit_num
+)
+SELECT p.permit_num, p.revision_num, t.slug AS trade_slug,
+       p.lifecycle_phase, p.phase_started_at, p.permit_type,
+       p.lifecycle_stalled, p.issued_date, p.application_date,
+       lp.last_passed_inspection_date
+  FROM permit_trades pt
+  JOIN trades t ON t.id = pt.trade_id
+  JOIN permits p ON p.permit_num = pt.permit_num AND p.revision_num = pt.revision_num
+  LEFT JOIN last_passed lp ON lp.permit_num = p.permit_num
+ WHERE pt.is_active = true
+   AND p.lifecycle_phase IS NOT NULL
+```
+
+**Main loop anchor fallback (after SKIP_PHASES check):**
+```js
+const { phase_started_at, last_passed_inspection_date, issued_date, application_date } = row;
+
+const effectiveAnchor = phase_started_at
+  || last_passed_inspection_date
+  || (issued_date ? new Date(issued_date + 'T00:00:00Z') : null)
+  || (application_date ? new Date(application_date + 'T00:00:00Z') : null);
+
+if (!effectiveAnchor) { skipped++; continue; }   // truly no anchor — rare
+
+const anchorIsFallback = !phase_started_at;
+```
+
+Then use `effectiveAnchor` in place of `phase_started_at` in the date math (line 394). Set `calibration_method` override:
+```js
+const finalCalMethod = anchorIsFallback ? 'fallback_issued' : cal.method;
+```
+
+And in `batch.push(...)`:
+```js
+calibration_method: finalCalMethod,
+```
+
+**Telemetry update** — add to `records_meta`:
+```js
+anchor_fallbacks_used: anchorFallbackCount,  // count of permits that used a fallback anchor
+```
+
+**PIPELINE_META reads update**: Add `permit_inspections` to reads, add `issued_date`, `application_date` to `permits` read columns.
 
 ---
 
-### Bug 3 — Context-Aware Thresholds
+### Part 3 — Spec Update
 
-**New `externalRow()` builder** — fixed thresholds (PASS ≥ 10%, WARN ≥ 5%, FAIL < 5%):
-Applied to: `primary_phone`, `primary_email`, `website`, `wsib_registry.linked_entity_id`
-
-**`infoRow` (no traffic-light judgment)**:
-Applied to: `est_const_cost` (city CKAN structural sparsity, pipeline cannot control)
-
-**Standard `coverageRow()`** (90%/70% from logic_variables):
-All other fields.
-
-**Fields with NOT NULL constraint** will always show ~100% — serve as integrity sentinels.
-
----
-
-### Bug 4 — UX Column Width
-
-`ColumnarAuditTable` in `FreshnessTimeline.tsx`:
-- `step_target`: `min-w-[140px]` → `min-w-[280px]`
-- `field`: no width → add `min-w-[180px]`
-
----
-
-## New Query Architecture
-
-Replace the current mixed approach with 8 dedicated queries + existing auxiliary queries:
-
-1. **`pa`** — massive permits FILTER query (~50 expressions), Denom A
-2. **`ea`** — entities aggregate, Denom B
-3. **`pp`** — permit_parcels coverage vs geocoded permits, Denom C
-4. **`pb`** — parcel_buildings aggregate, Denom D
-5. **`pt`** — permit_trades aggregate (active trades), Denom E
-6. **`ce`** — cost_estimates aggregate, Denom F
-7. **`tfd`** — forecastEligible (existing, Denom G)
-8. **`tfa`** — trade_forecasts aggregate with DISTINCT permit counts, Denom H
-
-Retained unchanged: `bnd` (builder-to-entity JOIN), `wa` (wsib_registry), `pSchema` (column count), `etRuns` (entity tracing verdict), `misc` (sub-selects for coa, tracked_projects, snapshots).
+**`docs/specs/product/future/85_trade_forecast_engine.md` §3 Behavioral Contract:**
+Add under "Anchor Selection":
+```
+### Anchor Fallback Hierarchy
+When `phase_started_at` is NULL, the engine uses the best available timestamp:
+1. `phase_started_at` (true phase transition anchor — preferred)
+2. Last passed inspection date (from `permit_inspections WHERE status='Passed'`)
+3. `issued_date` (permit issuance)
+4. `application_date` (permit application)
+When any fallback is used, `calibration_method` is stamped `'fallback_issued'`
+to signal a lower-confidence estimate.
+```
 
 ---
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — pipeline.run() wraps; no new API routes.
-* **Unhappy Path Tests:** Additive SQL expressions — no structural changes, existing infra tests cover the shape contract.
+* **Try-Catch Boundary:** N/A — both scripts run inside `pipeline.run()` which wraps all errors; no new API routes.
+* **Unhappy Path Tests:** (a) `is_active` always true even for terminal phases, (b) NULL phase_started_at → uses fallback, (c) no anchor at all → skipped (not crashed).
 * **logError Mandate:** N/A — no new catch blocks.
-* **Mobile-First:** N/A for script. FreshnessTimeline UX fix is additive Tailwind width change.
+* **Mobile-First:** N/A — backend only.
 
 ---
 
 ## Execution Plan
-- [ ] **Rollback Anchor:** `b107009` recorded.
-- [ ] **State Verification:** DB confirms grain mismatch (227,845 parcel-linked permits > 222,890 geocoded permits). All new column names validated against `01_database_schema.md`.
-- [ ] **Spec Review:** Spec 49 §4 Denominator Matrix reviewed. Updating to user-specified 8-denominator model.
-- [ ] **Fix:** Rewrite permits query (Denom A), extend entities query (Denom B), add pp/pb/pt/ce queries (Denom C-F), fix tf query grain (Denom H), keep tfd unchanged (Denom G). Add `externalRow` builder. Reclassify `est_const_cost` as infoRow.
-- [ ] **UX:** Widen ColumnarAuditTable step_target + field columns.
-- [ ] **Pre-Review Self-Checklist:** Verify no remaining row-level numerators against permit-level denominators. Verify every field name matches `01_database_schema.md`. Verify NOT NULL fields show correctly. Verify `externalRow` fields don't include any that should genuinely fail.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. → WF6.
+- [ ] **Contract Definition:** N/A — no API route changes. DB schema unchanged (calibration_method is VARCHAR(30), no constraint).
+- [ ] **Spec & Registry Sync:** Update `85_trade_forecast_engine.md` §3 with fallback anchor hierarchy. Run `npm run system-map`.
+- [ ] **Schema Evolution:** N/A — no migration required. `calibration_method` already VARCHAR(30) no-check. `issued_date` + `application_date` already on `permits`. `permit_inspections` already exists.
+- [ ] **Test Scaffolding:** Add tests to existing infra test files:
+  - `compute-trade-forecasts.infra.test.ts`: (a) SOURCE_SQL no longer contains `phase_started_at IS NOT NULL`, (b) SOURCE_SQL joins `permit_inspections` via CTE, (c) `issued_date` + `application_date` in SELECT, (d) `'fallback_issued'` is a valid calibration_method value in script.
+  - `classify-permits.infra.test.ts`: `is_active: true` hardcoded — script must NOT contain `is_active: isActive` (or `is_active: isTradeActiveInPhase`).
+- [ ] **Red Light:** Run `npm run test` — new tests must fail.
+- [ ] **Implementation:**
+  1. Edit `scripts/classify-permits.js` — remove `isActive` variable + set `is_active: true` at all 4 sites
+  2. Edit `src/lib/classification/classifier.ts` — same change, all equivalent sites
+  3. Edit `scripts/compute-trade-forecasts.js` — SOURCE_SQL + anchor fallback logic + telemetry
+  4. Edit `docs/specs/product/future/85_trade_forecast_engine.md` — anchor fallback section
+- [ ] **Auth Boundary & Secrets:** N/A.
+- [ ] **Pre-Review Self-Checklist:** Before Green Light, verify:
+  1. `is_active: isActive` is gone from classify-permits.js (grep check)
+  2. `is_active: isActive` is gone from classifier.ts (grep check)
+  3. `isTradeActiveInPhase` still exists and is still called in `calculateLeadScore` (line 129)
+  4. SOURCE_SQL CTE doesn't multiply rows (LEFT JOIN on permit_num, not permit_num+revision_num — permits table uses both as PK but inspections only join on permit_num)
+  5. `effectiveAnchor` null check prevents crashes on permits with no dates at all
+  6. `calibration_method` override only fires when `!phase_started_at`
+  7. Ghost purge NOT EXISTS query (line ~78 in infra test) still intact and not broken
+  8. PIPELINE_META reads updated to include permit_inspections
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → Spawn Adversarial + Independent Review agents. → WF6.
+
+---
+
+## Post-Commit Re-Run Instructions
+After merging, run both scripts with `--full`:
+```bash
+node scripts/classify-permits.js --full         # backfill is_active=false → true
+node scripts/compute-trade-forecasts.js         # already processes all active permits
+```

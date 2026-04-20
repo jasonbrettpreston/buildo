@@ -327,4 +327,39 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/defaultP25Days/);
     expect(content).toMatch(/defaultP75Days/);
   });
+
+  it('SOURCE_SQL does NOT filter phase_started_at IS NOT NULL — fallback anchor handles NULL', () => {
+    // WF1: removing the hard gate so permits without a real phase anchor still
+    // produce forecasts (with calibration_method = 'fallback_issued').
+    expect(content).not.toMatch(/phase_started_at IS NOT NULL/);
+  });
+
+  it('SOURCE_SQL fetches fallback anchor columns via CTE (no N+1 correlated subquery)', () => {
+    // The fallback anchor hierarchy needs last passed inspection date, issued_date,
+    // and application_date. The inspection aggregate must be a CTE (one Postgres
+    // pass, not one query per row).
+    expect(content).toMatch(/WITH last_passed AS/);
+    expect(content).toMatch(/FROM permit_inspections/);
+    expect(content).toMatch(/issued_date/);
+    expect(content).toMatch(/application_date/);
+    expect(content).toMatch(/last_passed_inspection_date/);
+    // Must NOT use a correlated subquery inside the SELECT list — that is O(n)
+    expect(content).not.toMatch(/SELECT.*FROM permit_inspections.*WHERE.*permit_num\s*=\s*p\.permit_num/);
+  });
+
+  it("stamps calibration_method = 'fallback_issued' when phase_started_at is NULL (spec 85 §3)", () => {
+    // Any row produced from a fallback anchor must advertise the lower confidence
+    // level so the UI (FreshnessTimeline) can distinguish it from real anchors.
+    expect(content).toMatch(/'fallback_issued'/);
+    expect(content).toMatch(/anchorIsFallback/);
+  });
+
+  it('tracks anchor_fallbacks_used counter in telemetry', () => {
+    expect(content).toMatch(/anchorFallbackCount/);
+    expect(content).toMatch(/anchor_fallbacks_used/);
+  });
+
+  it('PIPELINE_META reads include permit_inspections for fallback anchor', () => {
+    expect(content).toMatch(/permit_inspections/);
+  });
 });

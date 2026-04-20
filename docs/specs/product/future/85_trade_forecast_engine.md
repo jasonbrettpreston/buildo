@@ -40,7 +40,16 @@ Active `permit_trades`, `permits` with lifecycle data, and `phase_calibration` r
 - **Bimodal Routing:**
   - If current stage `<= bid_phase`: Target the "Shortlist" window.
   - If current stage `> bid_phase`: Target the "Work" window (Rescue Mission).
-- **Anchor Selection:** Uses the `phase_started_at` timestamp as the "T-Zero" point for calculation.
+- **Anchor Selection:** Uses `phase_started_at` as the primary "T-Zero" point. When `phase_started_at` is NULL the engine applies the **Fallback Anchor Hierarchy** (see below) so no forecast is silently dropped.
+
+#### Fallback Anchor Hierarchy
+Priority order when `phase_started_at` is NULL:
+1. `phase_started_at` — immutable phase-transition anchor (preferred)
+2. Latest passed inspection date (`permit_inspections WHERE status='Passed'` — aggregated via CTE in SOURCE_SQL)
+3. `permits.issued_date`
+4. `permits.application_date`
+
+When any fallback is used, `calibration_method` is stamped `'fallback_issued'` to signal a lower-confidence estimate. If no date is available at all the row is silently skipped and counted in `skipped_terminal_orphan`.
 - **Instant Stall Recalibration:**
   - If `lifecycle_stalled` is `TRUE`, apply a Stall Penalty (45 days for pre-con, 14 days for active construction).
 - **Rolling Snowplow:** The date rolls forward daily if the stall persists, ensuring the prediction never drifts into the past.

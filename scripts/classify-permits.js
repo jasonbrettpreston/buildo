@@ -407,7 +407,6 @@ function classifyPermit(permit, rules, runAt) {
     if (!trade) continue;
 
     const confidence = rule.confidence > 0 ? rule.confidence : 0.95;
-    const isActive = isTradeActiveInPhase(trade.slug, phase);
     const tradeMatch = {
       permit_num: permit.permit_num,
       revision_num: permit.revision_num,
@@ -415,7 +414,7 @@ function classifyPermit(permit, rules, runAt) {
       trade_slug: trade.slug,
       tier: rule.tier,
       confidence,
-      is_active: isActive,
+      is_active: true,
       phase,
     };
     tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
@@ -436,7 +435,6 @@ function classifyPermit(permit, rules, runAt) {
     return allowed.map((slug) => {
       const tradeId = SLUG_TO_ID.get(slug);
       if (!tradeId) return null;
-      const isActive = isTradeActiveInPhase(slug, phase);
       const tradeMatch = {
         permit_num: permit.permit_num,
         revision_num: permit.revision_num,
@@ -444,7 +442,7 @@ function classifyPermit(permit, rules, runAt) {
         trade_slug: slug,
         tier: 1,
         confidence: 0.80,
-        is_active: isActive,
+        is_active: true,
         phase,
       };
       tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
@@ -461,7 +459,6 @@ function classifyPermit(permit, rules, runAt) {
     for (const { slug, confidence } of tagResults) {
       const tradeId = SLUG_TO_ID.get(slug);
       if (!tradeId) continue; // skip trades not in the 20-trade list
-      const isActive = isTradeActiveInPhase(slug, phase);
       const tradeMatch = {
         permit_num: permit.permit_num,
         revision_num: permit.revision_num,
@@ -469,7 +466,7 @@ function classifyPermit(permit, rules, runAt) {
         trade_slug: slug,
         tier: 2,
         confidence,
-        is_active: isActive,
+        is_active: true,
         phase,
       };
       tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
@@ -487,7 +484,6 @@ function classifyPermit(permit, rules, runAt) {
     for (const slug of fb.slugs) {
       const tradeId = SLUG_TO_ID.get(slug);
       if (!tradeId) continue;
-      const isActive = isTradeActiveInPhase(slug, phase);
       const tradeMatch = {
         permit_num: permit.permit_num,
         revision_num: permit.revision_num,
@@ -495,7 +491,7 @@ function classifyPermit(permit, rules, runAt) {
         trade_slug: slug,
         tier: 1,
         confidence: fb.confidence,
-        is_active: isActive,
+        is_active: true,
         phase,
       };
       tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);

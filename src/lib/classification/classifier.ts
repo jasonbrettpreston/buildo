@@ -1,6 +1,6 @@
 import type { Permit, TradeMappingRule, TradeMatch, ProductMatch } from '@/lib/permits/types';
 import { getTradeById, getTradeBySlug } from '@/lib/classification/trades';
-import { determinePhase, isTradeActiveInPhase } from '@/lib/classification/phases';
+import { determinePhase } from '@/lib/classification/phases';
 import { calculateLeadScore } from '@/lib/classification/scoring';
 import { lookupTradesForTags } from '@/lib/classification/tag-trade-matrix';
 import { lookupProductsForTags } from '@/lib/classification/tag-product-matrix';
@@ -154,7 +154,6 @@ function matchTier1Rules(
     if (!trade) continue;
 
     const confidence = rule.confidence > 0 ? rule.confidence : (TIER_CONFIDENCE[1] ?? 0.95);
-    const isActive = isTradeActiveInPhase(trade.slug, phase);
 
     const partial: Partial<TradeMatch> = {
       trade_id: trade.id,
@@ -162,7 +161,7 @@ function matchTier1Rules(
       trade_name: trade.name,
       tier: 1,
       confidence,
-      is_active: isActive,
+      is_active: true,
       phase,
     };
 
@@ -176,7 +175,7 @@ function matchTier1Rules(
       trade_name: trade.name,
       tier: 1,
       confidence,
-      is_active: isActive,
+      is_active: true,
       phase,
       lead_score: leadScore,
     };
@@ -206,15 +205,13 @@ function matchTagMatrix(
     const trade = getTradeBySlug(tradeSlug);
     if (!trade) continue;
 
-    const isActive = isTradeActiveInPhase(tradeSlug, phase);
-
     const partial: Partial<TradeMatch> = {
       trade_id: trade.id,
       trade_slug: trade.slug,
       trade_name: trade.name,
       tier: 2, // tag-matrix matches are reported as tier 2
       confidence,
-      is_active: isActive,
+      is_active: true,
       phase,
     };
 
@@ -228,7 +225,7 @@ function matchTagMatrix(
       trade_name: trade.name,
       tier: 2,
       confidence,
-      is_active: isActive,
+      is_active: true,
       phase,
       lead_score: leadScore,
     });
@@ -304,15 +301,13 @@ function fallbackWorkTrades(
     const trade = getTradeBySlug(slug);
     if (!trade) continue;
 
-    const isActive = isTradeActiveInPhase(slug, phase);
-
     const partial: Partial<TradeMatch> = {
       trade_id: trade.id,
       trade_slug: slug,
       trade_name: trade.name,
       tier: 1,
       confidence: fallback.confidence,
-      is_active: isActive,
+      is_active: true,
       phase,
     };
 
@@ -326,7 +321,7 @@ function fallbackWorkTrades(
       trade_name: trade.name,
       tier: 1,
       confidence: fallback.confidence,
-      is_active: isActive,
+      is_active: true,
       phase,
       lead_score: leadScore,
     });
@@ -377,15 +372,13 @@ export function classifyPermit(
       const trade = getTradeBySlug(slug);
       if (!trade) continue;
 
-      const isActive = isTradeActiveInPhase(slug, phase);
-
       const partial: Partial<TradeMatch> = {
         trade_id: trade.id,
         trade_slug: slug,
         trade_name: trade.name,
         tier: 1,
         confidence: 0.80,
-        is_active: isActive,
+        is_active: true,
         phase,
       };
 
@@ -399,7 +392,7 @@ export function classifyPermit(
         trade_name: trade.name,
         tier: 1,
         confidence: 0.80,
-        is_active: isActive,
+        is_active: true,
         phase,
         lead_score: leadScore,
       });
