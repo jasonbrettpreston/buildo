@@ -430,7 +430,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     // large negative daysUntil → expired urgency (was 76.9% FAIL after WF1).
     // Snap to today + snowplow_buffer_days (DB-driven, spec 47 §4.1) so rescued
     // leads are Rescue Missions. Only fires for fallback anchors.
-    if (anchorIsFallback && predictedStart < today) {
+    // Use explicit .getTime() comparison — eliminates implicit Date coercion risk
+    // that caused snowplow_applied: 0 (bare < relies on valueOf() side-effect).
+    const isPast = new Date(predictedStart).getTime() < today.getTime();
+    if (anchorIsFallback && isPast) {
       predictedStart = new Date(today);
       predictedStart.setUTCDate(predictedStart.getUTCDate() + logicVars.snowplow_buffer_days);
       snowplowCount++;
@@ -459,7 +462,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       const minimumStallDate = new Date(today);
       minimumStallDate.setUTCDate(minimumStallDate.getUTCDate() + stallPenalty);
 
-      if (predictedStart < minimumStallDate) {
+      if (predictedStart.getTime() < minimumStallDate.getTime()) {
         predictedStart = minimumStallDate;
       }
     }

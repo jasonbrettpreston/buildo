@@ -186,7 +186,9 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     // Rolling snowplow: predicted date can never be closer than
     // penalty buffer from today
     expect(content).toMatch(/minimumStallDate/);
-    expect(content).toMatch(/predictedStart < minimumStallDate/);
+    // Must use .getTime() comparison — consistent with snowplow guard (Bug-1 fix)
+    expect(content).toMatch(/predictedStart\.getTime\(\)\s*<\s*minimumStallDate\.getTime\(\)/);
+    expect(content).not.toMatch(/predictedStart\s*<\s*minimumStallDate/);
   });
 
   it('classifies confidence from sample_size', () => {
@@ -369,13 +371,26 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     // Snowplow snaps to today + logicVars.snowplow_buffer_days so rescued leads are
     // Rescue Missions, not dead leads. Buffer is DB-driven per spec 47 §4.1.
     expect(content).toMatch(/snowplow_buffer_days/);
-    expect(content).toMatch(/anchorIsFallback && predictedStart < today/);
     // Must use setUTCDate for consistent UTC date math (same pattern as stall snowplow)
     expect(content).toMatch(/setUTCDate[\s\S]{0,80}logicVars\.snowplow_buffer_days/);
     // Must be in LOGIC_VARS_SCHEMA — not a hardcoded constant (spec 47 §4.1)
     expect(content).toMatch(/snowplow_buffer_days\s*:\s*z\.number\(\)\.finite\(\)\.positive\(\)/);
     // Old hardcoded constant must be gone
     expect(content).not.toMatch(/const SNOWPLOW_BUFFER_DAYS = 7/);
+  });
+
+  it('Bug-1: snowplow guard uses explicit .getTime() comparison — not bare < operator (WF3 April 2026)', () => {
+    // The bare `predictedStart < today` relies on implicit JS Date coercion via valueOf().
+    // Explicit .getTime() comparison eliminates any type-coercion edge case and makes
+    // the intent unambiguous. snowplow_applied: 0 at 76.9% expired traced to this risk.
+    // Fix: introduce isPast variable with .getTime() before the if-guard.
+    expect(content).toMatch(
+      /isPast\s*=\s*new Date\(predictedStart\)\.getTime\(\)\s*<\s*today\.getTime\(\)/,
+    );
+    // The if-guard must reference isPast, not the raw Date objects directly
+    expect(content).toMatch(/anchorIsFallback\s*&&\s*isPast/);
+    // The bare < operator form must not remain in the snowplow guard
+    expect(content).not.toMatch(/anchorIsFallback\s*&&\s*predictedStart\s*<\s*today/);
   });
 
   it('Historic Snowplow tracks snowplowCount counter in telemetry (WF3-B2)', () => {
