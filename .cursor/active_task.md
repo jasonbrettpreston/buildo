@@ -1,163 +1,177 @@
-# Active Task: Always-Active Trade Visibility + Forecast Fallback Anchors
-**Status:** Implementation
+# Active Task: Opportunity Score — Asymptotic Decay + NULL Guard + los_decay_divisor
+**Status:** Planning
 **Workflow:** WF1 — New Feature / Enhancement
-**Rollback Anchor:** `c632274`
+**Rollback Anchor:** `1b0db0b`
 
 ---
 
 ## Context
-* **Goal:** (1) Remove phase-based time-gating from `classify-permits.js` so every classified trade is `is_active: true` regardless of which construction phase the permit is in. This unblocks early bidding — a roofer can see a P3 permit before framing starts. (2) Remove the hard `phase_started_at IS NOT NULL` filter from `compute-trade-forecasts.js` and replace it with a 3-level fallback anchor (last passed inspection → issued_date → application_date) so permits without a real phase anchor still produce forecasts with `calibration_method = 'fallback_issued'`.
+
+* **Goal:** Three surgical changes to `compute-opportunity-scores.js`:
+  1. **Asymptotic Decay** — replace linear `(base × M) - penalty` with `(base × M) / (1 + rawPenalty / los_decay_divisor)`. Score now asymptotically approaches 0 under heavy competition but never goes negative, eliminating the zero-clamp data-loss problem.
+  2. **NULL Guard** — if `estimated_cost == null` OR `trade_contract_values == null/{}`, set `score = null` (not 0). A score of 0 now definitively means "real value, fully competed." Missing data produces NULL.
+  3. **Externalize `los_decay_divisor`** — new `logic_variables` row (default 25) controls the decay curve steepness from the Admin Control Panel without code deploys.
+
 * **Target Specs:**
-  - `docs/specs/product/future/85_trade_forecast_engine.md`
-  - `docs/specs/pipeline/47_pipeline_script_protocol.md`
-  - `docs/specs/pipeline/41_chain_permits.md`
+  - `docs/specs/product/future/81_opportunity_score_engine.md` (primary)
+  - `docs/specs/product/future/86_control_panel.md` (add los_decay_divisor to §1 table)
+  - `docs/specs/pipeline/47_pipeline_script_protocol.md` (compliance — infrastructure unchanged)
+
 * **Key Files:**
-  - `scripts/classify-permits.js` — remove `isTradeActiveInPhase` gate from `is_active` assignment
-  - `src/lib/classification/classifier.ts` — dual code path mirror (§7.1)
-  - `scripts/compute-trade-forecasts.js` — SOURCE_SQL + anchor fallback logic
-  - `docs/specs/product/future/85_trade_forecast_engine.md` — spec update
-  - `src/tests/compute-trade-forecasts.infra.test.ts` — new anchor fallback test
-  - `src/tests/classify-permits.infra.test.ts` — new is_active = true always test
+  - `scripts/compute-opportunity-scores.js` — math refactor + NULL guard
+  - `migrations/102_los_decay_divisor.sql` — new migration for logic_variables row
+  - `docs/specs/product/future/81_opportunity_score_engine.md` — spec update
+  - `docs/specs/product/future/86_control_panel.md` — add los_decay_divisor row
+  - `src/tests/compute-opportunity-scores.infra.test.ts` — new infra tests
 
 ---
 
 ## Technical Implementation
 
-### Part 1 — classify-permits.js (+ classifier.ts dual path)
+### Part 1 — Asymptotic Decay (lines 189–197)
 
-**Current code (4 call sites — lines 410/418, 439/447, 464/472, 490/498):**
+**Current (linear subtraction):**
 ```js
-const isActive = isTradeActiveInPhase(trade.slug, phase);
-const tradeMatch = { ..., is_active: isActive, ... };
+const competitionPenalty =
+  (row.tracking_count * vars.los_penalty_tracking) + (row.saving_count * vars.los_penalty_saving);
+const raw = (base * urgencyMultiplier) - competitionPenalty;
+const score = Math.max(0, Math.min(100, Math.round(raw)));
 ```
 
-**New code (all 4 sites):**
+**New (asymptotic decay):**
 ```js
-const tradeMatch = { ..., is_active: true, ... };
+const rawPenalty =
+  (row.tracking_count * vars.los_penalty_tracking) + (row.saving_count * vars.los_penalty_saving);
+const decayFactor = rawPenalty / vars.los_decay_divisor;
+const raw = (base * urgencyMultiplier) / (1 + decayFactor);
+const score = Math.max(0, Math.min(100, Math.round(raw)));
 ```
 
-Remove the `const isActive = isTradeActiveInPhase(...)` variable from `classifyPermit()` at all 4 sites (it's only used for the `is_active` field). The `isTradeActiveInPhase` function STAYS because `calculateLeadScore` (line 129) still calls it for the +15 phase-match boost. The function itself is not deleted.
+`decayFactor = 0` (no competition) → score = base × M unchanged.
+`decayFactor = 1` (rawPenalty = los_decay_divisor) → score halved.
+`decayFactor → ∞` (heavy competition) → score → 0 but never negative.
+`Math.max(0, ...)` clamp stays as a final safety boundary (unreachable in practice).
 
-**Dual code path**: Mirror identical change in `src/lib/classification/classifier.ts` at all equivalent `is_active: isActive` assignments (lines 165, 179, 217, 231, 315, 329, 388, 402).
+### Part 2 — NULL Guard (before math, after SKIP_PHASES)
 
-**`--full` re-run**: Already supported via `pipeline.isFullMode()` (line 512). Post-deploy, run `node scripts/classify-permits.js --full` to backfill existing rows from `is_active: false` → `true`.
+Insert before the math block:
+```js
+// NULL guard: missing cost data → explicit null (not 0)
+const tradeValues = row.trade_contract_values;
+const hasNoCostData = row.estimated_cost == null
+  || tradeValues == null
+  || Object.keys(tradeValues).length === 0;
 
----
+let score;
+if (hasNoCostData) {
+  score = null;
+  nullInputScores++;
+} else {
+  const tradeValue = tradeValues[row.trade_slug] ?? 0;
+  // ... base, multiplier, asymptotic decay ...
+}
+```
 
-### Part 2 — compute-trade-forecasts.js
+Also add `let nullInputScores = 0;` to the counter block at line 122.
 
-**SOURCE_SQL change:**
-1. Remove `AND p.phase_started_at IS NOT NULL` from WHERE clause
-2. Add `p.issued_date`, `p.application_date` to SELECT
-3. Add a CTE (`WITH last_passed AS (...)`) for last passed inspection date — aggregated once in Postgres, not N+1
+Move the integrity audit check (`integrityFlags++`) BEFORE the NULL guard so it runs regardless of cost data availability.
+
+### Part 3 — Zod Schema
+
+Add to LOGIC_VARS_SCHEMA (line 34):
+```js
+los_decay_divisor: z.number().finite().positive(),
+```
+
+### Part 4 — Audit Table Changes
+
+- `null_scores` status: change from `nullScores > 0 ? 'WARN' : 'PASS'` → `'INFO'` (nulls are now intentional)
+- Add new row after `null_scores`:
+  ```js
+  { metric: 'null_input_scores', value: nullInputScores, threshold: null, status: 'INFO' },
+  ```
+- Add to `records_meta`:
+  ```js
+  null_input_scores: nullInputScores,
+  ```
+
+### Part 5 — Migration 102
 
 ```sql
-WITH last_passed AS (
-  SELECT permit_num, MAX(inspection_date)::timestamptz AS last_passed_inspection_date
-  FROM permit_inspections
-  WHERE status = 'Passed'
-  GROUP BY permit_num
-)
-SELECT p.permit_num, p.revision_num, t.slug AS trade_slug,
-       p.lifecycle_phase, p.phase_started_at, p.permit_type,
-       p.lifecycle_stalled, p.issued_date, p.application_date,
-       lp.last_passed_inspection_date
-  FROM permit_trades pt
-  JOIN trades t ON t.id = pt.trade_id
-  JOIN permits p ON p.permit_num = pt.permit_num AND p.revision_num = pt.revision_num
-  LEFT JOIN last_passed lp ON lp.permit_num = p.permit_num
- WHERE pt.is_active = true
-   AND p.lifecycle_phase IS NOT NULL
+-- UP
+INSERT INTO logic_variables (variable_key, variable_value, description)
+VALUES
+  ('los_decay_divisor', 25, 'Scales the asymptotic decay curve for competition penalties (rawPenalty / this)')
+ON CONFLICT (variable_key) DO NOTHING;
+
+-- DOWN
+DELETE FROM logic_variables WHERE variable_key = 'los_decay_divisor';
 ```
 
-**Main loop anchor fallback (after SKIP_PHASES check):**
-```js
-const { phase_started_at, last_passed_inspection_date, issued_date, application_date } = row;
+Note: user requested snippet for 092, but 092 is already applied (latest migration = 101). New migration 102 follows the established pattern (101, 099, etc.) for adding logic_variables rows post-deployment.
 
-const effectiveAnchor = phase_started_at
-  || last_passed_inspection_date
-  || (issued_date ? new Date(issued_date + 'T00:00:00Z') : null)
-  || (application_date ? new Date(application_date + 'T00:00:00Z') : null);
+### Spec 47 Compliance — Preserved Exactly
 
-if (!effectiveAnchor) { skipped++; continue; }   // truly no anchor — rare
+The following infrastructure is NOT touched:
+- `pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, ...)` — unchanged
+- `pipeline.streamQuery(pool, SQL, [])` — unchanged
+- `flushBatch()` → `pipeline.withTransaction(pool, ...)` — unchanged
+- `pipeline.emitSummary(...)` shape — unchanged (new field added to records_meta)
+- `pipeline.emitMeta(...)` — unchanged
+- `lockResult.acquired` + skip path — unchanged
 
-const anchorIsFallback = !phase_started_at;
-```
+The `null` score value is handled by the existing `$${base + 4}::int` parameterized INSERT — PostgreSQL NULL::int stays NULL. The `IS DISTINCT FROM` guard handles null-to-value and value-to-null transitions correctly.
 
-Then use `effectiveAnchor` in place of `phase_started_at` in the date math (line 394). Set `calibration_method` override:
-```js
-const finalCalMethod = anchorIsFallback ? 'fallback_issued' : cal.method;
-```
+### Dual Code Path
 
-And in `batch.push(...)`:
-```js
-calibration_method: finalCalMethod,
-```
-
-**Telemetry update** — add to `records_meta`:
-```js
-anchor_fallbacks_used: anchorFallbackCount,  // count of permits that used a fallback anchor
-```
-
-**PIPELINE_META reads update**: Add `permit_inspections` to reads, add `issued_date`, `application_date` to `permits` read columns.
-
----
-
-### Part 3 — Spec Update
-
-**`docs/specs/product/future/85_trade_forecast_engine.md` §3 Behavioral Contract:**
-Add under "Anchor Selection":
-```
-### Anchor Fallback Hierarchy
-When `phase_started_at` is NULL, the engine uses the best available timestamp:
-1. `phase_started_at` (true phase transition anchor — preferred)
-2. Last passed inspection date (from `permit_inspections WHERE status='Passed'`)
-3. `issued_date` (permit issuance)
-4. `application_date` (permit application)
-When any fallback is used, `calibration_method` is stamped `'fallback_issued'`
-to signal a lower-confidence estimate.
-```
+**N/A** — spec 81 §5 explicitly states: "DUAL PATH NOTE: N/A — opportunity_score is a dynamic marketplace property written only by this pipeline script. `src/lib/classification/scoring.ts` computes `lead_score` and MUST NOT be modified alongside this script."
 
 ---
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — both scripts run inside `pipeline.run()` which wraps all errors; no new API routes.
-* **Unhappy Path Tests:** (a) `is_active` always true even for terminal phases, (b) NULL phase_started_at → uses fallback, (c) no anchor at all → skipped (not crashed).
+
+* **Try-Catch Boundary:** N/A — no new API routes. Script runs inside `pipeline.run()` which wraps all errors.
+* **Unhappy Path Tests:** (a) missing estimated_cost → null score, (b) empty trade_contract_values → null score, (c) heavy competition → score approaches 0 but never goes negative.
 * **logError Mandate:** N/A — no new catch blocks.
 * **Mobile-First:** N/A — backend only.
 
 ---
 
 ## Execution Plan
-- [ ] **Contract Definition:** N/A — no API route changes. DB schema unchanged (calibration_method is VARCHAR(30), no constraint).
-- [ ] **Spec & Registry Sync:** Update `85_trade_forecast_engine.md` §3 with fallback anchor hierarchy. Run `npm run system-map`.
-- [ ] **Schema Evolution:** N/A — no migration required. `calibration_method` already VARCHAR(30) no-check. `issued_date` + `application_date` already on `permits`. `permit_inspections` already exists.
-- [ ] **Test Scaffolding:** Add tests to existing infra test files:
-  - `compute-trade-forecasts.infra.test.ts`: (a) SOURCE_SQL no longer contains `phase_started_at IS NOT NULL`, (b) SOURCE_SQL joins `permit_inspections` via CTE, (c) `issued_date` + `application_date` in SELECT, (d) `'fallback_issued'` is a valid calibration_method value in script.
-  - `classify-permits.infra.test.ts`: `is_active: true` hardcoded — script must NOT contain `is_active: isActive` (or `is_active: isTradeActiveInPhase`).
-- [ ] **Red Light:** Run `npm run test` — new tests must fail.
-- [ ] **Implementation:**
-  1. Edit `scripts/classify-permits.js` — remove `isActive` variable + set `is_active: true` at all 4 sites
-  2. Edit `src/lib/classification/classifier.ts` — same change, all equivalent sites
-  3. Edit `scripts/compute-trade-forecasts.js` — SOURCE_SQL + anchor fallback logic + telemetry
-  4. Edit `docs/specs/product/future/85_trade_forecast_engine.md` — anchor fallback section
+
+- [ ] **Contract Definition:** N/A — no API route changes.
+- [ ] **Spec & Registry Sync:** Update `81_opportunity_score_engine.md` §2 (add los_decay_divisor), §3 (asymptotic decay formula, NULL guard edge case, remove "Negative Values → 0"), §4 (update test examples). Update `86_control_panel.md` §1 table. Run `npm run system-map`.
+- [ ] **Schema Evolution:** Create `migrations/102_los_decay_divisor.sql` — INSERT `los_decay_divisor = 25` into `logic_variables` with `ON CONFLICT DO NOTHING`. No DDL changes, no column adds, no backfill needed. No `db:generate` needed (Drizzle schema unchanged — `logic_variables` accessed via raw SQL only).
+- [ ] **Test Scaffolding:** Add to `src/tests/compute-opportunity-scores.infra.test.ts`:
+  - `los_decay_divisor` present in LOGIC_VARS_SCHEMA
+  - NULL guard pattern (`hasNoCostData`, `score = null`, `nullInputScores`)
+  - Asymptotic decay pattern (`/ (1 + decayFactor)`, not `- competitionPenalty`)
+  - `null_input_scores` in records_meta
+  - `null_scores` status is INFO (not WARN)
+- [ ] **Red Light:** Run `npm run test` — new tests must fail against current script.
+- [ ] **Implementation:** Edit `compute-opportunity-scores.js` per Technical Implementation above.
 - [ ] **Auth Boundary & Secrets:** N/A.
 - [ ] **Pre-Review Self-Checklist:** Before Green Light, verify:
-  1. `is_active: isActive` is gone from classify-permits.js (grep check)
-  2. `is_active: isActive` is gone from classifier.ts (grep check)
-  3. `isTradeActiveInPhase` still exists and is still called in `calculateLeadScore` (line 129)
-  4. SOURCE_SQL CTE doesn't multiply rows (LEFT JOIN on permit_num, not permit_num+revision_num — permits table uses both as PK but inspections only join on permit_num)
-  5. `effectiveAnchor` null check prevents crashes on permits with no dates at all
-  6. `calibration_method` override only fires when `!phase_started_at`
-  7. Ghost purge NOT EXISTS query (line ~78 in infra test) still intact and not broken
-  8. PIPELINE_META reads updated to include permit_inspections
+  1. NULL guard fires for `estimated_cost == null` (not just `trade_contract_values`)
+  2. NULL guard fires for empty `{}` as well as null
+  3. `decayFactor` uses `vars.los_decay_divisor` (not hardcoded constant)
+  4. `rawPenalty` computation is IDENTICAL to old `competitionPenalty` (variables unchanged)
+  5. `Math.max(0, Math.min(100, ...))` clamp still present as final safety boundary
+  6. `integrityFlags++` runs BEFORE the NULL guard (for all rows)
+  7. `flushBatch` handles `score = null` correctly (null passes through ::int cast)
+  8. `null_scores` DB audit does NOT count as out_of_range (NULL NOT BETWEEN 0 AND 100 = NULL, not true)
+  9. `nullInputScores` counter incremented only in the NULL guard branch (not for zero-scored rows)
+  10. All existing spec 47 tests still pass (no regressions)
 - [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass. → Spawn Adversarial + Independent Review agents. → WF6.
 
 ---
 
-## Post-Commit Re-Run Instructions
-After merging, run both scripts with `--full`:
+## Post-Deploy Instructions
+
+After merging, run:
 ```bash
-node scripts/classify-permits.js --full         # backfill is_active=false → true
-node scripts/compute-trade-forecasts.js         # already processes all active permits
+node scripts/compute-opportunity-scores.js
 ```
+This will: (a) score all previously-null-due-to-0-clamp leads with the asymptotic formula, (b) null out leads that lacked cost data, (c) produce `anchor_fallbacks_used` in the run telemetry.
+
+The `los_decay_divisor` seed row is inserted by migration 102. Operators can tune it via the Admin Control Panel `logic_variables` table without code deploys.

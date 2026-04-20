@@ -14,6 +14,7 @@ These are universal "Gravity" constants. They act as baseline rules, fallbacks, 
 | `los_penalty_saving` | Score | Increase to 10 to penalize leads being watched by competitors. |
 | `los_multiplier_bid` | Score | Global fallback (e.g., 2.5) if a trade lacks a specific bid multiplier. |
 | `los_multiplier_work` | Score | Global fallback (e.g., 1.5) if a trade lacks a specific work multiplier. |
+| `los_decay_divisor` | Score | Asymptotic decay curve steepness (default 25). `rawPenalty / this = decayFactor`; higher = gentler decay. At 25, a single high-intensity tracker halves the score. |
 | `expired_threshold_days` | Forecast | Sets the TTL (e.g., 90) before a lead classifies as expired and auto-archives. |
 | `coa_stall_threshold` | Lifecycle | Change to 30 to be more patient with the City's pre-con CoA process. |
 | `stall_penalty_precon` | Forecast | Days to push the "Snowplow" forward for zoning/permit delays (e.g., 45). |

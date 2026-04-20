@@ -126,6 +126,8 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
         // A zero liar_gate_threshold would silently disable geometric overrides.
         // Zero coverage ratios would produce a zero GFA fallback, suppressing all estimates.
         'liar_gate_threshold', 'urban_coverage_ratio', 'suburban_coverage_ratio', 'trust_threshold_pct',
+        // Spec 81 §3 — los_decay_divisor = 0 causes division by zero in decayFactor computation.
+        'los_decay_divisor',
       ]);
       for (const { variable_key, variable_value, variable_value_json } of lvRows) {
         // JSON-type variables (e.g. income_premium_tiers) store their value in

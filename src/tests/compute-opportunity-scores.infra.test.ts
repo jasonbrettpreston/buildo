@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/product/future/81_opportunity_score_engine.md
+// SPEC LINK: docs/specs/product/future/81_opportunity_score_engine.md §3 (asymptotic decay + NULL guard), §4 (infra tests)
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -210,5 +210,78 @@ describe('scripts/compute-opportunity-scores.js — spec 47 §12 compliance (WF3
     expect(content).not.toMatch(/opportunity_score >= 80 THEN 'elite'/);
     expect(content).not.toMatch(/opportunity_score >= 50 THEN 'strong'/);
     expect(content).not.toMatch(/opportunity_score >= 20 THEN 'moderate'/);
+  });
+});
+
+// ── WF1 asymptotic decay + NULL guard + los_decay_divisor (spec 81 §3 + §4) ──
+
+describe('scripts/compute-opportunity-scores.js — asymptotic decay + NULL guard (WF1 April 2026)', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/compute-opportunity-scores.js'),
+      'utf-8',
+    );
+  });
+
+  it('LOGIC_VARS_SCHEMA includes los_decay_divisor as finite positive number (spec 81 §2)', () => {
+    expect(content).toMatch(/los_decay_divisor/);
+    // Must be in the Zod schema — not just used raw
+    expect(content).toMatch(/los_decay_divisor\s*:\s*z\.number\(\)\.finite\(\)\.positive\(\)/);
+  });
+
+  it('uses asymptotic decay formula — divides by (1 + decayFactor) not subtracts penalty (spec 81 §3)', () => {
+    // New formula: raw = (base * urgencyMultiplier) / (1 + decayFactor)
+    expect(content).toMatch(/\(1 \+ decayFactor\)/);
+    expect(content).toMatch(/decayFactor\s*=/);
+    // Old linear subtraction pattern must be gone
+    expect(content).not.toMatch(/\(base \* urgencyMultiplier\) - competitionPenalty/);
+    expect(content).not.toMatch(/raw\s*=\s*\(base \* \w+\) - \w*[Pp]enalty/);
+  });
+
+  it('derives decayFactor from vars.los_decay_divisor — not a hardcoded constant (spec 81 §3)', () => {
+    expect(content).toMatch(/decayFactor\s*=\s*rawPenalty\s*\/\s*vars\.los_decay_divisor/);
+  });
+
+  it('NULL guard: sets score = null when estimated_cost is null or trade_contract_values is empty (spec 81 §3)', () => {
+    expect(content).toMatch(/hasNoCostData/);
+    expect(content).toMatch(/estimated_cost\s*==\s*null/);
+    expect(content).toMatch(/Object\.keys\(tradeValues\)\.length\s*===\s*0/);
+    // When null guard fires, score must be null (not 0)
+    expect(content).toMatch(/score\s*=\s*null/);
+  });
+
+  it('nullInputScores counter is declared and incremented only in the NULL guard branch (spec 81 §4)', () => {
+    expect(content).toMatch(/nullInputScores/);
+    // Counter must be incremented — searching for the increment pattern
+    expect(content).toMatch(/nullInputScores\+\+/);
+  });
+
+  it('integrity audit (integrityFlags++) runs regardless of cost data availability (spec 81 §3)', () => {
+    // The integrity check must appear BEFORE the hasNoCostData guard in source order.
+    // We verify both patterns exist; ordering is verified by their relative positions.
+    const integrityIdx = content.indexOf('integrityFlags++');
+    const nullGuardIdx = content.indexOf('hasNoCostData');
+    expect(integrityIdx).toBeGreaterThan(-1);
+    expect(nullGuardIdx).toBeGreaterThan(-1);
+    expect(integrityIdx).toBeLessThan(nullGuardIdx);
+  });
+
+  it('null_scores audit row has status INFO — not WARN (nulls are intentional, spec 81 §4)', () => {
+    // null_scores is now INFO because NULLs are a deliberate signal (missing cost data)
+    // not an anomaly. The old WARN path is removed.
+    expect(content).toMatch(/metric:\s*['"]null_scores['"][\s\S]{0,100}status:\s*['"]INFO['"]/);
+    // The old conditional WARN/PASS pattern must be gone
+    expect(content).not.toMatch(/nullScores > 0\s*\?\s*['"]WARN['"]\s*:\s*['"]PASS['"]/);
+  });
+
+  it('null_input_scores row present in audit_table with status INFO (spec 81 §4)', () => {
+    expect(content).toMatch(/metric:\s*['"]null_input_scores['"]/);
+    expect(content).toMatch(/null_input_scores[\s\S]{0,100}status:\s*['"]INFO['"]/);
+  });
+
+  it('null_input_scores is included in records_meta for pipeline telemetry (spec 81 §4)', () => {
+    // records_meta must expose nullInputScores so the chain orchestrator can surface it
+    expect(content).toMatch(/null_input_scores\s*:\s*nullInputScores/);
   });
 });

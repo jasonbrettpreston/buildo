@@ -34,6 +34,7 @@ Calculate a stable "Intrinsic Value" (0-100) for every trade opportunity based o
 - `los_multiplier_work`: 1.5 (Rescue window weight)
 - `los_penalty_tracking`: 50 (Penalty per high-intensity tracker)
 - `los_penalty_saving`: 10 (Penalty per low-intensity watcher)
+- `los_decay_divisor`: 25 (Asymptotic decay curve steepness — `rawPenalty / this` = decayFactor; higher = gentler decay)
 
 ### Implementation
 - **Script:** `scripts/compute-opportunity-scores.js`
@@ -55,24 +56,31 @@ Nightly run processing all active `trade_forecasts` where `urgency <> 'expired'`
   - If `target_window === 'bid'` use `tc.multiplier_bid` (e.g., 3.0 for excavation, 2.0 for painting).
   - If `target_window === 'work'` use `tc.multiplier_work` (e.g., 1.8 for structural-steel, 1.2 for caulking).
   - Falls back to global `los_multiplier_bid` / `los_multiplier_work` from `logic_variables` if trade row is missing.
-- **Competition Discount:**
-  - Math: `(tracking_count * los_penalty_tracking) + (saving_count * los_penalty_saving)`.
-- **Final LOS:** `Clamp((Base * Multiplier) - Discount, 0, 100)`.
+- **Competition Discount (Asymptotic Decay — WF1 April 2026):**
+  - `rawPenalty = (tracking_count × los_penalty_tracking) + (saving_count × los_penalty_saving)`
+  - `decayFactor = rawPenalty / los_decay_divisor`
+  - **Final LOS:** `Clamp((Base × Multiplier) / (1 + decayFactor), 0, 100)`
+  - At `decayFactor = 0` (no competition): score = Base × Multiplier unchanged.
+  - At `decayFactor = 1` (`rawPenalty = los_decay_divisor`): score halved.
+  - As competition → ∞: score → 0 asymptotically, never negative.
+  - `Math.max(0, ...)` clamp is a final safety boundary (unreachable under normal inputs).
 
 ### Outputs
-Mutates `trade_forecasts.opportunity_score`. All `UPDATE` queries must include `AND opportunity_score IS DISTINCT FROM v.score` to prevent unnecessary "dead tuple" bloat.
+Mutates `trade_forecasts.opportunity_score`. All `UPDATE` queries must include `AND opportunity_score IS DISTINCT FROM v.score` to prevent unnecessary "dead tuple" bloat. Score is `NULL` when cost data is absent (see Edge Cases).
 
 ### Edge Cases
 - **Integrity Audit:** Flags leads where `tracking_count > 0` but `modeled_gfa_sqm` is null (users following unverified geometry).
-- **Negative Values:** If competition penalty exceeds value, score is set to 0.
-- **Missing Cost:** If `trade_contract_values` is missing, Base defaults to 0.
+- **Missing Cost → NULL (WF1 April 2026):** If `estimated_cost IS NULL` OR `trade_contract_values IS NULL` OR `trade_contract_values = {}`, `opportunity_score` is set to `NULL` (not 0). A score of 0 definitively means "real value, fully competed." Missing data is surfaced as `NULL` so downstream consumers can distinguish the two states.
+- **Heavy Competition → Low (not Zero):** The asymptotic decay formula ensures heavily competed leads produce low non-negative scores. The old zero-clamp data-loss pattern (negative raw → clamped to 0) is eliminated.
 
 ---
 
 ## 4. Testing Mandate
 
-- **Logic:** `opportunity-score.logic.test.ts` — verify $150k framing job (15 pts * 2.5 = 37.5) with 1 tracker (37.5 - 50) results in 0 score.
-- **Infra:** `opportunity-score.infra.test.ts` — assert `logic_variables` exist in DB and script pulls them correctly; verify `lead_key` composite format (`permit:num:revision`).
+- **Logic (Asymptotic Decay):** `compute-opportunity-scores.infra.test.ts` — verify the script uses `/ (1 + decayFactor)` not `- competitionPenalty`; verify `los_decay_divisor` is in the Zod schema.
+- **Logic (NULL Guard):** Verify that `estimated_cost == null` OR empty `trade_contract_values` produces `score = null`, not `0`. Verify `nullInputScores` counter is tracked and surfaced in `records_meta`.
+- **Legacy Example (now incorrect):** ~~$150k framing job (15 pts × 2.5 = 37.5) with 1 tracker (37.5 - 50) = 0~~ → With asymptotic decay: score = (15 × 2.5) / (1 + 50/25) = 37.5 / 3 = 12.5 → 13 (not 0).
+- **Infra:** `compute-opportunity-scores.infra.test.ts` — verify `los_decay_divisor` in LOGIC_VARS_SCHEMA, `null_scores` audit status is INFO, `null_input_scores` in records_meta.
 
 ---
 

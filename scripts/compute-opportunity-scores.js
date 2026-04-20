@@ -38,6 +38,7 @@ const LOGIC_VARS_SCHEMA = z.object({
   los_multiplier_work:  z.number().finite().positive(),
   los_penalty_tracking: z.number().finite().min(0),
   los_penalty_saving:   z.number().finite().min(0),
+  los_decay_divisor:    z.number().finite().positive(),
   score_tier_elite:     z.number().finite().positive(),
   score_tier_strong:    z.number().finite().positive(),
   score_tier_moderate:  z.number().finite().positive(),
@@ -122,6 +123,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   let totalRows = 0;
   let updated = 0;
   let integrityFlags = 0;
+  let nullInputScores = 0;
   let batch = [];
   let batchCount = 0;
 
@@ -155,46 +157,63 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   for await (const row of pipeline.streamQuery(pool, SQL, [])) {
     totalRows++;
 
-    // Extract trade-specific dollar value from JSONB
-    const tradeValues = row.trade_contract_values || {};
-    const tradeValue = tradeValues[row.trade_slug] || 0;
-
-    // Base: trade value normalized, capped (from control panel)
-    const base = Math.min(tradeValue / vars.los_base_divisor, vars.los_base_cap);
-
-    // Per-trade urgency multiplier from trade_configurations JOIN (Bug 2 fix).
-    // Falls back to global logic_variables if the trade has no row in
-    // trade_configurations (defensive — all 32 trades should have one).
-    // spec 47 §4 — guard parseFloat with isFinite; log warn + use global fallback on NaN.
-    const rawBid = parseFloat(row.multiplier_bid);
-    const rawWork = parseFloat(row.multiplier_work);
-    if (row.multiplier_bid != null && !Number.isFinite(rawBid)) {
-      pipeline.log.warn(
-        '[opportunity-scores]',
-        `Non-finite multiplier_bid for trade ${row.trade_slug} — using global fallback`,
-        { raw: row.multiplier_bid },
-      );
+    // Integrity audit runs regardless of cost data availability (spec 81 §3)
+    if (row.tracking_count > 0 && row.modeled_gfa_sqm == null) {
+      integrityFlags++;
     }
-    if (row.multiplier_work != null && !Number.isFinite(rawWork)) {
-      pipeline.log.warn(
-        '[opportunity-scores]',
-        `Non-finite multiplier_work for trade ${row.trade_slug} — using global fallback`,
-        { raw: row.multiplier_work },
-      );
+
+    // NULL guard: missing cost data → explicit null, not 0 (spec 81 §3 WF1 April 2026).
+    // score = null means "no cost data". score = 0 means "real value, fully competed".
+    const tradeValues = row.trade_contract_values;
+    const hasNoCostData = row.estimated_cost == null
+      || tradeValues == null
+      || Object.keys(tradeValues).length === 0;
+
+    let score;
+    if (hasNoCostData) {
+      score = null;
+      nullInputScores++;
+    } else {
+      const tradeValue = tradeValues[row.trade_slug] ?? 0;
+
+      // Base: trade value normalized, capped (from control panel)
+      const base = Math.min(tradeValue / vars.los_base_divisor, vars.los_base_cap);
+
+      // Per-trade urgency multiplier from trade_configurations JOIN (Bug 2 fix).
+      // Falls back to global logic_variables if the trade has no row in
+      // trade_configurations (defensive — all 32 trades should have one).
+      // spec 47 §4 — guard parseFloat with isFinite; log warn + use global fallback on NaN.
+      const rawBid = parseFloat(row.multiplier_bid);
+      const rawWork = parseFloat(row.multiplier_work);
+      if (row.multiplier_bid != null && !Number.isFinite(rawBid)) {
+        pipeline.log.warn(
+          '[opportunity-scores]',
+          `Non-finite multiplier_bid for trade ${row.trade_slug} — using global fallback`,
+          { raw: row.multiplier_bid },
+        );
+      }
+      if (row.multiplier_work != null && !Number.isFinite(rawWork)) {
+        pipeline.log.warn(
+          '[opportunity-scores]',
+          `Non-finite multiplier_work for trade ${row.trade_slug} — using global fallback`,
+          { raw: row.multiplier_work },
+        );
+      }
+      const urgencyMultiplier = row.target_window === 'bid'
+        ? (row.multiplier_bid != null && Number.isFinite(rawBid) ? rawBid : vars.los_multiplier_bid)
+        : (row.multiplier_work != null && Number.isFinite(rawWork) ? rawWork : vars.los_multiplier_work);
+
+      // Asymptotic decay (spec 81 §3 WF1 April 2026): score approaches 0 under heavy
+      // competition but never goes negative. rawPenalty computation is identical to the
+      // old competitionPenalty; only the application changes from subtraction to decay.
+      const rawPenalty =
+        (row.tracking_count * vars.los_penalty_tracking) + (row.saving_count * vars.los_penalty_saving);
+      const decayFactor = rawPenalty / vars.los_decay_divisor;
+      const raw = (base * urgencyMultiplier) / (1 + decayFactor);
+
+      // Math.max(0,...) clamp is a final safety boundary — unreachable under normal inputs
+      score = Math.max(0, Math.min(100, Math.round(raw)));
     }
-    const urgencyMultiplier = row.target_window === 'bid'
-      ? (row.multiplier_bid != null && Number.isFinite(rawBid) ? rawBid : vars.los_multiplier_bid)
-      : (row.multiplier_work != null && Number.isFinite(rawWork) ? rawWork : vars.los_multiplier_work);
-
-    // Competition discount (from control panel)
-    const competitionPenalty =
-      (row.tracking_count * vars.los_penalty_tracking) + (row.saving_count * vars.los_penalty_saving);
-
-    // Raw score
-    const raw = (base * urgencyMultiplier) - competitionPenalty;
-
-    // Clamp to 0-100
-    const score = Math.max(0, Math.min(100, Math.round(raw)));
 
     batch.push({
       permit_num: row.permit_num,
@@ -202,11 +221,6 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
       trade_slug: row.trade_slug,
       score,
     });
-
-    // Integrity audit: tracked lead with no geometric basis
-    if (row.tracking_count > 0 && row.modeled_gfa_sqm == null) {
-      integrityFlags++;
-    }
 
     // Flush full batch immediately — keeps heap at O(BATCH_SIZE), not O(total rows)
     if (batch.length >= BATCH_SIZE) {
@@ -241,9 +255,10 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   const { rows: dist } = await pool.query(`
     SELECT
       CASE
-        WHEN opportunity_score >= $1 THEN 'elite'
-        WHEN opportunity_score >= $2 THEN 'strong'
-        WHEN opportunity_score >= $3 THEN 'moderate'
+        WHEN opportunity_score IS NULL   THEN 'no_cost_data'
+        WHEN opportunity_score >= $1     THEN 'elite'
+        WHEN opportunity_score >= $2     THEN 'strong'
+        WHEN opportunity_score >= $3     THEN 'moderate'
         ELSE 'low'
       END AS tier,
       COUNT(*)::int AS n
@@ -274,9 +289,10 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     { metric: 'records_scored',     value: totalRows,            threshold: null, status: 'INFO' },
     { metric: 'permits_in_scope',   value: permitsInScope,       threshold: null, status: 'INFO' },
     { metric: 'records_unchanged',  value: totalRows - updated,  threshold: null, status: 'INFO' },
-    { metric: 'null_input_rate',    value: integrityFlags,       threshold: 0,   status: integrityFlags > 0 ? 'WARN' : 'PASS' },
-    { metric: 'null_scores',        value: nullScores,           threshold: 0,   status: nullScores > 0    ? 'WARN' : 'PASS' },
-    { metric: 'out_of_range',       value: outOfRange,           threshold: 0,   status: outOfRange > 0    ? 'FAIL' : 'PASS' },
+    { metric: 'null_input_rate',    value: integrityFlags,       threshold: 0,    status: integrityFlags > 0 ? 'WARN' : 'PASS' },
+    { metric: 'null_scores',        value: nullScores,           threshold: null, status: 'INFO' },
+    { metric: 'null_input_scores',  value: nullInputScores,      threshold: null, status: 'INFO' },
+    { metric: 'out_of_range',       value: outOfRange,           threshold: 0,    status: outOfRange > 0    ? 'FAIL' : 'PASS' },
   ];
   const auditVerdict =
     auditTableRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
@@ -289,6 +305,7 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
     records_meta: {
       score_distribution: scoreDist,
       integrity_flags: integrityFlags,
+      null_input_scores: nullInputScores,
       run_at: RUN_AT,
       audit_table: {
         phase: 23,
