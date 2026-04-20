@@ -10,7 +10,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const SCRIPT_PATH = path.join(REPO_ROOT, 'scripts', 'quality', 'assert-global-coverage.js');
@@ -179,6 +179,133 @@ describe('manifest.json — chain wiring', () => {
     const globalIdx = coaChain.indexOf('assert_global_coverage');
     expect(distIdx).toBeGreaterThan(-1);
     expect(globalIdx).toBe(distIdx + 1);
+  });
+});
+
+// ── WF3 false-FAIL fixes ─────────────────────────────────────────────────────
+
+describe('assert-global-coverage.js — Bug 1+2: sparse fields use infoRow, not coverageRow', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  // These fields are naturally sparse in Toronto city open data — they do not
+  // reliably approach the 90% PASS threshold and must not trigger FAIL alerts.
+  const SPARSE_FIELDS = [
+    'street_direction',
+    'building_type',
+    'category',
+    'owner',
+    'council_district',
+    'ward',
+    'builder_name',
+  ];
+
+  for (const field of SPARSE_FIELDS) {
+    it(`${field} at Step 2 uses infoRow (not coverageRow) — naturally sparse (Bug 2)`, () => {
+      // The field must appear inside an infoRow call, not inside a coverageRow call.
+      // We check that the pattern `coverageRow(... '${field}')` does NOT appear
+      // with permitsTotal as the denominator in Step 2 context.
+      expect(content).toMatch(new RegExp(`infoRow[^)]*permits\\.${field}`));
+      // Must NOT appear as a coverageRow in Step 2 (permitsTotal denominator)
+      expect(content).not.toMatch(
+        new RegExp(`coverageRow\\('Step 2[^)]*permits\\.${field}`),
+      );
+    });
+  }
+
+  it('completed_date at Step 2 uses infoRow (not coverageRow) — active permits have no completed date (Bug 1)', () => {
+    // Step 2 measures load_permits field coverage. completed_date is NULL for
+    // all active permits → ~5.6% → FAIL. Demoted to infoRow since it's
+    // structural sparsity, not a data quality gap. Step 3 already audits
+    // completed_date on stale/closed permits with the correct denominator.
+    expect(content).toMatch(/infoRow[\s\S]{0,100}permits\.completed_date[\s\S]{0,200}permitsTotal/);
+    expect(content).not.toMatch(/coverageRow\('Step 2[^)]*permits\.completed_date/);
+  });
+});
+
+describe('assert-global-coverage.js — Bug 3: CoA lifecycle_phase uses unlinked denominator', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('CoA aggregate query counts unlinked_total (linked_permit_num IS NULL)', () => {
+    // Classifier assigns P1/P2 only to unlinked CoA apps. Using coaTotal (32K+)
+    // as denominator produces 0.6% → FAIL. Correct denominator = unlinked apps only.
+    expect(content).toMatch(/linked_permit_num IS NULL[\s\S]{0,60}AS unlinked_total/);
+  });
+
+  it('CoA lifecycle_phase coverage row uses unlinkedTotal as denominator (not coaTotal)', () => {
+    expect(content).toMatch(/lifecycle_phase['"]\s*,\s*lifecyclePhaseTotal\s*,\s*unlinkedTotal/);
+  });
+
+  it('CoA lifecycle_classified_at uses unlinkedTotal denominator (not coaTotal)', () => {
+    expect(content).toMatch(/lifecycle_classified_at['"]\s*,[\s\S]{0,100}unlinkedTotal/);
+  });
+
+  it('permits chain misc query includes coa_unlinked_total for Step 21', () => {
+    expect(content).toMatch(/coa_unlinked_total/);
+  });
+
+  it('CoA lifecycle_phase_pop aggregate excludes linked apps (numerator cannot exceed unlinkedTotal denominator)', () => {
+    // lifecycle_phase IS NOT NULL without linked_permit_num IS NULL includes apps
+    // that were classified while unlinked but later got linked — numerator > denominator → >100%.
+    expect(content).toContain('lifecycle_phase IS NOT NULL AND linked_permit_num IS NULL');
+    // Applies to both CoA aggregate and permits-chain misc subquery
+    expect(content).toContain('lifecycle_phase IS NOT NULL AND linked_permit_num IS NULL) AS coa_lifecycle_phase_pop');
+  });
+
+  it('CoA lifecycle_classified_pop aggregate excludes linked apps (same contamination guard)', () => {
+    expect(content).toContain('lifecycle_classified_at IS NOT NULL AND linked_permit_num IS NULL');
+  });
+});
+
+describe('assert-global-coverage.js — Bug 4: pre-permit coverage cannot exceed 100%', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('uses COUNT(DISTINCT permit_num) for pre-permit numerator (not COUNT(*))', () => {
+    // COUNT(*) WHERE permit_num LIKE "PRE-%" counts all revisions; DISTINCT
+    // counts unique CoA parent identifiers. Prevents overcounting when a
+    // pre-permit has multiple revisions.
+    expect(content).toMatch(/COUNT\(DISTINCT permit_num\)[\s\S]{0,50}PRE-%/);
+  });
+
+  it('CoA chain uses approved_total (all approved CoA apps) as pre-permit denominator', () => {
+    // approvedUnlinked shrinks as CoAs get linked after pre-permit creation →
+    // denominator < numerator → >100%. approved_total is stable.
+    expect(content).toMatch(/decision = 'Approved'[\s\S]{0,80}AS approved_total|approved_total[\s\S]{0,80}decision = 'Approved'/);
+    expect(content).toMatch(/permits\.pre_permit_leads['"]\s*,\s*preTotal\s*,\s*approvedTotal/);
+  });
+
+  it('permits chain uses coa_approved_total as Step 17 denominator (not approvedUnlinked)', () => {
+    expect(content).toMatch(/coa_approved_total/);
+    // Step 17 row must reference the approved_total sub-query, not the shrinkable unlinked count
+    expect(content).toMatch(/Step 17[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}coa_approved_total/);
+  });
+});
+
+describe('assert-global-coverage.js — Bug 5: lifecycle_stalled NOT NULL DEFAULT false → infoRow', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('CoA lifecycle_stalled uses infoRow (not coverageRow) — BOOLEAN NOT NULL DEFAULT false guarantees 100% population', () => {
+    // lifecycle_stalled BOOLEAN NOT NULL DEFAULT false — IS NOT NULL is always vacuous.
+    // coverageRow would permanently show 100% PASS; infoRow shows count of actually-stalled apps.
+    expect(content).toMatch(/infoRow\('CoA Step 10[\s\S]{0,80}lifecycle_stalled[\s\S]{0,80}lifecyclePhaseTotal/);
+    expect(content).not.toMatch(/coverageRow\('CoA Step 10[\s\S]{0,30}lifecycle_stalled/);
+  });
+
+  it('CoA aggregate uses lifecycle_stalled = true (count stalled apps, not IS NOT NULL)', () => {
+    expect(content).toContain("lifecycle_stalled = true AND linked_permit_num IS NULL)   AS lifecycle_stalled_true_pop");
+  });
+
+  it('permits lifecycle_stalled uses infoRow (not coverageRow) — same NOT NULL DEFAULT false constraint', () => {
+    // permits.lifecycle_stalled also BOOLEAN NOT NULL DEFAULT false (migration 085).
+    expect(content).toMatch(/infoRow\('Step 21[^)]*permits\.lifecycle_stalled/);
+    expect(content).not.toMatch(/coverageRow\('Step 21[^)]*permits\.lifecycle_stalled/);
+  });
+
+  it('permits aggregate counts lifecycle_stalled = true (stalled permits, not IS NOT NULL)', () => {
+    expect(content).toContain("lifecycle_stalled = true)                     AS lifecycle_stalled_pop");
   });
 });
 

@@ -124,8 +124,9 @@ All permit-based denominators exclude PRE-% synthetic permits: `permit_num NOT L
 | Step 20 — assert_engine_health | engine_health_snapshots.today | rows recorded `> NOW() - 25h` | ≥ 1 expected (INFO) |
 | Step 21 — classify_lifecycle_phase | permits.lifecycle_phase | `lifecycle_phase IS NOT NULL` | all real permits |
 | Step 21 — classify_lifecycle_phase | permits.phase_started_at | `phase_started_at IS NOT NULL` | real permits with `lifecycle_phase IS NOT NULL` |
+| Step 21 — classify_lifecycle_phase | permits.lifecycle_stalled | `lifecycle_stalled = true` | INFO — `BOOLEAN NOT NULL DEFAULT false`; always populated. Shows count of stalled permits. |
 | Step 21 — classify_lifecycle_phase | permits.lifecycle_classified_at | `lifecycle_classified_at IS NOT NULL` | all real permits |
-| Step 21 — classify_lifecycle_phase | coa_applications.lifecycle_phase | `lifecycle_phase IS NOT NULL` | `COUNT(*) FROM coa_applications` |
+| Step 21 — classify_lifecycle_phase | coa_applications.lifecycle_phase | `lifecycle_phase IS NOT NULL AND linked_permit_num IS NULL` | `COUNT(*) FROM coa_applications WHERE linked_permit_num IS NULL` (unlinked only — classifier skips linked apps) |
 | Step 22 — assert_lifecycle_phase_distribution | permits.unclassified_count | `lifecycle_phase IS NULL AND permit_num NOT LIKE 'PRE-%'` | all real permits (INFO: target = 0) |
 | Step 23 — compute_trade_forecasts | trade_forecasts.predicted_start | `predicted_start IS NOT NULL` | permits: `JOIN permit_trades pt ON pt.is_active=true` where `lifecycle_phase IS NOT NULL AND phase_started_at IS NOT NULL AND lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','P1','P2')` |
 | Step 23 — compute_trade_forecasts | trade_forecasts.urgency | `urgency IS NOT NULL` | `COUNT(*) FROM trade_forecasts` |
@@ -146,14 +147,14 @@ All permit-based denominators exclude PRE-% synthetic permits: `permit_num NOT L
 | CoA Step 3 — assert_coa_freshness | coa_applications.days_since_latest | `EXTRACT(days FROM NOW() - MAX(created_at))` | threshold = 45 days (INFO, > 45 = WARN) |
 | CoA Step 4 — link_coa | coa_applications.linked_permit_num | `linked_permit_num IS NOT NULL` | `COUNT(*) FROM coa_applications` |
 | CoA Step 4 — link_coa | coa_applications.linked_confidence | `linked_confidence IS NOT NULL` | `COUNT(*) FROM coa_applications WHERE linked_permit_num IS NOT NULL` |
-| CoA Step 5 — create_pre_permits | permits.pre_permit_leads | `COUNT(*) FROM permits WHERE permit_num LIKE 'PRE-%'` | approved + unlinked coa_applications |
+| CoA Step 5 — create_pre_permits | permits.pre_permit_leads | `COUNT(DISTINCT permit_num) WHERE permit_num LIKE 'PRE-%'` | `COUNT(*) FROM coa_applications WHERE decision = 'Approved'` (stable — all-time approved, not just currently unlinked) |
 | CoA Step 6 — assert_pre_permit_aging | permits.aged_pre_permits | `permit_num LIKE 'PRE-%' AND issued_date < NOW() - INTERVAL '18 months'` | `COUNT(*) FROM permits WHERE permit_num LIKE 'PRE-%'` (INFO) |
 | CoA Step 7 — refresh_snapshot | data_quality_snapshots.today | same as P18 | 1 (INFO) |
 | CoA Step 8 — assert_data_bounds | coa_applications.duplicate_pks | duplicate `application_number` pairs | 0 expected (INFO) |
 | CoA Step 9 — assert_engine_health | engine_health_snapshots.today | same as P20 | ≥ 1 expected (INFO) |
-| CoA Step 10 — classify_lifecycle_phase | coa_applications.lifecycle_phase | `lifecycle_phase IS NOT NULL` | `COUNT(*) FROM coa_applications` |
-| CoA Step 10 — classify_lifecycle_phase | coa_applications.lifecycle_stalled | `lifecycle_stalled IS NOT NULL` | `COUNT(*) FROM coa_applications WHERE lifecycle_phase IS NOT NULL` |
-| CoA Step 10 — classify_lifecycle_phase | coa_applications.lifecycle_classified_at | `lifecycle_classified_at IS NOT NULL` | `COUNT(*) FROM coa_applications` |
+| CoA Step 10 — classify_lifecycle_phase | coa_applications.lifecycle_phase | `lifecycle_phase IS NOT NULL AND linked_permit_num IS NULL` | `COUNT(*) FROM coa_applications WHERE linked_permit_num IS NULL` (unlinked only — classifier assigns P1/P2 only to unlinked apps) |
+| CoA Step 10 — classify_lifecycle_phase | coa_applications.lifecycle_stalled | `lifecycle_stalled = true AND linked_permit_num IS NULL` | `COUNT(*) WHERE lifecycle_phase IS NOT NULL AND linked_permit_num IS NULL` (INFO — `BOOLEAN NOT NULL DEFAULT false`; shows count of stalled classified apps) |
+| CoA Step 10 — classify_lifecycle_phase | coa_applications.lifecycle_classified_at | `lifecycle_classified_at IS NOT NULL AND linked_permit_num IS NULL` | `COUNT(*) FROM coa_applications WHERE linked_permit_num IS NULL` (unlinked only) |
 | CoA Step 11 — assert_lifecycle_phase_distribution | coa_applications.unclassified_count | `lifecycle_phase IS NULL` | `COUNT(*) FROM coa_applications` (INFO: target = 0) |
 
 ---

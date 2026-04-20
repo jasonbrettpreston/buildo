@@ -100,6 +100,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
       const { rows: [ca] } = await pool.query(`
         SELECT
           COUNT(*)                                                                        AS coa_total,
+          COUNT(*) FILTER (WHERE linked_permit_num IS NULL)                               AS unlinked_total,
+          COUNT(*) FILTER (WHERE decision = 'Approved')                                   AS approved_total,
           COUNT(*) FILTER (WHERE address IS NOT NULL)                                     AS address_pop,
           COUNT(*) FILTER (WHERE ward IS NOT NULL)                                        AS ward_pop,
           COUNT(*) FILTER (WHERE decision IS NOT NULL)                                    AS decision_pop,
@@ -107,9 +109,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL)                           AS linked_pop,
           COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL AND linked_confidence IS NOT NULL) AS confidence_pop,
           COUNT(*) FILTER (WHERE decision = 'Approved' AND linked_permit_num IS NULL)     AS approved_unlinked,
-          COUNT(*) FILTER (WHERE lifecycle_phase IS NOT NULL)                              AS lifecycle_phase_pop,
-          COUNT(*) FILTER (WHERE lifecycle_phase IS NOT NULL AND lifecycle_stalled = true)   AS lifecycle_stalled_pop,
-          COUNT(*) FILTER (WHERE lifecycle_classified_at IS NOT NULL)                     AS lifecycle_classified_pop,
+          COUNT(*) FILTER (WHERE lifecycle_phase IS NOT NULL AND linked_permit_num IS NULL)  AS lifecycle_phase_pop,
+          COUNT(*) FILTER (WHERE lifecycle_stalled = true AND linked_permit_num IS NULL)   AS lifecycle_stalled_true_pop,
+          COUNT(*) FILTER (WHERE lifecycle_classified_at IS NOT NULL AND linked_permit_num IS NULL) AS lifecycle_classified_pop,
           COUNT(*) FILTER (WHERE lifecycle_phase IS NULL)                                 AS unclassified_count,
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
@@ -117,11 +119,15 @@ pipeline.run('assert-global-coverage', async (pool) => {
       const coaTotal = parseInt(ca.coa_total, 10) || 0;
       const linkedTotal = parseInt(ca.linked_pop, 10) || 0;
       const lifecyclePhaseTotal = parseInt(ca.lifecycle_phase_pop, 10) || 0;
+      // Bug 3: classifier assigns P1/P2 only to unlinked CoA apps — use unlinked count as denom.
+      const unlinkedTotal = parseInt(ca.unlinked_total, 10) || 0;
+      // Bug 4: approved_total (all-time) never shrinks as linking progresses.
+      const approvedTotal = parseInt(ca.approved_total, 10) || 0;
 
       // ── Misc CoA metrics ───────────────────────────────────────
       const { rows: [cm] } = await pool.query(`
         SELECT
-          COUNT(*) FILTER (WHERE permit_num LIKE 'PRE-%')                                  AS pre_permit_total,
+          COUNT(DISTINCT permit_num) FILTER (WHERE permit_num LIKE 'PRE-%')                AS pre_permit_total,
           COUNT(*) FILTER (WHERE permit_num LIKE 'PRE-%' AND issued_date < NOW() - INTERVAL '18 months') AS aged_pre_permits,
           (SELECT COUNT(*) FROM data_quality_snapshots WHERE snapshot_date = CURRENT_DATE) AS snapshot_today,
           (SELECT COUNT(*) FROM engine_health_snapshots WHERE captured_at > NOW() - INTERVAL '25 hours') AS engine_health_today,
@@ -131,7 +137,6 @@ pipeline.run('assert-global-coverage', async (pool) => {
         FROM permits
       `);
       const preTotal = parseInt(cm.pre_permit_total, 10) || 0;
-      const approvedUnlinked = parseInt(ca.approved_unlinked, 10) || 0;
 
       // Step: assert_schema (CoA)
       const { rows: [csSchema] } = await pool.query(`
@@ -155,7 +160,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('CoA Step 4 — link_coa', 'coa_applications.linked_confidence', parseInt(ca.confidence_pop, 10), linkedTotal || null));
 
       // Step: create_pre_permits
-      rows.push(coverageRow('CoA Step 5 — create_pre_permits', 'permits.pre_permit_leads', preTotal, approvedUnlinked || null));
+      // Bug 4: denominator = all approved CoA apps (stable); approvedUnlinked shrinks as
+      // CoAs get linked after pre-permit creation → ratio would exceed 100%.
+      rows.push(coverageRow('CoA Step 5 — create_pre_permits', 'permits.pre_permit_leads', preTotal, approvedTotal || null));
 
       // Step: assert_pre_permit_aging
       rows.push(infoRow('CoA Step 6 — assert_pre_permit_aging', 'permits.aged_pre_permits_gt18m', parseInt(cm.aged_pre_permits, 10), preTotal));
@@ -170,9 +177,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('CoA Step 9 — assert_engine_health', 'engine_health_snapshots.today', parseInt(cm.engine_health_today, 10)));
 
       // Step: classify_lifecycle_phase
-      rows.push(coverageRow('CoA Step 10 — classify_lifecycle_phase', 'coa_applications.lifecycle_phase',         lifecyclePhaseTotal,                          coaTotal));
-      rows.push(coverageRow('CoA Step 10 — classify_lifecycle_phase', 'coa_applications.lifecycle_stalled',       parseInt(ca.lifecycle_stalled_pop, 10),        lifecyclePhaseTotal || null));
-      rows.push(coverageRow('CoA Step 10 — classify_lifecycle_phase', 'coa_applications.lifecycle_classified_at', parseInt(ca.lifecycle_classified_pop, 10),     coaTotal));
+      // Bug 3: lifecycle_phase denominator = unlinked CoA apps only (classifier skips linked ones).
+      rows.push(coverageRow('CoA Step 10 — classify_lifecycle_phase', 'coa_applications.lifecycle_phase',         lifecyclePhaseTotal,                          unlinkedTotal || null));
+      // lifecycle_stalled BOOLEAN NOT NULL DEFAULT false — IS NOT NULL is always vacuous (100%).
+      // Show count of actually-stalled classified unlinked apps as an info metric.
+      rows.push(infoRow('CoA Step 10 — classify_lifecycle_phase', 'coa_applications.lifecycle_stalled', parseInt(ca.lifecycle_stalled_true_pop, 10), lifecyclePhaseTotal));
+      // Bug 3: lifecycle_classified_at denominator = unlinked CoA apps only.
+      rows.push(coverageRow('CoA Step 10 — classify_lifecycle_phase', 'coa_applications.lifecycle_classified_at', parseInt(ca.lifecycle_classified_pop, 10),     unlinkedTotal || null));
 
       // Step: assert_lifecycle_phase_distribution
       rows.push(infoRow('CoA Step 11 — assert_lifecycle_phase_distribution', 'coa_applications.unclassified_count', parseInt(ca.unclassified_count, 10), coaTotal));
@@ -244,7 +255,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE lifecycle_phase IS NOT NULL)                  AS lifecycle_phase_pop,
           COUNT(*) FILTER (WHERE lifecycle_phase IS NOT NULL
                              AND phase_started_at IS NOT NULL)                 AS phase_started_pop,
-          COUNT(*) FILTER (WHERE lifecycle_stalled IS NOT NULL)                AS lifecycle_stalled_pop,
+          COUNT(*) FILTER (WHERE lifecycle_stalled = true)                     AS lifecycle_stalled_pop,
           COUNT(*) FILTER (WHERE lifecycle_classified_at IS NOT NULL)          AS lifecycle_classified_pop,
           -- Step 22 — assert_lifecycle_phase_distribution
           COUNT(*) FILTER (WHERE lifecycle_phase IS NULL)                      AS unclassified_count,
@@ -252,8 +263,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE status IN ('Pending Closed','Closed'))        AS stale_total,
           COUNT(*) FILTER (WHERE status IN ('Pending Closed','Closed')
                              AND completed_date IS NOT NULL)                   AS stale_with_date,
-          -- Step 17 — create_pre_permits
-          COUNT(*) FILTER (WHERE permit_num LIKE 'PRE-%')                      AS pre_permit_count
+          -- Step 17 — create_pre_permits (Bug 4: DISTINCT avoids overcounting when revisions exist)
+          COUNT(DISTINCT permit_num) FILTER (WHERE permit_num LIKE 'PRE-%')    AS pre_permit_count
         FROM permits
       `);
       const permitsTotal        = parseInt(pa.permits_total, 10) || 0;
@@ -377,9 +388,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
           -- CoA context
           (SELECT COUNT(*) FROM coa_applications WHERE linked_permit_num IS NOT NULL)       AS coa_linked_pop,
           (SELECT COUNT(*) FROM coa_applications)                                           AS coa_total,
-          (SELECT COUNT(*) FROM coa_applications WHERE lifecycle_phase IS NOT NULL)         AS coa_lifecycle_phase_pop,
+          (SELECT COUNT(*) FROM coa_applications WHERE lifecycle_phase IS NOT NULL AND linked_permit_num IS NULL) AS coa_lifecycle_phase_pop,
           (SELECT COUNT(*) FROM coa_applications
             WHERE decision = 'Approved' AND linked_permit_num IS NULL)                      AS coa_approved_unlinked,
+          -- Bug 4: stable denominator — all approved CoA apps (not just currently unlinked)
+          (SELECT COUNT(*) FROM coa_applications WHERE decision = 'Approved')               AS coa_approved_total,
+          -- Bug 3: permits chain Step 21 CoA lifecycle_phase needs unlinked denominator
+          (SELECT COUNT(*) FROM coa_applications WHERE linked_permit_num IS NULL)           AS coa_unlinked_total,
           -- User activity
           (SELECT COUNT(*) FROM tracked_projects WHERE status != 'archived')               AS tracked_active,
           (SELECT COUNT(*) FROM tracked_projects)                                           AS tracked_total,
@@ -463,25 +478,31 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 2 — load_permits', 'permits.street_name',             parseInt(pa.street_name_pop, 10),       permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.street_name_normalized',  parseInt(pa.street_name_norm_pop, 10),  permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.street_type',             parseInt(pa.street_type_pop, 10),       permitsTotal));
-      rows.push(coverageRow('Step 2 — load_permits', 'permits.street_direction',        parseInt(pa.street_direction_pop, 10),  permitsTotal));
+      // Bug 2: street_direction is naturally sparse — most streets lack N/S/E/W designations (~14%).
+      rows.push(infoRow(    'Step 2 — load_permits', 'permits.street_direction',        parseInt(pa.street_direction_pop, 10),  permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.city',                    parseInt(pa.city_pop, 10),              permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.postal',                  parseInt(pa.postal_pop, 10),            permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.geo_id',                  parseInt(pa.geo_id_pop, 10),            permitsTotal));
-      rows.push(coverageRow('Step 2 — load_permits', 'permits.building_type',           parseInt(pa.building_type_pop, 10),     permitsTotal));
-      rows.push(coverageRow('Step 2 — load_permits', 'permits.category',                parseInt(pa.category_pop, 10),          permitsTotal));
+      // Bug 2: building_type and category are naturally sparse in Toronto CKAN data.
+      rows.push(infoRow(    'Step 2 — load_permits', 'permits.building_type',           parseInt(pa.building_type_pop, 10),     permitsTotal));
+      rows.push(infoRow(    'Step 2 — load_permits', 'permits.category',                parseInt(pa.category_pop, 10),          permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.application_date',        parseInt(pa.application_date_pop, 10),  permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.issued_date',             parseInt(pa.issued_date_pop, 10),       permitsTotal));
-      rows.push(coverageRow('Step 2 — load_permits', 'permits.completed_date',          parseInt(pa.completed_date_pop, 10),    permitsTotal));
+      // Bug 1: completed_date is NULL for all active permits — structural sparsity.
+      // Step 3 audits it against stale/closed permits with the correct denominator.
+      rows.push(infoRow(    'Step 2 — load_permits', 'permits.completed_date',          parseInt(pa.completed_date_pop, 10),    permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.status',                  parseInt(pa.status_pop, 10),            permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.description',             parseInt(pa.description_pop, 10),       permitsTotal));
       // est_const_cost: INFO only — city CKAN structural sparsity, pipeline cannot control.
       rows.push(infoRow(    'Step 2 — load_permits', 'permits.est_const_cost',           parseInt(pa.est_const_cost_pop, 10),   permitsTotal));
-      rows.push(coverageRow('Step 2 — load_permits', 'permits.builder_name',             parseInt(pa.builder_name_pop, 10),     permitsTotal));
-      rows.push(coverageRow('Step 2 — load_permits', 'permits.owner',                   parseInt(pa.owner_pop, 10),             permitsTotal));
+      // Bug 2: builder_name and owner are naturally sparse in city permit data.
+      rows.push(infoRow(    'Step 2 — load_permits', 'permits.builder_name',             parseInt(pa.builder_name_pop, 10),     permitsTotal));
+      rows.push(infoRow(    'Step 2 — load_permits', 'permits.owner',                   parseInt(pa.owner_pop, 10),             permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.dwelling_units_created',  parseInt(pa.dwell_created_pop, 10),    permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.dwelling_units_lost',     parseInt(pa.dwell_lost_pop, 10),        permitsTotal));
-      rows.push(coverageRow('Step 2 — load_permits', 'permits.ward',                    parseInt(pa.ward_pop, 10),              permitsTotal));
-      rows.push(coverageRow('Step 2 — load_permits', 'permits.council_district',        parseInt(pa.council_district_pop, 10),  permitsTotal));
+      // Bug 2: ward and council_district are naturally sparse (not all Toronto permit types carry them).
+      rows.push(infoRow(    'Step 2 — load_permits', 'permits.ward',                    parseInt(pa.ward_pop, 10),              permitsTotal));
+      rows.push(infoRow(    'Step 2 — load_permits', 'permits.council_district',        parseInt(pa.council_district_pop, 10),  permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.current_use',             parseInt(pa.current_use_pop, 10),       permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.proposed_use',            parseInt(pa.proposed_use_pop, 10),      permitsTotal));
       rows.push(coverageRow('Step 2 — load_permits', 'permits.housing_units',           parseInt(pa.housing_units_pop, 10),     permitsTotal));
@@ -585,8 +606,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 16 — link_coa', 'coa_applications.linked_permit_num', parseInt(misc.coa_linked_pop, 10), coaTotal || null));
 
       // Step 17 — create_pre_permits
-      const approvedUnlinked = parseInt(misc.coa_approved_unlinked, 10) || 0;
-      rows.push(coverageRow('Step 17 — create_pre_permits', 'permits.pre_permit_leads', parseInt(pa.pre_permit_count, 10), approvedUnlinked || null));
+      // Bug 4: use approved_total (stable) not approvedUnlinked (shrinks as CoAs get linked).
+      rows.push(coverageRow('Step 17 — create_pre_permits', 'permits.pre_permit_leads', parseInt(pa.pre_permit_count, 10), parseInt(misc.coa_approved_total, 10) || null));
 
       // Step 18 — refresh_snapshot
       rows.push(infoRow('Step 18 — refresh_snapshot', 'data_quality_snapshots.today', parseInt(misc.snapshot_today, 10)));
@@ -600,10 +621,11 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // Step 21 — classify_lifecycle_phase (Denom A)
       rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'permits.lifecycle_phase',          lifecyclePhaseTotal,                          permitsTotal));
       rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'permits.phase_started_at',         parseInt(pa.phase_started_pop, 10),           lifecyclePhaseTotal || null));
-      // lifecycle_stalled is NOT NULL (default false) — serves as integrity sentinel.
-      rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'permits.lifecycle_stalled',        parseInt(pa.lifecycle_stalled_pop, 10),        permitsTotal));
+      // lifecycle_stalled BOOLEAN NOT NULL DEFAULT false — IS NOT NULL is vacuous. Show stalled count as info.
+      rows.push(infoRow('Step 21 — classify_lifecycle_phase', 'permits.lifecycle_stalled', parseInt(pa.lifecycle_stalled_pop, 10)));
       rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'permits.lifecycle_classified_at',  parseInt(pa.lifecycle_classified_pop, 10),     permitsTotal));
-      rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'coa_applications.lifecycle_phase', parseInt(misc.coa_lifecycle_phase_pop, 10),    coaTotal || null));
+      // Bug 3: lifecycle_phase denominator = unlinked CoA apps (classifier only classifies unlinked).
+      rows.push(coverageRow('Step 21 — classify_lifecycle_phase', 'coa_applications.lifecycle_phase', parseInt(misc.coa_lifecycle_phase_pop, 10),    parseInt(misc.coa_unlinked_total, 10) || null));
 
       // Step 22 — assert_lifecycle_phase_distribution
       rows.push(infoRow('Step 22 — assert_lifecycle_phase_distribution', 'permits.unclassified_count', parseInt(pa.unclassified_count, 10), permitsTotal));
