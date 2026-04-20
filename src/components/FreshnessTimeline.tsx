@@ -1107,6 +1107,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 const warningsList: string[] = Array.isArray(meta.warnings) ? meta.warnings as string[] : [];
                                 const errorsList: string[] = Array.isArray(meta.errors) ? meta.errors as string[] : [];
                                 const hasAuditTable = !!(meta.audit_table && typeof meta.audit_table === 'object');
+                                if (hasAuditTable) return null;
                                 return (
                                   <div className="space-y-1.5">
                                     {/* Old CQA verdict/scalars — hidden when audit_table replaces them */}
@@ -1190,72 +1191,6 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                         </div>
                                       </div>
                                     )}
-                                    {/* Audit table — chain-aware, single audit_table key per step */}
-                                    {!!(meta.audit_table && typeof meta.audit_table === 'object') && (() => {
-                                      const atRaw = meta.audit_table; const atIdx = 0;
-                                      if (!atRaw || typeof atRaw !== 'object') return null;
-                                      // Columnar format (assert-global-coverage): has `columns` string[]
-                                      if ('columns' in atRaw && Array.isArray((atRaw as Record<string, unknown>).columns)) {
-                                        const cat = atRaw as ColumnarAuditData;
-                                        return <ColumnarAuditTable key={`audit-${atIdx}`} cat={cat} wrapperClass="mt-2" />;
-                                      }
-                                      // Legacy metric-row format (all other assert scripts)
-                                      const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string; matched?: number; denominator?: number }> };
-                                      const verdictColor = at.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200'
-                                        : at.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200'
-                                        : at.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                        : 'bg-gray-50 text-gray-500 border-gray-200';
-                                      const statusIcon = (s: string) => s === 'PASS' ? '\u2714' : s === 'FAIL' ? '\u2718' : s === 'WARN' ? '\u26A0' : s === 'SKIP' ? '\u2014' : '\u2022';
-                                      const statusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : 'text-gray-400';
-                                      const infoRows = at.rows.filter((r) => r.metric === 'reason' || r.metric === 'instructions');
-                                      const metricRows = at.rows.filter((r) => r.metric !== 'reason' && r.metric !== 'instructions');
-                                      return (
-                                        <div key={`audit-${atIdx}`} className="mt-2">
-                                          <div className="flex items-center gap-2 mb-1">
-                                            <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Phase {at.phase}: {at.name}</h5>
-                                            <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${verdictColor}`}>{at.verdict}</span>
-                                          </div>
-                                          {infoRows.length > 0 && (
-                                            <div className="space-y-1 mb-2">
-                                              {infoRows.map((r) => (
-                                                <div key={r.metric} className={`flex items-start gap-2 px-2.5 py-1.5 rounded text-[10px] ${
-                                                  r.metric === 'instructions' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-600'
-                                                }`}>
-                                                  <span className="shrink-0 mt-0.5">{r.metric === 'instructions' ? '\u2139' : '\u25B8'}</span>
-                                                  <span className="break-words">{String(r.value)}</span>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          )}
-                                          {metricRows.length > 0 && (
-                                          <div className="overflow-x-auto">
-                                            <table className="w-full text-[10px] tabular-nums">
-                                              <thead>
-                                                <tr className="text-gray-500 text-left">
-                                                  <th className="pr-2 py-0.5 font-medium">Metric</th>
-                                                  <th className="px-2 py-0.5 font-medium text-right">Value</th>
-                                                  <th className="px-2 py-0.5 font-medium text-right">n</th>
-                                                  <th className="px-2 py-0.5 font-medium text-right">Threshold</th>
-                                                  <th className="px-2 py-0.5 font-medium text-center">Status</th>
-                                                </tr>
-                                              </thead>
-                                              <tbody>
-                                                {metricRows.map((r) => (
-                                                  <tr key={r.metric} className="border-t border-gray-50">
-                                                    <td className="pr-2 py-0.5 font-mono text-gray-700">{r.metric}</td>
-                                                    <td className="px-2 py-0.5 text-right text-gray-900 font-medium">{r.value === null ? '\u2014' : typeof r.value === 'boolean' ? String(r.value) : typeof r.value === 'number' ? r.value.toLocaleString() : String(r.value)}</td>
-                                                    <td className="px-2 py-0.5 text-right text-gray-400">{r.matched != null && r.denominator != null ? `${r.matched}/${r.denominator}` : '\u2014'}</td>
-                                                    <td className="px-2 py-0.5 text-right text-gray-400">{r.threshold ?? '\u2014'}</td>
-                                                    <td className={`px-2 py-0.5 text-center font-semibold ${statusColor(r.status)}`}>{statusIcon(r.status)}</td>
-                                                  </tr>
-                                                ))}
-                                              </tbody>
-                                            </table>
-                                          </div>
-                                          )}
-                                        </div>
-                                      );
-                                    })()}
                                     {/* DB State Changes — telemetry rendered after audit table */}
                                     {(() => {
                                       const telemetry = (info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
@@ -1266,6 +1201,80 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 );
                               })()}
                             </div>
+                            {/* Audit table — full width outside 3-col grid (steps 22, 26, 27) */}
+                            {info?.records_meta && typeof info.records_meta === 'object' && (() => {
+                              const meta = info.records_meta as Record<string, unknown>;
+                              if (!meta.audit_table || typeof meta.audit_table !== 'object') return null;
+                              const atRaw = meta.audit_table;
+                              const atIdx = 0;
+                              const telemetry = (info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
+                              if (!atRaw || typeof atRaw !== 'object') return null;
+                              if ('columns' in atRaw && Array.isArray((atRaw as Record<string, unknown>).columns)) {
+                                const cat = atRaw as ColumnarAuditData;
+                                return (
+                                  <div className="mt-3">
+                                    <ColumnarAuditTable key={`audit-${atIdx}`} cat={cat} wrapperClass="" />
+                                    {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={step.slug} />}
+                                  </div>
+                                );
+                              }
+                              const at = atRaw as { phase: number; name: string; verdict: string; rows: Array<{ metric: string; value: unknown; threshold: string | null; status: string; matched?: number; denominator?: number }> };
+                              const verdictColor = at.verdict === 'PASS' ? 'bg-green-50 text-green-700 border-green-200'
+                                : at.verdict === 'FAIL' ? 'bg-red-50 text-red-700 border-red-200'
+                                : at.verdict === 'WARN' ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                : 'bg-gray-50 text-gray-500 border-gray-200';
+                              const statusIcon = (s: string) => s === 'PASS' ? '\u2714' : s === 'FAIL' ? '\u2718' : s === 'WARN' ? '\u26A0' : s === 'SKIP' ? '\u2014' : '\u2022';
+                              const statusColor = (s: string) => s === 'PASS' ? 'text-green-600' : s === 'FAIL' ? 'text-red-600' : s === 'WARN' ? 'text-yellow-600' : 'text-gray-400';
+                              const infoRows = at.rows.filter((r) => r.metric === 'reason' || r.metric === 'instructions');
+                              const metricRows = at.rows.filter((r) => r.metric !== 'reason' && r.metric !== 'instructions');
+                              return (
+                                <div key={`audit-${atIdx}`} className="mt-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h5 className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Phase {at.phase}: {at.name}</h5>
+                                    <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${verdictColor}`}>{at.verdict}</span>
+                                  </div>
+                                  {infoRows.length > 0 && (
+                                    <div className="space-y-1 mb-2">
+                                      {infoRows.map((r) => (
+                                        <div key={r.metric} className={`flex items-start gap-2 px-2.5 py-1.5 rounded text-[10px] ${
+                                          r.metric === 'instructions' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-600'
+                                        }`}>
+                                          <span className="shrink-0 mt-0.5">{r.metric === 'instructions' ? '\u2139' : '\u25B8'}</span>
+                                          <span className="break-words">{String(r.value)}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {metricRows.length > 0 && (
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-[10px] tabular-nums">
+                                        <thead>
+                                          <tr className="text-gray-500 text-left">
+                                            <th className="pr-2 py-0.5 font-medium">Metric</th>
+                                            <th className="px-2 py-0.5 font-medium text-right">Value</th>
+                                            <th className="px-2 py-0.5 font-medium text-right">n</th>
+                                            <th className="px-2 py-0.5 font-medium text-right">Threshold</th>
+                                            <th className="px-2 py-0.5 font-medium text-center">Status</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {metricRows.map((r) => (
+                                            <tr key={r.metric} className="border-t border-gray-50">
+                                              <td className="pr-2 py-0.5 font-mono text-gray-700">{r.metric}</td>
+                                              <td className="px-2 py-0.5 text-right text-gray-900 font-medium">{r.value === null ? '\u2014' : typeof r.value === 'boolean' ? String(r.value) : typeof r.value === 'number' ? r.value.toLocaleString() : String(r.value)}</td>
+                                              <td className="px-2 py-0.5 text-right text-gray-400">{r.matched != null && r.denominator != null ? `${r.matched}/${r.denominator}` : '\u2014'}</td>
+                                              <td className="px-2 py-0.5 text-right text-gray-400">{r.threshold ?? '\u2014'}</td>
+                                              <td className={`px-2 py-0.5 text-center font-semibold ${statusColor(r.status)}`}>{statusIcon(r.status)}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                                  {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={step.slug} />}
+                                </div>
+                              );
+                            })()}
                           </div>
                           );
                         })()}
