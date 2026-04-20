@@ -46,7 +46,7 @@ Calculate a stable "Intrinsic Value" (0-100) for every trade opportunity based o
 ## 3. Behavioral Contract
 
 ### Inputs
-Nightly run processing all active `trade_forecasts` where `urgency <> 'expired'`.
+Nightly run processing all active `trade_forecasts` where `(urgency IS NULL OR urgency <> 'expired')`.
 
 ### Core Logic
 - **Financial Base:** Extract `trade_contract_values[row.trade_slug]`.
@@ -90,6 +90,7 @@ Mutates `trade_forecasts.opportunity_score`. All `UPDATE` queries must include `
 - `scripts/compute-opportunity-scores.js`
 - `migrations/091_signal_evolution.sql`
 - `migrations/092_control_panel.sql` (trade_configurations + logic_variables + seed data)
+- `migrations/102_los_decay_divisor.sql` (inserts `los_decay_divisor = 25` into `logic_variables`)
 
 **Control Panel (migrations 092 + 093):**
 All scoring constants are now DB-driven. Global constants (`los_penalty_tracking`, `los_base_divisor`, etc.) come from `logic_variables`. Per-trade urgency multipliers (`multiplier_bid`, `multiplier_work`) come from `trade_configurations` via a LEFT JOIN. The script loads all config via the shared `loadMarketplaceConfigs()` loader in `scripts/lib/config-loader.js` with hardcoded fallback. Operators can tune multipliers per-trade (e.g., framing bid=2.8 vs painting bid=2.0) without code deployments.
@@ -125,8 +126,8 @@ These eight items must be resolved in the `scripts/compute-opportunity-scores.js
 1. **Multi-Batch Transaction Boundary (Spec 47 §6.3):** Wrap the scoring loop in `pipeline.withTransaction`. This ensures that if the script crashes mid-run, the database rolls back, preventing a "split-score" marketplace where some leads use old logic and others use new logic.
 2. **Unbounded SELECT (OOM Guard) (Spec 47 §6.1):** Replace `pool.query` with `pipeline.streamQuery`. This processes the ~2.5M rows in memory-efficient chunks. Must include `flushBatch()` inside the loop and clear the array to prevent Node Heap crashes.
 3. **NaN Propagation Guard & Zod Validation:** Implement `Number.isFinite()` checks on all multipliers, and strictly validate the global `logic_variables` through `Zod` upon load.
-4. **Advisory Locking:** Add `pg_try_advisory_lock(81)` utilizing a dedicated pinned `lockClient` at script entry.
-5. **Graceful Shutdown (Spec 47 §5.5):** Implement a `process.on('SIGTERM', ...)` listener to guarantee the lock is released if Kubernetes preempts or scales down the container mid-run.
+4. **Advisory Locking:** Delegate to `pipeline.withAdvisoryLock(pool, 81, ...)` — the SDK helper acquires the lock, runs the callback, and releases on exit. No hand-rolled `lockClient` or direct `pg_try_advisory_lock` call.
+5. **Graceful Shutdown (Spec 47 §5.5):** Handled by `pipeline.withAdvisoryLock` — no manual `process.on('SIGTERM', ...)` in the script. The SDK helper guarantees lock release on SIGTERM/SIGINT.
 6. **Telemetry Accuracy:** Update `records_updated` using the actual `result.rowCount` from the `UPDATE` call rather than the batch size.
 7. **NULL Urgency Support:** Change the filter to `WHERE (tf.urgency IS NULL OR tf.urgency <> 'expired')`.
 8. **Bimodal Sourcing:** Ensure logic properly executes a LEFT JOIN on `trade_configurations` to source `multiplier_bid` and `multiplier_work` dynamically based on the current target window.
