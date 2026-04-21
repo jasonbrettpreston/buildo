@@ -87,6 +87,8 @@ const LOGIC_VARS_SCHEMA = z.object({
 All permit-based denominators exclude PRE-% synthetic permits: `permit_num NOT LIKE 'PRE-%'`.  
 "All real permits" = the count above.
 
+**Step 17 pre_permit_leads denominator (F2):** Uses `coa_approved_unlinked` (`decision='Approved' AND linked_permit_num IS NULL`) — the actionable population that `create_pre_permits` actually processes. The prior denominator `coa_approved_total` caused a persistent false-FAIL (~0.5%) because it included CoAs already linked to real permits (not eligible for pre-permit creation). The ratio can theoretically exceed 100% if pre-permits were created for CoAs that were subsequently linked, but `create_pre_permits` deactivates pre-permits on linking, so counts converge in practice.
+
 ### Permits Chain — Full Profile
 
 | step_target | field | populated condition | denominator |
@@ -147,7 +149,7 @@ All permit-based denominators exclude PRE-% synthetic permits: `permit_num NOT L
 | CoA Step 3 — assert_coa_freshness | coa_applications.days_since_latest | `EXTRACT(days FROM NOW() - MAX(created_at))` | threshold = 45 days (INFO, > 45 = WARN) |
 | CoA Step 4 — link_coa | coa_applications.linked_permit_num | `linked_permit_num IS NOT NULL` | `COUNT(*) FROM coa_applications` |
 | CoA Step 4 — link_coa | coa_applications.linked_confidence | `linked_confidence IS NOT NULL` | `COUNT(*) FROM coa_applications WHERE linked_permit_num IS NOT NULL` |
-| CoA Step 5 — create_pre_permits | permits.pre_permit_leads | `COUNT(DISTINCT permit_num) WHERE permit_num LIKE 'PRE-%'` | `COUNT(*) FROM coa_applications WHERE decision = 'Approved'` (stable — all-time approved, not just currently unlinked) |
+| CoA Step 5 — create_pre_permits | permits.pre_permit_leads | `COUNT(DISTINCT permit_num) WHERE permit_num LIKE 'PRE-%'` | `COUNT(*) FROM coa_applications WHERE decision='Approved' AND linked_permit_num IS NULL` (F2: unlinked = actionable denominator) |
 | CoA Step 6 — assert_pre_permit_aging | permits.aged_pre_permits | `permit_num LIKE 'PRE-%' AND issued_date < NOW() - INTERVAL '18 months'` | `COUNT(*) FROM permits WHERE permit_num LIKE 'PRE-%'` (INFO) |
 | CoA Step 7 — refresh_snapshot | data_quality_snapshots.today | same as P18 | 1 (INFO) |
 | CoA Step 8 — assert_data_bounds | coa_applications.duplicate_pks | duplicate `application_number` pairs | 0 expected (INFO) |

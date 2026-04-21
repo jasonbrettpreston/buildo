@@ -121,8 +121,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
       const lifecyclePhaseTotal = parseInt(ca.lifecycle_phase_pop, 10) || 0;
       // Bug 3: classifier assigns P1/P2 only to unlinked CoA apps — use unlinked count as denom.
       const unlinkedTotal = parseInt(ca.unlinked_total, 10) || 0;
-      // Bug 4: approved_total (all-time) never shrinks as linking progresses.
-      const approvedTotal = parseInt(ca.approved_total, 10) || 0;
+      // F2: use approved_unlinked (actionable denominator) — mirrors permits chain Step 17.
+      const approvedUnlinked = parseInt(ca.approved_unlinked, 10) || 0;
 
       // ── Misc CoA metrics ───────────────────────────────────────
       const { rows: [cm] } = await pool.query(`
@@ -160,9 +160,10 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('CoA Step 4 — link_coa', 'coa_applications.linked_confidence', parseInt(ca.confidence_pop, 10), linkedTotal || null));
 
       // Step: create_pre_permits
-      // Bug 4: denominator = all approved CoA apps (stable); approvedUnlinked shrinks as
-      // CoAs get linked after pre-permit creation → ratio would exceed 100%.
-      rows.push(coverageRow('CoA Step 5 — create_pre_permits', 'permits.pre_permit_leads', preTotal, approvedTotal || null));
+      // F2: denominator = approved CoA apps not yet linked (actionable). Mirrors permits chain Step 17.
+      // Ratio can exceed 100% if CoAs get linked after pre-permit creation, but create_pre_permits
+      // deactivates pre-permits on linking, so counts converge in practice.
+      rows.push(coverageRow('CoA Step 5 — create_pre_permits', 'permits.pre_permit_leads', preTotal, approvedUnlinked || null));
 
       // Step: assert_pre_permit_aging
       rows.push(infoRow('CoA Step 6 — assert_pre_permit_aging', 'permits.aged_pre_permits_gt18m', parseInt(cm.aged_pre_permits, 10), preTotal));
@@ -606,8 +607,11 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 16 — link_coa', 'coa_applications.linked_permit_num', parseInt(misc.coa_linked_pop, 10), coaTotal || null));
 
       // Step 17 — create_pre_permits
-      // Bug 4: use approved_total (stable) not approvedUnlinked (shrinks as CoAs get linked).
-      rows.push(coverageRow('Step 17 — create_pre_permits', 'permits.pre_permit_leads', parseInt(pa.pre_permit_count, 10), parseInt(misc.coa_approved_total, 10) || null));
+      // F2: denominator is coa_approved_unlinked (actionable: approved + not yet linked to a real permit).
+      // create_pre_permits only creates pre-permits for unlinked CoAs, so this is the correct population.
+      // Ratio can theoretically exceed 100% if CoAs are linked after pre-permits are created, but in
+      // practice create_pre_permits deactivates pre-permits when CoAs get linked, so counts converge.
+      rows.push(coverageRow('Step 17 — create_pre_permits', 'permits.pre_permit_leads', parseInt(pa.pre_permit_count, 10), parseInt(misc.coa_approved_unlinked, 10) || null));
 
       // Step 18 — refresh_snapshot
       rows.push(infoRow('Step 18 — refresh_snapshot', 'data_quality_snapshots.today', parseInt(misc.snapshot_today, 10)));

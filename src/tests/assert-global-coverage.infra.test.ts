@@ -269,17 +269,49 @@ describe('assert-global-coverage.js — Bug 4: pre-permit coverage cannot exceed
     expect(content).toMatch(/COUNT\(DISTINCT permit_num\)[\s\S]{0,50}PRE-%/);
   });
 
-  it('CoA chain uses approved_total (all approved CoA apps) as pre-permit denominator', () => {
-    // approvedUnlinked shrinks as CoAs get linked after pre-permit creation →
-    // denominator < numerator → >100%. approved_total is stable.
-    expect(content).toMatch(/decision = 'Approved'[\s\S]{0,80}AS approved_total|approved_total[\s\S]{0,80}decision = 'Approved'/);
-    expect(content).toMatch(/permits\.pre_permit_leads['"]\s*,\s*preTotal\s*,\s*approvedTotal/);
+  it('CoA chain uses approved_unlinked as CoA Step 5 denominator (F2 fix: mirrors permits chain)', () => {
+    // F2: both chains now use the unlinked denominator (actionable approved CoAs).
+    // approved_total was dropped — it included already-linked CoAs and caused false FAILs.
+    expect(content).toMatch(/CoA Step 5[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}approvedUnlinked/);
+    expect(content).not.toMatch(/CoA Step 5[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}approvedTotal/);
   });
 
-  it('permits chain uses coa_approved_total as Step 17 denominator (not approvedUnlinked)', () => {
-    expect(content).toMatch(/coa_approved_total/);
-    // Step 17 row must reference the approved_total sub-query, not the shrinkable unlinked count
-    expect(content).toMatch(/Step 17[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}coa_approved_total/);
+  it('permits chain uses coa_approved_unlinked as Step 17 denominator (F2 fix: unlinked = actionable denominator)', () => {
+    // coa_approved_unlinked = approved CoA apps NOT yet linked to a real permit.
+    // create_pre_permits only creates pre-permits for unlinked approved CoAs, so
+    // unlinked is the meaningful coverage denominator ("what % of open CoA opportunities
+    // have a pre-permit?"). coa_approved_total was too large (~26K) → 0.5% false FAIL.
+    // Note: ratio can theoretically exceed 100% as CoAs get linked after pre-permit
+    // creation — this is acceptable and documented here.
+    expect(content).toMatch(/coa_approved_unlinked/);
+    expect(content).toMatch(/Step 17[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}coa_approved_unlinked/);
+    // coa_approved_total must NOT appear as the Step 17 denominator
+    expect(content).not.toMatch(/Step 17[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}coa_approved_total/);
+  });
+});
+
+describe('assert-global-coverage.js — W2 regression: CKAN-absent fields emit INFO not FAIL', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('building_type uses infoRow (CKAN API does not provide this field)', () => {
+    expect(content).toMatch(/infoRow\([^)]*permits\.building_type/);
+    expect(content).not.toMatch(/coverageRow\([^)]*permits\.building_type/);
+  });
+
+  it('category uses infoRow (CKAN API does not provide this field)', () => {
+    expect(content).toMatch(/infoRow\([^)]*permits\.category/);
+    expect(content).not.toMatch(/coverageRow\([^)]*permits\.category/);
+  });
+
+  it('council_district uses infoRow (CKAN API does not provide this field)', () => {
+    expect(content).toMatch(/infoRow\([^)]*permits\.council_district/);
+    expect(content).not.toMatch(/coverageRow\([^)]*permits\.council_district/);
+  });
+
+  it('owner uses infoRow (CKAN API does not provide this field)', () => {
+    expect(content).toMatch(/infoRow\([^)]*permits\.owner/);
+    expect(content).not.toMatch(/coverageRow\([^)]*permits\.owner/);
   });
 });
 
