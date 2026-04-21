@@ -318,8 +318,9 @@ function ColumnarAuditTable({ cat, wrapperClass }: { cat: ColumnarAuditData; wra
             </tr>
           </thead>
           <tbody>
-            {(cat.rows ?? []).map((row) => {
-              const rowKey = `${String(row.step_target ?? '')}-${String(row.field ?? '')}`;
+            {(cat.rows ?? []).map((row, rowIdx) => {
+              const baseKey = row.metric != null ? String(row.metric) : `${String(row.step_target ?? '')}-${String(row.field ?? '')}`;
+              const rowKey = `${baseKey}-${rowIdx}`;
               return (
                 <tr key={rowKey} className="border-t border-gray-50">
                   {cat.columns.map((col) => {

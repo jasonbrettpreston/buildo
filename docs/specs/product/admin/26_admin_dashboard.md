@@ -58,6 +58,7 @@ As an admin, I want a unified dashboard to monitor pipeline health, trigger runs
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **UI:** `admin.ui.test.tsx` (273 tests — sync status, HealthCards, pipeline triggers, toggles, FreshnessTimeline, funnel accordion, Run All safeguards, mobile viewport)
+- **UI:** `FreshnessTimeline.ui.test.tsx` (11 tests — ColumnarAuditTable multi-schema rowKey: Global Coverage schema, Score Engine schema, unknown schema, metric=0/null/empty edge cases, mixed-schema uniqueness, source-shape guards)
 - **Logic:** `analytics.logic.test.ts` (getPermitsByDateRange, getTradeDistribution, getCostByWard, getStatusDistribution, getTopBuilders, getPermitTrends)
 - **Logic:** `market-metrics.logic.test.ts` (materialized view, formatCurrency, mapPermitType, trendPct, wealth tiers)
 <!-- TEST_INJECT_END -->
