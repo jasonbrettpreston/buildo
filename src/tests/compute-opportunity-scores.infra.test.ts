@@ -224,10 +224,16 @@ describe('scripts/compute-opportunity-scores.js — asymptotic decay + NULL guar
     );
   });
 
-  it('LOGIC_VARS_SCHEMA includes los_decay_divisor as finite positive number (spec 81 §2)', () => {
-    expect(content).toMatch(/los_decay_divisor/);
-    // Must be in the Zod schema — not just used raw
-    expect(content).toMatch(/los_decay_divisor\s*:\s*z\.number\(\)\.finite\(\)\.positive\(\)/);
+  it('LOGIC_VARS_SCHEMA uses z.coerce.number() for all fields — pg returns DECIMAL as string (WF3 April 2026)', () => {
+    // The node-postgres driver returns DECIMAL/NUMERIC columns as strings to prevent
+    // float64 precision loss. z.number() rejects strings → instant 871ms Zod crash.
+    // z.coerce.number() coerces strings to numbers before validation, making it safe
+    // regardless of whether config-loader's parseFloat already converted the value.
+    expect(content).toMatch(/los_decay_divisor\s*:\s*z\.coerce\.number\(\)\.finite\(\)\.positive\(\)/);
+    // All required numeric fields must use coerce — not z.number() directly
+    expect(content).not.toMatch(/los_base_divisor\s*:\s*z\.number\(\)/);
+    expect(content).not.toMatch(/los_decay_divisor\s*:\s*z\.number\(\)/);
+    expect(content).not.toMatch(/score_tier_elite\s*:\s*z\.number\(\)/);
   });
 
   it('uses asymptotic decay formula — divides by (1 + decayFactor) not subtracts penalty (spec 81 §3)', () => {

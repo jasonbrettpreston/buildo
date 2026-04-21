@@ -31,17 +31,20 @@ const BATCH_SIZE = pipeline.maxRowsPerInsert(4); // Math.floor(65535 / 4) = 1638
 // Zod schema for the logicVars used by this script.
 // los_base_divisor=0 would cause division by zero; fail fast before scoring.
 // spec 47 §4 — validate before entering main loop.
+// z.coerce.number() instead of z.number(): pg returns DECIMAL/NUMERIC columns as
+// strings to prevent float64 precision loss. z.number() rejects strings and causes
+// an instant 871ms Zod validation crash. z.coerce.number() coerces first.
 const LOGIC_VARS_SCHEMA = z.object({
-  los_base_divisor:     z.number().finite().positive(),
-  los_base_cap:         z.number().finite().positive(),
-  los_multiplier_bid:   z.number().finite().positive(),
-  los_multiplier_work:  z.number().finite().positive(),
-  los_penalty_tracking: z.number().finite().min(0),
-  los_penalty_saving:   z.number().finite().min(0),
-  los_decay_divisor:    z.number().finite().positive(),
-  score_tier_elite:     z.number().finite().positive(),
-  score_tier_strong:    z.number().finite().positive(),
-  score_tier_moderate:  z.number().finite().positive(),
+  los_base_divisor:     z.coerce.number().finite().positive(),
+  los_base_cap:         z.coerce.number().finite().positive(),
+  los_multiplier_bid:   z.coerce.number().finite().positive(),
+  los_multiplier_work:  z.coerce.number().finite().positive(),
+  los_penalty_tracking: z.coerce.number().finite().min(0),
+  los_penalty_saving:   z.coerce.number().finite().min(0),
+  los_decay_divisor:    z.coerce.number().finite().positive(),
+  score_tier_elite:     z.coerce.number().finite().positive(),
+  score_tier_strong:    z.coerce.number().finite().positive(),
+  score_tier_moderate:  z.coerce.number().finite().positive(),
 }).passthrough();
 
 pipeline.run('compute-opportunity-scores', async (pool) => {
