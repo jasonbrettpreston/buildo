@@ -497,4 +497,55 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/Skipped \(no anchor\)/);
     expect(content).not.toMatch(/Skipped \(terminal\/orphan\)/);
   });
+
+  it('WF3 Zombie Gate: SOURCE_SQL Branch B has 3-year COALESCE recency gate (breaks P18 zombie loop)', () => {
+    // A P18 permit with phase_started_at = 2018 was being streamed each run because
+    // Branch B had no recency gate — grace-purge deletes the expired row, stream
+    // recreates it with the same ancient anchor, it re-expires immediately, repeat.
+    // Fix: COALESCE(phase_started_at, issued_date) >= NOW() - INTERVAL '3 years'
+    // ensures permits with decade-old anchors never enter the stream.
+    // Red Light: this test MUST fail before the SOURCE_SQL edit is applied.
+    expect(content).toMatch(
+      /COALESCE\(p\.phase_started_at,\s*p\.issued_date::timestamptz\)\s*>=\s*NOW\(\)\s*-\s*INTERVAL\s*'3 years'/,
+    );
+  });
+
+  it('WF3 Zombie Gate: stale-purge NOT EXISTS mirrors SOURCE_SQL Branch B 3-year gate', () => {
+    // The stale-purge must use the same recency gate as SOURCE_SQL — otherwise
+    // a permit that ages out of the 3-year window stays in trade_forecasts until
+    // the grace-purge window (180 days after expiry) catches it, producing a
+    // ghost forecast for up to ~180 days after the permit should have been evicted.
+    // Red Light: this test MUST fail before the stale-purge edit is applied.
+    const coalesceGate =
+      /COALESCE\(p\.phase_started_at,\s*p\.issued_date::timestamptz\)\s*>=\s*NOW\(\)\s*-\s*INTERVAL\s*'3 years'/g;
+    const matches = content.match(coalesceGate);
+    // Must appear in both SOURCE_SQL and the NOT EXISTS subquery
+    expect(matches?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('WF3 P1/P2 Inclusion: SOURCE_SQL Branch A gates on application_date with 18-month window', () => {
+    // P1/P2 permits (pre-permit / CoA) have no issued_date or phase_started_at.
+    // application_date IS their primary temporal anchor. The 18-month gate is
+    // intentionally stricter than the 3-year zombie gate to prevent stale pre-permit
+    // leads from reaching the PERT pipeline.
+    // This test also confirms P1/P2 were successfully removed from SKIP_PHASES_SQL
+    // (so the OR branch structure exists at all — if P1/P2 were still skipped,
+    // there would be no Branch A).
+    expect(content).toMatch(
+      /p\.lifecycle_phase\s+IN\s+\(\s*'P1'\s*,\s*'P2'\s*\)/,
+    );
+    expect(content).toMatch(
+      /p\.application_date\s*>=\s*NOW\(\)\s*-\s*INTERVAL\s*'18 months'/,
+    );
+  });
+
+  it('WF3 P1/P2 Inclusion: Branch B explicitly excludes P1/P2 (branches are mutually exclusive)', () => {
+    // Branch B uses COALESCE(phase_started_at, issued_date) as anchor.
+    // P1/P2 have neither — they must NOT enter Branch B or the COALESCE
+    // falls back to NULL and the 3-year gate becomes vacuously true.
+    // p.lifecycle_phase NOT IN ('P1','P2') in Branch B is the guard.
+    expect(content).toMatch(
+      /lifecycle_phase NOT IN \$\{SKIP_PHASES_SQL\}[\s\S]{0,120}lifecycle_phase NOT IN \('P1','P2'\)/,
+    );
+  });
 });

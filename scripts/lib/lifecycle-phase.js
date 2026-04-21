@@ -400,8 +400,9 @@ const DEAD_STATUS_ARRAY = Object.freeze([...DEAD_STATUS_SET]);
 // Exported as a single source of truth so all consumers stay in sync.
 //   P19, P20  — terminal (wind-down / closed)
 //   O1, O2, O3 — orphan (detached parent folder, progression unreliable)
-//   P1, P2    — CoA pre-permit phases (not real building permits)
-const SKIP_PHASES_SQL = `('P19','P20','O1','O2','O3','P1','P2')`;
+// NOTE: P1/P2 removed 2026-04-21 — now included with 18-month recency gate
+// in compute-trade-forecasts.js SOURCE_SQL directly.
+const SKIP_PHASES_SQL = `('P19','P20','O1','O2','O3')`;
 
 // Frozen array form of NORMALIZED_DEAD_DECISIONS — same rationale for CoA.
 const NORMALIZED_DEAD_DECISIONS_ARRAY = Object.freeze([...NORMALIZED_DEAD_DECISIONS]);
@@ -500,6 +501,7 @@ const TRADE_TARGET_PHASE = Object.freeze({
 // forecasts.js still filters them via SKIP_PHASES (runs before
 // PHASE_ORDINAL lookup), so these ordinals don't affect forecasting.
 const PHASE_ORDINAL = Object.freeze({
+  P1: -8, P2: -7,
   P3: -6, P4: -5, P5: -4, P6: -3,
   P7a: -2, P7b: -2, P7c: -2, P7d: -2,
   P8: -1,

@@ -31,7 +31,6 @@ let TRADE_TARGET_PHASE = TRADE_TARGET_PHASE_FALLBACK;
 const SKIP_PHASES = new Set([
   'P19', 'P20',        // terminal
   'O1', 'O2', 'O3',    // orphan
-  'P1', 'P2',          // CoA pre-permit
 ]);
 
 // SKIP_PHASES_SQL imported from scripts/lib/lifecycle-phase.js — single source of truth.
@@ -44,6 +43,7 @@ const SKIP_PHASES = new Set([
 // Putting P18 here forced ISSUED calibration with issued_date anchors,
 // making virtually every P18 forecast "overdue." See adversarial Probe 2.
 const PRE_CONSTRUCTION_PHASES = new Set([
+  'P1', 'P2',               // pre-permit (application received, CoA)
   'P3', 'P4', 'P5', 'P6',  // pre-issuance
   'P7a', 'P7b', 'P7c', 'P7d', // issued, pre-construction
   'P8',                      // revised
@@ -264,7 +264,18 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       LEFT JOIN last_passed lp ON lp.permit_num = p.permit_num
      WHERE pt.is_active = true
        AND p.lifecycle_phase IS NOT NULL
-       AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
+       AND (
+         (
+           p.lifecycle_phase IN ('P1','P2')
+           AND p.application_date IS NOT NULL
+           AND p.application_date >= NOW() - INTERVAL '18 months'
+         )
+         OR (
+           p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
+           AND p.lifecycle_phase NOT IN ('P1','P2')
+           AND COALESCE(p.phase_started_at, p.issued_date::timestamptz) >= NOW() - INTERVAL '3 years'
+         )
+       )
   `;
 
   let totalRows = 0;
@@ -321,8 +332,19 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
                  AND pt.revision_num = tf.revision_num
                  AND t.slug = tf.trade_slug
                  AND pt.is_active = true
-                 AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
                  AND p.lifecycle_phase IS NOT NULL
+                 AND (
+                   (
+                     p.lifecycle_phase IN ('P1','P2')
+                     AND p.application_date IS NOT NULL
+                     AND p.application_date >= NOW() - INTERVAL '18 months'
+                   )
+                   OR (
+                     p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
+                     AND p.lifecycle_phase NOT IN ('P1','P2')
+                     AND COALESCE(p.phase_started_at, p.issued_date::timestamptz) >= NOW() - INTERVAL '3 years'
+                   )
+                 )
             )
           RETURNING 1`,
         );
