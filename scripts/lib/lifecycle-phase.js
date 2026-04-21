@@ -215,18 +215,21 @@ function mapInspectionStageToPhase(stageLower) {
 function computeStalled(input) {
   if (input.enriched_status === 'Stalled') return true;
 
+  const issuedStallDays     = input.permitIssuedStallDays ?? 730;
+  const inspectionStallDays = input.inspectionStallDays   ?? 180;
+
   if (
     input.status === 'Permit Issued' &&
     !input.has_passed_inspection &&
     input.issued_date != null
   ) {
     const daysSinceIssued = daysBetween(input.issued_date, input.now);
-    if (daysSinceIssued > 730) return true;
+    if (daysSinceIssued > issuedStallDays) return true;
   }
 
   if (input.status === 'Inspection' && input.latest_inspection_date != null) {
     const daysSinceInspection = daysBetween(input.latest_inspection_date, input.now);
-    if (daysSinceInspection > 180) return true;
+    if (daysSinceInspection > inspectionStallDays) return true;
   }
 
   return false;
@@ -313,14 +316,21 @@ function classifyBldLed(input, status, stalled) {
 
   if (status === 'Permit Issued') {
     if (input.has_passed_inspection) {
+      if (input.latest_passed_stage != null) {
+        const stageLower = String(input.latest_passed_stage).toLowerCase();
+        const mapped = mapInspectionStageToPhase(stageLower);
+        if (mapped) return { phase: mapped, stalled };
+      }
       return { phase: 'P18', stalled };
     }
     if (input.issued_date == null) {
       return { phase: 'P7c', stalled };
     }
+    const p7aMax = input.p7aMaxDays ?? 30;
+    const p7bMax = input.p7bMaxDays ?? 90;
     const daysSinceIssued = daysBetween(input.issued_date, input.now);
-    if (daysSinceIssued <= 30) return { phase: 'P7a', stalled };
-    if (daysSinceIssued <= 90) return { phase: 'P7b', stalled };
+    if (daysSinceIssued <= p7aMax) return { phase: 'P7a', stalled };
+    if (daysSinceIssued <= p7bMax) return { phase: 'P7b', stalled };
     return { phase: 'P7c', stalled };
   }
 

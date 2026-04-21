@@ -1410,7 +1410,7 @@ and registry-vs-code agreement.
 | **90** | `scripts/link-parcels.js` | 2 — Link | YES — `linked_at`, `parcel_linked_at` |
 | **91** | `scripts/link-massing.js` | 2 — Link | YES — `linked_at` |
 | **92** | `scripts/link-neighbourhoods.js` | 2 — Link | NO |
-| **93** | `scripts/link-coa.js` | 2 — Link | YES — `last_seen_at` |
+| **12** | `scripts/link-coa.js` | 2 — Link | YES — `last_seen_at` |
 | **94** | `scripts/link-wsib.js` | 2 — Link | YES — `matched_at` |
 | **95** | `scripts/load-coa.js` | 4 — Load/Ingest | YES — `first_seen_at`, `last_seen_at` |
 | **96** | `scripts/load-address-points.js` | 4 — Load/Ingest | NO |

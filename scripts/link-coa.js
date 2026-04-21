@@ -31,7 +31,7 @@ const LOGIC_VARS_SCHEMA = z.object({
   coa_match_conf_medium: z.coerce.number().finite().positive().max(1),
 }).passthrough();
 
-const ADVISORY_LOCK_ID = 93;
+const ADVISORY_LOCK_ID = 12;
 
 pipeline.run('link-coa', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {

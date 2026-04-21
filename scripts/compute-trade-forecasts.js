@@ -156,6 +156,12 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       work_phase: tc.work_phase_target,
     }]),
   );
+  const undefinedPhaseCount = Object.values(TRADE_TARGET_PHASE)
+    .filter(v => v.bid_phase == null || v.work_phase == null).length;
+  if (undefinedPhaseCount > 0) {
+    pipeline.log.warn('[trade-forecasts]',
+      `${undefinedPhaseCount} trades have missing phase targets — fell back to lifecycle-phase.js constants`);
+  }
 
   // §47 §6.1 — DB clock, captured once; bound to every computed_at write.
   // Also derive today as UTC midnight from the same DB clock so phase/urgency
@@ -214,64 +220,15 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Step 2: Stale-purge + pre-count (before stream opens)
+  // Step 2: Stale-purge + pre-count folded into first UPSERT batch
   //
-  // Runs in its own transaction so the DELETE and pre_count are
-  // atomic before any UPSERT batches begin.
+  // §7.3: DELETE + UPSERT must share the same withTransaction so a
+  // crash between commits cannot leave trade_forecasts empty.
+  // purgeExecuted gates the purge to the first flushForecastBatch call.
   // ═══════════════════════════════════════════════════════════
   let stalePurged = 0;
   let gracePurged = 0;
   let preRowCount = 0;
-
-  await pipeline.withTransaction(pool, async (client) => {
-    // F1 Grace-Purge: remove expired forecasts older than 180 days.
-    // The snowplow is dead code for expired rows — all expired rows have a real
-    // phase anchor (anchorIsFallback is always false), so no snapping occurs.
-    // Without this purge, expired rows accumulate indefinitely. The 180-day
-    // window keeps ~6 months of recently-expired leads visible while shedding
-    // true zombie data. Uses runAt for run-clock consistency.
-    const graceResult = await client.query(
-      `DELETE FROM trade_forecasts
-        WHERE urgency = 'expired'
-          AND predicted_start < $1::timestamptz - INTERVAL '180 days'`,
-      [runAt],
-    );
-    gracePurged = graceResult.rowCount || 0;
-    if (gracePurged > 0) {
-      pipeline.log.info(
-        '[trade-forecasts]',
-        `Grace-purged ${gracePurged.toLocaleString()} expired forecasts older than 180 days`,
-      );
-    }
-
-    const { rows: staleRows } = await client.query(
-      `DELETE FROM trade_forecasts tf
-        WHERE NOT EXISTS (
-          SELECT 1 FROM permit_trades pt
-            JOIN permits p ON p.permit_num = pt.permit_num
-                          AND p.revision_num = pt.revision_num
-            JOIN trades t ON t.id = pt.trade_id
-           WHERE pt.permit_num = tf.permit_num
-             AND pt.revision_num = tf.revision_num
-             AND t.slug = tf.trade_slug
-             AND pt.is_active = true
-             AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
-             AND p.lifecycle_phase IS NOT NULL
-        )
-      RETURNING 1`,
-    );
-    stalePurged = staleRows.length;
-    if (stalePurged > 0) {
-      pipeline.log.info(
-        '[trade-forecasts]',
-        `Purged ${stalePurged.toLocaleString()} stale forecasts for terminal/orphan/dead permits`,
-      );
-    }
-    const { rows: preCount } = await client.query(
-      'SELECT COUNT(*)::int AS n FROM trade_forecasts',
-    );
-    preRowCount = preCount[0].n;
-  });
 
   // ═══════════════════════════════════════════════════════════
   // Step 3: Stream permit-trade pairs + compute + per-batch flush
@@ -317,10 +274,63 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   let snowplowCount = 0;
   let batch = [];
   let batchCount = 0;
+  let purgeExecuted = false;
 
   const flushForecastBatch = async (currentBatch) => {
-    if (currentBatch.length === 0) return;
+    const shouldPurge = !purgeExecuted;
+    const hasRows = currentBatch.length > 0;
+    if (!shouldPurge && !hasRows) return;
     await pipeline.withTransaction(pool, async (client) => {
+      if (shouldPurge) {
+        // F1 Grace-Purge: remove expired forecasts older than 180 days.
+        // The snowplow is dead code for expired rows — all expired rows have a real
+        // phase anchor (anchorIsFallback is always false), so no snapping occurs.
+        // Without this purge, expired rows accumulate indefinitely. The 180-day
+        // window keeps ~6 months of recently-expired leads visible while shedding
+        // true zombie data. Uses runAt for run-clock consistency.
+        const graceResult = await client.query(
+          `DELETE FROM trade_forecasts
+            WHERE urgency = 'expired'
+              AND predicted_start < $1::timestamptz - INTERVAL '180 days'`,
+          [runAt],
+        );
+        gracePurged = graceResult.rowCount || 0;
+        if (gracePurged > 0) {
+          pipeline.log.info(
+            '[trade-forecasts]',
+            `Grace-purged ${gracePurged.toLocaleString()} expired forecasts older than 180 days`,
+          );
+        }
+
+        const { rows: staleRows } = await client.query(
+          `DELETE FROM trade_forecasts tf
+            WHERE NOT EXISTS (
+              SELECT 1 FROM permit_trades pt
+                JOIN permits p ON p.permit_num = pt.permit_num
+                              AND p.revision_num = pt.revision_num
+                JOIN trades t ON t.id = pt.trade_id
+               WHERE pt.permit_num = tf.permit_num
+                 AND pt.revision_num = tf.revision_num
+                 AND t.slug = tf.trade_slug
+                 AND pt.is_active = true
+                 AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
+                 AND p.lifecycle_phase IS NOT NULL
+            )
+          RETURNING 1`,
+        );
+        stalePurged = staleRows.length;
+        if (stalePurged > 0) {
+          pipeline.log.info(
+            '[trade-forecasts]',
+            `Purged ${stalePurged.toLocaleString()} stale forecasts for terminal/orphan/dead permits`,
+          );
+        }
+        const { rows: preCount } = await client.query(
+          'SELECT COUNT(*)::int AS n FROM trade_forecasts',
+        );
+        preRowCount = preCount[0].n;
+      }
+      if (!hasRows) return;
       const vals = [];
       const params = [];
       for (let j = 0; j < currentBatch.length; j++) {
@@ -362,6 +372,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       // guards elsewhere would return 0. Counting batch size was over-reporting.
       upserted += insertResult.rowCount || 0;
     });
+    // Set purgeExecuted only after the transaction commits successfully.
+    // If the transaction rolls back, the flag stays false so the next
+    // flushForecastBatch call will retry the purge.
+    if (shouldPurge) purgeExecuted = true;
   };
 
   pipeline.log.info('[trade-forecasts]', 'Streaming active permit-trade pairs...');

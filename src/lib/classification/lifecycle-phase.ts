@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/reports/lifecycle_phase_implementation.md §1.1–§1.6
+// 🔗 SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §1.1–§1.6
 // 🔗 DUAL CODE PATH: scripts/lib/lifecycle-phase.js must mirror this logic
 //                    bit-for-bit (CLAUDE.md §7).
 //
@@ -45,6 +45,14 @@ export interface PermitClassifierInput {
   has_passed_inspection: boolean;
   /** Injected "now" for deterministic testing. Defaults to new Date() in callers. */
   now: Date;
+  /** Days since Permit Issued before stall flag is set. From logic_variables. */
+  permitIssuedStallDays?: number | null;
+  /** Days since last inspection before stall flag is set. From logic_variables. */
+  inspectionStallDays?: number | null;
+  /** Max days since issued for P7a bucket. From logic_variables. */
+  p7aMaxDays?: number | null;
+  /** Max days since issued for P7b bucket. From logic_variables. */
+  p7bMaxDays?: number | null;
 }
 
 export interface PermitClassifierResult {
@@ -390,6 +398,9 @@ function computeStalled(input: PermitClassifierInput): boolean {
   // Signal 1: scraper-derived stalled flag
   if (input.enriched_status === 'Stalled') return true;
 
+  const issuedStallDays     = input.permitIssuedStallDays ?? 730;
+  const inspectionStallDays = input.inspectionStallDays   ?? 180;
+
   // Signal 2: long-issued Permit Issued with no passed inspection
   if (
     input.status === 'Permit Issued' &&
@@ -397,16 +408,16 @@ function computeStalled(input: PermitClassifierInput): boolean {
     input.issued_date != null
   ) {
     const daysSinceIssued = daysBetween(input.issued_date, input.now);
-    if (daysSinceIssued > 730) return true;
+    if (daysSinceIssued > issuedStallDays) return true;
   }
 
-  // Signal 3: Inspection status with last inspection > 180 days old
+  // Signal 3: Inspection status with last inspection > threshold days old
   if (
     input.status === 'Inspection' &&
     input.latest_inspection_date != null
   ) {
     const daysSinceInspection = daysBetween(input.latest_inspection_date, input.now);
-    if (daysSinceInspection > 180) return true;
+    if (daysSinceInspection > inspectionStallDays) return true;
   }
 
   return false;
@@ -533,20 +544,23 @@ function classifyBldLed(
   // P7a/b/c — Permit Issued, time-bucketed, no passed inspection yet
   if (status === 'Permit Issued') {
     if (input.has_passed_inspection) {
-      // Has passed inspection rows but status is still "Permit Issued" —
-      // shouldn't usually happen but defend against it by routing to P18
-      // (active construction, unknown sub-stage) since the permit has
-      // real inspection activity.
+      if (input.latest_passed_stage != null) {
+        const stageLower = String(input.latest_passed_stage).toLowerCase();
+        const mapped = mapInspectionStageToPhase(stageLower);
+        if (mapped) return { phase: mapped, stalled };
+      }
       return { phase: 'P18', stalled };
     }
     if (input.issued_date == null) {
       return { phase: 'P7c', stalled };
     }
+    const p7aMax = input.p7aMaxDays ?? 30;
+    const p7bMax = input.p7bMaxDays ?? 90;
     const daysSinceIssued = daysBetween(input.issued_date, input.now);
-    if (daysSinceIssued <= 30) return { phase: 'P7a', stalled };
-    if (daysSinceIssued <= 90) return { phase: 'P7b', stalled };
-    // P7c covers the 91-730 range AND the >730 range — stalled flag
-    // disambiguates. Tests assert this behavior.
+    if (daysSinceIssued <= p7aMax) return { phase: 'P7a', stalled };
+    if (daysSinceIssued <= p7bMax) return { phase: 'P7b', stalled };
+    // P7c covers the range above p7bMax — stalled flag disambiguates.
+    // Tests assert this behavior.
     return { phase: 'P7c', stalled };
   }
 

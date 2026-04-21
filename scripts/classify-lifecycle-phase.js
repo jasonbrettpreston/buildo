@@ -38,7 +38,11 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-load
 // ─────────────────────────────────────────────────────────────────
 
 const LIFECYCLE_CONFIG_SCHEMA = z.object({
-  coa_stall_threshold: z.coerce.number().positive(),
+  coa_stall_threshold:             z.coerce.number().positive(),
+  lifecycle_issued_stall_days:     z.coerce.number().int().positive(),
+  lifecycle_inspection_stall_days: z.coerce.number().int().positive(),
+  lifecycle_p7a_max_days:          z.coerce.number().int().positive(),
+  lifecycle_p7b_max_days:          z.coerce.number().int().positive(),
 });
 
 // ─────────────────────────────────────────────────────────────────
@@ -192,7 +196,11 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       `[classify-lifecycle-phase] config validation failed: ${configValidation.errors.join('; ')}`,
     );
   }
-  const COA_STALL_THRESHOLD_DAYS = logicVars.coa_stall_threshold;
+  const COA_STALL_THRESHOLD_DAYS       = logicVars.coa_stall_threshold;
+  const PERMIT_ISSUED_STALL_DAYS       = logicVars.lifecycle_issued_stall_days;
+  const INSPECTION_STALL_DAYS          = logicVars.lifecycle_inspection_stall_days;
+  const P7A_MAX_DAYS                   = logicVars.lifecycle_p7a_max_days;
+  const P7B_MAX_DAYS                   = logicVars.lifecycle_p7b_max_days;
 
   // ═══════════════════════════════════════════════════════════
   // Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration)
@@ -477,6 +485,10 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       latest_inspection_date: insp.latest_inspection_date,
       has_passed_inspection: insp.has_passed_inspection,
       now: RUN_AT,
+      permitIssuedStallDays: PERMIT_ISSUED_STALL_DAYS,
+      inspectionStallDays:   INSPECTION_STALL_DAYS,
+      p7aMaxDays:            P7A_MAX_DAYS,
+      p7bMaxDays:            P7B_MAX_DAYS,
     });
     permitBatch.push({
       permit_num: row.permit_num,

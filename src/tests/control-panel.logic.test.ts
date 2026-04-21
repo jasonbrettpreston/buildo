@@ -116,6 +116,10 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'profiling_coverage_pass_pct',      // spec 49
   'profiling_coverage_warn_pct',      // spec 49
   'snowplow_buffer_days',             // WF3 spec 85 §3 — Historic Snowplow buffer (spec 47 §4.1)
+  'lifecycle_issued_stall_days',      // WF2 — days since Permit Issued before stall flag (§4.1)
+  'lifecycle_inspection_stall_days',  // WF2 — days since last inspection before stall flag (§4.1)
+  'lifecycle_p7a_max_days',           // WF2 — max days for P7a bucket (§4.1)
+  'lifecycle_p7b_max_days',           // WF2 — max days for P7b bucket (§4.1)
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

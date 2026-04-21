@@ -47,7 +47,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/link-parcels.js':         90,
   'scripts/link-massing.js':         91,
   'scripts/link-neighbourhoods.js':  92,
-  'scripts/link-coa.js':             93,
+  'scripts/link-coa.js':             12,
   'scripts/link-wsib.js':            94,
   // Wave 1 — Classify
   'scripts/classify-inspection-status.js': 53,
