@@ -56,7 +56,9 @@ When any fallback is used, `calibration_method` is stamped `'fallback_issued'` t
 - **Calibration Fallback:** Exact Match -> Permit Type Fallback -> Issued Date Fallback -> Default (30 days).
 
 ### Outputs
-Upserts rows to `trade_forecasts`; purges stale rows for terminal or deactivated permits.
+Upserts rows to `trade_forecasts`. Runs two purge passes in Step 2 (atomic `withTransaction`):
+- **Stale Purge:** Deletes forecasts for permits where the trade is deactivated or the permit is in `SKIP_PHASES`. Uses `NOT EXISTS` against active `permit_trades` outside `SKIP_PHASES`.
+- **Grace-Purge (WF2 2026-04-21):** Deletes forecasts where `urgency = 'expired' AND predicted_start < runAt - 180 days`. Prevents zombie accumulation of expired rows that the snowplow cannot rescue (all expired rows have a real phase anchor, so `anchorIsFallback` is always false and the snowplow never fires for them). Tracked via `grace_purged` in `records_meta`.
 
 ### Urgency Classification
 - **`expired`:** > `logic_variables.expired_threshold_days` (default 90) days in the past (dead lead).
@@ -69,7 +71,13 @@ Upserts rows to `trade_forecasts`; purges stale rows for terminal or deactivated
 ## 4. Testing Mandate
 
 - **Logic:** `trade-forecasts.logic.test.ts` — Tests the "Rolling Snowplow" math, bimodal target switching, and UTC midnight normalization.
-- **Infra:** `trade-forecasts.infra.test.ts` — Verifies the "Ironclad Ghost Purge" (deleting forecasts when trades are deactivated) and batch UPSERT performance.
+- **Infra:** `trade-forecasts.infra.test.ts` — Verifies:
+  - Ironclad Ghost Purge (deleting forecasts when trades are deactivated)
+  - Grace-purge: DELETE WHERE urgency='expired' AND predicted_start older than 180 days inside `withTransaction` (not bare pool.query)
+  - `grace_purged` in `records_meta`
+  - `SKIP_PHASES_SQL` constant + `lifecycle_phase NOT IN` in SOURCE_SQL (SQL pushdown — not JS loop)
+  - `SKIP_PHASES.size === 0` startup guard
+  - `skipped_no_anchor` counter (not `skipped_terminal_orphan`)
 
 ---
 

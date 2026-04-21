@@ -32,6 +32,11 @@ const SKIP_PHASES = new Set([
   'P1', 'P2',          // CoA pre-permit
 ]);
 
+// SQL NOT IN list derived from SKIP_PHASES for SOURCE_SQL pushdown (S1 / WF2 2026-04-21).
+// Hardcoded string mirrors SKIP_PHASES exactly — must be kept in sync if SKIP_PHASES changes.
+// Structural constant (spec 47 §4.1): enum vocabulary, not an operator-tunable value.
+const SKIP_PHASES_SQL = `('P19','P20','O1','O2','O3','P1','P2')`;
+
 // Pre-construction phases use ISSUED calibration instead of phase-to-phase.
 // P18 is intentionally NOT here — it means "construction active with at
 // least one passed inspection." P18 permits should use the phase-to-phase
@@ -120,6 +125,12 @@ function classifyConfidence(sampleSize, isFallback) {
 const ADVISORY_LOCK_ID = 85;
 
 pipeline.run('compute-trade-forecasts', async (pool) => {
+  // spec 47 §4.3 startup guard: SKIP_PHASES is a structural constant but we verify
+  // it's non-empty so an accidental Set clear never makes the NOT IN vacuously-true.
+  if (SKIP_PHASES.size === 0) {
+    throw new Error('[compute-trade-forecasts] SKIP_PHASES is empty — refusing to run (vacuously-true NOT IN guard)');
+  }
+
   // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
   // Replaces hand-rolled lockClient + SIGTERM boilerplate. Helper handles:
   // dedicated pool.connect() client, advisory lock acquire/release,
@@ -210,9 +221,30 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   // atomic before any UPSERT batches begin.
   // ═══════════════════════════════════════════════════════════
   let stalePurged = 0;
+  let gracePurged = 0;
   let preRowCount = 0;
 
   await pipeline.withTransaction(pool, async (client) => {
+    // F1 Grace-Purge: remove expired forecasts older than 180 days.
+    // The snowplow is dead code for expired rows — all expired rows have a real
+    // phase anchor (anchorIsFallback is always false), so no snapping occurs.
+    // Without this purge, expired rows accumulate indefinitely. The 180-day
+    // window keeps ~6 months of recently-expired leads visible while shedding
+    // true zombie data. Uses runAt for run-clock consistency.
+    const graceResult = await client.query(
+      `DELETE FROM trade_forecasts
+        WHERE urgency = 'expired'
+          AND predicted_start < $1::timestamptz - INTERVAL '180 days'`,
+      [runAt],
+    );
+    gracePurged = graceResult.rowCount || 0;
+    if (gracePurged > 0) {
+      pipeline.log.info(
+        '[trade-forecasts]',
+        `Grace-purged ${gracePurged.toLocaleString()} expired forecasts older than 180 days`,
+      );
+    }
+
     const { rows: staleRows } = await client.query(
       `DELETE FROM trade_forecasts tf
         WHERE NOT EXISTS (
@@ -224,7 +256,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
              AND pt.revision_num = tf.revision_num
              AND t.slug = tf.trade_slug
              AND pt.is_active = true
-             AND p.lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','P1','P2')
+             AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
              AND p.lifecycle_phase IS NOT NULL
         )
       RETURNING 1`,
@@ -275,6 +307,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       LEFT JOIN last_passed lp ON lp.permit_num = p.permit_num
      WHERE pt.is_active = true
        AND p.lifecycle_phase IS NOT NULL
+       AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
   `;
 
   let totalRows = 0;
@@ -341,12 +374,6 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       lifecycle_stalled, last_passed_inspection_date,
       issued_date, application_date,
     } = row;
-
-    // Skip terminal/orphan/CoA phases
-    if (SKIP_PHASES.has(lifecycle_phase)) {
-      skipped++;
-      continue;
-    }
 
     // Fallback Anchor Hierarchy (spec 85 §3): phase_started_at → last passed
     // inspection → issued_date → application_date. Stamps 'fallback_issued'
@@ -523,7 +550,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   batch = [];
 
   pipeline.log.info('[trade-forecasts]', `Rows streamed: ${totalRows.toLocaleString()}`);
-  pipeline.log.info('[trade-forecasts]', `Skipped (terminal/orphan): ${skipped.toLocaleString()}`);
+  pipeline.log.info('[trade-forecasts]', `Skipped (no anchor): ${skipped.toLocaleString()}`);
   if (unmappedTrades > 0) {
     pipeline.log.warn('[trade-forecasts]', `Unmapped trades (not in TRADE_TARGET_PHASE): ${unmappedTrades}`);
   }
@@ -556,7 +583,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     { metric: 'forecasts_computed',        value: upserted,                threshold: null,    status: 'INFO' },
     { metric: 'new_forecasts',             value: newRows,                 threshold: null,    status: 'INFO' },
     { metric: 'stale_purged',              value: stalePurged,             threshold: null,    status: 'INFO' },
-    { metric: 'skipped_terminal_orphan',   value: skipped,                 threshold: null,    status: 'INFO' },
+    { metric: 'grace_purged',             value: gracePurged,             threshold: null,    status: 'INFO' },
+    // skipped_no_anchor: rows reaching the JS loop with no effectiveAnchor (all 4 fallback fields NULL).
+    // Terminal/orphan phases (SKIP_PHASES) are now excluded at SQL level — they no longer reach this counter.
+    { metric: 'skipped_no_anchor',         value: skipped,                 threshold: null,    status: 'INFO' },
     { metric: 'snowplow_applied',          value: snowplowCount,           threshold: null,    status: 'INFO' },
     {
       metric: 'unmapped_trades',
@@ -589,7 +619,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     records_meta: {
       forecasts_computed: upserted,
       stale_forecasts_purged: stalePurged,
-      skipped_terminal_orphan: skipped,
+      grace_purged: gracePurged,
+      skipped_no_anchor: skipped,
       unmapped_trades: unmappedTrades,
       anchor_fallbacks_used: anchorFallbackCount,
       snowplow_applied: snowplowCount,

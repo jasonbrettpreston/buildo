@@ -417,4 +417,82 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     // were rescued by the snowplow vs. expired naturally.
     expect(content).toMatch(/snowplow_applied\s*:\s*snowplowCount/);
   });
+
+  it('F1 grace-purge: deletes expired rows older than 180 days (prevents zombie accumulation)', () => {
+    // The snowplow is structurally dead code (all expired rows have phase_started_at IS NOT NULL,
+    // so anchorIsFallback is never true for expired rows). Without an explicit purge, expired
+    // trade_forecasts rows accumulate indefinitely. The grace-purge runs in Step 2's withTransaction
+    // to clear rows that are both urgency='expired' AND predicted_start > 180 days in the past.
+    expect(content).toMatch(/gracePurged/);
+    expect(content).toMatch(/DELETE FROM trade_forecasts/);
+    expect(content).toMatch(/urgency\s*=\s*'expired'/);
+    expect(content).toMatch(/INTERVAL '180 days'/);
+  });
+
+  it('F1 grace-purge: DELETE runs inside withTransaction, not as a bare pool.query', () => {
+    // Must be client.query inside the Step 2 withTransaction, not a standalone pool.query.
+    // A bare pool.query DELETE outside the transaction creates a crash-window between purge
+    // and upsert that leaves deleted rows gone without replacements (spec 47 §7.3 H-W2).
+    expect(content).not.toMatch(/await pool\.query\([\s\S]{0,80}urgency.*=.*'expired'[\s\S]{0,80}predicted_start/);
+    expect(content).not.toMatch(/await pool\.query\([\s\S]{0,80}predicted_start[\s\S]{0,80}urgency.*=.*'expired'/);
+  });
+
+  it('F1 grace-purge: grace_purged exposed in both audit_table rows and records_meta', () => {
+    // Dual-location requirement: spec §3 + spec §4 Testing Mandate
+    expect(content).toMatch(/metric:\s*['"]grace_purged['"]/);    // audit_table row
+    expect(content).toMatch(/grace_purged\s*:\s*gracePurged/);    // records_meta key
+  });
+
+  it('S1 SKIP_PHASES pushdown: SOURCE_SQL filters lifecycle_phase NOT IN SKIP_PHASES_SQL (not JS loop)', () => {
+    // Moving the SKIP_PHASES filter from JS to SQL eliminates ~1M rows from being
+    // streamed across the wire and discarded in the JS loop. DB filters at source.
+    expect(content).toMatch(/SKIP_PHASES_SQL/);
+    expect(content).toMatch(/lifecycle_phase NOT IN[\s\S]*?SKIP_PHASES_SQL/);
+  });
+
+  it('S1 SKIP_PHASES pushdown: JS SKIP_PHASES.has check removed from stream loop', () => {
+    // After SQL pushdown, the JS in-loop check is redundant and must be removed.
+    // Its presence would be misleading (implies rows still reach the loop).
+    expect(content).not.toMatch(/SKIP_PHASES\.has\(\s*lifecycle_phase\s*\)/);
+  });
+
+  it('S1 SKIP_PHASES pushdown: skipped counter renamed to skipped_no_anchor (terminal/orphan now SQL-filtered)', () => {
+    // The old name "skipped_terminal_orphan" was accurate when SKIP_PHASES filtering
+    // happened in JS. After SQL pushdown, the only rows skipped in the loop are those
+    // with no effectiveAnchor (all four fallback anchor fields are NULL).
+    expect(content).toMatch(/skipped_no_anchor/);
+    expect(content).not.toMatch(/skipped_terminal_orphan/);
+  });
+
+  it('S1 SKIP_PHASES pushdown: SKIP_PHASES.size === 0 startup guard present (spec 47 §4.3)', () => {
+    // spec 47 §4.3: validate constant arrays passed into SQL clauses are non-empty
+    // before running any queries. Empty SKIP_PHASES_SQL = vacuously-true NOT IN = no rows excluded.
+    expect(content).toMatch(/SKIP_PHASES\.size\s*===\s*0/);
+  });
+
+  it('S1 SKIP_PHASES_SQL mirrors SKIP_PHASES Set exactly (same phase codes, no drift)', () => {
+    // Both constants must contain identical phase codes. If SKIP_PHASES grows,
+    // SKIP_PHASES_SQL must also be updated — this test catches divergence.
+    const setMatch = content.match(/SKIP_PHASES\s*=\s*new Set\(\[([\s\S]*?)\]\)/);
+    const sqlMatch = content.match(/SKIP_PHASES_SQL\s*=\s*`\(([^`]+)\)`/);
+    expect(setMatch, 'SKIP_PHASES Set not found in script').toBeTruthy();
+    expect(sqlMatch, 'SKIP_PHASES_SQL constant not found in script').toBeTruthy();
+    const setPhases = (setMatch?.[1] ?? '').match(/'(\w+)'/g)?.map(s => s.slice(1, -1)).sort() ?? [];
+    const sqlPhases = (sqlMatch?.[1] ?? '').match(/'(\w+)'/g)?.map(s => s.slice(1, -1)).sort() ?? [];
+    expect(setPhases).toEqual(sqlPhases);
+  });
+
+  it('S1 stale-purge NOT IN uses SKIP_PHASES_SQL interpolation, not a separate hardcoded literal', () => {
+    // Both SOURCE_SQL and the stale-purge query must use ${SKIP_PHASES_SQL} so that
+    // adding a phase to SKIP_PHASES propagates to both queries automatically.
+    const matches = content.match(/NOT IN \$\{SKIP_PHASES_SQL\}/g);
+    expect(matches?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('S1 skipped counter log message uses "no anchor" label, not "terminal/orphan"', () => {
+    // After SQL pushdown, "skipped" only increments when effectiveAnchor is null/invalid.
+    // Terminal/orphan rows are excluded by SQL before the stream opens — they never reach JS.
+    expect(content).toMatch(/Skipped \(no anchor\)/);
+    expect(content).not.toMatch(/Skipped \(terminal\/orphan\)/);
+  });
 });
