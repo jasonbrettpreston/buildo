@@ -237,7 +237,7 @@ describe('scripts/classify-lifecycle-phase.js — Spec 47 §4 config validation'
     // validation at startup. Prevents silent NaN/undefined propagation
     // (e.g. DB NULL → parseFloat(null) → NaN → stall logic silently disabled).
     expect(content).toMatch(/z\.object\(/);
-    expect(content).toMatch(/coa_stall_threshold[\s\S]{0,50}z\.number\(\)/);
+    expect(content).toMatch(/coa_stall_threshold[\s\S]{0,50}z\.coerce\.number\(\)/);
     expect(content).toMatch(/validateLogicVars\(\s*logicVars/);
     // Validation result must be checked and thrown on failure
     expect(content).toMatch(/if\s*\(.*\.valid/);

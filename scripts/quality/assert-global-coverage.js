@@ -31,8 +31,8 @@ const ADVISORY_LOCK_ID = 111;
 const SKIP_PHASES_SQL = `('P19','P20','O1','O2','O3','P1','P2')`;
 
 const LOGIC_VARS_SCHEMA = z.object({
-  profiling_coverage_pass_pct: z.number().int().min(0).max(100),
-  profiling_coverage_warn_pct: z.number().int().min(0).max(100),
+  profiling_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
+  profiling_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
 }).refine(
   d => d.profiling_coverage_warn_pct < d.profiling_coverage_pass_pct,
   { message: 'profiling_coverage_warn_pct must be strictly less than profiling_coverage_pass_pct' },

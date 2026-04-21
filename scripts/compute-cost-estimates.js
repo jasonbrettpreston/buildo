@@ -41,13 +41,13 @@ const BATCH_SIZE = Math.floor((65535 - 1) / BULK_COLUMN_COUNT); // 4368
 // startup — bad DB values (NULL, 0, wrong type) throw immediately with a clear
 // message instead of silently producing NaN or corrupting estimates.
 const COST_MODEL_CONFIG_SCHEMA = z.object({
-  urban_coverage_ratio:           z.number().positive().max(1),
-  suburban_coverage_ratio:        z.number().positive().max(1),
+  urban_coverage_ratio:           z.coerce.number().positive().max(1),
+  suburban_coverage_ratio:        z.coerce.number().positive().max(1),
   // trust_threshold_pct intentionally excluded — reserved for Spec 83 Phase 2
   // (per-dataset coverage trust gate not yet implemented in the Brain).
   // Remains seeded in logic_variables.json and ZERO_IS_INVALID for future use.
-  liar_gate_threshold:            z.number().positive().max(1),
-  cost_model_coverage_warn_pct:   z.number().finite().positive(),
+  liar_gate_threshold:            z.coerce.number().positive().max(1),
+  cost_model_coverage_warn_pct:   z.coerce.number().finite().positive(),
 }).passthrough();
 
 // ─── Source query ─────────────────────────────────────────────────────────────

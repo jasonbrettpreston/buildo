@@ -27,8 +27,8 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-load
 const { safeParsePositiveInt } = require('./lib/safe-math');
 
 const LOGIC_VARS_SCHEMA = z.object({
-  stale_closure_abort_pct:    z.number().finite().positive(),
-  pending_closed_grace_days:  z.number().finite().positive().int(),
+  stale_closure_abort_pct:    z.coerce.number().finite().positive(),
+  pending_closed_grace_days:  z.coerce.number().finite().positive().int(),
 }).passthrough();
 
 const ADVISORY_LOCK_ID = 98;

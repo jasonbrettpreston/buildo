@@ -20,7 +20,7 @@ const { safeParsePositiveInt } = require('./lib/safe-math');
 const ADVISORY_LOCK_ID = 53;
 
 const LOGIC_VARS_SCHEMA = z.object({
-  inspection_stall_days: z.number().finite().positive().int(),
+  inspection_stall_days: z.coerce.number().finite().positive().int(),
 }).passthrough();
 
 pipeline.run('classify-inspection-status', async (pool) => {

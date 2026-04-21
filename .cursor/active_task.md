@@ -1,35 +1,39 @@
-# Active Task: WF3 — Coverage Script False FAILs + CoA lifecycle_stalled NULL
+# Active Task: Cross-Domain — WF3 ColumnarAuditTable rowKey Fix + WF2 z.coerce.number() Sweep
 **Status:** Implementation
-**Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `568edec59cb09d6728acb106a1190498eb8ba3e2`
+**Workflow:** WF3 (Frontend) + WF2 (Backend)
+**Rollback Anchor:** `b0ef6fe17b4ad3bc33dd8c3b1611115c273ad9a0`
+**Domain Mode:** Cross-Domain (Frontend + Backend/Pipeline)
 
 ## Context
-* **Goal:** Eliminate five false FAIL alerts across `assert-global-coverage.js` (permits + CoA chains) and fix the missing boolean write in `classify-lifecycle-phase.js`.
-* **Target Spec:** `docs/specs/pipeline/49_data_completeness_profiling.md`
-* **Key Files:**
-  - `scripts/quality/assert-global-coverage.js`
-  - `scripts/classify-lifecycle-phase.js`
-  - `src/tests/assert-global-coverage.infra.test.ts`
-  - `src/tests/classify-lifecycle-phase.infra.test.ts`
-
-## Bug List
-- **Bug 1:** `completed_date` at Step 2 uses `permitsTotal` denominator → 5.6% FAIL. Structural sparsity — active permits cannot have completed dates.
-- **Bug 2:** Seven naturally sparse fields (street_direction, building_type, category, owner, council_district, ward, builder_name) use coverageRow with 90% PASS threshold → FAIL.
-- **Bug 3:** CoA `lifecycle_phase` coverage uses `coaTotal` (32,920) denominator → 0.6% FAIL. Classifier only assigns P1/P2 to unlinked CoA apps; correct denominator = `COUNT(*) WHERE linked_permit_num IS NULL`.
-- **Bug 4:** Pre-permit coverage >100% (147/145 = 101.4%) because `approvedUnlinked` shrinks as CoAs link after pre-permit creation. Fix: denominator = all approved CoA apps; numerator = COUNT(DISTINCT permit_num).
-- **Bug 5:** `coa_applications.lifecycle_stalled` NULL for pre-migration-094 records. Dirty filter skips them (no last_seen_at change). Fix in classify script: add `OR lifecycle_stalled IS NULL` to dirty filter. Fix in coverage script: count IS NOT NULL (not = true).
-
-## Standards Compliance
-* **Try-Catch Boundary:** N/A — pipeline script wrapper
-* **Unhappy Path Tests:** N/A — regex-based infra tests
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A
+* **Goal (Part 1 / WF3):** Fix React key collision crash in `src/components/FreshnessTimeline.tsx` `ColumnarAuditTable` — rows keyed on `{ step_target, field }` but Score Engine rows use `{ metric, value }` → key evaluates to `"-"` for every row.
+* **Goal (Part 2 / WF2):** Replace remaining 35 bare `z.number()` with `z.coerce.number()` across 19 pipeline scripts (pg DECIMAL-as-string coercion sweep).
+* **Target Specs:**
+  - `docs/specs/product/admin/26_admin_dashboard.md`
+  - `docs/specs/pipeline/47_pipeline_script_protocol.md` §4
+  - `docs/specs/00_engineering_standards.md`
 
 ## Execution Plan
-- [x] Rollback Anchor: `568edec`
-- [x] State Verification: Source reading complete
-- [ ] Reproduction: Add failing infra tests (Red Light)
-- [ ] Red Light: Run tests MUST fail
-- [ ] Fix: implement in both scripts
-- [ ] Pre-Review Self-Checklist: sibling bugs check
+
+### Phase A — WF3 Frontend
+- [x] Rollback Anchor: `b0ef6fe`
+- [ ] State Verification: Confirm `row.metric` is the discriminator for Score Engine rows
+- [ ] Spec Review: 26_admin_dashboard.md ColumnarAuditTable section
+- [ ] Reproduction: Author failing UI test
+- [ ] Red Light: Must fail with duplicate-key error
+- [ ] Fix: Apply 3-line change to FreshnessTimeline.tsx lines 321-324
+- [ ] UI Regression Check: Run all *.ui.test.tsx
+- [ ] Pre-Review Self-Checklist (sibling-bugs)
+- [ ] Multi-Agent Adversarial Validation (DeepSeek + Gemini + Independent Review)
 - [ ] Green Light: npm run test && npm run lint -- --fix
+- [ ] Atomic Commit: fix(26_admin_dashboard): WF3 — unique rowKey for multi-schema ColumnarAuditTable
+
+### Phase B — WF2 Backend
+- [ ] State Verification: Re-confirm 35 instances / 19 files
+- [ ] Guardrail Test: pipeline_logic_vars_coercion.infra.test.ts
+- [ ] Red Light: Must fail on unpatched scripts
+- [ ] Implementation: Sweep all 19 files
+- [ ] Post-Edit Verification: 0 bare z.number() remaining in LOGIC_VARS_SCHEMA
+- [ ] Pre-Review Self-Checklist (spec-section)
+- [ ] Multi-Agent Adversarial Validation (DeepSeek + Gemini + Independent Review)
+- [ ] Green Light: npm run test && npm run lint -- --fix
+- [ ] Atomic Commit: chore(47_pipeline_script_protocol): WF2 — z.coerce.number() sweep across 19 pipeline scripts

@@ -26,7 +26,7 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-load
 const { safeParsePositiveInt } = require('./lib/safe-math');
 
 const LOGIC_VARS_SCHEMA = z.object({
-  pre_permit_expiry_months: z.number().finite().positive().int(),
+  pre_permit_expiry_months: z.coerce.number().finite().positive().int(),
 }).passthrough();
 
 const ADVISORY_LOCK_ID = 100;

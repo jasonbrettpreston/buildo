@@ -23,7 +23,7 @@ const {
 } = require('./../lib/lifecycle-phase');
 
 const LOGIC_VARS_SCHEMA = z.object({
-  lifecycle_unclassified_max: z.number().finite().nonnegative().int(),
+  lifecycle_unclassified_max: z.coerce.number().finite().nonnegative().int(),
 }).passthrough();
 
 // Advisory lock ID — unique to this assert script (§47 §A.5, ID 109).

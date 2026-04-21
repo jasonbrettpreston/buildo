@@ -37,9 +37,9 @@ let booleanPointInPolygon, turfPoint;
 const ADVISORY_LOCK_ID = 91;
 
 const LOGIC_VARS_SCHEMA = z.object({
-  massing_shed_threshold_sqm:    z.number().finite().positive(),
-  massing_garage_max_sqm:        z.number().finite().positive(),
-  massing_nearest_max_distance_m: z.number().finite().positive(),
+  massing_shed_threshold_sqm:    z.coerce.number().finite().positive(),
+  massing_garage_max_sqm:        z.coerce.number().finite().positive(),
+  massing_nearest_max_distance_m: z.coerce.number().finite().positive(),
 }).passthrough();
 
 const BATCH_SIZE = 500;

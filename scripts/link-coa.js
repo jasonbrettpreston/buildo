@@ -26,8 +26,8 @@ const { safeParsePositiveInt, safeParseIntOrNull } = require('./lib/safe-math');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
 const LOGIC_VARS_SCHEMA = z.object({
-  coa_match_conf_high:   z.number().finite().positive().max(1),
-  coa_match_conf_medium: z.number().finite().positive().max(1),
+  coa_match_conf_high:   z.coerce.number().finite().positive().max(1),
+  coa_match_conf_medium: z.coerce.number().finite().positive().max(1),
 }).passthrough();
 
 const ADVISORY_LOCK_ID = 93;

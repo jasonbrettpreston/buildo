@@ -20,8 +20,8 @@ const pipeline = require('../lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
 
 const LOGIC_VARS_SCHEMA = z.object({
-  scrape_early_phase_threshold_pct: z.number().finite().positive(),
-  scrape_stale_days:                z.number().finite().positive().int(),
+  scrape_early_phase_threshold_pct: z.coerce.number().finite().positive(),
+  scrape_stale_days:                z.coerce.number().finite().positive().int(),
 }).passthrough();
 
 // Must match scraper TARGET_TYPES (Spec 38 §3.6 — stage-level scrape targets only)

@@ -10,8 +10,8 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-load
 const TAG = '[refresh-snapshot]';
 
 const LOGIC_VARS_SCHEMA = z.object({
-  snapshot_coa_conf_high:  z.number().finite().positive().max(1),
-  coa_match_conf_medium:   z.number().finite().positive().max(1),
+  snapshot_coa_conf_high:  z.coerce.number().finite().positive().max(1),
+  coa_match_conf_medium:   z.coerce.number().finite().positive().max(1),
 }).passthrough();
 
 const ADVISORY_LOCK_ID = 40;

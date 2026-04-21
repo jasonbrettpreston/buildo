@@ -28,8 +28,8 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-load
 const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 
 const LOGIC_VARS_SCHEMA = z.object({
-  spatial_match_max_distance_m: z.number().finite().positive(),
-  spatial_match_confidence:     z.number().finite().positive().max(1),
+  spatial_match_max_distance_m: z.coerce.number().finite().positive(),
+  spatial_match_confidence:     z.coerce.number().finite().positive().max(1),
 }).passthrough();
 const BBOX_OFFSET = 0.001; // ~111m lat, ~82m lng at Toronto latitude
 

@@ -103,7 +103,7 @@ const ADVISORY_LOCK_ID = 86;
 // calibration_min_sample_size=0 would admit single-observation noise into
 // the calibration table; fail fast before computing. spec 47 §4.2.
 const CALIB_SCHEMA = z.object({
-  calibration_min_sample_size: z.number().finite().int().min(1),
+  calibration_min_sample_size: z.coerce.number().finite().int().min(1),
 }).passthrough();
 
 // 8 params per row: from_phase, to_phase, permit_type, median_days, p25_days,

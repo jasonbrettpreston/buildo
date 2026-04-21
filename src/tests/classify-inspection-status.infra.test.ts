@@ -37,7 +37,7 @@ describe('classify-inspection-status.js — inspection_stall_days externalizatio
   it('LOGIC_VARS_SCHEMA includes inspection_stall_days with numeric type', () => {
     expect(SRC).toMatch(/LOGIC_VARS_SCHEMA/);
     expect(SRC).toMatch(/inspection_stall_days/);
-    expect(SRC).toMatch(/z\.number/);
+    expect(SRC).toMatch(/z\.coerce\.number/);
   });
 
   it('SQL INTERVAL literals are parameterized — no hardcoded 300 days', () => {

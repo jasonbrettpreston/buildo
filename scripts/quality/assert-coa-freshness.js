@@ -26,7 +26,7 @@ const pipeline = require('../lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
 
 const LOGIC_VARS_SCHEMA = z.object({
-  coa_freshness_warn_days: z.number().finite().positive().int(),
+  coa_freshness_warn_days: z.coerce.number().finite().positive().int(),
 }).passthrough();
 
 const ADVISORY_LOCK_ID = 108;

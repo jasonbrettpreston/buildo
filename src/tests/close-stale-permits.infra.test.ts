@@ -58,6 +58,6 @@ describe('close-stale-permits.js — threshold externalization (§6.4)', () => {
     expect(SRC).toMatch(/LOGIC_VARS_SCHEMA/);
     expect(SRC).toMatch(/stale_closure_abort_pct/);
     expect(SRC).toMatch(/pending_closed_grace_days/);
-    expect(SRC).toMatch(/z\.number/);
+    expect(SRC).toMatch(/z\.coerce\.number/);
   });
 });

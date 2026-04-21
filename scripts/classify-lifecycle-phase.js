@@ -38,7 +38,7 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-load
 // ─────────────────────────────────────────────────────────────────
 
 const LIFECYCLE_CONFIG_SCHEMA = z.object({
-  coa_stall_threshold: z.number().positive(),
+  coa_stall_threshold: z.coerce.number().positive(),
 });
 
 // ─────────────────────────────────────────────────────────────────

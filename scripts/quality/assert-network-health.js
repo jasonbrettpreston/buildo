@@ -22,9 +22,9 @@ const pipeline = require('../lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
 
 const LOGIC_VARS_SCHEMA = z.object({
-  scraper_error_rate_warn_pct:   z.number().finite().positive(),
-  scraper_latency_p50_warn_ms:   z.number().finite().positive(),
-  scraper_empty_streak_warn:     z.number().finite().positive().int(),
+  scraper_error_rate_warn_pct:   z.coerce.number().finite().positive(),
+  scraper_latency_p50_warn_ms:   z.coerce.number().finite().positive(),
+  scraper_empty_streak_warn:     z.coerce.number().finite().positive().int(),
 }).passthrough();
 
 const ADVISORY_LOCK_ID = 105;

@@ -23,7 +23,7 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-load
 const { safeParsePositiveInt } = require('./lib/safe-math');
 
 const LOGIC_VARS_SCHEMA = z.object({
-  wsib_fuzzy_match_threshold: z.number().finite().positive().max(1),
+  wsib_fuzzy_match_threshold: z.coerce.number().finite().positive().max(1),
 }).passthrough();
 
 const ADVISORY_LOCK_ID = 94;

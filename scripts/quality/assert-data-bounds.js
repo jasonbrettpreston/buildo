@@ -18,12 +18,12 @@ const pipeline = require('../lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
 
 const LOGIC_VARS_SCHEMA = z.object({
-  cost_outlier_ceiling_cad:        z.number().finite().positive(),
-  desc_null_rate_warn_pct:         z.number().finite().positive(),
-  builder_null_rate_warn_pct:      z.number().finite().positive(),
-  cost_est_null_rate_warn_pct:     z.number().finite().positive(),
-  cost_est_min_tiers:              z.number().finite().positive().int(),
-  calibration_freshness_warn_hours: z.number().finite().positive(),
+  cost_outlier_ceiling_cad:        z.coerce.number().finite().positive(),
+  desc_null_rate_warn_pct:         z.coerce.number().finite().positive(),
+  builder_null_rate_warn_pct:      z.coerce.number().finite().positive(),
+  cost_est_null_rate_warn_pct:     z.coerce.number().finite().positive(),
+  cost_est_min_tiers:              z.coerce.number().finite().positive().int(),
+  calibration_freshness_warn_hours: z.coerce.number().finite().positive(),
 }).passthrough();
 
 const SLUG = 'assert_data_bounds';
