@@ -816,7 +816,7 @@ export const tradeForecasts = pgTable("trade_forecasts", {
 	p25Days: integer("p25_days"),
 	p75Days: integer("p75_days"),
 	computedAt: timestamp("computed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	opportunityScore: integer("opportunity_score").default(0).notNull(),
+	opportunityScore: integer("opportunity_score"),
 	targetWindow: varchar("target_window", { length: 20 }),
 }, (table) => [
 	index("idx_trade_forecasts_trade_start").using("btree", table.tradeSlug.asc().nullsLast().op("date_ops"), table.predictedStart.asc().nullsLast().op("text_ops")).where(sql`(predicted_start IS NOT NULL)`),

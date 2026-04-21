@@ -168,10 +168,11 @@ pipeline.run('assert-entity-tracing', async (pool) => {
     );
     auditRows.push(traceRow('lifecycle_phase', lp.matched, windowPermits, THRESHOLDS.lifecycle_phase, failures, 'window_permits'));
 
-    // ── 5. opportunity_score (column on trade_forecasts, default 0) ───────────
-    // opportunity_score defaults to 0. Checks whether compute_opportunity_scores
-    // populated scores: denominator is trade_forecasts rows (not permits),
-    // since permits without classifications will have no forecast rows.
+    // ── 5. opportunity_score (column on trade_forecasts, nullable) ───────────
+    // opportunity_score is NULL when cost data is absent (spec 81 §3). Checks
+    // whether compute_opportunity_scores populated scores >0: denominator is
+    // trade_forecasts rows (not permits), since permits without classifications
+    // will have no forecast rows. NULL > 0 is falsy — same as 0 > 0.
     const { rows: [os] } = await pool.query(
       `SELECT
          COUNT(*)::int                                                          AS forecast_rows,

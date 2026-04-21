@@ -18,7 +18,7 @@ Calculate a stable "Intrinsic Value" (0-100) for every trade opportunity based o
 #### `trade_forecasts` (Updated)
 | Column | Type | Constraints |
 |---|---|---|
-| `opportunity_score` | INTEGER | DEFAULT 0, CHECK (0-100) |
+| `opportunity_score` | INTEGER | nullable, DEFAULT NULL, CHECK (0-100) — NULL means no cost data (see §3 Edge Cases) |
 | `target_window` | VARCHAR(20) | CHECK ('bid', 'work') |
 
 #### `logic_variables` (NEW - Manual Adjustments)
