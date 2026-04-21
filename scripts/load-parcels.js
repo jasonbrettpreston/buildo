@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * 🔗 SPEC LINK: docs/specs/pipeline/55_source_parcels.md
+ * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/pipeline/55_source_parcels.md
  *
  * Load Toronto Property Boundaries CSV into the parcels table.
  * Streams the 327 MB file and batch-inserts in groups of 1000.

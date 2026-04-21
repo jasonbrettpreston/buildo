@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /**
- * 🔗 SPEC LINK: docs/specs/pipeline/40_pipeline_system.md §CQA-Tier1
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
  *
  * CQA Tier 1: Pre-Ingestion Schema Validation
  *

@@ -13,7 +13,9 @@
  * Usage: node scripts/quality/assert-staleness.js
  * Exit 0 = pass, Exit 1 = fail
  *
- * SPEC LINK: docs/specs/38_inspection_scraping.md §3.6 Step 5
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
  */
 const { z } = require('zod');
 const pipeline = require('../lib/pipeline');

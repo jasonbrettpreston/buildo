@@ -16,6 +16,7 @@
  * First-run backfill processes all ~237K permits + ~33K CoAs in one pass.
  * Typical incremental runs process ~5K-15K rows in 2-5 seconds.
  *
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
  * SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md
  */
 'use strict';

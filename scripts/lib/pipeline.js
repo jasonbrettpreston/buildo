@@ -17,8 +17,8 @@
  *     );
  *   });
  *
- * SPEC LINK: docs/specs/28_data_quality_dashboard.md
- * SPEC LINK: docs/specs/00_engineering_standards.md §9
+ * SPEC LINK: docs/specs/pipeline/30_pipeline_architecture.md
+ * SPEC LINK: docs/specs/pipeline/40_pipeline_system.md
  */
 const { Pool } = require('pg');
 

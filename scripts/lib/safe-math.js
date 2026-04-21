@@ -8,6 +8,8 @@
  * loud and debuggable rather than silent and corrupting.
  *
  * SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §16 Rule B5
+ * SPEC LINK: docs/specs/pipeline/30_pipeline_architecture.md
+ * SPEC LINK: docs/specs/pipeline/40_pipeline_system.md
  */
 
 /**

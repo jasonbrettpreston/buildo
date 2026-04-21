@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * 🔗 SPEC LINK: docs/specs/pipeline/56_source_massing.md
+ * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/pipeline/56_source_massing.md
  *
  * Load Toronto 3D Massing shapefile into building_footprints table.
  * Downloads the SHP ZIP from Toronto Open Data, extracts, and streams

@@ -14,7 +14,8 @@
  *   node scripts/load-permits.js              # fetch live from CKAN
  *   node scripts/load-permits.js --file data.json  # load from local file
  *
- * SPEC LINK: docs/specs/02_permit_sync.md
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/pipeline/50_source_permits.md
  */
 const pipeline = require('./lib/pipeline');
 const { normalizeStreetName } = require('./lib/address');

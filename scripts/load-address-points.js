@@ -14,7 +14,8 @@
  *
  * If no path is given, downloads from Toronto Open Data.
  *
- * SPEC LINK: docs/specs/28_data_quality_dashboard.md
+ * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/pipeline/54_source_address_points.md
  */
 const pipeline = require('./lib/pipeline');
 const { safeParsePositiveInt } = require('./lib/safe-math');

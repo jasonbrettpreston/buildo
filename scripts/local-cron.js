@@ -13,7 +13,8 @@
  * Usage: npm run local-cron
  *   (or: node scripts/local-cron.js)
  *
- * SPEC LINK: docs/specs/37_pipeline_system.md
+ * SPEC LINK: docs/specs/pipeline/30_pipeline_architecture.md
+ * SPEC LINK: docs/specs/pipeline/40_pipeline_system.md
  */
 const cron = require('node-cron');
 const { spawn } = require('child_process');

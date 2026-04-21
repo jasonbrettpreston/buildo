@@ -7,6 +7,7 @@
  * phase_calibration medians (Phase 3) and TRADE_TARGET_PHASE mapping
  * to produce rows in trade_forecasts that the lead feed JOINs on.
  *
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
  * SPEC LINK: docs/specs/product/future/85_trade_forecast_engine.md §6
  */
 'use strict';

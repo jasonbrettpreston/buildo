@@ -12,6 +12,7 @@
  *   Path A (Saved): passive watchlist — auto-archive only, no alerts
  *   Path B (Claimed): active flight board — stall/recovery/imminent alerts
  *
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
  * SPEC LINK: docs/specs/product/future/82_crm_assistant_alerts.md
  *
  * DUAL PATH NOTE: N/A — this script processes saved + claimed tracked_projects

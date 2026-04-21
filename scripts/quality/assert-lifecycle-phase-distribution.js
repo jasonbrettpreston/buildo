@@ -10,7 +10,9 @@
  * separate assert step, OR invoked standalone after a manual
  * classifier run.
  *
- * SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §3.3
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
  */
 'use strict';
 

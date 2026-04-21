@@ -153,8 +153,10 @@ describe('scripts/compute-timing-calibration-v2.js — spec 47 compliance (WF3-1
     );
   });
 
-  it('has correct SPEC LINK pointing to spec 86 (not lifecycle report)', () => {
-    expect(content).toMatch(/SPEC LINK:.*86_control_panel\.md/);
+  it('has correct SPEC LINKs pointing to chain + engine specs', () => {
+    expect(content).toMatch(/SPEC LINK:.*41_chain_permits\.md/);
+    expect(content).toMatch(/SPEC LINK:.*84_lifecycle_phase_engine\.md/);
+    expect(content).toMatch(/SPEC LINK:.*85_trade_forecast_engine\.md/);
     expect(content).not.toMatch(/SPEC LINK:.*lifecycle_phase_implementation/);
   });
 

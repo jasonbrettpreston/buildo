@@ -13,7 +13,7 @@
  *
  * Usage: node scripts/compute-centroids.js
  *
- * SPEC LINK: docs/specs/28_data_quality_dashboard.md
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
  */
 const pipeline = require('./lib/pipeline');
 const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');

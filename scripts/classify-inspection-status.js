@@ -9,6 +9,7 @@
  * Also re-activates Stalled permits if new inspection data appears
  * (driven from recent permit_inspections activity, not graveyard scan).
  *
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
  * SPEC LINK: docs/specs/pipeline/53_source_aic_inspections.md
  */
 

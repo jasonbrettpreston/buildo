@@ -20,7 +20,7 @@ Env vars:
     PROXY_HOST/PORT    — optional proxy (default: direct connection)
     PG_HOST/PORT/DATABASE/USER/PASSWORD — PostgreSQL connection
 
-SPEC LINK: docs/specs/38_inspection_scraping.md
+SPEC LINK: docs/specs/pipeline/44_chain_deep_scrapes.md
 """
 
 import asyncio

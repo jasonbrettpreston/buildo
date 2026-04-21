@@ -19,7 +19,9 @@
  *
  * Usage: node scripts/quality/assert-coa-freshness.js
  *
- * SPEC LINK: docs/specs/12_coa_integration.md
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
  */
 const { z } = require('zod');
 const pipeline = require('../lib/pipeline');

@@ -15,7 +15,8 @@
  * Usage: node scripts/load-coa.js
  *        node scripts/load-coa.js --full   (both resources)
  *
- * SPEC LINK: docs/specs/12_coa_integration.md
+ * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/pipeline/51_source_coa.md
  */
 const pipeline = require('./lib/pipeline');
 const { normalizeStreetName } = require('./lib/address');

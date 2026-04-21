@@ -26,7 +26,9 @@
  *   forecast_rows   — trade_forecasts rows for window permits. Used for
  *                     metric 5 (opportunity_score) only.
  *
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md §4
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
  */
 'use strict';
 

@@ -15,7 +15,9 @@
  *
  * records_total is ALWAYS 1 — one audit pass, never a DB entity count.
  *
- * SPEC LINK: docs/specs/pipeline/49_data_completeness_profiling.md
+ * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
  */
 'use strict';
 
