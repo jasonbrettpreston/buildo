@@ -356,21 +356,26 @@ pipeline.run('link-coa', async (pool) => {
   // SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §2.7
   let permitsBumped = 0;
   if (!dryRun) {
-    const bumpStart = new Date(startTime).toISOString();
-    const bumpResult = await pool.query(
-      `UPDATE permits
-          SET last_seen_at = $2::timestamptz
-        WHERE permit_num IN (
-          SELECT DISTINCT linked_permit_num
-            FROM coa_applications
-           WHERE linked_permit_num IS NOT NULL
-             AND last_seen_at >= $1::timestamptz
-        )
-          AND last_seen_at < NOW() - INTERVAL '1 second'
-          AND (lifecycle_phase IS NULL OR lifecycle_phase NOT IN ${SKIP_PHASES_SQL})`,
-      [bumpStart, RUN_AT],
-    );
-    permitsBumped = bumpResult.rowCount || 0;
+    // Use RUN_AT (DB-sourced timestamp) for the window start so this query uses
+    // the same clock source as the linking tier UPDATEs. A JS Date.now() bumpStart
+    // can be ahead of the DB clock, causing the subquery to miss newly-linked CoAs.
+    const bumpStart = RUN_AT.toISOString();
+    permitsBumped = await pipeline.withTransaction(pool, async (client) => {
+      const bumpResult = await client.query(
+        `UPDATE permits
+            SET last_seen_at = $2::timestamptz
+          WHERE permit_num IN (
+            SELECT DISTINCT linked_permit_num
+              FROM coa_applications
+             WHERE linked_permit_num IS NOT NULL
+               AND last_seen_at >= $1::timestamptz
+          )
+            AND last_seen_at < NOW() - INTERVAL '1 second'
+            AND (lifecycle_phase IS NULL OR lifecycle_phase NOT IN ${SKIP_PHASES_SQL})`,
+        [bumpStart, RUN_AT],
+      );
+      return bumpResult.rowCount || 0;
+    });
     pipeline.log.info(
       '[link-coa]',
       `Bumped permits.last_seen_at on ${permitsBumped.toLocaleString()} newly-linked permits (for downstream lifecycle re-classification)`,

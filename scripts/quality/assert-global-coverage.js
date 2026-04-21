@@ -652,9 +652,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.median_days',         parseInt(tfa.median_days_pop, 10),             forecastTotal || null));
       rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.p25_days',            parseInt(tfa.p25_days_pop, 10),                forecastTotal || null));
       rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.p75_days',            parseInt(tfa.p75_days_pop, 10),                forecastTotal || null));
-      // opportunity_score: compute_opportunity_scores only processes non-expired rows.
-      // Using forecastTotal (includes 62K+ expired rows) → ~20.5% false FAIL. WF3-A fix.
-      rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.opportunity_score',   parseInt(tfa.opportunity_score_pop, 10),        oppScoreDenom || null));
+      // opportunity_score: use opp_score_pop (non-expired AND >0) so numerator and denominator share the same grain.
+      // opportunity_score_pop (IS NOT NULL across all rows) can exceed oppScoreDenom when expired rows have a value → >100%. WF3-A grain fix.
+      rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.opportunity_score',   parseInt(tfa.opp_score_pop, 10),                oppScoreDenom || null));
       rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.computed_at',         parseInt(tfa.computed_at_pop, 10),             forecastTotal || null));
 
       // Step 24 — compute_opportunity_scores (mirrors compute-opportunity-scores.js WHERE)

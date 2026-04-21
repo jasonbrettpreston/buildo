@@ -1198,6 +1198,55 @@ Independent review agent found 6 issues (all fixed before commit). The following
 | NIT | Independent (pipeline audit Apr-2026) | **RUN_AT captured inside `withAdvisoryLock` callback** — Per §14.1, should be captured before lock acquisition. Current drift is <1ms (lock acquires near-instantly). Not a correctness issue at current scale. | All scripts — systematic WF2 | OPEN |
 | LOW | Independent | **`triggerPipeline` fires even when `rows_updated: 0`** — if the diff is empty (race: edits discarded between setShowConfirm and confirm click), PUT succeeds with 0 rows, yet the pipeline fires. Confirm button `totalChanges === 0` guard prevents the most common case; the race window is narrow. Fix: skip `triggerPipeline` when `data.data.rows_updated === 0`. | WF2 hardening | OPEN |
 
+## 2026-04-21 — WF3: CQA pipeline false-failure sweep (WF3-A/B/C/D/E)
+
+**Commits:** f9fac19 (scripts), 41fd855 (tests + spec), see WF6 commit below (grain fix + transaction)
+**Files reviewed:** `scripts/lib/lifecycle-phase.js`, `scripts/compute-trade-forecasts.js`, `scripts/link-coa.js`, `scripts/quality/assert-entity-tracing.js`, `scripts/quality/assert-global-coverage.js`
+**Models:** Gemini + DeepSeek (both per feedback_review_protocol.md)
+
+**Actioned in this WF3:**
+- WF3-A: `tf.urgency` filter added to `assert-entity-tracing.js` opportunity_score query (non-expired denominator)
+- WF3-A grain: `opportunity_score_pop` → `opp_score_pop` in `assert-global-coverage.js` Step 23 (same grain as `oppScoreDenom`)
+- WF3-B: `enriched_status` → `infoRow` in `assert-global-coverage.js` (~5.2% natural coverage, not a gap)
+- WF3-C: `is_wsib_registered` → `externalRow` in `assert-global-coverage.js` (24% by design; PASS≥10%)
+- WF3-D: `SKIP_PHASES_SQL` centralized in `lifecycle-phase.js`; 4 hardcoded copies removed
+- WF3-E: `link-coa.js` last_seen_at bump wrapped in `withTransaction`; `bumpStart` uses `RUN_AT` (DB clock)
+
+**Defensible (not deferred — design choices confirmed intentional):**
+- `SKIP_PHASES_SQL` as string literal not array: template interpolation is the pipeline-wide pattern; constant is frozen/private; no user-input vector
+- `externalRow` 10%/5% thresholds: explicitly documented in spec 49 §3 Behavioral Contract
+- `SKIP_PHASES` empty-guard: string literal can never be empty (it's a hardcoded const); guard needed only when built from array
+- `RUN_AT` captured inside `withAdvisoryLock` callback: matches SDK contract (lock acquires in <1ms); same pattern in all pipeline scripts
+
+| Sev | Source | File | Item | Planned home | Status |
+|-----|--------|------|------|--------------|--------|
+| CRITICAL | Gemini+DeepSeek | `lifecycle-phase.js` | **TRADE_TARGET_PHASE hardcoded business logic** — entire mapping belongs in `trade_configurations` DB table per §4.1. Changes require code deploys. | WF2 refactor — migrate to DB table | OPEN |
+| CRITICAL | Gemini+DeepSeek | `lifecycle-phase.js` | **Hardcoded stall thresholds 730/180/30/90 days** — `computeStalled`, `classifyBldLed`, `classifyOrphan` use hardcoded day constants. Must load from `logic_variables` per §4.1. `classifyCoaPhase` already does this correctly (proof the pattern is known). | WF3 → WF2 to add `logic_variables` rows + DB load | OPEN |
+| CRITICAL | Gemini | `compute-trade-forecasts.js` | **DELETE + UPSERT in separate transactions** — stale-purge `DELETE` commits before forecast `UPSERT` batches. A crash between them leaves `trade_forecasts` empty. Violates spec §7.1/§7.3 atomicity requirement. | WF3 on `compute-trade-forecasts.js` — merge purge into first batch | OPEN |
+| CRITICAL | DeepSeek | `lifecycle-phase.js` | **`classifyBldLed` returns `P18` when `has_passed_inspection = true`** — P18 = "Inspection Pipeline" but the permit has already passed; should be P17 (Final Inspection) or terminal. Potential misclassification of many permits. Needs cross-check with TS counterpart. | WF3 investigation + fix | OPEN |
+| CRITICAL | Gemini | `link-coa.js` | **Advisory lock ID `93` ≠ spec link `12`** — spec line 25 has `SPEC LINK: docs/specs/pipeline/12_coa_integration.md` but `ADVISORY_LOCK_ID = 93`. Per §5.2 lock ID must equal owning spec number. Risk: silent lock contention with any future spec-93 script. | WF3 — align lock ID with spec, or update the SPEC LINK comment | OPEN |
+| HIGH | Gemini | `assert-entity-tracing.js` | **`THRESHOLDS` and `TRACE_WINDOW` hardcoded** — business-tunable values (opportunity_score ≥ 80%, cost_estimate coverage ≥ 70%, trace window = 26h) hardcoded as `const`. Must load from `logic_variables` per §4.1. | WF2 → add DB rows + Zod schema + load at startup | OPEN |
+| HIGH | Gemini | `assert-entity-tracing.js` | **`cost_estimates` check uses `COUNT(*)` not `COUNT(DISTINCT)`** — table has one row per permit+trade; counting rows inflates the numerator when a permit has multiple trades. Fix: `COUNT(DISTINCT (ce.permit_num, ce.revision_num))`. | WF3 | OPEN |
+| HIGH | Gemini | `assert-entity-tracing.js` | **`NOW()` called independently in 7 queries** — violates spec §14 (single DB-sourced `RUN_AT`). For a 26h window, clock drift between queries is low-risk today but will cause flaky assertions as runtime grows. | WF2 — capture `RUN_AT` at startup; pass as `$1` to all queries | OPEN |
+| HIGH | Gemini | `link-coa.js` | **Tier 3 dry-run `catch` block is empty** — silently swallows DB errors during dry runs. `descErrors` increments but no `pipeline.log.warn` call. Violates `no-empty` principle. | WF3 — add `pipeline.log.warn` in catch block (mirrors live-run pattern at line 287) | OPEN |
+| HIGH | Gemini | `link-coa.js` | **`actualCandidates` dry-run metrics mislead** — in dry run, `crossWardCleaned` records are counted but not actually unlinked, so the subsequent tier queries (filtered `linked_permit_num IS NULL`) won't find them as candidates. Including them in `actualCandidates` deflates `matchRate`. Fix: `actualCandidates = totalUnlinked + (dryRun ? 0 : crossWardCleaned)`. | WF3 | OPEN |
+| HIGH | Gemini | `compute-trade-forecasts.js` | **`anchorIsFallback` logic too broad** — `!phase_started_at` includes permits anchored to `last_passed_inspection_date`; Historic Snowplow then incorrectly fires for them, pushing valid forecasts far into the future. Fix: track `anchorSource` explicitly and only snowplow when `anchorSource === 'issued_date' \| 'application_date'`. | WF3 | OPEN |
+| HIGH | Gemini | `compute-trade-forecasts.js` | **`overdueWindow`/`upcomingWindow` hardcoded at 30** — `classifyUrgency` defaults these to 30 but the script loads `urgency_overdue_days` / `urgency_upcoming_days` from `logicVars` and never passes them. Operator changes have no effect. | WF3 — pass from `logicVars` at call site | OPEN |
+| HIGH | DeepSeek | `lifecycle-phase.js` | **`PHASE_ORDINAL` P18 = P12 = 4** — Inspection Pipeline (P18) shares ordinal with Rough-In (P12). May cause incorrect progression comparisons in the flight tracker. Assign a distinct ordinal (e.g. 3.5 or renumber). | WF3 investigation — check flight-tracker usage before changing | OPEN |
+| HIGH | DeepSeek | `link-coa.js` | **Pre-pass Tier 3 0.10 confidence inconsistency** — pre-pass unlinks cross-ward mismatches except when `linked_confidence = 0.10`, but Tier 3 can also produce 0.10 confidence with ward conflicts. Tier 1c ward-conflict matches are preserved as intended; Tier 3 ward-conflict 0.10 matches would be unlinked on re-run. Semantic inconsistency between tiers. | WF3 investigation — document intent or align exclusion logic | OPEN |
+| HIGH | Gemini | `assert-global-coverage.js` | **No `RUN_AT` startup timestamp** — uses `NOW()` and `CURRENT_DATE` in multiple queries. Violates §14 Midnight Cross protection. Script is read-only so no data corruption risk, but metrics lose determinism across day boundaries. | WF2 — capture `RUN_AT` at startup; pass as bound param | OPEN |
+| HIGH | Gemini | `assert-global-coverage.js` | **`misc` query has 17 independent sub-selects** — each is a separate scan/index scan. Severe performance anti-pattern at scale. Rewrite as `CROSS JOIN` on single-row aggregates. | WF2 perf hardening | OPEN |
+| HIGH | Gemini | `assert-global-coverage.js` | **`denominator \|\| null` coerces 0-denominator to INFO** — when an upstream step produces 0 output, the coverage silently becomes INFO instead of FAIL. Masks real pipeline failures. Spec 49 §3 edge case: `denominator = 0 → INFO` but that means "nothing to measure"; a step that *should* produce output and produced 0 should be FAIL. Needs spec 49 §3 clarification before code change. | Spec 49 §3 update → WF2 code change | OPEN |
+| MED | Gemini | `assert-entity-tracing.js` | **`SKIP_PHASES_SQL` empty-guard missing** — current code imports the literal from `lifecycle-phase.js` (never empty). If the export ever changes to an array-derived value, `NOT IN ()` would be vacuously true. Add startup guard matching spec §4.3. | WF2 — add guard when SKIP_PHASES_SQL source changes to array | OPEN |
+| MED | Gemini | `link-coa.js` | **`LOGIC_VARS_SCHEMA` uses `.passthrough()`** — allows misspelled keys to pass silently as `undefined`, producing NaN later. Use `.strict()` to fail fast at startup. | WF3 | OPEN |
+| MED | Gemini | `link-coa.js` | **`UPDATE` in `runTier` lacks `IS DISTINCT FROM` guard** — re-running with same data produces phantom writes, unnecessary WAL traffic, and incorrect `last_seen_at` bumps. | WF2 — add `WHERE (ca.linked_permit_num, ca.linked_confidence) IS DISTINCT FROM (matched.permit_num, ${confidence})` | OPEN |
+| MED | Gemini | `compute-trade-forecasts.js` | **Forecast UPSERT lacks `IS DISTINCT FROM` guard** — every run rewrites all forecast rows even if unchanged. Inflates `records_updated` and WAL. | WF2 | OPEN |
+| MED | Gemini | `compute-trade-forecasts.js` | **`finalCalMethod` stamped wrong for inspection-anchored permits** — consequence of `anchorIsFallback` bug above. Fix together. | Resolved by anchorIsFallback fix | OPEN |
+| MED | Gemini | `assert-global-coverage.js` | **`emitMeta` call is empty** — violates §8.3; breaks DataFlowTile data-lineage view. Populate with all tables read. | WF2 | OPEN |
+| LOW | Gemini | `link-coa.js` | **`FTS_MAX_KEYWORDS` magic number `8`** — unexplained. Define as named constant with comment explaining the limit. | WF3 NIT | OPEN |
+| LOW | Gemini | `link-coa.js` | **CLI arg parsing `--dry-run` brittle** — `process.argv.includes('--dry-run')` fails for `--dry-run=true`. Use `minimist` or `yargs-parser`. | WF2 housekeeping | OPEN |
+| NIT | Gemini | `link-coa.js` | **`effective_match_rate_pct` rounding vs verdict discrepancy** — raw float used for status but rounded value displayed (e.g., shows 50.0% but status=FAIL at 49.98%). Use rounded value for status check. | WF3 NIT | OPEN |
+
 ## 2026-04-18 — §11 Counter Semantic Contract audit (pipeline metric accuracy sweep)
 
 | Sev | Source | Item | Closed in | Notes |
