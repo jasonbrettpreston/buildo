@@ -44,7 +44,7 @@ const LIFECYCLE_CONFIG_SCHEMA = z.object({
   lifecycle_inspection_stall_days: z.coerce.number().int().positive(),
   lifecycle_p7a_max_days:          z.coerce.number().int().positive(),
   lifecycle_p7b_max_days:          z.coerce.number().int().positive(),
-});
+}).passthrough();
 
 // ─────────────────────────────────────────────────────────────────
 // Batch UPDATE SQL builders — batched via VALUES clause to avoid
@@ -168,6 +168,15 @@ const ADVISORY_LOCK_ID = 84;
 
 pipeline.run('classify-lifecycle-phase', async (pool) => {
 
+  // ═══════════════════════════════════════════════════════════
+  // Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration)
+  // ═══════════════════════════════════════════════════════════
+  // §4: ALL state-dependent initialization (getDbTimestamp, loadMarketplaceConfigs,
+  // validateLogicVars) MUST execute inside the lock callback to ensure absolute
+  // isolation. Two concurrent instances loading config before lock acquisition
+  // would race on stale state.
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+
   // §R3.5 / §14.1 — Capture DB clock ONCE as the very first query.
   // All batch UPDATEs/INSERTs that set a timestamp column pass RUN_AT
   // as $N — never calling NOW() inside loops. Using the DB timestamp
@@ -202,14 +211,6 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   const INSPECTION_STALL_DAYS          = logicVars.lifecycle_inspection_stall_days;
   const P7A_MAX_DAYS                   = logicVars.lifecycle_p7a_max_days;
   const P7B_MAX_DAYS                   = logicVars.lifecycle_p7b_max_days;
-
-  // ═══════════════════════════════════════════════════════════
-  // Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration)
-  // ═══════════════════════════════════════════════════════════
-  // Replaces hand-rolled lockClient + SIGTERM boilerplate. Helper handles
-  // dedicated pool.connect() client, advisory lock acquire/release,
-  // SIGTERM/SIGINT trap, double-cleanup guard, and spec-mandated SKIP emit.
-  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   // ═══════════════════════════════════════════════════════════
   // Phase 1: classify dirty permit rows
   // ═══════════════════════════════════════════════════════════

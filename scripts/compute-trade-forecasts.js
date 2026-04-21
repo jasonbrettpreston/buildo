@@ -283,6 +283,13 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     if (!shouldPurge && !hasRows) return;
     await pipeline.withTransaction(pool, async (client) => {
       if (shouldPurge) {
+        // §8.1: capture preRowCount BEFORE any mutating DELETEs so telemetry
+        // reflects the true baseline, not the post-purge state.
+        const { rows: preCount } = await client.query(
+          'SELECT COUNT(*)::int AS n FROM trade_forecasts',
+        );
+        preRowCount = preCount[0].n;
+
         // F1 Grace-Purge: remove expired forecasts older than 180 days.
         // The snowplow is dead code for expired rows — all expired rows have a real
         // phase anchor (anchorIsFallback is always false), so no snapping occurs.
@@ -326,10 +333,6 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
             `Purged ${stalePurged.toLocaleString()} stale forecasts for terminal/orphan/dead permits`,
           );
         }
-        const { rows: preCount } = await client.query(
-          'SELECT COUNT(*)::int AS n FROM trade_forecasts',
-        );
-        preRowCount = preCount[0].n;
       }
       if (!hasRows) return;
       const vals = [];
@@ -626,8 +629,9 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     auditRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
     auditRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
 
+  // §11.1: records_total = total rows streamed, not rows upserted
   pipeline.emitSummary({
-    records_total: upserted,
+    records_total: totalRows,
     records_new: newRows,
     records_updated: upserted - newRows,
     records_meta: {

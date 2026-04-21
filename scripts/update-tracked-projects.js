@@ -69,12 +69,16 @@ const TRADE_CONFIG_SCHEMA = z.object({
 }).passthrough();
 
 pipeline.run('update-tracked-projects', async (pool) => {
+  // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
+  // §4: ALL state-dependent initialization (getDbTimestamp, loadMarketplaceConfigs)
+  // MUST execute inside the lock callback to ensure absolute isolation.
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+
   // §R3.5: Capture run timestamp at pipeline startup — MANDATORY per skeleton.
   // Used as $1 in all updated_at writes to prevent the Midnight Cross.
   const RUN_AT = await pipeline.getDbTimestamp(pool);
 
   // ─── Load Control Panel via shared loader ──────────────────
-  // Done BEFORE lock acquisition so a config error doesn't hold the lock.
   const { tradeConfigs } = await loadMarketplaceConfigs(pool, 'tracked-projects');
 
   // spec 47 §4.2: validate each trade's required fields before use.
@@ -99,12 +103,6 @@ pipeline.run('update-tracked-projects', async (pool) => {
       work_phase: tc.work_phase_target,
     }]),
   );
-
-  // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
-  // Replaces hand-rolled lockClient + SIGTERM boilerplate. Two concurrent runs
-  // would race on memory columns and double-fire CRM alerts. skipEmit:false so
-  // the script emits its own rich SKIP payload (with audit_table) on lock-held.
-  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   // ═══════════════════════════════════════════════════════════
   // Step 1: Stream all active tracked projects with forecast data
   //

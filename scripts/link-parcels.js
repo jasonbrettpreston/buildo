@@ -163,7 +163,21 @@ pipeline.run('link-parcels', async (pool) => {
 
   if (totalPermits === 0) {
     pipeline.log.info('[link-parcels]', 'No permits to process. Done.');
-    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    const chainId = process.env.PIPELINE_CHAIN || null;
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        audit_table: {
+          phase: chainId === 'sources' ? 6 : 9,
+          name: 'Parcel Linking',
+          verdict: 'PASS',
+          rows: [
+            { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+            { metric: 'reason', value: 'No unlinked permits — all already have parcel links', threshold: null, status: 'INFO' },
+          ],
+        },
+      },
+    });
     pipeline.emitMeta(
       { "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"], "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"] },
       { "permit_parcels": ["permit_num", "revision_num", "parcel_id", "match_type", "confidence", "linked_at"] }

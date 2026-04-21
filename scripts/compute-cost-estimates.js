@@ -195,16 +195,22 @@ if (require.main === module) {
   if (rowLimit) pipeline.log.info('[compute-cost-estimates]', `Row limit: ${rowLimit}`);
 
   pipeline.run('compute-cost-estimates', async (pool) => {
-    // ── 1. Load control panel ──────────────────────────────────────────────
+    // ── 1. Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
+    // §4: ALL state-dependent initialization (loadMarketplaceConfigs, rate table
+    // pre-fetch, config build) MUST execute inside the lock callback to ensure
+    // absolute isolation.
+    const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+
+    // ── 2. Load control panel ──────────────────────────────────────────────
     const { logicVars } = await loadMarketplaceConfigs(pool, 'compute-cost-estimates');
 
-    // ── 2. Zod validation — fail fast if any critical knob is invalid ──────
+    // ── 3. Zod validation — fail fast if any critical knob is invalid ──────
     const validation = validateLogicVars(logicVars, COST_MODEL_CONFIG_SCHEMA, 'compute-cost-estimates');
     if (!validation.valid) {
       throw new Error(`[compute-cost-estimates] Config validation failed: ${validation.errors.join(', ')}`);
     }
 
-    // ── 3. Pre-fetch surgical rate tables (before lock — read-only) ────────
+    // ── 4. Pre-fetch surgical rate tables ────────────────────────────────
     const [tradeRatesRes, scopeMatrixRes] = await Promise.all([
       pool.query(
         'SELECT trade_slug, base_rate_sqft::float8, structure_complexity_factor::float8 FROM trade_sqft_rates',
@@ -233,7 +239,7 @@ if (require.main === module) {
       `Pre-fetched ${tradeRatesRes.rows.length} trade rates, ${scopeMatrixRes.rows.length} matrix entries`,
     );
 
-    // ── 4. Build Brain config ──────────────────────────────────────────────
+    // ── 5. Build Brain config ──────────────────────────────────────────────
     const config = {
       tradeRates,
       scopeMatrix,
@@ -242,10 +248,6 @@ if (require.main === module) {
       liarGateThreshold:     logicVars.liar_gate_threshold,
     };
 
-    // ── 5. Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
-    // Replaces hand-rolled lockClient + SIGTERM boilerplate. skipEmit:false so
-    // the script emits its own rich SKIP payload (with audit_table) on lock-held.
-    const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     // ── 6. RUN_AT: single DB timestamp captured once after lock ────────────
     // Using SELECT NOW() here (not in batched SQL) prevents Midnight Cross
     // drift: if the run starts just before midnight and flushes batches just

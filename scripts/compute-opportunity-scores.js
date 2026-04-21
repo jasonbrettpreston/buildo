@@ -49,6 +49,11 @@ const LOGIC_VARS_SCHEMA = z.object({
 }).passthrough();
 
 pipeline.run('compute-opportunity-scores', async (pool) => {
+  // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
+  // §4: ALL state-dependent initialization (getDbTimestamp, loadMarketplaceConfigs)
+  // MUST execute inside the lock callback to ensure absolute isolation.
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+
   // §R3.5: Capture run timestamp at pipeline startup — MANDATORY per skeleton
   // even though opportunity_score is an int and no timestamp column is written.
   // Documents run identity and prevents Midnight Cross on any future additions.
@@ -69,11 +74,6 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
   if (!validation.valid) {
     throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   }
-
-  // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
-  // Replaces hand-rolled lockClient + SIGTERM boilerplate. skipEmit:false so
-  // the script emits its own rich SKIP payload (with audit_table) on lock-held.
-  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   // ═══════════════════════════════════════════════════════════
   // Step 1: Stream trade forecasts + cost + competition data
   // spec 47 §6.1 — streamQuery required for trade_forecasts (2.5M+ rows).

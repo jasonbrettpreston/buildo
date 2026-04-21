@@ -59,7 +59,25 @@ pipeline.run('link-coa', async (pool) => {
 
   if (totalUnlinked === 0) {
     pipeline.log.info('[link-coa]', 'Nothing to link.');
-    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    const chainId = process.env.PIPELINE_CHAIN || null;
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        audit_table: {
+          phase: chainId === 'coa' ? 4 : 12,
+          name: 'Link CoA',
+          verdict: 'PASS',
+          rows: [
+            { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+            { metric: 'reason', value: 'No unlinked CoA applications — all already linked', threshold: null, status: 'INFO' },
+          ],
+        },
+      },
+    });
+    pipeline.emitMeta(
+      { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name_normalized", "ward", "issued_date", "description"] },
+      { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"] }
+    );
     return;
   }
 

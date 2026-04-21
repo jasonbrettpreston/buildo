@@ -96,16 +96,16 @@ if (NORMALIZED_DEAD_DECISIONS_ARRAY.length === 0) {
 }
 
 pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
-  const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-lifecycle-phase-distribution');
-  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-lifecycle-phase-distribution');
-  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
-  const unclassifiedMax = logicVars.lifecycle_unclassified_max;
-
   // ─── Advisory lock awareness — pipeline.withAdvisoryLock (Phase 2 migration) ──
   // If the classifier is mid-write we skip gracefully (reason: 'classifier_running')
   // rather than reading half-updated distribution counts. skipEmit:false preserves
   // the custom reason — the helper's default SKIP emit omits it.
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  // §4: config reads MUST execute inside the lock callback
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-lifecycle-phase-distribution');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-lifecycle-phase-distribution');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  const unclassifiedMax = logicVars.lifecycle_unclassified_max;
   // Distribution from permits.lifecycle_phase
   const { rows: permitRows } = await pool.query(
     `SELECT lifecycle_phase, COUNT(*)::int AS n

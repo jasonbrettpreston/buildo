@@ -57,7 +57,20 @@ pipeline.run('close-stale-permits', async (pool) => {
 
   if (lastLoadResult.rows.length === 0) {
     pipeline.log.info('[close-stale]', 'No successful permits load found. Skipping.');
-    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        audit_table: {
+          phase: 3,
+          name: 'Stale Permit Closure',
+          verdict: 'WARN',
+          rows: [
+            { metric: 'status', value: 'SKIPPED', threshold: null, status: 'WARN' },
+            { metric: 'reason', value: 'No successful permits load found in pipeline_runs — cannot determine feed disappearance', threshold: null, status: 'WARN' },
+          ],
+        },
+      },
+    });
     pipeline.emitMeta(
       { "permits": ["status", "last_seen_at", "completed_date"], "pipeline_runs": ["pipeline", "status", "started_at"] },
       { "permits": ["status", "completed_date"] }

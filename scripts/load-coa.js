@@ -333,7 +333,24 @@ pipeline.run('load-coa', async (pool) => {
 
   if (allRaw.length === 0) {
     pipeline.log.warn('[load-coa]', 'No records found from CKAN. Exiting.');
-    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        audit_table: {
+          phase: 2,
+          name: 'CoA Ingestion',
+          verdict: 'WARN',
+          rows: [
+            { metric: 'status', value: 'SKIPPED', threshold: null, status: 'WARN' },
+            { metric: 'reason', value: 'Zero records returned from CKAN — possible API outage or empty dataset', threshold: null, status: 'WARN' },
+          ],
+        },
+      },
+    });
+    pipeline.emitMeta(
+      { "CKAN API": ["REFERENCE_FILE#", "STREET_NUM", "STREET_NAME", "WARD", "C_OF_A_DESCISION", "STATUSDESC", "HEARING_DATE", "DESCRIPTION", "CONTACT_NAME", "SUB_TYPE"] },
+      { "coa_applications": ["application_number", "address", "street_num", "street_name", "street_name_normalized", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"] }
+    );
     return;
   }
 

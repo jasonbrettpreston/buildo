@@ -50,7 +50,20 @@ pipeline.run('link-wsib', async (pool) => {
 
   if (totalUnlinked === 0) {
     pipeline.log.info('[link-wsib]', 'Nothing to link.');
-    pipeline.emitSummary({ records_total: 0, records_new: 0, records_updated: 0 });
+    pipeline.emitSummary({
+      records_total: 0, records_new: 0, records_updated: 0,
+      records_meta: {
+        audit_table: {
+          phase: (process.env.PIPELINE_CHAIN === 'sources') ? 12 : 7,
+          name: 'Link WSIB',
+          verdict: 'PASS',
+          rows: [
+            { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+            { metric: 'reason', value: 'No unlinked WSIB entries — all already linked', threshold: null, status: 'INFO' },
+          ],
+        },
+      },
+    });
     pipeline.emitMeta(
       { "wsib_registry": ["id", "trade_name_normalized", "legal_name_normalized", "linked_entity_id"], "entities": ["id", "name_normalized", "permit_count"] },
       { "wsib_registry": ["linked_entity_id", "match_confidence", "matched_at"], "entities": ["is_wsib_registered", "primary_phone", "primary_email", "website"] }

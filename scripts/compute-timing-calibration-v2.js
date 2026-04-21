@@ -113,6 +113,11 @@ const CALIB_SCHEMA = z.object({
 const CALIBRATION_BATCH_SIZE = pipeline.maxRowsPerInsert(8); // Math.floor(65535 / 8) = 8191
 
 pipeline.run('compute-timing-calibration-v2', async (pool) => {
+  // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
+  // §4: ALL state-dependent initialization (getDbTimestamp, loadMarketplaceConfigs)
+  // MUST execute inside the lock callback to ensure absolute isolation.
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+
   // §14.1: Capture run timestamp at pipeline startup — used as computed_at
   // for all UPSERT rows. Prevents "Midnight Cross" where NOW() in a loop
   // yields different calendar dates for rows in the same logical run.
@@ -127,11 +132,6 @@ pipeline.run('compute-timing-calibration-v2', async (pool) => {
     throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   }
   const minSampleSize = logicVars.calibration_min_sample_size;
-
-  // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
-  // Replaces hand-rolled lockClient + SIGTERM boilerplate. skipEmit:false so
-  // the script emits its own rich SKIP payload (with audit_table) on lock-held.
-  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   // ═══════════════════════════════════════════════════════════
   // Step 1: Compute phase-to-phase calibration from inspection pairs
   // ═══════════════════════════════════════════════════════════
