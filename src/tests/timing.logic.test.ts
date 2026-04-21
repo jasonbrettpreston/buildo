@@ -35,7 +35,7 @@ function qr<T extends QueryResultRow>(rows: T[]): QueryResult<T> {
 }
 
 // Sequence the timing.ts query order once so every test uses the same pattern:
-//   1. ensureCalibrationLoaded      → SELECT FROM timing_calibration
+//   1. ensureCalibrationLoaded      → SELECT FROM phase_calibration
 //   2. pickBestCandidate parcel SQL → SELECT FROM permit_parcels + permits
 //   3. permit_inspections           → SELECT FROM permit_inspections
 //   4. inspection_stage_map lookup  → SELECT FROM inspection_stage_map (Tier 1 only)
@@ -423,18 +423,18 @@ describe('Tier 3 — pre-permit (no issued_date)', () => {
 describe('calibration cache', () => {
   it('loads on first call', async () => {
     const mock = createMockPool();
-    stub(mock, [{ permit_type: 'X', median_days_to_first_inspection: 100, p25_days: 40, p75_days: 200, sample_size: 50, computed_at: new Date() }], [], []);
+    stub(mock, [{ permit_type: 'X', median_days: 100, p25_days: 40, p75_days: 200, sample_size: 50, computed_at: new Date() }], [], []);
     await getTradeTimingForPermit('p1', 'plumbing', mock as unknown as Pool);
     // First query = calibration load
     expect(mock.query).toHaveBeenCalled();
     const firstCall = mock.query.mock.calls[0]?.[0];
-    expect(String(firstCall)).toMatch(/timing_calibration/);
+    expect(String(firstCall)).toMatch(/phase_calibration/);
   });
 
   it('does not re-load cache within REFRESH_INTERVAL_MS', async () => {
     const mock = createMockPool();
     // First call: cache load (1), siblings (2), inspections (3)
-    stub(mock, [{ permit_type: 'X', median_days_to_first_inspection: 100, p25_days: 40, p75_days: 200, sample_size: 50, computed_at: new Date() }], [], []);
+    stub(mock, [{ permit_type: 'X', median_days: 100, p25_days: 40, p75_days: 200, sample_size: 50, computed_at: new Date() }], [], []);
     await getTradeTimingForPermit('p1', 'plumbing', mock as unknown as Pool);
 
     // Second call within 5 min: should NOT re-query timing_calibration
@@ -444,24 +444,24 @@ describe('calibration cache', () => {
     await getTradeTimingForPermit('p2', 'plumbing', mock as unknown as Pool);
 
     const calibCalls = mock.query.mock.calls.filter((c) =>
-      String(c[0]).match(/timing_calibration/),
+      String(c[0]).match(/phase_calibration/),
     );
     expect(calibCalls.length).toBe(1);
   });
 
   it('reloads cache after REFRESH_INTERVAL_MS', async () => {
     const mock = createMockPool();
-    stub(mock, [{ permit_type: 'X', median_days_to_first_inspection: 100, p25_days: 40, p75_days: 200, sample_size: 50, computed_at: new Date() }], [], []);
+    stub(mock, [{ permit_type: 'X', median_days: 100, p25_days: 40, p75_days: 200, sample_size: 50, computed_at: new Date() }], [], []);
     await getTradeTimingForPermit('p1', 'plumbing', mock as unknown as Pool);
 
     vi.advanceTimersByTime(REFRESH_INTERVAL_MS + 1000);
 
     // Second call > 5 min later: reload cache
-    stub(mock, [{ permit_type: 'X', median_days_to_first_inspection: 100, p25_days: 40, p75_days: 200, sample_size: 50, computed_at: new Date() }], [], []);
+    stub(mock, [{ permit_type: 'X', median_days: 100, p25_days: 40, p75_days: 200, sample_size: 50, computed_at: new Date() }], [], []);
     await getTradeTimingForPermit('p2', 'plumbing', mock as unknown as Pool);
 
     const calibCalls = mock.query.mock.calls.filter((c) =>
-      String(c[0]).match(/timing_calibration/),
+      String(c[0]).match(/phase_calibration/),
     );
     expect(calibCalls.length).toBe(2);
   });

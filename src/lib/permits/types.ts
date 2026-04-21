@@ -140,7 +140,7 @@ export interface CostEstimate {
 }
 
 // ---------------------------------------------------------------------------
-// Inspection stage map + timing calibration (migrations 072/073 — spec 71)
+// Inspection stage map (migration 072 — spec 71)
 // ---------------------------------------------------------------------------
 export type StageRelationship = 'follows' | 'concurrent';
 
@@ -153,16 +153,6 @@ export interface InspectionStageMapRow {
   min_lag_days: number;
   max_lag_days: number;
   precedence: number;
-}
-
-export interface TimingCalibrationRow {
-  id: number;
-  permit_type: string;
-  median_days_to_first_inspection: number;
-  p25_days: number;
-  p75_days: number;
-  sample_size: number;
-  computed_at: Date;
 }
 
 // ---------------------------------------------------------------------------

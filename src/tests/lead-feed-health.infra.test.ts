@@ -172,8 +172,8 @@ describe('Admin stats includes lead_views in live_table_counts', () => {
     expect(stats).toContain("'cost_estimates'");
   });
 
-  it('queries timing_calibration table in live_table_counts', () => {
-    expect(stats).toContain("'timing_calibration'");
+  it('queries phase_calibration table in live_table_counts', () => {
+    expect(stats).toContain("'phase_calibration'");
   });
 });
 

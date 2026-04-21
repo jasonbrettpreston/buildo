@@ -100,6 +100,8 @@ export interface DataQualitySnapshot {
   cost_estimates_from_permit: number | null;
   cost_estimates_from_model: number | null;
   cost_estimates_null_cost: number | null;
+  // V1 timing_calibration columns preserved in DB for historical data.
+  // No longer written — replaced by phase_calibration (v2).
   timing_calibration_total: number | null;
   timing_calibration_avg_sample: number | null;
   timing_calibration_freshness_hours: number | null;

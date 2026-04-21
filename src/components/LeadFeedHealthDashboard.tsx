@@ -52,10 +52,9 @@ function getTrafficLight(
   costCoverageTotal: number,
 ): { label: string; color: string; bgClass: string } {
   // WF3 2026-04-10 Phase 1: treat `null` timing as stale, not as "never
-  // calibrated and therefore fine". Null means the timing_calibration cron
-  // has never run OR the table was truncated — both are failure states that
-  // must surface in the traffic light, not hide behind GREEN. External
-  // review (Antigravity) flagged this as "Missing-Cron Green Light".
+  // calibrated and therefore fine". Null means the phase_calibration table
+  // has never been populated — a failure state that must surface in the
+  // traffic light, not hide behind GREEN.
   //
   // Spec 76 §3.3: GREEN requires `timing_freshness_hours < 48` (strict).
   // So the stale boundary must be `>= 48` (inclusive) — exactly 48.0h is

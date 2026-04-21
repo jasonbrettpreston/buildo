@@ -2,7 +2,7 @@
 //
 // 3-tier timing engine — given a permit and a trade, returns an estimate of
 // when the tradesperson's trade will be needed on that site. Reads from
-// `permit_inspections`, `inspection_stage_map`, and `timing_calibration`,
+// `permit_inspections`, `inspection_stage_map`, and `phase_calibration` (v2),
 // plus the existing PHASE_TRADE_MAP from classification/phases.ts.
 //
 // Never throws. On unexpected error the function returns a safe "timing
@@ -10,7 +10,7 @@
 // rely on this being callable without their own try/catch.
 //
 // timing.ts is the request-path consumer. The nightly populator of the
-// calibration cache is a sibling script: scripts/compute-timing-calibration.js.
+// calibration cache is: scripts/compute-timing-calibration-v2.js.
 // Unlike the cost-model dual code path, these two files do NOT share logic —
 // the script computes percentile SQL only; the library reads what the script
 // writes.
@@ -23,7 +23,7 @@ import {
   type Phase,
 } from '@/lib/classification/phases';
 import { logError, logInfo, logWarn } from '@/lib/logger';
-import type { InspectionStageMapRow, TimingCalibrationRow } from '@/lib/permits/types';
+import type { InspectionStageMapRow } from '@/lib/permits/types';
 
 // ---------------------------------------------------------------------------
 // Constants — exported for tests and documentation
@@ -38,11 +38,20 @@ export const MIN_SAMPLE_SIZE = 20;
 export const PRE_PERMIT_MIN_DAYS = 240; // 8 months
 export const PRE_PERMIT_MAX_DAYS = 420; // 14 months
 
+interface CalibrationCacheRow {
+  permit_type: string;
+  median_days: number;
+  p25_days: number;
+  p75_days: number;
+  sample_size: number;
+  computed_at: Date;
+}
+
 /**
  * Bootstrap calibration from spec 71 §Calibration data (initial seed from
  * the 2026-Q1 audit: Issued → first inspection, Median=105d, P25=44d,
  * P75=238d, n=7732). Used when the cache is empty (e.g., before the first
- * compute-timing-calibration.js run) so Tier 2 is functional from day 0.
+ * compute-timing-calibration-v2.js run) so Tier 2 is functional from day 0.
  */
 export const BOOTSTRAP_CALIBRATION = {
   p25: 44,
@@ -54,7 +63,7 @@ export const BOOTSTRAP_CALIBRATION = {
 // Module-level calibration cache (process-wide)
 // ---------------------------------------------------------------------------
 
-let calibrationCache: Map<string, TimingCalibrationRow> | null = null;
+let calibrationCache: Map<string, CalibrationCacheRow> | null = null;
 let calibrationLoadedAt = 0;
 
 /** Test-only escape hatch — resets module state between test runs. */
@@ -69,12 +78,19 @@ async function ensureCalibrationLoaded(pool: Pool): Promise<void> {
     return;
   }
   try {
-    const res = await pool.query<TimingCalibrationRow>(
-      `SELECT id, permit_type, median_days_to_first_inspection,
-              p25_days, p75_days, sample_size, computed_at
-         FROM timing_calibration`,
+    const res = await pool.query<CalibrationCacheRow>(
+      `SELECT permit_type,
+              MIN(median_days)::int AS median_days,
+              MIN(p25_days)::int AS p25_days,
+              MAX(p75_days)::int AS p75_days,
+              SUM(sample_size)::int AS sample_size,
+              MAX(computed_at) AS computed_at
+         FROM phase_calibration
+        WHERE from_phase = 'ISSUED'
+          AND permit_type != '__ALL__'
+        GROUP BY permit_type`,
     );
-    const map = new Map<string, TimingCalibrationRow>();
+    const map = new Map<string, CalibrationCacheRow>();
     for (const row of res.rows) {
       map.set(row.permit_type, row);
     }
@@ -118,7 +134,7 @@ function getGlobalMedianCalibration(): GlobalMedian {
     const w = Math.max(0, row.sample_size);
     if (w === 0) continue;
     weightedP25 += row.p25_days * w;
-    weightedMedian += row.median_days_to_first_inspection * w;
+    weightedMedian += row.median_days * w;
     weightedP75 += row.p75_days * w;
     totalWeight += w;
   }

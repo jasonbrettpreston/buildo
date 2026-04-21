@@ -202,18 +202,6 @@ export const entityContacts = pgTable("entity_contacts", {
 		}).onDelete("cascade"),
 ]);
 
-export const timingCalibration = pgTable("timing_calibration", {
-	id: serial().primaryKey().notNull(),
-	permitType: varchar("permit_type", { length: 100 }).notNull(),
-	medianDaysToFirstInspection: integer("median_days_to_first_inspection").notNull(),
-	p25Days: integer("p25_days").notNull(),
-	p75Days: integer("p75_days").notNull(),
-	sampleSize: integer("sample_size").notNull(),
-	computedAt: timestamp("computed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	unique("timing_calibration_permit_type_key").on(table.permitType),
-]);
-
 export const builders = pgTable("builders", {
 	id: serial().primaryKey().notNull(),
 	name: varchar({ length: 500 }).notNull(),

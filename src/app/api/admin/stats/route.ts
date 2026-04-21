@@ -334,7 +334,7 @@ export async function GET() {
         [['permits', 'entities', 'coa_applications', 'parcels', 'address_points',
           'building_footprints', 'neighbourhoods', 'permit_trades', 'permit_parcels',
           'parcel_buildings', 'wsib_registry', 'data_quality_snapshots', 'pipeline_runs',
-          'lead_views', 'cost_estimates', 'timing_calibration']]
+          'lead_views', 'cost_estimates', 'phase_calibration']]
       );
       for (const row of countRows) {
         liveTableCounts[row.relname] = Math.max(0, parseInt(row.reltuples, 10));

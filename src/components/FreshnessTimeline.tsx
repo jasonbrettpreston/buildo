@@ -50,8 +50,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
   classify_lifecycle_phase:   { name: 'Classify Lifecycle Phase', group: 'classify' },
   compute_cost_estimates:     { name: 'Cost Estimates',      group: 'classify' },
-  compute_timing_calibration: { name: 'Timing Calibration',  group: 'classify' },
-  compute_timing_calibration_v2: { name: 'Timing Calibration V2', group: 'classify' },
+  compute_timing_calibration_v2: { name: 'Timing Calibration', group: 'classify' },
   compute_trade_forecasts:       { name: 'Trade Forecasts',       group: 'classify' },
   compute_opportunity_scores:    { name: 'Opportunity Scores',    group: 'classify' },
   update_tracked_projects:       { name: 'Update Tracked Projects', group: 'classify' },
@@ -109,11 +108,6 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_similar',         indent: 1 },
       { slug: 'classify_permits',     indent: 1 },
       { slug: 'compute_cost_estimates',     indent: 1 },
-      // WF3 2026-04-13 — v1 removed from chain (Path A). Only v2 runs.
-      // v2 feeds spec 85 flight tracker via phase_calibration.
-      // The detail-page timing engine (spec 71, src/features/leads/lib/timing.ts)
-      // still reads v1's timing_calibration table — that table will go stale
-      // until a future frontend WF migrates timing.ts to phase_calibration.
       { slug: 'compute_timing_calibration_v2', indent: 1 },
       { slug: 'link_coa',             indent: 1 },
       { slug: 'create_pre_permits',   indent: 1 },

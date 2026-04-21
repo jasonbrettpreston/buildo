@@ -29,7 +29,6 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/load-parcels.js':         55,
   'scripts/load-massing.js':         56,
   'scripts/load-neighbourhoods.js':  57,
-  'scripts/compute-timing-calibration.js': 71,
   'scripts/load-coa.js':             95,
   'scripts/load-address-points.js':  96,
   'scripts/load-wsib.js':            97,

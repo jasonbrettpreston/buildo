@@ -25,7 +25,6 @@
     "classify_scope":       { "file": "scripts/classify-scope.js",        "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["scope_classified_at"] } },
     "classify_permits":     { "file": "scripts/classify-permits.js",      "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permit_trades", "permits"], "telemetry_null_cols": { "permits": ["trade_classified_at"] } },
     "compute_cost_estimates":       { "file": "scripts/compute-cost-estimates.js",       "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["cost_estimates"], "telemetry_null_cols": { "cost_estimates": ["estimated_cost"] } },
-    "compute_timing_calibration":   { "file": "scripts/compute-timing-calibration.js",   "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["timing_calibration"] },
     "compute_timing_calibration_v2": { "file": "scripts/compute-timing-calibration-v2.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["phase_calibration"] },
     "compute_trade_forecasts": { "file": "scripts/compute-trade-forecasts.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["trade_forecasts"] },
     "compute_opportunity_scores": { "file": "scripts/compute-opportunity-scores.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["trade_forecasts"] },

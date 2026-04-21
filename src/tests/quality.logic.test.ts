@@ -493,19 +493,17 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 45 tracked pipelines', () => {
-    // +2 (assert_lifecycle_phase_distribution, assert_entity_tracing) WF2 2026-04-18
-    // +1 (assert_global_coverage) WF1 2026-04-19
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(45);
+  it('has exactly 44 tracked pipelines', () => {
+    // -1 v1 compute_timing_calibration removed (migration 106, 2026-04-21)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(44);
   });
 
-  it('groups are correct: 10 ingest, 14 link, 10 classify, 1 snapshot, 10 quality', () => {
-    // WF2 2026-04-18: +2 quality (assert_lifecycle_phase_distribution, assert_entity_tracing)
-    // WF1 2026-04-19: +1 quality (assert_global_coverage)
+  it('groups are correct: 10 ingest, 14 link, 9 classify, 1 snapshot, 10 quality', () => {
+    // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(10);
     expect(groups.filter((g) => g === 'link')).toHaveLength(14);
-    expect(groups.filter((g) => g === 'classify')).toHaveLength(10);
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(9);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(1);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(10);
   });
@@ -2009,9 +2007,9 @@ describe('Pipeline manifest includes assert_engine_health', () => {
     expect(PIPELINE_TABLE_MAP.compute_cost_estimates).toBe('cost_estimates');
   });
 
-  it('PIPELINE_TABLE_MAP includes compute_timing_calibration', async () => {
+  it('PIPELINE_TABLE_MAP includes compute_timing_calibration_v2', async () => {
     const { PIPELINE_TABLE_MAP } = await import('@/lib/admin/funnel');
-    expect(PIPELINE_TABLE_MAP.compute_timing_calibration).toBe('timing_calibration');
+    expect(PIPELINE_TABLE_MAP.compute_timing_calibration_v2).toBe('phase_calibration');
   });
 });
 
@@ -2026,8 +2024,9 @@ describe('refresh-snapshot.js cost/timing observability', () => {
     expect(snapshotSource).toContain('FROM cost_estimates');
   });
 
-  it('queries timing_calibration table', () => {
-    expect(snapshotSource).toContain('FROM timing_calibration');
+  it('uses null constant for timing_calibration (v1 removed)', () => {
+    expect(snapshotSource).toContain('timingCal');
+    expect(snapshotSource).not.toContain('FROM timing_calibration');
   });
 
   it('includes cost/timing columns in INSERT', () => {
@@ -2049,16 +2048,13 @@ describe('assert-data-bounds.js cost/timing validation', () => {
     expect(boundsSource).toContain('estimated_cost IS NULL');
   });
 
-  it('checks timing_calibration staleness', () => {
-    expect(boundsSource).toContain('FROM timing_calibration');
-    expect(boundsSource).toContain('freshness_hours');
+  it('v1 timing_calibration staleness check removed (migration 106)', () => {
+    expect(boundsSource).not.toContain('FROM timing_calibration');
   });
 
-  it('gates cost/timing checks on runPermitChecks', () => {
-    // Both checks must be inside the permits-scoped block
+  it('gates cost checks on runPermitChecks', () => {
     const permitBlock = boundsSource.split('runPermitChecks').slice(1).join('');
     expect(permitBlock).toContain('cost_estimates');
-    expect(permitBlock).toContain('timing_calibration');
   });
 });
 
@@ -2129,22 +2125,5 @@ describe('compute-cost-estimates.js advisory lock resilience', () => {
   });
 });
 
-// ── Regression: compute-timing-calibration handles missing permit_inspections ──
-
-describe('compute-timing-calibration.js missing table resilience', () => {
-  const timingSource = fs.readFileSync(
-    path.join(__dirname, '../../scripts/compute-timing-calibration.js'), 'utf-8'
-  );
-
-  it('catches undefined table error (42P01) gracefully', () => {
-    expect(timingSource).toContain('42P01');
-    expect(timingSource).toContain('permit_inspections_missing');
-  });
-
-  it('emits PIPELINE_SUMMARY on missing table early return', () => {
-    expect(timingSource).toContain('emitSummary');
-    // Must contain two emitSummary calls — one for missing table, one for normal
-    const matches = timingSource.match(/emitSummary/g);
-    expect(matches!.length).toBeGreaterThanOrEqual(2);
-  });
-});
+// V1 compute-timing-calibration.js tests removed — script deleted in migration 106.
+// V2 equivalent: compute-timing-calibration-v2.js tested in its own infra file.

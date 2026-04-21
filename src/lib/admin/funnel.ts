@@ -570,7 +570,6 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   update_tracked_projects: { summary: 'Nightly CRM assistant: processes saved + claimed projects, detects state changes (stalled, urgency shifts), generates alerts, auto-archives dead leads. Memory columns prevent duplicate notifications.', table: 'tracked_projects' },
   // Compute (lead feed pre-computation)
   compute_cost_estimates:     { summary: 'Pre-computes cost model estimates for all permits (permit-reported or model-based)', table: 'cost_estimates' },
-  compute_timing_calibration: { summary: 'Calibrates timing percentiles per permit_type from inspection history', table: 'timing_calibration' },
   // Snapshot
   refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', table: 'data_quality_snapshots' },
   // Quality (CQA)
@@ -812,7 +811,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   compute_centroids: 'parcels', classify_scope: 'permits',
   classify_permits: 'permit_trades',
   compute_cost_estimates: 'cost_estimates',
-  compute_timing_calibration: 'timing_calibration',
+  compute_timing_calibration_v2: 'phase_calibration',
   refresh_snapshot: 'data_quality_snapshots', assert_schema: 'pipeline_runs',
   assert_data_bounds: 'pipeline_runs', assert_engine_health: 'engine_health_snapshots',
   assert_network_health: 'pipeline_runs', assert_staleness: 'pipeline_runs',

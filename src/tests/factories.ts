@@ -14,7 +14,6 @@ import type {
   LeadView,
   CostEstimate,
   InspectionStageMapRow,
-  TimingCalibrationRow,
   UserProfile,
 } from '@/lib/permits/types';
 import type { Parcel } from '@/lib/parcels/types';
@@ -161,21 +160,6 @@ export function createMockInspectionStageMapRow(
     min_lag_days: 5,
     max_lag_days: 14,
     precedence: 100,
-    ...overrides,
-  };
-}
-
-export function createMockTimingCalibrationRow(
-  overrides: Partial<TimingCalibrationRow> = {},
-): TimingCalibrationRow {
-  return {
-    id: 1,
-    permit_type: 'Building',
-    median_days_to_first_inspection: 21,
-    p25_days: 14,
-    p75_days: 35,
-    sample_size: 120,
-    computed_at: new Date('2024-03-01T12:00:00Z'),
     ...overrides,
   };
 }

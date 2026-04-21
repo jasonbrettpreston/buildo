@@ -326,25 +326,9 @@ pipeline.run('refresh-snapshot', async (pool) => {
     pipeline.log.warn(TAG, `Cost estimates query failed — zeroes: ${err.message}`);
   }
 
-  // ── Timing calibration coverage ──
-  let timingCal = { total: 0, avg_sample: 0, freshness_hours: null };
-  try {
-    const timingRes = await pool.query(
-      `SELECT COUNT(*) as total,
-              COALESCE(ROUND(AVG(sample_size))::int, 0) as avg_sample,
-              ROUND(EXTRACT(EPOCH FROM (NOW() - MAX(computed_at))) / 3600.0, 1) as freshness_hours
-       FROM timing_calibration`
-    );
-    const tr = timingRes.rows[0];
-    timingCal = {
-      total: safeParsePositiveInt(tr.total, 'total'),
-      avg_sample: safeParsePositiveInt(tr.avg_sample, 'avg_sample'),
-      freshness_hours: tr.freshness_hours !== null ? safeParseFloat(tr.freshness_hours, 'freshness_hours') : null,
-    };
-    pipeline.log.info(TAG, `Timing Calibration: ${timingCal.total} permit_types, avg sample=${timingCal.avg_sample}, freshness=${timingCal.freshness_hours}h`);
-  } catch (err) {
-    pipeline.log.warn(TAG, `Timing calibration query failed — zeroes: ${err.message}`);
-  }
+  // V1 timing_calibration dropped (migration 106). Columns preserved in
+  // data_quality_snapshots for historical continuity — written as NULL.
+  const timingCal = { total: null, avg_sample: null, freshness_hours: null };
 
   // UPSERT snapshot
   let isNew, isUpdate;
@@ -505,7 +489,7 @@ pipeline.run('refresh-snapshot', async (pool) => {
       },
     },
   });
-  pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"], "permit_inspections": ["*"], "cost_estimates": ["cost_source", "estimated_cost"], "timing_calibration": ["computed_at", "sample_size"] }, { "data_quality_snapshots": ["*"] });
+  pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"], "permit_inspections": ["*"], "cost_estimates": ["cost_source", "estimated_cost"] }, { "data_quality_snapshots": ["*"] });
   }); // withAdvisoryLock
 
   if (!lockResult.acquired) return;

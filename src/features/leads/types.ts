@@ -18,7 +18,6 @@ export type {
   LeadType,
   LeadView,
   StageRelationship,
-  TimingCalibrationRow,
 } from '@/lib/permits/types';
 
 // ---------------------------------------------------------------------------

@@ -651,49 +651,8 @@ pipeline.run('assert-data-bounds', async (pool) => {
         console.log(`  SKIP: cost_estimates check failed: ${ceErr.message}`);
       }
 
-      console.log('\n--- Timing Calibration Coverage (legacy v1 — check retained for now) ---');
-      // WF3 2026-04-13: v1 (compute_timing_calibration) was REMOVED from the
-      // permits chain. The `timing_calibration` table is no longer kept fresh
-      // by any chain step. It is still read by spec 71 detail-page timing
-      // (src/features/leads/lib/timing.ts); that engine will be migrated to
-      // `phase_calibration` in a future frontend WF. Until then this check
-      // will fire stale warnings — that's intentional ops signal, not noise.
-      try {
-        const tcRes = await pool.query(
-          `SELECT COUNT(*) as total,
-                  MIN(sample_size) as min_sample,
-                  EXTRACT(EPOCH FROM (NOW() - MAX(computed_at))) / 3600.0 as freshness_hours
-           FROM timing_calibration`
-        );
-        const tc = tcRes.rows[0];
-        const tcTotal = parseInt(tc.total, 10);
-        const tcMinSample = parseInt(tc.min_sample, 10) || 0;
-        const tcFreshness = tc.freshness_hours !== null ? parseFloat(tc.freshness_hours) : null;
-        if (tcTotal === 0) {
-          warnings.push('timing_calibration table is empty — compute_timing_calibration has not run yet');
-          console.warn('  WARN: timing_calibration table is empty');
-        } else {
-          console.log(`  OK: ${tcTotal} permit_types calibrated (min sample=${tcMinSample}, freshness=${tcFreshness !== null ? tcFreshness.toFixed(1) + 'h' : 'N/A'})`);
-          if (tcMinSample < 5) {
-            errors.push(`timing_calibration has rows with sample_size < 5 (min=${tcMinSample}) — HAVING clause should prevent this`);
-            console.error(`  FAIL: sample_size < 5 found (min=${tcMinSample})`);
-          }
-          if (tcFreshness !== null && tcFreshness > calibFreshnessHours) {
-            // Check if permit_inspections has data — staleness only matters if scraper has run
-            try {
-              const piCount = await count(`SELECT COUNT(*) FROM permit_inspections`);
-              if (piCount > 0) {
-                warnings.push(`timing_calibration is ${tcFreshness.toFixed(0)}h stale (> ${calibFreshnessHours}h threshold)`);
-                console.warn(`  WARN: timing_calibration last computed ${tcFreshness.toFixed(0)}h ago`);
-              }
-            } catch (piErr) {
-              console.log(`  SKIP: permit_inspections staleness check: ${piErr.message}`);
-            }
-          }
-        }
-      } catch (tcErr) {
-        console.log(`  SKIP: timing_calibration check failed: ${tcErr.message}`);
-      }
+      // V1 timing_calibration table dropped in migration 106. V2 phase_calibration
+      // is checked by compute-timing-calibration-v2.js via its own audit_table.
     } // end runPermitChecks cost/timing checks
 
     // Ghost record detection — permits the City silently dropped from CKAN

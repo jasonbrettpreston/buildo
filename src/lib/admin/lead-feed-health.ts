@@ -41,7 +41,7 @@ export interface LeadFeedReadiness {
   // timing_calibration — that's the detail-page engine (spec 71).
   permits_with_phase: number;
   // Detail-page timing: active permits whose permit_type has a row in
-  // timing_calibration. Answers "what does 4 permit types calibrated mean?"
+  // phase_calibration (v2). Answers "what does N permit types calibrated mean?"
   permits_with_timing_calibration_match: number;
   // Opportunity breakdown: counts by permit status (Permit Issued, Inspection,
   // Application, other). Powers the opportunity pillar input.
@@ -312,24 +312,22 @@ export async function getLeadFeedReadiness(pool: Pool): Promise<LeadFeedReadines
       WHERE p.latitude IS NOT NULL
         AND p.${ADMIN_ACTIVE_STATUS_PREDICATE}
     `),
-    // Cost estimates total + timing calibration total/freshness in one round-trip
+    // Cost estimates total + phase calibration (v2) total/freshness in one round-trip
     pool.query(`
       SELECT
         (SELECT COUNT(*) FROM cost_estimates WHERE estimated_cost IS NOT NULL) as cost_count,
-        (SELECT COUNT(*) FROM timing_calibration) as timing_total,
-        (SELECT ROUND(EXTRACT(EPOCH FROM (NOW() - MAX(computed_at))) / 3600.0, 1) FROM timing_calibration) as timing_freshness_hours
+        (SELECT COUNT(DISTINCT permit_type) FROM phase_calibration WHERE from_phase = 'ISSUED' AND permit_type != '__ALL__') as timing_total,
+        (SELECT ROUND(EXTRACT(EPOCH FROM (NOW() - MAX(computed_at))) / 3600.0, 1) FROM phase_calibration) as timing_freshness_hours
     `),
-    // Active permits whose permit_type has a row in timing_calibration.
-    // Kept separate because the EXISTS + permit_type scan is the slowest
-    // query in the batch (~2.6s) and putting it in the consolidated
-    // permits query would serialize the other counts behind it.
+    // Active permits whose permit_type has a row in phase_calibration (v2).
     pool.query(`
       SELECT COUNT(*) as c
       FROM permits p
       WHERE p.${ADMIN_ACTIVE_STATUS_PREDICATE}
         AND EXISTS (
-          SELECT 1 FROM timing_calibration tc
-          WHERE tc.permit_type = p.permit_type
+          SELECT 1 FROM phase_calibration pc
+          WHERE pc.permit_type = p.permit_type
+            AND pc.from_phase = 'ISSUED'
         )
     `),
     // Entities stats + WSIB feed-eligible builder intersection in one query
