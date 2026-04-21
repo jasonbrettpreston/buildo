@@ -471,12 +471,14 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
   });
 
   it('S1 SKIP_PHASES_SQL mirrors SKIP_PHASES Set exactly (same phase codes, no drift)', () => {
-    // Both constants must contain identical phase codes. If SKIP_PHASES grows,
-    // SKIP_PHASES_SQL must also be updated — this test catches divergence.
+    // SKIP_PHASES (JS Set) lives in this script; SKIP_PHASES_SQL is imported from
+    // scripts/lib/lifecycle-phase.js (WF3-D DRY). The phases must match — this
+    // test reads lifecycle-phase.js to verify cross-file consistency.
     const setMatch = content.match(/SKIP_PHASES\s*=\s*new Set\(\[([\s\S]*?)\]\)/);
-    const sqlMatch = content.match(/SKIP_PHASES_SQL\s*=\s*`\(([^`]+)\)`/);
     expect(setMatch, 'SKIP_PHASES Set not found in script').toBeTruthy();
-    expect(sqlMatch, 'SKIP_PHASES_SQL constant not found in script').toBeTruthy();
+    const lifecycleContent = read('scripts/lib/lifecycle-phase.js');
+    const sqlMatch = lifecycleContent.match(/SKIP_PHASES_SQL\s*=\s*`\(([^`]+)\)`/);
+    expect(sqlMatch, 'SKIP_PHASES_SQL constant not found in lifecycle-phase.js').toBeTruthy();
     const setPhases = (setMatch?.[1] ?? '').match(/'(\w+)'/g)?.map(s => s.slice(1, -1)).sort() ?? [];
     const sqlPhases = (sqlMatch?.[1] ?? '').match(/'(\w+)'/g)?.map(s => s.slice(1, -1)).sort() ?? [];
     expect(setPhases).toEqual(sqlPhases);

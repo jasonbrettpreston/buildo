@@ -95,10 +95,14 @@ describe('assert-global-coverage.js — denominator gates (source-script mirrori
   });
 
   it('trade_forecasts denominator excludes SKIP_PHASES exactly (mirrors compute-trade-forecasts.js)', () => {
-    // SKIP_PHASES_SQL constant must contain all 7 phases exactly as in compute-trade-forecasts.js
-    expect(src()).toContain("('P19','P20','O1','O2','O3','P1','P2')");
+    const content = src();
+    // SKIP_PHASES_SQL is imported from scripts/lib/lifecycle-phase.js (WF3-D);
+    // the literal is no longer defined locally but IS interpolated into SQL.
+    // Verify the import exists and the constant is referenced in SQL context.
+    expect(content).toMatch(/require\(['"][^'"]*lifecycle-phase['"]\)/);
+    expect(content).toContain('SKIP_PHASES_SQL');
     // Must be referenced in SQL as a NOT IN gate
-    expect(src()).toMatch(/NOT IN.*SKIP_PHASES|lifecycle_phase NOT IN/);
+    expect(content).toMatch(/NOT IN.*SKIP_PHASES|lifecycle_phase NOT IN/);
   });
 
   it('trade_forecasts denominator requires lifecycle_phase IS NOT NULL (mirrors compute-trade-forecasts.js SOURCE_SQL)', () => {
@@ -338,6 +342,65 @@ describe('assert-global-coverage.js — Bug 5: lifecycle_stalled NOT NULL DEFAUL
 
   it('permits aggregate counts lifecycle_stalled = true (stalled permits, not IS NOT NULL)', () => {
     expect(content).toContain("lifecycle_stalled = true)                     AS lifecycle_stalled_pop");
+  });
+});
+
+// ── WF3 false-FAIL fixes (denominator mismatches + SKIP_PHASES DRY) ────────────
+
+describe('assert-global-coverage.js — WF3-A: Step 23 opportunity_score uses non-expired denominator', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('Step 23 opportunity_score coverageRow uses oppScoreDenom, not forecastTotal', () => {
+    // forecastTotal includes 62K+ expired rows (77% of all trade_forecasts).
+    // compute_opportunity_scores only scores non-expired rows, so
+    // opportunity_score IS NOT NULL / forecastTotal ≈ 20.5% → false FAIL.
+    // oppScoreDenom is COUNT(*) FILTER (WHERE urgency IS NULL OR urgency <> 'expired').
+    expect(content).toMatch(
+      /Step 23[\s\S]{0,300}trade_forecasts\.opportunity_score['"][\s\S]{0,100}oppScoreDenom/,
+    );
+    expect(content).not.toMatch(
+      /Step 23[\s\S]{0,300}trade_forecasts\.opportunity_score['"][\s\S]{0,100}forecastTotal/,
+    );
+  });
+});
+
+describe('assert-global-coverage.js — WF3-B: enriched_status uses infoRow (inspection-stage only)', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('enriched_status uses infoRow not coverageRow — only populated for P9–P17 permits', () => {
+    // enriched_status is only set for permits in active inspection stages.
+    // 12,827 / 244,688 = 5.2% → permanent FAIL against all-permits denominator.
+    // infoRow removes threshold judgment; the raw count is still visible in the UI.
+    expect(content).toMatch(/infoRow\([^)]*permits\.enriched_status/);
+    expect(content).not.toMatch(/coverageRow\([^)]*permits\.enriched_status/);
+  });
+});
+
+describe('assert-global-coverage.js — WF3-C: is_wsib_registered uses externalRow (sparse scrape)', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('is_wsib_registered uses externalRow not coverageRow — third-party scraper field', () => {
+    // WSIB registration data comes from a third-party scraper and is sparse by design.
+    // 24.1% coverage fails the standard 80% PASS threshold but exceeds externalRow
+    // PASS threshold (10%). externalRow: PASS >= 10%, WARN >= 5%, FAIL below.
+    expect(content).toMatch(/externalRow\([^)]*is_wsib_registered/);
+    expect(content).not.toMatch(/coverageRow\([^)]*is_wsib_registered/);
+  });
+});
+
+describe('assert-global-coverage.js — WF3-D: SKIP_PHASES_SQL imported from shared lib', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('requires SKIP_PHASES_SQL from scripts/lib/lifecycle-phase.js', () => {
+    expect(content).toMatch(/require\(['"][^'"]*lifecycle-phase['"]\)/);
+  });
+
+  it('does not define SKIP_PHASES_SQL as a local backtick literal', () => {
+    expect(content).not.toMatch(/const SKIP_PHASES_SQL\s*=\s*`/);
   });
 });
 

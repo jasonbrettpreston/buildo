@@ -100,7 +100,7 @@ All permit-based denominators exclude PRE-% synthetic permits: `permit_num NOT L
 | Step 2 — load_permits | permits.issued_date | `issued_date IS NOT NULL` | all real permits |
 | Step 2 — load_permits | permits.geo_id | `geo_id IS NOT NULL AND geo_id != '' AND geo_id ~ '^[0-9]+$'` | all real permits |
 | Step 3 — close_stale_permits | permits.completed_date | `completed_date IS NOT NULL` | permits with `status IN ('Pending Closed','Closed')` — output-state denominator |
-| Step 4 — classify_permit_phase | permits.enriched_status | `enriched_status IS NOT NULL` | all real permits |
+| Step 4 — classify_permit_phase | permits.enriched_status | `enriched_status IS NOT NULL` | INFO — only populated for active inspection stages (P9–P17); ~5.2% of all real permits is the data reality, not a quality gap. `infoRow` — threshold check removed. |
 | Step 5 — classify_scope | permits.project_type | `project_type IS NOT NULL` | all real permits |
 | Step 5 — classify_scope | permits.scope_tags | `array_length(scope_tags,1) > 0` | all real permits |
 | Step 5 — classify_scope | permits.scope_classified_at | `scope_classified_at IS NOT NULL` | all real permits |
@@ -108,7 +108,7 @@ All permit-based denominators exclude PRE-% synthetic permits: `permit_num NOT L
 | Step 6 — extract_builders | entities.name_normalized | `name_normalized IS NOT NULL` | `COUNT(DISTINCT builder_name) FROM permits WHERE builder_name IS NOT NULL AND permit_num NOT LIKE 'PRE-%'` |
 | Step 6 — extract_builders | entities.primary_phone | `primary_phone IS NOT NULL` | `COUNT(*) FROM entities` |
 | Step 6 — extract_builders | entities.primary_email | `primary_email IS NOT NULL` | `COUNT(*) FROM entities` |
-| Step 7 — link_wsib | entities.is_wsib_registered | `is_wsib_registered = true` | `COUNT(*) FROM entities` |
+| Step 7 — link_wsib | entities.is_wsib_registered | `is_wsib_registered = true` | `COUNT(*) FROM entities` — `externalRow` (PASS ≥ 10%, WARN ≥ 5%); third-party scraper field, ~24% coverage by design |
 | Step 7 — link_wsib | wsib_registry.linked_entity_id | `linked_entity_id IS NOT NULL` | `COUNT(*) FROM wsib_registry` |
 | Step 8 — geocode_permits | permits.latitude | `latitude IS NOT NULL` | `geo_id IS NOT NULL AND geo_id != '' AND permit_num NOT LIKE 'PRE-%'` |
 | Step 8 — geocode_permits | permits.longitude | `longitude IS NOT NULL` | same as latitude |

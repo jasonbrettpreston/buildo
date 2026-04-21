@@ -1305,9 +1305,10 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
     // polluting last_seen_at's "last seen in Open Data feed" meaning.
     // Must include IS NULL guard so unclassified permits still receive the dirty signal.
     expect(content).toMatch(/lifecycle_phase IS NULL OR lifecycle_phase NOT IN/);
-    // Must cover the full SKIP_PHASES set matching compute-trade-forecasts.js — all 7 phases.
-    // Exact string match prevents partial coverage (e.g. dropping O1-O3 would still match a regex).
-    expect(content).toContain("NOT IN ('P19','P20','O1','O2','O3','P1','P2')");
+    // SKIP_PHASES_SQL imported from scripts/lib/lifecycle-phase.js (WF3-D).
+    // The literal is no longer hardcoded; verify the import and interpolation.
+    expect(content).toMatch(/require\(['"][^'"]*lifecycle-phase['"]\)/);
+    expect(content).toContain('SKIP_PHASES_SQL');
   });
 
   // Sources pipeline fixes
