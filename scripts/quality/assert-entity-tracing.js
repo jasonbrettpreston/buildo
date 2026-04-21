@@ -31,6 +31,7 @@
 'use strict';
 
 const pipeline = require('./../lib/pipeline');
+const { SKIP_PHASES_SQL } = require('./../lib/lifecycle-phase');
 
 // Advisory lock ID — unique to this assert script (§47 §A.5, ID 110).
 // Prevents two concurrent chain runs from executing the entity tracing
@@ -43,9 +44,7 @@ const ADVISORY_LOCK_ID = 110;
 // arrived just outside the previous 24h boundary.
 const TRACE_WINDOW = '26 hours';
 
-// Phases excluded from compute-trade-forecasts (SKIP_PHASES mirror).
-// Must stay in sync with scripts/compute-trade-forecasts.js SKIP_PHASES.
-const SKIP_PHASES_SQL = `('P19','P20','O1','O2','O3','P1','P2')`;
+// SKIP_PHASES_SQL imported from scripts/lib/lifecycle-phase.js — single source of truth.
 
 const THRESHOLDS = {
   permit_trades:     0.95,
@@ -173,6 +172,10 @@ pipeline.run('assert-entity-tracing', async (pool) => {
     // whether compute_opportunity_scores populated scores >0: denominator is
     // trade_forecasts rows (not permits), since permits without classifications
     // will have no forecast rows. NULL > 0 is falsy — same as 0 > 0.
+    // Filter expired rows from both numerator and denominator.
+    // compute_opportunity_scores only processes non-expired forecast rows;
+    // including expired rows (77% of all rows) inflates the denominator to ~81K
+    // and produces ~20.5% coverage — a false FAIL. WF3-A fix.
     const { rows: [os] } = await pool.query(
       `SELECT
          COUNT(*)::int                                                          AS forecast_rows,
@@ -180,7 +183,8 @@ pipeline.run('assert-entity-tracing', async (pool) => {
          FROM trade_forecasts tf
          JOIN permits p ON p.permit_num = tf.permit_num
                        AND p.revision_num = tf.revision_num
-        WHERE p.last_seen_at > NOW() - $1::interval`,
+        WHERE p.last_seen_at > NOW() - $1::interval
+          AND (tf.urgency IS NULL OR tf.urgency <> 'expired')`,
       [TRACE_WINDOW],
     );
     const osDenominator = os.forecast_rows || 0;

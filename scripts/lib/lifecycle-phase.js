@@ -385,6 +385,14 @@ function classifyCoaPhase(input) {
 // Single source of truth per WF3 review finding (drift risk from 3 places).
 const DEAD_STATUS_ARRAY = Object.freeze([...DEAD_STATUS_SET]);
 
+// SQL NOT IN list of phases that compute-trade-forecasts (and related CQA
+// scripts) exclude from forecast generation / eligibility counts.
+// Exported as a single source of truth so all consumers stay in sync.
+//   P19, P20  — terminal (wind-down / closed)
+//   O1, O2, O3 — orphan (detached parent folder, progression unreliable)
+//   P1, P2    — CoA pre-permit phases (not real building permits)
+const SKIP_PHASES_SQL = `('P19','P20','O1','O2','O3','P1','P2')`;
+
 // Frozen array form of NORMALIZED_DEAD_DECISIONS — same rationale for CoA.
 const NORMALIZED_DEAD_DECISIONS_ARRAY = Object.freeze([...NORMALIZED_DEAD_DECISIONS]);
 
@@ -496,6 +504,7 @@ module.exports = {
   classifyCoaPhase,
   normalizeCoaDecision,
   PHASE_ORDINAL,
+  SKIP_PHASES_SQL,
   DEAD_STATUS_SET,
   DEAD_STATUS_ARRAY,
   NORMALIZED_DEAD_DECISIONS_ARRAY,

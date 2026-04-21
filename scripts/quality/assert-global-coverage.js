@@ -21,14 +21,13 @@
 
 const { z } = require('zod');
 const pipeline = require('./../lib/pipeline');
+const { SKIP_PHASES_SQL } = require('./../lib/lifecycle-phase');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./../lib/config-loader');
 
 // Advisory lock ID — unique to this assert script (spec 47 §A.5, ID 111).
 const ADVISORY_LOCK_ID = 111;
 
-// Phases excluded from compute-trade-forecasts SOURCE_SQL.
-// Must stay in sync with scripts/compute-trade-forecasts.js SKIP_PHASES.
-const SKIP_PHASES_SQL = `('P19','P20','O1','O2','O3','P1','P2')`;
+// SKIP_PHASES_SQL imported from scripts/lib/lifecycle-phase.js — single source of truth.
 
 const LOGIC_VARS_SCHEMA = z.object({
   profiling_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
@@ -516,8 +515,11 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow(    'Step 3 — close_stale_permits', 'permits.status (stale total)', staleTotal, permitsTotal));
       rows.push(coverageRow('Step 3 — close_stale_permits', 'permits.completed_date',        parseInt(pa.stale_with_date, 10), staleTotal || null));
 
-      // Step 4 — classify_permit_phase (Denom A)
-      rows.push(coverageRow('Step 4 — classify_permit_phase', 'permits.enriched_status', parseInt(pa.enriched_status_pop, 10), permitsTotal));
+      // Step 4 — classify_permit_phase
+      // enriched_status is only populated for permits in active inspection stages
+      // (P9–P17). ~12K / 244K = 5.2% against all-permits denominator → false FAIL.
+      // infoRow: structural sparsity, not a data quality gap. WF3-B fix.
+      rows.push(infoRow('Step 4 — classify_permit_phase', 'permits.enriched_status', parseInt(pa.enriched_status_pop, 10), permitsTotal));
 
       // Step 5 — classify_scope (Denom A)
       rows.push(coverageRow('Step 5 — classify_scope', 'permits.project_type',        parseInt(pa.project_type_pop, 10),    permitsTotal));
@@ -539,7 +541,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(externalRow('Step 6 — extract_builders', 'entities.website',               parseInt(ea.website_pop, 10),        entitiesTotal));
 
       // Step 7 — link_wsib
-      rows.push(coverageRow('Step 7 — link_wsib', 'entities.is_wsib_registered',        parseInt(ea.wsib_registered_pop, 10), entitiesTotal));
+      // is_wsib_registered: third-party scraper field, sparse by design (~24%).
+      // externalRow: PASS >= 10%, WARN >= 5%, FAIL below. WF3-C fix.
+      rows.push(externalRow('Step 7 — link_wsib', 'entities.is_wsib_registered',        parseInt(ea.wsib_registered_pop, 10), entitiesTotal));
       // WSIB registry match rate — externalRow (external data source).
       rows.push(externalRow('Step 7 — link_wsib', 'wsib_registry.linked_entity_id',      parseInt(wa.linked_pop, 10),          wsibTotal || null));
       rows.push(coverageRow('Step 7 — link_wsib', 'wsib_registry.match_confidence',      parseInt(wa.confidence_pop, 10),      parseInt(wa.linked_pop, 10) || null));
@@ -648,7 +652,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.median_days',         parseInt(tfa.median_days_pop, 10),             forecastTotal || null));
       rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.p25_days',            parseInt(tfa.p25_days_pop, 10),                forecastTotal || null));
       rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.p75_days',            parseInt(tfa.p75_days_pop, 10),                forecastTotal || null));
-      rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.opportunity_score',   parseInt(tfa.opportunity_score_pop, 10),        forecastTotal || null));
+      // opportunity_score: compute_opportunity_scores only processes non-expired rows.
+      // Using forecastTotal (includes 62K+ expired rows) → ~20.5% false FAIL. WF3-A fix.
+      rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.opportunity_score',   parseInt(tfa.opportunity_score_pop, 10),        oppScoreDenom || null));
       rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.computed_at',         parseInt(tfa.computed_at_pop, 10),             forecastTotal || null));
 
       // Step 24 — compute_opportunity_scores (mirrors compute-opportunity-scores.js WHERE)

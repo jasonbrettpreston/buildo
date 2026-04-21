@@ -16,6 +16,7 @@ const pipeline = require('./lib/pipeline');
 const {
   TRADE_TARGET_PHASE: TRADE_TARGET_PHASE_FALLBACK,
   PHASE_ORDINAL,
+  SKIP_PHASES_SQL,
 } = require('./lib/lifecycle-phase');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
@@ -32,10 +33,8 @@ const SKIP_PHASES = new Set([
   'P1', 'P2',          // CoA pre-permit
 ]);
 
-// SQL NOT IN list derived from SKIP_PHASES for SOURCE_SQL pushdown (S1 / WF2 2026-04-21).
-// Hardcoded string mirrors SKIP_PHASES exactly — must be kept in sync if SKIP_PHASES changes.
+// SKIP_PHASES_SQL imported from scripts/lib/lifecycle-phase.js — single source of truth.
 // Structural constant (spec 47 §4.1): enum vocabulary, not an operator-tunable value.
-const SKIP_PHASES_SQL = `('P19','P20','O1','O2','O3','P1','P2')`;
 
 // Pre-construction phases use ISSUED calibration instead of phase-to-phase.
 // P18 is intentionally NOT here — it means "construction active with at

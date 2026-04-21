@@ -22,6 +22,7 @@
  */
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
+const { SKIP_PHASES_SQL } = require('./lib/lifecycle-phase');
 const { safeParsePositiveInt, safeParseIntOrNull } = require('./lib/safe-math');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
@@ -366,7 +367,7 @@ pipeline.run('link-coa', async (pool) => {
              AND last_seen_at >= $1::timestamptz
         )
           AND last_seen_at < NOW() - INTERVAL '1 second'
-          AND (lifecycle_phase IS NULL OR lifecycle_phase NOT IN ('P19','P20','O1','O2','O3','P1','P2'))`,
+          AND (lifecycle_phase IS NULL OR lifecycle_phase NOT IN ${SKIP_PHASES_SQL})`,
       [bumpStart, RUN_AT],
     );
     permitsBumped = bumpResult.rowCount || 0;
