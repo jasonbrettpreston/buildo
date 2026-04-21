@@ -373,24 +373,37 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/snowplow_buffer_days/);
     // Must use setUTCDate for consistent UTC date math (same pattern as stall snowplow)
     expect(content).toMatch(/setUTCDate[\s\S]{0,80}logicVars\.snowplow_buffer_days/);
-    // Must be in LOGIC_VARS_SCHEMA — not a hardcoded constant (spec 47 §4.1)
-    expect(content).toMatch(/snowplow_buffer_days\s*:\s*z\.number\(\)\.finite\(\)\.positive\(\)/);
+    // Must be in LOGIC_VARS_SCHEMA with coercion — not a hardcoded constant (spec 47 §4.1)
+    // z.coerce.number() required: pg returns DECIMAL as string (WF3 April 2026)
+    expect(content).toMatch(/snowplow_buffer_days\s*:\s*z\.coerce\.number\(\)\.finite\(\)\.positive\(\)/);
     // Old hardcoded constant must be gone
     expect(content).not.toMatch(/const SNOWPLOW_BUFFER_DAYS = 7/);
   });
 
-  it('Bug-1: snowplow guard uses explicit .getTime() comparison — not bare < operator (WF3 April 2026)', () => {
-    // The bare `predictedStart < today` relies on implicit JS Date coercion via valueOf().
-    // Explicit .getTime() comparison eliminates any type-coercion edge case and makes
-    // the intent unambiguous. snowplow_applied: 0 at 76.9% expired traced to this risk.
-    // Fix: introduce isPast variable with .getTime() before the if-guard.
+  it('Bug-1: snowplow guard compares against runAt (not today midnight) — catches same-day fallback forecasts (WF3 April 2026)', () => {
+    // predictedStart = fallbackAnchor + median can land at today-midnight when the
+    // anchor is just recent enough. today-midnight equals `today` so the old guard
+    // (< today) never fires for same-day forecasts — they silently stay "delayed"
+    // instead of being snapped to today + buffer. Using runAt (actual run timestamp)
+    // ensures any predictedStart before the current moment triggers the snowplow.
     expect(content).toMatch(
-      /isPast\s*=\s*new Date\(predictedStart\)\.getTime\(\)\s*<\s*today\.getTime\(\)/,
+      /isPast\s*=\s*new Date\(predictedStart\)\.getTime\(\)\s*<\s*new Date\(runAt\)\.getTime\(\)/,
     );
-    // The if-guard must reference isPast, not the raw Date objects directly
+    // The if-guard must reference isPast, not raw Date objects directly
     expect(content).toMatch(/anchorIsFallback\s*&&\s*isPast/);
-    // The bare < operator form must not remain in the snowplow guard
-    expect(content).not.toMatch(/anchorIsFallback\s*&&\s*predictedStart\s*<\s*today/);
+    // Must NOT use today.getTime() in the snowplow isPast comparison
+    expect(content).not.toMatch(/isPast\s*=\s*new Date\(predictedStart\)\.getTime\(\)\s*<\s*today\.getTime\(\)/);
+  });
+
+  it('LOGIC_VARS_SCHEMA uses z.coerce.number() — pg DECIMAL/NUMERIC returns as string (WF3 April 2026)', () => {
+    // pg driver returns DECIMAL/NUMERIC as strings to prevent float64 precision loss.
+    // z.number() rejects strings; z.coerce.number() coerces before validation.
+    // Sibling fix alongside compute-opportunity-scores.js (same schema pattern, same risk).
+    expect(content).toMatch(/z\.coerce\.number\(\)/);
+    // None of the schema fields should use bare z.number()
+    expect(content).not.toMatch(/stall_penalty_precon\s*:\s*z\.number\(\)/);
+    expect(content).not.toMatch(/snowplow_buffer_days\s*:\s*z\.number\(\)/);
+    expect(content).not.toMatch(/expired_threshold_days\s*:\s*z\.number\(\)/);
   });
 
   it('Historic Snowplow tracks snowplowCount counter in telemetry (WF3-B2)', () => {

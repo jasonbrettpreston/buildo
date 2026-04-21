@@ -52,16 +52,19 @@ const FORECAST_BATCH_SIZE = pipeline.maxRowsPerInsert(13); // Math.floor(65535 /
 // spec 47 §4 + spec 85 §6 item 4 — fail fast before any math runs.
 // These are the only logicVars consumed downstream; a NaN would silently
 // corrupt predictedStart (setUTCDate) and urgency classification.
+// z.coerce.number() instead of z.number(): pg returns DECIMAL/NUMERIC columns as
+// strings to prevent float64 precision loss. z.number() rejects strings. Sibling
+// fix alongside compute-opportunity-scores.js (same schema pattern, same risk).
 const LOGIC_VARS_SCHEMA = z.object({
-  stall_penalty_precon:               z.number().finite().min(0),
-  stall_penalty_active:               z.number().finite().min(0),
-  expired_threshold_days:             z.number().finite(),
-  urgency_overdue_days:               z.number().finite().positive(),
-  urgency_upcoming_days:              z.number().finite().positive(),
-  snowplow_buffer_days:               z.number().finite().positive(),
-  calibration_default_median_days:    z.number().finite().positive(),
-  calibration_default_p25_days:       z.number().finite().positive(),
-  calibration_default_p75_days:       z.number().finite().positive(),
+  stall_penalty_precon:               z.coerce.number().finite().min(0),
+  stall_penalty_active:               z.coerce.number().finite().min(0),
+  expired_threshold_days:             z.coerce.number().finite(),
+  urgency_overdue_days:               z.coerce.number().finite().positive(),
+  urgency_upcoming_days:              z.coerce.number().finite().positive(),
+  snowplow_buffer_days:               z.coerce.number().finite().positive(),
+  calibration_default_median_days:    z.coerce.number().finite().positive(),
+  calibration_default_p25_days:       z.coerce.number().finite().positive(),
+  calibration_default_p75_days:       z.coerce.number().finite().positive(),
 }).passthrough();
 
 // Urgency classification — no isStalled parameter.
@@ -430,9 +433,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     // large negative daysUntil → expired urgency (was 76.9% FAIL after WF1).
     // Snap to today + snowplow_buffer_days (DB-driven, spec 47 §4.1) so rescued
     // leads are Rescue Missions. Only fires for fallback anchors.
-    // Use explicit .getTime() comparison — eliminates implicit Date coercion risk
-    // that caused snowplow_applied: 0 (bare < relies on valueOf() side-effect).
-    const isPast = new Date(predictedStart).getTime() < today.getTime();
+    // Use runAt (actual run timestamp) not today (midnight UTC) — any predictedStart
+    // before the current moment triggers the snowplow, including same-day forecasts
+    // that land at today-midnight (equal to `today`, so the old guard missed them).
+    const isPast = new Date(predictedStart).getTime() < new Date(runAt).getTime();
     if (anchorIsFallback && isPast) {
       predictedStart = new Date(today);
       predictedStart.setUTCDate(predictedStart.getUTCDate() + logicVars.snowplow_buffer_days);
