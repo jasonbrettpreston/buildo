@@ -642,9 +642,18 @@ pipeline.run('assert-global-coverage', async (pool) => {
 
       // Step 23 — compute_trade_forecasts
       // Denom G (forecastEligible): DISTINCT permit counts — fixes >100% grain mismatch.
-      rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.permits_covered',      parseInt(tfa.forecast_total_permits, 10),      forecastEligible || null));
-      rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.predicted_start',      parseInt(tfa.predicted_start_permits, 10),      forecastEligible || null));
-      rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.urgency (classified)', parseInt(tfa.urgency_classified_permits, 10),   forecastEligible || null));
+      //
+      // WF3 2026-04-22: permit-level coverage rows demoted from coverageRow → infoRow.
+      // After the zombie/stall gates added to compute-trade-forecasts.js (stall gate +
+      // 180-day grace cutoff), ~64% of technically eligible permits are intentionally
+      // excluded. Actual coverage ~36% is the designed outcome, not a data quality gap.
+      // Using coverageRow here would produce a permanent FAIL against the global
+      // profiling_coverage_pass_pct threshold (~90%). Lowering that global threshold
+      // would blind the Denom H row-quality checks (trade_slug, confidence, etc.) that
+      // correctly hit 90%+. infoRow removes traffic-light judgment — count still visible.
+      rows.push(infoRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.permits_covered',      parseInt(tfa.forecast_total_permits, 10),      forecastEligible || null));
+      rows.push(infoRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.predicted_start',      parseInt(tfa.predicted_start_permits, 10),      forecastEligible || null));
+      rows.push(infoRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.urgency (classified)', parseInt(tfa.urgency_classified_permits, 10),   forecastEligible || null));
       // Denom H (forecast_total rows): row-level field quality.
       rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.trade_slug',          parseInt(tfa.trade_slug_pop, 10),              forecastTotal || null));
       rows.push(coverageRow('Step 23 — compute_trade_forecasts', 'trade_forecasts.target_window',       parseInt(tfa.target_window_pop, 10),           forecastTotal || null));

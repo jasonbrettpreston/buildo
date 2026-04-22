@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/pipeline/49_data_completeness_profiling.md
+// SPEC LINK: docs/specs/01-pipeline/49_data_completeness_profiling.md
 //
 // Infra tests for assert-global-coverage.js:
 //   (a) Denominator enforcement — assert SQL contains the exact gate conditions
@@ -15,8 +15,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const SCRIPT_PATH = path.join(REPO_ROOT, 'scripts', 'quality', 'assert-global-coverage.js');
 const MANIFEST_PATH = path.join(REPO_ROOT, 'scripts', 'manifest.json');
-const CHAIN_PERMITS_SPEC = path.join(REPO_ROOT, 'docs', 'specs', 'pipeline', '41_chain_permits.md');
-const CHAIN_COA_SPEC = path.join(REPO_ROOT, 'docs', 'specs', 'pipeline', '42_chain_coa.md');
+const CHAIN_PERMITS_SPEC = path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', '41_chain_permits.md');
+const CHAIN_COA_SPEC = path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', '42_chain_coa.md');
 
 function src(): string {
   return fs.readFileSync(SCRIPT_PATH, 'utf8');
@@ -405,6 +405,27 @@ describe('assert-global-coverage.js — WF3-D: SKIP_PHASES_SQL imported from sha
   it('does not define SKIP_PHASES_SQL as a local backtick literal', () => {
     expect(content).not.toMatch(/const SKIP_PHASES_SQL\s*=\s*`/);
   });
+});
+
+describe('assert-global-coverage.js — GC-1: Step 23 Denom G rows use infoRow (zombie-gate design intent)', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  // After WF3 zombie/stall gates, compute-trade-forecasts intentionally produces
+  // forecasts for only ~36% of technically eligible permits (stalled + ancient-anchor
+  // excluded). The three Denom G permit-level coverage rows previously used coverageRow()
+  // against the global profiling_coverage_pass_pct (~90%) → permanent false FAIL.
+  // Lowering the global DB threshold would blind Denom H row-quality checks (trade_slug,
+  // confidence, etc.) that correctly pass at 90%+. infoRow() removes traffic-light
+  // judgment — the ~36% is the intended design outcome, not a quality gap.
+  for (const field of ['permits_covered', 'predicted_start', 'urgency \\(classified\\)']) {
+    it(`GC-1 Step 23 '${field}' uses infoRow not coverageRow (design-gated, not a quality indicator)`, () => {
+      // infoRow( must appear with this field name
+      expect(content).toMatch(new RegExp(`infoRow\\('[^']*Step 23[^']*'\\s*,\\s*'trade_forecasts\\.${field}'`));
+      // coverageRow( must NOT appear with this field name
+      expect(content).not.toMatch(new RegExp(`coverageRow\\('[^']*Step 23[^']*'\\s*,\\s*'trade_forecasts\\.${field}'`));
+    });
+  }
 });
 
 describe('chain specs — step counts updated', () => {

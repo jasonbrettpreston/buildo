@@ -51,7 +51,11 @@ const TRACE_WINDOW = '26 hours';
 const THRESHOLDS = {
   permit_trades:     0.95,
   cost_estimates:    0.90,
-  trade_forecasts:   0.90,
+  // Zombie/stall gates (WF3 2026-04-22) intentionally exclude ~64% of eligible
+  // permits — stalled permits + permits with ancient phase_started_at. ~36%
+  // coverage is the designed outcome, not a data quality gap. Threshold lowered
+  // to 0.30 to stop the permanent false FAIL.
+  trade_forecasts:   0.30,
   lifecycle_phase:   0.95,
   opportunity_score: 0.80,
 };

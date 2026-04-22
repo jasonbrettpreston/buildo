@@ -146,3 +146,17 @@ describe('assert-entity-tracing.js — WF3 Zombie Gate: eligible denominator use
     expect(tfSql).not.toMatch(/phase_started_at\s+IS\s+NOT\s+NULL/);
   });
 });
+
+describe('assert-entity-tracing.js — ET-1: trade_forecasts threshold post zombie-gate calibration', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('ET-1 THRESHOLDS.trade_forecasts is 0.30 (zombie/stall gates reduce expected coverage to ~36%)', () => {
+    // After WF3 zombie-gate (stall gate + grace cutoff), compute-trade-forecasts
+    // intentionally excludes ~64% of technically eligible permits. The 0.90 threshold
+    // produced a permanent false FAIL at ~36% actual coverage. 0.30 reflects the
+    // design-gated expectation.
+    expect(content).toMatch(/trade_forecasts\s*:\s*0\.30\b/);
+    expect(content).not.toMatch(/trade_forecasts\s*:\s*0\.90\b/);
+  });
+});
