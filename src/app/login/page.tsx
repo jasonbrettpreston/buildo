@@ -13,7 +13,7 @@ export default function LoginPage() {
     // In dev mode, the middleware auto-injects the session cookie.
     // Just navigate to the target page and middleware handles the rest.
     const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect') || '/search';
+    const redirect = params.get('redirect') || '/dashboard';
     router.push(redirect);
   }
 

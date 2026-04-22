@@ -35,21 +35,21 @@ describe('Dashboard StatCard Logic', () => {
 });
 
 describe('Dashboard Navigation Links', () => {
+  // Two-Client Architecture (2026-04-22): /search and /map pages removed.
+  // Dashboard nav now links to Admin only; tradesperson UI lives in Expo mobile app.
   const NAV_LINKS = [
-    { href: '/search', label: 'Search' },
-    { href: '/map', label: 'Map' },
     { href: '/admin', label: 'Admin' },
   ];
 
-  it('has 3 navigation links', () => {
-    expect(NAV_LINKS).toHaveLength(3);
+  it('has 1 navigation link (admin only — Two-Client Architecture)', () => {
+    expect(NAV_LINKS).toHaveLength(1);
   });
 
-  it('includes search, map, and admin links', () => {
+  it('includes admin link and NOT deleted /search or /map', () => {
     const hrefs = NAV_LINKS.map((l) => l.href);
-    expect(hrefs).toContain('/search');
-    expect(hrefs).toContain('/map');
     expect(hrefs).toContain('/admin');
+    expect(hrefs).not.toContain('/search');
+    expect(hrefs).not.toContain('/map');
   });
 
   it('each link has a label', () => {

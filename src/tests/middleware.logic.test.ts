@@ -1,6 +1,6 @@
 // Logic Layer Tests — Route protection middleware
 // SPEC LINK: docs/specs/13_auth.md
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
   classifyRoute,
   isPublicRoute,
@@ -74,17 +74,19 @@ describe('Route Classification', () => {
     it('classifies protected pages as authenticated', () => {
       expect(classifyRoute('/dashboard')).toBe('authenticated');
       expect(classifyRoute('/dashboard/leads')).toBe('authenticated');
-      expect(classifyRoute('/onboarding')).toBe('authenticated');
-      expect(classifyRoute('/onboarding/step-2')).toBe('authenticated');
-      // Phase 3-iv: lead feed page
-      expect(classifyRoute('/leads')).toBe('authenticated');
-      expect(classifyRoute('/leads/123')).toBe('authenticated');
     });
 
-    it('classifies search and map pages as public', () => {
-      expect(classifyRoute('/search')).toBe('public');
-      expect(classifyRoute('/map')).toBe('public');
+    it('classifies /permits/* as public (serves Expo mobile client)', () => {
       expect(classifyRoute('/permits/123--01')).toBe('public');
+    });
+
+    it('classifies /search and /map as authenticated (pages removed — Two-Client Architecture)', () => {
+      // /search and /map pages were deleted in the Two-Client Architecture purge.
+      // Their routes now fall through to the fail-closed default → 'authenticated'.
+      expect(classifyRoute('/search')).toBe('authenticated');
+      expect(classifyRoute('/map')).toBe('authenticated');
+      expect(classifyRoute('/onboarding')).toBe('authenticated');
+      expect(classifyRoute('/leads')).toBe('authenticated');
     });
 
     it('classifies admin pages as admin', () => {
@@ -337,93 +339,7 @@ describe('Middleware dev-mode cookie injection (Bug #1 regression lock)', () => 
   });
 });
 
-// ---------------------------------------------------------------------------
-// Leads page dev-mode profile seed (WF3 2026-04-11 Bug #3 regression lock)
-// ---------------------------------------------------------------------------
-// In dev mode, user_profiles may be empty on a fresh local DB. Without a
-// dev-mode convenience seed, the leads page redirects to /onboarding —
-// which is a client-only mockup that doesn't persist anything, creating a
-// dead-end loop. The fix: when tradeSlug lookup returns empty AND we're in
-// dev mode with uid === 'dev-user', UPSERT a default profile and proceed.
-// These tests lock the shape of the fix in place.
-
-describe('Leads page dev seed (Bug #3 regression lock)', () => {
-  const leadsPageSource = fs.readFileSync(
-    path.join(__dirname, '../app/leads/page.tsx'),
-    'utf-8',
-  );
-
-  it('imports isDevMode from route-guard', () => {
-    expect(leadsPageSource).toContain('isDevMode');
-    expect(leadsPageSource).toContain("from '@/lib/auth/route-guard'");
-  });
-
-  it('has a dev-mode branch that checks uid === "dev-user" before redirecting to onboarding', () => {
-    // Gate: the seed fires ONLY when BOTH isDevMode() is true AND
-    // uid === 'dev-user'. Either condition false → fall through to the
-    // normal redirect path.
-    expect(leadsPageSource).toMatch(/isDevMode\(\)\s*&&\s*uid\s*===\s*['"]dev-user['"]/);
-  });
-
-  it('UPSERTs dev-user into user_profiles with ON CONFLICT DO NOTHING', () => {
-    // Idempotent seed: first visit creates the row, subsequent visits
-    // are a no-op via the conflict clause.
-    expect(leadsPageSource).toContain('INSERT INTO user_profiles');
-    expect(leadsPageSource).toContain("'dev-user'");
-    expect(leadsPageSource).toContain('ON CONFLICT (user_id) DO NOTHING');
-  });
-
-  it('preserves the normal /onboarding redirect path for non-dev users', () => {
-    // Regression guard: production (non-dev) users without a profile
-    // must still redirect to /onboarding. The dev branch is additive.
-    expect(leadsPageSource).toContain("redirect('/onboarding')");
-  });
-
-  // -------------------------------------------------------------------------
-  // Dev profile trade_slug switcher (WF3 2026-04-11 — user request)
-  // -------------------------------------------------------------------------
-  // The prior WF3 hardcoded dev-user trade_slug = 'plumbing'. The user
-  // asked how to change profiles. Fix: accept ?trade_slug=<slug> as a
-  // query param on /leads, validate against the canonical 32-slug
-  // allowlist from src/lib/classification/trades.ts, and UPSERT the dev
-  // profile with DO UPDATE. Production path is unreachable via the
-  // existing isDevMode() && uid === 'dev-user' gate.
-
-  it('accepts searchParams as a Next.js 15 async prop', () => {
-    // Next.js 15 changed searchParams to Promise<...> on Server Components.
-    // The signature must be async and await searchParams before reading.
-    expect(leadsPageSource).toMatch(/searchParams\s*:\s*Promise/);
-  });
-
-  it('imports the TRADES allowlist from classification for server-boundary validation', () => {
-    // Server-side validation is critical — a query param goes straight
-    // to a SQL UPDATE, so the allowlist must gate unknown slugs before
-    // the DB call.
-    expect(leadsPageSource).toContain('TRADES');
-    expect(leadsPageSource).toContain("from '@/lib/classification/trades'");
-  });
-
-  it('UPSERTs the requested trade_slug via DO UPDATE when a valid slug is provided in dev mode', () => {
-    // Must include the DO UPDATE SET clause — ON CONFLICT DO NOTHING
-    // alone (the earlier seed pattern) wouldn't actually change the
-    // existing trade_slug for an already-seeded dev-user.
-    expect(leadsPageSource).toContain('ON CONFLICT (user_id) DO UPDATE');
-    expect(leadsPageSource).toContain('trade_slug = EXCLUDED.trade_slug');
-  });
-
-  it('validates the query param against the allowlist BEFORE the UPSERT', () => {
-    // Positional check: the allowlist membership test (e.g. TRADES.some,
-    // TRADES.find, or a Set lookup) must appear in the source BEFORE
-    // the INSERT with the DO UPDATE clause. A regression that skipped
-    // validation would allow arbitrary strings into the SQL UPDATE.
-    const allowlistIdx = Math.max(
-      leadsPageSource.indexOf('TRADES.some'),
-      leadsPageSource.indexOf('TRADES.find'),
-      leadsPageSource.indexOf('TRADES.map'),
-    );
-    const updateIdx = leadsPageSource.indexOf('ON CONFLICT (user_id) DO UPDATE');
-    expect(allowlistIdx).toBeGreaterThan(-1);
-    expect(updateIdx).toBeGreaterThan(-1);
-    expect(allowlistIdx).toBeLessThan(updateIdx);
-  });
-});
+// Leads page (src/app/leads/) was removed in the Two-Client Architecture
+// purge (2026-04-22). The tradesperson lead feed is now served by the Expo
+// mobile client. The dev-seed tests above have been deleted along with the
+// page itself.

@@ -43,12 +43,6 @@ export default function Home() {
           >
             View Live Permits
           </button>
-          <button
-            onClick={() => router.push('/search')}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
-          >
-            Search Permits
-          </button>
         </div>
       </section>
 
@@ -105,8 +99,6 @@ export default function Home() {
           <span>Buildo - Toronto Building Permit Leads</span>
           <div className="flex items-center gap-4">
             <a href="/dashboard" className="hover:text-gray-900">Dashboard</a>
-            <a href="/search" className="hover:text-gray-900">Search</a>
-            <a href="/map" className="hover:text-gray-900">Map</a>
           </div>
         </div>
       </footer>

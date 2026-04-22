@@ -89,18 +89,11 @@ const rules: Rule[] = [
     file: 'src/features/leads/lib/get-lead-feed.ts',
     pattern: new RegExp(`DEFAULT_FEED_LIMIT\\s*=\\s*${contracts.feed.default_limit}\\b`),
   },
-  {
-    name: 'feed.forced_refetch_threshold_m → useLeadFeed movement threshold',
-    value: contracts.feed.forced_refetch_threshold_m,
-    file: 'src/features/leads/api/useLeadFeed.ts',
-    pattern: new RegExp(`FORCED_REFETCH_THRESHOLD_M\\s*=\\s*${contracts.feed.forced_refetch_threshold_m}\\b`),
-  },
-  {
-    name: 'feed.coord_precision → useLeadFeed coord rounding',
-    value: contracts.feed.coord_precision,
-    file: 'src/features/leads/api/useLeadFeed.ts',
-    pattern: new RegExp(`COORD_PRECISION\\s*=\\s*${contracts.feed.coord_precision}\\b`),
-  },
+  // feed.forced_refetch_threshold_m and feed.coord_precision were enforced
+  // against src/features/leads/api/useLeadFeed.ts (deleted in Two-Client
+  // Architecture purge 2026-04-22). These constants now belong to the Expo
+  // mobile client. The contracts values are retained in _contracts.json for
+  // when the mobile client enforces them.
   // ---- rate limits ----
   {
     name: 'rate_limits.feed_per_min → feed route RATE_LIMIT_PER_MIN',

@@ -12,13 +12,12 @@
 | 01 | `00-architecture/01_database_schema.md` | Database Schema | `src/lib/db/client.ts`, `src/lib/permits/types.ts`, `scripts/migrate.js` | — | Done |
 | 06 | `00-architecture/06_permits_rest_api.md` | Permit Data API | `src/app/api/permits/route.ts`, `src/app/api/permits/[id]/route.ts`, `src/app/api/permits/geo/route.ts`, +2 more | `src/tests/api.infra.test.ts` | Done |
 | 13 | `00-architecture/13_authentication.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/session.ts`, `src/lib/auth/types.ts`, +4 more | `src/tests/auth.logic.test.ts`, `src/tests/middleware.logic.test.ts` | Done |
+| 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture | — | — | Active |
 
 ## Pipeline (Data Engineering)
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
-| 03 | `01-pipeline/03_permit_change_tracking.md` | Change Detection | `src/lib/permits/hash.ts`, `src/lib/permits/diff.ts` | `src/tests/permits.logic.test.ts`, `src/tests/sync.logic.test.ts` | Done |
-| 10 | `01-pipeline/10_lead_scoring.md` | Lead Scoring | `src/lib/classification/scoring.ts` | `src/tests/scoring.logic.test.ts` | Done |
 | 30 | `01-pipeline/30_pipeline_architecture.md` | Pipeline Architecture v2.0 — SDK-First, Infrastructure-Defended | `scripts/lib/pipeline.js`, `scripts/run-chain.js`, `scripts/manifest.json`, +2 more | `src/tests/pipeline-sdk.logic.test.ts`, `src/tests/chain.logic.test.ts`, `src/tests/inspections.logic.test.ts`, +1 more | Done |
 | 37 | `01-pipeline/37_entity_model.md` | Corporate Identity Hub | `src/lib/permits/types.ts`, `src/lib/builders/normalize.ts`, `src/tests/factories.ts`, +22 more | `src/tests/entities.logic.test.ts`, `src/tests/entities.infra.test.ts` | Done |
 | 40 | `01-pipeline/40_pipeline_system.md` | Pipeline System Architecture | `scripts/lib/pipeline.js`, `scripts/run-chain.js`, `scripts/manifest.json`, +1 more | `src/tests/chain.logic.test.ts`, `src/tests/pipeline-sdk.logic.test.ts`, `src/tests/quality.infra.test.ts` | Done |
@@ -51,22 +50,30 @@
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
 | 26 | `02-web-admin/26_admin_dashboard.md` | Admin Dashboard | `src/app/admin/page.tsx`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/market-metrics/route.ts`, +3 more | `src/tests/admin.ui.test.tsx`, `src/tests/analytics.logic.test.ts`, `src/tests/market-metrics.logic.test.ts` | Done |
-| 76 | `02-web-admin/76_lead_feed_health_dashboard.md` | Lead Feed Health Dashboard — Admin Observability for the Lead Generation System | `src/app/api/admin/leads/health/route.ts`, `src/app/api/admin/leads/test-feed/route.ts`, `src/lib/admin/lead-feed-health.ts`, +4 more | `src/tests/lead-feed-health.logic.test.ts`, `src/tests/lead-feed-health.infra.test.ts`, `src/tests/LeadFeedHealthDashboard.ui.test.tsx` | Done |
+| 76 | `02-web-admin/76_lead_feed_health_dashboard.md` | Admin Test Feed Tool | `src/app/api/admin/leads/health/route.ts`, `src/app/api/admin/leads/test-feed/route.ts`, `src/lib/admin/lead-feed-health.ts`, +4 more | `src/tests/lead-feed-health.logic.test.ts`, `src/tests/lead-feed-health.infra.test.ts` | Done |
 | 86 | `02-web-admin/86_control_panel.md` | 86 Master Configuration List: The "Control Panel" Schema | `src/lib/admin/control-panel.ts`, `src/app/api/admin/control-panel/configs/route.ts`, `src/features/admin-controls/**`, +3 more | `src/tests/control-panel.*.test.{ts,tsx}` | Done |
 
 ## Mobile (Lead Feed)
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
-| 14 | `03-mobile/14_onboarding_wizard.md` | Onboarding Wizard | `src/app/onboarding/page.tsx`, `src/components/onboarding/OnboardingWizard.tsx` | `src/tests/onboarding.ui.test.tsx` | Done |
-| 19 | `03-mobile/19_search_and_filter.md` | Search & Filter | `src/app/search/page.tsx`, `src/components/search/FilterPanel.tsx` | `src/tests/search.logic.test.ts` | Done |
-| 20 | `03-mobile/20_map_view.md` | Map View | `src/app/map/page.tsx`, `src/app/api/permits/geo/route.ts` | `src/tests/map.ui.test.tsx` | Done |
-| 24 | `03-mobile/24_csv_pdf_export.md` | Data Export | `src/lib/export/csv.ts`, `src/lib/export/pdf.ts` | `src/tests/export.logic.test.ts` | Done |
-| 27 | `03-mobile/27_neighbourhood_profile_page.md` | Neighbourhood Profiles | `src/lib/neighbourhoods/summary.ts`, `src/lib/neighbourhoods/types.ts`, `src/components/permits/NeighbourhoodProfile.tsx`, +2 more | `src/tests/neighbourhood.logic.test.ts` | Done |
-| 70 | `03-mobile/70_frontend_platform_foundation.md` | 70 Frontend Platform Foundation | — | — | IMPLEMENTED (Baseline Architecture) |
-| 71 | `03-mobile/71_lead_feed_discovery_interface.md` | 71 Lead Feed (Discovery Interface) | `src/app/api/leads/feed/route.ts` | — | IMPLEMENTED (V1) -> PENDING UPGRADE (V2) |
-| 74 | `03-mobile/74_lead_feed_design.md` | Lead Feed — Design Specification | — | — | Done |
-| 75 | `03-mobile/75_lead_feed_implementation_guide.md` | Lead Feed — Integrated Implementation Guide | `src/features/leads/`, `src/app/leads/page.tsx`, `src/app/api/leads/` | — | **CUSTOM composition** of Shadcn primitives — see §4.0 Build vs Install |
+| 90 | `03-mobile/90_mobile_engineering_protocol.md` | Mobile Engineering Protocol & Architecture (The Pivot) | — | — | Done |
+
+## Archive (Deprecated)
+
+| # | Spec File | Feature | Implementation | Tests | Status |
+|---|-----------|---------|---------------|-------|--------|
+| 03 | `archive/03_permit_change_tracking.md` | Change Detection | `src/lib/permits/hash.ts`, `src/lib/permits/diff.ts` | `src/tests/permits.logic.test.ts`, `src/tests/sync.logic.test.ts` | Done |
+| 10 | `archive/10_lead_scoring.md` | Lead Scoring | `src/lib/classification/scoring.ts` | `src/tests/scoring.logic.test.ts` | Done |
+| 14 | `archive/14_onboarding_wizard.md` | Onboarding Wizard | `src/app/onboarding/page.tsx`, `src/components/onboarding/OnboardingWizard.tsx` | `src/tests/onboarding.ui.test.tsx` | Done |
+| 19 | `archive/19_search_and_filter.md` | Search & Filter | `src/app/search/page.tsx`, `src/components/search/FilterPanel.tsx` | `src/tests/search.logic.test.ts` | Done |
+| 20 | `archive/20_map_view.md` | Map View | `src/app/map/page.tsx`, `src/app/api/permits/geo/route.ts` | `src/tests/map.ui.test.tsx` | Done |
+| 24 | `archive/24_csv_pdf_export.md` | Data Export | `src/lib/export/csv.ts`, `src/lib/export/pdf.ts` | `src/tests/export.logic.test.ts` | Done |
+| 27 | `archive/27_neighbourhood_profile_page.md` | Neighbourhood Profiles | `src/lib/neighbourhoods/summary.ts`, `src/lib/neighbourhoods/types.ts`, `src/components/permits/NeighbourhoodProfile.tsx`, +2 more | `src/tests/neighbourhood.logic.test.ts` | Done |
+| 70 | `archive/70_frontend_platform_foundation.md` | 70 Frontend Platform Foundation | — | — | IMPLEMENTED (Baseline Architecture) |
+| 71 | `archive/71_lead_feed_discovery_interface.md` | 71 Lead Feed (Discovery Interface) | `src/app/api/leads/feed/route.ts` | — | IMPLEMENTED (V1) -> PENDING UPGRADE (V2) |
+| 74 | `archive/74_lead_feed_design.md` | Lead Feed — Design Specification | — | — | Done |
+| 75 | `archive/75_lead_feed_implementation_guide.md` | Lead Feed — Integrated Implementation Guide | `src/features/leads/`, `src/app/leads/page.tsx`, `src/app/api/leads/` | — | **CUSTOM composition** of Shadcn primitives — see §4.0 Build vs Install |
 
 ---
 

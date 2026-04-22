@@ -44,8 +44,6 @@ export const PUBLIC_PATHS = [
   '/',
   '/login',
   '/signup',
-  '/search',
-  '/map',
 ] as const;
 
 /** Path prefixes that are always public */
@@ -114,18 +112,15 @@ export function classifyRoute(pathname: string): RouteClass {
     return 'authenticated';
   }
 
-  // Read-only data APIs — public (serve search/map pages)
+  // Read-only data APIs — public (serve Expo mobile client)
   if (PUBLIC_PREFIXES.some(p => pathname.startsWith(p))) return 'public';
 
   // Exact public paths
   if ((PUBLIC_PATHS as readonly string[]).includes(pathname)) return 'public';
 
-  // Protected pages: dashboard, onboarding, leads (Phase 3-iv)
+  // Protected pages: dashboard (tradesperson-facing pages removed — Two-Client Architecture)
   if (
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/onboarding') ||
-    pathname === '/leads' ||
-    pathname.startsWith('/leads/')
+    pathname.startsWith('/dashboard')
   ) {
     return 'authenticated';
   }

@@ -39,18 +39,6 @@ export default function DashboardPage() {
             </div>
             <nav className="hidden md:flex items-center gap-4">
               <a
-                href="/search"
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Search
-              </a>
-              <a
-                href="/map"
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Map
-              </a>
-              <a
                 href="/admin"
                 className="text-sm text-gray-600 hover:text-gray-900"
               >
@@ -58,8 +46,6 @@ export default function DashboardPage() {
               </a>
             </nav>
             <MobileNav links={[
-              { href: '/search', label: 'Search' },
-              { href: '/map', label: 'Map' },
               { href: '/admin', label: 'Admin' },
             ]} />
           </div>
