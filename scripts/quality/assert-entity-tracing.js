@@ -83,14 +83,22 @@ pipeline.run('assert-entity-tracing', async (pool) => {
     }
 
     // ── Eligible denominator: permits compute-trade-forecasts would process ──
-    // Mirrors compute-trade-forecasts.js SOURCE_SQL + SKIP_PHASES in-process filter.
+    // Mirrors compute-trade-forecasts.js SOURCE_SQL eligibility criteria.
     // On CoA-link-only runs, link-coa.js bumps last_seen_at for CoA-linked permits —
-    // many of which are in SKIP_PHASES (P1/P2 pre-permit, P19/P20 terminal,
-    // O1-O3 orphan). Using windowPermits as the denominator for trade_forecasts
-    // would produce ~5% coverage on those runs (false FAIL). eligiblePermits
-    // excludes those phases AND requires at least one active trade (matching
-    // compute-trade-forecasts.js SOURCE_SQL: `pt.is_active = true`) so the
-    // denominator represents exactly the permits the script produces forecast rows for.
+    // many of which are in SKIP_PHASES (P19/P20 terminal, O1-O3 orphan). Using
+    // windowPermits as the denominator for trade_forecasts would produce ~5% coverage
+    // on those runs (false FAIL). eligiblePermits excludes those phases AND requires at
+    // least one active trade (matching SOURCE_SQL: `pt.is_active = true`) so the
+    // denominator represents exactly the permits the engine produces forecast rows for.
+    //
+    // WF3 2026-04-21: replaced `phase_started_at IS NOT NULL` with 3-year COALESCE
+    // recency gate to mirror the zombie gate added to SOURCE_SQL. Two reasons:
+    //   1. P1/P2 permits (PERT pipeline) have no phase_started_at but do have
+    //      application_date — the old IS NOT NULL excluded them from the denominator
+    //      even though the engine now generates forecasts for them (Branch A).
+    //   2. Permits with phase_started_at > 3 years ago are excluded from SOURCE_SQL
+    //      by the zombie gate — the denominator must exclude them too or coverage
+    //      reads as artificially low (false FAIL at 38.6%).
     const { rows: [eligRow] } = await pool.query(
       `SELECT COUNT(DISTINCT p.permit_num || '--' || p.revision_num)::int AS eligible_permits
          FROM permits p
@@ -99,8 +107,8 @@ pipeline.run('assert-entity-tracing', async (pool) => {
                               AND pt.is_active = true
         WHERE p.last_seen_at > NOW() - $1::interval
           AND p.lifecycle_phase IS NOT NULL
-          AND p.phase_started_at IS NOT NULL
-          AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}`,
+          AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
+          AND COALESCE(p.phase_started_at, p.issued_date, p.application_date) >= NOW() - INTERVAL '3 years'`,
       [TRACE_WINDOW],
     );
     const eligiblePermits = eligRow.eligible_permits;
@@ -152,8 +160,8 @@ pipeline.run('assert-entity-tracing', async (pool) => {
                          AND p.revision_num = tf.revision_num
           WHERE p.last_seen_at > NOW() - $1::interval
             AND p.lifecycle_phase IS NOT NULL
-            AND p.phase_started_at IS NOT NULL
-            AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}`,
+            AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
+            AND COALESCE(p.phase_started_at, p.issued_date, p.application_date) >= NOW() - INTERVAL '3 years'`,
         [TRACE_WINDOW],
       );
       auditRows.push(traceRow('trade_forecasts', tf.matched, eligiblePermits, THRESHOLDS.trade_forecasts, failures, 'eligible_permits'));

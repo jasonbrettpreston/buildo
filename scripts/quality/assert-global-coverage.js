@@ -422,8 +422,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
                                AND pt.is_active = true
          WHERE p.permit_num NOT LIKE 'PRE-%'
            AND p.lifecycle_phase IS NOT NULL
-           AND p.phase_started_at IS NOT NULL
            AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
+           AND COALESCE(p.phase_started_at, p.issued_date, p.application_date) >= NOW() - INTERVAL '3 years'
       `);
       const forecastEligible = parseInt(tfd.forecast_eligible_permits, 10) || 0;
 

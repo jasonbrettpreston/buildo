@@ -78,17 +78,71 @@ describe('scripts/lib/lifecycle-phase.js — SKIP_PHASES_SQL export (WF3-D share
     expect(content).toContain('SKIP_PHASES_SQL');
   });
 
-  it('SKIP_PHASES_SQL contains all 7 skip phases', () => {
-    // Must match compute-trade-forecasts.js SKIP_PHASES Set exactly.
-    const match = content.match(/SKIP_PHASES_SQL\s*=\s*`([^`]+)`/);
-    expect(match).not.toBeNull();
+  it('SKIP_PHASES_SQL contains exactly the terminal/orphan phases (P19, P20, O1, O2, O3)', () => {
+    // WF3 2026-04-21: P1 and P2 were intentionally removed from SKIP_PHASES_SQL to
+    // enable P1/P2 early-funnel inclusion in the PERT pipeline (Branch A in SOURCE_SQL).
+    // The set is now exactly 5 terminal/orphan phases.
+    const match = content.match(/SKIP_PHASES_SQL\s*=\s*`\(([^`]+)\)`/);
+    expect(match, 'SKIP_PHASES_SQL constant not found').not.toBeNull();
     const sqlLiteral = match?.[1] ?? '';
-    for (const phase of ['P19', 'P20', 'O1', 'O2', 'O3', 'P1', 'P2']) {
-      expect(sqlLiteral).toContain(phase);
+    // Exact phase matches using word boundaries (not .toContain which would
+    // match 'P1' as substring of 'P19' and 'P2' as substring of 'P20').
+    for (const phase of ['P19', 'P20', 'O1', 'O2', 'O3']) {
+      expect(sqlLiteral, `Expected '${phase}' in SKIP_PHASES_SQL`).toMatch(
+        new RegExp(`'${phase}'`),
+      );
     }
+    // P1 and P2 must NOT be present as discrete phases (removed for PERT pipeline).
+    expect(sqlLiteral).not.toMatch(/'P1'(?!')/);
+    expect(sqlLiteral).not.toMatch(/'P2'(?!')/);
   });
 
   it('exports SKIP_PHASES_SQL in module.exports', () => {
     expect(content).toMatch(/module\.exports[\s\S]{0,500}SKIP_PHASES_SQL/);
+  });
+});
+
+describe('assert-entity-tracing.js — WF3 Zombie Gate: eligible denominator uses COALESCE recency gate', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('eligiblePermits denominator has COALESCE(phase_started_at, issued_date, application_date) recency gate', () => {
+    // After the 3-year zombie gate was added to compute-trade-forecasts SOURCE_SQL,
+    // the eligible denominator must mirror it. Without this, the denominator counts
+    // old permits (>3 years) the engine intentionally ignores → false low coverage.
+    // Red Light: this test MUST fail before the eligiblePermits query is updated.
+    expect(content).toMatch(
+      /COALESCE\(p\.phase_started_at,\s*p\.issued_date,\s*p\.application_date\)\s*>=\s*NOW\(\)\s*-\s*INTERVAL\s*'3 years'/,
+    );
+  });
+
+  it('eligiblePermits denominator does NOT use phase_started_at IS NOT NULL in the SQL query (replaced by COALESCE gate)', () => {
+    // The old IS NOT NULL guard excluded P1/P2 (now eligible via application_date)
+    // and did not enforce the 3-year recency window. Must be removed from the SQL.
+    // Anchors on the query string itself (backtick template literal) — comments are excluded.
+    const sqlBlocks = content.match(/`[^`]+`/g) ?? [];
+    const eligSql = sqlBlocks.find(b => b.includes('eligible_permits')) ?? '';
+    expect(eligSql, 'eligiblePermits SQL should not have phase_started_at IS NOT NULL').not.toMatch(
+      /phase_started_at\s+IS\s+NOT\s+NULL/,
+    );
+  });
+
+  it('trade_forecasts numerator has the same COALESCE recency gate (numerator/denominator parity)', () => {
+    // Numerator and denominator must use identical eligibility criteria.
+    // A permit excluded from the denominator by the recency gate cannot appear
+    // in the numerator without producing a coverage ratio > 1.
+    // Anchors on the SQL template literal that SELECTs from trade_forecasts.
+    const sqlBlocks = content.match(/`[^`]+`/g) ?? [];
+    const tfSql = sqlBlocks.find(b => b.includes('trade_forecasts tf') && b.includes('AS matched')) ?? '';
+    expect(tfSql, 'trade_forecasts numerator SQL not found').not.toBe('');
+    expect(tfSql).toMatch(
+      /COALESCE\(p\.phase_started_at,\s*p\.issued_date,\s*p\.application_date\)\s*>=\s*NOW\(\)\s*-\s*INTERVAL\s*'3 years'/,
+    );
+  });
+
+  it('trade_forecasts numerator does NOT use phase_started_at IS NOT NULL in the SQL query', () => {
+    const sqlBlocks = content.match(/`[^`]+`/g) ?? [];
+    const tfSql = sqlBlocks.find(b => b.includes('trade_forecasts tf') && b.includes('AS matched')) ?? '';
+    expect(tfSql).not.toMatch(/phase_started_at\s+IS\s+NOT\s+NULL/);
   });
 });

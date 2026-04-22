@@ -109,8 +109,11 @@ describe('assert-global-coverage.js — denominator gates (source-script mirrori
     expect(src()).toMatch(/lifecycle_phase IS NOT NULL/);
   });
 
-  it('trade_forecasts denominator requires phase_started_at IS NOT NULL (mirrors compute-trade-forecasts.js SOURCE_SQL)', () => {
-    expect(src()).toMatch(/phase_started_at IS NOT NULL/);
+  it('trade_forecasts denominator uses COALESCE 3-year recency gate (WF3 2026-04-21: replaces phase_started_at IS NOT NULL)', () => {
+    // phase_started_at IS NOT NULL excluded P1/P2 permits (application_date only) and
+    // did not enforce the 3-year zombie gate. Replaced with COALESCE gate to mirror
+    // compute-trade-forecasts.js SOURCE_SQL exactly.
+    expect(src()).toMatch(/COALESCE\(p\.phase_started_at,\s*p\.issued_date,\s*p\.application_date\)\s*>=\s*NOW\(\)\s*-\s*INTERVAL\s*'3 years'/);
   });
 
   it('opportunity_score denominator filters urgency IS NULL OR urgency != expired (mirrors compute-opportunity-scores.js WHERE clause)', () => {

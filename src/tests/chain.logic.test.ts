@@ -1403,8 +1403,9 @@ describe('Entity Tracing + Phase Distribution Wiring', () => {
     expect(content).toContain('eligiblePermits');
     // Must require lifecycle_phase IS NOT NULL (mirrors compute-trade-forecasts SOURCE_SQL)
     expect(content).toContain('lifecycle_phase IS NOT NULL');
-    // Must require phase_started_at IS NOT NULL
-    expect(content).toContain('phase_started_at IS NOT NULL');
+    // WF3 2026-04-21: phase_started_at IS NOT NULL replaced by 3-year COALESCE recency gate
+    // to include P1/P2 permits (application_date only) and exclude >3y zombies.
+    expect(content).toMatch(/COALESCE\(p\.phase_started_at,\s*p\.issued_date,\s*p\.application_date\)\s*>=\s*NOW\(\)\s*-\s*INTERVAL\s*'3 years'/);
     // Must exclude SKIP_PHASES (terminal + orphan + CoA pre-permit)
     expect(content).toMatch(/P19[\s\S]*P20|NOT IN[\s\S]*P19/);
     // Must join permit_trades with is_active = true — mirrors compute-trade-forecasts
