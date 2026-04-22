@@ -33,6 +33,7 @@
     "revision_num_max": 10
   },
   "retention": {
-    "lead_views_days": 90
+    "lead_views_days": 90,
+    "grace_purge_days": 180
   }
 }

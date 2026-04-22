@@ -51,7 +51,7 @@ interface Contracts {
     permit_num_max: number;
     revision_num_max: number;
   };
-  retention: { lead_views_days: number };
+  retention: { lead_views_days: number; grace_purge_days: number };
 }
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -181,6 +181,19 @@ const rules: Rule[] = [
     value: contracts.schema.revision_num_max,
     file: 'migrations/070_lead_views_corrected.sql',
     pattern: new RegExp(`revision_num\\s+VARCHAR\\(${contracts.schema.revision_num_max}\\)`),
+  },
+  // ---- trade forecast grace-purge window (Spec 85) ----
+  {
+    name: 'retention.grace_purge_days → GRACE_PURGE_DAYS constant in compute-trade-forecasts',
+    value: contracts.retention.grace_purge_days,
+    file: 'scripts/compute-trade-forecasts.js',
+    pattern: new RegExp(`GRACE_PURGE_DAYS\\s*=\\s*${contracts.retention.grace_purge_days}\\b`),
+  },
+  {
+    name: 'retention.grace_purge_days → grace-purge SQL INTERVAL interpolation',
+    value: contracts.retention.grace_purge_days,
+    file: 'scripts/compute-trade-forecasts.js',
+    pattern: /INTERVAL\s*'\$\{GRACE_PURGE_DAYS\} days'/,
   },
   // ---- control panel Zod constraints (Spec 86) ----
   {

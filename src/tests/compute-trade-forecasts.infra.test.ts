@@ -176,19 +176,15 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     ).not.toMatch(/imminent_window_days\s*\|\|\s*14/);
   });
 
-  it('applies stall recalibration with context-aware penalty + rolling snowplow', () => {
-    // Pre-construction stalls = stall_penalty_precon (bureaucracy)
-    // Active construction stalls = stall_penalty_active
-    // Now loaded from control panel via logicVars (was hardcoded 45/14)
-    expect(content).toMatch(/stallPenalty/);
-    expect(content).toMatch(/logicVars\.stall_penalty_precon/);
-    expect(content).toMatch(/logicVars\.stall_penalty_active/);
-    // Rolling snowplow: predicted date can never be closer than
-    // penalty buffer from today
-    expect(content).toMatch(/minimumStallDate/);
-    // Must use .getTime() comparison — consistent with snowplow guard (Bug-1 fix)
-    expect(content).toMatch(/predictedStart\.getTime\(\)\s*<\s*minimumStallDate\.getTime\(\)/);
-    expect(content).not.toMatch(/predictedStart\s*<\s*minimumStallDate/);
+  it('ZG-1b Stalled Gate: stall recalibration block removed (dead code after SQL gate excludes lifecycle_stalled=true)', () => {
+    // SOURCE_SQL now has AND p.lifecycle_stalled = false, so every row reaching the
+    // stream loop has lifecycle_stalled = false. The old `if (lifecycle_stalled) { ... }`
+    // block was permanently unreachable — retaining it would mislead readers into
+    // thinking stall penalties are applied when they are not. Deleted in WF3 2026-04-22.
+    // stall_penalty_precon / stall_penalty_active remain in LOGIC_VARS_SCHEMA in case
+    // of future re-introduction, but the penalty math no longer runs per-row.
+    expect(content).not.toMatch(/if\s*\(\s*lifecycle_stalled\s*\)\s*\{/);
+    expect(content).not.toMatch(/minimumStallDate/);
   });
 
   it('classifies confidence from sample_size', () => {
@@ -418,15 +414,19 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/snowplow_applied\s*:\s*snowplowCount/);
   });
 
-  it('F1 grace-purge: deletes expired rows older than 180 days (prevents zombie accumulation)', () => {
+  it('F1 grace-purge: deletes expired rows older than GRACE_PURGE_DAYS (prevents zombie accumulation)', () => {
     // The snowplow is structurally dead code (all expired rows have phase_started_at IS NOT NULL,
     // so anchorIsFallback is never true for expired rows). Without an explicit purge, expired
     // trade_forecasts rows accumulate indefinitely. The grace-purge runs in Step 2's withTransaction
-    // to clear rows that are both urgency='expired' AND predicted_start > 180 days in the past.
+    // to clear rows that are both urgency='expired' AND predicted_start > GRACE_PURGE_DAYS in the past.
+    // WF3 2026-04-22: '180 days' literal replaced with GRACE_PURGE_DAYS template interpolation so the
+    // JS in-memory cutoff and SQL DELETE share the same named constant.
     expect(content).toMatch(/gracePurged/);
     expect(content).toMatch(/DELETE FROM trade_forecasts/);
     expect(content).toMatch(/urgency\s*=\s*'expired'/);
-    expect(content).toMatch(/INTERVAL '180 days'/);
+    // Must use the named constant in a template literal, not a bare '180 days' literal
+    expect(content).toMatch(/INTERVAL\s*'\$\{GRACE_PURGE_DAYS\} days'/);
+    expect(content).not.toMatch(/INTERVAL\s*'180 days'/);
   });
 
   it('F1 grace-purge: DELETE runs inside withTransaction, not as a bare pool.query', () => {
@@ -578,5 +578,53 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     // spec 47 §8.2 dual-location: audit_table (visible in FreshnessTimeline)
     // AND records_meta (accessible to chain orchestrator + observability stack).
     expect(content).toMatch(/skipped_past_target\s*:\s*skippedPastTarget/);
+  });
+
+  // ── Stalled Gate + Grace Cutoff (WF3 2026-04-22) ────────────────────────
+
+  it('ZG-1 Stalled Gate: SOURCE_SQL top-level WHERE filters lifecycle_stalled = false', () => {
+    // Stalled permits have ancient phase_started_at anchors → predictedStart deep
+    // in the past → expired urgency → grace_purge deletes → regenerated next run (zombie).
+    // SQL gate excludes them before streaming, breaking the loop at source.
+    // lifecycle_stalled is BOOLEAN NOT NULL DEFAULT false (migration 085) — = false is safe.
+    expect(content).toMatch(/lifecycle_stalled\s*=\s*false/);
+  });
+
+  it('ZG-2 Stalled Gate: AND p.lifecycle_stalled = false appears in BOTH SOURCE_SQL and stale-purge NOT EXISTS', () => {
+    // The stale-purge NOT EXISTS must mirror SOURCE_SQL — otherwise existing forecasts
+    // for now-stalled permits are never deleted (stalled permits still pass the NOT EXISTS
+    // subquery, so the RETURNING 1 finds a match and no DELETE fires).
+    // Anchored to `AND p.` to count only genuine SQL WHERE-clause guards, not comments.
+    const matches = content.match(/AND p\.lifecycle_stalled\s*=\s*false/g);
+    expect(matches?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('ZG-3 Grace Cutoff: GRACE_PURGE_DAYS named constant defined as 180', () => {
+    // 180 days crosses spec ↔ SQL ↔ JS — must be a named constant, not a duplicated literal.
+    // Sourced from docs/specs/_contracts.json retention.grace_purge_days.
+    expect(content).toMatch(/GRACE_PURGE_DAYS\s*=\s*180\b/);
+  });
+
+  it('ZG-4 Grace Cutoff: grace-purge SQL uses GRACE_PURGE_DAYS template interpolation (no bare literal)', () => {
+    // The grace-purge DELETE must use `INTERVAL '${GRACE_PURGE_DAYS} days'` so the
+    // constant and the SQL stay in sync automatically. A bare '180 days' literal
+    // would drift silently if the contract value changes.
+    expect(content).toMatch(/INTERVAL\s*'\$\{GRACE_PURGE_DAYS\} days'/);
+    // The old bare literal must be replaced
+    expect(content).not.toMatch(/INTERVAL\s*'180 days'/);
+  });
+
+  it('ZG-5 Grace Cutoff: skippedTooOld counter declared and incremented in stream loop', () => {
+    // Rows dropped by the in-memory cutoff must be counted separately from
+    // skipped_no_anchor and skipped_past_target so operators can quantify
+    // how many zombie rows are being suppressed per run.
+    expect(content).toMatch(/skippedTooOld\s*=\s*0/);
+    expect(content).toMatch(/skippedTooOld\+\+/);
+  });
+
+  it('ZG-6 Grace Cutoff: skipped_too_old exposed in both audit_table rows and records_meta', () => {
+    // Dual-location requirement: spec §4 Testing Mandate + spec 47 §8.2.
+    expect(content).toMatch(/metric:\s*['"]skipped_too_old['"]/);
+    expect(content).toMatch(/skipped_too_old\s*:\s*skippedTooOld/);
   });
 });

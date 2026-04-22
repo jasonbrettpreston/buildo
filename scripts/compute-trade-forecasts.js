@@ -54,6 +54,11 @@ const PRE_CONSTRUCTION_PHASES = new Set([
 // median_days, p25_days, p75_days, computed_at (§47 §6.1 runAt snapshot)
 const FORECAST_BATCH_SIZE = pipeline.maxRowsPerInsert(13); // Math.floor(65535 / 13) = 5041
 
+// Grace-purge window: rows older than this are deleted by the grace-purge DELETE.
+// Mirrored as the JS in-memory cutoff to break the write+delete zombie loop.
+// Sourced from docs/specs/_contracts.json retention.grace_purge_days.
+const GRACE_PURGE_DAYS = 180;
+
 // spec 47 §4 + spec 85 §6 item 4 — fail fast before any math runs.
 // These are the only logicVars consumed downstream; a NaN would silently
 // corrupt predictedStart (setUTCDate) and urgency classification.
@@ -264,6 +269,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       LEFT JOIN last_passed lp ON lp.permit_num = p.permit_num
      WHERE pt.is_active = true
        AND p.lifecycle_phase IS NOT NULL
+       AND p.lifecycle_stalled = false
        AND (
          (
            p.lifecycle_phase IN ('P1','P2')
@@ -281,6 +287,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   let totalRows = 0;
   let skipped = 0;
   let skippedPastTarget = 0;
+  let skippedTooOld = 0;
   let unmappedTrades = 0;
   let upserted = 0;
   let anchorFallbackCount = 0;
@@ -288,6 +295,13 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   let batch = [];
   let batchCount = 0;
   let purgeExecuted = false;
+
+  // In-memory mirror of the grace-purge DELETE threshold. Rows whose final
+  // predictedStart would land before this cutoff are dropped here rather than
+  // being written to trade_forecasts only to be deleted on the same run —
+  // breaking the write+delete zombie loop. Uses runAt (DB clock) to match
+  // the SQL `$1::timestamptz - INTERVAL '${GRACE_PURGE_DAYS} days'` exactly.
+  const graceCutoffMs = new Date(runAt).getTime() - GRACE_PURGE_DAYS * 24 * 60 * 60 * 1000;
 
   const flushForecastBatch = async (currentBatch) => {
     const shouldPurge = !purgeExecuted;
@@ -311,7 +325,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
         const graceResult = await client.query(
           `DELETE FROM trade_forecasts
             WHERE urgency = 'expired'
-              AND predicted_start < $1::timestamptz - INTERVAL '180 days'`,
+              AND predicted_start < $1::timestamptz - INTERVAL '${GRACE_PURGE_DAYS} days'`,
           [runAt],
         );
         gracePurged = graceResult.rowCount || 0;
@@ -334,6 +348,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
                  AND t.slug = tf.trade_slug
                  AND pt.is_active = true
                  AND p.lifecycle_phase IS NOT NULL
+                 AND p.lifecycle_stalled = false
                  AND (
                    (
                      p.lifecycle_phase IN ('P1','P2')
@@ -522,35 +537,16 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       snowplowCount++;
     }
 
-    // 3. INSTANT STALL RECALIBRATION — context-aware penalty + rolling snowplow.
-    //
-    // When lifecycle_stalled flips to true:
-    //   a) Instant penalty: push predicted_start forward by a buffer that
-    //      reflects how long this KIND of stall typically takes to resolve.
-    //      Pre-construction stalls (zoning, permits) = 45 days (bureaucracy).
-    //      Active construction stalls (failed inspection) = 14 days.
-    //   b) Rolling snowplow: if the project remains stalled across multiple
-    //      daily runs, the predicted date must keep rolling forward. It can
-    //      never be closer than stallPenalty days from today. This prevents
-    //      the date from drifting into the past while stalled.
-    if (lifecycle_stalled) {
-      const stallPenalty = PRE_CONSTRUCTION_PHASES.has(lifecycle_phase)
-        ? logicVars.stall_penalty_precon
-        : logicVars.stall_penalty_active;
-
-      // Apply the instant shockwave to the original estimate
-      predictedStart.setUTCDate(predictedStart.getUTCDate() + stallPenalty);
-
-      // The rolling snowplow: floor at today + penalty
-      const minimumStallDate = new Date(today);
-      minimumStallDate.setUTCDate(minimumStallDate.getUTCDate() + stallPenalty);
-
-      if (predictedStart.getTime() < minimumStallDate.getTime()) {
-        predictedStart = minimumStallDate;
-      }
+    // 3. In-memory grace cutoff: drop rows whose predictedStart is older than
+    // the grace-purge threshold. These would be UPSERTed then immediately
+    // deleted by the grace-purge DELETE — producing a zombie write+delete cycle.
+    // Dropping here saves the round-trip and eliminates the loop.
+    if (predictedStart.getTime() < graceCutoffMs) {
+      skippedTooOld++;
+      continue;
     }
 
-    // 3. Calculate final daysUntil based on recalibrated date
+    // 4. Calculate final daysUntil based on recalibrated date
     const daysUntil = Math.floor(
       (predictedStart.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
     );
@@ -603,6 +599,9 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
 
   pipeline.log.info('[trade-forecasts]', `Rows streamed: ${totalRows.toLocaleString()}`);
   pipeline.log.info('[trade-forecasts]', `Skipped (no anchor): ${skipped.toLocaleString()}`);
+  if (skippedTooOld > 0) {
+    pipeline.log.info('[trade-forecasts]', `Skipped (too old, grace cutoff): ${skippedTooOld.toLocaleString()}`);
+  }
   if (unmappedTrades > 0) {
     pipeline.log.warn('[trade-forecasts]', `Unmapped trades (not in TRADE_TARGET_PHASE): ${unmappedTrades}`);
   }
@@ -642,6 +641,9 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     // skipped_past_target: rows where currentOrdinal > targetOrdinal — trade's opportunity window closed.
     // Not counted in skipped_no_anchor; kept separate so operators can distinguish the two skip reasons.
     { metric: 'skipped_past_target',       value: skippedPastTarget,       threshold: null,    status: 'INFO' },
+    // skipped_too_old: rows whose final predictedStart < graceCutoffMs — would be written then immediately
+    // grace_purge-deleted. Dropped in-memory to break the zombie write+delete loop.
+    { metric: 'skipped_too_old',           value: skippedTooOld,           threshold: null,    status: 'INFO' },
     { metric: 'snowplow_applied',          value: snowplowCount,           threshold: null,    status: 'INFO' },
     {
       metric: 'unmapped_trades',
@@ -678,6 +680,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       grace_purged: gracePurged,
       skipped_no_anchor: skipped,
       skipped_past_target: skippedPastTarget,
+      skipped_too_old: skippedTooOld,
       unmapped_trades: unmappedTrades,
       anchor_fallbacks_used: anchorFallbackCount,
       snowplow_applied: snowplowCount,
@@ -697,7 +700,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     {
       permit_trades: ['permit_num', 'revision_num', 'trade_id', 'is_active'],
       trades: ['id', 'slug'],
-      permits: ['permit_num', 'revision_num', 'lifecycle_phase', 'phase_started_at', 'permit_type', 'issued_date', 'application_date'],
+      permits: ['permit_num', 'revision_num', 'lifecycle_phase', 'lifecycle_stalled', 'phase_started_at', 'permit_type', 'issued_date', 'application_date'],
       permit_inspections: ['permit_num', 'inspection_date', 'status'],
       phase_calibration: ['from_phase', 'to_phase', 'permit_type', 'median_days', 'p25_days', 'p75_days', 'sample_size'],
     },
