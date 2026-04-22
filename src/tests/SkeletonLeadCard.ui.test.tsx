@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.8
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.8
 //
 // SkeletonLeadCard UI tests — 375px mobile viewport, accessibility
 // semantics, dimension invariants that must match PermitLeadCard

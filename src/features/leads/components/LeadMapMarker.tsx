@@ -1,6 +1,6 @@
 'use client';
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.10
-// 🔗 DESIGN: docs/specs/product/future/74_lead_feed_design.md (cost-tier color tokens)
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.10
+// 🔗 DESIGN: docs/specs/03-mobile/74_lead_feed_design.md (cost-tier color tokens)
 //
 // LeadMapMarker — pure presentational marker rendered as the React
 // child of an `<AdvancedMarker>`. Sized to be readable at city-scale

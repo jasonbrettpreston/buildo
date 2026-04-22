@@ -1,7 +1,7 @@
 /**
  * lock-integrity.infra.test.ts
  *
- * SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §5 Testing Mandate
+ * SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §5 Testing Mandate
  *
  * File-shape infra tests verifying that compute-cost-estimates.js implements
  * the advisory lock + concurrency contract from Spec 47 §5 and §8.

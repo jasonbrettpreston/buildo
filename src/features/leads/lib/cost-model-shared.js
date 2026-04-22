@@ -1,7 +1,7 @@
 /**
  * cost-model-shared.js — Surgical Valuation Brain
  *
- * SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §7.2
+ * SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §7.2
  * DUAL CODE PATH: Shared by:
  *   - scripts/compute-cost-estimates.js  (The Muscle — pipeline bulk writer)
  *   - src/features/leads/lib/cost-model.ts (The TS API shim — lead feed reader)

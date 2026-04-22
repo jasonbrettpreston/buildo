@@ -13,7 +13,7 @@
  *
  * Usage: node scripts/geocode-permits.js
  *
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
  *
  * WF3-S2: wrapped the main geocode UPDATE and the zombie-cleanup UPDATE in
  * pipeline.withTransaction so a dashboard read between them cannot see

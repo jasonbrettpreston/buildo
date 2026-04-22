@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 + docs/specs/00_engineering_standards.md §4
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 + docs/specs/00_engineering_standards.md §4
 //
 // Server-side Firebase token verification for API route handlers.
 // NEVER import this from a 'use client' component — uses firebase-admin (Node runtime only).

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
- * SPEC LINK: docs/specs/pipeline/57_source_neighbourhoods.md
+ * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/01-pipeline/57_source_neighbourhoods.md
  *
  * Load Toronto Neighbourhood Boundaries (GeoJSON) and Neighbourhood Profiles (Census XLSX)
  * into the neighbourhoods table.

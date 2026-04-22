@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §7.6
+// SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §7.6
 //
 // Regression lock: scripts/geocode-permits.js must wrap both its UPDATEs
 // (main geocode + zombie cleanup) in a single transaction. If the zombie

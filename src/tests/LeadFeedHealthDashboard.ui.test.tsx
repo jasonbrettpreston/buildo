@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/product/admin/76_lead_feed_health_dashboard.md §2.3
+// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §2.3
 //
 // LeadFeedHealthDashboard UI tests — admin lead feed observability dashboard.
 // Tests cover all 4 sections: readiness gauge, cost/timing coverage,

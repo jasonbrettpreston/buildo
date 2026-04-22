@@ -15,7 +15,7 @@
  *
  * Usage: node scripts/link-neighbourhoods.js
  *
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
  */
 const pipeline = require('./lib/pipeline');
 const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');

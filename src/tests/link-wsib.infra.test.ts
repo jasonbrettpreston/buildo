@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §6.4
+// SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §6.4
 //
 // Regression lock: scripts/link-wsib.js must read its Tier 3 fuzzy-match
 // similarity threshold from logicVars rather than hardcoding it:

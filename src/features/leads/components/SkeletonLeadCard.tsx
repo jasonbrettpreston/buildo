@@ -1,5 +1,5 @@
 'use client';
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.8 + §1.2
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.8 + §1.2
 //
 // SkeletonLeadCard — layout-matching skeleton for PermitLeadCard (3-iii)
 // to prevent CLS on the skeleton → real card transition. The `tone`

@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §6.4
+// SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §6.4
 //
 // Regression lock: scripts/quality/assert-data-bounds.js must read its
 // data-quality thresholds from logicVars rather than hardcoding them:

@@ -4,7 +4,7 @@
  * Shows Old → New for each changed variable.
  * Uses Shadcn Dialog on desktop, Shadcn Drawer on mobile (spec §12.5).
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 6
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 6
  */
 
 import React from 'react';

@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/pipeline/41_chain_permits.md §4
+// SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md §4
 //
 // Infra tests for assert-entity-tracing.js:
 //   (a) Opportunity-score denominator must exclude expired forecast rows

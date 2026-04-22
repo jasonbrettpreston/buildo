@@ -5,7 +5,7 @@
  * Uses DeltaGuardInput for numeric fields and JsonTiersEditor for the
  * income_premium_tiers JSONB field.
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 3
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 3
  */
 
 import React from 'react';

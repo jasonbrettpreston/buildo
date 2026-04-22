@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §2 + Phase 3-i review
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §2 + Phase 3-i review
 //
 // Tests for the client-side types module — specifically the tightened
 // `isLeadApiError` guard (Phase 3-i adversarial review fix). The

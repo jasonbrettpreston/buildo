@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/pipeline/80_taxonomies.md
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/80_taxonomies.md
  *
  * Classify all permits against trade mapping rules and populate permit_trades.
  *

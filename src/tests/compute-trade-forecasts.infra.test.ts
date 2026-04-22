@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/product/future/85_trade_forecast_engine.md §3 (Historic Snowplow + Behavioral Contract)
+// SPEC LINK: docs/specs/01-pipeline/85_trade_forecast_engine.md §3 (Historic Snowplow + Behavioral Contract)
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';

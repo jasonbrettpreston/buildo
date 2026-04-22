@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §7a + §13
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §7a + §13
 //
 // PostHog wrapper for product telemetry. Designed so callers never crash:
 // every public function is SSR-safe (no-op when window is undefined) and

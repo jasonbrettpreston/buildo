@@ -2,8 +2,8 @@
 /**
  * compute-cost-estimates.js — Surgical Cost Estimation Muscle
  *
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §7
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §7
  * DUAL CODE PATH: Both this Muscle and src/features/leads/lib/cost-model.ts
  * delegate all formula logic to estimateCostShared() in
  * src/features/leads/lib/cost-model-shared.js (the Brain). No valuation

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 5
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 5
 //
 // LeadFeed UI tests — the orchestrator. The unhappy-path matrix:
 //   - pending without data → 3 skeletons

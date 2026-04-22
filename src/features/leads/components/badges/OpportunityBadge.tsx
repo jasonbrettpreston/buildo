@@ -1,6 +1,6 @@
 'use client';
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.5 (BuilderLeadCard context)
-// 🔗 DESIGN: docs/specs/product/future/74_lead_feed_design.md §Opportunity
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.5 (BuilderLeadCard context)
+// 🔗 DESIGN: docs/specs/03-mobile/74_lead_feed_design.md §Opportunity
 //
 // OpportunityBadge — displays the opportunity classification for a
 // permit lead. Spec 70 §4 Behavioral Contract defines the 4-category

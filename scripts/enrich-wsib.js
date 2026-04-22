@@ -18,7 +18,7 @@
  *   ENRICH_LIMIT     — Max entries to process (default 50, overridden by --limit)
  *   PIPELINE_CHAIN   — Set by run-chain.js when running as part of a chain
  *
- * SPEC LINK: docs/specs/pipeline/46_wsib_enrichment.md
+ * SPEC LINK: docs/specs/01-pipeline/46_wsib_enrichment.md
  */
 const pipeline = require('./lib/pipeline');
 const { safeParsePositiveInt } = require('./lib/safe-math');

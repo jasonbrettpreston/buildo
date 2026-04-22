@@ -1,7 +1,7 @@
 /**
  * TanStack Query mutation: write draftConfig diff to DB.
  * On success, commits the draft. On error, preserves draft state (user can retry).
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 2
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 2
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';

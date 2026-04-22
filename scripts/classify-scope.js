@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/pipeline/80_taxonomies.md §scope
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/80_taxonomies.md §scope
  *
  * Batch classify all permits by project scope (project_type + scope_tags).
  *

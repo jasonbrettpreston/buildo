@@ -18,9 +18,9 @@
  *
  * Usage: node scripts/create-pre-permits.js
  *
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
- * SPEC LINK: docs/specs/pipeline/60_shared_steps.md
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/01-pipeline/60_shared_steps.md
  */
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');

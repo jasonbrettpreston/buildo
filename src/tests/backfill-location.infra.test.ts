@@ -1,5 +1,5 @@
 // Infra Layer Tests — backfill-permits-location.js script structure
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';

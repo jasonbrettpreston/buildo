@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 3 step 3
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 3 step 3
 //
 // useGeolocation tests — mocks navigator.permissions + navigator.geolocation
 // to cover the discriminated status union. We exercise:

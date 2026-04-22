@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 3 step 2
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 3 step 2
 //
 // ⚠️  FRONTEND-ONLY DISTANCE DELTA — DO NOT USE FOR DISPLAYED DISTANCES.
 //

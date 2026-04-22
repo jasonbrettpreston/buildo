@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.5
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.5
 //
 // OpportunityBadge UI tests — render all 4 opportunity types, verify
 // aria-label correctness, verify lookup table completeness, 375px

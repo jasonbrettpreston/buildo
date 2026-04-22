@@ -10,8 +10,8 @@
  *
  * Example: node scripts/run-chain.js permits
  *
- * SPEC LINK: docs/specs/pipeline/30_pipeline_architecture.md
- * SPEC LINK: docs/specs/pipeline/40_pipeline_system.md
+ * SPEC LINK: docs/specs/01-pipeline/30_pipeline_architecture.md
+ * SPEC LINK: docs/specs/01-pipeline/40_pipeline_system.md
  */
 const pipeline = require('./lib/pipeline');
 const { spawn } = require('child_process');

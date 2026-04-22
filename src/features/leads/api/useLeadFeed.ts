@@ -1,6 +1,6 @@
 'use client';
 
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §2.2 + §11 Phase 3 step 2
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §2.2 + §11 Phase 3 step 2
 //
 // TanStack Query infinite hook for GET /api/leads/feed. Uses a
 // SNAPPED location stored in the Zustand store as the queryKey

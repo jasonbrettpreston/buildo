@@ -18,9 +18,9 @@
  *
  * Usage: node scripts/link-coa.js [--dry-run]
  *
- * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/pipeline/60_shared_steps.md
+ * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/60_shared_steps.md
  */
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
@@ -373,7 +373,7 @@ pipeline.run('link-coa', async (pool) => {
   //
   // Skipped in dry-run mode.
   //
-  // SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §2.7
+  // SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §2.7
   let permitsBumped = 0;
   if (!dryRun) {
     // Use RUN_AT (DB-sourced timestamp) for the window start so this query uses

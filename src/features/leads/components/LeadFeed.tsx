@@ -1,7 +1,7 @@
 'use client';
 
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 5
-// 🔗 DESIGN: docs/specs/product/future/74_lead_feed_design.md
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 5
+// 🔗 DESIGN: docs/specs/03-mobile/74_lead_feed_design.md
 //
 // LeadFeed — the orchestrator. Wires the Phase 3-iii cards to the
 // Phase 3-i useLeadFeed hook (which itself wraps useInfiniteQuery).

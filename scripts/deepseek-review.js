@@ -200,7 +200,7 @@ Override model with DEEPSEEK_MODEL env var:
 Examples:
   node scripts/deepseek-review.js test
   node scripts/deepseek-review.js review scripts/link-coa.js
-  node scripts/deepseek-review.js spec docs/specs/product/future/75_lead_feed_implementation_guide.md
+  node scripts/deepseek-review.js spec docs/specs/03-mobile/75_lead_feed_implementation_guide.md
   node scripts/deepseek-review.js plan
 `);
     return;

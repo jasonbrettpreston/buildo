@@ -1231,7 +1231,7 @@ describe('Pre-flight bloat gate (B24/B25)', () => {
 // ---------------------------------------------------------------------------
 // §11 Counter Semantic Contract — verify emitSummary arguments are
 // permit-scoped (primary entity), not join-table rows or multi-source sums.
-// See docs/specs/pipeline/47_pipeline_script_protocol.md §11.
+// See docs/specs/01-pipeline/47_pipeline_script_protocol.md §11.
 // ---------------------------------------------------------------------------
 
 describe('§11 Counter Semantic Contract — emitSummary uses primary-entity counts', () => {
@@ -1347,8 +1347,8 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
 
 // ---------------------------------------------------------------------------
 // Entity Tracing + Phase Distribution Wiring (WF2 2026-04-18)
-// SPEC LINK: docs/specs/pipeline/41_chain_permits.md §4 §6
-//            docs/specs/pipeline/42_chain_coa.md §4
+// SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md §4 §6
+//            docs/specs/01-pipeline/42_chain_coa.md §4
 // ---------------------------------------------------------------------------
 
 describe('Entity Tracing + Phase Distribution Wiring', () => {

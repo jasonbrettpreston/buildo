@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/product/future/82_crm_assistant_alerts.md
+// SPEC LINK: docs/specs/01-pipeline/82_crm_assistant_alerts.md
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';

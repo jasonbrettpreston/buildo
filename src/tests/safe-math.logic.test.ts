@@ -1,5 +1,5 @@
 /**
- * SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §16 (Safe Integer Rule B5)
+ * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §16 (Safe Integer Rule B5)
  *
  * Tests for scripts/lib/safe-math.js and src/lib/safe-math.ts.
  * Both modules expose identical behaviour — tested together via the TS version.

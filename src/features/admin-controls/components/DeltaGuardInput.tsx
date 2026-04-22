@@ -3,7 +3,7 @@
  * DeltaGuardInput — a number input that turns amber when the value deviates
  * more than 50% from the system default, warning the operator of a large change.
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 3
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 3
  */
 
 import React from 'react';

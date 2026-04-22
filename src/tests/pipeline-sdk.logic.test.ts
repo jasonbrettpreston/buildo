@@ -2017,7 +2017,7 @@ describe('reclassify-all.js — large-table query safety (spec 47 §6.2)', () =>
 
 // ---------------------------------------------------------------------------
 // WF3-L1: withAdvisoryLock uses transaction-level xact_lock (SIGKILL-safe)
-// SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §5
+// SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §5
 // ---------------------------------------------------------------------------
 describe('pipeline.js — withAdvisoryLock() uses pg_try_advisory_xact_lock (WF3-L1)', () => {
   const pipelineSrc = fs.readFileSync(

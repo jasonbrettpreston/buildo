@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/admin/76_lead_feed_health_dashboard.md §2.3
+// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §2.3
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';

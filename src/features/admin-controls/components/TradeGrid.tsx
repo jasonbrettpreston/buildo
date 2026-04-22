@@ -3,7 +3,7 @@
  * TradeGrid — inline-editable table of all 32 trade configurations.
  * 7 editable numeric columns; search filter by trade slug.
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 4
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 4
  */
 
 import React, { useState } from 'react';

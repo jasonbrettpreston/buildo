@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §2
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §2
 //
 // Client-side request/response types for the /api/leads/* routes.
 // Derived from the Phase 2 Zod schemas (server authoritative) + the

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.4
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.4
 //
 // PermitLeadCard UI tests — covers the unhappy-path matrix from the
 // Phase 3-iii standards-compliance section of active_task.md, plus

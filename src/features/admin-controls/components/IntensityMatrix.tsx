@@ -4,7 +4,7 @@
  * Rows = permit_type, Columns = structure_type.
  * Each cell is a decimal input (0.0001 → 1.0).
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 5
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 5
  */
 
 import React, { useMemo } from 'react';

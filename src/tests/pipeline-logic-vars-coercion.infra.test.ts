@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §4 — LOGIC_VARS_SCHEMA must use
+// SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §4 — LOGIC_VARS_SCHEMA must use
 // z.coerce.number() because the pg driver returns DECIMAL/NUMERIC columns as strings.
 // z.number() rejects strings and causes an instant Zod validation crash on startup.
 import { describe, it, expect, beforeAll } from 'vitest';

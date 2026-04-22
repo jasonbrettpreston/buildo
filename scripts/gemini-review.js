@@ -20,7 +20,7 @@
  * Examples:
  *   node scripts/gemini-review.js test
  *   node scripts/gemini-review.js review scripts/link-coa.js
- *   node scripts/gemini-review.js spec docs/specs/product/future/75_lead_feed_implementation_guide.md
+ *   node scripts/gemini-review.js spec docs/specs/03-mobile/75_lead_feed_implementation_guide.md
  *   node scripts/gemini-review.js plan
  */
 
@@ -191,7 +191,7 @@ Commands:
 Examples:
   node scripts/gemini-review.js test
   node scripts/gemini-review.js review scripts/link-coa.js
-  node scripts/gemini-review.js spec docs/specs/product/future/75_lead_feed_implementation_guide.md
+  node scripts/gemini-review.js spec docs/specs/03-mobile/75_lead_feed_implementation_guide.md
   node scripts/gemini-review.js plan
 `);
     return;

@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.4 + §4.5
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.4 + §4.5
 //
 // Pure unit tests for the Phase 3-iii format helpers. Each helper is the
 // security/sanitization boundary between dirty source data (CKAN, WSIB)

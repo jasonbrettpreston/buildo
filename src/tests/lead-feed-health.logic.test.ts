@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/product/admin/76_lead_feed_health_dashboard.md
+// SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   computeTestFeedDebug,

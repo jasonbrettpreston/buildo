@@ -4,7 +4,7 @@
  * Raw parseInt() and parseFloat() silently propagate NaN into DB writes and API responses.
  * These wrappers throw immediately with a descriptive message, making failures loud.
  *
- * SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §16 Rule B5
+ * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §16 Rule B5
  */
 
 /**

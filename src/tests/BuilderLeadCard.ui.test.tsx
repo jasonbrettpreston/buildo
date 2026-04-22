@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.5
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.5
 //
 // BuilderLeadCard UI tests — covers conditional footer permutations
 // (call/website/save), security sanitization (javascript:, dirty

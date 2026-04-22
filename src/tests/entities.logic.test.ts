@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/platform/37_entity_model.md
+// SPEC LINK: docs/specs/01-pipeline/37_entity_model.md
 import { describe, it, expect } from 'vitest';
 import { createMockEntity, createMockEntityProject } from './factories';
 import { normalizeEntityName, isIncorporated, classifyEntityType } from '@/lib/builders/normalize';

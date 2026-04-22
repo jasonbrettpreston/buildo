@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/admin/76_lead_feed_health_dashboard.md §3.1
+// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.1
 //
 // GET /api/admin/leads/health — aggregated lead feed health metrics.
 // Admin-only (middleware classifies /api/admin/** as 'admin').

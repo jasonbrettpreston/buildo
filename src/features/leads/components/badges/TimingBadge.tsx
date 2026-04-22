@@ -1,6 +1,6 @@
 'use client';
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.6
-// 🔗 DESIGN: docs/specs/product/future/74_lead_feed_design.md §Timing
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.6
+// 🔗 DESIGN: docs/specs/03-mobile/74_lead_feed_design.md §Timing
 //
 // TimingBadge — displays the timing engine's output for a lead:
 //   - `display` — human-readable string like "Need now" or "2-4 weeks"

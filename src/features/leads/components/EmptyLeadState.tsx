@@ -1,6 +1,6 @@
 'use client';
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 5 step 5
-// 🔗 DESIGN: docs/specs/product/future/74_lead_feed_design.md
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 5 step 5
+// 🔗 DESIGN: docs/specs/03-mobile/74_lead_feed_design.md
 //
 // EmptyLeadState — three discrete empty states discriminated by a
 // `variant` prop. Pure presentational; the parent (`LeadFeed`) decides

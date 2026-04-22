@@ -1,5 +1,5 @@
 'use client';
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 5 step 2
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 5 step 2
 //
 // Next.js route-level error boundary for /leads. Catches RENDER-TIME
 // exceptions that escape LeadFeed's in-tree error handling — fetch

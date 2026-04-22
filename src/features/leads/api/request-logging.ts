@@ -1,5 +1,5 @@
 // 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints (Observability)
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 7 item 4
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 7 item 4
 //
 // Tiny helper that wraps `logInfo` so Phase 2-ii and Phase 2-iii can't
 // accidentally drift on the structured-log shape spec 70 requires:

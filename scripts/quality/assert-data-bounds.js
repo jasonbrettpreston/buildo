@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
- * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
  *
  * CQA Tier 2: Post-Ingestion Data Bounds Validation
  *

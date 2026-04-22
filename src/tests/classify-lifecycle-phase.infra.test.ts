@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §2.3 §2.4 §3.3
+// 🔗 SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §2.3 §2.4 §3.3
 //
 // File-shape infra tests for the lifecycle-phase pipeline scripts and
 // their chain wiring. These tests do not hit a live DB — they regex
@@ -38,7 +38,7 @@ describe('scripts/classify-lifecycle-phase.js — pipeline shape', () => {
     // Common failure mode caught in 81/82/84/85/86 — report links meant reviewers
     // had no authoritative source, causing spec-vs-code drift to go undetected.
     expect(content).toMatch(
-      /SPEC LINK:\s*docs\/specs\/product\/future\/84_lifecycle_phase_engine\.md/,
+      /SPEC LINK:\s*docs\/specs\/01-pipeline\/84_lifecycle_phase_engine\.md/,
     );
     expect(content).not.toMatch(/SPEC LINK:.*docs\/reports\//);
   });

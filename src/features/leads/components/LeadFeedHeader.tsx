@@ -1,5 +1,5 @@
 'use client';
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.2
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.2
 //
 // LeadFeedHeader — sticky translucent filter bar that appears above
 // the LeadFeed's scroll container. Uses `position: sticky` (NOT fixed)

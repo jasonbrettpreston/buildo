@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/product/admin/26_admin_dashboard.md — ColumnarAuditTable multi-schema row key contract
+// SPEC LINK: docs/specs/02-web-admin/26_admin_dashboard.md — ColumnarAuditTable multi-schema row key contract
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';

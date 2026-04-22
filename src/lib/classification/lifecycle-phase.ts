@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md §1.1–§1.6
+// 🔗 SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §1.1–§1.6
 // 🔗 DUAL CODE PATH: scripts/lib/lifecycle-phase.js must mirror this logic
 //                    bit-for-bit (CLAUDE.md §7).
 //

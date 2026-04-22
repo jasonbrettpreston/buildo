@@ -3,7 +3,7 @@
  * Error boundary for /admin/control-panel.
  * Wired to Sentry with a feature tag so we can filter control-panel errors.
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 1
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 1
  */
 
 import { useEffect } from 'react';

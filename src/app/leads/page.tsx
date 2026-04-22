@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 5
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 5
 //
 // /leads route — Server Component shell. Reads the Firebase session
 // cookie via next/headers, verifies it server-side, looks up the

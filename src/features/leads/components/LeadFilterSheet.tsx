@@ -1,5 +1,5 @@
 'use client';
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.3
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.3
 //
 // LeadFilterSheet — Vaul bottom drawer for adjusting feed filters.
 // Phase 3-v ships ONLY the radius filter (5/10/20/30/50 km) plus a

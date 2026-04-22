@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §5 Testing Mandate
+// 🔗 SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §5 Testing Mandate
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';

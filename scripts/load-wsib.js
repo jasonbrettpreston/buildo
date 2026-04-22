@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
- * SPEC LINK: docs/specs/pipeline/52_source_wsib.md
+ * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/01-pipeline/52_source_wsib.md
  *
  * Load WSIB Businesses Classification Details CSV into wsib_registry.
  *

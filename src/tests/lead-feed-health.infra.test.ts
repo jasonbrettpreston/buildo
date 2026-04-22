@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/product/admin/76_lead_feed_health_dashboard.md
+// SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md
 import fs from 'fs';
 import path from 'path';
 import { describe, it, expect } from 'vitest';

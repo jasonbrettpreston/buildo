@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/admin/76_lead_feed_health_dashboard.md §2.3
+// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §2.3
 
 import Link from 'next/link';
 import { LeadFeedHealthDashboard } from '@/components/LeadFeedHealthDashboard';

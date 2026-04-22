@@ -1,7 +1,7 @@
 /**
  * cost-estimates.infra.test.ts
  *
- * SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §5 Testing Mandate
+ * SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §5 Testing Mandate
  *
  * File-shape infra tests covering:
  *   Phase 1 — Migration 096 schema, Brain module shape, config-loader guards

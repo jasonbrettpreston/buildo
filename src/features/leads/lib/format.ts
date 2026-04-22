@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.4 + §4.5
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.4 + §4.5
 //
 // Pure presentation helpers for the Phase 3-iii composite cards. Co-located
 // with the cards in `src/features/leads/lib/` so the data layer doesn't

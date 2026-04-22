@@ -3,7 +3,7 @@
  * PUT  /api/admin/control-panel/configs — Apply a diff payload.
  *
  * Both routes are admin-gated by src/middleware.ts (no per-route check needed).
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 2
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 2
  */
 
 import { NextResponse } from 'next/server';

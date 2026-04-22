@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/admin/76_lead_feed_health_dashboard.md §3.2
+// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.2
 //
 // GET /api/admin/leads/test-feed — admin test feed endpoint.
 // Bypasses user profile auth — constructs a synthetic LeadFeedInput.

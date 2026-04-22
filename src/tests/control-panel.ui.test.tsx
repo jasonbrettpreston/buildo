@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phases 3-6
+// SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phases 3-6
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';

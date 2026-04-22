@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §7.6
+// SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §7.6
 //
 // Regression lock: scripts/enrich-wsib.js must wrap both its cleanup UPDATEs
 // (email scrub + website scrub) in a single transaction. If the website scrub

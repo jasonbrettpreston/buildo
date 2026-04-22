@@ -5,7 +5,7 @@
  * draftConfig      = the admin's in-flight edits (not yet saved).
  * hasUnsavedChanges = derived: draftConfig differs from productionConfig.
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 2
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 2
  */
 
 import { create } from 'zustand';

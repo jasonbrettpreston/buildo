@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 + docs/specs/00_engineering_standards.md §4
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 + docs/specs/00_engineering_standards.md §4
 //
 // Rate limiting wrapper. Uses Upstash Redis when env vars are set,
 // falls back to an in-memory counter for dev. Fail-closed in production

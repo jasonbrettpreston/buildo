@@ -6,7 +6,7 @@
  * the chain runs in the background and is tracked in pipeline_runs.
  *
  * Admin-gated by src/middleware.ts (no per-route check needed).
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 6
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 6
  */
 
 import { NextResponse } from 'next/server';

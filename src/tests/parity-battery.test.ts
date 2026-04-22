@@ -1,7 +1,7 @@
 /**
  * parity-battery.test.ts
  *
- * SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §5 Testing Mandate
+ * SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §5 Testing Mandate
  *
  * Verifies that the JS Brain (cost-model-shared.js) and the TS shim
  * (cost-model.ts with tradeRates) produce byte-identical estimates for every

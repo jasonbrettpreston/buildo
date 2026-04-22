@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/product/future/81_opportunity_score_engine.md §3 (asymptotic decay + NULL guard), §4 (infra tests)
+// SPEC LINK: docs/specs/01-pipeline/81_opportunity_score_engine.md §3 (asymptotic decay + NULL guard), §4 (infra tests)
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';

@@ -5,7 +5,7 @@
  *   - API routes: src/app/api/admin/control-panel/**
  *   - Frontend:   src/features/admin-controls/lib/schemas.ts (re-exports)
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md
  *
  * DUAL PATH NOTE: scripts/lib/config-loader.js is the pipeline-side reader of
  * these same tables. Do NOT modify config-loader.js from this file. Schema

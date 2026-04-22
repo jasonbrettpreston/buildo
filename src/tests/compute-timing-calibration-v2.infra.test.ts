@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/product/future/86_control_panel.md
+// SPEC LINK: docs/specs/02-web-admin/86_control_panel.md
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';

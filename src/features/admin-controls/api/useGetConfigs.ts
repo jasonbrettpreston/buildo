@@ -1,6 +1,6 @@
 /**
  * TanStack Query hook: fetch current live state of all control-panel tables.
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 2
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 2
  */
 
 import { useQuery } from '@tanstack/react-query';

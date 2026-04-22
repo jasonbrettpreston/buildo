@@ -21,7 +21,7 @@
  * Environment:
  *   PG_HOST, PG_PORT, PG_USER, PG_PASSWORD, PG_DATABASE — DB connection
  *
- * SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md
+ * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md
  */
 
 // Load dotenv to populate PG_* + Firebase vars from .env

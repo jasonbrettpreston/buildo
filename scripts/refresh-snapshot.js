@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// SPEC LINK: docs/specs/pipeline/41_chain_permits.md
-// SPEC LINK: docs/specs/pipeline/42_chain_coa.md
-// SPEC LINK: docs/specs/pipeline/43_chain_sources.md
+// SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+// SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
+// SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
 // Refresh the data quality snapshot by re-running all counting queries
 // Usage: node scripts/refresh-snapshot.js
 

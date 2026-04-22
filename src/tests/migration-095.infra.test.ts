@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/pipeline/40_pipeline_system.md §3.1.1
+// 🔗 SPEC LINK: docs/specs/01-pipeline/40_pipeline_system.md §3.1.1
 // WF3-02 (H-W19): chain-scoped pipeline_schedules disable.
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';

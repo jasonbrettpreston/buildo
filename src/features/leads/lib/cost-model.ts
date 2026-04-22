@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §Implementation
+// 🔗 SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §Implementation
 // 🔗 ADR: docs/adr/001-dual-code-path.md — dual TS↔JS path is an explicit design choice; do not re-litigate in review
 // 🔗 DUAL CODE PATH: scripts/compute-cost-estimates.js (Muscle) delegates all
 // formula logic to cost-model-shared.js (Brain). This file mirrors that

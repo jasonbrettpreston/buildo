@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §Implementation
+// 🔗 SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §Implementation
 import { describe, it, expect } from 'vitest';
 import {
   estimateCost,

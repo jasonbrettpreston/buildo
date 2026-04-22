@@ -9,8 +9,8 @@
  * Also runs an integrity audit: flags permits where tracking_count > 0
  * but modeled_gfa_sqm is null (tracked leads with no geometric basis).
  *
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/product/future/81_opportunity_score_engine.md
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/81_opportunity_score_engine.md
  *
  * DUAL PATH NOTE: N/A — per spec §5 Operating Boundaries, opportunity_score
  * is a dynamic marketplace property written only by this pipeline script.

@@ -8,7 +8,7 @@
  * Usage:
  *   npx tsx scripts/reclassify-all.js
  *
- * SPEC LINK: docs/specs/pipeline/80_taxonomies.md
+ * SPEC LINK: docs/specs/01-pipeline/80_taxonomies.md
  */
 
 const pipeline = require('./lib/pipeline');

@@ -3,7 +3,7 @@
  * Admin Control Panel — edit Gravity config (logic_variables, trade_configurations,
  * scope_intensity_matrix) and trigger downstream pipeline re-sync.
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md
  */
 
 import Link from 'next/link';

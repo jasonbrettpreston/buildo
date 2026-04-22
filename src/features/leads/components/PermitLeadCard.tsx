@@ -1,6 +1,6 @@
 'use client';
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §4.4
-// 🔗 DESIGN: docs/specs/product/future/74_lead_feed_design.md
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §4.4
+// 🔗 DESIGN: docs/specs/03-mobile/74_lead_feed_design.md
 //
 // PermitLeadCard (collapsed) — Phase 3-iii composite. Composes the
 // Phase 3-ii atomic primitives (TimingBadge, OpportunityBadge,

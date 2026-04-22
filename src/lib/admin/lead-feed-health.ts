@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/admin/76_lead_feed_health_dashboard.md §2.1
+// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §2.1
 //
 // Query functions for the Lead Feed Health admin endpoint.
 // Read-only aggregates against existing tables — no mutations.

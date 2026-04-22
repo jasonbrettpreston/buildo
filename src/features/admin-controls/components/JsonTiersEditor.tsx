@@ -3,7 +3,7 @@
  * JsonTiersEditor — edits the income_premium_tiers JSONB field.
  * Shows raw JSON in a textarea; parses on blur and reports errors inline.
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 3
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 3
  */
 
 import React, { useEffect, useState } from 'react';

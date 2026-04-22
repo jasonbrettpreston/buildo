@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §7a + §13
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §7a + §13
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock posthog-js BEFORE importing the wrapper so the module under test

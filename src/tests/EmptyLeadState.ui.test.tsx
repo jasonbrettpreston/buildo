@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 5 step 5
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 5 step 5
 //
 // EmptyLeadState UI tests — three-variant discriminator + the
 // expand-radius CTA's MAX_RADIUS_KM clamping behavior.

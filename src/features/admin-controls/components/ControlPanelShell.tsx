@@ -11,7 +11,7 @@
  *   Apply pressed  → ConfirmSyncModal diff → useUpdateConfigs PUT
  *                    → useUpdateConfigs success → useTriggerPipeline POST
  *
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phases 1-6
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phases 1-6
  */
 
 import React, { useMemo, useState } from 'react';

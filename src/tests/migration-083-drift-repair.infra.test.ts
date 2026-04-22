@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 0
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 0
 // 🔗 MIGRATION: migrations/083_postgis_drift_repair.sql
 //
 // File-shape regression lock for the PostGIS drift repair migration.

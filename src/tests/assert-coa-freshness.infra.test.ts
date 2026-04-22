@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §6.4
+// SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §6.4
 //
 // Regression lock: scripts/quality/assert-coa-freshness.js must read the
 // portal-rot WARN threshold from logicVars.coa_freshness_warn_days rather

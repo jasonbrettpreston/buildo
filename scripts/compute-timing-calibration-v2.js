@@ -10,9 +10,9 @@
  * Output: rows in `phase_calibration` table, consumed by Phase 4's
  * flight tracker to generate per-permit, per-trade predictions.
  *
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/product/future/84_lifecycle_phase_engine.md
- * SPEC LINK: docs/specs/product/future/85_trade_forecast_engine.md
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md
+ * SPEC LINK: docs/specs/01-pipeline/85_trade_forecast_engine.md
  *
  * DUAL PATH NOTE: N/A — per spec §5 Operating Boundaries, phase_calibration
  * is written only by this pipeline script. No TS module computes the same

@@ -1,6 +1,6 @@
 /**
  * Type declarations for scripts/lib/safe-math.js
- * SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §16 Rule B5
+ * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §16 Rule B5
  */
 
 /**

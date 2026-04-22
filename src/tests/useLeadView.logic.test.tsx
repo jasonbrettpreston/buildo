@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §2.3
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §2.3
 //
 // useLeadView mutation hook tests. Verifies the happy path + error path
 // + that save/unsave invalidates the savedLeads query slice. Uses a real

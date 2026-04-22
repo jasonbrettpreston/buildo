@@ -1,5 +1,5 @@
 'use client';
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 3
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 3
 //
 // Client-side provider composition. Lives in src/app/ (NOT inside
 // src/features/leads/) so the React Context exemption in CLAUDE.md §12.4

@@ -1,7 +1,7 @@
 /**
  * cost-model-shared.logic.test.ts
  *
- * SPEC LINK: docs/specs/product/future/83_lead_cost_model.md §5 Testing Mandate
+ * SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §5 Testing Mandate
  *
  * Unit tests for the Surgical Valuation Brain (src/features/leads/lib/cost-model-shared.js).
  * All functions are pure — no DB, no side effects.

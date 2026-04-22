@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §7a + §13.2
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §7a + §13.2
 //
 // Sentry helper for route-level error.tsx boundaries. Re-exports a thin wrapper
 // over @sentry/nextjs so callers don't need to import the SDK directly.

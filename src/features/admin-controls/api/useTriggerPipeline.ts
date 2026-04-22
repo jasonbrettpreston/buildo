@@ -1,7 +1,7 @@
 /**
  * TanStack Query mutation: trigger pipeline re-sync (Steps 14-24).
  * Returns immediately; client polls pipeline status for progress.
- * SPEC LINK: docs/specs/product/future/86_control_panel.md §5 Phase 6
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 6
  */
 
 import { useMutation } from '@tanstack/react-query';

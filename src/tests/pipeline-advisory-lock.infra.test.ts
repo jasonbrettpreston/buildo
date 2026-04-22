@@ -11,7 +11,7 @@
  * Python scripts (aic-orchestrator.py) and coming_soon entries (file: null)
  * are excluded — they are out of scope for JS advisory locks.
  *
- * SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §R2
+ * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §R2
  */
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';

@@ -9,7 +9,7 @@
  * Called automatically at the end of `npm run migrate` (via scripts/migrate.js).
  * Can also be invoked directly: `node scripts/seeds/apply-logic-variables.js`
  *
- * SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §6.4
+ * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §6.4
  */
 'use strict';
 

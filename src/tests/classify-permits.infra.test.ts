@@ -1,5 +1,5 @@
-// SPEC LINK: docs/specs/pipeline/41_chain_permits.md §Step-13
-// SPEC LINK: docs/specs/product/future/85_trade_forecast_engine.md §3 (is_active always-true WF1)
+// SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md §Step-13
+// SPEC LINK: docs/specs/01-pipeline/85_trade_forecast_engine.md §3 (is_active always-true WF1)
 //
 // Infra tests for scripts/classify-permits.js:
 //   (a) is_active is ALWAYS true — phase-based time-gating removed (WF1)

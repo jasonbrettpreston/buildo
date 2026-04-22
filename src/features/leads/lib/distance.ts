@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11 Phase 1
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11 Phase 1
 //
 // Distance helpers for the lead feed. Actual distance math happens in SQL
 // via PostGIS `ST_Distance` / `<->` KNN operator — these helpers exist only

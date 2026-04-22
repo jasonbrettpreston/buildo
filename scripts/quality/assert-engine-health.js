@@ -14,9 +14,9 @@
  * Exit 0 = pass (warnings are OK)
  * Exit 1 = fail (critical engine health issues)
  *
- * SPEC LINK: docs/specs/pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/pipeline/42_chain_coa.md
- * SPEC LINK: docs/specs/pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
  */
 const pipeline = require('../lib/pipeline');
 

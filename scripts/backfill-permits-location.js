@@ -2,7 +2,7 @@
 /**
  * Backfill permits.location PostGIS Point column from latitude/longitude.
  *
- * 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §11
+ * 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §11
  *
  * Migration 067 adds the column + a BEFORE INSERT/UPDATE trigger that
  * keeps it in sync going forward. This script is the one-time backfill

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §2.2 + §11 Phase 3 step 2
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §2.2 + §11 Phase 3 step 2
 //
 // useLeadFeed hook tests — mocked fetch, no real network. Verifies:
 //   - Query key rounds lat/lng to 3 decimals (Layer 1)

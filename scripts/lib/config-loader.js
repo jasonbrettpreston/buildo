@@ -11,8 +11,8 @@
  *   - Validates allocation_pct sum at load time
  *   - Single point of failure logging
  *
- * SPEC LINK: docs/specs/pipeline/30_pipeline_architecture.md
- * SPEC LINK: docs/specs/pipeline/40_pipeline_system.md
+ * SPEC LINK: docs/specs/01-pipeline/30_pipeline_architecture.md
+ * SPEC LINK: docs/specs/01-pipeline/40_pipeline_system.md
  */
 'use strict';
 
