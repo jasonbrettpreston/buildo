@@ -1,5 +1,5 @@
 # Active Task: Buildo Mobile — Expo Application
-**Status:** Implementation — Phase 0
+**Status:** Implementation — Phase 1
 
 ## Context
 * **Goal:** Build the tradesperson-facing Expo React Native application. The Next.js backend is already the API layer. The mobile app is a "Dumb Glass" client: captures device state, fetches pre-calculated JSON, renders at 60fps.
@@ -143,10 +143,11 @@ New migrations (next after 106):
 ### Phase 1 — Auth Shell (Days 3–4)
 
 - [ ] **Firebase Auth:** Implement `signInWithEmailAndPassword` and Google OAuth via `expo-auth-session` + `expo-crypto`. Store `idToken` in MMKV (NOT AsyncStorage — synchronous reads for cold boot). `onIdTokenChanged()` listener auto-refreshes; never cache beyond 55 minutes.
-- [ ] **Auth Store (Zustand):** `authStore.ts` — `{ user, idToken, setAuth, clearAuth }`. Logout sequence: `signOut()` → `queryClient.clear()` → `authStore.clearAuth()` → `router.replace('/(auth)/login')`.
-- [ ] **API Client:** `apiClient.ts` — `fetchWithAuth(url, options)` injects `Authorization: Bearer <idToken>`. Handles: `401` → force logout + `clearAuth()`; `429` → read `Retry-After` header, throw `RateLimitError(retryAfter)`, surface toast "Retrying in X seconds"; `5xx` → `Sentry.captureException()`, throw `ApiError`.
-- [ ] **Backend: Bearer token middleware:** Update `src/middleware.ts` — parse `Authorization: Bearer <token>` header as an alternative to `__session` cookie. Both paths call Firebase Admin `verifyIdToken()`. Write `src/tests/middleware.security.test.ts` — three new cases: Bearer accepted, cookie still accepted, missing both → 401. **Red Light:** run test, confirm failure, then implement.
-- [ ] **Auth screen UI:** `app/(auth)/login.tsx` — dark `bg-zinc-950` background, amber "Sign In" button, Google OAuth button. Logo treatment. Safe area insets via `useSafeAreaInsets()`.
+- [ ] **Firebase Auth:** Wire Google OAuth — `npm install firebase expo-web-browser`; `expo-auth-session/providers/google` → `promptAsync()` → `GoogleAuthProvider.credential(id_token)` → `signInWithCredential()` → `getIdToken()`. `onIdTokenChanged()` listener for auto-refresh. (Deferred: needs firebase client SDK install.)
+- [x] **Auth Store (Zustand):** `mobile/src/store/authStore.ts` — `{ user, idToken, setAuth, clearAuth }` with MMKV v4 `createMMKV()` persistence. `_hasHydrated` flag gates auth routing. `partialize` excludes `idToken` from disk (security).
+- [x] **API Client:** `mobile/src/lib/apiClient.ts` — `fetchWithAuth` injects `Authorization: Bearer <idToken>`. Typed errors: `RateLimitError(retryAfterSeconds)`, `ApiError(status, message)`, `NetworkError(cause)`.
+- [x] **Backend: Bearer token middleware:** `extractBearerToken` added to `route-guard.ts`. `middleware.ts` checks `Authorization` header at edge layer (shape check only). `get-user.ts` `getUserIdFromSession` checks Bearer as fallback in Node layer (full Firebase `verifyIdToken`). `src/tests/middleware.security.test.ts` — 13 tests passing (Red Light confirmed before implementation). `src/tests/auth-get-user.logic.test.ts` — mock updated, no regressions (4291 total passing).
+- [x] **Auth screen UI + routing:** `mobile/app/(auth)/login.tsx` — industrial dark UI, amber CTA, Safe Area. `mobile/app/_layout.tsx` — `AuthGate` component with `_hasHydrated` guard, `useSegments`/`useRouter` redirect logic, `QueryClientProvider` (24h gcTime, 5min staleTime). `tsconfig.json` — `mobile/` excluded from root Next.js compiler.
 
 ---
 

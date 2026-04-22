@@ -20,10 +20,13 @@ vi.mock('@/lib/logger', () => ({
   logInfo: vi.fn(),
 }));
 
-function makeRequest(cookieValue: string | undefined): NextRequest {
+function makeRequest(cookieValue: string | undefined, authHeader?: string): NextRequest {
   return {
     cookies: {
       get: vi.fn().mockReturnValue(cookieValue === undefined ? undefined : { value: cookieValue }),
+    },
+    headers: {
+      get: vi.fn().mockReturnValue(authHeader ?? null),
     },
   } as unknown as NextRequest;
 }

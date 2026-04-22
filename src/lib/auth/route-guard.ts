@@ -152,6 +152,20 @@ export function isAuthRoute(pathname: string): boolean {
   return pathname.startsWith('/api/auth/');
 }
 
+/**
+ * Extract the raw token from an `Authorization: Bearer <token>` header.
+ * Case-insensitive scheme check. Returns undefined when the header is absent,
+ * uses a non-Bearer scheme, or the token portion is empty. The returned token
+ * is NOT verified — callers must pass it through `isValidSessionCookie` (edge
+ * shape check) or `verifyIdTokenCookie` (Node full Firebase verification).
+ */
+export function extractBearerToken(header: string | null): string | undefined {
+  if (!header) return undefined;
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  const token = match?.[1]?.trim();
+  return token || undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Session cookie helpers
 // ---------------------------------------------------------------------------

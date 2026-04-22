@@ -7,7 +7,7 @@
 
 import type { NextRequest } from 'next/server';
 import { logError, logWarn } from '@/lib/logger';
-import { isDevMode, DEV_SESSION_COOKIE } from '@/lib/auth/route-guard';
+import { isDevMode, DEV_SESSION_COOKIE, extractBearerToken } from '@/lib/auth/route-guard';
 
 // Lazy-import firebase-admin so dev without admin keys doesn't crash on import.
 /**
@@ -90,5 +90,12 @@ export async function verifyIdTokenCookie(
 }
 
 export async function getUserIdFromSession(request: NextRequest): Promise<string | null> {
-  return verifyIdTokenCookie(request.cookies.get('__session')?.value);
+  // Prefer session cookie (__session) — used by browser and Next.js SSR.
+  const cookie = request.cookies.get('__session')?.value;
+  if (cookie) return verifyIdTokenCookie(cookie);
+
+  // Fallback: mobile clients (Expo) cannot send browser cookies — they send
+  // Authorization: Bearer <Firebase idToken> instead. Extract and verify.
+  const bearerToken = extractBearerToken(request.headers.get('authorization'));
+  return verifyIdTokenCookie(bearerToken);
 }

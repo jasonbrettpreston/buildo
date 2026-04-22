@@ -8,6 +8,7 @@ import {
   isValidSessionCookie,
   isDevMode,
   DEV_SESSION_COOKIE,
+  extractBearerToken,
 } from '@/lib/auth/route-guard';
 
 /**
@@ -66,9 +67,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for session cookie
+  // Check for session cookie (browser / SSR) OR Bearer token (mobile clients)
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const hasValidSession = isValidSessionCookie(sessionCookie);
+  const bearerToken = extractBearerToken(request.headers.get('authorization'));
+  const hasValidSession = isValidSessionCookie(sessionCookie) || isValidSessionCookie(bearerToken);
 
   // Admin routes — require session + admin key header for API routes
   if (routeClass === 'admin') {
