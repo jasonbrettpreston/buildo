@@ -260,6 +260,14 @@ export const LEAD_FEED_SQL = `
       NULL::text    AS neighbourhood_name,
       NULL::text    AS cost_tier,
       NULL::float8  AS estimated_cost,
+      -- WF3 2026-04-22: lifecycle_phase (text) and lifecycle_stalled (bool)
+      -- must appear at positions 13-14, matching permit_candidates where they
+      -- were inserted after estimated_cost in WF2 2026-04-11. Previously
+      -- appended at the end of this SELECT, causing the UNION ALL type error:
+      -- "UNION types character varying and integer cannot be matched" because
+      -- position 13 was permit=lifecycle_phase (varchar) vs builder=active_permits_nearby (int).
+      NULL::text    AS lifecycle_phase,
+      false         AS lifecycle_stalled,
       -- The WHERE clause already filters to p.status IN
       -- ('Permit Issued','Inspection'), so COUNT here IS the count of
       -- ACTIVE permits within the radius — name is accurate.
@@ -363,14 +371,7 @@ export const LEAD_FEED_SQL = `
       -- lines up. Builder leads are always 'high' confidence (we know
       -- they have active permits) and always 'builder-led' opportunity.
       'high'::text AS timing_confidence,
-      'builder-led'::text AS opportunity_type,
-      -- Builder leads don't have a single lifecycle phase — they have
-      -- N active permits each with their own phase. Surface NULL here
-      -- and let the card render a builder-specific label via
-      -- displayLifecyclePhase(). The UNION ALL shape requires these
-      -- columns to be present on both sides.
-      NULL::text AS lifecycle_phase,
-      false AS lifecycle_stalled
+      'builder-led'::text AS opportunity_type
     FROM entities e
     JOIN entity_projects ep ON ep.entity_id = e.id AND ep.role = 'Builder'
     JOIN permits p

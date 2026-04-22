@@ -303,6 +303,34 @@ describe('LEAD_FEED_SQL — structure', () => {
     expect(LEAD_FEED_SQL).toMatch(/NULL::text\s+AS cost_tier/);
     expect(LEAD_FEED_SQL).toMatch(/NULL::float8\s+AS estimated_cost/);
   });
+
+  it('builder_candidates: lifecycle_phase/stalled appear BEFORE active_permits_nearby (UNION ALL position guard)', () => {
+    // WF3 2026-04-22 regression: lifecycle_phase (text) and
+    // lifecycle_stalled (bool) were added to permit_candidates at
+    // positions 13-14 (after estimated_cost) but appended at the END
+    // of builder_candidates. This shifts all subsequent columns by +2
+    // causing PostgreSQL UNION type error: "UNION types character varying
+    // and integer cannot be matched" at position 13.
+    //
+    // Guard: within the builder_candidates CTE section, the string
+    // "lifecycle_phase" must appear at an EARLIER character offset
+    // than "active_permits_nearby".
+    const builderStart = LEAD_FEED_SQL.indexOf('builder_candidates AS (');
+    const builderEnd = LEAD_FEED_SQL.indexOf('unified AS (');
+    expect(builderStart).toBeGreaterThan(0);
+    expect(builderEnd).toBeGreaterThan(builderStart);
+    const builderCTE = LEAD_FEED_SQL.slice(builderStart, builderEnd);
+
+    // Anchor both positions on actual column declarations, not the comment
+    // block on lines 263-268 which mentions both identifiers (lifecycle_phase
+    // then active_permits_nearby) and would cause false-pass if either column
+    // were moved back to the end.
+    const lifecyclePos = builderCTE.indexOf('NULL::text    AS lifecycle_phase');
+    const countPos = builderCTE.indexOf('::int AS active_permits_nearby');
+    expect(lifecyclePos).toBeGreaterThan(0);
+    expect(countPos).toBeGreaterThan(0);
+    expect(lifecyclePos).toBeLessThan(countPos);
+  });
 });
 
 describe('TIMING_DISPLAY_BY_CONFIDENCE', () => {
@@ -396,8 +424,8 @@ const sampleBuilderRow = {
   proximity_score: 25,
   timing_score: 15,
   value_score: 20,
-  opportunity_score: 7,
-  relevance_score: 67,
+  opportunity_score: 10,   // builder CASE produces {0,10,14,20} only
+  relevance_score: 70,    // 25+15+20+10
   timing_confidence: 'high' as const,
   opportunity_type: 'builder-led' as const,
   // Builder branch of the UNION ALL has hardcoded NULL lifecycle_phase
