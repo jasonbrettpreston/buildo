@@ -1,5 +1,5 @@
 # Active Task: Buildo Mobile — Expo Application
-**Status:** Implementation — Phase 1
+**Status:** Implementation — Phase 2
 
 ## Context
 * **Goal:** Build the tradesperson-facing Expo React Native application. The Next.js backend is already the API layer. The mobile app is a "Dumb Glass" client: captures device state, fetches pre-calculated JSON, renders at 60fps.
@@ -153,10 +153,10 @@ New migrations (next after 106):
 
 ### Phase 2 — Zod Boundary & API Contracts (Day 5)
 
-- [ ] **Zod schemas:** `mobile/src/lib/schemas.ts` — mirror `src/features/leads/types.ts`: `PermitLeadFeedItemSchema`, `BuilderLeadFeedItemSchema`, `LeadFeedResultSchema`, `FlightBoardItemSchema`, `SearchResultSchema`. Every `apiClient.ts` fetch parses through the relevant schema; a Zod error triggers Sentry capture + error boundary.
-- [ ] **Contracts mirror:** `mobile/src/constants/contracts.ts` — typed constants from `docs/specs/_contracts.json` (rate limits, geo bounds, feed limits). Query key normalization rounds lat/lng to 3dp per `contracts.feed.coord_precision`.
-- [ ] **Error boundary:** `mobile/src/components/ErrorBoundary.tsx` — class component (required for React Native error boundaries). Catches Zod parse failures and unhandled API errors. Shows Sentry event ID. Wraps `<Slot>` in `app/(app)/_layout.tsx`.
-- [ ] **Jest unit tests:** `__tests__/schemas.test.ts` — feed valid payload → parses; feed with missing `opportunity_score` → throws with field-level Zod error; Zod parse failure → correct error shape.
+- [x] **Zod schemas:** `mobile/src/lib/schemas.ts` — `PermitLeadFeedItemSchema`, `BuilderLeadFeedItemSchema`, `LeadFeedItemSchema` (discriminated union), `LeadFeedResultSchema`, `LeadFeedCursorSchema`, `FlightBoardItemSchema`, `FlightBoardResultSchema`, `SearchResultItemSchema`, `SearchResultSchema`. Bounds from CONTRACTS (`permit_num_max`, `feed.max_limit`, `geo.max_radius_km`). All types exported via `z.infer<>`.
+- [x] **Contracts mirror:** `mobile/src/constants/contracts.ts` — already completed in Phase 0.
+- [x] **Error boundary:** `mobile/src/components/ErrorBoundary.tsx` — class component, `getDerivedStateFromError` + `componentDidCatch`, industrial dark UI (red-alert heading, TRY AGAIN CTA). `app/(app)/_layout.tsx` wraps `<Tabs>` in `<ErrorBoundary>`. TODO Phase 8: Sentry wiring.
+- [x] **Jest unit tests:** `mobile/__tests__/schemas.test.ts` — 18 tests passing. Covers valid permit + builder leads, null nullable fields, missing field Zod error, invalid enum, discriminated union routing, unknown lead_type rejection, full feed response, non-null cursor, ZodError shape. Jest setup: `jest-expo@~54`, `babel-preset-expo`, `expo/src/winter` mock (prevents import.meta runtime crash in Node env), `reanimated: false` in babel test env, `@jest-environment node` annotation for pure TS tests.
 
 ---
 

@@ -47,8 +47,23 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
+    "babel-preset-expo": "^55.0.18",
+    "jest": "^30.3.0",
+    "jest-expo": "~54.0.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "jest": {
+    "preset": "jest-expo",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^@app/(.*)$": "<rootDir>/app/$1",
+      "^expo/src/winter(.*)$": "<rootDir>/__mocks__/expo-winter.js"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|@shopify/flash-list|@gorhom/bottom-sheet|nativewind|react-native-mmkv|react-native-reanimated|react-native-gesture-handler|react-native-screens|react-native-safe-area-context|react-native-svg|posthog-react-native)"
+    ]
+  }
 }
