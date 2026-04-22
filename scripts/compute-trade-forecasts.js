@@ -280,6 +280,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
 
   let totalRows = 0;
   let skipped = 0;
+  let skippedPastTarget = 0;
   let unmappedTrades = 0;
   let upserted = 0;
   let anchorFallbackCount = 0;
@@ -433,9 +434,6 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       continue;
     }
 
-    // Count fallback anchor usage only for rows that will produce a forecast
-    if (anchorIsFallback) anchorFallbackCount++;
-
     const currentOrdinal = PHASE_ORDINAL[lifecycle_phase];
     const bidOrdinal = PHASE_ORDINAL[targets.bid_phase];
 
@@ -462,6 +460,21 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     }
 
     const targetOrdinal = PHASE_ORDINAL[targetPhase];
+
+    // Phase-Past-Target Guard: permit has moved PAST the target phase —
+    // the trade's opportunity window is definitively closed. Skip entirely
+    // rather than generating a forecast that immediately classifies as `expired`.
+    // Strict > (not >=): AT the target phase means the window is RIGHT NOW
+    // (overdue urgency); strictly PAST means the opportunity is gone.
+    if (currentOrdinal != null && targetOrdinal != null && currentOrdinal > targetOrdinal) {
+      skippedPastTarget++;
+      continue;
+    }
+
+    // Count fallback anchor usage only for rows that will produce a forecast.
+    // Must come after the Phase-Past-Target Guard so rows that are immediately
+    // skipped do not inflate the fallback counter.
+    if (anchorIsFallback) anchorFallbackCount++;
 
     // isPastTarget only applies when targeting work_phase. For bid_phase
     // targeting: being AT the bid phase means the window is OPEN, not
@@ -626,6 +639,9 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     // skipped_no_anchor: rows reaching the JS loop with no effectiveAnchor (all 4 fallback fields NULL).
     // Terminal/orphan phases (SKIP_PHASES) are now excluded at SQL level — they no longer reach this counter.
     { metric: 'skipped_no_anchor',         value: skipped,                 threshold: null,    status: 'INFO' },
+    // skipped_past_target: rows where currentOrdinal > targetOrdinal — trade's opportunity window closed.
+    // Not counted in skipped_no_anchor; kept separate so operators can distinguish the two skip reasons.
+    { metric: 'skipped_past_target',       value: skippedPastTarget,       threshold: null,    status: 'INFO' },
     { metric: 'snowplow_applied',          value: snowplowCount,           threshold: null,    status: 'INFO' },
     {
       metric: 'unmapped_trades',
@@ -661,6 +677,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       stale_forecasts_purged: stalePurged,
       grace_purged: gracePurged,
       skipped_no_anchor: skipped,
+      skipped_past_target: skippedPastTarget,
       unmapped_trades: unmappedTrades,
       anchor_fallbacks_used: anchorFallbackCount,
       snowplow_applied: snowplowCount,

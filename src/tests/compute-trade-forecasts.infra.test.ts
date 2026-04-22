@@ -548,4 +548,35 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
       /lifecycle_phase NOT IN \$\{SKIP_PHASES_SQL\}[\s\S]{0,120}lifecycle_phase NOT IN \('P1','P2'\)/,
     );
   });
+
+  it('WF3 Phase-Past-Target Guard: skips forecast generation when currentOrdinal > targetOrdinal', () => {
+    // A P18 permit (ordinal 15) targeting HVAC work_phase P7c (ordinal 0) has
+    // currentOrdinal=15 > targetOrdinal=0. The trade's opportunity window is
+    // definitively closed — generating a forecast would immediately produce
+    // `expired` urgency, inflating the 70.6% expired rate.
+    // Strict > (not >=): AT the target phase = opportunity is RIGHT NOW (overdue);
+    // PAST the target phase = opportunity is definitively gone.
+    // Red Light: this test MUST fail before the guard is inserted.
+    expect(content).toMatch(
+      /currentOrdinal\s*!=\s*null\s*&&\s*targetOrdinal\s*!=\s*null\s*&&\s*currentOrdinal\s*>\s*targetOrdinal/,
+    );
+  });
+
+  it('WF3 Phase-Past-Target Guard: skippedPastTarget counter declared and incremented', () => {
+    // Separate counter from skipped (no-anchor) so operators can distinguish
+    // "no anchor found" skips from "opportunity definitively closed" skips.
+    expect(content).toMatch(/skippedPastTarget\s*=\s*0/);
+    expect(content).toMatch(/skippedPastTarget\+\+/);
+  });
+
+  it('WF3 Phase-Past-Target Guard: skipped_past_target exposed in audit_table rows', () => {
+    // spec 47 §8.2: every counter that affects forecast output must be in audit_table.
+    expect(content).toMatch(/metric:\s*['"]skipped_past_target['"]/);
+  });
+
+  it('WF3 Phase-Past-Target Guard: skipped_past_target exposed in records_meta', () => {
+    // spec 47 §8.2 dual-location: audit_table (visible in FreshnessTimeline)
+    // AND records_meta (accessible to chain orchestrator + observability stack).
+    expect(content).toMatch(/skipped_past_target\s*:\s*skippedPastTarget/);
+  });
 });
