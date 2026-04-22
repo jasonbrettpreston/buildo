@@ -17,7 +17,7 @@ import type { NextRequest } from 'next/server';
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { withRateLimit } from '@/lib/auth/rate-limit';
 import { pool } from '@/lib/db/client';
-import { isPostgisAvailable } from '@/lib/admin/lead-feed-health';
+import { isPostgisAvailable } from '@/lib/admin/test-feed-utils';
 import { ok } from '@/features/leads/api/envelope';
 import {
   badRequestZod,

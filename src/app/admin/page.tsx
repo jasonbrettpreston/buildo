@@ -60,10 +60,10 @@ export default function AdminPage() {
           >
             <div className="text-4xl mb-4">🎯</div>
             <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-              Lead Feed Health
+              Lead Feed Testing
             </h2>
             <p className="text-sm text-gray-500 mt-2">
-              Feed readiness, cost/timing coverage, engagement, and test feed
+              Simulate geographic queries directly against the backend
             </p>
           </Link>
 

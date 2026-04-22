@@ -4,9 +4,6 @@ import type { NextRequest } from 'next/server';
 
 vi.mock('@/lib/db/client', () => ({
   pool: {} as unknown,
-  // Stub the parsePositiveIntEnv helper used by lead-feed-health.ts
-  // for HEALTH_CACHE_TTL_MS parsing at module load time. The real impl
-  // is a pure function so we return a fixed value for tests.
   parsePositiveIntEnv: (_value: string | undefined, fallback: number) => fallback,
 }));
 
@@ -33,12 +30,11 @@ vi.mock('@/features/leads/api/request-logging', () => ({
   logRequestComplete: vi.fn(),
 }));
 
-// WF3 2026-04-11 — mock the PostGIS pre-flight helper so the feed route's
-// dev-env guard can be tested without a real DB. The `__resetPostgisCacheForTests`
-// export is required for module-level cache hygiene between tests.
-vi.mock('@/lib/admin/lead-feed-health', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/admin/lead-feed-health')>(
-    '@/lib/admin/lead-feed-health',
+// Mock the PostGIS pre-flight helper so the feed route's dev-env guard can be
+// tested without a real DB. WF3 2026-04-11; module moved to test-feed-utils WF2 2026-04-22.
+vi.mock('@/lib/admin/test-feed-utils', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/admin/test-feed-utils')>(
+    '@/lib/admin/test-feed-utils',
   );
   return {
     ...actual,
@@ -50,7 +46,7 @@ import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { withRateLimit } from '@/lib/auth/rate-limit';
 import { logRequestComplete } from '@/features/leads/api/request-logging';
 import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
-import { isPostgisAvailable } from '@/lib/admin/lead-feed-health';
+import { isPostgisAvailable } from '@/lib/admin/test-feed-utils';
 import { GET } from '@/app/api/leads/feed/route';
 
 const mockedGetUserContext = vi.mocked(getCurrentUserContext);

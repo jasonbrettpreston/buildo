@@ -16,7 +16,7 @@ import {
   computeTestFeedDebug,
   isPostgisAvailable,
   sanitizePgErrorMessage,
-} from '@/lib/admin/lead-feed-health';
+} from '@/lib/admin/test-feed-utils';
 
 const TAG = '[api/admin/leads/test-feed]';
 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     );
     if (!parsed.success) {
       return NextResponse.json(
-        { data: null, error: { code: 'VALIDATION_ERROR', message: 'Invalid parameters', details: parsed.error.flatten().fieldErrors }, meta: null },
+        { data: null, error: { code: 'VALIDATION_FAILED', message: 'Invalid parameters', details: parsed.error.flatten().fieldErrors }, meta: null },
         { status: 400 },
       );
     }
