@@ -1,130 +1,137 @@
-# Active Task: WF2 — 5 CRITICAL Pipeline Safety Fixes
+# Active Task: WF3 — CQA Tracing Gate Alignment + Phase-Past-Target Guard
 **Status:** Implementation
-**Workflow:** WF2/WF3
-**Domain Mode:** Backend/Pipeline
-**Rollback Anchor:** 29eec48
 
 ## Context
-* **Goal:** Fix 5 CRITICAL vulnerabilities identified in the WF6 adversarial pipeline audit. All changes must strictly adhere to `47_pipeline_script_protocol.md` (transaction boundaries, lock IDs, no hardcoded business logic).
+* **Goal:** Two precise fixes based on post-zombie-gate WF5 audit results. (1) `assert-entity-tracing` is FAILing at 38.6% trade_forecasts coverage because its `eligiblePermits` denominator still counts permits > 3 years old that the engine now intentionally ignores — fix by mirroring the 3-year COALESCE recency gate in both the denominator and numerator queries. (2) `compute-trade-forecasts` still produces 70.6% expired urgency because permits within 3 years but whose target work phase has already passed still generate forecasts — fix by adding a Phase-Past-Target Guard (`currentOrdinal > targetOrdinal` → skip).
 * **Target Specs:**
-  - `docs/specs/pipeline/47_pipeline_script_protocol.md` (primary — §4.1, §5.2, §7.3)
-  - `docs/specs/product/future/84_lifecycle_phase_engine.md` (lifecycle classifier)
+  - `docs/specs/product/future/85_trade_forecast_engine.md` §3 (Behavioral Contract — Bimodal Routing, SOURCE_SQL eligibility)
+  - `docs/specs/pipeline/47_pipeline_script_protocol.md` §4 (state init), §8.1 (preRowCount), §11.1 (records_total), §R9 (atomic transaction)
+* **Rollback Anchor:** `3652c27` (refactor: WF2 V1 timing removal)
 * **Key Files:**
-  - `scripts/compute-trade-forecasts.js` — Fix 1 (transaction) + Fix 4 (guardrail)
-  - `scripts/link-coa.js` — Fix 2 (advisory lock ID)
-  - `scripts/lib/lifecycle-phase.js` — Fix 3 (thresholds), Fix 5 (P18 bug)
-  - `scripts/classify-lifecycle-phase.js` — Fix 3 (load new logic_variables)
-  - `src/lib/classification/lifecycle-phase.ts` — Fix 3 + Fix 5 (dual-code-path)
-  - `migrations/105_lifecycle_logic_vars.sql` — Fix 3 (seed threshold vars)
+  - `scripts/quality/assert-entity-tracing.js` — eligiblePermits denominator + trade_forecasts numerator queries
+  - `scripts/compute-trade-forecasts.js` — Phase-Past-Target Guard in bimodal routing loop
+  - `src/tests/assert-entity-tracing.infra.test.ts` — test fix + new guardrail tests
+  - `src/tests/compute-trade-forecasts.infra.test.ts` — new guardrail tests
+
+## Investigation Summary (confirmed before planning)
+* `eligiblePermits` denominator (lines 94–104): uses `AND p.phase_started_at IS NOT NULL` — excludes P1/P2 (now eligible via application_date Branch A) and does NOT exclude permits >3 years old. After zombie gate, engine skips those old permits; denominator still counts them → false low coverage.
+* `trade_forecasts` numerator (lines 148–157): same `phase_started_at IS NOT NULL` filter — inconsistent with denominator after changes.
+* `assert-entity-tracing.infra.test.ts` line 86: test checks SKIP_PHASES_SQL for 'P1' and 'P2' using `.toContain()` (substring match). After WF3 removed P1/P2 from SKIP_PHASES_SQL, this passes by accident ('P1' substring-matches 'P19', 'P2' substring-matches 'P20'). Semantically wrong; needs correction.
+* `compute-trade-forecasts.js` Phase-Past-Target: bimodal routing for a P18 permit (ordinal 15) targets work_phase e.g. P7c (ordinal 0). `currentOrdinal=15 > targetOrdinal=0` but no skip guard exists — engine computes predictedStart = phase_started_at + median, which lands in the past (opportunity definitively gone), producing `expired` urgency. The 3-year zombie gate reduced this set but didn't eliminate it (permits 1–3 years old still reach the loop).
+* `anchorFallbackCount` is incremented at line 437, BEFORE bimodal routing. After adding the phase-past-target guard, this increment will count fallbacks for rows that are then immediately skipped. Must move to after the guard.
 
 ## Technical Implementation
 
-### Fix 1 — Transaction Atomicity (compute-trade-forecasts.js)
-**Problem:** The grace-purge + stale-purge DELETEs run in their own `withTransaction` block (Step 2, lines 226–274). Batch UPSERTs each have their own `withTransaction`. A crash between commits leaves `trade_forecasts` empty. Violates §7.3 ("DELETE + UPSERT must be in the same withTransaction").
+### Part 1 — assert-entity-tracing.js: 3-year COALESCE gate
 
-**Fix:** Introduce `let purgeExecuted = false`. Move all purge+precount queries into `flushForecastBatch`, guarded by `!purgeExecuted`. Remove the standalone Step-2 `withTransaction` block.
-
+**1a. eligiblePermits denominator (lines 94–104)**
+Replace `AND p.phase_started_at IS NOT NULL` with the COALESCE recency gate:
+```sql
+SELECT COUNT(DISTINCT p.permit_num || '--' || p.revision_num)::int AS eligible_permits
+  FROM permits p
+  JOIN permit_trades pt ON pt.permit_num = p.permit_num
+                       AND pt.revision_num = p.revision_num
+                       AND pt.is_active = true
+ WHERE p.last_seen_at > NOW() - $1::interval
+   AND p.lifecycle_phase IS NOT NULL
+   AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
+   AND COALESCE(p.phase_started_at, p.issued_date, p.application_date) >= NOW() - INTERVAL '3 years'
 ```
-const shouldPurge = !purgeExecuted;
-const hasRows = currentBatch.length > 0;
-if (!shouldPurge && !hasRows) return;
-await pipeline.withTransaction(pool, async (client) => {
-  if (shouldPurge) {
-    purgeExecuted = true;
-    // grace-purge DELETE
-    // stale-purge DELETE
-    // pre-count SELECT
-  }
-  if (!hasRows) return; // purge-only transaction (zero-row stream)
-  // UPSERT batch (unchanged)
-});
+*Rationale:* Mirrors compute-trade-forecasts SOURCE_SQL recency exclusion. `phase_started_at IS NOT NULL` was replaced because P1/P2 permits (now in the forecast engine via Branch A) have NULL phase_started_at but valid application_date. COALESCE covers all three anchor columns. The 3-year window deliberately uses a single gate rather than the hybrid 18-month/3-year dual-branch (P1/P2 currently have 0 rows; when PERT pipeline populates them, a slightly conservative 3-year gate on application_date is acceptable — it over-counts denominator for P1/P2 18–36 month window, making coverage readings conservative not optimistic).
+
+**1b. trade_forecasts numerator (lines 148–157)**
+Same replacement — remove `AND p.phase_started_at IS NOT NULL`, add COALESCE gate:
+```sql
+SELECT COUNT(DISTINCT tf.permit_num || '--' || tf.revision_num)::int AS matched
+  FROM trade_forecasts tf
+  JOIN permits p ON p.permit_num = tf.permit_num
+                AND p.revision_num = tf.revision_num
+ WHERE p.last_seen_at > NOW() - $1::interval
+   AND p.lifecycle_phase IS NOT NULL
+   AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
+   AND COALESCE(p.phase_started_at, p.issued_date, p.application_date) >= NOW() - INTERVAL '3 years'
 ```
+*Rationale:* Numerator and denominator must use identical eligibility criteria. A permit excluded from the denominator by the recency gate cannot be in the numerator without causing a coverage ratio > 1.
 
-### Fix 2 — Advisory Lock ID (link-coa.js)
-**Problem:** `ADVISORY_LOCK_ID = 93`; SPEC LINK points to spec 12. Per §5.2, lock ID = owning spec number. ID 12 is currently unassigned.
+### Part 2 — compute-trade-forecasts.js: Phase-Past-Target Guard
 
-**Fix:** `ADVISORY_LOCK_ID = 93` → `ADVISORY_LOCK_ID = 12`.
-Update `src/tests/pipeline-advisory-lock.infra.test.ts`: `'scripts/link-coa.js': 12`.
-
-### Fix 3 — Hardcoded Stall Thresholds (lifecycle-phase.js + classify-lifecycle-phase.js + lifecycle-phase.ts)
-**Problem:** `computeStalled` uses hardcoded 730/180-day thresholds; `classifyBldLed` uses hardcoded 30/90-day P7a/P7b bucket thresholds. Violates §4.1 — must load from `logic_variables`.
-
-**Migration 105** — 4 new `logic_variables` rows (`ON CONFLICT DO NOTHING`):
-- `lifecycle_issued_stall_days` = 730
-- `lifecycle_inspection_stall_days` = 180
-- `lifecycle_p7a_max_days` = 30
-- `lifecycle_p7b_max_days` = 90
-
-**classify-lifecycle-phase.js:** Extend `LIFECYCLE_CONFIG_SCHEMA` with `z.coerce.number().int().positive()` for all 4. Pass loaded values via the `input` object:
+**2a. Add `skippedPastTarget` counter (alongside other counters ~line 281):**
 ```js
-classifyLifecyclePhase({
-  ...existingFields,
-  permitIssuedStallDays: logicVars.lifecycle_issued_stall_days,
-  inspectionStallDays:   logicVars.lifecycle_inspection_stall_days,
-  p7aMaxDays:            logicVars.lifecycle_p7a_max_days,
-  p7bMaxDays:            logicVars.lifecycle_p7b_max_days,
-  now: RUN_AT,
-})
+let skippedPastTarget = 0;
 ```
 
-**lifecycle-phase.js:** In `computeStalled`, read `input.permitIssuedStallDays ?? 730` and `input.inspectionStallDays ?? 180`. In `classifyBldLed`, read `input.p7aMaxDays ?? 30` and `input.p7bMaxDays ?? 90`. Defaults are documented fallbacks — production always passes DB values.
+**2b. Move `anchorFallbackCount++` to after the guard (currently at line 437):**
+The comment states "only for rows that will produce a forecast" — the guard fires before forecast generation, so the increment must come after it.
 
-Mirror identical changes in `src/lib/classification/lifecycle-phase.ts`.
-
-### Fix 4 — TRADE_TARGET_PHASE Guardrail (compute-trade-forecasts.js)
-**Status: Already Implemented.** Lines 152–158 already build `TRADE_TARGET_PHASE` from `tradeConfigs.bid_phase_cutoff` / `work_phase_target` (seeded in migration 092). config-loader.js `FALLBACK_TRADE_CONFIGS` also includes these. DB loading is the primary path; lifecycle-phase.js constant is the documented fallback.
-
-**Remaining work (guardrail only):** Add a startup warning after line 158 if any entry has `undefined` bid_phase/work_phase — signals DB schema regression without halting the script:
+**2c. Insert guard after `const targetOrdinal = PHASE_ORDINAL[targetPhase]` (currently line 464):**
 ```js
-const undefinedPhaseCount = Object.values(TRADE_TARGET_PHASE)
-  .filter(v => v.bid_phase == null || v.work_phase == null).length;
-if (undefinedPhaseCount > 0) {
-  pipeline.log.warn('[trade-forecasts]',
-    `${undefinedPhaseCount} trades have missing phase targets — fell back to lifecycle-phase.js constants`);
+// Phase-Past-Target Guard: permit has moved PAST the target phase —
+// the trade's opportunity window is definitively closed. Skip entirely
+// rather than generating a forecast that will immediately be `expired`.
+// Strict > (not >=): AT the target phase means the opportunity is RIGHT NOW
+// (overdue urgency); strictly PAST means it is definitively gone.
+if (currentOrdinal != null && targetOrdinal != null && currentOrdinal > targetOrdinal) {
+  skippedPastTarget++;
+  continue;
 }
 ```
 
-### Fix 5 — classifyBldLed P18 Logic Bug (lifecycle-phase.js + lifecycle-phase.ts)
-**Problem:** When `status === 'Permit Issued'` and `has_passed_inspection = true`, function returns `{ phase: 'P18' }` regardless of which stage passed. A permit that passed HVAC Final (→ P15) or Framing (→ P11) is misclassified as P18 (Inspection Pipeline).
-
-**Fix:** Consult `latest_passed_stage` first via `mapInspectionStageToPhase`, then fall back to P18 — same logic already used for `status === 'Inspection'`:
+**2d. Update telemetry — audit_table rows (alongside `skipped_no_anchor` row ~line 628):**
 ```js
-if (status === 'Permit Issued') {
-  if (input.has_passed_inspection) {
-    if (input.latest_passed_stage != null) {
-      const stageLower = String(input.latest_passed_stage).toLowerCase();
-      const mapped = mapInspectionStageToPhase(stageLower);
-      if (mapped) return { phase: mapped, stalled };
-    }
-    return { phase: 'P18', stalled }; // stage unknown → stay in inspection pipeline
-  }
-  // ... rest unchanged
-}
+{ metric: 'skipped_past_target', value: skippedPastTarget, threshold: null, status: 'INFO' },
 ```
-Mirror in `lifecycle-phase.ts`.
 
-## Database Impact
-YES — migration 105 adds 4 `logic_variables` rows (key-value INSERTs only — no schema change, no column additions, no backfill needed). `db:generate` not required.
+**2e. Update telemetry — records_meta (~line 663):**
+```js
+skipped_past_target: skippedPastTarget,
+```
+
+**Spec 47 Acid Radar — unaffected by Part 2:**
+- §8.1: preRowCount before DELETEs — guard is in the stream loop, not purge step. No change.
+- §11.1: records_total = streamed rows — `totalRows` increments at top of loop, before the guard. So skipped-past-target rows ARE counted in records_total (they were streamed from the DB). Intentional: records_total represents rows the engine EVALUATED, not rows that produced forecasts.
+- §4: state init inside withAdvisoryLock — no change.
+- §R9: DELETE + UPSERT in one withTransaction — no change.
+
+### Part 3 — Test Fixes
+
+**3a. assert-entity-tracing.infra.test.ts — fix semantically wrong SKIP_PHASES_SQL test (lines 81–89):**
+The current test checks `.toContain('P1')` and `.toContain('P2')` for SKIP_PHASES_SQL. After WF3 removed P1/P2 from SKIP_PHASES_SQL, the test passes by accident (substring: 'P1' matches inside 'P19', 'P2' matches inside 'P20'). Fix: update the phase list to `['P19', 'P20', 'O1', 'O2', 'O3']` and add `.not.toContain()` assertions for P1 and P2 using exact regex matching.
+
+**3b. assert-entity-tracing.infra.test.ts — add guardrail tests for COALESCE gate.**
+
+**3c. compute-trade-forecasts.infra.test.ts — add guardrail tests for Phase-Past-Target Guard + `skipped_past_target` telemetry.**
 
 ## Standards Compliance
-* **Try-Catch Boundary:** N/A — no API routes modified
-* **Unhappy Path Tests:** Zod throw when threshold var missing/non-numeric; purge-only path (zero-row stream); P18→stage-mapped behavior; wrong lock ID detected
-* **logError Mandate:** N/A — pipeline scripts use `pipeline.log`
-* **Mobile-First:** N/A — backend/pipeline only
+* **Try-Catch Boundary:** N/A — no new API routes; pipeline SDK handles errors
+* **Unhappy Path Tests:** Guardrail tests cover the guard boundary (at-target vs. past-target). Existing tests cover NULL ordinal paths.
+* **logError Mandate:** N/A — pipeline scripts use `pipeline.log.*`
+* **Mobile-First:** N/A — backend-only
 
 ## Execution Plan
-- [ ] **State Verification:** Confirm lock ID 12 unused (it is); confirm `tradeConfigs` has bid/work phase fields (confirmed in config-loader.js lines 23–54)
-- [ ] **Contract Definition:** N/A — no API routes
-- [ ] **Spec Update:** Update spec 84 comment in lifecycle-phase.js/ts where thresholds are now input-driven
-- [ ] **Schema Evolution:** Create `migrations/105_lifecycle_logic_vars.sql` (UP: 4 INSERT ON CONFLICT DO NOTHING; DOWN: 4 DELETE). No `npm run migrate` needed (key-value table, no type generation)
-- [ ] **Guardrail Test:** Write infra/logic tests for all 5 fixes before implementation
-- [ ] **Red Light:** Run tests — all new tests must fail
-- [ ] **Implementation (ordered by risk — smallest first):**
-  - Fix 2: link-coa.js ADVISORY_LOCK_ID 93 → 12; update pipeline-advisory-lock.infra.test.ts
-  - Fix 4: compute-trade-forecasts.js undefined-phase guardrail (1 warning block)
-  - Fix 5: lifecycle-phase.js classifyBldLed P18 → mapInspectionStageToPhase; mirror lifecycle-phase.ts
-  - Fix 1: compute-trade-forecasts.js purge into first batch; remove Step-2 withTransaction block
-  - Fix 3: migration 105; classify-lifecycle-phase.js LIFECYCLE_CONFIG_SCHEMA + pass to input; lifecycle-phase.js computeStalled+classifyBldLed read from input; mirror lifecycle-phase.ts
-- [ ] **UI Regression Check:** N/A
-- [ ] **Pre-Review Self-Checklist:** 5-10 spec-derived questions, PASS/FAIL per item against actual diff
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix` → WF6 → Swarm Review (Gemini + DeepSeek + Independent)
+
+### Part 1: assert-entity-tracing.js — CQA Gate Alignment
+- [ ] **Rollback Anchor:** `3652c27` (recorded above)
+- [ ] **State Verification:** eligiblePermits query confirmed at lines 94–104; trade_forecasts numerator at lines 148–157; both have `phase_started_at IS NOT NULL` (wrong post-zombie-gate)
+- [ ] **Spec Review:** spec 85 §3 SOURCE_SQL eligibility, spec 47 §8.1/§11.1/§R9
+- [ ] **Guardrail Test (Part 1):** Add tests asserting COALESCE gate in both denominator and numerator queries; add test that `phase_started_at IS NOT NULL` is absent from both
+- [ ] **Test Fix (3a):** Update SKIP_PHASES_SQL test to remove P1/P2 from expected list, add not-contains assertions
+- [ ] **Red Light:** Confirm guardrail tests fail before implementation
+- [ ] **Step 1:** `assert-entity-tracing.js` — replace `phase_started_at IS NOT NULL` with COALESCE gate in eligiblePermits denominator
+- [ ] **Step 2:** `assert-entity-tracing.js` — replace `phase_started_at IS NOT NULL` with COALESCE gate in trade_forecasts numerator
+
+### Part 2: compute-trade-forecasts.js — Phase-Past-Target Guard
+- [ ] **Guardrail Test (Part 2):** Add tests asserting `skipped_past_target` in audit_table and records_meta; assert guard condition `currentOrdinal > targetOrdinal` exists in script
+- [ ] **Red Light:** Confirm guardrail tests fail before implementation
+- [ ] **Step 3:** Add `skippedPastTarget = 0` counter
+- [ ] **Step 4:** Move `anchorFallbackCount++` to after the Phase-Past-Target guard position
+- [ ] **Step 5:** Insert Phase-Past-Target Guard after `const targetOrdinal = ...`
+- [ ] **Step 6:** Update audit_table rows with `skipped_past_target` INFO metric
+- [ ] **Step 7:** Update records_meta with `skipped_past_target`
+
+### Part 3: Green Light + Review
+- [ ] **Pre-Review Self-Checklist (WF3 sibling-bug check):** 3–5 sibling bugs sharing same root cause
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix` — all pass
+- [ ] **Step 8:** Spawn independent review agent (isolated worktree) — spec 85 §3, spec 47 §4/§8.1/§11.1/§R9
+- [ ] **Step 9:** Spawn adversarial review agents (Gemini + Deepseek) on the diff
+- [ ] **Step 10:** Triage all findings — fix FAILs, defer pre-existing to `review_followups.md`
+- [ ] **Step 11:** WF6 hardening sweep + atomic commits (Part 1 first, Part 2 second)
