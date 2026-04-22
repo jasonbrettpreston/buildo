@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/73_builder_leads.md §Migration needed
+// 🔗 SPEC LINK: docs/specs/00-architecture/01_database_schema.md §Migration needed
 // 🔗 MIGRATION: migrations/084_entities_photo_drift_repair.sql
 //
 // Sibling of migration-083-drift-repair.infra.test.ts. Discovered

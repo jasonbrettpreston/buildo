@@ -1,5 +1,5 @@
 // Logic Layer Tests — Migration safety validator
-// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §3.2 + spec 75 §7a
+// 🔗 SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §3.2 + spec 75 §7a
 import { describe, it, expect } from 'vitest';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

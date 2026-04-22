@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §API Endpoints
 //
 // Shared Zod schemas for the leads API routes. Both schemas import the
 // authoritative bound constants from Phase 1 lib files so the validation

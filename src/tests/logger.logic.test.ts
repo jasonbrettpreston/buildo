@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §13.3
+// 🔗 SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §13.3
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 describe('logger — logInfo extension', () => {

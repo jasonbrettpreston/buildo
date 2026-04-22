@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/71_lead_timing_engine.md §Implementation
+// 🔗 SPEC LINK: docs/specs/01-pipeline/85_trade_forecast_engine.md §Implementation
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Pool, QueryResult, QueryResultRow } from 'pg';
 import {

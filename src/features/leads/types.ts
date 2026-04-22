@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md + 71/72/73 + 75 §11
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md + 71/72/73 + 75 §11
 //
 // Single import surface for src/features/leads/ consumers.
 //

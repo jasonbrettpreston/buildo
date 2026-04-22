@@ -1,5 +1,5 @@
 // Infra Layer Tests — Migration 071 (cost_estimates schema)
-// 🔗 SPEC LINK: docs/specs/product/future/72_lead_cost_model.md
+// 🔗 SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';

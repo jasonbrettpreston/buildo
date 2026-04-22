@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §Implementation
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §Implementation
 //
 // Unified lead feed — ranks permit and builder leads in ONE SQL pass via
 // UNION ALL + cursor pagination on (relevance_score, lead_type, lead_id).

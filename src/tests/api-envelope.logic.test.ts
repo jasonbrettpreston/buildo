@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §4.4 + spec 70 §API Endpoints
+// 🔗 SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §4.4 + spec 70 §API Endpoints
 import { describe, it, expect } from 'vitest';
 import { ok, err } from '@/features/leads/api/envelope';
 import {

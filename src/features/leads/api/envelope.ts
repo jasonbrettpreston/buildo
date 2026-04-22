@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §4.4 + spec 70 §API Endpoints
+// 🔗 SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §4.4 + spec 70 §API Endpoints
 //
 // Response envelope helpers. Every leads API response is `{data, error, meta}`
 // with consistent shape regardless of success or failure. Phase 2 routes

@@ -17,8 +17,8 @@ Env vars:
     PROXY_HOST/PORT/USER/PASS — optional Decodo proxy (disabled by default)
     PG_HOST/PORT/DATABASE/USER/PASSWORD — PostgreSQL connection
 
-SPEC LINK: docs/specs/pipeline/44_chain_deep_scrapes.md
-SPEC LINK: docs/specs/platform/37_entity_model.md
+SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md
+SPEC LINK: docs/specs/01-pipeline/37_entity_model.md
 """
 
 import asyncio

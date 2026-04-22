@@ -1,5 +1,5 @@
 // Logic Layer Tests — createMockLeadView factory (migration 070 shape)
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md
 import { describe, it, expect } from 'vitest';
 import { createMockLeadView } from './factories';
 

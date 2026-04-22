@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §11 (Plan Compliance)
+// 🔗 SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §11 (Plan Compliance)
 //
 // Spec-extracted contracts: this test is the enforcement layer for
 // docs/specs/_contracts.json. Every numeric threshold that crosses the

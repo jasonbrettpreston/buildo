@@ -1,5 +1,5 @@
 // Logic Layer Tests — Migration 072 (inspection_stage_map schema + seed)
-// 🔗 SPEC LINK: docs/specs/product/future/71_lead_timing_engine.md
+// 🔗 SPEC LINK: docs/specs/01-pipeline/85_trade_forecast_engine.md
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';

@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §Database Schema + §API Endpoints
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §Database Schema + §API Endpoints
 //
 // Real-DB integration test for the LEAD_FEED_SQL is_saved roundtrip.
 //

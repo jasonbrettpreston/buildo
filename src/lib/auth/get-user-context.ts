@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §API Endpoints
 //
 // Server-side helper combining Firebase auth + user_profiles lookup.
 // Phase 2 leads routes call this once at the top of the handler to get

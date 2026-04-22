@@ -8,7 +8,7 @@
  *     // ...route logic — any throw is caught and returned as 500 envelope
  *   });
  *
- * SPEC LINK: docs/specs/00_engineering_standards.md §2.2, §4.4
+ * SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §2.2, §4.4
  *            docs/reports/bug_prevention_strategy.md §3
  */
 

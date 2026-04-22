@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §API Endpoints
 //
 // Helper for the Phase 2 `POST /api/leads/view` route. Wraps the lead_views
 // upsert + competition-count read so Phase 2 routes don't have to re-derive

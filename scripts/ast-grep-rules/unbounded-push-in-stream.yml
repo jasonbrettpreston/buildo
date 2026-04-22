@@ -8,7 +8,7 @@ message: |
   Fix: add a batch-flush check after every .push():
     if (batch.length >= BATCH_SIZE) { await flushBatch(pool, batch); batch = []; }
   Suppression: // ast-grep-disable-next-line unbounded-push-in-stream: bounded by <reason>
-  SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §16 Rule B4
+  SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §16 Rule B4
 note: Ban applies to all active pipeline scripts. See scripts/amnesty.json for exempt files.
 rule:
   any:

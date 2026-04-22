@@ -8,7 +8,7 @@
  *
  * Usage: npm run generate:script
  *
- * SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §16 (Bug Prevention §8)
+ * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §16 (Bug Prevention §8)
  */
 
 import { createInterface } from 'readline/promises';
@@ -207,8 +207,8 @@ async function main() {
   }
 
   const description = await prompt('One-sentence description: ');
-  const specPathInput = await prompt('Spec path (e.g. docs/specs/product/future/85_trade_forecast_engine.md): ');
-  const specPath = specPathInput || `docs/specs/pipeline/47_pipeline_script_protocol.md`;
+  const specPathInput = await prompt('Spec path (e.g. docs/specs/01-pipeline/85_trade_forecast_engine.md): ');
+  const specPath = specPathInput || `docs/specs/01-pipeline/47_pipeline_script_protocol.md`;
 
   const mutatesData = await promptBool('Does this script write to the database?', true);
 

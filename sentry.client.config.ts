@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/75_lead_feed_implementation_guide.md §7a + §13.2
+// 🔗 SPEC LINK: docs/specs/03-mobile/75_lead_feed_implementation_guide.md §7a + §13.2
 // Sentry client-side init. Production-only by design — dev runs noise-free.
 
 import * as Sentry from '@sentry/nextjs';

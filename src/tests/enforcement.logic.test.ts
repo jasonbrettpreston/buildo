@@ -1,5 +1,5 @@
 /**
- * SPEC LINK: docs/specs/00_engineering_standards.md
+ * SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md
  *
  * Tests that automated enforcement gates are properly configured:
  * - ESLint bans console.error in API routes (§6.1)

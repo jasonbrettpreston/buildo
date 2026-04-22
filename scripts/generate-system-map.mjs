@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ---------------------------------------------------------------------------
-// System Map Generator — auto-generates docs/specs/00_system_map.md
+// System Map Generator — auto-generates docs/specs/00-architecture/00_system_map.md
 //
 // Recursively reads every spec file in docs/specs/ (including subdirectories)
 // and compiles the registry table grouped by directory.
@@ -15,20 +15,19 @@ import path from 'path';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const SPECS_DIR = path.join(ROOT, 'docs', 'specs');
-const OUTPUT = path.join(SPECS_DIR, '00_system_map.md');
+const OUTPUT = path.join(SPECS_DIR, '00-architecture', '00_system_map.md');
 
 // Directory → display name mapping (order determines output order)
 const SECTIONS = [
-  { dir: '.', name: 'Foundation' },
-  { dir: 'platform', name: 'Platform (Backend Infrastructure)' },
-  { dir: 'product/admin', name: 'Product — Admin' },
-  { dir: 'product/user', name: 'Product — User Experience' },
-  { dir: 'product/deferred', name: 'Product — Deferred' },
-  { dir: 'pipeline', name: 'Pipeline (Data Engineering)' },
+  { dir: '00-architecture', name: 'Architecture & Standards' },
+  { dir: '01-pipeline',     name: 'Pipeline (Data Engineering)' },
+  { dir: '02-web-admin',    name: 'Web Admin' },
+  { dir: '03-mobile',       name: 'Mobile (Lead Feed)' },
+  { dir: 'archive',         name: 'Archive (Deprecated)' },
 ];
 
 // Skip these directories entirely
-const SKIP_DIRS = new Set(['archive']);
+const SKIP_DIRS = new Set([]);
 
 function parseSpec(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');

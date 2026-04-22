@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §12.9 Real DB integration tests
+// 🔗 SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §12.9 Real DB integration tests
 //
 // Dual-mode test DB harness:
 //   - CI: GitHub Actions provides a `postgres:16` + PostGIS service container

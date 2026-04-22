@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ---------------------------------------------------------------------------
 // DB Docs Generator — queries PostgreSQL information_schema and regenerates
-// the schema listing in docs/specs/01_database_schema.md.
+// the schema listing in docs/specs/00-architecture/01_database_schema.md.
 //
 // Usage: npm run db:docs
 //
@@ -16,7 +16,7 @@ import path from 'path';
 const { Pool } = pg;
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const SPEC_PATH = path.join(ROOT, 'docs', 'specs', '01_database_schema.md');
+const SPEC_PATH = path.join(ROOT, 'docs', 'specs', '00-architecture', '01_database_schema.md');
 const DB_START = '<!-- DB_SCHEMA_START -->';
 const DB_END = '<!-- DB_SCHEMA_END -->';
 

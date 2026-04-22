@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Migration safety validator — runs in pre-commit hook and CLI.
-// SPEC LINK: docs/specs/00_engineering_standards.md §3.2 + spec 75 §7a
+// SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §3.2 + spec 75 §7a
 //
 // Rules:
 //   1. DROP TABLE / DROP COLUMN / TRUNCATE TABLE require an explicit

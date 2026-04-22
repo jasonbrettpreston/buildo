@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §API Endpoints
 //
 // POST /api/leads/view — record a view/save/unsave action against a lead
 // (permit or builder) and return the updated competition_count. Thin route

@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §API Endpoints
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §API Endpoints
 //
 // GET /api/leads/feed — personalized lead feed for the authenticated user.
 // Returns permits + builders interleaved by relevance score, paginated via

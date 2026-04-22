@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/01_database_schema.md, 02_data_ingestion.md, 03_change_detection.md
+// 🔗 SPEC LINK: docs/specs/00-architecture/01_database_schema.md, 02_data_ingestion.md, 03_change_detection.md
 import { describe, it, expect } from 'vitest';
 import { mapRawToPermit } from '@/lib/permits/field-mapping';
 import { computePermitHash } from '@/lib/permits/hash';

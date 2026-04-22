@@ -1,5 +1,5 @@
 // Infra Layer Tests — Migration 074 (entities photo_url + photo_validated_at)
-// 🔗 SPEC LINK: docs/specs/product/future/73_builder_leads.md
+// 🔗 SPEC LINK: docs/specs/00-architecture/01_database_schema.md
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';

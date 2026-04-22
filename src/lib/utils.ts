@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §12.5 Shadcn UI primitives
+// 🔗 SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §12.5 Shadcn UI primitives
 //
 // Shadcn `cn` utility — merges class names + deduplicates Tailwind
 // utilities via `tailwind-merge`. Used throughout `src/components/ui/`

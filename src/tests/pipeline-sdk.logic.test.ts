@@ -1,6 +1,6 @@
 /**
  * Pipeline SDK — unit tests
- * SPEC LINK: docs/specs/00_engineering_standards.md §9
+ * SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §9
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'path';

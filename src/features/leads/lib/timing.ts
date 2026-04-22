@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/71_lead_timing_engine.md §Implementation
+// 🔗 SPEC LINK: docs/specs/01-pipeline/85_trade_forecast_engine.md §Implementation
 //
 // 3-tier timing engine — given a permit and a trade, returns an estimate of
 // when the tradesperson's trade will be needed on that site. Reads from

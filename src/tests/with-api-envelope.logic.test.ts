@@ -1,5 +1,5 @@
 /**
- * SPEC LINK: docs/specs/00_engineering_standards.md §2.2 (Try-Catch Boundary),
+ * SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §2.2 (Try-Catch Boundary),
  *            docs/reports/bug_prevention_strategy.md §3 (withApiEnvelope)
  *
  * Tests for src/lib/api/with-api-envelope.ts — the HOF that wraps route handlers

@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §Database Schema
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §Database Schema
 //
 // Real-DB integration test for the lead_views XOR CHECK constraint
 // (migration 070). Mocked tests can't catch a runtime constraint violation

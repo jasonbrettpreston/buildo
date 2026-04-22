@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §12.14 Diff narrator
+// 🔗 SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §12.14 Diff narrator
 //
 // Tests the FAIL-OPEN behavior of scripts/diff-narrator.js. The narrator
 // MUST never block a commit on its own — every error path must exit 0 with

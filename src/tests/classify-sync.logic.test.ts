@@ -7,7 +7,7 @@
  *
  * If a developer updates one but not the other, this test blocks the commit.
  *
- * SPEC LINK: docs/specs/00_engineering_standards.md §7.1
+ * SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §7.1
  */
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';

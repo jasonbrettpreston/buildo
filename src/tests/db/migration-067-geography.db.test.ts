@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/product/future/70_lead_feed.md §Implementation
+// 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §Implementation
 //
 // Real-DB integration test for the PostGIS geography cast on permits.location.
 // The Phase 0+1 Gemini holistic review caught that ST_DWithin(p.location, ...)

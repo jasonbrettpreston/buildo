@@ -1,4 +1,4 @@
-// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §12.12 Property-based tests
+// 🔗 SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §12.12 Property-based tests
 //
 // fast-check property tests for the pure functions in src/features/leads/lib/.
 // Each invariant is a math statement that the function MUST satisfy for ALL

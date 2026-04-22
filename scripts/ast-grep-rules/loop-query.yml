@@ -8,7 +8,7 @@ message: |
   Fix: collect values into an array outside the loop, then do a single UNNEST-based
   batch INSERT/UPDATE after the loop.
   Suppression: // ast-grep-disable-next-line loop-query: <justification>
-  SPEC LINK: docs/specs/pipeline/47_pipeline_script_protocol.md §16 Rule B1
+  SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §16 Rule B1
 note: Ban applies to all active pipeline scripts. See scripts/amnesty.json for exempt files.
 rule:
   any:
