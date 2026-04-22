@@ -79,7 +79,7 @@ export function mapCoaToPermitDto(coa: {
 // Database queries
 // ---------------------------------------------------------------------------
 
-export interface UpcomingLeadsOptions {
+interface UpcomingLeadsOptions {
   limit?: number;
   search?: string;
   ward?: string;

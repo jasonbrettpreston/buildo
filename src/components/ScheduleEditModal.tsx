@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export interface ScheduleEditModalProps {
+interface ScheduleEditModalProps {
   pipeline: string;
   pipelineName: string;
   currentCadence: string;

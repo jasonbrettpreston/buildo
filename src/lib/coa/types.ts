@@ -27,13 +27,3 @@ export interface CoaApplication {
   created_at: Date;
 }
 
-/**
- * Result of attempting to link a CoA application to a building permit.
- */
-export interface CoaLinkResult {
-  coa_id: number;
-  permit_num: string;
-  permit_revision: string;
-  confidence: number;
-  match_type: 'exact_address' | 'fuzzy_address' | 'description_similarity';
-}

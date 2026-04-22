@@ -85,7 +85,7 @@ export interface FunnelRowData {
 // Stats interface (subset of AdminStats needed for funnel computation)
 // ---------------------------------------------------------------------------
 
-export interface FunnelStats {
+interface FunnelStats {
   wsib_total: number;
   wsib_linked: number;
   wsib_lead_pool: number;

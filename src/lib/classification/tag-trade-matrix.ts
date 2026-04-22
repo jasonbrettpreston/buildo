@@ -5,7 +5,7 @@
  * Replaces the old Tier 2/3 regex-based rules with structured lookups.
  */
 
-export interface TagTradeEntry {
+interface TagTradeEntry {
   tradeSlug: string;
   confidence: number;
 }

@@ -31,10 +31,10 @@ import type { InspectionStageMapRow } from '@/lib/permits/types';
 
 export const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 export const STALENESS_DAYS = 180;
-export const CALIBRATION_STALE_DAYS = 30;
+const CALIBRATION_STALE_DAYS = 30;
 export const NOT_PASSED_PENALTY_DAYS = 14;
 export const STAGE_GAP_MEDIAN_DAYS = 30;
-export const MIN_SAMPLE_SIZE = 20;
+const MIN_SAMPLE_SIZE = 20;
 export const PRE_PERMIT_MIN_DAYS = 240; // 8 months
 export const PRE_PERMIT_MAX_DAYS = 420; // 14 months
 

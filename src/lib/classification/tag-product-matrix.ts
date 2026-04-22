@@ -75,4 +75,3 @@ export function lookupProductsForTags(tags: string[]): string[] {
   return Array.from(productSet);
 }
 
-export { PREFIXED_TAG_PRODUCT_MATRIX as TAG_PRODUCT_MATRIX };

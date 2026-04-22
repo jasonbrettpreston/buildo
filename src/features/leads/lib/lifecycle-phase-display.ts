@@ -12,7 +12,7 @@
 // render it without import overhead.
 
 /** Canonical display labels for every lifecycle phase value. */
-export const LIFECYCLE_PHASE_DISPLAY: Record<string, string> = {
+const LIFECYCLE_PHASE_DISPLAY: Record<string, string> = {
   // CoA origination
   P1: 'Variance requested',
   P2: 'Variance granted',

@@ -35,7 +35,7 @@
 // Types
 // ─────────────────────────────────────────────────────────────────
 
-export interface PermitClassifierInput {
+interface PermitClassifierInput {
   status: string | null;
   enriched_status: string | null;
   issued_date: Date | null;
@@ -55,12 +55,12 @@ export interface PermitClassifierInput {
   p7bMaxDays?: number | null;
 }
 
-export interface PermitClassifierResult {
+interface PermitClassifierResult {
   phase: string | null;
   stalled: boolean;
 }
 
-export interface CoaClassifierInput {
+interface CoaClassifierInput {
   decision: string | null;
   linked_permit_num: string | null;
   status: string | null;
@@ -70,7 +70,7 @@ export interface CoaClassifierInput {
   stallThresholdDays?: number | null;
 }
 
-export interface CoaClassifierResult {
+interface CoaClassifierResult {
   phase: 'P1' | 'P2' | null;
   /** WF3 2026-04-13: true when a P1/P2 CoA has been inactive longer than stallThresholdDays. */
   stalled: boolean;
@@ -168,7 +168,7 @@ export const NOT_STARTED_P7D_SET: ReadonlySet<string> = new Set([
 // mirror in scripts/lib/lifecycle-phase.js, which also exports this set.
 // Asymmetric exports would violate the §7 dual-code-path rule even
 // though no test currently imports this set from the TS side.
-export const INSPECTION_PIPELINE_P18_SET: ReadonlySet<string> = new Set([
+const INSPECTION_PIPELINE_P18_SET: ReadonlySet<string> = new Set([
   'Forward to Inspector',
   'Rescheduled',
 ]);
@@ -192,7 +192,7 @@ export const VALID_PHASES: ReadonlySet<string> = new Set([
  * in scripts/lib/lifecycle-phase.js.
  */
 /** Bimodal trade target: bid_phase = when to start bidding, work_phase = when on-site. */
-export interface TradeTarget {
+interface TradeTarget {
   bid_phase: string;
   work_phase: string;
 }

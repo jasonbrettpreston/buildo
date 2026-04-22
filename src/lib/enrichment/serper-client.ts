@@ -7,7 +7,7 @@ import { logError } from '@/lib/logger';
 
 const SERPER_URL = 'https://google.serper.dev/search';
 
-export interface SerperSearchOptions {
+interface SerperSearchOptions {
   gl?: string;
   num?: number;
 }

@@ -1,7 +1,7 @@
 // Route classification and protection logic for Next.js middleware
 // SPEC LINK: docs/specs/13_auth.md
 
-export type RouteClass = 'public' | 'authenticated' | 'admin';
+type RouteClass = 'public' | 'authenticated' | 'admin';
 
 // ---------------------------------------------------------------------------
 // Dev Mode — bypass auth for local development

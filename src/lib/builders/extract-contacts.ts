@@ -27,7 +27,7 @@ export interface SerperResponse {
   };
 }
 
-export interface ExtractedContacts {
+interface ExtractedContacts {
   phone: string | null;
   email: string | null;
   website: string | null;
@@ -263,7 +263,7 @@ export function extractContacts(response: SerperResponse): ExtractedContacts {
 // Search query construction
 // ---------------------------------------------------------------------------
 
-export interface BuilderSearchInput {
+interface BuilderSearchInput {
   name: string;
   trade_name?: string | null;
   legal_name?: string | null;
@@ -308,13 +308,13 @@ export function buildSearchQuery(builder: BuilderSearchInput): string {
 // Pre-flight skip filters — prevent wasting Serper credits on unenrichable entities
 // ---------------------------------------------------------------------------
 
-export interface SkipCandidate {
+interface SkipCandidate {
   name: string;
   trade_name?: string | null;
   has_wsib_match?: boolean;
 }
 
-export interface SkipResult {
+interface SkipResult {
   skip: boolean;
   reason: 'numbered_corp' | 'individual' | 'generic_trade_name' | null;
 }

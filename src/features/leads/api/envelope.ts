@@ -7,13 +7,13 @@
 
 import { NextResponse } from 'next/server';
 
-export interface ApiSuccess<T, M = null> {
+interface ApiSuccess<T, M = null> {
   data: T;
   error: null;
   meta: M;
 }
 
-export interface ApiErrorBody {
+interface ApiErrorBody {
   data: null;
   error: { code: string; message: string; details?: unknown };
   meta: null;
@@ -30,8 +30,8 @@ export interface ApiErrorBody {
  * 204 No Content it must bypass `ok()` entirely and return
  * `new NextResponse(null, { status: 204 })`.
  */
-export type SuccessStatus = 200 | 201 | 202;
-export type ErrorStatus = 400 | 401 | 403 | 404 | 409 | 415 | 422 | 429 | 500 | 502 | 503;
+type SuccessStatus = 200 | 201 | 202;
+type ErrorStatus = 400 | 401 | 403 | 404 | 409 | 415 | 422 | 429 | 500 | 502 | 503;
 
 /**
  * Success envelope builder. Two-arg form sets `meta`; there is deliberately

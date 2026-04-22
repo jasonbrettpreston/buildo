@@ -5,7 +5,7 @@ import { useState } from 'react';
 /**
  * Build a Street View Static API URL, or return null if in dev mode or missing key.
  */
-export function getStreetViewUrl(
+function getStreetViewUrl(
   lat: number,
   lng: number,
   apiKey: string | undefined,
@@ -19,7 +19,7 @@ export function getStreetViewUrl(
 /**
  * Determine the display state for the PropertyPhoto component.
  */
-export function getDisplayState(
+function getDisplayState(
   lat: number | null,
   lng: number | null,
   isDev: boolean

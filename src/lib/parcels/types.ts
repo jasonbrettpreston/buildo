@@ -21,21 +21,6 @@ export interface Parcel {
   created_at: Date;
 }
 
-export interface PermitParcel {
-  id: number;
-  permit_num: string;
-  revision_num: string;
-  parcel_id: number;
-  match_type: string;
-  confidence: number;
-  linked_at: Date;
-}
-
-export interface ParcelMatchResult {
-  parcel_id: number;
-  match_type: 'exact_address' | 'name_only' | 'spatial';
-  confidence: number;
-}
 
 export interface LotDimensions {
   frontage_m: number;

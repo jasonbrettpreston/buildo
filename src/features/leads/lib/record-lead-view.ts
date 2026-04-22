@@ -30,7 +30,7 @@ export type RecordLeadViewInput =
       entity_id: number;
     };
 
-export interface RecordLeadViewResult {
+interface RecordLeadViewResult {
   ok: boolean;
   competition_count: number;
 }

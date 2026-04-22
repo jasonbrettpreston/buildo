@@ -22,11 +22,3 @@ export const PRODUCT_GROUPS: ProductGroup[] = [
   { id: 15, slug: 'mirrors-glass',      name: 'Mirrors & Glass',     sort_order: 15 },
   { id: 16, slug: 'garage-doors',       name: 'Garage Doors',        sort_order: 16 },
 ];
-
-export function getProductGroupBySlug(slug: string): ProductGroup | undefined {
-  return PRODUCT_GROUPS.find((p) => p.slug === slug);
-}
-
-export function getProductGroupById(id: number): ProductGroup | undefined {
-  return PRODUCT_GROUPS.find((p) => p.id === id);
-}

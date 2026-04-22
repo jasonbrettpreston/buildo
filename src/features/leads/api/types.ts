@@ -5,32 +5,13 @@
 // Phase 1 lib types (domain authoritative) so drift between client
 // and server is a typecheck failure, not a runtime bug.
 
-import type { LeadFeedCursor, LeadFeedItem } from '@/features/leads/types';
 import type { LeadFeedQuery, LeadViewBody } from './schemas';
 
 // ---------------------------------------------------------------------------
 // Request types — reused from the Zod schemas via z.infer
 // ---------------------------------------------------------------------------
 
-export type LeadFeedRequest = LeadFeedQuery;
 export type LeadViewRequest = LeadViewBody;
-
-// ---------------------------------------------------------------------------
-// Response types — match the envelope helpers in envelope.ts + the lib
-// layer's LeadFeedResult shape.
-// ---------------------------------------------------------------------------
-
-export interface LeadFeedResponseMeta {
-  next_cursor: LeadFeedCursor | null;
-  count: number;
-  radius_km: number;
-}
-
-export interface LeadFeedResponse {
-  data: LeadFeedItem[];
-  error: null;
-  meta: LeadFeedResponseMeta;
-}
 
 export interface LeadViewResponseData {
   competition_count: number;
@@ -49,7 +30,7 @@ export interface LeadViewResponse {
 // frameworks (e.g., 422 vs 400 for validation).
 // ---------------------------------------------------------------------------
 
-export interface LeadApiError {
+interface LeadApiError {
   data: null;
   error: {
     code: string;

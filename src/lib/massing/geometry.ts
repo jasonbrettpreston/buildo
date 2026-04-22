@@ -6,7 +6,7 @@ import type { StructureType } from './types';
 
 export type MassingUseType = 'residential' | 'commercial' | 'industrial' | 'mixed-use';
 
-export type StoriesSource = 'permit' | 'height_typed' | 'height_default';
+type StoriesSource = 'permit' | 'height_typed' | 'height_default';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -29,8 +29,7 @@ export const SHED_THRESHOLD_SQM = 20;
 /** 20–60 sqm accessory is classified as garage. */
 export const GARAGE_MAX_SQM = 60;
 
-export const SQM_TO_SQFT = 10.7639;
-export const M_TO_FT = 3.28084;
+const M_TO_FT = 3.28084;
 
 // ---------------------------------------------------------------------------
 // Core functions

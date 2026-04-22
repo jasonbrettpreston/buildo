@@ -109,7 +109,7 @@ const WORK_SCOPE_EXCLUSIONS: Record<string, string[]> = {
   'Garage Repair/Reconstruction': ['elevator', 'landscaping', 'pool-installation'],
 };
 
-export function applyScopeLimit(
+function applyScopeLimit(
   matches: TradeMatch[],
   permitNum: string | undefined,
   work: string | undefined

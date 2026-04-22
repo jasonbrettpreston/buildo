@@ -278,9 +278,6 @@ export interface EntityProject {
   observed_at: Date;
 }
 
-/** @deprecated Use Entity instead. Kept for backward compatibility. */
-export type Builder = Entity;
-
 // ---------------------------------------------------------------------------
 // Product classification
 // ---------------------------------------------------------------------------

@@ -196,7 +196,7 @@ export function rectangularityRatio(ring: [number, number][]): number | null {
 }
 
 /** A parcel centroid candidate for spatial matching. */
-export interface CentroidCandidate {
+interface CentroidCandidate {
   id: number;
   centroid_lat: number;
   centroid_lng: number;

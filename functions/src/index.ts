@@ -720,7 +720,7 @@ ff.cloudEvent<PubSubMessageData>('matchNotifications', async (cloudEvent) => {
     classifiedCount: payload.classifiedCount,
   }));
 
-  const { findMatchingUsers } = await import('../../src/lib/notifications/matcher');
+  // matcher module removed — notification matching is a no-op until reimplemented
   const pg = await import('pg');
 
   const pool = new pg.Pool({
@@ -761,65 +761,14 @@ ff.cloudEvent<PubSubMessageData>('matchNotifications', async (cloudEvent) => {
       message: `Matching notifications for ${classifiedPermits.length} classified permits`,
     }));
 
-    // ----- 2. Match each permit against user preferences -----
-    let totalNotifications = 0;
-    let matchErrors = 0;
-
-    for (const permit of classifiedPermits) {
-      try {
-        const matchResults = await findMatchingUsers({
-          permit_num: permit.permit_num,
-          revision_num: permit.revision_num,
-          ward: permit.ward,
-          postal: permit.postal,
-          est_const_cost: permit.est_const_cost,
-          trade_slugs: permit.trade_slugs,
-        });
-
-        if (matchResults.length === 0) {
-          continue;
-        }
-
-        // ----- 3. Insert notification records -----
-        const client = await pool.connect();
-        try {
-          await client.query('BEGIN');
-
-          for (const match of matchResults) {
-            await client.query(
-              `INSERT INTO notifications (
-                user_id, permit_num, revision_num, reason, status, created_at
-              ) VALUES ($1, $2, $3, $4, 'pending', NOW())
-              ON CONFLICT (user_id, permit_num, revision_num) DO NOTHING`,
-              [match.user_id, permit.permit_num, permit.revision_num, match.reason]
-            );
-          }
-
-          await client.query('COMMIT');
-          totalNotifications += matchResults.length;
-        } catch (txErr) {
-          await client.query('ROLLBACK');
-          throw txErr;
-        } finally {
-          client.release();
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error(JSON.stringify({
-          severity: 'ERROR',
-          message: `Failed to match notifications for permit ${permit.permit_num}/${permit.revision_num}`,
-          error: msg,
-        }));
-        matchErrors++;
-      }
-    }
-
+    // Notification matching stubbed out — matcher module was removed with the
+    // Two-Client Architecture purge. Reimplment via /api/notifications route.
     console.log(JSON.stringify({
       severity: 'INFO',
-      message: 'matchNotifications complete',
+      message: 'matchNotifications complete (matching disabled — matcher removed)',
       permitsProcessed: classifiedPermits.length,
-      notificationsCreated: totalNotifications,
-      errors: matchErrors,
+      notificationsCreated: 0,
+      errors: 0,
       syncRunId: payload.syncRunId,
     }));
   } catch (err) {

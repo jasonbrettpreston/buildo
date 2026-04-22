@@ -8,19 +8,6 @@
 // prevents type-surface churn between commits.
 
 // ---------------------------------------------------------------------------
-// Re-exports from Phase 1a schema types
-// ---------------------------------------------------------------------------
-export type {
-  CostEstimate,
-  CostSource,
-  CostTier,
-  InspectionStageMapRow,
-  LeadType,
-  LeadView,
-  StageRelationship,
-} from '@/lib/permits/types';
-
-// ---------------------------------------------------------------------------
 // Timing engine (Phase 1b-ii) — from spec 71 §4 Outputs
 // ---------------------------------------------------------------------------
 //

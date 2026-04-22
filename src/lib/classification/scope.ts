@@ -29,67 +29,9 @@ export type ProjectType =
   | 'repair'
   | 'other';
 
-export type WorkType = 'new' | 'alter';
+type WorkType = 'new' | 'alter';
 
-export type ResidentialTagSlug =
-  // new: tags (25)
-  | 'addition'
-  | 'deck'
-  | 'garage'
-  | 'porch'
-  | 'basement'
-  | 'underpinning'
-  | 'walkout'
-  | 'balcony'
-  | 'dormer'
-  | 'second-suite'
-  | 'kitchen'
-  | 'bathroom'
-  | 'laundry'
-  | 'open-concept'
-  | 'structural-beam'
-  | 'laneway-suite'
-  | 'pool'
-  | 'carport'
-  | 'canopy'
-  | 'roofing'
-  | 'fence'
-  | 'foundation'
-  | 'solar'
-  | 'fireplace'
-  | 'accessory-building'
-  | 'stair'
-  | 'window'
-  | 'door'
-  | 'shoring'
-  | 'demolition'
-  // alter: tags (6)
-  | 'interior-alterations'
-  | 'fire-damage'
-  | 'unit-conversion';
-// Note: alter:deck, alter:porch, alter:garage share slugs with their new: counterparts
-
-export type NewHouseBuildingType =
-  | 'build-sfd'
-  | 'semi-detached'
-  | 'townhouse'
-  | 'stacked-townhouse'
-  | 'houseplex-2-unit'
-  | 'houseplex-3-unit'
-  | 'houseplex-4-unit'
-  | 'houseplex-5-unit'
-  | 'houseplex-6-unit';
-
-export type NewHouseFeature =
-  | 'garage'
-  | 'deck'
-  | 'porch'
-  | 'walkout'
-  | 'balcony'
-  | 'laneway-suite'
-  | 'finished-basement';
-
-export type ScopeTag =
+type ScopeTag =
   // Structural
   | '2nd-floor'
   | '3rd-floor'
@@ -157,7 +99,7 @@ export type ScopeTag =
   | 'mid-rise'
   | 'low-rise';
 
-export interface ScopeResult {
+interface ScopeResult {
   project_type: ProjectType;
   scope_tags: string[];
 }
@@ -758,14 +700,14 @@ export const PROJECT_TYPE_CONFIG: Record<ProjectType, { label: string; color: st
 };
 
 /** Display config for use-type tags (universal tier — blue #2563EB). */
-export const USE_TYPE_TAG_CONFIG: Record<string, { label: string; color: string }> = {
+const USE_TYPE_TAG_CONFIG: Record<string, { label: string; color: string }> = {
   'residential': { label: 'Residential', color: '#2563EB' },
   'commercial': { label: 'Commercial', color: '#2563EB' },
   'mixed-use': { label: 'Mixed Use', color: '#2563EB' },
 };
 
 /** Display config for New Houses building type + feature tags. */
-export const NEW_HOUSE_TAG_CONFIG: Record<string, { label: string; color: string }> = {
+const NEW_HOUSE_TAG_CONFIG: Record<string, { label: string; color: string }> = {
   // Building type tags — emerald (#059669)
   'new:build-sfd': { label: 'Single Family Detached', color: '#059669' },
   'new:semi-detached': { label: 'Semi-Detached', color: '#059669' },
@@ -781,7 +723,7 @@ export const NEW_HOUSE_TAG_CONFIG: Record<string, { label: string; color: string
 };
 
 /** Display config for the 30 residential scope tags. */
-export const RESIDENTIAL_TAG_CONFIG: Record<string, { label: string; color: string }> = {
+const RESIDENTIAL_TAG_CONFIG: Record<string, { label: string; color: string }> = {
   // new: tags — green
   'new:addition': { label: 'Addition', color: '#16A34A' },
   'new:deck': { label: 'Deck', color: '#16A34A' },
@@ -917,7 +859,7 @@ export function isBLDPermit(permitNum: string): boolean {
 // Use-Type Classification (universal — every permit gets exactly one)
 // ---------------------------------------------------------------------------
 
-export type UseType = 'residential' | 'commercial' | 'mixed-use';
+type UseType = 'residential' | 'commercial' | 'mixed-use';
 
 /**
  * Classify a permit's primary use-type from permit_type, structure_type,

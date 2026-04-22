@@ -109,14 +109,14 @@ export interface DataQualitySnapshot {
   created_at: string;
 }
 
-export interface CoverageRate {
+interface CoverageRate {
   label: string;
   matched: number;
   total: number;
   percentage: number;
 }
 
-export interface MatchingMetrics {
+interface MatchingMetrics {
   tradeCoverage: CoverageRate;
   builderEnrichment: CoverageRate;
   parcelLinking: CoverageRate;

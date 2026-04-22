@@ -9,9 +9,9 @@ import { CircularBadge, DataFlowTile, TelemetrySection, Sparkline, type Sparklin
 // Pipeline Registry — single source of truth for all tracked pipelines
 // ---------------------------------------------------------------------------
 
-export type PipelineGroup = 'ingest' | 'link' | 'classify' | 'snapshot' | 'quality';
+type PipelineGroup = 'ingest' | 'link' | 'classify' | 'snapshot' | 'quality';
 
-export interface PipelineEntry {
+interface PipelineEntry {
   name: string;
   group: PipelineGroup;
 }
@@ -74,12 +74,12 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
 // indent: 0 = root trigger, 1 = main step, 2 = sub-dependency
 // ---------------------------------------------------------------------------
 
-export interface ChainStep {
+interface ChainStep {
   slug: string;
   indent: number;
 }
 
-export interface PipelineChain {
+interface PipelineChain {
   id: string;
   label: string;
   description: string;
@@ -244,7 +244,7 @@ export interface PipelineRunInfo {
   records_meta?: Record<string, unknown> | null;
 }
 
-export interface FreshnessTimelineProps {
+interface FreshnessTimelineProps {
   pipelineLastRun: Record<string, PipelineRunInfo>;
   runningPipelines: Set<string>;
   onTrigger: (slug: string) => void;

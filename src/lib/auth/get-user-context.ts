@@ -22,7 +22,7 @@ import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { isDevMode } from '@/lib/auth/route-guard';
 import { logError } from '@/lib/logger';
 
-export interface UserContext {
+interface UserContext {
   uid: string;
   trade_slug: string;
   display_name: string | null;

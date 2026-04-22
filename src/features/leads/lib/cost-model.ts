@@ -31,7 +31,7 @@ const brainModule = require('./cost-model-shared') as {
  * `display` (it's derived at read time), but the pipeline script and the
  * lead feed both need it, so the function returns it inline.
  */
-export type CostModelResult = CostEstimate & { display: string };
+type CostModelResult = CostEstimate & { display: string };
 
 export interface CostModelPermitInput {
   permit_num: string;
@@ -103,7 +103,7 @@ export const COST_TIER_BOUNDARIES = {
 } as const;
 
 /** Complexity score signals. Spec 72 §Implementation. Capped at 100 via Math.min. */
-export const COMPLEXITY_SIGNALS = {
+const COMPLEXITY_SIGNALS = {
   highRise: 30,       // stories > 6
   multiUnit: 20,      // dwelling_units > 4
   largeFootprint: 15, // footprint > 300 sqm
@@ -130,7 +130,7 @@ const PLACEHOLDER_COST_THRESHOLD = 1000;
  * TS read-path accepts the override via the `config` parameter of
  * `estimateCost`.
  */
-export const LIAR_GATE_THRESHOLD_DEFAULT = 0.25;
+const LIAR_GATE_THRESHOLD_DEFAULT = 0.25;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -370,10 +370,10 @@ function buildDisplay(
  * `trade_configurations.allocation_pct`; the TS read-path accepts the
  * same shape so the JS↔TS parity contract is real, not cosmetic.
  */
-export type TradeAllocationPct = Record<string, number>;
+type TradeAllocationPct = Record<string, number>;
 
 /** Surgical Brain per-trade rate row from trade_sqft_rates (spec 83 §2). */
-export interface TradeRate {
+interface TradeRate {
   base_rate_sqft: number;
   structure_complexity_factor: number;
 }
@@ -383,7 +383,7 @@ export interface TradeRate {
  * surgical Brain path runs (spec 83). When absent the v1 inline path runs
  * (preserves all existing tests).
  */
-export interface EstimateCostConfig {
+interface EstimateCostConfig {
   /** Override for `LIAR_GATE_THRESHOLD_DEFAULT` (0.25). V1 path only. */
   liarGateThreshold?: number;
   /** Per-trade allocation percentages. V1 path only. Defaults to `{}` → no slicing. */

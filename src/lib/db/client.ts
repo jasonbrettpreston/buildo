@@ -19,7 +19,7 @@ import { logError } from '@/lib/logger';
 //
 // Exported for reuse by other lib modules that parse positive-integer env
 // vars (e.g., cache TTLs). Testable in isolation.
-export function parsePositiveIntEnv(value: string | undefined, fallback: number): number {
+function parsePositiveIntEnv(value: string | undefined, fallback: number): number {
   if (value === undefined || value === '') return fallback;
   const parsed = parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;

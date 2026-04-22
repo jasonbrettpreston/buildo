@@ -21,35 +21,3 @@ export interface Neighbourhood {
   census_year: number;
   created_at: Date;
 }
-
-export interface NeighbourhoodProfile {
-  name: string;
-  neighbourhood_id: number;
-  summary: string;
-  income: {
-    avg_household: string;
-    median_household: string;
-    avg_individual: string;
-    low_income_pct: string;
-  };
-  housing: {
-    owner_pct: string;
-    renter_pct: string;
-    construction_era: string;
-  };
-  family: {
-    couples_pct: string;
-    lone_parent_pct: string;
-    married_pct: string;
-  };
-  education: {
-    university_degree_pct: string;
-  };
-  demographics: {
-    immigrant_pct: string;
-    visible_minority_pct: string;
-    english_knowledge_pct: string;
-    top_mother_tongue: string;
-  };
-  census_year: number;
-}

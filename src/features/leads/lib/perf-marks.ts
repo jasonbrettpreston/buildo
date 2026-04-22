@@ -28,7 +28,7 @@
 
 import { performance } from 'node:perf_hooks';
 
-export interface PerfMarkBuilder {
+interface PerfMarkBuilder {
   /** Record a named point in time. */
   mark(name: string): void;
   /** Record the duration between two previously-marked points. */

@@ -10,7 +10,7 @@
 import posthog from 'posthog-js';
 
 /** Type-safe event name union — extend as new events are added. */
-export type EventName =
+type EventName =
   | 'lead_feed.viewed'
   | 'lead_feed.lead_clicked'
   | 'lead_feed.lead_saved'
