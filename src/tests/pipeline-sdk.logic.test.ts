@@ -23,6 +23,58 @@ describe('Pipeline SDK', () => {
       // Clean up the pool immediately
       pool.end().catch(() => {});
     });
+
+    it('WF3 B3-H5: throws in production/staging when PG_PASSWORD is missing', () => {
+      const env = process.env as Record<string, string | undefined>;
+      const origNodeEnv = env.NODE_ENV;
+      const origPassword = env.PG_PASSWORD;
+      try {
+        env.NODE_ENV = 'production';
+        delete env.PG_PASSWORD;
+        expect(() => pipeline.createPool()).toThrow(/PG_PASSWORD/);
+
+        env.NODE_ENV = 'staging';
+        expect(() => pipeline.createPool()).toThrow(/PG_PASSWORD/);
+      } finally {
+        env.NODE_ENV = origNodeEnv;
+        if (origPassword === undefined) delete env.PG_PASSWORD;
+        else env.PG_PASSWORD = origPassword;
+      }
+    });
+
+    it('WF3 B3-H5: accepts the dev-default password when NODE_ENV is not production/staging', () => {
+      const env = process.env as Record<string, string | undefined>;
+      const origNodeEnv = env.NODE_ENV;
+      const origPassword = env.PG_PASSWORD;
+      try {
+        env.NODE_ENV = 'test';
+        delete env.PG_PASSWORD;
+        const pool = pipeline.createPool();
+        expect(pool).toBeDefined();
+        pool.end().catch(() => {});
+      } finally {
+        env.NODE_ENV = origNodeEnv;
+        if (origPassword === undefined) delete env.PG_PASSWORD;
+        else env.PG_PASSWORD = origPassword;
+      }
+    });
+  });
+
+  describe('WF3 B3-H7: telemetry uses Number() on bigint columns (no parseInt truncation)', () => {
+    it('source check: captureTelemetry + diffTelemetry use Number() for live/dead/seq/idx', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const nodeFs = require('fs');
+      const source = nodeFs.readFileSync(
+        path.resolve(__dirname, '../../scripts/lib/pipeline.js'),
+        'utf-8',
+      );
+      // parseInt(r.live, 10) truncates bigints > 2^53 — no longer used.
+      expect(source).not.toMatch(/parseInt\(r\.live, 10\)/);
+      expect(source).not.toMatch(/parseInt\(r\.dead, 10\)/);
+      // Number() preserves precision through float64 for telemetry display.
+      expect(source).toMatch(/const live\s*=\s*Number\(r\.live\)\s*\|\|\s*0/);
+      expect(source).toMatch(/const dead\s*=\s*Number\(r\.dead\)\s*\|\|\s*0/);
+    });
   });
 
   // -----------------------------------------------------------------------
@@ -349,6 +401,23 @@ describe('Pipeline SDK', () => {
       const releaseIdx = fnBlock.indexOf('client.release()');
       expect(destroyIdx).toBeLessThan(releaseIdx);
     });
+
+    it('WF3 B3-H6: client acquisition is inside the try, finally guards both stream and client refs', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const nodeFs = require('fs');
+      const source = nodeFs.readFileSync(path.resolve(__dirname, '../../scripts/lib/pipeline.js'), 'utf-8');
+      const fnBlock = source.slice(
+        source.indexOf('async function* streamQuery'),
+        source.indexOf('// Exports') > 0 ? source.indexOf('// Exports') : source.length,
+      );
+      // `let client;` declared before try, so the finally block can reference it
+      // even if pool.connect() throws. The plain old pattern (`const client = await
+      // pool.connect()` outside the try) is what we're guarding against.
+      expect(fnBlock).toMatch(/let client;[\s\S]*try\s*\{[\s\S]*client\s*=\s*await pool\.connect\(\)/);
+      // Finally must guard both references to avoid secondary undefined-deref errors
+      expect(fnBlock).toMatch(/if \(stream\) stream\.destroy\(\)/);
+      expect(fnBlock).toMatch(/if \(client\) client\.release\(\)/);
+    });
   });
 
   // -----------------------------------------------------------------------
@@ -415,6 +484,38 @@ describe('Pipeline SDK', () => {
   describe('checkQueueAge()', () => {
     it('is exported as a function', () => {
       expect(typeof pipeline.checkQueueAge).toBe('function');
+    });
+
+    it('WF3 B3-C4: passes whereParams through to pool.query (parameterized — no interpolation)', async () => {
+      const calls: Array<{ sql: string; params: unknown[] }> = [];
+      const mockPool = {
+        query: vi.fn(async (sql: string, params: unknown[]) => {
+          calls.push({ sql, params });
+          return { rows: [{ cnt: 0, max_age_minutes: 0 }] };
+        }),
+      };
+      await pipeline.checkQueueAge(mockPool, 'scraper_queue', 'queued_at', {
+        whereClause: 'status = $1 AND attempts < $2',
+        whereParams: ['pending', 5],
+      });
+      expect(calls).toHaveLength(1);
+      // whereParams must reach pool.query as the 2nd arg, not be string-spliced
+      expect(calls[0]!.params).toEqual(['pending', 5]);
+      // The $N placeholders must survive verbatim (proves they were parameterized)
+      expect(calls[0]!.sql).toMatch(/status = \$1 AND attempts < \$2/);
+    });
+
+    it('WF3 B3-C4: omits WHERE clause entirely when whereClause is not provided', async () => {
+      const calls: Array<{ sql: string; params: unknown[] }> = [];
+      const mockPool = {
+        query: vi.fn(async (sql: string, params: unknown[]) => {
+          calls.push({ sql, params });
+          return { rows: [{ cnt: 0, max_age_minutes: 0 }] };
+        }),
+      };
+      await pipeline.checkQueueAge(mockPool, 'scraper_queue', 'queued_at');
+      expect(calls[0]!.sql).not.toMatch(/WHERE/);
+      expect(calls[0]!.params).toEqual([]);
     });
   });
 
@@ -567,6 +668,27 @@ describe('Pipeline SDK', () => {
     it('exports run and createPool as functions', () => {
       expect(typeof pipeline.run).toBe('function');
       expect(typeof pipeline.createPool).toBe('function');
+    });
+
+    it('WF3 B3-H8: calls track.reset() at the top of every invocation (source check)', () => {
+      // Module-level _trackedNew / _trackedUpdated would otherwise bleed
+      // across sequential run() calls within the same process.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const nodeFs = require('fs');
+      const source = nodeFs.readFileSync(
+        path.resolve(__dirname, '../../scripts/lib/pipeline.js'),
+        'utf-8',
+      );
+      // Isolate the body of `async function run(name, fn)`
+      const runIdx = source.indexOf('async function run(name, fn)');
+      const nextFnIdx = source.indexOf('async function', runIdx + 10);
+      const runBody = source.slice(runIdx, nextFnIdx > 0 ? nextFnIdx : source.length);
+      // track.reset() MUST appear before the pool is created (i.e. before
+      // any possibility of fn() being invoked or throwing).
+      const resetIdx = runBody.indexOf('track.reset()');
+      const createPoolIdx = runBody.indexOf('createPool()');
+      expect(resetIdx, 'track.reset() missing from run()').toBeGreaterThan(-1);
+      expect(resetIdx).toBeLessThan(createPoolIdx);
     });
   });
 

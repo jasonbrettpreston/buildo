@@ -38,12 +38,28 @@ function createPool() {
       `PG_PORT must be a valid port number (1-65535), got: ${JSON.stringify(rawPort)}`
     );
   }
+  // WF3 B3-H5 (2026-04-23): in production/staging a missing PG_PASSWORD
+  // is never acceptable — the old `|| 'postgres'` fallback would attempt
+  // to connect as the default dev user and either succeed silently
+  // (misconfigured prod DB) or fail with a confusing pg auth error that
+  // obscured the real cause. Throw explicitly so the chain fails loudly
+  // with an actionable message. Dev + test environments retain the
+  // convenience fallback.
+  const pgPassword = process.env.PG_PASSWORD;
+  const isProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+  if (isProd && !pgPassword) {
+    throw new Error(
+      'PG_PASSWORD env var is required in production/staging — refusing to start pipeline pool without it',
+    );
+  }
   return new Pool({
     host: process.env.PG_HOST || 'localhost',
     port,
     database: process.env.PG_DATABASE || 'buildo',
     user: process.env.PG_USER || 'postgres',
-    password: process.env.PG_PASSWORD || 'postgres',
+    // Dev fallback only; the isProd guard above makes this line unreachable
+    // when NODE_ENV is production or staging.
+    password: pgPassword || 'postgres',
   });
 }
 
@@ -316,6 +332,12 @@ function progress(label, current, total, startMs) {
  * @param {(pool: Pool) => Promise<void>} fn - The main pipeline logic
  */
 async function run(name, fn) {
+  // WF3 B3-H8 (2026-04-23): reset module-level counters at the top of
+  // every run so sequential invocations within the same process (test
+  // runners, scripted chains that require() this SDK once and run several
+  // steps) start from a clean slate. Without this, `getTracked()` returns
+  // cumulative totals across runs — noise in telemetry, not a crash.
+  track.reset();
   let pool;
   const startMs = Date.now();
   _runStartMs = startMs; // expose to emitSummary for velocity calc
@@ -380,10 +402,18 @@ async function captureTelemetry(pool, tables, nullCols) {
       );
       if (engineRes.rows[0]) {
         const r = engineRes.rows[0];
-        const live = parseInt(r.live, 10) || 0;
-        const dead = parseInt(r.dead, 10) || 0;
-        const seq = parseInt(r.seq, 10) || 0;
-        const idx = parseInt(r.idx, 10) || 0;
+        // WF3 B3-H7 (2026-04-23): pg returns ::bigint columns as strings
+        // to avoid precision loss beyond 2^53. parseInt truncates past
+        // 10-digit magnitudes silently; Number() round-trips through
+        // float64 and preserves telemetry fidelity for Buildo-sized
+        // tables (237K rows accrue ~10M mutations/year — ~50+ years of
+        // headroom before float64 loses precision). For exact arithmetic
+        // on these values, a future caller could switch to BigInt —
+        // unnecessary here since we only compute ratios (float math).
+        const live = Number(r.live) || 0;
+        const dead = Number(r.dead) || 0;
+        const seq = Number(r.seq) || 0;
+        const idx = Number(r.idx) || 0;
         snapshot.engine[table] = {
           n_live_tup: live,
           n_dead_tup: dead,
@@ -455,10 +485,12 @@ async function diffTelemetry(pool, tables, pre) {
         );
         if (engineRes.rows[0]) {
           const r = engineRes.rows[0];
-          const live = parseInt(r.live, 10) || 0;
-          const dead = parseInt(r.dead, 10) || 0;
-          const seq = parseInt(r.seq, 10) || 0;
-          const idx = parseInt(r.idx, 10) || 0;
+          // See captureTelemetry note (WF3 B3-H7) — Number() avoids silent
+          // parseInt truncation on pg bigint string-typed results.
+          const live = Number(r.live) || 0;
+          const dead = Number(r.dead) || 0;
+          const seq = Number(r.seq) || 0;
+          const idx = Number(r.idx) || 0;
           result.engine[table] = {
             n_live_tup: live,
             n_dead_tup: dead,
@@ -543,16 +575,29 @@ function isFullMode() {
  * Check the age of the oldest unprocessed item in a queue-like table.
  * Logs a warning if the max age exceeds the threshold.
  *
+ * WF3 B3-C4 (2026-04-23): the API accepts a parameterized `whereClause`
+ * (string of conditions using $N placeholders) plus a `whereParams`
+ * array. The old `where` string was interpolated directly into SQL and
+ * relied on a comment to warn callers against passing user input — a
+ * latent injection vector. The new contract forces callers to separate
+ * SQL shape from values. `table` and `timestampCol` still pass through
+ * `quoteIdent` so dynamic identifiers are validated.
+ *
+ * Example:
+ *   checkQueueAge(pool, 'scraper_queue', 'queued_at', {
+ *     whereClause: 'status = $1 AND attempts < $2',
+ *     whereParams: ['pending', 5],
+ *   });
+ *
  * @param {Pool} pool
- * @param {string} table - Table name (e.g. 'scraper_queue', 'permits')
- * @param {string} timestampCol - Column holding the "queued at" timestamp
- * @param {{ where?: string, warnMinutes?: number, label?: string }} [options]
- * WARNING: options.where is interpolated directly into SQL. Only pass trusted,
- * hardcoded filter strings — never user input.
+ * @param {string} table
+ * @param {string} timestampCol
+ * @param {{ whereClause?: string, whereParams?: any[], warnMinutes?: number, label?: string }} [options]
  * @returns {Promise<{ maxAgeMinutes: number, count: number }>}
  */
 async function checkQueueAge(pool, table, timestampCol, options = {}) {
-  const where = options.where ? `WHERE ${options.where}` : '';
+  const whereClause = options.whereClause ? `WHERE ${options.whereClause}` : '';
+  const whereParams = options.whereParams || [];
   const label = options.label || `[queue-age:${table}]`;
   const warnMinutes = options.warnMinutes || 60;
 
@@ -560,7 +605,8 @@ async function checkQueueAge(pool, table, timestampCol, options = {}) {
     `SELECT
        COUNT(*)::int AS cnt,
        EXTRACT(EPOCH FROM (NOW() - MIN(${quoteIdent(timestampCol)}))) / 60 AS max_age_minutes
-     FROM ${quoteIdent(table)} ${where}`
+     FROM ${quoteIdent(table)} ${whereClause}`,
+    whereParams,
   );
 
   const row = result.rows[0];
@@ -637,9 +683,15 @@ async function checkBounds(pool, table, bounds, label) {
  */
 async function* streamQuery(pool, sql, params = [], options = {}) {
   const QueryStream = require('pg-query-stream');
-  const client = await pool.connect();
+  // WF3 B3-H6 (2026-04-23): pool.connect() moved inside the try so that
+  // if connect() throws, `client` stays undefined and the finally block's
+  // guard prevents a "Cannot read property 'release' of undefined" that
+  // would mask the original connection error. stream.destroy() is
+  // idempotent per pg-query-stream docs, so double-calling is safe.
+  let client;
   let stream;
   try {
+    client = await pool.connect();
     const qs = new QueryStream(sql, params, { batchSize: options.batchSize || 100 });
     stream = client.query(qs);
     for await (const row of stream) {
@@ -647,7 +699,7 @@ async function* streamQuery(pool, sql, params = [], options = {}) {
     }
   } finally {
     if (stream) stream.destroy();
-    client.release();
+    if (client) client.release();
   }
 }
 

@@ -73,8 +73,16 @@ const FALLBACK_LOGIC_VARS = Object.fromEntries(
  * @returns {Promise<{ tradeConfigs: Record<string, object>, logicVars: Record<string, number> }>}
  */
 async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
-  let tradeConfigs = FALLBACK_TRADE_CONFIGS;
-  let logicVars = { ...FALLBACK_LOGIC_VARS };
+  // WF3 B3-H2 (2026-04-23): structuredClone isolates the mutable working
+  // copies from FALLBACK_TRADE_CONFIGS / FALLBACK_LOGIC_VARS. The old
+  // pattern (`= FALLBACK_TRADE_CONFIGS` and `{ ...FALLBACK_LOGIC_VARS }`)
+  // either aliased the shared object outright or did a shallow copy that
+  // still shared nested values (JSON-typed logic_variables like
+  // income_premium_tiers). Any consumer that mutated a nested property
+  // would corrupt the shared fallback for the rest of the process
+  // lifetime — a latent bug waiting for a refactor to trip.
+  let tradeConfigs = structuredClone(FALLBACK_TRADE_CONFIGS);
+  let logicVars = structuredClone(FALLBACK_LOGIC_VARS);
 
   try {
     // ── Trade configurations ─────────────────────────────────
@@ -85,28 +93,87 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
     );
 
     if (tcRows.length > 0) {
-      tradeConfigs = Object.fromEntries(
-        tcRows.map((c) => [c.trade_slug, {
-          allocation_pct: parseFloat(c.allocation_pct),
+      // WF3 B3-H3 (2026-04-23): per-field isFinite + negative guards.
+      // parseFloat(null) / parseFloat('abc') returns NaN, and NaN silently
+      // propagates into allocation math, urgency multipliers, and score
+      // calculations. `parseTradeNum` returns `null` for any non-finite or
+      // negative input so the caller can decide per-trade whether to use
+      // the DB row or fall back to FALLBACK_TRADE_CONFIGS[slug].
+      const parseTradeNum = (value, slug, field) => {
+        const n = parseFloat(value);
+        if (!Number.isFinite(n)) {
+          pipeline.log.warn(
+            `[${tag}]`,
+            `trade_configurations.${field} for ${slug} is non-finite`,
+            { raw: value },
+          );
+          return null;
+        }
+        if (n < 0) {
+          pipeline.log.warn(
+            `[${tag}]`,
+            `trade_configurations.${field} for ${slug} is negative (${n})`,
+          );
+          return null;
+        }
+        return n;
+      };
+
+      const dbTradeConfigs = {};
+      for (const c of tcRows) {
+        const slug = c.trade_slug;
+        const fallback = FALLBACK_TRADE_CONFIGS[slug];
+        const allocation_pct = parseTradeNum(c.allocation_pct, slug, 'allocation_pct');
+        const multiplier_bid = parseTradeNum(c.multiplier_bid, slug, 'multiplier_bid');
+        const multiplier_work = parseTradeNum(c.multiplier_work, slug, 'multiplier_work');
+
+        if (allocation_pct === null || multiplier_bid === null || multiplier_work === null) {
+          // Row is partially invalid. Fall back per-slug so the trade is
+          // still represented in the map (compute-trade-forecasts' unmapped
+          // trades counter would otherwise spike). If no fallback exists,
+          // skip — consumers already tolerate missing slugs.
+          if (fallback) {
+            dbTradeConfigs[slug] = structuredClone(fallback);
+            pipeline.log.warn(
+              `[${tag}]`,
+              `Using hardcoded fallback for ${slug} — DB row had invalid numeric values`,
+            );
+          }
+          continue;
+        }
+
+        dbTradeConfigs[slug] = {
+          allocation_pct,
           bid_phase_cutoff: c.bid_phase_cutoff,
           work_phase_target: c.work_phase_target,
           imminent_window_days: c.imminent_window_days,
-          multiplier_bid: parseFloat(c.multiplier_bid),
-          multiplier_work: parseFloat(c.multiplier_work),
-        }]),
-      );
+          multiplier_bid,
+          multiplier_work,
+        };
+      }
+      tradeConfigs = dbTradeConfigs;
 
-      // Validate allocation_pct sums to ~1.0 — normalize if drifted
+      // Validate allocation_pct sums to ~1.0 — normalize if drifted.
+      // WF3 B3-C1 (2026-04-23): if allocSum is non-finite or <= 0, the
+      // normalization loop would produce Infinity / NaN / negative values
+      // across every allocation_pct. Guard by reverting to the hardcoded
+      // fallback — louder than a silent NaN cascade.
       const allocSum = Object.values(tradeConfigs)
         .reduce((sum, tc) => sum + tc.allocation_pct, 0);
-      if (Math.abs(allocSum - 1.0) > 0.001) {
+      if (!Number.isFinite(allocSum) || allocSum <= 0) {
+        pipeline.log.warn(
+          `[${tag}]`,
+          `allocation_pct sum is non-finite or zero (${allocSum}) — reverting to hardcoded fallback`,
+        );
+        tradeConfigs = structuredClone(FALLBACK_TRADE_CONFIGS);
+      } else if (Math.abs(allocSum - 1.0) > 0.001) {
         pipeline.log.warn(`[${tag}]`, `allocation_pct sum is ${allocSum.toFixed(4)} (expected 1.0) — normalizing`);
         for (const tc of Object.values(tradeConfigs)) {
           tc.allocation_pct = tc.allocation_pct / allocSum;
         }
       }
 
-      pipeline.log.info(`[${tag}]`, `Loaded ${tcRows.length} trade configs from control panel`);
+      pipeline.log.info(`[${tag}]`, `Loaded ${Object.keys(tradeConfigs).length} trade configs from control panel`);
     }
 
     // ── Logic variables ──────────────────────────────────────
@@ -130,6 +197,18 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
         // Spec 81 §3 — los_decay_divisor = 0 causes division by zero in decayFactor computation.
         'los_decay_divisor',
       ]);
+      // WF3 B3-H3 (2026-04-23): variables where a negative value is
+      // always a config error. expired_threshold_days is EXCLUDED — the
+      // script normalizes it via |value| (see compute-trade-forecasts L107),
+      // so the DB stores the threshold as a signed number by convention.
+      const NEGATIVE_IS_INVALID = new Set([
+        'los_base_divisor', 'los_decay_divisor',
+        'stall_penalty_precon', 'stall_penalty_active',
+        'coa_stall_threshold', 'snowplow_buffer_days',
+        'liar_gate_threshold',
+        'urban_coverage_ratio', 'suburban_coverage_ratio',
+        'trust_threshold_pct',
+      ]);
       for (const { variable_key, variable_value, variable_value_json } of lvRows) {
         // JSON-type variables (e.g. income_premium_tiers) store their value in
         // variable_value_json; variable_value holds a sentinel 0. Read the JSON
@@ -145,6 +224,13 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
         }
         if (parsed === 0 && ZERO_IS_INVALID.has(variable_key)) {
           pipeline.log.warn(`[${tag}]`, `logic_variables.${variable_key} is 0 (invalid) — keeping fallback`);
+          continue;
+        }
+        if (parsed < 0 && NEGATIVE_IS_INVALID.has(variable_key)) {
+          pipeline.log.warn(
+            `[${tag}]`,
+            `logic_variables.${variable_key} is negative (${parsed}) — keeping fallback`,
+          );
           continue;
         }
         logicVars[variable_key] = parsed;

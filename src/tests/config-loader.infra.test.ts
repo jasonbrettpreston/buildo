@@ -46,6 +46,54 @@ describe('scripts/lib/config-loader.js — shared config loader', () => {
     expect(content).toMatch(/catch \(err\)/);
     expect(content).toMatch(/using hardcoded defaults/);
   });
+
+  it('WF3 B3-H2: clones FALLBACK_TRADE_CONFIGS + FALLBACK_LOGIC_VARS to prevent shared-reference mutation', () => {
+    // Previously `let tradeConfigs = FALLBACK_TRADE_CONFIGS` aliased the shared
+    // object, and `{ ...FALLBACK_LOGIC_VARS }` was a shallow copy (still sharing
+    // nested JSON values like income_premium_tiers). Any consumer that mutated
+    // a nested property would corrupt the fallback for every subsequent call
+    // in the process. structuredClone isolates the working copy.
+    expect(content).toMatch(/let tradeConfigs\s*=\s*structuredClone\(FALLBACK_TRADE_CONFIGS\)/);
+    expect(content).toMatch(/let logicVars\s*=\s*structuredClone\(FALLBACK_LOGIC_VARS\)/);
+  });
+
+  it('WF3 B3-C1: guards against allocSum = 0 / non-finite before normalization division', () => {
+    // The old unguarded `tc.allocation_pct / allocSum` produced Infinity or
+    // NaN when allocSum degenerated. Guard reverts to the hardcoded fallback
+    // instead of silently broadcasting Infinity across every trade's
+    // allocation percentage.
+    expect(content).toMatch(/!Number\.isFinite\(allocSum\)\s*\|\|\s*allocSum\s*<=\s*0/);
+    expect(content).toMatch(/reverting to hardcoded fallback/);
+  });
+
+  it('WF3 B3-H3: per-field isFinite + negative guards on trade_configurations numeric columns', () => {
+    // parseFloat(null) = NaN silently propagates into allocation math and
+    // multiplier computations. parseTradeNum returns null for non-finite or
+    // negative values so the caller can fall back per-slug to
+    // FALLBACK_TRADE_CONFIGS[slug] rather than shipping a NaN-poisoned row.
+    expect(content).toMatch(/parseTradeNum/);
+    expect(content).toMatch(/!Number\.isFinite\(n\)/);
+    // Per-slug fallback must use structuredClone so subsequent consumers'
+    // mutations don't corrupt the shared fallback.
+    expect(content).toMatch(/dbTradeConfigs\[slug\]\s*=\s*structuredClone\(fallback\)/);
+  });
+
+  it('WF3 B3-H3: NEGATIVE_IS_INVALID set rejects negative logic_variables; expired_threshold_days excluded', () => {
+    // Negative divisors / buffers / ratios are always config errors except
+    // expired_threshold_days, which is stored signed by convention (see
+    // compute-trade-forecasts.js — script normalizes with Math.abs).
+    expect(content).toMatch(/NEGATIVE_IS_INVALID\s*=\s*new Set/);
+    // Must include the common divisors + ratios
+    expect(content).toMatch(/NEGATIVE_IS_INVALID[\s\S]{0,400}los_base_divisor/);
+    expect(content).toMatch(/NEGATIVE_IS_INVALID[\s\S]{0,400}stall_penalty_precon/);
+    expect(content).toMatch(/NEGATIVE_IS_INVALID[\s\S]{0,400}snowplow_buffer_days/);
+    // expired_threshold_days must NOT be in the negative-invalid set
+    const negSetMatch = content.match(/NEGATIVE_IS_INVALID\s*=\s*new Set\(\[([\s\S]*?)\]\)/);
+    expect(negSetMatch).toBeTruthy();
+    expect(negSetMatch![1]).not.toMatch(/expired_threshold_days/);
+    // And the guard must actually fire
+    expect(content).toMatch(/parsed\s*<\s*0\s*&&\s*NEGATIVE_IS_INVALID\.has\(variable_key\)/);
+  });
 });
 
 describe('scripts/ — all 4 pipeline scripts use shared config loader', () => {
