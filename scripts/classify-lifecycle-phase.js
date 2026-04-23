@@ -200,7 +200,7 @@ async function dispatchStartDateUrgentPushes(pool) {
          JOIN device_tokens dt ON dt.user_id = lv.user_id
          JOIN user_profiles up ON up.user_id = lv.user_id
         WHERE tf.predicted_start IS NOT NULL
-          AND tf.predicted_start >= NOW()
+          AND tf.predicted_start >= NOW() + INTERVAL '6 days'
           AND tf.predicted_start <= NOW() + INTERVAL '7 days'`,
     );
     rows = result.rows;

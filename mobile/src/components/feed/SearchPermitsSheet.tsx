@@ -2,8 +2,8 @@
 // Bottom sheet for the FAB permit search. Claims a permit by setting saved=true
 // and invalidating the flight board query. successNotification() on claim.
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator } from 'react-native';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import BottomSheet, { BottomSheetView, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchPermits } from '@/hooks/useSearchPermits';
 import { fetchWithAuth } from '@/lib/apiClient';
@@ -32,6 +32,8 @@ export function SearchPermitsSheet({ visible, onClose }: Props) {
     } else {
       sheetRef.current?.close();
       setQuery('');
+      // Clear stale error so a prior failed claim isn't shown on next open.
+      setClaimError(null);
     }
   }, [visible]);
 
@@ -57,6 +59,8 @@ export function SearchPermitsSheet({ visible, onClose }: Props) {
 
   const handleClaim = useCallback(
     (item: SearchResultItem) => {
+      // Clear any previous attempt's error before kicking off a new mutation.
+      setClaimError(null);
       claimMutation.mutate(item);
     },
     [claimMutation],
@@ -104,8 +108,8 @@ export function SearchPermitsSheet({ visible, onClose }: Props) {
           </View>
         )}
 
-        {/* Results */}
-        <FlatList
+        {/* Results — BottomSheetFlatList delegates scroll gestures correctly to the sheet */}
+        <BottomSheetFlatList
           data={results}
           keyExtractor={(item) => `${item.permit_num}-${item.revision_num}`}
           keyboardShouldPersistTaps="handled"

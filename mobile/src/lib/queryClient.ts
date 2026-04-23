@@ -1,8 +1,10 @@
-// SPEC LINK: docs/specs/03-mobile/90_mobile_engineering_protocol.md §TanStack Query
-// Singleton QueryClient with staleTime / gcTime tuned for a mobile feed:
-// - staleTime 30s: data is fresh for 30s before a background refetch fires
-// - gcTime 1h: inactive queries survive in memory for 1 hour (feeds the persister)
+// SPEC LINK: docs/specs/03-mobile/90_mobile_engineering_protocol.md §12
+// Singleton QueryClient with staleTime / gcTime per spec §12 defaults:
+// - staleTime 5m: main feed stays fresh for 5 minutes before background refetch
+// - gcTime 24h: inactive queries survive in memory for 24h, matching MMKV maxAge
+//   so cold-boot cache hits don't fall into a gap between in-memory GC and on-disk persistence
 // - retry 2: transient network blips get two retries before error state
+// Screen-level hooks (e.g. useFlightBoard) may override these defaults.
 //
 // Phase 7 — React Native bridge adapters:
 //   onlineManager: replaces browser navigator.onLine with NetInfo
@@ -30,8 +32,8 @@ focusManager.setEventListener((handleFocus) => {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
-      gcTime: 3_600_000,
+      staleTime: 300_000,
+      gcTime: 86_400_000,
       retry: 2,
     },
   },

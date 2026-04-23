@@ -98,6 +98,22 @@ export default function LeadFeedScreen() {
     [router],
   );
 
+  // Spec 90 §5 anti-pattern: FlashList renderItem must be stable, not inline.
+  const renderLeadItem = useCallback(
+    ({ item, index }: { item: LeadFeedItem; index: number }) => {
+      if (item.lead_type !== 'permit') return null;
+      return (
+        <LeadCard
+          item={item as PermitLeadFeedItem}
+          index={index}
+          onPress={handleCardPress}
+          onSaveToggle={handleSaveToggle}
+        />
+      );
+    },
+    [handleCardPress, handleSaveToggle],
+  );
+
   if (locationLoading) {
     return (
       <SafeAreaView className="flex-1 bg-zinc-950">
@@ -138,6 +154,7 @@ export default function LeadFeedScreen() {
         ref={listRef}
         data={isLoading ? [] : allItems}
         keyExtractor={(item) => item.lead_id}
+        estimatedItemSize={140}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         ListHeaderComponent={
@@ -146,17 +163,7 @@ export default function LeadFeedScreen() {
             onOpen={() => setFilterOpen(true)}
           />
         }
-        renderItem={({ item, index }) => {
-          if (item.lead_type !== 'permit') return null; // builder cards in Phase 4
-          return (
-            <LeadCard
-              item={item as PermitLeadFeedItem}
-              index={index}
-              onPress={handleCardPress}
-              onSaveToggle={handleSaveToggle}
-            />
-          );
-        }}
+        renderItem={renderLeadItem}
         ListEmptyComponent={
           isLoading ? (
             <View className="mt-2">

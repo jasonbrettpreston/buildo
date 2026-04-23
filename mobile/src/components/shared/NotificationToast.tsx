@@ -50,7 +50,11 @@ const HIDDEN_Y = -120;
 
 export function NotificationToast({ title, body, notificationType, onDismiss, onTap }: Props) {
   const translateY = useSharedValue(HIDDEN_Y);
+  // timerRef holds the 4s auto-dismiss trigger; unmountTimerRef holds the 240ms
+  // post-animation unmount delay. Both must be cleared on unmount so a rapid
+  // replacement toast doesn't fire onDismiss on the already-unmounted component.
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const unmountTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
 
@@ -61,17 +65,18 @@ export function NotificationToast({ title, body, notificationType, onDismiss, on
     }
     translateY.value = withTiming(HIDDEN_Y, { duration: 220, easing: Easing.in(Easing.ease) });
     // Small delay to let animation finish before unmounting
-    setTimeout(() => onDismissRef.current(), 240);
+    unmountTimerRef.current = setTimeout(() => onDismissRef.current(), 240);
   };
 
   useEffect(() => {
     translateY.value = withSpring(RESTING_Y, { stiffness: 400, damping: 28, mass: 1 });
     timerRef.current = setTimeout(() => {
       translateY.value = withTiming(HIDDEN_Y, { duration: 220, easing: Easing.in(Easing.ease) });
-      setTimeout(() => onDismissRef.current(), 240);
+      unmountTimerRef.current = setTimeout(() => onDismissRef.current(), 240);
     }, 4000);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (unmountTimerRef.current) clearTimeout(unmountTimerRef.current);
     };
     // translateY is a Reanimated shared value — stable reference, safe to omit
     // eslint-disable-next-line react-hooks/exhaustive-deps

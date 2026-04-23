@@ -61,10 +61,11 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Merge patch: jsonb || operator merges top-level keys, preserving unset fields.
+    // Merge patch: jsonb || merges top-level keys. COALESCE guards against a
+    // NULL existing column (NULL || anything = NULL would silently drop the patch).
     const result = await pool.query(
       `UPDATE user_profiles
-          SET notification_prefs = notification_prefs || $2::jsonb,
+          SET notification_prefs = COALESCE(notification_prefs, '{}'::jsonb) || $2::jsonb,
               updated_at = NOW()
         WHERE user_id = $1`,
       [userId, JSON.stringify(parsed.data)],

@@ -103,6 +103,17 @@ export default function FlightBoardScreen() {
     return unsubscribe;
   }, [navigation, scrollToTop]);
 
+  // Clear the undo timer on unmount so the deferred DELETE mutation can't fire on a
+  // dead component (e.g., if the user navigates away mid-undo window).
+  React.useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = null;
+      }
+    };
+  }, []);
+
   const handleRemove = useCallback(
     (item: FlightBoardItem) => {
       if (pendingRemoveRef.current) return;
@@ -243,6 +254,7 @@ export default function FlightBoardScreen() {
           }
           renderItem={renderItem}
           getItemType={getItemType}
+          estimatedItemSize={88}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           refreshControl={

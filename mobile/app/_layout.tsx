@@ -66,13 +66,14 @@ function NotificationHandlers() {
       const routeDomain = data.route_domain;
       const entityId = data.entity_id;
 
+      // navigate() switches tab without pushing a stack frame; push() stacks the detail on top.
       if (routeDomain === 'flight_board') {
-        router.push('/(app)/flight-board');
+        router.navigate('/(app)/flight-board');
         if (entityId) {
           router.push(`/(app)/[flight-job]?id=${entityId}`);
         }
       } else {
-        router.push('/(app)/');
+        router.navigate('/(app)/');
         if (entityId) {
           router.push(`/(app)/[lead]?id=${entityId}`);
         }
@@ -93,10 +94,9 @@ function NotificationHandlers() {
 
       successNotification();
 
-      if (
-        data?.route_domain === 'flight_board' &&
-        (notificationType === 'LIFECYCLE_PHASE_CHANGED' || notificationType === 'LIFECYCLE_STALLED')
-      ) {
+      // Badge increments for any flight_board-domain notification; the route_domain is
+      // the correct discriminator (START_DATE_URGENT also targets the flight board).
+      if (data?.route_domain === 'flight_board') {
         incrementUnread();
       }
 
@@ -124,13 +124,18 @@ function NotificationHandlers() {
       notificationType={toast.notificationType}
       onDismiss={() => setToast(null)}
       onTap={() => {
+        // Mirror the background-tap routing: navigate() for tab switch, push() for detail;
+        // entity route MUST branch on routeDomain so flight_board items reach [flight-job].
         if (toast.routeDomain === 'flight_board') {
-          router.push('/(app)/flight-board');
+          router.navigate('/(app)/flight-board');
+          if (toast.entityId) {
+            router.push(`/(app)/[flight-job]?id=${toast.entityId}`);
+          }
         } else {
-          router.push('/(app)/');
-        }
-        if (toast.entityId) {
-          router.push(`/(app)/[lead]?id=${toast.entityId}`);
+          router.navigate('/(app)/');
+          if (toast.entityId) {
+            router.push(`/(app)/[lead]?id=${toast.entityId}`);
+          }
         }
         setToast(null);
       }}

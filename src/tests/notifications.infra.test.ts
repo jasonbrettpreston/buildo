@@ -60,8 +60,9 @@ describe('notifications/preferences route — source regression locks', () => {
     expect(prefsSource).toContain('export async function PATCH');
   });
 
-  it('PATCH uses jsonb || merge (not full replace)', () => {
-    expect(prefsSource).toContain('notification_prefs || $2::jsonb');
+  it('PATCH uses jsonb || merge (not full replace) with NULL-safe COALESCE', () => {
+    // COALESCE guards against NULL existing column (NULL || anything = NULL would drop the patch silently).
+    expect(prefsSource).toContain("COALESCE(notification_prefs, '{}'::jsonb) || $2::jsonb");
   });
 
   it('validates notification_schedule as morning | anytime | evening', () => {

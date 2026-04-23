@@ -63,7 +63,13 @@ export function SaveButton({ leadId, isSaved, onToggle, testID }: Props) {
       >
         <Animated.View
           style={style}
-          testID={isSaved ? `save-heart-filled-${leadId}` : `save-heart-${leadId}`}
+          testID={
+            testID
+              ? (isSaved
+                  ? testID.replace('save-button-', 'save-heart-filled-')
+                  : testID.replace('save-button-', 'save-heart-'))
+              : (isSaved ? `save-heart-filled-${leadId}` : `save-heart-${leadId}`)
+          }
         >
           <Text style={{ fontSize: 22, color: isSaved ? '#f59e0b' : '#71717a' }}>
             {isSaved ? '♥' : '♡'}
