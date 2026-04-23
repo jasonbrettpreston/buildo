@@ -261,6 +261,9 @@ const LIFECYCLE_CONFIG_SCHEMA = z.object({
   lifecycle_inspection_stall_days: z.coerce.number().int().positive(),
   lifecycle_p7a_max_days:          z.coerce.number().int().positive(),
   lifecycle_p7b_max_days:          z.coerce.number().int().positive(),
+  // WF3 2026-04-23 B1-C2: previously hardcoded as `180` inside
+  // classifyOrphan; now operator-tunable per spec 47 §4.1.
+  lifecycle_orphan_stall_days:     z.coerce.number().int().positive(),
 }).passthrough();
 
 // ─────────────────────────────────────────────────────────────────
@@ -428,6 +431,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   const INSPECTION_STALL_DAYS          = logicVars.lifecycle_inspection_stall_days;
   const P7A_MAX_DAYS                   = logicVars.lifecycle_p7a_max_days;
   const P7B_MAX_DAYS                   = logicVars.lifecycle_p7b_max_days;
+  const ORPHAN_STALL_DAYS              = logicVars.lifecycle_orphan_stall_days;
   // ═══════════════════════════════════════════════════════════
   // Phase 1: classify dirty permit rows
   // ═══════════════════════════════════════════════════════════
@@ -721,6 +725,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       inspectionStallDays:   INSPECTION_STALL_DAYS,
       p7aMaxDays:            P7A_MAX_DAYS,
       p7bMaxDays:            P7B_MAX_DAYS,
+      orphanStallDays:       ORPHAN_STALL_DAYS,
     });
     permitBatch.push({
       permit_num: row.permit_num,

@@ -15,7 +15,7 @@
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const {
-  TRADE_TARGET_PHASE: TRADE_TARGET_PHASE_FALLBACK,
+  TRADE_TARGET_PHASE_FALLBACK,
   PHASE_ORDINAL,
   SKIP_PHASES_SQL,
 } = require('./lib/lifecycle-phase');

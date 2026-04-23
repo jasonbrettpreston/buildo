@@ -280,7 +280,12 @@ function classifyOrphan(input, status, stalled) {
   ) {
     if (input.issued_date != null && !input.has_passed_inspection) {
       const daysSinceIssued = daysBetween(input.issued_date, input.now);
-      if (daysSinceIssued > 180) {
+      // WF3 2026-04-23 B1-C2: threshold sourced from logic_variables
+      // (lifecycle_orphan_stall_days). `?? 180` preserves legacy behaviour
+      // for test callers that don't provide the full config context —
+      // the pipeline script always passes the DB-loaded value.
+      const orphanStallDays = input.orphanStallDays ?? 180;
+      if (daysSinceIssued > orphanStallDays) {
         return { phase: 'O3', stalled };
       }
     }
@@ -321,7 +326,13 @@ function classifyBldLed(input, status, stalled) {
         const mapped = mapInspectionStageToPhase(stageLower);
         if (mapped) return { phase: mapped, stalled };
       }
-      return { phase: 'P18', stalled };
+      // WF3 2026-04-23 B1-C3: an inspection passed but the stage either
+      // wasn't recorded (rollup race) or didn't map to P9-P16. Routing to
+      // P18 (Inspection Pipeline) is the wrong bucket — P18 represents
+      // "in pipeline, no stage passed yet". Since a stage HAS passed,
+      // the permit is effectively at Final Inspection (P17). This bumps
+      // ambiguous inspection-passed rows forward, not backward.
+      return { phase: 'P17', stalled };
     }
     if (input.issued_date == null) {
       return { phase: 'P7c', stalled };
@@ -441,7 +452,16 @@ const NORMALIZED_DEAD_DECISIONS_ARRAY = Object.freeze([...NORMALIZED_DEAD_DECISI
 // elevator) bid from P3 (application intake) — GCs line up subs
 // before the permit even issues. Specialty finishes bid later (P7a
 // or P11). Landscaping/decking bid during rough-in (P12).
-const TRADE_TARGET_PHASE = Object.freeze({
+//
+// WF3 2026-04-23 — B1-C1: this constant is FALLBACK-ONLY. Canonical source
+// is the `trade_configurations` DB table (loaded via `loadMarketplaceConfigs`
+// in config-loader.js) per spec 47 §4.1. Runtime scripts build their working
+// map from the DB and only fall back to this constant when the DB query
+// fails or returns zero rows. The legacy alias `TRADE_TARGET_PHASE` (below
+// the definition) exists for pre-DB-config frontend consumers that still
+// import the static constant directly; those importers should migrate to
+// DB-loaded config in a future WF.
+const TRADE_TARGET_PHASE_FALLBACK = Object.freeze({
   // --- SITE PREP & FOUNDATION ---
   excavation:          { bid_phase: 'P3',  work_phase: 'P9' },
   shoring:             { bid_phase: 'P3',  work_phase: 'P9' },
@@ -487,6 +507,13 @@ const TRADE_TARGET_PHASE = Object.freeze({
   'pool-installation': { bid_phase: 'P7a', work_phase: 'P17' },
 });
 
+// Legacy alias — DO NOT USE in new code. Use `trade_configurations` DB
+// table via `loadMarketplaceConfigs()` instead (spec 47 §4.1). Retained so
+// src/features/leads/lib/get-lead-feed.ts and src/app/api/leads/flight-board/route.ts
+// (which import this constant statically) keep compiling. A future WF should
+// migrate those consumers to DB-loaded config.
+const TRADE_TARGET_PHASE = TRADE_TARGET_PHASE_FALLBACK;
+
 // Phase ordinals for forward-progression comparison. Single source of
 // truth — imported by compute-trade-forecasts.js and
 // update-tracked-projects.js. Previously duplicated; extracted here to
@@ -507,7 +534,13 @@ const PHASE_ORDINAL = Object.freeze({
   P8: -1,
   P9: 1, P10: 2, P11: 3, P12: 4, P13: 5,
   P14: 6, P15: 7, P16: 8, P17: 9,
-  P18: 4,
+  // WF3 2026-04-23 B1-H4: P18 was previously 4, colliding with P12 (Rough-In)
+  // and causing isWindowClosed / Phase-Past-Target comparisons to misfire for
+  // MEP trades on inspection-pipeline permits. Fractional ordinal (3.5) places
+  // P18 between P11 (structural framing) and P12 (rough-in) — "inspections in
+  // progress, specific stage unknown". All consumers use </>/>= comparisons,
+  // never equality or indexing, so the fractional value is safe.
+  P18: 3.5,
   O1: 20, O2: 20, O3: 20,
 });
 
@@ -532,6 +565,7 @@ module.exports = {
   NORMALIZED_APPROVED_DECISIONS,
   NORMALIZED_DEAD_DECISIONS,
   VALID_PHASES,
-  TRADE_TARGET_PHASE,
+  TRADE_TARGET_PHASE_FALLBACK,
+  TRADE_TARGET_PHASE, // legacy alias — see comment near definition
   mapInspectionStageToPhase,
 };

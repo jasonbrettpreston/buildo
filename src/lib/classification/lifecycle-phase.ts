@@ -53,6 +53,12 @@ interface PermitClassifierInput {
   p7aMaxDays?: number | null;
   /** Max days since issued for P7b bucket. From logic_variables. */
   p7bMaxDays?: number | null;
+  /**
+   * Days since issued for an orphan permit (no parent BLD/CMB) with no
+   * passed inspection before it degrades from O2 → O3. From logic_variables
+   * (`lifecycle_orphan_stall_days`, default 180). WF3 2026-04-23 B1-C2.
+   */
+  orphanStallDays?: number | null;
 }
 
 interface PermitClassifierResult {
@@ -198,11 +204,18 @@ interface TradeTarget {
 }
 
 /**
- * Bimodal trade target mapping. Each trade has TWO windows:
+ * Bimodal trade target mapping — FALLBACK-ONLY. Each trade has TWO windows:
  * bid_phase (get on the shortlist) and work_phase (boots on the ground).
  * Dual code path: must match scripts/lib/lifecycle-phase.js.
+ *
+ * WF3 2026-04-23 — B1-C1: canonical source is the `trade_configurations` DB
+ * table (loaded via `loadMarketplaceConfigs`) per spec 47 §4.1. This constant
+ * is the last-resort fallback when the DB query fails or returns zero rows.
+ * The legacy alias `TRADE_TARGET_PHASE` (below the definition) preserves
+ * compatibility for callers still reading this constant statically; those
+ * callers should migrate to DB-loaded config in a future WF.
  */
-export const TRADE_TARGET_PHASE: Readonly<Record<string, TradeTarget>> = Object.freeze({
+export const TRADE_TARGET_PHASE_FALLBACK: Readonly<Record<string, TradeTarget>> = Object.freeze({
   // Site prep & foundation — bid from P3 (GCs line up subs pre-issuance)
   excavation: { bid_phase: 'P3', work_phase: 'P9' },
   shoring: { bid_phase: 'P3', work_phase: 'P9' },
@@ -242,6 +255,15 @@ export const TRADE_TARGET_PHASE: Readonly<Record<string, TradeTarget>> = Object.
   'decking-fences': { bid_phase: 'P12', work_phase: 'P17' },
   'pool-installation': { bid_phase: 'P7a', work_phase: 'P17' },
 });
+
+/**
+ * Legacy alias — DO NOT USE in new code. Use `trade_configurations` DB
+ * table via `loadMarketplaceConfigs()` instead (spec 47 §4.1). Retained so
+ * `src/features/leads/lib/get-lead-feed.ts` and
+ * `src/app/api/leads/flight-board/route.ts` keep compiling while their
+ * migration to DB-loaded config is pending.
+ */
+export const TRADE_TARGET_PHASE = TRADE_TARGET_PHASE_FALLBACK;
 
 // ─────────────────────────────────────────────────────────────────
 // CoA decision normalization + canonical sets
@@ -487,13 +509,18 @@ function classifyOrphan(
     status === 'Revision Issued' ||
     status === 'Revised'
   ) {
-    // O3 stalled check — long issue without any passed inspection
+    // O3 stalled check — long issue without any passed inspection.
+    // WF3 2026-04-23 B1-C2: threshold sourced from logic_variables
+    // (lifecycle_orphan_stall_days). `?? 180` preserves legacy behaviour
+    // for test callers that don't provide the full config context —
+    // the pipeline script always passes the DB-loaded value.
     if (
       input.issued_date != null &&
       !input.has_passed_inspection
     ) {
       const daysSinceIssued = daysBetween(input.issued_date, input.now);
-      if (daysSinceIssued > 180) {
+      const orphanStallDays = input.orphanStallDays ?? 180;
+      if (daysSinceIssued > orphanStallDays) {
         return { phase: 'O3', stalled };
       }
     }
@@ -549,7 +576,12 @@ function classifyBldLed(
         const mapped = mapInspectionStageToPhase(stageLower);
         if (mapped) return { phase: mapped, stalled };
       }
-      return { phase: 'P18', stalled };
+      // WF3 2026-04-23 B1-C3: an inspection passed but the stage either
+      // wasn't recorded (rollup race) or didn't map to P9-P16. Routing to
+      // P18 (Inspection Pipeline) is the wrong bucket — P18 represents
+      // "in pipeline, no stage passed yet". Since a stage HAS passed,
+      // the permit is effectively at Final Inspection (P17).
+      return { phase: 'P17', stalled };
     }
     if (input.issued_date == null) {
       return { phase: 'P7c', stalled };
