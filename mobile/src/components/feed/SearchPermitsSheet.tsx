@@ -60,7 +60,10 @@ export function SearchPermitsSheet({ visible, onClose }: Props) {
 
   const handleClaim = useCallback(
     (item: SearchResultItem) => {
-      // Clear any previous attempt's error before kicking off a new mutation.
+      // Guard against rapid double-tap: TanStack Query's useMutation is not
+      // serialized — a second mutate() call while isPending would fire a
+      // parallel POST and potentially double-claim two different permits.
+      if (claimMutation.isPending) return;
       setClaimError(null);
       claimMutation.mutate(item);
     },

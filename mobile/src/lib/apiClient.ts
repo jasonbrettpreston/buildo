@@ -64,9 +64,23 @@ export async function fetchWithAuth<T>(
   }
 
   if (!response.ok) {
-    const body = await response.text().catch(() => '');
-    throw new ApiError(response.status, body || `HTTP ${response.status}`);
+    // Sanitize body in the error message — never include raw server payload
+    // that could carry user PII (addresses, names, permit details) into
+    // downstream observability (Sentry breadcrumb on thrown ApiError).
+    const raw = await response.text().catch(() => '');
+    const safe = raw.length > 0 && raw.length <= 120 ? raw : `HTTP ${response.status}`;
+    throw new ApiError(response.status, safe);
   }
 
-  return response.json() as Promise<T>;
+  // Handle empty / non-JSON responses defensively. A 204 No Content, a 200 with
+  // empty body, or a misconfigured Next.js maintenance page returning HTML with
+  // status 200 would all otherwise throw an untyped SyntaxError from response.json()
+  // that escapes the typed error taxonomy.
+  const text = await response.text().catch(() => '');
+  if (!text) return undefined as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError(response.status, 'Response was not valid JSON');
+  }
 }

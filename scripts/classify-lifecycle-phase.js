@@ -117,7 +117,9 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
       messages.push({
         to: row.push_token,
         title: 'Phase Update',
-        body: `${t.permit_num} has advanced to ${t.phase}.`,
+        // PIPEDA: no permit_num in the visible body — Expo logs push bodies for
+        // delivery diagnostics. Routing identity is carried in data.entity_id below.
+        body: 'A job you are tracking has advanced to the next phase.',
         data: {
           notification_type: 'LIFECYCLE_PHASE_CHANGED',
           route_domain: 'flight_board',
@@ -155,7 +157,8 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
       messages.push({
         to: row.push_token,
         title: 'Delayed',
-        body: `${s.permit_num} has been flagged as stalled by the city.`,
+        // PIPEDA: no permit_num in body — routing identity in data.entity_id below.
+        body: 'A job you are tracking has been flagged as stalled by the city.',
         data: {
           notification_type: 'LIFECYCLE_STALLED',
           route_domain: 'flight_board',
@@ -220,7 +223,8 @@ async function dispatchStartDateUrgentPushes(pool) {
     messages.push({
       to: row.push_token,
       title: 'Work Starting Soon',
-      body: `${row.permit_num} is predicted to start in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`,
+      // PIPEDA: no permit_num in body — routing identity in data.entity_id below.
+      body: `A saved job is predicted to start in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`,
       data: {
         notification_type: 'START_DATE_URGENT',
         route_domain: 'flight_board',

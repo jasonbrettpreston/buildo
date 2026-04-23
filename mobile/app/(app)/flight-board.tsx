@@ -104,23 +104,57 @@ export default function FlightBoardScreen() {
     return unsubscribe;
   }, [navigation, scrollToTop]);
 
-  // Clear the undo timer on unmount so the deferred DELETE mutation can't fire on a
-  // dead component (e.g., if the user navigates away mid-undo window).
+  // Extracted commit so unmount cleanup + double-swipe collision can both reuse it.
+  // If called with the current pending ref, it fires the mutation immediately and
+  // clears both refs — this prevents the data-loss scenario where cleanup clears
+  // the timer and the delete is silently abandoned.
+  const commitPendingRemove = useCallback(() => {
+    const pending = pendingRemoveRef.current;
+    const snapshot = undoSnapshotRef.current;
+    pendingRemoveRef.current = null;
+    undoSnapshotRef.current = null;
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+    setSnackbarVisible(false);
+    if (pending) {
+      removeFromBoard.mutate(
+        { permitNum: pending.permitNum, revisionNum: pending.revisionNum },
+        {
+          onError: () => {
+            if (snapshot) {
+              queryClient.setQueryData(FLIGHT_BOARD_QUERY_KEY, snapshot);
+            }
+          },
+        },
+      );
+    }
+  }, [queryClient, removeFromBoard]);
+
+  // On unmount, fire any pending delete immediately — the alternative
+  // (clearing the timer silently) would optimistically remove from cache AND
+  // skip the server DELETE, creating data divergence (UI says gone, server
+  // still has it) that would re-appear on next refresh.
   React.useEffect(() => {
     return () => {
-      if (undoTimerRef.current) {
+      if (pendingRemoveRef.current) {
+        commitPendingRemove();
+      } else if (undoTimerRef.current) {
         clearTimeout(undoTimerRef.current);
         undoTimerRef.current = null;
       }
     };
-  }, []);
+  }, [commitPendingRemove]);
 
   const handleRemove = useCallback(
     (item: FlightBoardItem) => {
-      if (pendingRemoveRef.current) return;
-
-      // Heavy haptic is fired from FlightCard's onSwipeableWillOpen (drag completion)
-      // per spec 77 §4.1 — do not re-fire here (would be a duplicate pulse).
+      // Double-swipe collision policy: if another remove is pending, auto-commit
+      // it immediately (matches Gmail UX) rather than silently dropping the second
+      // swipe gesture while its red panel is visually open.
+      if (pendingRemoveRef.current) {
+        commitPendingRemove();
+      }
 
       // Snapshot current data for undo
       const snapshot = queryClient.getQueryData<FlightBoardResult>(FLIGHT_BOARD_QUERY_KEY);
@@ -150,28 +184,10 @@ export default function FlightBoardScreen() {
       if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
 
       undoTimerRef.current = setTimeout(() => {
-        // Capture refs into locals before nulling — onError fires async
-        // AFTER the refs are cleared, so the closure needs its own copy.
-        const pending = pendingRemoveRef.current;
-        const snapshot = undoSnapshotRef.current;
-        pendingRemoveRef.current = null;
-        undoSnapshotRef.current = null;
-        setSnackbarVisible(false);
-        if (pending) {
-          removeFromBoard.mutate(
-            { permitNum: pending.permitNum, revisionNum: pending.revisionNum },
-            {
-              onError: () => {
-                if (snapshot) {
-                  queryClient.setQueryData(FLIGHT_BOARD_QUERY_KEY, snapshot);
-                }
-              },
-            },
-          );
-        }
+        commitPendingRemove();
       }, UNDO_TIMEOUT_MS);
     },
-    [queryClient, removeFromBoard],
+    [queryClient, commitPendingRemove],
   );
 
   const handleUndo = useCallback(() => {
@@ -264,6 +280,12 @@ export default function FlightBoardScreen() {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={() => {
+                // If an undo window is active, a refetch would re-hydrate the
+                // "just-removed" card from the server and produce a confusing
+                // ghost state. Commit the pending delete first, then refresh.
+                if (pendingRemoveRef.current) {
+                  commitPendingRemove();
+                }
                 mediumImpact();
                 void refetch();
               }}

@@ -30,7 +30,11 @@ export default function LeadFeedScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { coords, loading: locationLoading } = useLocation();
-  const { radiusKm, tradeSlug, setRadiusKm } = useFilterStore();
+  // Per-field selectors — full-store subscription would re-render on every
+  // filter change including fields this screen doesn't read (homeBaseLocation).
+  const radiusKm = useFilterStore((s) => s.radiusKm);
+  const tradeSlug = useFilterStore((s) => s.tradeSlug);
+  const setRadiusKm = useFilterStore((s) => s.setRadiusKm);
   // Gate on idToken: prevents queries firing before Firebase Auth resolves on cold boot.
   const idToken = useAuthStore((s) => s.idToken);
   const { mutate: saveLead } = useSaveLead();
@@ -86,14 +90,14 @@ export default function LeadFeedScreen() {
     return unsubscribe;
   }, [navigation, scrollToTop]);
 
+  // Stable across mutations: renderLeadItem already guards lead_type==='permit',
+  // so the leadType arg is known. Eliminates the allItems dep that was causing
+  // every save mutation to invalidate all FlashList cell props.
   const handleSaveToggle = useCallback(
     (leadId: string, saved: boolean) => {
-      // Determine lead_type from the current data
-      const item = allItems.find((i) => i.lead_id === leadId);
-      if (!item) return;
-      saveLead({ leadId, leadType: item.lead_type, saved });
+      saveLead({ leadId, leadType: 'permit', saved });
     },
-    [allItems, saveLead],
+    [saveLead],
   );
 
   const handleCardPress = useCallback(
@@ -118,6 +122,23 @@ export default function LeadFeedScreen() {
     },
     [handleCardPress, handleSaveToggle],
   );
+
+  const keyExtractor = useCallback((item: LeadFeedItem) => item.lead_id, []);
+
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const handleWidenRadius = useCallback(() => {
+    setRadiusKm(Math.min(radiusKm * 2, 50));
+  }, [radiusKm, setRadiusKm]);
+
+  const handleRefetch = useCallback(() => {
+    mediumImpact();
+    void refetch();
+  }, [refetch]);
+
+  const handleOpenFilter = useCallback(() => setFilterOpen(true), []);
 
   if (locationLoading) {
     return (
@@ -158,13 +179,13 @@ export default function LeadFeedScreen() {
       <FlashList
         ref={listRef}
         data={isLoading ? [] : allItems}
-        keyExtractor={(item) => item.lead_id}
+        keyExtractor={keyExtractor}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         ListHeaderComponent={
           <FilterTriggerRow
             activeFilterCount={activeFilterCount}
-            onOpen={() => setFilterOpen(true)}
+            onOpen={handleOpenFilter}
           />
         }
         renderItem={renderLeadItem}
@@ -176,25 +197,17 @@ export default function LeadFeedScreen() {
               ))}
             </View>
           ) : isError ? (
-            <EmptyFeedState reason="unreachable" onRetry={() => void refetch()} />
+            <EmptyFeedState reason="unreachable" onRetry={handleRefetch} />
           ) : (
-            <EmptyFeedState
-              reason="no_results"
-              onWidenRadius={() => setRadiusKm(Math.min(radiusKm * 2, 50))}
-            />
+            <EmptyFeedState reason="no_results" onWidenRadius={handleWidenRadius} />
           )
         }
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
-        }}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
-            onRefresh={() => {
-              mediumImpact();
-              void refetch();
-            }}
+            onRefresh={handleRefetch}
             tintColor="#f59e0b"
           />
         }

@@ -23,9 +23,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return { hasError: true, errorMessage: message };
   }
 
-  componentDidCatch(error: unknown, info: React.ErrorInfo): void {
-    // TODO Phase 8: Sentry.captureException(error, { extra: info })
-    console.error('[ErrorBoundary]', error, info.componentStack);
+  componentDidCatch(error: unknown, _info: React.ErrorInfo): void {
+    // Sanitize: log only the error message, never the full error object or
+    // componentStack — both can carry user PII (addresses, permit numbers,
+    // response bodies) into logs / Sentry. When Phase 8 wires Sentry, pass
+    // only the sanitized message + a 'feature' tag; do NOT pass extra: info.
+    const safeMessage = error instanceof Error ? error.message : String(error);
+    console.error('[ErrorBoundary]', safeMessage);
   }
 
   handleReset = (): void => {

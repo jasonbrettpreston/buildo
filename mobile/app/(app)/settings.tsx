@@ -60,7 +60,9 @@ function usePatchPrefs() {
 }
 
 export default function SettingsScreen() {
-  const { tradeSlug, radiusKm, setRadiusKm } = useFilterStore();
+  const tradeSlug = useFilterStore((s) => s.tradeSlug);
+  const radiusKm = useFilterStore((s) => s.radiusKm);
+  const setRadiusKm = useFilterStore((s) => s.setRadiusKm);
 
   const { data, isLoading } = useQuery({
     queryKey: ['notification-prefs'],
@@ -239,7 +241,8 @@ export default function SettingsScreen() {
                     <Pressable
                       key={value}
                       onPress={() => updatePref('notification_schedule', value)}
-                      className={`flex-1 py-2 rounded-md items-center ${
+                      style={{ minHeight: 44, justifyContent: 'center' }}
+                      className={`flex-1 rounded-md items-center ${
                         isSelected ? 'bg-amber-500' : ''
                       }`}
                     >

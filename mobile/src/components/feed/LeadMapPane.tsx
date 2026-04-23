@@ -49,7 +49,7 @@ interface Props {
   onMarkerPress: (item: PermitLeadFeedItem) => void;
 }
 
-export function LeadMapPane({ permits, initialRegion, onRegionChangeComplete, onMarkerPress }: Props) {
+function LeadMapPaneInner({ permits, initialRegion, onRegionChangeComplete, onMarkerPress }: Props) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insets = useSafeAreaInsets();
 
@@ -129,6 +129,10 @@ export function LeadMapPane({ permits, initialRegion, onRegionChangeComplete, on
     </View>
   );
 }
+
+// React.memo bailout — 50 markers re-mounting on every filter-sheet toggle
+// is the single biggest Android scroll-jank source we have.
+export const LeadMapPane = React.memo(LeadMapPaneInner);
 
 const styles = StyleSheet.create({
   markerOuter: {

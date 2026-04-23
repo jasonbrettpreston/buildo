@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.2 LeadMapPane
 // Map pane — full-screen react-native-maps with phase-colored circle markers.
 // Tab bar always visible on Map screen (no hide-on-scroll here).
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Region } from 'react-native-maps';
@@ -27,7 +27,8 @@ const TORONTO_DEFAULT_REGION: Region = {
 export default function MapScreen() {
   const router = useRouter();
   const { coords } = useLocation();
-  const { radiusKm, tradeSlug } = useFilterStore();
+  const radiusKm = useFilterStore((s) => s.radiusKm);
+  const tradeSlug = useFilterStore((s) => s.tradeSlug);
   // Gate on idToken so the feed query doesn't fire before Firebase Auth resolves
   // on cold boot (matches the pattern in app/(app)/index.tsx).
   const idToken = useAuthStore((s) => s.idToken);
@@ -40,22 +41,31 @@ export default function MapScreen() {
 
   const { data } = useLeadFeed(feedParams);
 
-  // Flatten all pages and keep only permit leads with valid coordinates
-  const allPermits = (data?.pages.flatMap((p) => p.data) ?? []).filter(
-    (item): item is PermitLeadFeedItem =>
-      item.lead_type === 'permit' &&
-      item.latitude !== null &&
-      item.longitude !== null,
+  // Memoize both derived values so LeadMapPane (React.memo'd) can bail out
+  // on unrelated parent re-renders (e.g. filterOpen state flip).
+  const allPermits = useMemo(
+    () =>
+      (data?.pages.flatMap((p) => p.data) ?? []).filter(
+        (item): item is PermitLeadFeedItem =>
+          item.lead_type === 'permit' &&
+          item.latitude !== null &&
+          item.longitude !== null,
+      ),
+    [data],
   );
 
-  const initialRegion: Region = coords
-    ? {
-        latitude: coords.lat,
-        longitude: coords.lng,
-        latitudeDelta: 0.1,
-        longitudeDelta: 0.1,
-      }
-    : TORONTO_DEFAULT_REGION;
+  const initialRegion: Region = useMemo(
+    () =>
+      coords
+        ? {
+            latitude: coords.lat,
+            longitude: coords.lng,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
+          }
+        : TORONTO_DEFAULT_REGION,
+    [coords],
+  );
 
   const handleMarkerPress = useCallback(
     (item: PermitLeadFeedItem) => {

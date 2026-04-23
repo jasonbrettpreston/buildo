@@ -12,6 +12,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withSequence,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import {
   hasAskedPermission,
@@ -19,6 +20,7 @@ import {
   requestPermissionAndRegister,
 } from '@/lib/pushTokens';
 import { NotificationPermissionModal } from '@/components/shared/NotificationPermissionModal';
+import { successNotification } from '@/lib/haptics';
 
 interface Props {
   leadId: string;
@@ -39,6 +41,9 @@ export function SaveButton({ leadId, isSaved, onToggle, testID }: Props) {
         withSpring(1.0, { stiffness: 400, damping: 20 }),
       );
     }
+    return () => cancelAnimation(scale);
+    // scale is a Reanimated shared value — stable reference, safe to omit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSaved]);
 
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -46,7 +51,11 @@ export function SaveButton({ leadId, isSaved, onToggle, testID }: Props) {
   const handlePress = () => {
     const willSave = !isSaved;
     onToggle(leadId, willSave);
-
+    // Spec 91 §4.4 / 92 §4.3 — successful state mutation fires successNotification.
+    // Unsave is a reversal, not a celebration, so no haptic (matches spec).
+    if (willSave) {
+      successNotification();
+    }
     if (willSave && !hasAskedPermission()) {
       markAskedPermission();
       setShowPermModal(true);

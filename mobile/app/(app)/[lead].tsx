@@ -106,7 +106,8 @@ export default function LeadDetailScreen() {
       <View className="px-4 pt-4 pb-3 border-b border-zinc-800 flex-row items-center">
         <Pressable
           onPress={() => router.back()}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
+          style={{ minHeight: 44, justifyContent: 'center' }}
           accessibilityRole="button"
           accessibilityLabel="Back to Lead Feed"
           className="mr-2 active:opacity-70 flex-row items-center"

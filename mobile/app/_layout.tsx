@@ -12,6 +12,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 import { registerPushToken } from '@/lib/pushTokens';
 import { successNotification } from '@/lib/haptics';
 import { NotificationToast, type NotificationType } from '@/components/shared/NotificationToast';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -30,7 +31,10 @@ interface ToastState {
 }
 
 function AuthGate() {
-  const { user, _hasHydrated } = useAuthStore();
+  // Per-field selectors so a token refresh (idToken change) doesn't re-run the
+  // AuthGate effect (which only depends on user + segments + _hasHydrated).
+  const user = useAuthStore((s) => s.user);
+  const _hasHydrated = useAuthStore((s) => s._hasHydrated);
   const router = useRouter();
   const segments = useSegments();
 
@@ -41,7 +45,12 @@ function AuthGate() {
       router.replace('/login');
     } else if (user && inAuthGroup) {
       router.replace('/(app)/');
-      void registerPushToken().catch(() => {});
+      // Fire-and-forget but never silently swallow — surface the error so Phase 8
+      // Sentry wiring has something to report. A failed push registration is a
+      // permanent UX regression (no notifications) that must not be invisible.
+      void registerPushToken().catch((err) => {
+        console.warn('[AuthGate] registerPushToken failed', err instanceof Error ? err.message : err);
+      });
     }
   }, [user, segments, _hasHydrated]);
 
@@ -50,7 +59,7 @@ function AuthGate() {
 
 function NotificationHandlers() {
   const router = useRouter();
-  const { incrementUnread } = useNotificationStore();
+  const incrementUnread = useNotificationStore((s) => s.incrementUnread);
   const [toast, setToast] = useState<ToastState | null>(null);
 
   useEffect(() => {
@@ -145,15 +154,17 @@ function NotificationHandlers() {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{ persister: mmkvPersister, maxAge: 1000 * 60 * 60 * 24 }}
-      >
-        <AuthGate />
-        <NotificationHandlers />
-        <Stack screenOptions={{ headerShown: false }} />
-      </PersistQueryClientProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{ persister: mmkvPersister, maxAge: 1000 * 60 * 60 * 24 }}
+        >
+          <AuthGate />
+          <NotificationHandlers />
+          <Stack screenOptions={{ headerShown: false }} />
+        </PersistQueryClientProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }

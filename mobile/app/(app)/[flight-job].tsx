@@ -46,8 +46,13 @@ function TimelineGauge({ predicted_start, p25_days, p75_days }: GaugeProps) {
   const rangeLeft = useSharedValue(0);
   const dotLeft = useSharedValue(0);
 
-  const p25 = p25_days ?? -30;
-  const p75 = p75_days ?? 30;
+  // Guard against server bug where p75 < p25 (inverted range): swap so the
+  // bar width is never negative (withSpring on negative width renders as 0 and
+  // obscures the bug). Also guard NaN via Number.isFinite.
+  const rawP25 = p25_days ?? -30;
+  const rawP75 = p75_days ?? 30;
+  const p25 = Number.isFinite(rawP25) ? Math.min(rawP25, rawP75) : -30;
+  const p75 = Number.isFinite(rawP75) ? Math.max(rawP25, rawP75) : 30;
   // Range: p25 to p75 as fraction of a [−90, +90] day window
   const windowDays = 180;
   const p25Frac = Math.max(0, Math.min(1, (p25 + 90) / windowDays));
@@ -119,7 +124,7 @@ function TimelineGauge({ predicted_start, p25_days, p75_days }: GaugeProps) {
 export default function FlightJobDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data } = useFlightBoard();
+  const { data, isLoading } = useFlightBoard();
 
   // Parse permit_num and revision_num from id: "PERMIT_NUM--REVISION_NUM"
   const [permitNum, revisionNum] = (id ?? '').split('--');
@@ -140,7 +145,8 @@ export default function FlightJobDetailScreen() {
       <View className="px-4 pt-4 pb-3 border-b border-zinc-800 flex-row items-center">
         <Pressable
           onPress={() => router.back()}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
+          style={{ minHeight: 44, justifyContent: 'center' }}
           accessibilityRole="button"
           accessibilityLabel="Back to Flight Board"
           className="mr-2 active:opacity-70 flex-row items-center"
@@ -153,7 +159,17 @@ export default function FlightJobDetailScreen() {
         </Text>
       </View>
 
-      {!item ? (
+      {isLoading ? (
+        // Cold-boot deep-link from a push notification hits this path: the board
+        // query hasn't resolved yet. Render a simple skeleton instead of the
+        // "Job not found" state that would otherwise flash — which would make
+        // the urgent notification feel broken.
+        <View className="flex-1 px-4 pt-6">
+          <View className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 h-24" />
+          <View className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 h-40" />
+          <View className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 h-24" />
+        </View>
+      ) : !item ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-zinc-500 text-sm font-mono">Job not found in board.</Text>
         </View>

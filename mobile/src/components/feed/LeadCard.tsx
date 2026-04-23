@@ -22,7 +22,10 @@ interface Props {
   onSaveToggle: (leadId: string, saved: boolean) => void;
 }
 
-export function LeadCard({ item, index, onPress, onSaveToggle }: Props) {
+// React.memo bailout so unchanged card props (stable handlers + same item
+// identity from TanStack Query cache) skip the reconcile pass. Critical for
+// 60fps FlashList scrolling with 50+ rendered cells.
+function LeadCardInner({ item, index, onPress, onSaveToggle }: Props) {
   const address = [item.street_num, item.street_name].filter(Boolean).join(' ');
   const distanceLabel =
     item.distance_m < 1000
@@ -108,3 +111,5 @@ export function LeadCard({ item, index, onPress, onSaveToggle }: Props) {
     </Pressable>
   );
 }
+
+export const LeadCard = React.memo(LeadCardInner);

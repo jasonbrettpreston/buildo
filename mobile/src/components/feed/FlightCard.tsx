@@ -52,6 +52,9 @@ export function FlightCard({ item, index, onPress, onRemove, hasUpdate }: Props)
   const swipeRef = useRef<Swipeable>(null);
   const bgOpacity = useSharedValue(0);
   const hintTranslateX = useSharedValue(0);
+  // Haptic fire-once guard — onSwipeableWillOpen can fire repeatedly as the
+  // user hovers at the threshold (gloves / vibration). Reset on close.
+  const hapticFiredRef = useRef(false);
 
   // Amber update flash when permit was updated in background
   useEffect(() => {
@@ -115,8 +118,17 @@ export function FlightCard({ item, index, onPress, onRemove, hasUpdate }: Props)
         rightThreshold={80}
         overshootRight={false}
         // Heavy haptic fires when the 80px drag threshold completes (spec 77 §4.1),
-        // not when the user subsequently taps the revealed panel.
-        onSwipeableWillOpen={() => heavyImpact()}
+        // not when the user subsequently taps the revealed panel. Guard against
+        // repeated fires on threshold-hover (common with gloves on a job site).
+        onSwipeableWillOpen={() => {
+          if (!hapticFiredRef.current) {
+            heavyImpact();
+            hapticFiredRef.current = true;
+          }
+        }}
+        onSwipeableClose={() => {
+          hapticFiredRef.current = false;
+        }}
       >
         <Pressable
           testID={`flight-card-${index}`}
