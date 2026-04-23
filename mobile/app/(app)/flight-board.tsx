@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.2 Main Flight Board View
 // FlashList with temporal section headers (action_required → departing_soon → on_the_horizon).
 // FAB launches SearchPermitsSheet. Swipe-to-remove with 3-second undo snackbar.
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { View, Text, Pressable, RefreshControl } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
@@ -21,8 +21,9 @@ import { TemporalSectionHeader } from '@/components/feed/TemporalSectionHeader';
 import { EmptyBoardState } from '@/components/feed/EmptyBoardState';
 import { SearchPermitsSheet } from '@/components/feed/SearchPermitsSheet';
 import { tabBarVisible, tabBarScrollY } from '@/store/tabBarStore';
-import { heavyImpact, mediumImpact } from '@/lib/haptics';
+import { mediumImpact } from '@/lib/haptics';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
+import { Search } from 'lucide-react-native';
 import type { FlightBoardItem, FlightBoardResult } from '@/lib/schemas';
 
 type TemporalGroup = 'action_required' | 'departing_soon' | 'on_the_horizon';
@@ -118,7 +119,8 @@ export default function FlightBoardScreen() {
     (item: FlightBoardItem) => {
       if (pendingRemoveRef.current) return;
 
-      heavyImpact();
+      // Heavy haptic is fired from FlightCard's onSwipeableWillOpen (drag completion)
+      // per spec 77 §4.1 — do not re-fire here (would be a duplicate pulse).
 
       // Snapshot current data for undo
       const snapshot = queryClient.getQueryData<FlightBoardResult>(FLIGHT_BOARD_QUERY_KEY);
@@ -194,7 +196,9 @@ export default function FlightBoardScreen() {
   );
 
   const boardData = data?.data ?? [];
-  const listItems = buildListItems(boardData);
+  // Memoize grouped list so FlashList keys/getItemType stay stable across
+  // unrelated parent re-renders (haptic ticks, badge state, etc.).
+  const listItems = useMemo(() => buildListItems(boardData), [boardData]);
 
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) => {
@@ -303,8 +307,9 @@ export default function FlightBoardScreen() {
             elevation: 8,
           }}
           accessibilityLabel="Search for a job"
+          accessibilityRole="button"
         >
-          <Text style={{ fontSize: 22, color: '#18181b' }}>⌕</Text>
+          <Search size={24} color="#18181b" strokeWidth={2.5} />
         </Pressable>
       </Animated.View>
 

@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { useFilterStore } from '@/store/filterStore';
 import { lightImpact } from '@/lib/haptics';
+import { OfflineBanner } from '@/components/shared/OfflineBanner';
 
 type CostTier = 'small' | 'medium' | 'large' | 'major' | 'mega';
 type Schedule = 'morning' | 'anytime' | 'evening';
@@ -86,13 +87,20 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-950" edges={['top']}>
-      <View className="px-4 pt-4 pb-2 border-b border-zinc-800/50">
-        <Text className="font-mono text-xs text-zinc-400 uppercase tracking-widest">
+      {/* Screen title — large, high-contrast so it's visually distinct from the
+          monospace uppercase section headers below (spec 90 visual hierarchy). */}
+      <View className="px-4 pt-4 pb-3 border-b border-zinc-800/50">
+        <Text
+          accessibilityRole="header"
+          className="text-zinc-100 text-2xl font-bold"
+        >
           Settings
         </Text>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 48 }}>
+      <OfflineBanner />
+
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }}>
 
         {/* ── Trade Profile ───────────────────────────────────────── */}
         <Text className="font-mono text-xs text-zinc-400 uppercase tracking-wider px-4 pt-6 pb-2 border-t border-zinc-800">
@@ -113,6 +121,8 @@ export default function SettingsScreen() {
             <Text className="font-mono text-amber-500 text-sm">{localRadius} km</Text>
           </View>
           <Slider
+            accessibilityLabel="Search radius in kilometers"
+            accessibilityValue={{ min: 10, max: 50, now: localRadius, text: `${localRadius} kilometers` }}
             minimumValue={10}
             maximumValue={50}
             step={5}
@@ -151,6 +161,13 @@ export default function SettingsScreen() {
                 </Text>
               </View>
               <Slider
+                accessibilityLabel="Minimum job value tier for new lead notifications"
+                accessibilityValue={{
+                  min: 0,
+                  max: 4,
+                  now: costIndex >= 0 ? costIndex : 1,
+                  text: prefs.new_lead_min_cost_tier,
+                }}
                 minimumValue={0}
                 maximumValue={4}
                 step={1}

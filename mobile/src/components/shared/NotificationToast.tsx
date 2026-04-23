@@ -14,6 +14,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { X } from 'lucide-react-native';
 
 export type NotificationType =
   | 'NEW_HIGH_VALUE_LEAD'
@@ -58,27 +59,36 @@ export function NotificationToast({ title, body, notificationType, onDismiss, on
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
 
-  const dismiss = () => {
+  // Both dismiss paths (tap X + auto-dismiss) go through this so onDismiss can
+  // only fire once — clears both pending timers before scheduling the new one.
+  const scheduleDismiss = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    if (unmountTimerRef.current) {
+      clearTimeout(unmountTimerRef.current);
+      unmountTimerRef.current = null;
+    }
     translateY.value = withTiming(HIDDEN_Y, { duration: 220, easing: Easing.in(Easing.ease) });
-    // Small delay to let animation finish before unmounting
     unmountTimerRef.current = setTimeout(() => onDismissRef.current(), 240);
+  };
+
+  const dismiss = () => {
+    scheduleDismiss();
   };
 
   useEffect(() => {
     translateY.value = withSpring(RESTING_Y, { stiffness: 400, damping: 28, mass: 1 });
     timerRef.current = setTimeout(() => {
-      translateY.value = withTiming(HIDDEN_Y, { duration: 220, easing: Easing.in(Easing.ease) });
-      unmountTimerRef.current = setTimeout(() => onDismissRef.current(), 240);
+      scheduleDismiss();
     }, 4000);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (unmountTimerRef.current) clearTimeout(unmountTimerRef.current);
     };
-    // translateY is a Reanimated shared value — stable reference, safe to omit
+    // translateY is a Reanimated shared value — stable reference, safe to omit.
+    // scheduleDismiss captures refs (stable) and the worklet-safe shared value.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -123,8 +133,9 @@ export function NotificationToast({ title, body, notificationType, onDismiss, on
             onPress={dismiss}
             className="w-11 h-11 items-center justify-center"
             accessibilityLabel="Dismiss notification"
+            accessibilityRole="button"
           >
-            <Text className="text-zinc-600 text-lg">✕</Text>
+            <X size={18} color="#71717a" strokeWidth={2} />
           </Pressable>
         </Pressable>
       </GestureDetector>

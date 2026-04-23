@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
   useDerivedValue,
 } from 'react-native-reanimated';
+import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useNotificationStore } from '@/store/notificationStore';
 import { tabBarVisible } from '@/store/tabBarStore';
@@ -15,20 +16,40 @@ import { lightImpact } from '@/lib/haptics';
 
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 83 : 60;
 
-export default function AppLayout() {
-  const unread = useNotificationStore((s) => s.unreadFlightBoard);
-
+// Animated tab bar wrapper — consumes tabBarVisible shared value to slide the
+// native <BottomTabBar> off-screen on downward scroll, then back in on upward.
+function AnimatedTabBar(props: BottomTabBarProps) {
   const tabBarOffset = useDerivedValue(() =>
     withTiming(tabBarVisible.value === 1 ? 0 : TAB_BAR_HEIGHT, { duration: 200 }),
   );
-
   const tabBarStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: tabBarOffset.value }],
   }));
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+        },
+        tabBarStyle,
+      ]}
+      pointerEvents="box-none"
+    >
+      <BottomTabBar {...props} />
+    </Animated.View>
+  );
+}
+
+export default function AppLayout() {
+  const unread = useNotificationStore((s) => s.unreadFlightBoard);
 
   return (
     <ErrorBoundary>
       <Tabs
+        tabBar={(props) => <AnimatedTabBar {...props} />}
         screenOptions={{
           headerShown: false,
           tabBarStyle: {

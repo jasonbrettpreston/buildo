@@ -30,6 +30,7 @@
     "expo-notifications": "~0.32.16",
     "expo-router": "~6.0.23",
     "expo-status-bar": "~3.0.9",
+    "lucide-react-native": "~1.8.0",
     "nativewind": "^4.2.3",
     "posthog-react-native": "^4.42.4",
     "react": "19.1.0",

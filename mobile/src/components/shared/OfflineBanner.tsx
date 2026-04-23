@@ -2,7 +2,10 @@
 // Animated top banner shown when the device has no network connectivity.
 // Renders inline (pushes content down) and animates via Reanimated height+opacity
 // so the layout transition is smooth rather than a jarring jump.
-// Shows only on Feed and Flight Board screens per spec — do NOT use on Map or Settings.
+//
+// Design-audit decision (2026-04-23): banner now appears on ALL FOUR pillars
+// (Feed, Flight Board, Map, Settings) for cross-pillar consistency — users on
+// Map or Settings screens were previously left without any offline indicator.
 import { useEffect } from 'react';
 import { View, Text } from 'react-native';
 import Animated, {

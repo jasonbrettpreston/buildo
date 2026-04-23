@@ -12,6 +12,7 @@ import { useFilterStore } from '@/store/filterStore';
 import { useAuthStore } from '@/store/authStore';
 import { LeadMapPane } from '@/components/feed/LeadMapPane';
 import { LeadFilterSheet } from '@/components/feed/LeadFilterSheet';
+import { OfflineBanner } from '@/components/shared/OfflineBanner';
 import { lightImpact } from '@/lib/haptics';
 import type { PermitLeadFeedItem } from '@/lib/schemas';
 
@@ -98,6 +99,8 @@ export default function MapScreen() {
             <Text style={{ fontSize: 18 }}>⚙</Text>
           </Pressable>
         </View>
+        {/* Offline indicator — slides in when NetInfo reports offline. */}
+        <OfflineBanner />
       </SafeAreaView>
 
       <LeadFilterSheet visible={filterOpen} onClose={() => setFilterOpen(false)} />

@@ -31,11 +31,11 @@ export function SaveButton({ leadId, isSaved, onToggle, testID }: Props) {
   const scale = useSharedValue(1);
   const [showPermModal, setShowPermModal] = useState(false);
 
-  // Pulse when saved state flips to true
+  // Pulse when saved state flips to true — spec 91 §4.4 prescribes 1.3 peak.
   useEffect(() => {
     if (isSaved) {
       scale.value = withSequence(
-        withSpring(1.35, { stiffness: 400, damping: 10 }),
+        withSpring(1.3, { stiffness: 400, damping: 10 }),
         withSpring(1.0, { stiffness: 400, damping: 20 }),
       );
     }

@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §3 Behavioral Contract
 // Lead Feed screen — FlashList infinite scroll, FilterTriggerRow header,
 // tab bar hide-on-scroll, scroll-to-top on active tab re-tap.
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { View, Text, RefreshControl } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
@@ -53,7 +53,12 @@ export default function LeadFeedScreen() {
     isError,
   } = useLeadFeed(feedParams);
 
-  const allItems = data?.pages.flatMap((p) => p.data) ?? [];
+  // Memoize the flattened list so infinite-scroll pages don't recompute on every
+  // render (handleSaveToggle/handleCardPress deps would churn otherwise).
+  const allItems = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data],
+  );
 
   const handleScroll = useCallback((event: { nativeEvent: { contentOffset: { y: number } } }) => {
     const y = event.nativeEvent.contentOffset.y;

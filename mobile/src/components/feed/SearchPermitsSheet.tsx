@@ -4,6 +4,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import BottomSheet, { BottomSheetView, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { Search } from 'lucide-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchPermits } from '@/hooks/useSearchPermits';
 import { fetchWithAuth } from '@/lib/apiClient';
@@ -86,7 +87,7 @@ export function SearchPermitsSheet({ visible, onClose }: Props) {
 
         {/* Search input */}
         <View className="bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 flex-row items-center mb-4">
-          <Text className="text-zinc-500 mr-2" style={{ fontSize: 16 }}>⌕</Text>
+          <Search size={16} color="#71717a" strokeWidth={2} style={{ marginRight: 8 }} />
           <TextInput
             className="flex-1 text-zinc-100 text-sm font-mono"
             placeholder="Address or permit number..."
