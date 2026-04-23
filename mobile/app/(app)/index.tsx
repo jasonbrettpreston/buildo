@@ -154,7 +154,6 @@ export default function LeadFeedScreen() {
         ref={listRef}
         data={isLoading ? [] : allItems}
         keyExtractor={(item) => item.lead_id}
-        estimatedItemSize={140}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         ListHeaderComponent={

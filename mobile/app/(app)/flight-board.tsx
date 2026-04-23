@@ -254,7 +254,6 @@ export default function FlightBoardScreen() {
           }
           renderItem={renderItem}
           getItemType={getItemType}
-          estimatedItemSize={88}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           refreshControl={
