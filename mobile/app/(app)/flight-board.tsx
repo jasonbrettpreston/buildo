@@ -22,6 +22,7 @@ import { EmptyBoardState } from '@/components/feed/EmptyBoardState';
 import { SearchPermitsSheet } from '@/components/feed/SearchPermitsSheet';
 import { tabBarVisible, tabBarScrollY } from '@/store/tabBarStore';
 import { heavyImpact, mediumImpact } from '@/lib/haptics';
+import { OfflineBanner } from '@/components/shared/OfflineBanner';
 import type { FlightBoardItem, FlightBoardResult } from '@/lib/schemas';
 
 type TemporalGroup = 'action_required' | 'departing_soon' | 'on_the_horizon';
@@ -211,6 +212,8 @@ export default function FlightBoardScreen() {
           Flight Board
         </Text>
       </View>
+
+      <OfflineBanner />
 
       {isLoading ? (
         <View className="mt-2">
