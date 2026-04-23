@@ -95,9 +95,12 @@ const LOGIC_VARS_SCHEMA = z.object({
 // (expired_threshold_days, seeded as -90). Previously hardcoded.
 // WF3-05 (H-W13): `imminentWindow` is loaded per-trade from
 // trade_configurations.imminent_window_days (spec 85 / spec 82 §6).
-// Default 14 is a safety net only — callers should always pass the
-// per-trade value.
-function classifyUrgency(daysUntil, isPastTarget, expiredThreshold, imminentWindow = 14, overdueWindow = 30, upcomingWindow = 30) {
+// WF3 B2-H4 (2026-04-23): parameters are required — no defaults. A
+// silent default masked config-loader regressions (DB return missing
+// urgency_overdue_days → function silently used 30 instead of throwing).
+// The single call site always threads the DB-driven values; any new
+// call site must do the same.
+function classifyUrgency(daysUntil, isPastTarget, expiredThreshold, imminentWindow, overdueWindow, upcomingWindow) {
   // 1. THE GRAVEYARD FIX — must be first. If it's past the expired
   // threshold, it's dead data. We don't care if it's also past the
   // target phase — both cases are dead.
@@ -226,30 +229,47 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Step 2: Stale-purge + pre-count folded into first UPSERT batch
+  // Step 2: Capture preRowCount BEFORE any mutation (§47 §8.1).
   //
-  // §7.3: DELETE + UPSERT must share the same withTransaction so a
-  // crash between commits cannot leave trade_forecasts empty.
-  // purgeExecuted gates the purge to the first flushForecastBatch call.
+  // WF3 B2-H2 (2026-04-23): preRowCount is captured here — outside the
+  // main write transaction — so records_new = postRowCount - preRowCount
+  // reflects the true baseline even when the transaction later rolls back
+  // a failed chunk. Advisory lock 85 already prevents concurrent writers,
+  // so there is no race between this SELECT and the later DELETEs.
   // ═══════════════════════════════════════════════════════════
   let stalePurged = 0;
   let gracePurged = 0;
   let preRowCount = 0;
+  try {
+    const { rows: preCount } = await pool.query(
+      'SELECT COUNT(*)::int AS n FROM trade_forecasts',
+    );
+    preRowCount = preCount[0].n;
+  } catch (err) {
+    // Telemetry degrades gracefully — the run still computes and writes
+    // forecasts; only records_new defaults to 0 if this pre-count fails.
+    pipeline.log.warn(
+      '[trade-forecasts]',
+      'preRowCount query failed — records_new will default to 0',
+      { error: err instanceof Error ? err.message : String(err) },
+    );
+  }
 
   // ═══════════════════════════════════════════════════════════
-  // Step 3: Stream permit-trade pairs + compute + per-batch flush
+  // Step 3: Stream permit-trade pairs + compute in memory, then run
+  //         ONE atomic purge+upsert transaction (§47 §7.1, §7.3).
   //
-  // WF3-12: Replaced pool.query accumulator with pipeline.streamQuery.
-  // The old pattern loaded ~183K permit-trade rows into permitTradeRows
-  // then built a second unbounded forecasts[] array — O(N) heap for both.
-  // Now: rows stream through a for-await loop, forecasts flush per-batch
-  // into their own withTransaction. Heap holds at most O(BATCH_SIZE).
-  //
-  // Per-batch commit trade-off: a crash mid-stream leaves some rows with
-  // the new forecast and others with the previous run's values. Acceptable
-  // because: (1) the script is the sole writer to trade_forecasts (advisory
-  // lock 85 prevents concurrent runs), and (2) re-running the script
-  // converges — ON CONFLICT DO UPDATE is idempotent.
+  // WF3 B2-C1 (2026-04-23): previously each FORECAST_BATCH_SIZE chunk had
+  // its own transaction, and the first chunk's transaction carried the
+  // grace-purge + stale-purge DELETEs. A crash after the first chunk left
+  // the DB with purged old rows + a partial slice of new rows — the
+  // canonical §7.3 violation. Fixed by accumulating all forecasts in a
+  // single in-memory array during the stream and running one
+  // withTransaction that wraps grace-purge, stale-purge, and the chunked
+  // UPSERT loop. Peak heap ≈ 183K rows × ~300 bytes ≈ 55MB — well within
+  // the pipeline budget. Advisory lock 85 prevents concurrent runs; pool
+  // max (10) comfortably accommodates streamQuery's connection + the
+  // tx's connection + the lock's connection.
   // ═══════════════════════════════════════════════════════════
   const SOURCE_SQL = `
     WITH last_passed AS (
@@ -292,9 +312,15 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   let upserted = 0;
   let anchorFallbackCount = 0;
   let snowplowCount = 0;
-  let batch = [];
-  let batchCount = 0;
-  let purgeExecuted = false;
+  // WF3 B2-H3: per-source breakdown for calibration_distribution audit.
+  // Incremented after the Phase-Past-Target Guard passes — consistent with
+  // anchorFallbackCount so "used" means "produced a forecast."
+  const anchorSourceCounts = {
+    phase_started_at: 0,
+    last_passed_inspection: 0,
+    issued_date: 0,
+    application_date: 0,
+  };
 
   // In-memory mirror of the grace-purge DELETE threshold. Rows whose final
   // predictedStart would land before this cutoff are dropped here rather than
@@ -303,122 +329,11 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   // the SQL `$1::timestamptz - INTERVAL '${GRACE_PURGE_DAYS} days'` exactly.
   const graceCutoffMs = new Date(runAt).getTime() - GRACE_PURGE_DAYS * 24 * 60 * 60 * 1000;
 
-  const flushForecastBatch = async (currentBatch) => {
-    const shouldPurge = !purgeExecuted;
-    const hasRows = currentBatch.length > 0;
-    if (!shouldPurge && !hasRows) return;
-    await pipeline.withTransaction(pool, async (client) => {
-      if (shouldPurge) {
-        // §8.1: capture preRowCount BEFORE any mutating DELETEs so telemetry
-        // reflects the true baseline, not the post-purge state.
-        const { rows: preCount } = await client.query(
-          'SELECT COUNT(*)::int AS n FROM trade_forecasts',
-        );
-        preRowCount = preCount[0].n;
-
-        // F1 Grace-Purge: remove expired forecasts older than 180 days.
-        // The snowplow is dead code for expired rows — all expired rows have a real
-        // phase anchor (anchorIsFallback is always false), so no snapping occurs.
-        // Without this purge, expired rows accumulate indefinitely. The 180-day
-        // window keeps ~6 months of recently-expired leads visible while shedding
-        // true zombie data. Uses runAt for run-clock consistency.
-        const graceResult = await client.query(
-          `DELETE FROM trade_forecasts
-            WHERE urgency = 'expired'
-              AND predicted_start < $1::timestamptz - INTERVAL '${GRACE_PURGE_DAYS} days'`,
-          [runAt],
-        );
-        gracePurged = graceResult.rowCount || 0;
-        if (gracePurged > 0) {
-          pipeline.log.info(
-            '[trade-forecasts]',
-            `Grace-purged ${gracePurged.toLocaleString()} expired forecasts older than 180 days`,
-          );
-        }
-
-        const { rows: staleRows } = await client.query(
-          `DELETE FROM trade_forecasts tf
-            WHERE NOT EXISTS (
-              SELECT 1 FROM permit_trades pt
-                JOIN permits p ON p.permit_num = pt.permit_num
-                              AND p.revision_num = pt.revision_num
-                JOIN trades t ON t.id = pt.trade_id
-               WHERE pt.permit_num = tf.permit_num
-                 AND pt.revision_num = tf.revision_num
-                 AND t.slug = tf.trade_slug
-                 AND pt.is_active = true
-                 AND p.lifecycle_phase IS NOT NULL
-                 AND p.lifecycle_stalled = false
-                 AND (
-                   (
-                     p.lifecycle_phase IN ('P1','P2')
-                     AND p.application_date IS NOT NULL
-                     AND p.application_date >= NOW() - INTERVAL '18 months'
-                   )
-                   OR (
-                     p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
-                     AND p.lifecycle_phase NOT IN ('P1','P2')
-                     AND COALESCE(p.phase_started_at, p.issued_date::timestamptz) >= NOW() - INTERVAL '3 years'
-                   )
-                 )
-            )
-          RETURNING 1`,
-        );
-        stalePurged = staleRows.length;
-        if (stalePurged > 0) {
-          pipeline.log.info(
-            '[trade-forecasts]',
-            `Purged ${stalePurged.toLocaleString()} stale forecasts for terminal/orphan/dead permits`,
-          );
-        }
-      }
-      if (!hasRows) return;
-      const vals = [];
-      const params = [];
-      for (let j = 0; j < currentBatch.length; j++) {
-        const f = currentBatch[j];
-        const base = j * 13;
-        vals.push(
-          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int, $${base + 12}::int, $${base + 13}::timestamptz)`,
-        );
-        params.push(
-          f.permit_num, f.revision_num, f.trade_slug,
-          f.predicted_start, f.confidence, f.urgency,
-          f.target_window, f.calibration_method, f.sample_size,
-          f.median_days, f.p25_days, f.p75_days,
-          runAt, // §47 §6.1 — same timestamp for every row in this run
-        );
-      }
-      const insertResult = await client.query(
-        `INSERT INTO trade_forecasts
-           (permit_num, revision_num, trade_slug, predicted_start,
-            confidence, urgency, target_window, calibration_method,
-            sample_size, median_days, p25_days, p75_days, computed_at)
-         VALUES ${vals.join(', ')}
-         ON CONFLICT (permit_num, revision_num, trade_slug)
-         DO UPDATE SET
-           predicted_start = EXCLUDED.predicted_start,
-           confidence = EXCLUDED.confidence,
-           urgency = EXCLUDED.urgency,
-           target_window = EXCLUDED.target_window,
-           calibration_method = EXCLUDED.calibration_method,
-           sample_size = EXCLUDED.sample_size,
-           median_days = EXCLUDED.median_days,
-           p25_days = EXCLUDED.p25_days,
-           p75_days = EXCLUDED.p75_days,
-           computed_at = EXCLUDED.computed_at`,
-        params,
-      );
-      // §47 §6.3: use actual rowCount, not batch size. ON CONFLICT DO UPDATE
-      // returns rowCount for both INSERTs and UPDATEs; rows skipped by IS DISTINCT FROM
-      // guards elsewhere would return 0. Counting batch size was over-reporting.
-      upserted += insertResult.rowCount || 0;
-    });
-    // Set purgeExecuted only after the transaction commits successfully.
-    // If the transaction rolls back, the flag stays false so the next
-    // flushForecastBatch call will retry the purge.
-    if (shouldPurge) purgeExecuted = true;
-  };
+  // In-memory accumulator for all forecasts computed during the stream.
+  // Peak heap ≈ |permit-trade rows that survive skips| × ~300 bytes per object.
+  // At current scale (~183K input rows → ~130K surviving forecasts after skips)
+  // this is ≈ 40MB — acceptable per spec 85 §6.1 memory budget.
+  const allForecasts = [];
 
   pipeline.log.info('[trade-forecasts]', 'Streaming active permit-trade pairs...');
   for await (const row of pipeline.streamQuery(pool, SOURCE_SQL, [])) {
@@ -431,16 +346,35 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     } = row;
 
     // Fallback Anchor Hierarchy (spec 85 §3): phase_started_at → last passed
-    // inspection → issued_date → application_date. Stamps 'fallback_issued'
-    // on calibration_method when a fallback is used.
-    const effectiveAnchor = phase_started_at
-      || last_passed_inspection_date
-      || (issued_date ? new Date(issued_date + 'T00:00:00Z') : null)
-      || (application_date ? new Date(application_date + 'T00:00:00Z') : null);
+    // inspection → issued_date → application_date.
+    // WF3 B2-H3 (2026-04-23): track anchorSource explicitly so the Historic
+    // Snowplow only fires for anchors that can be years stale (issued_date,
+    // application_date). The old anchorIsFallback boolean snowplowed freshly
+    // inspection-anchored permits even when their predictedStart was only
+    // a few days past — unnecessarily clobbering real signal.
+    let effectiveAnchor;
+    let anchorSource;
+    if (phase_started_at) {
+      effectiveAnchor = phase_started_at;
+      anchorSource = 'phase_started_at';
+    } else if (last_passed_inspection_date) {
+      effectiveAnchor = last_passed_inspection_date;
+      anchorSource = 'last_passed_inspection';
+    } else if (issued_date) {
+      effectiveAnchor = new Date(issued_date + 'T00:00:00Z');
+      anchorSource = 'issued_date';
+    } else if (application_date) {
+      effectiveAnchor = new Date(application_date + 'T00:00:00Z');
+      anchorSource = 'application_date';
+    } else {
+      skipped++;
+      continue;
+    }
 
-    if (!effectiveAnchor) { skipped++; continue; }
-
-    const anchorIsFallback = !phase_started_at;
+    // Preserved as a derived boolean so the anchor_fallbacks_used counter
+    // and existing audit rows keep the same semantic: "any non-phase
+    // anchor is a fallback," regardless of how stale the anchor is.
+    const anchorIsFallback = anchorSource !== 'phase_started_at';
 
     // Look up bimodal targets for this trade
     const targets = TRADE_TARGET_PHASE[trade_slug];
@@ -490,6 +424,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     // Must come after the Phase-Past-Target Guard so rows that are immediately
     // skipped do not inflate the fallback counter.
     if (anchorIsFallback) anchorFallbackCount++;
+    anchorSourceCounts[anchorSource]++;
 
     // isPastTarget only applies when targeting work_phase. For bid_phase
     // targeting: being AT the bid phase means the window is OPEN, not
@@ -522,16 +457,20 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     predictedStart.setUTCDate(predictedStart.getUTCDate() + cal.median);
 
     // 2. HISTORIC SNOWPLOW (spec 85 §3 WF3 April 2026):
-    // Fallback anchors (issued_date / application_date) are often 1-3 years in
-    // the past. predictedStart = oldAnchor + median still lands in the past →
-    // large negative daysUntil → expired urgency (was 76.9% FAIL after WF1).
-    // Snap to today + snowplow_buffer_days (DB-driven, spec 47 §4.1) so rescued
-    // leads are Rescue Missions. Only fires for fallback anchors.
+    // issued_date / application_date anchors are often 1-3 years in the past.
+    // predictedStart = oldAnchor + median still lands in the past → large negative
+    // daysUntil → expired urgency (was 76.9% FAIL after WF1). Snap to today +
+    // snowplow_buffer_days (DB-driven, spec 47 §4.1) so rescued leads are Rescue
+    // Missions.
     // Use runAt (actual run timestamp) not today (midnight UTC) — any predictedStart
     // before the current moment triggers the snowplow, including same-day forecasts
     // that land at today-midnight (equal to `today`, so the old guard missed them).
+    // WF3 B2-H3 (2026-04-23): gate on anchorSource, not anchorIsFallback. A
+    // last_passed_inspection anchor is fresh by definition (< 60 days old) —
+    // snowplowing it clobbers real signal with an arbitrary buffer date.
     const isPast = new Date(predictedStart).getTime() < new Date(runAt).getTime();
-    if (anchorIsFallback && isPast) {
+    const snowplowSource = anchorSource === 'issued_date' || anchorSource === 'application_date';
+    if (snowplowSource && isPast) {
       predictedStart = new Date(today);
       predictedStart.setUTCDate(predictedStart.getUTCDate() + logicVars.snowplow_buffer_days);
       snowplowCount++;
@@ -563,9 +502,18 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       logicVars.urgency_upcoming_days,
     );
     const confidence = classifyConfidence(cal.sample, cal.method === 'default');
-    const finalCalMethod = anchorIsFallback ? 'fallback_issued' : cal.method;
+    // WF3 B2-H3: anchor-source-specific calibration_method. Preserves
+    // 'fallback_issued' for issued_date anchors (existing dashboards +
+    // infra test pin this label) and adds granular labels for the other
+    // two fallback sources so calibration_distribution can distinguish
+    // inspection-rescued leads from truly stale application_date ones.
+    let finalCalMethod;
+    if (anchorSource === 'phase_started_at')          finalCalMethod = cal.method;
+    else if (anchorSource === 'issued_date')          finalCalMethod = 'fallback_issued';
+    else if (anchorSource === 'last_passed_inspection') finalCalMethod = 'fallback_inspection';
+    else                                              finalCalMethod = 'fallback_application';
 
-    batch.push({
+    allForecasts.push({
       permit_num,
       revision_num,
       trade_slug,
@@ -580,24 +528,17 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       p75_days: cal.p75,
     });
 
-    if (batch.length >= FORECAST_BATCH_SIZE) {
-      await flushForecastBatch(batch);
-      batch = [];
-      batchCount++;
-      if (batchCount % 50 === 0) {
-        pipeline.log.info(
-          '[trade-forecasts]',
-          `Progress: ${totalRows.toLocaleString()} rows streamed, ${upserted.toLocaleString()} upserted (batch ${batchCount})`,
-        );
-      }
+    // Progress log every ~50 batch-sizes worth of accepted forecasts.
+    if (allForecasts.length > 0 && allForecasts.length % (FORECAST_BATCH_SIZE * 50) === 0) {
+      pipeline.log.info(
+        '[trade-forecasts]',
+        `Streamed ${totalRows.toLocaleString()} rows, ${allForecasts.length.toLocaleString()} forecasts buffered`,
+      );
     }
   }
 
-  // Final flush for any remaining rows after the stream closes
-  await flushForecastBatch(batch);
-  batch = [];
-
   pipeline.log.info('[trade-forecasts]', `Rows streamed: ${totalRows.toLocaleString()}`);
+  pipeline.log.info('[trade-forecasts]', `Forecasts to write: ${allForecasts.length.toLocaleString()}`);
   pipeline.log.info('[trade-forecasts]', `Skipped (no anchor): ${skipped.toLocaleString()}`);
   if (skippedTooOld > 0) {
     pipeline.log.info('[trade-forecasts]', `Skipped (too old, grace cutoff): ${skippedTooOld.toLocaleString()}`);
@@ -605,6 +546,118 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   if (unmappedTrades > 0) {
     pipeline.log.warn('[trade-forecasts]', `Unmapped trades (not in TRADE_TARGET_PHASE): ${unmappedTrades}`);
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // Step 4: Atomic purge + upsert (§47 §7.1, §7.3).
+  //
+  // Single withTransaction wrapping: grace-purge DELETE, stale-purge DELETE,
+  // then chunked INSERT ON CONFLICT. If any step fails, the tx rolls back
+  // and trade_forecasts is unchanged — no "purged-but-not-replaced" window.
+  // ═══════════════════════════════════════════════════════════
+  await pipeline.withTransaction(pool, async (client) => {
+    // F1 Grace-Purge: remove expired forecasts older than GRACE_PURGE_DAYS.
+    // The snowplow never rescues expired rows (expired rows have a real phase
+    // anchor, so no snapping occurs). Without this purge, expired rows would
+    // accumulate indefinitely. Uses runAt for run-clock consistency.
+    const graceResult = await client.query(
+      `DELETE FROM trade_forecasts
+        WHERE urgency = 'expired'
+          AND predicted_start < $1::timestamptz - INTERVAL '${GRACE_PURGE_DAYS} days'`,
+      [runAt],
+    );
+    gracePurged = graceResult.rowCount || 0;
+    if (gracePurged > 0) {
+      pipeline.log.info(
+        '[trade-forecasts]',
+        `Grace-purged ${gracePurged.toLocaleString()} expired forecasts older than ${GRACE_PURGE_DAYS} days`,
+      );
+    }
+
+    // Stale-purge: forecasts whose underlying permit_trade is no longer active
+    // OR whose permit has moved into SKIP_PHASES or gone stalled. NOT EXISTS
+    // mirrors SOURCE_SQL exactly — anything SOURCE_SQL wouldn't emit today is
+    // something we shouldn't still have a forecast row for.
+    const { rows: staleRows } = await client.query(
+      `DELETE FROM trade_forecasts tf
+        WHERE NOT EXISTS (
+          SELECT 1 FROM permit_trades pt
+            JOIN permits p ON p.permit_num = pt.permit_num
+                          AND p.revision_num = pt.revision_num
+            JOIN trades t ON t.id = pt.trade_id
+           WHERE pt.permit_num = tf.permit_num
+             AND pt.revision_num = tf.revision_num
+             AND t.slug = tf.trade_slug
+             AND pt.is_active = true
+             AND p.lifecycle_phase IS NOT NULL
+             AND p.lifecycle_stalled = false
+             AND (
+               (
+                 p.lifecycle_phase IN ('P1','P2')
+                 AND p.application_date IS NOT NULL
+                 AND p.application_date >= NOW() - INTERVAL '18 months'
+               )
+               OR (
+                 p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
+                 AND p.lifecycle_phase NOT IN ('P1','P2')
+                 AND COALESCE(p.phase_started_at, p.issued_date::timestamptz) >= NOW() - INTERVAL '3 years'
+               )
+             )
+        )
+      RETURNING 1`,
+    );
+    stalePurged = staleRows.length;
+    if (stalePurged > 0) {
+      pipeline.log.info(
+        '[trade-forecasts]',
+        `Purged ${stalePurged.toLocaleString()} stale forecasts for terminal/orphan/dead permits`,
+      );
+    }
+
+    // Chunked UPSERT: one INSERT ... ON CONFLICT DO UPDATE per FORECAST_BATCH_SIZE
+    // rows to stay under PostgreSQL's 65,535-parameter limit. §47 §6.3: use
+    // rowCount (returned by ON CONFLICT DO UPDATE for both INSERTs and UPDATEs),
+    // not batch length — otherwise IS DISTINCT FROM no-ops would inflate counts.
+    for (let offset = 0; offset < allForecasts.length; offset += FORECAST_BATCH_SIZE) {
+      const chunk = allForecasts.slice(offset, offset + FORECAST_BATCH_SIZE);
+      const vals = [];
+      const params = [];
+      for (let j = 0; j < chunk.length; j++) {
+        const f = chunk[j];
+        const base = j * 13;
+        vals.push(
+          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int, $${base + 12}::int, $${base + 13}::timestamptz)`,
+        );
+        params.push(
+          f.permit_num, f.revision_num, f.trade_slug,
+          f.predicted_start, f.confidence, f.urgency,
+          f.target_window, f.calibration_method, f.sample_size,
+          f.median_days, f.p25_days, f.p75_days,
+          runAt, // §47 §6.1 — same timestamp for every row in this run
+        );
+      }
+      const insertResult = await client.query(
+        `INSERT INTO trade_forecasts
+           (permit_num, revision_num, trade_slug, predicted_start,
+            confidence, urgency, target_window, calibration_method,
+            sample_size, median_days, p25_days, p75_days, computed_at)
+         VALUES ${vals.join(', ')}
+         ON CONFLICT (permit_num, revision_num, trade_slug)
+         DO UPDATE SET
+           predicted_start = EXCLUDED.predicted_start,
+           confidence = EXCLUDED.confidence,
+           urgency = EXCLUDED.urgency,
+           target_window = EXCLUDED.target_window,
+           calibration_method = EXCLUDED.calibration_method,
+           sample_size = EXCLUDED.sample_size,
+           median_days = EXCLUDED.median_days,
+           p25_days = EXCLUDED.p25_days,
+           p75_days = EXCLUDED.p75_days,
+           computed_at = EXCLUDED.computed_at`,
+        params,
+      );
+      upserted += insertResult.rowCount || 0;
+    }
+  });
 
   const { rows: postCount } = await pool.query(
     'SELECT COUNT(*)::int AS n FROM trade_forecasts',
@@ -683,6 +736,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       skipped_too_old: skippedTooOld,
       unmapped_trades: unmappedTrades,
       anchor_fallbacks_used: anchorFallbackCount,
+      // WF3 B2-H3: granular breakdown so operators can distinguish
+      // inspection-anchored (fresh, no snowplow) from issued/application
+      // (stale, snowplow fires).
+      anchor_sources: anchorSourceCounts,
       snowplow_applied: snowplowCount,
       urgency_distribution: urgencyDistribution,
       calibration_distribution: calibrationDistribution,

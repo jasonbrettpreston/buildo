@@ -385,10 +385,94 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(
       /isPast\s*=\s*new Date\(predictedStart\)\.getTime\(\)\s*<\s*new Date\(runAt\)\.getTime\(\)/,
     );
-    // The if-guard must reference isPast, not raw Date objects directly
-    expect(content).toMatch(/anchorIsFallback\s*&&\s*isPast/);
+    // The if-guard must reference isPast, not raw Date objects directly.
+    // WF3 B2-H3 (2026-04-23): the guard variable is now `snowplowSource`
+    // (derived from anchorSource) rather than `anchorIsFallback`, so the
+    // check evolves with the fix.
+    expect(content).toMatch(/snowplowSource\s*&&\s*isPast/);
     // Must NOT use today.getTime() in the snowplow isPast comparison
     expect(content).not.toMatch(/isPast\s*=\s*new Date\(predictedStart\)\.getTime\(\)\s*<\s*today\.getTime\(\)/);
+  });
+
+  it('WF3 B2-H3: snowplow fires only for issued_date / application_date anchors (not last_passed_inspection)', () => {
+    // Previously `anchorIsFallback && isPast` snowplowed any non-phase anchor —
+    // including fresh last_passed_inspection anchors whose predictedStart was
+    // only a few days past. The new guard uses anchorSource so inspection-
+    // anchored permits keep their calibrated date and only truly-stale
+    // issued_date / application_date anchors (which can be years old) get
+    // snapped forward to today + snowplow_buffer_days.
+    expect(content).toMatch(/anchorSource\s*===\s*'issued_date'/);
+    expect(content).toMatch(/anchorSource\s*===\s*'application_date'/);
+    // The snowplowSource derivation must combine both sources via ||
+    expect(content).toMatch(
+      /snowplowSource\s*=\s*anchorSource\s*===\s*'issued_date'\s*\|\|\s*anchorSource\s*===\s*'application_date'/,
+    );
+    // last_passed_inspection must NOT appear in the snowplow gate
+    expect(content).not.toMatch(
+      /snowplowSource[\s\S]{0,120}last_passed_inspection/,
+    );
+  });
+
+  it('WF3 B2-H3: anchor_sources counter map exposed in records_meta for calibration_distribution triage', () => {
+    // Per-source breakdown lets operators distinguish fresh inspection-anchored
+    // rescues from stale issued/application snowplow hits — information the old
+    // binary anchor_fallbacks_used counter could not answer.
+    expect(content).toMatch(/anchorSourceCounts/);
+    expect(content).toMatch(/anchor_sources\s*:\s*anchorSourceCounts/);
+    // All four source keys must be pre-declared so JSON output is stable
+    expect(content).toMatch(/phase_started_at\s*:\s*0/);
+    expect(content).toMatch(/last_passed_inspection\s*:\s*0/);
+    expect(content).toMatch(/issued_date\s*:\s*0/);
+    expect(content).toMatch(/application_date\s*:\s*0/);
+  });
+
+  it('WF3 B2-C1: single atomic purge+upsert transaction after stream closes (§47 §7.1, §7.3)', () => {
+    // Previously each FORECAST_BATCH_SIZE chunk had its own withTransaction,
+    // with grace-purge + stale-purge DELETEs riding on the first chunk. A
+    // crash after the first batch committed left purged old rows + partial
+    // new rows — the canonical §7.3 violation. Fixed by accumulating forecasts
+    // in memory then running one withTransaction that wraps grace-purge,
+    // stale-purge, and the chunked UPSERT loop.
+    expect(content).toMatch(/const allForecasts\s*=\s*\[\]/);
+    expect(content).toMatch(/allForecasts\.push/);
+    // Must NOT retain the old per-batch flush helper
+    expect(content).not.toMatch(/const flushForecastBatch\s*=/);
+    expect(content).not.toMatch(/let purgeExecuted/);
+    // Chunked upsert still uses FORECAST_BATCH_SIZE to stay under 65535 params
+    expect(content).toMatch(/offset\s*\+=\s*FORECAST_BATCH_SIZE/);
+    // Grace-purge + stale-purge must both live inside the single withTransaction
+    expect(content).toMatch(
+      /pipeline\.withTransaction\(pool,\s*async\s*\(client\)\s*=>[\s\S]*?DELETE FROM trade_forecasts[\s\S]*?urgency\s*=\s*'expired'[\s\S]*?INSERT INTO trade_forecasts/,
+    );
+  });
+
+  it('WF3 B2-H2: preRowCount captured via pool.query before any mutation (not inside the tx)', () => {
+    // §47 §8.1: records_new = postRowCount - preRowCount, and preRowCount MUST
+    // precede any DELETE. Capturing it inside the write transaction made it
+    // structurally fragile — a refactor that moved the capture below the
+    // grace-purge DELETE would have silently returned post-purge counts.
+    // New structure: an independent pool.query runs before the stream opens.
+    expect(content).toMatch(
+      /await pool\.query\(\s*['"]SELECT COUNT\(\*\)::int AS n FROM trade_forecasts['"]/,
+    );
+    // The old flushForecastBatch-internal capture must be gone
+    expect(content).not.toMatch(
+      /preRowCount\s*=\s*preCount\[0\]\.n;?\s*\n\s*\n\s*\/\/ F1 Grace-Purge/,
+    );
+  });
+
+  it('WF3 B2-H4: classifyUrgency signature has no default values — callers MUST pass DB-driven windows', () => {
+    // Defaults silently hid config-loader regressions: a missing
+    // urgency_overdue_days in logicVars meant classifyUrgency used 30 instead
+    // of throwing. Removing defaults forces the caller (or Zod) to surface
+    // the problem.
+    expect(content).not.toMatch(
+      /imminentWindow\s*=\s*\d+\s*,\s*overdueWindow\s*=\s*\d+\s*,\s*upcomingWindow\s*=\s*\d+/,
+    );
+    // Signature still accepts the three window parameters (just no defaults)
+    expect(content).toMatch(
+      /function classifyUrgency\([^)]*imminentWindow\s*,\s*overdueWindow\s*,\s*upcomingWindow\s*\)/,
+    );
   });
 
   it('LOGIC_VARS_SCHEMA uses z.coerce.number() — pg DECIMAL/NUMERIC returns as string (WF3 April 2026)', () => {
