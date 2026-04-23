@@ -240,14 +240,18 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   let stalePurged = 0;
   let gracePurged = 0;
   let preRowCount = 0;
+  let preCountFailed = false;
   try {
     const { rows: preCount } = await pool.query(
       'SELECT COUNT(*)::int AS n FROM trade_forecasts',
     );
     preRowCount = preCount[0].n;
   } catch (err) {
-    // Telemetry degrades gracefully — the run still computes and writes
-    // forecasts; only records_new defaults to 0 if this pre-count fails.
+    // WF3 (2026-04-23): flag failure so newRows defaults to 0 instead of
+    // postRowCount. Without the flag, `newRows = Math.max(0, postRowCount - 0)`
+    // would report every re-run row as "new", making records_new ≈ postRowCount
+    // and records_updated = 0 — the opposite of reality on any subsequent run.
+    preCountFailed = true;
     pipeline.log.warn(
       '[trade-forecasts]',
       'preRowCount query failed — records_new will default to 0',
@@ -663,7 +667,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     'SELECT COUNT(*)::int AS n FROM trade_forecasts',
   );
   const postRowCount = postCount[0].n;
-  const newRows = Math.max(0, postRowCount - preRowCount);
+  const newRows = preCountFailed ? 0 : Math.max(0, postRowCount - preRowCount);
 
   // Urgency distribution for telemetry
   const { rows: urgDist } = await pool.query(

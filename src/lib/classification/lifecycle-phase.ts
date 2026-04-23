@@ -174,7 +174,7 @@ export const NOT_STARTED_P7D_SET: ReadonlySet<string> = new Set([
 // mirror in scripts/lib/lifecycle-phase.js, which also exports this set.
 // Asymmetric exports would violate the §7 dual-code-path rule even
 // though no test currently imports this set from the TS side.
-const INSPECTION_PIPELINE_P18_SET: ReadonlySet<string> = new Set([
+export const INSPECTION_PIPELINE_P18_SET: ReadonlySet<string> = new Set([
   'Forward to Inspector',
   'Rescheduled',
 ]);

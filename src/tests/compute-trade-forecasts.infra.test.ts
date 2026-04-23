@@ -461,6 +461,15 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     );
   });
 
+  it('WF3 (2026-04-23): preCountFailed flag prevents records_new reporting postRowCount on pre-count failure', () => {
+    // Without the flag, `newRows = Math.max(0, postRowCount - 0)` = postRowCount.
+    // On any subsequent run this makes records_new ≈ 130K and records_updated = 0
+    // — the opposite of reality. The flag zeros newRows when the pre-count query fails.
+    expect(content).toMatch(/let preCountFailed\s*=\s*false/);
+    expect(content).toMatch(/preCountFailed\s*=\s*true/);
+    expect(content).toMatch(/preCountFailed\s*\?\s*0\s*:\s*Math\.max\(0,\s*postRowCount\s*-\s*preRowCount\)/);
+  });
+
   it('WF3 B2-H4: classifyUrgency signature has no default values — callers MUST pass DB-driven windows', () => {
     // Defaults silently hid config-loader regressions: a missing
     // urgency_overdue_days in logicVars meant classifyUrgency used 30 instead

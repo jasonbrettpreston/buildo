@@ -27,7 +27,9 @@ describe('scripts/lib/config-loader.js — shared config loader', () => {
   it('validates allocation_pct sum with tolerance', () => {
     expect(content).toMatch(/allocSum/);
     expect(content).toMatch(/1\.0/);
-    expect(content).toMatch(/0\.02/);
+    // Tolerance constant is 0.001 — tighter than the 2% band from initial spec.
+    // Regex /0\.001/ matches the guard at `Math.abs(allocSum - 1.0) > 0.001`.
+    expect(content).toMatch(/0\.001/);
   });
 
   it('derives FALLBACK_LOGIC_VARS from logic_variables.json (WF3-0 seed refactor)', () => {
@@ -76,6 +78,16 @@ describe('scripts/lib/config-loader.js — shared config loader', () => {
     // Per-slug fallback must use structuredClone so subsequent consumers'
     // mutations don't corrupt the shared fallback.
     expect(content).toMatch(/dbTradeConfigs\[slug\]\s*=\s*structuredClone\(fallback\)/);
+  });
+
+  it('WF3 (2026-04-23): imminent_window_days passed through parseTradeNum — rejects NaN/negative without crashing', () => {
+    // imminent_window_days was the only numeric trade_configurations column not
+    // guarded by parseTradeNum. A NaN string or negative value would silently
+    // propagate; null was also unguarded. Fix: wrap with parseTradeNum when
+    // non-null; leave null as-is (callers use ?? 14 fallback).
+    // The `!= null` guard preserves the legitimate-null path.
+    expect(content).toMatch(/imminent_window_days[\s\S]*?parseTradeNum/);
+    expect(content).toMatch(/c\.imminent_window_days\s*!=\s*null/);
   });
 
   it('WF3 B3-H3: NEGATIVE_IS_INVALID set rejects negative logic_variables; expired_threshold_days excluded', () => {

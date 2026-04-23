@@ -20,6 +20,17 @@ describe('scripts/update-tracked-projects.js — CRM assistant shape', () => {
     expect(content).toMatch(/TRADE_TARGET_PHASE/);
   });
 
+  it('WF3 (2026-04-23): falls back to TRADE_TARGET_PHASE_FALLBACK when validTradeConfigs is empty', () => {
+    // Previously TRADE_TARGET_PHASE was built entirely from validTradeConfigs with
+    // no fallback — if trade_configurations returned 0 valid entries, every row
+    // counted as unmappedTrade++ and was silently skipped (100% skip rate, no alerts).
+    // Fix mirrors compute-trade-forecasts.js: declare `let` with fallback, then
+    // override only when validTradeConfigs is non-empty.
+    expect(content).toMatch(/let TRADE_TARGET_PHASE\s*=\s*TRADE_TARGET_PHASE_FALLBACK/);
+    expect(content).toMatch(/Object\.keys\(builtPhaseMap\)\.length\s*>\s*0/);
+    expect(content).toMatch(/TRADE_TARGET_PHASE\s*=\s*builtPhaseMap/);
+  });
+
   it('queries active tracked projects via JOIN', () => {
     expect(content).toMatch(/tracked_projects tp/);
     expect(content).toMatch(/JOIN permits p/);

@@ -97,12 +97,24 @@ pipeline.run('update-tracked-projects', async (pool) => {
     }
   }
 
-  const TRADE_TARGET_PHASE = Object.fromEntries(
+  // WF3 (2026-04-23): TRADE_TARGET_PHASE_FALLBACK used when trade_configurations
+  // returns 0 valid entries — prevents silent 100% project-skip where every
+  // row counts as unmappedTrade++. Mirrors the pattern in compute-trade-forecasts.js.
+  let TRADE_TARGET_PHASE = TRADE_TARGET_PHASE_FALLBACK;
+  const builtPhaseMap = Object.fromEntries(
     Object.entries(validTradeConfigs).map(([slug, tc]) => [slug, {
       bid_phase: tc.bid_phase_cutoff,
       work_phase: tc.work_phase_target,
     }]),
   );
+  if (Object.keys(builtPhaseMap).length > 0) {
+    TRADE_TARGET_PHASE = builtPhaseMap;
+  } else {
+    pipeline.log.warn(
+      '[tracked-projects]',
+      'trade_configurations returned 0 valid entries — using TRADE_TARGET_PHASE_FALLBACK',
+    );
+  }
   // ═══════════════════════════════════════════════════════════
   // Step 1: Stream all active tracked projects with forecast data
   //

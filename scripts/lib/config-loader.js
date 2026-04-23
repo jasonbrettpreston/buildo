@@ -146,7 +146,11 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
           allocation_pct,
           bid_phase_cutoff: c.bid_phase_cutoff,
           work_phase_target: c.work_phase_target,
-          imminent_window_days: c.imminent_window_days,
+          // WF3 (2026-04-23): nullable field — null is valid (callers use ?? 14
+          // fallback). parseTradeNum guards against NaN strings and negative values.
+          imminent_window_days: c.imminent_window_days != null
+            ? parseTradeNum(c.imminent_window_days, slug, 'imminent_window_days')
+            : null,
           multiplier_bid,
           multiplier_work,
         };
