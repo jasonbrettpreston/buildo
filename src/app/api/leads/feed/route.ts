@@ -144,13 +144,17 @@ export async function GET(request: NextRequest) {
     //    step (not an early-return auth/zod/403/503/429).
     perf.mark('end');
     perf.measure('total', 'start', 'end');
+    // PIPEDA: truncate lat/lng to 3 decimals (~100m grid) before logging so the
+    // user_id + coord pair cannot be used to reconstruct a precise location
+    // history. Diagnostic value (feed relevance, cold-start coverage) is
+    // preserved at grid granularity. 6-decimal (~1m) precision is never logged.
     logRequestComplete(
       '[api/leads/feed]',
       {
         user_id: ctx.uid,
         trade_slug: params.trade_slug,
-        lat: params.lat,
-        lng: params.lng,
+        lat: Math.round(params.lat * 1000) / 1000,
+        lng: Math.round(params.lng * 1000) / 1000,
         radius_km: result.meta.radius_km,
         result_count: result.meta.count,
       },

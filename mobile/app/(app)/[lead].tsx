@@ -171,29 +171,29 @@ export default function LeadDetailScreen() {
               </View>
             </View>
 
-            {/* Signal pills */}
+            {/* Signal pills — spec 91 §4.1 rounded-md (matches LeadCard + FlightCard) */}
             <View className="flex-row flex-wrap gap-2 mt-4">
               {item.target_window === 'work' ? (
-                <View className="bg-red-500/20 border border-red-500/40 rounded-full px-3 py-1">
+                <View className="bg-red-500/20 border border-red-500/40 rounded-md px-3 py-1">
                   <Text className="font-mono text-xs text-red-400">🚨 Rescue Mission</Text>
                 </View>
               ) : (
-                <View className="bg-amber-500/20 border border-amber-500/40 rounded-full px-3 py-1">
+                <View className="bg-amber-500/20 border border-amber-500/40 rounded-md px-3 py-1">
                   <Text className="font-mono text-xs text-amber-400">💎 Early Bid</Text>
                 </View>
               )}
               {item.cost_tier ? (
-                <View className="bg-zinc-800 border border-zinc-700 rounded-full px-3 py-1">
+                <View className="bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1">
                   <Text className="font-mono text-xs text-zinc-300">{costSymbol}</Text>
                 </View>
               ) : null}
               {item.lifecycle_stalled ? (
-                <View className="bg-red-500/20 border border-red-500/40 rounded-full px-3 py-1">
+                <View className="bg-red-500/20 border border-red-500/40 rounded-md px-3 py-1">
                   <Text className="font-mono text-xs text-red-400">⚠ Delayed</Text>
                 </View>
               ) : null}
               {item.competition_count > 0 ? (
-                <View className="bg-zinc-800 border border-zinc-700 rounded-full px-3 py-1">
+                <View className="bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1">
                   <Text className="font-mono text-xs text-zinc-400">
                     👁 {item.competition_count} tracking
                   </Text>

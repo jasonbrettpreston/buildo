@@ -2,6 +2,7 @@
 // Infinite-scroll lead feed hook backed by TanStack Query.
 // Normalises cursor pagination and validates every page through Zod.
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { ZodError } from 'zod';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { LeadFeedResultSchema } from '@/lib/schemas';
 import type { LeadFeedResult, LeadFeedCursor } from '@/lib/schemas';
@@ -48,5 +49,9 @@ export function useLeadFeed(params: FeedParams | null) {
     initialPageParam: null as LeadFeedCursor | null,
     getNextPageParam: (lastPage) => lastPage.meta.next_cursor,
     enabled: params !== null,
+    // Schema drift is a contract bug — re-throw to the ErrorBoundary so engineers
+    // see it in dev and Sentry in prod. Network errors stay in isError for inline
+    // UX handling (retry / offline banner).
+    throwOnError: (err) => err instanceof ZodError,
   });
 }

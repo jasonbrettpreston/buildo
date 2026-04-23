@@ -60,7 +60,10 @@ export const GET = withApiEnvelope(async function GET(
       wsib: wsibLinks.length > 0 ? wsibLinks[0] : null,
     });
   } catch (err) {
-    logError('[api/entities]', err, { handler: 'GET', entityId });
+    // PIPEDA: do not log entityId — it reversibly joins to business mailing
+    // address via entities/wsib_registry. Route tag alone is enough signal
+    // to triage the 500; re-fetch with the original request URL if needed.
+    logError('[api/entities]', err, { handler: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch entity' },
       { status: 500 }

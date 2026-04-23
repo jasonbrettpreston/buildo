@@ -42,10 +42,10 @@ export function LeadCardSkeleton() {
       <Bone className="h-3 rounded w-1/2 mb-3" />
       {/* Divider */}
       <View className="border-b border-zinc-800 mb-3" />
-      {/* Badge row */}
+      {/* Badge row — rounded-md matches actual LeadCard pills (spec 91 §4.1). */}
       <View className="flex-row items-center gap-2">
-        <Bone className="h-5 rounded-full w-20" />
-        <Bone className="h-5 rounded-full w-16" />
+        <Bone className="h-5 rounded-md w-20" />
+        <Bone className="h-5 rounded-md w-16" />
       </View>
     </View>
   );

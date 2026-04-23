@@ -58,8 +58,8 @@ function LeadCardInner({ item, index, onPress, onSaveToggle }: Props) {
 
       {/* Score pills row */}
       <View className="flex-row flex-wrap gap-2 mb-3">
-        {/* Timing badge */}
-        <View className="bg-zinc-800 rounded-full px-3 py-1">
+        {/* Timing badge — spec 91 §4.1 rounded-md for status/category pills */}
+        <View className="bg-zinc-800 rounded-md px-3 py-1">
           <Text className="font-mono text-xs text-zinc-300">
             {item.timing_display}
           </Text>
@@ -67,18 +67,18 @@ function LeadCardInner({ item, index, onPress, onSaveToggle }: Props) {
 
         {/* Target window badge */}
         {item.target_window === 'work' ? (
-          <View className="bg-red-500/20 border border-red-500/40 rounded-full px-3 py-1">
+          <View className="bg-red-500/20 border border-red-500/40 rounded-md px-3 py-1">
             <Text className="font-mono text-xs text-red-400">🚨 Rescue Mission</Text>
           </View>
         ) : (
-          <View className="bg-amber-500/20 border border-amber-500/40 rounded-full px-3 py-1">
+          <View className="bg-amber-500/20 border border-amber-500/40 rounded-md px-3 py-1">
             <Text className="font-mono text-xs text-amber-400">💎 Early Bid</Text>
           </View>
         )}
 
         {/* Cost tier */}
         {item.cost_tier ? (
-          <View className="bg-zinc-800 rounded-full px-3 py-1">
+          <View className="bg-zinc-800 rounded-md px-3 py-1">
             <Text className="font-mono text-xs text-zinc-300">
               {COST_TIER_LABEL[item.cost_tier] ?? item.cost_tier}
             </Text>

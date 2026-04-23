@@ -2,9 +2,12 @@
 // SPEC LINK: docs/specs/03-mobile/90_mobile_engineering_protocol.md §Zod Boundary
 //
 // Every fetch through apiClient.ts must parse the response through the
-// relevant schema. A ZodError is caught by the ErrorBoundary and reported
-// to observability (Phase 8: Sentry). This file is the single source of
-// truth for what shape the mobile app will accept from the backend.
+// relevant schema. A ZodError re-throws via the hook's `throwOnError: (err)
+// => err instanceof ZodError` option — reaches the ErrorBoundary during
+// render (schema drift is a contract bug, not a UX state). Network errors
+// (ApiError/RateLimitError/NetworkError) stay in TanStack Query's `isError`
+// state for inline handling (retry CTA / offline banner). This file is the
+// single source of truth for what shape the mobile app will accept.
 import { z } from 'zod';
 import { CONTRACTS } from '@/constants/contracts';
 
@@ -46,6 +49,8 @@ export const PermitLeadFeedItemSchema = LeadScoreBaseSchema.extend({
   estimated_cost: z.number().nullable(),
   lifecycle_phase: z.string().nullable(),
   lifecycle_stalled: z.boolean(),
+  target_window: z.enum(['bid', 'work']),
+  competition_count: z.number().int().nonnegative(),
 });
 
 export type PermitLeadFeedItem = z.infer<typeof PermitLeadFeedItemSchema>;
