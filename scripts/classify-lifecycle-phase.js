@@ -41,14 +41,19 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-load
 
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 
-// EST hour gate — checks whether the current Toronto local time falls
-// within the user's notification_schedule window.
+// EST/EDT gate — checks whether the current Toronto local time falls
+// within the user's notification_schedule window. Uses Intl.DateTimeFormat
+// to correctly handle DST (Toronto is UTC-5 EST in winter, UTC-4 EDT in
+// summer — ~65% of the year). Hardcoding -5 would silently drop the first
+// hour of the morning window (6–7 AM EDT) for ~8 months of the year.
+const _torontoHourFmt = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/Toronto',
+  hour: 'numeric',
+  hour12: false,
+});
+
 function isScheduleAllowed(schedule, nowUtcMs) {
-  // Toronto offset: EST = UTC-5, EDT = UTC-4. Approximate with -5 for
-  // simplicity — the hour window (6-9, 17-20) has enough slack that a
-  // 1-hour DST drift is tolerable for notification scheduling.
-  const torontoMs = nowUtcMs - 5 * 60 * 60 * 1000;
-  const hour = new Date(torontoMs).getUTCHours();
+  const hour = parseInt(_torontoHourFmt.format(new Date(nowUtcMs)), 10);
   if (schedule === 'morning') return hour >= 6 && hour < 9;
   if (schedule === 'evening') return hour >= 17 && hour < 20;
   return true; // 'anytime'
@@ -174,6 +179,69 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
   }
 
   pipeline.log.info('[classify-lifecycle-phase/push]', `Dispatched ${messages.length} push notification(s)`);
+}
+
+// Dispatches START_DATE_URGENT pushes for permits predicted to start within 7 days.
+// Bypasses the schedule gate (spec §2.2 — urgency override).
+// Runs once per pipeline run after classification — fire-and-forget, MUST NOT abort.
+async function dispatchStartDateUrgentPushes(pool) {
+  const nowMs = Date.now();
+  let rows;
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT ON (tf.permit_num, tf.revision_num, dt.push_token)
+              tf.permit_num, tf.revision_num, dt.push_token,
+              up.notification_prefs, tf.predicted_start
+         FROM trade_forecasts tf
+         JOIN lead_views lv
+           ON lv.permit_num = tf.permit_num
+          AND lv.revision_num = tf.revision_num
+          AND lv.saved = true
+         JOIN device_tokens dt ON dt.user_id = lv.user_id
+         JOIN user_profiles up ON up.user_id = lv.user_id
+        WHERE tf.predicted_start IS NOT NULL
+          AND tf.predicted_start >= NOW()
+          AND tf.predicted_start <= NOW() + INTERVAL '7 days'`,
+    );
+    rows = result.rows;
+  } catch (err) {
+    pipeline.log.warn('[classify-lifecycle-phase/push]', 'START_DATE_URGENT query failed', { err: err.message });
+    return;
+  }
+
+  const messages = [];
+  for (const row of rows) {
+    const prefs = row.notification_prefs || {};
+    if (!prefs.start_date_urgent) continue;
+    // No schedule gate — start-date alerts bypass the window (spec §2.2)
+    const daysUntil = Math.ceil(
+      (new Date(row.predicted_start).getTime() - nowMs) / (1000 * 60 * 60 * 24),
+    );
+    messages.push({
+      to: row.push_token,
+      title: 'Work Starting Soon',
+      body: `${row.permit_num} is predicted to start in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`,
+      data: {
+        notification_type: 'START_DATE_URGENT',
+        route_domain: 'flight_board',
+        entity_id: `${row.permit_num}--${row.revision_num}`,
+        urgency: 'urgent',
+      },
+    });
+  }
+
+  if (messages.length === 0) return;
+
+  for (let i = 0; i < messages.length; i += 100) {
+    const chunk = messages.slice(i, i + 100);
+    try {
+      await callExpoPushApi(chunk);
+    } catch (err) {
+      pipeline.log.warn('[classify-lifecycle-phase/push]', `Expo Push API call failed for START_DATE_URGENT (${chunk.length} msgs)`, { err: err.message });
+    }
+  }
+
+  pipeline.log.info('[classify-lifecycle-phase/push]', `Dispatched ${messages.length} START_DATE_URGENT push notification(s)`);
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -958,6 +1026,13 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       `BLOCKING: unclassified count ${unclassifiedCount} > 100. Top unhandled statuses:`,
       { unclassifiedByStatus },
     );
+  }
+
+  // START_DATE_URGENT dispatch — fire-and-forget, MUST NOT abort the run.
+  try {
+    await dispatchStartDateUrgentPushes(pool);
+  } catch (err) {
+    pipeline.log.warn('[classify-lifecycle-phase/push]', 'dispatchStartDateUrgentPushes threw unexpectedly', { err: err.message });
   }
 
   pipeline.emitSummary({

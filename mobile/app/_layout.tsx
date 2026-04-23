@@ -41,7 +41,7 @@ function AuthGate() {
       router.replace('/login');
     } else if (user && inAuthGroup) {
       router.replace('/(app)/');
-      void registerPushToken();
+      void registerPushToken().catch(() => {});
     }
   }, [user, segments, _hasHydrated]);
 
@@ -68,12 +68,14 @@ function NotificationHandlers() {
 
       if (routeDomain === 'flight_board') {
         router.push('/(app)/flight-board');
+        if (entityId) {
+          router.push(`/(app)/[flight-job]?id=${entityId}`);
+        }
       } else {
         router.push('/(app)/');
-      }
-
-      if (entityId) {
-        router.push(`/(app)/[lead]?id=${entityId}`);
+        if (entityId) {
+          router.push(`/(app)/[lead]?id=${entityId}`);
+        }
       }
     });
 

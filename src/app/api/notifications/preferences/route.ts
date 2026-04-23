@@ -62,13 +62,17 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Merge patch: jsonb || operator merges top-level keys, preserving unset fields.
-    await pool.query(
+    const result = await pool.query(
       `UPDATE user_profiles
           SET notification_prefs = notification_prefs || $2::jsonb,
               updated_at = NOW()
         WHERE user_id = $1`,
       [userId, JSON.stringify(parsed.data)],
     );
+
+    if (result.rowCount === 0) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (cause) {
