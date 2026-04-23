@@ -1,0 +1,9 @@
+appId: com.buildo.app
+---
+- launchApp
+- tapOn: "Save Lead"
+- assertVisible: "Want us to alert you"
+- tapOn: "Allow"
+- tapOn: "Allow"
+- openLink: "buildo://(app)/lead?id=permit_test_123"
+- assertVisible: "Permit Details"

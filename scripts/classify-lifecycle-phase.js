@@ -21,6 +21,7 @@
  */
 'use strict';
 
+const https = require('https');
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const {
@@ -30,6 +31,150 @@ const {
   NORMALIZED_DEAD_DECISIONS_ARRAY,
 } = require('./lib/lifecycle-phase');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+
+// ─────────────────────────────────────────────────────────────────
+// Push notification dispatch (spec 92 §2.2)
+// Dispatches LIFECYCLE_PHASE_CHANGED and LIFECYCLE_STALLED pushes to
+// users who have saved a permit. Wrapped in try-catch — failure MUST
+// NOT abort the classification run.
+// ─────────────────────────────────────────────────────────────────
+
+const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
+
+// EST hour gate — checks whether the current Toronto local time falls
+// within the user's notification_schedule window.
+function isScheduleAllowed(schedule, nowUtcMs) {
+  // Toronto offset: EST = UTC-5, EDT = UTC-4. Approximate with -5 for
+  // simplicity — the hour window (6-9, 17-20) has enough slack that a
+  // 1-hour DST drift is tolerable for notification scheduling.
+  const torontoMs = nowUtcMs - 5 * 60 * 60 * 1000;
+  const hour = new Date(torontoMs).getUTCHours();
+  if (schedule === 'morning') return hour >= 6 && hour < 9;
+  if (schedule === 'evening') return hour >= 17 && hour < 20;
+  return true; // 'anytime'
+}
+
+function callExpoPushApi(messages) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(messages);
+    const req = https.request(
+      EXPO_PUSH_URL,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+        },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => resolve(data));
+      },
+    );
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+// Dispatches pushes for a set of permit phase changes and stall events.
+// pool: pg pool; transitions: [{permit_num, revision_num, phase}];
+// stalledPermits: [{permit_num, revision_num}] (newly stalled rows).
+async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
+  const nowMs = Date.now();
+  const messages = [];
+
+  // LIFECYCLE_PHASE_CHANGED
+  for (const t of transitions) {
+    let rows;
+    try {
+      const result = await pool.query(
+        `SELECT dt.push_token, up.notification_prefs
+           FROM lead_views lv
+           JOIN device_tokens dt ON dt.user_id = lv.user_id
+           JOIN user_profiles up ON up.user_id = lv.user_id
+          WHERE lv.permit_num = $1
+            AND lv.revision_num = $2
+            AND lv.saved = true`,
+        [t.permit_num, t.revision_num],
+      );
+      rows = result.rows;
+    } catch (err) {
+      pipeline.log.warn('[classify-lifecycle-phase/push]', `PHASE_CHANGED query failed for ${t.permit_num}`, { err: err.message });
+      continue;
+    }
+
+    for (const row of rows) {
+      const prefs = row.notification_prefs || {};
+      if (!prefs.phase_changed) continue;
+      if (!isScheduleAllowed(prefs.notification_schedule || 'anytime', nowMs)) continue;
+      messages.push({
+        to: row.push_token,
+        title: 'Phase Update',
+        body: `${t.permit_num} has advanced to ${t.phase}.`,
+        data: {
+          notification_type: 'LIFECYCLE_PHASE_CHANGED',
+          route_domain: 'flight_board',
+          entity_id: `${t.permit_num}--${t.revision_num}`,
+          urgency: 'normal',
+        },
+      });
+    }
+  }
+
+  // LIFECYCLE_STALLED — bypasses schedule gate (spec §2.2)
+  for (const s of stalledPermits) {
+    let rows;
+    try {
+      const result = await pool.query(
+        `SELECT dt.push_token, up.notification_prefs
+           FROM lead_views lv
+           JOIN device_tokens dt ON dt.user_id = lv.user_id
+           JOIN user_profiles up ON up.user_id = lv.user_id
+          WHERE lv.permit_num = $1
+            AND lv.revision_num = $2
+            AND lv.saved = true`,
+        [s.permit_num, s.revision_num],
+      );
+      rows = result.rows;
+    } catch (err) {
+      pipeline.log.warn('[classify-lifecycle-phase/push]', `LIFECYCLE_STALLED query failed for ${s.permit_num}`, { err: err.message });
+      continue;
+    }
+
+    for (const row of rows) {
+      const prefs = row.notification_prefs || {};
+      if (!prefs.lifecycle_stalled) continue;
+      // No schedule gate — stall alerts always deliver immediately
+      messages.push({
+        to: row.push_token,
+        title: 'Delayed',
+        body: `${s.permit_num} has been flagged as stalled by the city.`,
+        data: {
+          notification_type: 'LIFECYCLE_STALLED',
+          route_domain: 'flight_board',
+          entity_id: `${s.permit_num}--${s.revision_num}`,
+          urgency: 'stalled',
+        },
+      });
+    }
+  }
+
+  if (messages.length === 0) return;
+
+  // Expo Push API accepts up to 100 messages per request
+  for (let i = 0; i < messages.length; i += 100) {
+    const chunk = messages.slice(i, i + 100);
+    try {
+      await callExpoPushApi(chunk);
+    } catch (err) {
+      pipeline.log.warn('[classify-lifecycle-phase/push]', `Expo Push API call failed (${chunk.length} msgs)`, { err: err.message });
+    }
+  }
+
+  pipeline.log.info('[classify-lifecycle-phase/push]', `Dispatched ${messages.length} push notification(s)`);
+}
 
 // ─────────────────────────────────────────────────────────────────
 // Config schema — §4.2: every logic_variable consumed by this script
@@ -439,6 +584,19 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       );
     });
 
+    // Push dispatch — fire-and-forget after the DB transaction commits.
+    // Failures are logged and swallowed; they MUST NOT abort the classification run.
+    // Only dispatch LIFECYCLE_STALLED when stalled transitions false→true.
+    // Exclude null old_stalled (first-classification): we can't know if
+    // the permit was stalled before we ever saw it, so we skip to avoid
+    // false alerts on the first pipeline run.
+    const stalledRows = batch.filter((r) => r.stalled === true && r.old_stalled === false);
+    try {
+      await dispatchPhaseChangePushes(pool, transitions, stalledRows);
+    } catch (err) {
+      pipeline.log.warn('[classify-lifecycle-phase/push]', 'dispatchPhaseChangePushes threw unexpectedly', { err: err.message });
+    }
+
     // Progress log every 50 batches
     if (permitBatchIndex % 50 === 0) {
       pipeline.log.info(
@@ -453,7 +611,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   for await (const row of pipeline.streamQuery(
     pool,
     `SELECT permit_num, revision_num, status, enriched_status, issued_date, last_seen_at,
-            lifecycle_phase AS old_phase, permit_type, neighbourhood_id
+            lifecycle_phase AS old_phase, lifecycle_stalled AS old_stalled, permit_type, neighbourhood_id
        FROM permits
       WHERE lifecycle_classified_at IS NULL
          OR last_seen_at > lifecycle_classified_at`,
@@ -501,6 +659,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       // transition logging. old_phase is the value BEFORE this run's
       // classification. If old_phase !== phase, we log a transition.
       old_phase: row.old_phase,
+      old_stalled: row.old_stalled, // for stall-change push dispatch
       permit_type: row.permit_type,
       neighbourhood_id: row.neighbourhood_id,
     });

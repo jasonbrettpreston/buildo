@@ -72,7 +72,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <Text className="text-text-muted text-xs text-center leading-relaxed">
-            By continuing you agree to Buildo's Terms of Service and Privacy Policy.
+            By continuing you agree to Buildo&apos;s Terms of Service and Privacy Policy.
           </Text>
         </View>
       </View>
