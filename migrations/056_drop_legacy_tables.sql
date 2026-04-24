@@ -1,6 +1,7 @@
 -- Migration 056: Drop legacy builder tables after entities consolidation (Spec 37)
 -- builders → entities (migration 042), builder_contacts → entity_contacts (migration 055)
 
+-- ALLOW-DESTRUCTIVE: builders and builder_contacts tables superseded by entities/entity_contacts (migration 042/055); data fully migrated before this runs.
 -- UP
 
 -- Remove wsib_registry FK to builders (linked_entity_id is the canonical FK now)

@@ -1,5 +1,7 @@
 -- 002_permit_history.sql
 -- Change tracking: one row per field that changed between sync runs.
+-- FK-EXEMPT: permit_history references permits via permit_num+revision_num — composite FK added in migration 027.
+-- CONCURRENTLY-EXEMPT: indexes created before CONCURRENTLY was required; table was empty at migration time.
 
 -- UP
 CREATE TABLE IF NOT EXISTS permit_history (

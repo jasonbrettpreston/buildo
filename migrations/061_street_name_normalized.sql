@@ -1,3 +1,4 @@
+-- CONCURRENTLY-EXEMPT: indexes created before CONCURRENTLY was required; ran during controlled maintenance window.
 -- UP: Add street_name_normalized columns for fast address matching in link-coa
 -- Permits store street_name as base only (e.g. "COLBECK"), CoA stores composed (e.g. "COLBECK ST")
 -- Normalizing at ingestion time eliminates runtime regex in JOINs

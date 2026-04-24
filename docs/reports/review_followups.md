@@ -1,6 +1,19 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF2 Task 3 — Retroactive annotation sweep + validate-migration.js marker fixes (commit: TBD, 2026-04-24)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| LOW | Both / Defensible | **Escaped single-quote `''` not handled in string/comment parsers** — `SELECT 'it''s a trap'; -- DROP TABLE` causes quote counting desync in `stripLineComments` and `blankStringLiterals`. Known limitation; schema migrations virtually never contain escaped quotes in string values. | Known limitation — document in script header if/when reported |
+| LOW | Gemini / Defensible | **Nested block comments not handled** — `/* /* nested */ */` pattern. PostgreSQL supports these; rare in migrations. Current `stripBlockComments` regex would terminate early at first `*/`. | Future hardening (regex replacement with stack-based parser) |
+| LOW | Gemini / Defensible | **Dollar-quoted strings not handled** — `$$..$$` with commas or `--` inside. Same family as escaped-quote issue; rare in schema migrations. | Known limitation |
+| LOW | Gemini MEDIUM / Defensible | **Multiple ALTER TABLE without semicolons — greedy regex body** — If two `ALTER TABLE` statements exist without a terminating `;`, the `alterRe` body match could consume both. Pre-existing; real migrations always terminate ALTER TABLE with a semicolon. | Reactive — only if false positives reported |
+| LOW | Independent / Design | **`concurrentlyExempt` reads full content, not UP-block-only** — A `-- CONCURRENTLY-EXEMPT` placed exclusively in the DOWN block would suppress Rule 2 for the entire file. Accepted tradeoff: Rule 2 is not a security gate; file-scope annotation is appropriate for a file-level exemption. | Documented design decision; no planned fix |
+| LOW | Gemini / Out-of-scope | **Quoted identifiers with special chars in table name regex** — `"my-table"` not matched by `[\w]+`. Same as Task 2 deferral. | Future hardening |
+| LOW | DeepSeek / Out-of-scope | **Double-quoted identifiers in `splitTopLevelCommas`** — commas inside `"col,name"` treated as clause separators. Extremely rare in migration column names. | Future hardening |
+| LOW | Independent G1 / Cosmetic | **Stale `-- ALLOW-DESTRUCTIVE` in 069_lead_views.sql DOWN block** — The marker on the DOWN block's commented-out DROP has no functional effect (allowDestructive reads from upBlockContent). Confusing but harmless. | Low-priority cleanup |
+
 ## WF2 B1+B2+A4 — validate-migration.js hardening (commit: TBD, 2026-04-24)
 
 | Severity | Source | Item | Planned Home |

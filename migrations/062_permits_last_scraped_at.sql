@@ -1,3 +1,4 @@
+-- CONCURRENTLY-EXEMPT: index created before CONCURRENTLY was required; ran during controlled maintenance window.
 -- UP: Add last_scraped_at to permits for scraper cooldown tracking.
 -- Decouples "when did we last attempt this permit" from per-stage scraped_at
 -- in permit_inspections (which only updates for stages returned by AIC).

@@ -1,5 +1,6 @@
 -- Migration 040: WSIB Registry table for Class G construction businesses
 -- Source: WSIB Open Data "Businesses classification details" annual CSV
+-- CONCURRENTLY-EXEMPT: indexes created before CONCURRENTLY was required; table was empty at migration time.
 
 -- UP
 CREATE TABLE IF NOT EXISTS wsib_registry (

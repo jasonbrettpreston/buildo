@@ -33,6 +33,19 @@ describe('validateMigration', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('passes DROP TABLE when ALLOW-DESTRUCTIVE marker is present alongside block comments', () => {
+    const sql = wrap('/* header comment */\n-- ALLOW-DESTRUCTIVE: removing legacy table\n/* another comment */\nDROP TABLE legacy_thing;');
+    const result = validateMigration(sql, 'migrations/003b_drop_ok_block_comment.sql');
+    expect(result.ok).toBe(true);
+  });
+
+  it('fails DROP TABLE when ALLOW-DESTRUCTIVE is only inside a block comment', () => {
+    const sql = wrap('/* -- ALLOW-DESTRUCTIVE */\nDROP TABLE permits;');
+    const result = validateMigration(sql, 'migrations/003c_drop_blocked_comment.sql');
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes('DROP TABLE'))).toBe(true);
+  });
+
   it('fails when DROP COLUMN has no ALLOW-DESTRUCTIVE marker', () => {
     const sql = wrap('ALTER TABLE permits DROP COLUMN photo_url;');
     const result = validateMigration(sql, 'migrations/004_drop_col.sql');
@@ -268,6 +281,22 @@ describe('validateMigration', () => {
     const result = validateMigration(sql, 'migrations/306_b1_allow_down_only.sql');
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.includes('DROP TABLE'))).toBe(true);
+  });
+
+  // ─── CONCURRENTLY-EXEMPT: Rule 2 suppression for grandfathered migrations ────
+
+  it('CONCURRENTLY-EXEMPT: suppresses Rule 2 for CREATE INDEX on large table', () => {
+    const sql = `-- CONCURRENTLY-EXEMPT: grandfathered\n-- UP\nCREATE INDEX idx_permits_foo ON permits (foo);\n-- DOWN\nDROP INDEX IF EXISTS idx_permits_foo;\n`;
+    const result = validateMigration(sql, 'migrations/307_concurrently_exempt.sql');
+    expect(result.ok).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('CONCURRENTLY-EXEMPT inside block comment does NOT suppress Rule 2', () => {
+    const sql = `/* -- CONCURRENTLY-EXEMPT */\n-- UP\nCREATE INDEX idx_permits_foo ON permits (foo);\n-- DOWN\nDROP INDEX IF EXISTS idx_permits_foo;\n`;
+    const result = validateMigration(sql, 'migrations/308_concurrently_exempt_blockcomment.sql');
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.toLowerCase().includes('concurrently'))).toBe(true);
   });
 
   // ─── B2: PRIMARY KEY exclusion from Rule 5 integer-ID check ─────────────────

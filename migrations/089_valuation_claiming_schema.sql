@@ -1,3 +1,4 @@
+-- FK-EXEMPT: tracked_projects references permits via permit_num+revision_num — composite FK added separately; application enforces referential integrity.
 -- Migration 089: Valuation Engine + Claiming System Schema
 --
 -- Adds infrastructure for:

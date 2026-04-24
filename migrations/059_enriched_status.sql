@@ -1,3 +1,4 @@
+-- CONCURRENTLY-EXEMPT: indexes created before CONCURRENTLY was required; ran during controlled maintenance window.
 -- UP
 ALTER TABLE permits ADD COLUMN enriched_status VARCHAR(30) DEFAULT NULL;
 

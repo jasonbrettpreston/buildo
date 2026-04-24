@@ -1,3 +1,5 @@
+-- FK-EXEMPT: neighbourhood_id is a source-data PK from city open data, not a FK to another table.
+
 -- UP
 CREATE TABLE IF NOT EXISTS neighbourhoods (
     id                      SERIAL PRIMARY KEY,

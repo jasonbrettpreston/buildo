@@ -1,3 +1,4 @@
+-- FK-EXEMPT: lead_views references permits via permit_num+revision_num — composite FK constraint enforced at application layer.
 -- Migration 069: lead_views table
 -- Spec: docs/specs/product/future/75_lead_feed_implementation_guide.md §11
 --

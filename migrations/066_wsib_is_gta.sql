@@ -1,6 +1,7 @@
 -- Migration 066: Add is_gta flag to wsib_registry for GTA-only enrichment filtering
 -- Saves ~72K Serper credits by excluding non-GTA businesses from enrichment queue.
 -- Spec: docs/specs/pipeline/40_pipeline_system.md
+-- CONCURRENTLY-EXEMPT: index created before CONCURRENTLY was required; ran during controlled maintenance window.
 
 -- UP
 ALTER TABLE wsib_registry ADD COLUMN IF NOT EXISTS is_gta BOOLEAN DEFAULT false;

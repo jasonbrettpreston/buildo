@@ -195,10 +195,18 @@ function validateMigration(content, filename) {
   const upBlockContent = downMarkerMatch ? content.slice(0, downMarkerMatch.index) : content;
   const upBlockStripped = blankStringLiterals(stripLineComments(stripBlockComments(upBlockContent)));
 
-  // ALLOW-DESTRUCTIVE marker is scoped to the UP block only — a marker placed
-  // exclusively in the DOWN block must not exempt destructive statements in the UP block.
-  // Block-comment exclusion prevents `/* -- ALLOW-DESTRUCTIVE */` from bypassing the check.
-  const allowDestructive = /--\s*ALLOW-DESTRUCTIVE/i.test(upBlockContent) && !/\/\*[\s\S]*?--\s*ALLOW-DESTRUCTIVE[\s\S]*?\*\//i.test(upBlockContent);
+  // Intermediate representations for marker detection: block comments and string literals
+  // blanked, but line comments preserved. This lets us detect -- markers without being
+  // fooled by block-comment wrapping (`/* -- MARKER */`) or string literals (`'-- MARKER'`).
+  const contentSansBlocksAndStrings = blankStringLiterals(stripBlockComments(content));
+  const upBlockSansBlocksAndStrings = blankStringLiterals(stripBlockComments(upBlockContent));
+
+  // ALLOW-DESTRUCTIVE: scoped to UP block only so a marker in DOWN cannot exempt UP drops.
+  const allowDestructive = /--\s*ALLOW-DESTRUCTIVE/i.test(upBlockSansBlocksAndStrings);
+
+  // CONCURRENTLY-EXEMPT: file-scoped (Rule 2 scans full content); suppresses Rule 2 for
+  // migrations predating the CONCURRENTLY requirement.
+  const concurrentlyExempt = /--\s*CONCURRENTLY-EXEMPT\b/i.test(contentSansBlocksAndStrings);
 
   // Backstop: UP / DOWN blocks (check raw content so header comments count).
   if (!/^[ \t]*--[ \t]*UP\b/im.test(content)) {
@@ -234,7 +242,7 @@ function validateMigration(content, filename) {
     const onMatch = /\bON\s+(?:ONLY\s+)?(?:"?([a-zA-Z_][a-zA-Z0-9_]*)"?\.)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?/i.exec(stmt);
     if (!onMatch) continue;
     const tableName = (onMatch[2] || '').toLowerCase();
-    if (!isConcurrent && LARGE_TABLES.includes(tableName)) {
+    if (!isConcurrent && LARGE_TABLES.includes(tableName) && !concurrentlyExempt) {
       const line = lineOf(content, im.index ?? 0);
       errors.push(
         `${display}:${line}: CREATE INDEX on large table '${tableName}' must use CONCURRENTLY`,
@@ -277,7 +285,7 @@ function validateMigration(content, filename) {
   // but declares none. Suppressed by `-- FK-EXEMPT` anywhere in the file or
   // when the table is `permits` (the composite-PK parent table itself).
   const warnings = [];
-  const fkExempt = /--\s*FK-EXEMPT\b/i.test(content);
+  const fkExempt = /--\s*FK-EXEMPT\b/i.test(contentSansBlocksAndStrings);
   if (!fkExempt) {
     for (const { name, body } of extractCreateTableBlocks(stripped)) {
       if (name.toLowerCase() === 'permits') continue;

@@ -1,5 +1,8 @@
 -- Migration 042: Corporate Identity Hub — entities + entity_projects
 -- Spec: docs/specs/37_corporate_identity_hub.md
+-- CONCURRENTLY-EXEMPT: indexes created before CONCURRENTLY was required; tables were empty at migration time.
+
+-- UP
 
 -- Entity type classification
 CREATE TYPE entity_type_enum AS ENUM ('Corporation', 'Individual');
@@ -47,3 +50,9 @@ CREATE TABLE IF NOT EXISTS entity_projects (
 CREATE INDEX IF NOT EXISTS idx_entity_projects_entity ON entity_projects(entity_id);
 CREATE INDEX IF NOT EXISTS idx_entity_projects_permit ON entity_projects(permit_num, revision_num);
 CREATE INDEX IF NOT EXISTS idx_entity_projects_coa ON entity_projects(coa_file_num) WHERE coa_file_num IS NOT NULL;
+
+-- DOWN
+DROP TABLE IF EXISTS entity_projects;
+DROP TABLE IF EXISTS entities;
+DROP TYPE IF EXISTS project_role_enum;
+DROP TYPE IF EXISTS entity_type_enum;
