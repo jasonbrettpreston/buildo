@@ -138,6 +138,16 @@ compliance choice (e.g. deliberately skipping an unhappy-path test with a reason
       response BEFORE running tests. Catches the spec-vs-code drift class
       that costs reviewer cycles when only the reviewer side runs the
       checklist. (Process added in commit landing Phase 2 review hardening.)
+- [ ] **Multi-Agent Review:** Spawn three agents in parallel (`isolation: "worktree"`).
+      Provide each: (a) spec path, (b) modified files list, (c) one-sentence summary.
+      Do NOT provide a checklist — each agent generates its own from the spec + diff.
+      1. **Gemini** (adversarial): spec-vs-code gaps, missing edge cases, failure modes
+      2. **DeepSeek** (adversarial): logic errors, wrong assumptions, downstream consumers
+         not handling new states or values
+      3. **Code Reviewer**: error path coverage, type safety, naming/pattern consistency
+      **Triage findings:**
+      - **BUG** (blocking) → file WF3 immediately. Do NOT proceed to Green Light until resolved.
+      - **DEFER** (non-blocking) → append to `docs/reports/review_followups.md` with context.
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste the
       final test summary line (e.g., "✓ 1823 tests passed") and typecheck
       result (e.g., "Found 0 errors") as evidence. Both must show zero failures.
@@ -169,6 +179,16 @@ compliance choice (e.g. deliberately skipping an unhappy-path test with a reason
       self-skeptical checklist from the spec section governing the change.
       Walk each item against the ACTUAL diff. Output PASS/FAIL per item in
       the response BEFORE running tests. See WF1 for full rationale.
+- [ ] **Multi-Agent Review:** Spawn three agents in parallel (`isolation: "worktree"`).
+      Provide each: (a) spec path, (b) modified files list, (c) one-sentence summary.
+      Do NOT provide a checklist — each agent generates its own from the spec + diff.
+      1. **Gemini** (adversarial): spec-vs-code gaps, missing edge cases, failure modes
+      2. **DeepSeek** (adversarial): logic errors, wrong assumptions, downstream consumers
+         not handling new states or values
+      3. **Code Reviewer**: error path coverage, type safety, naming/pattern consistency
+      **Triage findings:**
+      - **BUG** (blocking) → file WF3 immediately. Do NOT proceed to Green Light until resolved.
+      - **DEFER** (non-blocking) → append to `docs/reports/review_followups.md` with context.
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste the
       final test summary line (e.g., "✓ 1823 tests passed") and typecheck
       result (e.g., "Found 0 errors") as evidence. Both must show zero failures.
@@ -194,6 +214,12 @@ compliance choice (e.g. deliberately skipping an unhappy-path test with a reason
       same data-shape gap, same boundary). For each, verify either that
       the fix covers it OR that it doesn't apply. Catches the "fixed the
       symptom, missed the class" pattern. See WF1 for full rationale.
+- [ ] **Independent Review:** Spawn one code reviewer agent (`isolation: "worktree"`).
+      Provide: (a) spec path, (b) modified files list, (c) one-sentence summary.
+      Agent generates its own checklist — do NOT provide one.
+      - **BUG** items → fix before Green Light.
+      - **DEFER** items → append to `docs/reports/review_followups.md` with context.
+      (Adversarial agents — Gemini + DeepSeek — only run for WF3 when explicitly requested.)
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste the
       final test summary line (e.g., "✓ 1823 tests passed") and typecheck
       result (e.g., "Found 0 errors") as evidence. Both must show zero failures.
@@ -388,32 +414,31 @@ Do not modify `.eas/workflows/` config without a WF2.
 
 ---
 
-## Independent Review Agent
-After implementing any WF1/WF2/WF3, spawn an independent review agent in an isolated worktree before committing. The agent acts as a second pair of eyes that doesn't share your implementation context.
+## Review Agent Reference
 
-### Agent Protocol
-1. **Spawn** with `isolation: "worktree"` so it reads committed + staged state independently.
-2. **Inputs:** Provide ONLY these — do NOT provide a pre-built checklist:
-   - The target spec path (e.g., `docs/specs/38_inspection_scraping.md`)
-   - The list of modified files
-   - A 1-sentence summary of what changed and why
-3. **Agent task:** The agent must:
-   a. Read the spec's Behavioral Contract and Operating Boundaries
-   b. Read each modified file in full
-   c. **Generate its own evaluation checklist** based on what the spec requires and what the code does — not what the implementor claims it does
-   d. Evaluate each checklist item as PASS/FAIL with line numbers
-   e. Check for gaps the implementor may not have considered:
-      - Error paths that silently swallow failures
-      - State mutations without IS DISTINCT FROM guards
-      - Missing telemetry/logging for new code paths
-      - Spec requirements that exist in the spec but have no corresponding code
-      - Off-by-one errors in thresholds or date math
-      - New values/states that aren't handled by downstream consumers
-4. **Output:** Return a structured report: checklist items, PASS/FAIL counts, and specific gaps with line numbers.
-5. **Action:** Fix any FAIL items before committing.
+Review agents are triggered as named steps inside WF1, WF2, and WF3 — not from this section.
+This section defines what each agent must do when spawned.
 
-### Why self-generated checklists
-If the implementor writes the checklist, the agent only validates what was intended — not what was missed. Self-generated checklists catch the "unknown unknowns" that the implementor's bias filters out.
+### All review agents (Gemini, DeepSeek, Code Reviewer)
+- Spawn with `isolation: "worktree"` — reads the repo independently, not through the implementor's context
+- Inputs: spec path + modified files list + one-sentence summary. **No checklist provided** — the agent generates its own from the spec and diff
+- Must read the spec's Behavioral Contract and Operating Boundaries in full before evaluating
+- Must generate checklist items from what the spec *requires*, not what the implementor *claims* — this catches unknown unknowns
+- Output: structured report with PASS/FAIL per item, line numbers for failures, and gaps not covered by any checklist item
+
+### Adversarial agents (Gemini, DeepSeek) — attack surface focus
+- Error paths that silently swallow failures
+- State mutations without IS DISTINCT FROM guards
+- Spec requirements with no corresponding code
+- Off-by-one errors in thresholds or date math
+- New values/states not handled by downstream consumers
+- Wrong assumptions baked into the implementation
+
+### Code Reviewer — quality focus
+- Missing telemetry/logging for new code paths
+- Type safety and `any` usage
+- Naming and pattern consistency with adjacent files
+- Exports that resolve correctly; no dead code introduced
 
 ---
 
