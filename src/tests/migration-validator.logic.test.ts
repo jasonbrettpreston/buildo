@@ -232,4 +232,61 @@ describe('validateMigration', () => {
     expect(result.ok).toBe(true);
     expect(result.warnings).toEqual([]);
   });
+
+  // ─── B1: Rule 1 scoped to UP block only ──────────────────────────────────────
+
+  it('B1 regression: DROP TABLE in DOWN block does NOT error without ALLOW-DESTRUCTIVE', () => {
+    const sql = `-- UP\nCREATE TABLE temp_thing (id SERIAL PRIMARY KEY);\n-- DOWN\nDROP TABLE IF EXISTS temp_thing;\n`;
+    const result = validateMigration(sql, 'migrations/300_b1_down_regression.sql');
+    expect(result.ok).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('B1 correctness: DROP TABLE in UP block still errors without ALLOW-DESTRUCTIVE', () => {
+    const sql = `-- UP\nDROP TABLE permits;\n-- DOWN\n-- noop\n`;
+    const result = validateMigration(sql, 'migrations/301_b1_up_correctness.sql');
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes('DROP TABLE'))).toBe(true);
+  });
+
+  it('B1 regression: TRUNCATE TABLE in DOWN block does NOT error without ALLOW-DESTRUCTIVE', () => {
+    const sql = `-- UP\nCREATE TABLE temp_thing (id SERIAL PRIMARY KEY);\n-- DOWN\nTRUNCATE TABLE temp_thing;\nDROP TABLE IF EXISTS temp_thing;\n`;
+    const result = validateMigration(sql, 'migrations/304_b1_truncate_down.sql');
+    expect(result.ok).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('B1 regression: DROP COLUMN in DOWN block does NOT error without ALLOW-DESTRUCTIVE', () => {
+    const sql = `-- UP\nALTER TABLE permits ADD COLUMN extra TEXT;\n-- DOWN\nALTER TABLE permits DROP COLUMN extra;\n`;
+    const result = validateMigration(sql, 'migrations/305_b1_drop_col_down.sql');
+    expect(result.ok).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('B1 + allowDestructive: marker in DOWN block only does NOT exempt UP block drops', () => {
+    const sql = `-- UP\nDROP TABLE permits;\n-- DOWN\n-- ALLOW-DESTRUCTIVE: rollback recreates it\nCREATE TABLE permits (permit_num TEXT);\n`;
+    const result = validateMigration(sql, 'migrations/306_b1_allow_down_only.sql');
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes('DROP TABLE'))).toBe(true);
+  });
+
+  // ─── B2: PRIMARY KEY exclusion from Rule 5 integer-ID check ─────────────────
+
+  it('B2: CREATE TABLE with *_id INTEGER PRIMARY KEY does NOT produce Rule 5 warning', () => {
+    const sql = wrap(
+      `CREATE TABLE address_points (\n  address_point_id INTEGER PRIMARY KEY,\n  latitude DECIMAL(10,7) NOT NULL,\n  longitude DECIMAL(10,7) NOT NULL\n);`,
+    );
+    const result = validateMigration(sql, 'migrations/302_b2_pk_no_warn.sql');
+    expect(result.ok).toBe(true);
+    expect(result.warnings).toEqual([]);
+  });
+
+  // ─── A4: permit_history in LARGE_TABLES ──────────────────────────────────────
+
+  it('A4: CREATE INDEX on permit_history without CONCURRENTLY produces Rule 2 error', () => {
+    const sql = wrap(`CREATE INDEX idx_ph_test ON permit_history (permit_num);`);
+    const result = validateMigration(sql, 'migrations/303_a4_permit_history.sql');
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes('permit_history'))).toBe(true);
+  });
 });

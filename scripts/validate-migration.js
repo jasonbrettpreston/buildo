@@ -21,7 +21,7 @@
 
 const fs = require('fs');
 
-const LARGE_TABLES = ['permits', 'permit_trades', 'permit_parcels', 'wsib_registry', 'entities'];
+const LARGE_TABLES = ['permits', 'permit_trades', 'permit_parcels', 'wsib_registry', 'entities', 'permit_history'];
 
 /**
  * Find the 1-based line number for an index into the original content.
@@ -185,12 +185,20 @@ function validateMigration(content, filename) {
     return out;
   }
 
-  // Strip comments (block first, then line) before ALL content inspection,
-  // including the ALLOW-DESTRUCTIVE marker — otherwise a destructive statement
-  // hidden inside a `/* -- ALLOW-DESTRUCTIVE */` block comment would bypass
-  // the check.
+  // Strip comments (block first, then line) before ALL content inspection.
   const stripped = blankStringLiterals(stripLineComments(stripBlockComments(content)));
-  const allowDestructive = /--\s*ALLOW-DESTRUCTIVE/i.test(content) && !/\/\*[\s\S]*?--\s*ALLOW-DESTRUCTIVE[\s\S]*?\*\//i.test(content);
+
+  // B1: Extract UP block for Rule 1 scanning so that legitimate rollback DROP
+  // statements in the DOWN block don't produce false-positive errors.
+  // Falls back to full content when no -- DOWN marker is present.
+  const downMarkerMatch = /^[ \t]*--[ \t]*DOWN\b/im.exec(content);
+  const upBlockContent = downMarkerMatch ? content.slice(0, downMarkerMatch.index) : content;
+  const upBlockStripped = blankStringLiterals(stripLineComments(stripBlockComments(upBlockContent)));
+
+  // ALLOW-DESTRUCTIVE marker is scoped to the UP block only — a marker placed
+  // exclusively in the DOWN block must not exempt destructive statements in the UP block.
+  // Block-comment exclusion prevents `/* -- ALLOW-DESTRUCTIVE */` from bypassing the check.
+  const allowDestructive = /--\s*ALLOW-DESTRUCTIVE/i.test(upBlockContent) && !/\/\*[\s\S]*?--\s*ALLOW-DESTRUCTIVE[\s\S]*?\*\//i.test(upBlockContent);
 
   // Backstop: UP / DOWN blocks (check raw content so header comments count).
   if (!/^[ \t]*--[ \t]*UP\b/im.test(content)) {
@@ -201,8 +209,9 @@ function validateMigration(content, filename) {
   }
 
   // Rule 1: DROP TABLE / DROP COLUMN / ALTER TABLE ... DROP COLUMN / TRUNCATE TABLE.
+  // Scans only the UP block so legitimate rollback statements in DOWN don't error.
   const dropRe = /\b(DROP\s+(?:TABLE|COLUMN)|ALTER\s+TABLE\s+[^;]*?\s+DROP\s+COLUMN|TRUNCATE\s+TABLE)\b/gi;
-  for (const m of stripped.matchAll(dropRe)) {
+  for (const m of upBlockStripped.matchAll(dropRe)) {
     if (!allowDestructive) {
       const line = lineOf(content, m.index ?? 0);
       const raw = m[1].replace(/\s+/g, ' ').toUpperCase();
@@ -282,8 +291,14 @@ function validateMigration(content, filename) {
             `${display}: CREATE TABLE ${name} has permit_num+revision_num but no FK to permits — add REFERENCES or suppress with -- FK-EXEMPT`,
           );
         }
-        // Integer ID signature: any column named *_id with INTEGER/INT/BIGINT type.
-        if (/\b\w+_id\s+(?:INTEGER|INT|BIGINT)\b/i.test(body)) {
+        // Integer ID signature: any column named *_id with INTEGER/INT/BIGINT type,
+        // excluding columns declared as PRIMARY KEY in their own clause (source-data PKs).
+        const idColInNonPkClause = splitTopLevelCommas(body).some(
+          (clause) =>
+            /\b\w+_id\s+(?:INTEGER|INT|BIGINT)\b/i.test(clause) &&
+            !/\bPRIMARY\s+KEY\b/i.test(clause),
+        );
+        if (idColInNonPkClause) {
           warnings.push(
             `${display}: CREATE TABLE ${name} has an _id INTEGER column but no FK REFERENCES — add REFERENCES or suppress with -- FK-EXEMPT`,
           );

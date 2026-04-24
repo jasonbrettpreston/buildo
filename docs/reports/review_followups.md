@@ -1,6 +1,21 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF2 B1+B2+A4 — validate-migration.js hardening (commit: TBD, 2026-04-24)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| LOW | Gemini CRITICAL / Defensible | **ALLOW-DESTRUCTIVE marker checkable via string literal** — placing `SELECT '-- ALLOW-DESTRUCTIVE'` in a migration sets the bypass flag. Defensible: requires adversarial dev; visible in review; validator is a hook aid, not a security gate against malicious insiders. Fixed the realistic case (DOWN-block scope); the string-literal bypass remains a theoretical gap. | If RELATIONSHIPS source changes |
+| MED | Gemini+Independent / Out-of-scope | **B2 does not handle table-level PRIMARY KEY constraint** — `(source_id INTEGER NOT NULL, ..., PRIMARY KEY(source_id))` pattern (PK as separate clause) still triggers the Rule 5 integer-ID warning. Mitigation: `-- FK-EXEMPT`. A proper fix requires scanning the full table body for PK constraint references to each candidate column. | Future hardening WF on validate-migration |
+| LOW | Gemini / Out-of-scope | **Table name regex does not support quoted identifiers with special chars** — `"my-table"` with hyphens would not be parsed by `[\w]+`. Affects Rule 2 table-name matching and Rule 5 extractCreateTableBlocks. Uncommon in this codebase. | Future hardening |
+| LOW | DeepSeek+Gemini / Defensible | **Escaped single-quote (`''`) not handled in stripLineComments / blankStringLiterals** — SQL escaped-quote sequences could cause quote-counting to desync. Rare in schema migrations; existing Known Limitation comment documents multi-line string limits. | Known limitation |
+| LOW | DeepSeek / Defensible | **Dollar-quoted strings not handled** — Same family as escaped-quote issue. Rare in schema migrations. | Known limitation |
+| LOW | DeepSeek / Out-of-scope | **stripBlockComments called before blankStringLiterals** — a `/*` inside a string literal could corrupt the block-comment stripper. Would require reordering the pipeline. Pre-existing; no real migration in the corpus uses this pattern. | Future hardening |
+| LOW | Both / Out-of-scope | **lineOf() O(N) per violation** — pre-compute newline index for O(log N) lookup. Pre-existing; acceptable for pre-commit hook scale. | Reactive — only if hook latency becomes an issue |
+| LOW | Both / Out-of-scope | **LARGE_TABLES hardcoded** — maintenance burden. Proposal: externalize to config or package.json property. | Future hardening |
+| LOW | Independent / Out-of-scope | **`parcels` potentially absent from LARGE_TABLES** — Toronto has ~440K registered parcels; if table grows to full city scope it exceeds 100K threshold. Verify actual row count before adding. | Verify row count, then file WF2 if confirmed |
+| LOW | Independent / Informational | **Rule 2 and Rule 3 not scoped to UP-only** — asymmetry with B1's Rule 1 fix. A DOWN block `CREATE INDEX` on a large table would still trigger Rule 2. Unlikely in real rollback SQL; informational only. | Future consideration |
+
 ## WF3 B3 — audit-fk-orphans stale entry fix (commit: TBD, 2026-04-24)
 
 | Severity | Source | Item | Planned Home |
