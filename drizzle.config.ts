@@ -17,5 +17,10 @@ export default defineConfig({
     '!geometry_columns',
     '!geography_columns',
     '!spatial_ref_sys',
+    // pg_stat_statements views carry `oid` columns that drizzle-kit emits as
+    // `unknown(...)` — uncompilable TypeScript. We query these via raw SQL in
+    // observe-chain.js only; no TS code references them. WF2 2026-04-24 migration 109.
+    '!pg_stat_statements',
+    '!pg_stat_statements_info',
   ],
 });

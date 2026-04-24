@@ -944,6 +944,14 @@ Migration (if this script ships a DB migration)
 [ ] CREATE INDEX on large tables (permits, permit_trades, permit_parcels, wsib_registry, entities) uses CONCURRENTLY
 [ ] No executable DROP TABLE / DROP COLUMN in migration body — use `-- ALLOW-DESTRUCTIVE` marker only when required
 [ ] `node scripts/validate-migration.js migrations/NNN_name.sql` exits 0 before staging
+
+Observer scripts (if this script is an Observer archetype — spec 30 §2.1)
+[ ] External AI API call (DeepSeek, Gemini, etc.) wrapped in try/catch — API unavailable ≠ pipeline failure
+[ ] API key environment variable checked with warn + skip (not process.exit) if absent
+[ ] System catalog queries (pg_stat_statements, pg_stat_user_tables) wrapped in try/catch — extension absent ≠ pipeline failure
+[ ] Observer reads only pipeline_runs and system catalogs — zero business table access
+[ ] records_new and records_updated emitted as null (Observer null pattern — spec 48 §3.5)
+[ ] New env vars surfaced in scripts/ai-env-check.mjs
 ```
 
 ---

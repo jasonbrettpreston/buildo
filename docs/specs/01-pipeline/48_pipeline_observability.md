@@ -20,7 +20,9 @@ run-chain.js (after chain lock released, before pool.end)
                                        │
                                        ├── pipeline_runs (current run + 7-day history)
                                        │
-                                       ├── @anthropic-ai/sdk  →  claude-opus-4-7
+                                       ├── pg_stat_statements (optional — top 10 slow queries)
+                                       │
+                                       ├── openai → DeepSeek API (deepseek-chat)
                                        │
                                        └── docs/reports/pipeline-observability/
                                                review-database-followup.md
@@ -44,6 +46,10 @@ node scripts/observe-chain.js <chain_id> <run_id>
 ```
 
 Guard: only spawned when `OBSERVABILITY_ENABLED !== '0'`.
+
+**Required environment variable:** `DEEPSEEK_API_KEY` — DeepSeek API key. If absent, the script
+logs a warning and writes a placeholder to the report; the rest of the observability chain continues
+unaffected. Set in `.env` as `DEEPSEEK_API_KEY=sk-...`.
 </architecture>
 
 ---
@@ -53,7 +59,7 @@ Guard: only spawned when `OBSERVABILITY_ENABLED !== '0'`.
 
 ### 3.1 DB Reads
 
-From `pipeline_runs` only:
+Primary source — `pipeline_runs`:
 
 | Query | Purpose |
 |-------|---------|
@@ -61,14 +67,33 @@ From `pipeline_runs` only:
 | Chain-level row: `WHERE id = $run_id` | Chain status, duration, total records |
 | 7-day historical baseline: same step slugs, `started_at >= NOW() - INTERVAL '7 days'`, `id < $run_id` | Velocity/duration/verdict baselines for anomaly detection |
 
+Optional source — `pg_stat_statements` (requires `migrations/109_pg_stat_statements.sql`):
+
+```sql
+SELECT LEFT(query, 200) AS query_snippet, calls,
+       ROUND(mean_exec_time::numeric, 2) AS mean_exec_time_ms,
+       ROUND(total_exec_time::numeric, 2) AS total_exec_time_ms,
+       ROUND(stddev_exec_time::numeric, 2) AS stddev_exec_time_ms, rows
+FROM pg_stat_statements
+WHERE query NOT ILIKE '%pg_stat_statements%' AND mean_exec_time > 0
+ORDER BY mean_exec_time DESC LIMIT 10
+```
+
+This query is wrapped in a `try/catch`. If `pg_stat_statements` is not installed (extension
+missing or `permission denied`), the error is caught, a warning is logged, and `slow_queries`
+is set to `null` — the rest of the observability chain continues unaffected.
+
 All queries are bounded (≤200 rows). No streaming needed. No business table access.
 
-### 3.2 Claude API Call
+### 3.2 DeepSeek API Call
 
-- Model: `claude-opus-4-7`
-- Context includes: formatted current run data (step verdicts, WARN/FAIL metrics, `failed_sample` arrays when present), 7-day historical velocity/duration averages per step
-- Prompt instructs the model to: identify anomalies vs baseline, classify issues by severity (CRITICAL/HIGH/INFO), suggest WF3 prompts for CRITICAL issues
-- Timeout: 30 seconds (gracefully degraded if API unavailable)
+- SDK: `openai` package (`require('openai')`) with `baseURL: 'https://api.deepseek.com'`
+- Model: `deepseek-chat` (V3 — fast operational analysis; `deepseek-reasoner` is reserved for adversarial code review via `scripts/deepseek-review.js`)
+- Auth: `DEEPSEEK_API_KEY` env var — gracefully skipped if absent
+- Context includes: formatted current run data (step verdicts, WARN/FAIL metrics, `failed_sample` arrays when present), 7-day historical velocity/duration averages per step, and `slow_queries` table from `pg_stat_statements` when available
+- Prompt instructs the model to: identify anomalies vs baseline, flag slow queries >100ms mean, classify issues by severity (CRITICAL/HIGH/INFO), suggest WF3 prompts for CRITICAL issues
+- Timeout: 30 seconds via `OpenAI({ timeout: API_TIMEOUT_MS })` constructor option
+- Gracefully degraded: if API unavailable or key absent, writes placeholder to report
 
 ### 3.3 Output Format
 

@@ -1,15 +1,15 @@
 'use strict';
 // 🔗 SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md
 //
-// Observer archetype (spec 30 §2.1) — reads pipeline_runs only, no business
-// table mutations. Spawned as a detached child by run-chain.js after the chain
-// lock is released. Calls Claude API to surface warnings/failures vs baseline
-// and appends findings to docs/reports/pipeline-observability/review-database-followup.md.
+// Observer archetype (spec 30 §2.1) — reads pipeline_runs + pg_stat_statements only,
+// no business table mutations. Spawned as a detached child by run-chain.js after the
+// chain lock is released. Calls DeepSeek API (deepseek-chat) to surface warnings/failures
+// vs baseline and appends findings to docs/reports/pipeline-observability/review-database-followup.md.
 
 const pipeline = require('./lib/pipeline');
 const path = require('path');
 const fs = require('fs');
-const Anthropic = require('@anthropic-ai/sdk');
+const OpenAI = require('openai');
 
 const ADVISORY_LOCK_ID = 112;
 const REPORT_PATH = path.resolve(__dirname, '../docs/reports/pipeline-observability/review-database-followup.md');
@@ -35,6 +35,7 @@ function verdictIcon(v) {
  */
 function extractIssues(records_meta) {
   const rows = records_meta?.audit_table?.rows ?? [];
+  if (!Array.isArray(rows)) return [];
   return rows.filter((r) => r.status === 'WARN' || r.status === 'FAIL');
 }
 
@@ -44,6 +45,12 @@ pipeline.run('observe-chain', async (pool) => {
   const [chainId, runIdStr] = process.argv.slice(2);
   if (!chainId || !runIdStr) {
     pipeline.log.warn('[observe-chain]', 'Missing chain_id or run_id args — nothing to observe');
+    pipeline.emitSummary({ records_total: 0, records_new: null, records_updated: null });
+    return;
+  }
+  const SAFE_CHAIN_ID_RX = /^[a-zA-Z0-9_-]+$/;
+  if (!SAFE_CHAIN_ID_RX.test(chainId)) {
+    pipeline.log.warn('[observe-chain]', `Invalid chainId format (must be alphanumeric/-/_): ${chainId}`);
     pipeline.emitSummary({ records_total: 0, records_new: null, records_updated: null });
     return;
   }
@@ -75,15 +82,24 @@ pipeline.run('observe-chain', async (pool) => {
     }
     const chainRow = chainRowRes.rows[0];
 
+    if (!chainRow.started_at) {
+      pipeline.log.warn('[observe-chain]', `chain row id=${runId} has NULL started_at — skipping step analysis`);
+      pipeline.emitSummary({ records_total: 0, records_new: null, records_updated: null });
+      return;
+    }
+
     // ── 2. Fetch step-level rows for this run ─────────────────────────────────
+    // Upper bound (completed_at or NOW()) prevents cross-run contamination when
+    // two chains overlap and share the same pipeline LIKE prefix.
     const stepRowsRes = await pool.query(
       `SELECT pipeline, status, started_at, completed_at, duration_ms,
               records_total, records_new, records_updated, records_meta
        FROM pipeline_runs
        WHERE pipeline LIKE $1
          AND started_at >= $2
+         AND started_at <= COALESCE($3::timestamptz, $4::timestamptz)
        ORDER BY started_at ASC`,
-      [`${chainId}:%`, chainRow.started_at],
+      [`${chainId}:%`, chainRow.started_at, chainRow.completed_at, new Date(startMs).toISOString()],
     );
     const stepRows = stepRowsRes.rows;
 
@@ -110,12 +126,31 @@ pipeline.run('observe-chain', async (pool) => {
       };
     }
 
-    // ── 4. Build context for Claude ───────────────────────────────────────────
+    // ── 3.5. Fetch top 10 slow queries from pg_stat_statements (optional) ───────
+    let slowQueries = null;
+    try {
+      const slowRes = await pool.query(
+        `SELECT LEFT(query, 200) AS query_snippet, calls,
+                ROUND(mean_exec_time::numeric, 2) AS mean_exec_time_ms,
+                ROUND(total_exec_time::numeric, 2) AS total_exec_time_ms,
+                ROUND(stddev_exec_time::numeric, 2) AS stddev_exec_time_ms, rows
+         FROM pg_stat_statements
+         WHERE query NOT ILIKE '%pg_stat_statements%' AND mean_exec_time > 0
+         ORDER BY mean_exec_time DESC LIMIT 10`,
+      );
+      slowQueries = slowRes.rows;
+    } catch (pgssErr) {
+      pipeline.log.warn('[observe-chain]', 'pg_stat_statements unavailable — skipping slow query analysis', {
+        err: pgssErr instanceof Error ? pgssErr.message : String(pgssErr),
+      });
+    }
+
+    // ── 4. Build context for DeepSeek ────────────────────────────────────────
     const stepSummaries = stepRows.map((s) => {
       const slug = s.pipeline.replace(`${chainId}:`, '');
       const issues = extractIssues(s.records_meta);
       const b = baseline[s.pipeline];
-      const durationDelta = b?.avg_duration_ms && s.duration_ms
+      const durationDelta = b?.avg_duration_ms > 0 && s.duration_ms != null
         ? (((s.duration_ms - b.avg_duration_ms) / b.avg_duration_ms) * 100).toFixed(1) + '%'
         : 'no baseline';
       return {
@@ -137,15 +172,17 @@ pipeline.run('observe-chain', async (pool) => {
       chain_duration_ms: chainRow.duration_ms,
       started_at: chainRow.started_at,
       steps: stepSummaries,
+      slow_queries: slowQueries,
     }, null, 2);
 
     const systemPrompt = `You are a pipeline health analyst for the Buildo permit-data pipeline.
-You receive structured run data and 7-day baselines. Your job:
+You receive structured run data, 7-day baselines, and optional slow query statistics. Your job:
 1. Identify FAIL and WARN metrics that matter — skip routine INFO
 2. Flag velocity drops >30% vs baseline as anomalies
-3. Classify each issue: CRITICAL (data integrity risk, requires WF3) or HIGH or INFO
-4. For CRITICAL issues, write a one-line WF3 prompt: "WF3 [concise description of bug to fix]"
-5. If chain is healthy, say so in one sentence
+3. Flag slow queries with mean_exec_time_ms >100ms as performance risks
+4. Classify each issue: CRITICAL (data integrity risk, requires WF3) or HIGH or INFO
+5. For CRITICAL issues, write a one-line WF3 prompt: "WF3 [concise description of bug to fix]"
+6. If chain is healthy, say so in one sentence
 
 Be concise. Developers read this at 9am — no padding.`;
 
@@ -160,35 +197,47 @@ Be concise. Developers read this at 9am — no padding.`;
 ### Critical Issues — WF3 Prompts
 ["> **WF3** ..." for each CRITICAL, or "None"]`;
 
-    // ── 5. Call Claude API ────────────────────────────────────────────────────
+    // ── 5. Call DeepSeek API ──────────────────────────────────────────────────
     let analysisText = '_AI analysis unavailable — API call skipped or failed._';
-    try {
-      const client = new Anthropic.default({ timeout: API_TIMEOUT_MS });
-      const response = await client.messages.create({
-        model: 'claude-opus-4-7',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
-      });
-      analysisText = response.content[0]?.text ?? analysisText;
-    } catch (apiErr) {
-      pipeline.log.warn('[observe-chain]', 'Claude API call failed — writing placeholder', {
-        err: apiErr instanceof Error ? apiErr.message : String(apiErr),
-      });
+    const deepseekKey = process.env.DEEPSEEK_API_KEY;
+    if (!deepseekKey) {
+      pipeline.log.warn('[observe-chain]', 'DEEPSEEK_API_KEY absent — AI analysis placeholder written');
+    } else {
+      try {
+        const client = new OpenAI({
+          apiKey: deepseekKey,
+          baseURL: 'https://api.deepseek.com',
+          timeout: API_TIMEOUT_MS,
+        });
+        const response = await client.chat.completions.create({
+          model: 'deepseek-chat',
+          max_tokens: 1024,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+        });
+        analysisText = response.choices[0]?.message?.content ?? analysisText;
+      } catch (apiErr) {
+        pipeline.log.warn('[observe-chain]', 'DeepSeek API call failed — writing placeholder', {
+          err: apiErr instanceof Error ? apiErr.message : String(apiErr),
+        });
+      }
     }
 
     // ── 6. Build step verdict table ───────────────────────────────────────────
     const tableRows = stepSummaries.map((s) => {
       const b = baseline[`${chainId}:${s.step}`];
-      const deltaStr = b?.avg_duration_ms && s.duration_ms
+      const deltaStr = b?.avg_duration_ms > 0 && s.duration_ms != null
         ? s.vs_baseline.duration_delta
         : 'no baseline';
-      return `| ${s.step} | ${verdictIcon(s.verdict)} ${s.verdict} | ${secStr(s.duration_ms)} | ${s.records_total ?? '—'} | ${deltaStr} |`;
+      const safeStep = s.step.replace(/\|/g, '\\|');
+      return `| ${safeStep} | ${verdictIcon(s.verdict)} ${s.verdict} | ${secStr(s.duration_ms)} | ${s.records_total ?? '—'} | ${deltaStr} |`;
     }).join('\n');
 
     // ── 7. Append to report file ──────────────────────────────────────────────
     const dir = path.dirname(REPORT_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.mkdirSync(dir, { recursive: true });
 
     const section = `\n## ${chainId} — ${formatDate(chainRow.started_at)}  (run_id: ${runId})\n
 **Chain status:** ${chainRow.status} | **Duration:** ${secStr(chainRow.duration_ms)}\n

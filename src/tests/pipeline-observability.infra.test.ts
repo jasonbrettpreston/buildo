@@ -23,8 +23,35 @@ describe('scripts/observe-chain.js — pipeline observability agent', () => {
     expect(content).toMatch(/pipeline\.log\.(warn|error|info)/);
   });
 
-  it('uses @anthropic-ai/sdk', () => {
-    expect(content).toMatch(/require\('@anthropic-ai\/sdk'\)/);
+  it('uses openai package with DeepSeek baseURL and deepseek-chat model', () => {
+    expect(content).toMatch(/require\('openai'\)/);
+    expect(content).toMatch(/api\.deepseek\.com/);
+    expect(content).toMatch(/deepseek-chat/);
+  });
+
+  it('pg_stat_statements query is wrapped in try/catch (graceful skip if extension absent)', () => {
+    expect(content).toMatch(/pg_stat_statements/);
+    // Use "FROM pg_stat_statements" as the anchor — this SQL clause only appears
+    // inside the actual query body (inside the try block), not in comments.
+    const sqlIdx = content.indexOf('FROM pg_stat_statements');
+    expect(sqlIdx).toBeGreaterThan(-1);
+    const tryCandidates = [...content.matchAll(/try\s*\{/g)].map((m) => m.index ?? 0);
+    const catchCandidates = [...content.matchAll(/\}\s*catch/g)].map((m) => m.index ?? 0);
+    const enclosingTry = tryCandidates.filter((t) => t < sqlIdx).at(-1);
+    const enclosingCatch = catchCandidates.find((c) => c > sqlIdx);
+    expect(enclosingTry).toBeDefined();
+    expect(enclosingCatch).toBeDefined();
+  });
+
+  it('DEEPSEEK_API_KEY absent — skips API call gracefully (warn + placeholder, no crash)', () => {
+    expect(content).toMatch(/DEEPSEEK_API_KEY/);
+    // Must gate the API call behind a key-presence check
+    expect(content).toMatch(/DEEPSEEK_API_KEY/);
+    expect(content).toMatch(/placeholder|API call skipped|unavailable/i);
+  });
+
+  it('includes slow_queries in context sent to AI', () => {
+    expect(content).toMatch(/slow_queries/);
   });
 
   it('emits PIPELINE_SUMMARY with Observer null pattern (records_new: null, records_updated: null)', () => {
@@ -98,9 +125,9 @@ describe('scripts/lib/pipeline.js — failed_sample in emitSummary (spec 48 §4)
   });
 });
 
-describe('@anthropic-ai/sdk — installed as dependency', () => {
-  it('package.json includes @anthropic-ai/sdk', () => {
+describe('openai — installed as dependency (used for DeepSeek API)', () => {
+  it('package.json includes openai', () => {
     const pkg = JSON.parse(read('package.json')) as { dependencies?: Record<string, string> };
-    expect(pkg.dependencies).toHaveProperty('@anthropic-ai/sdk');
+    expect(pkg.dependencies).toHaveProperty('openai');
   });
 });

@@ -86,4 +86,23 @@ try {
 }
 run('git log --oneline -1', 'Last commit');
 
+// 5. API Keys
+const deepseekKey = process.env.DEEPSEEK_API_KEY;
+console.log(
+  `${deepseekKey ? '✔' : '✘'} DEEPSEEK_API_KEY: ${deepseekKey
+    ? 'present (observe-chain.js AI analysis enabled)'
+    : 'MISSING — observe-chain.js will write placeholder reports'}`,
+);
+
+// 6. Optional DB Extensions
+const dbUrl = process.env.DATABASE_URL;
+if (dbUrl) {
+  run(
+    `psql "${dbUrl}" -tAc "SELECT CASE WHEN EXISTS(SELECT 1 FROM pg_extension WHERE extname='pg_stat_statements') THEN 'installed' ELSE 'not installed' END"`,
+    'pg_stat_statements extension',
+  );
+} else {
+  console.log('⚠  pg_stat_statements: skipped (DATABASE_URL not set — run migration 109 to enable)');
+}
+
 console.log('\n--- Done ---');
