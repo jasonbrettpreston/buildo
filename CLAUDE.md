@@ -23,10 +23,10 @@
 1. **GOD MODE:** You are a **Passive Planning Engine** until `.cursor/active_task.md` is in "Implementation" status. You have NO agency to write `src/` code.
 2. **System Map Authority:** `docs/specs/00_system_map.md` is the Single Source of Truth. Regenerate with `npm run system-map`.
 3. **Traceability:** Every test file MUST have a `SPEC LINK` header.
-4. **Verification:** Never declare a task done until `npx vitest run` passes.
+4. **Verification:** Never declare a task done until `npm run test` passes.
 5. **Automated Gate:** The Husky pre-commit hook runs `npm run typecheck && npm run lint && npm run test` automatically. ESLint enforces `no-empty` (bans empty catch blocks) and `no-restricted-syntax` (bans `process.exit()` in src/).
 6. **Pre-Flight:** Before starting any task, run `node scripts/ai-env-check.mjs` to orient yourself to the current environment state.
-7. **Engineering Standards:** When writing API, frontend, or database code, you MUST adhere to the stability, testing, and mobile-first rules in `docs/specs/00_engineering_standards.md`.
+7. **Engineering Standards:** When writing API, UI, or database code, you MUST adhere to the stability, testing, and UI rules in `docs/specs/00_engineering_standards.md`.
 8. **Admin UI:** The Next.js app is a desktop-first admin tool. Tailwind `md:` breakpoints may serve as the primary layout; mobile is secondary. Expo consumer UI (`mobile/`) follows mobile-first conventions enforced by its own toolchain.
 
 ### Context7 Library Docs
@@ -85,7 +85,7 @@ When implementing features that depend on external libraries, use the Context7 M
 * **Try-Catch Boundary:** [How are new/modified API routes handling errors?]
 * **Unhappy Path Tests:** [What error scenarios will be tested?]
 * **logError Mandate:** [Do all new/modified API catch blocks use `logError(tag, err, context)` from `src/lib/logger.ts`? Or N/A if no API routes.]
-* **Mobile-First:** [How are layouts structured for mobile? Or N/A if backend-only.]
+* **UI Layout:** [Admin = desktop-first with `md:` breakpoints. Expo = mobile-first. Or N/A if backend-only.]
 
 ## Execution Plan
 - [ ] Step 1: [Specific Action]
@@ -97,21 +97,13 @@ When implementing features that depend on external libraries, use the Context7 M
 2. Verify the plan addresses every applicable item
 3. If any item is missing, fix the plan silently — do NOT present non-compliant plans
 
-**STOP SEQUENCE:** After the plan passes compliance, output the compliance
-summary followed by the lock prompt. The summary MUST be visible in the
-response (not just in active_task.md):
+**STOP SEQUENCE:** After the plan passes compliance, present the lock prompt.
+The §10 evidence lives in the Execution Plan steps themselves — do not produce
+a parallel checklist. Only surface a §10 note if the plan makes a non-obvious
+compliance choice (e.g. deliberately skipping an unhappy-path test with a reason).
 
-> **§10 Compliance:** For each applicable category, list EVERY sub-item
-> from §10 with its status. Do not summarize — show each checklist item.
-> Mark inapplicable categories as ⬜ N/A.
->
-> - ✅/⬜ DB: [each sub-item or N/A]
-> - ✅/⬜ API: [each sub-item or N/A]
-> - ✅/⬜ UI: [each sub-item or N/A]
-> - ✅/⬜ Shared Logic: [each sub-item or N/A]
-> - ✅/⬜ Pipeline: [each sub-item or N/A]
->
 > **PLAN LOCKED. Do you authorize this [Workflow Type] plan? (y/n)**
+> §10 note: [one line if a non-obvious compliance decision was made — otherwise omit]
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.
 
 ---
