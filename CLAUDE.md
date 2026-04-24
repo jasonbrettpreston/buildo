@@ -14,6 +14,7 @@
 | **`WF3`** | Fix | "Fix a bug." |
 | **`WF5`** | Audit | "Audit." Append: `code`, `build`, `prod`, `pipeline`, `manual [feature]` |
 | **`WF6`** | Review | "Review, harden, and commit." |
+| **`WF7`** | Maestro | "Write or debug a Maestro E2E flow." |
 | **`WF11`**| Launch | "Safe start / recovery." |
 
 ---
@@ -26,7 +27,7 @@
 5. **Automated Gate:** The Husky pre-commit hook runs `npm run typecheck && npm run lint && npm run test` automatically. ESLint enforces `no-empty` (bans empty catch blocks) and `no-restricted-syntax` (bans `process.exit()` in src/).
 6. **Pre-Flight:** Before starting any task, run `node scripts/ai-env-check.mjs` to orient yourself to the current environment state.
 7. **Engineering Standards:** When writing API, frontend, or database code, you MUST adhere to the stability, testing, and mobile-first rules in `docs/specs/00_engineering_standards.md`.
-8. **Mobile-First UI:** All Tailwind styling MUST be written mobile-first (base classes = mobile, `md:` / `lg:` = desktop). Every new spec must include a `## 5. Mobile & Responsive Behavior` section.
+8. **Admin UI:** The Next.js app is a desktop-first admin tool. Tailwind `md:` breakpoints may serve as the primary layout; mobile is secondary. Expo consumer UI (`mobile/`) follows mobile-first conventions enforced by its own toolchain.
 
 ### Context7 Library Docs
 When implementing features that depend on external libraries, use the Context7 MCP server to fetch current documentation before writing code. This prevents hallucinated API calls against outdated library versions. Use `resolve-library-id` to find the library, then `get-library-docs` to fetch the docs.
@@ -57,6 +58,7 @@ When implementing features that depend on external libraries, use the Context7 M
 | Environment check | `node scripts/ai-env-check.mjs` |
 | Harvest tests → specs | `npm run spec:tests` |
 | Regenerate DB schema docs | `npm run db:docs` |
+| Run Maestro flow | `maestro test mobile/maestro/[flow].yaml` |
 
 ---
 
@@ -144,8 +146,10 @@ response (not just in active_task.md):
       response BEFORE running tests. Catches the spec-vs-code drift class
       that costs reviewer cycles when only the reviewer side runs the
       checklist. (Process added in commit landing Phase 2 review hardening.)
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
-      Output visible execution summary using ✅/⬜ for every step above. → WF6.
+- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste the
+      final test summary line (e.g., "✓ 1823 tests passed") and typecheck
+      result (e.g., "Found 0 errors") as evidence. Both must show zero failures.
+      Then list each prior step as DONE or N/A — no bare checkboxes. → WF6.
 ```
 
 ---
@@ -173,8 +177,10 @@ response (not just in active_task.md):
       self-skeptical checklist from the spec section governing the change.
       Walk each item against the ACTUAL diff. Output PASS/FAIL per item in
       the response BEFORE running tests. See WF1 for full rationale.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
-      Output visible execution summary using ✅/⬜ for every step above. → WF6.
+- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste the
+      final test summary line (e.g., "✓ 1823 tests passed") and typecheck
+      result (e.g., "Found 0 errors") as evidence. Both must show zero failures.
+      Then list each prior step as DONE or N/A — no bare checkboxes. → WF6.
 ```
 
 ---
@@ -196,8 +202,10 @@ response (not just in active_task.md):
       same data-shape gap, same boundary). For each, verify either that
       the fix covers it OR that it doesn't apply. Catches the "fixed the
       symptom, missed the class" pattern. See WF1 for full rationale.
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. All pass.
-      Output visible execution summary using ✅/⬜ for every step above. → WF6.
+- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste the
+      final test summary line (e.g., "✓ 1823 tests passed") and typecheck
+      result (e.g., "Found 0 errors") as evidence. Both must show zero failures.
+      Then list each prior step as DONE or N/A — no bare checkboxes. → WF6.
 ```
 
 ---
@@ -336,13 +344,43 @@ response (not just in active_task.md):
 - [ ] **Founder's Audit:** No laziness placeholders (`// ... existing code`),
       all exports resolve, schema matches spec.
 - [ ] **Auto-Fix:** Apply fixes. `npm run test && npm run lint -- --fix`.
-- [ ] **Verdict (MUST be visible in response):** Output ALL 7 WF6 steps
-      using ✅/⬜ format: Scope, each of the 5 sweep points, Collateral Check,
-      Founder's Audit, Auto-Fix. Final line: "CLEAN" or "N gaps remain: [list]".
+- [ ] **Verdict (MUST be visible in response):** For each of the 7 WF6 steps,
+      state what you found — not a bare checkbox. For error-path review, name
+      the specific functions examined. For type safety, paste the `npm run typecheck`
+      output line. For Auto-Fix, paste the final `npm run test` summary line
+      (e.g., "✓ 1823 tests passed"). Final line: "CLEAN" or "N gaps remain: [list]".
 - [ ] **Atomic Commit:** `git commit -m "[type](NN_spec): [description]"`.
       Conventional prefixes: feat/fix/refactor/test/docs/chore.
       Commit each component individually — do not batch.
 ```
+
+---
+
+## WF7: Maestro Flow
+**Trigger:** `WF7`, or "Write a Maestro flow", "Debug Maestro", "Add E2E test for [screen]".
+
+*No planning ceremony. No PLAN LOCKED gate. No independent review agent. Flows are YAML — iterate fast.*
+
+### Pre-Flight
+- Ensure a **development build** is installed on the target device/simulator. Expo Go does not work with Maestro.
+- Flows live in `mobile/maestro/`. Use existing flows as reference patterns.
+- Elements need `testID` props for stable selectors — verify before writing the flow.
+
+### Execution Plan
+```
+- [ ] **Identify Journey:** Name the screen, user actions, and assertions. One flow = one user journey.
+- [ ] **Selector Audit:** Confirm each tapped element has a `testID` prop in the component source.
+      If missing, add `testID` to the component first and commit that change separately (WF2).
+- [ ] **Write Flow:** Create or update `mobile/maestro/[feature].yaml`.
+      Pattern: `launchApp` → `tapOn` / `inputText` → `assertVisible` / `assertNotVisible`.
+- [ ] **Run Locally:** `maestro test mobile/maestro/[feature].yaml`. Iterate until 2 consecutive passes.
+- [ ] **Flakiness Check:** Run 3 times total. If any run fails, add `waitUntilVisible` guards
+      or `optional: true` on timing-sensitive assertions before declaring it stable.
+- [ ] **Commit:** `git commit -m "test(maestro): [description]"`. No WF6 required for flow-only changes.
+```
+
+**CI note:** Smoke flows run on every PR via Maestro Cloud + EAS Workflows; full suite runs nightly.
+Do not modify `.eas/workflows/` config without a WF2.
 
 ---
 
@@ -394,7 +432,7 @@ Every new spec MUST include an `## Operating Boundaries` section (Target Files, 
 
 ## Domain Rules
 
-> **MANDATORY:** At the start of EVERY task, declare which Domain Mode you are operating in based on which directories you will modify. State the mode explicitly in your first response: "**Domain Mode: Frontend**" or "**Domain Mode: Backend/Pipeline**" or "**Domain Mode: Cross-Domain**" (rare — requires reading both rule sets).
+> **MANDATORY:** At the start of EVERY task, declare which Domain Mode you are operating in based on which directories you will modify. State the mode explicitly in your first response: "**Domain Mode: Admin**" or "**Domain Mode: Backend/Pipeline**" or "**Domain Mode: Cross-Domain**" (rare — requires reading both rule sets).
 >
 > The Domain Mode determines which tools, libraries, and rules you must follow. Violating the rules of your declared domain is a §10 compliance failure that blocks the PLAN COMPLIANCE GATE.
 
@@ -402,62 +440,52 @@ Every new spec MUST include an `## Operating Boundaries` section (Target Files, 
 
 | If you will modify... | Declare mode |
 |----------------------|--------------|
-| `src/features/`, `src/components/`, `src/app/` (pages, NOT API routes), `src/hooks/`, frontend-only `src/lib/` modules | **Frontend Mode** |
+| `src/components/`, `src/app/` (pages, NOT API routes), `src/hooks/`, admin-only `src/lib/` modules | **Admin Mode** |
+| `mobile/` (Expo source — non-Maestro changes) | **Admin Mode** — apply Expo conventions from `docs/specs/03-mobile/` |
+| `mobile/maestro/` (flow YAML files only) | **WF7** — no mode declaration required |
 | `scripts/`, `migrations/`, `src/app/api/`, `src/lib/db/`, pipeline-related `src/lib/` modules | **Backend/Pipeline Mode** |
-| Both (e.g., adding a new API route + UI consumer) | **Cross-Domain Mode** — read BOTH rule blocks below before proceeding |
+| Admin UI + API route for the same admin-only feature | **Cross-Domain Mode** — build backend first, then admin UI in one pass |
+| API route consumed by the Expo app | **Cross-Domain Mode** — strict contract boundary; write API contract note |
 | Doc-only changes, specs, reports | **Either** — follow whichever domain the documented work belongs to |
 
 ---
 
-### 🎨 Frontend Mode
+### 🖥️ Admin Mode
 
-When operating in Frontend Mode, you MUST adhere to these rules. Required reading before generating an active task:
-- `docs/specs/00_engineering_standards.md` §1 (Architecture & UI), §4.3 (Frontend Security), §10 (Boundary), §12 (Frontend Foundation Tooling), §13 (Observability Standards)
-- `docs/specs/product/future/74_lead_feed_design.md` (industrial utilitarian design system, color tokens, spacing)
-- `docs/specs/product/future/75_lead_feed_implementation_guide.md` (component-by-component blueprint, foundation tooling)
+When operating in Admin Mode, you MUST adhere to these rules. Required reading before generating an active task:
+- `docs/specs/00_engineering_standards.md` §1 (Architecture & UI), §4.3 (Frontend Security), §10 (Boundary), §13 (Observability Standards)
+
+*Note: `src/features/leads/` consumer UI has moved to the Expo repo (`mobile/`). The only Next.js frontend is the admin panel — an internal desktop-first tool.*
 
 **Required tooling stack (no substitutions without prior approval):**
 
 | Concern | Tool | Why |
 |---------|------|-----|
-| Linting | **Biome** (scoped to `src/features/leads/` initially, expanding) | Catches React logic failures: `useHookAtTopLevel`, `noFloatingPromises`, `useExhaustiveDependencies` |
 | Server state / data fetching | **TanStack Query** | NEVER use `useEffect` for API calls. Always handle loading/error states. |
-| Offline persistence | **TanStack Query Persist Client + IndexedDB (idb-keyval)** | 24h cache, key normalization on lat/lng to ~3 decimals |
-| Global UI state | **Zustand** with `persist` middleware for filter state | NEVER use React Context for global state inside `src/features/leads/` (AST-grep enforced). Context allowed elsewhere for 3rd-party providers only. |
+| Global UI state | **Zustand** | Use for shared filter/selection state across admin views. |
 | Local form state | **React Hook Form + Zod resolver** | NEVER use `useState` for form fields |
 | API input validation | **Zod** with differentiated 400 error responses (NOT generic 500) | Field-level error messages |
-| UI primitives | **Shadcn UI** | Headless, accessible, mobile-touch-friendly. Run `npx shadcn@latest add [component]` for each. |
-| Bottom sheets | **Shadcn `<Drawer>`** (powered by Vaul) | iOS cubic-bezier `[0.32, 0.72, 0, 1]`. NEVER use centered `<Dialog>` modals on mobile. |
-| Animations / gestures | **Motion for React** (`motion` package, formerly Framer Motion) | Spring config: `stiffness: 400, damping: 20, mass: 1` for button interactions |
+| UI primitives | **Shadcn UI** | Headless, accessible. Run `npx shadcn@latest add [component]` for each. |
+| Animations | **Motion for React** (`motion` package, formerly Framer Motion) | Spring config: `stiffness: 400, damping: 20, mass: 1` for button interactions |
 | Toast notifications | **Sonner** (via Shadcn) | NEVER build custom alert banners or use `alert()`/`confirm()` |
-| Long lists | **TanStack Virtual** | Any list expected to exceed 50 items MUST be virtualized. NEVER `.map()` long arrays directly. |
-| Telemetry | **PostHog** via `src/lib/observability/capture.ts` `captureEvent()` wrapper | Every user interaction (`onClick`, `onSubmit`) MUST call `captureEvent()` (AST-grep enforced in `src/features/leads/`) |
 | Error tracking | **Sentry** wired into `app/[...]/error.tsx` route boundaries | Source maps uploaded on build |
 | Auth | **Firebase Auth** with `verifyIdToken` in middleware | Already in production. NEVER swap for Clerk or other providers without architectural approval. |
-| Score circles / dashboard primitives | **Tremor** (`@tremor/react`) | `<ProgressCircle>`, `<BarList>`, `<Tracker>` for data viz. Pairs with Shadcn — both copy-paste, both Apache 2.0. |
-| Map (frontend) | **`@vis.gl/react-google-maps`** with `AdvancedMarker` | Official Google library. For richer marker visuals, escalate to OverlayView + createPortal pattern. |
-| Infinite scroll + pull-to-refresh | **`react-infinite-scroll-component`** | Single library handles BOTH behaviors (4.15kB). Do NOT install separate scroll-trigger + pull-refresh libraries. |
+| Dashboard primitives | **Tremor** (`@tremor/react`) | `<ProgressCircle>`, `<BarList>`, `<Tracker>` for data viz. Pairs with Shadcn — both copy-paste, both Apache 2.0. |
 | Design quality | **Impeccable** Claude Code plugin (`pbakaus/impeccable`) | 20 commands for layout, typography, motion, accessibility audits. Run `/critique` after building each component, `/polish` + `/audit` before final commit. |
 
 **Rules to never violate:**
 
-1. **No floating promises** — every async call inside a handler must be `await`-ed or chained with `.catch()`. Biome enforces.
+1. **No floating promises** — every async call inside a handler must be `await`-ed or chained with `.catch()`.
 2. **No `useEffect` for data fetching** — use TanStack Query. Period.
-3. **No React Context inside `src/features/leads/`** — use Zustand. AST-grep blocks the commit.
-4. **No `onClick` without `captureEvent()`** — telemetry is mandatory in `src/features/leads/`. AST-grep blocks the commit.
-5. **No centered modals on mobile** — use Shadcn `<Drawer>`. Required for any popup/sheet/menu.
-6. **No `.map()` over arrays expected to exceed 50 items** — wrap in TanStack Virtual.
-7. **No secrets in `'use client'` components** — public Firebase config only. Admin keys, API tokens, anything else stays server-side.
-8. **No `dangerouslySetInnerHTML` without DOMPurify** — XSS guard. JSX escaping handles 99% of cases.
-9. **No `console.log` in committed code** — use `captureEvent()` for product events, `Sentry.captureException()` for errors.
-10. **Mobile-first Tailwind** — base classes target mobile, `md:` and `lg:` add desktop. Touch targets ≥ 44px.
+3. **No secrets in `'use client'` components** — public Firebase config only. Admin keys, API tokens, anything else stays server-side.
+4. **No `dangerouslySetInnerHTML` without DOMPurify** — XSS guard.
+5. **No `console.log` in committed code** — use `Sentry.captureException()` for errors.
+6. **API → Expo contract:** If an API route is consumed by the Expo app (not just the admin panel), treat it as a Cross-Domain task. Do not change the response shape without a contract note.
 
-**Pre-commit gauntlet (frontend files):**
-1. Biome check (logic correctness)
-2. AST-grep scan (telemetry + Context ban, scoped to `src/features/leads/`)
-3. TypeScript strict check
-4. Vitest related tests
-5. Lighthouse CI (on PRs only)
+**Pre-commit gauntlet (admin UI files):**
+1. TypeScript strict check (`npm run typecheck`)
+2. ESLint (`npm run lint`)
+3. Vitest related tests (`npx vitest related [changed files] --run`)
 
 ---
 
@@ -507,9 +535,18 @@ When operating in Backend/Pipeline Mode, you MUST adhere to these rules. Require
 
 ### Cross-Domain Mode
 
-For tasks that span both domains (e.g., new API route + UI consumer):
-1. **Read BOTH rule blocks above** before proceeding.
-2. **Sequence the work:** backend first, frontend second. Never both at once.
-3. **Write a handoff note** in the active task between phases — what API contract was established, what the frontend will consume.
-4. **Two pre-commit gauntlets apply** — backend files run the backend gauntlet, frontend files run the frontend gauntlet.
+Two scenarios require Cross-Domain Mode:
+
+**A. Admin UI + API route (same admin-only feature):**
+1. Read both rule blocks above before proceeding.
+2. Build the API route first (Backend/Pipeline Mode rules), then the admin UI consumer (Admin Mode rules). These can happen in the same session.
+3. Write a **handoff note** in the active task between phases — the JSON contract established.
+4. Both gauntlets apply to their respective files.
+
+**B. API route consumed by the Expo app (strict contract boundary):**
+1. The Expo app is a separate client — breaking changes to response shape will silently break mobile users.
+2. Before implementing: define the TypeScript interface in `src/app/api/[route]/types.ts`.
+3. After implementing: document the change in the relevant spec. If `npm run openapi:generate` is wired, run it.
+4. Write a **contract note** in the active task: endpoint path, method, request params, response shape diff.
+5. Coordinate with the Expo mobile repo — it consumes these types.
 
