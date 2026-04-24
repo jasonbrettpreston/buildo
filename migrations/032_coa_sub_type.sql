@@ -3,6 +3,7 @@
 -- Previously, SUB_TYPE was used as fallback when CONTACT_NAME was null, causing
 -- application type strings to display as builder names.
 
+-- UP
 ALTER TABLE coa_applications ADD COLUMN IF NOT EXISTS sub_type TEXT;
 
 -- Backfill: move SUB_TYPE values from applicant to sub_type column
@@ -11,3 +12,6 @@ UPDATE coa_applications
 SET sub_type = applicant,
     applicant = NULL
 WHERE applicant SIMILAR TO '%(dwellings|Existing Re|New Res|Add/Alt|Commercial|Industrial|Institutional|Detached|Semi-Det|Row House|Townhouse)%';
+
+-- DOWN
+-- ALTER TABLE coa_applications DROP COLUMN IF EXISTS sub_type;

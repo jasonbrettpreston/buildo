@@ -5,6 +5,7 @@
 -- ============================================================
 -- 1. Extend data_quality_snapshots with null counts
 -- ============================================================
+-- UP
 ALTER TABLE data_quality_snapshots
   ADD COLUMN IF NOT EXISTS null_description_count INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS null_builder_name_count INTEGER DEFAULT 0,
@@ -63,3 +64,19 @@ INSERT INTO pipeline_schedules (pipeline, cadence) VALUES
   ('create_pre_permits',   'Daily'),
   ('refresh_snapshot',     'Daily')
 ON CONFLICT (pipeline) DO NOTHING;
+
+-- DOWN
+-- DROP TABLE IF EXISTS pipeline_schedules;
+-- ALTER TABLE data_quality_snapshots
+--   DROP COLUMN IF EXISTS sla_permits_ingestion_hours,
+--   DROP COLUMN IF EXISTS schema_column_counts,
+--   DROP COLUMN IF EXISTS violations_total,
+--   DROP COLUMN IF EXISTS violation_missing_status,
+--   DROP COLUMN IF EXISTS violation_future_issued_date,
+--   DROP COLUMN IF EXISTS violation_cost_out_of_range,
+--   DROP COLUMN IF EXISTS null_geo_id_count,
+--   DROP COLUMN IF EXISTS null_street_name_count,
+--   DROP COLUMN IF EXISTS null_street_num_count,
+--   DROP COLUMN IF EXISTS null_est_const_cost_count,
+--   DROP COLUMN IF EXISTS null_builder_name_count,
+--   DROP COLUMN IF EXISTS null_description_count;

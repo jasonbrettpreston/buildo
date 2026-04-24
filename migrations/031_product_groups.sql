@@ -1,5 +1,6 @@
 -- 031: Product groups for material supplier leads (WF3)
 
+-- UP
 CREATE TABLE IF NOT EXISTS product_groups (
   id          SERIAL PRIMARY KEY,
   slug        VARCHAR(50) NOT NULL UNIQUE,
@@ -44,3 +45,9 @@ CREATE TABLE IF NOT EXISTS permit_products (
 CREATE INDEX IF NOT EXISTS idx_permit_products_product ON permit_products(product_id);
 
 SELECT setval('product_groups_id_seq', (SELECT MAX(id) FROM product_groups));
+
+-- DOWN
+-- DROP TABLE IF EXISTS permit_products;
+-- DROP INDEX IF EXISTS idx_product_groups_slug;
+-- DROP TABLE IF EXISTS product_groups;
+-- Data seed (product_groups rows) removed with table drop above.
