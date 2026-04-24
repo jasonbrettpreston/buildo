@@ -94,6 +94,14 @@ console.log(
     : 'MISSING — observe-chain.js will write placeholder reports'}`,
 );
 
+// Backup env (spec 112)
+const backupBucket = process.env.BACKUP_GCS_BUCKET;
+console.log(
+  `${backupBucket ? '✔' : '⚠'} BACKUP_GCS_BUCKET: ${backupBucket
+    ? 'present (backup-db.js enabled)'
+    : 'not set — backup-db.js will throw if run'}`,
+);
+
 // 6. Optional DB Extensions
 const dbUrl = process.env.DATABASE_URL;
 if (dbUrl) {

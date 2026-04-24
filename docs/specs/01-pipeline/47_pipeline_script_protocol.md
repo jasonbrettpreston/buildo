@@ -1636,6 +1636,7 @@ and registry-vs-code agreement.
 | **109** | `scripts/quality/assert-lifecycle-phase-distribution.js` | 6 — Quality | NO — read-only probe |
 | **110** | `scripts/quality/assert-entity-tracing.js` | 6 — Quality | NO — read-only probe |
 | **111** | `scripts/quality/assert-global-coverage.js` | 6 — Quality | NO — read-only probe |
+| **112** | `scripts/backup-db.js` | 7 — Maintenance | NO — GCS write only, no DB tables |
 
 **`RUN_AT` Snapshot Convention:**
 Scripts that write timestamps (`Writes Timestamps? = YES`) capture a single `RUN_AT` timestamp

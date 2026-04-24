@@ -47,6 +47,7 @@
     "assert_lifecycle_phase_distribution": { "file": "scripts/quality/assert-lifecycle-phase-distribution.js", "supports_full": false, "supports_dry_run": false },
     "assert_entity_tracing": { "file": "scripts/quality/assert-entity-tracing.js", "supports_full": false, "supports_dry_run": false },
     "assert_global_coverage": { "file": "scripts/quality/assert-global-coverage.js", "supports_full": false, "supports_dry_run": false },
+    "backup_db":            { "file": "scripts/backup-db.js", "supports_full": false, "supports_dry_run": false },
     "coa_documents":        { "file": null, "supports_full": false, "supports_dry_run": false, "coming_soon": true }
   },
 
