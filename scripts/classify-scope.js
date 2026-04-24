@@ -527,6 +527,8 @@ pipeline.run('classify-scope', async (pool) => {
   // Uses DISTINCT ON for deterministic latest revision, SUBSTRING for index eligibility
   pipeline.log.info('[classify-scope]', 'BLD→Companion scope propagation...');
 
+  // maxAttempts=5 defends against cross-chain deadlock with classify_lifecycle_phase (COA chain),
+  // which runs concurrent UPDATE permits at the same time as this propagation step.
   const propagated = await pipeline.withTransaction(pool, async (client) => {
     const propagateResult = await client.query(
       `UPDATE permits AS companion
@@ -554,7 +556,7 @@ pipeline.run('classify-scope', async (pool) => {
       [RUN_AT]
     );
     return propagateResult.rowCount || 0;
-  });
+  }, { maxAttempts: 5 });
 
   // Re-add demolition tag to DM permits that lost it during propagation (NULL-safe)
   // Sort the resulting array to match JS-side sorted output and prevent IS DISTINCT FROM thrashing
@@ -569,7 +571,7 @@ pipeline.run('classify-scope', async (pool) => {
          AND (scope_tags IS NULL OR NOT ('demolition' = ANY(scope_tags)))`
     );
     return demFixResult.rowCount || 0;
-  });
+  }, { maxAttempts: 5 });
 
   pipeline.log.info('[classify-scope]', `Propagated: ${propagated.toLocaleString()} companions${demFixed > 0 ? `, ${demFixed} DM tags restored` : ''}`);
 

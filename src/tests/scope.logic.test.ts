@@ -2056,4 +2056,26 @@ describe('classify-scope.js BLD→Companion propagation', () => {
     );
     expect(propagationBlock).toMatch(/IS DISTINCT FROM/);
   });
+
+  it('propagation withTransaction uses maxAttempts >= 5 to survive cross-chain deadlock', () => {
+    const source = scriptSource();
+    // Both the propagation pass and the DM-fix pass must carry maxAttempts >= 5.
+    // This defends against deadlocks with classify_lifecycle_phase (COA chain),
+    // which runs concurrent UPDATE permits during normal pipeline execution.
+    const propagationBlock = source.slice(
+      source.indexOf('BLD→Companion scope propagation'),
+      source.indexOf('Re-add demolition tag')
+    );
+    const dmBlock = source.slice(
+      source.indexOf('Re-add demolition tag'),
+      source.indexOf('Propagated:')
+    );
+    const maxAttemptsRe = /maxAttempts:\s*(\d+)/;
+    const propMatch = maxAttemptsRe.exec(propagationBlock);
+    const dmMatch = maxAttemptsRe.exec(dmBlock);
+    expect(propMatch, 'propagation withTransaction must pass maxAttempts').not.toBeNull();
+    expect(Number(propMatch![1])).toBeGreaterThanOrEqual(5);
+    expect(dmMatch, 'DM-fix withTransaction must pass maxAttempts').not.toBeNull();
+    expect(Number(dmMatch![1])).toBeGreaterThanOrEqual(5);
+  });
 });
