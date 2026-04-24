@@ -102,7 +102,7 @@ if (dbUrl) {
     'pg_stat_statements extension',
   );
 } else {
-  console.log('⚠  pg_stat_statements: skipped (DATABASE_URL not set — run migration 109 to enable)');
+  console.log('⚠  pg_stat_statements: skipped (DATABASE_URL not set — run migration 110 to enable)');
 }
 
 console.log('\n--- Done ---');

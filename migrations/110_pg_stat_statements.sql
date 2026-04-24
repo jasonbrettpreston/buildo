@@ -1,4 +1,4 @@
--- Migration 109: Enable pg_stat_statements extension
+-- Migration 110: Enable pg_stat_statements extension
 -- Provides per-query execution statistics (mean_exec_time, total_exec_time, calls, rows).
 -- Used by observe-chain.js to surface top 10 slowest queries to the AI analyst.
 -- Cloud SQL for PostgreSQL pre-loads this in shared_preload_libraries by default.

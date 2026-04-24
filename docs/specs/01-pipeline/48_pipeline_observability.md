@@ -67,7 +67,7 @@ Primary source — `pipeline_runs`:
 | Chain-level row: `WHERE id = $run_id` | Chain status, duration, total records |
 | 7-day historical baseline: same step slugs, `started_at >= NOW() - INTERVAL '7 days'`, `id < $run_id` | Velocity/duration/verdict baselines for anomaly detection |
 
-Optional source — `pg_stat_statements` (requires `migrations/109_pg_stat_statements.sql`):
+Optional source — `pg_stat_statements` (requires `migrations/110_pg_stat_statements.sql`):
 
 ```sql
 SELECT LEFT(query, 200) AS query_snippet, calls,
