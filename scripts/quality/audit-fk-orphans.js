@@ -73,13 +73,6 @@ const RELATIONSHIPS = [
   },
   {
     tier: 1,
-    child: 'builder_contacts',
-    parent: 'builders',
-    childCols: ['builder_id'],
-    parentCols: ['id'],
-  },
-  {
-    tier: 1,
     child: 'trade_mapping_rules',
     parent: 'trades',
     childCols: ['trade_id'],
@@ -284,6 +277,9 @@ const FK_STATUS = {
 // Main
 // ---------------------------------------------------------------------------
 
+module.exports = { RELATIONSHIPS };
+
+if (require.main === module) {
 pipeline.run('audit-fk-orphans', async (pool) => {
   // eslint-disable-next-line no-console
   console.log('\n=== FK Orphan Audit — Read-Only ===\n');
@@ -407,3 +403,4 @@ pipeline.run('audit-fk-orphans', async (pool) => {
     },
   });
 });
+} // require.main

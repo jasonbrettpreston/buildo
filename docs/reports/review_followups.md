@@ -1,6 +1,21 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF3 B3 — audit-fk-orphans stale entry fix (commit: TBD, 2026-04-24)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| LOW | Gemini CRITICAL / Defensible | **`buildOrphanQuery` uses string interpolation for table/column names** — Gemini flagged this as SQL injection. Defensible: identifiers come exclusively from the static `RELATIONSHIPS` array (code-controlled, not user input); PostgreSQL cannot parameterize table/column identifiers via `$N`; the script is admin-only tooling. Not a real risk in current form. Would become real only if `RELATIONSHIPS` were loaded from an external/user-controlled source. | If RELATIONSHIPS source changes |
+| LOW | Gemini / Defensible | **No PostgreSQL schema qualification on table names** — All queries use unqualified names (e.g., `FROM permits c`) relying on `search_path`. Defensible: single-schema application (`public`); `search_path` is stable and not configurable by end users. | Future hardening |
+| LOW | Gemini / Defensible | **`res.rows[0]` assumption on COUNT(*) result** — Gemini flagged potential crash if rows is empty. Defensible: `COUNT(*)` always returns exactly one row in PostgreSQL regardless of data state. | Not a real risk |
+| MED | Gemini / Out-of-scope | **Tier 1 entries not verified against `pg_constraint`** — Script assumes entries marked Tier 1 actually have enforced FK constraints in the DB. Adding `information_schema` pre-check would catch misconfigured entries. Not introduced by this fix; significant new feature. | Future hardening WF on audit-fk-orphans |
+| LOW | Gemini / Out-of-scope | **`NOT EXISTS` subquery vs `LEFT JOIN ANTI-JOIN` pattern** — Gemini flagged potential performance issue on large tables. Pre-existing pattern; not introduced by this fix; query plan on indexed FK columns is typically efficient. | Reactive — only if audit run time becomes an issue |
+| LOW | DeepSeek / Defensible | **`NOT VALID` constraints produce false Tier 1 confidence** — DeepSeek raised concern that a `NOT VALID` constraint allows existing orphans. Defensible: audit-fk-orphans measures orphan data counts, not constraint existence or validation state. The split-lock `NOT VALID + VALIDATE` pattern is the intended migration strategy per spec 47 §18. | Not applicable to this script's purpose |
+| LOW | DeepSeek / Defensible | **nullable:false may overcount orphans if column is actually nullable in DB** — Pre-existing design decision; `RELATIONSHIPS` config correctness is the operator's responsibility. | Documented design constraint |
+| LOW | Gemini+DeepSeek / Out-of-scope | **`parseInt(a.Tier)` sort / `r.Tier.startsWith('2')` fragility** — Both reviewers flagged that sort and summary logic couples to display string format. Pre-existing pattern not introduced by this fix. | Future hardening — store raw tier number in results object |
+| LOW | Independent / Out-of-scope | **Tier 2 dead code and "All Tier 2 clean" always-printing message** — After migration 109, no RELATIONSHIPS entries have `tier: 2`. The tier 2 summary branch at line 375+ always prints "clean" with nothing to report. Pre-existing; cosmetic. | Low-priority cleanup WF |
+| LOW | Independent / Out-of-scope | **`emitSummary` missing `audit_table`** — Admin UI shows "UNKNOWN" verdict for this script. Pre-existing pipeline observability gap. | Future observability WF tied to spec 48 |
+
 ## 1. Systemic Pipeline Patterns
 These systemic issues appeared multiple times across various scripts and have been consolidated into overarching tech-debt epics.
 

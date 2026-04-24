@@ -12,7 +12,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 
 ## 3. Behavioral Contract
 - **Inputs:** SQL migration files executed sequentially by `scripts/migrate.js` against a PostgreSQL database.
-- **Core Logic:** The schema consists of 44 tables across six domains. **Core permits** (`permits` with composite PK `(permit_num, revision_num)`, `permit_history`, `sync_runs`, `pipeline_runs`, `pipeline_schedules`) store ingested data, field-level audit trails, and pipeline run metadata. **Classification** (`trades`, `trade_mapping_rules` with 3-tier CHECK, `permit_trades` junction, `product_groups`, `permit_products`) links permits to 32 trade categories and product groups with confidence scores. **Enrichment** (`entities` deduplicated by `name_normalized`, `entity_projects` junction, `builders` legacy alias, `builder_contacts`, `coa_applications` with optional permit linking, `wsib_registry`, `permit_inspections`) tracks entity profiles, WSIB records, inspection stages, and Committee of Adjustment data. **Spatial** (`parcels` with lot dimensions, `permit_parcels` junction, `neighbourhoods` with Census 2021 demographics, `building_footprints` with 3D massing, `parcel_buildings` junction, `address_points`, `data_quality_snapshots`) supports geocoding, parcel matching, and quality tracking. **Cost modelling** (`cost_estimates`, `scope_intensity_matrix` with GFA allocation percentages by permit+structure type, `trade_sqft_rates` with base $/sqft by trade slug, `trade_configurations` with per-trade LoS multipliers) drives the cost estimation pipeline (Spec 83/86). **Operations** (`logic_variables`, `scraper_queue`, `engine_health_snapshots`, `lead_analytics`, `lead_views`, `tracked_projects`, `notifications`, `user_profiles`, `schema_migrations`) supports runtime configuration, scraping, and user activity tracking. All DDL uses `IF NOT EXISTS` for idempotent re-runs; trade seeds use `ON CONFLICT DO NOTHING`. The `pg` Pool in `src/lib/db/client.ts` provides `query<T>()` and `getClient()` for typed access. See `Permit`, `Trade`, `Entity`, `Inspection`, and related interfaces in `src/lib/permits/types.ts`.
+- **Core Logic:** The schema consists of 44 tables across six domains. **Core permits** (`permits` with composite PK `(permit_num, revision_num)`, `permit_history`, `sync_runs`, `pipeline_runs`, `pipeline_schedules`) store ingested data, field-level audit trails, and pipeline run metadata. **Classification** (`trades`, `trade_mapping_rules` with 3-tier CHECK, `permit_trades` junction, `product_groups`, `permit_products`) links permits to 32 trade categories and product groups with confidence scores. **Enrichment** (`entities` deduplicated by `name_normalized`, `entity_projects` junction, `coa_applications` with optional permit linking, `wsib_registry`, `permit_inspections`) tracks entity profiles, WSIB records, inspection stages, and Committee of Adjustment data. **Spatial** (`parcels` with lot dimensions, `permit_parcels` junction, `neighbourhoods` with Census 2021 demographics, `building_footprints` with 3D massing, `parcel_buildings` junction, `address_points`, `data_quality_snapshots`) supports geocoding, parcel matching, and quality tracking. **Cost modelling** (`cost_estimates`, `scope_intensity_matrix` with GFA allocation percentages by permit+structure type, `trade_sqft_rates` with base $/sqft by trade slug, `trade_configurations` with per-trade LoS multipliers) drives the cost estimation pipeline (Spec 83/86). **Operations** (`logic_variables`, `scraper_queue`, `engine_health_snapshots`, `lead_analytics`, `lead_views`, `tracked_projects`, `notifications`, `user_profiles`, `schema_migrations`) supports runtime configuration, scraping, and user activity tracking. All DDL uses `IF NOT EXISTS` for idempotent re-runs; trade seeds use `ON CONFLICT DO NOTHING`. The `pg` Pool in `src/lib/db/client.ts` provides `query<T>()` and `getClient()` for typed access. See `Permit`, `Trade`, `Entity`, `Inspection`, and related interfaces in `src/lib/permits/types.ts`.
 - **Outputs:** A fully indexed PostgreSQL database with 120+ B-tree, GIN, and GiST indexes supporting FTS, change detection (SHA-256 `data_hash`), spatial lookups (PostGIS `GEOMETRY` columns on `parcels`, `neighbourhoods`, and `building_footprints`), cost/date filter queries (`est_const_cost`, `application_date`, `hearing_date`), and referential integrity (FK constraints on 23 relationships — all Tier 1 as of migration 109, 2026-04-24). Partial indexes on `permits` (needs geocode) and `builders` (needs enrich) accelerate worker queries. **FK Hardening (migration 109, 2026-04-24):** All Tier 2 relationships are now enforced: `permit_history→permits` (CASCADE), `permit_history→sync_runs` (SET NULL), `tracked_projects→permits` (CASCADE), `permits→neighbourhoods` (SET NULL), `permit_products→permits` (CASCADE). `permit_products.permit_num` widened from VARCHAR(20)→VARCHAR(30) to match permits PK. 13 orphaned `permits.neighbourhood_id` rows nulled before constraint addition.
 - **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback. CoA FK to permits is intentionally omitted (composite PK incompatible with single-column reference) — enforced via CQA Tier 2 referential audit instead. PostgreSQL ENUMs deferred for `status` columns to accommodate upstream Toronto Open Data changes.
 
@@ -22,8 +22,8 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | Table | Columns | Indexes |
 |-------|---------|--------|
 | `address_points` | 3 | 0 |
-| `builder_contacts` | 8 | 2 |
-| `builders` | 15 | 3 |
+| ~~`builder_contacts`~~ | — | — | Dropped in migration 056 (data migrated to `entity_contacts`) |
+| ~~`builders`~~ | — | — | Dropped in migration 056 (data migrated to `entities`) |
 | `building_footprints` | 13 | 4 |
 | `coa_applications` | 22 | 10 |
 | `cost_estimates` | 15 | 1 |
@@ -79,39 +79,6 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `address_point_id` | INTEGER | NO | - |
 | `latitude` | NUMERIC(10,7) | NO | - |
 | `longitude` | NUMERIC(10,7) | NO | - |
-
-#### `builder_contacts` (8 columns)
-
-| Column | Type | Nullable | Default |
-|--------|------|----------|--------|
-| `id` | INTEGER | NO | nextval(builder_contacts_id_seq) |
-| `builder_id` | INTEGER | NO | - |
-| `contact_type` | CHARACTER VARYING(20) | YES | - |
-| `contact_value` | CHARACTER VARYING(500) | YES | - |
-| `source` | CHARACTER VARYING(50) | NO | user |
-| `contributed_by` | CHARACTER VARYING(100) | YES | - |
-| `verified` | BOOLEAN | NO | false |
-| `created_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
-
-#### `builders` (15 columns)
-
-| Column | Type | Nullable | Default |
-|--------|------|----------|--------|
-| `id` | INTEGER | NO | nextval(builders_id_seq) |
-| `name` | CHARACTER VARYING(500) | NO | - |
-| `name_normalized` | CHARACTER VARYING(500) | NO | - |
-| `phone` | CHARACTER VARYING(50) | YES | - |
-| `email` | CHARACTER VARYING(200) | YES | - |
-| `website` | CHARACTER VARYING(500) | YES | - |
-| `google_place_id` | CHARACTER VARYING(200) | YES | - |
-| `google_rating` | NUMERIC(2,1) | YES | - |
-| `google_review_count` | INTEGER | YES | - |
-| `obr_business_number` | CHARACTER VARYING(50) | YES | - |
-| `wsib_status` | CHARACTER VARYING(50) | YES | - |
-| `permit_count` | INTEGER | NO | 0 |
-| `first_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
-| `last_seen_at` | TIMESTAMP WITHOUT TIME ZONE | NO | now() |
-| `enriched_at` | TIMESTAMP WITHOUT TIME ZONE | YES | - |
 
 #### `building_footprints` (13 columns)
 
