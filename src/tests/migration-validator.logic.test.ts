@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const validator = require('../../scripts/validate-migration.js') as {
-  validateMigration: (content: string, filename: string) => { ok: boolean; errors: string[] };
+  validateMigration: (content: string, filename: string) => { ok: boolean; errors: string[]; warnings: string[] };
   LARGE_TABLES: string[];
 };
 
@@ -164,5 +164,72 @@ describe('validateMigration', () => {
     };
     const code = v.runCli([]);
     expect(code).toBe(1);
+  });
+
+  // ─── Rule 5: FK-signature warning ────────────────────────────────────────────
+
+  it('Rule 5: warns when CREATE TABLE has permit_num+revision_num but no FK', () => {
+    const sql = wrap(
+      `CREATE TABLE permit_notes (\n  id SERIAL PRIMARY KEY,\n  permit_num VARCHAR(30) NOT NULL,\n  revision_num VARCHAR(10) NOT NULL,\n  note TEXT\n);`,
+    );
+    const result = validateMigration(sql, 'migrations/200_permit_notes.sql');
+    expect(result.ok).toBe(true);
+    expect(result.warnings.some((w) => w.includes('permit_notes'))).toBe(true);
+  });
+
+  it('Rule 5: no warn when composite permit signature includes REFERENCES permits', () => {
+    const sql = wrap(
+      `CREATE TABLE permit_notes (\n  id SERIAL PRIMARY KEY,\n  permit_num VARCHAR(30) NOT NULL,\n  revision_num VARCHAR(10) NOT NULL,\n  note TEXT,\n  FOREIGN KEY (permit_num, revision_num) REFERENCES permits (permit_num, revision_num)\n);`,
+    );
+    const result = validateMigration(sql, 'migrations/201_permit_notes_fk.sql');
+    expect(result.ok).toBe(true);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('Rule 5: warns when CREATE TABLE has _id INTEGER column but no REFERENCES', () => {
+    const sql = wrap(
+      `CREATE TABLE job_items (\n  id SERIAL PRIMARY KEY,\n  builder_id INTEGER NOT NULL,\n  label TEXT\n);`,
+    );
+    const result = validateMigration(sql, 'migrations/202_job_items.sql');
+    expect(result.ok).toBe(true);
+    expect(result.warnings.some((w) => w.includes('job_items'))).toBe(true);
+  });
+
+  it('Rule 5: no warn when _id INTEGER column has REFERENCES', () => {
+    const sql = wrap(
+      `CREATE TABLE job_items (\n  id SERIAL PRIMARY KEY,\n  builder_id INTEGER NOT NULL REFERENCES builders (id),\n  label TEXT\n);`,
+    );
+    const result = validateMigration(sql, 'migrations/203_job_items_fk.sql');
+    expect(result.ok).toBe(true);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('Rule 5: -- FK-EXEMPT comment suppresses all warnings for the migration', () => {
+    const sql =
+      `-- FK-EXEMPT: staging table, FK added in next migration\n` +
+      wrap(
+        `CREATE TABLE permit_notes (\n  id SERIAL PRIMARY KEY,\n  permit_num VARCHAR(30) NOT NULL,\n  revision_num VARCHAR(10) NOT NULL\n);`,
+      );
+    const result = validateMigration(sql, 'migrations/204_fk_exempt.sql');
+    expect(result.ok).toBe(true);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('Rule 5: no warn for the permits table itself (parent-table exemption)', () => {
+    const sql = wrap(
+      `CREATE TABLE permits (\n  permit_num VARCHAR(30) NOT NULL,\n  revision_num VARCHAR(10) NOT NULL,\n  PRIMARY KEY (permit_num, revision_num)\n);`,
+    );
+    const result = validateMigration(sql, 'migrations/205_permits_parent.sql');
+    expect(result.ok).toBe(true);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('Rule 5: no warn for CREATE TABLE with no FK-signature columns', () => {
+    const sql = wrap(
+      `CREATE TABLE audit_log (\n  id SERIAL PRIMARY KEY,\n  event TEXT NOT NULL,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);`,
+    );
+    const result = validateMigration(sql, 'migrations/206_audit_log.sql');
+    expect(result.ok).toBe(true);
+    expect(result.warnings).toEqual([]);
   });
 });

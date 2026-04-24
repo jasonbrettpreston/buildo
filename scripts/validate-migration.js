@@ -113,10 +113,42 @@ function splitTopLevelCommas(body) {
 }
 
 /**
+ * Scan stripped SQL for CREATE TABLE statements and return each table's name,
+ * body (content inside the outermost parens), and the index of the keyword.
+ * Uses a paren-depth counter so nested constructs (CHECK, sub-selects) are
+ * captured correctly.
+ * @param {string} stripped - content with comments and string literals blanked
+ * @returns {{ name: string, body: string, index: number }[]}
+ */
+function extractCreateTableBlocks(stripped) {
+  const results = [];
+  const re = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:"?[\w]+"?\.)?"?([\w]+)"?\s*\(/gi;
+  for (const m of stripped.matchAll(re)) {
+    const name = m[1];
+    const openParen = m.index + m[0].length - 1; // index of the '('
+    let depth = 0;
+    let bodyStart = openParen + 1;
+    let bodyEnd = bodyStart;
+    for (let i = openParen; i < stripped.length; i++) {
+      if (stripped[i] === '(') depth++;
+      else if (stripped[i] === ')') {
+        depth--;
+        if (depth === 0) {
+          bodyEnd = i;
+          break;
+        }
+      }
+    }
+    results.push({ name, body: stripped.slice(bodyStart, bodyEnd), index: m.index });
+  }
+  return results;
+}
+
+/**
  * Validate a single migration file's content.
  * @param {string} content
  * @param {string} filename
- * @returns {{ ok: boolean, errors: string[] }}
+ * @returns {{ ok: boolean, errors: string[], warnings: string[] }}
  */
 function validateMigration(content, filename) {
   const errors = [];
@@ -231,7 +263,36 @@ function validateMigration(content, filename) {
     }
   }
 
-  return { ok: errors.length === 0, errors };
+  // Rule 5: FK-signature warning — non-blocking.
+  // Emit a warning for any CREATE TABLE that looks like it should have an FK
+  // but declares none. Suppressed by `-- FK-EXEMPT` anywhere in the file or
+  // when the table is `permits` (the composite-PK parent table itself).
+  const warnings = [];
+  const fkExempt = /--\s*FK-EXEMPT\b/i.test(content);
+  if (!fkExempt) {
+    for (const { name, body } of extractCreateTableBlocks(stripped)) {
+      if (name.toLowerCase() === 'permits') continue;
+      const hasFk = /\bREFERENCES\b|\bFOREIGN\s+KEY\b/i.test(body);
+      if (!hasFk) {
+        // Composite permit signature: both permit_num and revision_num present.
+        const hasPermitNum = /\bpermit_num\b/i.test(body);
+        const hasRevisionNum = /\brevision_num\b/i.test(body);
+        if (hasPermitNum && hasRevisionNum) {
+          warnings.push(
+            `${display}: CREATE TABLE ${name} has permit_num+revision_num but no FK to permits — add REFERENCES or suppress with -- FK-EXEMPT`,
+          );
+        }
+        // Integer ID signature: any column named *_id with INTEGER/INT/BIGINT type.
+        if (/\b\w+_id\s+(?:INTEGER|INT|BIGINT)\b/i.test(body)) {
+          warnings.push(
+            `${display}: CREATE TABLE ${name} has an _id INTEGER column but no FK REFERENCES — add REFERENCES or suppress with -- FK-EXEMPT`,
+          );
+        }
+      }
+    }
+  }
+
+  return { ok: errors.length === 0, errors, warnings };
 }
 
 /**
@@ -257,7 +318,10 @@ function runCli(argv) {
       failed = 1;
       continue;
     }
-    const { ok, errors } = validateMigration(content, file);
+    const { ok, errors, warnings } = validateMigration(content, file);
+    for (const w of warnings) {
+      console.warn(`WARN: ${w}`);
+    }
     if (!ok) {
       failed = 1;
       for (const e of errors) {
