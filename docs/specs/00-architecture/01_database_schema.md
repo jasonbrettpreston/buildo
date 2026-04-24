@@ -17,7 +17,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 - **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback. CoA FK to permits is intentionally omitted (composite PK incompatible with single-column reference) — enforced via CQA Tier 2 referential audit instead. PostgreSQL ENUMs deferred for `status` columns to accommodate upstream Toronto Open Data changes.
 
 <!-- DB_SCHEMA_START -->
-### Tables (44)
+### Tables (43)
 
 | Table | Columns | Indexes |
 |-------|---------|--------|
@@ -56,7 +56,6 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `scraper_queue` | 8 | 1 |
 | `spatial_ref_sys` | 5 | 0 |
 | `sync_runs` | 12 | 0 |
-| `timing_calibration` | 7 | 1 |
 | `tracked_projects` | 10 | 3 |
 | `trade_configurations` | 8 | 0 |
 | `trade_forecasts` | 14 | 2 |
@@ -697,18 +696,6 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `snapshot_path` | CHARACTER VARYING(500) | YES | - |
 | `duration_ms` | INTEGER | YES | - |
 
-#### `timing_calibration` (7 columns)
-
-| Column | Type | Nullable | Default |
-|--------|------|----------|--------|
-| `id` | INTEGER | NO | nextval(timing_calibration_id_seq) |
-| `permit_type` | CHARACTER VARYING(100) | NO | - |
-| `median_days_to_first_inspection` | INTEGER | NO | - |
-| `p25_days` | INTEGER | NO | - |
-| `p75_days` | INTEGER | NO | - |
-| `sample_size` | INTEGER | NO | - |
-| `computed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
-
 #### `tracked_projects` (10 columns)
 
 | Column | Type | Nullable | Default |
@@ -753,7 +740,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `p25_days` | INTEGER | YES | - |
 | `p75_days` | INTEGER | YES | - |
 | `computed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
-| `opportunity_score` | INTEGER | NO | 0 |
+| `opportunity_score` | INTEGER | YES | - |
 | `target_window` | CHARACTER VARYING(20) | YES | - |
 
 #### `trade_mapping_rules` (11 columns)

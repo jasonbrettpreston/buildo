@@ -936,6 +936,14 @@ Spec compliance
 [ ] Dual-path note present if TS counterpart exists; parity test added or updated
 [ ] All producer/consumer contracts documented in both specs
 [ ] No hardcoded SQL string for an enum value that has a shared-lib constant
+
+Migration (if this script ships a DB migration)
+[ ] Migration file has both `-- UP` and `-- DOWN` blocks (validate-migrations.sh enforces)
+[ ] `-- DOWN` block lists ALL columns/tables/indexes added in `-- UP` (not just the first)
+[ ] Data migrations (INSERT/UPDATE/DELETE) documented as forward-only with manual reversal instructions
+[ ] CREATE INDEX on large tables (permits, permit_trades, permit_parcels, wsib_registry, entities) uses CONCURRENTLY
+[ ] No executable DROP TABLE / DROP COLUMN in migration body — use `-- ALLOW-DESTRUCTIVE` marker only when required
+[ ] `node scripts/validate-migration.js migrations/NNN_name.sql` exits 0 before staging
 ```
 
 ---
