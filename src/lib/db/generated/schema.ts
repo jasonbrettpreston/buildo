@@ -29,6 +29,30 @@ export const tradeMappingRules = pgTable("trade_mapping_rules", {
 	check("trade_mapping_rules_tier_check", sql`tier = ANY (ARRAY[1, 2, 3])`),
 ]);
 
+export const permitHistory = pgTable("permit_history", {
+	id: serial().primaryKey().notNull(),
+	permitNum: varchar("permit_num", { length: 30 }).notNull(),
+	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
+	syncRunId: integer("sync_run_id"),
+	fieldName: varchar("field_name", { length: 100 }).notNull(),
+	oldValue: text("old_value"),
+	newValue: text("new_value"),
+	changedAt: timestamp("changed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_permit_history_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
+	index("idx_permit_history_sync_run").using("btree", table.syncRunId.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+			columns: [table.permitNum, table.revisionNum],
+			foreignColumns: [permits.permitNum, permits.revisionNum],
+			name: "fk_permit_history_permits"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.syncRunId],
+			foreignColumns: [syncRuns.id],
+			name: "fk_permit_history_sync_runs"
+		}).onDelete("set null"),
+]);
+
 export const syncRuns = pgTable("sync_runs", {
 	id: serial().primaryKey().notNull(),
 	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
@@ -131,20 +155,6 @@ export const dataQualitySnapshots = pgTable("data_quality_snapshots", {
 }, (table) => [
 	index("idx_dqs_snapshot_date").using("btree", table.snapshotDate.desc().nullsFirst().op("date_ops")),
 	unique("data_quality_snapshots_snapshot_date_key").on(table.snapshotDate),
-]);
-
-export const permitHistory = pgTable("permit_history", {
-	id: serial().primaryKey().notNull(),
-	permitNum: varchar("permit_num", { length: 30 }).notNull(),
-	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
-	syncRunId: integer("sync_run_id"),
-	fieldName: varchar("field_name", { length: 100 }).notNull(),
-	oldValue: text("old_value"),
-	newValue: text("new_value"),
-	changedAt: timestamp("changed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_permit_history_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
-	index("idx_permit_history_sync_run").using("btree", table.syncRunId.asc().nullsLast().op("int4_ops")),
 ]);
 
 export const trades = pgTable("trades", {
@@ -682,6 +692,11 @@ export const trackedProjects = pgTable("tracked_projects", {
 }, (table) => [
 	index("idx_tracked_projects_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
 	index("idx_tracked_projects_user").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.claimedAt.desc().nullsFirst().op("text_ops")),
+	foreignKey({
+			columns: [table.permitNum, table.revisionNum],
+			foreignColumns: [permits.permitNum, permits.revisionNum],
+			name: "fk_tracked_projects_permits"
+		}).onDelete("cascade"),
 	unique("uq_tracked_user_permit_trade").on(table.permitNum, table.revisionNum, table.tradeSlug, table.userId),
 	check("chk_tracked_status", sql`(status)::text = ANY ((ARRAY['saved'::character varying, 'claimed_unverified'::character varying, 'claimed'::character varying, 'verified'::character varying, 'archived'::character varying, 'expired'::character varying])::text[])`),
 ]);
@@ -763,6 +778,19 @@ export const tradeSqftRates = pgTable("trade_sqft_rates", {
 	check("trade_sqft_rates_structure_complexity_factor_check", sql`(structure_complexity_factor >= 0.50) AND (structure_complexity_factor <= 3.00)`),
 ]);
 
+export const deviceTokens = pgTable("device_tokens", {
+	id: serial().primaryKey().notNull(),
+	userId: varchar("user_id", { length: 128 }).notNull(),
+	pushToken: text("push_token").notNull(),
+	platform: varchar({ length: 10 }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_device_tokens_user_id").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+	unique("device_tokens_user_id_push_token_key").on(table.pushToken, table.userId),
+	check("device_tokens_platform_check", sql`(platform)::text = ANY ((ARRAY['ios'::character varying, 'android'::character varying])::text[])`),
+]);
+
 export const scopeIntensityMatrix = pgTable("scope_intensity_matrix", {
 	permitType: varchar("permit_type", { length: 100 }).notNull(),
 	structureType: varchar("structure_type", { length: 100 }).notNull(),
@@ -774,7 +802,7 @@ export const scopeIntensityMatrix = pgTable("scope_intensity_matrix", {
 ]);
 
 export const permitProducts = pgTable("permit_products", {
-	permitNum: varchar("permit_num", { length: 20 }).notNull(),
+	permitNum: varchar("permit_num", { length: 30 }).notNull(),
 	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
 	productId: integer("product_id").notNull(),
 	productSlug: varchar("product_slug", { length: 50 }).notNull(),
@@ -783,6 +811,11 @@ export const permitProducts = pgTable("permit_products", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	index("idx_permit_products_product").using("btree", table.productId.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+			columns: [table.permitNum, table.revisionNum],
+			foreignColumns: [permits.permitNum, permits.revisionNum],
+			name: "fk_permit_products_permits"
+		}).onDelete("cascade"),
 	foreignKey({
 			columns: [table.productId],
 			foreignColumns: [productGroups.id],
@@ -928,6 +961,11 @@ export const permits = pgTable("permits", {
 	index("idx_permits_status").using("btree", table.status.asc().nullsLast().op("text_ops")),
 	index("idx_permits_street_name_normalized").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")).where(sql`(street_name_normalized IS NOT NULL)`),
 	index("idx_permits_ward").using("btree", table.ward.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.neighbourhoodId],
+			foreignColumns: [neighbourhoods.id],
+			name: "fk_permits_neighbourhoods"
+		}).onDelete("set null"),
 	primaryKey({ columns: [table.permitNum, table.revisionNum], name: "permits_pkey"}),
 ]);
 export const mvMonthlyPermitStats = pgMaterializedView("mv_monthly_permit_stats", {	month: date(),

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { trades, tradeMappingRules, permitTrades, entities, entityContacts, builders, builderContacts, parcels, permitParcels, buildingFootprints, parcelBuildings, wsibRegistry, entityProjects, leadViews, permits, permitPhaseTransitions, productGroups, permitProducts, tradeForecasts, costEstimates } from "./schema";
+import { trades, tradeMappingRules, permits, permitHistory, syncRuns, permitTrades, entities, entityContacts, builders, builderContacts, parcels, permitParcels, buildingFootprints, parcelBuildings, wsibRegistry, entityProjects, leadViews, permitPhaseTransitions, trackedProjects, permitProducts, productGroups, tradeForecasts, costEstimates, neighbourhoods } from "./schema";
 
 export const tradeMappingRulesRelations = relations(tradeMappingRules, ({one}) => ({
 	trade: one(trades, {
@@ -11,6 +11,35 @@ export const tradeMappingRulesRelations = relations(tradeMappingRules, ({one}) =
 export const tradesRelations = relations(trades, ({many}) => ({
 	tradeMappingRules: many(tradeMappingRules),
 	permitTrades: many(permitTrades),
+}));
+
+export const permitHistoryRelations = relations(permitHistory, ({one}) => ({
+	permit: one(permits, {
+		fields: [permitHistory.permitNum],
+		references: [permits.permitNum]
+	}),
+	syncRun: one(syncRuns, {
+		fields: [permitHistory.syncRunId],
+		references: [syncRuns.id]
+	}),
+}));
+
+export const permitsRelations = relations(permits, ({one, many}) => ({
+	permitHistories: many(permitHistory),
+	leadViews: many(leadViews),
+	permitPhaseTransitions: many(permitPhaseTransitions),
+	trackedProjects: many(trackedProjects),
+	permitProducts: many(permitProducts),
+	tradeForecasts: many(tradeForecasts),
+	costEstimates: many(costEstimates),
+	neighbourhood: one(neighbourhoods, {
+		fields: [permits.neighbourhoodId],
+		references: [neighbourhoods.id]
+	}),
+}));
+
+export const syncRunsRelations = relations(syncRuns, ({many}) => ({
+	permitHistories: many(permitHistory),
 }));
 
 export const permitTradesRelations = relations(permitTrades, ({one}) => ({
@@ -97,13 +126,6 @@ export const leadViewsRelations = relations(leadViews, ({one}) => ({
 	}),
 }));
 
-export const permitsRelations = relations(permits, ({many}) => ({
-	leadViews: many(leadViews),
-	permitPhaseTransitions: many(permitPhaseTransitions),
-	tradeForecasts: many(tradeForecasts),
-	costEstimates: many(costEstimates),
-}));
-
 export const permitPhaseTransitionsRelations = relations(permitPhaseTransitions, ({one}) => ({
 	permit: one(permits, {
 		fields: [permitPhaseTransitions.permitNum],
@@ -111,7 +133,18 @@ export const permitPhaseTransitionsRelations = relations(permitPhaseTransitions,
 	}),
 }));
 
+export const trackedProjectsRelations = relations(trackedProjects, ({one}) => ({
+	permit: one(permits, {
+		fields: [trackedProjects.permitNum],
+		references: [permits.permitNum]
+	}),
+}));
+
 export const permitProductsRelations = relations(permitProducts, ({one}) => ({
+	permit: one(permits, {
+		fields: [permitProducts.permitNum],
+		references: [permits.permitNum]
+	}),
 	productGroup: one(productGroups, {
 		fields: [permitProducts.productId],
 		references: [productGroups.id]
@@ -134,4 +167,8 @@ export const costEstimatesRelations = relations(costEstimates, ({one}) => ({
 		fields: [costEstimates.permitNum],
 		references: [permits.permitNum]
 	}),
+}));
+
+export const neighbourhoodsRelations = relations(neighbourhoods, ({many}) => ({
+	permits: many(permits),
 }));

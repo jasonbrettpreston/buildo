@@ -1257,6 +1257,197 @@ Document the decision either way with a comment:
 
 ---
 
+## 18. FK Hardening Protocol — New Table Standard
+
+Every new table that has a parent-child relationship with another table MUST follow this
+protocol. Skipping FK constraints at creation time creates data quality debt that compounds
+as the table grows — retroactively adding FKs requires an orphan audit + cleanup migration.
+
+### 18.1 Declare FKs at table creation (the zero-debt rule)
+
+When writing a `CREATE TABLE` migration, declare FK constraints **inline** if the parent
+table already exists:
+
+```sql
+CREATE TABLE permit_products (
+  permit_num    VARCHAR(30) NOT NULL,  -- match parent column type exactly
+  revision_num  VARCHAR(10) NOT NULL,
+  product_id    INTEGER NOT NULL REFERENCES product_groups(id),
+  -- ...
+  FOREIGN KEY (permit_num, revision_num) REFERENCES permits(permit_num, revision_num)
+    ON DELETE CASCADE
+);
+```
+
+**Column type must match the parent exactly.** A `VARCHAR(20)` FK referencing a `VARCHAR(30)`
+parent is silently accepted at creation but blocks `FOREIGN KEY` enforcement. Verify types
+in `information_schema.columns` before writing the constraint.
+
+### 18.2 Cascade decision matrix
+
+Apply this rule to every new FK — document the rationale in the migration file:
+
+| Data category | ON DELETE behaviour | Examples |
+|---|---|---|
+| **Internal app data** — child is meaningless without the parent | `CASCADE` | `permit_trades`, `tracked_projects`, `cost_estimates`, `trade_forecasts`, `permit_products` |
+| **Municipal / external source data** — preserve the child, lose the reference | `SET NULL` | `permits.neighbourhood_id`, `permit_history.sync_run_id`, `coa_applications.linked_permit_num` |
+| **Safety-critical** — deletion of parent must be blocked while children exist | `RESTRICT` | Use sparingly; document in migration why orphan creation is structurally impossible |
+
+**Default when uncertain:** `CASCADE`. It prevents orphan accumulation and is reversible
+by restoring from backup. `SET NULL` requires the FK column to be nullable; verify before
+choosing it.
+
+### 18.3 Required child-side index
+
+PostgreSQL scans the child table on every parent `DELETE` to enforce `ON DELETE CASCADE`
+or `ON DELETE SET NULL`. Without an index on the child FK columns, each delete is a
+full table scan.
+
+**Rule:** Any FK on a child table with more than 10K rows MUST have a corresponding index
+on the FK columns before the constraint is added.
+
+```sql
+-- Add the index BEFORE the FK constraint
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permit_history_sync_run
+  ON permit_history(sync_run_id)
+  WHERE sync_run_id IS NOT NULL;  -- partial index when nullable
+
+-- Then add the constraint
+ALTER TABLE permit_history
+  ADD CONSTRAINT fk_permit_history_sync_runs
+  FOREIGN KEY (sync_run_id) REFERENCES sync_runs(id)
+  ON DELETE SET NULL
+  NOT VALID;
+ALTER TABLE permit_history VALIDATE CONSTRAINT fk_permit_history_sync_runs;
+```
+
+For empty or small tables (< 10K rows), non-CONCURRENTLY is acceptable.
+
+### 18.4 NOT VALID + VALIDATE pattern for tables > 100K rows
+
+Adding a FK constraint on a large table takes an `ACCESS EXCLUSIVE` lock that blocks all
+reads and writes. The NOT VALID + VALIDATE pattern splits this into two phases:
+
+1. `ADD CONSTRAINT ... NOT VALID` — instant (no table scan). Takes `SHARE ROW EXCLUSIVE`.
+2. `VALIDATE CONSTRAINT` — scans the table, but only holds `ACCESS SHARE` (reads proceed).
+
+```sql
+-- Step 1: instant — marks new rows but defers the scan
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'fk_permits_neighbourhoods'
+  ) THEN
+    ALTER TABLE permits
+      ADD CONSTRAINT fk_permits_neighbourhoods
+      FOREIGN KEY (neighbourhood_id)
+      REFERENCES neighbourhoods(id)
+      ON DELETE SET NULL
+      NOT VALID;
+  END IF;
+END $$;
+
+-- Step 2: scans under ACCESS SHARE only — safe in production
+ALTER TABLE permits VALIDATE CONSTRAINT fk_permits_neighbourhoods;
+```
+
+The `DO $$...$$` idempotency guard is mandatory: if the migration runner crashes after
+`ADD CONSTRAINT` but before `VALIDATE`, the next run must skip the ADD and go directly
+to VALIDATE.
+
+**Tables requiring NOT VALID + VALIDATE:** `permits` (237K+ rows), `permit_trades`
+(1.2M+ rows), `permit_parcels` (228K+ rows), `parcel_buildings` (516K+ rows),
+`building_footprints`, `wsib_registry`.
+
+### 18.5 Pre-constraint orphan audit (mandatory for existing tables)
+
+Before adding a FK to a table that has existing rows, run the orphan audit:
+
+```sh
+node scripts/quality/audit-fk-orphans.js
+```
+
+The output shows `Orphaned` counts per relationship. **Any non-zero orphan count blocks
+the constraint addition** — PostgreSQL will reject `VALIDATE CONSTRAINT` if orphans exist.
+
+**Clean orphans first:**
+
+```sql
+-- For ON DELETE SET NULL relationships: null out orphaned rows
+UPDATE child_table
+SET fk_col = NULL
+WHERE fk_col IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM parent_table WHERE id = child_table.fk_col);
+
+-- For ON DELETE CASCADE relationships: delete orphaned rows
+DELETE FROM child_table
+WHERE NOT EXISTS (
+  SELECT 1 FROM parent_table p
+  WHERE p.permit_num = child_table.permit_num
+    AND p.revision_num = child_table.revision_num
+);
+```
+
+### 18.6 Register the relationship in audit-fk-orphans.js
+
+After adding the FK constraint, **move the relationship from Tier 2 to Tier 1** in the
+`RELATIONSHIPS` array in `scripts/quality/audit-fk-orphans.js`. This keeps the audit
+registry current so future runs report accurate tier classifications.
+
+```js
+// BEFORE (Tier 2 — no FK)
+{ tier: 2, child: 'permits', parent: 'neighbourhoods', childCols: ['neighbourhood_id'],
+  parentCols: ['id'], nullable: true },
+
+// AFTER (Tier 1 — FK enforced)
+{ tier: 1, child: 'permits', parent: 'neighbourhoods', childCols: ['neighbourhood_id'],
+  parentCols: ['id'], nullable: true },
+```
+
+### 18.7 Adversarial review gate for FK migrations
+
+FK migrations are high-risk: a wrong `ON DELETE` behaviour silently destroys data in
+production without a visible error. **Every FK hardening migration MUST pass adversarial
+review before execution:**
+
+```sh
+# Review the proposed SQL
+node scripts/gemini-review.js review docs/reports/proposed_fk_migrations.md \
+  --context docs/specs/00-architecture/01_database_schema.md
+node scripts/deepseek-review.js review docs/reports/proposed_fk_migrations.md \
+  --context docs/specs/00-architecture/01_database_schema.md
+
+# Review the active task plan
+node scripts/gemini-review.js plan
+node scripts/deepseek-review.js plan
+```
+
+Output all four review responses before asking the user to confirm Phase B execution.
+The independent Claude worktree agent runs AFTER migration execution, before commit (WF6).
+
+### 18.8 Migration self-review checklist (FK-specific)
+
+Add these items to the standard §12 self-review checklist for any migration that adds
+FK constraints:
+
+```
+FK Hardening
+[ ] Column types match exactly between child FK col and parent PK col (information_schema check)
+[ ] ON DELETE behaviour documented with rationale in migration comment
+[ ] Child-side index exists on FK cols before ADD CONSTRAINT (or table has < 10K rows)
+[ ] DO $$...$$  idempotency guard wraps every ADD CONSTRAINT (conname check in pg_constraint)
+[ ] NOT VALID + VALIDATE split used for any table > 100K rows
+[ ] Orphan cleanup UPDATE/DELETE runs BEFORE the ADD CONSTRAINT step in the same migration
+[ ] UPDATE orphan cleanup uses WHERE clause (validate-migration.js enforces)
+[ ] DOWN block drops constraints in reverse order and notes any non-reversible type changes
+[ ] RELATIONSHIPS entry in audit-fk-orphans.js updated from Tier 2 → Tier 1 after migration
+[ ] db.test.ts added per §12.10: tests bad-FK insert rejection, CASCADE propagation,
+    SET NULL propagation for each new constraint
+[ ] Adversarial review (Gemini + DeepSeek) completed before npm run migrate
+```
+
+---
+
 ## Appendix A — Phase 3 WF3 Non-Migration Registry
 
 This appendix documents scripts and constants that were considered for Phase 3 WF3
