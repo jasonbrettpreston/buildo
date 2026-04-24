@@ -6,6 +6,7 @@
 // chain lock is released. Calls DeepSeek API (deepseek-chat) to surface warnings/failures
 // vs baseline and appends findings to docs/reports/pipeline-observability/review-database-followup.md.
 
+require('dotenv').config();
 const pipeline = require('./lib/pipeline');
 const path = require('path');
 const fs = require('fs');
