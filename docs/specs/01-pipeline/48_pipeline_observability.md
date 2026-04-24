@@ -1,0 +1,184 @@
+# Pipeline Observability Agent
+
+<requirements>
+## 1. Goal & User Story
+
+As a developer, after any pipeline chain completes, I want an AI agent to automatically read the run's warnings and failures alongside the 7-day historical baseline, then append a structured findings report — so I can identify regressions, anomalies, and critical issues without manually diffing `pipeline_runs` records.
+</requirements>
+
+---
+
+<architecture>
+## 2. System Overview
+
+### 2.1 Component Topology
+
+```
+run-chain.js (after chain lock released, before pool.end)
+       │
+       └── spawn detached  →  scripts/observe-chain.js
+                                       │
+                                       ├── pipeline_runs (current run + 7-day history)
+                                       │
+                                       ├── @anthropic-ai/sdk  →  claude-opus-4-7
+                                       │
+                                       └── docs/reports/pipeline-observability/
+                                               review-database-followup.md
+```
+
+### 2.2 Archetype
+
+`observe-chain.js` is an **Observer** (spec 30 §2.1) — it reads existing `pipeline_runs` rows only. It does NOT mutate any business tables. It writes only to the local filesystem.
+
+### 2.3 Advisory Lock
+
+Lock ID **112** (1-arg `pg_try_advisory_lock` form, per-script keyspace per spec 40 §3.5). Acquired on a dedicated pinned pool client held for the full run. If lock is held by a concurrent invocation, script emits PIPELINE_SUMMARY with `records_meta.skipped = true` and exits 0.
+
+### 2.4 Trigger
+
+Spawned as a detached fire-and-forget child process by `run-chain.js` immediately after the chain advisory lock is released, before `pool.end()`. The parent does NOT wait for it — the chain exit code is independent of the observer.
+
+CLI contract:
+```
+node scripts/observe-chain.js <chain_id> <run_id>
+```
+
+Guard: only spawned when `OBSERVABILITY_ENABLED !== '0'`.
+</architecture>
+
+---
+
+<behavior>
+## 3. Behavioral Contract
+
+### 3.1 DB Reads
+
+From `pipeline_runs` only:
+
+| Query | Purpose |
+|-------|---------|
+| Steps for the completed run: `WHERE pipeline LIKE '{chain_id}:%' AND started_at >= (SELECT started_at FROM pipeline_runs WHERE id = $run_id)` | Current run step verdicts + audit_table rows |
+| Chain-level row: `WHERE id = $run_id` | Chain status, duration, total records |
+| 7-day historical baseline: same step slugs, `started_at >= NOW() - INTERVAL '7 days'`, `id < $run_id` | Velocity/duration/verdict baselines for anomaly detection |
+
+All queries are bounded (≤200 rows). No streaming needed. No business table access.
+
+### 3.2 Claude API Call
+
+- Model: `claude-opus-4-7`
+- Context includes: formatted current run data (step verdicts, WARN/FAIL metrics, `failed_sample` arrays when present), 7-day historical velocity/duration averages per step
+- Prompt instructs the model to: identify anomalies vs baseline, classify issues by severity (CRITICAL/HIGH/INFO), suggest WF3 prompts for CRITICAL issues
+- Timeout: 30 seconds (gracefully degraded if API unavailable)
+
+### 3.3 Output Format
+
+Appended section in `docs/reports/pipeline-observability/review-database-followup.md`:
+
+```markdown
+## [chain_id] — YYYY-MM-DD HH:MM UTC  (run_id: NNN)
+
+### Summary
+[1-2 sentence chain health summary]
+
+### Step Verdicts
+| Step | Status | Duration | Records | vs Baseline |
+|------|--------|----------|---------|-------------|
+| ...  | PASS   | 4.2s     | 12,500  | +2% (normal) |
+
+### Anomalies & Warnings
+- [WARN] step_name: metric description
+
+### Critical Issues — WF3 Prompts
+> **WF3** [issue description]. Repro: [how to reproduce]. Expected: [correct behavior].
+
+---
+```
+
+If no anomalies detected: writes a brief "CLEAN" summary section only.
+
+### 3.4 Error Handling
+
+All logic wrapped in a single top-level try-catch. On any failure (DB query error, Claude API timeout, file write error): log `pipeline.log.warn('[observe-chain]', ...)` and exit 0. The observer NEVER propagates errors to the parent chain run.
+
+### 3.5 PIPELINE_SUMMARY Emission
+
+Emitted once per run (per spec 47 §R10). Observer pattern:
+
+```json
+{
+  "records_total": 0,
+  "records_new": null,
+  "records_updated": null,
+  "records_meta": {
+    "audit_table": {
+      "phase": 0,
+      "name": "Observability Agent",
+      "verdict": "PASS",
+      "rows": [{ "metric": "sys_duration_ms", "value": N, "threshold": null, "status": "INFO" }]
+    }
+  }
+}
+```
+</behavior>
+
+---
+
+<behavior>
+## 4. `emitSummary()` Extension — `failed_sample`
+
+### 4.1 Purpose
+
+Scripts may optionally pass a `failed_sample` array to `emitSummary()` containing string descriptors of the specific records that failed (e.g. permit numbers + error snippet). This lets the observability agent surface *which* records failed, not just how many.
+
+### 4.2 Contract
+
+```js
+pipeline.emitSummary({
+  records_total: 500,
+  records_new: 3,
+  records_updated: 490,
+  failed_sample: [
+    'permit_num:2023-12345 — TypeError: cannot read issued_date',
+    'permit_num:2024-00007 — RangeError: invalid date',
+  ],
+});
+```
+
+| Rule | Detail |
+|------|--------|
+| **Optional** | All existing callers continue to work unchanged |
+| **Capped** | Truncated to 20 items if more are provided |
+| **Passthrough** | Written verbatim to `PIPELINE_SUMMARY` payload as `failed_sample` top-level field |
+| **Absent when empty** | If array is empty or not provided, the field is omitted from the payload |
+</behavior>
+
+---
+
+<testing>
+## 5. Testing Mandate
+<!-- TEST_INJECT_START -->
+- **Logic:** `pipeline-sdk.logic.test.ts` — `failed_sample` passthrough and cap-at-20 behavior
+- **Infra:** `pipeline-observability.infra.test.ts` — script existence, Observer emit pattern, lock 112, error isolation, no bare console.error
+<!-- TEST_INJECT_END -->
+</testing>
+
+---
+
+<constraints>
+## 6. Operating Boundaries
+
+### Target Files
+- `scripts/observe-chain.js` (NEW — Observer script)
+- `scripts/lib/pipeline.js` (emitSummary extension only)
+- `scripts/run-chain.js` (detached spawn + Boy Scout lint fix)
+- `docs/reports/pipeline-observability/review-database-followup.md` (output file)
+
+### Out-of-Scope Files
+- Any business tables (`permits`, `trade_forecasts`, etc.) — observer reads `pipeline_runs` only
+- `scripts/manifest.json` — observe-chain.js is NOT a chain step; it's a post-chain observer
+- `src/app/api/` — no API routes
+
+### Cross-Spec Dependencies
+- **Relies on:** `30_pipeline_architecture.md` §2.1 (Observer archetype), `40_pipeline_system.md` §3.5 (advisory lock convention), `47_pipeline_script_protocol.md` §R10 (PIPELINE_SUMMARY mandate)
+- **Consumed by:** Developer review workflow
+</constraints>

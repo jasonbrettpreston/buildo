@@ -28,6 +28,7 @@
 | 45 | `01-pipeline/45_chain_entities.md` | Entities (Builder Web Enrichment) | `scripts/manifest.json`, `scripts/enrich-web-search.js` | `src/tests/enrichment.logic.test.ts`, `src/tests/enrichment.infra.test.ts`, `src/tests/chain.logic.test.ts` | Done |
 | 46 | `01-pipeline/46_wsib_enrichment.md` | WSIB Registry Enrichment | `scripts/enrich-wsib.js`, `scripts/manifest.json`, `scripts/link-wsib.js` | `src/tests/chain.logic.test.ts`, `src/tests/quality.logic.test.ts` | Done |
 | 47 | `01-pipeline/47_pipeline_script_protocol.md` | Pipeline Script Protocol — New Step Authoring Standard | `scripts/[new-script].js`, `scripts/lib/[feature]-shared.js` | `src/tests/[feature].logic.test.ts`, `src/tests/pipeline-advisory-lock.infra.test.ts` | Done |
+| 48 | `01-pipeline/48_pipeline_observability.md` | Pipeline Observability Agent | `scripts/observe-chain.js`, `scripts/lib/pipeline.js`, `scripts/run-chain.js` | `src/tests/pipeline-sdk.logic.test.ts`, `src/tests/pipeline-observability.infra.test.ts` | Done |
 | 49 | `01-pipeline/49_data_completeness_profiling.md` | Global Data Completeness Profile | `scripts/quality/assert-global-coverage.js`, `scripts/manifest.json`, `src/components/FreshnessTimeline.tsx` | `src/tests/assert-global-coverage.infra.test.ts` | Active |
 | 50 | `01-pipeline/50_source_permits.md` | Toronto Building Permits | `scripts/load-permits.js`, `src/lib/permits/field-mapping.ts` | `src/tests/sync.logic.test.ts`, `src/tests/permits.logic.test.ts`, `src/tests/pipeline-sdk.logic.test.ts` | Done |
 | 51 | `01-pipeline/51_source_coa.md` | Committee of Adjustment (CoA) Applications | `scripts/load-coa.js` | `src/tests/coa.logic.test.ts`, `src/tests/pipeline-sdk.logic.test.ts` | Done |
@@ -57,7 +58,10 @@
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
+| 77 | `03-mobile/77_mobile_crm_flight_board.md` | Mobile CRM Flight Board (Pillar 2) | — | — | Done |
 | 90 | `03-mobile/90_mobile_engineering_protocol.md` | Mobile Engineering Protocol & Architecture (The Pivot) | — | — | Done |
+| 91 | `03-mobile/91_mobile_lead_feed.md` | Mobile Lead Feed (Discovery Engine) | — | — | ACTIVE (Mobile Pivot) |
+| 92 | `03-mobile/92_mobile_engagement_hardware.md` | Mobile Engagement & Hardware (Pillar 3) | — | — | Done |
 
 ## Archive (Deprecated)
 

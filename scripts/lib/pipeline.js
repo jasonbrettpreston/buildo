@@ -230,7 +230,7 @@ let _runStartMs = Date.now();
  * - err_* (opt-in): from telemetry_context.error_taxonomy
  * - dq_*  (opt-in): from telemetry_context.data_quality
  *
- * @param {{ records_total: number, records_new: number, records_updated: number, records_meta?: object, telemetry_context?: { error_taxonomy?: Record<string, number>, data_quality?: Record<string, { nulls: number, total: number }> } }} stats
+ * @param {{ records_total: number, records_new: number, records_updated: number, records_meta?: object, failed_sample?: string[], telemetry_context?: { error_taxonomy?: Record<string, number>, data_quality?: Record<string, { nulls: number, total: number }> } }} stats
  */
 function emitSummary(stats) {
   const payload = {
@@ -240,6 +240,10 @@ function emitSummary(stats) {
     records_updated: stats.records_updated !== undefined ? stats.records_updated : 0,
   };
   if (stats.records_meta) payload.records_meta = stats.records_meta;
+  // failed_sample: specific record descriptors that errored (spec 48 §4). Cap at 20, omit if empty.
+  if (stats.failed_sample && stats.failed_sample.length > 0) {
+    payload.failed_sample = stats.failed_sample.slice(0, 20);
+  }
 
   // --- Auto-inject standardized health metrics (append, don't replace) ---
   // Ensure records_meta and audit_table exist

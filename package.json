@@ -44,6 +44,7 @@
     ]
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.91.0",
     "@google/genai": "^1.48.0",
     "@sentry/nextjs": "^10.47.0",
     "@tanstack/query-async-storage-persister": "^5.96.2",

@@ -286,6 +286,44 @@ describe('Pipeline SDK', () => {
       expect(rows.filter((r: { metric: string }) => r.metric === 'duration')).toHaveLength(1);
       expect(rows.filter((r: { metric: string }) => r.metric === 'sys_duration_ms')).toHaveLength(1);
     });
+
+    // --- failed_sample tests (spec 48 §4) ---
+
+    it('failed_sample passes through to PIPELINE_SUMMARY payload', () => {
+      pipeline.emitSummary({
+        records_total: 100,
+        records_new: 5,
+        records_updated: 90,
+        failed_sample: ['permit:A — TypeError: bad date', 'permit:B — RangeError: out of range'],
+      });
+      const output = logSpy!.mock.calls[0]![0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed.failed_sample).toEqual(['permit:A — TypeError: bad date', 'permit:B — RangeError: out of range']);
+    });
+
+    it('failed_sample is capped at 20 items when more are provided', () => {
+      const sample = Array.from({ length: 30 }, (_, i) => `permit:${i} — Error`);
+      pipeline.emitSummary({ records_total: 30, records_new: 0, records_updated: 0, failed_sample: sample });
+      const output = logSpy!.mock.calls[0]![0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed.failed_sample).toHaveLength(20);
+      expect(parsed.failed_sample[0]).toBe('permit:0 — Error');
+      expect(parsed.failed_sample[19]).toBe('permit:19 — Error');
+    });
+
+    it('failed_sample is omitted from payload when not provided', () => {
+      pipeline.emitSummary({ records_total: 50, records_new: 5, records_updated: 40 });
+      const output = logSpy!.mock.calls[0]![0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed).not.toHaveProperty('failed_sample');
+    });
+
+    it('failed_sample is omitted from payload when empty array provided', () => {
+      pipeline.emitSummary({ records_total: 50, records_new: 5, records_updated: 40, failed_sample: [] });
+      const output = logSpy!.mock.calls[0]![0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed).not.toHaveProperty('failed_sample');
+    });
   });
 
   // -----------------------------------------------------------------------

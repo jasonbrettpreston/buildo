@@ -601,6 +601,23 @@ async function run() {
     }
   }
 
+  // Spawn observability agent as a detached fire-and-forget child (spec 48).
+  // Does NOT affect the chain exit code — observer errors are fully isolated.
+  if (process.env.OBSERVABILITY_ENABLED !== '0' && chainRunId) {
+    try {
+      const observerProc = spawn(
+        'node',
+        [path.join(__dirname, 'observe-chain.js'), chainId, String(chainRunId)],
+        { detached: true, stdio: 'ignore' },
+      );
+      observerProc.unref();
+    } catch (spawnErr) {
+      pipeline.log.warn('[run-chain]', 'Failed to spawn observe-chain.js — observability skipped', {
+        err: spawnErr instanceof Error ? spawnErr.message : String(spawnErr),
+      });
+    }
+  }
+
   await pool.end().catch((dbErr) => { pipeline.log.warn('[run-chain]', `pool.end failed: ${dbErr.message}`); });
 
   if (failedStep) process.exit(1);

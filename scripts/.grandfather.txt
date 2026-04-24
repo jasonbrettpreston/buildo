@@ -15,5 +15,4 @@ scripts/audit_all_specs.mjs
 scripts/generate-db-docs.mjs
 scripts/local-cron.js
 
-scripts/run-chain.js
 scripts/task-init.mjs
