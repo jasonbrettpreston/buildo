@@ -2,6 +2,7 @@
 -- Core permits table ingesting Toronto Open Data building permits.
 -- Primary key is composite (permit_num, revision_num).
 
+-- UP
 CREATE TABLE IF NOT EXISTS permits (
     permit_num          VARCHAR(30)     NOT NULL,
     revision_num        VARCHAR(10)     NOT NULL,
@@ -51,24 +52,34 @@ CREATE TABLE IF NOT EXISTS permits (
 );
 
 -- Query indexes
-CREATE INDEX IF NOT EXISTS idx_permits_status
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_status
     ON permits (status);
 
-CREATE INDEX IF NOT EXISTS idx_permits_permit_type
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_permit_type
     ON permits (permit_type);
 
-CREATE INDEX IF NOT EXISTS idx_permits_issued_date
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_issued_date
     ON permits (issued_date);
 
-CREATE INDEX IF NOT EXISTS idx_permits_ward
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_ward
     ON permits (ward);
 
-CREATE INDEX IF NOT EXISTS idx_permits_data_hash
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_data_hash
     ON permits (data_hash);
 
-CREATE INDEX IF NOT EXISTS idx_permits_builder_name
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_builder_name
     ON permits (builder_name);
 
 -- Full-text search on description
-CREATE INDEX IF NOT EXISTS idx_permits_description_fts
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_description_fts
     ON permits USING gin (to_tsvector('english', COALESCE(description, '')));
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_permits_description_fts;
+-- DROP INDEX IF EXISTS idx_permits_builder_name;
+-- DROP INDEX IF EXISTS idx_permits_data_hash;
+-- DROP INDEX IF EXISTS idx_permits_ward;
+-- DROP INDEX IF EXISTS idx_permits_issued_date;
+-- DROP INDEX IF EXISTS idx_permits_permit_type;
+-- DROP INDEX IF EXISTS idx_permits_status;
+-- DROP TABLE IF EXISTS permits;

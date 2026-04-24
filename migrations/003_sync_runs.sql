@@ -1,6 +1,7 @@
 -- 003_sync_runs.sql
 -- Audit log for every data-sync execution against Toronto Open Data.
 
+-- UP
 CREATE TABLE IF NOT EXISTS sync_runs (
     id                  SERIAL          PRIMARY KEY,
     started_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
@@ -15,3 +16,6 @@ CREATE TABLE IF NOT EXISTS sync_runs (
     snapshot_path       VARCHAR(500),
     duration_ms         INTEGER
 );
+
+-- DOWN
+-- DROP TABLE IF EXISTS sync_runs;

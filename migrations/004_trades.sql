@@ -1,6 +1,7 @@
 -- 004_trades.sql
 -- Reference table of construction trade categories.
 
+-- UP
 CREATE TABLE IF NOT EXISTS trades (
     id          SERIAL          PRIMARY KEY,
     slug        VARCHAR(50)     UNIQUE NOT NULL,
@@ -34,3 +35,6 @@ INSERT INTO trades (slug, name, icon, color, sort_order) VALUES
     ('landscaping',      'Landscaping',       'tree-pine',       '#228B22', 19),
     ('waterproofing',    'Waterproofing',     'umbrella',        '#4169E1', 20)
 ON CONFLICT (slug) DO NOTHING;
+
+-- DOWN
+-- DROP TABLE IF EXISTS trades;

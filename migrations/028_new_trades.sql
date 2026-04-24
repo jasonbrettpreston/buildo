@@ -1,6 +1,7 @@
 -- 028: Add 11 new trade categories (WF3)
 -- IDs 21-31 for expanded trade taxonomy
 
+-- UP
 INSERT INTO trades (id, slug, name, icon, color, sort_order) VALUES
   (21, 'trim-work',          'Trim Work',               'Ruler',           '#A1887F', 21),
   (22, 'millwork-cabinetry', 'Millwork & Cabinetry',    'DoorOpen',        '#6D4C41', 22),
@@ -17,3 +18,8 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Reset sequence to avoid conflicts with future inserts
 SELECT setval('trades_id_seq', (SELECT MAX(id) FROM trades));
+
+-- DOWN
+-- Data migration — forward-only.
+-- To reverse: DELETE FROM trades WHERE id IN (21,22,23,24,25,26,27,28,29,30,31);
+-- Note: dependent permit_trades rows must be removed first to satisfy FK constraint.

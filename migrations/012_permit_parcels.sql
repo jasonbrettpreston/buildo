@@ -1,6 +1,7 @@
 -- 012_permit_parcels.sql
 -- Links permits to parcels via address matching.
 
+-- UP
 CREATE TABLE IF NOT EXISTS permit_parcels (
     id              SERIAL          PRIMARY KEY,
     permit_num      VARCHAR(30)     NOT NULL,
@@ -12,8 +13,13 @@ CREATE TABLE IF NOT EXISTS permit_parcels (
     UNIQUE (permit_num, revision_num, parcel_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_permit_parcels_permit
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permit_parcels_permit
     ON permit_parcels (permit_num, revision_num);
 
-CREATE INDEX IF NOT EXISTS idx_permit_parcels_parcel
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permit_parcels_parcel
     ON permit_parcels (parcel_id);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_permit_parcels_parcel;
+-- DROP INDEX IF EXISTS idx_permit_parcels_permit;
+-- DROP TABLE IF EXISTS permit_parcels;

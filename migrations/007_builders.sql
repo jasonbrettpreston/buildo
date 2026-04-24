@@ -1,6 +1,7 @@
 -- 007_builders.sql
 -- Builder directory aggregated from permit data and enriched via Google Places / OBR.
 
+-- UP
 CREATE TABLE IF NOT EXISTS builders (
     id                      SERIAL          PRIMARY KEY,
     name                    VARCHAR(500)    NOT NULL,
@@ -26,3 +27,8 @@ CREATE INDEX IF NOT EXISTS idx_builders_name_normalized
 
 CREATE INDEX IF NOT EXISTS idx_builders_permit_count
     ON builders (permit_count DESC);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_builders_permit_count;
+-- DROP INDEX IF EXISTS idx_builders_name_normalized;
+-- DROP TABLE IF EXISTS builders;

@@ -1,3 +1,4 @@
+-- UP
 CREATE TABLE IF NOT EXISTS building_footprints (
     id                  SERIAL PRIMARY KEY,
     source_id           VARCHAR(50) NOT NULL UNIQUE,
@@ -18,3 +19,8 @@ CREATE INDEX IF NOT EXISTS idx_building_footprints_centroid
 
 CREATE INDEX IF NOT EXISTS idx_building_footprints_source
   ON building_footprints (source_id);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_building_footprints_source;
+-- DROP INDEX IF EXISTS idx_building_footprints_centroid;
+-- DROP TABLE IF EXISTS building_footprints;

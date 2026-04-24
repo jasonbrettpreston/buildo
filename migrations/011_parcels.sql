@@ -1,6 +1,7 @@
 -- 011_parcels.sql
 -- Toronto Property Boundaries parcels with lot dimensions.
 
+-- UP
 CREATE TABLE IF NOT EXISTS parcels (
     id                      SERIAL          PRIMARY KEY,
     parcel_id               VARCHAR(20)     UNIQUE NOT NULL,
@@ -31,3 +32,9 @@ CREATE INDEX IF NOT EXISTS idx_parcels_street_name
 
 CREATE INDEX IF NOT EXISTS idx_parcels_feature_type
     ON parcels (feature_type);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_parcels_feature_type;
+-- DROP INDEX IF EXISTS idx_parcels_street_name;
+-- DROP INDEX IF EXISTS idx_parcels_address;
+-- DROP TABLE IF EXISTS parcels;

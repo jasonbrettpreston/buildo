@@ -1,3 +1,4 @@
+-- UP
 CREATE TABLE IF NOT EXISTS parcel_buildings (
     id              SERIAL PRIMARY KEY,
     parcel_id       INTEGER NOT NULL REFERENCES parcels(id),
@@ -13,3 +14,8 @@ CREATE INDEX IF NOT EXISTS idx_parcel_buildings_parcel
 
 CREATE INDEX IF NOT EXISTS idx_parcel_buildings_building
   ON parcel_buildings (building_id);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_parcel_buildings_building;
+-- DROP INDEX IF EXISTS idx_parcel_buildings_parcel;
+-- DROP TABLE IF EXISTS parcel_buildings;

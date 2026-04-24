@@ -1,3 +1,4 @@
+-- UP
 CREATE TABLE IF NOT EXISTS neighbourhoods (
     id                      SERIAL PRIMARY KEY,
     neighbourhood_id        INTEGER UNIQUE NOT NULL,
@@ -23,3 +24,7 @@ CREATE TABLE IF NOT EXISTS neighbourhoods (
 );
 
 CREATE INDEX IF NOT EXISTS idx_neighbourhoods_nid ON neighbourhoods(neighbourhood_id);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_neighbourhoods_nid;
+-- DROP TABLE IF EXISTS neighbourhoods;

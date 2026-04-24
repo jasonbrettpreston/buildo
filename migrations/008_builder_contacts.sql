@@ -1,6 +1,7 @@
 -- 008_builder_contacts.sql
 -- User-contributed contact information for builders.
 
+-- UP
 CREATE TABLE IF NOT EXISTS builder_contacts (
     id              SERIAL          PRIMARY KEY,
     builder_id      INTEGER         NOT NULL REFERENCES builders(id),
@@ -17,3 +18,8 @@ CREATE INDEX IF NOT EXISTS idx_builder_contacts_builder
 
 CREATE INDEX IF NOT EXISTS idx_builder_contacts_type
     ON builder_contacts (contact_type);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_builder_contacts_type;
+-- DROP INDEX IF EXISTS idx_builder_contacts_builder;
+-- DROP TABLE IF EXISTS builder_contacts;

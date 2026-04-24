@@ -2,6 +2,7 @@
 -- Rules engine that classifies permits into trades.
 -- Tier 1 = permit_type (highest signal), Tier 2 = work field, Tier 3 = description keywords.
 
+-- UP
 CREATE TABLE IF NOT EXISTS trade_mapping_rules (
     id              SERIAL          PRIMARY KEY,
     trade_id        INTEGER         NOT NULL REFERENCES trades(id),
@@ -178,3 +179,8 @@ INSERT INTO trade_mapping_rules (trade_id, tier, match_field, match_pattern, con
     ((SELECT id FROM trades WHERE slug = 'waterproofing'),    3, 'description', '%moisture barrier%',   0.70, NULL, NULL),
     ((SELECT id FROM trades WHERE slug = 'waterproofing'),    3, 'description', '%weeping tile%',       0.70, NULL, NULL)
 ;
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_trade_mapping_rules_tier;
+-- DROP INDEX IF EXISTS idx_trade_mapping_rules_trade;
+-- DROP TABLE IF EXISTS trade_mapping_rules;

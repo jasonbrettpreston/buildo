@@ -1,6 +1,7 @@
 -- 002_permit_history.sql
 -- Change tracking: one row per field that changed between sync runs.
 
+-- UP
 CREATE TABLE IF NOT EXISTS permit_history (
     id              SERIAL          PRIMARY KEY,
     permit_num      VARCHAR(30)     NOT NULL,
@@ -17,3 +18,8 @@ CREATE INDEX IF NOT EXISTS idx_permit_history_permit
 
 CREATE INDEX IF NOT EXISTS idx_permit_history_sync_run
     ON permit_history (sync_run_id);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_permit_history_sync_run;
+-- DROP INDEX IF EXISTS idx_permit_history_permit;
+-- DROP TABLE IF EXISTS permit_history;

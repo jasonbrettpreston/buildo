@@ -1,6 +1,7 @@
 -- 010_notifications.sql
 -- Notification queue for in-app and push notifications.
 
+-- UP
 CREATE TABLE IF NOT EXISTS notifications (
     id          SERIAL          PRIMARY KEY,
     user_id     VARCHAR(100)    NOT NULL,
@@ -21,3 +22,8 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_read
 
 CREATE INDEX IF NOT EXISTS idx_notifications_user_created
     ON notifications (user_id, created_at DESC);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_notifications_user_created;
+-- DROP INDEX IF EXISTS idx_notifications_user_read;
+-- DROP TABLE IF EXISTS notifications;

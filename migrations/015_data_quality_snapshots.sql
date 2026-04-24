@@ -1,6 +1,7 @@
 -- Migration 015: Data Quality Snapshots
 -- Tracks matching/enrichment coverage metrics over time for the Data Effectiveness Dashboard.
 
+-- UP
 CREATE TABLE IF NOT EXISTS data_quality_snapshots (
     id                  SERIAL          PRIMARY KEY,
     snapshot_date       DATE            NOT NULL DEFAULT CURRENT_DATE,
@@ -58,3 +59,7 @@ CREATE TABLE IF NOT EXISTS data_quality_snapshots (
 );
 
 CREATE INDEX IF NOT EXISTS idx_dqs_snapshot_date ON data_quality_snapshots (snapshot_date DESC);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_dqs_snapshot_date;
+-- DROP TABLE IF EXISTS data_quality_snapshots;

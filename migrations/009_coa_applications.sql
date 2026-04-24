@@ -1,6 +1,7 @@
 -- 009_coa_applications.sql
 -- Committee of Adjustment applications, optionally linked to permits.
 
+-- UP
 CREATE TABLE IF NOT EXISTS coa_applications (
     id                  SERIAL          PRIMARY KEY,
     application_number  VARCHAR(50)     UNIQUE,
@@ -29,3 +30,9 @@ CREATE INDEX IF NOT EXISTS idx_coa_applications_ward
 
 CREATE INDEX IF NOT EXISTS idx_coa_applications_linked_permit
     ON coa_applications (linked_permit_num);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_coa_applications_linked_permit;
+-- DROP INDEX IF EXISTS idx_coa_applications_ward;
+-- DROP INDEX IF EXISTS idx_coa_applications_address;
+-- DROP TABLE IF EXISTS coa_applications;

@@ -1,6 +1,7 @@
 -- 006_permit_trades.sql
 -- Junction table linking permits to trades with classification metadata.
 
+-- UP
 CREATE TABLE IF NOT EXISTS permit_trades (
     id              SERIAL          PRIMARY KEY,
     permit_num      VARCHAR(30)     NOT NULL,
@@ -16,14 +17,21 @@ CREATE TABLE IF NOT EXISTS permit_trades (
     UNIQUE (permit_num, revision_num, trade_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_permit_trades_trade
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permit_trades_trade
     ON permit_trades (trade_id);
 
-CREATE INDEX IF NOT EXISTS idx_permit_trades_active
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permit_trades_active
     ON permit_trades (is_active);
 
-CREATE INDEX IF NOT EXISTS idx_permit_trades_lead_score
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permit_trades_lead_score
     ON permit_trades (lead_score DESC);
 
-CREATE INDEX IF NOT EXISTS idx_permit_trades_permit
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permit_trades_permit
     ON permit_trades (permit_num, revision_num);
+
+-- DOWN
+-- DROP INDEX IF EXISTS idx_permit_trades_permit;
+-- DROP INDEX IF EXISTS idx_permit_trades_lead_score;
+-- DROP INDEX IF EXISTS idx_permit_trades_active;
+-- DROP INDEX IF EXISTS idx_permit_trades_trade;
+-- DROP TABLE IF EXISTS permit_trades;
