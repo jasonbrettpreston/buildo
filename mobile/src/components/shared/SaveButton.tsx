@@ -69,11 +69,6 @@ export function SaveButton({ leadId, isSaved, onToggle, testID }: Props) {
         onPress={handlePress}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
-        accessibilityRole="button"
-        // "Save Lead" / "Unsave Lead" — screen-reader label + Maestro handle.
-        // notifications.yaml uses `tapOn: "Save Lead"` to trigger the save flow,
-        // so this label is load-bearing for the E2E flow, not just A11y.
-        accessibilityLabel={isSaved ? 'Unsave Lead' : 'Save Lead'}
       >
         <Animated.View
           style={style}
