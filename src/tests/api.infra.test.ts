@@ -814,6 +814,44 @@ describe('pipelines/runs route — static WHERE construction (C4 regression)', (
   });
 });
 
+describe('migration 112 — notification_prefs column repair (P2 regression)', () => {
+  // SPEC LINK: docs/specs/03-mobile/92_mobile_engagement_hardware.md §2.3
+  // WF3 2026-04-25 P2: user_profiles.notification_prefs missing from live DB despite
+  // migrations 108 + 111 applied. Migration 112 must re-add the column idempotently.
+  it('migration file 112_notification_prefs_repair_2.sql exists', () => {
+    const migPath = path.resolve(__dirname, '../../migrations/112_notification_prefs_repair_2.sql');
+    expect(fs.existsSync(migPath)).toBe(true);
+  });
+
+  it('migration 112 uses ADD COLUMN IF NOT EXISTS for notification_prefs', () => {
+    const migPath = path.resolve(__dirname, '../../migrations/112_notification_prefs_repair_2.sql');
+    if (!fs.existsSync(migPath)) return;
+    const sql = fs.readFileSync(migPath, 'utf-8');
+    expect(sql).toMatch(/ADD COLUMN IF NOT EXISTS\s+notification_prefs/i);
+  });
+
+  it('migration 112 targets user_profiles table', () => {
+    const migPath = path.resolve(__dirname, '../../migrations/112_notification_prefs_repair_2.sql');
+    if (!fs.existsSync(migPath)) return;
+    const sql = fs.readFileSync(migPath, 'utf-8');
+    expect(sql).toMatch(/ALTER TABLE\s+user_profiles/i);
+  });
+
+  it('migration 112 includes a DOWN block', () => {
+    const migPath = path.resolve(__dirname, '../../migrations/112_notification_prefs_repair_2.sql');
+    if (!fs.existsSync(migPath)) return;
+    const sql = fs.readFileSync(migPath, 'utf-8');
+    expect(sql).toMatch(/DROP COLUMN IF EXISTS\s+notification_prefs/i);
+  });
+
+  it('migration 112 DOWN block has ALLOW-DESTRUCTIVE annotation (validate-migration.js gate)', () => {
+    const migPath = path.resolve(__dirname, '../../migrations/112_notification_prefs_repair_2.sql');
+    if (!fs.existsSync(migPath)) return;
+    const sql = fs.readFileSync(migPath, 'utf-8');
+    expect(sql).toMatch(/--\s*ALLOW-DESTRUCTIVE/i);
+  });
+});
+
 function findRouteFiles(dir: string): string[] {
   const results: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

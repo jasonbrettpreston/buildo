@@ -96,8 +96,10 @@ pg_restore \
 
 ## 4. Edge Cases
 
-- **Missing `BACKUP_GCS_BUCKET`:** Script throws before acquiring the advisory lock. No backup
-  attempt is made. `pipeline.run` catches and records the failure in `pipeline_runs`.
+- **Missing `BACKUP_GCS_BUCKET`:** Script emits a SKIP summary (`records_meta.skipped: true`) and
+  exits 0. No advisory lock is acquired. No pg_dump is attempted. Chain continues. This is the
+  correct behaviour for local dev environments where `BACKUP_GCS_BUCKET` is not set. Production
+  Cloud Run environments always have the secret mounted.
 - **pg_dump non-zero exit:** Error re-thrown inside the lock scope. `pipeline.run` records
   `status='failed'`. GCS upload is never initiated — no partial/corrupt object written.
 - **GCS upload failure mid-stream:** Stream `error` event is caught, re-thrown. The partially

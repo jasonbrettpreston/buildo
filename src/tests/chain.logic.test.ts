@@ -612,6 +612,20 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
     expect(source).toMatch(/=== ['"]backup_db['"]/);
   });
 
+  it('backup-db.js emits SKIP summary for missing bucket — does not throw (P1 regression)', () => {
+    // SPEC LINK: docs/specs/00-architecture/112_backup_recovery.md §4
+    // WF3 2026-04-25 P1: Missing BACKUP_GCS_BUCKET must produce a SKIP, not a hard throw.
+    // A bare throw breaks the permits chain every local dev run.
+    const src = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/backup-db.js'),
+      'utf-8'
+    );
+    // Must NOT throw when bucket is missing
+    expect(src).not.toMatch(/throw new Error\([^)]*BACKUP_GCS_BUCKET/);
+    // Must call emitSummary with skipped: true
+    expect(src).toMatch(/emitSummary[\s\S]{0,200}skipped:\s*true/);
+  });
+
   it('checks both records_new and records_updated before skipping', () => {
     const source = chainSource();
     // Skip only when BOTH are 0 — null-safe via || 0 coercion

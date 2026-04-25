@@ -32,12 +32,18 @@ const ConfigSchema = z.object({
 
 pipeline.run('backup-db', async (pool) => {
 
-  // §R5 — Startup guard: BACKUP_GCS_BUCKET must be set before we acquire the lock.
-  // A missing bucket should throw immediately with a clear message, not after a
-  // lock has been held for the duration of a pg_dump.
+  // §R5 — Startup guard: BACKUP_GCS_BUCKET is required in production but optional in
+  // local dev. Emit SKIP (not throw) so the permits chain continues cleanly when the
+  // var is absent. Production GCS bucket is always set via Cloud Run secrets.
   const rawBucket = process.env.BACKUP_GCS_BUCKET;
   if (!rawBucket || rawBucket.trim() === '') {
-    throw new Error('[backup-db] BACKUP_GCS_BUCKET env var is required but not set');
+    pipeline.emitSummary({
+      records_total: null,
+      records_new: null,
+      records_updated: null,
+      records_meta: { skipped: true, reason: 'BACKUP_GCS_BUCKET not configured — no backup on this environment' },
+    });
+    return;
   }
 
   const rawRetain = process.env.BACKUP_RETAIN_DAYS
