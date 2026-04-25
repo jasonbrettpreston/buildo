@@ -26,6 +26,8 @@
     "lighthouse:ci": "lhci autorun",
     "sql:lint": "sqlfluff lint --dialect postgres migrations/",
     "ast-grep:leads": "bash scripts/hooks/ast-grep-leads.sh",
+    "review:gemini": "node scripts/gemini-review.js",
+    "review:deepseek": "node scripts/deepseek-review.js",
     "generate:script": "node scripts/generate-script.mjs",
     "test:db": "BUILDO_TEST_DB=1 vitest run src/tests/db",
     "test:property": "vitest run src/tests/property",
@@ -45,6 +47,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",
+    "@google-cloud/storage": "^7.19.0",
     "@google/genai": "^1.48.0",
     "@sentry/nextjs": "^10.47.0",
     "@tanstack/query-async-storage-persister": "^5.96.2",

@@ -59,6 +59,8 @@ When implementing features that depend on external libraries, use the Context7 M
 | Harvest tests → specs | `npm run spec:tests` |
 | Regenerate DB schema docs | `npm run db:docs` |
 | Run Maestro flow | `maestro test mobile/maestro/[flow].yaml` |
+| Gemini adversarial review | `npm run review:gemini -- review <file> --context <spec>` |
+| DeepSeek adversarial review | `npm run review:deepseek -- review <file> --context <spec>` |
 
 ---
 
@@ -138,13 +140,16 @@ compliance choice (e.g. deliberately skipping an unhappy-path test with a reason
       response BEFORE running tests. Catches the spec-vs-code drift class
       that costs reviewer cycles when only the reviewer side runs the
       checklist. (Process added in commit landing Phase 2 review hardening.)
-- [ ] **Multi-Agent Review:** Spawn three agents in parallel (`isolation: "worktree"`).
-      Provide each: (a) spec path, (b) modified files list, (c) one-sentence summary.
-      Do NOT provide a checklist — each agent generates its own from the spec + diff.
-      1. **Gemini** (adversarial): spec-vs-code gaps, missing edge cases, failure modes
-      2. **DeepSeek** (adversarial): logic errors, wrong assumptions, downstream consumers
-         not handling new states or values
-      3. **Code Reviewer**: error path coverage, type safety, naming/pattern consistency
+- [ ] **Multi-Agent Review:** In ONE message send three parallel tool calls — do not
+      wait for one to finish before starting the others. No checklist provided to any
+      agent; each generates its own from the spec + diff.
+      - **Tool call 1 — Bash:** `npm run review:gemini -- review <file> --context <spec>`
+        Focus: spec-vs-code gaps, missing edge cases, failure modes, silent swallowed errors.
+      - **Tool call 2 — Bash:** `npm run review:deepseek -- review <file> --context <spec>`
+        Focus: logic errors, wrong assumptions, downstream consumers not handling new states.
+      - **Tool call 3 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`):
+        Provide: spec path + modified files list + one-sentence summary. Agent reads spec
+        and diff independently. Focus: error path coverage, type safety, naming/patterns.
       **Triage findings:**
       - **BUG** (blocking) → file WF3 immediately. Do NOT proceed to Green Light until resolved.
       - **DEFER** (non-blocking) → append to `docs/reports/review_followups.md` with context.
@@ -179,13 +184,16 @@ compliance choice (e.g. deliberately skipping an unhappy-path test with a reason
       self-skeptical checklist from the spec section governing the change.
       Walk each item against the ACTUAL diff. Output PASS/FAIL per item in
       the response BEFORE running tests. See WF1 for full rationale.
-- [ ] **Multi-Agent Review:** Spawn three agents in parallel (`isolation: "worktree"`).
-      Provide each: (a) spec path, (b) modified files list, (c) one-sentence summary.
-      Do NOT provide a checklist — each agent generates its own from the spec + diff.
-      1. **Gemini** (adversarial): spec-vs-code gaps, missing edge cases, failure modes
-      2. **DeepSeek** (adversarial): logic errors, wrong assumptions, downstream consumers
-         not handling new states or values
-      3. **Code Reviewer**: error path coverage, type safety, naming/pattern consistency
+- [ ] **Multi-Agent Review:** In ONE message send three parallel tool calls — do not
+      wait for one to finish before starting the others. No checklist provided to any
+      agent; each generates its own from the spec + diff.
+      - **Tool call 1 — Bash:** `npm run review:gemini -- review <file> --context <spec>`
+        Focus: spec-vs-code gaps, missing edge cases, failure modes, silent swallowed errors.
+      - **Tool call 2 — Bash:** `npm run review:deepseek -- review <file> --context <spec>`
+        Focus: logic errors, wrong assumptions, downstream consumers not handling new states.
+      - **Tool call 3 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`):
+        Provide: spec path + modified files list + one-sentence summary. Agent reads spec
+        and diff independently. Focus: error path coverage, type safety, naming/patterns.
       **Triage findings:**
       - **BUG** (blocking) → file WF3 immediately. Do NOT proceed to Green Light until resolved.
       - **DEFER** (non-blocking) → append to `docs/reports/review_followups.md` with context.
@@ -509,12 +517,17 @@ When operating in Admin Mode, you MUST adhere to these rules. Required reading b
 
 ### 🛢️ Backend / Pipeline Mode
 
-When operating in Backend/Pipeline Mode, you MUST adhere to these rules. Required reading before generating an active task:
-- `docs/specs/00_engineering_standards.md` §2 (Error Handling), §3 (Database), §6 (Logging), §7 (Dual Code Path), §9 (Pipeline & Script Safety), §10 (Boundary)
-- `docs/specs/pipeline/30_pipeline_architecture.md` (V2 architecture)
-- `docs/specs/pipeline/40_pipeline_system.md` (pipeline_runs, manifest, telemetry contracts)
-- `docs/specs/pipeline/47_pipeline_script_protocol.md` (NEW SCRIPT PROTOCOL — mandatory for any new pipeline step or WF3 on existing scripts)
-- `docs/specs/01_database_schema.md` (current schema)
+When operating in Backend/Pipeline Mode, you MUST adhere to these rules.
+
+**Pre-flight reads — send ALL five as parallel Read tool calls in a single message before generating the active task.** `scripts/CLAUDE.md` auto-loads specs 00, 30, and 40 — but you MUST still read 47 and the DB schema explicitly every session because they change frequently.
+
+| File | Sections |
+|------|---------|
+| `docs/specs/00_engineering_standards.md` | §2 Error Handling, §3 Database, §6 Logging, §7 Dual Path, §9 Pipeline Safety, §10 Boundary |
+| `docs/specs/01-pipeline/30_pipeline_architecture.md` | V2 architecture |
+| `docs/specs/01-pipeline/40_pipeline_system.md` | pipeline_runs, manifest, telemetry contracts |
+| `docs/specs/01-pipeline/47_pipeline_script_protocol.md` | **Mandatory** — §R1-R12 skeleton, advisory lock, emitSummary, emitMeta |
+| `docs/specs/00-architecture/01_database_schema.md` | Current schema |
 
 **Required tooling stack:**
 
