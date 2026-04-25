@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 /**
  * GET /api/admin/sync - Return the last 20 sync runs ordered by most recent.
  */
-export async function GET() {
+export const GET = withApiEnvelope(async function GET() {
   try {
     const runs = await query(
       `SELECT
@@ -26,14 +27,14 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/admin/sync - Trigger a new sync run.
  *
  * Body: { file_path: string }
  */
-export async function POST(request: NextRequest) {
+export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const filePath = body.file_path;
@@ -56,4 +57,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

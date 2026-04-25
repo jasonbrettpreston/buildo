@@ -48,6 +48,7 @@
     "assert_entity_tracing": { "file": "scripts/quality/assert-entity-tracing.js", "supports_full": false, "supports_dry_run": false },
     "assert_global_coverage": { "file": "scripts/quality/assert-global-coverage.js", "supports_full": false, "supports_dry_run": false },
     "backup_db":            { "file": "scripts/backup-db.js", "supports_full": false, "supports_dry_run": false },
+    "observe_chain":        { "file": "scripts/observe-chain.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["pipeline_runs"] },
     "coa_documents":        { "file": null, "supports_full": false, "supports_dry_run": false, "coming_soon": true }
   },
 

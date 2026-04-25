@@ -7,12 +7,14 @@ import type { MassingUseType } from '@/lib/massing/geometry';
 import { getCoaByPermit } from '@/lib/coa/repository';
 import { mapCoaToPermitDto } from '@/lib/coa/pre-permits';
 import type { CoaApplication } from '@/lib/coa/types';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
-export async function GET(
+export const GET = withApiEnvelope(async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context?: unknown
 ) {
-  const { id } = await params;
+  // SAFETY: Next.js App Router always passes { params } in context for dynamic segments
+  const { id } = await (context as { params: Promise<{ id: string }> }).params;
 
   // ID format: "permitNum--revisionNum" (double dash separator)
   const parts = id.split('--');
@@ -301,4 +303,4 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});

@@ -4,6 +4,7 @@ import { logError } from '@/lib/logger';
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 /** Track running child processes so DELETE can kill them */
 const runningProcesses = new Map<string, ChildProcess>();
@@ -69,11 +70,12 @@ const ALLOWED_PIPELINES = Object.keys(PIPELINE_SCRIPTS);
  * Creates a pipeline_runs row, spawns the script in the background,
  * and returns immediately with the run ID.
  */
-export async function POST(
+export const POST = withApiEnvelope(async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  context?: unknown
 ) {
-  const { slug } = await params;
+  // SAFETY: Next.js App Router always passes { params } in context for dynamic segments
+  const { slug } = await (context as { params: Promise<{ slug: string }> }).params;
 
   if (!ALLOWED_PIPELINES.includes(slug)) {
     return NextResponse.json(
@@ -302,18 +304,19 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * DELETE /api/admin/pipelines/[slug] - Cancel a running pipeline/chain.
  *
  * Sets all 'running' rows for the given slug to 'cancelled'.
  */
-export async function DELETE(
+export const DELETE = withApiEnvelope(async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  context?: unknown
 ) {
-  const { slug } = await params;
+  // SAFETY: Next.js App Router always passes { params } in context for dynamic segments
+  const { slug } = await (context as { params: Promise<{ slug: string }> }).params;
 
   if (!ALLOWED_PIPELINES.includes(slug)) {
     return NextResponse.json(
@@ -353,4 +356,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

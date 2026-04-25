@@ -1637,6 +1637,7 @@ and registry-vs-code agreement.
 | **110** | `scripts/quality/assert-entity-tracing.js` | 6 — Quality | NO — read-only probe |
 | **111** | `scripts/quality/assert-global-coverage.js` | 6 — Quality | NO — read-only probe |
 | **112** | `scripts/backup-db.js` | 7 — Maintenance | NO — GCS write only, no DB tables |
+| **113** | `scripts/observe-chain.js` | 7 — Maintenance | NO — reads pipeline_runs only, no writes |
 
 **`RUN_AT` Snapshot Convention:**
 Scripts that write timestamps (`Writes Timestamps? = YES`) capture a single `RUN_AT` timestamp

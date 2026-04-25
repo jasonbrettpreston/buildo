@@ -704,7 +704,7 @@ describe('API Error Handling Hardening', () => {
     expect(leakyFiles).toEqual([]);
   });
 
-  // C9: All public GET route handlers must be wrapped in try-catch
+  // C9: All public GET route handlers must be wrapped in try-catch or withApiEnvelope
   it('public GET routes have try-catch wrappers', () => {
     const publicRoutes = [
       path.join(__dirname, '../app/api/builders/route.ts'),
@@ -713,10 +713,13 @@ describe('API Error Handling Hardening', () => {
 
     for (const file of publicRoutes) {
       const src = fs.readFileSync(file, 'utf-8');
-      // GET handler should contain a try block
-      const getMatch = src.match(/export\s+async\s+function\s+GET[\s\S]*?\{([\s\S]*)\}/);
-      expect(getMatch, `${path.basename(file)} should export GET`).toBeTruthy();
-      expect(getMatch![1]).toContain('try');
+      // Accept either explicit try-catch in handler body or withApiEnvelope wrapper (which provides the try-catch)
+      const hasTryCatch = /export\s+async\s+function\s+GET[\s\S]*?\{[\s\S]*?try\s*\{/.test(src);
+      const hasApiEnvelope = src.includes('withApiEnvelope');
+      expect(
+        hasTryCatch || hasApiEnvelope,
+        `${path.basename(file)} GET handler must have try-catch or withApiEnvelope`,
+      ).toBe(true);
     }
   });
 

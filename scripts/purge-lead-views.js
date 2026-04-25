@@ -74,21 +74,27 @@ pipeline.run('purge-lead-views', async (pool) => {
     }
 
     // Batched delete to avoid a long lock on the viewed_at BRIN index.
+    // Per-batch withTransaction wrapping: each batch is individually atomic; locks
+    // are released between iterations so the BRIN index stays unblocked.
     const BATCH_SIZE = 5000;
     let totalDeleted = 0;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      const res = await pool.query(
-        `DELETE FROM lead_views
-          WHERE id IN (
-            SELECT id FROM lead_views
-             WHERE viewed_at < NOW() - ($1 || ' days')::interval
-             LIMIT $2
-          )`,
-        [String(RETENTION_DAYS), BATCH_SIZE],
-      );
-      totalDeleted += res.rowCount ?? 0;
-      if ((res.rowCount ?? 0) === 0) break;
+      let batchCount = 0;
+      await pipeline.withTransaction(pool, async (client) => {
+        const res = await client.query(
+          `DELETE FROM lead_views
+            WHERE id IN (
+              SELECT id FROM lead_views
+               WHERE viewed_at < NOW() - ($1 || ' days')::interval
+               LIMIT $2
+            )`,
+          [String(RETENTION_DAYS), BATCH_SIZE],
+        );
+        batchCount = res.rowCount ?? 0;
+      });
+      totalDeleted += batchCount;
+      if (batchCount === 0) break;
     }
 
     pipeline.log.info('[purge-lead-views]', `deleted ${totalDeleted} rows older than ${RETENTION_DAYS} days`);

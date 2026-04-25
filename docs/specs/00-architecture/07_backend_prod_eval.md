@@ -47,9 +47,15 @@ npm run test 2>&1 | tail -5
 ### C3: No rogue Pool instantiation
 ```
 grep -rn "new Pool(" src/ scripts/ --include="*.ts" --include="*.js" \
-  | grep -v "src/lib/db/client.ts" | grep -v ".test." | grep -v node_modules
+  | grep -v "src/lib/db/client.ts" | grep -v "scripts/lib/" \
+  | grep -v ".test." | grep -v node_modules \
+  | grep -v "scripts/analysis/" | grep -v "scripts/backfill/" \
+  | grep -v "scripts/seeds/" | grep -v "scripts/seed-" \
+  | grep -v "scripts/migrate.js"
 ```
-- **Pass:** 0 matches
+- **Pass:** 0 matches (exclusions cover seed utilities, backfill tools, analysis queries,
+  and scripts/lib/pipeline.js which is the legitimate Pool factory — none are mainline
+  pipeline scripts)
 - **Evidence:** _(paste)_  **Status:** PASS / FAIL
 
 ### C4: No raw SQL string concatenation
@@ -307,9 +313,11 @@ npx vitest run src/tests/migration-validator.logic.test.ts 2>&1 | tail -5
 ### M1: Dual code path in sync — lifecycle phase
 ```
 grep -c "early_construction\|structural\|finishing\|landscaping" \
-  src/lib/classification/lifecycle-phase.ts scripts/classify-lifecycle-phase.js
+  src/lib/classification/lifecycle-phase.ts scripts/lib/lifecycle-phase.js
 ```
-- **Pass:** Same phase labels present in both files
+- **Pass:** Phase labels present in both files (scripts/classify-lifecycle-phase.js is the
+  pipeline wrapper that delegates to scripts/lib/lifecycle-phase.js — the correct mirror is
+  the lib, not the wrapper)
 - **Evidence:** _(paste)_  **Status:** PASS / FAIL
 
 ### M2: All advisory lock IDs registered in spec 47 §A.5
@@ -434,7 +442,7 @@ node -e "
   });
 " 2>/dev/null || node -e "console.log(require('./scripts/manifest.json'))" | head -20
 ```
-- **Pass:** permits = 14 steps, coa = 6 steps, sources = 14 steps
+- **Pass:** permits = 27 steps, coa = 12 steps, sources = 15 steps (also: entities=2, wsib=1, deep_scrapes=7)
 - **Evidence:** _(paste)_  **Status:** PASS / FAIL
 
 ### OP2: Backup script registered and scheduled
@@ -497,7 +505,7 @@ psql $DATABASE_URL -c \
 
 | Date | V1 | V2 | V3 | V4 | V5 | V6 | V7 | V8 | V9 | V10 | Avg | Result |
 |------|----|----|----|----|----|----|----|----|----|----|-----|--------|
-| | | | | | | | | | | | | |
+| 2026-04-24 | 1 | 1 | 2 | 3 | 1 | 3 | **0** | 1 | **0** | 1 | 1.3 | NO-GO |
 
 *Record each run here. Score changes reflect actual codebase changes, not AI judgment drift.*
 

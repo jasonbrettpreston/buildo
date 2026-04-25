@@ -14,8 +14,8 @@ describe('scripts/observe-chain.js — pipeline observability agent', () => {
     expect(content).toBeTruthy();
   });
 
-  it('declares ADVISORY_LOCK_ID = 112', () => {
-    expect(content).toMatch(/ADVISORY_LOCK_ID\s*=\s*112/);
+  it('declares ADVISORY_LOCK_ID = 113', () => {
+    expect(content).toMatch(/ADVISORY_LOCK_ID\s*=\s*113/);
   });
 
   it('uses pipeline.log.* — no bare console.error', () => {

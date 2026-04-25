@@ -9,14 +9,15 @@ const SCRIPT_PATH = path.resolve(
   '..',
   '..',
   'scripts',
+  'backfill',
   'backfill-permits-location.js'
 );
 
-describe('scripts/backfill-permits-location.js', () => {
+describe('scripts/backfill/backfill-permits-location.js', () => {
   const src = fs.readFileSync(SCRIPT_PATH, 'utf-8');
 
   it('uses the Pipeline SDK (no inline new Pool)', () => {
-    expect(src).toMatch(/require\('\.\/lib\/pipeline'\)/);
+    expect(src).toMatch(/require\('\.\.\/lib\/pipeline'\)/);
     expect(src).not.toMatch(/new Pool\(/);
   });
 

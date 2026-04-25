@@ -14,6 +14,7 @@
 //   500 — unexpected error (logged via logError + returned as generic envelope)
 
 import type { NextRequest } from 'next/server';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { withRateLimit } from '@/lib/auth/rate-limit';
 import { pool } from '@/lib/db/client';
@@ -32,7 +33,7 @@ import { recordLeadView } from '@/features/leads/lib/record-lead-view';
 const RATE_LIMIT_PER_MIN = 60;
 const RATE_LIMIT_WINDOW_SEC = 60;
 
-export async function POST(request: NextRequest) {
+export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   const start = Date.now();
   try {
     // 1. Auth — runs first so unauthenticated requests get 401 even when
@@ -119,4 +120,4 @@ export async function POST(request: NextRequest) {
     // catches it and surfaces a 500 envelope with the cause logged.
     return internalError(cause, { route: 'POST /api/leads/view' });
   }
-}
+});

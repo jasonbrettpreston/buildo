@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import {
   getReferenceMonth,
   fetchKpi,
@@ -10,7 +11,7 @@ import {
   fetchNeighbourhoods,
 } from '@/lib/market-metrics/queries';
 
-export async function GET() {
+export const GET = withApiEnvelope(async function GET() {
   try {
     const refMonth = await getReferenceMonth();
 
@@ -39,4 +40,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});

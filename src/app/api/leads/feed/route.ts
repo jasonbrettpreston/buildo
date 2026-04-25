@@ -14,6 +14,7 @@
 //   500 — unexpected error (logged via logError + returned as generic envelope)
 
 import type { NextRequest } from 'next/server';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { withRateLimit } from '@/lib/auth/rate-limit';
 import { pool } from '@/lib/db/client';
@@ -35,7 +36,7 @@ import { createPerfMarks } from '@/features/leads/lib/perf-marks';
 const RATE_LIMIT_PER_MIN = 30;
 const RATE_LIMIT_WINDOW_SEC = 60;
 
-export async function GET(request: NextRequest) {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const start = Date.now();
   // Phase 7 2026-04-11 — named phase-level perf instrumentation.
   // Monotonic-clock-backed measurements via Node perf_hooks, logged
@@ -170,4 +171,4 @@ export async function GET(request: NextRequest) {
     // catches it and surfaces a 500 envelope with the cause logged.
     return internalError(cause, { route: 'GET /api/leads/feed' });
   }
-}
+});

@@ -3,8 +3,9 @@ import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import type { PermitFilter } from '@/lib/permits/types';
 import { getUpcomingLeads } from '@/lib/coa/pre-permits';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
-export async function GET(request: NextRequest) {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
 
   // Pre-Permits source: return upcoming CoA leads instead of building permits
@@ -191,4 +192,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { pool } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
 import { DEFAULT_RADIUS_KM, MAX_RADIUS_KM } from '@/features/leads/lib/distance';
 import { DEFAULT_FEED_LIMIT, MAX_FEED_LIMIT } from '@/features/leads/lib/get-lead-feed';
@@ -28,7 +29,7 @@ const testFeedSchema = z.object({
   limit: z.coerce.number().int().min(1).max(MAX_FEED_LIMIT).default(DEFAULT_FEED_LIMIT),
 });
 
-export async function GET(request: NextRequest) {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   try {
     const parsed = testFeedSchema.safeParse(
       Object.fromEntries(request.nextUrl.searchParams),
@@ -114,4 +115,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

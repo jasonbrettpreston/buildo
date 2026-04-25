@@ -14,6 +14,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 // Prevent Next.js from caching the resync response — each POST must hit the server.
 export const dynamic = 'force-dynamic';
@@ -37,7 +38,7 @@ const RESYNC_STEPS = [
   'update_tracked_projects',
 ] as const;
 
-export async function POST() {
+export const POST = withApiEnvelope(async function POST() {
   const triggeredAt = new Date().toISOString();
 
   // Fire-and-forget: spawn the permits chain in the background.
@@ -97,4 +98,4 @@ export async function POST() {
       steps: [...RESYNC_STEPS],
     },
   });
-}
+});

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 /**
  * GET /api/admin/builders - Return builder enrichment queue statistics.
  */
-export async function GET() {
+export const GET = withApiEnvelope(async function GET() {
   try {
     const [stats] = await query<{
       total: string;
@@ -37,14 +38,14 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/admin/builders - Trigger a builder enrichment batch.
  *
  * Body (optional): { limit?: number }
  */
-export async function POST(request: NextRequest) {
+export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const limit = typeof body.limit === 'number' && body.limit > 0
@@ -66,4 +67,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

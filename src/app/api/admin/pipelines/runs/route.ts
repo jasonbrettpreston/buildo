@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 interface PipelineRunRow {
   id: number;
@@ -23,7 +24,7 @@ interface PipelineRunRow {
  *   limit     — page size, default 25, max 100
  *   offset    — pagination offset, default 0
  */
-export async function GET(request: NextRequest) {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const pipeline = searchParams.get('pipeline');
   const status = searchParams.get('status');
@@ -66,4 +67,4 @@ export async function GET(request: NextRequest) {
     limit,
     offset,
   });
-}
+});

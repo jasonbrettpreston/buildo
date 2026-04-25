@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { pool } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 const NotificationPrefsSchema = z.object({
   new_lead_min_cost_tier: z.enum(['small', 'medium', 'large', 'major', 'mega']).optional(),
@@ -18,7 +19,7 @@ const NotificationPrefsSchema = z.object({
   notification_schedule: z.enum(['morning', 'anytime', 'evening']).optional(),
 });
 
-export async function GET(request: NextRequest) {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromSession(request);
     if (!userId) {
@@ -43,9 +44,9 @@ export async function GET(request: NextRequest) {
     logError('[notifications/preferences]', cause, { route: 'GET /api/notifications/preferences' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) {
   try {
     const userId = await getUserIdFromSession(request);
     if (!userId) {
@@ -80,4 +81,4 @@ export async function PATCH(request: NextRequest) {
     logError('[notifications/preferences]', cause, { route: 'PATCH /api/notifications/preferences' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

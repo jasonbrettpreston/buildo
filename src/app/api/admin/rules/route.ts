@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 /**
  * GET /api/admin/rules - Return all trade mapping rules with trade name joined.
  */
-export async function GET() {
+export const GET = withApiEnvelope(async function GET() {
   try {
     const rules = await query(
       `SELECT
@@ -25,14 +26,14 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/admin/rules - Insert a new trade mapping rule.
  *
  * Body: { trade_id, tier, match_field, match_pattern, confidence, phase_start?, phase_end? }
  */
-export async function POST(request: NextRequest) {
+export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { trade_id, tier, match_field, match_pattern, confidence, phase_start, phase_end } = body;
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * PATCH /api/admin/rules - Update an existing rule by id.
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
  * Body: { id: number, ...fieldsToUpdate }
  * Supports is_active toggle or full updates of mutable fields.
  */
-export async function PATCH(request: NextRequest) {
+export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, ...updates } = body;
@@ -147,4 +148,4 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

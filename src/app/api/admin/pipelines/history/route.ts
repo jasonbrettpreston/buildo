@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 /**
  * GET /api/admin/pipelines/history?slug=load_permits&limit=10
@@ -27,7 +28,7 @@ export interface PipelineHistoryResponse {
   runs: PipelineHistoryRun[];
 }
 
-export async function GET(request: Request) {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
@@ -83,4 +84,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+});

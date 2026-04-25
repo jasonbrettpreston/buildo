@@ -1,341 +1,158 @@
-# Active Task: WF5 DB Audit Follow-up — B3 + B1+B2+A4 + Annotation Sweep
-**Status:** Completed
-**Domain Mode:** Backend/Pipeline
+# Active Task: WF5 Audit Bug Batch B1–B5
+**Status:** Implementation
+**Workflow:** WF3 — Bug Fix
+**Rollback Anchor:** `9b5db3ddefc82d6402916c7340c263aa079353f6`
 
----
-
-## Review Protocol (applies to all three tasks)
-
-Per `feedback_review_protocol.md` + user opt-in for adversarial on WF3:
-
-| Step | Task 1 (WF3) | Task 2 (WF2) | Task 3 (WF2) |
-|------|-------------|-------------|-------------|
-| §12 Self-Review Walk | ✅ applicable sections | ✅ applicable sections | ✅ migration section |
-| Independent review (worktree) | ✅ always | ✅ always | ✅ always |
-| Gemini adversarial | ✅ user opted in | ✅ WF2 mandate | ✅ WF2 mandate |
-| DeepSeek adversarial | ✅ user opted in | ✅ WF2 mandate | ✅ WF2 mandate |
-| Triage → review_followups.md | ✅ | ✅ | ✅ |
-
-**§12 scope for tooling scripts** (non-pipeline-chain scripts):
-- Concurrency / Config & Validation / Atomicity / Writes / Time & Date / Streams → N/A (no advisory locks, no DB config loading, no writes/streams)
-- NULL Safety → applicable to audit-fk-orphans.js queries
-- Observability → applicable to audit-fk-orphans.js (emitSummary call)
-- Constants → applicable (RELATIONSHIPS array, LARGE_TABLES list)
-- Spec compliance → applicable (SPEC LINK header present in both files)
-- Migration section → applicable to Task 3 (SQL files being annotated)
-
-**Triage decision tree (per protocol):**
-- **Real** → fix in a follow-up commit on top of the implementation commit before WF6
-- **Defensible (per spec)** → explain rationale; mark WONTFIX in review_followups.md
-- **Out-of-scope** → mark in review_followups.md as "future hardening WF" with severity LOW
-
----
-
-## Task 1: WF3 — B3: Remove stale builder_contacts→builders from audit-fk-orphans.js
-
-### Context
-
-* **Goal:** Remove the `{ child: 'builder_contacts', parent: 'builders' }` Tier 1 entry from
-  `scripts/quality/audit-fk-orphans.js`. Both tables dropped in migration 056. Stale entry
-  causes ERROR rows in production CQA reports indistinguishable from real constraint violations.
-* **Target Spec:** `docs/specs/00-architecture/01_database_schema.md`
-* **Rollback Anchor:** `f44d95f`
+## Context
+* **Goal:** Fix 5 bugs surfaced by the WF5 prod backend audit + update 2 stale spec check
+  patterns. In priority order: B1 (advisory lock collision), B2 (M1 spec wrong file), B3
+  (purge-lead-views missing withTransaction), B4 (29 routes missing withApiEnvelope), B5
+  (observe-chain.js not in manifest + missing emitMeta). Plus C3/M1 spec exclusion fixes.
+* **Target Spec:**
+  - `docs/specs/01-pipeline/47_pipeline_script_protocol.md` (B1, B3, B5)
+  - `docs/specs/00-architecture/07_backend_prod_eval.md` (B2 M1 fix, C3 exclusion fix)
+  - `docs/specs/00-architecture/00_engineering_standards.md` §9 Pipeline Safety
 * **Key Files:**
-  - `scripts/quality/audit-fk-orphans.js` — remove entry; add `require.main` guard + `module.exports`
-  - `src/tests/audit-fk-orphans.logic.test.ts` — new test file
+  - `scripts/observe-chain.js` (B1 — lock ID, B5 — manifest + emitMeta)
+  - `docs/specs/01-pipeline/47_pipeline_script_protocol.md §A.5` (B1 — registry)
+  - `src/tests/pipeline-advisory-lock.infra.test.ts` (B1 — LOCK_ID_REGISTRY)
+  - `docs/specs/00-architecture/07_backend_prod_eval.md` (B2 M1 check, C3 pattern)
+  - `scripts/purge-lead-views.js` (B3 — withTransaction wrap)
+  - `src/app/api/**/*.ts` — 29 route files (B4 — withApiEnvelope sweep)
+  - `scripts/manifest.json` (B5 — observe-chain entry)
+  - `scripts/backfill-permits-location.js` (B5 — relocate to scripts/backfill/)
 
-### Technical Implementation
+## Technical Implementation
 
-1. Add `if (require.main === module) { pipeline.run(...) }` guard — makes file safely `require()`-able in tests without triggering DB connection.
-2. Add `module.exports = { RELATIONSHIPS }` at bottom.
-3. Remove the 8-line `builder_contacts → builders` block (lines 73–80 in current file).
-4. New test asserts:
-   - No entry in RELATIONSHIPS references `builder_contacts` or `builders`
-   - No duplicate child→parent+childCols key
+### B1 — Advisory lock collision (CRITICAL)
+`observe-chain.js:15` declares `ADVISORY_LOCK_ID = 112`, the same ID as `backup-db.js:21`.
+When both scripts run concurrently, the second silently skips — the advisory lock is already
+held. Three-file fix (must be done together):
+1. `scripts/observe-chain.js:15` — change `112` → `113`
+2. `docs/specs/01-pipeline/47_pipeline_script_protocol.md §A.5` — add registry row:
+   `| **113** | scripts/observe-chain.js | 7 — Maintenance | NO — observer only |`
+3. `src/tests/pipeline-advisory-lock.infra.test.ts LOCK_ID_REGISTRY` — add:
+   `'scripts/observe-chain.js': 113`
+The infra test currently does not scan observe-chain.js (absent from manifest). After B5
+adds it to the manifest, the uniqueness and registry checks will fire — must PASS.
 
-### Database Impact: NO
+### B2 — M1 spec check targets wrong file (SPEC FIX)
+The M1 check in `07_backend_prod_eval.md` compares `lifecycle-phase.ts` vs
+`classify-lifecycle-phase.js` (the pipeline wrapper script, which has 1 match — a comment).
+The actual mirror is `scripts/lib/lifecycle-phase.js` (5 matches). No real drift exists.
+Fix: update M1 grep to target `scripts/lib/lifecycle-phase.js`. Both TS module and JS lib
+have all 4 phase labels confirmed present.
 
-### Standards Compliance
-* **Try-Catch Boundary:** N/A
-* **Unhappy Path Tests:** Test verifies absence of stale entries — regression if re-added
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A
-* **§12.10 Real-DB Tests:** N/A — static RELATIONSHIPS array test
+### B3 — purge-lead-views.js batched DELETE without withTransaction
+The `while(true)` DELETE loop calls `pool.query()` directly with no transaction wrapper.
+Fix: wrap each loop iteration in `pipeline.withTransaction(pool, async (client) => {...})`.
+Per-batch wrapping (not one transaction over the full loop) preserves the intentional
+lock-releasing behaviour that prevents long BRIN index holds.
 
-### Execution Plan
-```
-- [ ] Rollback Anchor: f44d95f
-- [ ] State Verification: confirm builder_contacts/builders absent in current DB schema
-- [ ] Spec Review: 01_database_schema.md Tier classification rules
-- [ ] Guardrail Test: write audit-fk-orphans.logic.test.ts — must FAIL (stale entry present)
-- [ ] Red Light: npx vitest run src/tests/audit-fk-orphans.logic.test.ts
-- [ ] Fix: remove entry; add require.main guard + module.exports
-- [ ] Pre-Review Self-Checklist (3 items — see below)
-- [ ] Green Light: npm run test && npm run lint -- --fix. All pass.
-- [ ] §12 Self-Review Walk: Observability — emitSummary still called exactly once after fix?
-      Constants — RELATIONSHIPS array no longer references dropped tables?
-      Spec compliance — SPEC LINK header present?
-      All other §12 sections: N/A (no advisory locks, no DB writes, no streams).
-- [ ] Adversarial Reviews (parallel background — user opted in for WF3):
-        node scripts/gemini-review.js review scripts/quality/audit-fk-orphans.js
-        node scripts/deepseek-review.js review scripts/quality/audit-fk-orphans.js
-        node scripts/gemini-review.js review src/tests/audit-fk-orphans.logic.test.ts
-        node scripts/deepseek-review.js review src/tests/audit-fk-orphans.logic.test.ts
-- [ ] Independent Review Agent: worktree isolation, self-generated checklist against
-      01_database_schema.md Tier rules + audit-fk-orphans.js behavioral contract.
-- [ ] Triage: Real → fix-commit; Defensible → WONTFIX; Out-of-scope → future WF.
-- [ ] Append deferred findings to docs/reports/review_followups.md (section: Task1 commit SHA).
-- [ ] WF6 Atomic Commit (after any Real fixes applied).
-```
+### B4 — 29 routes missing withApiEnvelope (SWEEP)
+Mechanical 3-step per route:
+1. Add `import { withApiEnvelope } from '@/lib/api/with-api-envelope';`
+2. Change `export async function GET(req) {` →
+   `export const GET = withApiEnvelope(async function GET(req) {`
+3. Replace closing `}` with `});`
+Dynamic-param routes ([id], [slug]) must cast context:
+  `const { params } = context as { params: { id: string } }`.
+Mobile-consumed routes done first: `leads/feed`, `leads/flight-board`, `leads/search`,
+`permits/route.ts`, `permits/[id]/route.ts`. Admin routes follow.
 
-### Pre-Review Self-Checklist (walk before Green Light)
-1. Does `pipeline.run` still execute correctly when file is run directly (`node scripts/quality/audit-fk-orphans.js`)?
-2. Is ONLY the `builder_contacts → builders` entry removed — not `entity_contacts → entities` (still valid Tier 1)?
-3. Does `module.exports = { RELATIONSHIPS }` appear after `pipeline.run` so it doesn't shadow the local `const`?
+### B5 — observe-chain.js not in manifest + missing emitMeta (O2)
+- Add `observe_chain` entry to `scripts/manifest.json` under `m.scripts`:
+  `{ "file": "scripts/observe-chain.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["pipeline_runs"] }`
+- `backfill-permits-location.js` is one-time (header: "one-time backfill for 237K rows").
+  Move to `scripts/backfill/backfill-permits-location.js` — excluded from M3 grep by
+  convention. Update SPEC LINK path in file header.
+- Add `pipeline.emitMeta({"pipeline_runs": ["id","verdict","started_at","completed_at"]}, {})`
+  inside the `withAdvisoryLock` callback in observe-chain.js, after DB reads complete.
 
----
+### C3 Spec fix — exclusion pattern too broad
+Update `07_backend_prod_eval.md` C3 grep to add after existing exclusions:
+`| grep -v "analysis/" | grep -v "backfill/" | grep -v "seeds/" | grep -v "migrate.js"`
 
-## Task 2: WF2 — B1+B2+A4: validate-migration.js hardening
+## Standards Compliance
+* **Try-Catch Boundary:** B3 withTransaction wraps each DELETE batch. B4 withApiEnvelope
+  is the outer uncaught-exception catch. No new try/catch gaps introduced.
+* **Unhappy Path Tests:** B1: infra test uniqueness check reproduces the collision. B3 and
+  B5: existing pipeline-sdk and chain tests provide coverage. B4: withApiEnvelope already
+  tested in the routes that use it (entities, notifications, permits/geo).
+* **logError Mandate:** No new API catch blocks. withApiEnvelope delegates to logError
+  internally.
+* **UI Layout:** N/A — backend-only changes.
+* **Database Impact:** NO
 
-### Context
+## Execution Plan
 
-* **Goal:** Fix two validator false-positive bugs + expand LARGE_TABLES:
-  - **B1:** Rule 1 scans the entire file including DOWN blocks → false-positive ERRORs on
-    legitimate rollback DROP statements (migrations 051, 059, 060).
-  - **B2:** Rule 5 `*_id INTEGER` heuristic fires on `address_point_id INTEGER PRIMARY KEY`
-    (migration 018) — source-data table PK, not a FK reference.
-  - **A4:** `permit_history` missing from LARGE_TABLES — future indexes run without CONCURRENTLY protection.
-* **Target Spec:** `docs/specs/00-architecture/00_engineering_standards.md` §3.2 + spec 47 §12 migration section
-* **Key Files:**
-  - `scripts/validate-migration.js`
-  - `src/tests/migration-validator.logic.test.ts` (4 new tests)
+- [ ] **Rollback Anchor:** `9b5db3ddefc82d6402916c7340c263aa079353f6`
 
-### Technical Implementation
+- [ ] **State Verification:**
+  - observe-chain.js ADVISORY_LOCK_ID = 112 (same as backup-db.js:21) — confirmed
+  - scripts/lib/lifecycle-phase.js has 5 phase matches; TS module has 3 — no actual drift;
+    M1 spec targets the wrong file (wrapper vs lib)
+  - purge-lead-views.js while-loop DELETE uses pool.query with no withTransaction — confirmed
+  - 29 route files confirmed missing withApiEnvelope (5 mobile-consumed, 24 admin)
+  - observe-chain.js absent from manifest.json; backfill-permits-location.js is a one-time script
 
-**B1 — UP block scoping for Rule 1:**
-```js
-// Extract content before the first `-- DOWN` marker; fall back to full content if absent
-const downMarkerMatch = /^[ \t]*--[ \t]*DOWN\b/im.exec(content);
-const upBlockContent = downMarkerMatch ? content.slice(0, downMarkerMatch.index) : content;
-const upBlockStripped = blankStringLiterals(stripLineComments(stripBlockComments(upBlockContent)));
-// Rule 1 scans upBlockStripped instead of stripped
-```
+- [ ] **Spec Review:** Read specs listed above. Done in pre-flight.
 
-**B2 — PRIMARY KEY exclusion from Rule 5 integer-ID check:**
-```js
-// Reuse existing splitTopLevelCommas helper to check each column clause individually
-const clauses = splitTopLevelCommas(body);
-const hasIdCol = clauses.some(clause =>
-  /\b\w+_id\s+(?:INTEGER|INT|BIGINT)\b/i.test(clause) &&
-  !/\bPRIMARY\s+KEY\b/i.test(clause)
-);
-```
+- [ ] **Reproduction (B1):** Add observe-chain.js to manifest temporarily, then run
+  `npx vitest run src/tests/pipeline-advisory-lock.infra.test.ts`.
+  Must FAIL with "ID 112 used by both backup-db.js and observe-chain.js".
 
-**A4 — Expand LARGE_TABLES:**
-```js
-const LARGE_TABLES = [
-  'permits', 'permit_trades', 'permit_parcels',
-  'wsib_registry', 'entities', 'permit_history',
-];
-```
+- [ ] **Red Light:** Confirm the infra test fails with the duplicate ID error.
 
-**4 new guardrail tests (must FAIL before implementation):**
-1. B1 regression — DROP TABLE in DOWN block does NOT error without `-- ALLOW-DESTRUCTIVE`
-2. B1 correctness — DROP TABLE in UP block still errors without `-- ALLOW-DESTRUCTIVE`
-3. B2 — `foo_id INTEGER PRIMARY KEY` in CREATE TABLE does NOT produce Rule 5 warning
-4. A4 — `CREATE INDEX ON permit_history (col)` without CONCURRENTLY produces Rule 2 error
+- [ ] **Fix B1:** Change observe-chain.js ID 112→113. Add §A.5 row in spec. Add to
+  LOCK_ID_REGISTRY in infra test. Re-run infra test — must PASS.
 
-### Database Impact: NO
+- [ ] **Fix B2:** Update M1 check in 07_backend_prod_eval.md to target
+  `scripts/lib/lifecycle-phase.js`. Verify grep shows labels present in both files.
 
-### Standards Compliance
-* **Try-Catch Boundary:** N/A
-* **Unhappy Path Tests:** B1 correctness test verifies UP-block Rule 1 protection not regressed
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A
-* **§12.10 Real-DB Tests:** N/A
+- [ ] **Fix B3:** Wrap each batch DELETE iteration in `pipeline.withTransaction(pool, ...)`.
+  Extract `rowCount` outside callback for loop termination. Run
+  `npx vitest related scripts/purge-lead-views.js --run`.
 
-### Execution Plan
-```
-- [ ] State Verification: N/A (bugs confirmed by WF5 audit)
-- [ ] Contract Definition: N/A
-- [ ] Spec Update: N/A
-- [ ] Schema Evolution: N/A
-- [ ] Guardrail Test: add 4 new tests to migration-validator.logic.test.ts — must FAIL
-- [ ] Red Light: npx vitest run src/tests/migration-validator.logic.test.ts
-- [ ] Implementation: B1 + B2 + A4 in validate-migration.js
-- [ ] UI Regression Check: N/A
-- [ ] Pre-Review Self-Checklist (5 items — see below)
-- [ ] Green Light: npm run test && npm run lint -- --fix. All pass.
-- [ ] §12 Self-Review Walk:
-      Constants — LARGE_TABLES updated to include permit_history?
-      Spec compliance — SPEC LINK header still present in validate-migration.js?
-      Migration section (applicable items):
-        - All existing rules still fire correctly on their target patterns?
-        - No executable DROP added to any migration in this WF?
-      All other §12 sections: N/A (no advisory locks, no DB config, no streams, no writes).
-- [ ] Adversarial Reviews (parallel background — WF2 mandate):
-        node scripts/gemini-review.js review scripts/validate-migration.js
-        node scripts/deepseek-review.js review scripts/validate-migration.js
-        node scripts/gemini-review.js review src/tests/migration-validator.logic.test.ts
-        node scripts/deepseek-review.js review src/tests/migration-validator.logic.test.ts
-- [ ] Independent Review Agent: worktree isolation, self-generated checklist against
-      00_engineering_standards.md §3.2 + spec 47 §12 migration section.
-- [ ] Triage: Real → fix-commit; Defensible → WONTFIX; Out-of-scope → future WF.
-- [ ] Append deferred findings to docs/reports/review_followups.md (section: Task2 commit SHA).
-- [ ] WF6 Atomic Commit (after any Real fixes applied).
-```
+- [ ] **Fix B4 — mobile routes first:** Apply withApiEnvelope to leads/feed, leads/flight-board,
+  leads/search, permits/route.ts, permits/[id]/route.ts. Run
+  `npx vitest related src/app/api/leads/feed/route.ts src/app/api/permits/\[id\]/route.ts --run`.
+  Then sweep remaining 24 admin routes. Run `npm run typecheck` after full sweep.
 
-### Pre-Review Self-Checklist (walk before Green Light)
-1. Does B1 still catch `DROP TABLE` in the UP block — Rule 1 protection not regressed?
-2. Does B1 handle migrations with no `-- DOWN` marker (falls back to full content scan)?
-3. Does B2 still warn for `builder_id INTEGER NOT NULL` (no PRIMARY KEY in that clause)?
-4. Does A4 addition leave all 29 existing migration-validator tests unaffected?
-5. Does `node scripts/validate-migration.js migrations/*.sql` now produce 0 false-positive Rule 1/Rule 5 errors for migrations 018, 051, 059, 060?
+- [ ] **Fix B5:** Add observe_chain entry to manifest.json. Add emitMeta call to
+  observe-chain.js. Move backfill-permits-location.js → scripts/backfill/. Re-run
+  `npx vitest run src/tests/pipeline-advisory-lock.infra.test.ts` — must PASS (observe-chain.js
+  now visible to test, ID 113 registered).
 
----
+- [ ] **Fix C3 spec:** Add exclusion patterns to C3 grep command in 07_backend_prod_eval.md.
 
-## Task 3: WF2 — Retroactive Annotation Sweep
+- [ ] **Pre-Review Self-Checklist:** Before Green Light, verify these sibling bug classes:
+  1. Any other scripts sharing a lock ID not yet in the infra test? Run the uniqueness test.
+  2. Other pipeline scripts with batched write loops missing withTransaction?
+  3. Dynamic-param routes — context casts correct for all [id] and [slug] routes?
+  4. observe-chain.js emitMeta — reads dict reflects actual pipeline_runs columns queried?
+  5. backfill-permits-location.js relocation — any manifest chain steps referencing old path?
+  Walk each against the actual diff. Output PASS/FAIL per item before running tests.
 
-### Context
+- [ ] **Multi-Agent Review:** In ONE message, three parallel tool calls:
+  - **Tool call 1 — Bash:** `npm run review:gemini -- review scripts/observe-chain.js --context docs/specs/01-pipeline/47_pipeline_script_protocol.md`
+    Focus (adversarial): lock ID collision residue, emitMeta correctness, silent skip edge
+    cases, any state the advisory lock guard doesn't cover.
+  - **Tool call 2 — Bash:** `npm run review:deepseek -- review scripts/purge-lead-views.js --context docs/specs/01-pipeline/47_pipeline_script_protocol.md`
+    Focus (adversarial): withTransaction scope — does per-batch wrapping leave any partial-write
+    window? Are all 29 withApiEnvelope wraps type-safe for dynamic-param routes?
+  - **Tool call 3 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`):
+    Spec: `docs/specs/01-pipeline/47_pipeline_script_protocol.md`.
+    Modified files: observe-chain.js, purge-lead-views.js, manifest.json,
+    pipeline-advisory-lock.infra.test.ts, the 29 route files, 07_backend_prod_eval.md.
+    Summary: "Five-bug fix batch from WF5 prod audit — lock ID collision, withTransaction
+    gap, withApiEnvelope sweep, manifest registration, and stale spec patterns."
+    Focus: lock registry consistency, withTransaction scope correctness, withApiEnvelope
+    context-cast type safety in dynamic routes, emitMeta reads dict accuracy.
+  **Triage findings:**
+  - **BUG** (blocking) → file WF3 immediately. Do NOT proceed to Green Light.
+  - **DEFER** (non-blocking) → append to `docs/reports/review_followups.md` with context.
 
-* **Goal:** Suppress all grandfathered validator noise via file-level annotations so
-  `node scripts/validate-migration.js migrations/*.sql` exits 0 with 0 errors and 0 spurious
-  Rule 5 warnings. Add reversibility to migrations 042/045. Annotate hardcoded neighbourhood count.
-* **Target Spec:** `docs/specs/00-architecture/00_engineering_standards.md` §3.2
-* **Key Files:** 9 migration files + `scripts/quality/assert-data-bounds.js`
-
-### Changes
-
-**A1 — FK-EXEMPT headers** (suppresses Rule 5 — file-level scope):
-```sql
--- migrations/002_permit_history.sql (top of file):
--- FK-EXEMPT: FKs added in migration 109 (permit_history→permits CASCADE, permit_history→sync_runs SET NULL)
-
--- migrations/013_neighbourhoods.sql (top of file):
--- FK-EXEMPT: neighbourhood_id is a Toronto Open Data natural key, not a FK reference to another table
-
--- migrations/069_lead_views.sql (top of file):
--- FK-EXEMPT: permit_num/revision_num FK enforced via later ALTER TABLE (Tier 1 in audit-fk-orphans.js)
-
--- migrations/089_valuation_claiming_schema.sql (top of file):
--- FK-EXEMPT: tracked_projects→permits FK added in migration 109 (CASCADE)
-```
-
-**A2 — UP/DOWN headers** (suppresses Rule 4 missing-block errors):
-- `041_records_meta.sql` — add `-- UP` before `ALTER TABLE`; add `-- DOWN\n-- noop — ADD COLUMN IF NOT EXISTS is idempotent; column removal requires ALLOW-DESTRUCTIVE`
-- `042_entities.sql` — add `-- UP` before first `CREATE TYPE`; DOWN block added in A6
-- `044_wsib_entity_link.sql` — add `-- UP` before `ALTER TABLE`; add `-- DOWN\n-- ALTER TABLE wsib_registry DROP COLUMN IF EXISTS linked_entity_id;`
-- `045_permit_inspections.sql` — add `-- UP` before `CREATE TABLE`; DOWN block added in A6
-- `046_performance_indexes.sql` — add `-- UP` before first `CREATE INDEX`; add `-- DOWN\n-- DROP INDEX IF EXISTS idx_permits_est_const_cost;\n-- DROP INDEX IF EXISTS idx_permits_application_date;\n-- DROP INDEX IF EXISTS idx_coa_hearing_date;`
-
-**A3 — ALLOW-DESTRUCTIVE** (migration 056 UP block intentionally drops legacy tables):
-```sql
--- ALLOW-DESTRUCTIVE: removing builders/builder_contacts legacy tables after entity
--- consolidation (Spec 37). Data migrated to entities/entity_contacts in migration 042/055.
-```
-Added to UP block BEFORE the first DROP statement.
-
-**A5 — Neighbourhood count source comment** (`scripts/quality/assert-data-bounds.js`):
-Line containing `>= 158`: add trailing comment `-- Toronto 2021 neighbourhood boundaries (City of Toronto Open Data, 158 neighbourhoods)`
-
-**A6 — Commented-out DOWN blocks** for migrations lacking reversibility:
-- `042_entities.sql`:
-  ```sql
-  -- DOWN
-  -- DROP TABLE IF EXISTS entity_projects;
-  -- DROP TABLE IF EXISTS entities;
-  -- DROP TYPE IF EXISTS project_role_enum;
-  -- DROP TYPE IF EXISTS entity_type_enum;
-  ```
-- `045_permit_inspections.sql`:
-  ```sql
-  -- DOWN
-  -- DROP TABLE IF EXISTS permit_inspections;
-  ```
-
-### Database Impact: NO (annotation-only)
-
-### Standards Compliance
-* **Try-Catch Boundary:** N/A
-* **Unhappy Path Tests:** N/A — annotation sweep verified by validator clean run
-* **logError Mandate:** N/A
-* **Mobile-First:** N/A
-* **§12.10 Real-DB Tests:** N/A
-
-### Execution Plan
-```
-- [ ] State Verification: node scripts/validate-migration.js migrations/*.sql — record baseline
-      error count (expected: 26 errors, 5 warnings)
-- [ ] Contract Definition: N/A
-- [ ] Spec Update: N/A
-- [ ] Schema Evolution: N/A
-- [ ] Guardrail Test: N/A — annotation sweep; Red Light is the baseline validator run above
-- [ ] Red Light: baseline error/warn count confirmed before any edits
-- [ ] Implementation: apply A1 + A2 + A3 + A5 + A6
-- [ ] UI Regression Check: N/A
-- [ ] Pre-Review Self-Checklist (5 items — see below)
-- [ ] Green Light: node scripts/validate-migration.js migrations/*.sql → 0 errors, 0 spurious warnings
-       npm run test && npm run lint -- --fix → all pass
-- [ ] §12 Self-Review Walk (migration section — applicable since SQL files are being modified):
-      UP/DOWN blocks present in all 5 newly-annotated migrations?
-      ALLOW-DESTRUCTIVE marker precedes the DROP statements in migration 056?
-      DOWN blocks in 042/045 are fully commented-out (not live SQL)?
-      node scripts/validate-migration.js on all annotated files exits 0?
-      All other §12 sections: N/A.
-- [ ] Adversarial Reviews (parallel background — WF2 mandate):
-      Run on ALL changed files (annotations carry semantic risk — wrong scope, wrong migration):
-        node scripts/gemini-review.js review migrations/002_permit_history.sql
-        node scripts/deepseek-review.js review migrations/002_permit_history.sql
-        node scripts/gemini-review.js review migrations/013_neighbourhoods.sql
-        node scripts/deepseek-review.js review migrations/013_neighbourhoods.sql
-        node scripts/gemini-review.js review migrations/041_records_meta.sql
-        node scripts/deepseek-review.js review migrations/041_records_meta.sql
-        node scripts/gemini-review.js review migrations/042_entities.sql
-        node scripts/deepseek-review.js review migrations/042_entities.sql
-        node scripts/gemini-review.js review migrations/044_wsib_entity_link.sql
-        node scripts/deepseek-review.js review migrations/044_wsib_entity_link.sql
-        node scripts/gemini-review.js review migrations/045_permit_inspections.sql
-        node scripts/deepseek-review.js review migrations/045_permit_inspections.sql
-        node scripts/gemini-review.js review migrations/046_performance_indexes.sql
-        node scripts/deepseek-review.js review migrations/046_performance_indexes.sql
-        node scripts/gemini-review.js review migrations/056_drop_legacy_tables.sql
-        node scripts/deepseek-review.js review migrations/056_drop_legacy_tables.sql
-        node scripts/gemini-review.js review migrations/069_lead_views.sql
-        node scripts/deepseek-review.js review migrations/069_lead_views.sql
-        node scripts/gemini-review.js review migrations/089_valuation_claiming_schema.sql
-        node scripts/deepseek-review.js review migrations/089_valuation_claiming_schema.sql
-        node scripts/gemini-review.js review scripts/quality/assert-data-bounds.js
-        node scripts/deepseek-review.js review scripts/quality/assert-data-bounds.js
-- [ ] Independent Review Agent: worktree isolation; verify every annotation is correctly
-      scoped (FK-EXEMPT before -- UP, ALLOW-DESTRUCTIVE before first DROP, DOWN blocks
-      fully commented-out) and check for any annotation that contradicts the actual schema.
-- [ ] Triage: Real → fix-commit; Defensible → WONTFIX; Out-of-scope → future WF.
-- [ ] Append deferred findings to docs/reports/review_followups.md (section: Task3 commit SHA).
-- [ ] WF6 Atomic Commit (after any Real fixes applied).
-```
-
-### Pre-Review Self-Checklist (walk before Green Light)
-1. Do `-- FK-EXEMPT` headers appear BEFORE the `-- UP` line in all 4 migrations (file-level scope)?
-2. Does `-- ALLOW-DESTRUCTIVE` in migration 056 appear before the first DROP statement in the UP block?
-3. Are the DOWN blocks in migrations 042 and 045 fully commented-out — no live executable SQL?
-4. Does `node scripts/validate-migration.js migrations/*.sql` exit 0 with 0 errors after all edits?
-5. Does `npm run test` still pass (no migration-validator guardrail tests broken by the annotation changes)?
-
----
-
-## §10 Compliance
-
-- ⬜ **DB:** N/A — no schema changes across all three tasks.
-- ⬜ **API:** N/A.
-- ⬜ **UI:** N/A.
-- ⬜ **Shared Logic:** N/A.
-- ✅ **Pipeline/Tooling:**
-  - Task 1: Backwards-compatible; `pipeline.run` behavior unchanged; new test covers stale-entry regression.
-  - Task 2: 4 guardrail tests; B1 correctness test verifies UP-block protection preserved; all 29 existing tests unaffected.
-  - Task 3: Pure annotation; verified by validator clean run; no behavior change to any script or migration.
-  - All three tasks: adversarial (Gemini + DeepSeek) + independent review run on every changed file; findings triaged to review_followups.md.
-
----
-
-**PLAN LOCKED. Do you authorize this three-task WF3+WF2+WF2 sequence with adversarial reviews, §12 Self-Review Walks, and review_followups.md triage on all tasks? (y/n)**
-DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.
+- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste final test summary
+  line (e.g. "✓ 4451 tests passed") and typecheck result (e.g. "Found 0 errors"). Both must
+  show zero failures. Then list each prior step as DONE or N/A. → WF6.

@@ -1,5 +1,6 @@
 // SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 2
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
 
 // ─── Mock pg pool ──────────────────────────────────────────────────────────────
 const mockQuery = vi.fn();
@@ -25,6 +26,9 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 // ─────────────────────────────────────────────────────────────────────────────
+
+const mockGetRequest = () => new NextRequest('http://localhost/api/admin/control-panel/configs');
+const mockPostRequest = () => new NextRequest('http://localhost/api/admin/control-panel/resync', { method: 'POST' });
 
 describe('GET /api/admin/control-panel/configs', () => {
   beforeEach(() => {
@@ -67,7 +71,7 @@ describe('GET /api/admin/control-panel/configs', () => {
       });
 
     const { GET } = await import('@/app/api/admin/control-panel/configs/route');
-    const response = await GET();
+    const response = await GET(mockGetRequest());
     const body = await response.json() as { data: { logicVariables: unknown[]; tradeConfigs: unknown[]; scopeMatrix: unknown[] }; meta: { fetched_at: string } };
 
     expect(response.status).toBe(200);
@@ -84,7 +88,7 @@ describe('GET /api/admin/control-panel/configs', () => {
     mockQuery.mockRejectedValueOnce(new Error('connection refused'));
 
     const { GET } = await import('@/app/api/admin/control-panel/configs/route');
-    const response = await GET();
+    const response = await GET(mockGetRequest());
     const body = await response.json() as { error: string };
 
     expect(response.status).toBe(500);
@@ -162,7 +166,7 @@ describe('POST /api/admin/control-panel/resync', () => {
 
   it('returns 200 with step list on success', async () => {
     const { POST } = await import('@/app/api/admin/control-panel/resync/route');
-    const response = await POST();
+    const response = await POST(mockPostRequest());
     const body = await response.json() as { meta: { steps: string[] } };
 
     expect(response.status).toBe(200);

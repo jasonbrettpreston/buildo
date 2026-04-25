@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getQualityData } from '@/lib/quality/metrics';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import {
   detectVolumeAnomalies,
   detectSchemaDrift,
@@ -16,7 +17,7 @@ import type { EngineHealthEntry, EngineHealthAnomaly } from '@/lib/quality/types
  * GET /api/quality - Return the latest snapshot + last 30 days of trend data,
  * plus computed anomalies and system health summary.
  */
-export async function GET() {
+export const GET = withApiEnvelope(async function GET() {
   try {
     const data = await getQualityData();
 
@@ -159,4 +160,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});

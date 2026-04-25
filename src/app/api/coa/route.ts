@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
-export async function GET(request: NextRequest) {
+export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const permitNum = searchParams.get('permit_num');
@@ -57,4 +58,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

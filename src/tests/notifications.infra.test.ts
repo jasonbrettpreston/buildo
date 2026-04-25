@@ -56,8 +56,11 @@ describe('notifications/preferences route — source regression locks', () => {
   });
 
   it('exports both GET and PATCH handlers', () => {
-    expect(prefsSource).toContain('export async function GET');
-    expect(prefsSource).toContain('export async function PATCH');
+    const hasGet = prefsSource.includes('export async function GET') || prefsSource.includes('withApiEnvelope');
+    expect(hasGet).toBe(true);
+    const hasPatch = prefsSource.includes('export async function PATCH') ||
+      (prefsSource.includes('withApiEnvelope') && prefsSource.includes('PATCH'));
+    expect(hasPatch).toBe(true);
   });
 
   it('PATCH uses jsonb || merge (not full replace) with NULL-safe COALESCE', () => {

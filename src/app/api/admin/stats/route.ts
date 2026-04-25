@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { PIPELINE_TABLE_MAP } from '@/lib/admin/funnel';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 /**
  * GET /api/admin/stats - Return system-wide statistics for the admin dashboard.
  */
-export async function GET() {
+export const GET = withApiEnvelope(async function GET() {
   try {
     // Run all count queries in parallel for performance
     const [
@@ -400,4 +401,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});

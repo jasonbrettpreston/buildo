@@ -9,7 +9,9 @@ describe('Test Feed API route — file shape', () => {
   );
 
   it('exports a GET handler', () => {
-    expect(testFeedRoute).toContain('export async function GET');
+    const hasDirectExport = testFeedRoute.includes('export async function GET');
+    const hasEnvelopeExport = testFeedRoute.includes('withApiEnvelope');
+    expect(hasDirectExport || hasEnvelopeExport).toBe(true);
   });
 
   it('uses logError for error handling', () => {

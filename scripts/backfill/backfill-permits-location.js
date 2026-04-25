@@ -20,10 +20,10 @@
  *   --dry-run    Count candidates only; perform no writes.
  *
  * Usage:
- *   node scripts/backfill-permits-location.js
- *   node scripts/backfill-permits-location.js --dry-run
+ *   node scripts/backfill/backfill-permits-location.js
+ *   node scripts/backfill/backfill-permits-location.js --dry-run
  */
-const pipeline = require('./lib/pipeline');
+const pipeline = require('../lib/pipeline');
 
 const BATCH_SIZE = 5000;
 const SCRIPT_NAME = 'backfill-permits-location';

@@ -6,9 +6,10 @@
  * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 2
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import {
   loadAllConfigs,
   applyConfigUpdate,
@@ -30,7 +31,7 @@ const NO_CACHE_HEADERS = {
  * GET /api/admin/control-panel/configs
  * Returns the complete current state of all control-panel tables.
  */
-export async function GET() {
+export const GET = withApiEnvelope(async function GET() {
   try {
     const config = await loadAllConfigs(pool);
     return NextResponse.json(
@@ -44,14 +45,14 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});
 
 /**
  * PUT /api/admin/control-panel/configs
  * Validates a diff payload with Zod, then applies it inside a transaction.
  * Returns 400 on validation failure, 500 on DB error.
  */
-export async function PUT(request: Request) {
+export const PUT = withApiEnvelope(async function PUT(request: NextRequest) {
   let body: unknown;
   try {
     body = await request.json();
@@ -87,4 +88,4 @@ export async function PUT(request: Request) {
       { status: 500 },
     );
   }
-}
+});

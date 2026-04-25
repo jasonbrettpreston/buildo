@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { pool } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 const RegisterTokenSchema = z.object({
   push_token: z.string().min(1).regex(/^ExponentPushToken\[.+\]$/, {
@@ -18,7 +19,7 @@ const RegisterTokenSchema = z.object({
   platform: z.enum(['ios', 'android']),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   try {
     const userId = await getUserIdFromSession(request);
     if (!userId) {
@@ -49,4 +50,4 @@ export async function POST(request: NextRequest) {
     logError('[notifications/register]', cause, { route: 'POST /api/notifications/register' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

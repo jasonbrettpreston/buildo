@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 /**
  * GET /api/admin/pipelines/schedules - Return all pipeline schedules.
  */
-export async function GET() {
+export const GET = withApiEnvelope(async function GET() {
   try {
     const rows = await query<{ pipeline: string; cadence: string; cron_expression: string | null; enabled: boolean; updated_at: string }>(
       `SELECT pipeline, cadence, cron_expression, enabled, updated_at FROM pipeline_schedules ORDER BY pipeline`
@@ -15,13 +16,13 @@ export async function GET() {
     logError('[admin/pipelines/schedules]', err, { handler: 'GET' });
     return NextResponse.json({ error: 'Failed to fetch schedules' }, { status: 500 });
   }
-}
+});
 
 /**
  * PUT /api/admin/pipelines/schedules - Update a pipeline's cadence.
  * Body: { pipeline: string, cadence: string }
  */
-export async function PUT(request: NextRequest) {
+export const PUT = withApiEnvelope(async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const { pipeline, cadence } = body;
@@ -51,13 +52,13 @@ export async function PUT(request: NextRequest) {
     logError('[admin/pipelines/schedules]', err, { handler: 'PUT' });
     return NextResponse.json({ error: 'Failed to update schedule' }, { status: 500 });
   }
-}
+});
 
 /**
  * PATCH /api/admin/pipelines/schedules - Toggle a pipeline's enabled state.
  * Body: { pipeline: string, enabled: boolean }
  */
-export async function PATCH(request: NextRequest) {
+export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     const { pipeline, enabled } = body;
@@ -89,4 +90,4 @@ export async function PATCH(request: NextRequest) {
     logError('[admin/pipelines/schedules]', err, { handler: 'PATCH' });
     return NextResponse.json({ error: 'Failed to toggle pipeline' }, { status: 500 });
   }
-}
+});

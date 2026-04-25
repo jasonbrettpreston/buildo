@@ -12,7 +12,7 @@ const path = require('path');
 const fs = require('fs');
 const OpenAI = require('openai');
 
-const ADVISORY_LOCK_ID = 112;
+const ADVISORY_LOCK_ID = 113;
 const REPORT_PATH = path.resolve(__dirname, '../docs/reports/pipeline-observability/review-database-followup.md');
 const MAX_HISTORY_DAYS = 7;
 const API_TIMEOUT_MS = 30_000;
@@ -253,6 +253,11 @@ ${analysisText}
 
     fs.appendFileSync(REPORT_PATH, section, 'utf8');
     pipeline.log.info('[observe-chain]', `Report appended to ${REPORT_PATH}`);
+
+    pipeline.emitMeta(
+      { pipeline_runs: ['id', 'verdict', 'started_at', 'completed_at', 'pipeline', 'records_meta'] },
+      {},
+    );
 
     pipeline.emitSummary({
       records_total: 0,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 /**
  * GET /api/admin/pipelines/status — Lightweight pipeline status for polling.
@@ -12,7 +13,7 @@ import { logError } from '@/lib/logger';
  * Used by DataQualityDashboard polling loop to update runningPipelines
  * without timing out during heavy pipeline execution.
  */
-export async function GET() {
+export const GET = withApiEnvelope(async function GET() {
   try {
     const pipelineLastRun: Record<string, {
       last_run_at: string | null;
@@ -115,4 +116,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
