@@ -68,16 +68,6 @@ export const syncRuns = pgTable("sync_runs", {
 	durationMs: integer("duration_ms"),
 });
 
-export const userProfiles = pgTable("user_profiles", {
-	userId: varchar("user_id", { length: 128 }).primaryKey().notNull(),
-	tradeSlug: varchar("trade_slug", { length: 50 }).notNull(),
-	displayName: varchar("display_name", { length: 200 }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	check("user_profiles_trade_slug_not_empty", sql`TRIM(BOTH FROM trade_slug) <> ''::text`),
-]);
-
 export const dataQualitySnapshots = pgTable("data_quality_snapshots", {
 	id: serial().primaryKey().notNull(),
 	snapshotDate: date("snapshot_date").default(sql`CURRENT_DATE`).notNull(),
@@ -155,6 +145,16 @@ export const dataQualitySnapshots = pgTable("data_quality_snapshots", {
 }, (table) => [
 	index("idx_dqs_snapshot_date").using("btree", table.snapshotDate.desc().nullsFirst().op("date_ops")),
 	unique("data_quality_snapshots_snapshot_date_key").on(table.snapshotDate),
+]);
+
+export const userProfiles = pgTable("user_profiles", {
+	userId: varchar("user_id", { length: 128 }).primaryKey().notNull(),
+	tradeSlug: varchar("trade_slug", { length: 50 }).notNull(),
+	displayName: varchar("display_name", { length: 200 }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	check("user_profiles_trade_slug_not_empty", sql`TRIM(BOTH FROM trade_slug) <> ''::text`),
 ]);
 
 export const trades = pgTable("trades", {

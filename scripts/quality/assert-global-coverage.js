@@ -60,6 +60,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
     // ── Row builders ──────────────────────────────────────────────────────────
 
     // Standard coverage: PASS ≥ passPct%, WARN ≥ warnPct%, FAIL below.
+    // Emits { metric, value, threshold, status } — compatible with SDK auto-inject and admin UI renderer.
     function coverageRow(stepTarget, field, populated, denominator) {
       const pct = (denominator != null && denominator > 0)
         ? Math.round((populated / denominator) * 1000) / 10
@@ -68,7 +69,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
         : pct >= passPct ? 'PASS'
         : pct >= warnPct ? 'WARN'
         : 'FAIL';
-      return { step_target: stepTarget, field, populated, denominator, coverage_pct: pct, status };
+      return { metric: `${field} (${stepTarget})`, value: pct !== null ? `${pct}%` : populated, threshold: `>= ${passPct}%`, status };
     }
 
     // External/scraper-sourced fields: PASS ≥ 10%, WARN ≥ 5%, FAIL below.
@@ -81,13 +82,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
         : pct >= 10 ? 'PASS'
         : pct >= 5  ? 'WARN'
         : 'FAIL';
-      return { step_target: stepTarget, field, populated, denominator, coverage_pct: pct, status };
+      return { metric: `${field} (${stepTarget})`, value: pct !== null ? `${pct}%` : populated, threshold: '>= 10%', status };
     }
 
     // Informational only — no traffic-light judgment.
     // Used for structural sparsity (est_const_cost) and count-only metrics.
     function infoRow(stepTarget, field, value, denominator = null) {
-      return { step_target: stepTarget, field, populated: value, denominator, coverage_pct: null, status: 'INFO' };
+      return { metric: `${field} (${stepTarget})`, value, threshold: null, status: 'INFO' };
     }
 
     const rows = [];
@@ -705,9 +706,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
       records_updated: 0,
       records_meta: {
         audit_table: {
+          phase: 111,
           name: 'Global Data Completeness Profile',
           verdict,
-          columns: ['step_target', 'field', 'populated', 'denominator', 'coverage_pct', 'status'],
           rows,
         },
       },

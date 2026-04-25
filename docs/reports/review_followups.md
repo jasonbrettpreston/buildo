@@ -534,3 +534,9 @@ _From the 7-agent audit (4 micro + 3 macro + 2 automated guards). Critical/impor
 | Severity | Source | Item | Planned Home |
 |----------|--------|------|-------------|
 | LOW | Code Reviewer (confidence 85) | **spec 47 §A.2 Tier 2 registry not updated after D3 externalized RETENTION_DAYS** — `purge-lead-views.js` was registered in the §A.2 Tier 2 registry with `RETENTION_DAYS=90` as a hardcoded threshold; D3 fix moved it to DB logic_variables but the registry entry still implies a hardcoded value. §A.2 explicitly says Tier 2 entries require legal sign-off before externalizing — the registry text should be updated to reflect that the value is now sourced from `logic_variables.lead_view_retention_days` (with the 90-day default preserved in the seed JSON). | Update spec 47 §A.2 registry entry in next WF2 touching spec 47 |
+
+## WF3 — WF5 Audit P1/P2/P3 Bug Batch (commit: TBD, 2026-04-25)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| LOW | Code Reviewer (confidence 82) | **P1 touch-gate test only checks absent string, not unconditional behavior** — `close-stale-permits.infra.test.ts` verifies `INTERVAL '1 hour'` is absent but does not assert that no other time-conditional guard was added to the touch query. A future developer could introduce `AND permits.last_seen_at < $RUN_AT - INTERVAL '10 minutes'` and the test would still pass. Add `expect(LOAD_SRC).not.toMatch(/UPDATE permits SET last_seen_at[\s\S]*?WHERE[\s\S]*?INTERVAL/)` to lock unconditional behavior. | Add to close-stale-permits.infra.test.ts in next WF touching load-permits.js |

@@ -593,3 +593,36 @@ describe('scripts/quality/lifecycle-phase-sql-reproducer.sql — correctness gat
     expect(content).toMatch(/coa_disagreements/);
   });
 });
+
+// ── P2 fix: notification_prefs column must exist in user_profiles ─────────────
+// Migration 108 shows as applied but column was absent from DB, causing
+// PHASE_CHANGED / LIFECYCLE_STALLED / START_DATE_URGENT push queries to fail
+// with "column up.notification_prefs does not exist" on every run.
+// Migration 111 re-adds it idempotently. This test locks the migration file in.
+describe('migration 111 — notification_prefs_repair', () => {
+  const MIGRATION_SRC = fs.readFileSync(
+    path.resolve(repoRoot, 'migrations/111_notification_prefs_repair.sql'),
+    'utf-8'
+  );
+
+  it('migration file exists', () => {
+    expect(MIGRATION_SRC).toBeTruthy();
+  });
+
+  it('uses ADD COLUMN IF NOT EXISTS (idempotent re-add)', () => {
+    expect(MIGRATION_SRC).toMatch(/ADD COLUMN IF NOT EXISTS\s+notification_prefs/);
+  });
+
+  it('default JSON contains all 5 expected notification pref keys', () => {
+    expect(MIGRATION_SRC).toContain('new_lead_min_cost_tier');
+    expect(MIGRATION_SRC).toContain('phase_changed');
+    expect(MIGRATION_SRC).toContain('lifecycle_stalled');
+    expect(MIGRATION_SRC).toContain('start_date_urgent');
+    expect(MIGRATION_SRC).toContain('notification_schedule');
+  });
+
+  it('classify-lifecycle-phase.js queries notification_prefs from user_profiles', () => {
+    const classifySrc = read('scripts/classify-lifecycle-phase.js');
+    expect(classifySrc).toContain('up.notification_prefs');
+  });
+});

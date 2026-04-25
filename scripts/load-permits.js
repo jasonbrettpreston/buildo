@@ -316,8 +316,7 @@ async function insertBatch(client, batch, RUN_AT) {
   await client.query(
     `UPDATE permits SET last_seen_at = $${touchParams.length + 1}::timestamptz
      FROM (VALUES ${touchPlaceholders.join(',')}) AS v(pn, rn)
-     WHERE permits.permit_num = v.pn AND permits.revision_num = v.rn
-       AND permits.last_seen_at < NOW() - INTERVAL '1 hour'`,
+     WHERE permits.permit_num = v.pn AND permits.revision_num = v.rn`,
     [...touchParams, RUN_AT]
   );
 

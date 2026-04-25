@@ -61,3 +61,22 @@ describe('close-stale-permits.js — threshold externalization (§6.4)', () => {
     expect(SRC).toMatch(/z\.coerce\.number/);
   });
 });
+
+// ── P1 fix: 1-hour touch gate removed from load-permits.js ───────────────────
+// The gate `AND permits.last_seen_at < NOW() - INTERVAL '1 hour'` caused
+// close_stale_permits to see 93.9% of permits as unseen on rapid reruns, because
+// last_seen_at was not refreshed for permits updated within the last hour.
+describe('load-permits.js — P1 fix: no 1-hour touch gate', () => {
+  const LOAD_SRC = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/load-permits.js'),
+    'utf-8'
+  );
+
+  it('touch query does not contain 1-hour condition (prevents false closure rate on rapid reruns)', () => {
+    expect(LOAD_SRC).not.toMatch(/last_seen_at\s*<\s*NOW\(\)\s*-\s*INTERVAL\s*'1 hour'/);
+  });
+
+  it('touch query still updates last_seen_at (feed-disappearance signal preserved)', () => {
+    expect(LOAD_SRC).toMatch(/UPDATE permits SET last_seen_at/);
+  });
+});

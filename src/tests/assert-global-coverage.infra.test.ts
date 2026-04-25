@@ -50,19 +50,22 @@ describe('assert-global-coverage.js — records_total contract', () => {
   });
 });
 
-describe('assert-global-coverage.js — columnar audit_table shape', () => {
-  it('audit_table has a columns array', () => {
-    expect(src()).toContain('columns:');
+describe('assert-global-coverage.js — audit_table shape', () => {
+  it('rows use standard { metric, value, threshold, status } schema (P3 fix: compatible with SDK auto-inject and admin UI)', () => {
+    const content = src();
+    // Row builders emit metric/value/threshold/status
+    expect(content).toMatch(/metric:/);
+    expect(content).toMatch(/value:/);
+    expect(content).toMatch(/threshold:/);
+    // Old columnar schema keys must be absent from row objects
+    expect(content).not.toMatch(/step_target:/);
+    expect(content).not.toMatch(/\bpopulated:/);
+    expect(content).not.toMatch(/\bdenominator:/);
+    expect(content).not.toMatch(/coverage_pct:/);
   });
 
-  it('columns array contains all 6 required keys', () => {
-    const content = src();
-    expect(content).toContain('step_target');
-    expect(content).toContain('field');
-    expect(content).toContain('populated');
-    expect(content).toContain('denominator');
-    expect(content).toContain('coverage_pct');
-    expect(content).toContain('status');
+  it('no custom columns declaration (removed in P3 fix — caused SDK auto-inject rows to render as undefined:undefined)', () => {
+    expect(src()).not.toContain("columns: ['step_target'");
   });
 
   it('verdict is computed as worst non-INFO status', () => {
