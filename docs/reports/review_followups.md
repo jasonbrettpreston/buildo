@@ -528,3 +528,9 @@ _From the 7-agent audit (4 micro + 3 macro + 2 automated guards). Critical/impor
 | MEDIUM | DeepSeek | **purge-lead-views.js `records_updated` misused for deletions** — Spec §11 counter semantics: `records_updated` = rows modified in-place; deletions must appear as a named metric in `audit_table.rows`. Set `records_updated: 0` and move delete count to `audit_table`. | scripts/purge-lead-views.js |
 | LOW | Gemini | **observe-chain.js `parseFloat(...) \|\| null` hides 0ms baseline** — If avg_duration_ms is legitimately 0, the `\|\|` coerces it to null and baseline comparison shows "no baseline". Use `Number.isFinite` guard instead. | scripts/observe-chain.js lines 118,144 |
 | LOW | Gemini | **observe-chain.js duplicate delta-string calculation** — Duration delta built once for DeepSeek context (line 144) and again for the Markdown table (line 212). Should be computed once in the `stepSummaries` map and reused. | scripts/observe-chain.js |
+
+## WF3 — G1-G4 D1-D4 Bug Batch (commit: TBD, 2026-04-25)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| LOW | Code Reviewer (confidence 85) | **spec 47 §A.2 Tier 2 registry not updated after D3 externalized RETENTION_DAYS** — `purge-lead-views.js` was registered in the §A.2 Tier 2 registry with `RETENTION_DAYS=90` as a hardcoded threshold; D3 fix moved it to DB logic_variables but the registry entry still implies a hardcoded value. §A.2 explicitly says Tier 2 entries require legal sign-off before externalizing — the registry text should be updated to reflect that the value is now sourced from `logic_variables.lead_view_retention_days` (with the 90-day default preserved in the seed JSON). | Update spec 47 §A.2 registry entry in next WF2 touching spec 47 |

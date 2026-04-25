@@ -4,7 +4,7 @@
 // Observer archetype (spec 30 §2.1) — reads pipeline_runs + pg_stat_statements only,
 // no business table mutations. Spawned as a detached child by run-chain.js after the
 // chain lock is released. Calls DeepSeek API (deepseek-chat) to surface warnings/failures
-// vs baseline and appends findings to docs/reports/pipeline-observability/review-database-followup.md.
+// vs baseline and appends findings to docs/reports/pipeline-observability/{chainId}-followup.md.
 
 require('dotenv').config();
 const pipeline = require('./lib/pipeline');
@@ -12,8 +12,12 @@ const path = require('path');
 const fs = require('fs');
 const OpenAI = require('openai');
 
+// Lock ID 113 assigned sequentially per §A.5 Bundle G (governing spec is 48; no spec 113 exists).
+// Changed from 112 → 113 in B1 fix to resolve collision with backup-db.js (ID 112).
+// Effective per-chain lock = ADVISORY_LOCK_ID * 100 + chainOffset, allowing
+// permits/coa/sources observations to run concurrently (see G2 fix below).
 const ADVISORY_LOCK_ID = 113;
-const REPORT_PATH = path.resolve(__dirname, '../docs/reports/pipeline-observability/review-database-followup.md');
+const REPORT_DIR = path.resolve(__dirname, '../docs/reports/pipeline-observability');
 const MAX_HISTORY_DAYS = 7;
 const API_TIMEOUT_MS = 30_000;
 
@@ -29,6 +33,41 @@ function secStr(ms) {
 
 function verdictIcon(v) {
   return v === 'PASS' ? '✅' : v === 'WARN' ? '⚠️' : v === 'FAIL' ? '❌' : '—';
+}
+
+/**
+ * Escape Markdown special characters in a table cell value.
+ * Covers the full set that renders in CommonMark: \ ` * _ { } [ ] ( ) # + - . ! |
+ */
+function escapeMd(str) {
+  return str.replace(/([\\`*_{}[\]()#+\-.!|])/g, '\\$1');
+}
+
+/**
+ * Escape PostgreSQL LIKE wildcards using '!' as escape character.
+ * chainId may contain '_' (allowed by /^[a-zA-Z0-9_-]+$/) which is a LIKE single-char wildcard.
+ * Pair with ESCAPE '!' in SQL: WHERE pipeline LIKE $1 ESCAPE '!'
+ */
+function escapeLike(s) {
+  return s.replace(/[!%_]/g, '!$&');
+}
+
+/**
+ * Compute a chain-scoped advisory lock ID (G2 fix).
+ * Different chains (permits, coa, sources) get distinct lock IDs so their
+ * observe-chain processes can run concurrently without dropping observations.
+ * The base ADVISORY_LOCK_ID (113) * 100 + chainOffset keeps IDs in the 11300–11399 range,
+ * outside all script lock IDs (1–113) registered in §A.5.
+ */
+function chainScopedLockId(id) {
+  const knownOffsets = { permits: 0, coa: 1, sources: 2, entities: 3, wsib: 4, deep_scrapes: 5 };
+  if (Object.prototype.hasOwnProperty.call(knownOffsets, id)) {
+    return ADVISORY_LOCK_ID * 100 + knownOffsets[id];
+  }
+  // Unknown chain: deterministic hash into [6, 93] so it stays in the 11300–11399 range
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
+  return ADVISORY_LOCK_ID * 100 + (Math.abs(h) % 88) + 6;
 }
 
 /**
@@ -63,10 +102,20 @@ pipeline.run('observe-chain', async (pool) => {
   }
 
   const startMs = Date.now();
+  // Escape LIKE wildcards — chainId may contain '_' (SQL single-char wildcard).
+  // Without escaping, 'permits_ca' would match 'permitsXca:step' via LIKE 'permits_ca:%'.
+  const LIKE_PREFIX = escapeLike(chainId) + ':%';
+  // Per-chain report file — prevents concurrent chain observers (G2 fix) from interleaving
+  // writes on a previously shared single report file.
+  const reportPath = path.join(REPORT_DIR, `${chainId}-followup.md`);
+
+  // G2: chain-scoped lock — different chains acquire different effective IDs so
+  // permits + coa observations can run concurrently (see chainScopedLockId above).
+  const effectiveLockId = chainScopedLockId(chainId);
 
   // pipeline.withAdvisoryLock handles: xact-scoped lock, SIGKILL safety, skip emit.
   // Pass skipEmit: false so we control the null-pattern summary ourselves (spec 48 §3.5).
-  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, effectiveLockId, async () => {
 
     // ── 1. Fetch chain-level run row ──────────────────────────────────────────
     const chainRowRes = await pool.query(
@@ -96,11 +145,11 @@ pipeline.run('observe-chain', async (pool) => {
       `SELECT pipeline, status, started_at, completed_at, duration_ms,
               records_total, records_new, records_updated, records_meta
        FROM pipeline_runs
-       WHERE pipeline LIKE $1
+       WHERE pipeline LIKE $1 ESCAPE '!'
          AND started_at >= $2
          AND started_at <= COALESCE($3::timestamptz, $4::timestamptz)
        ORDER BY started_at ASC`,
-      [`${chainId}:%`, chainRow.started_at, chainRow.completed_at, new Date(startMs).toISOString()],
+      [LIKE_PREFIX, chainRow.started_at, chainRow.completed_at, new Date(startMs).toISOString()],
     );
     const stepRows = stepRowsRes.rows;
 
@@ -111,18 +160,20 @@ pipeline.run('observe-chain', async (pool) => {
               AVG(records_total) AS avg_records_total,
               COUNT(*) AS run_count
        FROM pipeline_runs
-       WHERE pipeline LIKE $1
+       WHERE pipeline LIKE $1 ESCAPE '!'
          AND started_at >= $2
          AND id < $3
          AND status = 'completed'
        GROUP BY pipeline`,
-      [`${chainId}:%`, cutoff, runId],
+      [LIKE_PREFIX, cutoff, runId],
     );
     const baseline = {};
     for (const r of histRes.rows) {
+      const parsedDuration = parseFloat(r.avg_duration_ms);
+      const parsedRecords = parseFloat(r.avg_records_total);
       baseline[r.pipeline] = {
-        avg_duration_ms: parseFloat(r.avg_duration_ms) || null,
-        avg_records_total: parseFloat(r.avg_records_total) || null,
+        avg_duration_ms: Number.isFinite(parsedDuration) ? parsedDuration : null,
+        avg_records_total: Number.isFinite(parsedRecords) ? parsedRecords : null,
         run_count: parseInt(r.run_count, 10),
       };
     }
@@ -151,8 +202,10 @@ pipeline.run('observe-chain', async (pool) => {
       const slug = s.pipeline.replace(`${chainId}:`, '');
       const issues = extractIssues(s.records_meta);
       const b = baseline[s.pipeline];
-      const durationDelta = b?.avg_duration_ms > 0 && s.duration_ms != null
-        ? (((s.duration_ms - b.avg_duration_ms) / b.avg_duration_ms) * 100).toFixed(1) + '%'
+      const durationDelta = b?.avg_duration_ms != null && s.duration_ms != null
+        ? b.avg_duration_ms === 0
+          ? (s.duration_ms > 0 ? '+∞%' : '0.0%')
+          : (((s.duration_ms - b.avg_duration_ms) / b.avg_duration_ms) * 100).toFixed(1) + '%'
         : 'no baseline';
       return {
         step: slug,
@@ -229,16 +282,17 @@ Be concise. Developers read this at 9am — no padding.`;
     // ── 6. Build step verdict table ───────────────────────────────────────────
     const tableRows = stepSummaries.map((s) => {
       const b = baseline[`${chainId}:${s.step}`];
-      const deltaStr = b?.avg_duration_ms > 0 && s.duration_ms != null
+      const deltaStr = b?.avg_duration_ms != null && s.duration_ms != null
         ? s.vs_baseline.duration_delta
         : 'no baseline';
-      const safeStep = s.step.replace(/\|/g, '\\|');
+      const safeStep = escapeMd(s.step);
       return `| ${safeStep} | ${verdictIcon(s.verdict)} ${s.verdict} | ${secStr(s.duration_ms)} | ${s.records_total ?? '—'} | ${deltaStr} |`;
     }).join('\n');
 
-    // ── 7. Append to report file ──────────────────────────────────────────────
-    const dir = path.dirname(REPORT_PATH);
-    fs.mkdirSync(dir, { recursive: true });
+    // ── 7. Append to per-chain report file ───────────────────────────────────
+    // One file per chain (e.g. permits-followup.md) so concurrent observers
+    // after the G2 lock-scoping fix cannot interleave writes on a shared file.
+    fs.mkdirSync(REPORT_DIR, { recursive: true });
 
     const section = `\n## ${chainId} — ${formatDate(chainRow.started_at)}  (run_id: ${runId})\n
 **Chain status:** ${chainRow.status} | **Duration:** ${secStr(chainRow.duration_ms)}\n
@@ -251,8 +305,8 @@ ${analysisText}
 
 ---\n`;
 
-    fs.appendFileSync(REPORT_PATH, section, 'utf8');
-    pipeline.log.info('[observe-chain]', `Report appended to ${REPORT_PATH}`);
+    fs.appendFileSync(reportPath, section, 'utf8');
+    pipeline.log.info('[observe-chain]', `Report appended to ${reportPath}`);
 
     pipeline.emitMeta(
       { pipeline_runs: ['id', 'verdict', 'started_at', 'completed_at', 'pipeline', 'records_meta'] },
@@ -280,7 +334,7 @@ ${analysisText}
   }, { skipEmit: false });
 
   if (!lockResult.acquired) {
-    pipeline.log.info('[observe-chain]', 'Advisory lock held — skipping this run');
+    pipeline.log.info('[observe-chain]', `Advisory lock held for chain ${chainId} (lock ${effectiveLockId}) — skipping this run`);
     pipeline.emitSummary({
       records_total: 0,
       records_new: null,

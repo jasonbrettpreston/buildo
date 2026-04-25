@@ -60,9 +60,12 @@ describe('scripts/observe-chain.js — pipeline observability agent', () => {
     expect(content).toMatch(/records_updated\s*:\s*null/);
   });
 
-  it('writes output to docs/reports/pipeline-observability/', () => {
+  it('G5: writes per-chain report to docs/reports/pipeline-observability/ (race-safe after G2)', () => {
+    // G2 made different chains run concurrently (different lock IDs). A shared
+    // review-database-followup.md would now be a real race — each chain gets its own file.
     expect(content).toMatch(/pipeline-observability/);
-    expect(content).toMatch(/review-database-followup\.md/);
+    expect(content).not.toContain('review-database-followup.md');
+    expect(content).toMatch(/chainId.*followup\.md|followup\.md.*chainId/);
   });
 
   it('error isolation — no process.exit(1) in script body (observer never fails the parent)', () => {
@@ -87,6 +90,32 @@ describe('scripts/observe-chain.js — pipeline observability agent', () => {
 
   it('applies 7-day historical baseline query', () => {
     expect(content).toMatch(/MAX_HISTORY_DAYS\s*=\s*7|INTERVAL '7 days'|7\s*days/);
+  });
+
+  it('G3: baseline parsing uses Number.isFinite — not || null (hides 0ms baselines)', () => {
+    expect(content).toContain('Number.isFinite');
+    expect(content).not.toMatch(/parseFloat\([^)]+\)\s*\|\|\s*null/);
+  });
+
+  it('G3: baseline comparison uses != null — not > 0 (treats 0ms baselines as present)', () => {
+    expect(content).not.toMatch(/avg_duration_ms\s*>\s*0/);
+  });
+
+  it('G4: step name Markdown escape covers more than just pipe characters', () => {
+    // Old: /\|/g — pipes only. New: must cover *, _, ` and other Markdown specials.
+    const hasFullEscape = /escapeMd|replace\([^)]*\*[^)]*_/.test(content);
+    expect(hasFullEscape).toBe(true);
+  });
+
+  it('G1: code comment documents §A.5 sequential lock ID assignment (code 113 ≠ spec 48 number)', () => {
+    expect(content).toMatch(/A\.5|sequential|§A\.5/);
+  });
+
+  it('G6: LIKE pattern escapes chainId underscores — prevents SQL wildcard match on unrelated pipelines', () => {
+    // chainId validated to /^[a-zA-Z0-9_-]+$/ may contain '_' (SQL single-char wildcard).
+    // Without escaping, permits_ca matches permitsXca:step via LIKE 'permits_ca:%'.
+    expect(content).toMatch(/escapeLike/);
+    expect(content).toMatch(/ESCAPE\s+'!'/);
   });
 });
 

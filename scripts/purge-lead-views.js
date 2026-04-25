@@ -27,22 +27,46 @@
 // Load dotenv to populate PG_* + Firebase vars from .env
 require('dotenv').config();
 
+const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
+const { loadMarketplaceConfigs } = require('./lib/config-loader');
 
-const RETENTION_DAYS = 90;
 const DRY_RUN = process.argv.includes('--dry-run');
 const RECONCILE = process.argv.includes('--reconcile');
 
 const ADVISORY_LOCK_ID = 101;
 
+// D3: Zod schema — RETENTION_DAYS loaded from DB logic_variables (spec §4.1)
+const LOGIC_VARS_SCHEMA = z.object({
+  lead_view_retention_days: z.coerce.number().int().min(7).max(365).default(90),
+}).passthrough();
+
 pipeline.run('purge-lead-views', async (pool) => {
+  // D3: Load retention threshold from DB before acquiring advisory lock (§R5 startup guard)
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'purge-lead-views');
+  const parsed = LOGIC_VARS_SCHEMA.safeParse(logicVars);
+  if (!parsed.success) throw new Error(`logicVars validation failed: ${parsed.error.message}`);
+  const RETENTION_DAYS = parsed.data.lead_view_retention_days;
+
+  // D4: Guard against misconfigured retention — zero would DELETE EVERY ROW in lead_views
+  if (!Number.isInteger(RETENTION_DAYS) || RETENTION_DAYS < 1) {
+    throw new Error(`[purge-lead-views] lead_view_retention_days must be a positive integer, got: ${RETENTION_DAYS}`);
+  }
+
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    // Capture cutoff once from DB clock — prevents retention window shifting between
+    // batch iterations if a long run crosses midnight (Gemini CRITICAL review finding).
+    const { rows: [{ cutoff: CUTOFF_AT }] } = await pool.query(
+      `SELECT (NOW() - ($1 || ' days')::interval)::timestamptz AS cutoff`,
+      [String(RETENTION_DAYS)],
+    );
+
     // Count rows that would be purged first (for dry-run + logging).
     const countRes = await pool.query(
       `SELECT COUNT(*)::int AS stale
          FROM lead_views
-        WHERE viewed_at < NOW() - ($1 || ' days')::interval`,
-      [String(RETENTION_DAYS)],
+        WHERE viewed_at < $1`,
+      [CUTOFF_AT],
     );
     const stale = countRes.rows[0]?.stale ?? 0;
 
@@ -57,7 +81,19 @@ pipeline.run('purge-lead-views', async (pool) => {
         records_total: stale,
         records_new: 0,
         records_updated: 0,
-        records_meta: { dry_run: true, retention_days: RETENTION_DAYS },
+        records_meta: {
+          dry_run: true,
+          retention_days: RETENTION_DAYS,
+          audit_table: {
+            phase: 101,
+            name: 'Lead Views Retention Purge',
+            verdict: 'INFO',
+            rows: [
+              { metric: 'rows_would_delete', value: stale, threshold: null, status: 'INFO' },
+              { metric: 'retention_days', value: RETENTION_DAYS, threshold: null, status: 'INFO' },
+            ],
+          },
+        },
       });
       return;
     }
@@ -68,7 +104,18 @@ pipeline.run('purge-lead-views', async (pool) => {
         records_total: 0,
         records_new: 0,
         records_updated: 0,
-        records_meta: { retention_days: RETENTION_DAYS },
+        records_meta: {
+          retention_days: RETENTION_DAYS,
+          audit_table: {
+            phase: 101,
+            name: 'Lead Views Retention Purge',
+            verdict: 'PASS',
+            rows: [
+              { metric: 'rows_deleted', value: 0, threshold: null, status: 'PASS' },
+              { metric: 'retention_days', value: RETENTION_DAYS, threshold: null, status: 'INFO' },
+            ],
+          },
+        },
       });
       return;
     }
@@ -86,10 +133,10 @@ pipeline.run('purge-lead-views', async (pool) => {
           `DELETE FROM lead_views
             WHERE id IN (
               SELECT id FROM lead_views
-               WHERE viewed_at < NOW() - ($1 || ' days')::interval
+               WHERE viewed_at < $1
                LIMIT $2
             )`,
-          [String(RETENTION_DAYS), BATCH_SIZE],
+          [CUTOFF_AT, BATCH_SIZE],
         );
         batchCount = res.rowCount ?? 0;
       });
@@ -99,10 +146,23 @@ pipeline.run('purge-lead-views', async (pool) => {
 
     pipeline.log.info('[purge-lead-views]', `deleted ${totalDeleted} rows older than ${RETENTION_DAYS} days`);
     pipeline.emitSummary({
-      records_total: totalDeleted,
+      records_total: stale,  // rows evaluated, not rows deleted (spec §11.1)
       records_new: 0,
-      records_updated: totalDeleted, // deletions tracked as "updates" in the records_meta contract
-      records_meta: { retention_days: RETENTION_DAYS, batch_size: BATCH_SIZE },
+      records_updated: 0, // D1: deletions are not in-place modifications — count lives in audit_table
+      records_meta: {
+        retention_days: RETENTION_DAYS,
+        batch_size: BATCH_SIZE,
+        audit_table: {
+          phase: 101,
+          name: 'Lead Views Retention Purge',
+          verdict: 'PASS',
+          rows: [
+            { metric: 'rows_deleted', value: totalDeleted, threshold: null, status: 'PASS' },
+            { metric: 'retention_days', value: RETENTION_DAYS, threshold: null, status: 'INFO' },
+            { metric: 'batch_size', value: BATCH_SIZE, threshold: null, status: 'INFO' },
+          ],
+        },
+      },
     });
 
     if (RECONCILE) {

@@ -34,7 +34,9 @@ run-chain.js (after chain lock released, before pool.end)
 
 ### 2.3 Advisory Lock
 
-Lock ID **112** (1-arg `pg_try_advisory_lock` form, per-script keyspace per spec 40 §3.5). Acquired on a dedicated pinned pool client held for the full run. If lock is held by a concurrent invocation, script emits PIPELINE_SUMMARY with `records_meta.skipped = true` and exits 0.
+Base lock constant `ADVISORY_LOCK_ID = 113` (assigned sequentially per §A.5 Bundle G; original spec ID was 112 but changed to 113 in B1 fix to resolve collision with `backup-db.js`).
+
+**Chain-scoped effective lock IDs:** To allow concurrent observations across different chains, the script computes `effectiveLockId = 113 * 100 + chainOffset` (permits→11300, coa→11301, sources→11302, etc.). Different chains acquire different lock IDs and run in parallel; only concurrent invocations for the *same* chain serialise. If a chain-scoped lock is held, the script emits PIPELINE_SUMMARY with `records_meta.skipped = true` and exits 0.
 
 ### 2.4 Trigger
 
@@ -97,7 +99,7 @@ All queries are bounded (≤200 rows). No streaming needed. No business table ac
 
 ### 3.3 Output Format
 
-Appended section in `docs/reports/pipeline-observability/review-database-followup.md`:
+Appended section in `docs/reports/pipeline-observability/{chain_id}-followup.md` (one file per chain, e.g. `permits-followup.md`; prevents interleaving writes when concurrent chain observations run after the G2 chain-scoped lock fix):
 
 ```markdown
 ## [chain_id] — YYYY-MM-DD HH:MM UTC  (run_id: NNN)
@@ -196,7 +198,7 @@ pipeline.emitSummary({
 - `scripts/observe-chain.js` (NEW — Observer script)
 - `scripts/lib/pipeline.js` (emitSummary extension only)
 - `scripts/run-chain.js` (detached spawn + Boy Scout lint fix)
-- `docs/reports/pipeline-observability/review-database-followup.md` (output file)
+- `docs/reports/pipeline-observability/{chain_id}-followup.md` (one file per chain — permits-followup.md, coa-followup.md, etc.)
 
 ### Out-of-Scope Files
 - Any business tables (`permits`, `trade_forecasts`, etc.) — observer reads `pipeline_runs` only
