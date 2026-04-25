@@ -12,7 +12,7 @@ As a business user, I expect this daily pipeline to ingest 237K+ raw Toronto bui
 
 **Trigger:** `node scripts/run-chain.js permits` or `POST /api/admin/pipelines/chain_permits`
 **Schedule:** Daily
-**Steps:** 27 (sequential, stop-on-failure)
+**Steps:** 28 (sequential, stop-on-failure)
 **Gate:** `permits` — if `records_new = 0`, downstream enrichment steps are skipped (infra steps still run)
 
 ```

@@ -13,7 +13,7 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
-  it('defines permits chain with 27 steps (no enrichment scripts)', () => {
+  it('defines permits chain with 28 steps (no enrichment scripts)', () => {
     // WF3 2026-04-13 — v1 `compute_timing_calibration` removed from chain
     // per user decision (Path A). v1's table `timing_calibration` will
     // go stale; the detail-page timing engine (spec 71) will be migrated
@@ -21,9 +21,10 @@ describe('Pipeline Chain Definitions', () => {
     // WF2 2026-04-18 — +2 steps: assert_lifecycle_phase_distribution (step 22)
     // and assert_entity_tracing (step 26).
     // WF1 2026-04-19 — +1 step: assert_global_coverage (step 27).
+    // WF3 2026-04-25 — +1 step: backup_db as final maintenance step (step 28).
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(27);
+    expect(chain!.steps).toHaveLength(28);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
@@ -69,9 +70,10 @@ describe('Pipeline Chain Definitions', () => {
     // classify_lifecycle_phase (phase gate validates before marketplace reads
     // fresh anchors). assert_entity_tracing appended as final CQA step.
     // WF1 2026-04-19 — assert_global_coverage appended as new final step 27.
+    // WF3 2026-04-25 — backup_db appended as final maintenance step (step 28).
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     const slugs = chain.steps.map((s) => s.slug);
-    const tail = slugs.slice(-7);
+    const tail = slugs.slice(-8);
     expect(tail).toEqual([
       'classify_lifecycle_phase',
       'assert_lifecycle_phase_distribution',
@@ -80,6 +82,7 @@ describe('Pipeline Chain Definitions', () => {
       'update_tracked_projects',
       'assert_entity_tracing',
       'assert_global_coverage',
+      'backup_db',
     ]);
   });
 
@@ -114,23 +117,37 @@ describe('Pipeline Chain Definitions', () => {
     expect(chain!.steps).toHaveLength(15);
   });
 
-  it('coa chain ends with assert_global_coverage; permits chain ends with assert_global_coverage', () => {
+  it('coa chain ends with assert_global_coverage; permits chain ends with backup_db', () => {
     // WF2 2026-04-18 — CoA chain ends with assert_lifecycle_phase_distribution (step 11).
-    // WF1 2026-04-19 — Both chains now end with assert_global_coverage (permits step 27, coa step 12).
+    // WF1 2026-04-19 — CoA ends with assert_global_coverage (step 12).
+    // WF3 2026-04-25 — Permits chain now ends with backup_db (step 28, OP4 fix).
+    //   CoA chain does not include backup_db — backup runs once per daily permits chain.
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('assert_global_coverage');
     expect(coa!.steps[coa!.steps.length - 2]!.slug).toBe('assert_lifecycle_phase_distribution');
     expect(coa!.steps[coa!.steps.length - 3]!.slug).toBe('classify_lifecycle_phase');
-    // Permits chain: assert_global_coverage is last; assert_entity_tracing is second-to-last
-    expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('assert_global_coverage');
-    expect(permits!.steps[permits!.steps.length - 2]!.slug).toBe('assert_entity_tracing');
-    expect(permits!.steps[permits!.steps.length - 7]!.slug).toBe('classify_lifecycle_phase');
+    // Permits chain: backup_db is last; assert_global_coverage is second-to-last
+    expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('backup_db');
+    expect(permits!.steps[permits!.steps.length - 2]!.slug).toBe('assert_global_coverage');
+    expect(permits!.steps[permits!.steps.length - 3]!.slug).toBe('assert_entity_tracing');
+    expect(permits!.steps[permits!.steps.length - 8]!.slug).toBe('classify_lifecycle_phase');
   });
 
   it('sources chain ends with assert_engine_health', () => {
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(sources!.steps[sources!.steps.length - 1]!.slug).toBe('assert_engine_health');
+  });
+
+  it('permits chain ends with backup_db as the final maintenance step (OP4 regression)', () => {
+    // WF3 2026-04-25 — OP4 gap: backup_db was spec-47 compliant but never
+    // wired into the daily permits chain, so pipeline_runs had 0 rows for it.
+    // Adding it as the last step ensures a daily logical backup after all data
+    // is written and all CQA assertions pass.
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
+    const slugs = chain.steps.map((s) => s.slug);
+    expect(slugs).toContain('backup_db');
+    expect(slugs[slugs.length - 1]).toBe('backup_db');
   });
 
   it('every chain step slug exists in PIPELINE_REGISTRY', () => {
@@ -585,6 +602,14 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
     expect(source).toMatch(/startsWith\(['"]assert_['"]\)|=== ['"]refresh_snapshot['"]/);
     // compute_* steps process cumulative DB state, not just new records
     expect(source).toContain("slug.startsWith('compute_')");
+  });
+
+  it('backup_db is exempt from gate-skip (OP4 regression — must run daily even when records_new = 0)', () => {
+    // WF3 2026-04-25: backup_db must always run as the final permits chain step,
+    // even on steady-state days (records_new = 0). The isInfraStep predicate in
+    // run-chain.js must include backup_db explicitly.
+    const source = chainSource();
+    expect(source).toMatch(/=== ['"]backup_db['"]/);
   });
 
   it('checks both records_new and records_updated before skipping', () => {
@@ -1372,11 +1397,13 @@ describe('Entity Tracing + Phase Distribution Wiring', () => {
     expect(chain[chain.length - 2]).toBe('assert_lifecycle_phase_distribution');
   });
 
-  it('manifest: assert_global_coverage is the final step of the permits chain (assert_entity_tracing is penultimate)', () => {
-    // WF1 2026-04-19: assert_global_coverage appended as new step 27.
+  it('manifest: backup_db is the final step of the permits chain (assert_global_coverage is penultimate)', () => {
+    // WF1 2026-04-19: assert_global_coverage appended as step 27.
+    // WF3 2026-04-25: backup_db appended as final step 28 (OP4 fix).
     const chain: string[] = manifest.chains.permits;
-    expect(chain[chain.length - 1]).toBe('assert_global_coverage');
-    expect(chain[chain.length - 2]).toBe('assert_entity_tracing');
+    expect(chain[chain.length - 1]).toBe('backup_db');
+    expect(chain[chain.length - 2]).toBe('assert_global_coverage');
+    expect(chain[chain.length - 3]).toBe('assert_entity_tracing');
   });
 
   it('assert-entity-tracing.js: uses pipeline.run() not a hand-rolled Pool', () => {

@@ -583,6 +583,8 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   assert_lifecycle_phase_distribution: { summary: 'Validates lifecycle phase distribution bands and unclassified count after classifier runs', table: 'pipeline_runs' },
   assert_entity_tracing:   { summary: 'Checks coverage of new permits across 5 downstream tables: permit_trades, cost_estimates, trade_forecasts, lifecycle_phase, opportunity_score', table: 'pipeline_runs' },
   assert_global_coverage:  { summary: 'Field-level coverage profile for a predefined set of steps in the current chain (static list — update manually when chain steps are added)', table: 'pipeline_runs' },
+  // Maintenance (1) — final permits chain step: logical pg_dump to GCS
+  backup_db:               { summary: 'Logical pg_dump backup to GCS after all data writes and CQA assertions pass (spec 112)', table: 'pipeline_runs' },
   // Deep Scrapes
   inspections:                    { summary: 'Scrapes permit inspection stages from City Application Status portal', table: 'permit_inspections' },
   classify_inspection_status:     { summary: 'Detects stalled permits (10+ months inactive) and classifies enriched_status', table: 'permits' },
@@ -817,6 +819,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   assert_network_health: 'pipeline_runs', assert_staleness: 'pipeline_runs',
   assert_coa_freshness: 'pipeline_runs',
   assert_pre_permit_aging: 'pipeline_runs',
+  backup_db: 'pipeline_runs',
   inspections: 'permit_inspections',
   coa_documents: 'coa_documents',
 };

@@ -61,7 +61,8 @@
       "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
       "classify_lifecycle_phase", "assert_lifecycle_phase_distribution",
       "compute_trade_forecasts", "compute_opportunity_scores", "update_tracked_projects",
-      "assert_entity_tracing", "assert_global_coverage"
+      "assert_entity_tracing", "assert_global_coverage",
+      "backup_db"
     ],
     "coa": [
       "assert_schema", "coa", "assert_coa_freshness", "link_coa", "create_pre_permits",

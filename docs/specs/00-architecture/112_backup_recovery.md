@@ -54,6 +54,11 @@ gcloud sql instances clone buildo-production buildo-recovery \
 **Script:** `scripts/backup-db.js`
 **Advisory Lock ID:** 112 (spec number convention, §5.2 of spec 47)
 
+**Primary trigger:** The permits chain (`scripts/manifest.json` `chains.permits`), as its final
+step after all data writes and CQA assertions pass. This satisfies the OP4 check in spec 07 §C5
+(requires a completed `backup_db` run within the last 25 hours). Cloud Scheduler is a secondary
+trigger for production resilience when the permits chain is skipped (gate: `records_new = 0`).
+
 **Inputs:**
 - `DATABASE_URL` or `PG_*` env vars (same as the pipeline pool)
 - `BACKUP_GCS_BUCKET` (required — GCS bucket name, e.g. `buildo-db-backups`)
@@ -115,7 +120,7 @@ pg_restore \
 - `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §A.5 — lock ID 112 registration
 
 ### Out-of-Scope Files
-- `src/app/api/` — no API trigger for backup (admin can run standalone or via Cloud Scheduler)
+- `src/app/api/` — no API trigger for backup; triggered daily via the permits chain (see §3 trigger note)
 - `migrations/` — no schema changes
 - Cloud Scheduler configuration — infrastructure provisioned outside this repo
 

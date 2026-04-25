@@ -277,7 +277,8 @@ async function run() {
       || slug.startsWith('compute_')
       || slug === 'refresh_snapshot'
       || slug === 'close_stale_permits'
-      || slug === 'update_tracked_projects';
+      || slug === 'update_tracked_projects'
+      || slug === 'backup_db';
     if (gateSkipped && !isInfraStep) {
       console.log(`${stepLabel} — SKIPPED (gate: 0 new records)`);
       const scopedSlug = `${chainId}:${slug}`;

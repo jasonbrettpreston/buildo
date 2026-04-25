@@ -67,6 +67,8 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   assert_lifecycle_phase_distribution: { name: 'Phase Distribution',  group: 'quality' },
   assert_entity_tracing:      { name: 'Entity Tracing',           group: 'quality' },
   assert_global_coverage:     { name: 'Global Coverage Profile',   group: 'quality' },
+  // Maintenance (1) — logical backup after all data + CQA passes
+  backup_db:                  { name: 'Database Backup',           group: 'snapshot' },
 };
 
 // ---------------------------------------------------------------------------
@@ -130,6 +132,9 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'assert_entity_tracing',      indent: 0 },
       // WF1 2026-04-19 — global field-level coverage profile (spec 49).
       { slug: 'assert_global_coverage',     indent: 0 },
+      // WF3 2026-04-25 — OP4 gap: daily logical backup as the final maintenance
+      // step after all CQA assertions pass (spec 112 §3).
+      { slug: 'backup_db',                  indent: 0 },
     ],
   },
   {

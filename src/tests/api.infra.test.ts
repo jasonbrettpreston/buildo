@@ -794,6 +794,26 @@ describe('Performance Index Coverage', () => {
   });
 });
 
+describe('pipelines/runs route — static WHERE construction (C4 regression)', () => {
+  // SPEC LINK: docs/specs/00-architecture/07_backend_prod_eval.md §C4
+  const SRC = fs.readFileSync(
+    path.resolve(__dirname, '../app/api/admin/pipelines/runs/route.ts'),
+    'utf-8'
+  );
+
+  it('does not use dynamic conditions.join() to build WHERE clause', () => {
+    expect(SRC).not.toMatch(/conditions\.join\s*\(/);
+  });
+
+  it('uses nullable-parameter static WHERE for pipeline filter', () => {
+    expect(SRC).toMatch(/\$1::text IS NULL OR pipeline = \$1/);
+  });
+
+  it('uses nullable-parameter static WHERE for status filter', () => {
+    expect(SRC).toMatch(/\$2::text IS NULL OR status = \$2/);
+  });
+});
+
 function findRouteFiles(dir: string): string[] {
   const results: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

@@ -31,33 +31,24 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(searchParams.get('limit') ?? '25', 10) || 25, 100);
   const offset = parseInt(searchParams.get('offset') ?? '0', 10) || 0;
 
-  const conditions: string[] = [];
-  const params: (string | number)[] = [];
-  let paramIdx = 1;
-
-  if (pipeline) {
-    conditions.push(`pipeline = $${paramIdx++}`);
-    params.push(pipeline);
-  }
-  if (status && ['running', 'completed', 'failed'].includes(status)) {
-    conditions.push(`status = $${paramIdx++}`);
-    params.push(status);
-  }
-
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const validStatus = status && ['running', 'completed', 'failed'].includes(status) ? status : null;
 
   const [rows, countRows] = await Promise.all([
     query<PipelineRunRow>(
       `SELECT id, pipeline, started_at, completed_at, status, duration_ms,
               error_message, records_total, records_new, records_updated
-       FROM pipeline_runs ${where}
+       FROM pipeline_runs
+       WHERE ($1::text IS NULL OR pipeline = $1)
+         AND ($2::text IS NULL OR status = $2)
        ORDER BY started_at DESC
-       LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
-      [...params, limit, offset]
+       LIMIT $3 OFFSET $4`,
+      [pipeline ?? null, validStatus, limit, offset]
     ),
     query<{ count: string }>(
-      `SELECT COUNT(*)::text as count FROM pipeline_runs ${where}`,
-      params
+      `SELECT COUNT(*)::text as count FROM pipeline_runs
+       WHERE ($1::text IS NULL OR pipeline = $1)
+         AND ($2::text IS NULL OR status = $2)`,
+      [pipeline ?? null, validStatus]
     ),
   ]);
 

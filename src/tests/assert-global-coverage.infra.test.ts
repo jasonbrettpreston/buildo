@@ -5,7 +5,7 @@
 //       mirrored from each source script's WHERE clause
 //   (b) Payload shape — audit_table has `columns`, all rows have required keys,
 //       records_total = 1
-//   (c) Chain count — permits chain = 27 steps, coa chain = 12 steps
+//   (c) Chain count — permits chain = 28 steps, coa chain = 12 steps
 //   (d) Advisory lock ID = 111
 
 import * as fs from 'node:fs';
@@ -163,10 +163,12 @@ describe('manifest.json — chain wiring', () => {
     );
   });
 
-  it('assert_global_coverage is last step in permits chain (step 27)', () => {
+  it('assert_global_coverage is second-to-last in permits chain; backup_db is last (step 28)', () => {
+    // WF3 2026-04-25: backup_db appended as final step 28 (OP4 fix).
     const permitsChain: string[] = manifest.chains.permits;
-    expect(permitsChain[permitsChain.length - 1]).toBe('assert_global_coverage');
-    expect(permitsChain).toHaveLength(27);
+    expect(permitsChain[permitsChain.length - 1]).toBe('backup_db');
+    expect(permitsChain[permitsChain.length - 2]).toBe('assert_global_coverage');
+    expect(permitsChain).toHaveLength(28);
   });
 
   it('assert_global_coverage is last step in coa chain (step 12)', () => {
@@ -432,9 +434,10 @@ describe('assert-global-coverage.js — GC-1: Step 23 Denom G rows use infoRow (
 });
 
 describe('chain specs — step counts updated', () => {
-  it('41_chain_permits.md declares 27 steps', () => {
+  it('41_chain_permits.md declares 28 steps', () => {
+    // WF3 2026-04-25: backup_db added as step 28 (OP4 fix).
     const content = fs.readFileSync(CHAIN_PERMITS_SPEC, 'utf8');
-    expect(content).toContain('27 (sequential');
+    expect(content).toContain('28 (sequential');
   });
 
   it('42_chain_coa.md declares 12 steps', () => {
