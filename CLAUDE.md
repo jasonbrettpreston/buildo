@@ -236,7 +236,8 @@ compliance choice (e.g. deliberately skipping an unhappy-path test with a reason
 | `WF5` | Core | Test suite, typecheck, dead code, supply chain, verdict |
 | `WF5 code` | Code Quality | logError enforcement, viewport audit, coverage check |
 | `WF5 build` | Build Health | 7-point rubric (build time, bundle size, circular deps, etc.) |
-| `WF5 prod [section]` | Production Readiness | 10-vector rubric scored per feature/module |
+| `WF5 prod backend` | Backend Eval | Fixed 46-check rubric — load `docs/specs/00-architecture/07_backend_prod_eval.md` |
+| `WF5 prod [section]` | Production Readiness | 10-vector generative rubric for non-backend scope |
 | `WF5 pipeline` | Pipeline Validation | 5-point functional check of chains + CQA + admin UI |
 | `WF5 manual [feature]` | Manual App Assessment | Spec-driven scenario testing in the running app |
 
