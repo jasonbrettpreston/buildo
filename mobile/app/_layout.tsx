@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/03-mobile/92_mobile_engagement_hardware.md §3.2, §4.1, §4.2
 import '../global.css';
 import { useEffect, useState } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import * as Notifications from 'expo-notifications';
@@ -37,8 +37,13 @@ function AuthGate() {
   const _hasHydrated = useAuthStore((s) => s._hasHydrated);
   const router = useRouter();
   const segments = useSegments();
+  const rootNavigationState = useRootNavigationState();
 
   useEffect(() => {
+    // Wait until Expo Router's navigation container is mounted before calling
+    // router.replace() — firing before the container is ready throws a
+    // "Attempted to navigate before mounting the RootLayout" error.
+    if (!rootNavigationState?.key) return;
     if (!_hasHydrated) return;
     const inAuthGroup = segments[0] === '(auth)';
     if (!user && !inAuthGroup) {
@@ -47,12 +52,12 @@ function AuthGate() {
       router.replace('/(app)/');
       // Fire-and-forget but never silently swallow — surface the error so Phase 8
       // Sentry wiring has something to report. A failed push registration is a
-      // permanent UX regression (no notifications) that must not be invisible.
+      // permanent UX registration (no notifications) that must not be invisible.
       void registerPushToken().catch((err) => {
         console.warn('[AuthGate] registerPushToken failed', err instanceof Error ? err.message : err);
       });
     }
-  }, [user, segments, _hasHydrated]);
+  }, [user, segments, _hasHydrated, rootNavigationState?.key]);
 
   return null;
 }
