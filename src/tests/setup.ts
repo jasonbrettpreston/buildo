@@ -1,3 +1,4 @@
+// SPEC LINK: docs/specs/00_engineering_standards.md
 // Vitest global setup
 // Configure test environment defaults
 

@@ -13,10 +13,15 @@
 
 const pipeline = require('./lib/pipeline');
 
+// §R2 — Advisory lock ID (spec 80)
+const ADVISORY_LOCK_ID = 80;
+
 const BATCH_SIZE = 500;
 const MAX_ITERATIONS = 500000; // safety guard: 500K batches × 500 = 250M rows max
 
 pipeline.run('reclassify-all', async (pool) => {
+
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const startTime = Date.now();
 
   // Dynamic import for TypeScript modules (requires tsx runtime)
@@ -213,4 +218,8 @@ pipeline.run('reclassify-all', async (pool) => {
     { permits: ['permit_num', 'revision_num', 'permit_type', 'structure_type', 'work', 'description', 'status', 'est_const_cost', 'issued_date', 'scope_tags'] },
     { permits: ['project_type', 'scope_tags', 'scope_classified_at', 'scope_source'], permit_trades: ['permit_num', 'revision_num', 'trade_id'], permit_products: ['permit_num', 'revision_num', 'product_id'] }
   );
+
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
 });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
-import { logError } from '@/lib/logger';
+import { logError, logWarn } from '@/lib/logger';
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
@@ -163,7 +163,7 @@ export const POST = withApiEnvelope(async function POST(
     );
     runId = rows[0]?.id ?? null;
   } catch (trackErr) {
-    console.warn(`[pipelines/${slug}] pipeline_runs table not available, running without tracking:`, trackErr instanceof Error ? trackErr.message : trackErr);
+    logWarn(`[pipelines/${slug}]`, 'pipeline_runs table not available — running without tracking', { error: trackErr instanceof Error ? trackErr.message : String(trackErr) });
   }
 
   // Bug 1 fix: Use spawn (not execFile) — execFile pipes stdin which causes
@@ -252,7 +252,7 @@ export const POST = withApiEnvelope(async function POST(
           recordsNew = summary.records_new ?? null;
           recordsUpdated = summary.records_updated ?? null;
           recordsMeta = summary.records_meta ?? null;
-        } catch { /* malformed summary — ignore */ }
+        } catch (parseErr) { logError(`[pipelines/${slug}]`, parseErr, { event: 'malformed_pipeline_summary' }); }
       }
 
       // Parse PIPELINE_META from stdout for self-documented reads/writes
@@ -262,7 +262,7 @@ export const POST = withApiEnvelope(async function POST(
         try {
           const pipelineMeta = JSON.parse(metaMatch[1]);
           recordsMeta = { ...(recordsMeta || {}), pipeline_meta: pipelineMeta };
-        } catch { /* malformed meta — ignore */ }
+        } catch (parseErr) { logError(`[pipelines/${slug}]`, parseErr, { event: 'malformed_pipeline_meta' }); }
       }
 
       if (runId) {

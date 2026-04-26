@@ -53,6 +53,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/classify-scope.js':       87,
   'scripts/classify-permits.js':     88,
   'scripts/classify-permit-phase.js': 89,
+  'scripts/reclassify-all.js':       80,
   // Bundle A — Compute (already compliant pre-Bundle G)
   'scripts/compute-opportunity-scores.js':   81,
   'scripts/update-tracked-projects.js':      82,

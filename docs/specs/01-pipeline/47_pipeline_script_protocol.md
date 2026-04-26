@@ -1605,6 +1605,7 @@ and registry-vs-code agreement.
 | **56** | `scripts/load-massing.js` | 4 — Load/Ingest | NO |
 | **57** | `scripts/load-neighbourhoods.js` | 4 — Load/Ingest | NO |
 | **71** | `scripts/compute-timing-calibration.js` | 5 — Maintenance | YES — `computed_at` |
+| **80** | `scripts/reclassify-all.js` | 1 — Classify | YES — `scope_classified_at`, permit_trades, permit_products |
 | **81** | `scripts/compute-opportunity-scores.js` | Bundle A | YES — `computed_at` |
 | **82** | `scripts/update-tracked-projects.js` | Bundle A | YES — timestamps |
 | **83** | `scripts/compute-cost-estimates.js` | Bundle A | YES — timestamps |

@@ -1,3 +1,4 @@
+// SPEC LINK: docs/specs/02-web-admin/26_admin_dashboard.md
 import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';

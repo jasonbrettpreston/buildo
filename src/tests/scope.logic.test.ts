@@ -1,3 +1,4 @@
+// SPEC LINK: docs/specs/00-architecture/01_database_schema.md
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';

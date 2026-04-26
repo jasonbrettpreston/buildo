@@ -1,3 +1,4 @@
+// SPEC LINK: docs/specs/00-architecture/01_database_schema.md
 import type {
   Permit,
   RawPermitRecord,

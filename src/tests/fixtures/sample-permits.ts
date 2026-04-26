@@ -1,3 +1,4 @@
+// SPEC LINK: docs/specs/01-pipeline/50_source_permits.md
 import type { RawPermitRecord } from '@/lib/permits/types';
 
 /**

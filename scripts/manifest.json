@@ -32,6 +32,7 @@
     "compute_centroids":    { "file": "scripts/compute-centroids.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcels"], "telemetry_null_cols": { "parcels": ["centroid_lat", "centroid_lng"] } },
     "link_similar":         { "file": "scripts/link-similar.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
     "create_pre_permits":   { "file": "scripts/create-pre-permits.js",    "supports_full": false, "supports_dry_run": false },
+    "reclassify_all":       { "file": "scripts/reclassify-all.js",         "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits", "permit_trades"] },
     "refresh_snapshot":     { "file": "scripts/refresh-snapshot.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["data_quality_snapshots"] },
     "assert_schema":        { "file": "scripts/quality/assert-schema.js", "supports_full": false, "supports_dry_run": false },
     "assert_data_bounds":   { "file": "scripts/quality/assert-data-bounds.js", "supports_full": false, "supports_dry_run": false },
