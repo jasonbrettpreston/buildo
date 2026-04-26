@@ -40,6 +40,8 @@ const validPermitLead = {
   estimated_cost: 75000,
   lifecycle_phase: 'structural',
   lifecycle_stalled: false,
+  target_window: 'bid',
+  competition_count: 0,
 };
 
 const validBuilderLead = {
@@ -120,6 +122,26 @@ describe('PermitLeadFeedItemSchema', () => {
 
   it('rejects invalid cost_tier value', () => {
     const result = PermitLeadFeedItemSchema.safeParse({ ...validPermitLead, cost_tier: 'gigantic' });
+    expect(result.success).toBe(false);
+  });
+
+  it('parses target_window: "bid" and "work"', () => {
+    expect(PermitLeadFeedItemSchema.safeParse({ ...validPermitLead, target_window: 'bid' }).success).toBe(true);
+    expect(PermitLeadFeedItemSchema.safeParse({ ...validPermitLead, target_window: 'work' }).success).toBe(true);
+  });
+
+  it('rejects invalid target_window value', () => {
+    const result = PermitLeadFeedItemSchema.safeParse({ ...validPermitLead, target_window: 'work_window' });
+    expect(result.success).toBe(false);
+  });
+
+  it('parses competition_count of 0 and positive integers', () => {
+    expect(PermitLeadFeedItemSchema.safeParse({ ...validPermitLead, competition_count: 0 }).success).toBe(true);
+    expect(PermitLeadFeedItemSchema.safeParse({ ...validPermitLead, competition_count: 5 }).success).toBe(true);
+  });
+
+  it('rejects negative competition_count', () => {
+    const result = PermitLeadFeedItemSchema.safeParse({ ...validPermitLead, competition_count: -1 });
     expect(result.success).toBe(false);
   });
 });
@@ -218,5 +240,44 @@ describe('LeadFeedResultSchema', () => {
         expect(err.issues[0]).toHaveProperty('message');
       }
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AuthGate — useRootNavigationState guard (regression)
+// SPEC LINK: docs/specs/03-mobile/90_mobile_engineering_protocol.md §3.2
+// ---------------------------------------------------------------------------
+// Static source assertion: guards that router.replace() is never called before
+// Expo Router's navigation container is ready. Removing the guard causes a
+// "Attempted to navigate before mounting the RootLayout" crash on cold start.
+
+describe('AuthGate — useRootNavigationState guard (regression)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('fs') as typeof import('fs');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const path = require('path') as typeof import('path');
+  const layoutSrc: string = fs.readFileSync(
+    path.resolve(__dirname, '../app/_layout.tsx'),
+    'utf-8',
+  );
+
+  it('imports useRootNavigationState from expo-router', () => {
+    expect(layoutSrc).toContain('useRootNavigationState');
+  });
+
+  it('guards the AuthGate useEffect on rootNavigationState?.key before router.replace()', () => {
+    const guardIdx = layoutSrc.indexOf('!rootNavigationState?.key');
+    // Use the actual call-site string (with quote) to avoid matching comments
+    const replaceIdx = layoutSrc.indexOf("router.replace('/");
+    expect(guardIdx).toBeGreaterThan(-1);
+    expect(replaceIdx).toBeGreaterThan(-1);
+    // Guard must appear before the first replace call in source order
+    expect(guardIdx).toBeLessThan(replaceIdx);
+  });
+
+  it('includes rootNavigationState?.key in the useEffect dependency array', () => {
+    expect(layoutSrc).toContain(
+      '[user, segments, _hasHydrated, rootNavigationState?.key]',
+    );
   });
 });
