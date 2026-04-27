@@ -51,6 +51,23 @@ const eslintConfig = [
       ],
     },
   },
+  // §6.2 — Ban console.log/debug/info in src/ committed code (Admin rule 5).
+  // console.warn is allowed for dev-time warnings (nav guard, SDK fallbacks).
+  // API routes additionally ban console.error in the block below — handled there separately.
+  {
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
+    ignores: ['src/tests/**'],
+    rules: {
+      'no-console': ['error', { allow: ['warn'] }],
+    },
+  },
+  // src/lib/logger.ts IS the console abstraction — exempt from no-console rule
+  {
+    files: ['src/lib/logger.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
   // §6.1 — Ban console.error in API routes; use logError() from src/lib/logger.ts instead
   {
     files: ['src/app/api/**/*.ts'],

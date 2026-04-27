@@ -73,7 +73,7 @@ export default function BuilderDetailPage() {
     fetch(`/api/builders/${id}`)
       .then((res) => res.json())
       .then((d) => setData(d))
-      .catch(console.error)
+      .catch((err) => console.warn('[builders/id] fetch failed', err))
       .finally(() => setLoading(false));
   }, [id]);
 

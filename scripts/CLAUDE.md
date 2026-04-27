@@ -1,19 +1,26 @@
-# Backend / Pipeline Domain — Auto-loaded Specs
+# Backend / Pipeline Domain — Required Reading
 
 This file is loaded automatically when Claude Code works in `scripts/`.
-It extends the root `CLAUDE.md` with the required-reading specs for Backend/Pipeline
-mode so they are always in context — Claude must NOT skip them even though they
-are pre-loaded here.
+It extends the root `CLAUDE.md` for Backend/Pipeline mode.
+
+**Do NOT use `@` imports here** — they load unconditionally into every session
+(including Admin/WF7 tasks) and waste context. Read the specs below explicitly
+via Read tool at task start instead.
 
 ---
 
-## Auto-loaded Required Reading
+## Required Reading (Backend/Pipeline Mode only — read explicitly, do not auto-import)
 
-@../docs/specs/00_engineering_standards.md
+Before generating any active task in Backend/Pipeline mode, send these as parallel
+Read tool calls in a single message:
 
-@../docs/specs/01-pipeline/30_pipeline_architecture.md
-
-@../docs/specs/01-pipeline/40_pipeline_system.md
+| File | Sections |
+|------|---------|
+| `docs/specs/00_engineering_standards.md` | §2 Error Handling, §3 Database, §6 Logging, §7 Dual Path, §9 Pipeline Safety, §10 Boundary |
+| `docs/specs/01-pipeline/30_pipeline_architecture.md` | V2 architecture, archetypes, invariants |
+| `docs/specs/01-pipeline/40_pipeline_system.md` | SDK exports, manifest schema, chain orchestration |
+| `docs/specs/01-pipeline/47_pipeline_script_protocol.md` | **Mandatory** — §R1-R12 skeleton, advisory lock, emitSummary, emitMeta |
+| `docs/specs/00-architecture/01_database_schema.md` | Current schema |
 
 ---
 

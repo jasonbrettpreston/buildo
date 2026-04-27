@@ -43,7 +43,7 @@ function BuildersContent() {
         setBuilders(data.builders || []);
         setTotal(data.pagination?.total || 0);
       })
-      .catch(console.error)
+      .catch((err) => console.warn('[builders] fetch failed', err))
       .finally(() => setLoading(false));
   }, [search, page]);
 

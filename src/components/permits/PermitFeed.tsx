@@ -53,7 +53,7 @@ export function PermitFeed({ filters = {}, savedPermitIds, onSave }: PermitFeedP
       setTotalPages(data.pagination?.total_pages || 1);
       setTotal(data.pagination?.total || 0);
     } catch (err) {
-      console.error('Failed to fetch permits:', err);
+      console.warn('[PermitFeed] fetch failed:', err);
     } finally {
       setLoading(false);
     }

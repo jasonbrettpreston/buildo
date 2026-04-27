@@ -6,6 +6,13 @@
       "Bash(npx *)",
       "Bash(node *)",
       "Bash(ls *)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Read(**/.env*)",
+      "Write(**/.env*)"
     ]
   },
   "hooks": {
@@ -16,6 +23,18 @@
           {
             "type": "command",
             "command": "node scripts/hooks/check-active-task.mjs"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run typecheck 2>&1 | tail -20",
+            "timeout": 60
           }
         ]
       }
