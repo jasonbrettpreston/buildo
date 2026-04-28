@@ -147,7 +147,65 @@ Realtor default: 3–5km. Tradesperson default: 10–15km (varies by trade). Man
 
 **Email field staleness:** `email` in `user_profiles` is sourced from Firebase Auth at account creation. If the user later changes their email via Firebase (e.g., through account recovery), the `user_profiles.email` field will not auto-update. Syncing this via a Firebase Auth event trigger is deferred to Phase 2. Known limitation at launch.
 
-## 8. Implementation
+## 8. Design & Interface
+
+### Design Language
+
+Spec 95 is primarily backend + store infrastructure. Its two visual surface contributions are the `TradeReadOnlyRow` component (used in Settings) and the hydration loading skeleton that drives initial loading states across every other spec that reads from `user_profiles`.
+
+**Token reference:** `bg-zinc-900` rows · `zinc-400` labels · `zinc-500` locked/disabled values · `zinc-600` hint text · Feather `lock` icon for immutable fields.
+
+---
+
+### TradeReadOnlyRow Component
+
+File: `mobile/src/components/settings/TradeReadOnlyRow.tsx`
+
+```
+flex-row items-center justify-between px-4 min-h-[52px] border-b border-zinc-800/50
+```
+
+| Slot | Classes |
+|------|---------|
+| Label "Trade" | `text-zinc-400 text-sm` |
+| Trade value | `text-zinc-500 text-sm font-mono` |
+| Lock icon (right) | Feather `lock` 14px `text-zinc-600` |
+| Sub-label (below) | `text-zinc-600 text-xs mt-0.5 pb-2` — "To change trade, delete and re-register." |
+
+The lock icon signals immutability without requiring a tooltip or explanation beyond the sub-label.
+
+**Accessibility:** `accessibilityLabel="Trade: {tradeSlug}, locked"` on the outer row. No `onPress` — it is not interactive.
+
+---
+
+### Hydration Loading Skeleton
+
+**Trigger:** While `useUserProfile` `isLoading === true` on first fetch (no MMKV cache present).
+
+**Skeleton pattern:** `bg-zinc-800` blocks at settings-row heights with shimmer animation.
+
+**Animation:** `withRepeat(withTiming(1000, { easing: Easing.linear }), -1, true)` interpolating `opacity: 0.4 → 0.8 → 0.4`. Loops indefinitely until data resolves.
+
+**Skeleton row anatomy:**
+- Full-width field rows: `h-5 rounded bg-zinc-800 w-3/5` for label + `h-5 rounded bg-zinc-800 w-2/5` for value
+- Toggle rows: label block + `h-7 w-12 rounded-full bg-zinc-800` on right
+- Section header placeholder: `h-4 rounded bg-zinc-800 w-1/4 mx-4 my-3`
+
+**Fast-path:** `useUserProfile` calls `filterStore.hydrate(mmkvCache)` synchronously on mount from MMKV before the network request completes. This means skeleton is visible for <300ms on repeat launches and <1s on first launch. On network success, `hydrate(serverData)` overwrites the MMKV values silently — no flash, no toast.
+
+---
+
+### `filterStore` vs `userProfileStore` Visual Boundary
+
+`filterStore` owns feed preferences (radius, location mode, trade) — changes trigger `queryClient.invalidateQueries(['leads'])`.
+
+`userProfileStore` owns account-level display fields (name, company, notification toggles) — changes do NOT trigger feed re-renders.
+
+This separation prevents a notification toggle save from causing the lead feed to re-fetch, which would be a jarring UX regression.
+
+---
+
+## 9. Implementation
 
 ### Cross-Spec Build Order
 
@@ -195,10 +253,19 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 **Step 7 — useUserProfile hook**
 - File: `mobile/src/hooks/useUserProfile.ts`
 - TanStack Query `useQuery({ queryKey: ['user-profile'], queryFn: ... })`. `staleTime: 300_000`. On success: calls `filterStore.hydrate(data)`. Response parsed through `UserProfileSchema` — Zod parse failure triggers a Sentry report and falls back to cached MMKV values (Spec 90 §13).
+- **Loading state (skeleton):** Expose `isLoading` and `isFetching` from the hook. Consuming screens (`SettingsScreen`, `ProfileScreen`) check `isLoading && !hasCachedData` to decide whether to render skeleton rows instead of live content. `hasCachedData` is derived from the MMKV key `user_profile_cache` existing in the store.
+- **Skeleton animation pattern:** Each skeleton block uses a `useSharedValue` animated `opacity` cycling `0.4 → 0.8 → 0.4` via `withRepeat(withTiming(1000, { easing: Easing.linear }), -1, true)`. All skeleton blocks share the same shared value so they pulse in sync (one `useSharedValue` per screen, not one per row). NativeWind classes on skeleton blocks: field label `h-5 rounded bg-zinc-800 w-3/5`, field value `h-5 rounded bg-zinc-800 w-2/5`, toggle stub `h-7 w-12 rounded-full bg-zinc-800`, section header `h-4 rounded bg-zinc-800 w-1/4 mx-4 my-3`.
+- **Fast-path:** On mount, before the query resolves, call `filterStore.hydrate(mmkvCache)` synchronously if the MMKV cache key exists. This collapses the skeleton to <300ms on repeat launches. On network success, `hydrate(serverData)` overwrites silently — no flash, no toast, no transition.
 
 **Step 8 — TradeReadOnlyRow component**
 - File: `mobile/src/components/settings/TradeReadOnlyRow.tsx`
 - Read-only row: label "Trade", value from `filterStore.tradeSlug`, `text-zinc-500`, lock icon. No edit affordance. Sub-label: `"To change trade, delete and re-register your account."` (§3).
+- **Outer container:** `flex-row items-center justify-between px-4 min-h-[52px] border-b border-zinc-800/50` — matches all settings rows for visual consistency.
+- **Label:** `text-zinc-400 text-sm` — same as editable field labels so the row doesn't visually stand out as special until the user tries to tap it.
+- **Value slot (right side):** `flex-row items-center gap-2` wrapping the trade value text (`text-zinc-500 text-sm font-mono`) and the Feather `lock` icon (size 14, `text-zinc-600`). The mono font echoes the IBM Plex Mono data-field treatment from the lead feed design language.
+- **Sub-label row (below the main row, same horizontal padding):** `text-zinc-600 text-xs mt-0.5 pb-3 px-4` — "To change trade, delete and re-register your account." Rendered as a separate `<Text>` outside the flex-row, not inside it, so it doesn't affect the row's min-height calculation.
+- **No `onPress`:** Do not attach any touch handler. The component is purely display. `accessible={false}` on the outer container; individual elements carry their own roles so VoiceOver reads the meaningful parts without announcing the container.
+- **Accessibility:** `accessibilityLabel={\`Trade: ${tradeSlug}, locked\`}` on the value+lock `View`. `accessibilityRole="text"`. The sub-label `Text` carries `accessibilityHint="To change your trade, delete your account and re-register."` for screen reader context.
 
 ### Testing Gates
 
@@ -208,7 +275,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 ---
 
-## 9. Operating Boundaries
+## 10. Operating Boundaries
 
 **Target files:**
 - `src/app/api/user-profile/route.ts` — GET + PATCH endpoint

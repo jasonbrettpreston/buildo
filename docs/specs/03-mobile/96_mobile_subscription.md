@@ -127,7 +127,98 @@ Manufacturers have `subscription_status = 'admin_managed'`. They:
 
 When Buildo admin deactivates a manufacturer account, `subscription_status` is updated server-side. The manufacturer sees the holding screen (Spec 94 §7) on next app open.
 
-## 9. Implementation
+## 9. Design & Interface
+
+### Design Language
+
+Spec 96 presents the highest-stakes screen in the app: the paywall moment. The design must communicate value (what the user earned in their trial), create urgency without being hostile, and make the subscription path feel trustworthy and low-friction. The aesthetic stays within the established industrial-utilitarian dark mode language — `bg-zinc-950` screen, `text-zinc-100` headlines, `amber-500` primary CTA — but the layout is intentionally centred and breathable (unlike the dense feed). This is a deliberate tonal shift: the rest of the app is information-dense; the paywall gives the user space to make a decision.
+
+---
+
+### PaywallScreen Layout
+
+**Container:** `bg-zinc-950 flex-1 items-center justify-center px-8`
+
+**Stagger sequence (Reanimated `withTiming`):**
+
+| Element | Delay | Transform |
+|---------|-------|-----------|
+| Icon lock `text-amber-500` (Feather `lock`, 32px) | 0ms | opacity 0→1 + `translateY: 12→0` |
+| Headline "Your free trial has ended." | 80ms | opacity 0→1 + `translateY: 12→0` |
+| Lead count `[X] leads in 14 days` | 160ms | opacity 0→1 + `translateY: 12→0` |
+| Primary CTA button | 240ms | opacity 0→1 + `translateY: 8→0` |
+| "Maybe later" secondary | 320ms | opacity 0→1 |
+
+All: `withTiming(300, { easing: Easing.out(Easing.ease) })`.
+
+**NativeWind classes by element:**
+
+| Slot | Classes |
+|------|---------|
+| Lock icon container | `mb-8 items-center` |
+| Headline | `text-zinc-100 text-2xl font-bold text-center mb-2` |
+| Sub-headline (count) | `text-amber-400 font-mono text-4xl font-bold text-center mb-8` |
+| Count caption | `text-zinc-500 text-sm text-center mb-10` — "viewed in your 14-day trial" |
+| Primary CTA | `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 px-8 w-full items-center mb-3` |
+| CTA label | `text-zinc-950 text-base font-bold` |
+| Secondary ("Maybe later") | `text-zinc-500 text-sm mt-4` |
+| Refresh link (60s reveal) | `text-zinc-600 text-xs mt-2` — "Already paid? Refresh status" |
+
+**Accessibility:** `accessibilityRole="header"` on headline. Primary CTA: `accessibilityLabel="Continue subscription at buildo.com"`. Refresh link: `accessibilityLabel="Refresh subscription status"` (appears after 60s).
+
+---
+
+### Loading Guard (Before Status Resolves)
+
+**Rule:** Never flash the paywall while `subscription_status` is `null` or `undefined`. The layout renders a full-screen loading guard instead.
+
+**Loading guard:** `bg-zinc-950 flex-1 items-center justify-center` with `<ActivityIndicator size="large" color="#f59e0b" />` (amber-400 equivalent). No text, no logo — just the spinner. This matches the initial app boot spinner pattern (Spec 93) so the transition into the gate feels part of the same loading sequence.
+
+**Transition:** Once `subscription_status` resolves, the loading guard unmounts instantly. If status is `'trial'` / `'active'` / `'past_due'` / `'admin_managed'`, the feed renders. If `'expired'`, `<PaywallScreen>` fades in via a single `opacity: 0 → 1` `withTiming(200)` (no stagger needed — the spinner already provided the anticipatory pause).
+
+---
+
+### Inline Blur State (Dismissed Paywall)
+
+When `paywallStore.dismissed = true` AND `subscription_status === 'expired'`, the feed and flight board enter inline blur mode — the paywall is dismissed but the content is locked.
+
+**Banner:** Pinned at top of the tab content area.
+- Container: `bg-zinc-900/95 flex-row items-center justify-between px-4 py-3 border-b border-zinc-800`
+- Text: `text-zinc-300 text-sm flex-1` — "Trial ended — subscribe to see new leads."
+- CTA chip: `bg-amber-500/15 border border-amber-500/30 rounded-full px-3 py-1` with `text-amber-400 text-xs font-semibold` — "Subscribe →"
+- Tapping anywhere on the banner: `paywallStore.show()` — reopens `<PaywallScreen>`
+
+**Lead card blur:** `<BlurView intensity={8} tint="dark">` from `expo-blur` wrapping each lead card + `style={{ opacity: 0.1 }}` on the card content beneath. The combination makes cards visibly present but illegible — communicating "there is content here, you just can't see it."
+
+**Empty feel prevention:** Show at least 4 blurred card placeholders so the feed doesn't look broken. Use skeleton-shaped `bg-zinc-900 rounded-2xl h-28 w-full` blocks with `opacity: 0.15` if the actual feed query is also blocked.
+
+---
+
+### Webhook Delay Refresh (60-Second Reveal)
+
+The "Already paid? Refresh status" link is hidden initially and revealed after 60 seconds on the paywall screen without a status change.
+
+**Implementation:** `useEffect` with `setTimeout(60_000)` → set `showRefresh = true`. The link fades in via `withTiming(400)` opacity transition. On tap: calls `queryClient.invalidateQueries(['user-profile'])` + shows `<ActivityIndicator size="small" color="#71717a" />` inline next to the link text while refetching. If status comes back `'active'`, paywall dismisses. If still `'expired'`, a `text-zinc-500 text-xs` message appears: "Still showing trial ended — please check buildo.com."
+
+---
+
+### `paywallStore` State Machine
+
+File: `mobile/src/store/paywallStore.ts`
+
+| State field | Type | Meaning |
+|-------------|------|---------|
+| `visible` | boolean | Full paywall screen is showing |
+| `dismissed` | boolean | User tapped "Maybe later" — inline blur mode |
+| `show()` | action | Set `visible: true`, `dismissed: false` |
+| `dismiss()` | action | Set `visible: false`, `dismissed: true` |
+| `clear()` | action | Set both false — called when `subscription_status` changes to `'active'` |
+
+`paywallStore` is not persisted in MMKV — always starts fresh on app open so a returning subscriber is never stuck in inline blur mode.
+
+---
+
+## 10. Implementation
 
 ### Cross-Spec Build Order
 
@@ -141,24 +232,31 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 1 — PaywallScreen component**
 - File: `mobile/src/components/paywall/PaywallScreen.tsx`
-- NativeWind classes per §5. Lead count sourced from `user_profiles.lead_views_count` (passed as prop from the layout gate).
-- "Continue at buildo.com →" opens `expo-web-browser` with `buildo.com/subscribe`.
+- NativeWind classes and stagger animation sequence per §9. Lead count sourced from `user_profiles.lead_views_count` (passed as prop from the layout gate).
+- **Stagger animation:** Five `useSharedValue(0)` instances (icon, headline, count, primaryCTA, secondary), each animated via `withDelay(N, withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }))`. `useAnimatedStyle` drives both `opacity` and `transform: [{ translateY: interpolate(sv, [0, 1], [12, 0]) }]` (8px for CTA, 0 for secondary).
+- **`lead_views_count` display:** Rendered as `{count} leads` in `text-amber-400 font-mono text-4xl font-bold text-center` with a caption `text-zinc-500 text-sm text-center` below: "viewed in your 14-day trial".
+- "Continue at buildo.com →" calls `POST /api/subscribe/session` (Firebase Bearer token) to get the signed checkout URL, then opens it via `WebBrowser.openAuthSessionAsync()` from `expo-web-browser`. Show an inline `ActivityIndicator size="small"` inside the button while the session request is in-flight; replace with "Continue at buildo.com →" text once the URL is received.
 - "Maybe later" calls `paywallStore.dismiss()` — does not fully hide paywall, switches to inline-blur mode.
+- **60-second Refresh link:** `useEffect(() => { const t = setTimeout(() => setShowRefresh(true), 60_000); return () => clearTimeout(t); }, [])`. Fades in via `withTiming(400)`. Tap: `queryClient.invalidateQueries(['user-profile'])`. See §9 for full interaction spec.
 
 **Step 2 — Subscription gate in app layout**
 - File: `mobile/app/(app)/_layout.tsx`
 - On mount + on `AppState change` to `'active'`: call `queryClient.invalidateQueries(['user-profile'])` to re-fetch profile.
-- **Loading state:** while `subscription_status` is `null` or `undefined` (initial fetch in progress), render a full-screen loading spinner — do NOT flash the paywall. Only render `<PaywallScreen>` after the fetch resolves to `'expired'` or `'past_due'`.
+- **Loading guard (design-critical):** While `subscription_status` is `null` or `undefined` (initial fetch in progress), render a full-screen loading guard: `bg-zinc-950 flex-1 items-center justify-center` with `<ActivityIndicator size="large" color="#f59e0b" />`. Do NOT flash the paywall during this window. Only render `<PaywallScreen>` after the fetch resolves to `'expired'`. Loading guard → `<PaywallScreen>` transition: `opacity: 0 → 1` `withTiming(200)` on the `PaywallScreen` mount.
+- **When `subscription_status` changes from `'expired'` to `'active'`** (post-payment webhook): call `paywallStore.clear()`, then `queryClient.invalidateQueries(['leads'])` so the feed reloads with real data. The paywall screen should fade out (opacity `1 → 0`, `withTiming(200)`) before unmounting.
 - Five status values handled:
   - `'trial'` → full access, no paywall
-  - `'active'` → full access, no paywall
+  - `'active'` → full access, no paywall; `paywallStore.clear()` called if previously dismissed
   - `'past_due'` → full access, no paywall (user is in Stripe dunning grace period)
-  - `'expired'` → `<PaywallScreen>`
+  - `'expired'` → `<PaywallScreen>` (if `paywallStore.dismissed`, render feed with inline blur)
   - `'admin_managed'` → full access, no paywall, subscription section hidden in Settings
 
 **Step 3 — Inline blur banners**
 - Files: `mobile/app/(app)/(tabs)/index.tsx`, `mobile/app/(app)/(tabs)/flight-board.tsx`
-- Rendered when `paywallStore.dismissed = true` AND `subscription_status === 'expired'`. Banner: `"Trial ended — subscribe to see new leads."` Lead cards blurred via `style={{ opacity: 0.15 }}`. Tapping banner calls `paywallStore.show()`.
+- Rendered when `paywallStore.dismissed = true` AND `subscription_status === 'expired'`.
+- **Banner layout (design per §9):** `bg-zinc-900/95 flex-row items-center justify-between px-4 py-3 border-b border-zinc-800`. Left: `text-zinc-300 text-sm flex-1` text "Trial ended — subscribe to see new leads." Right: `bg-amber-500/15 border border-amber-500/30 rounded-full px-3 py-1` chip with `text-amber-400 text-xs font-semibold` "Subscribe →". Full row `onPress`: `paywallStore.show()`.
+- **Lead card blur (design per §9):** Wrap each `LeadCard` in `<BlurView intensity={8} tint="dark" style={StyleSheet.absoluteFill}>` from `expo-blur`. The card content underneath gets `style={{ opacity: 0.1 }}`. Show at minimum 4 blurred card placeholders (`bg-zinc-900 rounded-2xl h-28 w-full opacity-[0.15]`) if the feed query returned no results or was blocked.
+- **Flight board:** Same banner. Individual flight board rows blurred with same `BlurView intensity={8}` + `opacity: 0.1` on content.
 
 **Step 4 — Trial started_at write (server-side)**
 - File: `src/app/api/user-profile/route.ts` (GET handler extension)
@@ -187,7 +285,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 ---
 
-## 10. Operating Boundaries
+## 11. Operating Boundaries
 
 **Target files:**
 - `src/app/api/user-profile/route.ts` — subscription_status read

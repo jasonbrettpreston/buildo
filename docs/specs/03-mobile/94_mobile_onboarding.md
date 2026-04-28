@@ -198,7 +198,206 @@ Input address
       Proceed silently — no warning
 ```
 
-## 9. Implementation
+## 9. Design & Interface
+
+### Design Language
+
+Inherits the industrial-utilitarian dark-mode system from `74_lead_feed_design.md`. All surfaces use the shared token palette: `bg-zinc-950` screens · `bg-zinc-900` cards/inputs · `amber-500` primary actions · `zinc-100` primary text · `zinc-400` secondary text.
+
+**Typography:** DM Sans 700 for titles and CTAs · IBM Plex Mono 500 (`font-mono`) for codes, labels, and data values.
+
+**Touch targets:** All interactive elements `min-h-[52px]` (exceeds 44px minimum per Spec 90 §9).
+
+**Motion:** `withTiming(300, { easing: Easing.out(Easing.ease) })` for entry reveals · `withSpring({ damping: 20, stiffness: 400 })` for button presses · staggered delays drive multi-element screens.
+
+---
+
+### Screen Specifications
+
+#### Progress Stepper (Path L, 4 steps — shown screens 2–5)
+
+```
+● ● ●̊ ○  ←  Complete · Active · Remaining
+```
+
+- Complete: `w-2.5 h-2.5 rounded-full bg-amber-500 mx-1.5`
+- Active: `w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-500/30 mx-1.5`
+- Remaining: `w-2.5 h-2.5 rounded-full bg-zinc-700 mx-1.5`
+- Container: `flex-row items-center justify-center mt-4 mb-8`
+- On step advance: `withSpring` scale pulse `1.0 → 1.3 → 1.0` on newly-complete dot (200ms)
+
+#### Trade Selection Screen — `profession.tsx`
+
+**Component:** `SectionList` with `stickySectionHeadersEnabled={true}` (required for Android; iOS stickiness is default).
+
+**Section header row:**
+```
+bg-zinc-900 px-4 py-2 border-b border-zinc-800
+```
+Label: `font-mono text-[11px] text-zinc-400 uppercase tracking-widest`
+
+**Trade row — unselected:**
+```
+flex-row items-center justify-between px-4 min-h-[52px]
+border-b border-zinc-800/40 active:bg-zinc-800
+```
+
+**Trade row — selected:**
+```
+border-l-[3px] border-amber-500 bg-amber-500/5 pl-3
+```
+Right slot: amber checkmark `text-amber-500 text-base` · `accessibilityState={{ selected: true }}`
+
+**Sticky "Continue" footer:**
+```
+absolute bottom-0 w-full bg-zinc-950/95 px-4 pb-safe pt-3 border-t border-zinc-800
+```
+- Disabled (no selection): `opacity-40` on CTA button
+- Enabled: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full`
+- Label: `text-zinc-950 font-bold text-base text-center`
+
+**Accessibility:** `accessibilityRole="button"` on each trade row.
+
+#### Trade Lock Confirmation — `@gorhom/bottom-sheet` v5
+
+`snapPoints={['42%']}` · background `bg-zinc-900 rounded-t-3xl`
+
+- Drag handle: `w-10 h-1 rounded-full bg-zinc-700 self-center mt-3 mb-5`
+- Trade name pill: `font-mono text-amber-400 text-xs tracking-widest uppercase bg-amber-500/10 px-3 py-1 rounded-full self-center`
+- Warning copy: `text-zinc-400 text-sm text-center mt-3 leading-relaxed`
+- Confirm: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full mt-6` · label `text-zinc-950 font-bold text-base text-center`
+- Go Back: `text-zinc-500 text-sm text-center mt-3 min-h-[44px]`
+
+**Note:** Must use `BottomSheetView` not raw `View` as direct child of the sheet. `BottomSheetModalProvider` required at app root (Spec 90 implementation note).
+
+#### Path Selection Screen — `path.tsx`
+
+Two `Pressable` cards, `gap-4 mx-4`, full-width:
+
+```
+bg-zinc-900 border border-zinc-800 rounded-2xl p-6
+active:border-amber-500 active:bg-amber-500/5
+```
+
+Selected (tap): `border-amber-500 bg-amber-500/5`
+
+Card anatomy:
+- Icon/Emoji: `text-4xl text-center mb-3`
+- Title: `text-lg font-bold text-zinc-100 text-center`
+- Description: `text-sm text-zinc-400 text-center mt-1 leading-relaxed`
+
+#### Address Input Screen — `address.tsx`
+
+Screen: `flex-1 bg-zinc-950`
+
+**Layout:** `KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}` wrapping a `ScrollView`.
+
+**Search field:**
+```
+bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-4
+text-zinc-100 font-mono text-base
+```
+Focused: `border-amber-500` · Placeholder: `text-zinc-600`
+
+**Toronto bounds error:**
+```
+bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 mt-3
+text-amber-400 text-sm leading-relaxed
+```
+
+**GPS Live button:**
+```
+bg-zinc-800 border border-zinc-700 rounded-2xl flex-row items-center
+justify-center px-4 py-4 mt-3 gap-3 min-h-[52px]
+```
+Icon: `text-amber-500` · Label: `text-zinc-100 text-base`
+
+**Permission denied explainer:**
+```
+bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3 mt-3
+text-red-400 text-sm leading-relaxed
+```
+"Enable in Settings →": `text-red-400 font-mono text-sm`
+
+#### Supplier Selection Screen — `supplier.tsx`
+
+**Component:** `FlatList numColumns={2}` — FlashList v2 does not yet support `numColumns`.
+
+`columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}` — must be inline style object; NativeWind cannot reach `columnWrapperStyle`.
+
+**Supplier card:**
+```
+bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex-1
+active:border-amber-500
+```
+Selected: `border-amber-500 bg-amber-500/5`
+
+**Skip link:**
+```
+text-zinc-500 font-mono text-xs text-center mt-6 min-h-[44px] items-center justify-center
+```
+
+#### Terms of Service Screen — `terms.tsx`
+
+**Custom checkbox (no library):**
+- Unchecked: `w-5 h-5 rounded-md border-2 border-zinc-600`
+- Checked: `w-5 h-5 rounded-md bg-amber-500 border-2 border-amber-500` + white `✓` `text-white text-xs font-bold`
+
+**Row:** `flex-row items-start gap-3 mt-4 min-h-[44px]`
+
+**ToS/Privacy links:** `text-amber-400 text-sm underline` → `expo-web-browser`
+
+CTA disabled until both checked: `opacity-40`
+
+CTA enabled: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full`
+Label: `text-zinc-950 font-bold text-base text-center`
+
+#### Completion Screen — Path L (`complete.tsx`)
+
+`bg-zinc-950 flex-1 items-center justify-center px-8`
+
+**Staggered entry** (`withTiming(300, Easing.out(Easing.ease))`):
+
+| Element | Delay | Transform |
+|---------|-------|-----------|
+| Trade badge | 0ms | fade + 20px up |
+| Heading | 80ms | fade + 20px up |
+| Body copy | 160ms | fade + 20px up |
+| CTA | 240ms | fade + 20px up |
+
+- Badge: `font-mono text-amber-400 text-xs tracking-widest uppercase bg-amber-500/10 px-3 py-1 rounded-full`
+- Heading: `text-zinc-100 text-2xl font-bold text-center mt-6`
+- Copy: `text-zinc-400 text-sm text-center mt-3 leading-relaxed`
+- CTA: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full mt-10`
+- Label: `"See your leads →"` · `text-zinc-950 font-bold text-base text-center`
+
+#### Manufacturer Holding Screen
+
+`bg-zinc-950 flex-1 items-center justify-center px-8`
+
+- Icon: `text-4xl text-zinc-600 text-center mb-6` (building/permit emoji)
+- Title: `text-zinc-100 text-xl font-bold text-center`
+- Sub-text: `text-zinc-400 text-sm text-center mt-2 leading-relaxed`
+- Contact button: `bg-zinc-800 border border-zinc-700 rounded-2xl py-4 px-8 mt-10 min-h-[52px] flex-row items-center justify-center`
+- Label: `text-zinc-100 font-bold text-base`
+
+---
+
+### Component Library Decisions
+
+| Concern | Library | Notes |
+|---------|---------|-------|
+| Trade list sticky headers | `SectionList` (React Native built-in) | `stickySectionHeadersEnabled={true}` required for Android |
+| Supplier grid | `FlatList numColumns={2}` | FlashList v2 does not support `numColumns` — use FlatList |
+| Confirmation bottom sheet | `@gorhom/bottom-sheet` v5 | Requires `BottomSheetModalProvider` at app root |
+| Address geocoding | `expo-location` `geocodeAsync()` | No third-party autocomplete — validation only |
+| Keyboard handling | `KeyboardAvoidingView` (React Native) | Platform branch: `'padding'` iOS, `'height'` Android |
+| Custom checkboxes | Custom `Pressable` | No library — NativeWind makes trivial |
+| Entry animations | Reanimated `withTiming` / `withSpring` | Reanimated shim active in Expo Go; real module in production builds |
+
+---
+
+## 10. Implementation
 
 ### Cross-Spec Build Order
 
@@ -225,26 +424,48 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 3 — Trade selection screen**
 - File: `mobile/app/(onboarding)/profession.tsx`
-- `<SectionList>` with 6 sticky category headers. 32 trades + Realtor. Amber `border-amber-500` on selected item. "Continue" CTA disabled until selection made. No `useEffect` for data — trade list is static JSON (Spec 90 §5). Realtor taps → skip `path.tsx`, go directly to `address.tsx`. Tradesperson taps → `path.tsx`.
+- `<SectionList>` with 6 sticky category headers. 32 trades + Realtor. `stickySectionHeadersEnabled={true}` (required for Android). No `useEffect` for data — trade list is static JSON (Spec 90 §5).
+- Section header: `bg-zinc-900 px-4 py-2 border-b border-zinc-800` · `font-mono text-[11px] text-zinc-400 uppercase tracking-widest`
+- Row unselected: `flex-row items-center justify-between px-4 min-h-[52px] border-b border-zinc-800/40 active:bg-zinc-800`
+- Row selected: add `border-l-[3px] border-amber-500 bg-amber-500/5 pl-3` · amber checkmark right · `accessibilityState={{ selected: true }}`
+- Sticky footer CTA: `absolute bottom-0 w-full bg-zinc-950/95 px-4 pb-safe pt-3 border-t border-zinc-800` · button `opacity-40` when disabled, `bg-amber-500 active:bg-amber-600 rounded-2xl py-4` when enabled
+- After selection, tapping "Continue" opens trade lock confirmation bottom sheet (`@gorhom/bottom-sheet` v5, `snapPoints={['42%']}`). PATCH fires only after user confirms. See §9 Design & Interface for full sheet spec.
+- Realtor taps → confirm sheet → skip `path.tsx`, go directly to `address.tsx`. Tradesperson → confirm → `path.tsx`.
 
 **Step 4 — Path selection screen**
 - File: `mobile/app/(onboarding)/path.tsx`
 - Two full-width `<Pressable>` cards: "Find New Leads" → Path L (`address.tsx`), "Track Active Projects" → Path T (`supplier.tsx`).
+- Card: `bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mx-4 active:border-amber-500 active:bg-amber-500/5`
+- Card anatomy: emoji `text-4xl text-center mb-3` · title `text-lg font-bold text-zinc-100 text-center` · description `text-sm text-zinc-400 text-center mt-1 leading-relaxed`
+- Cards separated by `gap-4`. Screen: `flex-1 bg-zinc-950 justify-center px-0`
+- No "Continue" CTA — tapping the card navigates immediately.
 
 **Step 5 — Address input screen**
 - File: `mobile/app/(onboarding)/address.tsx`
 - `expo-location` `geocodeAsync()` on submitted text. Run `snapCoord.ts`. Outside Toronto bounds → show warning + nearest neighbourhood centroid suggestion. Inside bounds → snap silently. On confirm: PATCH `{ home_base_lat, home_base_lng, location_mode: 'home_base_fixed' }`.
-- GPS permission denied (Live GPS path): show explainer + `Linking.openSettings()` deep link + secondary CTA to switch to fixed address.
+- Layout: `KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}` wrapping `ScrollView`
+- Text input: `bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-4 text-zinc-100 font-mono text-base` · focused `border-amber-500` · placeholder `text-zinc-600`
+- Toronto bounds error: `bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 mt-3 text-amber-400 text-sm leading-relaxed`
+- GPS Live button: `bg-zinc-800 border border-zinc-700 rounded-2xl flex-row items-center justify-center px-4 py-4 mt-3 gap-3 min-h-[52px]`
+- GPS permission denied (Live GPS path): `bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3 mt-3 text-red-400 text-sm` + `Linking.openSettings()` link + secondary CTA to switch to fixed address.
 
 **Step 6 — Supplier selection screen**
 - File: `mobile/app/(onboarding)/supplier.tsx`
-- `GET /api/onboarding/suppliers?trade={slug}` — **requires authentication** (Bearer token). Curated list (4–6) + "Other" text field. TanStack Query `useQuery` — no `useEffect` fetch (Spec 90 §5).
-- **Empty list fallback:** if the admin has not seeded suppliers for the selected trade, the screen auto-skips (treated as "Skip for now →"). Do not show an empty list.
-- "Skip for now →" link leaves `supplier_selection` null. On confirm: PATCH `{ supplier_selection }`.
+- `GET /api/onboarding/suppliers?trade={slug}` — **requires authentication** (Bearer token). TanStack Query `useQuery` — no `useEffect` fetch (Spec 90 §5).
+- **Empty list fallback:** if no suppliers seeded for the trade, screen auto-skips (treated as "Skip for now →"). Do not show an empty list.
+- Layout: `FlatList numColumns={2}` — FlashList v2 does not support `numColumns`. `columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}` (inline style — NativeWind cannot reach `columnWrapperStyle`).
+- Supplier card: `bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex-1 active:border-amber-500` · selected `border-amber-500 bg-amber-500/5`
+- "Other" text field: `bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-zinc-100 font-mono text-sm mt-3` below the grid
+- Skip link: `text-zinc-500 font-mono text-xs text-center mt-6 min-h-[44px] items-center justify-center`
+- "Skip for now →" leaves `supplier_selection` null. On confirm: PATCH `{ supplier_selection }`.
 
 **Step 7 — Terms of Service screen**
 - File: `mobile/app/(onboarding)/terms.tsx`
 - Two required checkboxes (ToS + Privacy Policy). Links open `expo-web-browser`. CTA disabled until both checked. On confirm: PATCH `{ tos_accepted_at: new Date().toISOString() }`.
+- Custom checkbox component (no library): unchecked `w-5 h-5 rounded-md border-2 border-zinc-600` · checked `bg-amber-500 border-amber-500` + white `✓` `text-white text-xs font-bold`
+- Checkbox row: `flex-row items-start gap-3 mt-4 min-h-[44px]`
+- Link text: `text-amber-400 text-sm underline`
+- CTA disabled: `opacity-40` · enabled: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full` · label `text-zinc-950 font-bold text-base text-center`
 
 **Step 8 — First permit screen (Path T only)**
 - File: `mobile/app/(onboarding)/first-permit.tsx`
@@ -252,7 +473,13 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 9 — Completion screen (Path L only)**
 - File: `mobile/app/(onboarding)/complete.tsx`
-- Trade badge + confirmation copy. CTA: "See your leads →". On tap: PATCH `{ default_tab: 'feed', onboarding_complete: true }` → navigate `/(app)/(tabs)`.
+- Layout: `bg-zinc-950 flex-1 items-center justify-center px-8`
+- Staggered entry (`withTiming(300, Easing.out(Easing.ease))`): trade badge (0ms) → heading (80ms) → copy (160ms) → CTA (240ms). Each element starts at `opacity: 0, translateY: 20`.
+- Trade badge: `font-mono text-amber-400 text-xs tracking-widest uppercase bg-amber-500/10 px-3 py-1 rounded-full`
+- Heading: `text-zinc-100 text-2xl font-bold text-center mt-6`
+- Copy: `text-zinc-400 text-sm text-center mt-3 leading-relaxed`
+- CTA: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full mt-10` · label `"See your leads →"` `text-zinc-950 font-bold text-base text-center`
+- On tap: PATCH `{ default_tab: 'feed', onboarding_complete: true }` → navigate `/(app)/(tabs)`.
 
 **Step 10 — Path T completion (no screen)**
 - In `terms.tsx` confirm handler for Path T: PATCH `{ default_tab: 'flight_board', onboarding_complete: true }` → navigate `/(app)/(tabs)/flight-board`.
@@ -272,7 +499,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 ---
 
-## 10. Operating Boundaries
+## 11. Operating Boundaries
 
 **Target files:**
 - `mobile/app/(onboarding)/` — new route group

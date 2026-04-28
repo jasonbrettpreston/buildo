@@ -113,7 +113,138 @@ If Firebase Auth is unreachable at sign-in: show retry option. Already-authentic
 
 **PIPEDA compliance:** CSV export must include all personally identifiable fields stored in `user_profiles`. Data not retained beyond 30-day window.
 
-## 4. Implementation
+## 4. Design & Interface
+
+### Design Language
+
+The auth screens are the first branded experience. They must feel premium and trustworthy — dark, minimal, and confident. No decoration, no gradients, no marketing copy. The screen communicates: "This is a professional tool." The design follows the industrial-utilitarian dark mode language: `bg-zinc-950` background, `text-zinc-100` primary text, `amber-500` logo accent. The 4-button auth stack is the centrepiece — laid out with deliberate spacing and appropriate visual weight per each method's provenance.
+
+---
+
+### Sign-In Screen Layout
+
+File: `mobile/app/(auth)/sign-in.tsx`
+
+**Screen container:** `bg-zinc-950 flex-1 items-center justify-center px-6`
+
+**Wordmark / logo area:**
+- `mb-12` below the logo before the button stack
+- Logo: SVG or image asset `w-10 h-10 rounded-xl` in `amber-500`; wordmark "Buildo" in `text-zinc-100 text-2xl font-bold` beside it
+- Tagline below wordmark: `text-zinc-500 text-sm text-center mt-1` — "Leads for the trades."
+
+**Button stack layout:**
+```
+[ Sign in with Apple    ]   ← bg-white text-black (Apple HIG)
+[ Sign in with Google   ]   ← bg-zinc-900 border border-zinc-700 with Google logo
+─────── or ───────────────  ← divider: text-zinc-700 text-xs font-mono tracking-widest
+[ Continue with Phone   ]   ← bg-zinc-900 border border-zinc-700
+[ Continue with Email   ]   ← bg-zinc-900 border border-zinc-700
+```
+
+**Button spacing:** `gap-3` between all buttons. Divider row: `flex-row items-center gap-3 my-1` with `flex-1 h-px bg-zinc-800` lines flanking `text-zinc-600 text-xs` "or".
+
+**All buttons:** `rounded-2xl py-4 px-5 flex-row items-center justify-center w-full min-h-[52px]`.
+
+---
+
+### Apple Sign-In Button (HIG Compliance)
+
+Apple mandates specific visual treatment. Use `expo-apple-authentication`'s `<AppleAuthenticationButton>` component directly — do NOT build a custom button:
+
+```tsx
+<AppleAuthenticationButton
+  buttonType={AppleAuthenticationButtonType.SIGN_IN}
+  buttonStyle={AppleAuthenticationButtonStyle.WHITE}
+  cornerRadius={16}
+  style={{ width: '100%', height: 52 }}
+  onPress={handleAppleSignIn}
+/>
+```
+
+`buttonStyle={WHITE}` on the dark background achieves the correct contrast. Do not apply NativeWind classes to this component — it renders a native view. The `cornerRadius={16}` matches `rounded-2xl` on the sibling buttons.
+
+---
+
+### Google Sign-In Button
+
+Custom `<Pressable>` styled to match the design system while displaying the Google logo:
+
+- Container: `bg-zinc-900 border border-zinc-700 rounded-2xl py-4 px-5 flex-row items-center justify-center w-full min-h-[52px] active:bg-zinc-800`
+- Google `G` logo: SVG inline (coloured, 20px) — left of label text, `mr-3`
+- Label: `text-zinc-100 text-sm font-semibold`
+
+---
+
+### Phone Input (react-native-international-phone-number)
+
+The Phone button opens a bottom sheet (`@gorhom/bottom-sheet` at `snapPoints={['55%']}`). Inside:
+
+- Component: `<PhoneInput>` from `react-native-international-phone-number`
+- Container: `bg-zinc-800 rounded-xl overflow-hidden mx-4` — wraps the component
+- Props: `defaultCountry="CA"` · `phoneInputStyles={{ container: { backgroundColor: '#27272a', borderRadius: 12 }, flagContainer: { backgroundColor: '#3f3f46', borderRadius: 0 }, input: { color: '#f4f4f5', fontFamily: 'DMSans-Regular', fontSize: 16 } }}`
+- CTA button below: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 mx-4 mt-4 w-full items-center` — "Send code"
+- Error state (`auth/too-many-requests`): `text-red-400 text-xs text-center mt-2` "Too many attempts. Try again in a few minutes."
+
+---
+
+### OTP Entry (input-otp-native)
+
+After phone number submitted, sheet transitions to OTP entry screen.
+
+- Component: `<OTPInput>` from `input-otp-native`
+- 6 cells: each `w-12 h-14 rounded-xl bg-zinc-800 border-2 border-zinc-700 text-zinc-100 text-2xl font-mono text-center items-center justify-center`
+- Active cell border: `border-amber-500`
+- `autoFocus` — keyboard appears immediately on sheet open
+- Row layout: `flex-row gap-2 justify-center mx-4`
+- Explainer below: `text-zinc-500 text-sm text-center mt-4` "Enter the 6-digit code sent to {phoneNumber}"
+- "Didn't receive it?" row: `text-zinc-600 text-xs text-center mt-6` with `text-amber-500` "Resend" tap target. Resend disabled for 30s after initial send (countdown: `"Resend in {N}s"`).
+
+---
+
+### Email Sign-In / Sign-Up Fields
+
+Shared `TextInput` style: `bg-zinc-800 rounded-xl px-4 py-3.5 text-zinc-100 text-base mb-3` with `placeholderTextColor="#71717a"`.
+
+Email field: `keyboardType="email-address"` · `autoCapitalize="none"` · `autoComplete="email"`.
+Password field: `secureTextEntry` · `autoComplete="current-password"` (sign-in) / `"new-password"` (sign-up).
+
+**Sign-up only — backup email field (SMS users):**
+- Shown only when arriving from the phone path
+- Label above: `text-zinc-500 text-xs mb-1` "Recovery email — in case you lose phone access"
+- Same `TextInput` style, `keyboardType="email-address"`
+
+---
+
+### In-Button Spinner Pattern
+
+All auth action buttons follow this pattern to prevent double-taps and communicate progress:
+
+```
+idle:   [ icon? ]  "Sign in with Google"  (full label)
+loading: [ ActivityIndicator size="small" color="#71717a" ]  (spinner only, button disabled)
+error:   [ icon? ]  "Sign in with Google"  (reverts to label, button re-enabled, error shown below)
+```
+
+Local `isSubmitting` boolean per button. `<Pressable disabled={isSubmitting} opacity={isSubmitting ? 0.7 : 1.0}`.
+
+---
+
+### Account Linking Bottom Sheet
+
+When `auth/account-exists-with-different-credential` is caught:
+
+- `@gorhom/bottom-sheet` at `snapPoints={['50%']}` (appears over whatever screen triggered the conflict)
+- Feather `link` 24px `text-amber-500` — centred, `mb-3`
+- Headline: `text-zinc-100 text-base font-bold text-center mb-2` "Email already registered"
+- Body: `text-zinc-400 text-sm text-center mb-6` — "An account with this email already exists. Sign in with {existingMethod} to link your {newMethod} account."
+- Primary: `bg-amber-500 active:bg-amber-600 rounded-2xl py-3.5 mx-4 w-full items-center` + `text-zinc-950 font-semibold text-sm` "Sign in with {existingMethod}"
+- Secondary: `text-zinc-500 text-sm text-center mt-3` "Cancel" — closes sheet, leaves user authenticated with original method
+
+The `{existingMethod}` and `{newMethod}` strings are derived from the Firebase error's `customData.email` lookup (call `fetchSignInMethodsForEmail`) to show the correct provider name.
+
+---
+
+## 5. Implementation
 
 ### Cross-Spec Build Order
 
@@ -142,16 +273,21 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 4 — Sign-in screen**
 - File: `mobile/app/(auth)/sign-in.tsx`
-- Four buttons in Apple HIG order: Apple Sign-In → Google → Phone → Email. `<Pressable>` not `<button>` (Spec 90 §5). Touch targets `min-h-[44px]` (Spec 90 §9).
-- **Apple:** `expo-apple-authentication` (`AppleAuthentication.signInAsync`); exchange credential via `OAuthProvider.credential` for Firebase sign-in.
-- **Google:** `expo-auth-session` with `ResponseType.Code`; configure URL scheme in `app.json`; exchange via Firebase credential.
-- **Phone/SMS:** `signInWithPhoneNumber` + `FirebaseRecaptchaVerifierModal` (or invisible reCAPTCHA). Presents two-step: phone input → OTP code entry. Handle `auth/too-many-requests` with user-visible back-off message.
-- **Account linking:** catch `auth/account-exists-with-different-credential` on all four paths. Show modal per §3.2 — prompt user to sign in with the original method, then call `linkWithCredential`.
+- **Layout per §4:** wordmark area (`mb-12`), then 4-button stack with `gap-3`, divider row between Google and Phone. Screen container `bg-zinc-950 flex-1 items-center justify-center px-6`.
+- Touch targets `min-h-[52px]` (§4 spec — exceeds Spec 90 §9 44pt minimum).
+- **Apple:** `<AppleAuthenticationButton>` from `expo-apple-authentication` per §4 Apple HIG section — use the native component directly with `buttonStyle={WHITE}` and `cornerRadius={16}`. Do NOT wrap in a custom `<Pressable>`. In-button spinner not applicable (native component handles its own loading state).
+- **Google:** Custom `<Pressable>` with Google `G` SVG logo per §4. `expo-auth-session` with `ResponseType.Code`; configure URL scheme in `app.json`; exchange via Firebase credential. In-button spinner per §4 spinner pattern.
+- **Phone/SMS:** Tapping "Continue with Phone" opens a bottom sheet (`snapPoints={['55%']}`). Phone input: `react-native-international-phone-number` with `defaultCountry="CA"` per §4 Phone Input spec. On "Send code" tap: `signInWithPhoneNumber` → sheet transitions to OTP entry using `input-otp-native` 6-cell spec per §4 OTP Entry. Handle `auth/too-many-requests` with `text-red-400 text-xs` message + 30s resend lockout timer.
+- **Email:** Tapping "Continue with Email" navigates to `/(auth)/sign-in?method=email` or opens an inline form below the button stack. Fields per §4 email field spec.
+- **Account linking:** catch `auth/account-exists-with-different-credential` on all four paths. Show bottom sheet per §4 Account Linking Bottom Sheet spec — call `fetchSignInMethodsForEmail` to determine existing provider name for the copy. On link success: close sheet, proceed to AuthGate.
 
 **Step 5 — Sign-up screen**
 - File: `mobile/app/(auth)/sign-up.tsx`
-- Email/password and SMS registration. SMS path: require backup email field (§3.3). Backup email is not verified at registration (async verification email sent later).
+- Same container and visual language as sign-in screen (`bg-zinc-950 flex-1 px-6`). Wordmark at top (same as sign-in, `mb-10`). No 4-button stack — sign-up is always method-specific (user selected their method on sign-in screen).
+- **Email/password path:** Email field + password field per §4 email field spec. Password confirmation field: same styling, `autoComplete="new-password"`. Submit button: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full items-center mt-4`. In-button spinner per §4 pattern.
+- **SMS path:** Phone input bottom sheet flow identical to sign-in (reuse component). After OTP verified: show backup email field in the same sheet before proceeding — `text-zinc-500 text-xs mb-1` label "Recovery email" + email `TextInput` per §4 spec. Backup email is not verified at registration (async verification email sent later).
 - Auth captures UID only — profile data written in Onboarding (Spec 94), not here.
+- "Already have an account?" link: `text-zinc-500 text-sm text-center mt-6` with `text-amber-500` "Sign in" tap target → `router.replace('/(auth)/sign-in')`.
 
 **Step 6 — AuthGate extension**
 - File: `mobile/app/_layout.tsx` (extend existing two-step `useRootNavigationState` guard)
@@ -174,7 +310,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 ---
 
-## 5. Operating Boundaries
+## 6. Operating Boundaries
 
 **Target files:**
 - `mobile/app/(auth)/sign-in.tsx`
