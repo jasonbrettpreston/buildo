@@ -30,8 +30,9 @@ FEED PREFERENCES
   Main supplier      [single-select — same list as onboarding]
 
 NOTIFICATIONS
-  Permit status changes    [ toggle ]   default ON
-  Urgent alerts (≤7 days) [ toggle ]   default ON
+  Permission status        [status row]  "Enabled" | "Not enabled → Enable in Settings ↗"
+  Permit status changes    [ toggle ]   default ON — disabled if OS permission denied
+  Urgent alerts (≤7 days) [ toggle ]   default ON — disabled if OS permission denied
 
 SUBSCRIPTION
   Status badge             (Trial X days left / Active / Expired)
@@ -154,10 +155,10 @@ On confirm:
 
 If user signs back in within 30 days:
 - Auth succeeds
-- App detects `account_deleted_at IS NOT NULL` AND within 30 days
+- App detects `account_deleted_at IS NOT NULL` AND within 30 days (via `GET /api/user-profile` returning 403 with reactivation metadata)
 - Show reactivation prompt: *"Welcome back. Reactivate your account?"*
-- On confirm: `account_deleted_at` = null, `subscription_status` restored to previous state (or `'expired'` if previously on trial)
-- User resumes normally
+- On confirm: PATCH `{ account_deleted_at: null, subscription_status: 'expired' }` — status is always restored to `'expired'` regardless of previous state. The original Stripe subscription was cancelled immediately at deletion time; the user must re-subscribe via `buildo.com`. If the user was on `trial` prior to deletion, the trial does not resume — they are directed to subscribe.
+- User resumes with `'expired'` status → paywall shown → directed to `buildo.com` to subscribe
 
 ### 3.3 Hard Deletion (Day 30)
 
@@ -170,8 +171,11 @@ WHERE account_deleted_at IS NOT NULL
 
 On hard delete:
 - Firebase Auth record deleted (`admin.auth().deleteUser(uid)`)
-- All associated `lead_assignments`, flight board claims, and notification tokens purged
+- All associated `lead_assignments`, flight board claims, and notification tokens purged — the migration must define explicit `ON DELETE CASCADE` or include these as explicit `DELETE` statements in the same transaction. Application code alone is not sufficient.
+- `admin.auth().revokeRefreshTokens(uid)` called server-side on deletion initiation (Step 3.1 confirm) to immediately invalidate all active sessions across all devices — not deferred to hard delete.
 - No recovery possible after this point
+
+**Phase 2 note (hard delete Cloud Function):** Until the Cloud Function is operational, accounts with `account_deleted_at > 30 days` are not automatically purged. An interim admin script (`scripts/purge-expired-deletions.js`) runs manually on a weekly cadence to fulfill the 30-day promise. This script is a PIPEDA compliance interim measure, not a permanent solution.
 
 **PIPEDA compliance:** All personally identifiable data (name, phone, email, company, location, supplier selection) is included in the CSV export and fully purged on hard deletion. Anonymised aggregate data (permit views count) may be retained for analytics.
 
@@ -207,26 +211,33 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - Subscription section hidden when `subscription_status === 'admin_managed'` (§1.1).
 - Tab bar does not hide on scroll for this screen (Spec 91 §2 — settings always shows tab bar).
 
-**Step 3 — Save-on-change logic**
+**Step 3 — Save-on-change logic and store separation**
 - File: `mobile/app/(app)/settings.tsx`
-- Text fields: save on `onBlur`. Toggles/switches: save on `onValueChange`. Each change: optimistic update to `filterStore` immediately, then PATCH `/api/user-profile`. On API error: revert `filterStore` to pre-change value + show toast: `"Couldn't save — try again."` (`bg-zinc-800 border border-red-500/40`).
+- Account-level fields (full name, company name, notification toggles) are stored in a separate `mobile/src/store/userProfileStore.ts` Zustand store — not `filterStore`. `filterStore` remains scoped to feed preferences (radius, trade, location mode). This prevents notification toggle changes from triggering a feed re-render.
+- Text fields: save on `onBlur` with per-field optimistic update. Each field tracks its own pre-change value for independent revert. Toggles/switches: save on `onValueChange`. On API error: revert only the failed field's store value + show toast: `"Couldn't save — try again."` (`bg-zinc-800 border border-red-500/40`).
+- **Phone number exception:** phone number is NOT save-on-blur. Editing the phone field opens a dedicated SMS verification sheet. PATCH fires only after OTP verification succeeds. If the user cancels verification, the old number is preserved in both store and server.
 
 **Step 4 — Location mode switch**
 - File: `mobile/app/(app)/settings.tsx` (handler) + reuse `mobile/app/(onboarding)/address.tsx` UI
 - On toggle from `gps_live` → `home_base_fixed`: toast `"Enter your home base address to continue"` → bottom sheet opens with address input. Feed suspends (shows last cached data) until address saved. On save: PATCH `{ location_mode: 'home_base_fixed', home_base_lat, home_base_lng }` → `queryClient.invalidateQueries(['leads'])`.
+- **Cancellation:** if the user dismisses the address sheet without saving, the toggle reverts to `gps_live` in the store. No PATCH is sent. Feed resumes with live GPS. The suspended state is never left open indefinitely.
 - Realtors: `location_mode` toggle not shown (always `home_base_fixed` per Spec 94 §4).
 
 **Step 5 — Notification permission hook**
 - File: `mobile/src/hooks/useNotificationSetup.ts`
 - MMKV key `hasAskedPermission: boolean` — never show pre-prompt twice (Spec 92 §4.1).
 - Leads path trigger: called from `mobile/app/(app)/(tabs)/index.tsx` after first lead card renders (`onViewableItemsChanged` with `viewableItems.length > 0` and `hasAskedPermission === false`).
+- **Empty feed fallback:** if `hasAskedPermission = false` and the feed returns zero results after 24 hours (checked via a `trial_started_at + 24h < NOW()` guard), show the pre-prompt anyway with copy: *"Get notified when new leads arrive in your area."* This prevents the prompt from never firing for users in low-permit zones.
 - Tracking path trigger: called from flight board after first permit claimed (mutation `onSuccess` callback).
-- Both paths: render in-app pre-prompt (`bg-zinc-900 border border-zinc-700 rounded-2xl p-4 mx-4`, positioned above tab bar, not a blocking modal). "Not now" → write `hasAskedPermission = true`, skip system dialog. "Turn on notifications" → `Notifications.requestPermissionsAsync()` → on grant, register token (Spec 92 §4.1 hardware layer).
+- Both paths: render in-app pre-prompt (`bg-zinc-900 border border-zinc-700 rounded-2xl p-4 mx-4`) **fixed above the tab bar** — not inside the scroll view, not a blocking modal. This ensures the prompt is always visible regardless of scroll position.
+- "Not now" → write `hasAskedPermission = true`, skip system dialog. "Turn on notifications" → `Notifications.requestPermissionsAsync()` → on grant, register token (Spec 92 §4.1 hardware layer).
+- Settings NOTIFICATIONS section: show OS permission status row — if permission denied, display `"Notifications off — tap to enable in device Settings"` with `Linking.openSettings()` deep link (not the in-app toggles, which are disabled when permission is denied).
 
 **Step 6 — Notification deep-link handler**
 - File: `mobile/app/_layout.tsx` (extend root layout)
-- `Notifications.addNotificationResponseReceivedListener`: read `data.permitNum + data.revisionNum` → `router.push('/(app)/flight-board/[id]', { id: \`${permitNum}--${revisionNum}\` })`.
-- If flight board item no longer exists: catch the navigation error → show toast `"This job is no longer on your board."` Do not crash or render a 404 screen (§2.3).
+- `Notifications.addNotificationResponseReceivedListener`: read `data.permitNum + data.revisionNum`.
+- **Cold start race condition:** `router.push` must not fire until the app is fully mounted and TanStack Query flight board data is loaded. Implement a deferred navigation pattern: store the pending `{ permitNum, revisionNum }` in a ref on notification response, then execute `router.push` only after the flight board `useQuery` reports `status !== 'loading'`. This prevents navigating to a card before the query has fetched, which would incorrectly show the "no longer on board" toast for an item that does exist.
+- If query resolves and the specific item is not in the response: show toast `"This job is no longer on your board."` Do not crash or render a 404 screen (§2.3).
 - Extends Spec 92 §3.2 deep-link routing (route domain `flight_board`).
 
 **Step 7 — CSV export endpoint**
@@ -240,7 +251,11 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 9 — Account deletion Steps 2–3: confirmation + suspension**
 - File: `mobile/src/components/settings/DeleteConfirmModal.tsx`
-- Custom modal (not a JS alert — `window.alert` is banned per Spec 90 §5 DOM anti-patterns). Confirmation copy per §3.1. On "Yes, delete my account" tap: PATCH `{ account_deleted_at: new Date().toISOString(), subscription_status: 'cancelled_pending_deletion' }` → `firebase.auth().signOut()` (Spec 93 §3.6) → navigate `/(auth)/sign-in?deleted=true`.
+- Custom modal (not a JS alert — `window.alert` is banned per Spec 90 §5 DOM anti-patterns). Confirmation copy per §3.1. On "Yes, delete my account" tap:
+  1. PATCH `{ account_deleted_at: new Date().toISOString(), subscription_status: 'cancelled_pending_deletion' }` — **must succeed** before proceeding.
+  2. Server calls `admin.auth().revokeRefreshTokens(uid)` to immediately invalidate all sessions across all devices.
+  3. On PATCH success: `firebase.auth().signOut()` (Spec 93 §3.6) → navigate `/(auth)/sign-in`.
+  4. On PATCH failure: show error toast `"Couldn't process deletion — try again."` Do NOT sign out. User remains authenticated.
 
 **Step 10 — Cloud Function hard delete**
 - **TODO: Phase 2** — Cloud Function daily sweep: `DELETE FROM user_profiles WHERE account_deleted_at IS NOT NULL AND account_deleted_at < NOW() - INTERVAL '30 days'`. Also deletes Firebase Auth record and all associated tokens. Cloud Functions infra not yet set up.

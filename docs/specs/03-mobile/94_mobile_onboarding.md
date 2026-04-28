@@ -50,7 +50,11 @@ OUTDOOR & SPECIALTY       PROPERTY
   Pool Installation
 ```
 
-**Selection:** Single select. Tapping a trade highlights it with an amber border (`border-amber-500`) and enables the "Continue" CTA. Trade is written to `user_profiles.trade_slug` and **locked permanently** — cannot be changed post-onboarding. A user who needs to change trade must delete their account and re-register.
+**Selection:** Single select. Tapping a trade highlights it with an amber border (`border-amber-500`) and enables the "Continue" CTA. Before writing `trade_slug` to the server, the app shows a confirmation step:
+> *"You selected [Trade]. This cannot be changed after setup without deleting your account. Continue?"*
+> `[ Confirm ]` `[ Go Back ]`
+
+Only after "Confirm" is tapped does the PATCH to `user_profiles.trade_slug` fire. Trade is then **locked permanently** — the API rejects further updates. A user who needs to change trade must delete their account and re-register.
 
 ### 3.2 Three Onboarding Paths
 
@@ -83,7 +87,7 @@ Full-screen address search using `expo-location` geocoding + manual text input. 
 **Step 2 — ToS + Privacy Policy**
 Single screen. Two checkboxes (each required): Terms of Service and Privacy Policy. Links open in `expo-web-browser`. Confirmation writes `tos_accepted_at` timestamp to `user_profiles`. CTA: "Start Exploring →"
 
-**Completion:** Straight drop to Feed tab. No confirmation screen.
+**Completion:** Write `{ default_tab: 'feed', onboarding_complete: true }` to `user_profiles` (server-side validation: all required fields must be present before server accepts `onboarding_complete = true`). Straight drop to Feed tab. No confirmation screen.
 
 ---
 
@@ -150,7 +154,7 @@ If they add a permit: they land on a populated Flight Board, not the radar empty
 **Step 4 — ToS + Privacy Policy**
 Same as §4 Path R Step 2.
 
-**Completion:** Straight drop to Flight Board tab. No confirmation screen. Writes `default_tab = 'flight_board'` to `user_profiles`.
+**Completion:** Writes `{ default_tab: 'flight_board', onboarding_complete: true }` to `user_profiles` (server validates required fields present). Straight drop to Flight Board tab. No confirmation screen.
 
 **Push notification prompt:** Fires after first permit is claimed to the flight board (not during onboarding). See Spec 97 §2.
 
@@ -158,7 +162,7 @@ Same as §4 Path R Step 2.
 
 ## 7. Manufacturer Holding Screen
 
-Manufacturers authenticate via Spec 93 but bypass onboarding entirely. On first login, if `user_profiles.subscription_status = 'admin_managed'` AND `user_profiles.onboarding_complete = false`:
+Manufacturers authenticate via Spec 93 but bypass onboarding entirely. The `_layout.tsx` gate distinguishes manufacturers by checking `account_preset = 'manufacturer'` (not just `onboarding_complete = false`) — a manufacturer without this flag would otherwise be routed into regular onboarding. On first login, if `user_profiles.account_preset = 'manufacturer'` AND `user_profiles.onboarding_complete = false`:
 
 ```
 ┌─────────────────────────────────────┐
@@ -173,7 +177,7 @@ Manufacturers authenticate via Spec 93 but bypass onboarding entirely. On first 
 └─────────────────────────────────────┘
 ```
 
-`bg-zinc-950` full screen. When Buildo admin marks the account active, an email + push notification is sent. On next app open the user bypasses this screen and lands on their configured feed.
+`bg-zinc-950` full screen. When Buildo admin marks the account active, a **notification email** is sent. Push notification is not possible at this stage — the manufacturer has not yet registered a push token (they were firewalled to the holding screen before any token registration could occur). On next app open, the app detects `onboarding_complete = true` and bypasses this screen to land on the configured feed.
 
 ---
 
@@ -209,11 +213,14 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 **Step 1 — Route group layout**
 - File: `mobile/app/(onboarding)/_layout.tsx`
 - Stack navigator. On mount: if `onboarding_complete = true` → redirect `/(app)` immediately (handles deep-link edge case mid-onboarding).
+- If `account_preset = 'manufacturer'` AND `onboarding_complete = false` → render holding screen (§7); do NOT render regular onboarding flow.
+- If GET `/api/user-profile` fails on AuthGate: show full-screen retry — do not default to onboarding or full access (Spec 93 §4 Step 6).
 
 **Step 2 — Coordinate utilities**
 - File: `mobile/src/lib/onboarding/snapCoord.ts`
 - `snapToGrid(lat, lng, gridMeters = 500)` rounds coordinates to nearest 500m grid point.
 - `isInsideToronto(lat, lng)` checks bounds: lat 43.58–43.86, lng −79.64 to −79.12.
+- **Post-snap re-validation:** after snapping, call `isInsideToronto` again. If the snap pushed the coordinate outside bounds (edge case near the boundary), fall back to the pre-snap validated coordinate rather than the out-of-bounds snapped result.
 - Shared by `useLocation.ts` (extract if duplicated) and all onboarding address screens.
 
 **Step 3 — Trade selection screen**
@@ -231,7 +238,9 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 6 — Supplier selection screen**
 - File: `mobile/app/(onboarding)/supplier.tsx`
-- `GET /api/onboarding/suppliers?trade={slug}` → curated list (4–6) + "Other" text field. TanStack Query `useQuery` — no `useEffect` fetch (Spec 90 §5). "Skip for now →" link leaves `supplier_selection` null. On confirm: PATCH `{ supplier_selection }`.
+- `GET /api/onboarding/suppliers?trade={slug}` — **requires authentication** (Bearer token). Curated list (4–6) + "Other" text field. TanStack Query `useQuery` — no `useEffect` fetch (Spec 90 §5).
+- **Empty list fallback:** if the admin has not seeded suppliers for the selected trade, the screen auto-skips (treated as "Skip for now →"). Do not show an empty list.
+- "Skip for now →" link leaves `supplier_selection` null. On confirm: PATCH `{ supplier_selection }`.
 
 **Step 7 — Terms of Service screen**
 - File: `mobile/app/(onboarding)/terms.tsx`
@@ -250,7 +259,10 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 11 — Drop-off recovery**
 - File: `mobile/src/store/onboardingStore.ts`
-- Zustand store persisted to MMKV under key `onboarding_step`. Each screen writes its step name on entry. Cleared when `onboarding_complete = true` is written. On re-launch with `onboarding_complete = false`: AuthGate resumes at stored step.
+- Zustand store persisted to MMKV under key `onboarding_step`. **MMKV step key advances only after the PATCH for that step succeeds** — not on screen entry. This prevents the local state from getting ahead of the server if a network request fails mid-step. On PATCH failure: show a retry toast, keep the user on the current screen, do not advance MMKV.
+- Cleared when `onboarding_complete = true` is confirmed by the server. On re-launch with `onboarding_complete = false`: AuthGate resumes at stored step. If MMKV is empty (new install or cleared): start from beginning (`/(onboarding)/profession`).
+
+**Server-side `onboarding_complete` guard:** The PATCH endpoint accepts `onboarding_complete: true` only when all required fields (`trade_slug`, `location_mode`, `tos_accepted_at`) are present in the profile row. Clients cannot short-circuit the flow by sending `onboarding_complete: true` with an otherwise empty profile.
 
 ### Testing Gates
 

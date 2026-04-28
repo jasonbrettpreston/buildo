@@ -36,10 +36,17 @@
 
 ### 3.1 Session Persistence
 
-Sessions persist indefinitely until explicit sign-out. Firebase tokens refresh automatically in the background — no re-authentication prompts. The only forced sign-out events are:
+Sessions persist indefinitely until explicit sign-out. Firebase tokens refresh automatically in the background — no re-authentication prompts. The only **user-initiated** sign-out events are:
 
 - User taps "Sign Out" in Settings
 - User completes account deletion
+
+**Forced sign-out (Firebase-initiated):** The following events cause Firebase to invalidate the refresh token, firing `onAuthStateChanged(null)`. The app must handle these identically to a user-initiated sign-out — redirect to `/(auth)/sign-in`:
+- User changes their password on another device
+- Admin disables the account in Firebase console
+- Project-wide token revocation (security incident)
+
+In all forced sign-out cases the user sees the sign-in screen with no error message (same experience as a voluntary sign-out). The app does not distinguish the reason.
 
 **Multiple devices:** The same Firebase account may be active on multiple devices simultaneously. No single-session enforcement.
 
@@ -47,7 +54,21 @@ Sessions persist indefinitely until explicit sign-out. Firebase tokens refresh a
 
 ### 3.2 Account Linking
 
-If a user signs up with email/password and later taps "Sign in with Google" using the same email address, Firebase silently links both methods to one account. One account, multiple sign-in methods. The user is never prompted to choose — it is seamless.
+Firebase does **not** automatically link accounts when a user attempts to sign in with a different method using an email already associated with another method. Firebase throws `auth/account-exists-with-different-credential`.
+
+**Required error handling flow:**
+```
+User taps "Sign in with Google" with email that already has password account
+  → Firebase throws auth/account-exists-with-different-credential
+  → App catches error, shows modal:
+      "An account with this email already exists.
+       Sign in with [original method] to link your Google account."
+  → User signs in with original method (email/password)
+  → App calls linkWithCredential(googleCredential)
+  → Accounts merged — both methods now work
+```
+
+For Apple Sign-In, the same pattern applies. The modal copy adapts to the conflicting method name. If the user cancels the linking flow, they remain authenticated with their original method.
 
 ### 3.3 SMS Account Recovery
 
@@ -73,17 +94,22 @@ If Firebase Auth is unreachable at sign-in: show retry option. Already-authentic
 
 ### 3.6 Account Deletion
 
-**Initiated from:** Settings → Account Actions → Delete Account
+**Initiated from:** Settings → Account Actions → Delete Account (Spec 97 §3)
 
 **Flow:**
-1. Confirmation dialog: *"This will permanently delete your account and all data after 30 days."*
-2. Offer CSV export of lead history and flight board before proceeding.
+1. CSV export offer (Spec 97 §3.1 Step 1).
+2. Confirmation modal (Spec 97 §3.1 Step 2).
 3. On confirm:
-   - Access suspended immediately — `subscription_status` set to `cancelled_pending_deletion`
-   - `account_deleted_at` timestamp written to `user_profiles`
-   - User signed out and redirected to sign-in screen
-4. **30-day recovery window:** User may sign back in and reactivate — clears `account_deleted_at`, restores status.
-5. After 30 days: hard delete — Firebase Auth record removed, `user_profiles` row deleted, all associated data purged.
+   - PATCH `/api/user-profile` with `{ account_deleted_at: now(), subscription_status: 'cancelled_pending_deletion' }` — **must succeed before proceeding**. If PATCH fails: show error toast, do NOT sign out.
+   - On PATCH success: `firebase.auth().signOut()` → redirect to `/(auth)/sign-in?deleted=true`.
+4. **30-day recovery window:** On sign-in, the app checks the profile response. If `account_deleted_at IS NOT NULL` and within 30 days, show a reactivation modal before proceeding:
+   ```
+   "Welcome back. Your account is scheduled for deletion on [date].
+    Reactivate to keep your account?"
+    [ Reactivate ] [ Sign Out ]
+   ```
+   On reactivate: PATCH `{ account_deleted_at: null, subscription_status: [restored] }`. The `?deleted=true` param is not relied on — server state is authoritative.
+5. After 30 days: hard delete — Firebase Auth record removed, `user_profiles` row deleted (Spec 97 §3.3).
 
 **PIPEDA compliance:** CSV export must include all personally identifiable fields stored in `user_profiles`. Data not retained beyond 30-day window.
 
@@ -101,7 +127,8 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 1 — Firebase client config**
 - File: `mobile/src/lib/firebase.ts`
-- `initializeAuth(app, { persistence: getReactNativePersistence(ReactNativeAsyncStorage) })`. Firebase Auth JS SDK + Expo secure storage adapter (Spec 90 §4). No `firebase/compat` package.
+- Use `expo-secure-store` as the persistence adapter — **not** `AsyncStorage`. `AsyncStorage` stores tokens in plain text; `expo-secure-store` uses Keychain (iOS) and Keystore (Android).
+- Implementation: `initializeAuth(app, { persistence: getReactNativePersistence(ExpoSecureStoreAdapter) })` where `ExpoSecureStoreAdapter` wraps `expo-secure-store` to conform to the Firebase storage interface. No `firebase/compat` package.
 
 **Step 2 — User session store**
 - File: `mobile/src/store/userStore.ts`
@@ -115,27 +142,34 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 4 — Sign-in screen**
 - File: `mobile/app/(auth)/sign-in.tsx`
-- Four buttons in Apple HIG order: Apple Sign-In → Google → Phone → Email.
-- Use `<Pressable>` not `<button>` (Spec 90 §5 anti-pattern). `expo-auth-session` for Google credential exchange.
-- Touch targets `min-h-[44px]` (Spec 90 §9).
+- Four buttons in Apple HIG order: Apple Sign-In → Google → Phone → Email. `<Pressable>` not `<button>` (Spec 90 §5). Touch targets `min-h-[44px]` (Spec 90 §9).
+- **Apple:** `expo-apple-authentication` (`AppleAuthentication.signInAsync`); exchange credential via `OAuthProvider.credential` for Firebase sign-in.
+- **Google:** `expo-auth-session` with `ResponseType.Code`; configure URL scheme in `app.json`; exchange via Firebase credential.
+- **Phone/SMS:** `signInWithPhoneNumber` + `FirebaseRecaptchaVerifierModal` (or invisible reCAPTCHA). Presents two-step: phone input → OTP code entry. Handle `auth/too-many-requests` with user-visible back-off message.
+- **Account linking:** catch `auth/account-exists-with-different-credential` on all four paths. Show modal per §3.2 — prompt user to sign in with the original method, then call `linkWithCredential`.
 
 **Step 5 — Sign-up screen**
 - File: `mobile/app/(auth)/sign-up.tsx`
-- Email/password and SMS registration. SMS path: require backup email field (§3.3).
+- Email/password and SMS registration. SMS path: require backup email field (§3.3). Backup email is not verified at registration (async verification email sent later).
 - Auth captures UID only — profile data written in Onboarding (Spec 94), not here.
 
 **Step 6 — AuthGate extension**
 - File: `mobile/app/_layout.tsx` (extend existing two-step `useRootNavigationState` guard)
-- After auth check: fetch `user_profiles.onboarding_complete`. If `false` → redirect `/(onboarding)/profession`. Existing guard structure preserved.
+- After auth check: fetch `/api/user-profile`. Three outcomes:
+  - 200 + `onboarding_complete = true` → proceed to app
+  - 200 + `onboarding_complete = false` → redirect `/(onboarding)/profession`
+  - 404 (no profile yet) → redirect `/(onboarding)/profession` (new user)
+  - 403 (`account_deleted_at` set, within 30 days) → show reactivation modal (§3.6)
+  - Network failure (after 3 retries) → show full-screen error with "Try again" button; do not default to onboarding or full access
 
 **Step 7 — Account deletion (Firebase side)**
-- File: `mobile/app/(app)/settings.tsx` triggers deletion (Spec 97 §3.1); this spec owns the Firebase cleanup.
-- After PATCH to `/api/user-profile` with `account_deleted_at`: call `firebase.auth().signOut()` → navigate `/(auth)/sign-in` with param `?deleted=true`.
-- Sign-in screen reads param and shows: *"Your account has been scheduled for deletion. Sign back in within 30 days to reactivate."*
+- File: `mobile/app/(app)/settings.tsx` triggers deletion (Spec 97 §3.1 Steps 8–9); this spec owns the Firebase cleanup.
+- Order is critical: PATCH `/api/user-profile` must succeed first → then `firebase.auth().signOut()`. If PATCH fails, show error toast and abort — do NOT sign out.
+- After sign-out: navigate `/(auth)/sign-in`. Server state is authoritative; no `?deleted=true` URL param needed.
 
 ### Testing Gates
 
-- **Unit:** `mobile/__tests__/useAuth.test.ts` — auth state machine: sign-in sets uid, sign-out clears store, `onAuthStateChanged(null)` fires sign-out path, MMKV not cleared on sign-out.
+- **Unit:** `mobile/__tests__/useAuth.test.ts` — auth state machine: sign-in sets uid; sign-out clears store + does not clear MMKV; `onAuthStateChanged(null)` fires sign-out path (covers forced sign-out); `auth/account-exists-with-different-credential` triggers linking modal; AuthGate 404 redirects to onboarding; AuthGate fetch failure shows error screen.
 - **Maestro:** `mobile/maestro/auth.yaml` — launch → sign in with email → verify feed visible → sign out → verify sign-in screen renders.
 
 ---

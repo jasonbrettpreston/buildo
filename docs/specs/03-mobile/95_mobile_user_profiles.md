@@ -61,7 +61,9 @@ Both governed by `expo-notifications` permission state (Spec 92). If OS permissi
 |--------|------|-------|
 | `account_preset` | TEXT | `'tradesperson' \| 'realtor' \| 'manufacturer'` |
 | `trade_slugs_override` | TEXT[] | Manufacturer: multiple or all trades. Null for individual accounts. |
-| `radius_cap_km` | INTEGER | Maximum radius enforced server-side. Null = no cap. |
+| `radius_cap_km` | INTEGER | Maximum radius enforced server-side. Null = no cap (manufacturers). |
+
+**Manufacturer `trade_slug` note:** Manufacturer accounts have `trade_slug = NULL`. The `trade_slugs_override` array is their trade list. All API and client logic that reads `trade_slug` must handle `NULL` by checking `trade_slugs_override` when `account_preset = 'manufacturer'`. The trade immutability rule (§3) does not apply — the PATCH 400 guard only rejects `trade_slug` updates for non-manufacturer accounts.
 
 ## 3. Trade Immutability
 
@@ -88,6 +90,12 @@ On sign-in to a new device or after reinstall:
 
 MMKV is the local cache. `user_profiles` is always the source of truth.
 
+**GET 404 behavior:** If the server returns 404 for the authenticated UID (no profile row exists), the client treats this as a new user and redirects to `/(onboarding)/profession`. This is the normal state between Firebase sign-up and completion of onboarding step 1.
+
+**Fetch failure behavior:** If the initial GET fails (network error, 5xx), the app shows a full-screen retry prompt — it does not default to onboarding or full access. Retry with exponential backoff (3 attempts). On MMKV cache hit, show the feed with a staleness banner while retrying in the background.
+
+**`radius_km` write-back (existing users):** On first launch after the §8 migration lands, if the server row has `radius_km = NULL` but MMKV has a previously stored radius, the client performs a one-time PATCH to write the MMKV value to the server. This migration guard runs once and then clears the MMKV `radius_km_legacy` flag.
+
 ## 5. Settings-Editable Fields
 
 The following fields may be updated via Settings post-onboarding (Spec 97 §1):
@@ -105,6 +113,7 @@ The following fields may be updated via Settings post-onboarding (Spec 97 §1):
 | Primary view | ✅ | Switches `default_tab` between feed and flight board |
 | Supplier selection | ✅ | |
 | Notification toggles | ✅ | See Spec 97 §2 |
+| Backup email | ✅ | SMS users only — editable for account recovery purposes |
 
 ## 6. Location Mode Switch Behaviour
 
@@ -120,6 +129,10 @@ Toggle fires
   → Feed refetches with new fixed coordinates
 ```
 
+**Cancellation behavior:** If the user dismisses the address sheet without saving, the toggle reverts to `gps_live` — no server write is made. Feed resumes with live GPS. The suspended state is never left open indefinitely.
+
+**Phone number change:** Phone number saves via a dedicated verification sheet, not save-on-blur. Editing the phone field opens a verification flow (SMS OTP). The PATCH to `user_profiles` fires only after verification succeeds. If verification fails or the user cancels, the old number is preserved.
+
 Applies to all tradespeople. Realtors are always `home_base_fixed` — toggle not shown.
 
 ## 7. Admin-Managed Radius Defaults
@@ -127,6 +140,12 @@ Applies to all tradespeople. Realtors are always `home_base_fixed` — toggle no
 `radius_km` defaults are seeded in the Buildo admin panel per `trade_slug`. Individual users may adjust their radius within `radius_cap_km`. The API enforces: `effective_radius = MIN(requested_radius, radius_cap_km)`.
 
 Realtor default: 3–5km. Tradesperson default: 10–15km (varies by trade). Manufacturer: no cap (null).
+
+**NULL cap handling:** The SQL formula `MIN(requested_radius, radius_cap_km)` returns `NULL` when `radius_cap_km IS NULL`. The server must explicitly handle this: if `radius_cap_km IS NULL`, apply no cap and use `requested_radius` as-is. The API enforces: `effective_radius = COALESCE(LEAST(requested_radius, radius_cap_km), requested_radius)`.
+
+**DB constraint:** The migration adds a `CHECK` constraint to enforce data integrity: `CHECK ((location_mode = 'gps_live' AND home_base_lat IS NULL AND home_base_lng IS NULL) OR (location_mode = 'home_base_fixed' AND home_base_lat IS NOT NULL AND home_base_lng IS NOT NULL))`. Application logic is not sufficient to guarantee this invariant across all client versions.
+
+**Email field staleness:** `email` in `user_profiles` is sourced from Firebase Auth at account creation. If the user later changes their email via Firebase (e.g., through account recovery), the `user_profiles.email` field will not auto-update. Syncing this via a Firebase Auth event trigger is deferred to Phase 2. Known limitation at launch.
 
 ## 8. Implementation
 
@@ -143,19 +162,22 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 **Step 1 — DB migration**
 - File: `migrations/XXX_user_profiles_mobile_columns.sql`
 - `ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS` for every column listed in §2 that does not already exist. All new columns are nullable with safe defaults — no backfill required.
-- Special note: `radius_km` is promoted from MMKV-only to a server-side column. After migration, MMKV stores it as cache only; `user_profiles` is authoritative.
+- Special note: `radius_km` is promoted from MMKV-only to a server-side column. After migration, MMKV stores it as cache only; `user_profiles` is authoritative. Client performs a one-time write-back on first launch (see §4 radius_km write-back note).
+- Add `CHECK` constraint per §7: `ALTER TABLE user_profiles ADD CONSTRAINT chk_location_mode_coords CHECK (...)`.
 - Run `npm run db:generate` after migration to regenerate Drizzle types.
 
 **Step 2 — GET /api/user-profile**
 - File: `src/app/api/user-profile/route.ts`
-- Authenticated route: extract Firebase UID from Bearer token header. Return full `user_profiles` row as `{ data: UserProfile }` envelope. 404 if no row found for UID.
+- Authenticated route: extract Firebase UID from Bearer token header. Return full `user_profiles` row as `{ data: UserProfile }` envelope.
+- If `account_deleted_at IS NOT NULL`: return 403 `{ error: "Account scheduled for deletion." }` — do not return profile data for deleted accounts.
+- If no row found for UID: return 404. The client interprets 404 as "new user → redirect to onboarding" (§4 GET 404 behavior).
 - Try-catch per §00 §2.2. `logError` per §00 §6.1. Never expose `err.message` to client.
 
 **Step 3 — PATCH /api/user-profile**
 - File: `src/app/api/user-profile/route.ts` (same file, add `PATCH` handler)
-- Zod-validate request body. Reject any body containing `trade_slug` with 400: `{ error: "Trade cannot be changed after registration." }` (§3).
-- Update only the fields present in the body. Enforce `effective_radius = MIN(requested_radius, radius_cap_km)` server-side.
-- Try-catch + `logError`. Return updated row.
+- Zod-validate request body. The Zod schema explicitly forbids the `email` field (`.strip()` or reject with 400 if present). Reject any body containing `trade_slug` with 400: `{ error: "Trade cannot be changed after registration." }` (§3 — manufacturer accounts excepted when `account_preset = 'manufacturer'`).
+- Enforce `effective_radius = COALESCE(LEAST(requested_radius, radius_cap_km), requested_radius)` (handles NULL cap per §7).
+- Update only the fields present in the body. Try-catch + `logError`. Return updated row.
 
 **Step 4 — Route guard**
 - File: `src/lib/auth/route-guard.ts`
@@ -180,7 +202,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 ### Testing Gates
 
-- **Infra:** `src/tests/user-profiles.infra.test.ts` — GET returns full row for valid UID; GET returns 404 for unknown UID; PATCH updates valid fields and returns updated row; PATCH rejects `trade_slug` update with 400; PATCH unauthenticated request returns 401; DB error returns 500 without leaking raw message (§00 §2.1 unhappy path mandate).
+- **Infra:** `src/tests/user-profiles.infra.test.ts` — GET returns full row for valid UID; GET returns 404 for unknown UID (new user); GET returns 403 for account with `account_deleted_at` set; PATCH updates valid fields and returns updated row; PATCH rejects `trade_slug` update with 400; PATCH rejects `email` field with 400; PATCH unauthenticated request returns 401; NULL `radius_cap_km` applies no cap; DB error returns 500 without leaking raw message (§00 §2.1 unhappy path mandate).
 - **Infra:** `src/tests/user-profiles-schema.infra.test.ts` (existing) — confirm all new migration columns land with correct types and defaults.
 - **Unit:** `mobile/__tests__/filterStore.test.ts` — `hydrate()` overwrites all fields; MMKV cache is written after hydration.
 
