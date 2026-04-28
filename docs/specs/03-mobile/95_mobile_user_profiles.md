@@ -128,7 +128,65 @@ Applies to all tradespeople. Realtors are always `home_base_fixed` — toggle no
 
 Realtor default: 3–5km. Tradesperson default: 10–15km (varies by trade). Manufacturer: no cap (null).
 
-## 8. Operating Boundaries
+## 8. Implementation
+
+### Cross-Spec Build Order
+
+This spec is step 1 of 5 — the foundation. **No other mobile spec can be end-to-end tested without the DB migration and `/api/user-profile` route existing first.**
+
+```
+Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subscription gate) → Spec 97 (Settings)
+```
+
+### Build Sequence
+
+**Step 1 — DB migration**
+- File: `migrations/XXX_user_profiles_mobile_columns.sql`
+- `ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS` for every column listed in §2 that does not already exist. All new columns are nullable with safe defaults — no backfill required.
+- Special note: `radius_km` is promoted from MMKV-only to a server-side column. After migration, MMKV stores it as cache only; `user_profiles` is authoritative.
+- Run `npm run db:generate` after migration to regenerate Drizzle types.
+
+**Step 2 — GET /api/user-profile**
+- File: `src/app/api/user-profile/route.ts`
+- Authenticated route: extract Firebase UID from Bearer token header. Return full `user_profiles` row as `{ data: UserProfile }` envelope. 404 if no row found for UID.
+- Try-catch per §00 §2.2. `logError` per §00 §6.1. Never expose `err.message` to client.
+
+**Step 3 — PATCH /api/user-profile**
+- File: `src/app/api/user-profile/route.ts` (same file, add `PATCH` handler)
+- Zod-validate request body. Reject any body containing `trade_slug` with 400: `{ error: "Trade cannot be changed after registration." }` (§3).
+- Update only the fields present in the body. Enforce `effective_radius = MIN(requested_radius, radius_cap_km)` server-side.
+- Try-catch + `logError`. Return updated row.
+
+**Step 4 — Route guard**
+- File: `src/lib/auth/route-guard.ts`
+- Classify `/api/user-profile` as `authenticated` (not admin-only). Mobile client authenticates via Firebase Bearer token, not admin session cookie.
+
+**Step 5 — Shared Zod schema**
+- File: `packages/shared-types/src/userProfile.ts`
+- `UserProfileSchema` — Zod object covering all columns in §2. Used by Next.js PATCH validation and Expo TanStack Query response parsing (Spec 90 §7 monorepo contract). Prevents API drift from crashing the native app.
+
+**Step 6 — filterStore fields**
+- File: `mobile/src/store/filterStore.ts`
+- Add: `locationMode`, `defaultTab`, `homeBaseLat`, `homeBaseLng`, `supplierSelection`, `notifPermitStatus`, `notifUrgentAlerts`.
+- Add `hydrate(profile: UserProfile)` action that overwrites all server-authoritative fields. MMKV is cache; `user_profiles` wins on conflict.
+
+**Step 7 — useUserProfile hook**
+- File: `mobile/src/hooks/useUserProfile.ts`
+- TanStack Query `useQuery({ queryKey: ['user-profile'], queryFn: ... })`. `staleTime: 300_000`. On success: calls `filterStore.hydrate(data)`. Response parsed through `UserProfileSchema` — Zod parse failure triggers a Sentry report and falls back to cached MMKV values (Spec 90 §13).
+
+**Step 8 — TradeReadOnlyRow component**
+- File: `mobile/src/components/settings/TradeReadOnlyRow.tsx`
+- Read-only row: label "Trade", value from `filterStore.tradeSlug`, `text-zinc-500`, lock icon. No edit affordance. Sub-label: `"To change trade, delete and re-register your account."` (§3).
+
+### Testing Gates
+
+- **Infra:** `src/tests/user-profiles.infra.test.ts` — GET returns full row for valid UID; GET returns 404 for unknown UID; PATCH updates valid fields and returns updated row; PATCH rejects `trade_slug` update with 400; PATCH unauthenticated request returns 401; DB error returns 500 without leaking raw message (§00 §2.1 unhappy path mandate).
+- **Infra:** `src/tests/user-profiles-schema.infra.test.ts` (existing) — confirm all new migration columns land with correct types and defaults.
+- **Unit:** `mobile/__tests__/filterStore.test.ts` — `hydrate()` overwrites all fields; MMKV cache is written after hydration.
+
+---
+
+## 9. Operating Boundaries
 
 **Target files:**
 - `src/app/api/user-profile/route.ts` — GET + PATCH endpoint

@@ -87,7 +87,60 @@ If Firebase Auth is unreachable at sign-in: show retry option. Already-authentic
 
 **PIPEDA compliance:** CSV export must include all personally identifiable fields stored in `user_profiles`. Data not retained beyond 30-day window.
 
-## 4. Operating Boundaries
+## 4. Implementation
+
+### Cross-Spec Build Order
+
+This spec is step 2 of 5. **Spec 95 DB migration and `/api/user-profile` route must exist first** — the AuthGate reads `onboarding_complete` from `user_profiles`.
+
+```
+Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subscription gate) → Spec 97 (Settings)
+```
+
+### Build Sequence
+
+**Step 1 — Firebase client config**
+- File: `mobile/src/lib/firebase.ts`
+- `initializeAuth(app, { persistence: getReactNativePersistence(ReactNativeAsyncStorage) })`. Firebase Auth JS SDK + Expo secure storage adapter (Spec 90 §4). No `firebase/compat` package.
+
+**Step 2 — User session store**
+- File: `mobile/src/store/userStore.ts`
+- Zustand v5 store: `{ uid, email, isLoading }` + `signOut()` action.
+- `onAuthStateChanged` listener writes uid/email into store.
+- `signOut()` calls `firebase.auth().signOut()` and resets store. Does **not** clear MMKV — §3.4.
+
+**Step 3 — Auth route group layout**
+- File: `mobile/app/(auth)/_layout.tsx`
+- Stack navigator wrapping sign-in and sign-up screens.
+
+**Step 4 — Sign-in screen**
+- File: `mobile/app/(auth)/sign-in.tsx`
+- Four buttons in Apple HIG order: Apple Sign-In → Google → Phone → Email.
+- Use `<Pressable>` not `<button>` (Spec 90 §5 anti-pattern). `expo-auth-session` for Google credential exchange.
+- Touch targets `min-h-[44px]` (Spec 90 §9).
+
+**Step 5 — Sign-up screen**
+- File: `mobile/app/(auth)/sign-up.tsx`
+- Email/password and SMS registration. SMS path: require backup email field (§3.3).
+- Auth captures UID only — profile data written in Onboarding (Spec 94), not here.
+
+**Step 6 — AuthGate extension**
+- File: `mobile/app/_layout.tsx` (extend existing two-step `useRootNavigationState` guard)
+- After auth check: fetch `user_profiles.onboarding_complete`. If `false` → redirect `/(onboarding)/profession`. Existing guard structure preserved.
+
+**Step 7 — Account deletion (Firebase side)**
+- File: `mobile/app/(app)/settings.tsx` triggers deletion (Spec 97 §3.1); this spec owns the Firebase cleanup.
+- After PATCH to `/api/user-profile` with `account_deleted_at`: call `firebase.auth().signOut()` → navigate `/(auth)/sign-in` with param `?deleted=true`.
+- Sign-in screen reads param and shows: *"Your account has been scheduled for deletion. Sign back in within 30 days to reactivate."*
+
+### Testing Gates
+
+- **Unit:** `mobile/__tests__/useAuth.test.ts` — auth state machine: sign-in sets uid, sign-out clears store, `onAuthStateChanged(null)` fires sign-out path, MMKV not cleared on sign-out.
+- **Maestro:** `mobile/maestro/auth.yaml` — launch → sign in with email → verify feed visible → sign out → verify sign-in screen renders.
+
+---
+
+## 5. Operating Boundaries
 
 **Target files:**
 - `mobile/app/(auth)/sign-in.tsx`

@@ -185,7 +185,77 @@ Users who cancel their Stripe subscription but do not delete their account:
 
 ---
 
-## 4. Operating Boundaries
+## 4. Implementation
+
+### Cross-Spec Build Order
+
+This spec is step 5 of 5. **All of specs 93, 94, 95, and 96 must be complete** — Settings reads and writes every field established by those specs.
+
+```
+Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subscription gate) → Spec 97 (Settings)
+```
+
+### Build Sequence
+
+**Step 1 — Shared row component**
+- File: `mobile/src/components/settings/SettingsRow.tsx`
+- `bg-zinc-900 border-b border-zinc-800 px-4 py-4 flex-row items-center justify-between`. `min-h-[44px]` touch target (Spec 90 §9). Props: `label`, `value`, `control` (right slot), `onPress`.
+
+**Step 2 — Settings screen**
+- File: `mobile/app/(app)/settings.tsx`
+- `<ScrollView>` with 5 sections rendered via `<SettingsRow>`. Section headers: `text-zinc-500 text-xs font-mono tracking-widest uppercase px-4 pt-6 pb-2`.
+- Subscription section hidden when `subscription_status === 'admin_managed'` (§1.1).
+- Tab bar does not hide on scroll for this screen (Spec 91 §2 — settings always shows tab bar).
+
+**Step 3 — Save-on-change logic**
+- File: `mobile/app/(app)/settings.tsx`
+- Text fields: save on `onBlur`. Toggles/switches: save on `onValueChange`. Each change: optimistic update to `filterStore` immediately, then PATCH `/api/user-profile`. On API error: revert `filterStore` to pre-change value + show toast: `"Couldn't save — try again."` (`bg-zinc-800 border border-red-500/40`).
+
+**Step 4 — Location mode switch**
+- File: `mobile/app/(app)/settings.tsx` (handler) + reuse `mobile/app/(onboarding)/address.tsx` UI
+- On toggle from `gps_live` → `home_base_fixed`: toast `"Enter your home base address to continue"` → bottom sheet opens with address input. Feed suspends (shows last cached data) until address saved. On save: PATCH `{ location_mode: 'home_base_fixed', home_base_lat, home_base_lng }` → `queryClient.invalidateQueries(['leads'])`.
+- Realtors: `location_mode` toggle not shown (always `home_base_fixed` per Spec 94 §4).
+
+**Step 5 — Notification permission hook**
+- File: `mobile/src/hooks/useNotificationSetup.ts`
+- MMKV key `hasAskedPermission: boolean` — never show pre-prompt twice (Spec 92 §4.1).
+- Leads path trigger: called from `mobile/app/(app)/(tabs)/index.tsx` after first lead card renders (`onViewableItemsChanged` with `viewableItems.length > 0` and `hasAskedPermission === false`).
+- Tracking path trigger: called from flight board after first permit claimed (mutation `onSuccess` callback).
+- Both paths: render in-app pre-prompt (`bg-zinc-900 border border-zinc-700 rounded-2xl p-4 mx-4`, positioned above tab bar, not a blocking modal). "Not now" → write `hasAskedPermission = true`, skip system dialog. "Turn on notifications" → `Notifications.requestPermissionsAsync()` → on grant, register token (Spec 92 §4.1 hardware layer).
+
+**Step 6 — Notification deep-link handler**
+- File: `mobile/app/_layout.tsx` (extend root layout)
+- `Notifications.addNotificationResponseReceivedListener`: read `data.permitNum + data.revisionNum` → `router.push('/(app)/flight-board/[id]', { id: \`${permitNum}--${revisionNum}\` })`.
+- If flight board item no longer exists: catch the navigation error → show toast `"This job is no longer on your board."` Do not crash or render a 404 screen (§2.3).
+- Extends Spec 92 §3.2 deep-link routing (route domain `flight_board`).
+
+**Step 7 — CSV export endpoint**
+- File: `src/app/api/user-profile/export/route.ts`
+- Authenticated `GET`. SELECT all PII columns from §2 (Spec 95): `full_name`, `phone_number`, `email`, `company_name`, `home_base_lat/lng`, `supplier_selection`, plus `lead_assignments` and flight board claims joined. Return `Content-Type: text/csv` with `Content-Disposition: attachment; filename="buildo-data-export.csv"`. PIPEDA compliant — all PII included.
+- Try-catch per §00 §2.2. `logError` on error.
+
+**Step 8 — Account deletion Step 1: export offer**
+- File: `mobile/app/(app)/settings.tsx` (tapping "Delete Account")
+- Opens `<DataExportSheet>` (`mobile/src/components/settings/DataExportSheet.tsx`) — bottom sheet, not a blocking dialog. "Download my data" → `GET /api/user-profile/export` → open file in `expo-sharing`. "Skip and continue" → opens `<DeleteConfirmModal>`.
+
+**Step 9 — Account deletion Steps 2–3: confirmation + suspension**
+- File: `mobile/src/components/settings/DeleteConfirmModal.tsx`
+- Custom modal (not a JS alert — `window.alert` is banned per Spec 90 §5 DOM anti-patterns). Confirmation copy per §3.1. On "Yes, delete my account" tap: PATCH `{ account_deleted_at: new Date().toISOString(), subscription_status: 'cancelled_pending_deletion' }` → `firebase.auth().signOut()` (Spec 93 §3.6) → navigate `/(auth)/sign-in?deleted=true`.
+
+**Step 10 — Cloud Function hard delete**
+- **TODO: Phase 2** — Cloud Function daily sweep: `DELETE FROM user_profiles WHERE account_deleted_at IS NOT NULL AND account_deleted_at < NOW() - INTERVAL '30 days'`. Also deletes Firebase Auth record and all associated tokens. Cloud Functions infra not yet set up.
+- 30-day recovery window (§3.2) implemented on the auth side: if `account_deleted_at IS NOT NULL` AND within 30 days, show reactivation prompt on sign-in.
+
+### Testing Gates
+
+- **Unit:** `mobile/__tests__/settings.test.ts` — all 5 sections render with correct row count; save-on-blur fires PATCH with correct field; toggle fires PATCH; optimistic revert fires on 500 response; subscription section hidden for `admin_managed`.
+- **Unit:** `mobile/__tests__/notificationSetup.test.ts` — prompt not triggered on cold boot; triggered after first lead card enters viewport; triggered after first permit claim; MMKV gate prevents second prompt; "Not now" writes `hasAskedPermission = true` without calling `requestPermissionsAsync`.
+- **Infra:** `src/tests/user-profile-export.infra.test.ts` — CSV response includes all PII column headers; returns 401 for unauthenticated request; empty flight board returns CSV with headers only (no crash).
+- **Maestro:** `mobile/maestro/settings.yaml` — navigate to settings → toggle notification preference → navigate away → return → verify toggle persisted.
+
+---
+
+## 5. Operating Boundaries
 
 **Target files:**
 - `mobile/app/(app)/settings.tsx` — new screen

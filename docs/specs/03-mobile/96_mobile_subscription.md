@@ -122,7 +122,59 @@ Manufacturers have `subscription_status = 'admin_managed'`. They:
 
 When Buildo admin deactivates a manufacturer account, `subscription_status` is updated server-side. The manufacturer sees the holding screen (Spec 94 §7) on next app open.
 
-## 9. Operating Boundaries
+## 9. Implementation
+
+### Cross-Spec Build Order
+
+This spec is step 4 of 5. **Spec 95 `user_profiles.subscription_status` column and GET endpoint must exist, and Spec 93 AuthGate must be operational** before the subscription gate can function.
+
+```
+Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subscription gate) → Spec 97 (Settings)
+```
+
+### Build Sequence
+
+**Step 1 — PaywallScreen component**
+- File: `mobile/src/components/paywall/PaywallScreen.tsx`
+- NativeWind classes per §5. Lead count sourced from `user_profiles.lead_views_count` (passed as prop from the layout gate).
+- "Continue at buildo.com →" opens `expo-web-browser` with `buildo.com/subscribe`.
+- "Maybe later" calls `paywallStore.dismiss()` — does not fully hide paywall, switches to inline-blur mode.
+
+**Step 2 — Subscription gate in app layout**
+- File: `mobile/app/(app)/_layout.tsx`
+- On mount + on `AppState change` to `'active'`: call `queryClient.invalidateQueries(['user-profile'])` to re-fetch profile. If `subscription_status === 'expired'` → render `<PaywallScreen>` over content (absolute positioned, z-index above all tabs). Four status values handled:
+  - `'trial'` → full access, no paywall
+  - `'active'` → full access, no paywall
+  - `'expired'` → `<PaywallScreen>`
+  - `'admin_managed'` → full access, no paywall, subscription section hidden in Settings
+
+**Step 3 — Inline blur banners**
+- Files: `mobile/app/(app)/(tabs)/index.tsx`, `mobile/app/(app)/(tabs)/flight-board.tsx`
+- Rendered when `paywallStore.dismissed = true` AND `subscription_status === 'expired'`. Banner: `"Trial ended — subscribe to see new leads."` Lead cards blurred via `style={{ opacity: 0.15 }}`. Tapping banner calls `paywallStore.show()`.
+
+**Step 4 — Trial started_at write**
+- File: `mobile/app/(app)/_layout.tsx` (same file, on-mount check)
+- If `subscription_status === null` and `trial_started_at === null` after first post-onboarding launch: PATCH `{ subscription_status: 'trial', trial_started_at: new Date().toISOString() }`. Fire once and never again (guarded by `trial_started_at !== null` check).
+
+**Step 5 — Stripe webhook handler**
+- File: `src/app/api/webhooks/stripe/route.ts`
+- Public route (no Firebase auth — Stripe calls it). Verify `Stripe-Signature` header via `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)`. Invalid signature → 400.
+- `customer.subscription.created` / `customer.subscription.updated` with `status: 'active'` → PATCH `subscription_status = 'active'` + write `stripe_customer_id`.
+- `customer.subscription.deleted` → PATCH `subscription_status = 'expired'`.
+- Unknown event types → 200 no-op (idempotent).
+- Try-catch per §00 §2.2. `logError` on unexpected errors.
+
+**Step 6 — Day 10/13 reminders**
+- **TODO: Phase 2** — Cloud Function daily sweep checks `trial_started_at` and sends reminder emails at day 10 and push + email at day 13. Cloud Functions infra not yet set up. Backend logic to implement: `NOW() - trial_started_at >= INTERVAL '10 days'` → trigger email; `>= INTERVAL '13 days'` → trigger email + push.
+
+### Testing Gates
+
+- **Unit:** `mobile/__tests__/subscriptionGate.test.ts` — gate passes (no paywall) for `'trial'`, `'active'`, `'admin_managed'`; shows `<PaywallScreen>` for `'expired'`; `admin_managed` never shows paywall even if somehow `expired`; AppState `'active'` event triggers re-fetch.
+- **Infra:** `src/tests/stripe-webhook.infra.test.ts` — valid `subscription.created` event updates status to `'active'`; invalid signature returns 400; `subscription.deleted` sets `'expired'`; unknown event type returns 200.
+
+---
+
+## 10. Operating Boundaries
 
 **Target files:**
 - `src/app/api/user-profile/route.ts` — subscription_status read

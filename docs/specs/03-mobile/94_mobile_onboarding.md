@@ -194,7 +194,73 @@ Input address
       Proceed silently — no warning
 ```
 
-## 9. Operating Boundaries
+## 9. Implementation
+
+### Cross-Spec Build Order
+
+This spec is step 3 of 5. **Spec 93 AuthGate and Spec 95 PATCH endpoint must exist first** — the onboarding redirect is triggered by the AuthGate, and each step writes to `user_profiles` via PATCH.
+
+```
+Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subscription gate) → Spec 97 (Settings)
+```
+
+### Build Sequence
+
+**Step 1 — Route group layout**
+- File: `mobile/app/(onboarding)/_layout.tsx`
+- Stack navigator. On mount: if `onboarding_complete = true` → redirect `/(app)` immediately (handles deep-link edge case mid-onboarding).
+
+**Step 2 — Coordinate utilities**
+- File: `mobile/src/lib/onboarding/snapCoord.ts`
+- `snapToGrid(lat, lng, gridMeters = 500)` rounds coordinates to nearest 500m grid point.
+- `isInsideToronto(lat, lng)` checks bounds: lat 43.58–43.86, lng −79.64 to −79.12.
+- Shared by `useLocation.ts` (extract if duplicated) and all onboarding address screens.
+
+**Step 3 — Trade selection screen**
+- File: `mobile/app/(onboarding)/profession.tsx`
+- `<SectionList>` with 6 sticky category headers. 32 trades + Realtor. Amber `border-amber-500` on selected item. "Continue" CTA disabled until selection made. No `useEffect` for data — trade list is static JSON (Spec 90 §5). Realtor taps → skip `path.tsx`, go directly to `address.tsx`. Tradesperson taps → `path.tsx`.
+
+**Step 4 — Path selection screen**
+- File: `mobile/app/(onboarding)/path.tsx`
+- Two full-width `<Pressable>` cards: "Find New Leads" → Path L (`address.tsx`), "Track Active Projects" → Path T (`supplier.tsx`).
+
+**Step 5 — Address input screen**
+- File: `mobile/app/(onboarding)/address.tsx`
+- `expo-location` `geocodeAsync()` on submitted text. Run `snapCoord.ts`. Outside Toronto bounds → show warning + nearest neighbourhood centroid suggestion. Inside bounds → snap silently. On confirm: PATCH `{ home_base_lat, home_base_lng, location_mode: 'home_base_fixed' }`.
+- GPS permission denied (Live GPS path): show explainer + `Linking.openSettings()` deep link + secondary CTA to switch to fixed address.
+
+**Step 6 — Supplier selection screen**
+- File: `mobile/app/(onboarding)/supplier.tsx`
+- `GET /api/onboarding/suppliers?trade={slug}` → curated list (4–6) + "Other" text field. TanStack Query `useQuery` — no `useEffect` fetch (Spec 90 §5). "Skip for now →" link leaves `supplier_selection` null. On confirm: PATCH `{ supplier_selection }`.
+
+**Step 7 — Terms of Service screen**
+- File: `mobile/app/(onboarding)/terms.tsx`
+- Two required checkboxes (ToS + Privacy Policy). Links open `expo-web-browser`. CTA disabled until both checked. On confirm: PATCH `{ tos_accepted_at: new Date().toISOString() }`.
+
+**Step 8 — First permit screen (Path T only)**
+- File: `mobile/app/(onboarding)/first-permit.tsx`
+- Inline reuse of `SearchPermitsSheet` from Spec 77 §3.1. "Skip, I'll do it later →" navigates to `terms.tsx`. On successful claim: fire `successNotification()` haptic (Spec 92 §4.3).
+
+**Step 9 — Completion screen (Path L only)**
+- File: `mobile/app/(onboarding)/complete.tsx`
+- Trade badge + confirmation copy. CTA: "See your leads →". On tap: PATCH `{ default_tab: 'feed', onboarding_complete: true }` → navigate `/(app)/(tabs)`.
+
+**Step 10 — Path T completion (no screen)**
+- In `terms.tsx` confirm handler for Path T: PATCH `{ default_tab: 'flight_board', onboarding_complete: true }` → navigate `/(app)/(tabs)/flight-board`.
+
+**Step 11 — Drop-off recovery**
+- File: `mobile/src/store/onboardingStore.ts`
+- Zustand store persisted to MMKV under key `onboarding_step`. Each screen writes its step name on entry. Cleared when `onboarding_complete = true` is written. On re-launch with `onboarding_complete = false`: AuthGate resumes at stored step.
+
+### Testing Gates
+
+- **Unit:** `mobile/__tests__/onboarding.test.ts` — `snapToGrid` inside bounds snaps to 500m grid; `isInsideToronto` outside bounds returns false; trade selection enforces single-select; `onboardingStore` MMKV persistence writes correct step key.
+- **Maestro:** `mobile/maestro/onboarding-leads.yaml` — Path L E2E: profession → path → GPS selection → supplier skip → ToS → confirm → feed visible with lead cards.
+- **Maestro:** `mobile/maestro/onboarding-tracking.yaml` — Path T: profession → path → supplier → first-permit add → ToS → flight board visible.
+
+---
+
+## 10. Operating Boundaries
 
 **Target files:**
 - `mobile/app/(onboarding)/` — new route group
