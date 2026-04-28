@@ -1,0 +1,17 @@
+appId: com.buildo.app
+---
+- launchApp
+- tapOn: "Flight Board"
+- assertVisible: "ACTION REQUIRED"
+- assertVisible: "DEPARTING SOON"
+- assertVisible: "ON THE HORIZON"
+- swipeLeft:
+    id: "flight-card-0"
+- assertVisible: "Remove"
+- tapOn: "Remove"
+- assertNotVisible:
+    id: "flight-card-0"
+- tapOn:
+    id: "flight-card-1"
+- assertVisible: "Best Case"
+- assertVisible: "Worst Case"

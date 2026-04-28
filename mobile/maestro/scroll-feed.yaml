@@ -1,0 +1,23 @@
+appId: com.buildo.app
+---
+- launchApp:
+    clearState: false
+- assertVisible: "Lead Feed"
+- assertVisible:
+    id: "lead-card-0"
+- assertVisible: "Filters"         # FilterTriggerRow always visible above the list
+- swipe:
+    direction: UP
+    duration: 800
+- assertVisible:
+    id: "lead-card-10"
+- tapOn:
+    id: "save-button-0"
+- assertVisible:
+    id: "save-heart-filled-0"
+- tapOn: "Lead Feed"               # Tap the already-active tab
+- assertVisible:
+    id: "lead-card-0"              # Scrolled back to top
+- tapOn:
+    id: "lead-card-0"
+- assertVisible: "Permit Details"

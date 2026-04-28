@@ -1,0 +1,11 @@
+appId: com.buildo.app
+---
+- launchApp
+- tapOn: "Map"
+- assertVisible: "Map View"
+- swipe:
+    direction: LEFT
+    duration: 500
+- tapOn:
+    id: "map-marker-0"
+- assertVisible: "Permit Details"
