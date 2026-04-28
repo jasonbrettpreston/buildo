@@ -121,6 +121,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'lifecycle_p7a_max_days',           // WF2 — max days for P7a bucket (§4.1)
   'lifecycle_p7b_max_days',           // WF2 — max days for P7b bucket (§4.1)
   'lifecycle_orphan_stall_days',      // WF3 B1-C2 — days for orphan O2→O3 degradation (§4.1)
+  'lead_view_retention_days',         // D3: PIPEDA/GDPR retention window for lead_views purge
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

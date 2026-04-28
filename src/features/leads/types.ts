@@ -137,6 +137,12 @@ export interface PermitLeadFeedItem extends LeadFeedItemBase {
   // displayLifecyclePhase(). NULL = dead state or not yet classified.
   lifecycle_phase: string | null;
   lifecycle_stalled: boolean;
+  // Phase 3: target_window computed at mapRow from TRADE_TARGET_PHASE.
+  // 'bid' = permit is before the trade's work_phase (go get on shortlists).
+  // 'work' = permit has reached or passed the trade's work_phase (boots on the ground).
+  target_window: 'bid' | 'work';
+  // Phase 3: number of OTHER users who have saved this permit (competition signal).
+  competition_count: number;
 }
 
 export interface BuilderLeadFeedItem extends LeadFeedItemBase {

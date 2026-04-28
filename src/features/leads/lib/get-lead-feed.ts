@@ -38,6 +38,7 @@ import type {
   LeadFeedItem,
   LeadFeedResult,
 } from '@/features/leads/types';
+import { TRADE_TARGET_PHASE } from '@/lib/classification/lifecycle-phase';
 import { logError, logWarn } from '@/lib/logger';
 
 /**
@@ -122,6 +123,19 @@ export const LEAD_FEED_SQL = `
       -- states (filter already excludes them) or unclassified edge cases.
       p.lifecycle_phase,
       p.lifecycle_stalled,
+      -- Competition count: number of OTHER users who have saved this permit.
+      -- Signals crowded opportunity — card shows "3 others watching".
+      -- Same lead_key format as the is_saved JOIN: 'permit:' || num || ':' || rev.
+      -- COUNT DISTINCT user_id so a single power-user with multiple saves
+      -- doesn't inflate the signal.
+      (
+        SELECT COUNT(DISTINCT lv2.user_id)::int
+        FROM lead_views lv2
+        WHERE lv2.lead_key = ('permit:' || p.permit_num || ':' || LPAD(p.revision_num, 2, '0'))
+          AND lv2.saved = true
+          AND lv2.user_id != $9::text
+          AND lv2.lead_type = 'permit'
+      ) AS competition_count,
       NULL::int        AS active_permits_nearby,
       NULL::float8     AS avg_project_cost,
       -- Phase 3-vi: project the user's saved-state for this lead.
@@ -268,6 +282,9 @@ export const LEAD_FEED_SQL = `
       -- position 13 was permit=lifecycle_phase (varchar) vs builder=active_permits_nearby (int).
       NULL::text    AS lifecycle_phase,
       false         AS lifecycle_stalled,
+      -- Builder leads don't have per-permit competition counts — the
+      -- builder IS the competition signal. Fixed 0 keeps UNION ALL shape.
+      0::int        AS competition_count,
       -- The WHERE clause already filters to p.status IN
       -- ('Permit Issued','Inspection'), so COUNT here IS the count of
       -- ACTIVE permits within the radius — name is accurate.
@@ -490,6 +507,10 @@ interface LeadFeedRow {
   // builds the card label.
   lifecycle_phase: string | null;
   lifecycle_stalled: boolean;
+  // Phase 3: competition_count is a correlated subquery on permit rows,
+  // 0 hardcoded on builder rows. Always an int from SQL; mapRow passes
+  // it through directly to PermitLeadFeedItem.competition_count.
+  competition_count: number;
 }
 
 /**
@@ -532,6 +553,31 @@ export const TIMING_DISPLAY_BY_CONFIDENCE: Record<
   low: 'Approximate timing',
 };
 
+// Phase index for target_window computation. Maps each phase code to its
+// ordinal position in the construction timeline so we can compare
+// lifecycle_phase against TRADE_TARGET_PHASE.work_phase numerically.
+// P7a-P7d are non-sequential in the phase labels (they're sub-buckets
+// of "freshly issued") but they map to sequential positions 7-10 here.
+const PHASE_INDEX: Readonly<Record<string, number>> = {
+  P1: 1, P2: 2, P3: 3, P4: 4, P5: 5, P6: 6,
+  P7a: 7, P7b: 8, P7c: 9, P7d: 10,
+  P8: 11, P9: 12, P10: 13, P11: 14, P12: 15,
+  P13: 16, P14: 17, P15: 18, P16: 19, P17: 20,
+  P18: 21, P19: 22, P20: 23,
+};
+
+function computeTargetWindow(
+  lifecyclePhase: string | null,
+  tradeSlug: string,
+): 'bid' | 'work' {
+  if (!lifecyclePhase) return 'bid'; // unknown phase → earlier window is safer
+  const target = TRADE_TARGET_PHASE[tradeSlug];
+  if (!target) return 'bid'; // unknown trade → fall back to bid
+  const currentIdx = PHASE_INDEX[lifecyclePhase] ?? 0;
+  const workIdx = PHASE_INDEX[target.work_phase] ?? 0;
+  return currentIdx >= workIdx ? 'work' : 'bid';
+}
+
 const COST_TIER_VALUES = ['small', 'medium', 'large', 'major', 'mega'] as const;
 type CostTier = (typeof COST_TIER_VALUES)[number];
 function narrowCostTier(raw: string | null): CostTier | null {
@@ -553,7 +599,7 @@ function toNumber(v: number | string): number {
   return Number(v);
 }
 
-function mapRow(row: LeadFeedRow): LeadFeedItem | null {
+function mapRow(row: LeadFeedRow, tradeSlug: string): LeadFeedItem | null {
   const base = {
     lead_id: row.lead_id,
     distance_m: toNumber(row.distance_m),
@@ -611,6 +657,8 @@ function mapRow(row: LeadFeedRow): LeadFeedItem | null {
       estimated_cost: toNumberOrNull(row.estimated_cost),
       lifecycle_phase: row.lifecycle_phase,
       lifecycle_stalled: row.lifecycle_stalled,
+      target_window: computeTargetWindow(row.lifecycle_phase, tradeSlug),
+      competition_count: row.competition_count,
     };
   }
 
@@ -679,7 +727,7 @@ export async function getLeadFeed(
     // produced an unexpected shape — should never happen given the CASE
     // structure but the DU forces explicit narrowing).
     const data = res.rows
-      .map(mapRow)
+      .map((row) => mapRow(row, input.trade_slug))
       .filter((item): item is LeadFeedItem => item !== null);
 
     // CRITICAL pagination contract: derive next_cursor from the RAW row

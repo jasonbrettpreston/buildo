@@ -304,6 +304,36 @@ describe('LEAD_FEED_SQL — structure', () => {
     expect(LEAD_FEED_SQL).toMatch(/NULL::float8\s+AS estimated_cost/);
   });
 
+  it('permit_candidates: contains competition_count correlated subquery scoped to other users', () => {
+    // Phase 3: competition signal — COUNT DISTINCT user_id from lead_views
+    // where saved=true and user_id != $9. Same lead_key format as is_saved.
+    expect(LEAD_FEED_SQL).toMatch(/COUNT\(DISTINCT lv2\.user_id\)::int/);
+    expect(LEAD_FEED_SQL).toMatch(/lv2\.saved = true/);
+    expect(LEAD_FEED_SQL).toMatch(/lv2\.user_id != \$9::text/);
+    expect(LEAD_FEED_SQL).toMatch(/lv2\.lead_type = 'permit'/);
+    expect(LEAD_FEED_SQL).toMatch(/AS competition_count/);
+  });
+
+  it('builder_candidates: hardcodes competition_count as 0 (UNION ALL shape)', () => {
+    // Builder leads don't have per-permit competition counts. The SQL
+    // hardcodes 0::int so the UNION ALL shape stays consistent.
+    const builderStart = LEAD_FEED_SQL.indexOf('builder_candidates AS (');
+    const builderEnd = LEAD_FEED_SQL.indexOf('unified AS (');
+    const builderCTE = LEAD_FEED_SQL.slice(builderStart, builderEnd);
+    expect(builderCTE).toMatch(/0::int\s+AS competition_count/);
+  });
+
+  it('builder_candidates: competition_count appears BEFORE active_permits_nearby (UNION ALL position guard)', () => {
+    const builderStart = LEAD_FEED_SQL.indexOf('builder_candidates AS (');
+    const builderEnd = LEAD_FEED_SQL.indexOf('unified AS (');
+    const builderCTE = LEAD_FEED_SQL.slice(builderStart, builderEnd);
+    const competitionPos = builderCTE.indexOf('0::int        AS competition_count');
+    const countPos = builderCTE.indexOf('::int AS active_permits_nearby');
+    expect(competitionPos).toBeGreaterThan(0);
+    expect(countPos).toBeGreaterThan(0);
+    expect(competitionPos).toBeLessThan(countPos);
+  });
+
   it('builder_candidates: lifecycle_phase/stalled appear BEFORE active_permits_nearby (UNION ALL position guard)', () => {
     // WF3 2026-04-22 regression: lifecycle_phase (text) and
     // lifecycle_stalled (bool) were added to permit_candidates at
@@ -392,6 +422,8 @@ const samplePermitRow = {
   // mapRow() now derives timing_display from these via displayLifecyclePhase().
   lifecycle_phase: 'P7a' as string | null,
   lifecycle_stalled: false,
+  // Phase 3: competition count and target_window fields.
+  competition_count: 0,
 };
 
 const sampleBuilderRow = {
@@ -433,6 +465,9 @@ const sampleBuilderRow = {
   // sense. displayLifecyclePhase(null, false) → "Unknown" on the card.
   lifecycle_phase: null as string | null,
   lifecycle_stalled: false,
+  // Builder rows carry 0 from the SQL hardcoded value; no per-permit
+  // competition count applies to the builder entity.
+  competition_count: 0,
 };
 
 function makeInput(overrides: Partial<LeadFeedInput> = {}): LeadFeedInput {
@@ -759,6 +794,103 @@ describe('mapRow — widened columns', () => {
     expect(result.data[1]?.timing_display).toBe('Framing');
     expect(result.data[2]?.timing_display).toBe('Recently issued (stalled)');
     expect(result.data[3]?.timing_display).toBe('Unknown');
+  });
+
+  it('passes competition_count through to the PermitLeadFeedItem', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, competition_count: 3 }]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'permit') {
+      expect(item.competition_count).toBe(3);
+    } else {
+      throw new Error('expected permit lead');
+    }
+  });
+
+  it('passes competition_count 0 for builder rows', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...sampleBuilderRow, competition_count: 0 }]),
+    );
+    const result = await getLeadFeed(makeInput(), mock as unknown as Pool);
+    // competition_count is permit-only; builder type doesn't carry it — just verify no crash
+    expect(result.data[0]?.lead_type).toBe('builder');
+  });
+
+  it('computes target_window "bid" when lifecycle_phase is before work_phase for the trade', async () => {
+    // plumbing work_phase = P12 (index 15). P7a = index 7 → bid
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, lifecycle_phase: 'P7a', competition_count: 0 }]),
+    );
+    const result = await getLeadFeed(makeInput({ trade_slug: 'plumbing' }), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'permit') {
+      expect(item.target_window).toBe('bid');
+    } else {
+      throw new Error('expected permit lead');
+    }
+  });
+
+  it('computes target_window "work" when lifecycle_phase meets or exceeds work_phase for the trade', async () => {
+    // plumbing work_phase = P12 (index 15). P12 = index 15 → work
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, lifecycle_phase: 'P12', competition_count: 0 }]),
+    );
+    const result = await getLeadFeed(makeInput({ trade_slug: 'plumbing' }), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'permit') {
+      expect(item.target_window).toBe('work');
+    } else {
+      throw new Error('expected permit lead');
+    }
+  });
+
+  it('computes target_window "work" when lifecycle_phase is past work_phase', async () => {
+    // plumbing work_phase = P12 (index 15). P15 = index 18 → work
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, lifecycle_phase: 'P15', competition_count: 0 }]),
+    );
+    const result = await getLeadFeed(makeInput({ trade_slug: 'plumbing' }), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'permit') {
+      expect(item.target_window).toBe('work');
+    } else {
+      throw new Error('expected permit lead');
+    }
+  });
+
+  it('defaults target_window to "bid" when lifecycle_phase is null', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, lifecycle_phase: null, competition_count: 0 }]),
+    );
+    const result = await getLeadFeed(makeInput({ trade_slug: 'plumbing' }), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'permit') {
+      expect(item.target_window).toBe('bid');
+    } else {
+      throw new Error('expected permit lead');
+    }
+  });
+
+  it('defaults target_window to "bid" for an unknown trade_slug', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(
+      qr([{ ...samplePermitRow, lifecycle_phase: 'P15', competition_count: 0 }]),
+    );
+    const result = await getLeadFeed(makeInput({ trade_slug: 'unknown-trade-xyz' }), mock as unknown as Pool);
+    const item = result.data[0];
+    if (item?.lead_type === 'permit') {
+      expect(item.target_window).toBe('bid');
+    } else {
+      throw new Error('expected permit lead');
+    }
   });
 
   it('passes lifecycle_phase + lifecycle_stalled through to the PermitLeadFeedItem', async () => {

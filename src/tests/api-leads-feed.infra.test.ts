@@ -120,6 +120,8 @@ const sampleResult = {
       is_saved: false,
       lifecycle_phase: 'P7a',
       lifecycle_stalled: false,
+      target_window: 'bid' as const,
+      competition_count: 0,
     },
   ],
   meta: {

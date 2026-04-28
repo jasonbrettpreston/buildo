@@ -432,5 +432,12 @@
     "description": "Days since issued for an orphan permit (no parent BLD/CMB) with no passed inspection before it degrades from O2 (active) to O3 (stalled orphan)",
     "min": 1,
     "max": 3650
+  },
+  "lead_view_retention_days": {
+    "default": 90,
+    "type": "number",
+    "description": "PIPEDA/GDPR retention window in days for lead_views rows; rows older than this are purged nightly by purge-lead-views.js",
+    "min": 7,
+    "max": 365
   }
 }
