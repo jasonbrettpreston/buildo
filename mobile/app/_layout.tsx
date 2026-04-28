@@ -38,12 +38,22 @@ function AuthGate() {
   const router = useRouter();
   const segments = useSegments();
   const rootNavigationState = useRootNavigationState();
+  const [isNavigationReady, setNavigationReady] = useState(false);
 
+  // Step 1: latch ready flag the moment the navigation container key exists.
+  // Using a boolean latch (rather than checking rootNavigationState?.key inline)
+  // decouples auth routing from the navigation container lifecycle — once true,
+  // it never flips back, so the auth effect can't fire during a re-render where
+  // the container key transiently disappears.
   useEffect(() => {
-    // Wait until Expo Router's navigation container is mounted before calling
-    // router.replace() — firing before the container is ready throws a
-    // "Attempted to navigate before mounting the RootLayout" error.
-    if (!rootNavigationState?.key) return;
+    if (rootNavigationState?.key) {
+      setNavigationReady(true);
+    }
+  }, [rootNavigationState?.key]);
+
+  // Step 2: auth redirects only after navigation container is confirmed ready.
+  useEffect(() => {
+    if (!isNavigationReady) return;
     if (!_hasHydrated) return;
     const inAuthGroup = segments[0] === '(auth)';
     if (!user && !inAuthGroup) {
@@ -57,7 +67,7 @@ function AuthGate() {
         console.warn('[AuthGate] registerPushToken failed', err instanceof Error ? err.message : err);
       });
     }
-  }, [user, segments, _hasHydrated, rootNavigationState?.key]);
+  }, [isNavigationReady, user, segments, _hasHydrated]);
 
   return null;
 }
