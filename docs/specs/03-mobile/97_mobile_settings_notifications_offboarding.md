@@ -9,7 +9,7 @@
 
 ### 1.1 Screen Structure
 
-Four sections rendered in a `<ScrollView>`. Section headers: `text-zinc-500 text-xs font-mono tracking-widest uppercase px-4 pt-6 pb-2`.
+Five sections rendered in a `<ScrollView>`. Section headers: `text-zinc-500 text-xs font-mono tracking-widest uppercase px-4 pt-6 pb-2`.
 
 ```
 ACCOUNT
@@ -31,9 +31,13 @@ FEED PREFERENCES
   Main supplier      [single-select — same list as onboarding]
 
 NOTIFICATIONS
-  Permission status        [status row]  "Enabled" | "Not enabled → Enable in Settings ↗"
-  Permit status changes    [ toggle ]   default ON — disabled if OS permission denied
-  Urgent alerts (≤7 days) [ toggle ]   default ON — disabled if OS permission denied
+  Permission status        [status row]   "Enabled" | "Not enabled → Enable in Settings ↗"
+  New lead cost threshold  [slider]       $0–$500k; writes notification_prefs.new_lead_min_cost_tier
+  Phase changes            [ toggle ]     notification_prefs.phase_changed — default ON
+  Stall alerts             [ toggle ]     notification_prefs.lifecycle_stalled — default ON
+  Start date urgent        [ toggle ]     notification_prefs.start_date_urgent — default ON
+  Notification schedule    [segmented]    Morning | Anytime | Evening — notification_prefs.notification_schedule
+  [All controls disabled if OS permission denied]
 
 SUBSCRIPTION
   Status badge             (Trial X days left / Active / Expired)
@@ -62,7 +66,35 @@ All editable fields save on blur (text fields) or toggle (switches) — no expli
 
 ## 2. Push Notifications
 
-### 2.1 Permission Prompt Timing
+### 2.1 Notification Controls (Full Spec 92 §2.3 Surface)
+
+The NOTIFICATIONS section exposes all five preference keys from `notification_prefs` JSONB (Spec 92 §2.3 and Spec 95 §2.4):
+
+**New lead cost threshold** (slider):
+- Determines `notification_prefs.new_lead_min_cost_tier` — the minimum job value that triggers a `NEW_HIGH_VALUE_LEAD` push
+- Slider values: `low` | `medium` | `high` (or display as dollar ranges: `< $100k` | `$100k–$500k` | `> $500k`)
+- Styling: same `@react-native-community/slider` spec as Radius Slider (§4) — `minimumTrackTintColor="#f59e0b"`, amber thumb, `onSlidingComplete` fires PATCH
+- PATCH sends merged `notification_prefs: { ...existing, new_lead_min_cost_tier: newValue }` (server merges partial per Spec 95 Step 3)
+
+**Phase toggles** (three independent switches):
+- `notification_prefs.phase_changed` → "Phase changes" — default `true`
+- `notification_prefs.lifecycle_stalled` → "Stall alerts" — default `true`
+- `notification_prefs.start_date_urgent` → "Start date urgent (≤7 days)" — default `true`
+
+**Notification schedule** (segmented control — Spec 92 §6.2 visual):
+- Container: `bg-zinc-800 rounded-lg p-1 flex-row mx-4` (inside section card wrapper)
+- Options: `Morning` | `Anytime` | `Evening` — maps to `notification_prefs.notification_schedule`
+- Selected segment: `bg-amber-500 rounded-md` · `text-zinc-950 text-xs font-mono`
+- Unselected: `text-zinc-400 text-xs font-mono`
+- On change: PATCH `notification_prefs: { ...existing, notification_schedule: newValue }`
+
+**Save pattern:** All five controls follow the same optimistic-update pattern as other toggle fields (§1.3). Failure reverts the specific key in the local `notificationPrefs` object and shows error toast. Since PATCH merges partial updates, a failed save of one key does not affect other keys.
+
+**Disabled state (OS permission denied):** All five controls render with `disabled={true}` and `opacity-50`. Explanatory sub-label below: `text-zinc-600 text-xs px-4 pb-3` — "Enable notifications in your device settings to use these controls."
+
+---
+
+### 2.2 Permission Prompt Timing
 
 iOS/Android require an explicit permission request. Prompting too early (before the user has seen value) results in high denial rates and no recovery path.
 
@@ -82,9 +114,9 @@ iOS/Android require an explicit permission request. Prompting too early (before 
 
 **Pre-prompt:** `bg-zinc-900 border border-zinc-700 rounded-2xl p-4 mx-4` positioned above the tab bar. Not a modal — does not block the screen. Dismisses on tap of either option. If "Not now": system dialog is never shown. User can enable via Settings → Notifications → device Settings deep link.
 
-### 2.2 Notification Types
+### 2.3 Notification Types
 
-Two types, each controlled by a toggle in Settings (§1.1):
+Two legacy toggle groupings (now fine-grained via §2.1 JSONB controls). For backward reference, the two top-level types from Spec 92 §2.1–2.2 are:
 
 **Permit status changes** (`notif_permit_status`):
 - Fires when a permit on the user's flight board moves to a new lifecycle phase
@@ -100,7 +132,7 @@ Two types, each controlled by a toggle in Settings (§1.1):
 
 **Notification hardware layer:** Per Spec 92 — `expo-notifications` token registration, foreground notification handling, and badge count management governed by Spec 92. This spec defines the notification types and triggers only.
 
-### 2.3 Deep Link Handling
+### 2.4 Deep Link Handling
 
 All push notification taps route via Expo Router:
 
@@ -151,10 +183,13 @@ CSV download triggers `GET /api/user-profile/export` — returns a CSV attachmen
 
 **Step 3 — Immediate suspension:**
 On confirm:
-- `account_deleted_at` = now() written to `user_profiles`
-- `subscription_status` = `'cancelled_pending_deletion'`
-- Stripe subscription cancelled immediately (no refund for current period)
-- Firebase Auth session revoked — user signed out
+- Client calls `POST /api/user-profile/delete` (Spec 95 Step 3a — dedicated deletion endpoint).
+- The server endpoint atomically handles:
+  1. Sets `account_deleted_at = NOW()`, `subscription_status = 'cancelled_pending_deletion'` on `user_profiles`
+  2. Cancels Stripe subscription via `stripe.subscriptions.cancel(subscriptionId)` if `stripe_customer_id IS NOT NULL` (no refund — `prorate: false`). Subscription lookup: `stripe.subscriptions.list({ customer: stripe_customer_id, status: 'active', limit: 1 })`. If no active subscription (trial user who never paid), skip Stripe cancellation silently.
+  3. Calls `admin.auth().revokeRefreshTokens(uid)` to immediately invalidate all active sessions across all devices
+- **Do NOT use `PATCH /api/user-profile`** — `subscription_status` and `account_deleted_at` are server-only fields blocked by the PATCH whitelist (Spec 95 Step 3).
+- On `POST /api/user-profile/delete` success: client calls `firebase.auth().signOut()` → navigate `/(auth)/sign-in`.
 - Redirect to sign-in screen with message: *"Your account has been scheduled for deletion. Sign back in within 30 days to reactivate."*
 
 ### 3.2 30-Day Recovery Window
@@ -163,9 +198,10 @@ If user signs back in within 30 days:
 - Auth succeeds
 - AuthGate fetches `GET /api/user-profile` → receives 403 with `{ error, account_deleted_at, days_remaining }` (Spec 95 §9 Step 2 response contract)
 - Show reactivation prompt: *"Welcome back. Your account is scheduled for deletion on [date]. Reactivate to keep your account?"* (`days_remaining` drives the date display)
-- On confirm: server-side PATCH `{ account_deleted_at: null, subscription_status: <restored_status> }` where `restored_status` is determined by the user's `account_preset`:
+- On confirm: client calls `POST /api/user-profile/reactivate` (Spec 95 Step 3b — dedicated reactivation endpoint). The server determines `restored_status` and applies atomically:
   - If `account_preset = 'manufacturer'` → restore to `'admin_managed'` (not `'expired'` — manufacturers must never see the consumer paywall)
   - All other presets → restore to `'expired'` (the original Stripe subscription was cancelled at deletion time; user must re-subscribe via `buildo.com`)
+  - **Do NOT use the general `PATCH /api/user-profile`** — `account_deleted_at` and `subscription_status` are server-only fields blocked by the PATCH whitelist (Spec 95 Step 3).
 - Post-reactivation sequence: (1) PATCH succeeds → (2) dismiss reactivation modal → (3) AuthGate proceeds (`onboarding_complete = true`) → (4) subscription gate handles the restored status
 - If the user was on `trial` prior to deletion, the trial does not resume — they are directed to subscribe at `buildo.com`
 
@@ -345,6 +381,10 @@ In the SUBSCRIPTION section (hidden for `admin_managed`):
 
 Days remaining for `trial`: computed from `trial_started_at + 14 days - NOW()`, rounded up. If 0 days, show "Expires today" in `text-red-400`.
 
+**`admin_managed`:** Subscription section hidden entirely — no badge rendered (Spec 96 §8).
+
+**`cancelled_pending_deletion`:** No badge defined. This status triggers an immediate sign-out + redirect in the subscription gate (Spec 96 Step 2) — the Settings screen never renders with this status. If reached due to a stale TanStack Query cache, render `text-zinc-600 text-xs font-mono` — "Pending deletion" as a fallback display row (read-only, no action).
+
 ---
 
 ### Deletion Sheets (DataExportSheet + DeleteConfirmModal)
@@ -397,7 +437,8 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 3 — Save-on-change logic and store separation**
 - File: `mobile/app/(app)/settings.tsx`
-- Account-level fields (full name, company name, notification toggles) are stored in a separate `mobile/src/store/userProfileStore.ts` Zustand store — not `filterStore`. `filterStore` remains scoped to feed preferences (radius, trade, location mode, defaultTab). This prevents notification toggle changes from triggering a feed re-render (§4 `filterStore` vs `userProfileStore` boundary).
+- Account-level fields (full name, company name, notification preferences) are stored in a separate `mobile/src/store/userProfileStore.ts` Zustand store — not `filterStore`. `filterStore` remains scoped to feed preferences (radius, trade, location mode, defaultTab). This prevents notification preference changes from triggering a feed re-render (§4 `filterStore` vs `userProfileStore` boundary).
+- `userProfileStore.notificationPrefs` holds the full JSONB object. Individual Settings controls read/write specific keys: `store.notificationPrefs.notification_schedule`, `store.notificationPrefs.phase_changed`, etc. On PATCH: send the full merged object: `{ notification_prefs: { ...store.notificationPrefs, [changedKey]: newValue } }`. Server applies partial merge (Spec 95 Step 3). On error: revert only the specific key that failed — do not reset the entire `notificationPrefs` object.
 - **Text fields (name, company, backup email):** Tapping the row opens an edit bottom sheet per §4 Editable Field Sheets spec (`@gorhom/bottom-sheet` 50%, autoFocus). Save button fires PATCH with optimistic update; on API error revert store value + show toast `"Couldn't save — try again."` (`bg-zinc-800 border border-red-500/40 rounded-xl px-4 py-3`). Each field independently tracks its pre-change value — one field's revert must not clobber another field's in-flight save.
 - **Toggles (notification switches, primary view, location mode):** `onValueChange` fires PATCH immediately (no sheet). Show `ActivityIndicator size="small"` inside the toggle row's right slot while in-flight; replace with the `Switch` once the response returns. On error: revert toggle state + show toast.
 - **Radius:** Tapping the Radius row opens a bottom sheet with `@react-native-community/slider` per §4 Radius Slider spec. `onSlidingComplete` fires PATCH. No save button.
@@ -446,10 +487,10 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - **"Cancel" button:** `bg-zinc-800 rounded-2xl py-4` — always rendered, disabled while PATCH is in-flight.
 - **"Yes, delete my account" button:** `bg-red-500/20 border border-red-500/40 rounded-2xl py-4` — on tap:
   1. Show `ActivityIndicator size="small" color="#f87171"` inside button; disable both buttons.
-  2. PATCH `{ account_deleted_at: new Date().toISOString(), subscription_status: 'cancelled_pending_deletion' }` — **must succeed** before proceeding.
-  3. Server calls `admin.auth().revokeRefreshTokens(uid)` to immediately invalidate all sessions across all devices.
-  4. On PATCH success: `firebase.auth().signOut()` (Spec 93 §3.6) → navigate `/(auth)/sign-in`.
-  5. On PATCH failure: re-enable both buttons, show error toast `"Couldn't process deletion — try again."` (`bg-zinc-800 border border-red-500/40`). Do NOT sign out. User remains authenticated.
+  2. Call `POST /api/user-profile/delete` (Spec 95 Step 3a) — **must succeed** before proceeding. This endpoint atomically sets deletion fields, cancels Stripe, and calls `revokeRefreshTokens` server-side. **Do NOT use `PATCH /api/user-profile`** — `subscription_status` and `account_deleted_at` are blocked by the PATCH whitelist.
+  3. On POST success: `firebase.auth().signOut()` (Spec 93 §3.6) → navigate `/(auth)/sign-in`.
+  4. On POST failure: re-enable both buttons, show error toast `"Couldn't process deletion — try again."` (`bg-zinc-800 border border-red-500/40`). Do NOT sign out. User remains authenticated.
+  5. **Double sign-out guard:** Set an `isSigningOut` ref to `true` before calling `firebase.auth().signOut()`. The `onAuthStateChanged` handler must check this flag — if `isSigningOut = true`, skip the standard forced-sign-out path to prevent the `onAuthStateChanged(null)` event and the explicit `signOut()` from both trying to navigate to `/(auth)/sign-in` simultaneously.
 
 **Step 10 — Cloud Function hard delete**
 - **TODO: Phase 2** — Cloud Function daily sweep: `DELETE FROM user_profiles WHERE account_deleted_at IS NOT NULL AND account_deleted_at < NOW() - INTERVAL '30 days'`. Also deletes Firebase Auth record and all associated tokens. Cloud Functions infra not yet set up.
@@ -468,8 +509,11 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Target files:**
 - `mobile/app/(app)/settings.tsx` — new screen
-- `src/app/api/user-profile/route.ts` — PATCH for settings saves
+- `src/app/api/user-profile/route.ts` — PATCH for settings saves (standard whitelist fields)
+- `src/app/api/user-profile/delete/route.ts` — deletion endpoint (Spec 95 Step 3a — handles subscription_status + account_deleted_at + Stripe cancel + revokeRefreshTokens)
+- `src/app/api/user-profile/reactivate/route.ts` — reactivation endpoint (Spec 95 Step 3b)
 - `src/app/api/user-profile/export/route.ts` — new CSV export endpoint
+- `src/app/api/onboarding/suppliers/route.ts` — supplier list endpoint (Spec 94 Step 7b)
 - `mobile/src/hooks/useNotificationSetup.ts` — permission prompt logic (extends Spec 92)
 
 **Out of scope:**

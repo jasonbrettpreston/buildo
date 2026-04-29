@@ -101,16 +101,18 @@ If Firebase Auth is unreachable at sign-in: show retry option. Already-authentic
 1. CSV export offer (Spec 97 §3.1 Step 1).
 2. Confirmation modal (Spec 97 §3.1 Step 2).
 3. On confirm:
-   - PATCH `/api/user-profile` with `{ account_deleted_at: now(), subscription_status: 'cancelled_pending_deletion' }` — **must succeed before proceeding**. If PATCH fails: show error toast, do NOT sign out.
-   - On PATCH success: `firebase.auth().signOut()` → redirect to `/(auth)/sign-in`.
+   - `POST /api/user-profile/delete` — **must succeed before proceeding** (Spec 95 Step 3a). This dedicated endpoint atomically sets `account_deleted_at`, `subscription_status: 'cancelled_pending_deletion'`, cancels Stripe subscription if applicable, and calls `admin.auth().revokeRefreshTokens(uid)` server-side. **Do NOT use the general `PATCH /api/user-profile`** — `subscription_status` and `account_deleted_at` are server-only fields blocked by the PATCH whitelist.
+   - If POST fails: show error toast, do NOT sign out.
+   - On POST success: `firebase.auth().signOut()` → redirect to `/(auth)/sign-in`.
 4. **30-day recovery window:** On sign-in, the AuthGate fetches `/api/user-profile`. If the account is in the deletion window, the server returns `403` with `{ error: "Account scheduled for deletion.", account_deleted_at: "<ISO>", days_remaining: <N> }` (Spec 95 §9 Step 2). The AuthGate shows a reactivation modal before proceeding:
    ```
    "Welcome back. Your account is scheduled for deletion on [date].
     Reactivate to keep your account?"
     [ Reactivate ] [ Sign Out ]
    ```
-   On reactivate: PATCH `{ account_deleted_at: null, subscription_status: [restored] }`. The `?deleted=true` param is not relied on — server state is authoritative.
-5. After 30 days: hard delete — Firebase Auth record removed, `user_profiles` row deleted (Spec 97 §3.3).
+   On reactivate: `POST /api/user-profile/reactivate` (Spec 95 Step 3b) — sets `account_deleted_at = null` and `subscription_status` to restored value. The `?deleted=true` param is not relied on — server state is authoritative.
+5. **`days_remaining = 0` edge case:** CEIL(30 - 30) = 0. The reactivation modal shows "Your account is scheduled for deletion today." (not "0 days left"). The POST /api/user-profile/reactivate returns 400 if `account_deleted_at > NOW() - INTERVAL '30 days'` is false (hard-delete window passed). If `days_remaining = 0`, the modal still offers reactivation — hard delete runs via the daily Cloud Function, not in real-time, so the window is still open until the sweep runs.
+6. After 30 days: hard delete — Firebase Auth record removed, `user_profiles` row deleted (Spec 97 §3.3).
 
 **PIPEDA compliance:** CSV export must include all personally identifiable fields stored in `user_profiles`. Data not retained beyond 30-day window.
 
@@ -280,7 +282,8 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - File: `mobile/src/store/userStore.ts`
 - Zustand v5 store: `{ uid, email, isLoading }` + `signOut()` action.
 - `onAuthStateChanged` listener writes uid/email into store.
-- `signOut()`: (1) calls `firebase.auth().signOut()`; (2) calls `filterStore.reset()` and `userProfileStore.reset()` to clear in-memory state; (3) resets this store. Does **not** clear MMKV — MMKV is preserved per §3.4 so the same user returning on the same device gets fast hydration. A different user signing in gets their own server data on the profile hydration.
+- `signOut()`: (1) calls `firebase.auth().signOut()`; (2) calls `filterStore.reset()`, `userProfileStore.reset()`, and `paywallStore.clear()` to clear all in-memory state; (3) resets this store. Does **not** clear MMKV — MMKV is preserved per §3.4 so the same user returning on the same device gets fast hydration. A different user signing in gets their own server data on the profile hydration.
+- **`paywallStore.clear()` is required in sign-out** — without it, a user who dismissed the paywall and then signed out on a shared device would leave `dismissed: true` in memory, causing the next user to start in inline blur mode (Spec 96 `paywallStore` note).
 
 **Step 3 — Auth route group layout**
 - File: `mobile/app/(auth)/_layout.tsx`
@@ -312,6 +315,23 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
   - 404 (no profile yet) → redirect `/(onboarding)/profession` (new user)
   - 403 (`account_deleted_at` set, within 30 days) → show reactivation modal (§3.6). The 403 body is `{ error, account_deleted_at, days_remaining }` per Spec 95 §9 Step 2 — use `days_remaining` to populate the modal copy.
   - Network failure (after 3 retries with exponential backoff: 1s, 2s, 4s) → show full-screen error with "Try again" button; do not default to onboarding or full access
+
+**Gate architecture (Expo Router — three-layer pattern):**
+The three gates implement as nested layouts in Expo Router's file-based routing:
+```
+_layout.tsx          ← Layer 1: AuthGate (this spec)
+                       Redirects unauthenticated → /(auth)/
+                       Redirects onboarding-incomplete → /(onboarding)/
+                       Shows reactivation modal for 403 (deleted account)
+(app)/_layout.tsx    ← Layer 2: Subscription gate (Spec 96)
+                       Runs only after AuthGate passes (onboarding_complete = true)
+                       Shows PaywallScreen for 'expired'
+                       Signs out + redirects for 'cancelled_pending_deletion'
+(onboarding)/        ← Layer 3: Onboarding gate
+                       Receives only users who AuthGate redirected here
+```
+The gate order "Auth → Subscription → Onboarding" describes the dependency order in which gates check conditions — not a sequential runtime pipeline. The AuthGate redirects onboarding-incomplete users directly to `(onboarding)/`, bypassing `(app)/_layout.tsx` entirely. The subscription gate in `(app)/_layout.tsx` only runs for users who have `onboarding_complete = true`. This is correct: incomplete users should not hit the subscription gate (they haven't started a trial yet). The `admin_managed` manufacturer case is handled by the AuthGate detecting `account_preset = 'manufacturer' AND onboarding_complete = false` and routing to the holding screen within `(onboarding)/`, never reaching `(app)/_layout.tsx`.
+
 - **Critical:** The AuthGate does NOT enforce subscription status — that check is owned by Spec 96 `(app)/_layout.tsx`. Do not ship a build without Spec 96 fully implemented or every onboarded user will have unguarded access to the feed.
 
 **Step 7 — Account deletion (Firebase side)**

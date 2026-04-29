@@ -36,7 +36,22 @@ All fields stored server-side in `user_profiles` (PostgreSQL). Client hydrates Z
 | `supplier_selection` | TEXT | Single supplier name. Skippable — may be null. Market research only, no in-app consequence at launch. |
 | `lead_views_count` | INTEGER DEFAULT 0 | Count of unique leads viewed during trial. Incremented server-side (see §2.2.1 below). Displayed on the paywall screen (Spec 96 §5). |
 
-**§2.2.1 `lead_views_count` increment mechanism:** The `GET /api/leads` (or `GET /api/leads/[id]`) route increments this counter server-side when `subscription_status = 'trial'`. Deduplication is per `(user_id, permit_num, revision_num)` — viewing the same lead twice does not increment the counter. Implemented via `INSERT INTO lead_view_events (user_id, permit_num, revision_num) ON CONFLICT DO NOTHING` followed by a denormalized `UPDATE user_profiles SET lead_views_count = lead_views_count + 1 WHERE user_id = $1` (only fires when the INSERT lands — ON CONFLICT case is a no-op). Counter is read-only from the client.
+**§2.2.1 `lead_views_count` increment mechanism:** The `GET /api/leads` (or `GET /api/leads/[id]`) route increments this counter server-side when `subscription_status = 'trial'`. Deduplication is per `(user_id, permit_num, revision_num)` — viewing the same lead twice does not increment the counter.
+
+**Implementation must use an atomic CTE** (not two separate statements) to prevent double-increment under concurrent requests:
+```sql
+WITH ins AS (
+  INSERT INTO lead_view_events (user_id, permit_num, revision_num)
+  VALUES ($1, $2, $3)
+  ON CONFLICT (user_id, permit_num, revision_num) DO NOTHING
+  RETURNING 1
+)
+UPDATE user_profiles
+SET lead_views_count = lead_views_count + 1
+WHERE user_id = $1
+  AND EXISTS (SELECT 1 FROM ins)
+```
+The `EXISTS (SELECT 1 FROM ins)` clause ensures the UPDATE only fires when the INSERT actually landed a new row, not on conflict. Two concurrent requests for the same event will race on the INSERT; at most one will see the `RETURNING 1` row, and only that one will increment the counter. Counter is read-only from the client.
 
 ---
 
@@ -55,10 +70,22 @@ All fields stored server-side in `user_profiles` (PostgreSQL). Client hydrates Z
 
 | Column | Type | Default |
 |--------|------|---------|
-| `notif_permit_status` | BOOLEAN | true |
-| `notif_urgent_alerts` | BOOLEAN | true |
+| `notification_prefs` | JSONB | `'{"new_lead_min_cost_tier":"medium","phase_changed":true,"lifecycle_stalled":true,"start_date_urgent":true,"notification_schedule":"anytime"}'` |
 
-Both governed by `expo-notifications` permission state (Spec 92). If OS permission is denied, these fields are irrelevant — no pushes are sent regardless of their value.
+**JSONB schema (canonical — Spec 92 §2.3):**
+```json
+{
+  "new_lead_min_cost_tier": "low" | "medium" | "high",
+  "phase_changed": true,
+  "lifecycle_stalled": true,
+  "start_date_urgent": true,
+  "notification_schedule": "morning" | "anytime" | "evening"
+}
+```
+
+All five keys are required at write time; the column has a non-null JSONB default so existing rows are always valid. The backend dispatch engine (Spec 92 §6.3) reads `notification_prefs->>'notification_schedule'` and the individual boolean fields from this JSONB column. If OS permission is denied, these fields are irrelevant — no pushes are sent regardless of their value.
+
+**Deprecation note:** Earlier drafts used two separate boolean columns (`notif_permit_status`, `notif_urgent_alerts`). These are superseded by `notification_prefs` JSONB, which covers the full Spec 92 preference surface. The migration must NOT create the boolean columns — only the JSONB column.
 
 ### 2.5 Admin-Configured Fields (Manufacturer accounts only)
 
@@ -68,7 +95,9 @@ Both governed by `expo-notifications` permission state (Spec 92). If OS permissi
 | `trade_slugs_override` | TEXT[] | Manufacturer: multiple or all trades. Null for individual accounts. |
 | `radius_cap_km` | INTEGER | Maximum radius enforced server-side. Null = no cap (manufacturers). |
 
-**Manufacturer `trade_slug` note:** Manufacturer accounts have `trade_slug = NULL`. The `trade_slugs_override` array is their trade list. All API and client logic that reads `trade_slug` must handle `NULL` by checking `trade_slugs_override` when `account_preset = 'manufacturer'`. **Manufacturer accounts cannot update `trade_slug` via PATCH** — the 400 guard applies to ALL accounts. For manufacturers, `trade_slug` is permanently `NULL` and `trade_slugs_override` is their trade list. The PATCH endpoint allows manufacturers to update `trade_slugs_override` but never `trade_slug` (setting a manufacturer's `trade_slug` to a non-null value would create an inconsistent state where both fields are populated).
+**Manufacturer `trade_slug` note:** Manufacturer accounts have `trade_slug = NULL`. The `trade_slugs_override` array is their trade list. All API and client logic that reads `trade_slug` must handle `NULL` by checking `trade_slugs_override` when `account_preset = 'manufacturer'`. **Manufacturer accounts cannot update `trade_slug` via PATCH** — the 400 guard applies to ALL accounts. For manufacturers, `trade_slug` is permanently `NULL` and `trade_slugs_override` is their trade list.
+
+**`trade_slugs_override` update path:** This field is NOT writable by manufacturers via `PATCH /api/user-profile` (it is in the server-only blocklist — client-controlled multi-trade selection creates a privilege escalation vector). Updates to `trade_slugs_override` are performed exclusively by Buildo admin via a dedicated admin endpoint (`PATCH /api/admin/user-profile/{uid}`) or direct DB write. This is intentional: manufacturer trade lists are configured by Buildo, not self-selected by the manufacturer.
 
 ## 3. Trade Immutability
 
@@ -117,7 +146,7 @@ The following fields may be updated via Settings post-onboarding (Spec 97 §1):
 | Radius | ✅ | Bounded by `radius_cap_km` from admin config |
 | Primary view | ✅ | Switches `default_tab` between feed and flight board |
 | Supplier selection | ✅ | |
-| Notification toggles | ✅ | See Spec 97 §2 |
+| Notification preferences | ✅ | Full JSONB — all 5 keys editable in Settings; PATCH merges partial updates |
 | Backup email | ✅ | SMS users only — editable for account recovery purposes |
 
 ## 6. Location Mode Switch Behaviour
@@ -148,7 +177,15 @@ Realtor default: 3–5km. Tradesperson default: 10–15km (varies by trade). Man
 
 **NULL cap handling:** The SQL formula `MIN(requested_radius, radius_cap_km)` returns `NULL` when `radius_cap_km IS NULL`. The server must explicitly handle this: if `radius_cap_km IS NULL`, apply no cap and use `requested_radius` as-is. The API enforces: `effective_radius = COALESCE(LEAST(requested_radius, radius_cap_km), requested_radius)`.
 
-**DB constraint:** The migration adds a `CHECK` constraint to enforce data integrity: `CHECK ((location_mode = 'gps_live' AND home_base_lat IS NULL AND home_base_lng IS NULL) OR (location_mode = 'home_base_fixed' AND home_base_lat IS NOT NULL AND home_base_lng IS NOT NULL))`. Application logic is not sufficient to guarantee this invariant across all client versions.
+**DB constraint:** The migration adds a `CHECK` constraint to enforce data integrity:
+```sql
+CHECK (
+  location_mode IS NULL  -- valid during mid-onboarding (before address/GPS step)
+  OR (location_mode = 'gps_live' AND home_base_lat IS NULL AND home_base_lng IS NULL)
+  OR (location_mode = 'home_base_fixed' AND home_base_lat IS NOT NULL AND home_base_lng IS NOT NULL)
+)
+```
+`location_mode IS NULL` is explicitly a valid third state for users who have authenticated and chosen their trade but have not yet reached the location step (mid-onboarding). Path T (tracking) users also start with `location_mode IS NULL` and the completion PATCH writes `location_mode='gps_live'` as a default (Spec 94 §10 Step 10). Application logic is not sufficient to guarantee this invariant across all client versions — the constraint enforces it at the DB level.
 
 **Email field staleness:** `email` in `user_profiles` is sourced from Firebase Auth at account creation. If the user later changes their email via Firebase (e.g., through account recovery), the `user_profiles.email` field will not auto-update. Syncing this via a Firebase Auth event trigger is deferred to Phase 2. Known limitation at launch.
 
@@ -226,7 +263,37 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - File: `migrations/XXX_user_profiles_mobile_columns.sql`
 - `ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS` for every column listed in §2 that does not already exist. All new columns are nullable with safe defaults — no backfill required.
 - Special note: `radius_km` is promoted from MMKV-only to a server-side column. After migration, MMKV stores it as cache only; `user_profiles` is authoritative. Client performs a one-time write-back on first launch (see §4 radius_km write-back note).
-- Add `CHECK` constraint per §7: `ALTER TABLE user_profiles ADD CONSTRAINT chk_location_mode_coords CHECK (...)`.
+- `notification_prefs`: add as JSONB with default `'{"new_lead_min_cost_tier":"medium","phase_changed":true,"lifecycle_stalled":true,"start_date_urgent":true,"notification_schedule":"anytime"}'::jsonb`. Do NOT add the deprecated boolean columns `notif_permit_status` / `notif_urgent_alerts`.
+- Add `CHECK` constraint per §7: `ALTER TABLE user_profiles ADD CONSTRAINT chk_location_mode_coords CHECK (location_mode IS NULL OR (location_mode = 'gps_live' AND ...) OR (location_mode = 'home_base_fixed' AND ...))`.
+- **New tables (same migration file):**
+  ```sql
+  CREATE TABLE IF NOT EXISTS lead_view_events (
+    user_id TEXT NOT NULL,
+    permit_num TEXT NOT NULL,
+    revision_num TEXT NOT NULL,
+    viewed_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, permit_num, revision_num)
+  );
+
+  CREATE TABLE IF NOT EXISTS subscribe_nonces (
+    nonce TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '15 minutes'
+  );
+
+  CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+    event_id TEXT PRIMARY KEY,
+    processed_at TIMESTAMPTZ DEFAULT NOW()
+  );
+  ```
+- **ON DELETE CASCADE for hard delete (PIPEDA compliance):** The migration must add FK constraints with CASCADE on all tables that reference `user_profiles.user_id`. At minimum: `lead_view_events`, `lead_assignments` (if it exists), flight board claims table, and push token registration table. If these tables do not yet have FK constraints:
+  ```sql
+  ALTER TABLE lead_view_events
+    ADD CONSTRAINT fk_lead_view_events_user
+    FOREIGN KEY (user_id) REFERENCES user_profiles(user_id) ON DELETE CASCADE;
+  -- Repeat pattern for lead_assignments, flight board claims, push tokens
+  ```
+  If the referenced child tables are created by earlier migrations, add the FK as a separate `ALTER TABLE` in this migration. This ensures Spec 97 §3.3 hard delete cascades automatically without relying on application-level DELETE chains (per Spec 97 §3.3: "Application code alone is not sufficient").
 - Run `npm run db:generate` after migration to regenerate Drizzle types.
 
 **Step 2 — GET /api/user-profile**
@@ -238,11 +305,50 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 3 — PATCH /api/user-profile**
 - File: `src/app/api/user-profile/route.ts` (same file, add `PATCH` handler)
-- **Check deleted account first:** If the authenticated UID has `account_deleted_at IS NOT NULL`, return 403 immediately (same body as GET 403). Do not apply any field updates to deleted accounts.
-- **`UserProfileUpdateSchema` (whitelist — not full `UserProfileSchema`):** Validate against a separate Zod schema that ONLY allows the 11 client-editable fields from §5: `full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `notif_permit_status`, `notif_urgent_alerts`. Any field not in this whitelist → strip silently (`.strip()`) or reject with 400 if strict mode is preferred. **Server-only fields that must NEVER be written via this endpoint:** `subscription_status`, `trial_started_at`, `stripe_customer_id`, `onboarding_complete`, `tos_accepted_at`, `account_deleted_at`, `account_preset`, `trade_slugs_override`, `radius_cap_km`, `lead_views_count`. These are written only by: Stripe webhook handler, GET handler (trial initiation), onboarding PATCH sequence (guarded by Step 9's server-side guard), or direct DB writes by admin scripts.
-- The Zod schema explicitly forbids the `email` field (`.strip()` or reject with 400 if present). Reject any body containing `trade_slug` with 400: `{ error: "Trade cannot be changed after registration." }` (§3). `trade_slug` immutability guard applies to ALL accounts including manufacturers — manufacturers cannot set `trade_slug` via PATCH. Idempotency exception: if incoming `trade_slug` equals the existing DB value, return 200 (handles onboarding retry after network drop, per Spec 94 §10 Step 3).
+- **Check deleted account first:** If the authenticated UID has `account_deleted_at IS NOT NULL`, return 403 immediately (same body as GET 403). Do not apply any field updates to deleted accounts. **Idempotency exception for deletion retry:** if the body is the deletion payload (contains `account_deleted_at` that matches the existing DB value), return 200 rather than 403 — see Step 3a.
+- **`UserProfileUpdateSchema` (whitelist — standard client-editable fields):** Validate against a Zod schema that allows the following 10 fields: `full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `notification_prefs`. Strip all other fields silently (`.strip()`).
+- **Guarded fields (writable via PATCH under server-enforced conditions — NOT in the standard whitelist above):**
+  - `onboarding_complete: true` — accepted ONLY when all required fields are present in the resulting row: `trade_slug IS NOT NULL`, `location_mode IS NOT NULL`, `tos_accepted_at IS NOT NULL`. The server validates these preconditions and then also writes `trial_started_at = NOW()` and `subscription_status = 'trial'` in the same DB transaction (Spec 96 Step 4) when `account_preset != 'manufacturer'`. Reject with 400 if preconditions are not met: `{ error: "Profile incomplete — cannot complete onboarding." }`. Manufacturers skip trial write.
+  - `tos_accepted_at` — accepted only from the onboarding sequence (present in body alongside valid onboarding step fields). Strip if sent independently post-onboarding.
+- **Strictly server-only fields (strip silently or 400 if strict):** `subscription_status`, `trial_started_at`, `stripe_customer_id`, `account_deleted_at`, `account_preset`, `trade_slugs_override`, `radius_cap_km`, `lead_views_count`. These must NEVER be accepted via this PATCH endpoint. They are written only by: Step 3a (deletion endpoint), Step 3b (reactivation endpoint), Stripe webhook handler, or direct DB admin scripts.
+- **`notification_prefs` validation:** If included, parse as a Zod object matching the §2.4 schema. Partial updates are merged server-side (spread existing prefs + incoming partial): `{ ...existingPrefs, ...incomingPrefs }`. This allows the client to update only `notification_schedule` without sending all 5 keys.
+- The Zod schema strips `email` (`.strip()`). Reject any body containing `trade_slug` with 400: `{ error: "Trade cannot be changed after registration." }` (§3). Idempotency exception: if incoming `trade_slug` equals the existing DB value, return 200 (handles onboarding retry after network drop, per Spec 94 §10 Step 3). `trade_slug` immutability guard applies to ALL accounts including manufacturers.
 - Enforce `effective_radius = COALESCE(LEAST(requested_radius, radius_cap_km), requested_radius)` (handles NULL cap per §7).
 - Update only the fields present in the body. Try-catch + `logError`. Return updated row.
+
+**Step 3a — POST /api/user-profile/delete (account deletion endpoint)**
+- File: `src/app/api/user-profile/delete/route.ts`
+- Authenticated route (Firebase Bearer token). Requires `account_deleted_at IS NULL` (cannot re-delete).
+- **Atomic deletion transaction:**
+  ```typescript
+  await db.transaction(async (tx) => {
+    // 1. Mark account for deletion
+    await tx.update(userProfiles).set({
+      account_deleted_at: new Date(),
+      subscription_status: 'cancelled_pending_deletion',
+    }).where(eq(userProfiles.user_id, uid));
+    // 2. Cancel Stripe subscription if stripe_customer_id is set
+    if (profile.stripe_customer_id) {
+      await stripe.subscriptions.cancel(stripeSubscriptionId); // requires sub lookup
+    }
+  });
+  // 3. Revoke all Firebase sessions server-side (outside DB transaction — Firebase Admin)
+  await admin.auth().revokeRefreshTokens(uid);
+  ```
+- On success: return 200 `{ ok: true }`. Client then calls `firebase.auth().signOut()` and navigates to `/(auth)/sign-in` (Spec 93 §3.6, Spec 97 §5 Step 9).
+- **Idempotency:** If `account_deleted_at IS NOT NULL` already (retry after network drop), return 200 immediately — do not call `revokeRefreshTokens` again (it is idempotent at Firebase level but avoids unnecessary Admin SDK calls).
+- Try-catch + `logError`. Never expose raw error to client.
+
+**Step 3b — POST /api/user-profile/reactivate (reactivation endpoint)**
+- File: `src/app/api/user-profile/reactivate/route.ts`
+- Authenticated route. Only valid when `account_deleted_at IS NOT NULL` AND `account_deleted_at > NOW() - INTERVAL '30 days'` (within recovery window).
+- Determines `restored_status`:
+  - `account_preset = 'manufacturer'` → `'admin_managed'`
+  - All others (including prior `trial`) → `'expired'` (trial does not resume; user must subscribe at buildo.com)
+- Sets `account_deleted_at = NULL`, `subscription_status = restored_status` atomically.
+- Returns 200 with updated profile. Client receives `subscription_status = 'expired'` or `'admin_managed'` and the subscription gate handles routing.
+- Returns 400 if recovery window has passed (> 30 days). Returns 400 if account is not in deletion state.
+- Try-catch + `logError`.
 
 **Step 4 — Route guard**
 - File: `src/lib/auth/route-guard.ts`
@@ -254,7 +360,8 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 6 — Store field separation**
 - `filterStore` owns feed-preference fields: `locationMode`, `defaultTab`, `homeBaseLat`, `homeBaseLng`, `supplierSelection`, `tradeSlug`, `radiusKm`.
-- `userProfileStore` owns account/display fields: `fullName`, `companyName`, `phoneNumber`, `backupEmail`, `notifPermitStatus`, `notifUrgentAlerts`. Changes to these fields must NOT trigger `queryClient.invalidateQueries(['leads'])` — notification toggle saves must not cause the lead feed to re-fetch.
+- `userProfileStore` owns account/display fields: `fullName`, `companyName`, `phoneNumber`, `backupEmail`, `notificationPrefs` (the full JSONB object from §2.4). Changes to these fields must NOT trigger `queryClient.invalidateQueries(['leads'])` — notification preference saves must not cause the lead feed to re-fetch.
+- `notificationPrefs` in the store is typed as the full JSONB shape: `{ new_lead_min_cost_tier: 'low'|'medium'|'high', phase_changed: boolean, lifecycle_stalled: boolean, start_date_urgent: boolean, notification_schedule: 'morning'|'anytime'|'evening' }`. Individual Settings controls read/write specific keys from this object; PATCH sends the merged full object (Step 3 merge logic).
 - File `mobile/src/store/filterStore.ts`: add `locationMode`, `defaultTab`, `homeBaseLat`, `homeBaseLng`, `supplierSelection`. Add `hydrate(profile: UserProfile)` action that overwrites only the filter-scoped fields listed above. Add `reset()` action that clears all fields to null/default (called on sign-out per Spec 93 §5 Step 2).
 - File `mobile/src/store/userProfileStore.ts` (new): Zustand store holding `fullName`, `companyName`, `phoneNumber`, `backupEmail`, `notifPermitStatus`, `notifUrgentAlerts`. Add `hydrate(profile: UserProfile)` action. Add `reset()` action. MMKV is cache; `user_profiles` wins on conflict.
 
@@ -290,12 +397,19 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - `mobile/src/store/filterStore.ts` — add `locationMode`, `defaultTab` fields
 - DB migration — new columns on `user_profiles` table
 
-**Schema evolution required (new columns):**
-`full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `lead_views_count`, `subscription_status`, `trial_started_at`, `stripe_customer_id`, `onboarding_complete`, `tos_accepted_at`, `account_deleted_at`, `notif_permit_status`, `notif_urgent_alerts`, `account_preset`, `trade_slugs_override`, `radius_cap_km`
+**Schema evolution required (new columns on `user_profiles`):**
+`full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `lead_views_count`, `subscription_status`, `trial_started_at`, `stripe_customer_id`, `onboarding_complete`, `tos_accepted_at`, `account_deleted_at`, `notification_prefs` (JSONB — replaces deprecated boolean columns), `account_preset`, `trade_slugs_override`, `radius_cap_km`
 
 **`subscription_status` ENUM values (all 6 must be in the migration):** `'trial'`, `'active'`, `'past_due'`, `'expired'`, `'cancelled_pending_deletion'`, `'admin_managed'`
 
-**Supporting table (new):** `lead_view_events(user_id TEXT, permit_num TEXT, revision_num TEXT, viewed_at TIMESTAMPTZ DEFAULT NOW(), PRIMARY KEY (user_id, permit_num, revision_num))` — drives `lead_views_count` deduplication per §2.2.1.
+**New tables (all created in this migration):**
+- `lead_view_events(user_id TEXT, permit_num TEXT, revision_num TEXT, viewed_at TIMESTAMPTZ DEFAULT NOW(), PRIMARY KEY (user_id, permit_num, revision_num))` — drives `lead_views_count` deduplication per §2.2.1
+- `subscribe_nonces(nonce TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '15 minutes')` — single-use nonces for Stripe checkout (Spec 96 §5)
+- `stripe_webhook_events(event_id TEXT PRIMARY KEY, processed_at TIMESTAMPTZ DEFAULT NOW())` — Stripe webhook idempotency table (Spec 96 Step 5)
+
+**New API files (new target files):**
+- `src/app/api/user-profile/delete/route.ts` — account deletion endpoint (Step 3a)
+- `src/app/api/user-profile/reactivate/route.ts` — 30-day recovery reactivation endpoint (Step 3b)
 
 Note: `radius_km` currently exists in MMKV only (`tasks/lessons.md`). This migration promotes it to a server-side column — MMKV becomes cache only.
 

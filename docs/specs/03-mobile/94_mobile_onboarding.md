@@ -80,7 +80,7 @@ Full-screen address search using `expo-location` geocoding + manual text input. 
 - Geocode the entered address
 - If coordinates fall outside Toronto bounding box (lat 43.58–43.86, lng −79.64 to −79.12): show warning — *"That address is outside Toronto's permit coverage. Did you mean [nearest Toronto area]?"* — offer the nearest Toronto centroid as a suggestion
 - If inside Toronto but imprecise: silently snap to nearest 500m grid point (same `snapCoord` logic as `useLocation.ts`)
-- On confirm → write `home_base_lat`, `home_base_lng` to `user_profiles`
+- On confirm → write `{ home_base_lat, home_base_lng, location_mode: 'home_base_fixed' }` to `user_profiles`. **`location_mode` must be explicitly written here** — it is required by the Spec 95 server guard for `onboarding_complete: true` and by the DB CHECK constraint.
 
 **Default radius:** Set by Buildo admin per the "realtor" preset — typically 3–5km. Written to `user_profiles.radius_km` from the admin-configured default. Not shown to user during onboarding.
 
@@ -110,8 +110,8 @@ Two large card options:
 [ 🔄 Live GPS feed  ]
 ```
 
-- **Fixed address:** Address input screen with Toronto bounds validation (same as §4 Path R). Writes `home_base_lat`, `home_base_lng` to `user_profiles`. Sets `location_mode = 'home_base_fixed'`.
-- **Live GPS:** No address input. Sets `location_mode = 'gps_live'`. Location resolved automatically on feed load via `useLocation.ts`.
+- **Fixed address:** Address input screen with Toronto bounds validation (same as §4 Path R). Writes `{ home_base_lat, home_base_lng, location_mode: 'home_base_fixed' }` to `user_profiles`. `location_mode` must be written explicitly alongside coordinates (required by server guard and DB CHECK constraint — see Spec 95 §7).
+- **Live GPS:** No address input. Writes `{ location_mode: 'gps_live' }` to `user_profiles`. Location resolved automatically on feed load via `useLocation.ts`.
 
 **GPS permission denied (Live GPS path):**
 If user denies iOS/Android location permission: show explainer — *"We need location access to show leads near you. Enable in Settings or switch to a fixed address."* — with a deep link to device Settings (`Linking.openSettings()`) and a secondary CTA to go back and choose fixed address instead. Does not apply to realtors (always fixed).
@@ -453,7 +453,8 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 5 — Address input screen**
 - File: `mobile/app/(onboarding)/address.tsx`
-- `expo-location` `geocodeAsync()` on submitted text. **Empty-array guard:** `geocodeAsync` returns `[]` (not null/error) when the address yields no results — check `results.length === 0` before accessing `results[0]` and show the user "Address not found — please try again." Run `snapCoord.ts`. Outside Toronto bounds → show warning + nearest neighbourhood centroid suggestion. Inside bounds → snap silently. On confirm: PATCH `{ home_base_lat, home_base_lng, location_mode: 'home_base_fixed' }`.
+- `expo-location` `geocodeAsync()` on submitted text. **Empty-array guard:** `geocodeAsync` returns `[]` (not null/error) when the address yields no results — check `results.length === 0` before accessing `results[0]` and show the user "Address not found — please try again." Run `snapCoord.ts`. Outside Toronto bounds → show warning + nearest neighbourhood centroid suggestion. Inside bounds → snap silently. On confirm: PATCH `{ home_base_lat, home_base_lng, location_mode: 'home_base_fixed' }`. **`location_mode` is required in this PATCH** — it satisfies both the Spec 95 server guard and the DB CHECK constraint.
+- **Live GPS path:** On selection → PATCH `{ location_mode: 'gps_live' }` immediately before navigating to supplier step. This ensures `location_mode` is written even if the user drops off before reaching the completion screen.
 - Layout: `KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}` wrapping `ScrollView`
 - Text input: `bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-4 text-zinc-100 font-sans text-base` · focused `border-amber-500` · placeholder `text-zinc-600`. Use `font-sans` (DM Sans) — not `font-mono` — for address input.
 - Toronto bounds error: `bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 mt-3 text-amber-400 text-sm leading-relaxed`
@@ -478,6 +479,14 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - Link text: `text-amber-400 text-sm underline`
 - CTA disabled: `opacity-40` · enabled: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full` · label `text-zinc-950 font-bold text-base text-center`
 
+**Step 7b — GET /api/onboarding/suppliers endpoint**
+- File: `src/app/api/onboarding/suppliers/route.ts`
+- Authenticated route (Firebase Bearer token — same auth as all mobile API routes). Query param: `trade` (slug string).
+- Returns `{ data: { suppliers: string[] } }` — an ordered list of supplier names for the given trade. List is seeded in the admin panel and fetched from a `trade_suppliers` config table (or similar admin-managed data store). If no suppliers are seeded for the trade, returns `{ data: { suppliers: [] } }` — the client auto-skips the supplier screen on empty array (Spec 94 §10 Step 6).
+- No POST/PATCH — supplier list is admin-managed only.
+- Try-catch + `logError`. Route guard: classify as `authenticated` (not admin-only).
+- **Test:** `src/tests/onboarding-suppliers.infra.test.ts` — returns 200 with list for known trade; returns empty array for unknown trade (not 404); returns 401 for unauthenticated request.
+
 **Step 8 — First permit screen (Path T only)**
 - File: `mobile/app/(onboarding)/first-permit.tsx`
 - Inline reuse of `SearchPermitsSheet` from Spec 77 §3.1. "Skip, I'll do it later →" navigates to `terms.tsx`. On successful claim: fire `successNotification()` haptic (Spec 92 §4.3).
@@ -493,7 +502,8 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - On tap: PATCH `{ default_tab: 'feed', onboarding_complete: true }` → navigate `/(app)/(tabs)`.
 
 **Step 10 — Path T completion (no screen)**
-- In `terms.tsx` confirm handler for Path T: PATCH `{ default_tab: 'flight_board', onboarding_complete: true }` → navigate `/(app)/(tabs)/flight-board`.
+- In `terms.tsx` confirm handler for Path T: PATCH `{ default_tab: 'flight_board', location_mode: 'gps_live', onboarding_complete: true }` → navigate `/(app)/(tabs)/flight-board`.
+- **Why `location_mode: 'gps_live'`:** Path T skips the address/GPS step entirely (§6). `location_mode` is required by the Spec 95 server guard for `onboarding_complete: true` and by the DB CHECK constraint. GPS Live is the correct default for tracking-path users — they follow active projects at job sites rather than scouting from a fixed territory. The server will also write `trial_started_at + subscription_status='trial'` atomically in this same PATCH (Spec 96 Step 4 preferred approach).
 
 **Step 11 — Drop-off recovery**
 - File: `mobile/src/store/onboardingStore.ts`

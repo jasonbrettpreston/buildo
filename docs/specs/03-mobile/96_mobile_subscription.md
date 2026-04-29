@@ -203,7 +203,7 @@ When `paywallStore.dismissed = true` AND `subscription_status === 'expired'`, th
 
 The "Already paid? Refresh status" link is hidden initially and revealed after 60 seconds on the paywall screen without a status change.
 
-**Implementation:** `useEffect` with `setTimeout(60_000)` → set `showRefresh = true`. The link fades in via `withTiming(1, { duration: 400 })` opacity transition on `useSharedValue(0)`. On tap: calls `queryClient.invalidateQueries(['user-profile'])` + shows `<ActivityIndicator size="small" color="#71717a" />` inline next to the link text while refetching. If status comes back `'active'`, paywall dismisses. If still `'expired'`, a `text-zinc-500 text-xs` message appears: "Still showing trial ended — please check buildo.com."
+**Implementation:** `useEffect` with `setTimeout(60_000)` → set `showRefresh = true`. **The timeout must be cleared in the cleanup return:** `return () => clearTimeout(timerId)` — prevents `setState` on an unmounted component if the paywall unmounts before the 60s fires (e.g., user pays and paywall closes). The link fades in via `withTiming(1, { duration: 400 })` opacity transition on `useSharedValue(0)`. On tap: calls `queryClient.invalidateQueries(['user-profile'])` + shows `<ActivityIndicator size="small" color="#71717a" />` inline next to the link text while refetching. If status comes back `'active'`, paywall dismisses. If still `'expired'`, a `text-zinc-500 text-xs` message appears: "Still showing trial ended — please check buildo.com."
 
 ---
 
@@ -217,9 +217,11 @@ File: `mobile/src/store/paywallStore.ts`
 | `dismissed` | boolean | User tapped "Maybe later" — inline blur mode |
 | `show()` | action | Set `visible: true`, `dismissed: false` |
 | `dismiss()` | action | Set `visible: false`, `dismissed: true` |
-| `clear()` | action | Set both false — called when `subscription_status` changes to `'active'` |
+| `clear()` | action | Set both false — called when `subscription_status` changes to `'active'` OR on sign-out |
 
 `paywallStore` is not persisted in MMKV — always starts fresh on app open so a returning subscriber is never stuck in inline blur mode.
+
+**Sign-out reset (critical):** `paywallStore.clear()` MUST be called in the sign-out action (Spec 93 Step 2 `signOut()` action) alongside `filterStore.reset()` and `userProfileStore.reset()`. Without this, a User A who dismissed the paywall and then signed out on a shared device would leave `paywallStore.dismissed = true` in memory, causing User B to see the inline blur mode immediately on sign-in (before their status is even checked). Since `paywallStore` is not MMKV-persisted, this only affects same-session shared-device scenarios — but those occur with family or team phone hand-offs.
 
 ---
 
@@ -269,17 +271,50 @@ Six status values handled (all values from Spec 95 §2.3 enum):
 - **Flight board:** Same banner. Individual flight board rows blurred with same `BlurView intensity={8}` + `opacity: 0.1` on content.
 
 **Step 4 — Trial started_at write (server-side)**
-- File: `src/app/api/user-profile/route.ts` (GET handler extension + PATCH handler extension)
+- File: `src/app/api/user-profile/route.ts` (PATCH handler — guarded field path in Spec 95 Step 3) + GET handler fallback
 - The server, not the client, initiates the trial. **Preferred (race-condition-safe):** Write `{ trial_started_at: NOW(), subscription_status: 'trial' }` atomically within the same DB transaction as the `onboarding_complete = true` PATCH (i.e., at the end of onboarding, when the client sends `PATCH { onboarding_complete: true }`). The server checks: if `onboarding_complete` is being set to `true` AND `trial_started_at IS NULL` AND `account_preset != 'manufacturer'` → write both fields in the same transaction. This eliminates the race condition where a GET fires immediately after the onboarding PATCH commits but before the trial is written.
 - **Fallback (GET handler):** If `onboarding_complete = true` AND `trial_started_at IS NULL` AND `subscription_status IS NULL` AND `account_preset != 'manufacturer'` on a GET — the trial write was missed (e.g., old client, app crash during PATCH). Write atomically using `UPDATE ... WHERE trial_started_at IS NULL RETURNING *` (idempotent — if two concurrent GETs race, only one write succeeds; the other reads the already-written value). The client always receives a profile with `subscription_status` set.
+- **Phase 1 trial expiration logic (same PATCH/GET handlers):** When `subscription_status = 'trial'` AND `trial_started_at + INTERVAL '14 days' <= NOW()` (note: `<=` inclusive — user gets the full 14th day; `< NOW()` would expire at midnight of day 14, cutting the last day short): write `subscription_status = 'expired'` to the DB row (not just the response). A computed-only response that leaves DB state as `'trial'` creates a split where admin dashboards and analytics see the user as active when they are locked out.
 - This prevents client-side gaming: a user cannot block the trial start or reset it by clearing app data.
+
+**Step 4b — POST /api/subscribe/session**
+- File: `src/app/api/subscribe/session/route.ts`
+- Authenticated route (Firebase Bearer token). Returns a single-use nonce URL for the Stripe checkout web flow.
+- **Implementation:**
+  ```typescript
+  const nonce = crypto.randomUUID();
+  await db.insert(subscribeNonces).values({
+    nonce,
+    user_id: uid,
+    expires_at: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+  });
+  return { url: `https://buildo.com/subscribe?nonce=${nonce}` };
+  ```
+- No UID or email in the URL — avoids PII in server logs, browser history, and referrer headers. The web checkout exchanges the nonce server-to-server to look up the Firebase UID.
+- **Nonce expiry cleanup:** Expired nonces may be purged by a separate periodic job. The web checkout endpoint must `SELECT ... WHERE expires_at > NOW()` and reject expired nonces with 400.
+- Returns 401 for unauthenticated request. Returns 400 if `subscription_status` is already `'active'` or `'admin_managed'` (no checkout needed). Try-catch + `logError`.
+- **Route guard:** classify as `authenticated`. Add to `src/lib/auth/route-guard.ts`.
+- **Test:** `src/tests/subscribe-session.infra.test.ts` (referenced in Testing Gates) — POST creates nonce row; URL contains nonce but no UID/email; unauthenticated request returns 401; already-active user returns 400.
 
 **Phase 1 trial expiration:** When `subscription_status = 'trial'` AND `trial_started_at + 14 days < NOW()`: write `subscription_status = 'expired'` to the DB (not just the response). A computed-only response that leaves DB state as `'trial'` creates a split where customer support dashboards, analytics, and admin panels see a user as active when they are locked out. Writing to DB is the correct approach. The Phase 2 Cloud Function (Step 6) handles batch processing and reminder emails — Phase 1 just needs to write the expiry correctly on first detection.
 
 **Step 5 — Stripe webhook handler**
 - File: `src/app/api/webhooks/stripe/route.ts`
 - Public route (no Firebase auth — Stripe calls it). Verify `Stripe-Signature` header via `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)`. Invalid signature → 400.
-- **Idempotency table:** `stripe_webhook_events(event_id TEXT PRIMARY KEY, processed_at TIMESTAMPTZ DEFAULT NOW())`. The webhook handler `INSERT INTO stripe_webhook_events (event_id) VALUES ($1) ON CONFLICT DO NOTHING RETURNING event_id`. If the `RETURNING` clause returns no rows, the event was already processed — return 200 immediately without re-processing. This deduplication must be part of the same DB transaction as the `user_profiles` UPDATE, not a pre-check, to prevent TOCTOU races under concurrent Stripe retries.
+- **Idempotency (must be in an explicit `db.transaction()`):** The deduplication INSERT and the `user_profiles` UPDATE must execute inside a single atomic transaction — not two separate auto-commit statements:
+  ```typescript
+  await db.transaction(async (tx) => {
+    const [inserted] = await tx.insert(stripeWebhookEvents)
+      .values({ event_id: event.id })
+      .onConflictDoNothing()
+      .returning({ event_id: stripeWebhookEvents.event_id });
+    if (!inserted) return; // Already processed — exit transaction, return 200
+    await tx.update(userProfiles)
+      .set({ subscription_status: newStatus, ... })
+      .where(eq(userProfiles.stripe_customer_id, customerId));
+  });
+  ```
+  Wrapping in `db.transaction()` prevents TOCTOU races under concurrent Stripe retries — two parallel webhook deliveries will race on the INSERT; only one will see a row returned; the other will exit without updating the profile.
 - `customer.subscription.created` / `customer.subscription.updated` with `status: 'active'` → UPDATE `subscription_status = 'active'` + write `stripe_customer_id` to `user_profiles`.
 - `invoice.payment_failed` → UPDATE `subscription_status = 'past_due'`. User retains access during Stripe's dunning retry period. Access revoked only on final `customer.subscription.deleted`.
 - `customer.subscription.deleted` → UPDATE `subscription_status = 'expired'`.
@@ -301,10 +336,12 @@ Six status values handled (all values from Spec 95 §2.3 enum):
 ## 11. Operating Boundaries
 
 **Target files:**
-- `src/app/api/user-profile/route.ts` — subscription_status read
+- `src/app/api/user-profile/route.ts` — subscription_status read + trial initiation
 - `src/app/api/webhooks/stripe/route.ts` — Stripe webhook handler (new)
+- `src/app/api/subscribe/session/route.ts` — nonce-based checkout URL endpoint (new, Step 4b)
 - `mobile/app/(app)/_layout.tsx` — subscription_status gate on every screen
 - `mobile/src/components/paywall/PaywallScreen.tsx` — new component
+- `mobile/src/store/paywallStore.ts` — new store
 
 **Out of scope:**
 - In-app purchase (Apple IAP) — deliberately excluded
