@@ -615,9 +615,13 @@ _From the 7-agent audit (4 micro + 3 macro + 2 automated guards). Critical/impor
 
 ## WF1 Spec 95 Mobile User Profiles — Deferred Review Items (2026-04-29)
 
+13-item adversarial triage resolved in commit 4eeaf96 (2026-04-29). Remaining deferred items below.
+
 | Severity | Source | Item | Planned Home |
 |----------|--------|------|-------------|
 | MED | Adversarial | **`tos_accepted_at` writable post-onboarding** — `UserProfileUpdateSchema` always accepts `tos_accepted_at`; spec requires stripping it if sent independently post-onboarding. Requires reading `onboarding_complete` from the pre-fetch SELECT and rejecting the field if already true. Compliance/legal field — low exploit risk since clients set it once; no UI in Spec 97 allows modifying it. | Spec 97 Settings — add guard when editable fields are wired |
 | MED | Adversarial | **`trade_slug: null` manufacturer filterStore** — `filterStore.hydrate()` maps `null` to `''` (empty string) for manufacturer accounts; `trade_slugs_override` is not surfaced in filterStore. Manufacturer feed requires multi-trade query logic that is not yet specced. | Manufacturer feed spec (future) |
 | MED | Adversarial | **Delete route not in DB transaction** — `UPDATE user_profiles` is a bare `query()` call, not wrapped in `withTransaction`. The spec mandates an atomic transaction wrapping the update and Stripe cancellation. Currently safe since Stripe is deferred (Spec 96), but needs the wrapper added when Stripe is wired. | Spec 96 — add `withTransaction` wrapper when Stripe is installed |
+| MED | Integration | **Radius slider writes to filterStore only, no PATCH to server** — `setRadiusKm()` updates local state but the radius change is not persisted to `user_profiles.radius_km` via PATCH. Spec 97 Settings screen is the natural home for the save action. | Spec 97 Settings |
 | LOW | Spec Compliance | **`chk_location_mode` constraint redundant** — migration 114 adds both `chk_location_mode` (CHECK enum values) and `chk_location_mode_coords` (three-state coherence). PostgreSQL NULL-in-CHECK semantics make `chk_location_mode` correctly allow NULL despite not being explicit. Redundant but not broken. | Low-priority cleanup if migration is revisited |
+| LOW | Integration | **signOut does not clear `user-profile-cache` MMKV key on second device** — `clearUserProfileCache()` is now called in signOut, but the `user-profile-cache` instance in `useUserProfile.ts` is created at module scope; a second logged-in device may still see stale cache until next launch. Spec 96 auth hardening pass should include token-rotation-triggered cache invalidation. | Spec 96 |
