@@ -251,6 +251,81 @@ describe('PATCH /api/user-profile', () => {
   });
 });
 
+describe('PATCH /api/user-profile — location coherence (Spec 95 §7)', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('returns 400 LOCATION_COORDS_REQUIRED when home_base_fixed sent without any coords', async () => {
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    // Existing row has no coords (null) — effective state would violate constraint
+    mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
+    const res = await PATCH(makePATCH({ location_mode: 'home_base_fixed' }));
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: { code: string } };
+    expect(body.error.code).toBe('LOCATION_COORDS_REQUIRED');
+  });
+
+  it('returns 400 when home_base_fixed sent with lat but missing lng', async () => {
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
+    const res = await PATCH(makePATCH({ location_mode: 'home_base_fixed', home_base_lat: 43.65 }));
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: { code: string } };
+    expect(body.error.code).toBe('LOCATION_COORDS_REQUIRED');
+  });
+
+  it('returns 400 when home_base_fixed sent with lng but missing lat', async () => {
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
+    const res = await PATCH(makePATCH({ location_mode: 'home_base_fixed', home_base_lng: -79.38 }));
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: { code: string } };
+    expect(body.error.code).toBe('LOCATION_COORDS_REQUIRED');
+  });
+
+  it('returns 200 when home_base_fixed sent with both coords', async () => {
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
+    const updated = { ...BASE_PROFILE, location_mode: 'home_base_fixed', home_base_lat: 43.65, home_base_lng: -79.38 };
+    mockQuery.mockResolvedValueOnce([updated]);
+    const res = await PATCH(makePATCH({ location_mode: 'home_base_fixed', home_base_lat: 43.65, home_base_lng: -79.38 }));
+    expect(res.status).toBe(200);
+    const body = await res.json() as { data: typeof updated };
+    expect(body.data.location_mode).toBe('home_base_fixed');
+  });
+
+  it('returns 200 when home_base_fixed sent without coords but existing row already has both', async () => {
+    // User already has coords set — just updating location_mode to fixed is valid
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, home_base_lat: 43.65, home_base_lng: -79.38 }]);
+    const updated = { ...BASE_PROFILE, location_mode: 'home_base_fixed', home_base_lat: 43.65, home_base_lng: -79.38 };
+    mockQuery.mockResolvedValueOnce([updated]);
+    const res = await PATCH(makePATCH({ location_mode: 'home_base_fixed' }));
+    expect(res.status).toBe(200);
+  });
+
+  it('auto-clears coords when switching to gps_live — response has null lat/lng', async () => {
+    // Existing row has coords set from a previous home_base_fixed session
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, home_base_lat: 43.65, home_base_lng: -79.38 }]);
+    const updated = { ...BASE_PROFILE, location_mode: 'gps_live', home_base_lat: null, home_base_lng: null };
+    mockQuery.mockResolvedValueOnce([updated]);
+    const res = await PATCH(makePATCH({ location_mode: 'gps_live' }));
+    expect(res.status).toBe(200);
+    const body = await res.json() as { data: typeof updated };
+    expect(body.data.home_base_lat).toBeNull();
+    expect(body.data.home_base_lng).toBeNull();
+  });
+
+  it('gps_live with explicit null coords also returns 200', async () => {
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, home_base_lat: 43.65, home_base_lng: -79.38 }]);
+    const updated = { ...BASE_PROFILE, location_mode: 'gps_live', home_base_lat: null, home_base_lng: null };
+    mockQuery.mockResolvedValueOnce([updated]);
+    const res = await PATCH(makePATCH({ location_mode: 'gps_live', home_base_lat: null, home_base_lng: null }));
+    expect(res.status).toBe(200);
+  });
+});
+
 describe('POST /api/user-profile/delete', () => {
   beforeEach(() => { vi.clearAllMocks(); });
 

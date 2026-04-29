@@ -71,7 +71,7 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
 
   try {
     const rows = await query<Record<string, unknown>>(
-      `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, tos_accepted_at, subscription_status
+      `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, home_base_lat, home_base_lng, tos_accepted_at, subscription_status
        FROM user_profiles WHERE user_id = $1`,
       [uid],
     );
@@ -81,7 +81,7 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       // New user — auto-create skeleton row (trade_slug nullable after migration 114)
       await query(`INSERT INTO user_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`, [uid]);
       const created = await query<Record<string, unknown>>(
-        `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, tos_accepted_at, subscription_status
+        `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, home_base_lat, home_base_lng, tos_accepted_at, subscription_status
          FROM user_profiles WHERE user_id = $1`,
         [uid],
       );
@@ -169,6 +169,32 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       }
     }
 
+    // Location coherence — Spec 95 §7 / chk_location_mode_coords.
+    // Validates the resulting effective state before hitting the DB CHECK constraint
+    // so clients receive a descriptive 400 instead of a constraint-violation 500.
+    const effectiveLocationMode = fields.location_mode ?? (existing.location_mode as string | null);
+    if (effectiveLocationMode === 'home_base_fixed') {
+      const effectiveLat = fields.home_base_lat !== undefined
+        ? fields.home_base_lat
+        : (existing.home_base_lat as number | null);
+      const effectiveLng = fields.home_base_lng !== undefined
+        ? fields.home_base_lng
+        : (existing.home_base_lng as number | null);
+      if (effectiveLat === null || effectiveLng === null) {
+        return NextResponse.json(
+          {
+            data: null,
+            error: {
+              code: 'LOCATION_COORDS_REQUIRED',
+              message: 'home_base_lat and home_base_lng are required when location_mode is home_base_fixed',
+            },
+            meta: null,
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     // Build dynamic SET clause — only include fields present in body
     const setClauses: string[] = [];
     const params: unknown[] = [uid];
@@ -187,6 +213,13 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     if (fields.location_mode !== undefined) addField('location_mode', fields.location_mode);
     if (fields.home_base_lat !== undefined) addField('home_base_lat', fields.home_base_lat);
     if (fields.home_base_lng !== undefined) addField('home_base_lng', fields.home_base_lng);
+    // gps_live requires NULL coords (chk_location_mode_coords). Auto-clear any coords
+    // the client did not explicitly send so the constraint is satisfied without requiring
+    // the client to redundantly pass null for both fields on every mode switch.
+    if (fields.location_mode === 'gps_live') {
+      if (fields.home_base_lat === undefined) addField('home_base_lat', null);
+      if (fields.home_base_lng === undefined) addField('home_base_lng', null);
+    }
     if (fields.supplier_selection !== undefined) addField('supplier_selection', fields.supplier_selection);
     if (fields.onboarding_complete !== undefined) addField('onboarding_complete', fields.onboarding_complete);
     if (fields.tos_accepted_at !== undefined) addField('tos_accepted_at', fields.tos_accepted_at);
