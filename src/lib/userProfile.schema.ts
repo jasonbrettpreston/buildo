@@ -17,8 +17,9 @@ export const UserProfileSchema = z.object({
   // Profession / feed-scoping
   default_tab: z.enum(['feed', 'flight_board']).nullable(),
   location_mode: z.enum(['gps_live', 'home_base_fixed']).nullable(),
-  home_base_lat: z.number().nullable(),
-  home_base_lng: z.number().nullable(),
+  // pg returns NUMERIC(9,6) as string — coerce to number before storing
+  home_base_lat: z.coerce.number().nullable(),
+  home_base_lng: z.coerce.number().nullable(),
   radius_km: z.number().int().nullable(),
   supplier_selection: z.string().nullable(),
   lead_views_count: z.number().int(),

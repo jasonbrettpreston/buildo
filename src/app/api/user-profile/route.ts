@@ -71,19 +71,30 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
 
   try {
     const rows = await query<Record<string, unknown>>(
-      `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, tos_accepted_at
+      `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, tos_accepted_at, subscription_status
        FROM user_profiles WHERE user_id = $1`,
       [uid],
     );
 
+    let existing: Record<string, unknown>;
     if (rows.length === 0) {
-      return NextResponse.json(
-        { data: null, error: { code: 'NOT_FOUND', message: 'Profile not found' }, meta: null },
-        { status: 404 },
+      // New user — auto-create skeleton row (trade_slug nullable after migration 114)
+      await query(`INSERT INTO user_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`, [uid]);
+      const created = await query<Record<string, unknown>>(
+        `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, tos_accepted_at, subscription_status
+         FROM user_profiles WHERE user_id = $1`,
+        [uid],
       );
+      if (created.length === 0) {
+        return NextResponse.json(
+          { data: null, error: { code: 'NOT_FOUND', message: 'Profile not found' }, meta: null },
+          { status: 404 },
+        );
+      }
+      existing = created[0]!;
+    } else {
+      existing = rows[0]!;
     }
-
-    const existing = rows[0]!;
 
     if (existing.account_deleted_at) {
       return NextResponse.json(
@@ -147,7 +158,7 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     }
 
     // Build dynamic SET clause — only include fields present in body
-    const setClauses: string[] = ['updated_at = NOW()'];
+    const setClauses: string[] = [];
     const params: unknown[] = [uid];
 
     const addField = (col: string, value: unknown) => {
@@ -182,12 +193,26 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       setClauses.push(`notification_prefs = COALESCE(notification_prefs, '{}'::jsonb) || $${params.length}::jsonb`);
     }
 
-    // onboarding_complete=true + non-manufacturer → start trial in same UPDATE
-    if (fields.onboarding_complete === true && existing.account_preset !== 'manufacturer') {
+    // onboarding_complete=true + non-manufacturer + not already subscribed → start trial
+    if (
+      fields.onboarding_complete === true &&
+      existing.account_preset !== 'manufacturer' &&
+      !existing.subscription_status
+    ) {
       setClauses.push(`trial_started_at = NOW()`);
       setClauses.push(`subscription_status = 'trial'`);
     }
 
+    // No writable fields in body — return current profile without a phantom write
+    if (setClauses.length === 0) {
+      const full = await query<Record<string, unknown>>(
+        `SELECT * FROM user_profiles WHERE user_id = $1`,
+        [uid],
+      );
+      return NextResponse.json({ data: full[0], error: null, meta: null });
+    }
+
+    setClauses.push('updated_at = NOW()');
     const updated = await query<Record<string, unknown>>(
       `UPDATE user_profiles SET ${setClauses.join(', ')} WHERE user_id = $1 RETURNING *`,
       params,

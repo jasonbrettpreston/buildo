@@ -12,6 +12,7 @@ import { fetchWithAuth } from '@/lib/apiClient';
 import { UserProfileSchema, type UserProfileType } from '@/lib/userProfile.schema';
 import { useFilterStore } from '@/store/filterStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
+import { useOnboardingStore } from '@/store/onboardingStore';
 
 const profileStorage = createMMKV({ id: 'user-profile-cache' });
 
@@ -29,6 +30,14 @@ function readCachedProfile(): UserProfileType | null {
 function writeCachedProfile(profile: UserProfileType): void {
   try {
     profileStorage.set('profile', JSON.stringify(profile));
+  } catch {
+    /* best-effort */
+  }
+}
+
+export function clearUserProfileCache(): void {
+  try {
+    profileStorage.remove('profile');
   } catch {
     /* best-effort */
   }
@@ -71,13 +80,17 @@ export function useUserProfile() {
     queryKey: ['user-profile'],
     queryFn: fetchProfile,
     staleTime: 300_000,
-    retry: 1,
+    retry: 3,
   });
 
   useEffect(() => {
     if (query.data) {
       hydrateFilter(query.data);
       hydrateUserProfile(query.data);
+      // Bridge server onboarding_complete back to local MMKV gate (Spec 95 §9 Step 7)
+      if (query.data.onboarding_complete && !useOnboardingStore.getState().isComplete) {
+        useOnboardingStore.getState().markComplete();
+      }
     }
   }, [query.data, hydrateFilter, hydrateUserProfile]);
 

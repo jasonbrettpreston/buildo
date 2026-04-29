@@ -8,6 +8,8 @@ import { auth } from '@/lib/firebase';
 import { useFilterStore } from '@/store/filterStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
+import { useUserProfileStore } from '@/store/userProfileStore';
+import { clearUserProfileCache } from '@/hooks/useUserProfile';
 import { identifyUser, resetIdentity, track } from '@/lib/analytics';
 
 // react-native-mmkv v4 uses createMMKV() factory (MMKV is now an interface, not a class)
@@ -82,7 +84,8 @@ export const useAuthStore = create<AuthState>()(
         useFilterStore.getState().reset();
         useNotificationStore.getState().reset();
         useOnboardingStore.getState().reset();
-        // TODO Spec 95: useUserProfileStore.getState().reset() — once the store exists.
+        useUserProfileStore.getState().reset();
+        clearUserProfileCache();
         // TODO Spec 96: usePaywallStore.getState().clear() — without it, a user who
         //   dismissed the paywall and signed out on a shared device leaves
         //   `dismissed: true` in memory, putting the next user in inline blur mode.

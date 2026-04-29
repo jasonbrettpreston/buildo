@@ -65,6 +65,9 @@ ALTER TABLE user_profiles DROP CONSTRAINT IF EXISTS user_profiles_trade_slug_not
 ALTER TABLE user_profiles ADD CONSTRAINT user_profiles_trade_slug_not_empty
   CHECK (trade_slug IS NULL OR trim(trade_slug) <> '');
 
+-- Notification preferences (JSONB — merged server-side via || operator)
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS notification_prefs JSONB;
+
 -- New tables
 
 -- FK-EXEMPT: permit_num+revision_num covers both permits and pre-permits (CoA) — no single FK target
@@ -125,4 +128,5 @@ CREATE TABLE IF NOT EXISTS stripe_webhook_events (
 -- ALTER TABLE user_profiles DROP COLUMN IF EXISTS email;
 -- ALTER TABLE user_profiles DROP COLUMN IF EXISTS company_name;
 -- ALTER TABLE user_profiles DROP COLUMN IF EXISTS phone_number;
+-- ALTER TABLE user_profiles DROP COLUMN IF EXISTS notification_prefs;
 -- ALTER TABLE user_profiles DROP COLUMN IF EXISTS full_name;

@@ -12,9 +12,27 @@ import type { UserProfileType } from '@/lib/userProfile.schema';
 const storage = createMMKV({ id: 'filter-store' });
 
 const mmkvStorage = {
-  getItem: (key: string) => storage.getString(key) ?? null,
-  setItem: (key: string, value: string) => storage.set(key, value),
-  removeItem: (key: string) => storage.remove(key),
+  getItem: (key: string) => {
+    try {
+      return storage.getString(key) ?? null;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    try {
+      storage.set(key, value);
+    } catch {
+      /* best-effort */
+    }
+  },
+  removeItem: (key: string) => {
+    try {
+      storage.remove(key);
+    } catch {
+      /* best-effort */
+    }
+  },
 };
 
 interface HomeBaseLocation {

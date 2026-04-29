@@ -14,15 +14,18 @@ export function TradeReadOnlyRow() {
         <Text className="text-zinc-400 text-sm">Trade</Text>
         <View
           className="flex-row items-center gap-2"
-          accessibilityRole="text"
-          accessibilityLabel={`Trade: ${tradeSlug}, locked`}
+          accessibilityLabel={tradeSlug ? `Trade: ${tradeSlug}, locked` : 'Trade: loading'}
         >
-          <Text className="text-zinc-500 text-sm font-mono">{tradeSlug}</Text>
+          {tradeSlug ? (
+            <Text className="text-zinc-500 text-sm font-mono">{tradeSlug}</Text>
+          ) : (
+            <View className="w-16 h-4 rounded bg-zinc-700 opacity-50" />
+          )}
           <Lock size={14} color="#52525b" />
         </View>
       </View>
       <Text
-        className="text-zinc-600 text-xs mt-0.5 pb-3 px-4"
+        className="text-zinc-600 text-xs mt-0.5 pb-2 px-4"
         accessibilityHint="To change trade, delete and re-register your account."
       >
         To change trade, delete and re-register your account.
