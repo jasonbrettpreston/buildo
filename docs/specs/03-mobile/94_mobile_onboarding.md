@@ -16,7 +16,7 @@
 
 **Drop-off recovery:** If a user exits mid-onboarding and returns, the app resumes at the last completed step. Step progress stored in MMKV under key `onboarding_step`. On completion, `onboarding_complete = true` is written to `user_profiles` and MMKV key is cleared.
 
-**Incomplete profile banner:** If `onboarding_complete = false` AND the user somehow reaches the feed (edge case), a top banner renders: `bg-amber-500/20 border-b border-amber-500/40 py-2 px-4` — `"Complete your setup to see relevant leads →"` in `text-amber-400 text-sm font-mono`. Tapping resumes onboarding.
+**Incomplete profile banner (defensive):** The hard gate in `_layout.tsx` prevents unauthenticated users from reaching the feed. However, deep links, navigation state races, or future changes could theoretically deliver a user to a feed screen before onboarding completes. As a second-layer defence, if `onboarding_complete = false` AND the user reaches any `(app)` screen, a top banner renders: `bg-amber-500/20 border-b border-amber-500/40 py-2 px-4` — `"Complete your setup to see relevant leads →"` in `text-amber-400 text-sm font-mono`. Tapping resumes onboarding. This banner is intentionally defensive — it handles edge cases the gate should normally prevent.
 
 ## 3. Profession & Trade Selection
 
@@ -136,7 +136,7 @@ Same as §4 Path R Step 2.
 
 **Screens:** Leads/Tracking question → Supplier → ToS → Flight Board
 
-**No progress indicator** — only 2 steps, not long enough to warrant one.
+**No progress indicator** — the non-linear path selection (Leads/Tracking question → optional first-permit → Supplier → ToS → Flight Board) makes a linear progress bar misleading. Omitted by design.
 
 **Step 1 — Leads or tracking?**
 Same card selection as Path L Step 1 → user selects "Track Active Projects."
@@ -169,7 +169,7 @@ Manufacturers authenticate via Spec 93 but bypass onboarding entirely. The `_lay
 │                                     │
 │   Your account is being configured. │
 │                                     │
-│   We'll notify you when your        │
+│   We'll email you when your         │
 │   custom feed is ready.             │
 │                                     │
 │   [  Contact Buildo  ]              │
@@ -430,6 +430,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - Row selected: add `border-l-[3px] border-amber-500 bg-amber-500/5 pl-3` · amber checkmark right · `accessibilityState={{ selected: true }}`
 - Sticky footer CTA: `absolute bottom-0 w-full bg-zinc-950/95 px-4 pb-safe pt-3 border-t border-zinc-800` · button `opacity-40` when disabled, `bg-amber-500 active:bg-amber-600 rounded-2xl py-4` when enabled
 - After selection, tapping "Continue" opens trade lock confirmation bottom sheet (`@gorhom/bottom-sheet` v5, `snapPoints={['42%']}`). PATCH fires only after user confirms. See §9 Design & Interface for full sheet spec.
+- **PATCH idempotency:** If the `trade_slug` PATCH succeeds on the server but the client doesn't receive the success response (network drop), the user will retry and the PATCH will be rejected by the trade immutability guard with a 400. To prevent this dead end, the server must apply idempotency: if the incoming `trade_slug` value equals the existing value in `user_profiles`, return 200 (treat as success) rather than 400. This makes the retry safe without relaxing the guard for genuine change attempts.
 - Realtor taps → confirm sheet → skip `path.tsx`, go directly to `address.tsx`. Tradesperson → confirm → `path.tsx`.
 
 **Step 4 — Path selection screen**

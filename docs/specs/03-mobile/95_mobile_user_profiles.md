@@ -34,12 +34,17 @@ All fields stored server-side in `user_profiles` (PostgreSQL). Client hydrates Z
 | `home_base_lng` | NUMERIC(9,6) | Null if `location_mode = 'gps_live'` |
 | `radius_km` | INTEGER | Default set by Buildo admin per `trade_slug`. User-adjustable in Settings. |
 | `supplier_selection` | TEXT | Single supplier name. Skippable — may be null. Market research only, no in-app consequence at launch. |
+| `lead_views_count` | INTEGER DEFAULT 0 | Count of unique leads viewed during trial. Incremented server-side (see §2.2.1 below). Displayed on the paywall screen (Spec 96 §5). |
+
+**§2.2.1 `lead_views_count` increment mechanism:** The `GET /api/leads` (or `GET /api/leads/[id]`) route increments this counter server-side when `subscription_status = 'trial'`. Deduplication is per `(user_id, permit_num, revision_num)` — viewing the same lead twice does not increment the counter. Implemented via `INSERT INTO lead_view_events (user_id, permit_num, revision_num) ON CONFLICT DO NOTHING` followed by a denormalized `UPDATE user_profiles SET lead_views_count = lead_views_count + 1 WHERE user_id = $1` (only fires when the INSERT lands — ON CONFLICT case is a no-op). Counter is read-only from the client.
+
+---
 
 ### 2.3 Subscription & Account State
 
 | Column | Type | Notes |
 |--------|------|-------|
-| `subscription_status` | ENUM | `'trial' \| 'active' \| 'expired' \| 'admin_managed'` |
+| `subscription_status` | ENUM | `'trial' \| 'active' \| 'past_due' \| 'expired' \| 'cancelled_pending_deletion' \| 'admin_managed'` |
 | `trial_started_at` | TIMESTAMPTZ | Written on first app launch post-onboarding |
 | `stripe_customer_id` | TEXT | Written when user pays via Stripe (web path) |
 | `onboarding_complete` | BOOLEAN DEFAULT false | Written true at end of onboarding flow |
@@ -63,7 +68,7 @@ Both governed by `expo-notifications` permission state (Spec 92). If OS permissi
 | `trade_slugs_override` | TEXT[] | Manufacturer: multiple or all trades. Null for individual accounts. |
 | `radius_cap_km` | INTEGER | Maximum radius enforced server-side. Null = no cap (manufacturers). |
 
-**Manufacturer `trade_slug` note:** Manufacturer accounts have `trade_slug = NULL`. The `trade_slugs_override` array is their trade list. All API and client logic that reads `trade_slug` must handle `NULL` by checking `trade_slugs_override` when `account_preset = 'manufacturer'`. The trade immutability rule (§3) does not apply — the PATCH 400 guard only rejects `trade_slug` updates for non-manufacturer accounts.
+**Manufacturer `trade_slug` note:** Manufacturer accounts have `trade_slug = NULL`. The `trade_slugs_override` array is their trade list. All API and client logic that reads `trade_slug` must handle `NULL` by checking `trade_slugs_override` when `account_preset = 'manufacturer'`. **Manufacturer accounts cannot update `trade_slug` via PATCH** — the 400 guard applies to ALL accounts. For manufacturers, `trade_slug` is permanently `NULL` and `trade_slugs_override` is their trade list. The PATCH endpoint allows manufacturers to update `trade_slugs_override` but never `trade_slug` (setting a manufacturer's `trade_slug` to a non-null value would create an inconsistent state where both fields are populated).
 
 ## 3. Trade Immutability
 
@@ -227,13 +232,15 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 **Step 2 — GET /api/user-profile**
 - File: `src/app/api/user-profile/route.ts`
 - Authenticated route: extract Firebase UID from Bearer token header. Return full `user_profiles` row as `{ data: UserProfile }` envelope.
-- If `account_deleted_at IS NOT NULL`: return 403 `{ error: "Account scheduled for deletion." }` — do not return profile data for deleted accounts.
+- If `account_deleted_at IS NOT NULL`: return 403 with the following exact body — `{ error: "Account scheduled for deletion.", account_deleted_at: "<ISO 8601 timestamp>", days_remaining: <integer: CEIL(30 - days since account_deleted_at)> }`. This is the authoritative contract that Spec 93 §3.6 (reactivation modal) and Spec 97 §3.2 (30-day recovery) both depend on. The `days_remaining` value is used in the reactivation modal copy ("X days left to reactivate"). Do not return profile data for deleted accounts.
 - If no row found for UID: return 404. The client interprets 404 as "new user → redirect to onboarding" (§4 GET 404 behavior).
 - Try-catch per §00 §2.2. `logError` per §00 §6.1. Never expose `err.message` to client.
 
 **Step 3 — PATCH /api/user-profile**
 - File: `src/app/api/user-profile/route.ts` (same file, add `PATCH` handler)
-- Zod-validate request body. The Zod schema explicitly forbids the `email` field (`.strip()` or reject with 400 if present). Reject any body containing `trade_slug` with 400: `{ error: "Trade cannot be changed after registration." }` (§3 — manufacturer accounts excepted when `account_preset = 'manufacturer'`).
+- **Check deleted account first:** If the authenticated UID has `account_deleted_at IS NOT NULL`, return 403 immediately (same body as GET 403). Do not apply any field updates to deleted accounts.
+- **`UserProfileUpdateSchema` (whitelist — not full `UserProfileSchema`):** Validate against a separate Zod schema that ONLY allows the 11 client-editable fields from §5: `full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `notif_permit_status`, `notif_urgent_alerts`. Any field not in this whitelist → strip silently (`.strip()`) or reject with 400 if strict mode is preferred. **Server-only fields that must NEVER be written via this endpoint:** `subscription_status`, `trial_started_at`, `stripe_customer_id`, `onboarding_complete`, `tos_accepted_at`, `account_deleted_at`, `account_preset`, `trade_slugs_override`, `radius_cap_km`, `lead_views_count`. These are written only by: Stripe webhook handler, GET handler (trial initiation), onboarding PATCH sequence (guarded by Step 9's server-side guard), or direct DB writes by admin scripts.
+- The Zod schema explicitly forbids the `email` field (`.strip()` or reject with 400 if present). Reject any body containing `trade_slug` with 400: `{ error: "Trade cannot be changed after registration." }` (§3). `trade_slug` immutability guard applies to ALL accounts including manufacturers — manufacturers cannot set `trade_slug` via PATCH. Idempotency exception: if incoming `trade_slug` equals the existing DB value, return 200 (handles onboarding retry after network drop, per Spec 94 §10 Step 3).
 - Enforce `effective_radius = COALESCE(LEAST(requested_radius, radius_cap_km), requested_radius)` (handles NULL cap per §7).
 - Update only the fields present in the body. Try-catch + `logError`. Return updated row.
 
@@ -245,14 +252,15 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - File: `packages/shared-types/src/userProfile.ts`
 - `UserProfileSchema` — Zod object covering all columns in §2. Used by Next.js PATCH validation and Expo TanStack Query response parsing (Spec 90 §7 monorepo contract). Prevents API drift from crashing the native app.
 
-**Step 6 — filterStore fields**
-- File: `mobile/src/store/filterStore.ts`
-- Add: `locationMode`, `defaultTab`, `homeBaseLat`, `homeBaseLng`, `supplierSelection`, `notifPermitStatus`, `notifUrgentAlerts`.
-- Add `hydrate(profile: UserProfile)` action that overwrites all server-authoritative fields. MMKV is cache; `user_profiles` wins on conflict.
+**Step 6 — Store field separation**
+- `filterStore` owns feed-preference fields: `locationMode`, `defaultTab`, `homeBaseLat`, `homeBaseLng`, `supplierSelection`, `tradeSlug`, `radiusKm`.
+- `userProfileStore` owns account/display fields: `fullName`, `companyName`, `phoneNumber`, `backupEmail`, `notifPermitStatus`, `notifUrgentAlerts`. Changes to these fields must NOT trigger `queryClient.invalidateQueries(['leads'])` — notification toggle saves must not cause the lead feed to re-fetch.
+- File `mobile/src/store/filterStore.ts`: add `locationMode`, `defaultTab`, `homeBaseLat`, `homeBaseLng`, `supplierSelection`. Add `hydrate(profile: UserProfile)` action that overwrites only the filter-scoped fields listed above. Add `reset()` action that clears all fields to null/default (called on sign-out per Spec 93 §5 Step 2).
+- File `mobile/src/store/userProfileStore.ts` (new): Zustand store holding `fullName`, `companyName`, `phoneNumber`, `backupEmail`, `notifPermitStatus`, `notifUrgentAlerts`. Add `hydrate(profile: UserProfile)` action. Add `reset()` action. MMKV is cache; `user_profiles` wins on conflict.
 
 **Step 7 — useUserProfile hook**
 - File: `mobile/src/hooks/useUserProfile.ts`
-- TanStack Query `useQuery({ queryKey: ['user-profile'], queryFn: ... })`. `staleTime: 300_000`. On success: calls `filterStore.hydrate(data)`. Response parsed through `UserProfileSchema` — Zod parse failure triggers a Sentry report and falls back to cached MMKV values (Spec 90 §13).
+- TanStack Query `useQuery({ queryKey: ['user-profile'], queryFn: ... })`. `staleTime: 300_000`. On success: calls **both** `filterStore.hydrate(data)` AND `userProfileStore.hydrate(data)` — both stores must be hydrated from the same server response. Missing either hydration call leaves a store empty on new device / reinstall, causing the Settings screen or feed to show stale/blank data. Response parsed through `UserProfileSchema` — Zod parse failure triggers a Sentry report and falls back to cached MMKV values (Spec 90 §13).
 - **Loading state (skeleton):** Expose `isLoading` and `isFetching` from the hook. Consuming screens (`SettingsScreen`, `ProfileScreen`) check `isLoading && !hasCachedData` to decide whether to render skeleton rows instead of live content. `hasCachedData` is derived from the MMKV key `user_profile_cache` existing in the store.
 - **Skeleton animation pattern:** Each skeleton block uses a `useSharedValue` animated `opacity` cycling `0.4 → 0.8 → 0.4` via `withRepeat(withTiming(1000, { easing: Easing.linear }), -1, true)`. All skeleton blocks share the same shared value so they pulse in sync (one `useSharedValue` per screen, not one per row). NativeWind classes on skeleton blocks: field label `h-5 rounded bg-zinc-800 w-3/5`, field value `h-5 rounded bg-zinc-800 w-2/5`, toggle stub `h-7 w-12 rounded-full bg-zinc-800`, section header `h-4 rounded bg-zinc-800 w-1/4 mx-4 my-3`.
 - **Fast-path:** On mount, before the query resolves, call `filterStore.hydrate(mmkvCache)` synchronously if the MMKV cache key exists. This collapses the skeleton to <300ms on repeat launches. On network success, `hydrate(serverData)` overwrites silently — no flash, no toast, no transition.
@@ -283,7 +291,11 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - DB migration — new columns on `user_profiles` table
 
 **Schema evolution required (new columns):**
-`full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `subscription_status`, `trial_started_at`, `stripe_customer_id`, `onboarding_complete`, `tos_accepted_at`, `account_deleted_at`, `notif_permit_status`, `notif_urgent_alerts`, `account_preset`, `trade_slugs_override`, `radius_cap_km`
+`full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `lead_views_count`, `subscription_status`, `trial_started_at`, `stripe_customer_id`, `onboarding_complete`, `tos_accepted_at`, `account_deleted_at`, `notif_permit_status`, `notif_urgent_alerts`, `account_preset`, `trade_slugs_override`, `radius_cap_km`
+
+**`subscription_status` ENUM values (all 6 must be in the migration):** `'trial'`, `'active'`, `'past_due'`, `'expired'`, `'cancelled_pending_deletion'`, `'admin_managed'`
+
+**Supporting table (new):** `lead_view_events(user_id TEXT, permit_num TEXT, revision_num TEXT, viewed_at TIMESTAMPTZ DEFAULT NOW(), PRIMARY KEY (user_id, permit_num, revision_num))` — drives `lead_views_count` deduplication per §2.2.1.
 
 Note: `radius_km` currently exists in MMKV only (`tasks/lessons.md`). This migration promotes it to a server-side column — MMKV becomes cache only.
 

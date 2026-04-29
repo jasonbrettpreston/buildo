@@ -16,12 +16,13 @@ ACCOUNT
   Full name          [editable text field]
   Phone number       [editable — re-triggers SMS verification if changed]
   Company name       [editable text field]
+  Backup email       [visible for SMS sign-in users only — editable for account recovery]
   Email              [read-only — text-zinc-500]
   Trade              [read-only — text-zinc-500 + lock icon 🔒]
                      "To change trade, delete and re-register your account."
 
 FEED PREFERENCES
-  Location mode      [toggle: Fixed Address | Live GPS]
+  Location mode      [toggle: Fixed Address | Live GPS — hidden for Realtors (always Fixed)]
                      → Switching to Fixed opens address input bottom sheet
                      → Toast on switch: "Enter your home base address to continue"
   Home base address  [visible only when location_mode = 'home_base_fixed']
@@ -50,7 +51,12 @@ Each editable row: `bg-zinc-900 border-b border-zinc-800 px-4 py-4 flex-row item
 
 ### 1.3 Saving Changes
 
-All editable fields save on blur (text fields) or toggle (switches) — no explicit "Save" button. Changes fire `PATCH /api/user-profile` and update the local Zustand `filterStore` optimistically. On API error, revert local state and show Sonner-equivalent error toast: `"Couldn't save — try again."` in `bg-zinc-800 border border-red-500/40`.
+All editable fields save on blur (text fields) or toggle (switches) — no explicit "Save" button. Changes fire `PATCH /api/user-profile` and update the local Zustand store optimistically. Feed-preference fields (`locationMode`, `radiusKm`, `defaultTab`, `supplierSelection`) update `filterStore`. Account/display fields (`fullName`, `companyName`, `backupEmail`, `notifPermitStatus`, `notifUrgentAlerts`) update `userProfileStore` — changes to account fields must NOT trigger feed re-renders. On API error, revert only the failed field's store value and show error toast: `"Couldn't save — try again."` in `bg-zinc-800 border border-red-500/40`.
+
+**Exceptions to save-on-blur:**
+- **Phone number:** NOT save-on-blur. Opens a dedicated SMS verification bottom sheet. PATCH fires only after OTP verification succeeds.
+- **Radius:** NOT save-on-blur. Opens a slider bottom sheet. Saves on `onSlidingComplete`.
+- **Location mode toggle:** NOT immediate-save. If toggling to `home_base_fixed`, opens address entry sheet first. PATCH fires only after address is confirmed and saved.
 
 ---
 
@@ -155,10 +161,13 @@ On confirm:
 
 If user signs back in within 30 days:
 - Auth succeeds
-- App detects `account_deleted_at IS NOT NULL` AND within 30 days (via `GET /api/user-profile` returning 403 with reactivation metadata)
-- Show reactivation prompt: *"Welcome back. Reactivate your account?"*
-- On confirm: PATCH `{ account_deleted_at: null, subscription_status: 'expired' }` — status is always restored to `'expired'` regardless of previous state. The original Stripe subscription was cancelled immediately at deletion time; the user must re-subscribe via `buildo.com`. If the user was on `trial` prior to deletion, the trial does not resume — they are directed to subscribe.
-- User resumes with `'expired'` status → paywall shown → directed to `buildo.com` to subscribe
+- AuthGate fetches `GET /api/user-profile` → receives 403 with `{ error, account_deleted_at, days_remaining }` (Spec 95 §9 Step 2 response contract)
+- Show reactivation prompt: *"Welcome back. Your account is scheduled for deletion on [date]. Reactivate to keep your account?"* (`days_remaining` drives the date display)
+- On confirm: server-side PATCH `{ account_deleted_at: null, subscription_status: <restored_status> }` where `restored_status` is determined by the user's `account_preset`:
+  - If `account_preset = 'manufacturer'` → restore to `'admin_managed'` (not `'expired'` — manufacturers must never see the consumer paywall)
+  - All other presets → restore to `'expired'` (the original Stripe subscription was cancelled at deletion time; user must re-subscribe via `buildo.com`)
+- Post-reactivation sequence: (1) PATCH succeeds → (2) dismiss reactivation modal → (3) AuthGate proceeds (`onboarding_complete = true`) → (4) subscription gate handles the restored status
+- If the user was on `trial` prior to deletion, the trial does not resume — they are directed to subscribe at `buildo.com`
 
 ### 3.3 Hard Deletion (Day 30)
 
@@ -399,6 +408,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - Tracking path trigger: called from flight board after first permit claimed (mutation `onSuccess` callback).
 - **Pre-prompt rendering (design per §4):** Rendered absolutely above the tab bar — `position: 'absolute', bottom: tabBarHeight + 16, left: 16, right: 16`. Entry: `withSpring` scale `0.85 → 1.0` + `opacity: 0 → 1`. Exit: `withTiming(150)` opacity + scale out. Not a blocking modal. Layout: `bg-zinc-900 border border-zinc-700 rounded-2xl p-5 shadow-2xl shadow-black/50` per §4 Notification Pre-Prompt Modal.
 - **Android 13 channel-before-permissions (critical):** On `Platform.OS === 'android'` call `Notifications.setNotificationChannelAsync('default', { ... })` (per §4 Android 13 spec) BEFORE `Notifications.requestPermissionsAsync()`. Skipping this step causes the system permission dialog to silently not appear on Android 13+.
+- **`hasAskedPermission` guard scope:** The MMKV guard must be evaluated BEFORE registering the `onViewableItemsChanged` callback (not inside it). If `hasAskedPermission = true` on mount, do not register the callback at all — this prevents a one-frame render of the pre-prompt on sessions after the user has already been asked. The same guard must prevent the in-app pre-prompt from rendering if it could theoretically be triggered from two paths (leads path AND tracking path) in the same session — only one in-app pre-prompt should ever render per session.
 - "Not now" → write `hasAskedPermission = true`, skip system dialog. "Turn on notifications" → `Notifications.requestPermissionsAsync()` → on grant, register token (Spec 92 §4.1 hardware layer).
 - **Settings NOTIFICATIONS section (OS denied state, design per §4):** When `status !== 'granted'`: render permission row as `tappable` variant — `Linking.openSettings()` on press, `external-link` icon, "Off" value label. Render toggle rows with `disabled={true}` + `opacity-50`. Render explanatory sub-label `text-zinc-600 text-xs px-4 pb-3` below the toggles.
 

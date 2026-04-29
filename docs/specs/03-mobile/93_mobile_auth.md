@@ -79,10 +79,11 @@ SMS users must provide a backup email address during onboarding (Spec 94 §3.3).
 Tapping "Sign Out" in Settings:
 - Calls `firebase.auth().signOut()`
 - Clears Firebase session token
-- Does **not** clear MMKV local state (trade preferences, cached feed data remain on device)
+- **Resets** in-memory Zustand stores (`filterStore.reset()`, `userProfileStore.reset()`) so no stale data is visible if a different user signs in on the same device
+- Does **not** clear MMKV local state — MMKV is preserved so the same user returning on the same device gets instant UI on next sign-in (server data overwrites MMKV during the profile hydration)
 - Redirects to sign-in screen
 
-On next sign-in (same or different account), `user_profiles` fetch overwrites local state cleanly.
+On next sign-in, `user_profiles` fetch overwrites local state cleanly. The Zustand reset + server hydration ensures stale data is never presented to a different user.
 
 ### 3.5 Offline Behaviour
 
@@ -101,8 +102,8 @@ If Firebase Auth is unreachable at sign-in: show retry option. Already-authentic
 2. Confirmation modal (Spec 97 §3.1 Step 2).
 3. On confirm:
    - PATCH `/api/user-profile` with `{ account_deleted_at: now(), subscription_status: 'cancelled_pending_deletion' }` — **must succeed before proceeding**. If PATCH fails: show error toast, do NOT sign out.
-   - On PATCH success: `firebase.auth().signOut()` → redirect to `/(auth)/sign-in?deleted=true`.
-4. **30-day recovery window:** On sign-in, the app checks the profile response. If `account_deleted_at IS NOT NULL` and within 30 days, show a reactivation modal before proceeding:
+   - On PATCH success: `firebase.auth().signOut()` → redirect to `/(auth)/sign-in`.
+4. **30-day recovery window:** On sign-in, the AuthGate fetches `/api/user-profile`. If the account is in the deletion window, the server returns `403` with `{ error: "Account scheduled for deletion.", account_deleted_at: "<ISO>", days_remaining: <N> }` (Spec 95 §9 Step 2). The AuthGate shows a reactivation modal before proceeding:
    ```
    "Welcome back. Your account is scheduled for deletion on [date].
     Reactivate to keep your account?"
@@ -147,7 +148,9 @@ File: `mobile/app/(auth)/sign-in.tsx`
 
 ---
 
-### Apple Sign-In Button (HIG Compliance)
+### Apple Sign-In Button (HIG Compliance — iOS only)
+
+**Platform guard:** `expo-apple-authentication` is iOS-only. The Apple button must be conditionally rendered: `{Platform.OS === 'ios' && <AppleAuthenticationButton ... />}`. On Android, the button stack shows only 3 options: Google → Phone → Email (no divider needed; spacing stays `gap-3`).
 
 Apple mandates specific visual treatment. Use `expo-apple-authentication`'s `<AppleAuthenticationButton>` component directly — do NOT build a custom button:
 
@@ -265,7 +268,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - File: `mobile/src/store/userStore.ts`
 - Zustand v5 store: `{ uid, email, isLoading }` + `signOut()` action.
 - `onAuthStateChanged` listener writes uid/email into store.
-- `signOut()` calls `firebase.auth().signOut()` and resets store. Does **not** clear MMKV — §3.4.
+- `signOut()`: (1) calls `firebase.auth().signOut()`; (2) calls `filterStore.reset()` and `userProfileStore.reset()` to clear in-memory state; (3) resets this store. Does **not** clear MMKV — MMKV is preserved per §3.4 so the same user returning on the same device gets fast hydration. A different user signing in gets their own server data on the profile hydration.
 
 **Step 3 — Auth route group layout**
 - File: `mobile/app/(auth)/_layout.tsx`
@@ -275,7 +278,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - File: `mobile/app/(auth)/sign-in.tsx`
 - **Layout per §4:** wordmark area (`mb-12`), then 4-button stack with `gap-3`, divider row between Google and Phone. Screen container `bg-zinc-950 flex-1 items-center justify-center px-6`.
 - Touch targets `min-h-[52px]` (§4 spec — exceeds Spec 90 §9 44pt minimum).
-- **Apple:** `<AppleAuthenticationButton>` from `expo-apple-authentication` per §4 Apple HIG section — use the native component directly with `buttonStyle={WHITE}` and `cornerRadius={16}`. Do NOT wrap in a custom `<Pressable>`. In-button spinner not applicable (native component handles its own loading state).
+- **Apple (iOS only):** `{Platform.OS === 'ios' && <AppleAuthenticationButton>}` — use the native component directly with `buttonStyle={WHITE}` and `cornerRadius={16}`. Do NOT wrap in a custom `<Pressable>`. In-button spinner not applicable (native component handles its own loading state). Android shows no Apple button — 3-item stack only.
 - **Google:** Custom `<Pressable>` with Google `G` SVG logo per §4. `expo-auth-session` with `ResponseType.Code`; configure URL scheme in `app.json`; exchange via Firebase credential. In-button spinner per §4 spinner pattern.
 - **Phone/SMS:** Tapping "Continue with Phone" opens a bottom sheet (`snapPoints={['55%']}`). Phone input: `react-native-international-phone-number` with `defaultCountry="CA"` per §4 Phone Input spec. On "Send code" tap: `signInWithPhoneNumber` → sheet transitions to OTP entry using `input-otp-native` 6-cell spec per §4 OTP Entry. Handle `auth/too-many-requests` with `text-red-400 text-xs` message + 30s resend lockout timer.
 - **Email:** Tapping "Continue with Email" navigates to `/(auth)/sign-in?method=email` or opens an inline form below the button stack. Fields per §4 email field spec.
@@ -291,12 +294,13 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 6 — AuthGate extension**
 - File: `mobile/app/_layout.tsx` (extend existing two-step `useRootNavigationState` guard)
-- After auth check: fetch `/api/user-profile`. Three outcomes:
-  - 200 + `onboarding_complete = true` → proceed to app
+- After auth check: fetch `/api/user-profile`. Five outcomes:
+  - 200 + `onboarding_complete = true` → proceed to app (subscription gate in `(app)/_layout.tsx` takes over — see Spec 96)
   - 200 + `onboarding_complete = false` → redirect `/(onboarding)/profession`
   - 404 (no profile yet) → redirect `/(onboarding)/profession` (new user)
-  - 403 (`account_deleted_at` set, within 30 days) → show reactivation modal (§3.6)
-  - Network failure (after 3 retries) → show full-screen error with "Try again" button; do not default to onboarding or full access
+  - 403 (`account_deleted_at` set, within 30 days) → show reactivation modal (§3.6). The 403 body is `{ error, account_deleted_at, days_remaining }` per Spec 95 §9 Step 2 — use `days_remaining` to populate the modal copy.
+  - Network failure (after 3 retries with exponential backoff: 1s, 2s, 4s) → show full-screen error with "Try again" button; do not default to onboarding or full access
+- **Critical:** The AuthGate does NOT enforce subscription status — that check is owned by Spec 96 `(app)/_layout.tsx`. Do not ship a build without Spec 96 fully implemented or every onboarded user will have unguarded access to the feed.
 
 **Step 7 — Account deletion (Firebase side)**
 - File: `mobile/app/(app)/settings.tsx` triggers deletion (Spec 97 §3.1 Steps 8–9); this spec owns the Firebase cleanup.
