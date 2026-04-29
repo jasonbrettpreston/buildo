@@ -215,9 +215,9 @@ All row variants share the base container: `bg-zinc-900 border-b border-zinc-800
 | Variant | Left | Right | Interaction |
 |---------|------|-------|-------------|
 | **display** | `text-zinc-400 text-sm` label | `text-zinc-500 text-sm font-mono` value | None (`accessible={false}`) |
-| **tappable** | `text-zinc-300 text-sm` label | `text-zinc-600 text-xs` value + Feather `chevron-right` 16px `text-zinc-600` | `onPress` → sheet or navigation |
-| **toggle** | `text-zinc-300 text-sm` label | `<Switch trackColor={{ true: '#f59e0b', false: '#3f3f46' }} thumbColor='#fafafa' />` | `onValueChange` → immediate save |
-| **locked** | `text-zinc-400 text-sm` label | `text-zinc-500 text-sm font-mono` value + Feather `lock` 14px `text-zinc-600` | None — `accessibilityLabel="{label}: {value}, locked"` |
+| **tappable** | `text-zinc-300 text-sm` label | `text-zinc-600 text-xs` value + `<ChevronRight size={16} color="#52525b" />` from `lucide-react-native` | `onPress` → sheet or navigation |
+| **toggle** | `text-zinc-300 text-sm` label | `<Switch trackColor={{ true: '#f59e0b', false: '#3f3f46' }} thumbColor='#fafafa' />` · `accessibilityRole="switch"` · `accessibilityState={{ checked: value }}` | `onValueChange` → immediate save |
+| **locked** | `text-zinc-400 text-sm` label | `text-zinc-500 text-sm font-mono` value + `<Lock size={14} color="#52525b" />` from `lucide-react-native` | None — `accessibilityLabel="{label}: {value}, locked"` |
 | **destructive** | `text-red-400 text-sm font-medium` label | None | `onPress` → confirmation sheet |
 
 **Section headers:** `text-zinc-500 text-xs font-mono tracking-widest uppercase px-4 pt-6 pb-2`
@@ -237,6 +237,8 @@ Text fields in ACCOUNT section: tapping the row opens a `@gorhom/bottom-sheet` s
 - Save button: `bg-amber-500 active:bg-amber-600 rounded-2xl py-3.5 px-6 mx-4 mt-4 items-center` with `text-zinc-950 font-bold text-sm` label "Save"
 - Dismiss closes sheet without saving; value reverts
 
+**Bottom sheet props:** Add `keyboardBehavior="interactive"` to the `<BottomSheet>` component — this causes the sheet to move with the keyboard as it appears, preventing the keyboard from obscuring the text input. Must use `<BottomSheetView>` (not raw `<View>`) as direct child.
+
 **Autofocus:** Each sheet auto-focuses the text input on open (`ref.focus()` in `onChange` when sheet index becomes 0), which pulls up the keyboard immediately without a second tap.
 
 ---
@@ -254,10 +256,13 @@ When user taps the Radius row, a bottom sheet opens with `@react-native-communit
   value={currentRadius}
   minimumTrackTintColor="#f59e0b"   // amber-400
   maximumTrackTintColor="#3f3f46"   // zinc-700
-  thumbTintColor="#f59e0b"
+  thumbTintColor={Platform.OS === 'ios' ? "#f59e0b" : undefined}   // iOS only
+  thumbColor={Platform.OS === 'android' ? "#f59e0b" : undefined}   // Android only
+  accessibilityValue={{ min: 1, max: radiusCapKm ?? 100, now: currentRadius }}
   onSlidingComplete={(value) => handleRadiusSave(value)}
 />
 ```
+**Platform note:** `thumbTintColor` is iOS-only — `thumbColor` is the Android equivalent. Passing `thumbTintColor` on Android has no effect; passing `thumbColor` on iOS has no effect. Use `Platform.OS` guard on both.
 
 **Sheet layout:**
 - Label: `text-zinc-400 text-sm` "Search radius"
@@ -272,17 +277,21 @@ When user taps the Radius row, a bottom sheet opens with `@react-native-communit
 
 **Container:** NOT a `Modal` — a custom sheet rendered above the tab bar (`position: 'absolute', bottom: tabBarHeight + 16, left: 16, right: 16`). This avoids JS-alert anti-pattern and allows the screen behind it to remain interactive.
 
+**`tabBarHeight`:** Acquire dynamically via `useBottomTabBarHeight()` from `@react-navigation/bottom-tabs` — do NOT hardcode a pixel value. Tab bar height varies across device families and OS versions. `import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'` at the top of the consuming component.
+
 **Layout:** `bg-zinc-900 border border-zinc-700 rounded-2xl p-5 shadow-2xl shadow-black/50`
+
+**Android shadow fallback:** `shadow-2xl` is not reliably rendered on Android. Add `style={{ elevation: 8 }}` as an inline prop alongside the NativeWind classes for Android shadow.
 
 **Entry animation:** `withSpring({ damping: 18, stiffness: 280 })` on `transform: [{ scale: 0.85 → 1.0 }]` + `opacity: 0 → 1`. The spring adds a subtle bounce that draws attention without being jarring.
 
 **Content:**
-- Icon: Feather `bell` 24px `text-amber-500` — `mb-3`
+- Icon: `<Bell size={24} color="#f59e0b" />` from `lucide-react-native` — `mb-3`
 - Headline: `text-zinc-100 text-base font-bold mb-1` — "Get notified when your tracked jobs need attention."
-- CTA: `bg-amber-500 active:bg-amber-600 rounded-xl py-3 px-5 w-full items-center mt-4` + `text-zinc-950 font-semibold text-sm` "Turn on notifications"
+- CTA: `bg-amber-500 active:bg-amber-600 rounded-2xl py-3 px-5 w-full items-center mt-4` + `text-zinc-950 font-semibold text-sm` "Turn on notifications" (`rounded-2xl` — consistent with all primary CTAs in the design system)
 - Secondary: `text-zinc-500 text-sm text-center mt-3` "Not now"
 
-**Exit animation:** `opacity: 1 → 0` + `scale: 1.0 → 0.92` `withTiming(150)` before unmount. Use a `useEffect` cleanup pattern: set `isVisible = false` → wait 150ms → unmount.
+**Exit animation:** `opacity: 1 → 0` via `withTiming(0, { duration: 150 })` + `scale: 1.0 → 0.92` via `withTiming(0.92, { duration: 150 })` before unmount. Use a `useEffect` cleanup pattern: set `isVisible = false` → wait 150ms → unmount.
 
 ---
 
@@ -315,7 +324,7 @@ When `Notifications.getPermissionsAsync()` returns `status !== 'granted'`, the N
 **Permission row (denied state):**
 - Container: standard `bg-zinc-900 border-b border-zinc-800/60 px-4 min-h-[52px] flex-row items-center justify-between`
 - Left: `text-zinc-400 text-sm` "Notifications"
-- Right: `flex-row items-center gap-2` — `text-zinc-500 text-xs` "Off" + Feather `external-link` 14px `text-zinc-600`
+- Right: `flex-row items-center gap-2` — `text-zinc-500 text-xs` "Off" + `<ExternalLink size={14} color="#52525b" />` from `lucide-react-native`
 - `onPress`: `Linking.openSettings()` (deep links to app's iOS Settings or Android App Info)
 - `accessibilityLabel`: "Notifications off, tap to open device Settings"
 
@@ -340,18 +349,18 @@ Days remaining for `trial`: computed from `trial_started_at + 14 days - NOW()`, 
 
 ### Deletion Sheets (DataExportSheet + DeleteConfirmModal)
 
-**DataExportSheet** (Step 1): `@gorhom/bottom-sheet` at `snapPoints={['45%']}`.
+**DataExportSheet** (Step 1): `@gorhom/bottom-sheet` at `snapPoints={['45%']}`. Must use `<BottomSheetView>` as direct child (v5 requirement).
 - Handle + `bg-zinc-900` background
-- Feather `download` 28px `text-amber-500` — centred, `mb-4`
+- `<Download size={28} color="#f59e0b" />` from `lucide-react-native` — centred, `mb-4`
 - Headline: `text-zinc-100 text-lg font-bold text-center mb-2` "Before you go"
 - Body: `text-zinc-400 text-sm text-center mb-6` "Download a copy of your lead history and flight board."
 - Download CTA: full-width `bg-zinc-800 border border-zinc-700 rounded-2xl py-4 items-center mb-3` + `text-zinc-200 font-semibold text-sm` "Download my data"
 - Skip: `text-zinc-500 text-sm text-center` "Skip and continue"
 - Sheet dismisses on either action. On download: shows `ActivityIndicator size="small"` inside the download button while `expo-sharing` opens.
 
-**DeleteConfirmModal** (Step 2): `@gorhom/bottom-sheet` at `snapPoints={['55%']}`.
+**DeleteConfirmModal** (Step 2): `@gorhom/bottom-sheet` at `snapPoints={['55%']}`. Must use `<BottomSheetView>` as direct child (v5 requirement).
 - `bg-zinc-950` background (darker than DataExportSheet — signals severity)
-- Feather `alert-triangle` 28px `text-red-500` — centred, `mb-4`
+- `<TriangleAlert size={28} color="#ef4444" />` from `lucide-react-native` — centred, `mb-4`. (In Lucide v1.x, the icon is `TriangleAlert` — not `AlertTriangle`.)
 - Headline: `text-zinc-100 text-lg font-bold text-center mb-2` "Delete your account?"
 - Body: `text-zinc-400 text-sm text-center leading-relaxed mb-8` "Your account will be suspended immediately. All data is permanently deleted after 30 days."
 - Confirm: full-width `bg-red-500/20 border border-red-500/40 rounded-2xl py-4 items-center mb-3` + `text-red-400 font-semibold text-sm` "Yes, delete my account"
@@ -403,10 +412,11 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 **Step 5 — Notification permission hook**
 - File: `mobile/src/hooks/useNotificationSetup.ts`
 - MMKV key `hasAskedPermission: boolean` — never show pre-prompt twice (Spec 92 §4.1).
+- **OS permission pre-check:** Before showing the pre-prompt, call `Notifications.getPermissionsAsync()`. If `status === 'granted'`, skip the pre-prompt entirely and proceed directly to token registration (Spec 92 §4.1 hardware layer) — the user already granted permission in a prior session. Only show the pre-prompt when `status !== 'granted'` AND `hasAskedPermission === false`.
 - Leads path trigger: called from `mobile/app/(app)/(tabs)/index.tsx` after first lead card renders (`onViewableItemsChanged` with `viewableItems.length > 0` and `hasAskedPermission === false`).
 - **Empty feed fallback:** if `hasAskedPermission = false` and the feed returns zero results after 24 hours (checked via a `trial_started_at + 24h < NOW()` guard), show the pre-prompt anyway with copy: *"Get notified when new leads arrive in your area."* This prevents the prompt from never firing for users in low-permit zones.
 - Tracking path trigger: called from flight board after first permit claimed (mutation `onSuccess` callback).
-- **Pre-prompt rendering (design per §4):** Rendered absolutely above the tab bar — `position: 'absolute', bottom: tabBarHeight + 16, left: 16, right: 16`. Entry: `withSpring` scale `0.85 → 1.0` + `opacity: 0 → 1`. Exit: `withTiming(150)` opacity + scale out. Not a blocking modal. Layout: `bg-zinc-900 border border-zinc-700 rounded-2xl p-5 shadow-2xl shadow-black/50` per §4 Notification Pre-Prompt Modal.
+- **Pre-prompt rendering (design per §4):** Rendered absolutely above the tab bar — `position: 'absolute', bottom: tabBarHeight + 16, left: 16, right: 16`. Entry: `withSpring` scale `0.85 → 1.0` + `opacity: 0 → 1`. Exit: `withTiming(0, { duration: 150 })` opacity + `withTiming(0.92, { duration: 150 })` scale. Not a blocking modal. Layout: `bg-zinc-900 border border-zinc-700 rounded-2xl p-5 shadow-2xl shadow-black/50` per §4 Notification Pre-Prompt Modal.
 - **Android 13 channel-before-permissions (critical):** On `Platform.OS === 'android'` call `Notifications.setNotificationChannelAsync('default', { ... })` (per §4 Android 13 spec) BEFORE `Notifications.requestPermissionsAsync()`. Skipping this step causes the system permission dialog to silently not appear on Android 13+.
 - **`hasAskedPermission` guard scope:** The MMKV guard must be evaluated BEFORE registering the `onViewableItemsChanged` callback (not inside it). If `hasAskedPermission = true` on mount, do not register the callback at all — this prevents a one-frame render of the pre-prompt on sessions after the user has already been asked. The same guard must prevent the in-app pre-prompt from rendering if it could theoretically be triggered from two paths (leads path AND tracking path) in the same session — only one in-app pre-prompt should ever render per session.
 - "Not now" → write `hasAskedPermission = true`, skip system dialog. "Turn on notifications" → `Notifications.requestPermissionsAsync()` → on grant, register token (Spec 92 §4.1 hardware layer).
@@ -426,13 +436,13 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 8 — Account deletion Step 1: export offer**
 - File: `mobile/app/(app)/settings.tsx` (tapping "Delete Account")
-- Opens `<DataExportSheet>` (`mobile/src/components/settings/DataExportSheet.tsx`) — `@gorhom/bottom-sheet` at `snapPoints={['45%']}` per §4 Deletion Sheets spec. Not a JS alert. Background `bg-zinc-900`. Feather `download` 28px `text-amber-500`, centred.
+- Opens `<DataExportSheet>` (`mobile/src/components/settings/DataExportSheet.tsx`) — `@gorhom/bottom-sheet` at `snapPoints={['45%']}` per §4 Deletion Sheets spec. Not a JS alert. Background `bg-zinc-900`. `<Download size={28} color="#f59e0b" />` from `lucide-react-native`, centred. Use `<BottomSheetView>` as direct child.
 - "Download my data": shows `ActivityIndicator size="small"` inside the button while `GET /api/user-profile/export` is in-flight. On success: opens CSV in `expo-sharing`. On error: toast `"Export failed — try again."`. Button re-enables after error.
 - "Skip and continue" → sheet snaps closed → `DeleteConfirmModal` opens (500ms delay to let first sheet fully dismiss).
 
 **Step 9 — Account deletion Steps 2–3: confirmation + suspension**
 - File: `mobile/src/components/settings/DeleteConfirmModal.tsx`
-- `@gorhom/bottom-sheet` at `snapPoints={['55%']}` per §4 Deletion Sheets spec. `bg-zinc-950` background (darker than DataExportSheet — signals severity). Not a JS alert (Spec 90 §5). Feather `alert-triangle` 28px `text-red-500`, centred.
+- `@gorhom/bottom-sheet` at `snapPoints={['55%']}` per §4 Deletion Sheets spec. `bg-zinc-950` background (darker than DataExportSheet — signals severity). Not a JS alert (Spec 90 §5). `<TriangleAlert size={28} color="#ef4444" />` from `lucide-react-native`, centred. Use `<BottomSheetView>` as direct child.
 - **"Cancel" button:** `bg-zinc-800 rounded-2xl py-4` — always rendered, disabled while PATCH is in-flight.
 - **"Yes, delete my account" button:** `bg-red-500/20 border border-red-500/40 rounded-2xl py-4` — on tap:
   1. Show `ActivityIndicator size="small" color="#f87171"` inside button; disable both buttons.

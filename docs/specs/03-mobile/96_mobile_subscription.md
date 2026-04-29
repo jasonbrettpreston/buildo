@@ -85,7 +85,7 @@ Shown when `subscription_status = 'expired'` on app open or foreground resume.
 
 **Lead count:** Fetched from `user_profiles` (tracked during trial — increment on each unique lead viewed). Makes the trial value concrete at the highest-friction moment.
 
-**"Continue at buildo.com →":** The app requests a checkout URL from `POST /api/subscribe/session` (Firebase Bearer token required). The server generates a **single-use, server-side nonce** and stores it as `subscribe_nonces(nonce TEXT PK, user_id TEXT, expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '15 minutes')`. The URL is `buildo.com/subscribe?nonce={nonce}` — no UID or email in the URL (avoids PII exposure in server logs, browser history, and referrer headers). The web checkout page exchanges the nonce server-to-server to look up the Firebase UID, immediately invalidates the nonce (DELETE), then pre-fills email in Stripe checkout and links the resulting Stripe customer to the correct Firebase UID. On payment success, Stripe webhook updates `subscription_status = 'active'`. The app opens this URL via `WebBrowser.openAuthSessionAsync()` from `expo-web-browser`.
+**"Continue at buildo.com →":** The app requests a checkout URL from `POST /api/subscribe/session` (Firebase Bearer token required). The server generates a **single-use, server-side nonce** and stores it as `subscribe_nonces(nonce TEXT PK, user_id TEXT, expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '15 minutes')`. The URL is `buildo.com/subscribe?nonce={nonce}` — no UID or email in the URL (avoids PII exposure in server logs, browser history, and referrer headers). The web checkout page exchanges the nonce server-to-server to look up the Firebase UID, immediately invalidates the nonce (DELETE), then pre-fills email in Stripe checkout and links the resulting Stripe customer to the correct Firebase UID. On payment success, Stripe webhook updates `subscription_status = 'active'`. The app opens this URL via `WebBrowser.openBrowserAsync()` from `expo-web-browser`. (`openAuthSessionAsync` is for OAuth redirect flows only — it expects an auth callback URL scheme. Stripe checkout is a standard browser redirect, not an OAuth flow. Using `openAuthSessionAsync` here would cause the browser session to terminate incorrectly.)
 
 **⚠️ App Store compliance note:** Apple App Store Review Guideline 3.1.1 restricts buttons or links that direct users to external purchasing mechanisms for digital content/services. The "Continue at buildo.com →" CTA may be flagged during App Store review. This is a known risk acknowledged at build time. Mitigation options include: (a) using Apple-approved neutral language like "Learn more" instead of "Continue at buildo.com →"; (b) relying on the App Store's reader app exemption if Buildo qualifies; (c) a separate iOS build variant that hides the CTA. This decision requires legal and product review before iOS submission — do NOT submit to App Store without resolving this.
 
@@ -140,19 +140,19 @@ Spec 96 presents the highest-stakes screen in the app: the paywall moment. The d
 
 ### PaywallScreen Layout
 
-**Container:** `bg-zinc-950 flex-1 items-center justify-center px-8`
+**Container:** `<SafeAreaView className="bg-zinc-950 flex-1">` wrapping `<View className="flex-1 items-center justify-center px-8">`. SafeAreaView is required to prevent the headline from rendering behind the device notch on notched iPhones.
 
 **Stagger sequence (Reanimated `withTiming`):**
 
 | Element | Delay | Transform |
 |---------|-------|-----------|
-| Icon lock `text-amber-500` (Feather `lock`, 32px) | 0ms | opacity 0→1 + `translateY: 12→0` |
+| Icon lock `text-amber-500` (`<Lock size={32} color="#f59e0b" />` from `lucide-react-native`) | 0ms | opacity 0→1 + `translateY: 12→0` |
 | Headline "Your free trial has ended." | 80ms | opacity 0→1 + `translateY: 12→0` |
 | Lead count `[X] leads in 14 days` | 160ms | opacity 0→1 + `translateY: 12→0` |
 | Primary CTA button | 240ms | opacity 0→1 + `translateY: 8→0` |
 | "Maybe later" secondary | 320ms | opacity 0→1 |
 
-All: `withTiming(300, { easing: Easing.out(Easing.ease) })`.
+All: `withDelay(N, withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }))` on `useSharedValue(0)` instances. `withTiming` first arg = target value (1), not duration. Secondary ("Maybe later") has **opacity only** — no `translateY` transform.
 
 **NativeWind classes by element:**
 
@@ -177,7 +177,7 @@ All: `withTiming(300, { easing: Easing.out(Easing.ease) })`.
 
 **Loading guard:** `bg-zinc-950 flex-1 items-center justify-center` with `<ActivityIndicator size="large" color="#f59e0b" />` (amber-400 equivalent). No text, no logo — just the spinner. This matches the initial app boot spinner pattern (Spec 93) so the transition into the gate feels part of the same loading sequence.
 
-**Transition:** Once `subscription_status` resolves, the loading guard unmounts instantly. If status is `'trial'` / `'active'` / `'past_due'` / `'admin_managed'`, the feed renders. If `'expired'`, `<PaywallScreen>` fades in via a single `opacity: 0 → 1` `withTiming(200)` (no stagger needed — the spinner already provided the anticipatory pause).
+**Transition:** Once `subscription_status` resolves, the loading guard unmounts instantly. If status is `'trial'` / `'active'` / `'past_due'` / `'admin_managed'`, the feed renders. If `'expired'`, `<PaywallScreen>` fades in via a single `opacity: 0 → 1` `withTiming(1, { duration: 200 })` on `useSharedValue(0)` (no stagger needed — the spinner already provided the anticipatory pause).
 
 ---
 
@@ -191,9 +191,11 @@ When `paywallStore.dismissed = true` AND `subscription_status === 'expired'`, th
 - CTA chip: `bg-amber-500/15 border border-amber-500/30 rounded-full px-3 py-1` with `text-amber-400 text-xs font-semibold` — "Subscribe →"
 - Tapping anywhere on the banner: `paywallStore.show()` — reopens `<PaywallScreen>`
 
-**Lead card blur:** `<BlurView intensity={8} tint="dark">` from `expo-blur` wrapping each lead card + `style={{ opacity: 0.1 }}` on the card content beneath. The combination makes cards visibly present but illegible — communicating "there is content here, you just can't see it."
+**Lead card blur:** `<BlurView intensity={8} tint="dark" style={StyleSheet.absoluteFill}>` from `expo-blur` placed as an **absolute sibling over the card content**, not as a parent wrapper. The card content `<View>` gets `style={{ opacity: 0.1 }}`. The combination makes cards visibly present but illegible. **Android degradation:** `BlurView` requires Android API level 31+ (Android 12). On API < 31, `expo-blur` silently renders a transparent view — apply a fallback `<View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(9,9,11,0.85)' }]}>` for Android API < 31, detected via `Platform.OS === 'android' && Platform.Version < 31`.
 
-**Empty feel prevention:** Show at least 4 blurred card placeholders so the feed doesn't look broken. Use skeleton-shaped `bg-zinc-900 rounded-2xl h-28 w-full` blocks with `opacity: 0.15` if the actual feed query is also blocked.
+**Empty feel prevention:** Show at least 4 blurred card placeholders so the feed doesn't look broken. Use skeleton-shaped `bg-zinc-900 rounded-2xl h-28 w-full` blocks with a `style={{ opacity: 0.15 }}` inline prop (NativeWind v4 arbitrary `opacity-[0.15]` may not JIT-compile — use inline style for this value) if the actual feed query is also blocked.
+
+**Scroll-to-top on entering blur mode:** When `paywallStore.dismiss()` is called (switching from `<PaywallScreen>` to inline-blur), call `feedScrollRef.current?.scrollToOffset({ offset: 0, animated: false })` so the banner is immediately visible at the top of the list.
 
 ---
 
@@ -201,7 +203,7 @@ When `paywallStore.dismissed = true` AND `subscription_status === 'expired'`, th
 
 The "Already paid? Refresh status" link is hidden initially and revealed after 60 seconds on the paywall screen without a status change.
 
-**Implementation:** `useEffect` with `setTimeout(60_000)` → set `showRefresh = true`. The link fades in via `withTiming(400)` opacity transition. On tap: calls `queryClient.invalidateQueries(['user-profile'])` + shows `<ActivityIndicator size="small" color="#71717a" />` inline next to the link text while refetching. If status comes back `'active'`, paywall dismisses. If still `'expired'`, a `text-zinc-500 text-xs` message appears: "Still showing trial ended — please check buildo.com."
+**Implementation:** `useEffect` with `setTimeout(60_000)` → set `showRefresh = true`. The link fades in via `withTiming(1, { duration: 400 })` opacity transition on `useSharedValue(0)`. On tap: calls `queryClient.invalidateQueries(['user-profile'])` + shows `<ActivityIndicator size="small" color="#71717a" />` inline next to the link text while refetching. If status comes back `'active'`, paywall dismisses. If still `'expired'`, a `text-zinc-500 text-xs` message appears: "Still showing trial ended — please check buildo.com."
 
 ---
 
@@ -237,17 +239,19 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - File: `mobile/src/components/paywall/PaywallScreen.tsx`
 - NativeWind classes and stagger animation sequence per §9. Lead count sourced from `user_profiles.lead_views_count` (passed as prop from the layout gate).
 - **Stagger animation:** Five `useSharedValue(0)` instances (icon, headline, count, primaryCTA, secondary), each animated via `withDelay(N, withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }))`. `useAnimatedStyle` drives both `opacity` and `transform: [{ translateY: interpolate(sv, [0, 1], [12, 0]) }]` (8px for CTA, 0 for secondary).
-- **`lead_views_count` display:** Rendered as `{count} leads` in `text-amber-400 font-mono text-4xl font-bold text-center` with a caption `text-zinc-500 text-sm text-center` below: "viewed in your 14-day trial".
-- "Continue at buildo.com →" calls `POST /api/subscribe/session` (Firebase Bearer token) to get the nonce-based checkout URL. Server creates a single-use nonce in `subscribe_nonces` table (TTL 15 minutes) and returns `{ url: "https://buildo.com/subscribe?nonce=..." }`. No UID or email in the URL. Opens via `WebBrowser.openAuthSessionAsync()`. Show an inline `ActivityIndicator size="small"` inside the button while the session request is in-flight; replace with "Continue at buildo.com →" text once the URL is received. On `POST /api/subscribe/session` failure: show toast `"Couldn't open checkout — try again"`, re-enable the button.
+- **`lead_views_count` display:** Rendered as `{count} leads` in `text-amber-400 font-mono text-4xl font-bold text-center` with a caption `text-zinc-500 text-sm text-center` below: "viewed in your 14-day trial". **Zero-count edge case:** When `lead_views_count === 0`, replace the number+caption block with a single line: `text-zinc-400 text-sm text-center mb-8` — "Explore real leads in your area." Do not display "0 leads" — that framing undermines the value proposition.
+- "Continue at buildo.com →" calls `POST /api/subscribe/session` (Firebase Bearer token) to get the nonce-based checkout URL. Server creates a single-use nonce in `subscribe_nonces` table (TTL 15 minutes) and returns `{ url: "https://buildo.com/subscribe?nonce=..." }`. No UID or email in the URL. Opens via `WebBrowser.openBrowserAsync()` (not `openAuthSessionAsync` — Stripe checkout is a standard browser flow, not an OAuth redirect). Show an inline `ActivityIndicator size="small"` inside the button while the session request is in-flight; replace with "Continue at buildo.com →" text once the URL is received. On `POST /api/subscribe/session` failure: show toast `"Couldn't open checkout — try again"`, re-enable the button.
 - "Maybe later" calls `paywallStore.dismiss()` — does not fully hide paywall, switches to inline-blur mode.
-- **60-second Refresh link:** `useEffect(() => { const t = setTimeout(() => setShowRefresh(true), 60_000); return () => clearTimeout(t); }, [])`. Fades in via `withTiming(400)`. Tap: `queryClient.invalidateQueries(['user-profile'])`. See §9 for full interaction spec.
+- **60-second Refresh link:** `useEffect(() => { const t = setTimeout(() => setShowRefresh(true), 60_000); return () => clearTimeout(t); }, [])`. Fades in via `withTiming(1, { duration: 400 })` on `useSharedValue(0)`. Tap: `queryClient.invalidateQueries(['user-profile'])`. See §9 for full interaction spec.
 
 **Step 2 — Subscription gate in app layout**
 - File: `mobile/app/(app)/_layout.tsx`
 - On mount + on `AppState change` to `'active'`: call `queryClient.invalidateQueries(['user-profile'])` to re-fetch profile.
-- **Loading guard (design-critical):** While `subscription_status` is `null` or `undefined` (initial fetch in progress), render a full-screen loading guard: `bg-zinc-950 flex-1 items-center justify-center` with `<ActivityIndicator size="large" color="#f59e0b" />`. Do NOT flash the paywall during this window. Only render `<PaywallScreen>` after the fetch resolves to `'expired'`. Loading guard → `<PaywallScreen>` transition: `opacity: 0 → 1` `withTiming(200)` on the `PaywallScreen` mount.
-- **When `subscription_status` changes from `'expired'` to `'active'`** (post-payment webhook): call `paywallStore.clear()`, then `queryClient.invalidateQueries(['leads'])` so the feed reloads with real data. The paywall screen should fade out (opacity `1 → 0`, `withTiming(200)`) before unmounting.
+- **Loading guard (design-critical):** While `subscription_status` is `null` or `undefined` (initial fetch in progress), render a full-screen loading guard: `bg-zinc-950 flex-1 items-center justify-center` with `<ActivityIndicator size="large" color="#f59e0b" />`. Do NOT flash the paywall during this window. Only render `<PaywallScreen>` after the fetch resolves to `'expired'`. Loading guard → `<PaywallScreen>` transition: `opacity: 0 → 1` `withTiming(1, { duration: 200 })` on `useSharedValue(0)` on the `PaywallScreen` mount.
+- **When `subscription_status` changes from `'expired'` to `'active'`** (post-payment webhook): call `paywallStore.clear()`, then `queryClient.invalidateQueries(['leads'])` so the feed reloads with real data. The paywall screen should fade out (opacity `1 → 0`, `withTiming(0, { duration: 200 })`) before unmounting.
 **Gate execution order:** `(app)/_layout.tsx` is the SUBSCRIPTION gate. It executes AFTER the AuthGate in `_layout.tsx` (Spec 93) and BEFORE the onboarding gate in `(onboarding)/_layout.tsx` (Spec 94). The sequence is: Auth → Subscription → Onboarding. The subscription gate must handle `admin_managed` by granting full access and deferring to the onboarding gate to render the holding screen if `onboarding_complete = false`.
+
+**Loading guard animation note:** Set `pointerEvents="none"` on the `<PaywallScreen>` wrapper during the mount fade-in (`opacity: 0 → 1`, `withTiming(1, { duration: 200 })`) to prevent accidental taps on the primary CTA before the screen is fully visible.
 
 Six status values handled (all values from Spec 95 §2.3 enum):
   - `'trial'` → full access, no paywall

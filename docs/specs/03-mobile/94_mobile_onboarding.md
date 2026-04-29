@@ -208,7 +208,7 @@ Inherits the industrial-utilitarian dark-mode system from `74_lead_feed_design.m
 
 **Touch targets:** All interactive elements `min-h-[52px]` (exceeds 44px minimum per Spec 90 §9).
 
-**Motion:** `withTiming(300, { easing: Easing.out(Easing.ease) })` for entry reveals · `withSpring({ damping: 20, stiffness: 400 })` for button presses · staggered delays drive multi-element screens.
+**Motion:** `withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) })` for entry reveals — first arg is the **target value** (1), not the duration · `withSpring({ damping: 20, stiffness: 400 })` for button presses · staggered delays drive multi-element screens.
 
 ---
 
@@ -221,10 +221,10 @@ Inherits the industrial-utilitarian dark-mode system from `74_lead_feed_design.m
 ```
 
 - Complete: `w-2.5 h-2.5 rounded-full bg-amber-500 mx-1.5`
-- Active: `w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-500/30 mx-1.5`
+- Active: Two nested Views — outer ring wrapper `w-[18px] h-[18px] rounded-full border border-amber-500/40 items-center justify-center mx-1.5` + inner dot `w-2.5 h-2.5 rounded-full bg-amber-500`. (NativeWind v4 does not support `ring-*` utilities — use a border on a wrapper View instead.)
 - Remaining: `w-2.5 h-2.5 rounded-full bg-zinc-700 mx-1.5`
 - Container: `flex-row items-center justify-center mt-4 mb-8`
-- On step advance: `withSpring` scale pulse `1.0 → 1.3 → 1.0` on newly-complete dot (200ms)
+- On step advance: scale pulse on newly-complete dot via `withSequence(withTiming(1.3, { duration: 100 }), withTiming(1.0, { duration: 100 }))` on a `useSharedValue(1)` driving `transform: [{ scale }]`
 
 #### Trade Selection Screen — `profession.tsx`
 
@@ -248,15 +248,18 @@ border-l-[3px] border-amber-500 bg-amber-500/5 pl-3
 ```
 Right slot: amber checkmark `text-amber-500 text-base` · `accessibilityState={{ selected: true }}`
 
+**Trade row — unselected:** `accessibilityState={{ selected: false }}` (explicitly set for both states — VoiceOver reads "not selected" for clarity).
+
 **Sticky "Continue" footer:**
 ```
 absolute bottom-0 w-full bg-zinc-950/95 px-4 pb-safe pt-3 border-t border-zinc-800
 ```
+- `pb-safe` requires the `tailwindcss-safe-area` plugin in `tailwind.config.js` — confirm plugin is installed before using this class (see §9 Component Library Decisions).
 - Disabled (no selection): `opacity-40` on CTA button
 - Enabled: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full`
 - Label: `text-zinc-950 font-bold text-base text-center`
 
-**Accessibility:** `accessibilityRole="button"` on each trade row.
+**Accessibility:** `accessibilityRole="radio"` on each trade row (trade selection is a single-choice set — `radio` is semantically correct over `button`). `accessibilityState={{ selected: true/false }}` on every row (both states must be explicit).
 
 #### Trade Lock Confirmation — `@gorhom/bottom-sheet` v5
 
@@ -268,7 +271,9 @@ absolute bottom-0 w-full bg-zinc-950/95 px-4 pb-safe pt-3 border-t border-zinc-8
 - Confirm: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full mt-6` · label `text-zinc-950 font-bold text-base text-center`
 - Go Back: `text-zinc-500 text-sm text-center mt-3 min-h-[44px]`
 
-**Note:** Must use `BottomSheetView` not raw `View` as direct child of the sheet. `BottomSheetModalProvider` required at app root (Spec 90 implementation note).
+**Note:** Must use `<BottomSheetView>` (not raw `<View>`) as direct child of the sheet — required in `@gorhom/bottom-sheet` v5 for correct layout and keyboard handling. `BottomSheetModalProvider` required at app root (Spec 90 implementation note).
+
+**Haptic on confirm:** Fire `Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)` (from `expo-haptics`) immediately after the user taps "Confirm" and the PATCH succeeds. No haptic on "Go Back".
 
 #### Path Selection Screen — `path.tsx`
 
@@ -295,9 +300,9 @@ Screen: `flex-1 bg-zinc-950`
 **Search field:**
 ```
 bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-4
-text-zinc-100 font-mono text-base
+text-zinc-100 font-sans text-base
 ```
-Focused: `border-amber-500` · Placeholder: `text-zinc-600`
+`font-sans` (DM Sans) — not `font-mono` — for address input. Address text is natural language, not data. Focused: `border-amber-500` · Placeholder: `text-zinc-600`
 
 **Toronto bounds error:**
 ```
@@ -356,14 +361,16 @@ Label: `text-zinc-950 font-bold text-base text-center`
 
 `bg-zinc-950 flex-1 items-center justify-center px-8`
 
-**Staggered entry** (`withTiming(300, Easing.out(Easing.ease))`):
+**Staggered entry** — four `useSharedValue(0)` instances, each driven by `withDelay(N, withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }))`. The shared value animates FROM 0 TO 1 and drives both `opacity` (0→1) and `transform: [{ translateY: interpolate(sv, [0, 1], [20, 0]) }]` via `useAnimatedStyle`. Note: `withTiming` first arg is the **target value**, not duration — duration is in the config object.
 
 | Element | Delay | Transform |
 |---------|-------|-----------|
-| Trade badge | 0ms | fade + 20px up |
-| Heading | 80ms | fade + 20px up |
-| Body copy | 160ms | fade + 20px up |
-| CTA | 240ms | fade + 20px up |
+| Trade badge | 0ms | opacity 0→1 + translateY 20→0 |
+| Heading | 80ms | opacity 0→1 + translateY 20→0 |
+| Body copy | 160ms | opacity 0→1 + translateY 20→0 |
+| CTA | 240ms | opacity 0→1 + translateY 20→0 |
+
+**Haptic on CTA tap:** Fire `Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)` when the CTA is tapped and the PATCH succeeds (`onboarding_complete: true`).
 
 - Badge: `font-mono text-amber-400 text-xs tracking-widest uppercase bg-amber-500/10 px-3 py-1 rounded-full`
 - Heading: `text-zinc-100 text-2xl font-bold text-center mt-6`
@@ -389,11 +396,14 @@ Label: `text-zinc-950 font-bold text-base text-center`
 |---------|---------|-------|
 | Trade list sticky headers | `SectionList` (React Native built-in) | `stickySectionHeadersEnabled={true}` required for Android |
 | Supplier grid | `FlatList numColumns={2}` | FlashList v2 does not support `numColumns` — use FlatList |
-| Confirmation bottom sheet | `@gorhom/bottom-sheet` v5 | Requires `BottomSheetModalProvider` at app root |
+| Confirmation bottom sheet | `@gorhom/bottom-sheet` v5 | Requires `BottomSheetModalProvider` at app root; `BottomSheetView` as direct child |
 | Address geocoding | `expo-location` `geocodeAsync()` | No third-party autocomplete — validation only |
 | Keyboard handling | `KeyboardAvoidingView` (React Native) | Platform branch: `'padding'` iOS, `'height'` Android |
 | Custom checkboxes | Custom `Pressable` | No library — NativeWind makes trivial |
-| Entry animations | Reanimated `withTiming` / `withSpring` | Reanimated shim active in Expo Go; real module in production builds |
+| Entry animations | Reanimated `withTiming` / `withSpring` | `withTiming(targetValue, { duration, easing })` — first arg is target, not duration |
+| Safe area insets | `tailwindcss-safe-area` (NW plugin) | Required for `pb-safe` class — must be listed in `tailwind.config.js` plugins array |
+| Haptic feedback | `expo-haptics` | `Haptics.notificationAsync(NotificationFeedbackType.Success)` on trade confirm + completion |
+| Icons | `lucide-react-native` | PascalCase named components: `<Lock size={N} />`, `<Check size={N} />` — NOT `@expo/vector-icons` Feather |
 
 ---
 
@@ -426,9 +436,9 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - File: `mobile/app/(onboarding)/profession.tsx`
 - `<SectionList>` with 6 sticky category headers. 32 trades + Realtor. `stickySectionHeadersEnabled={true}` (required for Android). No `useEffect` for data — trade list is static JSON (Spec 90 §5).
 - Section header: `bg-zinc-900 px-4 py-2 border-b border-zinc-800` · `font-mono text-[11px] text-zinc-400 uppercase tracking-widest`
-- Row unselected: `flex-row items-center justify-between px-4 min-h-[52px] border-b border-zinc-800/40 active:bg-zinc-800`
-- Row selected: add `border-l-[3px] border-amber-500 bg-amber-500/5 pl-3` · amber checkmark right · `accessibilityState={{ selected: true }}`
-- Sticky footer CTA: `absolute bottom-0 w-full bg-zinc-950/95 px-4 pb-safe pt-3 border-t border-zinc-800` · button `opacity-40` when disabled, `bg-amber-500 active:bg-amber-600 rounded-2xl py-4` when enabled
+- Row unselected: `flex-row items-center justify-between px-4 min-h-[52px] border-b border-zinc-800/40 active:bg-zinc-800` · `accessibilityRole="radio"` · `accessibilityState={{ selected: false }}`
+- Row selected: add `border-l-[3px] border-amber-500 bg-amber-500/5 pl-3` · amber checkmark right (`<Check size={16} color="#f59e0b" />` from `lucide-react-native`) · `accessibilityState={{ selected: true }}`
+- Sticky footer CTA: `absolute bottom-0 w-full bg-zinc-950/95 px-4 pb-safe pt-3 border-t border-zinc-800` · button `opacity-40` when disabled, `bg-amber-500 active:bg-amber-600 rounded-2xl py-4` when enabled. `pb-safe` requires `tailwindcss-safe-area` plugin.
 - After selection, tapping "Continue" opens trade lock confirmation bottom sheet (`@gorhom/bottom-sheet` v5, `snapPoints={['42%']}`). PATCH fires only after user confirms. See §9 Design & Interface for full sheet spec.
 - **PATCH idempotency:** If the `trade_slug` PATCH succeeds on the server but the client doesn't receive the success response (network drop), the user will retry and the PATCH will be rejected by the trade immutability guard with a 400. To prevent this dead end, the server must apply idempotency: if the incoming `trade_slug` value equals the existing value in `user_profiles`, return 200 (treat as success) rather than 400. This makes the retry safe without relaxing the guard for genuine change attempts.
 - Realtor taps → confirm sheet → skip `path.tsx`, go directly to `address.tsx`. Tradesperson → confirm → `path.tsx`.
@@ -443,9 +453,9 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 5 — Address input screen**
 - File: `mobile/app/(onboarding)/address.tsx`
-- `expo-location` `geocodeAsync()` on submitted text. Run `snapCoord.ts`. Outside Toronto bounds → show warning + nearest neighbourhood centroid suggestion. Inside bounds → snap silently. On confirm: PATCH `{ home_base_lat, home_base_lng, location_mode: 'home_base_fixed' }`.
+- `expo-location` `geocodeAsync()` on submitted text. **Empty-array guard:** `geocodeAsync` returns `[]` (not null/error) when the address yields no results — check `results.length === 0` before accessing `results[0]` and show the user "Address not found — please try again." Run `snapCoord.ts`. Outside Toronto bounds → show warning + nearest neighbourhood centroid suggestion. Inside bounds → snap silently. On confirm: PATCH `{ home_base_lat, home_base_lng, location_mode: 'home_base_fixed' }`.
 - Layout: `KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}` wrapping `ScrollView`
-- Text input: `bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-4 text-zinc-100 font-mono text-base` · focused `border-amber-500` · placeholder `text-zinc-600`
+- Text input: `bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-4 text-zinc-100 font-sans text-base` · focused `border-amber-500` · placeholder `text-zinc-600`. Use `font-sans` (DM Sans) — not `font-mono` — for address input.
 - Toronto bounds error: `bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 mt-3 text-amber-400 text-sm leading-relaxed`
 - GPS Live button: `bg-zinc-800 border border-zinc-700 rounded-2xl flex-row items-center justify-center px-4 py-4 mt-3 gap-3 min-h-[52px]`
 - GPS permission denied (Live GPS path): `bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3 mt-3 text-red-400 text-sm` + `Linking.openSettings()` link + secondary CTA to switch to fixed address.
@@ -475,7 +485,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 **Step 9 — Completion screen (Path L only)**
 - File: `mobile/app/(onboarding)/complete.tsx`
 - Layout: `bg-zinc-950 flex-1 items-center justify-center px-8`
-- Staggered entry (`withTiming(300, Easing.out(Easing.ease))`): trade badge (0ms) → heading (80ms) → copy (160ms) → CTA (240ms). Each element starts at `opacity: 0, translateY: 20`.
+- Staggered entry: four `useSharedValue(0)` instances, each driven by `withDelay(N, withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }))` — delays 0ms, 80ms, 160ms, 240ms. `useAnimatedStyle` drives `opacity: [0→1]` + `transform: [{ translateY: interpolate(sv, [0, 1], [20, 0]) }]`. `withTiming` first arg = target value (1), not duration.
 - Trade badge: `font-mono text-amber-400 text-xs tracking-widest uppercase bg-amber-500/10 px-3 py-1 rounded-full`
 - Heading: `text-zinc-100 text-2xl font-bold text-center mt-6`
 - Copy: `text-zinc-400 text-sm text-center mt-3 leading-relaxed`

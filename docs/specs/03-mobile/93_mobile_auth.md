@@ -164,7 +164,7 @@ Apple mandates specific visual treatment. Use `expo-apple-authentication`'s `<Ap
 />
 ```
 
-`buttonStyle={WHITE}` on the dark background achieves the correct contrast. Do not apply NativeWind classes to this component — it renders a native view. The `cornerRadius={16}` matches `rounded-2xl` on the sibling buttons.
+`buttonStyle={WHITE}` is correct on dark backgrounds: `WHITE` renders a **white background with black text/logo**, which stands out clearly against `bg-zinc-950`. `BLACK` renders a black background with white text — nearly invisible on a dark screen. Do not apply NativeWind classes to this component — it renders a native view. The `cornerRadius={16}` matches `rounded-2xl` on the sibling buttons.
 
 ---
 
@@ -180,11 +180,11 @@ Custom `<Pressable>` styled to match the design system while displaying the Goog
 
 ### Phone Input (react-native-international-phone-number)
 
-The Phone button opens a bottom sheet (`@gorhom/bottom-sheet` at `snapPoints={['55%']}`). Inside:
+The Phone button opens a bottom sheet (`@gorhom/bottom-sheet` at `snapPoints={['55%']}`, `keyboardBehavior="interactive"` so the sheet rises with the keyboard, `<BottomSheetView>` as direct child). Inside:
 
 - Component: `<PhoneInput>` from `react-native-international-phone-number`
 - Container: `bg-zinc-800 rounded-xl overflow-hidden mx-4` — wraps the component
-- Props: `defaultCountry="CA"` · `phoneInputStyles={{ container: { backgroundColor: '#27272a', borderRadius: 12 }, flagContainer: { backgroundColor: '#3f3f46', borderRadius: 0 }, input: { color: '#f4f4f5', fontFamily: 'DMSans-Regular', fontSize: 16 } }}`
+- Props: `defaultCountry="CA"` · `phoneInputStyles={{ container: { backgroundColor: '#27272a', borderRadius: 12 }, flagContainer: { backgroundColor: '#3f3f46', borderRadius: 0 }, divider: { backgroundColor: '#52525b' }, input: { color: '#f4f4f5', fontFamily: 'DMSans-Regular', fontSize: 16 } }}` — the `divider` key is required by `react-native-international-phone-number` to style the separator between the flag/dial-code area and the input field; omitting it leaves a default-styled separator that clashes with the dark theme.
 - CTA button below: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 mx-4 mt-4 w-full items-center` — "Send code"
 - Error state (`auth/too-many-requests`): `text-red-400 text-xs text-center mt-2` "Too many attempts. Try again in a few minutes."
 
@@ -195,12 +195,20 @@ The Phone button opens a bottom sheet (`@gorhom/bottom-sheet` at `snapPoints={['
 After phone number submitted, sheet transitions to OTP entry screen.
 
 - Component: `<OTPInput>` from `input-otp-native`
-- 6 cells: each `w-12 h-14 rounded-xl bg-zinc-800 border-2 border-zinc-700 text-zinc-100 text-2xl font-mono text-center items-center justify-center`
-- Active cell border: `border-amber-500`
-- `autoFocus` — keyboard appears immediately on sheet open
-- Row layout: `flex-row gap-2 justify-center mx-4`
+- 6 cells via `pinCount={6}` prop. **Cell styling uses the library's own `cellStyle` / `focusedCellStyle` props — NOT NativeWind className on cell elements.** The library renders its own native cell views that do not accept className:
+  ```tsx
+  <OTPInput
+    pinCount={6}
+    autoFocus
+    cellStyle={{ width: 48, height: 56, borderRadius: 12, backgroundColor: '#27272a', borderWidth: 2, borderColor: '#3f3f46', color: '#f4f4f5', fontSize: 24, fontFamily: 'SpaceMono', textAlign: 'center' }}
+    focusedCellStyle={{ borderColor: '#f59e0b' }}
+  />
+  ```
+- Row layout: `flex-row gap-2 justify-center mx-4` on the container wrapping `<OTPInput>`
+- `autoFocus` — keyboard appears immediately on sheet open; keyboard auto-dismissed when all 6 digits are entered (the library fires `onCodeFilled` callback — call `Keyboard.dismiss()` in that callback)
 - Explainer below: `text-zinc-500 text-sm text-center mt-4` "Enter the 6-digit code sent to {phoneNumber}"
 - "Didn't receive it?" row: `text-zinc-600 text-xs text-center mt-6` with `text-amber-500` "Resend" tap target. Resend disabled for 30s after initial send (countdown: `"Resend in {N}s"`).
+- **Wrong-code error state:** When OTP verification fails (incorrect code), render `text-red-400 text-xs text-center mt-2` "Incorrect code — try again." Apply a `borderColor: '#f87171'` (red-400) override to all cells via `cellStyle` until the user starts re-entering digits.
 
 ---
 
@@ -208,8 +216,8 @@ After phone number submitted, sheet transitions to OTP entry screen.
 
 Shared `TextInput` style: `bg-zinc-800 rounded-xl px-4 py-3.5 text-zinc-100 text-base mb-3` with `placeholderTextColor="#71717a"`.
 
-Email field: `keyboardType="email-address"` · `autoCapitalize="none"` · `autoComplete="email"`.
-Password field: `secureTextEntry` · `autoComplete="current-password"` (sign-in) / `"new-password"` (sign-up).
+Email field: `keyboardType="email-address"` · `autoCapitalize="none"` · `autoComplete="email"` · `textContentType="emailAddress"` (iOS AutoFill).
+Password field: `secureTextEntry` · `autoComplete="current-password"` (sign-in) / `"new-password"` (sign-up) · `textContentType="password"` (sign-in) / `textContentType="newPassword"` (sign-up, triggers iOS strong password suggestion).
 
 **Sign-up only — backup email field (SMS users):**
 - Shown only when arriving from the phone path
@@ -228,7 +236,11 @@ loading: [ ActivityIndicator size="small" color="#71717a" ]  (spinner only, butt
 error:   [ icon? ]  "Sign in with Google"  (reverts to label, button re-enabled, error shown below)
 ```
 
-Local `isSubmitting` boolean per button. `<Pressable disabled={isSubmitting} opacity={isSubmitting ? 0.7 : 1.0}`.
+Local `isSubmitting` boolean per button. `<Pressable disabled={isSubmitting} opacity={isSubmitting ? 0.7 : 1.0}`. All custom `<Pressable>` auth buttons: `accessibilityRole="button"` (the Google, Phone, and Email `<Pressable>` buttons — not the Apple button, which is a native component with its own accessibility).
+
+**Haptic feedback:**
+- Sign-in / sign-up **success**: `Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)` from `expo-haptics` — fires immediately after Firebase auth resolves and before navigation.
+- Sign-in / sign-up **failure**: `Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)` — fires on any auth error (wrong password, too many requests, etc.) before showing the error message.
 
 ---
 
@@ -236,8 +248,8 @@ Local `isSubmitting` boolean per button. `<Pressable disabled={isSubmitting} opa
 
 When `auth/account-exists-with-different-credential` is caught:
 
-- `@gorhom/bottom-sheet` at `snapPoints={['50%']}` (appears over whatever screen triggered the conflict)
-- Feather `link` 24px `text-amber-500` — centred, `mb-3`
+- `@gorhom/bottom-sheet` at `snapPoints={['50%']}` · `keyboardBehavior="interactive"` (sheet moves with keyboard if the user needs to re-enter credentials) · `<BottomSheetView>` as direct child (v5 requirement)
+- `<Link2 size={24} color="#f59e0b" />` from `lucide-react-native` — centred, `mb-3`
 - Headline: `text-zinc-100 text-base font-bold text-center mb-2` "Email already registered"
 - Body: `text-zinc-400 text-sm text-center mb-6` — "An account with this email already exists. Sign in with {existingMethod} to link your {newMethod} account."
 - Primary: `bg-amber-500 active:bg-amber-600 rounded-2xl py-3.5 mx-4 w-full items-center` + `text-zinc-950 font-semibold text-sm` "Sign in with {existingMethod}"
