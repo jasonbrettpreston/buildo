@@ -1,4 +1,5 @@
 // SPEC LINK: docs/specs/03-mobile/92_mobile_engagement_hardware.md §3.2, §4.1, §4.2
+//             docs/specs/03-mobile/93_mobile_auth.md §5 Step 6
 import '../global.css';
 import { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
@@ -7,7 +8,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import * as Notifications from 'expo-notifications';
 import { queryClient } from '@/lib/queryClient';
 import { mmkvPersister } from '@/lib/mmkvPersister';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore, initFirebaseAuthListener } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { registerPushToken } from '@/lib/pushTokens';
 import { successNotification } from '@/lib/haptics';
@@ -52,12 +53,16 @@ function AuthGate() {
   }, [rootNavigationState?.key]);
 
   // Step 2: auth redirects only after navigation container is confirmed ready.
+  // TODO Spec 95: extend this with a /api/user-profile fetch — five outcomes
+  //   (200+complete → app, 200+incomplete → onboarding, 404 → onboarding,
+  //   403 → reactivation modal, network failure → full-screen error).
+  //   Stub now: binary signed-in / signed-out routing only.
   useEffect(() => {
     if (!isNavigationReady) return;
     if (!_hasHydrated) return;
     const inAuthGroup = segments[0] === '(auth)';
     if (!user && !inAuthGroup) {
-      router.replace('/login');
+      router.replace('/(auth)/sign-in');
     } else if (user && inAuthGroup) {
       router.replace('/(app)/');
       // Fire-and-forget but never silently swallow — surface the error so Phase 8
@@ -67,8 +72,20 @@ function AuthGate() {
         console.warn('[AuthGate] registerPushToken failed', err instanceof Error ? err.message : err);
       });
     }
-  }, [isNavigationReady, user, segments, _hasHydrated]);
+  }, [isNavigationReady, user, segments, _hasHydrated, router]);
 
+  return null;
+}
+
+// Mounts the Firebase onAuthStateChanged listener once at app boot. The store
+// receives the user (or null on sign-out) and AuthGate routes accordingly.
+// Lives in its own component so the listener subscribe/unsubscribe lifecycle
+// is tied to RootLayout mount/unmount — not to AuthGate re-renders.
+function FirebaseAuthListener() {
+  useEffect(() => {
+    const unsubscribe = initFirebaseAuthListener();
+    return unsubscribe;
+  }, []);
   return null;
 }
 
@@ -175,6 +192,7 @@ export default function RootLayout() {
           client={queryClient}
           persistOptions={{ persister: mmkvPersister, maxAge: 1000 * 60 * 60 * 24 }}
         >
+          <FirebaseAuthListener />
           <AuthGate />
           <NotificationHandlers />
           <Stack screenOptions={{ headerShown: false }} />

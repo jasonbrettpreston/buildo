@@ -7,10 +7,12 @@ interface NotificationState {
   unreadFlightBoard: number;
   incrementUnread: () => void;
   clearUnread: () => void;
+  reset: () => void;
 }
 
 export const useNotificationStore = create<NotificationState>()((set) => ({
   unreadFlightBoard: 0,
   incrementUnread: () => set((s) => ({ unreadFlightBoard: s.unreadFlightBoard + 1 })),
   clearUnread: () => set({ unreadFlightBoard: 0 }),
+  reset: () => set({ unreadFlightBoard: 0 }),
 }));

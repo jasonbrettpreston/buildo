@@ -1,6 +1,11 @@
+// SPEC LINK: docs/specs/03-mobile/93_mobile_auth.md §3.4 Sign-Out, §5 Step 2
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKV } from 'react-native-mmkv';
+import { onAuthStateChanged, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useFilterStore } from '@/store/filterStore';
+import { useNotificationStore } from '@/store/notificationStore';
 
 // react-native-mmkv v4 uses createMMKV() factory (MMKV is now an interface, not a class)
 const storage = createMMKV({ id: 'auth-store' });
@@ -41,10 +46,13 @@ interface User {
 interface AuthState {
   user: User | null;
   idToken: string | null;
+  isLoading: boolean;
   _hasHydrated: boolean;
   setAuth: (user: User, idToken: string) => void;
   clearAuth: () => void;
+  setLoading: (loading: boolean) => void;
   setHasHydrated: (v: boolean) => void;
+  signOut: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -52,10 +60,26 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       idToken: null,
+      isLoading: true,
       _hasHydrated: false,
-      setAuth: (user, idToken) => set({ user, idToken }),
-      clearAuth: () => set({ user: null, idToken: null }),
+      setAuth: (user, idToken) => set({ user, idToken, isLoading: false }),
+      clearAuth: () => set({ user: null, idToken: null, isLoading: false }),
+      setLoading: (loading) => set({ isLoading: loading }),
       setHasHydrated: (v) => set({ _hasHydrated: v }),
+      signOut: async () => {
+        // Firebase sign-out first — onAuthStateChanged fires (null) which clears auth.
+        // Then reset peer in-memory stores so a different user signing in on the same
+        // device sees no stale data. MMKV is preserved per §3.4 so the same user
+        // returning on the same device gets fast hydration.
+        await firebaseSignOut(auth);
+        useFilterStore.getState().reset();
+        useNotificationStore.getState().reset();
+        // TODO Spec 95: useUserProfileStore.getState().reset() — once the store exists.
+        // TODO Spec 96: usePaywallStore.getState().clear() — without it, a user who
+        //   dismissed the paywall and signed out on a shared device leaves
+        //   `dismissed: true` in memory, putting the next user in inline blur mode.
+        set({ user: null, idToken: null, isLoading: false });
+      },
     }),
     {
       name: 'auth',
@@ -82,3 +106,33 @@ export const useAuthStore = create<AuthState>()(
     },
   ),
 );
+
+// Wires the Firebase onAuthStateChanged listener into the store. Call once from
+// RootLayout in mobile/app/_layout.tsx — returns the unsubscribe function so
+// React's useEffect cleanup detaches the listener on unmount.
+export function initFirebaseAuthListener(): () => void {
+  return onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+    if (firebaseUser) {
+      void firebaseUser
+        .getIdToken()
+        .then((idToken) => {
+          useAuthStore.getState().setAuth(
+            {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+            },
+            idToken,
+          );
+        })
+        .catch(() => {
+          // Token fetch failure is rare but can happen if Firebase is unreachable
+          // immediately after auth state change. Treat as signed-out so the
+          // AuthGate redirects to sign-in rather than leaving the user in limbo.
+          useAuthStore.getState().clearAuth();
+        });
+    } else {
+      useAuthStore.getState().clearAuth();
+    }
+  });
+}

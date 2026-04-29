@@ -1,7 +1,14 @@
 // SPEC LINK: docs/specs/03-mobile/92_mobile_engagement_hardware.md §2.3
+//             docs/specs/03-mobile/93_mobile_auth.md §3.4 Sign-Out, §5 Step 7
 //
-// Settings screen — trade profile display, radius control, and notification
-// preferences. All prefs sync to user_profiles.notification_prefs via PATCH.
+// Settings screen — trade profile display, radius control, notification
+// preferences, and Sign Out. All prefs sync to user_profiles.notification_prefs.
+//
+// Spec 97 §3 will add Delete Account next to Sign Out. The deletion order is:
+//   1. POST /api/user-profile/delete (must succeed before proceeding)
+//   2. useAuthStore.getState().signOut()  (this spec — clears Firebase + stores)
+//   3. AuthGate redirects to /(auth)/sign-in via onAuthStateChanged
+// If step 1 fails, do NOT sign out — show error toast and abort.
 import React, { useState } from 'react';
 import {
   View,
@@ -16,7 +23,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { useFilterStore } from '@/store/filterStore';
+import { useAuthStore } from '@/store/authStore';
 import { lightImpact } from '@/lib/haptics';
+import * as Haptics from 'expo-haptics';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
 
 type CostTier = 'small' | 'medium' | 'large' | 'major' | 'mega';
@@ -263,6 +272,31 @@ export default function SettingsScreen() {
             </View>
           </>
         )}
+
+        {/* ── Account Actions ──────────────────────────────────────────
+            Spec 93 §5 Step 7. Spec 97 §3 will add Delete Account to this group. */}
+        <Text className="font-mono text-xs text-zinc-400 uppercase tracking-wider px-4 pt-6 pb-2 border-t border-zinc-800">
+          Account
+        </Text>
+        <Pressable
+          onPress={() => {
+            lightImpact();
+            void (async () => {
+              try {
+                await useAuthStore.getState().signOut();
+                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              } catch {
+                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              }
+            })();
+          }}
+          className="px-4 py-4 border-b border-zinc-800/50 active:bg-zinc-900"
+          accessibilityRole="button"
+          accessibilityLabel="Sign Out"
+          testID="sign-out-button"
+        >
+          <Text className="text-zinc-100 text-sm">Sign Out</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );

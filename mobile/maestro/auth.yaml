@@ -1,0 +1,24 @@
+# SPEC LINK: docs/specs/03-mobile/93_mobile_auth.md §5 Testing Gates
+# Smoke flow: cold launch → email sign-in → feed → sign out → return to sign-in.
+# Requires a test account in Firebase Auth with the credentials below.
+appId: com.buildo.app
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Buildo"
+# On Android the Apple button is hidden — assert the always-present Google button.
+- assertVisible: "Sign in with Google"
+- tapOn: "Continue with Email"
+- tapOn:
+    id: "email-input"
+- inputText: "test@buildo.app"
+- tapOn:
+    id: "password-input"
+- inputText: "TestPassword123!"
+- tapOn:
+    id: "email-submit"
+- assertVisible: "Lead Feed"
+- tapOn: "Settings"
+- tapOn:
+    id: "sign-out-button"
+- assertVisible: "Sign in with Google"

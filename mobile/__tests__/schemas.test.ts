@@ -265,19 +265,30 @@ describe('AuthGate — useRootNavigationState guard (regression)', () => {
     expect(layoutSrc).toContain('useRootNavigationState');
   });
 
-  it('guards the AuthGate useEffect on rootNavigationState?.key before router.replace()', () => {
-    const guardIdx = layoutSrc.indexOf('!rootNavigationState?.key');
-    // Use the actual call-site string (with quote) to avoid matching comments
+  it('guards the AuthGate useEffect via isNavigationReady latch before router.replace()', () => {
+    // The AuthGate uses a two-step latch: a small useEffect sets
+    // isNavigationReady once `rootNavigationState?.key` exists, and the auth
+    // routing effect early-returns until that latch flips. This decouples
+    // routing from any transient re-renders where the navigation key
+    // disappears, which the older single-step inline guard could not handle.
+    const latchSetIdx = layoutSrc.indexOf('setNavigationReady(true)');
+    const guardIdx = layoutSrc.indexOf('if (!isNavigationReady) return');
     const replaceIdx = layoutSrc.indexOf("router.replace('/");
+    expect(latchSetIdx).toBeGreaterThan(-1);
     expect(guardIdx).toBeGreaterThan(-1);
     expect(replaceIdx).toBeGreaterThan(-1);
-    // Guard must appear before the first replace call in source order
     expect(guardIdx).toBeLessThan(replaceIdx);
   });
 
-  it('includes rootNavigationState?.key in the useEffect dependency array', () => {
-    expect(layoutSrc).toContain(
-      '[user, segments, _hasHydrated, rootNavigationState?.key]',
-    );
+  it('latches navigation-ready off rootNavigationState?.key', () => {
+    // The latch effect must depend on rootNavigationState?.key — that is what
+    // tells us the navigation container has mounted.
+    expect(layoutSrc).toContain('[rootNavigationState?.key]');
+  });
+
+  it('routes unauthenticated users to /(auth)/sign-in (not /login)', () => {
+    // Spec 93 §5 Step 3: the (auth) route group replaces the old /login screen.
+    expect(layoutSrc).toContain("router.replace('/(auth)/sign-in')");
+    expect(layoutSrc).not.toContain("router.replace('/login')");
   });
 });

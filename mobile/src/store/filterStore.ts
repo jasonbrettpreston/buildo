@@ -25,6 +25,7 @@ interface FilterState {
   setRadiusKm: (km: number) => void;
   setTradeSlug: (slug: string) => void;
   setHomeBaseLocation: (loc: HomeBaseLocation | null) => void;
+  reset: () => void;
 }
 
 export const useFilterStore = create<FilterState>()(
@@ -36,6 +37,7 @@ export const useFilterStore = create<FilterState>()(
       setRadiusKm: (km) => set({ radiusKm: km }),
       setTradeSlug: (slug) => set({ tradeSlug: slug }),
       setHomeBaseLocation: (loc) => set({ homeBaseLocation: loc }),
+      reset: () => set({ radiusKm: 10, tradeSlug: '', homeBaseLocation: null }),
     }),
     {
       name: 'filters',
