@@ -1,0 +1,43 @@
+# SPEC LINK: docs/specs/03-mobile/94_mobile_onboarding.md §10 Testing Gates
+# Maestro E2E: Path L full flow — profession → path → GPS → supplier skip → ToS → feed
+appId: com.buildo.app
+---
+- launchApp
+
+# Trade selection screen
+- assertVisible: "What's your trade?"
+- scrollDown
+- tapOn: "Plumbing"
+- assertVisible: "Continue"
+- tapOn: "Continue"
+
+# Confirm trade lock sheet
+- assertVisible: "Confirm"
+- tapOn: "Confirm"
+
+# Path selection
+- assertVisible: "Find New Leads"
+- tapOn: "Find New Leads"
+
+# Address / GPS screen
+- assertVisible: "Your home base"
+- tapOn: "Use Live GPS"
+
+# Supplier screen — skip
+- assertVisible: "Skip for now"
+- tapOn: "Skip for now"
+
+# ToS screen
+- assertVisible: "Terms & Privacy"
+- tapOn:
+    id: "tos-checkbox"
+- tapOn:
+    id: "privacy-checkbox"
+- tapOn: "Accept & Continue"
+
+# Completion screen
+- assertVisible: "See your leads"
+- tapOn: "See your leads"
+
+# Feed should be visible
+- assertVisible: "Lead Feed"

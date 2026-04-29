@@ -7,6 +7,7 @@ import { onAuthStateChanged, signOut as firebaseSignOut, type User as FirebaseUs
 import { auth } from '@/lib/firebase';
 import { useFilterStore } from '@/store/filterStore';
 import { useNotificationStore } from '@/store/notificationStore';
+import { useOnboardingStore } from '@/store/onboardingStore';
 import { identifyUser, resetIdentity, track } from '@/lib/analytics';
 
 // react-native-mmkv v4 uses createMMKV() factory (MMKV is now an interface, not a class)
@@ -80,6 +81,7 @@ export const useAuthStore = create<AuthState>()(
         await firebaseSignOut(auth);
         useFilterStore.getState().reset();
         useNotificationStore.getState().reset();
+        useOnboardingStore.getState().reset();
         // TODO Spec 95: useUserProfileStore.getState().reset() — once the store exists.
         // TODO Spec 96: usePaywallStore.getState().clear() — without it, a user who
         //   dismissed the paywall and signed out on a shared device leaves

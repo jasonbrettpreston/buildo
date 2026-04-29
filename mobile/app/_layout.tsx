@@ -1,5 +1,6 @@
 // SPEC LINK: docs/specs/03-mobile/92_mobile_engagement_hardware.md §3.2, §4.1, §4.2
 //             docs/specs/03-mobile/93_mobile_auth.md §5 Step 6
+//             docs/specs/03-mobile/94_mobile_onboarding.md §2, §10 Step 1
 //             docs/specs/03-mobile/90_mobile_engineering_protocol.md §11
 import '../global.css';
 import { useEffect, useState } from 'react';
@@ -11,6 +12,7 @@ import * as Sentry from '@sentry/react-native';
 import { queryClient } from '@/lib/queryClient';
 import { mmkvPersister } from '@/lib/mmkvPersister';
 import { useAuthStore, initFirebaseAuthListener } from '@/store/authStore';
+import { useOnboardingStore } from '@/store/onboardingStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { registerPushToken } from '@/lib/pushTokens';
 import { successNotification } from '@/lib/haptics';
@@ -50,43 +52,54 @@ function AuthGate() {
   // AuthGate effect (which only depends on user + segments + _hasHydrated).
   const user = useAuthStore((s) => s.user);
   const _hasHydrated = useAuthStore((s) => s._hasHydrated);
+  // Local MMKV gate — stub until Spec 95 wires GET /api/user-profile.
+  // TODO Spec 95: replace with server response (5 outcomes: 200+complete → app,
+  //   200+incomplete → onboarding, 404 → onboarding, 403 → reactivation modal,
+  //   network failure → full-screen error).
+  const isOnboardingComplete = useOnboardingStore((s) => s.isComplete);
   const router = useRouter();
   const segments = useSegments();
   const rootNavigationState = useRootNavigationState();
   const [isNavigationReady, setNavigationReady] = useState(false);
 
   // Step 1: latch ready flag the moment the navigation container key exists.
-  // Using a boolean latch (rather than checking rootNavigationState?.key inline)
-  // decouples auth routing from the navigation container lifecycle — once true,
-  // it never flips back, so the auth effect can't fire during a re-render where
-  // the container key transiently disappears.
   useEffect(() => {
     if (rootNavigationState?.key) {
       setNavigationReady(true);
     }
   }, [rootNavigationState?.key]);
 
-  // Step 2: auth redirects only after navigation container is confirmed ready.
-  // TODO Spec 95: extend this with a /api/user-profile fetch — five outcomes
-  //   (200+complete → app, 200+incomplete → onboarding, 404 → onboarding,
-  //   403 → reactivation modal, network failure → full-screen error).
-  //   Stub now: binary signed-in / signed-out routing only.
+  // Step 2: 5-branch routing matrix (Spec 94 §2):
+  //  1. !user && not in auth group → sign-in
+  //  2. user && in auth group && !onboardingComplete → onboarding
+  //  3. user && in auth group && onboardingComplete → app (register push token)
+  //  4. user && in onboarding group && onboardingComplete → app (already done)
+  //  5. user && not in auth/onboarding group && !onboardingComplete → onboarding (hard gate)
+  // registerPushToken fires ONLY on branch 3 — Spec 92 §4.1 requires contextual
+  // permission timing after first lead save, NOT on cold boot or during onboarding.
   useEffect(() => {
     if (!isNavigationReady) return;
     if (!_hasHydrated) return;
     const inAuthGroup = segments[0] === '(auth)';
+    const inOnboardingGroup = segments[0] === '(onboarding)';
+
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/sign-in');
-    } else if (user && inAuthGroup) {
+    } else if (user && inAuthGroup && !isOnboardingComplete) {
+      router.replace('/(onboarding)/profession');
+    } else if (user && inAuthGroup && isOnboardingComplete) {
       router.replace('/(app)/');
-      // Fire-and-forget but never silently swallow — surface the error so Phase 8
-      // Sentry wiring has something to report. A failed push registration is a
-      // permanent UX registration (no notifications) that must not be invisible.
       void registerPushToken().catch((err) => {
         console.warn('[AuthGate] registerPushToken failed', err instanceof Error ? err.message : err);
       });
+    } else if (user && inOnboardingGroup && isOnboardingComplete) {
+      // Completed-onboarding user deep-linked into the onboarding group.
+      router.replace('/(app)/');
+    } else if (user && !inAuthGroup && !inOnboardingGroup && !isOnboardingComplete) {
+      // Hard gate: user reached an (app) screen before completing onboarding.
+      router.replace('/(onboarding)/profession');
     }
-  }, [isNavigationReady, user, segments, _hasHydrated, router]);
+  }, [isNavigationReady, user, segments, _hasHydrated, isOnboardingComplete, router]);
 
   return null;
 }

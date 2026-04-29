@@ -1,0 +1,39 @@
+# SPEC LINK: docs/specs/03-mobile/94_mobile_onboarding.md §10 Testing Gates
+# Maestro E2E: Path T full flow — profession → tracking → supplier → first-permit skip → ToS → flight board
+appId: com.buildo.app
+---
+- launchApp
+
+# Trade selection screen
+- assertVisible: "What's your trade?"
+- scrollDown
+- tapOn: "Structural Steel"
+- assertVisible: "Continue"
+- tapOn: "Continue"
+
+# Confirm trade lock sheet
+- assertVisible: "Confirm"
+- tapOn: "Confirm"
+
+# Path selection
+- assertVisible: "Track Active Projects"
+- tapOn: "Track Active Projects"
+
+# Supplier screen — skip (Path T goes directly to supplier, skipping address)
+- assertVisible: "Skip for now"
+- tapOn: "Skip for now"
+
+# First permit soft prompt — skip
+- assertVisible: "Want to add your first active permit"
+- tapOn: "Skip, I'll do it later"
+
+# ToS screen
+- assertVisible: "Terms & Privacy"
+- tapOn:
+    id: "tos-checkbox"
+- tapOn:
+    id: "privacy-checkbox"
+- tapOn: "Accept & Finish Setup"
+
+# Flight Board should be visible
+- assertVisible: "Flight Board"

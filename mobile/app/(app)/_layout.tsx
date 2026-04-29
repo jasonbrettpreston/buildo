@@ -1,4 +1,5 @@
 // SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §2 Tab Bar
+//             docs/specs/03-mobile/94_mobile_onboarding.md §2 Incomplete profile banner
 // Tab bar hides on downward scroll, reveals on upward scroll (Reanimated translateY).
 // Tapping the already-active Feed or Flight Board tab scrolls back to top.
 import { useCallback } from 'react';
@@ -12,6 +13,7 @@ import Animated, {
 import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useNotificationStore } from '@/store/notificationStore';
+import { IncompleteBanner } from '@/components/onboarding/IncompleteBanner';
 import { tabBarVisible } from '@/store/tabBarStore';
 import { lightImpact } from '@/lib/haptics';
 
@@ -86,6 +88,7 @@ export default function AppLayout() {
 
   return (
     <ErrorBoundary>
+      <IncompleteBanner />
       <Tabs
         tabBar={renderTabBar}
         screenOptions={TABS_SCREEN_OPTIONS}

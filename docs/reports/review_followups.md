@@ -594,3 +594,10 @@ _From the 7-agent audit (4 micro + 3 macro + 2 automated guards). Critical/impor
 | LOW | Gemini logic | **Phone validation uses hardcoded length check `< 12`** — Already noted (CA-only at launch). Re-flagged for international expansion. | Revisit when expanding beyond CA |
 | LOW | Gemini logic | **Empty `mapFirebaseError` return for unknown codes triggers blank UI** — Current code: `if (message) setErrorMessage(message)`. Cancellation case ('') is intentional, but unknown codes do return a generic string so the conditional currently works. Re-verify if `mapFirebaseError` is ever extended to return more empty strings. | Audit when adding new error codes |
 | LOW | All adversarials | **Custom `PhoneInputField` and `OtpInputField` deviate from spec library names** — Both are intentional substitutions (supply-chain attack and API mismatch respectively). Spec text still references the original libraries. | Update spec 93 §4 to document the substitution decisions |
+
+## WF1 — Spec 94 Mobile Onboarding Multi-Agent Review (2026-04-29)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| LOW | Code reviewer | **`filterStore.ts` MMKV adapter lacks try-catch** — Unlike `authStore.ts` and `onboardingStore.ts`, `filterStore.ts` adapter methods (`getString`, `set`, `remove`) are called without try-catch. A device out-of-space error would propagate through Zustand's `onRehydrateStorage` with no handler, leaving hydration state indeterminate. Pre-existing issue (not introduced by Spec 94). | Add try-catch to `filterStore.ts` MMKV adapter in a follow-up WF2 task |
+| LOW | Code reviewer | **`fetchWithAuth` missing generic type parameter on PATCH call sites** — `profession.tsx`, `address.tsx`, `terms.tsx`, `complete.tsx` call `fetchWithAuth(...)` without `<T>` on PATCH calls where the response body is discarded. TypeScript infers `unknown` and the result is unused. `fetchWithAuth<void>(...)` would make the intent explicit. Minor consistency issue; no runtime impact. | Fix in next onboarding WF2 pass |
