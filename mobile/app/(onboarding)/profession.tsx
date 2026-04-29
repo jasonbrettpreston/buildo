@@ -134,7 +134,7 @@ export default function ProfessionScreen() {
           onPress={openConfirmSheet}
           disabled={!selectedTrade}
           style={{ opacity: selectedTrade ? 1 : 0.4 }}
-          className="bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full items-center"
+          className="bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full items-center min-h-[52px] justify-center"
           accessibilityRole="button"
           accessibilityLabel="Continue with selected trade"
         >
