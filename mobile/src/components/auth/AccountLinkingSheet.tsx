@@ -73,8 +73,9 @@ export const AccountLinkingSheet = forwardRef<AccountLinkingSheetRef, AccountLin
           </Text>
           <Pressable
             onPress={onLinkPress}
-            className="bg-amber-500 active:bg-amber-600 rounded-2xl py-3.5 mx-4 items-center"
+            className="bg-amber-500 active:bg-amber-600 rounded-2xl py-3.5 mx-4 w-full items-center min-h-[52px] justify-center"
             accessibilityRole="button"
+            accessibilityLabel={`Sign in with ${existingMethod}`}
           >
             <Text className="text-zinc-950 font-semibold text-sm">
               Sign in with {existingMethod}
@@ -82,8 +83,10 @@ export const AccountLinkingSheet = forwardRef<AccountLinkingSheetRef, AccountLin
           </Pressable>
           <Pressable
             onPress={() => sheetRef.current?.close()}
-            className="mt-3 items-center"
+            className="mt-3 items-center justify-center"
+            style={{ minHeight: 44 }}
             accessibilityRole="button"
+            accessibilityLabel="Cancel"
           >
             <Text className="text-zinc-500 text-sm text-center">Cancel</Text>
           </Pressable>

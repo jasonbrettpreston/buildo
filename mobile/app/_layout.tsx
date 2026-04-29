@@ -1,11 +1,13 @@
 // SPEC LINK: docs/specs/03-mobile/92_mobile_engagement_hardware.md §3.2, §4.1, §4.2
 //             docs/specs/03-mobile/93_mobile_auth.md §5 Step 6
+//             docs/specs/03-mobile/90_mobile_engineering_protocol.md §11
 import '../global.css';
 import { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import * as Notifications from 'expo-notifications';
+import * as Sentry from '@sentry/react-native';
 import { queryClient } from '@/lib/queryClient';
 import { mmkvPersister } from '@/lib/mmkvPersister';
 import { useAuthStore, initFirebaseAuthListener } from '@/store/authStore';
@@ -14,6 +16,18 @@ import { registerPushToken } from '@/lib/pushTokens';
 import { successNotification } from '@/lib/haptics';
 import { NotificationToast, type NotificationType } from '@/components/shared/NotificationToast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+// Spec 90 §11: Sentry must be initialized before any captureException call.
+// The @sentry/react-native/app-plugin in app.json wires NATIVE crash capture
+// at build time, but JS exceptions require this runtime init. Without it,
+// every Sentry.captureException() in the auth flow is a silent no-op.
+// `enabled` is gated on the DSN presence so local dev (no DSN) doesn't
+// generate noise — production EAS builds set EXPO_PUBLIC_SENTRY_DSN via Secrets.
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0.2,
+});
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

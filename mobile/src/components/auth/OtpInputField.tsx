@@ -9,6 +9,7 @@ import { View, Text } from 'react-native';
 interface OtpInputFieldProps {
   maxLength?: number;
   onComplete: (code: string) => void;
+  onChange?: (value: string) => void;
   errorMode?: boolean;
   autoFocus?: boolean;
 }
@@ -16,6 +17,7 @@ interface OtpInputFieldProps {
 export function OtpInputField({
   maxLength = 6,
   onComplete,
+  onChange,
   errorMode = false,
   autoFocus = true,
 }: OtpInputFieldProps) {
@@ -24,6 +26,7 @@ export function OtpInputField({
       <OTPInput
         maxLength={maxLength}
         onComplete={onComplete}
+        onChange={onChange}
         autoFocus={autoFocus}
         testID="otp-input"
         render={({ slots }) => (

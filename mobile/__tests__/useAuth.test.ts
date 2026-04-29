@@ -28,6 +28,17 @@ jest.mock('firebase/app', () => ({
   initializeApp: jest.fn(() => ({ options: {} })),
   getApps: jest.fn(() => []),
 }));
+// Mock the firebase module itself to bypass the env-var validation that
+// fires on import — the auth listener tests only need the `auth` export
+// shape, not real Firebase init.
+jest.mock('@/lib/firebase', () => ({
+  auth: {},
+  app: { options: {} },
+}));
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  captureException: jest.fn(),
+}));
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
   setItemAsync: jest.fn(() => Promise.resolve()),

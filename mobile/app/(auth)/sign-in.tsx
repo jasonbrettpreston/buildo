@@ -27,6 +27,7 @@ import {
 } from 'firebase/auth';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import * as Sentry from '@sentry/react-native';
 import { auth, app } from '@/lib/firebase';
 import { mapFirebaseError, isAccountLinkingError } from '@/lib/firebaseErrors';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
@@ -67,9 +68,36 @@ export default function SignInScreen() {
   const [linkingExistingMethod, setLinkingExistingMethod] = useState('');
   const [linkingNewMethod, setLinkingNewMethod] = useState('');
   const [pendingCredential, setPendingCredential] = useState<AuthCredential | null>(null);
+  // The email captured from auth/account-exists-with-different-credential. Used
+  // to verify that the just-completed sign-in matches the account we expect to
+  // link to — prevents linking a Google credential to an unrelated user's
+  // session if the user dismisses the linking sheet and signs in elsewhere.
+  const [linkingExpectedEmail, setLinkingExpectedEmail] = useState('');
   const linkingSheetRef = useRef<AccountLinkingSheetRef>(null);
   const phoneSheetRef = useRef<BottomSheet>(null);
   const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
+
+  // Tracks whether the component is still mounted so async sign-in flows
+  // don't call setState on an unmounted component (React warning + memory
+  // leak). Set to false in the cleanup of a setup effect.
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Tracks the last googleResponse instance the success-handler effect has
+  // processed, so re-renders triggered by other state changes (e.g.,
+  // pendingCredential) don't cause the same response to be processed twice.
+  const lastProcessedGoogleResponseRef = useRef<typeof googleResponse | null>(null);
+
+  // Global "any auth method in flight" — used as a mutex so the user can't
+  // start a second method while the first is pending and corrupt the
+  // linkingNewMethod / pendingCredential state.
+  const isAuthenticating =
+    appleLoading || googleLoading || emailLoading || phoneLoading || otpLoading;
 
   // Google OAuth — useIdTokenAuthRequest is the implicit flow that populates
   // params.id_token directly (vs useAuthRequest code flow which returns a code
@@ -93,20 +121,34 @@ export default function SignInScreen() {
   // credential captured from the prior auth/account-exists-with-different-credential
   // failure. This completes the spec §3.2 linking flow — without it, pending
   // credentials are captured but never merged.
+  //
+  // Only links if the just-completed sign-in's email matches the email that
+  // produced the linking error. Without this guard, a user who dismisses the
+  // sheet and signs in to an unrelated account would have the pending
+  // credential silently attached (and rejected by Firebase) to the wrong UID.
   const linkPendingCredential = useCallback(
     async (currentUser: FirebaseUser | null) => {
       if (!pendingCredential || !currentUser) return;
+      if (linkingExpectedEmail && currentUser.email?.toLowerCase() !== linkingExpectedEmail.toLowerCase()) {
+        // Wrong account — discard the pending credential rather than attempt
+        // a link that would fail with auth/credential-already-in-use.
+        setPendingCredential(null);
+        setLinkingExpectedEmail('');
+        return;
+      }
       try {
         await linkWithCredential(currentUser, pendingCredential);
-      } catch {
+      } catch (err) {
         // Linking failure is non-fatal — the user is still authenticated with
-        // their existing method. Surfacing the failure isn't useful here
-        // because the primary sign-in already succeeded.
+        // their existing method. Surface to telemetry so we can detect a
+        // pattern of linking failures (often signals a Firebase config issue).
+        Sentry.captureException(err, { tags: { layer: 'auth', op: 'linkWithCredential' } });
       } finally {
         setPendingCredential(null);
+        setLinkingExpectedEmail('');
       }
     },
-    [pendingCredential],
+    [pendingCredential, linkingExpectedEmail],
   );
 
   const handleAuthError = useCallback(async (err: unknown) => {
@@ -117,6 +159,7 @@ export default function SignInScreen() {
       const errorEmail = (err as { customData?: { email?: string } }).customData?.email ?? '';
       const credential = (err as { credential?: AuthCredential }).credential ?? null;
       if (errorEmail) {
+        setLinkingExpectedEmail(errorEmail);
         try {
           const methods = await fetchSignInMethodsForEmail(auth, errorEmail);
           const existing = methods[0] ?? 'email';
@@ -135,8 +178,15 @@ export default function SignInScreen() {
   }, []);
 
   // Google response handler — runs whenever the OAuth flow returns.
+  // Dedupe via a ref so re-renders triggered by other state (pendingCredential
+  // changing during a linking flow) don't cause the same response to be
+  // processed twice — which would attempt a second signInWithCredential with
+  // a stale id_token.
   useEffect(() => {
     if (!googleResponse) return;
+    if (lastProcessedGoogleResponseRef.current === googleResponse) return;
+    lastProcessedGoogleResponseRef.current = googleResponse;
+
     if (googleResponse.type !== 'success') {
       if (googleResponse.type === 'error') {
         setErrorMessage('Google sign-in failed. Please try again.');
@@ -157,11 +207,13 @@ export default function SignInScreen() {
         const credential = GoogleAuthProvider.credential(idToken);
         const result = await signInWithCredential(auth, credential);
         await linkPendingCredential(result.user);
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        if (isMountedRef.current) {
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
       } catch (err) {
-        await handleAuthError(err);
+        if (isMountedRef.current) await handleAuthError(err);
       } finally {
-        setGoogleLoading(false);
+        if (isMountedRef.current) setGoogleLoading(false);
       }
     })();
   }, [googleResponse, handleAuthError, linkPendingCredential]);
@@ -174,6 +226,7 @@ export default function SignInScreen() {
   }, [resendCooldown]);
 
   const handleAppleSignIn = useCallback(async () => {
+    if (isAuthenticating) return;
     try {
       setAppleLoading(true);
       setErrorMessage('');
@@ -199,9 +252,10 @@ export default function SignInScreen() {
     } finally {
       setAppleLoading(false);
     }
-  }, [handleAuthError, linkPendingCredential]);
+  }, [handleAuthError, linkPendingCredential, isAuthenticating]);
 
   const handleGoogleSignIn = useCallback(() => {
+    if (isAuthenticating) return;
     // Set loading immediately so the button shows the spinner while the user
     // is in the OAuth web flow. The success/error effect below resets it.
     setGoogleLoading(true);
@@ -209,9 +263,10 @@ export default function SignInScreen() {
     void googlePromptAsync().catch(() => {
       setGoogleLoading(false);
     });
-  }, [googlePromptAsync]);
+  }, [googlePromptAsync, isAuthenticating]);
 
   const handleEmailSignIn = useCallback(async () => {
+    if (isAuthenticating) return;
     if (!email || !password) {
       setErrorMessage('Enter your email and password.');
       return;
@@ -228,9 +283,10 @@ export default function SignInScreen() {
     } finally {
       setEmailLoading(false);
     }
-  }, [email, password, handleAuthError, linkPendingCredential]);
+  }, [email, password, handleAuthError, linkPendingCredential, isAuthenticating]);
 
   const handleSendCode = useCallback(async () => {
+    if (isAuthenticating) return;
     if (!phoneNumber || phoneNumber.length < 12) {
       setErrorMessage('Enter a complete phone number.');
       return;
@@ -253,7 +309,7 @@ export default function SignInScreen() {
     } finally {
       setPhoneLoading(false);
     }
-  }, [phoneNumber, handleAuthError]);
+  }, [phoneNumber, handleAuthError, isAuthenticating]);
 
   const handleVerifyOtp = useCallback(
     async (code: string) => {
@@ -277,18 +333,21 @@ export default function SignInScreen() {
   );
 
   const handleLinkExisting = useCallback(async () => {
-    // The user must complete the existing method's sign-in flow first; once
-    // that succeeds, onAuthStateChanged fires and AuthGate routes them onward.
-    // Linking the pending credential happens after that sign-in succeeds —
-    // for now, dismiss the sheet and let the user sign in with their existing
-    // method. Pending credential is preserved in state for a future
-    // linkWithCredential call once the user is authenticated.
+    // Close the linking sheet and route the user into the existing method's
+    // sign-in surface. After that sign-in resolves, linkPendingCredential
+    // (called from each handler) attaches the captured credential.
     linkingSheetRef.current?.close();
-    if (linkingExistingMethod === 'email') setMode('email');
-    if (linkingExistingMethod === 'phone') setMode('phone-input');
-    // For Apple/Google, the user just taps the corresponding button again.
-    // Note: a complete linking flow that re-attaches `pendingCredential` after
-    // the existing-method sign-in resolves is a follow-up — see Spec 93 §3.2.
+    if (linkingExistingMethod === 'email') {
+      setMode('email');
+    } else if (linkingExistingMethod === 'phone') {
+      // The phone-input surface lives inside phoneSheetRef — the sheet must
+      // be expanded explicitly, otherwise setMode reveals nothing.
+      setMode('phone-input');
+      phoneSheetRef.current?.expand();
+    }
+    // For Apple/Google existing methods, the user taps the corresponding
+    // button again on the idle stack. Adding a transient toast cue is
+    // tracked in review_followups.md.
   }, [linkingExistingMethod]);
 
   return (
@@ -398,9 +457,9 @@ export default function SignInScreen() {
             <Pressable
               onPress={() => {
                 resetTransientState();
-                setEmail('');
-                setPassword('');
                 setMode('idle');
+                // Preserve email + password — user may have hit Back to look
+                // at another method and is likely to come back to this form.
               }}
               className="mt-4 items-center"
             >
@@ -485,6 +544,11 @@ export default function SignInScreen() {
               </Text>
               <OtpInputField
                 onComplete={handleVerifyOtp}
+                onChange={() => {
+                  // Clear the red error border the moment the user starts
+                  // typing fresh digits per spec §4 OTP Entry.
+                  if (otpError) setOtpError(false);
+                }}
                 errorMode={otpError}
                 autoFocus
               />
@@ -502,9 +566,12 @@ export default function SignInScreen() {
                 ) : (
                   <Pressable
                     onPress={() => {
-                      setMode('phone-input');
-                      setVerificationId('');
+                      // Re-trigger the SMS for the SAME phone number rather
+                      // than dropping the user back to the input screen — the
+                      // old reset path forced them to re-type their number.
                       setOtpError(false);
+                      setErrorMessage('');
+                      void handleSendCode();
                     }}
                   >
                     <Text className="text-zinc-600 text-xs">

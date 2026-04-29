@@ -301,7 +301,14 @@ export default function SignUpScreen() {
               <Text className="text-zinc-500 text-sm text-center mb-6">
                 6-digit code sent to {phoneNumber}.
               </Text>
-              <OtpInputField onComplete={handleVerifyOtp} errorMode={otpError} autoFocus />
+              <OtpInputField
+                onComplete={handleVerifyOtp}
+                onChange={() => {
+                  if (otpError) setOtpError(false);
+                }}
+                errorMode={otpError}
+                autoFocus
+              />
               {otpLoading && (
                 <View className="mt-4 items-center">
                   <ActivityIndicator size="small" color="#71717a" />
@@ -316,9 +323,11 @@ export default function SignUpScreen() {
                 ) : (
                   <Pressable
                     onPress={() => {
-                      setPhoneStage('input');
-                      setVerificationId('');
+                      // Re-trigger SMS for the same number rather than reset
+                      // back to the input screen.
                       setOtpError(false);
+                      setErrorMessage('');
+                      void handleSendCode();
                     }}
                   >
                     <Text className="text-zinc-600 text-xs">
