@@ -6,6 +6,7 @@ import { View, Text, RefreshControl } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import type { FlashListRef } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useLeadFeed } from '@/hooks/useLeadFeed';
 import { useLocation } from '@/hooks/useLocation';
 import { useSaveLead } from '@/hooks/useSaveLead';
@@ -22,6 +23,8 @@ import { OfflineBanner } from '@/components/shared/OfflineBanner';
 import type { PermitLeadFeedItem } from '@/lib/schemas';
 import type { LeadFeedItem } from '@/lib/schemas';
 import { useRouter, useNavigation } from 'expo-router';
+
+const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
 
 // Spec §4.4: render 6 skeletons on initial load to eliminate layout shift.
 const SKELETONS = Array.from({ length: 6 });
@@ -64,18 +67,18 @@ export default function LeadFeedScreen() {
     [data],
   );
 
-  const handleScroll = useCallback((event: { nativeEvent: { contentOffset: { y: number } } }) => {
-    const y = event.nativeEvent.contentOffset.y;
+  const handleScroll = useAnimatedScrollHandler((event) => {
+    const y = event.contentOffset.y;
     const delta = y - tabBarScrollY.value;
     tabBarScrollY.value = y;
     if (y <= 0) {
       tabBarVisible.value = 1;
     } else if (delta > 5) {
-      tabBarVisible.value = -1; // scrolling down → hide
+      tabBarVisible.value = -1;
     } else if (delta < -5) {
-      tabBarVisible.value = 1; // scrolling up → show
+      tabBarVisible.value = 1;
     }
-  }, []);
+  });
 
   const scrollToTop = useCallback(() => {
     listRef.current?.scrollToTop({ animated: true });
@@ -176,8 +179,8 @@ export default function LeadFeedScreen() {
 
       <OfflineBanner />
 
-      <FlashList
-        ref={listRef}
+      <AnimatedFlashList
+        ref={listRef as React.Ref<FlashListRef<LeadFeedItem>>}
         data={isLoading ? [] : allItems}
         keyExtractor={keyExtractor}
         onScroll={handleScroll}

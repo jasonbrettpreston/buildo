@@ -10,6 +10,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter, useNavigation } from 'expo-router';
@@ -25,6 +26,8 @@ import { mediumImpact } from '@/lib/haptics';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
 import { Search } from 'lucide-react-native';
 import type { FlightBoardItem, FlightBoardResult } from '@/lib/schemas';
+
+const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
 
 type TemporalGroup = 'action_required' | 'departing_soon' | 'on_the_horizon';
 
@@ -76,8 +79,8 @@ export default function FlightBoardScreen() {
     transform: [{ scale: fabScale.value }],
   }));
 
-  const handleScroll = useCallback((event: { nativeEvent: { contentOffset: { y: number } } }) => {
-    const y = event.nativeEvent.contentOffset.y;
+  const handleScroll = useAnimatedScrollHandler((event) => {
+    const y = event.contentOffset.y;
     const delta = y - tabBarScrollY.value;
     tabBarScrollY.value = y;
     if (y <= 0) {
@@ -87,7 +90,7 @@ export default function FlightBoardScreen() {
     } else if (delta < -5) {
       tabBarVisible.value = 1;
     }
-  }, []);
+  });
 
   const scrollToTop = useCallback(() => {
     listRef.current?.scrollToTop({ animated: true });
@@ -264,8 +267,8 @@ export default function FlightBoardScreen() {
           onNavigateFeed={() => router.push('/(app)/')}
         />
       ) : (
-        <FlashList
-          ref={listRef}
+        <AnimatedFlashList
+          ref={listRef as React.Ref<FlashListRef<ListItem>>}
           data={listItems}
           keyExtractor={(item, index) =>
             item.type === 'header'

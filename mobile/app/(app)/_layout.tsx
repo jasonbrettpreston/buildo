@@ -32,6 +32,7 @@ const TAB_BAR_STYLE = {
 
 const TABS_SCREEN_OPTIONS = {
   headerShown: false,
+  // visual appearance only — hide/show is handled by AnimatedTabBar via translateY
   tabBarStyle: TAB_BAR_STYLE,
   tabBarActiveTintColor: '#f59e0b',
   tabBarInactiveTintColor: '#71717a',
@@ -43,7 +44,7 @@ function AnimatedTabBar(props: BottomTabBarProps) {
   const tabBarOffset = useDerivedValue(() =>
     withTiming(tabBarVisible.value === 1 ? 0 : TAB_BAR_HEIGHT, { duration: 200 }),
   );
-  const tabBarStyle = useAnimatedStyle(() => ({
+  const animatedTabBarStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: tabBarOffset.value }],
   }));
   return (
@@ -55,7 +56,7 @@ function AnimatedTabBar(props: BottomTabBarProps) {
           right: 0,
           bottom: 0,
         },
-        tabBarStyle,
+        animatedTabBarStyle,
       ]}
       pointerEvents="box-none"
     >
