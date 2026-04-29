@@ -89,6 +89,7 @@ const sampleContext = {
   uid: 'firebase-uid-abc',
   trade_slug: 'plumbing',
   display_name: null,
+  subscription_status: null,
 };
 
 const sampleResult = {
@@ -310,6 +311,7 @@ describe('GET /api/leads/feed — 400 Validation', () => {
       uid: 'u1',
       trade_slug: 'electrical', // matches the LAST query value
       display_name: null,
+      subscription_status: null,
     });
     mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 29 });
     mockedGetLeadFeed.mockResolvedValueOnce(sampleResult);
@@ -335,6 +337,7 @@ describe('GET /api/leads/feed — 403 Forbidden', () => {
       uid: 'u1',
       trade_slug: 'electrical',
       display_name: null,
+      subscription_status: null,
     });
     const res = await GET(makeRequest(validQuery)); // requests plumbing
     expect(res.status).toBe(403);
@@ -349,6 +352,7 @@ describe('GET /api/leads/feed — 403 Forbidden', () => {
       uid: 'u1',
       trade_slug: 'electrical',
       display_name: null,
+      subscription_status: null,
     });
     await GET(makeRequest(validQuery));
     expect(mockedGetLeadFeed).not.toHaveBeenCalled();
@@ -359,6 +363,7 @@ describe('GET /api/leads/feed — 403 Forbidden', () => {
       uid: 'u1',
       trade_slug: 'electrical',
       display_name: null,
+      subscription_status: null,
     });
     await GET(makeRequest(validQuery));
     expect(mockedWithRateLimit).not.toHaveBeenCalled();
@@ -445,6 +450,7 @@ describe('GET /api/leads/feed — composition correctness', () => {
       uid: 'firebase-uid-from-token',
       trade_slug: 'plumbing',
       display_name: null,
+      subscription_status: null,
     });
     mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 29 });
     mockedGetLeadFeed.mockResolvedValueOnce(sampleResult);

@@ -26,6 +26,7 @@ interface UserContext {
   uid: string;
   trade_slug: string;
   display_name: string | null;
+  subscription_status: string | null;
 }
 
 export async function getCurrentUserContext(
@@ -60,8 +61,8 @@ export async function getCurrentUserContext(
       );
     }
 
-    const res = await pool.query<{ trade_slug: string; display_name: string | null }>(
-      `SELECT trade_slug, display_name FROM user_profiles WHERE user_id = $1`,
+    const res = await pool.query<{ trade_slug: string; display_name: string | null; subscription_status: string | null }>(
+      `SELECT trade_slug, display_name, subscription_status FROM user_profiles WHERE user_id = $1`,
       [uid],
     );
     const row = res.rows[0];
@@ -80,7 +81,7 @@ export async function getCurrentUserContext(
       );
       return null;
     }
-    return { uid, trade_slug: row.trade_slug, display_name: row.display_name };
+    return { uid, trade_slug: row.trade_slug, display_name: row.display_name, subscription_status: row.subscription_status ?? null };
   } catch (err) {
     logError('[auth/get-user-context]', err, { uid, stage: 'profile-lookup' });
     return null;

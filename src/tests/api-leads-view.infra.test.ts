@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
 
 vi.mock('@/lib/db/client', () => ({
-  pool: {} as unknown,
+  pool: { query: vi.fn() },
 }));
 
 vi.mock('@/lib/auth/get-user-context', () => ({
@@ -26,12 +26,14 @@ import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { withRateLimit } from '@/lib/auth/rate-limit';
 import { logRequestComplete } from '@/features/leads/api/request-logging';
 import { recordLeadView } from '@/features/leads/lib/record-lead-view';
+import { pool } from '@/lib/db/client';
 import { POST } from '@/app/api/leads/view/route';
 
 const mockedGetUserContext = vi.mocked(getCurrentUserContext);
 const mockedWithRateLimit = vi.mocked(withRateLimit);
 const mockedRecordLeadView = vi.mocked(recordLeadView);
 const mockedLogRequestComplete = vi.mocked(logRequestComplete);
+const mockedPool = pool as unknown as { query: ReturnType<typeof vi.fn> };
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -66,6 +68,7 @@ const sampleContext = {
   uid: 'firebase-uid-abc',
   trade_slug: 'plumbing',
   display_name: null,
+  subscription_status: null,
 };
 
 const validPermitBody = {
@@ -330,6 +333,7 @@ describe('POST /api/leads/view — 403 Forbidden', () => {
       uid: 'u1',
       trade_slug: 'electrical',
       display_name: null,
+      subscription_status: null,
     });
     const res = await POST(makeRequest(validPermitBody)); // trade_slug = plumbing
     expect(res.status).toBe(403);
@@ -344,6 +348,7 @@ describe('POST /api/leads/view — 403 Forbidden', () => {
       uid: 'u1',
       trade_slug: 'electrical',
       display_name: null,
+      subscription_status: null,
     });
     await POST(makeRequest(validPermitBody));
     expect(mockedRecordLeadView).not.toHaveBeenCalled();
@@ -354,6 +359,7 @@ describe('POST /api/leads/view — 403 Forbidden', () => {
       uid: 'u1',
       trade_slug: 'electrical',
       display_name: null,
+      subscription_status: null,
     });
     await POST(makeRequest(validPermitBody));
     expect(mockedWithRateLimit).not.toHaveBeenCalled();
@@ -441,5 +447,83 @@ describe('POST /api/leads/view — 500 Internal Error', () => {
     mockedRecordLeadView.mockResolvedValueOnce({ ok: false, competition_count: 0 });
     await POST(makeRequest(validPermitBody));
     expect(mockedLogRequestComplete).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Trial view counter — Spec 95 §2.2.1 atomic CTE
+// ---------------------------------------------------------------------------
+
+describe('POST /api/leads/view — trial view counter (Spec 95 §2.2.1)', () => {
+  const trialContext = { ...sampleContext, subscription_status: 'trial' };
+
+  it('executes atomic CTE for trial + permit + view — correct SQL and params', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(trialContext);
+    mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 59 });
+    mockedPool.query.mockResolvedValueOnce(undefined); // CTE
+    mockedRecordLeadView.mockResolvedValueOnce({ ok: true, competition_count: 5 });
+
+    const res = await POST(makeRequest(validPermitBody));
+    expect(res.status).toBe(200);
+
+    expect(mockedPool.query).toHaveBeenCalledTimes(1);
+    const [sql, params] = mockedPool.query.mock.calls[0] as [string, unknown[]];
+    expect(sql).toMatch(/INSERT INTO lead_view_events/);
+    expect(sql).toMatch(/ON CONFLICT.*DO NOTHING/);
+    expect(sql).toMatch(/UPDATE user_profiles/);
+    expect(sql).toMatch(/lead_views_count = lead_views_count \+ 1/);
+    expect(sql).toMatch(/EXISTS \(SELECT 1 FROM ins\)/);
+    // uid from ctx, not from body (cannot be spoofed)
+    expect(params[0]).toBe('firebase-uid-abc');
+    expect(params[1]).toBe('24 101234'); // permit_num
+    expect(params[2]).toBe('01');         // revision_num
+  });
+
+  it('skips CTE for non-trial subscription (active)', async () => {
+    mockedGetUserContext.mockResolvedValueOnce({ ...sampleContext, subscription_status: 'active' });
+    mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 59 });
+    mockedRecordLeadView.mockResolvedValueOnce({ ok: true, competition_count: 0 });
+
+    await POST(makeRequest(validPermitBody));
+    expect(mockedPool.query).not.toHaveBeenCalled();
+  });
+
+  it('skips CTE when subscription_status is null', async () => {
+    // sampleContext has subscription_status: null (expired / no subscription)
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 59 });
+    mockedRecordLeadView.mockResolvedValueOnce({ ok: true, competition_count: 0 });
+
+    await POST(makeRequest(validPermitBody));
+    expect(mockedPool.query).not.toHaveBeenCalled();
+  });
+
+  it('skips CTE for builder lead (lead_view_events has no entity_id column)', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(trialContext);
+    mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 59 });
+    mockedRecordLeadView.mockResolvedValueOnce({ ok: true, competition_count: 0 });
+
+    await POST(makeRequest(validBuilderBody));
+    expect(mockedPool.query).not.toHaveBeenCalled();
+  });
+
+  it('skips CTE for save action on permit (only view consumes trial quota)', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(trialContext);
+    mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 59 });
+    mockedRecordLeadView.mockResolvedValueOnce({ ok: true, competition_count: 0 });
+
+    await POST(makeRequest({ ...validPermitBody, action: 'save' }));
+    expect(mockedPool.query).not.toHaveBeenCalled();
+  });
+
+  it('returns 500 when CTE throws — billing integrity, recordLeadView not called', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(trialContext);
+    mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 59 });
+    mockedPool.query.mockRejectedValueOnce(new Error('db: relation "lead_view_events" does not exist'));
+
+    const res = await POST(makeRequest(validPermitBody));
+    expect(res.status).toBe(500);
+    // CTE failure is fatal — recordLeadView must not run after a failed counter write
+    expect(mockedRecordLeadView).not.toHaveBeenCalled();
   });
 });

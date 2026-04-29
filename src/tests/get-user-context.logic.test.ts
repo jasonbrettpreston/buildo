@@ -42,9 +42,9 @@ describe('getCurrentUserContext', () => {
   it('returns context when session valid and profile exists', async () => {
     vi.mocked(getUserIdFromSession).mockResolvedValueOnce('firebase-uid-abc');
     const mock = createMockPool();
-    mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: 'Alice' }]));
+    mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: 'Alice', subscription_status: 'trial' }]));
     const result = await getCurrentUserContext(makeRequest(), mock as unknown as Pool);
-    expect(result).toEqual({ uid: 'firebase-uid-abc', trade_slug: 'plumbing', display_name: 'Alice' });
+    expect(result).toEqual({ uid: 'firebase-uid-abc', trade_slug: 'plumbing', display_name: 'Alice', subscription_status: 'trial' });
   });
 
   it('returns null when session valid but no profile row', async () => {
@@ -66,7 +66,7 @@ describe('getCurrentUserContext', () => {
   it('preserves null display_name from DB', async () => {
     vi.mocked(getUserIdFromSession).mockResolvedValueOnce('firebase-uid-abc');
     const mock = createMockPool();
-    mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: null }]));
+    mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: null, subscription_status: null }]));
     const result = await getCurrentUserContext(makeRequest(), mock as unknown as Pool);
     expect(result?.display_name).toBeNull();
   });
@@ -74,21 +74,30 @@ describe('getCurrentUserContext', () => {
   it('uses parameterized query (uid passed as $1)', async () => {
     vi.mocked(getUserIdFromSession).mockResolvedValueOnce('firebase-uid-abc');
     const mock = createMockPool();
-    mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: null }]));
+    mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: null, subscription_status: null }]));
     await getCurrentUserContext(makeRequest(), mock as unknown as Pool);
     const params = mock.query.mock.calls[0]?.[1];
     expect(params).toBeDefined();
     expect(params[0]).toBe('firebase-uid-abc');
   });
 
-  it('queries the user_profiles table', async () => {
+  it('queries the user_profiles table and selects subscription_status', async () => {
     vi.mocked(getUserIdFromSession).mockResolvedValueOnce('firebase-uid-abc');
     const mock = createMockPool();
-    mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: null }]));
+    mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: null, subscription_status: null }]));
     await getCurrentUserContext(makeRequest(), mock as unknown as Pool);
     const sql = mock.query.mock.calls[0]?.[0];
     expect(String(sql)).toMatch(/FROM user_profiles/);
     expect(String(sql)).toMatch(/WHERE user_id = \$1/);
+    expect(String(sql)).toMatch(/subscription_status/);
+  });
+
+  it('propagates subscription_status = null when DB returns null', async () => {
+    vi.mocked(getUserIdFromSession).mockResolvedValueOnce('firebase-uid-abc');
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: null, subscription_status: null }]));
+    const result = await getCurrentUserContext(makeRequest(), mock as unknown as Pool);
+    expect(result?.subscription_status).toBeNull();
   });
 
   it('never throws — multiple failure modes all return null', async () => {

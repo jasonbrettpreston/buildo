@@ -85,7 +85,33 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     });
     if (!rateLimit.allowed) return rateLimited(rateLimit.remaining);
 
-    // 5. Call the Phase 1 lib helper. Discriminated-union spread is type-safe
+    // 5. Trial view counter — Spec 95 §2.2.1.
+    //    Atomic CTE: inserts into lead_view_events (dedup PK), then
+    //    increments lead_views_count only when the INSERT lands a new row.
+    //    Two concurrent view requests for the same permit race on the INSERT;
+    //    exactly one sees RETURNING 1 and fires the UPDATE — preventing
+    //    double-increment without a serializable transaction.
+    //    Gating conditions (all must hold):
+    //      • action='view'  — saves/unsaves do not consume trial quota
+    //      • lead_type='permit' — lead_view_events has no entity_id column
+    //      • subscription_status='trial' — paywall counter only applies to trials
+    if (body.action === 'view' && body.lead_type === 'permit' && ctx.subscription_status === 'trial') {
+      await pool.query(
+        `WITH ins AS (
+           INSERT INTO lead_view_events (user_id, permit_num, revision_num)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (user_id, permit_num, revision_num) DO NOTHING
+           RETURNING 1
+         )
+         UPDATE user_profiles
+         SET lead_views_count = lead_views_count + 1
+         WHERE user_id = $1
+           AND EXISTS (SELECT 1 FROM ins)`,
+        [ctx.uid, body.permit_num, body.revision_num],
+      );
+    }
+
+    // 6. Call the Phase 1 lib helper. Discriminated-union spread is type-safe
     //    because `body` already matches `RecordLeadViewInput` shape modulo
     //    the user_id field which we inject from the auth context (NOT the
     //    body — that would let a client spoof another user).
@@ -99,7 +125,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       });
     }
 
-    // 6. Structured logging — spec 70 §API Endpoints "Observability".
+    // 7. Structured logging — spec 70 §API Endpoints "Observability".
     logRequestComplete(
       '[api/leads/view]',
       {
@@ -112,7 +138,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       start,
     );
 
-    // 7. Return the envelope.
+    // 8. Return the envelope.
     return ok({ competition_count: result.competition_count });
   } catch (cause) {
     // Defensive — none of the above should throw because every helper is
