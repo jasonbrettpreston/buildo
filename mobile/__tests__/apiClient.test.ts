@@ -9,7 +9,17 @@
 //  - NetworkError thrown on fetch() failure
 
 jest.mock('@/store/authStore', () => ({
-  useAuthStore: { getState: () => ({ idToken: 'test-token' }) },
+  useAuthStore: {
+    getState: () => ({
+      idToken: 'test-token',
+      user: { uid: 'user-1', email: null, displayName: null },
+      setAuth: jest.fn(),
+    }),
+  },
+}));
+
+jest.mock('@/lib/firebase', () => ({
+  auth: { currentUser: { getIdToken: jest.fn() } },
 }));
 
 const mockFetch = jest.fn();
@@ -106,5 +116,52 @@ describe('fetchWithAuth — ApiError / NetworkError', () => {
     mockFetch.mockRejectedValueOnce(new Error('net::ERR_CONNECTION_REFUSED'));
     const err = await fetchWithAuth('/api/user-profile').catch((e) => e);
     expect(err).toBeInstanceOf(NetworkError);
+  });
+});
+
+// RED LIGHT for first test: before the 401 retry fix, fetchWithAuth throws ApiError(401)
+// immediately on first 401 without ever calling getIdToken — mockFetch only fires once.
+describe('fetchWithAuth — 401 token refresh retry', () => {
+  function getIdTokenMock(): jest.Mock {
+    return (
+      jest.requireMock('@/lib/firebase') as {
+        auth: { currentUser: { getIdToken: jest.Mock } };
+      }
+    ).auth.currentUser.getIdToken;
+  }
+
+  beforeEach(() => {
+    getIdTokenMock().mockReset();
+  });
+
+  it('retries with fresh token on 401 and resolves', async () => {
+    getIdTokenMock().mockResolvedValue('refreshed-token');
+    mockFetch
+      .mockResolvedValueOnce(makeResponse(401, { error: 'Unauthorized' }))
+      .mockResolvedValueOnce(makeResponse(200, { data: 'ok' }));
+    const result = await fetchWithAuth<{ data: string }>('/api/leads/feed');
+    expect(result).toEqual({ data: 'ok' });
+    expect(getIdTokenMock()).toHaveBeenCalledWith(true);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws ApiError(401) when retry also returns 401', async () => {
+    getIdTokenMock().mockResolvedValue('refreshed-token');
+    mockFetch
+      .mockResolvedValueOnce(makeResponse(401, { error: 'Unauthorized' }))
+      .mockResolvedValueOnce(makeResponse(401, { error: 'Unauthorized' }));
+    const err = await fetchWithAuth('/api/leads/feed').catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).status).toBe(401);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws ApiError(401) when getIdToken throws', async () => {
+    getIdTokenMock().mockRejectedValue(new Error('Firebase network error'));
+    mockFetch.mockResolvedValueOnce(makeResponse(401, { error: 'Unauthorized' }));
+    const err = await fetchWithAuth('/api/leads/feed').catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).status).toBe(401);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });

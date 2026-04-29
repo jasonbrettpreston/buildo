@@ -39,11 +39,9 @@ export function useLeadFeed(params: FeedParams | null) {
   return useInfiniteQuery({
     queryKey: ['lead-feed', params],
     queryFn: ({ pageParam }) => {
-      // Defense-in-depth: enabled guard should prevent this, but a prefetch or
-      // explicit refetchQueries call bypasses that check and would hit params!.
-      if (!params) {
-        return Promise.reject(new Error('useLeadFeed called without params'));
-      }
+      // Defense-in-depth: enabled guard blocks most paths, but an explicit
+      // refetchQueries/prefetch call can bypass it and reach here with params=null.
+      if (!params) throw new Error('useLeadFeed: queryFn invoked without params');
       return fetchPage(params, pageParam as LeadFeedCursor | null);
     },
     initialPageParam: null as LeadFeedCursor | null,

@@ -216,4 +216,66 @@ describe('OfflineBanner', () => {
     expect(src).toMatch(/NetInfo\.addEventListener/);
     expect(src).toMatch(/AppState\.addEventListener/);
   });
+
+  // RED LIGHT: cold-boot race fix — NetInfo.fetch() must be called immediately
+  // to seed the initial online state before the first query fires.
+  it('queryClient.ts eagerly fetches initial NetInfo state for cold-boot offline fix', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    const src = fs.readFileSync(path.join(__dirname, '../src/lib/queryClient.ts'), 'utf8');
+    // Regex matches the actual seeding call, not just a comment reference.
+    expect(src).toMatch(/void NetInfo\.fetch\(\)\.then/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5. mmkvPersister shape guard — isPersistedClient
+// ---------------------------------------------------------------------------
+
+describe('mmkvPersister shape guard', () => {
+  // RED LIGHT: safe MMKV hydration per §1.3 — restoreClient must validate shape
+  // before casting, not blindly trust JSON.parse output.
+  it('mmkvPersister.ts defines isPersistedClient guard', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    const src = fs.readFileSync(path.join(__dirname, '../src/lib/mmkvPersister.ts'), 'utf8');
+    expect(src).toMatch(/isPersistedClient/);
+  });
+
+  it('shape guard rejects valid JSON missing required PersistedClient fields', () => {
+    // Inline the guard (mirrors mmkvPersister.ts) to verify logic without native MMKV
+    function isPersistedClient(val: unknown): boolean {
+      if (typeof val !== 'object' || val === null) return false;
+      const v = val as Record<string, unknown>;
+      if (typeof v.timestamp !== 'number' || typeof v.buster !== 'string'
+          || typeof v.clientState !== 'object' || v.clientState === null) return false;
+      const cs = v.clientState as Record<string, unknown>;
+      return Array.isArray(cs.queries) && Array.isArray(cs.mutations);
+    }
+    // Stale schema from a prior build — valid JSON but wrong top-level shape
+    expect(isPersistedClient({ foo: 'bar', data: [1, 2, 3] })).toBe(false);
+    expect(isPersistedClient({ timestamp: '2026-01-01', queries: [] })).toBe(false);
+    expect(isPersistedClient(null)).toBe(false);
+    expect(isPersistedClient(42)).toBe(false);
+    // Valid top-level but corrupt clientState sub-fields (triggers TanStack forEach crash)
+    expect(isPersistedClient({ timestamp: 1, buster: '', clientState: { queries: 'corrupt', mutations: [] } })).toBe(false);
+    expect(isPersistedClient({ timestamp: 1, buster: '', clientState: { queries: [], mutations: { foo: 1 } } })).toBe(false);
+  });
+
+  it('shape guard accepts a well-formed PersistedClient', () => {
+    function isPersistedClient(val: unknown): boolean {
+      if (typeof val !== 'object' || val === null) return false;
+      const v = val as Record<string, unknown>;
+      if (typeof v.timestamp !== 'number' || typeof v.buster !== 'string'
+          || typeof v.clientState !== 'object' || v.clientState === null) return false;
+      const cs = v.clientState as Record<string, unknown>;
+      return Array.isArray(cs.queries) && Array.isArray(cs.mutations);
+    }
+    const wellFormed = { timestamp: Date.now(), buster: '', clientState: { queries: [], mutations: [] } };
+    expect(isPersistedClient(wellFormed)).toBe(true);
+  });
 });

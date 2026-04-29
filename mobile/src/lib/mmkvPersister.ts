@@ -13,6 +13,27 @@ const storage = createMMKV({ id: 'tq-persist' });
 const CLIENT_KEY = 'tq-client';
 const LAST_UPDATED_KEY = 'tq-last-updated';
 
+// Structural guard: validates the minimum shape of a PersistedClient before
+// trusting it. A bare JSON.parse cast is unsafe — a stale schema from a prior
+// app build produces valid JSON with the wrong structure, which crashes
+// TanStack's hydration machinery when it tries to iterate queries/mutations.
+// clientState.queries and clientState.mutations must be arrays because
+// TanStack's hydrate() calls .forEach() on them directly; a truthy non-array
+// (e.g. a stale string or object) would throw TypeError after bypassing the
+// `|| []` fallback.
+function isPersistedClient(val: unknown): val is PersistedClient {
+  if (typeof val !== 'object' || val === null) return false;
+  const v = val as Record<string, unknown>;
+  if (
+    typeof v.timestamp !== 'number' ||
+    typeof v.buster !== 'string' ||
+    typeof v.clientState !== 'object' ||
+    v.clientState === null
+  ) return false;
+  const cs = v.clientState as Record<string, unknown>;
+  return Array.isArray(cs.queries) && Array.isArray(cs.mutations);
+}
+
 export const mmkvPersister: Persister = {
   persistClient: (client: PersistedClient) => {
     storage.set(CLIENT_KEY, JSON.stringify(client));
@@ -25,7 +46,13 @@ export const mmkvPersister: Persister = {
     const raw = storage.getString(CLIENT_KEY);
     if (!raw) return undefined;
     try {
-      return JSON.parse(raw) as PersistedClient;
+      const parsed: unknown = JSON.parse(raw);
+      if (!isPersistedClient(parsed)) {
+        console.warn('[mmkvPersister] Discarding invalid persisted client — schema mismatch or corruption');
+        storage.remove(CLIENT_KEY);
+        return undefined;
+      }
+      return parsed;
     } catch {
       return undefined;
     }

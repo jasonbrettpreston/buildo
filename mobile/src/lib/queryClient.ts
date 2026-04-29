@@ -18,9 +18,14 @@ import { QueryClient, onlineManager, focusManager } from '@tanstack/react-query'
 
 // Wire TanStack's online state to native NetInfo events.
 // Returns an unsubscribe function — TanStack calls it on cleanup.
-onlineManager.setEventListener((setOnline) =>
-  NetInfo.addEventListener((state) => setOnline(!!state.isConnected)),
-);
+// NetInfo.fetch() is called immediately so the initial online state is seeded
+// before the first query fires — without this, TanStack defaults to online=true
+// even on a cold-boot offline device until the first NetInfo event arrives.
+onlineManager.setEventListener((setOnline) => {
+  const unsubscribe = NetInfo.addEventListener((state) => setOnline(!!state.isConnected));
+  void NetInfo.fetch().then((state) => setOnline(!!state.isConnected));
+  return unsubscribe;
+});
 
 // Wire TanStack's focus state to AppState so background → foreground
 // transitions trigger a refetch (same as switching browser tabs on web).

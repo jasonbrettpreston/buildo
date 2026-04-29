@@ -632,3 +632,9 @@ _From the 7-agent audit (4 micro + 3 macro + 2 automated guards). Critical/impor
 |----------|--------|------|-------------|
 | ~~LOW~~ | ~~Code Reviewer~~ | ~~**`apiClient.test.ts` — missing `expect.assertions(N)` on try/catch assertion tests**~~ | **RESOLVED 2026-04-29** — converted both tests to `.rejects.toMatchObject()` idiom |
 | LOW | Code Reviewer | **`useUserProfile.ts` `markComplete()` bridge** — BLOCKED: `(onboarding)/_layout.tsx:9+15` and `IncompleteBanner.tsx:10+13` both read `isComplete` for routing/display. Removing the bridge without migrating these consumers would break the onboarding-complete guard and banner on new-device reinstall. Clarifying comment added to `useUserProfile.ts`. Full removal requires replacing all `isComplete` routing consumers with server-state reads. | Spec 97 Settings / Spec 94 onboarding cleanup (full consumer migration) |
+
+## WF3 Set 2 — Mobile Hydration & Network Hardening (commit: TBD, 2026-04-29)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| LOW | Code Reviewer | **`apiClient.ts` concurrent 401 mutex** — Two inflight requests that both receive 401 each independently call `getIdToken(true)` and `setAuth`. Firebase deduplicates the token refresh network call, but the Zustand store receives two `setAuth` writes with potentially different timestamps. Low risk in practice (rare to have two simultaneous requests when a token expires); a module-level `refreshPromise` mutex (`let refreshPromise: Promise<string> \| null = null`) would eliminate the race entirely. | Spec 93 auth hardening or next mobile hardening pass |

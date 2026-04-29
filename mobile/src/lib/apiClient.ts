@@ -1,3 +1,4 @@
+import { auth } from '@/lib/firebase';
 import { useAuthStore } from '@/store/authStore';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://buildo.app';
@@ -37,15 +38,10 @@ export class NetworkError extends Error {
   }
 }
 
-/**
- * Authenticated fetch for all Buildo API routes.
- * Attaches `Authorization: Bearer <idToken>` from the auth store.
- * Throws typed errors so callers can handle each class without inspecting
- * status codes directly.
- */
-export async function fetchWithAuth<T>(
+async function fetchWithAuthInternal<T>(
   path: string,
   options?: RequestInit,
+  isRetry = false,
 ): Promise<T> {
   const { idToken } = useAuthStore.getState();
 
@@ -92,6 +88,27 @@ export async function fetchWithAuth<T>(
     throw new ApiError(403, 'Forbidden');
   }
 
+  // 401 intercept: force-refresh the Firebase idToken and retry once.
+  // Firebase tokens expire after ~1 hour; a cold-boot or long background session
+  // can produce a 401 on the first post-expiry request. The isRetry guard prevents
+  // infinite loops if the server keeps returning 401 after a fresh token.
+  // Known limitation: concurrent 401s each call getIdToken(true) independently —
+  // Firebase deduplicates the network refresh but the store receives two setAuth
+  // writes. Low risk in practice; tracked in review_followups.md (concurrent 401 mutex).
+  if (response.status === 401 && !isRetry) {
+    try {
+      const { user } = useAuthStore.getState();
+      const newToken = await auth.currentUser?.getIdToken(true);
+      if (newToken && user) {
+        useAuthStore.getState().setAuth(user, newToken);
+        return fetchWithAuthInternal<T>(path, options, true);
+      }
+    } catch {
+      // Token refresh failed (Firebase unreachable, no currentUser) — fall through
+    }
+    throw new ApiError(401, 'Unauthorized');
+  }
+
   if (!response.ok) {
     // Sanitize body in the error message — never include raw server payload
     // that could carry user PII (addresses, names, permit details) into
@@ -112,4 +129,17 @@ export async function fetchWithAuth<T>(
   } catch {
     throw new ApiError(response.status, 'Response was not valid JSON');
   }
+}
+
+/**
+ * Authenticated fetch for all Buildo API routes.
+ * Attaches `Authorization: Bearer <idToken>` from the auth store.
+ * Throws typed errors so callers can handle each class without inspecting
+ * status codes directly.
+ */
+export function fetchWithAuth<T>(
+  path: string,
+  options?: RequestInit,
+): Promise<T> {
+  return fetchWithAuthInternal(path, options);
 }
