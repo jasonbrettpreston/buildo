@@ -39,6 +39,14 @@ jest.mock('@sentry/react-native', () => ({
   init: jest.fn(),
   captureException: jest.fn(),
 }));
+const mockTrack = jest.fn();
+const mockIdentifyUser = jest.fn();
+const mockResetIdentity = jest.fn();
+jest.mock('@/lib/analytics', () => ({
+  track: (...args: unknown[]) => mockTrack(...args),
+  identifyUser: (...args: unknown[]) => mockIdentifyUser(...args),
+  resetIdentity: (...args: unknown[]) => mockResetIdentity(...args),
+}));
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
   setItemAsync: jest.fn(() => Promise.resolve()),
@@ -60,6 +68,9 @@ import { mapFirebaseError, isAccountLinkingError } from '@/lib/firebaseErrors';
 describe('authStore.signOut', () => {
   beforeEach(() => {
     mockSignOut.mockClear();
+    mockTrack.mockClear();
+    mockResetIdentity.mockClear();
+    mockIdentifyUser.mockClear();
     useAuthStore.setState({ user: { uid: 'u1', email: 'a@b.com', displayName: null }, idToken: 'tok', isLoading: false });
     useFilterStore.setState({ tradeSlug: 'plumbing', radiusKm: 25, homeBaseLocation: { lat: 43, lng: -79 } });
     useNotificationStore.setState({ unreadFlightBoard: 5 });
@@ -88,11 +99,32 @@ describe('authStore.signOut', () => {
     expect(useAuthStore.getState().user).toBeNull();
     expect(useAuthStore.getState().idToken).toBeNull();
   });
+
+  it('emits signout_initiated telemetry before firebaseSignOut', async () => {
+    await useAuthStore.getState().signOut();
+    expect(mockTrack).toHaveBeenCalledWith('signout_initiated');
+    // signout_initiated must precede the SDK call so the event is attributed
+    // to the outgoing user, not the post-signout anonymous distinctId.
+    const trackCallOrder = mockTrack.mock.invocationCallOrder[0];
+    const signOutCallOrder = mockSignOut.mock.invocationCallOrder[0];
+    expect(trackCallOrder).toBeLessThan(signOutCallOrder);
+  });
+
+  it('calls resetIdentity() after firebaseSignOut completes', async () => {
+    await useAuthStore.getState().signOut();
+    expect(mockResetIdentity).toHaveBeenCalledTimes(1);
+    // resetIdentity must run AFTER firebaseSignOut so the distinctId reset
+    // happens at a clean session boundary.
+    const signOutCallOrder = mockSignOut.mock.invocationCallOrder[0];
+    const resetIdentityCallOrder = mockResetIdentity.mock.invocationCallOrder[0];
+    expect(resetIdentityCallOrder).toBeGreaterThan(signOutCallOrder);
+  });
 });
 
 describe('initFirebaseAuthListener', () => {
   beforeEach(() => {
     mockOnAuthStateChanged.mockClear();
+    mockIdentifyUser.mockClear();
     authStateHandler = null;
     useAuthStore.setState({ user: null, idToken: null, isLoading: true });
   });
@@ -127,6 +159,23 @@ describe('initFirebaseAuthListener', () => {
     expect(state.user?.email).toBe('tradesperson@buildo.app');
     expect(state.idToken).toBe('idtoken-xyz');
     expect(state.isLoading).toBe(false);
+  });
+
+  it('calls identifyUser(uid) after the listener hydrates the store', async () => {
+    initFirebaseAuthListener();
+    const fakeUser = {
+      uid: 'firebase-uid-xyz',
+      email: 'a@b.com',
+      displayName: null,
+      getIdToken: jest.fn(() => Promise.resolve('tok')),
+    };
+    authStateHandler?.(fakeUser);
+    await new Promise((r) => setImmediate(r));
+    expect(mockIdentifyUser).toHaveBeenCalledWith('firebase-uid-xyz');
+    // identifyUser must NOT be passed email or displayName (PII strip rule).
+    expect(mockIdentifyUser).toHaveBeenCalledTimes(1);
+    const args = mockIdentifyUser.mock.calls[0];
+    expect(args).toEqual(['firebase-uid-xyz']);
   });
 
   it('falls back to clearAuth when getIdToken rejects', async () => {

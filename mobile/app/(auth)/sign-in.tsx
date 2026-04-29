@@ -29,6 +29,7 @@ import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Sentry from '@sentry/react-native';
 import { auth, app } from '@/lib/firebase';
+import { track } from '@/lib/analytics';
 import { mapFirebaseError, isAccountLinkingError } from '@/lib/firebaseErrors';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { PhoneInputField } from '@/components/auth/PhoneInputField';
@@ -88,6 +89,11 @@ export default function SignInScreen() {
     };
   }, []);
 
+  // Funnel telemetry — Spec 90 §11.
+  useEffect(() => {
+    track('auth_screen_viewed', { screen: 'sign-in' });
+  }, []);
+
   // Tracks the last googleResponse instance the success-handler effect has
   // processed, so re-renders triggered by other state changes (e.g.,
   // pendingCredential) don't cause the same response to be processed twice.
@@ -138,38 +144,52 @@ export default function SignInScreen() {
       }
       try {
         await linkWithCredential(currentUser, pendingCredential);
+        track('auth_account_link_completed', {
+          existing_method: linkingExistingMethod || 'email',
+          new_method: linkingNewMethod || 'unknown',
+        });
       } catch (err) {
         // Linking failure is non-fatal — the user is still authenticated with
         // their existing method. Surface to telemetry so we can detect a
         // pattern of linking failures (often signals a Firebase config issue).
         Sentry.captureException(err, { tags: { layer: 'auth', op: 'linkWithCredential' } });
+        track('auth_account_link_failed', {
+          existing_method: linkingExistingMethod || 'email',
+          new_method: linkingNewMethod || 'unknown',
+          code: (err as { code?: string }).code ?? 'unknown',
+        });
       } finally {
         setPendingCredential(null);
         setLinkingExpectedEmail('');
       }
     },
-    [pendingCredential, linkingExpectedEmail],
+    [pendingCredential, linkingExpectedEmail, linkingExistingMethod, linkingNewMethod],
   );
 
-  const handleAuthError = useCallback(async (err: unknown) => {
+  const handleAuthError = useCallback(async (err: unknown, attemptedMethod?: string) => {
     const code = (err as { code?: string }).code;
     if (isAccountLinkingError(code)) {
       // Look up which provider already owns this email so we can tell the user
       // which method to sign in with first.
       const errorEmail = (err as { customData?: { email?: string } }).customData?.email ?? '';
       const credential = (err as { credential?: AuthCredential }).credential ?? null;
+      let existingProviderId = 'password';
       if (errorEmail) {
         setLinkingExpectedEmail(errorEmail);
         try {
           const methods = await fetchSignInMethodsForEmail(auth, errorEmail);
-          const existing = methods[0] ?? 'email';
-          setLinkingExistingMethod(providerName(existing));
+          existingProviderId = methods[0] ?? 'password';
+          setLinkingExistingMethod(providerName(existingProviderId));
         } catch {
           setLinkingExistingMethod('email');
         }
       }
       setPendingCredential(credential);
       linkingSheetRef.current?.expand();
+      track('auth_account_link_shown', {
+        existing_method: providerName(existingProviderId),
+        new_method: attemptedMethod ?? 'unknown',
+      });
       return;
     }
     const message = mapFirebaseError(code);
@@ -190,6 +210,7 @@ export default function SignInScreen() {
     if (googleResponse.type !== 'success') {
       if (googleResponse.type === 'error') {
         setErrorMessage('Google sign-in failed. Please try again.');
+        track('auth_method_failed', { method: 'google', code: 'oauth_response_error' });
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
       setGoogleLoading(false);
@@ -198,6 +219,7 @@ export default function SignInScreen() {
     const idToken = googleResponse.params.id_token;
     if (!idToken) {
       setErrorMessage('Google sign-in returned no token. Try again.');
+      track('auth_method_failed', { method: 'google', code: 'no_id_token' });
       setGoogleLoading(false);
       return;
     }
@@ -207,11 +229,13 @@ export default function SignInScreen() {
         const credential = GoogleAuthProvider.credential(idToken);
         const result = await signInWithCredential(auth, credential);
         await linkPendingCredential(result.user);
+        track('auth_method_succeeded', { method: 'google' });
         if (isMountedRef.current) {
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
       } catch (err) {
-        if (isMountedRef.current) await handleAuthError(err);
+        track('auth_method_failed', { method: 'google', code: (err as { code?: string }).code ?? 'unknown' });
+        if (isMountedRef.current) await handleAuthError(err, 'google');
       } finally {
         if (isMountedRef.current) setGoogleLoading(false);
       }
@@ -227,6 +251,7 @@ export default function SignInScreen() {
 
   const handleAppleSignIn = useCallback(async () => {
     if (isAuthenticating) return;
+    track('auth_method_attempted', { method: 'apple' });
     try {
       setAppleLoading(true);
       setErrorMessage('');
@@ -243,12 +268,14 @@ export default function SignInScreen() {
       const firebaseCredential = provider.credential({ idToken: identityToken });
       const result = await signInWithCredential(auth, firebaseCredential);
       await linkPendingCredential(result.user);
+      track('auth_method_succeeded', { method: 'apple' });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err: unknown) {
       // ERR_REQUEST_CANCELED fires when the user dismisses the Apple sheet —
       // not an error, just a no-op return.
       if ((err as { code?: string }).code === 'ERR_REQUEST_CANCELED') return;
-      await handleAuthError(err);
+      track('auth_method_failed', { method: 'apple', code: (err as { code?: string }).code ?? 'unknown' });
+      await handleAuthError(err, 'apple');
     } finally {
       setAppleLoading(false);
     }
@@ -256,6 +283,7 @@ export default function SignInScreen() {
 
   const handleGoogleSignIn = useCallback(() => {
     if (isAuthenticating) return;
+    track('auth_method_attempted', { method: 'google' });
     // Set loading immediately so the button shows the spinner while the user
     // is in the OAuth web flow. The success/error effect below resets it.
     setGoogleLoading(true);
@@ -271,15 +299,18 @@ export default function SignInScreen() {
       setErrorMessage('Enter your email and password.');
       return;
     }
+    track('auth_method_attempted', { method: 'email' });
     try {
       setEmailLoading(true);
       setErrorMessage('');
       setLinkingNewMethod('email');
       const result = await signInWithEmailAndPassword(auth, email, password);
       await linkPendingCredential(result.user);
+      track('auth_method_succeeded', { method: 'email' });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
-      await handleAuthError(err);
+      track('auth_method_failed', { method: 'email', code: (err as { code?: string }).code ?? 'unknown' });
+      await handleAuthError(err, 'email');
     } finally {
       setEmailLoading(false);
     }
@@ -295,6 +326,7 @@ export default function SignInScreen() {
       setErrorMessage('reCAPTCHA not ready. Try again.');
       return;
     }
+    track('auth_method_attempted', { method: 'phone' });
     try {
       setPhoneLoading(true);
       setErrorMessage('');
@@ -305,7 +337,8 @@ export default function SignInScreen() {
       setMode('phone-otp');
       setResendCooldown(30);
     } catch (err) {
-      await handleAuthError(err);
+      track('auth_method_failed', { method: 'phone', code: (err as { code?: string }).code ?? 'unknown' });
+      await handleAuthError(err, 'phone');
     } finally {
       setPhoneLoading(false);
     }
@@ -320,11 +353,14 @@ export default function SignInScreen() {
         const credential = PhoneAuthProvider.credential(verificationId, code);
         const result = await signInWithCredential(auth, credential);
         await linkPendingCredential(result.user);
+        track('auth_otp_verified');
+        track('auth_method_succeeded', { method: 'phone' });
         Keyboard.dismiss();
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch (err) {
         setOtpError(true);
-        await handleAuthError(err);
+        track('auth_method_failed', { method: 'phone', code: (err as { code?: string }).code ?? 'unknown' });
+        await handleAuthError(err, 'phone');
       } finally {
         setOtpLoading(false);
       }
@@ -569,6 +605,7 @@ export default function SignInScreen() {
                       // Re-trigger the SMS for the SAME phone number rather
                       // than dropping the user back to the input screen — the
                       // old reset path forced them to re-type their number.
+                      track('auth_otp_resend_requested');
                       setOtpError(false);
                       setErrorMessage('');
                       void handleSendCode();

@@ -1,4 +1,5 @@
 // SPEC LINK: docs/specs/03-mobile/93_mobile_auth.md §3.4 Sign-Out, §5 Step 2
+//             docs/specs/03-mobile/90_mobile_engineering_protocol.md §11 (PostHog)
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKV } from 'react-native-mmkv';
@@ -6,6 +7,7 @@ import { onAuthStateChanged, signOut as firebaseSignOut, type User as FirebaseUs
 import { auth } from '@/lib/firebase';
 import { useFilterStore } from '@/store/filterStore';
 import { useNotificationStore } from '@/store/notificationStore';
+import { identifyUser, resetIdentity, track } from '@/lib/analytics';
 
 // react-native-mmkv v4 uses createMMKV() factory (MMKV is now an interface, not a class)
 const storage = createMMKV({ id: 'auth-store' });
@@ -67,6 +69,10 @@ export const useAuthStore = create<AuthState>()(
       setLoading: (loading) => set({ isLoading: loading }),
       setHasHydrated: (v) => set({ _hasHydrated: v }),
       signOut: async () => {
+        // Telemetry first — emit while the user is still identified so the
+        // event is attributed to the outgoing session, not the next user
+        // who might sign in on this device.
+        track('signout_initiated');
         // Firebase sign-out first — onAuthStateChanged fires (null) which clears auth.
         // Then reset peer in-memory stores so a different user signing in on the same
         // device sees no stale data. MMKV is preserved per §3.4 so the same user
@@ -79,6 +85,10 @@ export const useAuthStore = create<AuthState>()(
         //   dismissed the paywall and signed out on a shared device leaves
         //   `dismissed: true` in memory, putting the next user in inline blur mode.
         set({ user: null, idToken: null, isLoading: false });
+        // Reset PostHog identity AFTER the in-memory store reset so the
+        // distinctId is cleared at a clean session boundary; any subsequent
+        // event before the next sign-in will use an anonymous distinctId.
+        resetIdentity();
       },
     }),
     {
@@ -124,6 +134,9 @@ export function initFirebaseAuthListener(): () => void {
             },
             idToken,
           );
+          // Identify the user in PostHog using the opaque Firebase uid as
+          // distinctId — no email/displayName/phone is sent (Spec 90 §11).
+          identifyUser(firebaseUser.uid);
         })
         .catch(() => {
           // Token fetch failure is rare but can happen if Firebase is unreachable

@@ -13,6 +13,7 @@ import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { auth, app } from '@/lib/firebase';
 import { mapFirebaseError } from '@/lib/firebaseErrors';
+import { track } from '@/lib/analytics';
 import { PhoneInputField } from '@/components/auth/PhoneInputField';
 import { OtpInputField } from '@/components/auth/OtpInputField';
 
@@ -53,6 +54,15 @@ export default function SignUpScreen() {
     }
   }, [method]);
 
+  // Funnel telemetry — Spec 90 §11.
+  // Fire ONCE on mount with the initialMethod the user arrived with. Tying
+  // this to `method` would re-fire every time the user toggles between
+  // email and phone within the same session, inflating funnel counts.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    track('signup_screen_viewed', { method: initialMethod });
+  }, []);
+
   // 30s cooldown after each "Send code" press — abuse protection per spec §4.
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -80,6 +90,7 @@ export default function SignUpScreen() {
       setEmailLoading(true);
       setErrorMessage('');
       await createUserWithEmailAndPassword(auth, email, password);
+      track('signup_completed', { method: 'email' });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // AuthGate routes to onboarding via onAuthStateChanged.
     } catch (err) {
@@ -98,6 +109,7 @@ export default function SignUpScreen() {
       setErrorMessage('reCAPTCHA not ready. Try again.');
       return;
     }
+    track('auth_method_attempted', { method: 'phone' });
     try {
       setPhoneLoading(true);
       setErrorMessage('');
@@ -107,6 +119,7 @@ export default function SignUpScreen() {
       setPhoneStage('otp');
       setResendCooldown(30);
     } catch (err) {
+      track('auth_method_failed', { method: 'phone', code: (err as { code?: string }).code ?? 'unknown' });
       await handleAuthError(err);
     } finally {
       setPhoneLoading(false);
@@ -125,11 +138,13 @@ export default function SignUpScreen() {
         // capture happens AFTER the Firebase user is created — Spec 95
         // onboarding writes it to user_profiles.
         await signInWithCredential(auth, credential);
+        track('auth_otp_verified');
         Keyboard.dismiss();
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setPhoneStage('backup-email');
       } catch (err) {
         setOtpError(true);
+        track('auth_method_failed', { method: 'phone', code: (err as { code?: string }).code ?? 'unknown' });
         await handleAuthError(err);
       } finally {
         setOtpLoading(false);
@@ -151,6 +166,7 @@ export default function SignUpScreen() {
     // The actual write to user_profiles.backup_email is owned by Spec 94/95.
     // Onboarding reads this from a temporary store / route param.
     // For now, dismiss the sheet — AuthGate routes to onboarding.
+    track('signup_completed', { method: 'phone' });
     phoneSheetRef.current?.close();
     setBackupLoading(false);
   }, [backupEmail]);
