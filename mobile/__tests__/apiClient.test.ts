@@ -49,22 +49,16 @@ describe('fetchWithAuth — AccountDeletedError', () => {
 
   it('AccountDeletedError carries account_deleted_at from body', async () => {
     mockFetch.mockResolvedValueOnce(makeResponse(403, deletedBody));
-    try {
-      await fetchWithAuth('/api/user-profile');
-    } catch (e) {
-      expect(e).toBeInstanceOf(AccountDeletedError);
-      expect((e as AccountDeletedError).account_deleted_at).toBe('2026-03-30T00:00:00.000Z');
-    }
+    await expect(fetchWithAuth('/api/user-profile')).rejects.toMatchObject({
+      account_deleted_at: '2026-03-30T00:00:00.000Z',
+    });
   });
 
   it('AccountDeletedError carries days_remaining from body', async () => {
     mockFetch.mockResolvedValueOnce(makeResponse(403, deletedBody));
-    try {
-      await fetchWithAuth('/api/user-profile');
-    } catch (e) {
-      expect(e).toBeInstanceOf(AccountDeletedError);
-      expect((e as AccountDeletedError).days_remaining).toBe(28);
-    }
+    await expect(fetchWithAuth('/api/user-profile')).rejects.toMatchObject({
+      days_remaining: 28,
+    });
   });
 
   it('throws ApiError(403) on generic 403 without ACCOUNT_DELETED code', async () => {

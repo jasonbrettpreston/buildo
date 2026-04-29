@@ -92,7 +92,12 @@ export function useUserProfile(options?: { enabled?: boolean }) {
     if (query.data) {
       hydrateFilter(query.data);
       hydrateUserProfile(query.data);
-      // Bridge server onboarding_complete back to local MMKV gate (Spec 95 §9 Step 7)
+      // Keep onboardingStore.isComplete in sync with server truth.
+      // Do NOT remove: (onboarding)/_layout.tsx and IncompleteBanner.tsx both
+      // read isComplete for routing/display. Removing this bridge would break
+      // the onboarding-complete guard and banner on new-device reinstall.
+      // Full removal requires migrating those consumers to read server state
+      // directly (tracked in review_followups.md — DEFER 2).
       if (query.data.onboarding_complete && !useOnboardingStore.getState().isComplete) {
         useOnboardingStore.getState().markComplete();
       }
