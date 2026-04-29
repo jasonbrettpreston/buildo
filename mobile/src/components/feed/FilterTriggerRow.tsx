@@ -23,7 +23,7 @@ export function FilterTriggerRow({ activeFilterCount, onOpen }: Props) {
         }}
         className="flex-row items-center gap-1.5 bg-zinc-800 rounded-lg px-3 py-1.5 active:bg-zinc-700"
         accessibilityLabel="Open filters"
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
         <Text className="text-zinc-400 text-xs">⚙</Text>
         {activeFilterCount > 0 ? (

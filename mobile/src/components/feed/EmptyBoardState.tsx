@@ -94,7 +94,7 @@ export function EmptyBoardState({ onNavigateFeed }: Props) {
       <Text className="text-zinc-500 text-sm text-center mt-6">
         No jobs tracked yet.
       </Text>
-      <Pressable onPress={onNavigateFeed} className="mt-3 active:opacity-70">
+      <Pressable onPress={onNavigateFeed} className="mt-3 active:opacity-70" hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
         <Text className="font-mono text-amber-400 text-sm">
           Find Jobs on the Lead Feed →
         </Text>

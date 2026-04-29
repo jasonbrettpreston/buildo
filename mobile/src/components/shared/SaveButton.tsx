@@ -26,7 +26,7 @@ interface Props {
   leadId: string;
   isSaved: boolean;
   onToggle: (leadId: string, saved: boolean) => void;
-  testID?: string;
+  testID: string;
 }
 
 export function SaveButton({ leadId, isSaved, onToggle, testID }: Props) {
@@ -65,20 +65,14 @@ export function SaveButton({ leadId, isSaved, onToggle, testID }: Props) {
   return (
     <>
       <Pressable
-        testID={testID ?? `save-button-${leadId}`}
+        testID={testID}
         onPress={handlePress}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
       >
         <Animated.View
           style={style}
-          testID={
-            testID
-              ? (isSaved
-                  ? testID.replace('save-button-', 'save-heart-filled-')
-                  : testID.replace('save-button-', 'save-heart-'))
-              : (isSaved ? `save-heart-filled-${leadId}` : `save-heart-${leadId}`)
-          }
+          testID={isSaved ? testID.replace('save-button-', 'save-heart-filled-') : testID.replace('save-button-', 'save-heart-')}
         >
           <Text style={{ fontSize: 22, color: isSaved ? '#f59e0b' : '#71717a' }}>
             {isSaved ? '♥' : '♡'}

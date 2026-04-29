@@ -90,9 +90,12 @@ export function FlightCard({ item, index, onPress, onRemove, hasUpdate }: Props)
     transform: [{ translateX: hintTranslateX.value }],
   }));
 
-  const isUrgent =
-    item.predicted_start !== null &&
-    (new Date(item.predicted_start).getTime() - Date.now()) / (1000 * 60 * 60 * 24) <= 7;
+  const daysUntilStart =
+    item.predicted_start !== null
+      ? (new Date(item.predicted_start).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      : null;
+
+  const isUrgent = daysUntilStart !== null && daysUntilStart <= 7;
 
   function renderRightActions() {
     return (
@@ -102,10 +105,11 @@ export function FlightCard({ item, index, onPress, onRemove, hasUpdate }: Props)
           onRemove(item);
         }}
         className="bg-red-600 w-20 items-center justify-center rounded-r-xl mb-3 mr-4"
+        style={{ minHeight: 44 }}
         accessibilityRole="button"
         accessibilityLabel="Remove from board"
       >
-        <Text className="text-white font-mono text-xs">Remove</Text>
+        <Text className="text-white text-xs">Remove</Text>
       </Pressable>
     );
   }
@@ -185,13 +189,19 @@ export function FlightCard({ item, index, onPress, onRemove, hasUpdate }: Props)
             <View className="flex-row gap-2 mt-2">
               {item.lifecycle_stalled && (
                 <View className="bg-red-500/20 border border-red-500/40 px-2 py-0.5 rounded-md">
-                  <Text className="text-red-400 text-xs font-mono">⚠ DELAYED</Text>
+                  <Text className="text-red-400 text-xs">⚠ DELAYED</Text>
                 </View>
               )}
               {isUrgent && (
-                <View className="bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 rounded-md">
-                  <Text className="text-amber-400 text-xs font-mono">⚡ {Math.ceil((new Date(item.predicted_start!).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} DAYS</Text>
-                </View>
+                daysUntilStart !== null && daysUntilStart <= 0 ? (
+                  <View className="bg-red-500/20 border border-red-500/40 px-2 py-0.5 rounded-md">
+                    <Text className="text-red-400 text-xs">⚡ OVERDUE</Text>
+                  </View>
+                ) : (
+                  <View className="bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 rounded-md">
+                    <Text className="text-amber-400 text-xs">⚡ {Math.ceil(daysUntilStart!)} DAYS</Text>
+                  </View>
+                )
               )}
             </View>
           )}
