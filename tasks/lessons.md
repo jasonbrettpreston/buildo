@@ -30,7 +30,7 @@
 
 ## Mobile / Expo
 - `tradeSlug` in filterStore defaults to `''` (empty string = falsy) — feed query won't fire until set
-- `radius_km` is client-side MMKV only — no column in `user_profiles`
+- `radius_km` is now server-side (added to `user_profiles` in migration 114) — MMKV is cache only; `user_profiles` is authoritative. `useUserProfile` hydrates filterStore from server on launch.
 - Maestro `assertVisible` on Android reads rendered text, not raw source — `uppercase` CSS → assert "LEAD FEED" not "Lead Feed"
 - `useRootNavigationState().key` is undefined until the navigation container mounts — guard `router.replace()` behind it
 

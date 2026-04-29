@@ -611,4 +611,13 @@ _From the 7-agent audit (4 micro + 3 macro + 2 automated guards). Critical/impor
 
 | Severity | Source | Item | Planned Home |
 |----------|--------|------|-------------|
-| LOW | WF5 audit | **`profession.tsx` idempotency catch dead code** — `err.message.includes('already')` in the PATCH catch block is unreachable because Spec 95 returns HTTP 200 for same-value `trade_slug` retry (idempotency exception), not 400. The catch only fires for genuine change attempts, where the error message will never contain "already". Dead code harmless but misleading. | Remove in a Spec 95 follow-up WF2 once the server behavior is confirmed |
+| LOW | WF5 audit | **`profession.tsx` idempotency catch dead code** — `err.message.includes('already')` in the PATCH catch block is unreachable because Spec 95 returns HTTP 200 for same-value `trade_slug` retry (idempotency exception), not 400. The catch only fires for genuine change attempts, where the error message will never contain "already". Dead code harmless but misleading. | Remove in a follow-up WF2 (now server behavior is confirmed by Spec 95 implementation) |
+
+## WF1 Spec 95 Mobile User Profiles — Deferred Review Items (2026-04-29)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| MED | Adversarial | **`tos_accepted_at` writable post-onboarding** — `UserProfileUpdateSchema` always accepts `tos_accepted_at`; spec requires stripping it if sent independently post-onboarding. Requires reading `onboarding_complete` from the pre-fetch SELECT and rejecting the field if already true. Compliance/legal field — low exploit risk since clients set it once; no UI in Spec 97 allows modifying it. | Spec 97 Settings — add guard when editable fields are wired |
+| MED | Adversarial | **`trade_slug: null` manufacturer filterStore** — `filterStore.hydrate()` maps `null` to `''` (empty string) for manufacturer accounts; `trade_slugs_override` is not surfaced in filterStore. Manufacturer feed requires multi-trade query logic that is not yet specced. | Manufacturer feed spec (future) |
+| MED | Adversarial | **Delete route not in DB transaction** — `UPDATE user_profiles` is a bare `query()` call, not wrapped in `withTransaction`. The spec mandates an atomic transaction wrapping the update and Stripe cancellation. Currently safe since Stripe is deferred (Spec 96), but needs the wrapper added when Stripe is wired. | Spec 96 — add `withTransaction` wrapper when Stripe is installed |
+| LOW | Spec Compliance | **`chk_location_mode` constraint redundant** — migration 114 adds both `chk_location_mode` (CHECK enum values) and `chk_location_mode_coords` (three-state coherence). PostgreSQL NULL-in-CHECK semantics make `chk_location_mode` correctly allow NULL despite not being explicit. Redundant but not broken. | Low-priority cleanup if migration is revisited |
