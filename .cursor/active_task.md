@@ -1,100 +1,127 @@
-# Active Task: WF3 — Spec 07 Relevance Scoping + V11 API Readiness + O4/SC1/M3 Fixes
+# Active Task: WF2 — Spec 93 Step 0: Mobile Pre-flight Dependencies
 **Status:** Implementation
-**Workflow:** WF3 — Bug Fix
-**Rollback Anchor:** `87af0776fc4e5dc4e1d5c8cadf31636e654d3fdc`
+**Workflow:** WF2 — Feature Enhancement
+**Domain Mode:** Admin (mobile/ Expo source — non-Maestro)
 
 ## Context
-* **Goal:** Fix 4 bugs surfaced by the 2026-04-25 WF5 prod backend run and extend the evaluation spec with a new V11 vector:
-  - **B1 (Spec relevance):** Checks R1/R2/R4/O1/O2/SC2/T4/M3 in `07_backend_prod_eval.md` include tooling/CLI scripts (`deepseek-review`, `diff-narrator`, `extract-stryker-survivors`, `gemini-review`, `local-cron`, `migrate`, `run-chain`, `validate-migration`) that are explicitly exempt from pipeline SDK protocol. Their `process.exit()` calls and absence of `pipeline.run`/`emitSummary`/`emitMeta` are design-correct — penalising them inflates FAIL counts unfairly.
-  - **B2 (M3):** `reclassify-all.js` is on disk and operational but absent from `scripts/manifest.json` scripts registry.
-  - **B3 (SC1):** 5 test helper files missing `// SPEC LINK:` header: `factories.ts`, `fixtures/sample-permits.ts`, `market-metrics.logic.test.ts`, `scope.logic.test.ts`, `setup.ts`.
-  - **B4 (O4):** Two empty catch blocks in `src/app/api/admin/pipelines/[slug]/route.ts` (lines 255, 265) swallow malformed JSON with only a comment — no log emission, making silent parse failures invisible in observability.
-  - **Enhancement (V11):** Add "API Frontend Readiness" vector to spec 07 to assess Expo-consumed routes (`src/app/api/leads/`) for contract safety, input validation, and auth boundary compliance.
-
-* **Target Spec:** `docs/specs/00-architecture/07_backend_prod_eval.md`
+* **Goal:** Install 10 missing mobile packages, add 3 missing `app.json` plugin entries, register `tailwindcss-safe-area` in `tailwind.config.js`, and update Jest `transformIgnorePatterns` for new native packages. This is the required pre-flight step before implementing any of Specs 93–97. Without it, all subsequent WF1s will hit missing-module errors at import time.
+* **Target Spec:** `docs/specs/03-mobile/93_mobile_auth.md` (§5 Build Sequence — Step 0)
 * **Key Files:**
-  - `docs/specs/00-architecture/07_backend_prod_eval.md` — primary: add exclusions + V11 + recompute scores
-  - `src/app/api/admin/pipelines/[slug]/route.ts` — B4: add logWarn at lines 255, 265
-  - `src/tests/factories.ts` — B3: add SPEC LINK header
-  - `src/tests/fixtures/sample-permits.ts` — B3: add SPEC LINK header
-  - `src/tests/market-metrics.logic.test.ts` — B3: add SPEC LINK header
-  - `src/tests/scope.logic.test.ts` — B3: add SPEC LINK header
-  - `src/tests/setup.ts` — B3: add SPEC LINK header
-  - `scripts/manifest.json` — B2: add `reclassify_all` entry
-  - `src/app/api/leads/feed/route.ts`, `flight-board/route.ts`, `search/route.ts`, `view/route.ts` — V11 evidence gather (read-only)
+  - `mobile/package.json` — add 10 packages; update jest transformIgnorePatterns
+  - `mobile/app.json` — add expo-apple-authentication plugin, @sentry/react-native/app-plugin, Google OAuth intentFilters
+  - `mobile/tailwind.config.js` — add `require('tailwindcss-safe-area')` to plugins array
+
+## State Verification (confirmed before planning)
+**`mobile/package.json` — packages confirmed MISSING:**
+| Package | Required by |
+|---------|------------|
+| `expo-secure-store` | Spec 93 Step 1 — Firebase persistence adapter |
+| `expo-apple-authentication` | Spec 93 Step 4 — Apple Sign-In (iOS) |
+| `expo-web-browser` | Spec 93 Step 4 / Spec 96 Step 1 — Google OAuth + Stripe checkout |
+| `expo-sharing` | Spec 97 Step 8 — CSV data export |
+| `expo-blur` | Spec 96 Step 3 — inline blur over locked lead cards |
+| `input-otp-native` | Spec 93 Step 4 — 6-cell OTP entry component |
+| `react-native-international-phone-number` | Spec 93 Step 4 — phone number input with country dial-code |
+| `tailwindcss-safe-area` | Spec 94 Step 3 — `pb-safe` class for sticky footer |
+| `@react-navigation/bottom-tabs` | Spec 97 Step 5 — `useBottomTabBarHeight()` for notification pre-prompt |
+| `@sentry/react-native` | Spec 90 §11 — native crash reporting |
+
+**`mobile/app.json` plugins array — confirmed MISSING:**
+- `["expo-apple-authentication"]` — required by Apple Sign-In native module
+- `["@sentry/react-native/app-plugin", {...}]` — required for Sentry source maps on EAS Build
+- Google OAuth URL scheme `intentFilters` on Android — required for expo-auth-session Google sign-in
+
+**`mobile/tailwind.config.js` — `plugins: []` — confirmed MISSING:**
+- `require('tailwindcss-safe-area')` — required for `pb-safe` class
+
+**Jest `transformIgnorePatterns` — needs additions for new native packages NOT already covered by existing patterns:**
+- `@sentry/react-native` (not covered by current regex)
+- `react-native-international-phone-number` (not covered — `react-native` in name but full package name differs)
+- `input-otp-native` (not covered)
+- Note: `expo-*` packages covered by existing `expo(nent)?` regex ✅; `@react-navigation/bottom-tabs` covered by existing `@react-navigation/.*` regex ✅
 
 ## Technical Implementation
-* **New/Modified Components:** N/A — backend-only
+* **New/Modified Components:** Config files only — no source code
 * **Data Hooks/Libs:** N/A
 * **Database Impact:** NO
 
 ## Standards Compliance
-* **Try-Catch Boundary:** B4 fix adds `log.warn(...)` inside two existing catch blocks; no new try-catch added.
-* **Unhappy Path Tests:** N/A — spec doc + config changes; existing test suite confirms no regressions.
-* **logError Mandate:** B4 uses `log.warn` (not logError) because malformed JSON in stdout is non-fatal and does not involve an external error — appropriate severity. All other catch blocks in the file already use `logError`.
-* **UI Layout:** N/A — backend-only.
+* **Try-Catch Boundary:** N/A — no API routes
+* **Unhappy Path Tests:** N/A — config-only change; existing test suite runs as regression check
+* **logError Mandate:** N/A
+* **UI Layout:** N/A — config-only
 
 ## Execution Plan
 
-- [ ] **Rollback Anchor:** `87af0776fc4e5dc4e1d5c8cadf31636e654d3fdc`
+- [ ] **State Verification:** Confirmed above — 10 packages missing from `mobile/package.json`, 3 app.json plugins missing, tailwind.config.js plugins empty, 3 jest transform patterns missing.
 
-- [ ] **State Verification:**
-  - B1: R1/R2/R4/O1/O2 grep commands lack exclusions for tooling scripts — confirmed by WF5 evidence (deepseek-review, diff-narrator, extract-stryker-survivors, gemini-review, local-cron, migrate all appear in FAIL output).
-  - B2: `node -e "require('./scripts/manifest.json').scripts['reclassify_all']"` → `undefined`. File `scripts/reclassify-all.js` exists on disk.
-  - B3: `grep -rL "SPEC LINK\|spec link" src/tests/ --include="*.ts"` → 5 files listed.
-  - B4: `[slug]/route.ts` lines 255, 265 have `catch { /* malformed summary/meta — ignore */ }` with no logging.
+- [ ] **Contract Definition:** N/A — no API route changes.
 
-- [ ] **Spec Review:** `docs/specs/00-architecture/07_backend_prod_eval.md` (spec under fix) + `docs/specs/01-pipeline/47_pipeline_script_protocol.md` (pipeline SDK protocol — confirms tooling scripts are not governed by §R1-R12) + `docs/specs/01-pipeline/30_pipeline_architecture.md` §2.1 (Observer archetype list confirms which scripts are mainline vs. tooling).
+- [ ] **Spec Update:** `docs/specs/03-mobile/93_mobile_auth.md` Step 0 already updated in the previous session (commit `626f1b8`). Run `npm run system-map` after implementation to reflect any file changes. N/A beyond confirming Step 0 is already the authoritative reference.
 
-- [ ] **Reproduction (static — no new vitest test required):**
-  - B1: Run WF5 SC2 command → `grep -rn "process\.exit" scripts/*.js | grep -v "lib/"` → 24 matches, all in tooling scripts.
-  - B2: `node -e "require('./scripts/manifest.json').scripts['reclassify_all']"` → `undefined`.
-  - B3: `grep -rL "SPEC LINK\|spec link" src/tests/ --include="*.ts"` → 5 files.
-  - B4: Read `[slug]/route.ts` lines 249-266 — empty catch bodies confirmed.
-  - V11: `find src/app/api/leads -name "route.ts"` → 4 routes; run each FR check to gather evidence.
+- [ ] **Schema Evolution:** NO DB impact. N/A.
 
-- [ ] **Red Light:** All reproduction commands produce non-empty output (confirming bugs exist). `npm run test` passes 4485 — no regressions from prior session.
+- [ ] **Guardrail Test:** N/A — no new behaviour to test. Existing `mobile/__tests__/` suite runs as regression proof.
 
-- [ ] **Fix (6 items, in order):**
+- [ ] **Red Light:** N/A — no new failing tests to write for a dependency install. Baseline: run `npm run test` from root before installing to confirm current pass count.
 
-  **Fix 1 — B4: logWarn in two empty catch blocks** (`[slug]/route.ts` lines 255, 265)
-  Replace both empty-body catches. Use the pipeline SDK `log.warn` (already imported in this file) or `logWarn` from logger — check which is available at top of file and use consistently.
+- [ ] **Implementation (in order — run from `mobile/` directory):**
 
-  **Fix 2 — B3: SPEC LINK headers** (5 test helper files)
-  Add `// SPEC LINK: <path>` as the first comment in each file:
-  - `factories.ts` → `docs/specs/00-architecture/01_database_schema.md`
-  - `fixtures/sample-permits.ts` → `docs/specs/01-pipeline/50_source_permits.md`
-  - `market-metrics.logic.test.ts` → `docs/specs/02-web-admin/26_admin_dashboard.md`
-  - `scope.logic.test.ts` → `docs/specs/00-architecture/01_database_schema.md`
-  - `setup.ts` → `docs/specs/00_engineering_standards.md`
+  **Step A — Install Expo SDK packages** (Expo-managed versions):
+  ```bash
+  cd mobile
+  npx expo install expo-secure-store expo-apple-authentication expo-web-browser expo-sharing expo-blur @sentry/react-native
+  ```
 
-  **Fix 3 — B2: Add reclassify-all to manifest.json**
-  Add slug `reclassify_all` to the `scripts` object in `scripts/manifest.json` with fields: `file: "scripts/reclassify-all.js"`, `telemetry_tables: ["permits", "permit_trades"]`, `supports_full: false`, `deprecated: false`.
+  **Step B — Install non-Expo npm packages** (version-pinned by us):
+  ```bash
+  npm install input-otp-native react-native-international-phone-number tailwindcss-safe-area @react-navigation/bottom-tabs
+  ```
 
-  **Fix 4 — B1: Update spec 07 relevance exclusions (8 check commands)**
-  For each of R1, R2, R4, O1, O2: append `| grep -v "deepseek-review\|diff-narrator\|extract-stryker-survivors\|gemini-review\|local-cron\|migrate"` to the grep pipeline. Add a **Note:** "Exclusion list = tooling/CLI scripts not governed by pipeline SDK protocol §R1-R12."
-  For SC2: update command to also exclude `run-chain`, `validate-migration`, `seed-` files. Add Note.
-  For T4: update pass criteria note to allow `diff-narrator.logic.test.ts` skips (pre-existing tooling). Append `| grep -v "diff-narrator"` to command.
-  For M3: update ls command to also filter `deepseek-review|diff-narrator|extract-stryker-survivors|gemini-review|local-cron|migrate`. Add Note.
+  **Step C — Update `mobile/app.json` plugins array** — add after the existing `expo-location` entry:
+  ```json
+  ["expo-apple-authentication"],
+  [
+    "@sentry/react-native/app-plugin",
+    {
+      "organization": "buildo",
+      "project": "buildo-mobile"
+    }
+  ]
+  ```
+  Add to `android` section — Google OAuth URL scheme intentFilter:
+  ```json
+  "intentFilters": [
+    {
+      "action": "VIEW",
+      "autoVerify": true,
+      "data": [
+        {
+          "scheme": "com.googleusercontent.apps.REPLACE_WITH_GOOGLE_ANDROID_CLIENT_ID"
+        }
+      ],
+      "category": ["BROWSABLE", "DEFAULT"]
+    }
+  ]
+  ```
+  **Note:** `REPLACE_WITH_GOOGLE_ANDROID_CLIENT_ID` is a placeholder — the actual reverse client ID comes from Google Cloud Console → Credentials → Android OAuth 2.0 Client. Do not commit a real client ID in plain text — use an EAS environment variable or substitute at build time.
 
-  **Fix 5 — V11: Add API Frontend Readiness vector** (new section in spec 07, after V10)
-  4 checks against `src/app/api/leads/` routes (feed, flight-board, search, view):
-  - **FR1:** All 4 routes use `withApiEnvelope` — `find src/app/api/leads -name "route.ts" | xargs grep -L "withApiEnvelope"` — Pass: 0 files.
-  - **FR2:** All 4 routes validate inputs with Zod — `find src/app/api/leads -name "route.ts" | xargs grep -L "z\.\|ZodObject\|zod"` — Pass: 0 files.
-  - **FR3:** No unexpected env vars in leads routes — `grep -rn "process\.env\." src/app/api/leads/ | grep -v "DATABASE_URL\|NODE_ENV\|CKAN\|API_KEY\|SERPER\|GOOGLE"` — Pass: 0 matches (no secrets beyond known service vars).
-  - **FR4:** Leads routes are correctly classified as non-admin in route-guard — `grep -n "leads" src/lib/auth/route-guard.ts` — Pass: routes are present and not marked as admin-only (Expo app uses user auth, not admin key).
-  Walk each check, record Evidence + PASS/FAIL, compute V11 score using same `floor(PASS/4 × 3)` formula.
+  **Step D — Update `mobile/tailwind.config.js` plugins array:**
+  Change `plugins: []` → `plugins: [require('tailwindcss-safe-area')]`
 
-  **Fix 6 — Recompute and record corrected scoring in spec 07**
-  Update the Scoring Summary table with post-fix scores. Add a new comparison table row for 2026-04-25 corrected and 2026-04-26 post-fix (with V11). Bump spec version to V1.1 — 2026-04-26. Update total checks count from 46 to 50 (46 + 4 for V11).
+  **Step E — Update `mobile/package.json` jest `transformIgnorePatterns`:**
+  Append `|@sentry/react-native|react-native-international-phone-number|input-otp-native` to the existing regex pattern (before the closing `))"`).
 
-- [ ] **Pre-Review Self-Checklist (3-5 sibling bugs):**
-  1. **S1 (Scalability)** — does the `pool.query` large-result check accidentally include tooling scripts? Verify S1 grep scope remains correct after edits.
-  2. **T5 (Testing)** — now that reclassify-all is in the manifest, does it have a guardrail test? Verify chain.logic.test.ts or pipeline-sdk.logic.test.ts covers it, or flag as DEFER.
-  3. **O4 siblings** — are there other empty catch blocks in `src/app/api/`? Run `grep -rn "catch\s*{[^}]*}" src/app/api/ --include="*.ts"` and verify no other bare swallows.
-  4. **SC1 scope** — `mobile/__tests__/` files: do they need SPEC LINK too? Confirm whether SC1 grep covers mobile test dir, and scope appropriately.
-  5. **FR1 coverage** — if a new `src/app/api/leads/[permitNum]/route.ts` is added later, V11 FR1-FR4 self-includes via `find src/app/api/leads`. Confirm no routes exist outside the `leads/` tree that the Expo app currently hits.
+- [ ] **UI Regression Check:** N/A — no shared components modified.
 
-- [ ] **Independent Review:** Spawn `feature-dev:code-reviewer` (`isolation: "worktree"`). Inputs: spec path `docs/specs/00-architecture/07_backend_prod_eval.md`, modified files list above, one-sentence summary: "WF3 — fix spec 07 relevance scoping (8 check updates), add V11 API frontend readiness vector (4 checks), fix O4 empty-catch logWarn, SC1 SPEC LINK headers, M3 manifest entry." Agent generates its own checklist from the spec. BUG items → fix before Green Light. DEFER → `docs/reports/review_followups.md`.
+- [ ] **Pre-Review Self-Checklist (5 items):**
+  1. Does `expo install` pin each Expo SDK package to a version compatible with `expo ~54.0.33`? Verify no peer-dependency warnings after install.
+  2. Does the `@sentry/react-native/app-plugin` require `SENTRY_DSN` or `SENTRY_AUTH_TOKEN` env vars at build time? Confirm `eas.json` or EAS Secrets covers this before first EAS Build — or document as a known gap.
+  3. Does adding `tailwindcss-safe-area` to `tailwind.config.js` break the existing `presets: [require('nativewind/preset')]` order? Safe-area must come after the preset, not before.
+  4. Does the Google OAuth `intentFilters` entry conflict with the existing `scheme: "buildo"` deep-link handler in `app.json`? Confirm both can coexist in the Android manifest.
+  5. Are the 3 new jest `transformIgnorePatterns` entries correctly placed inside the existing negative lookahead group? Confirm the regex compiles without syntax error by running a quick jest dry-run.
 
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix`. Paste final test summary line and typecheck result. Both must show 0 failures. List each prior step as DONE or N/A. → WF6.
+- [ ] **Multi-Agent Review:** Per the review protocol (`docs/reports/` feedback memory) — **adversarial agents (Gemini + DeepSeek) are SKIPPED for pure config changes** (package.json, app.json, tailwind.config.js). Independent code reviewer agent still runs.
+  Spawn `feature-dev:code-reviewer` agent (`isolation: "worktree"`). Inputs: spec path `docs/specs/03-mobile/93_mobile_auth.md`, modified files: `mobile/package.json`, `mobile/app.json`, `mobile/tailwind.config.js`. Summary: "WF2 — install 10 missing mobile packages and update 3 config files per Spec 93 Step 0 pre-flight. No logic or source code changes." Agent generates its own checklist. Fix any FAIL items before Green Light. DEFER items → `docs/reports/review_followups.md`.
+
+- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix` from root. Paste actual terminal output. Both must show zero failures. List each prior step as DONE or N/A. → WF6.

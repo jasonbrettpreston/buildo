@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.buildo.app",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Allow Buildo to access your location to find nearby construction leads.",
         "UIBackgroundModes": ["remote-notification"]
@@ -33,6 +34,18 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.RECEIVE_BOOT_COMPLETED"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "com.googleusercontent.apps.REPLACE_WITH_GOOGLE_ANDROID_CLIENT_ID"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": {
@@ -53,6 +66,14 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Allow Buildo to access your location to find nearby construction leads."
+        }
+      ],
+      "expo-apple-authentication",
+      [
+        "@sentry/react-native/app-plugin",
+        {
+          "organization": "buildo",
+          "project": "buildo-mobile"
         }
       ]
     ],
