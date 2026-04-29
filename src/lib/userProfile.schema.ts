@@ -37,8 +37,14 @@ export const UserProfileSchema = z.object({
   account_preset: z.enum(['tradesperson', 'realtor', 'manufacturer']).nullable(),
   trade_slugs_override: z.array(z.string()).nullable(),
   radius_cap_km: z.number().int().nullable(),
-  // notification_prefs stored as JSONB
-  notification_prefs: z.record(z.string(), z.unknown()).nullable(),
+  // notification_prefs stored as JSONB — canonical 5-key shape per §2.4
+  notification_prefs: z.object({
+    new_lead_min_cost_tier: z.enum(['low', 'medium', 'high']),
+    phase_changed: z.boolean(),
+    lifecycle_stalled: z.boolean(),
+    start_date_urgent: z.boolean(),
+    notification_schedule: z.enum(['morning', 'anytime', 'evening']),
+  }).nullable(),
 });
 
 export type UserProfileType = z.infer<typeof UserProfileSchema>;
@@ -57,7 +63,13 @@ export const UserProfileUpdateSchema = z
     home_base_lng: z.number().min(-180).max(180).nullable().optional(),
     radius_km: z.number().int().min(1).max(200).nullable().optional(),
     supplier_selection: z.string().nullable().optional(),
-    notification_prefs: z.record(z.string(), z.unknown()).optional(),
+    notification_prefs: z.object({
+      new_lead_min_cost_tier: z.enum(['low', 'medium', 'high']),
+      phase_changed: z.boolean(),
+      lifecycle_stalled: z.boolean(),
+      start_date_urgent: z.boolean(),
+      notification_schedule: z.enum(['morning', 'anytime', 'evening']),
+    }).partial().optional(),
     // Onboarding-only fields written by Spec 94 screens
     onboarding_complete: z.boolean().optional(),
     tos_accepted_at: z.string().optional(),

@@ -14,6 +14,7 @@ export function TradeReadOnlyRow() {
         <Text className="text-zinc-400 text-sm">Trade</Text>
         <View
           className="flex-row items-center gap-2"
+          accessibilityRole="text"
           accessibilityLabel={tradeSlug ? `Trade: ${tradeSlug}, locked` : 'Trade: loading'}
         >
           {tradeSlug ? (

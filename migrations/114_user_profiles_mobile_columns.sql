@@ -66,7 +66,8 @@ ALTER TABLE user_profiles ADD CONSTRAINT user_profiles_trade_slug_not_empty
   CHECK (trade_slug IS NULL OR trim(trade_slug) <> '');
 
 -- Notification preferences (JSONB — merged server-side via || operator)
-ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS notification_prefs JSONB;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS notification_prefs JSONB
+  DEFAULT '{"new_lead_min_cost_tier":"medium","phase_changed":true,"lifecycle_stalled":true,"start_date_urgent":true,"notification_schedule":"anytime"}'::jsonb;
 
 -- New tables
 

@@ -1,6 +1,6 @@
-# Active Task: Spec 95 Mobile User Profiles — API + Store Foundation
-**Status:** Complete
-**Workflow:** WF1 — Genesis
+# Active Task: Spec 95 WF5 Audit Fixes — 5 failures
+**Status:** Implementation
+**Workflow:** WF3 — Bug Fix (filed from WF5 manual audit)
 **Domain Mode:** Cross-Domain — modifies `src/app/api/` Next.js routes AND `mobile/` Expo source. Read `.claude/domain-crossdomain.md` before implementation. ✓
 
 ---

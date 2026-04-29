@@ -113,19 +113,29 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       );
     }
 
-    // trade_slug is immutable after onboarding — idempotency: same value returns 200
+    // trade_slug first write allowed when NULL (onboarding profession step).
+    // Once set, it is immutable — any attempt to change it returns 400.
+    // Idempotency: same value as existing returns 200 immediately.
+    let tradeSlugFirstWrite: string | null = null;
     if ('trade_slug' in rawBody) {
-      if (rawBody.trade_slug === existing.trade_slug) {
-        const full = await query<Record<string, unknown>>(
-          `SELECT * FROM user_profiles WHERE user_id = $1`,
-          [uid],
+      if (existing.trade_slug !== null) {
+        // Already set — enforce immutability
+        if (rawBody.trade_slug === existing.trade_slug) {
+          const full = await query<Record<string, unknown>>(
+            `SELECT * FROM user_profiles WHERE user_id = $1`,
+            [uid],
+          );
+          return NextResponse.json({ data: full[0], error: null, meta: null });
+        }
+        return NextResponse.json(
+          { data: null, error: { code: 'TRADE_IMMUTABLE', message: 'trade_slug cannot be changed after onboarding' }, meta: null },
+          { status: 400 },
         );
-        return NextResponse.json({ data: full[0], error: null, meta: null });
       }
-      return NextResponse.json(
-        { data: null, error: { code: 'TRADE_IMMUTABLE', message: 'trade_slug cannot be changed after onboarding' }, meta: null },
-        { status: 400 },
-      );
+      // existing.trade_slug IS NULL — first write during onboarding
+      if (typeof rawBody.trade_slug === 'string' && rawBody.trade_slug.trim().length > 0) {
+        tradeSlugFirstWrite = rawBody.trade_slug;
+      }
     }
 
     const parsed = UserProfileUpdateSchema.safeParse(rawBody);
@@ -142,7 +152,9 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     if (fields.onboarding_complete === true) {
       const effectiveLocation = fields.location_mode ?? existing.location_mode;
       const effectiveTos = fields.tos_accepted_at ?? existing.tos_accepted_at;
-      if (!existing.trade_slug || !effectiveLocation || !effectiveTos) {
+      // trade_slug may be set in this same PATCH (first write) — account for that
+      const effectiveTrade = tradeSlugFirstWrite ?? existing.trade_slug;
+      if (!effectiveTrade || !effectiveLocation || !effectiveTos) {
         return NextResponse.json(
           {
             data: null,
@@ -166,6 +178,7 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       setClauses.push(`${col} = $${params.length}`);
     };
 
+    if (tradeSlugFirstWrite !== null) addField('trade_slug', tradeSlugFirstWrite);
     if (fields.full_name !== undefined) addField('full_name', fields.full_name);
     if (fields.phone_number !== undefined) addField('phone_number', fields.phone_number);
     if (fields.company_name !== undefined) addField('company_name', fields.company_name);

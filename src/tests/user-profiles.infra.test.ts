@@ -132,13 +132,25 @@ describe('PATCH /api/user-profile', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 400 when trade_slug in body (immutability guard)', async () => {
+  it('returns 400 when trade_slug in body differs from existing (immutability guard)', async () => {
     mockGetUser.mockResolvedValueOnce('uid-abc');
     mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
     const res = await PATCH(makePATCH({ trade_slug: 'hvac' }));
     expect(res.status).toBe(400);
     const body = await res.json() as { error: { code: string } };
     expect(body.error.code).toBe('TRADE_IMMUTABLE');
+  });
+
+  it('returns 200 when new user sets trade_slug for first time (trade_slug IS NULL)', async () => {
+    mockGetUser.mockResolvedValueOnce('uid-new');
+    // Existing row has null trade_slug (new user, auto-created by UPSERT)
+    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, trade_slug: null }]);
+    const updated = { ...BASE_PROFILE, trade_slug: 'plumbing' };
+    mockQuery.mockResolvedValueOnce([updated]);
+    const res = await PATCH(makePATCH({ trade_slug: 'plumbing' }));
+    expect(res.status).toBe(200);
+    const body = await res.json() as { data: typeof updated };
+    expect(body.data.trade_slug).toBe('plumbing');
   });
 
   it('returns 200 when trade_slug matches existing (idempotency)', async () => {
@@ -214,6 +226,18 @@ describe('PATCH /api/user-profile', () => {
     expect(res.status).toBe(400);
     const body = await res.json() as { error: { code: string } };
     expect(body.error.code).toBe('ONBOARDING_INCOMPLETE');
+  });
+
+  it('strips email field silently — returns 200 with email unchanged on profile', async () => {
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
+    const updated = { ...BASE_PROFILE, full_name: 'Bob', updated_at: '2026-02-01T00:00:00Z' };
+    mockQuery.mockResolvedValueOnce([updated]);
+    // email is not in UserProfileUpdateSchema — Zod .strip() silently discards it
+    const res = await PATCH(makePATCH({ full_name: 'Bob', email: 'hacker@evil.com' }));
+    expect(res.status).toBe(200);
+    const body = await res.json() as { data: typeof updated };
+    expect(body.data.email).toBeNull();
   });
 
   it('returns 500 without raw error message on DB failure', async () => {
