@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import * as Sentry from '@sentry/react-native';
 import { createMMKV } from 'react-native-mmkv';
-import { fetchWithAuth } from '@/lib/apiClient';
+import { fetchWithAuth, AccountDeletedError, ApiError } from '@/lib/apiClient';
 import { UserProfileSchema, type UserProfileType } from '@/lib/userProfile.schema';
 import { useFilterStore } from '@/store/filterStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
@@ -57,7 +57,7 @@ async function fetchProfile(): Promise<UserProfileType> {
   return parsed.data;
 }
 
-export function useUserProfile() {
+export function useUserProfile(options?: { enabled?: boolean }) {
   const hydrateFilter = useFilterStore((s) => s.hydrate);
   const hydrateUserProfile = useUserProfileStore((s) => s.hydrate);
 
@@ -80,7 +80,12 @@ export function useUserProfile() {
     queryKey: ['user-profile'],
     queryFn: fetchProfile,
     staleTime: 300_000,
-    retry: 3,
+    enabled: options?.enabled ?? true,
+    // No retry for deterministic states: 403 (deleted account) and 404 (new user).
+    retry: (count, err) =>
+      !(err instanceof AccountDeletedError) &&
+      !(err instanceof ApiError && err.status === 404) &&
+      count < 3,
   });
 
   useEffect(() => {
@@ -98,6 +103,8 @@ export function useUserProfile() {
     data: query.data,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
+    isError: query.isError,
+    error: query.error,
     hasCachedData: hasCachedDataRef.current,
   };
 }

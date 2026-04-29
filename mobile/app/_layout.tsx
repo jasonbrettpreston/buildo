@@ -1,9 +1,11 @@
 // SPEC LINK: docs/specs/03-mobile/92_mobile_engagement_hardware.md §3.2, §4.1, §4.2
-//             docs/specs/03-mobile/93_mobile_auth.md §5 Step 6
+//             docs/specs/03-mobile/93_mobile_auth.md §3.6, §5 Step 6
 //             docs/specs/03-mobile/94_mobile_onboarding.md §2, §10 Step 1
+//             docs/specs/03-mobile/95_mobile_user_profiles.md §4
 //             docs/specs/03-mobile/90_mobile_engineering_protocol.md §11
 import '../global.css';
 import { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
@@ -12,8 +14,9 @@ import * as Sentry from '@sentry/react-native';
 import { queryClient } from '@/lib/queryClient';
 import { mmkvPersister } from '@/lib/mmkvPersister';
 import { useAuthStore, initFirebaseAuthListener } from '@/store/authStore';
-import { useOnboardingStore } from '@/store/onboardingStore';
 import { useNotificationStore } from '@/store/notificationStore';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { AccountDeletedError, ApiError, fetchWithAuth } from '@/lib/apiClient';
 import { registerPushToken } from '@/lib/pushTokens';
 import { successNotification } from '@/lib/haptics';
 import { NotificationToast, type NotificationType } from '@/components/shared/NotificationToast';
@@ -47,16 +50,28 @@ interface ToastState {
   routeDomain?: string;
 }
 
+interface ReactivationState {
+  account_deleted_at: string;
+  days_remaining: number;
+}
+
 function AuthGate() {
   // Per-field selectors so a token refresh (idToken change) doesn't re-run the
   // AuthGate effect (which only depends on user + segments + _hasHydrated).
   const user = useAuthStore((s) => s.user);
   const _hasHydrated = useAuthStore((s) => s._hasHydrated);
-  // Local MMKV gate — stub until Spec 95 wires GET /api/user-profile.
-  // TODO Spec 95: replace with server response (5 outcomes: 200+complete → app,
-  //   200+incomplete → onboarding, 404 → onboarding, 403 → reactivation modal,
-  //   network failure → full-screen error).
-  const isOnboardingComplete = useOnboardingStore((s) => s.isComplete);
+  const signOut = useAuthStore((s) => s.signOut);
+
+  // Server-driven routing — Spec 95 §4 / Spec 93 §3.6.
+  // Only enabled once Firebase auth has resolved and a user is present.
+  const { data: profile, error: profileError, isLoading: profileLoading } = useUserProfile({
+    enabled: !!user,
+  });
+
+  const [reactivationState, setReactivationState] = useState<ReactivationState | null>(null);
+  const [reactivating, setReactivating] = useState(false);
+  const [reactivationError, setReactivationError] = useState<string | null>(null);
+
   const router = useRouter();
   const segments = useSegments();
   const rootNavigationState = useRootNavigationState();
@@ -69,37 +84,154 @@ function AuthGate() {
     }
   }, [rootNavigationState?.key]);
 
-  // Step 2: 5-branch routing matrix (Spec 94 §2):
-  //  1. !user && not in auth group → sign-in
-  //  2. user && in auth group && !onboardingComplete → onboarding
-  //  3. user && in auth group && onboardingComplete → app (register push token)
-  //  4. user && in onboarding group && onboardingComplete → app (already done)
-  //  5. user && not in auth/onboarding group && !onboardingComplete → onboarding (hard gate)
-  // registerPushToken fires ONLY on branch 3 — Spec 92 §4.1 requires contextual
-  // permission timing after first lead save, NOT on cold boot or during onboarding.
+  // Step 2: 5-branch routing matrix per Spec 95 §4 + Spec 93 §3.6:
+  //  1. !user → sign-in
+  //  2. user + 403 AccountDeletedError → reactivation modal (do not navigate)
+  //  3. user + 404 → new user, no profile → onboarding
+  //  4. user + other error → retry UI (do not navigate away)
+  //  5. user + profile → route on onboarding_complete (true → app, false → onboarding)
+  // registerPushToken fires ONLY when routing to (app)/ from (auth)/ — Spec 92 §4.1
+  // requires contextual permission timing after first lead save, NOT on cold boot.
   useEffect(() => {
     if (!isNavigationReady) return;
     if (!_hasHydrated) return;
+
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === '(onboarding)';
 
-    if (!user && !inAuthGroup) {
-      router.replace('/(auth)/sign-in');
-    } else if (user && inAuthGroup && !isOnboardingComplete) {
-      router.replace('/(onboarding)/profession');
-    } else if (user && inAuthGroup && isOnboardingComplete) {
-      router.replace('/(app)/');
-      void registerPushToken().catch((err) => {
-        console.warn('[AuthGate] registerPushToken failed', err instanceof Error ? err.message : err);
-      });
-    } else if (user && inOnboardingGroup && isOnboardingComplete) {
-      // Completed-onboarding user deep-linked into the onboarding group.
-      router.replace('/(app)/');
-    } else if (user && !inAuthGroup && !inOnboardingGroup && !isOnboardingComplete) {
-      // Hard gate: user reached an (app) screen before completing onboarding.
-      router.replace('/(onboarding)/profession');
+    // Branch 1: unauthenticated
+    if (!user) {
+      if (!inAuthGroup) router.replace('/(auth)/sign-in');
+      return;
     }
-  }, [isNavigationReady, user, segments, _hasHydrated, isOnboardingComplete, router]);
+
+    // Branch 2: account in deletion window — show reactivation modal, block navigation
+    if (profileError instanceof AccountDeletedError) {
+      setReactivationState({
+        account_deleted_at: profileError.account_deleted_at,
+        days_remaining: profileError.days_remaining,
+      });
+      return;
+    }
+
+    // Branch 3: 404 → no profile row → new user, start onboarding
+    if (profileError instanceof ApiError && profileError.status === 404) {
+      if (!inOnboardingGroup) router.replace('/(onboarding)/profession');
+      return;
+    }
+
+    // Branch 4: network / server error — retry UI rendered below, do not navigate
+    if (profileError) return;
+
+    // Still loading with no cached data — wait
+    if (profileLoading && !profile) return;
+
+    // Branch 5: profile loaded — route on onboarding_complete
+    if (profile) {
+      if (inAuthGroup) {
+        if (!profile.onboarding_complete) {
+          router.replace('/(onboarding)/profession');
+        } else {
+          router.replace('/(app)/');
+          void registerPushToken().catch((err) => {
+            Sentry.captureException(err, { extra: { context: 'registerPushToken on auth→app' } });
+          });
+        }
+      } else if (inOnboardingGroup && profile.onboarding_complete) {
+        router.replace('/(app)/');
+      } else if (!inAuthGroup && !inOnboardingGroup && !profile.onboarding_complete) {
+        // Hard gate: user reached an (app) screen before completing onboarding.
+        router.replace('/(onboarding)/profession');
+      }
+    }
+  }, [isNavigationReady, user, segments, _hasHydrated, profile, profileError, profileLoading, router, signOut]);
+
+  // Reactivation modal — Spec 93 §3.6 Step 4
+  if (reactivationState && user) {
+    const deletionDate = new Date(reactivationState.account_deleted_at);
+    deletionDate.setDate(deletionDate.getDate() + 30);
+    const formattedDate = deletionDate.toLocaleDateString('en-CA', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    const bodyText =
+      reactivationState.days_remaining === 0
+        ? 'Your account is scheduled for deletion today.'
+        : `Your account is scheduled for deletion on ${formattedDate}.`;
+
+    const handleReactivate = async () => {
+      setReactivating(true);
+      setReactivationError(null);
+      try {
+        await fetchWithAuth('/api/user-profile/reactivate', { method: 'POST' });
+        setReactivationState(null);
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      } catch (err) {
+        Sentry.captureException(err, { extra: { context: 'reactivation POST' } });
+        // 400 = recovery window has passed (days_remaining=0 race); surface to user
+        setReactivationError('Unable to reactivate. Please contact support.');
+      } finally {
+        setReactivating(false);
+      }
+    };
+
+    return (
+      <Modal transparent animationType="fade" visible>
+        <View className="flex-1 items-center justify-center bg-black/70 px-6">
+          <View className="w-full rounded-2xl bg-zinc-900 p-6 border border-zinc-800">
+            <Text className="text-zinc-100 text-lg font-semibold mb-2">
+              Welcome back.
+            </Text>
+            <Text className="text-zinc-400 text-sm mb-6 leading-relaxed">
+              {bodyText} Reactivate to keep your account?
+            </Text>
+            <TouchableOpacity
+              onPress={() => { void handleReactivate(); }}
+              disabled={reactivating}
+              className="bg-amber-500 rounded-xl py-4 items-center mb-3 min-h-[52px] justify-center"
+            >
+              {reactivating
+                ? <ActivityIndicator color="#000" />
+                : <Text className="text-black font-semibold text-base">Reactivate</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => { void signOut(); }}
+              className="rounded-xl py-4 items-center min-h-[52px] justify-center border border-zinc-700"
+            >
+              <Text className="text-zinc-400 text-base">Sign Out</Text>
+            </TouchableOpacity>
+            {reactivationError ? (
+              <Text className="text-red-400 text-xs text-center mt-3">
+                {reactivationError}
+              </Text>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
+  // Network / server error retry prompt — Spec 95 §4 fetch failure behavior
+  if (user && profileError && !(profileError instanceof AccountDeletedError) &&
+      !(profileError instanceof ApiError && profileError.status === 404)) {
+    return (
+      <View className="flex-1 items-center justify-center bg-zinc-950 px-6">
+        <Text className="text-zinc-100 text-base font-semibold mb-2 text-center">
+          Could not load your profile.
+        </Text>
+        <Text className="text-zinc-500 text-sm mb-8 text-center">
+          Check your connection and try again.
+        </Text>
+        <TouchableOpacity
+          onPress={() => queryClient.refetchQueries({ queryKey: ['user-profile'] })}
+          className="bg-amber-500 rounded-xl px-8 py-4 min-h-[52px] items-center justify-center"
+        >
+          <Text className="text-black font-semibold text-base">Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return null;
 }

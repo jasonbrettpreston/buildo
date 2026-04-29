@@ -12,6 +12,16 @@ export class ApiError extends Error {
   }
 }
 
+export class AccountDeletedError extends Error {
+  constructor(
+    public readonly account_deleted_at: string,
+    public readonly days_remaining: number,
+  ) {
+    super('Account is scheduled for deletion');
+    this.name = 'AccountDeletedError';
+  }
+}
+
 export class RateLimitError extends Error {
   constructor(public readonly retryAfterSeconds: number) {
     super(`Rate limited — retry after ${retryAfterSeconds}s`);
@@ -61,6 +71,25 @@ export async function fetchWithAuth<T>(
   if (response.status === 429) {
     const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60', 10);
     throw new RateLimitError(Number.isFinite(retryAfter) ? retryAfter : 60);
+  }
+
+  // Parse 403 body before the generic error path so structured deletion data
+  // is not lost. The generic path caps body at 120 chars and discards JSON.
+  if (response.status === 403) {
+    const text = await response.text().catch(() => '');
+    try {
+      const json = JSON.parse(text) as Record<string, unknown>;
+      const errObj = json.error as Record<string, unknown> | undefined;
+      if (errObj?.code === 'ACCOUNT_DELETED') {
+        throw new AccountDeletedError(
+          String(errObj.account_deleted_at ?? ''),
+          Number(errObj.days_remaining ?? 0),
+        );
+      }
+    } catch (e) {
+      if (e instanceof AccountDeletedError) throw e;
+    }
+    throw new ApiError(403, 'Forbidden');
   }
 
   if (!response.ok) {
