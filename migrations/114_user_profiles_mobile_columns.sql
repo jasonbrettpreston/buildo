@@ -67,6 +67,7 @@ ALTER TABLE user_profiles ADD CONSTRAINT user_profiles_trade_slug_not_empty
 
 -- New tables
 
+-- FK-EXEMPT: permit_num+revision_num covers both permits and pre-permits (CoA) — no single FK target
 CREATE TABLE IF NOT EXISTS lead_view_events (
   user_id     TEXT NOT NULL,
   permit_num  TEXT NOT NULL,
