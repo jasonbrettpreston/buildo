@@ -1,5 +1,5 @@
 // SPEC LINK: docs/specs/03-mobile/94_mobile_onboarding.md §3, §9 Design, §10 Step 3
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { successNotification } from '@/lib/haptics';
 import { Check } from 'lucide-react-native';
 import { TRADE_SECTIONS, type TradeItem } from '@/lib/onboarding/tradeData';
 import { useOnboardingStore } from '@/store/onboardingStore';
@@ -27,6 +27,11 @@ export default function ProfessionScreen() {
 
   const { setTrade, setStep, setPath } = useOnboardingStore.getState();
   const { setTradeSlug } = useFilterStore.getState();
+
+  // Guard against post-unmount state mutations if the user navigates back
+  // during an in-flight PATCH.
+  const isMounted = useRef(true);
+  useEffect(() => () => { isMounted.current = false; }, []);
 
   const openConfirmSheet = useCallback(() => {
     sheetRef.current?.expand();
@@ -53,8 +58,9 @@ export default function ProfessionScreen() {
       }
     }
 
-    // PATCH succeeded — advance MMKV step, hydrate client stores, navigate.
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // PATCH succeeded — guard against back-press during in-flight PATCH.
+    if (!isMounted.current) return;
+    successNotification();
     setTrade(selectedTrade.slug, selectedTrade.label);
     setTradeSlug(selectedTrade.slug);
 
@@ -145,9 +151,7 @@ export default function ProfessionScreen() {
         backgroundStyle={{ backgroundColor: '#18181b' }}
         handleIndicatorStyle={{ backgroundColor: '#3f3f46' }}
       >
-        <BottomSheetView style={{ flex: 1, paddingHorizontal: 20 }}>
-          <View className="w-10 h-1 rounded-full bg-zinc-700 self-center mt-3 mb-5" />
-
+        <BottomSheetView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 8 }}>
           {selectedTrade && (
             <View className="self-center bg-amber-500/10 px-3 py-1 rounded-full mb-3">
               <Text className="font-mono text-amber-400 text-xs tracking-widest uppercase">

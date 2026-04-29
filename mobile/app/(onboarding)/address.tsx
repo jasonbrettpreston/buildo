@@ -1,5 +1,5 @@
 // SPEC LINK: docs/specs/03-mobile/94_mobile_onboarding.md §4 Step 1, §5 Step 2, §8, §9 Design, §10 Step 5
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -42,6 +42,9 @@ export default function AddressScreen() {
   const { setLocation, setStep } = useOnboardingStore.getState();
   const { setHomeBaseLocation, setLocationMode } = useFilterStore.getState();
 
+  const isMounted = useRef(true);
+  useEffect(() => () => { isMounted.current = false; }, []);
+
   const patchFixedAddress = useCallback(
     async (lat: number, lng: number) => {
       setIsPatching(true);
@@ -50,6 +53,7 @@ export default function AddressScreen() {
           method: 'PATCH',
           body: JSON.stringify({ home_base_lat: lat, home_base_lng: lng, location_mode: 'home_base_fixed' }),
         });
+        if (!isMounted.current) return;
         setLocation({ mode: 'home_base_fixed', lat, lng });
         setHomeBaseLocation({ lat, lng });
         setLocationMode('home_base_fixed');
@@ -117,6 +121,7 @@ export default function AddressScreen() {
         method: 'PATCH',
         body: JSON.stringify({ location_mode: 'gps_live' }),
       });
+      if (!isMounted.current) return;
       setLocation({ mode: 'gps_live' });
       setLocationMode('gps_live');
       setStep('supplier');

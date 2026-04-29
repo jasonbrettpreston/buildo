@@ -3,7 +3,7 @@
 // Dual completion path: Path L/R → complete.tsx; Path T → flight board directly.
 // Path T writes location_mode: 'gps_live' in the final PATCH (Path T skips address step;
 // location_mode is required by the Spec 95 server guard and DB CHECK constraint).
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { View, Text, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -56,8 +56,14 @@ export default function TermsScreen() {
 
   const bothChecked = tosChecked && privacyChecked;
 
+  // Guard against double-tap: React state `disabled` prop only updates after the
+  // next render cycle, so two rapid taps can both pass the `!isLoading` check
+  // before the re-render propagates. useRef is synchronous.
+  const isSubmittingRef = useRef(false);
+
   const handleConfirm = useCallback(async () => {
-    if (!bothChecked) return;
+    if (!bothChecked || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setErrorMessage(null);
     try {
@@ -91,6 +97,7 @@ export default function TermsScreen() {
       // Do NOT advance step or call markComplete on error.
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
     // stepStore advance is handled inside markComplete() or in complete.tsx for Path L.
   }, [bothChecked, goesToComplete, markComplete, setLocationMode, router]);
@@ -149,7 +156,7 @@ export default function TermsScreen() {
         <Pressable
           onPress={handleConfirm}
           disabled={!bothChecked || isLoading}
-          style={{ opacity: bothChecked ? 1 : 0.4 }}
+          style={{ opacity: isLoading ? 0.7 : bothChecked ? 1 : 0.4 }}
           className="bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full items-center min-h-[52px] justify-center"
           accessibilityRole="button"
           accessibilityLabel="Accept and continue"

@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/03-mobile/94_mobile_onboarding.md §5 Step 3, §6 Step 2, §9 Design, §10 Step 6
 // FlatList numColumns={2} — FlashList v2 does not support numColumns (Spec 90 §4).
 // columnWrapperStyle uses inline style — NativeWind cannot reach columnWrapperStyle.
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -77,7 +77,11 @@ export default function SupplierScreen() {
         });
         setSupplier(value);
       }
-      setStep('terms');
+      // Only advance to 'terms' if not inserting the first-permit step (Path T).
+      // setStep must only reflect the step we're actually going to.
+      if (selectedPath !== 'tracking') {
+        setStep('terms');
+      }
       const next = selectedPath === 'tracking'
         ? '/(onboarding)/first-permit'
         : '/(onboarding)/terms';
@@ -96,6 +100,29 @@ export default function SupplierScreen() {
       </SafeAreaView>
     );
   }
+
+  // Extracted per Spec 90 §5 — inline renderItem recreates the function on every
+  // render, forcing all visible cells to re-render unnecessarily.
+  const renderSupplierItem = useCallback(({ item }: { item: string }) => {
+    const isSelected = selectedSupplier === item;
+    return (
+      <Pressable
+        onPress={() => {
+          setSelectedSupplier(isSelected ? null : item);
+          setOtherText('');
+        }}
+        className={`bg-zinc-900 rounded-2xl p-4 flex-1 min-h-[52px] justify-center ${
+          isSelected
+            ? 'border border-amber-500 bg-amber-500/5'
+            : 'border border-zinc-800 active:border-amber-500'
+        }`}
+      >
+        <Text className={`text-sm text-center ${isSelected ? 'text-amber-400 font-semibold' : 'text-zinc-100'}`}>
+          {item}
+        </Text>
+      </Pressable>
+    );
+  }, [selectedSupplier]);
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-950" edges={['top', 'bottom']}>
@@ -119,26 +146,7 @@ export default function SupplierScreen() {
         // columnWrapperStyle must be an inline style — NativeWind cannot target this prop.
         columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
         contentContainerStyle={{ paddingBottom: 16 }}
-        renderItem={({ item }) => {
-          const isSelected = selectedSupplier === item;
-          return (
-            <Pressable
-              onPress={() => {
-                setSelectedSupplier(isSelected ? null : item);
-                setOtherText('');
-              }}
-              className={`bg-zinc-900 rounded-2xl p-4 flex-1 min-h-[52px] justify-center ${
-                isSelected
-                  ? 'border border-amber-500 bg-amber-500/5'
-                  : 'border border-zinc-800 active:border-amber-500'
-              }`}
-            >
-              <Text className={`text-sm text-center ${isSelected ? 'text-amber-400 font-semibold' : 'text-zinc-100'}`}>
-                {item}
-              </Text>
-            </Pressable>
-          );
-        }}
+        renderItem={renderSupplierItem}
         ListFooterComponent={() => (
           <View className="px-4">
             <TextInput

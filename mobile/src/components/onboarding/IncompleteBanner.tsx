@@ -15,7 +15,9 @@ export function IncompleteBanner() {
   return (
     <Pressable
       onPress={() => router.push('/(onboarding)/profession')}
-      className="bg-amber-500/20 border-b border-amber-500/40 py-2 px-4"
+      className="bg-amber-500/20 border-b border-amber-500/40 py-2 px-4 min-h-[44px] justify-center"
+      accessibilityRole="button"
+      accessibilityLabel="Complete your setup"
     >
       <Text className="text-amber-400 text-sm font-mono">
         Complete your setup to see relevant leads →
