@@ -279,7 +279,7 @@ Six status values handled (all values from Spec 95 §2.3 enum):
 
 **Step 4b — POST /api/subscribe/session**
 - File: `src/app/api/subscribe/session/route.ts`
-- Authenticated route (Firebase Bearer token). Returns a single-use nonce URL for the Stripe checkout web flow.
+- Authenticated route. Wrap handler with `withApiEnvelope` (§00 §2.2). Extract Firebase UID via `getUserIdFromSession(request)` from `src/lib/auth/get-user.ts`. Return 401 if UID is null. Returns a single-use nonce URL for the Stripe checkout web flow.
 - **Implementation:**
   ```typescript
   const nonce = crypto.randomUUID();
@@ -300,6 +300,8 @@ Six status values handled (all values from Spec 95 §2.3 enum):
 
 **Step 5 — Stripe webhook handler**
 - File: `src/app/api/webhooks/stripe/route.ts`
+- **Install `stripe` backend package** (root, not `mobile/`): `npm install stripe`. Required by this handler and by Spec 95 Step 3a (deletion endpoint). Do this before implementing either.
+- **Route guard:** Add `/api/webhooks/stripe` to `PUBLIC_PREFIXES` in `src/lib/auth/route-guard.ts`. Without this, the fail-closed default classifies the route as `'authenticated'` — every Stripe webhook call will receive 401 from middleware and be silently rejected. This is a required step before webhooks will function in any environment.
 - Public route (no Firebase auth — Stripe calls it). Verify `Stripe-Signature` header via `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)`. Invalid signature → 400.
 - **Idempotency (must be in an explicit `db.transaction()`):** The deduplication INSERT and the `user_profiles` UPDATE must execute inside a single atomic transaction — not two separate auto-commit statements:
   ```typescript
@@ -319,7 +321,7 @@ Six status values handled (all values from Spec 95 §2.3 enum):
 - `invoice.payment_failed` → UPDATE `subscription_status = 'past_due'`. User retains access during Stripe's dunning retry period. Access revoked only on final `customer.subscription.deleted`.
 - `customer.subscription.deleted` → UPDATE `subscription_status = 'expired'`.
 - Unknown event types → 200 no-op.
-- Try-catch per §00 §2.2. `logError` on unexpected errors.
+- Wrap handler with `withApiEnvelope` for the outer try-catch boundary (§00 §2.2); note the response format for webhook handlers is plain `{ received: true }` rather than the standard data envelope — return it directly inside the handler. `logError` on unexpected errors.
 - **`subscription_status` write ownership note:** `subscription_status` is NEVER written via `PATCH /api/user-profile`. It is written only by: (a) this webhook handler (direct DB UPDATE), (b) the GET/PATCH handler for trial initiation (Step 4 above), and (c) the reactivation PATCH in Spec 97 §3.2 (a separate guarded server action — not the same endpoint as the user-editable PATCH). If a developer needs to update `subscription_status` for testing, use a direct DB command or a dedicated admin endpoint.
 
 **Step 6 — Day 10/13 reminders**
@@ -329,7 +331,9 @@ Six status values handled (all values from Spec 95 §2.3 enum):
 
 - **Unit:** `mobile/__tests__/subscriptionGate.test.ts` — gate passes (no paywall) for `'trial'`, `'active'`, `'past_due'`, `'admin_managed'`; shows `<PaywallScreen>` for `'expired'`; `cancelled_pending_deletion` triggers sign-out + redirect to sign-in; `admin_managed` never shows paywall; loading guard shown while `subscription_status = null`; AppState `'active'` event triggers re-fetch.
 - **Infra:** `src/tests/stripe-webhook.infra.test.ts` — valid `subscription.created` event updates status to `'active'`; duplicate event ID returns 200 without re-processing; invalid signature returns 400; `subscription.deleted` sets `'expired'`; `invoice.payment_failed` sets `'past_due'`; unknown event type returns 200.
+- **Security:** `src/tests/stripe-webhook.security.test.ts` — missing `Stripe-Signature` header returns 400; forged signature string returns 400; replayed event ID is rejected (idempotency); request without any payload returns 400; no raw Stripe error message leaked in 4xx/5xx response.
 - **Infra:** `src/tests/subscribe-session.infra.test.ts` (new) — `POST /api/subscribe/session` creates nonce row in `subscribe_nonces`; returns URL with nonce parameter (no UID/email); expired nonce rejected by web checkout; unauthenticated request returns 401.
+- **Security:** `src/tests/subscribe-session.security.test.ts` — nonce URL contains no UID or email; two requests from the same user produce two distinct nonces; nonce is single-use (second exchange attempt returns 400); already-active subscriber returns 400 without creating a nonce.
 
 ---
 

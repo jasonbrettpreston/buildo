@@ -85,6 +85,16 @@ The `EXISTS (SELECT 1 FROM ins)` clause ensures the UPDATE only fires when the I
 
 All five keys are required at write time; the column has a non-null JSONB default so existing rows are always valid. The backend dispatch engine (Spec 92 §6.3) reads `notification_prefs->>'notification_schedule'` and the individual boolean fields from this JSONB column. If OS permission is denied, these fields are irrelevant — no pushes are sent regardless of their value.
 
+**JSONB partial merge — atomicity requirement:** The PATCH handler receives partial updates (e.g., only `notification_schedule`). The merge must be performed at the SQL level — not via a JavaScript read-modify-write — to avoid lost updates under concurrent requests:
+```sql
+-- Correct: atomic server-side merge
+UPDATE user_profiles
+SET notification_prefs = notification_prefs || $1::jsonb
+WHERE user_id = $2
+-- $1 is the incoming partial JSON object, e.g. '{"notification_schedule":"morning"}'
+```
+A JavaScript `{ ...existingPrefs, ...incomingPrefs }` approach requires a separate SELECT + UPDATE — two concurrent saves racing on the same key will clobber each other. The PostgreSQL `||` operator merges JSONB objects atomically in a single statement.
+
 **Deprecation note:** Earlier drafts used two separate boolean columns (`notif_permit_status`, `notif_urgent_alerts`). These are superseded by `notification_prefs` JSONB, which covers the full Spec 92 preference surface. The migration must NOT create the boolean columns — only the JSONB column.
 
 ### 2.5 Admin-Configured Fields (Manufacturer accounts only)
@@ -298,13 +308,15 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 2 — GET /api/user-profile**
 - File: `src/app/api/user-profile/route.ts`
-- Authenticated route: extract Firebase UID from Bearer token header. Return full `user_profiles` row as `{ data: UserProfile }` envelope.
+- Authenticated route. Wrap handler with `withApiEnvelope` (§00 §2.2 — all API routes). Extract Firebase UID via `getUserIdFromSession(request)` from `src/lib/auth/get-user.ts` — handles Bearer token → cookie fallback, dev-mode bypass, and Admin SDK uninitialized guard. Return 401 if UID is null.
+- Return full `user_profiles` row as `{ data: UserProfile }` envelope.
 - If `account_deleted_at IS NOT NULL`: return 403 with the following exact body — `{ error: "Account scheduled for deletion.", account_deleted_at: "<ISO 8601 timestamp>", days_remaining: <integer: CEIL(30 - days since account_deleted_at)> }`. This is the authoritative contract that Spec 93 §3.6 (reactivation modal) and Spec 97 §3.2 (30-day recovery) both depend on. The `days_remaining` value is used in the reactivation modal copy ("X days left to reactivate"). Do not return profile data for deleted accounts.
 - If no row found for UID: return 404. The client interprets 404 as "new user → redirect to onboarding" (§4 GET 404 behavior).
-- Try-catch per §00 §2.2. `logError` per §00 §6.1. Never expose `err.message` to client.
+- `logError` per §00 §6.1. Never expose `err.message` to client.
 
 **Step 3 — PATCH /api/user-profile**
 - File: `src/app/api/user-profile/route.ts` (same file, add `PATCH` handler)
+- Wrap handler with `withApiEnvelope` (§00 §2.2). Extract Firebase UID via `getUserIdFromSession(request)`. Return 401 if UID is null.
 - **Check deleted account first:** If the authenticated UID has `account_deleted_at IS NOT NULL`, return 403 immediately (same body as GET 403). Do not apply any field updates to deleted accounts. **Idempotency exception for deletion retry:** if the body is the deletion payload (contains `account_deleted_at` that matches the existing DB value), return 200 rather than 403 — see Step 3a.
 - **`UserProfileUpdateSchema` (whitelist — standard client-editable fields):** Validate against a Zod schema that allows the following 10 fields: `full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `notification_prefs`. Strip all other fields silently (`.strip()`).
 - **Guarded fields (writable via PATCH under server-enforced conditions — NOT in the standard whitelist above):**
@@ -318,7 +330,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 3a — POST /api/user-profile/delete (account deletion endpoint)**
 - File: `src/app/api/user-profile/delete/route.ts`
-- Authenticated route (Firebase Bearer token). Requires `account_deleted_at IS NULL` (cannot re-delete).
+- Authenticated route. Wrap handler with `withApiEnvelope` (§00 §2.2). Extract Firebase UID via `getUserIdFromSession(request)`. Return 401 if UID is null. Requires `account_deleted_at IS NULL` (cannot re-delete).
 - **Atomic deletion transaction:**
   ```typescript
   await db.transaction(async (tx) => {
@@ -329,7 +341,17 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
     }).where(eq(userProfiles.user_id, uid));
     // 2. Cancel Stripe subscription if stripe_customer_id is set
     if (profile.stripe_customer_id) {
-      await stripe.subscriptions.cancel(stripeSubscriptionId); // requires sub lookup
+      // Look up the active subscription — do NOT assume a subscription ID;
+      // trial users who never paid have no Stripe subscription.
+      const subscriptions = await stripe.subscriptions.list({
+        customer: profile.stripe_customer_id,
+        status: 'active',
+        limit: 1,
+      });
+      if (subscriptions.data.length > 0) {
+        await stripe.subscriptions.cancel(subscriptions.data[0].id);
+      }
+      // No active subscription (trial user who never paid) → skip silently
     }
   });
   // 3. Revoke all Firebase sessions server-side (outside DB transaction — Firebase Admin)
@@ -337,11 +359,11 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
   ```
 - On success: return 200 `{ ok: true }`. Client then calls `firebase.auth().signOut()` and navigates to `/(auth)/sign-in` (Spec 93 §3.6, Spec 97 §5 Step 9).
 - **Idempotency:** If `account_deleted_at IS NOT NULL` already (retry after network drop), return 200 immediately — do not call `revokeRefreshTokens` again (it is idempotent at Firebase level but avoids unnecessary Admin SDK calls).
-- Try-catch + `logError`. Never expose raw error to client.
+- `logError` per §00 §6.1. Never expose raw error to client.
 
 **Step 3b — POST /api/user-profile/reactivate (reactivation endpoint)**
 - File: `src/app/api/user-profile/reactivate/route.ts`
-- Authenticated route. Only valid when `account_deleted_at IS NOT NULL` AND `account_deleted_at > NOW() - INTERVAL '30 days'` (within recovery window).
+- Authenticated route. Wrap handler with `withApiEnvelope` (§00 §2.2). Extract Firebase UID via `getUserIdFromSession(request)`. Return 401 if UID is null. Only valid when `account_deleted_at IS NOT NULL` AND `account_deleted_at > NOW() - INTERVAL '30 days'` (within recovery window).
 - Determines `restored_status`:
   - `account_preset = 'manufacturer'` → `'admin_managed'`
   - All others (including prior `trial`) → `'expired'` (trial does not resume; user must subscribe at buildo.com)
@@ -352,18 +374,22 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 4 — Route guard**
 - File: `src/lib/auth/route-guard.ts`
-- Classify `/api/user-profile` as `authenticated` (not admin-only). Mobile client authenticates via Firebase Bearer token, not admin session cookie.
+- The fail-closed default in route-guard.ts already classifies any unrecognised route as `'authenticated'`. All new mobile API routes (`/api/user-profile`, `/api/user-profile/delete`, `/api/user-profile/reactivate`, `/api/onboarding/suppliers`, `/api/subscribe/session`) inherit this default — no explicit addition required.
+- **Exception — `/api/webhooks/stripe` (Spec 96 Step 5):** This route MUST be explicitly added to `PUBLIC_PREFIXES` — Stripe cannot authenticate as a Firebase user. Without this, all webhook calls receive 401 and are silently dropped.
+- **Bearer token support:** The middleware already handles Bearer tokens in the `Authorization` header (`extractBearerToken` in route-guard.ts). `getUserIdFromSession(request)` in `src/lib/auth/get-user.ts` handles the cookie → Bearer fallback chain — use this function in every new mobile route handler, not a custom extraction.
 
-**Step 5 — Shared Zod schema**
-- File: `packages/shared-types/src/userProfile.ts`
-- `UserProfileSchema` — Zod object covering all columns in §2. Used by Next.js PATCH validation and Expo TanStack Query response parsing (Spec 90 §7 monorepo contract). Prevents API drift from crashing the native app.
+**Step 5 — Zod schemas**
+- **`packages/shared-types` does NOT exist.** The root `package.json` has no `"workspaces"` field and there is no `packages/` directory. Do NOT attempt to create a monorepo workspace for this feature.
+- **Next.js API validation:** Define `UserProfileUpdateSchema` (Zod) in `src/lib/userProfile.schema.ts` — used only by the PATCH handler for whitelist validation.
+- **Expo response parsing:** Define a parallel `UserProfileSchema` (Zod) in `mobile/src/lib/userProfile.schema.ts` — used by the `useUserProfile` hook to validate server responses before hydrating stores. Parse failure triggers a Sentry report and falls back to MMKV cache (Spec 90 §13).
+- Keep these two schema files in sync manually when API fields change. If the project is later migrated to a monorepo (adding `"workspaces"` to root `package.json`), they can be consolidated.
 
 **Step 6 — Store field separation**
 - `filterStore` owns feed-preference fields: `locationMode`, `defaultTab`, `homeBaseLat`, `homeBaseLng`, `supplierSelection`, `tradeSlug`, `radiusKm`.
 - `userProfileStore` owns account/display fields: `fullName`, `companyName`, `phoneNumber`, `backupEmail`, `notificationPrefs` (the full JSONB object from §2.4). Changes to these fields must NOT trigger `queryClient.invalidateQueries(['leads'])` — notification preference saves must not cause the lead feed to re-fetch.
 - `notificationPrefs` in the store is typed as the full JSONB shape: `{ new_lead_min_cost_tier: 'low'|'medium'|'high', phase_changed: boolean, lifecycle_stalled: boolean, start_date_urgent: boolean, notification_schedule: 'morning'|'anytime'|'evening' }`. Individual Settings controls read/write specific keys from this object; PATCH sends the merged full object (Step 3 merge logic).
 - File `mobile/src/store/filterStore.ts`: add `locationMode`, `defaultTab`, `homeBaseLat`, `homeBaseLng`, `supplierSelection`. Add `hydrate(profile: UserProfile)` action that overwrites only the filter-scoped fields listed above. Add `reset()` action that clears all fields to null/default (called on sign-out per Spec 93 §5 Step 2).
-- File `mobile/src/store/userProfileStore.ts` (new): Zustand store holding `fullName`, `companyName`, `phoneNumber`, `backupEmail`, `notifPermitStatus`, `notifUrgentAlerts`. Add `hydrate(profile: UserProfile)` action. Add `reset()` action. MMKV is cache; `user_profiles` wins on conflict.
+- File `mobile/src/store/userProfileStore.ts` (new): Zustand store holding `fullName`, `companyName`, `phoneNumber`, `backupEmail`, `notificationPrefs` (the full JSONB object from §2.4 — replaces the deprecated `notifPermitStatus` / `notifUrgentAlerts` boolean fields which must NOT be added). Add `hydrate(profile: UserProfile)` action. Add `reset()` action. MMKV is cache; `user_profiles` wins on conflict.
 
 **Step 7 — useUserProfile hook**
 - File: `mobile/src/hooks/useUserProfile.ts`
@@ -385,6 +411,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 ### Testing Gates
 
 - **Infra:** `src/tests/user-profiles.infra.test.ts` — GET returns full row for valid UID; GET returns 404 for unknown UID (new user); GET returns 403 for account with `account_deleted_at` set; PATCH updates valid fields and returns updated row; PATCH rejects `trade_slug` update with 400; PATCH rejects `email` field with 400; PATCH unauthenticated request returns 401; NULL `radius_cap_km` applies no cap; DB error returns 500 without leaking raw message (§00 §2.1 unhappy path mandate).
+- **Security:** `src/tests/user-profiles.security.test.ts` (§00 §5.2 pattern) — PATCH attempt to write `subscription_status` is stripped silently; PATCH attempt to write `account_deleted_at` is stripped silently; PATCH attempt to write `trade_slugs_override` is rejected; `account_preset = 'manufacturer'` cannot self-elevate via PATCH; GET for a UID that belongs to another user cannot be accessed (each UID sees only their own row); no raw DB error messages leak in 5xx responses.
 - **Infra:** `src/tests/user-profiles-schema.infra.test.ts` (existing) — confirm all new migration columns land with correct types and defaults.
 - **Unit:** `mobile/__tests__/filterStore.test.ts` — `hydrate()` overwrites all fields; MMKV cache is written after hydration.
 

@@ -481,10 +481,10 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 7b — GET /api/onboarding/suppliers endpoint**
 - File: `src/app/api/onboarding/suppliers/route.ts`
-- Authenticated route (Firebase Bearer token — same auth as all mobile API routes). Query param: `trade` (slug string).
+- Authenticated route. Wrap handler with `withApiEnvelope` (§00 §2.2). Extract Firebase UID via `getUserIdFromSession(request)` from `src/lib/auth/get-user.ts`. Return 401 if UID is null. Query param: `trade` (slug string).
 - Returns `{ data: { suppliers: string[] } }` — an ordered list of supplier names for the given trade. List is seeded in the admin panel and fetched from a `trade_suppliers` config table (or similar admin-managed data store). If no suppliers are seeded for the trade, returns `{ data: { suppliers: [] } }` — the client auto-skips the supplier screen on empty array (Spec 94 §10 Step 6).
 - No POST/PATCH — supplier list is admin-managed only.
-- Try-catch + `logError`. Route guard: classify as `authenticated` (not admin-only).
+- `logError` per §00 §6.1. Route guard: classify as `authenticated` (not admin-only — the fail-closed default already covers this, but add an explicit entry to `AUTHENTICATED_API_ROUTES` for documentation clarity).
 - **Test:** `src/tests/onboarding-suppliers.infra.test.ts` — returns 200 with list for known trade; returns empty array for unknown trade (not 404); returns 401 for unauthenticated request.
 
 **Step 8 — First permit screen (Path T only)**

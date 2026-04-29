@@ -55,7 +55,7 @@ Each editable row: `bg-zinc-900 border-b border-zinc-800 px-4 py-4 flex-row item
 
 ### 1.3 Saving Changes
 
-All editable fields save on blur (text fields) or toggle (switches) — no explicit "Save" button. Changes fire `PATCH /api/user-profile` and update the local Zustand store optimistically. Feed-preference fields (`locationMode`, `radiusKm`, `defaultTab`, `supplierSelection`) update `filterStore`. Account/display fields (`fullName`, `companyName`, `backupEmail`, `notifPermitStatus`, `notifUrgentAlerts`) update `userProfileStore` — changes to account fields must NOT trigger feed re-renders. On API error, revert only the failed field's store value and show error toast: `"Couldn't save — try again."` in `bg-zinc-800 border border-red-500/40`.
+All editable fields save on blur (text fields) or toggle (switches) — no explicit "Save" button. Changes fire `PATCH /api/user-profile` and update the local Zustand store optimistically. Feed-preference fields (`locationMode`, `radiusKm`, `defaultTab`, `supplierSelection`) update `filterStore`. Account/display fields (`fullName`, `companyName`, `backupEmail`, `notificationPrefs`) update `userProfileStore` — changes to account fields must NOT trigger feed re-renders. On API error, revert only the failed field's store value and show error toast: `"Couldn't save — try again."` in `bg-zinc-800 border border-red-500/40`.
 
 **Exceptions to save-on-blur:**
 - **Phone number:** NOT save-on-blur. Opens a dedicated SMS verification bottom sheet. PATCH fires only after OTP verification succeeds.
@@ -364,7 +364,7 @@ When `Notifications.getPermissionsAsync()` returns `status !== 'granted'`, the N
 - `onPress`: `Linking.openSettings()` (deep links to app's iOS Settings or Android App Info)
 - `accessibilityLabel`: "Notifications off, tap to open device Settings"
 
-**Toggles disabled state:** `notif_permit_status` and `notif_urgent_alerts` toggle rows are still rendered but `Switch` prop `disabled={true}` + row opacity `opacity-50`. A `text-zinc-600 text-xs px-4 pb-3` row beneath them: "Enable notifications in your device settings to use these controls."
+**Toggles disabled state:** The five notification controls from §2.1 (cost threshold slider, three phase toggles, schedule segmented control) are still rendered but with `disabled={true}` + row opacity `opacity-50`. A `text-zinc-600 text-xs px-4 pb-3` row beneath them: "Enable notifications in your device settings to use these controls."
 
 ---
 
@@ -472,8 +472,8 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 7 — CSV export endpoint**
 - File: `src/app/api/user-profile/export/route.ts`
-- Authenticated `GET`. SELECT all PII columns from §2 (Spec 95): `full_name`, `phone_number`, `email`, `company_name`, `home_base_lat/lng`, `supplier_selection`, plus `lead_assignments` and flight board claims joined. Return `Content-Type: text/csv` with `Content-Disposition: attachment; filename="buildo-data-export.csv"`. PIPEDA compliant — all PII included.
-- Try-catch per §00 §2.2. `logError` on error.
+- Authenticated `GET`. Wrap handler with `withApiEnvelope` (§00 §2.2). Extract Firebase UID via `getUserIdFromSession(request)` from `src/lib/auth/get-user.ts`. Return 401 if UID is null. SELECT all PII columns from §2 (Spec 95): `full_name`, `phone_number`, `email`, `company_name`, `home_base_lat/lng`, `supplier_selection`, plus `lead_assignments` and flight board claims joined. Return `Content-Type: text/csv` with `Content-Disposition: attachment; filename="buildo-data-export.csv"`. PIPEDA compliant — all PII included.
+- `logError` per §00 §6.1 on error.
 
 **Step 8 — Account deletion Step 1: export offer**
 - File: `mobile/app/(app)/settings.tsx` (tapping "Delete Account")
@@ -501,6 +501,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - **Unit:** `mobile/__tests__/settings.test.ts` — all 5 sections render with correct row count; save-on-blur fires PATCH with correct field; toggle fires PATCH; optimistic revert fires on 500 response; subscription section hidden for `admin_managed`.
 - **Unit:** `mobile/__tests__/notificationSetup.test.ts` — prompt not triggered on cold boot; triggered after first lead card enters viewport; triggered after first permit claim; MMKV gate prevents second prompt; "Not now" writes `hasAskedPermission = true` without calling `requestPermissionsAsync`.
 - **Infra:** `src/tests/user-profile-export.infra.test.ts` — CSV response includes all PII column headers; returns 401 for unauthenticated request; empty flight board returns CSV with headers only (no crash).
+- **Security:** `src/tests/settings.security.test.ts` — `PATCH /api/user-profile` from Settings cannot write `subscription_status`; cannot write `account_deleted_at`; `GET /api/user-profile/export` for another user's UID returns 401 (not their data); notification prefs PATCH with extra unknown keys strips them silently.
 - **Maestro:** `mobile/maestro/settings.yaml` — navigate to settings → toggle notification preference → navigate away → return → verify toggle persisted.
 
 ---

@@ -273,10 +273,59 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 ### Build Sequence
 
+**Step 0 — Install dependencies**
+All packages below are required by specs 93–97 but are **not yet present in `mobile/package.json`**. Install before any other implementation work:
+
+```bash
+cd mobile
+npx expo install expo-secure-store expo-apple-authentication expo-web-browser expo-sharing expo-blur
+npm install input-otp-native react-native-international-phone-number tailwindcss-safe-area @react-navigation/bottom-tabs
+npx expo install @sentry/react-native
+```
+
+**`app.json` plugin additions** — add alongside the existing `expo-router`, `expo-font`, `expo-notifications`, `expo-location` entries:
+```json
+["expo-apple-authentication"],
+["@sentry/react-native/app-plugin", { "organization": "buildo", "project": "buildo-mobile" }]
+```
+
+**Google OAuth URL scheme** — add an Android `intentFilters` entry in `app.json` using your Google OAuth client's reverse client ID (from Google Cloud Console → Credentials → OAuth 2.0 Android client). Required for `expo-auth-session` Google sign-in on Android.
+
+**`tailwind.config.js`** — add to the `plugins` array: `require('tailwindcss-safe-area')`. Required for the `pb-safe` class used in the onboarding sticky footer (Spec 94 §10 Step 3).
+
+---
+
 **Step 1 — Firebase client config**
 - File: `mobile/src/lib/firebase.ts`
 - Use `expo-secure-store` as the persistence adapter — **not** `AsyncStorage`. `AsyncStorage` stores tokens in plain text; `expo-secure-store` uses Keychain (iOS) and Keystore (Android).
-- Implementation: `initializeAuth(app, { persistence: getReactNativePersistence(ExpoSecureStoreAdapter) })` where `ExpoSecureStoreAdapter` wraps `expo-secure-store` to conform to the Firebase storage interface. No `firebase/compat` package.
+- **`ExpoSecureStoreAdapter` is NOT exported by `expo-secure-store`** — it must be implemented as a custom wrapper in `mobile/src/lib/firebase.ts`:
+  ```typescript
+  import * as SecureStore from 'expo-secure-store';
+  import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+
+  // Firebase's getReactNativePersistence requires an AsyncStorage-compatible interface.
+  // expo-secure-store uses different method names — this adapter bridges the gap.
+  const ExpoSecureStoreAdapter = {
+    getItem: (key: string) => SecureStore.getItemAsync(key),
+    setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
+    removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+  };
+
+  export const auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(ExpoSecureStoreAdapter),
+  });
+  ```
+  No `firebase/compat` package.
+- **Firebase config env vars:** Source all Firebase config values from environment variables — never hardcode in source. Use the `EXPO_PUBLIC_` prefix so Expo includes them in the client bundle:
+  ```typescript
+  const firebaseConfig = {
+    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  };
+  ```
+  Set via EAS Secrets: `eas secret:create --scope project --name EXPO_PUBLIC_FIREBASE_API_KEY --value <value>`. Commit a `mobile/.env.local.example` file with placeholder keys (no real values) for local dev reference. Do NOT commit real Firebase credentials.
 
 **Step 2 — User session store**
 - File: `mobile/src/store/userStore.ts`
