@@ -78,14 +78,11 @@ function userIdFromMetadata(metadata: Stripe.Metadata | null | undefined): strin
 // Maps Stripe subscription.status to our internal status. Returns null for
 // statuses we don't act on (`incomplete`, `incomplete_expired`, `trialing`,
 // `paused`, `canceled` — none of which should mutate our own
-// subscription_status).
-//
-// 'canceled' is intentionally excluded: Spec 96 §7 configures subscriptions
-// with `cancel_at_period_end = true`, meaning the user retains access through
-// the end of their paid period after they cancel. The canonical signal for
-// access revocation is `customer.subscription.deleted` (mapped to 'expired'
-// in classifyEvent, NOT here). Mapping 'canceled' here would lock out paying
-// customers immediately on cancel, breaching the user agreement.
+// subscription_status). The single source of truth for access revocation is
+// `customer.subscription.deleted` (handled in classifyEvent), not any
+// status mapping here — Spec 96 §7 configures subscriptions with
+// `cancel_at_period_end = true`, so users retain access through the paid
+// period and only `subscription.deleted` correctly times the cutoff.
 //
 // 'unpaid' DOES revoke access — Stripe sets this status only after dunning
 // retries are exhausted, so the user has already lost their subscription.
@@ -158,6 +155,20 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Empty body' }, { status: 400 });
   }
 
+  // DoS guard: this is a public route. Without an upper-bound size check, an
+  // attacker (with or without a valid signature) can POST multi-GB bodies
+  // and exhaust server memory before constructEvent rejects them. Stripe's
+  // largest realistic event payloads are well under 100KB; 1MB is generous
+  // headroom while making the abuse case fast-fail. (request.text() has
+  // already buffered the body — Next.js App Router does not apply a default
+  // size limit when text/json parsing is bypassed; this is a follow-on
+  // mitigation that should ideally be paired with an edge/proxy size cap
+  // for true protection. Tracked in the ops runbook.)
+  const MAX_BODY_BYTES = 1_048_576;
+  if (rawBody.length > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+  }
+
   let stripe: Stripe;
   let event: Stripe.Event;
   try {
@@ -208,25 +219,44 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       //   2. Fall back to stripe_customer_id when metadata is absent (legacy
       //      events from before metadata wiring, or third-party tools that
       //      bypass the web checkout).
-      // The UPDATE also writes stripe_customer_id when matching by user_id,
-      // so the next event for the same customer benefits from the indexed
-      // path even without metadata.
+      //
+      // Both paths are guarded against:
+      //   (a) Out-of-order delivery — `last_stripe_event_at IS NULL OR
+      //       last_stripe_event_at < $eventCreatedAt`. Stripe does not
+      //       guarantee delivery order, so a delayed subscription.updated
+      //       arriving after a subscription.deleted would otherwise
+      //       overwrite 'expired' back to 'active'. We track the latest
+      //       processed event timestamp per user and reject older events
+      //       (rowCount === 0, no log noise — expected behaviour).
+      //   (b) Stripe-metadata forgery — `stripe_customer_id IS NULL OR
+      //       stripe_customer_id = $2`. The user_id-path UPDATE only fires
+      //       if the user has no customer yet OR the existing customer
+      //       matches the event's. This limits blast radius if a Stripe
+      //       admin compromise allowed setting `metadata.user_id` to a
+      //       victim's UID on an unrelated subscription.
+      const eventCreatedAt = new Date(event.created * 1000);
       let result;
       if (outcome.userId !== null) {
         result = await client.query(
           `UPDATE user_profiles
            SET subscription_status = $1,
                stripe_customer_id = COALESCE(stripe_customer_id, $2),
+               last_stripe_event_at = $4,
                updated_at = NOW()
-           WHERE user_id = $3`,
-          [outcome.newStatus, outcome.stripeCustomerId, outcome.userId],
+           WHERE user_id = $3
+             AND (stripe_customer_id IS NULL OR stripe_customer_id = $2)
+             AND (last_stripe_event_at IS NULL OR last_stripe_event_at < $4)`,
+          [outcome.newStatus, outcome.stripeCustomerId, outcome.userId, eventCreatedAt],
         );
       } else if (outcome.stripeCustomerId !== null) {
         result = await client.query(
           `UPDATE user_profiles
-           SET subscription_status = $1, updated_at = NOW()
-           WHERE stripe_customer_id = $2`,
-          [outcome.newStatus, outcome.stripeCustomerId],
+           SET subscription_status = $1,
+               last_stripe_event_at = $3,
+               updated_at = NOW()
+           WHERE stripe_customer_id = $2
+             AND (last_stripe_event_at IS NULL OR last_stripe_event_at < $3)`,
+          [outcome.newStatus, outcome.stripeCustomerId, eventCreatedAt],
         );
       } else {
         // Both identifiers missing — log and skip. The dedup row remains
@@ -240,17 +270,26 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       }
 
       if (result.rowCount === 0) {
-        // No row matched. This means the user_id (or stripe_customer_id)
-        // doesn't exist in user_profiles — either an account was deleted
-        // before Stripe finished cleanup, or the metadata carries a stale
-        // identifier. Log and continue; do NOT throw, because throwing
+        // No row matched. Three possible causes, distinguishable only by a
+        // follow-up SELECT (skipped here for cost):
+        //   (a) user_id / stripe_customer_id doesn't exist (account
+        //       deleted before Stripe cleanup, or stale identifier)
+        //   (b) stripe_customer_id mismatch in the WHERE guard (potential
+        //       Stripe-metadata forgery — see the user_id branch above)
+        //   (c) Out-of-order event — last_stripe_event_at >= $4, rejected
+        //       intentionally as a stale delivery
+        // We log all three the same way; do NOT throw, because throwing
         // would roll back the dedup row and Stripe would retry forever.
+        // Operations should grep on `event: 'no_row_matched'` and
+        // disambiguate by checking the user_profile row state.
         logError(
           '[stripe-webhook]',
-          new Error('No user_profiles row matched event identifiers'),
+          new Error('No user_profiles row matched event identifiers (or stale event)'),
           {
+            event: 'no_row_matched',
             event_id: event.id,
             event_type: event.type,
+            event_created_at: eventCreatedAt.toISOString(),
             user_id: outcome.userId,
             stripe_customer_id: outcome.stripeCustomerId,
             attempted_status: outcome.newStatus,

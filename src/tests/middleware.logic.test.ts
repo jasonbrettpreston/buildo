@@ -104,6 +104,22 @@ describe('Route Classification', () => {
       expect(classifyRoute('/some/nested/future/route')).toBe('authenticated');
       expect(classifyRoute('/api/future-endpoint')).toBe('authenticated');
     });
+
+    // Spec 96 §10 Step 5 + WF5 security review (Code Reviewer A3): the
+    // Stripe webhook public path is exact-match, NOT a prefix. A future
+    // sibling path like `/api/webhooks/stripe-evil` must inherit the
+    // fail-closed default, not the public classification.
+    it('classifies /api/webhooks/stripe as public via exact match only', () => {
+      expect(classifyRoute('/api/webhooks/stripe')).toBe('public');
+    });
+
+    it('does NOT classify sibling webhook paths as public (no startsWith match)', () => {
+      // These paths LOOK like the Stripe webhook prefix but are different
+      // endpoints — they must require auth (fail-closed default).
+      expect(classifyRoute('/api/webhooks/stripe-evil')).toBe('authenticated');
+      expect(classifyRoute('/api/webhooks/stripe-billing')).toBe('authenticated');
+      expect(classifyRoute('/api/webhooks/stripe/admin')).toBe('authenticated');
+    });
   });
 
   describe('isPublicRoute', () => {

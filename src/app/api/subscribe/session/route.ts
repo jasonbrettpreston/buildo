@@ -105,11 +105,21 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       // Reuse an unexpired nonce if one exists. Spec 96 §10 Step 4b
       // describes nonces as "single-use" — meaning the WEB CHECKOUT consumes
       // the row on exchange — so reusing the row before exchange is safe.
+      //
+      // FOR UPDATE serialises this SELECT with concurrent same-user calls.
+      // Without the lock, two parallel requests can both see the same
+      // unexpired row and both return the same URL; the web checkout then
+      // consumes the nonce on the first exchange and the second URL fails
+      // silently. The lock forces the second request to wait until this
+      // transaction commits, then re-read — at which point the nonce is
+      // either still present (reuse safe) or gone (it'll fall through to
+      // INSERT and create a fresh one).
       const existing = await client.query<{ nonce: string }>(
         `SELECT nonce FROM subscribe_nonces
          WHERE user_id = $1 AND expires_at > NOW()
          ORDER BY expires_at DESC
-         LIMIT 1`,
+         LIMIT 1
+         FOR UPDATE`,
         [uid],
       );
       if (existing.rowCount && existing.rowCount > 0) {

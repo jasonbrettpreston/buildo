@@ -56,13 +56,24 @@ const PUBLIC_PREFIXES = [
   '/api/products',
   '/api/coa',
   '/api/quality',
-  // Stripe webhooks — Stripe calls without Firebase auth. The handler verifies
-  // the Stripe-Signature header internally; without this entry the fail-closed
-  // default would 401 every webhook before our handler could run (Spec 96 §10
-  // Step 5 explicit). This is the ONLY webhook prefix permitted.
-  '/api/webhooks/stripe',
   '/permits/',
 ] as const;
+
+/**
+ * Exact API paths that are always public — separate from PUBLIC_PREFIXES
+ * so a `startsWith` match cannot accidentally promote a sibling path. For
+ * example, putting `/api/webhooks/stripe` in PUBLIC_PREFIXES would also
+ * classify `/api/webhooks/stripe-evil` and `/api/webhooks/stripe-billing`
+ * as public. Webhook receivers added to this exact-match list cannot be
+ * widened by a sibling-name typo.
+ */
+const PUBLIC_EXACT_API_PATHS: ReadonlySet<string> = new Set([
+  // Stripe webhook receiver (Spec 96 §10 Step 5). Stripe calls without
+  // Firebase auth; the handler verifies the Stripe-Signature header
+  // internally. Without this entry the fail-closed default would 401
+  // every webhook before our handler could run.
+  '/api/webhooks/stripe',
+]);
 
 /** Exact public file paths */
 const PUBLIC_FILES = [
@@ -109,6 +120,12 @@ export function classifyRoute(pathname: string): RouteClass {
 
   // Auth API routes — always public
   if (pathname.startsWith('/api/auth/')) return 'public';
+
+  // Exact-match public API paths (webhook receivers etc.). Checked BEFORE
+  // any prefix-based classification so sibling paths like
+  // `/api/webhooks/stripe-evil` cannot inherit public status from a
+  // `startsWith` match.
+  if (PUBLIC_EXACT_API_PATHS.has(pathname)) return 'public';
 
   // Admin API routes — require admin
   if (pathname.startsWith('/api/admin/')) return 'admin';

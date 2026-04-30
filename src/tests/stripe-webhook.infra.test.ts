@@ -45,9 +45,11 @@ function makeRequest(body: string, headers: Record<string, string> = {}): NextRe
   } as unknown as NextRequest;
 }
 
+const FIXED_EVENT_TS_S = 1717250000; // 2024-06-01T13:53:20Z
 const baseSubscriptionEvent = (status: string) => ({
   id: 'evt_test_123',
   type: 'customer.subscription.created' as const,
+  created: FIXED_EVENT_TS_S,
   data: { object: { customer: 'cus_test_abc', status } },
 });
 
@@ -63,17 +65,25 @@ describe('POST /api/webhooks/stripe — 200 happy paths', () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ received: true });
 
-    // Verify the UPDATE was issued with the right status + customer id
+    // Verify the UPDATE was issued with the right status, customer id,
+    // and event timestamp (params: [status, customer_id, event_created_at]
+    // for the stripe_customer_id fallback path — no metadata.user_id here).
     const updateCall = fakeClientQuery.mock.calls[1];
     expect(updateCall).toBeDefined();
     expect(updateCall?.[0]).toContain('UPDATE user_profiles');
-    expect(updateCall?.[1]).toEqual(['active', 'cus_test_abc']);
+    const params = updateCall?.[1] as unknown[];
+    expect(params[0]).toBe('active');
+    expect(params[1]).toBe('cus_test_abc');
+    expect(params[2]).toBeInstanceOf(Date);
+    // Confirm the event timestamp is preserved through the conversion
+    expect((params[2] as Date).getTime()).toBe(FIXED_EVENT_TS_S * 1000);
   });
 
   it('writes "past_due" on invoice.payment_failed', async () => {
     mockedConstructEvent.mockReturnValueOnce({
       id: 'evt_test_pd',
       type: 'invoice.payment_failed',
+      created: FIXED_EVENT_TS_S,
       data: { object: { customer: 'cus_test_pd' } },
     });
     fakeClientQuery
@@ -83,14 +93,16 @@ describe('POST /api/webhooks/stripe — 200 happy paths', () => {
     const res = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
 
     expect(res.status).toBe(200);
-    const updateCall = fakeClientQuery.mock.calls[1];
-    expect(updateCall?.[1]).toEqual(['past_due', 'cus_test_pd']);
+    const params = fakeClientQuery.mock.calls[1]?.[1] as unknown[];
+    expect(params[0]).toBe('past_due');
+    expect(params[1]).toBe('cus_test_pd');
   });
 
   it('writes "expired" on subscription.deleted', async () => {
     mockedConstructEvent.mockReturnValueOnce({
       id: 'evt_test_del',
       type: 'customer.subscription.deleted',
+      created: FIXED_EVENT_TS_S,
       data: { object: { customer: 'cus_test_del', status: 'canceled' } },
     });
     fakeClientQuery
@@ -100,14 +112,15 @@ describe('POST /api/webhooks/stripe — 200 happy paths', () => {
     const res = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
 
     expect(res.status).toBe(200);
-    const updateCall = fakeClientQuery.mock.calls[1];
-    expect((updateCall?.[1] as unknown[])[0]).toBe('expired');
+    const params = fakeClientQuery.mock.calls[1]?.[1] as unknown[];
+    expect(params[0]).toBe('expired');
   });
 
   it('returns 200 no-op for unknown event types', async () => {
     mockedConstructEvent.mockReturnValueOnce({
       id: 'evt_test_unknown',
       type: 'customer.discount.created',
+      created: FIXED_EVENT_TS_S,
       data: { object: {} },
     });
     fakeClientQuery.mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_test_unknown' }] });
@@ -124,6 +137,7 @@ describe('POST /api/webhooks/stripe — 200 happy paths', () => {
     mockedConstructEvent.mockReturnValueOnce({
       id: 'evt_incomplete',
       type: 'customer.subscription.updated',
+      created: FIXED_EVENT_TS_S,
       data: { object: { customer: 'cus_x', status: 'incomplete' } },
     });
     fakeClientQuery.mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_incomplete' }] });
@@ -133,6 +147,53 @@ describe('POST /api/webhooks/stripe — 200 happy paths', () => {
     expect(res.status).toBe(200);
     // Dedup write happened, but no UPDATE because outcome.newStatus is null
     expect(fakeClientQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('UPDATE includes event-ordering guard (last_stripe_event_at < event.created)', async () => {
+    // Out-of-order delivery guard: Stripe doesn't guarantee event order.
+    // The UPDATE WHERE clause must reject events older than the most
+    // recently applied one to prevent expired→active resurrection.
+    mockedConstructEvent.mockReturnValueOnce(baseSubscriptionEvent('active'));
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_test_123' }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [] });
+
+    await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
+
+    const updateSql = fakeClientQuery.mock.calls[1]?.[0] as string;
+    expect(updateSql).toMatch(/last_stripe_event_at IS NULL OR last_stripe_event_at <\s+\$\d/);
+  });
+
+  it('UPDATE includes stripe_customer_id forgery guard on the user_id path', async () => {
+    // Stripe-metadata forgery guard: the user_id-path UPDATE must only
+    // fire when the user has no customer ID yet OR the existing one matches
+    // the event's customer ID, limiting the blast radius if a Stripe-side
+    // compromise lets an attacker set metadata.user_id on a victim's UID.
+    mockedConstructEvent.mockReturnValueOnce({
+      id: 'evt_test_meta',
+      type: 'customer.subscription.created',
+      created: FIXED_EVENT_TS_S,
+      data: {
+        object: {
+          customer: 'cus_test_abc',
+          status: 'active',
+          metadata: { user_id: 'firebase-uid-xyz' },
+        },
+      },
+    });
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_test_meta' }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [] });
+
+    await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
+
+    const updateSql = fakeClientQuery.mock.calls[1]?.[0] as string;
+    expect(updateSql).toMatch(/WHERE user_id = \$\d/);
+    expect(updateSql).toMatch(/stripe_customer_id IS NULL OR stripe_customer_id = \$\d/);
+    // Params order on user_id path: [status, customer_id, user_id, event_created_at]
+    const params = fakeClientQuery.mock.calls[1]?.[1] as unknown[];
+    expect(params[2]).toBe('firebase-uid-xyz');
+    expect(params[3]).toBeInstanceOf(Date);
   });
 });
 
@@ -173,6 +234,16 @@ describe('POST /api/webhooks/stripe — 400 / 500', () => {
   it('returns 400 on empty body', async () => {
     const res = await POST(makeRequest('', { 'stripe-signature': 'sig' }));
     expect(res.status).toBe(400);
+    expect(mockedConstructEvent).not.toHaveBeenCalled();
+  });
+
+  it('returns 413 when payload exceeds the 1MB DoS cap', async () => {
+    // Public endpoint — without an upper-bound check, an attacker can POST
+    // multi-GB bodies and exhaust server memory before signature verify.
+    // Stripe payloads are well under 100KB; 1MB is generous headroom.
+    const huge = 'x'.repeat(1_048_577);
+    const res = await POST(makeRequest(huge, { 'stripe-signature': 'sig' }));
+    expect(res.status).toBe(413);
     expect(mockedConstructEvent).not.toHaveBeenCalled();
   });
 

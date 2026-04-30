@@ -83,6 +83,7 @@ describe('POST /api/webhooks/stripe — security', () => {
     mockedConstructEvent.mockReturnValueOnce({
       id: 'evt_test',
       type: 'customer.subscription.created',
+      created: 1717250000,
       data: { object: { customer: 'cus_x', status: 'active' } },
     });
     fakeClientQuery.mockRejectedValueOnce(new Error(sensitiveDetail));
@@ -98,6 +99,7 @@ describe('POST /api/webhooks/stripe — security', () => {
     mockedConstructEvent.mockReturnValueOnce({
       id: 'evt_replayed',
       type: 'customer.subscription.created',
+      created: 1717250000,
       data: { object: { customer: 'cus_x', status: 'active' } },
     });
     // Dedup INSERT collides → rowCount = 0
