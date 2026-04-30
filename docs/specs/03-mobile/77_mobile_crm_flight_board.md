@@ -76,6 +76,10 @@ bgOpacity.value = withSequence(
 ```
 The flash draws the eye to what changed without obscuring card content.
 
+**Backend signal:** the `GET /api/leads/flight-board` list response includes `updated_at: string` (ISO 8601) per item, sourced from `permits.updated_at` (added in migration 115). `permits.updated_at` is auto-maintained by the `set_updated_at` BEFORE-UPDATE trigger from migration 100, so any change in the ingestion pipeline propagates without code changes.
+
+**Client tracking:** the mobile client maintains `{ [permitId]: lastSeenUpdatedAt }` in MMKV (key `flight-board-last-seen`). On every list render, the parent passes `hasUpdate={item.updated_at !== mmkvSeen[permitId]}` to `FlightCard`; first-sight rows (no MMKV entry) do NOT flash. After the user opens the detail screen for a permit, the parent writes the current `updated_at` back to MMKV so subsequent renders are quiet until the next backend change.
+
 ### 3.3 The Detailed Investigation View
 
 Tapping a flight board card pushes a new detail screen to the navigation stack.
@@ -105,6 +109,19 @@ Tapping a flight board card pushes a new detail screen to the navigation stack.
 **Actions & Lifecycle**
 * **"Remove from Board":** Manual override. See §4.1 for undo behaviour.
 * **Auto-Archiving:** Jobs automatically remove when the backend detects the target `lifecycle_phase` for this trade has been completed.
+
+#### 3.3.1 API Contract — `GET /api/leads/flight-board/detail/:id`
+
+Powers the cold-boot path on `/(app)/[flight-job]` when a push notification opens the app from a closed state: `useFlightBoard()` cache is empty, so the screen calls this endpoint with the permit id from the deep link instead of failing with "Job not found".
+
+| | |
+|---|---|
+| **Auth** | Bearer token (mobile) or session cookie (web). |
+| **Path param** | `id` — `${permit_num}--${revision_num}`. CoA ids return 400 (flight board only tracks permits). |
+| **Status codes** | 200 success · 400 `INVALID_LEAD_ID` · 401 `UNAUTHORIZED` · 404 `NOT_FOUND` (permit not on user's saved board) · 500 sanitized |
+| **Response shape** | `{ data: FlightBoardDetail, error: null, meta: null }` |
+
+`FlightBoardDetail` (defined in `src/app/api/leads/flight-board/detail/[id]/types.ts`) matches a single item from the list endpoint plus `updated_at`. Authorization is implicit in the SQL: the row is only returned when `lead_views.user_id = ctx.uid AND saved = true AND lead_type = 'permit'`. A permit the user has unsaved between push and tap returns 404 — by the natural WHERE filter, no separate auth branch.
 
 ## 4. Mobile-Native User Experience (UX)
 

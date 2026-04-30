@@ -1,172 +1,255 @@
-# Active Task: Spec 95 WF5 Audit Fixes — 5 failures
+# Active Task: Mobile Backend Foundations — Lead Detail, Flight-Board Detail, permits.updated_at
 **Status:** Implementation
-**Workflow:** WF3 — Bug Fix (filed from WF5 manual audit)
-**Domain Mode:** Cross-Domain — modifies `src/app/api/` Next.js routes AND `mobile/` Expo source. Read `.claude/domain-crossdomain.md` before implementation. ✓
+**Workflow:** WF3 — Bug Fix (3 mobile blockers, all backend)
+**Domain Mode:** Cross-Domain — Scenario B (API consumed by Expo). Read `.claude/domain-crossdomain.md` ✓ + `scripts/CLAUDE.md` ✓ + `.claude/domain-admin.md` ✓.
 
 ---
 
 ## Context
 
-* **Goal:** Build the canonical user data model that persists across sessions and devices. Deliver: (1) DB migration adding all mobile columns to `user_profiles` + 3 new tables; (2) GET + PATCH `/api/user-profile` authenticated routes; (3) POST deletion + reactivation endpoints; (4) Zod schemas (server + client); (5) `userProfileStore` for account-level fields; (6) `filterStore` hydration additions; (7) `useUserProfile` TanStack Query hook; (8) `TradeReadOnlyRow` settings component.
+* **Goal:** Unblock three mobile bugs by shipping their backend prerequisites:
+  1. **Lead Investigation View** (`/(app)/[lead]`) — currently reads from TanStack feed cache only; on cold-boot from a push notification, the cache is empty and the screen has no source of truth. Build `GET /api/leads/detail/:id` joining `permits + cost_estimates + neighbourhoods + lead_views`.
+  2. **Flight Board cold-boot** (`/(app)/[flight-job]`) — currently looks up a single job by id-walking the `useFlightBoard()` array; cold-boot from a push notification → empty array → "Job not found". Build `GET /api/leads/flight-board/detail/:id` returning the single saved job by id.
+  3. **"Newly Updated" amber flash** on `FlightCard.tsx` — the component already implements the animation, but `hasUpdate` is never passed because the flight-board response shape lacks an `updated_at` field. Add `permits.updated_at` column + DB trigger (matching the Migration 100 pattern) and expose it on the list and both detail endpoints.
 
-* **Target Spec:** `docs/specs/03-mobile/95_mobile_user_profiles.md`
+* **Target Specs:**
+  - `docs/specs/03-mobile/91_mobile_lead_feed.md §4.3` (Detailed Investigation View) — backs `/api/leads/detail/:id`
+  - `docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.3` (Detailed Investigation View for flight board) + §3.2 "Amber Update Flash" — backs `/api/leads/flight-board/detail/:id` and the `updated_at` exposure
+
+* **Validation findings (pre-flight):**
+  - `permits.updated_at` — **MISSING** from `src/lib/db/schema.ts:888-970` and from migrations 100/114. Permits has `firstSeenAt`, `lastSeenAt`, `geocodedAt`, etc. but no `updated_at`.
+  - `cost_estimates` table — **PRESENT** at `schema.ts:857-886`, FK to permits via `(permit_num, revision_num)`. Columns: `estimated_cost`, `cost_source`, `cost_tier`, `cost_range_low`, `cost_range_high`, `modeled_gfa_sqm`, `effective_area_sqm`, `premium_factor`, `complexity_score`, `model_version`, `computed_at`, `trade_contract_values` (JSONB), `is_geometric_override`.
+  - `neighbourhoods` table (British spelling) — **PRESENT** at `schema.ts:307-334`. Columns: `id` (serial PK), `neighbourhood_id`, `name`, `avg_household_income`, `median_household_income`, `low_income_pct`, `tenure_owner_pct`, `period_of_construction`, `university_degree_pct`, `immigrant_pct`, `visible_minority_pct`, `english_knowledge_pct`, `top_mother_tongue`, `census_year`, `geom`. FK from `permits.neighbourhood_id` (integer).
+  - `lead_views` — **PRESENT**, holds `(user_id, permit_num, revision_num, saved, saved_at, lead_type)`. Used by `flight-board/route.ts` to filter `saved=true AND lead_type='permit'`.
 
 * **Cross-spec dependencies:**
-  - Spec 93 — Firebase UID is the `user_id` PK; `getUserIdFromSession` handles Bearer token auth for Expo
-  - Spec 94 — onboarding PATCH calls all hit this route; they will 404 until this spec ships (documented in review_followups.md as CRITICAL)
-  - Spec 96 — `subscription_status` written here when `onboarding_complete: true` is PATCHed
-  - Spec 97 — Settings UI reads and writes editable fields via PATCH
+  - Spec 95 (committed) — auth helper `getCurrentUserContext(request, pool)` returns `{ uid, trade_slug, ... }` or null (`src/lib/auth/get-user-context.ts:32`).
+  - Migration 100 — established the `trigger_set_timestamp()` reusable trigger function. We reuse it (don't redefine).
+  - Existing route patterns: `src/app/api/leads/feed/route.ts` and `src/app/api/leads/flight-board/route.ts` — both use `withApiEnvelope`, `ok(data)`, `internalError(cause, { route })`, `unauthorized()`. Inherit verbatim.
 
 * **Key Files:**
 
   NEW — server:
-  - `migrations/114_user_profiles_mobile_columns.sql`
-  - `src/lib/userProfile.schema.ts`
-  - `src/app/api/user-profile/route.ts` (GET + PATCH)
-  - `src/app/api/user-profile/delete/route.ts`
-  - `src/app/api/user-profile/reactivate/route.ts`
-  - `src/tests/user-profiles.infra.test.ts`
-  - `src/tests/user-profiles.security.test.ts`
-
-  NEW — mobile:
-  - `mobile/src/lib/userProfile.schema.ts`
-  - `mobile/src/store/userProfileStore.ts`
-  - `mobile/src/hooks/useUserProfile.ts`
-  - `mobile/src/components/settings/TradeReadOnlyRow.tsx`
-  - `mobile/__tests__/filterStore.test.ts`
+  - `migrations/115_permits_updated_at.sql`
+  - `src/app/api/leads/detail/[id]/route.ts`
+  - `src/app/api/leads/detail/[id]/types.ts`
+  - `src/app/api/leads/flight-board/detail/[id]/route.ts`
+  - `src/app/api/leads/flight-board/detail/[id]/types.ts`
+  - `src/lib/leads/parse-lead-id.ts` — shared id parser (rejects malformed; returns `{ kind: 'permit', permit_num, revision_num } | { kind: 'coa', application_number } | null`)
+  - `src/lib/leads/lead-detail-query.ts` — composed SELECT for detail endpoint
+  - `src/tests/leads-detail.infra.test.ts`
+  - `src/tests/flight-board-detail.infra.test.ts`
+  - `src/tests/permits-updated-at.logic.test.ts` — verifies trigger fires on UPDATE
 
   MODIFY:
-  - `mobile/src/store/filterStore.ts` — add `defaultTab`, `supplierSelection`, `hydrate()`, update `reset()`
-  - `tasks/lessons.md` — update `radius_km` note (now server-side after migration 114)
+  - `src/lib/db/schema.ts` — add `updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()` to `permits` table
+  - `src/app/api/leads/flight-board/route.ts` — add `p.updated_at` to `FLIGHT_BOARD_SQL` SELECT, extend `FlightBoardRow` interface and the mapped output object with `updated_at: string`
+  - `docs/specs/03-mobile/91_mobile_lead_feed.md` — append §4.3.1 documenting the `/api/leads/detail/:id` contract
+  - `docs/specs/03-mobile/77_mobile_crm_flight_board.md` — append §3.3.1 documenting the `/api/leads/flight-board/detail/:id` contract + amend §3.2 to specify `updated_at` is now present in list responses
 
 ---
 
 ## API Contract Note (Cross-Domain Scenario B)
 
-**Endpoints:**
-| Method | Path | Auth | Response |
-|--------|------|------|----------|
-| GET | `/api/user-profile` | Bearer / cookie | `{ data: UserProfile }` · 404 = new user · 403 = deleted account |
-| PATCH | `/api/user-profile` | Bearer / cookie | `{ data: UserProfile }` updated row · 400 on `trade_slug` |
-| POST | `/api/user-profile/delete` | Bearer / cookie | `{ data: { ok: true } }` |
-| POST | `/api/user-profile/reactivate` | Bearer / cookie | `{ data: UserProfile }` restored |
+| Method | Path | Auth | Status codes | Response shape |
+|--------|------|------|--------------|----------------|
+| GET | `/api/leads/detail/:id` | Bearer/cookie | 200, 400 (bad id), 401, 404 (no permit), 500 | `{ data: LeadDetail, error: null, meta: null }` |
+| GET | `/api/leads/flight-board/detail/:id` | Bearer/cookie | 200, 400 (bad id), 401, 404 (not on user's board), 500 | `{ data: FlightBoardDetail, error: null, meta: null }` |
+| GET | `/api/leads/flight-board` (modified) | Bearer/cookie | unchanged | each item adds `updated_at: string (ISO)` |
 
-**Client consumption:** `mobile/src/hooks/useUserProfile.ts` calls GET on app launch. Onboarding screens (Spec 94) call PATCH directly via `fetchWithAuth`. Spec 97 (Settings) will call PATCH for field edits.
+**`LeadDetail` shape (defined in `src/app/api/leads/detail/[id]/types.ts`):**
+```ts
+export interface LeadDetail {
+  lead_id: string;                       // `${permit_num}--${revision_num}` or `COA-${application_number}`
+  lead_type: 'permit' | 'coa';
+  permit_num: string | null;             // null for COA-only leads (rare)
+  revision_num: string | null;
+  address: string;                       // composed from street_num + street_name
+  location: { lat: number; lng: number } | null;
+  work_description: string | null;
+  applicant: string | null;              // best-effort from permits.applicant or builders join (deferred — null for now)
+  lifecycle_phase: string | null;
+  lifecycle_stalled: boolean;
+  target_window: 'bid' | 'work' | null;
+  opportunity_score: number | null;
+  competition_count: number;             // count(*) FROM lead_views WHERE permit_num=… AND revision_num=… AND saved=true
+  predicted_start: string | null;
+  p25_days: number | null;
+  p75_days: number | null;
+  cost: {
+    estimated: number | null;
+    tier: string | null;
+    range_low: number | null;
+    range_high: number | null;
+    modeled_gfa_sqm: number | null;
+  } | null;
+  neighbourhood: {
+    name: string | null;
+    avg_household_income: number | null;
+    median_household_income: number | null;
+    period_of_construction: string | null;
+  } | null;
+  updated_at: string;                    // ISO timestamp from permits.updated_at
+}
+```
+
+**`FlightBoardDetail` shape:** identical to a single `FlightBoardItem` from the list endpoint plus `updated_at: string`. Re-exported from the same `types.ts`.
+
+**Client consumption (downstream — out of scope):**
+- `mobile/app/(app)/[lead].tsx` — `useLeadDetail(id)` hook will call `GET /api/leads/detail/:id` on mount, fall back to `lead-feed` cache walk for warm-boot speed.
+- `mobile/app/(app)/[flight-job].tsx` — `useFlightJob(id)` hook will call `GET /api/leads/flight-board/detail/:id` on mount; existing `useFlightBoard()` cache walk becomes the synchronous fast-path.
+- `mobile/src/components/feed/FlightCard.tsx` — parent (`flight-board.tsx`) tracks `{ [permitId]: lastSeenUpdatedAt }` in MMKV; passes `hasUpdate={item.updated_at !== mmkvSeen[id]}`.
 
 ---
 
 ## Technical Implementation
 
-### New/Modified Components
+### Migration 115 — `permits.updated_at`
 
-| File | Purpose |
-|------|---------|
-| Migration 114 | ADD COLUMN on `user_profiles`; make `trade_slug` nullable; add location CHECK; create 3 new tables; FK CASCADE on `lead_view_events` |
-| `src/lib/userProfile.schema.ts` | Zod `UserProfileUpdateSchema` — whitelist for PATCH; `UserProfileType` TypeScript type |
-| `route.ts` GET + PATCH | Full user profile endpoint — trade immutability guard, deleted account 403, onboarding completion guard, JSONB merge, radius cap |
-| `delete/route.ts` | Atomic deletion: mark account, cancel Stripe subscription (if any), revoke Firebase refresh tokens |
-| `reactivate/route.ts` | 30-day recovery window, restore to `expired` or `admin_managed` |
-| `mobile/src/lib/userProfile.schema.ts` | Zod `UserProfileSchema` for validating server responses in `useUserProfile` |
-| `userProfileStore.ts` | Zustand + MMKV store for account-level display fields. Changes must NOT trigger lead feed re-renders |
-| `filterStore.ts` (modify) | Add `defaultTab`, `supplierSelection`; add `hydrate(profile)` action; update `reset()` |
-| `useUserProfile.ts` | TanStack Query hook — hydrates both stores, fast-path from MMKV, exposes skeleton loading state |
-| `TradeReadOnlyRow.tsx` | Read-only settings row: trade label + `font-mono` value + Lock icon + sub-label |
+`permits` is **237K+ rows**, classifies as the §3.1 zero-downtime case. Use the **add → backfill → constrain → trigger** sequence:
 
-### Data Hooks/Libs
+```sql
+-- UP
+-- Step 1: nullable add (no rewrite, instant on PG 11+)
+ALTER TABLE permits ADD COLUMN updated_at TIMESTAMPTZ;
 
-- **filterStore** additions: `defaultTab: 'feed' | 'flight_board' | null`, `supplierSelection: string | null`, `hydrate(profile: UserProfile)` action (overwrites `locationMode`, `defaultTab`, `homeBaseLocation`, `homeBaseLat`, `homeBaseLng`, `supplierSelection`, `tradeSlug`, `radiusKm` from server profile — does NOT write userProfileStore fields). New actions: `setDefaultTab`, `setSupplierSelection`. Update `reset()`.
-- **userProfileStore**: Zustand + MMKV key `user-profile`. Fields: `fullName`, `companyName`, `phoneNumber`, `backupEmail`, `notificationPrefs` (full JSONB object). Actions: `hydrate(profile)`, `reset()`. This store never triggers `queryClient.invalidateQueries(['leads'])`.
-- **useUserProfile**: `staleTime: 300_000`. On success: calls BOTH `filterStore.hydrate(data)` AND `userProfileStore.hydrate(data)`. Parses response through `UserProfileSchema` — Zod failure triggers Sentry + MMKV fallback. Fast-path: synchronous `filterStore.hydrate(mmkvCache)` on mount before query resolves. Exposes `isLoading`, `isFetching`, `hasCachedData`.
+-- Step 2: backfill — coalesce to best-known recency signal
+UPDATE permits SET updated_at = COALESCE(last_seen_at, first_seen_at, NOW())
+WHERE updated_at IS NULL;
 
-### Database Impact
+-- Step 3: constrain after backfill (no row scan needed, all rows now non-null)
+ALTER TABLE permits ALTER COLUMN updated_at SET DEFAULT NOW();
+ALTER TABLE permits ALTER COLUMN updated_at SET NOT NULL;
 
-**YES — Migration 114. All new columns are nullable with safe defaults — no backfill required.**
+-- Step 4: reuse trigger_set_timestamp() from migration 100
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON permits
+  FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
 
-**New columns on `user_profiles`:**
-- Identity: `full_name TEXT`, `phone_number TEXT`, `company_name TEXT`, `email TEXT`, `backup_email TEXT`
-- Profession: `default_tab TEXT CHECK (default_tab IN ('feed', 'flight_board'))`, `location_mode TEXT CHECK (location_mode IN ('gps_live', 'home_base_fixed'))`, `home_base_lat NUMERIC(9,6)`, `home_base_lng NUMERIC(9,6)`, `radius_km INTEGER`, `supplier_selection TEXT`, `lead_views_count INTEGER DEFAULT 0`
-- Subscription: `subscription_status TEXT CHECK (subscription_status IN ('trial','active','past_due','expired','cancelled_pending_deletion','admin_managed'))`, `trial_started_at TIMESTAMPTZ`, `stripe_customer_id TEXT`
-- Account state: `onboarding_complete BOOLEAN DEFAULT false`, `tos_accepted_at TIMESTAMPTZ`, `account_deleted_at TIMESTAMPTZ`
-- Admin-configured: `account_preset TEXT CHECK (account_preset IN ('tradesperson','realtor','manufacturer'))`, `trade_slugs_override TEXT[]`, `radius_cap_km INTEGER`
-- **Schema changes:** `ALTER COLUMN trade_slug DROP NOT NULL` (manufacturer accounts have NULL). Drop + replace `user_profiles_trade_slug_not_empty` CHECK with `CHECK (trade_slug IS NULL OR trim(trade_slug) <> '')`.
-- **Location CHECK (§7):** `CHECK (location_mode IS NULL OR (location_mode = 'gps_live' AND home_base_lat IS NULL AND home_base_lng IS NULL) OR (location_mode = 'home_base_fixed' AND home_base_lat IS NOT NULL AND home_base_lng IS NOT NULL))`
+-- DOWN
+DROP TRIGGER IF EXISTS set_updated_at ON permits;
+ALTER TABLE permits DROP COLUMN IF EXISTS updated_at;
+```
 
-**New tables (same migration file):**
-- `lead_view_events(user_id TEXT, permit_num TEXT, revision_num TEXT, viewed_at TIMESTAMPTZ DEFAULT NOW(), PRIMARY KEY (user_id, permit_num, revision_num))`
-- `subscribe_nonces(nonce TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '15 minutes')`
-- `stripe_webhook_events(event_id TEXT PRIMARY KEY, processed_at TIMESTAMPTZ DEFAULT NOW())`
+The trigger means **the ingestion script and any other UPDATE path automatically gets fresh `updated_at` without code changes** — that's the point of the trigger pattern (Bug Prevention Strategy §5).
 
-**FK CASCADE:** `ALTER TABLE lead_view_events ADD CONSTRAINT fk_lve_user FOREIGN KEY (user_id) REFERENCES user_profiles(user_id) ON DELETE CASCADE`
+### `GET /api/leads/detail/[id]`
+
+Composes a single SELECT joining permits + cost_estimates + neighbourhoods + a `lead_views` competition count subquery. Outline:
+
+```ts
+// route.ts (top-level structure — full impl in execution)
+export const GET = withApiEnvelope(async function GET(request, { params }) {
+  try {
+    const ctx = await getCurrentUserContext(request, pool);
+    if (!ctx) return unauthorized();
+
+    const parsed = parseLeadId(params.id);
+    if (!parsed) return badRequestInvalidId();
+    if (parsed.kind === 'coa') return notImplemented('COA detail not yet supported');  // Phase 2
+
+    const result = await pool.query<LeadDetailRow>(LEAD_DETAIL_SQL, [
+      parsed.permit_num,
+      parsed.revision_num,
+      ctx.trade_slug,
+    ]);
+    if (result.rowCount === 0) return notFound();
+    return ok(toLeadDetail(result.rows[0]));
+  } catch (cause) {
+    return internalError(cause, { route: 'GET /api/leads/detail/[id]' });
+  }
+});
+```
+
+The `LEAD_DETAIL_SQL` joins:
+- `permits p` (base)
+- `LEFT JOIN cost_estimates ce ON ce.permit_num = p.permit_num AND ce.revision_num = p.revision_num`
+- `LEFT JOIN neighbourhoods n ON n.id = p.neighbourhood_id`
+- `LEFT JOIN trade_forecasts tf ON tf.permit_num = p.permit_num AND tf.revision_num = p.revision_num AND tf.trade_slug = $3`
+- `LEFT JOIN LATERAL (SELECT COUNT(*)::int AS c FROM lead_views WHERE permit_num = p.permit_num AND revision_num = p.revision_num AND saved = true) lv_count ON TRUE`
+
+### `GET /api/leads/flight-board/detail/[id]`
+
+Reuses `FLIGHT_BOARD_SQL` modified with a `WHERE` predicate for the specific `(permit_num, revision_num)`. Hits `lead_views` with `user_id = $1 AND saved = true AND permit_num = $2 AND revision_num = $3`. Returns 404 if the user does not have this permit saved (the natural filter, no extra logic). Includes `updated_at` from `p.updated_at`.
+
+### Modified `flight-board/route.ts`
+
+Two changes:
+1. Add `p.updated_at::text AS updated_at` to the SELECT.
+2. Extend the `FlightBoardRow` interface and the mapped output object with `updated_at: string`.
+
+No client-side breakage: the mobile Zod schema (in `mobile/src/lib/schemas.ts`) currently doesn't enforce `updated_at`. Adding the field is additive — old clients ignore it, new clients use it. Confirmed Cross-Domain Scenario B safe.
 
 ---
 
 ## Standards Compliance
 
-* **Try-Catch Boundary:** All 4 route handlers wrapped with `withApiEnvelope`. Inner transaction logic uses try-catch with `logError` per §6.1.
-* **Unhappy Path Tests:** infra tests cover 404 / 403 / 401 / 400 paths; DB error 500 with no raw message leak; NULL radius_cap_km applies no cap.
-* **logError Mandate:** All server catch blocks use `logError`. Mobile stores use `console.error`. `useUserProfile` Zod parse failures use `Sentry.captureException` (Expo).
-* **UI Layout:** `TradeReadOnlyRow` is mobile-first. Outer container `min-h-[52px]` meets touch target requirement (Spec 90 §9).
-* **Security:** PATCH whitelist strips `subscription_status`, `account_deleted_at`, `account_preset`, `trade_slugs_override`, `lead_views_count` silently. `trade_slug` rejected with 400 (idempotency exception for same value). Atomic CTE for `lead_views_count` prevents double-increment (deferred to Spec 96 — this spec creates the table and column only).
+* **Try-Catch Boundary (§2.2):** Both new routes use `withApiEnvelope` + inner `try/catch` returning `internalError(cause, { route })`. No `err.message` ever returned to client.
+* **Unhappy Path Tests (§2.1):** infra tests cover 401 (no auth), 400 (malformed id `"not-an-id"`, `"COA-"` empty), 404 (unknown permit, removed-from-board), 500 (forced pool throw — assert no `err.message` leak in body).
+* **Pagination (§3.2):** N/A — both endpoints return a single row by primary key. The added competition `COUNT(*)` is bounded by `(permit_num, revision_num)` PK and existing `lead_views` indexes.
+* **Parameterization (§4.2):** All queries use `pool.query<T>(SQL, [params])`. Lead id is parsed and decomposed into separate `$1, $2` parameters before any SQL composition. No string interpolation.
+* **logError Mandate (§6.1):** `internalError()` already calls `logError` per existing pattern in feed/flight-board routes. New helpers also use `logError(tag, err, ctx)`.
+* **Migration Safety (§3.1):** 237K+ row table — using the **add nullable → backfill → set default + NOT NULL → trigger** sequence to avoid table rewrite. Step 2 (`UPDATE ... WHERE updated_at IS NULL`) runs in batches if Cloud SQL latency requires (will validate during implementation).
+* **Route Export Rule (§8.1):** `route.ts` files only export `GET`. All helpers live in `src/lib/leads/` and `src/app/api/leads/.../types.ts`.
+* **Auth coverage (§4.1):** Both new endpoints sit under `src/app/api/leads/` which is already covered by the auth middleware path matcher (verify during Step 0).
+* **Test pattern (§5.2):** `*.infra.test.ts` for routes, `*.logic.test.ts` for the trigger fire test.
+* **§10 note:** Trigger reuses `trigger_set_timestamp()` from migration 100 — do not redefine the function in 115; only the trigger.
 
 ---
 
 ## Execution Plan
 
-- [ ] **Step 0 — Pre-flight:** `node scripts/ai-env-check.mjs`. Confirm last migration = 113. Confirm `src/app/api/user-profile/` does not exist.
+- [ ] **Step 0 — Pre-flight:** `node scripts/ai-env-check.mjs`. Confirm last migration = 114, no `permits.updated_at` column. Confirm `src/app/api/leads/detail/` and `src/app/api/leads/flight-board/detail/` do not exist. Verify `middleware.ts` already covers `/api/leads/*` (it should — same prefix as feed/flight-board).
 
-- [ ] **Step 1 — Migration 114:** `migrations/114_user_profiles_mobile_columns.sql`. `-- UP` block: all ADD COLUMN statements; DROP CONSTRAINT + ADD CONSTRAINT for trade_slug check; ALTER COLUMN DROP NOT NULL; ADD CONSTRAINT chk_location_mode_coords; CREATE TABLE for 3 new tables; ALTER TABLE lead_view_events ADD FK. `-- DOWN` block: DROP TABLE + DROP COLUMN IF EXISTS + restore trade_slug NOT NULL + restore original check.
+- [ ] **Step 1 — Migration 115:** `migrations/115_permits_updated_at.sql`. UP block: add nullable column, backfill from `last_seen_at`/`first_seen_at`/NOW(), set default, set NOT NULL, create trigger reusing `trigger_set_timestamp()`. DOWN block: drop trigger, drop column.
 
-- [ ] **Step 2 — Server Zod schema:** `src/lib/userProfile.schema.ts`. `UserProfileUpdateSchema` (11 standard PATCH fields: `full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `notification_prefs`) with `.strip()`. Export `UserProfileType` inferred from a broader schema covering all columns (used as return type for GET/PATCH responses).
+- [ ] **Step 2 — Drizzle schema sync:** Add `updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()` to the `permits` table in `src/lib/db/schema.ts`. Run `npm run db:generate` to confirm types regenerate cleanly.
 
-- [ ] **Step 3 — GET `/api/user-profile`:** `src/app/api/user-profile/route.ts`. `withApiEnvelope`. `getUserIdFromSession` → 401. Query `user_profiles` by `user_id`. `account_deleted_at IS NOT NULL` → 403 with `days_remaining: CEIL(30 - days since account_deleted_at)`. No row → 404. Return full row as `{ data: row }`.
+- [ ] **Step 3 — Run migration locally:** `npm run migrate` (or equivalent). Verify column + trigger exist via `psql` `\d permits`. Run a one-row UPDATE test to confirm the trigger fires.
 
-- [ ] **Step 4 — PATCH `/api/user-profile`:** Same file as Step 3. `withApiEnvelope`. Check deleted account → 403 first. Parse body through `UserProfileUpdateSchema.strip()`. Guard `trade_slug` in body → 400 (with idempotency exception: if incoming value === existing DB value, return 200). Guard `onboarding_complete: true` → verify `trade_slug IS NOT NULL`, `location_mode IS NOT NULL`, `tos_accepted_at IS NOT NULL`; if yes and `account_preset != 'manufacturer'`, write `trial_started_at = NOW()` and `subscription_status = 'trial'` in same UPDATE (single statement). `notification_prefs`: merge via SQL `notification_prefs || $N::jsonb`. Radius: `COALESCE(LEAST(requested, cap), requested)`. Build dynamic SET clause from provided fields only. Return updated row.
+- [ ] **Step 4 — Type contracts (Cross-Domain mandate):** Create `src/app/api/leads/detail/[id]/types.ts` and `src/app/api/leads/flight-board/detail/[id]/types.ts` with the exported interfaces. These are the **published contract** the Expo app will consume — define them BEFORE the route handler.
 
-- [ ] **Step 5 — POST `/api/user-profile/delete`:** `src/app/api/user-profile/delete/route.ts`. `withApiEnvelope`. Auth → 401. Fetch profile; if already deleted → idempotency 200. DB transaction: (1) set `account_deleted_at = NOW()` + `subscription_status = 'cancelled_pending_deletion'`; (2) if `stripe_customer_id` set, `stripe.subscriptions.list({ customer, status: 'active', limit: 1 })` + cancel if found. Outside transaction: `admin.auth().revokeRefreshTokens(uid)`. Return `{ data: { ok: true } }`.
+- [ ] **Step 5 — Shared helpers:**
+  - `src/lib/leads/parse-lead-id.ts` — `parseLeadId(id: string): ParsedLeadId | null`. Accepts `${permit_num}--${revision_num}` (split on first `--`) or `COA-${application_number}`. Returns null for malformed (empty, no separator, etc.).
+  - `src/lib/leads/lead-detail-query.ts` — exports `LEAD_DETAIL_SQL` const + `LeadDetailRow` raw row interface + `toLeadDetail(row): LeadDetail` mapper (decimal→number, null-safe, JSONB unwrap if any).
 
-- [ ] **Step 6 — POST `/api/user-profile/reactivate`:** `src/app/api/user-profile/reactivate/route.ts`. `withApiEnvelope`. Auth → 401. Fetch profile; if not in deletion state → 400. If `account_deleted_at > NOW() - INTERVAL '30 days'` elapsed → 400. Determine `restored_status`: manufacturer → `admin_managed`; all others → `expired`. SET `account_deleted_at = NULL`, `subscription_status = restored_status`. Return updated row.
+- [ ] **Step 6 — `GET /api/leads/detail/[id]/route.ts`:** Implement per the outline above. Uses `withApiEnvelope`, `getCurrentUserContext`, `parseLeadId`, `pool.query`, `ok`, `internalError`, `unauthorized`, plus new `notFound()` and `badRequestInvalidId()` helpers (extend `src/features/leads/api/error-mapping.ts` if absent).
 
-- [ ] **Step 7 — Client Zod schema:** `mobile/src/lib/userProfile.schema.ts`. `UserProfileSchema` — full shape matching all `user_profiles` columns with nullable fields. Used by `useUserProfile` to validate server responses before hydrating stores. Export `UserProfileType` type.
+- [ ] **Step 7 — `GET /api/leads/flight-board/detail/[id]/route.ts`:** SQL adds `WHERE lv.user_id = $1 AND lv.permit_num = $2 AND lv.revision_num = $3 AND lv.saved = true AND lv.lead_type = 'permit'`. Returns 404 when `rowCount === 0`. Includes `updated_at` from `p.updated_at::text`.
 
-- [ ] **Step 8 — `userProfileStore.ts`:** `mobile/src/store/userProfileStore.ts`. Zustand + MMKV persist key `user-profile`. Interface: `fullName: string | null`, `companyName: string | null`, `phoneNumber: string | null`, `backupEmail: string | null`, `notificationPrefs: NotificationPrefs | null`. Actions: `hydrate(profile: UserProfileType)`, `reset()`. SPEC LINK: `docs/specs/03-mobile/95_mobile_user_profiles.md §9 Step 6`.
+- [ ] **Step 8 — Modify list endpoint `flight-board/route.ts`:** Add `p.updated_at::text AS updated_at` to `FLIGHT_BOARD_SQL`; extend `FlightBoardRow`; add `updated_at: row.updated_at` to mapped output. Verify existing `flight-board.infra.test.ts` (if any) still passes.
 
-- [ ] **Step 9 — `filterStore.ts` modifications:** Add `defaultTab: 'feed' | 'flight_board' | null`, `supplierSelection: string | null`. Add `setDefaultTab` and `setSupplierSelection` actions. Add `hydrate(profile: UserProfileType)` action that sets `tradeSlug`, `radiusKm`, `locationMode`, `homeBaseLocation`, `defaultTab`, `supplierSelection` from profile (coercing nulls to defaults where needed). Update `reset()` to include `defaultTab: null, supplierSelection: null`.
+- [ ] **Step 9 — Tests:**
+  - `src/tests/permits-updated-at.logic.test.ts` — SPEC LINK header. Inserts a permit, snapshots `updated_at`, sleeps 100ms, runs `UPDATE permits SET work_description = 'x' WHERE …`, asserts `updated_at` advanced.
+  - `src/tests/leads-detail.infra.test.ts` — SPEC LINK header. Cases: 200 (full join hydration), 401 (no ctx), 400 (malformed id), 404 (unknown permit), 500 (forced pool throw → no leak).
+  - `src/tests/flight-board-detail.infra.test.ts` — SPEC LINK header. Cases: 200 (saved permit returns), 404 (permit exists but user hasn't saved), 401, 400, 500.
 
-- [ ] **Step 10 — `useUserProfile.ts`:** `mobile/src/hooks/useUserProfile.ts`. TanStack Query `useQuery({ queryKey: ['user-profile'], staleTime: 300_000, queryFn })`. `queryFn`: call `fetchWithAuth('/api/user-profile')`, parse through `UserProfileSchema`. On success: `filterStore.hydrate(data)` AND `userProfileStore.hydrate(data)`. Zod parse failure: `Sentry.captureException(parseError)` + return MMKV cached values. Fast-path on mount: if MMKV key `user-profile` exists, synchronously call `filterStore.hydrate(cachedProfile)` before query settles. Derive `hasCachedData` from MMKV key existence. Expose `{ data, isLoading, isFetching, hasCachedData }`.
+- [ ] **Step 10 — Spec docs:** Append API contracts to `91_mobile_lead_feed.md §4.3.1` and `77_mobile_crm_flight_board.md §3.3.1`. Amend `77 §3.2` "Amber Update Flash" with: "The list response includes `updated_at: string (ISO 8601)` per item; clients store the last-seen value per permit in MMKV and trigger the flash when the values diverge on a subsequent fetch."
 
-- [ ] **Step 11 — `TradeReadOnlyRow.tsx`:** `mobile/src/components/settings/TradeReadOnlyRow.tsx`. Read `filterStore.tradeSlug`. Outer: `flex-row items-center justify-between px-4 min-h-[52px] border-b border-zinc-800/50` + `accessible={false}`. Right slot: `flex-row items-center gap-2` with `text-zinc-500 text-sm font-mono` + `<Lock size={14} color="#52525b" />`. `accessibilityLabel={\`Trade: ${tradeSlug}, locked\`}`. Sub-label: `text-zinc-600 text-xs mt-0.5 pb-3 px-4`.
+- [ ] **Step 11 — Independent code review (WF6 gate, NOT adversarial per WF3):** Spawn `feature-dev:code-reviewer` agent with `isolation: "worktree"`. Inputs: relevant spec paths + 3 new + 3 modified files + one-sentence summary. Triage → fix FAIL items. Deferred → `docs/reports/review_followups.md`.
 
-- [ ] **Step 12 — `src/tests/user-profiles.infra.test.ts`:** SPEC LINK header required. GET 200 full row for valid UID; GET 404 unknown UID; GET 403 deleted account (body has `days_remaining`); PATCH valid fields returns updated row; PATCH 400 on `trade_slug` in body; PATCH 401 unauthenticated; NULL `radius_cap_km` → no cap applied; DB error → 500 without raw message. Pattern: `vi.mock` + `withApiEnvelope` passthrough (same as `onboarding-suppliers.infra.test.ts`).
-
-- [ ] **Step 13 — `src/tests/user-profiles.security.test.ts`:** SPEC LINK header required. PATCH `subscription_status` → stripped silently (200, field unchanged); PATCH `account_deleted_at` → stripped silently; PATCH `trade_slugs_override` → 400 or stripped; PATCH on deleted account → 403; GET for own UID returns 200; 5xx responses contain no raw error text (test for absence of `err.message` strings in response body).
-
-- [ ] **Step 14 — `mobile/__tests__/filterStore.test.ts`:** SPEC LINK header required. `hydrate()` overwrites all filter-scoped fields from a full profile object; `reset()` returns all null/default values; `supplierSelection` and `defaultTab` initialize to null and hydrate correctly; MMKV `storage.set` is called after hydration (mock `createMMKV`).
-
-- [ ] **Step 15 — Update `tasks/lessons.md`:** Replace `radius_km is client-side MMKV only — no column in user_profiles` with `radius_km is now server-side (user_profiles column added migration 114) — MMKV is cache only; user_profiles is authoritative`.
-
-- [ ] **Step 16 — Multi-agent review (WF6 gate):** Three parallel agents, `isolation: "worktree"`. Spec input: `docs/specs/03-mobile/95_mobile_user_profiles.md`. Code Reviewer + Spec Compliance Reviewer + Logic Reviewer. Triage → fix FAIL items. Deferred → `docs/reports/review_followups.md`.
-
-- [ ] **Step 17 — Test + typecheck gate:**
-  - `npm run typecheck` (root)
-  - `cd mobile && npm run typecheck`
-  - `npx vitest run src/tests/user-profiles.infra.test.ts`
-  - `npx vitest run src/tests/user-profiles.security.test.ts`
-  - `cd mobile && npx jest --testPathPattern="filterStore" --ci`
+- [ ] **Step 12 — Test gate:**
+  - `npm run typecheck`
+  - `npx vitest run src/tests/permits-updated-at.logic.test.ts`
+  - `npx vitest run src/tests/leads-detail.infra.test.ts`
+  - `npx vitest run src/tests/flight-board-detail.infra.test.ts`
+  - `npx vitest related src/app/api/leads/flight-board/route.ts --run` (catches regressions on the modified list endpoint)
+  - `npm run lint -- --fix`
   - All must pass before commit.
 
-- [ ] **Step 18 — Commit:** `feat(95_mobile_user_profiles): WF1 user profiles API + store foundation`
+- [ ] **Step 13 — Commit:** `feat(91_mobile_lead_feed,77_mobile_crm_flight_board): backend foundations — lead detail, flight-board detail, permits.updated_at`
 
 ---
 
-## Deferred / Out of Scope
+## Out of Scope / Deferred
 
-- Stripe webhook handler (`/api/webhooks/stripe`) — Spec 96
-- `/api/subscribe/session` — Spec 96
-- `lead_views_count` atomic CTE increment in `/api/leads` — Spec 96
-- `radius_km` one-time write-back guard on first launch — Spec 97
-- `useLocation.ts` gating on `locationMode` — Spec 97
-- Phone number change verification flow — Spec 97
-- Location mode switch behavior (bottom sheet on toggle) — Spec 97
-- Skeleton animation in consuming screens (SettingsScreen, ProfileScreen) — Spec 97
-- Admin UI for managing user profiles — Spec 97
-- Team/org membership tables — Phase 2
+- **Mobile wiring** of the new endpoints — `useLeadDetail`, `useFlightJob`, `mmkv hasUpdate` tracking. This is its own WF3/WF1 task once the contracts are stable.
+- **COA detail join** — `parseLeadId` recognises `COA-…` ids but the detail handler returns 501 for now; CoA detail is a separate spec scope.
+- **Builder/applicant unmasking** in `LeadDetail.applicant` — currently null. Spec 91 §4.3 lists "builder/applicant entity (if unmasked)" as a future enhancement gated on a permits/builders join helper that doesn't exist yet.
+- **Street View image** — client-side `expo-image` cached fetch, no backend involvement.
+
+---
+
+> **PLAN LOCKED. Do you authorize this WF3 plan? (y/n)**
+> §10 note: trigger function `trigger_set_timestamp()` from migration 100 is reused, not redefined — migration 115 only adds the column + the new CREATE TRIGGER row.
+> DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.

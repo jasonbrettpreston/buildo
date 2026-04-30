@@ -34,6 +34,26 @@ export const badRequestZod = (zodError: ZodError) =>
   err('VALIDATION_FAILED', 'Request validation failed', 400, zodError.flatten());
 
 /**
+ * 400 for malformed lead id path params. The /api/leads/detail/:id and
+ * /api/leads/flight-board/detail/:id endpoints accept either
+ * `${permit_num}--${revision_num}` or `COA-${application_number}` ids;
+ * anything else (empty after split, no separator, etc.) is rejected here
+ * with a stable code so the mobile client can distinguish "user typed a
+ * bad URL" from "permit doesn't exist" (404).
+ */
+export const badRequestInvalidId = () =>
+  err('INVALID_LEAD_ID', 'Lead id must be `<permit_num>--<revision_num>` or `COA-<application_number>`', 400);
+
+/**
+ * 404 for missing leads. Used when a parsed id resolves to no row in
+ * permits (detail endpoint) or is not on the user's saved board
+ * (flight-board detail endpoint). Distinct from 400 (bad shape) so the
+ * client can show "permit no longer exists" vs "bad URL" UX.
+ */
+export const notFound = (message = 'Lead not found') =>
+  err('NOT_FOUND', message, 404);
+
+/**
  * 500 fallback. Accepts the underlying cause and a context object so the
  * error is captured in logs (not lost) while the client still gets a
  * generic message with no leaked stack trace. Phase 2 routes call this

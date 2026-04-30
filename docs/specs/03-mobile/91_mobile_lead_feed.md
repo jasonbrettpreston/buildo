@@ -90,6 +90,20 @@ Whether tapped from the feed or the map, the user is routed to a comprehensive, 
 * **Primary Call to Action:**
     * `SaveButton.tsx` floating fixed at the bottom of the screen.
 
+#### 4.3.1 API Contract — `GET /api/leads/detail/:id`
+
+| | |
+|---|---|
+| **Auth** | Bearer token (mobile) or session cookie (web) — same as `/api/leads/feed`. |
+| **Path param** | `id` — `${permit_num}--${revision_num}` for permits, `COA-${application_number}` for CoA leads. |
+| **Status codes** | 200 success · 400 `INVALID_LEAD_ID` (malformed) · 401 `UNAUTHORIZED` · 404 `NOT_FOUND` (no permit row, or CoA — currently unimplemented) · 500 `INTERNAL_ERROR`/`DATABASE_ERROR` (sanitized, no raw `err.message` leaked) |
+| **Response shape** | `{ data: LeadDetail, error: null, meta: null }` |
+
+`LeadDetail` is defined in `src/app/api/leads/detail/[id]/types.ts` and includes:
+`lead_id`, `lead_type`, `permit_num`, `revision_num`, `address`, `location: { lat, lng } | null`, `work_description`, `applicant` (reserved — currently null), `lifecycle_phase`, `lifecycle_stalled`, `target_window` (`'bid' | 'work' | null`), `opportunity_score`, `competition_count`, `predicted_start`, `p25_days`, `p75_days`, `cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm } | null`, `neighbourhood: { name, avg_household_income, median_household_income, period_of_construction } | null`, `updated_at` (ISO 8601).
+
+The handler joins `permits + cost_estimates + neighbourhoods + trade_forecasts` and a LATERAL `COUNT(*)` over `lead_views` (`saved=true`) for `competition_count`. `target_window` and `opportunity_score` are read directly from `trade_forecasts` (already persisted there — not recomputed in JS).
+
 ### 4.4 Interactive Primitives
 
 **`SaveButton.tsx` (Optimistic Database Persister)**

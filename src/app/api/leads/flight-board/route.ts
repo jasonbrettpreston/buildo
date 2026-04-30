@@ -12,6 +12,10 @@ import { pool } from '@/lib/db/client';
 import { ok } from '@/features/leads/api/envelope';
 import { internalError, unauthorized } from '@/features/leads/api/error-mapping';
 import { TRADE_TARGET_PHASE } from '@/lib/classification/lifecycle-phase';
+import {
+  computeTemporalGroup,
+  type TemporalGroup,
+} from '@/lib/leads/flight-board-temporal';
 
 // Mirrors the PHASE_INDEX used in get-lead-feed.ts — must stay in sync.
 const PHASE_INDEX: Readonly<Record<string, number>> = {
@@ -22,8 +26,6 @@ const PHASE_INDEX: Readonly<Record<string, number>> = {
   P18: 21, P19: 22, P20: 23,
 };
 
-type TemporalGroup = 'action_required' | 'departing_soon' | 'on_the_horizon';
-
 interface FlightBoardRow {
   permit_num: string;
   revision_num: string;
@@ -33,6 +35,7 @@ interface FlightBoardRow {
   predicted_start: string | null;
   p25_days: number | null;
   p75_days: number | null;
+  updated_at: string;
 }
 
 const FLIGHT_BOARD_SQL = `
@@ -44,7 +47,8 @@ const FLIGHT_BOARD_SQL = `
     p.lifecycle_stalled,
     tf.predicted_start::text AS predicted_start,
     tf.p25_days,
-    tf.p75_days
+    tf.p75_days,
+    p.updated_at::text AS updated_at
   FROM lead_views lv
   INNER JOIN permits p
     ON p.permit_num = lv.permit_num
@@ -58,19 +62,6 @@ const FLIGHT_BOARD_SQL = `
     AND lv.lead_type = 'permit'
   ORDER BY lv.saved_at DESC NULLS LAST
 `;
-
-function computeTemporalGroup(
-  row: FlightBoardRow,
-  now: Date,
-): TemporalGroup {
-  if (row.lifecycle_stalled) return 'action_required';
-  if (!row.predicted_start) return 'on_the_horizon';
-  const start = new Date(row.predicted_start);
-  const diffDays = (start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-  if (diffDays <= 0) return 'action_required'; // past due
-  if (diffDays <= 14) return 'departing_soon';
-  return 'on_the_horizon';
-}
 
 const GROUP_ORDER: Record<TemporalGroup, number> = {
   action_required: 0,
@@ -110,6 +101,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
         p25_days: row.p25_days,
         p75_days: row.p75_days,
         temporal_group: computeTemporalGroup(row, now),
+        updated_at: row.updated_at,
       }))
       .sort((a, b) => {
         const groupDiff = GROUP_ORDER[a.temporal_group] - GROUP_ORDER[b.temporal_group];
