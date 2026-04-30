@@ -18,3 +18,10 @@ export function heavyImpact(): void {
 export function successNotification(): void {
   void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 }
+
+// Engineering Standards §1.3 "the error variant for failures" — a distinct
+// haptic signal that a destructive or critical action failed, so the user
+// knows to check the screen for an error toast.
+export function errorNotification(): void {
+  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+}

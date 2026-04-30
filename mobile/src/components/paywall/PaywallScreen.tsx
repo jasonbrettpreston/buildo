@@ -22,7 +22,7 @@ import { Lock } from 'lucide-react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePaywallStore } from '@/store/paywallStore';
 import { useSubscribeCheckout } from '@/hooks/useSubscribeCheckout';
-import { successNotification } from '@/lib/haptics';
+import { successNotification, errorNotification } from '@/lib/haptics';
 
 interface Props {
   /** lead_views_count from user_profiles. Zero is rendered as a different copy block (spec §Step 1). */
@@ -96,8 +96,16 @@ export function PaywallScreen({ leadViewsCount }: Props) {
   const refreshStyle = useAnimatedStyle(() => ({ opacity: refreshOpacity.value }));
 
   const handlePrimary = async () => {
-    successNotification();
-    await openCheckout();
+    // Fire haptic AFTER the async operation resolves — a pre-emptive
+    // successNotification() before openCheckout would give the user a
+    // success signal even when the request fails (Spec 91 §4.4 explicit:
+    // success haptic is reserved for genuine successful state mutations).
+    const ok = await openCheckout();
+    if (ok) {
+      successNotification();
+    } else {
+      errorNotification();
+    }
   };
 
   const handleRefresh = async () => {
@@ -128,10 +136,13 @@ export function PaywallScreen({ leadViewsCount }: Props) {
 
         {leadViewsCount > 0 ? (
           <Animated.View style={countStyle}>
-            <Text className="text-center font-mono text-4xl font-bold text-amber-400">
+            {/* Spec 96 §9 NativeWind table: count = `text-amber-400 font-mono
+                text-4xl font-bold text-center mb-8`; caption = same with mb-10
+                and no mt. The mb-8 here gives the 32px gap the spec calls for. */}
+            <Text className="mb-8 text-center font-mono text-4xl font-bold text-amber-400">
               {leadViewsCount} leads
             </Text>
-            <Text className="mb-10 mt-2 text-center text-sm text-zinc-500">
+            <Text className="mb-10 text-center text-sm text-zinc-500">
               viewed in your 14-day trial
             </Text>
           </Animated.View>

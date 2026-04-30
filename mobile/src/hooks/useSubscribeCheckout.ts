@@ -13,6 +13,7 @@
 import { useState, useCallback } from 'react';
 import { z } from 'zod';
 import * as WebBrowser from 'expo-web-browser';
+import * as Sentry from '@sentry/react-native';
 import { fetchWithAuth, ApiError, NetworkError } from '@/lib/apiClient';
 
 // Cross-Domain Scenario B drift mitigation: this Zod schema is the
@@ -67,6 +68,14 @@ export function useSubscribeCheckout() {
       } else if (err instanceof NetworkError) {
         setError({ kind: 'network' });
       } else {
+        // 'unknown' covers unexpected 5xx, Zod parse failures on a malformed
+        // URL, and WebBrowser invocation errors — the highest-severity case.
+        // Send to Sentry so production crashes don't disappear into a typed
+        // local state. ApiError 4xx and NetworkError are user-recoverable
+        // states; we don't capture those.
+        Sentry.captureException(err, {
+          extra: { context: 'useSubscribeCheckout' },
+        });
         setError({ kind: 'unknown', message: err instanceof Error ? err.message : 'Unknown error' });
       }
       return false;

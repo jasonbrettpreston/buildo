@@ -7,19 +7,21 @@ vi.mock('@/lib/auth/get-user', () => ({
   getUserIdFromSession: vi.fn(),
 }));
 
+const fakeClientQuery = vi.fn();
 vi.mock('@/lib/db/client', () => ({
-  query: vi.fn(),
+  withTransaction: vi.fn(async (fn: (client: unknown) => Promise<unknown>) =>
+    fn({ query: fakeClientQuery }),
+  ),
 }));
 
 import { getUserIdFromSession } from '@/lib/auth/get-user';
-import { query } from '@/lib/db/client';
 import { POST } from '@/app/api/subscribe/session/route';
 
 const mockedGetUid = vi.mocked(getUserIdFromSession);
-const mockedQuery = vi.mocked(query);
 
 beforeEach(() => {
-  vi.resetAllMocks();
+  vi.clearAllMocks();
+  process.env.SUBSCRIBE_CHECKOUT_BASE_URL = 'https://buildo.com/subscribe';
 });
 
 function makeRequest(): NextRequest {
@@ -30,13 +32,20 @@ function makeRequest(): NextRequest {
   } as unknown as NextRequest;
 }
 
+// Helper: queue [SELECT profile, SELECT existing nonce, INSERT nonce] for the
+// happy-path transaction body.
+function queueHappyPath(status: string | null) {
+  fakeClientQuery
+    .mockResolvedValueOnce({ rowCount: 1, rows: [{ subscription_status: status }] })
+    .mockResolvedValueOnce({ rowCount: 0, rows: [] }) // no existing nonce
+    .mockResolvedValueOnce({ rowCount: 1, rows: [] }); // INSERT
+}
+
 describe('POST /api/subscribe/session — security', () => {
   it('URL never contains user_id or email (PII boundary)', async () => {
     const sensitiveUid = 'firebase-uid-PII-LEAK-PATTERN';
     mockedGetUid.mockResolvedValueOnce(sensitiveUid);
-    mockedQuery
-      .mockResolvedValueOnce([{ subscription_status: 'expired' }])
-      .mockResolvedValueOnce([]);
+    queueHappyPath('expired');
 
     const res = await POST(makeRequest());
     const body = (await res.json()) as { data: { url: string } };
@@ -45,13 +54,24 @@ describe('POST /api/subscribe/session — security', () => {
     expect(body.data.url).not.toMatch(/uid=|user_id=|email=|user=/i);
   });
 
-  it('two consecutive requests issue distinct nonces', async () => {
+  it('two consecutive requests reuse the same unexpired nonce (idempotent within window)', async () => {
+    // Spec §10 Step 4b: nonces are single-use ON EXCHANGE. Reusing an
+    // unexpired nonce before exchange prevents nonce-table churn from
+    // double-tap CTAs. The first call inserts; the second finds the
+    // existing row and returns the same URL.
     mockedGetUid.mockResolvedValue('uid-x');
-    mockedQuery
-      .mockResolvedValueOnce([{ subscription_status: 'trial' }])
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ subscription_status: 'trial' }])
-      .mockResolvedValueOnce([]);
+    // First request: no existing nonce → INSERT
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ subscription_status: 'trial' }] })
+      .mockResolvedValueOnce({ rowCount: 0, rows: [] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [] });
+    // Second request: existing nonce found → reuse
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ subscription_status: 'trial' }] })
+      .mockResolvedValueOnce({
+        rowCount: 1,
+        rows: [{ nonce: 'reused-nonce-9999' }],
+      });
 
     const r1 = await POST(makeRequest());
     const r2 = await POST(makeRequest());
@@ -61,15 +81,13 @@ describe('POST /api/subscribe/session — security', () => {
     const n1 = new URL(u1).searchParams.get('nonce');
     const n2 = new URL(u2).searchParams.get('nonce');
     expect(n1).toBeTruthy();
-    expect(n2).toBeTruthy();
-    expect(n1).not.toBe(n2);
+    // Second request returned the existing nonce, not a new one
+    expect(n2).toBe('reused-nonce-9999');
   });
 
   it('nonce is a UUID-shaped string (not a guessable counter)', async () => {
     mockedGetUid.mockResolvedValueOnce('uid-x');
-    mockedQuery
-      .mockResolvedValueOnce([{ subscription_status: 'trial' }])
-      .mockResolvedValueOnce([]);
+    queueHappyPath('trial');
 
     const res = await POST(makeRequest());
     const body = (await res.json()) as { data: { url: string } };
@@ -81,18 +99,34 @@ describe('POST /api/subscribe/session — security', () => {
 
   it('rejects already-active users without creating a nonce row', async () => {
     mockedGetUid.mockResolvedValueOnce('uid-active');
-    mockedQuery.mockResolvedValueOnce([{ subscription_status: 'active' }]);
+    fakeClientQuery.mockResolvedValueOnce({
+      rowCount: 1,
+      rows: [{ subscription_status: 'active' }],
+    });
 
     await POST(makeRequest());
 
-    // SELECT only — no INSERT into subscribe_nonces
-    expect(mockedQuery).toHaveBeenCalledTimes(1);
-    expect(mockedQuery.mock.calls[0]?.[0]).toContain('SELECT');
+    // SELECT profile only — no nonce SELECT or INSERT
+    expect(fakeClientQuery).toHaveBeenCalledTimes(1);
+    expect(fakeClientQuery.mock.calls[0]?.[0]).toContain('SELECT');
   });
 
   it('unauthenticated request never queries the DB', async () => {
     mockedGetUid.mockResolvedValueOnce(null);
     await POST(makeRequest());
-    expect(mockedQuery).not.toHaveBeenCalled();
+    expect(fakeClientQuery).not.toHaveBeenCalled();
+  });
+
+  it('cancelled_pending_deletion users cannot resubscribe (deletion contract)', async () => {
+    mockedGetUid.mockResolvedValueOnce('uid-deleting');
+    fakeClientQuery.mockResolvedValueOnce({
+      rowCount: 1,
+      rows: [{ subscription_status: 'cancelled_pending_deletion' }],
+    });
+
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(400);
+    // SELECT profile only — no nonce SELECT or INSERT
+    expect(fakeClientQuery).toHaveBeenCalledTimes(1);
   });
 });

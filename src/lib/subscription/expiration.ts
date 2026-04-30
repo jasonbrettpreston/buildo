@@ -7,6 +7,17 @@
 // write commits and find no matching rows. Pure DB helpers (no
 // Next.js dependencies) so a future Phase 2 Cloud Function batch
 // sweep can import directly.
+//
+// AUTHORIZATION CONTRACT: callers MUST verify that the supplied `uid` is
+// authorized — typically by passing the result of `getUserIdFromSession`
+// or another Firebase-verified UID. These helpers do NOT re-validate
+// ownership; they will write to whatever user_profiles row the WHERE
+// predicate matches. Calling either with an arbitrary uid from untrusted
+// input would let a caller start or expire trials for unrelated users
+// (within the WHERE bounds: only onboarded non-manufacturers for
+// fallback-init, only `subscription_status = 'trial'` for expiration).
+// The user-profile route is the only caller today; any new caller must
+// document its authorization path.
 
 import { query } from '@/lib/db/client';
 

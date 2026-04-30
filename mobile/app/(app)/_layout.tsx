@@ -111,7 +111,7 @@ function PaywallMount({ leadViewsCount }: { leadViewsCount: number }) {
 export default function AppLayout() {
   // Hydrates filterStore + userProfileStore from server profile on every authenticated launch.
   // Must live here so it runs for all authenticated app screens (feed, map, settings, etc.)
-  const { data: profile, isLoading } = useUserProfile();
+  const { data: profile, isLoading, isFetching } = useUserProfile();
 
   const unread = useNotificationStore((s) => s.unreadFlightBoard);
   const paywallDismissed = usePaywallStore((s) => s.dismissed);
@@ -122,6 +122,10 @@ export default function AppLayout() {
   // Track previous status so we can fire the post-payment "expired → active"
   // cleanup exactly once per transition (clear paywall + invalidate ['leads']).
   const prevStatusRef = useRef<string | null | undefined>(undefined);
+  // Guard so the cancelled_pending_deletion sign-out path fires at most once.
+  // Without this, a rapid AppState refetch returning the same status could
+  // trigger multiple parallel signOut() calls and double-redirects.
+  const deletedHandledRef = useRef(false);
 
   // Foreground re-fetch: when the app comes back from the background, the
   // Stripe webhook may have already flipped the user's status. Invalidating
@@ -137,9 +141,16 @@ export default function AppLayout() {
 
   // Sign-out fast path for cancelled_pending_deletion: the account is in the
   // 30-day deletion window and must NOT be shown any app content. Spec 96 §10
-  // Step 2 explicit: signOut + redirect.
+  // Step 2 explicit: signOut + redirect. The deletedHandledRef guard prevents
+  // a double sign-out if the AppState refetch returns the same status while
+  // the first signOut is still in-flight — Firebase signOut is idempotent
+  // but the redirect would race.
   useEffect(() => {
-    if (profile?.subscription_status === 'cancelled_pending_deletion') {
+    if (
+      profile?.subscription_status === 'cancelled_pending_deletion' &&
+      !deletedHandledRef.current
+    ) {
+      deletedHandledRef.current = true;
       void useAuthStore.getState().signOut().then(() => {
         router.replace('/(auth)/sign-in');
       });
@@ -182,9 +193,13 @@ export default function AppLayout() {
   );
 
   // Loading guard: never flash the paywall while subscription_status is
-  // unresolved. Covers initial fetch AND post-AppState invalidate refetch
-  // (`isLoading` stays true during the second fetch only on error retries).
-  if (isLoading || profile == null || profile.subscription_status == null) {
+  // unresolved (Spec 96 §9 explicit). `isLoading` is only true on the
+  // initial fetch — `isFetching` covers the AppState foreground refetch
+  // path where the cached status is stale ('expired') and the freshly-paid
+  // user would see a paywall flash before the refetch resolves to 'active'.
+  // Covering both ensures the post-payment 'expired → active' transition
+  // always passes through the loading guard, never the paywall.
+  if (isLoading || isFetching || profile == null || profile.subscription_status == null) {
     return <SubscriptionLoadingGuard />;
   }
 

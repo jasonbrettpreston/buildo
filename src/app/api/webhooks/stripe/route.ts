@@ -77,14 +77,24 @@ function userIdFromMetadata(metadata: Stripe.Metadata | null | undefined): strin
 
 // Maps Stripe subscription.status to our internal status. Returns null for
 // statuses we don't act on (`incomplete`, `incomplete_expired`, `trialing`,
-// `paused` — none of which should mutate our own subscription_status).
+// `paused`, `canceled` — none of which should mutate our own
+// subscription_status).
+//
+// 'canceled' is intentionally excluded: Spec 96 §7 configures subscriptions
+// with `cancel_at_period_end = true`, meaning the user retains access through
+// the end of their paid period after they cancel. The canonical signal for
+// access revocation is `customer.subscription.deleted` (mapped to 'expired'
+// in classifyEvent, NOT here). Mapping 'canceled' here would lock out paying
+// customers immediately on cancel, breaching the user agreement.
+//
+// 'unpaid' DOES revoke access — Stripe sets this status only after dunning
+// retries are exhausted, so the user has already lost their subscription.
 function mapSubscriptionStatus(status: Stripe.Subscription.Status): WebhookOutcome['newStatus'] {
   switch (status) {
     case 'active':
       return 'active';
     case 'past_due':
       return 'past_due';
-    case 'canceled':
     case 'unpaid':
       return 'expired';
     default:
