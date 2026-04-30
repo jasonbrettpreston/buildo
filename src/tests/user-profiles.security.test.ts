@@ -67,7 +67,12 @@ function setupAuth(profile = BASE_PROFILE) {
 }
 
 describe('PATCH /api/user-profile — whitelist security', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Spec 96 GET handler now runs two helper UPDATEs before the SELECT.
+    // Default both to no-op (empty rows) so unstubbed paths don't crash.
+    mockQuery.mockResolvedValue([]);
+  });
 
   it('strips subscription_status silently — returns 200 with field unchanged', async () => {
     setupAuth();
@@ -134,8 +139,11 @@ describe('PATCH /api/user-profile — whitelist security', () => {
 
   it('GET returns own profile — WHERE clause scoped to authenticated UID', async () => {
     mockGetUser.mockResolvedValueOnce('uid-abc');
-    // DB returns a row for uid-abc only
-    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, user_id: 'uid-abc' }]);
+    // Two helper UPDATEs (no-op, return []) then the SELECT
+    mockQuery
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ ...BASE_PROFILE, user_id: 'uid-abc' }]);
     const req = new NextRequest('http://localhost/api/user-profile');
     const res = await GET(req);
     expect(res.status).toBe(200);

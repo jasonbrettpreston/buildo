@@ -21,12 +21,20 @@ import {
 import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import * as WebBrowser from 'expo-web-browser';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { useFilterStore } from '@/store/filterStore';
 import { useAuthStore } from '@/store/authStore';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { lightImpact } from '@/lib/haptics';
 import * as Haptics from 'expo-haptics';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
+
+// Stripe Customer Portal entry — Spec 96 §7. Real portal session creation
+// (POST returning a one-off portal URL) is a separate task; this static
+// link routes the user to the buildo.com billing page where they sign in
+// and are redirected to their portal.
+const BILLING_PORTAL_URL = 'https://buildo.com/account/billing';
 
 type CostTier = 'small' | 'medium' | 'large' | 'major' | 'mega';
 type Schedule = 'morning' | 'anytime' | 'evening';
@@ -53,6 +61,38 @@ const DEFAULT_PREFS: NotificationPrefs = {
   start_date_urgent: true,
   notification_schedule: 'anytime',
 };
+
+// Spec 96 §7. Hidden when account_preset = 'manufacturer' (admin-managed
+// accounts have no consumer billing UI). Opens the buildo.com billing page
+// in the in-app browser; the user signs in there and is redirected to the
+// Stripe Customer Portal for cancel / payment-method updates.
+function ManageSubscriptionRow() {
+  const { data: profile } = useUserProfile();
+  if (!profile || profile.account_preset === 'manufacturer') return null;
+  return (
+    <>
+      <Text className="font-mono text-xs text-zinc-400 uppercase tracking-wider px-4 pt-6 pb-2 border-t border-zinc-800">
+        Subscription
+      </Text>
+      <Pressable
+        onPress={() => {
+          lightImpact();
+          void WebBrowser.openBrowserAsync(BILLING_PORTAL_URL);
+        }}
+        className="px-4 py-4 border-b border-zinc-800/50 active:bg-zinc-900"
+        style={{ minHeight: 52 }}
+        accessibilityRole="button"
+        accessibilityLabel="Manage subscription at buildo.com"
+        testID="manage-subscription"
+      >
+        <Text className="text-zinc-100 text-sm">Manage subscription at buildo.com →</Text>
+        <Text className="text-zinc-500 text-xs mt-0.5">
+          Cancel, update payment, or change plan
+        </Text>
+      </Pressable>
+    </>
+  );
+}
 
 function usePatchPrefs() {
   const queryClient = useQueryClient();
@@ -272,6 +312,14 @@ export default function SettingsScreen() {
             </View>
           </>
         )}
+
+        {/* ── Subscription ─────────────────────────────────────────────
+            Spec 96 §7. Hidden for manufacturer accounts (account_preset =
+            'manufacturer') because their access is admin-managed and they
+            should never see consumer billing UI. Real Stripe Customer
+            Portal session creation is deferred — this opens the billing
+            page on buildo.com which handles portal redirect. */}
+        <ManageSubscriptionRow />
 
         {/* ── Account Actions ──────────────────────────────────────────
             Spec 93 §5 Step 7. Spec 97 §3 will add Delete Account to this group. */}

@@ -74,7 +74,16 @@ function makePOST(path: string): NextRequest {
 }
 
 describe('GET /api/user-profile', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Spec 96 §10 Step 4 added two helpers (applyFallbackTrialInitIfNeeded
+    // and applyTrialExpirationIfNeeded) that run BEFORE the SELECT. Each
+    // issues an idempotent UPDATE with a WHERE-clause predicate; in the
+    // common test path neither matches, so the helpers no-op and return
+    // empty rows. mockResolvedValue([]) is the safe default; tests that
+    // exercise the SELECT use mockResolvedValueOnce on top of this default.
+    mockQuery.mockResolvedValue([]);
+  });
 
   it('returns 401 when unauthenticated', async () => {
     mockGetUser.mockResolvedValueOnce(null);
@@ -84,7 +93,8 @@ describe('GET /api/user-profile', () => {
 
   it('returns 404 for unknown uid', async () => {
     mockGetUser.mockResolvedValueOnce('uid-new');
-    mockQuery.mockResolvedValueOnce([]);
+    // Helpers + SELECT all return empty for unknown uid — default mockQuery
+    // resolves to [] for every call, so no Once stubs are needed here.
     const res = await GET(makeGET());
     expect(res.status).toBe(404);
     const body = await res.json() as { error: { code: string } };
@@ -93,7 +103,10 @@ describe('GET /api/user-profile', () => {
 
   it('returns 200 with full profile row', async () => {
     mockGetUser.mockResolvedValueOnce('uid-abc');
-    mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
+    mockQuery
+      .mockResolvedValueOnce([]) // applyFallbackTrialInitIfNeeded — predicate doesn't match
+      .mockResolvedValueOnce([]) // applyTrialExpirationIfNeeded — predicate doesn't match
+      .mockResolvedValueOnce([BASE_PROFILE]); // final SELECT
     const res = await GET(makeGET());
     expect(res.status).toBe(200);
     const body = await res.json() as { data: typeof BASE_PROFILE };
@@ -104,7 +117,10 @@ describe('GET /api/user-profile', () => {
   it('returns 403 with days_remaining for deleted account', async () => {
     mockGetUser.mockResolvedValueOnce('uid-abc');
     const deletedAt = new Date(Date.now() - 5 * 86_400_000).toISOString();
-    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, account_deleted_at: deletedAt }]);
+    mockQuery
+      .mockResolvedValueOnce([]) // applyFallbackTrialInitIfNeeded
+      .mockResolvedValueOnce([]) // applyTrialExpirationIfNeeded
+      .mockResolvedValueOnce([{ ...BASE_PROFILE, account_deleted_at: deletedAt }]); // SELECT
     const res = await GET(makeGET());
     expect(res.status).toBe(403);
     const body = await res.json() as { error: { code: string; days_remaining: number } };

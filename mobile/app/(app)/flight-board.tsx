@@ -24,6 +24,10 @@ import { SearchPermitsSheet } from '@/components/feed/SearchPermitsSheet';
 import { tabBarVisible, tabBarScrollY } from '@/store/tabBarStore';
 import { mediumImpact } from '@/lib/haptics';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
+import { InlineBlurBanner } from '@/components/paywall/InlineBlurBanner';
+import { BlurredFeedPlaceholder } from '@/components/paywall/BlurredFeedPlaceholder';
+import { usePaywallStore } from '@/store/paywallStore';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { Search } from 'lucide-react-native';
 import type { FlightBoardItem, FlightBoardResult } from '@/lib/schemas';
 
@@ -237,6 +241,24 @@ export default function FlightBoardScreen() {
   );
 
   const getItemType = useCallback((item: ListItem) => item.type, []);
+
+  // Spec 96 §9 inline-blur: same gate as the lead feed. If the user dismissed
+  // the paywall and is still 'expired', render banner + locked placeholders.
+  const { data: profile } = useUserProfile();
+  const paywallDismissed = usePaywallStore((s) => s.dismissed);
+  if (paywallDismissed && profile?.subscription_status === 'expired') {
+    return (
+      <SafeAreaView className="flex-1 bg-zinc-950" edges={['top']}>
+        <View className="px-4 pt-4 pb-2 border-b border-zinc-800/50">
+          <Text className="font-mono text-xs text-zinc-400 uppercase tracking-widest">
+            Flight Board
+          </Text>
+        </View>
+        <InlineBlurBanner />
+        <BlurredFeedPlaceholder count={4} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-950" edges={['top']}>

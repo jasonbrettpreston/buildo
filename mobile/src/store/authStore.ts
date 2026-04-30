@@ -9,6 +9,7 @@ import { useFilterStore } from '@/store/filterStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
+import { usePaywallStore } from '@/store/paywallStore';
 import { clearUserProfileCache } from '@/hooks/useUserProfile';
 import { identifyUser, resetIdentity, track } from '@/lib/analytics';
 
@@ -76,7 +77,16 @@ export const useAuthStore = create<AuthState>()(
         // event is attributed to the outgoing session, not the next user
         // who might sign in on this device.
         track('signout_initiated');
-        // Firebase sign-out first — onAuthStateChanged fires (null) which clears auth.
+        // Spec 96 §9 "Sign-out reset (critical)": clear paywall flags BEFORE
+        // firebaseSignOut. Otherwise a fast shared-device handoff (sign-out
+        // → AuthGate redirect → next user signs in → _layout.tsx renders)
+        // could process the next user's first render before this line
+        // executes, putting them in inline-blur mode against their own
+        // 'expired' status. paywallStore is in-memory only (not MMKV-
+        // persisted), so this protects same-session handoffs — common with
+        // family/team phones.
+        usePaywallStore.getState().clear();
+        // Firebase sign-out — onAuthStateChanged fires (null) which clears auth.
         // Then reset peer in-memory stores so a different user signing in on the same
         // device sees no stale data. MMKV is preserved per §3.4 so the same user
         // returning on the same device gets fast hydration.
@@ -86,9 +96,6 @@ export const useAuthStore = create<AuthState>()(
         useOnboardingStore.getState().reset();
         useUserProfileStore.getState().reset();
         clearUserProfileCache();
-        // TODO Spec 96: usePaywallStore.getState().clear() — without it, a user who
-        //   dismissed the paywall and signed out on a shared device leaves
-        //   `dismissed: true` in memory, putting the next user in inline blur mode.
         set({ user: null, idToken: null, isLoading: false });
         // Reset PostHog identity AFTER the in-memory store reset so the
         // distinctId is cleared at a clean session boundary; any subsequent

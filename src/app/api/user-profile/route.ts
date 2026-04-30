@@ -1,10 +1,15 @@
 // SPEC LINK: docs/specs/03-mobile/95_mobile_user_profiles.md §5 API Contract, §6 Route Logic
+//             docs/specs/03-mobile/96_mobile_subscription.md §10 Step 4 (GET fallback init + trial expiration)
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { UserProfileUpdateSchema } from '@/lib/userProfile.schema';
+import {
+  applyFallbackTrialInitIfNeeded,
+  applyTrialExpirationIfNeeded,
+} from '@/lib/subscription/expiration';
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const uid = await getUserIdFromSession(request);
@@ -16,6 +21,19 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   }
 
   try {
+    // Spec 96 §10 Step 4: run the trial-state helpers BEFORE the SELECT so the
+    // returned profile reflects any post-write state. Both helpers are
+    // idempotent — they no-op when their predicate doesn't match — and they
+    // RETURNING * so we could short-circuit, but reading the row again after
+    // both helpers run is simpler and the cost is one indexed lookup.
+    //
+    // Order matters: fallback init first (might write status='trial'), then
+    // expiration check (might immediately flip 'trial' → 'expired' if the
+    // PATCH was missed and the trial window has already passed). This
+    // matches the canonical flow that PATCH would have followed.
+    await applyFallbackTrialInitIfNeeded(uid);
+    await applyTrialExpirationIfNeeded(uid);
+
     const rows = await query<Record<string, unknown>>(
       `SELECT * FROM user_profiles WHERE user_id = $1`,
       [uid],

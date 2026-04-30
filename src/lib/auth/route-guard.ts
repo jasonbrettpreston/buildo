@@ -56,6 +56,11 @@ const PUBLIC_PREFIXES = [
   '/api/products',
   '/api/coa',
   '/api/quality',
+  // Stripe webhooks — Stripe calls without Firebase auth. The handler verifies
+  // the Stripe-Signature header internally; without this entry the fail-closed
+  // default would 401 every webhook before our handler could run (Spec 96 §10
+  // Step 5 explicit). This is the ONLY webhook prefix permitted.
+  '/api/webhooks/stripe',
   '/permits/',
 ] as const;
 
@@ -81,6 +86,10 @@ const AUTHENTICATED_API_ROUTES = [
   '/api/quality/refresh',
   '/api/notifications',
   '/api/leads', // Phase 2 lead feed routes — require Firebase session
+  // Spec 96 §10 Step 4b: nonce-issuing checkout endpoint. Listed explicitly
+  // (rather than relying on the fail-closed default) so the auth contract
+  // is visible at a glance and grep-friendly.
+  '/api/subscribe',
 ] as const;
 
 // ---------------------------------------------------------------------------

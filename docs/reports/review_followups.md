@@ -638,3 +638,15 @@ _From the 7-agent audit (4 micro + 3 macro + 2 automated guards). Critical/impor
 | Severity | Source | Item | Planned Home |
 |----------|--------|------|-------------|
 | LOW | Code Reviewer | **`apiClient.ts` concurrent 401 mutex** — Two inflight requests that both receive 401 each independently call `getIdToken(true)` and `setAuth`. Firebase deduplicates the token refresh network call, but the Zustand store receives two `setAuth` writes with potentially different timestamps. Low risk in practice (rare to have two simultaneous requests when a token expires); a module-level `refreshPromise` mutex (`let refreshPromise: Promise<string> \| null = null`) would eliminate the race entirely. | Spec 93 auth hardening or next mobile hardening pass |
+
+## WF1 Spec 96 Subscription — Deferred Review Items (2026-04-30)
+
+Multi-agent review (Code Reviewer + Gemini + DeepSeek) ran on the new endpoints. Critical and high-confidence findings were fixed inline before commit. Remaining items deferred:
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| LOW | DeepSeek | **`subscribe/session` race window between SELECT and INSERT** — A concurrent webhook (e.g., `customer.subscription.created`) could set status to `'active'` after the SELECT returns `null`/`expired` but before the INSERT commits. The web checkout server-to-server re-validates status before charging, so the wasted nonce is a UX issue, not a billing one. Fix would be `SELECT ... FOR UPDATE` or wrap in a transaction. Acceptable given 15-min TTL. | Future hardening pass |
+| LOW | DeepSeek | **`subscribe/session` hardcoded production fallback URL** — `'https://buildo.com/subscribe'` is the default when `SUBSCRIBE_CHECKOUT_BASE_URL` env is unset. A misconfigured staging/dev environment would route to prod. Either make the env var required (throw on startup) or default per `NODE_ENV`. | Deployment hardening |
+| LOW | Code Reviewer | **`useSubscribeCheckout` re-declares URL response shape locally instead of importing from `src/app/api/subscribe/session/types.ts`** — Mobile workspace cannot import server-side types without a `packages/shared-types` workspace (Spec 90 §7 deferred). Zod schema is the runtime guard so drift fails loud, but the TS type lives in two places. | Spec 90 §7 monorepo workspace |
+| LOW | Pre-existing | **Mobile typecheck fails on `AnimatedFlashList` ref/data/keyExtractor/renderItem types** — `Animated.createAnimatedComponent(FlashList)` strips the generic, props become `unknown`. Introduced in WF3 Set 3 (commit `15292eb`). Root typecheck (the gate) is clean; mobile typecheck warnings only. Fix requires either Reanimated v4 type fixes or a typed wrapper component. | Mobile hardening pass |
+| LOW | Pre-existing | **`mobile/app/_layout.tsx:38` Notification API type drift** — `expo-notifications` recent versions added `shouldShowBanner` and `shouldShowList` to `NotificationBehavior`. Existing handler returns the legacy 3-field shape. Notifications still work; types are stale. | Mobile dependency upgrade pass |

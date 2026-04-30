@@ -20,6 +20,10 @@ import { FilterTriggerRow } from '@/components/feed/FilterTriggerRow';
 import { LeadFilterSheet } from '@/components/feed/LeadFilterSheet';
 import { mediumImpact } from '@/lib/haptics';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
+import { InlineBlurBanner } from '@/components/paywall/InlineBlurBanner';
+import { BlurredFeedPlaceholder } from '@/components/paywall/BlurredFeedPlaceholder';
+import { usePaywallStore } from '@/store/paywallStore';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import type { PermitLeadFeedItem } from '@/lib/schemas';
 import type { LeadFeedItem } from '@/lib/schemas';
 import { useRouter, useNavigation } from 'expo-router';
@@ -44,8 +48,17 @@ export default function LeadFeedScreen() {
   const [filterOpen, setFilterOpen] = useState(false);
   const listRef = useRef<FlashListRef<LeadFeedItem>>(null);
 
+  // Spec 96 §9 inline-blur: when the user dismissed the full paywall but
+  // their subscription is still expired, render a banner + locked placeholders
+  // instead of fetching the feed. We don't issue the /api/leads/feed request
+  // in this state — they have no entitlement and the cards would be illegible.
+  const { data: profile } = useUserProfile();
+  const paywallDismissed = usePaywallStore((s) => s.dismissed);
+  const isInlineBlurMode =
+    paywallDismissed && profile?.subscription_status === 'expired';
+
   const feedParams =
-    coords && tradeSlug && idToken
+    !isInlineBlurMode && coords && tradeSlug && idToken
       ? { lat: coords.lat, lng: coords.lng, tradeSlug, radiusKm }
       : null;
 
@@ -142,6 +155,22 @@ export default function LeadFeedScreen() {
   }, [refetch]);
 
   const handleOpenFilter = useCallback(() => setFilterOpen(true), []);
+
+  if (isInlineBlurMode) {
+    // Spec 96 §9: banner + locked placeholders. No feed query, no scroll
+    // restoration concern since the FlashList isn't mounted in this branch.
+    return (
+      <SafeAreaView className="flex-1 bg-zinc-950" edges={['top']}>
+        <View className="px-4 pt-4 pb-2 border-b border-zinc-800/50">
+          <Text className="font-mono text-xs text-zinc-400 uppercase tracking-widest">
+            Lead Feed
+          </Text>
+        </View>
+        <InlineBlurBanner />
+        <BlurredFeedPlaceholder count={6} />
+      </SafeAreaView>
+    );
+  }
 
   if (locationLoading) {
     return (

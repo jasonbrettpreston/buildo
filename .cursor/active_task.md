@@ -1,255 +1,296 @@
-# Active Task: Mobile Backend Foundations — Lead Detail, Flight-Board Detail, permits.updated_at
+# Active Task: Spec 96 — Mobile Subscription & Paywall (WF1)
 **Status:** Implementation
-**Workflow:** WF3 — Bug Fix (3 mobile blockers, all backend)
-**Domain Mode:** Cross-Domain — Scenario B (API consumed by Expo). Read `.claude/domain-crossdomain.md` ✓ + `scripts/CLAUDE.md` ✓ + `.claude/domain-admin.md` ✓.
+**Workflow:** WF1 — Genesis (new feature)
+**Domain Mode:** Cross-Domain — Scenario A (Admin UI + API; Settings link → Stripe Customer Portal) AND Scenario B (Expo client consumes `POST /api/subscribe/session` + `GET /api/user-profile` for `subscription_status`). Read `.claude/domain-crossdomain.md` ✓ + `.claude/domain-admin.md` ✓ + `scripts/CLAUDE.md` ✓ + `docs/specs/03-mobile/90_mobile_engineering_protocol.md` ✓.
 
 ---
 
 ## Context
 
-* **Goal:** Unblock three mobile bugs by shipping their backend prerequisites:
-  1. **Lead Investigation View** (`/(app)/[lead]`) — currently reads from TanStack feed cache only; on cold-boot from a push notification, the cache is empty and the screen has no source of truth. Build `GET /api/leads/detail/:id` joining `permits + cost_estimates + neighbourhoods + lead_views`.
-  2. **Flight Board cold-boot** (`/(app)/[flight-job]`) — currently looks up a single job by id-walking the `useFlightBoard()` array; cold-boot from a push notification → empty array → "Job not found". Build `GET /api/leads/flight-board/detail/:id` returning the single saved job by id.
-  3. **"Newly Updated" amber flash** on `FlightCard.tsx` — the component already implements the animation, but `hasUpdate` is never passed because the flight-board response shape lacks an `updated_at` field. Add `permits.updated_at` column + DB trigger (matching the Migration 100 pattern) and expose it on the list and both detail endpoints.
+* **Goal:** Ship the subscription gate that controls access to the lead feed and flight board: 14-day free trial → Stripe-paid `'active'` → `'expired'` → paywall. All payment occurs on `buildo.com` (zero Apple commission). The gate must handle six `subscription_status` values, render a loading guard so the paywall never flashes during fetch, and degrade to inline-blur mode when dismissed.
 
-* **Target Specs:**
-  - `docs/specs/03-mobile/91_mobile_lead_feed.md §4.3` (Detailed Investigation View) — backs `/api/leads/detail/:id`
-  - `docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.3` (Detailed Investigation View for flight board) + §3.2 "Amber Update Flash" — backs `/api/leads/flight-board/detail/:id` and the `updated_at` exposure
-
-* **Validation findings (pre-flight):**
-  - `permits.updated_at` — **MISSING** from `src/lib/db/schema.ts:888-970` and from migrations 100/114. Permits has `firstSeenAt`, `lastSeenAt`, `geocodedAt`, etc. but no `updated_at`.
-  - `cost_estimates` table — **PRESENT** at `schema.ts:857-886`, FK to permits via `(permit_num, revision_num)`. Columns: `estimated_cost`, `cost_source`, `cost_tier`, `cost_range_low`, `cost_range_high`, `modeled_gfa_sqm`, `effective_area_sqm`, `premium_factor`, `complexity_score`, `model_version`, `computed_at`, `trade_contract_values` (JSONB), `is_geometric_override`.
-  - `neighbourhoods` table (British spelling) — **PRESENT** at `schema.ts:307-334`. Columns: `id` (serial PK), `neighbourhood_id`, `name`, `avg_household_income`, `median_household_income`, `low_income_pct`, `tenure_owner_pct`, `period_of_construction`, `university_degree_pct`, `immigrant_pct`, `visible_minority_pct`, `english_knowledge_pct`, `top_mother_tongue`, `census_year`, `geom`. FK from `permits.neighbourhood_id` (integer).
-  - `lead_views` — **PRESENT**, holds `(user_id, permit_num, revision_num, saved, saved_at, lead_type)`. Used by `flight-board/route.ts` to filter `saved=true AND lead_type='permit'`.
+* **Target Spec:** `docs/specs/03-mobile/96_mobile_subscription.md` (exhaustive implementation guide — §10 Build Sequence steps 1-6 map directly to the Execution Plan below).
 
 * **Cross-spec dependencies:**
-  - Spec 95 (committed) — auth helper `getCurrentUserContext(request, pool)` returns `{ uid, trade_slug, ... }` or null (`src/lib/auth/get-user-context.ts:32`).
-  - Migration 100 — established the `trigger_set_timestamp()` reusable trigger function. We reuse it (don't redefine).
-  - Existing route patterns: `src/app/api/leads/feed/route.ts` and `src/app/api/leads/flight-board/route.ts` — both use `withApiEnvelope`, `ok(data)`, `internalError(cause, { route })`, `unauthorized()`. Inherit verbatim.
+  - **Spec 95** — `user_profiles.subscription_status` enum, `trial_started_at`, `stripe_customer_id`, `lead_views_count`, `account_preset`; `subscribe_nonces` table; `stripe_webhook_events` table. **All shipped in migration 114** (validated). Spec 95 PATCH handler already writes `trial_started_at = NOW()` + `subscription_status = 'trial'` atomically when `onboarding_complete: true` is set on a non-manufacturer account. **No new migrations needed.**
+  - **Spec 93** — AuthGate operational (committed `991afb9`). The subscription gate sits AFTER AuthGate, BEFORE the Spec 94 onboarding gate. Sign-out action in `mobile/src/store/authStore.ts` already resets filter/userProfile/notification/onboarding stores; line 89 has a TODO awaiting `paywallStore.clear()`.
+  - **Spec 94** — Onboarding holding screen handles `account_preset = 'manufacturer' AND onboarding_complete = false`. The subscription gate must NOT route `'admin_managed'` to the paywall — it grants full access and defers to onboarding.
+  - **Spec 91 / 77** — Lead feed and flight board are gated by the subscription state. When `'expired' AND paywallStore.dismissed`, both render inline-blur banner + locked cards.
+
+* **Pre-flight validation findings (full report — see commit message):**
+  - DB schema: ✅ all columns + tables present in migration 114
+  - PATCH trial init: ✅ already in `user-profile/route.ts:243-250`
+  - Mobile dependencies: ✅ `expo-web-browser` 15.0.11, `expo-blur` 15.0.8, `lucide-react-native` 1.8.0
+  - **Missing pieces** (this task adds): `stripe` npm package (root); `paywallStore`; `PaywallScreen`; subscription gate in `_layout.tsx`; inline blur banners on index/flight-board; Settings subscription link; sign-out cleanup; GET fallback trial init + trial expiration in `user-profile/route.ts`; `POST /api/subscribe/session`; webhook handler; route-guard updates.
+  - **Spec path correction:** spec references `mobile/app/(app)/(tabs)/index.tsx` and `mobile/app/(app)/(tabs)/flight-board.tsx`; actual repo layout has `(app)/index.tsx` and `(app)/flight-board.tsx` directly under `(app)/` with `(app)/_layout.tsx` providing the `<Tabs>` navigator. Plan uses the actual paths.
 
 * **Key Files:**
 
   NEW — server:
-  - `migrations/115_permits_updated_at.sql`
-  - `src/app/api/leads/detail/[id]/route.ts`
-  - `src/app/api/leads/detail/[id]/types.ts`
-  - `src/app/api/leads/flight-board/detail/[id]/route.ts`
-  - `src/app/api/leads/flight-board/detail/[id]/types.ts`
-  - `src/lib/leads/parse-lead-id.ts` — shared id parser (rejects malformed; returns `{ kind: 'permit', permit_num, revision_num } | { kind: 'coa', application_number } | null`)
-  - `src/lib/leads/lead-detail-query.ts` — composed SELECT for detail endpoint
-  - `src/tests/leads-detail.infra.test.ts`
-  - `src/tests/flight-board-detail.infra.test.ts`
-  - `src/tests/permits-updated-at.logic.test.ts` — verifies trigger fires on UPDATE
+  - `src/app/api/webhooks/stripe/route.ts`
+  - `src/app/api/subscribe/session/route.ts`
+  - `src/app/api/subscribe/session/types.ts` (Cross-Domain Scenario B contract)
+  - `src/lib/subscription/expiration.ts` (shared trial-expiration helper used by GET handler)
+  - `src/tests/stripe-webhook.infra.test.ts`
+  - `src/tests/stripe-webhook.security.test.ts`
+  - `src/tests/subscribe-session.infra.test.ts`
+  - `src/tests/subscribe-session.security.test.ts`
+  - `src/tests/user-profile-trial.infra.test.ts` (covers GET fallback + expiration write)
 
-  MODIFY:
-  - `src/lib/db/schema.ts` — add `updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()` to `permits` table
-  - `src/app/api/leads/flight-board/route.ts` — add `p.updated_at` to `FLIGHT_BOARD_SQL` SELECT, extend `FlightBoardRow` interface and the mapped output object with `updated_at: string`
-  - `docs/specs/03-mobile/91_mobile_lead_feed.md` — append §4.3.1 documenting the `/api/leads/detail/:id` contract
-  - `docs/specs/03-mobile/77_mobile_crm_flight_board.md` — append §3.3.1 documenting the `/api/leads/flight-board/detail/:id` contract + amend §3.2 to specify `updated_at` is now present in list responses
+  NEW — mobile:
+  - `mobile/src/store/paywallStore.ts`
+  - `mobile/src/components/paywall/PaywallScreen.tsx`
+  - `mobile/src/components/paywall/InlineBlurBanner.tsx` (shared by feed + flight board)
+  - `mobile/src/components/paywall/SubscriptionLoadingGuard.tsx`
+  - `mobile/src/hooks/useSubscribeCheckout.ts` (POST /api/subscribe/session + WebBrowser.openBrowserAsync)
+  - `mobile/__tests__/subscriptionGate.test.ts`
+  - `mobile/__tests__/paywallStore.test.ts`
+
+  MODIFY — server:
+  - `src/app/api/user-profile/route.ts` — GET handler: idempotent fallback trial-init for legacy paths + trial-expiration write (`trial + 14d <= NOW() → 'expired'`)
+  - `src/lib/auth/route-guard.ts` — add `/api/webhooks/stripe` to `PUBLIC_PREFIXES`; add `/api/subscribe/session` explicitly to `AUTHENTICATED_API_ROUTES`
+
+  MODIFY — mobile:
+  - `mobile/app/(app)/_layout.tsx` — subscription gate (six status branches: `trial`/`active`/`past_due`/`admin_managed` → render Tabs; `expired` → `<PaywallScreen>` or inline-blur per `paywallStore.dismissed`; `cancelled_pending_deletion` → `firebase.auth().signOut()` + redirect to `/(auth)/sign-in`); loading guard while status is `null`/`undefined`; `AppState` listener that re-fetches profile on `'active'` transition.
+  - `mobile/app/(app)/index.tsx` — render `<InlineBlurBanner>` + `<BlurView>` over each `LeadCard` when `paywallStore.dismissed && status === 'expired'`. Scroll-to-top on entering blur mode.
+  - `mobile/app/(app)/flight-board.tsx` — same banner + blur over `FlightCard`.
+  - `mobile/app/(app)/settings.tsx` — add "Manage subscription at buildo.com →" row that opens Stripe Customer Portal via `WebBrowser.openBrowserAsync()` (hidden when `account_preset === 'manufacturer'`).
+  - `mobile/src/store/authStore.ts` — replace TODO at line 89 with `paywallStore.getState().clear()` in the sign-out flow.
+
+  MODIFY — root:
+  - `package.json` — add `stripe` as a dependency
 
 ---
 
 ## API Contract Note (Cross-Domain Scenario B)
 
-| Method | Path | Auth | Status codes | Response shape |
-|--------|------|------|--------------|----------------|
-| GET | `/api/leads/detail/:id` | Bearer/cookie | 200, 400 (bad id), 401, 404 (no permit), 500 | `{ data: LeadDetail, error: null, meta: null }` |
-| GET | `/api/leads/flight-board/detail/:id` | Bearer/cookie | 200, 400 (bad id), 401, 404 (not on user's board), 500 | `{ data: FlightBoardDetail, error: null, meta: null }` |
-| GET | `/api/leads/flight-board` (modified) | Bearer/cookie | unchanged | each item adds `updated_at: string (ISO)` |
+| Method | Path | Auth | Status codes | Response |
+|--------|------|------|--------------|----------|
+| POST | `/api/subscribe/session` | Bearer (Firebase) | 200 (`{url}`), 400 (already-active or admin_managed), 401, 500 | `{ data: { url: string }, error: null, meta: null }` |
+| POST | `/api/webhooks/stripe` | Stripe-Signature header (no Firebase) | 200 (`{received: true}`), 400 (signature invalid / payload missing), 500 | `{ received: true }` (NOT the standard data envelope — Stripe expects this shape) |
+| GET | `/api/user-profile` (modified) | Bearer (existing) | unchanged | now writes `subscription_status = 'expired'` to DB when trial expired; idempotent fallback trial-init for legacy paths |
 
-**`LeadDetail` shape (defined in `src/app/api/leads/detail/[id]/types.ts`):**
+**`SubscribeSessionResponse` (in `src/app/api/subscribe/session/types.ts`):**
 ```ts
-export interface LeadDetail {
-  lead_id: string;                       // `${permit_num}--${revision_num}` or `COA-${application_number}`
-  lead_type: 'permit' | 'coa';
-  permit_num: string | null;             // null for COA-only leads (rare)
-  revision_num: string | null;
-  address: string;                       // composed from street_num + street_name
-  location: { lat: number; lng: number } | null;
-  work_description: string | null;
-  applicant: string | null;              // best-effort from permits.applicant or builders join (deferred — null for now)
-  lifecycle_phase: string | null;
-  lifecycle_stalled: boolean;
-  target_window: 'bid' | 'work' | null;
-  opportunity_score: number | null;
-  competition_count: number;             // count(*) FROM lead_views WHERE permit_num=… AND revision_num=… AND saved=true
-  predicted_start: string | null;
-  p25_days: number | null;
-  p75_days: number | null;
-  cost: {
-    estimated: number | null;
-    tier: string | null;
-    range_low: number | null;
-    range_high: number | null;
-    modeled_gfa_sqm: number | null;
-  } | null;
-  neighbourhood: {
-    name: string | null;
-    avg_household_income: number | null;
-    median_household_income: number | null;
-    period_of_construction: string | null;
-  } | null;
-  updated_at: string;                    // ISO timestamp from permits.updated_at
+export interface SubscribeSessionResponse {
+  /** `https://buildo.com/subscribe?nonce={uuid}` — single-use, server-side nonce, 15-minute TTL. No UID or email in URL. */
+  url: string;
 }
 ```
 
-**`FlightBoardDetail` shape:** identical to a single `FlightBoardItem` from the list endpoint plus `updated_at: string`. Re-exported from the same `types.ts`.
+**Webhook events handled** (Stripe → server):
+- `customer.subscription.created` / `customer.subscription.updated` (status `'active'`) → write `subscription_status = 'active'` + `stripe_customer_id`
+- `invoice.payment_failed` → write `subscription_status = 'past_due'` (user retains access during dunning)
+- `customer.subscription.deleted` → write `subscription_status = 'expired'`
+- Unknown event types → 200 no-op
 
-**Client consumption (downstream — out of scope):**
-- `mobile/app/(app)/[lead].tsx` — `useLeadDetail(id)` hook will call `GET /api/leads/detail/:id` on mount, fall back to `lead-feed` cache walk for warm-boot speed.
-- `mobile/app/(app)/[flight-job].tsx` — `useFlightJob(id)` hook will call `GET /api/leads/flight-board/detail/:id` on mount; existing `useFlightBoard()` cache walk becomes the synchronous fast-path.
-- `mobile/src/components/feed/FlightCard.tsx` — parent (`flight-board.tsx`) tracks `{ [permitId]: lastSeenUpdatedAt }` in MMKV; passes `hasUpdate={item.updated_at !== mmkvSeen[id]}`.
+**Idempotency:** webhook handler wraps the `stripe_webhook_events` INSERT (`onConflictDoNothing`) and the `user_profiles` UPDATE in a single `db.transaction()` (per spec §Step 5 — required for TOCTOU safety under concurrent Stripe retries).
+
+**`subscription_status` write ownership** (per spec §Step 5): only writable by (a) the webhook handler, (b) the `user-profile` GET/PATCH handler for trial init/expiration, (c) Spec 97 reactivation (deferred). Never via `PATCH /api/user-profile` user-editable fields — Spec 95 already strips it from the whitelist.
 
 ---
 
 ## Technical Implementation
 
-### Migration 115 — `permits.updated_at`
-
-`permits` is **237K+ rows**, classifies as the §3.1 zero-downtime case. Use the **add → backfill → constrain → trigger** sequence:
-
-```sql
--- UP
--- Step 1: nullable add (no rewrite, instant on PG 11+)
-ALTER TABLE permits ADD COLUMN updated_at TIMESTAMPTZ;
-
--- Step 2: backfill — coalesce to best-known recency signal
-UPDATE permits SET updated_at = COALESCE(last_seen_at, first_seen_at, NOW())
-WHERE updated_at IS NULL;
-
--- Step 3: constrain after backfill (no row scan needed, all rows now non-null)
-ALTER TABLE permits ALTER COLUMN updated_at SET DEFAULT NOW();
-ALTER TABLE permits ALTER COLUMN updated_at SET NOT NULL;
-
--- Step 4: reuse trigger_set_timestamp() from migration 100
-CREATE TRIGGER set_updated_at
-  BEFORE UPDATE ON permits
-  FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
-
--- DOWN
-DROP TRIGGER IF EXISTS set_updated_at ON permits;
-ALTER TABLE permits DROP COLUMN IF EXISTS updated_at;
-```
-
-The trigger means **the ingestion script and any other UPDATE path automatically gets fresh `updated_at` without code changes** — that's the point of the trigger pattern (Bug Prevention Strategy §5).
-
-### `GET /api/leads/detail/[id]`
-
-Composes a single SELECT joining permits + cost_estimates + neighbourhoods + a `lead_views` competition count subquery. Outline:
+### `paywallStore` (Zustand v5)
 
 ```ts
-// route.ts (top-level structure — full impl in execution)
-export const GET = withApiEnvelope(async function GET(request, { params }) {
-  try {
-    const ctx = await getCurrentUserContext(request, pool);
-    if (!ctx) return unauthorized();
+interface PaywallState {
+  visible: boolean;       // full <PaywallScreen> rendering
+  dismissed: boolean;     // user tapped "Maybe later" → inline-blur mode
+  show(): void;           // visible: true, dismissed: false
+  dismiss(): void;        // visible: false, dismissed: true
+  clear(): void;          // both false — called by authStore.signOut + on status='active'
+}
+```
+Not MMKV-persisted (spec §9 explicit). Always starts fresh so a returning subscriber is never stuck in inline-blur.
 
-    const parsed = parseLeadId(params.id);
-    if (!parsed) return badRequestInvalidId();
-    if (parsed.kind === 'coa') return notImplemented('COA detail not yet supported');  // Phase 2
+### `PaywallScreen` (mobile/src/components/paywall/PaywallScreen.tsx)
 
-    const result = await pool.query<LeadDetailRow>(LEAD_DETAIL_SQL, [
-      parsed.permit_num,
-      parsed.revision_num,
-      ctx.trade_slug,
-    ]);
-    if (result.rowCount === 0) return notFound();
-    return ok(toLeadDetail(result.rows[0]));
-  } catch (cause) {
-    return internalError(cause, { route: 'GET /api/leads/detail/[id]' });
-  }
-});
+Stagger animation (5 sequential `useSharedValue(0)` instances animated via `withDelay(N, withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }))`): icon (0ms) → headline (80ms) → lead count (160ms) → primary CTA (240ms, translateY 8→0) → "Maybe later" (320ms, opacity-only). Refresh link revealed after 60s (`setTimeout` with cleanup in the `useEffect` return — required for unmount safety).
+
+Lead count: `lead_views_count` from `user_profiles` (passed as prop). **Zero-count edge case** (spec §Step 1): replace number+caption block with single line "Explore real leads in your area." — never display "0 leads".
+
+Primary CTA → `useSubscribeCheckout()` hook: POSTs to `/api/subscribe/session`, opens returned URL via `WebBrowser.openBrowserAsync()` (NOT `openAuthSessionAsync` — spec §5 explicitly: Stripe checkout is a standard browser flow, not OAuth). Inline `<ActivityIndicator size="small">` inside button while in-flight. On error: toast "Couldn't open checkout — try again", re-enable button.
+
+`pointerEvents="none"` on the wrapper during the mount fade-in (spec §Step 2 — prevents accidental taps before the screen is fully visible).
+
+### Subscription Gate (mobile/app/(app)/_layout.tsx)
+
+```
+On mount + AppState 'active' → queryClient.invalidateQueries(['user-profile'])
+While status null/undefined → <SubscriptionLoadingGuard /> (full-screen amber spinner)
+Switch on status:
+  'trial' | 'active' | 'past_due' | 'admin_managed' → render <Tabs> (current behaviour)
+  'expired' → paywallStore.dismissed
+              ? render <Tabs> with inline-blur banners (children handle blur)
+              : <PaywallScreen> with mount fade-in (200ms)
+  'cancelled_pending_deletion' → firebase.auth().signOut() + router.replace('/(auth)/sign-in')
 ```
 
-The `LEAD_DETAIL_SQL` joins:
-- `permits p` (base)
-- `LEFT JOIN cost_estimates ce ON ce.permit_num = p.permit_num AND ce.revision_num = p.revision_num`
-- `LEFT JOIN neighbourhoods n ON n.id = p.neighbourhood_id`
-- `LEFT JOIN trade_forecasts tf ON tf.permit_num = p.permit_num AND tf.revision_num = p.revision_num AND tf.trade_slug = $3`
-- `LEFT JOIN LATERAL (SELECT COUNT(*)::int AS c FROM lead_views WHERE permit_num = p.permit_num AND revision_num = p.revision_num AND saved = true) lv_count ON TRUE`
+Status transition `'expired' → 'active'` (post-payment): call `paywallStore.clear()` + `queryClient.invalidateQueries(['leads'])` + fade `<PaywallScreen>` out (`opacity: 1 → 0`, 200ms) before unmount.
 
-### `GET /api/leads/flight-board/detail/[id]`
+### Inline Blur (mobile/app/(app)/index.tsx + flight-board.tsx)
 
-Reuses `FLIGHT_BOARD_SQL` modified with a `WHERE` predicate for the specific `(permit_num, revision_num)`. Hits `lead_views` with `user_id = $1 AND saved = true AND permit_num = $2 AND revision_num = $3`. Returns 404 if the user does not have this permit saved (the natural filter, no extra logic). Includes `updated_at` from `p.updated_at`.
+Banner pinned at top of tab content area: `bg-zinc-900/95 flex-row items-center justify-between px-4 py-3 border-b border-zinc-800` with text "Trial ended — subscribe to see new leads." + amber chip "Subscribe →". Full-row `onPress: paywallStore.show()`.
 
-### Modified `flight-board/route.ts`
+Card blur: `<BlurView intensity={8} tint="dark" style={StyleSheet.absoluteFill}>` as **absolute sibling** over the card content (not parent wrapper); content gets `style={{ opacity: 0.1 }}`. **Android API < 31 fallback:** `Platform.OS === 'android' && Platform.Version < 31` → render `<View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(9,9,11,0.85)' }]}>` instead (spec §9 explicit — `expo-blur` silently no-ops on older Android).
 
-Two changes:
-1. Add `p.updated_at::text AS updated_at` to the SELECT.
-2. Extend the `FlightBoardRow` interface and the mapped output object with `updated_at: string`.
+Empty-feel prevention: at minimum 4 blurred placeholder cards (`bg-zinc-900 rounded-2xl h-28 w-full` with inline `style={{ opacity: 0.15 }}` — NativeWind v4 arbitrary `opacity-[0.15]` may not JIT-compile, spec §9 explicit). Scroll-to-top on entering blur mode (`feedScrollRef.current?.scrollToOffset({ offset: 0, animated: false })`).
 
-No client-side breakage: the mobile Zod schema (in `mobile/src/lib/schemas.ts`) currently doesn't enforce `updated_at`. Adding the field is additive — old clients ignore it, new clients use it. Confirmed Cross-Domain Scenario B safe.
+### `POST /api/subscribe/session`
+
+```ts
+withApiEnvelope → getUserIdFromSession → 401 if null
+→ fetch user_profiles.subscription_status
+→ if 'active' || 'admin_managed' → 400 (no checkout needed)
+→ nonce = crypto.randomUUID()
+→ INSERT subscribe_nonces (nonce, user_id=uid, expires_at=NOW()+15min)
+→ return ok({ url: `https://buildo.com/subscribe?nonce=${nonce}` })
+```
+
+Per spec §Step 4b: no UID or email in URL (PII boundary). Web checkout exchanges nonce server-to-server.
+
+### `POST /api/webhooks/stripe`
+
+```ts
+withApiEnvelope (try-catch boundary)
+→ verify Stripe-Signature via stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)
+→ invalid → 400
+→ db.transaction(async (tx) => {
+    const [inserted] = await tx.insert(stripeWebhookEvents)
+      .values({ event_id: event.id })
+      .onConflictDoNothing()
+      .returning({ event_id });
+    if (!inserted) return;  // duplicate event — exit transaction, 200
+    switch (event.type) {
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+        if (event.data.object.status === 'active') → UPDATE active + stripe_customer_id
+      case 'invoice.payment_failed' → UPDATE past_due
+      case 'customer.subscription.deleted' → UPDATE expired
+      default → no-op
+    }
+  })
+→ return NextResponse.json({ received: true })
+```
+
+Webhook responses are `{ received: true }` not the standard envelope (spec §Step 5 explicit — Stripe expects this shape).
+
+### GET `/api/user-profile` modifications
+
+Two additive behaviours inside the existing handler:
+
+1. **Idempotent fallback trial-init** (race-condition safe): if `onboarding_complete = true AND trial_started_at IS NULL AND subscription_status IS NULL AND account_preset != 'manufacturer'` → `UPDATE user_profiles SET trial_started_at = NOW(), subscription_status = 'trial' WHERE user_id = $1 AND trial_started_at IS NULL RETURNING *`. The `WHERE trial_started_at IS NULL` clause makes concurrent GETs converge on a single write.
+
+2. **Trial expiration write** (spec §Step 4 explicit DB write, not response-only): if `subscription_status = 'trial' AND trial_started_at + INTERVAL '14 days' <= NOW()` → `UPDATE user_profiles SET subscription_status = 'expired' WHERE user_id = $1 AND subscription_status = 'trial' AND trial_started_at + INTERVAL '14 days' <= NOW()`. Inclusive `<=` (user gets full 14th day per spec). The double-check in the WHERE clause prevents double-writes under concurrent GETs. Extracted to `src/lib/subscription/expiration.ts` so a future Phase 2 Cloud Function batch sweep can reuse the same predicate.
+
+* **Database Impact:** NO. All schema lives in migration 114 (Spec 95). This task is purely application logic + new API routes + mobile UI.
 
 ---
 
 ## Standards Compliance
 
-* **Try-Catch Boundary (§2.2):** Both new routes use `withApiEnvelope` + inner `try/catch` returning `internalError(cause, { route })`. No `err.message` ever returned to client.
-* **Unhappy Path Tests (§2.1):** infra tests cover 401 (no auth), 400 (malformed id `"not-an-id"`, `"COA-"` empty), 404 (unknown permit, removed-from-board), 500 (forced pool throw — assert no `err.message` leak in body).
-* **Pagination (§3.2):** N/A — both endpoints return a single row by primary key. The added competition `COUNT(*)` is bounded by `(permit_num, revision_num)` PK and existing `lead_views` indexes.
-* **Parameterization (§4.2):** All queries use `pool.query<T>(SQL, [params])`. Lead id is parsed and decomposed into separate `$1, $2` parameters before any SQL composition. No string interpolation.
-* **logError Mandate (§6.1):** `internalError()` already calls `logError` per existing pattern in feed/flight-board routes. New helpers also use `logError(tag, err, ctx)`.
-* **Migration Safety (§3.1):** 237K+ row table — using the **add nullable → backfill → set default + NOT NULL → trigger** sequence to avoid table rewrite. Step 2 (`UPDATE ... WHERE updated_at IS NULL`) runs in batches if Cloud SQL latency requires (will validate during implementation).
-* **Route Export Rule (§8.1):** `route.ts` files only export `GET`. All helpers live in `src/lib/leads/` and `src/app/api/leads/.../types.ts`.
-* **Auth coverage (§4.1):** Both new endpoints sit under `src/app/api/leads/` which is already covered by the auth middleware path matcher (verify during Step 0).
-* **Test pattern (§5.2):** `*.infra.test.ts` for routes, `*.logic.test.ts` for the trigger fire test.
-* **§10 note:** Trigger reuses `trigger_set_timestamp()` from migration 100 — do not redefine the function in 115; only the trigger.
+* **Try-Catch Boundary (§2.2):** Both new routes wrapped with `withApiEnvelope`. Webhook handler also has explicit signature-verify try-catch returning 400 on invalid signature (Stripe never receives a 5xx for a malformed payload). `logError` on unexpected errors.
+
+* **Unhappy Path Tests (§2.1):** `stripe-webhook.infra` covers duplicate event ID (200 no-op via transaction), invalid signature (400), unknown event type (200 no-op), DB write failure (transaction rollback, 500 sanitized). `subscribe-session.infra` covers unauthenticated (401), already-active subscriber (400), nonce uniqueness, no PII in URL. `user-profile-trial.infra` covers fallback init idempotency under concurrent GET, expiration race (only one write succeeds), manufacturer account NEVER gets trial fields written.
+
+* **logError Mandate (§6.1):** `withApiEnvelope` already wires logError via `internalError`. Webhook handler adds explicit `logError('[stripe-webhook]', err, { event_id, event_type })` on per-event failures so support can debug specific Stripe events without sifting through generic 500 logs.
+
+* **Pagination (§3.2):** N/A — no list endpoints.
+
+* **Parameterization (§4.2):** Drizzle parameterized queries throughout. No string concatenation in SQL.
+
+* **Migration Safety (§3.1):** N/A — no new migrations. All schema is from migration 114.
+
+* **Route Export Rule (§8.1):** route.ts files export only `POST`. Helpers go to `src/lib/subscription/`.
+
+* **Mobile-First (§1.1, §1.3):** PaywallScreen container `bg-zinc-950 flex-1 items-center justify-center px-8`; primary CTA `min-h-[44px]` enforced via `py-4` (16px padding × 2 = 32px + ~24px line-height = ~56px tappable). Inline banner row `min-h-[44px]` via `py-3` + ~24px line-height. Settings subscription link wraps in `Pressable min-h-[52px]` matching existing rows. All Pressables include either visual `min-h-[44px]` or `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}`.
+
+* **Mobile Dumb Glass (Spec 90 §3):** Subscription gate is pure rendering — all state computation (status determination, expiration logic) lives server-side in `user-profile` route. Mobile only branches on the returned `subscription_status` enum. **Optimistic UI exception** (Spec 90 §3 explicit): `paywallStore.dismiss()` is local-only ephemeral state — does not require server confirmation.
+
+* **Zod Boundary (Spec 90 §13):** `useUserProfile` already parses through `UserProfileSchema` (Spec 95). New `useSubscribeCheckout` hook parses the `{url}` response through a fresh Zod schema — Stripe URL responses MUST be validated to prevent a malformed URL from `WebBrowser.openBrowserAsync()` crashing the JS bridge.
+
+* **App Store compliance note (§5):** Apple Guideline 3.1.1 risk on "Continue at buildo.com →" CTA is documented in spec §5 as a known risk requiring legal/product review before iOS submission. **Implementation default uses spec-prescribed copy verbatim.** A `EXPO_PUBLIC_PAYWALL_CTA_NEUTRAL=1` env flag is added to `app.json` extra section so a future build variant can flip the copy to "Learn more" without a code change. NOT submitting to App Store as part of this task.
+
+* **§10 note:** Cross-Domain Scenario B types are defined for `POST /api/subscribe/session` (Expo client) — the webhook endpoint is Stripe-internal, no client-facing types needed beyond the response shape `{received: true}`.
 
 ---
 
 ## Execution Plan
 
-- [ ] **Step 0 — Pre-flight:** `node scripts/ai-env-check.mjs`. Confirm last migration = 114, no `permits.updated_at` column. Confirm `src/app/api/leads/detail/` and `src/app/api/leads/flight-board/detail/` do not exist. Verify `middleware.ts` already covers `/api/leads/*` (it should — same prefix as feed/flight-board).
+This plan mirrors Spec 96 §10 Build Sequence steps 1-6 + supporting work (route guard, sign-out cleanup, mobile dependency wiring, tests, review).
 
-- [ ] **Step 1 — Migration 115:** `migrations/115_permits_updated_at.sql`. UP block: add nullable column, backfill from `last_seen_at`/`first_seen_at`/NOW(), set default, set NOT NULL, create trigger reusing `trigger_set_timestamp()`. DOWN block: drop trigger, drop column.
+- [ ] **Step 0 — Pre-flight:** `node scripts/ai-env-check.mjs`. Confirm migration 114 applied. Confirm `subscribe_nonces`, `stripe_webhook_events` tables exist in schema.ts. Add `STRIPE_WEBHOOK_SECRET`, `STRIPE_SECRET_KEY` to local `.env.example` (placeholders). Run `npm install stripe` at root. Confirm no breaking change to `package-lock.json`.
 
-- [ ] **Step 2 — Drizzle schema sync:** Add `updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()` to the `permits` table in `src/lib/db/schema.ts`. Run `npm run db:generate` to confirm types regenerate cleanly.
+- [ ] **Step 1 — `paywallStore.ts`:** `mobile/src/store/paywallStore.ts`. Zustand state machine per §9. SPEC LINK header. Not MMKV-persisted (spec explicit). Test: `mobile/__tests__/paywallStore.test.ts` — `show()` / `dismiss()` / `clear()` transitions; initial state is `{ visible: false, dismissed: false }`.
 
-- [ ] **Step 3 — Run migration locally:** `npm run migrate` (or equivalent). Verify column + trigger exist via `psql` `\d permits`. Run a one-row UPDATE test to confirm the trigger fires.
+- [ ] **Step 2 — Sign-out cleanup:** `mobile/src/store/authStore.ts` line 89. Replace TODO with `paywallStore.getState().clear()` alongside the existing store resets. Critical per spec §9 — prevents same-device user-handoff bleed.
 
-- [ ] **Step 4 — Type contracts (Cross-Domain mandate):** Create `src/app/api/leads/detail/[id]/types.ts` and `src/app/api/leads/flight-board/detail/[id]/types.ts` with the exported interfaces. These are the **published contract** the Expo app will consume — define them BEFORE the route handler.
+- [ ] **Step 3 — `<SubscriptionLoadingGuard>`:** `mobile/src/components/paywall/SubscriptionLoadingGuard.tsx`. `bg-zinc-950 flex-1 items-center justify-center` with `<ActivityIndicator size="large" color="#f59e0b">`. SPEC LINK.
 
-- [ ] **Step 5 — Shared helpers:**
-  - `src/lib/leads/parse-lead-id.ts` — `parseLeadId(id: string): ParsedLeadId | null`. Accepts `${permit_num}--${revision_num}` (split on first `--`) or `COA-${application_number}`. Returns null for malformed (empty, no separator, etc.).
-  - `src/lib/leads/lead-detail-query.ts` — exports `LEAD_DETAIL_SQL` const + `LeadDetailRow` raw row interface + `toLeadDetail(row): LeadDetail` mapper (decimal→number, null-safe, JSONB unwrap if any).
+- [ ] **Step 4 — `<PaywallScreen>`:** `mobile/src/components/paywall/PaywallScreen.tsx`. SPEC LINK. Stagger animation per spec §9 table (5 sequential `useSharedValue(0)` + `withDelay`/`withTiming`). Lead count from prop with zero-count edge case. 60-second Refresh link with cleanup `setTimeout`. Primary CTA delegates to `useSubscribeCheckout`. `pointerEvents="none"` during mount fade.
 
-- [ ] **Step 6 — `GET /api/leads/detail/[id]/route.ts`:** Implement per the outline above. Uses `withApiEnvelope`, `getCurrentUserContext`, `parseLeadId`, `pool.query`, `ok`, `internalError`, `unauthorized`, plus new `notFound()` and `badRequestInvalidId()` helpers (extend `src/features/leads/api/error-mapping.ts` if absent).
+- [ ] **Step 5 — `useSubscribeCheckout` hook:** `mobile/src/hooks/useSubscribeCheckout.ts`. POSTs to `/api/subscribe/session` via `fetchWithAuth`, Zod-parses response, calls `WebBrowser.openBrowserAsync(url)`. Returns `{ openCheckout, isLoading, error }`. SPEC LINK.
 
-- [ ] **Step 7 — `GET /api/leads/flight-board/detail/[id]/route.ts`:** SQL adds `WHERE lv.user_id = $1 AND lv.permit_num = $2 AND lv.revision_num = $3 AND lv.saved = true AND lv.lead_type = 'permit'`. Returns 404 when `rowCount === 0`. Includes `updated_at` from `p.updated_at::text`.
+- [ ] **Step 6 — Subscription gate in `_layout.tsx`:** `mobile/app/(app)/_layout.tsx`. Six-branch switch on `subscription_status`. Loading guard while null/undefined. AppState listener for foreground re-fetch. `'cancelled_pending_deletion'` → sign-out + redirect. `'expired' → 'active'` transition: `paywallStore.clear()` + invalidate `['leads']` + fade out. SPEC LINK ref.
 
-- [ ] **Step 8 — Modify list endpoint `flight-board/route.ts`:** Add `p.updated_at::text AS updated_at` to `FLIGHT_BOARD_SQL`; extend `FlightBoardRow`; add `updated_at: row.updated_at` to mapped output. Verify existing `flight-board.infra.test.ts` (if any) still passes.
+- [ ] **Step 7 — `<InlineBlurBanner>`:** `mobile/src/components/paywall/InlineBlurBanner.tsx`. Shared component for index + flight-board. Banner per spec §9. Full-row `onPress: paywallStore.show()`. SPEC LINK.
 
-- [ ] **Step 9 — Tests:**
-  - `src/tests/permits-updated-at.logic.test.ts` — SPEC LINK header. Inserts a permit, snapshots `updated_at`, sleeps 100ms, runs `UPDATE permits SET work_description = 'x' WHERE …`, asserts `updated_at` advanced.
-  - `src/tests/leads-detail.infra.test.ts` — SPEC LINK header. Cases: 200 (full join hydration), 401 (no ctx), 400 (malformed id), 404 (unknown permit), 500 (forced pool throw → no leak).
-  - `src/tests/flight-board-detail.infra.test.ts` — SPEC LINK header. Cases: 200 (saved permit returns), 404 (permit exists but user hasn't saved), 401, 400, 500.
+- [ ] **Step 8 — Inline blur in feed + flight board:** `mobile/app/(app)/index.tsx` and `mobile/app/(app)/flight-board.tsx`. Render `<InlineBlurBanner>` when `paywallStore.dismissed && status === 'expired'`. Wrap each card in `<BlurView intensity={8} tint="dark">` (with Android < 31 fallback). 4 placeholder cards minimum. Scroll-to-top on entering blur mode.
 
-- [ ] **Step 10 — Spec docs:** Append API contracts to `91_mobile_lead_feed.md §4.3.1` and `77_mobile_crm_flight_board.md §3.3.1`. Amend `77 §3.2` "Amber Update Flash" with: "The list response includes `updated_at: string (ISO 8601)` per item; clients store the last-seen value per permit in MMKV and trigger the flash when the values diverge on a subsequent fetch."
+- [ ] **Step 9 — Settings subscription link:** `mobile/app/(app)/settings.tsx`. New row "Manage subscription" + sub-label "Opens buildo.com" → `WebBrowser.openBrowserAsync('https://buildo.com/account/billing')`. Hidden when `account_preset === 'manufacturer'`.
 
-- [ ] **Step 11 — Independent code review (WF6 gate, NOT adversarial per WF3):** Spawn `feature-dev:code-reviewer` agent with `isolation: "worktree"`. Inputs: relevant spec paths + 3 new + 3 modified files + one-sentence summary. Triage → fix FAIL items. Deferred → `docs/reports/review_followups.md`.
+- [ ] **Step 10 — `src/lib/subscription/expiration.ts`:** Export `applyTrialExpirationIfNeeded(profile, db)` and `applyFallbackTrialInitIfNeeded(profile, db)` — both idempotent, both use `UPDATE ... WHERE <predicate> RETURNING *` pattern for race safety. Pure helpers (no Next.js dependencies) so a future Phase 2 Cloud Function can import directly.
 
-- [ ] **Step 12 — Test gate:**
-  - `npm run typecheck`
-  - `npx vitest run src/tests/permits-updated-at.logic.test.ts`
-  - `npx vitest run src/tests/leads-detail.infra.test.ts`
-  - `npx vitest run src/tests/flight-board-detail.infra.test.ts`
-  - `npx vitest related src/app/api/leads/flight-board/route.ts --run` (catches regressions on the modified list endpoint)
+- [ ] **Step 11 — Modify `user-profile/route.ts` GET:** Wire the two helpers above into the GET handler. Both run BEFORE the response is composed, so the returned profile reflects the post-write state. Existing PATCH handler unchanged (Spec 95 already covers PATCH trial init). SPEC LINK comment updated.
+
+- [ ] **Step 12 — `POST /api/subscribe/session/route.ts`:** Per spec §Step 4b. Validates `subscription_status` (400 on already-active or admin_managed). Creates nonce in `subscribe_nonces` (TTL 15 min). Returns `{ url }`. SPEC LINK.
+
+- [ ] **Step 13 — `POST /api/webhooks/stripe/route.ts`:** Per spec §Step 5. Stripe signature verify. `db.transaction()` wrapping the dedup INSERT + status UPDATE. All four event types handled. Return `{ received: true }`. SPEC LINK.
+
+- [ ] **Step 14 — `route-guard.ts` updates:** Add `/api/webhooks/stripe` to `PUBLIC_PREFIXES` (Stripe calls without Firebase auth — fail-closed default would 401 every webhook). Add `/api/subscribe/session` explicitly to `AUTHENTICATED_API_ROUTES` for clarity (currently relies on fail-closed default). Update existing `route-guard.logic.test.ts` if present.
+
+- [ ] **Step 15 — Server tests:**
+  - `src/tests/stripe-webhook.infra.test.ts` — valid `subscription.created` → status `'active'`; duplicate event ID → 200 no UPDATE; invalid signature → 400; `subscription.deleted` → `'expired'`; `invoice.payment_failed` → `'past_due'`; unknown type → 200 no-op; DB throw → transaction rollback + sanitized 500.
+  - `src/tests/stripe-webhook.security.test.ts` — missing `Stripe-Signature` → 400; forged signature string → 400; replayed event ID → idempotent reject; empty payload → 400; no raw Stripe error message in any 4xx/5xx body.
+  - `src/tests/subscribe-session.infra.test.ts` — happy path inserts nonce + returns URL with nonce param; URL contains no UID or email; unauthenticated → 401; already-active → 400; admin_managed → 400.
+  - `src/tests/subscribe-session.security.test.ts` — two requests from same user produce distinct nonces; nonce single-use; nonce not in any log line (audit grep).
+  - `src/tests/user-profile-trial.infra.test.ts` — fallback init idempotent under concurrent GET (only one row UPDATE wins); expiration write fires at exactly day-14 (not day-13); manufacturer account is NEVER touched by either helper.
+
+- [ ] **Step 16 — Mobile tests:**
+  - `mobile/__tests__/paywallStore.test.ts` — state transitions covered.
+  - `mobile/__tests__/subscriptionGate.test.ts` — gate passes (no paywall) for `'trial'`, `'active'`, `'past_due'`, `'admin_managed'`; renders `<PaywallScreen>` for `'expired'`; `cancelled_pending_deletion` triggers sign-out + redirect; loading guard while `null`; AppState `'active'` event triggers re-fetch.
+
+- [ ] **Step 17 — Multi-agent review (WF1 gate — adversarial included per memory feedback):** Three parallel agents, `isolation: "worktree"`. Spec input: `docs/specs/03-mobile/96_mobile_subscription.md`. **Code Reviewer** (logic, missing telemetry, type safety) + **Gemini adversarial** (silent failure paths, IS DISTINCT FROM races, off-by-one) + **DeepSeek adversarial** (spec gaps, downstream consumers). Triage → fix FAIL items inline. Deferred → `docs/reports/review_followups.md`.
+
+- [ ] **Step 18 — Test gate:**
+  - `npm run typecheck` (root)
+  - `cd mobile && npm run typecheck`
+  - `npx vitest run src/tests/stripe-webhook.infra.test.ts src/tests/stripe-webhook.security.test.ts src/tests/subscribe-session.infra.test.ts src/tests/subscribe-session.security.test.ts src/tests/user-profile-trial.infra.test.ts`
+  - `cd mobile && npx jest --testPathPatterns="paywallStore|subscriptionGate" --ci`
   - `npm run lint -- --fix`
   - All must pass before commit.
 
-- [ ] **Step 13 — Commit:** `feat(91_mobile_lead_feed,77_mobile_crm_flight_board): backend foundations — lead detail, flight-board detail, permits.updated_at`
+- [ ] **Step 19 — Commit:** `feat(96_mobile_subscription): paywall + Stripe webhook + nonce checkout flow`
 
 ---
 
 ## Out of Scope / Deferred
 
-- **Mobile wiring** of the new endpoints — `useLeadDetail`, `useFlightJob`, `mmkv hasUpdate` tracking. This is its own WF3/WF1 task once the contracts are stable.
-- **COA detail join** — `parseLeadId` recognises `COA-…` ids but the detail handler returns 501 for now; CoA detail is a separate spec scope.
-- **Builder/applicant unmasking** in `LeadDetail.applicant` — currently null. Spec 91 §4.3 lists "builder/applicant entity (if unmasked)" as a future enhancement gated on a permits/builders join helper that doesn't exist yet.
-- **Street View image** — client-side `expo-image` cached fetch, no backend involvement.
+- **Day 10 / Day 13 reminder emails** — Phase 2 Cloud Function (spec §Step 6 explicit). Cloud Functions infra not yet stood up.
+- **Trial expiration batch sweep** — Phase 2 Cloud Function. Phase 1 expires lazily on GET (acceptable: only users who don't open the app for >14 days get a delayed `'expired'` write, and they see the paywall the first time they DO open it).
+- **App Store iOS submission** — Apple Guideline 3.1.1 risk on `"Continue at buildo.com →"` requires legal/product review (spec §5 explicit). The `EXPO_PUBLIC_PAYWALL_CTA_NEUTRAL` flag scaffolds the future build variant.
+- **Web checkout endpoint** (`buildo.com/subscribe?nonce=…` page) — separate task on the web admin side. Out of scope for this WF1; the nonce contract is published in the API contract note.
+- **Stripe Customer Portal deep-link from Settings** — placeholder URL `https://buildo.com/account/billing`. Real portal session creation is a separate task (Spec 97 territory).
+- **Periodic nonce purge job** — `subscribe_nonces` rows accumulate until expiry. Cron sweep deferred to Phase 2.
+- **Webhook signing secret rotation** — operational task, not a code change.
+- **Team / org billing** — Phase 2 (spec §11 Out of Scope).
 
 ---
 
-> **PLAN LOCKED. Do you authorize this WF3 plan? (y/n)**
-> §10 note: trigger function `trigger_set_timestamp()` from migration 100 is reused, not redefined — migration 115 only adds the column + the new CREATE TRIGGER row.
+> **PLAN LOCKED. Do you authorize this WF1 plan? (y/n)**
+>
+> §10 note: PATCH trial-init logic already lives in Spec 95's PATCH handler (line 243-250) — this task only adds the GET fallback + expiration write. No new migrations needed; all schema is from migration 114. Cross-Domain Scenario B types live in `src/app/api/subscribe/session/types.ts`. App Store Guideline 3.1.1 risk is acknowledged via the `EXPO_PUBLIC_PAYWALL_CTA_NEUTRAL` env flag scaffold; spec-prescribed copy is the implementation default.
+>
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.
