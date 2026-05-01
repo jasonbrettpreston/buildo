@@ -762,3 +762,10 @@ Second-round adversarial pass with the user's 6-area focus (logic / security / d
 | MEDIUM | DeepSeek | #12 Silent fallback when explicit KEY_PATH malformed | RESOLVED — `loadFromPath` takes `isExplicit`; explicit failures escalate to logError |
 | CRITICAL (from this WF3 review) | Code-reviewer | Stale-app reuse on rotation when firebase-admin has default registered | RESOLVED in this WF3 — `initializationAttempted` flag gates existing-default adoption; rotation-after-first-init path attempts re-init (which firebase-admin rejects) and returns null in dev rather than silently serving stale credentials. New regression test covers this scenario. |
 | MEDIUM | Code-reviewer (this WF3) | TOCTOU: `existsSync` true but `statSync` throws → 'unstattable' sentinel treated as stable identity | DEFER — narrow race window (microseconds), requires two consecutive races. Fix path: replace stable 'unstattable' sentinel with per-call sentinel (e.g., `unstattable:${randomUUID()}`) so consecutive failures never match cache. Tracked for production runtime WF. |
+
+## WF5 — Migration UP/DOWN audit (report: docs/reports/migration_down_audit_2026-05-01.md, 2026-05-01)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| HIGH | Static-analysis sweep | **15 migrations have uncommented DDL under `-- DOWN`** — same bug class as 113/115/116 fixed in commit 68643b3. Files: 041, 042, 044, 045, 046, 051, 059, 060, 100, 101, 102, 103, 108, 111, 112. Production DB happens to be correct (effects re-applied by hand or later migrations), but a fresh checkout running migrations from zero would land in a broken schema. | WF3 batch fix (comment out DOWN sections in all 15) |
+| HIGH | Spec 05 §4 routing escalation | **Pre-commit lint rule for migration UP/DOWN bug class** — 15 findings exceeds the 3+ threshold. Add `scripts/hooks/check-migration-down-comments.sh` chained into `.husky/pre-commit` to reject any new migration with uncommented DDL under `-- DOWN`. | WF2 (new lint rule infrastructure) |
