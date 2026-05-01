@@ -11,6 +11,7 @@
 | 00 | `00-architecture/00_engineering_standards.md` | Engineering Standards & Stability Guardrails | `src/lib/logger.ts`, `src/lib/classification/classifier.ts`, `src/lib/classification/scope.ts`, +2 more | `src/tests/contracts.infra.test.ts`, `src/tests/property/*.property.test.ts`, `src/tests/diff-narrator.logic.test.ts` | Done |
 | 01 | `00-architecture/01_database_schema.md` | Database Schema | `src/lib/db/client.ts`, `src/lib/permits/types.ts`, `scripts/migrate.js` | — | Done |
 | 06 | `00-architecture/06_permits_rest_api.md` | Permit Data API | `src/app/api/permits/route.ts`, `src/app/api/permits/[id]/route.ts`, `src/app/api/permits/geo/route.ts`, +2 more | `src/tests/api.infra.test.ts` | Done |
+| 07 | `00-architecture/07_backend_prod_eval.md` | Backend Production Readiness Evaluation | `src/lib/logger.ts`, `src/app/api/leads/feed/route.ts` | — | Done |
 | 112 | `00-architecture/112_backup_recovery.md` | Database Backup & Recovery | `scripts/backup-db.js`, `scripts/manifest.json` | — | Done |
 | 13 | `00-architecture/13_authentication.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/session.ts`, `src/lib/auth/types.ts`, +4 more | `src/tests/auth.logic.test.ts`, `src/tests/middleware.logic.test.ts` | Done |
 | 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture | — | — | Active |
@@ -51,6 +52,8 @@
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
+| 20 | `02-web-admin/20_stripe_web_checkout.md` | Stripe Web Checkout & Billing | `src/app/subscribe/page.tsx` | — | ACTIVE |
+| 21 | `02-web-admin/21_admin_user_management.md` | Admin User Management & Config Hub | — | — | ACTIVE |
 | 26 | `02-web-admin/26_admin_dashboard.md` | Admin Dashboard | `src/app/admin/page.tsx`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/market-metrics/route.ts`, +3 more | `src/tests/admin.ui.test.tsx`, `src/tests/analytics.logic.test.ts`, `src/tests/market-metrics.logic.test.ts` | Done |
 | 76 | `02-web-admin/76_lead_feed_health_dashboard.md` | Admin Test Feed Tool | `src/app/api/admin/leads/health/route.ts`, `src/app/api/admin/leads/test-feed/route.ts`, `src/lib/admin/lead-feed-health.ts`, +4 more | `src/tests/lead-feed-health.logic.test.ts`, `src/tests/lead-feed-health.infra.test.ts` | Done |
 | 86 | `02-web-admin/86_control_panel.md` | 86 Master Configuration List: The "Control Panel" Schema | `src/lib/admin/control-panel.ts`, `src/app/api/admin/control-panel/configs/route.ts`, `src/features/admin-controls/**`, +3 more | `src/tests/control-panel.*.test.{ts,tsx}` | Done |
@@ -59,10 +62,16 @@
 
 | # | Spec File | Feature | Implementation | Tests | Status |
 |---|-----------|---------|---------------|-------|--------|
-| 77 | `03-mobile/77_mobile_crm_flight_board.md` | Mobile CRM Flight Board (Pillar 2) | — | — | Done |
+| 77 | `03-mobile/77_mobile_crm_flight_board.md` | Mobile CRM Flight Board (Pillar 2) | `src/app/api/leads/flight-board/detail/[id]/types.ts` | — | Done |
 | 90 | `03-mobile/90_mobile_engineering_protocol.md` | Mobile Engineering Protocol & Architecture (The Pivot) | — | — | Done |
-| 91 | `03-mobile/91_mobile_lead_feed.md` | Mobile Lead Feed (Discovery Engine) | — | — | ACTIVE (Mobile Pivot) |
+| 91 | `03-mobile/91_mobile_lead_feed.md` | Mobile Lead Feed (Discovery Engine) | `src/app/api/leads/detail/[id]/types.ts` | — | ACTIVE (Mobile Pivot) |
 | 92 | `03-mobile/92_mobile_engagement_hardware.md` | Mobile Engagement & Hardware (Pillar 3) | — | — | Done |
+| 93 | `03-mobile/93_mobile_auth.md` | Mobile Authentication | `src/lib/auth/route-guard.ts` | — | ACTIVE |
+| 94 | `03-mobile/94_mobile_onboarding.md` | Mobile Onboarding | `src/app/api/onboarding/suppliers/route.ts`, `src/lib/auth/get-user.ts` | `src/tests/onboarding-suppliers.infra.test.ts` | ACTIVE |
+| 95 | `03-mobile/95_mobile_user_profiles.md` | Mobile User Profiles | `src/app/api/user-profile/route.ts`, `src/lib/auth/get-user.ts`, `src/app/api/user-profile/delete/route.ts`, +3 more | `src/tests/user-profiles.infra.test.ts`, `src/tests/user-profiles.security.test.ts`, `src/tests/user-profiles-schema.infra.test.ts` | ACTIVE |
+| 96 | `03-mobile/96_mobile_subscription.md` | Mobile Subscription & Paywall | `src/app/api/user-profile/route.ts`, `src/app/api/subscribe/session/route.ts`, `src/lib/auth/get-user.ts`, +2 more | `src/tests/subscribe-session.infra.test.ts`, `src/tests/stripe-webhook.infra.test.ts`, `src/tests/stripe-webhook.security.test.ts`, +1 more | ACTIVE |
+| 97 | `03-mobile/97_mobile_settings_notifications_offboarding.md` | Mobile Settings, Notifications & Offboarding | `src/app/api/user-profile/export/route.ts`, `src/lib/auth/get-user.ts`, `src/app/api/user-profile/route.ts`, +3 more | `src/tests/user-profile-export.infra.test.ts`, `src/tests/settings.security.test.ts` | ACTIVE |
+| 98 | `03-mobile/98_mobile_testing_protocol.md` | Mobile Testing Protocol & Local Environment | — | — | ACTIVE |
 
 ## Archive (Deprecated)
 

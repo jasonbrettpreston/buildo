@@ -33,6 +33,10 @@
 - `radius_km` is now server-side (added to `user_profiles` in migration 114) — MMKV is cache only; `user_profiles` is authoritative. `useUserProfile` hydrates filterStore from server on launch.
 - Maestro `assertVisible` on Android reads rendered text, not raw source — `uppercase` CSS → assert "LEAD FEED" not "Lead Feed"
 - `useRootNavigationState().key` is undefined until the navigation container mounts — guard `router.replace()` behind it
+- Deprecated/archived Expo packages can ship native code that breaks silently on Gradle toolchain bumps. `expo-firebase-recaptcha` (transitively `expo-firebase-core@6.0.0`) used the legacy `classifier` Jar property which Gradle 8 removed — `expo run:android` failed with "Could not set unknown property 'classifier'". Audit `package.json` against Expo's deprecation list before any Expo SDK / Gradle bump.
+- Apple Sign-In with `@react-native-firebase/auth` requires nonce round-trip: SHA-256 hash to `AppleAuthentication.signInAsync({ nonce: hashedNonce })`, raw value to `auth.AppleAuthProvider.credential(idToken, rawNonce)`. Reversing them produces `auth/invalid-credential`.
+- Phone-auth on RNFirebase uses confirmation-style API: `auth().signInWithPhoneNumber(num)` returns a `ConfirmationResult` whose `.confirm(code)` resolves the credential. No JS-side reCAPTCHA — Play Integrity (Android) / APN silent-push (iOS) handle bot prevention natively.
+- `transformIgnorePatterns` in `mobile/package.json` jest config must explicitly include `@react-native-firebase` (the existing `@react-native(-community)?` regex matches the prefix but the lookahead won't extend to `-firebase`).
 
 ## ESLint / Tooling
 - `scripts/CLAUDE.md` must NOT use `@` auto-imports — they load into every session including Admin/WF7

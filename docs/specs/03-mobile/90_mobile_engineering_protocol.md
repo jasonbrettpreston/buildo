@@ -27,7 +27,7 @@ You must strictly adhere to the following stack:
 * **Framework:** Expo SDK (React Native) utilizing Expo Router.
 * **Core Native UI:** `react-native-reanimated` v3 and `react-native-gesture-handler` (required for 60fps animations and swipe gestures).
 * **Styling:** NativeWind v4 (Tailwind CSS for React Native).
-* **Auth:** Firebase Auth (using the standard JS SDK + Expo secure storage adapter for smooth Expo Go compatibility).
+* **Auth:** Firebase Auth via `@react-native-firebase/auth` (native module). Native Keychain (iOS) / Keystore (Android) handles token persistence; Play Integrity (Android) and APN silent-push (iOS) handle phone-auth bot prevention — no JS-rendered reCAPTCHA. Native dev build required (Spec 98); Expo Go is not supported.
 * **Server State:** `@tanstack/react-query` (v5).
 * **Client State:** `zustand` v5.
 * **Local Persistence:** `react-native-mmkv` (Synchronous C++ storage).

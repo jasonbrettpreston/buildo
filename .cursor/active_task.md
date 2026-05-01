@@ -1,296 +1,162 @@
-# Active Task: Spec 96 — Mobile Subscription & Paywall (WF1)
+# Active Task: Migrate Mobile Auth to @react-native-firebase
 **Status:** Implementation
-**Workflow:** WF1 — Genesis (new feature)
-**Domain Mode:** Cross-Domain — Scenario A (Admin UI + API; Settings link → Stripe Customer Portal) AND Scenario B (Expo client consumes `POST /api/subscribe/session` + `GET /api/user-profile` for `subscription_status`). Read `.claude/domain-crossdomain.md` ✓ + `.claude/domain-admin.md` ✓ + `scripts/CLAUDE.md` ✓ + `docs/specs/03-mobile/90_mobile_engineering_protocol.md` ✓.
+**Workflow:** WF2 — Feature Enhancement
+**Domain Mode:** Admin (mobile/ Expo source — non-Maestro). Read `.claude/domain-admin.md` ✓ + `docs/specs/03-mobile/93_mobile_auth.md` ✓ + `docs/specs/03-mobile/90_mobile_engineering_protocol.md` ✓ + `docs/specs/00_engineering_standards.md` ✓.
 
 ---
 
 ## Context
 
-* **Goal:** Ship the subscription gate that controls access to the lead feed and flight board: 14-day free trial → Stripe-paid `'active'` → `'expired'` → paywall. All payment occurs on `buildo.com` (zero Apple commission). The gate must handle six `subscription_status` values, render a loading guard so the paywall never flashes during fetch, and degrade to inline-blur mode when dismissed.
+* **Goal:** Replace the Firebase JS SDK auth surface and the deprecated `expo-firebase-recaptcha` with `@react-native-firebase/auth` (native module). Permanent fix for the Gradle 8 build break in `expo-firebase-core@6.0.0` (the legacy `classifier` Jar property removed in Gradle 8) that is currently blocking `npx expo run:android` and the WF12 mobile launch. Phone-auth bot prevention shifts from a JS-rendered WebView reCAPTCHA modal to native Play Integrity (Android) and APN silent-push (iOS). All four sign-in methods (Apple, Google, Email, Phone) are reworked against the new API.
 
-* **Target Spec:** `docs/specs/03-mobile/96_mobile_subscription.md` (exhaustive implementation guide — §10 Build Sequence steps 1-6 map directly to the Execution Plan below).
-
-* **Cross-spec dependencies:**
-  - **Spec 95** — `user_profiles.subscription_status` enum, `trial_started_at`, `stripe_customer_id`, `lead_views_count`, `account_preset`; `subscribe_nonces` table; `stripe_webhook_events` table. **All shipped in migration 114** (validated). Spec 95 PATCH handler already writes `trial_started_at = NOW()` + `subscription_status = 'trial'` atomically when `onboarding_complete: true` is set on a non-manufacturer account. **No new migrations needed.**
-  - **Spec 93** — AuthGate operational (committed `991afb9`). The subscription gate sits AFTER AuthGate, BEFORE the Spec 94 onboarding gate. Sign-out action in `mobile/src/store/authStore.ts` already resets filter/userProfile/notification/onboarding stores; line 89 has a TODO awaiting `paywallStore.clear()`.
-  - **Spec 94** — Onboarding holding screen handles `account_preset = 'manufacturer' AND onboarding_complete = false`. The subscription gate must NOT route `'admin_managed'` to the paywall — it grants full access and defers to onboarding.
-  - **Spec 91 / 77** — Lead feed and flight board are gated by the subscription state. When `'expired' AND paywallStore.dismissed`, both render inline-blur banner + locked cards.
-
-* **Pre-flight validation findings (full report — see commit message):**
-  - DB schema: ✅ all columns + tables present in migration 114
-  - PATCH trial init: ✅ already in `user-profile/route.ts:243-250`
-  - Mobile dependencies: ✅ `expo-web-browser` 15.0.11, `expo-blur` 15.0.8, `lucide-react-native` 1.8.0
-  - **Missing pieces** (this task adds): `stripe` npm package (root); `paywallStore`; `PaywallScreen`; subscription gate in `_layout.tsx`; inline blur banners on index/flight-board; Settings subscription link; sign-out cleanup; GET fallback trial init + trial expiration in `user-profile/route.ts`; `POST /api/subscribe/session`; webhook handler; route-guard updates.
-  - **Spec path correction:** spec references `mobile/app/(app)/(tabs)/index.tsx` and `mobile/app/(app)/(tabs)/flight-board.tsx`; actual repo layout has `(app)/index.tsx` and `(app)/flight-board.tsx` directly under `(app)/` with `(app)/_layout.tsx` providing the `<Tabs>` navigator. Plan uses the actual paths.
+* **Target Spec:** `docs/specs/03-mobile/93_mobile_auth.md` (primary). This task also amends `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §4 — Spec 90's "Firebase Auth (using the standard JS SDK)" line is the architectural constraint that previously precluded the migration; it is updated as part of this WF2.
 
 * **Key Files:**
-
-  NEW — server:
-  - `src/app/api/webhooks/stripe/route.ts`
-  - `src/app/api/subscribe/session/route.ts`
-  - `src/app/api/subscribe/session/types.ts` (Cross-Domain Scenario B contract)
-  - `src/lib/subscription/expiration.ts` (shared trial-expiration helper used by GET handler)
-  - `src/tests/stripe-webhook.infra.test.ts`
-  - `src/tests/stripe-webhook.security.test.ts`
-  - `src/tests/subscribe-session.infra.test.ts`
-  - `src/tests/subscribe-session.security.test.ts`
-  - `src/tests/user-profile-trial.infra.test.ts` (covers GET fallback + expiration write)
-
-  NEW — mobile:
-  - `mobile/src/store/paywallStore.ts`
-  - `mobile/src/components/paywall/PaywallScreen.tsx`
-  - `mobile/src/components/paywall/InlineBlurBanner.tsx` (shared by feed + flight board)
-  - `mobile/src/components/paywall/SubscriptionLoadingGuard.tsx`
-  - `mobile/src/hooks/useSubscribeCheckout.ts` (POST /api/subscribe/session + WebBrowser.openBrowserAsync)
-  - `mobile/__tests__/subscriptionGate.test.ts`
-  - `mobile/__tests__/paywallStore.test.ts`
-
-  MODIFY — server:
-  - `src/app/api/user-profile/route.ts` — GET handler: idempotent fallback trial-init for legacy paths + trial-expiration write (`trial + 14d <= NOW() → 'expired'`)
-  - `src/lib/auth/route-guard.ts` — add `/api/webhooks/stripe` to `PUBLIC_PREFIXES`; add `/api/subscribe/session` explicitly to `AUTHENTICATED_API_ROUTES`
-
-  MODIFY — mobile:
-  - `mobile/app/(app)/_layout.tsx` — subscription gate (six status branches: `trial`/`active`/`past_due`/`admin_managed` → render Tabs; `expired` → `<PaywallScreen>` or inline-blur per `paywallStore.dismissed`; `cancelled_pending_deletion` → `firebase.auth().signOut()` + redirect to `/(auth)/sign-in`); loading guard while status is `null`/`undefined`; `AppState` listener that re-fetches profile on `'active'` transition.
-  - `mobile/app/(app)/index.tsx` — render `<InlineBlurBanner>` + `<BlurView>` over each `LeadCard` when `paywallStore.dismissed && status === 'expired'`. Scroll-to-top on entering blur mode.
-  - `mobile/app/(app)/flight-board.tsx` — same banner + blur over `FlightCard`.
-  - `mobile/app/(app)/settings.tsx` — add "Manage subscription at buildo.com →" row that opens Stripe Customer Portal via `WebBrowser.openBrowserAsync()` (hidden when `account_preset === 'manufacturer'`).
-  - `mobile/src/store/authStore.ts` — replace TODO at line 89 with `paywallStore.getState().clear()` in the sign-out flow.
-
-  MODIFY — root:
-  - `package.json` — add `stripe` as a dependency
-
----
-
-## API Contract Note (Cross-Domain Scenario B)
-
-| Method | Path | Auth | Status codes | Response |
-|--------|------|------|--------------|----------|
-| POST | `/api/subscribe/session` | Bearer (Firebase) | 200 (`{url}`), 400 (already-active or admin_managed), 401, 500 | `{ data: { url: string }, error: null, meta: null }` |
-| POST | `/api/webhooks/stripe` | Stripe-Signature header (no Firebase) | 200 (`{received: true}`), 400 (signature invalid / payload missing), 500 | `{ received: true }` (NOT the standard data envelope — Stripe expects this shape) |
-| GET | `/api/user-profile` (modified) | Bearer (existing) | unchanged | now writes `subscription_status = 'expired'` to DB when trial expired; idempotent fallback trial-init for legacy paths |
-
-**`SubscribeSessionResponse` (in `src/app/api/subscribe/session/types.ts`):**
-```ts
-export interface SubscribeSessionResponse {
-  /** `https://buildo.com/subscribe?nonce={uuid}` — single-use, server-side nonce, 15-minute TTL. No UID or email in URL. */
-  url: string;
-}
-```
-
-**Webhook events handled** (Stripe → server):
-- `customer.subscription.created` / `customer.subscription.updated` (status `'active'`) → write `subscription_status = 'active'` + `stripe_customer_id`
-- `invoice.payment_failed` → write `subscription_status = 'past_due'` (user retains access during dunning)
-- `customer.subscription.deleted` → write `subscription_status = 'expired'`
-- Unknown event types → 200 no-op
-
-**Idempotency:** webhook handler wraps the `stripe_webhook_events` INSERT (`onConflictDoNothing`) and the `user_profiles` UPDATE in a single `db.transaction()` (per spec §Step 5 — required for TOCTOU safety under concurrent Stripe retries).
-
-**`subscription_status` write ownership** (per spec §Step 5): only writable by (a) the webhook handler, (b) the `user-profile` GET/PATCH handler for trial init/expiration, (c) Spec 97 reactivation (deferred). Never via `PATCH /api/user-profile` user-editable fields — Spec 95 already strips it from the whitelist.
+  - `mobile/package.json` — remove `firebase`, `expo-firebase-recaptcha`; add `@react-native-firebase/app`, `@react-native-firebase/auth`, `expo-crypto`.
+  - `mobile/app.json` — add `@react-native-firebase/app` + `@react-native-firebase/auth` config plugins; add `googleServicesFile` to BOTH `android` (→ `./google-services.json`) AND `ios` (→ `./GoogleService-Info.plist`) blocks. The `@react-native-firebase/app` config plugin reads the same key name on both platforms during `expo prebuild` and copies the files into the ephemeral native folders. There is no `googleServicesPlist` key.
+  - `mobile/.gitignore` — add `google-services.json` + `GoogleService-Info.plist` BEFORE the user downloads them.
+  - `mobile/src/lib/firebase.ts` — strip JS init (`initializeApp` / `initializeAuth` / `getReactNativePersistence` / `ExpoSecureStoreAdapter`); thin re-export of `auth` from `@react-native-firebase/auth`.
+  - `mobile/src/store/authStore.ts` — swap `firebase/auth` listener for `auth().onAuthStateChanged(...)`; `auth().signOut()`.
+  - `mobile/src/lib/apiClient.ts:101` — swap `auth.currentUser?.getIdToken(true)` for `auth().currentUser?.getIdToken(true)`.
+  - `mobile/app/(auth)/sign-in.tsx` — drop `<FirebaseRecaptchaVerifierModal>`, switch all four method calls to RNFirebase, add Apple-Sign-In nonce.
+  - `mobile/app/(auth)/sign-up.tsx` — same migration as sign-in.
+  - `mobile/__tests__/useAuth.test.ts` — replace `firebase/auth` Jest mocks with `@react-native-firebase/auth` mocks; add phone-confirmation and Apple-nonce coverage.
+  - `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §4 — Auth row update.
+  - `docs/specs/03-mobile/93_mobile_auth.md` — §2 Stack, §5 Step 0 deps, §5 Step 1 firebase.ts, §5 Step 4 Phone path + Apple path, §5 Testing Gates.
 
 ---
 
 ## Technical Implementation
 
-### `paywallStore` (Zustand v5)
+* **New/Modified Components:** No new RN components. UI structure (button stack, bottom sheets, OTP cells, account-linking sheet) is unchanged — visual diff target is zero. The only DOM change is removing one `<FirebaseRecaptchaVerifierModal>` from `sign-in.tsx`.
 
-```ts
-interface PaywallState {
-  visible: boolean;       // full <PaywallScreen> rendering
-  dismissed: boolean;     // user tapped "Maybe later" → inline-blur mode
-  show(): void;           // visible: true, dismissed: false
-  dismiss(): void;        // visible: false, dismissed: true
-  clear(): void;          // both false — called by authStore.signOut + on status='active'
-}
-```
-Not MMKV-persisted (spec §9 explicit). Always starts fresh so a returning subscriber is never stuck in inline-blur.
+* **Data Hooks/Libs:**
+  - `firebase.ts` shrinks to ~5 lines — RNFirebase auto-initialises from native config files. The Android Keystore-on-screen-lock-removal caveat (currently at `firebase.ts:50`) is preserved as a comment because it still applies to the native persistence layer.
+  - `authStore.ts` — function-style API: `auth().onAuthStateChanged(...)` returns the same unsubscribe semantics. `firebaseSignOut(auth)` becomes `auth().signOut()`.
+  - `apiClient.ts` — one-line change. Token refresh semantics identical.
+  - **Phone flow rewrite:**
+    ```
+    // BEFORE
+    PhoneAuthProvider(auth).verifyPhoneNumber(num, recaptchaVerifier.current)
+      → setVerificationId(id) + transition to OTP screen
+      → PhoneAuthProvider.credential(verificationId, code) + signInWithCredential(auth, cred)
+    // AFTER
+    auth().signInWithPhoneNumber(num)  // returns confirmation
+      → confirmationRef.current = confirmation + transition to OTP screen
+      → confirmation.confirm(code)
+    ```
+    Drop `recaptchaVerifier` ref, drop `verificationId` state (replaced by `confirmationRef`), drop the `<FirebaseRecaptchaVerifierModal>` mount.
+  - **Apple Sign-In nonce:** RNFirebase's `auth.AppleAuthProvider.credential(idToken, nonce)` requires a nonce that was passed verbatim to `AppleAuthentication.signInAsync({ nonce })`. Generate via `expo-crypto`: a 32-char random string, then `Crypto.digestStringAsync(SHA256, raw)`. Pass the SHA to `signInAsync` (Apple sees the hash) and the raw to `credential` (Firebase verifies it matches).
 
-### `PaywallScreen` (mobile/src/components/paywall/PaywallScreen.tsx)
-
-Stagger animation (5 sequential `useSharedValue(0)` instances animated via `withDelay(N, withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }))`): icon (0ms) → headline (80ms) → lead count (160ms) → primary CTA (240ms, translateY 8→0) → "Maybe later" (320ms, opacity-only). Refresh link revealed after 60s (`setTimeout` with cleanup in the `useEffect` return — required for unmount safety).
-
-Lead count: `lead_views_count` from `user_profiles` (passed as prop). **Zero-count edge case** (spec §Step 1): replace number+caption block with single line "Explore real leads in your area." — never display "0 leads".
-
-Primary CTA → `useSubscribeCheckout()` hook: POSTs to `/api/subscribe/session`, opens returned URL via `WebBrowser.openBrowserAsync()` (NOT `openAuthSessionAsync` — spec §5 explicitly: Stripe checkout is a standard browser flow, not OAuth). Inline `<ActivityIndicator size="small">` inside button while in-flight. On error: toast "Couldn't open checkout — try again", re-enable button.
-
-`pointerEvents="none"` on the wrapper during the mount fade-in (spec §Step 2 — prevents accidental taps before the screen is fully visible).
-
-### Subscription Gate (mobile/app/(app)/_layout.tsx)
-
-```
-On mount + AppState 'active' → queryClient.invalidateQueries(['user-profile'])
-While status null/undefined → <SubscriptionLoadingGuard /> (full-screen amber spinner)
-Switch on status:
-  'trial' | 'active' | 'past_due' | 'admin_managed' → render <Tabs> (current behaviour)
-  'expired' → paywallStore.dismissed
-              ? render <Tabs> with inline-blur banners (children handle blur)
-              : <PaywallScreen> with mount fade-in (200ms)
-  'cancelled_pending_deletion' → firebase.auth().signOut() + router.replace('/(auth)/sign-in')
-```
-
-Status transition `'expired' → 'active'` (post-payment): call `paywallStore.clear()` + `queryClient.invalidateQueries(['leads'])` + fade `<PaywallScreen>` out (`opacity: 1 → 0`, 200ms) before unmount.
-
-### Inline Blur (mobile/app/(app)/index.tsx + flight-board.tsx)
-
-Banner pinned at top of tab content area: `bg-zinc-900/95 flex-row items-center justify-between px-4 py-3 border-b border-zinc-800` with text "Trial ended — subscribe to see new leads." + amber chip "Subscribe →". Full-row `onPress: paywallStore.show()`.
-
-Card blur: `<BlurView intensity={8} tint="dark" style={StyleSheet.absoluteFill}>` as **absolute sibling** over the card content (not parent wrapper); content gets `style={{ opacity: 0.1 }}`. **Android API < 31 fallback:** `Platform.OS === 'android' && Platform.Version < 31` → render `<View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(9,9,11,0.85)' }]}>` instead (spec §9 explicit — `expo-blur` silently no-ops on older Android).
-
-Empty-feel prevention: at minimum 4 blurred placeholder cards (`bg-zinc-900 rounded-2xl h-28 w-full` with inline `style={{ opacity: 0.15 }}` — NativeWind v4 arbitrary `opacity-[0.15]` may not JIT-compile, spec §9 explicit). Scroll-to-top on entering blur mode (`feedScrollRef.current?.scrollToOffset({ offset: 0, animated: false })`).
-
-### `POST /api/subscribe/session`
-
-```ts
-withApiEnvelope → getUserIdFromSession → 401 if null
-→ fetch user_profiles.subscription_status
-→ if 'active' || 'admin_managed' → 400 (no checkout needed)
-→ nonce = crypto.randomUUID()
-→ INSERT subscribe_nonces (nonce, user_id=uid, expires_at=NOW()+15min)
-→ return ok({ url: `https://buildo.com/subscribe?nonce=${nonce}` })
-```
-
-Per spec §Step 4b: no UID or email in URL (PII boundary). Web checkout exchanges nonce server-to-server.
-
-### `POST /api/webhooks/stripe`
-
-```ts
-withApiEnvelope (try-catch boundary)
-→ verify Stripe-Signature via stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)
-→ invalid → 400
-→ db.transaction(async (tx) => {
-    const [inserted] = await tx.insert(stripeWebhookEvents)
-      .values({ event_id: event.id })
-      .onConflictDoNothing()
-      .returning({ event_id });
-    if (!inserted) return;  // duplicate event — exit transaction, 200
-    switch (event.type) {
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated':
-        if (event.data.object.status === 'active') → UPDATE active + stripe_customer_id
-      case 'invoice.payment_failed' → UPDATE past_due
-      case 'customer.subscription.deleted' → UPDATE expired
-      default → no-op
-    }
-  })
-→ return NextResponse.json({ received: true })
-```
-
-Webhook responses are `{ received: true }` not the standard envelope (spec §Step 5 explicit — Stripe expects this shape).
-
-### GET `/api/user-profile` modifications
-
-Two additive behaviours inside the existing handler:
-
-1. **Idempotent fallback trial-init** (race-condition safe): if `onboarding_complete = true AND trial_started_at IS NULL AND subscription_status IS NULL AND account_preset != 'manufacturer'` → `UPDATE user_profiles SET trial_started_at = NOW(), subscription_status = 'trial' WHERE user_id = $1 AND trial_started_at IS NULL RETURNING *`. The `WHERE trial_started_at IS NULL` clause makes concurrent GETs converge on a single write.
-
-2. **Trial expiration write** (spec §Step 4 explicit DB write, not response-only): if `subscription_status = 'trial' AND trial_started_at + INTERVAL '14 days' <= NOW()` → `UPDATE user_profiles SET subscription_status = 'expired' WHERE user_id = $1 AND subscription_status = 'trial' AND trial_started_at + INTERVAL '14 days' <= NOW()`. Inclusive `<=` (user gets full 14th day per spec). The double-check in the WHERE clause prevents double-writes under concurrent GETs. Extracted to `src/lib/subscription/expiration.ts` so a future Phase 2 Cloud Function batch sweep can reuse the same predicate.
-
-* **Database Impact:** NO. All schema lives in migration 114 (Spec 95). This task is purely application logic + new API routes + mobile UI.
+* **Database Impact:** NO. Client-only migration. No backend, no schema, no factories.
 
 ---
 
 ## Standards Compliance
 
-* **Try-Catch Boundary (§2.2):** Both new routes wrapped with `withApiEnvelope`. Webhook handler also has explicit signature-verify try-catch returning 400 on invalid signature (Stripe never receives a 5xx for a malformed payload). `logError` on unexpected errors.
-
-* **Unhappy Path Tests (§2.1):** `stripe-webhook.infra` covers duplicate event ID (200 no-op via transaction), invalid signature (400), unknown event type (200 no-op), DB write failure (transaction rollback, 500 sanitized). `subscribe-session.infra` covers unauthenticated (401), already-active subscriber (400), nonce uniqueness, no PII in URL. `user-profile-trial.infra` covers fallback init idempotency under concurrent GET, expiration race (only one write succeeds), manufacturer account NEVER gets trial fields written.
-
-* **logError Mandate (§6.1):** `withApiEnvelope` already wires logError via `internalError`. Webhook handler adds explicit `logError('[stripe-webhook]', err, { event_id, event_type })` on per-event failures so support can debug specific Stripe events without sifting through generic 500 logs.
-
-* **Pagination (§3.2):** N/A — no list endpoints.
-
-* **Parameterization (§4.2):** Drizzle parameterized queries throughout. No string concatenation in SQL.
-
-* **Migration Safety (§3.1):** N/A — no new migrations. All schema is from migration 114.
-
-* **Route Export Rule (§8.1):** route.ts files export only `POST`. Helpers go to `src/lib/subscription/`.
-
-* **Mobile-First (§1.1, §1.3):** PaywallScreen container `bg-zinc-950 flex-1 items-center justify-center px-8`; primary CTA `min-h-[44px]` enforced via `py-4` (16px padding × 2 = 32px + ~24px line-height = ~56px tappable). Inline banner row `min-h-[44px]` via `py-3` + ~24px line-height. Settings subscription link wraps in `Pressable min-h-[52px]` matching existing rows. All Pressables include either visual `min-h-[44px]` or `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}`.
-
-* **Mobile Dumb Glass (Spec 90 §3):** Subscription gate is pure rendering — all state computation (status determination, expiration logic) lives server-side in `user-profile` route. Mobile only branches on the returned `subscription_status` enum. **Optimistic UI exception** (Spec 90 §3 explicit): `paywallStore.dismiss()` is local-only ephemeral state — does not require server confirmation.
-
-* **Zod Boundary (Spec 90 §13):** `useUserProfile` already parses through `UserProfileSchema` (Spec 95). New `useSubscribeCheckout` hook parses the `{url}` response through a fresh Zod schema — Stripe URL responses MUST be validated to prevent a malformed URL from `WebBrowser.openBrowserAsync()` crashing the JS bridge.
-
-* **App Store compliance note (§5):** Apple Guideline 3.1.1 risk on "Continue at buildo.com →" CTA is documented in spec §5 as a known risk requiring legal/product review before iOS submission. **Implementation default uses spec-prescribed copy verbatim.** A `EXPO_PUBLIC_PAYWALL_CTA_NEUTRAL=1` env flag is added to `app.json` extra section so a future build variant can flip the copy to "Learn more" without a code change. NOT submitting to App Store as part of this task.
-
-* **§10 note:** Cross-Domain Scenario B types are defined for `POST /api/subscribe/session` (Expo client) — the webhook endpoint is Stripe-internal, no client-facing types needed beyond the response shape `{received: true}`.
+* **Try-Catch Boundary:** N/A — no API routes added or modified. Existing `try-catch` blocks around each auth call in `sign-in.tsx` / `sign-up.tsx` are preserved (only inner SDK calls swap).
+* **Unhappy Path Tests:** Existing `useAuth.test.ts` covers `onAuthStateChanged(null)` (forced sign-out) and `signOut()` clearing peer stores — both kept. ADD: (a) phone confirmation expired (`auth/code-expired`) maps to `mapFirebaseError`; (b) Apple nonce mismatch is rejected and surfaces as a toast; (c) `linkWithCredential` rejection is non-fatal (existing pattern preserved).
+* **logError Mandate:** N/A — auth screens are React client code; existing `Sentry.captureException` calls preserved unchanged.
+* **UI Layout:** Mobile-first NativeWind classes preserved 1:1. Touch targets `min-h-[52px]` per Spec 93 §4 — unchanged.
+* **Spec 90 §4 amendment justification:** The "smooth Expo Go compatibility" rationale is stale — this project moved to native dev builds per Spec 98, and Expo Go was already incompatible due to TurboModule dependencies (Firebase Auth, Reanimated worklets, Sentry — Spec 98 §6.4). The migration removes a deprecated package whose Gradle 8 incompatibility now blocks the build.
+* **Spec 93 §5 Step 1 amendment:** Firebase config moves from `EXPO_PUBLIC_FIREBASE_*` env vars to native `google-services.json` / `GoogleService-Info.plist`. The new spec text documents the gitignore + EAS file-secret upload pattern.
+* **Native config secret-handling:** `mobile/google-services.json` and `mobile/GoogleService-Info.plist` MUST be added to `mobile/.gitignore` BEFORE either is downloaded. EAS handles them via file secrets.
+* **Engineering Standards reference:** The CLAUDE.md "§10 Plan Compliance Checklist" lookup returned empty — `00_engineering_standards.md` ends at §9. Compliance applied from §1 (Mobile-First UI), §2 (Try-Catch / Assumption Documentation), §5 (Testing Standards), §6 (logError — N/A here). No invented §10.
 
 ---
 
 ## Execution Plan
 
-This plan mirrors Spec 96 §10 Build Sequence steps 1-6 + supporting work (route guard, sign-out cleanup, mobile dependency wiring, tests, review).
+*WF2 verbatim. Each step lists what's done or why it's N/A.*
 
-- [ ] **Step 0 — Pre-flight:** `node scripts/ai-env-check.mjs`. Confirm migration 114 applied. Confirm `subscribe_nonces`, `stripe_webhook_events` tables exist in schema.ts. Add `STRIPE_WEBHOOK_SECRET`, `STRIPE_SECRET_KEY` to local `.env.example` (placeholders). Run `npm install stripe` at root. Confirm no breaking change to `package-lock.json`.
+- [ ] **State Verification:** Five call sites confirmed via grep against `mobile/{src,app}`: `firebase.ts`, `apiClient.ts:101`, `authStore.ts`, `app/(auth)/sign-in.tsx`, `app/(auth)/sign-up.tsx`. Plus `__tests__/useAuth.test.ts` (mocks). No other importers of `firebase/*`. The AuthGate (`app/_layout.tsx`) consumes `useAuthStore` — no direct Firebase imports.
+- [ ] **Contract Definition:** N/A. The Bearer-token contract between mobile and `src/app/api/*` is unchanged — `getIdToken()` returns the same JWT shape from RNFirebase as from the JS SDK. `fetchWithAuth` 401-retry semantics in `apiClient.ts` preserved.
+- [ ] **Spec Update:**
+  1. Amend `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §4 Auth row → `@react-native-firebase/auth` (native module). Native Keychain/Keystore persistence; Play Integrity (Android) and APN silent-push (iOS) for phone-auth bot prevention. Native dev build required (Spec 98) — Expo Go not supported.
+  2. Amend `docs/specs/03-mobile/93_mobile_auth.md`:
+     - §2 Stack — replace JS SDK line with RNFirebase line.
+     - §5 Step 0 Install — drop `expo-firebase-recaptcha`; add `@react-native-firebase/app @react-native-firebase/auth`; `npx expo install expo-crypto`.
+     - §5 Step 0 plugins — add `@react-native-firebase/app` and `@react-native-firebase/auth` to `app.json` plugin list.
+     - §5 Step 1 firebase.ts — replace whole code sample with the RNFirebase 5-line shim.
+     - §5 Step 4 Phone path — replace `PhoneAuthProvider.verifyPhoneNumber` flow with `auth().signInWithPhoneNumber → confirmation.confirm`. Note that no recaptcha widget is mounted.
+     - §5 Step 4 Apple path — add nonce generation step (`expo-crypto`).
+     - §5 Step 4 Account linking — change `linkWithCredential(user, cred)` to `currentUser.linkWithCredential(cred)`.
+     - §5 Testing Gates — update mock surface from `firebase/auth` to `@react-native-firebase/auth`.
+     - §6 Operating Boundaries Cross-spec line — note Spec 90 §4 amendment.
+  3. Run `npm run system-map` to regenerate `docs/specs/00_system_map.md`.
+- [ ] **Schema Evolution:** N/A — no DB change.
+- [ ] **Guardrail Test:** Update `mobile/__tests__/useAuth.test.ts`:
+  - Replace `jest.mock('firebase/auth', () => ({...}))` with `jest.mock('@react-native-firebase/auth', () => ...)` exposing function-style API (`auth()` factory + `auth.AppleAuthProvider.credential` + `auth.GoogleAuthProvider.credential`).
+  - ADD `signInWithPhoneNumber` test: mocked `auth().signInWithPhoneNumber` returns a confirmation; `confirmation.confirm(code)` resolves; assert `setAuth` is called with the resulting uid.
+  - ADD `auth/code-expired` failure test asserting `mapFirebaseError` returns the user-facing copy and triggers `Haptics.notificationAsync(Error)`.
+  - ADD Apple nonce test: assert the same nonce passed to `AppleAuthentication.signInAsync` is forwarded to `auth.AppleAuthProvider.credential`.
+- [ ] **Red Light:** `cd mobile && npx jest __tests__/useAuth.test.ts` — must fail (existing tests target `firebase/auth` mock paths that no longer resolve once production code switches).
+- [ ] **Implementation:**
+  1. `mobile/.gitignore` — add `google-services.json` and `GoogleService-Info.plist` lines.
+  2. **Deps:** `cd mobile && npm uninstall firebase expo-firebase-recaptcha && npm install @react-native-firebase/app @react-native-firebase/auth && npx expo install expo-crypto`.
+  3. **`app.json` plugin block** — append `"@react-native-firebase/app"` and `"@react-native-firebase/auth"`. Add `"googleServicesFile": "./google-services.json"` to the `android` block AND `"googleServicesFile": "./GoogleService-Info.plist"` to the `ios` block. Same key name on both platforms — the config plugin injects the file into the ephemeral native folder during `expo prebuild`.
+  4. **`mobile/.env.local.example`** — drop `EXPO_PUBLIC_FIREBASE_*` lines; keep Google OAuth client IDs (`expo-auth-session` still uses them).
+  5. **Rewrite `mobile/src/lib/firebase.ts`** — strip JS init, export `auth` from `@react-native-firebase/auth`. Preserve SPEC LINK header. Preserve the Android Keystore-on-screen-lock-removal comment.
+  6. **Rewrite `mobile/src/store/authStore.ts`:**
+     - Replace `import { onAuthStateChanged, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth'` with `import auth, { type FirebaseAuthTypes } from '@react-native-firebase/auth'`.
+     - `initFirebaseAuthListener` → `auth().onAuthStateChanged(...)`. Type `firebaseUser` as `FirebaseAuthTypes.User | null`.
+     - `signOut` → `await auth().signOut()`.
+  7. **Update `mobile/src/lib/apiClient.ts:101`** — `auth().currentUser?.getIdToken(true)`. Update import accordingly.
+  8. **Rewrite `mobile/app/(auth)/sign-in.tsx`:**
+     - Drop `import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha'`.
+     - Drop `<FirebaseRecaptchaVerifierModal ref={recaptchaVerifier} firebaseConfig={app.options} />` JSX.
+     - Drop `recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null)` ref.
+     - Replace `firebase/auth` imports with `import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'`.
+     - Replace `signInWithEmailAndPassword(auth, email, password)` → `auth().signInWithEmailAndPassword(email, password)`.
+     - Replace `signInWithCredential(auth, credential)` → `auth().signInWithCredential(credential)`.
+     - Replace `GoogleAuthProvider.credential(idToken)` → `auth.GoogleAuthProvider.credential(idToken)`.
+     - Replace `OAuthProvider('apple.com').credential({ idToken })` → `auth.AppleAuthProvider.credential(identityToken, rawNonce)`.
+     - **Phone flow:** replace `PhoneAuthProvider(auth).verifyPhoneNumber(...)` with `auth().signInWithPhoneNumber(phoneNumber)`; store returned confirmation in `confirmationRef`; OTP submit calls `confirmationRef.current?.confirm(code)`.
+     - **Apple nonce:** generate per `expo-crypto` (raw 32-char string + SHA-256 hash); pass `hashedNonce` to `AppleAuthentication.signInAsync({ nonce })`; pass `rawNonce` to `auth.AppleAuthProvider.credential`.
+     - **Account linking:** `auth().fetchSignInMethodsForEmail(errorEmail)`; in `linkPendingCredential`: `auth().currentUser?.linkWithCredential(pendingCredential)`.
+     - Update typed annotations: `FirebaseUser` → `FirebaseAuthTypes.User`; `AuthCredential` → `FirebaseAuthTypes.AuthCredential`.
+  9. **Apply identical migration to `mobile/app/(auth)/sign-up.tsx`** (smaller surface — no Apple, no account-linking sheet, just email + phone paths).
+  10. **`mapFirebaseError` (`mobile/src/lib/firebaseErrors.ts`)** — RNFirebase preserves `auth/*` error codes 1:1. Spot-check `auth/missing-verification-code`, `auth/code-expired`, `auth/invalid-verification-code`, `auth/account-exists-with-different-credential`, `auth/too-many-requests`. No code change expected; if a code differs, add it to the mapping table.
+  11. **Verify Firebase Console state (USER ACTION — flag in completion summary):**
+     - User downloads `google-services.json` from Firebase Console → places at `mobile/google-services.json`.
+     - User downloads `GoogleService-Info.plist` → places at `mobile/GoogleService-Info.plist`.
+     - User registers debug + release SHA-256 fingerprints in Firebase Console under the Android app config (required for phone auth via Play Integrity). Command: `cd mobile/android && ./gradlew signingReport`. Both certificates' SHA-256 lines must be added.
+- [ ] **UI Regression Check:** N/A — no shared UI component touched. The only screens modified are auth screens; `npx jest __tests__/useAuth.test.ts` is the regression anchor.
+- [ ] **Pre-Review Self-Checklist:** Generate 5–10 self-skeptical questions from Spec 93 §3 Behavioral Contract + §6 Operating Boundaries:
+  1. Does the diff handle `onAuthStateChanged(null)` (forced sign-out) identically to user-initiated sign-out, redirecting to `/(auth)/sign-in` with no error? (§3.1)
+  2. Does sign-out call `paywallStore.clear()` BEFORE `auth().signOut()`? (§3.4 + Spec 96 §9)
+  3. Does sign-out reset `filterStore`, `notificationStore`, `userProfileStore`, `userProfileCache` — but preserve MMKV?
+  4. Is the Apple nonce passed AS `hashedNonce` to `signInAsync` and AS `rawNonce` to `AppleAuthProvider.credential`? (Apple spec — SHA-256 to Apple, raw to Firebase)
+  5. Does `auth().signInWithPhoneNumber` failure path map `auth/too-many-requests` to the spec'd 30-second resend lockout?
+  6. Does `auth/account-exists-with-different-credential` still surface the linking sheet AND preserve the `pendingCredential` across the existing-method sign-in?
+  7. Are `google-services.json` + `GoogleService-Info.plist` gitignored BEFORE they exist on disk?
+  8. Does `apiClient.ts` 401 retry still call `getIdToken(true)` exactly once per call (no concurrent stampede regression)?
+  9. Are the existing Sentry tags (`layer: 'auth'`, `op: 'linkWithCredential'`) preserved in the new code paths?
+  10. Does the `mapFirebaseError` table cover the same set of `auth/*` codes after the SDK swap?
 
-- [ ] **Step 1 — `paywallStore.ts`:** `mobile/src/store/paywallStore.ts`. Zustand state machine per §9. SPEC LINK header. Not MMKV-persisted (spec explicit). Test: `mobile/__tests__/paywallStore.test.ts` — `show()` / `dismiss()` / `clear()` transitions; initial state is `{ visible: false, dismissed: false }`.
-
-- [ ] **Step 2 — Sign-out cleanup:** `mobile/src/store/authStore.ts` line 89. Replace TODO with `paywallStore.getState().clear()` alongside the existing store resets. Critical per spec §9 — prevents same-device user-handoff bleed.
-
-- [ ] **Step 3 — `<SubscriptionLoadingGuard>`:** `mobile/src/components/paywall/SubscriptionLoadingGuard.tsx`. `bg-zinc-950 flex-1 items-center justify-center` with `<ActivityIndicator size="large" color="#f59e0b">`. SPEC LINK.
-
-- [ ] **Step 4 — `<PaywallScreen>`:** `mobile/src/components/paywall/PaywallScreen.tsx`. SPEC LINK. Stagger animation per spec §9 table (5 sequential `useSharedValue(0)` + `withDelay`/`withTiming`). Lead count from prop with zero-count edge case. 60-second Refresh link with cleanup `setTimeout`. Primary CTA delegates to `useSubscribeCheckout`. `pointerEvents="none"` during mount fade.
-
-- [ ] **Step 5 — `useSubscribeCheckout` hook:** `mobile/src/hooks/useSubscribeCheckout.ts`. POSTs to `/api/subscribe/session` via `fetchWithAuth`, Zod-parses response, calls `WebBrowser.openBrowserAsync(url)`. Returns `{ openCheckout, isLoading, error }`. SPEC LINK.
-
-- [ ] **Step 6 — Subscription gate in `_layout.tsx`:** `mobile/app/(app)/_layout.tsx`. Six-branch switch on `subscription_status`. Loading guard while null/undefined. AppState listener for foreground re-fetch. `'cancelled_pending_deletion'` → sign-out + redirect. `'expired' → 'active'` transition: `paywallStore.clear()` + invalidate `['leads']` + fade out. SPEC LINK ref.
-
-- [ ] **Step 7 — `<InlineBlurBanner>`:** `mobile/src/components/paywall/InlineBlurBanner.tsx`. Shared component for index + flight-board. Banner per spec §9. Full-row `onPress: paywallStore.show()`. SPEC LINK.
-
-- [ ] **Step 8 — Inline blur in feed + flight board:** `mobile/app/(app)/index.tsx` and `mobile/app/(app)/flight-board.tsx`. Render `<InlineBlurBanner>` when `paywallStore.dismissed && status === 'expired'`. Wrap each card in `<BlurView intensity={8} tint="dark">` (with Android < 31 fallback). 4 placeholder cards minimum. Scroll-to-top on entering blur mode.
-
-- [ ] **Step 9 — Settings subscription link:** `mobile/app/(app)/settings.tsx`. New row "Manage subscription" + sub-label "Opens buildo.com" → `WebBrowser.openBrowserAsync('https://buildo.com/account/billing')`. Hidden when `account_preset === 'manufacturer'`.
-
-- [ ] **Step 10 — `src/lib/subscription/expiration.ts`:** Export `applyTrialExpirationIfNeeded(profile, db)` and `applyFallbackTrialInitIfNeeded(profile, db)` — both idempotent, both use `UPDATE ... WHERE <predicate> RETURNING *` pattern for race safety. Pure helpers (no Next.js dependencies) so a future Phase 2 Cloud Function can import directly.
-
-- [ ] **Step 11 — Modify `user-profile/route.ts` GET:** Wire the two helpers above into the GET handler. Both run BEFORE the response is composed, so the returned profile reflects the post-write state. Existing PATCH handler unchanged (Spec 95 already covers PATCH trial init). SPEC LINK comment updated.
-
-- [ ] **Step 12 — `POST /api/subscribe/session/route.ts`:** Per spec §Step 4b. Validates `subscription_status` (400 on already-active or admin_managed). Creates nonce in `subscribe_nonces` (TTL 15 min). Returns `{ url }`. SPEC LINK.
-
-- [ ] **Step 13 — `POST /api/webhooks/stripe/route.ts`:** Per spec §Step 5. Stripe signature verify. `db.transaction()` wrapping the dedup INSERT + status UPDATE. All four event types handled. Return `{ received: true }`. SPEC LINK.
-
-- [ ] **Step 14 — `route-guard.ts` updates:** Add `/api/webhooks/stripe` to `PUBLIC_PREFIXES` (Stripe calls without Firebase auth — fail-closed default would 401 every webhook). Add `/api/subscribe/session` explicitly to `AUTHENTICATED_API_ROUTES` for clarity (currently relies on fail-closed default). Update existing `route-guard.logic.test.ts` if present.
-
-- [ ] **Step 15 — Server tests:**
-  - `src/tests/stripe-webhook.infra.test.ts` — valid `subscription.created` → status `'active'`; duplicate event ID → 200 no UPDATE; invalid signature → 400; `subscription.deleted` → `'expired'`; `invoice.payment_failed` → `'past_due'`; unknown type → 200 no-op; DB throw → transaction rollback + sanitized 500.
-  - `src/tests/stripe-webhook.security.test.ts` — missing `Stripe-Signature` → 400; forged signature string → 400; replayed event ID → idempotent reject; empty payload → 400; no raw Stripe error message in any 4xx/5xx body.
-  - `src/tests/subscribe-session.infra.test.ts` — happy path inserts nonce + returns URL with nonce param; URL contains no UID or email; unauthenticated → 401; already-active → 400; admin_managed → 400.
-  - `src/tests/subscribe-session.security.test.ts` — two requests from same user produce distinct nonces; nonce single-use; nonce not in any log line (audit grep).
-  - `src/tests/user-profile-trial.infra.test.ts` — fallback init idempotent under concurrent GET (only one row UPDATE wins); expiration write fires at exactly day-14 (not day-13); manufacturer account is NEVER touched by either helper.
-
-- [ ] **Step 16 — Mobile tests:**
-  - `mobile/__tests__/paywallStore.test.ts` — state transitions covered.
-  - `mobile/__tests__/subscriptionGate.test.ts` — gate passes (no paywall) for `'trial'`, `'active'`, `'past_due'`, `'admin_managed'`; renders `<PaywallScreen>` for `'expired'`; `cancelled_pending_deletion` triggers sign-out + redirect; loading guard while `null`; AppState `'active'` event triggers re-fetch.
-
-- [ ] **Step 17 — Multi-agent review (WF1 gate — adversarial included per memory feedback):** Three parallel agents, `isolation: "worktree"`. Spec input: `docs/specs/03-mobile/96_mobile_subscription.md`. **Code Reviewer** (logic, missing telemetry, type safety) + **Gemini adversarial** (silent failure paths, IS DISTINCT FROM races, off-by-one) + **DeepSeek adversarial** (spec gaps, downstream consumers). Triage → fix FAIL items inline. Deferred → `docs/reports/review_followups.md`.
-
-- [ ] **Step 18 — Test gate:**
-  - `npm run typecheck` (root)
-  - `cd mobile && npm run typecheck`
-  - `npx vitest run src/tests/stripe-webhook.infra.test.ts src/tests/stripe-webhook.security.test.ts src/tests/subscribe-session.infra.test.ts src/tests/subscribe-session.security.test.ts src/tests/user-profile-trial.infra.test.ts`
-  - `cd mobile && npx jest --testPathPatterns="paywallStore|subscriptionGate" --ci`
-  - `npm run lint -- --fix`
-  - All must pass before commit.
-
-- [ ] **Step 19 — Commit:** `feat(96_mobile_subscription): paywall + Stripe webhook + nonce checkout flow`
+  Walk each against the actual diff. Output PASS/FAIL per item BEFORE running tests.
+- [ ] **Multi-Agent Review:** ONE message, three parallel tool calls. No checklist provided to any agent — each generates its own from spec + diff.
+  - **Tool call 1 — Bash:** `npm run review:gemini -- review mobile/app/(auth)/sign-in.tsx --context docs/specs/03-mobile/93_mobile_auth.md`
+  - **Tool call 2 — Bash:** `npm run review:deepseek -- review mobile/app/(auth)/sign-in.tsx --context docs/specs/03-mobile/93_mobile_auth.md`
+  - **Tool call 3 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`): provide spec path + modified files list (`mobile/src/lib/firebase.ts`, `mobile/src/store/authStore.ts`, `mobile/src/lib/apiClient.ts`, `mobile/app/(auth)/sign-in.tsx`, `mobile/app/(auth)/sign-up.tsx`) + one-sentence summary.
+  - **Triage:** BUG (blocking) → file WF3 immediately and fix before Green Light. DEFER → append to `docs/reports/review_followups.md`.
+- [ ] **Green Light:** `cd mobile && npx jest && npx tsc --noEmit && npm run lint -- --fix`. Paste final test summary line + typecheck result. Then resume WF12: re-run `npx expo run:android` — broken `expo-firebase-core` is gone, build should reach Gradle SUCCESS and the app should launch on the emulator. → WF6.
 
 ---
 
-## Out of Scope / Deferred
+## Pre-requisite User Actions (cannot be automated)
 
-- **Day 10 / Day 13 reminder emails** — Phase 2 Cloud Function (spec §Step 6 explicit). Cloud Functions infra not yet stood up.
-- **Trial expiration batch sweep** — Phase 2 Cloud Function. Phase 1 expires lazily on GET (acceptable: only users who don't open the app for >14 days get a delayed `'expired'` write, and they see the paywall the first time they DO open it).
-- **App Store iOS submission** — Apple Guideline 3.1.1 risk on `"Continue at buildo.com →"` requires legal/product review (spec §5 explicit). The `EXPO_PUBLIC_PAYWALL_CTA_NEUTRAL` flag scaffolds the future build variant.
-- **Web checkout endpoint** (`buildo.com/subscribe?nonce=…` page) — separate task on the web admin side. Out of scope for this WF1; the nonce contract is published in the API contract note.
-- **Stripe Customer Portal deep-link from Settings** — placeholder URL `https://buildo.com/account/billing`. Real portal session creation is a separate task (Spec 97 territory).
-- **Periodic nonce purge job** — `subscribe_nonces` rows accumulate until expiry. Cron sweep deferred to Phase 2.
-- **Webhook signing secret rotation** — operational task, not a code change.
-- **Team / org billing** — Phase 2 (spec §11 Out of Scope).
+These two steps require Firebase Console access:
+1. **Download native config files** from Firebase Console:
+   - Android app → `google-services.json` → save to `mobile/google-services.json`
+   - iOS app → `GoogleService-Info.plist` → save to `mobile/GoogleService-Info.plist`
+   *(I will add `.gitignore` entries before you download, so neither file is committed.)*
+2. **Register Android signing fingerprints.** Run `cd mobile/android && ./gradlew signingReport`. Copy the SHA-256 lines for both `debug` and `release` variants into Firebase Console → Project Settings → Android app → Add fingerprint. Required for phone-auth Play Integrity attestation; without these, SMS sends will fail in production builds.
+
+Both must be done BEFORE Step 11 (`Implementation`) completes — the dev build will not boot without `google-services.json`.
 
 ---
 
-> **PLAN LOCKED. Do you authorize this WF1 plan? (y/n)**
->
-> §10 note: PATCH trial-init logic already lives in Spec 95's PATCH handler (line 243-250) — this task only adds the GET fallback + expiration write. No new migrations needed; all schema is from migration 114. Cross-Domain Scenario B types live in `src/app/api/subscribe/session/types.ts`. App Store Guideline 3.1.1 risk is acknowledged via the `EXPO_PUBLIC_PAYWALL_CTA_NEUTRAL` env flag scaffold; spec-prescribed copy is the implementation default.
->
+> **PLAN LOCKED. Do you authorize this WF2 plan? (y/n)**
+> Note: Spec 90 §4 amendment is part of this WF2 — the JS-SDK constraint is the architectural blocker that previously precluded this migration. If you'd rather split the spec amendment into its own WF, say so and I'll re-scope.
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.

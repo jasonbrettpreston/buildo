@@ -10,7 +10,7 @@
 
 ## 2. Technical Architecture (Expo / NativeWind)
 
-**Stack:** Firebase Auth JS SDK + Expo secure storage adapter (per Spec 90 §4).
+**Stack:** `@react-native-firebase/auth` (native module — per Spec 90 §4). Native Keychain/Keystore handles token persistence automatically; Play Integrity (Android) and APN silent-push (iOS) handle phone-auth bot prevention. No JS Firebase SDK in the mobile bundle, no reCAPTCHA WebView, no `expo-secure-store` adapter required.
 
 **Sign-in methods (all four required at launch):**
 
@@ -278,16 +278,27 @@ All packages below are required by specs 93–97 but are **not yet present in `m
 
 ```bash
 cd mobile
-npx expo install expo-secure-store expo-apple-authentication expo-web-browser expo-sharing expo-blur
-npm install input-otp-native react-native-international-phone-number tailwindcss-safe-area @react-navigation/bottom-tabs
+npx expo install expo-apple-authentication expo-web-browser expo-sharing expo-blur expo-crypto
+npm install @react-native-firebase/app @react-native-firebase/auth input-otp-native react-native-international-phone-number tailwindcss-safe-area @react-navigation/bottom-tabs
 npx expo install @sentry/react-native
 ```
 
+`expo-secure-store` is no longer required — `@react-native-firebase/auth` persists tokens to native Keychain/Keystore automatically. The Firebase JS SDK (`firebase`) and `expo-firebase-recaptcha` are NOT installed.
+
 **`app.json` plugin additions** — add alongside the existing `expo-router`, `expo-font`, `expo-notifications`, `expo-location` entries:
 ```json
-["expo-apple-authentication"],
+"@react-native-firebase/app",
+"@react-native-firebase/auth",
+"expo-apple-authentication",
 ["@sentry/react-native/app-plugin", { "organization": "buildo", "project": "buildo-mobile" }]
 ```
+
+**Native Firebase config files** — Expo's continuous prebuild regenerates `android/` and `ios/` from scratch on each `npx expo run:*` cycle, so the native config files MUST be referenced from `app.json` so the `@react-native-firebase/app` plugin can copy them into the ephemeral folders:
+```json
+"android": { "googleServicesFile": "./google-services.json", ... },
+"ios":     { "googleServicesFile": "./GoogleService-Info.plist", ... }
+```
+Both files are gitignored. Download them from the Firebase Console (Project Settings → your Android/iOS app → Download `google-services.json` / `GoogleService-Info.plist`) and place them at `mobile/google-services.json` and `mobile/GoogleService-Info.plist`. For phone auth, also register the debug + release SHA-256 fingerprints under the Android app config (run `cd mobile/android && ./gradlew signingReport` — copy both certificates' SHA-256 lines).
 
 **Google OAuth URL scheme** — add an Android `intentFilters` entry in `app.json` using your Google OAuth client's reverse client ID (from Google Cloud Console → Credentials → OAuth 2.0 Android client). Required for `expo-auth-session` Google sign-in on Android.
 
@@ -297,35 +308,22 @@ npx expo install @sentry/react-native
 
 **Step 1 — Firebase client config**
 - File: `mobile/src/lib/firebase.ts`
-- Use `expo-secure-store` as the persistence adapter — **not** `AsyncStorage`. `AsyncStorage` stores tokens in plain text; `expo-secure-store` uses Keychain (iOS) and Keystore (Android).
-- **`ExpoSecureStoreAdapter` is NOT exported by `expo-secure-store`** — it must be implemented as a custom wrapper in `mobile/src/lib/firebase.ts`:
+- `@react-native-firebase/app` auto-initialises from `google-services.json` / `GoogleService-Info.plist` at native module load — there is no JS-side `initializeApp` call. This file is now a thin re-export of the `auth` namespace so the rest of the codebase has one import to switch:
   ```typescript
-  import * as SecureStore from 'expo-secure-store';
-  import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-
-  // Firebase's getReactNativePersistence requires an AsyncStorage-compatible interface.
-  // expo-secure-store uses different method names — this adapter bridges the gap.
-  const ExpoSecureStoreAdapter = {
-    getItem: (key: string) => SecureStore.getItemAsync(key),
-    setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-    removeItem: (key: string) => SecureStore.deleteItemAsync(key),
-  };
-
-  export const auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(ExpoSecureStoreAdapter),
-  });
+  // SPEC LINK: docs/specs/03-mobile/93_mobile_auth.md §2, §5 Step 1
+  // RNFirebase auto-initialises from native config files (google-services.json
+  // and GoogleService-Info.plist) at module load. Token persistence is handled
+  // by native Keychain (iOS) / Keystore (Android) automatically — no JS adapter.
+  //
+  // Android caveat: removing the device screen lock can wipe Keystore-encrypted
+  // items, which means the Firebase refresh token disappears and the user is
+  // signed out unexpectedly. This is an OS-level behavior, not an app bug.
+  // Spec 93 §3.1 "indefinite persistence" is best-effort under this constraint.
+  import auth from '@react-native-firebase/auth';
+  export { auth };
   ```
-  No `firebase/compat` package.
-- **Firebase config env vars:** Source all Firebase config values from environment variables — never hardcode in source. Use the `EXPO_PUBLIC_` prefix so Expo includes them in the client bundle:
-  ```typescript
-  const firebaseConfig = {
-    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-  };
-  ```
-  Set via EAS Secrets: `eas secret:create --scope project --name EXPO_PUBLIC_FIREBASE_API_KEY --value <value>`. Commit a `mobile/.env.local.example` file with placeholder keys (no real values) for local dev reference. Do NOT commit real Firebase credentials.
+- **No env vars needed.** The previous `EXPO_PUBLIC_FIREBASE_*` env vars are removed. Firebase config now lives in the native config files referenced from `app.json` (Step 0). EAS handles the files via file secrets (`eas secret:create --type file --name GOOGLE_SERVICES_JSON --value ./google-services.json`) so they never enter git.
+- **`firebase` (JS SDK) and `expo-firebase-recaptcha` MUST NOT appear in `mobile/package.json`.** They are replaced wholesale by `@react-native-firebase/app` + `@react-native-firebase/auth`.
 
 **Step 2 — User session store**
 - File: `mobile/src/store/userStore.ts`
@@ -342,11 +340,11 @@ npx expo install @sentry/react-native
 - File: `mobile/app/(auth)/sign-in.tsx`
 - **Layout per §4:** wordmark area (`mb-12`), then 4-button stack with `gap-3`, divider row between Google and Phone. Screen container `bg-zinc-950 flex-1 items-center justify-center px-6`.
 - Touch targets `min-h-[52px]` (§4 spec — exceeds Spec 90 §9 44pt minimum).
-- **Apple (iOS only):** `{Platform.OS === 'ios' && <AppleAuthenticationButton>}` — use the native component directly with `buttonStyle={WHITE}` and `cornerRadius={16}`. Do NOT wrap in a custom `<Pressable>`. In-button spinner not applicable (native component handles its own loading state). Android shows no Apple button — 3-item stack only.
-- **Google:** Custom `<Pressable>` with Google `G` SVG logo per §4. `expo-auth-session` with `ResponseType.Code`; configure URL scheme in `app.json`; exchange via Firebase credential. In-button spinner per §4 spinner pattern.
-- **Phone/SMS:** Tapping "Continue with Phone" opens a bottom sheet (`snapPoints={['55%']}`). Phone input: `react-native-international-phone-number` with `defaultCountry="CA"` per §4 Phone Input spec. On "Send code" tap: `signInWithPhoneNumber` → sheet transitions to OTP entry using `input-otp-native` 6-cell spec per §4 OTP Entry. Handle `auth/too-many-requests` with `text-red-400 text-xs` message + 30s resend lockout timer.
-- **Email:** Tapping "Continue with Email" navigates to `/(auth)/sign-in?method=email` or opens an inline form below the button stack. Fields per §4 email field spec.
-- **Account linking:** catch `auth/account-exists-with-different-credential` on all four paths. Show bottom sheet per §4 Account Linking Bottom Sheet spec — call `fetchSignInMethodsForEmail` to determine existing provider name for the copy. On link success: close sheet, proceed to AuthGate.
+- **Apple (iOS only):** `{Platform.OS === 'ios' && <AppleAuthenticationButton>}` — use the native component directly with `buttonStyle={WHITE}` and `cornerRadius={16}`. Do NOT wrap in a custom `<Pressable>`. In-button spinner not applicable (native component handles its own loading state). Android shows no Apple button — 3-item stack only. **Nonce required by RNFirebase:** generate a 32-character random string (`rawNonce`) and a SHA-256 digest of it (`hashedNonce`) via `expo-crypto`'s `digestStringAsync(SHA256, raw)`. Pass `nonce: hashedNonce` to `AppleAuthentication.signInAsync` (Apple receives the hash) and pass `rawNonce` as the second argument to `auth.AppleAuthProvider.credential(identityToken, rawNonce)` (Firebase verifies the hash matches what Apple signed). Mismatch produces `auth/invalid-credential` and is rejected.
+- **Google:** Custom `<Pressable>` with Google `G` SVG logo per §4. `expo-auth-session` `useIdTokenAuthRequest` (implicit flow, returns `id_token` directly); configure URL scheme in `app.json`; exchange via `auth.GoogleAuthProvider.credential(idToken)` → `auth().signInWithCredential(credential)`. In-button spinner per §4 spinner pattern.
+- **Phone/SMS:** Tapping "Continue with Phone" opens a bottom sheet (`snapPoints={['55%']}`). Phone input: `react-native-international-phone-number` with `defaultCountry="CA"` per §4 Phone Input spec. On "Send code" tap: `auth().signInWithPhoneNumber(phoneNumber)` returns a `confirmation` object — store it in a ref. Sheet transitions to OTP entry using `input-otp-native` 6-cell spec per §4 OTP Entry. On 6-digit completion: `confirmationRef.current.confirm(code)` returns a `UserCredential`. Handle `auth/too-many-requests` with `text-red-400 text-xs` message + 30s resend lockout timer. **No reCAPTCHA widget is mounted** — Play Integrity (Android) and APN silent-push (iOS) handle bot prevention natively, which is why the JS-rendered `<FirebaseRecaptchaVerifierModal>` is removed.
+- **Email:** Tapping "Continue with Email" navigates to `/(auth)/sign-in?method=email` or opens an inline form below the button stack. Fields per §4 email field spec. Submit calls `auth().signInWithEmailAndPassword(email, password)`.
+- **Account linking:** catch `auth/account-exists-with-different-credential` on all four paths. Show bottom sheet per §4 Account Linking Bottom Sheet spec — call `auth().fetchSignInMethodsForEmail(errorEmail)` to determine existing provider name for the copy. On successful sign-in via the existing method, attach the captured pending credential via `auth().currentUser?.linkWithCredential(pendingCredential)`. On link success: close sheet, proceed to AuthGate.
 
 **Step 5 — Sign-up screen**
 - File: `mobile/app/(auth)/sign-up.tsx`
@@ -385,12 +383,13 @@ The gate order "Auth → Subscription → Onboarding" describes the dependency o
 
 **Step 7 — Account deletion (Firebase side)**
 - File: `mobile/app/(app)/settings.tsx` triggers deletion (Spec 97 §3.1 Steps 8–9); this spec owns the Firebase cleanup.
-- Order is critical: PATCH `/api/user-profile` must succeed first → then `firebase.auth().signOut()`. If PATCH fails, show error toast and abort — do NOT sign out.
+- Order is critical: PATCH `/api/user-profile` must succeed first → then `auth().signOut()`. If PATCH fails, show error toast and abort — do NOT sign out.
 - After sign-out: navigate `/(auth)/sign-in`. Server state is authoritative; no `?deleted=true` URL param needed.
 
 ### Testing Gates
 
-- **Unit:** `mobile/__tests__/useAuth.test.ts` — auth state machine: sign-in sets uid; sign-out clears store + does not clear MMKV; `onAuthStateChanged(null)` fires sign-out path (covers forced sign-out); `auth/account-exists-with-different-credential` triggers linking modal; AuthGate 404 redirects to onboarding; AuthGate fetch failure shows error screen.
+- **Unit:** `mobile/__tests__/useAuth.test.ts` — auth state machine: sign-in sets uid; sign-out clears store + does not clear MMKV; `onAuthStateChanged(null)` fires sign-out path (covers forced sign-out); `auth/account-exists-with-different-credential` triggers linking modal; phone flow `auth().signInWithPhoneNumber → confirmation.confirm` resolves to a `UserCredential` and `setAuth` is called; `auth/code-expired` maps through `mapFirebaseError` and triggers error haptic; Apple Sign-In nonce: same value passed to `AppleAuthentication.signInAsync({ nonce: hashedNonce })` and `auth.AppleAuthProvider.credential(idToken, rawNonce)`; AuthGate 404 redirects to onboarding; AuthGate fetch failure shows error screen.
+  Mock surface: `jest.mock('@react-native-firebase/auth', ...)` exposing the `auth()` factory + `auth.AppleAuthProvider.credential` + `auth.GoogleAuthProvider.credential` static methods. Do NOT mock `firebase/auth` — the JS SDK is no longer in `package.json`.
 - **Maestro:** `mobile/maestro/auth.yaml` — launch → sign in with email → verify feed visible → sign out → verify sign-in screen renders.
 
 ---
@@ -411,4 +410,4 @@ The gate order "Auth → Subscription → Onboarding" describes the dependency o
 **Cross-spec dependencies:**
 - Spec 94 (Onboarding) — auth captures credential only; all profile data captured in onboarding immediately after first sign-in
 - Spec 96 (Subscription) — `subscription_status` checked on every launch post-auth
-- Spec 90 §4 — Firebase Auth JS SDK + Expo secure storage adapter required
+- Spec 90 §4 — `@react-native-firebase/auth` (native module). Native dev build required (Spec 98); Expo Go is not supported.
