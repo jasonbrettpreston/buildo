@@ -29,6 +29,11 @@ npm-debug.log*
 .env
 .env*.local
 
+# secrets (service account keys, API credentials — NEVER commit)
+/secrets/
+*.firebase-adminsdk*.json
+firebase-admin-sdk.json
+
 # vercel
 .vercel
 

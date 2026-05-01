@@ -740,3 +740,14 @@ Second-round adversarial pass with the user's 6-area focus (logic / security / d
 | LOW | DeepSeek | **No client-side email format validation in sign-up** — `sign-up.tsx:106` only checks presence; user sees raw Firebase error for `auth/invalid-email`. | Auth UX polish WF |
 | NIT | DeepSeek | **Hardcoded `phoneNumber.length < 12` magic number** — same finding as round 1; `sign-up.tsx:108` mirror. | Auth UX polish WF |
 | NIT | Gemini | **`partialize` ternary in `authStore.ts:113` is verbose but correct** — Gemini self-rescinded; no change needed. | No action |
+
+## WF2 — Firebase Admin SDK init in dev (commit: TBD, 2026-05-01)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| HIGH | Code-reviewer | **EACCES vs JSON parse error indistinguishable in dev** — `firebase-admin.ts loadFromPath` single catch swallows fs and JSON errors as one warning; a file present but unreadable silently falls through. DX issue. | Auth hardening WF (separate) |
+| MED | DeepSeek | **DEFAULT_KEY_PATH is relative to process.cwd()** — `./secrets/firebase-admin-sdk.json` may not resolve to project root in all runtime contexts. Works in current dev/prod patterns; harden if a deployment context shifts cwd. | Auth hardening WF |
+| MED | DeepSeek | **Module-level cache cannot be invalidated for credential rotation** — once `cachedApp` is set, env-var or file changes are ignored until process restart. Credential rotation requires either restart or hash-based cache invalidation. | Production runtime WF |
+| MED | DeepSeek | **Silent dev fallback when explicit FIREBASE_ADMIN_KEY_PATH is malformed** — when the user explicitly sets the path env var but the file is bad, dev falls through to the default path silently. Should be louder. Partially mitigated by improved logging in this WF; full fix overlaps with EACCES separation above. | Auth hardening WF |
+| LOW | Gemini | **Permanent-failure cache strategy floods logs** — every request that re-enters the init path on permanent-failure (e.g., malformed JSON) re-runs the full resolution and re-logs the warning. Cache the failure for ~1min or until restart. | Production runtime WF |
+| NIT | DeepSeek | **NODE_ENV reliability for production check** — `isProduction()` reads `NODE_ENV === 'production'`; some PaaS use different conventions. Consider a build-time `IS_PRODUCTION` constant. | Build infrastructure WF |

@@ -10,6 +10,7 @@
 |---|-----------|---------|---------------|-------|--------|
 | 00 | `00-architecture/00_engineering_standards.md` | Engineering Standards & Stability Guardrails | `src/lib/logger.ts`, `src/lib/classification/classifier.ts`, `src/lib/classification/scope.ts`, +2 more | `src/tests/contracts.infra.test.ts`, `src/tests/property/*.property.test.ts`, `src/tests/diff-narrator.logic.test.ts` | Done |
 | 01 | `00-architecture/01_database_schema.md` | Database Schema | `src/lib/db/client.ts`, `src/lib/permits/types.ts`, `scripts/migrate.js` | — | Done |
+| 05 | `00-architecture/05_knowledge_operating_model.md` | Knowledge Operating Model | `scripts/harvest-commits.mjs` | — | PROPOSED — future-state doctrine; not all wiring exists yet. |
 | 06 | `00-architecture/06_permits_rest_api.md` | Permit Data API | `src/app/api/permits/route.ts`, `src/app/api/permits/[id]/route.ts`, `src/app/api/permits/geo/route.ts`, +2 more | `src/tests/api.infra.test.ts` | Done |
 | 07 | `00-architecture/07_backend_prod_eval.md` | Backend Production Readiness Evaluation | `src/lib/logger.ts`, `src/app/api/leads/feed/route.ts` | — | Done |
 | 112 | `00-architecture/112_backup_recovery.md` | Database Backup & Recovery | `scripts/backup-db.js`, `scripts/manifest.json` | — | Done |
