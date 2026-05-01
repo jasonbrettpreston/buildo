@@ -5,7 +5,7 @@
 //             docs/specs/03-mobile/90_mobile_engineering_protocol.md §11
 import '../global.css';
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator, LogBox } from 'react-native';
 import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
@@ -21,6 +21,14 @@ import { registerPushToken } from '@/lib/pushTokens';
 import { successNotification } from '@/lib/haptics';
 import { NotificationToast, type NotificationType } from '@/components/shared/NotificationToast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+// LogBox renders dev-only on-screen warning toasts that overlap absolute-positioned
+// footer elements (e.g., the sign-up footer link), causing Maestro E2E flows to
+// fail with "Element not found" when LogBox steals the tap event. Suppressing the
+// on-screen UI does NOT silence warnings — they still print to the Metro terminal
+// (where they're more actionable during development). LogBox is auto-disabled in
+// production builds by React Native, so this has zero effect on shipped code.
+LogBox.ignoreAllLogs(true);
 
 // Spec 90 §11: Sentry must be initialized before any captureException call.
 // The @sentry/react-native/app-plugin in app.json wires NATIVE crash capture
