@@ -18,9 +18,17 @@ jest.mock('@/store/authStore', () => ({
   },
 }));
 
-jest.mock('@/lib/firebase', () => ({
-  auth: { currentUser: { getIdToken: jest.fn() } },
-}));
+// RNFirebase: `auth` is a factory function — `auth()` returns the instance with
+// currentUser. apiClient.ts calls `auth().currentUser?.getIdToken(true)`.
+jest.mock('@/lib/firebase', () => {
+  const instance = { currentUser: { getIdToken: jest.fn() } };
+  const authFn: any = jest.fn(() => instance);
+  // Expose the singleton instance off the function so tests can `requireMock`
+  // and reach `auth.currentUser.getIdToken` regardless of whether they go
+  // through `auth()` or pull the underlying instance directly.
+  authFn.currentUser = instance.currentUser;
+  return { auth: authFn };
+});
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
