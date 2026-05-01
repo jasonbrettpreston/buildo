@@ -751,3 +751,14 @@ Second-round adversarial pass with the user's 6-area focus (logic / security / d
 | MED | DeepSeek | **Silent dev fallback when explicit FIREBASE_ADMIN_KEY_PATH is malformed** — when the user explicitly sets the path env var but the file is bad, dev falls through to the default path silently. Should be louder. Partially mitigated by improved logging in this WF; full fix overlaps with EACCES separation above. | Auth hardening WF |
 | LOW | Gemini | **Permanent-failure cache strategy floods logs** — every request that re-enters the init path on permanent-failure (e.g., malformed JSON) re-runs the full resolution and re-logs the warning. Cache the failure for ~1min or until restart. | Production runtime WF |
 | NIT | DeepSeek | **NODE_ENV reliability for production check** — `isProduction()` reads `NODE_ENV === 'production'`; some PaaS use different conventions. Consider a build-time `IS_PRODUCTION` constant. | Build infrastructure WF |
+
+## WF3 — Address deferred items from Firebase Admin WF2 (commit: TBD, 2026-05-01)
+
+| Severity | Source | Item | Resolution |
+|----------|--------|------|-----------|
+| MEDIUM | Code-reviewer | #9 Spec 13 §5 missing new files | RESOLVED in 403adcc; verified in this WF3 |
+| MEDIUM | DeepSeek | #10 DEFAULT_KEY_PATH relative to process.cwd() | RESOLVED — `path.resolve(process.cwd(), 'secrets', 'firebase-admin-sdk.json')` at module load |
+| MEDIUM | DeepSeek | #11 Cache cannot invalidate on credential rotation | RESOLVED — source-identity tracking (SHA-256 hash for env, mtime for file). Production cache forever (rotation = redeploy). |
+| MEDIUM | DeepSeek | #12 Silent fallback when explicit KEY_PATH malformed | RESOLVED — `loadFromPath` takes `isExplicit`; explicit failures escalate to logError |
+| CRITICAL (from this WF3 review) | Code-reviewer | Stale-app reuse on rotation when firebase-admin has default registered | RESOLVED in this WF3 — `initializationAttempted` flag gates existing-default adoption; rotation-after-first-init path attempts re-init (which firebase-admin rejects) and returns null in dev rather than silently serving stale credentials. New regression test covers this scenario. |
+| MEDIUM | Code-reviewer (this WF3) | TOCTOU: `existsSync` true but `statSync` throws → 'unstattable' sentinel treated as stable identity | DEFER — narrow race window (microseconds), requires two consecutive races. Fix path: replace stable 'unstattable' sentinel with per-call sentinel (e.g., `unstattable:${randomUUID()}`) so consecutive failures never match cache. Tracked for production runtime WF. |

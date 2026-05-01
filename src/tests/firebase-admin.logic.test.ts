@@ -37,10 +37,12 @@ vi.mock('@/lib/logger', () => ({
 
 const mockReadFileSync = vi.fn();
 const mockExistsSync = vi.fn();
+const mockStatSync = vi.fn();
 vi.mock('node:fs', () => ({
   readFileSync: mockReadFileSync,
   existsSync: mockExistsSync,
-  default: { readFileSync: mockReadFileSync, existsSync: mockExistsSync },
+  statSync: mockStatSync,
+  default: { readFileSync: mockReadFileSync, existsSync: mockExistsSync, statSync: mockStatSync },
 }));
 
 const ENV_KEYS = [
@@ -92,6 +94,8 @@ describe('getFirebaseAdmin', () => {
     mockReadFileSync.mockImplementation(() => {
       throw new Error('readFileSync called without explicit mock setup');
     });
+    // Default statSync mock — tests that need mtime tracking override this.
+    mockStatSync.mockImplementation(() => ({ mtime: new Date(0), mtimeMs: 0 }));
   });
 
   afterEach(() => {
@@ -126,9 +130,12 @@ describe('getFirebaseAdmin', () => {
 
   it('falls back to ./secrets/firebase-admin-sdk.json when env vars unset — priority 3', async () => {
     (process.env as Record<string, string>).NODE_ENV = 'development';
-    mockExistsSync.mockImplementation((p: string) => p.endsWith('secrets/firebase-admin-sdk.json'));
+    // Slash-agnostic — DEFAULT_KEY_PATH is absolute via path.resolve(), which
+    // produces backslashes on Windows. Normalise to forward slashes for the suffix check.
+    const matchesDefault = (p: string) => p.replace(/\\/g, '/').endsWith('secrets/firebase-admin-sdk.json');
+    mockExistsSync.mockImplementation((p: string) => matchesDefault(p));
     mockReadFileSync.mockImplementation((p: string) => {
-      if (p.endsWith('secrets/firebase-admin-sdk.json')) return VALID_SERVICE_ACCOUNT_JSON;
+      if (matchesDefault(p)) return VALID_SERVICE_ACCOUNT_JSON;
       throw new Error(`Unexpected read: ${p}`);
     });
     const { getFirebaseAdmin } = await import('@/lib/firebase-admin');
@@ -297,5 +304,179 @@ describe('getFirebaseAdmin', () => {
     });
     const { getFirebaseAdmin } = await import('@/lib/firebase-admin');
     expect(() => getFirebaseAdmin()).toThrow(/private key|PEM/i);
+  });
+
+  // Deferred-review fixes (WF3 follow-up to commit 403adcc)
+
+  it('uses an absolute path for DEFAULT_KEY_PATH (review #10 — anchor to project root)', async () => {
+    (process.env as Record<string, string>).NODE_ENV = 'development';
+    let lastPathChecked = '';
+    mockExistsSync.mockImplementation((p: string) => {
+      lastPathChecked = p;
+      return false;
+    });
+    const { getFirebaseAdmin } = await import('@/lib/firebase-admin');
+    getFirebaseAdmin();
+    // The default path passed to existsSync must be absolute (not relative).
+    // Windows: starts with drive letter + colon. POSIX: starts with /.
+    expect(lastPathChecked).toMatch(/^([a-zA-Z]:[\\/]|\/)/);
+    expect(lastPathChecked).toMatch(/firebase-admin-sdk\.json$/);
+  });
+
+  it('re-initializes when FIREBASE_SERVICE_ACCOUNT_KEY changes in dev (review #11 — credential rotation)', async () => {
+    (process.env as Record<string, string>).NODE_ENV = 'development';
+    const json1 = VALID_SERVICE_ACCOUNT_JSON;
+    const json2 = JSON.stringify({
+      ...JSON.parse(VALID_SERVICE_ACCOUNT_JSON),
+      project_id: 'buildo-rotated',
+    });
+    (process.env as Record<string, string>).FIREBASE_SERVICE_ACCOUNT_KEY = json1;
+    const { getFirebaseAdmin } = await import('@/lib/firebase-admin');
+    const first = getFirebaseAdmin();
+    expect(first).not.toBeNull();
+    expect(mockInitializeApp).toHaveBeenCalledTimes(1);
+
+    // Rotate the env var — same shape, different project_id
+    (process.env as Record<string, string>).FIREBASE_SERVICE_ACCOUNT_KEY = json2;
+    // Don't simulate getApps returning the prior app — the module should not
+    // reuse a stale-source cached app in dev.
+    const second = getFirebaseAdmin();
+    expect(second).not.toBeNull();
+    expect(mockInitializeApp).toHaveBeenCalledTimes(2);
+    // Verify the new credential reached cert()
+    expect(mockCert).toHaveBeenLastCalledWith(expect.objectContaining({ project_id: 'buildo-rotated' }));
+  });
+
+  it('re-initializes when service account file mtime changes in dev (review #11 — file rotation)', async () => {
+    (process.env as Record<string, string>).NODE_ENV = 'development';
+    (process.env as Record<string, string>).FIREBASE_ADMIN_KEY_PATH = '/path/to/key.json';
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue(VALID_SERVICE_ACCOUNT_JSON);
+    let mtimeMs = new Date('2026-05-01T10:00:00Z').getTime();
+    mockStatSync.mockImplementation(() => ({ mtime: new Date(mtimeMs), mtimeMs }));
+
+    const { getFirebaseAdmin } = await import('@/lib/firebase-admin');
+    const first = getFirebaseAdmin();
+    expect(first).not.toBeNull();
+    expect(mockInitializeApp).toHaveBeenCalledTimes(1);
+
+    // File rotated — bump mtime
+    mtimeMs = new Date('2026-05-01T11:30:00Z').getTime();
+    const second = getFirebaseAdmin();
+    expect(second).not.toBeNull();
+    expect(mockInitializeApp).toHaveBeenCalledTimes(2);
+  });
+
+  it('does NOT re-initialize in production even when source identity changes (review #11 — production cache forever)', async () => {
+    (process.env as Record<string, string>).NODE_ENV = 'production';
+    (process.env as Record<string, string>).FIREBASE_SERVICE_ACCOUNT_KEY = VALID_SERVICE_ACCOUNT_JSON;
+    const { getFirebaseAdmin } = await import('@/lib/firebase-admin');
+    const first = getFirebaseAdmin();
+    expect(first).not.toBeNull();
+    expect(mockInitializeApp).toHaveBeenCalledTimes(1);
+
+    // Rotate the env var — production must ignore (rotation = redeploy).
+    const json2 = JSON.stringify({
+      ...JSON.parse(VALID_SERVICE_ACCOUNT_JSON),
+      project_id: 'buildo-attempted-rotation',
+    });
+    (process.env as Record<string, string>).FIREBASE_SERVICE_ACCOUNT_KEY = json2;
+    const second = getFirebaseAdmin();
+    expect(second).toBe(first);
+    expect(mockInitializeApp).toHaveBeenCalledTimes(1);
+  });
+
+  it('escalates to logError when explicit FIREBASE_ADMIN_KEY_PATH points at a malformed file (review #12)', async () => {
+    (process.env as Record<string, string>).NODE_ENV = 'development';
+    (process.env as Record<string, string>).FIREBASE_ADMIN_KEY_PATH = '/explicit/bad.json';
+    mockExistsSync.mockImplementation((p: string) => p === '/explicit/bad.json');
+    mockReadFileSync.mockImplementation((p: string) => {
+      if (p === '/explicit/bad.json') return 'not-valid-json{';
+      throw new Error(`unexpected read: ${p}`);
+    });
+    const logger = await import('@/lib/logger');
+    const { getFirebaseAdmin } = await import('@/lib/firebase-admin');
+    getFirebaseAdmin();
+    // logError should have been called specifically for the explicit-path parse failure
+    const errorCalls = (logger.logError as ReturnType<typeof vi.fn>).mock.calls;
+    const explicitPathErrorCall = errorCalls.find(
+      (call) =>
+        call[2] !== undefined &&
+        typeof call[2] === 'object' &&
+        (call[2] as Record<string, unknown>).path === '/explicit/bad.json' &&
+        (call[2] as Record<string, unknown>).source === 'file',
+    );
+    expect(explicitPathErrorCall).toBeDefined();
+  });
+
+  it('does NOT silently serve a stale app on rotation when firebase-admin already has the default registered (WF3 review CRITICAL)', async () => {
+    // Realistic scenario: after first init, firebase-admin's getApps() returns
+    // the previously-registered default. On rotation, naive code would adopt
+    // the OLD app from getApps() and stamp the NEW sourceId — silent stale
+    // credential serving. Verify that doesn't happen: instead, re-init is
+    // attempted (which firebase-admin would reject — caught by our try/catch)
+    // and dev returns null rather than the stale app.
+    (process.env as Record<string, string>).NODE_ENV = 'development';
+    (process.env as Record<string, string>).FIREBASE_SERVICE_ACCOUNT_KEY = VALID_SERVICE_ACCOUNT_JSON;
+
+    const oldApp = { name: '[DEFAULT]', _id: 'old-app' };
+    mockInitializeApp.mockImplementation(() => oldApp);
+
+    const { getFirebaseAdmin } = await import('@/lib/firebase-admin');
+    const first = getFirebaseAdmin();
+    expect(first).toBe(oldApp);
+    expect(mockInitializeApp).toHaveBeenCalledTimes(1);
+
+    // Now firebase-admin's registry has [DEFAULT] (simulate that real-world side effect).
+    mockGetApps.mockReturnValue([oldApp]);
+    // initializeApp now throws on second call because default already exists.
+    mockInitializeApp.mockImplementation(() => {
+      throw new Error('Firebase app named "[DEFAULT]" already exists');
+    });
+
+    // Rotate the credential.
+    const json2 = JSON.stringify({
+      ...JSON.parse(VALID_SERVICE_ACCOUNT_JSON),
+      project_id: 'buildo-rotated',
+    });
+    (process.env as Record<string, string>).FIREBASE_SERVICE_ACCOUNT_KEY = json2;
+
+    const second = getFirebaseAdmin();
+    // Must NOT silently return the old (stale-credential) app.
+    expect(second).not.toBe(oldApp);
+    // In dev with init failure, the contract is null (NOT throw).
+    expect(second).toBeNull();
+    // Must have ATTEMPTED re-init (proving the rotation was detected and
+    // not silently absorbed), even though firebase-admin rejected it.
+    expect(mockInitializeApp).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses logWarn (NOT logError) when default-path file is malformed (review #12 regression guard)', async () => {
+    (process.env as Record<string, string>).NODE_ENV = 'development';
+    // No FIREBASE_ADMIN_KEY_PATH — fall through to default path
+    mockExistsSync.mockImplementation((p: string) => p.endsWith('firebase-admin-sdk.json'));
+    mockReadFileSync.mockImplementation((p: string) => {
+      if (p.endsWith('firebase-admin-sdk.json')) return 'not-valid-json{';
+      throw new Error(`unexpected read: ${p}`);
+    });
+    const logger = await import('@/lib/logger');
+    const { getFirebaseAdmin } = await import('@/lib/firebase-admin');
+    getFirebaseAdmin();
+    // logWarn should have been called for the parse failure
+    const warnCalls = (logger.logWarn as ReturnType<typeof vi.fn>).mock.calls;
+    const parseWarn = warnCalls.find((call) =>
+      typeof call[1] === 'string' && /failed to read or parse/i.test(call[1] as string),
+    );
+    expect(parseWarn).toBeDefined();
+    // logError should NOT have been called for the parse failure
+    // (the final no-credentials path uses logWarn in dev too)
+    const errorCalls = (logger.logError as ReturnType<typeof vi.fn>).mock.calls;
+    const parseError = errorCalls.find(
+      (call) =>
+        call[2] !== undefined &&
+        typeof call[2] === 'object' &&
+        (call[2] as Record<string, unknown>).stage === 'JSON.parse',
+    );
+    expect(parseError).toBeUndefined();
   });
 });
