@@ -17,7 +17,9 @@ Full WF execution plans: `.claude/workflows.md` — read when a WF is triggered,
 | **`WF5`** | Audit | "Audit." Append: `code`, `build`, `prod`, `prod backend`, `pipeline`, `manual [feature]` |
 | **`WF6`** | Review | "Review, harden, and commit." Also the exit gate after WF1/WF2/WF3. |
 | **`WF7`** | Maestro | "Write or debug a Maestro E2E flow." |
-| **`WF11`** | Launch | "Safe start / recovery." |
+| **`WF8`** | Parallel | "Fork a worktree to work in parallel without violating the active-task slot." |
+| **`WF11`** | Launch | "Safe start / recovery." (Next.js dev server) |
+| **`WF12`** | Mobile Launch | "Safe start mobile / Maestro / emulator." (Expo native dev build per Spec 98) |
 
 ---
 
@@ -30,7 +32,7 @@ Full WF execution plans: `.claude/workflows.md` — read when a WF is triggered,
 5. **Automated Gate:** Husky pre-commit runs `npm run typecheck && npm run lint && npm run test`. ESLint enforces `no-empty` and bans `process.exit()` in `src/`.
 6. **Pre-Flight:** Run `node scripts/ai-env-check.mjs` before starting any task.
 7. **Engineering Standards:** Adhere to `docs/specs/00_engineering_standards.md` for all API, UI, and DB code.
-8. **Lessons:** Read `tasks/lessons.md` at session start — project-specific gotchas that have already bitten us.
+8. **Lessons:** Read `tasks/lessons.md` at session start — project-specific gotchas that have already bitten us. When fixing a CRITICAL/HIGH bug or running WF5/WF6, also read `docs/specs/00-architecture/05_knowledge_operating_model.md` for the lesson-routing protocol.
 9. **Library Docs:** Use the Context7 MCP server (`resolve-library-id` → `get-library-docs`) before writing code against any external library. Prevents hallucinated API calls against outdated versions.
 
 ### Execution Order Constraint

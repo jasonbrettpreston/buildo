@@ -15,6 +15,7 @@
     "migrate": "node scripts/migrate.js",
     "db:generate": "drizzle-kit introspect",
     "task": "node scripts/task-init.mjs",
+    "wf8": "node scripts/wf8-worktree.mjs",
     "system-map": "node scripts/generate-system-map.mjs",
     "safe-start": "node -e \"try{require('child_process').execSync('Stop-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess -Force', {shell: 'powershell.exe', stdio:'ignore'})}catch{}\" && rm -rf .next && npm run build && npm run dev",
     "seed:trades": "npx tsx scripts/seed-trades.ts",
