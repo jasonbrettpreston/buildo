@@ -4,8 +4,16 @@
 appId: com.buildo.app
 ---
 - launchApp:
-    clearState: true
-- assertVisible: "Buildo"
+    # clearState: false — the Expo dev client caches Metro's bundler URL in app
+    # data when first launched via deep link. Wiping that with clearState: true
+    # leaves the dev client unable to find Metro on subsequent launches, causing
+    # a black screen / load failure. Test isolation is preserved by the explicit
+    # sign-out step at the end of this flow. For CI, switch to a release variant
+    # (Spec 98 §2.2) where clearState is safe because the JS bundle is baked in.
+    clearState: false
+- extendedWaitUntil:
+    visible: "Buildo"
+    timeout: 45000
 # On Android the Apple button is hidden — assert the always-present Google button.
 - assertVisible: "Sign in with Google"
 - tapOn: "Continue with Email"
@@ -17,7 +25,11 @@ appId: com.buildo.app
 - inputText: "TestPassword123!"
 - tapOn:
     id: "email-submit"
-- assertVisible: "Lead Feed"
+# Wait for any post-auth landing — Settings tab is universal across Lead Feed
+# and Flight Board, so it's a more stable anchor than asserting a specific feed.
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 10000
 - tapOn: "Settings"
 - tapOn:
     id: "sign-out-button"

@@ -1,0 +1,56 @@
+# SPEC LINK: docs/specs/03-mobile/93_mobile_auth.md §5 Step 5 (Sign-up screen),
+#            docs/specs/03-mobile/94_mobile_onboarding.md (downstream routing)
+# Smoke flow: cold launch → tap "Sign up" footer → email signup with timestamped
+# unique address → land on first onboarding screen ("What's your trade?").
+#
+# Scope is intentionally bounded to "signup successful + AuthGate routes to
+# onboarding". The full 7-step onboarding walk is a separate flow (deferred).
+#
+# Date.now() generates a unique millisecond epoch per run so each invocation
+# creates a fresh Firebase user — Firebase rejects "email already in use".
+# Maestro evaluates JavaScript inside ${...} template strings (v1.31+).
+# Note: ${CURRENT_TIMESTAMP} is NOT a Maestro built-in — it evaluated as
+# undefined and produced "newuser_undefined@buildo.app" on prior runs.
+appId: com.buildo.app
+---
+- launchApp:
+    # clearState: false — preserves the Expo dev client's cached Metro bundler
+    # URL. Wiping that with clearState: true leaves the dev client unable to
+    # find Metro and the app launches to a black screen. The unique timestamped
+    # email below guarantees a fresh Firebase account per run regardless of
+    # whether prior auth tokens are still in keychain.
+    clearState: false
+# Generate a unique email up-front via evalScript and stash on output.* so the
+# value is computed exactly once per run and reused if a retry step is added
+# later. This pattern is more debuggable than inlining ${Date.now()} since
+# `output.uniqueEmail` shows up in Maestro's run logs.
+- evalScript: ${output.uniqueEmail = 'newuser_' + Date.now() + '@buildo.app'}
+- extendedWaitUntil:
+    visible: "Buildo"
+    timeout: 70000  # Match auth.yaml — observed cold-start can exceed 30s on dev builds.
+# The "Sign up" tap target is the amber footer link on the sign-in screen,
+# not "Continue with Email" (which routes existing users into the email form).
+# Use testID rather than text — React Native's nested <Text> grouping prevents
+# Maestro from isolating the inner "Sign up" span as a tappable element.
+- tapOn:
+    id: "sign-up-link"
+- extendedWaitUntil:
+    visible:
+      id: "signup-header"
+    timeout: 10000
+- tapOn:
+    id: "signup-email-input"
+- inputText: ${output.uniqueEmail}
+- tapOn:
+    id: "signup-password-input"
+- inputText: "TestPassword123!"
+- tapOn:
+    id: "signup-confirm-input"
+- inputText: "TestPassword123!"
+- tapOn:
+    id: "signup-submit"
+# Successful signup → AuthGate sees onboarding_complete=false → routes to
+# /(onboarding)/profession (Spec 93 §5 Step 6). Headline text from profession.tsx:116.
+- extendedWaitUntil:
+    visible: "What's your trade?"
+    timeout: 15000
