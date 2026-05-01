@@ -1,2 +1,3 @@
 #!/bin/sh
-bash scripts/hooks/validate-commit-msg.sh "$1"
+bash scripts/hooks/validate-commit-msg.sh "$1" && \
+bash scripts/hooks/check-lesson-routing.sh "$1"
