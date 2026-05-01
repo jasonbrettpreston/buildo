@@ -45,6 +45,23 @@
 
 ---
 
+<failure_modes>
+## 4a. Known Failure Modes
+[Add this section after the first CRITICAL/HIGH bug fix touches the spec's surface,
+per docs/specs/00-architecture/05_knowledge_operating_model.md §4. Each entry: short
+title, the class of failure, the guard now in place (test / lint / code change), and
+the commit SHA that introduced the guard. Omit section entirely until the first guard
+is added — empty placeholders rot.]
+
+<!-- Example entry (delete when adding real ones):
+- **Out-of-order webhook events** — Stripe does not guarantee delivery order; late
+  `customer.subscription.updated` could overwrite `expired` back to `active`.
+  Guard: `last_stripe_event_at` timestamp gate in webhook UPDATE (migration 116, commit 7dfe1a1).
+-->
+</failure_modes>
+
+---
+
 <testing>
 ## 5. Testing Mandate
 <!-- TEST_INJECT_START -->
