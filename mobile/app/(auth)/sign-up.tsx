@@ -4,14 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import {
-  createUserWithEmailAndPassword,
-  signInWithCredential,
-  PhoneAuthProvider,
-} from 'firebase/auth';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
+import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { auth, app } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { mapFirebaseError } from '@/lib/firebaseErrors';
 import { track } from '@/lib/analytics';
 import { PhoneInputField } from '@/components/auth/PhoneInputField';
@@ -37,7 +32,6 @@ export default function SignUpScreen() {
   // Phone state
   const [phoneStage, setPhoneStage] = useState<PhoneStage>('input');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [verificationId, setVerificationId] = useState('');
   const [otpError, setOtpError] = useState(false);
   const [phoneLoading, setPhoneLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
@@ -45,7 +39,10 @@ export default function SignUpScreen() {
   const [backupEmail, setBackupEmail] = useState('');
   const [backupLoading, setBackupLoading] = useState(false);
 
-  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
+  // RNFirebase confirmation result is the SMS-session handle returned from
+  // signInWithPhoneNumber. Replaces the verificationId string used by the JS
+  // SDK PhoneAuthProvider flow.
+  const confirmationRef = useRef<FirebaseAuthTypes.ConfirmationResult | null>(null);
   const phoneSheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
@@ -89,7 +86,7 @@ export default function SignUpScreen() {
     try {
       setEmailLoading(true);
       setErrorMessage('');
-      await createUserWithEmailAndPassword(auth, email, password);
+      await auth().createUserWithEmailAndPassword(email, password);
       track('signup_completed', { method: 'email' });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // AuthGate routes to onboarding via onAuthStateChanged.
@@ -105,17 +102,15 @@ export default function SignUpScreen() {
       setErrorMessage('Enter a complete phone number.');
       return;
     }
-    if (!recaptchaVerifier.current) {
-      setErrorMessage('reCAPTCHA not ready. Try again.');
-      return;
-    }
     track('auth_method_attempted', { method: 'phone' });
     try {
       setPhoneLoading(true);
       setErrorMessage('');
-      const phoneProvider = new PhoneAuthProvider(auth);
-      const id = await phoneProvider.verifyPhoneNumber(phoneNumber, recaptchaVerifier.current);
-      setVerificationId(id);
+      // RNFirebase: no JS-side reCAPTCHA. Play Integrity (Android) / APN
+      // silent-push (iOS) handle bot prevention natively. Returned confirmation
+      // owns the SMS session and is consumed in handleVerifyOtp.
+      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+      confirmationRef.current = confirmation;
       setPhoneStage('otp');
       setResendCooldown(30);
     } catch (err) {
@@ -132,12 +127,17 @@ export default function SignUpScreen() {
         setOtpLoading(true);
         setOtpError(false);
         setErrorMessage('');
-        const credential = PhoneAuthProvider.credential(verificationId, code);
-        // Note: signInWithCredential creates the Firebase user if they don't
+        const confirmation = confirmationRef.current;
+        if (!confirmation) {
+          throw Object.assign(new Error('No phone-auth session active'), {
+            code: 'auth/missing-verification-id',
+          });
+        }
+        // Note: confirmation.confirm creates the Firebase user if they don't
         // exist (phone auth has no separate "create" call). The backup-email
         // capture happens AFTER the Firebase user is created — Spec 95
         // onboarding writes it to user_profiles.
-        await signInWithCredential(auth, credential);
+        await confirmation.confirm(code);
         track('auth_otp_verified');
         Keyboard.dismiss();
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -150,7 +150,7 @@ export default function SignUpScreen() {
         setOtpLoading(false);
       }
     },
-    [verificationId, handleAuthError],
+    [handleAuthError],
   );
 
   const handleSubmitBackupEmail = useCallback(async () => {
@@ -173,7 +173,6 @@ export default function SignUpScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-950">
-      <FirebaseRecaptchaVerifierModal ref={recaptchaVerifier} firebaseConfig={app.options} />
       <View className="flex-1 px-6">
         {/* Wordmark — same as sign-in but mb-10 */}
         <View className="items-center mb-10 mt-10">
@@ -271,7 +270,7 @@ export default function SignUpScreen() {
             // Closing the sheet returns the user to email signup, not silently dismissing them.
             setMethod('email');
             setPhoneStage('input');
-            setVerificationId('');
+            confirmationRef.current = null;
             setOtpError(false);
           }
         }}

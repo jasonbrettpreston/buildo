@@ -14,21 +14,11 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Google from 'expo-auth-session/providers/google';
-import {
-  signInWithEmailAndPassword,
-  signInWithCredential,
-  GoogleAuthProvider,
-  OAuthProvider,
-  PhoneAuthProvider,
-  fetchSignInMethodsForEmail,
-  linkWithCredential,
-  type AuthCredential,
-  type User as FirebaseUser,
-} from 'firebase/auth';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
+import * as Crypto from 'expo-crypto';
+import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Sentry from '@sentry/react-native';
-import { auth, app } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { track } from '@/lib/analytics';
 import { mapFirebaseError, isAccountLinkingError } from '@/lib/firebaseErrors';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
@@ -61,14 +51,18 @@ export default function SignInScreen() {
 
   // Phone form state
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [verificationId, setVerificationId] = useState('');
   const [otpError, setOtpError] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  // RNFirebase returns a confirmation object from signInWithPhoneNumber that
+  // owns the SMS session — kept in a ref so it survives re-renders between
+  // the phone-input and OTP-entry screens. Replaces the verificationId string
+  // used by the JS-SDK PhoneAuthProvider flow.
+  const confirmationRef = useRef<FirebaseAuthTypes.ConfirmationResult | null>(null);
 
   // Account linking state
   const [linkingExistingMethod, setLinkingExistingMethod] = useState('');
   const [linkingNewMethod, setLinkingNewMethod] = useState('');
-  const [pendingCredential, setPendingCredential] = useState<AuthCredential | null>(null);
+  const [pendingCredential, setPendingCredential] = useState<FirebaseAuthTypes.AuthCredential | null>(null);
   // The email captured from auth/account-exists-with-different-credential. Used
   // to verify that the just-completed sign-in matches the account we expect to
   // link to — prevents linking a Google credential to an unrelated user's
@@ -76,7 +70,6 @@ export default function SignInScreen() {
   const [linkingExpectedEmail, setLinkingExpectedEmail] = useState('');
   const linkingSheetRef = useRef<AccountLinkingSheetRef>(null);
   const phoneSheetRef = useRef<BottomSheet>(null);
-  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
 
   // Tracks whether the component is still mounted so async sign-in flows
   // don't call setState on an unmounted component (React warning + memory
@@ -133,7 +126,7 @@ export default function SignInScreen() {
   // sheet and signs in to an unrelated account would have the pending
   // credential silently attached (and rejected by Firebase) to the wrong UID.
   const linkPendingCredential = useCallback(
-    async (currentUser: FirebaseUser | null) => {
+    async (currentUser: FirebaseAuthTypes.User | null) => {
       if (!pendingCredential || !currentUser) return;
       if (linkingExpectedEmail && currentUser.email?.toLowerCase() !== linkingExpectedEmail.toLowerCase()) {
         // Wrong account — discard the pending credential rather than attempt
@@ -143,7 +136,7 @@ export default function SignInScreen() {
         return;
       }
       try {
-        await linkWithCredential(currentUser, pendingCredential);
+        await currentUser.linkWithCredential(pendingCredential);
         track('auth_account_link_completed', {
           existing_method: linkingExistingMethod || 'email',
           new_method: linkingNewMethod || 'unknown',
@@ -171,13 +164,24 @@ export default function SignInScreen() {
     if (isAccountLinkingError(code)) {
       // Look up which provider already owns this email so we can tell the user
       // which method to sign in with first.
-      const errorEmail = (err as { customData?: { email?: string } }).customData?.email ?? '';
-      const credential = (err as { credential?: AuthCredential }).credential ?? null;
+      // RNFirebase puts the conflicting email + credential under `userInfo`
+      // (not `customData` like the JS SDK). Both fields preserve the same
+      // semantics — the email belongs to the existing account, the credential
+      // is the one the user just attempted to sign in with.
+      const errorEmail =
+        (err as { userInfo?: { email?: string } }).userInfo?.email ??
+        (err as { customData?: { email?: string } }).customData?.email ??
+        '';
+      const credential =
+        (err as { userInfo?: { authCredential?: FirebaseAuthTypes.AuthCredential } }).userInfo
+          ?.authCredential ??
+        (err as { credential?: FirebaseAuthTypes.AuthCredential }).credential ??
+        null;
       let existingProviderId = 'password';
       if (errorEmail) {
         setLinkingExpectedEmail(errorEmail);
         try {
-          const methods = await fetchSignInMethodsForEmail(auth, errorEmail);
+          const methods = await auth().fetchSignInMethodsForEmail(errorEmail);
           existingProviderId = methods[0] ?? 'password';
           setLinkingExistingMethod(providerName(existingProviderId));
         } catch {
@@ -226,8 +230,8 @@ export default function SignInScreen() {
     void (async () => {
       try {
         setLinkingNewMethod('Google');
-        const credential = GoogleAuthProvider.credential(idToken);
-        const result = await signInWithCredential(auth, credential);
+        const credential = auth.GoogleAuthProvider.credential(idToken);
+        const result = await auth().signInWithCredential(credential);
         await linkPendingCredential(result.user);
         track('auth_method_succeeded', { method: 'google' });
         if (isMountedRef.current) {
@@ -256,17 +260,28 @@ export default function SignInScreen() {
       setAppleLoading(true);
       setErrorMessage('');
       setLinkingNewMethod('Apple');
+      // RNFirebase requires the same nonce used in Apple's sign-in to verify
+      // the identity token. Apple receives the SHA-256 hash and signs over
+      // it; Firebase recomputes the hash from the raw value and rejects the
+      // token if it doesn't match. Required by auth.AppleAuthProvider.credential.
+      const rawNonce = Array.from(Crypto.getRandomBytes(16))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+      const hashedNonce = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        rawNonce,
+      );
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
+        nonce: hashedNonce,
       });
       const { identityToken } = credential;
       if (!identityToken) throw new Error('No identity token from Apple');
-      const provider = new OAuthProvider('apple.com');
-      const firebaseCredential = provider.credential({ idToken: identityToken });
-      const result = await signInWithCredential(auth, firebaseCredential);
+      const firebaseCredential = auth.AppleAuthProvider.credential(identityToken, rawNonce);
+      const result = await auth().signInWithCredential(firebaseCredential);
       await linkPendingCredential(result.user);
       track('auth_method_succeeded', { method: 'apple' });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -304,7 +319,7 @@ export default function SignInScreen() {
       setEmailLoading(true);
       setErrorMessage('');
       setLinkingNewMethod('email');
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      const result = await auth().signInWithEmailAndPassword(email, password);
       await linkPendingCredential(result.user);
       track('auth_method_succeeded', { method: 'email' });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -322,18 +337,16 @@ export default function SignInScreen() {
       setErrorMessage('Enter a complete phone number.');
       return;
     }
-    if (!recaptchaVerifier.current) {
-      setErrorMessage('reCAPTCHA not ready. Try again.');
-      return;
-    }
     track('auth_method_attempted', { method: 'phone' });
     try {
       setPhoneLoading(true);
       setErrorMessage('');
       setLinkingNewMethod('phone');
-      const phoneProvider = new PhoneAuthProvider(auth);
-      const id = await phoneProvider.verifyPhoneNumber(phoneNumber, recaptchaVerifier.current);
-      setVerificationId(id);
+      // RNFirebase: no JS-side reCAPTCHA. Play Integrity (Android) / APN
+      // silent-push (iOS) handle bot prevention natively. The returned
+      // confirmation owns the SMS session and is consumed in handleVerifyOtp.
+      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+      confirmationRef.current = confirmation;
       setMode('phone-otp');
       setResendCooldown(30);
     } catch (err) {
@@ -350,9 +363,16 @@ export default function SignInScreen() {
         setOtpLoading(true);
         setOtpError(false);
         setErrorMessage('');
-        const credential = PhoneAuthProvider.credential(verificationId, code);
-        const result = await signInWithCredential(auth, credential);
-        await linkPendingCredential(result.user);
+        const confirmation = confirmationRef.current;
+        if (!confirmation) {
+          // Defensive: confirmation was never set (handleSendCode not called or
+          // failed). Surface a clear error rather than null-deref.
+          throw Object.assign(new Error('No phone-auth session active'), {
+            code: 'auth/missing-verification-id',
+          });
+        }
+        const result = await confirmation.confirm(code);
+        await linkPendingCredential(result?.user ?? null);
         track('auth_otp_verified');
         track('auth_method_succeeded', { method: 'phone' });
         Keyboard.dismiss();
@@ -365,7 +385,7 @@ export default function SignInScreen() {
         setOtpLoading(false);
       }
     },
-    [verificationId, handleAuthError, linkPendingCredential],
+    [handleAuthError, linkPendingCredential],
   );
 
   const handleLinkExisting = useCallback(async () => {
@@ -388,7 +408,6 @@ export default function SignInScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-950">
-      <FirebaseRecaptchaVerifierModal ref={recaptchaVerifier} firebaseConfig={app.options} />
       <View className="flex-1 items-center justify-center px-6">
         {/* Wordmark */}
         <View className="items-center mb-12">
@@ -531,7 +550,7 @@ export default function SignInScreen() {
         onChange={(idx) => {
           if (idx === -1) {
             setMode('idle');
-            setVerificationId('');
+            confirmationRef.current = null;
             setPhoneNumber('');
             resetTransientState();
           }

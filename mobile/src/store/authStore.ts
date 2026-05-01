@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKV } from 'react-native-mmkv';
-import { onAuthStateChanged, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth';
+import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useFilterStore } from '@/store/filterStore';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -90,7 +90,7 @@ export const useAuthStore = create<AuthState>()(
         // Then reset peer in-memory stores so a different user signing in on the same
         // device sees no stale data. MMKV is preserved per §3.4 so the same user
         // returning on the same device gets fast hydration.
-        await firebaseSignOut(auth);
+        await auth().signOut();
         useFilterStore.getState().reset();
         useNotificationStore.getState().reset();
         useOnboardingStore.getState().reset();
@@ -129,11 +129,11 @@ export const useAuthStore = create<AuthState>()(
   ),
 );
 
-// Wires the Firebase onAuthStateChanged listener into the store. Call once from
-// RootLayout in mobile/app/_layout.tsx — returns the unsubscribe function so
-// React's useEffect cleanup detaches the listener on unmount.
+// Wires the RNFirebase onAuthStateChanged listener into the store. Call once
+// from RootLayout in mobile/app/_layout.tsx — returns the unsubscribe function
+// so React's useEffect cleanup detaches the listener on unmount.
 export function initFirebaseAuthListener(): () => void {
-  return onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+  return auth().onAuthStateChanged((firebaseUser: FirebaseAuthTypes.User | null) => {
     if (firebaseUser) {
       void firebaseUser
         .getIdToken()

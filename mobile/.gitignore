@@ -33,6 +33,11 @@ yarn-error.*
 # local env files
 .env*.local
 
+# Firebase native config — downloaded from Firebase Console; never committed.
+# EAS handles them via file secrets (eas secret:create --type file).
+google-services.json
+GoogleService-Info.plist
+
 # typescript
 *.tsbuildinfo
 

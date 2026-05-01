@@ -17,6 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.buildo.app",
       "usesAppleSignIn": true,
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Allow Buildo to access your location to find nearby construction leads.",
         "UIBackgroundModes": ["remote-notification"]
@@ -28,6 +29,7 @@
         "backgroundColor": "#09090b"
       },
       "package": "com.buildo.app",
+      "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
@@ -69,8 +71,10 @@
         }
       ],
       "expo-apple-authentication",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
       [
-        "@sentry/react-native/app-plugin",
+        "@sentry/react-native",
         {
           "organization": "buildo",
           "project": "buildo-mobile"

@@ -28,6 +28,8 @@ export function mapFirebaseError(code: string | undefined): string {
       return 'Enter a phone number to continue.';
     case 'auth/code-expired':
       return 'That code has expired. Request a new one.';
+    case 'auth/missing-verification-id':
+      return 'Your code request expired. Please send a new code.';
     case 'auth/cancelled-popup-request':
     case 'auth/popup-closed-by-user':
       return ''; // user cancelled — no error message

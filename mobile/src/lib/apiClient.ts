@@ -98,7 +98,7 @@ async function fetchWithAuthInternal<T>(
   if (response.status === 401 && !isRetry) {
     try {
       const { user } = useAuthStore.getState();
-      const newToken = await auth.currentUser?.getIdToken(true);
+      const newToken = await auth().currentUser?.getIdToken(true);
       if (newToken && user) {
         useAuthStore.getState().setAuth(user, newToken);
         return fetchWithAuthInternal<T>(path, options, true);
