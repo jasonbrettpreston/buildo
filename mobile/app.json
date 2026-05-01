@@ -40,10 +40,10 @@
       "intentFilters": [
         {
           "action": "VIEW",
-          "autoVerify": true,
+          "autoVerify": false,
           "data": [
             {
-              "scheme": "com.googleusercontent.apps.REPLACE_WITH_GOOGLE_ANDROID_CLIENT_ID"
+              "scheme": "com.googleusercontent.apps.1005165777284-5oa9jq97l51gcrtk9bskqh78j10bj2of"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
