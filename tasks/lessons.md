@@ -17,6 +17,9 @@
 - Notifications table columns are `is_read`/`is_sent` (not `read`/`sent`) — mapped in TS interfaces
 - CoA column is `application_number`, aliased to `application_num` in SQL queries
 - CoA column is `linked_confidence`, aliased to `link_confidence` in queries
+- **Migration runner does NOT respect `-- UP` / `-- DOWN` markers** — they're SQL comments, not section directives. `scripts/migrate.js` runs the entire `.sql` file as one transaction. Any uncommented DROP/REVERT statement under `-- DOWN` will execute immediately after the UP section, silently undoing the migration. The migration is recorded as "applied" but the schema is unchanged. ALWAYS comment out every line of the DOWN section (match migration 114's convention). Discovered 2026-05-01 in migrations 113/115/116; backup → fix files → delete bogus `schema_migrations` rows → re-run was the recovery path.
+- **`schema_migrations` row presence does NOT prove the schema changed** — it proves the file ran without erroring. Always verify with `\d table_name` after applying migrations that touch important tables.
+- **`trigger_set_timestamp()` function from migration 100 may be missing** even when `schema_migrations` says 100 was applied (likely from a `pg_dump`/`pg_restore` cycle that didn't preserve the function). If a later migration fails with `function trigger_set_timestamp() does not exist`, recreate via `CREATE OR REPLACE FUNCTION trigger_set_timestamp() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = NOW(); RETURN NEW; END; $$ LANGUAGE plpgsql;`
 
 ## Pipeline
 - `new Date()` is banned for timestamps written to DB — use `pipeline.getDbTimestamp(pool)`
