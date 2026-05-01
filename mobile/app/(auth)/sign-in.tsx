@@ -530,7 +530,12 @@ export default function SignInScreen() {
 
         {/* Footer link to sign-up */}
         <View className="absolute bottom-12">
-          <Pressable onPress={() => router.push('/(auth)/sign-up')}>
+          <Pressable
+            onPress={() => router.push('/(auth)/sign-up')}
+            testID="sign-up-link"
+            accessibilityRole="button"
+            accessibilityLabel="Sign up"
+          >
             <Text className="text-zinc-500 text-sm text-center">
               Don&apos;t have an account? <Text className="text-amber-500">Sign up</Text>
             </Text>

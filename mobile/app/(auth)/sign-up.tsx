@@ -184,7 +184,13 @@ export default function SignUpScreen() {
 
         {method === 'email' && (
           <View className="w-full">
-            <Text className="text-zinc-100 text-xl font-bold mb-6">Create your account</Text>
+            <Text
+              className="text-zinc-100 text-xl font-bold mb-6"
+              testID="signup-header"
+              accessibilityRole="header"
+            >
+              Create your account
+            </Text>
             <TextInput
               className="bg-zinc-800 rounded-xl px-4 py-3.5 text-zinc-100 text-base mb-3"
               placeholder="Email"
