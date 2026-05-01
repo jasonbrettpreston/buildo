@@ -1,5 +1,6 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
+_Last triaged: 2026-05-01 | Next triage: 2026-05-29 | Triage cadence: weekly_
 
 ## WF2 Task 3 — Retroactive annotation sweep + validate-migration.js marker fixes (commit: TBD, 2026-04-24)
 
@@ -685,3 +686,62 @@ Three-reviewer security pass (Gemini webhook + DeepSeek subscribe-session + Code
 | LOW | DeepSeek (security) | **Missing `else` on `result.kind` switch in subscribe-session** — Future enum addition could fall through without returning a response. Add a final exhaustiveness check + 500. | Refactor pass |
 | LOW | Gemini (logic) | **Stale `'canceled'` mention in webhook log message context** (already partly fixed) — Comment reads cleanly but log messages still treat all rowCount===0 cases identically. The current "no_row_matched" event tag is grep-friendly but doesn't disambiguate the three sub-causes (missing user, customer mismatch, stale event). Splitting into separate log lines per cause would help support debug specific Stripe events. | Logging hygiene pass |
 | LOW | Gemini (NIT) | **`withApiEnvelope` wrapper name is misleading on the webhook route** — The webhook returns `{ received: true }` not the standard envelope, so the wrapper is acting as an error-only catch-all. Either rename to `withApiErrorHandler` or document the dual mode. | Refactor naming pass |
+
+---
+
+## 8. Weekly Triage — 2026-05-01
+
+_Run: 2026-05-01 UTC · Window: all items (first triage run — no prior `last_reviewed` dates) · Next: 2026-05-29_
+
+**Totals:** ~490 items across 8 sections · **Zombies flagged: 490** (entire queue — no `last_reviewed` field existed before this run) · Promoted: 10 · Killed: 6 · Converted: 4 · Deferred: ~470
+
+### Promoted → Active WF
+
+Items satisfy: severity CRITICAL or HIGH + actionable code fix identified + still relevant to current codebase.
+
+| Severity | Item | Proposed WF | Reason |
+|----------|------|-------------|--------|
+| CRITICAL | `pipeline.js:465` `checkQueueAge` interpolates raw `options.where` SQL — injection vector if any caller passes user data | **WF3** `scripts/lib/pipeline.js` | SQL injection in a library used by every pipeline script; low effort to fix (escape or reject the param) |
+| CRITICAL | `config-loader.js:105` `allocSum=0` division by zero — Infinity/NaN trade allocations throughout pipeline | **WF3** `scripts/lib/config-loader.js` | Silent NaN propagation into cost model and forecasts; one-liner guard; zero-alloc seed is a realistic DB misconfiguration |
+| CRITICAL | Builder `lead_id::text` lexicographic cursor pagination — `'9' < '10'` breaks relevance-tie ordering | **WF3** `src/features/leads/lib/get-lead-feed.ts` | User-facing feed correctness bug; fix: cast to `e.id::int` in SQL (IDs confirmed < 2.1B) |
+| CRITICAL×2 | `lifecycle-phase.js`: `TRADE_TARGET_PHASE` hardcoded + stall thresholds 730/180/30/90 hardcoded | **WF3** (bundled) `scripts/lifecycle-phase.js` | Operator tuning impossible without code deploy; violates §4.1; `classifyCoaPhase` already uses the correct `logic_variables` pattern |
+| CRITICAL | `compute-trade-forecasts.js` DELETE purge commits before UPSERT batches — table emptied on crash | **WF3** `scripts/compute-trade-forecasts.js` | Spec §7.3 atomicity violation; crash between purge commit and first UPSERT leaves `trade_forecasts` empty; fix: wrap purge+first-batch in same `withTransaction` |
+| CRITICAL | `classifyBldLed` returns `P18` when `has_passed_inspection = true` — permit already passed, should be P17/terminal | **WF3** `scripts/lifecycle-phase.js` | Systematic misclassification of permits that completed inspection; cross-check TS counterpart in `lifecycle-phase.logic.test.ts` |
+| CRITICAL | Unstall cliff: `phase_started_at` not reset when `lifecycle_stalled` flips `true → false` | **WF3** `scripts/classify-lifecycle-phase.js` | Permits that resume construction show `daysUntil = -700+`, hitting `expired` instantly; fix: add `phase_started_at = NOW()` branch in the stall-transition CASE |
+| HIGH | `aic-scraper-nodriver.py` writes `permit_inspections` but never bumps `permits.last_seen_at` | **WF3** `scripts/aic-scraper-nodriver.py` | Classifier dirty predicate misses new inspection events until the next deep_scrapes chain run; one-line fix or classifier predicate change |
+| HIGH | `backup_db` has **never run** — zero rows in `pipeline_runs` for this script | **WF3** (ops) `scripts/backup-db.js` | No production DB backup on record; mandatory before any upcoming schema change; verify GCS upload path |
+| HIGH | Subscription funnel has zero PostHog events — `paywall_shown`, `subscribe_session_requested`, etc. all absent | **WF1** `mobile/src/lib/analytics.ts` + 7 call sites | Entire subscription funnel is a black box; Spec 90 §11 mandates funnel telemetry; ~7 event names + 4 whitelist keys + 7 call sites |
+
+### Killed
+
+Items satisfy: explicitly rejected at creation, confirmed non-bug, or cost > benefit with no realistic trigger.
+
+| Item | Reason |
+|------|--------|
+| i18n hardcoded strings — km units, `"lead/leads"` pluralization | Explicitly rejected at creation: "Toronto-only product, English-only. File for a dedicated i18n WF if/when we expand." |
+| Null Island `{lat:0,lng:0}` check in `locationLabel` | Explicitly rejected: "(0,0) is valid coordinate (Gulf of Guinea). We never set it as default." |
+| `Intl.PluralRules` for lead count | Explicitly rejected: same i18n rationale; no expansion planned |
+| `DrawerPortal` conditional rendering for perf | Explicitly rejected: "Shadcn default. Premature optimization for this use case." |
+| `DrawerHandle` extractable component | Explicitly rejected: "YAGNI. Only one Drawer consumer exists today." |
+| `scrollToTop` vs `scrollToOffset({offset:0})` disputed finding | Confirmed non-bug: FlashList v2.3.1 changelog confirms `scrollToTop()` added in v2.0.0; finding is incorrect |
+
+### Converted
+
+Items routed to a stronger destination per Spec 05 §2 instead of a code WF.
+
+| Item | Target | Rationale |
+|------|--------|-----------|
+| `'use strict'` missing from most pipeline scripts | **ESLint rule** — add `'use strict'` enforcement to `scripts/` eslint config | Pattern is machine-checkable; not a review-queue item; pre-commit will catch regressions automatically |
+| SPEC LINK rot — 5 missing spec files (`02_permit_sync.md`, `12_coa_integration.md`, etc.) | **Spec hygiene WF2** (docs-only) — stub the 5 missing files or add redirects in `docs/specs/pipeline/` | No src/ code change; pure documentation debt |
+| Advisory lock §5.2: IDs don't match owning spec numbers for infra scripts | **Spec 47 §5.2 doc update** — amend §5.2 to allow sequential assignment when a script has no 1:1 spec | Spec is wrong, not the code; all scripts use correct collision-avoidance strategy |
+| `notification_type` enum spec drift (`PHASE_CHANGED` vs `LIFECYCLE_PHASE_CHANGED`) | **Spec 92 §6.1 doc update** — correct example in `docs/specs/03-mobile/92_mobile_engagement_hardware.md §6.1` | Code is internally consistent; no code change required |
+
+### Deferred (all remaining items)
+
+All ~470 remaining items deferred with `triage_after: 2026-05-29`. Existing Planned Home designations are current. No code or spec change warranted this cycle beyond the PROMOTE / KILL / CONVERT decisions above.
+
+Notable groups in the deferred set (for next triage context):
+- **Systemic pipeline patterns** (§1): 5 epics (Midnight Cross, SDK emits, advisory lock drift, file-shape tests, hardcoded constants) — each requires a multi-script sweep WF; defer until a dedicated sprint is scoped.
+- **Mobile hardening backlog** (§3 + §4): ~45 items targeting `Mobile hardening WF` or `Mobile UI polish WF` — bundle into a single WF1 sprint once Spec 97 Settings lands.
+- **Phase 8 / Spec 94–96 integration gaps**: `CRIT | /api/user-profile PATCH missing` + `trade_slug NOT NULL blocks manufacturer` — both are Spec 95 scope already committed (4eeaf96); verify closure at next triage.
+- **FreshnessTimeline refactor** (MED×2, §2 lines 165–166): 10+ pre-existing bugs in a 1449-line component; defer until a dedicated WF2 refactor sprint with a full component audit plan.
