@@ -53,13 +53,20 @@ CREATE TRIGGER set_updated_at
   FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
 
 -- DOWN
-DROP TRIGGER IF EXISTS set_updated_at ON trade_mapping_rules;
-DROP TRIGGER IF EXISTS set_updated_at ON user_profiles;
-DROP TRIGGER IF EXISTS set_updated_at ON pipeline_schedules;
-DROP TRIGGER IF EXISTS set_updated_at ON tracked_projects;
-DROP TRIGGER IF EXISTS set_updated_at ON lead_analytics;
-DROP TRIGGER IF EXISTS set_updated_at ON logic_variables;
-DROP TRIGGER IF EXISTS set_updated_at ON trade_configurations;
-DROP TRIGGER IF EXISTS set_updated_at ON trade_sqft_rates;
-DROP TRIGGER IF EXISTS set_updated_at ON scope_intensity_matrix;
-DROP FUNCTION IF EXISTS trigger_set_timestamp();
+-- (commented out — scripts/migrate.js executes the entire file as one transaction
+-- and does NOT respect `-- DOWN` as a section marker. Uncommenting any line below
+-- would cause the migration's UP work to be immediately reversed. See
+-- tasks/lessons.md "migration runner UP/DOWN convention" for the full context.
+-- This file's DOWN was the most likely root cause of the trigger_set_timestamp()
+-- function being missing in dev DBs prior to 68643b3 — confirmed by WF5 audit
+-- 634fd1f and the manual recreation we had to do during 403adcc.)
+-- DROP TRIGGER IF EXISTS set_updated_at ON trade_mapping_rules;
+-- DROP TRIGGER IF EXISTS set_updated_at ON user_profiles;
+-- DROP TRIGGER IF EXISTS set_updated_at ON pipeline_schedules;
+-- DROP TRIGGER IF EXISTS set_updated_at ON tracked_projects;
+-- DROP TRIGGER IF EXISTS set_updated_at ON lead_analytics;
+-- DROP TRIGGER IF EXISTS set_updated_at ON logic_variables;
+-- DROP TRIGGER IF EXISTS set_updated_at ON trade_configurations;
+-- DROP TRIGGER IF EXISTS set_updated_at ON trade_sqft_rates;
+-- DROP TRIGGER IF EXISTS set_updated_at ON scope_intensity_matrix;
+-- DROP FUNCTION IF EXISTS trigger_set_timestamp();

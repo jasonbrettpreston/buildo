@@ -52,7 +52,11 @@ CREATE INDEX IF NOT EXISTS idx_entity_projects_permit ON entity_projects(permit_
 CREATE INDEX IF NOT EXISTS idx_entity_projects_coa ON entity_projects(coa_file_num) WHERE coa_file_num IS NOT NULL;
 
 -- DOWN
-DROP TABLE IF EXISTS entity_projects;
-DROP TABLE IF EXISTS entities;
-DROP TYPE IF EXISTS project_role_enum;
-DROP TYPE IF EXISTS entity_type_enum;
+-- (commented out — scripts/migrate.js executes the entire file as one transaction
+-- and does NOT respect `-- DOWN` as a section marker. Uncommenting any line below
+-- would cause the migration's UP work to be immediately reversed. See
+-- tasks/lessons.md "migration runner UP/DOWN convention" for the full context.)
+-- DROP TABLE IF EXISTS entity_projects;
+-- DROP TABLE IF EXISTS entities;
+-- DROP TYPE IF EXISTS project_role_enum;
+-- DROP TYPE IF EXISTS entity_type_enum;

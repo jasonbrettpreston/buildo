@@ -20,4 +20,8 @@ CREATE INDEX idx_scraper_queue_pending ON scraper_queue (created_at)
 COMMENT ON TABLE scraper_queue IS 'Batch claiming queue for multi-worker AIC inspection scraper';
 
 -- DOWN
-DROP TABLE IF EXISTS scraper_queue;
+-- (commented out — scripts/migrate.js executes the entire file as one transaction
+-- and does NOT respect `-- DOWN` as a section marker. Uncommenting any line below
+-- would cause the migration's UP work to be immediately reversed. See
+-- tasks/lessons.md "migration runner UP/DOWN convention" for the full context.)
+-- DROP TABLE IF EXISTS scraper_queue;

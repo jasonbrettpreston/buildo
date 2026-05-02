@@ -15,5 +15,9 @@ WHERE w.linked_builder_id = b.id
   AND w.linked_entity_id IS NULL;
 
 -- DOWN
-DROP INDEX IF EXISTS idx_wsib_linked_entity;
-ALTER TABLE wsib_registry DROP COLUMN IF EXISTS linked_entity_id;
+-- (commented out — scripts/migrate.js executes the entire file as one transaction
+-- and does NOT respect `-- DOWN` as a section marker. Uncommenting any line below
+-- would cause the migration's UP work to be immediately reversed. See
+-- tasks/lessons.md "migration runner UP/DOWN convention" for the full context.)
+-- DROP INDEX IF EXISTS idx_wsib_linked_entity;
+-- ALTER TABLE wsib_registry DROP COLUMN IF EXISTS linked_entity_id;

@@ -16,5 +16,9 @@ ALTER TABLE user_profiles
   }'::jsonb;
 
 -- DOWN
+-- (commented out — scripts/migrate.js executes the entire file as one transaction
+-- and does NOT respect `-- DOWN` as a section marker. Uncommenting any line below
+-- would cause the migration's UP work to be immediately reversed. See
+-- tasks/lessons.md "migration runner UP/DOWN convention" for the full context.)
 -- ALLOW-DESTRUCTIVE
-ALTER TABLE user_profiles DROP COLUMN IF EXISTS notification_prefs;
+-- ALTER TABLE user_profiles DROP COLUMN IF EXISTS notification_prefs;
