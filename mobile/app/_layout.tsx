@@ -87,10 +87,14 @@ function AuthGate() {
   const rootNavigationState = useRootNavigationState();
   const [isNavigationReady, setNavigationReady] = useState(false);
 
-  // Subscribe to onboardingStore.currentStep so getResumePath uses the
-  // freshest value. Selector form re-renders only when currentStep changes,
-  // not on every other onboardingStore mutation. Spec 94 §10 Step 11.
-  const onboardingCurrentStep = useOnboardingStore((s) => s.currentStep);
+  // NOTE: we do NOT subscribe to onboardingStore.currentStep via a selector
+  // here. AuthGate's effect only needs the latest currentStep when it's
+  // ALREADY firing (segments changed, profile loaded/changed, etc.) — we
+  // don't want to RE-FIRE the effect every time setStep updates the store
+  // during normal onboarding flow. Subscribing + including in deps caused a
+  // render loop ("Maximum update depth exceeded") on /(onboarding)/complete
+  // post-WF2 3727ceb (this commit fixes that regression). Read lazily via
+  // getState() inside the effect closure when needed.
 
   // Step 1: latch ready flag the moment the navigation container key exists.
   useEffect(() => {
@@ -149,7 +153,7 @@ function AuthGate() {
     if (profile) {
       if (inAuthGroup) {
         if (!profile.onboarding_complete) {
-          router.replace(getResumePath(profile, onboardingCurrentStep));
+          router.replace(getResumePath(profile, useOnboardingStore.getState().currentStep));
         } else {
           router.replace('/(app)/');
           void registerPushToken().catch((err) => {
@@ -160,10 +164,13 @@ function AuthGate() {
         router.replace('/(app)/');
       } else if (!inAuthGroup && !inOnboardingGroup && !profile.onboarding_complete) {
         // Hard gate: user reached an (app) screen before completing onboarding.
-        router.replace(getResumePath(profile, onboardingCurrentStep));
+        router.replace(getResumePath(profile, useOnboardingStore.getState().currentStep));
       }
     }
-  }, [isNavigationReady, user, segments, _hasHydrated, profile, profileError, profileLoading, onboardingCurrentStep, router, signOut]);
+    // currentStep is intentionally NOT in this dep array — see the comment
+    // above the lazy useOnboardingStore.getState().currentStep reads. Adding
+    // it caused a render loop in commit 3727ceb (fixed in this commit).
+  }, [isNavigationReady, user, segments, _hasHydrated, profile, profileError, profileLoading, router, signOut]);
 
   // Reactivation modal — Spec 93 §3.6 Step 4
   if (reactivationState && user) {
