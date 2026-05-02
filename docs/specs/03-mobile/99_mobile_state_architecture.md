@@ -20,7 +20,7 @@
 |----------|------|---------|----------------------------------------|
 | `currentStep` selector subscription loop | 2026-05-02 (commit `3727ceb` → fixed `6c5d085`) | Routing `useEffect` subscribed to a Zustand field it ALSO mutated via `router.replace`-induced cascade | §6.4 (lazy `getState()` for state read in router effects) |
 | Dual-router (AuthGate ↔ OnboardingLayout) loop | 2026-05-02 (fixed same day, WF3) | Two layout-level `router.replace` effects reading DIFFERENT sources of truth (server profile vs local store) for the same routing decision | §5.1 (one router per gate boundary) + §5.2 (read canonical source) |
-| `isFetching` / Tabs flicker loop | 2026-05-02 (current — followup WF3 to apply §6.5 fix) | Render gate condition included an unstable signal (`isFetching` toggles on every refetch); `refetchOnReconnect` cascade on flaky NetInfo amplified | §6.5 (gate conditions must be stable; never gate on `isFetching`) |
+| `isFetching` / Tabs flicker loop | 2026-05-02 (current — fix scheduled as §9.4a P0 BLOCKING) | Render gate condition included an unstable signal (`isFetching` toggles on every refetch); flips AppLayout between `<SubscriptionLoadingGuard/>` and `<Tabs>` ~80×/sec, mounting/unmounting LeadFeedScreen continuously | §6.5 (gate conditions must be stable; never gate on `isFetching`) |
 
 ### 1.2 The six user-stated quality goals (verbatim)
 
@@ -102,7 +102,8 @@ This table is **normative**. Adding a field to the mobile app requires adding a 
 | `user.email` | `authStore` | `authStore.setAuth()` | reactivation modal copy, settings | NOT persisted |
 | `user.displayName` | `authStore` | `authStore.setAuth()` | settings | NOT persisted |
 | `idToken` | `authStore` | `authStore.setAuth()` (init + 401 retry) | apiClient `Authorization: Bearer` only | NOT persisted (short-lived) |
-| `_hasHydrated` | `authStore` | `onRehydrateStorage` callback | AuthGate (Branch 0 — wait-for-hydrate gate) | NOT persisted (process-local) |
+| `isLoading` | `authStore` | `authStore.setAuth()` / `clearAuth()` / `setLoading()` (init defaults to `true`; cleared to `false` on first auth resolve) | AuthGate (initial-load gate before hydrate completes) | NOT persisted (process-local) |
+| `_hasHydrated` | `authStore` | `onRehydrateStorage` callback (sole production writer); `setHasHydrated(true)` permitted ONLY in tests to bypass MMKV | AuthGate (Branch 0 — wait-for-hydrate gate) | NOT persisted (process-local) |
 
 ### 3.3 Onboarding-Local State (no server mirror)
 
@@ -112,22 +113,35 @@ This table is **normative**. Adding a field to the mobile app requires adding a 
 | `selectedTradeName` | `onboardingStore` | `setTrade()` in `profession.tsx` | `path.tsx` for display |
 | `selectedPath` | `onboardingStore` | `setPath()` in `path.tsx` | `address.tsx`, `supplier.tsx` (skip-suppliers branch) |
 
-### 3.4 Engagement / UI
+### 3.4 Engagement (Zustand, in-memory)
 
 | Field | Owner Layer | Writer | Readers |
 |-------|-------------|--------|---------|
 | `unreadFlightBoard` | `notificationStore` (in-memory) | `incrementUnread()` in `NotificationHandlers` foreground push handler; `clearUnread()` on Flight Board tab focus | AppLayout tab badge |
-| `paywall.visible` / `paywall.dismissed` | `paywallStore` (in-memory — Spec 96 §9 explicit) | `show()` / `dismiss()` / `clear()` (also from `signOut()` per §4.5 and from `expired→active` transition in AppLayout) | AppLayout subscription gate, PaywallScreen, InlineBlurBanner |
-| `tabBarScrollY` / `tabBarVisible` | `tabBarStore` (Layer 5 SharedValues) | feed/board/map screens via `onScroll` worklet | AppLayout `AnimatedTabBar` |
+| `paywall.visible` | `paywallStore` (in-memory — Spec 96 §9 explicit) | `show()` — currently has NO callers (verified by grep 2026-05-02); reserved for InlineBlurBanner tap once wired. Until then, this field is ALWAYS `false`. **Audit obligation per §9.9: confirm caller exists before next release, or delete the field.** | AppLayout subscription gate, PaywallScreen |
+| `paywall.dismissed` | `paywallStore` (in-memory) | `dismiss()` (PaywallScreen "Maybe later" tap), `clear()` (signOut per §B5; `expired→active` transition in AppLayout) | AppLayout subscription gate, InlineBlurBanner |
+
+### 3.4a UI-Only SharedValues (Layer 5 — orthogonal to Layers 1-4)
+
+These are NOT Zustand stores. They use `react-native-reanimated`'s `makeMutable()` and live exclusively on the UI thread. They are **never** read by router effects, hydrated from server, persisted to MMKV, or reset in §B5 sign-out — they are process-local UI state for animations.
+
+| Field | File | Writer | Readers | Sign-out reset |
+|-------|------|--------|---------|----------------|
+| `tabBarScrollY` | `tabBarStore.ts` | `onScroll` worklets in `(app)/index.tsx`, `flight-board.tsx`, `map.tsx` | `AnimatedTabBar` `useDerivedValue` | NOT required (process-local, not user-scoped) |
+| `tabBarVisible` | `tabBarStore.ts` | derived from `tabBarScrollY` direction | `AnimatedTabBar` `translateY` | NOT required |
 
 ### 3.5 Deprecated mirrors (migration targets per §9)
 
 | Mirror | Replacement | Migration WF |
 |--------|-------------|--------------|
-| `onboardingStore.isComplete` | Read `useUserProfile().data.onboarding_complete` directly | WF2 §9.2 |
+| `onboardingStore.isComplete` | Read `useUserProfile().data.onboarding_complete` directly | WF2 §9.2a-c |
 | `onboardingStore.locationMode` / `homeBaseLat` / `homeBaseLng` / `supplierSelection` (the duplicates) | Use `filterStore` exclusively (already populated by B2 hydration) | WF2 §9.3 |
 | `onboardingStore.selectedTrade` (duplicate of `filterStore.tradeSlug`) | Use `filterStore.tradeSlug` | WF2 §9.3 |
+| `onboardingStore.selectedTradeName` (display-only mirror of server `display_name` lookup) | Read from server profile or extract from trade catalog at display site | WF2 §9.3 |
 | `useUserProfile.readCachedProfile` MMKV blob (`user-profile-cache`) | Eliminated — TanStack persister covers fast-hydration | WF3 §9.1 |
+| `userProfileStore.hydrate` non-idempotent set | Migrate to deep-equal-before-set per §6.6 | WF2 §9.8 |
+| `filterStore.hydrate` non-idempotent set | Same | WF2 §9.8 |
+| `paywallStore.show()` action with no caller | Delete OR wire InlineBlurBanner caller | WF3 §9.9 |
 
 ---
 
@@ -151,7 +165,7 @@ const query = useQuery({
 - Every server fetch MUST go through TanStack Query — never raw `fetch()` in components.
 - `queryKey` MUST be a stable, parameterized array. Object literals with closure refs are BANNED (cache fragmentation).
 - `enabled` gates: use `!!user` for user-scoped queries; never `enabled: someChangingValue` that toggles continuously.
-- **`refetchOnReconnect` MUST be set to `false` for `['user-profile']` and other gate-relevant queries** (the 2026-05-02 incident #3 root cause). Other queries may opt in.
+- **`refetchOnReconnect` defaults to `true` and MUST stay enabled** for `['user-profile']` so a returning-from-offline user gets a fresh profile (Stripe webhook may have flipped `subscription_status` during the offline window). The 2026-05-02 incident #3 root cause is **not** `refetchOnReconnect` — it's that AppLayout's render gate gates on `isFetching` (per §6.5 BANNED). Surgical fix: strip `isFetching` from the gate condition (§9.4); `refetchOnReconnect` stays on.
 - Validation: every response MUST be parsed through a Zod schema before TanStack stores it (Spec 90 §13 Zod Boundary).
 
 ### B2 — TanStack → Zustand (server-to-local hydration)
@@ -218,6 +232,7 @@ auth().onAuthStateChanged((firebaseUser) => {
 - `lastKnownUid` is NOT reset on sign-out (Spec 93 §3.4 fast-path preservation).
 - Stale-resolution guard: `getIdToken().then()` MUST verify `lastKnownUid === expectedUid` before calling `setAuth` (race-prevention per WF3 review).
 - Telemetry: emit `Sentry.addBreadcrumb({category:'auth', message:'uid_change_cache_invalidated'})` only on genuine UID change (not first-fire) per §7.
+- **HMR caveat (DEV only):** `lastKnownUid` is module-scoped `let`, so Metro Fast Refresh resets it on hot reload of `authStore.ts` while in-flight `getIdToken().then()` closures from the OLD module retain the stale binding. The stale-resolution guard above mitigates the late-write race. The cache-invalidation re-fire is acceptable (extra refetch, not data loss). DO NOT move `lastKnownUid` into Zustand state to "fix" HMR — that would defeat the cold-boot first-fire detection (Zustand persist would rehydrate it from MMKV).
 
 ### B5 — Sign-out Reset (the global fan-out)
 
@@ -239,8 +254,8 @@ signOut: async () => {
 
 **Rules:**
 - Order is normative: paywall reset BEFORE firebase signOut (prevents shared-device handoff race per Spec 96 §9).
-- All in-memory Zustand stores MUST be enumerated in this function. Adding a new store with user-scoped state requires adding a `.reset()` call here.
-- `queryClient.clear()` is **NOT** called — TanStack queries are gated by `enabled: !!user` and naturally stop reading. **Open question** flagged for review: should it be called?
+- All in-memory Zustand stores MUST be enumerated in this function. Adding a new store with user-scoped state requires adding a `.reset()` call here. **Enforcement:** §8.5 store-enumeration test grep-asserts that every `create<*Store>(` in `mobile/src/store/*.ts` has a corresponding `.getState().reset()` call in `signOut()`.
+- **`queryClient.removeQueries({queryKey: ['user-profile']})` MUST fire** in `signOut()` AFTER `await auth().signOut()` and BEFORE the Zustand resets. Reason: `enabled: !!user` only stops *new* fetches — in-flight fetches resolve and write to the cache, attributing the previous user's data to the next sign-in. Additionally, the MMKV-persisted TanStack cache (`mmkvPersister`, 24h `maxAge`) survives the sign-out and rehydrates on next mount, leaking previous-user `['user-profile']` to a different user signing in on a shared device — a privacy violation under PIPEDA (the same reason `userProfileStore.partialize` strips PII). The B4 invalidate-on-uid-change is defense-in-depth; this `removeQueries` call is the primary fix. **Tracked as §9.10 followup.**
 
 ---
 
@@ -269,20 +284,22 @@ For each routing decision, the router MUST read from the field's owner per §3:
 | Account in deletion window? | `profileError instanceof AccountDeletedError` |
 | Subscription status? | `useUserProfile().data.subscription_status` (canonical) — NEVER mirrored locally |
 
-### 5.3 The 5 routing branches (AuthGate, Spec 93 §5 Step 6)
+**Stale-profile guard (CRITICAL):** Routers MUST NOT make a routing decision against a `profile` whose `user_id !== authStore.user?.uid`. When the UID changes (B4 cache invalidation in flight), TanStack returns the previous user's `query.data` until the new fetch resolves; using it would route the new user based on the old user's `onboarding_complete` / `subscription_status`. AuthGate's existing `profileLoading && !profile` guard only defends the cold-boot case — it does NOT defend the UID-change-mid-fetch case. Implementation: `if (profile && profile.user_id !== user?.uid) return;` placed after the `profileLoading` guard. **Tracked as §9.11 followup.**
 
-This subsection is the canonical AuthGate matrix. Any change to AuthGate's branches requires updating this section.
+### 5.3 The 9 routing arms (AuthGate, Spec 93 §5 Step 6)
+
+This subsection is the canonical AuthGate matrix. Any change to AuthGate's branches requires updating this section. **Counting convention:** 9 distinct routing arms (1, 2, 3, 4, 4.5, 5a, 5b, 5c, 5d). §8.2 test mandate covers all 9. Branch 5 has 4 sub-cases (5a-5d) because the destination depends on which group the user is currently in × `onboarding_complete`; collapsing them in tests would mask sub-case-specific bugs.
 
 ```
-1. !user                                           → /(auth)/sign-in
-2. AccountDeletedError                             → reactivation modal (no nav)
-3. ApiError 404                                    → /(onboarding)/profession
-4. profileError (other)                            → retry UI (no nav)
+1.   !user                                           → /(auth)/sign-in
+2.   AccountDeletedError                             → reactivation modal (no nav)
+3.   ApiError 404                                    → /(onboarding)/profession
+4.   profileError (other)                            → retry UI (no nav)
 4.5. profile.account_preset='manufacturer' && !complete  → /(onboarding)/manufacturer-hold
-5a. profile && inAuthGroup && !complete            → getResumePath(profile, currentStep)
-5b. profile && inAuthGroup && complete             → /(app)/ + registerPushToken
-5c. profile && inOnboardingGroup && complete       → /(app)/
-5d. profile && !auth && !onboarding && !complete   → getResumePath(profile, currentStep)
+5a.  profile && inAuthGroup && !complete             → getResumePath(profile, currentStep)
+5b.  profile && inAuthGroup && complete              → /(app)/ + registerPushToken
+5c.  profile && inOnboardingGroup && complete        → /(app)/
+5d.  profile && !auth && !onboarding && !complete    → getResumePath(profile, currentStep)
 ```
 
 ### 5.4 Lint rule: router useEffect dependency hygiene
@@ -303,6 +320,8 @@ const { hydrate, reset } = useFilterStore((s) => ({ hydrate: s.hydrate, reset: s
 const hydrate = useFilterStore((s) => s.hydrate);
 const reset = useFilterStore((s) => s.reset);
 ```
+
+**`useShallow` escape hatch:** Zustand v5 ships `useShallow` exactly to opt into shallow-equality checks for object-returning selectors. Permitted ONLY for selectors returning arrays of primitives (e.g., `useShallow((s) => s.tags)`). BANNED for selectors returning store-action objects (`useShallow((s) => ({ hydrate: s.hydrate, reset: s.reset }))`) — separate selectors per action are simpler and shallow-equal still allocates a new array per render. Each `useShallow` site MUST include a one-line comment justifying why a primitive selector is insufficient.
 
 ### 6.2 Hydrate functions MUST be idempotent
 
@@ -352,16 +371,25 @@ if (isLoading || profile == null || profile.subscription_status == null) {
 // the existing rendered tree stays mounted; refetch updates data when it resolves.
 ```
 
+**Current violations being remediated** (do not soften this rule because the live code violates it — these are tracked):
+- `mobile/app/(app)/_layout.tsx:202` includes `isFetching` in the loading gate — **§9.4 P0/BLOCKING removes it**.
+
 ### 6.6 Object-valued store fields MUST be deep-compared before set
 
 ```ts
 // REQUIRED for nested object fields (notificationPrefs, homeBaseLocation)
+import equal from 'fast-deep-equal/es6';
+
 hydrate: (profile) => set((prev) => {
   const nextPrefs = profile.notification_prefs;
-  const prefsChanged = !deepEqual(prev.notificationPrefs, nextPrefs);
-  return prefsChanged ? { notificationPrefs: nextPrefs } : prev;
+  return equal(prev.notificationPrefs, nextPrefs) ? prev : { notificationPrefs: nextPrefs };
 });
 ```
+
+**Rules:**
+- MUST use `fast-deep-equal/es6` (npm-installed, ~80 lines, no deps). Hand-rolled deep-equal is BANNED — easy to get wrong, hard to test, slow on cold paths.
+- For schemas with stable shape (Zod-validated), prefer **field-by-field comparison** over deep-equal. `notification_prefs` (5 known keys) is a candidate — and §9.8 followup proposes flattening it to 5 separate boolean fields on `userProfileStore` so each one becomes a primitive comparison (no deep-equal needed).
+- **Current violations being remediated:** `mobile/src/store/filterStore.ts:78-89` and `mobile/src/store/userProfileStore.ts:59-66` both call bare `set({...})` unconditionally. **§9.8 P0/BLOCKING fixes both.**
 
 ---
 
@@ -385,7 +413,15 @@ Every `queryClient.invalidateQueries` call MUST be paired with:
 
 ### 7.3 Router decision telemetry
 
-Every `router.replace` / `router.push` from AuthGate or AppLayout MUST emit `track('route_decision', { authority, branch, from, to, reason })` in DEV builds. In production, only branch transitions that fire at low frequency (sign-out, account deletion) are tracked.
+In **DEV builds**, every `router.replace` / `router.push` from AuthGate or AppLayout MUST emit `track('route_decision', { authority, branch, from, to, reason })`.
+
+In **production**, ONLY these four routing events emit telemetry (low frequency, high signal):
+1. `signOut → /(auth)/sign-in` — fires once per session end; churn / engagement signal.
+2. AuthGate Branch 2 (AccountDeletedError) → reactivation modal **shown** — compliance-critical (proves users saw the 30-day window prompt).
+3. `cancelled_pending_deletion` → forced sign-out (AppLayout deletion handler) — revenue / churn signal.
+4. AppLayout `expired → active` transition (paywall clears) — subscription conversion event.
+
+The high-frequency onboarding routing arms (5a-5d) MUST NOT emit production telemetry — too noisy, no actionable signal.
 
 ### 7.4 React Strict Mode visibility
 
@@ -417,25 +453,54 @@ Each branch in §5.3 (5 + 4.5 manufacturer = 6 branches) MUST have a Jest test v
 
 Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate. Pattern: render the layout twice (once with isFetching=true, once with =false) — both must produce the same JSX.
 
-### 8.4 The loopDetector as CI regression guard
+### 8.4 The stateDebug hub as CI regression guard
+
+**Prerequisite:** §9.5 must complete first (currently `loopDetector.ts` exposes `dumpDiagnostics` but lacks `__DEV__` guards; promotion to `stateDebug.ts` happens in §9.5).
 
 `stateDebug.dumpDiagnostics()` is permitted in CI integration tests as an assertion — `expect(maxRendersPerSecond).toBeLessThan(20)`. This catches loop regressions before merge.
+
+### 8.5 Store-enumeration test (§B5 reset coverage)
+
+A vitest at `mobile/__tests__/storeReset.coverage.test.ts` MUST glob `mobile/src/store/*.ts`, parse each file for `export const use<Name>Store = create<...>(`, and assert that `signOut()` in `mobile/src/store/authStore.ts` calls `use<Name>Store.getState().reset()` for every discovered store (or that the store is explicitly excluded with a `// signOut-exempt: <reason>` comment). Adding a store without a reset call OR exemption fails CI.
+
+### 8.6 Schema-vs-matrix drift check
+
+A pre-commit script `mobile/scripts/check-spec99-matrix.mjs` MUST parse the Zod object keys from `mobile/src/lib/userProfile.schema.ts` and the §3.1 markdown table, asserting setEqual (every server field has exactly one §3.1 row). A future migration that adds a new server field without a §3.1 row fails the check. Pattern matches existing `scripts/ai-env-check.mjs`.
 
 ---
 
 ## 9. Migration Plan (followup WFs)
 
-The following items eliminate the duplication identified in the audit. Each is a separate WF — this Spec 99 only authorizes the work; it does not perform it.
+The following items eliminate the duplication identified in the audit and resolve the spec-vs-code drift surfaced by adversarial review. Each is a separate WF — this Spec 99 only authorizes the work; it does not perform it.
 
-| # | Item | Type | Files | Notes |
-|---|------|------|-------|-------|
-| 9.1 | Eliminate `user-profile-cache` MMKV blob | WF3 | `mobile/src/hooks/useUserProfile.ts` | Remove `readCachedProfile` / `writeCachedProfile` / `clearUserProfileCache` (use TanStack persister exclusively). Update B5 (sign-out reset) to remove `clearUserProfileCache()` call. |
-| 9.2 | Move `isComplete` reads from `onboardingStore` to server profile | WF2 | `mobile/src/components/onboarding/IncompleteBanner.tsx`, then delete `markComplete()` bridge in `useUserProfile.ts`, then remove `isComplete` field from `onboardingStore` | IncompleteBanner reads `useUserProfile().data.onboarding_complete` directly |
-| 9.3 | Remove duplicate fields from `onboardingStore` | WF2 | `mobile/src/store/onboardingStore.ts`, all onboarding screens that call `setLocation()`, `setSupplier()` | Use `filterStore` exclusively after the field's PATCH succeeds. `selectedTrade` → use `filterStore.tradeSlug`. `locationMode` / `homeBaseLat` / `homeBaseLng` / `supplierSelection` → write to filterStore via dedicated setter, then PATCH server. |
-| 9.4 | Disable `refetchOnReconnect` for `['user-profile']` | WF3 | `mobile/src/hooks/useUserProfile.ts` | Add `refetchOnReconnect: false` per §B1. Also remove `isFetching` from AppLayout's gate condition per §6.5. |
-| 9.5 | Replace `loopDetector` with permanent `stateDebug` hub | WF3 | `mobile/src/lib/debug/loopDetector.ts` → `stateDebug.ts` | Add `__DEV__` guard. Drop `useDepsTracker` mirroring effects on production paths (DEV-only). |
-| 9.6 | Add 5-branch + manufacturer router branch tests | WF2 | `mobile/__tests__/authGate.test.ts` (NEW) | Per §8.2 |
-| 9.7 | Idempotency tests for all bridges | WF2 | `mobile/__tests__/bridges.test.ts` (NEW) | Per §8.1 |
+**Priority legend:**
+- **P0/BLOCKING** — closes an active incident or spec-code drift visible in production code. Spec 99's normative rules are violated until landed.
+- **P1** — duplication / structural cleanup; required for the spec to fully apply but not actively breaking users today.
+- **P2** — observability / tooling / future-proofing.
+
+**Sequencing:** items with explicit `depends on:` lines MUST land in order.
+
+| # | Priority | Item | WF type | Files |
+|---|----------|------|---------|-------|
+| 9.4a | **P0** | Strip `isFetching` from AppLayout loading gate (§6.5 violation; root cause of incident #3 emulator flicker loop) | WF3 | `mobile/app/(app)/_layout.tsx:202` |
+| 9.4b | P2 | (Optional) keep `refetchOnReconnect: true` decision documented; no code change needed | — | — |
+| 9.8 | **P0** | Add deep-equal-before-set to `filterStore.hydrate` and `userProfileStore.hydrate` (§6.6 violation; required before §9.7 tests can pass) | WF3 | `mobile/src/store/filterStore.ts:78`, `mobile/src/store/userProfileStore.ts:59`. Install `fast-deep-equal`. |
+| 9.10 | **P0** | Add `queryClient.removeQueries({queryKey: ['user-profile']})` to `signOut()` (§B5 PIPEDA leak risk on shared device) | WF3 | `mobile/src/store/authStore.ts:signOut()` |
+| 9.11 | **P0** | Add stale-profile guard to AuthGate (§5.2 — `if (profile && profile.user_id !== user?.uid) return;`) | WF3 | `mobile/app/_layout.tsx` AuthGate routing effect |
+| 9.2a | P1 | Migrate `IncompleteBanner` to read `useUserProfile().data.onboarding_complete` (NOT `useOnboardingStore.isComplete`) | WF2 | `mobile/src/components/onboarding/IncompleteBanner.tsx` |
+| 9.2b | P1 | depends on 9.2a — Remove `markComplete()` bridge from `useUserProfile.ts:101-103` AND update direct callers in `mobile/app/(onboarding)/complete.tsx:69` and `terms.tsx:91` to PATCH `onboarding_complete=true` directly to server (no local state mirror) | WF2 | `mobile/src/hooks/useUserProfile.ts`, `mobile/app/(onboarding)/complete.tsx`, `mobile/app/(onboarding)/terms.tsx` |
+| 9.2c | P1 | depends on 9.2b — Remove `isComplete` field + `markComplete()` action from `onboardingStore`. Add `persist` `migrate` function (version bump 0→1) to drop the legacy MMKV key for existing users. | WF2 | `mobile/src/store/onboardingStore.ts` |
+| 9.3 | P1 | Remove `selectedTrade`, `selectedTradeName`, `locationMode`, `homeBaseLat`, `homeBaseLng`, `supplierSelection` duplicates from `onboardingStore`. Add `persist` `migrate` function (version bump) to drop legacy MMKV keys. Update onboarding screens to write to `filterStore` after server PATCH success (no local mirror). | WF2 | `mobile/src/store/onboardingStore.ts`, `mobile/app/(onboarding)/profession.tsx`, `address.tsx`, `supplier.tsx` |
+| 9.1 | P1 | depends on cold-boot perf benchmark — Eliminate `user-profile-cache` MMKV blob (use TanStack persister exclusively). Update §B5 to remove `clearUserProfileCache()` call. Add `profileStorage.clearAll()` migration to purge orphaned blob from existing installs. | WF3 | `mobile/src/hooks/useUserProfile.ts` |
+| 9.5 | P1 | Promote `loopDetector.ts` → `mobile/src/lib/debug/stateDebug.ts` with `__DEV__` guard. Production builds compile to no-op. | WF3 | `mobile/src/lib/debug/` |
+| 9.6 | P1 | Add AuthGate router branch tests (9 arms per §5.3) | WF2 | `mobile/__tests__/authGate.test.ts` (NEW) |
+| 9.7 | P1 | depends on 9.8 — Idempotency tests for all bridges per §8.1 | WF2 | `mobile/__tests__/bridges.test.ts` (NEW) |
+| 9.9 | P2 | Audit `paywallStore.show()` — verify caller exists OR delete the action | WF3 | `mobile/src/store/paywallStore.ts` |
+| 9.12 | P2 | Add §8.5 store-enumeration test | WF3 | `mobile/__tests__/storeReset.coverage.test.ts` (NEW) |
+| 9.13 | P2 | Add §8.6 schema-vs-matrix drift check | WF3 | `mobile/scripts/check-spec99-matrix.mjs` (NEW) |
+| 9.14 | P2 | Flatten `notification_prefs` to 5 separate boolean fields on `userProfileStore` (eliminates the deep-equal hot path entirely) | WF2 | `mobile/src/store/userProfileStore.ts`, settings notification screens, server schema migration coordinated with web admin |
+| 9.15 | P2 | Add §5.4 lint rule (vitest AST-parses AuthGate/AppLayout, asserts no Zustand selector subscription used inside router useEffect closures) | WF3 | `mobile/__tests__/routerHygiene.lint.test.ts` (NEW) |
+| 9.16 | P2 | Codify or ban Bridge B6 (LeadFilterSheet/settings PATCH+local-set without B3 ceremony). Grep `getState().set*` in `LeadFilterSheet.tsx` and `settings.tsx`; either standardize as B6 in §4 or migrate to B3. | WF1 amendment | TBD |
 
 ---
 
