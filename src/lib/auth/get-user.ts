@@ -90,12 +90,38 @@ export async function verifyIdTokenCookie(
 }
 
 export async function getUserIdFromSession(request: NextRequest): Promise<string | null> {
-  // Prefer session cookie (__session) — used by browser and Next.js SSR.
+  // Prefer Bearer header when present. Mobile clients (Expo) send
+  // `Authorization: Bearer <Firebase idToken>` and DO NOT send browser cookies.
+  // Critically, when DEV_MODE=true, the middleware injects __session=dev.buildo.local
+  // on EVERY incoming request (including mobile requests that already carry a
+  // valid Bearer). If we checked cookie first, the dev-mode bypass at
+  // verifyIdTokenCookie would short-circuit to 'dev-user' and the real Firebase
+  // UID would be silently discarded — every mobile session in dev would share
+  // dev-user's profile. WF3 2026-05-02: caught when mobile onboarding PATCH
+  // returned TRADE_IMMUTABLE because dev-user already had a trade_slug.
+  //
+  // Authorization header present → commit to the Bearer flow regardless of
+  // whether extractBearerToken returns a valid token. Even a malformed,
+  // non-Bearer, or whitespace-only Authorization header is an explicit auth
+  // attempt and must NOT fall through to the cookie path. Falling through
+  // would let an attacker send `Authorization: Bearer ` (empty) or
+  // `Authorization: garbage` alongside a valid (or middleware-injected dev)
+  // cookie to authenticate via the cookie while looking like a Bearer client
+  // — closing that vector by fail-closed on any Authorization header.
+  //
+  // No Authorization header → fall back to cookie (web admin browser /
+  // Next.js SSR Server Components don't send Bearer; the cookie path is
+  // correct for them). Both absent → null.
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== null) {
+    // extractBearerToken returns undefined for missing/malformed/non-Bearer
+    // values; verifyIdTokenCookie handles undefined input as null.
+    const bearerToken = extractBearerToken(authHeader);
+    return verifyIdTokenCookie(bearerToken);
+  }
+
   const cookie = request.cookies.get('__session')?.value;
   if (cookie) return verifyIdTokenCookie(cookie);
 
-  // Fallback: mobile clients (Expo) cannot send browser cookies — they send
-  // Authorization: Bearer <Firebase idToken> instead. Extract and verify.
-  const bearerToken = extractBearerToken(request.headers.get('authorization'));
-  return verifyIdTokenCookie(bearerToken);
+  return null;
 }

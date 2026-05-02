@@ -194,4 +194,105 @@ describe('verifyIdTokenCookie dev-mode bypass (Bug #2 regression lock)', () => {
     expect(mockVerifyIdToken).toHaveBeenCalled();
     delete (process.env as Record<string, string | undefined>).DEV_MODE;
   });
+
+  // Bearer-vs-cookie precedence (WF3 — dev-mode middleware injects __session
+  // on every request, including mobile requests that already carry a real
+  // Firebase Bearer token. The fix: prefer Bearer when present so mobile
+  // doesn't get silently treated as dev-user.)
+
+  it('returns the Bearer-token uid when BOTH a cookie AND an Authorization Bearer header are present', async () => {
+    // Realistic scenario: middleware injects __session=dev.buildo.local
+    // on a mobile request that already carries `Authorization: Bearer <real-firebase-token>`.
+    // Under the OLD ordering, `verifyIdTokenCookie` would receive the cookie
+    // first and return 'dev-user'. The Bearer would never be inspected.
+    // Under the NEW ordering, Bearer wins.
+    process.env.DEV_MODE = 'true';
+    mockVerifyIdToken.mockResolvedValueOnce({ uid: 'mobile-firebase-user' });
+    const { getUserIdFromSession } = await import('@/lib/auth/get-user');
+    const { DEV_SESSION_COOKIE } = await import('@/lib/auth/route-guard');
+    // Cookie is the dev session, Bearer is a real (mocked) Firebase token
+    const result = await getUserIdFromSession(
+      makeRequest(DEV_SESSION_COOKIE, 'Bearer real.firebase.token'),
+    );
+    expect(result).toBe('mobile-firebase-user');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('real.firebase.token');
+    delete (process.env as Record<string, string | undefined>).DEV_MODE;
+  });
+
+  it('falls back to cookie path when no Bearer header is present (web admin / SSR unaffected)', async () => {
+    // The web admin and Next.js Server Components don't send Bearer headers.
+    // They must continue to use the cookie path unchanged.
+    process.env.DEV_MODE = 'true';
+    const { getUserIdFromSession } = await import('@/lib/auth/get-user');
+    const { DEV_SESSION_COOKIE } = await import('@/lib/auth/route-guard');
+    const result = await getUserIdFromSession(makeRequest(DEV_SESSION_COOKIE));
+    expect(result).toBe('dev-user'); // dev-mode bypass via cookie
+    expect(mockVerifyIdToken).not.toHaveBeenCalled();
+    delete (process.env as Record<string, string | undefined>).DEV_MODE;
+  });
+
+  it('returns null when both Bearer and cookie are absent', async () => {
+    const { getUserIdFromSession } = await import('@/lib/auth/get-user');
+    const result = await getUserIdFromSession(makeRequest(undefined));
+    expect(result).toBeNull();
+  });
+
+  it('returns null when Bearer is malformed (preserves fail-closed contract)', async () => {
+    // A malformed Bearer must not silently fall back to the cookie path —
+    // a present-but-invalid header is an explicit auth attempt that failed,
+    // not a missing header.
+    const { getUserIdFromSession } = await import('@/lib/auth/get-user');
+    // Bearer with non-3-segment token → verifyIdTokenCookie returns null
+    const result = await getUserIdFromSession(makeRequest(undefined, 'Bearer not-a-jwt'));
+    expect(result).toBeNull();
+  });
+
+  it('FAIL-CLOSED: garbage Bearer + valid cookie → null (NOT cookie uid)', async () => {
+    // The critical security property of the fix: if an Authorization header
+    // is present, never fall back to the cookie even when the cookie alone
+    // would succeed. Caught by WF3 adversarial review (Gemini MEDIUM):
+    // attacker with stolen/leaked dev cookie sends garbage Bearer alongside
+    // it — the old `extractBearerToken !== undefined` check would let
+    // empty/non-Bearer Authorization headers fall through to cookie auth.
+    process.env.DEV_MODE = 'true';
+    const { getUserIdFromSession } = await import('@/lib/auth/get-user');
+    const { DEV_SESSION_COOKIE } = await import('@/lib/auth/route-guard');
+    // Bearer with garbage token + valid dev cookie present
+    const result = await getUserIdFromSession(
+      makeRequest(DEV_SESSION_COOKIE, 'Bearer not-a-jwt'),
+    );
+    expect(result).toBeNull();
+    // verifyIdToken should NOT have been called with the dev cookie
+    // (dev bypass would have returned 'dev-user' had the cookie been used)
+    delete (process.env as Record<string, string | undefined>).DEV_MODE;
+  });
+
+  it('FAIL-CLOSED: empty Bearer ("Authorization: Bearer ") + valid cookie → null', async () => {
+    // Edge case: empty token after `Bearer `. extractBearerToken returns
+    // undefined, but we still treat it as a Bearer attempt because the
+    // Authorization header was present. No fallback to cookie.
+    process.env.DEV_MODE = 'true';
+    const { getUserIdFromSession } = await import('@/lib/auth/get-user');
+    const { DEV_SESSION_COOKIE } = await import('@/lib/auth/route-guard');
+    const result = await getUserIdFromSession(
+      makeRequest(DEV_SESSION_COOKIE, 'Bearer '),
+    );
+    expect(result).toBeNull();
+    delete (process.env as Record<string, string | undefined>).DEV_MODE;
+  });
+
+  it('FAIL-CLOSED: non-Bearer Authorization (e.g., "Basic ...") + valid cookie → null', async () => {
+    // Any Authorization header — Bearer, Basic, anything — commits the
+    // request to the Bearer flow. A misrouted or buggy client sending a
+    // Basic header alongside a session cookie should not silently work
+    // via the cookie path.
+    process.env.DEV_MODE = 'true';
+    const { getUserIdFromSession } = await import('@/lib/auth/get-user');
+    const { DEV_SESSION_COOKIE } = await import('@/lib/auth/route-guard');
+    const result = await getUserIdFromSession(
+      makeRequest(DEV_SESSION_COOKIE, 'Basic dXNlcjpwYXNz'),
+    );
+    expect(result).toBeNull();
+    delete (process.env as Record<string, string | undefined>).DEV_MODE;
+  });
 });
