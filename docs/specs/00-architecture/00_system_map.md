@@ -73,6 +73,7 @@
 | 96 | `03-mobile/96_mobile_subscription.md` | Mobile Subscription & Paywall | `src/app/api/user-profile/route.ts`, `src/app/api/subscribe/session/route.ts`, `src/lib/auth/get-user.ts`, +2 more | `src/tests/subscribe-session.infra.test.ts`, `src/tests/stripe-webhook.infra.test.ts`, `src/tests/stripe-webhook.security.test.ts`, +1 more | ACTIVE |
 | 97 | `03-mobile/97_mobile_settings_notifications_offboarding.md` | Mobile Settings, Notifications & Offboarding | `src/app/api/user-profile/export/route.ts`, `src/lib/auth/get-user.ts`, `src/app/api/user-profile/route.ts`, +3 more | `src/tests/user-profile-export.infra.test.ts`, `src/tests/settings.security.test.ts` | ACTIVE |
 | 98 | `03-mobile/98_mobile_testing_protocol.md` | Mobile Testing Protocol & Local Environment | — | — | ACTIVE |
+| 99 | `03-mobile/99_mobile_state_architecture.md` | Mobile State Architecture & Ownership Protocol | `mobile/src/store/*.ts`, `mobile/src/hooks/useUserProfile.ts`, `mobile/app/_layout.tsx`, `mobile/app/(app)/_layout.tsx`, `mobile/src/lib/queryClient.ts` | `mobile/__tests__/useAuth.test.ts`, `mobile/__tests__/filterStore.test.ts`, +planned: authGate.test.ts, bridges.test.ts | ACTIVE |
 
 ## Archive (Deprecated)
 
