@@ -57,6 +57,35 @@ export default function SupplierScreen() {
     }
   }, [selectedTrade, selectedPath, isLoading, suppliers.length, router]);
 
+  // Extracted per Spec 90 §5 — inline renderItem recreates the function on every
+  // render, forcing all visible cells to re-render unnecessarily.
+  //
+  // RULES-OF-HOOKS: this useCallback MUST appear above the `if (isLoading)`
+  // early return below. When isLoading flips true→false during the query
+  // lifecycle, an early return placed before the hook would change the hook
+  // count between renders → React invariant violation → Redbox.
+  // WF3 2026-05-02 fix.
+  const renderSupplierItem = useCallback(({ item }: { item: string }) => {
+    const isSelected = selectedSupplier === item;
+    return (
+      <Pressable
+        onPress={() => {
+          setSelectedSupplier(isSelected ? null : item);
+          setOtherText('');
+        }}
+        className={`bg-zinc-900 rounded-2xl p-4 flex-1 min-h-[52px] justify-center ${
+          isSelected
+            ? 'border border-amber-500 bg-amber-500/5'
+            : 'border border-zinc-800 active:border-amber-500'
+        }`}
+      >
+        <Text className={`text-sm text-center ${isSelected ? 'text-amber-400 font-semibold' : 'text-zinc-100'}`}>
+          {item}
+        </Text>
+      </Pressable>
+    );
+  }, [selectedSupplier]);
+
   const handleSkip = () => {
     // No PATCH on skip — step advances only after server confirmation.
     const next = selectedPath === 'tracking'
@@ -100,29 +129,6 @@ export default function SupplierScreen() {
       </SafeAreaView>
     );
   }
-
-  // Extracted per Spec 90 §5 — inline renderItem recreates the function on every
-  // render, forcing all visible cells to re-render unnecessarily.
-  const renderSupplierItem = useCallback(({ item }: { item: string }) => {
-    const isSelected = selectedSupplier === item;
-    return (
-      <Pressable
-        onPress={() => {
-          setSelectedSupplier(isSelected ? null : item);
-          setOtherText('');
-        }}
-        className={`bg-zinc-900 rounded-2xl p-4 flex-1 min-h-[52px] justify-center ${
-          isSelected
-            ? 'border border-amber-500 bg-amber-500/5'
-            : 'border border-zinc-800 active:border-amber-500'
-        }`}
-      >
-        <Text className={`text-sm text-center ${isSelected ? 'text-amber-400 font-semibold' : 'text-zinc-100'}`}>
-          {item}
-        </Text>
-      </Pressable>
-    );
-  }, [selectedSupplier]);
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-950" edges={['top', 'bottom']}>
