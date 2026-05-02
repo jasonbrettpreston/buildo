@@ -1,28 +1,18 @@
 // SPEC LINK: docs/specs/03-mobile/94_mobile_onboarding.md §10 Step 1
-import { useEffect } from 'react';
-import { Stack, useRouter } from 'expo-router';
-import { useOnboardingStore } from '@/store/onboardingStore';
-import { useAuthStore } from '@/store/authStore';
+//             docs/specs/03-mobile/93_mobile_auth.md §5 Step 6 (AuthGate routing matrix)
+//
+// AuthGate (mobile/app/_layout.tsx) is the SOLE routing authority for the
+// onboarding ↔ app boundary. This layout used to have its own
+// `if (isComplete) router.replace('/(app)/')` effect, but that read the LOCAL
+// `useOnboardingStore.isComplete` while AuthGate read SERVER
+// `profile.onboarding_complete` — when those two diverged (stale dev-user
+// profile in MMKV cache vs. real-user `markComplete()` bridge), the two
+// routers undid each other and pinged the user between groups indefinitely
+// (Maximum update depth exceeded). Discovered 2026-05-02 via loopDetector
+// instrumentation; fix is to leave routing to AuthGate alone.
+import { Stack } from 'expo-router';
 
 export default function OnboardingLayout() {
-  const router = useRouter();
-  const isComplete = useOnboardingStore((s) => s.isComplete);
-  // account_preset is undefined until Spec 95 wires user_profiles hydration.
-  const user = useAuthStore((s) => s.user);
-  const accountPreset = (user as { account_preset?: string } | null)?.account_preset;
-
-  useEffect(() => {
-    if (isComplete) {
-      // Deep-link safety: a completed-onboarding user who somehow lands in
-      // the onboarding group is redirected to the main app immediately.
-      router.replace('/(app)/');
-      return;
-    }
-    if (accountPreset === 'manufacturer') {
-      router.replace('/(onboarding)/manufacturer-hold');
-    }
-  }, [isComplete, accountPreset, router]);
-
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="profession" />

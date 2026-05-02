@@ -7,8 +7,10 @@
 // transition into the gate feels part of the same loading sequence.
 
 import { View, ActivityIndicator } from 'react-native';
+import { trackRender } from '@/lib/debug/loopDetector';
 
 export function SubscriptionLoadingGuard() {
+  trackRender('SubscriptionLoadingGuard');
   return (
     <View className="flex-1 items-center justify-center bg-zinc-950">
       <ActivityIndicator size="large" color="#f59e0b" />

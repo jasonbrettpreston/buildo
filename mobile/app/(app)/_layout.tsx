@@ -32,6 +32,7 @@ import { lightImpact } from '@/lib/haptics';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { SubscriptionLoadingGuard } from '@/components/paywall/SubscriptionLoadingGuard';
 import { PaywallScreen } from '@/components/paywall/PaywallScreen';
+import { trackRender, useDepsTracker } from '@/lib/debug/loopDetector';
 
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 83 : 60;
 
@@ -109,6 +110,7 @@ function PaywallMount({ leadViewsCount }: { leadViewsCount: number }) {
 }
 
 export default function AppLayout() {
+  trackRender('AppLayout');
   // Hydrates filterStore + userProfileStore from server profile on every authenticated launch.
   // Must live here so it runs for all authenticated app screens (feed, map, settings, etc.)
   const { data: profile, isLoading, isFetching } = useUserProfile();
@@ -138,6 +140,7 @@ export default function AppLayout() {
     });
     return () => subscription.remove();
   }, [queryClient]);
+  useDepsTracker('AppLayout.appstate', [queryClient]);
 
   // Sign-out fast path for cancelled_pending_deletion: the account is in the
   // 30-day deletion window and must NOT be shown any app content. Spec 96 §10
@@ -156,6 +159,7 @@ export default function AppLayout() {
       });
     }
   }, [profile?.subscription_status, router]);
+  useDepsTracker('AppLayout.deletion', [profile?.subscription_status, router]);
 
   // Post-payment transition: webhook flipped 'expired' → 'active'. Clear the
   // paywall flags and invalidate the leads cache so the feed shows fresh data
@@ -170,6 +174,7 @@ export default function AppLayout() {
     }
     prevStatusRef.current = next;
   }, [profile?.subscription_status, clearPaywall, queryClient]);
+  useDepsTracker('AppLayout.statusTransition', [profile?.subscription_status, clearPaywall, queryClient]);
 
   const screenListeners = useCallback(
     ({ route }: { route: { name: string } }) => ({

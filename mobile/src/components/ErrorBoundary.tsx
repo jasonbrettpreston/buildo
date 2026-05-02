@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { dumpDiagnostics } from '@/lib/debug/loopDetector';
 
 interface Props {
   children: React.ReactNode;
@@ -30,6 +31,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
     // only the sanitized message + a 'feature' tag; do NOT pass extra: info.
     const safeMessage = error instanceof Error ? error.message : String(error);
     console.error('[ErrorBoundary]', safeMessage);
+    // DIAGNOSTIC: dump render/effect counts at the moment of crash. Remove with loopDetector.
+    console.error(dumpDiagnostics());
   }
 
   handleReset = (): void => {

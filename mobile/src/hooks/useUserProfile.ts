@@ -13,6 +13,7 @@ import { UserProfileSchema, type UserProfileType } from '@/lib/userProfile.schem
 import { useFilterStore } from '@/store/filterStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
+import { useDepsTracker } from '@/lib/debug/loopDetector';
 
 const profileStorage = createMMKV({ id: 'user-profile-cache' });
 
@@ -103,6 +104,7 @@ export function useUserProfile(options?: { enabled?: boolean }) {
       }
     }
   }, [query.data, hydrateFilter, hydrateUserProfile]);
+  useDepsTracker('useUserProfile.hydrate', [query.data, hydrateFilter, hydrateUserProfile]);
 
   return {
     data: query.data,

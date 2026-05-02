@@ -71,6 +71,22 @@ jest.mock('@react-native-firebase/auth', () => {
 jest.mock('@sentry/react-native', () => ({
   init: jest.fn(),
   captureException: jest.fn(),
+  addBreadcrumb: jest.fn(),
+}));
+const mockClearUserProfileCache = jest.fn();
+jest.mock('@/hooks/useUserProfile', () => ({
+  clearUserProfileCache: (...args: unknown[]) => mockClearUserProfileCache(...args),
+}));
+const mockInvalidateQueries = jest.fn();
+jest.mock('@/lib/queryClient', () => ({
+  // The mock needs to satisfy TanStack's invalidateQueries return type
+  // (Promise<void>). Internally we just record the filters arg for assertion.
+  queryClient: {
+    invalidateQueries: (filters: unknown): Promise<void> => {
+      mockInvalidateQueries(filters);
+      return Promise.resolve();
+    },
+  },
 }));
 const mockTrack = jest.fn();
 const mockIdentifyUser = jest.fn();
@@ -204,6 +220,75 @@ describe('initFirebaseAuthListener', () => {
     expect(mockIdentifyUser).toHaveBeenCalledTimes(1);
     const args = mockIdentifyUser.mock.calls[0];
     expect(args).toEqual(['firebase-uid-xyz']);
+  });
+
+  // -----------------------------------------------------------------
+  // UID-change cache invalidation (WF3 dual-router fix).
+  // The lastKnownUid module-scoped guard inside initFirebaseAuthListener
+  // wipes the persisted profile MMKV blob + invalidates ['user-profile']
+  // when the Firebase uid differs from the previously-seen value (also
+  // catches cold-boot first-fire when the guard starts null). Same-uid
+  // re-fires (token refresh) MUST NOT trigger cache wipe — Spec 93 §3.4
+  // mandates fast-hydration for returning users on the same device.
+  // -----------------------------------------------------------------
+
+  it('clears user profile cache on first listener fire (cold boot)', async () => {
+    mockClearUserProfileCache.mockClear();
+    mockInvalidateQueries.mockClear();
+    initFirebaseAuthListener();
+    const fakeUser = {
+      uid: 'cold-boot-uid',
+      email: 'a@b.com',
+      displayName: null,
+      getIdToken: jest.fn(() => Promise.resolve('tok')),
+    };
+    authStateHandler?.(fakeUser);
+    await new Promise((r) => setImmediate(r));
+    expect(mockClearUserProfileCache).toHaveBeenCalledTimes(1);
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['user-profile'] });
+  });
+
+  it('does NOT re-clear cache when same uid fires again (token refresh)', async () => {
+    mockClearUserProfileCache.mockClear();
+    mockInvalidateQueries.mockClear();
+    initFirebaseAuthListener();
+    const fakeUser = {
+      uid: 'token-refresh-uid',
+      email: 'a@b.com',
+      displayName: null,
+      getIdToken: jest.fn(() => Promise.resolve('tok')),
+    };
+    authStateHandler?.(fakeUser);
+    await new Promise((r) => setImmediate(r));
+    // Second fire with the SAME uid — simulates Firebase token refresh path.
+    authStateHandler?.(fakeUser);
+    await new Promise((r) => setImmediate(r));
+    expect(mockClearUserProfileCache).toHaveBeenCalledTimes(1);
+    expect(mockInvalidateQueries).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears cache on UID change (shared-device handoff)', async () => {
+    mockClearUserProfileCache.mockClear();
+    mockInvalidateQueries.mockClear();
+    initFirebaseAuthListener();
+    const userA = {
+      uid: 'shared-device-user-A',
+      email: 'a@b.com',
+      displayName: null,
+      getIdToken: jest.fn(() => Promise.resolve('tokA')),
+    };
+    const userB = {
+      uid: 'shared-device-user-B',
+      email: 'c@d.com',
+      displayName: null,
+      getIdToken: jest.fn(() => Promise.resolve('tokB')),
+    };
+    authStateHandler?.(userA);
+    await new Promise((r) => setImmediate(r));
+    authStateHandler?.(userB);
+    await new Promise((r) => setImmediate(r));
+    expect(mockClearUserProfileCache).toHaveBeenCalledTimes(2);
+    expect(mockInvalidateQueries).toHaveBeenCalledTimes(2);
   });
 
   it('falls back to clearAuth when getIdToken rejects', async () => {

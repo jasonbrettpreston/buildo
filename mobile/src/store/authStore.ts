@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKV } from 'react-native-mmkv';
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import * as Sentry from '@sentry/react-native';
 import { auth } from '@/lib/firebase';
 import { useFilterStore } from '@/store/filterStore';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -11,6 +12,7 @@ import { useOnboardingStore } from '@/store/onboardingStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
 import { usePaywallStore } from '@/store/paywallStore';
 import { clearUserProfileCache } from '@/hooks/useUserProfile';
+import { queryClient } from '@/lib/queryClient';
 import { identifyUser, resetIdentity, track } from '@/lib/analytics';
 
 // react-native-mmkv v4 uses createMMKV() factory (MMKV is now an interface, not a class)
@@ -132,12 +134,60 @@ export const useAuthStore = create<AuthState>()(
 // Wires the RNFirebase onAuthStateChanged listener into the store. Call once
 // from RootLayout in mobile/app/_layout.tsx — returns the unsubscribe function
 // so React's useEffect cleanup detaches the listener on unmount.
+//
+// UID-change cache invalidation: the PersistQueryClientProvider rehydrates the
+// `['user-profile']` query from MMKV on cold boot. If the cached profile was
+// written by a previous user (e.g., DEV_MODE 'dev-user' from a prior session,
+// or a different Firebase account on a shared device), the AuthGate would
+// route on stale `onboarding_complete` until the network refetch completes —
+// which previously caused a render loop with the (onboarding) layout's
+// independent router (since fixed). The check below is module-scoped so it
+// also catches the cold-boot first-fire (lastKnownUid === null) and clears
+// any persisted query data before AuthGate ever reads it.
+//
+// `lastKnownUid` is intentionally NOT reset on sign-out: Spec 93 §3.4 mandates
+// that MMKV is preserved across sign-out so the same user re-signing in on the
+// same device gets fast hydration. Resetting on sign-out would force a redundant
+// invalidation on same-user re-sign-in.
+let lastKnownUid: string | null = null;
+
 export function initFirebaseAuthListener(): () => void {
   return auth().onAuthStateChanged((firebaseUser: FirebaseAuthTypes.User | null) => {
     if (firebaseUser) {
+      // Capture the uid at fire-time so a late-resolving getIdToken from a
+      // PRIOR fire cannot clobber the current user's identity in setAuth().
+      // RNFirebase can fire onAuthStateChanged multiple times in quick
+      // succession on init / token refresh; without this guard, A's
+      // getIdToken().then() could win the race and overwrite B's setAuth.
+      const expectedUid = firebaseUser.uid;
+      if (lastKnownUid !== expectedUid) {
+        // First-fire OR genuine UID change. Drop any persisted profile that
+        // doesn't belong to this Firebase user, then force a fresh fetch.
+        // Both clears are idempotent and safe to call when the cache is empty.
+        // Telemetry: emit only on actual UID transitions (not the cold-boot
+        // first-fire where lastKnownUid was null) so shared-device handoff
+        // events surface in Sentry without noise from every app launch.
+        if (lastKnownUid !== null) {
+          Sentry.addBreadcrumb({
+            category: 'auth',
+            message: 'uid_change_cache_invalidated',
+            level: 'info',
+            data: { from: lastKnownUid, to: expectedUid },
+          });
+          track('auth_user_switch');
+        }
+        clearUserProfileCache();
+        void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+        lastKnownUid = expectedUid;
+      }
       void firebaseUser
         .getIdToken()
         .then((idToken) => {
+          // Stale-resolution guard: if a newer listener fire has already
+          // advanced lastKnownUid past us, drop this token write — it would
+          // otherwise overwrite the current user's identity with the
+          // previous user's. Compare against the captured expectedUid.
+          if (lastKnownUid !== expectedUid) return;
           useAuthStore.getState().setAuth(
             {
               uid: firebaseUser.uid,
@@ -154,9 +204,12 @@ export function initFirebaseAuthListener(): () => void {
           // Token fetch failure is rare but can happen if Firebase is unreachable
           // immediately after auth state change. Treat as signed-out so the
           // AuthGate redirects to sign-in rather than leaving the user in limbo.
+          // Same stale-fire guard: don't clear if a newer fire moved on.
+          if (lastKnownUid !== expectedUid) return;
           useAuthStore.getState().clearAuth();
         });
     } else {
+      // Note: do NOT reset lastKnownUid here (Spec 93 §3.4 fast-path).
       useAuthStore.getState().clearAuth();
     }
   });

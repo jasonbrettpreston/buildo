@@ -23,6 +23,10 @@ import { registerPushToken } from '@/lib/pushTokens';
 import { successNotification } from '@/lib/haptics';
 import { NotificationToast, type NotificationType } from '@/components/shared/NotificationToast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { trackRender, useDepsTracker, wireStoreLogging } from '@/lib/debug/loopDetector';
+
+// DIAGNOSTIC: wire Zustand subscribers once at module load. Remove with loopDetector.
+wireStoreLogging();
 
 // LogBox renders dev-only on-screen warning toasts that overlap absolute-positioned
 // footer elements (e.g., the sign-up footer link), causing Maestro E2E flows to
@@ -66,6 +70,7 @@ interface ReactivationState {
 }
 
 function AuthGate() {
+  trackRender('AuthGate');
   // Per-field selectors so a token refresh (idToken change) doesn't re-run the
   // AuthGate effect (which only depends on user + segments + _hasHydrated).
   const user = useAuthStore((s) => s.user);
@@ -151,6 +156,19 @@ function AuthGate() {
     // profession.tsx, which would 400 TRADE_IMMUTABLE on resume for users
     // whose trade_slug is already set.
     if (profile) {
+      // Branch 4.5: manufacturer hold — Spec 94 §7. Manufacturers wait for
+      // admin enablement; they do NOT see the standard onboarding flow and
+      // must NOT be routed via getResumePath. Previously enforced by an
+      // independent useEffect in (onboarding)/_layout.tsx, but that introduced
+      // a dual-router loop. Migrated here so AuthGate remains the sole
+      // routing authority. Already-completed manufacturers fall through to
+      // the standard /(app)/ routing below.
+      if (profile.account_preset === 'manufacturer' && !profile.onboarding_complete) {
+        if (segments[0] !== '(onboarding)' || segments[1] !== 'manufacturer-hold') {
+          router.replace('/(onboarding)/manufacturer-hold');
+        }
+        return;
+      }
       if (inAuthGroup) {
         if (!profile.onboarding_complete) {
           router.replace(getResumePath(profile, useOnboardingStore.getState().currentStep));
@@ -171,6 +189,9 @@ function AuthGate() {
     // above the lazy useOnboardingStore.getState().currentStep reads. Adding
     // it caused a render loop in commit 3727ceb (fixed in this commit).
   }, [isNavigationReady, user, segments, _hasHydrated, profile, profileError, profileLoading, router, signOut]);
+
+  // DIAGNOSTIC: mirror the routing-effect deps to log which dep changes between fires.
+  useDepsTracker('AuthGate.routing', [isNavigationReady, user, segments, _hasHydrated, profile, profileError, profileLoading, router, signOut]);
 
   // Reactivation modal — Spec 93 §3.6 Step 4
   if (reactivationState && user) {
@@ -267,6 +288,7 @@ function AuthGate() {
 // Lives in its own component so the listener subscribe/unsubscribe lifecycle
 // is tied to RootLayout mount/unmount — not to AuthGate re-renders.
 function FirebaseAuthListener() {
+  trackRender('FirebaseAuthListener');
   useEffect(() => {
     const unsubscribe = initFirebaseAuthListener();
     return unsubscribe;
@@ -275,6 +297,7 @@ function FirebaseAuthListener() {
 }
 
 function NotificationHandlers() {
+  trackRender('NotificationHandlers');
   const router = useRouter();
   const incrementUnread = useNotificationStore((s) => s.incrementUnread);
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -370,6 +393,7 @@ function NotificationHandlers() {
 }
 
 export default function RootLayout() {
+  trackRender('RootLayout');
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
