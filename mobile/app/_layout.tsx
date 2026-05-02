@@ -16,6 +16,8 @@ import { mmkvPersister } from '@/lib/mmkvPersister';
 import { useAuthStore, initFirebaseAuthListener } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useOnboardingStore } from '@/store/onboardingStore';
+import { getResumePath } from '@/lib/onboarding/getResumePath';
 import { AccountDeletedError, ApiError, fetchWithAuth } from '@/lib/apiClient';
 import { registerPushToken } from '@/lib/pushTokens';
 import { successNotification } from '@/lib/haptics';
@@ -85,6 +87,11 @@ function AuthGate() {
   const rootNavigationState = useRootNavigationState();
   const [isNavigationReady, setNavigationReady] = useState(false);
 
+  // Subscribe to onboardingStore.currentStep so getResumePath uses the
+  // freshest value. Selector form re-renders only when currentStep changes,
+  // not on every other onboardingStore mutation. Spec 94 §10 Step 11.
+  const onboardingCurrentStep = useOnboardingStore((s) => s.currentStep);
+
   // Step 1: latch ready flag the moment the navigation container key exists.
   useEffect(() => {
     if (rootNavigationState?.key) {
@@ -134,11 +141,15 @@ function AuthGate() {
     // Still loading with no cached data — wait
     if (profileLoading && !profile) return;
 
-    // Branch 5: profile loaded — route on onboarding_complete
+    // Branch 5: profile loaded — route on onboarding_complete.
+    // For !onboarding_complete users we resume at the FURTHEST step they've
+    // reached (Spec 94 §10 Step 11 drop-off recovery) — NOT a hardcoded
+    // profession.tsx, which would 400 TRADE_IMMUTABLE on resume for users
+    // whose trade_slug is already set.
     if (profile) {
       if (inAuthGroup) {
         if (!profile.onboarding_complete) {
-          router.replace('/(onboarding)/profession');
+          router.replace(getResumePath(profile, onboardingCurrentStep));
         } else {
           router.replace('/(app)/');
           void registerPushToken().catch((err) => {
@@ -149,10 +160,10 @@ function AuthGate() {
         router.replace('/(app)/');
       } else if (!inAuthGroup && !inOnboardingGroup && !profile.onboarding_complete) {
         // Hard gate: user reached an (app) screen before completing onboarding.
-        router.replace('/(onboarding)/profession');
+        router.replace(getResumePath(profile, onboardingCurrentStep));
       }
     }
-  }, [isNavigationReady, user, segments, _hasHydrated, profile, profileError, profileLoading, router, signOut]);
+  }, [isNavigationReady, user, segments, _hasHydrated, profile, profileError, profileLoading, onboardingCurrentStep, router, signOut]);
 
   // Reactivation modal — Spec 93 §3.6 Step 4
   if (reactivationState && user) {

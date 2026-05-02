@@ -784,3 +784,12 @@ Second-round adversarial pass with the user's 6-area focus (logic / security / d
 | LOW | Gemini | **JWT 3-segment shape check is naive and brittle** — Would reject JWE (5-segment encrypted) tokens if ever needed; offers minimal security benefit on top of `admin.auth().verifyIdToken()`'s own validation. | Auth simplification WF |
 | NIT | DeepSeek | Order of dev-bypass check vs shape check — micro-opt to short-circuit the well-known `DEV_SESSION_COOKIE` constant before splitting/checking. | Future cleanup |
 | NIT | DeepSeek | `import type { NextRequest }` is only used in `getUserIdFromSession`; could be relocated. | Future cleanup |
+
+## WF2 — AuthGate resume routing per Spec 94 §10 Step 11 (commit: TBD, 2026-05-02)
+
+| Severity | Source | Item | Planned Home |
+|----------|--------|------|-------------|
+| MEDIUM | Code-reviewer | **`'complete'` in OnboardingStep union is a future-bug trap** — Resolved inline via documentation in `getResumePath.ts STEP_TO_SCREEN`. The convention (markComplete() not setStep('complete')) is enforced by code review only, not the type system. Could be hardened further by removing 'complete' from the OnboardingStep union — would require auditing every consumer of the type. | Type narrowing WF (when convenient — convention enforcement is sufficient short-term) |
+| LOW | Code-reviewer | **Realtor fallback `/(onboarding)/complete` return path is unreachable** — only fires if all of `currentStep=null`, `trade_slug='realtor'`, `location_mode` set, `tos_accepted_at` set, but `onboarding_complete=false`. The caller only invokes getResumePath when onboarding_complete=false, but the realtor screens patch onboarding_complete atomically with the other fields. Dead branch but harmless. | Code simplification WF (low priority) |
+| LOW | Code-reviewer | **`onboardingCurrentStep` dependency causes extra effect runs mid-flow** — All re-runs are no-ops due to the `inOnboardingGroup` guard. No loop, no perf issue at this scale. | Performance pass (when relevant) |
+| LOW | Code-reviewer | **`path.tsx` and `first-permit.tsx` don't call setStep** — Works in practice (prior screen's setStep value is correct on resume), but per a strict reading of Spec 94 §10 Step 11 every screen should explicitly advance currentStep on entry/exit. | Onboarding consistency WF |
