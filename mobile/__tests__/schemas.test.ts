@@ -299,4 +299,22 @@ describe('AuthGate — useRootNavigationState guard (regression)', () => {
     expect(decideSrc).not.toContain("'/login'");
     expect(layoutSrc).not.toContain("'/login'");
   });
+
+  // Spec 99 §6.4 + §9.6 amendment (Gemini WF2 §9.6+§9.7 review F6): currentStep
+  // MUST be read lazily via `useOnboardingStore.getState().currentStep` inside
+  // the routing-effect closure — NEVER subscribed via `useStore((s) => s.currentStep)`.
+  // Subscribing was the root cause of incident #1 (the 3727ceb render loop).
+  // The pure-function unit tests in authGate.test.ts pass currentStep as a
+  // static input — they CANNOT detect a regression that re-introduces the
+  // subscription pattern in _layout.tsx. This static-source assertion fills
+  // the gap.
+  it('AuthGate reads currentStep via lazy getState (not via selector subscription)', () => {
+    // The lazy-read pattern must be present.
+    expect(layoutSrc).toMatch(/useOnboardingStore\s*\.\s*getState\s*\(\s*\)\s*\.\s*currentStep/);
+    // The selector-subscription pattern (which caused incident #1) must NOT
+    // be present in any form.
+    expect(layoutSrc).not.toMatch(
+      /useOnboardingStore\s*\(\s*\(\s*s\s*\)\s*=>\s*s\s*\.\s*currentStep\s*\)/,
+    );
+  });
 });

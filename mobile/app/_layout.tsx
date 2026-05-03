@@ -167,6 +167,15 @@ function AuthGate() {
           days_remaining: decision.days_remaining,
         });
         return;
+      default: {
+        // Spec 99 §9.6 amendment (code-reviewer H2 + DeepSeek #5): exhaustive-
+        // ness guard. If a future kind is added to AuthGateDecision without
+        // updating this switch, TypeScript narrows `decision` to that new
+        // kind here — assigning it to `never` produces a compile error.
+        const _exhaustive: never = decision;
+        void _exhaustive;
+        return;
+      }
     }
     // currentStep is intentionally NOT in this dep array — see the comment
     // above the lazy useOnboardingStore.getState().currentStep reads. Adding

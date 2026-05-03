@@ -14,7 +14,11 @@
 // decisions (e.g., the Sentry `stale_profile_missing_user_id` log on a
 // corrupt profile) stay inside AuthGate.
 
-import { AccountDeletedError, ApiError } from '@/lib/apiClient';
+// Imports MUST be from leaf modules ONLY — pure function = zero side-effect
+// imports. `@/lib/errors` is the leaf re-export of the error classes (was
+// `@/lib/apiClient` which transitively pulls in firebase + MMKV; see §9.6
+// adversarial review Gemini F4 + DeepSeek #7).
+import { AccountDeletedError, ApiError } from '@/lib/errors';
 import { getResumePath } from '@/lib/onboarding/getResumePath';
 import type { UserProfileType } from '@/lib/userProfile.schema';
 import type { OnboardingStep } from '@/lib/onboarding/getResumePath';
@@ -86,9 +90,14 @@ export function decideAuthGateRoute(input: AuthGateInput): AuthGateDecision {
   // PREVIOUS user's profile.data until the new fetch resolves. Routing on it
   // would evaluate Branch 5 against the OLD user's onboarding_complete /
   // account_preset. Skip until profile.user_id matches the live Firebase uid.
-  // Defensive `profile.user_id &&` check: a malformed profile (empty user_id)
-  // would otherwise wedge routing forever via `'' !== uid` always true.
-  if (input.profile && input.profile.user_id && input.profile.user_id !== input.user.uid) {
+  //
+  // Falsy `user_id` is also treated as `wait` (security: Gemini WF2 §9.6 F1
+  // + DeepSeek #2 consensus). A corrupted/poisoned cache attesting to
+  // completion would otherwise bypass the guard entirely — User-A's empty-uid
+  // profile would route User-B based on User-A's onboarding_complete. AuthGate
+  // emits a Sentry message in the corrupt-profile case (caller-side side
+  // effect) so the cache corruption is observable without routing on it.
+  if (input.profile && (!input.profile.user_id || input.profile.user_id !== input.user.uid)) {
     return { kind: 'wait' };
   }
 
@@ -111,8 +120,15 @@ export function decideAuthGateRoute(input: AuthGateInput): AuthGateDecision {
     if (inOnboardingGroup && input.profile.onboarding_complete) {
       return { kind: 'navigate', to: '/(app)/' };
     }
-    // Branch 5d: in (app) but onboarding incomplete (deep-link / state race) → resume.
-    if (!inAuthGroup && !inOnboardingGroup && !input.profile.onboarding_complete) {
+    // Branch 5d: in (onboarding) BUT onboarding incomplete OR in any other
+    // group (e.g. (app) deep-link) with !complete → resume at the furthest
+    // step. Pre-amend, this branch only fired for `!inAuth && !inOnboarding`,
+    // leaving `(inOnboarding && !complete && non-manufacturer)` to fall
+    // through to a silent `wait` — a deep-link-into-onboarding-without-
+    // currentStep wedge (code-reviewer WF2 §9.6 H1 + Gemini F2 consensus).
+    // The `!inAuthGroup` is dead-code hygiene: control already returned
+    // above for inAuthGroup, but the predicate is kept for legibility.
+    if (!inAuthGroup && !input.profile.onboarding_complete) {
       return { kind: 'navigate', to: getResumePath(input.profile, input.currentStep) };
     }
   }

@@ -1,42 +1,16 @@
 import { auth } from '@/lib/firebase';
 import { useAuthStore } from '@/store/authStore';
+import { ApiError, AccountDeletedError, RateLimitError, NetworkError } from '@/lib/errors';
+
+// Spec 99 §9.6 amendment: error classes moved to `@/lib/errors` (a leaf
+// module with zero side-effect imports). Re-exported here for backward
+// compatibility — existing callers continue to `import { ApiError, ... }
+// from '@/lib/apiClient'`. Pure modules + their unit tests should import
+// from `@/lib/errors` directly to avoid pulling firebase/MMKV into the
+// import graph.
+export { ApiError, AccountDeletedError, RateLimitError, NetworkError };
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://buildo.app';
-
-export class ApiError extends Error {
-  constructor(
-    public readonly status: number,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
-
-export class AccountDeletedError extends Error {
-  constructor(
-    public readonly account_deleted_at: string,
-    public readonly days_remaining: number,
-  ) {
-    super('Account is scheduled for deletion');
-    this.name = 'AccountDeletedError';
-  }
-}
-
-export class RateLimitError extends Error {
-  constructor(public readonly retryAfterSeconds: number) {
-    super(`Rate limited — retry after ${retryAfterSeconds}s`);
-    this.name = 'RateLimitError';
-  }
-}
-
-export class NetworkError extends Error {
-  constructor(cause: unknown) {
-    super('Network request failed');
-    this.name = 'NetworkError';
-    this.cause = cause;
-  }
-}
 
 async function fetchWithAuthInternal<T>(
   path: string,

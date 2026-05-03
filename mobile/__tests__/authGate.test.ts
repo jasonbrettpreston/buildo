@@ -11,60 +11,19 @@
 //
 // Plus: the §9.11 stale-profile guard test that was deferred from WF2-A.
 
-// decideAuthGateRoute imports apiClient (for AccountDeletedError + ApiError)
-// which transitively pulls in @react-native-firebase/auth + react-native-mmkv
-// native modules. Mock the shims to keep the import graph resolvable in
-// Node Jest (the actual functionality is unused — only the error class
-// constructors are exercised).
-jest.mock('react-native-mmkv', () => ({
-  createMMKV: () => ({
-    getString: jest.fn(() => null),
-    set: jest.fn(),
-    remove: jest.fn(),
-    contains: jest.fn(() => false),
-    clearAll: jest.fn(),
-  }),
-}));
-jest.mock('@/lib/firebase', () => ({
-  auth: jest.fn(() => ({
-    onAuthStateChanged: jest.fn(() => jest.fn()),
-    signOut: jest.fn(() => Promise.resolve()),
-  })),
-}));
-jest.mock('@react-native-firebase/auth', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    onAuthStateChanged: jest.fn(() => jest.fn()),
-    signOut: jest.fn(() => Promise.resolve()),
-  })),
-}));
-jest.mock('@sentry/react-native', () => ({
-  init: jest.fn(),
-  captureException: jest.fn(),
-  captureMessage: jest.fn(),
-  addBreadcrumb: jest.fn(),
-}));
-jest.mock('@/lib/migrations/userProfileCacheCleanup', () => ({
-  cleanupLegacyUserProfileCache: jest.fn(),
-}));
-jest.mock('@/lib/queryClient', () => ({
-  queryClient: {
-    invalidateQueries: jest.fn(() => Promise.resolve()),
-    clear: jest.fn(),
-  },
-}));
-jest.mock('@/lib/analytics', () => ({
-  track: jest.fn(),
-  identifyUser: jest.fn(),
-  resetIdentity: jest.fn(),
-}));
+// Spec 99 §9.6 amendment (Gemini F4 + DeepSeek #7 consensus): the previous
+// version of this file mocked 7 modules (mmkv, firebase x2, sentry, cleanup,
+// queryClient, analytics) just to make the apiClient transitive import
+// graph resolvable. The error classes were extracted to @/lib/errors (a
+// leaf module with zero side-effect imports) — both the pure function and
+// this test now import from the leaf, killing all 7 mocks.
 
 import {
   decideAuthGateRoute,
   type AuthGateInput,
   type AuthGateDecision,
 } from '@/lib/auth/decideAuthGateRoute';
-import { AccountDeletedError, ApiError } from '@/lib/apiClient';
+import { AccountDeletedError, ApiError } from '@/lib/errors';
 import type { UserProfileType } from '@/lib/userProfile.schema';
 
 const UID_A = 'user-A-firebase-uid';
@@ -214,18 +173,21 @@ describe('decideAuthGateRoute — loading + stale-profile guard', () => {
     expect(out).toEqual({ kind: 'wait' });
   });
 
-  it('§9.11 ROUTES when profile.user_id has falsy value (corrupt) — does NOT wedge', () => {
-    // The pure function treats falsy user_id as "trust comparison failed"
-    // and proceeds. The Sentry log fires inside AuthGate (not here).
+  it('§9.11 WAITS when profile.user_id is falsy (corrupt) — security guard', () => {
+    // WF2 §9.6 amendment (Gemini F1 + DeepSeek #2 consensus): falsy user_id
+    // is now treated as `wait`, NOT pass-through. A corrupted/poisoned cache
+    // attesting to onboarding_complete=true would otherwise route the live
+    // user (UID_A) based on the corrupt profile's claim — a trust-boundary
+    // violation. AuthGate emits a Sentry message in the corrupt-profile case
+    // (caller-side side effect, NOT exercised here) so the cache corruption
+    // remains observable.
     const out = decideAuthGateRoute({
       ...baseInput,
       user: mkUser(UID_A),
       profile: mkProfile({ user_id: '', onboarding_complete: true }),
       segments: ['(auth)', 'sign-in'],
     });
-    // With falsy user_id passed through: it's a complete profile in (auth).
-    // Branch 5b should fire.
-    expect(out).toEqual({ kind: 'navigate', to: '/(app)/', sideEffect: 'registerPushToken' });
+    expect(out).toEqual({ kind: 'wait' });
   });
 });
 
@@ -299,7 +261,7 @@ describe('decideAuthGateRoute — Branch 5 (profile loaded)', () => {
     expect(out).toEqual({ kind: 'navigate', to: '/(app)/' });
   });
 
-  // Branch 5d
+  // Branch 5d (in (app) deep-link)
   it('5d: navigates via getResumePath when !inAuth && !inOnboarding && !complete', () => {
     const out = decideAuthGateRoute({
       ...baseInput,
@@ -310,6 +272,39 @@ describe('decideAuthGateRoute — Branch 5 (profile loaded)', () => {
     }) as Extract<AuthGateDecision, { kind: 'navigate' }>;
     expect(out.kind).toBe('navigate');
     expect(out.to).toBe('/(onboarding)/supplier');
+  });
+
+  // Branch 5d (in (onboarding) but !complete + non-manufacturer)
+  // WF2 §9.6 amendment (Gemini F2 + code-reviewer H1 consensus): pre-amend,
+  // this case fell through to silent `wait` — a deep-link wedge. Now
+  // routed to getResumePath so a deep-link to /(onboarding)/supplier
+  // without the prerequisite trade selection bounces to the right step.
+  it('5d-onboarding: navigates via getResumePath when in (onboarding) and !complete', () => {
+    const out = decideAuthGateRoute({
+      ...baseInput,
+      user: mkUser(),
+      profile: mkProfile({ onboarding_complete: false, trade_slug: 'framing' }),
+      segments: ['(onboarding)', 'address'],
+      currentStep: 'supplier',
+    }) as Extract<AuthGateDecision, { kind: 'navigate' }>;
+    expect(out.kind).toBe('navigate');
+    expect(out.to).toBe('/(onboarding)/supplier');
+  });
+
+  // Branch 5d-onboarding: when currentStep matches the user's actual screen,
+  // getResumePath returns the same path → router.replace becomes a no-op
+  // in production. The pure function still emits a navigate decision (it
+  // can't know whether segments and `to` match without parsing both).
+  it('5d-onboarding: navigates to the same path when currentStep matches segments (no-op replace)', () => {
+    const out = decideAuthGateRoute({
+      ...baseInput,
+      user: mkUser(),
+      profile: mkProfile({ onboarding_complete: false, trade_slug: 'framing' }),
+      segments: ['(onboarding)', 'address'],
+      currentStep: 'address',
+    }) as Extract<AuthGateDecision, { kind: 'navigate' }>;
+    expect(out.kind).toBe('navigate');
+    expect(out.to).toBe('/(onboarding)/address');
   });
 });
 
