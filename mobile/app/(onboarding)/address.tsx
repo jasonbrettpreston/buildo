@@ -39,7 +39,10 @@ export default function AddressScreen() {
   const [isPatching, setIsPatching] = useState(false);
   const [patchError, setPatchError] = useState<string | null>(null);
 
-  const { setLocation, setStep } = useOnboardingStore.getState();
+  // Spec 99 §9.3: locationMode + homeBaseLat/Lng are canonical in
+  // filterStore (B2-hydrated from server). The duplicate `setLocation`
+  // action in onboardingStore was removed; only setStep remains here.
+  const { setStep } = useOnboardingStore.getState();
   const { setHomeBaseLocation, setLocationMode } = useFilterStore.getState();
 
   const isMounted = useRef(true);
@@ -54,7 +57,6 @@ export default function AddressScreen() {
           body: JSON.stringify({ home_base_lat: lat, home_base_lng: lng, location_mode: 'home_base_fixed' }),
         });
         if (!isMounted.current) return;
-        setLocation({ mode: 'home_base_fixed', lat, lng });
         setHomeBaseLocation({ lat, lng });
         setLocationMode('home_base_fixed');
         setStep('supplier');
@@ -65,7 +67,7 @@ export default function AddressScreen() {
         setIsPatching(false);
       }
     },
-    [setLocation, setHomeBaseLocation, setLocationMode, setStep, router],
+    [setHomeBaseLocation, setLocationMode, setStep, router],
   );
 
   const handleGeocodeSubmit = useCallback(async () => {
@@ -122,7 +124,6 @@ export default function AddressScreen() {
         body: JSON.stringify({ location_mode: 'gps_live' }),
       });
       if (!isMounted.current) return;
-      setLocation({ mode: 'gps_live' });
       setLocationMode('gps_live');
       setStep('supplier');
       router.push('/(onboarding)/supplier');
@@ -131,7 +132,7 @@ export default function AddressScreen() {
     } finally {
       setIsPatching(false);
     }
-  }, [setLocation, setLocationMode, setStep, router]);
+  }, [setLocationMode, setStep, router]);
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-950" edges={['top', 'bottom']}>

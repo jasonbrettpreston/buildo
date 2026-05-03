@@ -14,14 +14,19 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useQueryClient } from '@tanstack/react-query';
-import { useOnboardingStore } from '@/store/onboardingStore';
+import { useFilterStore } from '@/store/filterStore';
+import { getTradeLabel } from '@/lib/onboarding/tradeData';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { successNotification } from '@/lib/haptics';
 
 export default function CompleteScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const selectedTradeName = useOnboardingStore((s) => s.selectedTradeName);
+  // Spec 99 §9.3: derive trade label from canonical filterStore.tradeSlug
+  // via the catalog (was reading the duplicate onboardingStore.
+  // selectedTradeName mirror — removed in §9.3).
+  const tradeSlug = useFilterStore((s) => s.tradeSlug);
+  const selectedTradeName = getTradeLabel(tradeSlug);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

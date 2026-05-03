@@ -1,7 +1,14 @@
 // SPEC LINK: docs/specs/03-mobile/94_mobile_onboarding.md §3.1
+//             docs/specs/03-mobile/99_mobile_state_architecture.md §3.5 + §9.3
 // Static trade list for the SectionList in profession.tsx.
 // 6 category groups, 33 items (32 canonical trade slugs + realtor).
 // Slugs match the canonical 32 in the system map exactly.
+//
+// Per Spec 99 §9.3: this catalog is also the canonical lookup for trade
+// label display (e.g. complete.tsx). The previously-mirrored
+// `onboardingStore.selectedTradeName` was a duplicate write that could
+// drift from the canonical `trade_slug`; deriving the label from the
+// slug via `getTradeLabel(slug)` at the display site eliminates the drift.
 
 export type TradeItem = { label: string; slug: string };
 
@@ -70,3 +77,25 @@ export const TRADE_SECTIONS: Array<{ title: string; data: TradeItem[] }> = [
     ],
   },
 ];
+
+// Flat slug→label map, built once at module load. O(1) lookup.
+const SLUG_TO_LABEL: Map<string, string> = (() => {
+  const m = new Map<string, string>();
+  for (const section of TRADE_SECTIONS) {
+    for (const item of section.data) {
+      m.set(item.slug, item.label);
+    }
+  }
+  return m;
+})();
+
+/**
+ * Look up the display label for a trade slug. Returns the slug itself as
+ * fallback if the slug is not in the catalog (defensive — should not
+ * happen in normal flow because PATCH endpoints validate against the
+ * canonical 32). For empty/null input returns `null`.
+ */
+export function getTradeLabel(slug: string | null | undefined): string | null {
+  if (!slug) return null;
+  return SLUG_TO_LABEL.get(slug) ?? slug;
+}

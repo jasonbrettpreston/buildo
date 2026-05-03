@@ -25,7 +25,10 @@ export default function ProfessionScreen() {
   const [patchError, setPatchError] = useState<string | null>(null);
   const sheetRef = useRef<BottomSheet>(null);
 
-  const { setTrade, setStep, setPath } = useOnboardingStore.getState();
+  // Spec 99 §9.3: trade is canonical in filterStore (B2-hydrated from server).
+  // The duplicate `setTrade` mirror in onboardingStore was removed; only
+  // setStep + setPath remain as genuinely-local onboarding flow control.
+  const { setStep, setPath } = useOnboardingStore.getState();
   const { setTradeSlug } = useFilterStore.getState();
 
   // Guard against post-unmount state mutations if the user navigates back
@@ -61,7 +64,6 @@ export default function ProfessionScreen() {
     // PATCH succeeded — guard against back-press during in-flight PATCH.
     if (!isMounted.current) return;
     successNotification();
-    setTrade(selectedTrade.slug, selectedTrade.label);
     setTradeSlug(selectedTrade.slug);
 
     if (selectedTrade.slug === 'realtor') {
@@ -75,7 +77,7 @@ export default function ProfessionScreen() {
       router.push('/(onboarding)/path');
     }
     setIsPatching(false);
-  }, [selectedTrade, setTrade, setTradeSlug, setPath, setStep, router]);
+  }, [selectedTrade, setTradeSlug, setPath, setStep, router]);
 
   const renderSectionHeader = useCallback(
     ({ section }: { section: SectionListData<TradeItem> }) => (

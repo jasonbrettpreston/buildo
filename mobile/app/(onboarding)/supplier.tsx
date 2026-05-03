@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useOnboardingStore } from '@/store/onboardingStore';
+import { useFilterStore } from '@/store/filterStore';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { ProgressStepper } from '@/components/onboarding/ProgressStepper';
 
@@ -23,7 +24,10 @@ interface SuppliersResponse {
 
 export default function SupplierScreen() {
   const router = useRouter();
-  const selectedTrade = useOnboardingStore((s) => s.selectedTrade);
+  // Spec 99 §9.3: trade is canonical in filterStore. Supplier query is keyed
+  // on the canonical trade slug now (was reading the duplicate
+  // onboardingStore.selectedTrade mirror — removed in §9.3).
+  const selectedTrade = useFilterStore((s) => s.tradeSlug);
   const selectedPath = useOnboardingStore((s) => s.selectedPath);
   const isPathL = selectedPath === 'leads';
 
@@ -32,7 +36,7 @@ export default function SupplierScreen() {
   const [isPatching, setIsPatching] = useState(false);
   const [patchError, setPatchError] = useState<string | null>(null);
 
-  const { setSupplier, setStep } = useOnboardingStore.getState();
+  const { setStep } = useOnboardingStore.getState();
 
   const { data, isLoading } = useQuery({
     queryKey: ['onboarding-suppliers', selectedTrade],
@@ -104,7 +108,10 @@ export default function SupplierScreen() {
           method: 'PATCH',
           body: JSON.stringify({ supplier_selection: value }),
         });
-        setSupplier(value);
+        // Spec 99 §9.3: supplierSelection is canonical in filterStore (B2-
+        // hydrated from server). Was previously double-written to the
+        // onboardingStore mirror — that mirror is removed.
+        useFilterStore.getState().setSupplierSelection(value);
       }
       // Only advance to 'terms' if not inserting the first-permit step (Path T).
       // setStep must only reflect the step we're actually going to.

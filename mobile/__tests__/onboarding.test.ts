@@ -4,9 +4,10 @@
 // Unit tests for:
 //  - snapToGrid: grid alignment, post-snap re-validation
 //  - isInsideToronto: bounds checking
-//  - onboardingStore: step advancement, reset, setTrade, persist migrate
-//    (markComplete + isComplete REMOVED in Spec 99 §9.2c — server profile is
-//    the sole source of truth for onboarding completion)
+//  - onboardingStore: step advancement, path selection, reset, persist migrate
+//    (Spec 99 §9.2c removed markComplete + isComplete; §9.3 removed
+//    selectedTrade/Name + locationMode/homeBaseLat/Lng + supplierSelection
+//    duplicates — they live in filterStore which is B2-hydrated from server.)
 
 jest.mock('react-native-mmkv', () => ({
   createMMKV: () => ({
@@ -88,87 +89,93 @@ describe('onboardingStore', () => {
     expect(useOnboardingStore.getState().currentStep).toBe('supplier');
   });
 
-  // Spec 99 §9.2c: markComplete + isComplete REMOVED. Server
-  // profile.onboarding_complete is now the sole source of truth.
-  // Terminal-step behavior (atomic isComplete=true + currentStep=null)
-  // is replaced by: PATCH onboarding_complete=true server-side; AuthGate
-  // refetch reads server truth; routes to (app)/. No local mirror.
-  // currentStep stays at its last value (e.g., 'terms') after completion;
-  // it's only used by getResumePath when onboarding_complete=false.
-
-  it('reset returns all fields to initial state', () => {
+  it('setPath stores the selected onboarding path', () => {
     const { useOnboardingStore } = require('@/store/onboardingStore');
-    useOnboardingStore.getState().setTrade('plumbing', 'Plumbing');
-    useOnboardingStore.getState().setPath('leads');
-    useOnboardingStore.getState().setStep('terms');
     useOnboardingStore.getState().reset();
-    const s = useOnboardingStore.getState();
-    expect(s.selectedTrade).toBeNull();
-    expect(s.selectedTradeName).toBeNull();
-    expect(s.selectedPath).toBeNull();
-    expect(s.locationMode).toBeNull();
-    expect(s.currentStep).toBeNull();
-    // isComplete no longer exists on the state shape (Spec 99 §3.5)
-    expect((s as Record<string, unknown>).isComplete).toBeUndefined();
+    useOnboardingStore.getState().setPath('leads');
+    expect(useOnboardingStore.getState().selectedPath).toBe('leads');
   });
 
-  it('persist migrate strips legacy isComplete key from v0 state', () => {
-    // Spec 99 §9.2c: existing users have `isComplete: true|false` persisted
-    // in MMKV. The migrate function (version 0→1) drops it on rehydrate.
+  it('reset returns all fields to initial state (currentStep + selectedPath only)', () => {
     const { useOnboardingStore } = require('@/store/onboardingStore');
-    // Simulate a v0 persisted state by reading the migrate function.
-    // The actual test of migrate runs inside Zustand's persist middleware
-    // on next hydrate; we assert the function is configured correctly via
-    // the persist options shape (introspection is per Zustand v5 API).
+    useOnboardingStore.getState().setStep('terms');
+    useOnboardingStore.getState().setPath('leads');
+    useOnboardingStore.getState().reset();
+    const s = useOnboardingStore.getState();
+    expect(s.currentStep).toBeNull();
+    expect(s.selectedPath).toBeNull();
+    // Spec 99 §9.2c + §9.3 — these fields are GONE; should be undefined on
+    // the state shape (filterStore holds canonical values now).
+    const sx = s as Record<string, unknown>;
+    expect(sx.isComplete).toBeUndefined();
+    expect(sx.selectedTrade).toBeUndefined();
+    expect(sx.selectedTradeName).toBeUndefined();
+    expect(sx.locationMode).toBeUndefined();
+    expect(sx.homeBaseLat).toBeUndefined();
+    expect(sx.homeBaseLng).toBeUndefined();
+    expect(sx.supplierSelection).toBeUndefined();
+  });
+
+  it('persist migrate (current version is 2)', () => {
+    const { useOnboardingStore } = require('@/store/onboardingStore');
     const persistApi = useOnboardingStore.persist;
     const options = persistApi?.getOptions?.();
-    expect(options?.version).toBe(1);
-    // Run the migrate function directly on a synthetic v0 state shape:
+    expect(options?.version).toBe(2);
+  });
+
+  it('persist migrate v0 → v2: strips isComplete + 6 §9.3 mirror fields', () => {
+    // A v0 user (pre-§9.2c, pre-§9.3) has all 7 legacy fields in MMKV.
+    // The whitelist migrate must keep only currentStep + selectedPath.
+    const { useOnboardingStore } = require('@/store/onboardingStore');
+    const options = useOnboardingStore.persist?.getOptions?.();
     const v0State = {
       currentStep: 'terms',
       selectedTrade: 'plumbing',
       selectedTradeName: 'Plumbing',
       selectedPath: 'leads',
-      locationMode: null,
+      locationMode: 'home_base_fixed',
+      homeBaseLat: 43.6532,
+      homeBaseLng: -79.3832,
+      supplierSelection: 'Acme Supply',
+      isComplete: true,
+    };
+    const migrated = options?.migrate?.(v0State, 0) as Record<string, unknown>;
+    expect(migrated.currentStep).toBe('terms');
+    expect(migrated.selectedPath).toBe('leads');
+    // All 7 legacy mirror keys MUST be stripped.
+    expect(migrated.isComplete).toBeUndefined();
+    expect(migrated.selectedTrade).toBeUndefined();
+    expect(migrated.selectedTradeName).toBeUndefined();
+    expect(migrated.locationMode).toBeUndefined();
+    expect(migrated.homeBaseLat).toBeUndefined();
+    expect(migrated.homeBaseLng).toBeUndefined();
+    expect(migrated.supplierSelection).toBeUndefined();
+  });
+
+  it('persist migrate v1 → v2: strips the 6 §9.3 mirror fields', () => {
+    // A v1 user (post-§9.2c, pre-§9.3) has the 6 §9.3 fields only.
+    const { useOnboardingStore } = require('@/store/onboardingStore');
+    const options = useOnboardingStore.persist?.getOptions?.();
+    const v1State = {
+      currentStep: 'supplier',
+      selectedTrade: 'hvac',
+      selectedTradeName: 'HVAC',
+      selectedPath: 'tracking',
+      locationMode: 'gps_live',
       homeBaseLat: null,
       homeBaseLng: null,
       supplierSelection: null,
-      isComplete: true, // legacy field
     };
-    const migrated = options?.migrate?.(v0State, 0);
-    expect(migrated).toBeDefined();
-    expect((migrated as Record<string, unknown>).isComplete).toBeUndefined();
-    expect((migrated as Record<string, unknown>).currentStep).toBe('terms');
-    expect((migrated as Record<string, unknown>).selectedTrade).toBe('plumbing');
+    const migrated = options?.migrate?.(v1State, 1) as Record<string, unknown>;
+    expect(migrated.currentStep).toBe('supplier');
+    expect(migrated.selectedPath).toBe('tracking');
+    expect(migrated.selectedTrade).toBeUndefined();
+    expect(migrated.selectedTradeName).toBeUndefined();
+    expect(migrated.locationMode).toBeUndefined();
+    expect(migrated.supplierSelection).toBeUndefined();
   });
 
-  it('setTrade stores both slug and display name', () => {
-    const { useOnboardingStore } = require('@/store/onboardingStore');
-    useOnboardingStore.getState().reset();
-    useOnboardingStore.getState().setTrade('plumbing', 'Plumbing');
-    expect(useOnboardingStore.getState().selectedTrade).toBe('plumbing');
-    expect(useOnboardingStore.getState().selectedTradeName).toBe('Plumbing');
-  });
-
-  it('single-select: selecting trade A then trade B leaves only B selected', () => {
-    const { useOnboardingStore } = require('@/store/onboardingStore');
-    useOnboardingStore.getState().reset();
-    useOnboardingStore.getState().setTrade('plumbing', 'Plumbing');
-    useOnboardingStore.getState().setTrade('hvac', 'HVAC');
-    expect(useOnboardingStore.getState().selectedTrade).toBe('hvac');
-  });
-
-  it('setLocation stores mode and coords correctly', () => {
-    const { useOnboardingStore } = require('@/store/onboardingStore');
-    useOnboardingStore.getState().reset();
-    useOnboardingStore.getState().setLocation({
-      mode: 'home_base_fixed',
-      lat: 43.6532,
-      lng: -79.3832,
-    });
-    const s = useOnboardingStore.getState();
-    expect(s.locationMode).toBe('home_base_fixed');
-    expect(s.homeBaseLat).toBeCloseTo(43.6532);
-    expect(s.homeBaseLng).toBeCloseTo(-79.3832);
-  });
+  // Spec 99 §9.3: setTrade / setLocation / setSupplier removed. The values
+  // they used to write are now canonical in filterStore (B2-hydrated from
+  // server); idempotency tests live in storeIdempotency.test.ts.
 });
