@@ -156,6 +156,19 @@ describe('authStore.signOut', () => {
     expect(useAuthStore.getState().idToken).toBeNull();
   });
 
+  // Spec 99 §9.1 + adversarial review consensus (DeepSeek F6 + code-reviewer
+  // MED + Gemini F5): assert the legacy MMKV cleanup migration ran exactly
+  // once at authStore module load. Without this assertion, accidentally
+  // removing the call from authStore.ts would silently regress the PIPEDA
+  // cleanup of the orphaned legacy `user-profile-cache` blob.
+  it('cleanupLegacyUserProfileCache ran at authStore module load', () => {
+    // The mock factory at the top of this file replaced the export with
+    // `jest.fn()`. Reading it back here returns the same mock instance.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { cleanupLegacyUserProfileCache } = require('@/lib/migrations/userProfileCacheCleanup');
+    expect(cleanupLegacyUserProfileCache).toHaveBeenCalledTimes(1);
+  });
+
   // Spec 99 §B5 + §9.10: signOut MUST purge the ['user-profile'] cache so the
   // next sign-in (possibly a different user on a shared device) cannot read
   // the previous user's profile. The MMKV-persisted TanStack cache otherwise

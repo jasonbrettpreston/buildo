@@ -21,16 +21,27 @@ import { useFilterStore } from '@/store/filterStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
 import { useDepsTracker } from '@/lib/debug/loopDetector';
 
+// Spec 99 §B1 + WF3-§9.1 adversarial review F2 (DeepSeek + code-reviewer +
+// Gemini consensus): a deterministic schema-drift error MUST short-circuit
+// retries. Previously `throw new Error(...)` was retried 3× under the generic
+// retry guard — wasting bandwidth and emitting 3 duplicate Sentry events per
+// cold boot during a bad deploy. Sentinel class lets the retry guard skip it.
+export class ProfileSchemaError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProfileSchemaError';
+  }
+}
+
 async function fetchProfile(): Promise<UserProfileType> {
   const raw = await fetchWithAuth<{ data: unknown }>('/api/user-profile');
   const parsed = UserProfileSchema.safeParse(raw.data);
   if (!parsed.success) {
     Sentry.captureException(parsed.error, { extra: { context: 'useUserProfile Zod parse' } });
     // Throw to TanStack's error state — the persister keeps the previous
-    // valid `query.data` accessible, and the retry policy below handles
-    // transient parse failures. Pre-§9.1, this fell back to a parallel MMKV
-    // cache; that cache was redundant with the TanStack persister.
-    throw new Error('Profile response failed schema validation');
+    // valid `query.data` accessible. Pre-§9.1, this fell back to a parallel
+    // MMKV cache; that cache was redundant with the TanStack persister.
+    throw new ProfileSchemaError('Profile response failed schema validation');
   }
   return parsed.data;
 }
@@ -44,10 +55,13 @@ export function useUserProfile(options?: { enabled?: boolean }) {
     queryFn: fetchProfile,
     staleTime: 300_000,
     enabled: options?.enabled ?? true,
-    // No retry for deterministic states: 403 (deleted account) and 404 (new user).
+    // No retry for deterministic states: 403 (deleted account), 404 (new user),
+    // schema-drift parse failure (retrying won't fix server returning malformed
+    // data — wastes bandwidth + emits duplicate Sentry events).
     retry: (count, err) =>
       !(err instanceof AccountDeletedError) &&
       !(err instanceof ApiError && err.status === 404) &&
+      !(err instanceof ProfileSchemaError) &&
       count < 3,
   });
 

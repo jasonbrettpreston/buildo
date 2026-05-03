@@ -14,6 +14,7 @@
 // before any auth flow can race with the cleanup.
 
 import { createMMKV } from 'react-native-mmkv';
+import * as Sentry from '@sentry/react-native';
 
 let cleaned = false;
 
@@ -23,8 +24,31 @@ export function cleanupLegacyUserProfileCache(): void {
   try {
     // The legacy blob was created with id 'user-profile-cache'.
     const legacyStorage = createMMKV({ id: 'user-profile-cache' });
-    legacyStorage.clearAll();
-  } catch {
-    // MMKV not initialized in tests OR file already gone — non-fatal.
+    // Gemini WF3-§9.1 review F2: createMMKV lazily allocates the underlying
+    // mmap file on first ACCESS. Calling clearAll() unconditionally would
+    // materialize an empty file on fresh installs that never had the legacy
+    // blob — leaving an orphan that violates Spec 99 §2.1 (no direct MMKV
+    // access outside persist middleware) for the lifetime of the install.
+    // `contains()` reads the existing keyspace without forcing a write —
+    // safe on a fresh install AND a no-op on subsequent boots after cleanup.
+    if (legacyStorage.contains('profile')) {
+      legacyStorage.clearAll();
+      Sentry.addBreadcrumb({
+        category: 'storage',
+        message: 'legacy_user_profile_cache_cleanup',
+        level: 'info',
+        data: { result: 'cleared' },
+      });
+    }
+    // No breadcrumb on the no-op path — would emit on every cold boot for
+    // every install indefinitely, drowning the actually-cleared signal.
+  } catch (err) {
+    // MMKV not initialized in tests OR storage layer error — non-fatal.
+    Sentry.addBreadcrumb({
+      category: 'storage',
+      message: 'legacy_user_profile_cache_cleanup',
+      level: 'warning',
+      data: { result: 'error', error: err instanceof Error ? err.message : String(err) },
+    });
   }
 }

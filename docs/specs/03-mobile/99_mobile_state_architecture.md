@@ -139,7 +139,7 @@ These are NOT Zustand stores. They use `react-native-reanimated`'s `makeMutable(
 | `onboardingStore.locationMode` / `homeBaseLat` / `homeBaseLng` / `supplierSelection` (the duplicates) | Use `filterStore` exclusively (already populated by B2 hydration) | WF2 §9.3 |
 | `onboardingStore.selectedTrade` (duplicate of `filterStore.tradeSlug`) | Use `filterStore.tradeSlug` | WF2 §9.3 |
 | `onboardingStore.selectedTradeName` (display-only mirror of server `display_name` lookup) | Read from server profile or extract from trade catalog at display site | WF2 §9.3 |
-| `useUserProfile.readCachedProfile` MMKV blob (`user-profile-cache`) | Eliminated — TanStack persister covers fast-hydration | WF3 §9.1 |
+| `useUserProfile.readCachedProfile` MMKV blob (`user-profile-cache`) | Eliminated — TanStack persister covers fast-hydration | WF3 §9.1 (✅ done — see `mobile/src/lib/migrations/userProfileCacheCleanup.ts` for the one-time orphan-file cleanup) |
 | `userProfileStore.hydrate` non-idempotent set | Migrate to deep-equal-before-set per §6.6 | WF2 §9.8 |
 | `filterStore.hydrate` non-idempotent set | Same | WF2 §9.8 |
 | `paywallStore.show()` action with no caller | Delete OR wire InlineBlurBanner caller | WF3 §9.9 |
@@ -218,12 +218,20 @@ const mutation = useMutation({
 auth().onAuthStateChanged((firebaseUser) => {
   if (firebaseUser) {
     const expectedUid = firebaseUser.uid;
-    if (lastKnownUid !== expectedUid) {
-      clearUserProfileCache();
-      void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+    const isUidChange = lastKnownUid !== expectedUid;
+    if (isUidChange) {
       lastKnownUid = expectedUid;
     }
-    // ... setAuth
+    void firebaseUser.getIdToken().then((idToken) => {
+      if (lastKnownUid !== expectedUid) return; // stale
+      useAuthStore.getState().setAuth({...}, idToken);
+      // Invalidate AFTER setAuth so the refetch uses the NEW bearer token.
+      // Pre-§9.1-amend, invalidate fired synchronously and raced setAuth
+      // (Gemini WF3-§9.1 review F7).
+      if (isUidChange) {
+        void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      }
+    });
   }
 });
 ```
@@ -243,11 +251,14 @@ signOut: async () => {
   track('signout_initiated');
   usePaywallStore.getState().clear();   // BEFORE firebase signOut — Spec 96 §9 critical
   await auth().signOut();
+  // §9.10 (PIPEDA): purge ALL TanStack queries (in-memory + persister).
+  // Replaces the legacy `clearUserProfileCache()` call removed in §9.1 —
+  // queryClient.clear() handles the only remaining profile cache.
+  queryClient.clear();
   useFilterStore.getState().reset();
   useNotificationStore.getState().reset();
   useOnboardingStore.getState().reset();
   useUserProfileStore.getState().reset();
-  clearUserProfileCache();
   set({ user: null, idToken: null, isLoading: false });
   resetIdentity();
 }
@@ -492,7 +503,7 @@ The following items eliminate the duplication identified in the audit and resolv
 | 9.2b | P1 | depends on 9.2a — Remove `markComplete()` bridge from `useUserProfile.ts:101-103` AND update direct callers in `mobile/app/(onboarding)/complete.tsx:69` and `terms.tsx:91` to PATCH `onboarding_complete=true` directly to server (no local state mirror) | WF2 | `mobile/src/hooks/useUserProfile.ts`, `mobile/app/(onboarding)/complete.tsx`, `mobile/app/(onboarding)/terms.tsx` |
 | 9.2c | P1 | depends on 9.2b — Remove `isComplete` field + `markComplete()` action from `onboardingStore`. Add `persist` `migrate` function (version bump 0→1) to drop the legacy MMKV key for existing users. | WF2 | `mobile/src/store/onboardingStore.ts` |
 | 9.3 | P1 | Remove `selectedTrade`, `selectedTradeName`, `locationMode`, `homeBaseLat`, `homeBaseLng`, `supplierSelection` duplicates from `onboardingStore`. Add `persist` `migrate` function (version bump) to drop legacy MMKV keys. Update onboarding screens to write to `filterStore` after server PATCH success (no local mirror). | WF2 | `mobile/src/store/onboardingStore.ts`, `mobile/app/(onboarding)/profession.tsx`, `address.tsx`, `supplier.tsx` |
-| 9.1 | P1 | depends on cold-boot perf benchmark — Eliminate `user-profile-cache` MMKV blob (use TanStack persister exclusively). Update §B5 to remove `clearUserProfileCache()` call. Add `profileStorage.clearAll()` migration to purge orphaned blob from existing installs. | WF3 | `mobile/src/hooks/useUserProfile.ts` |
+| 9.1 | ✅ DONE | Eliminated `user-profile-cache` MMKV blob. TanStack persister is now sole canonical profile cache (verified sync via `mmkvPersister.restoreClient` — no cold-boot regression). §B5 dropped the `clearUserProfileCache()` call. One-time `cleanupLegacyUserProfileCache()` migration in `mobile/src/lib/migrations/` purges the orphaned blob on existing installs (gated by `legacyStorage.contains('profile')` to avoid materializing an empty file on fresh installs per Gemini WF3-§9.1 review F2). | WF3 | `mobile/src/hooks/useUserProfile.ts`, `mobile/src/store/authStore.ts`, `mobile/src/lib/migrations/userProfileCacheCleanup.ts` |
 | 9.5 | P1 | Promote `loopDetector.ts` → `mobile/src/lib/debug/stateDebug.ts` with `__DEV__` guard. Production builds compile to no-op. | WF3 | `mobile/src/lib/debug/` |
 | 9.6 | P1 | Add AuthGate router branch tests (9 arms per §5.3) | WF2 | `mobile/__tests__/authGate.test.ts` (NEW) |
 | 9.7 | P1 | depends on 9.8 — Idempotency tests for all bridges per §8.1 | WF2 | `mobile/__tests__/bridges.test.ts` (NEW) |

@@ -181,13 +181,12 @@ export function initFirebaseAuthListener(): () => void {
       // succession on init / token refresh; without this guard, A's
       // getIdToken().then() could win the race and overwrite B's setAuth.
       const expectedUid = firebaseUser.uid;
-      if (lastKnownUid !== expectedUid) {
-        // First-fire OR genuine UID change. Drop any persisted profile that
-        // doesn't belong to this Firebase user, then force a fresh fetch.
-        // Both clears are idempotent and safe to call when the cache is empty.
-        // Telemetry: emit only on actual UID transitions (not the cold-boot
-        // first-fire where lastKnownUid was null) so shared-device handoff
-        // events surface in Sentry without noise from every app launch.
+      const isUidChange = lastKnownUid !== expectedUid;
+      if (isUidChange) {
+        // First-fire OR genuine UID change. Telemetry on real transitions
+        // only (not the cold-boot first-fire where lastKnownUid was null) so
+        // shared-device handoff events surface in Sentry without noise from
+        // every app launch.
         if (lastKnownUid !== null) {
           Sentry.addBreadcrumb({
             category: 'auth',
@@ -197,10 +196,10 @@ export function initFirebaseAuthListener(): () => void {
           });
           track('auth_user_switch');
         }
-        // Spec 99 §9.1: clearUserProfileCache() removed (legacy MMKV blob is
-        // gone). The TanStack persister blob is invalidated below — its
-        // refetch will write the new user's profile, replacing the stale one.
-        void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+        // Update lastKnownUid synchronously so concurrent listener fires
+        // observe the new value. Cache invalidation MUST happen AFTER setAuth
+        // (see .then() below) — invalidating before would trigger a refetch
+        // using the OLD bearer token (Gemini WF3-§9.1 review F7).
         lastKnownUid = expectedUid;
       }
       void firebaseUser
@@ -222,6 +221,13 @@ export function initFirebaseAuthListener(): () => void {
           // Identify the user in PostHog using the opaque Firebase uid as
           // distinctId — no email/displayName/phone is sent (Spec 90 §11).
           identifyUser(firebaseUser.uid);
+          // Cache invalidation AFTER setAuth: the next refetch uses the
+          // just-set new bearer (Spec 99 §B4 + Gemini WF3-§9.1 F7).
+          // Pre-fix, invalidate fired synchronously above and the refetch
+          // raced setAuth — sending the OLD token to the server.
+          if (isUidChange) {
+            void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+          }
         })
         .catch(() => {
           // Token fetch failure is rare but can happen if Firebase is unreachable
