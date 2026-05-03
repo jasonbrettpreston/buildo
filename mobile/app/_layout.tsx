@@ -150,6 +150,16 @@ function AuthGate() {
     // Still loading with no cached data — wait
     if (profileLoading && !profile) return;
 
+    // Spec 99 §5.2 stale-profile guard: when the Firebase UID changes
+    // (different user signs in on a shared device), the B4 cache invalidation
+    // fires but TanStack returns the PREVIOUS user's profile.data until the
+    // new fetch resolves. Routing on it would evaluate Branch 5 against the
+    // OLD user's onboarding_complete / account_preset — wrong destination for
+    // the new user. Skip the routing decision entirely until the profile's
+    // user_id matches the live Firebase uid; the next fetch resolution will
+    // re-fire this effect with the correct profile.
+    if (profile && profile.user_id !== user.uid) return;
+
     // Branch 5: profile loaded — route on onboarding_complete.
     // For !onboarding_complete users we resume at the FURTHEST step they've
     // reached (Spec 94 §10 Step 11 drop-off recovery) — NOT a hardcoded

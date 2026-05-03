@@ -93,6 +93,14 @@ export const useAuthStore = create<AuthState>()(
         // device sees no stale data. MMKV is preserved per §3.4 so the same user
         // returning on the same device gets fast hydration.
         await auth().signOut();
+        // Spec 99 §B5 + §9.10: purge the user-profile query (in-memory + MMKV
+        // persister) so the next sign-in (potentially a different user on a
+        // shared device) cannot read the previous user's profile from cache.
+        // `enabled: !!user` only stops NEW fetches; in-flight fetches resolve
+        // and write to the cache, and the MMKV persister rehydrates on next
+        // mount with the previous user's data — a PIPEDA leak on shared devices.
+        // Surgical (only ['user-profile']) so other queries keep their cache.
+        queryClient.removeQueries({ queryKey: ['user-profile'] });
         useFilterStore.getState().reset();
         useNotificationStore.getState().reset();
         useOnboardingStore.getState().reset();

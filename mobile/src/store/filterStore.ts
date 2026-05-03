@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKV } from 'react-native-mmkv';
+import equal from 'fast-deep-equal/es6';
 import type { UserProfileType } from '@/lib/userProfile.schema';
 
 const storage = createMMKV({ id: 'filter-store' });
@@ -76,16 +77,35 @@ export const useFilterStore = create<FilterState>()(
       setDefaultTab: (tab) => set({ defaultTab: tab }),
       setSupplierSelection: (s) => set({ supplierSelection: s }),
       hydrate: (profile: UserProfileType) =>
-        set({
-          tradeSlug: profile.trade_slug ?? '',
-          radiusKm: profile.radius_km ?? 10,
-          locationMode: profile.location_mode,
-          homeBaseLocation:
+        // Spec 99 §6.6 + §9.8: deep-equal-before-set so a refetch with
+        // identical content does NOT notify subscribers (which would re-fire
+        // any selector reading these fields and cascade re-renders). Per-field
+        // primitive checks for the scalars; deep-equal for the homeBaseLocation
+        // object (the only nested value here).
+        set((prev) => {
+          const nextTradeSlug = profile.trade_slug ?? '';
+          const nextRadiusKm = profile.radius_km ?? 10;
+          const nextLocationMode = profile.location_mode;
+          const nextHomeBaseLocation =
             profile.home_base_lat !== null && profile.home_base_lng !== null
               ? { lat: profile.home_base_lat, lng: profile.home_base_lng }
-              : null,
-          defaultTab: profile.default_tab,
-          supplierSelection: profile.supplier_selection,
+              : null;
+          const nextDefaultTab = profile.default_tab;
+          const nextSupplierSelection = profile.supplier_selection;
+
+          const changed: Partial<FilterState> = {};
+          if (prev.tradeSlug !== nextTradeSlug) changed.tradeSlug = nextTradeSlug;
+          if (prev.radiusKm !== nextRadiusKm) changed.radiusKm = nextRadiusKm;
+          if (prev.locationMode !== nextLocationMode) changed.locationMode = nextLocationMode;
+          if (!equal(prev.homeBaseLocation, nextHomeBaseLocation)) {
+            changed.homeBaseLocation = nextHomeBaseLocation;
+          }
+          if (prev.defaultTab !== nextDefaultTab) changed.defaultTab = nextDefaultTab;
+          if (prev.supplierSelection !== nextSupplierSelection) {
+            changed.supplierSelection = nextSupplierSelection;
+          }
+          // Returning prev causes Zustand's set() to bail out of notifying.
+          return Object.keys(changed).length === 0 ? prev : changed;
         }),
       reset: () =>
         set({

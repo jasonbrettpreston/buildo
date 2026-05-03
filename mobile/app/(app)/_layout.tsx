@@ -113,7 +113,7 @@ export default function AppLayout() {
   trackRender('AppLayout');
   // Hydrates filterStore + userProfileStore from server profile on every authenticated launch.
   // Must live here so it runs for all authenticated app screens (feed, map, settings, etc.)
-  const { data: profile, isLoading, isFetching } = useUserProfile();
+  const { data: profile, isLoading } = useUserProfile();
 
   const unread = useNotificationStore((s) => s.unreadFlightBoard);
   const paywallDismissed = usePaywallStore((s) => s.dismissed);
@@ -198,13 +198,17 @@ export default function AppLayout() {
   );
 
   // Loading guard: never flash the paywall while subscription_status is
-  // unresolved (Spec 96 §9 explicit). `isLoading` is only true on the
-  // initial fetch — `isFetching` covers the AppState foreground refetch
-  // path where the cached status is stale ('expired') and the freshly-paid
-  // user would see a paywall flash before the refetch resolves to 'active'.
-  // Covering both ensures the post-payment 'expired → active' transition
-  // always passes through the loading guard, never the paywall.
-  if (isLoading || isFetching || profile == null || profile.subscription_status == null) {
+  // unresolved (Spec 96 §9 explicit). Per Spec 99 §6.5, gating on isFetching
+  // is BANNED because it toggles on every refetch and flips the gate between
+  // SubscriptionLoadingGuard and Tabs, mounting/unmounting the entire tab
+  // tree at high frequency (incident #3, 2026-05-02). isLoading is the only
+  // stable signal: true on initial fetch, false after first resolve. Background
+  // refetches (isFetching=true with profile already loaded) MUST be silent —
+  // the rendered tree stays mounted; refetch swaps data when it resolves.
+  // The post-payment 'expired → active' transition is handled by the
+  // statusTransition effect (lines 164-172) which clears the paywall and
+  // invalidates ['leads'] without flicker.
+  if (isLoading || profile == null || profile.subscription_status == null) {
     return <SubscriptionLoadingGuard />;
   }
 

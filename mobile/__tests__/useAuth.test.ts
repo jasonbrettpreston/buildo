@@ -78,6 +78,7 @@ jest.mock('@/hooks/useUserProfile', () => ({
   clearUserProfileCache: (...args: unknown[]) => mockClearUserProfileCache(...args),
 }));
 const mockInvalidateQueries = jest.fn();
+const mockRemoveQueries = jest.fn();
 jest.mock('@/lib/queryClient', () => ({
   // The mock needs to satisfy TanStack's invalidateQueries return type
   // (Promise<void>). Internally we just record the filters arg for assertion.
@@ -85,6 +86,9 @@ jest.mock('@/lib/queryClient', () => ({
     invalidateQueries: (filters: unknown): Promise<void> => {
       mockInvalidateQueries(filters);
       return Promise.resolve();
+    },
+    removeQueries: (filters: unknown): void => {
+      mockRemoveQueries(filters);
     },
   },
 }));
@@ -142,6 +146,23 @@ describe('authStore.signOut', () => {
     await useAuthStore.getState().signOut();
     expect(useAuthStore.getState().user).toBeNull();
     expect(useAuthStore.getState().idToken).toBeNull();
+  });
+
+  // Spec 99 §B5 + §9.10: signOut MUST purge the ['user-profile'] cache so the
+  // next sign-in (possibly a different user on a shared device) cannot read
+  // the previous user's profile. The MMKV-persisted TanStack cache otherwise
+  // rehydrates on next mount with stale data — PIPEDA leak.
+  it('removes user-profile query from cache after firebase signOut', async () => {
+    mockSignOut.mockClear();
+    const removeBefore = (mockRemoveQueries as jest.Mock | undefined);
+    if (removeBefore) removeBefore.mockClear();
+    await useAuthStore.getState().signOut();
+    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ['user-profile'] });
+    // Order: removeQueries fires AFTER firebase signOut completes (so the
+    // listener's null-fire doesn't race against the cache purge).
+    const signOutOrder = mockSignOut.mock.invocationCallOrder[0];
+    const removeOrder = mockRemoveQueries.mock.invocationCallOrder.at(-1) ?? -1;
+    expect(removeOrder).toBeGreaterThan(signOutOrder);
   });
 
   it('emits signout_initiated telemetry before firebaseSignOut', async () => {
