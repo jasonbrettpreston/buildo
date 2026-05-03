@@ -51,8 +51,16 @@ State flows top-down. A lower layer NEVER initiates a write to an upper layer ex
 └─────────────────────────────────────────────────────────────┘
                          ↓ (Zustand `persist` middleware)
 ┌─────────────────────────────────────────────────────────────┐
-│  Layer 4 — MMKV (persistence only — never read directly     │  ← persistence backing store
-│           outside persist middleware or B5)                  │
+│  Layer 4a — MMKV (UNENCRYPTED, plaintext on disk)           │  ← persistence for non-sensitive UX state
+│           Persists Zustand stores + TanStack Query cache.   │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 4b — Expo SecureStore / iOS Keychain / Android       │  ← persistence for sensitive credentials
+│            Keystore (ENCRYPTED, hardware-backed where avail)│
+│            Currently used only by RNFirebase native module  │
+│            for the Firebase auth session — no app code      │
+│            touches it directly today.                        │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -63,7 +71,9 @@ State flows top-down. A lower layer NEVER initiates a write to an upper layer ex
 
 ### 2.1 Hard rules
 
-- **Layer 4 (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`.** Direct `createMMKV().getString()` in component / hook code is BANNED. (Closes the `user-profile-cache` duplicate-blob anti-pattern.)
+- **Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`.** Direct `createMMKV().getString()` in component / hook code is BANNED. (Closes the `user-profile-cache` duplicate-blob anti-pattern.)
+- **Layer 4a (MMKV) is UNENCRYPTED.** Anything sensitive — Firebase ID tokens, refresh tokens, API keys, payment credentials, government IDs, photo content — MUST go into Layer 4b (SecureStore/Keychain), NEVER into MMKV. The current allowlist of sensitive-but-OK-in-MMKV items is empty. Adding a new persisted field with credential-like content requires a Spec 99 amendment naming it explicitly.
+- **Layer 4b (SecureStore) is the ONLY place sensitive credentials may live on disk.** RNFirebase handles its own session storage natively (Keychain on iOS, EncryptedSharedPreferences on Android) — app code does NOT manage Firebase tokens directly. Adding any new app-managed credential (e.g., a third-party API key) requires using `expo-secure-store` + a Spec 99 amendment.
 - **Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror, with a declared bridge (§4) as the canonical writer.**
 - **Layer 5 (Reanimated SharedValues) NEVER drives routing, gating, or business logic.** SharedValues exist on the UI thread; reading them on the JS thread is racy.
 
@@ -322,18 +332,28 @@ Router `useEffect` dependency arrays MUST NOT contain Zustand fields read inside
 
 ## 6. Render-Stability Rules (selector hygiene)
 
-### 6.1 Zustand selectors MUST return primitives or stable references
+### 6.1 Atomic selectors MANDATE — no whole-store reads, no object-returning selectors without `useShallow`
+
+Components MUST select only the primitives or stable references they need. As stores grow, bad selectors destroy frame rate by triggering re-renders on every mutation regardless of whether the component cared about the changed field. Zustand without a selector returns the WHOLE state object — a new reference produced on every `set()` — guaranteeing a re-render of the consumer on every store mutation anywhere in the store.
 
 ```ts
+// BANNED — returns the WHOLE state on every render → re-renders on EVERY store mutation
+//          even if the component only consumes one field. UI thread blocking risk.
+const store = useFilterStore();
+const { tradeSlug } = useFilterStore();   // destructure of whole state — same problem
+
 // BANNED — returns a NEW object every render → re-renders on every store mutation
 const { hydrate, reset } = useFilterStore((s) => ({ hydrate: s.hydrate, reset: s.reset }));
 
-// REQUIRED — separate selectors, each returning a stable function reference
+// REQUIRED — atomic primitive selectors
+const tradeSlug = useFilterStore((s) => s.tradeSlug);
 const hydrate = useFilterStore((s) => s.hydrate);
 const reset = useFilterStore((s) => s.reset);
 ```
 
-**`useShallow` escape hatch:** Zustand v5 ships `useShallow` exactly to opt into shallow-equality checks for object-returning selectors. Permitted ONLY for selectors returning arrays of primitives (e.g., `useShallow((s) => s.tags)`). BANNED for selectors returning store-action objects (`useShallow((s) => ({ hydrate: s.hydrate, reset: s.reset }))`) — separate selectors per action are simpler and shallow-equal still allocates a new array per render. Each `useShallow` site MUST include a one-line comment justifying why a primitive selector is insufficient.
+**`useShallow` escape hatch:** Zustand v5 ships `useShallow` exactly to opt into shallow-equality checks for object-returning selectors. Permitted for selectors returning arrays/objects of primitives (e.g., `useShallow((s) => s.tags)` or `useShallow((s) => ({ lat: s.lat, lng: s.lng }))`). BANNED for selectors returning store-action objects (`useShallow((s) => ({ hydrate: s.hydrate, reset: s.reset }))`) — separate selectors per action are simpler and shallow-equal still allocates a new array per render. Each `useShallow` site MUST include a one-line comment justifying why a primitive selector is insufficient.
+
+**Enforcement:** §9.15 (router-hygiene lint vitest) is extended in this amendment to also flag whole-store reads (`useFilterStore()` with no selector) anywhere in `mobile/app/**` and `mobile/src/components/**`.
 
 ### 6.2 Hydrate functions MUST be idempotent
 
