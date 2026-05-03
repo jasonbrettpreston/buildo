@@ -252,6 +252,16 @@ describe('LeadFeedResultSchema', () => {
 // "Attempted to navigate before mounting the RootLayout" crash on cold start.
 
 describe('AuthGate — useRootNavigationState guard (regression)', () => {
+  // Spec 99 §9.6: the routing decision was lifted from AuthGate's useEffect
+  // into a pure function `decideAuthGateRoute(input)` so the matrix can be
+  // unit-tested directly (mobile/__tests__/authGate.test.ts). These static-
+  // source grep assertions now check BOTH files:
+  //   - `_layout.tsx` still imports useRootNavigationState + sets the latch
+  //   - `decideAuthGateRoute.ts` early-returns on !isNavigationReady before
+  //     emitting any { kind: 'navigate' } decision
+  // The behavior assertions (unauthenticated → /(auth)/sign-in, etc.) are
+  // now covered with input/output precision in authGate.test.ts; this
+  // regression suite remains as a structural guard on the file split.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fs = require('fs') as typeof import('fs');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -260,35 +270,33 @@ describe('AuthGate — useRootNavigationState guard (regression)', () => {
     path.resolve(__dirname, '../app/_layout.tsx'),
     'utf-8',
   );
+  const decideSrc: string = fs.readFileSync(
+    path.resolve(__dirname, '../src/lib/auth/decideAuthGateRoute.ts'),
+    'utf-8',
+  );
 
-  it('imports useRootNavigationState from expo-router', () => {
+  it('imports useRootNavigationState from expo-router (in _layout.tsx)', () => {
     expect(layoutSrc).toContain('useRootNavigationState');
   });
 
-  it('guards the AuthGate useEffect via isNavigationReady latch before router.replace()', () => {
-    // The AuthGate uses a two-step latch: a small useEffect sets
-    // isNavigationReady once `rootNavigationState?.key` exists, and the auth
-    // routing effect early-returns until that latch flips. This decouples
-    // routing from any transient re-renders where the navigation key
-    // disappears, which the older single-step inline guard could not handle.
-    const latchSetIdx = layoutSrc.indexOf('setNavigationReady(true)');
-    const guardIdx = layoutSrc.indexOf('if (!isNavigationReady) return');
-    const replaceIdx = layoutSrc.indexOf("router.replace('/");
-    expect(latchSetIdx).toBeGreaterThan(-1);
-    expect(guardIdx).toBeGreaterThan(-1);
-    expect(replaceIdx).toBeGreaterThan(-1);
-    expect(guardIdx).toBeLessThan(replaceIdx);
+  it('guards routing via isNavigationReady before any navigate decision', () => {
+    // _layout.tsx still latches isNavigationReady from rootNavigationState?.key.
+    expect(layoutSrc).toContain('setNavigationReady(true)');
+    // decideAuthGateRoute.ts early-returns wait on !isNavigationReady BEFORE
+    // any navigate decision — the literal predicate moved here in §9.6.
+    expect(decideSrc).toContain("if (!input.isNavigationReady) return { kind: 'wait' }");
   });
 
-  it('latches navigation-ready off rootNavigationState?.key', () => {
-    // The latch effect must depend on rootNavigationState?.key — that is what
-    // tells us the navigation container has mounted.
+  it('latches navigation-ready off rootNavigationState?.key (in _layout.tsx)', () => {
     expect(layoutSrc).toContain('[rootNavigationState?.key]');
   });
 
   it('routes unauthenticated users to /(auth)/sign-in (not /login)', () => {
-    // Spec 93 §5 Step 3: the (auth) route group replaces the old /login screen.
-    expect(layoutSrc).toContain("router.replace('/(auth)/sign-in')");
-    expect(layoutSrc).not.toContain("router.replace('/login')");
+    // Spec 93 §5 Step 3 + Spec 99 §5.3 Branch 1: the literal `to` value lives
+    // in decideAuthGateRoute.ts after the §9.6 lift. _layout.tsx now does
+    // `router.replace(decision.to)` (no literal route string for this branch).
+    expect(decideSrc).toContain("to: '/(auth)/sign-in'");
+    expect(decideSrc).not.toContain("'/login'");
+    expect(layoutSrc).not.toContain("'/login'");
   });
 });

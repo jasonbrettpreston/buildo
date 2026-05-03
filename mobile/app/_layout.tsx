@@ -17,13 +17,13 @@ import { useAuthStore, initFirebaseAuthListener } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useOnboardingStore } from '@/store/onboardingStore';
-import { getResumePath } from '@/lib/onboarding/getResumePath';
 import { AccountDeletedError, ApiError, fetchWithAuth } from '@/lib/apiClient';
 import { registerPushToken } from '@/lib/pushTokens';
 import { successNotification } from '@/lib/haptics';
 import { NotificationToast, type NotificationType } from '@/components/shared/NotificationToast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { trackRender, useDepsTracker, wireStoreLogging } from '@/lib/debug/stateDebug';
+import { decideAuthGateRoute } from '@/lib/auth/decideAuthGateRoute';
 
 // Spec 99 §7.1 + §9.5: wire Zustand subscribers once at module load. The
 // stateDebug hub is a permanent dev-only observability tool; the function
@@ -119,94 +119,54 @@ function AuthGate() {
   // registerPushToken fires ONLY when routing to (app)/ from (auth)/ — Spec 92 §4.1
   // requires contextual permission timing after first lead save, NOT on cold boot.
   useEffect(() => {
-    if (!isNavigationReady) return;
-    if (!_hasHydrated) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-    const inOnboardingGroup = segments[0] === '(onboarding)';
-
-    // Branch 1: unauthenticated
-    if (!user) {
-      if (!inAuthGroup) router.replace('/(auth)/sign-in');
-      return;
-    }
-
-    // Branch 2: account in deletion window — show reactivation modal, block navigation
-    if (profileError instanceof AccountDeletedError) {
-      setReactivationState({
-        account_deleted_at: profileError.account_deleted_at,
-        days_remaining: profileError.days_remaining,
-      });
-      return;
-    }
-
-    // Branch 3: 404 → no profile row → new user, start onboarding
-    if (profileError instanceof ApiError && profileError.status === 404) {
-      if (!inOnboardingGroup) router.replace('/(onboarding)/profession');
-      return;
-    }
-
-    // Branch 4: network / server error — retry UI rendered below, do not navigate
-    if (profileError) return;
-
-    // Still loading with no cached data — wait
-    if (profileLoading && !profile) return;
-
-    // Spec 99 §5.2 stale-profile guard: when the Firebase UID changes
-    // (different user signs in on a shared device), the B4 cache invalidation
-    // fires but TanStack returns the PREVIOUS user's profile.data until the
-    // new fetch resolves. Routing on it would evaluate Branch 5 against the
-    // OLD user's onboarding_complete / account_preset — wrong destination for
-    // the new user. Skip the routing decision entirely until the profile's
-    // user_id matches the live Firebase uid; the next fetch resolution will
-    // re-fire this effect with the correct profile.
+    // Spec 99 §9.6: routing decision lifted to a pure function so the 9-arm
+    // matrix can be unit-tested directly (mobile/__tests__/authGate.test.ts).
+    // This useEffect is now a thin dispatcher — it captures inputs, evaluates
+    // the pure function, and performs the side effect implied by the
+    // discriminated-union return.
     //
-    // Defensive `profile.user_id &&` check (DeepSeek WF2-Phase-A review #1):
-    // if the server returns a profile with empty/missing user_id (data
-    // corruption, malformed cache), the bare `!==` comparison would wedge
-    // routing forever. Treat falsy as "trust the comparison failed" and log
-    // to Sentry so the underlying corruption is observable.
+    // Defensive Sentry log on a malformed profile (empty user_id) stays HERE
+    // because it's a side effect, not a routing decision. The pure function
+    // treats falsy user_id as "wait" via its stale-profile guard.
     if (profile && !profile.user_id) {
       Sentry.captureMessage('stale_profile_missing_user_id', {
-        extra: { firebaseUid: user.uid, profileKeys: Object.keys(profile) },
+        extra: { firebaseUid: user?.uid, profileKeys: Object.keys(profile) },
       });
     }
-    if (profile && profile.user_id && profile.user_id !== user.uid) return;
 
-    // Branch 5: profile loaded — route on onboarding_complete.
-    // For !onboarding_complete users we resume at the FURTHEST step they've
-    // reached (Spec 94 §10 Step 11 drop-off recovery) — NOT a hardcoded
-    // profession.tsx, which would 400 TRADE_IMMUTABLE on resume for users
-    // whose trade_slug is already set.
-    if (profile) {
-      // Branch 4.5: manufacturer hold — Spec 94 §7. Manufacturers wait for
-      // admin enablement; they do NOT see the standard onboarding flow and
-      // must NOT be routed via getResumePath. Previously enforced by an
-      // independent useEffect in (onboarding)/_layout.tsx, but that introduced
-      // a dual-router loop. Migrated here so AuthGate remains the sole
-      // routing authority. Already-completed manufacturers fall through to
-      // the standard /(app)/ routing below.
-      if (profile.account_preset === 'manufacturer' && !profile.onboarding_complete) {
-        if (segments[0] !== '(onboarding)' || segments[1] !== 'manufacturer-hold') {
-          router.replace('/(onboarding)/manufacturer-hold');
-        }
+    const decision = decideAuthGateRoute({
+      isNavigationReady,
+      hasHydrated: _hasHydrated,
+      user,
+      profile,
+      profileError,
+      profileLoading,
+      segments,
+      // Lazy read per Spec 99 §6.4 — currentStep is NOT in this effect's
+      // deps array; subscribing to it would re-run the effect on every
+      // setStep call (incident #1, fixed in 6c5d085).
+      currentStep: useOnboardingStore.getState().currentStep,
+    });
+
+    switch (decision.kind) {
+      case 'wait':
         return;
-      }
-      if (inAuthGroup) {
-        if (!profile.onboarding_complete) {
-          router.replace(getResumePath(profile, useOnboardingStore.getState().currentStep));
-        } else {
-          router.replace('/(app)/');
+      case 'navigate':
+        router.replace(decision.to);
+        if (decision.sideEffect === 'registerPushToken') {
           void registerPushToken().catch((err) => {
-            Sentry.captureException(err, { extra: { context: 'registerPushToken on auth→app' } });
+            Sentry.captureException(err, {
+              extra: { context: 'registerPushToken on auth→app' },
+            });
           });
         }
-      } else if (inOnboardingGroup && profile.onboarding_complete) {
-        router.replace('/(app)/');
-      } else if (!inAuthGroup && !inOnboardingGroup && !profile.onboarding_complete) {
-        // Hard gate: user reached an (app) screen before completing onboarding.
-        router.replace(getResumePath(profile, useOnboardingStore.getState().currentStep));
-      }
+        return;
+      case 'reactivation-modal':
+        setReactivationState({
+          account_deleted_at: decision.account_deleted_at,
+          days_remaining: decision.days_remaining,
+        });
+        return;
     }
     // currentStep is intentionally NOT in this dep array — see the comment
     // above the lazy useOnboardingStore.getState().currentStep reads. Adding
