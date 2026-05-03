@@ -142,7 +142,8 @@ describe('onboardingStore', () => {
     const migrated = options?.migrate?.(v0State, 0) as Record<string, unknown>;
     expect(migrated.currentStep).toBe('terms');
     expect(migrated.selectedPath).toBe('leads');
-    // All 7 legacy mirror keys MUST be stripped.
+    // All 7 legacy mirror keys MUST be stripped (Gemini WF2-C #4 — homeBaseLat/Lng
+    // were missing from the explicit assertions; added here).
     expect(migrated.isComplete).toBeUndefined();
     expect(migrated.selectedTrade).toBeUndefined();
     expect(migrated.selectedTradeName).toBeUndefined();
@@ -150,6 +151,27 @@ describe('onboardingStore', () => {
     expect(migrated.homeBaseLat).toBeUndefined();
     expect(migrated.homeBaseLng).toBeUndefined();
     expect(migrated.supplierSelection).toBeUndefined();
+  });
+
+  it('persist migrate v2 → v2: self-healing strip of unexpected legacy keys', () => {
+    // DeepSeek WF2-C #4: the migrate is applied UNCONDITIONALLY so a future
+    // regression that writes a removed field to a v2 MMKV blob (dev tool,
+    // debugger, hand-edit) gets self-healed on next boot. Test asserts the
+    // unconditional whitelist strips an unexpected legacy key from a v2 input.
+    const { useOnboardingStore } = require('@/store/onboardingStore');
+    const options = useOnboardingStore.persist?.getOptions?.();
+    const v2DirtyState = {
+      currentStep: 'profession',
+      selectedPath: null,
+      // Should NOT be here on a v2 store, but a buggy refactor could write it:
+      selectedTrade: 'rogue-leak',
+      isComplete: true,
+    };
+    const migrated = options?.migrate?.(v2DirtyState, 2) as Record<string, unknown>;
+    expect(migrated.currentStep).toBe('profession');
+    expect(migrated.selectedPath).toBeNull();
+    expect(migrated.selectedTrade).toBeUndefined();
+    expect(migrated.isComplete).toBeUndefined();
   });
 
   it('persist migrate v1 → v2: strips the 6 §9.3 mirror fields', () => {
@@ -178,4 +200,43 @@ describe('onboardingStore', () => {
   // Spec 99 §9.3: setTrade / setLocation / setSupplier removed. The values
   // they used to write are now canonical in filterStore (B2-hydrated from
   // server); idempotency tests live in storeIdempotency.test.ts.
+});
+
+// ---------------------------------------------------------------------------
+// getTradeLabel — Spec 99 §9.3 trade-name lookup helper
+// (replaces the removed onboardingStore.selectedTradeName mirror)
+// ---------------------------------------------------------------------------
+
+describe('getTradeLabel', () => {
+  it('returns the canonical label for a known trade slug', () => {
+    const { getTradeLabel } = require('@/lib/onboarding/tradeData');
+    expect(getTradeLabel('framing')).toBe('Framing');
+    expect(getTradeLabel('structural-steel')).toBe('Structural Steel');
+    expect(getTradeLabel('hvac')).toBe('HVAC');
+  });
+
+  it('returns "Real Estate Agent" for the realtor slug', () => {
+    // Realtor is the special non-trade entry in the catalog (per Spec 94 §3.1).
+    // Verifies the realtor branch in profession.tsx + complete.tsx renders
+    // a human-readable label, not "realtor".
+    const { getTradeLabel } = require('@/lib/onboarding/tradeData');
+    expect(getTradeLabel('realtor')).toBe('Real Estate Agent');
+  });
+
+  it('returns null for empty/null/undefined input (caller falls back)', () => {
+    const { getTradeLabel } = require('@/lib/onboarding/tradeData');
+    expect(getTradeLabel('')).toBeNull();
+    expect(getTradeLabel(null)).toBeNull();
+    expect(getTradeLabel(undefined)).toBeNull();
+  });
+
+  it('returns null for unknown slug (catalog drift) — caller fallback handles UX', () => {
+    // Per WF2-C consensus (Gemini #3 + DeepSeek #2 + code-reviewer MED c):
+    // unknown slugs return null (NOT the slug literal) so the caller's
+    // `?? 'Tradesperson'` chain produces a human-readable label even when
+    // the static catalog drifts from the server's canonical trade list.
+    const { getTradeLabel } = require('@/lib/onboarding/tradeData');
+    expect(getTradeLabel('not-in-catalog')).toBeNull();
+    expect(getTradeLabel('future-trade-slug')).toBeNull();
+  });
 });

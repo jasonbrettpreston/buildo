@@ -81,12 +81,24 @@ export const useOnboardingStore = create<OnboardingState>()(
       //            (selectedTrade, selectedTradeName, locationMode,
       //            homeBaseLat/Lng, supplierSelection) per §9.3. filterStore
       //            holds the canonical values, B2-hydrated from server.
-      // The migrate function whitelists known v2 keys (currentStep +
-      // selectedPath) so all legacy fields are stripped on existing installs.
-      // Zustand v5 chains migrates correctly when a v0 user upgrades through
-      // v1→v2 — the if-chain runs sequentially per stored version.
+      //
+      // Zustand v5 calls `migrate(state, storedVersion)` ONCE with the stored
+      // version (verified at zustand/esm/middleware.mjs:391-399 by Gemini
+      // WF2-C review #1) — no chaining required. The single `if (version < 2)`
+      // branch handles BOTH v0 and v1 callers because both are < 2.
+      //
+      // The whitelist is applied UNCONDITIONALLY (DeepSeek WF2-C #4): a v2→v2
+      // call still strips any unexpected keys, making the migration self-
+      // healing if a future regression (dev tool, debugger, hand-edited MMKV)
+      // writes a removed field to a v2 blob. Cost: 2 Map lookups per cold
+      // boot — negligible.
+      //
+      // FORWARD-COMPAT: when a future §9.x bumps to v3, REPLACE the whitelist
+      // body — do NOT add `else if (version === 2)` (that would re-apply the
+      // v2 whitelist to v3 stores). Update the version number, update the
+      // whitelist keys, leave the unconditional structure intact.
       version: 2,
-      migrate: (persistedState: unknown, version: number) => {
+      migrate: (persistedState: unknown, _version: number) => {
         const legacy = (persistedState ?? {}) as Partial<OnboardingState> & {
           // Legacy v0 + v1 fields the migrate must read but not preserve:
           isComplete?: boolean;
@@ -97,14 +109,12 @@ export const useOnboardingStore = create<OnboardingState>()(
           homeBaseLng?: number | null;
           supplierSelection?: string | null;
         };
-        if (version < 2) {
-          // Whitelist: only v2 keys survive. All v0/v1 mirror fields drop.
-          return {
-            currentStep: legacy.currentStep ?? null,
-            selectedPath: legacy.selectedPath ?? null,
-          } as OnboardingState;
-        }
-        return persistedState as OnboardingState;
+        // Whitelist: only v2 keys survive. All legacy mirror fields drop.
+        // Applied unconditionally for self-healing per DeepSeek WF2-C #4.
+        return {
+          currentStep: legacy.currentStep ?? null,
+          selectedPath: legacy.selectedPath ?? null,
+        } as OnboardingState;
       },
     },
   ),

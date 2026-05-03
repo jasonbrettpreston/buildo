@@ -90,12 +90,37 @@ const SLUG_TO_LABEL: Map<string, string> = (() => {
 })();
 
 /**
- * Look up the display label for a trade slug. Returns the slug itself as
- * fallback if the slug is not in the catalog (defensive — should not
- * happen in normal flow because PATCH endpoints validate against the
- * canonical 32). For empty/null input returns `null`.
+ * Look up the display label for a trade slug. Returns `null` for empty/null
+ * input AND for unknown slugs — callers MUST provide a UX fallback (e.g.,
+ * `getTradeLabel(slug) ?? 'Tradesperson'`). The pre-§9.3 contract was
+ * `selectedTradeName ?? 'Tradesperson'`; mirroring that behavior here for
+ * unknown slugs prevents ugly slug-literal display in the chip when the
+ * static catalog drifts from the server's canonical 32 (DeepSeek + Gemini
+ * + code-reviewer WF2-C consensus finding).
+ *
+ * Catalog-drift observability: a Sentry breadcrumb is emitted on miss
+ * (non-empty slug not found in catalog) so server-add-without-mobile-deploy
+ * is observable per Spec 99 §1.2 goal #1 (maximum observability).
  */
 export function getTradeLabel(slug: string | null | undefined): string | null {
   if (!slug) return null;
-  return SLUG_TO_LABEL.get(slug) ?? slug;
+  const label = SLUG_TO_LABEL.get(slug);
+  if (!label) {
+    // Defensive: log catalog drift. Lazy-import Sentry to keep this module
+    // import-cycle-free and tree-shakeable.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const Sentry = require('@sentry/react-native');
+      Sentry.addBreadcrumb({
+        category: 'catalog-drift',
+        message: 'getTradeLabel: unknown slug',
+        level: 'warning',
+        data: { slug },
+      });
+    } catch {
+      /* Sentry not initialized in tests / cold-boot — non-fatal */
+    }
+    return null;
+  }
+  return label;
 }

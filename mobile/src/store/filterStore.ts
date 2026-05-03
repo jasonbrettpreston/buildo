@@ -120,6 +120,20 @@ export const useFilterStore = create<FilterState>()(
     {
       name: 'filters',
       storage: createJSONStorage(() => mmkvStorage),
+      // Spec 99 §6.6 + WF2-C code-reviewer HIGH (a): persist DATA fields only,
+      // not action functions. Without `partialize`, every Zustand action
+      // reference is JSON.stringified into the MMKV blob on every state write.
+      // Phase C added more persisted data here (tradeSlug + supplierSelection
+      // are now sole-canonical for these fields), so omitting `partialize`
+      // amplifies the existing waste — fixed now.
+      partialize: (state) => ({
+        radiusKm: state.radiusKm,
+        tradeSlug: state.tradeSlug,
+        homeBaseLocation: state.homeBaseLocation,
+        locationMode: state.locationMode,
+        defaultTab: state.defaultTab,
+        supplierSelection: state.supplierSelection,
+      }),
     },
   ),
 );

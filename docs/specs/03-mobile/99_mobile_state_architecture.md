@@ -107,11 +107,12 @@ This table is **normative**. Adding a field to the mobile app requires adding a 
 
 ### 3.3 Onboarding-Local State (no server mirror)
 
+After §9.3 deduplication, `onboardingStore` holds ONLY these two genuinely-local fields. `selectedTradeName` (display-only mirror) was removed — display sites derive the trade label from the canonical `filterStore.tradeSlug` via `getTradeLabel(slug)` in `mobile/src/lib/onboarding/tradeData.ts`.
+
 | Field | Owner Layer | Canonical Writer | Authorized Readers |
 |-------|-------------|------------------|---------------------|
 | `currentStep` | `onboardingStore` | each onboarding screen calls `setStep('next')` AFTER its PATCH succeeds (Spec 94 §10 Step 11) | AuthGate `getResumePath()` — **MUST be read via `useOnboardingStore.getState().currentStep` inside the effect closure (NEVER subscribed via `useStore((s) => s.currentStep)` per §6.4)** |
-| `selectedTradeName` | `onboardingStore` | `setTrade()` in `profession.tsx` | `path.tsx` for display |
-| `selectedPath` | `onboardingStore` | `setPath()` in `path.tsx` | `address.tsx`, `supplier.tsx` (skip-suppliers branch) |
+| `selectedPath` | `onboardingStore` | `setPath()` in `path.tsx` | `address.tsx`, `supplier.tsx` (skip-suppliers branch), `terms.tsx` (Path L vs Path T branch), `complete.tsx` (display) |
 
 ### 3.4 Engagement (Zustand, in-memory)
 

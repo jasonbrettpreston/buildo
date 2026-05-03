@@ -27,6 +27,10 @@ export default function SupplierScreen() {
   // Spec 99 §9.3: trade is canonical in filterStore. Supplier query is keyed
   // on the canonical trade slug now (was reading the duplicate
   // onboardingStore.selectedTrade mirror — removed in §9.3).
+  // Persistence note: filterStore is MMKV-persisted (Zustand `persist`
+  // middleware with name='filters'), so on cold-boot relaunch mid-onboarding
+  // tradeSlug rehydrates synchronously BEFORE supplier mounts. The B2 server
+  // hydration from useUserProfile then overlays canonical server values.
   const selectedTrade = useFilterStore((s) => s.tradeSlug);
   const selectedPath = useOnboardingStore((s) => s.selectedPath);
   const isPathL = selectedPath === 'leads';
