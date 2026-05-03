@@ -156,6 +156,31 @@ describe('userProfileStore.hydrate — Spec 99 §6.6 idempotency', () => {
     unsubscribe();
   });
 
+  // DeepSeek WF2-Phase-A review #4: cover the null transitions explicitly.
+  // Prior to §9.8 deep-equal, every cold-boot-from-MMKV-with-null state
+  // would notify on a fresh-from-server null too (different object refs in
+  // hydrate's internal logic). Now equal(null, null) === true must bail out.
+  it('hydrate with null → null notificationPrefs does NOT notify (cold-boot idempotency)', () => {
+    const profileWithNullPrefs: UserProfileType = { ...sampleProfile, notification_prefs: null };
+    useUserProfileStore.getState().hydrate(profileWithNullPrefs);
+    const listener = jest.fn();
+    const unsubscribe = useUserProfileStore.subscribe(listener);
+    useUserProfileStore.getState().hydrate(profileWithNullPrefs);
+    expect(listener).not.toHaveBeenCalled();
+    unsubscribe();
+  });
+
+  it('hydrate with object → null notificationPrefs (server revoked prefs) DOES notify', () => {
+    useUserProfileStore.getState().hydrate(sampleProfile);
+    const profileWithRevokedPrefs: UserProfileType = { ...sampleProfile, notification_prefs: null };
+    const listener = jest.fn();
+    const unsubscribe = useUserProfileStore.subscribe(listener);
+    useUserProfileStore.getState().hydrate(profileWithRevokedPrefs);
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(useUserProfileStore.getState().notificationPrefs).toBeNull();
+    unsubscribe();
+  });
+
   it('hydrate with notificationPrefs change DOES notify', () => {
     useUserProfileStore.getState().hydrate(sampleProfile);
     const profileWithChangedPrefs: UserProfileType = {

@@ -158,7 +158,18 @@ function AuthGate() {
     // the new user. Skip the routing decision entirely until the profile's
     // user_id matches the live Firebase uid; the next fetch resolution will
     // re-fire this effect with the correct profile.
-    if (profile && profile.user_id !== user.uid) return;
+    //
+    // Defensive `profile.user_id &&` check (DeepSeek WF2-Phase-A review #1):
+    // if the server returns a profile with empty/missing user_id (data
+    // corruption, malformed cache), the bare `!==` comparison would wedge
+    // routing forever. Treat falsy as "trust the comparison failed" and log
+    // to Sentry so the underlying corruption is observable.
+    if (profile && !profile.user_id) {
+      Sentry.captureMessage('stale_profile_missing_user_id', {
+        extra: { firebaseUid: user.uid, profileKeys: Object.keys(profile) },
+      });
+    }
+    if (profile && profile.user_id && profile.user_id !== user.uid) return;
 
     // Branch 5: profile loaded — route on onboarding_complete.
     // For !onboarding_complete users we resume at the FURTHEST step they've

@@ -93,14 +93,19 @@ export const useAuthStore = create<AuthState>()(
         // device sees no stale data. MMKV is preserved per §3.4 so the same user
         // returning on the same device gets fast hydration.
         await auth().signOut();
-        // Spec 99 §B5 + §9.10: purge the user-profile query (in-memory + MMKV
-        // persister) so the next sign-in (potentially a different user on a
-        // shared device) cannot read the previous user's profile from cache.
-        // `enabled: !!user` only stops NEW fetches; in-flight fetches resolve
-        // and write to the cache, and the MMKV persister rehydrates on next
-        // mount with the previous user's data — a PIPEDA leak on shared devices.
-        // Surgical (only ['user-profile']) so other queries keep their cache.
-        queryClient.removeQueries({ queryKey: ['user-profile'] });
+        // Spec 99 §B5 + §9.10: purge ALL TanStack Query cache so the next
+        // sign-in (potentially a different user on a shared device) cannot
+        // read the previous user's data from cache. `enabled: !!user` only
+        // stops NEW fetches; in-flight fetches resolve and write to the
+        // cache, and the MMKV persister rehydrates on next mount with the
+        // previous user's data — a PIPEDA leak on shared devices.
+        //
+        // `clear()` (not `removeQueries({queryKey:['user-profile']})`) per
+        // Gemini WF2-Phase-A review #5: lead-feed, leads, flight-board, and
+        // any future user-scoped queries are ALSO under PIPEDA — narrow
+        // purge would leak them. The mobile app currently has no
+        // non-user-scoped queries, so the blast radius is zero.
+        queryClient.clear();
         useFilterStore.getState().reset();
         useNotificationStore.getState().reset();
         useOnboardingStore.getState().reset();

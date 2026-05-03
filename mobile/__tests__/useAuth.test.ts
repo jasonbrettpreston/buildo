@@ -79,6 +79,7 @@ jest.mock('@/hooks/useUserProfile', () => ({
 }));
 const mockInvalidateQueries = jest.fn();
 const mockRemoveQueries = jest.fn();
+const mockClearQueries = jest.fn();
 jest.mock('@/lib/queryClient', () => ({
   // The mock needs to satisfy TanStack's invalidateQueries return type
   // (Promise<void>). Internally we just record the filters arg for assertion.
@@ -89,6 +90,9 @@ jest.mock('@/lib/queryClient', () => ({
     },
     removeQueries: (filters: unknown): void => {
       mockRemoveQueries(filters);
+    },
+    clear: (): void => {
+      mockClearQueries();
     },
   },
 }));
@@ -152,17 +156,25 @@ describe('authStore.signOut', () => {
   // next sign-in (possibly a different user on a shared device) cannot read
   // the previous user's profile. The MMKV-persisted TanStack cache otherwise
   // rehydrates on next mount with stale data — PIPEDA leak.
-  it('removes user-profile query from cache after firebase signOut', async () => {
+  it('clears all TanStack Query cache after firebase signOut and BEFORE Zustand resets', async () => {
     mockSignOut.mockClear();
-    const removeBefore = (mockRemoveQueries as jest.Mock | undefined);
-    if (removeBefore) removeBefore.mockClear();
+    mockClearQueries.mockClear();
+    // Spy on filterStore.reset so we can assert ordering against it
+    // (code-reviewer WF2-Phase-A review HIGH: the cache purge MUST fire before
+    // peer-store resets; otherwise an in-flight fetch resolving during the
+    // reset window could write previous-user data to cache after the purge.)
+    const filterResetSpy = jest.spyOn(useFilterStore.getState(), 'reset');
     await useAuthStore.getState().signOut();
-    expect(mockRemoveQueries).toHaveBeenCalledWith({ queryKey: ['user-profile'] });
-    // Order: removeQueries fires AFTER firebase signOut completes (so the
-    // listener's null-fire doesn't race against the cache purge).
+    expect(mockClearQueries).toHaveBeenCalledTimes(1);
     const signOutOrder = mockSignOut.mock.invocationCallOrder[0];
-    const removeOrder = mockRemoveQueries.mock.invocationCallOrder.at(-1) ?? -1;
-    expect(removeOrder).toBeGreaterThan(signOutOrder);
+    const clearOrder = mockClearQueries.mock.invocationCallOrder.at(-1) ?? -1;
+    const filterResetOrder = filterResetSpy.mock.invocationCallOrder.at(-1) ?? -1;
+    // AFTER firebase signOut: prevents the listener's null-fire from racing.
+    expect(clearOrder).toBeGreaterThan(signOutOrder);
+    // BEFORE Zustand resets: prevents in-flight fetches from rewriting cache
+    // during the reset window (Spec 99 §B5).
+    expect(clearOrder).toBeLessThan(filterResetOrder);
+    filterResetSpy.mockRestore();
   });
 
   it('emits signout_initiated telemetry before firebaseSignOut', async () => {

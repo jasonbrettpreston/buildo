@@ -113,7 +113,7 @@ export default function AppLayout() {
   trackRender('AppLayout');
   // Hydrates filterStore + userProfileStore from server profile on every authenticated launch.
   // Must live here so it runs for all authenticated app screens (feed, map, settings, etc.)
-  const { data: profile, isLoading } = useUserProfile();
+  const { data: profile, isLoading, isFetching } = useUserProfile();
 
   const unread = useNotificationStore((s) => s.unreadFlightBoard);
   const paywallDismissed = usePaywallStore((s) => s.dismissed);
@@ -198,17 +198,22 @@ export default function AppLayout() {
   );
 
   // Loading guard: never flash the paywall while subscription_status is
-  // unresolved (Spec 96 §9 explicit). Per Spec 99 §6.5, gating on isFetching
-  // is BANNED because it toggles on every refetch and flips the gate between
-  // SubscriptionLoadingGuard and Tabs, mounting/unmounting the entire tab
-  // tree at high frequency (incident #3, 2026-05-02). isLoading is the only
-  // stable signal: true on initial fetch, false after first resolve. Background
-  // refetches (isFetching=true with profile already loaded) MUST be silent —
-  // the rendered tree stays mounted; refetch swaps data when it resolves.
-  // The post-payment 'expired → active' transition is handled by the
-  // statusTransition effect (lines 164-172) which clears the paywall and
-  // invalidates ['leads'] without flicker.
+  // unresolved (Spec 96 §9 explicit). Per Spec 99 §6.5, BROAD gating on
+  // isFetching is BANNED — it toggles on every refetch and flips the gate
+  // between SubscriptionLoadingGuard and Tabs, mounting/unmounting the entire
+  // tab tree at high frequency (incident #3, 2026-05-02). isLoading is the
+  // only stable signal for the cold-boot first fetch.
   if (isLoading || profile == null || profile.subscription_status == null) {
+    return <SubscriptionLoadingGuard />;
+  }
+  // NARROW expired-refetch guard: when the cached subscription_status is
+  // 'expired' AND a refetch is in flight, suppress the paywall mount until the
+  // refetch resolves. This protects the post-payment 'expired→active'
+  // transition (Spec 96 §9 anti-flicker) without re-introducing the broad
+  // isFetching gate that caused incident #3 — for trial/active/past_due/
+  // admin_managed users, this branch never fires (status !== 'expired') so
+  // background refetches stay silent and the tab tree stays mounted.
+  if (isFetching && profile.subscription_status === 'expired') {
     return <SubscriptionLoadingGuard />;
   }
 
