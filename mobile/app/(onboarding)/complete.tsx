@@ -20,7 +20,6 @@ import { successNotification } from '@/lib/haptics';
 export default function CompleteScreen() {
   const router = useRouter();
   const selectedTradeName = useOnboardingStore((s) => s.selectedTradeName);
-  const markComplete = useOnboardingStore((s) => s.markComplete);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -66,11 +65,15 @@ export default function CompleteScreen() {
         body: JSON.stringify({ default_tab: 'feed', onboarding_complete: true }),
       });
       successNotification();
-      markComplete();
+      // Spec 99 §9.2b: no markComplete() call. Server is sole source of
+      // truth — AuthGate's next refetch sees onboarding_complete=true and
+      // routes to (app)/ via Branch 5b/5c. The router.replace below races
+      // ahead of the refetch, but AuthGate's guard handles the brief window.
       router.replace('/(app)/');
     } catch {
       setErrorMessage('Could not complete setup. Please try again.');
-      // Do NOT call markComplete on error — user stays on screen and can retry.
+      // On error: server PATCH did not commit; user stays on this screen
+      // and can retry. No local mirror to roll back (Spec 99 §9.2b).
     } finally {
       setIsLoading(false);
     }

@@ -12,7 +12,6 @@ import { fetchWithAuth, AccountDeletedError, ApiError } from '@/lib/apiClient';
 import { UserProfileSchema, type UserProfileType } from '@/lib/userProfile.schema';
 import { useFilterStore } from '@/store/filterStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
-import { useOnboardingStore } from '@/store/onboardingStore';
 import { useDepsTracker } from '@/lib/debug/loopDetector';
 
 const profileStorage = createMMKV({ id: 'user-profile-cache' });
@@ -93,15 +92,11 @@ export function useUserProfile(options?: { enabled?: boolean }) {
     if (query.data) {
       hydrateFilter(query.data);
       hydrateUserProfile(query.data);
-      // Keep onboardingStore.isComplete in sync with server truth.
-      // Do NOT remove: (onboarding)/_layout.tsx and IncompleteBanner.tsx both
-      // read isComplete for routing/display. Removing this bridge would break
-      // the onboarding-complete guard and banner on new-device reinstall.
-      // Full removal requires migrating those consumers to read server state
-      // directly (tracked in review_followups.md — DEFER 2).
-      if (query.data.onboarding_complete && !useOnboardingStore.getState().isComplete) {
-        useOnboardingStore.getState().markComplete();
-      }
+      // Spec 99 §9.2b: the markComplete() bridge that previously kept
+      // onboardingStore.isComplete in sync with server truth is REMOVED.
+      // Server `profile.onboarding_complete` is now the SOLE source of truth
+      // (Spec 99 §3.5). Consumers — IncompleteBanner (§9.2a), AuthGate (§5.3
+      // Branch 5), getResumePath fallback — all read server state directly.
     }
   }, [query.data, hydrateFilter, hydrateUserProfile]);
   useDepsTracker('useUserProfile.hydrate', [query.data, hydrateFilter, hydrateUserProfile]);

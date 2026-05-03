@@ -39,17 +39,18 @@ export interface ResumeProfile {
 }
 
 // NOTE: 'complete' is INTENTIONALLY excluded from setStep calls in onboarding
-// screens. The terminal store action is markComplete() (onboardingStore.ts:93),
-// which sets `{ isComplete: true, currentStep: null }` atomically — there is
-// no screen that calls setStep('complete'). This entry exists ONLY as a
-// defensive no-op if a stale MMKV write or future regression somehow stores
-// 'complete' as currentStep, so getResumePath returns a sensible navigable
-// path instead of cascading to the fallback (which would route to /path,
+// screens. Per Spec 99 §9.2c, the terminal action is the PATCH itself:
+// `complete.tsx` and `terms.tsx` write `onboarding_complete: true` to the
+// server, then `router.replace('/(app)/')`. AuthGate's next refetch sees
+// the server truth and routes via Branch 5b/5c. There is no local mirror
+// (`isComplete` and `markComplete` were removed in §9.2c).
+//
+// The 'complete' entry in STEP_TO_SCREEN exists ONLY as a defensive no-op
+// if a stale MMKV write or future regression somehow stores 'complete' as
+// currentStep. getResumePath then returns a sensible navigable path
+// instead of cascading to the fallback (which would route to /path,
 // potentially looping a user who is genuinely at the end of onboarding).
-// WF2 reviewer flagged the OnboardingStep union member as a future-bug trap
-// (a developer might call setStep('complete') instead of markComplete() and
-// produce a persistent /(onboarding)/complete loop). The defense is here;
-// the convention is enforced by code review, NOT the type system.
+// The convention is enforced by code review, NOT the type system.
 const STEP_TO_SCREEN: Readonly<Record<NonNullable<OnboardingStep>, string>> = {
   profession: '/(onboarding)/profession',
   path: '/(onboarding)/path',

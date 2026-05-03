@@ -51,7 +51,6 @@ export default function TermsScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { markComplete } = useOnboardingStore.getState();
   const { setLocationMode } = useFilterStore.getState();
 
   const bothChecked = tosChecked && privacyChecked;
@@ -88,19 +87,21 @@ export default function TermsScreen() {
             onboarding_complete: true,
           }),
         });
-        markComplete();
+        // Spec 99 §9.2b: no markComplete() call. Server is sole source of
+        // truth (Spec 99 §3.5). AuthGate's next refetch sees
+        // onboarding_complete=true and routes to (app)/ via Branch 5.
         setLocationMode('gps_live');
         router.replace('/(app)/flight-board');
       }
     } catch {
       setErrorMessage('Setup failed. Please try again.');
-      // Do NOT advance step or call markComplete on error.
+      // On error: server PATCH did not commit; user stays on this screen
+      // and can retry. No local mirror to roll back (Spec 99 §9.2b).
     } finally {
       setIsLoading(false);
       isSubmittingRef.current = false;
     }
-    // stepStore advance is handled inside markComplete() or in complete.tsx for Path L.
-  }, [bothChecked, goesToComplete, markComplete, setLocationMode, router]);
+  }, [bothChecked, goesToComplete, setLocationMode, router]);
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-950" edges={['top', 'bottom']}>

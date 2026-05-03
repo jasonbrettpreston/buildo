@@ -53,14 +53,12 @@ interface OnboardingState {
   homeBaseLat: number | null;
   homeBaseLng: number | null;
   supplierSelection: string | null;
-  isComplete: boolean;
 
   setStep: (step: OnboardingStep) => void;
   setTrade: (slug: string, name: string) => void;
   setPath: (path: OnboardingPath) => void;
   setLocation: (opts: { mode: LocationMode; lat?: number; lng?: number }) => void;
   setSupplier: (name: string | null) => void;
-  markComplete: () => void;
   reset: () => void;
 }
 
@@ -73,7 +71,6 @@ const INITIAL_STATE = {
   homeBaseLat: null as number | null,
   homeBaseLng: null as number | null,
   supplierSelection: null as string | null,
-  isComplete: false,
 };
 
 export const useOnboardingStore = create<OnboardingState>()(
@@ -90,12 +87,26 @@ export const useOnboardingStore = create<OnboardingState>()(
           homeBaseLng: lng ?? null,
         }),
       setSupplier: (name) => set({ supplierSelection: name }),
-      markComplete: () => set({ isComplete: true, currentStep: null }),
       reset: () => set({ ...INITIAL_STATE }),
     }),
     {
       name: 'onboarding',
       storage: createJSONStorage(() => mmkvStorage),
+      // Spec 99 §9.2c: bumped from version undefined→1 when isComplete +
+      // markComplete were removed (server profile.onboarding_complete is
+      // now the sole source of truth — Spec 99 §3.5). The migrate function
+      // strips the legacy `isComplete` key from MMKV-persisted state on
+      // existing installs so it doesn't linger forever after upgrade.
+      version: 1,
+      migrate: (persistedState: unknown, version: number) => {
+        if (version === undefined || version < 1) {
+          // v0 had `isComplete: boolean`. Drop it; server is canonical now.
+          const { isComplete: _isComplete, ...rest } =
+            (persistedState ?? {}) as { isComplete?: boolean } & Partial<OnboardingState>;
+          return rest as OnboardingState;
+        }
+        return persistedState as OnboardingState;
+      },
     },
   ),
 );

@@ -86,28 +86,58 @@ describe('onboardingStore', () => {
     expect(useOnboardingStore.getState().currentStep).toBe('supplier');
   });
 
-  it('markComplete sets isComplete=true and currentStep=null', () => {
-    const { useOnboardingStore } = require('@/store/onboardingStore');
-    useOnboardingStore.getState().reset();
-    useOnboardingStore.getState().setStep('terms');
-    useOnboardingStore.getState().markComplete();
-    expect(useOnboardingStore.getState().isComplete).toBe(true);
-    expect(useOnboardingStore.getState().currentStep).toBeNull();
-  });
+  // Spec 99 §9.2c: markComplete + isComplete REMOVED. Server
+  // profile.onboarding_complete is now the sole source of truth.
+  // Terminal-step behavior (atomic isComplete=true + currentStep=null)
+  // is replaced by: PATCH onboarding_complete=true server-side; AuthGate
+  // refetch reads server truth; routes to (app)/. No local mirror.
+  // currentStep stays at its last value (e.g., 'terms') after completion;
+  // it's only used by getResumePath when onboarding_complete=false.
 
   it('reset returns all fields to initial state', () => {
     const { useOnboardingStore } = require('@/store/onboardingStore');
     useOnboardingStore.getState().setTrade('plumbing', 'Plumbing');
     useOnboardingStore.getState().setPath('leads');
-    useOnboardingStore.getState().markComplete();
+    useOnboardingStore.getState().setStep('terms');
     useOnboardingStore.getState().reset();
     const s = useOnboardingStore.getState();
     expect(s.selectedTrade).toBeNull();
     expect(s.selectedTradeName).toBeNull();
     expect(s.selectedPath).toBeNull();
     expect(s.locationMode).toBeNull();
-    expect(s.isComplete).toBe(false);
     expect(s.currentStep).toBeNull();
+    // isComplete no longer exists on the state shape (Spec 99 §3.5)
+    expect((s as Record<string, unknown>).isComplete).toBeUndefined();
+  });
+
+  it('persist migrate strips legacy isComplete key from v0 state', () => {
+    // Spec 99 §9.2c: existing users have `isComplete: true|false` persisted
+    // in MMKV. The migrate function (version 0→1) drops it on rehydrate.
+    const { useOnboardingStore } = require('@/store/onboardingStore');
+    // Simulate a v0 persisted state by reading the migrate function.
+    // The actual test of migrate runs inside Zustand's persist middleware
+    // on next hydrate; we assert the function is configured correctly via
+    // the persist options shape (introspection is per Zustand v5 API).
+    const persistApi = useOnboardingStore.persist;
+    const options = persistApi?.getOptions?.();
+    expect(options?.version).toBe(1);
+    // Run the migrate function directly on a synthetic v0 state shape:
+    const v0State = {
+      currentStep: 'terms',
+      selectedTrade: 'plumbing',
+      selectedTradeName: 'Plumbing',
+      selectedPath: 'leads',
+      locationMode: null,
+      homeBaseLat: null,
+      homeBaseLng: null,
+      supplierSelection: null,
+      isComplete: true, // legacy field
+    };
+    const migrated = options?.migrate?.(v0State, 0);
+    expect(migrated).toBeDefined();
+    expect((migrated as Record<string, unknown>).isComplete).toBeUndefined();
+    expect((migrated as Record<string, unknown>).currentStep).toBe('terms');
+    expect((migrated as Record<string, unknown>).selectedTrade).toBe('plumbing');
   });
 
   it('setTrade stores both slug and display name', () => {

@@ -70,13 +70,17 @@ describe('getResumePath', () => {
   });
 
   it("DEFENSIVE: returns /(onboarding)/complete if currentStep='complete' is somehow written", () => {
-    // No screen calls setStep('complete') — markComplete() is the terminal
-    // action and it sets currentStep to null. This case verifies that IF a
-    // stale MMKV write or future regression stores 'complete' as currentStep,
-    // getResumePath still returns a valid navigable path rather than falling
-    // through to the path-based fallback (which would route an end-of-flow
-    // user back to /path, potentially looping). The convention against
-    // setStep('complete') is enforced by code review, not the type system.
+    // No screen calls setStep('complete'). Per Spec 99 §9.2c, the terminal
+    // action is the PATCH that writes onboarding_complete=true to server;
+    // AuthGate's refetch reads server truth and routes to (app)/. There is
+    // no local mirror to reset (isComplete + markComplete REMOVED in §9.2c).
+    //
+    // This case verifies that IF a stale MMKV write or future regression
+    // stores 'complete' as currentStep, getResumePath still returns a valid
+    // navigable path rather than falling through to the path-based fallback
+    // (which would route an end-of-flow user back to /path, potentially
+    // looping). The convention against setStep('complete') is enforced by
+    // code review, not the type system.
     const { getResumePath } = require('@/lib/onboarding/getResumePath');
     const profile = {
       trade_slug: 'framing',
