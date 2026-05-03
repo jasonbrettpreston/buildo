@@ -13,12 +13,14 @@ import Animated, {
   interpolate,
   Easing,
 } from 'react-native-reanimated';
+import { useQueryClient } from '@tanstack/react-query';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { successNotification } from '@/lib/haptics';
 
 export default function CompleteScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const selectedTradeName = useOnboardingStore((s) => s.selectedTradeName);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -66,9 +68,15 @@ export default function CompleteScreen() {
       });
       successNotification();
       // Spec 99 §9.2b: no markComplete() call. Server is sole source of
-      // truth — AuthGate's next refetch sees onboarding_complete=true and
-      // routes to (app)/ via Branch 5b/5c. The router.replace below races
-      // ahead of the refetch, but AuthGate's guard handles the brief window.
+      // truth (Spec 99 §3.5).
+      // CRITICAL — Spec 99 §B3 mandate: every SoT-mutating PATCH MUST
+      // invalidate the SoT cache. Without this, TanStack returns the
+      // pre-PATCH cached profile (onboarding_complete=false) for up to
+      // staleTime (5 min). AuthGate Branch 5d would then bounce the user
+      // back to onboarding immediately after router.replace lands. Await
+      // the invalidate so the next render sees fresh data on entry to
+      // /(app)/. (WF2-B adversarial trio finding C1.)
+      await queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       router.replace('/(app)/');
     } catch {
       setErrorMessage('Could not complete setup. Please try again.');

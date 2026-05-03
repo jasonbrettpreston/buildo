@@ -8,6 +8,7 @@ import { View, Text, Pressable, ActivityIndicator, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import { useQueryClient } from '@tanstack/react-query';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { useFilterStore } from '@/store/filterStore';
 import { fetchWithAuth } from '@/lib/apiClient';
@@ -52,6 +53,7 @@ export default function TermsScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { setLocationMode } = useFilterStore.getState();
+  const queryClient = useQueryClient();
 
   const bothChecked = tosChecked && privacyChecked;
 
@@ -87,10 +89,15 @@ export default function TermsScreen() {
             onboarding_complete: true,
           }),
         });
-        // Spec 99 §9.2b: no markComplete() call. Server is sole source of
-        // truth (Spec 99 §3.5). AuthGate's next refetch sees
-        // onboarding_complete=true and routes to (app)/ via Branch 5.
         setLocationMode('gps_live');
+        // CRITICAL — Spec 99 §B3 mandate: every SoT-mutating PATCH MUST
+        // invalidate the SoT cache. Without this, TanStack returns the
+        // pre-PATCH cached profile (onboarding_complete=false) for up to
+        // staleTime (5 min). AuthGate Branch 5d would then bounce the
+        // user back to onboarding immediately after router.replace lands.
+        // Await the invalidate so the next render sees fresh server truth.
+        // (WF2-B adversarial trio finding C1.)
+        await queryClient.invalidateQueries({ queryKey: ['user-profile'] });
         router.replace('/(app)/flight-board');
       }
     } catch {
@@ -101,7 +108,7 @@ export default function TermsScreen() {
       setIsLoading(false);
       isSubmittingRef.current = false;
     }
-  }, [bothChecked, goesToComplete, setLocationMode, router]);
+  }, [bothChecked, goesToComplete, setLocationMode, queryClient, router]);
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-950" edges={['top', 'bottom']}>

@@ -4,7 +4,9 @@
 // Unit tests for:
 //  - snapToGrid: grid alignment, post-snap re-validation
 //  - isInsideToronto: bounds checking
-//  - onboardingStore: step advancement, markComplete, reset, setTrade
+//  - onboardingStore: step advancement, reset, setTrade, persist migrate
+//    (markComplete + isComplete REMOVED in Spec 99 §9.2c — server profile is
+//    the sole source of truth for onboarding completion)
 
 jest.mock('react-native-mmkv', () => ({
   createMMKV: () => ({

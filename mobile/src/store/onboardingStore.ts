@@ -92,18 +92,33 @@ export const useOnboardingStore = create<OnboardingState>()(
     {
       name: 'onboarding',
       storage: createJSONStorage(() => mmkvStorage),
-      // Spec 99 §9.2c: bumped from version undefined→1 when isComplete +
+      // Spec 99 §9.2c: bumped from version 0→1 when isComplete +
       // markComplete were removed (server profile.onboarding_complete is
       // now the sole source of truth — Spec 99 §3.5). The migrate function
-      // strips the legacy `isComplete` key from MMKV-persisted state on
-      // existing installs so it doesn't linger forever after upgrade.
+      // explicitly whitelists known v1 keys, dropping `isComplete` from
+      // MMKV-persisted state on existing installs and any future-unknown
+      // keys that would otherwise leak through (DeepSeek WF2-B review M4 —
+      // forward-compat for §9.3 multi-version migrate chain).
+      // Zustand v5 `persist` normalizes a missing version to 0 before calling
+      // migrate, so a `version === undefined` arm would be dead code
+      // (code-reviewer WF2-B review H1).
       version: 1,
       migrate: (persistedState: unknown, version: number) => {
-        if (version === undefined || version < 1) {
-          // v0 had `isComplete: boolean`. Drop it; server is canonical now.
-          const { isComplete: _isComplete, ...rest } =
-            (persistedState ?? {}) as { isComplete?: boolean } & Partial<OnboardingState>;
-          return rest as OnboardingState;
+        if (version < 1) {
+          const v0 = (persistedState ?? {}) as Partial<OnboardingState>;
+          // Whitelist: only known v1 keys survive. `isComplete` is dropped
+          // (no longer in OnboardingState shape); any unknown keys also
+          // dropped to prevent silent forward-bleed into v2.
+          return {
+            currentStep: v0.currentStep ?? null,
+            selectedTrade: v0.selectedTrade ?? null,
+            selectedTradeName: v0.selectedTradeName ?? null,
+            selectedPath: v0.selectedPath ?? null,
+            locationMode: v0.locationMode ?? null,
+            homeBaseLat: v0.homeBaseLat ?? null,
+            homeBaseLng: v0.homeBaseLng ?? null,
+            supplierSelection: v0.supplierSelection ?? null,
+          } as OnboardingState;
         }
         return persistedState as OnboardingState;
       },
