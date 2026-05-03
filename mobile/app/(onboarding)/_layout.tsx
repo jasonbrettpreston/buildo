@@ -9,6 +9,7 @@
 // profile in MMKV cache vs. real-user `markComplete()` bridge), the two
 // routers undid each other and pinged the user between groups indefinitely
 // (Maximum update depth exceeded). Discovered 2026-05-02 via loopDetector
+// (now `stateDebug` per Spec 99 §9.5)
 // instrumentation; fix is to leave routing to AuthGate alone.
 import { Stack } from 'expo-router';
 

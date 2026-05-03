@@ -415,7 +415,7 @@ Promote `mobile/src/lib/debug/loopDetector.ts` (currently temporary) to `mobile/
 - Track effect fires with dep diffs via `useDepsTracker(tag, deps)` (keep)
 - Detect render storms (>30 renders/sec) and log `[LOOP-DETECTED]` once with the offending tag (keep)
 
-In **production builds** (`!__DEV__`), the hub is a no-op stub (zero overhead). The current `loopDetector` does NOT have this guard — must add per §9.5.
+In **production builds** (`!__DEV__`), the hub is a no-op stub (zero overhead). Implemented in §9.5 (commit `af52c75`) — every export early-returns; `useDepsTracker` is exported as `__DEV__ ? useDepsTrackerDev : useDepsTrackerNoop` (module-scope ternary) so the production noop has zero hook calls (Hermes/Metro constant-folds the ternary at build time).
 
 ### 7.2 Cache invalidation telemetry
 
@@ -467,9 +467,9 @@ Each render gate condition (per §6.5) MUST have a test asserting that toggling 
 
 ### 8.4 The stateDebug hub as CI regression guard
 
-**Prerequisite:** §9.5 must complete first (currently `loopDetector.ts` exposes `dumpDiagnostics` but lacks `__DEV__` guards; promotion to `stateDebug.ts` happens in §9.5).
+**Prerequisite:** §9.5 ✅ done (commit `af52c75` promoted `loopDetector.ts` → `stateDebug.ts` with `__DEV__` guards).
 
-`stateDebug.dumpDiagnostics()` is permitted in CI integration tests as an assertion — `expect(maxRendersPerSecond).toBeLessThan(20)`. This catches loop regressions before merge.
+`stateDebug.dumpDiagnostics()` is permitted in CI integration tests as an assertion — `expect(maxRendersPerSecond).toBeLessThan(20)`. **Not yet actionable as written:** `dumpDiagnostics()` returns a `string` (human-readable snapshot), not a structured object. Tracked as **§9.5b** (NEW followup): add a `getDiagnosticsSnapshot(): { renders: Array<{tag, total, last1s}>, effects: Array<...> }` accessor for parse-free CI assertions (Gemini WF3-§9.5 review #4).
 
 ### 8.5 Store-enumeration test (§B5 reset coverage)
 
@@ -504,7 +504,8 @@ The following items eliminate the duplication identified in the audit and resolv
 | 9.2c | P1 | depends on 9.2b — Remove `isComplete` field + `markComplete()` action from `onboardingStore`. Add `persist` `migrate` function (version bump 0→1) to drop the legacy MMKV key for existing users. | WF2 | `mobile/src/store/onboardingStore.ts` |
 | 9.3 | P1 | Remove `selectedTrade`, `selectedTradeName`, `locationMode`, `homeBaseLat`, `homeBaseLng`, `supplierSelection` duplicates from `onboardingStore`. Add `persist` `migrate` function (version bump) to drop legacy MMKV keys. Update onboarding screens to write to `filterStore` after server PATCH success (no local mirror). | WF2 | `mobile/src/store/onboardingStore.ts`, `mobile/app/(onboarding)/profession.tsx`, `address.tsx`, `supplier.tsx` |
 | 9.1 | ✅ DONE | Eliminated `user-profile-cache` MMKV blob. TanStack persister is now sole canonical profile cache (verified sync via `mmkvPersister.restoreClient` — no cold-boot regression). §B5 dropped the `clearUserProfileCache()` call. One-time `cleanupLegacyUserProfileCache()` migration in `mobile/src/lib/migrations/` purges the orphaned blob on existing installs (gated by `legacyStorage.contains('profile')` to avoid materializing an empty file on fresh installs per Gemini WF3-§9.1 review F2). | WF3 | `mobile/src/hooks/useUserProfile.ts`, `mobile/src/store/authStore.ts`, `mobile/src/lib/migrations/userProfileCacheCleanup.ts` |
-| 9.5 | P1 | Promote `loopDetector.ts` → `mobile/src/lib/debug/stateDebug.ts` with `__DEV__` guard. Production builds compile to no-op. | WF3 | `mobile/src/lib/debug/` |
+| 9.5 | ✅ DONE | Promoted `loopDetector.ts` → `mobile/src/lib/debug/stateDebug.ts` (commit `af52c75`). Every export `__DEV__`-guarded. `useDepsTracker` exported as module-scope ternary (`__DEV__ ? useDepsTrackerDev : useDepsTrackerNoop`) so production noop calls ZERO hooks (Hermes/Metro DCEs the dev impl). `wired` flag persisted on `globalThis` so HMR re-fires of `wireStoreLogging()` don't multiply subscriptions. Production-path test at `mobile/__tests__/stateDebug.prod.test.ts` exercises the `__DEV__ === false` path. | WF3 | `mobile/src/lib/debug/stateDebug.ts`, 5 import-site updates, `mobile/__tests__/stateDebug.prod.test.ts` (NEW) |
+| 9.5b | P2 | NEW (Gemini WF3-§9.5 #4): add structured `getDiagnosticsSnapshot(): {renders, effects}` accessor so §8.4 CI assertions can read counters without parsing the human-readable string. | WF3 | `mobile/src/lib/debug/stateDebug.ts` |
 | 9.6 | P1 | Add AuthGate router branch tests (9 arms per §5.3) | WF2 | `mobile/__tests__/authGate.test.ts` (NEW) |
 | 9.7 | P1 | depends on 9.8 — Idempotency tests for all bridges per §8.1 | WF2 | `mobile/__tests__/bridges.test.ts` (NEW) |
 | 9.9 | P2 | Audit `paywallStore.show()` — verify caller exists OR delete the action | WF3 | `mobile/src/store/paywallStore.ts` |
@@ -528,7 +529,7 @@ The following items eliminate the duplication identified in the audit and resolv
 - All `mobile/app/**/_layout.tsx` — already fixed in prior WF3; further changes per §9.4
 - All `mobile/app/(onboarding)/*.tsx` — modified in §9.3 followup
 - `mobile/src/hooks/useUserProfile.ts` — modified in §9.1 / §9.2 / §9.4
-- `mobile/src/lib/debug/loopDetector.ts` — modified in §9.5
+- `mobile/src/lib/debug/stateDebug.ts` (renamed from `loopDetector.ts` in §9.5) — modify only via §9.5b structured-snapshot followup
 
 ### Cross-Spec Dependencies
 - **This spec is a dependency of:** every future mobile WF that adds state, a store, or a router.

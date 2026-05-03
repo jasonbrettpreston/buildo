@@ -31,10 +31,14 @@ export class ErrorBoundary extends React.Component<Props, State> {
     // only the sanitized message + a 'feature' tag; do NOT pass extra: info.
     const safeMessage = error instanceof Error ? error.message : String(error);
     console.error('[ErrorBoundary]', safeMessage);
-    // Spec 99 §7.1 + §9.5: dump render/effect counts at the moment of
-    // crash. dumpDiagnostics is a no-op in production builds (__DEV__ guard
-    // in stateDebug.ts), so this call is dead-code-eliminated by Metro.
-    console.error(dumpDiagnostics());
+    // Spec 99 §7.1 + §9.5: dump render/effect counts at the moment of crash.
+    // dumpDiagnostics returns '' in production (__DEV__ guard in stateDebug.ts).
+    // Guard against logging an empty string in production crashes — would
+    // emit a useless blank line to Sentry/Crashlytics on every boundary catch
+    // (Gemini WF3-§9.5 review #2 + DeepSeek F6 consensus; Metro DCE strips
+    // function bodies but cannot prove dumpDiagnostics()'s return value here).
+    const diag = dumpDiagnostics();
+    if (diag) console.error(diag);
   }
 
   handleReset = (): void => {

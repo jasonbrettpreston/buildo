@@ -85,15 +85,18 @@ export function trackRender(tag: string): void {
 // Place RIGHT AFTER the real useEffect with the same deps array. Logs
 // fire-count + which dep index changed (with stringified before/after).
 //
-// In production: the hook itself still runs (React requires it for hook-order
-// stability), but the body short-circuits via `__DEV__` so no Maps grow and no
-// console output is emitted. Cost: one useRef + one no-op useEffect per call.
-export function useDepsTracker(tag: string, deps: unknown[]): void {
+// Production: module-scope `__DEV__` ternary at the bottom of this file
+// re-exports a true no-op (zero hooks called). Hook-order stability is
+// preserved because the prod export is a constant-reference noop function
+// that consistently calls zero hooks. Pre-fix used a single export with
+// an `if (!__DEV__) return` inside the useEffect body, which still cost
+// `useRef × 2 + useEffect` scheduling per render in production
+// (Gemini WF3-§9.5 review #1 + DeepSeek F2 consensus).
+function useDepsTrackerDev(tag: string, deps: unknown[]): void {
   const prevDeps = useRef<unknown[] | null>(null);
   const fireCount = useRef(0);
 
   useEffect(() => {
-    if (!__DEV__) return;
     fireCount.current++;
     const changed: string[] = [];
     if (prevDeps.current === null) {
@@ -122,6 +125,15 @@ export function useDepsTracker(tag: string, deps: unknown[]): void {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
+
+// Production no-op: zero hooks, zero closures, zero state. Hermes/Metro
+// constant-folds the `__DEV__` ternary at the export site so the dev impl
+// is fully dead-code-eliminated in release builds.
+function useDepsTrackerNoop(_tag: string, _deps: unknown[]): void {
+  // intentionally empty
+}
+
+export const useDepsTracker = __DEV__ ? useDepsTrackerDev : useDepsTrackerNoop;
 
 export function dumpDiagnostics(): string {
   if (!__DEV__) return '';
@@ -162,11 +174,21 @@ function subscribeStore<T extends object>(name: string, store: SubscribableStore
   });
 }
 
-let wired = false;
+// Persist the wired flag on globalThis (DEV-only) so Metro Fast Refresh of
+// `_layout.tsx` (which re-fires the top-level wireStoreLogging() call) does
+// NOT re-subscribe to all 6 Zustand stores — Zustand store instances survive
+// HMR, so each re-fire would add another listener, multiplying [store:*] log
+// volume per mutation across the dev session. Module-scoped `let wired` was
+// reset on stateDebug.ts HMR; globalThis survives both module and call-site
+// HMR (Gemini WF3-§9.5 review #3 + DeepSeek F3 consensus).
+const WIRED_KEY = '__buildo_stateDebug_wired';
+type GlobalWithFlag = typeof globalThis & { [WIRED_KEY]?: boolean };
+
 export function wireStoreLogging(): void {
   if (!__DEV__) return;
-  if (wired) return;
-  wired = true;
+  const g = globalThis as GlobalWithFlag;
+  if (g[WIRED_KEY]) return;
+  g[WIRED_KEY] = true;
   subscribeStore('auth', useAuthStore as unknown as SubscribableStore<object>);
   subscribeStore('filter', useFilterStore as unknown as SubscribableStore<object>);
   subscribeStore('onboarding', useOnboardingStore as unknown as SubscribableStore<object>);
