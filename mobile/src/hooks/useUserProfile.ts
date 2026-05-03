@@ -1,80 +1,43 @@
 // SPEC LINK: docs/specs/03-mobile/95_mobile_user_profiles.md §9 Step 7
+//             docs/specs/03-mobile/99_mobile_state_architecture.md §9.1 + §B1
 // TanStack Query hook that fetches the user profile on app launch.
 // On success: hydrates both filterStore (feed-scoped fields) and
-// userProfileStore (account-level fields).
-// Fast-path: reads MMKV cache synchronously on mount so the feed is
-// queryable before the network round-trip completes.
+// userProfileStore (account-level fields) per Spec 99 §B2.
+//
+// Persistence: handled exclusively by the TanStack Query persister
+// (PersistQueryClientProvider in mobile/app/_layout.tsx, MMKV-backed via
+// `mmkvPersister`). Spec 99 §9.1 removed the parallel hand-rolled
+// `user-profile-cache` MMKV blob + its readCachedProfile/writeCachedProfile/
+// clearUserProfileCache helpers — they were a duplicate persistence layer
+// that pre-dated the TanStack persister wiring. Single canonical write path
+// now: TanStack auto-persists query.data on mutation; queryClient.clear()
+// in signOut (§9.10) purges both in-memory cache AND the persister blob.
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import * as Sentry from '@sentry/react-native';
-import { createMMKV } from 'react-native-mmkv';
 import { fetchWithAuth, AccountDeletedError, ApiError } from '@/lib/apiClient';
 import { UserProfileSchema, type UserProfileType } from '@/lib/userProfile.schema';
 import { useFilterStore } from '@/store/filterStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
 import { useDepsTracker } from '@/lib/debug/loopDetector';
 
-const profileStorage = createMMKV({ id: 'user-profile-cache' });
-
-function readCachedProfile(): UserProfileType | null {
-  try {
-    const raw = profileStorage.getString('profile');
-    if (!raw) return null;
-    const parsed = UserProfileSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeCachedProfile(profile: UserProfileType): void {
-  try {
-    profileStorage.set('profile', JSON.stringify(profile));
-  } catch {
-    /* best-effort */
-  }
-}
-
-export function clearUserProfileCache(): void {
-  try {
-    profileStorage.remove('profile');
-  } catch {
-    /* best-effort */
-  }
-}
-
 async function fetchProfile(): Promise<UserProfileType> {
   const raw = await fetchWithAuth<{ data: unknown }>('/api/user-profile');
   const parsed = UserProfileSchema.safeParse(raw.data);
   if (!parsed.success) {
     Sentry.captureException(parsed.error, { extra: { context: 'useUserProfile Zod parse' } });
-    // Fall back to MMKV cache on parse failure
-    const cached = readCachedProfile();
-    if (cached) return cached;
-    throw new Error('Profile parse failed and no cache available');
+    // Throw to TanStack's error state — the persister keeps the previous
+    // valid `query.data` accessible, and the retry policy below handles
+    // transient parse failures. Pre-§9.1, this fell back to a parallel MMKV
+    // cache; that cache was redundant with the TanStack persister.
+    throw new Error('Profile response failed schema validation');
   }
-  writeCachedProfile(parsed.data);
   return parsed.data;
 }
 
 export function useUserProfile(options?: { enabled?: boolean }) {
   const hydrateFilter = useFilterStore((s) => s.hydrate);
   const hydrateUserProfile = useUserProfileStore((s) => s.hydrate);
-
-  // Computed once at hook call time — MMKV read is cheap but not render-safe
-  const hasCachedDataRef = useRef<boolean>(readCachedProfile() !== null);
-
-  // Fast-path: synchronously hydrate BOTH stores from MMKV before the query resolves.
-  // This collapses skeleton loading time to <300ms on repeat launches.
-  useEffect(() => {
-    const cached = readCachedProfile();
-    if (cached) {
-      hydrateFilter(cached);
-      hydrateUserProfile(cached);
-    }
-    // Intentionally run on mount only — stable store refs, MMKV is synchronous
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const query = useQuery({
     queryKey: ['user-profile'],
@@ -107,6 +70,5 @@ export function useUserProfile(options?: { enabled?: boolean }) {
     isFetching: query.isFetching,
     isError: query.isError,
     error: query.error,
-    hasCachedData: hasCachedDataRef.current,
   };
 }

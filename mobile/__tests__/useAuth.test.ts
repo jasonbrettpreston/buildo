@@ -73,9 +73,13 @@ jest.mock('@sentry/react-native', () => ({
   captureException: jest.fn(),
   addBreadcrumb: jest.fn(),
 }));
-const mockClearUserProfileCache = jest.fn();
-jest.mock('@/hooks/useUserProfile', () => ({
-  clearUserProfileCache: (...args: unknown[]) => mockClearUserProfileCache(...args),
+// Spec 99 §9.1 removed clearUserProfileCache; mock the cleanup migration
+// helper that authStore imports at module load. Inline jest.fn (NOT a
+// closure-captured const) because the cleanup is invoked at module load
+// — Jest hoists imports above const declarations, so a closure reference
+// would dereference undefined at the moment authStore's import fires.
+jest.mock('@/lib/migrations/userProfileCacheCleanup', () => ({
+  cleanupLegacyUserProfileCache: jest.fn(),
 }));
 const mockInvalidateQueries = jest.fn();
 const mockRemoveQueries = jest.fn();
@@ -265,8 +269,11 @@ describe('initFirebaseAuthListener', () => {
   // mandates fast-hydration for returning users on the same device.
   // -----------------------------------------------------------------
 
-  it('clears user profile cache on first listener fire (cold boot)', async () => {
-    mockClearUserProfileCache.mockClear();
+  // Spec 99 §9.1: clearUserProfileCache() removed (legacy MMKV blob is gone).
+  // The TanStack persister blob is the only profile cache now;
+  // invalidateQueries({queryKey:['user-profile']}) is the sole signal.
+
+  it('invalidates user-profile query on first listener fire (cold boot)', async () => {
     mockInvalidateQueries.mockClear();
     initFirebaseAuthListener();
     const fakeUser = {
@@ -277,12 +284,10 @@ describe('initFirebaseAuthListener', () => {
     };
     authStateHandler?.(fakeUser);
     await new Promise((r) => setImmediate(r));
-    expect(mockClearUserProfileCache).toHaveBeenCalledTimes(1);
     expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['user-profile'] });
   });
 
-  it('does NOT re-clear cache when same uid fires again (token refresh)', async () => {
-    mockClearUserProfileCache.mockClear();
+  it('does NOT re-invalidate when same uid fires again (token refresh)', async () => {
     mockInvalidateQueries.mockClear();
     initFirebaseAuthListener();
     const fakeUser = {
@@ -296,12 +301,10 @@ describe('initFirebaseAuthListener', () => {
     // Second fire with the SAME uid — simulates Firebase token refresh path.
     authStateHandler?.(fakeUser);
     await new Promise((r) => setImmediate(r));
-    expect(mockClearUserProfileCache).toHaveBeenCalledTimes(1);
     expect(mockInvalidateQueries).toHaveBeenCalledTimes(1);
   });
 
-  it('clears cache on UID change (shared-device handoff)', async () => {
-    mockClearUserProfileCache.mockClear();
+  it('invalidates on UID change (shared-device handoff)', async () => {
     mockInvalidateQueries.mockClear();
     initFirebaseAuthListener();
     const userA = {
@@ -320,7 +323,6 @@ describe('initFirebaseAuthListener', () => {
     await new Promise((r) => setImmediate(r));
     authStateHandler?.(userB);
     await new Promise((r) => setImmediate(r));
-    expect(mockClearUserProfileCache).toHaveBeenCalledTimes(2);
     expect(mockInvalidateQueries).toHaveBeenCalledTimes(2);
   });
 

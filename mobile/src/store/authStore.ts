@@ -11,9 +11,14 @@ import { useNotificationStore } from '@/store/notificationStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
 import { usePaywallStore } from '@/store/paywallStore';
-import { clearUserProfileCache } from '@/hooks/useUserProfile';
 import { queryClient } from '@/lib/queryClient';
+import { cleanupLegacyUserProfileCache } from '@/lib/migrations/userProfileCacheCleanup';
 import { identifyUser, resetIdentity, track } from '@/lib/analytics';
+
+// Spec 99 §9.1: one-time legacy cleanup at module load. Removes any stale
+// data in the orphaned `user-profile-cache` MMKV blob from existing installs.
+// Idempotent (module-scoped + MMKV clearAll on empty blob is a no-op).
+cleanupLegacyUserProfileCache();
 
 // react-native-mmkv v4 uses createMMKV() factory (MMKV is now an interface, not a class)
 const storage = createMMKV({ id: 'auth-store' });
@@ -110,7 +115,10 @@ export const useAuthStore = create<AuthState>()(
         useNotificationStore.getState().reset();
         useOnboardingStore.getState().reset();
         useUserProfileStore.getState().reset();
-        clearUserProfileCache();
+        // Spec 99 §9.1: removed clearUserProfileCache() — the legacy MMKV
+        // blob (`user-profile-cache`) is gone. queryClient.clear() above
+        // already purges the TanStack persister blob (the only remaining
+        // profile cache).
         set({ user: null, idToken: null, isLoading: false });
         // Reset PostHog identity AFTER the in-memory store reset so the
         // distinctId is cleared at a clean session boundary; any subsequent
@@ -189,7 +197,9 @@ export function initFirebaseAuthListener(): () => void {
           });
           track('auth_user_switch');
         }
-        clearUserProfileCache();
+        // Spec 99 §9.1: clearUserProfileCache() removed (legacy MMKV blob is
+        // gone). The TanStack persister blob is invalidated below — its
+        // refetch will write the new user's profile, replacing the stale one.
         void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
         lastKnownUid = expectedUid;
       }
