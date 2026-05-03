@@ -19,7 +19,7 @@ import { fetchWithAuth, AccountDeletedError, ApiError } from '@/lib/apiClient';
 import { UserProfileSchema, type UserProfileType } from '@/lib/userProfile.schema';
 import { useFilterStore } from '@/store/filterStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
-import { useDepsTracker } from '@/lib/debug/loopDetector';
+import { useDepsTracker } from '@/lib/debug/stateDebug';
 
 // Spec 99 §B1 + WF3-§9.1 adversarial review F2 (DeepSeek + code-reviewer +
 // Gemini consensus): a deterministic schema-drift error MUST short-circuit

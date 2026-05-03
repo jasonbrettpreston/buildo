@@ -32,7 +32,7 @@ import { lightImpact } from '@/lib/haptics';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { SubscriptionLoadingGuard } from '@/components/paywall/SubscriptionLoadingGuard';
 import { PaywallScreen } from '@/components/paywall/PaywallScreen';
-import { trackRender, useDepsTracker } from '@/lib/debug/loopDetector';
+import { trackRender, useDepsTracker } from '@/lib/debug/stateDebug';
 
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 83 : 60;
 

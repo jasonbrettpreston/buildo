@@ -7,7 +7,7 @@
 // transition into the gate feels part of the same loading sequence.
 
 import { View, ActivityIndicator } from 'react-native';
-import { trackRender } from '@/lib/debug/loopDetector';
+import { trackRender } from '@/lib/debug/stateDebug';
 
 export function SubscriptionLoadingGuard() {
   trackRender('SubscriptionLoadingGuard');

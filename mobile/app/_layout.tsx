@@ -23,9 +23,11 @@ import { registerPushToken } from '@/lib/pushTokens';
 import { successNotification } from '@/lib/haptics';
 import { NotificationToast, type NotificationType } from '@/components/shared/NotificationToast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { trackRender, useDepsTracker, wireStoreLogging } from '@/lib/debug/loopDetector';
+import { trackRender, useDepsTracker, wireStoreLogging } from '@/lib/debug/stateDebug';
 
-// DIAGNOSTIC: wire Zustand subscribers once at module load. Remove with loopDetector.
+// Spec 99 §7.1 + §9.5: wire Zustand subscribers once at module load. The
+// stateDebug hub is a permanent dev-only observability tool; the function
+// no-ops in production via __DEV__ guard inside stateDebug.ts.
 wireStoreLogging();
 
 // LogBox renders dev-only on-screen warning toasts that overlap absolute-positioned

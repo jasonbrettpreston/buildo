@@ -1,19 +1,26 @@
-// TEMPORARY DIAGNOSTIC INSTRUMENTATION — remove once the post-onboarding
-// "Maximum update depth exceeded" loop on /(app) is identified and fixed.
+// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §7 (Observability) + §9.5
 //
-// Tracks render counts, effect fires (with dep diffs), and Zustand mutations
-// so the loop's origin can be identified from Metro / `adb logcat | grep
-// ReactNativeJS`. LogBox is disabled in _layout.tsx, so these logs do NOT
-// appear as on-screen toasts — Metro/logcat only.
+// PERMANENT dev-only state-debug hub. Replaces the temporary `loopDetector.ts`
+// that caught the 3 render-loop incidents on 2026-05-02. Per Spec 99 §7.1
+// (and §9.5 promotion), the diagnostic stays in the codebase as a regression-
+// catching tool — but every export is gated by `__DEV__` so production builds
+// compile to no-op stubs. Metro's dead-code elimination strips the body of
+// each function call site in release mode; only the empty function shells
+// ship in the production bundle.
 //
-// Output legend:
-//   [render] <Tag> #<n>           → component rendered (every 5 after the first 10)
+// Output legend (DEV builds, Metro/logcat — LogBox is silenced in _layout.tsx):
+//   [render] <Tag> #<n>           → component rendered (every 5 after first 10)
 //   [effect] <Tag> fire#<n>: ...  → effect ran; lists which dep changed
 //   [store:<name>] <field>: a → b → Zustand mutation by field
 //   [LOOP-DETECTED] ...           → >30 events for one tag in last 1s (logged once)
 //
-// To remove: delete this file, drop the trackRender/useDepsTracker calls in
-// the 6 patched files, and the wireStoreLogging() call in app/_layout.tsx.
+// Usage:
+//   - Add `trackRender('MyComponent')` at the top of any function component
+//   - Add `useDepsTracker('MyEffect.tag', [...sameDeps])` AFTER any useEffect
+//     whose stability you want to observe (mirrors the deps array)
+//   - Call `wireStoreLogging()` ONCE at app boot (mobile/app/_layout.tsx)
+//   - Call `dumpDiagnostics()` from ErrorBoundary.componentDidCatch to log
+//     the render/effect counts at the moment of the crash
 
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore';
@@ -58,6 +65,7 @@ function recordWindow(key: string): number {
 }
 
 export function trackRender(tag: string): void {
+  if (!__DEV__) return;
   const count = (renderCounts.get(tag) ?? 0) + 1;
   renderCounts.set(tag, count);
   const recent = recordWindow(`render:${tag}`);
@@ -76,11 +84,16 @@ export function trackRender(tag: string): void {
 // useEffect hook that mirrors the deps of an effect you want to observe.
 // Place RIGHT AFTER the real useEffect with the same deps array. Logs
 // fire-count + which dep index changed (with stringified before/after).
+//
+// In production: the hook itself still runs (React requires it for hook-order
+// stability), but the body short-circuits via `__DEV__` so no Maps grow and no
+// console output is emitted. Cost: one useRef + one no-op useEffect per call.
 export function useDepsTracker(tag: string, deps: unknown[]): void {
   const prevDeps = useRef<unknown[] | null>(null);
   const fireCount = useRef(0);
 
   useEffect(() => {
+    if (!__DEV__) return;
     fireCount.current++;
     const changed: string[] = [];
     if (prevDeps.current === null) {
@@ -111,7 +124,8 @@ export function useDepsTracker(tag: string, deps: unknown[]): void {
 }
 
 export function dumpDiagnostics(): string {
-  const lines: string[] = ['=== LOOP DETECTOR SNAPSHOT ==='];
+  if (!__DEV__) return '';
+  const lines: string[] = ['=== STATE-DEBUG SNAPSHOT ==='];
   lines.push('Renders (sorted by total):');
   const renderEntries = [...renderCounts.entries()].sort((a, b) => b[1] - a[1]);
   for (const [tag, count] of renderEntries) {
@@ -150,6 +164,7 @@ function subscribeStore<T extends object>(name: string, store: SubscribableStore
 
 let wired = false;
 export function wireStoreLogging(): void {
+  if (!__DEV__) return;
   if (wired) return;
   wired = true;
   subscribeStore('auth', useAuthStore as unknown as SubscribableStore<object>);
@@ -158,5 +173,5 @@ export function wireStoreLogging(): void {
   subscribeStore('paywall', usePaywallStore as unknown as SubscribableStore<object>);
   subscribeStore('userProfile', useUserProfileStore as unknown as SubscribableStore<object>);
   subscribeStore('notification', useNotificationStore as unknown as SubscribableStore<object>);
-  console.log('[loopDetector] store subscriptions wired');
+  console.log('[stateDebug] store subscriptions wired');
 }
