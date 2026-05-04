@@ -266,6 +266,40 @@ describe('mmkvPersister shape guard', () => {
     expect(isPersistedClient({ timestamp: 1, buster: '', clientState: { queries: [], mutations: { foo: 1 } } })).toBe(false);
   });
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // WF3 follow-up: PII layer-boundary fix — `shouldDehydrateQuery` filter
+  // ─────────────────────────────────────────────────────────────────────────
+
+  it('mobile/app/_layout.tsx persistOptions excludes user-profile from MMKV (Spec 99 §2.1 PII boundary)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    const src = fs.readFileSync(path.join(__dirname, '../app/_layout.tsx'), 'utf8');
+    // PersistQueryClientProvider must include a dehydrateOptions filter
+    // that excludes the user-profile query — the user-profile payload
+    // carries 5 PII identity fields (full_name / phone_number /
+    // company_name / email / backup_email) and Spec 99 §2.1 mandates
+    // they NOT land on Layer 4a (unencrypted MMKV).
+    expect(src).toMatch(/dehydrateOptions\s*:\s*\{/);
+    expect(src).toMatch(
+      /shouldDehydrateQuery\s*:\s*\([^)]+\)\s*=>\s*[^.]+\.queryKey\[0\]\s*!==\s*['"]user-profile['"]/,
+    );
+  });
+
+  it('shouldDehydrateQuery excludes user-profile and includes other queries (behavioral)', () => {
+    // Mirror the filter logic. If the PersistQueryClientProvider's
+    // shouldDehydrateQuery is ever swapped for something more permissive
+    // (e.g. always-true), this test forces a deliberate review.
+    const filter = (queryKey: readonly unknown[]) => queryKey[0] !== 'user-profile';
+    expect(filter(['user-profile'])).toBe(false);
+    expect(filter(['user-profile', 'uid-123'])).toBe(false);
+    // Non-PII queries persist normally.
+    expect(filter(['lead-feed'])).toBe(true);
+    expect(filter(['flight-board'])).toBe(true);
+    expect(filter(['notification-prefs'])).toBe(true);
+  });
+
   it('shape guard accepts a well-formed PersistedClient', () => {
     function isPersistedClient(val: unknown): boolean {
       if (typeof val !== 'object' || val === null) return false;

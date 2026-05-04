@@ -391,7 +391,25 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <PersistQueryClientProvider
           client={queryClient}
-          persistOptions={{ persister: mmkvPersister, maxAge: 1000 * 60 * 60 * 24 }}
+          persistOptions={{
+            persister: mmkvPersister,
+            maxAge: 1000 * 60 * 60 * 24,
+            // WF3 PII layer-boundary fix (Spec 99 §2.1, follow-up to the
+            // Phase 7 adversarial review): exclude the user-profile
+            // query from MMKV persistence. The query carries 5 PII
+            // identity fields (full_name / phone_number / company_name
+            // / email / backup_email); MMKV is Layer 4a (UNENCRYPTED on
+            // disk per `mmkvPersister.ts:11` — no encryptionKey passed
+            // to createMMKV). Spec 99 §2.1 mandates Layer 4b SecureStore
+            // for PII. The query stays in-memory normally; cold-boot
+            // mobile re-fetches from server (the canonical source).
+            // Other queries (`['lead-feed']`, `['flight-board']`,
+            // `['notification-prefs']`) carry only public permit data
+            // or non-PII toggles and continue to persist normally.
+            dehydrateOptions: {
+              shouldDehydrateQuery: (query) => query.queryKey[0] !== 'user-profile',
+            },
+          }}
         >
           <FirebaseAuthListener />
           <AuthGate />
