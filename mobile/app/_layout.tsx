@@ -13,6 +13,7 @@ import * as Notifications from 'expo-notifications';
 import * as Sentry from '@sentry/react-native';
 import { queryClient } from '@/lib/queryClient';
 import { mmkvPersister } from '@/lib/mmkvPersister';
+import { shouldDehydrateQueryFn } from '@/lib/persistFilter';
 import { useAuthStore, initFirebaseAuthListener } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -407,8 +408,21 @@ export default function RootLayout() {
             // `['notification-prefs']`) carry only public permit data
             // or non-PII toggles and continue to persist normally.
             dehydrateOptions: {
-              shouldDehydrateQuery: (query) => query.queryKey[0] !== 'user-profile',
+              shouldDehydrateQuery: shouldDehydrateQueryFn,
             },
+            // WF3 follow-up amendment (code-reviewer CRITICAL 1):
+            // `shouldDehydrateQuery` only filters WRITES to MMKV. On
+            // cold boot, `mmkvPersister.restoreClient()` returns the
+            // full pre-WF3 blob (which includes the user-profile PII
+            // query), and TanStack hydrates it into memory before the
+            // dehydrate filter ever runs. Bumping `buster` from the
+            // default '' to 'wf3-pii-strip-1' forces a one-time full
+            // cache flush on every existing client at the deploy
+            // moment — TanStack compares the persisted `buster` field
+            // against this value and calls `removeClient()` on
+            // mismatch. The `isPersistedClient` shape guard at
+            // `mmkvPersister.ts:29` already validates the field exists.
+            buster: 'wf3-pii-strip-1',
           }}
         >
           <FirebaseAuthListener />

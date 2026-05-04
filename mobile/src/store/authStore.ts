@@ -12,6 +12,7 @@ import { useOnboardingStore } from '@/store/onboardingStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
 import { usePaywallStore } from '@/store/paywallStore';
 import { queryClient } from '@/lib/queryClient';
+import { mmkvPersister } from '@/lib/mmkvPersister';
 import { cleanupLegacyUserProfileCache } from '@/lib/migrations/userProfileCacheCleanup';
 import { identifyUser, resetIdentity, track } from '@/lib/analytics';
 
@@ -129,14 +130,26 @@ export const useAuthStore = create<AuthState>()(
           // currently has no non-user-scoped queries, so the blast
           // radius is zero.
           queryClient.clear();
+          // WF3 follow-up amendment (code-reviewer CRITICAL 2):
+          // `queryClient.clear()` ONLY purges in-memory state. The
+          // TanStack persister's MMKV blob (`tq-persist`) on disk is
+          // untouched until the next `persistClient()` write — a
+          // shared-device handoff before then would let the next user's
+          // cold boot read the previous user's persisted lead-feed +
+          // flight-board data via `restoreClient()`. Explicitly
+          // `removeClient()` the persister blob so disk state matches
+          // the just-cleared memory state. (The earlier comment claim
+          // that `queryClient.clear()` purges the persister blob was
+          // factually wrong — corrected here.)
+          mmkvPersister.removeClient();
           useFilterStore.getState().reset();
           useNotificationStore.getState().reset();
           useOnboardingStore.getState().reset();
           useUserProfileStore.getState().reset();
           // Spec 99 §9.1: removed clearUserProfileCache() — the legacy
-          // MMKV blob (`user-profile-cache`) is gone. queryClient.clear()
-          // above already purges the TanStack persister blob (the only
-          // remaining profile cache).
+          // MMKV blob (`user-profile-cache`) is gone. The TanStack
+          // persister blob is removed via mmkvPersister.removeClient()
+          // above.
           set({ user: null, idToken: null, isLoading: false });
           // Reset PostHog identity AFTER the in-memory store reset so
           // the distinctId is cleared at a clean session boundary; any

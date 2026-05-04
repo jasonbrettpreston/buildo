@@ -270,34 +270,43 @@ describe('mmkvPersister shape guard', () => {
   // WF3 follow-up: PII layer-boundary fix — `shouldDehydrateQuery` filter
   // ─────────────────────────────────────────────────────────────────────────
 
-  it('mobile/app/_layout.tsx persistOptions excludes user-profile from MMKV (Spec 99 §2.1 PII boundary)', () => {
+  it('mobile/app/_layout.tsx persistOptions wires the persistFilter predicate + buster (Spec 99 §2.1 PII boundary)', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const fs = require('fs') as typeof import('fs');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const path = require('path') as typeof import('path');
     const src = fs.readFileSync(path.join(__dirname, '../app/_layout.tsx'), 'utf8');
-    // PersistQueryClientProvider must include a dehydrateOptions filter
-    // that excludes the user-profile query — the user-profile payload
-    // carries 5 PII identity fields (full_name / phone_number /
-    // company_name / email / backup_email) and Spec 99 §2.1 mandates
-    // they NOT land on Layer 4a (unencrypted MMKV).
-    expect(src).toMatch(/dehydrateOptions\s*:\s*\{/);
-    expect(src).toMatch(
-      /shouldDehydrateQuery\s*:\s*\([^)]+\)\s*=>\s*[^.]+\.queryKey\[0\]\s*!==\s*['"]user-profile['"]/,
-    );
+    // The PersistQueryClientProvider must:
+    //   (1) import shouldDehydrateQueryFn from the persistFilter module
+    //       (the actual logic is asserted behaviorally below by importing
+    //       persistFilter directly).
+    //   (2) wire the predicate into dehydrateOptions.shouldDehydrateQuery.
+    //   (3) bump `buster` to a non-empty value so existing pre-WF3
+    //       persisted blobs (which contain the old user-profile PII
+    //       payload) get cleared on first cold boot post-deploy.
+    expect(src).toMatch(/from ['"]@\/lib\/persistFilter['"]/);
+    expect(src).toMatch(/shouldDehydrateQuery\s*:\s*shouldDehydrateQueryFn/);
+    expect(src).toMatch(/buster\s*:\s*['"][\w-]+['"]/);
   });
 
-  it('shouldDehydrateQuery excludes user-profile and includes other queries (behavioral)', () => {
-    // Mirror the filter logic. If the PersistQueryClientProvider's
-    // shouldDehydrateQuery is ever swapped for something more permissive
-    // (e.g. always-true), this test forces a deliberate review.
-    const filter = (queryKey: readonly unknown[]) => queryKey[0] !== 'user-profile';
-    expect(filter(['user-profile'])).toBe(false);
-    expect(filter(['user-profile', 'uid-123'])).toBe(false);
+  it('shouldDehydrateQueryFn excludes user-profile and includes other queries (behavioral, imports prod predicate)', () => {
+    // WF3 follow-up amendment (code-reviewer HIGH 1): import the
+    // ACTUAL production filter so a future change to the filter (e.g.
+    // excluding additional PII queries, or accidentally swapping it
+    // for an always-true) is caught by this test. The previous version
+    // tested a local mirror — production drift would have silently
+    // passed. The predicate lives in `@/lib/persistFilter` (extracted
+    // from `_layout.tsx` so the test can import it without dragging
+    // in React + expo-router under jest-node).
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { shouldDehydrateQueryFn } = require('../src/lib/persistFilter') as
+      typeof import('../src/lib/persistFilter');
+    expect(shouldDehydrateQueryFn({ queryKey: ['user-profile'] })).toBe(false);
+    expect(shouldDehydrateQueryFn({ queryKey: ['user-profile', 'uid-123'] })).toBe(false);
     // Non-PII queries persist normally.
-    expect(filter(['lead-feed'])).toBe(true);
-    expect(filter(['flight-board'])).toBe(true);
-    expect(filter(['notification-prefs'])).toBe(true);
+    expect(shouldDehydrateQueryFn({ queryKey: ['lead-feed'] })).toBe(true);
+    expect(shouldDehydrateQueryFn({ queryKey: ['flight-board'] })).toBe(true);
+    expect(shouldDehydrateQueryFn({ queryKey: ['notification-prefs'] })).toBe(true);
   });
 
   it('shape guard accepts a well-formed PersistedClient', () => {
