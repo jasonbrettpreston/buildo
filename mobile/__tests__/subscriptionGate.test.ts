@@ -51,7 +51,7 @@ describe('subscription gate — source invariants', () => {
   it('clears paywall + invalidates leads cache on the "expired" → "active" transition', () => {
     // Spec §10 Step 2: when status flips to 'active' from 'expired', clear
     // paywallStore and invalidate the leads cache so the feed reloads.
-    expect(layoutSrc).toMatch(/clearPaywall|paywallStore[\s\S]*\.clear\(/);
+    expect(layoutSrc).toMatch(/clearPaywall|paywallStore[\s\S]*\.reset\(/);
     expect(layoutSrc).toMatch(/invalidateQueries[\s\S]*['"]leads['"]/);
   });
 
@@ -79,12 +79,12 @@ describe('subscription gate — source invariants', () => {
 });
 
 describe('signOut wiring', () => {
-  it('authStore.signOut calls usePaywallStore.clear() (spec §9 sign-out reset)', () => {
+  it('authStore.signOut calls usePaywallStore.reset() (Spec 96 §9 sign-out reset; renamed from clear() per Spec 99 §B5)', () => {
     const authSrc = fs.readFileSync(
       path.join(__dirname, '../src/store/authStore.ts'),
       'utf8',
     );
-    expect(authSrc).toMatch(/usePaywallStore[\s\S]*\.clear\(/);
+    expect(authSrc).toMatch(/usePaywallStore[\s\S]*\.reset\(/);
   });
 });
 

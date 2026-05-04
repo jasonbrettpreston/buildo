@@ -117,7 +117,7 @@ export default function AppLayout() {
 
   const unread = useNotificationStore((s) => s.unreadFlightBoard);
   const paywallDismissed = usePaywallStore((s) => s.dismissed);
-  const clearPaywall = usePaywallStore((s) => s.clear);
+  const clearPaywall = usePaywallStore((s) => s.reset);
   const queryClient = useQueryClient();
   const router = useRouter();
 

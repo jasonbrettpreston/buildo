@@ -103,6 +103,9 @@ This table is **normative**. Adding a field to the mobile app requires adding a 
 | `subscription_status` | enum | — | Server (Stripe webhook + admin) | Stripe webhook handler | AppLayout subscription gate, PaywallScreen | — |
 | `lead_views_count` | int | — | Server (incremented on lead view API) | Lead view endpoint | PaywallScreen copy | — |
 | `trial_started_at` / `stripe_customer_id` / `trade_slugs_override` / `radius_cap_km` | various | — | Server | server / admin | settings, internal logic | — |
+| `display_name` | text | — | Server | Server insert on first PATCH (typically derived from auth provider) | settings (display only) | — |
+| `email` | text | — | Server (Firebase auth claim) | Server insert on first PATCH | settings (display only), notification dispatch | — |
+| `created_at` / `updated_at` | timestamptz | — | Server (Postgres trigger) | Postgres `NOW()` on insert/update | observability only — never read by client routing | — |
 
 ### 3.2 Auth / Identity (Firebase + apiClient)
 
@@ -129,7 +132,7 @@ After §9.3 deduplication, `onboardingStore` holds ONLY these two genuinely-loca
 | Field | Owner Layer | Writer | Readers |
 |-------|-------------|--------|---------|
 | `unreadFlightBoard` | `notificationStore` (in-memory) | `incrementUnread()` in `NotificationHandlers` foreground push handler; `clearUnread()` on Flight Board tab focus | AppLayout tab badge |
-| `paywall.visible` | `paywallStore` (in-memory — Spec 96 §9 explicit) | `show()` — currently has NO callers (verified by grep 2026-05-02); reserved for InlineBlurBanner tap once wired. Until then, this field is ALWAYS `false`. **Audit obligation per §9.9: confirm caller exists before next release, or delete the field.** | AppLayout subscription gate, PaywallScreen |
+| `paywall.visible` | `paywallStore` (in-memory — Spec 96 §9 explicit) | `show()` — called by `InlineBlurBanner.tsx:12` on banner tap (verified 2026-05-03 §9.9 audit). The original §3.4 audit incorrectly flagged this as caller-less; the grep missed `usePaywallStore((s) => s.show)` selector usage. | AppLayout subscription gate, PaywallScreen |
 | `paywall.dismissed` | `paywallStore` (in-memory) | `dismiss()` (PaywallScreen "Maybe later" tap), `clear()` (signOut per §B5; `expired→active` transition in AppLayout) | AppLayout subscription gate, InlineBlurBanner |
 
 ### 3.4a UI-Only SharedValues (Layer 5 — orthogonal to Layers 1-4)
@@ -152,7 +155,7 @@ These are NOT Zustand stores. They use `react-native-reanimated`'s `makeMutable(
 | `useUserProfile.readCachedProfile` MMKV blob (`user-profile-cache`) | Eliminated — TanStack persister covers fast-hydration | WF3 §9.1 (✅ done — see `mobile/src/lib/migrations/userProfileCacheCleanup.ts` for the one-time orphan-file cleanup) |
 | `userProfileStore.hydrate` non-idempotent set | Migrate to deep-equal-before-set per §6.6 | WF2 §9.8 |
 | `filterStore.hydrate` non-idempotent set | Same | WF2 §9.8 |
-| `paywallStore.show()` action with no caller | Delete OR wire InlineBlurBanner caller | WF3 §9.9 |
+| ~~`paywallStore.show()` action with no caller~~ | RESOLVED — §9.9 audit (2026-05-03) confirmed `InlineBlurBanner.tsx:12` calls it. The original audit grep missed the selector form. | WF3 §9.9 ✅ |
 
 ---
 
@@ -525,14 +528,14 @@ The following items eliminate the duplication identified in the audit and resolv
 | 9.3 | P1 | Remove `selectedTrade`, `selectedTradeName`, `locationMode`, `homeBaseLat`, `homeBaseLng`, `supplierSelection` duplicates from `onboardingStore`. Add `persist` `migrate` function (version bump) to drop legacy MMKV keys. Update onboarding screens to write to `filterStore` after server PATCH success (no local mirror). | WF2 | `mobile/src/store/onboardingStore.ts`, `mobile/app/(onboarding)/profession.tsx`, `address.tsx`, `supplier.tsx` |
 | 9.1 | ✅ DONE | Eliminated `user-profile-cache` MMKV blob. TanStack persister is now sole canonical profile cache (verified sync via `mmkvPersister.restoreClient` — no cold-boot regression). §B5 dropped the `clearUserProfileCache()` call. One-time `cleanupLegacyUserProfileCache()` migration in `mobile/src/lib/migrations/` purges the orphaned blob on existing installs (gated by `legacyStorage.contains('profile')` to avoid materializing an empty file on fresh installs per Gemini WF3-§9.1 review F2). | WF3 | `mobile/src/hooks/useUserProfile.ts`, `mobile/src/store/authStore.ts`, `mobile/src/lib/migrations/userProfileCacheCleanup.ts` |
 | 9.5 | ✅ DONE | Promoted `loopDetector.ts` → `mobile/src/lib/debug/stateDebug.ts` (commit `af52c75`). Every export `__DEV__`-guarded. `useDepsTracker` exported as module-scope ternary (`__DEV__ ? useDepsTrackerDev : useDepsTrackerNoop`) so production noop calls ZERO hooks (Hermes/Metro DCEs the dev impl). `wired` flag persisted on `globalThis` so HMR re-fires of `wireStoreLogging()` don't multiply subscriptions. Production-path test at `mobile/__tests__/stateDebug.prod.test.ts` exercises the `__DEV__ === false` path. | WF3 | `mobile/src/lib/debug/stateDebug.ts`, 5 import-site updates, `mobile/__tests__/stateDebug.prod.test.ts` (NEW) |
-| 9.5b | P2 | NEW (Gemini WF3-§9.5 #4): add structured `getDiagnosticsSnapshot(): {renders, effects}` accessor so §8.4 CI assertions can read counters without parsing the human-readable string. | WF3 | `mobile/src/lib/debug/stateDebug.ts` |
+| 9.5b | ✅ DONE | Added `getDiagnosticsSnapshot(): {renders: DiagnosticsCounter[], effects: DiagnosticsCounter[]}` to `stateDebug.ts`; both arrays sorted by total desc; production returns empty arrays via `__DEV__` guard. `dumpDiagnostics()` refactored to format the snapshot. CI assertions can now read counters structurally. | WF2 P2 batch | `mobile/src/lib/debug/stateDebug.ts` |
 | 9.6 | P1 | Add AuthGate router branch tests (9 arms per §5.3) | WF2 | `mobile/__tests__/authGate.test.ts` (NEW) |
 | 9.7 | P1 | depends on 9.8 — Idempotency tests for all bridges per §8.1 | WF2 | `mobile/__tests__/bridges.test.ts` (NEW) |
-| 9.9 | P2 | Audit `paywallStore.show()` — verify caller exists OR delete the action | WF3 | `mobile/src/store/paywallStore.ts` |
-| 9.12 | P2 | Add §8.5 store-enumeration test | WF3 | `mobile/__tests__/storeReset.coverage.test.ts` (NEW) |
-| 9.13 | P2 | Add §8.6 schema-vs-matrix drift check | WF3 | `mobile/scripts/check-spec99-matrix.mjs` (NEW) |
+| 9.9 | ✅ DONE | Audited `paywallStore.show()` — caller is `mobile/src/components/paywall/InlineBlurBanner.tsx:12` (`usePaywallStore((s) => s.show)`). The original §3.4 audit grep missed the selector usage; row updated with verified caller. | WF2 P2 batch | `docs/specs/03-mobile/99_mobile_state_architecture.md` §3.4 |
+| 9.12 | ✅ DONE | Added `mobile/__tests__/storeReset.coverage.test.ts`. Discovers all Zustand stores in `mobile/src/store/` via regex, asserts each has a matching `.getState().reset()` call in `signOut()` OR a `// signOut-exempt: <reason>` comment. Catches the silent-leak bug where adding a new store and forgetting the signOut entry leaves stale data on shared devices (PIPEDA leak class). | WF2 P2 batch | `mobile/__tests__/storeReset.coverage.test.ts` (NEW) |
+| 9.13 | ✅ DONE | Added `mobile/scripts/check-spec99-matrix.mjs`. Parses Zod schema field names + §3.1 table column 1; asserts setEqual. Brace-depth tracker in schema parser skips nested `notification_prefs` keys; multi-line `z\s*\.` allows `subscription_status` (split across 3 lines). Currently 0 drift across 27 fields. Discovered & fixed 4 missing §3.1 rows (`created_at`, `updated_at`, `display_name`, `email`) as part of close-out. | WF2 P2 batch | `mobile/scripts/check-spec99-matrix.mjs` (NEW), `docs/specs/03-mobile/99_mobile_state_architecture.md` §3.1 |
 | 9.14 | P2 | Flatten `notification_prefs` to 5 separate boolean fields on `userProfileStore` (eliminates the deep-equal hot path entirely) | WF2 | `mobile/src/store/userProfileStore.ts`, settings notification screens, server schema migration coordinated with web admin |
-| 9.15 | P2 | Add §5.4 lint rule (vitest AST-parses AuthGate/AppLayout, asserts no Zustand selector subscription used inside router useEffect closures) | WF3 | `mobile/__tests__/routerHygiene.lint.test.ts` (NEW) |
+| 9.15 | ✅ DONE | Added `mobile/__tests__/routerHygiene.lint.test.ts`. Two static-analysis rules: (1) router-effect hygiene — extracts every `useEffect(() => { BODY }, [DEPS])` block via brace-depth tracking; if `router` is in DEPS, scans BODY for `useXStore(` hook calls (lazy `.getState()` reads remain permitted). (2) atomic-selector mandate — globs `mobile/app/**/*.tsx` + `mobile/src/components/**/*.tsx`; flags any `useXStore()` zero-arg whole-store read per §6.1. 51 tests pass against current code. | WF2 P2 batch | `mobile/__tests__/routerHygiene.lint.test.ts` (NEW) |
 | 9.16 | P2 | Codify or ban Bridge B6 (LeadFilterSheet/settings PATCH+local-set without B3 ceremony). Grep `getState().set*` in `LeadFilterSheet.tsx` and `settings.tsx`; either standardize as B6 in §4 or migrate to B3. | WF1 amendment | TBD |
 
 ---

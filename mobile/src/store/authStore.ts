@@ -92,7 +92,7 @@ export const useAuthStore = create<AuthState>()(
         // 'expired' status. paywallStore is in-memory only (not MMKV-
         // persisted), so this protects same-session handoffs — common with
         // family/team phones.
-        usePaywallStore.getState().clear();
+        usePaywallStore.getState().reset();
         // Firebase sign-out — onAuthStateChanged fires (null) which clears auth.
         // Then reset peer in-memory stores so a different user signing in on the same
         // device sees no stale data. MMKV is preserved per §3.4 so the same user

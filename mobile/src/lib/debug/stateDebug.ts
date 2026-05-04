@@ -135,20 +135,61 @@ function useDepsTrackerNoop(_tag: string, _deps: unknown[]): void {
 
 export const useDepsTracker = __DEV__ ? useDepsTrackerDev : useDepsTrackerNoop;
 
+/** Per-tag counter row for the structured snapshot (Spec 99 §9.5b). */
+export interface DiagnosticsCounter {
+  tag: string;
+  total: number;
+  last1s: number;
+}
+/** Structured diagnostics snapshot — see `getDiagnosticsSnapshot()`. */
+export interface DiagnosticsSnapshot {
+  renders: DiagnosticsCounter[];
+  effects: DiagnosticsCounter[];
+}
+
+/**
+ * Structured snapshot of the in-memory counters (Spec 99 §9.5b — added so
+ * §8.4 CI assertions can read counters directly without parsing the
+ * human-readable string from `dumpDiagnostics()`). Both arrays are sorted
+ * by `total` descending (most-active tags first).
+ *
+ * Production: returns `{ renders: [], effects: [] }` (no overhead).
+ */
+export function getDiagnosticsSnapshot(): DiagnosticsSnapshot {
+  if (!__DEV__) return { renders: [], effects: [] };
+  const renders = [...renderCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([tag, total]) => ({
+      tag,
+      total,
+      last1s: renderWindow.get(`render:${tag}`)?.length ?? 0,
+    }));
+  const effects = [...effectCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([tag, total]) => ({
+      tag,
+      total,
+      last1s: renderWindow.get(`effect:${tag}`)?.length ?? 0,
+    }));
+  return { renders, effects };
+}
+
+/**
+ * Human-readable string formatting of `getDiagnosticsSnapshot()`. Used by
+ * `ErrorBoundary.componentDidCatch` to log a snapshot to Metro/logcat at
+ * the moment of crash. Production returns `''`.
+ */
 export function dumpDiagnostics(): string {
   if (!__DEV__) return '';
+  const snap = getDiagnosticsSnapshot();
   const lines: string[] = ['=== STATE-DEBUG SNAPSHOT ==='];
   lines.push('Renders (sorted by total):');
-  const renderEntries = [...renderCounts.entries()].sort((a, b) => b[1] - a[1]);
-  for (const [tag, count] of renderEntries) {
-    const recent = renderWindow.get(`render:${tag}`)?.length ?? 0;
-    lines.push(`  ${tag}: total=${count} last1s=${recent}`);
+  for (const { tag, total, last1s } of snap.renders) {
+    lines.push(`  ${tag}: total=${total} last1s=${last1s}`);
   }
   lines.push('Effects (sorted by total):');
-  const effectEntries = [...effectCounts.entries()].sort((a, b) => b[1] - a[1]);
-  for (const [tag, count] of effectEntries) {
-    const recent = renderWindow.get(`effect:${tag}`)?.length ?? 0;
-    lines.push(`  ${tag}: total=${count} last1s=${recent}`);
+  for (const { tag, total, last1s } of snap.effects) {
+    lines.push(`  ${tag}: total=${total} last1s=${last1s}`);
   }
   return lines.join('\n');
 }

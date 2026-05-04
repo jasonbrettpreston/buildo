@@ -38,17 +38,17 @@ describe('paywallStore', () => {
     expect(dismissed).toBe(true);
   });
 
-  it('clear() resets both flags from the dismissed state', () => {
+  it('reset() resets both flags from the dismissed state', () => {
     usePaywallStore.getState().dismiss();
-    usePaywallStore.getState().clear();
+    usePaywallStore.getState().reset();
     const { visible, dismissed } = usePaywallStore.getState();
     expect(visible).toBe(false);
     expect(dismissed).toBe(false);
   });
 
-  it('clear() resets both flags from the visible state', () => {
+  it('reset() resets both flags from the visible state', () => {
     usePaywallStore.getState().show();
-    usePaywallStore.getState().clear();
+    usePaywallStore.getState().reset();
     const { visible, dismissed } = usePaywallStore.getState();
     expect(visible).toBe(false);
     expect(dismissed).toBe(false);
