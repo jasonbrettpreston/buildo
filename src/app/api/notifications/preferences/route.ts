@@ -83,8 +83,20 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       );
     }
 
-    // Build a partial UPDATE: only the fields the client explicitly sent.
-    // Empty payload (`{}`) is a no-op — return success without writing.
+    // Build a partial UPDATE on the SET side of an UPSERT: only the fields
+    // the client explicitly sent. Empty payload (`{}`) is a no-op — return
+    // success without writing.
+    //
+    // Why UPSERT instead of plain UPDATE (per WF2 §9.14 review):
+    // GET returns canonical defaults for any authenticated user even when
+    // no `user_profiles` row exists yet (settings screen renders cleanly).
+    // The pre-upsert PATCH used a bare `UPDATE` and returned 404 when
+    // rowCount === 0 — so the mobile client could load defaults via GET,
+    // toggle a switch, and receive 404. Pre-flatten this round-trip
+    // worked because the JSONB merge would no-op against a missing row in
+    // a way that the wrapper code interpreted as success. Switching to
+    // INSERT ... ON CONFLICT preserves that semantic: PATCH on a missing
+    // row creates it with canonical defaults plus the client's overrides.
     const setClauses: string[] = [];
     const params: unknown[] = [userId];
     const addField = (col: keyof typeof parsed.data, value: unknown) => {
@@ -102,12 +114,21 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     }
     setClauses.push('updated_at = NOW()');
 
+    // INSERT ... ON CONFLICT: if a row already exists for user_id, run the
+    // partial UPDATE built above; otherwise create the row with canonical
+    // defaults overlaid with whatever fields the client sent. The migration-
+    // 117 NOT NULL DEFAULTs guarantee the omitted columns get safe values.
     const result = await pool.query(
-      `UPDATE user_profiles SET ${setClauses.join(', ')} WHERE user_id = $1`,
+      `INSERT INTO user_profiles (user_id)
+       VALUES ($1)
+       ON CONFLICT (user_id) DO UPDATE SET ${setClauses.join(', ')}`,
       params,
     );
 
     if (result.rowCount === 0) {
+      // Defensive — INSERT ... ON CONFLICT always affects ≥1 row, so this
+      // branch is effectively unreachable. Keep the fallback so a future
+      // schema change that breaks the assumption surfaces loudly.
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
     }
 

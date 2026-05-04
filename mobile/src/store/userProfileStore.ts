@@ -100,6 +100,21 @@ export const useUserProfileStore = create<UserProfileState>()(
     {
       name: 'user-profile',
       storage: createJSONStorage(() => mmkvStorage),
+      // Spec 99 §2.1 PII boundary (DeepSeek WF2 §9.14 review #4): persist
+      // ONLY the 5 non-PII notification fields to MMKV. The identity
+      // fields (`fullName`, `companyName`, `phoneNumber`, `backupEmail`)
+      // are PII and the §2.1 mandate routes them through the encrypted
+      // SecureStore layer (Layer 4b), not the unencrypted MMKV layer
+      // (Layer 4a). They are still server-canonical and rehydrated by
+      // TanStack Query's user-profile cache on cold boot, so dropping
+      // them from this MMKV blob has zero functional cost.
+      partialize: (state) => ({
+        newLeadMinCostTier: state.newLeadMinCostTier,
+        phaseChanged: state.phaseChanged,
+        lifecycleStalled: state.lifecycleStalled,
+        startDateUrgent: state.startDateUrgent,
+        notificationSchedule: state.notificationSchedule,
+      }),
       // Spec 99 §9.14: bump to v1 to drop the orphan `notificationPrefs`
       // JSONB blob from existing MMKV state. The persist middleware calls
       // `migrate(state, storedVersion)` ONCE with the stored version
@@ -108,12 +123,31 @@ export const useUserProfileStore = create<UserProfileState>()(
       version: 1,
       migrate: (persistedState: unknown, _version: number) => {
         if (persistedState && typeof persistedState === 'object') {
-          // Drop the v0 JSONB blob; the new flat fields will fall back to
-          // INITIAL_STATE defaults via the spread merge that the persist
-          // middleware applies after migrate() returns.
-          const { notificationPrefs: _drop, ...rest } = persistedState as Record<string, unknown>;
-          void _drop;
-          return rest;
+          // DeepSeek WF2 §9.14 review #5: explicit whitelist (matches the
+          // `partialize` allowed set above). A `rest`-spread on
+          // `persistedState` would carry every unknown legacy v0 key
+          // into v1 state forever — zustand persist's shallow merge
+          // keeps rehydrated keys over INITIAL_STATE.
+          //
+          // The whitelist is intentionally narrower than `Object.keys
+          // (INITIAL_STATE)` — it omits the PII identity fields
+          // (`fullName`/`companyName`/`phoneNumber`/`backupEmail`) so
+          // that any v0 user upgrading to v1 has those values dropped
+          // from MMKV on first cold boot, not on the second. They are
+          // re-rehydrated from TanStack Query's user-profile cache.
+          const PERSISTED_KEYS = [
+            'newLeadMinCostTier',
+            'phaseChanged',
+            'lifecycleStalled',
+            'startDateUrgent',
+            'notificationSchedule',
+          ] as const;
+          const v0 = persistedState as Record<string, unknown>;
+          const v1: Record<string, unknown> = {};
+          for (const key of PERSISTED_KEYS) {
+            if (key in v0) v1[key] = v0[key];
+          }
+          return v1;
         }
         return persistedState;
       },

@@ -43,21 +43,64 @@ ALTER TABLE user_profiles
   ADD COLUMN IF NOT EXISTS start_date_urgent BOOLEAN NOT NULL DEFAULT TRUE,
   ADD COLUMN IF NOT EXISTS notification_schedule TEXT NOT NULL DEFAULT 'anytime';
 
--- Step 2: BACKFILL from JSONB. Use COALESCE so a NULL notification_prefs row
--- (defensive — should not exist) keeps the column DEFAULT instead of writing
--- NULL into a NOT NULL column.
+-- Step 2: BACKFILL from JSONB. Defensive CASE wrappers per WF2 §9.14
+-- adversarial review (Gemini + DeepSeek + code-reviewer consensus):
+--
+--  (a) Boolean cast safety — `(jsonb ->> 'k')::boolean` throws
+--      `invalid input syntax` on any non-canonical scalar (e.g., a stray
+--      `'1'`/`'yes'`/`''` from a past hand-edit). CASE on the canonical
+--      strings avoids the unconditional cast.
+--
+--  (b) Enum sanitization — Spec 99 §9.14 reconciled the cost-tier enum
+--      from a divergent 5-value set (`small/medium/large/major/mega`,
+--      previously accepted by `notifications/preferences/route.ts` Zod
+--      only — never written through `userProfile.schema.ts`). Reviewers
+--      flagged that ANY non-canonical value in the JSONB (whether from
+--      the divergent route, hand-edits, or future drift) would survive
+--      COALESCE, then fail the CHECK constraint added in Step 3 and
+--      abort the entire migration. The CASE projection maps known
+--      legacy values to their nearest canonical equivalent and
+--      defaults the rest, so the CHECK can never fail at constraint-
+--      add time.
 UPDATE user_profiles
 SET
-  new_lead_min_cost_tier = COALESCE(notification_prefs ->> 'new_lead_min_cost_tier', 'medium'),
-  phase_changed          = COALESCE((notification_prefs ->> 'phase_changed')::boolean, TRUE),
-  lifecycle_stalled_pref = COALESCE((notification_prefs ->> 'lifecycle_stalled')::boolean, TRUE),
-  start_date_urgent      = COALESCE((notification_prefs ->> 'start_date_urgent')::boolean, TRUE),
-  notification_schedule  = COALESCE(notification_prefs ->> 'notification_schedule', 'anytime')
+  new_lead_min_cost_tier = CASE notification_prefs ->> 'new_lead_min_cost_tier'
+    WHEN 'low'    THEN 'low'
+    WHEN 'medium' THEN 'medium'
+    WHEN 'high'   THEN 'high'
+    -- Legacy 5-value enum projection (defensive — see comment above):
+    WHEN 'small'  THEN 'low'
+    WHEN 'large'  THEN 'high'
+    WHEN 'major'  THEN 'high'
+    WHEN 'mega'   THEN 'high'
+    ELSE 'medium'
+  END,
+  phase_changed = CASE notification_prefs ->> 'phase_changed'
+    WHEN 'true'  THEN TRUE
+    WHEN 'false' THEN FALSE
+    ELSE TRUE
+  END,
+  lifecycle_stalled_pref = CASE notification_prefs ->> 'lifecycle_stalled'
+    WHEN 'true'  THEN TRUE
+    WHEN 'false' THEN FALSE
+    ELSE TRUE
+  END,
+  start_date_urgent = CASE notification_prefs ->> 'start_date_urgent'
+    WHEN 'true'  THEN TRUE
+    WHEN 'false' THEN FALSE
+    ELSE TRUE
+  END,
+  notification_schedule = CASE notification_prefs ->> 'notification_schedule'
+    WHEN 'morning'  THEN 'morning'
+    WHEN 'anytime'  THEN 'anytime'
+    WHEN 'evening'  THEN 'evening'
+    ELSE 'anytime'
+  END
 WHERE notification_prefs IS NOT NULL;
 
--- Step 3: ADD CHECK constraints to enforce the canonical enum values. Done
--- AFTER the backfill so a stale JSONB value (none observed, but defensive)
--- doesn't fail the constraint and abort the migration.
+-- Step 3: ADD CHECK constraints to enforce the canonical enum values. Safe
+-- because the Step 2 CASE projections guarantee every row was written with
+-- a value from the canonical set.
 ALTER TABLE user_profiles
   ADD CONSTRAINT chk_new_lead_min_cost_tier
     CHECK (new_lead_min_cost_tier IN ('low', 'medium', 'high')),

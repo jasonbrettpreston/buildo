@@ -155,10 +155,17 @@ describe('RegisterTokenSchema validation', () => {
   });
 });
 
+// Spec 99 §9.14 (2026-05-04): canonical schema is the 5 flat fields with
+// the 3-value cost-tier enum and the `lifecycle_stalled_pref` field name
+// (renamed from `lifecycle_stalled` to disambiguate from
+// `permits.lifecycle_stalled` in pipeline joins). The pre-§9.14 version
+// of this local schema used `['small','medium','large','major','mega']`
+// + `lifecycle_stalled` and silently masked any drift in the production
+// route.
 const NotificationPrefsSchema = z.object({
-  new_lead_min_cost_tier: z.enum(['small', 'medium', 'large', 'major', 'mega']).optional(),
+  new_lead_min_cost_tier: z.enum(['low', 'medium', 'high']).optional(),
   phase_changed: z.boolean().optional(),
-  lifecycle_stalled: z.boolean().optional(),
+  lifecycle_stalled_pref: z.boolean().optional(),
   start_date_urgent: z.boolean().optional(),
   notification_schedule: z.enum(['morning', 'anytime', 'evening']).optional(),
 });
@@ -168,7 +175,7 @@ describe('NotificationPrefsSchema validation', () => {
     const result = NotificationPrefsSchema.safeParse({
       new_lead_min_cost_tier: 'medium',
       phase_changed: true,
-      lifecycle_stalled: true,
+      lifecycle_stalled_pref: true,
       start_date_urgent: true,
       notification_schedule: 'anytime',
     });

@@ -206,4 +206,62 @@ describe('userProfileStore.hydrate — Spec 99 §6.6 idempotency', () => {
     expect(useUserProfileStore.getState().newLeadMinCostTier).toBe('high');
     unsubscribe();
   });
+
+  it('hydrate with start_date_urgent flipped DOES notify (post-§9.14 review #4)', () => {
+    // Adversarial review (Gemini + DeepSeek + code-reviewer §9.14 Phase D)
+    // flagged that 4 of the 5 notification fields had an explicit
+    // change-DOES-notify case but `start_date_urgent` did not. Adding the
+    // 5th case for parity.
+    useUserProfileStore.getState().hydrate(sampleProfile);
+    const listener = jest.fn();
+    const unsubscribe = useUserProfileStore.subscribe(listener);
+    useUserProfileStore.getState().hydrate({
+      ...sampleProfile,
+      start_date_urgent: false,
+    });
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(useUserProfileStore.getState().startDateUrgent).toBe(false);
+    unsubscribe();
+  });
+
+  // Per-field coverage for the 4 string identity fields. Adversarial review
+  // (Gemini WF2 §9.14 #4 + code-reviewer HIGH-1) flagged the test suite as
+  // covering only 4 of the 9 hydrated fields. Closing the gap — null-to-null
+  // bail-out is the original incident-#3 regression class (refetch firing
+  // notify on identical content), and a regression in the per-field strict-
+  // equality gate of any of these 4 would bring it back.
+  describe.each([
+    ['fullName',     'full_name',     'Alice',     'Alice Updated'],
+    ['companyName',  'company_name',  'Co Inc.',   'Co Updated Inc.'],
+    ['phoneNumber',  'phone_number',  '+15551234', '+15559999'],
+    ['backupEmail',  'backup_email',  'a@b.com',   'b@c.com'],
+  ] as const)('identity field %s', (storeKey, profileKey, oldVal, newVal) => {
+    it('hydrate with same value does NOT notify', () => {
+      useUserProfileStore.getState().hydrate({ ...sampleProfile, [profileKey]: oldVal });
+      const listener = jest.fn();
+      const unsubscribe = useUserProfileStore.subscribe(listener);
+      useUserProfileStore.getState().hydrate({ ...sampleProfile, [profileKey]: oldVal });
+      expect(listener).not.toHaveBeenCalled();
+      unsubscribe();
+    });
+
+    it('hydrate with null → null does NOT notify (cold-boot idempotency)', () => {
+      useUserProfileStore.getState().hydrate({ ...sampleProfile, [profileKey]: null });
+      const listener = jest.fn();
+      const unsubscribe = useUserProfileStore.subscribe(listener);
+      useUserProfileStore.getState().hydrate({ ...sampleProfile, [profileKey]: null });
+      expect(listener).not.toHaveBeenCalled();
+      unsubscribe();
+    });
+
+    it('hydrate with changed value DOES notify', () => {
+      useUserProfileStore.getState().hydrate({ ...sampleProfile, [profileKey]: oldVal });
+      const listener = jest.fn();
+      const unsubscribe = useUserProfileStore.subscribe(listener);
+      useUserProfileStore.getState().hydrate({ ...sampleProfile, [profileKey]: newVal });
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(useUserProfileStore.getState()[storeKey]).toBe(newVal);
+      unsubscribe();
+    });
+  });
 });
