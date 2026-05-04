@@ -106,7 +106,9 @@ This table is **normative**. Adding a field to the mobile app requires adding a 
 | `account_deleted_at` | timestamptz | — | Server | DELETE intent endpoint | apiClient → AccountDeletedError → AuthGate reactivation modal | — |
 | `subscription_status` | enum | — | Server (Stripe webhook + admin) | Stripe webhook handler | AppLayout subscription gate, PaywallScreen | — |
 | `lead_views_count` | int | — | Server (incremented on lead view API) | Lead view endpoint | PaywallScreen copy | — |
-| `trial_started_at` / `stripe_customer_id` / `trade_slugs_override` / `radius_cap_km` | various | — | Server | server / admin | settings, internal logic | — |
+| `trial_started_at` / `trade_slugs_override` / `radius_cap_km` | various | — | Server | server / admin | settings, internal logic | — |
+<!-- WF3 2026-05-04 PII hardening (review_followups.md mobile-PII bundle): `stripe_customer_id` removed from this matrix and from `mobile/src/lib/userProfile.schema.ts`. The field is server-only (Spec 96 customer-portal redirect happens server-side); previously it landed in the TanStack Query MMKV persister (Layer 4a UNENCRYPTED) violating Spec 99 §2.1. The server `userProfile.schema.ts` retains the field; the corresponding API route's `CLIENT_SAFE_COLUMNS` whitelist (added in Phase 2) excludes it from GET / PATCH responses to mobile clients. -->
+
 | `display_name` | text | — | Server | Server insert on first PATCH (typically derived from auth provider) | settings (display only) | — |
 | `email` | text | — | Server (Firebase auth claim) | Server insert on first PATCH | settings (display only), notification dispatch | — |
 | `created_at` / `updated_at` | timestamptz | — | Server (Postgres trigger) | Postgres `NOW()` on insert/update | observability only — never read by client routing | — |

@@ -46,7 +46,6 @@ const sampleProfile: UserProfileType = {
   lead_views_count: 0,
   subscription_status: 'trial',
   trial_started_at: '2026-05-02T00:00:00Z',
-  stripe_customer_id: null,
   onboarding_complete: true,
   tos_accepted_at: '2026-05-01T00:00:00Z',
   account_deleted_at: null,
