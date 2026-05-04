@@ -44,9 +44,37 @@ function walkTsx(dir: string): string[] {
 }
 
 /**
- * Find every `useEffect(() => { ... }, [DEPS])` block. Returns the body string
- * + the deps string. Brace-depth tracker so nested `{}` (if-blocks, switches,
- * literals) inside the effect body don't truncate the match.
+ * Strip line comments, block comments, and string-literal contents from
+ * source so the brace-depth walker in `extractUseEffects()` is not
+ * desynced by `{` or `}` inside strings/templates/comments. Replaces
+ * string contents with spaces of equal length so character indices and
+ * line numbers stay stable. Per WF2 P2 review #5 (Gemini + DeepSeek
+ * consensus on brace-walker comment/string blindness).
+ */
+function stripStringsAndComments(src: string): string {
+  // Block comments first (greedy non-nested).
+  let out = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+  // Line comments.
+  out = out.replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length));
+  // String literals: single-quoted, double-quoted, template-literal. Crude
+  // (does not handle escaped quotes inside strings perfectly), but the
+  // sole purpose is to neutralize stray `{` / `}` chars inside string
+  // contents — false positives where we strip too much only weaken the
+  // STORE_HOOK_CALL search, not produce false test failures.
+  out = out.replace(/'([^'\\\n]|\\.)*'/g, (m) => `'${' '.repeat(m.length - 2)}'`);
+  out = out.replace(/"([^"\\\n]|\\.)*"/g, (m) => `"${' '.repeat(m.length - 2)}"`);
+  out = out.replace(/`([^`\\]|\\.)*`/g, (m) => `\`${' '.repeat(m.length - 2)}\``);
+  return out;
+}
+
+/**
+ * Find every `useEffect(() => { ... }, [DEPS])` block (including async
+ * variant `useEffect(async () => { ... })`). Returns the body string +
+ * the deps string. Brace-depth tracker on a comment/string-stripped
+ * variant of the source so nested `{}` inside if-blocks/switches DO
+ * count, but `{}` inside string literals or comments do NOT (per WF2 P2
+ * review #5+#8: handle the `useEffect(async ...)` variant DeepSeek
+ * flagged AND the comment/string blindness all three reviewers flagged).
  */
 interface EffectBlock {
   body: string;
@@ -55,16 +83,26 @@ interface EffectBlock {
 }
 function extractUseEffects(src: string): EffectBlock[] {
   const out: EffectBlock[] = [];
-  const re = /useEffect\s*\(\s*\(\s*\)\s*=>\s*\{/g;
+  // Walk on the comment/string-stripped clone so brace counts are correct,
+  // but slice the ORIGINAL src for body text so the caller sees real code.
+  const safe = stripStringsAndComments(src);
+  // Allow optional `async` keyword (DeepSeek WF2 P2 review #8: the prior
+  // regex silently skipped `useEffect(async () => …)` effects, letting
+  // a developer bypass the lint by adding `async`).
+  const re = /useEffect\s*\(\s*(?:async\s+)?\(\s*\)\s*=>\s*\{/g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(src)) !== null) {
+  // Run the regex against `safe` so brace-shaped chars inside string/
+  // comment content can never spuriously open an effect. Indices line up
+  // with `src` because `stripStringsAndComments` preserves length.
+  while ((m = re.exec(safe)) !== null) {
     const bodyStart = m.index + m[0].length;
-    // Walk forward tracking `{` `}` depth (start at depth 1 — we already
-    // consumed the opening brace via the regex).
+    // Walk forward tracking `{` `}` depth on the SAFE source (so braces
+    // inside strings/comments don't count) — start at depth 1 since the
+    // regex consumed the opening brace.
     let depth = 1;
     let i = bodyStart;
-    while (i < src.length && depth > 0) {
-      const ch = src[i];
+    while (i < safe.length && depth > 0) {
+      const ch = safe[i];
       if (ch === '{') depth++;
       else if (ch === '}') depth--;
       i++;
@@ -72,13 +110,16 @@ function extractUseEffects(src: string): EffectBlock[] {
     if (depth !== 0) continue; // unbalanced — skip
     const bodyEnd = i - 1; // index of the `}` we just consumed
     const body = src.slice(bodyStart, bodyEnd);
-    // After the `}` we expect `, [DEPS])`. Find the next `[` and matching `]`.
-    const tail = src.slice(i);
-    const depsOpen = tail.indexOf('[');
+    // After the `}` we expect `, [DEPS])`. Bracket search on `safe` so a
+    // `[` inside a string literal in the dep arg's spread doesn't trip
+    // us. Most deps arrays are simple identifier lists; we don't
+    // currently have nested bracketed expressions like `items[0]`.
+    const safeTail = safe.slice(i);
+    const depsOpen = safeTail.indexOf('[');
     if (depsOpen === -1) continue;
-    const depsClose = tail.indexOf(']', depsOpen + 1);
+    const depsClose = safeTail.indexOf(']', depsOpen + 1);
     if (depsClose === -1) continue;
-    const deps = tail.slice(depsOpen + 1, depsClose);
+    const deps = src.slice(i + depsOpen + 1, i + depsClose);
     const startLine = src.slice(0, m.index).split('\n').length;
     out.push({ body, deps, startLine });
   }

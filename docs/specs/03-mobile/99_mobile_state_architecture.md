@@ -133,7 +133,7 @@ After §9.3 deduplication, `onboardingStore` holds ONLY these two genuinely-loca
 |-------|-------------|--------|---------|
 | `unreadFlightBoard` | `notificationStore` (in-memory) | `incrementUnread()` in `NotificationHandlers` foreground push handler; `clearUnread()` on Flight Board tab focus | AppLayout tab badge |
 | `paywall.visible` | `paywallStore` (in-memory — Spec 96 §9 explicit) | `show()` — called by `InlineBlurBanner.tsx:12` on banner tap (verified 2026-05-03 §9.9 audit). The original §3.4 audit incorrectly flagged this as caller-less; the grep missed `usePaywallStore((s) => s.show)` selector usage. | AppLayout subscription gate, PaywallScreen |
-| `paywall.dismissed` | `paywallStore` (in-memory) | `dismiss()` (PaywallScreen "Maybe later" tap), `clear()` (signOut per §B5; `expired→active` transition in AppLayout) | AppLayout subscription gate, InlineBlurBanner |
+| `paywall.dismissed` | `paywallStore` (in-memory) | `dismiss()` (PaywallScreen "Maybe later" tap), `reset()` (signOut per §B5; `expired→active` transition in AppLayout — renamed from `clear()` 2026-05-03 for §B5 naming uniformity) | AppLayout subscription gate, InlineBlurBanner |
 
 ### 3.4a UI-Only SharedValues (Layer 5 — orthogonal to Layers 1-4)
 
@@ -262,7 +262,7 @@ auth().onAuthStateChanged((firebaseUser) => {
 ```ts
 signOut: async () => {
   track('signout_initiated');
-  usePaywallStore.getState().clear();   // BEFORE firebase signOut — Spec 96 §9 critical
+  usePaywallStore.getState().reset();   // BEFORE firebase signOut — Spec 96 §9 critical (renamed from clear() 2026-05-03 for §B5 naming uniformity)
   await auth().signOut();
   // §9.10 (PIPEDA): purge ALL TanStack queries (in-memory + persister).
   // Replaces the legacy `clearUserProfileCache()` call removed in §9.1 —

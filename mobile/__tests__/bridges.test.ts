@@ -126,39 +126,58 @@ describe('B1 subscriber notify-suppression — Spec 99 §9.7b', () => {
     onboarding_complete: true,
   };
 
-  it('subscribers DO NOT notify when refetch resolves with structurally-equal payload', async () => {
+  /**
+   * Promise that resolves with the first non-undefined `data` the observer
+   * emits. Replaces fixed `setTimeout(10ms)` waits per WF2 P2 review #3
+   * (Gemini + DeepSeek + code-reviewer consensus): 10ms is below p99
+   * microtask flush latency on slow CI runners; subscribing-and-resolving on
+   * actual data delivery is deterministic and removes the flake risk.
+   */
+  function firstDataRef(observer: QueryObserver): Promise<unknown> {
+    return new Promise((resolve) => {
+      const unsub = observer.subscribe((result) => {
+        if (result.data !== undefined) {
+          unsub();
+          resolve(result.data);
+        }
+      });
+    });
+  }
+
+  it('data reference is stable across refetch when payload is structurally equal', async () => {
     const client = mkClient();
     const queryFn = async () => JSON.parse(JSON.stringify(sampleProfileBytes));
 
     const observer = new QueryObserver(client, { queryKey: ['user-profile'], queryFn });
 
-    // Initial fetch (subscriber receives ONE notify with the loaded data).
-    let notifyCount = 0;
-    let lastData: unknown = null;
+    // Wait deterministically for the FIRST data delivery — this is the
+    // pre-refetch baseline reference we'll compare against.
+    const dataRefBeforeRefetch = await firstDataRef(observer);
+    expect(dataRefBeforeRefetch).toBeDefined();
+
+    // Track every post-baseline notify so we can assert ALL post-refetch
+    // data references are === the baseline (proves structural sharing kept
+    // them stable, not just any one).
+    const postRefetchDataRefs: unknown[] = [];
     const unsubscribe = observer.subscribe((result) => {
-      notifyCount++;
-      lastData = result.data;
+      if (result.data !== undefined) postRefetchDataRefs.push(result.data);
     });
-    // Wait for the initial fetch to complete.
-    await new Promise((r) => setTimeout(r, 10));
-    const notifyAfterInitial = notifyCount;
-    expect(lastData).toBeDefined();
 
-    // Force a refetch with structurally-equal payload.
+    // Force a refetch with structurally-equal payload. `refetch()` returns
+    // a promise that resolves when the fetch completes — no setTimeout
+    // needed.
     await observer.refetch();
-    // Allow microtasks to flush.
-    await new Promise((r) => setTimeout(r, 10));
 
-    // Subscriber MUST NOT have received a data-change notify because
-    // structural sharing kept the reference stable. The observer DOES
-    // emit lifecycle notifies for fetchStatus changes (isFetching true→
-    // false), but data-equal notifies are suppressed. The contract is:
-    // notifyCount may have grown by lifecycle events but `lastData` ref
-    // is unchanged.
-    const initialDataRef = lastData;
-    expect(initialDataRef).toBe(lastData);
-    // Net assertion: data reference is stable across refetch (the property
-    // a re-rendering React subscriber would actually depend on).
+    // Real assertion (per WF2 P2 review #1 — the previous version compared
+    // a captured ref to itself one line later and was vacuously true):
+    // every data reference observed AFTER the refetch must be === the
+    // pre-refetch reference. Structural sharing's whole job is to suppress
+    // re-render notifies on equal data; if ANY post-refetch ref differs,
+    // a re-rendering React subscriber would tear.
+    expect(postRefetchDataRefs.length).toBeGreaterThan(0);
+    for (const ref of postRefetchDataRefs) {
+      expect(ref).toBe(dataRefBeforeRefetch);
+    }
     unsubscribe();
   });
 
@@ -172,13 +191,16 @@ describe('B1 subscriber notify-suppression — Spec 99 §9.7b', () => {
     };
     const observer = new QueryObserver(client, { queryKey: ['user-profile'], queryFn });
 
-    const dataRefs: unknown[] = [];
+    // Deterministic baseline: wait for first data delivery.
+    const initialRef = await firstDataRef(observer);
+    expect(initialRef).toBeDefined();
+
+    const dataRefs: unknown[] = [initialRef];
     const unsubscribe = observer.subscribe((result) => {
       if (result.data !== undefined) dataRefs.push(result.data);
     });
-    await new Promise((r) => setTimeout(r, 10));
+    // refetch() resolves when fetch completes — no setTimeout needed.
     await observer.refetch();
-    await new Promise((r) => setTimeout(r, 10));
 
     // At least 2 distinct data references should have been observed —
     // the initial load + the refetch with a changed payload.

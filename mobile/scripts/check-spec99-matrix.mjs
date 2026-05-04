@@ -27,37 +27,66 @@ const REPO_ROOT = path.resolve(__dirname, '../..');
 const SCHEMA_FILE = path.join(REPO_ROOT, 'mobile/src/lib/userProfile.schema.ts');
 const SPEC_FILE = path.join(REPO_ROOT, 'docs/specs/03-mobile/99_mobile_state_architecture.md');
 
-/** Parse TOP-LEVEL Zod schema field names. Tracks brace depth to skip
- *  fields nested inside e.g. `notification_prefs: z.object({ ... })`. */
+/** Strip line comments, block comments, and string-literal contents from
+ *  source so the brace-depth walker is not desynced by `{` / `}` chars
+ *  inside strings, templates, or comments. Replaces stripped content with
+ *  spaces of equal length so character indices stay stable for any caller
+ *  walking by index. Per WF2 P2 review #5 + #9 (Gemini + DeepSeek
+ *  consensus on parser fragility). */
+function stripStringsAndComments(src) {
+  let out = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+  out = out.replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length));
+  out = out.replace(/'([^'\\\n]|\\.)*'/g, (m) => `'${' '.repeat(m.length - 2)}'`);
+  out = out.replace(/"([^"\\\n]|\\.)*"/g, (m) => `"${' '.repeat(m.length - 2)}"`);
+  out = out.replace(/`([^`\\]|\\.)*`/g, (m) => `\`${' '.repeat(m.length - 2)}\``);
+  return out;
+}
+
+/** Parse TOP-LEVEL Zod schema field names. Tracks brace depth on a
+ *  comment/string-stripped clone to skip fields nested inside e.g.
+ *  `notification_prefs: z.object({ ... })` AND to ignore commented-out
+ *  fields like `// foo: z.string()`.
+ *
+ *  Per WF2 P2 review #9 (DeepSeek): bumped slice limit from 80 → 240
+ *  chars and added a `slice-exhausted` warning so a long type signature
+ *  (e.g., a wide `z.enum([...])`) cannot silently slip past the field-
+ *  detector. The 240 figure covers the widest current field
+ *  (`subscription_status` enum at ~120 chars) with comfortable headroom. */
 function parseSchemaFields(src) {
-  const objMatch = /UserProfileSchema\s*=\s*z\.object\s*\(\s*\{/.exec(src);
+  const safe = stripStringsAndComments(src);
+  const objMatch = /UserProfileSchema\s*=\s*z\.object\s*\(\s*\{/.exec(safe);
   if (!objMatch) {
     throw new Error('Could not locate UserProfileSchema = z.object({...}) in schema file');
   }
-  // Walk from the opening brace, tracking depth, capturing top-level
-  // `<name>: z.` only when depth === 1 (the schema's own properties).
   const start = objMatch.index + objMatch[0].length;
   const fields = new Set();
   let depth = 1;
   let i = start;
-  // Match name at the current position when depth === 1.
-  while (i < src.length && depth > 0) {
-    const ch = src[i];
+  const SLICE = 240;
+  while (i < safe.length && depth > 0) {
+    const ch = safe[i];
     if (ch === '{') depth++;
     else if (ch === '}') {
       depth--;
       if (depth === 0) break;
     } else if (depth === 1 && /[a-z_]/i.test(ch)) {
-      // Try to match `<name>: z.` starting here.
-      const slice = src.slice(i, i + 80);
-      // Allow `z\s*\.` so multi-line declarations like
-      //   subscription_status: z
-      //     .enum([...])
-      // are captured.
+      // Try to match `<name>: z.` starting here. Run on `safe` so a
+      // commented-out field doesn't register, and slice from `safe` so
+      // string contents containing `:` or `.` cannot tease a false match.
+      const slice = safe.slice(i, i + SLICE);
       const m = /^([a-z_][a-z0-9_]*)\s*:\s*z\s*\./.exec(slice);
       if (m) {
         fields.add(m[1]);
         i += m[1].length;
+      } else if (slice.length === SLICE && /^[a-z_][a-z0-9_]*\s*:/i.test(slice)) {
+        // Slice exhausted but the name+colon prefix is present and we
+        // didn't match `z.`. Either a non-zod field type or the value
+        // text exceeds 240 chars. Warn so a future schema regression
+        // surfaces as a noisy script run, not silent drift.
+        const nameMatch = /^([a-z_][a-z0-9_]*)/i.exec(slice);
+        console.error(
+          `[check-spec99-matrix] WARN slice exhausted at field "${nameMatch?.[1] ?? '?'}" — bump SLICE in parseSchemaFields if this is a new long-type field.`,
+        );
       }
     }
     i++;
@@ -72,8 +101,13 @@ function parseSpecFields(src) {
     throw new Error('Could not locate §3.1 Server-Authoritative Profile Fields heading');
   }
   const rest = src.slice(sectionStart);
-  const nextHeading = rest.search(/\n##+\s/m);
-  const sectionBody = nextHeading === -1 ? rest : rest.slice(0, nextHeading);
+  // Anchor on top-level `### N.N` boundaries only (per WF2 P2 review #10
+  // DeepSeek): the prior `/\n##+\s/` truncated on ANY heading level ≥ 2,
+  // so adding a `#### Migration notes` subheading inside §3.1 would silently
+  // drop trailing rows.
+  const HEADING_AFTER_31 = /\n###\s+(?:[0-4]\.\d|\d{2}\.\d)\s/m;
+  const nextHeading = rest.slice(1).search(HEADING_AFTER_31);
+  const sectionBody = nextHeading === -1 ? rest : rest.slice(0, nextHeading + 1);
 
   const fields = new Set();
   // Split into table rows.

@@ -93,37 +93,57 @@ export const useAuthStore = create<AuthState>()(
         // persisted), so this protects same-session handoffs — common with
         // family/team phones.
         usePaywallStore.getState().reset();
-        // Firebase sign-out — onAuthStateChanged fires (null) which clears auth.
-        // Then reset peer in-memory stores so a different user signing in on the same
-        // device sees no stale data. MMKV is preserved per §3.4 so the same user
-        // returning on the same device gets fast hydration.
-        await auth().signOut();
-        // Spec 99 §B5 + §9.10: purge ALL TanStack Query cache so the next
-        // sign-in (potentially a different user on a shared device) cannot
-        // read the previous user's data from cache. `enabled: !!user` only
-        // stops NEW fetches; in-flight fetches resolve and write to the
-        // cache, and the MMKV persister rehydrates on next mount with the
-        // previous user's data — a PIPEDA leak on shared devices.
+        // Firebase sign-out — onAuthStateChanged fires (null) which clears
+        // auth. Then reset peer in-memory stores so a different user
+        // signing in on the same device sees no stale data. MMKV is
+        // preserved per §3.4 so the same user returning on the same device
+        // gets fast hydration.
         //
-        // `clear()` (not `removeQueries({queryKey:['user-profile']})`) per
-        // Gemini WF2-Phase-A review #5: lead-feed, leads, flight-board, and
-        // any future user-scoped queries are ALSO under PIPEDA — narrow
-        // purge would leak them. The mobile app currently has no
-        // non-user-scoped queries, so the blast radius is zero.
-        queryClient.clear();
-        useFilterStore.getState().reset();
-        useNotificationStore.getState().reset();
-        useOnboardingStore.getState().reset();
-        useUserProfileStore.getState().reset();
-        // Spec 99 §9.1: removed clearUserProfileCache() — the legacy MMKV
-        // blob (`user-profile-cache`) is gone. queryClient.clear() above
-        // already purges the TanStack persister blob (the only remaining
-        // profile cache).
-        set({ user: null, idToken: null, isLoading: false });
-        // Reset PostHog identity AFTER the in-memory store reset so the
-        // distinctId is cleared at a clean session boundary; any subsequent
-        // event before the next sign-in will use an anonymous distinctId.
-        resetIdentity();
+        // WF2 P2 review #11 (DeepSeek): wrap the Firebase call in
+        // try/finally so that a Firebase failure (network blip, expired
+        // refresh token, Firebase unreachable) does NOT skip the
+        // downstream PIPEDA-critical cleanup (queryClient.clear() + peer
+        // store resets). Pre-fix, a thrown signOut() would leave the
+        // user logged in locally with stale Zustand + TanStack caches —
+        // exactly the leak the §9.12 storeReset coverage test is meant
+        // to prevent at the static layer.
+        try {
+          await auth().signOut();
+        } catch (err) {
+          Sentry.captureException(err, {
+            extra: { context: 'authStore.signOut: firebase signOut failed; running cleanup anyway' },
+          });
+        } finally {
+          // Spec 99 §B5 + §9.10: purge ALL TanStack Query cache so the
+          // next sign-in (potentially a different user on a shared
+          // device) cannot read the previous user's data from cache.
+          // `enabled: !!user` only stops NEW fetches; in-flight fetches
+          // resolve and write to the cache, and the MMKV persister
+          // rehydrates on next mount with the previous user's data —
+          // a PIPEDA leak on shared devices.
+          //
+          // `clear()` (not `removeQueries({queryKey:['user-profile']})`)
+          // per Gemini WF2-Phase-A review #5: lead-feed, leads,
+          // flight-board, and any future user-scoped queries are ALSO
+          // under PIPEDA — narrow purge would leak them. The mobile app
+          // currently has no non-user-scoped queries, so the blast
+          // radius is zero.
+          queryClient.clear();
+          useFilterStore.getState().reset();
+          useNotificationStore.getState().reset();
+          useOnboardingStore.getState().reset();
+          useUserProfileStore.getState().reset();
+          // Spec 99 §9.1: removed clearUserProfileCache() — the legacy
+          // MMKV blob (`user-profile-cache`) is gone. queryClient.clear()
+          // above already purges the TanStack persister blob (the only
+          // remaining profile cache).
+          set({ user: null, idToken: null, isLoading: false });
+          // Reset PostHog identity AFTER the in-memory store reset so
+          // the distinctId is cleared at a clean session boundary; any
+          // subsequent event before the next sign-in will use an
+          // anonymous distinctId.
+          resetIdentity();
+        }
       },
     }),
     {
