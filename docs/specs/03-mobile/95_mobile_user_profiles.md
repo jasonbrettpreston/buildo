@@ -68,34 +68,23 @@ The `EXISTS (SELECT 1 FROM ins)` clause ensures the UPDATE only fires when the I
 
 ### 2.4 Notification Preferences
 
+> **Spec 99 §9.14 update (2026-05-04):** the original single `notification_prefs` JSONB column was flattened to 5 sibling columns in migration 117. The flatten eliminates the mobile `fast-deep-equal` hot path (5 atomic primitives compare via `Object.is`) and replaces server-side JSONB merge syntax with standard column UPDATEs. The `lifecycle_stalled` JSONB key was renamed `lifecycle_stalled_pref` on the column to avoid silent ambiguity in pipeline SELECTs that join `permits.lifecycle_stalled`.
+
 | Column | Type | Default |
 |--------|------|---------|
-| `notification_prefs` | JSONB | `'{"new_lead_min_cost_tier":"medium","phase_changed":true,"lifecycle_stalled":true,"start_date_urgent":true,"notification_schedule":"anytime"}'` |
+| `new_lead_min_cost_tier` | `TEXT` (CHECK `'low' / 'medium' / 'high'`) | `'medium'` |
+| `phase_changed` | `BOOLEAN` | `TRUE` |
+| `lifecycle_stalled_pref` | `BOOLEAN` | `TRUE` |
+| `start_date_urgent` | `BOOLEAN` | `TRUE` |
+| `notification_schedule` | `TEXT` (CHECK `'morning' / 'anytime' / 'evening'`) | `'anytime'` |
 
-**JSONB schema (canonical — Spec 92 §2.3):**
-```json
-{
-  "new_lead_min_cost_tier": "low" | "medium" | "high",
-  "phase_changed": true,
-  "lifecycle_stalled": true,
-  "start_date_urgent": true,
-  "notification_schedule": "morning" | "anytime" | "evening"
-}
-```
+All 5 columns are NOT NULL with safe defaults (set in migration 117 to match the original JSONB defaults exactly), so existing rows are always valid and PATCH bodies can omit any subset of fields. The backend dispatch engine (Spec 92 §6.3) and the lifecycle classifier (`scripts/classify-lifecycle-phase.js`) read the columns directly. If OS permission is denied, these fields are irrelevant — no pushes are sent regardless of their value.
 
-All five keys are required at write time; the column has a non-null JSONB default so existing rows are always valid. The backend dispatch engine (Spec 92 §6.3) reads `notification_prefs->>'notification_schedule'` and the individual boolean fields from this JSONB column. If OS permission is denied, these fields are irrelevant — no pushes are sent regardless of their value.
+**Partial merge — atomicity:** The PATCH handler builds dynamic SET clauses for only the fields the client sent (same `addField()` pattern as the rest of the user-profile PATCH). Because each field is its own column, concurrent partial PATCHes that target different fields cannot clobber each other; concurrent PATCHes targeting the same field follow normal last-write-wins semantics, which was the same behavior the JSONB merge produced.
 
-**JSONB partial merge — atomicity requirement:** The PATCH handler receives partial updates (e.g., only `notification_schedule`). The merge must be performed at the SQL level — not via a JavaScript read-modify-write — to avoid lost updates under concurrent requests:
-```sql
--- Correct: atomic server-side merge
-UPDATE user_profiles
-SET notification_prefs = notification_prefs || $1::jsonb
-WHERE user_id = $2
--- $1 is the incoming partial JSON object, e.g. '{"notification_schedule":"morning"}'
-```
-A JavaScript `{ ...existingPrefs, ...incomingPrefs }` approach requires a separate SELECT + UPDATE — two concurrent saves racing on the same key will clobber each other. The PostgreSQL `||` operator merges JSONB objects atomically in a single statement.
-
-**Deprecation note:** Earlier drafts used two separate boolean columns (`notif_permit_status`, `notif_urgent_alerts`). These are superseded by `notification_prefs` JSONB, which covers the full Spec 92 preference surface. The migration must NOT create the boolean columns — only the JSONB column.
+**Deprecation history:**
+- *2026-04-21:* Earlier drafts used two boolean columns (`notif_permit_status`, `notif_urgent_alerts`); superseded by the single `notification_prefs` JSONB.
+- *2026-05-04:* The JSONB column itself was superseded by the 5 flat columns above (Spec 99 §9.14, migration 117). Pre-117 readers (`COALESCE(notification_prefs, '{}'::jsonb) || $::jsonb`) are gone from the codebase.
 
 ### 2.5 Admin-Configured Fields (Manufacturer accounts only)
 
@@ -273,7 +262,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - File: `migrations/XXX_user_profiles_mobile_columns.sql`
 - `ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS` for every column listed in §2 that does not already exist. All new columns are nullable with safe defaults — no backfill required.
 - Special note: `radius_km` is promoted from MMKV-only to a server-side column. After migration, MMKV stores it as cache only; `user_profiles` is authoritative. Client performs a one-time write-back on first launch (see §4 radius_km write-back note).
-- `notification_prefs`: add as JSONB with default `'{"new_lead_min_cost_tier":"medium","phase_changed":true,"lifecycle_stalled":true,"start_date_urgent":true,"notification_schedule":"anytime"}'::jsonb`. Do NOT add the deprecated boolean columns `notif_permit_status` / `notif_urgent_alerts`.
+- *Pre-Spec-99-§9.14 (historical):* `notification_prefs` JSONB. **As of migration 117 this column is dropped** and replaced by 5 sibling columns: `new_lead_min_cost_tier TEXT DEFAULT 'medium'`, `phase_changed BOOLEAN DEFAULT TRUE`, `lifecycle_stalled_pref BOOLEAN DEFAULT TRUE`, `start_date_urgent BOOLEAN DEFAULT TRUE`, `notification_schedule TEXT DEFAULT 'anytime'`. CHECK constraints enforce the two enums. See §2.4 for the canonical column list.
 - Add `CHECK` constraint per §7: `ALTER TABLE user_profiles ADD CONSTRAINT chk_location_mode_coords CHECK (location_mode IS NULL OR (location_mode = 'gps_live' AND ...) OR (location_mode = 'home_base_fixed' AND ...))`.
 - **New tables (same migration file):**
   ```sql
@@ -318,12 +307,12 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - File: `src/app/api/user-profile/route.ts` (same file, add `PATCH` handler)
 - Wrap handler with `withApiEnvelope` (§00 §2.2). Extract Firebase UID via `getUserIdFromSession(request)`. Return 401 if UID is null.
 - **Check deleted account first:** If the authenticated UID has `account_deleted_at IS NOT NULL`, return 403 immediately (same body as GET 403). Do not apply any field updates to deleted accounts. **Idempotency exception for deletion retry:** if the body is the deletion payload (contains `account_deleted_at` that matches the existing DB value), return 200 rather than 403 — see Step 3a.
-- **`UserProfileUpdateSchema` (whitelist — standard client-editable fields):** Validate against a Zod schema that allows the following 10 fields: `full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `notification_prefs`. Strip all other fields silently (`.strip()`).
+- **`UserProfileUpdateSchema` (whitelist — standard client-editable fields):** Validate against a Zod schema that allows the following 14 fields: `full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, plus the 4 notification fields (`new_lead_min_cost_tier`, `phase_changed`, `lifecycle_stalled_pref`, `start_date_urgent`, `notification_schedule`) — flat per Spec 99 §9.14. Strip all other fields silently (`.strip()`).
 - **Guarded fields (writable via PATCH under server-enforced conditions — NOT in the standard whitelist above):**
   - `onboarding_complete: true` — accepted ONLY when all required fields are present in the resulting row: `trade_slug IS NOT NULL`, `location_mode IS NOT NULL`, `tos_accepted_at IS NOT NULL`. The server validates these preconditions and then also writes `trial_started_at = NOW()` and `subscription_status = 'trial'` in the same DB transaction (Spec 96 Step 4) when `account_preset != 'manufacturer'`. Reject with 400 if preconditions are not met: `{ error: "Profile incomplete — cannot complete onboarding." }`. Manufacturers skip trial write.
   - `tos_accepted_at` — accepted only from the onboarding sequence (present in body alongside valid onboarding step fields). Strip if sent independently post-onboarding.
 - **Strictly server-only fields (strip silently or 400 if strict):** `subscription_status`, `trial_started_at`, `stripe_customer_id`, `account_deleted_at`, `account_preset`, `trade_slugs_override`, `radius_cap_km`, `lead_views_count`. These must NEVER be accepted via this PATCH endpoint. They are written only by: Step 3a (deletion endpoint), Step 3b (reactivation endpoint), Stripe webhook handler, or direct DB admin scripts.
-- **`notification_prefs` validation:** If included, parse as a Zod object matching the §2.4 schema. Partial updates are merged server-side (spread existing prefs + incoming partial): `{ ...existingPrefs, ...incomingPrefs }`. This allows the client to update only `notification_schedule` without sending all 5 keys.
+- **Notification fields validation (per Spec 99 §9.14):** Each of the 5 flat notification fields is independently `.optional()` in `UserProfileUpdateSchema`. Partial updates are now natural — the PATCH handler builds dynamic SET clauses for only the fields the client sent. The pre-§9.14 read-modify-write JSONB merge is no longer needed; concurrent partial PATCHes that target different fields cannot clobber each other.
 - The Zod schema strips `email` (`.strip()`). Reject any body containing `trade_slug` with 400: `{ error: "Trade cannot be changed after registration." }` (§3). Idempotency exception: if incoming `trade_slug` equals the existing DB value, return 200 (handles onboarding retry after network drop, per Spec 94 §10 Step 3). `trade_slug` immutability guard applies to ALL accounts including manufacturers.
 - Enforce `effective_radius = COALESCE(LEAST(requested_radius, radius_cap_km), requested_radius)` (handles NULL cap per §7).
 - Update only the fields present in the body. Try-catch + `logError`. Return updated row.
@@ -425,7 +414,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - DB migration — new columns on `user_profiles` table
 
 **Schema evolution required (new columns on `user_profiles`):**
-`full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `lead_views_count`, `subscription_status`, `trial_started_at`, `stripe_customer_id`, `onboarding_complete`, `tos_accepted_at`, `account_deleted_at`, `notification_prefs` (JSONB — replaces deprecated boolean columns), `account_preset`, `trade_slugs_override`, `radius_cap_km`
+`full_name`, `phone_number`, `company_name`, `backup_email`, `default_tab`, `location_mode`, `home_base_lat`, `home_base_lng`, `radius_km`, `supplier_selection`, `lead_views_count`, `subscription_status`, `trial_started_at`, `stripe_customer_id`, `onboarding_complete`, `tos_accepted_at`, `account_deleted_at`, `new_lead_min_cost_tier` / `phase_changed` / `lifecycle_stalled_pref` / `start_date_urgent` / `notification_schedule` (5 flat columns per Spec 99 §9.14 + migration 117 — replaced the JSONB column which itself replaced earlier deprecated booleans), `account_preset`, `trade_slugs_override`, `radius_cap_km`
 
 **`subscription_status` ENUM values (all 6 must be in the migration):** `'trial'`, `'active'`, `'past_due'`, `'expired'`, `'cancelled_pending_deletion'`, `'admin_managed'`
 

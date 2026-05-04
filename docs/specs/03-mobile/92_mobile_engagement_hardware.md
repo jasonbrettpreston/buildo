@@ -44,18 +44,19 @@ Tradespeople must have granular control over what interrupts their day. The `set
     * Urgency overrides (`LIFECYCLE_STALLED`, `START_DATE_URGENT`) always bypass this gate.
     * *Rationale:* Consumer apps peak at 8PM. Tradespeople start work at 6–7AM. The morning window is the power window for this audience — validated by field use patterns. Default `"Anytime"` is non-breaking for existing users.
 * **Settings UI:** `bg-zinc-800` segmented control container; amber highlight on selected option; `font-mono text-xs` labels.
-* **Backend Sync:** All preferences sync to `user_profiles.notification_prefs` JSONB. The Next.js dispatch engine evaluates preferences before calling the Expo Push API.
+* **Backend Sync:** All preferences sync to 5 sibling columns on `user_profiles` (flattened from a single `notification_prefs` JSONB column in migration 117 per Spec 99 §9.14). The Next.js dispatch engine reads the flat columns directly before calling the Expo Push API.
 
-**`notification_prefs` JSONB schema:**
-```json
-{
-  "new_lead_min_cost_tier": "medium",
-  "phase_changed": true,
-  "lifecycle_stalled": true,
-  "start_date_urgent": true,
-  "notification_schedule": "anytime"
-}
-```
+**`user_profiles` notification columns** (migration 117 — Spec 99 §9.14):
+
+| Column | Type | Default |
+|---|---|---|
+| `new_lead_min_cost_tier` | `TEXT` (CHECK `'low' / 'medium' / 'high'`) | `'medium'` |
+| `phase_changed` | `BOOLEAN` | `TRUE` |
+| `lifecycle_stalled_pref` | `BOOLEAN` | `TRUE` |
+| `start_date_urgent` | `BOOLEAN` | `TRUE` |
+| `notification_schedule` | `TEXT` (CHECK `'morning' / 'anytime' / 'evening'`) | `'anytime'` |
+
+The `lifecycle_stalled_pref` column is named with the `_pref` suffix to avoid silent ambiguity in pipeline SELECTs that join `permits` (where `lifecycle_stalled` is a derived classification of permit progress) with `user_profiles`. The mobile-side store field stays `lifecycleStalled` — no naming collision in the mobile bundle.
 
 ## 3. Payload Schema & Deep Linking
 

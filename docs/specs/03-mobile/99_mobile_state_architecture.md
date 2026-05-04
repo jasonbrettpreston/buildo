@@ -95,7 +95,11 @@ This table is **normative**. Adding a field to the mobile app requires adding a 
 | `radius_km` | int | `filterStore.radiusKm` | Server | Server PATCH from LeadFilterSheet | useLeadFeed params, LeadFilterSheet UI | B2 |
 | `supplier_selection` | text | `filterStore.supplierSelection` | Server | Server PATCH from `supplier.tsx` or settings | settings, future supplier-tagged feed | B2 |
 | `full_name` / `company_name` / `phone_number` / `backup_email` | text | `userProfileStore.{fullName,companyName,phoneNumber,backupEmail}` | Server | Server PATCH from settings | settings forms, NotificationToast (display only) | B2 |
-| `notification_prefs` | jsonb (5-key shape) | `userProfileStore.notificationPrefs` | Server | Server PATCH from settings notifications | settings notification toggles | B2 — **MUST use deep-equal gate per §6.6** |
+| `new_lead_min_cost_tier` | enum (`low`/`medium`/`high`) | `userProfileStore.newLeadMinCostTier` | Server | Server PATCH from settings notifications | settings cost-tier slider, push-notification dispatch (lifecycle classifier) | B2 |
+| `phase_changed` | bool | `userProfileStore.phaseChanged` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch | B2 |
+| `lifecycle_stalled_pref` | bool | `userProfileStore.lifecycleStalled` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch (suffix `_pref` on server side avoids collision with `permits.lifecycle_stalled`) | B2 |
+| `start_date_urgent` | bool | `userProfileStore.startDateUrgent` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch | B2 |
+| `notification_schedule` | enum (`morning`/`anytime`/`evening`) | `userProfileStore.notificationSchedule` | Server | Server PATCH from settings notifications | settings segmented control, push-notification dispatch | B2 |
 | `onboarding_complete` | bool | **NONE** (was `onboardingStore.isComplete` until 2026-05-02; see §3.5 deprecation) | Server | Server PATCH in `complete.tsx` | AuthGate (Branch 5), `IncompleteBanner` (read server profile directly per §9.2) | B2 |
 | `tos_accepted_at` | timestamptz | — | Server | Server PATCH from `terms.tsx` | AuthGate fallback, audit | — |
 | `account_preset` | enum | — | Server (admin-set) | Admin tool | AuthGate manufacturer branch (Branch 4.5) | — |
@@ -411,20 +415,22 @@ if (isLoading || profile == null || profile.subscription_status == null) {
 
 ### 6.6 Object-valued store fields MUST be deep-compared before set
 
+> **§9.14 update (2026-05-04):** the original `notificationPrefs` JSONB blob — the canonical example for this rule — was flattened to 5 sibling primitive fields on `userProfileStore` (migration 117 + Phase B). Primitives compare via `Object.is` for free (Zustand's own equality), so deep-equal is no longer needed for that field. **Field-by-field comparison is the preferred shape going forward** (see Rules below); deep-equal remains required only for the few legitimately composite fields like `filterStore.homeBaseLocation` (`{lat, lng}` always travels together).
+
 ```ts
-// REQUIRED for nested object fields (notificationPrefs, homeBaseLocation)
+// REQUIRED for nested object fields (homeBaseLocation; was notificationPrefs pre-§9.14)
 import equal from 'fast-deep-equal/es6';
 
 hydrate: (profile) => set((prev) => {
-  const nextPrefs = profile.notification_prefs;
-  return equal(prev.notificationPrefs, nextPrefs) ? prev : { notificationPrefs: nextPrefs };
+  const nextLoc = { lat: profile.home_base_lat, lng: profile.home_base_lng };
+  return equal(prev.homeBaseLocation, nextLoc) ? prev : { homeBaseLocation: nextLoc };
 });
 ```
 
 **Rules:**
 - MUST use `fast-deep-equal/es6` (npm-installed, ~80 lines, no deps). Hand-rolled deep-equal is BANNED — easy to get wrong, hard to test, slow on cold paths.
-- For schemas with stable shape (Zod-validated), prefer **field-by-field comparison** over deep-equal. `notification_prefs` (5 known keys) is a candidate — and §9.8 followup proposes flattening it to 5 separate boolean fields on `userProfileStore` so each one becomes a primitive comparison (no deep-equal needed).
-- **Current violations being remediated:** `mobile/src/store/filterStore.ts:78-89` and `mobile/src/store/userProfileStore.ts:59-66` both call bare `set({...})` unconditionally. **§9.8 P0/BLOCKING fixes both.**
+- For schemas with stable shape (Zod-validated), **prefer field-by-field comparison** over deep-equal. The §9.14 flatten of `notification_prefs` is the canonical example: 5 atomic primitives + 5 `Object.is` gates replaced 1 JSONB blob + 1 `fast-deep-equal` call.
+- New composite fields MUST justify the deep-equal cost in the spec PR (decision tree: would 2-3 atomic fields work? if yes, prefer flatten).
 
 ---
 
@@ -534,7 +540,7 @@ The following items eliminate the duplication identified in the audit and resolv
 | 9.9 | ✅ DONE | Audited `paywallStore.show()` — caller is `mobile/src/components/paywall/InlineBlurBanner.tsx:12` (`usePaywallStore((s) => s.show)`). The original §3.4 audit grep missed the selector usage; row updated with verified caller. | WF2 P2 batch | `docs/specs/03-mobile/99_mobile_state_architecture.md` §3.4 |
 | 9.12 | ✅ DONE | Added `mobile/__tests__/storeReset.coverage.test.ts`. Discovers all Zustand stores in `mobile/src/store/` via regex, asserts each has a matching `.getState().reset()` call in `signOut()` OR a `// signOut-exempt: <reason>` comment. Catches the silent-leak bug where adding a new store and forgetting the signOut entry leaves stale data on shared devices (PIPEDA leak class). | WF2 P2 batch | `mobile/__tests__/storeReset.coverage.test.ts` (NEW) |
 | 9.13 | ✅ DONE | Added `mobile/scripts/check-spec99-matrix.mjs`. Parses Zod schema field names + §3.1 table column 1; asserts setEqual. Brace-depth tracker in schema parser skips nested `notification_prefs` keys; multi-line `z\s*\.` allows `subscription_status` (split across 3 lines). Currently 0 drift across 27 fields. Discovered & fixed 4 missing §3.1 rows (`created_at`, `updated_at`, `display_name`, `email`) as part of close-out. | WF2 P2 batch | `mobile/scripts/check-spec99-matrix.mjs` (NEW), `docs/specs/03-mobile/99_mobile_state_architecture.md` §3.1 |
-| 9.14 | P2 | Flatten `notification_prefs` to 5 separate boolean fields on `userProfileStore` (eliminates the deep-equal hot path entirely) | WF2 | `mobile/src/store/userProfileStore.ts`, settings notification screens, server schema migration coordinated with web admin |
+| 9.14 | ✅ DONE | Flattened `notification_prefs` JSONB → 5 sibling columns (3 booleans + 2 enums) via migration 117. Server (`userProfile.schema.ts` + 2 API routes + `classify-lifecycle-phase.js` push-dispatch script) and mobile (`userProfile.schema.ts`, `userProfileStore`, `settings.tsx`, 4 test files) updated in coordinated phases. Cost-tier enum reconciled from divergent `['small','medium','large','major','mega']` (one-off in `notifications/preferences/route.ts`) to canonical `['low','medium','high']`. `lifecycle_stalled_pref` server-column suffix avoids collision with `permits.lifecycle_stalled` in pipeline joins. `userProfileStore` persist `version: 1` + migrate drops orphan JSONB blob from existing MMKV. `fast-deep-equal` no longer called from `userProfileStore` — primitive `Object.is` per field replaces the deep-equal hot path that §6.6 was written to mitigate. | WF2 cross-domain | migration 117, `src/lib/userProfile.schema.ts`, `src/app/api/user-profile/route.ts`, `src/app/api/notifications/preferences/route.ts`, `scripts/classify-lifecycle-phase.js`, 4 server test files; `mobile/src/lib/userProfile.schema.ts`, `mobile/src/store/userProfileStore.ts`, `mobile/app/(app)/settings.tsx`, 4 mobile test files |
 | 9.15 | ✅ DONE | Added `mobile/__tests__/routerHygiene.lint.test.ts`. Two static-analysis rules: (1) router-effect hygiene — extracts every `useEffect(() => { BODY }, [DEPS])` block via brace-depth tracking; if `router` is in DEPS, scans BODY for `useXStore(` hook calls (lazy `.getState()` reads remain permitted). (2) atomic-selector mandate — globs `mobile/app/**/*.tsx` + `mobile/src/components/**/*.tsx`; flags any `useXStore()` zero-arg whole-store read per §6.1. 51 tests pass against current code. | WF2 P2 batch | `mobile/__tests__/routerHygiene.lint.test.ts` (NEW) |
 | 9.16 | P2 | Codify or ban Bridge B6 (LeadFilterSheet/settings PATCH+local-set without B3 ceremony). Grep `getState().set*` in `LeadFilterSheet.tsx` and `settings.tsx`; either standardize as B6 in §4 or migrate to B3. | WF1 amendment | TBD |
 
