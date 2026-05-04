@@ -65,14 +65,21 @@ describe('getUserIdFromSession', () => {
     (process.env as Record<string, string>).NODE_ENV = prev ?? 'test';
   });
 
-  it('returns null and logs ERROR (production) when firebase-admin not initialized', async () => {
+  it('THROWS in production when firebase-admin not initialized (WF3 hardening — no silent 401 storm)', async () => {
+    // WF3 2026-05-04 auth hardening: a silent return-null in production
+    // produced a 401 storm with no diagnostic. Now we throw so the route
+    // handler returns 500 (catches alerting + surfaces the real cause).
+    // Boot-time init also throws (commit 403adcc); this is defense-in-depth
+    // for the exotic case where boot init succeeded but the apps array got
+    // cleared.
     mockApps.length = 0;
     const prev = process.env.NODE_ENV;
     (process.env as Record<string, string>).NODE_ENV = 'production';
     const logger = await import('@/lib/logger');
     const { getUserIdFromSession } = await import('@/lib/auth/get-user');
-    const result = await getUserIdFromSession(makeRequest('a.b.c'));
-    expect(result).toBeNull();
+    await expect(getUserIdFromSession(makeRequest('a.b.c'))).rejects.toThrow(
+      /firebase-admin not initialized/,
+    );
     expect(logger.logError).toHaveBeenCalled();
     (process.env as Record<string, string>).NODE_ENV = prev ?? 'test';
   });
@@ -82,6 +89,28 @@ describe('getUserIdFromSession', () => {
     const { getUserIdFromSession } = await import('@/lib/auth/get-user');
     const result = await getUserIdFromSession(makeRequest('a.b.c'));
     expect(result).toBe('user-123');
+  });
+
+  it('passes checkRevoked: true to verifyIdToken (WF3 hardening — server-side revocation enforcement per Spec 93 §3.1)', async () => {
+    // Pre-WF3 the verifyIdToken call omitted the second arg so revoked
+    // tokens (post-password-change, admin-disabled, etc.) authenticated
+    // until natural expiry (~1hr). Spec 93 §3.1 mandates server-side
+    // enforcement — this assertion locks the second-arg presence.
+    mockVerifyIdToken.mockResolvedValueOnce({ uid: 'user-123' });
+    const { getUserIdFromSession } = await import('@/lib/auth/get-user');
+    await getUserIdFromSession(makeRequest('a.b.c'));
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('a.b.c', true);
+  });
+
+  it('rejects oversized tokens (>8KB) before any Firebase parse (WF3 DoS guard)', async () => {
+    // Pre-WF3 a 1MB JWT would tie up CPU/memory in verifyIdToken before
+    // Firebase rejected. Cheap length pre-check rejects the pathological
+    // case in O(1).
+    const oversized = 'a.' + 'x'.repeat(9000) + '.c';
+    const { getUserIdFromSession } = await import('@/lib/auth/get-user');
+    const result = await getUserIdFromSession(makeRequest(oversized));
+    expect(result).toBeNull();
+    expect(mockVerifyIdToken).not.toHaveBeenCalled();
   });
 
   it('returns null and logs warn (not error) on id-token-expired', async () => {
@@ -168,7 +197,26 @@ describe('verifyIdTokenCookie dev-mode bypass (Bug #2 regression lock)', () => {
     const { verifyIdTokenCookie } = await import('@/lib/auth/get-user');
     const { DEV_SESSION_COOKIE } = await import('@/lib/auth/route-guard');
     await verifyIdTokenCookie(DEV_SESSION_COOKIE);
-    expect(mockVerifyIdToken).toHaveBeenCalledWith(DEV_SESSION_COOKIE);
+    expect(mockVerifyIdToken).toHaveBeenCalledWith(DEV_SESSION_COOKIE, true);
+  });
+
+  it('STILL calls Firebase when DEV_MODE=true + matching cookie + NODE_ENV=production (WF3 dual-gate hardening)', async () => {
+    // WF3 2026-05-04: a misconfigured prod build with `DEV_MODE=true`
+    // would otherwise authenticate any client that knows the well-known
+    // DEV_SESSION_COOKIE constant. Dual-gate now also requires
+    // NODE_ENV !== 'production'.
+    process.env.DEV_MODE = 'true';
+    const prevNodeEnv = process.env.NODE_ENV;
+    (process.env as Record<string, string>).NODE_ENV = 'production';
+    mockVerifyIdToken.mockResolvedValueOnce({ uid: 'real-user' });
+    const { verifyIdTokenCookie } = await import('@/lib/auth/get-user');
+    const { DEV_SESSION_COOKIE } = await import('@/lib/auth/route-guard');
+    const result = await verifyIdTokenCookie(DEV_SESSION_COOKIE);
+    // Must NOT short-circuit to 'dev-user' — Firebase is called instead.
+    expect(result).toBe('real-user');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith(DEV_SESSION_COOKIE, true);
+    delete (process.env as Record<string, string | undefined>).DEV_MODE;
+    (process.env as Record<string, string>).NODE_ENV = prevNodeEnv ?? 'test';
   });
 
   it('STILL calls Firebase when DEV_MODE=true but cookie is a different 3-segment token', async () => {
@@ -181,7 +229,7 @@ describe('verifyIdTokenCookie dev-mode bypass (Bug #2 regression lock)', () => {
     const { verifyIdTokenCookie } = await import('@/lib/auth/get-user');
     const result = await verifyIdTokenCookie('real.firebase.token');
     expect(result).toBe('real-user');
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('real.firebase.token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('real.firebase.token', true);
     delete (process.env as Record<string, string | undefined>).DEV_MODE;
   });
 
@@ -215,7 +263,7 @@ describe('verifyIdTokenCookie dev-mode bypass (Bug #2 regression lock)', () => {
       makeRequest(DEV_SESSION_COOKIE, 'Bearer real.firebase.token'),
     );
     expect(result).toBe('mobile-firebase-user');
-    expect(mockVerifyIdToken).toHaveBeenCalledWith('real.firebase.token');
+    expect(mockVerifyIdToken).toHaveBeenCalledWith('real.firebase.token', true);
     delete (process.env as Record<string, string | undefined>).DEV_MODE;
   });
 
