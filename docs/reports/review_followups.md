@@ -1,6 +1,41 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF3 Top-6 Deferred Bug Sweep — 2026-05-04 (RESOLVED)
+
+7 commits closed 9 CRITICAL + 8 HIGH from the queue below. Phases 1–6 attacked one bundle each (smallest-blast-radius first); Phase 7 applied amendments from the adversarial trio (Gemini + DeepSeek + code-reviewer) which surfaced 3 additional CRITICAL + 4 additional HIGH that were also fixed inline. Phase 4 was a no-op — the original deferred item (compute-trade-forecasts atomicity) was already pre-fixed by commit "WF3 B2-C1 (2026-04-23)" and locked by the existing test at `compute-trade-forecasts.infra.test.ts:429`.
+
+| Commit | Bundle | Items closed |
+|---|---|---|
+| `d609b9b` | Phase 1 — Auth hardening (`src/lib/auth/get-user.ts`) | CRIT × 2 (timing-attack on cookie compare; verifyIdToken revocation check) + HIGH × 2 (silent-401-storm in prod; dev-mode dual-gate) + MED × 1 (8 KB token length DoS) |
+| `08ff823` | Phase 2 — `/api/user-profile` route hardening | CRIT × 2 (`SELECT *` leakage; trade_slug first-write race) + HIGH × 1 (trade_slug validation bypass) + MED × 1 (Cache-Control on GET-with-side-effects, free) |
+| `6b518ae` | Phase 3 — push-dispatch hardening (`scripts/classify-lifecycle-phase.js`) | CRIT × 2 (N+1 query; `DISTINCT ON` without `ORDER BY`) + HIGH × 1 (`callExpoPushApi` ignores statusCode) |
+| (Phase 4 — no-op, pre-fixed) | compute-trade-forecasts atomicity (review_followups.md:378) | CRIT × 1 verified resolved by 2026-04-23 commit |
+| `857bf51` | Phase 5 — Mobile MMKV PII (`mobile/src/lib/userProfile.schema.ts`) | CRIT × 1 (`stripe_customer_id` → MMKV violated Spec 99 §2.1) + HIGH × 3 (`.datetime()` on timestamps, coord bounds, `lead_views_count` nullable default) |
+| `fefc2a3` | Phase 6 — Builder pagination (`src/features/leads/lib/get-lead-feed.ts`) | CRIT × 1 (lexicographic cursor sort skipped builders 10..89 after page 1 ended at builder 9) |
+| `0fa1314` | Phase 7 — Adversarial trio amendments | CRIT × 3 (mobile vs server contract break, partial-PATCH data loss, lead_views_count `.default(0)` doesn't fire on null) + HIGH × 4 (string-match re-throw → custom error class, tos_accepted_at mutability, non-trade UPDATE 0-row check, unnest NULL-revision filter) |
+
+**Items deliberately NOT selected** (deferred to standalone WFs — already documented in the active task plan):
+- Sentry @~7.2.0 broken on RN 0.81 New Architecture (CRIT) — version bump risk; standalone
+- `lifecycle-phase.js` `classifyBldLed` returns P18 when `has_passed_inspection=true` (CRIT) — needs spec author input
+- `lifecycle-phase.js` TRADE_TARGET_PHASE / stall thresholds hardcoded (2× CRIT) — DB migration scope
+- `pipeline.js:465` `checkQueueAge` SQL injection vector (CRIT) — library-level fix
+- Backup-email persistence bridge missing in `sign-up.tsx` (CRIT) — cross-feature
+- Auth-state reset on forced sign-out PROMOTED CRIT — separate mobile-state WF
+- Lifecycle "Unstall cliff" CRIT — Phase 2 classifier upgrade
+
+**Items deferred from the Phase 7 adversarial review** (out-of-scope for the top-6 sweep, captured here for a future WF):
+- Phase 6 cursor wire-format break for in-flight clients (Gemini CRIT) — needs deploy-time cursor migration; separate WF1
+- Phase 5 broader PII scope: `full_name` / `phone_number` / `company_name` / `email` / `backup_email` still persisted to unencrypted MMKV (Gemini CRIT) — architectural decision needing Spec 99 §2.1 amendment + CISO sign-off
+- Phase 1 timing-safe length leak on `timingSafeStringEqual` (Gemini + DeepSeek HIGH) — DEV cookie length is a hardcoded constant; low-risk in practice
+- Phase 1 catch-all narrowing to Firebase codes only (Gemini HIGH) — scope creep
+- Phase 2 location_mode coord-clearing inconsistency 500-vs-400 (Gemini HIGH) — pre-existing
+- Phase 2 409 reconciliation SELECT outside transaction (DeepSeek + code-reviewer HIGH) — cosmetic; field is diagnostic
+- Phase 2b lifecycle backfill N+1 (Gemini HIGH) — pre-existing one-time migration concern
+- Expo Push API positive-shape assertion (DeepSeek HIGH) — defensive; nice-to-have
+
+---
+
 ## Weekly Triage 2026-05-03
 
 _Sample triage — pre-routine validation pass (does not cover every item; full weekly run will sweep the whole queue)._
