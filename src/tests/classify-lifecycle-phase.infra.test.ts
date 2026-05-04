@@ -634,3 +634,59 @@ describe('migration 111 — notification_prefs_repair', () => {
     expect(classifySrc).not.toContain('up.notification_prefs');
   });
 });
+
+describe('scripts/classify-lifecycle-phase.js — WF3 push dispatch hardening', () => {
+  // SPEC LINK: docs/reports/review_followups.md WF2 §9.14 Phase D — classify-lifecycle-phase bundle
+  const classifySrc = read('scripts/classify-lifecycle-phase.js');
+
+  it('PHASE_CHANGED dispatch uses batched (permit_num, revision_num) IN unnest query (WF3 N+1 fix)', () => {
+    // Pre-WF3 the inner loop issued one pool.query per transition
+    // (`WHERE lv.permit_num = $1 AND lv.revision_num = $2`). With
+    // thousands of phase changes daily, this tipped Cloud SQL into
+    // connection exhaustion AND held the advisory lock for the
+    // duration. The new shape is a single batched query.
+    expect(classifySrc).toMatch(
+      /\(lv\.permit_num,\s*lv\.revision_num\)\s+IN\s*\(\s*SELECT\s+\*\s+FROM\s+unnest\(\$1::text\[\],\s*\$2::varchar\[\]\)/,
+    );
+    // The legacy per-row WHERE pattern is gone for these two queries
+    // (the `WHERE lv.permit_num = $1 AND lv.revision_num = $2` form
+    // would still have been used by a regression that re-introduced
+    // the loop).
+    const phaseChangedSection = classifySrc.split('LIFECYCLE_PHASE_CHANGED')[1] ?? '';
+    expect(phaseChangedSection.split('LIFECYCLE_STALLED')[0]).not.toMatch(
+      /WHERE\s+lv\.permit_num\s*=\s*\$1\s+AND\s+lv\.revision_num\s*=\s*\$2/,
+    );
+  });
+
+  it('LIFECYCLE_STALLED dispatch also uses batched query (WF3 N+1 fix)', () => {
+    // The stalledPermits loop had the same pattern; assert both
+    // dispatches converged on the unnest shape.
+    const unnestMatches = (classifySrc.match(/unnest\(\$1::text\[\],\s*\$2::varchar\[\]\)/g) ?? []).length;
+    expect(unnestMatches).toBeGreaterThanOrEqual(2);
+  });
+
+  it('START_DATE_URGENT DISTINCT ON is paired with matching ORDER BY tiebreaker (WF3 ORDER-BY fix)', () => {
+    // Pre-WF3 the SELECT DISTINCT ON had no ORDER BY, so PostgreSQL
+    // returned an arbitrary row per group — silently dropping
+    // legitimate subscribers OR picking the wrong predicted_start.
+    expect(classifySrc).toMatch(
+      /DISTINCT ON \(tf\.permit_num,\s*tf\.revision_num,\s*dt\.push_token\)[\s\S]*?ORDER BY\s+tf\.permit_num,\s*tf\.revision_num,\s*dt\.push_token,\s*tf\.predicted_start\s+ASC/,
+    );
+  });
+
+  it('callExpoPushApi rejects on non-2xx HTTP status (WF3 silent push-loss fix)', () => {
+    // Pre-WF3 the function resolved on any HTTP response without
+    // inspecting status code. A 4xx/5xx (rate limit, auth failure,
+    // malformed payload) was silently parsed as success.
+    expect(classifySrc).toMatch(/status\s*<\s*200\s*\|\|\s*status\s*>=\s*300/);
+    expect(classifySrc).toMatch(/Expo Push API \$\{status\}/);
+  });
+
+  it('callExpoPushApi parses per-ticket Expo errors and warns (WF3 silent push-loss fix)', () => {
+    // Expo returns 200 with errors embedded in the JSON body. The
+    // hardening parses `parsed.data[]` for `status: 'error'` tickets
+    // and surfaces a summary via pipeline.log.warn.
+    expect(classifySrc).toContain("t.status === 'error'");
+    expect(classifySrc).toMatch(/per-ticket errors/);
+  });
+});

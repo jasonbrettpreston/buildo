@@ -59,6 +59,14 @@ function isScheduleAllowed(schedule, nowUtcMs) {
   return true; // 'anytime'
 }
 
+// WF3 2026-05-04 hardening (review_followups.md classify-lifecycle-phase
+// bundle): Expo Push API returns 200 with errors embedded in the JSON
+// body (per-ticket `status:'error'` + top-level errors). Pre-WF3 this
+// function resolved on any HTTP response without inspecting status code
+// or body — silently dropping pushes on 4xx/5xx, rate-limit responses,
+// and per-ticket DeviceNotRegistered errors. Now the function rejects on
+// non-2xx and parses Expo's per-ticket error array, throwing a
+// summarised error that the caller's catch surfaces via pipeline.log.
 function callExpoPushApi(messages) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify(messages);
@@ -74,7 +82,46 @@ function callExpoPushApi(messages) {
       (res) => {
         let data = '';
         res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () => resolve(data));
+        res.on('end', () => {
+          const status = res.statusCode ?? 0;
+          if (status < 200 || status >= 300) {
+            reject(new Error(`Expo Push API ${status}: ${data.slice(0, 500)}`));
+            return;
+          }
+          // Parse JSON body to surface per-ticket errors. Expo returns
+          // `{ data: [{ status: 'ok'|'error', message?, details? }, ...] }`
+          // OR `{ errors: [...] }` on top-level failure.
+          let parsed;
+          try {
+            parsed = JSON.parse(data);
+          } catch {
+            // Non-JSON 2xx body — exotic but treat as success per the
+            // pre-WF3 contract; the body is unused by callers.
+            resolve(data);
+            return;
+          }
+          if (Array.isArray(parsed?.errors) && parsed.errors.length > 0) {
+            reject(new Error(`Expo Push API top-level errors: ${JSON.stringify(parsed.errors).slice(0, 500)}`));
+            return;
+          }
+          // Surface per-ticket errors so the caller can log them. We don't
+          // reject on per-ticket errors (some tickets succeeded) — just
+          // attach a summary the caller can warn on.
+          const tickets = Array.isArray(parsed?.data) ? parsed.data : [];
+          const errored = tickets.filter((t) => t && t.status === 'error');
+          if (errored.length > 0) {
+            const summary = errored
+              .slice(0, 5)
+              .map((t) => `${t.details?.error ?? 'unknown'}: ${t.message ?? ''}`)
+              .join('; ');
+            pipeline.log.warn(
+              '[classify-lifecycle-phase/push]',
+              `Expo Push API returned ${errored.length}/${tickets.length} per-ticket errors`,
+              { sample: summary },
+            );
+          }
+          resolve(data);
+        });
       },
     );
     req.on('error', reject);
@@ -86,30 +133,45 @@ function callExpoPushApi(messages) {
 // Dispatches pushes for a set of permit phase changes and stall events.
 // pool: pg pool; transitions: [{permit_num, revision_num, phase}];
 // stalledPermits: [{permit_num, revision_num}] (newly stalled rows).
+//
+// WF3 2026-05-04 (review_followups.md classify-lifecycle-phase bundle):
+// pre-WF3 the inner loop issued ONE pool.query per transition AND per
+// stalled permit. With thousands of phase changes daily, this tipped
+// Cloud SQL into connection exhaustion and held the advisory lock for
+// the duration. Now each subroutine issues a SINGLE batched query using
+// `(permit_num, revision_num) IN (SELECT * FROM unnest(...))` — see
+// Spec 99 §9.14 commentary for column types (`permit_num text`,
+// `revision_num varchar(10)`).
 async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
   const nowMs = Date.now();
   const messages = [];
 
-  // LIFECYCLE_PHASE_CHANGED
-  for (const t of transitions) {
+  // LIFECYCLE_PHASE_CHANGED — batched lookup
+  if (transitions.length > 0) {
+    const permitNums = transitions.map((t) => t.permit_num);
+    const revisionNums = transitions.map((t) => t.revision_num);
     let rows;
     try {
       const result = await pool.query(
-        // Spec 99 §9.14: notification_prefs JSONB flattened to 5 columns in
-        // migration 117. Select the two we read here directly.
-        `SELECT dt.push_token, up.phase_changed, up.notification_schedule
+        `SELECT lv.permit_num, lv.revision_num, dt.push_token,
+                up.phase_changed, up.notification_schedule
            FROM lead_views lv
            JOIN device_tokens dt ON dt.user_id = lv.user_id
            JOIN user_profiles up ON up.user_id = lv.user_id
-          WHERE lv.permit_num = $1
-            AND lv.revision_num = $2
+          WHERE (lv.permit_num, lv.revision_num) IN (
+                  SELECT * FROM unnest($1::text[], $2::varchar[])
+                )
             AND lv.saved = true`,
-        [t.permit_num, t.revision_num],
+        [permitNums, revisionNums],
       );
       rows = result.rows;
     } catch (err) {
-      pipeline.log.warn('[classify-lifecycle-phase/push]', `PHASE_CHANGED query failed for ${t.permit_num}`, { err: err.message });
-      continue;
+      pipeline.log.warn(
+        '[classify-lifecycle-phase/push]',
+        `PHASE_CHANGED batched query failed for ${transitions.length} transitions`,
+        { err: err.message },
+      );
+      rows = [];
     }
 
     for (const row of rows) {
@@ -124,34 +186,41 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
         data: {
           notification_type: 'LIFECYCLE_PHASE_CHANGED',
           route_domain: 'flight_board',
-          entity_id: `${t.permit_num}--${t.revision_num}`,
+          entity_id: `${row.permit_num}--${row.revision_num}`,
           urgency: 'normal',
         },
       });
     }
   }
 
-  // LIFECYCLE_STALLED — bypasses schedule gate (spec §2.2)
-  for (const s of stalledPermits) {
+  // LIFECYCLE_STALLED — batched lookup. Bypasses schedule gate (spec §2.2).
+  if (stalledPermits.length > 0) {
+    const permitNums = stalledPermits.map((s) => s.permit_num);
+    const revisionNums = stalledPermits.map((s) => s.revision_num);
     let rows;
     try {
       const result = await pool.query(
         // Spec 99 §9.14: read the lifecycle_stalled_pref column (renamed
         // from notification_prefs.lifecycle_stalled to disambiguate from
         // permits.lifecycle_stalled in joins).
-        `SELECT dt.push_token, up.lifecycle_stalled_pref
+        `SELECT lv.permit_num, lv.revision_num, dt.push_token, up.lifecycle_stalled_pref
            FROM lead_views lv
            JOIN device_tokens dt ON dt.user_id = lv.user_id
            JOIN user_profiles up ON up.user_id = lv.user_id
-          WHERE lv.permit_num = $1
-            AND lv.revision_num = $2
+          WHERE (lv.permit_num, lv.revision_num) IN (
+                  SELECT * FROM unnest($1::text[], $2::varchar[])
+                )
             AND lv.saved = true`,
-        [s.permit_num, s.revision_num],
+        [permitNums, revisionNums],
       );
       rows = result.rows;
     } catch (err) {
-      pipeline.log.warn('[classify-lifecycle-phase/push]', `LIFECYCLE_STALLED query failed for ${s.permit_num}`, { err: err.message });
-      continue;
+      pipeline.log.warn(
+        '[classify-lifecycle-phase/push]',
+        `LIFECYCLE_STALLED batched query failed for ${stalledPermits.length} permits`,
+        { err: err.message },
+      );
+      rows = [];
     }
 
     for (const row of rows) {
@@ -165,7 +234,7 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
         data: {
           notification_type: 'LIFECYCLE_STALLED',
           route_domain: 'flight_board',
-          entity_id: `${s.permit_num}--${s.revision_num}`,
+          entity_id: `${row.permit_num}--${row.revision_num}`,
           urgency: 'stalled',
         },
       });
@@ -196,6 +265,19 @@ async function dispatchStartDateUrgentPushes(pool) {
   try {
     const result = await pool.query(
       // Spec 99 §9.14: read the start_date_urgent column directly.
+      //
+      // WF3 2026-05-04 (review_followups.md classify-lifecycle-phase
+      // bundle): added ORDER BY clause matching the DISTINCT ON tuple +
+      // a tiebreaker. PostgreSQL's `SELECT DISTINCT ON (cols)` without
+      // a matching ORDER BY returns an arbitrary row per group — could
+      // silently drop legitimate subscribers OR return the wrong
+      // predicted_start. The tiebreaker `tf.predicted_start ASC` picks
+      // the earliest predicted_start when a (permit, revision, token)
+      // tuple has multiple forecast rows in the 6-7 day window (rare
+      // but possible across multiple trade forecasts on the same
+      // permit) — earliest date wins because the urgency message is
+      // stated as "starting in N days", and the user wants the
+      // earliest-actionable signal.
       `SELECT DISTINCT ON (tf.permit_num, tf.revision_num, dt.push_token)
               tf.permit_num, tf.revision_num, dt.push_token,
               up.start_date_urgent, tf.predicted_start
@@ -208,7 +290,8 @@ async function dispatchStartDateUrgentPushes(pool) {
          JOIN user_profiles up ON up.user_id = lv.user_id
         WHERE tf.predicted_start IS NOT NULL
           AND tf.predicted_start >= NOW() + INTERVAL '6 days'
-          AND tf.predicted_start <= NOW() + INTERVAL '7 days'`,
+          AND tf.predicted_start <= NOW() + INTERVAL '7 days'
+        ORDER BY tf.permit_num, tf.revision_num, dt.push_token, tf.predicted_start ASC`,
     );
     rows = result.rows;
   } catch (err) {
