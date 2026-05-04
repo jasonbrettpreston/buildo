@@ -115,6 +115,15 @@ jest.mock('react-native-mmkv', () => ({
     remove: jest.fn(),
   }),
 }));
+const mockPersisterRemoveClient = jest.fn();
+jest.mock('@/lib/mmkvPersister', () => ({
+  mmkvPersister: {
+    persistClient: jest.fn(),
+    restoreClient: jest.fn(() => undefined),
+    removeClient: () => mockPersisterRemoveClient(),
+  },
+  getLastPersistedAt: jest.fn(() => null),
+}));
 
 import { useAuthStore, initFirebaseAuthListener } from '@/store/authStore';
 import { useFilterStore } from '@/store/filterStore';
@@ -236,6 +245,65 @@ describe('initFirebaseAuthListener', () => {
     expect(state.user).toBeNull();
     expect(state.idToken).toBeNull();
     expect(state.isLoading).toBe(false);
+  });
+
+  it('forced-signout (null fire AFTER a user-fire) runs the FULL cleanup — persister blob removed + telemetry fired (WF3 forced-signout unification)', async () => {
+    // PROMOTED CRITICAL fix: pre-WF3 the listener null branch called
+    // `clearAuth()` ALONE — peer stores + queryClient + persister blob
+    // were all left intact. On a shared device, the next user signing
+    // in would see the previous user's state (PIPEDA shared-device
+    // leak). Now the listener calls the same `clearLocalSessionState()`
+    // helper as explicit signOut() WHEN lastKnownUid !== null (i.e.
+    // there was a real authenticated user, not the cold-boot first-fire).
+    //
+    // Test strategy: mock-call assertions are the deterministic
+    // evidence — `mockPersisterRemoveClient` and `mockTrack('forced_
+    // signout')` are called ONLY by the new cleanup path; their
+    // presence proves the helper ran. (Direct Zustand store-state
+    // checks are flaky under jest's mocked persist middleware — the
+    // helper's other steps are covered by the static-shape test in
+    // `storeReset.coverage.test.ts`.)
+    mockClearQueries.mockClear();
+    mockPersisterRemoveClient.mockClear();
+    mockTrack.mockClear();
+    mockResetIdentity.mockClear();
+    initFirebaseAuthListener();
+    // Step 1: fire the listener with a Firebase user so the listener's
+    // own bookkeeping sets `lastKnownUid` to a non-null value. We can't
+    // set the module-scoped `lastKnownUid` directly from a test.
+    const fakeUser = {
+      uid: 'forced-signout-victim',
+      email: 'a@b.com',
+      displayName: null,
+      getIdToken: jest.fn(() => Promise.resolve('tok')),
+    };
+    authStateHandler?.(fakeUser);
+    await new Promise((r) => setImmediate(r));
+    // Reset mock counters AFTER the user-fire (which itself calls
+    // some of these mocks via the hydration path) so we only assert
+    // on calls that came from the null-fire cleanup.
+    mockClearQueries.mockClear();
+    mockPersisterRemoveClient.mockClear();
+    mockTrack.mockClear();
+    mockResetIdentity.mockClear();
+
+    // Step 2: Firebase fires null — forced sign-out path.
+    authStateHandler?.(null);
+
+    // Auth zeroed (proves clearLocalSessionState ran past its setState).
+    const auth = useAuthStore.getState();
+    expect(auth.user).toBeNull();
+    expect(auth.idToken).toBeNull();
+    // TanStack persister blob removed from disk (the bug this fix closed).
+    expect(mockPersisterRemoveClient).toHaveBeenCalled();
+    // queryClient.clear() called (peer-store cleanup proxy — every
+    // store-reset call before this one ran in source order).
+    expect(mockClearQueries).toHaveBeenCalled();
+    // Telemetry: distinguishes forced from user-initiated signouts.
+    expect(mockTrack).toHaveBeenCalledWith('forced_signout');
+    // PostHog identity reset (last step of the helper — proves the
+    // helper ran to completion, not a partial execution).
+    expect(mockResetIdentity).toHaveBeenCalled();
   });
 
   it('hydrates the store when a Firebase user arrives', async () => {

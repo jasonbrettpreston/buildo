@@ -1,97 +1,113 @@
-# Active Task: WF3 Top-6 Follow-up — Cursor Backward-Compat + PII MMKV Strip
+# Active Task: WF3 Forced-Signout Cleanup Unification + Dead-Code Sweep
 **Status:** Implementation (authorized 2026-05-04)
-**Workflow:** WF3 — bug-fix follow-up to the top-6 sweep
-**Domain Mode:** Cross-Domain (server cursor SQL + mobile persister config)
-**Rollback Anchor:** `39c9ec3`
+**Workflow:** WF3 — bug fix (PROMOTED CRITICAL) + dead-code housekeeping
+**Domain Mode:** Admin (mobile)
+**Rollback Anchor:** `fbb52c3`
 
 ## Context
-Two items deferred from the Phase 7 adversarial review on the original WF3 top-6 sweep, both now ripe for a focused follow-up:
 
-1. **Phase 6 cursor wire-format break** — Phase 6 (`fefc2a3`) changed the builder `lead_id` projection from `e.id::text` to `LPAD(e.id::text, 20, '0')`. At the deploy moment, mobile clients holding pre-deploy cursors (`lead_id="9"`) compare against post-deploy server-emitted `"00000000000000000009"`. Lex order: `"00000000000000000009" < "9"` is TRUE → cursor pages through ALL builders again from the top → duplicate rows in the user's feed. Real one-time bug at every deploy.
+Two related items:
 
-2. **Mobile MMKV PII scope** — `mobile/src/lib/userProfile.schema.ts` still includes `full_name`, `phone_number`, `company_name`, `email`, `backup_email`. Verified: `mmkvPersister.ts:11` creates the MMKV instance with NO `encryptionKey` — the user-profile query's TanStack persisted blob lands on unencrypted disk. Direct Spec 99 §2.1 violation (Layer 4a is unencrypted; PII MUST go to Layer 4b).
+1. **PROMOTED CRITICAL** — `auth-state reset placement leaks data on forced sign-out`. Documented in `review_followups.md` (line ~744, the 🔥 PROMOTED entry from §9.14 Phase D). The asymmetry just widened in the previous WF3 follow-up: `signOut()` now calls `mmkvPersister.removeClient()` to purge the persister blob from disk, but the listener's null branch (`onAuthStateChanged(null)` for forced sign-outs — admin disable, password change on another device, project token revocation) still calls `clearAuth()` only. On a shared device, a forced sign-out leaves: every Zustand peer store unchanged, the TanStack in-memory cache unchanged, AND now a more visible asymmetry where the disk state and memory state are inconsistent across the two paths.
+
+2. **Dead-code sweep** — after the cumulative §9 + WF3 changes (16+ commits across mobile state + auth + push dispatch + mobile schema + cursor backward-compat + PII strip), audit for truly-dead code that the changes left behind. Conservative: only remove items with NO consumers AND NO upgrade-path obligation. Persist `migrate` functions and one-time MMKV cleanup migrations STAY (existing users still need them).
 
 ## Technical Implementation
 
-### Item 1 — Cursor backward-compat (small, safe)
+### Item 1 — Forced-signout cleanup unification
 
-The cursor comparison in `LEAD_FEED_SQL` is currently:
-```sql
-($6::int IS NULL OR (relevance_score, lead_type, lead_id) < ($6, $7, $8))
-```
+**Current shape** (`mobile/src/store/authStore.ts`):
+- `signOut()` (lines 82–148): the "happy path" sign-out. Calls `track('signout_initiated')` → `usePaywallStore.reset()` → `auth().signOut()` → in `finally`: `queryClient.clear()` + `mmkvPersister.removeClient()` + 4 peer-store `.reset()` calls + `set({user:null, idToken:null, isLoading:false})` + `resetIdentity()`.
+- `clearAuth` action (line 80): `set({ user: null, idToken: null, isLoading: false })` ONLY.
+- Listener null branch (line 275): `useAuthStore.getState().clearAuth()`. Skips everything else.
 
-Pre-deploy clients send `lead_id="9"` (bare int as text). Post-deploy server emits `lead_id="00000000000000000009"`. The comparison is broken across the deploy boundary.
+**Fix**: extract everything that runs in the signOut() `finally` block into a private `clearLocalSessionState()` helper (or inline an action), then have BOTH the `signOut()` finally AND the listener null branch invoke it. Implementation choices:
 
-Fix: when the cursor's `lead_type` is `'builder'`, server-side LPAD the incoming `$8` to 20 chars before comparing. New shape:
-```sql
-($6::int IS NULL OR
-  (relevance_score, lead_type, lead_id) <
-  ($6, $7, CASE WHEN $7 = 'builder' THEN LPAD($8, 20, '0') ELSE $8 END))
-```
+A. **Extract to a module-scope function** in `authStore.ts`. Both `signOut()` and the listener call it. The `signOut()` action stays as the public API; `clearLocalSessionState` is internal.
 
-Effect:
-- Pre-deploy client with `lead_id="9"` → server LPAD's to `"00...09"` → compares correctly against post-deploy projection → no duplicates
-- Post-deploy client with `lead_id="00...09"` → LPAD on already-padded value is a no-op → still compares correctly
-- Permit cursors (`lead_type='permit'`) are untouched — bypass the CASE entirely
+B. **Add a new Zustand action** `forceSignOutCleanup` and have the listener call it. Pros: testable via `useAuthStore.getState().forceSignOutCleanup()`. Cons: makes the public store API wider for an internal concern.
 
-Cost: 1 SQL line + 1 regression test. No cursor-format change required on the client side. No deploy migration needed.
+**Going with A** — minimal API surface; `clearLocalSessionState` is a leaf helper that doesn't need to be a Zustand action. The new §9.12 `storeReset.coverage.test.ts` already enforces the wiring at the static layer; we'll add a direct test that the listener's null branch invokes the helper.
 
-### Item 2 — PII MMKV strip via `shouldDehydrateQuery`
+**Side effects to verify**:
+- The listener fires multiple times during a single Firebase auth resolution (per the existing `lastKnownUid !== null` guard at line 213). On the null-fire path, `lastKnownUid` is intentionally NOT reset (Spec 93 §3.4 fast-path). Adding the cleanup must not break this — the cleanup runs on the listener's null branch only, and it's idempotent (each `.reset()` and `removeClient()` is a no-op on already-cleared state).
+- `track('signout_initiated')` is currently inside `signOut()` only. For forced sign-outs, the original `signout_initiated` PostHog event would not fire (the user didn't initiate). Cleaner to add a NEW telemetry event `forced_signout` (or `auth_revoked`) on the listener path, which is also useful for product analytics.
 
-Strategy: add `dehydrateOptions.shouldDehydrateQuery` to `PersistQueryClientProvider` in `mobile/app/_layout.tsx:392-400`. Filter out the `['user-profile']` query from the dehydrated/persisted blob. The query stays in-memory normally (cold-boot fetches it from server as the canonical source), but never lands on disk.
+### Item 2 — Dead-code sweep
 
-Justification for excluding the entire user-profile query rather than per-field stripping:
-- The 5 PII fields ARE the bulk of the user-profile payload's value
-- Per-field stripping requires custom dehydrate logic that TanStack's persister doesn't natively support without a custom serializer
-- The non-PII fields (subscription_status, lead_views_count, notification prefs) are server-canonical and re-fetchable at zero ergonomic cost (~50ms)
-- Other queries with public data (`['lead-feed']`, `['flight-board']`) continue to persist normally
+**Method**: grep + read-and-decide. Target categories:
 
-Side effects to verify:
-- AuthGate's cold-boot path: existing `profileLoading && !profile` guard already handles the no-cached-profile case (the `splash-with-spinner` state). No new behavior.
-- Settings screen's first render after cold boot: `useUserProfile()` returns `{ data: undefined, isLoading: true }` for ~50-200ms while the fetch resolves. Existing skeleton components cover this.
-- `NotificationHandlers`: reads `notification_prefs` via the same query → same brief no-data window, no UI impact (the handler doesn't render, it just registers listeners).
+a) **Unreferenced exports** in mobile state / auth files. Specifically:
+   - `cleanupLegacyUserProfileCache` is a one-time migration; STAY (existing users may not have run it).
+   - Any export from removed-then-restored or restructured files.
 
-Cost: ~5 lines in `_layout.tsx` + 1 regression test asserting the dehydrate filter excludes `['user-profile']`. No schema change.
+b) **Dead comments** referring to removed code. Examples:
+   - `mobile/src/store/authStore.ts:97` says "Firebase sign-out — onAuthStateChanged fires (null) which clears auth." — STAYS (still accurate).
+   - `userProfileCacheCleanup.ts:13` says "Called from authStore module load so it runs exactly once per process" — verify this is still true (`grep cleanupLegacyUserProfileCache` to confirm).
+
+c) **Persist migrate functions** in `userProfileStore` (v0→v1) and `onboardingStore` (v0→v2). KEEP — they handle existing-user upgrade. Removing them would silently corrupt v0 state on upgraders.
+
+d) **Spec 99 §3.5 deprecated mirrors** — historical doc; KEEP as audit trail.
+
+e) **Other helpers / hooks / test files** that grep returns zero callers for.
+
+**Grep targets** (run as a pre-Phase-2 audit):
+- `mobile/src/lib/` for files where `grep -l <export>` returns zero hits outside their own file
+- `mobile/src/store/` for actions / fields no consumer reads
+- `mobile/__tests__/` for test fixtures that were unconsolidated by removed schema fields
+
+**Conservative posture**: when in doubt, KEEP. The cost of an accidental delete (regression in production) outweighs the cost of an extra unused export (lint warning at most). Phase 2 is a netting-out exercise, not an aggressive purge.
 
 ## Standards Compliance
+
 * **Try-Catch Boundary:** N/A — no new error paths.
-* **Unhappy Path Tests:** Item 1 — behavioral test that a pre-deploy bare-int cursor (`lead_id="9"`) correctly paginates to the next builder page after deploy (asserts the SQL WHERE includes the CASE-LPAD). Item 2 — assert `shouldDehydrateQuery` returns `false` for `['user-profile']` and `true` for `['lead-feed']`.
+* **Unhappy Path Tests:** Item 1 — new test asserts the listener's null branch runs the same cleanup as `signOut()` (peer stores reset, queryClient cleared, persister blob removed). Item 2 — `npm run dead-code` (already in package.json per CLAUDE.md) before-and-after diff.
 * **logError Mandate:** N/A.
 * **UI Layout:** N/A.
-* **§9.13 drift impact:** None — no schema changes.
+* **§9.13 drift impact:** None.
 
 ## Execution Plan
 
-**Phase 1 — Cursor backward-compat (commit 1)**
-- [ ] 1a. Locate the cursor comparison in `src/features/leads/lib/get-lead-feed.ts` (around line 460–465 per the existing diff).
-- [ ] 1b. Wrap the `$8` placeholder in a `CASE WHEN $7 = 'builder' THEN LPAD($8, 20, '0') ELSE $8 END` expression.
-- [ ] 1c. Add a regression test in `src/tests/get-lead-feed.logic.test.ts` asserting the cursor comparison contains the CASE+LPAD pattern.
-- [ ] 1d. Pre-commit gate.
-- [ ] 1e. **Commit 1:** `fix(70_lead_feed): WF3 cursor backward-compat — accept pre-deploy bare-int builder lead_ids`
+**Phase 1 — Forced-signout cleanup unification (commit 1)**
+- [ ] 1a. Extract a module-scope `clearLocalSessionState()` helper in `authStore.ts` containing:
+      `usePaywallStore.getState().reset()` → `queryClient.clear()` → `mmkvPersister.removeClient()` → 4 peer-store `.reset()` calls → in-memory auth set-to-null → `resetIdentity()`. (NOTE: `auth().signOut()` is NOT in the helper — that's specific to the explicit-signout path.)
+- [ ] 1b. Refactor `signOut()` to use the helper after `auth().signOut()` (or in finally). Keep `track('signout_initiated')` AT THE TOP of `signOut()` (telemetry attributed to the outgoing session).
+- [ ] 1c. Update the listener's null branch to call `clearLocalSessionState()` instead of just `clearAuth()`. Add a new `track('forced_signout')` event before the cleanup so product analytics can distinguish user-initiated from server-initiated sign-outs.
+- [ ] 1d. Adversarial probe: does the listener fire `null` on EVERY app cold-boot before Firebase resolves the cached session? If yes, every cold boot would trigger the cleanup — a regression. Verify by reading the existing fire-detection logic (`lastKnownUid` guard at line 213). The fast-path comment at line 241 says "do NOT reset lastKnownUid here" — implying the null-fire is real on certain transitions, not on every cold boot. Worth a `lastKnownUid !== null` guard around the new cleanup so first-fire doesn't trigger it (a user who never signed in shouldn't have signOut behavior fire).
+- [ ] 1e. Update `mobile/__tests__/storeReset.coverage.test.ts` to also exercise the listener path (call the captured `authStateHandler(null)` and assert all peer stores reset).
+- [ ] 1f. Update `mobile/__tests__/useAuth.test.ts` if it has a forced-signout test — assert the new cleanup behavior + the new `forced_signout` track call.
+- [ ] 1g. Mobile suite + drift script.
+- [ ] 1h. **Commit 1:** `fix(99_mobile_state_architecture): WF3 unify forced-signout cleanup with explicit-signout path`
 
-**Phase 2 — PII MMKV strip (commit 2)**
-- [ ] 2a. Update `mobile/app/_layout.tsx` `PersistQueryClientProvider` `persistOptions` to include `dehydrateOptions: { shouldDehydrateQuery: (q) => q.queryKey[0] !== 'user-profile' }`.
-- [ ] 2b. Add a regression test in `mobile/__tests__` (or extend existing `bridges.test.ts`) asserting the filter excludes user-profile and includes lead-feed.
-- [ ] 2c. Update Spec 99 §2.1 (in-line note) documenting that user-profile is excluded from MMKV persistence per WF3 hardening.
-- [ ] 2d. Run mobile suite + drift script.
-- [ ] 2e. **Commit 2:** `fix(99_mobile_state_architecture): WF3 strip user-profile from MMKV persister to comply with §2.1 PII layer boundary`
+**Phase 2 — Dead-code sweep (commit 2)**
+- [ ] 2a. Run `npm run dead-code` (mobile) — capture baseline.
+- [ ] 2b. For each flagged item, decide REMOVE vs KEEP per the conservative criteria above. Enumerate decisions in the commit message.
+- [ ] 2c. Manual grep audit for:
+      - `useAuthStore` exports — are all actions used?
+      - `mmkvPersister` exports — `getLastPersistedAt` consumer (OfflineBanner per the file header)?
+      - `userProfileCacheCleanup` — should call site move out of authStore module load if it's run for too long? (KEEP; flag for future deprecation when usage telemetry confirms zero hits.)
+      - Spec 99 §3.5 deprecated mirrors entries — any whose deprecation target is now ✅ DONE in §9 backlog and could be moved to a "historical" subsection?
+- [ ] 2d. Apply removals + comment cleanups. Avoid touching persist `migrate` functions and one-time MMKV cleanup helpers.
+- [ ] 2e. Mobile suite + drift script.
+- [ ] 2f. **Commit 2:** `chore(99_mobile_state_architecture): WF3 dead-code sweep across §9 + WF3 cumulative changes`
 
-**Phase 3 — Adversarial review (single reviewer for this small surface)**
-- [ ] 3a. Spawn `feature-dev:code-reviewer` non-isolated on the range `39c9ec3..HEAD`. Single reviewer for the small surface; trio is overkill.
+**Phase 3 — Adversarial review (single code-reviewer)**
+- [ ] 3a. Spawn `feature-dev:code-reviewer` non-isolated on the range `fbb52c3..HEAD`. Focus: (i) forced-signout cleanup correctness across cold-boot and uid-change paths, (ii) dead-code removals don't break any latent consumer.
 - [ ] 3b. Apply CRITICAL/HIGH inline.
-- [ ] 3c. **Commit 3 (if amendments):** `fix(99_mobile_state_architecture): WF3 cursor + PII followup — code-reviewer amendments`
+- [ ] 3c. **Commit 3 (if amendments):** `fix(99_mobile_state_architecture): WF3 forced-signout + dead-code sweep — code-reviewer amendments`
 
-**Phase 4 — Update review_followups.md**
-- [ ] 4a. Update the existing WF3 sweep header to mark these two items RESOLVED (they're currently listed as "deferred from Phase 7").
-- [ ] 4b. **Commit 4:** `docs(99_mobile_state_architecture): mark WF3 cursor + PII followup items resolved in review_followups.md`
+**Phase 4 — Update `review_followups.md`**
+- [ ] 4a. Mark the PROMOTED CRITICAL "Auth-state reset placement leaks data on forced sign-out" as ✅ RESOLVED with the commit hash.
+- [ ] 4b. Add a brief summary of the dead-code sweep (kept items + removed items) for traceability.
+- [ ] 4c. **Commit 4:** `docs(99_mobile_state_architecture): mark forced-signout PROMOTED item resolved + record dead-code sweep`
 
 ## Out of Scope
-- Encrypted MMKV via `encryptionKey` (Option B from the analysis). Bigger lift, requires Keychain key generation/storage flow and key-rotation policy. The `shouldDehydrateQuery` filter eliminates the immediate PII-on-disk risk; encryption can be a future hardening.
-- Per-field PII stripping (would require custom serializer in the persister). The whole-query exclusion is simpler and the non-PII fields in user-profile are server-canonical anyway.
-- Spec 99 §2.1 amendment + CISO sign-off framework — out of scope for this code-only WF3.
+- The 6 lower-priority deferrals from the Phase 7 trio review (timing-safe length leak, catch-all narrowing, etc.) — already filed in `review_followups.md`.
+- Encrypted-MMKV via `encryptionKey` — separate hardening WF.
+- Aggressive removal of one-time migrations / persist migrate functions — KEEP for upgrader safety.
 
-> **PLAN LOCKED. Do you authorize this WF3 follow-up plan? (y/n)**
+> **PLAN LOCKED. Do you authorize this WF3 plan? (y/n)**
 >
-> §10 note: 4 commits, ~30 lines of code + ~30 lines of test + 1 spec note. Surface is small enough that I'm recommending a SINGLE reviewer (code-reviewer agent) instead of the full trio for Phase 3.
+> §10 note: ~30 LOC for Phase 1 (helper extraction + listener wiring + 2 test additions); Phase 2 size depends on what `npm run dead-code` reports — bounded by the conservative-keep posture. Single code-reviewer for Phase 3 (small surface).
 >
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.

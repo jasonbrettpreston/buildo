@@ -69,6 +69,50 @@ interface AuthState {
   signOut: () => Promise<void>;
 }
 
+/**
+ * Reset all in-memory + on-disk session state. Runs everything `signOut()`
+ * does AFTER the Firebase `auth().signOut()` call, but is also invoked from
+ * the listener's null branch when Firebase fires a forced sign-out
+ * (admin disable, password change on another device, project token
+ * revocation per Spec 93 §3.1).
+ *
+ * Pre-WF3 the listener's null branch called `clearAuth()` ONLY (auth
+ * fields zeroed; peer stores + queryClient + persister blob unchanged).
+ * On a shared device, the next user signing in saw the previous user's
+ * filter/notification/profile state until server hydration completed —
+ * the PROMOTED CRITICAL from §9.14 Phase D review, made more visible
+ * in the WF3 PII-strip follow-up which added `mmkvPersister.removeClient()`
+ * to `signOut()` (widening the asymmetry between the two paths).
+ *
+ * MUST be idempotent — every called step (reset, clear, removeClient) is
+ * a no-op on already-cleared state, so the cold-boot first-fire path
+ * (which guards on `lastKnownUid !== null` before invoking) is safe even
+ * if the guard is ever weakened by a future refactor.
+ */
+function clearLocalSessionState(): void {
+  // Spec 96 §9: reset paywall flags first so a fast shared-device handoff
+  // doesn't put the next user in inline-blur mode against their own status.
+  usePaywallStore.getState().reset();
+  // Spec 99 §B5 + §9.10 + WF3 follow-up: purge ALL TanStack Query cache
+  // (in-memory + persister blob on disk).
+  queryClient.clear();
+  mmkvPersister.removeClient();
+  // Spec 99 §B5 storeReset coverage: reset every peer store so a different
+  // user signing in sees no stale data. MMKV-backed stores are intentionally
+  // preserved for same-user re-sign-in fast-path (Spec 93 §3.4); each
+  // store's `reset()` action is responsible for its own MMKV semantics.
+  useFilterStore.getState().reset();
+  useNotificationStore.getState().reset();
+  useOnboardingStore.getState().reset();
+  useUserProfileStore.getState().reset();
+  // Inline auth zero (matches `clearAuth()` semantics — kept inline to
+  // make the full session-clear visible in one place).
+  useAuthStore.setState({ user: null, idToken: null, isLoading: false });
+  // PostHog identity reset AFTER stores so the distinctId is cleared at
+  // a clean session boundary; subsequent events use anonymous distinctId.
+  resetIdentity();
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -85,29 +129,18 @@ export const useAuthStore = create<AuthState>()(
         // event is attributed to the outgoing session, not the next user
         // who might sign in on this device.
         track('signout_initiated');
-        // Spec 96 §9 "Sign-out reset (critical)": clear paywall flags BEFORE
-        // firebaseSignOut. Otherwise a fast shared-device handoff (sign-out
-        // → AuthGate redirect → next user signs in → _layout.tsx renders)
-        // could process the next user's first render before this line
-        // executes, putting them in inline-blur mode against their own
-        // 'expired' status. paywallStore is in-memory only (not MMKV-
-        // persisted), so this protects same-session handoffs — common with
-        // family/team phones.
-        usePaywallStore.getState().reset();
-        // Firebase sign-out — onAuthStateChanged fires (null) which clears
-        // auth. Then reset peer in-memory stores so a different user
-        // signing in on the same device sees no stale data. MMKV is
-        // preserved per §3.4 so the same user returning on the same device
-        // gets fast hydration.
-        //
         // WF2 P2 review #11 (DeepSeek): wrap the Firebase call in
         // try/finally so that a Firebase failure (network blip, expired
         // refresh token, Firebase unreachable) does NOT skip the
-        // downstream PIPEDA-critical cleanup (queryClient.clear() + peer
-        // store resets). Pre-fix, a thrown signOut() would leave the
-        // user logged in locally with stale Zustand + TanStack caches —
-        // exactly the leak the §9.12 storeReset coverage test is meant
-        // to prevent at the static layer.
+        // downstream PIPEDA-critical cleanup. Pre-fix, a thrown
+        // signOut() would leave the user logged in locally with stale
+        // Zustand + TanStack caches — exactly the leak the §9.12
+        // storeReset coverage test is meant to prevent at the static
+        // layer.
+        //
+        // The full local cleanup runs via `clearLocalSessionState()` —
+        // shared with the listener's null branch (forced sign-out path)
+        // so both flows produce identical disk + memory state.
         try {
           await auth().signOut();
         } catch (err) {
@@ -115,47 +148,7 @@ export const useAuthStore = create<AuthState>()(
             extra: { context: 'authStore.signOut: firebase signOut failed; running cleanup anyway' },
           });
         } finally {
-          // Spec 99 §B5 + §9.10: purge ALL TanStack Query cache so the
-          // next sign-in (potentially a different user on a shared
-          // device) cannot read the previous user's data from cache.
-          // `enabled: !!user` only stops NEW fetches; in-flight fetches
-          // resolve and write to the cache, and the MMKV persister
-          // rehydrates on next mount with the previous user's data —
-          // a PIPEDA leak on shared devices.
-          //
-          // `clear()` (not `removeQueries({queryKey:['user-profile']})`)
-          // per Gemini WF2-Phase-A review #5: lead-feed, leads,
-          // flight-board, and any future user-scoped queries are ALSO
-          // under PIPEDA — narrow purge would leak them. The mobile app
-          // currently has no non-user-scoped queries, so the blast
-          // radius is zero.
-          queryClient.clear();
-          // WF3 follow-up amendment (code-reviewer CRITICAL 2):
-          // `queryClient.clear()` ONLY purges in-memory state. The
-          // TanStack persister's MMKV blob (`tq-persist`) on disk is
-          // untouched until the next `persistClient()` write — a
-          // shared-device handoff before then would let the next user's
-          // cold boot read the previous user's persisted lead-feed +
-          // flight-board data via `restoreClient()`. Explicitly
-          // `removeClient()` the persister blob so disk state matches
-          // the just-cleared memory state. (The earlier comment claim
-          // that `queryClient.clear()` purges the persister blob was
-          // factually wrong — corrected here.)
-          mmkvPersister.removeClient();
-          useFilterStore.getState().reset();
-          useNotificationStore.getState().reset();
-          useOnboardingStore.getState().reset();
-          useUserProfileStore.getState().reset();
-          // Spec 99 §9.1: removed clearUserProfileCache() — the legacy
-          // MMKV blob (`user-profile-cache`) is gone. The TanStack
-          // persister blob is removed via mmkvPersister.removeClient()
-          // above.
-          set({ user: null, idToken: null, isLoading: false });
-          // Reset PostHog identity AFTER the in-memory store reset so
-          // the distinctId is cleared at a clean session boundary; any
-          // subsequent event before the next sign-in will use an
-          // anonymous distinctId.
-          resetIdentity();
+          clearLocalSessionState();
         }
       },
     }),
@@ -272,7 +265,39 @@ export function initFirebaseAuthListener(): () => void {
         });
     } else {
       // Note: do NOT reset lastKnownUid here (Spec 93 §3.4 fast-path).
-      useAuthStore.getState().clearAuth();
+      //
+      // WF3 follow-up (PROMOTED CRITICAL from §9.14 Phase D review): if
+      // a previous user WAS signed in and Firebase is now firing null
+      // (forced sign-out — admin disable, password change on another
+      // device, project token revocation per Spec 93 §3.1), run the
+      // full session cleanup. Pre-fix this branch called `clearAuth()`
+      // alone, leaving every peer store + queryClient + persister blob
+      // intact — the next user signing in on a shared device would see
+      // the previous user's filter/notification/profile state until
+      // server hydration completed (PIPEDA shared-device leak).
+      //
+      // The `lastKnownUid !== null` guard distinguishes:
+      //   (a) genuine forced sign-out (lastKnownUid was set → user was
+      //       authenticated → run full cleanup + telemetry).
+      //   (b) cold-boot first-fire with no cached session
+      //       (lastKnownUid === null → there was no user → skip the
+      //       cleanup so we don't thrash the persisted TanStack cache
+      //       on every app launch by an unauthenticated user).
+      if (lastKnownUid !== null) {
+        Sentry.addBreadcrumb({
+          category: 'auth',
+          message: 'forced_signout_cleanup',
+          level: 'info',
+          data: { from: lastKnownUid },
+        });
+        track('forced_signout');
+        clearLocalSessionState();
+      } else {
+        // First-fire / pre-auth state — keep the original clearAuth
+        // semantics so the AuthGate transitions from "loading" to
+        // "signed-out" without thrashing the persisted blob.
+        useAuthStore.getState().clearAuth();
+      }
     }
   });
 }

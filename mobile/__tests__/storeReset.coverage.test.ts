@@ -145,8 +145,41 @@ describe('storeReset coverage — Spec 99 §B5 + §8.5', () => {
     });
   });
 
-  it('authStore is self-resetting via inline `set({ user: null, ... })` in signOut', () => {
+  it('authStore is self-resetting via inline `set({ user: null, ... })` (in clearLocalSessionState helper post-WF3)', () => {
     // authStore doesn't call .reset() on itself; it inlines the reset.
+    // Post-WF3 forced-signout unification: this lives inside
+    // `clearLocalSessionState()` rather than directly in `signOut()`,
+    // but the regex still matches anywhere in the file.
     expect(signOutSrc).toMatch(/set\s*\(\s*\{\s*user:\s*null,\s*idToken:\s*null/);
+  });
+
+  // WF3 forced-signout unification: the same cleanup MUST run on the
+  // listener's null branch too (PROMOTED CRITICAL — pre-fix, forced
+  // sign-outs from `onAuthStateChanged(null)` left every peer store +
+  // queryClient + persister blob intact, leaking state on shared
+  // devices). Post-fix, both paths route through
+  // `clearLocalSessionState()` — the helper is the single point of
+  // truth for "everything signOut does AFTER auth().signOut()".
+  it('clearLocalSessionState helper is defined AND invoked from BOTH signOut() and the listener null branch (WF3)', () => {
+    const fullSrc = fs.readFileSync(SIGNOUT_FILE, 'utf-8');
+    // Helper definition exists.
+    expect(fullSrc).toMatch(/function\s+clearLocalSessionState\s*\(\s*\)/);
+    // Helper is called at least twice: once from signOut() finally,
+    // once from the listener's forced-sign-out branch.
+    const callCount = (fullSrc.match(/clearLocalSessionState\s*\(\s*\)/g) ?? []).length;
+    // 1 definition + 2 invocations = 3 occurrences total.
+    expect(callCount).toBeGreaterThanOrEqual(3);
+  });
+
+  it('listener null branch is guarded by `lastKnownUid !== null` so cold-boot first-fire does NOT thrash the persisted cache', () => {
+    // Adversarial probe: the listener fires null on every cold boot
+    // before Firebase resolves a cached session. Without this guard,
+    // every app launch by an unauthenticated user would call
+    // `mmkvPersister.removeClient()` and wipe the offline-first
+    // TanStack cache. The guard distinguishes "genuine forced
+    // sign-out" (lastKnownUid was set) from "cold-boot pre-auth
+    // state" (lastKnownUid still null).
+    const fullSrc = fs.readFileSync(SIGNOUT_FILE, 'utf-8');
+    expect(fullSrc).toMatch(/if\s*\(\s*lastKnownUid\s*!==\s*null\s*\)/);
   });
 });
