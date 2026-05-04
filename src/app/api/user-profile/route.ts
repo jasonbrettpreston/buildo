@@ -1,15 +1,37 @@
 // SPEC LINK: docs/specs/03-mobile/95_mobile_user_profiles.md §5 API Contract, §6 Route Logic
 //             docs/specs/03-mobile/96_mobile_subscription.md §10 Step 4 (GET fallback init + trial expiration)
+//
+// WF3 2026-05-04 hardening (review_followups.md /api/user-profile bundle):
+//  (a) `SELECT *` / `RETURNING *` replaced with `CLIENT_SAFE_SELECT_LIST` —
+//      pre-WF3 the route leaked `stripe_customer_id` (PII), `radius_cap_km`
+//      (admin-internal), and `trade_slugs_override` (admin-internal) on
+//      every response, AND any new internal column added to the table
+//      would be leaked automatically.
+//  (b) `trade_slug` first-write race — pre-WF3 the SELECT-then-UPDATE
+//      pattern allowed two concurrent PATCHes to both see `trade_slug
+//      IS NULL` and both succeed, with the second winner overwriting
+//      the first. Now the trade_slug write is an atomic precondition
+//      (`UPDATE ... WHERE user_id = $1 AND trade_slug IS NULL`) and
+//      `rowCount === 0` returns 409.
+//  (c) Trade-slug validation bypass — pre-WF3 `rawBody.trade_slug` was
+//      read directly BEFORE `safeParse`. Now `trade_slug` is in the
+//      Zod schema and the route uses `parsed.data.trade_slug`.
+//  (d) `Cache-Control: no-store` on GET — the trial-state helpers
+//      (`applyFallbackTrialInitIfNeeded`, `applyTrialExpirationIfNeeded`)
+//      issue writes on GET, so cached/proxied GETs would silently
+//      trigger duplicate writes.
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
-import { UserProfileUpdateSchema } from '@/lib/userProfile.schema';
+import { CLIENT_SAFE_SELECT_LIST, UserProfileUpdateSchema } from '@/lib/userProfile.schema';
 import {
   applyFallbackTrialInitIfNeeded,
   applyTrialExpirationIfNeeded,
 } from '@/lib/subscription/expiration';
+
+const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' } as const;
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const uid = await getUserIdFromSession(request);
@@ -35,14 +57,14 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     await applyTrialExpirationIfNeeded(uid);
 
     const rows = await query<Record<string, unknown>>(
-      `SELECT * FROM user_profiles WHERE user_id = $1`,
+      `SELECT ${CLIENT_SAFE_SELECT_LIST} FROM user_profiles WHERE user_id = $1`,
       [uid],
     );
 
     if (rows.length === 0) {
       return NextResponse.json(
         { data: null, error: { code: 'NOT_FOUND', message: 'Profile not found' }, meta: null },
-        { status: 404 },
+        { status: 404, headers: NO_STORE_HEADERS },
       );
     }
 
@@ -64,16 +86,22 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
           },
           meta: null,
         },
-        { status: 403 },
+        { status: 403, headers: NO_STORE_HEADERS },
       );
     }
 
-    return NextResponse.json({ data: profile, error: null, meta: null });
+    // Cache-Control: no-store — the trial-state helpers above issue
+    // writes on GET, so any cached/proxied response would silently
+    // trigger duplicate writes (and stale data).
+    return NextResponse.json(
+      { data: profile, error: null, meta: null },
+      { headers: NO_STORE_HEADERS },
+    );
   } catch (err) {
     logError('[user-profile/GET]', err, { uid });
     return NextResponse.json(
       { data: null, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' }, meta: null },
-      { status: 500 },
+      { status: 500, headers: NO_STORE_HEADERS },
     );
   }
 });
@@ -131,16 +159,36 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       );
     }
 
+    // WF3 2026-05-04: validate the body BEFORE the trade_slug branch so
+    // any future Zod constraints on trade_slug (length, charset regex)
+    // are enforced. Pre-WF3 the handler read `rawBody.trade_slug`
+    // directly, bypassing Zod entirely.
+    const parsed = UserProfileUpdateSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { data: null, error: { code: 'VALIDATION_ERROR', message: parsed.error.issues[0]?.message ?? 'Invalid input' }, meta: null },
+        { status: 400 },
+      );
+    }
+    const fields = parsed.data;
+
     // trade_slug first write allowed when NULL (onboarding profession step).
     // Once set, it is immutable — any attempt to change it returns 400.
     // Idempotency: same value as existing returns 200 immediately.
+    //
+    // The actual write happens below as an atomic-precondition UPDATE
+    // (`WHERE user_id = $1 AND trade_slug IS NULL`) — see the
+    // `tradeSlugFirstWrite` branch in the SET-clause section. This
+    // closes the race where two concurrent PATCHes both saw `trade_slug
+    // IS NULL` here, both proceeded to the UPDATE, and the second
+    // winner overwrote the first (violating immutability).
     let tradeSlugFirstWrite: string | null = null;
-    if ('trade_slug' in rawBody) {
+    if (fields.trade_slug !== undefined) {
       if (existing.trade_slug !== null) {
         // Already set — enforce immutability
-        if (rawBody.trade_slug === existing.trade_slug) {
+        if (fields.trade_slug === existing.trade_slug) {
           const full = await query<Record<string, unknown>>(
-            `SELECT * FROM user_profiles WHERE user_id = $1`,
+            `SELECT ${CLIENT_SAFE_SELECT_LIST} FROM user_profiles WHERE user_id = $1`,
             [uid],
           );
           return NextResponse.json({ data: full[0], error: null, meta: null });
@@ -150,21 +198,14 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
           { status: 400 },
         );
       }
-      // existing.trade_slug IS NULL — first write during onboarding
-      if (typeof rawBody.trade_slug === 'string' && rawBody.trade_slug.trim().length > 0) {
-        tradeSlugFirstWrite = rawBody.trade_slug;
+      // existing.trade_slug IS NULL — first write during onboarding.
+      // Zod has already enforced min(1)+max(50); the trim guard remains
+      // as defense-in-depth for whitespace-only strings (Zod min(1)
+      // allows `' '` since string length > 0).
+      if (fields.trade_slug.trim().length > 0) {
+        tradeSlugFirstWrite = fields.trade_slug;
       }
     }
-
-    const parsed = UserProfileUpdateSchema.safeParse(rawBody);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { data: null, error: { code: 'VALIDATION_ERROR', message: parsed.error.issues[0]?.message ?? 'Invalid input' }, meta: null },
-        { status: 400 },
-      );
-    }
-
-    const fields = parsed.data;
 
     // onboarding_complete=true guard: requires trade+location+tos in combined state
     if (fields.onboarding_complete === true) {
@@ -273,17 +314,51 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     // No writable fields in body — return current profile without a phantom write
     if (setClauses.length === 0) {
       const full = await query<Record<string, unknown>>(
-        `SELECT * FROM user_profiles WHERE user_id = $1`,
+        `SELECT ${CLIENT_SAFE_SELECT_LIST} FROM user_profiles WHERE user_id = $1`,
         [uid],
       );
       return NextResponse.json({ data: full[0], error: null, meta: null });
     }
 
     setClauses.push('updated_at = NOW()');
+
+    // WF3 2026-05-04: atomic-precondition write when this PATCH includes
+    // a trade_slug first-write. The pre-WF3 SELECT-then-UPDATE pattern
+    // allowed two concurrent PATCHes to both see `existing.trade_slug
+    // IS NULL`, both proceed, and the second winner silently overwrite
+    // the first. Adding `AND trade_slug IS NULL` to the WHERE clause
+    // makes the UPDATE serializable: the loser sees `rowCount === 0`
+    // and gets a 409 instead of overwriting.
+    const whereClause = tradeSlugFirstWrite !== null
+      ? 'WHERE user_id = $1 AND trade_slug IS NULL'
+      : 'WHERE user_id = $1';
     const updated = await query<Record<string, unknown>>(
-      `UPDATE user_profiles SET ${setClauses.join(', ')} WHERE user_id = $1 RETURNING *`,
+      `UPDATE user_profiles SET ${setClauses.join(', ')} ${whereClause} RETURNING ${CLIENT_SAFE_SELECT_LIST}`,
       params,
     );
+
+    if (tradeSlugFirstWrite !== null && updated.length === 0) {
+      // Race-loss: another concurrent PATCH won the trade_slug first-write
+      // between our SELECT (line ~94) and our UPDATE here. Read back the
+      // winning value so the client can reconcile and surface a friendly
+      // error.
+      const winning = await query<{ trade_slug: string | null }>(
+        `SELECT trade_slug FROM user_profiles WHERE user_id = $1`,
+        [uid],
+      );
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: 'TRADE_RACE_LOST',
+            message: 'Concurrent PATCH set trade_slug to a different value first',
+            existing_trade_slug: winning[0]?.trade_slug ?? null,
+          },
+          meta: null,
+        },
+        { status: 409 },
+      );
+    }
 
     return NextResponse.json({ data: updated[0], error: null, meta: null });
   } catch (err) {

@@ -53,8 +53,61 @@ export type UserProfileType = z.infer<typeof UserProfileSchema>;
 
 // Whitelist for PATCH body — only these fields are client-writable.
 // .strip() silently discards any extra keys (subscription_status, account_deleted_at, etc.)
+//
+// WF3 2026-05-04 hardening (review_followups.md /api/user-profile bundle):
+// `trade_slug` IS a client-writable field (the onboarding profession step
+// PATCHes it as the first write of the user_profiles row), but it has
+// special semantics — first-write only, immutable thereafter. Pre-WF3 the
+// route handler read `rawBody.trade_slug` directly BEFORE calling safeParse,
+// bypassing Zod entirely; future schema constraints (length, charset
+// regex) would not have been enforced. Adding it here lets the route
+// read `parsed.data.trade_slug` instead.
+//
+// Server-canonical column list (the columns that should be returned to
+// clients on GET / PATCH). Exclude internal fields:
+//   - `stripe_customer_id`, `radius_cap_km`, `trade_slugs_override` (admin-internal)
+//   - `account_preset` (admin-set, but DOES need to leak — clients read it
+//     to know e.g. "manufacturer" preset and skip subscription UI)
+// Used by `/api/user-profile` GET and PATCH RETURNING — replaces `SELECT *`
+// / `RETURNING *` which leaked any future internal column automatically.
+export const CLIENT_SAFE_COLUMNS = [
+  'user_id',
+  'trade_slug',
+  'display_name',
+  'created_at',
+  'updated_at',
+  'full_name',
+  'phone_number',
+  'company_name',
+  'email',
+  'backup_email',
+  'default_tab',
+  'location_mode',
+  'home_base_lat',
+  'home_base_lng',
+  'radius_km',
+  'supplier_selection',
+  'lead_views_count',
+  'subscription_status',
+  'trial_started_at',
+  'onboarding_complete',
+  'tos_accepted_at',
+  'account_deleted_at',
+  'account_preset',
+  'new_lead_min_cost_tier',
+  'phase_changed',
+  'lifecycle_stalled_pref',
+  'start_date_urgent',
+  'notification_schedule',
+] as const;
+export const CLIENT_SAFE_SELECT_LIST = CLIENT_SAFE_COLUMNS.join(', ');
+
 export const UserProfileUpdateSchema = z
   .object({
+    // Spec 95 §3.1 trade_slug: first-write only, immutable thereafter.
+    // Validation gate runs at safeParse; immutability gate is enforced
+    // in the route handler against existing row state.
+    trade_slug: z.string().min(1).max(50).optional(),
     full_name: z.string().max(120).nullable().optional(),
     phone_number: z.string().max(30).nullable().optional(),
     company_name: z.string().max(120).nullable().optional(),

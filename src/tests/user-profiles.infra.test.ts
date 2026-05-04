@@ -120,6 +120,38 @@ describe('GET /api/user-profile', () => {
     expect(body.data.trade_slug).toBe('plumbing');
   });
 
+  it('GET sets Cache-Control: no-store (WF3 hardening — trial-state writes on GET must not be proxy-cached)', async () => {
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([BASE_PROFILE]);
+    const res = await GET(makeGET());
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+  });
+
+  it('GET SELECT projects only client-safe columns (WF3 hardening — no SELECT * leakage)', async () => {
+    // Pre-WF3 the SELECT was `SELECT * FROM user_profiles`, which leaked
+    // `stripe_customer_id`/`radius_cap_km`/`trade_slugs_override` to the
+    // client. Now the SELECT lists explicit columns from
+    // `CLIENT_SAFE_SELECT_LIST`. Inspect the actual SQL passed to the
+    // query mock.
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([BASE_PROFILE]);
+    await GET(makeGET());
+    // The third call is the final profile SELECT.
+    const finalSelectSql = String(mockQuery.mock.calls[2]?.[0] ?? '');
+    expect(finalSelectSql).not.toContain('SELECT *');
+    expect(finalSelectSql).not.toContain('stripe_customer_id');
+    expect(finalSelectSql).not.toContain('radius_cap_km');
+    expect(finalSelectSql).not.toContain('trade_slugs_override');
+    // Sanity: the SELECT must include user_id (canonical identifier).
+    expect(finalSelectSql).toContain('user_id');
+  });
+
   it('returns 403 with days_remaining for deleted account', async () => {
     mockGetUser.mockResolvedValueOnce('uid-abc');
     const deletedAt = new Date(Date.now() - 5 * 86_400_000).toISOString();
@@ -173,6 +205,55 @@ describe('PATCH /api/user-profile', () => {
     expect(res.status).toBe(200);
     const body = await res.json() as { data: typeof updated };
     expect(body.data.trade_slug).toBe('plumbing');
+  });
+
+  it('PATCH trade_slug first-write uses atomic precondition (WF3 hardening — race-safe)', async () => {
+    // Pre-WF3 the SELECT-then-UPDATE pattern allowed two concurrent PATCHes
+    // to both see `trade_slug IS NULL`, both succeed, second winner
+    // overwrites first. Now the UPDATE includes `AND trade_slug IS NULL`
+    // in its WHERE clause so the loser sees rowCount === 0 and gets 409.
+    mockGetUser.mockResolvedValueOnce('uid-new');
+    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, trade_slug: null }]);
+    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, trade_slug: 'plumbing' }]);
+    await PATCH(makePATCH({ trade_slug: 'plumbing' }));
+    const updateCall = mockQuery.mock.calls.find(
+      (c) => typeof c[0] === 'string' && (c[0] as string).startsWith('UPDATE'),
+    );
+    expect(updateCall).toBeDefined();
+    expect(updateCall![0]).toMatch(/WHERE\s+user_id\s*=\s*\$1\s+AND\s+trade_slug\s+IS\s+NULL/i);
+  });
+
+  it('returns 409 TRADE_RACE_LOST when concurrent PATCH won the trade_slug first-write (WF3 hardening)', async () => {
+    mockGetUser.mockResolvedValueOnce('uid-new');
+    // Initial SELECT shows trade_slug NULL (we believe we have the lock)
+    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, trade_slug: null }]);
+    // UPDATE returns 0 rows (precondition failed — concurrent winner already set it)
+    mockQuery.mockResolvedValueOnce([]);
+    // Reconciliation SELECT returns the winner's value
+    mockQuery.mockResolvedValueOnce([{ trade_slug: 'electrical' }]);
+    const res = await PATCH(makePATCH({ trade_slug: 'plumbing' }));
+    expect(res.status).toBe(409);
+    const body = await res.json() as {
+      error: { code: string; existing_trade_slug: string | null };
+    };
+    expect(body.error.code).toBe('TRADE_RACE_LOST');
+    expect(body.error.existing_trade_slug).toBe('electrical');
+  });
+
+  it('PATCH RETURNING clause projects only client-safe columns (WF3 hardening — no RETURNING * leakage)', async () => {
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery.mockResolvedValueOnce([BASE_PROFILE]); // existing
+    mockQuery.mockResolvedValueOnce([BASE_PROFILE]); // updated
+    await PATCH(makePATCH({ full_name: 'New Name' }));
+    const updateCall = mockQuery.mock.calls.find(
+      (c) => typeof c[0] === 'string' && (c[0] as string).startsWith('UPDATE'),
+    );
+    expect(updateCall).toBeDefined();
+    const sql = updateCall![0] as string;
+    expect(sql).not.toContain('RETURNING *');
+    expect(sql).not.toContain('stripe_customer_id');
+    expect(sql).not.toContain('radius_cap_km');
+    expect(sql).not.toContain('trade_slugs_override');
   });
 
   it('returns 200 when trade_slug matches existing (idempotency)', async () => {
