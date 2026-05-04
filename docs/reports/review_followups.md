@@ -24,15 +24,22 @@ _Generated following the Pipeline Clean-up Mandate._
 - Auth-state reset on forced sign-out PROMOTED CRIT — separate mobile-state WF
 - Lifecycle "Unstall cliff" CRIT — Phase 2 classifier upgrade
 
-**Items deferred from the Phase 7 adversarial review** (out-of-scope for the top-6 sweep, captured here for a future WF):
-- Phase 6 cursor wire-format break for in-flight clients (Gemini CRIT) — needs deploy-time cursor migration; separate WF1
-- Phase 5 broader PII scope: `full_name` / `phone_number` / `company_name` / `email` / `backup_email` still persisted to unencrypted MMKV (Gemini CRIT) — architectural decision needing Spec 99 §2.1 amendment + CISO sign-off
+**Items deferred from the Phase 7 adversarial review** (status):
+- ✅ **RESOLVED** — Phase 6 cursor wire-format break for in-flight clients (Gemini CRIT) — fixed by `3fa96a1` (server-side `CASE WHEN $7='builder' THEN LPAD($8, 20, '0') ELSE $8 END` accepts both pre-deploy bare-int and post-deploy padded cursors)
+- ✅ **RESOLVED** — Phase 5 broader PII scope: `full_name` / `phone_number` / `company_name` / `email` / `backup_email` persisted to unencrypted MMKV (Gemini CRIT) — fixed by `671aa87` (`shouldDehydrateQuery` filter excludes `['user-profile']`) + `202a9aa` (`buster` bump clears stale pre-WF3 blobs on first cold boot, `mmkvPersister.removeClient()` in signOut purges disk state). Full encryption-at-rest (`encryptionKey` on `createMMKV`) remains a future hardening for any new PII-adjacent queries — not blocking.
 - Phase 1 timing-safe length leak on `timingSafeStringEqual` (Gemini + DeepSeek HIGH) — DEV cookie length is a hardcoded constant; low-risk in practice
 - Phase 1 catch-all narrowing to Firebase codes only (Gemini HIGH) — scope creep
 - Phase 2 location_mode coord-clearing inconsistency 500-vs-400 (Gemini HIGH) — pre-existing
 - Phase 2 409 reconciliation SELECT outside transaction (DeepSeek + code-reviewer HIGH) — cosmetic; field is diagnostic
 - Phase 2b lifecycle backfill N+1 (Gemini HIGH) — pre-existing one-time migration concern
 - Expo Push API positive-shape assertion (DeepSeek HIGH) — defensive; nice-to-have
+
+**WF3 cursor + PII follow-up commits (3 new):**
+| Commit | Scope |
+|---|---|
+| `3fa96a1` | Cursor backward-compat — `CASE WHEN $7='builder' THEN LPAD($8, 20, '0') ELSE $8 END` |
+| `671aa87` | PII MMKV strip — `shouldDehydrateQuery` filter on user-profile + Spec 99 §2.1 amendment |
+| `202a9aa` | Code-reviewer amendments — `buster: 'wf3-pii-strip-1'` clears stale blobs at deploy moment, `mmkvPersister.removeClient()` in signOut, predicate extracted to `persistFilter.ts` for behavioral test import |
 
 ---
 
