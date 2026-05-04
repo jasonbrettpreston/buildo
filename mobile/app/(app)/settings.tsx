@@ -9,7 +9,7 @@
 //   2. useAuthStore.getState().signOut()  (this spec — clears Firebase + stores)
 //   3. AuthGate redirects to /(auth)/sign-in via onAuthStateChanged
 // If step 1 fails, do NOT sign out — show error toast and abort.
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -135,6 +135,20 @@ export default function SettingsScreen() {
   const { mutate: patchPrefs } = usePatchPrefs();
 
   const [localRadius, setLocalRadius] = useState(radiusKm);
+  // Re-sync the slider's local in-drag display to filterStore.radiusKm
+  // whenever the canonical store value changes — covers two cases the
+  // §9.16 review (#3) flagged:
+  //  (a) `usePatchProfile` rolls back radiusKm on PATCH error, so the
+  //      slider should snap back to the pre-mutation value.
+  //  (b) `usePatchProfile` invalidates `['user-profile']` on settle and
+  //      the server applies the admin `radius_cap_km` cap, so the
+  //      slider should reflect any server-clamped value.
+  // The local `useState` exists because the slider's `onValueChange`
+  // fires on every drag tick (smooth visual updates without thrashing
+  // the store), and `onSlidingComplete` commits the final value.
+  useEffect(() => {
+    setLocalRadius(radiusKm);
+  }, [radiusKm]);
 
   const costIndex = COST_TIERS.indexOf(prefs.new_lead_min_cost_tier);
 

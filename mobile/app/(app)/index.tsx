@@ -195,7 +195,7 @@ export default function LeadFeedScreen() {
   if (!coords) {
     return (
       <SafeAreaView className="flex-1 bg-zinc-950">
-        <EmptyFeedState reason="no_results" onWidenRadius={() => patchProfile({ radius_km: Math.min(radiusKm * 2, 50) })} />
+        <EmptyFeedState reason="no_results" onWidenRadius={handleWidenRadius} />
       </SafeAreaView>
     );
   }

@@ -63,12 +63,17 @@ describe('usePatchProfile / buildPatchProfileOptions — Spec 99 §4.B3 + §9.16
     const observer = new MutationObserver(client, buildPatchProfileOptions(client));
 
     const mutationPromise = observer.mutate({ radius_km: 35 } as ProfilePatch);
-    // Flush all pending microtasks + macrotasks so onMutate (which awaits
-    // cancelQueries internally) completes the optimistic local set before
-    // we check it. Single `Promise.resolve()` flushes are not enough —
-    // cancelQueries returns a promise that takes 2-3 microtask ticks.
-    // setImmediate runs after all microtasks have drained.
-    await new Promise((r) => setImmediate(r));
+    // Flush microtasks so `onMutate` (which awaits `cancelQueries` and
+    // then the snapshot+apply) completes before we check the optimistic
+    // value. WF2 §9.16 review #1: multi-tick `Promise.resolve()` chain
+    // instead of `setImmediate` — `setImmediate` runs in the Node "check"
+    // phase (a macrotask), so it works today only because TanStack Query
+    // v5's `MutationObserver.mutate` keeps `onMutate` in microtask scope.
+    // A future TanStack scheduler change to a macrotask boundary would
+    // make `setImmediate` race with `onMutate`. The microtask chain stays
+    // correct as long as TanStack remains in microtask scope (the
+    // weaker assumption).
+    for (let i = 0; i < 5; i++) await Promise.resolve();
 
     // Local set already applied; PATCH still in flight.
     expect(useFilterStore.getState().radiusKm).toBe(35);
