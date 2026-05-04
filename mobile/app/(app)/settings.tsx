@@ -24,6 +24,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as WebBrowser from 'expo-web-browser';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { useFilterStore } from '@/store/filterStore';
+import { usePatchProfile } from '@/hooks/usePatchProfile';
 import { useAuthStore } from '@/store/authStore';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { lightImpact } from '@/lib/haptics';
@@ -114,7 +115,10 @@ function usePatchPrefs() {
 export default function SettingsScreen() {
   const tradeSlug = useFilterStore((s) => s.tradeSlug);
   const radiusKm = useFilterStore((s) => s.radiusKm);
-  const setRadiusKm = useFilterStore((s) => s.setRadiusKm);
+  // Spec 99 §9.16: writes go through `usePatchProfile` (canonical B3 mutation
+  // with rollback + invalidate). Pre-§9.16 this called `setRadiusKm(val)`
+  // alone, which lost the change on cold boot and drifted on shared devices.
+  const { mutate: patchProfile } = usePatchProfile();
 
   const { data, isLoading } = useQuery({
     queryKey: ['notification-prefs'],
@@ -183,7 +187,7 @@ export default function SettingsScreen() {
             value={localRadius}
             onValueChange={setLocalRadius}
             onSlidingComplete={(val) => {
-              setRadiusKm(val);
+              patchProfile({ radius_km: val });
             }}
             minimumTrackTintColor="#f59e0b"
             maximumTrackTintColor="#3f3f46"

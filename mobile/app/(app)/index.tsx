@@ -10,6 +10,7 @@ import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useLeadFeed } from '@/hooks/useLeadFeed';
 import { useLocation } from '@/hooks/useLocation';
 import { useSaveLead } from '@/hooks/useSaveLead';
+import { usePatchProfile } from '@/hooks/usePatchProfile';
 import { useFilterStore } from '@/store/filterStore';
 import { useAuthStore } from '@/store/authStore';
 import { tabBarVisible, tabBarScrollY } from '@/store/tabBarStore';
@@ -41,7 +42,11 @@ export default function LeadFeedScreen() {
   // filter change including fields this screen doesn't read (homeBaseLocation).
   const radiusKm = useFilterStore((s) => s.radiusKm);
   const tradeSlug = useFilterStore((s) => s.tradeSlug);
-  const setRadiusKm = useFilterStore((s) => s.setRadiusKm);
+  // Spec 99 §9.16: writes go through `usePatchProfile` (canonical B3 mutation
+  // with rollback + invalidate). The bare `setRadiusKm` setter is the
+  // optimistic step inside the hook — calling it directly here would re-
+  // introduce the lossy local-only pattern that §9.16 closed.
+  const { mutate: patchProfile } = usePatchProfile();
   // Gate on idToken: prevents queries firing before Firebase Auth resolves on cold boot.
   const idToken = useAuthStore((s) => s.idToken);
   const { mutate: saveLead } = useSaveLead();
@@ -146,8 +151,8 @@ export default function LeadFeedScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleWidenRadius = useCallback(() => {
-    setRadiusKm(Math.min(radiusKm * 2, 50));
-  }, [radiusKm, setRadiusKm]);
+    patchProfile({ radius_km: Math.min(radiusKm * 2, 50) });
+  }, [radiusKm, patchProfile]);
 
   const handleRefetch = useCallback(() => {
     mediumImpact();
@@ -190,7 +195,7 @@ export default function LeadFeedScreen() {
   if (!coords) {
     return (
       <SafeAreaView className="flex-1 bg-zinc-950">
-        <EmptyFeedState reason="no_results" onWidenRadius={() => setRadiusKm(Math.min(radiusKm * 2, 50))} />
+        <EmptyFeedState reason="no_results" onWidenRadius={() => patchProfile({ radius_km: Math.min(radiusKm * 2, 50) })} />
       </SafeAreaView>
     );
   }

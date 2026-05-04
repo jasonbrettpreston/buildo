@@ -1,10 +1,15 @@
 // SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.2 Filter Sheet
+//             docs/specs/03-mobile/99_mobile_state_architecture.md §4.B3 + §9.16
 // Bottom sheet filter UI. Uses @gorhom/bottom-sheet with snap points ['50%','85%'].
-// Presents radius slider and trade selector. Calls filterStore setters on Apply.
+// Presents radius preset buttons. Writes go through `usePatchProfile`
+// (canonical Bridge B3) per Spec 99 §9.16 — pre-§9.16 this called
+// `setRadiusKm(km)` alone, which lost the change on cold boot and drifted
+// on shared devices.
 import React, { useCallback, useRef } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useFilterStore } from '@/store/filterStore';
+import { usePatchProfile } from '@/hooks/usePatchProfile';
 import { CONTRACTS } from '@/constants/contracts';
 
 const SNAP_POINTS = ['50%', '85%'];
@@ -19,7 +24,7 @@ interface Props {
 export function LeadFilterSheet({ visible, onClose }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
   const radiusKm = useFilterStore((s) => s.radiusKm);
-  const setRadiusKm = useFilterStore((s) => s.setRadiusKm);
+  const { mutate: patchProfile } = usePatchProfile();
 
   const handleClose = useCallback(() => {
     sheetRef.current?.close();
@@ -63,7 +68,7 @@ export function LeadFilterSheet({ visible, onClose }: Props) {
           {RADIUS_OPTIONS.map((km) => (
             <Pressable
               key={km}
-              onPress={() => setRadiusKm(km)}
+              onPress={() => patchProfile({ radius_km: km })}
               style={{ minHeight: 44, justifyContent: 'center' }}
               className={[
                 'rounded-lg px-4 border',
