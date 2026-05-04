@@ -78,6 +78,17 @@ describe('LEAD_FEED_SQL — structure', () => {
     );
   });
 
+  it('LPADs builder lead_id to 20 chars for numeric-correct cursor sort (WF3 review_followups.md:230)', () => {
+    // Pre-WF3 the projection was bare `e.id::text AS lead_id`, which
+    // sorts lexicographically: '9' > '10' > '100'. Cursor pagination
+    // on relevance ties would silently skip past builders '10..89'
+    // when page 1 ended at builder '9'. LPAD to 20 chars (covers any
+    // PostgreSQL int8) makes the text comparison numerically correct.
+    expect(LEAD_FEED_SQL).toMatch(/LPAD\(e\.id::text, 20, '0'\) AS lead_id/);
+    // The legacy bare cast is gone:
+    expect(LEAD_FEED_SQL).not.toMatch(/^\s*e\.id::text AS lead_id\b/m);
+  });
+
   it('permit pillar boundaries match spec 70 §4 (value 0-20, opportunity 0-20)', () => {
     // Rescaled from pre-review drafts (value 0-30, opportunity 0-10) to
     // honor the per-pillar contract in spec 70 §4 lines 234-235. The

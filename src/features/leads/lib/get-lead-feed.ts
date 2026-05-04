@@ -260,7 +260,17 @@ export const LEAD_FEED_SQL = `
   builder_candidates AS (
     SELECT
       'builder'::text AS lead_type,
-      e.id::text AS lead_id,
+      -- WF3 2026-05-04 (review_followups.md:230) - LPAD to 20 chars so
+      -- the cursor pagination tuple comparison sorts builder IDs
+      -- NUMERICALLY when lexically compared. Pre-WF3 the projection
+      -- was a bare e.id::text cast; under text ordering "9" sorts
+      -- AFTER "10" and "100", so cursor pagination on relevance ties
+      -- silently skipped past builders 10..89 when page 1 ended at
+      -- builder 9. 20 digits accommodates any PostgreSQL int8
+      -- (max ~9.2e18 = 19 digits + safety margin). The wire format
+      -- for builder lead_ids changes to a zero-padded string but the
+      -- field is opaque to clients (used as cursor + URL routing key).
+      LPAD(e.id::text, 20, '0') AS lead_id,
       NULL::text    AS permit_num,
       NULL::text    AS revision_num,
       NULL::text    AS status,
