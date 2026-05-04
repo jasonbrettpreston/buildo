@@ -40,6 +40,20 @@ import { isDevMode, DEV_SESSION_COOKIE, extractBearerToken } from '@/lib/auth/ro
 const MAX_TOKEN_BYTES = 8 * 1024; // 8 KB — Firebase ID tokens are ~1.5 KB
 
 /**
+ * Production-only error thrown when firebase-admin appears uninitialized
+ * at runtime. Used as a load-bearing fingerprint so the catch block can
+ * re-throw it (preserving the silent-401-storm hardening) without relying
+ * on a fragile `err.message.includes(...)` string-match. WF3 Phase 7
+ * amendment (Gemini CRITICAL).
+ */
+class FirebaseAdminNotInitializedError extends Error {
+  constructor() {
+    super('firebase-admin not initialized in production — auth bypass risk');
+    this.name = 'FirebaseAdminNotInitializedError';
+  }
+}
+
+/**
  * Constant-time equality for the dev-bypass cookie compare. Returns
  * false on length mismatch without invoking timingSafeEqual (which
  * throws on length mismatch — we want a silent false, not an exception).
@@ -121,9 +135,7 @@ export async function verifyIdTokenCookie(
       // exotic case where boot init succeeded but the apps array got cleared.
       // In dev, logWarn is fine (running without a service account is common).
       if (process.env.NODE_ENV === 'production') {
-        const err = new Error(
-          'firebase-admin not initialized in production — auth bypass risk',
-        );
+        const err = new FirebaseAdminNotInitializedError();
         logError('[auth/get-user]', err, { stage: 'init' });
         // (c) WF3 2026-05-04: throw instead of return null. A silent 401
         // storm gives no diagnostic; a 500 trips alerting and surfaces
@@ -146,16 +158,15 @@ export async function verifyIdTokenCookie(
       logWarn('[auth/get-user]', 'token expired/revoked', { code });
       return null;
     }
-    // (c) Re-throw the production-uninitialized error so the route handler
-    // returns 500. This branch is only reached when the inner block threw
-    // an Error WITHOUT a `code` field — Firebase verification errors
-    // always have `code`, so any code-less Error is the production-init
-    // throw. Letting it bubble up turns silent 401s into actionable 500s.
-    if (
-      process.env.NODE_ENV === 'production' &&
-      err instanceof Error &&
-      err.message.includes('firebase-admin not initialized')
-    ) {
+    // (c) Re-throw the production-uninitialized error so the route
+    // handler returns 500. WF3 Phase 7 amendment (Gemini CRITICAL):
+    // changed from `err.message.includes('firebase-admin not
+    // initialized')` to `err instanceof FirebaseAdminNotInitializedError`.
+    // The string-match was a load-bearing security branch — a future
+    // wording refactor of the throw site would silently fall through
+    // to `return null` and re-introduce the silent-401-storm regression
+    // hardening (c) was specifically designed to prevent.
+    if (err instanceof FirebaseAdminNotInitializedError) {
       throw err;
     }
     logError('[auth/get-user]', err, { stage: 'verifyIdToken' });

@@ -256,14 +256,36 @@ describe('PATCH /api/user-profile', () => {
     expect(sql).not.toContain('trade_slugs_override');
   });
 
-  it('returns 200 when trade_slug matches existing (idempotency)', async () => {
+  it('returns 200 when trade_slug matches existing (idempotency — falls through, does NOT add trade_slug to SET clause)', async () => {
     mockGetUser.mockResolvedValueOnce('uid-abc');
     // First query: fetch existing row
     mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
-    // Second query: re-fetch full row
+    // PATCH body has only trade_slug (matching existing) — no other writable
+    // fields, so setClauses.length === 0 path runs the "no writable fields"
+    // SELECT instead of an UPDATE.
     mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
     const res = await PATCH(makePATCH({ trade_slug: 'plumbing' }));
     expect(res.status).toBe(200);
+  });
+
+  it('PATCH { trade_slug: <existing>, full_name: "X" } applies full_name and skips trade_slug (WF3 Phase 7 fix — Gemini CRITICAL #2)', async () => {
+    // Pre-fix: the trade_slug-matches-existing branch returned early with
+    // a fresh SELECT, silently dropping `full_name`. Post-fix: trade_slug
+    // matching existing falls through; full_name proceeds to the UPDATE.
+    mockGetUser.mockResolvedValueOnce('uid-abc');
+    mockQuery.mockResolvedValueOnce([BASE_PROFILE]); // existing
+    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, full_name: 'New Name' }]); // updated
+    const res = await PATCH(makePATCH({ trade_slug: 'plumbing', full_name: 'New Name' }));
+    expect(res.status).toBe(200);
+    const updateCall = mockQuery.mock.calls.find(
+      (c) => typeof c[0] === 'string' && (c[0] as string).startsWith('UPDATE'),
+    );
+    expect(updateCall).toBeDefined();
+    const sql = updateCall![0] as string;
+    // Must include full_name SET clause
+    expect(sql).toMatch(/full_name\s*=\s*\$\d+/);
+    // Must NOT include trade_slug SET clause (value unchanged — silent drop is correct here)
+    expect(sql).not.toMatch(/trade_slug\s*=\s*\$\d+/);
   });
 
   it('returns updated row for valid PATCH fields', async () => {

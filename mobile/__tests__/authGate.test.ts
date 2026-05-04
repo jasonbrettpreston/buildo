@@ -59,8 +59,6 @@ const mkProfile = (overrides: Partial<UserProfileType> = {}): UserProfileType =>
   tos_accepted_at: '2026-05-01T00:00:00Z',
   account_deleted_at: null,
   account_preset: 'tradesperson',
-  trade_slugs_override: null,
-  radius_cap_km: null,
   // Spec 99 §9.14 — flat notification fields (post-flatten).
   new_lead_min_cost_tier: 'medium',
   phase_changed: true,

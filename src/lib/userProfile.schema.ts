@@ -126,7 +126,12 @@ export const UserProfileUpdateSchema = z
     notification_schedule: z.enum(['morning', 'anytime', 'evening']).optional(),
     // Onboarding-only fields written by Spec 94 screens
     onboarding_complete: z.boolean().optional(),
-    tos_accepted_at: z.string().optional(),
+    // WF3 Phase 7 amendment (DeepSeek + Gemini HIGH): tighten to
+    // `.datetime()` so a malformed string can't reach the DB CHECK and
+    // surface as a 500. Combined with the route-level immutability
+    // check below, this also prevents a bad client from spoofing a
+    // future ToS-acceptance timestamp post-onboarding.
+    tos_accepted_at: z.string().datetime({ offset: true }).optional(),
   })
   .strip();
 

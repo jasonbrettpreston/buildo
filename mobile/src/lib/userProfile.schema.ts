@@ -51,10 +51,25 @@ export const UserProfileSchema = z.object({
     .nullable(),
   radius_km: z.number().int().nullable(),
   supplier_selection: z.string().nullable(),
-  // Default 0 covers new accounts where the LEFT JOIN to lead_views
-  // returns NULL — pre-WF3 this would have failed schema parse and
-  // broken the entire settings screen.
-  lead_views_count: z.number().int().nonnegative().nullable().default(0),
+  // WF3 Phase 7 amendment (Gemini HIGH): use `.transform(v => v ?? 0)`
+  // so that a server-sent `null` is normalized to 0 at the BOUNDARY.
+  // Pre-amendment used `.nullable().default(0)`, but Zod v4's `.default`
+  // fires only on `undefined` — explicit `null` would parse as `null`
+  // and the static type would be `number | null`, defeating the stated
+  // intent ("Default 0 covers new accounts where the LEFT JOIN to
+  // lead_views returns NULL"). Paywall counter `profile.lead_views_count
+  // >= LIMIT` would then evaluate `null >= LIMIT` as false, gating
+  // users to the wrong side. Migration 114:22 declares
+  // `lead_views_count INTEGER DEFAULT 0` (no NOT NULL) so a legacy
+  // un-backfilled row could legitimately return null; the transform
+  // normalizes both null and undefined to 0.
+  lead_views_count: z
+    .number()
+    .int()
+    .nonnegative()
+    .nullable()
+    .default(0)
+    .transform((v) => v ?? 0),
   // Subscription
   subscription_status: z
     .enum(['trial', 'active', 'past_due', 'expired', 'cancelled_pending_deletion', 'admin_managed'])
@@ -67,8 +82,15 @@ export const UserProfileSchema = z.object({
   account_deleted_at: z.string().datetime({ offset: true }).nullable(),
   // Admin-configured
   account_preset: z.enum(['tradesperson', 'realtor', 'manufacturer']).nullable(),
-  trade_slugs_override: z.array(z.string()).nullable(),
-  radius_cap_km: z.number().int().nullable(),
+  // trade_slugs_override + radius_cap_km INTENTIONALLY OMITTED — same
+  // rationale as stripe_customer_id above. Both are admin-internal
+  // (Spec 95 §2.5) and were excluded from `CLIENT_SAFE_COLUMNS` in the
+  // Phase 2 server hardening, so the API response no longer carries
+  // them. Pre-WF3-amendment the mobile schema declared both as
+  // required-but-nullable — Zod v4's `.nullable()` permits `null` but
+  // NOT a missing key, so every API response would have failed parse
+  // and broken every profile-dependent screen. Caught by code-reviewer
+  // WF3 Phase 7 review.
   // Notification preferences — flattened from JSONB to 5 sibling columns
   // in migration 117 per Spec 99 §9.14 (eliminates the deep-equal hot path
   // in userProfileStore.hydrate()). DB column for `lifecycle_stalled` was

@@ -186,25 +186,52 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     if (fields.trade_slug !== undefined) {
       if (existing.trade_slug !== null) {
         // Already set — enforce immutability
-        if (fields.trade_slug === existing.trade_slug) {
-          const full = await query<Record<string, unknown>>(
-            `SELECT ${CLIENT_SAFE_SELECT_LIST} FROM user_profiles WHERE user_id = $1`,
-            [uid],
+        if (fields.trade_slug !== existing.trade_slug) {
+          return NextResponse.json(
+            { data: null, error: { code: 'TRADE_IMMUTABLE', message: 'trade_slug cannot be changed after onboarding' }, meta: null },
+            { status: 400 },
           );
-          return NextResponse.json({ data: full[0], error: null, meta: null });
         }
-        return NextResponse.json(
-          { data: null, error: { code: 'TRADE_IMMUTABLE', message: 'trade_slug cannot be changed after onboarding' }, meta: null },
-          { status: 400 },
-        );
+        // WF3 Phase 7 fix (Gemini CRITICAL #2): when fields.trade_slug
+        // matches existing.trade_slug, the previous early-return at this
+        // branch silently DROPPED every other field in the body. A
+        // common reconciliation flow (offline-replay re-sending the
+        // already-set trade_slug alongside other settings) would 200
+        // with the unchanged profile and the user's other writes lost
+        // forever. Fall through instead — `tradeSlugFirstWrite` stays
+        // null so trade_slug is omitted from the SET clause (correct,
+        // since the value isn't changing), and the rest of the PATCH
+        // proceeds normally.
+      } else {
+        // existing.trade_slug IS NULL — first write during onboarding.
+        // Zod has already enforced min(1)+max(50); the trim guard remains
+        // as defense-in-depth for whitespace-only strings (Zod min(1)
+        // allows ' ' since string length > 0).
+        if (fields.trade_slug.trim().length > 0) {
+          tradeSlugFirstWrite = fields.trade_slug;
+        }
       }
-      // existing.trade_slug IS NULL — first write during onboarding.
-      // Zod has already enforced min(1)+max(50); the trim guard remains
-      // as defense-in-depth for whitespace-only strings (Zod min(1)
-      // allows `' '` since string length > 0).
-      if (fields.trade_slug.trim().length > 0) {
-        tradeSlugFirstWrite = fields.trade_slug;
-      }
+    }
+
+    // WF3 Phase 7 amendment (DeepSeek + Gemini HIGH): tos_accepted_at
+    // is the legal-record timestamp for ToS acceptance — once set,
+    // arbitrary later overwrites would falsify the audit trail. Apply
+    // the same immutability gate as trade_slug. First-write (when
+    // existing is null) flows through normally; equal-value PATCH is a
+    // no-op and skips the SET clause; differing value returns 400.
+    if (
+      fields.tos_accepted_at !== undefined &&
+      existing.tos_accepted_at !== null &&
+      fields.tos_accepted_at !== existing.tos_accepted_at
+    ) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: { code: 'TOS_IMMUTABLE', message: 'tos_accepted_at cannot be changed once set' },
+          meta: null,
+        },
+        { status: 400 },
+      );
     }
 
     // onboarding_complete=true guard: requires trade+location+tos in combined state
@@ -360,6 +387,19 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       );
     }
 
+    // WF3 Phase 7 amendment (DeepSeek HIGH): symmetric 0-row check on
+    // the non-trade-slug UPDATE path. The trade-slug branch above
+    // returns 409 on rowCount=0 (race-loss); the non-trade-slug path
+    // previously fell through here and returned `data: undefined` to
+    // the client when a concurrent DELETE (e.g., account_deleted_at
+    // flow running in parallel) removed the row between our SELECT
+    // and our UPDATE. Narrow race but a real footgun.
+    if (updated.length === 0) {
+      return NextResponse.json(
+        { data: null, error: { code: 'NOT_FOUND', message: 'Profile not found' }, meta: null },
+        { status: 404 },
+      );
+    }
     return NextResponse.json({ data: updated[0], error: null, meta: null });
   } catch (err) {
     logError('[user-profile/PATCH]', err, { uid });

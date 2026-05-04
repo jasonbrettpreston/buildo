@@ -146,10 +146,21 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
   const nowMs = Date.now();
   const messages = [];
 
-  // LIFECYCLE_PHASE_CHANGED — batched lookup
+  // LIFECYCLE_PHASE_CHANGED — batched lookup. WF3 Phase 7 amendment
+  // (Gemini HIGH): defensively filter out rows with null permit_num or
+  // revision_num before flattening into the unnest arrays. Tuple-IN with
+  // a NULL element returns UNKNOWN (per SQL spec), so `(lv.permit_num,
+  // lv.revision_num) IN (SELECT ...)` would silently drop the affected
+  // permits. `permits.revision_num` is currently NOT NULL by schema, so
+  // the filter is defense-in-depth against future migrations that relax
+  // the constraint OR upstream code that ever produces a {permit_num: ...,
+  // revision_num: null} transition row.
   if (transitions.length > 0) {
-    const permitNums = transitions.map((t) => t.permit_num);
-    const revisionNums = transitions.map((t) => t.revision_num);
+    const validTransitions = transitions.filter(
+      (t) => t.permit_num != null && t.revision_num != null,
+    );
+    const permitNums = validTransitions.map((t) => t.permit_num);
+    const revisionNums = validTransitions.map((t) => t.revision_num);
     let rows;
     try {
       const result = await pool.query(
@@ -194,9 +205,13 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
   }
 
   // LIFECYCLE_STALLED — batched lookup. Bypasses schedule gate (spec §2.2).
+  // Same null-filter rationale as the PHASE_CHANGED branch above.
   if (stalledPermits.length > 0) {
-    const permitNums = stalledPermits.map((s) => s.permit_num);
-    const revisionNums = stalledPermits.map((s) => s.revision_num);
+    const validStalled = stalledPermits.filter(
+      (s) => s.permit_num != null && s.revision_num != null,
+    );
+    const permitNums = validStalled.map((s) => s.permit_num);
+    const revisionNums = validStalled.map((s) => s.revision_num);
     let rows;
     try {
       const result = await pool.query(

@@ -45,8 +45,6 @@ const BASE_PROFILE: UserProfileType = {
   tos_accepted_at: '2026-01-01T00:00:00Z',
   account_deleted_at: null,
   account_preset: null,
-  trade_slugs_override: null,
-  radius_cap_km: null,
   // Spec 99 §9.14 — flat notification fields (post-flatten).
   new_lead_min_cost_tier: 'medium',
   phase_changed: true,
