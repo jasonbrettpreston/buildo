@@ -469,9 +469,29 @@ export const LEAD_FEED_SQL = `
   WHERE
     -- Cursor pagination via row tuple comparison. NULL cursor on page 1
     -- short-circuits this WHERE clause.
+    --
+    -- WF3 follow-up 2026-05-04 - backward-compat for the Phase 6 LPAD
+    -- change. Phase 6 (commit fefc2a3) switched the builder lead_id
+    -- projection from a bare e.id::text to LPAD(e.id::text, 20, "0").
+    -- At the deploy moment, mobile clients holding pre-deploy cursors
+    -- (e.g. lead_id "9") would compare against post-deploy projection
+    -- "00000000000000000009"; since "00..09" < "9" in lex order, the
+    -- cursor would page through all builders again from the top and
+    -- produce duplicate rows in the feed.
+    --
+    -- The CASE wraps the incoming $8 cursor lead_id in the same LPAD
+    -- the projection uses, but ONLY for builder cursors (permit
+    -- lead_ids like "BLD-2024-12345:01" already sort correctly as
+    -- text). Result:
+    --   - pre-deploy client sends "9" -> CASE LPADs to "00..09" -> matches
+    --   - post-deploy client sends "00..09" -> LPAD on padded value
+    --     is a no-op -> still matches
+    --   - permit cursor -> bypasses CASE entirely (text already sortable)
+    -- No client-side migration needed.
     ($6::int IS NULL OR
      (relevance_score, lead_type, lead_id) <
-     ($6::int, $7::text, $8::text))
+     ($6::int, $7::text,
+      CASE WHEN $7::text = 'builder' THEN LPAD($8::text, 20, '0') ELSE $8::text END))
   ORDER BY relevance_score DESC, lead_type DESC, lead_id DESC
   LIMIT $5::int
 `;

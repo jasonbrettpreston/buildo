@@ -57,8 +57,26 @@ describe('LEAD_FEED_SQL — structure', () => {
   });
 
   it('uses cursor pagination via row tuple comparison', () => {
+    // WF3 follow-up 2026-05-04: the cursor lead_id is now wrapped in a
+    // CASE+LPAD for builder cursors (backward-compat with pre-deploy
+    // clients that hold bare-int cursors like "9"). Permit cursors
+    // pass through `$8::text` unchanged — see the dedicated
+    // backward-compat test below for the CASE assertion.
     expect(LEAD_FEED_SQL).toMatch(
-      /\$6::int IS NULL OR\s*\(relevance_score, lead_type, lead_id\) <\s*\(\$6::int, \$7::text, \$8::text\)/,
+      /\$6::int IS NULL OR\s*\(relevance_score, lead_type, lead_id\) <\s*\(\$6::int, \$7::text,/,
+    );
+  });
+
+  it('cursor lead_id is wrapped in CASE+LPAD for builder cursors (WF3 follow-up backward-compat)', () => {
+    // Pre-deploy clients hold cursors with bare-int builder lead_ids
+    // (e.g. "9"). Phase 6 (commit fefc2a3) switched the projection to
+    // LPAD'd format. Without this CASE, a pre-deploy cursor would
+    // compare lex order "00..09" < "9" === true and re-page through
+    // all builders from the top → duplicate rows in the user's feed at
+    // every deploy. The CASE LPAD's the incoming $8 only when the
+    // cursor's lead_type is 'builder'; permit cursors are unchanged.
+    expect(LEAD_FEED_SQL).toMatch(
+      /CASE WHEN \$7::text = 'builder' THEN LPAD\(\$8::text, 20, '0'\) ELSE \$8::text END/,
     );
   });
 
