@@ -70,7 +70,11 @@ export type UserProfileType = z.infer<typeof UserProfileSchema>;
 //     to know e.g. "manufacturer" preset and skip subscription UI)
 // Used by `/api/user-profile` GET and PATCH RETURNING — replaces `SELECT *`
 // / `RETURNING *` which leaked any future internal column automatically.
-export const CLIENT_SAFE_COLUMNS = [
+// Module-private: only `CLIENT_SAFE_SELECT_LIST` (the joined string)
+// is consumed externally — by `/api/user-profile/route.ts`. Removing
+// the `export` per WF3 dead-code sweep (knip flagged it as an unused
+// export — verified zero importers via grep).
+const CLIENT_SAFE_COLUMNS = [
   'user_id',
   'trade_slug',
   'display_name',
