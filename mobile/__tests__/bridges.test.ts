@@ -47,13 +47,12 @@ describe('B1 (Server → TanStack Query) data-store smoke check — Spec 99 §8.
     trade_slug: 'framing',
     radius_km: 10,
     onboarding_complete: true,
-    notification_prefs: {
-      new_lead_min_cost_tier: 'medium',
-      phase_changed: true,
-      lifecycle_stalled: true,
-      start_date_urgent: true,
-      notification_schedule: 'morning',
-    },
+    // Spec 99 §9.14 — flat notification fields (post-migration-117).
+    new_lead_min_cost_tier: 'medium',
+    phase_changed: true,
+    lifecycle_stalled_pref: true,
+    start_date_urgent: true,
+    notification_schedule: 'morning',
   };
 
   function mkClient(): QueryClient {

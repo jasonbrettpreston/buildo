@@ -62,7 +62,12 @@ const mkProfile = (overrides: Partial<UserProfileType> = {}): UserProfileType =>
   account_preset: 'tradesperson',
   trade_slugs_override: null,
   radius_cap_km: null,
-  notification_prefs: null,
+  // Spec 99 §9.14 — flat notification fields (post-flatten).
+  new_lead_min_cost_tier: 'medium',
+  phase_changed: true,
+  lifecycle_stalled_pref: true,
+  start_date_urgent: true,
+  notification_schedule: 'anytime',
   ...overrides,
 });
 

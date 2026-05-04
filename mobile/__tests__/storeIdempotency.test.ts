@@ -53,13 +53,12 @@ const sampleProfile: UserProfileType = {
   account_preset: 'tradesperson',
   trade_slugs_override: null,
   radius_cap_km: null,
-  notification_prefs: {
-    new_lead_min_cost_tier: 'medium',
-    phase_changed: true,
-    lifecycle_stalled: true,
-    start_date_urgent: true,
-    notification_schedule: 'morning',
-  },
+  // Spec 99 §9.14 — flat notification fields (post-117 flatten).
+  new_lead_min_cost_tier: 'medium',
+  phase_changed: true,
+  lifecycle_stalled_pref: true,
+  start_date_urgent: true,
+  notification_schedule: 'morning',
 };
 
 describe('filterStore.hydrate — Spec 99 §6.6 idempotency', () => {
@@ -140,63 +139,71 @@ describe('userProfileStore.hydrate — Spec 99 §6.6 idempotency', () => {
     unsubscribe();
   });
 
-  it('second hydrate with new notificationPrefs object reference but same content does NOT notify', () => {
-    // The exact regression this test guards: prior to §9.8, every hydrate
-    // recreated notificationPrefs as a new object → Zustand notify on every
-    // refetch → cascade through subscribers. Now deep-equal MUST bail out.
+  // Spec 99 §9.14: was "second hydrate with new notificationPrefs object
+  // reference but same content does NOT notify" (the deep-equal hot path).
+  // Post-flatten the test is replaced with per-field idempotency cases —
+  // each of the 5 atomic fields independently bails out on equal value
+  // via `Object.is` (Zustand's own equality check). The null-transition
+  // tests are gone because flat primitive defaults can never be null.
+  it('hydrate with all 5 notification fields equal does NOT notify (post-§9.14 flatten)', () => {
     useUserProfileStore.getState().hydrate(sampleProfile);
-    const profileWithFreshPrefs: UserProfileType = {
-      ...sampleProfile,
-      notification_prefs: { ...sampleProfile.notification_prefs! },
-    };
     const listener = jest.fn();
     const unsubscribe = useUserProfileStore.subscribe(listener);
-    useUserProfileStore.getState().hydrate(profileWithFreshPrefs);
+    // Same primitive values → per-field equality gate bails out.
+    useUserProfileStore.getState().hydrate({ ...sampleProfile });
     expect(listener).not.toHaveBeenCalled();
     unsubscribe();
   });
 
-  // DeepSeek WF2-Phase-A review #4: cover the null transitions explicitly.
-  // Prior to §9.8 deep-equal, every cold-boot-from-MMKV-with-null state
-  // would notify on a fresh-from-server null too (different object refs in
-  // hydrate's internal logic). Now equal(null, null) === true must bail out.
-  it('hydrate with null → null notificationPrefs does NOT notify (cold-boot idempotency)', () => {
-    const profileWithNullPrefs: UserProfileType = { ...sampleProfile, notification_prefs: null };
-    useUserProfileStore.getState().hydrate(profileWithNullPrefs);
+  it('hydrate with notification_schedule changed DOES notify', () => {
+    useUserProfileStore.getState().hydrate(sampleProfile);
     const listener = jest.fn();
     const unsubscribe = useUserProfileStore.subscribe(listener);
-    useUserProfileStore.getState().hydrate(profileWithNullPrefs);
-    expect(listener).not.toHaveBeenCalled();
-    unsubscribe();
-  });
-
-  it('hydrate with object → null notificationPrefs (server revoked prefs) DOES notify', () => {
-    useUserProfileStore.getState().hydrate(sampleProfile);
-    const profileWithRevokedPrefs: UserProfileType = { ...sampleProfile, notification_prefs: null };
-    const listener = jest.fn();
-    const unsubscribe = useUserProfileStore.subscribe(listener);
-    useUserProfileStore.getState().hydrate(profileWithRevokedPrefs);
-    expect(listener).toHaveBeenCalledTimes(1);
-    expect(useUserProfileStore.getState().notificationPrefs).toBeNull();
-    unsubscribe();
-  });
-
-  it('hydrate with notificationPrefs change DOES notify', () => {
-    useUserProfileStore.getState().hydrate(sampleProfile);
-    const profileWithChangedPrefs: UserProfileType = {
+    useUserProfileStore.getState().hydrate({
       ...sampleProfile,
-      notification_prefs: {
-        ...sampleProfile.notification_prefs!,
-        notification_schedule: 'evening', // changed from 'morning'
-      },
-    };
-    const listener = jest.fn();
-    const unsubscribe = useUserProfileStore.subscribe(listener);
-    useUserProfileStore.getState().hydrate(profileWithChangedPrefs);
-    expect(listener).toHaveBeenCalledTimes(1);
-    expect(useUserProfileStore.getState().notificationPrefs).toMatchObject({
-      notification_schedule: 'evening',
+      notification_schedule: 'evening', // changed from 'morning'
     });
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(useUserProfileStore.getState().notificationSchedule).toBe('evening');
+    unsubscribe();
+  });
+
+  it('hydrate with phase_changed flipped DOES notify', () => {
+    useUserProfileStore.getState().hydrate(sampleProfile);
+    const listener = jest.fn();
+    const unsubscribe = useUserProfileStore.subscribe(listener);
+    useUserProfileStore.getState().hydrate({
+      ...sampleProfile,
+      phase_changed: false, // flipped
+    });
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(useUserProfileStore.getState().phaseChanged).toBe(false);
+    unsubscribe();
+  });
+
+  it('hydrate with lifecycle_stalled_pref flipped DOES notify', () => {
+    useUserProfileStore.getState().hydrate(sampleProfile);
+    const listener = jest.fn();
+    const unsubscribe = useUserProfileStore.subscribe(listener);
+    useUserProfileStore.getState().hydrate({
+      ...sampleProfile,
+      lifecycle_stalled_pref: false,
+    });
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(useUserProfileStore.getState().lifecycleStalled).toBe(false);
+    unsubscribe();
+  });
+
+  it('hydrate with new_lead_min_cost_tier changed DOES notify', () => {
+    useUserProfileStore.getState().hydrate(sampleProfile);
+    const listener = jest.fn();
+    const unsubscribe = useUserProfileStore.subscribe(listener);
+    useUserProfileStore.getState().hydrate({
+      ...sampleProfile,
+      new_lead_min_cost_tier: 'high', // changed from 'medium'
+    });
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(useUserProfileStore.getState().newLeadMinCostTier).toBe('high');
     unsubscribe();
   });
 });

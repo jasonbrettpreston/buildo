@@ -36,18 +36,21 @@ import { OfflineBanner } from '@/components/shared/OfflineBanner';
 // and are redirected to their portal.
 const BILLING_PORTAL_URL = 'https://buildo.com/account/billing';
 
-type CostTier = 'small' | 'medium' | 'large' | 'major' | 'mega';
+// Spec 99 §9.14 (2026-05-04): cost-tier reconciled to canonical 3-value enum
+// (was a divergent 5-value set unique to this screen); `lifecycle_stalled`
+// renamed to `lifecycle_stalled_pref` to match the server column post-flatten.
+type CostTier = 'low' | 'medium' | 'high';
 type Schedule = 'morning' | 'anytime' | 'evening';
 
 interface NotificationPrefs {
   new_lead_min_cost_tier: CostTier;
   phase_changed: boolean;
-  lifecycle_stalled: boolean;
+  lifecycle_stalled_pref: boolean;
   start_date_urgent: boolean;
   notification_schedule: Schedule;
 }
 
-const COST_TIERS: CostTier[] = ['small', 'medium', 'large', 'major', 'mega'];
+const COST_TIERS: CostTier[] = ['low', 'medium', 'high'];
 const SCHEDULE_OPTIONS: { value: Schedule; label: string }[] = [
   { value: 'morning', label: 'Morning' },
   { value: 'anytime', label: 'Anytime' },
@@ -57,7 +60,7 @@ const SCHEDULE_OPTIONS: { value: Schedule; label: string }[] = [
 const DEFAULT_PREFS: NotificationPrefs = {
   new_lead_min_cost_tier: 'medium',
   phase_changed: true,
-  lifecycle_stalled: true,
+  lifecycle_stalled_pref: true,
   start_date_urgent: true,
   notification_schedule: 'anytime',
 };
@@ -215,12 +218,12 @@ export default function SettingsScreen() {
                 accessibilityLabel="Minimum job value tier for new lead notifications"
                 accessibilityValue={{
                   min: 0,
-                  max: 4,
+                  max: 2,
                   now: costIndex >= 0 ? costIndex : 1,
                   text: prefs.new_lead_min_cost_tier,
                 }}
                 minimumValue={0}
-                maximumValue={4}
+                maximumValue={2}
                 step={1}
                 value={costIndex >= 0 ? costIndex : 1}
                 onSlidingComplete={(val) => {
@@ -231,8 +234,8 @@ export default function SettingsScreen() {
                 thumbTintColor="#f59e0b"
               />
               <View className="flex-row justify-between mt-1">
-                <Text className="font-mono text-xs text-zinc-600">Small</Text>
-                <Text className="font-mono text-xs text-zinc-600">Mega</Text>
+                <Text className="font-mono text-xs text-zinc-600">Low</Text>
+                <Text className="font-mono text-xs text-zinc-600">High</Text>
               </View>
             </View>
 
@@ -257,8 +260,8 @@ export default function SettingsScreen() {
                 <Text className="text-zinc-500 text-xs mt-0.5">When a saved job is flagged as delayed</Text>
               </View>
               <Switch
-                value={prefs.lifecycle_stalled}
-                onValueChange={(v) => updatePref('lifecycle_stalled', v)}
+                value={prefs.lifecycle_stalled_pref}
+                onValueChange={(v) => updatePref('lifecycle_stalled_pref', v)}
                 trackColor={{ false: '#3f3f46', true: '#f59e0b' }}
                 thumbColor="#ffffff"
               />
