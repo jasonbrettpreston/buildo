@@ -52,7 +52,13 @@ const BASE_PROFILE = {
   account_preset: null,
   trade_slugs_override: null,
   radius_cap_km: null,
-  notification_prefs: null,
+  // Spec 99 §9.14: notification_prefs JSONB flattened to 5 sibling fields in
+  // migration 117. NOT NULL with defaults — every fixture row carries them.
+  new_lead_min_cost_tier: 'medium',
+  phase_changed: true,
+  lifecycle_stalled_pref: true,
+  start_date_urgent: true,
+  notification_schedule: 'anytime',
 };
 
 function makeGET(uid?: string): NextRequest {

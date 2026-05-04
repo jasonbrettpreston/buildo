@@ -63,13 +63,28 @@ describe('notifications/preferences route — source regression locks', () => {
     expect(hasPatch).toBe(true);
   });
 
-  it('PATCH uses jsonb || merge (not full replace) with NULL-safe COALESCE', () => {
-    // COALESCE guards against NULL existing column (NULL || anything = NULL would drop the patch silently).
-    expect(prefsSource).toContain("COALESCE(notification_prefs, '{}'::jsonb) || $2::jsonb");
+  it('PATCH builds dynamic SET clauses for the 5 flat columns (Spec 99 §9.14)', () => {
+    // Pre-flatten this used `COALESCE(notification_prefs, '{}'::jsonb) || $::jsonb`.
+    // Post-flatten each field is a plain column UPDATE built via addField().
+    expect(prefsSource).toContain("addField('phase_changed'");
+    expect(prefsSource).toContain("addField('lifecycle_stalled_pref'");
+    expect(prefsSource).toContain("addField('start_date_urgent'");
+    expect(prefsSource).toContain("addField('new_lead_min_cost_tier'");
+    expect(prefsSource).toContain("addField('notification_schedule'");
+    expect(prefsSource).not.toContain("'{}'::jsonb");
   });
 
   it('validates notification_schedule as morning | anytime | evening', () => {
     expect(prefsSource).toContain("z.enum(['morning', 'anytime', 'evening'])");
+  });
+
+  it('uses canonical cost-tier enum low/medium/high (Spec 99 §9.14 reconciliation)', () => {
+    expect(prefsSource).toContain("z.enum(['low', 'medium', 'high'])");
+    // The pre-existing divergent 5-value enum is gone — assert the literal
+    // enum array (not bare words "small"/"mega" which can appear in
+    // explanatory prose comments).
+    expect(prefsSource).not.toMatch(/z\.enum\(\[\s*['"]small['"]/);
+    expect(prefsSource).not.toMatch(/['"]mega['"]\s*\]/);
   });
 
   it('uses logError in both catch blocks', () => {
@@ -208,6 +223,11 @@ const migration108 = fs.readFileSync(
   'utf-8',
 );
 
+const migration117 = fs.readFileSync(
+  path.join(__dirname, '../../migrations/117_notification_prefs_flatten.sql'),
+  'utf-8',
+);
+
 describe('Migration 107 — device_tokens', () => {
   it('creates device_tokens table', () => {
     expect(migration107).toContain('CREATE TABLE device_tokens');
@@ -226,7 +246,7 @@ describe('Migration 107 — device_tokens', () => {
   });
 });
 
-describe('Migration 108 — notification_prefs', () => {
+describe('Migration 108 — notification_prefs (legacy JSONB; superseded by 117)', () => {
   it('adds notification_prefs column to user_profiles', () => {
     expect(migration108).toContain('ALTER TABLE user_profiles');
     expect(migration108).toContain('notification_prefs');
@@ -238,5 +258,35 @@ describe('Migration 108 — notification_prefs', () => {
 
   it('has DOWN block', () => {
     expect(migration108).toContain('DROP COLUMN IF EXISTS notification_prefs');
+  });
+});
+
+describe('Migration 117 — notification_prefs flatten (Spec 99 §9.14)', () => {
+  it('adds the 5 flat columns to user_profiles', () => {
+    expect(migration117).toContain('new_lead_min_cost_tier');
+    expect(migration117).toContain('phase_changed');
+    expect(migration117).toContain('lifecycle_stalled_pref');
+    expect(migration117).toContain('start_date_urgent');
+    expect(migration117).toContain('notification_schedule');
+  });
+
+  it('drops the legacy JSONB column at end of UP', () => {
+    expect(migration117).toMatch(/DROP COLUMN IF EXISTS notification_prefs/);
+  });
+
+  it('has the ALLOW-DESTRUCTIVE marker (DROP COLUMN safety)', () => {
+    expect(migration117).toContain('-- ALLOW-DESTRUCTIVE');
+  });
+
+  it('adds CHECK constraints for the two enum columns', () => {
+    expect(migration117).toMatch(/CHECK\s*\(\s*new_lead_min_cost_tier\s+IN\s*\(\s*'low',\s*'medium',\s*'high'\s*\)\s*\)/);
+    expect(migration117).toMatch(/CHECK\s*\(\s*notification_schedule\s+IN\s*\(\s*'morning',\s*'anytime',\s*'evening'\s*\)\s*\)/);
+  });
+
+  it('backfills from JSONB before dropping the column', () => {
+    const updateIdx = migration117.indexOf('UPDATE user_profiles');
+    const dropIdx = migration117.indexOf('DROP COLUMN IF EXISTS notification_prefs');
+    expect(updateIdx).toBeGreaterThan(0);
+    expect(dropIdx).toBeGreaterThan(updateIdx);
   });
 });

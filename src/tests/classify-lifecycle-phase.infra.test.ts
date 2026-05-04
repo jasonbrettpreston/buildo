@@ -621,8 +621,16 @@ describe('migration 111 — notification_prefs_repair', () => {
     expect(MIGRATION_SRC).toContain('notification_schedule');
   });
 
-  it('classify-lifecycle-phase.js queries notification_prefs from user_profiles', () => {
+  it('classify-lifecycle-phase.js queries flat notification columns (post-117 §9.14)', () => {
+    // Pre-migration-117 the script SELECTed `up.notification_prefs` (JSONB).
+    // Post-117 the script reads the flat columns directly: phase_changed,
+    // lifecycle_stalled_pref, start_date_urgent, notification_schedule.
     const classifySrc = read('scripts/classify-lifecycle-phase.js');
-    expect(classifySrc).toContain('up.notification_prefs');
+    expect(classifySrc).toContain('up.phase_changed');
+    expect(classifySrc).toContain('up.lifecycle_stalled_pref');
+    expect(classifySrc).toContain('up.start_date_urgent');
+    expect(classifySrc).toContain('up.notification_schedule');
+    // The legacy JSONB read is gone:
+    expect(classifySrc).not.toContain('up.notification_prefs');
   });
 });

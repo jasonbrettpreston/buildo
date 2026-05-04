@@ -95,7 +95,9 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
     let rows;
     try {
       const result = await pool.query(
-        `SELECT dt.push_token, up.notification_prefs
+        // Spec 99 §9.14: notification_prefs JSONB flattened to 5 columns in
+        // migration 117. Select the two we read here directly.
+        `SELECT dt.push_token, up.phase_changed, up.notification_schedule
            FROM lead_views lv
            JOIN device_tokens dt ON dt.user_id = lv.user_id
            JOIN user_profiles up ON up.user_id = lv.user_id
@@ -111,9 +113,8 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
     }
 
     for (const row of rows) {
-      const prefs = row.notification_prefs || {};
-      if (!prefs.phase_changed) continue;
-      if (!isScheduleAllowed(prefs.notification_schedule || 'anytime', nowMs)) continue;
+      if (!row.phase_changed) continue;
+      if (!isScheduleAllowed(row.notification_schedule || 'anytime', nowMs)) continue;
       messages.push({
         to: row.push_token,
         title: 'Phase Update',
@@ -135,7 +136,10 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
     let rows;
     try {
       const result = await pool.query(
-        `SELECT dt.push_token, up.notification_prefs
+        // Spec 99 §9.14: read the lifecycle_stalled_pref column (renamed
+        // from notification_prefs.lifecycle_stalled to disambiguate from
+        // permits.lifecycle_stalled in joins).
+        `SELECT dt.push_token, up.lifecycle_stalled_pref
            FROM lead_views lv
            JOIN device_tokens dt ON dt.user_id = lv.user_id
            JOIN user_profiles up ON up.user_id = lv.user_id
@@ -151,8 +155,7 @@ async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
     }
 
     for (const row of rows) {
-      const prefs = row.notification_prefs || {};
-      if (!prefs.lifecycle_stalled) continue;
+      if (!row.lifecycle_stalled_pref) continue;
       // No schedule gate — stall alerts always deliver immediately
       messages.push({
         to: row.push_token,
@@ -192,9 +195,10 @@ async function dispatchStartDateUrgentPushes(pool) {
   let rows;
   try {
     const result = await pool.query(
+      // Spec 99 §9.14: read the start_date_urgent column directly.
       `SELECT DISTINCT ON (tf.permit_num, tf.revision_num, dt.push_token)
               tf.permit_num, tf.revision_num, dt.push_token,
-              up.notification_prefs, tf.predicted_start
+              up.start_date_urgent, tf.predicted_start
          FROM trade_forecasts tf
          JOIN lead_views lv
            ON lv.permit_num = tf.permit_num
@@ -214,8 +218,7 @@ async function dispatchStartDateUrgentPushes(pool) {
 
   const messages = [];
   for (const row of rows) {
-    const prefs = row.notification_prefs || {};
-    if (!prefs.start_date_urgent) continue;
+    if (!row.start_date_urgent) continue;
     // No schedule gate — start-date alerts bypass the window (spec §2.2)
     const daysUntil = Math.ceil(
       (new Date(row.predicted_start).getTime() - nowMs) / (1000 * 60 * 60 * 24),

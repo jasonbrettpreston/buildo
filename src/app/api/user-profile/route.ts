@@ -251,11 +251,14 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       addField('radius_km', capped);
     }
 
-    // notification_prefs: atomic server-side JSONB merge
-    if (fields.notification_prefs !== undefined) {
-      params.push(JSON.stringify(fields.notification_prefs));
-      setClauses.push(`notification_prefs = COALESCE(notification_prefs, '{}'::jsonb) || $${params.length}::jsonb`);
-    }
+    // Spec 99 §9.14 — notification preferences are now 5 flat columns (was
+    // one JSONB column with merge SQL pre-migration-117). Each field is an
+    // ordinary partial PATCH: omit to leave unchanged, send a value to set.
+    if (fields.new_lead_min_cost_tier !== undefined) addField('new_lead_min_cost_tier', fields.new_lead_min_cost_tier);
+    if (fields.phase_changed !== undefined) addField('phase_changed', fields.phase_changed);
+    if (fields.lifecycle_stalled_pref !== undefined) addField('lifecycle_stalled_pref', fields.lifecycle_stalled_pref);
+    if (fields.start_date_urgent !== undefined) addField('start_date_urgent', fields.start_date_urgent);
+    if (fields.notification_schedule !== undefined) addField('notification_schedule', fields.notification_schedule);
 
     // onboarding_complete=true + non-manufacturer + not already subscribed → start trial
     if (

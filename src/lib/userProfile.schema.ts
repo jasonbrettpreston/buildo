@@ -37,14 +37,16 @@ export const UserProfileSchema = z.object({
   account_preset: z.enum(['tradesperson', 'realtor', 'manufacturer']).nullable(),
   trade_slugs_override: z.array(z.string()).nullable(),
   radius_cap_km: z.number().int().nullable(),
-  // notification_prefs stored as JSONB — canonical 5-key shape per §2.4
-  notification_prefs: z.object({
-    new_lead_min_cost_tier: z.enum(['low', 'medium', 'high']),
-    phase_changed: z.boolean(),
-    lifecycle_stalled: z.boolean(),
-    start_date_urgent: z.boolean(),
-    notification_schedule: z.enum(['morning', 'anytime', 'evening']),
-  }).nullable(),
+  // Notification preferences — flattened from JSONB to 5 sibling columns in
+  // migration 117 per Spec 99 §9.14 (eliminates the deep-equal hot path on
+  // the mobile side; replaces JSONB merge SQL on the server). DB column for
+  // `lifecycle_stalled` was renamed `lifecycle_stalled_pref` to avoid silent
+  // ambiguity in pipeline SELECTs that join `permits.lifecycle_stalled`.
+  new_lead_min_cost_tier: z.enum(['low', 'medium', 'high']),
+  phase_changed: z.boolean(),
+  lifecycle_stalled_pref: z.boolean(),
+  start_date_urgent: z.boolean(),
+  notification_schedule: z.enum(['morning', 'anytime', 'evening']),
 });
 
 export type UserProfileType = z.infer<typeof UserProfileSchema>;
@@ -63,13 +65,12 @@ export const UserProfileUpdateSchema = z
     home_base_lng: z.number().min(-180).max(180).nullable().optional(),
     radius_km: z.number().int().min(1).max(200).nullable().optional(),
     supplier_selection: z.string().nullable().optional(),
-    notification_prefs: z.object({
-      new_lead_min_cost_tier: z.enum(['low', 'medium', 'high']),
-      phase_changed: z.boolean(),
-      lifecycle_stalled: z.boolean(),
-      start_date_urgent: z.boolean(),
-      notification_schedule: z.enum(['morning', 'anytime', 'evening']),
-    }).partial().optional(),
+    // Spec 99 §9.14 — flat notification fields (was a JSONB sub-object pre-117)
+    new_lead_min_cost_tier: z.enum(['low', 'medium', 'high']).optional(),
+    phase_changed: z.boolean().optional(),
+    lifecycle_stalled_pref: z.boolean().optional(),
+    start_date_urgent: z.boolean().optional(),
+    notification_schedule: z.enum(['morning', 'anytime', 'evening']).optional(),
     // Onboarding-only fields written by Spec 94 screens
     onboarding_complete: z.boolean().optional(),
     tos_accepted_at: z.string().optional(),
