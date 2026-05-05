@@ -1,6 +1,32 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF3 — Spec 99 H5 MEMORY.md Auto-Memory Cleanup 2026-05-05 (RESOLVED)
+
+**Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` finding **HIGH H5** — `~/.claude/projects/.../memory/MEMORY.md` was a 94-line snapshot blob violating the auto-memory protocol's "MEMORY.md is an index, not a memory" rule (CLAUDE.md auto-memory section). Audit cited specific stale numeric claims (`41 mig vs 114 actual`, `36 specs vs 67 actual`, `1823 tests vs ~4990 actual`) as the symptom; the deeper structural concern was that the file's shape was drift-prone by construction.
+
+**Resolution:** Memory-side cleanup only — these files live at `~/.claude/projects/C--Users-User-Buildo/memory/` and are user-scope (NOT in the repo). The only repo edit is this RESOLVED entry.
+
+**MEMORY.md trim — 94 → 22 lines:** Deleted 11 inline-content sections that violated the auto-memory "What NOT to save" rules (code patterns / conventions / architecture / file paths / project structure / anything already documented in CLAUDE.md or `tasks/lessons.md`):
+
+- Project Overview, Key Architecture Decisions, Admin Dashboard, Auth & Middleware, CoA Integration, Testing, 32 Trade Slugs, Classification Architecture — all derivable from CLAUDE.md + specs.
+- DB Column Gotchas, TypeScript Quirks Found, ESLint Config — already in `tasks/lessons.md` (read at session start per CLAUDE.md Prime Directive #8). Verified at lessons.md lines 17-19 (all three CoA aliases + notification column names present).
+
+**Audit's specific stale numbers were ALREADY cleaned** in a prior session — confirmed via grep before the trim. The numeric-claim portion of H5 was already partially closed; this WF3 closed the structural portion.
+
+**Kept (already-indexed) sections:** Active Investigations (4 entries), Pipeline Hardening Roadmap, User Environment, Feedback (4 entries) — all retained verbatim except for two stale-hook updates:
+- Pipeline Hardening Roadmap hook: "Phase 1 Step 2 next, B20-23 deferred" → "~65 pipeline bugs; Phases 1-3 fully resolved; Phase 4 WF1 epics remain". Verified against `project_pipeline_hardening_roadmap.md` which marks Step 2 + B20-B23 BOTH done with commit hashes.
+- Multi-worker architecture hook: "WF1 for next session" → "IMPLEMENTED + HARDENED (commits `1e8eea1`, `f9cb5aa`)". Verified against `project_multiworker_architecture.md` which shows the implementation + hardening fixes already committed.
+
+**Orphan disposition:** `wf5_pipeline_audit.md` (55 days old, not previously indexed) was initially proposed for deletion as a stale orphan. User clarified it's REFERENCE input used when running WF5 on the pipeline — captures the "Option C — Raw DB Transparency" design decision + a bug-pattern checklist that subsequent audits validate against. Disposition reversed: file KEPT, NEW "Pipeline Audits" section added in MEMORY.md with index entry. **This was a near-miss — would have deleted load-bearing reference material; saved by the user's mid-execution intervention.**
+
+**Code-reviewer findings (single feature-dev:code-reviewer agent, isolation:worktree):**
+- **IMPORTANT — Pipeline Hardening Roadmap hook exceeded ~150 chars** (was ~196 chars after the stale-claim update). Fixed inline by trimming to 142 chars: "~65 pipeline bugs; Phases 1-3 fully resolved; Phase 4 WF1 epics remain". The longer version's per-phase status itemisation is recoverable from the linked file.
+- **DEFER — No memory captures the per-finding WF3 cadence pattern.** Across H1-H5, the user consistently ran one WF3 per audit finding with full plan-lock ceremony (never bundled findings into a single WF3). Existing `feedback_always_use_workflow.md` covers "ceremony mandatory" but not "per-finding granularity". Recommend creating `feedback_wf3_granularity.md` ("audit findings are fixed one-at-a-time, never bundled; sequential phase commits preferred within a single WF3") in a future cleanup. Not addressed in this WF3 because it stretches scope (the H5 finding is about MEMORY.md hygiene, not adding new memories).
+
+**No commit beyond this RESOLVED entry.** All MEMORY.md and `wf5_pipeline_audit.md` changes are in user-scope `~/.claude/projects/.../memory/` — not version-controlled.
+
+
 ## WF3 — Spec 99 H4 Mobile Typecheck Cleanup 2026-05-05 (RESOLVED — 4 commits)
 
 **Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` finding **HIGH H4** — `npx tsc --noEmit` from `mobile/` had 15 pre-existing errors across 4 root causes (bridges.test.ts QueryObserver invariant generics × 2; offline.test.ts missing dev-dep × 1; FlashList v2 generic erasure × 10; expo-notifications + expo-router × 2). Blocked future WF5 GO verdict.
