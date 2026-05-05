@@ -1,6 +1,47 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF2 — Spec 99 M1+M2+M3 Doc-Only Spec Sync 2026-05-05 (RESOLVED)
+
+**Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` rows 203-205 (M1, M2, M3) — all tagged "WF2 doc-only" sync of `docs/specs/03-mobile/99_mobile_state_architecture.md` to current code reality.
+
+**Resolution:** ONE bundled commit covering 3 audit M-findings + 3 review fixes (1 BUG + 1 BUG + 1 DEFER from code-reviewer, all addressed inline). Net spec change: +40 / -16 lines, single file. Zero source code change.
+
+**Edits landed:**
+- **§B5 line 290 (rule body) + §B5 code block (lines 268-285) + §9.10 row** — M1 + code-reviewer F1 (DeepSeek C2 confirms): rule rewritten from `removeQueries({queryKey:['user-profile']})` to `queryClient.clear()` (broader purge for defense-in-depth) AND code block updated to reflect post-§9.19 production shape (`try/finally` wrapping `auth().signOut()` + `clearLocalSessionState()` helper extraction). The original code block was pre-§9.19 inline pattern, contradicting both the surrounding rules and the actual implementation.
+- **§5.2 stale-profile guard + §9.11 row** — M2: code example updated to `if (profile && (!profile.user_id || profile.user_id !== user?.uid)) return;`; new "Hardening beyond spec letter" paragraph documents the falsy-uid attack class (corrupted/poisoned cache with `user_id = null/''/undefined`) and cites Gemini WF2 §9.6 F1 + DeepSeek #2 consensus. §9.11 closed to ✅ DONE.
+- **§9 Migration Plan table** — M3: appended 4 new rows §9.17-§9.20:
+  - **§9.17** cursor backward-compat (`3fa96a1`) — server-side fix at `src/features/leads/lib/get-lead-feed.ts`. Code-reviewer F2 caught a SQL parameter error in my initial draft (`CASE WHEN $8::text` → corrected to `CASE WHEN $7::text = 'builder' THEN LPAD($8::text, 20, '0') ELSE $8::text END` per actual production SQL).
+  - **§9.18** PII MMKV strip (`671aa87+202a9aa`) — `mobile/src/lib/persistFilter.ts` (NEW), `mobile/app/_layout.tsx`, `mobile/src/store/authStore.ts`, `mobile/__tests__/offline.test.ts`.
+  - **§9.19** forced-signout cleanup unification (`381a0c9+f2f7147`) — `clearLocalSessionState()` extraction; `mobile/src/store/authStore.ts`, `mobile/__tests__/storeReset.coverage.test.ts`, `mobile/__tests__/useAuth.test.ts`.
+  - **§9.20** dead-code sweep (`7bcb681`) — server-side `CLIENT_SAFE_COLUMNS` removal at `src/lib/userProfile.schema.ts`.
+
+**Multi-Agent Review (per WF2 protocol — all 3 agents):**
+
+- **feature-dev:code-reviewer (worktree-isolated):** 2 BUG + 2 DEFER. BUGs (F1 §B5 code block stale, F2 §9.17 SQL parameter error) fixed inline. DEFER F3 (§B5 attribution should mention §9.19 consolidation of `removeClient()`) also fixed inline as a small-cost improvement. DEFER F4 (`§B5 Hardening Beyond Spec Letter` subsection per audit Pattern B) deferred — §B5's rule body already explains the broader-purge rationale inline; a separate labeled subsection would be redundant. Filed as continuation of the audit's Pattern B class-level fix recommendation.
+- **Gemini Pro adversarial:** 1 CRITICAL + 4 HIGH + 2 MEDIUM + 1 LOW. ALL OUT OF SCOPE for M1+M2+M3 (doc-only sync). Filed as new findings below for future WF triage.
+- **DeepSeek-R1 adversarial:** 2 CRITICAL + 2 HIGH + 1 MEDIUM + 1 LOW. ONE CRITICAL overlaps with code-reviewer F1 (signOut error handling — same site, same fix already applied). The remaining items are OUT OF SCOPE; filed below for future WF triage.
+
+**New findings from Gemini + DeepSeek (out-of-scope for this WF2; for future triage):**
+
+| Severity | Source | Item | Planned Home |
+|---|---|---|---|
+| CRITICAL | Gemini | **`userProfileStore` persists PII to unencrypted MMKV via Zustand `persist` middleware (§3.1 mirrored fields).** §9.18 fixed the TanStack persister but `userProfileStore` is a separate persistence layer carrying the same 5 PII fields (`full_name`, `phone_number`, `company_name`, `email`, `backup_email`). Direct violation of §2.1 Layer 4a/4b boundary. | WF3 — add `partialize` to `userProfileStore` to strip PII fields from `persist()`; or migrate user-profile mirror out of Zustand and rely on TanStack canonical fetch |
+| CRITICAL | DeepSeek | **B4 re-sign-in same-user cache invalidation gap.** After sign-out, `lastKnownUid` retains the previous user's UID (by design for cold-boot detection). When that user signs in again, `isUidChange` is false, so no `invalidateQueries({queryKey: ['user-profile']})` fires; the stale cached profile (including `subscription_status`) is served until `staleTime` (5 min) or next refetch trigger. | WF3 — always invalidate on `onAuthStateChanged(user)`, regardless of `isUidChange`; move the `isUidChange` guard to the telemetry breadcrumb only |
+| HIGH | Gemini | **§6.5 isFetching carve-out is fragile.** Couples generic query loading state to specific business logic transition (post-payment). Future query refactor could silently break post-payment UI. Recommends a dedicated `useMutation`-backed `isAwaitingSubscriptionUpdate` flag instead. | WF1 — already considered at H1 plan time; documented in H1 RESOLVED entry as the rejected alternative. Re-open if a regression surfaces. |
+| HIGH | Gemini | **B4 stale-bearer-token race.** `onAuthStateChanged` fires making `user` truthy; if a query fires before the async `getIdToken().then(setAuth)` completes, `apiClient` reads the OLD `idToken` while `enabled: !!user` already passes. | WF3 — tighten `enabled` to `!!user && !!idToken` for user-scoped queries; clear `idToken` synchronously when `user` changes |
+| HIGH | Gemini | **signOut() not crash-resilient.** App crash between `auth().signOut()` and the cleanup leaves stale data persisted on disk. (PARTIALLY addressed by §9.19's try/finally but Gemini's specific concern is app-startup recovery.) | WF3 — add `clearLocalSessionState()` invocation to app startup when `auth().currentUser` is null |
+| HIGH | DeepSeek | **B4 mid-session token expiry handling not specified.** Firebase ID tokens expire after ~1 hour; spec doesn't document the refresh strategy. | WF2 — document the existing `apiClient` 401 interceptor as the canonical refresh path (Bridge B6?), or codify a refresh strategy |
+| HIGH | DeepSeek | **B3 optimistic rollback can overwrite concurrent state changes.** `onMutate` captures `previous`, `onError` writes it back — if another mutation/hydrate touches the same field between, rollback reverts legitimate changes. | WF2 — document version-counter or last-write-wins strategy in B3 spec; or amend B3 hook to re-read current value before rollback |
+| MEDIUM | Gemini | **§8.3 / §7.3 mandates have/had no enforcement (§8.3 closed by H2, §7.3 closed by H3).** Gemini correctly observed the audit's H2/H3 findings. Both now resolved. | ✅ ALREADY DONE (H2 + H3) |
+| MEDIUM | Gemini | **MMKV ban lacks automated enforcement** — §2.1 hard rule banning direct `createMMKV().getString()` outside `mobile/src/lib/persistence/` is verified manually only. | WF2 — add ESLint rule banning `react-native-mmkv` imports outside the allowed module list |
+| MEDIUM | DeepSeek | **`getDiagnosticsSnapshot()` returns empty in production builds — CI tests in production mode pass vacuously.** §8.4's `expect(maxRendersPerSecond).toBeLessThan(20)` assertion would mask render-storm regressions if CI runs with `__DEV__=false`. | WF2 — gate the assertion to dev-mode tests OR provide a production-safe diagnostic fallback |
+| LOW | Gemini | **`queryClient.clear()` too aggressive on sign-out** (recommends scoped predicate-based `removeQueries`). DIRECTLY CONTRADICTS the audit's M1 ruling (chose broader purge for defense-in-depth). | NOT actioned — audit ruling stands. The trade-off (cache loss on next sign-in) is intentional |
+| LOW | DeepSeek | **Stale-profile guard returns early without loading state — could leave previous user's UI visible for several frames.** | WF2 — add a loading-state route or component for the stale-profile branch |
+
+These findings expand the Spec 99 bug surface but are NOT blocked by the M1+M2+M3 doc sync; the spec now matches code reality, which is the precondition for evaluating each new finding against accurate normative text.
+
+
 ## WF3 — Spec 99 H5 MEMORY.md Auto-Memory Cleanup 2026-05-05 (RESOLVED)
 
 **Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` finding **HIGH H5** — `~/.claude/projects/.../memory/MEMORY.md` was a 94-line snapshot blob violating the auto-memory protocol's "MEMORY.md is an index, not a memory" rule (CLAUDE.md auto-memory section). Audit cited specific stale numeric claims (`41 mig vs 114 actual`, `36 specs vs 67 actual`, `1823 tests vs ~4990 actual`) as the symptom; the deeper structural concern was that the file's shape was drift-prone by construction.
