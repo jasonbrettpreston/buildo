@@ -132,7 +132,12 @@ describe('B1 subscriber notify-suppression — Spec 99 §9.7b', () => {
    * microtask flush latency on slow CI runners; subscribing-and-resolving on
    * actual data delivery is deterministic and removes the flake risk.
    */
-  function firstDataRef(observer: QueryObserver): Promise<unknown> {
+  // TanStack v5+ tightened QueryObserver's invariant generics — a concrete
+  // QueryObserver<TData,...> is not assignable to QueryObserver<unknown,...>.
+  // The helper accepts an observer of ANY shape; it only reads `result.data`
+  // (which is typed via the eslint-disabled `any` generics below).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function firstDataRef(observer: QueryObserver<any, any, any, any, any>): Promise<unknown> {
     return new Promise((resolve) => {
       const unsub = observer.subscribe((result) => {
         if (result.data !== undefined) {
@@ -147,7 +152,7 @@ describe('B1 subscriber notify-suppression — Spec 99 §9.7b', () => {
     const client = mkClient();
     const queryFn = async () => JSON.parse(JSON.stringify(sampleProfileBytes));
 
-    const observer = new QueryObserver(client, { queryKey: ['user-profile'], queryFn });
+    const observer = new QueryObserver(client, { queryKey: ['user-profile'] as const, queryFn });
 
     // Wait deterministically for the FIRST data delivery — this is the
     // pre-refetch baseline reference we'll compare against.
@@ -188,7 +193,7 @@ describe('B1 subscriber notify-suppression — Spec 99 §9.7b', () => {
       i++;
       return data;
     };
-    const observer = new QueryObserver(client, { queryKey: ['user-profile'], queryFn });
+    const observer = new QueryObserver(client, { queryKey: ['user-profile'] as const, queryFn });
 
     // Deterministic baseline: wait for first data delivery.
     const initialRef = await firstDataRef(observer);
