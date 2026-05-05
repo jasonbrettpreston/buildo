@@ -1,6 +1,6 @@
 /** @jest-environment node */
 // SPEC LINK: docs/specs/03-mobile/96_mobile_subscription.md §10 Step 2 Subscription gate
-//             docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 Gate stability + 2026-05-05 narrow carve-out amendment
+//             docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 Gate stability + §8.3 Gate-stability tests + 2026-05-05 narrow carve-out amendment
 //
 // _layout.tsx orchestrates ~6 third-party libraries (expo-router, TanStack
 // Query, Reanimated, BottomTabBar, AppState, IncompleteBanner) which are
@@ -105,6 +105,69 @@ describe('subscription gate — source invariants', () => {
     expect(amendmentBlock).toMatch(/_layout\.tsx/);
     expect(amendmentBlock).toMatch(/subscription_status/);
     expect(amendmentBlock).toMatch(/['"]expired['"]/);
+  });
+});
+
+describe('subscription gate — §6.5 gate stability (WF5 H2 / §8.3)', () => {
+  // Spec 99 §8.3 mandate: "Each render gate condition (per §6.5) MUST have a
+  // test asserting that toggling `isFetching` does NOT flip the gate." The
+  // file's preamble explains why we use source-grep invariants here rather
+  // than the spec's literal "render twice" pattern. These four tests cover
+  // all four §6.5 render gates in `(app)/_layout.tsx`: the broad loading
+  // gate, the §6.5 amendment 2026-05-05 carve-out, the deletion gate, and
+  // the paywall gate.
+
+  // All four tests use `[^{]+` (not `[^)]+`) as the condition-capture
+  // delimiter so a contributor refactoring a condition to include a nested
+  // parenthesized subexpression — e.g., `if ((isFetching) && status === 'x')`
+  // — cannot evade the `isFetching` check by hiding it behind inner parens.
+  // The block-opening `{` is the unambiguous terminator of the if-condition
+  // body. `[^{]+` plus `\)\s*\{` backtracking captures the condition cleanly.
+
+  it('broad loading gate omits isFetching (uses only stable signals)', () => {
+    // §6.5: "isFetching toggles on every refetch — BANNED in any gate
+    // condition that does not pair it with a stable status field." The
+    // broad gate must use only stable signals (isLoading + profile shape).
+    const broadGateMatch = layoutSrc.match(
+      /Loading guard:[\s\S]*?if\s*\(([^{]+)\)\s*\{[\s\S]*?return <SubscriptionLoadingGuard/,
+    );
+    expect(broadGateMatch).not.toBeNull();
+    expect(broadGateMatch![1]).not.toMatch(/isFetching/);
+  });
+
+  it('carve-out is the only isFetching gate-condition AND pairs with "expired"', () => {
+    // §6.5 amendment 2026-05-05 enumerates EXACTLY ONE permitted `isFetching`
+    // carve-out: paired with `subscription_status === 'expired'`. Two
+    // invariants in one assertion: (a) no second carve-out slipped in;
+    // (b) the existing one still pairs with the stable status field.
+    const gateConditionMatches = layoutSrc.match(
+      /if\s*\([^{]*isFetching[^{]*\)/g,
+    );
+    expect(gateConditionMatches).not.toBeNull();
+    expect(gateConditionMatches!).toHaveLength(1);
+    expect(gateConditionMatches![0]).toMatch(
+      /subscription_status === ['"]expired['"]/,
+    );
+  });
+
+  it('cancelled_pending_deletion gate omits isFetching', () => {
+    // The render gate (NOT the sign-out useEffect earlier in the file) is
+    // anchored by the "Deletion-confirmed accounts" comment.
+    const deletionGateMatch = layoutSrc.match(
+      /Deletion-confirmed accounts[\s\S]*?if\s*\(([^{]+)\)\s*\{[\s\S]*?return <SubscriptionLoadingGuard/,
+    );
+    expect(deletionGateMatch).not.toBeNull();
+    expect(deletionGateMatch![1]).not.toMatch(/isFetching/);
+  });
+
+  it('paywall gate omits isFetching', () => {
+    // The expired-not-dismissed → <PaywallMount/> gate must use only the
+    // stable status enum + the dismissed flag.
+    const paywallGateMatch = layoutSrc.match(
+      /if\s*\(([^{]*paywallDismissed[^{]*)\)\s*\{[\s\S]*?return <PaywallMount/,
+    );
+    expect(paywallGateMatch).not.toBeNull();
+    expect(paywallGateMatch![1]).not.toMatch(/isFetching/);
   });
 });
 

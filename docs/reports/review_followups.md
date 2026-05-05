@@ -1,6 +1,22 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF3 — Spec 99 H2 Gate-Stability Tests 2026-05-05 (RESOLVED)
+
+**Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` finding **HIGH H2** — zero tests across `mobile/__tests__/*.test.ts` reference `isFetching`. Spec 99 §8.3 mandates each render gate condition (per §6.5) MUST have a test asserting `isFetching` toggle does NOT flip the gate. Coupled with the now-resolved H1: the narrow carve-out at `(app)/_layout.tsx:220` had no regression guard AND the broad-stripping had no enforcement.
+
+**Resolution:** Test-only addition to `mobile/__tests__/subscriptionGate.test.ts`. New `describe('subscription gate — §6.5 gate stability (WF5 H2 / §8.3)')` block with 4 source-invariant `it()` cases — one per render gate in `(app)/_layout.tsx`: broad loading gate (line 206), §6.5 amendment carve-out (line 220), `cancelled_pending_deletion` gate (line 226), paywall gate (line 233). Each test asserts `isFetching` is absent from the gate's condition (or, for the carve-out, that it is the SOLE permitted occurrence AND pairs with `=== 'expired'`). Zero production source files modified. Mutation-test evidence: prepending `isFetching ||` to the broad gate caused Test 1 to fail with the expected diagnostic; prepending `Boolean(true) && isFetching &&` to the deletion gate caused Test 2 to fail showing both gates in the `gateConditionMatches` array. Both reverted. SPEC LINK header extended to cite §8.3.
+
+**Why source-grep, not behavioural render:** The file's preamble (lines 5-13) explicitly rules out behavioural rendering as impractical because `_layout.tsx` orchestrates 6 third-party libraries (expo-router, TanStack Query, Reanimated, BottomTabBar, AppState, IncompleteBanner). Source invariants give regression coverage equivalent to the spec's literal "render twice" intent at lower scope cost; the audit's H2 routing column ("WF3 — add `subscriptionGate.test.ts` cases for the carve-out + the broad gate") matches this approach.
+
+**Code-reviewer findings — both fixed inline (zero deferred):**
+
+- **BUG — Test 2 false-negative escape via parenthesized `isFetching`.** Original regex `/if \([^)]*isFetching[^)]*\)/g` would miss `if (foo() && isFetching)` because the inner `)` after `foo(` blocks `[^)]*` from spanning. A second `isFetching` gate hidden behind any inner `()` would evade the `.toHaveLength(1)` count. Fixed by switching the body delimiter from `[^)]*` to `[^{]*` (the `{` opening the if-block is the unambiguous terminator) and applying the same change uniformly across Tests 1/3/4 to prevent the equivalent silent false-pass on capture-group brittleness. Mutation test confirmed the hardened regex catches the parenthesized case.
+- **DEFER class — Tests 1/3/4 same `[^)]+` brittleness.** Resolved inline by the same uniform `[^{]+` capture-window fix; not deferred.
+
+**Pattern A cross-reference (NOT in this WF3's scope):** The audit's Phase 5 routes the H2+H3 class ("Spec mandate exists but no enforcement test") to a future §9.21 — `mobile/__tests__/spec99.mandates.lint.test.ts` that statically grep-asserts every spec mandate has implementation evidence. That's a class-level fix covering H2 + H3 + future mandate drift; file as future WF1 when prioritised.
+
+
 ## WF3 — Spec 99 H1 Amendment 2026-05-05 (RESOLVED)
 
 **Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` finding **HIGH H1** — `mobile/app/(app)/_layout.tsx:216` retains an `isFetching && subscription_status === 'expired'` carve-out that Spec 99 §6.5's categorical text did not permit.
