@@ -29,7 +29,14 @@ import type { PermitLeadFeedItem } from '@/lib/schemas';
 import type { LeadFeedItem } from '@/lib/schemas';
 import { useRouter, useNavigation } from 'expo-router';
 
-const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
+// FlashList v2 tightened generics — `Animated.createAnimatedComponent(FlashList)`
+// erases the `<T>` parameter, defaulting all callbacks (renderItem, keyExtractor,
+// getItemType) and the ref to `<unknown>`. Cast back to `typeof FlashList`
+// preserves the generic so call sites can pass `<AnimatedFlashList<LeadFeedItem>>`
+// (or rely on inference) and recover full type narrowing on item callbacks.
+const AnimatedFlashList = Animated.createAnimatedComponent(
+  FlashList,
+) as unknown as typeof FlashList;
 
 // Spec §4.4: render 6 skeletons on initial load to eliminate layout shift.
 const SKELETONS = Array.from({ length: 6 });

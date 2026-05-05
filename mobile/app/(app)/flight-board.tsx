@@ -31,7 +31,10 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { Search } from 'lucide-react-native';
 import type { FlightBoardItem, FlightBoardResult } from '@/lib/schemas';
 
-const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
+// FlashList v2 tightened generics — see index.tsx for the full rationale.
+const AnimatedFlashList = Animated.createAnimatedComponent(
+  FlashList,
+) as unknown as typeof FlashList;
 
 type TemporalGroup = 'action_required' | 'departing_soon' | 'on_the_horizon';
 
