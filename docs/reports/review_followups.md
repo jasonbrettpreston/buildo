@@ -1,6 +1,37 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF1 — Spec 99 §9.21 Mandates-Lint Test (Pattern A class fix) 2026-05-05 (RESOLVED)
+
+**Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` Phase 5 (lines 161-168) — "Pattern A: Spec mandate exists but no enforcement test (HIGH H2 + HIGH H3 both)... Routing: Add §9.21 (NEW) — `mobile/__tests__/spec99.mandates.lint.test.ts` that statically asserts every `## §X mandate` in Spec 99 has a corresponding implementation grep-target."
+
+**Resolution:** New test file `mobile/__tests__/spec99.mandates.lint.test.ts` (~360 lines) with hardcoded `MANDATES` array of 10 rows (§7.1-§7.4 Observability + §8.1-§8.6 Test Mandates). 12 cases total: 1 sanity (Spec 99 reachable) + 10 per-mandate evidence checks + 1 meta-count guard. Pattern matches `routerHygiene.lint.test.ts` (51-test §5.4+§6.1 enforcement) and `storeReset.coverage.test.ts` (§8.5).
+
+**§9 row appended** to Spec 99 §9 Migration Plan table marking §9.21 ✅ DONE (referenced in commit `<this commit>`).
+
+**NEW finding surfaced by writing the lint test:**
+
+| Severity | Source | Item | Planned Home |
+|---|---|---|---|
+| HIGH | §9.21 lint test | **§7.2 cache invalidation telemetry has zero implementation evidence at HEAD.** Spec 99 §7.2 mandates `Sentry.addBreadcrumb({category:'query', message:'invalidate', data:{key}})` paired with every non-trivial `queryClient.invalidateQueries` call. Grep across `mobile/src/` finds zero matches for the breadcrumb pattern. Audit Phase 4 verified §7.1 + §7.3 but did NOT check §7.2 — the §9.21 lint test surfaced this gap. The §7.2 case is `it.skip` with `pendingReason` until implementation lands. | WF3 — wire `Sentry.addBreadcrumb({category:'query',...})` at every non-trivial `invalidateQueries` site (notably `(app)/_layout.tsx` AppState and post-payment effects, `useSaveLead`, `useRemoveFromBoard`, `usePatchProfile`); also add the DEV-only `track('query_invalidate', {key})` PostHog event per §7.2 line 490. When wired, remove the `pendingReason` field from the §7.2 row in `MANDATES` to flip `it.skip` → `it`. |
+
+**Code-reviewer findings (single agent per user "skip adversarial" request):**
+- 0 BUG / 0 CRITICAL.
+- 2 IMPORTANT — fixed inline before commit:
+  - **F1: `walkSource` excludes `.test.ts` but not `.test.tsx`.** Forward-compat: a future co-located component test in `mobile/src/` could contain a mock `Sentry.addBreadcrumb({category:'query'})` and satisfy §7.2 as a false positive. Fixed by adding `!entry.name.endsWith('.test.tsx')` to the exclusion list.
+  - **F2: §8.1 and §8.3 read test-file source without `stripComments`.** Inconsistent with §7.1, §7.3, §7.4, §8.4 which all `stripComments` before matching, and contradicts the file-header rationale ("commented-out evidence does NOT count as implementation"). Fixed by wrapping both `readOrEmpty` calls with `stripComments`.
+- 3 DEFER (recorded for future cleanup, not blocking):
+  - **D1: §7.2 `searchTree` scope when implementation lands.** Currently scans all of `mobile/src/`; could scope to `mobile/src/hooks/` + `mobile/src/store/` for tighter semantics + faster runtime. Pure performance/semantic improvement; defer until §7.2 is wired and the `it.skip` is flipped to `it`.
+  - **D2: §7.4 suppression-marker vocabulary is static.** Check tests `strictModeSuppress|suppressDoubleFire`. A future contributor suppressing via different name (`dedupRender`, `strictModeNoop`) would evade. Add a TODO comment in §7.4's check body naming the accepted gap; if `stateDebug` ever gains a config arg, expand the regex.
+  - **D3: §8.3 regex matches regex-literal syntax, not prose.** The `Permitted (narrow )?carve-outs` check matches against a JS regex literal in `subscriptionGate.test.ts`. If the gate-stability test is refactored to use `.toContain('Permitted carve-outs')`, the lint silently loses coverage. Consider re-anchoring to the more stable `it(` test title string instead.
+
+**Red Light evidence (mutation tests, both reverted):**
+- Mutation A: renamed `track('route_decision'` → `track('route_decision_DISABLED'` in `mobile/app/_layout.tsx` only. Initial weak §7.3 check (concatenated bodies) PASSED — caught a real test weakness during mutation testing. Hardened the §7.3 check to require BOTH layout files independently. Re-mutated → §7.3 case correctly failed with `no track("route_decision") in app/_layout.tsx (AuthGate authority site)`.
+- Mutation B: bumped `expect(MANDATES).toHaveLength(10)` to `99` → meta-count case correctly failed.
+
+**Test results:** 11/12 pass + 1 skip (§7.2 pending). Full mobile suite: 340/345 pass + 5 skipped (4 baseline + 1 new §7.2). Mobile typecheck: 0 errors (note: `.expo/types/router.d.ts` is an auto-regenerated typed-routes artifact that intermittently surfaces a pre-existing `router.replace(decision.to)` Href narrowing issue at `app/_layout.tsx:180`; this is a stale-cache pattern, NOT introduced by §9.21, and not in §9.21 scope to fix).
+
+
 ## WF2 — Spec 99 M1+M2+M3 Doc-Only Spec Sync 2026-05-05 (RESOLVED)
 
 **Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` rows 203-205 (M1, M2, M3) — all tagged "WF2 doc-only" sync of `docs/specs/03-mobile/99_mobile_state_architecture.md` to current code reality.
