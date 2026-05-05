@@ -125,7 +125,7 @@ jest.mock('@/lib/mmkvPersister', () => ({
   getLastPersistedAt: jest.fn(() => null),
 }));
 
-import { useAuthStore, initFirebaseAuthListener } from '@/store/authStore';
+import { useAuthStore, initFirebaseAuthListener, __resetLastKnownUidForTests } from '@/store/authStore';
 import { useFilterStore } from '@/store/filterStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { mapFirebaseError, isAccountLinkingError } from '@/lib/firebaseErrors';
@@ -230,11 +230,44 @@ describe('initFirebaseAuthListener', () => {
     mockIdentifyUser.mockClear();
     authStateHandler = null;
     useAuthStore.setState({ user: null, idToken: null, isLoading: true });
+    // Reset the module-scoped `lastKnownUid` so a previous test's user-fire
+    // does NOT leak into the next test and silently flip a cold-boot null
+    // fire into the forced-signout cleanup branch (code-reviewer Phase 3
+    // HIGH — see also `cold-boot null-fire (lastKnownUid===null)` test
+    // below which proves the guarded branch fires when uncontaminated).
+    __resetLastKnownUidForTests();
   });
 
   it('subscribes to onAuthStateChanged exactly once', () => {
     initFirebaseAuthListener();
     expect(mockOnAuthStateChanged).toHaveBeenCalledTimes(1);
+  });
+
+  it('cold-boot null-fire (lastKnownUid===null) takes the clearAuth() branch — does NOT remove persister blob or fire forced_signout telemetry', () => {
+    // Adversarial probe (code-reviewer Phase 3 HIGH 2): the existing
+    // null-fire test below is satisfied by EITHER code path; this test
+    // pins the cold-boot branch behaviour. On every app launch by an
+    // unauthenticated user, Firebase fires `null` before resolving any
+    // cached session — without the `lastKnownUid !== null` guard, that
+    // would call `mmkvPersister.removeClient()` and wipe the offline
+    // TanStack cache on every cold boot.
+    mockPersisterRemoveClient.mockClear();
+    mockClearQueries.mockClear();
+    mockTrack.mockClear();
+    mockResetIdentity.mockClear();
+    initFirebaseAuthListener();
+    // No prior user-fire → `lastKnownUid` is still null (just reset by beforeEach).
+    authStateHandler?.(null);
+    // Cleanup branch's tell-tale side effects MUST NOT have fired.
+    expect(mockPersisterRemoveClient).not.toHaveBeenCalled();
+    expect(mockClearQueries).not.toHaveBeenCalled();
+    expect(mockResetIdentity).not.toHaveBeenCalled();
+    expect(mockTrack).not.toHaveBeenCalledWith('forced_signout');
+    // But `clearAuth()` DID run — auth fields zeroed.
+    const state = useAuthStore.getState();
+    expect(state.user).toBeNull();
+    expect(state.idToken).toBeNull();
+    expect(state.isLoading).toBe(false);
   });
 
   it('clears the store when onAuthStateChanged fires null (forced sign-out)', () => {

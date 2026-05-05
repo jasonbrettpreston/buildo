@@ -198,6 +198,17 @@ export const useAuthStore = create<AuthState>()(
 // invalidation on same-user re-sign-in.
 let lastKnownUid: string | null = null;
 
+// Test-only escape hatch. The module-scoped `lastKnownUid` persists across
+// tests in the same Jest worker (modules are cached). Without a reset, a
+// test that fires the listener with a user leaves a non-null `lastKnownUid`
+// behind — the next test firing `null` would take the forced-signout
+// cleanup branch instead of the cold-boot `clearAuth()` branch (silent
+// behavior shift across tests). Tests MUST call this in `beforeEach` to
+// restore module state. Production code MUST NOT call this.
+export function __resetLastKnownUidForTests(): void {
+  lastKnownUid = null;
+}
+
 export function initFirebaseAuthListener(): () => void {
   return auth().onAuthStateChanged((firebaseUser: FirebaseAuthTypes.User | null) => {
     if (firebaseUser) {
