@@ -33,6 +33,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { SubscriptionLoadingGuard } from '@/components/paywall/SubscriptionLoadingGuard';
 import { PaywallScreen } from '@/components/paywall/PaywallScreen';
 import { trackRender, useDepsTracker } from '@/lib/debug/stateDebug';
+import { track } from '@/lib/analytics';
 
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 83 : 60;
 
@@ -154,6 +155,22 @@ export default function AppLayout() {
       !deletedHandledRef.current
     ) {
       deletedHandledRef.current = true;
+      // Spec 99 §7.3 production event #3 — distinguishes from the explicit
+      // signout_initiated path (which fires from authStore.signOut() in
+      // user-initiated sign-outs). Forced sign-outs from the deletion
+      // handler are a separate revenue/churn signal.
+      track('cancelled_pending_deletion_signout');
+      // Spec 99 §7.3 DEV-only route_decision for the AppLayout authority's
+      // router.replace below. Hermes constant-folds in production.
+      if (__DEV__) {
+        track('route_decision', {
+          authority: 'AppLayout',
+          branch: 'cancelled_pending_deletion',
+          from: '(app)',
+          to: '/(auth)/sign-in',
+          reason: 'subscription_status_pending_deletion',
+        });
+      }
       void useAuthStore.getState().signOut().then(() => {
         router.replace('/(auth)/sign-in');
       });
@@ -171,6 +188,14 @@ export default function AppLayout() {
     if (prev === 'expired' && next === 'active') {
       clearPaywall();
       void queryClient.invalidateQueries({ queryKey: ['leads'] });
+      // Spec 99 §7.3 production event #4 — subscription conversion signal
+      // (post-payment webhook landing). Cold-boot false-positive avoided
+      // because prevStatusRef is initialised undefined and the first
+      // useEffect fire sets prev=undefined (skips this branch).
+      track('subscription_expired_to_active', {
+        prev: 'expired',
+        next: 'active',
+      });
     }
     prevStatusRef.current = next;
   }, [profile?.subscription_status, clearPaywall, queryClient]);

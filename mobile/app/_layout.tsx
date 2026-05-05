@@ -24,6 +24,7 @@ import { successNotification } from '@/lib/haptics';
 import { NotificationToast, type NotificationType } from '@/components/shared/NotificationToast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { trackRender, useDepsTracker, wireStoreLogging } from '@/lib/debug/stateDebug';
+import { track } from '@/lib/analytics';
 import { decideAuthGateRoute } from '@/lib/auth/decideAuthGateRoute';
 
 // Spec 99 §7.1 + §9.5: wire Zustand subscribers once at module load. The
@@ -153,6 +154,20 @@ function AuthGate() {
       case 'wait':
         return;
       case 'navigate':
+        // Spec 99 §7.3 router decision telemetry — DEV-only event for every
+        // router.replace from AuthGate. Hermes/Metro constant-folds the
+        // `if (__DEV__)` guard at build time so production bundles carry zero
+        // overhead. Production builds rely on the 4 enumerated events
+        // (signout_initiated, reactivation_modal_shown, etc.) instead.
+        if (__DEV__) {
+          track('route_decision', {
+            authority: 'AuthGate',
+            branch: 'navigate',
+            from: segments.join('/') || '(root)',
+            to: decision.to,
+            reason: 'auth_gate_routing_effect',
+          });
+        }
         router.replace(decision.to);
         if (decision.sideEffect === 'registerPushToken') {
           void registerPushToken().catch((err) => {
@@ -165,6 +180,12 @@ function AuthGate() {
       case 'reactivation-modal':
         setReactivationState({
           account_deleted_at: decision.account_deleted_at,
+          days_remaining: decision.days_remaining,
+        });
+        // Spec 99 §7.3 production event #2 — compliance-critical signal
+        // proving the user saw the 30-day reactivation prompt (PIPEDA /
+        // account-deletion audit trail). NOT __DEV__-guarded.
+        track('reactivation_modal_shown', {
           days_remaining: decision.days_remaining,
         });
         return;

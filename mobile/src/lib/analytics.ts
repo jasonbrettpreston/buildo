@@ -31,6 +31,9 @@ function getClient(): PostHog | null {
 
 // Whitelist of allowed event property keys — any unlisted key is dropped.
 // Exhaustive list mirrors the funnel catalogue in the WF3 active task.
+// Spec 99 §7.3 (router decision telemetry) added 8 keys for route_decision +
+// reactivation_modal_shown + subscription_expired_to_active payloads:
+// authority, branch, from, to, reason, days_remaining, prev, next.
 const ALLOWED_KEYS = new Set([
   'screen',
   'method',
@@ -38,9 +41,31 @@ const ALLOWED_KEYS = new Set([
   'existing_method',
   'new_method',
   'first_seen_at',
+  'authority',
+  'branch',
+  'from',
+  'to',
+  'reason',
+  'days_remaining',
+  'prev',
+  'next',
 ] as const);
 
-type AllowedKey = 'screen' | 'method' | 'code' | 'existing_method' | 'new_method' | 'first_seen_at';
+type AllowedKey =
+  | 'screen'
+  | 'method'
+  | 'code'
+  | 'existing_method'
+  | 'new_method'
+  | 'first_seen_at'
+  | 'authority'
+  | 'branch'
+  | 'from'
+  | 'to'
+  | 'reason'
+  | 'days_remaining'
+  | 'prev'
+  | 'next';
 type EventValue = string | number | boolean | null;
 type EventProps = Partial<Record<AllowedKey, EventValue>>;
 

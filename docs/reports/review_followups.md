@@ -1,6 +1,35 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF3 — Spec 99 H3 Router Decision Telemetry 2026-05-05 (RESOLVED)
+
+**Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` finding **HIGH H3** — zero `track('route_decision', ...)` calls anywhere in `mobile/`; 3 of 4 mandated production-only events missing per Spec 99 §7.3 (only `signOut → /(auth)/sign-in` partially covered via `track('signout_initiated')` at `authStore.ts:131`).
+
+**Resolution:** Wired DEV-only `route_decision` event at every `router.replace` from AuthGate and AppLayout (2 sites total), plus the 3 missing production-only events. The existing `signout_initiated` event covers production event #1 unchanged — renaming would have broken existing PostHog dashboards. Touched 4 source files + 1 new test file:
+
+- `mobile/src/lib/analytics.ts` — extended `ALLOWED_KEYS` whitelist + `AllowedKey` type union with 8 new keys (`authority`, `branch`, `from`, `to`, `reason`, `days_remaining`, `prev`, `next`). The whitelist extension is a Spec 90 §11 contract change subjected to PII review (see code-reviewer findings below) — all 8 keys verified to carry only operational metadata (route paths, enum values, day counters), not PII.
+- `mobile/app/_layout.tsx` (AuthGate) — `case 'navigate':` gains a DEV-guarded `route_decision` event before `router.replace(decision.to)`; `case 'reactivation-modal':` gains a production `reactivation_modal_shown` event after `setReactivationState(...)` (compliance-critical — proves the user saw the 30-day deletion-window prompt).
+- `mobile/app/(app)/_layout.tsx` (AppLayout) — deletion useEffect gains production `cancelled_pending_deletion_signout` + DEV-guarded `route_decision`; post-payment transition useEffect gains production `subscription_expired_to_active` inside the `if (prev === 'expired' && next === 'active')` block.
+- `mobile/__tests__/routerTelemetry.test.ts` — NEW source-grep test file (sibling pattern of `subscriptionGate.test.ts`). 8 source-invariant `it()` cases: 2 whitelist+type-union assertions, 5 site assertions with DEV/production distinction, 1 regression guard for `signout_initiated`.
+
+**Why source-grep, not behavioural render:** Same rationale as H2 — `_layout.tsx` orchestrates 6 third-party libraries impractical to render under jest-node. Source invariants give regression coverage equivalent to the spec mandate's intent at lower scope cost.
+
+**Red Light evidence:** 7 of 8 new tests failed at HEAD before the fix; the 1 passing test was the `signout_initiated` regression guard (by design — that event already exists in `authStore.ts:131`). After the fix all 8 pass. Note: Test 7 (`subscription_expired_to_active` site) initially failed even after the fix because the original regex `[\s\S]*?\}` matched the inner `{ queryKey: ['leads'] }` closing brace before reaching the if-block's own `}`. Fixed by anchoring on `prevStatusRef.current = next;` (the next statement at outer indent level) — same regex-brittleness lesson as H2's `[^{]+` fix, applied via a different anchoring strategy here.
+
+**Code-reviewer findings — both fixed inline (zero deferred):**
+
+- **DEFER class — `__DEV__` guard regex false-pass risk in Tests 3 and 5.** Original pattern `if\s*\(__DEV__\)\s*\{[\s\S]*?track\(['"]route_decision['"][\s\S]*?\}` would false-pass if a contributor moved the track call OUTSIDE the guard with the props-object's `}` landing between them; the lazy `[\s\S]*?\}` matched the props-close, not the if-block close. Fixed by replacing with explicit brace counting via a new `assertDevGuardedTrack(fragment, eventName)` helper: scans from `if (__DEV__) {` opening to the track call, counts `{` vs `}` characters, asserts the delta is ≥ 1 (proving the call is inside an unclosed brace block).
+- **DEFER class — `extractSwitchCase` terminator fired on inner `}\s*$` lines.** Original terminator `case '...'|default:|\}\s*$` with the `m` flag matched any line ending in `}`, including the navigate case's inner `if (__DEV__) {}` block close, silently truncating the extracted case body. Fixed by dropping the `\}\s*$` alternative; over-capture past the switch close is harmless because the regexes consuming the captured fragment are anchored on case-specific tokens.
+
+**PII whitelist verification (Spec 90 §11):** Code-reviewer PASS — all 8 new keys carry only operational metadata. `from` uses `segments.join('/')` which Expo Router's `useSegments()` returns as route GROUP names (`(app)`, `[lead]` — file tokens, not resolved query parameters). `to` is hard-coded path literals. `days_remaining`, `prev`, `next` are integers/enum values. The `stripPii` whitelist is the correct defense-in-depth layer.
+
+**Idempotency under refetch storms:** Code-reviewer PASS — `cancelled_pending_deletion_signout` is gated by `deletedHandledRef.current = true` (synchronous before async signOut). `subscription_expired_to_active` is gated by `prev === 'expired' && next === 'active'`; after the event fires `prevStatusRef.current = next` makes `prev = 'active'`, so a re-fire on stable status fails the `prev === 'expired'` check. Cold-boot false-positive avoided because `prevStatusRef` initialises undefined (first useEffect fire skips the branch).
+
+**Hermes constant-folding:** Code-reviewer PASS — Metro bundler substitutes `__DEV__ → false` at the JS transform layer for production builds before Hermes receives the source; Hermes dead-code-eliminates the `if (false) {...}` block during bytecode compilation. Same mechanism as the existing `stateDebug` hub (Spec 99 §9.5). `route_decision` events carry zero overhead in production.
+
+**Pattern A cross-reference (NOT in this WF3's scope):** Same cross-link as H2 — the audit's Phase 5 routes the H2+H3 class to a future §9.21 generic mandates-lint test (`mobile/__tests__/spec99.mandates.lint.test.ts`). Future WF1.
+
+
 ## WF3 — Spec 99 H2 Gate-Stability Tests 2026-05-05 (RESOLVED)
 
 **Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` finding **HIGH H2** — zero tests across `mobile/__tests__/*.test.ts` reference `isFetching`. Spec 99 §8.3 mandates each render gate condition (per §6.5) MUST have a test asserting `isFetching` toggle does NOT flip the gate. Coupled with the now-resolved H1: the narrow carve-out at `(app)/_layout.tsx:220` had no regression guard AND the broad-stripping had no enforcement.
