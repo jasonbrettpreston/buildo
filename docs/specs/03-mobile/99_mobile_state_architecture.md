@@ -71,7 +71,7 @@ State flows top-down. A lower layer NEVER initiates a write to an upper layer ex
 
 ### 2.1 Hard rules
 
-- **Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`.** Direct `createMMKV().getString()` in component / hook code is BANNED. (Closes the `user-profile-cache` duplicate-blob anti-pattern.)
+- **Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`.** Direct `createMMKV().getString()` in component / hook code is BANNED. (Closes the `user-profile-cache` duplicate-blob anti-pattern.) The Zustand `persist` middleware's own rehydration read (via the configured `storage.getString`) is the sole exempt pathway — it is the canonical mechanism by which persisted Zustand state hydrates on cold boot. The TanStack `Persister`'s rehydration read is similarly exempt for the same reason.
 - **Layer 4a (MMKV) is UNENCRYPTED.** Anything sensitive — Firebase ID tokens, refresh tokens, API keys, payment credentials, government IDs, photo content — MUST go into Layer 4b (SecureStore/Keychain), NEVER into MMKV. The current allowlist of sensitive-but-OK-in-MMKV items is empty. Adding a new persisted field with credential-like content requires a Spec 99 amendment naming it explicitly.
 - **Layer 4b (SecureStore) is the ONLY place sensitive credentials may live on disk.** RNFirebase handles its own session storage natively (Keychain on iOS, EncryptedSharedPreferences on Android) — app code does NOT manage Firebase tokens directly. Adding any new app-managed credential (e.g., a third-party API key) requires using `expo-secure-store` + a Spec 99 amendment.
 - **The `['user-profile']` TanStack query is excluded from MMKV persistence** via `dehydrateOptions.shouldDehydrateQuery` on the `PersistQueryClientProvider` (`mobile/app/_layout.tsx`). The query payload carries 5 PII identity fields (`full_name`, `phone_number`, `company_name`, `email`, `backup_email`); persisting it to Layer 4a would violate this section. The query stays in-memory normally; cold-boot mobile re-fetches from server (the canonical source) — adds ~50–200 ms to the first profile-dependent render but eliminates the on-disk PII surface. Other queries (`['lead-feed']`, `['flight-board']`, `['notification-prefs']`) carry only public permit data or non-PII toggles and continue to persist normally. The full encryption-at-rest path (passing `encryptionKey` to `createMMKV` in `mmkvPersister.ts`) is a future hardening that would let other PII-adjacent queries persist safely; the dehydrate filter is the immediate fix.
@@ -168,7 +168,7 @@ These are NOT Zustand stores. They use `react-native-reanimated`'s `makeMutable(
 
 ## 4. The Six Bridge Patterns
 
-These are the **only** allowed cross-layer flows. A sixth pattern requires a spec amendment.
+These are the **only** allowed cross-layer flows. A seventh pattern requires a spec amendment.
 
 ### B1 — Server → TanStack Query
 
@@ -231,7 +231,7 @@ const mutation = useMutation({
 - Rollback MUST be paired with every optimistic write.
 - `onSettled` MUST invalidate the relevant query so the next render reads server truth.
 
-> **Rollback race amendment 2026-05-05 (resolves WF2 M1+M2+M3 #7, DeepSeek):** the naive rollback pattern above can overwrite legitimate concurrent state changes. Concrete scenario: user adjusts the radius slider (mutation A starts; `onMutate` captures `previous = 10`, applies optimistic = 20). Before A's network call resolves, user adjusts again (mutation B starts; B's `onMutate` captures `previous = 20` — i.e., A's optimistic value, not the on-disk pre-A truth — applies optimistic = 30). Mutation A then errors (network blip). A's `onError` rolls back to 10. The user's screen flips 30 → 10, silently destroying B's optimistic value. B's eventual `onSettled` invalidate triggers a refetch which restores 30 from the server (since B's PATCH succeeded), but the user sees a confusing flicker.
+> **Rollback race amendment 2026-05-05 (resolves WF2 M1+M2+M3 #7, DeepSeek):** the naive rollback pattern above can overwrite legitimate concurrent state changes. Concrete scenario: user adjusts the radius slider (mutation A starts; `onMutate` captures `previous = 10` from the Zustand store, applies optimistic = 20). Before A's network call resolves, user adjusts again (mutation B starts; B's `onMutate` reads `useFilterStore.getState().radiusKm` and captures `previous = 20` — i.e., A's optimistic Zustand value, not the server-canonical pre-A value — applies optimistic = 30). Mutation A then errors (network blip). A's `onError` rolls back to 10. The user's screen flips 30 → 10, silently destroying B's optimistic value. B's eventual `onSettled` invalidate triggers a refetch which restores 30 from the server (since B's PATCH succeeded), but the user sees a confusing flicker.
 >
 > **Recommended mitigation: re-read-before-rollback (last-write-wins).** In `onError`, read the CURRENT Zustand value via `useXStore.getState().<field>`. If it equals the optimistic value (`patch.<field>`), restore `previous`. If it differs, DO NOT overwrite — the newer write is canonical and rolling back would clobber it. Pseudocode:
 > ```ts
@@ -363,7 +363,7 @@ async function fetchWithAuthInternal<T>(path, options, isRetry = false): Promise
 - Refreshed token MUST be written to `useAuthStore` via `setAuth(user, newToken)` BEFORE the retry. The retry uses the new bearer because `fetchWithAuthInternal` re-reads `idToken` from the store at line 20.
 - Refresh failure (Firebase unreachable, `currentUser` null, `getIdToken` rejection) MUST propagate as `ApiError(401)` — the apiClient does NOT call `clearAuth()` directly. The error propagates to TanStack Query → consumer → AuthGate, which routes via Branch 4 (other profileError) to the retry UI per §5.3. A second 401 after the user-initiated retry would mean the refresh token itself is invalid — at that point the user is effectively signed out, and the next foreground/AppState event would let the listener detect the broken session.
 - This bridge is mid-session ONLY. Cold-boot UID-change invalidation belongs to B4; sign-out cleanup belongs to B5. B6 fires when the app already has a logged-in `user` and just needs a fresh `idToken`.
-- Spec 90 §11 mandates this interceptor at the engineering-protocol layer; this section is the architectural mirror.
+- This section is the canonical (and sole) normative source for the 401 interceptor contract; `mobile/src/lib/apiClient.ts:65-84` is the implementation site. Removing the interceptor without a corresponding B6 spec amendment is forbidden.
 - **Known limitation:** concurrent 401s each call `getIdToken(true)` independently. Firebase deduplicates the network refresh internally, but the store receives two `setAuth` writes. Low risk in practice (Zustand `set` is sync; second write is a no-op if newToken is identical). Tracked in `docs/reports/review_followups.md` as "concurrent 401 mutex" for future hardening.
 
 ---
@@ -571,6 +571,8 @@ The high-frequency onboarding routing arms (5a-5d) MUST NOT emit production tele
 ### 8.1 Idempotency tests for every bridge
 
 Each bridge in §4 MUST have a Jest test asserting that calling it twice with identical input produces zero observable mutations on the second call. Pattern:
+
+> **B6 carve-out (added with §4 B6, 2026-05-05):** B6 is a one-shot 401-retry interceptor — by design, two consecutive 401s with identical input fire `getIdToken(true)` on each call (Firebase deduplicates the network refresh internally; the per-request `isRetry` guard limits each call chain to exactly one retry). The B1-B5 idempotency mandate does NOT apply to B6 in the hydration-equality sense. B6's test contract is enforced separately by the §4.B6 rules (exactly-once retry per call chain via `isRetry`; identical-token short-circuit at the Firebase SDK layer).
 
 ```ts
 it('hydrate is idempotent — second call with same profile produces no notify', () => {

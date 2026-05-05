@@ -1,6 +1,55 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF2 — M1+M2+M3 Adversarial Findings (WF2 Batch: #6 + #7) 2026-05-05 (RESOLVED — 2 phases / 3 commits)
+
+**Source:** WF2 M1+M2+M3 RESOLVED entry below — 2 of 4 remaining OPEN findings classified as WF2 doc-only (Bridge B-spec amendments). #9 (MMKV ESLint rule, WF1) and #10 (getDiagnosticsSnapshot prod gating, WF2) remain.
+
+**Resolution:** 2-phase WF2 batch per the per-finding cadence rule (`feedback_wf3_granularity.md`).
+
+- **Phase 1 — Finding #6 (HIGH DeepSeek) — commit `aed9918`:** New B6 bridge spec for the apiClient 401 interceptor (mid-session token refresh). §4 header renamed Five → Six Bridge Patterns. Pattern code block + Rules section + cross-references to B4/B5 + known-limitation note (concurrent 401 thundering herd, tracked separately). New §9.23 catalog row.
+- **Phase 2 — Finding #7 (HIGH DeepSeek) — commit `cddc3d0`:** Extended B3 Rules with rollback-race amendment (re-read-before-rollback default + per-field version-counter alternative + deep-equal cross-reference + out-of-scope follow-up WF3 for code-side amendment to `usePatchProfile.ts`). New §9.24 catalog row.
+
+**Multi-Agent Review (per WF2 protocol — 3 agents fired):**
+- **feature-dev:code-reviewer (worktree-isolated):** 2 BUG (line 171 "sixth" stale; line 366 Spec 90 §11 citation factually wrong) + 2 DEFER (line 234 prose conflation; §8.1 missing B6 carve-out). All 4 fixed inline before WF6 commit.
+- **Gemini Pro:** 1 CRITICAL + 4 HIGH + 1 MEDIUM + 1 LOW + 1 NIT.
+- **DeepSeek-R1:** 2 HIGH + 3 MEDIUM + 1 LOW + 1 NIT.
+
+**Inline fixes applied** (4 — code-reviewer findings + 1 from DeepSeek):
+1. **BUG line 171:** "A sixth pattern requires" → "A seventh pattern requires" (after rename Five→Six).
+2. **BUG line 366:** removed factually-wrong Spec 90 §11 citation; replaced with self-referential "this section is the canonical normative source for the 401 interceptor contract."
+3. **DEFER line 234:** B3 race scenario prose changed "not the on-disk pre-A truth" → "not the server-canonical pre-A value" + added explicit `useFilterStore.getState().radiusKm` reference to the Zustand-vs-server distinction.
+4. **DEFER §8.1:** added B6 carve-out paragraph noting B6's idempotency contract is exactly-once retry per call chain (not the hydration-equality sense the §8.1 mandate enforces for B1-B5).
+5. **DeepSeek LOW §2.1:** added explicit Zustand `persist` middleware rehydration exemption sentence (mirrors the TanStack `Persister` exemption already implicit in the rule).
+
+**Adversarial false positives** (verified resolved before adversarial pass; documented for future audit traceability):
+- **Gemini CRITICAL §2.1 userProfileStore PII** — already resolved at `mobile/src/store/userProfileStore.ts:111-117` (the `partialize` config strips all 4 PII identity fields from MMKV persistence; comment block at lines 103-110 cites DeepSeek WF2 §9.14 review #4). Gemini scanned a stale state of the spec/code mapping and asserted the violation existed; verified false at scan time.
+- **Gemini HIGH §7.3 + DeepSeek HIGH §7.3** — already resolved by H3 commit `d032621` (10 telemetry sites wired across AuthGate + AppLayout including reactivation_modal_shown). Both reviewers were reading the audit's pre-H3 state.
+- **DeepSeek HIGH §8.3** — already resolved by H2 commit `e41d6a5` (4 source-grep tests in `subscriptionGate.test.ts` covering all §6.5 render gates).
+- **DeepSeek MEDIUM §B4 cache invalidation race** — partially mitigated by Phase 1 of the prior WF3 batch (commit `ffd9851` added idToken gate to `useUserProfile`, which prevents the query firing with stale bearer pre-setAuth). The remaining "AppState refetch race after setAuth" window is sub-microsecond and benign.
+
+**Substantive new findings (not actioned in this batch — filed below for future WF triage):**
+
+| Severity | Source | Item | Planned Home |
+|---|---|---|---|
+| HIGH | Gemini | **§4 B3 should mandate per-field version-counter as the DEFAULT** — current spec defaults to re-read-before-rollback, acknowledging the equality miss-case as an alternative trigger. Gemini argues version-counter is structurally correct and should not be the alternative. Substantive design disagreement; the spec text already trades simplicity vs. completeness explicitly. | WF1/WF2 — design decision needed before code-side §9.24 follow-up WF3 lands. Either re-affirm re-read default OR amend §4 B3 to mandate version-counter. |
+| HIGH | Gemini | **§4 B6 concurrent 401 thundering herd MUST be a mutex, not "low risk"** — currently noted as known-limitation tracked in `review_followups.md`. Gemini wants a single in-flight refresh promise that subsequent 401s `await` rather than fire independent `getIdToken(true)` calls. Real concern under burst-401 scenarios (deploy-induced 401 storm, post-network-restoration retries). | WF3 — implement promise-mutex in `apiClient.ts`; amend B6 spec rules to require it. |
+| MEDIUM | Gemini | **§4 B2 server-payload coupling** — `hydrateFilter(query.data)` and `hydrateUserProfile(query.data)` pass the entire server response into both stores. Future API field additions expose both stores to changes only one cares about. Recommend mapping at the bridge level: `hydrateFilter({tradeSlug: query.data.trade_slug, ...})`. | WF2 — amend B2 spec rules + refactor `useUserProfile.ts` hydration call sites. |
+| MEDIUM | Gemini | **§4 B4 `lastKnownUid` module-let is fragile** — Gemini disputes the spec's HMR-caveat justification (line 264) for keeping it module-scoped. Recommends moving to Zustand state with `partialize` exclusion + read in `onRehydrateStorage`. | WF2 — design discussion; current pattern was reviewed and accepted at §9.6 amendment time. Re-open if HMR remains a friction point. |
+| MEDIUM | DeepSeek | **§B5 paywall reset ordering — `usePaywallStore.reset()` should be BEFORE `await auth().signOut()`** — `finally` runs after the promise settles, allowing microtask interleave with React effects. Could cause brief paywall flicker during sign-out. | WF3 — analyze actual flicker risk (might be theoretical only); amend §B5 if real; restore the pre-§9.19 paywall-before-firebase ordering or rationalize the post-§9.19 ordering. |
+| LOW | Gemini | **§3.3 `currentStep` vs server `onboarding_complete` race** — final step's `setStep` updates local before the `onboarding_complete` PATCH succeeds; a network blip leaves a state mismatch on relaunch. | WF3 — tie `setStep('next')` to PATCH success (await before local update) or accept eventual-consistency. |
+| LOW | DeepSeek | **§8.5 store-enumeration test regex fragility** — `create<…>(` regex misses `createStore` factory pattern; a future store created via factory bypasses the enumeration silently. | WF3 — replace regex with explicit allow-list OR import-based discovery; cross-check with file glob. |
+| NIT | Gemini | **§6.6 composite-field rule weak** — "MUST justify the deep-equal cost" is subjective. Recommends stricter "MUST flatten unless server-side equivalent absent". | WF2 — strengthen §6.6 rule prescriptively. |
+
+**Test results:** N/A — doc-only changes; no test surface affected. Mobile suite: 344/348 pass (unchanged). Mobile typecheck: 0 errors. Repo-root lint warnings only / typecheck 0 errors.
+
+**Status of the M1+M2+M3 12-finding table after this batch:**
+- ✅ #1, #2, #4, #5, #8, #12 RESOLVED (prior batches + pre-batch verifications)
+- ✅ #6, #7 RESOLVED (this batch)
+- ❌ #3, #11 NOT-ACTIONED
+- 🔵 #9 (MMKV ESLint rule, WF1), #10 (getDiagnosticsSnapshot prod gating, WF2) remaining
+
+
 ## WF3 — M1+M2+M3 Adversarial Findings (WF3 Batch: #4 + #5 + #12) 2026-05-05 (RESOLVED — 3 phases / 3 commits)
 
 **Source:** WF2 M1+M2+M3 RESOLVED entry below — 12 new findings from the adversarial pass at commit `fa563bf`. This batch closes the 3 OPEN code-fix-shape findings; 4 were verified already resolved before scoping (CRITICAL #1 userProfileStore PII, CRITICAL #2 B4 re-sign-in cache invalidation, MEDIUM #8 §8.3/§7.3 enforcement, plus HIGH #3 + LOW #11 not-actioned per audit / contradicting M1 ruling); 4 belong to separate WF2/WF1 batches (#6, #7, #9, #10).
