@@ -1,6 +1,47 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF3 — M1+M2+M3 Adversarial Findings (WF3 Batch: #4 + #5 + #12) 2026-05-05 (RESOLVED — 3 phases / 3 commits)
+
+**Source:** WF2 M1+M2+M3 RESOLVED entry below — 12 new findings from the adversarial pass at commit `fa563bf`. This batch closes the 3 OPEN code-fix-shape findings; 4 were verified already resolved before scoping (CRITICAL #1 userProfileStore PII, CRITICAL #2 B4 re-sign-in cache invalidation, MEDIUM #8 §8.3/§7.3 enforcement, plus HIGH #3 + LOW #11 not-actioned per audit / contradicting M1 ruling); 4 belong to separate WF2/WF1 batches (#6, #7, #9, #10).
+
+**Resolution:** 3-phase WF3 batch per the per-phase commit cadence rule from `feedback_wf3_granularity.md` (memory). Single `feature-dev:code-reviewer` agent ran across all 3 phases at the end (WF3 default — user did not request adversarial).
+
+**Phase 1 — Finding #4 (HIGH Gemini, B4 stale-bearer-token race) — commit `ffd9851`:**
+- `mobile/src/hooks/useUserProfile.ts` — subscribed to `idToken` via `useAuthStore((s) => s.idToken)`; gated internal `enabled` on `(options?.enabled ?? true) && !!idToken`. Caller's `enabled: !!user` preserved; helper adds `&& !!idToken` internally. Eliminates cold-boot 401-then-retry round-trip when authStore rehydrates `{user.uid, idToken: null}` (idToken intentionally not persisted; refreshed by listener attach).
+
+**Phase 2 — Finding #5 (HIGH Gemini, signOut not crash-resilient) — commit `6ee943b`:**
+- `mobile/src/store/authStore.ts:300` — dropped `lastKnownUid !== null` guard around `clearLocalSessionState()`; cleanup now unconditional on every null fire, closing the crash-recovery gap (hard JS crash mid-session would otherwise leave stale persisted blob on disk; next cold boot's null fire would skip cleanup).
+- Telemetry (`Sentry.addBreadcrumb('forced_signout_cleanup')` + `track('forced_signout')`) STAYS gated on `lastKnownUid !== null` to prevent PostHog noise on cold-boot first-fires of unauthenticated users.
+- `mobile/__tests__/useAuth.test.ts:246` — cold-boot null-fire test inverted to assert cleanup DID run (`mockPersisterRemoveClient`, `mockClearQueries`, `mockResetIdentity` toHaveBeenCalled) but telemetry did NOT (`mockTrack('forced_signout')` not called).
+
+**Phase 3 — Finding #12 (LOW DeepSeek, stale-profile loading state) — commit `5e3f9b4`:**
+- `mobile/src/lib/auth/decideAuthGateRoute.ts` — added `'wait-stale-profile'` kind to `AuthGateDecision` union with explicit JSDoc citing #12 + PIPEDA visual leak rationale; stale-profile branch now returns this kind (was generic `'wait'`).
+- `mobile/app/_layout.tsx` — added `staleProfile` boolean state; switch sets true on `'wait-stale-profile'`, false on other cases; render branch `if (staleProfile && user) return <SubscriptionLoadingGuard />` placed before reactivation modal + retry UI. Exhaustiveness check (`const _exhaustive: never = decision`) catches the new kind at compile time.
+- `mobile/__tests__/authGate.test.ts` — 2 stale-profile tests updated (UID-mismatch + falsy-user_id) from `{kind: 'wait'}` to `{kind: 'wait-stale-profile'}`.
+
+**Code-reviewer findings (single agent, isolation:worktree, per WF3 default):**
+- 0 BUG / 0 CRITICAL.
+- 1 DEFER (fixed inline before WF6 commit per H2/H3/H4 pattern of "land at zero deferred"): the Phase 2 comment block at `authStore.ts:296-297` claimed "no I/O" for peer-store resets in the cost analysis. Reviewer correctly identified that each persisted Zustand store's `reset()` triggers an MMKV write via the persist middleware's setItem callback (writing serialized INITIAL_STATE), even when state is already at defaults. Total per-cold-boot I/O for unauthenticated user is ~4 MMKV `set()` + 2 `remove()` calls (all sub-millisecond) — bounded but NOT zero. Functionality is correct (idempotency holds; trade-off remains defensible); the comment was misleading future contributors. Fixed inline by replacing the "no I/O" claim with an accurate cost breakdown citing the 4 set() + 2 remove() calls. Also updated the secondary comment at `clearLocalSessionState`'s storeReset coverage section to clarify that persisted stores DO trigger MMKV writes on reset.
+
+**Test results:** 344/348 mobile pass (unchanged from pre-batch); mobile typecheck 0 errors; repo-root lint warnings only; repo-root typecheck 0 errors. No new tests added (existing tests updated in Phases 2 + 3 to assert the new contracts).
+
+**Per-phase Red Light evidence:**
+- Phase 1: no test-file change needed (the 401-then-retry race is observable in production Sentry events; static defensive fix). Behavioral change: cold-boot rehydrated-user case skips the wasted round-trip.
+- Phase 2: `useAuth.test.ts:246` was the regression — assertions failed with the OLD contract before the test update; now passes with the NEW contract.
+- Phase 3: `authGate.test.ts:175` and `:192` were the regressions — assertions failed with the OLD `{kind: 'wait'}` expectation before the union change; now pass with `{kind: 'wait-stale-profile'}`.
+
+**Findings status update for the M1+M2+M3 12-finding table (below in this file):**
+- ✅ #4 RESOLVED (Phase 1)
+- ✅ #5 RESOLVED (Phase 2)
+- ✅ #12 RESOLVED (Phase 3)
+- 🔵 #6, #7 — pending separate WF2 batch (B-bridge spec amendments)
+- 🔵 #9 — pending separate WF1 (MMKV ban ESLint rule)
+- 🔵 #10 — pending separate WF2 (getDiagnosticsSnapshot prod test gating)
+
+The 4 already-resolved (#1, #2, #8, #11) and 1 not-actioned (#3) findings are unchanged.
+
+
 ## WF3 — Spec 99 §7.2 Cache Invalidation Telemetry 2026-05-05 (RESOLVED)
 
 **Source:** §9.21 mandates-lint test (commit `e655417`) surfaced that §7.2 (cache invalidation telemetry) had ZERO implementation evidence at HEAD — `Sentry.addBreadcrumb({category:'query',...})` paired with `invalidateQueries` did not exist anywhere in `mobile/src/`. Audit Phase 4 verified §7.1 + §7.3 but did NOT check §7.2; the lint test surfaced the gap and parked it as `it.skip` with `pendingReason` until follow-up WF3.

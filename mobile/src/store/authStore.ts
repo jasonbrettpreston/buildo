@@ -99,9 +99,12 @@ function clearLocalSessionState(): void {
   queryClient.clear();
   mmkvPersister.removeClient();
   // Spec 99 §B5 storeReset coverage: reset every peer store so a different
-  // user signing in sees no stale data. MMKV-backed stores are intentionally
-  // preserved for same-user re-sign-in fast-path (Spec 93 §3.4); each
-  // store's `reset()` action is responsible for its own MMKV semantics.
+  // user signing in sees no stale data. Persisted stores trigger MMKV
+  // writes via the Zustand persist middleware on every reset — including
+  // when state is already at INITIAL_STATE (writes serialized defaults
+  // back). Each store's `reset()` action is responsible for its own MMKV
+  // semantics; same-user re-sign-in still works via the persisted
+  // INITIAL_STATE rehydrate (Spec 93 §3.4 fast-path).
   useFilterStore.getState().reset();
   useNotificationStore.getState().reset();
   useOnboardingStore.getState().reset();
@@ -290,11 +293,19 @@ export function initFirebaseAuthListener(): () => void {
       // (or the same user re-auth) would see leaked state.
       //
       // Cost analysis of unconditional cleanup: clearLocalSessionState is
-      // idempotent — every reset is a no-op on already-cleared state.
-      // The only on-disk impact for an unauthenticated cold boot is
-      // `mmkvPersister.removeClient()` (sub-millisecond MMKV write to
-      // remove a non-existent blob) + Zustand peer-store sync resets
-      // (no I/O). Acceptable trade-off for crash-recovery.
+      // idempotent — every reset produces the same end-state on
+      // already-cleared input. Per-cold-boot I/O for an unauthenticated
+      // user is bounded but NOT zero (code-reviewer DEFER-corrected
+      // 2026-05-05): mmkvPersister.removeClient() = 2 MMKV remove() calls;
+      // each persisted Zustand peer-store reset (filterStore,
+      // notificationStore, onboardingStore, userProfileStore) triggers
+      // the persist middleware's setItem callback writing INITIAL_STATE
+      // back to MMKV — even on already-reset state. authStore.setState
+      // also triggers a 5th persist write. Total: ~4 MMKV set() calls +
+      // 2 MMKV remove() calls per unauthenticated cold boot, all
+      // sub-millisecond. Acceptable trade-off for crash-recovery — the
+      // alternative was leaving stale persisted blob on disk after a
+      // hard JS crash (data leak class).
       //
       // Telemetry remains gated on `lastKnownUid !== null` so PostHog
       // doesn't see a `forced_signout` event on every cold boot for an
