@@ -34,6 +34,7 @@ import { SubscriptionLoadingGuard } from '@/components/paywall/SubscriptionLoadi
 import { PaywallScreen } from '@/components/paywall/PaywallScreen';
 import { trackRender, useDepsTracker } from '@/lib/debug/stateDebug';
 import { track } from '@/lib/analytics';
+import { logQueryInvalidate } from '@/lib/queryTelemetry';
 
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 83 : 60;
 
@@ -136,6 +137,8 @@ export default function AppLayout() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (next: AppStateStatus) => {
       if (next === 'active') {
+        // Spec 99 §7.2 — non-trivial invalidate (AppState listener, bare invalidate)
+        logQueryInvalidate('user-profile');
         void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       }
     });
@@ -187,6 +190,8 @@ export default function AppLayout() {
     const next = profile?.subscription_status;
     if (prev === 'expired' && next === 'active') {
       clearPaywall();
+      // Spec 99 §7.2 — non-trivial invalidate (post-payment transition, bare invalidate)
+      logQueryInvalidate('leads');
       void queryClient.invalidateQueries({ queryKey: ['leads'] });
       // Spec 99 §7.3 production event #4 — subscription conversion signal
       // (post-payment webhook landing). Cold-boot false-positive avoided

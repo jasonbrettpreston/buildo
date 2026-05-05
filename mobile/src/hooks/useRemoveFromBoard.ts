@@ -3,6 +3,7 @@
 // captureEvent fires on confirmed delete (not on optimistic remove, in case of undo).
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchWithAuth } from '@/lib/apiClient';
+import { logQueryInvalidate } from '@/lib/queryTelemetry';
 import { FLIGHT_BOARD_QUERY_KEY } from './useFlightBoard';
 
 interface RemoveParams {
@@ -28,6 +29,8 @@ export function useRemoveFromBoard() {
       // Optimistic remove already happened in the screen's handleRemove.
       // Only invalidate — do NOT setQueryData here, which would overwrite any
       // concurrent optimistic updates and cause a visible list flash.
+      // Spec 99 §7.2 — non-trivial invalidate (mutation onSuccess, not onSettled)
+      logQueryInvalidate('flight-board');
       void queryClient.invalidateQueries({ queryKey: FLIGHT_BOARD_QUERY_KEY });
       // captureEvent('job_removed_from_board') — Phase 8 PostHog wiring
     },

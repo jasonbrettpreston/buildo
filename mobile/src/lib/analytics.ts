@@ -34,6 +34,9 @@ function getClient(): PostHog | null {
 // Spec 99 §7.3 (router decision telemetry) added 8 keys for route_decision +
 // reactivation_modal_shown + subscription_expired_to_active payloads:
 // authority, branch, from, to, reason, days_remaining, prev, next.
+// Spec 99 §7.2 (cache invalidation telemetry) added 'key' for the
+// query_invalidate event (DEV-only) — operational metadata (TanStack
+// queryKey root strings: 'user-profile', 'leads', 'flight-board', etc.).
 const ALLOWED_KEYS = new Set([
   'screen',
   'method',
@@ -49,6 +52,7 @@ const ALLOWED_KEYS = new Set([
   'days_remaining',
   'prev',
   'next',
+  'key',
 ] as const);
 
 type AllowedKey =
@@ -65,7 +69,8 @@ type AllowedKey =
   | 'reason'
   | 'days_remaining'
   | 'prev'
-  | 'next';
+  | 'next'
+  | 'key';
 type EventValue = string | number | boolean | null;
 type EventProps = Partial<Record<AllowedKey, EventValue>>;
 

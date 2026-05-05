@@ -18,6 +18,7 @@ import { useFilterStore } from '@/store/filterStore';
 import { getTradeLabel } from '@/lib/onboarding/tradeData';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { successNotification } from '@/lib/haptics';
+import { logQueryInvalidate } from '@/lib/queryTelemetry';
 
 export default function CompleteScreen() {
   const router = useRouter();
@@ -81,6 +82,8 @@ export default function CompleteScreen() {
       // back to onboarding immediately after router.replace lands. Await
       // the invalidate so the next render sees fresh data on entry to
       // /(app)/. (WF2-B adversarial trio finding C1.)
+      // Spec 99 §7.2 — non-trivial invalidate (bare invalidate, not mutation onSettled)
+      logQueryInvalidate('user-profile');
       await queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       router.replace('/(app)/');
     } catch {

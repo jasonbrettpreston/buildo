@@ -15,6 +15,7 @@ import { queryClient } from '@/lib/queryClient';
 import { mmkvPersister } from '@/lib/mmkvPersister';
 import { cleanupLegacyUserProfileCache } from '@/lib/migrations/userProfileCacheCleanup';
 import { identifyUser, resetIdentity, track } from '@/lib/analytics';
+import { logQueryInvalidate } from '@/lib/queryTelemetry';
 
 // Spec 99 §9.1: one-time legacy cleanup at module load. Removes any stale
 // data in the orphaned `user-profile-cache` MMKV blob from existing installs.
@@ -263,6 +264,8 @@ export function initFirebaseAuthListener(): () => void {
           // Pre-fix, invalidate fired synchronously above and the refetch
           // raced setAuth — sending the OLD token to the server.
           if (isUidChange) {
+            // Spec 99 §7.2 — non-trivial invalidate (auth listener, not mutation onSettled)
+            logQueryInvalidate('user-profile');
             void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
           }
         })

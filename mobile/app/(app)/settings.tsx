@@ -23,6 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as WebBrowser from 'expo-web-browser';
 import { fetchWithAuth } from '@/lib/apiClient';
+import { logQueryInvalidate } from '@/lib/queryTelemetry';
 import { useFilterStore } from '@/store/filterStore';
 import { usePatchProfile } from '@/hooks/usePatchProfile';
 import { useAuthStore } from '@/store/authStore';
@@ -107,6 +108,8 @@ function usePatchPrefs() {
         body: JSON.stringify(patch),
       }),
     onSuccess: () => {
+      // Spec 99 §7.2 — non-trivial invalidate (mutation onSuccess, not onSettled)
+      logQueryInvalidate('notification-prefs');
       void queryClient.invalidateQueries({ queryKey: ['notification-prefs'] });
     },
   });

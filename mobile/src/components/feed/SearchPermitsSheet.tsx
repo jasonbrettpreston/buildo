@@ -10,6 +10,7 @@ import { useSearchPermits } from '@/hooks/useSearchPermits';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { FLIGHT_BOARD_QUERY_KEY } from '@/hooks/useFlightBoard';
 import { successNotification } from '@/lib/haptics';
+import { logQueryInvalidate } from '@/lib/queryTelemetry';
 import type { SearchResultItem } from '@/lib/schemas';
 
 interface Props {
@@ -50,6 +51,8 @@ export function SearchPermitsSheet({ visible, onClose }: Props) {
       }),
     onSuccess: () => {
       successNotification();
+      // Spec 99 §7.2 — non-trivial invalidate (mutation onSuccess, not onSettled)
+      logQueryInvalidate('flight-board');
       void queryClient.invalidateQueries({ queryKey: FLIGHT_BOARD_QUERY_KEY });
       onClose();
     },

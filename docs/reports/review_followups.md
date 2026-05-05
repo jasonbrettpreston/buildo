@@ -1,6 +1,52 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF3 — Spec 99 §7.2 Cache Invalidation Telemetry 2026-05-05 (RESOLVED)
+
+**Source:** §9.21 mandates-lint test (commit `e655417`) surfaced that §7.2 (cache invalidation telemetry) had ZERO implementation evidence at HEAD — `Sentry.addBreadcrumb({category:'query',...})` paired with `invalidateQueries` did not exist anywhere in `mobile/src/`. Audit Phase 4 verified §7.1 + §7.3 but did NOT check §7.2; the lint test surfaced the gap and parked it as `it.skip` with `pendingReason` until follow-up WF3.
+
+**Resolution:** New `logQueryInvalidate(key)` helper at `mobile/src/lib/queryTelemetry.ts` consolidates the §7.2 two-call pattern (`Sentry.addBreadcrumb` always + `track('query_invalidate')` DEV-only). Wired the helper at 10 non-trivial `invalidateQueries` sites across `mobile/src/` and `mobile/app/`. Strict spec-letter reading applied: `onSettled` is the only exempt mutation lifecycle handler; `onSuccess` is non-trivial.
+
+**Sites wired (10 non-trivial):**
+- `mobile/src/store/authStore.ts:266` (auth listener UID-change branch)
+- `mobile/src/components/paywall/PaywallScreen.tsx:114` (refresh button)
+- `mobile/src/components/feed/SearchPermitsSheet.tsx:53` (mutation `onSuccess`)
+- `mobile/src/hooks/useRemoveFromBoard.ts:31` (mutation `onSuccess` — initially misclassified as `onSettled` and missed; code-reviewer caught and fix landed inline)
+- `mobile/app/_layout.tsx:239` (reactivation handler)
+- `mobile/app/(app)/_layout.tsx:139` (AppState 'active' handler)
+- `mobile/app/(app)/_layout.tsx:190` (post-payment expired→active transition)
+- `mobile/app/(app)/settings.tsx:110` (notification-prefs mutation `onSuccess`)
+- `mobile/app/(onboarding)/complete.tsx:84` (onboarding completion bare invalidate)
+- `mobile/app/(onboarding)/terms.tsx:100` (terms acceptance bare invalidate)
+
+**Sites left exempt (2 — `onSettled` per spec letter):**
+- `mobile/src/hooks/usePatchProfile.ts:81` (`useMutation.onSettled`)
+- `mobile/src/hooks/useSaveLead.ts:65` (`useMutation.onSettled`)
+
+**Whitelist extension:** `mobile/src/lib/analytics.ts` `ALLOWED_KEYS` + `AllowedKey` gained `'key'` (operational metadata only — values are TanStack queryKey roots like `'user-profile'`, `'leads'`, `'flight-board'`, `'notification-prefs'`).
+
+**§9.21 lint test flipped:** `mobile/__tests__/spec99.mandates.lint.test.ts:§7.2` row no longer has `pendingReason`; the case is now an active `it()` enforcing 3 assertions: (a) helper file exists + exports `logQueryInvalidate`, (b) helper has canonical Sentry breadcrumb shape, (c) at least one caller exists in `mobile/src/` or `mobile/app/`. Total cases: 12 passed (was 11+1 skip).
+
+**New helper unit tests:** `mobile/__tests__/queryTelemetry.test.ts` (NEW, 3 tests) — runtime regression coverage beyond the static lint:
+1. `Sentry.addBreadcrumb` fires with the canonical `{category:'query', message:'invalidate', data:{key}}` shape.
+2. `track('query_invalidate', {key})` fires when `__DEV__=true`.
+3. `track('query_invalidate', ...)` does NOT fire when `__DEV__=false` (production builds dead-code-eliminate via Hermes per WF3 H3 verified pattern).
+
+**Code-reviewer findings (single agent per WF3 default — user did not request adversarial):**
+- 1 BUG (fixed inline before commit): site classification miss on `mobile/src/hooks/useRemoveFromBoard.ts:31`. The handler is `onSuccess` (NOT `onSettled` as I initially classified). Under the strict-spec-letter reading the user accepted at PLAN LOCK, `onSuccess` is non-trivial and requires the helper call. Other `onSuccess` sites (`SearchPermitsSheet.tsx`, `(app)/settings.tsx`) were correctly wired; this one was missed because the surrounding comment said "Only invalidate" which I misread as the `onSettled` "always-runs" idiom. Total wired sites went from 9 → 10.
+- 1 DEFER (recorded below for future cleanup): §9.21 lint check comment overstates enforcement. The comment claims "at least 2 hits in src/ (helper + caller)" but the actual condition is `if (!appCallerFound && !srcCallerFound)` using boolean searchTree results. Since the helper file itself matches `logQueryInvalidate\(`, `srcCallerFound` is permanently `true`, making the guard inert via the `src/` path. Acceptable today (any wired site in `app/` makes the test pass for the right reasons), but the comment should be corrected OR a `countMatches` helper should replace the boolean `searchTree` to actually enforce the "2 hits" intent.
+
+**Test results:** 344/348 mobile pass (was 340/345 before; +4 = 1 §7.2 flip + 3 new helper unit tests) + 4 skipped (was 5; the §7.2 it.skip flipped to passing it). Mobile typecheck: 0 errors. Repo-root lint: warnings only. Repo-root typecheck: 0 errors.
+
+**Red Light evidence (mutation test, reverted):** Nullified the helper body to `void key;` (no Sentry, no track). Both the §7.2 lint case AND all 3 helper unit tests failed correctly. Reverted; all green.
+
+**New finding deferred for future cleanup:**
+
+| Severity | Source | Item | Planned Home |
+|---|---|---|---|
+| LOW | §7.2 code-reviewer | **§9.21 lint check comment overstates enforcement.** `mobile/__tests__/spec99.mandates.lint.test.ts:149-155` comment claims "at least 2 hits in src/" but actual condition uses boolean `searchTree`. Helper file itself matches the regex, so `srcCallerFound` is permanently `true`. Guard is inert via `src/` path. | Future doc-only WF — correct the comment to match actual semantics OR implement a `countMatches` variant returning a number for proper enforcement |
+
+
 ## WF1 — Spec 99 §9.21 Mandates-Lint Test (Pattern A class fix) 2026-05-05 (RESOLVED)
 
 **Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` Phase 5 (lines 161-168) — "Pattern A: Spec mandate exists but no enforcement test (HIGH H2 + HIGH H3 both)... Routing: Add §9.21 (NEW) — `mobile/__tests__/spec99.mandates.lint.test.ts` that statically asserts every `## §X mandate` in Spec 99 has a corresponding implementation grep-target."

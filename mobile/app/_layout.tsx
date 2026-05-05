@@ -25,6 +25,7 @@ import { NotificationToast, type NotificationType } from '@/components/shared/No
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { trackRender, useDepsTracker, wireStoreLogging } from '@/lib/debug/stateDebug';
 import { track } from '@/lib/analytics';
+import { logQueryInvalidate } from '@/lib/queryTelemetry';
 import { decideAuthGateRoute } from '@/lib/auth/decideAuthGateRoute';
 
 // Spec 99 §7.1 + §9.5: wire Zustand subscribers once at module load. The
@@ -236,6 +237,8 @@ function AuthGate() {
       try {
         await fetchWithAuth('/api/user-profile/reactivate', { method: 'POST' });
         setReactivationState(null);
+        // Spec 99 §7.2 — non-trivial invalidate (reactivation handler, bare invalidate)
+        logQueryInvalidate('user-profile');
         queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       } catch (err) {
         Sentry.captureException(err, { extra: { context: 'reactivation POST' } });

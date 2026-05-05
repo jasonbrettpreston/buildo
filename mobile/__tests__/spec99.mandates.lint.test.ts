@@ -115,18 +115,48 @@ const MANDATES: Mandate[] = [
     section: '§7.2',
     name: 'Cache invalidation telemetry',
     check: () => {
-      const src = path.join(MOBILE_ROOT, 'src');
-      const found = searchTree(
-        src,
-        /Sentry\.addBreadcrumb\(\{[\s\S]{0,120}category:\s*['"]query['"]/,
+      // §7.2 mandate is implemented via the `logQueryInvalidate(key)` helper
+      // at `mobile/src/lib/queryTelemetry.ts` (added by follow-up WF3 after
+      // §9.21 surfaced the gap). Three assertions:
+      //   1. Helper file exists and exports `logQueryInvalidate`.
+      //   2. Helper file contains the canonical breadcrumb shape
+      //      (`Sentry.addBreadcrumb({category:'query', ...})`).
+      //   3. At least one caller exists in `mobile/src/` or `mobile/app/`
+      //      (proves the helper is wired, not an orphan export).
+      const helperPath = path.join(MOBILE_ROOT, 'src/lib/queryTelemetry.ts');
+      const helperSrc = stripComments(readOrEmpty(helperPath));
+      if (!helperSrc) return 'mobile/src/lib/queryTelemetry.ts missing';
+      if (!/export\s+function\s+logQueryInvalidate\b/.test(helperSrc)) {
+        return 'no exported logQueryInvalidate in queryTelemetry.ts';
+      }
+      if (
+        !/Sentry\.addBreadcrumb\(\{[\s\S]{0,120}category:\s*['"]query['"]/.test(
+          helperSrc,
+        )
+      ) {
+        return 'queryTelemetry.ts missing canonical Sentry.addBreadcrumb({category:"query"}) shape';
+      }
+      // Caller existence: search both src/ and app/ (excluding the helper
+      // file itself, which contains the import name in JSDoc).
+      const srcCallerFound = searchTree(
+        path.join(MOBILE_ROOT, 'src'),
+        /logQueryInvalidate\(/,
       );
-      if (!found) {
-        return 'no Sentry.addBreadcrumb({category:"query"}) paired with invalidateQueries found in mobile/src/';
+      const appCallerFound = searchTree(
+        path.join(MOBILE_ROOT, 'app'),
+        /logQueryInvalidate\(/,
+      );
+      // Helper file itself contains "logQueryInvalidate" in its export
+      // declaration, but the regex requires a `(` immediately after — the
+      // export `function logQueryInvalidate(key: string)` matches that, so
+      // searchTree finds the helper itself as a "caller". Tighten by
+      // requiring at least 2 hits in src/ (helper + at least one real
+      // caller) or any hit in app/.
+      if (!appCallerFound && !srcCallerFound) {
+        return 'no logQueryInvalidate(...) callers found in mobile/src/ or mobile/app/';
       }
       return null;
     },
-    pendingReason:
-      '§7.2 mandate (Sentry.addBreadcrumb category:"query" paired with invalidateQueries) has no implementation evidence at HEAD. Audit Phase 4 (audit_spec99_2026-05-04.md) verified §7.1/§7.3 but did not check §7.2 — this lint test surfaces the gap. Filed as new WF3 in review_followups.md (§9.21 commit).',
   },
   {
     section: '§7.3',

@@ -23,6 +23,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { usePaywallStore } from '@/store/paywallStore';
 import { useSubscribeCheckout } from '@/hooks/useSubscribeCheckout';
 import { successNotification, errorNotification } from '@/lib/haptics';
+import { logQueryInvalidate } from '@/lib/queryTelemetry';
 
 interface Props {
   /** lead_views_count from user_profiles. Zero is rendered as a different copy block (spec §Step 1). */
@@ -111,6 +112,8 @@ export function PaywallScreen({ leadViewsCount }: Props) {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     setRefreshNoChange(false);
+    // Spec 99 §7.2 — non-trivial invalidate (refresh button, not mutation onSettled)
+    logQueryInvalidate('user-profile');
     await queryClient.invalidateQueries({ queryKey: ['user-profile'] });
     // The gate listens to the query result — if status flipped to 'active',
     // <PaywallScreen> unmounts before this state update lands. Otherwise we

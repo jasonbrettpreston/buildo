@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { useFilterStore } from '@/store/filterStore';
 import { fetchWithAuth } from '@/lib/apiClient';
+import { logQueryInvalidate } from '@/lib/queryTelemetry';
 import { ProgressStepper } from '@/components/onboarding/ProgressStepper';
 
 const TOS_URL = 'https://buildo.app/terms';
@@ -97,6 +98,8 @@ export default function TermsScreen() {
         // user back to onboarding immediately after router.replace lands.
         // Await the invalidate so the next render sees fresh server truth.
         // (WF2-B adversarial trio finding C1.)
+        // Spec 99 §7.2 — non-trivial invalidate (bare invalidate, not mutation onSettled)
+        logQueryInvalidate('user-profile');
         await queryClient.invalidateQueries({ queryKey: ['user-profile'] });
         router.replace('/(app)/flight-board');
       }
