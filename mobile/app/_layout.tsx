@@ -53,8 +53,17 @@ Sentry.init({
 });
 
 Notifications.setNotificationHandler({
+  // Silent-foreground intent — we render in-app toasts via NotificationToast
+  // instead of letting the OS show a banner. expo-notifications v0.27+ split
+  // the deprecated `shouldShowAlert` into `shouldShowBanner` + `shouldShowList`;
+  // BOTH must be `false` to suppress the OS-level foreground banner on iOS
+  // 14+/Android 13+. The `expo/tsconfig.base.json` enables `skipLibCheck`, so
+  // TypeScript will NOT flag this object's missing fields — runtime regression
+  // discovered during code review of WF3 H4 (audit_spec99_2026-05-04.md).
   handleNotification: async () => ({
     shouldShowAlert: false,
+    shouldShowBanner: false,
+    shouldShowList: false,
     shouldPlaySound: false,
     shouldSetBadge: false,
   }),

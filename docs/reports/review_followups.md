@@ -1,6 +1,39 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF3 — Spec 99 H4 Mobile Typecheck Cleanup 2026-05-05 (RESOLVED — 4 commits)
+
+**Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` finding **HIGH H4** — `npx tsc --noEmit` from `mobile/` had 15 pre-existing errors across 4 root causes (bridges.test.ts QueryObserver invariant generics × 2; offline.test.ts missing dev-dep × 1; FlashList v2 generic erasure × 10; expo-notifications + expo-router × 2). Blocked future WF5 GO verdict.
+
+**Resolution:** 4 commits, 5 files modified, +1 dev-dep added. Type-only changes — no runtime behaviour change EXCEPT the C1 BUG fix below, which restores the silent-foreground notification intent that had silently regressed when `expo-notifications` v0.27+ split `shouldShowAlert` into `shouldShowBanner` + `shouldShowList` (the regression was hidden by `skipLibCheck: true` in `expo/tsconfig.base.json`).
+
+| Commit | Phase | Closes | Files |
+|---|---|---|---|
+| `47a1b24` | 1 | bridges.test.ts ×2 (TanStack v5 QueryKey readonly + helper variance) | `mobile/__tests__/bridges.test.ts` |
+| `19de789` | 2 | offline.test.ts ×1 (missing `@tanstack/query-sync-storage-persister` dev-dep) | `mobile/package.json`, `mobile/package-lock.json` |
+| `21520d9` | 3 | FlashList ×10 (`Animated.createAnimatedComponent(FlashList) as unknown as typeof FlashList`) | `mobile/app/(app)/index.tsx`, `mobile/app/(app)/flight-board.tsx` |
+| `<phase-4-commit>` | 4 | NotificationBehavior fields (BUG fix, not pre-existing tsc error — see below) | `mobile/app/_layout.tsx` |
+
+**Phase 4 — code-reviewer-discovered BUG (was NOT what the H4 audit thought it was):**
+
+The audit listed `_layout.tsx` lines 56 + 171 as 2 of the 15 typecheck errors, attributing them to `NotificationBehavior` shape change + expo-router `Href` narrowing. After Phase 2's `npm install --legacy-peer-deps` refreshed transitive deps, the typecheck count dropped to 0 WITHOUT any code change to `_layout.tsx` — Phase 4 was initially marked "absorbed". Code-reviewer flagged this as suspicious and verified by reading `node_modules/expo-notifications/build/Notifications.types.d.ts`: the installed `expo-notifications@~0.32.16` `NotificationBehavior` interface DOES still require `shouldShowBanner: boolean` and `shouldShowList: boolean` as non-optional fields. The reason typecheck passes anyway is `skipLibCheck: true` in `mobile/node_modules/expo/tsconfig.base.json` — TypeScript skips checking the .d.ts return-type contract on `handleNotification`, so the missing fields are invisible to the compiler.
+
+The runtime impact is real: on iOS 14+/Android 13+, the native layer reads `shouldShowBanner` to decide whether to show a foreground notification banner. Without the field, the OS uses native defaults (likely `true` — banner shown), defeating the silent-foreground intent (we render in-app toasts via `NotificationToast` instead).
+
+Fixed in Phase 4 by adding both fields explicitly with `false` and an inline comment documenting the `skipLibCheck` invisibility for future contributors. The `shouldShowAlert: false` line stays as deprecated-API compatibility for any older expo-notifications consumers in the dep tree.
+
+**Phase 4 was therefore NOT absorbed — the audit's H4 baseline misattributed `_layout.tsx`'s 2 errors. Whatever those original errors were, Phase 2 cleared them; the actual `NotificationBehavior` runtime defect was a separate finding only surfaced by the code-reviewer's `skipLibCheck` analysis.**
+
+**Code-reviewer findings (3 commits + Phase 4 BUG amendment):**
+
+- **BUG (C1) — `_layout.tsx:56-60` NotificationBehavior runtime regression** — fixed inline in Phase 4 commit.
+- **DEFER (C2) — `as unknown as typeof FlashList` double-cast loses Reanimated v3 Animated-specific props in TypeScript's view** (`entering`/`exiting`/`layout`). The library ships its own `AnimatedFlashList` from `@shopify/flash-list` which is also typed at `<any>` for items. Acceptable for the immediate type-error fix, but if either screen ever needs Reanimated layout animation props on the FlashList, TypeScript will silently accept misuse via the cast. **Mitigation:** in a future cleanup, consider importing `AnimatedFlashList` directly from `@shopify/flash-list` (equivalent typing but no double-wrap) and tracking whether layout animation props are needed on either list.
+
+**`--legacy-peer-deps` analysis:** Required because of pre-existing `react-dom@19.2.5` vs `react@19.1.0` peer conflict (NOT introduced by this WF3). Code-reviewer verified that the install isolated the new sync-persister's transitive `@tanstack/query-core@5.100.9` + `@tanstack/query-persist-client-core@5.100.9` under nested `node_modules/`, leaving the prod TanStack stack at `5.100.6`. No prod dep version drift.
+
+**Test count delta:** 329/333 still passes (same as pre-H4). No new tests added — the `tsc --noEmit | grep -cE "error TS" → 0` is the regression contract for this finding.
+
+
 ## WF3 — Spec 99 H3 Router Decision Telemetry 2026-05-05 (RESOLVED)
 
 **Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` finding **HIGH H3** — zero `track('route_decision', ...)` calls anywhere in `mobile/`; 3 of 4 mandated production-only events missing per Spec 99 §7.3 (only `signOut → /(auth)/sign-in` partially covered via `track('signout_initiated')` at `authStore.ts:131`).
