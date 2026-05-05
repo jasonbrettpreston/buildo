@@ -165,14 +165,17 @@ describe('decideAuthGateRoute — loading + stale-profile guard', () => {
   });
 
   // §9.11 stale-profile guard (deferred from WF2-A)
-  it('§9.11 waits when profile.user_id !== user.uid (UID change in flight)', () => {
+  // WF3 M1+M2+M3 #12 (DeepSeek): kind upgraded from generic 'wait' to
+  // 'wait-stale-profile' so AuthGate can render an opaque loading guard
+  // (the previous user's UI would otherwise stay visible — PIPEDA visual leak).
+  it('§9.11 returns wait-stale-profile when profile.user_id !== user.uid (UID change in flight)', () => {
     const out = decideAuthGateRoute({
       ...baseInput,
       user: mkUser(UID_B), // logged in as UserB
       profile: mkProfile({ user_id: UID_A }), // but cache still holds UserA's profile
       segments: ['(app)'],
     });
-    expect(out).toEqual({ kind: 'wait' });
+    expect(out).toEqual({ kind: 'wait-stale-profile' });
   });
 
   it('§9.11 WAITS when profile.user_id is falsy (corrupt) — security guard', () => {
@@ -189,7 +192,7 @@ describe('decideAuthGateRoute — loading + stale-profile guard', () => {
       profile: mkProfile({ user_id: '', onboarding_complete: true }),
       segments: ['(auth)', 'sign-in'],
     });
-    expect(out).toEqual({ kind: 'wait' });
+    expect(out).toEqual({ kind: 'wait-stale-profile' });
   });
 });
 

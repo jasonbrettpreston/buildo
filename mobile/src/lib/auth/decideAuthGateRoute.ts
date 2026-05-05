@@ -38,8 +38,16 @@ export interface AuthGateInput {
 
 /** Discriminated-union routing decision. AuthGate handles each kind. */
 export type AuthGateDecision =
-  /** No-op for this evaluation (waiting on hydration / loading / stale data). */
+  /** No-op for this evaluation (waiting on hydration / loading / generic). */
   | { kind: 'wait' }
+  /**
+   * Stale-profile wait: cached `profile.user_id` does not match live `user.uid`
+   * (UID change in flight) OR `profile.user_id` is falsy (corrupted cache).
+   * AuthGate MUST render an opaque loading guard until the new fetch resolves
+   * — otherwise the previous user's UI stays visible for several frames
+   * (PIPEDA visual leak per WF3 M1+M2+M3 #12 / DeepSeek finding).
+   */
+  | { kind: 'wait-stale-profile' }
   /** Imperative navigation. `sideEffect` is invoked after `router.replace(to)`. */
   | { kind: 'navigate'; to: string; sideEffect?: 'registerPushToken' }
   /** Show the reactivation modal (account in 30-day deletion window per Spec 93 §3.6). */
@@ -98,7 +106,11 @@ export function decideAuthGateRoute(input: AuthGateInput): AuthGateDecision {
   // emits a Sentry message in the corrupt-profile case (caller-side side
   // effect) so the cache corruption is observable without routing on it.
   if (input.profile && (!input.profile.user_id || input.profile.user_id !== input.user.uid)) {
-    return { kind: 'wait' };
+    // WF3 M1+M2+M3 #12 (DeepSeek): distinguish stale-profile wait from
+    // generic wait so AuthGate can render an opaque loading guard (the
+    // previous user's UI would otherwise stay visible until the new
+    // fetch resolves — PIPEDA visual leak).
+    return { kind: 'wait-stale-profile' };
   }
 
   if (input.profile) {

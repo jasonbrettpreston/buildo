@@ -27,6 +27,7 @@ import { trackRender, useDepsTracker, wireStoreLogging } from '@/lib/debug/state
 import { track } from '@/lib/analytics';
 import { logQueryInvalidate } from '@/lib/queryTelemetry';
 import { decideAuthGateRoute } from '@/lib/auth/decideAuthGateRoute';
+import { SubscriptionLoadingGuard } from '@/components/paywall/SubscriptionLoadingGuard';
 
 // Spec 99 §7.1 + §9.5: wire Zustand subscribers once at module load. The
 // stateDebug hub is a permanent dev-only observability tool; the function
@@ -100,6 +101,11 @@ function AuthGate() {
   const [reactivationState, setReactivationState] = useState<ReactivationState | null>(null);
   const [reactivating, setReactivating] = useState(false);
   const [reactivationError, setReactivationError] = useState<string | null>(null);
+  // WF3 M1+M2+M3 #12 (DeepSeek): stale-profile loading guard. When
+  // `decideAuthGateRoute` returns `wait-stale-profile` (UID change mid-fetch
+  // OR corrupted cache), render <SubscriptionLoadingGuard/> to hide the
+  // previous user's UI until the new fetch resolves.
+  const [staleProfile, setStaleProfile] = useState(false);
 
   const router = useRouter();
   const segments = useSegments();
@@ -162,8 +168,15 @@ function AuthGate() {
 
     switch (decision.kind) {
       case 'wait':
+        setStaleProfile(false);
+        return;
+      case 'wait-stale-profile':
+        // WF3 M1+M2+M3 #12 — render opaque loading guard until new fetch
+        // resolves. Set state so the render branch below mounts the guard.
+        setStaleProfile(true);
         return;
       case 'navigate':
+        setStaleProfile(false);
         // Spec 99 §7.3 router decision telemetry — DEV-only event for every
         // router.replace from AuthGate. Hermes/Metro constant-folds the
         // `if (__DEV__)` guard at build time so production bundles carry zero
@@ -188,6 +201,7 @@ function AuthGate() {
         }
         return;
       case 'reactivation-modal':
+        setStaleProfile(false);
         setReactivationState({
           account_deleted_at: decision.account_deleted_at,
           days_remaining: decision.days_remaining,
@@ -216,6 +230,16 @@ function AuthGate() {
 
   // DIAGNOSTIC: mirror the routing-effect deps to log which dep changes between fires.
   useDepsTracker('AuthGate.routing', [isNavigationReady, user, segments, _hasHydrated, profile, profileError, profileLoading, router, signOut]);
+
+  // WF3 M1+M2+M3 #12 (DeepSeek): stale-profile loading guard. Renders
+  // BEFORE the reactivation modal + retry UI checks because a UID-change-
+  // mid-fetch can produce a profile whose user_id !== user.uid; the
+  // existing reactivation/retry checks would not catch that. Guarded on
+  // `user` so the cold-boot signed-out flow still falls through to the
+  // sign-in screen rather than an opaque loading guard with no user.
+  if (staleProfile && user) {
+    return <SubscriptionLoadingGuard />;
+  }
 
   // Reactivation modal — Spec 93 §3.6 Step 4
   if (reactivationState && user) {
