@@ -21,12 +21,13 @@ _Generated following the Pipeline Clean-up Mandate._
 - `lifecycle-phase.js` TRADE_TARGET_PHASE / stall thresholds hardcoded (2× CRIT) — DB migration scope
 - `pipeline.js:465` `checkQueueAge` SQL injection vector (CRIT) — library-level fix
 - Backup-email persistence bridge missing in `sign-up.tsx` (CRIT) — cross-feature
-- Auth-state reset on forced sign-out PROMOTED CRIT — separate mobile-state WF
+- ✅ Auth-state reset on forced sign-out PROMOTED CRIT — **RESOLVED** by `381a0c9` + `f2f7147` (see Items deferred from the Phase 7 adversarial review below for full detail)
 - Lifecycle "Unstall cliff" CRIT — Phase 2 classifier upgrade
 
 **Items deferred from the Phase 7 adversarial review** (status):
 - ✅ **RESOLVED** — Phase 6 cursor wire-format break for in-flight clients (Gemini CRIT) — fixed by `3fa96a1` (server-side `CASE WHEN $7='builder' THEN LPAD($8, 20, '0') ELSE $8 END` accepts both pre-deploy bare-int and post-deploy padded cursors)
 - ✅ **RESOLVED** — Phase 5 broader PII scope: `full_name` / `phone_number` / `company_name` / `email` / `backup_email` persisted to unencrypted MMKV (Gemini CRIT) — fixed by `671aa87` (`shouldDehydrateQuery` filter excludes `['user-profile']`) + `202a9aa` (`buster` bump clears stale pre-WF3 blobs on first cold boot, `mmkvPersister.removeClient()` in signOut purges disk state). Full encryption-at-rest (`encryptionKey` on `createMMKV`) remains a future hardening for any new PII-adjacent queries — not blocking.
+- ✅ **RESOLVED** — PROMOTED CRITICAL "Auth-state reset placement leaks data on forced sign-out" (the §9.14 Phase D PROMOTED item; same item as the Weekly Triage 2026-05-03 entry below) — fixed by `381a0c9` (extracted `clearLocalSessionState()` helper in `authStore.ts`, invoked from BOTH `signOut()`'s finally block AND the `onAuthStateChanged(null)` listener branch when `lastKnownUid !== null`; cold-boot first-fire keeps the original `clearAuth()` to avoid thrashing the persisted TanStack cache on every app launch by an unauthenticated user) + `f2f7147` (code-reviewer Phase 3 amendments — `__resetLastKnownUidForTests()` test-only export prevents Jest module-state contamination across tests; new cold-boot test pins the `clearAuth()` branch behavior with negative mock-call assertions). Telemetry: new `track('forced_signout')` event distinguishes server-initiated from user-initiated signouts in PostHog.
 - Phase 1 timing-safe length leak on `timingSafeStringEqual` (Gemini + DeepSeek HIGH) — DEV cookie length is a hardcoded constant; low-risk in practice
 - Phase 1 catch-all narrowing to Firebase codes only (Gemini HIGH) — scope creep
 - Phase 2 location_mode coord-clearing inconsistency 500-vs-400 (Gemini HIGH) — pre-existing
@@ -41,6 +42,13 @@ _Generated following the Pipeline Clean-up Mandate._
 | `671aa87` | PII MMKV strip — `shouldDehydrateQuery` filter on user-profile + Spec 99 §2.1 amendment |
 | `202a9aa` | Code-reviewer amendments — `buster: 'wf3-pii-strip-1'` clears stale blobs at deploy moment, `mmkvPersister.removeClient()` in signOut, predicate extracted to `persistFilter.ts` for behavioral test import |
 
+**WF3 forced-signout + dead-code sweep commits (3 new):**
+| Commit | Scope |
+|---|---|
+| `381a0c9` | Forced-signout cleanup unification — extract `clearLocalSessionState()` helper, invoke from BOTH `signOut()` finally AND listener null-branch (guarded by `lastKnownUid !== null`); add `track('forced_signout')` + Sentry breadcrumb |
+| `7bcb681` | Dead-code sweep (conservative-keep posture) — only 1 of 9 knip-flagged items removed: `export` dropped from `CLIENT_SAFE_COLUMNS` in `src/lib/userProfile.schema.ts` (only the joined string `CLIENT_SAFE_SELECT_LIST` is consumed externally; verified zero importers via grep). KEPT: `UserProfileSchema` + `UserProfileType` + `UserProfileUpdateType` (canonical contract types — even if no current consumer, removal would silently drop the contract authority); persist `migrate` functions in `userProfileStore` v0→v1 + `onboardingStore` v0→v2 (existing-user upgrade path); `cleanupLegacyUserProfileCache` (one-time MMKV migration for orphaned legacy blob); `INSPECTION_PIPELINE_P18_SET` + `TRADE_TARGET_PHASE_FALLBACK` (consumed by `scripts/lib/lifecycle-phase.js` — knip false positive); §3.5 deprecated mirrors entries (audit-trail, not dead code). |
+| `f2f7147` | Code-reviewer Phase 3 amendments — closed 2 HIGH test-reliability gaps (`__resetLastKnownUidForTests()` test-only export prevents Jest module-state contamination across tests; new "cold-boot null-fire" test pins the `clearAuth()` branch with negative mock-call assertions on `mmkvPersister.removeClient` / `queryClient.clear` / `resetIdentity` / `track('forced_signout')`). Code-reviewer returned 0 CRITICAL on production logic. |
+
 ---
 
 ## Weekly Triage 2026-05-03
@@ -54,7 +62,7 @@ _Sample triage — pre-routine validation pass (does not cover every item; full 
 - _§ "WF5 Spec 96 — 6-Reviewer Adversarial Sweep"_ MED — `IncompleteBanner` rendered unconditionally. **Reason:** component is still always-mounted but self-hides via `profile?.onboarding_complete === true` early-return; symptom resolved.
 
 **Items PROMOTED (1):** Reactive trigger has fired — newly-actionable.
-- _§ "WF2 Spec 93 RNFirebase migration — Round 2"_ CRITICAL — Forced sign-out leaks peer-store data. **Trigger:** Spec 99 §9.12 storeReset coverage test landed but covers only the explicit `signOut()` path; the `onAuthStateChanged(null)` listener branch at `authStore.ts:242` calls `clearAuth()` only (line 79: clears `user/idToken/isLoading`), skipping the peer-store resets at lines 114-117. Fix is mechanical (move resets into the listener's null branch + add a listener-path test).
+- ✅ **RESOLVED** — _§ "WF2 Spec 93 RNFirebase migration — Round 2"_ CRITICAL — Forced sign-out leaks peer-store data. **Trigger:** Spec 99 §9.12 storeReset coverage test landed but covers only the explicit `signOut()` path; the `onAuthStateChanged(null)` listener branch at `authStore.ts:242` calls `clearAuth()` only (line 79: clears `user/idToken/isLoading`), skipping the peer-store resets at lines 114-117. **Fix:** `381a0c9` extracted `clearLocalSessionState()` helper invoked from BOTH the explicit `signOut()` finally AND the listener's null branch (guarded by `lastKnownUid !== null` to skip cold-boot first-fire so an unauthenticated user's app launch doesn't thrash the persisted TanStack cache). Listener path also fires `track('forced_signout')` + Sentry breadcrumb for product-analytics distinction. `f2f7147` closed code-reviewer Phase 3 HIGHs on test reliability (`__resetLastKnownUidForTests()` + cold-boot path test).
 
 **Recommended next 3 LOW items to tackle:**
 1. _§ "WF1 Spec 96 Subscription"_ LOW — `subscribe/session` race window (SELECT then INSERT). One-line fix: wrap in `withTransaction` or `SELECT ... FOR UPDATE`. Matches the existing webhook handler pattern.
