@@ -243,14 +243,21 @@ describe('initFirebaseAuthListener', () => {
     expect(mockOnAuthStateChanged).toHaveBeenCalledTimes(1);
   });
 
-  it('cold-boot null-fire (lastKnownUid===null) takes the clearAuth() branch — does NOT remove persister blob or fire forced_signout telemetry', () => {
-    // Adversarial probe (code-reviewer Phase 3 HIGH 2): the existing
-    // null-fire test below is satisfied by EITHER code path; this test
-    // pins the cold-boot branch behaviour. On every app launch by an
-    // unauthenticated user, Firebase fires `null` before resolving any
-    // cached session — without the `lastKnownUid !== null` guard, that
-    // would call `mmkvPersister.removeClient()` and wipe the offline
-    // TanStack cache on every cold boot.
+  it('cold-boot null-fire (lastKnownUid===null) runs full cleanup but skips forced_signout telemetry (WF3 M1+M2+M3 #5)', () => {
+    // WF3 M1+M2+M3 #5 (Gemini): cleanup is now UNCONDITIONAL on null fires
+    // to close the crash-recovery gap (if the JS process hard-crashed
+    // mid-session, the next cold boot's null fire would otherwise skip
+    // cleanup and leave stale persisted blob on disk). Pre-fix the
+    // `lastKnownUid !== null` guard wrapped both telemetry AND cleanup;
+    // now the guard wraps ONLY telemetry — the cleanup runs every time
+    // null fires.
+    //
+    // Cost analysis: clearLocalSessionState is idempotent. For an
+    // unauthenticated cold boot the only on-disk impact is one
+    // mmkvPersister.removeClient() call (sub-ms MMKV write to remove a
+    // non-existent blob). Telemetry stays gated — PostHog must NOT see
+    // a forced_signout event on every cold boot for unauthenticated
+    // users (only real forced sign-outs emit the event).
     mockPersisterRemoveClient.mockClear();
     mockClearQueries.mockClear();
     mockTrack.mockClear();
@@ -258,12 +265,14 @@ describe('initFirebaseAuthListener', () => {
     initFirebaseAuthListener();
     // No prior user-fire → `lastKnownUid` is still null (just reset by beforeEach).
     authStateHandler?.(null);
-    // Cleanup branch's tell-tale side effects MUST NOT have fired.
-    expect(mockPersisterRemoveClient).not.toHaveBeenCalled();
-    expect(mockClearQueries).not.toHaveBeenCalled();
-    expect(mockResetIdentity).not.toHaveBeenCalled();
+    // Cleanup DID run (post-WF3 M1+M2+M3 #5 — unconditional for crash-recovery).
+    expect(mockPersisterRemoveClient).toHaveBeenCalled();
+    expect(mockClearQueries).toHaveBeenCalled();
+    expect(mockResetIdentity).toHaveBeenCalled();
+    // Telemetry is STILL gated — must NOT fire forced_signout on cold-boot
+    // first-fire (PostHog noise control).
     expect(mockTrack).not.toHaveBeenCalledWith('forced_signout');
-    // But `clearAuth()` DID run — auth fields zeroed.
+    // Auth fields zeroed (clearLocalSessionState calls setState({user:null,...})).
     const state = useAuthStore.getState();
     expect(state.user).toBeNull();
     expect(state.idToken).toBeNull();

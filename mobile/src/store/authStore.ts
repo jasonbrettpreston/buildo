@@ -280,23 +280,28 @@ export function initFirebaseAuthListener(): () => void {
     } else {
       // Note: do NOT reset lastKnownUid here (Spec 93 §3.4 fast-path).
       //
-      // WF3 follow-up (PROMOTED CRITICAL from §9.14 Phase D review): if
-      // a previous user WAS signed in and Firebase is now firing null
-      // (forced sign-out — admin disable, password change on another
-      // device, project token revocation per Spec 93 §3.1), run the
-      // full session cleanup. Pre-fix this branch called `clearAuth()`
-      // alone, leaving every peer store + queryClient + persister blob
-      // intact — the next user signing in on a shared device would see
-      // the previous user's filter/notification/profile state until
-      // server hydration completed (PIPEDA shared-device leak).
+      // WF3 M1+M2+M3 #5 (Gemini): cleanup is now UNCONDITIONAL on null
+      // fires. Pre-fix the `lastKnownUid !== null` guard skipped cleanup
+      // on cold-boot first-fire to avoid thrashing the persisted TanStack
+      // cache for unauthenticated users — but that left a crash-recovery
+      // gap: if the JS process hard-crashed mid-session, the next cold
+      // boot's null fire would skip the cleanup AND leave stale persisted
+      // blob from the crashed session on disk. The next user signing in
+      // (or the same user re-auth) would see leaked state.
       //
-      // The `lastKnownUid !== null` guard distinguishes:
-      //   (a) genuine forced sign-out (lastKnownUid was set → user was
-      //       authenticated → run full cleanup + telemetry).
-      //   (b) cold-boot first-fire with no cached session
-      //       (lastKnownUid === null → there was no user → skip the
-      //       cleanup so we don't thrash the persisted TanStack cache
-      //       on every app launch by an unauthenticated user).
+      // Cost analysis of unconditional cleanup: clearLocalSessionState is
+      // idempotent — every reset is a no-op on already-cleared state.
+      // The only on-disk impact for an unauthenticated cold boot is
+      // `mmkvPersister.removeClient()` (sub-millisecond MMKV write to
+      // remove a non-existent blob) + Zustand peer-store sync resets
+      // (no I/O). Acceptable trade-off for crash-recovery.
+      //
+      // Telemetry remains gated on `lastKnownUid !== null` so PostHog
+      // doesn't see a `forced_signout` event on every cold boot for an
+      // unauthenticated user (only real forced sign-outs — admin disable,
+      // password change on another device, project token revocation per
+      // Spec 93 §3.1 — emit the event). Sentry breadcrumb is similarly
+      // gated for the same reason.
       if (lastKnownUid !== null) {
         Sentry.addBreadcrumb({
           category: 'auth',
@@ -305,13 +310,15 @@ export function initFirebaseAuthListener(): () => void {
           data: { from: lastKnownUid },
         });
         track('forced_signout');
-        clearLocalSessionState();
-      } else {
-        // First-fire / pre-auth state — keep the original clearAuth
-        // semantics so the AuthGate transitions from "loading" to
-        // "signed-out" without thrashing the persisted blob.
-        useAuthStore.getState().clearAuth();
       }
+      // WF3 follow-up (PROMOTED CRITICAL from §9.14 Phase D review): full
+      // session cleanup runs unconditionally now to close the crash-
+      // recovery gap above. Pre-§9.14 this branch called clearAuth() alone,
+      // leaving every peer store + queryClient + persister blob intact —
+      // the next user signing in on a shared device would see the previous
+      // user's filter/notification/profile state until server hydration
+      // completed (PIPEDA shared-device leak).
+      clearLocalSessionState();
     }
   });
 }
