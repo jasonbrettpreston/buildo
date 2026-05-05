@@ -1,5 +1,6 @@
 /** @jest-environment node */
 // SPEC LINK: docs/specs/03-mobile/96_mobile_subscription.md §10 Step 2 Subscription gate
+//             docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 Gate stability + 2026-05-05 narrow carve-out amendment
 //
 // _layout.tsx orchestrates ~6 third-party libraries (expo-router, TanStack
 // Query, Reanimated, BottomTabBar, AppState, IncompleteBanner) which are
@@ -75,6 +76,35 @@ describe('subscription gate — source invariants', () => {
     // (the children handle the inline-blur banner). The gate must read
     // paywallStore.dismissed somewhere alongside the expired check.
     expect(layoutSrc).toMatch(/paywallDismissed|dismissed/);
+  });
+
+  it('Spec 99 §6.5 amendment 2026-05-05 enumerates the AppLayout isFetching carve-out', () => {
+    // The narrow `isFetching && subscription_status === 'expired'` carve-out
+    // at line 216 is permitted ONLY because Spec 99 §6.5 was amended on
+    // 2026-05-05 (resolves WF5 H1) to enumerate it explicitly. Three
+    // assertions guard against drift:
+    //   1. Categorical rule still present (amendment must not delete it).
+    //   2. Amendment header exists.
+    //   3. AppLayout case is enumerated by file path + status value inside
+    //      the amendment block.
+    const specSrc = fs.readFileSync(
+      path.join(__dirname, '../../docs/specs/03-mobile/99_mobile_state_architecture.md'),
+      'utf8',
+    );
+    // 1. Categorical rule body — the existing BANNED comment in the §6.5
+    //    code-block survives the amendment.
+    expect(specSrc).toMatch(/isFetching toggles on every refetch/);
+    // 2. Amendment header exists.
+    expect(specSrc).toMatch(/Permitted (narrow )?carve-outs/);
+    // 3. AppLayout case enumerated — slice the spec from the amendment
+    //    header forward and assert the file path + 'expired' both appear
+    //    within the amendment block (not somewhere else in the spec).
+    const amendmentMatch = specSrc.match(/Permitted (narrow )?carve-outs[\s\S]{0,2000}/);
+    expect(amendmentMatch).not.toBeNull();
+    const amendmentBlock = amendmentMatch![0];
+    expect(amendmentBlock).toMatch(/_layout\.tsx/);
+    expect(amendmentBlock).toMatch(/subscription_status/);
+    expect(amendmentBlock).toMatch(/['"]expired['"]/);
   });
 });
 

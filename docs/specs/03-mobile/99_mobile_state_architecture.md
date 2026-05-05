@@ -413,8 +413,22 @@ if (isLoading || profile == null || profile.subscription_status == null) {
 // the existing rendered tree stays mounted; refetch updates data when it resolves.
 ```
 
+> **Amendment 2026-05-05 (resolves WF5 H1, audit `audit_spec99_2026-05-04.md`):** narrow `isFetching` carve-outs ARE permitted in render gates ONLY when ALL three conditions hold:
+>
+> 1. The carve-out pairs `isFetching` with a **stable status field** — a server-canonical enum that doesn't toggle on every refetch (e.g., `subscription_status`). Coupling with transient signals (`isError`, `isPaused`, `fetchStatus`) is BANNED.
+> 2. The carve-out branch returns the **same `<Loading*/>` element** as the parent stable-signal gate. Returning a different element introduces a new flicker surface and is BANNED.
+> 3. The carve-out is **explicitly enumerated below** by spec amendment in the SAME commit that adds the code. Implicit / grandfathered carve-outs are BANNED — reviewers MUST reject any unenumerated carve-out.
+>
+> **Permitted carve-outs (enumerated):**
+>
+> - **`mobile/app/(app)/_layout.tsx` — `isFetching && profile.subscription_status === 'expired'` returning `<SubscriptionLoadingGuard/>`.**
+>   *Rationale:* Protects the post-payment `expired → active` transition (Spec 96 §9 anti-flicker). After Stripe's webhook flips `subscription_status` from `'expired'` to `'active'`, the next AppState→active or `refetchOnReconnect` fires a `['user-profile']` refetch; without the carve-out the gate would briefly render `<PaywallScreen>` for one frame before the new status arrives. The `'expired'` value is a server-canonical enum — it doesn't flip on refetch — so this branch fires ONLY while the cached status is already `'expired'` AND a refetch is in flight. Trial / active / past_due / admin_managed users never enter this branch (status mismatch), so background refetches stay silent for them and the tab tree stays mounted.
+>   *Why this carve-out instead of a `useMutation`-backed flag refactor:* A flag refactor narrows the protection to AppState→active-initiated refetches only, leaving `refetchOnReconnect` and other automatic refetch paths exposed to the one-frame flash. The carve-out covers all refetch sources for the same UX cost.
+>
+> Adding a new permitted carve-out requires extending this enumeration in the same commit; reviewers MUST reject any unenumerated carve-out.
+
 **Current violations being remediated** (do not soften this rule because the live code violates it — these are tracked):
-- `mobile/app/(app)/_layout.tsx:202` includes `isFetching` in the loading gate — **§9.4 P0/BLOCKING removes it**.
+- _Previously-tracked §6.5 violations all resolved_: line 202 broad gate removed by §9.4a (✅ DONE); line 216 narrow `expired` carve-out permitted by 2026-05-05 amendment above (now an enumerated exception).
 
 ### 6.6 Object-valued store fields MUST be deep-compared before set
 

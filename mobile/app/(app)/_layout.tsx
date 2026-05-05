@@ -206,12 +206,16 @@ export default function AppLayout() {
   if (isLoading || profile == null || profile.subscription_status == null) {
     return <SubscriptionLoadingGuard />;
   }
-  // NARROW expired-refetch guard: when the cached subscription_status is
-  // 'expired' AND a refetch is in flight, suppress the paywall mount until the
-  // refetch resolves. This protects the post-payment 'expired→active'
-  // transition (Spec 96 §9 anti-flicker) without re-introducing the broad
-  // isFetching gate that caused incident #3 — for trial/active/past_due/
-  // admin_managed users, this branch never fires (status !== 'expired') so
+  // NARROW expired-refetch carve-out — Spec 99 §6.5 amendment 2026-05-05
+  // enumerates this as a permitted exception to the categorical isFetching
+  // ban: when the cached subscription_status is 'expired' AND a refetch is
+  // in flight, render <SubscriptionLoadingGuard/> until the refetch resolves.
+  // Protects the post-payment 'expired→active' transition (Spec 96 §9
+  // anti-flicker). Permitted because (1) 'expired' is a server-canonical
+  // enum that doesn't toggle on refetch, (2) the branch returns the same
+  // element as the parent gate, and (3) this case is explicitly enumerated
+  // in §6.5's "Permitted carve-outs" subsection. Trial/active/past_due/
+  // admin_managed users never enter this branch (status !== 'expired') so
   // background refetches stay silent and the tab tree stays mounted.
   if (isFetching && profile.subscription_status === 'expired') {
     return <SubscriptionLoadingGuard />;

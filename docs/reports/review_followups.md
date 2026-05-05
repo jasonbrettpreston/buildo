@@ -1,6 +1,21 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate._
 
+## WF3 — Spec 99 H1 Amendment 2026-05-05 (RESOLVED)
+
+**Source:** WF5 audit `docs/reports/audit_spec99_2026-05-04.md` finding **HIGH H1** — `mobile/app/(app)/_layout.tsx:216` retains an `isFetching && subscription_status === 'expired'` carve-out that Spec 99 §6.5's categorical text did not permit.
+
+**Resolution:** Spec 99 §6.5 amended (2026-05-05) to enumerate the AppLayout case as a permitted narrow carve-out under three conditions: stable status field; same loading element as parent gate; explicit enumeration. The categorical rule is preserved for the broad / unscoped case. No executable code change — only the comment block in `_layout.tsx:200-218` updated to cite the new amendment subsection. Regression guard: `mobile/__tests__/subscriptionGate.test.ts` asserts the amendment header + AppLayout enumeration both exist (catches accidental amendment removal).
+
+**Why amend not refactor:** The alternative `useMutation`-backed `postPaymentRefetchInFlight` flag would narrow the anti-flicker protection to AppState→active-initiated refetches only; the existing carve-out covers ALL refetch sources (including `refetchOnReconnect`) for the same UX cost. The audit explicitly noted the carve-out is "provably correct... well-commented" (audit line 114).
+
+**Deferred test-hardening items** (from independent code-reviewer agent, both DEFER severity, zero BUG):
+
+- **D1 — Tighten the amendment-block extraction window in `subscriptionGate.test.ts`.** Current regex `Permitted (narrow )?carve-outs[\s\S]{0,2000}` captures a 2000-char slice. The actual amendment block is ~1200 chars, so the extra 800 chars overlap the "Current violations being remediated" paragraph and the §6.6 heading. No live false-pass today (the three search terms `_layout.tsx` / `subscription_status` / `'expired'` appear only inside the amendment), but a future move of the AppLayout enumeration into the violations paragraph (within the window) would slip through. Mitigation: tighten window to ~1400 OR replace regex slice with a section-bounded extraction (substring from `Permitted carve-outs` up to next `###` heading).
+
+- **D2 — Enforce enumeration exhaustiveness with a paired lint test.** Amendment condition 3 ("enumerated in the SAME commit") has no automated check — relies on reviewer vigilance. A second future `isFetching && profile.subscription_status === 'past_due'` carve-out added without amending the spec would not be caught by the current test (which only asserts the `expired` case is enumerated, not that the enumeration is exhaustive). Mitigation: add a companion test that greps `_layout.tsx` for all `isFetching && profile.subscription_status` occurrences and asserts the count matches the number of enumerated items in §6.5's "Permitted carve-outs" block.
+
+
 ## WF3 Top-6 Deferred Bug Sweep — 2026-05-04 (RESOLVED)
 
 7 commits closed 9 CRITICAL + 8 HIGH from the queue below. Phases 1–6 attacked one bundle each (smallest-blast-radius first); Phase 7 applied amendments from the adversarial trio (Gemini + DeepSeek + code-reviewer) which surfaced 3 additional CRITICAL + 4 additional HIGH that were also fixed inline. Phase 4 was a no-op — the original deferred item (compute-trade-forecasts atomicity) was already pre-fixed by commit "WF3 B2-C1 (2026-04-23)" and locked by the existing test at `compute-trade-forecasts.infra.test.ts:429`.
