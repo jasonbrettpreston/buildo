@@ -98,6 +98,8 @@ These findings expand the Spec 99 bug surface but are NOT blocked by the M1+M2+M
 
 **No commit beyond this RESOLVED entry.** All MEMORY.md and `wf5_pipeline_audit.md` changes are in user-scope `~/.claude/projects/.../memory/` — not version-controlled.
 
+**Update 2026-05-05:** Deferred item **D1** (per-finding WF3 cadence memory) closed by follow-up WF3. Created `~/.claude/projects/C--Users-User-Buildo/memory/feedback_wf3_granularity.md` capturing the rule + body (rule, **Why** with 9-commit citation chain, **How to apply** with 6 sub-rules covering sequential default, per-finding granularity, multi-phase per-phase commits, new-findings routing, inline-DEFER exception, per-WF override scope). Added MEMORY.md index entry under `## Feedback` between `feedback_always_use_workflow.md` (ceremony) and `feedback_review_protocol.md` (review). Index hook initially read as absolute; code-reviewer flagged as IMPORTANT; fixed inline to add "default + bundle only on override" so the hook accurately conveys the opt-out clause. Code-reviewer 0 BUG, 1 IMPORTANT (fixed inline), 2 DEFER (D1: commit SHA chain in Why fragile after rebase — low priority, not load-bearing; D2: recursive deferred-item case not explicitly stated — covered by composition with `feedback_always_use_workflow.md`'s ceremony rule, no action). Memory file is user-scope, NOT committed; this RESOLVED note is the only repo edit.
+
 
 ## WF3 — Spec 99 H4 Mobile Typecheck Cleanup 2026-05-05 (RESOLVED — 4 commits)
 
