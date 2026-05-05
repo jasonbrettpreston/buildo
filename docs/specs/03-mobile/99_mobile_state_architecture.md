@@ -166,7 +166,7 @@ These are NOT Zustand stores. They use `react-native-reanimated`'s `makeMutable(
 
 ---
 
-## 4. The Five Bridge Patterns
+## 4. The Six Bridge Patterns
 
 These are the **only** allowed cross-layer flows. A sixth pattern requires a spec amendment.
 
@@ -306,6 +306,44 @@ signOut: async () => {
 - Order WAS normative (paywall reset BEFORE firebase signOut) but the §9.19 unification moved the entire fan-out into `clearLocalSessionState()` which runs in `finally` (i.e., AFTER `auth().signOut()` resolves or throws). This is intentional: the try/finally guarantees cleanup on Firebase failure (the PIPEDA-critical case), and the paywall reset still runs before any subsequent code observes the cleared session because both branches reach `finally` synchronously. The "BEFORE firebase signOut" rule for paywall reset (Spec 96 §9 anti-flicker) is preserved by Spec 96 §9's separate guard, not by the order in `signOut()`.
 - All in-memory Zustand stores MUST be enumerated in `clearLocalSessionState()`. Adding a new store with user-scoped state requires adding a `.reset()` call there. **Enforcement:** §8.5 store-enumeration test grep-asserts that every `create<*Store>(` in `mobile/src/store/*.ts` has a corresponding `.getState().reset()` call in `clearLocalSessionState()` (or in `signOut()` directly for stores explicitly excluded from the helper — currently none).
 - **`queryClient.clear()` MUST fire** as part of `clearLocalSessionState()`. Reason: `enabled: !!user` only stops *new* fetches — in-flight fetches resolve and write to the cache, attributing the previous user's data to the next sign-in. Additionally, the MMKV-persisted TanStack cache (`mmkvPersister`, 24h `maxAge`) survives the sign-out and rehydrates on next mount, leaking previous-user `['user-profile']` to a different user signing in on a shared device — a privacy violation under PIPEDA (the same reason `userProfileStore.partialize` strips PII). The B4 invalidate-on-uid-change is defense-in-depth; this `clear()` call is the primary fix. **§9.10 ✅ DONE** — implementation chose `queryClient.clear()` (broader purge) over the originally-specified scoped `removeQueries({queryKey: ['user-profile']})`; broader purge is defense-in-depth (cancels in-flight refetches across all queries, not just `['user-profile']`) and is stricter than the §B5 PIPEDA letter requires. Spec amended 2026-05-05 to match implementation. The MMKV blob is purged separately via `mmkvPersister.removeClient()` (added §9.18, consolidated into `clearLocalSessionState()` by §9.19) — orthogonal mechanism, both required.
+
+### B6 — API Client → Auth Listener (mid-session token refresh on 401)
+
+Spec 99 amendment 2026-05-05 (resolves WF2 M1+M2+M3 #6, DeepSeek): Firebase ID tokens expire after ~1 hour. `onAuthStateChanged` does NOT fire on token expiry — Firebase only fires it on USER state changes (sign-in / sign-out / forced revocation). Pre-amend, B4 covered cold-boot/UID-change invalidation but the spec said nothing about mid-session refresh; the apiClient's existing 401 interceptor was implicit. A future contributor removing the interceptor "because it's not in the spec" would silently break the app at the 1-hour mark. B6 documents the interceptor as a normative bridge.
+
+**Pattern:** (current implementation in `mobile/src/lib/apiClient.ts:65-84`)
+```ts
+async function fetchWithAuthInternal<T>(path, options, isRetry = false): Promise<T> {
+  const { idToken } = useAuthStore.getState();
+  const headers = { Authorization: `Bearer ${idToken}`, ... };
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+
+  // 401 intercept: force-refresh idToken and retry once.
+  if (response.status === 401 && !isRetry) {
+    try {
+      const { user } = useAuthStore.getState();
+      const newToken = await auth().currentUser?.getIdToken(true);
+      if (newToken && user) {
+        useAuthStore.getState().setAuth(user, newToken);
+        return fetchWithAuthInternal<T>(path, options, /* isRetry */ true);
+      }
+    } catch {
+      // Token refresh failed (Firebase unreachable, refresh token revoked) —
+      // fall through to throw ApiError(401).
+    }
+    throw new ApiError(401, 'Unauthorized');
+  }
+  // ...
+}
+```
+
+**Rules:**
+- 401 from server MUST trigger `auth().currentUser?.getIdToken(true)` (force-refresh) exactly once. The `isRetry` boolean parameter is the cycle guard — recursive call sets `isRetry: true`, the second 401 propagates `ApiError(401)` instead of looping.
+- Refreshed token MUST be written to `useAuthStore` via `setAuth(user, newToken)` BEFORE the retry. The retry uses the new bearer because `fetchWithAuthInternal` re-reads `idToken` from the store at line 20.
+- Refresh failure (Firebase unreachable, `currentUser` null, `getIdToken` rejection) MUST propagate as `ApiError(401)` — the apiClient does NOT call `clearAuth()` directly. The error propagates to TanStack Query → consumer → AuthGate, which routes via Branch 4 (other profileError) to the retry UI per §5.3. A second 401 after the user-initiated retry would mean the refresh token itself is invalid — at that point the user is effectively signed out, and the next foreground/AppState event would let the listener detect the broken session.
+- This bridge is mid-session ONLY. Cold-boot UID-change invalidation belongs to B4; sign-out cleanup belongs to B5. B6 fires when the app already has a logged-in `user` and just needs a fresh `idToken`.
+- Spec 90 §11 mandates this interceptor at the engineering-protocol layer; this section is the architectural mirror.
+- **Known limitation:** concurrent 401s each call `getIdToken(true)` independently. Firebase deduplicates the network refresh internally, but the store receives two `setAuth` writes. Low risk in practice (Zustand `set` is sync; second write is a no-op if newToken is identical). Tracked in `docs/reports/review_followups.md` as "concurrent 401 mutex" for future hardening.
 
 ---
 
@@ -584,6 +622,7 @@ The following items eliminate the duplication identified in the audit and resolv
 | 9.18 | ✅ DONE | Strip `['user-profile']` query from MMKV persister to comply with §2.1 PII layer boundary. Closes deferred CRITICAL from WF3 Phase 7 Gemini review: the mobile `UserProfileSchema` includes 5 PII identity fields (full_name, phone_number, company_name, email, backup_email) that landed unencrypted on disk via the TanStack persister; `mmkvPersister` is Layer 4a UNENCRYPTED while §2.1 mandates Layer 4b SecureStore for PII. Two-commit landing: `671aa87` (initial fix via `dehydrateOptions.shouldDehydrateQuery` filter excluding the user-profile query — only filters WRITES to MMKV) + `202a9aa` (code-reviewer CRITICAL amendment: bumped persister `buster` to `'wf3-pii-strip-1'` to flush the pre-WF3 persisted blob from existing clients on cold-boot, since `shouldDehydrateQuery` does NOT filter rehydration READS; also extracted `persistFilter.ts` helper for the dehydrate predicate). | WF3 | `mobile/src/lib/persistFilter.ts` (NEW), `mobile/app/_layout.tsx` (PersistQueryClientProvider config), `mobile/src/store/authStore.ts` (`mmkvPersister.removeClient()` call), `mobile/__tests__/offline.test.ts` |
 | 9.19 | ✅ DONE | Unify forced-signout cleanup with explicit-signout path (§B5 listener-null branch). Pre-WF3 the `signOut()` finally block did the global fan-out (queryClient.clear + 4 peer-store resets + persister blob purge) but the `onAuthStateChanged(null)` listener branch only called `clearAuth()` — leaving stale data on shared devices for forced sign-outs (admin disable, password change on another device, project token revocation per Spec 93 §3.1). The asymmetry was the PROMOTED CRITICAL from §9.14 Phase D Gemini review, made more visible in §9.18 (which added `mmkvPersister.removeClient()` to `signOut()` but not the listener path). Resolution: extracted `clearLocalSessionState()` module-scope helper containing the full fan-out; both paths now invoke it. Added `forced_signout` PostHog event distinct from `signout_initiated` so analytics distinguishes the two trigger paths. `lastKnownUid !== null` guard prevents the cleanup from firing on every cold-boot first-fire (when the listener legitimately fires `null` before Firebase resolves the cached session). Two-commit landing: `381a0c9` (initial unification with helper extraction + telemetry) + `f2f7147` (code-reviewer amendments — deterministic mock-call assertions in `useAuth.test.ts`). | WF3 | `mobile/src/store/authStore.ts` (`clearLocalSessionState` helper + listener wiring), `mobile/__tests__/storeReset.coverage.test.ts`, `mobile/__tests__/useAuth.test.ts` |
 | 9.20 | ✅ DONE | Dead-code sweep across cumulative §9 + WF3 changes (16+ commits across mobile state + auth + push dispatch + mobile schema + cursor backward-compat + PII strip). Conservative posture: only items with NO consumers AND NO upgrade-path obligation removed. Knip baseline reduced from 4 unused exports to 3 — the removed export was `CLIENT_SAFE_COLUMNS` in the SERVER `userProfile.schema.ts` (consumers were since-deleted server-shape lookup helpers). Persist `migrate` functions and one-time MMKV cleanup helpers KEPT for upgrader safety (existing v0 clients still need them; removing would silently corrupt v0 state on upgraders). | WF3 | `src/lib/userProfile.schema.ts` (server-side `CLIENT_SAFE_COLUMNS` removal) |
+| 9.23 | ✅ DONE | B6 — API Client → Auth Listener (mid-session token refresh on 401) bridge spec amendment per WF2 M1+M2+M3 #6 (DeepSeek). Documents the existing `mobile/src/lib/apiClient.ts:65-84` 401 interceptor as a normative bridge — Firebase ID tokens expire after ~1 hour but `onAuthStateChanged` does NOT fire on expiry, so without this bridge a future contributor could remove the interceptor "because it's not in the spec" and silently break the app at the 1-hour mark. §4 header renamed Five → Six Bridge Patterns. No code change — implementation existed; this is normative documentation. | WF2 doc-only | `docs/specs/03-mobile/99_mobile_state_architecture.md` §4 (B6 section + header rename) |
 | 9.21 | ✅ DONE | Pattern A class-level fix per audit Phase 5 (`audit_spec99_2026-05-04.md` line 161-168) — `mobile/__tests__/spec99.mandates.lint.test.ts` statically asserts every §7 + §8 mandate has implementation evidence. 10 mandate cases (§7.1-§7.4, §8.1-§8.6) + 1 sanity case + 1 meta-count guard. Hardcoded `MANDATES` array means adding a new spec mandate requires explicitly adding a row (the meta-count guard catches accidental drops). Source-grep style consistent with `routerHygiene.lint.test.ts` (§5.4+§6.1 enforcement) and `storeReset.coverage.test.ts` (§8.5). The lint test surfaced a NEW gap: §7.2 (`Sentry.addBreadcrumb({category:'query'})` paired with `invalidateQueries`) has zero implementation evidence at HEAD — audit Phase 4 verified §7.1/§7.3 but not §7.2; that case is `it.skip` with `pendingReason` until a follow-up WF3 wires the telemetry. | WF1 | `mobile/__tests__/spec99.mandates.lint.test.ts` (NEW) |
 
 ---
