@@ -45,6 +45,13 @@ jest.mock('@sentry/react-native', () => ({
   init: jest.fn(),
   captureException: jest.fn(),
   addBreadcrumb: jest.fn(),
+  // setUser added in WF3 telemetry batch (Spec 99 §7.5). authStore.ts now
+  // calls Sentry.setUser({id}) on signed-in and Sentry.setUser(null) on
+  // signout. Module-load is safe (no setUser call yet), but a future test
+  // here that exercises a signout path would crash without this mock.
+  // Defensive parity with useAuth.test.ts (Independent reviewer #1, WF3
+  // post-impl review).
+  setUser: jest.fn(),
 }));
 jest.mock('@/lib/migrations/userProfileCacheCleanup', () => ({
   cleanupLegacyUserProfileCache: jest.fn(),

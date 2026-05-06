@@ -388,7 +388,13 @@ const MANDATES: Mandate[] = [
         ],
         [
           'src/hooks/useSaveLead.ts',
-          /track\(\s*saved\s*\?\s*['"]lead_saved['"]\s*:\s*['"]lead_unsaved['"]|track\(\s*['"]lead_(?:un)?saved['"]/,
+          // Multi-line tolerant: [\s\S]* matches across newlines so a
+          // future Prettier auto-format that splits the ternary across
+          // lines doesn't silently fail this lint (Independent reviewer
+          // #2, WF3 post-impl review). The OR-branch covers either
+          // `track(saved ? 'lead_saved' : 'lead_unsaved')` ternary form
+          // OR direct `track('lead_saved')` / `track('lead_unsaved')`.
+          /track\([\s\S]{0,80}?(?:saved\s*\?\s*['"]lead_saved['"][\s\S]{0,40}?:\s*['"]lead_unsaved['"]|['"]lead_(?:un)?saved['"])/,
           'lead_saved/lead_unsaved in useSaveLead.ts',
         ],
         [

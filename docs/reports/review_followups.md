@@ -43,6 +43,21 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 |---|---|---|---|
 | MEDIUM | M1+M2+M3 #9 (Gemini) | **MMKV ban lacks automated enforcement.** §2.1 hard rule banning direct `createMMKV().getString()` outside `mobile/src/lib/persistence/` is verified manually only. | WF1 — add ESLint rule banning `react-native-mmkv` imports outside the allowed module list. |
 
+### WF3 (telemetry baseline) deferrals (2026-05-06)
+
+**Pre-existing concerns surfaced by Multi-Agent Review of unchanged code.** None of these are regressions introduced by the WF3 telemetry batch (commits `1b5d996`/`eb95f57`/`4a96c3f`); reviewers correctly identified pre-existing issues in surrounding code (authStore.ts signOut path, PaywallScreen handlePrimary). Filing here so they're not silently dropped.
+
+| Severity | Source | Item | Planned Home |
+|---|---|---|---|
+| HIGH | Gemini | **`signOut` race condition with `onAuthStateChanged`**: between `await auth().signOut()` and `clearLocalSessionState` running in `finally`, a new authStateChanged fire could land. Speculative — practical race window is milliseconds and a new sign-in takes seconds; never observed. Mitigation would be an `isSigningOut` flag in authStore + listener guard. | Cross-cutting auth-flow hardening WF; gated on observed Sentry events from real users. |
+| HIGH | Gemini | **`clearLocalSessionState` no per-step try/catch**: a thrown error in any step halts the fan-out — partial cleanup = partial PIPEDA. Mitigation: wrap each `.reset()`/`clear()` call in `try { ... } catch { Sentry.captureException }`. ~50 LoC. | Defensive cross-store hardening WF. |
+| HIGH | DeepSeek | **`PaywallScreen.handlePrimary` unhandled rejection**: `await openCheckout()` has no try/catch; throwing leaves checkout in indeterminate state with no error feedback. Pre-existing pattern, not introduced by Phase 3. | WF3 spec 96 PaywallScreen hardening cycle. |
+| HIGH | DeepSeek | **`PaywallScreen` `successNotification()` haptic on `openCheckout=true` is premature**: `true` only confirms the WebBrowser opened, not that payment succeeded. Spec 91 §4.4 reserves success haptic for genuine state mutations. Should fire on `subscription_status='expired'→'active'` transition (currently fires at button-tap time). | Same WF3 PaywallScreen cycle. |
+| HIGH | DeepSeek | **`PaywallScreen` accessibilityLabel mismatch with `CTA_NEUTRAL` flag**: when env flag flips to neutral copy ("Learn more →"), the accessibilityLabel still reads "Continue subscription at buildo.com". Screen-reader users see contradictory state. | Same WF3 PaywallScreen cycle. |
+| MEDIUM | Gemini | **Unconditional `clearLocalSessionState` on cold boot for logged-out users**: pre-existing crash-recovery pattern; imposes I/O cost on every cold start. Mitigation: clean-shutdown flag in MMKV. | Performance-WF gated on cold-start telemetry. |
+| MEDIUM | DeepSeek | **`PaywallScreen.handleRefresh` missing error catch**: `queryClient.invalidateQueries` throwing leaves `isRefreshing` stuck. Pre-existing pattern. | Same WF3 PaywallScreen cycle. |
+| LOW (cross-store) | Gemini | **mmkvStorage adapter silent failures across stores** (already in WF1-C deferrals). Multi-store concern; reviewer surfaced again on authStore. | Cross-store observability hardening (existing defer). |
+
 ### WF3 (audit items 7-9) deferrals (2026-05-06)
 
 | Severity | Source | Item | Planned Home |
