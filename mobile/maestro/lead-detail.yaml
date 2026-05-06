@@ -1,0 +1,82 @@
+# SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.3 Detailed Investigation View
+#            docs/specs/03-mobile/91_mobile_lead_feed.md §4.3.1 API contract
+#            docs/specs/03-mobile/98_mobile_testing_protocol.md §3.2 testID convention
+#
+# WF1-A regression cover (audit item 11, 2026-05-06 mobile-spec audit).
+# Cold-boot deep-link to /(app)/[lead] proves:
+#   1. The Spec 99 §B1 useLeadDetail hook resolves without a feed cache
+#      (the very Maestro-blocker WF1-A unblocked at commit 98ad3df).
+#   2. The four Spec 91 §4.3 sections render with their canonical testIDs:
+#      lead-detail-cost, lead-detail-sqft, lead-detail-target-date,
+#      lead-detail-neighborhood, lead-detail-description.
+#   3. SaveButton renders with the corrected testID convention from
+#      WF1-A Phase 4 (`save-button-detail` → SaveButton.tsx:75 .replace
+#      produces `save-heart-detail` / `save-heart-filled-detail`).
+#
+# FIXTURE REQUIREMENT (same convention as notifications.yaml): the test
+# permit id `permit_test_123` must exist server-side with a populated
+# cost_estimates row + neighbourhoods join + trade_forecasts row, and
+# saved=true in lead_views for the test user. Without the fixture the
+# detail endpoint returns 404 and the flow exits at lead-detail-not-found.
+# Document the seed step in mobile/maestro/README when CI integration lands.
+
+appId: com.buildo.app
+---
+- launchApp:
+    # See auth.yaml for the clearState: false rationale (Expo dev-client
+    # caches Metro's bundler URL).
+    clearState: false
+
+# Open the detail screen directly via deep link — bypasses the feed list,
+# simulating the push-notification cold-boot path that WF1-A made resilient.
+- openLink: "buildo://(app)/lead?id=permit_test_123"
+
+# Cold-boot loading state — the useLeadDetail hook is fetching; WF1-A's
+# rewrite shows a 4-block skeleton while in flight.
+- assertVisible:
+    id: "lead-detail-skeleton"
+
+# After the fetch resolves, the screen header is always visible.
+- extendedWaitUntil:
+    visible: "Permit Details"
+    timeout: 10000
+
+# Spec 91 §4.3 — Cost Estimate section (estimated + tier + range).
+- assertVisible:
+    id: "lead-detail-cost"
+
+# Spec 91 §4.3 — Square Footage Projection (cost.modeled_gfa_sqm × 10.7639).
+- assertVisible:
+    id: "lead-detail-sqft"
+
+# Spec 91 §4.3 — Target Start Date (predicted_start in font-mono amber).
+- assertVisible:
+    id: "lead-detail-target-date"
+
+# Spec 91 §4.3 — Neighborhood Profile (income tier + period of construction).
+- assertVisible:
+    id: "lead-detail-neighborhood"
+
+# Spec 91 §4.3 — Project Details (work_description; applicant when unmasked).
+# Conditional on detail.work_description being non-null in the fixture; the
+# section is hidden when both work_description and applicant are null.
+- assertVisible:
+    id: "lead-detail-description"
+
+# Spec 91 §4.4 — SaveButton fixed at bottom. testID renamed in WF1-A Phase 4
+# from `lead-detail-save-button` to `save-button-detail` so SaveButton's
+# internal .replace('save-button-', ...) produces the canonical filled and
+# unfilled inner-View testIDs (save-heart-filled-detail / save-heart-detail).
+- assertVisible:
+    id: "save-button-detail"
+
+# Tap save → optimistic fill flips the heart. Asserts the inner-View testID
+# the WF1-A Phase 4 fix unlocked (was a no-op before commit ebfcf4d).
+- tapOn:
+    id: "save-button-detail"
+- assertVisible:
+    id: "save-heart-filled-detail"
+
+# Back navigation returns to whatever was below — feed or empty stack on
+# direct deep-link launch. Assert the back affordance is present.
+- assertVisible: "Feed"
