@@ -49,9 +49,11 @@ export interface LeadDetailRow {
   target_window: 'bid' | 'work' | null;
   // competition (count from lateral)
   competition_count: number;
+  // own-save flag (EXISTS lateral, viewer-scoped)
+  saved: boolean;
 }
 
-// $1 permit_num · $2 revision_num · $3 trade_slug · $4 viewer's user_id (excluded from competition count)
+// $1 permit_num · $2 revision_num · $3 trade_slug · $4 viewer's user_id (excluded from competition count, scopes own-save)
 //
 // competition_count must match the feed's semantic exactly so the same
 // permit reports the same number on both list and detail screens:
@@ -60,6 +62,9 @@ export interface LeadDetailRow {
 //   - COUNT(DISTINCT user_id) so a multi-trade power user is counted once
 //   - user_id != $4 to exclude the viewer's own save (spec 91 §3 says "OTHER users")
 //   - lead_type = 'permit' to ignore CoA/builder rows that share the table
+//
+// `saved` (own-save flag) uses the same lead_key index pattern but scopes to
+// the viewer's user_id (= $4). EXISTS subquery returns boolean — never null.
 export const LEAD_DETAIL_SQL = `
   SELECT
     p.permit_num,
@@ -86,7 +91,8 @@ export const LEAD_DETAIL_SQL = `
     tf.p75_days,
     tf.opportunity_score,
     tf.target_window,
-    COALESCE(lv_count.c, 0)::int AS competition_count
+    COALESCE(lv_count.c, 0)::int AS competition_count,
+    lv_self.saved AS saved
   FROM permits p
   LEFT JOIN cost_estimates ce
     ON ce.permit_num = p.permit_num
@@ -105,6 +111,15 @@ export const LEAD_DETAIL_SQL = `
       AND lv2.user_id != $4::text
       AND lv2.lead_type = 'permit'
   ) lv_count ON TRUE
+  LEFT JOIN LATERAL (
+    SELECT EXISTS (
+      SELECT 1 FROM lead_views lv_own
+      WHERE lv_own.lead_key = ('permit:' || p.permit_num || ':' || LPAD(p.revision_num, 2, '0'))
+        AND lv_own.user_id = $4::text
+        AND lv_own.saved = true
+        AND lv_own.lead_type = 'permit'
+    ) AS saved
+  ) lv_self ON TRUE
   WHERE p.permit_num = $1
     AND p.revision_num = $2
   LIMIT 1
@@ -191,5 +206,6 @@ export function toLeadDetail(row: LeadDetailRow): LeadDetail {
     cost: toCost(row),
     neighbourhood: toNeighbourhood(row),
     updated_at: row.updated_at,
+    is_saved: row.saved,
   };
 }

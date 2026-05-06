@@ -56,4 +56,11 @@ export interface LeadDetail {
   neighbourhood: LeadDetailNeighbourhood | null;
   /** ISO 8601 timestamp from permits.updated_at — reflects the last change to the source row. */
   updated_at: string;
+  /**
+   * Per-user save state (`lead_views.saved=true AND user_id=ctx.uid`).
+   * Always non-null — the EXISTS subquery returns boolean.
+   * Mobile SaveButton renders the optimistic-fill heart from this field
+   * on cold-boot deep-link (no feed cache to fall back to).
+   */
+  is_saved: boolean;
 }

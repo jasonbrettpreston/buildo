@@ -72,6 +72,7 @@ const sampleRow = {
   opportunity_score: 78,
   target_window: 'bid' as const,
   competition_count: 4,
+  saved: false,
 };
 
 async function readJson(res: Response): Promise<unknown> {
@@ -147,6 +148,43 @@ describe('GET /api/leads/detail/[id] — 200', () => {
     const res = await GET(makeRequest(), makeContext('24 101234--01'));
     const body = (await readJson(res)) as { data: { location: unknown } };
     expect(body.data.location).toBeNull();
+  });
+
+  // -------------------------------------------------------------------------
+  // is_saved (mapper-boundary tests; SQL-boundary tests live in
+  // src/tests/db/lead-detail-saved-state.db.test.ts)
+  // -------------------------------------------------------------------------
+
+  it('returns is_saved: false when the row reports saved=false (default)', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [sampleRow] });
+    const res = await GET(makeRequest(), makeContext('24 101234--01'));
+    const body = (await readJson(res)) as { data: { is_saved: boolean } };
+    expect(body.data.is_saved).toBe(false);
+  });
+
+  it('returns is_saved: true when the row reports saved=true', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedPool.query.mockResolvedValueOnce({
+      rowCount: 1,
+      rows: [{ ...sampleRow, saved: true }],
+    });
+    const res = await GET(makeRequest(), makeContext('24 101234--01'));
+    const body = (await readJson(res)) as { data: { is_saved: boolean } };
+    expect(body.data.is_saved).toBe(true);
+  });
+
+  it('LEAD_DETAIL_SQL contains the lv_self LATERAL EXISTS scoped to $4 (regression guard)', async () => {
+    // Read the SQL string directly to lock the parameter binding. Mocked-pool
+    // tests can't observe parameter substitution end-to-end; this asserts the
+    // structural shape that the Multi-Agent plan review caught (`$2` vs `$4`
+    // would have silently returned is_saved=false for every lead).
+    const { LEAD_DETAIL_SQL } = await import('@/lib/leads/lead-detail-query');
+    expect(LEAD_DETAIL_SQL).toMatch(/lv_self/);
+    expect(LEAD_DETAIL_SQL).toMatch(/SELECT EXISTS\s*\(/);
+    expect(LEAD_DETAIL_SQL).toMatch(/lv_own\.user_id\s*=\s*\$4::text/);
+    expect(LEAD_DETAIL_SQL).toMatch(/lv_own\.saved\s*=\s*true/);
+    expect(LEAD_DETAIL_SQL).toMatch(/lv_self\.saved AS saved/);
   });
 });
 
