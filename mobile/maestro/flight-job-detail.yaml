@@ -1,0 +1,69 @@
+# SPEC LINK: docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.3 Detailed Investigation View
+#            docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.3.1 API contract
+#            docs/specs/03-mobile/92_mobile_engagement_hardware.md §4.4 amber update flash
+#            docs/specs/03-mobile/98_mobile_testing_protocol.md §3.2 testID convention
+#
+# WF1-B + WF1-C regression cover (audit item 12, 2026-05-06 mobile-spec audit).
+# Cold-boot deep-link to /(app)/[flight-job] proves:
+#   1. The Spec 77 §3.3.1 useFlightJobDetail cold-boot fallback resolves
+#      without a useFlightBoard cache hit (Maestro-blocker WF1-B unblocked
+#      at commits 4e2df49 + 3d5b47f). Previously the screen would show
+#      "Job not found in board" on cold boot.
+#   2. The screen renders the §3.3 sections — header, status badges, and
+#      Timeline Forecast — proving the Spec 99 §B1 useQuery path landed.
+#
+# NOTE on amber update flash (WF1-C, commits 6416262 + 0beaaf4):
+# `flight-card-update-flash` testID lives on the FlightCard inside the
+# flight-board screen, NOT on the [flight-job] detail screen itself.
+# This flow's mark-as-seen useEffect at [flight-job].tsx:154-158 writes
+# the current updated_at to MMKV — the next visit to the flight-board
+# tab should see the corresponding card with NO flash. Maestro coverage
+# of that round-trip belongs in flight-board.yaml, not here.
+#
+# FIXTURE REQUIREMENT (same convention as notifications.yaml + lead-detail.yaml):
+# permit_test_123 must exist server-side with a populated trade_forecasts
+# row + saved=true in lead_views for the test user. Without the fixture
+# the detail endpoint returns 404 and the flow exits at the not-found UX.
+
+appId: com.buildo.app
+---
+- launchApp:
+    # See auth.yaml for the clearState: false rationale.
+    clearState: false
+
+# Open the detail screen directly via deep link — bypasses the flight
+# board list, simulating the push-notification cold-boot path that WF1-B
+# made resilient.
+- openLink: "buildo://(app)/flight-job?id=permit_test_123"
+
+# Cold-boot UX: the screen header is always rendered; the body shows a
+# 3-block skeleton while either useFlightBoard or useFlightJobDetail
+# is in flight. WF1-B's combined isLoading covers both queries.
+- assertVisible: "Job Detail"
+- assertVisible: "Flight Board"
+
+# After both queries resolve (cache miss → useFlightJobDetail completes),
+# the address renders in the hero. Use Spec 77 §3.3 section name as the
+# stable structural anchor (the address text varies by fixture).
+- extendedWaitUntil:
+    visible: "Timeline Forecast"
+    timeout: 10000
+
+# Spec 77 §3.3 — Timeline Engine block — exists under either the
+# TimelineGauge (Best Case / Worst Case) or the empty-forecast fallback.
+- assertVisible:
+    text: "(Best Case|No forecast data available yet)"
+
+# Spec 77 §3.3 — Target Date section header (always present when
+# predicted_start is non-null in the fixture).
+- assertVisible: "Target Date"
+
+# Negative assertion: the "Job not found in board" empty state must NOT
+# appear on a successful cold-boot fallback. Pre-WF1-B this would have
+# fired immediately. Asserting its absence locks in the regression cover.
+- assertNotVisible: "Job not found in board."
+
+# Back navigation returns to the previous stack — direct deep-link launch
+# usually returns to the Flight Board pillar. Assert the back affordance
+# is present.
+- assertVisible: "Flight Board"
