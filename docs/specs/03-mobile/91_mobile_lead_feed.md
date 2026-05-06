@@ -20,7 +20,7 @@ Located primarily in `mobile/app/(app)/index.tsx` and `mobile/src/components/fee
 
 **State Management & Core Logic**
 * `store/filterStore.ts` (Zustand v5): Tracks `radiusKm`, `tradeSlug`, and `homeBaseLocation`. Persisted synchronously via `react-native-mmkv` so the app cold-boots exactly where the user left off.
-* `hooks/useLeadFeed.ts` (TanStack Query v5): Wrapper over `useInfiniteQuery` connecting to `GET /api/leads/feed`. Uses `getNextPageParam` for infinite scrolling.
+* `hooks/useLeadFeed.ts` (TanStack Query v5): Wrapper over `useInfiniteQuery` connecting to `GET /api/leads/feed`. Uses `getNextPageParam` for infinite scrolling. Per **Spec 99 §B1** (canonical Server → TanStack Query bridge), all server fetches MUST go through TanStack Query — never raw `fetch()` in components — and the response is parsed through `LeadFeedResultSchema` (Spec 90 §13 Zod boundary) before TanStack stores it.
 * `hooks/useLocation.ts`: Debounces `expo-location` updates. Query caches are only dropped and refetched when the user physically breaches a 500m "Snapping Distance" buffer to prevent relentless API thrashing while driving/walking.
 
 **Tab Bar Scroll Behaviour**
@@ -107,10 +107,11 @@ The handler joins `permits + cost_estimates + neighbourhoods + trade_forecasts` 
 ### 4.4 Interactive Primitives
 
 **`SaveButton.tsx` (Optimistic Database Persister)**
-* Implements strict Optimistic Updates. Tapping instantly fills the heart icon and fires a `successNotification()` haptic (NOT medium impact — the save is a successful state mutation, not a physical force).
+* Implements strict Optimistic Updates per **Spec 99 §B3** (Zustand → Server mutation with rollback): `onMutate` snapshots cached query data and applies the optimistic UI; `onError` restores from snapshot; `onSettled` invalidates to reconcile server state. WF1-A extended this to mirror state across both `['lead-feed']` and `['lead-detail', leadId]` cache keys (`mobile/src/hooks/useSaveLead.ts`) so the detail screen renders correctly on cold-boot deep-link.
+* Tapping instantly fills the heart icon and fires a `successNotification()` haptic (NOT medium impact — the save is a successful state mutation, not a physical force).
 * Scale pulse on fill: Reanimated `withSequence(withSpring(1.3), withSpring(1.0))`.
 * If the TanStack `useMutation` fails, rolls the UI backward and triggers a NativeWind error toast. Successful saves route the lead to the CRM Flight Board (Spec 77) for timeline tracking.
-* `testID="save-button-{index}"` (unfilled) / `testID="save-heart-filled-{index}"` (filled, optimistic).
+* `testID="save-button-{index}"` (unfilled) / `testID="save-heart-filled-{index}"` (filled, optimistic). The `SaveButton` derives the filled-state inner-View testID by `.replace('save-button-', 'save-heart-filled-')` — callers MUST pass a testID matching the `save-button-{slot}` convention so the replace produces the canonical filled testID (e.g., the detail screen passes `save-button-detail` → `save-heart-filled-detail`).
 
 **`LeadCardSkeleton.tsx`**
 * Exact physical dimensions of `LeadCard`. Same `bg-zinc-900 border border-zinc-800 rounded-xl p-4 mx-4 mb-3` container.

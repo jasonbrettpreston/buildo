@@ -329,8 +329,8 @@ Both files are gitignored. Download them from the Firebase Console (Project Sett
 - File: `mobile/src/store/userStore.ts`
 - Zustand v5 store: `{ uid, email, isLoading }` + `signOut()` action.
 - `onAuthStateChanged` listener writes uid/email into store.
-- `signOut()`: (1) calls `firebase.auth().signOut()`; (2) calls `filterStore.reset()`, `userProfileStore.reset()`, and `paywallStore.clear()` to clear all in-memory state; (3) resets this store. Does **not** clear MMKV — MMKV is preserved per §3.4 so the same user returning on the same device gets fast hydration. A different user signing in gets their own server data on the profile hydration.
-- **`paywallStore.clear()` is required in sign-out** — without it, a user who dismissed the paywall and then signed out on a shared device would leave `dismissed: true` in memory, causing the next user to start in inline blur mode (Spec 96 `paywallStore` note).
+- `signOut()`: (1) calls `firebase.auth().signOut()`; (2) the `clearLocalSessionState` fan-out (Spec 99 §B5) resets every peer Zustand store — `filterStore.reset()`, `userProfileStore.reset()`, `paywallStore.reset()`, `notificationStore.reset()`, `onboardingStore.reset()`, `flightBoardSeenStore.reset()` — plus `queryClient.clear()` and `mmkvPersister.removeClient()`; (3) resets this store. **The persisted Zustand stores write `INITIAL_STATE` back to MMKV via the persist middleware on `.reset()`**, so the previous user's data is overwritten (PIPEDA-aligned per Spec 99 §B5). The same user returning on the same device gets `INITIAL_STATE` in MMKV which their next profile fetch overwrites; a different user signing in similarly starts from `INITIAL_STATE` and hydrates from their own server profile.
+- **`paywallStore.reset()` is required in sign-out** (renamed from `clear()` on 2026-05-03 per Spec 99 §3.4 + §9.19 for §B5 naming uniformity) — without it, a user who dismissed the paywall and then signed out on a shared device would leave `dismissed: true` in memory, causing the next user to start in inline blur mode (Spec 96 `paywallStore` note).
 
 **Step 3 — Auth route group layout**
 - File: `mobile/app/(auth)/_layout.tsx`

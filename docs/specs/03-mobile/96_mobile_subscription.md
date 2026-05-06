@@ -217,11 +217,11 @@ File: `mobile/src/store/paywallStore.ts`
 | `dismissed` | boolean | User tapped "Maybe later" — inline blur mode |
 | `show()` | action | Set `visible: true`, `dismissed: false` |
 | `dismiss()` | action | Set `visible: false`, `dismissed: true` |
-| `clear()` | action | Set both false — called when `subscription_status` changes to `'active'` OR on sign-out |
+| `reset()` | action | Set both false — called when `subscription_status` changes to `'active'` OR on sign-out (renamed from `clear()` on 2026-05-03 per Spec 99 §3.4 + §9.19 for §B5 naming uniformity) |
 
 `paywallStore` is not persisted in MMKV — always starts fresh on app open so a returning subscriber is never stuck in inline blur mode.
 
-**Sign-out reset (critical):** `paywallStore.clear()` MUST be called in the sign-out action (Spec 93 Step 2 `signOut()` action) alongside `filterStore.reset()` and `userProfileStore.reset()`. Without this, a User A who dismissed the paywall and then signed out on a shared device would leave `paywallStore.dismissed = true` in memory, causing User B to see the inline blur mode immediately on sign-in (before their status is even checked). Since `paywallStore` is not MMKV-persisted, this only affects same-session shared-device scenarios — but those occur with family or team phone hand-offs.
+**Sign-out reset (critical):** `paywallStore.reset()` MUST be called in the sign-out action (Spec 93 Step 2 `signOut()` action) alongside the other Zustand `.reset()` calls in the Spec 99 §B5 `clearLocalSessionState` fan-out. Without this, a User A who dismissed the paywall and then signed out on a shared device would leave `paywallStore.dismissed = true` in memory, causing User B to see the inline blur mode immediately on sign-in (before their status is even checked). Since `paywallStore` is not MMKV-persisted, this only affects same-session shared-device scenarios — but those occur with family or team phone hand-offs.
 
 ---
 
@@ -250,14 +250,14 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - File: `mobile/app/(app)/_layout.tsx`
 - On mount + on `AppState change` to `'active'`: call `queryClient.invalidateQueries(['user-profile'])` to re-fetch profile.
 - **Loading guard (design-critical):** While `subscription_status` is `null` or `undefined` (initial fetch in progress), render a full-screen loading guard: `bg-zinc-950 flex-1 items-center justify-center` with `<ActivityIndicator size="large" color="#f59e0b" />`. Do NOT flash the paywall during this window. Only render `<PaywallScreen>` after the fetch resolves to `'expired'`. Loading guard → `<PaywallScreen>` transition: `opacity: 0 → 1` `withTiming(1, { duration: 200 })` on `useSharedValue(0)` on the `PaywallScreen` mount.
-- **When `subscription_status` changes from `'expired'` to `'active'`** (post-payment webhook): call `paywallStore.clear()`, then `queryClient.invalidateQueries(['leads'])` so the feed reloads with real data. The paywall screen should fade out (opacity `1 → 0`, `withTiming(0, { duration: 200 })`) before unmounting.
+- **When `subscription_status` changes from `'expired'` to `'active'`** (post-payment webhook): call `paywallStore.reset()`, then `queryClient.invalidateQueries(['leads'])` so the feed reloads with real data. The paywall screen should fade out (opacity `1 → 0`, `withTiming(0, { duration: 200 })`) before unmounting.
 **Gate execution order:** `(app)/_layout.tsx` is the SUBSCRIPTION gate. It executes AFTER the AuthGate in `_layout.tsx` (Spec 93) and BEFORE the onboarding gate in `(onboarding)/_layout.tsx` (Spec 94). The sequence is: Auth → Subscription → Onboarding. The subscription gate must handle `admin_managed` by granting full access and deferring to the onboarding gate to render the holding screen if `onboarding_complete = false`.
 
 **Loading guard animation note:** Set `pointerEvents="none"` on the `<PaywallScreen>` wrapper during the mount fade-in (`opacity: 0 → 1`, `withTiming(1, { duration: 200 })`) to prevent accidental taps on the primary CTA before the screen is fully visible.
 
 Six status values handled (all values from Spec 95 §2.3 enum):
   - `'trial'` → full access, no paywall
-  - `'active'` → full access, no paywall; `paywallStore.clear()` called if previously dismissed
+  - `'active'` → full access, no paywall; `paywallStore.reset()` called if previously dismissed
   - `'past_due'` → full access, no paywall (user is in Stripe dunning grace period)
   - `'expired'` → `<PaywallScreen>` (if `paywallStore.dismissed`, render feed with inline blur)
   - `'admin_managed'` → full access, no paywall, subscription section hidden in Settings; onboarding gate handles holding screen if `onboarding_complete = false`

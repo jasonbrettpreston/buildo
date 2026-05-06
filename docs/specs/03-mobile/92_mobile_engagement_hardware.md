@@ -158,7 +158,7 @@ If a push notification is delivered while the app is backgrounded, reflect the u
 Inside the Flight Board, newly updated cards receive a 2-second amber tint fade:
 * Reanimated `useSharedValue(0)` → `withSequence(withTiming(1, {duration: 0}), withDelay(500, withTiming(0, {duration: 1500, easing: Easing.out(Easing.ease)})))`
 * AnimatedView `backgroundColor: rgba(245, 158, 11, opacity * 0.12)`, positioned `absolute inset-0 rounded-xl`, `pointerEvents="none"`. `testID="flight-card-update-flash"` for Maestro assertions (Spec 98 §3.2).
-* **Trigger rule (canonical):** see Spec 77 §3.2. The `hasUpdate` prop is set when `item.updated_at !== mmkvSeen[permitId]` per the per-user `flightBoardSeenStore` MMKV map; first-sight rows (no MMKV entry) DO NOT flash. Detail-screen open writes the current `updated_at` back to MMKV. (The pre-2026-05-06 wording — "within the last 60 seconds on first board load after app foreground" — was implementation-naive and drifted from Spec 77 §3.2's persistent-tracking design; superseded.)
+* **Trigger rule (canonical — defers to Spec 77 §3.2):** the `hasUpdate` prop is set when `item.updated_at !== mmkvSeen[permitId]` per the per-user `flightBoardSeenStore` MMKV map (Spec 99 §3.4c — `flight-board-last-seen` blob, reset on sign-out via §B5). First-sight rows (no MMKV entry) DO NOT flash. Detail-screen open writes the current `updated_at` back to MMKV. _Note: prior to 2026-05-06 this rule was a stateless 60-second post-foreground window — that wording was implementation-naive and drifted from Spec 77 §3.2's persistent-tracking design; superseded by WF1-C (commit `0beaaf4`)._
 
 ## 5. Behavior-Driven Design (Maestro Contract)
 
