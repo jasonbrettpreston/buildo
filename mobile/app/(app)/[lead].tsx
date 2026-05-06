@@ -368,11 +368,18 @@ export default function LeadDetailScreen() {
                 {detail.address}
               </Text>
             </View>
+            {/* SaveButton testID follows the `save-button-{slot}` convention
+                so the component's internal `.replace('save-button-', ...)` at
+                SaveButton.tsx:75 produces the canonical filled/unfilled
+                testIDs (`save-heart-filled-detail` / `save-heart-detail`).
+                Multi-Agent Review BUG-1 (worktree): a non-conforming testID
+                like `lead-detail-save-button` no-ops the replace and breaks
+                Maestro state-discriminated assertions. */}
             <SaveButton
               leadId={detail.lead_id}
               isSaved={detail.is_saved}
               onToggle={handleSaveToggle}
-              testID="lead-detail-save-button"
+              testID="save-button-detail"
             />
           </View>
         </>
