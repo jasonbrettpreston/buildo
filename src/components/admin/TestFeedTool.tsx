@@ -1,7 +1,9 @@
 // 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.2
+//             docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.5 (Inspect → link, Cycle 4 P4)
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import type { TestFeedDebug } from '@/lib/admin/test-feed-utils';
 import { TRADES } from '@/lib/classification/trades';
 
@@ -258,29 +260,53 @@ export function TestFeedTool() {
                 Results
               </p>
               <div className="max-h-96 overflow-y-auto space-y-1.5">
-                {result.data.map((item, i) => (
-                  <div
-                    key={`${String(item.permit_num ?? 'item')}-${i}`}
-                    className="bg-gray-50 rounded-lg border border-gray-200 p-3 text-sm"
-                  >
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      <span className="text-gray-500">
-                        Type: <strong>{String(item.lead_type)}</strong>
-                      </span>
-                      {'permit_num' in item && (
+                {result.data.map((item, i) => {
+                  // Spec 76 §3.5 cross-link — permits get an "Inspect →"
+                  // link to the LeadDetail Inspector with the lead_id
+                  // pre-filled. CoA leads use a different id shape; we
+                  // skip the link for them since Spec 91 §4.3.1 hasn't
+                  // documented the CoA path here yet.
+                  const permitNum =
+                    'permit_num' in item ? String(item.permit_num) : null;
+                  const revisionNum =
+                    'revision_num' in item ? String(item.revision_num) : null;
+                  const inspectorId =
+                    permitNum && revisionNum
+                      ? `${permitNum}--${revisionNum}`
+                      : null;
+                  return (
+                    <div
+                      key={`${permitNum ?? 'item'}-${i}`}
+                      className="bg-gray-50 rounded-lg border border-gray-200 p-3 text-sm"
+                    >
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                         <span className="text-gray-500">
-                          Permit: <strong>{String(item.permit_num)}</strong>
+                          Type: <strong>{String(item.lead_type)}</strong>
                         </span>
-                      )}
-                      {'relevance_score' in item && (
-                        <span className="text-gray-500">
-                          Score:{' '}
-                          <strong>{String(item.relevance_score)}</strong>
-                        </span>
-                      )}
+                        {permitNum && (
+                          <span className="text-gray-500">
+                            Permit: <strong>{permitNum}</strong>
+                          </span>
+                        )}
+                        {'relevance_score' in item && (
+                          <span className="text-gray-500">
+                            Score:{' '}
+                            <strong>{String(item.relevance_score)}</strong>
+                          </span>
+                        )}
+                        {inspectorId && (
+                          <Link
+                            href={`/admin/lead-feed/inspector?id=${encodeURIComponent(inspectorId)}&tab=lead`}
+                            data-testid={`test-feed-inspect-${permitNum}`}
+                            className="ml-auto text-xs text-blue-600 hover:underline"
+                          >
+                            Inspect →
+                          </Link>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : (
