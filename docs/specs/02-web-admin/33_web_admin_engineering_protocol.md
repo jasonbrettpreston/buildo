@@ -1,4 +1,4 @@
-# Spec 90 — Web Admin Engineering Protocol & Architecture
+# Spec 33 — Web Admin Engineering Protocol & Architecture
 
 ## 1. Goal & User Story
 
@@ -6,7 +6,9 @@
 
 **User Story:** as an engineering or operations contributor opening this codebase for the first time, I need a single document I can read in 30 minutes that tells me what tech stack the admin uses, what NOT to do, where state lives, what the testing bar is, and which observability surfaces I'm expected to wire — so I can ship admin features that don't drift from the rest of the system.
 
-**Authority precedence:** Spec 90 is the engineering-protocol authority for `src/app/admin/**`, `src/app/api/admin/**`, and `src/components/admin/**`. Where this spec contradicts the older Spec 26 (Admin Dashboard) or Spec 21 (User Management), Spec 90 wins; the feature spec must be amended to align.
+**Authority precedence:** Spec 33 is the engineering-protocol authority for `src/app/admin/**`, `src/app/api/admin/**`, and `src/components/admin/**`. Where this spec contradicts the older Spec 26 (Admin Dashboard) or Spec 21 (User Management), Spec 33 wins; the feature spec must be amended to align.
+
+**Numbering note (2026-05-06):** the web-admin engineering / testing / state-architecture trio uses Specs 33 / 34 / 35 in `docs/specs/02-web-admin/` rather than 90 / 98 / 99. The 90/98/99 slots are already occupied by the parallel mobile specs in `docs/specs/03-mobile/`. Reusing the same numbers across folders would cause "Spec 90" to be ambiguous in cross-references; 33/34/35 disambiguate while sitting in the natural numerical sequence after Spec 30 (App Health Dashboard).
 
 ## 2. Platform & Browser Matrix
 
@@ -16,7 +18,7 @@ The admin runs in modern browsers — desktop-first, responsive. Targets:
 2. **Tablet (iPad / Android):** UI must remain usable on 768px+ viewports. Use Tailwind `md:` breakpoints to adapt dense tables to scrollable cards. Touch targets ≥44px.
 3. **Mobile (rare):** admin is NOT mobile-first. A phone-sized viewport (`< 768px`) renders a degraded but functional view — read-only where multi-column tables would cause horizontal scrolling. Most admin features assume a keyboard.
 
-**Theme constraint:** the admin supports a single theme (light) at present. Adding dark mode requires a Spec 90 amendment to enumerate the token mapping; do NOT add `dark:` Tailwind variants ad-hoc.
+**Theme constraint:** the admin supports a single theme (light) at present. Adding dark mode requires a Spec 33 amendment to enumerate the token mapping; do NOT add `dark:` Tailwind variants ad-hoc.
 
 ## 3. The Prime Directive: Server-Component-First
 
@@ -41,11 +43,11 @@ The admin's tech stack is the Next.js half of this monorepo. Strict constraints:
 - **Styling:** Tailwind CSS only. No CSS modules, no styled-components, no inline `<style>` blocks. Design tokens live in `tailwind.config.ts`.
 - **Icons:** `lucide-react` (mobile uses `lucide-react-native` per Spec 90 mobile §5). DO NOT mix the two libraries.
 - **Server state (client-side reads):** `@tanstack/react-query` v5. Mirrors mobile Spec 90 §4 mandate. Every server fetch from a client component goes through TanStack Query — never raw `fetch()` in render.
-- **Client state (admin draft / UI ephemeral):** `zustand` v5. Admin draft state (e.g., Spec 86 Control Panel unsaved edits) lives in dedicated stores per Spec 99 web-admin §3 Field Ownership Matrix.
+- **Client state (admin draft / UI ephemeral):** `zustand` v5. Admin draft state (e.g., Spec 86 Control Panel unsaved edits) lives in dedicated stores per Spec 35 §3 Field Ownership Matrix.
 - **Schema validation:** **Zod** at every boundary — request body, response payload, env vars, external API responses. See §13 Bug Prevention.
 - **Database access (server only):** `pg` `Pool` singleton at `src/lib/db/client.ts`. Parameterized queries via numbered placeholders (`$1`, `$2`); template-literal string concatenation is BANNED (SQL injection class).
 - **Auth (server-side):** Firebase Admin SDK on the server validates the `__session` cookie or `X-Admin-Key` header per Spec 21 §2 + Spec 76 §2.6. Admin gate at the route handler boundary, never inside a server component.
-- **Testing:** Vitest (logic + infra), Playwright (E2E), React Testing Library (component). See Spec 98 for the testing protocol authority.
+- **Testing:** Vitest (logic + infra), Playwright (E2E), React Testing Library (component). See Spec 34 for the testing protocol authority.
 - **Observability:** Sentry (errors), PostHog (admin-side product analytics — minimal compared to mobile). Spec 30 App Health Dashboard cross-references both.
 
 ## 5. Strict Anti-Patterns (NEVER DO THESE)
@@ -54,14 +56,14 @@ If you do any of the following, you have failed:
 
 - **NO `fetch()` from server components to our own API routes.** Server components access the DB directly via `pool.query` (or via shared lib functions). Round-tripping through `/api/*` from a server component wastes a network hop.
 - **NO admin auth bypass.** Every `src/app/api/admin/**` route handler MUST call `verifyAdminAuth(request)` (or equivalent) before reading params or touching the database. The middleware-only pattern is insufficient — middleware can be bypassed by misconfigured Next.js rewrites; the per-route guard is defense-in-depth.
-- **NO PII in logs.** `console.log(user)` where `user` includes email/phone/displayName is BANNED. Use structured logging via `src/lib/logger.ts` which strips PII fields before serialization. Sentry breadcrumb data MUST be sanitized — Spec 99 web-admin §7 codifies the allowlist.
+- **NO PII in logs.** `console.log(user)` where `user` includes email/phone/displayName is BANNED. Use structured logging via `src/lib/logger.ts` which strips PII fields before serialization. Sentry breadcrumb data MUST be sanitized — Spec 35 §7 codifies the allowlist.
 - **NO unparameterized SQL.** Template-literal interpolation into a query string (`pool.query(\`SELECT * FROM users WHERE id = ${id}\`)`) is BANNED. Use `$1`/`$2` placeholders with the args array.
 - **NO client-side fetch without TanStack Query.** Direct `fetch()` from a `"use client"` component bypasses caching, deduplication, retry, and error mapping. Wrap every server read in a hook (`useAdminMarketMetrics`, `useAppHealth`, etc.).
 - **NO `useEffect` for data fetching.** Mirror of mobile Spec 90 §5. TanStack Query handles the lifecycle.
-- **NO storing sensitive data in `localStorage`.** Admin session tokens, API keys, user PII, payment data — all BANNED in client storage. `localStorage` is restricted to non-sensitive UI preferences (theme, table column visibility) per Spec 99 web-admin §3.
-- **NO direct mutation of TanStack Query cache without invalidation.** Use `queryClient.setQueryData` for optimistic updates ONLY when paired with a corresponding `invalidateQueries` on settle (Spec 99 web-admin §B3 mirrors the mobile bridge pattern).
+- **NO storing sensitive data in `localStorage`.** Admin session tokens, API keys, user PII, payment data — all BANNED in client storage. `localStorage` is restricted to non-sensitive UI preferences (theme, table column visibility) per Spec 35 §3.
+- **NO direct mutation of TanStack Query cache without invalidation.** Use `queryClient.setQueryData` for optimistic updates ONLY when paired with a corresponding `invalidateQueries` on settle (Spec 35 §B3 mirrors the mobile bridge pattern).
 - **NO admin actions without observability.** Every state-mutating admin action (config save, user edit, lead view, pipeline trigger) MUST emit an `admin_action` Sentry breadcrumb + a `track('admin_action', {action, target})` event. Closes the audit's "admin telemetry — when admin tweaks logic_variables, what fires?" gap.
-- **NO mobile imports.** The web admin MUST NOT import from `mobile/src/**`. The `mobile/` directory is a separate Expo project with React Native runtime — its imports break Next.js builds. Schemas that BOTH consume (e.g., `LeadDetailSchema`, `FlightBoardItemSchema`) are duplicated via the `_contracts.json` boundary OR a shared package; final mechanism is a Spec 99 web-admin amendment when the Detail Inspectors (Spec 76 §3.5–§3.6) implementation lands.
+- **NO mobile imports.** The web admin MUST NOT import from `mobile/src/**`. The `mobile/` directory is a separate Expo project with React Native runtime — its imports break Next.js builds. Schemas that BOTH consume (e.g., `LeadDetailSchema`, `FlightBoardItemSchema`) are duplicated via the `_contracts.json` boundary OR a shared package; final mechanism is a Spec 35 amendment when the Detail Inspectors (Spec 76 §3.5–§3.6) implementation lands.
 
 ## 6. The Component Philosophy: shadcn/ui
 
@@ -72,13 +74,13 @@ For admin-specific compositions (charts, dense tables, dashboards), build featur
 **Decision tree:**
 1. Need a primitive (button, dialog, table, slider)? → shadcn/ui.
 2. Need a domain composition (PermitCard, FlightCenterTool, AppHealthTile)? → build in `src/components/admin/` from primitives.
-3. Need something neither covers (e.g., a complex map widget)? → propose a Spec 90 amendment naming the new dependency before adding it.
+3. Need something neither covers (e.g., a complex map widget)? → propose a Spec 33 amendment naming the new dependency before adding it.
 
 ## 7. State & Data Flow Protocol
 
 - **API contract authority:** route handler types in `src/app/api/admin/**/types.ts` are the source of truth for request/response shapes. Frontend client code derives types from these via Zod schemas (NOT from manual interface duplication). Mobile-side equivalent: Spec 90 mobile §7 monorepo pattern — web admin doesn't need monorepo-level sharing because both ends compile in the same TypeScript project.
 - **Zod boundary (mandatory):** see §13.
-- **Admin draft state pattern (Spec 86 precedent):** when an admin starts editing a server-authoritative dataset (e.g., `logic_variables`), the unsaved changes live in a Zustand store. The store has explicit `commitDraft(serverData)` and `discardDraft()` actions — no implicit cross-contamination between server-fetched state and draft state. Spec 99 web-admin §3 Field Ownership Matrix enumerates each admin store's owned fields.
+- **Admin draft state pattern (Spec 86 precedent):** when an admin starts editing a server-authoritative dataset (e.g., `logic_variables`), the unsaved changes live in a Zustand store. The store has explicit `commitDraft(serverData)` and `discardDraft()` actions — no implicit cross-contamination between server-fetched state and draft state. Spec 35 §3 Field Ownership Matrix enumerates each admin store's owned fields.
 - **No global state singletons.** Each Zustand store is feature-scoped (`useControlPanelStore`, `useFlightCenterStore`). A "kitchen sink" admin store is BANNED — it makes ownership opaque and causes `useStore` re-renders to cascade.
 - **Server state lifecycle:** TanStack Query default `staleTime` for admin reads is 60s (admin data changes slowly); `gcTime` is 5 min. Live-polling pages (Spec 30 App Health Dashboard, Spec 76 Lead Feed Health) override `staleTime` to match their poll cadence.
 
@@ -105,7 +107,7 @@ For admin-specific compositions (charts, dense tables, dashboards), build featur
 
 ## 10. Testing Mandate
 
-Authority: **Spec 98 web-admin testing protocol** (sibling spec). Summary here:
+Authority: **Spec 34 web-admin testing protocol** (sibling spec). Summary here:
 
 - **E2E (Playwright):** smoke flow per major admin route. Login fixture authenticates as a test admin. CI runs against postgres testcontainer per `src/tests/db/setup-testcontainer.ts` pattern.
 - **Unit / Integration (Vitest):** existing `src/tests/*.{logic,infra}.test.ts` pattern. Logic tests for pure functions; infra tests for route handlers with mocked `pool.query` + `getCurrentUserContext` (precedent: `src/tests/leads-detail.infra.test.ts`).
@@ -116,8 +118,8 @@ Authority: **Spec 98 web-admin testing protocol** (sibling spec). Summary here:
 
 - **Crash reporting:** `@sentry/nextjs`. Server + client SDKs. Source maps uploaded automatically per `sentry.config.ts`.
 - **Sentry user context:** the admin layout sets `Sentry.setUser({ id: adminUid })` on session establish; clears on logout. Mirrors mobile Spec 99 §7.5 — admin crashes MUST be attributable to the admin who hit them.
-- **Sentry breadcrumb on every admin action:** Spec 90 web-admin §5 anti-patterns + this section codify: every state-mutating admin action emits `Sentry.addBreadcrumb({ category: 'admin_action', message: <action>, data: <target> })`. Read-only admin actions (page view, list render) do NOT emit — too noisy.
-- **PostHog admin events:** minimal vs mobile. Required: `admin_session_started`, `admin_action_performed: { action, target }`, `admin_config_committed: { keys_changed }`. Spec 99 web-admin §7 enumerates the full set.
+- **Sentry breadcrumb on every admin action:** Spec 33 §5 anti-patterns + this section codify: every state-mutating admin action emits `Sentry.addBreadcrumb({ category: 'admin_action', message: <action>, data: <target> })`. Read-only admin actions (page view, list render) do NOT emit — too noisy.
+- **PostHog admin events:** minimal vs mobile. Required: `admin_session_started`, `admin_action_performed: { action, target }`, `admin_config_committed: { keys_changed }`. Spec 35 §7 enumerates the full set.
 - **App Health Dashboard:** Spec 30 (`docs/specs/02-web-admin/30_app_health_dashboard.md`) is the consumer surface — it aggregates Sentry + PostHog data into a triage page. This protocol mandates the EMISSION; Spec 30 mandates the CONSUMPTION.
 - **Server-side request logging:** every admin route handler emits a structured log (level + tag + request_id + duration_ms) via `src/lib/logger.ts`. PII-stripped (per §5 anti-patterns). Logs flow to Vercel + Sentry.
 
@@ -154,7 +156,7 @@ Authority: **Spec 98 web-admin testing protocol** (sibling spec). Summary here:
 
 **Cross-spec dependencies:**
 - **Authoritative for:** all `src/app/admin/**`, `src/app/api/admin/**`, `src/components/admin/**`.
-- **Relies on:** Spec 98 web-admin (testing protocol), Spec 99 web-admin (state architecture). Spec 47 pipeline script protocol (for shared SQL discipline). Spec 30 App Health Dashboard (consumer of the observability mandates here).
+- **Relies on:** Spec 34 (web-admin testing protocol), Spec 35 (web-admin state architecture). Spec 47 pipeline script protocol (for shared SQL discipline). Spec 30 App Health Dashboard (consumer of the observability mandates here).
 - **Consumed by:** Spec 21, 26, 30, 76, 86 (every web-admin feature spec must follow this protocol).
 
 **Amendment process:** changes to this spec require a doc-only WF2 commit cross-referencing the impact on consumer specs (21/26/30/76/86) so they can be updated in lockstep. Three documented incidents (paywallStore.clear/reset rename, FlashList v1/v2 transition, Spec 92 §4.4 60s window — all caught by the 2026-05-06 mobile-spec audit) traced to the protocol-vs-feature drift this amendment process prevents.
