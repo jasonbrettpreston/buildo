@@ -433,6 +433,63 @@ const MANDATES: Mandate[] = [
       return null;
     },
   },
+  {
+    section: '§7.7',
+    name: 'Auth funnel ratio invariants',
+    check: () => {
+      // §7.7 mandate: every auth method (apple/google/email/phone) MUST
+      // emit auth_method_attempted + at least one of {succeeded, failed}
+      // in sign-in.tsx. Phone is 2-step (SMS+OTP) — succeeded fires from
+      // handleVerifyOtp, failed can fire from either step.
+      const path1 = path.join(MOBILE_ROOT, 'app/(auth)/sign-in.tsx');
+      const src = stripComments(readOrEmpty(path1));
+      if (!src) return 'mobile/app/(auth)/sign-in.tsx missing';
+
+      const checks: Array<[string, RegExp]> = [
+        // Apple
+        ['apple attempted', /track\(\s*['"]auth_method_attempted['"]\s*,\s*\{\s*method:\s*['"]apple['"]/],
+        ['apple succeeded', /track\(\s*['"]auth_method_succeeded['"]\s*,\s*\{\s*method:\s*['"]apple['"]/],
+        ['apple failed', /track\(\s*['"]auth_method_failed['"]\s*,\s*\{\s*method:\s*['"]apple['"]/],
+        // Google
+        ['google attempted', /track\(\s*['"]auth_method_attempted['"]\s*,\s*\{\s*method:\s*['"]google['"]/],
+        ['google succeeded', /track\(\s*['"]auth_method_succeeded['"]\s*,\s*\{\s*method:\s*['"]google['"]/],
+        ['google failed', /track\(\s*['"]auth_method_failed['"]\s*,\s*\{\s*method:\s*['"]google['"]/],
+        // Email
+        ['email attempted', /track\(\s*['"]auth_method_attempted['"]\s*,\s*\{\s*method:\s*['"]email['"]/],
+        ['email succeeded', /track\(\s*['"]auth_method_succeeded['"]\s*,\s*\{\s*method:\s*['"]email['"]/],
+        ['email failed', /track\(\s*['"]auth_method_failed['"]\s*,\s*\{\s*method:\s*['"]email['"]/],
+        // Phone — succeeded only at OTP step; failed at either step.
+        ['phone attempted', /track\(\s*['"]auth_method_attempted['"]\s*,\s*\{\s*method:\s*['"]phone['"]/],
+        ['phone succeeded', /track\(\s*['"]auth_method_succeeded['"]\s*,\s*\{\s*method:\s*['"]phone['"]/],
+        ['phone failed', /track\(\s*['"]auth_method_failed['"]\s*,\s*\{\s*method:\s*['"]phone['"]/],
+      ];
+      for (const [label, pattern] of checks) {
+        if (!pattern.test(src)) {
+          return `sign-in.tsx missing track() for ${label} — Spec 99 §7.7 requires every auth method to emit attempted + at least one outcome`;
+        }
+      }
+      return null;
+    },
+  },
+  {
+    section: '§8.8',
+    name: 'Auth ratio invariant test exists',
+    check: () => {
+      // §8.8 enforcement layer for §7.7: the §7.7 row above IS the §8.8
+      // enforcement (this file). Verify self-presence so a regression that
+      // deletes the §7.7 row doesn't silently bypass enforcement.
+      const selfPath = path.join(
+        MOBILE_ROOT,
+        '__tests__/spec99.mandates.lint.test.ts',
+      );
+      const src = readOrEmpty(selfPath);
+      if (!src) return 'spec99.mandates.lint.test.ts missing (self-check)';
+      if (!/section:\s*['"]§7\.7['"]/.test(src)) {
+        return '§7.7 mandate row missing from MANDATES array';
+      }
+      return null;
+    },
+  },
 ];
 
 describe('Spec 99 mandates — implementation evidence (audit Pattern A class fix)', () => {
@@ -469,10 +526,9 @@ describe('Spec 99 mandates — implementation evidence (audit Pattern A class fi
   // expected count is the explicit signal that the spec's mandate
   // inventory has changed and was reviewed.
   it('MANDATES array length matches the spec mandate inventory', () => {
-    // §7.1, §7.2, §7.3, §7.4, §7.5, §7.6 + §8.1, §8.2, §8.3, §8.4, §8.5,
-    // §8.6, §8.7 = 13. Update this count when adding a new §7.x or §8.x
-    // subsection to Spec 99. (§7.7 + §8.8 land in Phase 4 of the WF3
-    // telemetry batch — not yet present.)
-    expect(MANDATES).toHaveLength(13);
+    // §7.1, §7.2, §7.3, §7.4, §7.5, §7.6, §7.7 + §8.1, §8.2, §8.3, §8.4,
+    // §8.5, §8.6, §8.7, §8.8 = 15. Update this count when adding a new
+    // §7.x or §8.x subsection to Spec 99.
+    expect(MANDATES).toHaveLength(15);
   });
 });

@@ -614,6 +614,31 @@ A fixed enumeration of product flow events MUST fire at canonical sites so the f
 
 **Enforcement (§8.7 — see §8 Test Mandates):** the `mobile/__tests__/spec99.mandates.lint.test.ts` test greps each canonical site for the matching `track()` call. A regression that removes a funnel event from its canonical site fails CI.
 
+### 7.7 Auth funnel ratio invariants
+
+For the `auth_method_attempted` / `auth_method_succeeded` / `auth_method_failed` ratio to be measurable in PostHog, every auth method MUST emit at least one outcome event (`succeeded` XOR `failed`) per attempt. Drift here corrupts the ratio silently — a regression that drops `auth_method_failed` on a specific error path makes the conversion rate look better than it is.
+
+**Per-method contract (verified at `mobile/app/(auth)/sign-in.tsx`):**
+
+| Method | Attempted site | Succeeded site | Failed site(s) |
+|---|---|---|---|
+| Apple | `handleAppleSignIn` (line ~258) | `handleAppleSignIn` success branch (line ~281) | `handleAppleSignIn` catch (line ~287; skip on `ERR_REQUEST_CANCELED`) |
+| Google | `handleGoogleSignIn` (line ~296) | googleResponse useEffect success branch (line ~236) | googleResponse useEffect (3 sites: oauth_response_error line ~217, no_id_token line ~226, signInWithCredential catch line ~241) |
+| Email | `handleEmailSignIn` (line ~312) | `handleEmailSignIn` success branch (line ~319) | `handleEmailSignIn` catch (line ~322) |
+| Phone (SMS) | `handleSendCode` (line ~335) | (no synchronous succeeded — SMS-request success transitions to OTP entry) | `handleSendCode` catch (line ~348) |
+| Phone (OTP) | (implicit: continuation of phone-attempted from SMS step) | `handleVerifyOtp` success branch (line ~372) | `handleVerifyOtp` catch (line ~377) |
+
+**Phone exception explained:** the phone flow is 2-step (SMS request + OTP verify). `auth_method_attempted: phone` fires at the SMS step. The outcome can fire at:
+1. SMS request error (`handleSendCode` catch) → `auth_method_failed`.
+2. OTP verify success (`handleVerifyOtp` success) → `auth_method_succeeded`.
+3. OTP verify failure (`handleVerifyOtp` catch) → `auth_method_failed`.
+
+If the user abandons between SMS-success and OTP-entry, the attempted has no outcome — UX dropout, not a code bug. PostHog dashboards should account for this with a "phone-attempted with no outcome" funnel step.
+
+**Apple `ERR_REQUEST_CANCELED` exception:** Apple sign-in's user-cancellation is handled BEFORE the `auth_method_failed` track call (sign-in.tsx around line 285). User-cancelled attempts deliberately produce no outcome event because cancellation is not a "failure" — the user actively chose not to authenticate. PostHog dashboards should treat Apple-cancelled the same as phone-abandoned.
+
+**Enforcement (§8.8 — see §8 Test Mandates):** the `mobile/__tests__/spec99.mandates.lint.test.ts` test greps `sign-in.tsx` for each method's `auth_method_attempted/succeeded/failed` triple. A regression that removes any outcome event from sign-in.tsx fails CI.
+
 ---
 
 ## 8. Test Mandates
