@@ -150,8 +150,9 @@ export function FlightCard({ item, index, onPress, onRemove, hasUpdate }: Props)
           accessibilityHint="Swipe left to reveal remove action"
           className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mx-4 mb-3 active:bg-zinc-800/70"
         >
-          {/* Amber update flash overlay */}
+          {/* Amber update flash overlay (Spec 77 §3.2 + Spec 92 §4.4). */}
           <Animated.View
+            testID="flight-card-update-flash"
             pointerEvents="none"
             style={[
               {

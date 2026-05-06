@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useFlightBoard } from '@/hooks/useFlightBoard';
 import { useFlightJobDetail } from '@/hooks/useFlightJobDetail';
+import { useFlightBoardSeenStore } from '@/store/flightBoardSeenStore';
 import type { FlightBoardItem, FlightBoardDetail } from '@/lib/schemas';
 import { ChevronLeft } from 'lucide-react-native';
 
@@ -146,6 +147,15 @@ export default function FlightJobDetailScreen() {
     cachedItem ?? detailQuery.data;
 
   const isLoading = boardLoading || (!cachedItem && detailQuery.isLoading);
+
+  // Spec 77 §3.2 — when the user opens the detail screen, write the current
+  // updated_at back to the MMKV last-seen map so the amber update flash on
+  // the parent flight-board quietens until the next backend change.
+  useEffect(() => {
+    if (!item || !item.updated_at) return;
+    const permitId = `${item.permit_num}--${item.revision_num}`;
+    useFlightBoardSeenStore.getState().markSeen(permitId, item.updated_at);
+  }, [item?.permit_num, item?.revision_num, item?.updated_at]);
 
   const isUrgent =
     item?.predicted_start !== null &&

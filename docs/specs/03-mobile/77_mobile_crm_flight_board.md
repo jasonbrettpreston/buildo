@@ -78,7 +78,7 @@ The flash draws the eye to what changed without obscuring card content.
 
 **Backend signal:** the `GET /api/leads/flight-board` list response includes `updated_at: string` (ISO 8601) per item, sourced from `permits.updated_at` (added in migration 115). `permits.updated_at` is auto-maintained by the `set_updated_at` BEFORE-UPDATE trigger from migration 100, so any change in the ingestion pipeline propagates without code changes.
 
-**Client tracking:** the mobile client maintains `{ [permitId]: lastSeenUpdatedAt }` in MMKV (key `flight-board-last-seen`). On every list render, the parent passes `hasUpdate={item.updated_at !== mmkvSeen[permitId]}` to `FlightCard`; first-sight rows (no MMKV entry) do NOT flash. After the user opens the detail screen for a permit, the parent writes the current `updated_at` back to MMKV so subsequent renders are quiet until the next backend change.
+**Client tracking:** the mobile client maintains `{ [permitId]: lastSeenUpdatedAt }` in MMKV (key `flight-board-last-seen`) via `mobile/src/store/flightBoardSeenStore.ts` (Zustand + persist middleware; per Spec 99 §3.4b, reset on sign-out via §B5). On every list render, the parent passes `hasUpdate={item.updated_at !== mmkvSeen[permitId]}` to `FlightCard`; first-sight rows (no MMKV entry) do NOT flash. After the user opens the detail screen for a permit, the parent writes the current `updated_at` back to MMKV so subsequent renders are quiet until the next backend change. Cross-reference: Spec 92 §4.4 (animation contract — defers here for the trigger rule). Spec 98 §3.2 testID: `flight-card-update-flash` on the AnimatedView overlay.
 
 ### 3.3 The Detailed Investigation View
 

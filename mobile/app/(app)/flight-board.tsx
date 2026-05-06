@@ -28,6 +28,7 @@ import { InlineBlurBanner } from '@/components/paywall/InlineBlurBanner';
 import { BlurredFeedPlaceholder } from '@/components/paywall/BlurredFeedPlaceholder';
 import { usePaywallStore } from '@/store/paywallStore';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useFlightBoardSeenStore } from '@/store/flightBoardSeenStore';
 import { Search } from 'lucide-react-native';
 import type { FlightBoardItem, FlightBoardResult } from '@/lib/schemas';
 
@@ -226,21 +227,34 @@ export default function FlightBoardScreen() {
   // unrelated parent re-renders (haptic ticks, badge state, etc.).
   const listItems = useMemo(() => buildListItems(boardData), [boardData]);
 
+  // Spec 77 §3.2 amber update flash. Subscribes to the entire seenMap because
+  // any card's seen-state change must recompute hasUpdate for the visible
+  // cells. FlashList memoizes per-cell render so unchanged cards short-circuit.
+  const seenMap = useFlightBoardSeenStore((s) => s.seenMap);
+
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) => {
       if (item.type === 'header') {
         return <TemporalSectionHeader group={item.group} count={item.count} />;
       }
+      const permitId = `${item.item.permit_num}--${item.item.revision_num}`;
+      const lastSeenAt = seenMap[permitId];
+      // Spec 77 §3.2 — `hasUpdate = item.updated_at !== mmkvSeen[permitId]`.
+      // First-sight rows (no MMKV entry) DO NOT flash; achieved via the
+      // `lastSeenAt !== undefined` gate.
+      const hasUpdate =
+        lastSeenAt !== undefined && item.item.updated_at !== lastSeenAt;
       return (
         <FlightCard
           item={item.item}
           index={item.index}
           onPress={handleCardPress}
           onRemove={handleRemove}
+          hasUpdate={hasUpdate}
         />
       );
     },
-    [handleCardPress, handleRemove],
+    [handleCardPress, handleRemove, seenMap],
   );
 
   const getItemType = useCallback((item: ListItem) => item.type, []);
