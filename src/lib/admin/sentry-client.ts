@@ -16,6 +16,7 @@
 // to `{status: 'unavailable', reason}` rather than throwing.
 
 import * as Sentry from '@sentry/nextjs';
+import { z } from 'zod';
 import { logError } from '@/lib/logger';
 import type {
   CrashRate24hPayload,
@@ -23,18 +24,29 @@ import type {
   TileResult,
 } from '@/lib/admin/healthSchema';
 
+// Spec 33 §13: external-API responses MUST be Zod-parsed before
+// consuming. A schema break upstream (Sentry renames `groups` → `rows`)
+// then surfaces as a `parse_error` tile rather than an invisible 0-fill.
+const SentryStatsResponseSchema = z.object({
+  intervals: z.array(z.string()).optional(),
+  groups: z
+    .array(
+      z.object({
+        by: z.record(z.string(), z.string()),
+        totals: z.record(z.string(), z.number()).optional(),
+      }),
+    )
+    .optional(),
+});
+
 const apiToken = process.env.SENTRY_API_TOKEN;
 const orgSlug = process.env.SENTRY_ORG_SLUG ?? 'buildo';
 const mobileProjectSlug = process.env.SENTRY_MOBILE_PROJECT_SLUG ?? 'buildo-mobile';
 const sentryHost = process.env.SENTRY_HOST ?? 'https://sentry.io';
 
-interface SentryRestError {
-  reason: string;
-}
-
 /**
  * Make an authenticated Sentry REST call. Returns parsed JSON on 2xx;
- * returns a `SentryRestError` discriminated union on any failure.
+ * returns a `{ok: false, reason}` discriminated union on any failure.
  *
  * Failure shapes:
  *   - 'env_missing'      — SENTRY_API_TOKEN unset (local dev common case)
@@ -43,9 +55,10 @@ interface SentryRestError {
  *   - 'parse_error'      — response body wasn't JSON
  *   - 'network_error'    — fetch threw (timeout, DNS, etc.)
  */
-async function sentryGet<T>(
+async function sentryGet<T extends z.ZodTypeAny>(
   path: string,
-): Promise<{ ok: true; data: T } | { ok: false; reason: string }> {
+  schema: T,
+): Promise<{ ok: true; data: z.infer<T> } | { ok: false; reason: string }> {
   if (!apiToken) return { ok: false, reason: 'env_missing' };
   const url = `${sentryHost}/api/0${path}`;
   const start = Date.now();
@@ -66,12 +79,21 @@ async function sentryGet<T>(
     if (response.status >= 500)
       return { ok: false, reason: 'upstream_unavailable' };
     if (!response.ok) return { ok: false, reason: `http_${response.status}` };
+    let json: unknown;
     try {
-      const data = (await response.json()) as T;
-      return { ok: true, data };
+      json = await response.json();
     } catch {
       return { ok: false, reason: 'parse_error' };
     }
+    const parsed = schema.safeParse(json);
+    if (!parsed.success) {
+      logError('[admin/sentry-client]', new Error('Sentry response schema mismatch'), {
+        path,
+        issues: parsed.error.flatten(),
+      });
+      return { ok: false, reason: 'parse_error' };
+    }
+    return { ok: true, data: parsed.data };
   } catch (err) {
     logError('[admin/sentry-client]', err, { path, stage: 'fetch' });
     return { ok: false, reason: 'network_error' };
@@ -82,13 +104,7 @@ async function sentryGet<T>(
 // Tile-data methods
 // ---------------------------------------------------------------------------
 
-interface SentryStatsResponse {
-  intervals?: string[];
-  groups?: Array<{
-    by: Record<string, string>;
-    totals?: Record<string, number>;
-  }>;
-}
+type SentryStatsResponse = z.infer<typeof SentryStatsResponseSchema>;
 
 /**
  * Crash rate per user over the last 24h. Uses Sentry's events-stats
@@ -99,22 +115,33 @@ interface SentryStatsResponse {
  * Sentry issues view filtered to fatal-level events.
  */
 export async function getCrashRate24h(): Promise<TileResult<CrashRate24hPayload>> {
-  // Two parallel queries: fatal event count + DAU. Either failing
-  // → `unavailable` at the tile level (we don't try to render a
-  // partial denominator).
-  const [crashRes, dauRes] = await Promise.all([
-    sentryGet<SentryStatsResponse>(
+  // Three parallel queries:
+  //   - fatal event count (numerator for rate_per_user)
+  //   - DAU = count_unique(user) over ALL events (denominator)
+  //   - count_unique(user) filtered to level:fatal (= affected_users,
+  //     distinct users who experienced ≥1 crash, NOT total crash events).
+  // Any of the three failing → `unavailable` at tile level.
+  const [crashRes, dauRes, affectedRes] = await Promise.all([
+    sentryGet(
       `/projects/${orgSlug}/${mobileProjectSlug}/stats_v2/?statsPeriod=24h&field=count()&query=level:fatal`,
+      SentryStatsResponseSchema,
     ),
-    sentryGet<SentryStatsResponse>(
+    sentryGet(
       `/projects/${orgSlug}/${mobileProjectSlug}/stats_v2/?statsPeriod=24h&field=count_unique(user)`,
+      SentryStatsResponseSchema,
+    ),
+    sentryGet(
+      `/projects/${orgSlug}/${mobileProjectSlug}/stats_v2/?statsPeriod=24h&field=count_unique(user)&query=level:fatal`,
+      SentryStatsResponseSchema,
     ),
   ]);
   if (!crashRes.ok) return { status: 'unavailable', reason: crashRes.reason };
   if (!dauRes.ok) return { status: 'unavailable', reason: dauRes.reason };
+  if (!affectedRes.ok) return { status: 'unavailable', reason: affectedRes.reason };
 
   const crashCount = sumTotals(crashRes.data, 'count()');
   const dau = sumTotals(dauRes.data, 'count_unique(user)');
+  const affectedUsers = sumTotals(affectedRes.data, 'count_unique(user)');
   // Rate calc: zero DAU = zero rate (avoid div/0; semantically "no users
   // in window means no measurable crash rate").
   const ratePerUser = dau === 0 ? 0 : Math.min(1, crashCount / dau);
@@ -123,7 +150,7 @@ export async function getCrashRate24h(): Promise<TileResult<CrashRate24hPayload>
     status: 'ok',
     payload: {
       rate_per_user: ratePerUser,
-      affected_users: crashCount,
+      affected_users: affectedUsers,
       sentry_link: `${sentryHost}/organizations/${orgSlug}/issues/?project=${mobileProjectSlug}&query=is%3Aunresolved+level%3Afatal&statsPeriod=24h`,
     },
   };
@@ -141,8 +168,9 @@ export async function getBreadcrumbCount24h(
   // category in the breadcrumbs json (Sentry indexes breadcrumb data
   // automatically). For a precise count an org would need a custom
   // search, but the linked dashboard lets the operator drill in.
-  const res = await sentryGet<SentryStatsResponse>(
+  const res = await sentryGet(
     `/projects/${orgSlug}/${mobileProjectSlug}/stats_v2/?statsPeriod=24h&field=count()&query=breadcrumb.category:${encodeURIComponent(category)}`,
+    SentryStatsResponseSchema,
   );
   if (!res.ok) return { status: 'unavailable', reason: res.reason };
   return {

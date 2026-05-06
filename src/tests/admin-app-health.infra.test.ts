@@ -350,4 +350,93 @@ describe('GET /api/admin/app-health — 60s in-memory cache', () => {
     await GET(makeRequest());
     expect(mockedGetCrashRate).toHaveBeenCalledTimes(2);
   });
+
+  it('concurrent cache misses share ONE fan-out (dog-pile defense)', async () => {
+    // Spec 30 §2.2 cache exists specifically because Sentry/PostHog have
+    // rate limits. Two simultaneous requests landing on a cold cache MUST
+    // collapse onto the same in-flight Promise — otherwise the cache fails
+    // its primary purpose under concurrent load.
+    mockedVerify.mockResolvedValue({
+      uid: 'admin-1',
+      authMethod: 'session',
+    });
+    // The first crash query is held open by an external deferred. The
+    // second incoming request must arrive WHILE the first fan-out is
+    // still pending, so the cache stores a Promise (not a resolved body)
+    // and the second request awaits the same Promise.
+    let resolveCrash: ((v: typeof OK_CRASH) => void) | undefined;
+    const crashDeferred = new Promise<typeof OK_CRASH>((r) => {
+      resolveCrash = r;
+    });
+    mockedGetCrashRate.mockReturnValueOnce(crashDeferred);
+    mockedGetBreadcrumbCount.mockResolvedValue(OK_BREADCRUMB);
+    mockedGetAuth.mockResolvedValue(OK_AUTH);
+    mockedGetLeadSave.mockResolvedValue(OK_LEAD_SAVE);
+    mockedGetPaywall.mockResolvedValue(OK_PAYWALL);
+
+    const { GET } = await import('@/app/api/admin/app-health/route');
+    // Fire both requests; the first lands cold, stores the pending
+    // promise, awaits the fan-out. The second lands while the cache
+    // entry is a pending Promise — must collapse onto the same fan-out.
+    const p1 = GET(makeRequest());
+    // Yield enough microtask ticks for p1 to: (a) await verifyAdminAuth
+    // (mocked, microtask), (b) populate the cache slot with the pending
+    // bodyPromise, (c) launch the parallel fan-out (mockedGetCrashRate
+    // returns the held deferred). Three awaits is enough on Node 20.
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    const p2 = GET(makeRequest());
+
+    resolveCrash!(OK_CRASH);
+    const [r1, r2] = await Promise.all([p1, p2]);
+
+    expect(r1.status).toBe(200);
+    expect(r2.status).toBe(200);
+    // Sentry/PostHog upstream MUST see exactly ONE call each, not two.
+    expect(mockedGetCrashRate).toHaveBeenCalledTimes(1);
+    expect(mockedGetLeadSave).toHaveBeenCalledTimes(1);
+    expect(mockedGetPaywall).toHaveBeenCalledTimes(1);
+    expect(mockedGetAuth).toHaveBeenCalledTimes(1);
+    expect(mockedGetBreadcrumbCount).toHaveBeenCalledTimes(1);
+  });
+
+  it('cache TTL aligns to the next minute boundary, not a floating 60s window', async () => {
+    // Spec 30 §2.2: "60s in-memory TTL keyed on snapshot_at minute boundary".
+    // A request landing at HH:MM:42 builds a snapshot that expires at
+    // HH:MM+1:00, NOT at HH:MM+1:42. Aligning to the wall-clock minute
+    // means concurrent instances invalidate together and pay one upstream
+    // round-trip per minute — a floating window staggers expirations
+    // across instances and doubles rate-limit footprint.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-06T12:00:42Z'));
+
+    mockedVerify.mockResolvedValue({
+      uid: 'admin-1',
+      authMethod: 'session',
+    });
+    mockedGetCrashRate.mockResolvedValue(OK_CRASH);
+    mockedGetBreadcrumbCount.mockResolvedValue(OK_BREADCRUMB);
+    mockedGetAuth.mockResolvedValue(OK_AUTH);
+    mockedGetLeadSave.mockResolvedValue(OK_LEAD_SAVE);
+    mockedGetPaywall.mockResolvedValue(OK_PAYWALL);
+
+    const { GET } = await import('@/app/api/admin/app-health/route');
+    await GET(makeRequest());
+    expect(mockedGetCrashRate).toHaveBeenCalledTimes(1);
+
+    // 17 seconds later (12:00:59) — STILL within the same minute, so
+    // cache hit. A floating 60s window would still be hot here too, so
+    // this case alone doesn't distinguish the two. The next case does.
+    vi.advanceTimersByTime(17_000);
+    await GET(makeRequest());
+    expect(mockedGetCrashRate).toHaveBeenCalledTimes(1);
+
+    // Advance to 12:01:00 — the next minute boundary. Minute-boundary
+    // TTL fires here (18 seconds after the original request, NOT 60).
+    // A floating-window TTL would still be hot until 12:01:42.
+    vi.advanceTimersByTime(1_000);
+    await GET(makeRequest());
+    expect(mockedGetCrashRate).toHaveBeenCalledTimes(2);
+  });
 });

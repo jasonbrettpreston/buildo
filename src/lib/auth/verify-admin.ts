@@ -27,10 +27,15 @@
 //   this helper is a one-line swap (`adminUids.includes(uid)` →
 //   `userProfile.is_admin === true`); call sites are unaffected.
 
+import { timingSafeEqual } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { isDevMode } from '@/lib/auth/route-guard';
 import { logError, logWarn } from '@/lib/logger';
+
+// State-mutating HTTP methods. Spec 33 §13 mandates an Origin check on
+// these — GET/HEAD/OPTIONS bypass the CSRF gate (read-only).
+const MUTATING_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 
 /** The auth method that produced the admin context. Surfaced for telemetry. */
 export type AdminAuthMethod = 'session' | 'admin_key' | 'dev_bypass';
@@ -54,18 +59,35 @@ export interface AdminContext {
 export async function verifyAdminAuth(
   request: NextRequest,
 ): Promise<AdminContext | null> {
+  // 0. Spec 33 §13 CSRF gate. State-mutating methods (POST/PATCH/PUT/DELETE)
+  //    MUST present an Origin header that matches the allowed-origin
+  //    allowlist. Failure short-circuits BEFORE any auth-mode check so a
+  //    forged cross-site request with a valid cookie still bounces.
+  if (MUTATING_METHODS.has(request.method)) {
+    if (!isOriginAllowed(request)) {
+      logWarn('[auth/verify-admin]', 'CSRF: origin not in allowlist', {
+        method: request.method,
+        origin: request.headers.get('origin') ?? null,
+      });
+      return null;
+    }
+  }
+
   // 1. Dev mode bypass. Mirrors `getCurrentUserContext` precedent — local
-  //    dev shouldn't require real admin provisioning.
+  //    dev shouldn't require real admin provisioning. `isDevMode()` is
+  //    already defended by NODE_ENV !== 'production' AND DEV_MODE === 'true'
+  //    (route-guard.ts); two independent flags must misconfigure to bypass.
   if (isDevMode()) {
     return { uid: 'dev-user', authMethod: 'dev_bypass' };
   }
 
   // 2. X-Admin-Key header check. Done BEFORE the firebase-admin verify so
   //    the common service path (CI / pipeline scripts) doesn't pay the
-  //    network round-trip cost.
+  //    network round-trip cost. Constant-time compare to defeat timing
+  //    side-channel enumeration of the secret.
   const adminKey = request.headers.get('x-admin-key');
   const expectedKey = process.env.ADMIN_API_KEY;
-  if (expectedKey && adminKey && adminKey === expectedKey) {
+  if (expectedKey && adminKey && timingSafeStringEqual(adminKey, expectedKey)) {
     return { uid: 'admin-key', authMethod: 'admin_key' };
   }
 
@@ -103,4 +125,45 @@ export function parseAdminAllowlist(raw: string | undefined): string[] {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+/**
+ * Parse the `ADMIN_ALLOWED_ORIGINS` env var into a host-only origin array.
+ * Comma-separated, whitespace-trimmed, empty entries dropped, lowercased
+ * for case-insensitive match. Exported for test injection.
+ */
+export function parseAllowedOrigins(raw: string | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/**
+ * Spec 33 §13 CSRF check. Compares the request's `Origin` header against
+ * the `ADMIN_ALLOWED_ORIGINS` allowlist. Default-deny: missing Origin
+ * header on a state-mutating request fails the check.
+ *
+ * Note: `Referer` is NOT a substitute — Origin is the spec-mandated header
+ * for CSRF (Referer can be stripped by browser policy).
+ */
+function isOriginAllowed(request: NextRequest): boolean {
+  const origin = request.headers.get('origin');
+  if (!origin) return false;
+  const allowed = parseAllowedOrigins(process.env.ADMIN_ALLOWED_ORIGINS);
+  if (allowed.length === 0) return false; // Default-deny on misconfiguration.
+  return allowed.includes(origin.toLowerCase());
+}
+
+/**
+ * Constant-time string equality. `crypto.timingSafeEqual` requires equal
+ * buffer lengths, so we length-check first (which leaks length, but the
+ * admin key has a fixed length so this leaks no useful information).
+ */
+function timingSafeStringEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return timingSafeEqual(aBuf, bBuf);
 }

@@ -253,3 +253,24 @@ One-line per resolved batch with commit hash + date. Full prose recoverable via 
 ---
 
 _If you need a specific historical entry's full prose, use `git log -p docs/reports/review_followups.md` and grep for the commit hash above._
+
+---
+
+## Spec 30 Cycle 2 Phase 4 — Multi-Agent Review Deferred Items (2026-05-06)
+
+Source: Gemini + DeepSeek + worktree code-reviewer adversarial review of commits `5b1a327` through `fdfbda8`. Fix-now items (CSRF Origin gate, minute-boundary TTL, promise-deduplication, useState-scoped QueryClient, `affected_users` distinct-count, `useAppHealth` hook extraction, Zod parse on Sentry/PostHog responses, timing-safe admin key compare) were applied in commit `<TBD>`. Items below are deferred — not blocking, but worth picking up in a future maintenance pass.
+
+- **`__resetAppHealthCacheForTests` export footgun (Gemini MEDIUM).** The `__`-prefix is a convention, not a security boundary. A developer could accidentally import the reset in production code. Mitigation: lift cache state into a separate `src/app/api/admin/app-health/cache.ts` module and use `vi.mock` for test isolation — eliminates the production-side export entirely. Low priority; current pattern is widely used in the codebase.
+
+- **`settle()` reason erasure (Gemini MEDIUM).** Aggregator `settle()` wrapper catches unexpected throws and returns the canonical `{reason: 'aggregator_threw'}` — discards `err.message` which would help operator triage. Trade-off: including `err.message` could leak internals into the API response. Compromise: include the exception class name (e.g., `aggregator_threw:TypeError`) — not the full message. Defer until an operator hits an opaque `aggregator_threw` they can't debug.
+
+- **Failed admin-key attempts not logged (DeepSeek MEDIUM).** When `X-Admin-Key` is present but does NOT match `ADMIN_API_KEY`, the helper falls through silently to the session path. By contrast, the session path `logWarn`s on a non-allowlisted authenticated user. Adding a `logWarn` for the wrong-key case would surface CI misconfiguration + brute-force probing. Defer; not security-critical given timing-safe compare + short-circuit on length mismatch.
+
+- **Successful admin-key authentication not logged (DeepSeek LOW).** No audit trail for `authMethod === 'admin_key'` admin auth events. Downstream route handlers emit `admin_action` breadcrumbs, but the auth layer itself is silent. Adding `logInfo` would let operators trace which automation used the key. Defer until first incident requires the audit trail.
+
+- **Dev bypass without hostname check (DeepSeek HIGH, demoted).** `isDevMode()` already enforces `NODE_ENV !== 'production'` AND `DEV_MODE === 'true'` (route-guard.ts:32-34) — two independent flags must misconfigure simultaneously. Adding a `request.nextUrl.hostname === 'localhost'` check is defense-in-depth-3, not a missing security boundary. Defer.
+
+- **Long inline comment block in verify-admin.ts (DeepSeek NIT).** The 32-line spec-paraphrase comment block at the top of the file may rot if Spec 33 amends without updating the file. Defer; spec links + brief summary is the project pattern, but rewriting now adds review burden without correctness gain.
+
+- **Zod 500 error includes no detail in dev (Gemini LOW).** When the response envelope fails Zod validation, the 500 returns a generic message. In dev mode, including `parsed.error.issues` in the body would speed local diagnosis. Defer — the issue is logged via `logError` already, which is the canonical operator-debug path.
+

@@ -116,8 +116,11 @@ describe('healthSchema — TileResult discriminated union', () => {
 // ===========================================================================
 
 describe('sentry-client.getCrashRate24h', () => {
-  it('returns ok with computed rate_per_user when both queries succeed', async () => {
-    // Two parallel fetches: crash count + DAU. Mock both 200 responses.
+  it('returns ok with computed rate_per_user when all three queries succeed', async () => {
+    // Three parallel fetches: crash count + DAU + distinct affected users
+    // (count_unique(user) filtered to level:fatal). Spec 30 §2.2 contract:
+    // affected_users is the unique-user count of crash victims, NOT total
+    // crash event count.
     mockFetch
       .mockResolvedValueOnce({
         ok: true,
@@ -134,13 +137,22 @@ describe('sentry-client.getCrashRate24h', () => {
           Promise.resolve({
             groups: [{ by: {}, totals: { 'count_unique(user)': 1000 } }],
           }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            groups: [{ by: {}, totals: { 'count_unique(user)': 3 } }],
+          }),
       });
     const { getCrashRate24h } = await import('@/lib/admin/sentry-client');
     const result = await getCrashRate24h();
     expect(result.status).toBe('ok');
     if (result.status === 'ok') {
       expect(result.payload.rate_per_user).toBeCloseTo(0.005, 4);
-      expect(result.payload.affected_users).toBe(5);
+      // 3 distinct users experienced ≥1 fatal — NOT the 5 crash events.
+      expect(result.payload.affected_users).toBe(3);
       expect(result.payload.sentry_link).toMatch(/^https:\/\/sentry\.io/);
     }
   });
@@ -160,12 +172,21 @@ describe('sentry-client.getCrashRate24h', () => {
           Promise.resolve({
             groups: [{ by: {}, totals: { 'count_unique(user)': 0 } }],
           }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            groups: [{ by: {}, totals: { 'count_unique(user)': 0 } }],
+          }),
       });
     const { getCrashRate24h } = await import('@/lib/admin/sentry-client');
     const result = await getCrashRate24h();
     expect(result.status).toBe('ok');
     if (result.status === 'ok') {
       expect(result.payload.rate_per_user).toBe(0);
+      expect(result.payload.affected_users).toBe(0);
     }
   });
 
@@ -213,11 +234,17 @@ describe('sentry-client.getCrashRate24h', () => {
         ok: true,
         status: 200,
         json: () => Promise.resolve({ groups: [] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ groups: [] }),
       });
     const { getCrashRate24h } = await import('@/lib/admin/sentry-client');
     await getCrashRate24h();
-    // Two parallel fetches → two breadcrumbs.
-    expect(breadcrumbSpy).toHaveBeenCalledTimes(2);
+    // Three parallel fetches (crash count + DAU + affected_users distinct)
+    // → three breadcrumbs.
+    expect(breadcrumbSpy).toHaveBeenCalledTimes(3);
     const firstCall = breadcrumbSpy.mock.calls[0]?.[0];
     expect(firstCall).toMatchObject({
       category: 'app_health',

@@ -24,15 +24,12 @@
  *   staleTime: 60_000 matches the server-side cache TTL.
  */
 
+import { useState } from 'react';
 import Link from 'next/link';
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HealthTile } from '@/components/admin/HealthTile';
+import { useAppHealth } from '@/features/admin-app-health/api/useAppHealth';
 import type {
-  AppHealthResponse,
   AuthConversion7dPayload,
   CacheInvalidation24hPayload,
   CrashRate24hPayload,
@@ -40,17 +37,16 @@ import type {
   PaywallConversion7dPayload,
 } from '@/lib/admin/healthSchema';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60_000, // matches the server-side cache TTL.
-      refetchInterval: 60_000, // polling cadence for live triage.
-      retry: 1,
-    },
-  },
-});
-
 export default function AppHealthPage() {
+  // QueryClient lives PER MOUNT, not at module scope, to avoid cross-mount
+  // state sharing under HMR / fast-refresh and to match the App Router
+  // recommendation. `useState(() => ...)` ensures one instance per mount.
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: { queries: { retry: 1 } },
+      }),
+  );
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-gray-50">
@@ -86,16 +82,7 @@ export default function AppHealthPage() {
 }
 
 function AppHealthDashboard() {
-  const { data, isLoading, isError } = useQuery<AppHealthResponse>({
-    queryKey: ['admin', 'app-health'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/app-health');
-      if (!response.ok) {
-        throw new Error(`App Health endpoint returned ${response.status}`);
-      }
-      return (await response.json()) as AppHealthResponse;
-    },
-  });
+  const { data, isLoading, isError } = useAppHealth();
 
   if (isError) {
     return (

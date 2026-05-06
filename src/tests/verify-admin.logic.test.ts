@@ -30,17 +30,22 @@ import { logWarn } from '@/lib/logger';
 import {
   verifyAdminAuth,
   parseAdminAllowlist,
+  parseAllowedOrigins,
 } from '@/lib/auth/verify-admin';
 
 const mockedGetUid = vi.mocked(getUserIdFromSession);
 const mockedIsDevMode = vi.mocked(isDevMode);
 const mockedLogWarn = vi.mocked(logWarn);
 
-function makeRequest(headers: Record<string, string> = {}): NextRequest {
-  // Minimal NextRequest stand-in. The helper only consumes
-  // `request.headers.get(...)` + passes the request through to
-  // `getUserIdFromSession` (which we mock).
+function makeRequest(
+  headers: Record<string, string> = {},
+  method: string = 'GET',
+): NextRequest {
+  // Minimal NextRequest stand-in. The helper consumes
+  // `request.method` (CSRF gate) + `request.headers.get(...)` + passes
+  // the request through to `getUserIdFromSession` (which we mock).
   return {
+    method,
     headers: {
       get: (key: string) => headers[key.toLowerCase()] ?? null,
     },
@@ -166,6 +171,132 @@ describe('verifyAdminAuth — session cookie + allowlist', () => {
     // Spec 33 §5 anti-pattern guard: admin auth must be explicit, never
     // implicit via empty allowlist.
     expect(mockedLogWarn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('parseAllowedOrigins', () => {
+  it('returns empty array when env var is undefined', () => {
+    expect(parseAllowedOrigins(undefined)).toEqual([]);
+  });
+
+  it('returns empty array when env var is empty string', () => {
+    expect(parseAllowedOrigins('')).toEqual([]);
+  });
+
+  it('parses comma-separated origins with whitespace trimming and lowercasing', () => {
+    expect(
+      parseAllowedOrigins('https://Admin.Buildo.app, https://Staging.Buildo.app'),
+    ).toEqual(['https://admin.buildo.app', 'https://staging.buildo.app']);
+  });
+});
+
+describe('verifyAdminAuth — Spec 33 §13 CSRF Origin gate', () => {
+  beforeEach(() => {
+    process.env.ADMIN_ALLOWED_ORIGINS = 'https://admin.buildo.app';
+    process.env.ADMIN_USER_IDS = 'admin-uid-1';
+  });
+
+  it('GET request bypasses the CSRF gate even with no Origin header', async () => {
+    mockedGetUid.mockResolvedValueOnce('admin-uid-1');
+    const ctx = await verifyAdminAuth(makeRequest({}, 'GET'));
+    expect(ctx?.authMethod).toBe('session');
+  });
+
+  it('HEAD and OPTIONS bypass the CSRF gate', async () => {
+    mockedGetUid.mockResolvedValue('admin-uid-1');
+    expect((await verifyAdminAuth(makeRequest({}, 'HEAD')))?.authMethod).toBe(
+      'session',
+    );
+    expect(
+      (await verifyAdminAuth(makeRequest({}, 'OPTIONS')))?.authMethod,
+    ).toBe('session');
+  });
+
+  it.each(['POST', 'PATCH', 'PUT', 'DELETE'])(
+    'returns null + logs WARN when %s has no Origin header',
+    async (method) => {
+      mockedGetUid.mockResolvedValueOnce('admin-uid-1');
+      const ctx = await verifyAdminAuth(makeRequest({}, method));
+      expect(ctx).toBeNull();
+      // CSRF check MUST short-circuit BEFORE getUserIdFromSession runs —
+      // a forged cross-site request must not even reach session verify.
+      expect(mockedGetUid).not.toHaveBeenCalled();
+      expect(mockedLogWarn).toHaveBeenCalledTimes(1);
+      expect(mockedLogWarn.mock.calls[0]?.[1]).toMatch(/CSRF/i);
+    },
+  );
+
+  it('returns null when POST has Origin not in the allowlist', async () => {
+    const ctx = await verifyAdminAuth(
+      makeRequest({ origin: 'https://evil.example.com' }, 'POST'),
+    );
+    expect(ctx).toBeNull();
+    expect(mockedGetUid).not.toHaveBeenCalled();
+  });
+
+  it('passes CSRF + auth when POST has matching Origin and admin session', async () => {
+    mockedGetUid.mockResolvedValueOnce('admin-uid-1');
+    const ctx = await verifyAdminAuth(
+      makeRequest({ origin: 'https://admin.buildo.app' }, 'POST'),
+    );
+    expect(ctx?.authMethod).toBe('session');
+    expect(ctx?.uid).toBe('admin-uid-1');
+  });
+
+  it('Origin match is case-insensitive (browsers may differ on host casing)', async () => {
+    mockedGetUid.mockResolvedValueOnce('admin-uid-1');
+    const ctx = await verifyAdminAuth(
+      makeRequest({ origin: 'HTTPS://Admin.Buildo.App' }, 'POST'),
+    );
+    expect(ctx?.authMethod).toBe('session');
+  });
+
+  it('default-deny when ADMIN_ALLOWED_ORIGINS is unset (no allowlist = no allowed origins)', async () => {
+    delete process.env.ADMIN_ALLOWED_ORIGINS;
+    const ctx = await verifyAdminAuth(
+      makeRequest({ origin: 'https://admin.buildo.app' }, 'POST'),
+    );
+    expect(ctx).toBeNull();
+  });
+
+  it('CSRF gate runs BEFORE dev_bypass — a forged cross-site mutating request is blocked even in dev mode', async () => {
+    // Defense-in-depth: dev_bypass shortcuts auth, but if a developer is
+    // running locally with DEV_MODE=true and clicks a link from a
+    // malicious page, the cross-site POST should still bounce.
+    mockedIsDevMode.mockReturnValue(true);
+    const ctx = await verifyAdminAuth(makeRequest({}, 'POST'));
+    expect(ctx).toBeNull();
+  });
+});
+
+describe('verifyAdminAuth — timing-safe admin key compare', () => {
+  it('rejects keys of the same length but different content', async () => {
+    process.env.ADMIN_API_KEY = 'aaaaaaaaaa';
+    mockedGetUid.mockResolvedValueOnce(null);
+    const ctx = await verifyAdminAuth(
+      makeRequest({ 'x-admin-key': 'bbbbbbbbbb' }),
+    );
+    expect(ctx).toBeNull();
+  });
+
+  it('rejects keys of different lengths without throwing', async () => {
+    // crypto.timingSafeEqual throws if buffers have different lengths;
+    // the helper guards on length first, so a wrong-length key returns
+    // null cleanly rather than crashing the route.
+    process.env.ADMIN_API_KEY = 'short';
+    mockedGetUid.mockResolvedValueOnce(null);
+    const ctx = await verifyAdminAuth(
+      makeRequest({ 'x-admin-key': 'much-longer-key' }),
+    );
+    expect(ctx).toBeNull();
+  });
+
+  it('accepts an exact-match admin key', async () => {
+    process.env.ADMIN_API_KEY = 'exact-match-key';
+    const ctx = await verifyAdminAuth(
+      makeRequest({ 'x-admin-key': 'exact-match-key' }),
+    );
+    expect(ctx?.authMethod).toBe('admin_key');
   });
 });
 

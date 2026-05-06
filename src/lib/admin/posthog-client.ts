@@ -15,6 +15,7 @@
 // `{status: 'unavailable', reason}`.
 
 import * as Sentry from '@sentry/nextjs';
+import { z } from 'zod';
 import { logError } from '@/lib/logger';
 import type {
   AuthConversion7dPayload,
@@ -22,6 +23,14 @@ import type {
   PaywallConversion7dPayload,
   TileResult,
 } from '@/lib/admin/healthSchema';
+
+// Spec 33 §13: external-API responses MUST be Zod-parsed before
+// consuming. PostHog's Query API returns rows as nested arrays of
+// arbitrary scalars; the schema enforces the outer shape and lets
+// downstream callers coerce the cells via `toNonNegInt` / `String`.
+const PostHogQueryResponseSchema = z.object({
+  results: z.array(z.array(z.unknown())).optional(),
+});
 
 const apiKey = process.env.POSTHOG_API_KEY;
 const projectId = process.env.POSTHOG_PROJECT_ID;
@@ -34,9 +43,7 @@ interface PostHogQueryRequest {
   };
 }
 
-interface PostHogQueryResponse {
-  results?: Array<Array<unknown>>;
-}
+type PostHogQueryResponse = z.infer<typeof PostHogQueryResponseSchema>;
 
 /**
  * Make an authenticated PostHog Query API call.
@@ -45,13 +52,13 @@ interface PostHogQueryResponse {
  *   - 'env_missing'      — POSTHOG_API_KEY or POSTHOG_PROJECT_ID unset
  *   - 'rate_limited'     — 429
  *   - 'upstream_unavailable' — 5xx
- *   - 'parse_error'      — non-JSON body
+ *   - 'parse_error'      — non-JSON body or schema mismatch
  *   - 'network_error'    — fetch threw
  */
-async function posthogQuery<T = PostHogQueryResponse>(
+async function posthogQuery(
   hogQL: string,
   tileName: string,
-): Promise<{ ok: true; data: T } | { ok: false; reason: string }> {
+): Promise<{ ok: true; data: PostHogQueryResponse } | { ok: false; reason: string }> {
   if (!apiKey || !projectId) {
     return { ok: false, reason: 'env_missing' };
   }
@@ -82,12 +89,22 @@ async function posthogQuery<T = PostHogQueryResponse>(
     if (response.status >= 500)
       return { ok: false, reason: 'upstream_unavailable' };
     if (!response.ok) return { ok: false, reason: `http_${response.status}` };
+    let json: unknown;
     try {
-      const data = (await response.json()) as T;
-      return { ok: true, data };
+      json = await response.json();
     } catch {
       return { ok: false, reason: 'parse_error' };
     }
+    const parsed = PostHogQueryResponseSchema.safeParse(json);
+    if (!parsed.success) {
+      logError(
+        '[admin/posthog-client]',
+        new Error('PostHog response schema mismatch'),
+        { tile: tileName, issues: parsed.error.flatten() },
+      );
+      return { ok: false, reason: 'parse_error' };
+    }
+    return { ok: true, data: parsed.data };
   } catch (err) {
     logError('[admin/posthog-client]', err, { tile: tileName, stage: 'fetch' });
     return { ok: false, reason: 'network_error' };
@@ -114,7 +131,7 @@ export async function getLeadSaveFunnel7d(): Promise<
     FROM events
     WHERE timestamp >= now() - INTERVAL 7 DAY
   `;
-  const res = await posthogQuery<PostHogQueryResponse>(hogQL, 'lead_save_funnel_7d');
+  const res = await posthogQuery(hogQL, 'lead_save_funnel_7d');
   if (!res.ok) return { status: 'unavailable', reason: res.reason };
   const row = res.data.results?.[0];
   const viewed = toNonNegInt(row?.[0]);
@@ -145,7 +162,7 @@ export async function getPaywallConversion7d(): Promise<
     FROM events
     WHERE timestamp >= now() - INTERVAL 7 DAY
   `;
-  const res = await posthogQuery<PostHogQueryResponse>(hogQL, 'paywall_conversion_7d');
+  const res = await posthogQuery(hogQL, 'paywall_conversion_7d');
   if (!res.ok) return { status: 'unavailable', reason: res.reason };
   const row = res.data.results?.[0];
   const shown = toNonNegInt(row?.[0]);
@@ -179,7 +196,7 @@ export async function getAuthMethodFunnel7d(): Promise<
       AND properties.method IN ('apple', 'google', 'email', 'phone')
     GROUP BY properties.method
   `;
-  const res = await posthogQuery<PostHogQueryResponse>(hogQL, 'auth_conversion_7d');
+  const res = await posthogQuery(hogQL, 'auth_conversion_7d');
   if (!res.ok) return { status: 'unavailable', reason: res.reason };
   const rows = res.data.results ?? [];
   // Synthesize all 4 methods even when zero events — UI tiles render
