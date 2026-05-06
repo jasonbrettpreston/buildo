@@ -136,6 +136,16 @@ export const FlightBoardResultSchema = z.object({
 
 export type FlightBoardResult = z.infer<typeof FlightBoardResultSchema>;
 
+// Flight Board Detail (Spec 77 §3.3.1 — single-permit cold-boot fallback).
+// Server type at `src/app/api/leads/flight-board/detail/[id]/types.ts` —
+// matches a single FlightBoardItem plus `updated_at` (ISO 8601 from
+// `permits.updated_at`, used by Spec 92 §4.4 amber update flash).
+export const FlightBoardDetailSchema = FlightBoardItemSchema.extend({
+  updated_at: z.string(),
+});
+
+export type FlightBoardDetail = z.infer<typeof FlightBoardDetailSchema>;
+
 // ---------------------------------------------------------------------------
 // Global search result (Phase 5 — FAB permit search per Spec 77 §3.1)
 // ---------------------------------------------------------------------------
