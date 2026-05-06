@@ -9,6 +9,7 @@
 // the feed cache).
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchWithAuth } from '@/lib/apiClient';
+import { track } from '@/lib/analytics';
 import type { LeadDetail, LeadFeedResult } from '@/lib/schemas';
 import type { InfiniteData } from '@tanstack/react-query';
 
@@ -28,7 +29,16 @@ export function useSaveLead() {
         body: JSON.stringify({ lead_id: leadId, lead_type: leadType, saved }),
       }),
 
-    onMutate: async ({ leadId, saved }) => {
+    onMutate: async ({ leadId, leadType, saved }) => {
+      // Spec 99 §7.6 — product funnel events. Fired in onMutate (BEFORE
+      // server confirms) so the funnel measures user INTENT, not just
+      // server-confirmed mutations. A failed mutation rolls back UI but
+      // the intent was real — the analytics event reflects that.
+      track(saved ? 'lead_saved' : 'lead_unsaved', {
+        lead_id: leadId,
+        lead_type: leadType,
+      });
+
       // Snapshot BOTH cache keys before the optimistic update so onError can
       // restore either side if the mutation fails. Cancel in-flight refetches
       // so they don't overwrite the optimistic state.

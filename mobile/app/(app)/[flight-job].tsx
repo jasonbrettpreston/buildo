@@ -12,6 +12,7 @@ import Animated, {
 import { useFlightBoard } from '@/hooks/useFlightBoard';
 import { useFlightJobDetail } from '@/hooks/useFlightJobDetail';
 import { useFlightBoardSeenStore } from '@/store/flightBoardSeenStore';
+import { track } from '@/lib/analytics';
 import type { FlightBoardItem, FlightBoardDetail } from '@/lib/schemas';
 import { ChevronLeft } from 'lucide-react-native';
 
@@ -156,6 +157,18 @@ export default function FlightJobDetailScreen() {
     const permitId = `${item.permit_num}--${item.revision_num}`;
     useFlightBoardSeenStore.getState().markSeen(permitId, item.updated_at);
   }, [item?.permit_num, item?.revision_num, item?.updated_at]);
+
+  // Spec 99 §7.6 — product funnel anchor event. Fires once per detail
+  // resolve (deps gate on permit_num/revision_num so re-renders don't
+  // re-fire). lead_id is composed to match the canonical Spec 91 §4.3.1
+  // shape (`${permit_num}--${revision_num}`).
+  useEffect(() => {
+    if (!item?.permit_num || !item?.revision_num) return;
+    track('flight_job_detail_viewed', {
+      lead_id: `${item.permit_num}--${item.revision_num}`,
+      lead_type: 'permit',
+    });
+  }, [item?.permit_num, item?.revision_num]);
 
   const isUrgent =
     item?.predicted_start !== null &&

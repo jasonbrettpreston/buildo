@@ -37,6 +37,16 @@ function getClient(): PostHog | null {
 // Spec 99 §7.2 (cache invalidation telemetry) added 'key' for the
 // query_invalidate event (DEV-only) — operational metadata (TanStack
 // queryKey root strings: 'user-profile', 'leads', 'flight-board', etc.).
+// Spec 99 §7.6 (product funnel events, 2026-05-06) added 4 keys for the
+// lead_detail_viewed / flight_job_detail_viewed / lead_saved / lead_unsaved /
+// paywall_shown / subscribe_button_clicked events:
+//   - lead_id: opaque server token (`${permit_num}--${revision_num}` for
+//     permits, `COA-${application_number}` for CoA) — public city-of-record
+//     data, NOT PII (same family as PostHog distinctId per §10).
+//   - lead_type: enum 'permit' | 'coa' | 'builder' — categorical, not PII.
+//   - subscription_status: enum 'trial'/'active'/'expired'/etc. — not PII.
+//   - tier: enum 'small'/'medium'/'large'/'major'/'mega' — cost tier from
+//     Spec 83; categorical, not PII.
 const ALLOWED_KEYS = new Set([
   'screen',
   'method',
@@ -53,6 +63,10 @@ const ALLOWED_KEYS = new Set([
   'prev',
   'next',
   'key',
+  'lead_id',
+  'lead_type',
+  'subscription_status',
+  'tier',
 ] as const);
 
 type AllowedKey =
@@ -70,7 +84,11 @@ type AllowedKey =
   | 'days_remaining'
   | 'prev'
   | 'next'
-  | 'key';
+  | 'key'
+  | 'lead_id'
+  | 'lead_type'
+  | 'subscription_status'
+  | 'tier';
 type EventValue = string | number | boolean | null;
 type EventProps = Partial<Record<AllowedKey, EventValue>>;
 

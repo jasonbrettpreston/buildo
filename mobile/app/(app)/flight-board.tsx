@@ -29,6 +29,7 @@ import { BlurredFeedPlaceholder } from '@/components/paywall/BlurredFeedPlacehol
 import { usePaywallStore } from '@/store/paywallStore';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useFlightBoardSeenStore } from '@/store/flightBoardSeenStore';
+import { track } from '@/lib/analytics';
 import { Search } from 'lucide-react-native';
 import type { FlightBoardItem, FlightBoardResult } from '@/lib/schemas';
 
@@ -114,6 +115,16 @@ export default function FlightBoardScreen() {
     });
     return unsubscribe;
   }, [navigation, scrollToTop]);
+
+  // Spec 99 §7.6 — DEV-only per §7.3 frequency-split rule. A user can
+  // toggle Feed↔FlightBoard tabs many times per session, so per-mount
+  // PostHog events would flood. DEV-only captures the dev-time signal
+  // without the prod volume.
+  React.useEffect(() => {
+    if (__DEV__) {
+      track('flight_board_viewed');
+    }
+  }, []);
 
   // Extracted commit so unmount cleanup + double-swipe collision can both reuse it.
   // If called with the current pending ref, it fires the mutation immediately and

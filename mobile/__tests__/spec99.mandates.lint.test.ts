@@ -345,6 +345,94 @@ const MANDATES: Mandate[] = [
       return null;
     },
   },
+  {
+    section: '§7.5',
+    name: 'Sentry user attribution (crash reports)',
+    check: () => {
+      // §7.5 mandate: Sentry.setUser({id: uid}) on auth listener signed-in;
+      // Sentry.setUser(null) inside clearLocalSessionState (§B5 fan-out).
+      const authStorePath = path.join(MOBILE_ROOT, 'src/store/authStore.ts');
+      const src = stripComments(readOrEmpty(authStorePath));
+      if (!src) return 'mobile/src/store/authStore.ts missing';
+      // Signed-in: Sentry.setUser({ id: ... })
+      if (!/Sentry\.setUser\(\s*\{\s*id:/.test(src)) {
+        return 'authStore.ts missing Sentry.setUser({id: ...}) on signed-in';
+      }
+      // Signed-out: Sentry.setUser(null)
+      if (!/Sentry\.setUser\(\s*null\s*\)/.test(src)) {
+        return 'authStore.ts missing Sentry.setUser(null) in signout fan-out';
+      }
+      return null;
+    },
+  },
+  {
+    section: '§7.6',
+    name: 'Product funnel events (lead/paywall)',
+    check: () => {
+      // §7.6 production events MUST fire at canonical sites. Each entry
+      // here is `[file, regex]` — file must contain the regex match.
+      // DEV-only events are NOT enforced here (production volume issue per
+      // §7.3 frequency-split rule means a DEV-only fire might be wrapped
+      // in `if (__DEV__)`); this lint enforces the existence of the
+      // canonical track('event_name') call regardless of guards.
+      const sites: Array<[string, RegExp, string]> = [
+        [
+          'app/(app)/[lead].tsx',
+          /track\(\s*['"]lead_detail_viewed['"]/,
+          'lead_detail_viewed in [lead].tsx',
+        ],
+        [
+          'app/(app)/[flight-job].tsx',
+          /track\(\s*['"]flight_job_detail_viewed['"]/,
+          'flight_job_detail_viewed in [flight-job].tsx',
+        ],
+        [
+          'src/hooks/useSaveLead.ts',
+          /track\(\s*saved\s*\?\s*['"]lead_saved['"]\s*:\s*['"]lead_unsaved['"]|track\(\s*['"]lead_(?:un)?saved['"]/,
+          'lead_saved/lead_unsaved in useSaveLead.ts',
+        ],
+        [
+          'src/components/paywall/PaywallScreen.tsx',
+          /track\(\s*['"]paywall_shown['"]/,
+          'paywall_shown in PaywallScreen.tsx',
+        ],
+        [
+          'src/components/paywall/PaywallScreen.tsx',
+          /track\(\s*['"]subscribe_button_clicked['"]/,
+          'subscribe_button_clicked in PaywallScreen.tsx',
+        ],
+      ];
+      for (const [relPath, pattern, label] of sites) {
+        const fullPath = path.join(MOBILE_ROOT, relPath);
+        const src = stripComments(readOrEmpty(fullPath));
+        if (!src) return `${relPath} missing or unreadable`;
+        if (!pattern.test(src)) {
+          return `missing ${label} (regression: a §7.6 funnel event was removed from its canonical site)`;
+        }
+      }
+      return null;
+    },
+  },
+  {
+    section: '§8.7',
+    name: 'Funnel-event presence test exists',
+    check: () => {
+      // §8.7 enforcement layer for §7.6: the spec99.mandates.lint.test.ts
+      // §7.6 row above IS the §8.7 enforcement (this very file). Verify
+      // self-presence so a regression that deletes the §7.6 row doesn't
+      // silently bypass enforcement — the lint test is its own §8.7 proof.
+      const selfPath = path.join(
+        MOBILE_ROOT,
+        '__tests__/spec99.mandates.lint.test.ts',
+      );
+      const src = readOrEmpty(selfPath);
+      if (!src) return 'spec99.mandates.lint.test.ts missing (self-check)';
+      if (!/section:\s*['"]§7\.6['"]/.test(src)) {
+        return '§7.6 mandate row missing from MANDATES array';
+      }
+      return null;
+    },
+  },
 ];
 
 describe('Spec 99 mandates — implementation evidence (audit Pattern A class fix)', () => {
@@ -381,8 +469,10 @@ describe('Spec 99 mandates — implementation evidence (audit Pattern A class fi
   // expected count is the explicit signal that the spec's mandate
   // inventory has changed and was reviewed.
   it('MANDATES array length matches the spec mandate inventory', () => {
-    // §7.1, §7.2, §7.3, §7.4 + §8.1, §8.2, §8.3, §8.4, §8.5, §8.6 = 10.
-    // Update this count when adding a new §7.x or §8.x subsection to Spec 99.
-    expect(MANDATES).toHaveLength(10);
+    // §7.1, §7.2, §7.3, §7.4, §7.5, §7.6 + §8.1, §8.2, §8.3, §8.4, §8.5,
+    // §8.6, §8.7 = 13. Update this count when adding a new §7.x or §8.x
+    // subsection to Spec 99. (§7.7 + §8.8 land in Phase 4 of the WF3
+    // telemetry batch — not yet present.)
+    expect(MANDATES).toHaveLength(13);
   });
 });

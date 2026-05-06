@@ -14,7 +14,7 @@
 // query; useSaveLead mirrors optimistic state across both ['lead-feed']
 // and ['lead-detail', id] cache keys for cold-boot deep-link correctness.
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -23,6 +23,7 @@ import { OpportunityRing } from '@/components/feed/OpportunityRing';
 import { SaveButton } from '@/components/shared/SaveButton';
 import { useSaveLead } from '@/hooks/useSaveLead';
 import { useLeadDetail } from '@/hooks/useLeadDetail';
+import { track } from '@/lib/analytics';
 import {
   formatCostTier,
   formatCurrencyAbbrev,
@@ -49,6 +50,17 @@ export default function LeadDetailScreen() {
   // queryClient.getQueryCache().subscribe walk that this screen used to
   // rely on, which was a §B1 violation and broke cold-boot deep-link.
   const { data: detail, isLoading, isError } = useLeadDetail(id);
+
+  // Spec 99 §7.6 — product funnel anchor event. Fires once per detail
+  // resolve (deps gate on lead_id so re-renders don't re-fire). Funnel
+  // partner to lead_saved/lead_unsaved at the SaveButton in the CTA below.
+  useEffect(() => {
+    if (!detail?.lead_id) return;
+    track('lead_detail_viewed', {
+      lead_id: detail.lead_id,
+      lead_type: detail.lead_type,
+    });
+  }, [detail?.lead_id, detail?.lead_type]);
 
   const handleSaveToggle = useCallback(
     (leadId: string, saved: boolean) => {

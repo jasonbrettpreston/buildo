@@ -583,6 +583,37 @@ The high-frequency onboarding routing arms (5a-5d) MUST NOT emit production tele
 
 **Enforcement:** `mobile/__tests__/useAuth.test.ts` asserts `Sentry.setUser` calls match the auth state machine — set on signed-in, null on signed-out, null on forced-signout. A regression that drops `Sentry.setUser` on the signout fan-out fails CI.
 
+### 7.6 Product funnel events
+
+A fixed enumeration of product flow events MUST fire at canonical sites so the funnel ratios (`% of lead-detail-views that save`, `% of paywall-shows that convert`) are measurable in PostHog without manual instrumentation diff against the codebase.
+
+**Production events (low-frequency, high-signal, fire in both DEV and PROD):**
+
+| Event | Site | Trigger | Payload |
+|---|---|---|---|
+| `lead_detail_viewed` | `mobile/app/(app)/[lead].tsx` | `useEffect` on `detail.lead_id` resolve (per-navigation, NOT per-render) | `{ lead_id, lead_type }` |
+| `flight_job_detail_viewed` | `mobile/app/(app)/[flight-job].tsx` | `useEffect` on `item.permit_num` + `item.revision_num` resolve | `{ lead_id, lead_type: 'permit' }` |
+| `lead_saved` / `lead_unsaved` | `mobile/src/hooks/useSaveLead.ts` `onMutate` | User tap (BEFORE server confirms — measures intent) | `{ lead_id, lead_type }` |
+| `paywall_shown` | `mobile/src/components/paywall/PaywallScreen.tsx` | Mount `useEffect` (component only mounts when `subscription_status='expired'` AND `!paywallStore.dismissed`) | `{ subscription_status: 'expired' }` |
+| `subscribe_button_clicked` | `PaywallScreen.tsx` `handlePrimary` | User tap on the primary CTA, BEFORE `openCheckout` resolves | none |
+
+**DEV-only events (high-frequency; emit per `__DEV__` gate per §7.3 split — too noisy for production):**
+
+| Event | Site | Reason for DEV-only |
+|---|---|---|
+| `paywall_dismissed` | `PaywallScreen.tsx` "Maybe later" press | A user can dismiss → reopen → dismiss repeatedly per session; per-tap PostHog events would flood. |
+| `flight_board_viewed` | `mobile/app/(app)/flight-board.tsx` mount `useEffect` | Tab toggles (Feed ↔ FlightBoard) are unbounded per session. |
+
+**Rejected (per §7.3 frequency-split rule — would flood production):**
+- `lead_card_viewed` per FlashList `renderItem` (covered by `lead_detail_viewed` on tap).
+
+**PII boundary** (whitelisted in `mobile/src/lib/analytics.ts` `ALLOWED_KEYS`):
+- `lead_id` is `${permit_num}--${revision_num}` for permits or `COA-${application_number}` for CoA — public city-of-record data, NOT PII.
+- `lead_type`, `subscription_status`, `tier` are categorical enums, NOT PII.
+- `email`, `phone_number`, `displayName`, etc. are NEVER passed to `track()` and would be dropped by the whitelist if accidentally added.
+
+**Enforcement (§8.7 — see §8 Test Mandates):** the `mobile/__tests__/spec99.mandates.lint.test.ts` test greps each canonical site for the matching `track()` call. A regression that removes a funnel event from its canonical site fails CI.
+
 ---
 
 ## 8. Test Mandates

@@ -24,6 +24,7 @@ import { usePaywallStore } from '@/store/paywallStore';
 import { useSubscribeCheckout } from '@/hooks/useSubscribeCheckout';
 import { successNotification, errorNotification } from '@/lib/haptics';
 import { logQueryInvalidate } from '@/lib/queryTelemetry';
+import { track } from '@/lib/analytics';
 
 interface Props {
   /** lead_views_count from user_profiles. Zero is rendered as a different copy block (spec §Step 1). */
@@ -70,6 +71,14 @@ export function PaywallScreen({ leadViewsCount }: Props) {
     return () => clearTimeout(t);
   }, []);
 
+  // Spec 99 §7.6 — paywall funnel anchor event. Fires once on mount.
+  // This component only mounts when `subscription_status='expired'` AND
+  // !paywallStore.dismissed (per the (app)/_layout.tsx gate), so the
+  // mount IS the canonical "user saw paywall" moment.
+  useEffect(() => {
+    track('paywall_shown', { subscription_status: 'expired' });
+  }, []);
+
   useEffect(() => {
     if (showRefresh) {
       refreshOpacity.value = withTiming(1, { duration: 400 });
@@ -97,6 +106,10 @@ export function PaywallScreen({ leadViewsCount }: Props) {
   const refreshStyle = useAnimatedStyle(() => ({ opacity: refreshOpacity.value }));
 
   const handlePrimary = async () => {
+    // Spec 99 §7.6 — paywall funnel conversion event. Fires on tap, BEFORE
+    // the async checkout call resolves — so the funnel measures intent
+    // (a tap) regardless of whether the WebBrowser session opens cleanly.
+    track('subscribe_button_clicked');
     // Fire haptic AFTER the async operation resolves — a pre-emptive
     // successNotification() before openCheckout would give the user a
     // success signal even when the request fails (Spec 91 §4.4 explicit:
@@ -176,7 +189,16 @@ export function PaywallScreen({ leadViewsCount }: Props) {
 
         <Animated.View style={secondaryStyle}>
           <Pressable
-            onPress={dismiss}
+            onPress={() => {
+              // Spec 99 §7.6 — DEV-only per §7.3 frequency-split rule. A
+              // user can dismiss → reopen → dismiss repeatedly, so per-tap
+              // PostHog events would flood. DEV-only catches the dev-time
+              // signal without the prod volume.
+              if (__DEV__) {
+                track('paywall_dismissed');
+              }
+              dismiss();
+            }}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             accessibilityRole="button"
             accessibilityLabel="Dismiss paywall and browse with locked content"
