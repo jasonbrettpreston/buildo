@@ -57,6 +57,44 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## 📱 Pre-Spec-99 Mobile Findings — Still Valid Post-Architecture
+
+Surfaced 2026-05-05 verification pass against the BEFORE state of this file (commit `bb4bdc9~1`). These are mobile findings from 2026-04-23 batches (Mobile Ph4-7, Phase 8.0, Design-audit) that the prior cleanup dropped under the "dormant >1 week" rule. **Spec 99's architectural change did NOT obsolete them** — Spec 99 restructured state management; these are UI/screen/schema gaps orthogonal to that. Each row verified against current HEAD before promotion.
+
+### 🔴 Maestro-blocking (verify Maestro flow scope before going to E2E)
+
+| Severity | Item | Verification | Maestro flow at risk |
+|---|---|---|---|
+| HIGH | **`[flight-job].tsx` cold-boot from notification → "Job not found"** — reads `item` from `useFlightBoard()` cache; deep-link via push tap before board query loads → empty state. Spec 77 §3.3 mandates dedicated `useFlightJobDetail` query. | Verified: `mobile/src/hooks/` has no `useFlightJobDetail` or `useLeadDetail` hook (grep clean). Cold-boot deep-link still hits the cached-data race. | Push-notification deep-link flows fail on cold boot |
+| HIGH | **`[lead].tsx` schema gap — sq_footage / predicted_start / income_tier / neighborhood profile absent** — `PermitLeadFeedItemSchema` carries none of these fields. Screen was built out (360 lines, has OpportunityRing) but four spec 91 §4.3 sections render placeholders or are missing. | Verified: `grep -E "sq_footage\|predicted_start\|income_tier\|neighborhood"` in `[lead].tsx` returns 0 matches; only `OpportunityRing` present. | Lead-detail E2E asserting on cost-tier / start-date / neighborhood content fails |
+| HIGH | **`[flight-job].tsx` contextual data thin** — relies on `FlightBoardItemSchema` which only has `permit_num`, `revision_num`, `address`, `lifecycle_phase`, `lifecycle_stalled`, `predicted_start`, `p25_days`, `p75_days`, `temporal_group`. No cost / sq_footage / neighborhood. Same root cause as the `useFlightJobDetail` finding above. | Verified same as cold-boot finding — no detail hook exists. | Flight-job-detail E2E asserting on contextual data fails |
+| HIGH | **Amber "newly updated" flash is dead code** — `FlightCard.hasUpdate` prop wired client-side (lines 48, 51, 61, 66) but `FlightBoardItem` schema has no `updated_at` field; `flight-board.tsx` `renderItem` never passes `hasUpdate`. Spec 92 §4.4 unread-card indicator unwired. | Verified: `grep "updated_at\|hasUpdate" mobile/app/(app)/flight-board.tsx` returns 0 matches. Backend schema + render-site both missing. | Visual assertion on the badge would fail; not a blocker for happy-path tests but a real gap |
+
+### 🟡 Maestro-MAYBE (visible bugs that could affect specific assertions)
+
+| Severity | Item | Verification | Test surface |
+|---|---|---|---|
+| LOW | **`FlightCard` urgency badge can show negative day count** (`⚡ -2 DAYS` for overdue predicted_start) — `Math.ceil(daysUntilStart!)` with no `Math.max(0, ...)` floor at line 202. | Verified at `mobile/src/components/feed/FlightCard.tsx:202`. | E2E asserting on badge text format would fail for stalled/overdue permits |
+| LOW | **`[flight-job].tsx` percentage string cast (`'${rangeLeft.value * 100}%' as unknown as number`)** in `useAnimatedStyle` worklet — works on iOS, inconsistent on Android Reanimated v3. | Source-pre-Spec-99 finding — needs in-context re-verification, but Reanimated v3 quirks are platform-stable. | Android-specific Maestro flows on the flight-job-detail screen |
+| LOW | **Push token not re-registered on cold boot for already-authenticated users** — `AuthGate` only calls `registerPushToken()` on auth-group → app-group transition (`sideEffect: 'registerPushToken'` in §5.3 Branch 5b). Returning authenticated users skip this branch. If the Expo Push Token rotates (OS upgrade, reinstall), the server never learns. MMKV dedup makes a cold-boot call safe. | Spec 99 §5.3 codifies this branch shape — finding survives. Fix: call `registerPushToken()` unconditionally when `user && _hasHydrated`. | Push notification E2E on returning users with rotated tokens |
+
+### 🟢 Maestro-NO but real (kept for completeness; deferred)
+
+These ARE real bugs but won't surface in Maestro testing — they're either UI polish (visual deviations from spec) or backend/server-side. Listed here so they're not silently lost again, but not blocking E2E:
+
+- LOW Mobile UI polish (~6 items): `LeadCard` Reanimated spring, `LeadCardSkeleton` pulse pattern, `FilterTriggerRow` styling, `NotificationToast` safe-area, `EmptyBoardState` gradient, hitSlop on Empty CTAs, typography nits in `[flight-job]`/`FlightCard`/`ScoreRow`, `SearchPermitsSheet` snap points
+- LOW Backend: `dispatchPhaseChangePushes` SQL no NULL push_token filter; `LeadMapPane` super-cluster not implemented (Phase 2 map WF)
+- LOW Schema: `.nullable() without .optional()` on `PermitLeadFeedItemSchema` fields
+
+Plus historical resolved (verified already-fixed in this triage):
+- ✅ `@react-native-community/slider` was missing from `package.json`; verified present 2026-05-05.
+- ✅ `[lead].tsx` 13-line stub; built out to 360 lines with `OpportunityRing`. Schema gaps remain (separate row above), but the screen is no longer a stub.
+- ✅ Phase 8.0 401 token refresh retry; resolved by `apiClient.ts:65-84` + B6 spec amendment commit `aed9918`.
+- ✅ Spec 90 §12 FlashList v2 estimatedItemSize; resolved by H4 commit `21520d9` typed wrapper.
+- ✅ `NotificationPermissionModal` UI migration to `@gorhom/bottom-sheet`; pre-existing resolution flagged in original BEFORE state line 884.
+
+---
+
 ## 🟢 Architectural Reinforcement — close spec-vs-code gaps (high-leverage)
 
 These are NOT race patches. They are gaps where the spec promises something the implementation does not actually guarantee, OR places where a bridge has a "known limitation" footnote that violates the architecture's "safe by construction" principle. Closing these reinforces the architecture rather than patching around it. Each is small + high-leverage.
