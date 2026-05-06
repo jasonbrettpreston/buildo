@@ -72,6 +72,7 @@ jest.mock('@sentry/react-native', () => ({
   init: jest.fn(),
   captureException: jest.fn(),
   addBreadcrumb: jest.fn(),
+  setUser: jest.fn(),
 }));
 // Spec 99 §9.1 removed clearUserProfileCache; mock the cleanup migration
 // helper that authStore imports at module load. Inline jest.fn (NOT a
@@ -221,6 +222,23 @@ describe('authStore.signOut', () => {
     const signOutCallOrder = mockSignOut.mock.invocationCallOrder[0];
     const resetIdentityCallOrder = mockResetIdentity.mock.invocationCallOrder[0];
     expect(resetIdentityCallOrder).toBeGreaterThan(signOutCallOrder);
+  });
+
+  it('clears Sentry.setUser(null) inside clearLocalSessionState (Spec 99 §7.5 + §B5 PIPEDA)', async () => {
+    const Sentry = jest.requireMock('@sentry/react-native') as {
+      setUser: jest.Mock;
+    };
+    Sentry.setUser.mockClear();
+    await useAuthStore.getState().signOut();
+    // Sentry.setUser(null) MUST fire on the signout fan-out so subsequent
+    // crash reports are not attributed to the previous user.
+    expect(Sentry.setUser).toHaveBeenCalled();
+    // Last call MUST be null — anything after a transient setUser({id})
+    // would re-attribute, defeating the PIPEDA boundary. The current
+    // signOut path doesn't write a non-null setUser, but defensively
+    // assert the LAST call is null.
+    const lastCall = Sentry.setUser.mock.calls[Sentry.setUser.mock.calls.length - 1];
+    expect(lastCall).toEqual([null]);
   });
 });
 
@@ -380,6 +398,31 @@ describe('initFirebaseAuthListener', () => {
     expect(mockIdentifyUser).toHaveBeenCalledTimes(1);
     const args = mockIdentifyUser.mock.calls[0];
     expect(args).toEqual(['firebase-uid-xyz']);
+  });
+
+  it('calls Sentry.setUser({id: uid}) after the listener hydrates the store (Spec 99 §7.5)', async () => {
+    const Sentry = jest.requireMock('@sentry/react-native') as {
+      setUser: jest.Mock;
+    };
+    Sentry.setUser.mockClear();
+    initFirebaseAuthListener();
+    const fakeUser = {
+      uid: 'firebase-uid-xyz',
+      email: 'a@b.com',
+      displayName: 'Display Name',
+      getIdToken: jest.fn(() => Promise.resolve('tok')),
+    };
+    authStateHandler?.(fakeUser);
+    await new Promise((r) => setImmediate(r));
+    expect(Sentry.setUser).toHaveBeenCalledWith({ id: 'firebase-uid-xyz' });
+    // PIPEDA: ONLY the opaque uid — no email, no displayName, no IP. The
+    // Sentry User type accepts {id, email, username, ip_address}; we send
+    // {id} only. Anything else would leak PII into crash reports.
+    const args = Sentry.setUser.mock.calls[0];
+    expect(args).toEqual([{ id: 'firebase-uid-xyz' }]);
+    expect(args[0]).not.toHaveProperty('email');
+    expect(args[0]).not.toHaveProperty('username');
+    expect(args[0]).not.toHaveProperty('ip_address');
   });
 
   // -----------------------------------------------------------------

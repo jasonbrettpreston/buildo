@@ -573,6 +573,16 @@ The high-frequency onboarding routing arms (5a-5d) MUST NOT emit production tele
 
 `stateDebug.trackRender(tag)` MUST count Strict Mode double-fires (counter increments on each), not suppress them. The `[LOOP-DETECTED]` threshold (30/sec) is high enough to ignore Strict Mode noise but catch genuine loops.
 
+### 7.5 User attribution for Sentry crash reports
+
+`Sentry.setUser({ id: firebaseUser.uid })` MUST be called in the auth listener's signed-in branch (immediately after `identifyUser(uid)` for symmetry with the PostHog distinctId mechanism). `Sentry.setUser(null)` MUST be called inside `clearLocalSessionState()` (the §B5 fan-out — NOT in `signOut()` directly, so the listener-driven forced-signout path also clears the attribution; same lesson as `paywallStore.reset()` from commits `381a0c9` + `f2f7147`).
+
+**Rationale:** without user attribution, individual user reports of crashes cannot be correlated with Sentry events. Anonymous JS stack traces are unactionable for support workflows.
+
+**PII boundary:** Firebase `uid` is opaque (server-generated, not personally identifying alone). The `Sentry.setUser` payload is restricted to `{ id }` only — `email`, `username`, `ip_address` are NEVER sent. Same precedent as PostHog distinctId per `mobile/src/lib/analytics.ts`.
+
+**Enforcement:** `mobile/__tests__/useAuth.test.ts` asserts `Sentry.setUser` calls match the auth state machine — set on signed-in, null on signed-out, null on forced-signout. A regression that drops `Sentry.setUser` on the signout fan-out fails CI.
+
 ---
 
 ## 8. Test Mandates

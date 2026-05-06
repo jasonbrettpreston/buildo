@@ -122,6 +122,12 @@ function clearLocalSessionState(): void {
   // PostHog identity reset AFTER stores so the distinctId is cleared at
   // a clean session boundary; subsequent events use anonymous distinctId.
   resetIdentity();
+  // Spec 99 §7.5 + §B5 PIPEDA: clear Sentry user attribution alongside the
+  // PostHog reset so subsequent crash reports are not attributed to the
+  // signed-out user. MUST live in clearLocalSessionState (not in signOut())
+  // so the listener-driven forced-signout path also clears — same lesson as
+  // paywallStore.reset() (commits 381a0c9 + f2f7147).
+  Sentry.setUser(null);
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -269,6 +275,10 @@ export function initFirebaseAuthListener(): () => void {
           // Identify the user in PostHog using the opaque Firebase uid as
           // distinctId — no email/displayName/phone is sent (Spec 90 §11).
           identifyUser(firebaseUser.uid);
+          // Spec 99 §7.5 — Sentry crash attribution. Same opaque uid; no
+          // email/displayName/phone (PIPEDA). Without this, individual user
+          // reports of crashes cannot be correlated with Sentry events.
+          Sentry.setUser({ id: firebaseUser.uid });
           // Cache invalidation AFTER setAuth: the next refetch uses the
           // just-set new bearer (Spec 99 §B4 + Gemini WF3-§9.1 F7).
           // Pre-fix, invalidate fired synchronously above and the refetch
