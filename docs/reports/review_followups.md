@@ -43,6 +43,14 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 |---|---|---|---|
 | MEDIUM | M1+M2+M3 #9 (Gemini) | **MMKV ban lacks automated enforcement.** §2.1 hard rule banning direct `createMMKV().getString()` outside `mobile/src/lib/persistence/` is verified manually only. | WF1 — add ESLint rule banning `react-native-mmkv` imports outside the allowed module list. |
 
+### WF3 (audit items 7-9) deferrals (2026-05-06)
+
+| Severity | Source | Item | Planned Home |
+|---|---|---|---|
+| MEDIUM | Gemini | **`fetchWithAuth` startup-race robustness** — when `idToken` is `null` at app start (uid hydrated from MMKV but onAuthStateChanged hasn't fired), an API call sends `Authorization: Bearer null` and depends on the server returning 401 (not 400) to trigger the §B6 refresh path. Spec 99 §B4's idToken gate is the architectural mitigation, but cross-hook hardening could pre-empt-refresh in `fetchWithAuthInternal` when `idToken` is falsy. | Cross-hook architecture WF; tag `[BRIDGES]`. Spec 99 §B6 amendment. |
+| LOW | Gemini | **§B6 stale `user` object on refresh** — apiClient reuses local store user when calling `setAuth(user, newToken)`. If Firebase-side displayName/email changed, local UI shows stale data until next `onAuthStateChanged` event. Mitigation would source user from `auth().currentUser` at refresh time. | Spec 99 §B6 amendment + apiClient.ts:74-77 patch. |
+| MEDIUM | DeepSeek | **Missing integration test for nonce-handoff sequence in `sign-in.tsx`** — `prepareAppleNonce` test (this WF3) locks the SHA-256 relationship at the helper boundary; `useAuth.test.ts:570-583` locks `AppleAuthProvider.credential(_, rawNonce)` mock invocation. The CALLER linkage in `sign-in.tsx:262-285` (does it actually pass `hashedNonce` to signInAsync AND `rawNonce` to credential?) isn't unit-tested because the sign-in screen requires component render. | Future Maestro flow `auth-apple-signin.yaml` covers this end-to-end; defer until the Maestro batch (audit items 11-13) lands. |
+
 ### WF1-A deferrals (2026-05-06)
 
 | Severity | Source | Item | Planned Home |

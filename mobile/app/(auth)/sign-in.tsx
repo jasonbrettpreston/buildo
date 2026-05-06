@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Google from 'expo-auth-session/providers/google';
-import * as Crypto from 'expo-crypto';
+import { prepareAppleNonce } from '@/lib/appleAuth';
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Sentry from '@sentry/react-native';
@@ -263,14 +263,9 @@ export default function SignInScreen() {
       // RNFirebase requires the same nonce used in Apple's sign-in to verify
       // the identity token. Apple receives the SHA-256 hash and signs over
       // it; Firebase recomputes the hash from the raw value and rejects the
-      // token if it doesn't match. Required by auth.AppleAuthProvider.credential.
-      const rawNonce = Array.from(Crypto.getRandomBytes(16))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
-      const hashedNonce = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        rawNonce,
-      );
+      // token if it doesn't match. The pure helper at mobile/src/lib/appleAuth.ts
+      // keeps the relationship unit-testable per Spec 93 §10.
+      const { rawNonce, hashedNonce } = await prepareAppleNonce();
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,

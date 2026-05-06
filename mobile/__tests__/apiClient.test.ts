@@ -8,15 +8,41 @@
 //  - ApiError(404) thrown on 404 (no retry — deterministic new-user state)
 //  - NetworkError thrown on fetch() failure
 
-jest.mock('@/store/authStore', () => ({
-  useAuthStore: {
-    getState: () => ({
-      idToken: 'test-token',
-      user: { uid: 'user-1', email: null, displayName: null },
-      setAuth: jest.fn(),
+// Stateful authStore mock: setAuth mutates the inner state so that the
+// recursive fetchWithAuthInternal call (after a 401 token refresh) reads
+// the REFRESHED idToken, not the original. Without this, the §B6 retry
+// path silently sends the stale bearer on the second fetch and no test
+// can detect a regression where setAuth is dropped.
+jest.mock('@/store/authStore', () => {
+  const initial = {
+    idToken: 'test-token',
+    user: { uid: 'user-1', email: null, displayName: null } as {
+      uid: string;
+      email: string | null;
+      displayName: string | null;
+    },
+  };
+  let state: typeof initial & { setAuth: jest.Mock } = {
+    ...initial,
+    setAuth: jest.fn((user: typeof initial.user, idToken: string) => {
+      state = { ...state, user, idToken };
     }),
-  },
-}));
+  };
+  return {
+    useAuthStore: {
+      getState: () => state,
+      // Test-only helper to reset stateful auth between cases.
+      _resetMockState: () => {
+        state = {
+          ...initial,
+          setAuth: jest.fn((user: typeof initial.user, idToken: string) => {
+            state = { ...state, user, idToken };
+          }),
+        };
+      },
+    },
+  };
+});
 
 // RNFirebase: `auth` is a factory function — `auth()` returns the instance with
 // currentUser. apiClient.ts calls `auth().currentUser?.getIdToken(true)`.
@@ -129,7 +155,7 @@ describe('fetchWithAuth — ApiError / NetworkError', () => {
 
 // RED LIGHT for first test: before the 401 retry fix, fetchWithAuth throws ApiError(401)
 // immediately on first 401 without ever calling getIdToken — mockFetch only fires once.
-describe('fetchWithAuth — 401 token refresh retry', () => {
+describe('fetchWithAuth — 401 token refresh retry (Spec 99 §B6)', () => {
   function getIdTokenMock(): jest.Mock {
     return (
       jest.requireMock('@/lib/firebase') as {
@@ -138,8 +164,21 @@ describe('fetchWithAuth — 401 token refresh retry', () => {
     ).auth.currentUser.getIdToken;
   }
 
+  function getSetAuthMock(): jest.Mock {
+    return (
+      jest.requireMock('@/store/authStore') as {
+        useAuthStore: { getState: () => { setAuth: jest.Mock } };
+      }
+    ).useAuthStore.getState().setAuth;
+  }
+
   beforeEach(() => {
     getIdTokenMock().mockReset();
+    (
+      jest.requireMock('@/store/authStore') as {
+        useAuthStore: { _resetMockState: () => void };
+      }
+    ).useAuthStore._resetMockState();
   });
 
   it('retries with fresh token on 401 and resolves', async () => {
@@ -151,6 +190,29 @@ describe('fetchWithAuth — 401 token refresh retry', () => {
     expect(result).toEqual({ data: 'ok' });
     expect(getIdTokenMock()).toHaveBeenCalledWith(true);
     expect(mockFetch).toHaveBeenCalledTimes(2);
+
+    // Spec 99 §B6 contract: the refreshed token MUST be (a) written to
+    // authStore via setAuth and (b) carried as the Bearer on the retry.
+    // Without these two assertions a regression that calls getIdToken
+    // but drops the result would still pass.
+    // Capture the setAuth mock once — calling getSetAuthMock() twice would
+    // pull a fresh reference if a future refactor adds a mid-test reset,
+    // silently producing a confusing pass/fail (Independent reviewer #1).
+    const setAuthMock = getSetAuthMock();
+    expect(setAuthMock).toHaveBeenCalledTimes(1);
+    expect(setAuthMock).toHaveBeenCalledWith(
+      { uid: 'user-1', email: null, displayName: null },
+      'refreshed-token',
+    );
+
+    const firstCallHeaders = (mockFetch.mock.calls[0][1] as RequestInit | undefined)?.headers as
+      | Record<string, string>
+      | undefined;
+    const secondCallHeaders = (mockFetch.mock.calls[1][1] as RequestInit | undefined)?.headers as
+      | Record<string, string>
+      | undefined;
+    expect(firstCallHeaders?.Authorization).toBe('Bearer test-token');
+    expect(secondCallHeaders?.Authorization).toBe('Bearer refreshed-token');
   });
 
   it('throws ApiError(401) when retry also returns 401', async () => {
