@@ -146,6 +146,62 @@ export const FlightBoardDetailSchema = FlightBoardItemSchema;
 export type FlightBoardDetail = z.infer<typeof FlightBoardDetailSchema>;
 
 // ---------------------------------------------------------------------------
+// Lead detail (Spec 91 §4.3.1 — single-lead detail screen contract)
+// ---------------------------------------------------------------------------
+// Mirrors `src/app/api/leads/detail/[id]/types.ts` LeadDetail interface
+// byte-for-byte. is_saved was added by WF1-A Phase 1 (commit 657faf8) so
+// the mobile SaveButton can render the optimistic-fill heart on cold-boot
+// deep-link without depending on the feed cache.
+
+export const LeadDetailLocationSchema = z.object({
+  lat: z.number(),
+  lng: z.number(),
+});
+
+export const LeadDetailCostSchema = z.object({
+  estimated: z.number().nullable(),
+  tier: z.string().nullable(),
+  range_low: z.number().nullable(),
+  range_high: z.number().nullable(),
+  modeled_gfa_sqm: z.number().nullable(),
+});
+
+export const LeadDetailNeighbourhoodSchema = z.object({
+  name: z.string().nullable(),
+  avg_household_income: z.number().nullable(),
+  median_household_income: z.number().nullable(),
+  period_of_construction: z.string().nullable(),
+});
+
+export const LeadDetailSchema = z.object({
+  lead_id: z.string(),
+  lead_type: z.enum(['permit', 'coa']),
+  permit_num: z.string().nullable(),
+  revision_num: z.string().nullable(),
+  address: z.string(),
+  location: LeadDetailLocationSchema.nullable(),
+  work_description: z.string().nullable(),
+  applicant: z.string().nullable(),
+  lifecycle_phase: z.string().nullable(),
+  lifecycle_stalled: z.boolean(),
+  target_window: z.enum(['bid', 'work']).nullable(),
+  opportunity_score: z.number().nullable(),
+  competition_count: z.number().int().nonnegative(),
+  predicted_start: z.string().nullable(),
+  p25_days: z.number().nullable(),
+  p75_days: z.number().nullable(),
+  cost: LeadDetailCostSchema.nullable(),
+  neighbourhood: LeadDetailNeighbourhoodSchema.nullable(),
+  updated_at: z.string(),
+  is_saved: z.boolean(),
+});
+
+export type LeadDetailLocation = z.infer<typeof LeadDetailLocationSchema>;
+export type LeadDetailCost = z.infer<typeof LeadDetailCostSchema>;
+export type LeadDetailNeighbourhood = z.infer<typeof LeadDetailNeighbourhoodSchema>;
+export type LeadDetail = z.infer<typeof LeadDetailSchema>;
+
+// ---------------------------------------------------------------------------
 // Global search result (Phase 5 — FAB permit search per Spec 77 §3.1)
 // ---------------------------------------------------------------------------
 
