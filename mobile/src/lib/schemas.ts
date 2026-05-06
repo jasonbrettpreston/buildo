@@ -126,6 +126,9 @@ export const FlightBoardItemSchema = z.object({
   p25_days: z.number().nullable(),
   p75_days: z.number().nullable(),
   temporal_group: z.enum(['action_required', 'departing_soon', 'on_the_horizon']),
+  // Spec 77 §3.2 + §3.3.1 — ISO 8601 timestamp from `permits.updated_at`,
+  // drives the amber update flash via the `flightBoardSeenStore` MMKV map.
+  updated_at: z.string(),
 });
 
 export type FlightBoardItem = z.infer<typeof FlightBoardItemSchema>;
@@ -137,12 +140,8 @@ export const FlightBoardResultSchema = z.object({
 export type FlightBoardResult = z.infer<typeof FlightBoardResultSchema>;
 
 // Flight Board Detail (Spec 77 §3.3.1 — single-permit cold-boot fallback).
-// Server type at `src/app/api/leads/flight-board/detail/[id]/types.ts` —
-// matches a single FlightBoardItem plus `updated_at` (ISO 8601 from
-// `permits.updated_at`, used by Spec 92 §4.4 amber update flash).
-export const FlightBoardDetailSchema = FlightBoardItemSchema.extend({
-  updated_at: z.string(),
-});
+// Identical shape to FlightBoardItem; aliased for callsite clarity.
+export const FlightBoardDetailSchema = FlightBoardItemSchema;
 
 export type FlightBoardDetail = z.infer<typeof FlightBoardDetailSchema>;
 

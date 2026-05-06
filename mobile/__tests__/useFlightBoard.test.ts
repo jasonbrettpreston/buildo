@@ -18,6 +18,8 @@ const validItem = {
   p25_days: -10,
   p75_days: 20,
   temporal_group: 'departing_soon',
+  // Spec 77 §3.2 — drives the amber update flash via flightBoardSeenStore.
+  updated_at: '2026-05-01T12:00:00Z',
 };
 
 const validResult = {

@@ -11,6 +11,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { useUserProfileStore } from '@/store/userProfileStore';
 import { usePaywallStore } from '@/store/paywallStore';
+import { useFlightBoardSeenStore } from '@/store/flightBoardSeenStore';
 import { queryClient } from '@/lib/queryClient';
 import { mmkvPersister } from '@/lib/mmkvPersister';
 import { cleanupLegacyUserProfileCache } from '@/lib/migrations/userProfileCacheCleanup';
@@ -109,6 +110,12 @@ function clearLocalSessionState(): void {
   useNotificationStore.getState().reset();
   useOnboardingStore.getState().reset();
   useUserProfileStore.getState().reset();
+  // Spec 99 §B5 PIPEDA: clear the per-user "last seen" map so a different
+  // user signing in on the same device doesn't inherit the prior user's
+  // view history. (Spec 93 §3.4's older "MMKV preserved" rule was
+  // superseded by §B5 in commits 381a0c9 + f2f7147.) Spec 77 §3.2's
+  // first-sight-no-flash gate handles the post-reset UX cleanly.
+  useFlightBoardSeenStore.getState().reset();
   // Inline auth zero (matches `clearAuth()` semantics — kept inline to
   // make the full session-clear visible in one place).
   useAuthStore.setState({ user: null, idToken: null, isLoading: false });
