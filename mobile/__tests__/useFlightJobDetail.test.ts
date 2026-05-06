@@ -26,7 +26,7 @@ jest.mock('@sentry/react-native', () => ({
 }));
 
 import { fetchWithAuth } from '@/lib/apiClient';
-import { ApiError, AccountDeletedError } from '@/lib/errors';
+import { ApiError, AccountDeletedError, RateLimitError } from '@/lib/errors';
 import * as Sentry from '@sentry/react-native';
 import {
   fetchFlightJobDetail,
@@ -69,11 +69,14 @@ describe('fetchFlightJobDetail — Spec 77 §3.3.1', () => {
     });
   });
 
-  it('encodes the id segment when calling fetchWithAuth', async () => {
+  it('percent-encodes id segments containing reserved characters', async () => {
+    // Use a fixture that actually exercises encodeURIComponent — bare hyphens
+    // are unreserved (RFC 3986) and pass through unchanged, so a hyphen-only
+    // id is a false-green for this assertion. Forward slashes ARE encoded.
     mockFetch.mockResolvedValueOnce({ data: validDetail });
-    await fetchFlightJobDetail('23-145678--01');
+    await fetchFlightJobDetail('BP/2024-145--01');
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/leads/flight-board/detail/23-145678--01',
+      '/api/leads/flight-board/detail/BP%2F2024-145--01',
     );
   });
 
@@ -118,6 +121,11 @@ describe('shouldRetryFlightJobDetail — retry guard', () => {
     expect(
       shouldRetryFlightJobDetail(0, new FlightJobDetailSchemaError('drift')),
     ).toBe(false);
+  });
+
+  it('skips retry on RateLimitError — burning retries compounds the throttle', () => {
+    expect(shouldRetryFlightJobDetail(0, new RateLimitError(60))).toBe(false);
+    expect(shouldRetryFlightJobDetail(2, new RateLimitError(30))).toBe(false);
   });
 
   it('retries network errors up to 3 attempts', () => {

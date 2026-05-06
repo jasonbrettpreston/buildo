@@ -6,14 +6,16 @@
 // opens the screen with an empty `useFlightBoard()` cache. Calls
 // `GET /api/leads/flight-board/detail/:id` per Spec 77 §3.3.1 contract.
 //
-// Authorization is implicit in the SQL — endpoint returns 404 when the user
+// Authorization: client-side we gate on `idToken` to avoid a cold-boot 401
+// before authStore rehydrates the Bearer token (Spec 99 §B4). Server-side
+// authorization is enforced by the SQL — endpoint returns 404 when the user
 // does not have the permit saved (lead_views.user_id = ctx.uid AND saved =
-// true AND lead_type = 'permit'). No mobile-side auth check needed.
+// true AND lead_type = 'permit').
 
 import { useQuery } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react-native';
 import { fetchWithAuth } from '@/lib/apiClient';
-import { AccountDeletedError, ApiError } from '@/lib/errors';
+import { AccountDeletedError, ApiError, RateLimitError } from '@/lib/errors';
 import { useAuthStore } from '@/store/authStore';
 import { FlightBoardDetailSchema, type FlightBoardDetail } from '@/lib/schemas';
 
@@ -55,13 +57,16 @@ export async function fetchFlightJobDetail(id: string): Promise<FlightBoardDetai
  */
 // Skip retries for deterministic states: 400 (malformed id), 404 (not on
 // user's saved board — natural WHERE filter), 403 (deleted account),
-// schema-drift (malformed server response). Exported for unit testing.
-export function shouldRetryFlightJobDetail(count: number, err: unknown): boolean {
+// schema-drift (malformed server response), and 429 (rate-limit — burning
+// retries against a rate-limited endpoint compounds the throttle). Up to 2
+// retries (3 total attempts) for transient errors. Exported for unit testing.
+export function shouldRetryFlightJobDetail(failureCount: number, err: unknown): boolean {
   return (
     !(err instanceof AccountDeletedError) &&
+    !(err instanceof RateLimitError) &&
     !(err instanceof ApiError && (err.status === 400 || err.status === 404)) &&
     !(err instanceof FlightJobDetailSchemaError) &&
-    count < 3
+    failureCount < 3
   );
 }
 

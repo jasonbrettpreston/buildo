@@ -43,6 +43,13 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 |---|---|---|---|
 | MEDIUM | M1+M2+M3 #9 (Gemini) | **MMKV ban lacks automated enforcement.** §2.1 hard rule banning direct `createMMKV().getString()` outside `mobile/src/lib/persistence/` is verified manually only. | WF1 — add ESLint rule banning `react-native-mmkv` imports outside the allowed module list. |
 
+### WF1-B deferrals (2026-05-06)
+
+| Severity | Source | Item | Planned Home |
+|---|---|---|---|
+| LOW | Independent (worktree) #4 | **No `testID` on `[flight-job].tsx` cold-boot loading skeleton or "Job not found" view.** Spec 98 requires Maestro-assertable testIDs on distinct screen states. Loading skeleton at `[flight-job].tsx:181` and not-found view at line 190 lack them. | When the Maestro flow for push-notification deep-link is authored, add `testID="flight-job-loading-skeleton"` + `testID="flight-job-not-found"`. |
+| LOW | Independent (worktree) #5 | **`FlightBoardDetailSchema.updated_at` uses bare `z.string()`** — accepts empty/non-ISO strings; `formatDateLong` returns `'—'` so no immediate display corruption, but Sentry won't see a server-side data integrity issue. Consistent with existing `FlightBoardItemSchema.predicted_start` convention. | Future date-validation hardening pass — promote all date fields to `z.string().regex(/^\d{4}-\d{2}-\d{2}/)` or `z.string().datetime()`. |
+
 ### Test/spec polish (LOW + NIT)
 
 | Severity | Source | Item | Planned Home |
@@ -65,9 +72,9 @@ Surfaced 2026-05-05 verification pass against the BEFORE state of this file (com
 
 | Severity | Item | Verification | Maestro flow at risk |
 |---|---|---|---|
-| HIGH | **`[flight-job].tsx` cold-boot from notification → "Job not found"** — reads `item` from `useFlightBoard()` cache; deep-link via push tap before board query loads → empty state. Spec 77 §3.3 mandates dedicated `useFlightJobDetail` query. | Verified: `mobile/src/hooks/` has no `useFlightJobDetail` or `useLeadDetail` hook (grep clean). Cold-boot deep-link still hits the cached-data race. | Push-notification deep-link flows fail on cold boot |
+| ✅ HIGH | ~~**`[flight-job].tsx` cold-boot from notification → "Job not found"**~~ — **RESOLVED 2026-05-06 by WF1-B** (commits `4e2df49` Phase 1 + `3d5b47f` Phase 2). Hook `mobile/src/hooks/useFlightJobDetail.ts` + `[flight-job].tsx` cold-boot fallback wired. | — | — |
 | HIGH | **`[lead].tsx` schema gap — sq_footage / predicted_start / income_tier / neighborhood profile absent** — `PermitLeadFeedItemSchema` carries none of these fields. Screen was built out (360 lines, has OpportunityRing) but four spec 91 §4.3 sections render placeholders or are missing. | Verified: `grep -E "sq_footage\|predicted_start\|income_tier\|neighborhood"` in `[lead].tsx` returns 0 matches; only `OpportunityRing` present. | Lead-detail E2E asserting on cost-tier / start-date / neighborhood content fails |
-| HIGH | **`[flight-job].tsx` contextual data thin** — relies on `FlightBoardItemSchema` which only has `permit_num`, `revision_num`, `address`, `lifecycle_phase`, `lifecycle_stalled`, `predicted_start`, `p25_days`, `p75_days`, `temporal_group`. No cost / sq_footage / neighborhood. Same root cause as the `useFlightJobDetail` finding above. | Verified same as cold-boot finding — no detail hook exists. | Flight-job-detail E2E asserting on contextual data fails |
+| HIGH | **`[flight-job].tsx` contextual data thin** — relies on `FlightBoardItemSchema` which only has `permit_num`, `revision_num`, `address`, `lifecycle_phase`, `lifecycle_stalled`, `predicted_start`, `p25_days`, `p75_days`, `temporal_group`. No cost / sq_footage / neighborhood. Now ALSO includes `updated_at` per WF1-B `FlightBoardDetailSchema`, but the cost/sq_footage/neighborhood gap remains unaddressed. | Partial: WF1-B added `updated_at`. Cost/sq_footage/neighborhood require a Spec 77 §3.3 schema expansion + corresponding backend amendment. | Flight-job-detail E2E asserting on contextual data fails |
 | HIGH | **Amber "newly updated" flash is dead code** — `FlightCard.hasUpdate` prop wired client-side (lines 48, 51, 61, 66) but `FlightBoardItem` schema has no `updated_at` field; `flight-board.tsx` `renderItem` never passes `hasUpdate`. Spec 92 §4.4 unread-card indicator unwired. | Verified: `grep "updated_at\|hasUpdate" mobile/app/(app)/flight-board.tsx` returns 0 matches. Backend schema + render-site both missing. | Visual assertion on the badge would fail; not a blocker for happy-path tests but a real gap |
 
 ### 🟡 Maestro-MAYBE (visible bugs that could affect specific assertions)
@@ -170,7 +177,11 @@ These practices keep `review_followups.md` from drifting back to the 1246-line s
 
 One-line per resolved batch with commit hash + date. Full prose recoverable via `git log -p docs/reports/review_followups.md`.
 
-### 2026-05-05 (this session)
+### 2026-05-06
+
+- `4e2df49` / `3d5b47f` — **WF1-B mobile cold-boot fallback for `[flight-job].tsx`** — Phase 1: `useFlightJobDetail` hook + `FlightBoardDetailSchema` + 11 unit tests. Phase 2: `[flight-job].tsx` cold-boot wiring (cache-first, then single-permit fetch, then "Job not found" only when both fail). Multi-Agent review applied 2 inline fixes (RateLimitError retry exclusion; `encodeURIComponent` test no-longer-false-green) + 2 deferrals (testID gaps; `updated_at` Zod hardening). Closes Pre-Spec-99 Mobile Findings #1 (push deep-link Maestro blocker).
+
+### 2026-05-05 (last session)
 
 - `dd638c2` — **WF3 H1 Spec 99 §6.5 amendment** — permitted narrow `isFetching` carve-out for stable status fields; AppLayout `expired`-refetch enumerated as the canonical exception.
 - `e41d6a5` — **WF3 H2 §8.3 gate-stability tests** — 4 source-grep regression tests in `subscriptionGate.test.ts` covering all §6.5 render gates.
