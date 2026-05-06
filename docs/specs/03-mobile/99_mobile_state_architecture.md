@@ -142,7 +142,8 @@ After §9.3 deduplication, `onboardingStore` holds ONLY these two genuinely-loca
 | `paywall.visible` | `paywallStore` (in-memory — Spec 96 §9 explicit) | `show()` — called by `InlineBlurBanner.tsx:12` on banner tap (verified 2026-05-03 §9.9 audit). The original §3.4 audit incorrectly flagged this as caller-less; the grep missed `usePaywallStore((s) => s.show)` selector usage. | AppLayout subscription gate, PaywallScreen |
 | `paywall.dismissed` | `paywallStore` (in-memory) | `dismiss()` (PaywallScreen "Maybe later" tap), `reset()` (signOut per §B5; `expired→active` transition in AppLayout — renamed from `clear()` 2026-05-03 for §B5 naming uniformity) | AppLayout subscription gate, InlineBlurBanner |
 
-### 3.4b Engagement (Zustand, MMKV-persisted)
+### 3.4c Engagement (Zustand, MMKV-persisted)
+<!-- Subsection number is `3.4c`, not `3.4b`, because §3.4a (UI-Only SharedValues, below) was already taken by an existing subsection. Document order in this section: §3.4 → §3.4a (existing) → §3.4c (this section). -->
 
 These stores survive app close and are reset on sign-out via §B5. Spec 77 §3.2 prescribes the persistence — same-user re-sign-in re-seeds via the gate (no server source of truth to re-hydrate from, so first-sight semantics protect post-reset UX).
 

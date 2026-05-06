@@ -43,6 +43,13 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 |---|---|---|---|
 | MEDIUM | M1+M2+M3 #9 (Gemini) | **MMKV ban lacks automated enforcement.** §2.1 hard rule banning direct `createMMKV().getString()` outside `mobile/src/lib/persistence/` is verified manually only. | WF1 — add ESLint rule banning `react-native-mmkv` imports outside the allowed module list. |
 
+### WF1-C deferrals (2026-05-06)
+
+| Severity | Source | Item | Planned Home |
+|---|---|---|---|
+| LOW | Gemini + DeepSeek (convergent, MEDIUM each) | **MMKV adapter silent error swallowing across ALL stores.** Every Zustand+MMKV store in `mobile/src/store/*.ts` (filterStore, userProfileStore, onboardingStore, authStore, flightBoardSeenStore) uses an identical `try { ... } catch { /* best-effort */ }` adapter pattern. Gemini and DeepSeek both flagged this on the new flightBoardSeenStore but the issue is project-wide. Adding Sentry only to one store creates asymmetric observability. | Future WF — cross-store hardening pass adding `Sentry.captureException(err, { extra: { context: 'mmkvAdapter.<op>', storeId } })` to every adapter's catch block. Tag `[OBSERVABILITY]`. Spec 99 §1.2 + §7.1 alignment. |
+| LOW | DeepSeek (HIGH but de-rated after verification) | **`flightBoardSeenStore.seenMap` unbounded growth.** No TTL or max-size cap. At realistic scale (~1000 permits a user might have ever opened over years × 40 bytes each = 40 KB) this is well within MMKV's tolerance. Worth revisiting if active-user scale 100x. | Future WF — gated on real telemetry showing rehydrate latency >50ms or MMKV blob size >1 MB. Add LRU eviction policy at that point. |
+
 ### WF1-B deferrals (2026-05-06)
 
 | Severity | Source | Item | Planned Home |
@@ -75,7 +82,7 @@ Surfaced 2026-05-05 verification pass against the BEFORE state of this file (com
 | ✅ HIGH | ~~**`[flight-job].tsx` cold-boot from notification → "Job not found"**~~ — **RESOLVED 2026-05-06 by WF1-B** (commits `4e2df49` Phase 1 + `3d5b47f` Phase 2). Hook `mobile/src/hooks/useFlightJobDetail.ts` + `[flight-job].tsx` cold-boot fallback wired. | — | — |
 | HIGH | **`[lead].tsx` schema gap — sq_footage / predicted_start / income_tier / neighborhood profile absent** — `PermitLeadFeedItemSchema` carries none of these fields. Screen was built out (360 lines, has OpportunityRing) but four spec 91 §4.3 sections render placeholders or are missing. | Verified: `grep -E "sq_footage\|predicted_start\|income_tier\|neighborhood"` in `[lead].tsx` returns 0 matches; only `OpportunityRing` present. | Lead-detail E2E asserting on cost-tier / start-date / neighborhood content fails |
 | HIGH | **`[flight-job].tsx` contextual data thin** — relies on `FlightBoardItemSchema` which only has `permit_num`, `revision_num`, `address`, `lifecycle_phase`, `lifecycle_stalled`, `predicted_start`, `p25_days`, `p75_days`, `temporal_group`. No cost / sq_footage / neighborhood. Now ALSO includes `updated_at` per WF1-B `FlightBoardDetailSchema`, but the cost/sq_footage/neighborhood gap remains unaddressed. | Partial: WF1-B added `updated_at`. Cost/sq_footage/neighborhood require a Spec 77 §3.3 schema expansion + corresponding backend amendment. | Flight-job-detail E2E asserting on contextual data fails |
-| HIGH | **Amber "newly updated" flash is dead code** — `FlightCard.hasUpdate` prop wired client-side (lines 48, 51, 61, 66) but `FlightBoardItem` schema has no `updated_at` field; `flight-board.tsx` `renderItem` never passes `hasUpdate`. Spec 92 §4.4 unread-card indicator unwired. | Verified: `grep "updated_at\|hasUpdate" mobile/app/(app)/flight-board.tsx` returns 0 matches. Backend schema + render-site both missing. | Visual assertion on the badge would fail; not a blocker for happy-path tests but a real gap |
+| ✅ HIGH | ~~**Amber "newly updated" flash is dead code**~~ — **RESOLVED 2026-05-06 by WF1-C** (commits `6416262` Phase 1 + `0beaaf4` Phase 2). New `flightBoardSeenStore` (Spec 99 §3.4c) + `FlightBoardItem.updated_at` + `flight-board.tsx` renderItem wiring + `[flight-job].tsx` mark-on-detail-open + Spec 77/92/99 amendments aligning the trigger rule. | — | — |
 
 ### 🟡 Maestro-MAYBE (visible bugs that could affect specific assertions)
 
@@ -179,6 +186,7 @@ One-line per resolved batch with commit hash + date. Full prose recoverable via 
 
 ### 2026-05-06
 
+- `6416262` / `0beaaf4` — **WF1-C amber update flash wiring** — Phase 1: `flightBoardSeenStore` (Zustand + MMKV persist) + `FlightBoardItem.updated_at` schema field + `clearLocalSessionState` §B5 fan-out + 6 unit tests. Phase 2: `flight-board.tsx` renderItem `hasUpdate` computation + `[flight-job].tsx` `markSeen` on detail-open + FlightCard `testID="flight-card-update-flash"` + Spec 77/92/99 amendments (Spec 99 §3.4c new subsection + Spec 92 §4.4 trigger-rule supersedure + Spec 77 §3.2 store-path cross-link). Multi-Agent review applied 2 inline fixes (persist `name` aligned to spec literal `'flight-board-last-seen'`; Spec 99 subsection renumbered §3.4b → §3.4c to preserve §3.4a ordering) + 2 deferrals (cross-store MMKV silent-swallow Sentry add; seen-map unbounded-growth LRU). Closes Pre-Spec-99 Mobile Findings #4 (dead-coded amber flash).
 - `4e2df49` / `3d5b47f` — **WF1-B mobile cold-boot fallback for `[flight-job].tsx`** — Phase 1: `useFlightJobDetail` hook + `FlightBoardDetailSchema` + 11 unit tests. Phase 2: `[flight-job].tsx` cold-boot wiring (cache-first, then single-permit fetch, then "Job not found" only when both fail). Multi-Agent review applied 2 inline fixes (RateLimitError retry exclusion; `encodeURIComponent` test no-longer-false-green) + 2 deferrals (testID gaps; `updated_at` Zod hardening). Closes Pre-Spec-99 Mobile Findings #1 (push deep-link Maestro blocker).
 
 ### 2026-05-05 (last session)

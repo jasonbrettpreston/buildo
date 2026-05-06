@@ -70,7 +70,9 @@ export const useFlightBoardSeenStore = create<FlightBoardSeenState>()(
       },
     }),
     {
-      name: 'flight-board-seen',
+      // Spec 77 §3.2 prescribes the canonical persisted key name
+      // `flight-board-last-seen` verbatim. MMKV blob `id` matches.
+      name: 'flight-board-last-seen',
       storage: createJSONStorage(() => mmkvStorage),
       version: 1,
     },
