@@ -10,7 +10,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useFlightBoard } from '@/hooks/useFlightBoard';
-import type { FlightBoardItem } from '@/lib/schemas';
+import { useFlightJobDetail } from '@/hooks/useFlightJobDetail';
+import type { FlightBoardItem, FlightBoardDetail } from '@/lib/schemas';
 import { ChevronLeft } from 'lucide-react-native';
 
 const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
@@ -124,14 +125,27 @@ function TimelineGauge({ predicted_start, p25_days, p75_days }: GaugeProps) {
 export default function FlightJobDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data, isLoading } = useFlightBoard();
+  const { data, isLoading: boardLoading } = useFlightBoard();
 
   // Parse permit_num and revision_num from id: "PERMIT_NUM--REVISION_NUM"
   const [permitNum, revisionNum] = (id ?? '').split('--');
 
-  const item: FlightBoardItem | undefined = data?.data.find(
+  const cachedItem: FlightBoardItem | undefined = data?.data.find(
     (d) => d.permit_num === permitNum && d.revision_num === revisionNum,
   );
+
+  // Cold-boot fallback (Spec 77 §3.3.1): when push deep-link opens this screen
+  // and the board has resolved without a hit (permit not in user's saved
+  // board cache), fetch the single permit by id. Gated to fire only after
+  // the board resolved without a hit, so cache-hit fast path is preserved.
+  const detailQuery = useFlightJobDetail(id, {
+    enabled: !boardLoading && !cachedItem,
+  });
+
+  const item: FlightBoardItem | FlightBoardDetail | undefined =
+    cachedItem ?? detailQuery.data;
+
+  const isLoading = boardLoading || (!cachedItem && detailQuery.isLoading);
 
   const isUrgent =
     item?.predicted_start !== null &&
@@ -160,16 +174,19 @@ export default function FlightJobDetailScreen() {
       </View>
 
       {isLoading ? (
-        // Cold-boot deep-link from a push notification hits this path: the board
-        // query hasn't resolved yet. Render a simple skeleton instead of the
-        // "Job not found" state that would otherwise flash — which would make
-        // the urgent notification feel broken.
+        // Cold-boot deep-link from a push notification hits this path while
+        // either the board query OR the single-permit fallback is in flight.
+        // Render a skeleton instead of the "Job not found" state that would
+        // otherwise flash — making the urgent notification feel broken.
         <View className="flex-1 px-4 pt-6">
           <View className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 h-24" />
           <View className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 h-40" />
           <View className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 h-24" />
         </View>
       ) : !item ? (
+        // Both list AND single-permit fetch resolved without a hit — the
+        // permit isn't on this user's saved board (404) or detail fetch
+        // errored permanently.
         <View className="flex-1 items-center justify-center">
           <Text className="text-zinc-500 text-sm font-mono">Job not found in board.</Text>
         </View>
