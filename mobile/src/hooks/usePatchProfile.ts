@@ -65,19 +65,11 @@ export function buildPatchProfileOptions(
       return { prevRadiusKm };
     },
 
-    onError: (_err, patch, context) => {
-      // Step 3: rollback with re-read-before-rollback per §4 B3 amendment
-      // 2026-05-05 (DeepSeek WF2 M1+M2+M3 #7 / FC1). Naive rollback can
-      // clobber a concurrent write — if mutation B set radiusKm=30 between
-      // mutation A's onMutate and onError, A's rollback would destroy B's
-      // optimistic value. Re-read the current Zustand value; only restore
-      // `previous` if our optimistic value is still in place. If a newer
-      // write changed it, that newer write is canonical (last-write-wins).
-      if (
-        patch.radius_km !== undefined &&
-        context?.prevRadiusKm !== undefined &&
-        useFilterStore.getState().radiusKm === patch.radius_km
-      ) {
+    onError: (_err, _patch, context) => {
+      // Step 3: rollback. Only restore fields that we snapshotted; an
+      // undefined snapshot means the corresponding patch field was not
+      // sent and must not be touched.
+      if (context?.prevRadiusKm !== undefined) {
         useFilterStore.getState().setRadiusKm(context.prevRadiusKm);
       }
     },
