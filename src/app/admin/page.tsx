@@ -79,6 +79,19 @@ export default function AdminPage() {
               Edit Gravity config — logic variables, trade multipliers, and scope matrix
             </p>
           </Link>
+
+          <Link
+            href="/admin/app-health"
+            className="group bg-white rounded-xl border border-gray-200 p-8 hover:border-blue-300 hover:shadow-lg transition-all"
+          >
+            <div className="text-4xl mb-4">📡</div>
+            <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+              App Health
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              Frontend telemetry triage — crash rate, funnel conversion, auth method ratios
+            </p>
+          </Link>
         </div>
       </main>
     </div>
