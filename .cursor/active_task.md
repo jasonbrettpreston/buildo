@@ -1,113 +1,109 @@
-# Active Task: WF3 Forced-Signout Cleanup Unification + Dead-Code Sweep
-**Status:** Implementation (authorized 2026-05-04)
-**Workflow:** WF3 — bug fix (PROMOTED CRITICAL) + dead-code housekeeping
-**Domain Mode:** Admin (mobile)
-**Rollback Anchor:** `fbb52c3`
+# Active Task: WF1 — Cycle 4: Implement Spec 76 Cycle-3 amendment (Flight Center Tool + Lead Detail Inspector + Flight Job Detail Inspector)
+**Status:** Implementation (authorized 2026-05-06; plan revised post-clarification — mobile-parity Flight Center with `<SearchPermitsModal>` mirroring mobile Spec 77 §3.1, NOT Test-Feed-driven saves)
+**Workflow:** WF1 — New Feature Genesis (CODE — implements the spec amendment authored at commit `7b3289a`)
+**Domain Mode:** Admin (web-admin only — modifies `src/components/admin/`, `src/app/admin/`, `src/lib/admin/`, `src/features/admin-flight-center/`)
+**Rollback Anchor:** `345c429` (current HEAD — last Cycle 2 Phase 4 commit)
 
 ## Context
 
-Two related items:
+* **Goal:** ship the three admin tools defined by Spec 76 §3.4 / §3.5 / §3.6:
+  1. **Flight Center Tool** (`/admin/lead-feed/flight-center`) — admin-scoped flight board UX mirroring mobile Spec 77 §3.2: 3 temporal sections (`action_required` / `departing_soon` / `on_the_horizon`), each card shows expected completion date (`predicted_start` + p25/p75 days), tap a card → opens §3.6 Flight Job Detail Inspector inline (drawer/modal, not a route nav). Uses `lead_views` + `flight-board` endpoint unmodified — no impersonation, admin's saves write `lead_views` rows under the admin's own session uid.
+  2. **Lead Detail Inspector** (`/admin/lead-feed/inspector?tab=lead`) — paste a `lead_id`, see Spec 91 §4.3 `LeadDetail` payload (cost / neighbourhood / target_window / opportunity_score / competition_count / applicant / work_description / is_saved). JSON tree + structured render side-by-side. Catches schema drift via Zod parse error display.
+  3. **Flight Job Detail Inspector** (`/admin/lead-feed/inspector?tab=flight`) — paste a `lead_id`, see Spec 77 §3.3.1 `FlightBoardDetail` payload (the list-item shape with `temporal_group` + `updated_at`). Same UI pattern as Lead Detail.
+  4. **Cross-link:** Test Feed Tool result rows get an "Inspect" button → navigates to `/admin/lead-feed/inspector?id=...&tab=lead`. Flight Center cards open the Flight Job inspector as a drawer/modal.
 
-1. **PROMOTED CRITICAL** — `auth-state reset placement leaks data on forced sign-out`. Documented in `review_followups.md` (line ~744, the 🔥 PROMOTED entry from §9.14 Phase D). The asymmetry just widened in the previous WF3 follow-up: `signOut()` now calls `mmkvPersister.removeClient()` to purge the persister blob from disk, but the listener's null branch (`onAuthStateChanged(null)` for forced sign-outs — admin disable, password change on another device, project token revocation) still calls `clearAuth()` only. On a shared device, a forced sign-out leaves: every Zustand peer store unchanged, the TanStack in-memory cache unchanged, AND now a more visible asymmetry where the disk state and memory state are inconsistent across the two paths.
+* **Target Spec:** `docs/specs/02-web-admin/76_lead_feed_health_dashboard.md` §3.4 / §3.5 / §3.6 / §2.4 file map.
+  Cross-spec: Spec 33 (engineering protocol) + Spec 35 (state architecture) + Spec 77 (mobile flight board contract) + Spec 91 (mobile lead feed `LeadDetail` contract).
 
-2. **Dead-code sweep** — after the cumulative §9 + WF3 changes (16+ commits across mobile state + auth + push dispatch + mobile schema + cursor backward-compat + PII strip), audit for truly-dead code that the changes left behind. Conservative: only remove items with NO consumers AND NO upgrade-path obligation. Persist `migrate` functions and one-time MMKV cleanup migrations STAY (existing users still need them).
+* **Key Files:**
+  * **NEW** — `src/lib/admin/admin-uid.ts` — exposes `getAdminUid()` returning the canonical admin sentinel (`'admin-test'`); single source for the synthetic `user_id` referenced by the test feed tool's `LeadFeedInput`.
+  * **NEW** — `src/lib/admin/lead-schemas.ts` — web-admin-owned Zod copies of `LeadDetailSchema` / `FlightBoardItemSchema` / `FlightBoardDetailSchema`. Mobile `mobile/src/lib/schemas.ts` is excluded from the web tsconfig (`"exclude": ["mobile"]`); a wrapper module is the spec-deferred mechanism (§2.4 line 90 — "decided at implementation plan-lock"). Drift defended by a contract test that mounts BOTH schemas and asserts equivalent accept/reject on a shared fixture set.
+  * **NEW** — `src/features/admin-flight-center/api/useAdminFlightBoard.ts` — TanStack Query hook for `GET /api/leads/flight-board` (Spec 33 §5 named-hook mandate).
+  * **NEW** — `src/features/admin-flight-center/api/useFlightBoardDetail.ts` — TanStack Query hook for `GET /api/leads/flight-board/detail/:id`.
+  * **NEW** — `src/features/admin-flight-center/api/useLeadDetail.ts` — TanStack Query hook for `GET /api/leads/detail/:id`.
+  * **NEW** — `src/features/admin-flight-center/api/useSavePermit.ts` — TanStack Query mutation hook for `POST /api/leads/save` with optimistic update + rollback per Spec 35 §B3.
+  * **NEW** — `src/components/admin/FlightCenterTool.tsx` — Flight Center UI.
+  * **NEW** — `src/app/admin/lead-feed/flight-center/page.tsx` — Flight Center page shell.
+  * **NEW** — `src/components/admin/LeadDetailInspector.tsx` — JSON-tree + structured-render probe for `LeadDetail`.
+  * **NEW** — `src/components/admin/FlightJobDetailInspector.tsx` — JSON-tree + structured-render probe for `FlightBoardDetail`.
+  * **NEW** — `src/app/admin/lead-feed/inspector/page.tsx` — paired-tab page mounting both inspectors; URL query state (`?id=...&tab=lead|flight`) is the source of truth so deep-links from the Test Feed Tool work.
+  * **MODIFIED** — `src/components/admin/TestFeedTool.tsx` — add an "Inspect" link on each result row pointing at `/admin/lead-feed/inspector?id=<permit_num>--<revision_num>&tab=lead`. No fetch refactor (Spec 33 §13 "next-touch retrofit" applies to ENDPOINTS, not unrelated forms; the Test Feed Tool has been pre-existing pre-Spec-33 and stays as-is for this cycle).
+  * **MODIFIED** — `src/app/admin/lead-feed/page.tsx` — add tile-style navigation links to the Flight Center + Inspector sub-pages.
 
 ## Technical Implementation
 
-### Item 1 — Forced-signout cleanup unification
-
-**Current shape** (`mobile/src/store/authStore.ts`):
-- `signOut()` (lines 82–148): the "happy path" sign-out. Calls `track('signout_initiated')` → `usePaywallStore.reset()` → `auth().signOut()` → in `finally`: `queryClient.clear()` + `mmkvPersister.removeClient()` + 4 peer-store `.reset()` calls + `set({user:null, idToken:null, isLoading:false})` + `resetIdentity()`.
-- `clearAuth` action (line 80): `set({ user: null, idToken: null, isLoading: false })` ONLY.
-- Listener null branch (line 275): `useAuthStore.getState().clearAuth()`. Skips everything else.
-
-**Fix**: extract everything that runs in the signOut() `finally` block into a private `clearLocalSessionState()` helper (or inline an action), then have BOTH the `signOut()` finally AND the listener null branch invoke it. Implementation choices:
-
-A. **Extract to a module-scope function** in `authStore.ts`. Both `signOut()` and the listener call it. The `signOut()` action stays as the public API; `clearLocalSessionState` is internal.
-
-B. **Add a new Zustand action** `forceSignOutCleanup` and have the listener call it. Pros: testable via `useAuthStore.getState().forceSignOutCleanup()`. Cons: makes the public store API wider for an internal concern.
-
-**Going with A** — minimal API surface; `clearLocalSessionState` is a leaf helper that doesn't need to be a Zustand action. The new §9.12 `storeReset.coverage.test.ts` already enforces the wiring at the static layer; we'll add a direct test that the listener's null branch invokes the helper.
-
-**Side effects to verify**:
-- The listener fires multiple times during a single Firebase auth resolution (per the existing `lastKnownUid !== null` guard at line 213). On the null-fire path, `lastKnownUid` is intentionally NOT reset (Spec 93 §3.4 fast-path). Adding the cleanup must not break this — the cleanup runs on the listener's null branch only, and it's idempotent (each `.reset()` and `removeClient()` is a no-op on already-cleared state).
-- `track('signout_initiated')` is currently inside `signOut()` only. For forced sign-outs, the original `signout_initiated` PostHog event would not fire (the user didn't initiate). Cleaner to add a NEW telemetry event `forced_signout` (or `auth_revoked`) on the listener path, which is also useful for product analytics.
-
-### Item 2 — Dead-code sweep
-
-**Method**: grep + read-and-decide. Target categories:
-
-a) **Unreferenced exports** in mobile state / auth files. Specifically:
-   - `cleanupLegacyUserProfileCache` is a one-time migration; STAY (existing users may not have run it).
-   - Any export from removed-then-restored or restructured files.
-
-b) **Dead comments** referring to removed code. Examples:
-   - `mobile/src/store/authStore.ts:97` says "Firebase sign-out — onAuthStateChanged fires (null) which clears auth." — STAYS (still accurate).
-   - `userProfileCacheCleanup.ts:13` says "Called from authStore module load so it runs exactly once per process" — verify this is still true (`grep cleanupLegacyUserProfileCache` to confirm).
-
-c) **Persist migrate functions** in `userProfileStore` (v0→v1) and `onboardingStore` (v0→v2). KEEP — they handle existing-user upgrade. Removing them would silently corrupt v0 state on upgraders.
-
-d) **Spec 99 §3.5 deprecated mirrors** — historical doc; KEEP as audit trail.
-
-e) **Other helpers / hooks / test files** that grep returns zero callers for.
-
-**Grep targets** (run as a pre-Phase-2 audit):
-- `mobile/src/lib/` for files where `grep -l <export>` returns zero hits outside their own file
-- `mobile/src/store/` for actions / fields no consumer reads
-- `mobile/__tests__/` for test fixtures that were unconsolidated by removed schema fields
-
-**Conservative posture**: when in doubt, KEEP. The cost of an accidental delete (regression in production) outweighs the cost of an extra unused export (lint warning at most). Phase 2 is a netting-out exercise, not an aggressive purge.
+* **New/Modified Components:** `<FlightCenterTool>`, `<LeadDetailInspector>`, `<FlightJobDetailInspector>`, edits to `<TestFeedTool>` + `/admin/lead-feed/page.tsx`.
+* **Data Hooks/Libs:**
+  * `src/features/admin-flight-center/api/useAdminFlightBoard.ts` — `useQuery` against `/api/leads/flight-board`; Zod-parses response with `FlightBoardItemSchema[]`; staleTime 30s + refetchInterval 30s (mirrors mobile cadence). Spec 33 §13 mandate.
+  * `src/features/admin-flight-center/api/useFlightBoardDetail.ts` — `useQuery(id)`; Zod-parses `FlightBoardDetailSchema`. `enabled: !!id` so the hook is inert until the user picks an id.
+  * `src/features/admin-flight-center/api/useLeadDetail.ts` — same shape, parses `LeadDetailSchema`.
+  * `src/features/admin-flight-center/api/useSavePermit.ts` — `useMutation` for `POST /api/leads/save` with optimistic update of the `['admin', 'flight-board']` query cache (Spec 35 §B3 pattern). On error: rollback + `logError`.
+  * `src/lib/admin/admin-uid.ts` — `getAdminUid()`; defaults to `'admin-test'`. Env override via `ADMIN_TEST_UID` for test-DB seeding.
+  * `src/lib/admin/lead-schemas.ts` — `LeadDetailSchema`, `FlightBoardItemSchema`, `FlightBoardDetailSchema` Zod definitions. TS types via `z.infer`.
+* **Database Impact:** **NO** — Cycle 4 reuses 100% existing endpoints + tables (`lead_views`, `permits`, `cost_estimates`, `permit_trades`). No migration. No new DB-touching code.
 
 ## Standards Compliance
 
-* **Try-Catch Boundary:** N/A — no new error paths.
-* **Unhappy Path Tests:** Item 1 — new test asserts the listener's null branch runs the same cleanup as `signOut()` (peer stores reset, queryClient cleared, persister blob removed). Item 2 — `npm run dead-code` (already in package.json per CLAUDE.md) before-and-after diff.
-* **logError Mandate:** N/A.
-* **UI Layout:** N/A.
-* **§9.13 drift impact:** None.
+* **Try-Catch Boundary:** N/A — Cycle 4 adds NO new admin API routes. The new code is client-side only (hooks + components) reusing existing user-facing endpoints (`/api/leads/flight-board`, `/api/leads/flight-board/detail/:id`, `/api/leads/detail/:id`, `/api/leads/save`). Per Spec 76 §3.4 + §2.6, those endpoints are out-of-scope for modification.
+* **Unhappy Path Tests:** schema drift (Zod parse failure shows raw response side-by-side), 404 (`lead_views` LATERAL gate per Spec 91 §4.3.1 — admin must save first; UI explains the "save it via Flight Center" recovery path), 400 (invalid `lead_id` shape — UI shows endpoint error verbatim), network failure (TanStack Query retry then error state), optimistic-save rollback on `POST /save` failure.
+* **logError Mandate:** every catch block in the new hooks calls `logError('[admin/flight-center]', err, { stage })`. The mutation rollback path also `logError`s before reverting the optimistic cache.
+* **UI Layout:** desktop-first `md:` breakpoints per Spec 33 §3 (admin = desktop-primary). Flight Center grid is `md:grid-cols-3` for the three temporal sections, stacking to a single column below `md`. Inspector tabs are `md:flex-row` / `flex-col`.
+
+### Spec 33 + Spec 35 compliance baked into each phase
+* **Spec 33 §3 (server-component-first):** pages (`/admin/lead-feed/flight-center/page.tsx`, `/admin/lead-feed/inspector/page.tsx`) are server-rendered shells; the interactive tools mount as client subtrees inside `QueryClientProvider`s scoped per-mount via `useState(() => new QueryClient(...))` (the Cycle 2 Phase 4 fix pattern).
+* **Spec 33 §5 (named-hook mandate):** every server read goes through a named hook in `src/features/admin-flight-center/api/`. NO inline `fetch()` in `queryFn`.
+* **Spec 33 §11 + §13 (Zod boundary):** every endpoint response is `safeParse`d via the schemas in `src/lib/admin/lead-schemas.ts`. Zod failure → `parse_error` UI state.
+* **Spec 33 §13 (timing-safe / etc.):** N/A — no new auth surface.
+* **Spec 35 §5.1 (one auth gate per route boundary):** the new pages live under `/admin/*` which is gated by middleware + the existing per-route admin checks for any admin-specific endpoints. Cycle 4 introduces no new auth gates because no new endpoints exist.
+* **Spec 35 §B3 (optimistic mutation + rollback):** `useSavePermit` follows the Layer-3 pattern — optimistic write to the TanStack cache, on error rollback the previous snapshot + `logError`. Test asserts both the optimistic ON path and the rollback ON-error path.
+* **Spec 35 §6.1 (atomic selectors):** N/A — no Zustand stores added (server state only).
+* **Spec 35 §7.1 (admin action telemetry):** save / unsave / inspect actions emit `logAdminEvent` with the PII allowlist already defined in `src/lib/admin/analytics.ts` (Cycle 2 Phase 0 foundation).
+* **Spec 35 §8.2 (auth-gate test):** UI tests assert that the page-level component renders only when admin auth context is mocked — the page-level guard in production is middleware + the page wrapper checking session.
 
 ## Execution Plan
 
-**Phase 1 — Forced-signout cleanup unification (commit 1)**
-- [ ] 1a. Extract a module-scope `clearLocalSessionState()` helper in `authStore.ts` containing:
-      `usePaywallStore.getState().reset()` → `queryClient.clear()` → `mmkvPersister.removeClient()` → 4 peer-store `.reset()` calls → in-memory auth set-to-null → `resetIdentity()`. (NOTE: `auth().signOut()` is NOT in the helper — that's specific to the explicit-signout path.)
-- [ ] 1b. Refactor `signOut()` to use the helper after `auth().signOut()` (or in finally). Keep `track('signout_initiated')` AT THE TOP of `signOut()` (telemetry attributed to the outgoing session).
-- [ ] 1c. Update the listener's null branch to call `clearLocalSessionState()` instead of just `clearAuth()`. Add a new `track('forced_signout')` event before the cleanup so product analytics can distinguish user-initiated from server-initiated sign-outs.
-- [ ] 1d. Adversarial probe: does the listener fire `null` on EVERY app cold-boot before Firebase resolves the cached session? If yes, every cold boot would trigger the cleanup — a regression. Verify by reading the existing fire-detection logic (`lastKnownUid` guard at line 213). The fast-path comment at line 241 says "do NOT reset lastKnownUid here" — implying the null-fire is real on certain transitions, not on every cold boot. Worth a `lastKnownUid !== null` guard around the new cleanup so first-fire doesn't trigger it (a user who never signed in shouldn't have signOut behavior fire).
-- [ ] 1e. Update `mobile/__tests__/storeReset.coverage.test.ts` to also exercise the listener path (call the captured `authStateHandler(null)` and assert all peer stores reset).
-- [ ] 1f. Update `mobile/__tests__/useAuth.test.ts` if it has a forced-signout test — assert the new cleanup behavior + the new `forced_signout` track call.
-- [ ] 1g. Mobile suite + drift script.
-- [ ] 1h. **Commit 1:** `fix(99_mobile_state_architecture): WF3 unify forced-signout cleanup with explicit-signout path`
+### Phase 0 — Foundation
+- [ ] **0.1** — `src/lib/admin/admin-uid.ts`: `getAdminUid()` returning `process.env.ADMIN_TEST_UID ?? 'admin-test'`. Single export, single concern.
+- [ ] **0.2** — `src/lib/admin/lead-schemas.ts`: web-admin-owned Zod definitions for `LeadDetailSchema`, `FlightBoardItemSchema`, `FlightBoardDetailSchema` (= alias of `FlightBoardItemSchema` per Spec 77 §3.3.1 post-WF1-C). Source-of-truth comment with explicit field-by-field diff vs. the mobile copy.
+- [ ] **0.3** — `src/tests/admin-lead-schemas.contract.test.ts`: contract drift test importing BOTH the web copy and `mobile/src/lib/schemas.ts` at test runtime; mounts a fixture-set of valid + invalid payloads and asserts both schemas produce identical accept/reject + same field-level error count. Vitest is happy with the relative import even though the web tsconfig excludes `mobile/`.
+- [ ] **0.4** — Logic test for `admin-uid.ts` (env override, default sentinel). Commit Phase 0.
 
-**Phase 2 — Dead-code sweep (commit 2)**
-- [ ] 2a. Run `npm run dead-code` (mobile) — capture baseline.
-- [ ] 2b. For each flagged item, decide REMOVE vs KEEP per the conservative criteria above. Enumerate decisions in the commit message.
-- [ ] 2c. Manual grep audit for:
-      - `useAuthStore` exports — are all actions used?
-      - `mmkvPersister` exports — `getLastPersistedAt` consumer (OfflineBanner per the file header)?
-      - `userProfileCacheCleanup` — should call site move out of authStore module load if it's run for too long? (KEEP; flag for future deprecation when usage telemetry confirms zero hits.)
-      - Spec 99 §3.5 deprecated mirrors entries — any whose deprecation target is now ✅ DONE in §9 backlog and could be moved to a "historical" subsection?
-- [ ] 2d. Apply removals + comment cleanups. Avoid touching persist `migrate` functions and one-time MMKV cleanup helpers.
-- [ ] 2e. Mobile suite + drift script.
-- [ ] 2f. **Commit 2:** `chore(99_mobile_state_architecture): WF3 dead-code sweep across §9 + WF3 cumulative changes`
+### Phase 1 — TanStack Query hooks
+- [ ] **1.1** — `src/features/admin-flight-center/api/useAdminFlightBoard.ts`: `useQuery(['admin','flight-board'], fetchFlightBoard)`; `staleTime: 30_000` + `refetchInterval: 30_000` (mobile cadence). Returns `FlightBoardItem[]` already grouped by `temporal_group`. Zod parse with `FlightBoardResultSchema` envelope.
+- [ ] **1.2** — `src/features/admin-flight-center/api/useFlightBoardDetail.ts`: parameterised by `id`; `enabled: !!id`. Zod-parses `FlightBoardDetailSchema`. Maps non-200 to typed error: `404 → 'NOT_SAVED'`, `400 → 'INVALID_ID'`, others → `'NETWORK'`.
+- [ ] **1.3** — `src/features/admin-flight-center/api/useLeadDetail.ts`: same shape, parses `LeadDetailSchema`.
+- [ ] **1.4** — `src/features/admin-flight-center/api/useSavePermit.ts`: `useMutation` for `POST /api/leads/save` with `{lead_id, lead_type:'permit', saved:true}`. Optimistic update of `['admin','flight-board']` cache via `queryClient.setQueryData` (Spec 35 §B3). `onError` rollback + `logError`. `onSuccess` invalidates `flight-board` query (mobile parity per `SearchPermitsSheet:52-57`).
+- [ ] **1.5** — `src/features/admin-flight-center/api/useUnsavePermit.ts`: same shape but `saved:false`. Web admin's port of mobile swipe-to-remove. No undo snackbar in this cycle (Phase 5 followup if needed).
+- [ ] **1.6** — `src/features/admin-flight-center/api/useSearchPermits.ts`: debounced `useQuery(['admin','search-permits', q], fetchSearch)` against `GET /api/leads/search?q=`; `enabled: q.trim().length >= 2`; Zod-parses `SearchResultsSchema`. Mirrors mobile `useSearchPermits.ts`.
+- [ ] **1.7** — `src/tests/admin-flight-hooks.logic.test.ts`: 6 hooks × happy + Zod-parse-failure + (for save) optimistic-then-rollback + (for search) min-length gate. ~24 tests.
+- [ ] **1.8** — Typecheck + targeted vitest run. Commit Phase 1.
 
-**Phase 3 — Adversarial review (single code-reviewer)**
-- [ ] 3a. Spawn `feature-dev:code-reviewer` non-isolated on the range `fbb52c3..HEAD`. Focus: (i) forced-signout cleanup correctness across cold-boot and uid-change paths, (ii) dead-code removals don't break any latent consumer.
-- [ ] 3b. Apply CRITICAL/HIGH inline.
-- [ ] 3c. **Commit 3 (if amendments):** `fix(99_mobile_state_architecture): WF3 forced-signout + dead-code sweep — code-reviewer amendments`
+### Phase 2 — Flight Center Tool (mobile-parity: search → claim → board)
+- [ ] **2.1** — `src/components/admin/SearchPermitsModal.tsx`: web port of mobile `<SearchPermitsSheet>` (Spec 77 §3.1). Native `<dialog>` element with Tailwind, focus-trap-on-open. Search input (debounced 300ms) + result list + per-row "Save" button. On successful save: invalidates flight-board query + closes modal + brief success toast.
+- [ ] **2.2** — `src/components/admin/FlightCenterTool.tsx`: header bar with "Search permits" button (opens §2.1 modal) + 3 temporal sections (`action_required` / `departing_soon` / `on_the_horizon`); each card renders address + lifecycle_phase + lifecycle_stalled badge + expected completion (`predicted_start ± p25/p75`) + per-card "Unsave" button + tap-the-card → opens `<FlightJobDetailInspector>` in inline drawer (no route nav per §3.4). Empty-state copy: "No permits saved yet. Use **Search Permits** above to find and claim a permit."
+- [ ] **2.3** — `src/app/admin/lead-feed/flight-center/page.tsx`: server-component shell with header + `<Link href="/admin/lead-feed">← Lead Feed</Link>` + mounts `<FlightCenterTool>` inside `QueryClientProvider` (per-mount `useState(() => new QueryClient(...))`).
+- [ ] **2.4** — `src/tests/admin-flight-center.ui.test.tsx`: render the 3 sections, render a card with the predicted-start string, open search modal → type query → click Save → optimistic add → close modal → board shows the new permit, click card → drawer opens. ~12 tests.
+- [ ] **2.5** — Typecheck + targeted vitest. Commit Phase 2.
 
-**Phase 4 — Update `review_followups.md`**
-- [ ] 4a. Mark the PROMOTED CRITICAL "Auth-state reset placement leaks data on forced sign-out" as ✅ RESOLVED with the commit hash.
-- [ ] 4b. Add a brief summary of the dead-code sweep (kept items + removed items) for traceability.
-- [ ] 4c. **Commit 4:** `docs(99_mobile_state_architecture): mark forced-signout PROMOTED item resolved + record dead-code sweep`
+### Phase 3 — Detail Inspectors
+- [ ] **3.1** — `src/components/admin/LeadDetailInspector.tsx`: text input for `lead_id` + Inspect button + JSON tree (one level expanded) + structured render of every field per Spec 91 §4.3 contract. Three explicit UI states: (a) idle, (b) loading, (c) result OR error. Error state distinguishes 404 (with "save first via Flight Center" recovery copy), 400 (validation error verbatim from endpoint), schema drift (parse error + raw response side-by-side).
+- [ ] **3.2** — `src/components/admin/FlightJobDetailInspector.tsx`: parallel structure to §3.1, parses `FlightBoardDetailSchema`, structured render covers `temporal_group` + `updated_at` (which §3.5 LeadDetail does NOT expose).
+- [ ] **3.3** — `src/app/admin/lead-feed/inspector/page.tsx`: paired-tab page reading `?id=` and `?tab=lead|flight` from `useSearchParams`; tab toggle preserves the `id`. Server-component shell with `<Suspense>` wrapping the client subtree (since `useSearchParams` requires it under App Router).
+- [ ] **3.4** — `src/tests/admin-detail-inspectors.ui.test.tsx`: 3 states × 2 inspectors + tab toggle preserves id + URL-deep-link prefills the input. ~14 tests.
+- [ ] **3.5** — Typecheck + targeted vitest. Commit Phase 3.
 
-## Out of Scope
-- The 6 lower-priority deferrals from the Phase 7 trio review (timing-safe length leak, catch-all narrowing, etc.) — already filed in `review_followups.md`.
-- Encrypted-MMKV via `encryptionKey` — separate hardening WF.
-- Aggressive removal of one-time migrations / persist migrate functions — KEEP for upgrader safety.
+### Phase 4 — Cross-tool wiring + landing-page nav
+- [ ] **4.1** — `src/components/admin/TestFeedTool.tsx`: add a small "Inspect →" link in each result row pointing at `/admin/lead-feed/inspector?id=<permit_num>--<revision_num>&tab=lead`. No "Save to Flight Board" button on Test Feed rows — saves are owned by the Search Permits modal (mobile parity, Phase 2.1). No fetch-path refactor (Spec 33 §13 "next-touch retrofit" applies to ENDPOINTS; this is a one-off non-polling form, exempt for this cycle).
+- [ ] **4.2** — `src/app/admin/lead-feed/page.tsx`: add two tile-style navigation links — "Flight Center" + "Inspectors" — under the existing `<TestFeedTool>` mount, mirroring the `/admin` nav-hub tile pattern (Phase 3 of Cycle 2).
+- [ ] **4.3** — UI test extension: verify the "Inspect →" link in `TestFeedTool.ui.test.tsx` if present (otherwise add a minimal smoke for the link href shape).
+- [ ] **4.4** — Full pre-commit gauntlet (`npm run typecheck && npm run lint && npm run test`). Commit Phase 4.
 
-> **PLAN LOCKED. Do you authorize this WF3 plan? (y/n)**
->
-> §10 note: ~30 LOC for Phase 1 (helper extraction + listener wiring + 2 test additions); Phase 2 size depends on what `npm run dead-code` reports — bounded by the conservative-keep posture. Single code-reviewer for Phase 3 (small surface).
->
+### Phase 5 — Multi-Agent Review (per WF1 protocol + saved feedback memory)
+- [ ] **5.1** — Gemini adversarial review of `useSavePermit.ts` (the only new state-mutating surface — optimistic update + rollback is the highest-risk seam) with context Spec 35.
+- [ ] **5.2** — DeepSeek adversarial review of `lead-schemas.ts` + the contract drift test (the schema-mirror seam — drift here ships malformed payloads to the inspector silently) with context Spec 33.
+- [ ] **5.3** — Worktree-isolated `feature-dev:code-reviewer` agent reviewing the full Phase-1-through-4 diff + the 6 new files for spec compliance, dead code, naming, type safety. Inputs: spec path + commit list + one-sentence summary.
+- [ ] **5.4** — Triage findings into fix-now vs. followup. Fix-now applied. Deferred → `docs/reports/review_followups.md` (Spec 76 Cycle 4 section). Final pre-commit gauntlet. Commit Phase 5.
+
+> **PLAN LOCKED. Do you authorize this WF1 Cycle 4 plan? (y/n)**
+> §10 note: schema-import mechanism — chose web-admin-owned wrapper module (`src/lib/admin/lead-schemas.ts`) + contract drift test rather than relaxing the web tsconfig `exclude: ["mobile"]` boundary. The wrapper preserves bundle isolation; the drift test guards against silent schema divergence. Spec 76 §2.4 deferred this decision to plan-lock (this document).
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.
