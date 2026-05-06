@@ -1,0 +1,78 @@
+# SPEC LINK: docs/specs/03-mobile/97_mobile_settings_notifications_offboarding.md §10 testing gates
+#            docs/specs/03-mobile/97_mobile_settings_notifications_offboarding.md §2 notification preferences UI
+#            docs/specs/03-mobile/92_mobile_engagement_hardware.md §2.3 notification controls
+#            docs/specs/03-mobile/99_mobile_state_architecture.md §9.14 (notification_prefs JSONB → 5 flat columns, migration 117)
+#
+# Audit item 13 (2026-05-06 mobile-spec audit): Notification Preferences
+# Lifecycle gap. Closes the "no dedicated E2E Maestro flow for notification
+# settings" finding from the audit's Top-10 highest-severity test gaps.
+#
+# This flow asserts the 5 notification controls render under the
+# Settings → Notifications section per the post-§9.14 flat column layout:
+#   1. Minimum Job Value (Slider, label text)
+#   2. Phase Updates (Switch, label "Phase Updates")
+#   3. Stall Alerts (Switch, label "Stall Alerts")
+#   4. Urgent Start (Switch, label "Urgent Start")
+#   5. Notification Schedule (segmented control: Morning / Anytime / Evening)
+#
+# SCOPE LIMIT (audit defer-list item 3.7): the 4 Switch components and
+# the 3 Pressable schedule options have NO testIDs (only accessibilityLabel
+# on the slider). Tap-toggle-then-assert-server-state would require:
+#   (a) testID hardening on each control (~5 lines in settings.tsx), AND
+#   (b) backend fixture for /api/notifications/preferences PATCH visibility.
+# Both deferred; this flow asserts UI structural contract only.
+#
+# FIXTURE REQUIREMENT: a signed-in user with a populated user_profile row
+# (default notification prefs from migration 117). Cold-launch + sign-in
+# flow is covered by auth.yaml; this flow assumes the user is already
+# signed in OR runs after auth.yaml in a CI suite.
+
+appId: com.buildo.app
+---
+- launchApp:
+    # See auth.yaml for the clearState: false rationale (Expo dev-client
+    # caches Metro's bundler URL).
+    clearState: false
+
+# Tap the Settings tab — assumes signed-in state. The tab bar in
+# (app)/_layout.tsx renders Settings as a labeled tab.
+- tapOn: "Settings"
+
+# Spec 97 §1.1 — screen header is the structural anchor.
+- assertVisible: "Settings"
+
+# Spec 97 §2 / Spec 92 §2.3 — Notifications section header. Maestro
+# scrolls automatically when the target text is below the fold.
+- assertVisible: "Notifications"
+
+# Pref 1 — Minimum Job Value slider (Spec 92 §2.3 cost tier threshold).
+- assertVisible: "Minimum Job Value"
+
+# Pref 2 — Phase Updates toggle (Spec 92 §2.3 phase_changed).
+- assertVisible: "Phase Updates"
+- assertVisible: "When a saved job advances to next phase"
+
+# Pref 3 — Stall Alerts toggle (Spec 92 §2.3 lifecycle_stalled_pref).
+- assertVisible: "Stall Alerts"
+- assertVisible: "When a saved job is flagged as delayed"
+
+# Pref 4 — Urgent Start toggle (Spec 92 §2.3 start_date_urgent).
+- assertVisible: "Urgent Start"
+- assertVisible: "When predicted start is ≤ 7 days away"
+
+# Pref 5 — Notification Schedule segmented control (Spec 92 §2.3
+# notification_schedule). The 3 options are sibling Pressables.
+- assertVisible: "Non-urgent alerts delivery window"
+- assertVisible: "Morning"
+- assertVisible: "Anytime"
+- assertVisible: "Evening"
+
+# Spec 92 §2.3 — clarifying caption that urgency overrides bypass the schedule.
+- assertVisible: "Stall and urgent alerts always deliver immediately, regardless of schedule."
+
+# Tap Anytime — segmented control accepts text-target taps. Future testID
+# hardening (audit defer 3.7) would let us assert the selected state via
+# a stable testID. For now, confirm the tap doesn't crash and the section
+# remains rendered (negative regression cover for crashes on schedule change).
+- tapOn: "Anytime"
+- assertVisible: "Notifications"
