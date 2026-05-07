@@ -1,106 +1,129 @@
-# Active Task: WF3 — App Health route exports test-only function — Next.js production build fails
-**Status:** Implementation (authorized 2026-05-06 — user said "proceed" on the WF3 file)
+# Active Task: WF3 — BLD/CMB permits wrongly classified as orphan when no sibling BLD revision exists
+**Status:** Implementation (authorized 2026-05-07 — explicit y/n given on plan-lock)
 **Workflow:** WF3 — Bug Fix
-**Domain Mode:** Admin (web admin API route + test seam)
-**Rollback Anchor:** `2901fcd` (current HEAD — last Cycle 7 commit)
+**Domain Mode:** Backend/Pipeline (`scripts/classify-lifecycle-phase.js` + Spec 84)
+**Rollback Anchor:** `52a0c86` (current HEAD — last WF3 commit)
 
 ## Bug
 
-`npm run build` (Next.js production build) fails with:
+Per Spec 84 §7 Orphan Logic:
+> | O1 | Orphan Active  | **Standalone trade permit** (e.g., a furnace swap) with active inspections. |
+> | O2 | Orphan Done    | Standalone trade permit finalized. |
+> | O3 | Orphan Stalled | Standalone trade permit > stall threshold with no activity. |
 
+The spec scopes O-phases to **standalone trade permits** (HVA, PLB, DRN, etc. — not BLD or CMB). But `scripts/classify-lifecycle-phase.js:798-814` computes `is_orphan = true` for any permit whose `permit_num` prefix (year + serial) has no OTHER BLD/CMB sibling in the `bldCmbByPrefix` map:
+
+```js
+let is_orphan = true;
+if (parts.length >= 3) {
+  const prefix = `${parts[0]} ${parts[1]}`;
+  const siblings = bldCmbByPrefix.get(prefix);
+  if (siblings) {
+    for (const pn of siblings) {
+      if (pn !== row.permit_num) {
+        is_orphan = false;
+        break;
+      }
+    }
+  }
+}
 ```
-.next/types/app/api/admin/app-health/route.ts:12:13
-Type error: Type 'OmitWithTag<typeof import("...src/app/api/admin/app-health/route"),
-  "POST" | "PATCH" | "PUT" | "DELETE" | "GET" | "config" | ...>'
-  does not satisfy the constraint '{ [x: string]: never; }'.
-  Property '__resetAppHealthCacheForTests' is incompatible with index signature.
-    Type '() => void' is not assignable to type 'never'.
-```
 
-Next.js's App Router enforces that route files (`route.ts`) export ONLY HTTP method handlers (GET/POST/etc.) plus a fixed set of config exports (`dynamic`, `runtime`, etc.). Any other named export is rejected at type-check time during `next build`. Cycle 2 P4 (commit `345c429`) added `__resetAppHealthCacheForTests` as a test-only reset seam to `src/app/api/admin/app-health/route.ts`; it works in dev (where the type-checker is more permissive) but blocks production builds.
+For a BLD permit whose prefix has no OTHER BLD revisions (the common case — most BLDs are single-revision), `siblings = {self}` → loop never sets `is_orphan = false` → BLD permit wrongly classified into O1/O2/O3 despite being a parent permit, not a standalone trade permit.
 
-Surfaced by my Cycle 7 build attempt during validation. Production deployments are blocked until this is fixed.
+**Verified observed instance** (24 Northbridge — `25 122754 BLD`): issued 2025-06-17, status "Inspection", has 2 active sub-permits at P18 (`25 122754 HVA Rev 00`, `25 122754 PLB Rev 00`). Currently `lifecycle_phase = O3`. Per spec, this BLD should be `P18` (BLD-led inspection pipeline). Surfaced through user's manual Flight Center verification.
+
+**Downstream impact:**
+- `compute-trade-forecasts.js` doesn't compute predictions for orphan-classified permits → 12 correctly-tagged trades on this BLD (concrete, electrical, plumbing, hvac, framing, drywall, etc.) all get NULL `predicted_start`
+- Flight Center shows "No prediction yet" on every saved permit caught in this misclassification
+- Likely affects a meaningful fraction of single-revision BLD permits (Toronto's small-residential-projects category — most are single-revision)
 
 ## State Verification (WF3 step 2)
 
-**Affected files (verified by grep):**
-- `src/app/api/admin/app-health/route.ts:253` — defines + exports `__resetAppHealthCacheForTests`
-- `src/app/api/admin/app-health/route.ts:55-78` — defines `CacheEntry` interface + `let cache: CacheEntry | null = null` module-level state
-- `src/tests/admin-app-health.infra.test.ts:122-125` — imports `__resetAppHealthCacheForTests` from the route file's module specifier and calls it in `beforeEach`
+**`bldCmbByPrefix` map construction** (verified at `scripts/classify-lifecycle-phase.js:740-770`): keys are `"YY NNNNNN"` prefixes, values are Sets of permit_nums where the suffix is BLD or CMB. Sub-permits with non-BLD/CMB suffixes (HVA, PLB, DRN, ELE, MTL, TPS, etc.) are NOT in this map's values.
 
-**Constraint:** Next.js can ONLY type-check the public exports of `route.ts`. The cache state's lifecycle (in-memory promise dedup + minute-boundary TTL) MUST be preserved exactly — Cycle 2 Phase 4 added the dog-pile defense + minute-boundary TTL via Multi-Agent Review fixes; reverting any of that would re-open closed bugs.
+**The check's INTENDED semantics** per the inline comment at line 805 ("Orphan iff no OTHER permit_num in the set"): meant to distinguish a sub-permit with a parent BLD (non-orphan) from a sub-permit without one (orphan). Works correctly for sub-permits. **Breaks for BLD/CMB themselves** because they are in their own map (sibling = self) but the loop only counts non-self entries.
+
+**Spec 84 §7 categorical rule:** O-phases apply ONLY to standalone trade permits. BLD and CMB are NEVER trade permits (they are parent permits or combined-permit folders). Therefore `is_orphan = true` for a BLD or CMB permit is a categorical spec violation.
 
 ## Spec Review (WF3 step 3)
 
-`docs/specs/02-web-admin/30_app_health_dashboard.md` §2.2: "in-memory 60s TTL keyed on snapshot_at minute boundary". The cache mechanism is the spec contract; only the MODULE LOCATION of its state changes.
+**Spec 84 §7** (above) — orphans are standalone trade permits. BLD/CMB cannot be orphans by definition.
 
-`docs/specs/02-web-admin/33_web_admin_engineering_protocol.md` §5: admin route handlers must call `verifyAdminAuth` first. Unaffected by this WF3 — auth boundary stays inside `route.ts`.
+**Spec 84 §3.4** (decision tree ordering): orphan branch fires before BLD-led branches. So once `is_orphan = true`, the BLD-led status checks are bypassed. Fixing `is_orphan` to be `false` for BLD/CMB lets the BLD-led branches handle them correctly.
+
+**Spec 47** (pipeline protocol): the fix lives inside `pipeline.run` → `streamQuery` loop. No Spec 47 contract changes; the fix is a 5-line inline patch.
 
 ## Reproduction (WF3 step 4)
 
-The bug is reproduced by running `npm run build`. No new vitest needed for the bug itself — the build error IS the reproduction. However:
+Two reproduction tests:
 
-- A new test asserting that `route.ts` exports ONLY canonical Next.js handler/config names (no `__` test-only seams) would prevent the same regression class. Adding this as the regression-lock test.
+1. **Logic test** — extract `computeIsOrphan(permitNum, bldCmbByPrefix)` into a pure helper in `scripts/lib/orphan-detection.js`, write a vitest asserting:
+   - BLD permit with no sibling BLD → `is_orphan = false` (NEW — fails today)
+   - CMB permit with no sibling CMB → `is_orphan = false` (NEW — fails today)
+   - HVA/PLB/DRN/ELE etc. sub-permit with no parent BLD/CMB at the prefix → `is_orphan = true` (preserves existing behavior)
+   - HVA/PLB/DRN sub-permit with parent BLD → `is_orphan = false` (preserves existing)
+2. **Live-DB integration test** (manual, post-deploy): re-run `classify-lifecycle-phase.js` on the dev DB; verify `25 122754 BLD` flips from O3 → P18. Documented in deployment runbook.
 
 ## Fix (WF3 step 5)
 
-**Strategy:** extract the cache state + reset helper into a new module `src/app/api/admin/app-health/cache.ts`. The route file imports the helpers from there. The test file imports the reset helper from `cache.ts` instead of `route.ts`.
+**Strategy:** add a BLD/CMB short-circuit before the sibling-search loop. If the permit_num ends with `' BLD'` or `' CMB'`, `is_orphan = false` per Spec 84 §7. Otherwise the existing sub-permit-with-parent-BLD logic applies unchanged.
 
-The new module is NOT a Next.js route file (only `route.ts` is constrained), so non-handler exports are allowed there.
+**Files:**
 
-## Files to change
+1. **NEW** `scripts/lib/orphan-detection.js` — pure helper extracting the orphan-detection logic. Exported as `computeIsOrphan(permitNum, bldCmbByPrefix)`. Uses `endsWith(' BLD')` / `endsWith(' CMB')` short-circuit + the existing sibling-loop.
+2. **MODIFIED** `scripts/classify-lifecycle-phase.js` — replace the inline orphan-detection block (lines 798-814) with a call to the new helper. The `bldCmbByPrefix` map construction stays unchanged.
+3. **NEW** `src/tests/orphan-detection.logic.test.ts` — vitest covering the four cases above + edge cases (malformed permit_num, missing prefix, empty bldCmbByPrefix Map).
+4. **NO** `lifecycle-phase.ts` changes — the TS classifier accepts `is_orphan` as input; the fix is upstream of the classifier in the JS script that computes the input.
 
-1. **NEW** — `src/app/api/admin/app-health/cache.ts`:
-   - Export `CacheEntry` interface (was inline in route.ts)
-   - Export module-level `cache: CacheEntry | null = null` STATE — implementation detail; not exported directly. Instead expose:
-     - `getCachedBody(): Promise<AppHealthResponse> | null` — returns the pending/resolved promise if within TTL, else null
-     - `setCachedBody(promise: Promise<AppHealthResponse>, expiresAt: number): void` — writes the cache slot
-     - `clearCache(): void` — wipes the slot (used by route's error-recovery path AND by tests)
-     - `nextMinuteBoundary(now: number): number` — pure helper (was inline)
-2. **MODIFIED** — `src/app/api/admin/app-health/route.ts`:
-   - Remove inline `CacheEntry` + `cache` + `nextMinuteBoundary` + `__resetAppHealthCacheForTests`
-   - Import `getCachedBody`, `setCachedBody`, `clearCache`, `nextMinuteBoundary` from `./cache`
-   - Adjust the GET handler's cache-read/write/clear sites to call the helpers
-3. **MODIFIED** — `src/tests/admin-app-health.infra.test.ts`:
-   - Change `import { __resetAppHealthCacheForTests } from '@/app/api/admin/app-health/route'` to `import { clearCache } from '@/app/api/admin/app-health/cache'`
-   - Update the `beforeEach` call accordingly
-4. **NEW** — `src/tests/admin-app-health-route-exports.logic.test.ts`:
-   - Regression-lock test: imports the route module + asserts the exported names are a subset of `{ GET, POST, PATCH, PUT, DELETE, HEAD, OPTIONS, dynamic, runtime, fetchCache, revalidate, preferredRegion, config, maxDuration }`. Catches future test-only-export accidents.
+**No `compute-trade-forecasts.js` changes needed** — once `is_orphan` is correctly `false` for the affected BLDs, the forecast pipeline will pick them up on its next run (no orphan exclusion to bypass).
 
-## Pre-Review Self-Checklist (WF3 step 8)
+## Idempotency Check (Backend/Pipeline mandate)
 
-3-5 sibling bugs that could share the same root cause:
+`classify-lifecycle-phase.js` already follows Spec 47 §R1-R12 (advisory lock + `pipeline.run` + UPSERT pattern via `INSERT ... ON CONFLICT (permit_num, revision_num) DO UPDATE`). The fix doesn't change write behavior — it changes one input value (`is_orphan`) which feeds the same classifier. Re-running the script after the fix is idempotent: it'll UPDATE `lifecycle_phase` for affected BLDs from O1/O2/O3 → P-codes, then no-op on subsequent runs (since `lifecycle_classified_at > last_seen_at`).
 
-1. **Other admin route files exporting test seams.** Grep for `^export (function|const) __` in `src/app/**/route.ts`. If any siblings exist, file follow-up WFs.
-2. **Spec 30's other test seams (test-only mocks / fixtures).** Cycle 2 Phase 4 added cache-reset; were any other test-only exports added to route files? Grep `__` exports across the app/api tree.
-3. **Cache state divergence between dev + production.** Module-level `let cache` is intentional but does it survive HMR cleanly? Cycle 2 Phase 4 fixed the dog-pile race with the promise-dedup; verify the extraction doesn't reintroduce the race.
-4. **Test isolation regression.** The Cycle 2 P4 cache test (`admin-app-health.infra.test.ts > 60s in-memory cache > concurrent cache misses share ONE fan-out (dog-pile defense)`) depends on the test seam working. Verify it still passes after the extraction.
-5. **Bundle size/import cycle.** `cache.ts` is imported by `route.ts`; `route.ts` is the only production consumer. No circular import risk.
+## Pre-Review Self-Checklist (3-5 sibling bug classes)
+
+1. **Other parent-permit suffixes treated as orphan?** Toronto's permit data uses BLD + CMB as parent suffixes. Are there other parent-equivalent suffixes (e.g., revision-only suffixes like ALT, REV, etc.) that should also short-circuit `is_orphan = false`? Need to confirm Toronto's permit-suffix taxonomy. If unsure, document the BLD/CMB-only allowlist as the exact spec-mandated fix (per Spec 84 §7 referencing only BLD/CMB), and mark broader suffixes as a separate followup.
+2. **`bldCmbByPrefix` map can be empty for a permit's prefix entirely.** Currently `if (siblings)` guards against undefined. The new helper preserves this guard. Verified.
+3. **Permit_num malformed** — fewer than 3 space-separated parts. Currently `if (parts.length >= 3)` guards. The new helper preserves this guard for sub-permits but the BLD/CMB short-circuit fires regardless of parts count (because `endsWith(' BLD')` already implies a permit_num like "25 122754 BLD" with at least 3 parts).
+4. **Future ELE permits.** If Toronto starts issuing electrical permits via the city, they'd be sub-permits like "25 122754 ELE". The existing logic (after the fix) would correctly classify them: orphan if no parent BLD, non-orphan if a parent BLD exists at the prefix. No special handling needed.
+5. **Stalled-modifier interaction.** `lifecycle_stalled` is computed independently of `is_orphan` (separate `computeStalled()` function in lifecycle-phase.ts). Not affected by this fix. Verified.
+
+## Independent Review (WF3 protocol — single worktree code-reviewer agent)
+
+Per WF3 protocol (no adversarial agents unless requested). One worktree code-reviewer agent at the end with: spec path, modified files list, one-sentence summary. Adversarial review skipped.
 
 ## Execution Plan
 
-- [ ] **R1** — Rollback anchor (above): `2901fcd`. Confirmed.
-- [ ] **R2** — Reproduction: `npm run build` fails today with the exact error above. Confirmed during Cycle 7 validation.
-- [ ] **F1** — Create `src/app/api/admin/app-health/cache.ts` with the 4 exported helpers.
-- [ ] **F2** — Refactor `src/app/api/admin/app-health/route.ts` to import from `./cache`.
-- [ ] **F3** — Update `src/tests/admin-app-health.infra.test.ts` import + call.
-- [ ] **F4** — Add `src/tests/admin-app-health-route-exports.logic.test.ts` regression-lock.
-- [ ] **G1** — `npx vitest run src/tests/admin-app-health.infra.test.ts src/tests/admin-app-health-route-exports.logic.test.ts` → both green.
-- [ ] **G2** — `npm run typecheck && npm run build` → build passes.
+- [ ] **R1** — Rollback anchor: `52a0c86`. Confirmed.
+- [ ] **R2** — Reproduction (red light): write `src/tests/orphan-detection.logic.test.ts`. Without the fix, the BLD-no-sibling case asserts `is_orphan === false` and fails (current behavior returns `true`).
+- [ ] **F1** — Create `scripts/lib/orphan-detection.js` with `computeIsOrphan(permitNum, bldCmbByPrefix)` exported.
+- [ ] **F2** — Refactor `scripts/classify-lifecycle-phase.js` to import + call the helper, replacing the inline block.
+- [ ] **G1** — Run targeted tests → green.
+- [ ] **G2** — Run typecheck + lint.
 - [ ] **G3** — Full vitest suite for regressions.
-- [ ] **G4** — Multi-Agent Review: ONE worktree code-reviewer agent per WF3 protocol (no Gemini/DeepSeek unless requested). Inputs: Spec 30, modified files, one-sentence summary.
-- [ ] **G5** — Triage. BUG → fix-now. DEFER → `docs/reports/review_followups.md`.
+- [ ] **G4** — Independent review (worktree code-reviewer agent).
+- [ ] **G5** — Triage findings.
 - [ ] **G6** — Commit + push.
 
 ## Standards Compliance
 
-* **Try-Catch Boundary:** unchanged — the route's existing try/catch around `recordLeadView`-equivalent path stays intact.
-* **Unhappy Path Tests:** the existing `admin-app-health.infra.test.ts` already exercises 9 failure paths (auth, malformed payload, Zod boundary, dog-pile dedup, minute-boundary TTL, unavailable tiles, etc.). All MUST still pass post-extraction.
-* **logError Mandate:** unchanged — `route.ts` keeps its `logError` calls in the same locations.
-* **UI Layout:** N/A.
+* **Try-Catch Boundary:** N/A — pure function, no I/O.
+* **Unhappy Path Tests:** orphan-detection logic test covers malformed permit_num, empty map, missing prefix.
+* **logError Mandate:** N/A — pure function. The calling script logs errors via `pipeline.log` already.
+* **UI Layout:** N/A — backend fix.
 
-## Idempotency Check
-**N/A — Admin/Frontend fix, not pipeline.**
+## Deployment Runbook (post-merge)
 
-> **PLAN LOCKED. Status set to Implementation per user authorization ("proceed").**
-> §10 note: chose extraction (separate module) over `// @ts-expect-error` suppression on the export. Suppression would mask the failure; extraction expresses the architectural separation cleanly (route file = handlers; cache.ts = stateful helpers). Plus extraction creates a stable home for future cache-related additions (TTL config, telemetry, etc.).
+1. Run `node scripts/classify-lifecycle-phase.js` against production DB to refresh classifications for affected BLDs (orphan → P-codes).
+2. Run `node scripts/compute-trade-forecasts.js` (or whatever the prediction pipeline is named in this codebase) to generate forecasts for the newly-non-orphan BLDs.
+3. Verify: `SELECT COUNT(*) FROM permits WHERE permit_num LIKE '% BLD' AND lifecycle_phase IN ('O1','O2','O3')` should drop to ~0 (only edge cases like literal-string-collision should remain).
+
+## Out of Scope (queued)
+
+- `compute-trade-forecasts.js` orphan-skip logic itself — Spec 84 §7 says O-phase permits ARE legitimately orphan trade permits without enough timeline to anchor predictions. Skipping them in forecast generation is correct per spec. Don't change.
+- Flight Center UX gaps (no trade-context indicator, no "out-of-scope" hint on null-prediction cards) — file separately as small UX WFs after this WF3 lands.
+- Spec 84 ambiguity about which permit_num suffixes count as parent vs trade — if Toronto has parent-suffixes besides BLD/CMB, file a Spec 84 amendment.
+
+> Status: Implementation. Proceeding without further authorization gate per user's explicit "proceed".

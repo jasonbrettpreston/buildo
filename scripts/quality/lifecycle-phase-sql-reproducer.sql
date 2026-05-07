@@ -70,12 +70,22 @@ permit_inputs AS (
     p.issued_date,
     p.lifecycle_phase AS script_phase,
     p.lifecycle_stalled AS script_stalled,
-    -- is_orphan: true if no BLD/CMB sibling (other than self) shares
-    -- the application prefix. COALESCE handles the missing-prefix case.
-    COALESCE(
-      array_length(array_remove(bcp.members, p.permit_num), 1),
-      0
-    ) = 0 AS is_orphan,
+    -- is_orphan: per Spec 84 §7, O-phases are for STANDALONE TRADE
+    -- permits only. BLD and CMB are parent permits / combined-folder
+    -- permits and can NEVER be orphans, regardless of whether sibling
+    -- revisions exist. Mirror of scripts/lib/orphan-detection.js
+    -- computeIsOrphan(). WF3 fix 2026-05-07.
+    --   Step 1 — categorical short-circuit: BLD/CMB suffix → false.
+    --   Step 2 — sub-permit (HVA/PLB/DRN/ELE/MTL/TPS/etc.): orphan iff
+    --            no parent BLD/CMB at the same prefix (existing logic).
+    -- COALESCE handles the missing-prefix case.
+    CASE
+      WHEN split_part(p.permit_num, ' ', 3) IN ('BLD', 'CMB') THEN false
+      ELSE COALESCE(
+        array_length(array_remove(bcp.members, p.permit_num), 1),
+        0
+      ) = 0
+    END AS is_orphan,
     lp.stage_name AS latest_passed_stage,
     ir.latest_inspection_date,
     COALESCE(ir.has_passed_inspection, false) AS has_passed_inspection

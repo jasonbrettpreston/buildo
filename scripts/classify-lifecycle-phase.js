@@ -30,6 +30,7 @@ const {
   DEAD_STATUS_ARRAY,
   NORMALIZED_DEAD_DECISIONS_ARRAY,
 } = require('./lib/lifecycle-phase');
+const { computeIsOrphan } = require('./lib/orphan-detection');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
 // ─────────────────────────────────────────────────────────────────
@@ -795,23 +796,13 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   )) {
     dirtyPermitsCount++;
 
-    // Orphan detection — O(1) lookup via bldCmbByPrefix Map
-    const parts = row.permit_num.split(' ');
-    let is_orphan = true;
-    if (parts.length >= 3) {
-      const prefix = `${parts[0]} ${parts[1]}`;
-      const siblings = bldCmbByPrefix.get(prefix);
-      if (siblings) {
-        // Orphan iff no OTHER permit_num in the set — matches the
-        // original SQL semantics (s.permit_num <> p.permit_num).
-        for (const pn of siblings) {
-          if (pn !== row.permit_num) {
-            is_orphan = false;
-            break;
-          }
-        }
-      }
-    }
+    // Orphan detection — pure helper. Per Spec 84 §7, O-phases are for
+    // "standalone trade permits" only (HVA/PLB/DRN/etc.); BLD and CMB
+    // are parent permits and can never be orphans. Earlier inline logic
+    // wrongly orphaned single-revision BLDs because their prefix Set
+    // contained only themselves; the loop never set is_orphan = false.
+    // See scripts/lib/orphan-detection.js for the spec-aligned check.
+    const is_orphan = computeIsOrphan(row.permit_num, bldCmbByPrefix);
     const insp = inspByPermit.get(row.permit_num) || EMPTY_INSP;
     const result = classifyLifecyclePhase({
       status: row.status,
