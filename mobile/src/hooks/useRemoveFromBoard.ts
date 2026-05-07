@@ -16,10 +16,13 @@ export function useRemoveFromBoard() {
 
   return useMutation({
     mutationFn: ({ permitNum, revisionNum }: RemoveParams) =>
+      // Spec 91 §4.3.1 canonical lead_id format. Earlier `permit-${a}-${b}`
+      // shape was non-canonical and never parsed server-side; closed by
+      // the new POST /api/leads/save route in Spec 76 §3.4.
       fetchWithAuth('/api/leads/save', {
         method: 'POST',
         body: JSON.stringify({
-          lead_id: `permit-${permitNum}-${revisionNum}`,
+          lead_id: `${permitNum}--${revisionNum}`,
           lead_type: 'permit',
           saved: false,
         }),

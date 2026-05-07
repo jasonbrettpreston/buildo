@@ -178,7 +178,27 @@ The test-feed endpoint does NOT require a `user_profiles` entry — it construct
 - Admin operates under a real `user_id` sentinel (canonical: `'admin-test'`, exposed via `src/lib/admin/admin-uid.ts`) with `is_admin = true` in `auth_users`.
 - Admin's saves write `lead_views` rows where `user_id = 'admin-test'`. These rows do NOT count in `competition_count` for real users — the existing exclusion filter (`lv2.user_id != $9::text` at `src/features/leads/lib/get-lead-feed.ts:136`; `lv2.user_id != $4::text` at `src/lib/leads/lead-detail-query.ts:105`) naturally excludes the admin sentinel from any real user's view.
 - No impersonation, no PIPEDA boundary crossing, no audit-log requirement beyond the standard `/api/admin/*` action logging.
-- **Reuses existing mobile endpoints unmodified** (`GET /api/leads/flight-board`, `GET /api/leads/flight-board/detail/:id`, `POST /api/leads/save`) — admin's session cookie carries the admin uid; backend doesn't distinguish admin from user at the data layer.
+- **Reuses existing mobile endpoints unmodified** (`GET /api/leads/flight-board`, `GET /api/leads/flight-board/detail/:id`) — admin's session cookie carries the admin uid; backend doesn't distinguish admin from user at the data layer.
+- **Save endpoint** (`POST /api/leads/save`, `src/app/api/leads/save/route.ts`) was authored as part of WF2 Cycle 4 P5 (2026-05-06). The mobile app and Cycle 4 admin Flight Center both POST to this route to claim/un-claim permits. The endpoint uses `getCurrentUserContext` for auth, sources `trade_slug` from the user profile (NOT body), and translates the wire shape into a `recordLeadView` call internally. **Pre-existing bug closed:** the original spec language "reuses existing `POST /api/leads/save`" was wrong — that endpoint did not exist; mobile's claim/save/unsave callsites had been hitting a 404 since they were written. P5 closed the gap. **Wire contract:**
+
+```
+POST /api/leads/save
+Body: { lead_id: string, lead_type: 'permit'|'builder', saved: boolean }
+
+lead_id format (Spec 91 §4.3.1 canonical):
+  permits  : `${permit_num}--${revision_num}`  (e.g., `24-101234-BLD--01`)
+  builders : `builder-${entity_id}`            (e.g., `builder-12345`)
+
+Action mapping: saved:true → action:'save'; saved:false → action:'unsave'.
+The 'view' action stays exclusive to /api/leads/view (semantically distinct;
+view consumes trial quota per Spec 95 §2.2.1, save/unsave do not).
+
+Errors mirror /api/leads/view: 400 INVALID_JSON|VALIDATION_FAILED|INVALID_LEAD_ID;
+401 UNAUTHORIZED; 415 INVALID_CONTENT_TYPE; 429 RATE_LIMITED (60/min per uid,
+independent bucket from leads-view:); 500 INTERNAL_ERROR.
+
+Response 200: { data: { competition_count: number }, error: null, meta: null }
+```
 
 **UI:** `/admin/lead-feed/flight-center` page renders an admin-scoped flight board:
 - Three temporal sections (action_required / departing_soon / on_the_horizon) per Spec 77 §3.2 grouping.

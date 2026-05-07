@@ -31,6 +31,11 @@ vi.mock('@/lib/logger', () => ({
   logInfo: vi.fn(),
 }));
 
+vi.mock('@sentry/nextjs', () => ({
+  addBreadcrumb: vi.fn(),
+  captureException: vi.fn(),
+}));
+
 const VALID_FLIGHT_ITEM: FlightBoardItem = {
   permit_num: '20-101234',
   revision_num: '00',
@@ -301,6 +306,69 @@ describe('useSavePermit', () => {
     expect(cached?.data).toHaveLength(0);
   });
 
+  it('sends canonical lead_id format `${permit_num}--${revision_num}` to /api/leads/save (Spec 91 §4.3.1)', async () => {
+    const { queryClient, Wrapper } = makeWrapper();
+    queryClient.setQueryData<FlightBoardResult>(ADMIN_FLIGHT_BOARD_QUERY_KEY, {
+      data: [],
+    });
+    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
+
+    const { result } = renderHook(() => useSavePermit(), { wrapper: Wrapper });
+    await act(async () => {
+      await result.current.mutateAsync({
+        permit_num: '24-101234-BLD',
+        revision_num: '01',
+      });
+    });
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [url, init] = mockFetch.mock.calls[0] ?? [];
+    expect(url).toBe('/api/leads/save');
+    const body = JSON.parse((init as { body: string }).body) as {
+      lead_id: string;
+      lead_type: string;
+      saved: boolean;
+    };
+    // Canonical: double-dash separator, NO `permit-` prefix. Toronto permit
+    // numbers contain single dashes (e.g. `24-101234-BLD`); the server
+    // parser splits on the FIRST `--` only, so the permit_num is preserved
+    // verbatim on the left of the split.
+    expect(body.lead_id).toBe('24-101234-BLD--01');
+    expect(body.lead_type).toBe('permit');
+    expect(body.saved).toBe(true);
+  });
+
+  it('emits a Sentry admin_action breadcrumb in onMutate (Spec 35 §7.1)', async () => {
+    const Sentry = await import('@sentry/nextjs');
+    const breadcrumbSpy = vi.mocked(Sentry.addBreadcrumb);
+    const { queryClient, Wrapper } = makeWrapper();
+    queryClient.setQueryData<FlightBoardResult>(ADMIN_FLIGHT_BOARD_QUERY_KEY, {
+      data: [],
+    });
+    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
+
+    const { result } = renderHook(() => useSavePermit(), { wrapper: Wrapper });
+    await act(async () => {
+      await result.current.mutateAsync({
+        permit_num: '20-101234',
+        revision_num: '00',
+      });
+    });
+    // Spec 35 §7.1: every state-mutating admin action MUST emit a
+    // category:'admin_action' breadcrumb. Spec 99 §B3 timing: in
+    // onMutate, BEFORE the network call, so failed mutations still
+    // record user intent.
+    expect(breadcrumbSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'admin_action',
+        message: 'save_permit',
+        data: expect.objectContaining({
+          permit_num: '20-101234',
+          revision_num: '00',
+        }),
+      }),
+    );
+  });
+
   it('skips optimistic write when no item is supplied (still calls server)', async () => {
     const { queryClient, Wrapper } = makeWrapper();
     queryClient.setQueryData<FlightBoardResult>(ADMIN_FLIGHT_BOARD_QUERY_KEY, {
@@ -369,6 +437,52 @@ describe('useUnsavePermit', () => {
     );
     // Rollback restored the row.
     expect(cached?.data).toHaveLength(1);
+  });
+
+  it('sends canonical lead_id format with saved:false to /api/leads/save', async () => {
+    const { Wrapper } = makeWrapper();
+    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
+
+    const { result } = renderHook(() => useUnsavePermit(), { wrapper: Wrapper });
+    await act(async () => {
+      await result.current.mutateAsync({
+        permit_num: '24-101234-BLD',
+        revision_num: '01',
+      });
+    });
+    const [url, init] = mockFetch.mock.calls[0] ?? [];
+    expect(url).toBe('/api/leads/save');
+    const body = JSON.parse((init as { body: string }).body) as {
+      lead_id: string;
+      saved: boolean;
+    };
+    expect(body.lead_id).toBe('24-101234-BLD--01');
+    expect(body.saved).toBe(false);
+  });
+
+  it('emits a Sentry admin_action:unsave_permit breadcrumb in onMutate', async () => {
+    const Sentry = await import('@sentry/nextjs');
+    const breadcrumbSpy = vi.mocked(Sentry.addBreadcrumb);
+    const { Wrapper } = makeWrapper();
+    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
+
+    const { result } = renderHook(() => useUnsavePermit(), { wrapper: Wrapper });
+    await act(async () => {
+      await result.current.mutateAsync({
+        permit_num: '20-101234',
+        revision_num: '00',
+      });
+    });
+    expect(breadcrumbSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'admin_action',
+        message: 'unsave_permit',
+        data: expect.objectContaining({
+          permit_num: '20-101234',
+          revision_num: '00',
+        }),
+      }),
+    );
   });
 });
 

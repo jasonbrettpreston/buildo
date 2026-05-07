@@ -274,3 +274,24 @@ Source: Gemini + DeepSeek + worktree code-reviewer adversarial review of commits
 
 - **Zod 500 error includes no detail in dev (Gemini LOW).** When the response envelope fails Zod validation, the 500 returns a generic message. In dev mode, including `parsed.error.issues` in the body would speed local diagnosis. Defer — the issue is logged via `logError` already, which is the canonical operator-debug path.
 
+
+---
+
+## Spec 76 WF2 Cycle 4 P5 — Deferred Items (2026-05-06)
+
+Source: 3-agent Multi-Agent Review of `POST /api/leads/save` + the lead_id-format alignment across web admin + mobile (commit `<TBD>`). Fix-now items applied: canonical `parseLeadId` reuse, `--`-uniqueness guard, `.trim()` on Zod schema, defensive cache spread on optimistic write. Items below are deferred — non-blocking but worth picking up:
+
+- **PostHog `track('admin_action_performed')` event on save/unsave (DeepSeek HIGH).** Spec 35 §7.1 mandates Sentry breadcrumb + PostHog event for every admin mutation. Sentry breadcrumb shipped in P5; PostHog event deferred because the web admin has no client-side `track()` shim yet (Cycle 2 Phase 0 wired SERVER-side analytics only via `src/lib/admin/analytics.ts`). Followup: build a `useAdminAnalytics` hook that calls a thin `/api/admin/analytics/track` endpoint with the same PII allowlist; then wire into all admin mutations.
+
+- **Toast feedback on save/unsave success/error (DeepSeek HIGH).** No `sonner` (or equivalent) toast library is wired in the web admin. Add when a project-wide toast UX choice is made.
+
+- **Concurrent mutation race in optimistic save (DeepSeek MEDIUM).** Two near-simultaneous `useSavePermit` calls each snapshot the cache pre-optimistic-write; the second snapshot may already include the first's optimistic item. The `onSettled` invalidation reconciles eventually, but a brief inconsistent state is possible. Rare for save flow (single-tap claims); revisit if observed in production. Spec 99 §B3 "Rollback race acknowledgement" 2026-05-05 documents the per-field decision matrix; per the matrix, save_permit is low-contention so the naive rollback IS the canonical default.
+
+- **Pre-leadId-construction input validation in `useSavePermit` (DeepSeek MEDIUM).** If `permit_num` or `revision_num` were ever empty strings, the constructed `leadId` would be malformed and the server returns 400 with no UI feedback. Today the only callsite (SearchPermitsModal) only sends valid values from search hits. If future callers can pass empty values, add a precondition + UI feedback.
+
+- **API design: `lead_type`+`lead_id` redundancy (Gemini LOW).** A client could send `lead_type:'permit'` with `lead_id:'builder-123'`; the server correctly rejects but the contract is loose. Long-term refactor: drop `lead_type` from the body and infer from the `lead_id` shape server-side. Out of scope for P5; defer until a Spec 76 v2 amendment.
+
+- **Content-Type validation uses `.includes` not `.startsWith` (Gemini NIT).** `'text/plain; comment="application/json"'` would technically pass `.includes('application/json')`. Mirrors the existing `/api/leads/view` pattern (consistency); change both at once or neither. Defer to a sweep PR.
+
+- **Pre-existing broader bug: SQL `lead_id` separator mismatch.** `get-lead-feed.ts:100` builds `lead_id` as `permit_num || ':' || revision_num` (colon), but `parseLeadId` and the new `/api/leads/save` route expect `--`. Mobile's feed→detail flow (`router.push(`/(app)/[lead]?id=${item.lead_id}`)`) passes the colon-separated id into the URL where `parseLeadId` fails — separate WF3 needed. NOT introduced by P5; surfaced during P5 review.
+

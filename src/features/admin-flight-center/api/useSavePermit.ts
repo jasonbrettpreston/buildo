@@ -18,10 +18,9 @@ import {
   useQueryClient,
   type UseMutationResult,
 } from '@tanstack/react-query';
+import * as Sentry from '@sentry/nextjs';
 import { logError } from '@/lib/logger';
-import {
-  ADMIN_FLIGHT_BOARD_QUERY_KEY,
-} from '@/features/admin-flight-center/api/useAdminFlightBoard';
+import { ADMIN_FLIGHT_BOARD_QUERY_KEY } from '@/features/admin-flight-center/api/useAdminFlightBoard';
 import type { FlightBoardResult } from '@/lib/admin/lead-schemas';
 
 export interface SavePermitInput {
@@ -36,7 +35,11 @@ interface SavePermitContext {
 }
 
 async function postSavePermit(input: SavePermitInput): Promise<void> {
-  const leadId = `permit-${input.permit_num}-${input.revision_num}`;
+  // Spec 91 §4.3.1 canonical lead_id format — `${permit_num}--${revision_num}`.
+  // Toronto permit numbers contain single dashes, so `--` is the unambiguous
+  // separator. Server-side parser at src/app/api/leads/save/route.ts splits
+  // on the FIRST `--` only.
+  const leadId = `${input.permit_num}--${input.revision_num}`;
   const response = await fetch('/api/leads/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -62,8 +65,19 @@ export function useSavePermit(): UseMutationResult<
   return useMutation<void, Error, SavePermitInput, SavePermitContext>({
     mutationFn: postSavePermit,
     onMutate: async (input) => {
+      // Spec 35 §7.1 admin action telemetry — breadcrumb fires BEFORE the
+      // network call so a failed mutation still leaves a record of the
+      // user's INTENT (mirror of mobile Spec 99 §7.6 funnel-event timing).
+      Sentry.addBreadcrumb({
+        category: 'admin_action',
+        message: 'save_permit',
+        data: {
+          permit_num: input.permit_num,
+          revision_num: input.revision_num,
+        },
+      });
       // Cancel in-flight refetches so they don't overwrite the optimistic
-      // write between onMutate and onSuccess (Spec 35 §B3 step 1).
+      // write between onMutate and onSettled (Spec 35 §B3 step 1).
       await queryClient.cancelQueries({ queryKey: ADMIN_FLIGHT_BOARD_QUERY_KEY });
       const previousBoard = queryClient.getQueryData<FlightBoardResult>(
         ADMIN_FLIGHT_BOARD_QUERY_KEY,
@@ -79,9 +93,14 @@ export function useSavePermit(): UseMutationResult<
             i.revision_num === input.revision_num,
         );
         if (!alreadyOnBoard) {
+          // Spread `previousBoard` first so any non-`data` envelope fields
+          // a future Spec 76 amendment adds (pagination cursor, total
+          // count, last_updated, etc.) survive the optimistic write.
+          // Today FlightBoardResult is `{data}`-only; defensive against
+          // schema growth.
           queryClient.setQueryData<FlightBoardResult>(
             ADMIN_FLIGHT_BOARD_QUERY_KEY,
-            { data: [...previousBoard.data, input.optimisticItem] },
+            { ...previousBoard, data: [...previousBoard.data, input.optimisticItem] },
           );
         }
       }
@@ -101,9 +120,11 @@ export function useSavePermit(): UseMutationResult<
         revision_num: input.revision_num,
       });
     },
-    onSuccess: () => {
-      // Server is now authoritative — invalidate so the next render
-      // hydrates from the wire response, not the optimistic placeholder.
+    onSettled: () => {
+      // Spec 35 §B3 + Spec 99 §B3 mandate: invalidate in `onSettled`, NOT
+      // `onSuccess`. Settling on success OR failure means the cache always
+      // reconciles with server truth post-mutation — preventing optimistic
+      // drift if the server eventually disagrees with our optimistic write.
       void queryClient.invalidateQueries({
         queryKey: ADMIN_FLIGHT_BOARD_QUERY_KEY,
       });

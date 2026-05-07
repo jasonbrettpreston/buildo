@@ -41,10 +41,13 @@ export function SearchPermitsSheet({ visible, onClose }: Props) {
 
   const claimMutation = useMutation({
     mutationFn: (item: SearchResultItem) =>
+      // Spec 91 §4.3.1 canonical lead_id format — `${permit_num}--${revision_num}`.
+      // The earlier `permit-${a}-${b}` shape was non-canonical and never parsed
+      // server-side; closed by Spec 76 §3.4 + the new POST /api/leads/save route.
       fetchWithAuth('/api/leads/save', {
         method: 'POST',
         body: JSON.stringify({
-          lead_id: `permit-${item.permit_num}-${item.revision_num}`,
+          lead_id: `${item.permit_num}--${item.revision_num}`,
           lead_type: 'permit',
           saved: true,
         }),

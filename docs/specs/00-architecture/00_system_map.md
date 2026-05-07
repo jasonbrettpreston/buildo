@@ -14,7 +14,7 @@
 | 06 | `00-architecture/06_permits_rest_api.md` | Permit Data API | `src/app/api/permits/route.ts`, `src/app/api/permits/[id]/route.ts`, `src/app/api/permits/geo/route.ts`, +2 more | `src/tests/api.infra.test.ts` | Done |
 | 07 | `00-architecture/07_backend_prod_eval.md` | Backend Production Readiness Evaluation | `src/lib/logger.ts`, `src/app/api/leads/feed/route.ts` | — | Done |
 | 112 | `00-architecture/112_backup_recovery.md` | Database Backup & Recovery | `scripts/backup-db.js`, `scripts/manifest.json` | — | Done |
-| 13 | `00-architecture/13_authentication.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/session.ts`, `src/lib/auth/types.ts`, +4 more | `src/tests/auth.logic.test.ts`, `src/tests/middleware.logic.test.ts` | Done |
+| 13 | `00-architecture/13_authentication.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/session.ts`, `src/lib/auth/types.ts`, +7 more | `src/tests/auth.logic.test.ts`, `src/tests/auth-get-user.logic.test.ts`, `src/tests/firebase-admin.logic.test.ts`, +1 more | Done |
 | 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture | — | — | Active |
 
 ## Pipeline (Data Engineering)
@@ -56,7 +56,11 @@
 | 20 | `02-web-admin/20_stripe_web_checkout.md` | Stripe Web Checkout & Billing | `src/app/subscribe/page.tsx` | — | ACTIVE |
 | 21 | `02-web-admin/21_admin_user_management.md` | Admin User Management & Config Hub | — | — | ACTIVE |
 | 26 | `02-web-admin/26_admin_dashboard.md` | Admin Dashboard | `src/app/admin/page.tsx`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/market-metrics/route.ts`, +3 more | `src/tests/admin.ui.test.tsx`, `src/tests/analytics.logic.test.ts`, `src/tests/market-metrics.logic.test.ts` | Done |
-| 76 | `02-web-admin/76_lead_feed_health_dashboard.md` | Admin Test Feed Tool | `src/app/api/admin/leads/health/route.ts`, `src/app/api/admin/leads/test-feed/route.ts`, `src/lib/admin/lead-feed-health.ts`, +4 more | `src/tests/lead-feed-health.logic.test.ts`, `src/tests/lead-feed-health.infra.test.ts` | Done |
+| 30 | `02-web-admin/30_app_health_dashboard.md` | App Health Dashboard | `src/app/admin/app-health/page.tsx`, `src/components/admin/HealthTile.tsx`, `src/app/api/admin/app-health/route.ts`, +3 more | `src/tests/admin-app-health.{logic,ui,infra}.test.ts(x)` | Done |
+| 33 | `02-web-admin/33_web_admin_engineering_protocol.md` | Web Admin Engineering Protocol & Architecture | `src/lib/db/client.ts`, `src/lib/logger.ts`, `src/app/api/admin/**/types.ts`, +1 more | `src/tests/*.{logic,infra}.test.ts`, `src/tests/leads-detail.infra.test.ts` | Done |
+| 34 | `02-web-admin/34_web_admin_testing_protocol.md` | Web Admin Testing Protocol | — | `src/tests/leads-detail.infra.test.ts`, `src/tests/db/lead-detail-saved-state.db.test.ts`, `src/tests/user-profiles.security.test.ts` | ACTIVE |
+| 35 | `02-web-admin/35_web_admin_state_architecture.md` | Web Admin State Architecture & Ownership Protocol | `src/lib/admin/preferences.ts`, `src/app/admin/layout.tsx`, `src/lib/admin/context.ts`, +1 more | `src/tests/admin-store-reset.coverage.test.ts`, `src/tests/spec35-render-stability.lint.test.ts` | ACTIVE |
+| 76 | `02-web-admin/76_lead_feed_health_dashboard.md` | Admin Lead-Feed Tooling (Test Feed + Flight Center + Detail Inspectors) | `src/app/api/admin/leads/health/route.ts`, `src/app/api/admin/leads/test-feed/route.ts`, `src/lib/admin/lead-feed-health.ts`, +10 more | `src/tests/lead-feed-health.logic.test.ts`, `src/tests/lead-feed-health.infra.test.ts` | explicitly out of Cycle 3 scope. **Currently the lead feed algorithm does NOT differentiate by user type** (verified at implementation review: `getLeadFeed` at `src/features/leads/lib/get-lead-feed.ts` is parameterized by `trade_slug` + geo only; `account_preset` from `user_profiles` is not consumed by the feed SQL). |
 | 86 | `02-web-admin/86_control_panel.md` | 86 Master Configuration List: The "Control Panel" Schema | `src/lib/admin/control-panel.ts`, `src/app/api/admin/control-panel/configs/route.ts`, `src/features/admin-controls/**`, +3 more | `src/tests/control-panel.*.test.{ts,tsx}` | Done |
 
 ## Mobile (Lead Feed)
@@ -73,7 +77,7 @@
 | 96 | `03-mobile/96_mobile_subscription.md` | Mobile Subscription & Paywall | `src/app/api/user-profile/route.ts`, `src/app/api/subscribe/session/route.ts`, `src/lib/auth/get-user.ts`, +2 more | `src/tests/subscribe-session.infra.test.ts`, `src/tests/stripe-webhook.infra.test.ts`, `src/tests/stripe-webhook.security.test.ts`, +1 more | ACTIVE |
 | 97 | `03-mobile/97_mobile_settings_notifications_offboarding.md` | Mobile Settings, Notifications & Offboarding | `src/app/api/user-profile/export/route.ts`, `src/lib/auth/get-user.ts`, `src/app/api/user-profile/route.ts`, +3 more | `src/tests/user-profile-export.infra.test.ts`, `src/tests/settings.security.test.ts` | ACTIVE |
 | 98 | `03-mobile/98_mobile_testing_protocol.md` | Mobile Testing Protocol & Local Environment | — | — | ACTIVE |
-| 99 | `03-mobile/99_mobile_state_architecture.md` | Mobile State Architecture & Ownership Protocol | `mobile/src/store/*.ts`, `mobile/src/hooks/useUserProfile.ts`, `mobile/app/_layout.tsx`, `mobile/app/(app)/_layout.tsx`, `mobile/src/lib/queryClient.ts` | `mobile/__tests__/useAuth.test.ts`, `mobile/__tests__/filterStore.test.ts`, +planned: authGate.test.ts, bridges.test.ts | ACTIVE |
+| 99 | `03-mobile/99_mobile_state_architecture.md` | Mobile State Architecture & Ownership Protocol | `src/lib/userProfile.schema.ts`, `src/app/api/user-profile/route.ts`, `src/app/api/notifications/preferences/route.ts` | `src/tests/get-lead-feed.logic.test.ts` | ACTIVE |
 
 ## Archive (Deprecated)
 
