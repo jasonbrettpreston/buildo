@@ -439,5 +439,280 @@
     "description": "PIPEDA/GDPR retention window in days for lead_views rows; rows older than this are purged nightly by purge-lead-views.js",
     "min": 7,
     "max": 365
+  },
+
+  "lifecycle_band_p3_min": {
+    "default": 716,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P3 (Intake) before assert-lifecycle-phase-distribution emits a band-violation FAIL. Calibrated against 2026-05-07 snapshot (843) ±15%.",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p3_max": {
+    "default": 970,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P3 (Intake) before band-violation FAIL.",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p4_min": {
+    "default": 3471,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P4 (Examination/review) before band-violation FAIL.",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p4_max": {
+    "default": 4695,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P4 (Examination/review).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p5_min": {
+    "default": 1247,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P5 (On Hold/deficiency notice).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p5_max": {
+    "default": 1687,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P5 (On Hold/deficiency notice).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p6_min": {
+    "default": 2491,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P6 (Ready for issuance / approved).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p6_max": {
+    "default": 3370,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P6 (Ready for issuance / approved).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p7a_min": {
+    "default": 1749,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P7a (issued, fresh — ≤30 days bucket).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p7a_max": {
+    "default": 2367,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P7a (issued, fresh).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p7b_min": {
+    "default": 2154,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P7b (issued, active — 31–90 days bucket).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p7b_max": {
+    "default": 2914,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P7b (issued, active).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p7c_min": {
+    "default": 28311,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P7c (issued, bulk — >90 days, no inspections recorded).",
+    "min": 0,
+    "max": 200000
+  },
+  "lifecycle_band_p7c_max": {
+    "default": 38303,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P7c (issued, bulk).",
+    "min": 0,
+    "max": 200000
+  },
+  "lifecycle_band_p7d_min": {
+    "default": 1674,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P7d (issued, not started).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p7d_max": {
+    "default": 2264,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P7d (issued, not started).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p8_min": {
+    "default": 16117,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P8 (revision in progress).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p8_max": {
+    "default": 21805,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P8 (revision in progress).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p18_min": {
+    "default": 91112,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P18 (Inspection-status fallback when no detailed inspection records).",
+    "min": 0,
+    "max": 500000
+  },
+  "lifecycle_band_p18_max": {
+    "default": 123270,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P18.",
+    "min": 0,
+    "max": 500000
+  },
+  "lifecycle_band_p19_min": {
+    "default": 6748,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P19 (winddown / pre-occupancy).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p19_max": {
+    "default": 9130,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P19 (winddown / pre-occupancy).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p20_min": {
+    "default": 7355,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=P20 (terminal / occupancy).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p20_max": {
+    "default": 9951,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=P20 (terminal / occupancy).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p9_p17_agg_min": {
+    "default": 0,
+    "type": "number",
+    "description": "Min sum of permits in P9–P17 (detailed inspection-stage phases). Wide tolerance — current scraper coverage ~5.5%; raise as inspection ingestion scales up.",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_p9_p17_agg_max": {
+    "default": 80000,
+    "type": "number",
+    "description": "Max sum of permits in P9–P17. Wide upper bound until inspection ingestion scales up.",
+    "min": 0,
+    "max": 200000
+  },
+  "lifecycle_band_o1_min": {
+    "default": 2549,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=O1 (active orphan trade permit). Per Spec 84 §7 O-phases scope ONLY to standalone trade permits (HVA/PLB/DRN); BLDs are never orphan post-WF3.",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_o1_max": {
+    "default": 3449,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=O1 (active orphan trade permit).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_o2_min": {
+    "default": 2461,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=O2 (orphan trade permit, mid-lifecycle).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_o2_max": {
+    "default": 3329,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=O2 (orphan trade permit, mid-lifecycle).",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_band_o3_min": {
+    "default": 36913,
+    "type": "number",
+    "description": "Min count for lifecycle_phase=O3 (stalled orphan trade permit, beyond lifecycle_orphan_stall_days threshold).",
+    "min": 0,
+    "max": 200000
+  },
+  "lifecycle_band_o3_max": {
+    "default": 49941,
+    "type": "number",
+    "description": "Max count for lifecycle_phase=O3 (stalled orphan trade permit).",
+    "min": 0,
+    "max": 200000
+  },
+  "lifecycle_band_coa_p1_min": {
+    "default": 30,
+    "type": "number",
+    "description": "Min count for CoA lifecycle_phase=P1 (application received). Small counts; ±30% tolerance.",
+    "min": 0,
+    "max": 10000
+  },
+  "lifecycle_band_coa_p1_max": {
+    "default": 80,
+    "type": "number",
+    "description": "Max count for CoA lifecycle_phase=P1 (application received).",
+    "min": 0,
+    "max": 10000
+  },
+  "lifecycle_band_coa_p2_min": {
+    "default": 120,
+    "type": "number",
+    "description": "Min count for CoA lifecycle_phase=P2 (committee decision rendered).",
+    "min": 0,
+    "max": 10000
+  },
+  "lifecycle_band_coa_p2_max": {
+    "default": 200,
+    "type": "number",
+    "description": "Max count for CoA lifecycle_phase=P2 (committee decision rendered).",
+    "min": 0,
+    "max": 10000
+  },
+
+  "lifecycle_cross_stalled_threshold": {
+    "default": 1000,
+    "type": "number",
+    "description": "Max count of permits with enriched_status=Stalled but lifecycle_stalled=false before the assertion FAILs. Detects classifier ↔ scraper signal divergence.",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_cross_active_inspection_threshold": {
+    "default": 500,
+    "type": "number",
+    "description": "Max count of permits with enriched_status=Active Inspection NOT in P9-P18/O1-O3 before the assertion FAILs.",
+    "min": 0,
+    "max": 100000
+  },
+  "lifecycle_cross_issued_threshold": {
+    "default": 500,
+    "type": "number",
+    "description": "Max count of permits with enriched_status=Permit Issued NOT in P7a/b/c/d/P8/P18/O1-O3 before the assertion FAILs.",
+    "min": 0,
+    "max": 100000
   }
 }

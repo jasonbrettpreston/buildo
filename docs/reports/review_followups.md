@@ -378,3 +378,23 @@ Source: WF3 worktree code-reviewer flagged this while reviewing the App Health r
 
 - **`src/app/api/admin/pipelines/history/route.ts` exports TS interfaces (`PipelineHistoryRun`, `PipelineHistoryResponse`) directly from the route file (lines 15, 26).** Same class of violation that prompted the WF3 — non-handler named exports from a route file. Currently does NOT break `next build` because TypeScript interfaces are erased at compile time (the route validator only sees runtime exports). **Defer**: a future Next.js version could tighten the validator to also reject type-only exports. Move both interfaces to `src/app/api/admin/pipelines/history/types.ts` if/when this ever surfaces, or proactively if a sweep of route-file hygiene is filed.
 
+---
+
+## Spec 47/84/86 — WF2 Lifecycle Bands Multi-Agent Review Deferred Items (2026-05-07)
+
+Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of the WF2 that externalized `EXPECTED_BANDS` + 3 cross-status thresholds into `logic_variables` (migration 119).
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| HIGH (design) | Gemini | **P9-P17 aggregate band masks per-phase health.** A failure in P11 (Framing) could be silently absorbed by other phases inside the aggregate. Spec 84 §3.3/§3.4 detail distinct construction stages that deserve individual `[min, max]` bands. | Pre-existing design decision (low scraper coverage ~5.5% justified the aggregate). Expanding to per-phase bands is a separate WF1 epic and requires a coverage uplift first to avoid noisy WARN spam. |
+| HIGH (defensive) | DeepSeek | **Unknown-phase gate missing.** The audit loop iterates only over `EXPECTED_BANDS`; if the classifier emits a typo phase like `'P-3'` or a future `'P21'` it lands in `allCounts` but is never failed against. Indirect mitigation: the *expected* phase would then have count 0 → band check fails on it. | Defensive gap, real but not introduced by this WF2. Future WF1: add an "audit_table.cross_check_unknown_phase" that compares `Object.keys(allCounts)` against `Object.keys(PHASE_TO_LOGIC_VAR_SUFFIX)`. |
+| HIGH (consistency) | DeepSeek | **`crossStalled` query does not handle `lifecycle_stalled IS NULL`.** The query `lifecycle_stalled = false` excludes NULL rows; cross-checks 2/3 already adopted `OR lifecycle_phase IS NULL`. | Pre-existing query (Bug #9 Strangler Fig downgrade comment). Fold into a future WF3 that revisits NULL-handling consistency across all three cross-checks. |
+| MEDIUM | Gemini | **`ON CONFLICT DO NOTHING` blocks description corrections.** A typo in a description requires a new migration with `UPDATE`. | Intentional — same convention as migration 118 (operator-hotfix preservation). Description fixes via separate UPDATE migration is the established discipline. |
+| MEDIUM | DeepSeek | **`enriched_status='Stalled'` comparison is case-sensitive.** Mixed-case data (`'stalled'`, `'STALLED'`) would silently miss rows. | Pre-existing query. Wrap into the same future WF3 as the NULL-handling item. |
+| MEDIUM | DeepSeek | **Skip-path `emitSummary` lacks an `audit_table` row.** When the classifier holds the lock and this script skips, admin UI may show green for a no-op run. | Pre-existing `skipEmit: false` pattern. Pipeline-wide convention question — defer until the admin UI surfacing is built. |
+| LOW | Gemini | **`p9_p17_agg_min = 0` is functionally useless** — counts can't be negative. Set to `1` for at-least-one-row guard or remove until coverage justifies a meaningful floor. | Pre-existing band shape (kept identical to old hardcoded `EXPECTED_BANDS`). Will be revisited when the per-phase expansion above lands. |
+| LOW | Gemini | **Add a DB `CHECK` constraint on `lifecycle_band_*` values** to reject non-numeric operator edits at the DB layer (currently only Zod at runtime). | Hardening; not a WF2 regression. Open if the admin UI ever permits free-text edits. |
+| BLOCKED | Gemini | **Rename `lifecycle_band_p3_*` → `lifecycle_band_intake_p3_*`** to match Spec 84 §3.2's `INTAKE_P3` prefixed naming for permit intake phases. | Blocked on Spec 84 §6 W11 ("ID Collision: P3/P4/P5 mean different things in CoA vs Permits — Pending Refactor"). When the classifier switches to writing `INTAKE_P3` to `permits.lifecycle_phase`, rename these `logic_variables` keys and the `PHASE_TO_LOGIC_VAR_SUFFIX` map in lockstep. Today's keys correctly mirror today's DB values. |
+
+**False positive (worktree code-reviewer):** "migration file missing on disk" — caused by worktree isolation not picking up untracked files. Confirmed present + applied to dev DB (`INSERT 0 39`); assert script ran end-to-end with all 18 bands PASS.
+

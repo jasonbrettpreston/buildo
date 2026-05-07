@@ -24,10 +24,6 @@ const {
   NORMALIZED_DEAD_DECISIONS_ARRAY,
 } = require('./../lib/lifecycle-phase');
 
-const LOGIC_VARS_SCHEMA = z.object({
-  lifecycle_unclassified_max: z.coerce.number().finite().nonnegative().int(),
-}).passthrough();
-
 // Advisory lock ID — unique to this assert script (§47 §A.5, ID 109).
 // Prevents two concurrent chain runs from executing the distribution
 // check simultaneously. If the classifier (lock 84) is concurrently
@@ -35,48 +31,64 @@ const LOGIC_VARS_SCHEMA = z.object({
 // lock-is-held check on the shared lock (see WF3 Bug #10 rationale).
 const ADVISORY_LOCK_ID = 109;
 
-// Expected distribution bands. Wide enough (±5%) to absorb normal
-// day-to-day fluctuation but tight enough to catch a rule regression.
-// Based on live DB snapshot 2026-04-11.
+// ──────────────────────────────────────────────────────────────────
+// Phase distribution bands — externalized to logic_variables (WF2 2026-05-07).
 //
-// NOTE: these bands assume the classifier has recently run on fresh
-// data. If the classifier hasn't run yet, most counts will be 0 and
-// the assertion will fail — which is the correct behavior (the
-// feature is not healthy until the classifier has populated the
-// column).
-// Recalibrated 2026-04-12 against live DB post-classifier-V1 backfill.
-// Bands are ±10% for phases >1000, ±30% for phases <1000 (small counts
-// fluctuate more from daily CKAN delta ingestion).
-const EXPECTED_BANDS = {
+// Audit-table display labels → snake-case logic_variables key suffixes.
+// Migration 119 seeded `lifecycle_band_<suffix>_min/_max` rows. Bounds
+// are operator-tunable via the admin Control Panel (Spec 86 §1) without
+// a code deploy. Defaults are set in scripts/seeds/logic_variables.json
+// and mirrored into the DB by migration 119.
+//
+// Bands assume the classifier has recently run on fresh data. If it
+// hasn't, most counts will be 0 and the assertion will fail — correct
+// behaviour (the feature is unhealthy until the classifier populates
+// the column).
+// ──────────────────────────────────────────────────────────────────
+const PHASE_TO_LOGIC_VAR_SUFFIX = {
   // permits — pre-issuance
-  P3:  { min: 200, max: 400 },
-  P4:  { min: 1200, max: 1600 },
-  P5:  { min: 900, max: 1200 },
-  P6:  { min: 2200, max: 2900 },
+  P3: 'p3', P4: 'p4', P5: 'p5', P6: 'p6',
   // permits — issued time-bucketed
-  P7a: { min: 700, max: 1400 },
-  P7b: { min: 1200, max: 2200 },
-  P7c: { min: 14000, max: 18000 },
-  P7d: { min: 600, max: 1200 },
+  P7a: 'p7a', P7b: 'p7b', P7c: 'p7c', P7d: 'p7d',
   // permits — active + revised
-  P8:  { min: 4700, max: 6000 },
-  P18: { min: 41000, max: 52000 },
-  // permits — terminal
-  P19: { min: 4900, max: 6200 },
-  P20: { min: 7700, max: 9600 },
-  // P9-P17 combined (current scraper coverage is ~5.5%; wide tolerance
-  // while the scraper scales up)
-  'P9-P17': { min: 0, max: 80000 },
+  P8: 'p8', P18: 'p18', P19: 'p19', P20: 'p20',
+  // permits — active sub-stage aggregate (P9-P17 sum)
+  'P9-P17': 'p9_p17_agg',
   // orphans
-  O1:  { min: 7000, max: 9000 },
-  O2:  { min: 13000, max: 16000 },
-  O3:  { min: 115000, max: 145000 },
-  // coa
-  P1:  { min: 30, max: 80 },
-  P2:  { min: 120, max: 200 },
+  O1: 'o1', O2: 'o2', O3: 'o3',
+  // CoA (no namespace collision with permits — permits never store P1/P2)
+  P1: 'coa_p1', P2: 'coa_p2',
 };
 
-// unclassifiedMax externalized to logic_variables as lifecycle_unclassified_max (WF3-E12)
+// Build Zod schema dynamically — every phase contributes a min/max key.
+// Bands are integer row counts; .int() rejects accidental fractional operator
+// edits (e.g. 500.5) that would otherwise round-trip through DECIMAL silently.
+const _bandShape = {};
+for (const suffix of Object.values(PHASE_TO_LOGIC_VAR_SUFFIX)) {
+  _bandShape[`lifecycle_band_${suffix}_min`] = z.coerce.number().finite().nonnegative().int();
+  _bandShape[`lifecycle_band_${suffix}_max`] = z.coerce.number().finite().nonnegative().int();
+}
+
+const LOGIC_VARS_SCHEMA = z.object({
+  lifecycle_unclassified_max: z.coerce.number().finite().nonnegative().int(),
+  lifecycle_cross_stalled_threshold: z.coerce.number().finite().nonnegative().int(),
+  lifecycle_cross_active_inspection_threshold: z.coerce.number().finite().nonnegative().int(),
+  lifecycle_cross_issued_threshold: z.coerce.number().finite().nonnegative().int(),
+  ..._bandShape,
+}).passthrough().superRefine((data, ctx) => {
+  // Operator-hotfix guard: a min > max pair would silently make the
+  // band un-matchable and the assertion would PASS on a dead phase.
+  for (const suffix of Object.values(PHASE_TO_LOGIC_VAR_SUFFIX)) {
+    const min = data[`lifecycle_band_${suffix}_min`];
+    const max = data[`lifecycle_band_${suffix}_max`];
+    if (Number.isFinite(min) && Number.isFinite(max) && min > max) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `lifecycle_band_${suffix}: min (${min}) > max (${max}) — band would never match`,
+      });
+    }
+  }
+});
 
 // Phases that roll into the P9-P17 aggregate bucket
 const ACTIVE_SUBPHASES = new Set([
@@ -106,6 +118,19 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-lifecycle-phase-distribution');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   const unclassifiedMax = logicVars.lifecycle_unclassified_max;
+  const stalledThreshold = logicVars.lifecycle_cross_stalled_threshold;
+  const activeInspectionThreshold = logicVars.lifecycle_cross_active_inspection_threshold;
+  const issuedThreshold = logicVars.lifecycle_cross_issued_threshold;
+
+  // Resolve the per-phase distribution bands from logic_variables.
+  // Spec 47 §R4 — no hardcoded thresholds; operator-tunable via Spec 86 Control Panel.
+  const EXPECTED_BANDS = {};
+  for (const [label, suffix] of Object.entries(PHASE_TO_LOGIC_VAR_SUFFIX)) {
+    EXPECTED_BANDS[label] = {
+      min: logicVars[`lifecycle_band_${suffix}_min`],
+      max: logicVars[`lifecycle_band_${suffix}_max`],
+    };
+  }
   // Distribution from permits.lifecycle_phase
   const { rows: permitRows } = await pool.query(
     `SELECT lifecycle_phase, COUNT(*)::int AS n
@@ -223,16 +248,16 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
   const crossStalled = crossCheck1[0].n;
   const stalledStatus = crossStalled === 0
     ? 'PASS'
-    : crossStalled < 1000 ? 'WARN' : 'FAIL';
+    : crossStalled < stalledThreshold ? 'WARN' : 'FAIL';
   auditRows.push({
     metric: 'cross_check_stalled',
     value: crossStalled,
-    threshold: '< 1000 (WARN), >= 1000 (FAIL)',
+    threshold: `< ${stalledThreshold} (WARN), >= ${stalledThreshold} (FAIL)`,
     status: stalledStatus,
   });
-  if (crossStalled >= 1000) {
+  if (crossStalled >= stalledThreshold) {
     failures.push(
-      `${crossStalled} permits have enriched_status=Stalled but lifecycle_stalled=false (exceeds 1000 threshold)`,
+      `${crossStalled} permits have enriched_status=Stalled but lifecycle_stalled=false (exceeds ${stalledThreshold} threshold)`,
     );
   } else if (crossStalled > 0) {
     warnings.push(
@@ -265,12 +290,12 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
   auditRows.push({
     metric: 'cross_check_active_inspection',
     value: crossActive,
-    threshold: '< 500 (WARN), >= 500 (FAIL)',
-    status: crossActive === 0 ? 'PASS' : crossActive < 500 ? 'WARN' : 'FAIL',
+    threshold: `< ${activeInspectionThreshold} (WARN), >= ${activeInspectionThreshold} (FAIL)`,
+    status: crossActive === 0 ? 'PASS' : crossActive < activeInspectionThreshold ? 'WARN' : 'FAIL',
   });
-  if (crossActive >= 500) {
+  if (crossActive >= activeInspectionThreshold) {
     failures.push(
-      `${crossActive} permits with enriched_status=Active Inspection are not in P9-P18/O1-O3 (exceeds 500 threshold)`,
+      `${crossActive} permits with enriched_status=Active Inspection are not in P9-P18/O1-O3 (exceeds ${activeInspectionThreshold} threshold)`,
     );
   } else if (crossActive > 0) {
     warnings.push(
@@ -290,12 +315,12 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
   auditRows.push({
     metric: 'cross_check_permit_issued',
     value: crossIssued,
-    threshold: '< 500 (WARN), >= 500 (FAIL)',
-    status: crossIssued === 0 ? 'PASS' : crossIssued < 500 ? 'WARN' : 'FAIL',
+    threshold: `< ${issuedThreshold} (WARN), >= ${issuedThreshold} (FAIL)`,
+    status: crossIssued === 0 ? 'PASS' : crossIssued < issuedThreshold ? 'WARN' : 'FAIL',
   });
-  if (crossIssued >= 500) {
+  if (crossIssued >= issuedThreshold) {
     failures.push(
-      `${crossIssued} permits with enriched_status=Permit Issued are not in P7a/b/c/d/P8/P18/O1-O3 (exceeds 500 threshold)`,
+      `${crossIssued} permits with enriched_status=Permit Issued are not in P7a/b/c/d/P8/P18/O1-O3 (exceeds ${issuedThreshold} threshold)`,
     );
   }
 

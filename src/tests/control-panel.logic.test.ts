@@ -122,6 +122,31 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'lifecycle_p7b_max_days',           // WF2 — max days for P7b bucket (§4.1)
   'lifecycle_orphan_stall_days',      // WF3 B1-C2 — days for orphan O2→O3 degradation (§4.1)
   'lead_view_retention_days',         // D3: PIPEDA/GDPR retention window for lead_views purge
+
+  // ── Lifecycle phase distribution bands (WF2 2026-05-07, migration 119) ──
+  // Spec 47 §R4 + Spec 84 §3.4 + Spec 86 §1. Externalized from
+  // scripts/quality/assert-lifecycle-phase-distribution.js EXPECTED_BANDS.
+  'lifecycle_cross_stalled_threshold',
+  'lifecycle_cross_active_inspection_threshold',
+  'lifecycle_cross_issued_threshold',
+  'lifecycle_band_p3_min', 'lifecycle_band_p3_max',
+  'lifecycle_band_p4_min', 'lifecycle_band_p4_max',
+  'lifecycle_band_p5_min', 'lifecycle_band_p5_max',
+  'lifecycle_band_p6_min', 'lifecycle_band_p6_max',
+  'lifecycle_band_p7a_min', 'lifecycle_band_p7a_max',
+  'lifecycle_band_p7b_min', 'lifecycle_band_p7b_max',
+  'lifecycle_band_p7c_min', 'lifecycle_band_p7c_max',
+  'lifecycle_band_p7d_min', 'lifecycle_band_p7d_max',
+  'lifecycle_band_p8_min',  'lifecycle_band_p8_max',
+  'lifecycle_band_p18_min', 'lifecycle_band_p18_max',
+  'lifecycle_band_p19_min', 'lifecycle_band_p19_max',
+  'lifecycle_band_p20_min', 'lifecycle_band_p20_max',
+  'lifecycle_band_p9_p17_agg_min', 'lifecycle_band_p9_p17_agg_max',
+  'lifecycle_band_o1_min', 'lifecycle_band_o1_max',
+  'lifecycle_band_o2_min', 'lifecycle_band_o2_max',
+  'lifecycle_band_o3_min', 'lifecycle_band_o3_max',
+  'lifecycle_band_coa_p1_min', 'lifecycle_band_coa_p1_max',
+  'lifecycle_band_coa_p2_min', 'lifecycle_band_coa_p2_max',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
@@ -173,7 +198,7 @@ describe('Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ conf
     expect(jsonKeys.length).toBeGreaterThan(0);
   });
 
-  it('logic_variables.json contains all 57 expected keys', () => {
+  it('logic_variables.json contains all expected keys', () => {
     for (const key of EXPECTED_LOGIC_VAR_KEYS) {
       expect(jsonData, `JSON missing key: ${key}`).toHaveProperty(key);
     }

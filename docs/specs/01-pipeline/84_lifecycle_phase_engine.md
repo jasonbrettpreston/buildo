@@ -107,6 +107,24 @@ Orphans (O1-O3) have no logical rank in the standard P1-P20 progression, prevent
 
 ---
 
+### 8. Distribution Health Bands (CQA Tier 3)
+
+`scripts/quality/assert-lifecycle-phase-distribution.js` is the canonical post-classifier health check. It compares the live row counts of every phase (`P3-P20`, `O1-O3`, CoA `P1-P2`, plus the synthetic `P9-P17` aggregate) against per-phase `[min, max]` bands and flags `FAIL`/`WARN` if any actual count drifts outside its band.
+
+**Externalization (WF2 2026-05-07, migration 119)** — every band bound and every cross-status drift threshold lives in `logic_variables`, not in code. Operators tune via the admin Control Panel ("Lifecycle Phase Distribution Bands" group, Spec 86 §1) without a redeploy.
+
+Key namespace:
+- `lifecycle_band_<phase>_min`, `lifecycle_band_<phase>_max` — 18 phases × 2 keys (36 entries). Phase suffixes: `p3`, `p4`, `p5`, `p6`, `p7a`, `p7b`, `p7c`, `p7d`, `p8`, `p18`, `p19`, `p20`, `p9_p17_agg`, `o1`, `o2`, `o3`, `coa_p1`, `coa_p2`.
+- `lifecycle_cross_stalled_threshold` — FAIL when N permits have `enriched_status='Stalled'` but `lifecycle_stalled=false`.
+- `lifecycle_cross_active_inspection_threshold` — FAIL when N permits with `enriched_status='Active Inspection'` are not in `P9-P18`/`O1-O3`.
+- `lifecycle_cross_issued_threshold` — FAIL when N permits with `enriched_status='Permit Issued'` are not in `P7a/b/c/d`/`P8`/`P18`/`O1-O3`.
+
+Defaults are calibrated against the 2026-05-07 live-DB snapshot with ±15% tolerance and seeded by both `migrations/119_lifecycle_phase_bands_logic_variables.sql` and `scripts/seeds/logic_variables.json` (single source of truth — the parity test `src/tests/control-panel.logic.test.ts` enforces both surfaces match).
+
+A startup-time Zod `superRefine` rejects any `min > max` pair (operator-hotfix guard) — a bad pair would silently make a band un-matchable and the assertion would pass on a dead phase.
+
+---
+
 ## 4. System Logic & Edge Cases
 
 ### Logic Notes for the Contract

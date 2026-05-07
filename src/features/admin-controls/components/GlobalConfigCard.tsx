@@ -1,11 +1,12 @@
 'use client';
 /**
- * GlobalConfigCard — renders all 54 logic_variables grouped by domain,
- * plus income_premium_tiers (JSONB type, seeded via migration 097).
- * Uses DeltaGuardInput for numeric fields and JsonTiersEditor for the
- * income_premium_tiers JSONB field.
+ * GlobalConfigCard — renders all numeric logic_variables grouped by domain
+ * (~93 keys post migration 119), plus income_premium_tiers (JSONB type,
+ * seeded via migration 097). Uses DeltaGuardInput for numeric fields and
+ * JsonTiersEditor for the income_premium_tiers JSONB field.
  *
  * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 3
+ * SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3.4
  */
 
 import React from 'react';
@@ -14,7 +15,7 @@ import { DeltaGuardInput } from './DeltaGuardInput';
 import { JsonTiersEditor } from './JsonTiersEditor';
 import { useAdminControlsStore } from '../store/useAdminControlsStore';
 
-/** Logical groups for display — covers all 54 numeric keys + income_premium_tiers. */
+/** Logical groups for display — covers all numeric keys + income_premium_tiers. */
 const GROUPS: Array<{ label: string; keys: string[] }> = [
   {
     label: 'Lead Scoring',
@@ -135,6 +136,43 @@ const GROUPS: Array<{ label: string; keys: string[] }> = [
       'lifecycle_unclassified_max',
     ],
   },
+  {
+    // Spec 84 §3.4 — distribution bands consumed by
+    // scripts/quality/assert-lifecycle-phase-distribution.js. Tunable
+    // here so operators can widen/tighten bands without a code deploy
+    // when fresh CKAN data shifts the snapshot.
+    label: 'Lifecycle Phase Distribution Bands',
+    keys: [
+      // Cross-status drift thresholds (Strangler Fig: enriched_status vs lifecycle_*)
+      'lifecycle_cross_stalled_threshold',
+      'lifecycle_cross_active_inspection_threshold',
+      'lifecycle_cross_issued_threshold',
+      // Pre-issuance
+      'lifecycle_band_p3_min', 'lifecycle_band_p3_max',
+      'lifecycle_band_p4_min', 'lifecycle_band_p4_max',
+      'lifecycle_band_p5_min', 'lifecycle_band_p5_max',
+      'lifecycle_band_p6_min', 'lifecycle_band_p6_max',
+      // Issued time-bucketed
+      'lifecycle_band_p7a_min', 'lifecycle_band_p7a_max',
+      'lifecycle_band_p7b_min', 'lifecycle_band_p7b_max',
+      'lifecycle_band_p7c_min', 'lifecycle_band_p7c_max',
+      'lifecycle_band_p7d_min', 'lifecycle_band_p7d_max',
+      // Active + revised
+      'lifecycle_band_p8_min',  'lifecycle_band_p8_max',
+      'lifecycle_band_p18_min', 'lifecycle_band_p18_max',
+      'lifecycle_band_p19_min', 'lifecycle_band_p19_max',
+      'lifecycle_band_p20_min', 'lifecycle_band_p20_max',
+      // Active sub-stage aggregate (P9-P17 sum)
+      'lifecycle_band_p9_p17_agg_min', 'lifecycle_band_p9_p17_agg_max',
+      // Orphans
+      'lifecycle_band_o1_min', 'lifecycle_band_o1_max',
+      'lifecycle_band_o2_min', 'lifecycle_band_o2_max',
+      'lifecycle_band_o3_min', 'lifecycle_band_o3_max',
+      // CoA
+      'lifecycle_band_coa_p1_min', 'lifecycle_band_coa_p1_max',
+      'lifecycle_band_coa_p2_min', 'lifecycle_band_coa_p2_max',
+    ],
+  },
 ];
 
 const JSON_KEYS = new Set(['income_premium_tiers']);
@@ -155,6 +193,10 @@ function stepFor(key: string): number {
     key === 'massing_shed_threshold_sqm' ||
     key === 'scrape_early_phase_threshold_pct'
   ) return 1;
+  // Lifecycle band/threshold keys are integer row counts, not ratios.
+  // Must short-circuit BEFORE the "_threshold" includes() check below
+  // (which would otherwise return 0.01 — wrong step for counts in the thousands).
+  if (key.startsWith('lifecycle_band_') || key.startsWith('lifecycle_cross_')) return 1;
   if (
     key.endsWith('_conf') ||
     key.endsWith('_conf_high') ||

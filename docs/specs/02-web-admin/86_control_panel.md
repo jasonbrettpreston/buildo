@@ -26,6 +26,10 @@ These are universal "Gravity" constants. They act as baseline rules, fallbacks, 
 | `commercial_shell_multiplier` | Cost | **NEW:** The penalty multiplier (e.g., 0.60) applied to interior trades on Shell builds. |
 | `placeholder_cost_threshold` | Cost | **NEW:** The minimum city cost (e.g., $1000) before the model assumes total override control. |
 | `income_premium_tiers` | Cost | **NEW:** JSON mapping of neighborhood income brackets to cost multipliers (e.g., `{"100000": 1.2, "150000": 1.5}`). |
+| `lifecycle_band_<phase>_min/_max` (×36) | Lifecycle CQA | **WF2 2026-05-07 (mig 119):** Per-phase row-count tolerance bands consumed by `assert-lifecycle-phase-distribution.js`. Widen/tighten without a redeploy when CKAN deltas shift the snapshot. See Spec 84 §3.8. |
+| `lifecycle_cross_*_threshold` (×3) | Lifecycle CQA | **WF2 2026-05-07 (mig 119):** Strangler Fig drift thresholds (`enriched_status` vs `lifecycle_*`). FAIL when the legacy/new column drift exceeds the configured row count. |
+
+> The table above is illustrative; the **single source of truth** for the full key set is `scripts/seeds/logic_variables.json`. Schema parity between that file, `scripts/lib/config-loader.js` (`FALLBACK_LOGIC_VARS`), and `src/lib/admin/control-panel.ts` (`LOGIC_VAR_DEFAULTS`) is enforced by `src/tests/control-panel.logic.test.ts`. Adding a new variable means appending to the JSON; the admin UI grouping lives in `src/features/admin-controls/components/GlobalConfigCard.tsx` `GROUPS`.
 
 ## 2. Trade Matrix Logic (`trade_configurations`)
 
