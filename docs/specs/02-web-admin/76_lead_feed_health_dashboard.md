@@ -269,16 +269,19 @@ A permit can render correctly through one endpoint and fail through the other �
 
 **Edge cases:** same as §3.5 (invalid id → 400; cold-boot 404 if not on user's saved board; schema drift → parse error displayed).
 
-### 3.7 User-Type Filter (DEFERRED — Cycle 3 amendment 2026-05-06)
+### 3.7 User-Type Filter (CLOSED — Cycle 6 amendment 2026-05-06)
 
-**Status:** explicitly out of Cycle 3 scope. **Currently the lead feed algorithm does NOT differentiate by user type** (verified at implementation review: `getLeadFeed` at `src/features/leads/lib/get-lead-feed.ts` is parameterized by `trade_slug` + geo only; `account_preset` from `user_profiles` is not consumed by the feed SQL).
+**Status:** **CLOSED.** A `?user_type=` parameter is NOT a planned product feature. Realtors and tradespeople share Spec 91's feed/flight-board algorithm; differentiation flows through `trade_slug` (a parameter the admin Test Feed Tool already exposes), not through a separate `user_type` axis. Manufacturers are not customer-facing feed personas — they're admin-managed B2B accounts per Spec 94 §7.
 
-**Why the deferral:** adding `?user_type=trade|realtor|manufacturer` to `/api/admin/leads/test-feed` (or to the §3.4 Flight Center Tool) would expose a UI parameter feeding an algorithm that ignores it — dead UI surface. Two paths must precede any UI exposure:
+**Resolution (Cycle 6, commit pending):** the persona model is now documented in Spec 91 §1.3 (persona coverage matrix) + Spec 95 §2.5.1 (persona vs `trade_slug` separation of concerns). The architectural rule:
 
-1. **Spec 91 amendment first:** decide what should differ between trade / realtor / manufacturer feed views. Today no architectural design exists. Likely candidates: different scoring weights, different lead-type filtering (realtors might see CoA leads exclusively; manufacturers might see neighbourhood-scoped leads), different radius defaults. Any of these requires Spec 91 (`docs/specs/03-mobile/91_mobile_lead_feed.md`) algorithm-level documentation BEFORE Spec 76 exposes the UI.
-2. **Or scope-mark the user types as admin-test sentinels:** acknowledge `user_type=manufacturer` as an admin construct that synthesizes a `LeadFeedInput` with `account_preset='manufacturer'` — but if `getLeadFeed` ignores that field, the results are identical to `account_preset=null`. This option is rejected here because it ships dead UI.
+- `account_preset` is a UX hint (drives onboarding, welcome copy, billing).
+- `trade_slug` is the authoritative algorithm input.
+- Persona-specific behavior is expressed via DB calibration only (a row in `trades` + a row in `trade_forecasts`), never via algorithm branching.
 
-**Concrete next step (out of this cycle):** product decision on whether user-type-differentiated feeds are a planned feature. If yes → file a Spec 91 amendment WF that documents the algorithm-level differentiation; once that lands, file a Spec 76 amendment WF that exposes the param. If no → close this deferral note as "user-type-differentiated views are not on the roadmap."
+For the admin Test Feed Tool / Flight Center this means: there's nothing to expose. The existing `trade_slug` parameter already lets an admin synthesize "what would a realtor see?" by passing `trade_slug='realtor'` (once the realtor backend wire-up — Spec 91 §3.5 Cycle 7 — completes; today the realtor feed is empty by data-layer omission, not algorithm omission).
+
+**Original deferral text (preserved for context):** "adding `?user_type=trade|realtor|manufacturer` to `/api/admin/leads/test-feed` would expose a UI parameter feeding an algorithm that ignores it — dead UI surface." Cycle 6 confirmed this concern was correct AND that the alternate path (`trade_slug`-as-axis) is sufficient. No `user_type` axis is needed.
 
 </behavior>
 

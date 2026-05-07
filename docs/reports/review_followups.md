@@ -295,3 +295,54 @@ Source: 3-agent Multi-Agent Review of `POST /api/leads/save` + the lead_id-forma
 
 - **Pre-existing broader bug: SQL `lead_id` separator mismatch.** `get-lead-feed.ts:100` builds `lead_id` as `permit_num || ':' || revision_num` (colon), but `parseLeadId` and the new `/api/leads/save` route expect `--`. Mobile's feed→detail flow (`router.push(`/(app)/[lead]?id=${item.lead_id}`)`) passes the colon-separated id into the URL where `parseLeadId` fails — separate WF3 needed. NOT introduced by P5; surfaced during P5 review.
 
+
+---
+
+## Spec 91 + Spec 95 — Cycle 6 Multi-Agent Review Deferred Items (2026-05-06)
+
+Source: 3-agent Multi-Agent Review of Cycle 6 spec amendments (Spec 91 §1.1-1.3 + §3.5; Spec 95 §2.5.1; Spec 76 §3.7 closure). Fix-now items applied: phantom Spec 94 §3.5 → §4 reference (3 places); Spec 91 §3.5 item 4 algorithmic-invariant tightening (mandated option (a), rejected option (b)).
+
+**Spec 91 — pre-existing gaps surfaced by Gemini (NOT introduced by Cycle 6):**
+
+- **State migration strategy for MMKV-persisted `filterStore`** (Gemini §2). When the Zustand state shape changes across app versions, today the implicit behavior is JSON.parse failure → cache wipe → user loses filters. Need a versioned state + migration plan.
+
+- **Location permission lifecycle** (Gemini §2 `useLocation.ts`). Spec doesn't cover (a) permission denied at OS prompt, (b) permission revoked mid-session. `EmptyFeedState.tsx` needs a `location_denied` state.
+
+- **Map cluster tap behavior** (Gemini §4.2). Spec mentions tapping a marker but omits cluster-tap UX (standard expectation: zoom to de-cluster).
+
+- **Optimistic-save UI failure messaging** (Gemini §4.4). `useSaveLead` rolls back the cache on error but the user-facing UX (toast copy + heart re-animation) is undefined.
+
+- **Infinite-scroll page failure** (Gemini §2 `useLeadFeed`). What happens when page 4 fails after pages 1-3 loaded? `EmptyFeedState` is for initial-fetch failures only.
+
+- **TanStack Query cache memory pressure** (Gemini §2). FlashList recycles views but the query cache holds all loaded items in RAM. Mid-range Android risk after 1000+ scroll. Need a page-trim or gcTime strategy.
+
+- **`competition_count` view criteria** (Gemini §3). What counts as a "view"? 500ms render? Explicit endpoint hit? Spec 91 §3 doesn't define the trigger; gaming risk if cards-on-screen-during-scroll counts.
+
+- **`OpportunityRing` simultaneous animation jank** (Gemini §4.1). 350ms gauge animation on every card mount; FlashList renders many cards rapidly during scroll → frame drops on mid-range Android.
+
+- **Brittle `SaveButton` testID derivation** (Gemini §4.4). String-replace on parent button testID creates implicit naming-convention contract that breaks E2E tests when violated.
+
+- **`permit_trades` row-count scalability** (Gemini §3.5). Cycle 6 mandates option (a) — every-active-permit `'realtor'` row. At 50M permits this doubles a critical JOIN table. Cycle 7 must benchmark + decide whether to amend §1.2 or accept the cost.
+
+**Spec 95 — pre-existing contradictions surfaced by DeepSeek (NOT introduced by Cycle 6):**
+
+- **§2.4 vs §9 Step 6 contradiction: notification preferences shape.** §2.4 documents the migration to 5 flat columns; §9 Step 6 still describes `notificationPrefs` as a JSONB object. Pick one and update both.
+
+- **§5 Settings table stale JSONB note.** Same root cause as the §9 Step 6 inconsistency (Worktree code-reviewer also flagged this).
+
+- **§9 Step 3 PATCH vs §2.5 manufacturer onboarding precondition.** PATCH requires `trade_slug IS NOT NULL` for `onboarding_complete=true`, but manufacturers permanently have `trade_slug=NULL`. Manufacturers can never finalize onboarding via this endpoint.
+
+- **§9 Step 3 idempotency exception misplaced.** The `account_deleted_at` idempotency check is in PATCH but PATCH strips that field — should be in the dedicated delete endpoint.
+
+- **§4 Partial onboarding on new device.** GET 404 → "new user" redirect forces redoing immutable trade selection. No partial-state resume defined.
+
+- **Concurrent delete + reactivate race.** No row-level locking; reactivation could undo a deletion without revoking tokens.
+
+- **`lead_view_events` + `subscribe_nonces` table growth.** No expiry/archival strategy documented.
+
+- **Manufacturer trade selection assumption.** Onboarding flow doesn't have a manufacturer path; assumes `trade_slugs_override` pre-populated out-of-band.
+
+- **Stripe webhook idempotency table.** PK constraint alone doesn't guarantee single-processing — handler must catch insert errors.
+
+All items above are PRE-EXISTING and out of Cycle 6 scope. They warrant a separate Spec 95 hardening WF or staged WF3s. Cycle 6 deliberately did not touch any of these because the cycle was scoped to 3 narrow amendments (§2.5.1 addition only).
+

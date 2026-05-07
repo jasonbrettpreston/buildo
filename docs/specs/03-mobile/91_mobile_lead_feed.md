@@ -1,12 +1,33 @@
 # Spec 91 — Mobile Lead Feed (Discovery Engine)
 
 **Status:** ACTIVE (Mobile Pivot)
-**Purpose:** Dictates the exact UI, components, and logic for the primary tradesperson discovery interface, orchestrating the browsing of construction opportunities via high-performance native list rendering and geospatial map synchronization.
+**Purpose:** Dictates the exact UI, components, and logic for the primary discovery interface (tradesperson AND real estate agent personas — see §1.2), orchestrating the browsing of construction opportunities via high-performance native list rendering and geospatial map synchronization.
 
 ## 1. Goal & User Story
 
-**Goal:** Provide a highly performant, memory-safe, and visually intuitive native interface for tradespeople to discover, filter, and interact with geographically relevant construction permits.
-**User Story:** As a tradesperson, I want to open the app and instantly see a map and feed of relevant jobs near my physical location. I need to seamlessly scroll through hundreds of leads without crashing my phone's RAM, filter by radius, and tap to save high-value opportunities instantly.
+**Goal:** Provide a highly performant, memory-safe, and visually intuitive native interface for tradespeople and real estate agents to discover, filter, and interact with geographically relevant construction permits.
+
+### 1.1 Tradesperson user story
+As a tradesperson, I want to open the app and instantly see a map and feed of relevant jobs near my physical location. I need to seamlessly scroll through hundreds of leads without crashing my phone's RAM, filter by radius, and tap to save high-value opportunities instantly.
+
+### 1.2 Real estate agent user story
+As a real estate agent, I want the same map + feed UX as a tradesperson, surfacing permits that signal **listing-prospecting** opportunities (earliest possible — homeowners about to start a major build are about to need a listing agent or a new home for the duration) and **closing-prospecting** opportunities (latest possible — completed builds need a sale). I differ from a tradesperson only in WHICH lifecycle phases are calibrated as actionable for me; the algorithm, scoring, flight board, save flow, and detail screens are identical.
+
+**Algorithmic invariant:** the §3 backend contract and §4 behavioral mechanisms are **persona-agnostic**. Both personas flow through the same `getLeadFeed` SQL, the same `target_window`, the same `opportunity_score`, the same `competition_count` JOIN, the same `is_saved` LATERAL gate. Persona-specific behavior is expressed via DB calibration only (the row in `trades` + the row in `trade_forecasts`), not via algorithm branching. This is enforced by Spec 95 §3.1.x (persona vs trade_slug separation of concerns).
+
+### 1.3 Persona coverage matrix
+
+The full set of `account_preset` values (Spec 95 §3.1):
+
+| `account_preset` | `trade_slug` | Feed semantics | Onboarding | Subscription |
+|---|---|---|---|---|
+| `'tradesperson'` | one of 32 construction trades | This spec — calibrated to that trade's `work_phase` | Standard (Spec 94 §3) | Trial → paid (Spec 96) |
+| `'realtor'` | `'realtor'` | This spec — calibrated to `'realtor'` `work_phase` (earliest + latest extremes) | Standard with realtor-specific radius default + always-fixed address (Spec 94 §3.1 trade list + §4 Path R) | Trial → paid (Spec 96) |
+| `'manufacturer'` | `NULL` (uses `trade_slugs_override` array) | **Not customer-facing.** Admin-managed B2B; bypasses this spec entirely. | Onboarding bypass (Spec 94 §7) | Admin-managed (Spec 95 §3.1; Spec 96 §expiration excludes manufacturers) |
+
+**Single source of truth:** `account_preset` is a UX hint (drives onboarding flow + welcome copy). **`trade_slug` is the authoritative input to this spec's algorithm.** A profile with `account_preset='realtor'` but `trade_slug='roofing'` would receive a roofer's feed — `trade_slug` wins. Onboarding (Spec 94) is the gate that ensures the two stay aligned per the matrix above.
+
+> **Wire-up status (2026-05-06):** the `'realtor'` `trade_slug` is recognized by mobile onboarding (`mobile/src/lib/onboarding/tradeData.ts`, `mobile/app/(onboarding)/profession.tsx`, Spec 94 §3.1 trade list + §4 Path R) but is **NOT yet wired in the backend feed/data layer** — see §3.5 Wire-up dependencies for the complete list of what a follow-up cycle must ship before realtors get a non-empty feed end-to-end.
 
 ## 2. Technical Architecture (Expo / NativeWind)
 
@@ -39,6 +60,19 @@ The feed acts as a "Dumb Glass" client. All heavy geospatial computations (Haver
 * `lifecycle_phase`: `string` (Unified P1–P20 stage).
 
 All four fields are required in the Zod schema (`PermitLeadFeedItemSchema`). `competition_count` must be `z.number().int().nonnegative()`.
+
+### 3.5 Wire-up dependencies for the realtor persona (Cycle 7 — pending)
+
+The realtor persona's mobile UX is wired today (Spec 94 §3.1 trade list + §4 Path R; trade picker entry; onboarding path) but the backend feed/data layer for `trade_slug='realtor'` is incomplete. The follow-up cycle ("Cycle 7 — Realtor backend wire-up") MUST ship the following five items before the realtor feed returns non-empty results end-to-end:
+
+1. **`TRADES` array entry.** Add `{ id: 33, slug: 'realtor', name: 'Real Estate Agent', icon: ..., color: ..., sort_order: 33 }` to `src/lib/classification/trades.ts`. Mobile already references `slug='realtor'` in `tradeData.ts:76`; the backend list is the missing half.
+2. **DB `trades` table seed.** New migration appending the realtor row to the `trades` table (mirrors migration 028 / 029 patterns).
+3. **`trade_forecasts` calibration row.** A row keyed by `trade_slug='realtor'` with a `work_phase` value. Product decision required at wire-up time: realtors care about TWO temporal extremes (earliest = P1-ish submission, latest = P20-ish occupancy). Options: (a) pick ONE work_phase (e.g., P1 for listing-prospecting; trade off the closing-prospecting use case to a separate flow), (b) split realtors into two trade slugs (`'realtor-listing'` + `'realtor-closing'`), or (c) extend `trade_forecasts` to support multi-phase calibration. Defer to wire-up cycle.
+4. **`permit_trades` association strategy — MANDATED: every-active-permit row (option (a)).** The feed SQL JOINs `permits` to `permit_trades` via `trade_slug`. For realtors to see leads, every active permit must associate with `'realtor'` somehow. **The §1.2 algorithmic invariant resolves this: persona-specific behavior MUST be expressed via DB calibration, not algorithm branching. Therefore Cycle 7 MUST backfill `permit_trades` so every active permit gets a `(permit_id, 'realtor')` row** — handled by a recurring job or pipeline trigger; mechanical; idempotent. Acknowledged cost: ~doubles the `permit_trades` row count (at scale, this is significant — 50M permits → 50M new rows; storage + index + backup impact must be benchmarked during Cycle 7).
+   - **Rejected alternative — SQL bypass:** modifying `getLeadFeed` to short-circuit the `permit_trades` JOIN when `trade_slug='realtor'` would be an algorithm branch. **Explicitly rejected** because it violates §1.2; documented here only so Cycle 7 doesn't re-discover and re-litigate. The rejection holds regardless of operational cost — if the row-count cost of (a) becomes truly infeasible, the right response is to amend §1.2 (a deliberate architectural change), not to silently break the invariant in `getLeadFeed`.
+5. **Tests.** Logic + infra tests asserting `getLeadFeed({ trade_slug: 'realtor' })` returns leads (currently 0). UI test asserting the realtor feed renders cards (currently empty state). Maestro flow exercising realtor onboarding → feed → save end-to-end.
+
+Until Cycle 7 ships, a profile with `trade_slug='realtor'` will receive an empty feed (the existing empty-state UI handles it gracefully but no leads are shown). The mobile onboarding flow is intentionally permissive about this gap — the assumption is that Cycle 7 lands before any realtor accounts go to production.
 
 ## 4. Behavioral Contract & UX Mechanisms
 

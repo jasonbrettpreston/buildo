@@ -98,6 +98,29 @@ All 5 columns are NOT NULL with safe defaults (set in migration 117 to match the
 
 **`trade_slugs_override` update path:** This field is NOT writable by manufacturers via `PATCH /api/user-profile` (it is in the server-only blocklist — client-controlled multi-trade selection creates a privilege escalation vector). Updates to `trade_slugs_override` are performed exclusively by Buildo admin via a dedicated admin endpoint (`PATCH /api/admin/user-profile/{uid}`) or direct DB write. This is intentional: manufacturer trade lists are configured by Buildo, not self-selected by the manufacturer.
 
+### 2.5.1 Persona vs `trade_slug` — separation of concerns
+
+`account_preset` and `trade_slug` are **two separate axes** that cooperate but never substitute for each other. Drift between them is the most common source of "why is this user's feed empty?" support tickets, so the rules are spelled out here as the single source of truth (Spec 91 §1.3 references this section).
+
+**Authority split:**
+
+| Axis | Authority | Drives |
+|---|---|---|
+| `account_preset` | UX hint (set at onboarding, immutable thereafter) | Onboarding flow (Spec 94 §3 + §7), welcome copy, subscription rules (Spec 96 manufacturer-special handling), auth-gate routing (`mobile/src/lib/auth/decideAuthGateRoute.ts`) |
+| `trade_slug` | **Authoritative algorithm input** (set at onboarding, immutable per §3) | Lead feed `getLeadFeed` SQL (Spec 91 §3), flight board `flight-board` SQL (Spec 77 §3.2), competition_count JOIN, target_window calibration via `trade_forecasts` |
+
+**Implication:** the algorithm in Spec 91 §3 / Spec 77 §3.2 reads `trade_slug` ONLY. A profile with `account_preset='realtor'` but `trade_slug='roofing'` would receive a roofer's feed — `trade_slug` wins. Onboarding (Spec 94) is the gate that ensures the two stay aligned per the matrix in Spec 91 §1.3.
+
+**The three valid `(account_preset, trade_slug)` combinations:**
+
+| `account_preset` | `trade_slug` | Notes |
+|---|---|---|
+| `'tradesperson'` | one of 32 construction slugs from `src/lib/classification/trades.ts` | The dominant case |
+| `'realtor'` | `'realtor'` | Mobile onboarding wires this; backend wire-up of the `'realtor'` trade row + `permit_trades` association is pending — see Spec 91 §3.5 |
+| `'manufacturer'` | `NULL` (uses `trade_slugs_override` array) | Admin-managed B2B; bypasses the standard feed entirely |
+
+**Anti-pattern (rejected):** branching the algorithm on `account_preset`. Doing so would mean the same `trade_slug` value produces different feeds depending on the persona — undebuggable, untestable, and impossible to A/B from the admin Test Feed Tool. The `account_preset` axis exists for UX/billing/onboarding ONLY.
+
 ## 3. Trade Immutability
 
 `trade_slug` is written once at onboarding and cannot be changed via the app. This is enforced at two layers:
