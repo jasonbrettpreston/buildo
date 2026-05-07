@@ -1,5 +1,6 @@
 // 🔗 SPEC LINK: docs/specs/07_trade_taxonomy.md, 08_trade_classification.md, 32_product_groups.md
 import { describe, it, expect } from 'vitest';
+import type { TradeMatch } from '@/lib/permits/types';
 import { classifyPermit, extractPermitCode, classifyProducts, NARROW_SCOPE_CODES } from '@/lib/classification/classifier';
 import {
   determinePhase,
@@ -14,12 +15,14 @@ import { PRODUCT_GROUPS } from '@/lib/classification/products';
 import { createMockPermit } from './factories';
 
 // ---------------------------------------------------------------------------
-// Trade Taxonomy (32 trades)
+// Trade Taxonomy (33 trades — 32 construction + realtor per Spec 91 §1.3)
 // ---------------------------------------------------------------------------
 
 describe('Trade Taxonomy', () => {
-  it('has exactly 32 trade categories', () => {
-    expect(TRADES).toHaveLength(32);
+  it('has exactly 33 trade categories (32 construction + realtor)', () => {
+    // WF2 Cycle 7 — added 'realtor' (id 33) per Spec 91 §3.5.
+    // Realtor is a tradesperson algorithmically; calibrated via the DB.
+    expect(TRADES).toHaveLength(33);
   });
 
   it('includes drain-plumbing trade', () => {
@@ -696,12 +699,19 @@ describe('Construction Phases', () => {
     expect(isTradeActiveInPhase('pool-installation', 'landscaping')).toBe(true);
   });
 
-  it('all 31 trade slugs appear in at least one phase', () => {
+  it('all construction trade slugs appear in at least one phase', () => {
+    // Realtor (Spec 91 §1.3 persona) is excluded from construction phase
+    // mapping — its lifecycle calibration is via trade_configurations
+    // (P1/P19) not the construction PHASE_TRADE_MAP. Spec 91 §1.2
+    // algorithmic invariant: persona-specific behavior is DB-side only;
+    // realtor is intentionally absent from this construction-domain
+    // grouping.
     const allPhaseTradeSet = new Set<string>();
     for (const trades of Object.values(PHASE_TRADE_MAP)) {
       for (const t of trades) allPhaseTradeSet.add(t);
     }
     for (const trade of TRADES) {
+      if (trade.slug === 'realtor') continue;
       expect(allPhaseTradeSet.has(trade.slug)).toBe(true);
     }
   });
@@ -940,6 +950,13 @@ describe('Permit Code Scope Limiting', () => {
 // ---------------------------------------------------------------------------
 
 describe('Narrow-Scope Code-Based Fallback', () => {
+  // WF2 Cycle 7 — every classifyPermit return now includes a realtor row
+  // per Spec 91 §3.5. The narrow-scope assertions filter realtor out and
+  // assert only on the construction-trade matches, since the realtor
+  // append is exercised separately in the realtor-coverage describe below.
+  const constructionOnly = (matches: TradeMatch[]) =>
+    matches.filter((m) => m.trade_slug !== 'realtor');
+
   it('PLB permit with no matching Tier 1 rules falls back to plumbing at 0.80', () => {
     const permit = createMockPermit({
       permit_num: '22 654321 PLB 00',
@@ -947,7 +964,7 @@ describe('Narrow-Scope Code-Based Fallback', () => {
       work: 'Building Permit Related(PS)',
     });
     // Pass empty rules so no Tier 1 matches
-    const matches = classifyPermit(permit, []);
+    const matches = constructionOnly(classifyPermit(permit, []));
     expect(matches).toHaveLength(1);
     expect(matches[0]!.trade_slug).toBe('plumbing');
     expect(matches[0]!.confidence).toBe(0.80);
@@ -960,7 +977,7 @@ describe('Narrow-Scope Code-Based Fallback', () => {
       permit_type: 'UnknownType',
       work: 'Building Permit Related(MS)',
     });
-    const matches = classifyPermit(permit, []);
+    const matches = constructionOnly(classifyPermit(permit, []));
     expect(matches).toHaveLength(1);
     expect(matches[0]!.trade_slug).toBe('hvac');
     expect(matches[0]!.confidence).toBe(0.80);
@@ -973,7 +990,7 @@ describe('Narrow-Scope Code-Based Fallback', () => {
       permit_type: 'UnknownType',
       work: 'Building Permit Related (DR)',
     });
-    const matches = classifyPermit(permit, []);
+    const matches = constructionOnly(classifyPermit(permit, []));
     expect(matches).toHaveLength(1);
     expect(matches[0]!.trade_slug).toBe('drain-plumbing');
     expect(matches[0]!.confidence).toBe(0.80);
@@ -986,7 +1003,7 @@ describe('Narrow-Scope Code-Based Fallback', () => {
       permit_type: 'UnknownType',
       work: 'Unknown Work',
     });
-    const matches = classifyPermit(permit, []);
+    const matches = constructionOnly(classifyPermit(permit, []));
     expect(matches).toHaveLength(1);
     expect(matches[0]!.trade_slug).toBe('fire-protection');
     expect(matches[0]!.confidence).toBe(0.80);
@@ -998,7 +1015,7 @@ describe('Narrow-Scope Code-Based Fallback', () => {
       permit_type: 'UnknownType',
       work: 'Unknown Work',
     });
-    const matches = classifyPermit(permit, []);
+    const matches = constructionOnly(classifyPermit(permit, []));
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('excavation');
     expect(slugs).toContain('shoring');

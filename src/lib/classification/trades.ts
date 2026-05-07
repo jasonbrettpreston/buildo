@@ -1,12 +1,13 @@
 import type { Trade } from '@/lib/permits/types';
 
 /**
- * The canonical list of 32 trade categories used by Buildo to classify
+ * The canonical list of 33 trade categories used by Buildo to classify
  * Toronto building permits into actionable leads.
  *
  * IDs 1-20: original trades (4 display renames, slugs unchanged)
  * IDs 21-31: new trades added in WF3
  * ID 32: drain-plumbing (specialized drain/site-service trade)
+ * ID 33: realtor (Real Estate Agent persona — WF2 Cycle 7, Spec 91 §1.3)
  */
 export const TRADES: Trade[] = [
   { id: 1,  slug: 'excavation',          name: 'Excavation',              icon: 'Shovel',        color: '#795548', sort_order: 1  },
@@ -42,6 +43,12 @@ export const TRADES: Trade[] = [
   { id: 30, slug: 'temporary-fencing',   name: 'Temporary Fencing',       icon: 'AlertTriangle', color: '#FF6F00', sort_order: 30 },
   { id: 31, slug: 'caulking',            name: 'Caulking',                icon: 'Pipette',       color: '#B0BEC5', sort_order: 31 },
   { id: 32, slug: 'drain-plumbing',     name: 'Drain & Plumbing',        icon: 'Droplet',       color: '#1565C0', sort_order: 32 },
+  // --- Real Estate persona (WF2 Cycle 7, 2026-05-06) ---
+  // Per Spec 91 §1.3 + §3.5: realtors are tradespeople algorithmically,
+  // calibrated to P1 (earliest visibility) + P19 (predicted occupancy /
+  // ready-to-list). The 'realtor' slug is the authoritative algorithm
+  // input; account_preset='realtor' is the UX hint (Spec 95 §2.5.1).
+  { id: 33, slug: 'realtor',             name: 'Real Estate Agent',       icon: 'Key',           color: '#EC407A', sort_order: 33 },
 ];
 
 /**

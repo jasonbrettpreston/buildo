@@ -209,8 +209,10 @@ describe('scripts/compute-timing-calibration-v2.js — spec 47 compliance (WF3-1
 });
 
 describe('TRADE_TARGET_PHASE — shared trade→phase mapping', () => {
-  it('JS and TS versions cover all 32 trade slugs', async () => {
-    // The 32 trade slugs from CLAUDE.md
+  it('JS and TS versions cover all 33 trade slugs (32 construction + realtor)', async () => {
+    // The 32 construction trade slugs + 'realtor' (WF2 Cycle 7,
+    // Spec 91 §3.5). Both JS + TS sides must mirror the full set per
+    // CLAUDE.md §7 dual code path mandate.
     const EXPECTED_SLUGS = [
       'excavation', 'shoring', 'concrete', 'structural-steel', 'framing',
       'masonry', 'roofing', 'plumbing', 'hvac', 'electrical',
@@ -219,6 +221,7 @@ describe('TRADE_TARGET_PHASE — shared trade→phase mapping', () => {
       'trim-work', 'millwork-cabinetry', 'tiling', 'stone-countertops',
       'decking-fences', 'eavestrough-siding', 'pool-installation', 'solar',
       'security', 'temporary-fencing', 'caulking', 'drain-plumbing',
+      'realtor',
     ];
 
     // JS side — dynamic import to avoid ESLint no-require-imports

@@ -1,142 +1,160 @@
-# Active Task: WF2 — Cycle 6: Document realtors as a first-class persona — Spec 91 + Spec 95 + Spec 76 §3.7 amendments
+# Active Task: WF2 — Cycle 7: Realtor backend wire-up (per Spec 91 §3.5)
 **Status:** Implementation (authorized 2026-05-06)
-**Workflow:** WF2 — Feature Enhancement (multi-spec amendment; no `src/` code; closes the Spec 76 §3.7 deferral and aligns three specs to a unified persona model)
-**Domain Mode:** Cross-Domain (touches docs/specs/02-web-admin/ + docs/specs/03-mobile/ — both surfaces refer to the same `account_preset` enum + `trade_slug='realtor'` value)
-**Rollback Anchor:** `78f81b0` (current HEAD — last Cycle 4 P5 commit)
+**Workflow:** WF2 — Feature Enhancement (extends the realtor persona's backend so a `trade_slug='realtor'` profile gets non-empty feed + flight-board responses end-to-end)
+**Domain Mode:** Backend/Pipeline (touches `src/lib/classification/`, `src/features/leads/`, `migrations/`, `scripts/classify-permits.js`, `scripts/reclassify-all.js`, `src/lib/sync/process.ts`)
+**Rollback Anchor:** `88c6671` (current HEAD — last Cycle 6 commit)
 
 ## Source
 
-Cycle 6 was queued at the close of Cycle 4 with the user's note: "Cycle 6 (queued, gated on product decision): Spec 91 amendment for user-type-differentiated feeds." Recon (this turn) revealed the product decision is simpler than the original deferral assumed:
-
-- **Realtors are tradespeople algorithmically** — same feed, same flight center, same scoring. They differ only in WHICH trade they pick (`trade_slug='realtor'`) and the lifecycle phases that trade is calibrated to (earliest = P1 submission, latest = P20 occupancy — for listing prospecting + post-completion sale).
-- **Manufacturers are NOT customer-facing feed personas** — admin-managed B2B accounts, already documented in Spec 95 §3.1 with `trade_slug=NULL` + `trade_slugs_override` array, and in Spec 94 §7 with onboarding bypass.
-
-So Cycle 6 collapses to documenting realtors as a first-class persona that shares the tradesperson algorithm. NO code change in this cycle (Path A); a separate WF will follow to wire the backend (`TRADES` row + `trade_forecasts` calibration + `permit_trades` association).
+Spec 91 §3.5 (just amended in Cycle 6) enumerates the 5 deliverables Cycle 7 must ship before realtors get a non-empty feed. Product calls confirmed in conversation:
+- **`predicted_start` semantics:** late stage (≈ P19 winddown / P20 occupancy) — "build complete, ready to list"
+- **Visibility timing:** earliest possible — realtor `permit_trades` rows added at the same point construction-trade rows are added (= the moment classify-permits processes the permit)
+- **Single trade slug:** `'realtor'` only (NOT `'realtor-listing'` + `'realtor-closing'`); the §1.2 algorithmic invariant is satisfied via DB calibration only
+- **`permit_trades` association:** option (a) MANDATED per Spec 91 §3.5 item 4 — every active permit gets a `(permit_id, 'realtor')` row
 
 ## State Verification (WF2 step 1)
 
-**Realtor wiring is HALF-COMPLETE today (broken end-to-end):**
+**Match-everything mechanism:** trade_mapping_rules tier 1 rules (the only tier classify-permits.js applies) use exact-string matching against fields like `permit_type` / `work` / `description`. There's no native "match all permits" pattern at tier 1 — tier 3 has regex but is intentionally excluded from the classifier (`if (rule.tier !== 1) continue` at scripts/classify-permits.js). **Implementation choice:** add an unconditional code branch in classify-permits.js (and the parallel writer in `src/lib/sync/process.ts`) that always inserts a realtor `permit_trades` row alongside any matching construction trade rows. Cleaner than a magic regex in the rules table; easier to reason about.
 
-✅ Mobile UX wired:
-- `mobile/src/lib/onboarding/tradeData.ts:76` — "Real Estate Agent" with `slug: 'realtor'` in the trade picker (33-item list = 32 trades + realtor)
-- `mobile/app/(onboarding)/profession.tsx:69` — picker → `OnboardingPath = 'realtor'`
-- `mobile/app/(onboarding)/address.tsx:26` — `isRealtor` short-circuits to fixed-address (no GPS option)
-- `mobile/src/lib/onboarding/getResumePath.ts:79` — resume path skips path-selection
-- `mobile/src/store/onboardingStore.ts:44` — `OnboardingPath` includes `'realtor'`
-- Spec 94 §3.1 — realtor radius default 3-5km
-- Spec 94 §3.5 — "does not apply to realtors (always fixed)" address handling
+**`TRADE_TARGET_PHASE_FALLBACK` schema** (`src/lib/classification/lifecycle-phase.ts:218`): `Record<trade_slug, { bid_phase: string, work_phase: string }>`. Used by `getLeadFeed` + flight-board endpoint via `TRADE_TARGET_PHASE` alias. Realtor entry: `bid_phase: 'P1'` (intake — earliest visibility), `work_phase: 'P19'` (winddown — latest stage; predicted_start aligns with project completion).
 
-❌ Feed/backend NOT wired:
-- `src/lib/classification/trades.ts` — 32 entries; no `'realtor'`
-- `migrations/004_trades.sql`, `028_new_trades.sql`, `029_rename_trades.sql` — no `'realtor'` seed
-- `src/features/leads/lib/get-lead-feed.ts` — no special-case for `trade_slug='realtor'`
-- `permit_trades` has no `'realtor'` rows (zero permits associated)
-- `trade_forecasts` has no `'realtor'` row (no work_phase calibration)
-- Spec 91 doesn't mention realtors anywhere
-- Spec 95 §3.1 enum lists `'realtor'` but adjacent prose only documents `'manufacturer'`-special-handling
+**`trade_configurations` DB table** is the canonical source loaded via `loadMarketplaceConfigs()` (Spec 47 §4.1); `TRADE_TARGET_PHASE_FALLBACK` is the last-resort fallback. Both must include the realtor entry for the system to honor it under DB-loaded config OR fallback.
 
-❌ Net effect: a realtor who completes onboarding today gets `trade_slug='realtor'` in their profile, their feed/flight-board queries return zero rows, the empty-state UI shows "no leads in your area" — an unrecoverable broken state. **The wire-up follow-up cycle will fix this; Path A documents the architectural intent so the wire-up cycle has a clear target.**
+**Migration numbering:** latest is `117_notification_prefs_flatten.sql`. Cycle 7 migration is **118**.
+
+**`permit_trades` writers** (verified): `scripts/classify-permits.js:641`, `scripts/reclassify-all.js:127`, `src/lib/sync/process.ts:119`, `src/lib/sync/process.ts:185`. All four sites need realtor coverage.
+
+**Backfill volume:** `permit_trades` row count is on the order of millions today. Adding one realtor row per active permit ~doubles the table size. Spec 91 §3.5 item 4 acknowledges and accepts this cost.
+
+**`competition_count` impact:** the `getLeadFeed` JOIN scopes `competition_count` to `lv2.trade_slug = $X`. Realtors saving a permit increment competition_count ONLY for OTHER realtors viewing the same permit (because their JOIN is scoped to `trade_slug='realtor'`). Tradespeople's competition_count is unaffected. This is correct — it's the algorithmic invariant working as intended. NO change needed.
 
 ## Contract Definition (WF2 step 2)
 
-**No API contract changes.** All endpoint contracts remain unchanged. The persona model becomes:
+**No public API contract changes.** All endpoint contracts (`/api/leads/feed`, `/api/leads/flight-board`, `/api/leads/detail/:id`, `/api/leads/save` from Cycle 4 P5) remain identical. The change is purely internal:
 
-| `account_preset` | `trade_slug` | Persona | Feed algorithm | UX framing |
-|---|---|---|---|---|
-| `'tradesperson'` | one of 32 construction trades | Tradesperson | Spec 91 §3 algorithm, calibrated to that trade's `work_phase` | "Find jobs near you" |
-| `'realtor'` | `'realtor'` | Real Estate Agent | **Same Spec 91 §3 algorithm**, calibrated to `'realtor'` `work_phase` (earliest + latest) | "Find listings & post-completion leads" |
-| `'manufacturer'` | `NULL` | Manufacturer (B2B) | **Not customer-facing**; admin-managed via `trade_slugs_override` | Onboarding bypass (Spec 94 §7) |
+| Surface | Change |
+|---|---|
+| `TRADES` array (`src/lib/classification/trades.ts`) | New entry id 33, slug 'realtor', name 'Real Estate Agent', icon TBD, color TBD, sort_order 33 |
+| `TRADE_TARGET_PHASE_FALLBACK` (`src/lib/classification/lifecycle-phase.ts`) | New entry `realtor: { bid_phase: 'P1', work_phase: 'P19' }` |
+| DB `trades` table | Migration 118 INSERT: id 33, slug 'realtor' |
+| DB `trade_configurations` table | Migration 118 INSERT: realtor row mirroring fallback values |
+| DB `permit_trades` table | Backfill script inserts `(permit_num, revision_num, realtor_trade_id, ...)` for every active permit |
+| `scripts/classify-permits.js` | Unconditional realtor branch alongside trade_mapping_rules application |
+| `scripts/reclassify-all.js` | Same unconditional branch (mirrors classify-permits) |
+| `src/lib/sync/process.ts` | Same unconditional branch in both INSERT sites (lines 119 + 185) |
 
-Key clarification baked into Spec 95: **`account_preset` is a UX hint for onboarding/welcome copy. Feed differentiation flows through `trade_slug` only.** A realtor who somehow had `trade_slug='roofing'` would get a roofer's feed, not a realtor's — `trade_slug` is the authoritative input to the algorithm.
-
-`npm run typecheck` to identify breaking consumers — N/A, no code changes.
+**`npm run typecheck` after the TRADES + TRADE_TARGET_PHASE_FALLBACK edits** to confirm no consumer breakage. Both objects are typed `Readonly` and exhaustive — adding a key shouldn't break anything, but typecheck verifies.
 
 ## Spec Update (WF2 step 3)
 
-### S1 — Spec 91 (`docs/specs/03-mobile/91_mobile_lead_feed.md`)
-
-- Amend §1 (Goal & User Story) to include real estate agents as a parallel persona — add a second user story alongside the tradesperson story, identical algorithm, different lifecycle phase calibration.
-- Add a new §X (Persona Coverage) section enumerating the three `account_preset` values and what they mean for feed behavior. Cross-reference Spec 95 §3.1 for the schema authority.
-- Add a "Wire-up dependencies" subsection inside §3 noting that `trade_slug='realtor'` requires:
-  1. A row in `TRADES` (`src/lib/classification/trades.ts`, id 33)
-  2. A row in the `trades` DB table (migration)
-  3. Calibration in `trade_forecasts` for the `'realtor'` work_phase (earliest = P1 submission, latest = P20 occupancy — exact P-codes resolved at wire-up time)
-  4. A `permit_trades` association strategy — either every active permit gets a `'realtor'` row OR a SQL bypass when `trade_slug='realtor'` (decision deferred to wire-up cycle; document both options).
-  5. Tests asserting realtor feed returns leads (currently 0 because of the missing data layer).
-
-### S2 — Spec 95 (`docs/specs/03-mobile/95_mobile_user_profiles.md`)
-
-- Add a §3.1.x "Persona vs trade_slug separation of concerns" subsection clarifying:
-  - `account_preset` is a UX hint (onboarding flow, welcome copy, subscription rules per Spec 96)
-  - `trade_slug` is the authoritative feed-algorithm input
-  - The two CAN diverge in the schema (no DB constraint linking them) — but onboarding (Spec 94) ensures realtors get `trade_slug='realtor'`, tradespeople get one of 32 construction slugs, and manufacturers get `NULL` + `trade_slugs_override`.
-- Reference Spec 91's new §X for the realtor persona's feed semantics.
-
-### S3 — Spec 76 §3.7 (`docs/specs/02-web-admin/76_lead_feed_health_dashboard.md`)
-
-- Close the deferral. Replace the "Concrete next step (out of this cycle): product decision on whether user-type-differentiated feeds are a planned feature" paragraph with: "Closed 2026-05-06 (Cycle 6): user_type-differentiated feeds are NOT a planned product feature. Realtors are tradespeople algorithmically — they share Spec 91's feed/flight-board algorithm via a calibrated `trade_slug='realtor'`. Manufacturers are not customer-facing feed personas (admin-managed B2B per Spec 94 §7). The admin Test Feed Tool / Flight Center does NOT need a `?user_type=` parameter — that would be dead UI surface. See Spec 91 §1 + §X for the persona model."
-
-### S4 — System map regen
-
-- `npm run system-map` after the three spec edits.
+Spec 91 §3.5 already documents the wire-up contract (Cycle 6 lock-in). Cycle 7's spec change is a single line: update the §3.5 preamble from "Cycle 7 — pending" to "Cycle 7 — completed" once shipped. No other spec text needs amendment.
 
 ## Schema Evolution (WF2 step 4)
 
-**N/A.** No DB impact — schema unchanged. The realtor wire-up follow-up cycle will own DB migrations.
+**`migrations/118_realtor_trade.sql` (UP):**
+```sql
+-- 118_realtor_trade.sql
+-- Wires the realtor persona into the data layer per Spec 91 §3.5.
+-- Adds the realtor row to `trades` and `trade_configurations`.
+-- Backfill of `permit_trades` is handled by a separate runtime script
+-- (scripts/backfill-realtor-permit-trades.js) — NOT in this migration
+-- because the row count is large enough that a transactional migration
+-- would lock the table for too long.
+
+INSERT INTO trades (id, slug, name, icon, color, sort_order)
+VALUES (33, 'realtor', 'Real Estate Agent', '<icon>', '<color>', 33)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO trade_configurations (trade_slug, bid_phase, work_phase, ...)
+VALUES ('realtor', 'P1', 'P19', ...)
+ON CONFLICT (trade_slug) DO UPDATE SET
+  bid_phase = EXCLUDED.bid_phase,
+  work_phase = EXCLUDED.work_phase,
+  ...;
+```
+
+**Backfill script `scripts/backfill-realtor-permit-trades.js`:**
+```sql
+INSERT INTO permit_trades (permit_num, revision_num, trade_id, tier, confidence, is_active, phase, lead_score, classified_at)
+SELECT p.permit_num, p.revision_num, 33, 1, 1.0, true, NULL, NULL, NOW()
+FROM permits p
+WHERE NOT EXISTS (
+  SELECT 1 FROM permit_trades pt2
+  WHERE pt2.permit_num = p.permit_num
+    AND pt2.revision_num = p.revision_num
+    AND pt2.trade_id = 33
+);
+```
+Idempotent (NOT EXISTS). Runs in batches of 10k rows to avoid lock contention. Logs progress + final row count.
+
+**No DOWN migration text** — DOWN would DELETE the realtor row from trades + trade_configurations + cascade to permit_trades; expensive and risky. Document a manual rollback procedure instead (DELETE in reverse order, NOT a transactional migration).
 
 ## Compliance Cross-Check Matrix
 
 | Spec | Section | Compliance check |
 |---|---|---|
-| Spec 91 | §1 user story | Amended to include real estate agents as parallel persona ✓ after S1 |
-| Spec 91 | §3 algorithm | Unchanged — explicitly documented as persona-agnostic ✓ after S1 |
-| Spec 95 | §3.1 schema | Adds persona vs trade_slug clarification (currently only documents manufacturer specials) ✓ after S2 |
-| Spec 94 | §3.1 + §3.5 + §7 | Already covers realtor radius default + always-fixed address + manufacturer onboarding bypass — NO amendment needed ✓ |
-| Spec 76 | §3.7 | Deferral closed; cross-reference to Spec 91 §X ✓ after S3 |
-| Spec 96 (subscription) | manufacturer expiration logic | Unchanged — manufacturer-specific subscription handling is correct ✓ |
-| Spec 99 §B3 | mutation patterns | N/A — no mutations changed |
-| Spec 90 §5/§7 | mobile API contract | N/A — no API contract changed |
+| Spec 91 | §1.2 algorithmic invariant | DB calibration only; NO algorithm branching introduced ✓ |
+| Spec 91 | §1.3 persona matrix | Realtor `(account_preset='realtor', trade_slug='realtor')` row becomes operational ✓ |
+| Spec 91 | §3.5 wire-up dependencies | All 5 items shipped: TRADES entry, DB seed migration, trade_forecasts/configurations calibration, permit_trades MANDATED option (a), tests |
+| Spec 95 | §2.5.1 persona vs trade_slug | `account_preset` axis untouched; `trade_slug` is the algorithm input ✓ |
+| Spec 47 §4.1 | trade_configurations canonical | Realtor row added to DB table; fallback constant kept in sync |
+| Spec 84 | lifecycle phase engine | P19 / P1 are valid phase codes (P19 = winddown, P1 = intake) ✓ |
 
-## Execution Plan
+## Execution Plan (WF2 protocol)
 
-### Spec amendments
-- [ ] **S1** — `docs/specs/03-mobile/91_mobile_lead_feed.md`: amend §1 user story, add §X persona coverage, add §3 wire-up dependencies subsection.
-- [ ] **S2** — `docs/specs/03-mobile/95_mobile_user_profiles.md`: add §3.1.x persona-vs-trade_slug clarification, cross-reference Spec 91 §X.
-- [ ] **S3** — `docs/specs/02-web-admin/76_lead_feed_health_dashboard.md` §3.7: close the deferral, cross-reference Spec 91 §X.
-- [ ] **S4** — `npm run system-map`.
+### Phase 1 — Guardrail Tests (red light, written before implementation)
+- [ ] **T1** — Logic test for `TRADES` array: `src/tests/trades-realtor.logic.test.ts` asserts realtor entry exists with correct `id=33`, `slug='realtor'`, `sort_order=33`. Fails today.
+- [ ] **T2** — Logic test for `TRADE_TARGET_PHASE_FALLBACK`: same file, asserts `TRADE_TARGET_PHASE.realtor === { bid_phase: 'P1', work_phase: 'P19' }`. Fails today.
+- [ ] **T3** — Infra test for `getLeadFeed({trade_slug: 'realtor'})`: `src/tests/get-lead-feed.realtor.infra.test.ts` mocks `permit_trades` to include realtor rows, asserts the SQL returns expected leads. Fails today (no realtor in TRADES).
+- [ ] **T4** — Infra test for migration 118: `src/tests/migration-118.infra.test.ts` runs the migration on the test DB, asserts `trades.id=33` exists, asserts `trade_configurations` realtor row exists. Fails today.
+- [ ] **T5** — Infra test for backfill script: `src/tests/backfill-realtor-permit-trades.infra.test.ts` seeds 10 permits, runs the backfill, asserts 10 new permit_trades rows with `trade_id=33`, asserts re-running is idempotent (still 10 rows). Fails today.
+- [ ] **Verify red light:** `npx vitest run src/tests/trades-realtor.logic.test.ts src/tests/get-lead-feed.realtor.infra.test.ts src/tests/migration-118.infra.test.ts src/tests/backfill-realtor-permit-trades.infra.test.ts` → all fail.
 
-### Verification
-- [ ] **V1** — Confirm internal cross-references resolve (Spec 91 §X exists when Spec 95 + Spec 76 reference it).
-- [ ] **V2** — Confirm no `src/` code touched (`git status` shows only `docs/` + `.cursor/`).
-- [ ] **V3** — `npm run typecheck` for sanity (should be a no-op since no `.ts` files changed).
+### Phase 2 — Implementation
+- [ ] **I1** — `src/lib/classification/trades.ts`: add realtor entry. Pick icon (probably `'Home'` or `'Key'`) + color (e.g., `'#9C27B0'` purple — distinct from construction trades).
+- [ ] **I2** — `src/lib/classification/lifecycle-phase.ts`: add `realtor: { bid_phase: 'P1', work_phase: 'P19' }` to `TRADE_TARGET_PHASE_FALLBACK`. Run `npm run typecheck`.
+- [ ] **I3** — `migrations/118_realtor_trade.sql`: write the UP migration (idempotent INSERTs; ON CONFLICT clauses).
+- [ ] **I4** — `scripts/backfill-realtor-permit-trades.js`: write the backfill script (batched, idempotent, logged).
+- [ ] **I5** — `scripts/classify-permits.js`: add unconditional realtor branch — for each permit being classified, always emit a `(permit_num, revision_num, 33)` row alongside any tier-1-matched construction trade rows.
+- [ ] **I6** — `scripts/reclassify-all.js`: same branch.
+- [ ] **I7** — `src/lib/sync/process.ts`: same branch in both INSERT sites (lines 119 + 185).
+- [ ] **I8** — Mirror the dual-code-path requirement: `scripts/lib/lifecycle-phase.js` (per CLAUDE.md §7 dual code path) — verify it has `TRADE_TARGET_PHASE_FALLBACK` + add the realtor entry there too.
 
-### Multi-Agent Review (WF2 step 10)
-- [ ] **R1** — Three parallel reviews on the spec amendments:
-  - Gemini on `docs/specs/03-mobile/91_mobile_lead_feed.md` (Spec 91) — adversarial check that the realtor persona is documented unambiguously and the algorithm-agnostic claim holds.
-  - DeepSeek on `docs/specs/03-mobile/95_mobile_user_profiles.md` (Spec 95) — adversarial check that the persona-vs-trade_slug separation is consistent with the existing schema docs (Spec 96 subscription, Spec 94 onboarding).
-  - Worktree-isolated `feature-dev:code-reviewer` agent over the full diff: 3 spec edits + system map regen. Triage: spec drift → fix; deferred → `docs/reports/review_followups.md`.
+### Phase 3 — Green Light
+- [ ] **G1** — `npx vitest run src/tests/trades-realtor.logic.test.ts src/tests/get-lead-feed.realtor.infra.test.ts src/tests/migration-118.infra.test.ts src/tests/backfill-realtor-permit-trades.infra.test.ts` → all pass.
+- [ ] **G2** — `npx vitest run` (full suite) → no regressions.
+- [ ] **G3** — `npm run typecheck && npm run lint -- --fix`.
 
-### Green Light (WF2 step 11)
-- [ ] **G1** — `npm run typecheck && npm run lint -- --fix` (no-op for spec changes; sanity check). Commit. Push.
-- [ ] **G2** — Hand off to follow-up cycle ("Cycle 7 — Realtor backend wire-up") which will own the data engineering: `TRADES` array entry, DB migration for `trades` row, `trade_forecasts` calibration, `permit_trades` association strategy, tests.
+### Phase 4 — Deployment artifact
+- [ ] **D1** — Document the deployment runbook in the commit message: "After merge, run migration 118, then run `node scripts/backfill-realtor-permit-trades.js`. Backfill is idempotent + batched; safe to re-run."
+- [ ] **D2** — Note that classify-permits + reclassify-all + sync/process changes are picked up automatically on next pipeline run (no manual trigger needed).
+
+### Phase 5 — Multi-Agent Review (WF2 step 10)
+- [ ] **R1** — Three parallel reviews:
+  - Gemini on `migrations/118_realtor_trade.sql` with context Spec 91 §3.5 — adversarial check for migration safety (idempotency, ON CONFLICT correctness, missing CASCADE risks).
+  - DeepSeek on `scripts/backfill-realtor-permit-trades.js` with context Spec 91 §3.5 — adversarial check for backfill safety (lock contention, batching, race with live classify-permits).
+  - Worktree-isolated `feature-dev:code-reviewer` agent over the full diff: TRADES.ts + lifecycle-phase.ts + migration + backfill + 4 classifier-writer changes + tests. Triage: bug → WF3; deferred → `docs/reports/review_followups.md` (Spec 91 P5 section).
+
+### Phase 6 — Commit + Push
+- [ ] **C1** — Single commit `feat(91_mobile_lead_feed): WF2 Cycle 7 — wire realtor persona into the data layer`. Pre-commit gauntlet runs the full test suite.
+- [ ] **C2** — `git push origin main`.
 
 ## Standards Compliance
 
-* **Try-Catch Boundary:** N/A — no code changes.
-* **Unhappy Path Tests:** N/A — no code changes; the spec amendments themselves don't add behaviors that need tests.
-* **logError Mandate:** N/A.
-* **UI Layout:** N/A.
+* **Try-Catch Boundary:** N/A for the migration (SQL); the backfill script wraps each batch's pool.query in try/catch with logError + retry (mirror of existing scripts/sync/process.ts patterns).
+* **Unhappy Path Tests:** T5 covers idempotency (re-running the backfill); T3 covers the SQL returning correctly when realtor rows exist; migration test covers ON CONFLICT.
+* **logError Mandate:** backfill script uses `logError` on any batch failure with `{stage, batch_start, error}` context.
+* **UI Layout:** N/A — backend wire-up only.
+* **Spec 47 §4.1 dual config path:** trade_configurations DB row + TRADE_TARGET_PHASE_FALLBACK kept in sync; both updated in this cycle.
+* **CLAUDE.md §7 dual code path:** `scripts/lib/lifecycle-phase.js` mirror — verified in I8.
 
-## Out of Scope (queued for follow-up cycle)
+## Out of Scope (queued for follow-up cycles)
 
-- **Cycle 7 — Realtor backend wire-up** (separate WF on authorization):
-  - Add `{ id: 33, slug: 'realtor', name: 'Real Estate Agent', icon: 'Home', color: '#XXXXXX', sort_order: 33 }` to `src/lib/classification/trades.ts`
-  - Migration to seed `trades` table with the realtor row
-  - Decide `permit_trades` association strategy (every-active-permit vs. SQL bypass) — product+SQL design conversation
-  - `trade_forecasts` calibration row (P1-ish for early signal, P20-ish for late signal — exact P-codes resolved during the cycle)
-  - Tests asserting `getLeadFeed({trade_slug: 'realtor'})` returns leads end-to-end
-  - Possible Spec 96 amendment (subscription) if realtor billing differs from tradesperson — TBD during the cycle
+- **Mobile UI realtor-specific tweaks.** Spec 94 already covers radius default + always-fixed address; trade picker already has the entry. Any Cycle 7-uncovered UX (e.g., realtor-specific welcome copy, realtor-specific empty-state messaging) is out of scope. File a separate WF if needed after testing the end-to-end flow.
+- **Web admin Test Feed Tool realtor smoke test.** Manual verification once Cycle 7 ships: pick `trade_slug='realtor'` in the admin Test Feed Tool, confirm leads return. Not a Cycle 7 deliverable.
+- **`trade_forecasts` per-permit row generation for realtor.** The prediction pipeline (compute-timing.js or similar) writes `trade_forecasts` rows. After Cycle 7, the next pipeline run will compute realtor forecasts for every (permit, realtor) pair using the new work_phase calibration. NO Cycle 7 work needed; the existing pipeline handles it once the trade_configurations row exists.
+- **Spec 96 (subscription)** — realtor billing is identical to tradesperson per the persona matrix; no Spec 96 amendment needed.
 
-> **PLAN LOCKED. Do you authorize this WF2 Cycle 6 (Path A — spec amendments only) plan? (y/n)**
-> §10 note: chose to close Spec 76 §3.7 as "not a planned feature" rather than amend it to acknowledge the new persona model. Reason: the deferral was about admin tooling exposing `?user_type=` — that's dead UI now AND in the future, because realtor-vs-tradesperson differentiation flows through `trade_slug` (a parameter the admin tool already exposes), not through a separate `user_type` axis.
+> **PLAN LOCKED. Do you authorize this WF2 Cycle 7 plan? (y/n)**
+> §10 note: chose unconditional code-branch realtor classification over a `trade_mapping_rules` regex pattern because tier 1 (the classifier's only applied tier) is exact-string match — no native match-all pattern. The unconditional branch is more transparent and harder to accidentally break than a magic regex.
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.

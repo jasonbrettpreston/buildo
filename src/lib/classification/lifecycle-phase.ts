@@ -254,6 +254,13 @@ export const TRADE_TARGET_PHASE_FALLBACK: Readonly<Record<string, TradeTarget>> 
   landscaping: { bid_phase: 'P12', work_phase: 'P17' },
   'decking-fences': { bid_phase: 'P12', work_phase: 'P17' },
   'pool-installation': { bid_phase: 'P7a', work_phase: 'P17' },
+  // Real Estate persona — WF2 Cycle 7 (Spec 91 §3.5).
+  // bid_phase: P1 (intake) → realtor sees the permit the moment it enters
+  // the DB, before issuance. work_phase: P19 (winddown / pre-occupancy) →
+  // predicted_start aligns with project completion ("ready to list").
+  // Same algorithm as construction trades; persona-specific behavior is
+  // expressed via DB calibration only per Spec 91 §1.2 invariant.
+  realtor: { bid_phase: 'P1', work_phase: 'P19' },
 });
 
 /**

@@ -350,6 +350,56 @@ function fallbackWorkTrades(
  * @param scopeTags - Optional pre-computed scope tags. If not provided,
  *   the classifier uses only Tier 1 rules + work-field fallback.
  */
+/**
+ * Append a realtor TradeMatch to every classifier output. Per Spec 91
+ * §1.2 algorithmic invariant + §3.5 item 4 (option (a) MANDATED): every
+ * active permit gets a `(permit_num, revision_num, realtor)` row so
+ * realtors see the same set of permits tradespeople do. The realtor
+ * persona's calibration (P1 bid_phase, P19 work_phase) is purely DB-side
+ * (`trade_configurations.realtor` + `TRADE_TARGET_PHASE_FALLBACK.realtor`);
+ * `getLeadFeed` and the flight-board endpoint do NOT branch on persona.
+ */
+const REALTOR_TRADE_ID = 33;
+const REALTOR_TRADE_SLUG = 'realtor';
+const REALTOR_TRADE_NAME = 'Real Estate Agent';
+
+function appendRealtorMatch(
+  matches: TradeMatch[],
+  permit: Partial<Permit>,
+  phase: string,
+): TradeMatch[] {
+  const permit_num = permit.permit_num ?? '';
+  const revision_num = permit.revision_num ?? '';
+  if (!permit_num || !revision_num) return matches;
+
+  const partial: Partial<TradeMatch> = {
+    trade_id: REALTOR_TRADE_ID,
+    trade_slug: REALTOR_TRADE_SLUG,
+    trade_name: REALTOR_TRADE_NAME,
+    tier: 1,
+    confidence: 1.0,
+    is_active: true,
+    phase,
+  };
+  const lead_score = calculateLeadScore(permit, partial, phase);
+
+  return [
+    ...matches,
+    {
+      permit_num,
+      revision_num,
+      trade_id: REALTOR_TRADE_ID,
+      trade_slug: REALTOR_TRADE_SLUG,
+      trade_name: REALTOR_TRADE_NAME,
+      tier: 1,
+      confidence: 1.0,
+      is_active: true,
+      phase,
+      lead_score,
+    },
+  ];
+}
+
 export function classifyPermit(
   permit: Partial<Permit>,
   rules: TradeMappingRule[],
@@ -363,7 +413,7 @@ export function classifyPermit(
   if (isNarrowScope) {
     const tier1 = matchTier1Rules(permit, rules, phase);
     const limited = applyScopeLimit(tier1, permit.permit_num, permit.work);
-    if (limited.length > 0) return limited;
+    if (limited.length > 0) return appendRealtorMatch(limited, permit, phase);
 
     // Fallback: assign code's allowed trades at 0.80 confidence
     const allowed = NARROW_SCOPE_CODES[code!]!;
@@ -397,7 +447,11 @@ export function classifyPermit(
         lead_score: leadScore,
       });
     }
-    return applyScopeLimit(narrowFallback, permit.permit_num, permit.work);
+    return appendRealtorMatch(
+      applyScopeLimit(narrowFallback, permit.permit_num, permit.work),
+      permit,
+      phase,
+    );
   }
 
   // Path B: Broad-scope — tag matrix + Tier 1 merge
@@ -435,7 +489,11 @@ export function classifyPermit(
   }
 
   const allMatches = Array.from(merged.values());
-  return applyScopeLimit(allMatches, permit.permit_num, permit.work);
+  return appendRealtorMatch(
+    applyScopeLimit(allMatches, permit.permit_num, permit.work),
+    permit,
+    phase,
+  );
 }
 
 // ---------------------------------------------------------------------------

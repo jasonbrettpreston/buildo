@@ -390,6 +390,31 @@ function getFieldValue(permit, matchField) {
   return permit[matchField] || null;
 }
 
+// Per Spec 91 §1.2 + §3.5 item 4 (option (a) MANDATED): every permit
+// gets a realtor TradeMatch alongside any construction-trade matches.
+// This helper is called at every return path in classifyPermit() so the
+// JS-side behavior mirrors the TS-side classifier (CLAUDE.md §7 dual
+// code path mandate). Without this, JS callers of classifyPermit would
+// receive a different shape than TS callers.
+const REALTOR_TRADE_ID_JS = 33;
+const REALTOR_TRADE_SLUG_JS = 'realtor';
+
+function appendRealtorMatch(matches, permit, phase, runAt) {
+  if (!permit.permit_num || !permit.revision_num) return matches;
+  const realtorMatch = {
+    permit_num: permit.permit_num,
+    revision_num: permit.revision_num,
+    trade_id: REALTOR_TRADE_ID_JS,
+    trade_slug: REALTOR_TRADE_SLUG_JS,
+    tier: 1,
+    confidence: 1.0,
+    is_active: true,
+    phase,
+  };
+  realtorMatch.lead_score = calculateLeadScore(permit, realtorMatch, phase, runAt);
+  return [...matches, realtorMatch];
+}
+
 function classifyPermit(permit, rules, runAt) {
   const phase = determinePhase(permit, runAt);
   const code = extractPermitCode(permit.permit_num);
@@ -429,11 +454,11 @@ function classifyPermit(permit, rules, runAt) {
   // Narrow-scope permits: Tier 1 rule matches, with code-based fallback
   if (isNarrowScope) {
     const limited = applyScopeLimit(Array.from(ruleMap.values()), permit.permit_num, permit.work);
-    if (limited.length > 0) return limited;
+    if (limited.length > 0) return appendRealtorMatch(limited, permit, phase, runAt);
 
     // Fallback: assign code's allowed trades at 0.80 confidence
     const allowed = NARROW_SCOPE_CODES[code];
-    return allowed.map((slug) => {
+    const fallbackMatches = allowed.map((slug) => {
       const tradeId = SLUG_TO_ID.get(slug);
       if (!tradeId) return null;
       const tradeMatch = {
@@ -449,6 +474,7 @@ function classifyPermit(permit, rules, runAt) {
       tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
       return tradeMatch;
     }).filter(Boolean);
+    return appendRealtorMatch(fallbackMatches, permit, phase, runAt);
   }
 
   // Step 2: Tag-trade matrix matches (Tier 2)
@@ -500,7 +526,8 @@ function classifyPermit(permit, rules, runAt) {
     }
   }
 
-  return applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);
+  const final = applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);
+  return appendRealtorMatch(final, permit, phase, runAt);
 }
 
 // ---------------------------------------------------------------------------
@@ -592,6 +619,10 @@ pipeline.run('classify-permits', async (pool) => {
     let paramIdx = 1;
 
     for (const permit of batch.rows) {
+      // classifyPermit now includes a realtor TradeMatch in its return
+      // array per Spec 91 §1.2 + §3.5 item 4 (option (a) MANDATED). The
+      // realtor append is internal to classifyPermit so JS + TS classifiers
+      // expose the same shape (CLAUDE.md §7 dual code path mandate).
       const matches = classifyPermit(permit, allRules, RUN_AT);
       if (matches.length > 0) {
         // Dedup by (permit_num, revision_num, trade_id) - keep highest confidence

@@ -505,6 +505,13 @@ const TRADE_TARGET_PHASE_FALLBACK = Object.freeze({
   landscaping:         { bid_phase: 'P12', work_phase: 'P17' },
   'decking-fences':    { bid_phase: 'P12', work_phase: 'P17' },
   'pool-installation': { bid_phase: 'P7a', work_phase: 'P17' },
+  // Real Estate persona — WF2 Cycle 7 (Spec 91 §3.5).
+  // Mirror of src/lib/classification/lifecycle-phase.ts (CLAUDE.md §7
+  // dual code path mandate). bid_phase: P1 (intake — earliest visibility,
+  // pre-issuance). work_phase: P19 (winddown / pre-occupancy → ready to
+  // list). Same algorithm as construction trades; persona-specific
+  // behavior is DB calibration only per Spec 91 §1.2.
+  realtor:             { bid_phase: 'P1',  work_phase: 'P19' },
 });
 
 // Legacy alias — DO NOT USE in new code. Use `trade_configurations` DB

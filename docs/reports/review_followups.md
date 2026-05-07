@@ -346,3 +346,26 @@ Source: 3-agent Multi-Agent Review of Cycle 6 spec amendments (Spec 91 §1.1-1.3
 
 All items above are PRE-EXISTING and out of Cycle 6 scope. They warrant a separate Spec 95 hardening WF or staged WF3s. Cycle 6 deliberately did not touch any of these because the cycle was scoped to 3 narrow amendments (§2.5.1 addition only).
 
+
+---
+
+## Spec 91 — WF2 Cycle 7 Multi-Agent Review Deferred Items (2026-05-06)
+
+Source: 3-agent Multi-Agent Review of Cycle 7 backend wire-up. Fix-now applied: dual-code-path parity (JS classifyPermit now appends realtor INSIDE the function, mirroring TS), explicit RAISE EXCEPTION DOWN block, ON CONFLICT DO NOTHING for trade_configurations to preserve operator hotfixes, removed MAX_ITERATIONS cap, added active-status filter on backfill SELECT, computed verdict from completion.
+
+**Deferred (out of Cycle 7 scope, real concerns flagged for future cycles):**
+
+- **Architectural re-litigation of option (a) — Gemini CRITICAL.** Gemini reviewer challenged the §3.5 item 4 option (a) MANDATE on scalability grounds (`permit_trades` row-count doubling). Spec 91 §3.5 already documents this as accepted cost. Cycle 6 explicitly closed this debate (§1.2 algorithmic invariant + persona-agnostic algorithm); Cycle 7 implements the closed decision. **If row-count doubling proves operationally infeasible** (benchmark Cycle 7's permit_trades growth on a real DB after backfill), the spec's own escape clause permits amending §1.2 — but that requires a deliberate WF, not a silent algorithm branch in `getLeadFeed`.
+
+- **trades ON CONFLICT (id) DO NOTHING vs trade_configurations DO NOTHING asymmetry — Worktree code-reviewer MEDIUM.** The trades INSERT uses DO NOTHING; trade_configurations now also DO NOTHING (changed in Cycle 7 fix per Gemini MEDIUM). Trades row attribute updates (icon, color) via re-running this migration would silently no-op. Operationally acceptable for now (trades attributes are stable). If realtor's icon/color need updates later, file a small WF amending the trades row directly.
+
+- **Advisory lock 91 held for the full backfill duration — DeepSeek MEDIUM.** At 50M+ permits × 10K batch = potentially hours-long lock. Currently the backfill is the only consumer of lock 91; no other process competes. **Followup if observed:** refactor to release+reacquire lock between batches (allows concurrent classify-permits to interleave; minor complexity cost).
+
+- **tier=1, confidence=1.0 hardcoded for realtor permit_trades rows — DeepSeek MEDIUM.** Acknowledged in Cycle 7 plan-lock as placeholder; the calibration pipeline (compute-timing.js) computes the real lead_score downstream. If realtor scoring needs different tier/confidence semantics from construction trades, file a Spec 91 amendment.
+
+- **emitMeta read-column list inaccurate (now updated to include status) — DeepSeek LOW.** Fixed in Cycle 7.
+
+- **setval('trades_id_seq', MAX(id)) race condition — Gemini HIGH.** Migration-time race: a concurrent INSERT into trades after the migration's INSERT but before setval could let the sequence reset below the actual MAX(id). Migrations are typically serialized in production deployments (single migration runner, no concurrent application writes during migration window), so this race is theoretical. **Defer:** if Buildo ever moves to online migrations with concurrent writes, revisit this with row-level locking.
+
+- **Pre-existing classify-permits.js `new Date()` lint warnings on lines 79, 122, 139 — pre-existing.** Not introduced by Cycle 7. Spec 47 mandates pipeline.getDbTimestamp(pool); this is a separate cleanup.
+
