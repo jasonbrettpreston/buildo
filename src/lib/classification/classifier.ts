@@ -367,7 +367,14 @@ function appendRealtorMatch(
   matches: TradeMatch[],
   permit: Partial<Permit>,
   phase: string,
+  realtorAvailable: boolean,
 ): TradeMatch[] {
+  // WF3 startup-guard: skip the realtor append when migration 118 hasn't
+  // been applied (trades.id=33 missing → FK constraint would crash on
+  // INSERT). Caller is responsible for setting `realtorAvailable` from
+  // a one-time DB lookup at script-startup. See
+  // scripts/lib/pipeline-realtor-availability.js.
+  if (!realtorAvailable) return matches;
   const permit_num = permit.permit_num ?? '';
   const revision_num = permit.revision_num ?? '';
   if (!permit_num || !revision_num) return matches;
@@ -400,11 +407,26 @@ function appendRealtorMatch(
   ];
 }
 
+export interface ClassifyPermitOptions {
+  /**
+   * Whether the realtor trade row (`trades.id=33`) exists in the DB.
+   * Pipeline scripts should compute this once at startup via
+   * `scripts/lib/pipeline-realtor-availability.js#checkRealtorAvailable`
+   * and pass the result here so the classifier can skip the realtor
+   * append when migration 118 hasn't been applied (avoids FK crash).
+   * Defaults to `true` to preserve Cycle 7 behavior for callers that
+   * don't supply the option (tests, programmatic uses).
+   */
+  realtorAvailable?: boolean;
+}
+
 export function classifyPermit(
   permit: Partial<Permit>,
   rules: TradeMappingRule[],
-  scopeTags?: string[]
+  scopeTags?: string[],
+  options?: ClassifyPermitOptions,
 ): TradeMatch[] {
+  const realtorAvailable = options?.realtorAvailable ?? true;
   const phase = determinePhase(permit);
   const code = extractPermitCode(permit.permit_num);
   const isNarrowScope = code != null && NARROW_SCOPE_CODES[code] != null;
@@ -413,7 +435,7 @@ export function classifyPermit(
   if (isNarrowScope) {
     const tier1 = matchTier1Rules(permit, rules, phase);
     const limited = applyScopeLimit(tier1, permit.permit_num, permit.work);
-    if (limited.length > 0) return appendRealtorMatch(limited, permit, phase);
+    if (limited.length > 0) return appendRealtorMatch(limited, permit, phase, realtorAvailable);
 
     // Fallback: assign code's allowed trades at 0.80 confidence
     const allowed = NARROW_SCOPE_CODES[code!]!;
@@ -451,6 +473,7 @@ export function classifyPermit(
       applyScopeLimit(narrowFallback, permit.permit_num, permit.work),
       permit,
       phase,
+      realtorAvailable,
     );
   }
 
@@ -493,6 +516,7 @@ export function classifyPermit(
     applyScopeLimit(allMatches, permit.permit_num, permit.work),
     permit,
     phase,
+    realtorAvailable,
   );
 }
 

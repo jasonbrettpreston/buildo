@@ -15,6 +15,7 @@
  */
 const pipeline = require('./lib/pipeline');
 const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
+const { checkRealtorAvailable } = require('./lib/pipeline-realtor-availability');
 
 const ADVISORY_LOCK_ID = 88;
 
@@ -399,7 +400,13 @@ function getFieldValue(permit, matchField) {
 const REALTOR_TRADE_ID_JS = 33;
 const REALTOR_TRADE_SLUG_JS = 'realtor';
 
-function appendRealtorMatch(matches, permit, phase, runAt) {
+function appendRealtorMatch(matches, permit, phase, runAt, realtorAvailable) {
+  // WF3 startup-guard: skip the realtor append when migration 118 hasn't
+  // been applied (trades.id=33 missing → FK constraint would crash on
+  // INSERT). Caller is responsible for setting `realtorAvailable` from
+  // a one-time DB lookup at script-startup. See
+  // scripts/lib/pipeline-realtor-availability.js.
+  if (!realtorAvailable) return matches;
   if (!permit.permit_num || !permit.revision_num) return matches;
   const realtorMatch = {
     permit_num: permit.permit_num,
@@ -415,7 +422,7 @@ function appendRealtorMatch(matches, permit, phase, runAt) {
   return [...matches, realtorMatch];
 }
 
-function classifyPermit(permit, rules, runAt) {
+function classifyPermit(permit, rules, runAt, realtorAvailable = true) {
   const phase = determinePhase(permit, runAt);
   const code = extractPermitCode(permit.permit_num);
   const isNarrowScope = code != null && NARROW_SCOPE_CODES[code] != null;
@@ -454,7 +461,7 @@ function classifyPermit(permit, rules, runAt) {
   // Narrow-scope permits: Tier 1 rule matches, with code-based fallback
   if (isNarrowScope) {
     const limited = applyScopeLimit(Array.from(ruleMap.values()), permit.permit_num, permit.work);
-    if (limited.length > 0) return appendRealtorMatch(limited, permit, phase, runAt);
+    if (limited.length > 0) return appendRealtorMatch(limited, permit, phase, runAt, realtorAvailable);
 
     // Fallback: assign code's allowed trades at 0.80 confidence
     const allowed = NARROW_SCOPE_CODES[code];
@@ -474,7 +481,7 @@ function classifyPermit(permit, rules, runAt) {
       tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
       return tradeMatch;
     }).filter(Boolean);
-    return appendRealtorMatch(fallbackMatches, permit, phase, runAt);
+    return appendRealtorMatch(fallbackMatches, permit, phase, runAt, realtorAvailable);
   }
 
   // Step 2: Tag-trade matrix matches (Tier 2)
@@ -527,7 +534,7 @@ function classifyPermit(permit, rules, runAt) {
   }
 
   const final = applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);
-  return appendRealtorMatch(final, permit, phase, runAt);
+  return appendRealtorMatch(final, permit, phase, runAt, realtorAvailable);
 }
 
 // ---------------------------------------------------------------------------
@@ -541,6 +548,19 @@ pipeline.run('classify-permits', async (pool) => {
     const startTime = Date.now();
 
   pipeline.log.info('[classify-permits]', 'Trade classification — inferred from permit metadata, not actual building plans');
+
+  // WF3 startup-guard: Cycle 7 added unconditional realtor classification
+  // (trade_id=33). If migration 118 hasn't been applied, the trades.id=33
+  // row is missing and the FK constraint `permit_trades_trade_id_fkey`
+  // crashes the pipeline mid-run. Probe the table once at startup; pass
+  // the result to classifyPermit so it skips the realtor append cleanly.
+  const realtorAvailable = await checkRealtorAvailable(pool);
+  if (!realtorAvailable) {
+    pipeline.log.warn(
+      '[classify-permits]',
+      'Realtor trade row (trades.id=33) NOT FOUND — apply migration 118_realtor_trade.sql to enable realtor classification. Continuing with construction-trade classification only.',
+    );
+  }
 
   // Load rules from DB
   const rulesResult = await pool.query(
@@ -623,7 +643,7 @@ pipeline.run('classify-permits', async (pool) => {
       // array per Spec 91 §1.2 + §3.5 item 4 (option (a) MANDATED). The
       // realtor append is internal to classifyPermit so JS + TS classifiers
       // expose the same shape (CLAUDE.md §7 dual code path mandate).
-      const matches = classifyPermit(permit, allRules, RUN_AT);
+      const matches = classifyPermit(permit, allRules, RUN_AT, realtorAvailable);
       if (matches.length > 0) {
         // Dedup by (permit_num, revision_num, trade_id) - keep highest confidence
         const dedupMap = new Map();

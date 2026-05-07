@@ -24,6 +24,27 @@ async function loadRules(): Promise<TradeMappingRule[]> {
   );
 }
 
+/**
+ * WF3 startup-guard: Cycle 7 added unconditional realtor classification
+ * (trade_id=33). If migration 118 hasn't been applied, the trades.id=33
+ * row is missing and the FK constraint `permit_trades_trade_id_fkey`
+ * crashes the sync mid-run. Probe once at sync-start; pass the result
+ * to classifyPermit so it skips the realtor append cleanly.
+ *
+ * Defensive failure mode: any query error → returns false. Better to
+ * skip realtor than crash the sync.
+ */
+async function checkRealtorAvailable(): Promise<boolean> {
+  try {
+    const rows = await query<{ id: number; slug: string }>(
+      `SELECT id, slug FROM trades WHERE id = 33 AND slug = 'realtor'`,
+    );
+    return rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 /** Look up an existing permit by its composite key. */
 async function findExistingPermit(
   permitNum: string,
@@ -67,6 +88,16 @@ async function processBatch(
   };
 
   const rules = await loadRules();
+  const realtorAvailable = await checkRealtorAvailable();
+  if (!realtorAvailable) {
+    logError(
+      '[sync/process]',
+      new Error(
+        'Realtor trade row (trades.id=33) NOT FOUND — apply migration 118_realtor_trade.sql to enable realtor classification. Continuing with construction-trade classification only.',
+      ),
+      { stage: 'realtor_availability_check' },
+    );
+  }
 
   for (const raw of batch) {
     const client = await getClient();
@@ -113,7 +144,7 @@ async function processBatch(
         );
 
         // Classify and store trade matches
-        const matches = classifyPermit(mapped, rules);
+        const matches = classifyPermit(mapped, rules, undefined, { realtorAvailable });
         for (const m of matches) {
           await client.query(
             `INSERT INTO permit_trades (
@@ -179,7 +210,7 @@ async function processBatch(
           'DELETE FROM permit_trades WHERE permit_num=$1 AND revision_num=$2',
           [permitNum, revisionNum]
         );
-        const matches = classifyPermit(mapped, rules);
+        const matches = classifyPermit(mapped, rules, undefined, { realtorAvailable });
         for (const m of matches) {
           await client.query(
             `INSERT INTO permit_trades (

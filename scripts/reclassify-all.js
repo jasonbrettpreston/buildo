@@ -12,6 +12,7 @@
  */
 
 const pipeline = require('./lib/pipeline');
+const { checkRealtorAvailable } = require('./lib/pipeline-realtor-availability');
 
 // §R2 — Advisory lock ID (spec 80)
 const ADVISORY_LOCK_ID = 80;
@@ -37,6 +38,17 @@ pipeline.run('reclassify-all', async (pool) => {
   } catch (e) {
     pipeline.log.error('[reclassify-all]', 'Failed to import TS modules. Run with: npx tsx scripts/reclassify-all.js');
     throw e;
+  }
+
+  // WF3 startup-guard: skip realtor classification when migration 118
+  // hasn't been applied (trades.id=33 missing → FK constraint would
+  // crash on INSERT). See scripts/lib/pipeline-realtor-availability.js.
+  const realtorAvailable = await checkRealtorAvailable(pool);
+  if (!realtorAvailable) {
+    pipeline.log.warn(
+      '[reclassify-all]',
+      'Realtor trade row (trades.id=33) NOT FOUND — apply migration 118_realtor_trade.sql to enable realtor classification. Continuing with construction-trade classification only.',
+    );
   }
 
   // Load active Tier 1 rules from DB (or use in-memory ALL_RULES)
@@ -96,7 +108,7 @@ pipeline.run('reclassify-all', async (pool) => {
           const scope = classifyScope(permit);
 
           // 2. Classify trades using tag matrix
-          const matches = classifyPermit(permit, rules, scope.scope_tags);
+          const matches = classifyPermit(permit, rules, scope.scope_tags, { realtorAvailable });
 
           // 3. Classify products
           const products = classifyProducts(permit, scope.scope_tags);
