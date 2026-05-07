@@ -369,3 +369,12 @@ Source: 3-agent Multi-Agent Review of Cycle 7 backend wire-up. Fix-now applied: 
 
 - **Pre-existing classify-permits.js `new Date()` lint warnings on lines 79, 122, 139 — pre-existing.** Not introduced by Cycle 7. Spec 47 mandates pipeline.getDbTimestamp(pool); this is a separate cleanup.
 
+
+---
+
+## Spec 30 — WF3 Sibling Concerns Surfaced 2026-05-06
+
+Source: WF3 worktree code-reviewer flagged this while reviewing the App Health route extraction fix.
+
+- **`src/app/api/admin/pipelines/history/route.ts` exports TS interfaces (`PipelineHistoryRun`, `PipelineHistoryResponse`) directly from the route file (lines 15, 26).** Same class of violation that prompted the WF3 — non-handler named exports from a route file. Currently does NOT break `next build` because TypeScript interfaces are erased at compile time (the route validator only sees runtime exports). **Defer**: a future Next.js version could tighten the validator to also reject type-only exports. Move both interfaces to `src/app/api/admin/pipelines/history/types.ts` if/when this ever surfaces, or proactively if a sweep of route-file hygiene is filed.
+

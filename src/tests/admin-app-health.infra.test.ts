@@ -118,11 +118,13 @@ const OK_PAYWALL = {
 beforeEach(async () => {
   vi.clearAllMocks();
   // Reset the aggregator's process-local cache between tests so each
-  // test starts from a cold state.
-  const { __resetAppHealthCacheForTests } = await import(
-    '@/app/api/admin/app-health/route'
-  );
-  __resetAppHealthCacheForTests();
+  // test starts from a cold state. Cache moved out of route.ts in WF3
+  // (Next.js route files cannot export non-handler functions —
+  // `__resetAppHealthCacheForTests` blocked production builds). The
+  // reset helper now lives at @/app/api/admin/app-health/cache as
+  // `clearCache`.
+  const { clearCache } = await import('@/app/api/admin/app-health/cache');
+  clearCache();
 });
 
 afterEach(() => {

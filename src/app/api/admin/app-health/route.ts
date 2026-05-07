@@ -50,40 +50,17 @@ import {
 
 const TAG = '[api/admin/app-health]';
 
-const CACHE_TTL_MS = 60_000;
-
-interface CacheEntry {
-  /**
-   * Minute-boundary expiry per Spec 30 §2.2 ("60s in-memory TTL keyed
-   * on `snapshot_at` minute boundary"). Aligning to the wall-clock minute
-   * means concurrent instances invalidate together and pay one upstream
-   * round-trip per minute — a floating window would stagger expirations
-   * and double the rate-limit footprint.
-   */
-  expiresAt: number;
-  /**
-   * Stored as a Promise (not the resolved body) to defeat the
-   * thundering-herd / dog-pile race. The first cache miss creates the
-   * promise and stores it BEFORE awaiting; concurrent racers find the
-   * pending promise in the cache and await the same fan-out, so Sentry
-   * and PostHog see exactly one request per minute even under concurrent
-   * load. On rejection (e.g., the assembly throws during the validated
-   * envelope build), the cache is cleared so the next request retries.
-   */
-  bodyPromise: Promise<AppHealthResponse>;
-}
-
-/** Process-local cache. Single entry — the endpoint takes no params. */
-let cache: CacheEntry | null = null;
-
-/**
- * Compute the next minute-boundary expiry. Math.ceil to the next minute
- * so a request landing at e.g. 12:00:42 builds a snapshot that expires
- * at 12:01:00, not 12:01:42. Aligns with wall-clock and `snapshot_at`.
- */
-function nextMinuteBoundary(now: number): number {
-  return Math.ceil((now + 1) / CACHE_TTL_MS) * CACHE_TTL_MS;
-}
+// Cache state + helpers EXTRACTED to ./cache (WF3 2026-05-06): Next.js's
+// App Router rejects non-handler named exports from route.ts at build
+// time. The `__resetAppHealthCacheForTests` test seam was blocking
+// production builds. The semantics — minute-boundary TTL + promise-based
+// dog-pile defense — are preserved verbatim in the new module.
+import {
+  clearCache,
+  getCachedBody,
+  nextMinuteBoundary,
+  setCachedBody,
+} from '@/app/api/admin/app-health/cache';
 
 /**
  * Promise.allSettled wrapper that converts a rejection into the canonical
@@ -119,21 +96,22 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 
   // Spec 30 §2.2 caching: serve from cache if within TTL. Concurrent
   // requests within the TTL share the SAME pending promise (dog-pile
-  // defense) — see CacheEntry doc.
+  // defense). See ./cache.ts for the storage mechanism.
   const now = Date.now();
-  if (cache && cache.expiresAt > now) {
+  const cachedPromise = getCachedBody(now);
+  if (cachedPromise) {
     Sentry.addBreadcrumb({
       category: 'app_health',
       message: 'aggregator_cache_hit',
-      data: { ttl_remaining_ms: cache.expiresAt - now },
+      data: {},
     });
     try {
-      const body = await cache.bodyPromise;
+      const body = await cachedPromise;
       return NextResponse.json(body);
     } catch (err) {
       // Pending promise rejected; fall through to a fresh fan-out below.
       logError(TAG, err, { stage: 'cached_promise_rejected' });
-      cache = null;
+      clearCache();
     }
   }
 
@@ -142,7 +120,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   // and Sentry/PostHog see exactly one upstream request per minute.
   const expiresAt = nextMinuteBoundary(now);
   const bodyPromise = buildAppHealthBody(adminCtx.authMethod);
-  cache = { expiresAt, bodyPromise };
+  setCachedBody(bodyPromise, expiresAt);
 
   let body: AppHealthResponse;
   try {
@@ -151,7 +129,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     // Building the validated envelope threw (Zod failure, etc). Clear
     // the cache so the NEXT request retries instead of serving the
     // poisoned promise, then return 500 to this caller.
-    cache = null;
+    clearCache();
     logError(TAG, err, { stage: 'envelope_build_threw' });
     return NextResponse.json(
       {
@@ -245,11 +223,6 @@ async function buildAppHealthBody(
   return parsed.data;
 }
 
-/**
- * Test-only cache reset. Exported with `__` prefix to discourage
- * production import. Used by infra tests to start each test from a
- * clean cache without restarting the module graph.
- */
-export function __resetAppHealthCacheForTests(): void {
-  cache = null;
-}
+// Test-only cache reset moved to ./cache.ts as `clearCache()` (WF3
+// 2026-05-06 — Next.js route files cannot export non-handler functions).
+// Tests now import `clearCache` directly from `./cache`.
