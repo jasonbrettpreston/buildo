@@ -50,6 +50,7 @@ Nightly run processing all active `trade_forecasts` where `(urgency IS NULL OR u
 
 ### Core Logic
 - **Financial Base:** Extract `trade_contract_values[row.trade_slug]`.
+  - **Realtor carve-out (WF3 2026-05-08):** When `row.trade_slug === 'realtor'`, the financial base is `row.estimated_cost` (the total project cost), NOT `trade_contract_values['realtor']` (which the cost slicer never produces — realtors don't bid on a sliced trade contract). Rationale: realtors prospect for listings, so the entire renovation is the listing-likelihood signal. The carve-out branches on `trade_slug` only — Spec 95 §2.5.1 explicitly forbids branching on the persona axis. Spec 81 §3 NULL semantics are preserved: realtor with `estimated_cost IS NULL` → `score = NULL`, same as other trades.
 - **Math:** `MIN(trade_value / logic_variables['los_base_divisor'], 30)`.
 - **Strategic Multiplier (Per-Trade):**
   - Performs a `LEFT JOIN` on `trade_configurations` for per-trade `multiplier_bid` / `multiplier_work`.
@@ -70,7 +71,7 @@ Mutates `trade_forecasts.opportunity_score`. All `UPDATE` queries must include `
 
 ### Edge Cases
 - **Integrity Audit:** Flags leads where `tracking_count > 0` but `modeled_gfa_sqm` is null (users following unverified geometry).
-- **Missing Cost → NULL (WF1 April 2026):** If `estimated_cost IS NULL` OR `trade_contract_values IS NULL` OR `trade_contract_values = {}`, `opportunity_score` is set to `NULL` (not 0). A score of 0 definitively means "real value, fully competed." Missing data is surfaced as `NULL` so downstream consumers can distinguish the two states.
+- **Missing Cost → NULL (WF1 April 2026):** If `estimated_cost IS NULL` OR (for non-realtor trades) `trade_contract_values IS NULL` OR `trade_contract_values = {}`, `opportunity_score` is set to `NULL` (not 0). A score of 0 definitively means "real value, fully competed." Missing data is surfaced as `NULL` so downstream consumers can distinguish the two states. **Realtor exemption (WF3 2026-05-08):** see Realtor carve-out under Core Logic above — realtor doesn't require `trade_contract_values` to be populated; only `estimated_cost`. Realtor with `estimated_cost IS NULL` still yields `score = NULL`.
 - **Heavy Competition → Low (not Zero):** The asymptotic decay formula ensures heavily competed leads produce low non-negative scores. The old zero-clamp data-loss pattern (negative raw → clamped to 0) is eliminated.
 
 ---
@@ -131,6 +132,7 @@ These eight items must be resolved in the `scripts/compute-opportunity-scores.js
 6. **Telemetry Accuracy:** Update `records_updated` using the actual `result.rowCount` from the `UPDATE` call rather than the batch size.
 7. **NULL Urgency Support:** Change the filter to `WHERE (tf.urgency IS NULL OR tf.urgency <> 'expired')`.
 8. **Bimodal Sourcing:** Ensure logic properly executes a LEFT JOIN on `trade_configurations` to source `multiplier_bid` and `multiplier_work` dynamically based on the current target window.
+9. **Realtor Financial-Base Carve-out (WF3 2026-05-08):** When `trade_slug === 'realtor'` (Spec 47 §10.2 constant `REALTOR_TRADE_SLUG` from `scripts/lib/pipeline-realtor-availability.js`), use `row.estimated_cost` as the financial base instead of `trade_contract_values['realtor']`. The cost slicer (`compute-cost-estimates.js`, step 14) doesn't allocate to realtor — they prospect for listings, not bid on a sliced trade contract. Branches on `trade_slug` only — Spec 95 §2.5.1 explicitly forbids branching on the persona axis. NULL semantics preserved: realtor with `estimated_cost IS NULL` → `score = NULL`. Closes the 84,235 forecast rows that scored 0 immediately after mig 118 wired realtor in (commit `61854b0`).
 
 ---
 

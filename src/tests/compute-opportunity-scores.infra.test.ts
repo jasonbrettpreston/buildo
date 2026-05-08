@@ -317,3 +317,73 @@ describe('scripts/compute-opportunity-scores.js — WF3 crash fixes', () => {
     expect(content).not.toMatch(/tradeValues\s*==\s*null/);
   });
 });
+
+// ── WF3 2026-05-08 — Realtor financial-base carve-out ──────────────────────
+// 🔗 SPEC LINK: docs/specs/01-pipeline/81_opportunity_score_engine.md §3
+//             docs/specs/03-mobile/91_mobile_lead_feed.md §3.5
+//             docs/specs/03-mobile/95_mobile_user_profiles.md §2.5.1
+//             docs/specs/01-pipeline/47_pipeline_script_protocol.md §10.2
+//
+// Realtors don't bid on a trade contract — they prospect for listings. The
+// cost slicer (compute-cost-estimates.js) doesn't allocate to realtor, so
+// `trade_contract_values['realtor']` is always undefined → tradeValue=0
+// → score=0 across 84K forecast rows after mig 118 wired realtor in.
+//
+// Fix: realtor uses the TOTAL `estimated_cost` as its financial base
+// (renovation cost is the listing-likelihood signal, per user 2026-05-08).
+// Branches on `trade_slug === 'realtor'` (NOT account_preset, per Spec 95
+// §2.5.1) and reuses the existing REALTOR_TRADE_SLUG constant from
+// scripts/lib/pipeline-realtor-availability.js (Spec 47 §10.2).
+describe('scripts/compute-opportunity-scores.js — realtor financial-base carve-out (WF3 2026-05-08)', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/compute-opportunity-scores.js'),
+      'utf-8',
+    );
+  });
+
+  it('imports REALTOR_TRADE_SLUG from pipeline-realtor-availability (no magic string)', () => {
+    // Spec 47 §10.2 — shared enum vocabulary. The constant already exists in
+    // scripts/lib/pipeline-realtor-availability.js; re-use it instead of
+    // hardcoding 'realtor' in this script too.
+    expect(content).toMatch(/REALTOR_TRADE_SLUG/);
+    expect(content).toMatch(
+      /require\(\s*['"]\.\/lib\/pipeline-realtor-availability['"]\s*\)/,
+    );
+  });
+
+  it('branches financial base on trade_slug (not account_preset) — Spec 95 §2.5.1 compliant', () => {
+    // Spec 95 §2.5.1 explicitly REJECTS branching on account_preset. The
+    // canonical algorithmic axis is trade_slug, set immutably at onboarding.
+    expect(content).toMatch(/trade_slug\s*===\s*REALTOR_TRADE_SLUG/);
+    // Negative regression-lock — must NOT branch on account_preset in code.
+    // Scoped to non-comment lines so a future clarifying comment like
+    // "// NOT account_preset — see Spec 95 §2.5.1" doesn't trip the test.
+    const codeOnly = content
+      .split('\n')
+      .filter((l) => !l.trimStart().startsWith('//'))
+      .join('\n');
+    expect(codeOnly).not.toMatch(/account_preset/);
+  });
+
+  it('realtor uses estimated_cost as tradeValue (no per-trade slice required)', () => {
+    // Realtor's financial base is the total project cost, not a sliced
+    // portion — the cost slicer doesn't allocate to realtor.
+    // The fix should produce a path where, when trade_slug is realtor,
+    // tradeValue resolves to row.estimated_cost rather than
+    // tradeValues[trade_slug].
+    expect(content).toMatch(/isRealtor[\s\S]{0,80}estimated_cost/);
+  });
+
+  it('realtor with NULL estimated_cost still yields NULL score (Spec 81 §3 NULL semantics preserved)', () => {
+    // Spec 81 §3 line 73: "0 means 'real value, fully competed'. NULL means
+    // 'no cost data'." The carve-out must not silently flip realtor NULL-cost
+    // rows to 0 — the NULL guard (`row.estimated_cost == null`) must still
+    // route to `score = null` for realtor too.
+    expect(content).toMatch(/row\.estimated_cost\s*==\s*null/);
+    // The realtor-aware guard relaxes the trade_contract_values check ONLY
+    // when isRealtor — non-realtor rows still require a populated JSONB.
+    expect(content).toMatch(/!isRealtor[\s\S]{0,120}!tradeValues/);
+  });
+});

@@ -22,6 +22,8 @@
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+// WF3 2026-05-08 — realtor financial-base carve-out (Spec 81 §3 + Spec 47 §10.2)
+const { REALTOR_TRADE_SLUG } = require('./lib/pipeline-realtor-availability');
 
 // WF3-03 PR-B (H-W1): lock ID = spec number convention.
 const ADVISORY_LOCK_ID = 81;
@@ -173,17 +175,27 @@ pipeline.run('compute-opportunity-scores', async (pool) => {
 
     // NULL guard: missing cost data → explicit null, not 0 (spec 81 §3 WF1 April 2026).
     // score = null means "no cost data". score = 0 means "real value, fully competed".
+    //
+    // WF3 2026-05-08 — realtor carve-out (Spec 81 §3 + Spec 91 §3.5):
+    // Realtors don't bid on a trade contract — they prospect for listings and
+    // care about whether the home will be sold. The cost slicer doesn't
+    // allocate to realtor (no key in trade_contract_values), so realtor uses
+    // the TOTAL `estimated_cost` as its financial base. Branches on
+    // trade_slug — Spec 95 §2.5.1 explicitly forbids branching on the persona
+    // axis (the test below regression-locks zero references to that field).
     const tradeValues = row.trade_contract_values;
+    const isRealtor = row.trade_slug === REALTOR_TRADE_SLUG;
     const hasNoCostData = row.estimated_cost == null
-      || !tradeValues
-      || Object.keys(tradeValues).length === 0;
+      || (!isRealtor && (!tradeValues || Object.keys(tradeValues).length === 0));
 
     let score;
     if (hasNoCostData) {
       score = null;
       nullInputScores++;
     } else {
-      const tradeValue = tradeValues[row.trade_slug] ?? 0;
+      const tradeValue = isRealtor
+        ? row.estimated_cost
+        : (tradeValues[row.trade_slug] ?? 0);
 
       // Base: trade value normalized, capped (from control panel)
       const base = Math.min(tradeValue / vars.los_base_divisor, vars.los_base_cap);
