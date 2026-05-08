@@ -318,7 +318,10 @@ pipeline.run('assert-global-coverage', async (pool) => {
       const wsibTotal = parseInt(wa.wsib_total, 10) || 0;
 
       // ── pb: Parcel-buildings aggregate (Denom D) ───────────────
-      // All columns are NOT NULL in schema — rows serve as integrity sentinels.
+      // All linkage columns are NOT NULL in schema — rows serve as integrity sentinels.
+      // WF2 #4 2026-05-08 — added Surgical Triangle INPUT coverage for area_sqm and
+      // height_m (the cost model's primary inputs). Without these, an outlier output
+      // like the $29M ZARA two-wall-signs estimate gives no upstream signal.
       const { rows: [pb] } = await pool.query(`
         SELECT
           COUNT(*)                                                     AS pb_total,
@@ -326,7 +329,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE structure_type IS NOT NULL)           AS structure_type_pop,
           COUNT(*) FILTER (WHERE match_type IS NOT NULL)               AS match_type_pop,
           COUNT(*) FILTER (WHERE confidence IS NOT NULL)               AS confidence_pop,
-          COUNT(*) FILTER (WHERE linked_at IS NOT NULL)                AS linked_at_pop
+          COUNT(*) FILTER (WHERE linked_at IS NOT NULL)                AS linked_at_pop,
+          COUNT(*) FILTER (WHERE area_sqm IS NOT NULL)                 AS area_sqm_pop,
+          COUNT(*) FILTER (WHERE height_m IS NOT NULL)                 AS height_m_pop
         FROM parcel_buildings
       `);
       const pbTotal = parseInt(pb.pb_total, 10) || 0;
@@ -386,6 +391,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
           (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings)                          AS massing_linked_parcels,
           (SELECT COUNT(*) FROM parcels
             WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL)                    AS parcels_with_centroid,
+          -- WF2 #4 2026-05-08 — Surgical Triangle INPUT: lot size coverage
+          (SELECT COUNT(*) FROM parcels)                                                    AS parcels_total,
+          (SELECT COUNT(*) FROM parcels WHERE area_sqm IS NOT NULL)                         AS parcels_with_area,
           -- Timing calibration
           (SELECT COUNT(*) FROM phase_calibration WHERE median_days IS NOT NULL)            AS calibration_rows,
           -- CoA context
@@ -564,6 +572,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 9 — link_parcels', 'permit_parcels.match_type (geocoded)',  parseInt(misc.pp_linked_geocoded, 10), geocodedTotal || null));
       rows.push(coverageRow('Step 9 — link_parcels', 'permit_parcels.confidence (geocoded)',  parseInt(misc.pp_linked_geocoded, 10), geocodedTotal || null));
       rows.push(coverageRow('Step 9 — link_parcels', 'permit_parcels.linked_at (geocoded)',   parseInt(misc.pp_linked_geocoded, 10), geocodedTotal || null));
+      // WF2 #4 2026-05-08 — Surgical Triangle INPUT: lot size (fallback GFA basis per Spec 83 §3A).
+      rows.push(coverageRow('Step 9 — link_parcels', 'parcels.area_sqm', parseInt(misc.parcels_with_area, 10), parseInt(misc.parcels_total, 10) || null));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));
@@ -577,6 +587,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 11 — link_massing', 'parcel_buildings.match_type',     parseInt(pb.match_type_pop, 10),     pbTotal || null));
       rows.push(coverageRow('Step 11 — link_massing', 'parcel_buildings.confidence',     parseInt(pb.confidence_pop, 10),     pbTotal || null));
       rows.push(coverageRow('Step 11 — link_massing', 'parcel_buildings.linked_at',      parseInt(pb.linked_at_pop, 10),      pbTotal || null));
+      // WF2 #4 2026-05-08 — Surgical Triangle INPUTS: footprint area + height (primary GFA basis per Spec 83 §3A).
+      rows.push(coverageRow('Step 11 — link_massing', 'parcel_buildings.area_sqm',       parseInt(pb.area_sqm_pop, 10),       pbTotal || null));
+      rows.push(coverageRow('Step 11 — link_massing', 'parcel_buildings.height_m',       parseInt(pb.height_m_pop, 10),       pbTotal || null));
 
       // Step 12 — link_similar (proxy: non-BLD permits with scope_tags propagated)
       rows.push(coverageRow('Step 12 — link_similar', 'permits.scope_tags (non-BLD)', parseInt(pa.non_bld_scope_pop, 10), parseInt(pa.non_bld_total, 10) || null));

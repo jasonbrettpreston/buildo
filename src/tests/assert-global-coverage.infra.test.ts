@@ -445,3 +445,39 @@ describe('chain specs — step counts updated', () => {
     expect(content).toContain('12 (sequential');
   });
 });
+
+// ===========================================================================
+// WF2 #4 2026-05-08 — Surgical Triangle input coverage (Spec 83 §3 inputs)
+//
+// Step 27 previously tracked OUTPUTS (modeled_gfa_sqm, effective_area_sqm)
+// but NOT the four cornerstone INPUTS that drive the Surgical Triangle:
+//   - parcels.area_sqm        (lot size — fallback GFA basis)
+//   - parcel_buildings.area_sqm  (footprint — primary GFA basis)
+//   - parcel_buildings.height_m  (height factor for GFA when stories absent)
+//   - permits.storeys         (stories multiplier for GFA)
+//
+// Without coverage on these, the cost model's "crazy number" outputs (e.g.
+// $29M for two ZARA wall signs) give no upstream signal. These tests
+// regression-lock that the four input rows are present in the assert
+// script. Spec 47 §10.3 — verification belongs upstream of consumers; the
+// admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7) renders these fields
+// per-permit, but step 27 is the population-level verification.
+// ===========================================================================
+
+describe('assert-global-coverage.js — Surgical Triangle input coverage (WF2 #4)', () => {
+  it('tracks parcels.area_sqm coverage (Step 9 — link_parcels)', () => {
+    expect(src()).toMatch(/parcels\.area_sqm/);
+  });
+
+  it('tracks parcel_buildings.area_sqm coverage (Step 11 — link_massing)', () => {
+    expect(src()).toMatch(/parcel_buildings\.area_sqm/);
+  });
+
+  it('tracks parcel_buildings.height_m coverage (Step 11 — link_massing)', () => {
+    expect(src()).toMatch(/parcel_buildings\.height_m/);
+  });
+
+  it('tracks permits.storeys coverage (Step 2 — load_permits)', () => {
+    expect(src()).toMatch(/permits\.storeys/);
+  });
+});

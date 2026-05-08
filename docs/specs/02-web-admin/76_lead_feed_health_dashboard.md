@@ -215,9 +215,30 @@ Response 200: { data: { competition_count: number }, error: null, meta: null }
 
 **Cross-link:** card-tap opens §3.6 (Flight Job Detail Inspector), NOT §3.5 (Lead Detail Inspector). Mirrors mobile: tapping a flight-board card uses `/api/leads/flight-board/detail/:id` (Spec 77 §3.3.1), not `/api/leads/detail/:id` (Spec 91 §4.3.1). The two endpoints return different shapes; the routing per endpoint is normative.
 
-### 3.5 Lead Detail Inspector (NEW — Cycle 3 amendment 2026-05-06)
+### 3.5 Lead Detail Inspector (Cycle 7 amendment 2026-05-08 — SUPERSEDES Cycle 3 thin-shape pass-through)
 
-**Goal:** admin pastes a `lead_id` (or selects from the Test Feed Tool result set), sees the full Spec 91 §4.3 `LeadDetail` payload — `cost.modeled_gfa_sqm`, `cost.range_low`/`range_high`, `neighbourhood.avg_household_income`, `target_window`, `opportunity_score`, `competition_count`, `applicant`, `work_description`, `is_saved` (scoped to the admin uid).
+**Cycle 7 expansion (this amendment):** the inspector now consumes a NEW admin-only endpoint `GET /api/admin/leads/inspect/:id` returning the `LeadInspect` shape (~70 fields, 8 panels) that mirrors the field-coverage matrix in `scripts/quality/assert-global-coverage.js` (step 27 of permits chain). The Cycle 3 thin pass-through to `/api/leads/detail/:id` (Spec 91 §4.3.1, ~15 fields) is retained for the public-mobile contract but no longer used by the admin inspector.
+
+**Why the expansion:** the WF3 cost-accuracy investigation (2026-05-08) found systemic over-classification — sign permits with $5M plumbing slices, fee-deferral records with full trade matrices, $29M cost estimates for two-wall-sign installations. The previous inspector surface didn't have enough field depth to spot these without dropping to psql. The expanded inspector closes that gap: every input that any pipeline step produces, surfaced for one-click audit per lead.
+
+**8 panels (chain-step grouped):**
+
+| Panel | Source | Key fields |
+|---|---|---|
+| Identity | derived | `lead_id`, `lead_type` |
+| Source | step 2 (`load_permits`) + step 4 (`classify_permit_phase`) | `permit_type`, `structure_type`, `status`, `enriched_status`, full `description` (NOT truncated — was the ZARA smoking gun), `est_const_cost` (city-reported, pre-Liar's-Gate), `builder_name`, `owner`, dates |
+| Scope | step 5 (`classify_scope`) | `project_type`, `scope_tags[]` |
+| Trades | step 13 (`classify_permits`) | All `permit_trades` rows with `confidence`; `is_default_fallback` flag (true when `confidence === 0.55` — signals tag-trade-matrix default with no permit-specific signal, the DST/ZARA over-classification pattern) |
+| Entity | steps 6-7 (`extract_builders` + `link_wsib`) | `legal_name`, `name_normalized`, `wsib_registered` |
+| Spatial | steps 8-11 | parcel (id, **`area_sqm`** — lot size), massing (**`area_sqm`** — footprint, **`height_m`**, `stories`), neighbourhood (id, name, `avg_household_income`, `period_of_construction`) |
+| **Cost (the diagnostic centerpiece)** | step 14 (`compute_cost_estimates`) | `cost_source` (permit/model/none), `is_geometric_override`, **`estimated_cost_total`** (clearly labeled as TOTAL — the admin UI bug from Cycle 3 surfaced as the user-reported "cost.estimated applies to total not per-trade"), `modeled_gfa_sqm`, full `trade_contract_values` JSONB, **inputs panel** (lot_size_sqm, footprint_area_sqm, height_m, stories, permit_type_allocation_pct, structure_complexity_factor, neighbourhood_premium_tier — every Surgical Triangle input per Spec 83 §3), **liar_gate panel** (modeled_total, reported_total, ratio, path: surgical_only/proportional_slicing/none per Spec 83 §3D) |
+| Lifecycle | step 21 (`classify_lifecycle_phase`) | `phase`, `stalled`, `classified_at`, `phase_started_at` |
+| Forecast | steps 23-24 (`compute_trade_forecasts` + `compute_opportunity_scores`) | Per-trade rows: `target_window`, `urgency`, `predicted_start`, `p25_days`, `p75_days`, `opportunity_score`, **`trade_slice_dollar`** (clearly labeled per-trade slice — distinct from the panel-7 total) |
+| Engagement | derived from `lead_views` | `competition_count`, `saved_by_admin` (admin-scoped, NOT mobile's `is_saved`) |
+
+**Endpoint:** `GET /api/admin/leads/inspect/:id`. Admin-only — `verifyAdminAuth` (Spec 33 §5) on first line. **No** `lead_views.saved=true` LATERAL gate (admin can inspect any permit, not just saved ones — closes the Cycle 3 line 234 caveat).
+
+**Goal (preserved from Cycle 3):** admin pastes a `lead_id` (or selects from the Test Feed Tool result set), sees the full Spec 91 §4.3 `LeadDetail` payload — `cost.modeled_gfa_sqm`, `cost.range_low`/`range_high`, `neighbourhood.avg_household_income`, `target_window`, `opportunity_score`, `competition_count`, `applicant`, `work_description`, `is_saved` (scoped to the admin uid).
 
 **Endpoint:** `GET /api/leads/detail/:id` (Spec 91 §4.3.1). Reuses unmodified — admin auth bypass already exists per §2.6 pattern.
 

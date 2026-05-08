@@ -155,6 +155,8 @@ Final audit against city `est_const_cost`:
 | Telemetry | `liar_gate_overrides` | Counter must be emitted to the `audit_table`. |
 | Quality | `snapshots` | Script must populate `data_quality_snapshots` (from Migration 080). |
 
+> **Per-permit audit surface (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7) renders every Surgical Triangle input from §3 (lot_size_sqm, footprint_area_sqm, height_m, stories, permit_type_allocation_pct, structure_complexity_factor, neighbourhood_premium_tier) plus the Liar's Gate decision tree (modeled_total, reported_total, ratio, path: surgical_only/proportional_slicing/none per §3D). When a single permit produces a "crazy number" (e.g., $29M for a sign install), the inspector exposes which input drove the divergence. This is the operator-facing dual to step 27 (`assert-global-coverage.js`) which measures field-coverage at the population level.
+
 ---
 
 ## 5. Testing Mandate

@@ -831,6 +831,8 @@ most urgent CRM alert.
 
 ### 10.3 Verify downstream handling before shipping a new value
 
+> **Operator-facing dual surface (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7 amendment) renders every field that step 27 (`assert-global-coverage.js`) measures coverage on, organized into 8 panels by chain step group. Step 27 is the *automated* verification of downstream contracts; the inspector is the *operator-facing* dual — both surface the same field set, in different audit contexts.
+
 Before adding a new enum value or nullable field to a producer's output, explicitly audit
 every consumer script for handling:
 

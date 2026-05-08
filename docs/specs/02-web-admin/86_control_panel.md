@@ -74,6 +74,8 @@ Refactor the scripts to load via `scripts/lib/config-loader.js`. They must execu
 | **23** | `compute-opportunity-scores` | Reads `multiplier_bid/work` based on the stamped window. Applies penalties for tracking/saving. |
 | **24** | `update-tracked-projects` | The CRM Assistant. Reads `imminent_window_days` for payload text, auto-archives dead leads, and syncs `lead_analytics`. |
 
+> **Cross-link to per-permit audit (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7) consumes the tunables defined here to render every cost-derivation input per permit. When an operator changes a tunable in the Control Panel (e.g., `urban_coverage_ratio`, a `scope_intensity_matrix` cell, or a `base_trade_rate`), the inspector renders the new value's effect on individual leads — closing the loop between marketplace-wide tuning and per-permit accuracy audit.
+
 ### Step 3: Admin UI (The Control Page)
 
 Create a single React page (or tabbed view) in the Admin dashboard with four distinct sections:

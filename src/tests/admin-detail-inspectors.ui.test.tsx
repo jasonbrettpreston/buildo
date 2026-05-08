@@ -19,38 +19,102 @@ vi.mock('@/lib/logger', () => ({
   logInfo: vi.fn(),
 }));
 
-const VALID_LEAD_DETAIL = {
+// WF2 #4 2026-05-08 — LeadDetailInspector now consumes the LeadInspect shape
+// from /api/admin/leads/inspect/:id (Spec 76 §3.5 Cycle 7), not the public
+// /api/leads/detail/:id LeadDetail. The 8-panel diagnostic shape is below.
+const VALID_LEAD_INSPECT = {
   lead_id: '20-101234--00',
   lead_type: 'permit' as const,
-  permit_num: '20-101234',
-  revision_num: '00',
-  address: '123 Queen St W',
-  location: { lat: 43.6532, lng: -79.3832 },
-  work_description: 'Major reno',
-  applicant: 'Acme Construction',
-  lifecycle_phase: 'permit-issued',
-  lifecycle_stalled: false,
-  target_window: 'work' as const,
-  opportunity_score: 0.823,
-  competition_count: 3,
-  predicted_start: '2026-06-15',
-  p25_days: 30,
-  p75_days: 60,
+  source: {
+    permit_num: '20-101234',
+    revision_num: '00',
+    permit_type: 'Building Additions/Alterations',
+    structure_type: 'Single Family Detached',
+    status: 'Permit Issued',
+    enriched_status: 'Active Inspection',
+    address: {
+      street_num: '123',
+      street_name: 'Queen',
+      street_type: 'St',
+      full: '123 Queen St',
+    },
+    location: { lat: 43.6532, lng: -79.3832 },
+    application_date: '2024-01-15',
+    issued_date: '2024-04-20',
+    completed_date: null,
+    work: 'Major reno',
+    description: 'Major reno — full second-floor addition + basement underpinning',
+    builder_name: 'Acme Construction',
+    owner: 'Jane Doe',
+    est_const_cost: 250000,
+    last_seen_at: '2026-05-08T12:00:00Z',
+    first_seen_at: '2024-01-15T09:00:00Z',
+  },
+  scope: {
+    project_type: 'addition',
+    scope_tags: ['residential', 'addition'],
+  },
+  trades: [
+    { trade_id: 5, trade_slug: 'framing', confidence: 0.95, is_default_fallback: false },
+  ],
+  entity: {
+    matched: true,
+    legal_name: 'Acme Construction',
+    name_normalized: 'acme construction',
+    wsib_registered: true,
+  },
+  spatial: {
+    parcel: { id: 9999, area_sqm: 450, latitude: 43.65, longitude: -79.38 },
+    massing: { area_sqm: 180.5, height_m: 7.5, stories: 2 },
+    neighbourhood: {
+      id: 100,
+      name: 'Queen West',
+      avg_household_income: 95000,
+      period_of_construction: '1900-1945',
+    },
+  },
   cost: {
-    estimated: 250000,
-    tier: 'mid',
-    range_low: 200000,
-    range_high: 300000,
+    cost_source: 'permit' as const,
+    is_geometric_override: false,
+    estimated_cost_total: 250000,
     modeled_gfa_sqm: 180.5,
+    trade_contract_values: { framing: 25000 },
+    inputs: {
+      lot_size_sqm: 450,
+      footprint_area_sqm: 180.5,
+      height_m: 7.5,
+      stories: 2,
+      permit_type_allocation_pct: null,
+      structure_complexity_factor: null,
+      neighbourhood_premium_tier: null,
+    },
+    liar_gate: {
+      modeled_total: 250000,
+      reported_total: 250000,
+      ratio: 1.0,
+      path: 'proportional_slicing' as const,
+    },
   },
-  neighbourhood: {
-    name: 'Queen West',
-    avg_household_income: 95000,
-    median_household_income: 82000,
-    period_of_construction: '1900-1945',
+  lifecycle: {
+    phase: 'P9',
+    stalled: false,
+    classified_at: '2026-05-08T11:00:00Z',
+    phase_started_at: '2024-04-20T00:00:00Z',
   },
-  updated_at: '2026-05-06T12:00:00Z',
-  is_saved: true,
+  forecast: [
+    {
+      trade_slug: 'framing',
+      target_window: 'work' as const,
+      urgency: 'imminent',
+      predicted_start: '2026-06-15',
+      p25_days: 30,
+      p75_days: 60,
+      opportunity_score: 75,
+      trade_slice_dollar: 25000,
+    },
+  ],
+  engagement: { competition_count: 3, saved_by_admin: true },
+  updated_at: '2026-05-08T12:00:00Z',
 };
 
 const VALID_FLIGHT_DETAIL = {
@@ -102,6 +166,18 @@ afterEach(() => {
 // LeadDetailInspector
 // ===========================================================================
 
+describe('<LeadDetailInspector> — fixture parity', () => {
+  // Drift guard — if a future amendment to LeadInspectSchema adds/tightens
+  // a required field, this test fails so the fixture is updated alongside
+  // the schema. Without this, the UI tests would silently pass with stale
+  // fixture data while the route's Zod parse would 500 in production.
+  // (Worktree-reviewer WF2 #4 finding, confidence 85.)
+  it('VALID_LEAD_INSPECT passes LeadInspectSchema — drift guard', async () => {
+    const { LeadInspectSchema } = await import('@/lib/admin/lead-schemas');
+    expect(() => LeadInspectSchema.parse(VALID_LEAD_INSPECT)).not.toThrow();
+  });
+});
+
 describe('<LeadDetailInspector> — three render states', () => {
   it('renders idle state when no id is supplied', () => {
     const { Wrapper } = makeWrapper();
@@ -110,9 +186,9 @@ describe('<LeadDetailInspector> — three render states', () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it('typing an id and submitting triggers a fetch + renders the result', async () => {
+  it('typing an id and submitting triggers a fetch + renders the 8-panel diagnostic shape', async () => {
     mockFetch.mockResolvedValueOnce(
-      mockJsonResponse({ data: VALID_LEAD_DETAIL, error: null, meta: null }),
+      mockJsonResponse({ data: VALID_LEAD_INSPECT, error: null, meta: null }),
     );
     const { Wrapper } = makeWrapper();
     render(<LeadDetailInspector />, { wrapper: Wrapper });
@@ -123,17 +199,19 @@ describe('<LeadDetailInspector> — three render states', () => {
     fireEvent.click(screen.getByTestId('lead-detail-inspector-submit'));
 
     await waitFor(() => screen.getByTestId('lead-detail-inspector-result'));
-    // Structured render shows the lead_id field.
+    // Structured render shows lead_id + 8 distinct panels per Cycle 7.
     expect(screen.getByText('20-101234--00')).toBeDefined();
-    // Cost estimated localised.
-    expect(screen.getByText('250,000')).toBeDefined();
-    // Opportunity score formatted to 3 decimals.
-    expect(screen.getByText('0.823')).toBeDefined();
+    expect(screen.getByTestId('panel-source')).toBeDefined();
+    expect(screen.getByTestId('panel-cost')).toBeDefined();
+    expect(screen.getByTestId('panel-trades')).toBeDefined();
+    expect(screen.getByTestId('panel-spatial')).toBeDefined();
+    // Total cost is rendered (the field that was previously mislabeled per user feedback).
+    expect(screen.getAllByText('250,000').length).toBeGreaterThan(0);
   });
 
   it('initialId pre-fills and immediately fetches', async () => {
     mockFetch.mockResolvedValueOnce(
-      mockJsonResponse({ data: VALID_LEAD_DETAIL, error: null, meta: null }),
+      mockJsonResponse({ data: VALID_LEAD_INSPECT, error: null, meta: null }),
     );
     const { Wrapper } = makeWrapper();
     render(<LeadDetailInspector initialId="20-101234--00" />, { wrapper: Wrapper });
@@ -145,15 +223,17 @@ describe('<LeadDetailInspector> — three render states', () => {
 });
 
 describe('<LeadDetailInspector> — error states', () => {
-  it('404 → NOT_SAVED panel with Spec 91 §4.3.1 recovery copy', async () => {
+  it('404 → NOT_FOUND panel — admin can inspect any permit, so 404 means absent (Cycle 7)', async () => {
     mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 404 }));
     const { Wrapper } = makeWrapper();
     render(<LeadDetailInspector initialId="missing-permit" />, { wrapper: Wrapper });
 
     await waitFor(() =>
-      screen.getByTestId('lead-detail-inspector-error-not_saved'),
+      screen.getByTestId('lead-detail-inspector-error-not_found'),
     );
-    expect(screen.getByText(/Search permits/)).toBeDefined();
+    // Cycle 7 amendment: no longer scoped to "permits the admin has saved" —
+    // the new admin endpoint bypasses the lead_views.saved=true LATERAL gate.
+    expect(screen.getByText(/admin-scoped|genuinely absent/)).toBeDefined();
   });
 
   it('400 → INVALID_ID panel with serverMessage verbatim', async () => {
@@ -180,10 +260,13 @@ describe('<LeadDetailInspector> — error states', () => {
   });
 
   it('schema drift (Zod parse error) renders the parse-error panel with issues', async () => {
-    // Server returned a malformed payload — competition_count is negative.
+    // Server returned a malformed payload — engagement.competition_count is negative.
     mockFetch.mockResolvedValueOnce(
       mockJsonResponse({
-        data: { ...VALID_LEAD_DETAIL, competition_count: -1 },
+        data: {
+          ...VALID_LEAD_INSPECT,
+          engagement: { ...VALID_LEAD_INSPECT.engagement, competition_count: -1 },
+        },
         error: null,
         meta: null,
       }),

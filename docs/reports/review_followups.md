@@ -423,3 +423,30 @@ Source: Worktree code-reviewer of the WF3 that brought dev DB in sync with on-di
 
 **Sidebar — running permits chain at the time of WF3:** completed 21 of 28 steps before failing at step 22 (`assert_lifecycle_phase_distribution`) on the pre-existing Strangler Fig drift (`cross_check_active_inspection = 580 ≥ 500`). NOT a regression — same value yesterday was 579, threshold 500. WF2 commit `91051e0` made this threshold operator-tunable via the admin Control Panel; user will tune 500→800 via UI to flip step 22 verdict from FAIL to WARN, then re-run the chain.
 
+---
+
+## Spec 76/47/83 — WF2 #4 Multi-Agent Review Deferred Items (2026-05-08)
+
+Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #4 admin Lead Detail Inspector diagnostic field expansion (Spec 76 §3.5 Cycle 7 amendment).
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| HIGH (perf) | worktree (conf 88) + Gemini (medium) | **`lead_views` performance index missing.** Both `lv_count` LATERAL and `saved_by_admin` EXISTS subquery filter on `lead_key + saved + (user_id?)`. No matching composite index exists. The diagnostic endpoint will get progressively slower as `lead_views` grows. | Migration required — separate WF3. Add `CREATE INDEX CONCURRENTLY idx_lead_views_lead_key_saved ON lead_views (lead_key) INCLUDE (user_id) WHERE saved = true`. Not blocking — single-permit admin diagnostic, not on hot path. |
+| HIGH (correctness) | worktree (conf 82) | **Liar's Gate ≤$1,000 sub-path inference.** `classifyLiarGatePath()` maps `cost_source='permit'` → `proportional_slicing` always, but Spec 83 §3D bullet 2 ("Default: Reported ≤ $1,000 use Surgical Total exclusively") may also write `cost_source='permit'`. The inference would then mislabel that path. | Needs investigation of `compute-cost-estimates.js` to see what it actually writes. If ambiguous, either heuristic + `est_const_cost` check, or persist `path` as a column on `cost_estimates` (cleanest). Filed as separate WF3. |
+| MEDIUM (design) | Gemini | **`is_default_fallback` magic range 0.5..0.6 in lead-inspect-query.ts:268.** Couples the consumer query to the pipeline's default `0.55` confidence value. If the constant moves, the flag silently misfires. | Cleanest fix: add `is_default_fallback` boolean column to `permit_trades` so the producer (classifier) sets it at write time. Separate WF2. Short-term mitigation: import `DEFAULT_TRADE_CONFIDENCE` from a shared constants module (currently doesn't exist as TS export). |
+| MEDIUM (deferred input) | Gemini (CRITICAL→partial) | **`structure_complexity_factor` not in cost.inputs panel.** Lives in `trade_sqft_rates` per-trade_slug, not per-permit. Surfacing it in the Cost panel (which is single-permit) would require picking a representative trade. | Better placement: add as a per-trade column in the Forecast panel. Filed as a small WF2 follow-up — schema already exists, just needs the join + UI. |
+| MEDIUM (UX) | DeepSeek | **No `isFetching` indicator for background TanStack refetches.** Users see stale data flash to fresh data without a "Refreshing…" hint. | UX polish; not breaking. Add a subtle indicator if/when the inspector is used heavily and the lack-of-feedback becomes a friction point. |
+| LOW (a11y) | DeepSeek | **`ErrorPanel` lacks `role="alert"` / `aria-live`.** Screen-reader users may miss new error states. | A11y enhancement. Add when the broader admin a11y sweep happens. |
+
+**False positives (worktree code-reviewer):** none this round — all three reviews surfaced real findings.
+
+**Resolved in commit (8 fixes folded in):**
+1. ✅ Worktree #3: VALID_LEAD_INSPECT schema-drift guard test added
+2. ✅ Gemini #1: `permit_type_allocation_pct` matrix lookup wired (scope_intensity_matrix LEFT JOIN); `neighbourhood_premium_tier` JS-side bracket lookup against `logic_variables.income_premium_tiers`
+3. ✅ Gemini #2: Entities join refactored — JS-side `normalizeBuilderName` mirror of `scripts/extract-builders.js:34`, separate query against `entities.name_normalized`
+4. ✅ Gemini #6: `lead_id` revision_num padded to 2 digits matching `LPAD(revision_num, 2, '0')` SQL convention
+5. ✅ DeepSeek #1: Removed dead `'PARSE_ERROR'` from `LeadInspectErrorCode` (Zod parse errors flow through the separate `ZodError` branch)
+6. ✅ DeepSeek #2: Generic-Error fallback panel branch added (renders network-error UI for non-LeadInspectError, non-ZodError throws)
+7. ✅ DeepSeek #3: `useEffect` syncs `initialId` → `activeId` when parent re-passes (deep-link reactivity)
+8. ✅ DeepSeek #4 + #5: `costs` prop removed from `ForecastPanel` (was unused); empty/whitespace `initialId` normalized to null via `normalizeId()` helper
+
