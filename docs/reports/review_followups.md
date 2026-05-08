@@ -3,6 +3,30 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF2 #3 (2026-05-08) — Multi-Agent Review deferrals
+_Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared.js` + `compute-cost-estimates.js` for the `permit_type_class` cost-model gating commit._
+
+**Applied this commit:** Gemini MEDIUM (Brain line 548) — short-circuit now computes `premium_factor` via `computePremiumFactor(...)` for telemetry consistency with `complexity_score`.
+
+| Severity | Source | Item | Planned Home |
+|---|---|---|---|
+| HIGH | Gemini WF2 #3 review | **Falsy-`0` in `computeGfa` `(row.storeys || 1)`** at `src/features/leads/lib/cost-model-shared.js:188`. A permit correctly listing 0 storeys (e.g., foundation-only) gets defaulted to 1 — inflates GFA. Pre-existing, not introduced by WF2 #3. **Fix:** swap `||` → `??`. | WF3 — same change in `(row.estimated_stories ?? row.storeys ?? 1)`. Bundle with the next two HIGHs (all share the same falsy-`0` root cause). |
+| HIGH | Gemini WF2 #3 review | **Falsy-`0` in `computeEffectiveArea` `pct > 0` gate** at `src/features/leads/lib/cost-model-shared.js:227`. A `gfa_allocation_percentage = 0` row in `scope_intensity_matrix` (valid configuration meaning "no construction area") falls through to the matrix-miss branch and defaults to 1.0 (full GFA). Same pattern as the storeys bug — could grossly inflate cost for a minor permit on a large structure. Pre-existing. **Fix:** change to `if (pct !== undefined)` so `pct === 0` short-circuits correctly. | WF3 — bundle with the storeys fix; both share the same root cause. |
+| MEDIUM | Gemini WF2 #3 review | **Falsy-`0` in `computeTradeValue` `complexity_factor \|\| 1.0`** at `src/features/leads/lib/cost-model-shared.js:286`. Operator-set `0` is silently overridden to 1.0. Pre-existing. **Fix:** `??` instead of `\|\|`. | WF3 — bundle with the two HIGHs above (one commit covers all three falsy-`0` cases). |
+| LOW | Gemini WF2 #3 review | **Proportional slicing rounding error** at `src/features/leads/lib/cost-model-shared.js:393`. Sum of `Math.round(weight * reportedCost)` per trade may not equal `reportedCost` (off-by-pennies for many trades). Pre-existing. **Fix:** remainder distribution OR document in JSDoc. | WF3 — low priority; document in JSDoc as the simpler fix. |
+| LOW | Gemini WF2 #3 review | **Brittle `includes()` keyword detection** at `isShellPermit` / `isCommercial` (`cost-model-shared.js:151–164`). False positives on substrings (e.g., "nutshell-shaped roof", "Commercial Electric Inc."). Pre-existing. **Fix:** word-boundary regex `\bshell\b` / `\bcommercial\b`. | WF3 — low priority; needs a regression-test fixture to confirm no false negatives on tokenized permit types. |
+| NIT | Gemini WF2 #3 review | **Magic numbers in `computeComplexityScore`** at `cost-model-shared.js:421–425` (`stories > 6`, `units > 4`, `footprint > 300`, `income > 150000`). Pre-existing. **Fix:** module-level named constants (`HIGH_RISE_STORY_THRESHOLD = 6` etc.). | WF3 — nit; pair with the Spec 81 score-distribution work if/when those thresholds become operator-tunable. |
+| DEFER | Worktree code-reviewer (conf 35) | **Shape asymmetry: `_permitTypeClassSkipped` not on normal-path return.** Construction return object has 14 fields; non-construction has 16 (`_permitTypeClassSkipped: true` + the always-present `_liarsGateOverride/_zeroTotalBypass/_usedFallback`). Muscle truthiness check handles the asymmetry, but a future destructuring consumer would see `undefined`. **Fix:** add `_permitTypeClassSkipped: false` to the normal return + document the four `_` flags in the `CostEstimate` JSDoc. | WF3 — housekeeping. |
+| DEFER | Worktree code-reviewer (conf 40) | **`modelCoveragePct` denominator includes `permit_type_class_skipped` permits.** Skipped permits emit `estimated_cost: null` so they're counted as `nullEstimates`, dragging coverage. Live `--limit=2000` showed verdict=WARN with 68.8% coverage (3.85% skipped — but the 2K sample over-represented stale non-construction permits). After full run, structural floor is ~95.5% (the construction tail per Spec 80 §5). **Fix:** either (a) lower `cost_model_coverage_warn_pct` from 80 to ~90, OR (b) compute a separate `construction_model_coverage_pct` that excludes skipped permits from the denominator. Option (b) is cleaner; the existing metric is meaningful only for construction-class permits anyway. | WF3 — observability calibration. |
+
+**Reviews rejected as misinformed:**
+- DeepSeek HIGH "`xmax=0` cannot distinguish insert/update" — actually works (existing pattern; live run reported 62 updates correctly).
+- DeepSeek MEDIUM "loadMarketplaceConfigs outside lock" — review missed that the calls ARE inside the `withAdvisoryLock` callback (compute-cost-estimates.js:202–227).
+- DeepSeek MEDIUM "pipeline.run + withAdvisoryLock nesting risk" — canonical SDK pattern; `pipeline.run` doesn't acquire its own lock.
+- DeepSeek NIT "Brain default to construction on missing field" — inverted concern; current code defaults to safe-skip (more conservative than the proposed fix).
+
+---
+
 ## 🔴 Maestro-First — Frontend Candidates (pull only on observed symptoms)
 
 **Pivot 2026-05-05:** session-end decision was to abandon speculative pre-Maestro patches (the FC1+FC2+FC3 batch I attempted at commit `3709025`, reverted via `2ccb8c0`). The right signal is running Maestro against the current architecture and fixing only what genuinely manifests. The candidates below remain open, scoped, and ready to pull from when matching symptoms appear in Maestro logs — but DO NOT pre-emptively patch.

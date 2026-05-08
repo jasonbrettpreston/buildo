@@ -147,11 +147,26 @@ function shouldAppendRealtor(permitClass) {
   return permitClass === CONSTRUCTION;
 }
 
+// ─── WF2 #3 (2026-05-08) — Cost-model gate per class ──────────────────────
+//
+// JS mirror of the TS-side `shouldApplyCostSlicing`. The Surgical Triangle
+// (Spec 83 §3) runs only for construction-class permits; all other classes
+// short-circuit to `cost_source = 'none'` to eliminate the $29M-for-2-signs
+// bug class. Parity regression-locked by permit-type-class.logic.test.ts.
+//
+// @param {string} permitClass
+// @returns {boolean}
+
+function shouldApplyCostSlicing(permitClass) {
+  return permitClass === CONSTRUCTION;
+}
+
 module.exports = {
   loadPermitTypeClassMap,
   classifyPermitType,
   filterTradesByClass,
   shouldAppendRealtor,
+  shouldApplyCostSlicing,
   PERMIT_TYPE_CLASSES,
   PERMIT_CLASS_TRADE_ALLOWLIST,
   CONSTRUCTION,

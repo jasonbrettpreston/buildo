@@ -301,4 +301,35 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     expect(content).not.toMatch(/modelCoveragePct >= 80\b/);
     expect(content).not.toMatch(/modelCoveragePct < 80\b/);
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // WF2 #3 (2026-05-08) — gate Surgical Triangle on permit_type_class
+  // (Spec 80 §5 + Spec 83 §3 + mig 120). Non-construction permits short-circuit
+  // to cost_source='none' to eliminate the $29M-for-2-signs bug class.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  it('SOURCE_SQL LEFT JOINs permit_type_classifications (WF2 #3 — Spec 83 §3)', () => {
+    expect(content).toMatch(/LEFT\s+JOIN\s+permit_type_classifications\b/i);
+  });
+
+  it('SOURCE_SQL selects permit_type_class with COALESCE fallback to "unclassified" (Spec 80 §5 default-discipline)', () => {
+    // Missing classification rows must fall back to 'unclassified' (safe-skip)
+    // — never NULL, never silently treated as 'construction'.
+    expect(content).toMatch(/COALESCE\([\s\S]*?ptc\.class[\s\S]*?,\s*['"]unclassified['"]\s*\)\s+AS\s+permit_type_class/i);
+  });
+
+  it('startup-guard throws when permit_type_classifications table is empty (Spec 47 §R5)', () => {
+    // A bad deploy that drops the lookup table silently treats every permit as
+    // unclassified, wiping all cost estimates. Refuse-to-run is the right default.
+    expect(content).toMatch(/permit_type_classifications[\s\S]*?(empty|refusing\s+to\s+run|0\s+rows)/i);
+  });
+
+  it('emitMeta declares permit_type_classifications as a NEW read-table dependency', () => {
+    const metaSection = content.split('pipeline.emitMeta(')[1] ?? '';
+    expect(metaSection).toContain('permit_type_classifications');
+  });
+
+  it('audit_table includes permit_type_class_skipped row (WF2 #3 telemetry — Spec 47 §R10)', () => {
+    expect(content).toMatch(/metric:\s*['"]permit_type_class_skipped['"]/);
+  });
 });

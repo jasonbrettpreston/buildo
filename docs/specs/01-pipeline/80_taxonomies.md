@@ -132,6 +132,26 @@ Realtor's "home will be sold" signal applies only to construction-class permits.
 
 **Behavioral expectation** post-WF2 #2: a re-run of `classify-permits.js` produces a different `permit_trades` row set for the 4.5% non-construction permit_types. Existing wrong rows for these permits become orphans; an explicit one-shot DELETE pass is filed as a follow-up WF3 (orphan cleanup is not part of WF2 #2 to keep the rollback boundary clean).
 
+### Cost-model behaviors (WF2 #3, 2026-05-08)
+
+`scripts/compute-cost-estimates.js` (the Muscle) and `src/features/leads/lib/cost-model-shared.js` (the Brain — single source of truth) gate the Surgical Triangle (Spec 83 §3) on `permit_type_class`. The Brain inlines the check (`row.permit_type_class === 'construction'`); both dual-path surfaces export a `shouldApplyCostSlicing(permitClass)` helper for downstream consumers and the parity test.
+
+| Class | Surgical Triangle applied? | `cost_source` | `estimated_cost` | `trade_contract_values` |
+|---|---|---|---|---|
+| `construction` | **YES** — full Spec 83 §3 path (GFA → Area_Eff → Liar's Gate) | `'permit'` / `'model'` / `'none'` (per existing branches) | per existing branches | per existing branches |
+| `signage` | NO — short-circuits BEFORE GFA | `'none'` | `null` | `{}` |
+| `administrative` | NO — short-circuits BEFORE GFA | `'none'` | `null` | `{}` |
+| `safety_upgrade` | NO — short-circuits BEFORE GFA | `'none'` | `null` | `{}` |
+| `unclassified` | NO — safe-skip default | `'none'` | `null` | `{}` |
+
+The short-circuit reuses the canonical Zero-Total-Bypass shape so downstream consumers don't need a new variant. `complexity_score` is still computed (preserves Spec 81 score-distribution telemetry); GFA / Area_Eff / Liar's Gate / trade valuation are skipped entirely.
+
+Eliminates the $29M-for-2-signs / $1.96B WESTON GOLF CLUB bug class where sign permits inherited host-building GFA through the Surgical Triangle. The reserved `signage` class will be unlocked once a future WF3 adds description-level subtype detection inside `Designated Structures` (1,081 of 1,781 rows are signs, but the same permit_type also covers solar/retaining walls/telecom).
+
+**SOURCE_SQL contract (the Muscle):** `compute-cost-estimates.js` adds `LEFT JOIN permit_type_classifications ptc ON ptc.permit_type = p.permit_type` with `COALESCE(ptc.class, 'unclassified') AS permit_type_class`. A startup guard refuses to run when the table is empty (Spec 47 §R5). `audit_table` gains a `permit_type_class_skipped` row reporting the count per run; `emitMeta` declares `permit_type_classifications` as a read dependency.
+
+**Behavioral expectation** post-WF2 #3: ~4.5% of permits (the non-construction tail) emit `cost_source='none'` on the next `compute-cost-estimates.js` run. Pre-existing wrong rows in `cost_estimates` become orphans (~10K rows); the orphan cleanup is filed as a separate WF3 (mirrors WF2 #2's clean rollback boundary).
+
 ---
 
 <testing>

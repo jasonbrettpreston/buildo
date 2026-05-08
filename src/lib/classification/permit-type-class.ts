@@ -114,3 +114,27 @@ export function filterTradesByClass<T extends { trade_slug: string }>(
 export function shouldAppendRealtor(permitClass: PermitTypeClass): boolean {
   return permitClass === CONSTRUCTION;
 }
+
+// ─── WF2 #3 (2026-05-08) — Cost-model gate per class ─────────────────────
+//
+// The Surgical Triangle (Spec 83 §3) only applies when permit_type_class is
+// 'construction'. Non-construction classes short-circuit the cost model to
+// `cost_source = 'none'` to eliminate the $29M-for-2-signs / $1.96B WESTON
+// GOLF CLUB bug class where sign permits inherited host-building GFA.
+//
+// Mirror lives at scripts/lib/permit-type-classifier.js (Spec 7 §7.1
+// dual-path); parity regression-locked by permit-type-class.logic.test.ts.
+
+/**
+ * True iff the cost model should run the Surgical Triangle for this class.
+ * Returns `true` only for 'construction'. All other classes (signage,
+ * administrative, safety_upgrade, unclassified) short-circuit to
+ * `cost_source = 'none'`.
+ *
+ * Branches on `permit_type_class` (DB-derived). Used by both the JS Brain
+ * (cost-model-shared.js) and the TS shim (cost-model.ts) — gating once at
+ * the Brain layer is sufficient because both surfaces delegate to it.
+ */
+export function shouldApplyCostSlicing(permitClass: PermitTypeClass): boolean {
+  return permitClass === CONSTRUCTION;
+}

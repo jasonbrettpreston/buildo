@@ -73,7 +73,8 @@ const SOURCE_SQL = `
     bf.estimated_stories,
     n.avg_household_income::float8        AS avg_household_income,
     n.tenure_renter_pct::float8           AS tenure_renter_pct,
-    COALESCE(pt.active_trades, ARRAY[]::text[]) AS active_trade_slugs
+    COALESCE(pt.active_trades, ARRAY[]::text[]) AS active_trade_slugs,
+    COALESCE(ptc.class, 'unclassified')   AS permit_type_class
   FROM permits p
   LEFT JOIN LATERAL (
     SELECT parcel_id
@@ -101,6 +102,10 @@ const SOURCE_SQL = `
     -- cost distribution requires the full classified trade set so declared
     -- costs on alteration permits are not silently discarded. (WF3-L2)
   ) pt ON true
+  -- WF2 #3 (Spec 80 §5 + Spec 83 §3): permit_type_classifications drives the
+  -- Surgical Triangle gate. COALESCE to 'unclassified' so missing/new
+  -- permit_types fall through to safe-skip (Brain emits cost_source='none').
+  LEFT JOIN permit_type_classifications ptc ON ptc.permit_type = p.permit_type
 `;
 
 // ─── Bulk UPSERT SQL builder ──────────────────────────────────────────────────
@@ -239,6 +244,17 @@ if (require.main === module) {
       `Pre-fetched ${tradeRatesRes.rows.length} trade rates, ${scopeMatrixRes.rows.length} matrix entries`,
     );
 
+    // WF2 #3 — startup guard (Spec 47 §R5): permit_type_classifications drives
+    // the Surgical Triangle gate. An empty table would silently treat every
+    // permit as 'unclassified' and wipe all cost_estimates rows. Refuse-to-run
+    // is the right default — apply migration 120 first.
+    const ptcCountRes = await pool.query('SELECT COUNT(*)::int AS n FROM permit_type_classifications');
+    if (ptcCountRes.rows[0].n === 0) {
+      throw new Error(
+        'permit_type_classifications table is empty — refusing to run; apply migration 120 first (WF2 #1, Spec 80 §5)',
+      );
+    }
+
     // ── 5. Build Brain config ──────────────────────────────────────────────
     const config = {
       tradeRates,
@@ -265,6 +281,7 @@ if (require.main === module) {
     let nullEstimates     = 0;
     let liarsGateOverrides  = 0;
     let zeroTotalBypasses   = 0;
+    let permitTypeClassSkipped = 0; // WF2 #3 — Spec 80 §5 / Spec 83 §3 gate
     let batch = [];
 
     try {
@@ -281,6 +298,7 @@ if (require.main === module) {
         if (estimate.estimated_cost == null) nullEstimates++;
         if (estimate._liarsGateOverride) liarsGateOverrides++;
         if (estimate._zeroTotalBypass)   zeroTotalBypasses++;
+        if (estimate._permitTypeClassSkipped) permitTypeClassSkipped++;
 
         if (batch.length >= BATCH_SIZE) {
           try {
@@ -372,6 +390,7 @@ if (require.main === module) {
       { metric: 'permits_skipped_unchanged', value: skipped,            threshold: null,    status: 'INFO' },
       { metric: 'liar_gate_overrides',       value: liarsGateOverrides, threshold: null,    status: 'INFO' },
       { metric: 'zero_total_bypass',         value: zeroTotalBypasses,  threshold: null,    status: 'INFO' },
+      { metric: 'permit_type_class_skipped', value: permitTypeClassSkipped, threshold: null, status: 'INFO' },
       { metric: 'model_coverage_pct',        value: modelCoveragePct.toFixed(1) + '%', threshold: `>= ${logicVars.cost_model_coverage_warn_pct}%`, status: modelCoveragePct >= logicVars.cost_model_coverage_warn_pct ? 'PASS' : 'WARN' },
     ];
     if (failedRows > 0) {
@@ -407,6 +426,7 @@ if (require.main === module) {
         neighbourhoods:         ['neighbourhood_id', 'avg_household_income', 'tenure_renter_pct'],
         trade_sqft_rates:       ['trade_slug', 'base_rate_sqft', 'structure_complexity_factor'],
         scope_intensity_matrix: ['permit_type', 'structure_type', 'gfa_allocation_percentage'],
+        permit_type_classifications: ['permit_type', 'class'],
       },
       {
         cost_estimates: [

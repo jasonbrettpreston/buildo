@@ -44,6 +44,7 @@
  * @property {number|null}   avg_household_income
  * @property {number|null}   dwelling_units_created
  * @property {string[]}      active_trade_slugs  — all classified trades from permit_trades LATERAL JOIN (phase-agnostic for cost distribution)
+ * @property {string|null}   [permit_type_class] — Spec 80 §5 taxonomy ('construction' | 'signage' | 'administrative' | 'safety_upgrade' | 'unclassified'). When != 'construction' the Brain short-circuits to cost_source='none' (Spec 83 §3, WF2 #3). Production callers always supply via SOURCE_SQL JOIN with COALESCE → 'unclassified' default.
  */
 
 /**
@@ -126,6 +127,12 @@ const FALLBACK_COMMERCIAL_FLOORS = 1;
 
 /** model_version written to cost_estimates — signals surgical formula. */
 const MODEL_VERSION = 2;
+
+/**
+ * permit_type_class value (Spec 80 §5) for which the Surgical Triangle runs.
+ * All other classes short-circuit to cost_source='none' per Spec 83 §3 (WF2 #3).
+ */
+const COST_SLICING_CLASS = 'construction';
 
 /** Default premium tiers used when config.premiumTiers is not supplied. */
 const DEFAULT_PREMIUM_TIERS = [
@@ -468,6 +475,39 @@ function determineCostTier(cost) {
  * @returns {CostEstimate}
  */
 function estimateCostShared(row, config) {
+  // ── WF2 #3 — permit_type_class gate (Spec 80 §5 + Spec 83 §3) ──────────
+  // Short-circuit non-construction permits BEFORE running Step A (GFA),
+  // Step B (Area_Eff), Step C (trade valuation), or Step D (Liar's Gate).
+  // Eliminates the $29M-for-2-signs bug class where sign permits inherit
+  // host-building GFA through the Surgical Triangle. Production SOURCE_SQL
+  // uses COALESCE(ptc.class, 'unclassified') so this is never silently NULL.
+  if (row.permit_type_class !== COST_SLICING_CLASS) {
+    // premium_factor + complexity_score are properties of the permit's
+    // location/characteristics, not of the cost model itself — compute them
+    // for telemetry consistency (Gemini WF2 #3 review). The actual surgical
+    // valuation steps (GFA → Area_Eff → trade rates → Liar's Gate) are
+    // skipped because the Surgical Triangle does not apply to this class.
+    return {
+      permit_num:             row.permit_num,
+      revision_num:           row.revision_num,
+      estimated_cost:         null,
+      cost_source:            'none',
+      cost_tier:              null,
+      cost_range_low:         null,
+      cost_range_high:        null,
+      premium_factor:         computePremiumFactor(row.avg_household_income, config),
+      complexity_score:       computeComplexityScore(row),
+      is_geometric_override:  false,
+      modeled_gfa_sqm:        null,
+      effective_area_sqm:     null,
+      trade_contract_values:  {},
+      _liarsGateOverride:     false,
+      _zeroTotalBypass:       false,
+      _usedFallback:          false,
+      _permitTypeClassSkipped: true,
+    };
+  }
+
   // ── Input sanitization (spec 83 §3 Step 1 — W12, W21) ──────────────────
   const rawCost = Number.isFinite(row.est_const_cost) ? row.est_const_cost : null;
 

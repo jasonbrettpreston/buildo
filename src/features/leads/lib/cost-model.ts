@@ -9,6 +9,7 @@
 //
 // Pure function — no DB, no side effects, no throws on well-typed input.
 
+import type { PermitTypeClass } from '@/lib/classification/permit-type-class';
 import type { CostEstimate, CostSource, CostTier } from '@/lib/permits/types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -45,6 +46,14 @@ export interface CostModelPermitInput {
   storeys: number | null;
   /** Surgical path only — trade slugs with active permit_trades rows */
   active_trade_slugs?: string[];
+  /**
+   * Spec 80 §5 taxonomy. WF2 #3: when != 'construction' the cost model
+   * short-circuits to `cost_source = 'none'` (no Surgical Triangle).
+   * Production callers receive this from the SOURCE_SQL JOIN with
+   * COALESCE(ptc.class, 'unclassified'). May be null when no classification
+   * is available (defensive — Brain treats null as safe-skip).
+   */
+  permit_type_class?: PermitTypeClass | null;
 }
 
 export interface CostModelParcelInput {
@@ -462,6 +471,7 @@ export function estimateCost(
       avg_household_income: neighbourhood?.avg_household_income ?? null,
       tenure_renter_pct: neighbourhood?.tenure_renter_pct ?? null,
       active_trade_slugs: permit.active_trade_slugs ?? [],
+      permit_type_class: permit.permit_type_class ?? null,
     };
     const brainConfig: Record<string, unknown> = {
       tradeRates: config.tradeRates,

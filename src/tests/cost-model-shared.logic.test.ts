@@ -89,6 +89,10 @@ function makeRow(overrides = {}) {
     avg_household_income: 80000,
     dwelling_units_created: 1,
     active_trade_slugs: ['plumbing', 'electrical'],
+    // WF2 #3 (Spec 80 §5 + Spec 83 §3): all existing fixtures default to
+    // 'construction' so the Surgical Triangle keeps running. Non-construction
+    // fixtures override explicitly to test the gate.
+    permit_type_class: 'construction',
     ...overrides,
   };
 }
@@ -527,5 +531,108 @@ describe('estimateCostShared — integration', () => {
     expect(result).toHaveProperty('modeled_gfa_sqm');
     expect(result).toHaveProperty('effective_area_sqm');
     expect(result).toHaveProperty('trade_contract_values');
+  });
+});
+
+// ─── WF2 #3 — permit_type_class gate (Spec 80 §5 + Spec 83 §3) ──────────────
+//
+// Brain short-circuits BEFORE Step A (GFA) / Step B (Area_Eff) / Step C (trades) /
+// Step D (Liar's Gate) when permit_type_class !== 'construction'. The cost
+// model only applies the Surgical Triangle for the 95.5% construction tail
+// per Spec 80 §5 coverage stats. Eliminates the $29M-for-2-signs bug class.
+
+describe('estimateCostShared — WF2 #3 permit_type_class gate', () => {
+  it('administrative class → cost_source="none" despite valid massing + active trades', () => {
+    const row = makeRow({ permit_type_class: 'administrative' });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result.cost_source).toBe('none');
+    expect(result.estimated_cost).toBeNull();
+    expect(result.trade_contract_values).toEqual({});
+    expect(result.is_geometric_override).toBe(false);
+    expect(result.effective_area_sqm).toBeNull();
+  });
+
+  it('signage class → cost_source="none" (the $29M-for-2-signs bug class)', () => {
+    // Sign permit on a tall commercial structure: rich massing, active trades,
+    // low reported cost — pre-gate this would emit a Liar\'s Gate override
+    // estimate in the millions. Post-gate: clean 'none'.
+    const row = makeRow({
+      permit_type: 'designated structures',
+      structure_type: 'commercial',
+      footprint_area_sqm: 5000,
+      estimated_stories: 30,
+      est_const_cost: 5000,
+      active_trade_slugs: ['electrical', 'structural-steel'],
+      permit_type_class: 'signage',
+    });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result.cost_source).toBe('none');
+    expect(result.estimated_cost).toBeNull();
+  });
+
+  it('safety_upgrade class → cost_source="none" (limited-scope fire/security upgrades)', () => {
+    const row = makeRow({
+      permit_type: 'fire/security upgrade',
+      structure_type: 'multi-residential',
+      est_const_cost: 50000,
+      active_trade_slugs: ['electrical', 'fire-protection'],
+      permit_type_class: 'safety_upgrade',
+    });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result.cost_source).toBe('none');
+    expect(result.estimated_cost).toBeNull();
+  });
+
+  it('unclassified class → cost_source="none" (safe-skip default per Spec 80 §5)', () => {
+    const row = makeRow({ permit_type_class: 'unclassified' });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result.cost_source).toBe('none');
+    expect(result.estimated_cost).toBeNull();
+  });
+
+  it('null permit_type_class → cost_source="none" (defense in depth)', () => {
+    // Production callers should never pass null (SOURCE_SQL uses COALESCE to
+    // 'unclassified'), but the Brain treats null/undefined as safe-skip too.
+    const row = makeRow({ permit_type_class: null });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result.cost_source).toBe('none');
+  });
+
+  it('undefined permit_type_class → cost_source="none" (defense in depth)', () => {
+    const row = makeRow({ permit_type_class: undefined });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result.cost_source).toBe('none');
+  });
+
+  it('construction class → Surgical Triangle still runs (regression-lock for the gate polarity)', () => {
+    const row = makeRow({
+      permit_type: 'new building',
+      structure_type: 'sfd',
+      active_trade_slugs: ['plumbing', 'electrical'],
+      permit_type_class: 'construction',
+    });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    // Construction class with valid trades + massing must produce a non-'none'
+    // result. Catches a future regression where the gate flips polarity.
+    expect(result.cost_source).not.toBe('none');
+    expect(result.estimated_cost).toBeGreaterThan(0);
+    expect(result.effective_area_sqm).toBeGreaterThan(0);
+  });
+
+  it('non-construction returns the canonical Zero-Total-Bypass shape (same fields as before)', () => {
+    // The short-circuit must reuse the existing 'none' shape so downstream
+    // consumers don't need to handle a new variant.
+    const row = makeRow({ permit_type_class: 'administrative' });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result).toMatchObject({
+      cost_source: 'none',
+      estimated_cost: null,
+      cost_tier: null,
+      is_geometric_override: false,
+      trade_contract_values: {},
+    });
+    // permit_num + revision_num still echo through (caller correlation).
+    expect(result.permit_num).toBe('P-TEST-001');
+    expect(result.revision_num).toBe('00');
   });
 });

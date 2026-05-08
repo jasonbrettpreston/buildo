@@ -36,6 +36,7 @@ import {
   PERMIT_CLASS_TRADE_ALLOWLIST,
   filterTradesByClass,
   shouldAppendRealtor,
+  shouldApplyCostSlicing,
 } from '@/lib/classification/permit-type-class';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -254,4 +255,46 @@ describe('shouldAppendRealtor — gates realtor on construction class only', () 
   it('unclassified → false (safe-skip default)', () => {
     expect(shouldAppendRealtor('unclassified')).toBe(false);
   });
+});
+
+// ─── WF2 #3 (2026-05-08) — cost-model gating helper ───────────────────────
+
+describe('shouldApplyCostSlicing — gates Surgical Triangle on construction only (Spec 83 §3)', () => {
+  it('construction → true (full Surgical Triangle applies)', () => {
+    expect(shouldApplyCostSlicing('construction')).toBe(true);
+  });
+
+  it('signage → false (sign permits inherit host-building GFA — $29M-for-2-signs bug class)', () => {
+    expect(shouldApplyCostSlicing('signage')).toBe(false);
+  });
+
+  it('administrative → false (fee deferrals / certificates of occupancy have no construction scope)', () => {
+    expect(shouldApplyCostSlicing('administrative')).toBe(false);
+  });
+
+  it('safety_upgrade → false (limited-scope fire/security upgrades — no GFA slicing)', () => {
+    expect(shouldApplyCostSlicing('safety_upgrade')).toBe(false);
+  });
+
+  it('unclassified → false (safe-skip default per Spec 80 §5)', () => {
+    expect(shouldApplyCostSlicing('unclassified')).toBe(false);
+  });
+});
+
+describe('shouldApplyCostSlicing — JS↔TS surface parity (Spec 7 §7.1)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const jsHelper = require('../../scripts/lib/permit-type-classifier') as {
+    shouldApplyCostSlicing: (cls: string) => boolean;
+  };
+
+  it('JS helper exports shouldApplyCostSlicing', () => {
+    expect(typeof jsHelper.shouldApplyCostSlicing).toBe('function');
+  });
+
+  it.each([...PERMIT_TYPE_CLASSES])(
+    'JS and TS agree on shouldApplyCostSlicing(%s)',
+    (cls) => {
+      expect(jsHelper.shouldApplyCostSlicing(cls)).toBe(shouldApplyCostSlicing(cls));
+    },
+  );
 });

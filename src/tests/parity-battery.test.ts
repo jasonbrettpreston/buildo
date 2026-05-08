@@ -93,6 +93,11 @@ interface ParityInput {
  * Flatten the 4-object TS input into the flat PermitRow shape the Brain expects.
  */
 function toRow(input: ParityInput): Record<string, unknown> {
+  // `permit_type_class` is read off the permit fixture via index access so this
+  // helper works for both pre-R5 inputs (no field) and post-R5 inputs (with the
+  // CostModelPermitInput field). Production callers always supply the value via
+  // the SOURCE_SQL JOIN (Spec 80 §5 default-discipline → 'unclassified').
+  const ptc = (input.permit as unknown as Record<string, unknown>).permit_type_class;
   return {
     permit_num:            input.permit.permit_num,
     revision_num:          input.permit.revision_num,
@@ -104,6 +109,7 @@ function toRow(input: ParityInput): Record<string, unknown> {
     storeys:               input.permit.storeys,
     dwelling_units_created:input.permit.dwelling_units_created,
     active_trade_slugs:    input.permit.active_trade_slugs ?? [],
+    permit_type_class:     ptc === undefined ? 'construction' : ptc,
     footprint_area_sqm:    input.footprint?.footprint_area_sqm ?? null,
     estimated_stories:     input.footprint?.estimated_stories ?? null,
     lot_size_sqm:          input.parcel?.lot_size_sqm ?? null,
@@ -140,7 +146,18 @@ function assertParity(input: ParityInput, label: string) {
 }
 
 // ─── Fixture factory helpers ─────────────────────────────────────────────────
-function makePermit(overrides: Partial<CostModelPermitInput> & Pick<CostModelPermitInput, 'permit_num'>): CostModelPermitInput {
+// `permit_type_class` is widened with `& { permit_type_class?: ... }` so the
+// factory can default it to 'construction' for existing fixtures (preserves
+// today's surgical behavior) and accept non-construction overrides for the
+// WF2 #3 gate tests below. Once R5 lands the field on CostModelPermitInput,
+// this widening collapses into a clean Partial<CostModelPermitInput>.
+type PermitTypeClassValue = 'construction' | 'signage' | 'administrative' | 'safety_upgrade' | 'unclassified';
+type MakePermitOverrides =
+  & Partial<CostModelPermitInput>
+  & Pick<CostModelPermitInput, 'permit_num'>
+  & { permit_type_class?: PermitTypeClassValue | null };
+
+function makePermit(overrides: MakePermitOverrides): CostModelPermitInput & { permit_type_class: PermitTypeClassValue | null } {
   return {
     permit_num: overrides.permit_num,
     revision_num: overrides.revision_num ?? '00',
@@ -152,6 +169,9 @@ function makePermit(overrides: Partial<CostModelPermitInput> & Pick<CostModelPer
     dwelling_units_created: overrides.dwelling_units_created ?? null,
     storeys: overrides.storeys ?? null,
     active_trade_slugs: overrides.active_trade_slugs ?? [],
+    // WF2 #3: default to 'construction' so existing fixtures keep their surgical
+    // path. Non-construction fixtures override explicitly to test the gate.
+    permit_type_class: overrides.permit_type_class === undefined ? 'construction' : overrides.permit_type_class,
   };
 }
 
@@ -653,5 +673,141 @@ describe('parity-battery — Edge cases and null guards', () => {
       expect(ts.cost_range_low).toBe(Math.round(ts.estimated_cost * 0.75));
       expect(ts.cost_range_high).toBe(Math.round(ts.estimated_cost * 1.25));
     }
+  });
+});
+
+// ─── WF2 #3 — permit_type_class gate (Spec 80 §5 + Spec 83 §3) ──────────────
+//
+// Non-construction permits short-circuit to cost_source='none' BEFORE the
+// Surgical Triangle runs. Eliminates the $29M-for-2-signs / $1.96B WESTON
+// GOLF CLUB bug class where sign permits inherit host-building GFA.
+//
+// Both surfaces (TS shim via estimateCost + JS Brain via estimateCostShared)
+// must produce IDENTICAL cost_source='none' output for every non-construction
+// class. The TS shim's surgical-brain branch passes permit_type_class through
+// to the Brain, so single source of truth is preserved.
+
+describe('parity-battery — WF2 #3 permit_type_class gate (cost_source="none" for non-construction)', () => {
+  it('C-PCG-01: administrative class short-circuits despite valid massing + active trades', () => {
+    const input: ParityInput = {
+      permit: makePermit({
+        permit_num: 'C-PCG-01',
+        permit_type: 'pre-permit',
+        structure_type: 'sfd',
+        active_trade_slugs: ['plumbing', 'electrical'],
+        permit_type_class: 'administrative',
+      }),
+      parcel: GOOD_PARCEL, footprint: GOOD_FOOTPRINT, neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParity(input, 'C-PCG-01');
+
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, SHARED_CONFIG);
+    expect(ts.cost_source).toBe('none');
+    expect(ts.estimated_cost).toBeNull();
+    expect(ts.trade_contract_values).toEqual({});
+    expect(ts.is_geometric_override).toBe(false);
+  });
+
+  it('C-PCG-02: signage class short-circuits (sign permits do NOT inherit host-building GFA)', () => {
+    // The original $29M ZARA two-wall-signs bug: sign permit on a commercial
+    // tower inherited the entire structure's footprint × stories. Gate ensures
+    // signage class never reaches the Surgical Triangle even with rich massing.
+    const input: ParityInput = {
+      permit: makePermit({
+        permit_num: 'C-PCG-02',
+        permit_type: 'designated structures',
+        structure_type: 'commercial',
+        est_const_cost: 5_000,
+        active_trade_slugs: ['electrical', 'structural-steel'],
+        permit_type_class: 'signage',
+      }),
+      parcel: { lot_size_sqm: 5_000, frontage_m: 80 },
+      footprint: { footprint_area_sqm: 5_000, estimated_stories: 30 },
+      neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParity(input, 'C-PCG-02');
+
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, SHARED_CONFIG);
+    expect(ts.cost_source).toBe('none');
+    expect(ts.estimated_cost).toBeNull();
+  });
+
+  it('C-PCG-03: safety_upgrade class short-circuits (limited-scope fire/security upgrades)', () => {
+    const input: ParityInput = {
+      permit: makePermit({
+        permit_num: 'C-PCG-03',
+        permit_type: 'fire/security upgrade',
+        structure_type: 'multi-residential',
+        est_const_cost: 50_000,
+        active_trade_slugs: ['electrical', 'fire-protection'],
+        permit_type_class: 'safety_upgrade',
+      }),
+      parcel: GOOD_PARCEL, footprint: GOOD_FOOTPRINT, neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParity(input, 'C-PCG-03');
+
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, SHARED_CONFIG);
+    expect(ts.cost_source).toBe('none');
+    expect(ts.estimated_cost).toBeNull();
+  });
+
+  it('C-PCG-04: unclassified class short-circuits (safe-skip default per Spec 80 §5)', () => {
+    const input: ParityInput = {
+      permit: makePermit({
+        permit_num: 'C-PCG-04',
+        permit_type: 'partial permit',
+        structure_type: 'sfd',
+        active_trade_slugs: ['plumbing'],
+        permit_type_class: 'unclassified',
+      }),
+      parcel: GOOD_PARCEL, footprint: GOOD_FOOTPRINT, neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParity(input, 'C-PCG-04');
+
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, SHARED_CONFIG);
+    expect(ts.cost_source).toBe('none');
+    expect(ts.estimated_cost).toBeNull();
+  });
+
+  it('C-PCG-05: null permit_type_class short-circuits (DB column nullable defensive default)', () => {
+    // Edge case: SOURCE_SQL uses COALESCE(ptc.class, 'unclassified') so this
+    // shouldn't happen in production, but the Brain treats null/undefined as
+    // safe-skip too (defense in depth).
+    const input: ParityInput = {
+      permit: makePermit({
+        permit_num: 'C-PCG-05',
+        permit_type: 'new building',
+        structure_type: 'sfd',
+        active_trade_slugs: ['plumbing'],
+        permit_type_class: null,
+      }),
+      parcel: GOOD_PARCEL, footprint: GOOD_FOOTPRINT, neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParity(input, 'C-PCG-05');
+
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, SHARED_CONFIG);
+    expect(ts.cost_source).toBe('none');
+  });
+
+  it('C-PCG-06: construction class with identical inputs DOES run the Surgical Triangle (regression-lock)', () => {
+    // Mirror of C-PCG-04 but flipped to construction — the same shape MUST
+    // produce a non-'none' result. Catches a future regression where the gate
+    // accidentally flips polarity.
+    const input: ParityInput = {
+      permit: makePermit({
+        permit_num: 'C-PCG-06',
+        permit_type: 'new building',
+        structure_type: 'sfd',
+        active_trade_slugs: ['plumbing'],
+        permit_type_class: 'construction',
+      }),
+      parcel: GOOD_PARCEL, footprint: GOOD_FOOTPRINT, neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParity(input, 'C-PCG-06');
+
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, SHARED_CONFIG);
+    expect(ts.cost_source).not.toBe('none');
+    expect(ts.estimated_cost).not.toBeNull();
+    expect((ts.estimated_cost ?? 0)).toBeGreaterThan(0);
   });
 });
