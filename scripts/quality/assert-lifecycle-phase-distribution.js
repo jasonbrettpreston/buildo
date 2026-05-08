@@ -241,9 +241,18 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
   // classifier uses more accurate date math. Holding the new logic
   // hostage to legacy bugs produces false FAILs. Downgraded to WARN
   // with a threshold of 1000 before escalating to FAIL.
+  // WF3 2026-05-08 — silent-failure-mode hardening (Spec 84 §3.5 + Spec 47 §10.3 + Spec 85 §3.5):
+  //   - `lifecycle_stalled IS NOT TRUE` (NULL-safe; consistent with cross-checks #2/#3 below)
+  //   - `LOWER(enriched_status)` (case-insensitive; consistent with the CoA unclassified
+  //      query at ~L195 which uses `lower(trim(...))` on `decision`)
+  // Today `lifecycle_stalled` is `BOOLEAN NOT NULL DEFAULT false` (mig 085) and the
+  // legacy classifier only writes `'Stalled'` — neither variant manifests in current
+  // data. The fix regression-locks the query against any future schema relaxation or
+  // operator-driven case drift, before downstream consumers (Spec 85 trade-forecast
+  // engine) compound on bad state.
   const { rows: crossCheck1 } = await pool.query(
     `SELECT COUNT(*)::int AS n FROM permits
-      WHERE enriched_status = 'Stalled' AND lifecycle_stalled = false`,
+      WHERE LOWER(enriched_status) = 'stalled' AND lifecycle_stalled IS NOT TRUE`,
   );
   const crossStalled = crossCheck1[0].n;
   const stalledStatus = crossStalled === 0
@@ -274,9 +283,11 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
   // branch (orphan trade permits with status='Inspection' get routed
   // to O2/O3 by the decision tree — that's correct behavior, not a
   // classification failure). Also includes IS NULL guard per WF3 Bug #7.
+  // WF3 2026-05-08 — `LOWER(enriched_status)` for the same case-insensitivity reason
+  // as cross-check #1 (sibling concern, same root cause).
   const { rows: crossCheck2 } = await pool.query(
     `SELECT COUNT(*)::int AS n FROM permits
-      WHERE enriched_status = 'Active Inspection'
+      WHERE LOWER(enriched_status) = 'active inspection'
         AND (lifecycle_phase NOT IN (
           'P9','P10','P11','P12','P13','P14','P15','P16','P17','P18',
           'O1','O2','O3'
@@ -304,9 +315,10 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
   }
 
   // Cross-check 3: same orphan inclusion + IS NULL guard as cross-check 2.
+  // WF3 2026-05-08 — `LOWER(enriched_status)` (sibling concern from cross-check #1).
   const { rows: crossCheck3 } = await pool.query(
     `SELECT COUNT(*)::int AS n FROM permits
-      WHERE enriched_status = 'Permit Issued'
+      WHERE LOWER(enriched_status) = 'permit issued'
         AND (lifecycle_phase NOT IN ('P7a','P7b','P7c','P7d','P8','P18',
              'O1','O2','O3')
              OR lifecycle_phase IS NULL)`,

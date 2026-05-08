@@ -85,4 +85,62 @@ describe('assert-lifecycle-phase-distribution.js — unclassified threshold exte
     expect(SEED.lifecycle_cross_active_inspection_threshold).toBeDefined();
     expect(SEED.lifecycle_cross_issued_threshold).toBeDefined();
   });
+
+  it('cross-check #1 (Stalled drift) handles NULL + case (WF3 2026-05-08)', () => {
+    // Spec 84 §3.5 + Spec 47 §10.3 + Spec 85 §3.5 — silent-failure-mode hardening.
+    //
+    // Two silent-failure modes the original query had:
+    //   1. `lifecycle_stalled = false` excludes NULL rows via SQL three-valued logic.
+    //      Even though the column is currently NOT NULL (mig 085), this regression-locks
+    //      the query against a future schema relaxation. Cross-checks #2/#3 already
+    //      adopted the equivalent `OR ... IS NULL` shape; this aligns #1.
+    //   2. `enriched_status = 'Stalled'` is case-sensitive. Mixed-case DB drift would
+    //      silently miss rows. `LOWER(enriched_status)` is consistent with the existing
+    //      CoA unclassified query at line ~195 (`lower(trim(...))`).
+    //
+    // Locate cross-check #1 — it's the single SELECT that joins `enriched_status` (any
+    // case) and `lifecycle_stalled`. Use a multiline regex to pull the WHERE clause.
+    const crossStalled = SRC.match(
+      /SELECT[\s\S]*?lifecycle_stalled[\s\S]*?(?=`,)/i,
+    );
+    if (!crossStalled) throw new Error('cross-check #1 query block not found in source');
+    const block = crossStalled[0];
+
+    // Required: NULL-safe predicate on lifecycle_stalled.
+    // Accept either `IS NOT TRUE` or an explicit `(... = false OR ... IS NULL)`.
+    const hasNullSafePredicate =
+      /lifecycle_stalled\s+IS\s+NOT\s+TRUE/i.test(block) ||
+      /\blifecycle_stalled\s*=\s*false\s+OR\s+lifecycle_stalled\s+IS\s+NULL/i.test(block);
+    expect(
+      hasNullSafePredicate,
+      'cross-check #1 must use `lifecycle_stalled IS NOT TRUE` (or equivalent NULL-safe form). ' +
+        'Bare `= false` silently excludes NULL rows via SQL three-valued logic.',
+    ).toBe(true);
+
+    // Required: case-insensitive predicate on enriched_status (LOWER() or canonical-array).
+    const hasCaseInsensitiveStatus =
+      /LOWER\s*\(\s*enriched_status\s*\)\s*=\s*'stalled'/i.test(block) ||
+      /LOWER\s*\(\s*enriched_status\s*\)\s*IN\s*\(/i.test(block);
+    expect(
+      hasCaseInsensitiveStatus,
+      'cross-check #1 must compare `LOWER(enriched_status)` against a lowercase literal. ' +
+        'Bare `enriched_status = \'Stalled\'` silently misses mixed-case rows.',
+    ).toBe(true);
+
+    // Negative regression-lock — the old shape MUST NOT reappear.
+    expect(block).not.toMatch(/lifecycle_stalled\s*=\s*false(?!\s+OR)/i);
+    expect(block).not.toMatch(/enriched_status\s*=\s*'Stalled'/);
+  });
+
+  it('cross-checks #2 and #3 also use case-insensitive enriched_status (WF3 2026-05-08 sibling concern)', () => {
+    // Same case-sensitivity gap as #1 — extending the fix to the whole class
+    // per WF3 protocol Pre-Review Self-Checklist ("fixed the symptom, missed
+    // the class" antipattern).
+    expect(SRC).toMatch(/LOWER\s*\(\s*enriched_status\s*\)\s*=\s*'active inspection'/i);
+    expect(SRC).toMatch(/LOWER\s*\(\s*enriched_status\s*\)\s*=\s*'permit issued'/i);
+    // Negative regression-lock — scoped to SQL `WHERE` context to avoid matching
+    // error-message templates (which legitimately contain the literal phrase).
+    expect(SRC).not.toMatch(/WHERE\s+enriched_status\s*=\s*'Active Inspection'/);
+    expect(SRC).not.toMatch(/WHERE\s+enriched_status\s*=\s*'Permit Issued'/);
+  });
 });

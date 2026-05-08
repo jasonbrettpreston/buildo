@@ -398,3 +398,15 @@ Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of the W
 
 **False positive (worktree code-reviewer):** "migration file missing on disk" — caused by worktree isolation not picking up untracked files. Confirmed present + applied to dev DB (`INSERT 0 39`); assert script ran end-to-end with all 18 bands PASS.
 
+---
+
+## Spec 47/84/85 — WF3 Cross-Check Hygiene Review Deferred Items (2026-05-08)
+
+Source: WF3 worktree code-reviewer of the cross-check #1 NULL + case-hygiene fix (also extended `LOWER()` to cross-checks #2 and #3).
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| MEDIUM | worktree code-reviewer (Spec 47 §10.2) | **Inline `LOWER('stalled')` / `'active inspection'` / `'permit issued'` literals across three SQL strings — should be promoted to shared constants in `scripts/lib/lifecycle-phase.js`.** That module already exports `DEAD_STATUS_ARRAY`, `NORMALIZED_DEAD_DECISIONS_ARRAY`, etc. — designated single-source-of-truth for status vocabulary. If canonical casing of `enriched_status` ever changes, all three cross-checks silently stop matching. | Plan-lock pre-decided this as out of scope. The cleanest shape is a `STATUS_*` constant set used by both writer (`scripts/classify-inspection-status.js`) and readers (this assert script); writer-side changes plus their test surface exceed WF3 scope. **Promote to a future WF2** if either the writer's canonical casing changes OR if a third reader of `enriched_status` appears in the codebase. |
+
+**False positive (worktree code-reviewer):** "test file is missing the 2 new `it()` blocks" — caused by worktree isolation not picking up uncommitted working-tree changes. Confirmed locally: 2 new `it()` blocks present (`grep -c "WF3 2026-05-08" → 2`); `npx vitest run` reports 8/8 passing including both new blocks.
+
