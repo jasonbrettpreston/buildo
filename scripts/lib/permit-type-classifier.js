@@ -96,10 +96,64 @@ function classifyPermitType(classMap, permitType) {
   return classMap.get(permitType) ?? UNCLASSIFIED;
 }
 
+// ─── WF2 #2 (2026-05-08) — Trade allowlist per class ──────────────────────
+//
+// JS mirror of the TS-side allowlist (src/lib/classification/permit-type-class.ts).
+// Both surfaces consume identical policy keys; parity regression-locked by
+// src/tests/permit-type-class.logic.test.ts.
+//
+// Policy values:
+//   'all'  — full pass-through (construction)
+//   'none' — empty result (administrative, unclassified)
+//   array  — narrow trade allowlist (signage, safety_upgrade)
+
+const PERMIT_CLASS_TRADE_ALLOWLIST = Object.freeze({
+  construction: 'all',
+  signage: Object.freeze(['electrical', 'structural-steel']),
+  administrative: 'none',
+  safety_upgrade: Object.freeze(['electrical', 'fire-protection']),
+  unclassified: 'none',
+});
+
+/**
+ * Filter a TradeMatch-shaped array by the per-class allowlist. Any element
+ * with a `trade_slug` field is supported.
+ *
+ * @template T
+ * @param {T[]} matches
+ * @param {string} permitClass
+ * @returns {T[]}
+ */
+function filterTradesByClass(matches, permitClass) {
+  const policy = PERMIT_CLASS_TRADE_ALLOWLIST[permitClass];
+  if (policy === 'all') return matches;
+  if (policy === 'none') return [];
+  if (Array.isArray(policy)) {
+    const allowed = new Set(policy);
+    return matches.filter((m) => allowed.has(m.trade_slug));
+  }
+  // Unknown policy value — defensive: treat as 'none' (safe-skip).
+  return [];
+}
+
+/**
+ * Realtor's "home will be sold" signal applies only to construction-class
+ * permits. Mirror of TS-side `shouldAppendRealtor`.
+ *
+ * @param {string} permitClass
+ * @returns {boolean}
+ */
+function shouldAppendRealtor(permitClass) {
+  return permitClass === CONSTRUCTION;
+}
+
 module.exports = {
   loadPermitTypeClassMap,
   classifyPermitType,
+  filterTradesByClass,
+  shouldAppendRealtor,
   PERMIT_TYPE_CLASSES,
+  PERMIT_CLASS_TRADE_ALLOWLIST,
   CONSTRUCTION,
   SIGNAGE,
   ADMINISTRATIVE,

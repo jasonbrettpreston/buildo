@@ -13,6 +13,11 @@
 
 const pipeline = require('./lib/pipeline');
 const { checkRealtorAvailable } = require('./lib/pipeline-realtor-availability');
+// WF2 #2 (mig 120 / Spec 80 §5) — gate the tag-trade matrix on permit_type_class.
+const {
+  loadPermitTypeClassMap,
+  classifyPermitType,
+} = require('./lib/permit-type-classifier');
 
 // §R2 — Advisory lock ID (spec 80)
 const ADVISORY_LOCK_ID = 80;
@@ -50,6 +55,13 @@ pipeline.run('reclassify-all', async (pool) => {
       'Realtor trade row (trades.id=33) NOT FOUND — apply migration 118_realtor_trade.sql to enable realtor classification. Continuing with construction-trade classification only.',
     );
   }
+
+  // WF2 #2 — load permit_type → class map at startup (Spec 47 §R5).
+  const permitClassMap = await loadPermitTypeClassMap(pool);
+  pipeline.log.info(
+    '[reclassify-all]',
+    `Loaded ${permitClassMap.size} permit_type class entries`,
+  );
 
   // Load active Tier 1 rules from DB (or use in-memory ALL_RULES)
   const { rows: dbRules } = await pool.query(
@@ -108,7 +120,11 @@ pipeline.run('reclassify-all', async (pool) => {
           const scope = classifyScope(permit);
 
           // 2. Classify trades using tag matrix
-          const matches = classifyPermit(permit, rules, scope.scope_tags, { realtorAvailable });
+          // WF2 #2 — thread permitClass so non-construction permit_types
+          // get filtered (administrative/unclassified → empty; safety_upgrade
+          // → narrow; signage → narrow + reserved).
+          const permitClass = classifyPermitType(permitClassMap, permit.permit_type);
+          const matches = classifyPermit(permit, rules, scope.scope_tags, { realtorAvailable, permitClass });
 
           // 3. Classify products
           const products = classifyProducts(permit, scope.scope_tags);

@@ -372,7 +372,7 @@ describe('classifyPermit - Tag Matrix Integration', () => {
       work: 'New Building',
     });
     const tags = ['new:build-sfd', 'new:kitchen', 'new:bathroom'];
-    const matches = classifyPermit(permit, ALL_RULES, tags);
+    const matches = classifyPermit(permit, ALL_RULES, tags, { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs.length).toBeGreaterThan(10);
     expect(slugs).toContain('plumbing');
@@ -389,7 +389,7 @@ describe('classifyPermit - Tag Matrix Integration', () => {
       work: 'Building Permit Related(PS)',
     });
     const tags = ['new:kitchen', 'new:bathroom'];
-    const matches = classifyPermit(permit, ALL_RULES, tags);
+    const matches = classifyPermit(permit, ALL_RULES, tags, { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('plumbing');
     expect(slugs).not.toContain('framing');
@@ -402,7 +402,7 @@ describe('classifyPermit - Tag Matrix Integration', () => {
       permit_type: 'Building',
       work: 'Other',
     });
-    const matches = classifyPermit(permit, ALL_RULES, []);
+    const matches = classifyPermit(permit, ALL_RULES, [], { permitClass: 'construction' });
     expect(matches.length).toBeGreaterThanOrEqual(1);
     // Fallback trades should be tier 1 (Tier 3 deprecated)
     for (const m of matches) {
@@ -417,7 +417,7 @@ describe('classifyPermit - Tag Matrix Integration', () => {
       permit_type: 'Building',
       work: 'Other',
     });
-    const matches = classifyPermit(permit, ALL_RULES);
+    const matches = classifyPermit(permit, ALL_RULES, undefined, { permitClass: 'construction' });
     expect(matches.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -428,7 +428,7 @@ describe('classifyPermit - Tag Matrix Integration', () => {
       work: 'New Building',
     });
     const tags = ['new:kitchen'];
-    const matches = classifyPermit(permit, ALL_RULES, tags);
+    const matches = classifyPermit(permit, ALL_RULES, tags, { permitClass: 'construction' });
     const plumbMatch = matches.find((m) => m.trade_slug === 'plumbing');
     expect(plumbMatch).toBeDefined();
     // Tier 1 (0.95) should beat tag matrix (0.80)
@@ -443,7 +443,7 @@ describe('classifyPermit - Tag Matrix Integration', () => {
       work: 'Interior Alterations',
     });
     const tags = ['alter:kitchen', 'alter:bathroom'];
-    const matches = classifyPermit(permit, ALL_RULES, tags);
+    const matches = classifyPermit(permit, ALL_RULES, tags, { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).not.toContain('excavation');
     expect(slugs).not.toContain('roofing');
@@ -457,7 +457,7 @@ describe('classifyPermit - Tag Matrix Integration', () => {
       work: 'Other',
     });
     const tags = ['new:nonexistent_tag', 'alter:unknown_scope'];
-    const matches = classifyPermit(permit, ALL_RULES, tags);
+    const matches = classifyPermit(permit, ALL_RULES, tags, { permitClass: 'construction' });
     expect(matches.length).toBeGreaterThanOrEqual(1);
     for (const m of matches) {
       expect(m.tier).toBe(1);
@@ -476,7 +476,7 @@ describe('Tier 3 Deprecation - all fallback matches must be tier 1', () => {
       permit_type: 'Building',
       work: 'Other',
     });
-    const matches = classifyPermit(permit, ALL_RULES, []);
+    const matches = classifyPermit(permit, ALL_RULES, [], { permitClass: 'construction' });
     expect(matches.length).toBeGreaterThanOrEqual(1);
     for (const m of matches) {
       expect(m.tier).toBe(1);
@@ -492,7 +492,7 @@ describe('Tier 3 Deprecation - all fallback matches must be tier 1', () => {
       createMockPermit({ permit_num: '21 400000 BLD 00', permit_type: 'Small Residential Projects', work: 'Addition' }),
     ];
     for (const permit of permits) {
-      const matches = classifyPermit(permit, ALL_RULES, []);
+      const matches = classifyPermit(permit, ALL_RULES, [], { permitClass: 'construction' });
       for (const m of matches) {
         expect(m.tier).not.toBe(3);
       }
@@ -507,7 +507,7 @@ describe('Tier 1 Work-Field Fallback', () => {
       permit_type: 'Building',
       work: 'Interior Alterations',
     });
-    const matches = classifyPermit(permit, ALL_RULES, []);
+    const matches = classifyPermit(permit, ALL_RULES, [], { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('drywall');
     expect(slugs).toContain('painting');
@@ -524,7 +524,7 @@ describe('Tier 1 Work-Field Fallback', () => {
       permit_type: 'Building',
       work: 'New Building',
     });
-    const matches = classifyPermit(permit, ALL_RULES, []);
+    const matches = classifyPermit(permit, ALL_RULES, [], { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('framing');
     expect(slugs).toContain('concrete');
@@ -540,7 +540,7 @@ describe('Tier 1 Work-Field Fallback', () => {
       permit_type: 'Building',
       work: 'Re-Roofing',
     });
-    const matches = classifyPermit(permit, ALL_RULES, []);
+    const matches = classifyPermit(permit, ALL_RULES, [], { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('roofing');
     for (const m of matches) {
@@ -554,7 +554,7 @@ describe('Tier 1 Work-Field Fallback', () => {
       permit_type: 'Building',
       work: 'Deck',
     });
-    const matches = classifyPermit(permit, ALL_RULES, []);
+    const matches = classifyPermit(permit, ALL_RULES, [], { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('framing');
     expect(slugs).toContain('concrete');
@@ -569,7 +569,7 @@ describe('Tier 1 Work-Field Fallback', () => {
       permit_type: 'Building',
       work: 'Some Unknown Work Type',
     });
-    const matches = classifyPermit(permit, ALL_RULES, []);
+    const matches = classifyPermit(permit, ALL_RULES, [], { permitClass: 'construction' });
     expect(matches.length).toBeGreaterThanOrEqual(4);
     for (const m of matches) {
       expect(m.tier).toBe(1);
@@ -585,7 +585,7 @@ describe('Tier 1 Work-Field Fallback', () => {
 describe('Tier 1 Classification - Permit Type Direct Match', () => {
   it('classifies Plumbing(PS) as plumbing with 0.95 confidence', () => {
     const permit = createMockPermit({ permit_type: 'Plumbing(PS)' });
-    const matches = classifyPermit(permit, ALL_RULES);
+    const matches = classifyPermit(permit, ALL_RULES, undefined, { permitClass: 'construction' });
     const plumbingMatch = matches.find((m) => m.trade_slug === 'plumbing');
     expect(plumbingMatch).toBeDefined();
     expect(plumbingMatch!.tier).toBe(1);
@@ -596,7 +596,7 @@ describe('Tier 1 Classification - Permit Type Direct Match', () => {
     const permit = createMockPermit({
       permit_type: 'Demolition Folder (DM)',
     });
-    const matches = classifyPermit(permit, ALL_RULES);
+    const matches = classifyPermit(permit, ALL_RULES, undefined, { permitClass: 'construction' });
     const match = matches.find((m) => m.trade_slug === 'demolition');
     expect(match).toBeDefined();
     expect(match!.tier).toBe(1);
@@ -604,14 +604,14 @@ describe('Tier 1 Classification - Permit Type Direct Match', () => {
 
   it('classifies Mechanical/HVAC(MH) as hvac', () => {
     const permit = createMockPermit({ permit_type: 'Mechanical/HVAC(MH)' });
-    const matches = classifyPermit(permit, ALL_RULES);
+    const matches = classifyPermit(permit, ALL_RULES, undefined, { permitClass: 'construction' });
     const match = matches.find((m) => m.trade_slug === 'hvac');
     expect(match).toBeDefined();
   });
 
   it('classifies Electrical(EL) as electrical', () => {
     const permit = createMockPermit({ permit_type: 'Electrical(EL)' });
-    const matches = classifyPermit(permit, ALL_RULES);
+    const matches = classifyPermit(permit, ALL_RULES, undefined, { permitClass: 'construction' });
     const match = matches.find((m) => m.trade_slug === 'electrical');
     expect(match).toBeDefined();
   });
@@ -835,7 +835,7 @@ describe('Permit Code Scope Limiting', () => {
       work: 'Building Permit Related(PS)',
       description: 'Plumbing - new bathroom with electrical and hvac work',
     });
-    const matches = classifyPermit(permit, ALL_RULES, ['new:bathroom']);
+    const matches = classifyPermit(permit, ALL_RULES, ['new:bathroom'], { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('plumbing');
     expect(slugs).not.toContain('framing');
@@ -851,7 +851,7 @@ describe('Permit Code Scope Limiting', () => {
       structure_type: 'SFD - Detached',
       work: 'Building Permit Related(MS)',
     });
-    const matches = classifyPermit(permit, ALL_RULES);
+    const matches = classifyPermit(permit, ALL_RULES, undefined, { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('hvac');
     expect(slugs).not.toContain('plumbing');
@@ -866,7 +866,7 @@ describe('Permit Code Scope Limiting', () => {
       structure_type: 'SFD - Detached',
       work: 'Building Permit Related (DR)',
     });
-    const matches = classifyPermit(permit, ALL_RULES);
+    const matches = classifyPermit(permit, ALL_RULES, undefined, { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('drain-plumbing');
     expect(slugs).not.toContain('plumbing');
@@ -880,7 +880,7 @@ describe('Permit Code Scope Limiting', () => {
       permit_type: 'Fire/Security Upgrade',
       work: 'Fire Alarm',
     });
-    const matches = classifyPermit(permit, ALL_RULES);
+    const matches = classifyPermit(permit, ALL_RULES, undefined, { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('fire-protection');
     expect(slugs).not.toContain('plumbing');
@@ -893,7 +893,7 @@ describe('Permit Code Scope Limiting', () => {
       permit_type: 'Demolition Folder (DM)',
       work: 'Demolition',
     });
-    const matches = classifyPermit(permit, ALL_RULES);
+    const matches = classifyPermit(permit, ALL_RULES, undefined, { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('demolition');
     expect(slugs).not.toContain('plumbing');
@@ -907,7 +907,7 @@ describe('Permit Code Scope Limiting', () => {
       work: 'New Building',
     });
     const tags = ['new:build-sfd', 'new:kitchen', 'new:bathroom'];
-    const matches = classifyPermit(permit, ALL_RULES, tags);
+    const matches = classifyPermit(permit, ALL_RULES, tags, { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs.length).toBeGreaterThan(3);
     expect(slugs).toContain('framing');
@@ -921,7 +921,7 @@ describe('Permit Code Scope Limiting', () => {
       work: 'Interior Alterations',
     });
     const tags = ['alter:kitchen', 'alter:bathroom', 'alter:basement'];
-    const matches = classifyPermit(permit, ALL_RULES, tags);
+    const matches = classifyPermit(permit, ALL_RULES, tags, { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).not.toContain('excavation');
     expect(slugs).not.toContain('roofing');
@@ -935,7 +935,7 @@ describe('Permit Code Scope Limiting', () => {
       work: 'Underpinning',
     });
     const tags = ['alter:underpinning', 'alter:foundation'];
-    const matches = classifyPermit(permit, ALL_RULES, tags);
+    const matches = classifyPermit(permit, ALL_RULES, tags, { permitClass: 'construction' });
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('shoring');
     expect(slugs).not.toContain('roofing');
@@ -964,7 +964,7 @@ describe('Narrow-Scope Code-Based Fallback', () => {
       work: 'Building Permit Related(PS)',
     });
     // Pass empty rules so no Tier 1 matches
-    const matches = constructionOnly(classifyPermit(permit, []));
+    const matches = constructionOnly(classifyPermit(permit, [], undefined, { permitClass: 'construction' }));
     expect(matches).toHaveLength(1);
     expect(matches[0]!.trade_slug).toBe('plumbing');
     expect(matches[0]!.confidence).toBe(0.80);
@@ -977,7 +977,7 @@ describe('Narrow-Scope Code-Based Fallback', () => {
       permit_type: 'UnknownType',
       work: 'Building Permit Related(MS)',
     });
-    const matches = constructionOnly(classifyPermit(permit, []));
+    const matches = constructionOnly(classifyPermit(permit, [], undefined, { permitClass: 'construction' }));
     expect(matches).toHaveLength(1);
     expect(matches[0]!.trade_slug).toBe('hvac');
     expect(matches[0]!.confidence).toBe(0.80);
@@ -990,7 +990,7 @@ describe('Narrow-Scope Code-Based Fallback', () => {
       permit_type: 'UnknownType',
       work: 'Building Permit Related (DR)',
     });
-    const matches = constructionOnly(classifyPermit(permit, []));
+    const matches = constructionOnly(classifyPermit(permit, [], undefined, { permitClass: 'construction' }));
     expect(matches).toHaveLength(1);
     expect(matches[0]!.trade_slug).toBe('drain-plumbing');
     expect(matches[0]!.confidence).toBe(0.80);
@@ -1003,7 +1003,7 @@ describe('Narrow-Scope Code-Based Fallback', () => {
       permit_type: 'UnknownType',
       work: 'Unknown Work',
     });
-    const matches = constructionOnly(classifyPermit(permit, []));
+    const matches = constructionOnly(classifyPermit(permit, [], undefined, { permitClass: 'construction' }));
     expect(matches).toHaveLength(1);
     expect(matches[0]!.trade_slug).toBe('fire-protection');
     expect(matches[0]!.confidence).toBe(0.80);
@@ -1015,7 +1015,7 @@ describe('Narrow-Scope Code-Based Fallback', () => {
       permit_type: 'UnknownType',
       work: 'Unknown Work',
     });
-    const matches = constructionOnly(classifyPermit(permit, []));
+    const matches = constructionOnly(classifyPermit(permit, [], undefined, { permitClass: 'construction' }));
     const slugs = matches.map((m) => m.trade_slug);
     expect(slugs).toContain('excavation');
     expect(slugs).toContain('shoring');
@@ -1049,5 +1049,91 @@ describe('ALL_RULES', () => {
 
   it('has the same rules as TIER_1_RULES', () => {
     expect(ALL_RULES).toEqual(TIER_1_RULES);
+  });
+});
+
+// ─── WF2 #2 (2026-05-08) — permit_type_class integration coverage ─────────
+// Worktree code-reviewer flagged a coverage gap: every existing test passes
+// `permitClass: 'construction'`, so a future refactor that bypasses
+// `applyClassGating` on a return path wouldn't be caught by the unit tests
+// of `filterTradesByClass` in isolation. These integration tests exercise
+// the full classifyPermit → applyClassGating → filterTradesByClass chain
+// for each non-construction class.
+
+describe('classifyPermit — permit_type_class integration (WF2 #2)', () => {
+  const buildPermit = (overrides: Partial<Parameters<typeof createMockPermit>[0]> = {}) =>
+    createMockPermit({
+      permit_num: '21 100000 BLD 00',
+      permit_type: 'New Building',
+      structure_type: 'SFD',
+      work: 'New Building',
+      ...overrides,
+    });
+
+  it('administrative class → empty result (no trades, no realtor)', () => {
+    const permit = buildPermit();
+    const matches = classifyPermit(permit, ALL_RULES, ['residential', 'new_build'], {
+      permitClass: 'administrative',
+    });
+    expect(matches).toHaveLength(0);
+  });
+
+  it('unclassified class → empty result (safe-skip default)', () => {
+    const permit = buildPermit();
+    const matches = classifyPermit(permit, ALL_RULES, ['residential', 'new_build'], {
+      permitClass: 'unclassified',
+    });
+    expect(matches).toHaveLength(0);
+  });
+
+  it('safety_upgrade class → only electrical + fire-protection (filter, not extend)', () => {
+    const permit = buildPermit();
+    const matches = classifyPermit(
+      permit,
+      ALL_RULES,
+      ['residential', 'new_build', 'plumbing', 'hvac'],
+      { permitClass: 'safety_upgrade' },
+    );
+    const slugs = matches.map((m) => m.trade_slug);
+    // No trades outside the allowlist (also no realtor — gated to construction).
+    for (const slug of slugs) {
+      expect(['electrical', 'fire-protection']).toContain(slug);
+    }
+  });
+
+  it('signage class → only electrical + structural-steel (RESERVED — currently no rows route here)', () => {
+    const permit = buildPermit();
+    const matches = classifyPermit(
+      permit,
+      ALL_RULES,
+      ['residential', 'new_build', 'plumbing'],
+      { permitClass: 'signage' },
+    );
+    const slugs = matches.map((m) => m.trade_slug);
+    for (const slug of slugs) {
+      expect(['electrical', 'structural-steel']).toContain(slug);
+    }
+  });
+
+  it('construction class → realtor TradeMatch is appended (Spec 91 §3.5)', () => {
+    const permit = buildPermit();
+    const matches = classifyPermit(permit, ALL_RULES, ['residential', 'new_build'], {
+      permitClass: 'construction',
+      realtorAvailable: true,
+    });
+    const slugs = matches.map((m) => m.trade_slug);
+    expect(slugs).toContain('realtor');
+  });
+
+  it('non-construction classes → realtor TradeMatch is NOT appended', () => {
+    const permit = buildPermit();
+    for (const cls of ['administrative', 'safety_upgrade', 'signage', 'unclassified'] as const) {
+      const matches = classifyPermit(permit, ALL_RULES, ['residential', 'new_build'], {
+        permitClass: cls,
+        realtorAvailable: true,
+      });
+      const slugs = matches.map((m) => m.trade_slug);
+      expect(slugs).not.toContain('realtor');
+    }
   });
 });

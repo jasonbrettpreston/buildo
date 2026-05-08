@@ -473,3 +473,25 @@ Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #
 5. ✅ DeepSeek MEDIUM (Map guard): `classifyPermitType()` validates `classMap instanceof Map` before calling `.get()` — non-Map input returns `UNCLASSIFIED` (safe-skip) instead of crashing the pipeline mid-run
 6. ✅ Worktree MEDIUM (doc note): Added explicit note to `permit-type-class.logic.test.ts` that the parity test reads the migration file text and DOES NOT catch live-DB drift via `ALTER TYPE`. Future migration that adds an enum value MUST add a companion `*.infra.test.ts` querying `pg_enum`.
 
+---
+
+## Spec 41/80/91 — WF2 #2 Multi-Agent Review Deferred Items (2026-05-08)
+
+Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #2 classifier gating on `permit_type_class`.
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| CRITICAL (per worktree, conf 90) | worktree #1+#2 | **`runAt` parameter parity drift between JS↔TS classifiers.** JS `applyClassGating` accepts `runAt` and threads it to `appendRealtorMatch` → `calculateLeadScore(permit, partial, phase, runAt)`. TS `applyClassGating` doesn't have `runAt` because TS `calculateLeadScore(permit, partial, phase)` uses `new Date()` internally for freshness/staleness. → Realtor `lead_score` differs between JS and TS paths for the same permit. Spec 47 §R3.5 Midnight Cross + Spec 7 §7.1 dual-path violations. | **Pre-existing** — TS `calculateLeadScore` in `src/lib/classification/scoring.ts:102` already used `new Date()` before this WF. WF2 #2 mirrors the existing pattern in each surface, doesn't introduce the drift. Fixing requires expanding `calculateLeadScore` signature across 10 call sites + `scoring.ts` rewrite. **Promote to a separate WF3** for explicit Midnight Cross hardening of TS classifier. |
+| MEDIUM | DeepSeek #6 | **`classifyPermit` defaults `permitClass = UNCLASSIFIED` — silent zero matches for callers that forget to thread the option.** | **Intentional safe-skip per plan-lock.** The default IS the conservative behavior for unknown call sites — over-classifying with the full matrix is the WORSE outcome. Documented at the parameter's JSDoc + Spec 80 §5. A runtime warn would be too noisy. Defer permanently. |
+| HIGH (Gemini) | Gemini all | **classify-permits.js architectural concerns** — multi-transaction race, hardcoded business logic duplicated TS↔JS, ghost-trade `unnest` query fragility, 30-day month math, non-deterministic work fallback iteration. | **Pre-existing** structural concerns that long predate WF2 #2. Each is a worthy separate WF; none introduced by this change. Architectural rewrite of classify-permits.js belongs in a dedicated initiative. |
+| HIGH (DeepSeek) | DeepSeek #1-3 | **TS classifier pre-existing concerns** — `extractPermitCode` regex misses start-of-string, `applyScopeLimit` only applies first matching pattern, `NARROW_SCOPE_CODES` hardcoded slugs. | **Pre-existing.** Same architectural origin as Gemini's findings. Defer. |
+| MEDIUM (DeepSeek) | DeepSeek #4-7 | TS non-null asserts, regex injection in tier 3 fieldMatches, hardcoded `REALTOR_TRADE_ID = 33`, `classifyProducts` `product_id ?? 0` | Pre-existing. Defer. |
+
+**Resolved in commit (4 fixes folded in):**
+1. ✅ Worktree IMPORTANT #3: Added 6 integration tests in `classification.logic.test.ts` for non-construction classes through full `classifyPermit` chain (administrative/unclassified empty; safety_upgrade narrow; signage narrow; realtor gated to construction)
+2. ✅ Worktree IMPORTANT #4: Per-class breakdown rows added to `audit_table` in `classify-permits.js` (`class.construction`, `class.signage`, `class.administrative`, `class.safety_upgrade`, `class.unclassified`) so operators can confirm zero-trade emission for non-construction permits
+3. ✅ Test coverage: 30+ existing call sites in `classification.logic.test.ts` updated with `{ permitClass: 'construction' }` to preserve the asserted matrix behavior under the new contract
+4. ✅ Spec amendments: Spec 41 step 13 (replaced WF2 #1 forward-ref with implemented behavior table), Spec 80 §5 (Consumer behaviors subsection), Spec 91 §3.5 (realtor gating note), Spec 47 §10.2 (per-class behavior policies subsection)
+
+**Followup WF3 candidate (carved out):** **Orphan cleanup of pre-existing wrong rows.** WF3 investigation 2026-05-08 found 14,090 wrong Fire/Security Upgrade trade rows + 12,026 Designated Structures trade rows + 3,657 DCs DeferredFees trade rows + ~10,141 wrong realtor rows on non-construction permits. WF2 #2's gating prevents NEW wrong rows from being written, but the existing rows persist until either (a) `classify-permits.js --full` re-runs (mass UPSERT path) or (b) an explicit DELETE pass scoped per non-construction permit_type. Filed as a small WF3 to run after WF2 #2 + #3 stabilize.
+

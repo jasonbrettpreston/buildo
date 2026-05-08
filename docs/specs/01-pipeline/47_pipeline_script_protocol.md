@@ -839,6 +839,15 @@ the JS-side mirror lives at `scripts/lib/permit-type-classifier.js`, the TS-side
 `src/tests/permit-type-class.logic.test.ts` regression-locks all three surfaces against the
 SQL CREATE TYPE.
 
+**Per-class behavior policies (WF2 #2 2026-05-08):** the lookup-table variant pairs naturally
+with a per-class behavior policy that the consumer applies. Both surfaces export
+`PERMIT_CLASS_TRADE_ALLOWLIST` (a `Record<class, 'all' | 'none' | string[]>`) plus
+`filterTradesByClass()` and `shouldAppendRealtor()` helpers. Consumer code
+(`scripts/classify-permits.js`, `src/lib/classification/classifier.ts`) imports + applies these
+identically. The parity test asserts both surfaces export equivalent allowlists — drift between
+JS and TS would silently produce divergent classifier output, the exact class of bug Spec 7 §7.1
+mandates against.
+
 ### 10.3 Verify downstream handling before shipping a new value
 
 > **Operator-facing dual surface (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7 amendment) renders every field that step 27 (`assert-global-coverage.js`) measures coverage on, organized into 8 panels by chain step group. Step 27 is the *automated* verification of downstream contracts; the inspector is the *operator-facing* dual — both surface the same field set, in different audit contexts.

@@ -116,6 +116,22 @@ A 5-value taxonomy that classifies every permit_type into a behavioral bucket. W
 
 **Coverage today (247,030 dev-DB permits):** construction 95.5% / administrative 0.5% / safety_upgrade 2.8% / unclassified 1.5%.
 
+### Consumer behaviors (WF2 #2, 2026-05-08)
+
+`scripts/classify-permits.js` step 13 + `src/lib/classification/classifier.ts` (Spec 7 §7.1 dual-path) gate the tag-trade matrix on the class. Both surfaces import `filterTradesByClass` and `shouldAppendRealtor` from the dual-path mirror modules.
+
+| Class | Trade matrix output | Realtor TradeMatch appended? |
+|---|---|---|
+| `construction` | **Full** Tier 1 + Tier 2 + narrow-scope (current behavior, unchanged) | **YES** |
+| `signage` | RESERVED — `electrical` + `structural-steel` only (no rows seeded today) | NO |
+| `administrative` | **EMPTY** — return `[]` (no `permit_trades` rows written) | NO |
+| `safety_upgrade` | `electrical` + `fire-protection` only (filter-out, not extend) | NO |
+| `unclassified` | **EMPTY** — safe-skip default | NO |
+
+Realtor's "home will be sold" signal applies only to construction-class permits. A sign permit, fee deferral, or fire-upgrade permit does NOT generate a listing opportunity → `shouldAppendRealtor(class) === false` for non-construction classes. Branches on `permit_type_class` (DB-derived, NOT `account_preset` per Spec 95 §2.5.1).
+
+**Behavioral expectation** post-WF2 #2: a re-run of `classify-permits.js` produces a different `permit_trades` row set for the 4.5% non-construction permit_types. Existing wrong rows for these permits become orphans; an explicit one-shot DELETE pass is filed as a follow-up WF3 (orphan cleanup is not part of WF2 #2 to keep the rollback boundary clean).
+
 ---
 
 <testing>

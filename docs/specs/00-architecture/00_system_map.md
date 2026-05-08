@@ -42,7 +42,7 @@
 | 56 | `01-pipeline/56_source_massing.md` | 3D Building Massing | — | — | Done |
 | 57 | `01-pipeline/57_source_neighbourhoods.md` | Toronto Neighbourhoods | — | — | Done |
 | 60 | `01-pipeline/60_shared_steps.md` | Shared Pipeline Steps | `scripts/geocode-permits.js`, `scripts/link-massing.js`, `scripts/create-pre-permits.js` | — | Done |
-| 80 | `01-pipeline/80_taxonomies.md` | Pipeline Taxonomies | `src/lib/classification/trades.ts`, `src/lib/classification/tag-trade-matrix.ts`, `src/lib/classification/phases.ts`, +2 more | `src/tests/permit-type-class.logic.test.ts` | Done |
+| 80 | `01-pipeline/80_taxonomies.md` | Pipeline Taxonomies | `src/lib/classification/trades.ts`, `src/lib/classification/tag-trade-matrix.ts`, `src/lib/classification/phases.ts`, +3 more | `src/tests/permit-type-class.logic.test.ts` | Done |
 | 81 | `01-pipeline/81_opportunity_score_engine.md` | 81 Opportunity Score Engine | `src/lib/classification/scoring.ts` | `src/tests/compute-opportunity-scores.infra.test.ts` | Done |
 | 82 | `01-pipeline/82_crm_assistant_alerts.md` | 82 CRM Assistant & Alerts | — | `src/tests/tracked-projects.logic.test.ts`, `src/tests/tracked-projects.infra.test.ts` | Done |
 | 83 | `01-pipeline/83_lead_cost_model.md` | Spec 83: Surgical Estimation Engine — Valuation & Trade Slicing | — | `src/tests/cost-model.logic.test.ts`, `src/tests/cost-estimates.infra.test.ts` | ARCHITECTURE LOCKED |

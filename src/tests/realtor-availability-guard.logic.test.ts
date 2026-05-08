@@ -40,18 +40,23 @@ const minimalPermit: Partial<Permit> = {
 const noRules: TradeMappingRule[] = [];
 
 describe('classifyPermit — realtorAvailable option (WF3 startup-guard)', () => {
-  it('appends a realtor TradeMatch by default (preserves Cycle 7 behavior)', () => {
-    // Default behavior: when no `realtorAvailable` option is passed,
-    // the classifier appends realtor as before. Tests with no realtor
-    // option must still see realtor in the output.
-    const matches = classifyPermit(minimalPermit, noRules);
+  it('appends a realtor TradeMatch when permitClass=construction (post WF2 #2)', () => {
+    // WF2 #2 (2026-05-08): realtor append is now ALSO gated on
+    // `permitClass === 'construction'` (Spec 80 §5). All existing realtor
+    // tests must pass `permitClass: 'construction'` explicitly to assert
+    // the realtor-append behavior; the default `'unclassified'` returns []
+    // (safe-skip) per the gating contract.
+    const matches = classifyPermit(minimalPermit, noRules, undefined, {
+      permitClass: 'construction',
+    });
     const hasRealtor = matches.some((m) => m.trade_slug === 'realtor');
     expect(hasRealtor).toBe(true);
   });
 
-  it('appends realtor when realtorAvailable=true is explicitly passed', () => {
+  it('appends realtor when realtorAvailable=true and permitClass=construction', () => {
     const matches = classifyPermit(minimalPermit, noRules, undefined, {
       realtorAvailable: true,
+      permitClass: 'construction',
     });
     const hasRealtor = matches.some((m) => m.trade_slug === 'realtor');
     expect(hasRealtor).toBe(true);
@@ -64,6 +69,7 @@ describe('classifyPermit — realtorAvailable option (WF3 startup-guard)', () =>
     // the FK constraint crashes the entire pipeline.
     const matches = classifyPermit(minimalPermit, noRules, undefined, {
       realtorAvailable: false,
+      permitClass: 'construction',
     });
     const hasRealtor = matches.some((m) => m.trade_slug === 'realtor');
     expect(hasRealtor).toBe(false);
@@ -74,9 +80,12 @@ describe('classifyPermit — realtorAvailable option (WF3 startup-guard)', () =>
   });
 
   it('disabling realtor still allows construction-trade matches through unchanged', () => {
-    const withRealtor = classifyPermit(minimalPermit, noRules);
+    const withRealtor = classifyPermit(minimalPermit, noRules, undefined, {
+      permitClass: 'construction',
+    });
     const withoutRealtor = classifyPermit(minimalPermit, noRules, undefined, {
       realtorAvailable: false,
+      permitClass: 'construction',
     });
     // The non-realtor matches should be identical between the two calls.
     const withRealtorNonRealtor = withRealtor.filter((m) => m.trade_slug !== 'realtor');

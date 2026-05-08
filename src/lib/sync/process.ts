@@ -4,6 +4,11 @@ import { mapRawToPermit } from '@/lib/permits/field-mapping';
 import { computePermitHash } from '@/lib/permits/hash';
 import { diffPermitFields } from '@/lib/permits/diff';
 import { classifyPermit } from '@/lib/classification/classifier';
+import {
+  type PermitTypeClass,
+  UNCLASSIFIED,
+  isPermitTypeClass,
+} from '@/lib/classification/permit-type-class';
 import { parsePermitsStream } from '@/lib/sync/ingest';
 import type {
   RawPermitRecord,
@@ -43,6 +48,44 @@ async function checkRealtorAvailable(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * WF2 #2 (mig 120 / Spec 80 §5) — load permit_type → class map at sync-start
+ * (Spec 47 §R5 startup-guard pattern). Mirror of
+ * scripts/lib/permit-type-classifier.js#loadPermitTypeClassMap. Single ~25-row
+ * read; PK lookup latency 0.071ms (verified WF2 #1).
+ *
+ * Drift detection: rows with non-canonical class values are skipped + logged
+ * via logError (the sync already imports logError); the map stays canonical
+ * so consumer === comparisons remain correct.
+ */
+async function loadPermitTypeClassMap(): Promise<Map<string, PermitTypeClass>> {
+  const rows = await query<{ permit_type: string; class: string | null }>(
+    `SELECT permit_type, class FROM permit_type_classifications`,
+  );
+  const map = new Map<string, PermitTypeClass>();
+  for (const row of rows) {
+    const cls = row.class ?? UNCLASSIFIED;
+    if (!isPermitTypeClass(cls)) {
+      logError(
+        '[sync/process]',
+        new Error(`Skipping permit_type_classifications row with non-canonical class: permit_type=${JSON.stringify(row.permit_type)}, class=${JSON.stringify(cls)}`),
+        { stage: 'permit_type_class_load' },
+      );
+      continue;
+    }
+    map.set(row.permit_type, cls);
+  }
+  return map;
+}
+
+function classifyPermitType(
+  classMap: Map<string, PermitTypeClass>,
+  permitType: string | null | undefined,
+): PermitTypeClass {
+  if (!permitType) return UNCLASSIFIED;
+  return classMap.get(permitType) ?? UNCLASSIFIED;
 }
 
 /** Look up an existing permit by its composite key. */
@@ -98,6 +141,8 @@ async function processBatch(
       { stage: 'realtor_availability_check' },
     );
   }
+  // WF2 #2 (mig 120 / Spec 80 §5) — load classMap once at sync-start.
+  const permitClassMap = await loadPermitTypeClassMap();
 
   for (const raw of batch) {
     const client = await getClient();
@@ -144,7 +189,8 @@ async function processBatch(
         );
 
         // Classify and store trade matches
-        const matches = classifyPermit(mapped, rules, undefined, { realtorAvailable });
+        const permitClass = classifyPermitType(permitClassMap, mapped.permit_type);
+        const matches = classifyPermit(mapped, rules, undefined, { realtorAvailable, permitClass });
         for (const m of matches) {
           await client.query(
             `INSERT INTO permit_trades (
@@ -210,7 +256,8 @@ async function processBatch(
           'DELETE FROM permit_trades WHERE permit_num=$1 AND revision_num=$2',
           [permitNum, revisionNum]
         );
-        const matches = classifyPermit(mapped, rules, undefined, { realtorAvailable });
+        const permitClass = classifyPermitType(permitClassMap, mapped.permit_type);
+        const matches = classifyPermit(mapped, rules, undefined, { realtorAvailable, permitClass });
         for (const m of matches) {
           await client.query(
             `INSERT INTO permit_trades (

@@ -111,4 +111,45 @@ describe('classify-permits.js — protocol compliance', () => {
     expect(content).toMatch(/pipeline\.emitMeta/);
     expect(content).toMatch(/permit_trades/);
   });
+
+  // ─── WF2 #2 (2026-05-08) — permit_type_class gating regression-locks ──
+
+  it('imports the permit-type-class helpers (loadPermitTypeClassMap, classifyPermitType, filterTradesByClass, shouldAppendRealtor)', () => {
+    const content = src();
+    expect(content).toMatch(/require\(\s*['"]\.\/lib\/permit-type-classifier['"]\s*\)/);
+    expect(content).toMatch(/loadPermitTypeClassMap/);
+    expect(content).toMatch(/classifyPermitType/);
+    expect(content).toMatch(/filterTradesByClass/);
+    expect(content).toMatch(/shouldAppendRealtor/);
+  });
+
+  it('loads the permit_type class map at startup (Spec 47 §R5 startup-guard pattern)', () => {
+    const content = src();
+    expect(content).toMatch(/await\s+loadPermitTypeClassMap\(\s*pool/);
+  });
+
+  it('threads permitClass through classifyPermit at every call site', () => {
+    const content = src();
+    // Every classifyPermit invocation with arguments must reference permitClass
+    // or classifyPermitType — the new gating axis. Empty-paren references like
+    // "classifyPermit()" inside comments are skipped (literal-prose mention).
+    const callMatches = content.match(/classifyPermit\([^)]+\)/g) ?? [];
+    expect(callMatches.length).toBeGreaterThan(0);
+    for (const call of callMatches) {
+      expect(call, `classifyPermit call missing permitClass: ${call}`).toMatch(/permitClass|classifyPermitType/);
+    }
+  });
+
+  it('gates realtor append on shouldAppendRealtor (construction class only)', () => {
+    const content = src();
+    expect(content).toMatch(/shouldAppendRealtor\(/);
+    // The bare unconditional appendRealtorMatch return (no class gate) should
+    // no longer exist — it must be wrapped in shouldAppendRealtor() before invoke.
+    expect(content).not.toMatch(/return\s+appendRealtorMatch\(matches,\s*permit,\s*phase,\s*runAt,\s*realtorAvailable\s*\);/);
+  });
+
+  it('filters trade matches via filterTradesByClass before appending realtor', () => {
+    const content = src();
+    expect(content).toMatch(/filterTradesByClass\(/);
+  });
 });

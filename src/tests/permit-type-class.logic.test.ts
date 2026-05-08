@@ -33,6 +33,9 @@ import {
   ADMINISTRATIVE,
   SAFETY_UPGRADE,
   UNCLASSIFIED,
+  PERMIT_CLASS_TRADE_ALLOWLIST,
+  filterTradesByClass,
+  shouldAppendRealtor,
 } from '@/lib/classification/permit-type-class';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -128,6 +131,24 @@ describe('permit-type-class — seed integrity', () => {
     }
   });
 
+  it('TS allowlist exports match JS allowlist exports (Spec 7 §7.1 dual-path)', () => {
+    // The JS mirror exports an object literal with the same shape — the
+    // SAME values per class (frozen on the JS side). Read the JS source
+    // and verify the policy values match what the TS side exports.
+    const jsHelperPath = path.join(REPO_ROOT, 'scripts', 'lib', 'permit-type-classifier.js');
+    const jsSrc = fs.readFileSync(jsHelperPath, 'utf-8');
+
+    // Each class must appear in the JS PERMIT_CLASS_TRADE_ALLOWLIST literal
+    // with a matching policy. Smoke test for parity — exact equality is
+    // enforced by the runtime tests below.
+    expect(jsSrc).toMatch(/PERMIT_CLASS_TRADE_ALLOWLIST/);
+    expect(jsSrc).toMatch(/construction:\s*'all'/);
+    expect(jsSrc).toMatch(/administrative:\s*'none'/);
+    expect(jsSrc).toMatch(/unclassified:\s*'none'/);
+    expect(jsSrc).toMatch(/signage:\s*Object\.freeze\(\['electrical',\s*'structural-steel'\]\)/);
+    expect(jsSrc).toMatch(/safety_upgrade:\s*Object\.freeze\(\['electrical',\s*'fire-protection'\]\)/);
+  });
+
   it('class distribution: 12 construction / 8 administrative / 1 safety_upgrade / 4 unclassified / 0 signage', () => {
     const counts: Record<string, number> = {
       construction: 0,
@@ -146,5 +167,91 @@ describe('permit-type-class — seed integrity', () => {
     expect(counts.safety_upgrade).toBe(1);
     expect(counts.unclassified).toBe(4);
     expect(counts.signage).toBe(0); // reserved for future WF3 subtype detection
+  });
+});
+
+// ─── WF2 #2 — Trade allowlist behavior ─────────────────────────────────
+
+describe('PERMIT_CLASS_TRADE_ALLOWLIST — behavior contract (Spec 80 §5)', () => {
+  it('construction → "all" (full pass-through)', () => {
+    expect(PERMIT_CLASS_TRADE_ALLOWLIST.construction).toBe('all');
+  });
+
+  it('administrative → "none" (empty result)', () => {
+    expect(PERMIT_CLASS_TRADE_ALLOWLIST.administrative).toBe('none');
+  });
+
+  it('unclassified → "none" (safe-skip default)', () => {
+    expect(PERMIT_CLASS_TRADE_ALLOWLIST.unclassified).toBe('none');
+  });
+
+  it('signage → ["electrical", "structural-steel"] (RESERVED, no rows seeded today)', () => {
+    expect(PERMIT_CLASS_TRADE_ALLOWLIST.signage).toEqual(['electrical', 'structural-steel']);
+  });
+
+  it('safety_upgrade → ["electrical", "fire-protection"]', () => {
+    expect(PERMIT_CLASS_TRADE_ALLOWLIST.safety_upgrade).toEqual(['electrical', 'fire-protection']);
+  });
+});
+
+describe('filterTradesByClass — pass-through / empty / narrow filtering', () => {
+  const matches = [
+    { trade_slug: 'plumbing', confidence: 0.9 },
+    { trade_slug: 'electrical', confidence: 0.95 },
+    { trade_slug: 'framing', confidence: 0.8 },
+    { trade_slug: 'fire-protection', confidence: 0.85 },
+    { trade_slug: 'structural-steel', confidence: 0.75 },
+  ];
+
+  it('construction passes ALL matches through', () => {
+    expect(filterTradesByClass(matches, 'construction')).toEqual(matches);
+  });
+
+  it('administrative returns empty', () => {
+    expect(filterTradesByClass(matches, 'administrative')).toEqual([]);
+  });
+
+  it('unclassified returns empty (safe-skip default)', () => {
+    expect(filterTradesByClass(matches, 'unclassified')).toEqual([]);
+  });
+
+  it('safety_upgrade keeps only electrical + fire-protection (no plumbing/framing/etc.)', () => {
+    const filtered = filterTradesByClass(matches, 'safety_upgrade');
+    const slugs = filtered.map((m) => m.trade_slug).sort();
+    expect(slugs).toEqual(['electrical', 'fire-protection']);
+  });
+
+  it('signage keeps only electrical + structural-steel (no plumbing/HVAC/framing/etc.)', () => {
+    const filtered = filterTradesByClass(matches, 'signage');
+    const slugs = filtered.map((m) => m.trade_slug).sort();
+    expect(slugs).toEqual(['electrical', 'structural-steel']);
+  });
+
+  it('does not mutate the input array', () => {
+    const original = matches.slice();
+    filterTradesByClass(matches, 'safety_upgrade');
+    expect(matches).toEqual(original);
+  });
+});
+
+describe('shouldAppendRealtor — gates realtor on construction class only', () => {
+  it('construction → true', () => {
+    expect(shouldAppendRealtor('construction')).toBe(true);
+  });
+
+  it('signage → false (signs do not generate listing opportunities)', () => {
+    expect(shouldAppendRealtor('signage')).toBe(false);
+  });
+
+  it('administrative → false', () => {
+    expect(shouldAppendRealtor('administrative')).toBe(false);
+  });
+
+  it('safety_upgrade → false', () => {
+    expect(shouldAppendRealtor('safety_upgrade')).toBe(false);
+  });
+
+  it('unclassified → false (safe-skip default)', () => {
+    expect(shouldAppendRealtor('unclassified')).toBe(false);
   });
 });

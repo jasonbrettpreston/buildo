@@ -16,6 +16,16 @@
 const pipeline = require('./lib/pipeline');
 const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 const { checkRealtorAvailable } = require('./lib/pipeline-realtor-availability');
+// WF2 #2 (2026-05-08) — gate the tag-trade matrix on permit_type_class
+// (mig 120 / Spec 80 §5). Stops the 12K+ wrong DST permit_trades + 14K+
+// wrong Fire/Security Upgrade trade rows + 1.4K wrong realtor classifications
+// surfaced by WF3 investigation 2026-05-08.
+const {
+  loadPermitTypeClassMap,
+  classifyPermitType,
+  filterTradesByClass,
+  shouldAppendRealtor,
+} = require('./lib/permit-type-classifier');
 
 const ADVISORY_LOCK_ID = 88;
 
@@ -422,7 +432,21 @@ function appendRealtorMatch(matches, permit, phase, runAt, realtorAvailable) {
   return [...matches, realtorMatch];
 }
 
-function classifyPermit(permit, rules, runAt, realtorAvailable = true) {
+/**
+ * Apply WF2 #2 (mig 120 / Spec 80 §5) class-based gating to a matches array.
+ * Filters the trade matrix per `permit_type_class`, then conditionally appends
+ * the realtor TradeMatch only for construction-class permits.
+ *
+ * `permitClass` defaults to 'unclassified' (safe-skip) when the caller doesn't
+ * resolve it — protects future call sites from accidentally bypassing the gate.
+ */
+function applyClassGating(matches, permit, phase, runAt, realtorAvailable, permitClass) {
+  const filtered = filterTradesByClass(matches, permitClass);
+  if (!shouldAppendRealtor(permitClass)) return filtered;
+  return appendRealtorMatch(filtered, permit, phase, runAt, realtorAvailable);
+}
+
+function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitClass = 'unclassified') {
   const phase = determinePhase(permit, runAt);
   const code = extractPermitCode(permit.permit_num);
   const isNarrowScope = code != null && NARROW_SCOPE_CODES[code] != null;
@@ -461,7 +485,7 @@ function classifyPermit(permit, rules, runAt, realtorAvailable = true) {
   // Narrow-scope permits: Tier 1 rule matches, with code-based fallback
   if (isNarrowScope) {
     const limited = applyScopeLimit(Array.from(ruleMap.values()), permit.permit_num, permit.work);
-    if (limited.length > 0) return appendRealtorMatch(limited, permit, phase, runAt, realtorAvailable);
+    if (limited.length > 0) return applyClassGating(limited, permit, phase, runAt, realtorAvailable, permitClass);
 
     // Fallback: assign code's allowed trades at 0.80 confidence
     const allowed = NARROW_SCOPE_CODES[code];
@@ -481,7 +505,7 @@ function classifyPermit(permit, rules, runAt, realtorAvailable = true) {
       tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
       return tradeMatch;
     }).filter(Boolean);
-    return appendRealtorMatch(fallbackMatches, permit, phase, runAt, realtorAvailable);
+    return applyClassGating(fallbackMatches, permit, phase, runAt, realtorAvailable, permitClass);
   }
 
   // Step 2: Tag-trade matrix matches (Tier 2)
@@ -534,7 +558,7 @@ function classifyPermit(permit, rules, runAt, realtorAvailable = true) {
   }
 
   const final = applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);
-  return appendRealtorMatch(final, permit, phase, runAt, realtorAvailable);
+  return applyClassGating(final, permit, phase, runAt, realtorAvailable, permitClass);
 }
 
 // ---------------------------------------------------------------------------
@@ -561,6 +585,17 @@ pipeline.run('classify-permits', async (pool) => {
       'Realtor trade row (trades.id=33) NOT FOUND — apply migration 118_realtor_trade.sql to enable realtor classification. Continuing with construction-trade classification only.',
     );
   }
+
+  // WF2 #2 (mig 120 / Spec 80 §5) — load permit_type class map at startup
+  // (Spec 47 §R5 startup-guard pattern). The classifier filters trade matches
+  // per class: construction → full matrix; administrative/unclassified → empty;
+  // safety_upgrade → electrical+fire-protection only; signage → reserved.
+  // Single ~25-row table read; PK lookup latency 0.071ms (verified WF2 #1).
+  const permitClassMap = await loadPermitTypeClassMap(pool);
+  pipeline.log.info(
+    '[classify-permits]',
+    `Loaded ${permitClassMap.size} permit_type class entries`,
+  );
 
   // Load rules from DB
   const rulesResult = await pool.query(
@@ -596,6 +631,17 @@ pipeline.run('classify-permits', async (pool) => {
   let totalMatches = 0;
   let permitsWithTrades = 0;
   let dbUpdated = 0;
+  // WF2 #2 — per-class telemetry for operator visibility (worktree review #4).
+  // Surfaces in audit_table: counts of permits processed per permit_type_class
+  // so operators can confirm e.g. "3,500 administrative permits emitted zero
+  // trades" rather than silently failing for another reason.
+  const classCounters = {
+    construction: 0,
+    signage: 0,
+    administrative: 0,
+    safety_upgrade: 0,
+    unclassified: 0,
+  };
   let lastPermitNum = '';
   let lastRevisionNum = '';
 
@@ -643,7 +689,11 @@ pipeline.run('classify-permits', async (pool) => {
       // array per Spec 91 §1.2 + §3.5 item 4 (option (a) MANDATED). The
       // realtor append is internal to classifyPermit so JS + TS classifiers
       // expose the same shape (CLAUDE.md §7 dual code path mandate).
-      const matches = classifyPermit(permit, allRules, RUN_AT, realtorAvailable);
+      // WF2 #2 (2026-05-08) — also threads `permitClass` through so the
+      // classifier filters non-construction trade matches per Spec 80 §5.
+      const permitClass = classifyPermitType(permitClassMap, permit.permit_type);
+      classCounters[permitClass] = (classCounters[permitClass] ?? 0) + 1;
+      const matches = classifyPermit(permit, allRules, RUN_AT, realtorAvailable, permitClass);
       if (matches.length > 0) {
         // Dedup by (permit_num, revision_num, trade_id) - keep highest confidence
         const dedupMap = new Map();
@@ -815,6 +865,15 @@ pipeline.run('classify-permits', async (pool) => {
     { metric: 'classification_coverage', value: classificationCoverage.toFixed(1) + '%', threshold: '>= 95%', status: classificationCoverage >= 95 ? 'PASS' : 'WARN' },
     { metric: 'total_trade_matches', value: totalMatches, threshold: null, status: 'INFO' },
     { metric: 'permit_trades_written', value: dbUpdated, threshold: null, status: 'INFO' },
+    // WF2 #2 — per-class breakdown for operator visibility (Spec 80 §5).
+    // Operator can confirm whether non-construction permits emitted the
+    // expected zero-trade output (the gating's intended behavior) vs.
+    // silently failing for another reason.
+    { metric: 'class.construction', value: classCounters.construction, threshold: null, status: 'INFO' },
+    { metric: 'class.signage', value: classCounters.signage, threshold: null, status: 'INFO' },
+    { metric: 'class.administrative', value: classCounters.administrative, threshold: null, status: 'INFO' },
+    { metric: 'class.safety_upgrade', value: classCounters.safety_upgrade, threshold: null, status: 'INFO' },
+    { metric: 'class.unclassified', value: classCounters.unclassified, threshold: null, status: 'INFO' },
   ];
 
   pipeline.emitSummary({

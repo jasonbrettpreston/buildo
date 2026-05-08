@@ -3,6 +3,14 @@ import { getTradeById, getTradeBySlug } from '@/lib/classification/trades';
 import { determinePhase } from '@/lib/classification/phases';
 import { calculateLeadScore } from '@/lib/classification/scoring';
 import { lookupTradesForTags } from '@/lib/classification/tag-trade-matrix';
+// WF2 #2 (2026-05-08) — gate the tag-trade matrix on permit_type_class
+// (mig 120 / Spec 80 §5). Mirror of scripts/classify-permits.js.
+import {
+  filterTradesByClass,
+  shouldAppendRealtor,
+  UNCLASSIFIED,
+  type PermitTypeClass,
+} from '@/lib/classification/permit-type-class';
 import { lookupProductsForTags } from '@/lib/classification/tag-product-matrix';
 import { PRODUCT_GROUPS } from '@/lib/classification/products';
 
@@ -418,6 +426,36 @@ export interface ClassifyPermitOptions {
    * don't supply the option (tests, programmatic uses).
    */
   realtorAvailable?: boolean;
+  /**
+   * The permit_type's class (WF2 #2, mig 120 / Spec 80 §5). The classifier
+   * filters its output: construction → full matrix; administrative/unclassified
+   * → empty; safety_upgrade → electrical+fire-protection only; signage →
+   * electrical+structural-steel only (RESERVED).
+   *
+   * Pipeline scripts compute this once per permit via
+   * `scripts/lib/permit-type-classifier.js#classifyPermitType(classMap, permit_type)`.
+   * Defaults to `'unclassified'` (safe-skip) when not provided — protects future
+   * call sites from accidentally bypassing the gate.
+   */
+  permitClass?: PermitTypeClass;
+}
+
+/**
+ * Apply WF2 #2 (mig 120 / Spec 80 §5) class-based gating to a matches array.
+ * Filters the trade matrix per `permit_type_class`, then conditionally appends
+ * the realtor TradeMatch only for construction-class permits. Mirror of
+ * scripts/classify-permits.js#applyClassGating per Spec 7 §7.1 dual-path.
+ */
+function applyClassGating(
+  matches: TradeMatch[],
+  permit: Partial<Permit>,
+  phase: string,
+  realtorAvailable: boolean,
+  permitClass: PermitTypeClass,
+): TradeMatch[] {
+  const filtered = filterTradesByClass(matches, permitClass);
+  if (!shouldAppendRealtor(permitClass)) return filtered;
+  return appendRealtorMatch(filtered, permit, phase, realtorAvailable);
 }
 
 export function classifyPermit(
@@ -427,6 +465,7 @@ export function classifyPermit(
   options?: ClassifyPermitOptions,
 ): TradeMatch[] {
   const realtorAvailable = options?.realtorAvailable ?? true;
+  const permitClass: PermitTypeClass = options?.permitClass ?? UNCLASSIFIED;
   const phase = determinePhase(permit);
   const code = extractPermitCode(permit.permit_num);
   const isNarrowScope = code != null && NARROW_SCOPE_CODES[code] != null;
@@ -435,7 +474,7 @@ export function classifyPermit(
   if (isNarrowScope) {
     const tier1 = matchTier1Rules(permit, rules, phase);
     const limited = applyScopeLimit(tier1, permit.permit_num, permit.work);
-    if (limited.length > 0) return appendRealtorMatch(limited, permit, phase, realtorAvailable);
+    if (limited.length > 0) return applyClassGating(limited, permit, phase, realtorAvailable, permitClass);
 
     // Fallback: assign code's allowed trades at 0.80 confidence
     const allowed = NARROW_SCOPE_CODES[code!]!;
@@ -469,11 +508,12 @@ export function classifyPermit(
         lead_score: leadScore,
       });
     }
-    return appendRealtorMatch(
+    return applyClassGating(
       applyScopeLimit(narrowFallback, permit.permit_num, permit.work),
       permit,
       phase,
       realtorAvailable,
+      permitClass,
     );
   }
 
@@ -512,11 +552,12 @@ export function classifyPermit(
   }
 
   const allMatches = Array.from(merged.values());
-  return appendRealtorMatch(
+  return applyClassGating(
     applyScopeLimit(allMatches, permit.permit_num, permit.work),
     permit,
     phase,
     realtorAvailable,
+    permitClass,
   );
 }
 
