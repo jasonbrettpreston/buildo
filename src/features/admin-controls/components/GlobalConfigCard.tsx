@@ -137,6 +137,18 @@ const GROUPS: Array<{ label: string; keys: string[] }> = [
     ],
   },
   {
+    // Spec 44 §4 (Staleness) + Spec 86 §1 — operator-tunable gate for the
+    // deepscrapes chain step 7 (assert_staleness). Externalized in
+    // migration 121 (WF3 2026-05-08) to unblock the chain when natural
+    // scrape staleness drift exceeds the legacy hardcoded `> 0` halt.
+    label: 'Pipeline Staleness Thresholds',
+    keys: [
+      'staleness_max_stale_over_30d',
+      'staleness_min_coverage_pct',
+      'staleness_max_days_stale',
+    ],
+  },
+  {
     // Spec 84 §3.4 — distribution bands consumed by
     // scripts/quality/assert-lifecycle-phase-distribution.js. Tunable
     // here so operators can widen/tighten bands without a code deploy

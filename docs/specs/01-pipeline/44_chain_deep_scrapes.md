@@ -76,7 +76,7 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
    - Any Not Passed → `'Not Passed'`
    - Mixed → `'Active Inspection'`
 4. **Network health** — verifies proxy connectivity, checks for WAF blocks in recent pipeline_runs
-5. **Staleness** — flags permits with stale `scraped_at` (>30 days), monitors consecutive empty streaks
+5. **Staleness** — flags permits with stale `scraped_at` (> `scrape_stale_days`); operator-tunable 3-tier gate (`staleness_max_stale_over_30d` mig 121); monitors consecutive empty streaks
 
 ### Outputs
 - `permit_inspections` table: stage-level status records per permit
@@ -106,8 +106,13 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
 ### Staleness (assert_staleness)
 | Check | Threshold | Level |
 |-------|-----------|-------|
-| Permits with stale `scraped_at` (>30d) | > 0 (production phase) | FAIL |
+| Permits with stale `scraped_at` (>`scrape_stale_days`) | > `staleness_max_stale_over_30d` | FAIL |
+| Permits with stale `scraped_at` (>`scrape_stale_days`) | 1..`staleness_max_stale_over_30d` (inclusive) | WARN |
+| Coverage (scraped/total) | < `staleness_min_coverage_pct` | WARN (informational) |
+| Single-permit `max_days_stale` | > `staleness_max_days_stale` | WARN (informational) |
 | Consecutive empty max | > WAF_TRAP_THRESHOLD (20) | WARN |
+
+> **Operator-tunable (mig 121, WF3 2026-05-08):** all three `staleness_*` thresholds are operator-tunable via `/admin/control-panel` per Spec 86 §1. Defaults absorb the 2026-05-08 snapshot (6,514 stale → WARN, not FAIL); tighten to <2000 once scrape coverage ≥50% per Spec 38.
 
 ### Data bounds (assert_data_bounds, deep_scrapes scope)
 | Check | Threshold | Level |

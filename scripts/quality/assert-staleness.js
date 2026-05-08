@@ -7,8 +7,13 @@
  *
  * Checks:
  *   1. Coverage stats (informational): total target, scraped, never scraped, pct
+ *      - WARN row emitted when coverage < staleness_min_coverage_pct (mig 121)
  *   2. max_days_stale (informational)
- *   3. stale_over_30d: WARN in early phase (<5% coverage), FAIL in production
+ *      - WARN row emitted when value exceeds staleness_max_days_stale (mig 121)
+ *   3. stale_over_30d (the gate):
+ *      - PASS when 0
+ *      - WARN when 0 < count <= staleness_max_stale_over_30d (mig 121)
+ *      - FAIL when count > staleness_max_stale_over_30d
  *
  * Usage: node scripts/quality/assert-staleness.js
  * Exit 0 = pass, Exit 1 = fail
@@ -16,6 +21,8 @@
  * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
  * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
  * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md §4 (Staleness)
+ * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §1
  */
 const { z } = require('zod');
 const pipeline = require('../lib/pipeline');
@@ -24,6 +31,10 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loa
 const LOGIC_VARS_SCHEMA = z.object({
   scrape_early_phase_threshold_pct: z.coerce.number().finite().positive(),
   scrape_stale_days:                z.coerce.number().finite().positive().int(),
+  // mig 121 (WF3 2026-05-08) — operator-tunable staleness gate.
+  staleness_max_stale_over_30d:     z.coerce.number().finite().nonnegative().int(),
+  staleness_min_coverage_pct:       z.coerce.number().finite().nonnegative(),
+  staleness_max_days_stale:         z.coerce.number().finite().nonnegative().int(),
 }).passthrough();
 
 // Must match scraper TARGET_TYPES (Spec 38 §3.6 — stage-level scrape targets only)
@@ -43,6 +54,10 @@ pipeline.run('assert-staleness', async (pool) => {
 
   const earlyPhasePct = logicVars.scrape_early_phase_threshold_pct;
   const staleDays     = logicVars.scrape_stale_days;
+  // mig 121 — operator-tunable thresholds (Spec 86 §1).
+  const maxStaleOver30dThreshold = logicVars.staleness_max_stale_over_30d;
+  const minCoveragePctThreshold  = logicVars.staleness_min_coverage_pct;
+  const maxDaysStaleThreshold    = logicVars.staleness_max_days_stale;
 
   console.log('\n=== Phase 4: Staleness Monitor ===\n');
 
@@ -67,15 +82,27 @@ pipeline.run('assert-staleness', async (pool) => {
   const coveragePct = totalTarget > 0 ? ((scraped / totalTarget) * 100).toFixed(1) + '%' : '0%';
   const isEarlyPhase = totalTarget > 0 && (scraped / totalTarget) * 100 < earlyPhasePct;
 
+  // Coverage floor evaluation (informational; not a halt per Spec 44 §3.5).
+  const coverageNumeric = totalTarget > 0 ? (scraped / totalTarget) * 100 : 0;
+  const belowCoverageFloor = totalTarget > 0 && coverageNumeric < minCoveragePctThreshold;
+
   rows.push({ metric: 'total_target_permits', value: totalTarget, threshold: null, status: 'INFO' });
   rows.push({ metric: 'scraped_permits', value: scraped, threshold: null, status: 'INFO' });
   rows.push({ metric: 'never_scraped', value: neverScraped, threshold: null, status: 'INFO' });
-  rows.push({ metric: 'coverage_pct', value: coveragePct, threshold: null, status: 'INFO' });
+  rows.push({
+    metric: 'coverage_pct',
+    value: coveragePct,
+    threshold: `>= ${minCoveragePctThreshold}%`,
+    status: belowCoverageFloor ? 'WARN' : 'INFO',
+  });
+  if (belowCoverageFloor) {
+    warnings.push(`coverage ${coveragePct} below floor ${minCoveragePctThreshold}% (mig 121, Spec 44 §3.5 — informational)`);
+  }
 
   console.log(`  INFO: total_target_permits = ${totalTarget.toLocaleString()}`);
   console.log(`  INFO: scraped_permits = ${scraped.toLocaleString()}`);
   console.log(`  INFO: never_scraped = ${neverScraped.toLocaleString()}`);
-  console.log(`  INFO: coverage_pct = ${coveragePct}${isEarlyPhase ? ' (early phase)' : ''}`);
+  console.log(`  ${belowCoverageFloor ? 'WARN' : 'INFO'}: coverage_pct = ${coveragePct}${isEarlyPhase ? ' (early phase)' : ''}${belowCoverageFloor ? ` (below floor ${minCoveragePctThreshold}%)` : ''}`);
 
   // Staleness query — group by permit first (a permit has multiple inspection
   // stages, so counting raw rows inflates stale_14d by the stage count)
@@ -99,21 +126,33 @@ pipeline.run('assert-staleness', async (pool) => {
   const maxDaysStale = parseInt(stalenessRes.rows[0]?.max_days_stale) || 0;
   const stale30d = parseInt(stalenessRes.rows[0]?.stale_30d) || 0;
 
-  rows.push({ metric: 'max_days_stale', value: maxDaysStale, threshold: null, status: 'INFO' });
-  console.log(`  INFO: max_days_stale = ${maxDaysStale} days`);
+  // max_days_stale informational ceiling (mig 121, WF3 2026-05-08 — Spec 86 §1).
+  const exceedsMaxDaysStale = maxDaysStale > maxDaysStaleThreshold;
+  rows.push({
+    metric: 'max_days_stale',
+    value: maxDaysStale,
+    threshold: `<= ${maxDaysStaleThreshold} days`,
+    status: exceedsMaxDaysStale ? 'WARN' : 'INFO',
+  });
+  if (exceedsMaxDaysStale) {
+    warnings.push(`max_days_stale ${maxDaysStale}d exceeds ceiling ${maxDaysStaleThreshold}d (informational; not a halt)`);
+  }
+  console.log(`  ${exceedsMaxDaysStale ? 'WARN' : 'INFO'}: max_days_stale = ${maxDaysStale} days${exceedsMaxDaysStale ? ` (ceiling ${maxDaysStaleThreshold}d)` : ''}`);
 
-  if (stale30d > 0) {
-    if (isEarlyPhase) {
-      warnings.push(`${stale30d} permits stale >30d (early phase — not blocking)`);
-      rows.push({ metric: 'stale_over_30d', value: stale30d, threshold: '== 0', status: 'WARN' });
-      console.log(`  WARN: stale_over_30d = ${stale30d} (early phase)`);
-    } else {
-      errors.push(`${stale30d} permits stale >30d`);
-      rows.push({ metric: 'stale_over_30d', value: stale30d, threshold: '== 0', status: 'FAIL' });
-      console.error(`  FAIL: stale_over_30d = ${stale30d}`);
-    }
+  // 3-tier stale_over_30d gate (mig 121). Threshold loaded from logic_variables;
+  // operators tighten via /admin/control-panel as scrape coverage scales.
+  // PASS = 0; WARN = 1..threshold inclusive; FAIL = > threshold.
+  const stale30dThresholdLabel = `<= ${maxStaleOver30dThreshold}`;
+  if (stale30d > maxStaleOver30dThreshold) {
+    errors.push(`${stale30d} permits stale >${staleDays}d exceeds threshold ${maxStaleOver30dThreshold}`);
+    rows.push({ metric: 'stale_over_30d', value: stale30d, threshold: stale30dThresholdLabel, status: 'FAIL' });
+    console.error(`  FAIL: stale_over_30d = ${stale30d} (threshold ${maxStaleOver30dThreshold})`);
+  } else if (stale30d >= 1) {
+    warnings.push(`${stale30d} permits stale >${staleDays}d (within tolerance ${maxStaleOver30dThreshold} — operator-tunable per Spec 86 §1)`);
+    rows.push({ metric: 'stale_over_30d', value: stale30d, threshold: stale30dThresholdLabel, status: 'WARN' });
+    console.log(`  WARN: stale_over_30d = ${stale30d} (within tolerance ${maxStaleOver30dThreshold})`);
   } else {
-    rows.push({ metric: 'stale_over_30d', value: 0, threshold: '== 0', status: 'PASS' });
+    rows.push({ metric: 'stale_over_30d', value: 0, threshold: stale30dThresholdLabel, status: 'PASS' });
     console.log('  PASS: stale_over_30d = 0');
   }
 

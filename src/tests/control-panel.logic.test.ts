@@ -147,6 +147,13 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'lifecycle_band_o3_min', 'lifecycle_band_o3_max',
   'lifecycle_band_coa_p1_min', 'lifecycle_band_coa_p1_max',
   'lifecycle_band_coa_p2_min', 'lifecycle_band_coa_p2_max',
+
+  // ── Pipeline staleness thresholds (WF3 2026-05-08, migration 121) ──
+  // Spec 47 §R4 + Spec 44 §4 + Spec 86 §1. Externalized from the
+  // hardcoded `if (stale30d > 0)` gate in assert-staleness.js.
+  'staleness_max_stale_over_30d',
+  'staleness_min_coverage_pct',
+  'staleness_max_days_stale',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

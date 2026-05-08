@@ -714,5 +714,27 @@
     "description": "Max count of permits with enriched_status=Permit Issued NOT in P7a/b/c/d/P8/P18/O1-O3 before the assertion FAILs.",
     "min": 0,
     "max": 100000
+  },
+
+  "staleness_max_stale_over_30d": {
+    "default": 10000,
+    "type": "number",
+    "description": "Max permits with last inspection scrape older than scrape_stale_days before assert-staleness emits FAIL (Spec 44 step 7). Sized against the 2026-05-08 snapshot (6,514 stale → WARN). Tighten to <2000 once scrape coverage ≥50% per Spec 38.",
+    "min": 0,
+    "max": 100000
+  },
+  "staleness_min_coverage_pct": {
+    "default": 10,
+    "type": "number",
+    "description": "Scraped/total ratio (percent) below which assert-staleness emits an informational WARN row. Per Spec 44 §3.5 informational, not a halt.",
+    "min": 0,
+    "max": 100
+  },
+  "staleness_max_days_stale": {
+    "default": 60,
+    "type": "number",
+    "description": "Single-permit max_days_stale ceiling (days). Above this assert-staleness emits an informational WARN row indicating permits are aging beyond expectation. Not a halt.",
+    "min": 0,
+    "max": 365
   }
 }
