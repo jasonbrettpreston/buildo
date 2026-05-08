@@ -14,15 +14,37 @@
 // Skipped if BUILDO_TEST_DB=1 / DATABASE_URL is not set.
 
 import type { DatabaseError } from 'pg';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 const pool = getTestPool();
 
 describe.skipIf(!dbAvailable())('migration 070 — lead_views XOR CHECK', () => {
+  // WF3 2026-05-08 — seed the FK targets the four it() blocks point at.
+  // The "accepts ..." tests need both targets to actually exist; without seeds
+  // they hit FK violation (23503) instead of the intended success / CHECK fire.
+  // Pattern mirrors lead-views-fk.db.test.ts:18-34.
+  beforeAll(async () => {
+    if (!pool) return;
+    await pool.query(
+      `INSERT INTO permits (permit_num, revision_num, permit_type, status)
+       VALUES ('24 999001', '00', 'TEST', 'Permit Issued')
+       ON CONFLICT (permit_num, revision_num) DO NOTHING`,
+    );
+    await pool.query(
+      `INSERT INTO entities (id, legal_name, name_normalized)
+       VALUES (9999, 'XOR Test Builder', 'xor-test-builder-9999')
+       ON CONFLICT (id) DO NOTHING`,
+    );
+  });
+
   afterAll(async () => {
     if (!pool) return;
+    // Order: delete the children first (CASCADE would also cover this, but
+    // explicit deletes keep the cleanup intent obvious).
     await pool.query("DELETE FROM lead_views WHERE user_id LIKE 'xor-test-%'");
+    await pool.query("DELETE FROM entities WHERE id = 9999");
+    await pool.query("DELETE FROM permits WHERE permit_num = '24 999001' AND revision_num = '00'");
     await pool.end();
   });
 
