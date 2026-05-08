@@ -450,3 +450,26 @@ Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #
 7. ✅ DeepSeek #3: `useEffect` syncs `initialId` → `activeId` when parent re-passes (deep-link reactivity)
 8. ✅ DeepSeek #4 + #5: `costs` prop removed from `ForecastPanel` (was unused); empty/whitespace `initialId` normalized to null via `normalizeId()` helper
 
+---
+
+## Spec 80 — WF2 #1 Multi-Agent Review Deferred Items (2026-05-08)
+
+Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #1 `permit_type_class` foundation (mig 120 + dual-path TS/JS mirrors).
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| CRITICAL (per Gemini, MEDIUM in context) | Gemini | **`ON CONFLICT (permit_type) DO NOTHING` vs `DO UPDATE SET ...`** — the `DO NOTHING` clause means a partial-apply or operator experiment leaves the prior class in place; re-running mig 120 doesn't converge. | Established codebase convention (mig 117/118/119 all use the same pattern). The intent is to preserve operator hotfixes against silent revert by re-running the migration — Spec 86 §1 admin tunability principle. Convergence-vs-preservation is a real tradeoff; the codebase has chosen preservation. Document the rationale more loudly in the migration header next time this comes up. |
+| HIGH | Gemini | **`Temporary Structures` classified as `unclassified` contradicts the comment** ("minimal trades: site, electrical, sometimes plumbing"). Either reclassify as `construction` (over-includes painting/drywall) or add a `narrow_trade`/`limited_construction` enum value. | User-authorized current plan. The 4 unclassified types (Designated Structures, Partial Permit, Conditional Permit, Temporary Structures) all need WF3 description-level subtype detection to handle correctly. Adding a new enum value now would inflate scope; the right place is the WF3 that solves the broader class problem. |
+| MEDIUM | Gemini | **`permit_type TEXT PRIMARY KEY` is case-sensitive + unbounded.** Inputs from CKAN may drift in capitalization or whitespace, missing the join. Suggested fix: `CHECK (permit_type = trim(permit_type))` + case-insensitive collation. | Theoretical — 247K dev-DB permits surveyed all use canonical casing. Worth adding when/if a mismatch surfaces; not blocking. |
+| MEDIUM | Gemini | **DOWN procedure incomplete — operator restart of consumer apps not documented.** When the table is dropped, in-memory caches in pipeline scripts that loaded the map at startup will become stale. | Runbook concern, not code. Add to the runbook when the next operational doc sweep happens. |
+| MEDIUM | worktree (conf 83) | **Parity test reads migration file text, not live DB.** A future `ALTER TYPE permit_type_class ADD VALUE 'narrow_trade'` migration would drift the live DB without breaking the parity test. | Not a regression today (no such migration exists). Documented in test header so a future engineer knows to add a `*.infra.test.ts` companion that queries `pg_enum` when the first ALTER TYPE migration lands. |
+| LOW | Gemini | **`signage` reserved-but-unimplemented enum value.** Behavior is already documented in Spec 80 §5 ("only electrical+structural-steel"), but no rows or consumer logic exists yet. | Forward-compat. Will be implemented in the WF3 that adds description-level subtype detection inside `Designated Structures`. Documented as RESERVED in mig 120 + Spec 80 §5. |
+
+**Resolved in commit (6 fixes folded in):**
+1. ✅ Gemini HIGH: `updated_at` auto-update trigger added so operator UPDATE via admin UI bumps the timestamp without app-layer responsibility
+2. ✅ DeepSeek HIGH (null guard): `row.class ?? UNCLASSIFIED` defensive fallback in `loadPermitTypeClassMap`
+3. ✅ DeepSeek HIGH (drift detection): rows with non-canonical class values are skipped + logged via `console.warn`; the map stays canonical so consumer `=== CONSTRUCTION` checks remain correct
+4. ✅ DeepSeek MEDIUM (silent catch): REMOVED the silent `try/catch` swallowing all DB errors — startup failures now propagate to the caller (Spec 47 §R5 startup-guard pattern; same lesson as commit `0f2b3d7`'s `fetchNeighbourhoodPremiumTier` fix)
+5. ✅ DeepSeek MEDIUM (Map guard): `classifyPermitType()` validates `classMap instanceof Map` before calling `.get()` — non-Map input returns `UNCLASSIFIED` (safe-skip) instead of crashing the pipeline mid-run
+6. ✅ Worktree MEDIUM (doc note): Added explicit note to `permit-type-class.logic.test.ts` that the parity test reads the migration file text and DOES NOT catch live-DB drift via `ALTER TYPE`. Future migration that adds an enum value MUST add a companion `*.infra.test.ts` querying `pg_enum`.
+

@@ -47,7 +47,7 @@ assert_entity_tracing → assert_global_coverage
 | 10 | `link_neighbourhoods` | `link-neighbourhoods.js` | Assign neighbourhood_id via point-in-polygon | permits |
 | 11 | `link_massing` | `link-massing.js` | Link parcels to 3D building footprint volumes | parcel_buildings |
 | 12 | `link_similar` | `link-similar.js` | Propagate scope tags between related permits at same address | permits |
-| 13 | `classify_permits` | `classify-permits.js` | Deep trade classification via tag-trade matrix (32 trades) | permit_trades |
+| 13 | `classify_permits` | `classify-permits.js` | Deep trade classification via tag-trade matrix (32 trades). **WF2 #2 (forthcoming) gates this on `permit_type_class` (Spec 80 §5, mig 120) — sign permits → only electrical+structural-steel; administrative permits → no trades; safety_upgrade → electrical+fire-protection; unclassified → safe-skip.** | permit_trades |
 | 14 | `compute_cost_estimates` | `compute-cost-estimates.js` | Pre-compute cost model estimates + Liar's Gate + 32-trade allocation slicer | cost_estimates |
 | 15 | `compute_timing_calibration_v2` | `compute-timing-calibration-v2.js` | Compute phase-to-phase calibration medians from inspection stage pairs (P11→P12, etc.) — feeds the **spec 85 flight tracker** (step 22). Sole calibration step since WF3 2026-04-13 removed v1. | phase_calibration |
 | 16 | `link_coa` | `link-coa.js` | Link CoA to permits via `street_name_normalized` + confidence matrix | coa_applications |

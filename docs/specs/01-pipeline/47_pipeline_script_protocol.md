@@ -829,6 +829,16 @@ required downstream routing.
 ignored, including `overdue` (predicted start already passed) which arguably warrants the
 most urgent CRM alert.
 
+**Lookup-table variant (WF2 #1 2026-05-08, mig 120):** when the enum vocabulary is small AND
+operator-tunable (e.g. classification of `permit_type` into behavioral buckets), the canonical
+shape is a lookup table seeded from a researched classification, with the enum values defined
+as a Postgres `CREATE TYPE`. Operators reclassify via DB UPDATE without redeploys (Spec 86 §1
+admin tunability pattern). See `permit_type_class` enum + `permit_type_classifications` table —
+the JS-side mirror lives at `scripts/lib/permit-type-classifier.js`, the TS-side at
+`src/lib/classification/permit-type-class.ts`, and the parity test at
+`src/tests/permit-type-class.logic.test.ts` regression-locks all three surfaces against the
+SQL CREATE TYPE.
+
 ### 10.3 Verify downstream handling before shipping a new value
 
 > **Operator-facing dual surface (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7 amendment) renders every field that step 27 (`assert-global-coverage.js`) measures coverage on, organized into 8 panels by chain step group. Step 27 is the *automated* verification of downstream contracts; the inspector is the *operator-facing* dual — both surface the same field set, in different audit contexts.

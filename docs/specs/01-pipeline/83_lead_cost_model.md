@@ -78,6 +78,9 @@ The engine is split into "Muscle" (Execution) and "Brain" (Logic).
 
 ### Core Logic (Three-Step Valuation)
 
+> **permit_type_class gating (WF2 #3, forthcoming, depends on mig 120 / Spec 80 §5):** the cost model only applies the Surgical Triangle when `permit_type_class = 'construction'`. Non-construction classes (`administrative`, `safety_upgrade`, `unclassified`) skip cost slicing entirely → `cost_source = 'none'`. This eliminates the $29M-for-2-signs class of bug surfaced by the WF3 investigation 2026-05-08 (sign permits inheriting host-building GFA in the Surgical Triangle). The reserved `signage` class will be unlocked once a future WF3 adds description-level subtype detection inside `Designated Structures`.
+
+
 #### Step A: Establish Geometric Truth (GFA)
 Calculate the physical baseline of the structure.
 * **Primary (Massing)**: $GFA = Footprint\ Area \times (Stories\ or\ Height\ Factor)$
