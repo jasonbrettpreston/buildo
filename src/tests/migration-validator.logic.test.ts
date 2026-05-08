@@ -248,11 +248,14 @@ describe('validateMigration', () => {
 
   // ─── B1: Rule 1 scoped to UP block only ──────────────────────────────────────
 
-  it('B1 regression: DROP TABLE in DOWN block does NOT error without ALLOW-DESTRUCTIVE', () => {
+  it('B1 regression: DROP TABLE in DOWN does NOT trigger Rule 1 (but DOES trigger Rule 6)', () => {
+    // Rule 1 (ALLOW-DESTRUCTIVE) is UP-scoped — DROP in DOWN must not fire it.
+    // Rule 6 (no executable SQL in DOWN) IS file-wide — same input still fails
+    // overall because the runner runs every line. Both invariants verified.
     const sql = `-- UP\nCREATE TABLE temp_thing (id SERIAL PRIMARY KEY);\n-- DOWN\nDROP TABLE IF EXISTS temp_thing;\n`;
     const result = validateMigration(sql, 'migrations/300_b1_down_regression.sql');
-    expect(result.ok).toBe(true);
-    expect(result.errors).toEqual([]);
+    expect(result.errors.some((e) => /DROP TABLE.*ALLOW-DESTRUCTIVE/.test(e))).toBe(false);
+    expect(result.errors.some((e) => /DOWN.*executable|executable.*DOWN/i.test(e))).toBe(true);
   });
 
   it('B1 correctness: DROP TABLE in UP block still errors without ALLOW-DESTRUCTIVE', () => {
@@ -262,18 +265,18 @@ describe('validateMigration', () => {
     expect(result.errors.some((e) => e.includes('DROP TABLE'))).toBe(true);
   });
 
-  it('B1 regression: TRUNCATE TABLE in DOWN block does NOT error without ALLOW-DESTRUCTIVE', () => {
+  it('B1 regression: TRUNCATE TABLE in DOWN does NOT trigger Rule 1 (but DOES trigger Rule 6)', () => {
     const sql = `-- UP\nCREATE TABLE temp_thing (id SERIAL PRIMARY KEY);\n-- DOWN\nTRUNCATE TABLE temp_thing;\nDROP TABLE IF EXISTS temp_thing;\n`;
     const result = validateMigration(sql, 'migrations/304_b1_truncate_down.sql');
-    expect(result.ok).toBe(true);
-    expect(result.errors).toEqual([]);
+    expect(result.errors.some((e) => /TRUNCATE.*ALLOW-DESTRUCTIVE/.test(e))).toBe(false);
+    expect(result.errors.some((e) => /DOWN.*executable|executable.*DOWN/i.test(e))).toBe(true);
   });
 
-  it('B1 regression: DROP COLUMN in DOWN block does NOT error without ALLOW-DESTRUCTIVE', () => {
+  it('B1 regression: DROP COLUMN in DOWN does NOT trigger Rule 1 (but DOES trigger Rule 6)', () => {
     const sql = `-- UP\nALTER TABLE permits ADD COLUMN extra TEXT;\n-- DOWN\nALTER TABLE permits DROP COLUMN extra;\n`;
     const result = validateMigration(sql, 'migrations/305_b1_drop_col_down.sql');
-    expect(result.ok).toBe(true);
-    expect(result.errors).toEqual([]);
+    expect(result.errors.some((e) => /DROP COLUMN.*ALLOW-DESTRUCTIVE/.test(e))).toBe(false);
+    expect(result.errors.some((e) => /DOWN.*executable|executable.*DOWN/i.test(e))).toBe(true);
   });
 
   it('B1 + allowDestructive: marker in DOWN block only does NOT exempt UP block drops', () => {
@@ -286,7 +289,9 @@ describe('validateMigration', () => {
   // ─── CONCURRENTLY-EXEMPT: Rule 2 suppression for grandfathered migrations ────
 
   it('CONCURRENTLY-EXEMPT: suppresses Rule 2 for CREATE INDEX on large table', () => {
-    const sql = `-- CONCURRENTLY-EXEMPT: grandfathered\n-- UP\nCREATE INDEX idx_permits_foo ON permits (foo);\n-- DOWN\nDROP INDEX IF EXISTS idx_permits_foo;\n`;
+    // DOWN content kept as a comment so Rule 6 doesn't fire — original test
+    // intent was Rule 2 suppression, not DOWN-block content.
+    const sql = `-- CONCURRENTLY-EXEMPT: grandfathered\n-- UP\nCREATE INDEX idx_permits_foo ON permits (foo);\n-- DOWN\n-- DROP INDEX IF EXISTS idx_permits_foo;\n`;
     const result = validateMigration(sql, 'migrations/307_concurrently_exempt.sql');
     expect(result.ok).toBe(true);
     expect(result.errors).toEqual([]);
@@ -317,5 +322,57 @@ describe('validateMigration', () => {
     const result = validateMigration(sql, 'migrations/303_a4_permit_history.sql');
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.includes('permit_history'))).toBe(true);
+  });
+
+  // ─── Rule 6: DOWN block must not contain executable SQL ─────────────────────
+  // 🔗 Why this rule exists:
+  //   `scripts/migrate.js` runs the entire SQL file as one batch (line 197).
+  //   It does NOT parse `-- UP` / `-- DOWN` as section markers. Author intent
+  //   that the DOWN block "only runs under db:migrate:down tooling" is a
+  //   misunderstanding — the runner runs every line. Migration 118
+  //   (commit 2901fcd) reintroduced this antipattern with a `RAISE EXCEPTION`
+  //   block in DOWN, breaking CI on every push to main for 2 days.
+  // 🔗 Prior precedent: commits 1da51e4 + 68643b3 commented out 18 migrations'
+  //   DOWN blocks for the same reason. This rule prevents recurrence.
+
+  it('Rule 6: fails when DOWN block contains uncommented INSERT', () => {
+    const sql = `-- UP\nCREATE TABLE t (id INT);\n-- DOWN\nINSERT INTO schema_migrations (filename) VALUES ('rollback');\n`;
+    const result = validateMigration(sql, 'migrations/400_rule6_insert_down.sql');
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => /DOWN.*executable|executable.*DOWN/i.test(e))).toBe(true);
+  });
+
+  it('Rule 6: fails when DOWN block contains uncommented DO $$ ... END $$', () => {
+    const sql =
+      `-- UP\nCREATE TABLE t (id INT);\n` +
+      `-- DOWN\nDO $$\nBEGIN\n  RAISE EXCEPTION USING MESSAGE = 'manual rollback required';\nEND $$;\n`;
+    const result = validateMigration(sql, 'migrations/401_rule6_do_block_down.sql');
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => /DOWN.*executable|executable.*DOWN/i.test(e))).toBe(true);
+  });
+
+  it('Rule 6: passes when DOWN block is all comments (canonical pattern)', () => {
+    const sql =
+      `-- UP\nCREATE TABLE t (id INT);\n` +
+      `-- DOWN\n-- (commented out — scripts/migrate.js runs every line)\n-- DROP TABLE t;\n`;
+    const result = validateMigration(sql, 'migrations/402_rule6_commented_down.sql');
+    expect(result.ok).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('Rule 6: passes when DOWN block is empty', () => {
+    const sql = `-- UP\nCREATE TABLE t (id INT);\n-- DOWN\n`;
+    const result = validateMigration(sql, 'migrations/403_rule6_empty_down.sql');
+    expect(result.ok).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('Rule 6: fails on benign-looking SELECT 1; in DOWN (still executable)', () => {
+    // Mig 099's pre-fix shape — SELECT 1; is a no-op but it IS executed.
+    // The rule rejects it for consistency: every line after `-- DOWN` must be a comment.
+    const sql = `-- UP\nSELECT 1;\n-- DOWN\nSELECT 1;\n`;
+    const result = validateMigration(sql, 'migrations/404_rule6_select1_down.sql');
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => /DOWN.*executable|executable.*DOWN/i.test(e))).toBe(true);
   });
 });

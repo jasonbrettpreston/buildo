@@ -64,15 +64,19 @@ ON CONFLICT (trade_slug) DO NOTHING;
 -- explicit instructions rather than silently break standard tooling.)
 
 -- DOWN
-DO $$
-BEGIN
-  RAISE EXCEPTION USING
-    ERRCODE = '0A000',  -- feature_not_supported
-    MESSAGE = 'MANUAL ROLLBACK REQUIRED for migration 118 (realtor trade).',
-    DETAIL  = 'Transactional rollback is unsafe — backfilled permit_trades rows would CASCADE DELETE under a long table lock. Run the manual procedure documented below, then re-run this migration with the DOWN block guarded.',
-    HINT    = 'Manual rollback (run OUTSIDE a single transaction, in this exact order):
-    1. DELETE FROM permit_trades WHERE trade_id = 33;          -- batched if large; consider scripts/backfill-realtor-permit-trades.js inverse
-    2. DELETE FROM trade_configurations WHERE trade_slug = ''realtor'';
-    3. DELETE FROM trades WHERE id = 33;
-    Then revert the TRADES array entry + TRADE_TARGET_PHASE_FALLBACK realtor row in code (one commit).';
-END $$;
+-- (commented out — scripts/migrate.js executes the entire file as one batch
+-- and does NOT respect `-- DOWN` as a section marker. Uncommenting any line
+-- below caused CI to fail on every push to main for 2 days. WF3 2026-05-08.)
+--
+-- DO $$
+-- BEGIN
+--   RAISE EXCEPTION USING
+--     ERRCODE = '0A000',  -- feature_not_supported
+--     MESSAGE = 'MANUAL ROLLBACK REQUIRED for migration 118 (realtor trade).',
+--     DETAIL  = 'Transactional rollback is unsafe — backfilled permit_trades rows would CASCADE DELETE under a long table lock. Run the manual procedure documented below, then re-run this migration with the DOWN block guarded.',
+--     HINT    = 'Manual rollback (run OUTSIDE a single transaction, in this exact order):
+--     1. DELETE FROM permit_trades WHERE trade_id = 33;          -- batched if large; consider scripts/backfill-realtor-permit-trades.js inverse
+--     2. DELETE FROM trade_configurations WHERE trade_slug = ''realtor'';
+--     3. DELETE FROM trades WHERE id = 33;
+--     Then revert the TRADES array entry + TRADE_TARGET_PHASE_FALLBACK realtor row in code (one commit).';
+-- END $$;

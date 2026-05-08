@@ -7,6 +7,7 @@ on:
       - 'scripts/**'
       - 'eslint.config.mjs'
       - 'ruff.toml'
+      - 'migrations/**'
 
 jobs:
   boy-scout:
@@ -40,3 +41,20 @@ jobs:
           python-version: '3.11'
       - run: pip install ruff
       - run: ruff check scripts/*.py
+
+  validate-migrations:
+    # Regression-lock for the mig-118 antipattern (active SQL after `-- DOWN`
+    # crashes scripts/migrate.js because the runner doesn't parse markers).
+    # Pre-commit hook also enforces validate-migration.js, but `--no-verify`
+    # or out-of-band pushes would bypass it; this CI gate catches them BEFORE
+    # db-tests.yml fails on every fresh DB.
+    name: Migration Safety Validator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: node scripts/validate-migration.js migrations/*.sql

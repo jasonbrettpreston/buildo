@@ -9,6 +9,15 @@
 //   3. ALTER TABLE ... ADD COLUMN ... NOT NULL must include a DEFAULT
 //      (checks every clause of a multi-clause ALTER).
 //   4. UP and DOWN blocks must both be present (backstop for the bash hook).
+//   6. DOWN block must be all comments / empty. `scripts/migrate.js` runs
+//      the entire SQL file as one batch (it does NOT parse `-- UP`/`-- DOWN`
+//      as section markers), so any executable SQL after `-- DOWN` runs
+//      unconditionally on every migration apply. Mig 118 (commit 2901fcd)
+//      reintroduced this antipattern with a `RAISE EXCEPTION` block in DOWN
+//      and broke CI on every push to main for 2 days. This rule prevents
+//      recurrence. Prior cleanup: commits 1da51e4 + 68643b3 commented out
+//      DOWN sections in 18 migrations. Rule numbering skips 5 to leave
+//      room for future renumbering — Rule 5 is the FK-signature warning.
 //
 // Usage:
 //   node scripts/validate-migration.js migrations/067_foo.sql migrations/068_bar.sql
@@ -277,6 +286,33 @@ function validateMigration(content, filename) {
       }
       // Advance cursor past this clause + its separating comma.
       cursor += clause.length + 1;
+    }
+  }
+
+  // Rule 6: DOWN block must contain no executable SQL.
+  // The runner (`scripts/migrate.js`) executes every line in the file regardless
+  // of the `-- UP` / `-- DOWN` markers, so any non-comment line after `-- DOWN`
+  // runs on every migration apply. Walk the post-DOWN slice line by line; flag
+  // the first executable line we find. Mig 118 (RAISE EXCEPTION) is the
+  // bug-of-record; mig 099 (`SELECT 1;`) is the benign-looking sibling.
+  if (downMarkerMatch) {
+    // Find the line index AFTER the `-- DOWN` marker line.
+    const downLineEnd = content.indexOf('\n', downMarkerMatch.index);
+    const postDownStart = downLineEnd === -1 ? content.length : downLineEnd + 1;
+    const postDownStripped = stripped.slice(postDownStart);
+    const postDownLines = postDownStripped.split('\n');
+    let lineCursor = lineOf(content, postDownStart);
+    for (const rawLine of postDownLines) {
+      // After comment-stripping, an executable line will have at least one
+      // non-whitespace character. Empty (was a comment) or all-whitespace lines
+      // are fine.
+      if (/\S/.test(rawLine)) {
+        errors.push(
+          `${display}:${lineCursor}: DOWN block contains executable SQL — scripts/migrate.js runs every line; comment out or remove. (Rule 6)`,
+        );
+        break;
+      }
+      lineCursor++;
     }
   }
 

@@ -37,4 +37,5 @@ SELECT 1; -- no-op: seed insertion is handled by apply-logic-variables.js
 -- DOWN
 -- No rollback needed: this migration records process, not schema state.
 -- To undo: DELETE FROM schema_migrations WHERE filename = '099_logic_variables_seed_loader.sql';
-SELECT 1;
+-- (commented out — scripts/migrate.js runs every line. WF3 2026-05-08.)
+-- SELECT 1;
