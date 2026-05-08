@@ -410,3 +410,16 @@ Source: WF3 worktree code-reviewer of the cross-check #1 NULL + case-hygiene fix
 
 **False positive (worktree code-reviewer):** "test file is missing the 2 new `it()` blocks" — caused by worktree isolation not picking up uncommitted working-tree changes. Confirmed locally: 2 new `it()` blocks present (`grep -c "WF3 2026-05-08" → 2`); `npx vitest run` reports 8/8 passing including both new blocks.
 
+---
+
+## Spec 86/91/95/99 — WF3 Mig 118+119 Apply Deferred Items (2026-05-08)
+
+Source: Worktree code-reviewer of the WF3 that brought dev DB in sync with on-disk migrations 118 (realtor wire-up) + 119 (lifecycle bands tracking).
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| MEDIUM (confidence 82) | worktree code-reviewer | **Realtor row missing from `trade_sqft_rates` (mig 096 seeded 32 trades; realtor not added).** `src/lib/admin/control-panel.ts:250-253` LEFT JOINs `trade_sqft_rates` and falls back to `base_rate_sqft = 0` / `structure_complexity_factor = 1.0` for missing rows. Once `scripts/backfill-realtor-permit-trades.js` runs and produces realtor `permit_trades` rows, the cost model (`src/features/leads/lib/cost-model.ts`) will silently produce $0 cost estimates for realtor permits. Real silent-data-gap, not a crash. | Realtor has no `permit_trades` rows until the backfill script runs (Cycle 7 separate task). The silent-$0 path cannot trigger today. **Promote to a WF2** that adds a migration 120 (or extends mig 118 in a new mig) to seed `trade_sqft_rates` for realtor — should land before or with the backfill script. Spec 47 §10.3 ("Verify downstream handling before shipping a new value") was partially observed (the trade row exists, but a downstream-required join target was missed). |
+| LOW | session observation | **14 prior migrations have checksum drift warnings.** The migrate.js runner emitted WARN lines for migs 089, 091, 092, 096, 099, 100, 101, 102, 103, 106, 108, 111, 112, 117. Drift is from prior commits `1da51e4` + `68643b3` that comment-only edited applied DOWN sections. The runner correctly refused to re-run them (no risk of destructive replay), but the schema_migrations row's checksum no longer matches the on-disk file. | Comment-only edits are functionally identical post-apply (the runner already executed every line including the now-commented DOWN). **Resolve via** either (a) bulk `--force` re-run after audit, (b) update the tracking row's checksum to match without re-running (`UPDATE schema_migrations SET checksum = $new WHERE filename = $f`), or (c) accept as cosmetic. Recommend (b) as a one-shot WF3 with explicit operator confirmation per file. |
+
+**Sidebar — running permits chain at the time of WF3:** completed 21 of 28 steps before failing at step 22 (`assert_lifecycle_phase_distribution`) on the pre-existing Strangler Fig drift (`cross_check_active_inspection = 580 ≥ 500`). NOT a regression — same value yesterday was 579, threshold 500. WF2 commit `91051e0` made this threshold operator-tunable via the admin Control Panel; user will tune 500→800 via UI to flip step 22 verdict from FAIL to WARN, then re-run the chain.
+

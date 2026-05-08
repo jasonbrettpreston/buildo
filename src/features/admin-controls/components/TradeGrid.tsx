@@ -1,6 +1,7 @@
 'use client';
 /**
- * TradeGrid — inline-editable table of all 32 trade configurations.
+ * TradeGrid — inline-editable table of all current trade configurations
+ * (count is dynamic — DB-driven; realtor added in mig 118 brought it to 33).
  * 7 editable numeric columns; search filter by trade slug.
  *
  * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 4
